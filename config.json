@@ -1,0 +1,186 @@
+{
+    "globalParameters": {
+        "timeLimit": 3600,
+        "outputDirectory": "."
+    },
+    "inputInstances": [
+        {
+            "graphFile": "path/to/graph1.txt",
+            "machineParamsFile": "path/to/machineParams1.txt"
+        },
+        {
+            "graphFile": "path/to/graph2.txt",
+            "machineParamsFile": "path/to/machineParams2.txt"
+        }
+    ],
+    "algorithms": [
+        {
+            "name": "GreedyBsp",
+            "run" : true,
+            "parameters": {}
+        },
+        {
+            "name": "GreedyVariance",
+            "run" : true,
+            "parameters": {}
+        },
+        {
+            "name": "GreedyEtf",
+            "run" : true,
+            "parameters": {
+                "mode": "ETF"
+            }
+        },
+        {
+            "name": "GreedyCilk",
+            "run" : true,
+            "parameters": {
+                "mode": "CILK"
+            }
+        },
+        {
+            "name": "GreedyLayers",
+            "run" : true,
+            "parameters": {}
+        },
+        {
+            "name": "GreedyRandom",
+            "run" : true,
+            "parameters": {}
+        },
+        {
+            "name": "GreedyBadRandom",
+            "run" : true,
+            "parameters": {}
+        },
+        {
+            "name": "GreedyChildren",
+            "run" : true,
+            "parameters": {}
+        },
+        {
+            "name": "GreedyMeta",
+            "run" : true,
+            "parameters": {}
+        },
+        {
+            "name": "FullILP",
+            "run" : true,
+            "parameters": {
+                "max_number_of_supersteps": 4,
+                "write_intermediate_solutions": false,
+                "intermediate_solutions_directory": ".",
+                "intermediate_solutions_prefix": "interm_sol",
+                "use_initial_solution": false,
+                "initial_solution_scheduler": "GreedyBsp"
+            }
+        },
+        {
+            "name": "TotalCommILP",
+            "run" : true,
+            "parameters": {
+                "max_number_of_supersteps": 4,
+                "write_intermediate_solutions": false,
+                "intermediate_solutions_directory": ".",
+                "intermediate_solutions_prefix": "interm_sol",
+                "use_initial_solution": false,
+                "initial_solution_scheduler": "BspGreedy"
+            }
+        },
+        {
+            "name": "MultiHC",
+            "run" : true,
+            "parameters": {
+                "param1": "value1",
+                "param2": "value2"
+            }
+        },
+        {
+            "name": "HDagg",
+            "run" : true,
+            "parameters": {
+                "balance_threshhold": 1.1,
+                "hillclimb_balancer_iterations": 10,
+                "hungarian_alg": true
+            }
+        },
+        {
+            "name": "BalDMixR",
+            "run": true,
+            "parameters": {
+                "balance_threshhold": 1.2,
+                "part_algo": "Greedy",
+                "coin_type": "Thue_Morse",
+                "clumps_per_partition": 6,
+                "nodes_per_clump": 4,
+                "nodes_per_partition": 15,
+                "max_weight_for_flag": 0.3333,
+                "balanced_cut_ratio": 0.3333,
+                "min_weight_for_split": 0.0208333,
+                "hill_climb_simple_improvement_attemps": 10,
+                "min_comp_generation_when_shaving": 3
+            }
+        },
+        {
+            "name": "CoBalDMixR",
+            "run": true,
+            "parameters": {
+                "coarsen": {
+                    "min_nodes_after_coarsen_per_partition": 1000,
+                    "number_of_final_no_change_reps": 4,
+                    "geom_decay_num_nodes": 1.0625,
+                    "poisson_par": 0,
+                    "noise": 0,
+                    "edge_sort_ratio_triangle": 3,
+                    "edge_sort_ratio_weight": 2,
+                    "num_rep_without_node_decrease": 4,
+                    "temperature_multiplier": 1.125,
+                    "number_of_temperature_increases": 14
+                },
+                "initial": {
+                    "balance_threshhold": 1.2,
+                    "part_algo": "Greedy",
+                    "coin_type": "Thue_Morse",
+                    "clumps_per_partition": 6,
+                    "nodes_per_clump": 4,
+                    "nodes_per_partition": 15,
+                    "max_weight_for_flag": 0.3333,
+                    "balanced_cut_ratio": 0.3333,
+                    "min_weight_for_split": 0.0208333,
+                    "hill_climb_simple_improvement_attemps": 10,
+                    "min_comp_generation_when_shaving": 3
+                },
+                "final": {
+                    "balance_threshhold": 1.2,
+                    "part_algo": "Greedy",
+                    "coin_type": "Thue_Morse",
+                    "clumps_per_partition": 6,
+                    "nodes_per_clump": 4,
+                    "nodes_per_partition": 15,
+                    "max_weight_for_flag": 0.3333,
+                    "balanced_cut_ratio": 0.3333,
+                    "min_weight_for_split": 0.0208333,
+                    "hill_climb_simple_improvement_attemps": 10,
+                    "min_comp_generation_when_shaving": 3
+                }
+            }
+        },
+        {
+            "name": "CoarseBestGreedyHC",
+            "run": true,
+            "parameters": {
+                "coarsen": {
+                    "min_nodes_after_coarsen_per_partition": 1000,
+                    "geom_decay_num_nodes": 1.0625,
+                    "poisson_par": 0,
+                    "noise": 0,
+                    "edge_sort_ratio_triangle": 3,
+                    "edge_sort_ratio_weight": 2,
+                    "num_rep_without_node_decrease": 4,
+                    "temperature_multiplier": 1.125,
+                    "number_of_temperature_increases": 14
+                }
+            }
+        }
+    ]
+}

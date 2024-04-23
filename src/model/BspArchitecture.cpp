@@ -1,0 +1,116 @@
+/*
+Copyright 2024 Huawei Technologies Co., Ltd.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner   
+*/
+
+#include <cmath>
+#include <stdexcept>
+
+#include "model/BspArchitecture.hpp"
+#include <auxiliary/auxiliary.hpp>
+
+void BspArchitecture::setSendCosts(const std::vector<std::vector<unsigned int>> &vec) {
+
+    if (vec.size() != number_processors) {
+        throw std::invalid_argument("Invalid Argument");
+    }
+
+    isNuma = false;
+    for (unsigned i = 0; i < number_processors; i++) {
+
+        if (vec[i].size() != number_processors) {
+            throw std::invalid_argument("Invalid Argument");
+        }
+
+        for (unsigned j = 0; j < number_processors; j++) {
+
+            if (i == j) {
+                if (vec[i][j] != 0)
+                    throw std::invalid_argument("Invalid Argument, Diagonal elements should be 0");
+            } else {
+                send_costs[i][j] = vec[i][j];
+
+                if ( number_processors > 1 && vec[i][j] != vec[0][1] ) {
+                    isNuma = true;
+                }
+            }
+        }
+    }
+}
+
+void BspArchitecture::setNumberOfProcessors(unsigned int num_proc) {
+
+    number_processors = num_proc;
+    send_costs =
+        std::vector<std::vector<unsigned int>>(number_processors, std::vector<unsigned int>(number_processors, 1));
+    for (unsigned i = 0; i < number_processors; i++) {
+        send_costs[i][i] = 0;
+    }
+    isNuma = false;
+}
+
+void BspArchitecture::SetUniformSendCost() {
+    for (unsigned i = 0; i < number_processors; i++) {
+        for (unsigned j = 0; j < number_processors; j++) {
+            if (i == j) {
+                send_costs[i][j] = 0;
+            } else {
+                send_costs[i][j] = 1;
+            }
+        }
+    }
+    isNuma = false;
+}
+
+void BspArchitecture::SetExpSendCost(const unsigned int base) {
+
+    isNuma = true;
+
+    unsigned maxPos = 1;
+    const unsigned two = 2;
+    for (; uintpow(two, maxPos + 1) <= number_processors - 1; ++maxPos) {
+    }
+    for (unsigned i = 0; i < number_processors; ++i)
+        for (unsigned j = i + 1; j < number_processors; ++j)
+            for (unsigned pos = maxPos; pos >= 0; --pos)
+                if (((1 << pos) & i) != ((1 << pos) & j)) {
+                    send_costs[i][j] = send_costs[j][i] = intpow(base, pos);
+                    break;
+                }
+};
+
+// compute average comm. coefficient between a pair of processors
+unsigned BspArchitecture::computeCommAverage() const {
+    double avg = 0;
+    for (unsigned i = 0; i < number_processors; ++i)
+        for (unsigned j = 0; j < number_processors; ++j)
+            avg += send_costs[i][j];
+    avg = avg * (double)communication_costs / (double)number_processors / (double)number_processors;
+    return static_cast<unsigned>(round(avg));
+};
+
+bool BspArchitecture::are_send_cost_numa() {
+    if (number_processors == 1) return false;
+
+    const unsigned val = send_costs[0][1];
+    for (unsigned p1 = 0; p1 < number_processors; p1++) {
+        for (unsigned p2 = 0; p2 < number_processors; p2++) {
+            if (p1 == p2) continue;
+            if (send_costs[p1][p2] != val) return true;
+        }
+    }
+    return false;
+}

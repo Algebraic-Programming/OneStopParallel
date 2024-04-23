@@ -1,0 +1,287 @@
+
+digraph {
+    fontname="Helvetica,Arial,sans-serif"
+    node [
+        fontname="Helvetica,Arial,sans-serif",
+        fontsize=12,
+        penwidth=1.0,
+        margin=0.05,
+        width=0.5,
+        height=0.3,
+        fixedsize=true
+    ]
+    edge [
+        fontname="Helvetica,Arial,sans-serif",
+        arrowsize=.3,
+        style=dashed,
+        color="#00000040"
+    ]
+    compound=true;
+    rank=same;
+    rankdir=BT;
+    splines=false;
+    overlap=false;
+
+    subgraph cluster_ss0 {
+        subgraph cluster_ss0_p0 {
+            node [ color="#db5f57", style= filled ];
+            rankdir=LR;
+            label="Processor #0";
+            rank=same;
+            0; 5; 9; 15; 20; 21; 34; 39; 
+        };
+        subgraph cluster_ss0_p1 {
+            node [ color="#91db57", style= filled ];
+            rankdir=LR;
+            label="Processor #1";
+            rank=same;
+            1; 6; 10; 17; 18; 30; 36; 
+        };
+        subgraph cluster_ss0_p2 {
+            node [ color="#57d3db", style= filled ];
+            rankdir=LR;
+            label="Processor #2";
+            rank=same;
+            3; 7; 11; 12; 25; 26; 50; 53; 
+        };
+        subgraph cluster_ss0_p3 {
+            node [ color="#a157db", style= filled ];
+            rankdir=LR;
+            label="Processor #3";
+            rank=same;
+            4; 8; 13; 14; 27; 28; 29; 
+        };
+        label="Super-step #0";
+    };
+
+    subgraph cluster_ss1 {
+        subgraph cluster_ss1_p0 {
+            node [ color="#db5f57", style= filled ];
+            rankdir=LR;
+            label="Processor #0";
+            rank=same;
+            2; 46; 
+        };
+        subgraph cluster_ss1_p1 {
+            node [ color="#91db57", style= filled ];
+            rankdir=LR;
+            label="Processor #1";
+            rank=same;
+            31; 
+        };
+        subgraph cluster_ss1_p2 {
+            node [ color="#57d3db", style= filled ];
+            rankdir=LR;
+            label="Processor #2";
+            rank=same;
+            16; 40; 
+        };
+        subgraph cluster_ss1_p3 {
+            node [ color="#a157db", style= filled ];
+            rankdir=LR;
+            label="Processor #3";
+            rank=same;
+            22; 
+        };
+        label="Super-step #1";
+    };
+
+    subgraph cluster_ss2 {
+        subgraph cluster_ss2_p0 {
+            node [ color="#db5f57", style= filled ];
+            rankdir=LR;
+            label="Processor #0";
+            rank=same;
+            32; 
+        };
+        subgraph cluster_ss2_p1 {
+            node [ color="#91db57", style= filled ];
+            rankdir=LR;
+            label="Processor #1";
+            rank=same;
+            19; 
+        };
+        subgraph cluster_ss2_p2 {
+            node [ color="#57d3db", style= filled ];
+            rankdir=LR;
+            label="Processor #2";
+            rank=same;
+            51; 
+        };
+        subgraph cluster_ss2_p3 {
+            node [ color="#a157db", style= filled ];
+            rankdir=LR;
+            label="Processor #3";
+            rank=same;
+            49; 52; 
+        };
+        label="Super-step #2";
+    };
+
+    subgraph cluster_ss3 {
+        subgraph cluster_ss3_p0 {
+            node [ color="#db5f57", style= filled ];
+            rankdir=LR;
+            label="Processor #0";
+            rank=same;
+            44; 
+        };
+        subgraph cluster_ss3_p1 {
+            node [ color="#91db57", style= filled ];
+            rankdir=LR;
+            label="Processor #1";
+            rank=same;
+            37; 
+        };
+        subgraph cluster_ss3_p2 {
+            node [ color="#57d3db", style= filled ];
+            rankdir=LR;
+            label="Processor #2";
+            rank=same;
+            45; 
+        };
+        subgraph cluster_ss3_p3 {
+            node [ color="#a157db", style= filled ];
+            rankdir=LR;
+            label="Processor #3";
+            rank=same;
+            23; 24; 
+        };
+        label="Super-step #3";
+    };
+
+    subgraph cluster_ss4 {
+        subgraph cluster_ss4_p0 {
+            node [ color="#db5f57", style= filled ];
+            rankdir=LR;
+            label="Processor #0";
+            rank=same;
+            33; 
+        };
+        label="Super-step #4";
+    };
+
+    subgraph cluster_ss5 {
+        subgraph cluster_ss5_p0 {
+            node [ color="#db5f57", style= filled ];
+            rankdir=LR;
+            label="Processor #0";
+            rank=same;
+            35; 
+        };
+        label="Super-step #5";
+    };
+
+    subgraph cluster_ss6 {
+        subgraph cluster_ss6_p0 {
+            node [ color="#db5f57", style= filled ];
+            rankdir=LR;
+            label="Processor #0";
+            rank=same;
+            42; 
+        };
+        subgraph cluster_ss6_p1 {
+            node [ color="#91db57", style= filled ];
+            rankdir=LR;
+            label="Processor #1";
+            rank=same;
+            38; 
+        };
+        subgraph cluster_ss6_p2 {
+            node [ color="#57d3db", style= filled ];
+            rankdir=LR;
+            label="Processor #2";
+            rank=same;
+            41; 
+        };
+        subgraph cluster_ss6_p3 {
+            node [ color="#a157db", style= filled ];
+            rankdir=LR;
+            label="Processor #3";
+            rank=same;
+            47; 
+        };
+        label="Super-step #6";
+    };
+
+    subgraph cluster_ss7 {
+        subgraph cluster_ss7_p0 {
+            node [ color="#db5f57", style= filled ];
+            rankdir=LR;
+            label="Processor #0";
+            rank=same;
+            48; 
+        };
+        subgraph cluster_ss7_p1 {
+            node [ color="#91db57", style= filled ];
+            rankdir=LR;
+            label="Processor #1";
+            rank=same;
+            43; 
+        };
+        label="Super-step #7";
+    };
+
+    0 -> 2;
+    1 -> 2 [style=solid, color=black, penwidth=1];
+    2 -> 19 [style=solid, color=black, penwidth=1];
+    2 -> 32;
+    2 -> 38 [style=solid, color=black, penwidth=1];
+    2 -> 46;
+    2 -> 49 [style=solid, color=black, penwidth=1];
+    2 -> 51 [style=solid, color=black, penwidth=1];
+    2 -> 52 [style=solid, color=black, penwidth=1];
+    3 -> 12;
+    4 -> 14;
+    5 -> 21;
+    6 -> 24 [style=solid, color=black, penwidth=1];
+    7 -> 26;
+    8 -> 28;
+    9 -> 33;
+    10 -> 18;
+    11 -> 12;
+    12 -> 16;
+    13 -> 14;
+    14 -> 22;
+    14 -> 29;
+    15 -> 16 [style=solid, color=black, penwidth=1];
+    16 -> 19 [style=solid, color=black, penwidth=1];
+    16 -> 40;
+    17 -> 18;
+    18 -> 19;
+    19 -> 23 [style=solid, color=black, penwidth=1];
+    19 -> 37;
+    20 -> 21;
+    21 -> 22 [style=solid, color=black, penwidth=1];
+    22 -> 23;
+    23 -> 24;
+    23 -> 33 [style=solid, color=black, penwidth=1];
+    23 -> 42 [style=solid, color=black, penwidth=1];
+    25 -> 26;
+    26 -> 32 [style=solid, color=black, penwidth=1];
+    26 -> 40;
+    26 -> 46 [style=solid, color=black, penwidth=1];
+    26 -> 50;
+    26 -> 51;
+    26 -> 53;
+    27 -> 28;
+    28 -> 29;
+    28 -> 31 [style=solid, color=black, penwidth=1];
+    29 -> 44 [style=solid, color=black, penwidth=1];
+    30 -> 31;
+    31 -> 32 [style=solid, color=black, penwidth=1];
+    32 -> 35;
+    32 -> 44;
+    32 -> 45 [style=solid, color=black, penwidth=1];
+    33 -> 35;
+    34 -> 35;
+    35 -> 38 [style=solid, color=black, penwidth=1];
+    35 -> 41 [style=solid, color=black, penwidth=1];
+    35 -> 42;
+    35 -> 47 [style=solid, color=black, penwidth=1];
+    36 -> 37;
+    37 -> 38;
+    38 -> 43;
+    38 -> 48 [style=solid, color=black, penwidth=1];
+    39 -> 40 [style=solid, color=black, penwidth=1];
+}
