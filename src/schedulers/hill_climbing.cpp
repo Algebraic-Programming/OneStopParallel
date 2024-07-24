@@ -116,6 +116,15 @@ void HillClimbing::Init() {
     }
 
     updatePromisingMoves();
+
+    // memory_constraints
+    if(use_memory_constraint)
+    {
+        memory_used.clear();
+        memory_used.resize(schedule.params.p, std::vector<int>(M, 0));
+        for (unsigned i = 0; i < N; ++i)
+            memory_used[schedule.proc[i]][schedule.supstep[i]] += schedule.G.memW[i];
+    }
 };
 
 
@@ -561,6 +570,13 @@ void HillClimbing::executeMove(const int node, const int newProc, const int wher
             itr->second += 1;
     }
 
+    // memory constraints, if any
+    if(use_memory_constraint)
+    {
+        memory_used[schedule.proc[node]][schedule.supstep[node]] -= schedule.G.memW[node];
+        memory_used[newProc][newStep] += schedule.G.memW[node];
+    }
+
     // update data
     schedule.proc[node] = newProc;
     schedule.supstep[node] = newStep;
@@ -586,6 +602,9 @@ bool HillClimbing::Improve(const bool SteepestAscent, const bool shrink) {
         promisingMoves.pop_front();
 
         if(!canMove[static_cast<Direction>(next.c)][next.a][next.b])
+            continue;
+        
+        if(use_memory_constraint && violatesMemConstraint(next.a, next.b, next.c-1))
             continue;
 
         stepAuxData moveData;
@@ -625,6 +644,9 @@ bool HillClimbing::Improve(const bool SteepestAscent, const bool shrink) {
 
         intPair next = *nextMove.second;
         ++nextMove.second;
+
+        if(use_memory_constraint && violatesMemConstraint(next.a, next.b, dir-1))
+            continue;
 
         stepAuxData moveData;
         int costDiff = moveCostChange(next.a, next.b, dir-1, moveData);
@@ -695,6 +717,15 @@ void HillClimbing::HillClimbSteps(const int StepsLimit, const bool SteepestAscen
         if (!Improve(SteepestAscent, shrink))
             break;
 };
+
+// Check if move violates mem constraints
+bool HillClimbing::violatesMemConstraint(int node, int processor, int where)
+{
+    if(memory_used[processor][schedule.supstep[node]+where] + schedule.G.memW[node] > schedule.params.memory_bound)
+        return true;
+    
+    return false;
+}
 
 // Initialization for comm. schedule hill climbing
 void HillClimbingCS::Init() {

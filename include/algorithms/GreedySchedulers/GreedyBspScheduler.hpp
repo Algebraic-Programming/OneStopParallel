@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner   
+@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 
 #pragma once
@@ -26,13 +26,16 @@ limitations under the License.
 #include <string>
 #include <vector>
 
+#include <boost/heap/fibonacci_heap.hpp>
+
 #include "algorithms/Scheduler.hpp"
 #include "auxiliary/auxiliary.hpp"
 #include "model/BspSchedule.hpp"
 
 /**
- * @brief The GreedyBspScheduler class represents a scheduler that uses a greedy algorithm to compute schedules for BspInstance.
- * 
+ * @brief The GreedyBspScheduler class represents a scheduler that uses a greedy algorithm to compute schedules for
+ * BspInstance.
+ *
  * This class inherits from the Scheduler class and implements the computeSchedule() and getScheduleName() methods.
  * The computeSchedule() method computes a schedule for a given BspInstance using a greedy algorithm.
  * The getScheduleName() method returns the name of the schedule, which is "BspGreedy" in this case.
@@ -40,21 +43,55 @@ limitations under the License.
 class GreedyBspScheduler : public Scheduler {
 
   private:
+    struct heap_node {
 
+        VertexType node;
+
+        double score;
+
+        heap_node() : node(0), score(0) {}
+        heap_node(VertexType node, double score) : node(node), score(score) {}
+
+        bool operator<(heap_node const &rhs) const {
+            return (score < rhs.score) || (score == rhs.score and node < rhs.node);
+        }
+    };
+
+    std::vector<boost::heap::fibonacci_heap<heap_node>> max_proc_score_heap;
+    std::vector<boost::heap::fibonacci_heap<heap_node>> max_all_proc_score_heap;
+
+    using heap_handle = typename boost::heap::fibonacci_heap<heap_node>::handle_type;
+
+    std::vector<std::unordered_map<VertexType, heap_handle>> node_proc_heap_handles;
+    std::vector<std::unordered_map<VertexType, heap_handle>> node_all_proc_heap_handles;
+
+    float max_percent_idle_processors;
+    bool use_memory_constraint = false;
+    std::vector<unsigned> current_proc_memory;
+
+    double computeScore(VertexType node, unsigned proc, const std::vector<std::vector<bool>> &procInHyperedge,
+                        const BspInstance &instance);
 
     void Choose(const BspInstance &instance, const std::vector<std::vector<int>> &procInHyperedge,
                 const std::set<int> &allReady, const std::vector<std::set<int>> &procReady,
                 const std::vector<bool> &procFree, int &node, int &p) const;
 
-
     bool CanChooseNode(const BspInstance &instance, const std::set<int> &allReady,
                        const std::vector<std::set<int>> &procReady, const std::vector<bool> &procFree) const;
+
+    void ChooseHeap(const BspInstance &instance, const std::vector<std::vector<bool>> &procInHyperedge,
+                    const std::set<VertexType> &allReady, const std::vector<std::set<VertexType>> &procReady,
+                    const std::vector<bool> &procFree, VertexType &node, unsigned &p) const;
+
+    bool CanChooseNodeHeap(const BspInstance &instance, const std::set<VertexType> &allReady,
+                           const std::vector<std::set<VertexType>> &procReady, const std::vector<bool> &procFree) const;
 
   public:
     /**
      * @brief Default constructor for GreedyBspScheduler.
      */
-    GreedyBspScheduler() : Scheduler() {}
+    GreedyBspScheduler(float max_percent_idle_processors_ = 0.2)
+        : Scheduler(), max_percent_idle_processors(max_percent_idle_processors_) {}
 
     /**
      * @brief Default destructor for GreedyBspScheduler.
@@ -63,20 +100,33 @@ class GreedyBspScheduler : public Scheduler {
 
     /**
      * @brief Compute a schedule for the given BspInstance.
-     * 
+     *
      * This method computes a schedule for the given BspInstance using a greedy algorithm.
-     * 
+     *
      * @param instance The BspInstance object representing the instance to compute the schedule for.
      * @return A pair containing the return status and the computed BspSchedule.
      */
+    virtual std::pair<RETURN_STATUS, BspSchedule> computeScheduleNoHeap(const BspInstance &instance);
+
     virtual std::pair<RETURN_STATUS, BspSchedule> computeSchedule(const BspInstance &instance) override;
 
     /**
      * @brief Get the name of the schedule.
-     * 
+     *
      * This method returns the name of the schedule, which is "BspGreedy" in this case.
-     * 
+     *
      * @return The name of the schedule.
      */
-    virtual std::string getScheduleName() const override { return "BspGreedy"; }
+    virtual std::string getScheduleName() const override {
+
+        if (use_memory_constraint) {
+            return "BspGreedyMemory";
+        } else {
+            return "BspGreedy";
+        }
+    }
+
+    virtual void setUseMemoryConstraint(bool use_memory_constraint_) override {
+        use_memory_constraint = use_memory_constraint_;
+    }
 };

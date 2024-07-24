@@ -37,13 +37,13 @@ class LKBufferedCommScheduler : public LKBase<unsigned> {
     std::vector<std::unordered_set<unsigned>> step_comm_observers;
 
         
-    virtual unsigned current_costs() override;
+    virtual unsigned compute_current_costs() override;
     virtual void commputeCommGain(unsigned node, unsigned current_step, unsigned current_proc, unsigned new_proc) override;
     virtual void compute_superstep_datastructures() override;
     virtual void initalize_superstep_datastructures() override;
 
     virtual void cleanup_superstep_datastructures() override;
-    virtual void update_superstep_datastructures(Move move, unsigned from_proc, unsigned from_step) override;
+    virtual void update_superstep_datastructures(Move move) override;
 
 
     virtual void initializeRewardPenaltyFactors() override;

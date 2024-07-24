@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner   
+@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 
 #pragma once
@@ -22,20 +22,41 @@ limitations under the License.
 #include "GreedyCilkScheduler.hpp"
 #include "GreedyEtfScheduler.hpp"
 #include "GreedyLayers.hpp"
-#include "algorithms/Scheduler.hpp"
-#include "algorithms/GreedySchedulers/RandomGreedy.hpp"
+#include "algorithms/GreedySchedulers/GreedyBspLocking.hpp"
 #include "algorithms/GreedySchedulers/GreedyChildren.hpp"
 #include "algorithms/GreedySchedulers/GreedyVarianceScheduler.hpp"
+#include "algorithms/GreedySchedulers/GreedyVarianceFillupScheduler.hpp"
+#include "algorithms/GreedySchedulers/GreedyBspFillupScheduler.hpp"
+#include "algorithms/GreedySchedulers/RandomGreedy.hpp"
+#include "algorithms/Scheduler.hpp"
+
+enum GREEDY_COST_FUNCTION { BSP, SUPERSTEPS };
+
+inline std::string to_string(const GREEDY_COST_FUNCTION status) {
+    switch (status) {
+    case BSP:
+        return "BSP";
+    case SUPERSTEPS:
+        return "SUPERSTEPS";
+    default:
+        return "DEFAULT";
+    }
+}
+
 
 /**
  * @class MetaGreedyScheduler
  * @brief A class that represents a meta greedy scheduler.
- * 
+ *
  * The MetaGreedyScheduler class is a subclass of the Scheduler class. It implements the computeSchedule,
  * runGreedyMode, and getScheduleName methods. It provides a way to compute a schedule using a meta greedy
  * algorithm and retrieve the name of the schedule.
  */
 class MetaGreedyScheduler : public Scheduler {
+
+  private:
+    GREEDY_COST_FUNCTION cost_function = SUPERSTEPS;
+
   public:
     /**
      * @brief Constructs a MetaGreedyScheduler object.
@@ -62,9 +83,11 @@ class MetaGreedyScheduler : public Scheduler {
      */
     virtual std::pair<RETURN_STATUS, BspSchedule> runGreedyMode(const BspInstance &instance, const std::string &mode);
 
+    virtual void set_cost_function(GREEDY_COST_FUNCTION cost_function) { this->cost_function = cost_function; }
+
     /**
      * @brief Gets the name of the schedule.
      * @return The name of the schedule.
      */
-    virtual std::string getScheduleName() const override { return "BestGreedy"; }
+    virtual std::string getScheduleName() const override { return "BestGreedy_" + cost_function; }
 };

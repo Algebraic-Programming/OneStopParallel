@@ -13,10 +13,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner   
+@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 
 #include "file_interactions/FileReader.hpp"
+#include <boost/algorithm/string.hpp>
+#include "model/ComputationalDag.hpp"
 
 std::pair<bool, BspInstance> FileReader::readBspInstance(const std::string &filename) {
     std::ifstream infile(filename);
@@ -121,7 +123,8 @@ std::pair<bool, BspSchedule> FileReader::readBspSchdeuleTxtFormat(const BspInsta
         unsigned node, from, to, comm;
         sscanf(line.c_str(), "%d %d %d %d", &node, &from, &to, &comm);
 
-        if (node < 0 || from < 0 || to < 0 || comm < 0 || node >= num_nodes || from >= num_proc || to >= num_proc || comm >= num_supersteps) {
+        if (node < 0 || from < 0 || to < 0 || comm < 0 || node >= num_nodes || from >= num_proc || to >= num_proc ||
+            comm >= num_supersteps) {
             std::cout << "Incorrect input file format (index out of range).\n";
             return {false, BspSchedule()};
         }
@@ -166,12 +169,16 @@ std::pair<bool, ComputationalDag> FileReader::readComputationalDagHyperdagFormat
     int hEdges, pins, N;
     sscanf(line.c_str(), "%d %d %d", &hEdges, &N, &pins);
 
-    ComputationalDag dag;
-
     if (N <= 0 || hEdges <= 0 || pins <= 0) {
         std::cout << "Incorrect input file format (number of nodes/hyperedges/pins is not positive).\n";
-        return {false, dag};
+        return {false, ComputationalDag()};
     }
+
+    // for (size_t i = 0; i < N; i++) {
+    //     dag.addVertex(1,1);
+    // }
+
+    ComputationalDag dag(N);
 
     // Resize(N);
     std::vector<int> edgeSource(hEdges, -1);
@@ -209,7 +216,7 @@ std::pair<bool, ComputationalDag> FileReader::readComputationalDagHyperdagFormat
         while (!infile.eof() && line.at(0) == '%')
             getline(infile, line);
 
-        int node, work, comm;
+        int node, work, comm; //, mem;
         sscanf(line.c_str(), "%d %d %d", &node, &work, &comm);
 
         if (node < 0 || work < 0 || comm < 0 || node >= N) {
@@ -219,11 +226,11 @@ std::pair<bool, ComputationalDag> FileReader::readComputationalDagHyperdagFormat
 
         dag.setNodeCommunicationWeight(node, comm);
         dag.setNodeWorkWeight(node, work);
+        dag.setNodeMemoryWeight(node, comm);
     }
 
     return {true, dag};
-}
-
+};
 
 std::pair<bool, ComputationalDag> FileReader::readComputationalDagMartixMarketFormat(const std::string &filename) {
 
@@ -247,33 +254,31 @@ std::pair<bool, ComputationalDag> FileReader::readComputationalDagMartixMarketFo
     int nEntries, M_row, M_col;
     sscanf(line.c_str(), "%d %d %d", &M_row, &M_col, &nEntries);
 
-    ComputationalDag dag;
-
     if (M_row <= 0 || M_col <= 0 || M_col != M_row) {
         std::cout << "Incorrect input file format (No rows/columns or not a square matrix).\n";
-        return {false, dag};
+        return {false, ComputationalDag()};
     }
 
-    for (int i = 0; i < M_row; i++) {
-        dag.addVertex(1, 1);
-    }
+    ComputationalDag dag(M_row);
 
-    // Resize(N);
+    // Initialise data;
     std::vector<int> node_work_wts(M_row, 0);
     std::vector<int> node_comm_wts(M_row, 1);
     // read edges
     for (int i = 0; i < nEntries; ++i) {
+        getline(infile, line);
+        while (!infile.eof() && line.at(0) == '%')
+            getline(infile, line);
+        
         if (infile.eof()) {
             std::cout << "Incorrect input file format (file terminated too early).\n";
             return {false, dag};
         }
-        getline(infile, line);
-        while (!infile.eof() && line.at(0) == '%')
-            getline(infile, line);
 
         int row, col;
-        double val; 
+        double val;
         sscanf(line.c_str(), "%d %d %lf", &row, &col, &val);
+        // Indexing starting at 0
         row -= 1;
         col -= 1;
 
@@ -284,8 +289,99 @@ std::pair<bool, ComputationalDag> FileReader::readComputationalDagMartixMarketFo
         if (row < col) {
             std::cout << "Incorrect input file format (matrix is not lower triangular).\n";
             return {false, dag};
-        } else if ( col != row ) {
-            dag.addEdge(col, row);
+        } else if (col != row) {
+            dag.addEdge(col, row , val, 1);
+//            mtx.emplace(std::make_pair(col, row), val);
+        } else {
+            dag.set_node_mtx_entry(row, val);
+             //mtx.emplace(std::make_pair(col, row), val);
+         }
+        node_work_wts[row] += 1;
+    }
+
+    for (int i = 0; i < M_row; i++) {
+        if (node_work_wts[i] == 0) {
+            node_work_wts[i]++;
+        }
+        dag.setNodeCommunicationWeight(i, node_comm_wts[i]);
+        dag.setNodeWorkWeight(i, node_work_wts[i]);
+        dag.setNodeMemoryWeight(i, node_work_wts[i]);
+    }
+
+    getline(infile, line);
+    if (! infile.eof()) {
+        std::cout << "Incorrect input file format (file has remaining lines).\n";
+        return {false, dag};
+    }
+
+    return {true, dag};
+}
+
+
+std::pair<bool, ComputationalDag> FileReader::readComputationalDagMartixMarketFormat(const std::string &filename, std::unordered_map<std::pair<VertexType, VertexType>, double, pair_hash> &mtx) {
+
+    std::ifstream infile(filename);
+    if (!infile.is_open()) {
+        std::cout << "Unable to find/open input dag file.\n";
+
+        return {false, ComputationalDag()};
+    }
+
+    return FileReader::readComputationalDagMartixMarketFormat(infile, mtx);
+}
+
+std::pair<bool, ComputationalDag> FileReader::readComputationalDagMartixMarketFormat(std::ifstream &infile, std::unordered_map<std::pair<VertexType, VertexType>, double, pair_hash> &mtx) {
+
+    std::string line;
+    getline(infile, line);
+    while (!infile.eof() && line.at(0) == '%')
+        getline(infile, line);
+
+    int nEntries, M_row, M_col;
+    sscanf(line.c_str(), "%d %d %d", &M_row, &M_col, &nEntries);
+
+    if (M_row <= 0 || M_col <= 0 || M_col != M_row) {
+        std::cout << "Incorrect input file format (No rows/columns or not a square matrix).\n";
+        return {false, ComputationalDag()};
+    }
+
+    ComputationalDag dag(M_row);
+
+    // Initialise data;
+    std::vector<int> node_work_wts(M_row, 0);
+    std::vector<int> node_comm_wts(M_row, 1);
+    //std::unordered_map<std::pair<VertexType, VertexType>, double, pair_hash> matrix_entries;
+    // read edges
+    for (int i = 0; i < nEntries; ++i) {
+        getline(infile, line);
+        while (!infile.eof() && line.at(0) == '%')
+            getline(infile, line);
+        
+        if (infile.eof()) {
+            std::cout << "Incorrect input file format (file terminated too early).\n";
+            return {false, dag};
+        }
+
+        int row, col;
+        double val;
+        sscanf(line.c_str(), "%d %d %lf", &row, &col, &val);
+        // Indexing starting at 0
+        row -= 1;
+        col -= 1;
+
+        if (row < 0 || col < 0 || row >= M_row || col >= M_col) {
+            std::cout << "Incorrect input file format (index out of range).\n";
+            return {false, dag};
+        }
+        if (row < col) {
+            std::cout << "Incorrect input file format (matrix is not lower triangular).\n";
+            return {false, dag};
+        } else if (col != row) {
+             dag.addEdge(col, row , val, 1);
+            mtx.emplace(std::make_pair(col, row), val);
+        } else {
+            dag.set_node_mtx_entry(row, val);
+            mtx.emplace(std::make_pair(col, row), val);
         }
         node_work_wts[row] += 1;
     }
@@ -296,11 +392,17 @@ std::pair<bool, ComputationalDag> FileReader::readComputationalDagMartixMarketFo
         }
         dag.setNodeCommunicationWeight(i, node_comm_wts[i]);
         dag.setNodeWorkWeight(i, node_work_wts[i]);
+        dag.setNodeMemoryWeight(i, node_work_wts[i]);
+    }
+
+    getline(infile, line);
+    if (! infile.eof()) {
+        std::cout << "Incorrect input file format (file has remaining lines).\n";
+        return {false, dag};
     }
 
     return {true, dag};
 }
-
 
 // read problem parameters from file
 std::pair<bool, BspArchitecture> FileReader::readBspArchitecture(std::ifstream &infile) {
@@ -351,21 +453,111 @@ std::pair<bool, BspArchitecture> FileReader::readBspArchitecture(std::ifstream &
     return {true, architecture};
 };
 
+void parseNode(std::string line, ComputationalDag& G) {
+
+    // Extract node id and properties
+    std::size_t pos = line.find('[');
+    int nodeId = std::stoi(line.substr(0, pos));
+    std::string properties = line.substr(pos + 1, line.find(']') - pos - 1);
+
+    // Split properties into key-value pairs
+    std::vector<std::string> keyValuePairs;
+    boost::split(keyValuePairs, properties, boost::is_any_of(" "));
+
+
+    // Create node with properties
+    int work_weight = 0;
+    int mem_weight = 0;
+    int comm_weight = 0;
+    for (const std::string& keyValuePair : keyValuePairs) {
+        std::vector<std::string> keyValue;
+        boost::split(keyValue, keyValuePair, boost::is_any_of("="));
+
+        std::string key = keyValue[0];
+        std::string value = keyValue[1];
+
+        if (key == "work_weight") {
+            work_weight = std::stoi(value);
+        } else if (key == "mem_weight") {
+            mem_weight = std::stoi(value);
+        } else if (key == "comm_weight") {
+            comm_weight = std::stoi(value);
+        }
+    }
+
+    G.addVertex(work_weight, comm_weight, mem_weight);
+
+}
+
+void parseEdge(std::string line, ComputationalDag& G) {
+
+   
+
+    // Extract source, target and properties
+    std::size_t pos = line.find('[');
+    std::string nodes = line.substr(0, pos);
+    std::string properties = line.substr(pos + 1, line.find(']') - pos - 1);
+
+    // Split nodes into source and target
+    std::vector<std::string> sourceTarget;
+    boost::split(sourceTarget, nodes, boost::is_any_of("-"));
+
+    int source = std::stoi(sourceTarget[0]);
+    int target = std::stoi(sourceTarget[1].substr(1));
+
+    // Split properties into key-value pairs
+    std::vector<std::string> keyValuePairs;
+    boost::split(keyValuePairs, properties, boost::is_any_of(" "));
+
+    // Create edge with properties
+    int comm_weight = 0;
+    for (const std::string& keyValuePair : keyValuePairs) {
+        std::vector<std::string> keyValue;
+        boost::split(keyValue, keyValuePair, boost::is_any_of("="));
+
+        std::string key = keyValue[0];
+        std::string value = keyValue[1];
+
+        if (key == "comm_weight") {
+            comm_weight = std::stoi(value);
+        }
+    }
+
+
+    G.addEdge(source, target, comm_weight);
+    // Add edge to graph
+    
+}
+
+
 std::pair<bool, ComputationalDag> FileReader::readComputationalDagDotFormat(std::ifstream &infile) {
 
+
     ComputationalDag G;
-    auto &dag = G.getGraph();
+   
+    std::string line;
+    while (std::getline(infile, line)) {
+        // Skip lines that do not contain opening or closing brackets
+        if (line.find('{') != std::string::npos || line.find('}') != std::string::npos) {
+            continue;
+        }
 
-    boost::dynamic_properties dp(boost::ignore_other_properties);
+        // Check if the line represents a node or an edge
+        if (line.find("->") != std::string::npos) {
+            // This is an edge
+            parseEdge(line, G);
+            // Add the edge to the graph
+        } else {
+            // This is a node
+            parseNode(line, G);
+            // Add the node to the graph
+        }
+    }
 
-    dp.property("work_weight", boost::get(&Vertex::workWeight, dag));
-    dp.property("comm_weight", boost::get(&Vertex::communicationWeight, dag));
-    dp.property("comm_weight", boost::get(&Edge::communicationWeight, dag));
+    return std::make_pair(true, G);
 
-    bool status = boost::read_graphviz(infile, dag, dp);
-
-    return std::make_pair(status, G);
 }
+
 
 std::pair<bool, ComputationalDag> FileReader::readComputationalDagDotFormat(const std::string &filename) {
 
@@ -413,6 +605,7 @@ std::tuple<bool, BspInstance, BspSchedule> FileReader::readBspScheduleDotFormat(
         std::string cs;
         int workWeight = 0;
         int communicationWeight = 0;
+        int memoryWeight = 0;
     };
 
     struct Line {
@@ -427,6 +620,8 @@ std::tuple<bool, BspInstance, BspSchedule> FileReader::readBspScheduleDotFormat(
 
     dp.property("work_weight", boost::get(&Node::workWeight, graph));
     dp.property("comm_weight", boost::get(&Node::communicationWeight, graph));
+    dp.property("mem_weight", boost::get(&Node::memoryWeight, graph));
+
     dp.property("proc", boost::get(&Node::proc, graph));
     dp.property("superstep", boost::get(&Node::superstep, graph));
     dp.property("cs", boost::get(&Node::cs, graph));
@@ -441,7 +636,7 @@ std::tuple<bool, BspInstance, BspSchedule> FileReader::readBspScheduleDotFormat(
 
     for (auto v : boost::make_iterator_range(boost::vertices(graph))) {
         auto &node = graph[v];
-        G.addVertex(node.workWeight, node.communicationWeight);
+        G.addVertex(node.workWeight, node.communicationWeight, node.memoryWeight);
         processor_assignment[v] = node.proc;
         superstep_assignment[v] = node.superstep;
 
@@ -470,4 +665,158 @@ std::tuple<bool, BspInstance, BspSchedule> FileReader::readBspScheduleDotFormat(
     BspSchedule schedule(instance, processor_assignment, superstep_assignment, comm_schedule);
 
     return std::make_tuple(status, instance, schedule);
+};
+
+std::pair<bool, ComputationalDag> FileReader::readComputationalDagMetisFormat(std::string &filename) {
+
+    std::ifstream infile(filename);
+    if (!infile.is_open()) {
+        std::cout << "Unable to find/open input dag file.\n";
+
+        return {false, ComputationalDag()};
+    }
+
+    return FileReader::readComputationalDagMetisFormat(infile);
+
 }
+
+std::pair<bool, ComputationalDag> FileReader::readComputationalDagMetisFormat(std::ifstream &infile) {
+    // graph_t *ReadGraph(params_t *params)
+
+    // idx_t i, j, k, l, fmt, ncon, nfields, readew, readvw, readvs, edge, ewgt;
+    // idx_t *xadj, *adjncy, *vwgt, *adjwgt, *vsize;
+    // char *line = NULL, fmtstr[256], *curstr, *newstr;
+    // size_t lnlen = 0;
+    // FILE *fpin;
+
+    
+    std::string line;
+    getline(infile, line);
+    while (!infile.eof() && line.at(0) == '%')
+        getline(infile, line);
+
+    unsigned num_nodes = 0;
+    unsigned num_edges = 0;
+    std::string fmt = "000";
+    unsigned ncon = 0;
+
+    std::stringstream line2stream(line);
+
+    line2stream >> num_nodes >> num_edges >> fmt >> ncon;
+
+    std::cout << "num_nodes: " << num_nodes << " num_edges: " << num_edges << " fmt: " << fmt << " ncon: " << ncon
+              << std::endl;
+
+    if (num_nodes <= 0 || num_edges < 0) {
+        std::cout << "The supplied number of nodes: " << num_nodes
+                  << " must be positive and number of edges: " << num_edges << " must be non-negative." << std::endl;
+        return {false, ComputationalDag()};
+    }
+
+    if (!(fmt.size() == 3 && (fmt[0] == '0' || fmt[0] == '1') && (fmt[1] == '0' || fmt[1] == '1') &&
+          (fmt[2] == '0' || fmt[2] == '1'))) {
+        std::cout << "Cannot read this type of file format fmt= " << fmt << std::endl;
+    }
+
+    bool readvs = (fmt[0] == '1');
+    bool readvw = (fmt[1] == '1');
+    bool readew = (fmt[2] == '1');
+
+    ComputationalDag dag(num_nodes);
+
+    if (ncon > 0 && !readvw) {
+        std::cout << "------------------------------------------------------------------------------\n"
+                     "***  I detected an error in your input file  ***\n\n"
+                     "You specified ncon="
+                  << ncon
+                  << ", but the fmt parameter does not specify vertex weights\n"
+                     "Make sure that the fmt parameter is set to either 10 or 11.\n"
+                     "------------------------------------------------------------------------------\n";
+    }
+
+    if (ncon > 3) {
+        std::cout << "Only up to 3 vertex weights are supported" << std::endl;
+    }
+
+    for (unsigned i = 0; i < num_nodes; i++) {
+
+        do {
+            if (infile.eof()) {
+                std::cout << "Premature end of input file while reading vertex " << i + 1 << std::endl;
+
+                std::getline(infile, line);
+            }
+        } while (line[0] == '%');
+
+        std::stringstream line2stream(line);
+
+        if (readvs) {
+
+            unsigned vertex_size;
+            line2stream >> vertex_size;
+
+            dag.setNodeCommunicationWeight(i, vertex_size);
+        }
+
+        if (readvw) {
+            for (unsigned l = 0; l < ncon; l++) {
+
+                unsigned vertex_weight;
+                line2stream >> vertex_weight;
+
+                if (l == 0) {
+                    dag.setNodeWorkWeight(i, vertex_weight);
+                } else if (l == 1) {
+                    dag.setNodeMemoryWeight(i, vertex_weight);
+                }
+            }
+        }
+
+        while (line2stream) {
+
+            unsigned target;
+            line2stream >> target;
+            
+            target--;
+
+            if (target < 0 || target >= num_nodes)
+                std::cout << "Edge " << target  << " for vertex " << i  << " is out of bounds" << std::endl;
+
+            if (readew) {
+                unsigned edge_weight;
+                line2stream >> edge_weight;
+
+                dag.addEdge(i, target, 1.0 , edge_weight);
+            } else {
+
+                dag.addEdge(i, target);
+            }
+        }
+    }
+
+
+    return {true, dag};
+}
+
+// gk_fclose(fpin);
+
+// if (k != graph->nedges) {
+//     printf("------------------------------------------------------------------------------\n");
+//     printf("***  I detected an error in your input file  ***\n\n");
+//     printf("In the first line of the file, you specified that the graph contained\n"
+//            "%" PRIDX " edges. However, I only found %" PRIDX " edges in the file.\n",
+//            graph->nedges / 2, k / 2);
+//     if (2 * k == graph->nedges) {
+//         printf("\n *> I detected that you specified twice the number of edges that you have in\n");
+//         printf("    the file. Remember that the number of edges specified in the first line\n");
+//         printf("    counts each edge between vertices v and u only once.\n\n");
+//     }
+//     printf("Please specify the correct number of edges in the first line of the file.\n");
+//     printf("------------------------------------------------------------------------------\n");
+//     exit(0);
+// }
+
+// gk_free((void *)&line, LTERM);
+
+// return {true, dag};
+// }

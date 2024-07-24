@@ -29,6 +29,7 @@ limitations under the License.
 struct BSPproblem {
     int p, g, L;
     std::vector<std::vector<int>> sendCost;
+    unsigned memory_bound = 0;
     int avgComm{};
 
     explicit BSPproblem(const int a = 0, const int b = 0, const int c = 0) : p(a), g(b), L(c) { SetUniformCost(); };

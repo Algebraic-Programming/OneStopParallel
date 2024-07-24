@@ -95,6 +95,9 @@ struct DAG {
     // work and communication weight of each node
     std::vector<int> workW, commW;
 
+    // memory weight of each node
+    std::vector<int> memW;
+
     // communication weights of each edge
     std::unordered_map< std::pair<int, int> , int, pair_hash > comm_edge_W;
 
@@ -136,6 +139,7 @@ struct DAG {
         for (unsigned node = 0; node < n; ++node) {
             workW[node] = cdag.nodeWorkWeight(node);
             commW[node] = cdag.nodeCommunicationWeight(node);
+            memW[node] = cdag.nodeMemoryWeight(node);
         }
 
         for(auto edge : cdag.edges()) {

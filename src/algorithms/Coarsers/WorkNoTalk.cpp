@@ -169,7 +169,10 @@ RETURN_STATUS WorkNoTalk::run_contractions() {
         comm_cost_multiplier = 1;
     }
 
-    std::cout << "Coarsen Step: " << dag_history.size() << ", Number of nodes: " << dag_history.back()->numberOfVertices() << std::endl;
+    std::cout   << "Coarsen Step: " << dag_history.size()
+                << ", Number of nodes: " << dag_history.back()->numberOfVertices()
+                << ", Number of edges: " << dag_history.back()->getComputationalDag().numberOfEdges()
+                << ", Log ratio: " << std::log(dag_history.back()->getComputationalDag().numberOfEdges()) / std::log(dag_history.back()->numberOfVertices()) << std::endl;
 
     Biased_Random_with_side_bias coin( coarsen_par.edge_sort_ratio );
     int no_change_in_a_row = 0;
@@ -181,7 +184,10 @@ RETURN_STATUS WorkNoTalk::run_contractions() {
         else {
             diff = run_and_add_contraction(Contract_Edge_Weight);
         }
-        std::cout << "Coarsen Step: " << dag_history.size() << ", Number of nodes: " << dag_history.back()->numberOfVertices() << std::endl;
+        std::cout   << "Coarsen Step: " << dag_history.size()
+                    << ", Number of nodes: " << dag_history.back()->numberOfVertices()
+                    << ", Number of edges: " << dag_history.back()->getComputationalDag().numberOfEdges()
+                    << ", Log ratio: " << std::log(dag_history.back()->getComputationalDag().numberOfEdges()) / std::log(dag_history.back()->numberOfVertices()) << std::endl;
         
         if (diff == 0) {
             no_change_in_a_row++;

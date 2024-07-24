@@ -17,9 +17,7 @@ limitations under the License.
 */
 
 #include "model/BspSchedule.hpp"
-
-#include <algorithm>
-#include <iostream>
+#include "model/SetSchedule.hpp"
 
 void BspSchedule::updateNumberOfSupersteps() {
 
@@ -169,6 +167,31 @@ bool BspSchedule::satisfiesPrecedenceConstraints() const {
 
     return true;
 };
+
+
+bool BspSchedule::satisfiesMemoryConstraints() const {
+
+
+    SetSchedule set_schedule = SetSchedule(*this);
+
+    for (unsigned step = 0; step < number_of_supersteps; step++) {
+        for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
+
+            unsigned memory = 0;
+            for (const auto &node : set_schedule.step_processor_vertices[step][proc]) {
+                memory += instance->getComputationalDag().nodeMemoryWeight(node);
+            }
+
+            if (memory > instance->getArchitecture().memoryBound(proc)) {
+                return false;
+            }
+        }
+    }
+
+
+    return true;
+};
+
 
 bool BspSchedule::hasValidCommSchedule() const { return checkCommScheduleValidity(commSchedule); }
 
@@ -558,6 +581,61 @@ unsigned BspSchedule::computeCostsBufferedSending() const {
     return costs;
 }
 
+unsigned BspSchedule::computeBaseCommCostsBufferedSending() const {
+
+    assert(satisfiesPrecedenceConstraints());
+
+    //std::vector<unsigned> comm = std::vector<unsigned>(number_of_supersteps, 0);
+    std::vector<std::vector<unsigned>> rec(instance->numberOfProcessors(),
+                                           std::vector<unsigned>(number_of_supersteps, 0));
+    std::vector<std::vector<unsigned>> send(instance->numberOfProcessors(),
+                                            std::vector<unsigned>(number_of_supersteps, 0));
+
+    for (unsigned node = 0; node < instance->numberOfVertices(); node++) {
+
+        std::vector<unsigned> step_needed(instance->numberOfProcessors(), number_of_supersteps);
+        for (const auto &target : instance->getComputationalDag().children(node)) {
+
+            if (node_to_processor_assignment[node] != node_to_processor_assignment[target]) {
+                step_needed[node_to_processor_assignment[target]] =
+                    std::min(step_needed[node_to_processor_assignment[target]], node_to_superstep_assignment[target]);
+            }
+        }
+
+        for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
+
+            if (step_needed[proc] < number_of_supersteps) {
+                send[node_to_processor_assignment[node]][node_to_superstep_assignment[node]] +=
+                    instance->sendCosts(node_to_processor_assignment[node], proc) *
+                    instance->getComputationalDag().nodeCommunicationWeight(node);
+
+                rec[proc][step_needed[proc] - 1] += instance->sendCosts(node_to_processor_assignment[node], proc) *
+                                                    instance->getComputationalDag().nodeCommunicationWeight(node);
+            }
+        }
+    }
+
+    unsigned costs = 0;
+    for (unsigned step = 0; step < number_of_supersteps; step++) {
+        unsigned max_send = 0;
+        unsigned max_rec = 0;
+
+        for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
+            if (max_send < send[proc][step])
+                max_send = send[proc][step];
+            if (max_rec < rec[proc][step])
+                max_rec = rec[proc][step];
+        }
+
+        costs += std::max(max_send, max_rec);
+    }
+
+
+    return costs;
+}
+
+
+
 double BspSchedule::computeCostsTotalCommunication() const {
 
     assert(satisfiesPrecedenceConstraints());
@@ -600,4 +678,56 @@ double BspSchedule::computeCostsTotalCommunication() const {
 
     return total_work + total_communication * instance->communicationCosts() * (1.0 / instance->numberOfProcessors()) +
            (number_of_supersteps - 1) * instance->synchronisationCosts();
+}
+
+double BspSchedule::computeBaseCommCostsTotalCommunication() const {
+
+    assert(satisfiesPrecedenceConstraints());
+
+    double total_communication = 0;
+
+    for (const auto &edge : instance->getComputationalDag().edges()) {
+
+        const unsigned &source = instance->getComputationalDag().source(edge);
+        const unsigned &target = instance->getComputationalDag().target(edge);
+
+        if (node_to_processor_assignment[source] != node_to_processor_assignment[target]) {
+            total_communication +=
+                instance->sendCosts(node_to_processor_assignment[source], node_to_processor_assignment[target]) *
+                instance->getComputationalDag().nodeCommunicationWeight(source);
+        }
+    }
+
+    return total_communication * (1.0 / instance->numberOfProcessors());
+}
+
+
+
+unsigned BspSchedule::computeBaseCommCost() const{
+    std::vector<std::vector<unsigned>> rec(number_of_supersteps,
+                                           std::vector<unsigned>(instance->numberOfProcessors(), 0));
+    std::vector<std::vector<unsigned>> send(number_of_supersteps,
+                                            std::vector<unsigned>(instance->numberOfProcessors(), 0));
+
+    for (auto const &[key, val] : commSchedule) {
+
+        send[val][get<1>(key)] += instance->getComputationalDag().nodeCommunicationWeight(get<0>(key));
+        rec[val][get<2>(key)] += instance->getComputationalDag().nodeCommunicationWeight(get<0>(key));
+    }
+
+    unsigned base_comm_cost = 0;
+    for (unsigned step = 0; step < number_of_supersteps; step++) {
+
+        unsigned max_comm = 0;
+
+        for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
+            if (max_comm < send[step][proc])
+                max_comm = send[step][proc];
+            if (max_comm < rec[step][proc])
+                max_comm = rec[step][proc];
+        }
+
+        base_comm_cost += max_comm;
+    }
+    return base_comm_cost;
 }

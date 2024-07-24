@@ -31,14 +31,17 @@ limitations under the License.
  * 
  */
 struct HDagg_parameters {
+    enum BALANCE_FUNC { MAXIMUM, XLOGX };
+
     float balance_threshhold;
     unsigned hillclimb_balancer_iterations;
     bool hungarian_alg;
+    BALANCE_FUNC balance_function;
 
     HDagg_parameters(float balance_threshhold_ = 1.1, unsigned hillclimb_balancer_iterations_ = 5,
-                     bool hungarian_alg_ = true)
+                     bool hungarian_alg_ = true, BALANCE_FUNC balance_function_ = MAXIMUM)
         : balance_threshhold(balance_threshhold_), hillclimb_balancer_iterations(hillclimb_balancer_iterations_),
-          hungarian_alg(hungarian_alg_) {}
+          hungarian_alg(hungarian_alg_), balance_function(balance_function_) {}
 };
 
 /**

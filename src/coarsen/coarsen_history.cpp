@@ -200,7 +200,10 @@ int CoarsenHistory::run_and_add_contraction(const contract_edge_sort edge_sort_t
 
 void CoarsenHistory::run_dag_evolution(const int min_number_of_nodes)
 {
-    std::cout << "Coarsen Step: " << dag_evolution.size() << ", Number of nodes: " << dag_evolution.back()->n << std::endl;
+    std::cout   << "Coarsen Step: " << dag_evolution.size()
+                << ", Number of nodes: " << dag_evolution.back()->n
+                << ", Number of edges: " << dag_evolution.back()->comm_edge_W.size()
+                << ", Log ratio: " << std::log(dag_evolution.back()->comm_edge_W.size()) / std::log(dag_evolution.back()->n) << std::endl;
 
     Biased_Random_with_side_bias coin( coarsen_par.edge_sort_ratio );
     int no_change_in_a_row = 0;
@@ -213,7 +216,10 @@ void CoarsenHistory::run_dag_evolution(const int min_number_of_nodes)
         else {
             diff = run_and_add_contraction(Contract_Edge_Weight);
         }
-        std::cout << "Coarsen Step: " << dag_evolution.size() << ", Number of nodes: " << dag_evolution.back()->n << std::endl;
+        std::cout   << "Coarsen Step: " << dag_evolution.size()
+                    << ", Number of nodes: " << dag_evolution.back()->n
+                    << ", Number of edges: " << dag_evolution.back()->comm_edge_W.size()
+                    << ", Log ratio: " << std::log(dag_evolution.back()->comm_edge_W.size()) / std::log(dag_evolution.back()->n) << std::endl;
         
         if (diff == 0) {
             no_change_in_a_row++;

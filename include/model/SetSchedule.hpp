@@ -44,21 +44,21 @@ class SetSchedule : public IBspSchedule {
   public:
     unsigned number_of_supersteps;
 
-    std::vector<std::vector<std::unordered_set<unsigned>>> step_processor_vertices;
+    std::vector<std::vector<std::unordered_set<VertexType>>> step_processor_vertices;
 
     SetSchedule() = default;
 
     SetSchedule(const BspInstance &inst, unsigned num_supersteps)
         : instance(&inst), number_of_supersteps(num_supersteps) {
 
-        step_processor_vertices = std::vector<std::vector<std::unordered_set<unsigned>>>(num_supersteps, std::vector<std::unordered_set<unsigned>>(
+        step_processor_vertices = std::vector<std::vector<std::unordered_set<VertexType>>>(num_supersteps, std::vector<std::unordered_set<VertexType>>(
             inst.numberOfProcessors()));
     }
 
     SetSchedule(const IBspSchedule &schedule)
         : instance(&schedule.getInstance()), number_of_supersteps(schedule.numberOfSupersteps()) {
 
-        step_processor_vertices = std::vector<std::vector<std::unordered_set<unsigned>>>(schedule.numberOfSupersteps(), std::vector<std::unordered_set<unsigned>>(schedule.getInstance().numberOfProcessors()));
+        step_processor_vertices = std::vector<std::vector<std::unordered_set<VertexType>>>(schedule.numberOfSupersteps(), std::vector<std::unordered_set<VertexType>>(schedule.getInstance().numberOfProcessors()));
 
         for (unsigned i = 0; i < schedule.getInstance().numberOfVertices(); i++) {
 

@@ -35,14 +35,13 @@ class BspInstance {
     ComputationalDag cdag;
     BspArchitecture architecture;
 
-    bool allow_recomputation;
 
   public:
 
     /**
      * @brief Default constructor for the BspInstance class.
      */
-    BspInstance() : allow_recomputation(false) {}
+    BspInstance() = default;
 
     /**
      * @brief Constructs a BspInstance object with the specified computational DAG and BSP architecture.
@@ -51,7 +50,7 @@ class BspInstance {
      * @param architecture The BSP architecture for the instance.
      */
     BspInstance(ComputationalDag cdag, BspArchitecture architecture)
-        : cdag(cdag), architecture(architecture), allow_recomputation(false) {}
+        : cdag(cdag), architecture(architecture) {}
 
     /**
      * @brief Returns a reference to the BSP architecture for the instance.
@@ -100,15 +99,6 @@ class BspInstance {
     inline unsigned int numberOfProcessors() const { return architecture.numberOfProcessors(); }
 
     
-    inline bool allowRecomputation() const { return allow_recomputation; }
-    
-    /**
-     * @brief Sets whether recomputation is allowed for the instance.
-     *
-     * @param value_ True if recomputation is allowed, false otherwise.
-     */
-    inline void setRecomputation(bool value_) { allow_recomputation = value_; }
-
     /**
      * @brief Returns the communication costs between two processors.
      *
@@ -163,6 +153,8 @@ class BspInstance {
      */
     inline bool isNumaInstance() const { return architecture.isNumaArchitecture(); }
 
+    inline unsigned memoryBound() const { return architecture.memoryBound(); }
+    inline unsigned memoryBound(unsigned proc) const { return architecture.memoryBound(proc); }
 
     /**
      * @brief Sets the communication costs of the BSP architecture.

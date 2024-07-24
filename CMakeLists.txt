@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(BSP-Scheduling VERSION 0.1.0 LANGUAGES CXX)
+project(one-stop-parallel VERSION 0.1.0 LANGUAGES CXX)
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
@@ -9,7 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_subdirectory(.githooks)
 
 add_compile_options(
-    "-O3" "-DNDEBUG" "-Wall" "-Wfatal-errors" #"-g"
+    "-O3" "-DNDEBUG" "-Wall" "-Wfatal-errors"
 )
 
 # Include directories
@@ -17,10 +17,11 @@ include_directories(include)
 
 # Find Boost libraries
 set(Boost_USE_STATIC_LIBS ON)
-find_package(Boost 1.37.0 REQUIRED COMPONENTS graph log log_setup OPTIONAL_COMPONENTS unit_test_framework )
+find_package(Boost 1.37.0 REQUIRED COMPONENTS graph log log_setup OPTIONAL_COMPONENTS)
 include_directories(${Boost_INCLUDE_DIRS})
 
 configure_file(main_config.json main_config.json COPYONLY)
+configure_file(main_config.json test_suite/main_config.json COPYONLY)
 
 # Find pthread library
 set(THREADS_PREFER_PTHREAD_FLAG ON)
@@ -33,11 +34,14 @@ find_package(OpenMP REQUIRED)
 add_subdirectory(src)
 
 # Add the main executable
-add_executable(main main.cpp)
-target_link_libraries(main PRIVATE BspSchedulingLibrary)
+add_executable(OneStopParllel main.cpp)
+target_link_libraries(OneStopParllel PRIVATE BspSchedulingLibrary)
 
 # Add subdirectory for examples
 add_subdirectory(examples)
+
+# Add subdirectory for test_suite
+add_subdirectory(test_suite)
 
 
 # Add the documentation command

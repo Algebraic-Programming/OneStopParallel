@@ -17,7 +17,7 @@ limitations under the License.
 =#
 
 import Pkg
-Pkg.activate("../../third/SankeyPlots/SankeyPlots_version.jl")
+Pkg.activate("SankeyPlots_version.jl")
 
 import SankeyPlots_version
 import PlotUtils

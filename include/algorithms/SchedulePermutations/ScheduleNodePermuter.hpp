@@ -20,6 +20,7 @@ limitations under the License.
 
 #include <vector>
 #include <algorithm>
+#include <queue>
 
 #include "model/BspSchedule.hpp"
 
@@ -32,7 +33,16 @@ enum SCHEDULE_NODE_PERMUTATION_MODES { LOOP_PROCESSORS, SNAKE_PROCESSORS, PROCES
  * @param mode ordering of processors
  * @return std::vector<size_t> vec[prev_node_name] = new_node_name(location)
  */
-std::vector<size_t> schedule_node_permuter(const BspSchedule& sched, unsigned cache_line_size, const SCHEDULE_NODE_PERMUTATION_MODES mode = SNAKE_PROCESSORS, const bool simplified = false);
+std::vector<size_t> schedule_node_permuter(const BspSchedule& sched, unsigned cache_line_size, const SCHEDULE_NODE_PERMUTATION_MODES mode = LOOP_PROCESSORS, const bool simplified = false);
+
+/**
+ * @brief Computes a permutation to improve locality of a schedule, looping through processors
+ * 
+ * @param sched BSP Schedule
+ * @param mode ordering of processors
+ * @return std::vector<size_t> vec[prev_node_name] = new_node_name(location)
+ */
+std::vector<size_t> schedule_node_permuter_basic(const BspSchedule& sched, const SCHEDULE_NODE_PERMUTATION_MODES mode = LOOP_PROCESSORS);
 
 /**
  * @brief Improves the sorting of nodes for data locality in the interior of a superstep
@@ -41,6 +51,14 @@ std::vector<size_t> schedule_node_permuter(const BspSchedule& sched, unsigned ca
  * @param sched BSP Schedule
  */
 void topological_sort_for_data_locality_interior(std::vector<size_t>& nodes, const BspSchedule& sched, unsigned cache_line_size);
+
+/**
+ * @brief Improves the sorting of nodes for data locality in the interior of a superstep
+ * 
+ * @param nodes Node subset
+ * @param sched BSP Schedule
+ */
+void topological_sort_for_data_locality_interior_basic(std::vector<size_t>& nodes, const BspSchedule& sched);
 
 /**
  * @brief Improves the sorting of nodes for data locality on the beginning of a superstep

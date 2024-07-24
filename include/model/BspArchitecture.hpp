@@ -188,7 +188,10 @@ class BspArchitecture {
      *
      * @param memory_bound_ The memory bound to be set.
      */
-    inline void setMemoryBound(unsigned int memory_bound_) { memory_bound = memory_bound_; }
+    inline void setMemoryBound(unsigned memory_bound_) { memory_bound = memory_bound_; }
+
+    inline void setMemoryBound(unsigned memory_bound_, unsigned proc) { memory_bound = memory_bound_; }
+
 
     /**
      * @brief Sets the synchronization costs for the BspArchitecture.
@@ -236,6 +239,8 @@ class BspArchitecture {
      * @return The memory bound as an unsigned integer.
      */
     inline unsigned memoryBound() const { return memory_bound; }
+
+    inline unsigned memoryBound(unsigned proc) const { return memory_bound; }
 
     /**
      * Returns the number of processors in the architecture.

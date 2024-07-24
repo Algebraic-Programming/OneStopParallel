@@ -82,7 +82,7 @@ void SetSchedule::mergeSupersteps(unsigned start_step, unsigned end_step) {
 
         for (unsigned proc = 0; proc < getInstance().numberOfProcessors(); proc++) {
 
-            step_processor_vertices[step - (end_step - start_step)][proc].merge(step_processor_vertices[step][proc]);
+            step_processor_vertices[step - (end_step - start_step)][proc] = std::move(step_processor_vertices[step][proc]);
         }
     }
 }
@@ -94,7 +94,7 @@ void SetSchedule::insertSupersteps(unsigned step_before, unsigned num_new_steps)
     for (unsigned step = step_before + 1; step < number_of_supersteps; step++) {
 
         step_processor_vertices.push_back(step_processor_vertices[step]);
-        step_processor_vertices[step] = std::vector<std::unordered_set<unsigned>>(getInstance().numberOfProcessors());
+        step_processor_vertices[step] = std::vector<std::unordered_set<VertexType>>(getInstance().numberOfProcessors());
 
     }
 

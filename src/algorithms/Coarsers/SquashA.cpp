@@ -131,13 +131,16 @@ int SquashA::run_and_add_contraction(const contract_edge_sort edge_sort_type) {
 
 
     // Getting components to contract and adding graph contraction
-    if (num_nodes_decrease > 0 ) {
+    int min_node_decrease = last_dag.n - int( last_dag.n / std::pow(coarsen_par.geom_decay_num_nodes, 0.25) );
+    if (num_nodes_decrease > 0 && num_nodes_decrease >= min_node_decrease) {
         std::vector<std::vector<int>> partition_vec = connected_components.get_connected_components();
         std::vector<std::unordered_set<VertexType>> partition;
         for ( auto& vec : partition_vec ) {
             partition.emplace_back(vec.cbegin(), vec.cend());
         }
         add_contraction(partition);
+    } else {
+        num_nodes_decrease = 0;
     }
     return num_nodes_decrease;
 
@@ -147,7 +150,10 @@ RETURN_STATUS SquashA::run_contractions() {
     if (min_nodes == 0) {
         min_nodes = original_inst->numberOfProcessors() * 1000;
     }
-    std::cout << "Coarsen Step: " << dag_history.size() << ", Number of nodes: " << dag_history.back()->numberOfVertices() << std::endl;
+    std::cout   << "Coarsen Step: " << dag_history.size()
+                << ", Number of nodes: " << dag_history.back()->numberOfVertices()
+                << ", Number of edges: " << dag_history.back()->getComputationalDag().numberOfEdges()
+                << ", Log ratio: " << std::log(dag_history.back()->getComputationalDag().numberOfEdges()) / std::log(dag_history.back()->numberOfVertices()) << std::endl;
 
     Biased_Random_with_side_bias coin( coarsen_par.edge_sort_ratio );
     int no_change_in_a_row = 0;
@@ -159,7 +165,10 @@ RETURN_STATUS SquashA::run_contractions() {
         else {
             diff = run_and_add_contraction(Contract_Edge_Weight);
         }
-        std::cout << "Coarsen Step: " << dag_history.size() << ", Number of nodes: " << dag_history.back()->numberOfVertices() << std::endl;
+        std::cout   << "Coarsen Step: " << dag_history.size()
+                    << ", Number of nodes: " << dag_history.back()->numberOfVertices()
+                    << ", Number of edges: " << dag_history.back()->getComputationalDag().numberOfEdges()
+                    << ", Log ratio: " << std::log(dag_history.back()->getComputationalDag().numberOfEdges()) / std::log(dag_history.back()->numberOfVertices()) << std::endl;
         
         if (diff == 0) {
             no_change_in_a_row++;

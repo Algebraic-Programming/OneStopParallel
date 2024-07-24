@@ -18,6 +18,16 @@ limitations under the License.
 
 #include "algorithms/SubArchitectureSchedulers/SubArchitectures.hpp"
 
+void SubArchitectureScheduler::setTimeLimitSeconds(unsigned int limit) {
+    timeLimitSeconds = limit;
+    if (scheduler) scheduler->setTimeLimitHours(limit);
+}
+
+void SubArchitectureScheduler::setTimeLimitHours(unsigned int limit) {
+    timeLimitSeconds = limit * 3600;
+    if (scheduler) scheduler->setTimeLimitHours(limit);
+}
+
 void SubArchitectureScheduler::min_symmetric_sub_sum( const std::vector<std::vector<unsigned>>& matrix,
                             const size_t size,
                             std::vector<unsigned>& current_processors,

@@ -13,12 +13,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner   
+@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 
 #pragma once
 
+#include <algorithm>
 #include <chrono>
+#include <deque>
 #include <limits>
 #include <list>
 #include <map>
@@ -29,12 +31,15 @@ limitations under the License.
 #include <unordered_set>
 #include <vector>
 
+#include "boost_extensions/transitive_edge_reduction.hpp"
 #include <boost/heap/fibonacci_heap.hpp>
 
 #include "algorithms/ImprovementScheduler.hpp"
 #include "auxiliary/auxiliary.hpp"
 #include "model/SetSchedule.hpp"
 #include "model/VectorSchedule.hpp"
+
+//#define LK_DEBUG
 
 template<typename T>
 class LKBase : public ImprovementScheduler {
@@ -47,12 +52,17 @@ class LKBase : public ImprovementScheduler {
         double gain;
         T change_in_cost;
 
+        unsigned from_proc;
+        unsigned from_step;
+
         unsigned to_proc;
         unsigned to_step;
 
-        Move() : node(0), gain(0), change_in_cost(0), to_proc(0), to_step(0) {}
-        Move(VertexType node, double gain, T change_cost, unsigned to_proc, unsigned to_step)
-            : node(node), gain(gain), change_in_cost(change_cost), to_proc(to_proc), to_step(to_step) {}
+        Move() : node(0), gain(0), change_in_cost(0), from_proc(0), from_step(0), to_proc(0), to_step(0) {}
+        Move(VertexType node, double gain, T change_cost, unsigned from_proc, unsigned from_step, unsigned to_proc,
+             unsigned to_step)
+            : node(node), gain(gain), change_in_cost(change_cost), from_proc(from_proc), from_step(from_step),
+              to_proc(to_proc), to_step(to_step) {}
 
         bool operator<(Move const &rhs) const { return gain < rhs.gain; }
     };
@@ -60,17 +70,23 @@ class LKBase : public ImprovementScheduler {
     boost::heap::fibonacci_heap<Move> max_gain_heap;
     using heap_handle = typename boost::heap::fibonacci_heap<Move>::handle_type;
 
-    std::vector<heap_handle> node_heap_handles;
+    std::unordered_map<VertexType, heap_handle> node_heap_handles;
 
     unsigned counter = 0;
+    unsigned step_selection_counter = 1;
+    unsigned epoch_counter = 0;
+
+    double current_cost = 0;
 
     std::mt19937 gen;
+    //
 
     // current schedule
     VectorSchedule vector_schedule;
     SetSchedule set_schedule;
 
     const BspInstance *instance;
+
     BspSchedule *best_schedule;
     T best_schedule_costs;
 
@@ -80,8 +96,12 @@ class LKBase : public ImprovementScheduler {
 
     // std::vector<unsigned> best_node_step, best_node_proc;
 
+    std::unordered_set<VertexType> node_selection;
+
     std::vector<std::vector<std::vector<double>>> node_gains;
     std::vector<std::vector<std::vector<T>>> node_change_in_costs;
+
+    std::vector<std::vector<unsigned>> step_processor_memory;
 
     std::vector<std::vector<T>> step_processor_work;
     std::vector<std::vector<T>> step_processor_send;
@@ -98,32 +118,35 @@ class LKBase : public ImprovementScheduler {
     bool current_feasible;
     std::unordered_set<EdgeType, EdgeType_hash> current_violations; // edges
 
-    std::vector<bool> in_heap;
-    std::vector<bool> locked;
-    std::vector<unsigned> unlock;
     std::unordered_set<VertexType> locked_nodes;
+    std::vector<unsigned> unlock;
 
     virtual void commputeCommGain(unsigned node, unsigned current_step, unsigned current_proc, unsigned new_proc) = 0;
-    virtual void update_superstep_datastructures(Move move, unsigned from_proc, unsigned from_step) = 0;
+    virtual void update_superstep_datastructures(Move move) = 0;
     virtual void compute_superstep_datastructures() = 0;
-    virtual T current_costs() = 0;
+    virtual T compute_current_costs() = 0;
 
     virtual void computeNodeGain(unsigned node);
     virtual void computeWorkGain(unsigned node, unsigned current_step, unsigned current_proc, unsigned new_proc);
 
-    virtual void applyMove(Move move, unsigned from_proc, unsigned from_step);
-    virtual void updateNodesGainAfterMove(Move move, unsigned from_proc, unsigned from_step);
-    virtual std::unordered_set<VertexType> collectNodesToUpdate(Move move, unsigned from_proc, unsigned from_step);
-    virtual void updateMaxGainUnlockedNeighbors(VertexType node);
+    virtual void applyMove(Move move, bool update = true);
+    virtual void reverseMove(Move move, bool update = true);
 
-    virtual void updateViolations(VertexType node);
+    virtual void compute_superstep_work_datastructures(unsigned start_step, unsigned end_step);
+
+    virtual void collectNodesToUpdate(Move move, std::unordered_set<VertexType> &nodes);
+
+    virtual void updateViolations(VertexType node, std::unordered_map<VertexType, EdgeType> &new_violations,
+                                  std::unordered_set<EdgeType, EdgeType_hash> *resolved_violations = nullptr);
 
     virtual double computeMaxGain(VertexType node);
+    virtual std::pair<unsigned, unsigned> best_move_change_superstep(VertexType node);
+    virtual Move compute_best_move(VertexType node);
 
     virtual void recompute_superstep_max_work(unsigned step);
     virtual void initalize_datastructures();
     virtual void initalize_superstep_datastructures();
-    virtual void initalize_gain_heap();
+
     virtual void initalize_gain_heap(const std::unordered_set<VertexType> &nodes);
 
     virtual void cleanup_datastructures();
@@ -136,48 +159,56 @@ class LKBase : public ImprovementScheduler {
     virtual void setup_gain_heap_unlocked_nodes();
 
     virtual void resetGainHeap();
-    virtual void computeUnlockedNodesGain();
 
     virtual Move findMove();
 
-    virtual bool start();
+    virtual bool start() = 0;
+
     virtual void resetLockedNodes();
     virtual bool unlockNode(VertexType node);
     virtual void unlockEdge(EdgeType edge);
-    virtual void unlockNeighbours(VertexType node, std::unordered_set<VertexType> &unlocked);
-    virtual void unlockEdgeNeighbors(EdgeType edge);
-    virtual void lockAll();
-    virtual void unlockViolationEdges();
+    virtual void unlockNeighbours(Move move, std::unordered_set<VertexType> &unlocked);
+    virtual void unlockEdgeNeighbors(EdgeType edge, std::unordered_set<VertexType> &unlocked);
 
     virtual void updateNodesGain(const std::unordered_set<VertexType> &nodes);
 
     virtual void setCurrentSchedule(const IBspSchedule &schedule);
     virtual void setBestSchedule(const IBspSchedule &schedule);
-    virtual void reverseMoveBestSchedule(Move move, unsigned from_proc, unsigned from_step);
+    virtual void reverseMoveBestSchedule(Move move);
 
     virtual std::unordered_set<VertexType> selectNodesThreshold();
+    virtual std::unordered_set<VertexType> selectNodesConseqSteps(unsigned threshold);
+    virtual std::unordered_set<VertexType> selectNodesConseqStepsMaxWork(unsigned threshold);
     virtual std::unordered_set<VertexType> selectNodesThreshold(unsigned threshold);
     virtual std::unordered_set<VertexType> selectNodesPermutationThreshold();
     virtual std::unordered_set<VertexType> selectNodesPermutationThreshold(unsigned threshold);
     virtual std::unordered_set<VertexType> selectNodesCollision(unsigned num = 5);
 
-    virtual bool checkAbortCondition(Move &move);
-    std::vector<double> circularBuffer;
+    virtual std::unordered_set<VertexType> selectNodesConseqStepsReduceNumSteps(unsigned threshold);
+
+    virtual std::unordered_set<VertexType> selectNodesFindRemoveSteps(unsigned threshold);
 
     virtual void setParameters();
+
+    virtual void select_nodes();
 
     virtual void checkMergeSupersteps();
     virtual void checkInsertSuperstep();
 
     virtual void insertSuperstep(unsigned step);
 
+    virtual bool check_remove_superstep(unsigned step);
+    virtual void remove_superstep(unsigned step);
+
     void printHeap();
+
+    unsigned max_epochs;
+
+    unsigned max_inner_iterations;
 
     unsigned max_num_unlocks;
     unsigned max_iterations;
-    unsigned max_iterations_inner;
     unsigned selection_threshold;
-    unsigned abort_threshold;
 
     double penalty_factor;
     double base_penalty_factor;
@@ -185,11 +216,18 @@ class LKBase : public ImprovementScheduler {
     double base_reward_factor;
     double base_reward;
 
+    bool compute_with_time_limit = false;
+    bool use_memory_constraint = false;
+    bool contract_transitive_edges = false;
+
+    bool quick_pass = false;
+    int initial_depth = 3;
+
   public:
     LKBase()
-        : ImprovementScheduler(), best_schedule_costs(0), current_feasible(true), max_num_unlocks(3),
-          max_iterations(500), penalty_factor(1.0), base_penalty_factor(7.0), reward_factor(1.0),
-          base_reward_factor(10.0), base_reward(1.0) {
+        : ImprovementScheduler(), best_schedule_costs(0), current_feasible(true), max_epochs(20), max_num_unlocks(3),
+          max_iterations(500), penalty_factor(1.0), base_penalty_factor(20.0), reward_factor(1.0),
+          base_reward_factor(5.0), base_reward(1.0) {
 
         std::random_device rd;
         gen = std::mt19937(rd());
@@ -198,48 +236,85 @@ class LKBase : public ImprovementScheduler {
     virtual ~LKBase() = default;
 
     virtual RETURN_STATUS improveSchedule(BspSchedule &schedule) override;
+    virtual RETURN_STATUS improveScheduleWithTimeLimit(BspSchedule &schedule) override;
+
+    virtual void setTimeLimitSeconds(unsigned limit) override;
+
+    virtual void setUseMemoryConstraint(bool use_memory_constraint_) override {
+        use_memory_constraint = use_memory_constraint_;
+    }
+
+    virtual void setContractTransitiveEdges(bool contract_transitive_edges_) {
+        contract_transitive_edges = contract_transitive_edges_;
+    }
 
     virtual std::string getScheduleName() const = 0;
+
+    virtual void set_quick_pass(bool quick_pass_) { quick_pass = quick_pass_; }
 };
+
+template<typename T>
+void LKBase<T>::setTimeLimitSeconds(unsigned limit) {
+
+    compute_with_time_limit = true;
+    timeLimitSeconds = limit;
+}
+
+template<typename T>
+void LKBase<T>::select_nodes() {
+
+    node_selection = selectNodesFindRemoveSteps(selection_threshold);
+
+   
+}
 
 template<typename T>
 void LKBase<T>::setParameters() {
 
     max_num_unlocks = 3;
-    abort_threshold = 20;
+    max_inner_iterations = 500;
 
     if (num_nodes < 250) {
 
-        max_iterations = 50;
+        max_iterations = 100;
 
         selection_threshold = num_nodes * 0.33;
 
-        max_iterations_inner = num_nodes;
-
     } else if (num_nodes < 1000) {
 
-        max_iterations = std::sqrt(num_nodes) * 2;
+        max_iterations = num_nodes / 2;
 
-        selection_threshold = num_nodes * 0.15;
-
-        max_iterations_inner = 8 * std::sqrt(num_nodes);
+        selection_threshold = num_nodes * 0.33;
 
     } else if (num_nodes < 5000) {
 
-        max_iterations = std::log(num_nodes) * 14;
+        max_iterations = 4 * std::sqrt(num_nodes);
 
-        selection_threshold = num_nodes * 0.10;
+        selection_threshold = num_nodes * 0.33;
 
-        max_iterations_inner = 4 * std::sqrt(num_nodes);
+    } else if (num_nodes < 10000) {
+
+        max_iterations = 3 * std::sqrt(num_nodes);
+
+        selection_threshold = num_nodes * 0.33;
+
+    } else if (num_nodes < 50000) {
+
+        max_iterations = std::sqrt(num_nodes);
+
+        selection_threshold = num_nodes * 0.2;
 
     } else {
 
-        max_iterations = 4 * std::sqrt(num_nodes) ;
+        max_iterations = std::sqrt(num_nodes);
 
         selection_threshold = num_nodes * 0.20;
+    }
 
-        max_iterations_inner = 6 * std::sqrt(num_nodes);
-
+    if (quick_pass) {
+        max_epochs = 2;
+        max_iterations *= .5;
+        selection_threshold *= .75;
     }
 }
 
@@ -248,10 +323,54 @@ RETURN_STATUS LKBase<T>::improveSchedule(BspSchedule &schedule) {
 
     best_schedule = &schedule;
 
+    if (contract_transitive_edges) {
+
+        auto g = best_schedule->getInstance().getComputationalDag().getGraph();
+        approx_transitive_edge_reduction filter(g);
+
+        boost::filtered_graph<GraphType, approx_transitive_edge_reduction> fg(g, filter);
+
+        ComputationalDag f_dag;
+        boost::copy_graph(fg, f_dag.getGraph());
+
+        BspInstance *f_instance = new BspInstance(f_dag, best_schedule->getInstance().getArchitecture());
+
+        instance = f_instance;
+    } else {
+        instance = &best_schedule->getInstance();
+    }
+
+    num_nodes = instance->numberOfVertices();
+    num_procs = instance->numberOfProcessors();
+    num_steps = best_schedule->numberOfSupersteps();
+
+    bool improvement_found = start();
+
+    assert(best_schedule->satisfiesPrecedenceConstraints());
+
+    if (contract_transitive_edges) {
+        delete instance;
+    }
+
+    schedule.setImprovedLazyCommunicationSchedule();
+
+    if (improvement_found)
+        return SUCCESS;
+    else
+        return BEST_FOUND;
+};
+
+template<typename T>
+RETURN_STATUS LKBase<T>::improveScheduleWithTimeLimit(BspSchedule &schedule) {
+
+    best_schedule = &schedule;
+
     instance = &best_schedule->getInstance();
     num_nodes = instance->numberOfVertices();
     num_procs = instance->numberOfProcessors();
     num_steps = best_schedule->numberOfSupersteps();
+
+    compute_with_time_limit = true;
 
     bool improvement_found = start();
 
@@ -266,195 +385,51 @@ RETURN_STATUS LKBase<T>::improveSchedule(BspSchedule &schedule) {
 };
 
 template<typename T>
-bool LKBase<T>::start() {
+void LKBase<T>::remove_superstep(unsigned step) {
 
-    vector_schedule = VectorSchedule(*best_schedule);
-    set_schedule = SetSchedule(*best_schedule);
+    assert(step < num_steps);
 
-    initializeRewardPenaltyFactors();
-    initalize_datastructures();
-    compute_superstep_datastructures();
+    for (unsigned proc = 0; proc < num_procs; proc++) {
+        for (const auto &node : set_schedule.step_processor_vertices[step][proc]) {
 
-    best_schedule_costs = current_costs();
+            computeNodeGain(node);
+            auto pair = best_move_change_superstep(node);
 
-    T initial_costs = best_schedule_costs;
-    T current_costs = initial_costs;
+            vector_schedule.setAssignedSuperstep(node, pair.first);
+            vector_schedule.setAssignedProcessor(node, pair.second);
 
-    std::cout << getScheduleName() << " start() best schedule costs: " << best_schedule_costs << std::endl;
+            set_schedule.step_processor_vertices[pair.first][pair.second].insert(node);
 
-    setParameters();
-
-    initalize_gain_heap();
-
-    //  std::cout << "Initial costs " << current_costs() << std::endl;
-    unsigned improvement_counter = 0;
-
-    for (unsigned i = 0; i < max_iterations; i++) {
-
-        // std::cout << "begin iter costs: " << current_costs() << std::endl;
-
-        unsigned failed_branches = 0;
-        T best_iter_costs = current_costs;
-        counter = 0;
-
-        while (failed_branches < 3 && locked_nodes.size() < max_iterations_inner && max_gain_heap.size() > 0) {
-
-            // std::cout << "failed branches: " << failed_branches << std::endl;
-
-            Move best_move = findMove(); // O(log n)
-
-            unsigned current_proc = vector_schedule.assignedProcessor(best_move.node);
-            unsigned current_step = vector_schedule.assignedSuperstep(best_move.node);
-
-            applyMove(best_move, current_proc, current_step); // O(p + log n)
-
-            current_costs -= best_move.change_in_cost;
-
-            // std::cout << "current costs: " << current_costs << " best move gain: " << best_move.gain
-            //           << " best move costs: " << best_move.change_in_cost << std::endl;
-
-            locked_nodes.insert(best_move.node);
-            locked[best_move.node] = true;
-
-            updateViolations(best_move.node); // O(Delta_max * log(current_violations.size())
-
-            updateRewardPenaltyFactors();
-
-            std::unordered_set<VertexType> nodes_to_update =
-                collectNodesToUpdate(best_move, current_proc, current_step);
-            unlockNeighbours(best_move.node, nodes_to_update);
-            updateNodesGain(nodes_to_update);
-
-            if (best_move.change_in_cost < 0 && current_violations.empty() && current_feasible) {
-
-                if (best_schedule_costs > current_costs + best_move.change_in_cost) {
-
-                    //                    std::cout << "costs increased .. save best schedule with costs "
-                    //                              << current_costs + best_move.change_in_cost << std::endl;
-
-                    best_schedule_costs = current_costs + best_move.change_in_cost;
-                    setBestSchedule(vector_schedule); // O(n)
-                    reverseMoveBestSchedule(best_move, current_proc, current_step);
-                }
-            }
-
-            if (current_violations.empty() && not current_feasible) {
-
-                //                std::cout << "<=============== moved from infeasible to feasible" << std::endl;
-                current_feasible = true;
-
-                if (current_costs <= best_schedule_costs) {
-                    //                    std::cout << "new schdule better than previous best schedule" << std::endl;
-
-                    //                setBestSchedule(vector_schedule);
-                    //                best_schedule_costs = current_costs;
-                } else {
-
-                    //                    std::cout << "... but costs did not improve: " << current_costs
-                    //                              << " vs best schedule: " << best_schedule_costs << std::endl;
-
-                    if (current_costs > (1.1 - counter * 0.001) * best_schedule_costs) {
-                        //                        std::cout << "rollback to best schedule" << std::endl;
-                        setCurrentSchedule(*best_schedule); // O(n + p*s)
-                        compute_superstep_datastructures(); // O(n)
-                        current_costs = best_schedule_costs;
-                        current_violations.clear();
-                        current_feasible = true;
-                        resetGainHeap();
-                        setup_gain_heap_unlocked_nodes();
-                        counter = 0;
-                        failed_branches++;
-                    }
-                }
-
-            } else if (not current_violations.empty() && current_feasible) {
-                //                std::cout << "================> moved from feasible to infeasible" << std::endl;
-                current_feasible = false;
-
-                // unlockNeighbours(best_move.node);
-
-                if (current_costs + best_move.change_in_cost <= best_schedule_costs) {
-                    //                    std::cout << "save best schedule with costs " << current_costs +
-                    //                    best_move.change_in_cost
-                    //                              << std::endl;
-                    best_schedule_costs = current_costs + best_move.change_in_cost;
-                    setBestSchedule(vector_schedule); // O(n)
-                    reverseMoveBestSchedule(best_move, current_proc, current_step);
-                }
-            }
-
-            if (not current_feasible) {
-
-                if (current_costs > (1.2 - counter * 0.001) * best_schedule_costs) {
-
-                    // std::cout << "current cost " << current_costs
-                    //           << " too far away from best schedule costs: " << best_schedule_costs << "rollback to
-                    //           best schedule" << std::endl;
-
-                    setCurrentSchedule(*best_schedule); // O(n + p*s)
-                    compute_superstep_datastructures(); // O(n)
-                    current_costs = best_schedule_costs;
-                    current_violations.clear();
-                    current_feasible = true;
-                    resetGainHeap();
-                    setup_gain_heap_unlocked_nodes();
-                    counter = 0;
-                    failed_branches++;
-                }
-            }
-
-            counter++;
-
-        } // while
-
-        // std::cout << "current costs end while: " << current_costs_double() << std::endl;
-        // std::cout << "number of violations " << current_violations.size() << std::endl;
-        if (current_violations.empty()) {
-
-            if (current_costs <= best_schedule_costs) {
-                setBestSchedule(vector_schedule);
-                best_schedule_costs = current_costs;
-            }
-
-            resetLockedNodesAndComputeGains();
-
-        } else {
-
-            //            std::cout << "current solution not feasible .. rolling back to best solution with costs "
-            //                      << best_schedule_costs << std::endl;
-
-            resetLockedNodes();
-
-            setCurrentSchedule(*best_schedule); // O (n + p*s)
-
-            compute_superstep_datastructures(); // O(n)
-            current_costs = best_schedule_costs;
-            current_violations.clear();
-            current_feasible = true;
-
-            resetGainHeap();
-            initalize_gain_heap();
+            std::unordered_map<VertexType, EdgeType> q;
+            updateViolations(node, q);
         }
+        set_schedule.step_processor_vertices[step][proc].clear();
+    }
 
-        if (best_iter_costs <= current_costs) {
+    if (step > 0) {
+        vector_schedule.mergeSupersteps(step - 1, step);
+        set_schedule.mergeSupersteps(step - 1, step);
+    } else {
+        vector_schedule.mergeSupersteps(0, 1);
+        set_schedule.mergeSupersteps(0, 1);
+    }
 
-            if (improvement_counter++ == std::log(max_iterations)) {
-                // std::cout << "no improvement ... end local search " << std::endl;
-                break;
-            }
-        } else {
-            improvement_counter = 0;
+    num_steps -= 1;
+    compute_superstep_work_datastructures(step - 1, step);
+
+    for (unsigned i = step + 1; i < num_steps - 1; i++) {
+
+        step_max_work[i] = step_max_work[i + 1];
+        step_second_max_work[i] = step_second_max_work[i + 1];
+
+        for (unsigned proc = 0; proc < num_procs; proc++) {
+
+            step_processor_work[i][proc] = step_processor_work[i + 1][proc];
         }
+    }
 
-    } // for
-
-    std::cout << getScheduleName() << " end best schedule costs: " << best_schedule_costs << std::endl;
-    cleanup_datastructures();
-
-    if (initial_costs > current_costs)
-        return true;
-    else
-        return false;
+    step_second_max_work[num_steps - 1] = 0;
+    step_max_work[num_steps - 1] = 0;
 }
 
 template<typename T>
@@ -472,22 +447,35 @@ void LKBase<T>::checkMergeSupersteps() {
 
             avg_work += step_processor_work[step][proc];
 
-            if (step_max_work[step] < min_work) {
+            if (step_processor_work[step][proc] < min_work) {
                 min_work = step_processor_work[step][proc];
             }
         }
+
+        avg_work = avg_work / num_procs;
+
+        std::cout << "step " << step << " " << " min work: " << min_work << " avg work: " << avg_work
+                  << " max work: " << step_max_work[step] << std::endl;
+    }
+}
+
+template<typename T>
+bool LKBase<T>::check_remove_superstep(unsigned step) {
+
+    unsigned total_work = 0;
+
+    for (unsigned proc = 0; proc < num_procs; proc++) {
+
+        total_work += step_processor_work[step][proc];
     }
 
-    unsigned step = 0;
-    while (step < num_steps - 1) {
+    if (total_work < instance->synchronisationCosts()) {
 
-        if (set_schedule.step_processor_vertices[step].empty()) {
-            set_schedule.mergeSupersteps(step, step + 1);
-            num_steps--;
-        } else {
-            step++;
-        }
+        remove_superstep(step);
+        return true;
     }
+
+    return false;
 }
 
 template<typename T>
@@ -592,7 +580,7 @@ void LKBase<T>::insertSuperstep(unsigned step_before) {
 
                 for (const auto &node : set_schedule.step_processor_vertices[i][proc]) {
 
-                    if (locked[node]) {
+                    if (locked_nodes.find(node) != locked_nodes.end()) {
 
                         if (unlockNode(node)) {
                             computeNodeGain(node);
@@ -610,21 +598,146 @@ void LKBase<T>::insertSuperstep(unsigned step_before) {
 }
 
 template<typename T>
-bool LKBase<T>::checkAbortCondition(Move &move) {
+std::unordered_set<VertexType> LKBase<T>::selectNodesConseqSteps(unsigned threshold) {
 
-    if (circularBuffer.size() < abort_threshold) {
-        circularBuffer.push_back(move.gain);
+    std::unordered_set<VertexType> nodes;
+
+    std::uniform_int_distribution<> dis(0, instance->numberOfProcessors() - 1);
+
+    while (nodes.size() < threshold) {
+        auto proc = dis(gen);
+
+        std::sample(set_schedule.step_processor_vertices[step_selection_counter][proc].begin(),
+                    set_schedule.step_processor_vertices[step_selection_counter][proc].end(),
+                    std::inserter(nodes, nodes.end()), 10, gen);
+    }
+
+    step_selection_counter++;
+    if (step_selection_counter == num_steps) {
+        step_selection_counter = 0;
+        epoch_counter++;
+    }
+    return nodes;
+}
+
+template<typename T>
+std::unordered_set<VertexType> LKBase<T>::selectNodesFindRemoveSteps(unsigned threshold) {
+
+    for (unsigned step_to_remove = step_selection_counter; step_to_remove < num_steps; step_to_remove++) {
+
+        if (check_remove_superstep(step_to_remove)) {
+
+#ifdef LK_DEBUG
+            std::cout << "trying to remove superstep " << step_to_remove << std::endl;
+#endif
+            std::unordered_set<VertexType> nodes;
+
+            for (unsigned proc = 0; proc < num_procs; proc++) {
+
+                nodes.insert(set_schedule.step_processor_vertices[step_selection_counter][proc].begin(),
+                             set_schedule.step_processor_vertices[step_selection_counter][proc].end());
+                nodes.insert(set_schedule.step_processor_vertices[step_selection_counter - 1][proc].begin(),
+                             set_schedule.step_processor_vertices[step_selection_counter - 1][proc].end());
+            }
+
+            step_selection_counter = step_to_remove + 1;
+
+            if (step_selection_counter >= num_steps) {
+                epoch_counter++;
+            }
+
+            return nodes;
+        }
+    }
+
+    return selectNodesThreshold(threshold);
+}
+
+template<typename T>
+std::unordered_set<VertexType> LKBase<T>::selectNodesConseqStepsReduceNumSteps(unsigned threshold) {
+
+    if (step_selection_counter > 0 && check_remove_superstep(step_selection_counter)) {
+
+        std::cout << "trying to reduce nr of supersteps" << std::endl;
+
+        std::unordered_set<VertexType> nodes;
+
+        for (unsigned proc = 0; proc < num_procs; proc++) {
+
+            nodes.insert(set_schedule.step_processor_vertices[step_selection_counter][proc].begin(),
+                         set_schedule.step_processor_vertices[step_selection_counter][proc].end());
+            nodes.insert(set_schedule.step_processor_vertices[step_selection_counter - 1][proc].begin(),
+                         set_schedule.step_processor_vertices[step_selection_counter - 1][proc].end());
+        }
+
+        step_selection_counter++;
+        if (step_selection_counter >= num_steps) {
+            step_selection_counter = 0;
+            epoch_counter++;
+        }
+
+        return nodes;
 
     } else {
-        circularBuffer.erase(circularBuffer.begin());
-        circularBuffer.push_back(move.gain);
+        return selectNodesConseqStepsMaxWork(threshold);
+    }
+}
+
+template<typename T>
+std::unordered_set<VertexType> LKBase<T>::selectNodesConseqStepsMaxWork(unsigned threshold) {
+
+    std::unordered_set<VertexType> nodes;
+
+    unsigned max_work_step = 0;
+    unsigned max_step = 0;
+    unsigned second_max_work_step = 0;
+    unsigned second_max_step = 0;
+
+    for (unsigned proc = 0; proc < num_procs; proc++) {
+
+        if (step_processor_work[step_selection_counter][proc] > max_work_step) {
+            second_max_work_step = max_work_step;
+            second_max_step = max_step;
+            max_work_step = step_processor_work[step_selection_counter][proc];
+            max_step = proc;
+
+        } else if (step_processor_work[step_selection_counter][proc] > second_max_work_step) {
+            second_max_work_step = step_processor_work[step_selection_counter][proc];
+            second_max_step = proc;
+        }
     }
 
-    if (std::accumulate(circularBuffer.begin(), circularBuffer.end(), 0) <= 0) {
-        return true;
+    if (set_schedule.step_processor_vertices[step_selection_counter][max_step].size() < threshold * .66) {
+
+        nodes.insert(set_schedule.step_processor_vertices[step_selection_counter][max_step].begin(),
+                     set_schedule.step_processor_vertices[step_selection_counter][max_step].end());
+
+    } else {
+
+        std::sample(set_schedule.step_processor_vertices[step_selection_counter][max_step].begin(),
+                    set_schedule.step_processor_vertices[step_selection_counter][max_step].end(),
+                    std::inserter(nodes, nodes.end()), (unsigned)std::round(threshold * .66), gen);
     }
 
-    return false;
+    if (set_schedule.step_processor_vertices[step_selection_counter][second_max_step].size() < threshold * .33) {
+
+        nodes.insert(set_schedule.step_processor_vertices[step_selection_counter][second_max_step].begin(),
+                     set_schedule.step_processor_vertices[step_selection_counter][second_max_step].end());
+
+    } else {
+
+        std::sample(set_schedule.step_processor_vertices[step_selection_counter][second_max_step].begin(),
+                    set_schedule.step_processor_vertices[step_selection_counter][second_max_step].end(),
+                    std::inserter(nodes, nodes.end()), (unsigned)std::round(threshold * .33), gen);
+    }
+
+    step_selection_counter++;
+    if (step_selection_counter >= num_steps) {
+        step_selection_counter = 0;
+        epoch_counter++;
+    }
+
+    return nodes;
 }
 
 template<typename T>
@@ -637,7 +750,9 @@ std::unordered_set<VertexType> LKBase<T>::selectNodesThreshold() {
     unsigned threshold = num_nodes * 0.33;
 
     while (nodes.size() < threshold) {
-        nodes.insert(dis(gen));
+        auto node = dis(gen);
+
+        nodes.insert(node);
     }
 
     return nodes;
@@ -651,7 +766,9 @@ std::unordered_set<VertexType> LKBase<T>::selectNodesThreshold(unsigned threshol
     std::uniform_int_distribution<> dis(0, num_nodes - 1);
 
     while (nodes.size() < threshold) {
-        nodes.insert(dis(gen));
+
+        auto node = dis(gen);
+        nodes.insert(node);
     }
 
     return nodes;
@@ -742,25 +859,77 @@ typename LKBase<T>::Move LKBase<T>::findMove() {
     Move best_move = Move((*node_heap_handles[max_nodes[i]]));
 
     max_gain_heap.erase(node_heap_handles[max_nodes[i]]);
-    in_heap[best_move.node] = false;
+    node_heap_handles.erase(max_nodes[i]);
 
     return best_move;
 };
 
 template<typename T>
-void LKBase<T>::applyMove(Move move, unsigned from_proc, unsigned from_step) {
+void LKBase<T>::compute_superstep_work_datastructures(unsigned start_step, unsigned end_step) {
+
+    for (unsigned step = start_step; step <= end_step; step++) {
+
+        step_max_work[step] = 0;
+        step_second_max_work[step] = 0;
+
+        for (unsigned proc = 0; proc < num_procs; proc++) {
+
+            step_processor_work[step][proc] = 0;
+
+            for (const auto &node : set_schedule.step_processor_vertices[step][proc]) {
+                step_processor_work[step][proc] += instance->getComputationalDag().nodeWorkWeight(node);
+            }
+
+            if (step_processor_work[step][proc] > step_max_work[step]) {
+
+                step_second_max_work[step] = step_max_work[step];
+                step_max_work[step] = step_processor_work[step][proc];
+
+            } else if (step_processor_work[step][proc] > step_second_max_work[step]) {
+
+                step_second_max_work[step] = step_processor_work[step][proc];
+            }
+        }
+    }
+}
+
+template<typename T>
+void LKBase<T>::applyMove(Move move, bool update) {
 
     vector_schedule.setAssignedProcessor(move.node, move.to_proc);
     vector_schedule.setAssignedSuperstep(move.node, move.to_step);
 
-    set_schedule.step_processor_vertices[from_step][from_proc].erase(move.node);
+    set_schedule.step_processor_vertices[move.from_step][move.from_proc].erase(move.node);
     set_schedule.step_processor_vertices[move.to_step][move.to_proc].insert(move.node);
 
-    update_superstep_datastructures(move, from_proc, from_step);
+    if (update) {
+        update_superstep_datastructures(move);
+    }
+
+    locked_nodes.insert(move.node);
+
+    current_cost -= move.change_in_cost;
 }
 
 template<typename T>
-void LKBase<T>::updateViolations(VertexType node) {
+void LKBase<T>::reverseMove(Move move, bool update) {
+
+    vector_schedule.setAssignedProcessor(move.node, move.from_proc);
+    vector_schedule.setAssignedSuperstep(move.node, move.from_step);
+
+    set_schedule.step_processor_vertices[move.to_step][move.to_proc].erase(move.node);
+    set_schedule.step_processor_vertices[move.from_step][move.from_proc].insert(move.node);
+
+    if (update) {
+        update_superstep_datastructures(move);
+    }
+
+    current_cost += move.change_in_cost;
+}
+
+template<typename T>
+void LKBase<T>::updateViolations(VertexType node, std::unordered_map<VertexType, EdgeType> &new_violations,
+                                 std::unordered_set<EdgeType, EdgeType_hash> *resolved_violations) {
 
     for (const auto &edge : instance->getComputationalDag().out_edges(node)) {
 
@@ -774,6 +943,7 @@ void LKBase<T>::updateViolations(VertexType node) {
                     vector_schedule.assignedSuperstep(node) > vector_schedule.assignedSuperstep(child)) {
 
                     current_violations.insert(edge);
+                    new_violations[child] = edge;
                 }
             }
         } else {
@@ -784,6 +954,10 @@ void LKBase<T>::updateViolations(VertexType node) {
                     vector_schedule.assignedSuperstep(node) < vector_schedule.assignedSuperstep(child)) {
 
                     current_violations.erase(edge);
+
+                    if (resolved_violations != nullptr) {
+                        resolved_violations->insert(edge);
+                    }
                 }
             }
         }
@@ -801,6 +975,7 @@ void LKBase<T>::updateViolations(VertexType node) {
                     vector_schedule.assignedSuperstep(node) < vector_schedule.assignedSuperstep(parent)) {
 
                     current_violations.insert(edge);
+                    new_violations[parent] = edge;
                 }
             }
         } else {
@@ -811,28 +986,13 @@ void LKBase<T>::updateViolations(VertexType node) {
                     vector_schedule.assignedSuperstep(node) > vector_schedule.assignedSuperstep(parent)) {
 
                     current_violations.erase(edge);
+
+                    if (resolved_violations != nullptr) {
+                        resolved_violations->insert(edge);
+                    }
                 }
             }
         }
-    }
-}
-
-template<typename T>
-void LKBase<T>::lockAll() {
-    for (unsigned i = 0; i < num_nodes; i++) {
-        locked[i] = true;
-    }
-}
-
-template<typename T>
-void LKBase<T>::unlockViolationEdges() {
-
-    for (const auto &edge : current_violations) {
-        const auto &source = instance->getComputationalDag().source(edge);
-        const auto &target = instance->getComputationalDag().target(edge);
-
-        locked[source] = false;
-        locked[target] = false;
     }
 }
 
@@ -844,12 +1004,15 @@ void LKBase<T>::setBestSchedule(const IBspSchedule &schedule) {
         best_schedule->setAssignedProcessor(node, schedule.assignedProcessor(node));
         best_schedule->setAssignedSuperstep(node, schedule.assignedSuperstep(node));
     }
+
+    best_schedule->updateNumberOfSupersteps();
+    // best_schedule->setNumberOfSupersteps(schedule.numberOfSupersteps());
 }
 
 template<typename T>
-void LKBase<T>::reverseMoveBestSchedule(Move move, unsigned from_proc, unsigned from_step) {
-    best_schedule->setAssignedProcessor(move.node, from_proc);
-    best_schedule->setAssignedSuperstep(move.node, from_step);
+void LKBase<T>::reverseMoveBestSchedule(Move move) {
+    best_schedule->setAssignedProcessor(move.node, move.from_proc);
+    best_schedule->setAssignedSuperstep(move.node, move.from_step);
 }
 
 template<typename T>
@@ -870,6 +1033,33 @@ void LKBase<T>::computeNodeGain(unsigned node) {
 
         commputeCommGain(node, current_step, current_proc, new_proc);
         computeWorkGain(node, current_step, current_proc, new_proc);
+
+        if (use_memory_constraint) {
+
+            if (step_processor_memory[vector_schedule.assignedSuperstep(node)][new_proc] +
+                    instance->getComputationalDag().nodeMemoryWeight(node) >
+                instance->memoryBound()) {
+
+                node_gains[node][new_proc][1] = std::numeric_limits<T>::lowest();
+            }
+            if (vector_schedule.assignedSuperstep(node) > 0) {
+                if (step_processor_memory[vector_schedule.assignedSuperstep(node) - 1][new_proc] +
+                        instance->getComputationalDag().nodeMemoryWeight(node) >
+                    instance->memoryBound()) {
+
+                    node_gains[node][new_proc][0] = std::numeric_limits<T>::lowest();
+                }
+            }
+
+            if (vector_schedule.assignedSuperstep(node) < num_steps - 1) {
+                if (step_processor_memory[vector_schedule.assignedSuperstep(node) + 1][new_proc] +
+                        instance->getComputationalDag().nodeMemoryWeight(node) >
+                    instance->memoryBound()) {
+
+                    node_gains[node][new_proc][2] = std::numeric_limits<T>::lowest();
+                }
+            }
+        }
     }
 }
 
@@ -1001,65 +1191,25 @@ void LKBase<T>::computeWorkGain(unsigned node, unsigned current_step, unsigned c
 }
 
 template<typename T>
-void LKBase<T>::updateNodesGainAfterMove(Move move, unsigned from_proc, unsigned from_step) {
-
-    for (const auto &ep : instance->getComputationalDag().out_edges(move.node)) {
-        const auto &target = instance->getComputationalDag().target(ep);
-
-        if (!locked[target]) {
-            computeNodeGain(target);
-            computeMaxGain(target);
-        }
-    }
-
-    for (const auto &ep : instance->getComputationalDag().in_edges(move.node)) {
-        const auto &source = instance->getComputationalDag().source(ep);
-
-        if (!locked[source]) {
-            computeNodeGain(source);
-            computeMaxGain(source);
-        }
-    }
-
-    const unsigned start_step = std::min(from_step, move.to_step) == 0 ? 0 : std::min(from_step, move.to_step) - 1;
-    const unsigned end_step = std::min(num_steps, std::max(from_step, move.to_step) + 2);
-
-    for (unsigned step = start_step; step < end_step; step++) {
-
-        for (unsigned proc = 0; proc < num_procs; proc++) {
-
-            for (const auto &node : set_schedule.step_processor_vertices[step][proc]) {
-
-                if (locked[node] == false) {
-                    computeNodeGain(node);
-                    computeMaxGain(node);
-                }
-            }
-        }
-    }
-}
-
-template<typename T>
-std::unordered_set<VertexType> LKBase<T>::collectNodesToUpdate(Move move, unsigned from_proc, unsigned from_step) {
-
-    std::unordered_set<VertexType> nodes_to_update;
+void LKBase<T>::collectNodesToUpdate(Move move, std::unordered_set<VertexType> &nodes_to_update) {
 
     for (const auto &target : instance->getComputationalDag().children(move.node)) {
 
-        if (!locked[target]) {
+        if (node_selection.find(target) != node_selection.end() && locked_nodes.find(target) == locked_nodes.end()) {
             nodes_to_update.insert(target);
         }
     }
 
     for (const auto &source : instance->getComputationalDag().parents(move.node)) {
 
-        if (!locked[source]) {
+        if (node_selection.find(source) != node_selection.end() && locked_nodes.find(source) == locked_nodes.end()) {
             nodes_to_update.insert(source);
         }
     }
 
-    const unsigned start_step = std::min(from_step, move.to_step) == 0 ? 0 : std::min(from_step, move.to_step) - 1;
-    const unsigned end_step = std::min(num_steps, std::max(from_step, move.to_step) + 2);
+    const unsigned start_step =
+        std::min(move.from_step, move.to_step) == 0 ? 0 : std::min(move.from_step, move.to_step) - 1;
+    const unsigned end_step = std::min(num_steps, std::max(move.from_step, move.to_step) + 2);
 
     for (unsigned step = start_step; step < end_step; step++) {
 
@@ -1067,14 +1217,13 @@ std::unordered_set<VertexType> LKBase<T>::collectNodesToUpdate(Move move, unsign
 
             for (const auto &node : set_schedule.step_processor_vertices[step][proc]) {
 
-                if (locked[node] == false) {
+                if (node_selection.find(node) != node_selection.end() &&
+                    locked_nodes.find(node) == locked_nodes.end()) {
                     nodes_to_update.insert(node);
                 }
             }
         }
     }
-
-    return nodes_to_update;
 }
 
 template<typename T>
@@ -1098,26 +1247,7 @@ void LKBase<T>::recompute_superstep_max_work(unsigned step) {
 }
 
 template<typename T>
-void LKBase<T>::updateMaxGainUnlockedNeighbors(VertexType node) {
-
-    for (const auto &edge : instance->getComputationalDag().out_edges(node)) {
-        const auto &target = instance->getComputationalDag().target(edge);
-        if (!locked[target]) {
-            computeMaxGain(target);
-        }
-    }
-
-    for (const auto &edge : instance->getComputationalDag().in_edges(node)) {
-
-        const auto &source = instance->getComputationalDag().source(edge);
-        if (!locked[source]) {
-            computeMaxGain(source);
-        }
-    }
-}
-
-template<typename T>
-double LKBase<T>::computeMaxGain(VertexType node) {
+typename LKBase<T>::Move LKBase<T>::compute_best_move(VertexType node) {
 
     // max_node_gains[node] = std::numeric_limits<double>::lowest();
     double node_max_gain = std::numeric_limits<double>::lowest();
@@ -1217,7 +1347,111 @@ double LKBase<T>::computeMaxGain(VertexType node) {
         }
     }
 
-    if (in_heap[node]) {
+    return Move(node, node_max_gain, node_change_in_cost, vector_schedule.assignedProcessor(node),
+                vector_schedule.assignedSuperstep(node), node_best_proc, node_best_step);
+}
+
+template<typename T>
+double LKBase<T>::computeMaxGain(VertexType node) {
+
+    double node_max_gain = std::numeric_limits<double>::lowest();
+    T node_change_in_cost = 0;
+    unsigned node_best_step = 0;
+    unsigned node_best_proc = 0;
+
+    T proc_change_in_cost = 0;
+    double proc_max = 0;
+    unsigned best_step = 0;
+    for (unsigned proc = 0; proc < num_procs; proc++) {
+
+        unsigned rand_count = 0;
+
+        if (vector_schedule.assignedSuperstep(node) > 0 && vector_schedule.assignedSuperstep(node) < num_steps - 1) {
+
+            if (node_gains[node][proc][0] > node_gains[node][proc][1]) {
+
+                if (node_gains[node][proc][0] > node_gains[node][proc][2]) {
+                    proc_max = node_gains[node][proc][0];
+                    proc_change_in_cost = node_change_in_costs[node][proc][0];
+                    best_step = 0;
+
+                } else {
+                    proc_max = node_gains[node][proc][2];
+                    proc_change_in_cost = node_change_in_costs[node][proc][2];
+                    best_step = 2;
+                }
+
+            } else {
+
+                if (node_gains[node][proc][1] > node_gains[node][proc][2]) {
+
+                    proc_max = node_gains[node][proc][1];
+                    proc_change_in_cost = node_change_in_costs[node][proc][1];
+                    best_step = 1;
+                } else {
+
+                    proc_max = node_gains[node][proc][2];
+                    proc_change_in_cost = node_change_in_costs[node][proc][2];
+                    best_step = 2;
+                }
+            }
+
+        } else if (vector_schedule.assignedSuperstep(node) == 0 &&
+                   vector_schedule.assignedSuperstep(node) < num_steps - 1) {
+
+            if (node_gains[node][proc][2] > node_gains[node][proc][1]) {
+
+                proc_max = node_gains[node][proc][2];
+                proc_change_in_cost = node_change_in_costs[node][proc][2];
+                best_step = 2;
+            } else {
+
+                proc_max = node_gains[node][proc][1];
+                proc_change_in_cost = node_change_in_costs[node][proc][1];
+                best_step = 1;
+            }
+
+        } else if (vector_schedule.assignedSuperstep(node) > 0 &&
+                   vector_schedule.assignedSuperstep(node) == num_steps - 1) {
+
+            if (node_gains[node][proc][1] > node_gains[node][proc][0]) {
+
+                proc_max = node_gains[node][proc][1];
+                proc_change_in_cost = node_change_in_costs[node][proc][1];
+                best_step = 1;
+            } else {
+
+                proc_max = node_gains[node][proc][0];
+                proc_change_in_cost = node_change_in_costs[node][proc][0];
+                best_step = 0;
+            }
+        } else {
+            proc_max = node_gains[node][proc][1];
+            proc_change_in_cost = node_change_in_costs[node][proc][1];
+            best_step = 1;
+        }
+
+        if (node_max_gain < proc_max) {
+
+            node_max_gain = proc_max;
+            node_change_in_cost = proc_change_in_cost;
+            node_best_step = vector_schedule.assignedSuperstep(node) + best_step - 1;
+            node_best_proc = proc;
+            rand_count = 0;
+
+        } else if (node_max_gain == proc_max) {
+
+            if (rand() % (2 + rand_count) == 0) {
+                node_max_gain = proc_max;
+                node_change_in_cost = proc_change_in_cost;
+                node_best_step = vector_schedule.assignedSuperstep(node) + best_step - 1;
+                node_best_proc = proc;
+                rand_count++;
+            }
+        }
+    }
+
+    if (node_heap_handles.find(node) != node_heap_handles.end()) {
 
         (*node_heap_handles[node]).to_proc = node_best_proc;
         (*node_heap_handles[node]).to_step = node_best_step;
@@ -1231,12 +1465,68 @@ double LKBase<T>::computeMaxGain(VertexType node) {
 
     } else {
 
-        Move move(node, node_max_gain, node_change_in_cost, node_best_proc, node_best_step);
+        if (node_max_gain < -1.0 && node_change_in_cost < 0)
+            return node_max_gain;
+
+        Move move(node, node_max_gain, node_change_in_cost, vector_schedule.assignedProcessor(node),
+                  vector_schedule.assignedSuperstep(node), node_best_proc, node_best_step);
         node_heap_handles[node] = max_gain_heap.push(move);
-        in_heap[node] = true;
     }
 
     return node_max_gain;
+}
+
+template<typename T>
+std::pair<unsigned, unsigned> LKBase<T>::best_move_change_superstep(VertexType node) {
+
+    // max_node_gains[node] = std::numeric_limits<double>::lowest();
+    double node_max_gain = std::numeric_limits<double>::lowest();
+    // T node_change_in_cost = 0;
+    unsigned node_best_step = 0;
+    unsigned node_best_proc = 0;
+
+    // T proc_change_in_cost = 0;
+    double proc_max = 0;
+    unsigned best_step = 0;
+    for (unsigned proc = 0; proc < num_procs; proc++) {
+
+        if (vector_schedule.assignedSuperstep(node) > 0 && vector_schedule.assignedSuperstep(node) < num_steps - 1) {
+
+            if (node_gains[node][proc][0] > node_gains[node][proc][2]) {
+                proc_max = node_gains[node][proc][0];
+                best_step = 0;
+
+            } else {
+                proc_max = node_gains[node][proc][2];
+                best_step = 2;
+            }
+
+        } else if (vector_schedule.assignedSuperstep(node) == 0 &&
+                   vector_schedule.assignedSuperstep(node) < num_steps - 1) {
+
+            proc_max = node_gains[node][proc][2];
+            best_step = 2;
+
+        } else if (vector_schedule.assignedSuperstep(node) > 0 &&
+                   vector_schedule.assignedSuperstep(node) == num_steps - 1) {
+
+            proc_max = node_gains[node][proc][0];
+            best_step = 0;
+
+        } else {
+            throw std::invalid_argument("error lk base best_move_change_superstep");
+        }
+
+        if (node_max_gain < proc_max) {
+
+            node_max_gain = proc_max;
+
+            node_best_step = vector_schedule.assignedSuperstep(node) + best_step - 1;
+            node_best_proc = proc;
+        }
+    }
+
+    return {node_best_step, node_best_proc};
 }
 
 template<typename T>
@@ -1263,8 +1553,6 @@ void LKBase<T>::cleanup_datastructures() {
     node_gains.clear();
     node_heap_handles.clear();
 
-    locked.clear();
-    in_heap.clear();
     unlock.clear();
 
     max_gain_heap.clear();
@@ -1272,6 +1560,7 @@ void LKBase<T>::cleanup_datastructures() {
     cleanup_superstep_datastructures();
 }
 
+/* needed */
 template<typename T>
 void LKBase<T>::initalize_datastructures() {
 
@@ -1281,10 +1570,6 @@ void LKBase<T>::initalize_datastructures() {
     node_change_in_costs = std::vector<std::vector<std::vector<T>>>(
         num_nodes, std::vector<std::vector<T>>(num_procs, std::vector<T>(3, 0)));
 
-    node_heap_handles = std::vector<heap_handle>(num_nodes);
-
-    locked = std::vector<bool>(num_nodes, true);
-    in_heap = std::vector<bool>(num_nodes, false);
     unlock = std::vector<unsigned>(num_nodes, max_num_unlocks);
 
     initalize_superstep_datastructures();
@@ -1294,7 +1579,7 @@ template<typename T>
 void LKBase<T>::resetLockedNodesAndComputeGains() {
 
     for (const auto &i : locked_nodes) {
-        locked[i] = false;
+
         unlock[i] = max_num_unlocks;
 
         computeNodeGain(i);
@@ -1308,7 +1593,7 @@ template<typename T>
 void LKBase<T>::resetLockedNodes() {
 
     for (const auto &i : locked_nodes) {
-        locked[i] = false;
+
         unlock[i] = max_num_unlocks;
     }
 
@@ -1329,10 +1614,16 @@ void LKBase<T>::cleanup_superstep_datastructures() {
     step_second_max_work.clear();
     step_second_max_send.clear();
     step_second_max_receive.clear();
+
+    step_processor_memory.clear();
 }
 
 template<typename T>
 void LKBase<T>::initalize_superstep_datastructures() {
+
+    if (use_memory_constraint) {
+        step_processor_memory = std::vector<std::vector<unsigned>>(num_steps, std::vector<unsigned>(num_procs, 0));
+    }
 
     step_processor_work = std::vector<std::vector<T>>(num_steps, std::vector<T>(num_procs, 0));
     step_processor_send = std::vector<std::vector<T>>(num_steps, std::vector<T>(num_procs, 0));
@@ -1374,19 +1665,7 @@ template<typename T>
 void LKBase<T>::resetGainHeap() {
 
     max_gain_heap.clear();
-    for (unsigned node = 0; node < num_nodes; node++) {
-        in_heap[node] = false;
-    }
-}
-
-template<typename T>
-void LKBase<T>::initalize_gain_heap() {
-
-    for (unsigned i = 0; i < num_nodes; i++) {
-
-        computeNodeGain(i);
-        computeMaxGain(i);
-    }
+    node_heap_handles.clear();
 }
 
 template<typename T>
@@ -1402,23 +1681,12 @@ void LKBase<T>::initalize_gain_heap(const std::unordered_set<VertexType> &nodes)
 template<typename T>
 void LKBase<T>::setup_gain_heap_unlocked_nodes() {
 
-    for (unsigned i = 0; i < num_nodes; i++) {
+    for (const auto &node : node_selection) {
 
-        if (!locked[i]) {
+        if (locked_nodes.find(node) == locked_nodes.end()) {
 
-            computeNodeGain(i);
-            computeMaxGain(i);
-        }
-    }
-}
-
-template<typename T>
-void LKBase<T>::computeUnlockedNodesGain() {
-
-    for (unsigned i = 0; i < num_nodes; i++) {
-
-        if (!locked[i]) {
-            computeNodeGain(i);
+            computeNodeGain(node);
+            computeMaxGain(node);
         }
     }
 }
@@ -1426,40 +1694,53 @@ void LKBase<T>::computeUnlockedNodesGain() {
 template<typename T>
 bool LKBase<T>::unlockNode(VertexType node) {
 
-    if (locked[node] && unlock[node] > 0) {
+    //    if (!super_locked[node]) {
+    if (locked_nodes.find(node) != locked_nodes.end() && unlock[node] > 0) {
         unlock[node]--;
-        locked[node] = false;
 
         locked_nodes.erase(node);
 
         return true;
+    } else if (locked_nodes.find(node) == locked_nodes.end()) {
+        return true;
     }
-
+    //    }
     return false;
-}
+};
 
 template<typename T>
 void LKBase<T>::updateNodesGain(const std::unordered_set<VertexType> &nodes) {
 
     for (const auto &node : nodes) {
-        computeNodeGain(node);
-        computeMaxGain(node);
+
+        if (locked_nodes.find(node) == locked_nodes.end()) {
+            computeNodeGain(node);
+            computeMaxGain(node);
+        }
     }
-}
+};
 
 template<typename T>
-void LKBase<T>::unlockNeighbours(VertexType node, std::unordered_set<VertexType> &unlocked) {
+void LKBase<T>::unlockNeighbours(Move move, std::unordered_set<VertexType> &unlocked) {
 
-    for (const auto &edge : instance->getComputationalDag().out_edges(node)) {
+    for (const auto &edge : instance->getComputationalDag().out_edges(move.node)) {
 
-        if (unlockNode(instance->getComputationalDag().target(edge)))
-            unlocked.insert(instance->getComputationalDag().target(edge));
+        const auto &target = instance->getComputationalDag().target(edge);
+        if (vector_schedule.assignedProcessor(target) != move.to_proc ||
+            vector_schedule.assignedSuperstep(target) < move.to_step) {
+            if (unlockNode(target))
+                unlocked.insert(target);
+        }
     }
 
-    for (const auto &edge : instance->getComputationalDag().in_edges(node)) {
+    for (const auto &edge : instance->getComputationalDag().in_edges(move.node)) {
 
-        if (unlockNode(instance->getComputationalDag().source(edge)))
-            unlocked.insert(instance->getComputationalDag().source(edge));
+        const auto &source = instance->getComputationalDag().source(edge);
+        if (vector_schedule.assignedProcessor(source) != move.to_proc ||
+            vector_schedule.assignedSuperstep(source) > move.to_step) {
+            if (unlockNode(source))
+                unlocked.insert(source);
+        }
     }
 }
 
@@ -1474,27 +1755,34 @@ void LKBase<T>::unlockEdge(EdgeType edge) {
 }
 
 template<typename T>
-void LKBase<T>::unlockEdgeNeighbors(EdgeType edge) {
+void LKBase<T>::unlockEdgeNeighbors(EdgeType edge, std::unordered_set<VertexType> &unlocked) {
 
     const auto &source = instance->getComputationalDag().source(edge);
     const auto &target = instance->getComputationalDag().target(edge);
 
+    // unlockNode(source);
+    // unlockNode(target);
+
     for (const auto &child : instance->getComputationalDag().children(target)) {
-        unlockNode(child);
+        if (unlockNode(child))
+            unlocked.insert(child);
     }
 
     for (const auto &child : instance->getComputationalDag().children(source)) {
         if (child != target)
-            unlockNode(child);
+            if (unlockNode(child))
+                unlocked.insert(child);
     }
 
     for (const auto &parent : instance->getComputationalDag().parents(target)) {
         if (parent != source)
-            unlockNode(parent);
+            if (unlockNode(parent))
+                unlocked.insert(parent);
     }
 
     for (const auto &parent : instance->getComputationalDag().parents(source)) {
 
-        unlockNode(parent);
+        if (unlockNode(parent))
+            unlocked.insert(parent);
     }
 }

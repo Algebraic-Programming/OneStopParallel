@@ -84,9 +84,13 @@ void topological_sort_for_data_locality_interior(std::vector<size_t>& nodes, con
         std::sort(node_queue.begin(), node_queue.end(), queue_cmp);
     }
 
-    if ( ! std::is_permutation(new_ordering.cbegin(), new_ordering.cend(), nodes.cbegin(), nodes.cend()) ) {
+    if (new_ordering.size() != nodes.size()) {
         throw std::runtime_error("topological_sort_for_data_locality_interior failed");
     }
+
+    // if ( ! std::is_permutation(new_ordering.cbegin(), new_ordering.cend(), nodes.cbegin(), nodes.cend()) ) {
+    //     throw std::runtime_error("topological_sort_for_data_locality_interior failed");
+    // }
 
     nodes = new_ordering;
 }
@@ -173,9 +177,13 @@ void topological_sort_for_data_locality_begin(std::vector<size_t>& nodes, const 
         std::sort(node_queue.begin(), node_queue.end(), queue_cmp);
     }
 
-    if ( ! std::is_permutation(new_ordering.cbegin(), new_ordering.cend(), nodes.cbegin(), nodes.cend()) ) {
-        throw std::runtime_error("topological_sort_for_data_locality_begin failed");
+    if (new_ordering.size() != nodes.size()) {
+        throw std::runtime_error("topological_sort_for_data_locality_interior failed");
     }
+
+    // if ( ! std::is_permutation(new_ordering.cbegin(), new_ordering.cend(), nodes.cbegin(), nodes.cend()) ) {
+    //     throw std::runtime_error("topological_sort_for_data_locality_begin failed");
+    // }
 
     nodes = new_ordering;
 }
@@ -262,9 +270,13 @@ void topological_sort_for_data_locality_end(std::vector<size_t>& nodes, const Bs
         std::sort(node_queue.begin(), node_queue.end(), queue_cmp);
     }
 
-    if ( ! std::is_permutation(new_ordering.cbegin(), new_ordering.cend(), nodes.cbegin(), nodes.cend()) ) {
-        throw std::runtime_error("topological_sort_for_data_locality_end failed");
+    if (new_ordering.size() != nodes.size()) {
+        throw std::runtime_error("topological_sort_for_data_locality_interior failed");
     }
+
+    // if ( ! std::is_permutation(new_ordering.cbegin(), new_ordering.cend(), nodes.cbegin(), nodes.cend()) ) {
+    //     throw std::runtime_error("topological_sort_for_data_locality_end failed");
+    // }
 
     nodes = new_ordering;
 }
@@ -340,4 +352,107 @@ std::vector<size_t> schedule_node_permuter(const BspSchedule& sched, unsigned ca
 
 
     return permutation;
+}
+
+std::vector<size_t> schedule_node_permuter_basic(const BspSchedule& sched, const SCHEDULE_NODE_PERMUTATION_MODES mode) {
+    // superstep, processor, nodes
+    std::vector<std::vector<std::vector<size_t>>> allocation(sched.numberOfSupersteps(),
+                                                                std::vector<std::vector<size_t>>(sched.getInstance().numberOfProcessors(),
+                                                                    std::vector<size_t>({})));
+    for (size_t node = 0; node < sched.getInstance().numberOfVertices(); node++) {
+        allocation[ sched.assignedSuperstep(node) ][ sched.assignedProcessor(node) ].emplace_back(node);
+    }
+
+    // reordering and allocating into permutation
+    std::vector<size_t> permutation(sched.getInstance().numberOfVertices());
+
+    if(mode == LOOP_PROCESSORS || mode == SNAKE_PROCESSORS) {
+        bool forward = true;
+        size_t counter = 0;
+        for (auto step_it = allocation.begin(); step_it != allocation.cend(); step_it++) {
+            if (forward) {
+                for (auto proc_it = step_it->begin(); proc_it != step_it->cend(); proc_it++) {
+                    topological_sort_for_data_locality_interior_basic(*proc_it, sched);
+                    
+                    for (const auto& node : *proc_it) {
+                        permutation[node] = counter;
+                        counter++;
+                    }
+                }
+            } else {
+                for (auto proc_it = step_it->rbegin(); proc_it != step_it->crend(); proc_it++) {
+                    topological_sort_for_data_locality_interior_basic(*proc_it, sched);
+                    
+                    for (const auto& node : *proc_it) {
+                        permutation[node] = counter;
+                        counter++;
+                    }
+                }
+            }
+            
+            if (mode == SNAKE_PROCESSORS) {
+                forward = !forward;
+            }
+        }
+    } else {
+        throw std::logic_error("Permutation mode not implemented.");
+    }
+
+    return permutation;
+}
+
+void topological_sort_for_data_locality_interior_basic(std::vector<size_t>& nodes, const BspSchedule& sched) {
+    if (nodes.empty()) return;
+
+    const ComputationalDag& graph = sched.getInstance().getComputationalDag();
+    
+    std::unordered_map<size_t, size_t> nodes_to_position; //position in vector called nodes
+    for (size_t i = 0; i < nodes.size(); i++) {
+        nodes_to_position.emplace(nodes[i], i);
+    }
+
+    std::vector<std::vector<size_t>> out_edges_temp(nodes.size(), std::vector<size_t>({})); // first index position to vector nodes and then list of positions of vector nodes (of children)
+    std::vector<size_t> number_of_unallocated_parents(nodes.size()); // same order as nodes
+    for (size_t i = 0; i < nodes.size(); i++) {
+        for (const auto& out_edge : graph.out_edges(nodes[i])) {
+            if ( nodes_to_position.find(out_edge.m_target) != nodes_to_position.cend() ) {
+                number_of_unallocated_parents[ nodes_to_position.at(out_edge.m_target) ]++;
+                out_edges_temp[i].emplace_back(nodes_to_position.at(out_edge.m_target));
+            }
+        }
+    }
+
+    // queue ordered by node_number (decreasingly)
+    std::priority_queue<size_t, std::vector<size_t>, std::greater<size_t>> node_queue;
+    for  (size_t i = 0; i < nodes.size(); i++) {
+        if ( number_of_unallocated_parents[i] == 0 ) {
+            node_queue.push( nodes[i] );
+        }
+    }
+
+    std::vector<size_t> new_ordering;
+    new_ordering.reserve(nodes.size());
+    while ( !node_queue.empty() ) {
+        size_t recently_added_node = node_queue.top();
+        new_ordering.emplace_back( recently_added_node );
+        node_queue.pop();
+
+        // new ones to the queue
+        for (const auto& chld_ind : out_edges_temp[ nodes_to_position.at(recently_added_node) ] ) {
+            number_of_unallocated_parents[chld_ind]--;
+            if (number_of_unallocated_parents[chld_ind] == 0) {
+                node_queue.push(nodes[chld_ind]);
+            }
+        }
+    }
+
+    if (new_ordering.size() != nodes.size()) {
+        throw std::runtime_error("topological_sort_for_data_locality_interior failed");
+    }
+
+    // if ( ! std::is_permutation(new_ordering.cbegin(), new_ordering.cend(), nodes.cbegin(), nodes.cend()) ) {
+    //     throw std::runtime_error("topological_sort_for_data_locality_interior failed");
+    // }
+
+    nodes = new_ordering;
 }

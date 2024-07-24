@@ -298,7 +298,7 @@ void LKBufferedCommScheduler::cleanup_superstep_datastructures() {
     comm_edges.clear();
 }
 
-unsigned LKBufferedCommScheduler::current_costs() {
+unsigned LKBufferedCommScheduler::compute_current_costs() {
 
     unsigned costs = 0;
     for (unsigned step = 0; step < num_steps; step++) {

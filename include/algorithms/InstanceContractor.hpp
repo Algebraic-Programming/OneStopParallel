@@ -13,65 +13,74 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner   
+@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 
 #pragma once
 
-#include <vector>
 #include <memory>
-#include <set>
 #include <numeric>
+#include <set>
+#include <vector>
 
-#include "model/ComputationalDag.hpp"
+#include "algorithms/ImprovementScheduler.hpp"
+#include "algorithms/Scheduler.hpp"
 #include "model/BspInstance.hpp"
 #include "model/BspSchedule.hpp"
-#include "algorithms/Scheduler.hpp"
-#include "algorithms/ImprovementScheduler.hpp"
+#include "model/ComputationalDag.hpp"
 
 class InstanceContractor : public Scheduler {
-    private:
+  private:
+  protected:
+    const BspInstance *original_inst;
 
-    protected:
-        const BspInstance * original_inst;
+    Scheduler *sched;
+    ImprovementScheduler *improver;
 
-        Scheduler * sched;
-        ImprovementScheduler * improver;
+    std::vector<std::unique_ptr<BspInstance>> dag_history;
+    std::vector<std::unique_ptr<std::unordered_map<VertexType, VertexType>>> contraction_maps;
+    std::vector<std::unique_ptr<std::unordered_map<VertexType, std::set<VertexType>>>> expansion_maps;
+    long int active_graph;
+    BspSchedule active_schedule;
 
-        std::vector<std::unique_ptr<BspInstance>> dag_history;
-        std::vector<std::unique_ptr<std::unordered_map<VertexType, VertexType>>> contraction_maps;
-        std::vector<std::unique_ptr<std::unordered_map<VertexType,std::set<VertexType>>>> expansion_maps;
-        long int active_graph;
-        BspSchedule active_schedule;
+    RETURN_STATUS add_contraction(const std::vector<std::unordered_set<VertexType>> &partition);
+    virtual RETURN_STATUS run_contractions() = 0;
+    void compactify_dag_history();
+    RETURN_STATUS compute_initial_schedule();
+    RETURN_STATUS expand_active_schedule();
+    RETURN_STATUS improve_active_schedule();
+    RETURN_STATUS run_expansions();
 
-        RETURN_STATUS add_contraction( const std::vector<std::unordered_set<VertexType>>& partition );
-        virtual RETURN_STATUS run_contractions() = 0;
-        RETURN_STATUS compute_initial_schedule();
-        RETURN_STATUS expand_active_schedule();
-        RETURN_STATUS improve_active_schedule();
-        RETURN_STATUS run_expansions();
+    void clear_computation_data();
 
-        void clear_computation_data();
+  public:
+    virtual void setTimeLimitSeconds(unsigned int limit) override;
+    virtual void setTimeLimitHours(unsigned int limit) override;
 
-    public:
-        InstanceContractor() : Scheduler(), original_inst(nullptr), sched(nullptr), improver(nullptr) { };
-        InstanceContractor( Scheduler* sched_, ImprovementScheduler* improver_ = nullptr) : Scheduler(), original_inst(nullptr), sched(sched_), improver(improver_), active_graph(-1) { };
-        InstanceContractor( unsigned timelimit, Scheduler* sched_, ImprovementScheduler* improver_ ) : Scheduler(timelimit), original_inst(nullptr), sched(sched_), improver(improver_), active_graph(-1) { };
-        virtual ~InstanceContractor() = default;
+    InstanceContractor() : Scheduler(), original_inst(nullptr), sched(nullptr), improver(nullptr){};
+    InstanceContractor(Scheduler *sched_, ImprovementScheduler *improver_ = nullptr)
+        : Scheduler(), original_inst(nullptr), sched(sched_), improver(improver_), active_graph(-1){};
+    InstanceContractor(unsigned timelimit, Scheduler *sched_, ImprovementScheduler *improver_)
+        : Scheduler(timelimit), original_inst(nullptr), sched(sched_), improver(improver_), active_graph(-1){};
+    virtual ~InstanceContractor() = default;
 
-        inline void setInitialScheduler( Scheduler * const sched_ ) { sched = sched_; };
-        inline void setImprovementScheduler( ImprovementScheduler * const improver_ ) { improver = improver_; };
+    inline void setInitialScheduler(Scheduler *const sched_) { sched = sched_; };
+    inline void setImprovementScheduler(ImprovementScheduler *const improver_) { improver = improver_; };
 
-        std::pair< ComputationalDag, std::unordered_map<VertexType, VertexType>> get_contracted_graph_and_mapping( const ComputationalDag& graph );
-        std::pair<RETURN_STATUS, BspSchedule> computeSchedule(const BspInstance& instance) override;
+    std::pair<ComputationalDag, std::unordered_map<VertexType, VertexType>>
+    get_contracted_graph_and_mapping(const ComputationalDag &graph);
+    std::pair<RETURN_STATUS, BspSchedule> computeSchedule(const BspInstance &instance) override;
 
-        virtual std::string getCoarserName() const = 0;
-        std::string getScheduleName() const override {
-            if (improver == nullptr) {
-                return "C"+getCoarserName()+"-S"+sched->getScheduleName();    
-            } else {
-                return "C"+getCoarserName()+"-S"+sched->getScheduleName()+"-I"+improver->getScheduleName();
-            }
-        };
+    virtual std::string getCoarserName() const = 0;
+    std::string getScheduleName() const override {
+        if (improver == nullptr) {
+            return "C" + getCoarserName() + "-S" + sched->getScheduleName();
+        } else {
+            return "C" + getCoarserName() + "-S" + sched->getScheduleName() + "-I" + improver->getScheduleName();
+        }
+    };
 
+    static BspSchedule expand_schedule(const BspSchedule &schedule,
+                                       std::pair<ComputationalDag, std::unordered_map<VertexType, VertexType>> pair,
+                                       const BspInstance &instance);
 };

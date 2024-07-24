@@ -19,14 +19,12 @@ limitations under the License.
 #include "algorithms/HDagg/HDagg_simple.hpp"
 
 std::pair<RETURN_STATUS, BspSchedule> HDagg_simple::computeSchedule(const BspInstance &instance) {
-    DAG graph(instance.getComputationalDag());
-    assert(graph.n > 0);
 
     BspSchedule sched(instance);
     
-    std::vector<int> top_dist = graph.get_top_node_distance(); // starts at one(!)
-    int min_top_dist = INT_MAX;
-    int max_top_dist = INT_MIN;
+    std::vector<unsigned> top_dist = instance.getComputationalDag().get_top_node_distance();
+    unsigned min_top_dist = UINT_MAX;
+    unsigned max_top_dist = 0;
     for (auto& dist : top_dist) {
         min_top_dist = std::min(min_top_dist, dist);
         max_top_dist = std::max(max_top_dist, dist);
@@ -42,7 +40,7 @@ std::pair<RETURN_STATUS, BspSchedule> HDagg_simple::computeSchedule(const BspIns
         Union_Find_Universe<size_t> uf_universe;
 
         for (const auto& node : level_sets[curr_level]) {
-            uf_universe.add_object(node, graph.workW[node]);
+            uf_universe.add_object(node, instance.getComputationalDag().nodeWorkWeight(node));
         }
 
         std::vector<std::pair<std::vector<size_t>, unsigned>> components_and_weights = uf_universe.get_connected_components_and_weights();
@@ -70,7 +68,7 @@ std::pair<RETURN_STATUS, BspSchedule> HDagg_simple::computeSchedule(const BspIns
         // trying to include next level
         while(curr_level + 1 < level_sets.size()) {
             for (const auto& node : level_sets[curr_level+1]) {
-                uf_universe.add_object(node, graph.workW[node]);
+                uf_universe.add_object(node, instance.getComputationalDag().nodeWorkWeight(node));
             }
             for (const auto& node : level_sets[curr_level+1]) {
                 for (const auto& in_edge : instance.getComputationalDag().in_edges(node)) {
@@ -100,6 +98,23 @@ std::pair<RETURN_STATUS, BspSchedule> HDagg_simple::computeSchedule(const BspIns
             if (new_improved_imbalance_and_allocation.first <= new_imbalance) {
                 new_allocation = new_improved_imbalance_and_allocation.second;
                 new_imbalance = new_improved_imbalance_and_allocation.first;
+            }
+
+            if (params.balance_function == HDagg_parameters::XLOGX) {
+                std::vector<size_t> partition_weights(instance.numberOfProcessors(),0);
+                size_t total_weight = 0;
+                size_t wt_counter = 0;
+                for (auto& wt: new_weights) {
+                    partition_weights[new_allocation[wt_counter]] += wt;
+                    total_weight += wt;
+                    wt_counter++;
+                }
+                // std::vector<float> normalised_partition_weights(instance.numberOfProcessors(),0.0);
+                new_imbalance = 0.0;
+                for (size_t i = 0; i < partition_weights.size(); i++) {
+                    float normalised_partition_weight = partition_weights[i] / total_weight;
+                    new_imbalance += normalised_partition_weight * std::log2( normalised_partition_weight * instance.numberOfProcessors() );
+                }
             }
 
             if (new_imbalance < params.balance_threshhold) {

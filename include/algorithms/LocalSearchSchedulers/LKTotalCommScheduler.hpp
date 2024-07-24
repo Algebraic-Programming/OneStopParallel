@@ -25,6 +25,8 @@ limitations under the License.
 #include <set>
 #include <string>
 #include <vector>
+#include <omp.h>
+#include <algorithm>
 
 #include "LKBase.hpp"
 
@@ -39,11 +41,11 @@ class LKTotalCommScheduler : public LKBase<double> {
     virtual void cleanup_superstep_datastructures() override;
     virtual void compute_superstep_datastructures() override;
 
-    virtual void update_superstep_datastructures(Move move, unsigned from_proc, unsigned from_step) override;
+    virtual void update_superstep_datastructures(Move move) override;
 
     virtual void commputeCommGain(unsigned node, unsigned current_step, unsigned current_proc, unsigned new_proc) override;
 
-    virtual double current_costs() override;
+    virtual double compute_current_costs() override;
 
     virtual void initializeRewardPenaltyFactors() override;
     virtual void updateRewardPenaltyFactors() override;
@@ -51,6 +53,10 @@ class LKTotalCommScheduler : public LKBase<double> {
     virtual bool start() override;
 
     virtual void insertSuperstep(unsigned step) override;
+
+    virtual void concurrent_updateNodesGain(const std::vector<VertexType> &nodes);
+
+    virtual void select_nodes() override;
 
   public:
     LKTotalCommScheduler() : LKBase() {}

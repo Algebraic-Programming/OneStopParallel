@@ -23,6 +23,7 @@ limitations under the License.
 #include <unordered_map>
 #include <unordered_set>
 #include <stdexcept>
+#include <cmath>
 
 #include "model/ComputationalDag.hpp"
 #include "structures/dag.hpp"

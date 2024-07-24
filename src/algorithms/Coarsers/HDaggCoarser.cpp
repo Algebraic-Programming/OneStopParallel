@@ -19,11 +19,16 @@ limitations under the License.
 #include "algorithms/Coarsers/HDaggCoarser.hpp"
 
 RETURN_STATUS HDaggCoarser::run_contractions() {
+    std::cout   << "Coarsen Step: " << dag_history.size()
+                << ", Number of nodes: " << dag_history.back()->numberOfVertices()
+                << ", Number of edges: " << dag_history.back()->getComputationalDag().numberOfEdges()
+                << ", Log ratio: " << std::log(dag_history.back()->getComputationalDag().numberOfEdges()) / std::log(dag_history.back()->numberOfVertices()) << std::endl;
+
     const ComputationalDag& graph = original_inst->getComputationalDag();
     std::vector<std::vector<VertexType>> partition;
     std::vector<bool> visited(original_inst->numberOfVertices(), false);
     
-    std::map<EdgeType, bool> edge_mask = original_inst->getComputationalDag().long_edges_in_triangles();
+    std::unordered_set<EdgeType, EdgeType_hash> edge_mask = original_inst->getComputationalDag().long_edges_in_triangles();
     
     for (const auto& sink : graph.sinkVertices()) {
         partition.push_back(std::vector<VertexType>({sink}));
@@ -38,12 +43,12 @@ RETURN_STATUS HDaggCoarser::run_contractions() {
             VertexType vert = partition[part_ind][vert_ind];
             bool indegree_one = true;
             for (const auto& in_edge : graph.in_edges(vert)) {
-                if ( edge_mask.at(in_edge) ) continue;
+                if ( edge_mask.find(in_edge) != edge_mask.cend() ) continue;
                 unsigned count = 0;
                 for (const auto& out_edge : graph.out_edges(in_edge.m_source)) {
-                    if ( edge_mask.at(out_edge) ) continue; 
+                    if ( edge_mask.find(out_edge) != edge_mask.cend() ) continue; 
                     count++;
-                }
+                                }
                 if (count != 1) {
                     indegree_one = false;
                 }
@@ -51,13 +56,13 @@ RETURN_STATUS HDaggCoarser::run_contractions() {
 
             if (indegree_one) {
                 for (const auto& in_edge : graph.in_edges(vert)) {
-                    if ( edge_mask.at(in_edge) ) continue;
+                    if ( edge_mask.find(in_edge) != edge_mask.cend() ) continue;
                     partition[part_ind].push_back(in_edge.m_source);
                     part_size++;
                 }
             } else {
                 for (const auto& in_edge : graph.in_edges(vert)) {
-                    if ( edge_mask.at(in_edge) ) continue;
+                    if ( edge_mask.find(in_edge) != edge_mask.cend() ) continue;
                     if (!visited[in_edge.m_source]) {
                         partition.push_back(std::vector<VertexType>({in_edge.m_source}));
                         partition_size++;
@@ -80,5 +85,11 @@ RETURN_STATUS HDaggCoarser::run_contractions() {
 
 
     add_contraction(partition_other_format);
+
+    std::cout   << "Coarsen Step: " << dag_history.size()
+                << ", Number of nodes: " << dag_history.back()->numberOfVertices()
+                << ", Number of edges: " << dag_history.back()->getComputationalDag().numberOfEdges()
+                << ", Log ratio: " << std::log(dag_history.back()->getComputationalDag().numberOfEdges()) / std::log(dag_history.back()->numberOfVertices()) << std::endl;
+
     return SUCCESS;
 }

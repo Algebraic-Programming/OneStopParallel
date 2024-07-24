@@ -18,6 +18,7 @@ limitations under the License.
 
 #include "file_interactions/BspScheduleWriter.hpp"
 
+
 void BspScheduleWriter::write_txt(std::ostream &os) const {
 
     os << "\%\% BspSchedule for " << schedule.getInstance().numberOfProcessors() << " processors and "

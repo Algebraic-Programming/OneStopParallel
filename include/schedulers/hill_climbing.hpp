@@ -84,6 +84,11 @@ struct HillClimbing {
     void eraseMoveOptionsLater(int node);
     void eraseMoveOptions(int node);
 
+    // For memory constraints
+    bool use_memory_constraint = false;
+    std::vector<std::vector<int>> memory_used;
+    bool violatesMemConstraint(int node, int processor, int where);
+
     // Compute the cost change incurred by a potential move
     int moveCostChange(int node, int p, int where, stepAuxData &changing);
 

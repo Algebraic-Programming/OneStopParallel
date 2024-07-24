@@ -55,6 +55,7 @@ class ComputationalDagWriter {
             out << "["
                 << "work_weight=\"" << graph[i].workWeight << "\";"
                 << "comm_weight=\"" << graph[i].communicationWeight << "\";"
+                << "mem_weight=\"" << graph[i].memoryWeight << "\";"
                 << "]";
         }
     };

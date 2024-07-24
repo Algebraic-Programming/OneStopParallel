@@ -31,6 +31,8 @@ void DAG::Resize(const int N) {
     Out.resize(n);
     workW.clear();
     workW.resize(n);
+    memW.clear();
+    memW.resize(n, 0);
     commW.clear();
     commW.resize(n);
     comm_edge_W.clear();

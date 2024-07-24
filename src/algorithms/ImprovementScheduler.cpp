@@ -20,8 +20,6 @@ limitations under the License.
 
 #include "algorithms/ImprovementScheduler.hpp"
 
-
-
 std::pair<RETURN_STATUS, BspSchedule>
 ImprovementScheduler::constructImprovedScheduleWithTimeLimit(const BspSchedule &schedule) {
 
@@ -71,3 +69,15 @@ RETURN_STATUS ImprovementScheduler::improveScheduleWithTimeLimit(BspSchedule &sc
     }
 }
 */
+
+void ComboScheduler::setTimeLimitSeconds(unsigned int limit) {
+    timeLimitSeconds = limit;
+    if (base_scheduler) base_scheduler->setTimeLimitHours(limit);
+    if (improvement_scheduler) improvement_scheduler->setTimeLimitSeconds(limit);
+}
+
+void ComboScheduler::setTimeLimitHours(unsigned int limit) {
+    timeLimitSeconds = limit * 3600;
+    if (base_scheduler) base_scheduler->setTimeLimitHours(limit);
+    if (improvement_scheduler) improvement_scheduler->setTimeLimitHours(limit);
+}

@@ -13,29 +13,41 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner   
+@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 
 #include "algorithms/GreedySchedulers/GreedyVarianceScheduler.hpp"
 
-std::vector<double> GreedyVarianceScheduler::compute_work_variance(const ComputationalDag& graph) const {
+std::vector<double> GreedyVarianceScheduler::compute_work_variance(const ComputationalDag &graph) const {
     std::vector<double> work_variance(graph.numberOfVertices(), 0.0);
 
     const std::vector<VertexType> top_order = graph.GetTopOrder();
 
     for (auto r_iter = top_order.rbegin(); r_iter != top_order.crend(); r_iter++) {
-        work_variance[*r_iter] = (double) graph.nodeWorkWeight(*r_iter);
         double temp = 0;
-        for (const auto& child : graph.children(*r_iter)) {
-            temp += pow(work_variance[child], 2);
+        double max_priority = 0;
+        for (const auto &child : graph.children(*r_iter)) {
+            max_priority = std::max(work_variance[child], max_priority);
         }
-        work_variance[*r_iter] += pow(temp, 0.5);
+        for (const auto &child : graph.children(*r_iter)) {
+            temp += std::exp(2*(work_variance[child]-max_priority));
+        }
+        temp = std::log(temp) / 2 + max_priority;
+
+        double node_weight = std::log((double)graph.nodeWorkWeight(*r_iter));
+        double larger_val = node_weight > temp ? node_weight : temp;
+
+        work_variance[*r_iter] = std::log( std::exp(node_weight-larger_val) + std::exp( temp - larger_val ) ) + larger_val;
     }
 
     return work_variance;
 }
 
 std::pair<RETURN_STATUS, BspSchedule> GreedyVarianceScheduler::computeSchedule(const BspInstance &instance) {
+
+    if (use_memory_constraint) {
+        current_proc_memory = std::vector<unsigned>(instance.numberOfProcessors(), 0);
+    }
 
     const unsigned &N = instance.numberOfVertices();
     const unsigned &params_p = instance.numberOfProcessors();
@@ -46,23 +58,25 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyVarianceScheduler::computeSchedule(c
 
     const std::vector<double> work_variances = compute_work_variance(G);
 
-    std::set<int> ready;
+    // std::cout << "Max priority is: " << *std::max_element(work_variances.begin(), work_variances.end()) << std::endl;
 
-    std::vector<std::vector<int>> procInHyperedge = std::vector<std::vector<int>>(N, std::vector<int>(params_p, false));
+    std::set<std::pair<VertexType, double>, VarianceCompare> ready;
 
-    std::vector<std::set<int>> procReady(params_p);
-    std::set<int> allReady;
+    // auto variance_compare = [work_variances] (const VertexType& l, const VertexType& r) { return ((work_variances[l] < work_variances[r]) || ((work_variances[l] == work_variances[r]) && (l > r))); };
+    std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> procReady(params_p);
+    
+    std::set<std::pair<VertexType, double>, VarianceCompare> allReady;
 
     std::vector<unsigned> nrPredecDone(N, 0);
     std::vector<bool> procFree(params_p, true);
     unsigned free = params_p;
 
-    std::set<intPair> finishTimes;
-    finishTimes.insert(intPair(0, -1));
+    std::set<std::pair<size_t, VertexType>> finishTimes;
+    finishTimes.emplace(0, std::numeric_limits<VertexType>::max());
 
     for (const auto &v : G.sourceVertices()) {
-        ready.insert(v);
-        allReady.insert(v);
+        ready.insert(std::make_pair(v, work_variances[v]));
+        allReady.insert(std::make_pair(v, work_variances[v]));
     }
 
     unsigned supstepIdx = 0;
@@ -75,36 +89,49 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyVarianceScheduler::computeSchedule(c
             allReady = ready;
 
             ++supstepIdx;
+
+            if (use_memory_constraint) {
+                for (unsigned proc = 0; proc < params_p; proc++) {
+                    current_proc_memory[proc] = 0;
+                }
+            }
+
             endSupStep = false;
 
-            finishTimes.insert(intPair(0, -1));
+            finishTimes.emplace(0, std::numeric_limits<VertexType>::max());
         }
 
-        const int time = finishTimes.begin()->a;
+        const size_t time = finishTimes.begin()->first;
 
         // Find new ready jobs
-        while (!finishTimes.empty() && finishTimes.begin()->a == time) {
-            const intPair currentPair = *finishTimes.begin();
+        while (!finishTimes.empty() && finishTimes.begin()->first == time) {
+            const VertexType node = finishTimes.begin()->second;
             finishTimes.erase(finishTimes.begin());
-            const int node = currentPair.b;
-            if (node != -1) {
+            if (node != std::numeric_limits<VertexType>::max()) {
                 for (const auto &succ : G.children(node)) {
-                    // for (size_t j = 0; j < G.Out[node].size(); ++j) {
-                    //     int succ = G.Out[node][j];
                     ++nrPredecDone[succ];
                     if (nrPredecDone[succ] == G.numberOfParents(succ)) {
-                        ready.insert(succ);
+                        ready.insert(std::make_pair(succ, work_variances[succ]));
 
                         bool canAdd = true;
                         for (const auto &pred : G.parents(succ)) {
-                            // for (const int i : G.In[succ]) {
                             if (schedule.assignedProcessor(pred) != schedule.assignedProcessor(node) &&
                                 schedule.assignedSuperstep(pred) == supstepIdx)
                                 canAdd = false;
                         }
 
-                        if (canAdd)
-                            procReady[schedule.assignedProcessor(node)].insert(succ);
+                        if (use_memory_constraint && canAdd) {
+                            if (current_proc_memory[schedule.assignedProcessor(node)] +
+                                        instance.getComputationalDag().nodeMemoryWeight(succ) >
+                                    instance.getArchitecture().memoryBound()) {
+                                canAdd = false;
+                            }
+                        } 
+
+                        if (canAdd) {
+                            procReady[schedule.assignedProcessor(node)].insert(std::make_pair(succ, work_variances[succ]));
+                        }
+                        
                     }
                 }
                 procFree[schedule.assignedProcessor(node)] = true;
@@ -116,50 +143,65 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyVarianceScheduler::computeSchedule(c
             continue;
 
         // Assign new jobs to processors
+        if (! CanChooseNode(instance, allReady, procReady, procFree) ) {
+            endSupStep = true;
+        }
         while (CanChooseNode(instance, allReady, procReady, procFree)) {
 
-            int nextNode = -1, nextProc = -1;
-            Choose(instance, work_variances, procInHyperedge, allReady, procReady, procFree, nextNode, nextProc);
+            VertexType nextNode = std::numeric_limits<VertexType>::max();
+            unsigned nextProc = params_p;
+            Choose(instance, work_variances, allReady, procReady, procFree, nextNode, nextProc);
 
-            if (procReady[nextProc].find(nextNode) != procReady[nextProc].end())
-                procReady[nextProc].erase(nextNode);
-            else
-                allReady.erase(nextNode);
+            if (nextNode == std::numeric_limits<VertexType>::max() || nextProc == params_p) {
+                endSupStep = true;
+                break;
+            }
 
-            ready.erase(nextNode);
+            if (procReady[nextProc].find(std::make_pair(nextNode, work_variances[nextNode])) != procReady[nextProc].end()) {
+                procReady[nextProc].erase(std::make_pair(nextNode, work_variances[nextNode]));
+            } else {
+                allReady.erase(std::make_pair(nextNode, work_variances[nextNode]));
+            }
+
+            ready.erase(std::make_pair(nextNode, work_variances[nextNode]));
             schedule.setAssignedProcessor(nextNode, nextProc);
             schedule.setAssignedSuperstep(nextNode, supstepIdx);
-            // schedule.proc[nextNode] = nextProc;
-            // schedule.supstep[nextNode] = supstepIdx;
 
-            finishTimes.insert(intPair(time + G.nodeWorkWeight(nextNode), nextNode));
+            if (use_memory_constraint) {
+                current_proc_memory[nextProc] += instance.getComputationalDag().nodeMemoryWeight(nextNode);
+
+                std::vector<std::pair<VertexType, double>> toErase;
+                for (const auto &node_pair : procReady[nextProc]) {
+                    if (current_proc_memory[nextProc] + instance.getComputationalDag().nodeMemoryWeight(node_pair.first) >
+                        instance.getArchitecture().memoryBound()) {
+                        toErase.push_back(node_pair);
+                    }
+                }
+
+                for (const auto &node : toErase) {
+                    procReady[nextProc].erase(node);
+                }
+            }
+
+            finishTimes.emplace(time + G.nodeWorkWeight(nextNode), nextNode);
             procFree[nextProc] = false;
             --free;
-
-            // update comm auxiliary structure
-            procInHyperedge[nextNode][nextProc] = true;
-
-            for (const auto &pred : G.parents(nextNode)) {
-                // for (const int i : G.In[nextNode]) {
-                procInHyperedge[pred][nextProc] = true;
-            }
         }
-
-        if (allReady.empty() && free >= params_p / 2)
+        if (allReady.empty() && free > params_p * max_percent_idle_processors && ready.size() >= std::min(std::min(params_p, (unsigned) (1.2 * (params_p - free))), params_p - free + ((unsigned) (0.5 * free)) ))
             endSupStep = true;
     }
 
     assert(schedule.satisfiesPrecedenceConstraints());
 
     schedule.setAutoCommunicationSchedule();
-    
+
     return {SUCCESS, schedule};
 };
 
 // auxiliary - check if it is possible to assign a node at all
-bool GreedyVarianceScheduler::CanChooseNode(const BspInstance &instance, const std::set<int> &allReady,
-                                       const std::vector<std::set<int>> &procReady,
-                                       const std::vector<bool> &procFree) const {
+bool GreedyVarianceScheduler::CanChooseNode(const BspInstance &instance, const std::set<std::pair<VertexType, double>, VarianceCompare> &allReady,
+                                            const std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> &procReady,
+                                            const std::vector<bool> &procFree) const {
     for (unsigned i = 0; i < instance.numberOfProcessors(); ++i)
         if (procFree[i] && !procReady[i].empty())
             return true;
@@ -172,51 +214,56 @@ bool GreedyVarianceScheduler::CanChooseNode(const BspInstance &instance, const s
     return false;
 };
 
-void GreedyVarianceScheduler::Choose(   const BspInstance &instance, const std::vector<double> &work_variance,
-                                        const std::vector<std::vector<int>> &procInHyperedge,
-                                        const std::set<int> &allReady, const std::vector<std::set<int>> &procReady,
-                                        const std::vector<bool> &procFree, int &node, int &p) const {
+void GreedyVarianceScheduler::Choose(const BspInstance &instance, const std::vector<double> &work_variance,
+                                     const std::set<std::pair<VertexType, double>, VarianceCompare> &allReady, const std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> &procReady,
+                                     const std::vector<bool> &procFree, VertexType &node, unsigned &p) const {
 
     double maxScore = -1;
+    bool found_allocation = false;
     for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
         if (procFree[i] && !procReady[i].empty()) {
-            p = i;
             // select node
-            for (auto &r : procReady[i]) {
-                double score = work_variance[r];
-                // for (const auto &pred : instance.getComputationalDag().parents(r)) {
-                //     // for (const int pred : schedule.G.In[r]) {
-                //     if (procInHyperedge[pred][i])
-                //         score += (double)instance.getComputationalDag().nodeCommunicationWeight(pred) /
-                //                  (double)instance.getComputationalDag().numberOfChildren(pred);
-                // }
-
-                if (score > maxScore) {
-                    maxScore = score;
-                    node = r;
-                }
-            }
-            return;
-        }
-    }
-    for (auto &r : allReady) {
-        for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
-            if (!procFree[i])
-                continue;
-
-            double score = work_variance[r];
-            // for (const auto &pred : instance.getComputationalDag().parents(r)) {
-            //     // for (const int pred : schedule.G.In[r]) {
-
-            //     if (procInHyperedge[pred][i]) {
-            //         score += (double)instance.getComputationalDag().nodeCommunicationWeight(pred) /
-            //                  (double)instance.getComputationalDag().numberOfChildren(pred);
-            //     }
+            const std::pair<VertexType, double>& node_pair = *procReady[i].begin();
+            const double& score = node_pair.second;
+            
+            // for (auto it = procReady[i].begin(); it != procReady[i].cend(); it++) {
+            //     std::cout << "Node: " << it->first << " Score: " << it->second << ",  ";
             // }
+            // std::cout << std::endl;
+
             if (score > maxScore) {
                 maxScore = score;
-                node = r;
+                node = node_pair.first;
                 p = i;
+                found_allocation = true;
+            }
+        }
+    }
+
+    if (found_allocation) return;
+
+    for (auto it = allReady.begin(); it != allReady.cend(); it++) {
+        for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
+            if (!procFree[i]) continue;
+
+            double score = it->second;
+
+            if (score > maxScore) {
+                if (use_memory_constraint) {
+
+                    if (current_proc_memory[i] + instance.getComputationalDag().nodeMemoryWeight(it->first) <=
+                        instance.getArchitecture().memoryBound()) {
+
+                        node = it->first;
+                        p = i;
+                        return;
+                    }
+                } else {
+
+                    node = it->first;
+                    p = i;
+                    return;
+                }
             }
         }
     }

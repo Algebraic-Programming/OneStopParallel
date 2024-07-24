@@ -27,13 +27,14 @@ limitations under the License.
 #include <vector>
 #include <algorithm>
 #include <stdexcept>
+#include <queue>
 
 #include "algorithms/Scheduler.hpp"
 #include "auxiliary/auxiliary.hpp"
 #include "model/BspSchedule.hpp"
 
 /**
- * @brief The GreedyBspScheduler class represents a scheduler that uses a greedy algorithm to compute schedules for BspInstance.
+ * @brief The GreedyVarianceScheduler class represents a scheduler that uses a greedy algorithm to compute schedules for BspInstance.
  * 
  * This class inherits from the Scheduler class and implements the computeSchedule() and getScheduleName() methods.
  * The computeSchedule() method computes a schedule for a given BspInstance using a greedy algorithm.
@@ -43,25 +44,35 @@ class GreedyVarianceScheduler : public Scheduler {
 
   private:
 
+    float max_percent_idle_processors;
+    bool use_memory_constraint = false;
+    std::vector<unsigned> current_proc_memory;
+
     std::vector<double> compute_work_variance(const ComputationalDag& graph) const;
 
+    struct VarianceCompare
+    {
+        bool operator()(const std::pair<VertexType, double>& lhs, const std::pair<VertexType, double>& rhs) const {
+            return ((lhs.second > rhs.second) || ((lhs.second == rhs.second) && (lhs.first < rhs.first)));
+        }
+    };
+
     void Choose(const BspInstance &instance, const std::vector<double> &work_variance,
-                const std::vector<std::vector<int>> &procInHyperedge,
-                const std::set<int> &allReady, const std::vector<std::set<int>> &procReady,
-                const std::vector<bool> &procFree, int &node, int &p) const;
+                const std::set<std::pair<VertexType, double>, VarianceCompare> &allReady, const std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> &procReady,
+                const std::vector<bool> &procFree, VertexType &node, unsigned &p) const;
 
 
-    bool CanChooseNode(const BspInstance &instance, const std::set<int> &allReady,
-                       const std::vector<std::set<int>> &procReady, const std::vector<bool> &procFree) const;
+    bool CanChooseNode(const BspInstance &instance, const std::set<std::pair<VertexType, double>, VarianceCompare> &allReady,
+                       const std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> &procReady, const std::vector<bool> &procFree) const;
 
   public:
     /**
-     * @brief Default constructor for GreedyBspScheduler.
+     * @brief Default constructor for GreedyVarianceScheduler.
      */
-    GreedyVarianceScheduler() : Scheduler() {}
+    GreedyVarianceScheduler(float max_percent_idle_processors_ = 0.2) : Scheduler(), max_percent_idle_processors(max_percent_idle_processors_) {}
 
     /**
-     * @brief Default destructor for GreedyBspScheduler.
+     * @brief Default destructor for GreedyVarianceScheduler.
      */
     virtual ~GreedyVarianceScheduler() = default;
 
@@ -82,5 +93,16 @@ class GreedyVarianceScheduler : public Scheduler {
      * 
      * @return The name of the schedule.
      */
-    virtual std::string getScheduleName() const override { return "VarianceGreedy"; }
+    virtual std::string getScheduleName() const override {
+
+        if (use_memory_constraint) {
+            return "VarianceGreedyMemory";
+        } else {
+            return "VarianceGreedy";
+        }
+    }
+
+    virtual void setUseMemoryConstraint(bool use_memory_constraint_) override { use_memory_constraint = use_memory_constraint_; }
+
+
 };

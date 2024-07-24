@@ -32,4 +32,4 @@ limitations under the License.
  * @param chance chance/num_vertices is the probability of edge inclusion
  * @return DAG 
  */
-DAG erdos_renyi_graph_gen( unsigned num_vertices, unsigned chance );
+DAG erdos_renyi_graph_gen( unsigned num_vertices, double chance );

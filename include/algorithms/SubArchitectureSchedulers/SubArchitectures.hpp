@@ -38,6 +38,8 @@ class SubArchitectureScheduler : public Scheduler {
         SubArchitectureScheduler( Scheduler* scheduler_, unsigned num_processors_ = 0, bool logarithmic_ = true ) : Scheduler(scheduler_->getTimeLimitSeconds()+10), scheduler(scheduler_), num_processors(num_processors_), logarithmic(logarithmic_), best_num_processors(0) { };
 
         void setNumberofProcessors(unsigned proc) { num_processors = proc; }
+        virtual void setTimeLimitSeconds(unsigned int limit) override;
+        virtual void setTimeLimitHours(unsigned int limit) override;
 
         static void min_symmetric_sub_sum( const std::vector<std::vector<unsigned>>& matrix,
                                     const size_t size,

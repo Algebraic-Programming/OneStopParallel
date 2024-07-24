@@ -18,6 +18,19 @@ limitations under the License.
 
 #include "algorithms/InstanceContractor.hpp"
 
+
+void InstanceContractor::setTimeLimitSeconds(unsigned int limit) {
+    timeLimitSeconds = limit;
+    if (sched) sched->setTimeLimitSeconds(limit);
+    if (improver) improver->setTimeLimitSeconds(limit);
+}
+
+void InstanceContractor::setTimeLimitHours(unsigned int limit) {
+    timeLimitSeconds = limit * 3600;
+    if (sched) sched->setTimeLimitHours(limit);
+    if (improver) improver->setTimeLimitHours(limit);
+}
+
 RETURN_STATUS InstanceContractor::add_contraction( const std::vector<std::unordered_set<VertexType>>& partition ) {
     assert( ! dag_history.empty() );
     std::pair<ComputationalDag, std::unordered_map<VertexType, VertexType>> graph_and_contraction_map = dag_history.back()->getComputationalDag().contracted_graph_without_loops(partition);
@@ -52,6 +65,8 @@ RETURN_STATUS InstanceContractor::add_contraction( const std::vector<std::unorde
     contraction_maps.push_back( move(new_contr) );
     expansion_maps.push_back(move( expansion_map ));
 
+    compactify_dag_history();
+
     return SUCCESS;
 }
 
@@ -64,8 +79,37 @@ RETURN_STATUS InstanceContractor::compute_initial_schedule() {
         initial_schedule = sched->computeSchedule( *(dag_history.back()) );
     }
     active_schedule = initial_schedule.second;
-    return initial_schedule.first;
+    auto ret = improve_active_schedule();
+
+
+    return std::max(ret,initial_schedule.first);
 }
+
+
+BspSchedule InstanceContractor::expand_schedule(const BspSchedule& schedule, std::pair< ComputationalDag, std::unordered_map<VertexType, VertexType>> pair, const BspInstance& instance) {
+
+    
+    BspSchedule expanded_schedule(instance);
+
+    for ( auto node : instance.getComputationalDag().vertices() ) {
+        expanded_schedule.setAssignedProcessor(node, schedule.assignedProcessor(pair.second.at(node)) );
+        expanded_schedule.setAssignedSuperstep(node, schedule.assignedSuperstep(pair.second.at(node)) );
+    }
+
+    // for (auto& [triple, step] : schedule.getCommunicationSchedule()) {
+    //     for (auto& node : expansion_maps[active_graph-1]->at(std::get<0>(triple))) {
+    //         expanded_schedule.addCommunicationScheduleEntry( std::tuple<unsigned int, unsigned int, unsigned int>({node, std::get<1>(triple), std::get<2>(triple) }), step);
+    //     }
+    // }
+    expanded_schedule.setAutoCommunicationSchedule();
+
+
+    return expanded_schedule;
+}
+
+
+
+
 
 RETURN_STATUS InstanceContractor::expand_active_schedule() {
     assert((active_graph >= 1) && ( (long unsigned) active_graph < dag_history.size()));
@@ -115,6 +159,10 @@ RETURN_STATUS InstanceContractor::run_expansions() {
 
 std::pair< ComputationalDag, std::unordered_map<VertexType, VertexType> > InstanceContractor::get_contracted_graph_and_mapping( const ComputationalDag& graph ) {
     clear_computation_data();
+
+    BspInstance tmp(graph, BspArchitecture());
+    original_inst = &tmp;
+
     dag_history.emplace_back( std::make_unique<BspInstance>( graph, BspArchitecture() ));
     run_contractions();
 
@@ -165,4 +213,53 @@ void InstanceContractor::clear_computation_data() {
 
     active_graph = -1;
     active_schedule = BspSchedule();
+}
+
+void InstanceContractor::compactify_dag_history() {
+    if (dag_history.size() < 3) return;
+
+    size_t dag_indx_first = dag_history.size()-2;
+    size_t map_indx_first = contraction_maps.size()-2;
+
+    size_t dag_indx_second = dag_history.size()-1;
+    size_t map_indx_second = contraction_maps.size()-1;
+
+    if ( ((double) dag_history[dag_indx_first-1]->numberOfVertices() / (double) dag_history[dag_indx_second-1]->numberOfVertices()) > 1.25 ) return;
+
+    // Compute combined contraction_map
+    std::unique_ptr<std::unordered_map<VertexType, VertexType>> combi_contraction_map = std::make_unique<std::unordered_map<VertexType, VertexType>>();
+    for (auto map_pair_it = contraction_maps[map_indx_first]->begin(); map_pair_it != contraction_maps[map_indx_first]->cend(); map_pair_it++) {
+        combi_contraction_map->emplace( map_pair_it->first, contraction_maps[map_indx_second]->at( map_pair_it->second ) );
+    }
+
+    // Compute combined expansion_map
+    std::unique_ptr<std::unordered_map<VertexType, std::set<VertexType>>> combi_expansion_map = std::make_unique<std::unordered_map<VertexType, std::set<VertexType>>>();
+    for (auto map_pair_it = combi_contraction_map->begin(); map_pair_it != combi_contraction_map->cend(); map_pair_it++) {
+        if ( combi_expansion_map->find(map_pair_it->second) == combi_expansion_map->cend() ) {
+            combi_expansion_map->insert( std::make_pair( map_pair_it->second, std::set<VertexType>({map_pair_it->first})));
+        } else {
+            (*combi_expansion_map)[map_pair_it->second].emplace(map_pair_it->first);
+        }
+    }
+
+    // Delete ComputationalDag
+    auto dag_it = dag_history.begin();
+    std::advance(dag_it, dag_indx_first);
+    dag_history.erase(dag_it);
+
+    // Delete contraction map
+    auto contr_map_it = contraction_maps.begin();
+    std::advance(contr_map_it, map_indx_second);
+    contraction_maps.erase(contr_map_it);
+
+    // Replace contraction map
+    contraction_maps[map_indx_first] = move(combi_contraction_map);
+
+    // Delete expansion map
+    auto exp_map_it = expansion_maps.begin();
+    std::advance(exp_map_it, map_indx_second);
+    expansion_maps.erase(exp_map_it);
+
+    // Replace expansion map
+    expansion_maps[map_indx_first] = move(combi_expansion_map);
 }

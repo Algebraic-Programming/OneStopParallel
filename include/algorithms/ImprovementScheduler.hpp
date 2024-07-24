@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner   
+@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 
 #pragma once
@@ -47,13 +47,13 @@ class ImprovementScheduler {
      * @brief Set the time limit in seconds for the improvement algorithm.
      * @param limit The time limit in seconds.
      */
-    inline void setTimeLimitSeconds(unsigned int limit) { timeLimitSeconds = limit; }
+    virtual void setTimeLimitSeconds(unsigned int limit) { timeLimitSeconds = limit; }
 
     /**
      * @brief Set the time limit in hours for the improvement algorithm.
      * @param limit The time limit in hours.
      */
-    inline void setTimeLimitHours(unsigned int limit) { timeLimitSeconds = limit * 3600; }
+    virtual void setTimeLimitHours(unsigned int limit) { timeLimitSeconds = limit * 3600; }
 
     /**
      * @brief Get the time limit in seconds for the improvement algorithm.
@@ -72,6 +72,9 @@ class ImprovementScheduler {
      * @return The name of the algorithm as a string.
      */
     virtual std::string getScheduleName() const = 0;
+
+
+    virtual void setUseMemoryConstraint(bool use_memory_constraint_) { throw std::runtime_error("Not implemented");}
 
     /**
      * @brief Improve the given BspSchedule.
@@ -97,9 +100,7 @@ class ImprovementScheduler {
      * @param schedule The BspSchedule to be improved.
      * @return The status of the improvement operation.
      */
-    //  virtual RETURN_STATUS improveScheduleWithTimeLimit(BspSchedule &schedule) {
-    //   return SUCCESS;
-    // }
+    virtual RETURN_STATUS improveScheduleWithTimeLimit(BspSchedule &schedule) { return TIMEOUT; }
 
     /**
      * @brief Construct an improved BspSchedule based on the given schedule within the time limit.
@@ -116,6 +117,9 @@ class ComboScheduler : public Scheduler {
     ImprovementScheduler *improvement_scheduler;
 
   public:
+    virtual void setTimeLimitSeconds(unsigned int limit) override;
+    virtual void setTimeLimitHours(unsigned int limit) override;
+
     ComboScheduler(Scheduler *base, ImprovementScheduler *improvement)
         : base_scheduler(base), improvement_scheduler(improvement) {}
 

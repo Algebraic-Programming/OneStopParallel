@@ -35,6 +35,10 @@ bool readProblem(const std::string &filename, DAG &G, BSPproblem &params, bool N
 
 std::pair<bool, BspInstance> readBspInstance(const std::string &filename);
 
+std::pair<bool, ComputationalDag> readComputationalDagMetisFormat(std::ifstream &infile);
+
+std::pair<bool, ComputationalDag> readComputationalDagMetisFormat(std::string &filename);
+
 std::pair<bool, BspArchitecture> readBspArchitecture(const std::string &filename);
 
 std::pair<bool, BspArchitecture> readBspArchitecture(std::ifstream &infile);
@@ -42,6 +46,10 @@ std::pair<bool, BspArchitecture> readBspArchitecture(std::ifstream &infile);
 std::pair<bool, ComputationalDag> readComputationalDagHyperdagFormat(const std::string &filename);
 
 std::pair<bool, ComputationalDag> readComputationalDagHyperdagFormat(std::ifstream &infile);
+
+std::pair<bool, ComputationalDag> readComputationalDagMartixMarketFormat(const std::string &filename, std::unordered_map<std::pair<VertexType, VertexType>, double, pair_hash> &mtx);
+
+std::pair<bool, ComputationalDag> readComputationalDagMartixMarketFormat(std::ifstream &infile, std::unordered_map<std::pair<VertexType, VertexType>, double, pair_hash> &mtx);
 
 std::pair<bool, ComputationalDag> readComputationalDagMartixMarketFormat(const std::string &filename);
 
@@ -66,6 +74,8 @@ std::pair<bool, BspSchedule> readBspSchdeuleTxtFormat(const BspInstance &instanc
 std::tuple<bool, BspInstance, BspSchedule> readBspScheduleDotFormat(const std::string &filename);
 
 std::tuple<bool, BspInstance, BspSchedule> readBspScheduleDotFormat(std::ifstream &infile);
+
+
 
 } // namespace FileReader
 

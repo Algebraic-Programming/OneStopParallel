@@ -142,14 +142,16 @@ void CoarseRefineScheduler::run_schedule_evolve()
 void CoarseRefineScheduler::run_schedule_evolution( const bool only_above_thresh, const unsigned comm_cost_multiplier, const unsigned com_cost_addition )
 {
     if (active_subdag < 0) return;
+
     std::cout << "Starting expansion" << std::endl;
 
-
     while (active_subdag > 0) {
-        std::cout << "Refining coarsened graph " << active_subdag << std::endl;
+        std::cout << "Refining coarsened graph " << active_subdag << ": current number of supersteps: " << active_loose_schedule->supersteps.size() << std::endl;
         run_schedule_evolve();
         run_schedule_refine();
-        run_schedule_superstep_joinings( randInt(2) == 0, only_above_thresh, comm_cost_multiplier, com_cost_addition );
+        if (randInt(3) != 0) {
+            run_schedule_superstep_joinings( randInt(2) == 0, only_above_thresh, comm_cost_multiplier, com_cost_addition );
+        }
     }
 
     std::cout << "Finished expansion" << std::endl << std::endl;

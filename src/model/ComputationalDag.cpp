@@ -82,6 +82,15 @@ EdgeType ComputationalDag::addEdge(const VertexType &src, const VertexType &tar,
     return edge;
 }
 
+EdgeType ComputationalDag::addEdge(const VertexType &src, const VertexType &tar, double val, const int memory_weight) {
+    const auto [edge, valid] = boost::add_edge(src, tar, {memory_weight, val}, graph);
+    if (not valid) {
+        throw std::invalid_argument("Adding Edge was not sucessful");
+    }
+    assert(graph[edge].communicationWeight == memory_weight);
+    return edge;
+}
+
 std::vector<VertexType> ComputationalDag::sourceVertices() const {
     std::vector<VertexType> vec;
 
@@ -261,6 +270,45 @@ size_t ComputationalDag::longestPath(const std::set<VertexType> &vertices) const
                            [&](const size_t mx, const VertexType &node) { return std::max(mx, distances[node]); });
 }
 
+size_t ComputationalDag::longestPath() const {
+    size_t max_edgecount = 0;
+    std::queue<VertexType> bfs_queue;
+    std::vector<VertexType> distances(numberOfVertices()), in_degrees(numberOfVertices()),
+        visit_counter(numberOfVertices());
+
+    // Find source nodes
+    for (VertexType node = 0; node < numberOfVertices(); node++) {
+        unsigned indeg = 0;
+        for (const VertexType &parent : parents(node))
+            ++indeg;
+
+        if (indeg == 0) {
+            bfs_queue.push(node);
+            distances[node] = 0;
+        }
+        in_degrees[node] = indeg;
+        visit_counter[node] = 0;
+    }
+
+    // Execute BFS
+    while (!bfs_queue.empty()) {
+        const VertexType current = bfs_queue.front();
+        bfs_queue.pop();
+
+        for (const VertexType &child : children(current)) {
+
+            ++visit_counter[child];
+            if (visit_counter[child] == in_degrees[child]) {
+                bfs_queue.push(child);
+                distances[child] = distances[current] + 1;
+                max_edgecount = std::max(max_edgecount, distances[child]);
+            }
+        }
+    }
+
+    return max_edgecount;
+}
+
 std::vector<VertexType> ComputationalDag::longestChain() const {
 
     std::vector<VertexType> chain;
@@ -316,6 +364,7 @@ ComputationalDag::contracted_graph_without_loops(const std::vector<std::unordere
     // Allocating vertices
     std::unordered_map<VertexType, bool> allocated_into_new_graph;
     allocated_into_new_graph.reserve(numberOfVertices());
+    // TODO should this be allocated_into_new_graph.reserve(numberOfVertices(), false);
     for (auto node : vertices()) {
         allocated_into_new_graph[node] = false;
     }
@@ -490,32 +539,39 @@ std::vector<unsigned> ComputationalDag::get_top_node_distance() const {
     return top_distance;
 }
 
-std::map<EdgeType, bool> ComputationalDag::long_edges_in_triangles() const {
-    std::map<EdgeType, bool> edge_mask;
+std::unordered_set<EdgeType, EdgeType_hash> ComputationalDag::long_edges_in_triangles() const {
 
-    for (const auto &edge : edges()) {
-        bool remove_edge = false;
-        std::set<VertexType> chld_set;
-        std::set<VertexType> par_set;
-        for (const auto &chld : children(edge.m_source)) {
-            chld_set.emplace(chld);
+    std::unordered_set<EdgeType, EdgeType_hash> deleted_edges;
+
+    for (const auto &vertex : graph.vertex_set()) {
+
+        std::unordered_set<VertexType> children_set;
+
+        for (const auto& v : children(vertex)) {
+            children_set.emplace(v);
         }
-        for (const auto &par : parents(edge.m_target)) {
-            par_set.emplace(par);
-        }
-        for (const auto &chld : chld_set) {
-            if (par_set.find(chld) != par_set.cend()) {
-                remove_edge = true;
+
+        for (const auto &edge : boost::extensions::make_source_iterator_range(boost::out_edges(vertex, graph))) {
+
+            const auto &child = boost::target(edge, graph);
+
+            for (const auto &parent :
+                 boost::extensions::make_source_iterator_range(boost::inv_adjacent_vertices(child, graph))) {
+
+                //const auto &pair = boost::edge(vertex, parent, graph);
+
+
+                if (children_set.find(parent) != children_set.cend()) {
+                    deleted_edges.emplace(edge);
+                }
             }
         }
-
-        edge_mask.emplace(edge, remove_edge);
     }
 
-    return edge_mask;
+    return deleted_edges;
 }
 
 double ComputationalDag::average_degree() const {
- 
+
     return static_cast<double>(numberOfEdges()) / static_cast<double>(numberOfVertices());
 }

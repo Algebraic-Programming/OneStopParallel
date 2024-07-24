@@ -18,6 +18,8 @@ limitations under the License.
 
 #pragma once
 
+#include <cmath>
+
 #include "algorithms/InstanceContractor.hpp"
 #include "coarsen/coarsen_history.hpp"
 

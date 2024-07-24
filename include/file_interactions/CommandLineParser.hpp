@@ -44,13 +44,13 @@ struct CommandLineParser {
         std::cout << "Usage: Either read config file: \n"
                   << "     --config *.json          \t\tSpecify config .json file.\n"
                   << "  Or specify command line options:\n"
-                  << "     --inputDag, --g <FILE>          \tSpecify the input dag file. Supported formats: *.dot, "
+                  << "     --inputDag, -g <FILE>          \tSpecify the input dag file. Supported formats: *.dot, "
                      "*.mtx,... \n"
-                  << "     --inputMachine, --m <FILE>      \tSpecify the input file. Supported format: ... \n"
-                  << "     --timeLimit, --t <TIME>         \tSet a time limit in seconds. Applies to each algorithm. \n"
-                  << "     --output, --o                   \tOutput schedule file \n"
-                  << "     --sankey, --s                   \tOutput sankey schedule file \n"
-                  << "     --dot, --d                      \tOutput dot schedule file \n"
+                  << "     --inputMachine, -m <FILE>      \tSpecify the input file. Supported format: ... \n"
+                  << "     --timeLimit, -t <TIME>         \tSet a time limit in seconds. Applies to each algorithm. \n"
+                  << "     --output, -o                   \tOutput schedule file \n"
+                  << "     --sankey, -s                   \tOutput sankey schedule file \n"
+                  << "     --dot, -d                      \tOutput dot schedule file \n"
                   << "   Available algorithms: \n";
 
         pt::ptree loadPtreeRoot;

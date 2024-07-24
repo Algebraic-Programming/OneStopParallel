@@ -22,6 +22,7 @@ limitations under the License.
 #include <set>
 #include <unordered_map>
 #include <vector>
+#include <stdexcept>
 
 /// @brief Structure to execute a union-find algorithm
 template<typename T>

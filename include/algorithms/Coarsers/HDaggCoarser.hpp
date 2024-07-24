@@ -19,7 +19,6 @@ limitations under the License.
 #pragma once
 
 #include "algorithms/InstanceContractor.hpp"
-#include "coarsen/coarsen_history.hpp"
 
 /**
  * @brief Acyclic graph contractor from (Zarebavani, Behrooz, et al. "HDagg: hybrid aggregation of loop-carried dependence iterations in sparse matrix computations." 2022 IEEE International Parallel and Distributed Processing Symposium (IPDPS). IEEE, 2022.)

@@ -198,6 +198,8 @@ DAG Multilevel::Coarsify(int newN, const std::string& outfilename, bool FastCoar
     const int N = G_full.n;
     std::vector<bool> validNode(N, true);
     contractionHistory.clear();
+    if(newN<1)
+        newN=1;
     // list of original node indices contained in each contracted node
     std::vector<std::set<int>> contains(N);
     for (int i = 0; i < N; ++i)

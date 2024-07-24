@@ -239,11 +239,7 @@ class LooseSuperStep {
             }
             break;
 
-        case ILP:
-            std::cout << "ILP not yet implemented." << std::endl;
-            std::cout << "Running Greedy partitioner instead." << std::endl;
-            new_allocation = greedy_partitioner(params.number_of_partitions, coll_weights);
-            break;
+
 
         default:
             new_allocation = greedy_partitioner(params.number_of_partitions, coll_weights);

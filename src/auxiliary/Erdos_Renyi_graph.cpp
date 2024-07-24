@@ -35,7 +35,7 @@ limitations under the License.
 // }
 
 
-DAG erdos_renyi_graph_gen( unsigned num_vertices, unsigned chance ) {
+DAG erdos_renyi_graph_gen( unsigned num_vertices, double chance ) {
     std::random_device rd;
     std::mt19937 gen(rd());
 
@@ -43,7 +43,7 @@ DAG erdos_renyi_graph_gen( unsigned num_vertices, unsigned chance ) {
     std::vector<std::vector<int>> out_(num_vertices);
 
     for (unsigned i = 0; i< num_vertices; i++) {
-        std::binomial_distribution<> bino_dist( num_vertices-1-i , double(chance)/double(num_vertices)  );
+        std::binomial_distribution<> bino_dist( num_vertices-1-i , chance/double(num_vertices)  );
         unsigned out_edges_num = bino_dist(gen);
 
         std::unordered_set<unsigned> out_edges;

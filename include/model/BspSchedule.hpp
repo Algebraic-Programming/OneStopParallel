@@ -18,12 +18,15 @@ limitations under the License.
 
 #pragma once
 
-#include "IBspSchedule.hpp"
-
 #include <list>
 #include <map>
 #include <stdexcept>
 #include <vector>
+#include <algorithm>
+#include <iostream>
+
+#include "IBspSchedule.hpp"
+
 
 typedef std::tuple<unsigned int, unsigned int, unsigned int> KeyTriple;
 
@@ -114,6 +117,8 @@ class BspSchedule : public IBspSchedule {
      * @return A reference to the BspInstance for the schedule.
      */
     const BspInstance &getInstance() const override { return *instance; }
+
+  
 
     /**
      * @brief Returns the number of supersteps in the schedule.
@@ -235,10 +240,18 @@ class BspSchedule : public IBspSchedule {
 
     unsigned computeCosts() const;
 
+    unsigned computeBaseCommCost() const;
+
     unsigned computeCostsBufferedSending() const;
 
 
+    unsigned computeBaseCommCostsBufferedSending() const;
+
+    
+
     double computeCostsTotalCommunication() const;
+
+    double computeBaseCommCostsTotalCommunication() const;
 
     /**
      * @brief Returns true if the schedule satisfies the precedence constraints of the computational DAG.
@@ -249,6 +262,7 @@ class BspSchedule : public IBspSchedule {
      * @return True if the schedule satisfies the precedence constraints of the computational DAG, false otherwise.
      */
     bool satisfiesPrecedenceConstraints() const;
+    bool satisfiesMemoryConstraints() const;
 
     void setAutoCommunicationSchedule();
     void setImprovedLazyCommunicationSchedule();
@@ -258,4 +272,9 @@ class BspSchedule : public IBspSchedule {
 
     std::vector<unsigned int> getAssignedNodeVector(unsigned int processor) const;
     std::vector<unsigned int> getAssignedNodeVector(unsigned int processor, unsigned int superstep) const;
+
+    void setNumberOfSupersteps(unsigned int number_of_supersteps_) { number_of_supersteps = number_of_supersteps_; }
+
 };
+
+

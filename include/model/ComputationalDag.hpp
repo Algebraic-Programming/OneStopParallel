@@ -33,20 +33,23 @@ limitations under the License.
 
 struct Vertex {
 
-    Vertex() : workWeight(0), communicationWeight(0), memoryWeight(0) {}
-    Vertex(int workWeight_, int communicationWeight_, int memoryWeight_)
-        : workWeight(workWeight_), communicationWeight(communicationWeight_), memoryWeight(memoryWeight_) {}
+    Vertex() : workWeight(0), communicationWeight(0), memoryWeight(0), mtx_entry(1.0) {}
+    Vertex(int workWeight_, int communicationWeight_, int memoryWeight_, double mtx = 1.0)
+        : workWeight(workWeight_), communicationWeight(communicationWeight_), memoryWeight(memoryWeight_), mtx_entry(mtx) {}
 
     int workWeight;
     int communicationWeight;
     int memoryWeight;
+
+    double mtx_entry;
 };
 
 struct Edge {
-    Edge() : communicationWeight(0) {}
-    Edge(int communicationWeight_) : communicationWeight(communicationWeight_) {}
+    Edge() : communicationWeight(0), mtx_entry(1.0) {}
+    Edge(int communicationWeight_, double mtx = 1.0) : communicationWeight(communicationWeight_), mtx_entry(mtx) {}
     
     int communicationWeight;
+    double mtx_entry;
 
 };
 
@@ -75,7 +78,11 @@ struct EdgeType_hash {
  * The class provides various methods to manipulate and analyze the DAG, such as adding vertices and edges,
  * calculating the longest path, and retrieving topological order of vertices.
  */
+
+
+
 class ComputationalDag {
+
     static constexpr int DEFAULT_EDGE_COMM_WEIGHT = 1;
 
   private:
@@ -125,6 +132,8 @@ class ComputationalDag {
      * @brief Default constructor for the ComputationalDag class.
      */
     explicit ComputationalDag() : graph(0) {}
+    explicit ComputationalDag(unsigned number_of_nodes) : graph(number_of_nodes) {}
+
 
     unsigned int numberOfVertices() const { return boost::num_vertices(graph); }
     unsigned int numberOfEdges() const { return boost::num_edges(graph); }
@@ -207,6 +216,12 @@ class ComputationalDag {
   
     int edgeCommunicationWeight(const EdgeType &e) const { return (*this)[e].communicationWeight; }
 
+    double node_mtx_entry(const VertexType &v) const { return (*this)[v].mtx_entry; }
+    double edge_mtx_entry(const EdgeType &e) const { return (*this)[e].mtx_entry; }
+
+    void set_node_mtx_entry(const VertexType &v, double val) { (*this)[v].mtx_entry = val;}
+    void set_edge_mtx_entry(const EdgeType &e, double val) { (*this)[e].mtx_entry = val;}
+
     template<typename VertexIterator>
     int sumOfVerticesWorkWeights(VertexIterator begin, VertexIterator end) const {
         return std::accumulate(begin, end, 0,
@@ -237,6 +252,9 @@ class ComputationalDag {
         return sumOfEdgesCommunicationWeights(edges_.begin(), edges_.end());
     }
 
+    void setNodeMemoryWeight(const VertexType &v, const int memory_weight) { graph[v].memoryWeight = memory_weight; }
+
+
     void setNodeWorkWeight(const VertexType &v, const int work_weight) { graph[v].workWeight = work_weight; }
 
     void setNodeCommunicationWeight(const VertexType &v, const int comm_weight) {
@@ -253,6 +271,8 @@ class ComputationalDag {
 
     EdgeType addEdge(const VertexType &src, const VertexType &tar, int memory_weight = DEFAULT_EDGE_COMM_WEIGHT);
 
+    EdgeType addEdge(const VertexType &src, const VertexType &tar, double val, int memory_weight = DEFAULT_EDGE_COMM_WEIGHT);
+
     void printGraph(std::ostream &os = std::cout) const;
 
     // computes bottom node distance
@@ -268,6 +288,9 @@ class ComputationalDag {
     // calculates number of edges in the longest path
     // returns 0 if no vertices
     size_t longestPath(const std::set<VertexType> &vertices) const;
+    // calculates number of edges in the longest path
+    // returns 0 if no vertices
+    size_t longestPath() const;
 
     std::vector<VertexType> longestChain() const;
 
@@ -282,11 +305,11 @@ class ComputationalDag {
     contracted_graph_without_loops(const std::vector<std::unordered_set<VertexType>> &partition) const;
 
     /**
-     * @brief Computed Map returns true if and only if for the edge (u,v) there exists a path of length two from u to v
+     * @brief The set of edges (u,v) for which there exists a path of length two from u to v
      * 
-     * @return std::map<EdgeType, bool> 
+     * @return std::unordered_set<EdgeType, EdgeType_hash> 
      */
-    std::map<EdgeType, bool> long_edges_in_triangles() const;
+    std::unordered_set<EdgeType, EdgeType_hash> long_edges_in_triangles() const;
 
     /**
      * @brief Computes the average degree of the graph

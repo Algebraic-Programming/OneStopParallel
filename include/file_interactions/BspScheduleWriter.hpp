@@ -53,6 +53,7 @@ class BspScheduleWriter {
             out << "["
                 << "work_weight=\"" << schedule.getInstance().getComputationalDag().nodeWorkWeight(i) << "\";"
                 << "comm_weight=\"" << schedule.getInstance().getComputationalDag().nodeCommunicationWeight(i) << "\";"
+                << "mem_weight=\"" << schedule.getInstance().getComputationalDag().nodeMemoryWeight(i) << "\";"
                 << "proc=\"" << schedule.assignedProcessor(i) << "\";"
                 << "superstep=\"" << schedule.assignedSuperstep(i) << "\";";
 

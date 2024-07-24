@@ -26,6 +26,7 @@ limitations under the License.
 #include "model/BspInstance.hpp"
 #include "model/BspSchedule.hpp"
 
+
 enum RETURN_STATUS { SUCCESS, BEST_FOUND, TIMEOUT, ERROR };
 
 inline std::string to_string(const RETURN_STATUS status) {
@@ -71,13 +72,13 @@ class Scheduler {
          * @brief Set the time limit in seconds for computing a schedule.
          * @param limit The time limit in seconds.
          */
-        inline void setTimeLimitSeconds(unsigned int limit) { timeLimitSeconds = limit; }
+        virtual void setTimeLimitSeconds(unsigned int limit) { timeLimitSeconds = limit; }
 
         /**
          * @brief Set the time limit in hours for computing a schedule.
          * @param limit The time limit in hours.
          */
-        inline void setTimeLimitHours(unsigned int limit) { timeLimitSeconds = limit * 3600; }
+        virtual void setTimeLimitHours(unsigned int limit) { timeLimitSeconds = limit * 3600; }
 
         /**
          * @brief Get the time limit in seconds for computing a schedule.
@@ -110,7 +111,8 @@ class Scheduler {
          * @return A pair containing the return status and the computed schedule.
          */
         virtual std::pair<RETURN_STATUS, BspSchedule> computeScheduleWithTimeLimit(const BspInstance &instance);
+
+
+        virtual void setUseMemoryConstraint(bool use_memory_constraint_) { throw std::runtime_error("Not implemented");}
 };
-
-
 
