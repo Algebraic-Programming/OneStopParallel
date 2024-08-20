@@ -17,8 +17,10 @@ limitations under the License.
 */
 
 #include "file_interactions/FileReader.hpp"
-#include <boost/algorithm/string.hpp>
 #include "model/ComputationalDag.hpp"
+#include <boost/algorithm/string.hpp>
+#include <algorithm>
+
 
 std::pair<bool, BspInstance> FileReader::readBspInstance(const std::string &filename) {
     std::ifstream infile(filename);
@@ -48,7 +50,7 @@ std::pair<bool, BspSchedule> FileReader::readBspSchdeuleTxtFormat(const BspInsta
 
     std::ifstream infile(filename);
     if (!infile.is_open()) {
-        std::cout << "Unable to find/open input machine parameter file.\n";
+        std::cout << "Unable to find/open input schedule file.\n";
 
         return {false, BspSchedule()};
     }
@@ -90,8 +92,8 @@ std::pair<bool, BspSchedule> FileReader::readBspSchdeuleTxtFormat(const BspInsta
         unsigned node, proc, superstep;
         sscanf(line.c_str(), "%d %d %d", &node, &proc, &superstep);
 
-        if (node < 0 || proc < 0 || superstep < 0 || node > num_nodes || proc > num_proc ||
-            superstep > num_supersteps) {
+        if (node < 0 || proc < 0 || superstep < 0 || node >= num_nodes || proc >= num_proc ||
+            superstep >= num_supersteps) {
             std::cout << "Incorrect input file format (index out of range).\n";
             return {false, BspSchedule()};
         }
@@ -109,7 +111,12 @@ std::pair<bool, BspSchedule> FileReader::readBspSchdeuleTxtFormat(const BspInsta
     }
 
     if (has_comm_schedule == 0) {
-        return {true, BspSchedule(instance, processor_assignment, superstep_assignment)};
+        BspSchedule sched(instance, processor_assignment, superstep_assignment);
+        if (sched.satisfiesPrecedenceConstraints()) {
+            return {true, sched};
+        }
+        std::cout << "Schedule does not satisfy precedence constraints.\n";
+        return {false, BspSchedule()};
     }
 
     std::map<KeyTriple, unsigned> comm_schedule;
@@ -132,7 +139,16 @@ std::pair<bool, BspSchedule> FileReader::readBspSchdeuleTxtFormat(const BspInsta
         comm_schedule[{node, from, to}] = comm;
     }
 
-    return {true, BspSchedule(instance, processor_assignment, superstep_assignment, comm_schedule)};
+    BspSchedule sched(instance, processor_assignment, superstep_assignment, comm_schedule);
+    if (! sched.satisfiesPrecedenceConstraints()) {
+        std::cout << "Schedule does not satisfy precedence constraints.\n";
+        return {false, BspSchedule()};
+    }
+    if (! sched.hasValidCommSchedule()) {
+        std::cout << "Schedule does not have a valid communication schedule.\n";
+        return {false, BspSchedule()};
+    }
+    return {true, sched};
 }
 
 std::pair<bool, BspArchitecture> FileReader::readBspArchitecture(const std::string &filename) {
@@ -232,6 +248,99 @@ std::pair<bool, ComputationalDag> FileReader::readComputationalDagHyperdagFormat
     return {true, dag};
 };
 
+std::pair<bool, csr_graph> FileReader::readComputationalDagMartixMarketFormat_csr(const std::string &filename) {
+
+    std::ifstream infile(filename);
+    if (!infile.is_open()) {
+        std::cout << "Unable to find/open input dag file.\n";
+
+        return {false, csr_graph()};
+    }
+
+    return FileReader::readComputationalDagMartixMarketFormat_csr(infile);
+}
+
+std::pair<bool, csr_graph> FileReader::readComputationalDagMartixMarketFormat_csr(std::ifstream &infile) {
+
+    std::string line;
+    getline(infile, line);
+    while (!infile.eof() && line.at(0) == '%')
+        getline(infile, line);
+
+    int nEntries, M_row, M_col;
+    sscanf(line.c_str(), "%d %d %d", &M_row, &M_col, &nEntries);
+
+    if (M_row <= 0 || M_col <= 0 || M_col != M_row) {
+        std::cout << "Incorrect input file format (No rows/columns or not a square matrix).\n";
+        return {false, csr_graph()};
+    }
+
+    std::vector<std::pair<int, int>> edges_vec(nEntries - M_row);
+    std::vector<double> edge_mtx_wts(nEntries - M_row, 0.0);
+
+    // Initialise data;
+    std::vector<double> node_mtx_wts(M_row, 0);
+    std::vector<int> node_work_wts(M_row, 1);
+    std::vector<int> node_comm_wts(M_row, 1);
+
+    // read edges
+    unsigned edgeIdx = 0;
+    unsigned nodeIdx = 0;
+
+    for (int i = 0; i < nEntries; ++i) {
+        getline(infile, line);
+        while (!infile.eof() && line.at(0) == '%')
+            getline(infile, line);
+
+        if (infile.eof()) {
+            std::cout << "Incorrect input file format (file terminated too early).\n";
+            return {false, csr_graph()};
+        }
+
+        int row, col;
+        double val;
+        sscanf(line.c_str(), "%d %d %lf", &row, &col, &val);
+        // Indexing starting at 0
+        row -= 1;
+        col -= 1;
+
+        if (row < 0 || col < 0 || row >= M_row || col >= M_col) {
+            std::cout << "Incorrect input file format (index out of range).\n";
+            return {false, csr_graph()};
+        }
+        if (row < col) {
+            std::cout << "Incorrect input file format (matrix is not lower triangular).\n";
+            return {false, csr_graph()};
+
+        } else if (col != row) {
+            edges_vec[edgeIdx] = std::make_pair(col, row);
+            edge_mtx_wts[edgeIdx++] = val;
+            node_work_wts[row] += 1;
+           
+        } else {
+            node_mtx_wts[nodeIdx++] = val;
+        }
+    }
+
+    csr_graph dag(boost::edges_are_unsorted_multi_pass, begin(edges_vec), end(edges_vec), begin(edge_mtx_wts), M_row);
+
+
+    for (const auto &vertex : boost::make_iterator_range(boost::vertices(dag))) {
+        dag[vertex].mtx_entry = node_mtx_wts[vertex];
+        dag[vertex].workWeight = node_work_wts[vertex];
+        dag[vertex].communicationWeight = node_comm_wts[vertex];
+        dag[vertex].memoryWeight = node_work_wts[vertex];
+    }
+
+    getline(infile, line);
+    if (!infile.eof()) {
+        std::cout << "Incorrect input file format (file has remaining lines).\n";
+        return {false, dag};
+    }
+
+    return {true, dag};
+}
+
 std::pair<bool, ComputationalDag> FileReader::readComputationalDagMartixMarketFormat(const std::string &filename) {
 
     std::ifstream infile(filename);
@@ -269,7 +378,7 @@ std::pair<bool, ComputationalDag> FileReader::readComputationalDagMartixMarketFo
         getline(infile, line);
         while (!infile.eof() && line.at(0) == '%')
             getline(infile, line);
-        
+
         if (infile.eof()) {
             std::cout << "Incorrect input file format (file terminated too early).\n";
             return {false, dag};
@@ -290,26 +399,26 @@ std::pair<bool, ComputationalDag> FileReader::readComputationalDagMartixMarketFo
             std::cout << "Incorrect input file format (matrix is not lower triangular).\n";
             return {false, dag};
         } else if (col != row) {
-            dag.addEdge(col, row , val, 1);
-//            mtx.emplace(std::make_pair(col, row), val);
+            dag.addEdge(col, row, val, 1);
+            //            mtx.emplace(std::make_pair(col, row), val);
         } else {
             dag.set_node_mtx_entry(row, val);
-             //mtx.emplace(std::make_pair(col, row), val);
-         }
+            // mtx.emplace(std::make_pair(col, row), val);
+        }
         node_work_wts[row] += 1;
     }
 
     for (int i = 0; i < M_row; i++) {
-        if (node_work_wts[i] == 0) {
-            node_work_wts[i]++;
-        }
+        // if (node_work_wts[i] == 0) {
+        //     node_work_wts[i]++;
+        // }
         dag.setNodeCommunicationWeight(i, node_comm_wts[i]);
         dag.setNodeWorkWeight(i, node_work_wts[i]);
         dag.setNodeMemoryWeight(i, node_work_wts[i]);
     }
 
     getline(infile, line);
-    if (! infile.eof()) {
+    if (!infile.eof()) {
         std::cout << "Incorrect input file format (file has remaining lines).\n";
         return {false, dag};
     }
@@ -317,8 +426,8 @@ std::pair<bool, ComputationalDag> FileReader::readComputationalDagMartixMarketFo
     return {true, dag};
 }
 
-
-std::pair<bool, ComputationalDag> FileReader::readComputationalDagMartixMarketFormat(const std::string &filename, std::unordered_map<std::pair<VertexType, VertexType>, double, pair_hash> &mtx) {
+std::pair<bool, ComputationalDag> FileReader::readComputationalDagMartixMarketFormat(
+    const std::string &filename, std::unordered_map<std::pair<VertexType, VertexType>, double, pair_hash> &mtx) {
 
     std::ifstream infile(filename);
     if (!infile.is_open()) {
@@ -330,7 +439,8 @@ std::pair<bool, ComputationalDag> FileReader::readComputationalDagMartixMarketFo
     return FileReader::readComputationalDagMartixMarketFormat(infile, mtx);
 }
 
-std::pair<bool, ComputationalDag> FileReader::readComputationalDagMartixMarketFormat(std::ifstream &infile, std::unordered_map<std::pair<VertexType, VertexType>, double, pair_hash> &mtx) {
+std::pair<bool, ComputationalDag> FileReader::readComputationalDagMartixMarketFormat(
+    std::ifstream &infile, std::unordered_map<std::pair<VertexType, VertexType>, double, pair_hash> &mtx) {
 
     std::string line;
     getline(infile, line);
@@ -350,13 +460,13 @@ std::pair<bool, ComputationalDag> FileReader::readComputationalDagMartixMarketFo
     // Initialise data;
     std::vector<int> node_work_wts(M_row, 0);
     std::vector<int> node_comm_wts(M_row, 1);
-    //std::unordered_map<std::pair<VertexType, VertexType>, double, pair_hash> matrix_entries;
-    // read edges
+    // std::unordered_map<std::pair<VertexType, VertexType>, double, pair_hash> matrix_entries;
+    //  read edges
     for (int i = 0; i < nEntries; ++i) {
         getline(infile, line);
         while (!infile.eof() && line.at(0) == '%')
             getline(infile, line);
-        
+
         if (infile.eof()) {
             std::cout << "Incorrect input file format (file terminated too early).\n";
             return {false, dag};
@@ -377,8 +487,9 @@ std::pair<bool, ComputationalDag> FileReader::readComputationalDagMartixMarketFo
             std::cout << "Incorrect input file format (matrix is not lower triangular).\n";
             return {false, dag};
         } else if (col != row) {
-             dag.addEdge(col, row , val, 1);
+            dag.addEdge(col, row, val, 1);
             mtx.emplace(std::make_pair(col, row), val);
+
         } else {
             dag.set_node_mtx_entry(row, val);
             mtx.emplace(std::make_pair(col, row), val);
@@ -387,16 +498,16 @@ std::pair<bool, ComputationalDag> FileReader::readComputationalDagMartixMarketFo
     }
 
     for (int i = 0; i < M_row; i++) {
-        if (node_work_wts[i] == 0) {
-            node_work_wts[i]++;
-        }
+        //     if (node_work_wts[i] == 0) {
+        //         node_work_wts[i]++;
+        //     }
         dag.setNodeCommunicationWeight(i, node_comm_wts[i]);
         dag.setNodeWorkWeight(i, node_work_wts[i]);
         dag.setNodeMemoryWeight(i, node_work_wts[i]);
     }
 
     getline(infile, line);
-    if (! infile.eof()) {
+    if (!infile.eof()) {
         std::cout << "Incorrect input file format (file has remaining lines).\n";
         return {false, dag};
     }
@@ -453,7 +564,7 @@ std::pair<bool, BspArchitecture> FileReader::readBspArchitecture(std::ifstream &
     return {true, architecture};
 };
 
-void parseNode(std::string line, ComputationalDag& G) {
+void parseNode(std::string line, ComputationalDag &G) {
 
     // Extract node id and properties
     std::size_t pos = line.find('[');
@@ -464,12 +575,11 @@ void parseNode(std::string line, ComputationalDag& G) {
     std::vector<std::string> keyValuePairs;
     boost::split(keyValuePairs, properties, boost::is_any_of(" "));
 
-
     // Create node with properties
     int work_weight = 0;
     int mem_weight = 0;
     int comm_weight = 0;
-    for (const std::string& keyValuePair : keyValuePairs) {
+    for (const std::string &keyValuePair : keyValuePairs) {
         std::vector<std::string> keyValue;
         boost::split(keyValue, keyValuePair, boost::is_any_of("="));
 
@@ -486,21 +596,24 @@ void parseNode(std::string line, ComputationalDag& G) {
     }
 
     G.addVertex(work_weight, comm_weight, mem_weight);
-
 }
 
-void parseEdge(std::string line, ComputationalDag& G) {
+void parseEdge(std::string line, ComputationalDag &G) {
 
-   
+    // std::cout << "line: " << line << std::endl;
 
     // Extract source, target and properties
     std::size_t pos = line.find('[');
     std::string nodes = line.substr(0, pos);
     std::string properties = line.substr(pos + 1, line.find(']') - pos - 1);
 
+    //  std::cout << "nodes: " << nodes << " properties: " << properties << std::endl;
+
     // Split nodes into source and target
     std::vector<std::string> sourceTarget;
     boost::split(sourceTarget, nodes, boost::is_any_of("-"));
+
+    // std::cout << "source: " << sourceTarget[0] << " target: " << sourceTarget[1].substr(1) << std::endl;
 
     int source = std::stoi(sourceTarget[0]);
     int target = std::stoi(sourceTarget[1].substr(1));
@@ -511,7 +624,7 @@ void parseEdge(std::string line, ComputationalDag& G) {
 
     // Create edge with properties
     int comm_weight = 0;
-    for (const std::string& keyValuePair : keyValuePairs) {
+    for (const std::string &keyValuePair : keyValuePairs) {
         std::vector<std::string> keyValue;
         boost::split(keyValue, keyValuePair, boost::is_any_of("="));
 
@@ -523,18 +636,14 @@ void parseEdge(std::string line, ComputationalDag& G) {
         }
     }
 
-
     G.addEdge(source, target, comm_weight);
     // Add edge to graph
-    
 }
-
 
 std::pair<bool, ComputationalDag> FileReader::readComputationalDagDotFormat(std::ifstream &infile) {
 
-
     ComputationalDag G;
-   
+
     std::string line;
     while (std::getline(infile, line)) {
         // Skip lines that do not contain opening or closing brackets
@@ -555,9 +664,7 @@ std::pair<bool, ComputationalDag> FileReader::readComputationalDagDotFormat(std:
     }
 
     return std::make_pair(true, G);
-
 }
-
 
 std::pair<bool, ComputationalDag> FileReader::readComputationalDagDotFormat(const std::string &filename) {
 
@@ -585,86 +692,218 @@ bool FileReader::readProblem(const std::string &filename, DAG &G, BSPproblem &pa
     return true;
 };
 
-std::tuple<bool, BspInstance, BspSchedule> FileReader::readBspScheduleDotFormat(const std::string &filename) {
+std::tuple<bool, BspSchedule> FileReader::readBspScheduleDotFormat(const std::string &filename, BspInstance &instance) {
 
     std::ifstream infile(filename);
     if (!infile.is_open()) {
         std::cout << "Unable to find/open input dag file.\n";
 
-        return {false, BspInstance(), BspSchedule()};
+        return {false, BspSchedule()};
     }
 
-    return FileReader::readBspScheduleDotFormat(infile);
+    return FileReader::readBspScheduleDotFormat(infile, instance);
 }
 
-std::tuple<bool, BspInstance, BspSchedule> FileReader::readBspScheduleDotFormat(std::ifstream &infile) {
+void parseNodeSchedule(std::string line, ComputationalDag &G, std::vector<unsigned> &node_to_proc,
+                       std::vector<unsigned> &node_to_superstep, std::map<KeyTriple, unsigned> &commSchedule) {
 
-    struct Node {
-        unsigned proc = 0;
-        unsigned superstep = 0;
-        std::string cs;
-        int workWeight = 0;
-        int communicationWeight = 0;
-        int memoryWeight = 0;
-    };
+    // Extract node id and properties
+    std::size_t pos = line.find('[');
+    unsigned nodeId = std::stoul(line.substr(0, pos));
+    std::string properties = line.substr(pos + 1, line.find(']') - pos - 1);
 
-    struct Line {
-        int communicationWeight = 0;
-    };
+    // std::cout << "node: " << nodeId << " properties: " << properties << std::endl;
 
-    using graph_t = boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS, Node, Line>;
+    std::size_t pos_cs = properties.find("cs=");
 
-    graph_t graph(0);
+    // std::cout << "pos_cs: " << pos_cs << std::endl;
 
-    boost::dynamic_properties dp(boost::ignore_other_properties);
+    bool has_cs = pos_cs != std::string::npos;
 
-    dp.property("work_weight", boost::get(&Node::workWeight, graph));
-    dp.property("comm_weight", boost::get(&Node::communicationWeight, graph));
-    dp.property("mem_weight", boost::get(&Node::memoryWeight, graph));
+    std::string prop_without_cs;
+    std::string cs;
 
-    dp.property("proc", boost::get(&Node::proc, graph));
-    dp.property("superstep", boost::get(&Node::superstep, graph));
-    dp.property("cs", boost::get(&Node::cs, graph));
-    dp.property("comm_weight", boost::get(&Line::communicationWeight, graph));
+    if (has_cs) {
+        prop_without_cs = properties.substr(0, pos_cs - 1);
+        cs = properties.substr(pos_cs + 5, properties.size() - pos_cs);
 
-    bool status = boost::read_graphviz(infile, graph, dp);
+        // std::cout << "prop_without_cs: " << prop_without_cs << " cs: " << cs << std::endl;
 
-    ComputationalDag G;
-    std::vector<unsigned> processor_assignment;
-    std::vector<unsigned> superstep_assignment;
-    std::map<KeyTriple, unsigned> comm_schedule;
+    } else {
+        prop_without_cs = properties;
+    }
 
-    for (auto v : boost::make_iterator_range(boost::vertices(graph))) {
-        auto &node = graph[v];
-        G.addVertex(node.workWeight, node.communicationWeight, node.memoryWeight);
-        processor_assignment[v] = node.proc;
-        superstep_assignment[v] = node.superstep;
+    // std::cout << "prop_without_cs: " << prop_without_cs << std::endl;
 
-        if (not node.cs.empty()) {
+    // Split properties into key-value pairs
+    std::vector<std::string> keyValuePairs;
+    boost::split(keyValuePairs, prop_without_cs, boost::is_any_of(";"));
 
-            std::string cs_strip = node.cs.substr(1, node.cs.size() - 2);
-            std::vector<std::string> sub_strs;
-            boost::split(sub_strs, cs_strip, boost::is_any_of(";"));
+    // Create node with properties
+    int work_weight = 0;
+    int mem_weight = 0;
+    int comm_weight = 0;
+    for (const std::string &keyValuePair : keyValuePairs) {
 
-            for (const auto &entry : sub_strs) {
+        // std::cout << "keyValuePair: " << keyValuePair << std::endl;
 
-                std::string entry_strip = node.cs.substr(1, entry.size() - 2);
-                std::vector<std::string> parts;
-                boost::split(parts, entry_strip, boost::is_any_of(","));
-                comm_schedule[{v, std::stoi(parts[0]), std::stoi(parts[1])}] = std::stoi(parts[2]);
-            }
+        std::vector<std::string> keyValue;
+
+        if (keyValuePair.empty()) {
+            continue;
+        }
+
+        boost::split(keyValue, keyValuePair, boost::is_any_of("="));
+
+        std::string key = keyValue[0];
+        std::string value = keyValue[1];
+
+        // std::cout << "key: " << key << " value: " << value << std::endl;
+
+        if (key == "work_weight") {
+
+            std::size_t pos_v = value.find("\"");
+
+            std::string num = value.substr(pos_v + 1, line.find("\"") - pos_v - 1);
+
+            work_weight = std::stoi(num);
+        } else if (key == "mem_weight") {
+            std::size_t pos_v = value.find("\"");
+
+            std::string num = value.substr(pos_v + 1, line.find("\"") - pos_v - 1);
+
+            mem_weight = std::stoi(num);
+        } else if (key == "comm_weight") {
+
+            std::size_t pos_v = value.find("\"");
+
+            std::string num = value.substr(pos_v + 1, line.find("\"") - pos_v - 1);
+
+            comm_weight = std::stoi(num);
+        } else if (key == "proc") {
+
+            std::size_t pos_v = value.find("\"");
+
+            std::string num = value.substr(pos_v + 1, line.find("\"") - pos_v - 1);
+
+            node_to_proc.push_back(std::stoul(num));
+            // schedule.setAssignedProcessor(nodeId, std::stoi(num));
+        } else if (key == "superstep") {
+
+            std::size_t pos_v = value.find("\"");
+
+            std::string num = value.substr(pos_v + 1, line.find("\"") - pos_v - 1);
+            node_to_superstep.push_back(std::stoul(num));
+            // schedule.setAssignedSuperstep(nodeId, std::stoi(num));
         }
     }
 
-    for (auto e : boost::make_iterator_range(boost::edges(graph))) {
-        auto &edge = graph[e];
-        G.addEdge(boost::source(e, graph), boost::target(e, graph), edge.communicationWeight);
+    if (has_cs) {
+        // std::string cs_strip = cs.substr(4, cs.size() - 2);
+
+        // std::cout << "cs_strip: " << cs_strip << std::endl;
+
+        std::vector<std::string> sub_strs;
+        boost::split(sub_strs, cs, boost::is_any_of(";"));
+
+        for (const auto &entry : sub_strs) {
+
+            std::string entry_strip = entry.substr(1, entry.size() - 2);
+            std::vector<std::string> parts;
+            boost::split(parts, entry_strip, boost::is_any_of(","));
+
+            commSchedule[{nodeId, std::stoi(parts[0]), std::stoi(parts[1])}] = std::stoi(parts[2]);
+
+            // schedule.addCommunicationScheduleEntry(nodeId, std::stoi(parts[0]), std::stoi(parts[1]),
+            //                                        std::stoi(parts[2]));
+        }
     }
 
-    BspInstance instance(G, BspArchitecture());
-    BspSchedule schedule(instance, processor_assignment, superstep_assignment, comm_schedule);
+    G.addVertex(work_weight, comm_weight, mem_weight);
+}
 
-    return std::make_tuple(status, instance, schedule);
+void parseEdgeSchedule(std::string line, ComputationalDag &G) {
+
+    // std::cout << "line: " << line << std::endl;
+
+    // Extract source, target and properties
+    std::size_t pos = line.find('[');
+    std::string nodes = line.substr(0, pos);
+    std::string properties = line.substr(pos + 1, line.find(']') - pos - 1);
+
+    // std::cout << "nodes: " << nodes << " properties: " << properties << std::endl;
+
+    // Split nodes into source and target
+    std::vector<std::string> sourceTarget;
+    boost::split(sourceTarget, nodes, boost::is_any_of("-"));
+
+    // std::cout << "source: " << sourceTarget[0] << " target: " << sourceTarget[1].substr(1) << std::endl;
+
+    int source = std::stoi(sourceTarget[0]);
+    int target = std::stoi(sourceTarget[1].substr(1));
+
+    // Split properties into key-value pairs
+    std::vector<std::string> keyValuePairs;
+    boost::split(keyValuePairs, properties, boost::is_any_of(" "));
+
+    // Create edge with properties
+    int comm_weight = 0;
+    for (const std::string &keyValuePair : keyValuePairs) {
+        std::vector<std::string> keyValue;
+        boost::split(keyValue, keyValuePair, boost::is_any_of("="));
+
+        std::string key = keyValue[0];
+        std::string value = keyValue[1];
+
+        std::size_t pos_v = value.find("\"");
+
+        std::string num = value.substr(pos_v + 1, line.find("\"") - pos_v - 1);
+
+        // std::cout << "key: " << key << " num: " << num << std::endl;
+
+        if (key == "comm_weight") {
+            comm_weight = std::stoi(num);
+        }
+    }
+
+    G.addEdge(source, target, comm_weight);
+    // Add edge to graph
+}
+
+std::tuple<bool, BspSchedule> FileReader::readBspScheduleDotFormat(std::ifstream &infile, BspInstance &inst) {
+
+    ComputationalDag& G = inst.getComputationalDag();
+
+   
+    std::vector<unsigned> node_to_proc;
+    std::vector<unsigned> node_to_superstep;
+    std::map<KeyTriple, unsigned> commSchedule;
+
+    std::string line;
+    while (std::getline(infile, line)) {
+        // Skip lines that do not contain opening or closing brackets
+        if (line.find('{') != std::string::npos || line.find('}') != std::string::npos) {
+            continue;
+        }
+
+        // Check if the line represents a node or an edge
+        if (line.find("->") != std::string::npos) {
+            // This is an edge
+            parseEdgeSchedule(line, G);
+            // Add the edge to the graph
+        } else {
+            // This is a node
+            // std::cout << "line: " << line << std::endl;
+            parseNodeSchedule(line, G, node_to_proc, node_to_superstep, commSchedule);
+            // Add the node to the graph
+        }
+    }
+
+
+
+    BspSchedule schedule(inst, node_to_proc, node_to_superstep, commSchedule);
+
+    return std::make_tuple(true, schedule);
 };
 
 std::pair<bool, ComputationalDag> FileReader::readComputationalDagMetisFormat(std::string &filename) {
@@ -677,8 +916,7 @@ std::pair<bool, ComputationalDag> FileReader::readComputationalDagMetisFormat(st
     }
 
     return FileReader::readComputationalDagMetisFormat(infile);
-
-}
+};
 
 std::pair<bool, ComputationalDag> FileReader::readComputationalDagMetisFormat(std::ifstream &infile) {
     // graph_t *ReadGraph(params_t *params)
@@ -689,7 +927,6 @@ std::pair<bool, ComputationalDag> FileReader::readComputationalDagMetisFormat(st
     // size_t lnlen = 0;
     // FILE *fpin;
 
-    
     std::string line;
     getline(infile, line);
     while (!infile.eof() && line.at(0) == '%')
@@ -776,17 +1013,17 @@ std::pair<bool, ComputationalDag> FileReader::readComputationalDagMetisFormat(st
 
             unsigned target;
             line2stream >> target;
-            
+
             target--;
 
             if (target < 0 || target >= num_nodes)
-                std::cout << "Edge " << target  << " for vertex " << i  << " is out of bounds" << std::endl;
+                std::cout << "Edge " << target << " for vertex " << i << " is out of bounds" << std::endl;
 
             if (readew) {
                 unsigned edge_weight;
                 line2stream >> edge_weight;
 
-                dag.addEdge(i, target, 1.0 , edge_weight);
+                dag.addEdge(i, target, 1.0, edge_weight);
             } else {
 
                 dag.addEdge(i, target);
@@ -794,9 +1031,123 @@ std::pair<bool, ComputationalDag> FileReader::readComputationalDagMetisFormat(st
         }
     }
 
-
     return {true, dag};
+};
+
+std::vector<unsigned> parseNumbers(const std::string &str) {
+    std::vector<unsigned> numbers;
+    std::stringstream ss(str);
+    std::string item;
+    while (std::getline(ss, item, ',')) {
+        try {
+
+            numbers.push_back(std::stoul(item));
+        } catch (const std::exception &e) {
+            std::cerr << "Error parsing number: " << e.what() << '\n';
+        }
+    }
+    return numbers;
 }
+
+void parseNodeRecomp(std::string line, unsigned node, BspScheduleRecomp &schedule) {
+
+    //std::cout << "line: " << line << std::endl;
+
+    size_t procPos = line.find("proc=\"") + 7; // Start of proc numbers
+    size_t procEnd = line.find(")", procPos);  // End of proc numbers
+    std::string procStr = line.substr(procPos, procEnd - procPos);
+
+    size_t superstepPos = line.find("superstep=\"") + 12; // Start of superstep numbers
+    size_t superstepEnd = line.find(")", superstepPos);   // End of superstep numbers
+    std::string superstepStr = line.substr(superstepPos, superstepEnd - superstepPos);
+
+   // std::cout << "procStr: " << procStr << " superstepStr: " << superstepStr << std::endl;
+
+    std::vector<unsigned> procVec = parseNumbers(procStr);
+    std::vector<unsigned> superstepVec = parseNumbers(superstepStr);
+
+    schedule.node_processor_assignment[node] = procVec;
+    schedule.node_superstep_assignment[node] = superstepVec;
+
+    if(*std::max_element(superstepVec.begin(),superstepVec.end()) >= schedule.numberOfSupersteps()) {
+        schedule.setNumberOfSupersteps(*std::max_element(superstepVec.begin(),superstepVec.end()) + 1);
+    }
+
+    size_t csPos = line.find("cs="); // Start of cs
+
+    //std::cout << "csPos: " << csPos << std::endl;
+
+    if (csPos != std::string::npos) {
+
+        csPos += 5;
+        size_t csEnd = line.find("]", csPos); // End of cs
+        std::string csStr = line.substr(csPos, csEnd - csPos);
+
+        //std::cout << "csStr: " << csStr << std::endl;
+
+        // Split csStr by ';' to get individual cs entries
+
+        std::stringstream ss(csStr);
+        std::string csEntry;
+        while (std::getline(ss, csEntry, ';')) {
+            // Remove parentheses
+            csEntry.erase(std::remove(csEntry.begin(), csEntry.end(), '('), csEntry.end());
+            csEntry.erase(std::remove(csEntry.begin(), csEntry.end(), ')'), csEntry.end());
+
+            //std::cout << "csEntry: " << csEntry << std::endl;
+
+            std::vector<unsigned> numbers = parseNumbers(csEntry);
+            if (numbers.size() == 3) {
+                auto key = std::make_tuple(node, numbers[0], numbers[1]);
+                schedule.commSchedule[key] = numbers[2];
+            }
+        }
+    }
+};
+std::pair<bool, BspScheduleRecomp> FileReader::extractBspScheduleRecomp(std::ifstream &infile,
+                                                                        const BspInstance &instance) {
+
+    BspScheduleRecomp schedule(instance, 1);
+
+    unsigned node = 0;
+
+    std::string line;
+    while (std::getline(infile, line)) {
+        // Skip lines that do not contain opening or closing brackets
+        if (line.find('{') != std::string::npos || line.find('}') != std::string::npos) {
+            continue;
+        }
+
+        // Check if the line represents a node or an edge
+        if (line.find("->") != std::string::npos) {
+            // This is an edge
+            // parseEdge(line, G);
+            // Add the edge to the graph
+        } else {
+            // This is a node
+            parseNodeRecomp(line, node, schedule);
+            // Add the node to the graph
+            node++;
+        }
+    }
+
+    std::cout << "schedule.node_processor_assignment.size(): " << schedule.node_processor_assignment.size()
+              << std::endl;
+
+    return std::make_pair(true, schedule);
+};
+
+std::pair<bool, BspScheduleRecomp> FileReader::extractBspScheduleRecomp(const std::string &filename,
+                                                                        const BspInstance &instance) {
+    std::ifstream infile(filename);
+    if (!infile.is_open()) {
+        std::cout << "Unable to find/open input dag file.\n";
+
+        return {false, BspScheduleRecomp()};
+    }
+
+    return FileReader::extractBspScheduleRecomp(infile, instance);
+};
 
 // gk_fclose(fpin);
 

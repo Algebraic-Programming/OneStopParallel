@@ -44,7 +44,7 @@ void BspScheduleRecomp::addCommunicationScheduleEntry(KeyTriple key, unsigned st
 
 bool BspScheduleRecomp::satisfiesPrecedenceConstraints() const {
 
-    throw std::runtime_error("Not implemented yet.");
+ //   throw std::runtime_error("Not implemented yet.");
     /*
         std::vector<unsigned> node_superstep = std::vector<unsigned>(instance->numberOfVertices(),
        number_of_supersteps); std::vector<std::vector<unsigned>> node_to_processor_assignment =
@@ -120,7 +120,7 @@ bool BspScheduleRecomp::hasValidCommSchedule() const { return checkCommScheduleV
 
 bool BspScheduleRecomp::checkCommScheduleValidity(const std::map<KeyTriple, unsigned int> &cs) const {
 
-    throw std::runtime_error("Not implemented yet.");
+    //throw std::runtime_error("Not implemented yet.");
 
     /*
         std::vector<std::vector<unsigned>> first_at = std::vector<std::vector<unsigned>>(

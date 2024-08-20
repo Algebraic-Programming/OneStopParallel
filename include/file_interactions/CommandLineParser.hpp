@@ -32,13 +32,13 @@ namespace pt = boost::property_tree;
 struct CommandLineParser {
   public:
     pt::ptree global_params;
-    pt::ptree algorithms;
+    pt::ptree scheduler;
     pt::ptree instances;
 
   private:
     std::string main_config_file;
 
-    pt::ptree algorithms_config;
+    pt::ptree scheduler_config;
 
     void usage() {
         std::cout << "Usage: Either read config file: \n"
@@ -51,13 +51,13 @@ struct CommandLineParser {
                   << "     --output, -o                   \tOutput schedule file \n"
                   << "     --sankey, -s                   \tOutput sankey schedule file \n"
                   << "     --dot, -d                      \tOutput dot schedule file \n"
-                  << "   Available algorithms: \n";
+                  << "   Available scheduler: \n";
 
         pt::ptree loadPtreeRoot;
         pt::read_json(main_config_file, loadPtreeRoot);
-        pt::ptree algorithms_config_usage = loadPtreeRoot.get_child("algorithms");
+        pt::ptree scheduler_config_usage = loadPtreeRoot.get_child("algorithms");
 
-        for (auto &algorithm : algorithms_config_usage) {
+        for (auto &algorithm : scheduler_config_usage) {
             std::cout << "     --" << algorithm.second.get_child("name").get_value<std::string>() << "\t\t"
                       << algorithm.second.get_child("description").get_value<std::string>() << "\n";
         }
@@ -72,7 +72,7 @@ struct CommandLineParser {
             algorithm_identifier = algorithm_identifier.substr(1);
         }
 
-        for (auto &algorithm : algorithms_config) {
+        for (auto &algorithm : scheduler_config) {
 
             std::string alg_name = algorithm.second.get_child("name").get_value<std::string>();
 
@@ -80,7 +80,7 @@ struct CommandLineParser {
                            [](unsigned char c) { return std::tolower(c); });
 
             if (alg_name == algorithm_identifier) {
-                algorithms.push_back(algorithm);
+                scheduler.push_back(algorithm);
                 algorithm_found = true;
             }
         }
@@ -97,12 +97,12 @@ struct CommandLineParser {
 
         global_params = loadPtreeRoot.get_child("globalParameters");
         instances = loadPtreeRoot.get_child("inputInstances");
-        pt::ptree algorithms_config_parse = loadPtreeRoot.get_child("algorithms");
+        pt::ptree scheduler_config_parse = loadPtreeRoot.get_child("algorithms");
 
-        for (auto &algorithm : algorithms_config_parse) {
+        for (auto &algorithm : scheduler_config_parse) {
 
             if (algorithm.second.get_child("run").get_value<bool>()) {
-                algorithms.push_back(algorithm);
+                scheduler.push_back(algorithm);
             }
         }
     }
@@ -123,8 +123,8 @@ struct CommandLineParser {
             }
 
             parse_config_file(config_file);
-            if (algorithms.empty()) {
-                throw std::invalid_argument("Parameter error: config file does not specify algorithms to run!\n");
+            if (scheduler.empty()) {
+                throw std::invalid_argument("Parameter error: config file does not specify scheduler to run!\n");
             }
             if (instances.empty()) {
                 throw std::invalid_argument("Parameter error: config file does not specify any instance!\n");
@@ -143,7 +143,7 @@ struct CommandLineParser {
             pt::read_json(main_config_file, loadPtreeRoot);
 
             global_params = loadPtreeRoot.get_child("globalParameters");
-            algorithms_config = loadPtreeRoot.get_child("algorithms");
+            scheduler_config = loadPtreeRoot.get_child("algorithms");
             pt::ptree instance;
 
             bool graph_specified = false;
@@ -197,7 +197,7 @@ struct CommandLineParser {
             if (!machine_specified || !graph_specified) {
                 usage();
                 throw std::invalid_argument("Parameter error: no graph or machine parameters were specified!\n");
-            } else if (algorithms.empty()) {
+            } else if (scheduler.empty()) {
                 usage();
                 throw std::invalid_argument("Parameter error: no algorithm was specified!\n");
             }

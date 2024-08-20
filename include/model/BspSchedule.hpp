@@ -86,8 +86,8 @@ class BspSchedule : public IBspSchedule {
      * @param processor_assignment_ The processor assignment for the nodes.
      * @param superstep_assignment_ The superstep assignment for the nodes.
      */ 
-    BspSchedule(const BspInstance &inst, std::vector<unsigned> processor_assignment_,
-                std::vector<unsigned> superstep_assignment_)
+    BspSchedule(const BspInstance &inst, const std::vector<unsigned> &processor_assignment_,
+                const std::vector<unsigned> &superstep_assignment_)
         : instance(&inst), node_to_processor_assignment(processor_assignment_),
           node_to_superstep_assignment(superstep_assignment_) {
         updateNumberOfSupersteps();
@@ -102,8 +102,8 @@ class BspSchedule : public IBspSchedule {
      * @param superstep_assignment_ The superstep assignment for the nodes.
      * @param comm_ The communication schedule for the nodes.
      */
-    BspSchedule(const BspInstance &inst, std::vector<unsigned int> processor_assignment_,
-                std::vector<unsigned int> superstep_assignment_, std::map<KeyTriple, unsigned int> comm_)
+    BspSchedule(const BspInstance &inst, const std::vector<unsigned int>& processor_assignment_,
+                const std::vector<unsigned int>& superstep_assignment_, const std::map<KeyTriple, unsigned int>& comm_)
         : instance(&inst), node_to_processor_assignment(processor_assignment_),
           node_to_superstep_assignment(superstep_assignment_), commSchedule(comm_) { updateNumberOfSupersteps(); }
 
@@ -230,10 +230,8 @@ class BspSchedule : public IBspSchedule {
     const std::map<KeyTriple, unsigned int> &getCommunicationSchedule() const { return commSchedule; }
     std::map<KeyTriple, unsigned int> &getCommunicationSchedule() { return commSchedule; }
 
-
     bool checkCommScheduleValidity(const std::map<KeyTriple, unsigned int> &cs) const;
-  
-    
+      
     bool hasValidCommSchedule() const;
 
     unsigned computeWorkCosts() const;
@@ -244,11 +242,8 @@ class BspSchedule : public IBspSchedule {
 
     unsigned computeCostsBufferedSending() const;
 
-
     unsigned computeBaseCommCostsBufferedSending() const;
-
-    
-
+  
     double computeCostsTotalCommunication() const;
 
     double computeBaseCommCostsTotalCommunication() const;
@@ -269,11 +264,15 @@ class BspSchedule : public IBspSchedule {
     void setLazyCommunicationSchedule();
     void setEagerCommunicationSchedule();
 
-
     std::vector<unsigned int> getAssignedNodeVector(unsigned int processor) const;
     std::vector<unsigned int> getAssignedNodeVector(unsigned int processor, unsigned int superstep) const;
 
     void setNumberOfSupersteps(unsigned int number_of_supersteps_) { number_of_supersteps = number_of_supersteps_; }
+
+    unsigned num_assigned_nodes(unsigned processor) const;
+    std::vector<unsigned> num_assigned_nodes_per_processor() const;
+
+    std::vector<std::vector<unsigned>> num_assigned_nodes_per_superstep_processor() const;
 
 };
 

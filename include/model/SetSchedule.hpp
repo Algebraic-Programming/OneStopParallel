@@ -20,7 +20,7 @@ limitations under the License.
 
 #include "BspSchedule.hpp"
 #include "IBspSchedule.hpp"
-#include "algorithms/CommunicationScheduler.hpp"
+#include "scheduler/CommunicationScheduler.hpp"
 
 /**
  * @class SetSchedule

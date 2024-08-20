@@ -35,13 +35,15 @@ class BspScheduleRecomp {
 
     unsigned int number_of_supersteps;
 
+   
+
+  public:
+
     std::vector<std::vector<unsigned>> node_processor_assignment;
     std::vector<std::vector<unsigned>> node_superstep_assignment;
 
-
     std::map<KeyTriple, unsigned> commSchedule;
 
-  public:
     BspScheduleRecomp() = default;
 
     BspScheduleRecomp(const BspInstance &inst, unsigned number_of_supersteps_)
@@ -137,6 +139,13 @@ class BspScheduleRecomp {
    
     bool satisfiesMemoryConstraints() const;
 
+    unsigned total_node_assignments() const {
+        unsigned total = 0;
+        for (unsigned i = 0; i < node_processor_assignment.size(); i++) {
+            total += node_processor_assignment[i].size();
+        }
+        return total;
+    }
    
 
 };

@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner   
+@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 
 #pragma once
@@ -37,9 +37,7 @@ class BspScheduleRecompWriter {
 
         template<class VertexOrEdge>
         void operator()(std::ostream &out, const VertexOrEdge &i) const {
-            out << "["
-                << "comm_weight=\"" << graph[i].communicationWeight << "\";"
-                << "]";
+            out << "[" << "comm_weight=\"" << graph[i].communicationWeight << "\";" << "]";
         }
     };
 
@@ -50,20 +48,19 @@ class BspScheduleRecompWriter {
 
         template<class VertexOrEdge>
         void operator()(std::ostream &out, const VertexOrEdge &i) const {
-            out << "["
-                << "work_weight=\"" << schedule.getInstance().getComputationalDag().nodeWorkWeight(i) << "\";"
+            out << "[" << "work_weight=\"" << schedule.getInstance().getComputationalDag().nodeWorkWeight(i) << "\";"
                 << "comm_weight=\"" << schedule.getInstance().getComputationalDag().nodeCommunicationWeight(i) << "\";"
                 << "mem_weight=\"" << schedule.getInstance().getComputationalDag().nodeMemoryWeight(i) << "\";"
                 << "proc=\"(";
-                for (size_t j = 0; j < schedule.assignedProcessors(i).size() - 1; ++j) {
-                    out <<  schedule.assignedProcessors(i)[j] << ",";
-                }
-                out << schedule.assignedProcessors(i)[schedule.assignedProcessors(i).size() - 1] << ")\";"
+            for (size_t j = 0; j < schedule.assignedProcessors(i).size() - 1; ++j) {
+                out << schedule.assignedProcessors(i)[j] << ",";
+            }
+            out << schedule.assignedProcessors(i)[schedule.assignedProcessors(i).size() - 1] << ")\";"
                 << "superstep=\"(";
-                for (size_t j = 0; j < schedule.assignedSupersteps(i).size() - 1; ++j) {
-                    out <<  schedule.assignedSupersteps(i)[j] << ",";
-                }
-                out << schedule.assignedSupersteps(i)[schedule.assignedSupersteps(i).size() - 1] << ")\";";
+            for (size_t j = 0; j < schedule.assignedSupersteps(i).size() - 1; ++j) {
+                out << schedule.assignedSupersteps(i)[j] << ",";
+            }
+            out << schedule.assignedSupersteps(i)[schedule.assignedSupersteps(i).size() - 1] << ")\";";
 
             bool found = false;
 
@@ -92,24 +89,25 @@ class BspScheduleRecompWriter {
 
     struct VertexWriterDuplicateSchedule_DOT {
         const BspSchedule &schedule;
+        const std::vector<std::string> name;
+        const std::vector<unsigned> node_to_proc;
+        const std::vector<unsigned> node_to_superstep;
 
-        VertexWriterDuplicateSchedule_DOT(const BspSchedule &schedule_) : schedule(schedule_) {}
+        VertexWriterDuplicateSchedule_DOT(const BspSchedule &schedule_, const std::vector<std::string> &name_, std::vector<unsigned> &node_to_proc_,
+                                          std::vector<unsigned> &node_to_superstep_)
+            : schedule(schedule_), name(name_), node_to_proc(node_to_proc_), node_to_superstep(node_to_superstep_) {}
 
         template<class VertexOrEdge>
         void operator()(std::ostream &out, const VertexOrEdge &i) const {
-            out << "["
-                << "label=\"" << i << "\";"
-                << "work_weight=\"" << schedule.getInstance().getComputationalDag().nodeWorkWeight(i) << "\";"
-                << "comm_weight=\"" << schedule.getInstance().getComputationalDag().nodeCommunicationWeight(i) << "\";"
-                << "mem_weight=\"" << schedule.getInstance().getComputationalDag().nodeMemoryWeight(i) << "\";"
-                << "proc=\"" << schedule.assignedProcessor(i) << "\";"
-                << "superstep=\"" << schedule.assignedSuperstep(i) << "\";";
+            out << "[" << "label=\"" << name[i] << "\";" << "work_weight=\""
+                << schedule.getInstance().getComputationalDag().nodeWorkWeight(i) << "\";" << "comm_weight=\""
+                << schedule.getInstance().getComputationalDag().nodeCommunicationWeight(i) << "\";" << "mem_weight=\""
+                << schedule.getInstance().getComputationalDag().nodeMemoryWeight(i) << "\";" << "proc=\""
+                << schedule.assignedProcessor(i) << "\";" << "superstep=\"" << schedule.assignedSuperstep(i) << "\";";
 
             out << "]";
         }
     };
-
-
 
     /**
      * Constructs a BspScheduleWriter object with the given BspSchdule.
@@ -151,11 +149,14 @@ class BspScheduleRecompWriter {
         write_dot(os);
     }
 
+    template<class VertexWriterType = VertexWriterDuplicateSchedule_DOT, class EdgeWriterType = EdgeWriterSchedule_DOT>
+    void write_dot_duplicate_vertices(const std::string &filename) const {
+        std::ofstream os(filename);
+        write_dot(os);
+    }
 
     template<class VertexWriterType = VertexWriterDuplicateSchedule_DOT, class EdgeWriterType = EdgeWriterSchedule_DOT>
     void write_dot_duplicate_vertices(std::ostream &os) const;
-
-
 };
 
 template<class VertexWriterType, class EdgeWriterType>
@@ -164,13 +165,87 @@ void BspScheduleRecompWriter::write_dot(std::ostream &os) const {
     boost::write_graphviz(os, g, VertexWriterType(schedule), EdgeWriterType(g));
 }
 
-
 template<class VertexWriterType, class EdgeWriterType>
 void BspScheduleRecompWriter::write_dot_duplicate_vertices(std::ostream &os) const {
-    
-    
-    const auto &g = schedule.getInstance().getComputationalDag().getGraph();
 
-    
-    boost::write_graphviz(os, g, VertexWriterType(schedule), EdgeWriterType(g));
+    const auto &g = schedule.getInstance().getComputationalDag().getGraph();
+   
+    std::vector<std::string> names;
+    std::vector<unsigned> node_to_proc;
+    std::vector<unsigned> node_to_superstep;
+
+    std::unordered_map<VertexType, std::vector<unsigned>> vertex_to_idx;
+
+    GraphType g2;
+
+    unsigned idx_new = 0;
+
+    for (const auto &node : boost::make_iterator_range(boost::vertices(g))) {
+
+        if (schedule.assignedProcessors(node).size() == 1) {
+
+            boost::add_vertex(g2);
+
+            names.push_back(std::to_string(node));
+            node_to_proc[idx_new] = schedule.assignedProcessors(node)[0];
+            node_to_superstep[idx_new] = schedule.assignedSupersteps(node)[0];
+
+            vertex_to_idx.insert({node, {idx_new}});
+            idx_new++;
+
+        } else {
+
+            std::vector<unsigned> idxs;
+            for (unsigned i = 0; i < schedule.assignedProcessors(node).size(); ++i) {
+
+                boost::add_vertex(g2);
+
+                names.push_back(std::to_string(node).append("_").append(std::to_string(i)));
+                node_to_proc[idx_new] = schedule.assignedProcessors(node)[i];
+                node_to_superstep[idx_new] = schedule.assignedSupersteps(node)[i];
+
+                idxs.push_back(idx_new++);
+            }
+            vertex_to_idx.insert({node, idxs});
+        }
+    }
+
+    for (const auto &[key, val] : vertex_to_idx) {
+
+        if (val.size() == 1) {
+
+            for (const auto &edge : boost::make_iterator_range(boost::out_edges(key, g))) {
+
+                const auto target = boost::target(edge, g);
+                
+                for (const auto &new_node_target : vertex_to_idx[target]) {
+                    boost::add_edge(val[0], new_node_target, g2);
+                }
+            }
+
+        } else {
+
+            const std::unordered_set<unsigned> assigned_processors(schedule.assignedProcessors(key));
+
+            for (unsigned i = 0; i < val.size(); i++) {
+
+                for (const auto &edge : boost::make_iterator_range(boost::out_edges(key, g))) {
+
+                    const auto target = boost::target(edge, g);
+
+                    for (unsigned j = 0; j < vertex_to_idx[target].size(); j++) {
+
+                        if (assigned_processors.find(node_to_proc[vertex_to_idx[target][j]]) ==
+                                assigned_processors.end() ||
+                            node_to_proc[val[i]] == node_to_proc[vertex_to_idx[target][j]]) {
+
+                            boost::add_edge(val[i], vertex_to_idx[target][j], g2);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    boost::write_graphviz(os, g2, VertexWriterDuplicateSchedule_DOT(names, node_to_proc, node_to_superstep), EdgeWriterType(g2));
 }

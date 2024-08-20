@@ -28,53 +28,56 @@ limitations under the License.
 #include <tuple>
 #include <unistd.h>
 
-#include "algorithms/Coarsers/Funnel.hpp"
-#include "algorithms/Coarsers/HDaggCoarser.hpp"
-#include "algorithms/Coarsers/SquashA.hpp"
-#include "algorithms/Coarsers/WavefrontCoarser.hpp"
-#include "algorithms/ContractRefineScheduler/BalDMixR.hpp"
-#include "algorithms/ContractRefineScheduler/CoBalDMixR.hpp"
-#include "algorithms/ContractRefineScheduler/MultiLevelHillClimbing.hpp"
-#include "algorithms/GreedySchedulers/GreedyBspScheduler.hpp"
-#include "algorithms/GreedySchedulers/GreedyChildren.hpp"
-#include "algorithms/GreedySchedulers/GreedyCilkScheduler.hpp"
-#include "algorithms/GreedySchedulers/GreedyEtfScheduler.hpp"
-#include "algorithms/GreedySchedulers/GreedyLayers.hpp"
-#include "algorithms/GreedySchedulers/GreedyVarianceScheduler.hpp"
-#include "algorithms/GreedySchedulers/MetaGreedyScheduler.hpp"
-#include "algorithms/GreedySchedulers/RandomBadGreedy.hpp"
-#include "algorithms/GreedySchedulers/RandomGreedy.hpp"
-#include "algorithms/HDagg/HDagg_simple.hpp"
-#include "algorithms/ImprovementScheduler.hpp"
-#include "algorithms/LocalSearchSchedulers/HillClimbingScheduler.hpp"
-#include "algorithms/Serial/Serial.hpp"
-#include "algorithms/Wavefront/Wavefront.hpp"
+#include "scheduler/Coarsers/Funnel.hpp"
+#include "scheduler/Coarsers/HDaggCoarser.hpp"
+#include "scheduler/Coarsers/SquashA.hpp"
+#include "scheduler/Coarsers/WavefrontCoarser.hpp"
+#include "scheduler/ContractRefineScheduler/BalDMixR.hpp"
+#include "scheduler/ContractRefineScheduler/CoBalDMixR.hpp"
+#include "scheduler/ContractRefineScheduler/MultiLevelHillClimbing.hpp"
+#include "scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
+#include "scheduler/GreedySchedulers/GreedyChildren.hpp"
+#include "scheduler/GreedySchedulers/GreedyCilkScheduler.hpp"
+#include "scheduler/GreedySchedulers/GreedyEtfScheduler.hpp"
+#include "scheduler/GreedySchedulers/GreedyLayers.hpp"
+#include "scheduler/GreedySchedulers/GreedyVarianceScheduler.hpp"
+#include "scheduler/GreedySchedulers/MetaGreedyScheduler.hpp"
+#include "scheduler/GreedySchedulers/RandomBadGreedy.hpp"
+#include "scheduler/GreedySchedulers/RandomGreedy.hpp"
+#include "scheduler/HDagg/HDagg_simple.hpp"
+#include "scheduler/ImprovementScheduler.hpp"
+#include "scheduler/LocalSearchSchedulers/HillClimbingScheduler.hpp"
+#include "scheduler/Serial/Serial.hpp"
+#include "scheduler/Wavefront/Wavefront.hpp"
 
 #include "file_interactions/CommandLineParser.hpp"
 #include "file_interactions/FileReader.hpp"
-#include "model/BspSchedule.hpp"
 #include "file_interactions/BspScheduleWriter.hpp"
+#include "model/BspSchedule.hpp"
 
-#include "algorithms/SchedulePermutations/ScheduleNodePermuter.hpp"
+#include "scheduler/SchedulePermutations/ScheduleNodePermuter.hpp"
 #include "simulation/BspSptrsvCSR.hpp"
 
 #include "auxiliary/run_algorithm.hpp"
 
-//#define NO_PERMUTE
+#define NO_PERMUTE
 
 namespace pt = boost::property_tree;
 
 bool check_vectors_equal(const std::vector<double> &v1, const std::vector<double> &v2) {
     if (v1.size() != v2.size()) {
+        std::cout << "Vectors have different sizes!" << std::endl;
         return false;
     }
 
+    bool ret = true;
     for (unsigned i = 0; i < v1.size(); i++) {
-        if (std::abs(v1[i] - v2[i]) > 0.000001) {
-            return false;
+        if (std::abs(v1[i] - v2[i]) / (std::abs(v1[i]) + std::abs(v2[i]) + 0.00001) > 0.00001) {
+            std::cout << "Difference at index " << i << ": " << v1[i] << " != " << v2[i] << std::endl;
+            ret = false;
         }
     }
-    return true;
+    return ret;
 }
 
 void flush_cache(const unsigned proc_num) {
@@ -181,72 +184,59 @@ int main(int argc, char *argv[]) {
 
                     std::cout << std::endl << "Running graph: " << name_graph << " - " << name_machine << std::endl;
 
+                    BspInstance bsp_instance;
+
                     bool mtx_format = false;
-
-                    std::pair<bool, ComputationalDag> read_graph;
-
-                    std::unordered_map<std::pair<VertexType, VertexType>, double, pair_hash> matrix_entries;
+                    bool graph_status = false;
 
                     if (filename_graph.substr(filename_graph.rfind(".") + 1) == "txt") {
-                        read_graph = FileReader::readComputationalDagHyperdagFormat(filename_graph);
+                        std::tie(graph_status, bsp_instance.getComputationalDag()) = FileReader::readComputationalDagHyperdagFormat(filename_graph);
 
                     } else if (filename_graph.substr(filename_graph.rfind(".") + 1) == "mtx") {
                         mtx_format = true;
-                        read_graph = FileReader::readComputationalDagMartixMarketFormat(filename_graph, matrix_entries);
-
-                        // std::tuple<bool, ComputationalDag, std::unordered_map<std::pair<VertexType, VertexType>,
-                        // double, pair_hash>> read_graph =
-                        // FileReader::readComputationalDagMartixMarketFormat(filename_graph); status_graph =
-                        // std::get<0>(read_graph); graph = std::get<1>(read_graph); matrix_entries =
-                        // std::get<2>(read_graph);
+                        std::tie(graph_status, bsp_instance.getComputationalDag()) = FileReader::readComputationalDagMartixMarketFormat(filename_graph);
+ 
                     } else if (filename_graph.substr(filename_graph.rfind(".") + 1) == "dot") {
-                        read_graph = FileReader::readComputationalDagDotFormat(filename_graph);
+                        std::tie(graph_status, bsp_instance.getComputationalDag()) = FileReader::readComputationalDagDotFormat(filename_graph);
 
                     } else {
                         log.open(log_file, std::ios_base::app);
                         log << "Unknown file ending: ." << filename_graph.substr(filename_graph.rfind(".") + 1)
                             << " ...assuming hyperDag format." << std::endl;
                         log.close();
-                        read_graph = FileReader::readComputationalDagHyperdagFormat(filename_graph);
+                        std::tie(graph_status, bsp_instance.getComputationalDag()) = FileReader::readComputationalDagHyperdagFormat(filename_graph);
                     }
 
-                    bool &status_graph = read_graph.first;
+                    bool arch_status = false;
+                    std::tie(arch_status, bsp_instance.getArchitecture()) = FileReader::readBspArchitecture(filename_machine);
 
-                    ComputationalDag &graph = read_graph.second;
+                    ComputationalDag &graph = bsp_instance.getComputationalDag();
 
-                    auto [status_architecture, architecture] = FileReader::readBspArchitecture(filename_machine);
-
-                    if (!status_graph) {
+                    if (!graph_status) {
                         throw std::invalid_argument("Reading graph file " + filename_graph + " failed.");
                     }
 
-                    if (!status_architecture) {
+                    if (!arch_status) {
                         throw std::invalid_argument("Reading architecture file " + filename_machine + " failed.");
                     }
 
-                    BspInstance bsp_instance(graph, architecture);
-
-                    BspSptrsvCSR simulator =
-                        mtx_format ? BspSptrsvCSR(bsp_instance, matrix_entries) : BspSptrsvCSR(bsp_instance);
-
-                    matrix_entries.clear();
-                    matrix_entries.rehash(0);
-
+                    BspSptrsvCSR simulator(bsp_instance, not mtx_format);
+                    
                     const auto ref_solution = simulator.compute_sptrsv();
 
-                    std::vector<std::string> schedulers_name(parser.algorithms.size(), "");
-                    std::vector<bool> schedulers_failed(parser.algorithms.size(), false);
-                    std::vector<unsigned> schedulers_costs(parser.algorithms.size(), 0);
-                    std::vector<unsigned> schedulers_work_costs(parser.algorithms.size(), 0);
-                    std::vector<unsigned> schedulers_base_comm_costs(parser.algorithms.size(), 0);
-                    std::vector<unsigned> schedulers_supersteps(parser.algorithms.size(), 0);
-                    std::vector<unsigned> schedulers_base_buffered_sending(parser.algorithms.size(), 0);
-                    std::vector<double> schedulers_base_costsTotalCommunication(parser.algorithms.size(), 0);
-                    std::vector<long unsigned> schedulers_compute_time(parser.algorithms.size(), 0);
-                    std::vector<double> schedulers_sptrsv_simulation_time(parser.algorithms.size(), 0);
+                    std::vector<std::string> schedulers_name(parser.scheduler.size(), "");
+                    std::vector<bool> schedulers_failed(parser.scheduler.size(), false);
+                    std::vector<unsigned> schedulers_costs(parser.scheduler.size(), 0);
+                    std::vector<unsigned> schedulers_work_costs(parser.scheduler.size(), 0);
+                    std::vector<unsigned> schedulers_base_comm_costs(parser.scheduler.size(), 0);
+                    std::vector<unsigned> schedulers_supersteps(parser.scheduler.size(), 0);
+                    std::vector<unsigned> schedulers_base_buffered_sending(parser.scheduler.size(), 0);
+                    std::vector<double> schedulers_base_costsTotalCommunication(parser.scheduler.size(), 0);
+                    std::vector<long unsigned> schedulers_compute_time(parser.scheduler.size(), 0);
+                    std::vector<double> schedulers_sptrsv_simulation_time(parser.scheduler.size(), 0);
 
                     size_t algorithm_counter = 0;
-                    for (auto &algorithm : parser.algorithms) {
+                    for (auto &algorithm : parser.scheduler) {
                         schedulers_name[algorithm_counter] =
                             algorithm.second.get_child("name").get_value<std::string>();
 
@@ -344,12 +334,14 @@ int main(int argc, char *argv[]) {
                                 perm = schedule_node_permuter_basic(schedule, LOOP_PROCESSORS);
                             }
                             const auto fin_perm_time = std::chrono::high_resolution_clock::now();
+
 #ifdef NO_PERMUTE
                             simulator.setup_csr_no_permutation(schedule);
                        
 #else
                             simulator.setup_csr(schedule, perm);
 #endif
+
                             const auto fin_reorder_time = std::chrono::high_resolution_clock::now();
 
                             std::cout << "Permutation time: "
@@ -381,6 +373,8 @@ int main(int argc, char *argv[]) {
                             }
 
                             simulator.reset_x();
+
+                            std::cout << "Starting actual simulation" << std::endl;
 
                             for (unsigned record = 0; record < 100; record++) {
 
@@ -434,7 +428,7 @@ int main(int argc, char *argv[]) {
 
                                 schedulers_sptrsv_simulation_time[algorithm_counter] = inner_record;
 
-                                std::cout << schedulers_sptrsv_simulation_time[algorithm_counter] << std::endl;
+                                // std::cout << schedulers_sptrsv_simulation_time[algorithm_counter] << std::endl;
 
                                 stats.open(stats_file, std::ios_base::app);
                                 stats << name_graph << "," << name_machine << "," << schedulers_name[algorithm_counter]
@@ -488,7 +482,7 @@ int main(int argc, char *argv[]) {
                     }
 
                     int tw = 1, ww = 1, cw = 1, nsw = 1, ct = 1;
-                    for (size_t i = 0; i < parser.algorithms.size(); i++) {
+                    for (size_t i = 0; i < parser.scheduler.size(); i++) {
                         if (schedulers_failed[i])
                             continue;
                         tw = std::max(tw, 1 + int(std::log10(schedulers_costs[i])));
@@ -505,7 +499,7 @@ int main(int argc, char *argv[]) {
                     std::cout << "Number of Vertices: " + std::to_string(graph.numberOfVertices()) +
                                      "  Number of Edges: " + std::to_string(graph.numberOfEdges())
                               << std::endl;
-                    for (size_t j = 0; j < parser.algorithms.size(); j++) {
+                    for (size_t j = 0; j < parser.scheduler.size(); j++) {
                         size_t i = j;
                         if (sorted_by_total_costs)
                             i = ordering[j];

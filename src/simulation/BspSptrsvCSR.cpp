@@ -29,14 +29,13 @@ void BspSptrsvCSR::setup_csr(const BspSchedule &schedule, std::vector<size_t> &p
 
     x = std::vector<double>(instance->numberOfVertices(), 1.0);
 
-    // std::vector<double>
     val.clear();
     val.reserve(instance->getComputationalDag().numberOfEdges() + instance->getComputationalDag().numberOfVertices());
-    // std::vector<unsigned>
+
     col_idx.clear();
     col_idx.reserve(instance->getComputationalDag().numberOfEdges() +
                     instance->getComputationalDag().numberOfVertices());
-    // std::vector<unsigned>
+
     row_ptr.clear();
     row_ptr.reserve(instance->numberOfVertices() + 1);
 
@@ -46,23 +45,17 @@ void BspSptrsvCSR::setup_csr(const BspSchedule &schedule, std::vector<size_t> &p
     step_proc_ptr =
         std::vector<std::vector<unsigned>>(num_supersteps, std::vector<unsigned>(instance->numberOfProcessors(), 0));
 
-    step_proc_num =
-        std::vector<std::vector<unsigned>>(num_supersteps, std::vector<unsigned>(instance->numberOfProcessors(), 0));
-
-    SetSchedule set_schedule(schedule);
+    step_proc_num = schedule.num_assigned_nodes_per_superstep_processor();
 
     unsigned current_step = 0;
     unsigned current_processor = 0;
 
     step_proc_ptr[current_step][current_processor] = 0;
-    step_proc_num[current_step][current_processor] =
-        set_schedule.step_processor_vertices[current_step][current_processor].size();
 
     for (const auto &node : perm_inv) {
 
-        if (set_schedule.step_processor_vertices[current_step][current_processor].find(node) ==
-            set_schedule.step_processor_vertices[current_step][current_processor].end()) {
-
+        if (schedule.assignedProcessor(node) != current_processor || schedule.assignedSuperstep(node) != current_step) {
+            
             while (schedule.assignedProcessor(node) != current_processor ||
                    schedule.assignedSuperstep(node) != current_step) {
 
@@ -75,8 +68,7 @@ void BspSptrsvCSR::setup_csr(const BspSchedule &schedule, std::vector<size_t> &p
             }
 
             step_proc_ptr[current_step][current_processor] = row_ptr.size();
-            step_proc_num[current_step][current_processor] =
-                set_schedule.step_processor_vertices[current_step][current_processor].size();
+
         }
 
         row_ptr.push_back(col_idx.size());
@@ -91,11 +83,13 @@ void BspSptrsvCSR::setup_csr(const BspSchedule &schedule, std::vector<size_t> &p
             col_idx.push_back(p);
             auto pair = boost::edge(perm_inv[p], node, instance->getComputationalDag().getGraph());
             assert(pair.second);
-            val.push_back(edge_value.at(pair.first));
+            val.push_back(instance->getComputationalDag().edge_mtx_entry(pair.first));
+
         }
 
         col_idx.push_back(perm[node]);
-        val.push_back(node_value.at(node));
+        val.push_back(instance->getComputationalDag().node_mtx_entry(node));
+
     }
 
     row_ptr.push_back(col_idx.size());
@@ -112,14 +106,14 @@ void BspSptrsvCSR::setup_csr_snake(const BspSchedule &schedule, std::vector<size
 
     x = std::vector<double>(instance->numberOfVertices(), 1.0);
 
-    // std::vector<double>
+
     val.clear();
     val.reserve(instance->getComputationalDag().numberOfEdges() + instance->getComputationalDag().numberOfVertices());
-    // std::vector<unsigned>
+
     col_idx.clear();
     col_idx.reserve(instance->getComputationalDag().numberOfEdges() +
                     instance->getComputationalDag().numberOfVertices());
-    // std::vector<unsigned>
+
     row_ptr.clear();
     row_ptr.reserve(instance->numberOfVertices() + 1);
 
@@ -129,23 +123,17 @@ void BspSptrsvCSR::setup_csr_snake(const BspSchedule &schedule, std::vector<size
     step_proc_ptr =
         std::vector<std::vector<unsigned>>(num_supersteps, std::vector<unsigned>(instance->numberOfProcessors(), 0));
 
-    step_proc_num =
-        std::vector<std::vector<unsigned>>(num_supersteps, std::vector<unsigned>(instance->numberOfProcessors(), 0));
-
-    SetSchedule set_schedule(schedule);
+    step_proc_num = schedule.num_assigned_nodes_per_superstep_processor();
 
     unsigned current_step = 0;
     unsigned current_processor = 0;
     bool reverse = false;
 
     step_proc_ptr[current_step][current_processor] = 0;
-    step_proc_num[current_step][current_processor] =
-        set_schedule.step_processor_vertices[current_step][current_processor].size();
 
     for (const auto &node : perm_inv) {
 
-        if (set_schedule.step_processor_vertices[current_step][current_processor].find(node) ==
-            set_schedule.step_processor_vertices[current_step][current_processor].end()) {
+        if (schedule.assignedProcessor(node) != current_processor || schedule.assignedSuperstep(node) != current_step) {
 
             while (schedule.assignedProcessor(node) != current_processor ||
                    schedule.assignedSuperstep(node) != current_step) {
@@ -167,8 +155,6 @@ void BspSptrsvCSR::setup_csr_snake(const BspSchedule &schedule, std::vector<size
             }
 
             step_proc_ptr[current_step][current_processor] = row_ptr.size();
-            step_proc_num[current_step][current_processor] =
-                set_schedule.step_processor_vertices[current_step][current_processor].size();
         }
 
         row_ptr.push_back(col_idx.size());
@@ -183,11 +169,13 @@ void BspSptrsvCSR::setup_csr_snake(const BspSchedule &schedule, std::vector<size
             col_idx.push_back(p);
             auto pair = boost::edge(perm_inv[p], node, instance->getComputationalDag().getGraph());
             assert(pair.second);
-            val.push_back(edge_value.at(pair.first));
+            val.push_back(instance->getComputationalDag().edge_mtx_entry(pair.first));
+
         }
 
         col_idx.push_back(perm[node]);
-        val.push_back(node_value.at(node));
+        val.push_back(instance->getComputationalDag().node_mtx_entry(node));
+
     }
 
     row_ptr.push_back(col_idx.size());
@@ -262,30 +250,10 @@ void BspSptrsvCSR::setup_csr_no_permutation(const BspSchedule &schedule) {
     row_ptr.clear();
     row_ptr.reserve(instance->numberOfVertices() + 1);
 
-    // step_ptr.clear();
-    // step_ptr.reserve(instance->numberOfVertices());
+    for (const auto& node : instance->getComputationalDag().dfs_topoOrder()) {
 
-    // step_proc_ptr =
-    //     std::vector<std::vector<unsigned>>(num_supersteps, std::vector<unsigned>(instance->numberOfProcessors(), 0));
-
-    // step_proc_num =
-    //     std::vector<std::vector<unsigned>>(num_supersteps, std::vector<unsigned>(instance->numberOfProcessors(), 0));
-
-    SetSchedule set_schedule(schedule);
-
-    for (const auto &node : instance->getComputationalDag().dfs_topoOrder()) {
-
-        for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
-
-            for (unsigned step = 0; step < schedule.numberOfSupersteps(); step++) {
-
-                if (set_schedule.step_processor_vertices[step][proc].find(node) !=
-                    set_schedule.step_processor_vertices[step][proc].end()) {
-
-                    vector_step_processor_vertices[step][proc].push_back(node);
-                }
-            }
-        }
+        vector_step_processor_vertices[schedule.assignedSuperstep(node)][schedule.assignedProcessor(node)].push_back(
+            node);
     }
 
     for (unsigned node = 0; node < instance->numberOfVertices(); node++) {
@@ -302,11 +270,13 @@ void BspSptrsvCSR::setup_csr_no_permutation(const BspSchedule &schedule) {
             col_idx.push_back(p);
             auto pair = boost::edge(p, node, instance->getComputationalDag().getGraph());
             assert(pair.second);
-            val.push_back(edge_value.at(pair.first));
+            val.push_back(instance->getComputationalDag().edge_mtx_entry(pair.first));
+
         }
 
         col_idx.push_back(node);
-        val.push_back(node_value.at(node));
+        val.push_back(instance->getComputationalDag().node_mtx_entry(node));
+
     }
 
     row_ptr.push_back(col_idx.size());
@@ -364,21 +334,17 @@ void BspSptrsvCSR::simulate_sptrsv_graph_mtx() {
 
             for (const auto &node : vector_step_processor_vertices[step][proc]) {
 
-
-                for (const auto& edge : instance->getComputationalDag().in_edges(node)) {
-                    x[node] -= instance->getComputationalDag().edge_mtx_entry(edge) * x[instance->getComputationalDag().source(edge)];
-                    
-   
+                for (const auto &edge : instance->getComputationalDag().in_edges(node)) {
+                    x[node] -= instance->getComputationalDag().edge_mtx_entry(edge) *
+                               x[instance->getComputationalDag().source(edge)];
                 }
 
                 x[node] /= instance->getComputationalDag().node_mtx_entry(node);
-
             }
 #pragma omp barrier
         }
     }
 }
-
 
 void BspSptrsvCSR::simulate_sptrsv_no_barrier() {
 
@@ -386,17 +352,13 @@ void BspSptrsvCSR::simulate_sptrsv_no_barrier() {
     {
 
         for (unsigned step = 0; step < num_supersteps; step++) {
-            
 
             const unsigned int proc = omp_get_thread_num();
-           // std::cout << "proc " << proc << " step " << step << std::endl;
 
-
-            for (unsigned k = 0; k < vector_step_processor_vertices[step][proc].size();  ) {
+            for (unsigned k = 0; k < vector_step_processor_vertices[step][proc].size();) {
 
                 const unsigned node = vector_step_processor_vertices[step][proc][k];
 
-                
                 bool advance = false;
                 if (ready[node] <= 0) {
                     advance = true;
@@ -412,11 +374,11 @@ void BspSptrsvCSR::simulate_sptrsv_no_barrier() {
 
                 x[node] /= val[row_end];
 
-                if (advance) {            
+                if (advance) {
 
                     for (const auto &child : instance->getComputationalDag().children(node)) {
-                        
-                        #pragma omp atomic update
+
+#pragma omp atomic update
                         ready[child]--;
                     }
                     k++;
@@ -424,11 +386,9 @@ void BspSptrsvCSR::simulate_sptrsv_no_barrier() {
                     x[node] = 1.0;
                 }
             }
-
         }
     }
 }
-
 
 void BspSptrsvCSR::setup_csr_no_barrier(const BspSchedule &schedule, std::vector<size_t> &perm) {
 
@@ -441,7 +401,7 @@ void BspSptrsvCSR::setup_csr_no_barrier(const BspSchedule &schedule, std::vector
 
     for (const auto &node : instance->getComputationalDag().vertices()) {
 
-      ready[node] = instance->getComputationalDag().numberOfParents(node);
+        ready[node] = instance->getComputationalDag().numberOfParents(node);
     }
 
     vector_step_processor_vertices = std::vector<std::vector<std::vector<VertexType>>>(
@@ -452,21 +412,10 @@ void BspSptrsvCSR::setup_csr_no_barrier(const BspSchedule &schedule, std::vector
 
     x = std::vector<double>(instance->numberOfVertices(), 1.0);
 
-    SetSchedule set_schedule(schedule);
-
     for (const auto &node : perm_inv) {
 
-        for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
-
-            for (unsigned step = 0; step < schedule.numberOfSupersteps(); step++) {
-
-                if (set_schedule.step_processor_vertices[step][proc].find(node) !=
-                    set_schedule.step_processor_vertices[step][proc].end()) {
-
-                    vector_step_processor_vertices[step][proc].push_back(node);
-                }
-            }
-        }
+        vector_step_processor_vertices[schedule.assignedSuperstep(node)][schedule.assignedProcessor(node)].push_back(
+            node);
     }
 
     val.clear();
@@ -475,7 +424,7 @@ void BspSptrsvCSR::setup_csr_no_barrier(const BspSchedule &schedule, std::vector
     col_idx.clear();
     col_idx.reserve(instance->getComputationalDag().numberOfEdges() +
                     instance->getComputationalDag().numberOfVertices());
-    
+
     row_ptr = std::vector<unsigned>(instance->numberOfVertices());
 
     for (const auto &node : perm_inv) {
@@ -492,11 +441,11 @@ void BspSptrsvCSR::setup_csr_no_barrier(const BspSchedule &schedule, std::vector
             col_idx.push_back(perm_inv[p]);
             auto pair = boost::edge(perm_inv[p], node, instance->getComputationalDag().getGraph());
             assert(pair.second);
-            val.push_back(edge_value.at(pair.first));
+            val.push_back(instance->getComputationalDag().edge_mtx_entry(pair.first));
         }
 
         col_idx.push_back(perm[node]);
-        val.push_back(node_value.at(node));
-    }
+        val.push_back(instance->getComputationalDag().node_mtx_entry(node));
 
+    }
 }

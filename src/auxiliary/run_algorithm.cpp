@@ -40,7 +40,7 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
         scheduler.setTimeLimitSeconds(timeLimit);
 
         return scheduler.computeSchedule(bsp_instance);
-    } else if (algorithm.get_child("name").get_value<std::string>() == "Bsp") {
+    } else if (algorithm.get_child("name").get_value<std::string>() == "GreedyBspFillup") {
 
         float max_percent_idle_processors =
             algorithm.get_child("parameters").get_child("max_percent_idle_processors").get_value<float>();
@@ -49,7 +49,7 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
         scheduler.setTimeLimitSeconds(timeLimit);
 
         return scheduler.computeSchedule(bsp_instance);
-    } else if (algorithm.get_child("name").get_value<std::string>() == "Variance") {
+    } else if (algorithm.get_child("name").get_value<std::string>() == "GreedyVarianceFillup") {
 
         float max_percent_idle_processors =
             algorithm.get_child("parameters").get_child("max_percent_idle_processors").get_value<float>();
@@ -1542,7 +1542,7 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
         scheduler.setTimeLimitSeconds(timeLimit);
 
         return scheduler.computeSchedule(bsp_instance);
-    } else if (algorithm.get_child("name").get_value<std::string>() == "FunnelBsp") {
+    } else if (algorithm.get_child("name").get_value<std::string>() == "FunnelBspFillupGreedy") {
 
         float max_relative_weight =
             algorithm.get_child("parameters").get_child("coarsen").get_child("max_relative_weight").get_value<float>();
@@ -1571,7 +1571,7 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
         scheduler.setTimeLimitSeconds(timeLimit);
 
         return scheduler.computeSchedule(bsp_instance);
-    } else if (algorithm.get_child("name").get_value<std::string>() == "FunnelVariance") {
+    } else if (algorithm.get_child("name").get_value<std::string>() == "FunnelVarianceFillupGreedy") {
 
         float max_relative_weight =
             algorithm.get_child("parameters").get_child("coarsen").get_child("max_relative_weight").get_value<float>();
@@ -2230,6 +2230,37 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
         return scheduler.computeSchedule(bsp_instance);
     }  else {
 
+        throw std::invalid_argument("Parameter error: Unknown algorithm.\n");
+    }
+};
+
+
+std::pair<RETURN_STATUS, DAGPartition> run_algorithm(const CommandLineParserPartition &parser, const pt::ptree &algorithm,
+                                                    const BspInstance &bsp_instance, unsigned timeLimit, bool use_memory_constraint) {
+
+    std::cout << "Running algorithm: " << algorithm.get_child("name").get_value<std::string>() << std::endl;
+
+    if (algorithm.get_child("name").get_value<std::string>() == "VariancePartitioner") {
+
+        IListPartitioner::ProcessorPriorityMethod proc_priority_method;
+        if (algorithm.get_child("parameters").get_child("proc_priority_method").get_value<std::string>() == "FLATSPLINE") {
+            proc_priority_method = IListPartitioner::FLATSPLINE;
+        } else if (algorithm.get_child("parameters").get_child("proc_priority_method").get_value<std::string>() == "LINEAR") {
+            proc_priority_method = IListPartitioner::LINEAR;
+        } else {
+            throw std::invalid_argument("Parameter error in VariancePartitioner: processor priority method not recognised.\n");
+        }
+
+        float max_percent_idle_processors = algorithm.get_child("parameters").get_child("max_percent_idle_processors").get_value<float>();
+        double variance_power = algorithm.get_child("parameters").get_child("variance_power").get_value<double>();
+        double memory_capacity_increase = algorithm.get_child("parameters").get_child("memory_capacity_increase").get_value<double>();
+        float max_priority_difference_percent = algorithm.get_child("parameters").get_child("max_priority_difference_percent").get_value<float>();
+
+        VariancePartitioner partitioner(proc_priority_method, use_memory_constraint, max_percent_idle_processors, variance_power, memory_capacity_increase,max_priority_difference_percent, timeLimit);
+
+        return partitioner.computePartition(bsp_instance);
+
+    } else {
         throw std::invalid_argument("Parameter error: Unknown algorithm.\n");
     }
 }

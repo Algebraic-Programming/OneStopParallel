@@ -60,70 +60,86 @@ class BspSptrsvCSR {
 
     std::vector<int> ready;
 
-    /**
-     * @brief Default constructor for the BspSptrsvCSR class.
-     */
-    BspSptrsvCSR(const BspInstance &inst) : instance(&inst) {
+    // /**
+    //  * @brief Default constructor for the BspSptrsvCSR class.
+    //  */
+    // BspSptrsvCSR(const BspInstance &inst, bool use_mtx_values = false) : instance(&inst) {
 
-        double lower_bound = -100;
-        double upper_bound = 100;
-        std::uniform_real_distribution<double> unif_100(lower_bound, upper_bound);
+    //     if (use_mtx_values) {
 
-        std::uniform_real_distribution<double> unif_log(-std::log(upper_bound), std::log(upper_bound));
-        std::default_random_engine re;
+    //         for (const auto &node : inst.getComputationalDag().vertices()) {
 
-        for (const auto &node : inst.getComputationalDag().vertices()) {
+    //             node_value[node] = inst.getComputationalDag().get_node_mtx_entry(node);
 
-            node_value[node] = (1 - 2 * randInt(2)) * std::exp(unif_log(re));
+    //             for (const auto &edge : inst.getComputationalDag().out_edges(node)) {
 
-            for (const auto &edge : inst.getComputationalDag().out_edges(node)) {
+    //                 edge_value[edge] = inst.getComputationalDag().get_edge_mtx_entry(edge);
+    //             }
+    //         }
+    //     } else {
+    //         double lower_bound = -100;
+    //         double upper_bound = 100;
+    //         std::uniform_real_distribution<double> unif_100(lower_bound, upper_bound);
 
-                edge_value[edge] = unif_100(re);
-            }
-        }
-    }
+    //         std::uniform_real_distribution<double> unif_log(-std::log(upper_bound), std::log(upper_bound));
+    //         std::default_random_engine re;
 
-    BspSptrsvCSR(BspInstance &inst, bool write_mtx_values) : instance(&inst) {
+    //         for (const auto &node : inst.getComputationalDag().vertices()) {
 
-        double lower_bound = -100;
-        double upper_bound = 100;
-        std::uniform_real_distribution<double> unif_100(lower_bound, upper_bound);
+    //             node_value[node] = (1 - 2 * randInt(2)) * std::exp(unif_log(re));
 
-        std::uniform_real_distribution<double> unif_log(-std::log(upper_bound), std::log(upper_bound));
-        std::default_random_engine re;
+    //             for (const auto &edge : inst.getComputationalDag().out_edges(node)) {
 
-        for (const auto &node : inst.getComputationalDag().vertices()) {
+    //                 edge_value[edge] = unif_100(re);
+    //             }
+    //         }
+    //     }
+    // }
 
-            node_value[node] = (1 - 2 * randInt(2)) * std::exp(unif_log(re));
+    BspSptrsvCSR(BspInstance &inst, bool generate_mtx_values) : instance(&inst) {
 
-            if (write_mtx_values) {
-                inst.getComputationalDag().set_node_mtx_entry(node, node_value[node]);
-            }
+        if (generate_mtx_values) {
 
-            for (const auto &edge : inst.getComputationalDag().out_edges(node)) {
+            double lower_bound = -100;
+            double upper_bound = 100;
+            std::uniform_real_distribution<double> unif_100(lower_bound, upper_bound);
 
-                edge_value[edge] = unif_100(re);
+            std::uniform_real_distribution<double> unif_log(-std::log(upper_bound), std::log(upper_bound));
+            std::default_random_engine re;
 
-                if (write_mtx_values) {
-                    inst.getComputationalDag().set_edge_mtx_entry(edge, edge_value[edge]);
+            for (const auto &node : inst.getComputationalDag().vertices()) {
+
+                // node_value[node] = (1 - 2 * randInt(2)) * std::exp(unif_log(re));
+
+                // if (write_mtx_values) {
+                inst.getComputationalDag().set_node_mtx_entry(node, (1 - 2 * randInt(2)) * std::exp(unif_log(re)));
+                //}
+
+                for (const auto &edge : inst.getComputationalDag().out_edges(node)) {
+
+                    // edge_value[edge] = unif_100(re);
+
+                    // if (write_mtx_values) {
+                    inst.getComputationalDag().set_edge_mtx_entry(edge, unif_100(re));
+                    //}
                 }
             }
         }
     }
 
-    /**
-     * @brief Default constructor for the BspSptrsvCSR class.
-     */
-    BspSptrsvCSR(const BspInstance &inst,
-                 const std::unordered_map<std::pair<VertexType, VertexType>, double, pair_hash> &matrix_val_ptr)
-        : instance(&inst) {
-        for (const auto &node : inst.getComputationalDag().vertices()) {
-            node_value[node] = matrix_val_ptr.at(std::make_pair(node, node));
-            for (const auto &edge : inst.getComputationalDag().out_edges(node)) {
-                edge_value[edge] = matrix_val_ptr.at(std::make_pair(edge.m_source, edge.m_target));
-            }
-        }
-    }
+    // /**
+    //  * @brief Default constructor for the BspSptrsvCSR class.
+    //  */
+    // BspSptrsvCSR(const BspInstance &inst,
+    //              const std::unordered_map<std::pair<VertexType, VertexType>, double, pair_hash> &matrix_val_ptr)
+    //     : instance(&inst) {
+    //     for (const auto &node : inst.getComputationalDag().vertices()) {
+    //         node_value[node] = matrix_val_ptr.at(std::make_pair(node, node));
+    //         for (const auto &edge : inst.getComputationalDag().out_edges(node)) {
+    //             edge_value[edge] = matrix_val_ptr.at(std::make_pair(edge.m_source, edge.m_target));
+    //         }
+    //     }
+    // }
 
     void setup_csr(const BspSchedule &schedule, std::vector<size_t> &perm);
 

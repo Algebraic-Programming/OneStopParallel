@@ -46,6 +46,7 @@ struct Vertex {
 
 struct Edge {
     Edge() : communicationWeight(0), mtx_entry(1.0) {}
+    Edge(double mtx) : communicationWeight(1), mtx_entry(mtx) {}
     Edge(int communicationWeight_, double mtx = 1.0) : communicationWeight(communicationWeight_), mtx_entry(mtx) {}
     
     int communicationWeight;

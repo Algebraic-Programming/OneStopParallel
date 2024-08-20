@@ -38,7 +38,7 @@ class BspArchitecture {
     unsigned communication_costs;
     unsigned synchronisation_costs;
 
-    unsigned memory_bound; // currently only used in ILP
+    unsigned memory_bound; // currently only used in ILP and partitioning
 
     bool isNuma;
 
@@ -302,3 +302,4 @@ class BspArchitecture {
      */
     inline unsigned sendCosts(unsigned p1, unsigned p2) const { return send_costs[p1][p2]; }
 };
+

@@ -1,0 +1,22 @@
+{
+    "globalParameters": {
+        "timeLimit": 3600,
+        "outputPartition": false,
+        "outputDotPartition": false,
+        "use_memory_constraints": false,
+        "memory_bound": 100
+    },
+    "algorithms": [
+        {
+            "name": "VariancePartitioner",
+            "description": "\tPartitioner based on the Variance BSP scheduler.",
+            "parameters": {
+                "proc_priority_method": "FLATSPLINE",
+                "max_percent_idle_processors": 0.2,
+                "variance_power": 2,
+                "memory_capacity_increase": 1.1,
+                "max_priority_difference_percent": 0.34
+            }
+        }
+    ]
+}

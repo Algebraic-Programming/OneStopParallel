@@ -26,8 +26,6 @@ limitations under the License.
 #include <string>
 #include <tuple>
 
-#include "algorithms/ImprovementScheduler.hpp"
-
 #include "file_interactions/CommandLineParser.hpp"
 #include "file_interactions/FileReader.hpp"
 #include "file_interactions/BspScheduleWriter.hpp"
@@ -57,21 +55,23 @@ int main(int argc, char *argv[]) {
 
                 std::string filename_machine = instance.second.get_child("machineParamsFile").get_value<std::string>();
 
-                BspArchitecture architecture;
+                BspInstance bsp_instance;
+                
                 std::string name_machine;
                 if (!filename_machine.empty() &&
                         std::find_if(filename_machine.begin(), filename_machine.end(),
                                      [](unsigned char c) { return !std::isdigit(c); }) == filename_machine.end()) {
                     std::cout << "Number of processors: " << filename_machine << std::endl;
-                    architecture.setNumberOfProcessors(std::atol(filename_machine.c_str()));
+                    bsp_instance.getArchitecture().setNumberOfProcessors(std::atol(filename_machine.c_str()));
                     name_machine = "p" + filename_machine;
                 } else {
 
                     name_machine = filename_machine.substr(
                         filename_machine.rfind("/") + 1, filename_machine.rfind(".") - filename_machine.rfind("/") - 1);
-                    auto [status_architecture, architecture_] = FileReader::readBspArchitecture(filename_machine);
                     
-                    architecture = architecture_;
+                    bool status_architecture = false;
+                    std::tie(status_architecture, bsp_instance.getArchitecture()) = FileReader::readBspArchitecture(filename_machine);
+                    
 
                     if (!status_architecture) {
                         throw std::invalid_argument("Reading architecture file " + filename_machine + " failed.");
@@ -79,46 +79,38 @@ int main(int argc, char *argv[]) {
                 }
 
                 bool mtx_format = false;
-                bool status_graph;
-                ComputationalDag graph;
-                std::unordered_map<std::pair<VertexType, VertexType>, double, pair_hash> matrix_entries;
-
+                bool status_graph = false;
+            
                 if (filename_graph.substr(filename_graph.rfind(".") + 1) == "txt") {
-                    std::pair<bool, ComputationalDag> read_graph = FileReader::readComputationalDagHyperdagFormat(filename_graph);
-                    status_graph = read_graph.first;
-                    graph = read_graph.second;
+                    std::tie(status_graph, bsp_instance.getComputationalDag()) = FileReader::readComputationalDagHyperdagFormat(filename_graph);
+
                 } else if (filename_graph.substr(filename_graph.rfind(".") + 1) == "mtx") {
                     mtx_format = true;
-                    std::pair<bool, ComputationalDag> read_graph = FileReader::readComputationalDagMartixMarketFormat(filename_graph);
-                    status_graph = read_graph.first;
-                    graph = read_graph.second;
+                    std::tie(status_graph, bsp_instance.getComputationalDag()) = FileReader::readComputationalDagMartixMarketFormat(filename_graph);
+
                 } else if (filename_graph.substr(filename_graph.rfind(".") + 1) == "dot") {
-                    std::pair<bool, ComputationalDag> read_graph = FileReader::readComputationalDagDotFormat(filename_graph);
-                    status_graph = read_graph.first;
-                    graph = read_graph.second;
+                    std::tie(status_graph, bsp_instance.getComputationalDag()) = FileReader::readComputationalDagDotFormat(filename_graph);
+
                 } else {
                     std::cout << "Unknown file ending: ." << filename_graph.substr(filename_graph.rfind(".") + 1)
                         << " ...assuming hyperDag format." << std::endl;
-                    std::pair<bool, ComputationalDag> read_graph = FileReader::readComputationalDagHyperdagFormat(filename_graph);
-                    status_graph = read_graph.first;
-                    graph = read_graph.second;
+                    std::tie(status_graph, bsp_instance.getComputationalDag()) = FileReader::readComputationalDagHyperdagFormat(filename_graph);
+ 
                 }
 
                 if (!status_graph) {
                     throw std::invalid_argument("Reading graph file " + filename_graph + " failed.");
                 }
-
-                BspInstance bsp_instance(graph, architecture);
-
-                std::vector<std::string> schedulers_name(parser.algorithms.size(), "");
-                std::vector<bool> schedulers_failed(parser.algorithms.size(), false);
-                std::vector<unsigned> schedulers_costs(parser.algorithms.size(), 0);
-                std::vector<unsigned> schedulers_work_costs(parser.algorithms.size(), 0);
-                std::vector<unsigned> schedulers_supersteps(parser.algorithms.size(), 0);
-                std::vector<long unsigned> schedulers_compute_time(parser.algorithms.size(), 0);
+  
+                std::vector<std::string> schedulers_name(parser.scheduler.size(), "");
+                std::vector<bool> schedulers_failed(parser.scheduler.size(), false);
+                std::vector<unsigned> schedulers_costs(parser.scheduler.size(), 0);
+                std::vector<unsigned> schedulers_work_costs(parser.scheduler.size(), 0);
+                std::vector<unsigned> schedulers_supersteps(parser.scheduler.size(), 0);
+                std::vector<long unsigned> schedulers_compute_time(parser.scheduler.size(), 0);
 
                 size_t algorithm_counter = 0;
-                for (auto &algorithm : parser.algorithms) {
+                for (auto &algorithm : parser.scheduler) {
                     schedulers_name[algorithm_counter] = algorithm.second.get_child("name").get_value<std::string>();
 
                     try {
@@ -230,7 +222,7 @@ int main(int argc, char *argv[]) {
                 }
 
                 int tw = 1, ww = 1, cw = 1, nsw = 1, ct = 1;
-                for (size_t i = 0; i < parser.algorithms.size(); i++) {
+                for (size_t i = 0; i < parser.scheduler.size(); i++) {
                     if (schedulers_failed[i])
                         continue;
                     tw = std::max(tw, 1 + int(std::log10(schedulers_costs[i])));
@@ -244,10 +236,10 @@ int main(int argc, char *argv[]) {
                 std::vector<size_t> ordering = sorting_arrangement(schedulers_costs);
 
                 std::cout << std::endl << name_graph << " - " << name_machine << std::endl;
-                std::cout << "Number of Vertices: " + std::to_string(graph.numberOfVertices()) +
-                                 "  Number of Edges: " + std::to_string(graph.numberOfEdges())
+                std::cout << "Number of Vertices: " + std::to_string(bsp_instance.getComputationalDag().numberOfVertices()) +
+                                 "  Number of Edges: " + std::to_string(bsp_instance.getComputationalDag().numberOfEdges())
                           << std::endl;
-                for (size_t j = 0; j < parser.algorithms.size(); j++) {
+                for (size_t j = 0; j < parser.scheduler.size(); j++) {
                     size_t i = j;
                     if (sorted_by_total_costs)
                         i = ordering[j];

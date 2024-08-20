@@ -22,6 +22,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 
 configure_file(main_config.json main_config.json COPYONLY)
 configure_file(main_config.json test_suite/main_config.json COPYONLY)
+configure_file(main_partition_config.json main_partition_config.json COPYONLY)
 
 # Find pthread library
 set(THREADS_PREFER_PTHREAD_FLAG ON)
@@ -34,8 +35,12 @@ find_package(OpenMP REQUIRED)
 add_subdirectory(src)
 
 # Add the main executable
-add_executable(OneStopParllel main.cpp)
-target_link_libraries(OneStopParllel PRIVATE BspSchedulingLibrary)
+add_executable(OneStopParallel main.cpp)
+target_link_libraries(OneStopParallel PRIVATE BspSchedulingLibrary)
+
+add_executable(OneStopParallel_Partition main_partition.cpp)
+target_link_libraries(OneStopParallel_Partition PRIVATE ${Boost_LIBRARIES})
+target_link_libraries(OneStopParallel_Partition PRIVATE BspSchedulingLibrary)
 
 # Add subdirectory for examples
 add_subdirectory(examples)
