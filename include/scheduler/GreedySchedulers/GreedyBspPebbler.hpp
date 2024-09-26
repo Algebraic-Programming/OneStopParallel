@@ -66,6 +66,7 @@ class GreedyBspPebbler : public Scheduler {
     std::vector<std::unordered_map<VertexType, heap_handle>> node_all_proc_heap_handles;
 
     float max_percent_idle_processors;
+    bool increase_parallelism_in_new_superstep;
     unsigned mem_limit;
 
     void ChooseHeap(const BspInstance &instance, const std::vector<std::vector<bool>> &procInHyperedge,
@@ -79,8 +80,8 @@ class GreedyBspPebbler : public Scheduler {
     /**
      * @brief Default constructor for GreedyBspScheduler.
      */
-    GreedyBspPebbler(unsigned mem_limit_, float max_percent_idle_processors_ = 0.2)
-        : Scheduler(), max_percent_idle_processors(max_percent_idle_processors_), mem_limit(mem_limit_) {}
+    GreedyBspPebbler(unsigned mem_limit_, float max_percent_idle_processors_ = 0.2, bool increase_parallelism_in_new_superstep_ = true)
+        : Scheduler(), max_percent_idle_processors(max_percent_idle_processors_), increase_parallelism_in_new_superstep(increase_parallelism_in_new_superstep_), mem_limit(mem_limit_) {}
 
     /**
      * @brief Default destructor for GreedyBspScheduler.

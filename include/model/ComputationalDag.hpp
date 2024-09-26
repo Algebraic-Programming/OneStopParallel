@@ -23,6 +23,7 @@ limitations under the License.
 #include <numeric>
 #include <queue>
 #include <vector>
+#include <omp.h>
 
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/copy.hpp>
@@ -306,6 +307,15 @@ class ComputationalDag {
     contracted_graph_without_loops(const std::vector<std::unordered_set<VertexType>> &partition) const;
 
     /**
+     * @brief Tests whether there is a path from src to dest.
+     *
+     * @param src source vertex
+     * @param dest destination vertex
+     * @return true if there is a path from src to dest, false otherwise
+     */
+    bool has_path(VertexType src, VertexType dest) const; 
+
+    /**
      * @brief The set of edges (u,v) for which there exists a path of length two from u to v
      * 
      * @return std::unordered_set<EdgeType, EdgeType_hash> 
@@ -313,11 +323,22 @@ class ComputationalDag {
     std::unordered_set<EdgeType, EdgeType_hash> long_edges_in_triangles() const;
 
     /**
+     * @brief The set of edges (u,v) for which there exists a path of length two from u to v
+     * 
+     * @return std::unordered_set<EdgeType, EdgeType_hash> 
+     */
+    std::unordered_set<EdgeType, EdgeType_hash> long_edges_in_triangles_parallel() const;
+
+
+    /**
      * @brief Computes the average degree of the graph
      * 
      * @return double 
      */
     double average_degree() const;
+
+
+    int get_max_memory_weight() const; 
 
 
 };

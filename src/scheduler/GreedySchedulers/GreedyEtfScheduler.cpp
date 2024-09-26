@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner   
+@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 
 #include <algorithm>
@@ -21,9 +21,33 @@ limitations under the License.
 
 #include "scheduler/GreedySchedulers/GreedyEtfScheduler.hpp"
 
-std::pair<RETURN_STATUS, BspSchedule> GreedyEtfScheduler::computeSchedule(const BspInstance& instance) {
+std::pair<RETURN_STATUS, BspSchedule> GreedyEtfScheduler::computeSchedule(const BspInstance &instance) {
 
-    const unsigned& avgCommCost = instance.getArchitecture().computeCommAverage();
+    if (use_memory_constraint) {
+
+        switch (instance.getArchitecture().getMemoryConstraintType()) {
+
+        case LOCAL:
+            throw std::invalid_argument("Local memory constraint not supported");
+
+        case PERSISTENT_AND_TRANSIENT:
+            current_proc_persistent_memory = std::vector<int>(instance.numberOfProcessors(), 0);
+            current_proc_transient_memory = std::vector<int>(instance.numberOfProcessors(), 0);
+
+        case GLOBAL:
+            throw std::invalid_argument("Global memory constraint not supported");
+
+        case NONE:
+            use_memory_constraint = false;
+            std::cerr << "Warning: Memory constraint type set to NONE, ignoring memory constraint" << std::endl;
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    const unsigned &avgCommCost = instance.getArchitecture().computeCommAverage();
 
     CSchedule schedule(instance.numberOfVertices());
 
@@ -69,6 +93,16 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyEtfScheduler::computeSchedule(const 
         schedule.time[node] = best.c;
         finishTimes[proc] = schedule.time[node] + instance.getComputationalDag().nodeWorkWeight(node);
 
+        if (use_memory_constraint) {
+
+            if (instance.getArchitecture().getMemoryConstraintType() == PERSISTENT_AND_TRANSIENT) {
+
+                current_proc_persistent_memory[proc] += instance.getComputationalDag().nodeMemoryWeight(node);
+                current_proc_transient_memory[proc] = std::max(current_proc_transient_memory[proc],
+                                                               instance.getComputationalDag().nodeMemoryWeight(node));
+            }
+        }
+
         // for (const int succ : G.Out[node]) {
 
         for (const auto &succ : instance.getComputationalDag().children(node)) {
@@ -76,36 +110,67 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyEtfScheduler::computeSchedule(const 
             if (predecProcessed[succ] == instance.getComputationalDag().numberOfParents(succ))
                 ready.insert(intPair(BL[succ], succ));
         }
+
+        if (use_memory_constraint && not check_mem_feasibility(instance, ready)) {
+
+            return {ERROR, schedule.convertToBspSchedule(instance, greedyProcLists)};
+        }
     }
 
     return {SUCCESS, schedule.convertToBspSchedule(instance, greedyProcLists)};
 };
 
-std::vector<int> GreedyEtfScheduler::ComputeBottomLevel(const BspInstance& instance ,unsigned avg_) const {
+bool GreedyEtfScheduler::check_mem_feasibility(const BspInstance &instance, const std::set<intPair> &ready) const {
 
-    std::vector<int> BL(instance.numberOfVertices());
+    if (instance.getArchitecture().getMemoryConstraintType() == PERSISTENT_AND_TRANSIENT) {
 
-    //const std::vector<VertexType> topOrder = instance.getComputationalDag().topologicalOrderVertices();
-    for (const auto& node : instance.getComputationalDag().GetTopOrder()) {
-    //for (unsigned i = instance.numberOfVertices() - 1; i >= 0; --i) {
-        //const int node = topOrder[i];
-        int maxval = 0;
+        for (const auto &node_pair : ready) {
+            for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
 
-        for (const auto &succ : instance.getComputationalDag().children(node)) {
+                auto node = node_pair.b;
 
-            if (BL[succ] > maxval)
-                maxval = BL[succ];
+                if (current_proc_persistent_memory[i] + instance.getComputationalDag().nodeMemoryWeight(node) +
+                        std::max(current_proc_transient_memory[i],
+                                 instance.getComputationalDag().nodeCommunicationWeight(node)) <=
+                    instance.getArchitecture().memoryBound()) {
+                    return true;
+                }
+            }
         }
 
-        BL[node] = maxval + instance.getComputationalDag().nodeWorkWeight(node) +
-                   avg_ *
-                       instance.getComputationalDag().nodeCommunicationWeight(node);
+        return false;
+    }
+};
+
+std::vector<int> GreedyEtfScheduler::ComputeBottomLevel(const BspInstance &instance, unsigned avg_) const {
+
+    std::vector<int> BL(instance.numberOfVertices(), 0.0);
+
+    // const std::vector<VertexType> topOrder = instance.getComputationalDag().topologicalOrderVertices();
+    for (const auto &node : instance.getComputationalDag().dfs_reverse_topoOrder()) {
+        // for (unsigned i = instance.numberOfVertices() - 1; i >= 0; --i) {
+        // const int node = topOrder[i];
+        int maxval = 0;
+        //        VertexType maxNode = 0;
+
+        for (const auto &out_edge : instance.getComputationalDag().out_edges(node)) {
+
+            const auto &succ = out_edge.m_target;
+            const int tmp_val = BL[succ] + instance.getComputationalDag().edgeCommunicationWeight(out_edge);
+
+            if (tmp_val > maxval) {
+                maxval = tmp_val;
+                //              maxNode = succ;
+            }
+        }
+        BL[node] = maxval + instance.getComputationalDag().nodeWorkWeight(node);
     }
     return BL;
 };
 
-int GreedyEtfScheduler::GetESTforProc(const BspInstance& instance, CSchedule &schedule, int node, int proc, const int procAvailableFrom,
-                                      std::vector<int> &send, std::vector<int> &rec, unsigned avg_) const {
+int GreedyEtfScheduler::GetESTforProc(const BspInstance &instance, CSchedule &schedule, int node, int proc,
+                                      const int procAvailableFrom, std::vector<int> &send, std::vector<int> &rec,
+                                      unsigned avg_) const {
 
     std::vector<intPair> predec;
     for (const auto &pred : instance.getComputationalDag().parents(node)) {
@@ -121,9 +186,13 @@ int GreedyEtfScheduler::GetESTforProc(const BspInstance& instance, CSchedule &sc
         if (schedule.proc[next.b] != proc) {
             t = std::max(t, send[schedule.proc[next.b]]);
             t = std::max(t, rec[proc]);
-            t += instance.getComputationalDag().nodeCommunicationWeight(next.b) *
-                 (use_numa ? instance.communicationCosts() * instance.sendCosts(schedule.proc[next.b], proc)
-                           : avg_);
+            t += instance.getComputationalDag().edgeCommunicationWeight(
+                     boost::edge(next.b, node, instance.getComputationalDag().getGraph()).first) *
+                 instance.sendCosts(schedule.proc[next.b], proc);
+
+            // t += instance.getComputationalDag().nodeCommunicationWeight(next.b) *
+            //      (use_numa ? instance.communicationCosts() * instance.sendCosts(schedule.proc[next.b], proc) : avg_);
+
             send[schedule.proc[next.b]] = t;
             rec[proc] = t;
         }
@@ -133,14 +202,36 @@ int GreedyEtfScheduler::GetESTforProc(const BspInstance& instance, CSchedule &sc
 };
 
 // auxiliary: compute EST of node over all processors
-intTriple GreedyEtfScheduler::GetBestESTforNodes(const BspInstance& instance, CSchedule &schedule, const std::vector<int> &nodeList,
-                                               const std::vector<int> &procAvailableFrom, std::vector<int> &send,
-                                               std::vector<int> &rec, unsigned avg_) const {
+intTriple GreedyEtfScheduler::GetBestESTforNodes(const BspInstance &instance, CSchedule &schedule,
+                                                 const std::vector<int> &nodeList,
+                                                 const std::vector<int> &procAvailableFrom, std::vector<int> &send,
+                                                 std::vector<int> &rec, unsigned avg_) const {
 
     int bestEST = INT_MAX, bestProc = 0, bestNode = 0;
     std::vector<int> bestSend, bestRec;
     for (int node : nodeList)
         for (unsigned j = 0; j < instance.numberOfProcessors(); ++j) {
+
+            if (use_memory_constraint) {
+
+                if (instance.getArchitecture().getMemoryConstraintType() == LOCAL) {
+
+                    if (current_proc_persistent_memory[j] + instance.getComputationalDag().nodeMemoryWeight(node) >
+                        instance.getArchitecture().memoryBound()) {
+                        continue;
+                    }
+
+                } else if (instance.getArchitecture().getMemoryConstraintType() == PERSISTENT_AND_TRANSIENT) {
+
+                    if (current_proc_persistent_memory[j] + instance.getComputationalDag().nodeMemoryWeight(node) +
+                            std::max(current_proc_transient_memory[j],
+                                     instance.getComputationalDag().nodeCommunicationWeight(node)) >
+                        instance.getArchitecture().memoryBound()) {
+                        continue;
+                    }
+                }
+            }
+
             std::vector<int> newSend = send;
             std::vector<int> newRec = rec;
             int EST = GetESTforProc(instance, schedule, node, j, procAvailableFrom[j], newSend, newRec, avg_);

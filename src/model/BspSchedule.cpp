@@ -170,20 +170,65 @@ bool BspSchedule::satisfiesPrecedenceConstraints() const {
 
 bool BspSchedule::satisfiesMemoryConstraints() const {
 
-    SetSchedule set_schedule = SetSchedule(*this);
+    switch (instance->getArchitecture().getMemoryConstraintType()) {
 
-    for (unsigned step = 0; step < number_of_supersteps; step++) {
-        for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
+    case LOCAL: {
 
-            unsigned memory = 0;
-            for (const auto &node : set_schedule.step_processor_vertices[step][proc]) {
-                memory += instance->getComputationalDag().nodeMemoryWeight(node);
+        SetSchedule set_schedule = SetSchedule(*this);
+
+        for (unsigned step = 0; step < number_of_supersteps; step++) {
+            for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
+
+                unsigned memory = 0;
+                for (const auto &node : set_schedule.step_processor_vertices[step][proc]) {
+                    memory += instance->getComputationalDag().nodeMemoryWeight(node);
+                }
+
+                if (memory > instance->getArchitecture().memoryBound(proc)) {
+                    return false;
+                }
             }
+        }
 
-            if (memory > instance->getArchitecture().memoryBound(proc)) {
+        break;
+    }
+
+    case PERSISTENT_AND_TRANSIENT: {
+        std::vector<int> current_proc_persistent_memory(instance->numberOfProcessors(), 0);
+        std::vector<int> current_proc_transient_memory(instance->numberOfProcessors(), 0);
+
+        for (VertexType node = 0; node < instance->numberOfVertices(); node++) {
+
+            const unsigned proc = node_to_processor_assignment[node];
+            current_proc_persistent_memory[proc] += instance->getComputationalDag().nodeMemoryWeight(node);
+            current_proc_transient_memory[proc] = std::max(
+                current_proc_transient_memory[proc], instance->getComputationalDag().nodeCommunicationWeight(node));
+
+            if (current_proc_persistent_memory[proc] + current_proc_transient_memory[proc] >
+                instance->getArchitecture().memoryBound(proc)) {
                 return false;
             }
         }
+        break;
+    }
+
+    case GLOBAL: {
+        std::vector<unsigned> current_proc_memory(instance->numberOfProcessors(), 0);
+
+        for (VertexType node = 0; node < instance->numberOfVertices(); node++) {
+
+            const unsigned proc = node_to_processor_assignment[node];
+            current_proc_memory[proc] += instance->getComputationalDag().nodeMemoryWeight(node);
+
+            if (current_proc_memory[proc] > instance->getArchitecture().memoryBound(proc)) {
+                return false;
+            }
+        }
+        break;
+    }
+    default:
+        // includes case NONE
+        break;
     }
 
     return true;

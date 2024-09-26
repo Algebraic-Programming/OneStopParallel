@@ -36,6 +36,8 @@ class LKTotalCommScheduler : public LKBase<double> {
   private:
 
     double comm_multiplier = 1.0;
+
+    const bool hyperedge_costs = true;
  
     virtual void initalize_superstep_datastructures() override;
     virtual void cleanup_superstep_datastructures() override;
@@ -59,7 +61,7 @@ class LKTotalCommScheduler : public LKBase<double> {
     virtual void select_nodes() override;
 
   public:
-    LKTotalCommScheduler() : LKBase() {}
+    LKTotalCommScheduler(bool hyperedge_costs_ = true) : LKBase(), hyperedge_costs(hyperedge_costs_) {}
 
     virtual ~LKTotalCommScheduler() = default;
 

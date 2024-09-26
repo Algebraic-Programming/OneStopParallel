@@ -45,8 +45,10 @@ class GreedyVarianceFillupScheduler : public Scheduler {
   private:
 
     float max_percent_idle_processors;
+    bool increase_parallelism_in_new_superstep;
     bool use_memory_constraint = false;
-    std::vector<unsigned> current_proc_memory;
+    std::vector<int> current_proc_persistent_memory;
+    std::vector<int> current_proc_transient_memory;
 
     std::vector<double> compute_work_variance(const ComputationalDag& graph) const;
 
@@ -56,6 +58,9 @@ class GreedyVarianceFillupScheduler : public Scheduler {
             return ((lhs.second > rhs.second) || ((lhs.second == rhs.second) && (lhs.first < rhs.first)));
         }
     };
+
+   bool check_mem_feasibility(const BspInstance &instance, const std::set<std::pair<VertexType, double>, VarianceCompare> &allReady,
+                                               const std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> &procReady) const;
 
     void Choose(const BspInstance &instance, const std::vector<double> &work_variance,
                 std::set<std::pair<VertexType, double>, VarianceCompare> &allReady, std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> &procReady,
@@ -70,7 +75,7 @@ class GreedyVarianceFillupScheduler : public Scheduler {
     /**
      * @brief Default constructor for GreedyVarianceFillupScheduler.
      */
-    GreedyVarianceFillupScheduler(float max_percent_idle_processors_ = 0.2) : Scheduler(), max_percent_idle_processors(max_percent_idle_processors_) {}
+    GreedyVarianceFillupScheduler(float max_percent_idle_processors_ = 0.2, bool increase_parallelism_in_new_superstep_ = true) : Scheduler(), max_percent_idle_processors(max_percent_idle_processors_), increase_parallelism_in_new_superstep(increase_parallelism_in_new_superstep_) {}
 
     /**
      * @brief Default destructor for GreedyVarianceFillupScheduler.

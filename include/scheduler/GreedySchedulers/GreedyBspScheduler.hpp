@@ -32,6 +32,9 @@ limitations under the License.
 #include "auxiliary/auxiliary.hpp"
 #include "model/BspSchedule.hpp"
 
+
+
+
 /**
  * @brief The GreedyBspScheduler class represents a scheduler that uses a greedy algorithm to compute schedules for
  * BspInstance.
@@ -66,32 +69,35 @@ class GreedyBspScheduler : public Scheduler {
     std::vector<std::unordered_map<VertexType, heap_handle>> node_all_proc_heap_handles;
 
     float max_percent_idle_processors;
+    bool increase_parallelism_in_new_superstep;
     bool use_memory_constraint = false;
-    std::vector<unsigned> current_proc_memory;
+
+    std::vector<int> current_proc_persistent_memory;
+    std::vector<int> current_proc_transient_memory;
+
+
 
     double computeScore(VertexType node, unsigned proc, const std::vector<std::vector<bool>> &procInHyperedge,
                         const BspInstance &instance);
 
-    void Choose(const BspInstance &instance, const std::vector<std::vector<int>> &procInHyperedge,
-                const std::set<int> &allReady, const std::vector<std::set<int>> &procReady,
-                const std::vector<bool> &procFree, int &node, int &p) const;
 
-    bool CanChooseNode(const BspInstance &instance, const std::set<int> &allReady,
-                       const std::vector<std::set<int>> &procReady, const std::vector<bool> &procFree) const;
-
-    void ChooseHeap(const BspInstance &instance, const std::vector<std::vector<bool>> &procInHyperedge,
+    void Choose(const BspInstance &instance, const std::vector<std::vector<bool>> &procInHyperedge,
                     const std::set<VertexType> &allReady, const std::vector<std::set<VertexType>> &procReady,
                     const std::vector<bool> &procFree, VertexType &node, unsigned &p) const;
 
-    bool CanChooseNodeHeap(const BspInstance &instance, const std::set<VertexType> &allReady,
+    bool CanChooseNode(const BspInstance &instance, const std::set<VertexType> &allReady,
                            const std::vector<std::set<VertexType>> &procReady, const std::vector<bool> &procFree) const;
+
+    bool check_mem_feasibility(const BspInstance &instance, const std::set<VertexType> &allReady,
+                                               const std::vector<std::set<VertexType>> &procReady) const;
+
 
   public:
     /**
      * @brief Default constructor for GreedyBspScheduler.
      */
-    GreedyBspScheduler(float max_percent_idle_processors_ = 0.2)
-        : Scheduler(), max_percent_idle_processors(max_percent_idle_processors_) {}
+    GreedyBspScheduler(float max_percent_idle_processors_ = 0.2, bool increase_parallelism_in_new_superstep_ = true)
+        : Scheduler(), max_percent_idle_processors(max_percent_idle_processors_), increase_parallelism_in_new_superstep(increase_parallelism_in_new_superstep_) {}
 
     /**
      * @brief Default destructor for GreedyBspScheduler.
@@ -106,8 +112,6 @@ class GreedyBspScheduler : public Scheduler {
      * @param instance The BspInstance object representing the instance to compute the schedule for.
      * @return A pair containing the return status and the computed BspSchedule.
      */
-    virtual std::pair<RETURN_STATUS, BspSchedule> computeScheduleNoHeap(const BspInstance &instance);
-
     virtual std::pair<RETURN_STATUS, BspSchedule> computeSchedule(const BspInstance &instance) override;
 
     /**

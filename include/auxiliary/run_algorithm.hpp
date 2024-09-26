@@ -41,6 +41,7 @@
 #include "scheduler/ImprovementScheduler.hpp"
 
 #include "dag_partitioners/VariancePartitioner.hpp"
+#include "dag_partitioners/LightEdgeVariancePartitioner.hpp"
 
 #include "file_interactions/CommandLineParser.hpp"
 #include "file_interactions/CommandLineParserPartition.hpp"
@@ -52,7 +53,7 @@
 
 
 std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &parser, const boost::property_tree::ptree &algorithm,
-                                                    const BspInstance &bsp_instance, unsigned timeLimit);
+                                                    const BspInstance &bsp_instance, unsigned timeLimit, bool use_memory_constraint);
 
 std::pair<RETURN_STATUS, DAGPartition> run_algorithm(const CommandLineParserPartition &parser, const boost::property_tree::ptree &algorithm,
                                                     const BspInstance &bsp_instance, unsigned timeLimit, bool use_memory_constraint);

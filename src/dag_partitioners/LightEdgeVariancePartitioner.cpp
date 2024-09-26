@@ -16,9 +16,9 @@ limitations under the License.
 @author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner   
 */
 
-#include "dag_partitioners/VariancePartitioner.hpp"
+#include "dag_partitioners/LightEdgeVariancePartitioner.hpp"
 
-std::vector<double> VariancePartitioner::compute_work_variance(const ComputationalDag &graph, double power) const {
+std::vector<double> LightEdgeVariancePartitioner::compute_work_variance(const ComputationalDag &graph, double power) const {
     std::vector<double> work_variance(graph.numberOfVertices(), 0.0);
 
     const std::vector<VertexType> top_order = graph.GetTopOrder();
@@ -43,12 +43,14 @@ std::vector<double> VariancePartitioner::compute_work_variance(const Computation
     return work_variance;
 }
 
-std::pair<RETURN_STATUS, DAGPartition> VariancePartitioner::computePartition(const BspInstance &instance) {
+std::pair<RETURN_STATUS, DAGPartition> LightEdgeVariancePartitioner::computePartition(const BspInstance &instance) {
     DAGPartition output_partition(instance);
 
     const unsigned &n_vert = instance.numberOfVertices();
     const unsigned &n_processors = instance.numberOfProcessors();
     const auto &graph = instance.getComputationalDag();
+
+    std::vector<bool> has_vertex_been_assigned(n_vert, false);
 
     long unsigned total_work = 0;
     for (unsigned v = 0; v < n_vert; v++) {
@@ -70,6 +72,28 @@ std::pair<RETURN_STATUS, DAGPartition> VariancePartitioner::computePartition(con
     for (const VertexType& v : graph.vertices()) {
         for (const VertexType chld : graph.children(v)) {
             num_unallocated_parents[chld] += 1;
+        }
+    }
+
+    std::vector<std::vector<VertexType>> preprocessed_partition = heavy_edge_preprocess(graph, heavy_is_x_times_median, min_percent_components_retained, bound_component_weight_percent / n_processors);
+    std::vector<size_t> which_preprocess_partition(graph.numberOfVertices());
+    for (size_t i = 0; i < preprocessed_partition.size(); i++) {
+        for (const VertexType &vert : preprocessed_partition[i]) {
+            which_preprocess_partition[vert] = i;
+        }
+    }
+
+    std::vector<int> memory_cost_of_preprocessed_partition(preprocessed_partition.size(), 0);
+    for (size_t i = 0; i < preprocessed_partition.size(); i++) {
+        for (const auto &vert : preprocessed_partition[i]) {
+            memory_cost_of_preprocessed_partition[i] += graph.nodeMemoryWeight(vert);
+        }
+    }
+
+    std::vector<int> transient_cost_of_preprocessed_partition(preprocessed_partition.size(), 0);
+    for (size_t i = 0; i < preprocessed_partition.size(); i++) {
+        for (const auto &vert : preprocessed_partition[i]) {
+            transient_cost_of_preprocessed_partition[i] = std::max(transient_cost_of_preprocessed_partition[i], graph.nodeCommunicationWeight(vert));
         }
     }
 
@@ -115,7 +139,7 @@ std::pair<RETURN_STATUS, DAGPartition> VariancePartitioner::computePartition(con
             endsuperstep = true;
             // std::cout << "\nCall for new superstep - parallelism.\n";
         }
-        std::vector<float> processor_priorities = computeProcessorPriorities(superstep_partition_work, total_partition_work, total_work, instance);
+        std::vector<float> processor_priorities = computeProcessorPriorities(superstep_partition_work, total_partition_work, total_work, instance, slack);
         float min_priority = processor_priorities[0];
         float max_priority = processor_priorities[0];
         for (const auto& prio : processor_priorities) {
@@ -155,7 +179,7 @@ std::pair<RETURN_STATUS, DAGPartition> VariancePartitioner::computePartition(con
         bool assigned_a_node = false;
 
         // Choosing next processor
-        std::vector<unsigned> processors_in_order = computeProcessorPriority(superstep_partition_work, total_partition_work, total_work, instance, slack);
+        std::vector<unsigned> processors_in_order = computeProcessorPriority(superstep_partition_work, total_partition_work, total_work, instance);
         for (unsigned &proc : processors_in_order) {
             if ((free_processors.find(proc)) != free_processors.cend()) continue;
 
@@ -175,13 +199,13 @@ std::pair<RETURN_STATUS, DAGPartition> VariancePartitioner::computePartition(con
                 const VertexType& vert = vertex_prior_pair_iter->first;
                 if (use_memory_constraint && instance.getArchitecture().getMemoryConstraintType() != NONE) {
                     if (instance.getArchitecture().getMemoryConstraintType() == LOCAL || instance.getArchitecture().getMemoryConstraintType() == GLOBAL) {
-                        if (total_partition_memory[proc] + graph.nodeMemoryWeight(vert) < memory_capacity[proc]) {
+                        if (has_vertex_been_assigned[vert] || (total_partition_memory[proc] + memory_cost_of_preprocessed_partition[which_preprocess_partition[vert]] < memory_capacity[proc])) {
                             next_node = vert;
                             assigned_a_node = true;
                         }
                     }
                     if (instance.getArchitecture().getMemoryConstraintType() == PERSISTENT_AND_TRANSIENT) {
-                        if (total_partition_memory[proc] + graph.nodeMemoryWeight(vert) + std::max(transient_partition_memory[proc], (long unsigned) graph.nodeCommunicationWeight(vert)) < memory_capacity[proc]) {
+                        if (has_vertex_been_assigned[vert] || total_partition_memory[proc] + graph.nodeMemoryWeight(vert) + std::max(transient_partition_memory[proc], (long unsigned) transient_cost_of_preprocessed_partition[which_preprocess_partition[vert]]) < memory_capacity[proc]) {
                             next_node = vert;
                             assigned_a_node = true;
                         }
@@ -196,13 +220,13 @@ std::pair<RETURN_STATUS, DAGPartition> VariancePartitioner::computePartition(con
                 const VertexType& vert = vertex_prior_pair_iter->first;
                 if (use_memory_constraint && instance.getArchitecture().getMemoryConstraintType() != NONE) {
                     if (instance.getArchitecture().getMemoryConstraintType() == LOCAL || instance.getArchitecture().getMemoryConstraintType() == GLOBAL) {
-                        if (total_partition_memory[proc] + graph.nodeMemoryWeight(vert) < memory_capacity[proc]) {
+                        if (has_vertex_been_assigned[vert] || (total_partition_memory[proc] + memory_cost_of_preprocessed_partition[which_preprocess_partition[vert]] < memory_capacity[proc])) {
                             next_node = vert;
                             assigned_a_node = true;
                         }
                     }
                     if (instance.getArchitecture().getMemoryConstraintType() == PERSISTENT_AND_TRANSIENT) {
-                        if (total_partition_memory[proc] + graph.nodeMemoryWeight(vert) + std::max(transient_partition_memory[proc], (long unsigned) graph.nodeCommunicationWeight(vert)) < memory_capacity[proc]) {
+                        if (has_vertex_been_assigned[vert] || total_partition_memory[proc] + graph.nodeMemoryWeight(vert) + std::max(transient_partition_memory[proc], (long unsigned) transient_cost_of_preprocessed_partition[which_preprocess_partition[vert]]) < memory_capacity[proc]) {
                             next_node = vert;
                             assigned_a_node = true;
                         }
@@ -217,13 +241,13 @@ std::pair<RETURN_STATUS, DAGPartition> VariancePartitioner::computePartition(con
                 const VertexType& vert = vertex_prior_pair_iter->first;
                 if (use_memory_constraint && instance.getArchitecture().getMemoryConstraintType() != NONE) {
                     if (instance.getArchitecture().getMemoryConstraintType() == LOCAL || instance.getArchitecture().getMemoryConstraintType() == GLOBAL) {
-                        if (total_partition_memory[proc] + graph.nodeMemoryWeight(vert) < memory_capacity[proc]) {
+                        if (has_vertex_been_assigned[vert] || (total_partition_memory[proc] + memory_cost_of_preprocessed_partition[which_preprocess_partition[vert]] < memory_capacity[proc])) {
                             next_node = vert;
                             assigned_a_node = true;
                         }
                     }
                     if (instance.getArchitecture().getMemoryConstraintType() == PERSISTENT_AND_TRANSIENT) {
-                        if (total_partition_memory[proc] + graph.nodeMemoryWeight(vert) + std::max(transient_partition_memory[proc], (long unsigned) graph.nodeCommunicationWeight(vert)) < memory_capacity[proc]) {
+                        if (has_vertex_been_assigned[vert] || total_partition_memory[proc] + graph.nodeMemoryWeight(vert) + std::max(transient_partition_memory[proc], (long unsigned) transient_cost_of_preprocessed_partition[which_preprocess_partition[vert]]) < memory_capacity[proc]) {
                             next_node = vert;
                             assigned_a_node = true;
                         }
@@ -239,44 +263,102 @@ std::pair<RETURN_STATUS, DAGPartition> VariancePartitioner::computePartition(con
                 free_processors.insert(proc);
             } else {
                 // Assignments
-                // std::cout << "Allocated node " << next_node << " to processor " << proc << ".\n";
-                output_partition.setAssignedProcessor(next_node, proc);
-                superstep_assignment[next_node] = superstep;
-                num_unable_to_partition_node_loop = 0;
+                if (has_vertex_been_assigned[next_node]) {
+                    unsigned proc_alloc_prior = output_partition.assignedProcessor(next_node);
+                    // std::cout << "Allocated node " << next_node << " to processor " << proc_alloc_prior << " previously.\n";
 
-                // Updating loads
-                total_partition_work[proc] += graph.nodeWorkWeight(next_node);
-                superstep_partition_work[proc] += graph.nodeWorkWeight(next_node);
-                total_partition_memory[proc] += graph.nodeMemoryWeight(next_node);
-                transient_partition_memory[proc] = std::max(transient_partition_memory[proc], (long unsigned) graph.nodeCommunicationWeight(next_node));
+                    superstep_assignment[next_node] = superstep;
+                    num_unable_to_partition_node_loop = 0;
 
-                // Deletion from Queues
-                std::pair<VertexType, double> pair = std::make_pair(next_node, variance_priorities[next_node]);
-                ready.erase(pair);
-                procReady[proc].erase(pair);
-                procReadyPrior[proc].erase(pair);
-                allReady.erase(pair);
-                if (which_proc_ready_prior[next_node] != -1) {
-                    procReadyPrior[which_proc_ready_prior[next_node]].erase(pair);
-                }
+                    // Updating loads
+                    superstep_partition_work[proc_alloc_prior] += graph.nodeWorkWeight(next_node);
 
-                // Checking children
-                for (const auto &chld : graph.children(next_node)) {
-                    num_unallocated_parents[chld] -= 1;
-                    if (num_unallocated_parents[chld] == 0) {
-                        // std::cout << "Inserting child " << chld << " into ready.\n";
-                        ready.insert(std::make_pair(chld, variance_priorities[chld]));
-                        bool is_proc_ready = true;
-                        for (const auto &parent : graph.parents(chld)) {
-                            if ((output_partition.assignedProcessor(parent) != proc) && (superstep_assignment[parent] == superstep) ) {
-                                is_proc_ready = false;
-                                break;
+                    // Deletion from Queues
+                    std::pair<VertexType, double> pair = std::make_pair(next_node, variance_priorities[next_node]);
+                    ready.erase(pair);
+                    procReady[proc].erase(pair);
+                    procReadyPrior[proc].erase(pair);
+                    allReady.erase(pair);
+                    if (which_proc_ready_prior[next_node] != -1) {
+                        procReadyPrior[which_proc_ready_prior[next_node]].erase(pair);
+                    }
+
+                    // Checking children
+                    for (const auto &chld : graph.children(next_node)) {
+                        num_unallocated_parents[chld] -= 1;
+                        if (num_unallocated_parents[chld] == 0) {
+                            // std::cout << "Inserting child " << chld << " into ready.\n";
+                            ready.insert(std::make_pair(chld, variance_priorities[chld]));
+                            bool is_proc_ready = true;
+                            for (const auto &parent : graph.parents(chld)) {
+                                if ((output_partition.assignedProcessor(parent) != proc_alloc_prior) && (superstep_assignment[parent] == superstep) ) {
+                                    is_proc_ready = false;
+                                    break;
+                                }
+                            }
+                            if (is_proc_ready) {
+                                procReady[proc_alloc_prior].insert(std::make_pair(chld, variance_priorities[chld]));
+                                // std::cout << "Inserting child " << chld << " into procReady for processor " << proc_alloc_prior << ".\n";
                             }
                         }
-                        if (is_proc_ready) {
-                            procReady[proc].insert(std::make_pair(chld, variance_priorities[chld]));
-                            // std::cout << "Inserting child " << chld << " into procReady for processor " << proc << ".\n";
+                    }
+                } else {
+                    output_partition.setAssignedProcessor(next_node, proc);
+                    has_vertex_been_assigned[next_node] = true;
+                    // std::cout << "Allocated node " << next_node << " to processor " << proc << ".\n";
+
+                    superstep_assignment[next_node] = superstep;
+                    num_unable_to_partition_node_loop = 0;
+
+                    // Updating loads
+                    total_partition_work[proc] += graph.nodeWorkWeight(next_node);
+                    superstep_partition_work[proc] += graph.nodeWorkWeight(next_node);
+                    total_partition_memory[proc] += graph.nodeMemoryWeight(next_node);
+                    transient_partition_memory[proc] = std::max(transient_partition_memory[proc], (long unsigned) graph.nodeCommunicationWeight(next_node));
+
+                    // Deletion from Queues
+                    std::pair<VertexType, double> pair = std::make_pair(next_node, variance_priorities[next_node]);
+                    ready.erase(pair);
+                    procReady[proc].erase(pair);
+                    procReadyPrior[proc].erase(pair);
+                    allReady.erase(pair);
+                    if (which_proc_ready_prior[next_node] != -1) {
+                        procReadyPrior[which_proc_ready_prior[next_node]].erase(pair);
+                    }
+
+                    // Checking children
+                    for (const auto &chld : graph.children(next_node)) {
+                        num_unallocated_parents[chld] -= 1;
+                        if (num_unallocated_parents[chld] == 0) {
+                            // std::cout << "Inserting child " << chld << " into ready.\n";
+                            ready.insert(std::make_pair(chld, variance_priorities[chld]));
+                            bool is_proc_ready = true;
+                            for (const auto &parent : graph.parents(chld)) {
+                                if ((output_partition.assignedProcessor(parent) != proc) && (superstep_assignment[parent] == superstep) ) {
+                                    is_proc_ready = false;
+                                    break;
+                                }
+                            }
+                            if (is_proc_ready) {
+                                procReady[proc].insert(std::make_pair(chld, variance_priorities[chld]));
+                                // std::cout << "Inserting child " << chld << " into procReady for processor " << proc << ".\n";
+                            }
                         }
+                    }
+
+                    // Allocating all nodes in the same partition
+                    for (VertexType node_in_same_partition : preprocessed_partition[which_preprocess_partition[next_node]]) {
+                        if (node_in_same_partition == next_node) continue;
+
+                        // Allocation
+                        output_partition.setAssignedProcessor(node_in_same_partition, proc);
+                        has_vertex_been_assigned[node_in_same_partition] = true;
+                        // std::cout << "Allocated node " << next_node << " to processor " << proc << ".\n";
+
+                        // Update loads
+                        total_partition_work[proc] += graph.nodeWorkWeight(node_in_same_partition);
+                        total_partition_memory[proc] += graph.nodeMemoryWeight(node_in_same_partition);
+                        transient_partition_memory[proc] = std::max(transient_partition_memory[proc], (long unsigned) graph.nodeCommunicationWeight(node_in_same_partition));
                     }
                 }
 

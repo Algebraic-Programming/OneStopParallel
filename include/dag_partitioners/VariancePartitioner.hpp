@@ -30,11 +30,17 @@ class VariancePartitioner : public IListPartitioner {
     /// @brief the power in the power mean average of the variance scheduler
     double variance_power;
 
+    /// @brief whether or not parallelism should be increased in the next superstep
+    bool increase_parallelism_in_new_superstep;
+
     /// @brief the multiplier by which the memory bound should increase if it the scheduler determines it should be breached
     double memory_capacity_increase;
 
     /// @brief percentage of the average workload by which the processor priorities may diverge
     float max_priority_difference_percent;
+
+    /// @brief how much to ignore the global work balance, value between 0 and 1
+    float slack;
 
     /// @brief Computes a power mean average of the bottom node distance
     /// @param graph graph
@@ -53,7 +59,7 @@ class VariancePartitioner : public IListPartitioner {
 
     public:
 
-    VariancePartitioner(ProcessorPriorityMethod proc_priority_method_ = FLATSPLINE, bool use_memory_constraint_ = false, float max_percent_idle_processors_ = 0.2, double variance_power_ = 2, double memory_capacity_increase_ = 1.1, float max_priority_difference_percent_ = 0.34, unsigned timelimit = 3600) : IListPartitioner(proc_priority_method_, timelimit, use_memory_constraint_), max_percent_idle_processors(max_percent_idle_processors_), variance_power(variance_power_), memory_capacity_increase(memory_capacity_increase_), max_priority_difference_percent(max_priority_difference_percent_) { };
+    VariancePartitioner(ProcessorPriorityMethod proc_priority_method_ = FLATSPLINE, bool use_memory_constraint_ = false, float max_percent_idle_processors_ = 0.2, double variance_power_ = 2, bool increase_parallelism_in_new_superstep_ = true, double memory_capacity_increase_ = 1.1, float max_priority_difference_percent_ = 0.34, float slack_ = 0.0, unsigned timelimit = 3600) : IListPartitioner(proc_priority_method_, timelimit, use_memory_constraint_), max_percent_idle_processors(max_percent_idle_processors_), variance_power(variance_power_), increase_parallelism_in_new_superstep(increase_parallelism_in_new_superstep_), memory_capacity_increase(memory_capacity_increase_), max_priority_difference_percent(max_priority_difference_percent_), slack(slack_) { };
 
     virtual ~VariancePartitioner() = default;
 

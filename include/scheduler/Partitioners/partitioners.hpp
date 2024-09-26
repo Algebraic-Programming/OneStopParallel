@@ -72,6 +72,8 @@ struct weighted_bin {
 
 std::vector<unsigned> greedy_partitioner(const unsigned num_parts, const std::multiset<int, std::greater<int>>& weights);
 
+std::vector<unsigned> ilp_partitioner(const unsigned num_parts, const std::multiset<int, std::greater<int>>& weights, unsigned time = 60);
+
 std::vector<unsigned> kk_partitioner_2(const std::multiset<int, std::greater<int>>& weights);
 
 std::vector<unsigned> kk_partitioner(const unsigned num_parts, const std::multiset<int, std::greater<int>>& weights);

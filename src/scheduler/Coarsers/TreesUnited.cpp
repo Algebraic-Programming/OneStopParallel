@@ -25,7 +25,7 @@ void TreesUnited::run_in_tree_contraction() {
     
     std::unordered_set<EdgeType, EdgeType_hash> edge_mask;
     if (parameters.use_approx_transitive_reduction) {
-        edge_mask = graph.long_edges_in_triangles();
+        edge_mask = graph.long_edges_in_triangles_parallel();
     }
     
     for (const auto& sink : graph.sinkVertices()) {
@@ -101,7 +101,7 @@ void TreesUnited::run_out_tree_contraction() {
     
     std::unordered_set<EdgeType, EdgeType_hash> edge_mask;
     if (parameters.use_approx_transitive_reduction) {
-        edge_mask = graph.long_edges_in_triangles();
+        edge_mask = graph.long_edges_in_triangles_parallel();
     }
     
     for (const auto& source : graph.sourceVertices()) {

@@ -20,18 +20,18 @@ limitations under the License.
 
 #include <chrono>
 #include <climits>
+#include <cmath>
 #include <list>
 #include <map>
 #include <set>
 #include <string>
 #include <vector>
-#include <cmath>
 
 #include <boost/heap/fibonacci_heap.hpp>
 
-#include "scheduler/Scheduler.hpp"
 #include "auxiliary/auxiliary.hpp"
 #include "model/BspSchedule.hpp"
+#include "scheduler/Scheduler.hpp"
 
 /**
  * @brief The GreedyBspLocking class represents a scheduler that uses a greedy algorithm to compute schedules for
@@ -53,15 +53,16 @@ class GreedyBspLocking : public Scheduler {
         int secondary_score;
 
         heap_node() : node(0), score(0), secondary_score(0) {}
-        heap_node(VertexType node, int score, int secondary_score) : node(node), score(score), secondary_score(secondary_score) {}
+        heap_node(VertexType node, int score, int secondary_score)
+            : node(node), score(score), secondary_score(secondary_score) {}
 
         bool operator<(heap_node const &rhs) const {
-            return (score < rhs.score) || (score == rhs.score and secondary_score < rhs.secondary_score)
-            || (score == rhs.score and secondary_score == rhs.secondary_score and node > rhs.node);
+            return (score < rhs.score) || (score == rhs.score and secondary_score < rhs.secondary_score) ||
+                   (score == rhs.score and secondary_score == rhs.secondary_score and node > rhs.node);
         }
     };
 
-    std::vector<int> get_longest_path(const ComputationalDag& graph) const;
+    std::vector<int> get_longest_path(const ComputationalDag &graph) const;
 
     std::vector<boost::heap::fibonacci_heap<heap_node>> max_proc_score_heap;
     std::vector<boost::heap::fibonacci_heap<heap_node>> max_all_proc_score_heap;
@@ -81,33 +82,33 @@ class GreedyBspLocking : public Scheduler {
     int counter; // temporary, only for debugging
 
     float max_percent_idle_processors;
+    bool increase_parallelism_in_new_superstep;
     bool use_memory_constraint = false;
-    std::vector<unsigned> current_proc_memory;
+    std::vector<int> current_proc_persistent_memory;
+    std::vector<int> current_proc_transient_memory;
 
-    std::pair<int, double> computeScore(VertexType node, unsigned proc, const std::vector<std::vector<bool>> &procInHyperedge,
-                        const BspInstance &instance);
+    std::pair<int, double> computeScore(VertexType node, unsigned proc,
+                                        const std::vector<std::vector<bool>> &procInHyperedge,
+                                        const BspInstance &instance);
 
-    bool Choose(const BspInstance &instance, const std::vector<std::vector<int>> &procInHyperedge,
-                const std::set<int> &allReady, const std::vector<std::set<int>> &procReady,
-                const std::vector<bool> &procFree, int &node, int &p) const;
+    bool check_mem_feasibility(const BspInstance &instance, const std::set<VertexType> &allReady,
+                               const std::vector<std::set<VertexType>> &procReady) const;
 
-    bool CanChooseNode(const BspInstance &instance, const std::set<int> &allReady,
-                       const std::vector<std::set<int>> &procReady, const std::vector<bool> &procFree) const;
+    bool Choose(const BspInstance &instance, const std::vector<std::vector<bool>> &procInHyperedge,
+                std::set<VertexType> &allReady, std::vector<std::set<VertexType>> &procReady,
+                const std::vector<bool> &procFree, VertexType &node, unsigned &p, const bool endSupStep,
+                const size_t remaining_time);
 
-    bool ChooseHeap(const BspInstance &instance, const std::vector<std::vector<bool>> &procInHyperedge,
-                    std::set<VertexType> &allReady, std::vector<std::set<VertexType>> &procReady,
-                    const std::vector<bool> &procFree, VertexType &node, unsigned &p,
-                    const bool endSupStep, const size_t remaining_time);
-
-    bool CanChooseNodeHeap(const BspInstance &instance, const std::set<VertexType> &allReady,
-                           const std::vector<std::set<VertexType>> &procReady, const std::vector<bool> &procFree) const;
+    bool CanChooseNode(const BspInstance &instance, const std::set<VertexType> &allReady,
+                       const std::vector<std::set<VertexType>> &procReady, const std::vector<bool> &procFree) const;
 
   public:
     /**
      * @brief Default constructor for GreedyBspLocking.
      */
-    GreedyBspLocking(float max_percent_idle_processors_ = 0.4)
-        : Scheduler(), max_percent_idle_processors(max_percent_idle_processors_) {}
+    GreedyBspLocking(float max_percent_idle_processors_ = 0.4, bool increase_parallelism_in_new_superstep_ = true)
+        : Scheduler(), max_percent_idle_processors(max_percent_idle_processors_),
+          increase_parallelism_in_new_superstep(increase_parallelism_in_new_superstep_) {}
 
     /**
      * @brief Default destructor for GreedyBspLocking.
@@ -122,8 +123,6 @@ class GreedyBspLocking : public Scheduler {
      * @param instance The BspInstance object representing the instance to compute the schedule for.
      * @return A pair containing the return status and the computed BspSchedule.
      */
-    virtual std::pair<RETURN_STATUS, BspSchedule> computeScheduleNoHeap(const BspInstance &instance);
-
     virtual std::pair<RETURN_STATUS, BspSchedule> computeSchedule(const BspInstance &instance) override;
 
     /**
@@ -138,7 +137,7 @@ class GreedyBspLocking : public Scheduler {
         if (use_memory_constraint) {
             return "BspGreedyLockingMemory";
         } else {
-            return "BspGreedyLocking_"+std::to_string(max_percent_idle_processors);
+            return "BspGreedyLocking_" + std::to_string(max_percent_idle_processors);
         }
     }
 

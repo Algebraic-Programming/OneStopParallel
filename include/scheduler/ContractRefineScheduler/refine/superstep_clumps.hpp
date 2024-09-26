@@ -239,7 +239,7 @@ class LooseSuperStep {
             }
             break;
 
-       
+
         default:
             new_allocation = greedy_partitioner(params.number_of_partitions, coll_weights);
             break;

@@ -3,8 +3,7 @@
         "timeLimit": 3600,
         "outputPartition": false,
         "outputDotPartition": false,
-        "use_memory_constraints": false,
-        "memory_bound": 100
+        "use_memory_constraints": true
     },
     "algorithms": [
         {
@@ -12,10 +11,28 @@
             "description": "\tPartitioner based on the Variance BSP scheduler.",
             "parameters": {
                 "proc_priority_method": "FLATSPLINE",
-                "max_percent_idle_processors": 0.2,
-                "variance_power": 2,
+                "max_percent_idle_processors": 0.0,
+                "increase_parallelism_in_new_superstep": true,
+                "variance_power": 6,
                 "memory_capacity_increase": 1.1,
-                "max_priority_difference_percent": 0.34
+                "max_priority_difference_percent": 0.34,
+                "slack": 0.0
+            }
+        },
+        {
+            "name": "LightEdgeVariancePartitioner",
+            "description": "\tPartitioner based on the Variance BSP scheduler with heavy edge grouping.",
+            "parameters": {
+                "proc_priority_method": "FLATSPLINE",
+                "max_percent_idle_processors": 0.0,
+                "increase_parallelism_in_new_superstep": true,
+                "variance_power": 6,
+                "memory_capacity_increase": 1.1,
+                "max_priority_difference_percent": 0.34,
+                "heavy_is_x_times_median": 3.0,
+                "min_percent_components_retained": 0.25,
+                "bound_component_weight_percent": 4.0,
+                "slack": 0.0
             }
         }
     ]

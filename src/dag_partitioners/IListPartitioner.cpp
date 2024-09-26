@@ -18,15 +18,15 @@ limitations under the License.
 
 #include "dag_partitioners/IListPartitioner.hpp"
 
-float IListPartitioner::linear_interpolation(float alpha) {
-    return alpha;
+float IListPartitioner::linear_interpolation(float alpha, const float slack) {
+    return (1.0 - slack) * alpha;
 }
 
-float IListPartitioner::flat_spline_interpolation(float alpha) {
-    return ((-2) * pow(alpha, 3)) + (3 * pow(alpha, 2));
+float IListPartitioner::flat_spline_interpolation(float alpha, const float slack) {
+    return (1.0 - slack) *  ((-2) * pow(alpha, 3)) + (3 * pow(alpha, 2));
 }
 
-std::vector<float> IListPartitioner::computeProcessorPrioritiesInterpolation(const std::vector<long unsigned>& superstep_partition_work, const std::vector<long unsigned>& total_partition_work, const long unsigned& total_work, const BspInstance &instance) {
+std::vector<float> IListPartitioner::computeProcessorPrioritiesInterpolation(const std::vector<long unsigned>& superstep_partition_work, const std::vector<long unsigned>& total_partition_work, const long unsigned& total_work, const BspInstance &instance, const float slack) {
     long unsigned work_till_now = 0;
     for (const auto& part_work : total_partition_work) {
         work_till_now += part_work;
@@ -39,15 +39,23 @@ std::vector<float> IListPartitioner::computeProcessorPrioritiesInterpolation(con
     switch (proc_priority_method)
     {
     case LINEAR:
-        value = linear_interpolation(percentage_complete);
+        value = linear_interpolation(percentage_complete, slack);
         break;
 
     case FLATSPLINE:
-        value = flat_spline_interpolation(percentage_complete);
+        value = flat_spline_interpolation(percentage_complete, slack);
+        break;
+
+    case SUPERSTEP_ONLY:
+        value = superstep_only_interpolation();
+        break;
+
+    case GLOBAL_ONLY:
+        value = global_only_interpolation();
         break;
     
     default:
-        value = flat_spline_interpolation(percentage_complete);
+        value = flat_spline_interpolation(percentage_complete, slack);
         break;
     }
 
@@ -59,22 +67,28 @@ std::vector<float> IListPartitioner::computeProcessorPrioritiesInterpolation(con
     return proc_prio;
 }
 
-std::vector<float> IListPartitioner::computeProcessorPriorities(const std::vector<long unsigned>& superstep_partition_work, const std::vector<long unsigned>& total_partition_work, const long unsigned& total_work, const BspInstance &instance) {
+std::vector<float> IListPartitioner::computeProcessorPriorities(const std::vector<long unsigned>& superstep_partition_work, const std::vector<long unsigned>& total_partition_work, const long unsigned& total_work, const BspInstance &instance, const float slack) {
     switch (proc_priority_method)
     {
     case LINEAR:
-        return computeProcessorPrioritiesInterpolation(superstep_partition_work, total_partition_work, total_work, instance);
+        return computeProcessorPrioritiesInterpolation(superstep_partition_work, total_partition_work, total_work, instance, slack);
 
     case FLATSPLINE:
-        return computeProcessorPrioritiesInterpolation(superstep_partition_work, total_partition_work, total_work, instance);
+        return computeProcessorPrioritiesInterpolation(superstep_partition_work, total_partition_work, total_work, instance, slack);
+    
+    case SUPERSTEP_ONLY:
+        return computeProcessorPrioritiesInterpolation(superstep_partition_work, total_partition_work, total_work, instance, slack);
+
+    case GLOBAL_ONLY:
+        return computeProcessorPrioritiesInterpolation(superstep_partition_work, total_partition_work, total_work, instance, slack);
     
     default:
-        return computeProcessorPrioritiesInterpolation(superstep_partition_work, total_partition_work, total_work, instance);
+        return computeProcessorPrioritiesInterpolation(superstep_partition_work, total_partition_work, total_work, instance, slack);
     }
 }
 
-std::vector<unsigned> IListPartitioner::computeProcessorPriority(const std::vector<long unsigned>& superstep_partition_work, const std::vector<long unsigned>& total_partition_work, const long unsigned& total_work, const BspInstance &instance) {
-    std::vector<size_t> temp = sorting_arrangement(computeProcessorPriorities(superstep_partition_work, total_partition_work, total_work, instance));
+std::vector<unsigned> IListPartitioner::computeProcessorPriority(const std::vector<long unsigned>& superstep_partition_work, const std::vector<long unsigned>& total_partition_work, const long unsigned& total_work, const BspInstance &instance, const float slack) {
+    std::vector<size_t> temp = sorting_arrangement(computeProcessorPriorities(superstep_partition_work, total_partition_work, total_work, instance, slack));
     std::vector<unsigned> output(temp.size());
     for (size_t i = 0 ; i < output.size(); i++) {
         output[i] = temp[i];

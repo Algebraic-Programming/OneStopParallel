@@ -48,7 +48,6 @@ file(GLOB model_sources model/*.cpp)
 # Library: refine
 file(GLOB refine_sources scheduler/ContractRefineScheduler/refine/*.cpp)
 
-
 # Library: structures
 file(GLOB structures_sources structures/*.cpp)
 
@@ -64,6 +63,11 @@ file(GLOB SubArchitectureSchedulers_sources scheduler/SubArchitectureSchedulers/
 # Library: advanced_partitioners
 file(GLOB dag_partitioners_sources dag_partitioners/*.cpp)
 
+# Library: coarser
+file(GLOB coarser_sources coarser/*.cpp)
+
+# Library: heavy_edge_coarser
+file(GLOB heavy_edge_coarser_sources coarser/heavy_edges/*.cpp)
 
 # Declare the main library as an interface
 add_library( BspSchedulingLibrary STATIC ${scheduler_sources}
@@ -87,6 +91,8 @@ add_library( BspSchedulingLibrary STATIC ${scheduler_sources}
                                   ${SerialSchedulers_sources}
                                   ${SubArchitectureSchedulers_sources}
                                   ${dag_partitioners_sources}
+                                  ${coarser_sources}
+                                  ${heavy_edge_coarser_sources}
 )
 target_link_libraries( BspSchedulingLibrary PUBLIC
     Boost::graph

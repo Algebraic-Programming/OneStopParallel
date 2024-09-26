@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner   
+@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 
 #pragma once
@@ -27,17 +27,16 @@ limitations under the License.
 #include <vector>
 
 #include "ClassicSchedule.hpp"
-#include "scheduler/Scheduler.hpp"
 #include "auxiliary/auxiliary.hpp"
 #include "model/BspSchedule.hpp"
+#include "scheduler/Scheduler.hpp"
 
 enum CilkMode { CILK, SJF, RANDOM };
-
 
 /**
  * @class GreedyCilkScheduler
  * @brief A class that represents a greedy scheduler for Cilk-based BSP scheduling scheduler.
- * 
+ *
  * The GreedyCilkScheduler class is a concrete implementation of the Scheduler base class. It provides
  * a greedy scheduling algorithm for Cilk-based BSP (Bulk Synchronous Parallel) systems. The scheduler
  * selects the next node and processor to execute a task based on a greedy strategy.
@@ -47,6 +46,10 @@ class GreedyCilkScheduler : public Scheduler {
   private:
     CilkMode mode; /**< The mode of the Cilk scheduler. */
 
+    bool use_memory_constraint = false;
+
+    std::vector<int> current_proc_persistent_memory;
+    std::vector<int> current_proc_transient_memory;
 
     void Choose(const BspInstance &instance, std::vector<std::deque<unsigned>> &procQueue,
                 const std::set<unsigned> &readyNodes, const std::vector<bool> &procFree, unsigned &node, unsigned &p);
@@ -54,26 +57,26 @@ class GreedyCilkScheduler : public Scheduler {
   public:
     /**
      * @brief Constructs a GreedyCilkScheduler object with the specified Cilk mode.
-     * 
+     *
      * This constructor initializes a GreedyCilkScheduler object with the specified Cilk mode.
-     * 
+     *
      * @param mode_ The Cilk mode for the scheduler.
      */
     GreedyCilkScheduler(CilkMode mode_ = CILK) : Scheduler(), mode(mode_) {}
 
     /**
      * @brief Destroys the GreedyCilkScheduler object.
-     * 
+     *
      * This destructor destroys the GreedyCilkScheduler object.
      */
     virtual ~GreedyCilkScheduler() = default;
 
     /**
      * @brief Computes the schedule for the given BSP instance using the greedy scheduling algorithm.
-     * 
+     *
      * This member function computes the schedule for the given BSP instance using the greedy scheduling algorithm.
      * It overrides the computeSchedule() function of the base Scheduler class.
-     * 
+     *
      * @param instance The BSP instance to compute the schedule for.
      * @return A pair containing the return status and the computed BSP schedule.
      */
@@ -81,27 +84,31 @@ class GreedyCilkScheduler : public Scheduler {
 
     /**
      * @brief Sets the Cilk mode for the scheduler.
-     * 
+     *
      * This member function sets the Cilk mode for the scheduler.
-     * 
+     *
      * @param mode_ The Cilk mode to set.
      */
     inline void setMode(CilkMode mode_) { mode = mode_; }
 
     /**
      * @brief Gets the Cilk mode of the scheduler.
-     * 
+     *
      * This member function gets the Cilk mode of the scheduler.
-     * 
+     *
      * @return The Cilk mode of the scheduler.
      */
     inline CilkMode getMode() const { return mode; }
 
+    virtual void setUseMemoryConstraint(bool use_memory_constraint_) override {
+        use_memory_constraint = use_memory_constraint_;
+    }
+
     /**
      * @brief Gets the name of the schedule.
-     * 
+     *
      * This member function gets the name of the schedule based on the Cilk mode.
-     * 
+     *
      * @return The name of the schedule.
      */
     virtual std::string getScheduleName() const override {
@@ -119,7 +126,6 @@ class GreedyCilkScheduler : public Scheduler {
 
         default:
             return "UnknownModeGreedy";
-
         }
     }
 };

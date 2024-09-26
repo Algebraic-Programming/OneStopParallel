@@ -117,6 +117,7 @@ class Variance_csr : public Scheduler {
     std::unordered_set<VertexType> ready;
 
     float max_percent_idle_processors;
+    bool increase_parallelism_in_new_superstep;
 
     std::vector<double> compute_work_variance(const ComputationalDag &graph) const;
     std::vector<double> compute_work_variance_csr(const csr_graph &graph) const;
@@ -146,8 +147,8 @@ void Choose_csr(unsigned num_p, const csr_graph& G, const std::vector<double> &w
     /**
      * @brief Default constructor for GreedyVarianceFillupScheduler.
      */
-    Variance_csr(float max_percent_idle_processors_ = 0.2)
-        : Scheduler(), max_percent_idle_processors(max_percent_idle_processors_) {}
+    Variance_csr(float max_percent_idle_processors_ = 0.2, bool increase_parallelism_in_new_superstep_ = true)
+        : Scheduler(), max_percent_idle_processors(max_percent_idle_processors_), increase_parallelism_in_new_superstep(increase_parallelism_in_new_superstep_) {}
 
     /**
      * @brief Default destructor for GreedyVarianceFillupScheduler.

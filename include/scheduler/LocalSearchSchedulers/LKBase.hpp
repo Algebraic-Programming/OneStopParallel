@@ -34,10 +34,10 @@ limitations under the License.
 #include "boost_extensions/transitive_edge_reduction.hpp"
 #include <boost/heap/fibonacci_heap.hpp>
 
-#include "scheduler/ImprovementScheduler.hpp"
 #include "auxiliary/auxiliary.hpp"
 #include "model/SetSchedule.hpp"
 #include "model/VectorSchedule.hpp"
+#include "scheduler/ImprovementScheduler.hpp"
 
 // #define LK_DEBUG
 
@@ -102,6 +102,9 @@ class LKBase : public ImprovementScheduler {
     std::vector<std::vector<std::vector<T>>> node_change_in_costs;
 
     std::vector<std::vector<unsigned>> step_processor_memory;
+
+    std::vector<int> current_proc_persistent_memory;
+    std::vector<int> current_proc_transient_memory;
 
     std::vector<std::vector<T>> step_processor_work;
     std::vector<std::vector<T>> step_processor_send;
@@ -274,9 +277,9 @@ void LKBase<T>::setParameters() {
 
     if (num_nodes < 250) {
 
-        max_iterations = 100;
+        max_iterations = 300;
 
-        selection_threshold = num_nodes * 0.33;
+        selection_threshold = 0.25 * num_nodes;
 
     } else if (num_nodes < 1000) {
 
@@ -1034,26 +1037,38 @@ void LKBase<T>::computeNodeGain(unsigned node) {
 
         if (use_memory_constraint) {
 
-            if (step_processor_memory[vector_schedule.assignedSuperstep(node)][new_proc] +
-                    instance->getComputationalDag().nodeMemoryWeight(node) >
-                instance->memoryBound()) {
-
-                node_gains[node][new_proc][1] = std::numeric_limits<T>::lowest();
-            }
-            if (vector_schedule.assignedSuperstep(node) > 0) {
-                if (step_processor_memory[vector_schedule.assignedSuperstep(node) - 1][new_proc] +
+            if (instance->getArchitecture().getMemoryConstraintType() == LOCAL) {
+                if (step_processor_memory[vector_schedule.assignedSuperstep(node)][new_proc] +
                         instance->getComputationalDag().nodeMemoryWeight(node) >
+                    instance->memoryBound()) {
+
+                    node_gains[node][new_proc][1] = std::numeric_limits<T>::lowest();
+                }
+                if (vector_schedule.assignedSuperstep(node) > 0) {
+                    if (step_processor_memory[vector_schedule.assignedSuperstep(node) - 1][new_proc] +
+                            instance->getComputationalDag().nodeMemoryWeight(node) >
+                        instance->memoryBound()) {
+
+                        node_gains[node][new_proc][0] = std::numeric_limits<T>::lowest();
+                    }
+                }
+
+                if (vector_schedule.assignedSuperstep(node) < num_steps - 1) {
+                    if (step_processor_memory[vector_schedule.assignedSuperstep(node) + 1][new_proc] +
+                            instance->getComputationalDag().nodeMemoryWeight(node) >
+                        instance->memoryBound()) {
+
+                        node_gains[node][new_proc][2] = std::numeric_limits<T>::lowest();
+                    }
+                }
+            } else if (instance->getArchitecture().getMemoryConstraintType() == PERSISTENT_AND_TRANSIENT) {
+                if (current_proc_persistent_memory[new_proc] + instance->getComputationalDag().nodeMemoryWeight(node) +
+                        std::max(current_proc_transient_memory[new_proc],
+                                 instance->getComputationalDag().nodeCommunicationWeight(node)) >
                     instance->memoryBound()) {
 
                     node_gains[node][new_proc][0] = std::numeric_limits<T>::lowest();
-                }
-            }
-
-            if (vector_schedule.assignedSuperstep(node) < num_steps - 1) {
-                if (step_processor_memory[vector_schedule.assignedSuperstep(node) + 1][new_proc] +
-                        instance->getComputationalDag().nodeMemoryWeight(node) >
-                    instance->memoryBound()) {
-
+                    node_gains[node][new_proc][1] = std::numeric_limits<T>::lowest();
                     node_gains[node][new_proc][2] = std::numeric_limits<T>::lowest();
                 }
             }
@@ -1620,7 +1635,12 @@ template<typename T>
 void LKBase<T>::initalize_superstep_datastructures() {
 
     if (use_memory_constraint) {
-        step_processor_memory = std::vector<std::vector<unsigned>>(num_steps, std::vector<unsigned>(num_procs, 0));
+        if (instance->getArchitecture().getMemoryConstraintType() == LOCAL) {
+            step_processor_memory = std::vector<std::vector<unsigned>>(num_steps, std::vector<unsigned>(num_procs, 0));
+        } else if (instance->getArchitecture().getMemoryConstraintType() == PERSISTENT_AND_TRANSIENT) {
+            current_proc_persistent_memory = std::vector<int>(num_procs, 0);
+            current_proc_transient_memory = std::vector<int>(num_procs, 0);
+        }
     }
 
     step_processor_work = std::vector<std::vector<T>>(num_steps, std::vector<T>(num_procs, 0));

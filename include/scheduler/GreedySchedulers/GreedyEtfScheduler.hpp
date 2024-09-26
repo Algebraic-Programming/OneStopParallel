@@ -47,6 +47,11 @@ class GreedyEtfScheduler : public Scheduler {
     EtfMode mode; // The mode of the scheduler (ETF or BL_EST)
     bool use_numa; // Flag indicating whether to use NUMA-aware scheduling
 
+    bool use_memory_constraint = false;
+
+    std::vector<int> current_proc_persistent_memory;
+    std::vector<int> current_proc_transient_memory;
+
     /**
      * @brief Computes the bottom level of each task.
      * 
@@ -55,6 +60,8 @@ class GreedyEtfScheduler : public Scheduler {
      * @return A vector containing the bottom level of each task.
      */
     std::vector<int> ComputeBottomLevel(const BspInstance &instance, unsigned avg_) const;
+
+    bool check_mem_feasibility(const BspInstance &instance, const std::set<intPair>& ready) const; 
 
     /**
      * @brief Calculates the earliest start time (EST) for a task on a processor.
@@ -136,6 +143,10 @@ class GreedyEtfScheduler : public Scheduler {
      * @return True if NUMA-aware scheduling is enabled, false otherwise.
      */
     inline bool useNuma() const { return use_numa; }
+
+    virtual void setUseMemoryConstraint(bool use_memory_constraint_) override {
+        use_memory_constraint = use_memory_constraint_;
+    }
 
     /**
      * @brief Gets the name of the schedule.

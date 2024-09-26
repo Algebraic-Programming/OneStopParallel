@@ -42,7 +42,7 @@ std::pair<bool, BspInstance> readBspInstance(const std::string &filename);
 
 std::pair<bool, ComputationalDag> readComputationalDagMetisFormat(std::ifstream &infile);
 
-std::pair<bool, ComputationalDag> readComputationalDagMetisFormat(std::string &filename);
+std::pair<bool, ComputationalDag> readComputationalDagMetisFormat(const std::string &filename);
 
 std::pair<bool, BspArchitecture> readBspArchitecture(const std::string &filename);
 

@@ -30,7 +30,7 @@ class IListPartitioner : public Partitioner {
     public:
     
     /// @brief Processor choosing priority method 
-    enum ProcessorPriorityMethod { LINEAR, FLATSPLINE };
+    enum ProcessorPriorityMethod { LINEAR, FLATSPLINE, SUPERSTEP_ONLY, GLOBAL_ONLY };
 
     protected:
 
@@ -39,36 +39,47 @@ class IListPartitioner : public Partitioner {
     /// @brief linear function for interpolation
     /// @param alpha in [0,1] 
     /// @return alpha
-    float linear_interpolation(float alpha);
+    float linear_interpolation(float alpha, const float slack = 0.0);
 
     /// @brief cubic function for interpolation
     /// @param alpha
     /// @return (-2)*alpha^3 + 3*alpha^2
-    float flat_spline_interpolation(float alpha);
+    float flat_spline_interpolation(float alpha, const float slack = 0.0);
+
+    /// @brief returns 0
+    /// @return 0
+    float superstep_only_interpolation() { return 0; };
+
+    /// @brief returns 1
+    /// @return 1
+    float global_only_interpolation() { return 1; };
 
     /// @brief Computes the interpolated priorities
     /// @param superstep_partition_work vector with current work distribution in current superstep
     /// @param total_partition_work vector with current work distribution overall
     /// @param total_work total work weight of all nodes of the graph
     /// @param instance bsp instance
+    /// @param slack how much to ignore global balance
     /// @return vector with the interpolated priorities
-    std::vector<float> computeProcessorPrioritiesInterpolation(const std::vector<long unsigned>& superstep_partition_work, const std::vector<long unsigned>& total_partition_work, const long unsigned& total_work, const BspInstance &instance);
+    std::vector<float> computeProcessorPrioritiesInterpolation(const std::vector<long unsigned>& superstep_partition_work, const std::vector<long unsigned>& total_partition_work, const long unsigned& total_work, const BspInstance &instance, const float slack = 0.0);
     
     /// @brief Computes processor priorities
     /// @param superstep_partition_work vector with current work distribution in current superstep
     /// @param total_partition_work vector with current work distribution overall
     /// @param total_work total work weight of all nodes of the graph
     /// @param instance bsp instance
+    /// @param slack how much to ignore global balance
     /// @return vector with the processor priorities
-    std::vector<float> computeProcessorPriorities(const std::vector<long unsigned>& superstep_partition_work, const std::vector<long unsigned>& total_partition_work, const long unsigned& total_work, const BspInstance &instance);
+    std::vector<float> computeProcessorPriorities(const std::vector<long unsigned>& superstep_partition_work, const std::vector<long unsigned>& total_partition_work, const long unsigned& total_work, const BspInstance &instance, const float slack = 0.0);
     
     /// @brief Computes processor priorities
     /// @param superstep_partition_work vector with current work distribution in current superstep
     /// @param total_partition_work vector with current work distribution overall
     /// @param total_work total work weight of all nodes of the graph
     /// @param instance bsp instance
+    /// @param slack how much to ignore global balance
     /// @return vector with the processors in order of priority
-    std::vector<unsigned> computeProcessorPriority(const std::vector<long unsigned>& superstep_partition_work, const std::vector<long unsigned>& total_partition_work, const long unsigned& total_work, const BspInstance &instance);
+    std::vector<unsigned> computeProcessorPriority(const std::vector<long unsigned>& superstep_partition_work, const std::vector<long unsigned>& total_partition_work, const long unsigned& total_work, const BspInstance &instance, const float slack = 0.0);
 
 
     public:

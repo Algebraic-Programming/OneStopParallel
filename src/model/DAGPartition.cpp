@@ -66,6 +66,17 @@ std::vector<unsigned> DAGPartition::computeAllMemoryCosts() const {
     for (unsigned v = 0; v < instance->numberOfVertices(); v++) {
         memory[node_to_processor_assignment[v]] += instance->getComputationalDag().nodeMemoryWeight(v);
     }
+    if (instance->getArchitecture().getMemoryConstraintType() == PERSISTENT_AND_TRANSIENT) {
+        std::vector<unsigned> transistent_memory(instance->numberOfProcessors(), 0);
+        
+        for (unsigned v = 0; v < instance->numberOfVertices(); v++) {
+            transistent_memory[node_to_processor_assignment[v]] = std::max(transistent_memory[node_to_processor_assignment[v]], (unsigned) instance->getComputationalDag().nodeCommunicationWeight(v) );
+        }
+        
+        for (size_t proc = 0; proc < instance->numberOfProcessors(); proc++){
+            memory[proc] += transistent_memory[proc];
+        }
+    }
 
     return memory;
 };
@@ -76,6 +87,15 @@ unsigned DAGPartition::computeMemoryCosts(unsigned processor) const {
         if (node_to_processor_assignment[v] == processor) {
             memory += instance->getComputationalDag().nodeMemoryWeight(v);
         }
+    }
+    if (instance->getArchitecture().getMemoryConstraintType() == PERSISTENT_AND_TRANSIENT) {
+        unsigned transistent_memory = 0;
+        for (unsigned v = 0; v < instance->numberOfVertices(); v++) {
+            if (node_to_processor_assignment[v] == processor) {
+                transistent_memory = std::max(transistent_memory, (unsigned) instance->getComputationalDag().nodeCommunicationWeight(v) );
+            }
+        }
+        memory += transistent_memory;
     }
 
     return memory;
@@ -95,12 +115,15 @@ unsigned DAGPartition::computeMaxMemoryCosts() const {
 
 bool DAGPartition::satisfiesMemoryConstraints() const {
 
+    if (instance->getArchitecture().getMemoryConstraintType() == NONE) return true;
+
     std::vector<unsigned> memory = computeAllMemoryCosts();
     for (unsigned p = 0; p < instance->numberOfProcessors(); p++) {
         if (memory[p] > instance->getArchitecture().memoryBound(p)) {
             return false;
         }
     }
+
     return true;
 };
 

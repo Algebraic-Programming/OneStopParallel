@@ -260,9 +260,9 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyBspPebbler::computeSchedule(const Bs
 
         }
 
-        if (allReady.empty() && free > params_p * max_percent_idle_processors &&
+        if (allReady.empty() && free > params_p * max_percent_idle_processors && ((!increase_parallelism_in_new_superstep) ||
             ready.size() >= std::min(std::min(params_p, (unsigned)(1.2 * (params_p - free))),
-                                     params_p - free + ((unsigned)(0.5 * free)))) {
+                                     params_p - free + ((unsigned)(0.5 * free))))) {
             endSupStep = true;
         }
     }

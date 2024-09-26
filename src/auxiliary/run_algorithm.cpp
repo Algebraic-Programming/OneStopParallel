@@ -1,7 +1,7 @@
 #include "auxiliary/run_algorithm.hpp"
 
 std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &parser, const pt::ptree &algorithm,
-                                                    const BspInstance &bsp_instance, unsigned timeLimit) {
+                                                    const BspInstance &bsp_instance, unsigned timeLimit, bool use_memory_constraint) {
 
     std::cout << "Running algorithm: " << algorithm.get_child("name").get_value<std::string>() << std::endl;
 
@@ -15,28 +15,50 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
 
         float max_percent_idle_processors =
             algorithm.get_child("parameters").get_child("max_percent_idle_processors").get_value<float>();
+        bool increase_parallelism_in_new_superstep =
+            algorithm.get_child("parameters").get_child("increase_parallelism_in_new_superstep").get_value<bool>();
 
-        GreedyBspScheduler scheduler(max_percent_idle_processors);
+        GreedyBspScheduler scheduler(max_percent_idle_processors, increase_parallelism_in_new_superstep);
+        scheduler.setUseMemoryConstraint(use_memory_constraint);
         scheduler.setTimeLimitSeconds(timeLimit);
 
         return scheduler.computeSchedule(bsp_instance);
-    }
-    else if (algorithm.get_child("name").get_value<std::string>() == "GreedyBspLocking") {
+    } else if (algorithm.get_child("name").get_value<std::string>() == "GreedyBspLocking") {
 
         float max_percent_idle_processors =
             algorithm.get_child("parameters").get_child("max_percent_idle_processors").get_value<float>();
+        bool increase_parallelism_in_new_superstep =
+            algorithm.get_child("parameters").get_child("increase_parallelism_in_new_superstep").get_value<bool>();
 
-        GreedyBspLocking scheduler(max_percent_idle_processors);
+        GreedyBspLocking scheduler(max_percent_idle_processors, increase_parallelism_in_new_superstep);
         scheduler.setTimeLimitSeconds(timeLimit);
 
         return scheduler.computeSchedule(bsp_instance);
-    }
-    else if (algorithm.get_child("name").get_value<std::string>() == "GreedyVariance") {
+    } else if (algorithm.get_child("name").get_value<std::string>() == "GreedyBspLockingLK") {
 
         float max_percent_idle_processors =
             algorithm.get_child("parameters").get_child("max_percent_idle_processors").get_value<float>();
+        bool increase_parallelism_in_new_superstep =
+            algorithm.get_child("parameters").get_child("increase_parallelism_in_new_superstep").get_value<bool>();
 
-        GreedyVarianceScheduler scheduler(max_percent_idle_processors);
+        bool hyperedge = algorithm.get_child("parameters").get_child("hyperedge").get_value<bool>();
+
+        LKTotalCommScheduler improver(hyperedge);
+
+        GreedyBspLocking greedy_scheduler(max_percent_idle_processors, increase_parallelism_in_new_superstep);
+        ComboScheduler scheduler(&greedy_scheduler, &improver);
+
+        scheduler.setTimeLimitSeconds(timeLimit);
+
+        return scheduler.computeSchedule(bsp_instance);
+    } else if (algorithm.get_child("name").get_value<std::string>() == "GreedyVariance") {
+
+        float max_percent_idle_processors =
+            algorithm.get_child("parameters").get_child("max_percent_idle_processors").get_value<float>();
+        bool increase_parallelism_in_new_superstep =
+            algorithm.get_child("parameters").get_child("increase_parallelism_in_new_superstep").get_value<bool>();
+
+        GreedyVarianceScheduler scheduler(max_percent_idle_processors, increase_parallelism_in_new_superstep);
         scheduler.setTimeLimitSeconds(timeLimit);
 
         return scheduler.computeSchedule(bsp_instance);
@@ -44,8 +66,28 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
 
         float max_percent_idle_processors =
             algorithm.get_child("parameters").get_child("max_percent_idle_processors").get_value<float>();
+        bool increase_parallelism_in_new_superstep =
+            algorithm.get_child("parameters").get_child("increase_parallelism_in_new_superstep").get_value<bool>();
 
-        GreedyBspFillupScheduler scheduler(max_percent_idle_processors);
+        GreedyBspFillupScheduler scheduler(max_percent_idle_processors, increase_parallelism_in_new_superstep);
+        scheduler.setTimeLimitSeconds(timeLimit);
+
+        return scheduler.computeSchedule(bsp_instance);
+
+    } else if (algorithm.get_child("name").get_value<std::string>() == "GreedyBspFillupLK") {
+
+        float max_percent_idle_processors =
+            algorithm.get_child("parameters").get_child("max_percent_idle_processors").get_value<float>();
+        bool increase_parallelism_in_new_superstep =
+            algorithm.get_child("parameters").get_child("increase_parallelism_in_new_superstep").get_value<bool>();
+
+        bool hyperedge = algorithm.get_child("parameters").get_child("hyperedge").get_value<bool>();
+
+        LKTotalCommScheduler improver(hyperedge);
+
+        GreedyBspFillupScheduler bsp_greedy_scheduler(max_percent_idle_processors, increase_parallelism_in_new_superstep);
+        ComboScheduler scheduler(&bsp_greedy_scheduler, &improver);
+
         scheduler.setTimeLimitSeconds(timeLimit);
 
         return scheduler.computeSchedule(bsp_instance);
@@ -53,8 +95,28 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
 
         float max_percent_idle_processors =
             algorithm.get_child("parameters").get_child("max_percent_idle_processors").get_value<float>();
+        bool increase_parallelism_in_new_superstep =
+            algorithm.get_child("parameters").get_child("increase_parallelism_in_new_superstep").get_value<bool>();
 
-        GreedyVarianceFillupScheduler scheduler(max_percent_idle_processors);
+        GreedyVarianceFillupScheduler scheduler(max_percent_idle_processors, increase_parallelism_in_new_superstep);
+        scheduler.setTimeLimitSeconds(timeLimit);
+
+        return scheduler.computeSchedule(bsp_instance);
+
+    } else if (algorithm.get_child("name").get_value<std::string>() == "GreedyVarianceFillupLK") {
+
+        float max_percent_idle_processors =
+            algorithm.get_child("parameters").get_child("max_percent_idle_processors").get_value<float>();
+        bool increase_parallelism_in_new_superstep =
+            algorithm.get_child("parameters").get_child("increase_parallelism_in_new_superstep").get_value<bool>();
+
+        bool hyperedge = algorithm.get_child("parameters").get_child("hyperedge").get_value<bool>();
+
+        LKTotalCommScheduler improver(hyperedge);
+
+        GreedyVarianceFillupScheduler greedy_scheduler(max_percent_idle_processors, increase_parallelism_in_new_superstep);
+        ComboScheduler scheduler(&greedy_scheduler, &improver);
+
         scheduler.setTimeLimitSeconds(timeLimit);
 
         return scheduler.computeSchedule(bsp_instance);
@@ -72,6 +134,26 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
 
         return scheduler.computeSchedule(bsp_instance);
 
+    } else if (algorithm.get_child("name").get_value<std::string>() == "GreedyCilkLK") {
+
+        GreedyCilkScheduler cilk_scheduler;
+
+        algorithm.get_child("parameters").get_child("mode").get_value<std::string>() == "RANDOM"
+            ? cilk_scheduler.setMode(CilkMode::RANDOM)
+        : algorithm.get_child("parameters").get_child("mode").get_value<std::string>() == "SJF"
+            ? cilk_scheduler.setMode(CilkMode::SJF)
+            : cilk_scheduler.setMode(CilkMode::CILK);
+
+        bool hyperedge = algorithm.get_child("parameters").get_child("hyperedge").get_value<bool>();
+
+        LKTotalCommScheduler improver(hyperedge);
+
+        ComboScheduler scheduler(&cilk_scheduler, &improver);
+
+        scheduler.setTimeLimitSeconds(timeLimit);
+
+        return scheduler.computeSchedule(bsp_instance);
+
     } else if (algorithm.get_child("name").get_value<std::string>() == "GreedyEtf") {
 
         GreedyEtfScheduler scheduler;
@@ -80,6 +162,25 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
         algorithm.get_child("parameters").get_child("mode").get_value<std::string>() == "BL_EST"
             ? scheduler.setMode(EtfMode::BL_EST)
             : scheduler.setMode(EtfMode::ETF);
+
+        return scheduler.computeSchedule(bsp_instance);
+
+    } else if (algorithm.get_child("name").get_value<std::string>() == "GreedyEtfLK") {
+
+        GreedyEtfScheduler etf_scheduler;
+        etf_scheduler.setTimeLimitSeconds(timeLimit);
+
+        algorithm.get_child("parameters").get_child("mode").get_value<std::string>() == "BL_EST"
+            ? etf_scheduler.setMode(EtfMode::BL_EST)
+            : etf_scheduler.setMode(EtfMode::ETF);
+
+        bool hyperedge = algorithm.get_child("parameters").get_child("hyperedge").get_value<bool>();
+
+        LKTotalCommScheduler improver(hyperedge);
+
+        ComboScheduler scheduler(&etf_scheduler, &improver);
+
+        scheduler.setTimeLimitSeconds(timeLimit);
 
         return scheduler.computeSchedule(bsp_instance);
 
@@ -168,7 +269,10 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
         unsigned hillclimb_balancer_iterations =
             algorithm.get_child("parameters").get_child("hillclimb_balancer_iterations").get_value<unsigned>();
         bool hungarian_alg = algorithm.get_child("parameters").get_child("hungarian_alg").get_value<bool>();
-        HDagg_parameters::BALANCE_FUNC balance_function = algorithm.get_child("parameters").get_child("balance_func").get_value<std::string>() == "xlogx" ? HDagg_parameters::XLOGX : HDagg_parameters::MAXIMUM;
+        HDagg_parameters::BALANCE_FUNC balance_function =
+            algorithm.get_child("parameters").get_child("balance_func").get_value<std::string>() == "xlogx"
+                ? HDagg_parameters::XLOGX
+                : HDagg_parameters::MAXIMUM;
 
         HDagg_parameters params(balance_threshhold, hillclimb_balancer_iterations, hungarian_alg, balance_function);
         HDagg_simple scheduler(params);
@@ -181,7 +285,10 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
         unsigned hillclimb_balancer_iterations =
             algorithm.get_child("parameters").get_child("hillclimb_balancer_iterations").get_value<unsigned>();
         bool hungarian_alg = algorithm.get_child("parameters").get_child("hungarian_alg").get_value<bool>();
-        HDagg_parameters::BALANCE_FUNC balance_function = algorithm.get_child("parameters").get_child("balance_func").get_value<std::string>() == "xlogx" ? HDagg_parameters::XLOGX : HDagg_parameters::MAXIMUM;
+        HDagg_parameters::BALANCE_FUNC balance_function =
+            algorithm.get_child("parameters").get_child("balance_func").get_value<std::string>() == "xlogx"
+                ? HDagg_parameters::XLOGX
+                : HDagg_parameters::MAXIMUM;
 
         HDagg_parameters params(balance_threshhold, hillclimb_balancer_iterations, hungarian_alg, balance_function);
         HDagg_simple scheduler_inner(params);
@@ -196,7 +303,10 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
         unsigned hillclimb_balancer_iterations =
             algorithm.get_child("parameters").get_child("hillclimb_balancer_iterations").get_value<unsigned>();
         bool hungarian_alg = algorithm.get_child("parameters").get_child("hungarian_alg").get_value<bool>();
-        HDagg_parameters::BALANCE_FUNC balance_function = algorithm.get_child("parameters").get_child("balance_func").get_value<std::string>() == "xlogx" ? HDagg_parameters::XLOGX : HDagg_parameters::MAXIMUM;
+        HDagg_parameters::BALANCE_FUNC balance_function =
+            algorithm.get_child("parameters").get_child("balance_func").get_value<std::string>() == "xlogx"
+                ? HDagg_parameters::XLOGX
+                : HDagg_parameters::MAXIMUM;
 
         HDagg_parameters params(balance_threshhold, hillclimb_balancer_iterations, hungarian_alg, balance_function);
         HDagg_simple scheduler_inner(params);
@@ -597,8 +707,10 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
         CoarseRefineScheduler_parameters params(initial_params, final_params, coarse_params,
                                                 min_nodes_after_coarsen_per_partition, number_of_final_no_change_reps);
 
+        bool hyperedge = algorithm.get_child("parameters").get_child("hyperedge").get_value<bool>();
+
         CoBalDMixR cob_scheduler(params);
-        LKTotalCommScheduler improver;
+        LKTotalCommScheduler improver(hyperedge);
         improver.set_quick_pass(true);
         ComboScheduler scheduler(&cob_scheduler, &improver);
         scheduler.setTimeLimitSeconds(timeLimit);
@@ -668,6 +780,152 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
         scheduler.setTimeLimitSeconds(timeLimit);
 
         return scheduler.computeSchedule(bsp_instance);
+
+    } else if (algorithm.get_child("name").get_value<std::string>() == "SquashBspGreedyHC") {
+
+        unsigned number_of_partitions = bsp_instance.numberOfProcessors();
+
+        float geom_decay_num_nodes =
+            algorithm.get_child("parameters").get_child("coarsen").get_child("geom_decay_num_nodes").get_value<float>();
+        double poisson_par =
+            algorithm.get_child("parameters").get_child("coarsen").get_child("poisson_par").get_value<double>();
+        unsigned noise =
+            algorithm.get_child("parameters").get_child("coarsen").get_child("noise").get_value<unsigned>();
+        std::pair<unsigned, unsigned> edge_sort_ratio = std::make_pair(algorithm.get_child("parameters")
+                                                                           .get_child("coarsen")
+                                                                           .get_child("edge_sort_ratio_triangle")
+                                                                           .get_value<unsigned>(),
+                                                                       algorithm.get_child("parameters")
+                                                                           .get_child("coarsen")
+                                                                           .get_child("edge_sort_ratio_weight")
+                                                                           .get_value<unsigned>());
+        int num_rep_without_node_decrease = algorithm.get_child("parameters")
+                                                .get_child("coarsen")
+                                                .get_child("num_rep_without_node_decrease")
+                                                .get_value<int>();
+        float temperature_multiplier = algorithm.get_child("parameters")
+                                           .get_child("coarsen")
+                                           .get_child("temperature_multiplier")
+                                           .get_value<float>();
+        float number_of_temperature_increases = algorithm.get_child("parameters")
+                                                    .get_child("coarsen")
+                                                    .get_child("number_of_temperature_increases")
+                                                    .get_value<float>();
+
+        CoarsenParams coarse_params(geom_decay_num_nodes, poisson_par, noise, edge_sort_ratio,
+                                    num_rep_without_node_decrease, temperature_multiplier,
+                                    number_of_temperature_increases);
+
+        int min_nodes_after_coarsen_per_partition = algorithm.get_child("parameters")
+                                                        .get_child("coarsen")
+                                                        .get_child("min_nodes_after_coarsen_per_partition")
+                                                        .get_value<int>();
+
+        GreedyBspScheduler greedy;
+        HillClimbingScheduler hill_climbing;
+        SquashA scheduler(&greedy, &hill_climbing, coarse_params,
+                          min_nodes_after_coarsen_per_partition * number_of_partitions);
+        scheduler.setTimeLimitSeconds(timeLimit);
+
+        return scheduler.computeSchedule(bsp_instance);
+
+    } else if (algorithm.get_child("name").get_value<std::string>() == "SquashBspGreedyLK") {
+
+        unsigned number_of_partitions = bsp_instance.numberOfProcessors();
+
+        float geom_decay_num_nodes =
+            algorithm.get_child("parameters").get_child("coarsen").get_child("geom_decay_num_nodes").get_value<float>();
+        double poisson_par =
+            algorithm.get_child("parameters").get_child("coarsen").get_child("poisson_par").get_value<double>();
+        unsigned noise =
+            algorithm.get_child("parameters").get_child("coarsen").get_child("noise").get_value<unsigned>();
+        std::pair<unsigned, unsigned> edge_sort_ratio = std::make_pair(algorithm.get_child("parameters")
+                                                                           .get_child("coarsen")
+                                                                           .get_child("edge_sort_ratio_triangle")
+                                                                           .get_value<unsigned>(),
+                                                                       algorithm.get_child("parameters")
+                                                                           .get_child("coarsen")
+                                                                           .get_child("edge_sort_ratio_weight")
+                                                                           .get_value<unsigned>());
+        int num_rep_without_node_decrease = algorithm.get_child("parameters")
+                                                .get_child("coarsen")
+                                                .get_child("num_rep_without_node_decrease")
+                                                .get_value<int>();
+        float temperature_multiplier = algorithm.get_child("parameters")
+                                           .get_child("coarsen")
+                                           .get_child("temperature_multiplier")
+                                           .get_value<float>();
+        float number_of_temperature_increases = algorithm.get_child("parameters")
+                                                    .get_child("coarsen")
+                                                    .get_child("number_of_temperature_increases")
+                                                    .get_value<float>();
+
+        CoarsenParams coarse_params(geom_decay_num_nodes, poisson_par, noise, edge_sort_ratio,
+                                    num_rep_without_node_decrease, temperature_multiplier,
+                                    number_of_temperature_increases);
+
+        int min_nodes_after_coarsen_per_partition = algorithm.get_child("parameters")
+                                                        .get_child("coarsen")
+                                                        .get_child("min_nodes_after_coarsen_per_partition")
+                                                        .get_value<int>();
+
+        GreedyBspScheduler greedy;
+        LKTotalCommScheduler hill_climbing;
+        SquashA scheduler(&greedy, &hill_climbing, coarse_params,
+                          min_nodes_after_coarsen_per_partition * number_of_partitions);
+        scheduler.setTimeLimitSeconds(timeLimit);
+
+        return scheduler.computeSchedule(bsp_instance);
+
+        } else if (algorithm.get_child("name").get_value<std::string>() == "SquashBspGreedy") {
+
+        unsigned number_of_partitions = bsp_instance.numberOfProcessors();
+
+        float geom_decay_num_nodes =
+            algorithm.get_child("parameters").get_child("coarsen").get_child("geom_decay_num_nodes").get_value<float>();
+        double poisson_par =
+            algorithm.get_child("parameters").get_child("coarsen").get_child("poisson_par").get_value<double>();
+        unsigned noise =
+            algorithm.get_child("parameters").get_child("coarsen").get_child("noise").get_value<unsigned>();
+        std::pair<unsigned, unsigned> edge_sort_ratio = std::make_pair(algorithm.get_child("parameters")
+                                                                           .get_child("coarsen")
+                                                                           .get_child("edge_sort_ratio_triangle")
+                                                                           .get_value<unsigned>(),
+                                                                       algorithm.get_child("parameters")
+                                                                           .get_child("coarsen")
+                                                                           .get_child("edge_sort_ratio_weight")
+                                                                           .get_value<unsigned>());
+        int num_rep_without_node_decrease = algorithm.get_child("parameters")
+                                                .get_child("coarsen")
+                                                .get_child("num_rep_without_node_decrease")
+                                                .get_value<int>();
+        float temperature_multiplier = algorithm.get_child("parameters")
+                                           .get_child("coarsen")
+                                           .get_child("temperature_multiplier")
+                                           .get_value<float>();
+        float number_of_temperature_increases = algorithm.get_child("parameters")
+                                                    .get_child("coarsen")
+                                                    .get_child("number_of_temperature_increases")
+                                                    .get_value<float>();
+
+        CoarsenParams coarse_params(geom_decay_num_nodes, poisson_par, noise, edge_sort_ratio,
+                                    num_rep_without_node_decrease, temperature_multiplier,
+                                    number_of_temperature_increases);
+
+        int min_nodes_after_coarsen_per_partition = algorithm.get_child("parameters")
+                                                        .get_child("coarsen")
+                                                        .get_child("min_nodes_after_coarsen_per_partition")
+                                                        .get_value<int>();
+
+        GreedyBspScheduler greedy;
+
+        SquashA scheduler(&greedy, coarse_params,
+                          min_nodes_after_coarsen_per_partition * number_of_partitions);
+        scheduler.setTimeLimitSeconds(timeLimit);
+
+        return scheduler.computeSchedule(bsp_instance);
+
+
     } else if (algorithm.get_child("name").get_value<std::string>() == "CoarseBestGreedy") {
 
         unsigned number_of_partitions = bsp_instance.numberOfProcessors();
@@ -761,7 +1019,11 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
                                                      .get_value<unsigned>();
         bool hungarian_alg =
             algorithm.get_child("parameters").get_child("HDagg").get_child("hungarian_alg").get_value<bool>();
-        HDagg_parameters::BALANCE_FUNC balance_function = algorithm.get_child("parameters").get_child("HDagg").get_child("balance_func").get_value<std::string>() == "xlogx" ? HDagg_parameters::XLOGX : HDagg_parameters::MAXIMUM;
+        HDagg_parameters::BALANCE_FUNC balance_function =
+            algorithm.get_child("parameters").get_child("HDagg").get_child("balance_func").get_value<std::string>() ==
+                    "xlogx"
+                ? HDagg_parameters::XLOGX
+                : HDagg_parameters::MAXIMUM;
 
         HDagg_parameters params(balance_threshhold, hillclimb_balancer_iterations, hungarian_alg, balance_function);
 
@@ -852,15 +1114,16 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
 
         float max_percent_idle_processor =
             algorithm.get_child("parameters").get_child("max_percent_idle_processors").get_value<float>();
+        bool increase_parallelism_in_new_superstep =
+            algorithm.get_child("parameters").get_child("increase_parallelism_in_new_superstep").get_value<bool>();
 
-        GreedyBspFillupScheduler bsp_greedy(max_percent_idle_processor);
+        GreedyBspFillupScheduler bsp_greedy(max_percent_idle_processor, increase_parallelism_in_new_superstep);
         HDaggCoarser scheduler(&bsp_greedy);
         scheduler.setTimeLimitSeconds(timeLimit);
 
         return scheduler.computeSchedule(bsp_instance);
 
-    }
-    else if (algorithm.get_child("name").get_value<std::string>() == "CoarseHDaggGreedyLocking") {
+    } else if (algorithm.get_child("name").get_value<std::string>() == "CoarseHDaggGreedyLocking") {
 
         float max_percent_idle_processor =
             algorithm.get_child("parameters").get_child("max_percent_idle_processors").get_value<float>();
@@ -891,8 +1154,7 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
         scheduler.setTimeLimitSeconds(timeLimit);
 
         return scheduler.computeSchedule(bsp_instance);
-    
-    
+
     } else if (algorithm.get_child("name").get_value<std::string>() == "CoarseHDaggGreedyLocking") {
 
         float max_percent_idle_processor =
@@ -1475,8 +1737,10 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
                                                 .get_child("bsp")
                                                 .get_child("max_percent_idle_processors")
                                                 .get_value<float>();
+        bool increase_parallelism_in_new_superstep =
+            algorithm.get_child("parameters").get_child("bsp").get_child("increase_parallelism_in_new_superstep").get_value<bool>();
 
-        GreedyBspScheduler scheduler_inner(max_percent_idle_processors);
+        GreedyBspScheduler scheduler_inner(max_percent_idle_processors, increase_parallelism_in_new_superstep);
         Funnel scheduler(&scheduler_inner, params);
 
         scheduler.setTimeLimitSeconds(timeLimit);
@@ -1504,15 +1768,16 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
                                                 .get_child("bsp")
                                                 .get_child("max_percent_idle_processors")
                                                 .get_value<float>();
+        bool increase_parallelism_in_new_superstep =
+            algorithm.get_child("parameters").get_child("increase_parallelism_in_new_superstep").get_value<bool>();
 
-        GreedyBspLocking scheduler_inner(max_percent_idle_processors);
+        GreedyBspLocking scheduler_inner(max_percent_idle_processors, increase_parallelism_in_new_superstep);
         Funnel scheduler(&scheduler_inner, params);
 
         scheduler.setTimeLimitSeconds(timeLimit);
 
         return scheduler.computeSchedule(bsp_instance);
-    
-    
+
     } else if (algorithm.get_child("name").get_value<std::string>() == "FunnelVarianceGreedy") {
 
         float max_relative_weight =
@@ -1535,8 +1800,10 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
                                                 .get_child("variance")
                                                 .get_child("max_percent_idle_processors")
                                                 .get_value<float>();
+        bool increase_parallelism_in_new_superstep =
+            algorithm.get_child("parameters").get_child("variance").get_child("increase_parallelism_in_new_superstep").get_value<bool>();
 
-        GreedyVarianceScheduler scheduler_inner(max_percent_idle_processors);
+        GreedyVarianceScheduler scheduler_inner(max_percent_idle_processors, increase_parallelism_in_new_superstep);
         Funnel scheduler(&scheduler_inner, params);
 
         scheduler.setTimeLimitSeconds(timeLimit);
@@ -1564,8 +1831,10 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
                                                 .get_child("bsp")
                                                 .get_child("max_percent_idle_processors")
                                                 .get_value<float>();
+        bool increase_parallelism_in_new_superstep =
+            algorithm.get_child("parameters").get_child("bsp").get_child("increase_parallelism_in_new_superstep").get_value<bool>();
 
-        GreedyBspFillupScheduler scheduler_inner(max_percent_idle_processors);
+        GreedyBspFillupScheduler scheduler_inner(max_percent_idle_processors, increase_parallelism_in_new_superstep);
         Funnel scheduler(&scheduler_inner, params);
 
         scheduler.setTimeLimitSeconds(timeLimit);
@@ -1593,15 +1862,17 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
                                                 .get_child("variance")
                                                 .get_child("max_percent_idle_processors")
                                                 .get_value<float>();
+        bool increase_parallelism_in_new_superstep =
+            algorithm.get_child("parameters").get_child("variance").get_child("increase_parallelism_in_new_superstep").get_value<bool>();
 
-        GreedyVarianceFillupScheduler scheduler_inner(max_percent_idle_processors);
+        GreedyVarianceFillupScheduler scheduler_inner(max_percent_idle_processors, increase_parallelism_in_new_superstep);
         Funnel scheduler(&scheduler_inner, params);
 
         scheduler.setTimeLimitSeconds(timeLimit);
 
         return scheduler.computeSchedule(bsp_instance);
 
-   } else if (algorithm.get_child("name").get_value<std::string>() == "FunnelBestGreedy") {
+    } else if (algorithm.get_child("name").get_value<std::string>() == "FunnelBestGreedy") {
 
         float max_relative_weight =
             algorithm.get_child("parameters").get_child("coarsen").get_child("max_relative_weight").get_value<float>();
@@ -1619,8 +1890,6 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
         Funnel_parameters params(max_relative_weight, funnel_incoming, funnel_outgoing, first_funnel_incoming,
                                  use_approx_transitive_reduction);
 
-     
-
         MetaGreedyScheduler scheduler_inner;
         Funnel scheduler(&scheduler_inner, params);
 
@@ -1635,8 +1904,10 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
 
         float max_percent_idle_processor =
             algorithm.get_child("parameters").get_child("max_percent_idle_processors").get_value<float>();
+        bool increase_parallelism_in_new_superstep =
+            algorithm.get_child("parameters").get_child("increase_parallelism_in_new_superstep").get_value<bool>();
 
-        GreedyBspFillupScheduler bsp_greedy(max_percent_idle_processor);
+        GreedyBspFillupScheduler bsp_greedy(max_percent_idle_processor, increase_parallelism_in_new_superstep);
         LKTotalCommScheduler lk;
         ComboScheduler bsp_greedy_lk(&bsp_greedy, &lk);
         HillClimbingScheduler hc;
@@ -1657,9 +1928,12 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
         bool apply_trans_edge_contraction =
             algorithm.get_child("parameters").get_child("trans_edge_contraction").get_value<bool>();
 
-        float max_percent_idle_processors = algorithm.get_child("parameters").get_child("max_percent_idle_processors").get_value<float>();
+        float max_percent_idle_processors =
+            algorithm.get_child("parameters").get_child("max_percent_idle_processors").get_value<float>();
+        bool increase_parallelism_in_new_superstep =
+            algorithm.get_child("parameters").get_child("increase_parallelism_in_new_superstep").get_value<bool>();
 
-        GreedyVarianceFillupScheduler greedy(max_percent_idle_processors);
+        GreedyVarianceFillupScheduler greedy(max_percent_idle_processors, increase_parallelism_in_new_superstep);
         LKTotalCommScheduler lk;
         ComboScheduler greedy_lk(&greedy, &lk);
         HillClimbingScheduler hc;
@@ -1680,10 +1954,12 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
         bool apply_trans_edge_contraction =
             algorithm.get_child("parameters").get_child("trans_edge_contraction").get_value<bool>();
 
-        float max_percent_idle_processors = algorithm.get_child("parameters").get_child("max_percent_idle_processors").get_value<float>();
+        float max_percent_idle_processors =
+            algorithm.get_child("parameters").get_child("max_percent_idle_processors").get_value<float>();
+        bool increase_parallelism_in_new_superstep =
+            algorithm.get_child("parameters").get_child("increase_parallelism_in_new_superstep").get_value<bool>();
 
-        
-        GreedyBspLocking greedy(max_percent_idle_processors);
+        GreedyBspLocking greedy(max_percent_idle_processors, increase_parallelism_in_new_superstep);
         LKTotalCommScheduler lk;
         ComboScheduler greedy_lk(&greedy, &lk);
         HillClimbingScheduler hc;
@@ -1893,8 +2169,6 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
         bool apply_trans_edge_contraction =
             algorithm.get_child("parameters").get_child("trans_edge_contraction").get_value<bool>();
 
-
-
         float max_relative_weight =
             algorithm.get_child("parameters").get_child("coarsen").get_child("max_relative_weight").get_value<float>();
         bool funnel_incoming =
@@ -1910,7 +2184,6 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
 
         Funnel_parameters params(max_relative_weight, funnel_incoming, funnel_outgoing, first_funnel_incoming,
                                  use_approx_transitive_reduction);
-
 
         float max_percent_idle_processor =
             algorithm.get_child("parameters").get_child("max_percent_idle_processors").get_value<float>();
@@ -1930,14 +2203,16 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
 
             return scheduler.computeSchedule(bsp_instance);
         }
-    
-    
+
     } else if (algorithm.get_child("name").get_value<std::string>() == "FunnelCoarseVarGLK+HC") {
 
         bool apply_trans_edge_contraction =
             algorithm.get_child("parameters").get_child("trans_edge_contraction").get_value<bool>();
 
-        float max_percent_idle_processors = algorithm.get_child("parameters").get_child("max_percent_idle_processors").get_value<float>();
+        float max_percent_idle_processors =
+            algorithm.get_child("parameters").get_child("max_percent_idle_processors").get_value<float>();
+        bool increase_parallelism_in_new_superstep =
+            algorithm.get_child("parameters").get_child("increase_parallelism_in_new_superstep").get_value<bool>();
 
         float max_relative_weight =
             algorithm.get_child("parameters").get_child("coarsen").get_child("max_relative_weight").get_value<float>();
@@ -1955,12 +2230,12 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
         Funnel_parameters params(max_relative_weight, funnel_incoming, funnel_outgoing, first_funnel_incoming,
                                  use_approx_transitive_reduction);
 
-        GreedyVarianceFillupScheduler greedy(max_percent_idle_processors);
+        GreedyVarianceFillupScheduler greedy(max_percent_idle_processors, increase_parallelism_in_new_superstep);
         LKTotalCommScheduler lk;
         ComboScheduler greedy_lk(&greedy, &lk);
         HillClimbingScheduler hc;
         Funnel scheduler(&greedy_lk, &hc);
-  
+
         if (apply_trans_edge_contraction) {
 
             AppTransEdgeReductor red(scheduler);
@@ -2143,7 +2418,6 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
         CoarseRefineScheduler_parameters params(initial_params, final_params, coarse_params,
                                                 min_nodes_after_coarsen_per_partition, number_of_final_no_change_reps);
 
-
         float max_relative_weight =
             algorithm.get_child("parameters").get_child("funnel").get_child("max_relative_weight").get_value<float>();
         bool funnel_incoming =
@@ -2158,7 +2432,7 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
                                                    .get_value<bool>();
 
         Funnel_parameters f_params(max_relative_weight, funnel_incoming, funnel_outgoing, first_funnel_incoming,
-                                 use_approx_transitive_reduction);
+                                   use_approx_transitive_reduction);
 
         CoBalDMixR cobald(params);
 
@@ -2228,38 +2502,109 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
         scheduler.setTimeLimitSeconds(timeLimit);
 
         return scheduler.computeSchedule(bsp_instance);
-    }  else {
+    } else {
 
         throw std::invalid_argument("Parameter error: Unknown algorithm.\n");
     }
 };
 
-
-std::pair<RETURN_STATUS, DAGPartition> run_algorithm(const CommandLineParserPartition &parser, const pt::ptree &algorithm,
-                                                    const BspInstance &bsp_instance, unsigned timeLimit, bool use_memory_constraint) {
+std::pair<RETURN_STATUS, DAGPartition> run_algorithm(const CommandLineParserPartition &parser,
+                                                     const pt::ptree &algorithm, const BspInstance &bsp_instance,
+                                                     unsigned timeLimit, bool use_memory_constraint) {
 
     std::cout << "Running algorithm: " << algorithm.get_child("name").get_value<std::string>() << std::endl;
 
     if (algorithm.get_child("name").get_value<std::string>() == "VariancePartitioner") {
 
         IListPartitioner::ProcessorPriorityMethod proc_priority_method;
-        if (algorithm.get_child("parameters").get_child("proc_priority_method").get_value<std::string>() == "FLATSPLINE") {
+        if (algorithm.get_child("parameters").get_child("proc_priority_method").get_value<std::string>() ==
+            "FLATSPLINE") {
             proc_priority_method = IListPartitioner::FLATSPLINE;
-        } else if (algorithm.get_child("parameters").get_child("proc_priority_method").get_value<std::string>() == "LINEAR") {
+        } else if (algorithm.get_child("parameters").get_child("proc_priority_method").get_value<std::string>() ==
+                   "LINEAR") {
             proc_priority_method = IListPartitioner::LINEAR;
+        } else if (algorithm.get_child("parameters").get_child("proc_priority_method").get_value<std::string>() ==
+                   "SUPERSTEP_ONLY") {
+            proc_priority_method = IListPartitioner::SUPERSTEP_ONLY;
+        } else if (algorithm.get_child("parameters").get_child("proc_priority_method").get_value<std::string>() ==
+                   "GLOBAL_ONLY") {
+            proc_priority_method = IListPartitioner::GLOBAL_ONLY;
         } else {
-            throw std::invalid_argument("Parameter error in VariancePartitioner: processor priority method not recognised.\n");
+            throw std::invalid_argument(
+                "Parameter error in VariancePartitioner: processor priority method not recognised.\n");
         }
 
-        float max_percent_idle_processors = algorithm.get_child("parameters").get_child("max_percent_idle_processors").get_value<float>();
+        float max_percent_idle_processors =
+            algorithm.get_child("parameters").get_child("max_percent_idle_processors").get_value<float>();
+        bool increase_parallelism_in_new_superstep =
+            algorithm.get_child("parameters").get_child("increase_parallelism_in_new_superstep").get_value<bool>();
         double variance_power = algorithm.get_child("parameters").get_child("variance_power").get_value<double>();
-        double memory_capacity_increase = algorithm.get_child("parameters").get_child("memory_capacity_increase").get_value<double>();
-        float max_priority_difference_percent = algorithm.get_child("parameters").get_child("max_priority_difference_percent").get_value<float>();
+        double memory_capacity_increase =
+            algorithm.get_child("parameters").get_child("memory_capacity_increase").get_value<double>();
+        float max_priority_difference_percent =
+            algorithm.get_child("parameters").get_child("max_priority_difference_percent").get_value<float>();
+        float slack =
+            algorithm.get_child("parameters").get_child("slack").get_value<float>();
 
-        VariancePartitioner partitioner(proc_priority_method, use_memory_constraint, max_percent_idle_processors, variance_power, memory_capacity_increase,max_priority_difference_percent, timeLimit);
+        VariancePartitioner partitioner(proc_priority_method, use_memory_constraint, max_percent_idle_processors,
+                                        variance_power, increase_parallelism_in_new_superstep, memory_capacity_increase, max_priority_difference_percent, slack,
+                                        timeLimit);
 
         return partitioner.computePartition(bsp_instance);
 
+    } else if (algorithm.get_child("name").get_value<std::string>() == "LightEdgeVariancePartitioner") {
+
+        IListPartitioner::ProcessorPriorityMethod proc_priority_method;
+        if (algorithm.get_child("parameters").get_child("proc_priority_method").get_value<std::string>() ==
+            "FLATSPLINE") {
+            proc_priority_method = IListPartitioner::FLATSPLINE;
+        } else if (algorithm.get_child("parameters").get_child("proc_priority_method").get_value<std::string>() ==
+                   "LINEAR") {
+            proc_priority_method = IListPartitioner::LINEAR;
+        } else if (algorithm.get_child("parameters").get_child("proc_priority_method").get_value<std::string>() ==
+                   "SUPERSTEP_ONLY") {
+            proc_priority_method = IListPartitioner::SUPERSTEP_ONLY;
+        } else if (algorithm.get_child("parameters").get_child("proc_priority_method").get_value<std::string>() ==
+                   "GLOBAL_ONLY") {
+            proc_priority_method = IListPartitioner::GLOBAL_ONLY;
+        } else {
+            throw std::invalid_argument(
+                "Parameter error in VariancePartitioner: processor priority method not recognised.\n");
+        }
+
+        float max_percent_idle_processors =
+            algorithm.get_child("parameters").get_child("max_percent_idle_processors").get_value<float>();
+        bool increase_parallelism_in_new_superstep =
+            algorithm.get_child("parameters").get_child("increase_parallelism_in_new_superstep").get_value<bool>();
+        double variance_power = algorithm.get_child("parameters").get_child("variance_power").get_value<double>();
+        double memory_capacity_increase =
+            algorithm.get_child("parameters").get_child("memory_capacity_increase").get_value<double>();
+        float max_priority_difference_percent =
+            algorithm.get_child("parameters").get_child("max_priority_difference_percent").get_value<float>();
+
+        float heavy_is_x_times_median =
+            algorithm.get_child("parameters").get_child("heavy_is_x_times_median").get_value<float>();
+        float min_percent_components_retained =
+            algorithm.get_child("parameters").get_child("min_percent_components_retained").get_value<float>();
+        float bound_component_weight_percent =
+            algorithm.get_child("parameters").get_child("bound_component_weight_percent").get_value<float>();
+        float slack =
+            algorithm.get_child("parameters").get_child("slack").get_value<float>();
+
+        LightEdgeVariancePartitioner partitioner(   proc_priority_method,
+                                                    use_memory_constraint,
+                                                    max_percent_idle_processors,
+                                                    variance_power,
+                                                    heavy_is_x_times_median,
+                                                    min_percent_components_retained,
+                                                    bound_component_weight_percent,
+                                                    increase_parallelism_in_new_superstep,
+                                                    memory_capacity_increase,
+                                                    max_priority_difference_percent,
+                                                    slack,
+                                                    timeLimit);
+
+        return partitioner.computePartition(bsp_instance);
     } else {
         throw std::invalid_argument("Parameter error: Unknown algorithm.\n");
     }

@@ -42,13 +42,16 @@ bool LKTotalCommScheduler::start() {
     select_nodes();
 
     initalize_gain_heap(node_selection);
-
-    // std::cout << "Initial costs " << current_cost << std::endl;
+#ifdef LK_DEBUG
+    std::cout << "Initial costs " << current_cost << std::endl;
+#endif
     unsigned improvement_counter = 0;
     counter = 0;
 
     for (unsigned i = 0; i < max_iterations; i++) {
-
+#ifdef LK_DEBUG
+        std::cout << "max iteration " << i << std::endl;
+#endif
         unsigned failed_branches = 0;
         double best_iter_costs = current_cost;
 
@@ -551,10 +554,37 @@ void LKTotalCommScheduler::update_superstep_datastructures(Move move) {
     step_processor_work[move.to_step][move.to_proc] += instance->getComputationalDag().nodeWorkWeight(move.node);
 
     if (use_memory_constraint) {
-        step_processor_memory[move.to_step][move.to_proc] +=
-            instance->getComputationalDag().nodeMemoryWeight(move.node);
-        step_processor_memory[move.from_step][move.from_proc] -=
-            instance->getComputationalDag().nodeMemoryWeight(move.node);
+
+        if (instance->getArchitecture().getMemoryConstraintType() == LOCAL) {
+            step_processor_memory[move.to_step][move.to_proc] +=
+                instance->getComputationalDag().nodeMemoryWeight(move.node);
+            step_processor_memory[move.from_step][move.from_proc] -=
+                instance->getComputationalDag().nodeMemoryWeight(move.node);
+
+        } else if (instance->getArchitecture().getMemoryConstraintType() == PERSISTENT_AND_TRANSIENT) {
+
+            current_proc_persistent_memory[move.to_proc] += instance->getComputationalDag().nodeMemoryWeight(move.node);
+            current_proc_persistent_memory[move.from_proc] -=
+                instance->getComputationalDag().nodeMemoryWeight(move.node);
+
+            current_proc_transient_memory[move.to_proc] =
+                std::max(current_proc_transient_memory[move.to_proc],
+                         instance->getComputationalDag().nodeCommunicationWeight(move.node));
+
+            if (current_proc_transient_memory[move.from_proc] ==
+                instance->getComputationalDag().nodeCommunicationWeight(move.node)) {
+
+                current_proc_transient_memory[move.from_proc] = 0;
+
+                for (unsigned step = 0; step < num_steps; step++) {
+                    for (const auto &node : set_schedule.step_processor_vertices[step][move.from_proc]) {
+                        current_proc_transient_memory[move.from_proc] =
+                            std::max(current_proc_transient_memory[move.from_proc],
+                                     instance->getComputationalDag().nodeCommunicationWeight(node));
+                    }
+                }
+            }
+        }
     }
 
     if (move.from_step == move.to_step) {
@@ -595,228 +625,469 @@ void LKTotalCommScheduler::update_superstep_datastructures(Move move) {
 void LKTotalCommScheduler::commputeCommGain(unsigned node, unsigned current_step, unsigned current_proc,
                                             unsigned new_proc) {
 
-    if (current_proc == new_proc) {
+    if (hyperedge_costs) {
 
-        for (const auto &target : instance->getComputationalDag().children(node)) {
+        if (current_proc == new_proc) {
 
-            if (current_step == vector_schedule.assignedSuperstep(target)) {
-                node_gains[node][current_proc][2] -=
-                    (double)instance->getComputationalDag().nodeCommunicationWeight(node) * penalty_factor;
+            for (const auto &target : instance->getComputationalDag().children(node)) {
 
-            } else if (current_step > vector_schedule.assignedSuperstep(target)) {
+                if (current_step == vector_schedule.assignedSuperstep(target)) {
+                    node_gains[node][current_proc][2] -=
+                        (double)instance->getComputationalDag().nodeCommunicationWeight(node) * penalty_factor;
 
-                node_gains[node][current_proc][0] +=
-                    (double)instance->getComputationalDag().nodeCommunicationWeight(node) * reward_factor;
+                } else if (current_step > vector_schedule.assignedSuperstep(target)) {
+
+                    node_gains[node][current_proc][0] +=
+                        (double)instance->getComputationalDag().nodeCommunicationWeight(node) * reward_factor;
+                }
             }
-        }
 
-        for (const auto &source : instance->getComputationalDag().parents(node)) {
+            for (const auto &source : instance->getComputationalDag().parents(node)) {
 
-            if (current_step == vector_schedule.assignedSuperstep(source)) {
-                node_gains[node][current_proc][0] -=
-                    (double)instance->getComputationalDag().nodeCommunicationWeight(node) * penalty_factor;
+                if (current_step == vector_schedule.assignedSuperstep(source)) {
+                    node_gains[node][current_proc][0] -=
+                        (double)instance->getComputationalDag().nodeCommunicationWeight(source) * penalty_factor;
 
-            } else if (current_step < vector_schedule.assignedSuperstep(source)) {
+                } else if (current_step < vector_schedule.assignedSuperstep(source)) {
 
-                node_gains[node][current_proc][2] +=
-                    (double)instance->getComputationalDag().nodeCommunicationWeight(node) * reward_factor;
+                    node_gains[node][current_proc][2] +=
+                        (double)instance->getComputationalDag().nodeCommunicationWeight(source) * reward_factor;
+                }
+            }
+        } else {
+
+            // current_proc != new_proc
+
+            for (const auto &target : instance->getComputationalDag().children(node)) {
+
+                const unsigned &target_proc = vector_schedule.assignedProcessor(target);
+                if (target_proc == current_proc) {
+
+                    const double loss = (double)instance->getComputationalDag().nodeCommunicationWeight(node) *
+                                        instance->communicationCosts(new_proc, target_proc) * comm_multiplier;
+
+                    node_gains[node][new_proc][0] -= loss;
+                    node_gains[node][new_proc][1] -= loss;
+                    node_gains[node][new_proc][2] -= loss;
+
+                    node_change_in_costs[node][new_proc][0] -= loss;
+                    node_change_in_costs[node][new_proc][1] -= loss;
+                    node_change_in_costs[node][new_proc][2] -= loss;
+
+                    if (vector_schedule.assignedSuperstep(target) == current_step) {
+
+                        node_gains[node][new_proc][1] -=
+                            (double)instance->getComputationalDag().nodeCommunicationWeight(node) * penalty_factor;
+                        node_gains[node][new_proc][2] -=
+                            (double)instance->getComputationalDag().nodeCommunicationWeight(node) * penalty_factor;
+
+                    } else if (vector_schedule.assignedSuperstep(target) == current_step + 1) {
+
+                        node_gains[node][new_proc][2] -=
+                            (double)instance->getComputationalDag().nodeCommunicationWeight(node) * penalty_factor;
+
+                    } // else if (vector_schedule.assignedSuperstep(target) < current_step) {
+                      //  not resolved but step towrads it ...
+                    //     node_gains[node][new_proc][0] +=
+                    //         (double)instance->getComputationalDag().nodeCommunicationWeight(node) * reward_factor *
+                    //         0.5;
+                    // }
+
+                } else if (target_proc == new_proc) {
+
+                    const double gain = (double)instance->getComputationalDag().nodeCommunicationWeight(node) *
+                                        instance->communicationCosts(current_proc, target_proc) * comm_multiplier;
+
+                    node_gains[node][new_proc][0] += gain;
+                    node_gains[node][new_proc][1] += gain;
+                    node_gains[node][new_proc][2] += gain;
+
+                    node_change_in_costs[node][new_proc][0] += gain;
+                    node_change_in_costs[node][new_proc][1] += gain;
+                    node_change_in_costs[node][new_proc][2] += gain;
+
+                    if (vector_schedule.assignedSuperstep(target) == current_step) {
+
+                        node_gains[node][new_proc][1] +=
+                            (double)instance->getComputationalDag().nodeCommunicationWeight(node) * reward_factor;
+
+                    } else if (vector_schedule.assignedSuperstep(target) < current_step) {
+
+                        node_gains[node][new_proc][0] +=
+                            (double)instance->getComputationalDag().nodeCommunicationWeight(node) * reward_factor;
+                    }
+
+                } else {
+
+                    assert(target_proc != current_proc && target_proc != new_proc);
+
+                    const double gain = (double)(instance->communicationCosts(new_proc, target_proc) -
+                                                 instance->communicationCosts(current_proc, target_proc)) *
+                                        instance->getComputationalDag().nodeCommunicationWeight(node) * comm_multiplier;
+
+                    node_gains[node][new_proc][0] += gain;
+                    node_gains[node][new_proc][1] += gain;
+                    node_gains[node][new_proc][2] += gain;
+
+                    node_change_in_costs[node][new_proc][0] += gain;
+                    node_change_in_costs[node][new_proc][1] += gain;
+                    node_change_in_costs[node][new_proc][2] += gain;
+
+                    if (vector_schedule.assignedSuperstep(target) == current_step + 1) {
+
+                        node_gains[node][new_proc][2] -=
+                            (double)instance->getComputationalDag().nodeCommunicationWeight(node) * penalty_factor;
+                    } else if (vector_schedule.assignedSuperstep(target) == current_step) {
+
+                        node_gains[node][new_proc][0] +=
+                            (double)instance->getComputationalDag().nodeCommunicationWeight(node) * reward_factor;
+                    } // else if (vector_schedule.assignedSuperstep(target) < current_step) {
+
+                    /////         node_gains[node][new_proc][0] +=
+                    //              (double)instance->getComputationalDag().nodeCommunicationWeight(node) *
+                    //              reward_factor * 0.5;
+                    //      }
+                }
+            }
+
+            for (const auto &source : instance->getComputationalDag().parents(node)) {
+
+                const unsigned &source_proc = vector_schedule.assignedProcessor(source);
+                if (source_proc == current_proc) {
+
+                    const double loss = (double)instance->getComputationalDag().nodeCommunicationWeight(source) *
+                                        instance->communicationCosts(current_proc, new_proc) * comm_multiplier;
+
+                    node_gains[node][new_proc][0] -= loss;
+                    node_gains[node][new_proc][1] -= loss;
+                    node_gains[node][new_proc][2] -= loss;
+
+                    node_change_in_costs[node][new_proc][0] -= loss;
+                    node_change_in_costs[node][new_proc][1] -= loss;
+                    node_change_in_costs[node][new_proc][2] -= loss;
+
+                    if (vector_schedule.assignedSuperstep(source) == current_step) {
+
+                        node_gains[node][new_proc][0] -=
+                            (double)instance->getComputationalDag().nodeCommunicationWeight(source) * penalty_factor;
+                        node_gains[node][new_proc][1] -=
+                            (double)instance->getComputationalDag().nodeCommunicationWeight(source) * penalty_factor;
+
+                    } else if (vector_schedule.assignedSuperstep(source) == current_step - 1) {
+
+                        node_gains[node][new_proc][0] -=
+                            (double)instance->getComputationalDag().nodeCommunicationWeight(source) * penalty_factor;
+
+                    } // else if (vector_schedule.assignedSuperstep(source) > current_step) {
+
+                    //           node_gains[node][new_proc][0] +=
+                    //               (double)instance->getComputationalDag().nodeCommunicationWeight(source) *
+                    //               reward_factor
+                    //               * 0.5;
+                    //       }
+
+                } else if (source_proc == new_proc) {
+
+                    assert(source_proc != current_proc);
+                    const double gain = (double)instance->getComputationalDag().nodeCommunicationWeight(source) *
+                                        instance->communicationCosts(current_proc, new_proc) * comm_multiplier;
+
+                    node_gains[node][new_proc][0] += gain;
+                    node_gains[node][new_proc][1] += gain;
+                    node_gains[node][new_proc][2] += gain;
+
+                    node_change_in_costs[node][new_proc][0] += gain;
+                    node_change_in_costs[node][new_proc][1] += gain;
+                    node_change_in_costs[node][new_proc][2] += gain;
+
+                    if (vector_schedule.assignedSuperstep(source) == current_step) {
+
+                        node_gains[node][new_proc][1] +=
+                            (double)instance->getComputationalDag().nodeCommunicationWeight(source) * reward_factor;
+
+                        node_gains[node][new_proc][2] +=
+                            (double)instance->getComputationalDag().nodeCommunicationWeight(source) * reward_factor;
+
+                    } else if (vector_schedule.assignedSuperstep(source) == current_step + 1) {
+
+                        node_gains[node][new_proc][2] +=
+                            (double)instance->getComputationalDag().nodeCommunicationWeight(source) * reward_factor;
+                    } // else if (vector_schedule.assignedSuperstep(source) > current_step + 1) {
+
+                    //      node_gains[node][new_proc][2] +=
+                    //           (double)instance->getComputationalDag().nodeCommunicationWeight(source) * reward_factor
+                    //           * 0.5;
+                    //   }
+
+                } else {
+
+                    assert(source_proc != current_proc && source_proc != new_proc);
+                    const double gain = (double)(instance->communicationCosts(new_proc, source_proc) -
+                                                 instance->communicationCosts(current_proc, source_proc)) *
+                                        instance->getComputationalDag().nodeCommunicationWeight(source) *
+                                        comm_multiplier;
+
+                    node_gains[node][new_proc][0] += gain;
+                    node_gains[node][new_proc][1] += gain;
+                    node_gains[node][new_proc][2] += gain;
+
+                    node_change_in_costs[node][new_proc][0] += gain;
+                    node_change_in_costs[node][new_proc][1] += gain;
+                    node_change_in_costs[node][new_proc][2] += gain;
+
+                    if (vector_schedule.assignedSuperstep(source) == current_step - 1) {
+
+                        node_gains[node][new_proc][0] -=
+                            (double)instance->getComputationalDag().nodeCommunicationWeight(source) * penalty_factor;
+
+                    } else if (vector_schedule.assignedSuperstep(source) == current_step) {
+
+                        node_gains[node][new_proc][2] +=
+                            (double)instance->getComputationalDag().nodeCommunicationWeight(source) * reward_factor;
+                    } // else if (vector_schedule.assignedSuperstep(source) > current_step) {
+
+                    //   node_gains[node][new_proc][2] +=
+                    //       (double)instance->getComputationalDag().nodeCommunicationWeight(source) * reward_factor *
+                    //       0.5;
+                    // }
+                }
             }
         }
     } else {
 
-        // current_proc != new_proc
+        // no hyperedge costs
 
-        for (const auto &target : instance->getComputationalDag().children(node)) {
+        if (current_proc == new_proc) {
 
-            const unsigned &target_proc = vector_schedule.assignedProcessor(target);
-            if (target_proc == current_proc) {
+            for (const auto &out_edge : instance->getComputationalDag().out_edges(node)) {
+                const auto &target = instance->getComputationalDag().target(out_edge);
+                // for (const auto &target : instance->getComputationalDag().children(node)) {
 
-                const double loss = (double)instance->getComputationalDag().nodeCommunicationWeight(node) *
-                                    instance->communicationCosts(new_proc, target_proc) * comm_multiplier;
+                if (current_step == vector_schedule.assignedSuperstep(target)) {
+                    node_gains[node][current_proc][2] -=
+                        (double)instance->getComputationalDag().edgeCommunicationWeight(out_edge) * penalty_factor;
 
-                node_gains[node][new_proc][0] -= loss;
-                node_gains[node][new_proc][1] -= loss;
-                node_gains[node][new_proc][2] -= loss;
+                } else if (current_step > vector_schedule.assignedSuperstep(target)) {
 
-                node_change_in_costs[node][new_proc][0] -= loss;
-                node_change_in_costs[node][new_proc][1] -= loss;
-                node_change_in_costs[node][new_proc][2] -= loss;
-
-                if (vector_schedule.assignedSuperstep(target) == current_step) {
-
-                    node_gains[node][new_proc][1] -=
-                        (double)instance->getComputationalDag().nodeCommunicationWeight(node) * penalty_factor;
-                    node_gains[node][new_proc][2] -=
-                        (double)instance->getComputationalDag().nodeCommunicationWeight(node) * penalty_factor;
-
-                } else if (vector_schedule.assignedSuperstep(target) == current_step + 1) {
-
-                    node_gains[node][new_proc][2] -=
-                        (double)instance->getComputationalDag().nodeCommunicationWeight(node) * penalty_factor;
-
-                } // else if (vector_schedule.assignedSuperstep(target) < current_step) {
-                  //  not resolved but step towrads it ...
-                //     node_gains[node][new_proc][0] +=
-                //         (double)instance->getComputationalDag().nodeCommunicationWeight(node) * reward_factor *
-                //         0.5;
-                // }
-
-            } else if (target_proc == new_proc) {
-
-                const double gain = (double)instance->getComputationalDag().nodeCommunicationWeight(node) *
-                                    instance->communicationCosts(current_proc, target_proc) * comm_multiplier;
-
-                node_gains[node][new_proc][0] += gain;
-                node_gains[node][new_proc][1] += gain;
-                node_gains[node][new_proc][2] += gain;
-
-                node_change_in_costs[node][new_proc][0] += gain;
-                node_change_in_costs[node][new_proc][1] += gain;
-                node_change_in_costs[node][new_proc][2] += gain;
-
-                if (vector_schedule.assignedSuperstep(target) == current_step) {
-
-                    node_gains[node][new_proc][1] +=
-                        (double)instance->getComputationalDag().nodeCommunicationWeight(node) * reward_factor;
-
-                } else if (vector_schedule.assignedSuperstep(target) < current_step) {
-
-                    node_gains[node][new_proc][0] +=
-                        (double)instance->getComputationalDag().nodeCommunicationWeight(node) * reward_factor;
+                    node_gains[node][current_proc][0] +=
+                        (double)instance->getComputationalDag().edgeCommunicationWeight(out_edge) * reward_factor;
                 }
-
-            } else {
-
-                assert(target_proc != current_proc && target_proc != new_proc);
-
-                const double gain = (double)(instance->communicationCosts(new_proc, target_proc) -
-                                             instance->communicationCosts(current_proc, target_proc)) *
-                                    instance->getComputationalDag().nodeCommunicationWeight(node) * comm_multiplier;
-
-                node_gains[node][new_proc][0] += gain;
-                node_gains[node][new_proc][1] += gain;
-                node_gains[node][new_proc][2] += gain;
-
-                node_change_in_costs[node][new_proc][0] += gain;
-                node_change_in_costs[node][new_proc][1] += gain;
-                node_change_in_costs[node][new_proc][2] += gain;
-
-                if (vector_schedule.assignedSuperstep(target) == current_step + 1) {
-
-                    node_gains[node][new_proc][2] -=
-                        (double)instance->getComputationalDag().nodeCommunicationWeight(node) * penalty_factor;
-                } else if (vector_schedule.assignedSuperstep(target) == current_step) {
-
-                    node_gains[node][new_proc][0] +=
-                        (double)instance->getComputationalDag().nodeCommunicationWeight(node) * reward_factor;
-                } // else if (vector_schedule.assignedSuperstep(target) < current_step) {
-
-                /////         node_gains[node][new_proc][0] +=
-                //              (double)instance->getComputationalDag().nodeCommunicationWeight(node) *
-                //              reward_factor * 0.5;
-                //      }
             }
-        }
 
-        for (const auto &source : instance->getComputationalDag().parents(node)) {
+            for (const auto &in_edge : instance->getComputationalDag().in_edges(node)) {
+                const auto &source = instance->getComputationalDag().source(in_edge);
+                // for (const auto &source : instance->getComputationalDag().parents(node)) {
 
-            const unsigned &source_proc = vector_schedule.assignedProcessor(source);
-            if (source_proc == current_proc) {
+                if (current_step == vector_schedule.assignedSuperstep(source)) {
+                    node_gains[node][current_proc][0] -=
+                        (double)instance->getComputationalDag().edgeCommunicationWeight(in_edge) * penalty_factor;
 
-                const double loss = (double)instance->getComputationalDag().nodeCommunicationWeight(source) *
-                                    instance->communicationCosts(current_proc, new_proc) * comm_multiplier;
+                } else if (current_step < vector_schedule.assignedSuperstep(source)) {
 
-                node_gains[node][new_proc][0] -= loss;
-                node_gains[node][new_proc][1] -= loss;
-                node_gains[node][new_proc][2] -= loss;
+                    node_gains[node][current_proc][2] +=
+                        (double)instance->getComputationalDag().edgeCommunicationWeight(in_edge) * reward_factor;
+                }
+            }
+        } else {
 
-                node_change_in_costs[node][new_proc][0] -= loss;
-                node_change_in_costs[node][new_proc][1] -= loss;
-                node_change_in_costs[node][new_proc][2] -= loss;
+            // current_proc != new_proc
 
-                if (vector_schedule.assignedSuperstep(source) == current_step) {
+            for (const auto &out_edge : instance->getComputationalDag().out_edges(node)) {
+                const auto &target = instance->getComputationalDag().target(out_edge);
 
-                    node_gains[node][new_proc][0] -=
-                        (double)instance->getComputationalDag().nodeCommunicationWeight(source) * penalty_factor;
-                    node_gains[node][new_proc][1] -=
-                        (double)instance->getComputationalDag().nodeCommunicationWeight(source) * penalty_factor;
+                const unsigned &target_proc = vector_schedule.assignedProcessor(target);
+                if (target_proc == current_proc) {
 
-                } else if (vector_schedule.assignedSuperstep(source) == current_step - 1) {
+                    const double loss = (double)instance->getComputationalDag().edgeCommunicationWeight(out_edge) *
+                                        instance->communicationCosts(new_proc, target_proc) * comm_multiplier;
 
-                    node_gains[node][new_proc][0] -=
-                        (double)instance->getComputationalDag().nodeCommunicationWeight(source) * penalty_factor;
+                    node_gains[node][new_proc][0] -= loss;
+                    node_gains[node][new_proc][1] -= loss;
+                    node_gains[node][new_proc][2] -= loss;
 
-                } // else if (vector_schedule.assignedSuperstep(source) > current_step) {
+                    node_change_in_costs[node][new_proc][0] -= loss;
+                    node_change_in_costs[node][new_proc][1] -= loss;
+                    node_change_in_costs[node][new_proc][2] -= loss;
 
-                //           node_gains[node][new_proc][0] +=
-                //               (double)instance->getComputationalDag().nodeCommunicationWeight(source) *
-                //               reward_factor
-                //               * 0.5;
-                //       }
+                    if (vector_schedule.assignedSuperstep(target) == current_step) {
 
-            } else if (source_proc == new_proc) {
+                        node_gains[node][new_proc][1] -=
+                            (double)instance->getComputationalDag().edgeCommunicationWeight(out_edge) * penalty_factor;
+                        node_gains[node][new_proc][2] -=
+                            (double)instance->getComputationalDag().edgeCommunicationWeight(out_edge) * penalty_factor;
 
-                assert(source_proc != current_proc);
-                const double gain = (double)instance->getComputationalDag().nodeCommunicationWeight(source) *
-                                    instance->communicationCosts(current_proc, new_proc) * comm_multiplier;
+                    } else if (vector_schedule.assignedSuperstep(target) == current_step + 1) {
 
-                node_gains[node][new_proc][0] += gain;
-                node_gains[node][new_proc][1] += gain;
-                node_gains[node][new_proc][2] += gain;
+                        node_gains[node][new_proc][2] -=
+                            (double)instance->getComputationalDag().edgeCommunicationWeight(out_edge) * penalty_factor;
 
-                node_change_in_costs[node][new_proc][0] += gain;
-                node_change_in_costs[node][new_proc][1] += gain;
-                node_change_in_costs[node][new_proc][2] += gain;
+                    } // else if (vector_schedule.assignedSuperstep(target) < current_step) {
+                      //  not resolved but step towrads it ...
+                    //     node_gains[node][new_proc][0] +=
+                    //         (double)instance->getComputationalDag().nodeCommunicationWeight(node) * reward_factor *
+                    //         0.5;
+                    // }
 
-                if (vector_schedule.assignedSuperstep(source) == current_step) {
+                } else if (target_proc == new_proc) {
 
-                    node_gains[node][new_proc][1] +=
-                        (double)instance->getComputationalDag().nodeCommunicationWeight(source) * reward_factor;
+                    const double gain = (double)instance->getComputationalDag().edgeCommunicationWeight(out_edge) *
+                                        instance->communicationCosts(current_proc, target_proc) * comm_multiplier;
 
-                    node_gains[node][new_proc][2] +=
-                        (double)instance->getComputationalDag().nodeCommunicationWeight(source) * reward_factor;
+                    node_gains[node][new_proc][0] += gain;
+                    node_gains[node][new_proc][1] += gain;
+                    node_gains[node][new_proc][2] += gain;
 
-                } else if (vector_schedule.assignedSuperstep(source) == current_step + 1) {
+                    node_change_in_costs[node][new_proc][0] += gain;
+                    node_change_in_costs[node][new_proc][1] += gain;
+                    node_change_in_costs[node][new_proc][2] += gain;
 
-                    node_gains[node][new_proc][2] +=
-                        (double)instance->getComputationalDag().nodeCommunicationWeight(source) * reward_factor;
-                } // else if (vector_schedule.assignedSuperstep(source) > current_step + 1) {
+                    if (vector_schedule.assignedSuperstep(target) == current_step) {
 
-                //      node_gains[node][new_proc][2] +=
-                //           (double)instance->getComputationalDag().nodeCommunicationWeight(source) * reward_factor
-                //           * 0.5;
-                //   }
+                        node_gains[node][new_proc][1] +=
+                            (double)instance->getComputationalDag().edgeCommunicationWeight(out_edge) * reward_factor;
 
-            } else {
+                    } else if (vector_schedule.assignedSuperstep(target) < current_step) {
 
-                assert(source_proc != current_proc && source_proc != new_proc);
-                const double gain = (double)(instance->communicationCosts(new_proc, source_proc) -
-                                             instance->communicationCosts(current_proc, source_proc)) *
-                                    instance->getComputationalDag().nodeCommunicationWeight(source) * comm_multiplier;
+                        node_gains[node][new_proc][0] +=
+                            (double)instance->getComputationalDag().edgeCommunicationWeight(out_edge) * reward_factor;
+                    }
 
-                node_gains[node][new_proc][0] += gain;
-                node_gains[node][new_proc][1] += gain;
-                node_gains[node][new_proc][2] += gain;
+                } else {
 
-                node_change_in_costs[node][new_proc][0] += gain;
-                node_change_in_costs[node][new_proc][1] += gain;
-                node_change_in_costs[node][new_proc][2] += gain;
+                    assert(target_proc != current_proc && target_proc != new_proc);
 
-                if (vector_schedule.assignedSuperstep(source) == current_step - 1) {
+                    const double gain = (double)(instance->communicationCosts(new_proc, target_proc) -
+                                                 instance->communicationCosts(current_proc, target_proc)) *
+                                        instance->getComputationalDag().edgeCommunicationWeight(out_edge) *
+                                        comm_multiplier;
 
-                    node_gains[node][new_proc][0] -=
-                        (double)instance->getComputationalDag().nodeCommunicationWeight(source) * penalty_factor;
+                    node_gains[node][new_proc][0] += gain;
+                    node_gains[node][new_proc][1] += gain;
+                    node_gains[node][new_proc][2] += gain;
 
-                } else if (vector_schedule.assignedSuperstep(source) == current_step) {
+                    node_change_in_costs[node][new_proc][0] += gain;
+                    node_change_in_costs[node][new_proc][1] += gain;
+                    node_change_in_costs[node][new_proc][2] += gain;
 
-                    node_gains[node][new_proc][2] +=
-                        (double)instance->getComputationalDag().nodeCommunicationWeight(source) * reward_factor;
-                } // else if (vector_schedule.assignedSuperstep(source) > current_step) {
+                    if (vector_schedule.assignedSuperstep(target) == current_step + 1) {
 
-                //   node_gains[node][new_proc][2] +=
-                //       (double)instance->getComputationalDag().nodeCommunicationWeight(source) * reward_factor *
-                //       0.5;
-                // }
+                        node_gains[node][new_proc][2] -=
+                            (double)instance->getComputationalDag().edgeCommunicationWeight(out_edge) * penalty_factor;
+                    } else if (vector_schedule.assignedSuperstep(target) == current_step) {
+
+                        node_gains[node][new_proc][0] +=
+                            (double)instance->getComputationalDag().edgeCommunicationWeight(out_edge) * reward_factor;
+                    } // else if (vector_schedule.assignedSuperstep(target) < current_step) {
+
+                    /////         node_gains[node][new_proc][0] +=
+                    //              (double)instance->getComputationalDag().nodeCommunicationWeight(node) *
+                    //              reward_factor * 0.5;
+                    //      }
+                }
+            }
+
+            for (const auto &in_edge : instance->getComputationalDag().in_edges(node)) {
+                const auto &source = instance->getComputationalDag().source(in_edge);
+
+                const unsigned &source_proc = vector_schedule.assignedProcessor(source);
+                if (source_proc == current_proc) {
+
+                    const double loss = (double)instance->getComputationalDag().edgeCommunicationWeight(in_edge) *
+                                        instance->communicationCosts(current_proc, new_proc) * comm_multiplier;
+
+                    node_gains[node][new_proc][0] -= loss;
+                    node_gains[node][new_proc][1] -= loss;
+                    node_gains[node][new_proc][2] -= loss;
+
+                    node_change_in_costs[node][new_proc][0] -= loss;
+                    node_change_in_costs[node][new_proc][1] -= loss;
+                    node_change_in_costs[node][new_proc][2] -= loss;
+
+                    if (vector_schedule.assignedSuperstep(source) == current_step) {
+
+                        node_gains[node][new_proc][0] -=
+                            (double)instance->getComputationalDag().edgeCommunicationWeight(in_edge) * penalty_factor;
+                        node_gains[node][new_proc][1] -=
+                            (double)instance->getComputationalDag().edgeCommunicationWeight(in_edge) * penalty_factor;
+
+                    } else if (vector_schedule.assignedSuperstep(source) == current_step - 1) {
+
+                        node_gains[node][new_proc][0] -=
+                            (double)instance->getComputationalDag().edgeCommunicationWeight(in_edge) * penalty_factor;
+
+                    } // else if (vector_schedule.assignedSuperstep(source) > current_step) {
+
+                    //           node_gains[node][new_proc][0] +=
+                    //               (double)instance->getComputationalDag().nodeCommunicationWeight(source) *
+                    //               reward_factor
+                    //               * 0.5;
+                    //       }
+
+                } else if (source_proc == new_proc) {
+
+                    assert(source_proc != current_proc);
+                    const double gain = (double)instance->getComputationalDag().edgeCommunicationWeight(in_edge) *
+                                        instance->communicationCosts(current_proc, new_proc) * comm_multiplier;
+
+                    node_gains[node][new_proc][0] += gain;
+                    node_gains[node][new_proc][1] += gain;
+                    node_gains[node][new_proc][2] += gain;
+
+                    node_change_in_costs[node][new_proc][0] += gain;
+                    node_change_in_costs[node][new_proc][1] += gain;
+                    node_change_in_costs[node][new_proc][2] += gain;
+
+                    if (vector_schedule.assignedSuperstep(source) == current_step) {
+
+                        node_gains[node][new_proc][1] +=
+                            (double)instance->getComputationalDag().edgeCommunicationWeight(in_edge) * reward_factor;
+
+                        node_gains[node][new_proc][2] +=
+                            (double)instance->getComputationalDag().edgeCommunicationWeight(in_edge) * reward_factor;
+
+                    } else if (vector_schedule.assignedSuperstep(source) == current_step + 1) {
+
+                        node_gains[node][new_proc][2] +=
+                            (double)instance->getComputationalDag().edgeCommunicationWeight(in_edge) * reward_factor;
+                    } // else if (vector_schedule.assignedSuperstep(source) > current_step + 1) {
+
+                    //      node_gains[node][new_proc][2] +=
+                    //           (double)instance->getComputationalDag().nodeCommunicationWeight(source) * reward_factor
+                    //           * 0.5;
+                    //   }
+
+                } else {
+
+                    assert(source_proc != current_proc && source_proc != new_proc);
+                    const double gain = (double)(instance->communicationCosts(new_proc, source_proc) -
+                                                 instance->communicationCosts(current_proc, source_proc)) *
+                                        instance->getComputationalDag().edgeCommunicationWeight(in_edge) *
+                                        comm_multiplier;
+
+                    node_gains[node][new_proc][0] += gain;
+                    node_gains[node][new_proc][1] += gain;
+                    node_gains[node][new_proc][2] += gain;
+
+                    node_change_in_costs[node][new_proc][0] += gain;
+                    node_change_in_costs[node][new_proc][1] += gain;
+                    node_change_in_costs[node][new_proc][2] += gain;
+
+                    if (vector_schedule.assignedSuperstep(source) == current_step - 1) {
+
+                        node_gains[node][new_proc][0] -=
+                            (double)instance->getComputationalDag().edgeCommunicationWeight(in_edge) * penalty_factor;
+
+                    } else if (vector_schedule.assignedSuperstep(source) == current_step) {
+
+                        node_gains[node][new_proc][2] +=
+                            (double)instance->getComputationalDag().edgeCommunicationWeight(in_edge) * reward_factor;
+                    } // else if (vector_schedule.assignedSuperstep(source) > current_step) {
+
+                    //   node_gains[node][new_proc][2] +=
+                    //       (double)instance->getComputationalDag().nodeCommunicationWeight(source) * reward_factor *
+                    //       0.5;
+                    // }
+                }
             }
         }
     }
@@ -837,8 +1108,14 @@ double LKTotalCommScheduler::compute_current_costs() {
         const unsigned &target_proc = vector_schedule.assignedProcessor(instance->getComputationalDag().target(edge));
 
         if (source_proc != target_proc) {
-            comm_costs += instance->getComputationalDag().nodeCommunicationWeight(source) *
-                          instance->communicationCosts(source_proc, target_proc) * comm_multiplier;
+
+            if (hyperedge_costs) {
+                comm_costs += instance->getComputationalDag().nodeCommunicationWeight(source) *
+                              instance->communicationCosts(source_proc, target_proc) * comm_multiplier;
+            } else {
+                comm_costs += instance->getComputationalDag().edgeCommunicationWeight(edge) *
+                              instance->communicationCosts(source_proc, target_proc);
+            }
         }
     }
 
@@ -861,7 +1138,18 @@ void LKTotalCommScheduler::compute_superstep_datastructures() {
                 step_processor_work[step][proc] += instance->getComputationalDag().nodeWorkWeight(node);
 
                 if (use_memory_constraint) {
-                    step_processor_memory[step][proc] += instance->getComputationalDag().nodeMemoryWeight(node);
+
+                    if (instance->getArchitecture().getMemoryConstraintType() == LOCAL) {
+
+                        step_processor_memory[step][proc] += instance->getComputationalDag().nodeMemoryWeight(node);
+
+                    } else if (instance->getArchitecture().getMemoryConstraintType() == PERSISTENT_AND_TRANSIENT) {
+
+                        current_proc_persistent_memory[proc] += instance->getComputationalDag().nodeMemoryWeight(node);
+                        current_proc_transient_memory[proc] =
+                            std::max(current_proc_transient_memory[proc],
+                                     instance->getComputationalDag().nodeCommunicationWeight(node));
+                    }
                 }
             }
 
@@ -894,7 +1182,15 @@ void LKTotalCommScheduler::initalize_superstep_datastructures() {
     step_second_max_work = std::vector<double>(num_steps, 0);
 
     if (use_memory_constraint) {
-        step_processor_memory = std::vector<std::vector<unsigned>>(num_steps, std::vector<unsigned>(num_procs, 0));
+        if (instance->getArchitecture().getMemoryConstraintType() == LOCAL) {
+
+            step_processor_memory = std::vector<std::vector<unsigned>>(num_steps, std::vector<unsigned>(num_procs, 0));
+
+        } else if (instance->getArchitecture().getMemoryConstraintType() == PERSISTENT_AND_TRANSIENT) { 
+
+            current_proc_persistent_memory = std::vector<int>(num_procs, 0);
+            current_proc_transient_memory = std::vector<int>(num_procs, 0);
+        }
     }
 }
 
@@ -907,7 +1203,7 @@ void LKTotalCommScheduler::initializeRewardPenaltyFactors() {
 
 void LKTotalCommScheduler::updateRewardPenaltyFactors() {
 
-    //base_penalty_factor = 10.0 + 10.0 * (max_iterations - counter) / max_iterations;
+    // base_penalty_factor = 10.0 + 10.0 * (max_iterations - counter) / max_iterations;
 
     penalty_factor = base_penalty_factor * comm_multiplier * instance->communicationCosts() +
                      (current_violations.size() + base_penalty_factor) * current_violations.size();

@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner   
+@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 
 #include <algorithm>
@@ -21,7 +21,34 @@ limitations under the License.
 
 #include "scheduler/GreedySchedulers/GreedyCilkScheduler.hpp"
 
-std::pair<RETURN_STATUS, BspSchedule> GreedyCilkScheduler::computeSchedule(const BspInstance& instance) {
+std::pair<RETURN_STATUS, BspSchedule> GreedyCilkScheduler::computeSchedule(const BspInstance &instance) {
+
+    if (use_memory_constraint) {
+
+        switch (instance.getArchitecture().getMemoryConstraintType()) {
+
+        case LOCAL:
+            throw std::invalid_argument("Local memory constraint not supported");
+
+        case PERSISTENT_AND_TRANSIENT:
+
+            throw std::invalid_argument("Local memory constraint not supported");
+            // TODO: Implement memory constraint for Cilk scheduler
+            current_proc_persistent_memory = std::vector<int>(instance.numberOfProcessors(), 0);
+            current_proc_transient_memory = std::vector<int>(instance.numberOfProcessors(), 0);
+
+        case GLOBAL:
+            throw std::invalid_argument("Global memory constraint not supported");
+
+        case NONE:
+            use_memory_constraint = false;
+            std::cerr << "Warning: Memory constraint type set to NONE, ignoring memory constraint" << std::endl;
+            break;
+
+        default:
+            break;
+        }
+    }
 
     CSchedule schedule(instance.numberOfVertices());
 
@@ -78,6 +105,18 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyCilkScheduler::computeSchedule(const
             schedule.proc[nextNode] = nextProc;
             schedule.time[nextNode] = time;
 
+            if (use_memory_constraint) {
+
+                if (instance.getArchitecture().getMemoryConstraintType() == PERSISTENT_AND_TRANSIENT) {
+
+                    current_proc_persistent_memory[nextProc] +=
+                        instance.getComputationalDag().nodeMemoryWeight(nextNode);
+                    current_proc_transient_memory[nextProc] =
+                        std::max(current_proc_transient_memory[nextProc],
+                                 instance.getComputationalDag().nodeMemoryWeight(nextNode));
+                }
+            }
+
             finishTimes.insert(intPair(time + instance.getComputationalDag().nodeWorkWeight(nextNode), nextNode));
             procFree[nextProc] = false;
             --nrProcFree;
@@ -90,13 +129,13 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyCilkScheduler::computeSchedule(const
 };
 
 // Choosing a node to assign for classical greedy methods (cilk, SJF, random)
-void GreedyCilkScheduler::Choose(const BspInstance& instance, std::vector<std::deque<unsigned>> &procQueue, const std::set<unsigned> &readyNodes,
-                                 const std::vector<bool> &procFree, unsigned &node, unsigned &p) {
+void GreedyCilkScheduler::Choose(const BspInstance &instance, std::vector<std::deque<unsigned>> &procQueue,
+                                 const std::set<unsigned> &readyNodes, const std::vector<bool> &procFree,
+                                 unsigned &node, unsigned &p) {
     if (mode == SJF) {
         node = *readyNodes.begin();
         for (auto &r : readyNodes)
-            if (instance.getComputationalDag().nodeWorkWeight(r) <
-                                  instance.getComputationalDag().nodeWorkWeight(node))
+            if (instance.getComputationalDag().nodeWorkWeight(r) < instance.getComputationalDag().nodeWorkWeight(node))
                 node = r;
 
         p = 0;

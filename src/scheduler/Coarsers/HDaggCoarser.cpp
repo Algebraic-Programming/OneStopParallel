@@ -28,7 +28,7 @@ RETURN_STATUS HDaggCoarser::run_contractions() {
     std::vector<std::vector<VertexType>> partition;
     std::vector<bool> visited(getOriginalInstance()->numberOfVertices(), false);
     
-    std::unordered_set<EdgeType, EdgeType_hash> edge_mask = getOriginalInstance()->getComputationalDag().long_edges_in_triangles();
+    std::unordered_set<EdgeType, EdgeType_hash> edge_mask = getOriginalInstance()->getComputationalDag().long_edges_in_triangles_parallel();
     
     for (const auto& sink : graph.sinkVertices()) {
         partition.push_back(std::vector<VertexType>({sink}));

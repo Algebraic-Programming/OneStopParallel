@@ -355,6 +355,34 @@ std::vector<VertexType> ComputationalDag::longestChain() const {
     return chain;
 }
 
+bool ComputationalDag::has_path(VertexType src, VertexType dest) const {
+
+    std::unordered_set<VertexType> visited;
+    visited.emplace(src);
+
+    std::queue<VertexType> next;
+    next.push(src);
+
+    while (!next.empty()) {
+        VertexType v = next.front();
+        next.pop();
+
+        for (const VertexType &child : children(v)) {
+
+            if (child == dest) {
+                return true;
+            }
+
+            if (visited.find(child) == visited.end()) {
+                visited.emplace(child);
+                next.push(child);
+            }
+        }
+    }
+
+    return false;
+}
+
 std::pair<ComputationalDag, std::unordered_map<VertexType, VertexType>>
 ComputationalDag::contracted_graph_without_loops(const std::vector<std::unordered_set<VertexType>> &partition) const {
     ComputationalDag contr_graph;
@@ -547,7 +575,7 @@ std::unordered_set<EdgeType, EdgeType_hash> ComputationalDag::long_edges_in_tria
 
         std::unordered_set<VertexType> children_set;
 
-        for (const auto& v : children(vertex)) {
+        for (const auto &v : children(vertex)) {
             children_set.emplace(v);
         }
 
@@ -558,13 +586,64 @@ std::unordered_set<EdgeType, EdgeType_hash> ComputationalDag::long_edges_in_tria
             for (const auto &parent :
                  boost::extensions::make_source_iterator_range(boost::inv_adjacent_vertices(child, graph))) {
 
-                //const auto &pair = boost::edge(vertex, parent, graph);
-
+                // const auto &pair = boost::edge(vertex, parent, graph);
 
                 if (children_set.find(parent) != children_set.cend()) {
                     deleted_edges.emplace(edge);
+                    break;
                 }
             }
+        }
+    }
+
+    return deleted_edges;
+}
+
+std::unordered_set<EdgeType, EdgeType_hash> ComputationalDag::long_edges_in_triangles_parallel() const {
+
+    std::unordered_set<EdgeType, EdgeType_hash> deleted_edges;
+    std::vector<std::vector<EdgeType>> deleted_edges_thread(omp_get_max_threads());
+
+    // std::cout << "Computing longest edges in triangle with number of threads: " << omp_get_max_threads() <<
+    // std::endl;
+
+#pragma omp parallel for schedule(dynamic, 4)
+    for (const auto &vertex : graph.vertex_set()) {
+
+        const unsigned int proc = omp_get_thread_num();
+        std::unordered_set<VertexType> children_set;
+
+        for (const auto &v : children(vertex)) {
+            children_set.emplace(v);
+        }
+
+        for (const auto &edge : boost::extensions::make_source_iterator_range(boost::out_edges(vertex, graph))) {
+
+            const auto &child = boost::target(edge, graph);
+
+            for (const auto &parent :
+                 boost::extensions::make_source_iterator_range(boost::inv_adjacent_vertices(child, graph))) {
+
+                // const auto &pair = boost::edge(vertex, parent, graph);
+
+                if (children_set.find(parent) != children_set.cend()) {
+
+                    deleted_edges_thread[proc].emplace_back(edge);
+                    break;
+                }
+            }
+        }
+    }
+
+    size_t sum_sizes = 0;
+    for (unsigned i = 0; i < deleted_edges_thread.size(); i++) {
+        sum_sizes += deleted_edges_thread[i].size();
+    }
+    deleted_edges.reserve(sum_sizes);
+
+    for (unsigned i = 0; i < deleted_edges_thread.size(); i++) {
+        for (const auto &edge : deleted_edges_thread[i]) {
+            deleted_edges.emplace(edge);
         }
     }
 
@@ -574,4 +653,13 @@ std::unordered_set<EdgeType, EdgeType_hash> ComputationalDag::long_edges_in_tria
 double ComputationalDag::average_degree() const {
 
     return static_cast<double>(numberOfEdges()) / static_cast<double>(numberOfVertices());
+}
+
+int ComputationalDag::get_max_memory_weight() const {
+    int max_memory_weight = 0;
+
+    for (const auto &node : vertices()) {
+        max_memory_weight = std::max(max_memory_weight, nodeMemoryWeight(node));
+    }
+    return max_memory_weight;
 }

@@ -73,7 +73,6 @@ int main(int argc, char *argv[]) {
                     bool status_architecture = false;
                     std::tie(status_architecture, bsp_instance.getArchitecture()) = FileReader::readBspArchitecture(filename_machine);
                     
-
                     if (!status_architecture) {
                         throw std::invalid_argument("Reading architecture file " + filename_machine + " failed.");
                     }
@@ -101,10 +100,6 @@ int main(int argc, char *argv[]) {
 
                 if (!status_graph) {
                     throw std::invalid_argument("Reading graph file " + filename_graph + " failed.");
-                }
-
-                if(parser.global_params.get_child("use_memory_constraints").get_value<bool>()) {
-                    bsp_instance.getArchitecture().setMemoryBound(parser.global_params.get_child("memory_bound").get_value<unsigned>());
                 }
   
                 std::vector<std::string> partitioners_name(parser.scheduler.size(), "");

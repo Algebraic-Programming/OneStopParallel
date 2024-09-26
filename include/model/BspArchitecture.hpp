@@ -22,6 +22,9 @@ limitations under the License.
 #include <algorithm>
 #include <stdexcept>
 
+
+enum MEMORY_CONSTRAINT_TYPE { NONE, LOCAL, GLOBAL, PERSISTENT_AND_TRANSIENT};
+
 /**
  * @class BspArchitecture
  * @brief Represents the architecture of a BSP (Bulk Synchronous Parallel) system.
@@ -38,11 +41,13 @@ class BspArchitecture {
     unsigned communication_costs;
     unsigned synchronisation_costs;
 
-    unsigned memory_bound; // currently only used in ILP and partitioning
+    unsigned memory_bound;
 
     bool isNuma;
 
     std::vector<std::vector<unsigned int>> send_costs;
+
+    MEMORY_CONSTRAINT_TYPE memory_const_type = NONE;
 
     bool are_send_cost_numa();
 
@@ -301,5 +306,9 @@ class BspArchitecture {
      * @return The send costs between the two processors.
      */
     inline unsigned sendCosts(unsigned p1, unsigned p2) const { return send_costs[p1][p2]; }
+
+    inline MEMORY_CONSTRAINT_TYPE getMemoryConstraintType() const { return memory_const_type; }
+    inline void setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE memory_const_type_) { memory_const_type = memory_const_type_; }
+
 };
 

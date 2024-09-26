@@ -118,7 +118,8 @@ int main(int argc, char *argv[]) {
 
                         auto [return_status, schedule] =
                             run_algorithm(parser, algorithm.second, bsp_instance,
-                                          parser.global_params.get_child("timeLimit").get_value<unsigned>());
+                                          parser.global_params.get_child("timeLimit").get_value<unsigned>(),
+                                          parser.global_params.get_child("use_memory_constraints").get_value<bool>());
 
                         const auto finish_time = std::chrono::high_resolution_clock::now();
 

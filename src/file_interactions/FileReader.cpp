@@ -18,9 +18,8 @@ limitations under the License.
 
 #include "file_interactions/FileReader.hpp"
 #include "model/ComputationalDag.hpp"
-#include <boost/algorithm/string.hpp>
 #include <algorithm>
-
+#include <boost/algorithm/string.hpp>
 
 std::pair<bool, BspInstance> FileReader::readBspInstance(const std::string &filename) {
     std::ifstream infile(filename);
@@ -140,11 +139,11 @@ std::pair<bool, BspSchedule> FileReader::readBspSchdeuleTxtFormat(const BspInsta
     }
 
     BspSchedule sched(instance, processor_assignment, superstep_assignment, comm_schedule);
-    if (! sched.satisfiesPrecedenceConstraints()) {
+    if (!sched.satisfiesPrecedenceConstraints()) {
         std::cout << "Schedule does not satisfy precedence constraints.\n";
         return {false, BspSchedule()};
     }
-    if (! sched.hasValidCommSchedule()) {
+    if (!sched.hasValidCommSchedule()) {
         std::cout << "Schedule does not have a valid communication schedule.\n";
         return {false, BspSchedule()};
     }
@@ -316,14 +315,13 @@ std::pair<bool, csr_graph> FileReader::readComputationalDagMartixMarketFormat_cs
             edges_vec[edgeIdx] = std::make_pair(col, row);
             edge_mtx_wts[edgeIdx++] = val;
             node_work_wts[row] += 1;
-           
+
         } else {
             node_mtx_wts[nodeIdx++] = val;
         }
     }
 
     csr_graph dag(boost::edges_are_unsorted_multi_pass, begin(edges_vec), end(edges_vec), begin(edge_mtx_wts), M_row);
-
 
     for (const auto &vertex : boost::make_iterator_range(boost::vertices(dag))) {
         dag[vertex].mtx_entry = node_mtx_wts[vertex];
@@ -523,10 +521,27 @@ std::pair<bool, BspArchitecture> FileReader::readBspArchitecture(std::ifstream &
     while (!infile.eof() && line.at(0) == '%')
         getline(infile, line);
 
-    unsigned p, g, L;
-    sscanf(line.c_str(), "%d %d %d", &p, &g, &L);
+    unsigned p, g, L, M;
+    int mem_type = -1;
+    sscanf(line.c_str(), "%d %d %d %d %d", &p, &g, &L, &mem_type, &M);
 
     BspArchitecture architecture(p, g, L);
+
+    if (0 <= mem_type && mem_type <= 3) {
+
+        if (mem_type == 0) {
+            architecture.setMemoryConstraintType(NONE);
+        } else if (mem_type == 1) {
+            architecture.setMemoryConstraintType(LOCAL);
+            architecture.setMemoryBound(M);
+        } else if (mem_type == 2) {
+            architecture.setMemoryConstraintType(GLOBAL);
+            architecture.setMemoryBound(M);
+        } else if (mem_type == 3) {
+            architecture.setMemoryConstraintType(PERSISTENT_AND_TRANSIENT);
+            architecture.setMemoryBound(M);
+        }
+    }
 
     for (unsigned i = 0; i < p * p; ++i) {
         if (infile.eof()) {
@@ -872,9 +887,8 @@ void parseEdgeSchedule(std::string line, ComputationalDag &G) {
 
 std::tuple<bool, BspSchedule> FileReader::readBspScheduleDotFormat(std::ifstream &infile, BspInstance &inst) {
 
-    ComputationalDag& G = inst.getComputationalDag();
+    ComputationalDag &G = inst.getComputationalDag();
 
-   
     std::vector<unsigned> node_to_proc;
     std::vector<unsigned> node_to_superstep;
     std::map<KeyTriple, unsigned> commSchedule;
@@ -899,14 +913,12 @@ std::tuple<bool, BspSchedule> FileReader::readBspScheduleDotFormat(std::ifstream
         }
     }
 
-
-
     BspSchedule schedule(inst, node_to_proc, node_to_superstep, commSchedule);
 
     return std::make_tuple(true, schedule);
 };
 
-std::pair<bool, ComputationalDag> FileReader::readComputationalDagMetisFormat(std::string &filename) {
+std::pair<bool, ComputationalDag> FileReader::readComputationalDagMetisFormat(const std::string &filename) {
 
     std::ifstream infile(filename);
     if (!infile.is_open()) {
@@ -1051,7 +1063,7 @@ std::vector<unsigned> parseNumbers(const std::string &str) {
 
 void parseNodeRecomp(std::string line, unsigned node, BspScheduleRecomp &schedule) {
 
-    //std::cout << "line: " << line << std::endl;
+    // std::cout << "line: " << line << std::endl;
 
     size_t procPos = line.find("proc=\"") + 7; // Start of proc numbers
     size_t procEnd = line.find(")", procPos);  // End of proc numbers
@@ -1061,7 +1073,7 @@ void parseNodeRecomp(std::string line, unsigned node, BspScheduleRecomp &schedul
     size_t superstepEnd = line.find(")", superstepPos);   // End of superstep numbers
     std::string superstepStr = line.substr(superstepPos, superstepEnd - superstepPos);
 
-   // std::cout << "procStr: " << procStr << " superstepStr: " << superstepStr << std::endl;
+    // std::cout << "procStr: " << procStr << " superstepStr: " << superstepStr << std::endl;
 
     std::vector<unsigned> procVec = parseNumbers(procStr);
     std::vector<unsigned> superstepVec = parseNumbers(superstepStr);
@@ -1069,13 +1081,13 @@ void parseNodeRecomp(std::string line, unsigned node, BspScheduleRecomp &schedul
     schedule.node_processor_assignment[node] = procVec;
     schedule.node_superstep_assignment[node] = superstepVec;
 
-    if(*std::max_element(superstepVec.begin(),superstepVec.end()) >= schedule.numberOfSupersteps()) {
-        schedule.setNumberOfSupersteps(*std::max_element(superstepVec.begin(),superstepVec.end()) + 1);
+    if (*std::max_element(superstepVec.begin(), superstepVec.end()) >= schedule.numberOfSupersteps()) {
+        schedule.setNumberOfSupersteps(*std::max_element(superstepVec.begin(), superstepVec.end()) + 1);
     }
 
     size_t csPos = line.find("cs="); // Start of cs
 
-    //std::cout << "csPos: " << csPos << std::endl;
+    // std::cout << "csPos: " << csPos << std::endl;
 
     if (csPos != std::string::npos) {
 
@@ -1083,7 +1095,7 @@ void parseNodeRecomp(std::string line, unsigned node, BspScheduleRecomp &schedul
         size_t csEnd = line.find("]", csPos); // End of cs
         std::string csStr = line.substr(csPos, csEnd - csPos);
 
-        //std::cout << "csStr: " << csStr << std::endl;
+        // std::cout << "csStr: " << csStr << std::endl;
 
         // Split csStr by ';' to get individual cs entries
 
@@ -1094,7 +1106,7 @@ void parseNodeRecomp(std::string line, unsigned node, BspScheduleRecomp &schedul
             csEntry.erase(std::remove(csEntry.begin(), csEntry.end(), '('), csEntry.end());
             csEntry.erase(std::remove(csEntry.begin(), csEntry.end(), ')'), csEntry.end());
 
-            //std::cout << "csEntry: " << csEntry << std::endl;
+            // std::cout << "csEntry: " << csEntry << std::endl;
 
             std::vector<unsigned> numbers = parseNumbers(csEntry);
             if (numbers.size() == 3) {

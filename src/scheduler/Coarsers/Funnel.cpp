@@ -101,7 +101,7 @@ void Funnel::expand_out_group_dfs(const std::unordered_set<EdgeType, EdgeType_ha
 void Funnel::run_in_contraction() {
     const ComputationalDag& graph = dag_history.back()->getComputationalDag();
 
-    const std::unordered_set<EdgeType, EdgeType_hash> edge_mask = parameters.use_approx_transitive_reduction ? graph.long_edges_in_triangles() : std::unordered_set<EdgeType, EdgeType_hash>();
+    const std::unordered_set<EdgeType, EdgeType_hash> edge_mask = parameters.use_approx_transitive_reduction ? graph.long_edges_in_triangles_parallel() : std::unordered_set<EdgeType, EdgeType_hash>();
     
     std::multiset<int> weights;
     for (VertexType node = 0; node < graph.numberOfVertices(); node++) {
@@ -138,7 +138,7 @@ void Funnel::run_in_contraction() {
 void Funnel::run_out_contraction() {
     const ComputationalDag& graph = dag_history.back()->getComputationalDag();
 
-    const std::unordered_set<EdgeType, EdgeType_hash> edge_mask = parameters.use_approx_transitive_reduction ? graph.long_edges_in_triangles() : std::unordered_set<EdgeType, EdgeType_hash>();
+    const std::unordered_set<EdgeType, EdgeType_hash> edge_mask = parameters.use_approx_transitive_reduction ? graph.long_edges_in_triangles_parallel() : std::unordered_set<EdgeType, EdgeType_hash>();
     
     std::multiset<int> weights;
     for (VertexType node = 0; node < graph.numberOfVertices(); node++) {
