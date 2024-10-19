@@ -37,6 +37,9 @@ class BspInstance {
     ComputationalDag cdag;
     BspArchitecture architecture;
 
+    // for problem instances with heterogeneity
+    std::vector<std::vector<bool>> nodeProcessorCompatibility;
+
   public:
     /**
      * @brief Default constructor for the BspInstance class.
@@ -185,5 +188,43 @@ class BspInstance {
             std::cout << "Warning: Computational DAG memory weight exceeds architecture memory bound. Adjusting memory bound to " << max_memory_weight << std::endl;
             architecture.setMemoryBound(cdag.get_max_memory_weight());
         }
+    }
+
+    bool isCompatible(const VertexType& node, unsigned processor_id) const {
+        return isCompatibleType(cdag.nodeType(node), architecture.processorType(processor_id));
+    }
+
+    bool isCompatibleType(unsigned nodeType, unsigned processorType) const {
+        
+        if(nodeType >= nodeProcessorCompatibility.size()
+            || processorType >= nodeProcessorCompatibility[nodeType].size())
+            return true;
+
+        return nodeProcessorCompatibility[nodeType][processorType];
+    }
+
+    void setNodeProcessorCompatibility(const std::vector<std::vector<bool>>& compatibility_) {
+        
+        nodeProcessorCompatibility = compatibility_;
+    }
+    
+    void setDiagonalCompatibilityMatrix(unsigned number_of_types) {
+        
+        nodeProcessorCompatibility = std::vector<std::vector<bool> >(number_of_types, std::vector<bool>(number_of_types, false));
+        for(int i=0; i<number_of_types; ++i)
+           nodeProcessorCompatibility[i][i] = true; 
+    }
+
+    std::vector<std::vector<unsigned>> getProcTypesCompatibleWithNodeType() const {
+        unsigned numberOfNodeTypes = cdag.getNumberOfNodeTypes();
+        unsigned numberOfProcTypes = architecture.getNumberOfProcessorTypes();
+        std::vector<std::vector<unsigned>> compatibleProcTypes(numberOfNodeTypes);
+
+        for(unsigned nodeType = 0; nodeType < numberOfNodeTypes; ++nodeType)
+            for(unsigned processorType = 0; processorType < numberOfProcTypes; ++processorType)
+                if(isCompatibleType(nodeType, processorType))
+                    compatibleProcTypes[nodeType].push_back(processorType);
+
+        return compatibleProcTypes;
     }
 };

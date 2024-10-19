@@ -45,6 +45,8 @@ class BspArchitecture {
 
     bool isNuma;
 
+    std::vector<unsigned int> processor_type;
+
     std::vector<std::vector<unsigned int>> send_costs;
 
     MEMORY_CONSTRAINT_TYPE memory_const_type = NONE;
@@ -54,6 +56,7 @@ class BspArchitecture {
   public:
     BspArchitecture()
         : number_processors(2), communication_costs(1), synchronisation_costs(2), memory_bound(100), isNuma(false),
+          processor_type(std::vector<unsigned int>(number_processors, 0)),
           send_costs(std::vector<std::vector<unsigned int>>(number_processors,
                                                             std::vector<unsigned int>(number_processors, 1))) {
         for (unsigned i = 0; i < number_processors; i++) {
@@ -71,7 +74,8 @@ class BspArchitecture {
      */
     BspArchitecture(unsigned processors, unsigned comm_cost, unsigned synch_cost, unsigned memory_bound_ = 100) 
         : number_processors(processors), communication_costs(comm_cost), synchronisation_costs(synch_cost), memory_bound(memory_bound_),
-          isNuma(false), send_costs(std::vector<std::vector<unsigned int>>(
+          isNuma(false), processor_type(std::vector<unsigned int>(number_processors, 0)),
+          send_costs(std::vector<std::vector<unsigned int>>(
                              number_processors, std::vector<unsigned int>(number_processors, 1))) {
 
         for (unsigned i = 0; i < number_processors; i++) {
@@ -88,7 +92,8 @@ class BspArchitecture {
      * @param synch_cost The synchronization cost between processors.
      */
     BspArchitecture(unsigned int processors, unsigned int comm_cost, unsigned int synch_cost, std::vector<std::vector<unsigned>> send_costs_)
-        : number_processors(processors), communication_costs(comm_cost), synchronisation_costs(synch_cost), memory_bound(100), send_costs(send_costs_) {
+        : number_processors(processors), communication_costs(comm_cost), synchronisation_costs(synch_cost), memory_bound(100), send_costs(send_costs_),
+        processor_type(std::vector<unsigned int>(number_processors, 0)) {
 
         if (number_processors != send_costs.size()) {
             throw std::invalid_argument("send_costs_ needs to be a processors x processors matrix.\n");
@@ -113,7 +118,8 @@ class BspArchitecture {
      * @param synch_cost The synchronization cost between processors.
      */
     BspArchitecture(unsigned int processors, unsigned int comm_cost, unsigned int synch_cost, unsigned memory_bound_, std::vector<std::vector<unsigned>> send_costs_)
-        : number_processors(processors), communication_costs(comm_cost), synchronisation_costs(synch_cost), memory_bound(memory_bound_), send_costs(send_costs_) {
+        : number_processors(processors), communication_costs(comm_cost), synchronisation_costs(synch_cost), memory_bound(memory_bound_), send_costs(send_costs_),
+        processor_type(std::vector<unsigned int>(number_processors, 0)) {
 
         if (number_processors != send_costs.size()) {
             throw std::invalid_argument("send_costs_ needs to be a processors x processors matrix.\n");
@@ -283,6 +289,9 @@ class BspArchitecture {
      * @return A reference to the send costs matrix.
      */
     inline const std::vector<std::vector<unsigned int>> &sendCostMatrix() const { return send_costs; }
+
+    // the type indeces of the processor (e.g. CPU, vector/tensor core)
+    inline const std::vector<unsigned int> &processorTypes() const { return processor_type; }
     
     
     /**
@@ -306,6 +315,12 @@ class BspArchitecture {
      * @return The send costs between the two processors.
      */
     inline unsigned sendCosts(unsigned p1, unsigned p2) const { return send_costs[p1][p2]; }
+
+
+    // the type index of the processor (e.g. CPU, vector/tensor core)
+    inline unsigned processorType(unsigned p1) const { return processor_type[p1]; }
+    inline void setProcessorType(unsigned p1, unsigned type) { processor_type[p1] = type; }
+    unsigned getNumberOfProcessorTypes() const;
 
     inline MEMORY_CONSTRAINT_TYPE getMemoryConstraintType() const { return memory_const_type; }
     inline void setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE memory_const_type_) { memory_const_type = memory_const_type_; }

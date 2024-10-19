@@ -25,7 +25,6 @@ limitations under the License.
 #include <algorithm>
 #include <iostream>
 
-#include "IBspSchedule.hpp"
 #include "BspSchedule.hpp"
 
 
@@ -47,29 +46,33 @@ typedef std::tuple<unsigned int, unsigned int, unsigned int> KeyTriple;
  * The `BspSchedule` class is designed to work with a `BspInstance` object, which represents the instance of the BSP
  * problem being solved.
  *
- * @see IBspSchedule
  * @see BspInstance
  */
-class BspMemSchedule : public IBspSchedule {
+class BspMemSchedule {
 
   private:
     const BspInstance *instance;
 
     unsigned int number_of_supersteps;
 
-    std::vector<unsigned> node_to_processor_assignment;
-    std::vector<unsigned> node_to_superstep_assignment;
+    struct compute_step
+    {
+      unsigned node;
+      std::vector<unsigned> nodes_evicted_after;
+
+      compute_step() {}
+      compute_step(unsigned node_) : node(node_) {}
+      compute_step(unsigned node_, const std::vector<unsigned>& evicted_) : node(node_), nodes_evicted_after(evicted_) {}
+    };
+
+    // executed nodes in order in a computation phase, for processor p and superstep s
+    std::vector<std::vector<std::vector<compute_step> > > compute_steps_for_proc_superstep;
 
     // memory limit
     unsigned memory_limit;
 
-    // further properties of schedule
-
-    // executed nodes in order, for processor p and superstep s
-    std::vector<std::vector<std::vector<unsigned> > > top_order_for_proc_superstep;
-
     // nodes evicted from cache after the computation of a specific node
-    std::vector<std::vector<unsigned> > nodes_evicted_after;
+    //std::vector<std::vector<unsigned> > nodes_evicted_after;
 
     // nodes evicted from cache in a given superstep's comm phase
     std::vector<std::vector<std::vector<unsigned> > > nodes_evicted_in_comm;
@@ -80,70 +83,54 @@ class BspMemSchedule : public IBspSchedule {
     // nodes sent up from processor p in superstep s
     std::vector<std::vector<std::vector<unsigned> > > nodes_sent_up;
 
-    // contains entries: (vertex, from_proc, to_proc ) : step
-    //std::map<KeyTriple, unsigned> commSchedule;
-
   public:
+
+    enum CACHE_EVICTION_STRATEGY
+    {
+        FORESIGHT,
+        LEAST_RECENTLY_USED,
+        LARGEST_ID
+    };
 
     /**
      * @brief Default constructor for the BspMemSchedule class.
      */
-    BspMemSchedule() : instance(nullptr), number_of_supersteps(0) {}
+    BspMemSchedule() : instance(nullptr), number_of_supersteps(0), memory_limit(0) {}
 
-    /**
-     * @brief Constructs a BspMemSchedule object with the specified BspInstance.
-     *
-     * @param inst The BspInstance for the schedule.
-     */
-    BspMemSchedule(const BspInstance &inst)
-        : instance(&inst), number_of_supersteps(1),
-          node_to_processor_assignment(std::vector<unsigned int>(inst.numberOfVertices(), 0)),
-          node_to_superstep_assignment(std::vector<unsigned int>(inst.numberOfVertices(), 0)) {}
-
-    /**
-     * @brief Constructs a BspMemSchedule object with the specified BspInstance, processor assignment, and superstep assignment.
-     *
-     * @param inst The BspInstance for the schedule.
-     * @param processor_assignment_ The processor assignment for the nodes.
-     * @param superstep_assignment_ The superstep assignment for the nodes.
-     */ 
-    BspMemSchedule(const BspInstance &inst, std::vector<unsigned> processor_assignment_,
-                std::vector<unsigned> superstep_assignment_)
-        : instance(&inst), node_to_processor_assignment(processor_assignment_),
-          node_to_superstep_assignment(superstep_assignment_) {
-        updateNumberOfSupersteps();
+    BspMemSchedule(const BspInstance &inst) : instance(&inst)
+    {
+      BspSchedule schedule(inst, std::vector<unsigned int>(inst.numberOfVertices(), 0), std::vector<unsigned int>(inst.numberOfVertices(), 0));
+      memory_limit = minimumMemoryRequired(inst);
+      ConvertFromBsp(schedule);
     }
 
-    /**
-     * @brief Constructs a BspMemSchedule object with the specified BspInstance, processor assignment, superstep assignment,
-     * and communication schedule.
-     *
-     * @param inst The BspInstance for the schedule.
-     * @param processor_assignment_ The processor assignment for the nodes.
-     * @param superstep_assignment_ The superstep assignment for the nodes.
-     * @param comm_ The communication schedule for the nodes.
-     */
-    /*BspMemSchedule(const BspInstance &inst, std::vector<unsigned int> processor_assignment_,
-                std::vector<unsigned int> superstep_assignment_, std::map<KeyTriple, unsigned int> comm_)
-        : instance(&inst), node_to_processor_assignment(processor_assignment_),
-          node_to_superstep_assignment(superstep_assignment_), commSchedule(comm_) { updateNumberOfSupersteps(); }*/
+    BspMemSchedule(const BspInstance &inst, const std::vector<unsigned>& processor_assignment_,
+                  const std::vector<unsigned>& superstep_assignment_) : instance(&inst)
+    {
+      BspSchedule schedule(inst, processor_assignment_, superstep_assignment_);
+      memory_limit = minimumMemoryRequired(inst);
+      ConvertFromBsp(schedule);
+    }
 
+    BspMemSchedule(const BspSchedule &schedule, unsigned Mem_limit, CACHE_EVICTION_STRATEGY evict_rule = LARGEST_ID)
+    : instance(&schedule.getInstance()), memory_limit(Mem_limit) { ConvertFromBsp(schedule, evict_rule); }
 
-    
     virtual ~BspMemSchedule() = default;
 
+    // cost computation
+    unsigned computeCost() const;
+    unsigned computeAsynchronousCost() const;
 
     // convert from unconstrained schedule
-    BspMemSchedule(const BspSchedule &schedule, unsigned Mem_limit, bool clever_evict = false);
+    void ConvertFromBsp(const BspSchedule &schedule, CACHE_EVICTION_STRATEGY evict_rule = LARGEST_ID);
 
     //auxiliary for conversion
     static std::vector<std::vector<std::vector<unsigned> > > computeTopOrdersDFS(const BspSchedule &schedule);
     void SplitSupersteps(const BspSchedule &schedule);
-    void SetMemoryMovement(bool clever_evict = false);
+    void SetMemoryMovement(CACHE_EVICTION_STRATEGY evict_rule = LARGEST_ID);
 
+    // other basic operations
     bool isValid();
-    unsigned getCost();
-
     static unsigned minimumMemoryRequired(const BspInstance& instance);
 
     /**
@@ -151,136 +138,17 @@ class BspMemSchedule : public IBspSchedule {
      *
      * @return A reference to the BspInstance for the schedule.
      */
-    const BspInstance &getInstance() const override { return *instance; }
+    const BspInstance &getInstance() const { return *instance; }
 
   
-
     /**
      * @brief Returns the number of supersteps in the schedule.
      *
      * @return The number of supersteps in the schedule.
      */
-    unsigned numberOfSupersteps() const override { return number_of_supersteps; }
+    unsigned numberOfSupersteps() const { return number_of_supersteps; }
 
-    /**
-     * @brief Returns the number of processors in the schedule.
-     *
-     * @return The number of processors in the schedule.
-     */
-    void updateNumberOfSupersteps();
-
-    /**
-     * @brief Returns the superstep assigned to the specified node.
-     *
-     * @param node The node for which to return the assigned superstep.
-     * @return The superstep assigned to the specified node.
-     */
-    inline unsigned assignedSuperstep(unsigned node) const override { return node_to_superstep_assignment[node]; }
-    
-    /**
-     * @brief Returns the processor assigned to the specified node.
-     *
-     * @param node The node for which to return the assigned processor.
-     * @return The processor assigned to the specified node.
-     */
-    inline unsigned assignedProcessor(unsigned node) const override { return node_to_processor_assignment[node]; }
-
-    /**
-     * @brief Returns the superstep assignment for the schedule.
-     *
-     * @return The superstep assignment for the schedule.
-     */
-    inline const std::vector<unsigned> &assignedSupersteps() const { return node_to_superstep_assignment; }
-    
-    /**
-     * @brief Returns the processor assignment for the schedule.
-     *
-     * @return The processor assignment for the schedule.
-     */
-    inline const std::vector<unsigned> &assignedProcessors() const { return node_to_processor_assignment; }
-
-    /**
-     * @brief Sets the superstep assigned to the specified node.
-     *
-     * @param node The node for which to set the assigned superstep.
-     * @param superstep The superstep to assign to the node.
-     */
-    void setAssignedSuperstep(unsigned node, unsigned superstep) override;
-    
-    /**
-     * @brief Sets the processor assigned to the specified node.
-     *
-     * @param node The node for which to set the assigned processor.
-     * @param processor The processor to assign to the node.
-     */
-    void setAssignedProcessor(unsigned node, unsigned processor) override;
-
-    /**
-     * @brief Sets the superstep assignment for the schedule.
-     *
-     * @param vec The superstep assignment to set.
-     */
-    void setAssignedSupersteps(const std::vector<unsigned int> &vec);
-
-
-    /**
-     * @brief Sets the processor assignment for the schedule.
-     *
-     * @param vec The processor assignment to set.
-     */
-    void setAssignedProcessors(const std::vector<unsigned int> &vec);
-
-
-    /**
-     * @brief Sets the communication schedule for the schedule.
-     *
-     * @param cs The communication schedule to set.
-     */
-    //void setCommunicationSchedule(const std::map<KeyTriple, unsigned int> &cs);
-    
-    
-    /**
-     * @brief Adds an entry to the communication schedule.
-     *
-     * @param key The key for the communication schedule entry.
-     * @param step The superstep for the communication schedule entry.
-     */
-    //void addCommunicationScheduleEntry(KeyTriple key, unsigned step);
-    
-    /**
-     * @brief Adds an entry to the communication schedule.
-     *
-     * @param node The node resp. its data which is sent.
-     * @param from_proc The processor from which the data is sent.
-     * @param to_proc The processor to which the data is sent.
-     * @param step The superstep in which the data is sent. 
-     */
-    //void addCommunicationScheduleEntry(unsigned node, unsigned from_proc, unsigned to_proc, unsigned step);
-
-    /**
-     * @brief Returns the communication schedule for the schedule.
-     *
-     * @return The communication schedule for the schedule.
-     */
-    /*const std::map<KeyTriple, unsigned int> &getCommunicationSchedule() const { return commSchedule; }
-    std::map<KeyTriple, unsigned int> &getCommunicationSchedule() { return commSchedule; }*/
-
-    unsigned computeWorkCosts() const;
-
-    /**
-     * @brief Returns true if the schedule satisfies the precedence constraints of the computational DAG.
-     *
-     * The precedence constraints of the computational DAG are satisfied if, for each directed edge (u, v) such that u and v are assigned to different processors, the
-     * superstep assigned to node u is less than the superstep assigned to node v.
-     *
-     * @return True if the schedule satisfies the precedence constraints of the computational DAG, false otherwise.
-     */
-    bool satisfiesPrecedenceConstraints() const;
-
-    std::vector<unsigned int> getAssignedNodeVector(unsigned int processor) const;
-    std::vector<unsigned int> getAssignedNodeVector(unsigned int processor, unsigned int superstep) const;
-
-    void setNumberOfSupersteps(unsigned int number_of_supersteps_) { number_of_supersteps = number_of_supersteps_; }
+    void updateNumberOfSupersteps(unsigned new_number_of_supersteps);
 
 };
 

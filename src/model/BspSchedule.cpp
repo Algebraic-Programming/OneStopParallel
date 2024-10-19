@@ -168,6 +168,19 @@ bool BspSchedule::satisfiesPrecedenceConstraints() const {
     return true;
 };
 
+bool BspSchedule::satisfiesNodeTypeConstraints() const {
+
+    if (node_to_processor_assignment.size() != instance->numberOfVertices())
+        return false;
+
+    for (unsigned int node = 0; node < instance->numberOfVertices(); node++) {
+        if (!instance->isCompatible(node, node_to_processor_assignment[node]))
+            return false;
+    }
+
+    return true;
+};
+
 bool BspSchedule::satisfiesMemoryConstraints() const {
 
     switch (instance->getArchitecture().getMemoryConstraintType()) {

@@ -42,6 +42,9 @@ add_executable(OneStopParallel_Partition main_partition.cpp)
 target_link_libraries(OneStopParallel_Partition PRIVATE ${Boost_LIBRARIES})
 target_link_libraries(OneStopParallel_Partition PRIVATE BspSchedulingLibrary)
 
+# Add subdirectory for executables
+add_subdirectory(executables)
+
 # Add subdirectory for examples
 add_subdirectory(examples)
 

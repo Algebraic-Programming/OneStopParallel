@@ -99,10 +99,10 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyBspScheduler::computeSchedule(const 
         allReady.insert(v);
 
         for (unsigned proc = 0; proc < params_p; ++proc) {
-
-            // double score = computeScore(v, proc, procInHyperedge, instance);
-            heap_node new_node(v, 0.0);
-            node_all_proc_heap_handles[proc][v] = max_all_proc_score_heap[proc].push(new_node);
+            if (instance.isCompatible(v, proc)) {
+                heap_node new_node(v, 0.0);
+                node_all_proc_heap_handles[proc][v] = max_all_proc_score_heap[proc].push(new_node);
+            }
         }
     }
 
@@ -130,6 +130,9 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyBspScheduler::computeSchedule(const 
 
             for (const auto &v : ready) {
                 for (unsigned proc = 0; proc < params_p; ++proc) {
+
+                    if (!instance.isCompatible(v, proc))
+                        continue;
 
                     double score = computeScore(v, proc, procInHyperedge, instance);
                     heap_node new_node(v, score);
@@ -192,6 +195,9 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyBspScheduler::computeSchedule(const 
                             }
                         }
 
+                        if (!instance.isCompatible(succ, schedule.assignedProcessor(node)))
+                            canAdd = false;
+
                         if (canAdd) {
                             procReady[schedule.assignedProcessor(node)].insert(succ);
 
@@ -240,8 +246,10 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyBspScheduler::computeSchedule(const 
                 allReady.erase(nextNode);
 
                 for (unsigned proc = 0; proc < instance.numberOfProcessors(); ++proc) {
-                    max_all_proc_score_heap[proc].erase(node_all_proc_heap_handles[proc][nextNode]);
-                    node_all_proc_heap_handles[proc].erase(nextNode);
+                    if (instance.isCompatible(nextNode, proc)) {
+                        max_all_proc_score_heap[proc].erase(node_all_proc_heap_handles[proc][nextNode]);
+                        node_all_proc_heap_handles[proc].erase(nextNode);
+                    }
                 }
             }
 
@@ -299,7 +307,6 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyBspScheduler::computeSchedule(const 
             procInHyperedge[nextNode][nextProc] = true;
 
             for (const auto &pred : G.parents(nextNode)) {
-                // for (const int i : G.In[nextNode]) {
 
                 if (procInHyperedge[pred][nextProc]) {
                     continue;
@@ -312,9 +319,18 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyBspScheduler::computeSchedule(const 
                     if (child != nextNode && procReady[nextProc].find(child) != procReady[nextProc].end()) {
 
                         (*node_proc_heap_handles[nextProc][child]).score +=
-                            (double)instance.getComputationalDag().nodeCommunicationWeight(child) /
-                            (double)instance.getComputationalDag().numberOfChildren(child);
+                            (double)instance.getComputationalDag().nodeCommunicationWeight(pred) /
+                            (double)instance.getComputationalDag().numberOfChildren(pred);
                         max_proc_score_heap[nextProc].update(node_proc_heap_handles[nextProc][child]);
+                    }
+
+                    if (child != nextNode && allReady.find(child) != allReady.end() &&
+                        instance.isCompatible(child, nextProc)) {
+
+                        (*node_all_proc_heap_handles[nextProc][child]).score +=
+                            (double)instance.getComputationalDag().nodeCommunicationWeight(pred) /
+                            (double)instance.getComputationalDag().numberOfChildren(pred);
+                        max_all_proc_score_heap[nextProc].update(node_all_proc_heap_handles[nextProc][child]);
                     }
                 }
             }
@@ -325,9 +341,10 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyBspScheduler::computeSchedule(const 
             return {ERROR, schedule};
         }
 
-        if (allReady.empty() && free > params_p * max_percent_idle_processors && ((!increase_parallelism_in_new_superstep) ||
-            ready.size() >= std::min(std::min(params_p, (unsigned)(1.2 * (params_p - free))),
-                                     params_p - free + ((unsigned)(0.5 * free))))) {
+        if (free > params_p * max_percent_idle_processors &&
+            ((!increase_parallelism_in_new_superstep) ||
+             ready.size() >= std::min(std::min(params_p, (unsigned)(1.2 * (params_p - free))),
+                                      params_p - free + ((unsigned)(0.5 * free))))) {
             endSupStep = true;
         }
     }
@@ -340,16 +357,15 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyBspScheduler::computeSchedule(const 
 };
 
 void GreedyBspScheduler::Choose(const BspInstance &instance, const std::vector<std::vector<bool>> &procInHyperedge,
-                                    const std::set<VertexType> &allReady,
-                                    const std::vector<std::set<VertexType>> &procReady,
-                                    const std::vector<bool> &procFree, VertexType &node, unsigned &p) const {
+                                const std::set<VertexType> &allReady,
+                                const std::vector<std::set<VertexType>> &procReady, const std::vector<bool> &procFree,
+                                VertexType &node, unsigned &p) const {
 
     double max_score = -1.0;
 
     for (unsigned proc = 0; proc < instance.numberOfProcessors(); ++proc) {
 
         if (procFree[proc] && !procReady[proc].empty()) {
-            // if (procFree[proc] && !node_proc_heap_handles[proc].empty()) {
 
             // select node
             heap_node top_node = max_proc_score_heap[proc].top();
@@ -414,6 +430,8 @@ bool GreedyBspScheduler::check_mem_feasibility(const BspInstance &instance, cons
         return true;
     } else if (instance.getArchitecture().getMemoryConstraintType() == PERSISTENT_AND_TRANSIENT) {
 
+        unsigned num_empty_proc = 0;
+
         for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
             if (!procReady[i].empty()) {
 
@@ -425,7 +443,13 @@ bool GreedyBspScheduler::check_mem_feasibility(const BspInstance &instance, cons
                     instance.getArchitecture().memoryBound()) {
                     return true;
                 }
+            } else {
+                ++num_empty_proc;
             }
+        }
+
+        if (num_empty_proc == instance.numberOfProcessors() && allReady.empty()) {
+            return true;
         }
 
         if (!allReady.empty())
@@ -442,13 +466,13 @@ bool GreedyBspScheduler::check_mem_feasibility(const BspInstance &instance, cons
             }
 
         return false;
-    } 
+    }
 };
 
 // auxiliary - check if it is possible to assign a node at all
 bool GreedyBspScheduler::CanChooseNode(const BspInstance &instance, const std::set<VertexType> &allReady,
-                                           const std::vector<std::set<VertexType>> &procReady,
-                                           const std::vector<bool> &procFree) const {
+                                       const std::vector<std::set<VertexType>> &procReady,
+                                       const std::vector<bool> &procFree) const {
     for (unsigned i = 0; i < instance.numberOfProcessors(); ++i)
         if (procFree[i] && !procReady[i].empty())
             return true;

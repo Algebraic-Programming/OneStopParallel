@@ -17,21 +17,13 @@ limitations under the License.
 */
 
 #include "model/BspMemSchedule.hpp"
-#include "model/SetSchedule.hpp"
 
-void BspMemSchedule::updateNumberOfSupersteps() {
+void BspMemSchedule::updateNumberOfSupersteps(unsigned new_number_of_supersteps) {
 
-    number_of_supersteps = 0;
+    number_of_supersteps = new_number_of_supersteps;
 
-    for (unsigned i = 0; i < instance->numberOfVertices(); ++i) {
-
-        if (node_to_superstep_assignment[i] >= number_of_supersteps) {
-            number_of_supersteps = node_to_superstep_assignment[i] + 1;
-        }
-    }
-
-    top_order_for_proc_superstep.clear();
-    top_order_for_proc_superstep.resize(instance->numberOfProcessors(), std::vector<std::vector<unsigned> >(number_of_supersteps));
+    compute_steps_for_proc_superstep.clear();
+    compute_steps_for_proc_superstep.resize(instance->numberOfProcessors(), std::vector<std::vector<compute_step> >(number_of_supersteps));
 
     nodes_evicted_in_comm.clear();
     nodes_evicted_in_comm.resize(instance->numberOfProcessors(), std::vector<std::vector<unsigned> >(number_of_supersteps));
@@ -43,210 +35,111 @@ void BspMemSchedule::updateNumberOfSupersteps() {
     nodes_sent_up.resize(instance->numberOfProcessors(), std::vector<std::vector<unsigned> >(number_of_supersteps));
 }
 
-void BspMemSchedule::setAssignedSuperstep(unsigned node, unsigned superstep) {
+unsigned BspMemSchedule::computeCost() const {
 
-    if (node < instance->numberOfVertices()) {
-        node_to_superstep_assignment[node] = superstep;
+    int total_costs = 0;
+    for(unsigned step = 0; step < number_of_supersteps; ++step)
+    {
+        // compute phase
+        int max_work = INT_MIN;
+        for(unsigned proc = 0; proc < instance->getArchitecture().numberOfProcessors(); ++proc)
+        {
+            int work = 0;
+            for(const auto& computeStep : compute_steps_for_proc_superstep[proc][step])
+                work += instance->getComputationalDag().nodeWorkWeight(computeStep.node);
 
-        if (superstep >= number_of_supersteps) {
-            number_of_supersteps = superstep + 1;
+            if(work > max_work)
+                max_work = work;
         }
-
-    } else {
-        throw std::invalid_argument("Invalid Argument while assigning node to superstep: index out of range.");
-    }
-}
-
-void BspMemSchedule::setAssignedProcessor(unsigned node, unsigned processor) {
-
-    if (node < instance->numberOfVertices() && processor < instance->numberOfProcessors()) {
-        node_to_processor_assignment[node] = processor;
-    } else {
-        // std::cout << "node " << node << " num nodes " << instance->numberOfVertices() << "  processor " << processor
-        //          << " num proc " << instance->numberOfProcessors() << std::endl;
-        throw std::invalid_argument("Invalid Argument while assigning node to processor");
-    }
-}
-
-/*void BspMemSchedule::addCommunicationScheduleEntry(unsigned node, unsigned from_proc, unsigned to_proc, unsigned step) {
-    addCommunicationScheduleEntry(std::make_tuple(node, from_proc, to_proc), step);
-}
-
-void BspMemSchedule::addCommunicationScheduleEntry(KeyTriple key, unsigned step) {
-
-    if (step >= number_of_supersteps)
-        throw std::invalid_argument("Invalid Argument while adding communication schedule entry: step out of range.");
-
-    if (get<0>(key) >= instance->numberOfVertices())
-        throw std::invalid_argument("Invalid Argument while adding communication schedule entry: node out of range.");
-
-    if (get<1>(key) >= instance->numberOfProcessors())
-        throw std::invalid_argument(
-            "Invalid Argument while adding communication schedule entry: from processor out of range.");
-
-    if (get<2>(key) >= instance->numberOfProcessors())
-        throw std::invalid_argument(
-            "Invalid Argument while adding communication schedule entry: to processor out of range.");
-
-    commSchedule[key] = step;
-}*/
-
-void BspMemSchedule::setAssignedSupersteps(const std::vector<unsigned> &vec) {
-
-    if (vec.size() == instance->numberOfVertices()) {
-        for (unsigned i = 0; i < instance->numberOfVertices(); ++i) {
-
-            if (vec[i] >= number_of_supersteps) {
-                number_of_supersteps = vec[i] + 1;
-            }
-
-            node_to_superstep_assignment[i] = vec[i];
-        }
-    } else {
-        throw std::invalid_argument(
-            "Invalid Argument while assigning supersteps: size does not match number of nodes.");
-    }
-}
-
-void BspMemSchedule::setAssignedProcessors(const std::vector<unsigned> &vec) {
-
-    if (vec.size() == instance->numberOfVertices()) {
-        for (unsigned i = 0; i < instance->numberOfVertices(); ++i) {
-
-            if (vec[i] >= instance->numberOfProcessors()) {
-                throw std::invalid_argument(
-                    "Invalid Argument while assigning processors: processor index out of range.");
-            }
-
-            node_to_processor_assignment[i] = vec[i];
-        }
-    } else {
-        throw std::invalid_argument(
-            "Invalid Argument while assigning processors: size does not match number of nodes.");
-    }
-}
-
-std::vector<unsigned> BspMemSchedule::getAssignedNodeVector(unsigned processor) const {
-
-    std::vector<unsigned> vec;
-
-    for (unsigned i = 0; i < instance->numberOfVertices(); i++) {
-
-        if (node_to_processor_assignment[i] == processor) {
-            vec.push_back(i);
-        }
-    }
-
-    return vec;
-}
-
-std::vector<unsigned int> BspMemSchedule::getAssignedNodeVector(unsigned processor, unsigned superstep) const {
-    std::vector<unsigned int> vec;
-
-    for (unsigned int i = 0; i < instance->numberOfVertices(); i++) {
-
-        if (node_to_processor_assignment[i] == processor && node_to_superstep_assignment[i] == superstep) {
-            vec.push_back(i);
-        }
-    }
-
-    return vec;
-}
-
-bool BspMemSchedule::satisfiesPrecedenceConstraints() const {
-
-    if (node_to_processor_assignment.size() != instance->numberOfVertices() ||
-        node_to_superstep_assignment.size() != instance->numberOfVertices()) {
-        return false;
-    }
-
-    // bool comm_edge_found = false;
-
-    for (const auto &ep : instance->getComputationalDag().edges()) {
-        const unsigned &source = instance->getComputationalDag().source(ep);
-        const unsigned &target = instance->getComputationalDag().target(ep);
-
-        const int different_processors =
-            (node_to_processor_assignment[source] == node_to_processor_assignment[target]) ? 0 : 1;
-
-        if (node_to_superstep_assignment[source] + different_processors > node_to_superstep_assignment[target]) {
-            // std::cout << "This is not a valid scheduling (problems with nodes " << source << " and " << target <<
-            // ")."
-            //           << std::endl; // todo should be removed
-            return false;
-        }
-    }
-
-    return true;
-};
-
-
-/*void BspMemSchedule::setCommunicationSchedule(const std::map<KeyTriple, unsigned int> &cs) {
-    if (checkCommScheduleValidity(cs)) {
-        commSchedule.clear();
-        commSchedule = std::map<KeyTriple, unsigned int>(cs);
-
-    } else {
-        throw std::invalid_argument("Given communication schedule is not valid for instance");
-    }
-}*/
-
-unsigned BspMemSchedule::computeWorkCosts() const {
-
-    assert(satisfiesPrecedenceConstraints());
-
-    std::vector<std::vector<unsigned>> work = std::vector<std::vector<unsigned>>(
-        number_of_supersteps, std::vector<unsigned>(instance->numberOfProcessors(), 0));
-
-    for (unsigned node = 0; node < instance->numberOfVertices(); node++) {
-        work[node_to_superstep_assignment[node]][node_to_processor_assignment[node]] +=
-            instance->getComputationalDag().nodeWorkWeight(node);
-    }
-
-    unsigned total_costs = 0;
-    for (unsigned step = 0; step < number_of_supersteps; step++) {
-
-        unsigned max_work = 0;
-
-        for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
-
-            if (max_work < work[step][proc]) {
-                max_work = work[step][proc];
-            }
-        }
-
         total_costs += max_work;
+
+        // communication phase
+        int max_send_up = INT_MIN;
+        for(unsigned proc = 0; proc < instance->getArchitecture().numberOfProcessors(); ++proc)
+        {
+            int send_up = 0;
+            for(unsigned node : nodes_sent_up[proc][step])
+                send_up += instance->getComputationalDag().nodeCommunicationWeight(node) * (int)instance->getArchitecture().communicationCosts();
+
+            if(send_up > max_send_up)
+                max_send_up = send_up;
+        }
+        total_costs += max_send_up;
+
+        total_costs += (int)instance->getArchitecture().synchronisationCosts();
+
+        int max_send_down = INT_MIN;
+        for(unsigned proc = 0; proc < instance->getArchitecture().numberOfProcessors(); ++proc)
+        {
+            int send_down = 0;
+            for(unsigned node : nodes_sent_down[proc][step])
+                send_down += instance->getComputationalDag().nodeCommunicationWeight(node) * (int)instance->getArchitecture().communicationCosts();
+
+            if(send_down > max_send_down)
+                max_send_down = send_down;
+        }
+        total_costs += max_send_down;
+
     }
 
     return total_costs;
 }
 
+unsigned BspMemSchedule::computeAsynchronousCost() const {
 
-BspMemSchedule::BspMemSchedule(const BspSchedule &schedule, unsigned Mem_limit, bool clever_evict)
-    : instance(&schedule.getInstance()), memory_limit(Mem_limit)
+    std::vector<int> current_time_at_processor(instance->getArchitecture().numberOfProcessors(), 0);
+    std::vector<int> time_when_node_gets_blue(instance->getComputationalDag().numberOfVertices(), INT_MAX);
+
+    for(unsigned step = 0; step < number_of_supersteps; ++step)
+    {
+        // compute phase
+        for(unsigned proc = 0; proc < instance->getArchitecture().numberOfProcessors(); ++proc)
+            for(const auto& computeStep : compute_steps_for_proc_superstep[proc][step])
+                current_time_at_processor[proc] += instance->getComputationalDag().nodeWorkWeight(computeStep.node);
+
+        // communication phase - send up
+        for(unsigned proc = 0; proc < instance->getArchitecture().numberOfProcessors(); ++proc)
+            for(unsigned node : nodes_sent_up[proc][step])
+            {
+                current_time_at_processor[proc] += instance->getComputationalDag().nodeCommunicationWeight(node) * (int)instance->getArchitecture().communicationCosts();
+                if(time_when_node_gets_blue[node] > current_time_at_processor[proc])
+                    time_when_node_gets_blue[node] = current_time_at_processor[proc];
+            }
+
+        // communication phase - send down
+        for(unsigned proc = 0; proc < instance->getArchitecture().numberOfProcessors(); ++proc)
+            for(unsigned node : nodes_sent_down[proc][step])
+            {
+                if(current_time_at_processor[proc] < time_when_node_gets_blue[node])
+                    current_time_at_processor[proc] = time_when_node_gets_blue[node];
+                current_time_at_processor[proc] += instance->getComputationalDag().nodeCommunicationWeight(node) * (int)instance->getArchitecture().communicationCosts();
+            }
+
+    }
+
+    int makespan = 0;
+    for(unsigned proc = 0; proc < instance->getArchitecture().numberOfProcessors(); ++proc)
+        if(current_time_at_processor[proc] > makespan)
+            makespan = current_time_at_processor[proc];
+
+    return makespan;
+}
+
+void BspMemSchedule::ConvertFromBsp(const BspSchedule &schedule, CACHE_EVICTION_STRATEGY evict_rule)
 {
     // check if conversion possible at all
     unsigned memory_required = minimumMemoryRequired(*instance);
-    if(Mem_limit < memory_required)
+    if(memory_limit < memory_required)
     {
         std::cout<<"Conversion failed. Minimum memory required is "<<memory_required<<std::endl;
         return;
     }
 
-    std::cout<<"Minimum memory required: "<<memory_required<<std::endl;
-    // resize vectors
-    nodes_evicted_after.clear();
-    nodes_evicted_after.resize(instance->getComputationalDag().numberOfVertices());
-
-    // initialize to original schedule
-    node_to_processor_assignment = schedule.assignedProcessors();
-    node_to_superstep_assignment = schedule.assignedSupersteps();
-
     // split supersteps
     SplitSupersteps(schedule);
 
     // track memory
-    SetMemoryMovement(clever_evict);    
+    SetMemoryMovement(evict_rule);    
 }
 
 void BspMemSchedule::SplitSupersteps(const BspSchedule &schedule)
@@ -292,9 +185,9 @@ void BspMemSchedule::SplitSupersteps(const BspSchedule &schedule)
                         neededAfter[node] = false;
                         for(unsigned succ : instance->getComputationalDag().children(node))
                         {
-                            if(assignedSuperstep(succ)>step)
+                            if(schedule.assignedSuperstep(succ)>step)
                                 neededAfter[node] = true;
-                            if(assignedSuperstep(succ) == step && top_order_idx[succ] <= end_current)
+                            if(schedule.assignedSuperstep(succ) == step && top_order_idx[succ] <= end_current)
                                 neededAfter[node] = true;
                         }
 
@@ -307,9 +200,9 @@ void BspMemSchedule::SplitSupersteps(const BspSchedule &schedule)
                         unsigned node = top_orders[proc][step][idx];
                         for(unsigned pred : instance->getComputationalDag().parents(node))
                         {
-                            if(assignedSuperstep(pred)<step || (assignedSuperstep(pred)==step && !neededAfter[pred]))
+                            if(schedule.assignedSuperstep(pred)<step || (schedule.assignedSuperstep(pred)==step && !neededAfter[pred]))
                                 lastUsedBy[pred] = node;
-                            if(assignedSuperstep(pred)<step || (assignedSuperstep(pred)==step && top_order_idx[pred] < start_idx))
+                            if(schedule.assignedSuperstep(pred)<step || (schedule.assignedSuperstep(pred)==step && top_order_idx[pred] < start_idx))
                                 values_needed.insert(pred);
                         }
                     }
@@ -359,68 +252,82 @@ void BspMemSchedule::SplitSupersteps(const BspSchedule &schedule)
         }
         superstep_index += max_segments_in_superstep;
     }
-
-    for(unsigned node=0; node < instance->getComputationalDag().numberOfVertices(); ++node)
-        setAssignedSuperstep(node, new_superstep_ID[node]);
     
-    updateNumberOfSupersteps();
+    updateNumberOfSupersteps(superstep_index+1);
     std::cout<<schedule.numberOfSupersteps()<<" -> "<<number_of_supersteps<<std::endl;
 
     for(unsigned step=0; step<schedule.numberOfSupersteps(); ++step)
         for(unsigned proc=0; proc<instance->numberOfProcessors(); ++proc)
             for(unsigned node : top_orders[proc][step])
-                top_order_for_proc_superstep[proc][assignedSuperstep(node)].push_back(node);
+                compute_steps_for_proc_superstep[proc][new_superstep_ID[node]].emplace_back(node);
 }
 
-void BspMemSchedule::SetMemoryMovement(bool clever_evict)
+void BspMemSchedule::SetMemoryMovement(CACHE_EVICTION_STRATEGY evict_rule)
 {
+    // Note - this currently uses work weights instead of memory weights, to allow testing with our current inputs
+
+    const unsigned N = instance->getComputationalDag().numberOfVertices();
+
     std::vector<unsigned> mem_used(instance->numberOfProcessors(), 0);
     std::vector<std::set<unsigned> > in_mem(instance->numberOfProcessors());
-    std::vector<std::set<std::pair<unsigned, unsigned>> > evictable(instance->numberOfProcessors());
+    std::vector<std::set<std::pair<std::pair<unsigned, unsigned>, unsigned>> > evictable(instance->numberOfProcessors());
     std::vector<std::set<unsigned> > non_evictable(instance->numberOfProcessors());
 
-    std::vector<bool> in_slow_mem(instance->getComputationalDag().numberOfVertices(), false);
-
-    // last point where each node is required on each proc - autoevict afterwards
-    std::vector<std::vector<unsigned> > last_used_at(instance->getComputationalDag().numberOfVertices(),
-        std::vector<unsigned>(instance->numberOfProcessors(), instance->getComputationalDag().numberOfVertices()));
+    std::vector<bool> in_slow_mem(N, false);
     
-    // supersteps where each node is required on a given proc
-    std::vector<std::vector<std::deque<unsigned> > > used_at(instance->getComputationalDag().numberOfVertices(),
-        std::vector<std::deque<unsigned> >(instance->numberOfProcessors()));
+    // superstep-step pairs where a node is required (on a given proc)
+    std::vector<std::vector<std::deque<std::pair<unsigned, unsigned> > > > used_at(N, std::vector<std::deque<std::pair<unsigned, unsigned> > >(instance->numberOfProcessors()));
     
-    // iterator to place in evictable
-    std::vector<std::vector<std::set<std::pair<unsigned, unsigned> >::iterator > > place_in_evictable(instance->getComputationalDag().numberOfVertices(),
-        std::vector<std::set<std::pair<unsigned, unsigned> >::iterator>(instance->numberOfProcessors()));
+    // iterator to its position in "evictable" - for efficient delete
+    std::vector<std::vector<std::set<std::pair<std::pair<unsigned, unsigned>, unsigned> >::iterator > > place_in_evictable(N,
+        std::vector<std::set<std::pair<std::pair<unsigned, unsigned>, unsigned> >::iterator>(instance->numberOfProcessors()));
 
-    for(unsigned step=0; step<number_of_supersteps; ++step)
+    // utility for LRU eviction strategy
+    std::vector<std::vector<unsigned> > node_last_used_on_proc;
+    if(evict_rule == CACHE_EVICTION_STRATEGY::LEAST_RECENTLY_USED)
+        node_last_used_on_proc.resize(N, std::vector<unsigned>(instance->numberOfProcessors(), 0));
+    std::vector<unsigned> total_step_count_on_proc(instance->numberOfProcessors(), 0);
+
+    // NOTE - conversion currently assumes that input schedule has no recomputation -> TODO for later
+    std::vector<unsigned> assigned_processor(N);
+    std::vector<unsigned> assigned_superstep(N);
+    for(unsigned superstep=0; superstep<number_of_supersteps; ++superstep)
         for(unsigned proc=0; proc<instance->numberOfProcessors(); ++proc)
-            for(unsigned node : top_order_for_proc_superstep[proc][step])
+            for(unsigned stepIndex = 0; stepIndex < compute_steps_for_proc_superstep[proc][superstep].size(); ++stepIndex)
             {
+                unsigned node = compute_steps_for_proc_superstep[proc][superstep][stepIndex].node;
+                assigned_processor[node] = proc;
+                assigned_superstep[node] = superstep;
+            }
+
+    for(unsigned superstep=0; superstep<number_of_supersteps; ++superstep)
+        for(unsigned proc=0; proc<instance->numberOfProcessors(); ++proc)
+            for(unsigned stepIndex = 0; stepIndex < compute_steps_for_proc_superstep[proc][superstep].size(); ++stepIndex)
+            {
+                unsigned node = compute_steps_for_proc_superstep[proc][superstep][stepIndex].node;
                 for(unsigned pred : instance->getComputationalDag().parents(node))
-                    last_used_at[pred][proc] = node;
-                for(unsigned succ : instance->getComputationalDag().children(node))
-                    used_at[node][proc].push_back(assignedSuperstep(succ));
+                    used_at[pred][proc].emplace_back(superstep, stepIndex);
             }
     
-    for(unsigned node=0; node<instance->getComputationalDag().numberOfVertices(); ++node)
+    for(unsigned node=0; node<N; ++node)
         for(unsigned proc=0; proc<instance->numberOfProcessors(); ++proc)
             place_in_evictable[node][proc] = evictable[proc].end();
 
     // iterate through schedule
-    for(unsigned step=0; step<number_of_supersteps; ++step)
+    for(unsigned superstep=0; superstep<number_of_supersteps; ++superstep)
     {
         for(unsigned proc=0; proc<instance->numberOfProcessors(); ++proc)
         {
-            if(top_order_for_proc_superstep[proc][step].empty())
+            if(compute_steps_for_proc_superstep[proc][superstep].empty())
                 continue;
 
-            // before compute phase
-            std::map<unsigned, unsigned> last_used_in_this_superstep;
+            // before compute phase, evict data in comm phase of previous superstep
             std::set<unsigned> new_values_needed;
-            for(unsigned node : top_order_for_proc_superstep[proc][step])
+            for(unsigned stepIndex = 0; stepIndex < compute_steps_for_proc_superstep[proc][superstep].size(); ++stepIndex)
+            {
+                unsigned node = compute_steps_for_proc_superstep[proc][superstep][stepIndex].node;
                 for(unsigned pred : instance->getComputationalDag().parents(node))
-                    if(assignedSuperstep(pred) < step)
+                    if(assigned_superstep[pred] < superstep)
                     {
                         non_evictable[proc].insert(pred);
 
@@ -432,25 +339,24 @@ void BspMemSchedule::SetMemoryMovement(bool clever_evict)
 
                         if(in_mem[proc].find(pred) == in_mem[proc].end())
                             new_values_needed.insert(pred);
-
-                        last_used_in_this_superstep[pred] = node;
                     }
+            }
             
             for(unsigned node : new_values_needed)
             {
                 in_mem[proc].insert(node);
                 mem_used[proc] += instance->getComputationalDag().nodeWorkWeight(node);
-                nodes_sent_down[proc][step-1].push_back(node);
+                nodes_sent_down[proc][superstep-1].push_back(node);
                 if(!in_slow_mem[node])
                 {
                     in_slow_mem[node] = true;
-                    nodes_sent_up[assignedProcessor(node)][assignedSuperstep(node)].push_back(node);
+                    nodes_sent_up[assigned_processor[node]][assigned_superstep[node]].push_back(node);
                 }
             }
 
-            unsigned first_node_weight = instance->getComputationalDag().nodeWorkWeight(top_order_for_proc_superstep[proc][step][0]);
+            unsigned first_node_weight = instance->getComputationalDag().nodeWorkWeight(compute_steps_for_proc_superstep[proc][superstep][0].node);
 
-            while(mem_used[proc] + first_node_weight > memory_limit)
+            while(mem_used[proc] + first_node_weight > memory_limit) // no sliding pebbles for now
             {
                 unsigned evicted = (--evictable[proc].end())->second;
                 evictable[proc].erase(--evictable[proc].end());
@@ -459,33 +365,32 @@ void BspMemSchedule::SetMemoryMovement(bool clever_evict)
                 mem_used[proc] -= instance->getComputationalDag().nodeWorkWeight(evicted);
                 in_mem[proc].erase(evicted);
 
-                nodes_evicted_in_comm[proc][step-1].push_back(evicted);
+                nodes_evicted_in_comm[proc][superstep-1].push_back(evicted);
                 if(!in_slow_mem[evicted])
                 {
                     in_slow_mem[evicted] = true;
-                    nodes_sent_up[assignedProcessor(evicted)][assignedSuperstep(evicted)].push_back(evicted);
+                    nodes_sent_up[assigned_processor[evicted]][assigned_superstep[evicted]].push_back(evicted);
                 }
             }
 
-            // check if new nodes will be needed after this phase
+            // check if the new nodes will be needed after (and thus cannot be deleted during) this compute phase
             std::map<unsigned, bool> needed_after;
-            for(unsigned node : top_order_for_proc_superstep[proc][step])
+            for(const auto& computeStep : compute_steps_for_proc_superstep[proc][superstep])
             {
-                needed_after[node] = false;
-                for(unsigned succ : instance->getComputationalDag().children(node))
-                    if(assignedSuperstep(succ) > step)
-                        needed_after[node] = true;
-                if(instance->getComputationalDag().numberOfChildren(node) == 0)
-                    needed_after[node] = true;
+                needed_after[computeStep.node] = false;
+                for(unsigned succ : instance->getComputationalDag().children(computeStep.node))
+                    if(assigned_superstep[succ] > superstep)
+                        needed_after[computeStep.node] = true;
             }
+            
 
             // during compute phase
-            for(unsigned idx = 0; idx < top_order_for_proc_superstep[proc][step].size(); ++idx)
+            for(unsigned stepIndex = 0; stepIndex < compute_steps_for_proc_superstep[proc][superstep].size(); ++stepIndex)
             {
-                unsigned node = top_order_for_proc_superstep[proc][step][idx];
+                unsigned node = compute_steps_for_proc_superstep[proc][superstep][stepIndex].node;
                 unsigned node_weight = instance->getComputationalDag().nodeWorkWeight(node);
 
-                if(idx > 0)
+                if(stepIndex > 0)
                 {
                     //evict nodes to make space
                     while(mem_used[proc] + node_weight > memory_limit)
@@ -497,7 +402,7 @@ void BspMemSchedule::SetMemoryMovement(bool clever_evict)
                         mem_used[proc] -= instance->getComputationalDag().nodeWorkWeight(evicted);
                         in_mem[proc].erase(evicted);
 
-                        nodes_evicted_after[top_order_for_proc_superstep[proc][step][idx-1]].push_back(evicted);
+                        compute_steps_for_proc_superstep[proc][superstep][stepIndex-1].nodes_evicted_after.push_back(evicted);
                     }
                 }
 
@@ -505,40 +410,73 @@ void BspMemSchedule::SetMemoryMovement(bool clever_evict)
                 mem_used[proc] += node_weight;
 
                 non_evictable[proc].insert(node);
+
+                if(evict_rule == CACHE_EVICTION_STRATEGY::LEAST_RECENTLY_USED) // update usage times for LRU strategy
+                {
+                    ++total_step_count_on_proc[proc];
+                    node_last_used_on_proc[node][proc] = total_step_count_on_proc[proc];
+                    for(unsigned pred : instance->getComputationalDag().parents(node))
+                        node_last_used_on_proc[pred][proc] = total_step_count_on_proc[proc];
+                }
                 
                 for(unsigned pred : instance->getComputationalDag().parents(node))
                 {
                     used_at[pred][proc].pop_front();
 
                     // autoevict
-                    if(last_used_at[pred][proc] == node && (assignedSuperstep(pred)<step || !needed_after[pred]))
+                    if(used_at[pred][proc].empty() && (assigned_superstep[pred]<superstep || !needed_after[pred]))
                     {
                         in_mem[proc].erase(pred);
                         non_evictable[proc].erase(pred);
                         mem_used[proc] -= instance->getComputationalDag().nodeWorkWeight(pred);
-                        nodes_evicted_after[node].push_back(pred);
+                        compute_steps_for_proc_superstep[proc][superstep][stepIndex].nodes_evicted_after.push_back(pred);
                     }
-                    else if(assignedSuperstep(pred)<step && last_used_in_this_superstep[pred] == node)
+                    else if(assigned_superstep[pred]<superstep && used_at[pred][proc].front().first > superstep)
                     {
                         non_evictable[proc].erase(pred);
 
-                        unsigned prio = clever_evict ? used_at[pred][proc].front() : 2000000-pred;
+                        std::pair<unsigned, unsigned> prio;
+                        if(evict_rule == CACHE_EVICTION_STRATEGY::FORESIGHT)
+                            prio = used_at[pred][proc].front();
+                        else if(evict_rule == CACHE_EVICTION_STRATEGY::LEAST_RECENTLY_USED)
+                            prio = std::make_pair(UINT_MAX - node_last_used_on_proc[pred][proc], node);
+                        else if(evict_rule == CACHE_EVICTION_STRATEGY::LARGEST_ID)
+                            prio = std::make_pair(pred, 0);
+
                         place_in_evictable[pred][proc] = evictable[proc].emplace(prio, pred).first;
                     }
                 }
                 
             }
 
-
             // after compute phase
             for(unsigned node : non_evictable[proc])
             {
-                unsigned prio = clever_evict ? used_at[node][proc].front() : 2000000-node;
-                place_in_evictable[node][proc] = evictable[proc].emplace(prio, node).first;
+                if(used_at[node][proc].empty())
+                {
+                    mem_used[proc] -= instance->getComputationalDag().nodeWorkWeight(node);
+                    in_mem[proc].erase(node);
+                    nodes_evicted_in_comm[proc][superstep].push_back(node);
+                    in_slow_mem[node] = true;
+                    nodes_sent_up[proc][superstep].push_back(node);
+                }
+                else
+                {
+                    std::pair<unsigned, unsigned> prio;
+                    if(evict_rule == CACHE_EVICTION_STRATEGY::FORESIGHT)
+                        prio = used_at[node][proc].front();
+                    else if(evict_rule == CACHE_EVICTION_STRATEGY::LEAST_RECENTLY_USED)
+                        prio = std::make_pair(UINT_MAX - node_last_used_on_proc[node][proc], node);
+                    else if(evict_rule == CACHE_EVICTION_STRATEGY::LARGEST_ID)
+                        prio = std::make_pair(node, 0);
+
+                    place_in_evictable[node][proc] = evictable[proc].emplace(prio, node).first;
+                }
             }
             non_evictable[proc].clear();
         }
     }
+
 }
 
 bool BspMemSchedule::isValid()
@@ -553,20 +491,26 @@ bool BspMemSchedule::isValid()
         for(unsigned proc=0; proc<instance->numberOfProcessors(); ++proc)
         {
             // computation phase
-            for(unsigned node : top_order_for_proc_superstep[proc][step])
+            for(const auto& computeStep : compute_steps_for_proc_superstep[proc][step])
             {
-                for(unsigned pred : instance->getComputationalDag().parents(node))
+                if(!instance->isCompatible(computeStep.node, proc))
+                    return false;
+
+                for(unsigned pred : instance->getComputationalDag().parents(computeStep.node))
                     if(!in_fast_mem[pred][proc])
                         return false;
                 
-                in_fast_mem[node][proc] = true;
-                mem_used[proc] += instance->getComputationalDag().nodeWorkWeight(node);
+                in_fast_mem[computeStep.node][proc] = true;
+                mem_used[proc] += instance->getComputationalDag().nodeWorkWeight(computeStep.node);
 
                 if(mem_used[proc] > memory_limit)
-                    return false;
+                        return false;
 
-                for(unsigned to_remove : nodes_evicted_after[node])
+                for(unsigned to_remove : computeStep.nodes_evicted_after)
                 {
+                    if(!in_fast_mem[to_remove][proc])
+                        return false;
+
                     in_fast_mem[to_remove][proc] = false;
                     mem_used[proc] -= instance->getComputationalDag().nodeWorkWeight(to_remove);
                 }
@@ -582,6 +526,9 @@ bool BspMemSchedule::isValid()
             }
             for(unsigned node : nodes_evicted_in_comm[proc][step])
             {
+                if(!in_fast_mem[node][proc])
+                    return false;
+
                 in_fast_mem[node][proc] = false;
                 mem_used[proc] -= instance->getComputationalDag().nodeWorkWeight(node);
             }
@@ -606,48 +553,6 @@ bool BspMemSchedule::isValid()
     }
 
     return true;
-}
-
-unsigned BspMemSchedule::getCost()
-{
-    unsigned cost = 0;
-
-    for(unsigned step=0; step<number_of_supersteps; ++step)
-    {
-        unsigned max_compute = 0;
-        for(unsigned proc=0; proc<instance->numberOfProcessors(); ++proc)
-        {
-            unsigned compute_cost = 0;
-            for(unsigned node : top_order_for_proc_superstep[proc][step])
-                compute_cost += instance->getComputationalDag().nodeWorkWeight(node);
-            
-            if(compute_cost > max_compute)
-                max_compute = compute_cost;
-        }
-        cost += max_compute;
-
-        unsigned max_up = 0, max_down = 0;
-        for(unsigned proc=0; proc<instance->numberOfProcessors(); ++proc)
-        {
-            unsigned cost_up = 0, cost_down = 0;
-            for(unsigned node : nodes_sent_up[proc][step])
-                cost_up += instance->getComputationalDag().nodeWorkWeight(node);
-            for(unsigned node : nodes_sent_down[proc][step])
-                cost_down += instance->getComputationalDag().nodeWorkWeight(node);
-            
-            if(cost_up > max_up)
-                max_up = cost_up;
-            if(cost_down > max_down)
-                max_down = cost_down;
-        }
-        cost += (max_up + max_down) * instance->communicationCosts();
-
-        if(max_up + max_down > 0)
-            cost += instance->synchronisationCosts();
-
-    }
-
-    return cost;
 }
 
 unsigned BspMemSchedule::minimumMemoryRequired(const BspInstance& instance)

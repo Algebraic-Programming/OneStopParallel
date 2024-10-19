@@ -68,7 +68,7 @@ void ComputationalDag::printGraph(std::ostream &os) const {
         for (const auto &e : out_edges(v)) {
             const auto &vc = target(e);
             os << "  +--(comm=" << edgeCommunicationWeight(e) << ")--> [" << vc << "]{work=" << nodeWorkWeight(vc)
-               << ", comm=" << nodeCommunicationWeight(vc) << "}\n";
+               << ", comm=" << nodeCommunicationWeight(vc) << ", type=" << nodeType(vc) << "}\n";
         }
     }
 }
@@ -662,4 +662,13 @@ int ComputationalDag::get_max_memory_weight() const {
         max_memory_weight = std::max(max_memory_weight, nodeMemoryWeight(node));
     }
     return max_memory_weight;
+}
+
+unsigned ComputationalDag::getNumberOfNodeTypes() const {
+    unsigned numberOfTypes = 1;
+    for (unsigned node = 0; node < numberOfVertices(); node++)
+        if(nodeType(node) >= numberOfTypes)
+            numberOfTypes = nodeType(node)+1;
+
+    return numberOfTypes;
 }

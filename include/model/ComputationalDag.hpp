@@ -34,13 +34,14 @@ limitations under the License.
 
 struct Vertex {
 
-    Vertex() : workWeight(0), communicationWeight(0), memoryWeight(0), mtx_entry(1.0) {}
-    Vertex(int workWeight_, int communicationWeight_, int memoryWeight_, double mtx = 1.0)
-        : workWeight(workWeight_), communicationWeight(communicationWeight_), memoryWeight(memoryWeight_), mtx_entry(mtx) {}
+    Vertex() : workWeight(0), communicationWeight(0), memoryWeight(0), nodeType(0), mtx_entry(1.0) {}
+    Vertex(int workWeight_, int communicationWeight_, int memoryWeight_, unsigned nodeType_ = 0, double mtx = 1.0)
+        : workWeight(workWeight_), communicationWeight(communicationWeight_), memoryWeight(memoryWeight_), nodeType(nodeType_), mtx_entry(mtx) {}
 
     int workWeight;
     int communicationWeight;
     int memoryWeight;
+    unsigned nodeType;
 
     double mtx_entry;
 };
@@ -121,6 +122,25 @@ class ComputationalDag {
 
         for (size_t i = 0; i < out_.size(); ++i) {
             addVertex(workW_[i], commW_[i]);
+        }
+        for (size_t i = 0; i < out_.size(); ++i) {
+            const auto &v_idx = boost::vertex(i, graph);
+            for (const auto &j : out_[i]) {
+                addEdge(v_idx, boost::vertex(j, graph));
+            }
+        }
+    }
+
+    ComputationalDag(const std::vector<std::vector<int>> &out_, const std::vector<int> &workW_,
+                     const std::vector<int> &commW_, const std::vector<unsigned> &nodeType_) {
+        graph.m_vertices.reserve(out_.size());
+
+        assert(out_.size() == workW_.size());
+        assert(out_.size() == commW_.size());
+        assert(out_.size() == nodeType_.size());
+
+        for (size_t i = 0; i < out_.size(); ++i) {
+            addVertex(workW_[i], commW_[i], nodeType_[i]);
         }
         for (size_t i = 0; i < out_.size(); ++i) {
             const auto &v_idx = boost::vertex(i, graph);
@@ -215,6 +235,7 @@ class ComputationalDag {
     int nodeWorkWeight(const VertexType &v) const { return (*this)[v].workWeight; }
     int nodeCommunicationWeight(const VertexType &v) const { return (*this)[v].communicationWeight; }
     int nodeMemoryWeight(const VertexType &v) const { return (*this)[v].memoryWeight; }
+    unsigned nodeType(const VertexType &v) const { return (*this)[v].nodeType; }
   
     int edgeCommunicationWeight(const EdgeType &e) const { return (*this)[e].communicationWeight; }
 
@@ -259,6 +280,8 @@ class ComputationalDag {
 
     void setNodeWorkWeight(const VertexType &v, const int work_weight) { graph[v].workWeight = work_weight; }
 
+    void setNodeType(const VertexType &v, const unsigned node_type) { graph[v].nodeType = node_type; }
+
     void setNodeCommunicationWeight(const VertexType &v, const int comm_weight) {
         graph[v].communicationWeight = comm_weight;
     }
@@ -267,8 +290,8 @@ class ComputationalDag {
         graph[e].communicationWeight = comm_weight;
     }
 
-    VertexType addVertex(const int work_weight, const int comm_weight, const int memory_weight = 0) {
-        return boost::add_vertex(Vertex{work_weight, comm_weight, memory_weight}, graph);
+    VertexType addVertex(const int work_weight, const int comm_weight, const int memory_weight = 0, const int node_type = 0) {
+        return boost::add_vertex(Vertex{work_weight, comm_weight, memory_weight, node_type}, graph);
     }
 
     EdgeType addEdge(const VertexType &src, const VertexType &tar, int memory_weight = DEFAULT_EDGE_COMM_WEIGHT);
@@ -338,7 +361,9 @@ class ComputationalDag {
     double average_degree() const;
 
 
-    int get_max_memory_weight() const; 
+    int get_max_memory_weight() const;
+
+    unsigned getNumberOfNodeTypes() const;
 
 
 };

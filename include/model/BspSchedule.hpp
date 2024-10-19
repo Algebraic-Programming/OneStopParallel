@@ -257,6 +257,7 @@ class BspSchedule : public IBspSchedule {
      * @return True if the schedule satisfies the precedence constraints of the computational DAG, false otherwise.
      */
     bool satisfiesPrecedenceConstraints() const;
+    bool satisfiesNodeTypeConstraints() const;
     bool satisfiesMemoryConstraints() const;
 
     void setAutoCommunicationSchedule();

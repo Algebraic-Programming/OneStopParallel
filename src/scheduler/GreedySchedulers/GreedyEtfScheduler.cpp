@@ -33,6 +33,7 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyEtfScheduler::computeSchedule(const 
         case PERSISTENT_AND_TRANSIENT:
             current_proc_persistent_memory = std::vector<int>(instance.numberOfProcessors(), 0);
             current_proc_transient_memory = std::vector<int>(instance.numberOfProcessors(), 0);
+            break;
 
         case GLOBAL:
             throw std::invalid_argument("Global memory constraint not supported");
@@ -123,6 +124,10 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyEtfScheduler::computeSchedule(const 
 bool GreedyEtfScheduler::check_mem_feasibility(const BspInstance &instance, const std::set<intPair> &ready) const {
 
     if (instance.getArchitecture().getMemoryConstraintType() == PERSISTENT_AND_TRANSIENT) {
+
+        if (ready.empty()) {
+            return true;
+        }
 
         for (const auto &node_pair : ready) {
             for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {

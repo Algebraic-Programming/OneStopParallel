@@ -54,6 +54,7 @@ void BspArchitecture::setSendCosts(const std::vector<std::vector<unsigned int>> 
 void BspArchitecture::setNumberOfProcessors(unsigned int num_proc) {
 
     number_processors = num_proc;
+    processor_type = std::vector<unsigned int>(number_processors, 0);
     send_costs =
         std::vector<std::vector<unsigned int>>(number_processors, std::vector<unsigned int>(number_processors, 1));
     for (unsigned i = 0; i < number_processors; i++) {
@@ -113,4 +114,13 @@ bool BspArchitecture::are_send_cost_numa() {
         }
     }
     return false;
+}
+
+unsigned BspArchitecture::getNumberOfProcessorTypes() const {
+    unsigned numberOfTypes = 1;
+    for (unsigned p = 0; p < number_processors; p++)
+        if(processor_type[p] >= numberOfTypes)
+            numberOfTypes = processor_type[p]+1;
+
+    return numberOfTypes;
 }
