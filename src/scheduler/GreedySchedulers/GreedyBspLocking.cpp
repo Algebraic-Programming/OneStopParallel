@@ -41,9 +41,7 @@ std::vector<int> GreedyBspLocking::get_longest_path(const ComputationalDag &grap
     return longest_path;
 }
 
-std::pair<int, double> GreedyBspLocking::computeScore(VertexType node, unsigned proc,
-                                                      const std::vector<std::vector<bool>> &procInHyperedge,
-                                                      const BspInstance &instance) {
+std::pair<int, double> GreedyBspLocking::computeScore(VertexType node, unsigned proc, const BspInstance &instance) {
 
     int score = 0;
     for (const auto &succ : instance.getComputationalDag().children(node)) {
@@ -114,9 +112,6 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyBspLocking::computeSchedule(const Bs
     ready_phase.clear();
     ready_phase.resize(N, -1);
 
-    std::vector<std::vector<bool>> procInHyperedge =
-        std::vector<std::vector<bool>>(N, std::vector<bool>(params_p, false));
-
     std::vector<std::set<VertexType>> procReady(params_p);
     std::set<VertexType> allReady;
 
@@ -133,15 +128,16 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyBspLocking::computeSchedule(const Bs
         ready_phase[v] = params_p;
 
         for (unsigned proc = 0; proc < params_p; ++proc) {
-
-            heap_node new_node(v, default_value[v], G.numberOfChildren(v));
-            node_all_proc_heap_handles[proc][v] = max_all_proc_score_heap[proc].push(new_node);
+            if(instance.isCompatible(v, proc)) {
+                heap_node new_node(v, default_value[v], G.numberOfChildren(v));
+                node_all_proc_heap_handles[proc][v] = max_all_proc_score_heap[proc].push(new_node);
+            }
         }
     }
 
     unsigned supstepIdx = 0;
     bool endSupStep = false;
-    counter = 0;
+
     while (!ready.empty() || !finishTimes.empty()) {
 
         if (finishTimes.empty() && endSupStep) {
@@ -170,7 +166,10 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyBspLocking::computeSchedule(const Bs
                 ready_phase[v] = params_p;
                 for (unsigned proc = 0; proc < params_p; ++proc) {
 
-                    std::pair<int, double> score = computeScore(v, proc, procInHyperedge, instance);
+                    if(!instance.isCompatible(v, proc))
+                        continue;
+
+                    std::pair<int, double> score = computeScore(v, proc, instance);
                     heap_node new_node(v, score.first, G.numberOfChildren(v));
                     node_all_proc_heap_handles[proc][v] = max_all_proc_score_heap[proc].push(new_node);
                 }
@@ -232,12 +231,16 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyBspLocking::computeSchedule(const Bs
                             }
                         }
 
+                        if (!instance.isCompatible(succ, schedule.assignedProcessor(node)))
+                            canAdd = false;
+                        
+
                         if (canAdd) {
                             procReady[schedule.assignedProcessor(node)].insert(succ);
                             ready_phase[succ] = schedule.assignedProcessor(node);
 
                             std::pair<int, double> score =
-                                computeScore(succ, schedule.assignedProcessor(node), procInHyperedge, instance);
+                                computeScore(succ, schedule.assignedProcessor(node), instance);
                             heap_node new_node(succ, score.first, G.numberOfChildren(succ));
 
                             node_proc_heap_handles[schedule.assignedProcessor(node)][succ] =
@@ -250,9 +253,6 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyBspLocking::computeSchedule(const Bs
             }
         }
 
-        /*if (endSupStep)
-            continue;*/
-
         // Assign new jobs to processors
         if (!CanChooseNode(instance, allReady, procReady, procFree)) {
             endSupStep = true;
@@ -262,17 +262,13 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyBspLocking::computeSchedule(const Bs
 
             VertexType nextNode = std::numeric_limits<VertexType>::max();
             unsigned nextProc = instance.numberOfProcessors();
-            bool should = Choose(instance, procInHyperedge, allReady, procReady, procFree, nextNode, nextProc,
+            Choose(instance, allReady, procReady, procFree, nextNode, nextProc,
                                  endSupStep, max_finish_time - time);
 
             if (nextNode == std::numeric_limits<VertexType>::max() || nextProc == instance.numberOfProcessors()) {
                 endSupStep = true;
                 break;
             }
-
-            /*if (!should && (float)free < (float)params_p * max_percent_idle_processors) {
-                break;
-            }*/
 
             if (ready_phase[nextNode] < params_p) {
 
@@ -286,8 +282,10 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyBspLocking::computeSchedule(const Bs
                 allReady.erase(nextNode);
 
                 for (unsigned proc = 0; proc < instance.numberOfProcessors(); ++proc) {
-                    max_all_proc_score_heap[proc].erase(node_all_proc_heap_handles[proc][nextNode]);
-                    node_all_proc_heap_handles[proc].erase(nextNode);
+                    if(instance.isCompatible(nextNode, proc)) {
+                        max_all_proc_score_heap[proc].erase(node_all_proc_heap_handles[proc][nextNode]);
+                        node_all_proc_heap_handles[proc].erase(nextNode);
+                    }
                 }
             }
 
@@ -296,7 +294,6 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyBspLocking::computeSchedule(const Bs
             schedule.setAssignedSuperstep(nextNode, supstepIdx);
 
             ready_phase[nextNode] = -1;
-            ++counter;
 
             if (use_memory_constraint) {
 
@@ -345,35 +342,6 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyBspLocking::computeSchedule(const Bs
             --free;
 
             // update auxiliary structures
-            /*procInHyperedge[nextNode][nextProc] = true;
-
-            for (const auto &pred : G.parents(nextNode)) {
-
-                if (procInHyperedge[pred][nextProc]) {
-                    continue;
-                }
-
-                procInHyperedge[pred][nextProc] = true;
-
-                for (const auto &child : G.children(pred)) {
-
-                    if (child != nextNode && procReady[nextProc].find(child) != procReady[nextProc].end()) {
-
-                        (*node_proc_heap_handles[nextProc][child]).secondary_score +=
-                            (double)instance.getComputationalDag().nodeCommunicationWeight(pred) /
-                            (double)instance.getComputationalDag().numberOfChildren(pred);
-                        max_proc_score_heap[nextProc].update(node_proc_heap_handles[nextProc][child]);
-                    }
-
-                    if (child != nextNode && allReady.find(child) != allReady.end()) {
-
-                        (*node_all_proc_heap_handles[nextProc][child]).secondary_score +=
-                            (double)instance.getComputationalDag().nodeCommunicationWeight(pred) /
-                            (double)instance.getComputationalDag().numberOfChildren(pred);
-                        max_all_proc_score_heap[nextProc].update(node_all_proc_heap_handles[nextProc][child]);
-                    }
-                }
-            }*/
 
             for (const auto &succ : G.children(nextNode)) {
 
@@ -387,7 +355,7 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyBspLocking::computeSchedule(const Bs
                         }
                         if (ready_phase[parent] == params_p) {
                             for (int proc = 0; proc < params_p; ++proc) {
-                                if (proc == locked[succ])
+                                if (proc == locked[succ] || !instance.isCompatible(parent, proc))
                                     continue;
 
                                 (*node_all_proc_heap_handles[proc][parent]).score += lock_penalty;
@@ -409,7 +377,7 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyBspLocking::computeSchedule(const Bs
                         }
                         if (ready_phase[parent] == params_p) {
                             for (int proc = 0; proc < params_p; ++proc) {
-                                if (proc == nextProc)
+                                if (proc == nextProc || !instance.isCompatible(parent, proc))
                                     continue;
 
                                 (*node_all_proc_heap_handles[proc][parent]).score -= lock_penalty;
@@ -426,7 +394,7 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyBspLocking::computeSchedule(const Bs
             return {ERROR, schedule};
         }
 
-        if (allReady.empty() && free > params_p * max_percent_idle_processors &&
+        if (free > params_p * max_percent_idle_processors &&
             ((!increase_parallelism_in_new_superstep) ||
              ready.size() >= std::min(std::min(params_p, (unsigned)(1.2 * (params_p - free))),
                                       params_p - free + ((unsigned)(0.5 * free))))) {
@@ -441,8 +409,9 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyBspLocking::computeSchedule(const Bs
     return {SUCCESS, schedule};
 };
 
-bool GreedyBspLocking::Choose(const BspInstance &instance, const std::vector<std::vector<bool>> &procInHyperedge,
-                              std::set<VertexType> &allReady, std::vector<std::set<VertexType>> &procReady,
+// return value currently unused, remains a future improvement option
+// (returning false indicates that the best move is still not particularly promising)
+bool GreedyBspLocking::Choose(const BspInstance &instance, std::set<VertexType> &allReady, std::vector<std::set<VertexType>> &procReady,
                               const std::vector<bool> &procFree, VertexType &node, unsigned &p, const bool endSupStep,
                               const size_t remaining_time) {
 
@@ -492,9 +461,9 @@ bool GreedyBspLocking::Choose(const BspInstance &instance, const std::vector<std
         while (endSupStep && (remaining_time < instance.getComputationalDag().nodeWorkWeight(top_node.node))) {
             allReady.erase(top_node.node);
             for (unsigned proc_del = 0; proc_del < instance.numberOfProcessors(); proc_del++) {
-                if (proc_del == proc)
+                if (proc_del == proc || !instance.isCompatible(top_node.node, proc_del))
                     continue;
-                max_all_proc_score_heap[proc_del].erase(node_all_proc_heap_handles[proc][top_node.node]);
+                max_all_proc_score_heap[proc_del].erase(node_all_proc_heap_handles[proc_del][top_node.node]);
                 node_all_proc_heap_handles[proc_del].erase(top_node.node);
             }
             max_all_proc_score_heap[proc].pop();
@@ -596,9 +565,8 @@ bool GreedyBspLocking::CanChooseNode(const BspInstance &instance, const std::set
         if (procFree[i] && !procReady[i].empty())
             return true;
 
-    if (!allReady.empty())
-        for (unsigned i = 0; i < instance.numberOfProcessors(); ++i)
-            if (procFree[i])
+    for (unsigned i = 0; i < instance.numberOfProcessors(); ++i)
+            if (procFree[i] && !max_all_proc_score_heap[i].empty())
                 return true;
 
     return false;

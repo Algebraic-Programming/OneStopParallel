@@ -72,7 +72,7 @@ class BspMemSchedule {
     unsigned memory_limit;
 
     // nodes evicted from cache after the computation of a specific node
-    //std::vector<std::vector<unsigned> > nodes_evicted_after;
+    std::vector<std::vector<unsigned> > nodes_evicted_after;
 
     // nodes evicted from cache in a given superstep's comm phase
     std::vector<std::vector<std::vector<unsigned> > > nodes_evicted_in_comm;

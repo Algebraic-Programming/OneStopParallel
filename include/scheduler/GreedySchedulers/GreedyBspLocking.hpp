@@ -79,8 +79,6 @@ class GreedyBspLocking : public Scheduler {
 
     std::vector<int> default_value;
 
-    int counter; // temporary, only for debugging
-
     float max_percent_idle_processors;
     bool increase_parallelism_in_new_superstep;
     bool use_memory_constraint = false;
@@ -88,14 +86,12 @@ class GreedyBspLocking : public Scheduler {
     std::vector<int> current_proc_transient_memory;
 
     std::pair<int, double> computeScore(VertexType node, unsigned proc,
-                                        const std::vector<std::vector<bool>> &procInHyperedge,
                                         const BspInstance &instance);
 
     bool check_mem_feasibility(const BspInstance &instance, const std::set<VertexType> &allReady,
                                const std::vector<std::set<VertexType>> &procReady) const;
 
-    bool Choose(const BspInstance &instance, const std::vector<std::vector<bool>> &procInHyperedge,
-                std::set<VertexType> &allReady, std::vector<std::set<VertexType>> &procReady,
+    bool Choose(const BspInstance &instance, std::set<VertexType> &allReady, std::vector<std::set<VertexType>> &procReady,
                 const std::vector<bool> &procFree, VertexType &node, unsigned &p, const bool endSupStep,
                 const size_t remaining_time);
 

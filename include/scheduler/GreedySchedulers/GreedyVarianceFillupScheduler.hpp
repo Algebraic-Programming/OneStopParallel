@@ -59,16 +59,16 @@ class GreedyVarianceFillupScheduler : public Scheduler {
         }
     };
 
-   bool check_mem_feasibility(const BspInstance &instance, const std::set<std::pair<VertexType, double>, VarianceCompare> &allReady,
+   bool check_mem_feasibility(const BspInstance &instance, const std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> &allReady,
                                                const std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> &procReady) const;
 
     void Choose(const BspInstance &instance, const std::vector<double> &work_variance,
-                std::set<std::pair<VertexType, double>, VarianceCompare> &allReady, std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> &procReady,
+                std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> &allReady, std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> &procReady,
                 const std::vector<bool> &procFree, VertexType &node, unsigned &p,
                 const bool endSupStep, const size_t remaining_time) const;
 
 
-    bool CanChooseNode(const BspInstance &instance, const std::set<std::pair<VertexType, double>, VarianceCompare> &allReady,
+    bool CanChooseNode(const BspInstance &instance, const std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> &allReady,
                        const std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> &procReady, const std::vector<bool> &procFree) const;
 
   public:

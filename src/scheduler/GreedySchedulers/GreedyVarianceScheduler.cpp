@@ -88,8 +88,9 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyVarianceScheduler::computeSchedule(c
     // auto variance_compare = [work_variances] (const VertexType& l, const VertexType& r) { return ((work_variances[l]
     // < work_variances[r]) || ((work_variances[l] == work_variances[r]) && (l > r))); };
     std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> procReady(params_p);
+    std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> allReady(instance.getArchitecture().getNumberOfProcessorTypes());
 
-    std::set<std::pair<VertexType, double>, VarianceCompare> allReady;
+    std::vector<std::vector<unsigned>> procTypesCompatibleWithNodeType = instance.getProcTypesCompatibleWithNodeType();
 
     std::vector<unsigned> nrPredecDone(N, 0);
     std::vector<bool> procFree(params_p, true);
@@ -100,7 +101,8 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyVarianceScheduler::computeSchedule(c
 
     for (const auto &v : G.sourceVertices()) {
         ready.insert(std::make_pair(v, work_variances[v]));
-        allReady.insert(std::make_pair(v, work_variances[v]));
+        for(unsigned procType : procTypesCompatibleWithNodeType[G.nodeType(v)])
+            allReady[procType].insert(std::make_pair(v, work_variances[v]));
     }
 
     unsigned supstepIdx = 0;
@@ -110,7 +112,15 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyVarianceScheduler::computeSchedule(c
             for (unsigned i = 0; i < params_p; ++i)
                 procReady[i].clear();
 
-            allReady = ready;
+            for(int procType = 0; procType < instance.getArchitecture().getNumberOfProcessorTypes(); ++procType)
+                allReady[procType].clear();
+
+            for(const auto &nodeAndValuePair : ready)
+            {
+                const unsigned node = nodeAndValuePair.first;
+                for(unsigned procType : procTypesCompatibleWithNodeType[G.nodeType(node)])
+                    allReady[procType].insert(allReady[procType].end(), nodeAndValuePair);
+            }
 
             ++supstepIdx;
 
@@ -167,6 +177,9 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyVarianceScheduler::computeSchedule(c
                             }
                         }
 
+                        if (!instance.isCompatible(succ, schedule.assignedProcessor(node)))
+                            canAdd = false;
+
                         if (canAdd) {
                             procReady[schedule.assignedProcessor(node)].insert(
                                 std::make_pair(succ, work_variances[succ]));
@@ -200,7 +213,8 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyVarianceScheduler::computeSchedule(c
                 procReady[nextProc].end()) {
                 procReady[nextProc].erase(std::make_pair(nextNode, work_variances[nextNode]));
             } else {
-                allReady.erase(std::make_pair(nextNode, work_variances[nextNode]));
+                for(unsigned procType : procTypesCompatibleWithNodeType[G.nodeType(nextNode)])
+                    allReady[procType].erase(std::make_pair(nextNode, work_variances[nextNode]));
             }
 
             ready.erase(std::make_pair(nextNode, work_variances[nextNode]));
@@ -257,7 +271,7 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyVarianceScheduler::computeSchedule(c
             return {ERROR, schedule};
         }
 
-        if (allReady.empty() && free > params_p * max_percent_idle_processors &&
+        if (free > params_p * max_percent_idle_processors &&
             ((!increase_parallelism_in_new_superstep) ||
              ready.size() >= std::min(std::min(params_p, (unsigned)(1.2 * (params_p - free))),
                                       params_p - free + ((unsigned)(0.5 * free)))))
@@ -273,24 +287,23 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyVarianceScheduler::computeSchedule(c
 
 // auxiliary - check if it is possible to assign a node at all
 bool GreedyVarianceScheduler::CanChooseNode(
-    const BspInstance &instance, const std::set<std::pair<VertexType, double>, VarianceCompare> &allReady,
+    const BspInstance &instance, const std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> &allReady,
     const std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> &procReady,
     const std::vector<bool> &procFree) const {
     for (unsigned i = 0; i < instance.numberOfProcessors(); ++i)
         if (procFree[i] && !procReady[i].empty())
             return true;
 
-    if (!allReady.empty())
-        for (unsigned i = 0; i < instance.numberOfProcessors(); ++i)
-            if (procFree[i])
-                return true;
+    for (unsigned i = 0; i < instance.numberOfProcessors(); ++i)
+        if (procFree[i] && !allReady[instance.getArchitecture().processorType(i)].empty())
+            return true;
 
     return false;
 };
 
 void GreedyVarianceScheduler::Choose(
     const BspInstance &instance, const std::vector<double> &work_variance,
-    const std::set<std::pair<VertexType, double>, VarianceCompare> &allReady,
+    const std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> &allReady,
     const std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> &procReady,
     const std::vector<bool> &procFree, VertexType &node, unsigned &p) const {
 
@@ -319,53 +332,55 @@ void GreedyVarianceScheduler::Choose(
     if (found_allocation)
         return;
 
-    for (auto it = allReady.begin(); it != allReady.cend(); it++) {
-        for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
-            if (!procFree[i])
-                continue;
+    for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
+        if (procFree[i] && !allReady[instance.getArchitecture().processorType(i)].empty()) {
+            // select node
+            for (auto it = allReady[instance.getArchitecture().processorType(i)].begin(); it != allReady[instance.getArchitecture().processorType(i)].end();) {
 
-            double score = it->second;
+                const double &score = it->second;
 
-            if (score > maxScore) {
-                if (use_memory_constraint) {
+                if (score > maxScore) {
+                    if (use_memory_constraint) {
 
-                    if (instance.getArchitecture().getMemoryConstraintType() == LOCAL) {
+                        if (instance.getArchitecture().getMemoryConstraintType() == LOCAL) {
 
-                        if (current_proc_persistent_memory[i] +
-                                instance.getComputationalDag().nodeMemoryWeight(it->first) <=
-                            instance.getArchitecture().memoryBound()) {
+                            if (current_proc_persistent_memory[i] +
+                                    instance.getComputationalDag().nodeMemoryWeight(it->first) <=
+                                instance.getArchitecture().memoryBound()) {
 
-                            node = it->first;
-                            p = i;
-                            return;
+                                node = it->first;
+                                p = i;
+                                return;
+                            }
+
+                        } else if (instance.getArchitecture().getMemoryConstraintType() == PERSISTENT_AND_TRANSIENT) {
+                            if (current_proc_persistent_memory[i] +
+                                    instance.getComputationalDag().nodeMemoryWeight(it->first) +
+                                    std::max(current_proc_transient_memory[i],
+                                            instance.getComputationalDag().nodeCommunicationWeight(it->first)) <=
+                                instance.getArchitecture().memoryBound()) {
+
+                                node = it->first;
+                                p = i;
+                                return;
+                            }
                         }
 
-                    } else if (instance.getArchitecture().getMemoryConstraintType() == PERSISTENT_AND_TRANSIENT) {
-                        if (current_proc_persistent_memory[i] +
-                                instance.getComputationalDag().nodeMemoryWeight(it->first) +
-                                std::max(current_proc_transient_memory[i],
-                                         instance.getComputationalDag().nodeCommunicationWeight(it->first)) <=
-                            instance.getArchitecture().memoryBound()) {
-
-                            node = it->first;
-                            p = i;
-                            return;
-                        }
+                    } else {
+                        node = it->first;
+                        p = i;
+                        return;
                     }
-
-                } else {
-
-                    node = it->first;
-                    p = i;
-                    return;
                 }
+                it++;
             }
+
         }
     }
 };
 
 bool GreedyVarianceScheduler::check_mem_feasibility(
-    const BspInstance &instance, const std::set<std::pair<VertexType, double>, VarianceCompare> &allReady,
+    const BspInstance &instance, const std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> &allReady,
     const std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> &procReady) const {
 
     if (instance.getArchitecture().getMemoryConstraintType() == LOCAL) {
@@ -388,19 +403,21 @@ bool GreedyVarianceScheduler::check_mem_feasibility(
             }
         }
 
-        if (!allReady.empty())
-            for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
+        for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
 
-                const std::pair<VertexType, double> &node_pair = *allReady.begin();
-                VertexType top_node = node_pair.first;
+            if(allReady[instance.getArchitecture().processorType(i)].empty())
+                continue;
 
-                if (current_proc_persistent_memory[i] + instance.getComputationalDag().nodeMemoryWeight(top_node) +
-                        std::max(current_proc_transient_memory[i],
-                                 instance.getComputationalDag().nodeCommunicationWeight(top_node)) <=
-                    instance.getArchitecture().memoryBound()) {
-                    return true;
-                }
+            const std::pair<VertexType, double> &node_pair = *allReady[instance.getArchitecture().processorType(i)].begin();
+            VertexType top_node = node_pair.first;
+
+            if (current_proc_persistent_memory[i] + instance.getComputationalDag().nodeMemoryWeight(top_node) +
+                    std::max(current_proc_transient_memory[i],
+                                instance.getComputationalDag().nodeCommunicationWeight(top_node)) <=
+                instance.getArchitecture().memoryBound()) {
+                return true;
             }
+        }
 
         return false;
     }

@@ -135,10 +135,11 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyBspFillupScheduler::computeSchedule(
             allReady.insert(node);
 
             for (unsigned proc = 0; proc < params_p; ++proc) {
+                if(instance.isCompatible(node, proc)){
 
-                // double score = computeScore(v, proc, procInHyperedge, instance);
-                heap_node new_node(node, 0.0);
-                node_all_proc_heap_handles[proc][node] = max_all_proc_score_heap[proc].push(new_node);
+                    heap_node new_node(node, 0.0);
+                    node_all_proc_heap_handles[proc][node] = max_all_proc_score_heap[proc].push(new_node);
+                }
             }
         }
     }
@@ -173,6 +174,9 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyBspFillupScheduler::computeSchedule(
 
             for (const auto &v : ready) {
                 for (unsigned proc = 0; proc < params_p; ++proc) {
+
+                    if(!instance.isCompatible(v, proc))
+                        continue;
 
                     double score = computeScore(v, proc, procInHyperedge, instance);
                     heap_node new_node(v, score);
@@ -236,6 +240,9 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyBspFillupScheduler::computeSchedule(
                             }
                         }
 
+                        if (!instance.isCompatible(succ, schedule.assignedProcessor(node)))
+                            canAdd = false;
+
                         if (canAdd) {
                             procReady[schedule.assignedProcessor(node)].insert(succ);
 
@@ -282,8 +289,10 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyBspFillupScheduler::computeSchedule(
                 allReady.erase(nextNode);
 
                 for (unsigned proc = 0; proc < instance.numberOfProcessors(); ++proc) {
-                    max_all_proc_score_heap[proc].erase(node_all_proc_heap_handles[proc][nextNode]);
-                    node_all_proc_heap_handles[proc].erase(nextNode);
+                    if(instance.isCompatible(nextNode, proc)) {
+                        max_all_proc_score_heap[proc].erase(node_all_proc_heap_handles[proc][nextNode]);
+                        node_all_proc_heap_handles[proc].erase(nextNode);
+                    }
                 }
             }
 
@@ -354,9 +363,17 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyBspFillupScheduler::computeSchedule(
                     if (child != nextNode && procReady[nextProc].find(child) != procReady[nextProc].end()) {
 
                         (*node_proc_heap_handles[nextProc][child]).score +=
-                            (double)instance.getComputationalDag().nodeCommunicationWeight(child) /
-                            (double)instance.getComputationalDag().numberOfChildren(child);
+                            (double)instance.getComputationalDag().nodeCommunicationWeight(pred) /
+                            (double)instance.getComputationalDag().numberOfChildren(pred);
                         max_proc_score_heap[nextProc].update(node_proc_heap_handles[nextProc][child]);
+                    }
+
+                    if (child != nextNode && allReady.find(child) != allReady.end() && instance.isCompatible(child, nextProc)) {
+
+                        (*node_all_proc_heap_handles[nextProc][child]).score +=
+                            (double)instance.getComputationalDag().nodeCommunicationWeight(pred) /
+                            (double)instance.getComputationalDag().numberOfChildren(pred);
+                        max_all_proc_score_heap[nextProc].update(node_all_proc_heap_handles[nextProc][child]);
                     }
                 }
             }
@@ -430,9 +447,9 @@ void GreedyBspFillupScheduler::Choose(const BspInstance &instance,
         while (endSupStep && (remaining_time < instance.getComputationalDag().nodeWorkWeight(top_node.node))) {
             allReady.erase(top_node.node);
             for (unsigned proc_del = 0; proc_del < instance.numberOfProcessors(); proc_del++) {
-                if (proc_del == proc)
+                if (proc_del == proc || !instance.isCompatible(top_node.node, proc_del))
                     continue;
-                max_all_proc_score_heap[proc_del].erase(node_all_proc_heap_handles[proc][top_node.node]);
+                max_all_proc_score_heap[proc_del].erase(node_all_proc_heap_handles[proc_del][top_node.node]);
                 node_all_proc_heap_handles[proc_del].erase(top_node.node);
             }
             max_all_proc_score_heap[proc].pop();
