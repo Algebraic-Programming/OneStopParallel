@@ -32,11 +32,24 @@ bool FunnelBfs::isCompatibleNodeType(const VertexType& new_node, const VertexTyp
 
 void FunnelBfs::run_in_contraction() {
     const ComputationalDag& graph = dag_history.back()->getComputationalDag();
+    const BspArchitecture &arch = dag_history.back()->getArchitecture();
 
     const std::unordered_set<EdgeType, EdgeType_hash> edge_mask = parameters.use_approx_transitive_reduction ? graph.long_edges_in_triangles_parallel() : std::unordered_set<EdgeType, EdgeType_hash>();
 
     std::vector<std::unordered_set<VertexType>> partition;
     std::vector<bool> visited(graph.numberOfVertices(), false);
+
+    std::vector<unsigned> max_memory_per_vertex_type;
+    if (use_architecture_memory_contraints) {
+        max_memory_per_vertex_type = std::vector<unsigned>(graph.getNumberOfNodeTypes(), 0);
+        for (unsigned proc = 0; proc < arch.numberOfProcessors(); proc++) {
+            for (unsigned vert_type = 0; vert_type < graph.getNumberOfNodeTypes(); vert_type++) {
+                if (dag_history.back()->isCompatibleType(vert_type, arch.processorType(proc))) {
+                    max_memory_per_vertex_type[vert_type] = std::max(max_memory_per_vertex_type[vert_type], arch.memoryBound(proc));
+                }
+            }
+        }
+    }
 
     std::vector<VertexType> top_order = graph.GetTopOrder();
 
@@ -68,8 +81,11 @@ void FunnelBfs::run_in_contraction() {
             if (!isCompatibleNodeType(active_node, bottom_node, *(dag_history.back()))) continue;
             if (work_weight_of_group + graph.nodeWorkWeight(active_node) > parameters.max_work_weight) continue;
             if (memory_weight_of_group + graph.nodeMemoryWeight(active_node) > parameters.max_memory_weight) continue;
+            if (use_architecture_memory_contraints && (memory_weight_of_group + graph.nodeMemoryWeight(active_node) > max_memory_per_vertex_type[graph.nodeType(bottom_node)])) continue;
 
             group.emplace(active_node);
+            work_weight_of_group += graph.nodeWorkWeight(active_node);
+            memory_weight_of_group += graph.nodeMemoryWeight(active_node);
 
             for (const EdgeType in_edge : graph.in_edges(active_node)) {
                 if (parameters.use_approx_transitive_reduction && (edge_mask.find(in_edge) != edge_mask.cend())) continue;
@@ -111,11 +127,24 @@ void FunnelBfs::run_in_contraction() {
 
 void FunnelBfs::run_out_contraction() {
     const ComputationalDag& graph = dag_history.back()->getComputationalDag();
+    const BspArchitecture &arch = dag_history.back()->getArchitecture();
 
     const std::unordered_set<EdgeType, EdgeType_hash> edge_mask = parameters.use_approx_transitive_reduction ? graph.long_edges_in_triangles_parallel() : std::unordered_set<EdgeType, EdgeType_hash>();
 
     std::vector<std::unordered_set<VertexType>> partition;
     std::vector<bool> visited(graph.numberOfVertices(), false);
+
+    std::vector<unsigned> max_memory_per_vertex_type;
+    if (use_architecture_memory_contraints) {
+        max_memory_per_vertex_type = std::vector<unsigned>(graph.getNumberOfNodeTypes(), 0);
+        for (unsigned proc = 0; proc < arch.numberOfProcessors(); proc++) {
+            for (unsigned vert_type = 0; vert_type < graph.getNumberOfNodeTypes(); vert_type++) {
+                if (dag_history.back()->isCompatibleType(vert_type, arch.processorType(proc))) {
+                    max_memory_per_vertex_type[vert_type] = std::max(max_memory_per_vertex_type[vert_type], arch.memoryBound(proc));
+                }
+            }
+        }
+    }
 
     std::vector<VertexType> top_order = graph.GetTopOrder();
 
@@ -147,8 +176,11 @@ void FunnelBfs::run_out_contraction() {
             if (!isCompatibleNodeType(active_node, top_node, *(dag_history.back()))) continue;
             if (work_weight_of_group + graph.nodeWorkWeight(active_node) > parameters.max_work_weight) continue;
             if (memory_weight_of_group + graph.nodeMemoryWeight(active_node) > parameters.max_memory_weight) continue;
+            if (use_architecture_memory_contraints && (memory_weight_of_group + graph.nodeMemoryWeight(active_node) > max_memory_per_vertex_type[graph.nodeType(top_node)])) continue;
 
             group.emplace(active_node);
+            work_weight_of_group += graph.nodeWorkWeight(active_node);
+            memory_weight_of_group += graph.nodeMemoryWeight(active_node);
 
             for (const EdgeType out_edge : graph.out_edges(active_node)) {
                 if (parameters.use_approx_transitive_reduction && (edge_mask.find(out_edge) != edge_mask.cend())) continue;

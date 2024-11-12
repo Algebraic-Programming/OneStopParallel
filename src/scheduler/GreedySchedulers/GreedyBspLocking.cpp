@@ -342,6 +342,7 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyBspLocking::computeSchedule(const Bs
                     procReady[nextProc].erase(node);
                     max_proc_score_heap[nextProc].erase(node_proc_heap_handles[nextProc][node]);
                     node_proc_heap_handles[nextProc].erase(node);
+                    ready_phase[node] = -1;
                 }
             }
 

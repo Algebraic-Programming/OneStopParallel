@@ -431,12 +431,14 @@ ComputationalDag::contracted_graph_without_loops(const std::vector<std::unordere
     for (auto &part : partition) {
         int part_ww = 0;
         int part_cw = 0;
+        int part_mw = 0;
         for (const VertexType &node : part) {
             part_ww += nodeWorkWeight(node);
             part_cw += nodeCommunicationWeight(node);
+            part_mw += nodeMemoryWeight(node);
         }
 
-        VertexType part_node = contr_graph.addVertex(part_ww, part_cw);
+        VertexType part_node = contr_graph.addVertex(part_ww, part_cw, part_mw);
 
         for (const VertexType &node : part) {
             contraction_map[node] = part_node;
@@ -446,7 +448,7 @@ ComputationalDag::contracted_graph_without_loops(const std::vector<std::unordere
     for (auto node : vertices()) {
         if (allocated_into_new_graph[node])
             continue;
-        contraction_map[node] = contr_graph.addVertex(nodeWorkWeight(node), nodeCommunicationWeight(node));
+        contraction_map[node] = contr_graph.addVertex(nodeWorkWeight(node), nodeCommunicationWeight(node), nodeMemoryWeight(node));
         allocated_into_new_graph[node] = true;
     }
     assert(std::all_of(allocated_into_new_graph.begin(), allocated_into_new_graph.end(),

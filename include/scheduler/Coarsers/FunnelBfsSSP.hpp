@@ -33,6 +33,8 @@ class FunnelBfsSSP : public SSPInstanceContractor {
     private:
         FunnelBfs_parameters parameters;
 
+        bool use_architecture_memory_contraints;
+
         void run_in_contraction();
 
         void run_out_contraction();
@@ -43,12 +45,22 @@ class FunnelBfsSSP : public SSPInstanceContractor {
         RETURN_STATUS run_contractions() override;
 
     public:
-        FunnelBfsSSP(FunnelBfs_parameters parameters_ = FunnelBfs_parameters()) : SSPInstanceContractor(), parameters(parameters_) { }
+        FunnelBfsSSP(FunnelBfs_parameters parameters_ = FunnelBfs_parameters()) : SSPInstanceContractor(), parameters(parameters_), use_architecture_memory_contraints(false) { }
         FunnelBfsSSP(SSPScheduler* sched_, FunnelBfs_parameters parameters_ = FunnelBfs_parameters()) : FunnelBfsSSP(sched_, nullptr, parameters_) { }
-        FunnelBfsSSP(SSPScheduler* sched_, SSPImprovementScheduler* improver_, FunnelBfs_parameters parameters_ = FunnelBfs_parameters()) : SSPInstanceContractor(sched_, improver_), parameters(parameters_) { }
+        FunnelBfsSSP(SSPScheduler* sched_, SSPImprovementScheduler* improver_, FunnelBfs_parameters parameters_ = FunnelBfs_parameters()) : SSPInstanceContractor(sched_, improver_), parameters(parameters_), use_architecture_memory_contraints(false) { }
         FunnelBfsSSP(unsigned timelimit, SSPScheduler* sched_, FunnelBfs_parameters parameters_ = FunnelBfs_parameters()) : FunnelBfsSSP(timelimit, sched_, nullptr, parameters_) { }
-        FunnelBfsSSP(unsigned timelimit, SSPScheduler* sched_, SSPImprovementScheduler* improver_, FunnelBfs_parameters parameters_ = FunnelBfs_parameters()) : SSPInstanceContractor(timelimit, sched_, improver_), parameters(parameters_) { }
+        FunnelBfsSSP(unsigned timelimit, SSPScheduler* sched_, SSPImprovementScheduler* improver_, FunnelBfs_parameters parameters_ = FunnelBfs_parameters()) : SSPInstanceContractor(timelimit, sched_, improver_), parameters(parameters_), use_architecture_memory_contraints(false) { }
         virtual ~FunnelBfsSSP() = default;
 
         std::string getCoarserName() const override { return "FunnelBfs"; }
+
+        virtual void setUseMemoryConstraint(bool use_architecture_memory_contraints_) override {
+            use_architecture_memory_contraints = use_architecture_memory_contraints_;
+            if (sched) {
+                sched->setUseMemoryConstraint(use_architecture_memory_contraints_);
+            }
+            if (improver) {
+                improver->setUseMemoryConstraint(use_architecture_memory_contraints_);
+            }
+        }
 };

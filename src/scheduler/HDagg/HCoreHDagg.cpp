@@ -246,6 +246,86 @@ float HCoreHDagg::score_scaled_superstep_cost(unsigned max_work_weight, unsigned
     return static_cast<float>(max_work_weight + instance.getArchitecture().synchronisationCosts()) / static_cast<float>(total_work_weight);;
 }
 
+float HCoreHDagg::future_score_weight_balance(const std::set<VertexType> &ready_vertices_forward_check, const BspInstance &instance) {
+    const ComputationalDag &graph = instance.getComputationalDag();
+    const BspArchitecture &arch = instance.getArchitecture();
+
+    unsigned largest_work_weight = 0;
+    unsigned total_work = 0;
+    std::vector<float> total_work_weight_per_processor_type(arch.getNumberOfProcessorTypes(), 0);
+
+    for (const VertexType &vert : ready_vertices_forward_check) {
+        largest_work_weight = std::max(largest_work_weight, static_cast<unsigned>(graph.nodeWorkWeight(vert)));
+        total_work += graph.nodeWorkWeight(vert);
+    }
+
+    for (const VertexType &vert : ready_vertices_forward_check) {
+        std::vector<unsigned> compatible_processor_types;
+
+        for (unsigned proc_type = 0; proc_type < arch.getNumberOfProcessorTypes(); proc_type++) {
+            if (instance.isCompatibleType(graph.nodeType(vert), proc_type)) {
+                compatible_processor_types.emplace_back(proc_type);
+            }
+        }
+
+        for (const unsigned proc_type : compatible_processor_types) {
+            total_work_weight_per_processor_type[proc_type] += static_cast<float>(graph.nodeWorkWeight(vert)) / static_cast<float>(compatible_processor_types.size());
+        }
+    }
+
+    std::vector<unsigned> number_of_processors_of_each_type(arch.getNumberOfProcessorTypes(), 0);
+    for (unsigned proc = 0; proc < instance.numberOfProcessors(); proc++) {
+        number_of_processors_of_each_type[arch.processorType(proc)]++;
+    }
+
+    float max_work = static_cast<float>(largest_work_weight);
+    for (unsigned proc_type = 0; proc_type < arch.getNumberOfProcessorTypes(); proc_type++) {
+        max_work = std::max(max_work, total_work_weight_per_processor_type[proc_type] / static_cast<float>(number_of_processors_of_each_type[proc_type]));
+    }
+
+    return max_work / static_cast<float>(total_work);
+}
+
+float HCoreHDagg::future_score_scaled_superstep_cost(const std::set<VertexType> &ready_vertices_forward_check, const BspInstance &instance) {
+    const ComputationalDag &graph = instance.getComputationalDag();
+    const BspArchitecture &arch = instance.getArchitecture();
+
+    unsigned largest_work_weight = 0;
+    unsigned total_work = 0;
+    std::vector<float> total_work_weight_per_processor_type(arch.getNumberOfProcessorTypes(), 0);
+
+    for (const VertexType &vert : ready_vertices_forward_check) {
+        largest_work_weight = std::max(largest_work_weight, static_cast<unsigned>(graph.nodeWorkWeight(vert)));
+        total_work += graph.nodeWorkWeight(vert);
+    }
+
+    for (const VertexType &vert : ready_vertices_forward_check) {
+        std::vector<unsigned> compatible_processor_types;
+
+        for (unsigned proc_type = 0; proc_type < arch.getNumberOfProcessorTypes(); proc_type++) {
+            if (instance.isCompatibleType(graph.nodeType(vert), proc_type)) {
+                compatible_processor_types.emplace_back(proc_type);
+            }
+        }
+
+        for (const unsigned proc_type : compatible_processor_types) {
+            total_work_weight_per_processor_type[proc_type] += static_cast<float>(graph.nodeWorkWeight(vert)) / static_cast<float>(compatible_processor_types.size());
+        }
+    }
+
+    std::vector<unsigned> number_of_processors_of_each_type(arch.getNumberOfProcessorTypes(), 0);
+    for (unsigned proc = 0; proc < instance.numberOfProcessors(); proc++) {
+        number_of_processors_of_each_type[arch.processorType(proc)]++;
+    }
+
+    float max_work = static_cast<float>(largest_work_weight);
+    for (unsigned proc_type = 0; proc_type < arch.getNumberOfProcessorTypes(); proc_type++) {
+        max_work = std::max(max_work, total_work_weight_per_processor_type[proc_type] / static_cast<float>(number_of_processors_of_each_type[proc_type]));
+    }
+
+    return (max_work + static_cast<float>(arch.synchronisationCosts())) / static_cast<float>(total_work);
+}
+
 
 std::pair<RETURN_STATUS, BspSchedule> HCoreHDagg::computeSchedule(const BspInstance &instance) {
 
@@ -299,9 +379,20 @@ std::pair<RETURN_STATUS, BspSchedule> HCoreHDagg::computeSchedule(const BspInsta
         std::vector<std::vector<VertexType>> best_allocation;
         float best_score = std::numeric_limits<float>::max();
 
-        std::set<VertexType> ready_vertices_forward_check = ready_vertices;
         std::vector<unsigned> number_of_unprocessed_parents_forward_check = number_of_unprocessed_parents;
         std::vector<bool> vertex_scheduled_forward_check = vertex_scheduled;
+
+        std::set<VertexType> ready_vertices_forward_check;
+        std::vector<unsigned> number_of_unprocessed_parents_future;
+        if (params.consider_future_score) {     
+            ready_vertices_forward_check = ready_vertices;
+            number_of_unprocessed_parents_future = number_of_unprocessed_parents;
+        }
+
+        std::set<VertexType> ready_vertices_for_node_type_forward_check;
+        if (params.front_type == HCoreHDagg_parameters::FRONT_TYPE::WAVEFRONT_VERTEXTYPE) {
+            ready_vertices_for_node_type_forward_check = ready_vertices;
+        }
 
         bool compute_next_iteration = true;
         unsigned repeated_improve_failures = 0;
@@ -353,6 +444,24 @@ std::pair<RETURN_STATUS, BspSchedule> HCoreHDagg::computeSchedule(const BspInsta
                     break;
             }
 
+            for (const VertexType& vert : task_to_schedule) {
+                vertex_scheduled_forward_check[vert] = true;
+            }
+
+            if (params.consider_future_score) {
+                for (const VertexType &vert : task_to_schedule) {
+                    ready_vertices_forward_check.erase(vert);
+                }
+                for (const VertexType &vert : task_to_schedule) {
+                    for (const VertexType &child : graph.children(vert)) {
+                        number_of_unprocessed_parents_future[child]--;
+                        if (number_of_unprocessed_parents_future[child] == 0 && (!vertex_scheduled_forward_check[child])) {
+                            ready_vertices_forward_check.emplace(child);
+                        }
+                    }
+                }
+            }
+
             if (score <= best_score) {
                 compute_next_iteration = true;
                 
@@ -367,12 +476,32 @@ std::pair<RETURN_STATUS, BspSchedule> HCoreHDagg::computeSchedule(const BspInsta
 
                 repeated_improve_failures = 0;
                 best_score = score;
+
+                if (params.consider_future_score) {
+                    float future_score = std::numeric_limits<float>::max();
+                    switch (params.score_func) {
+                        case HCoreHDagg_parameters::SCORE_FUNC::WEIGHT_BALANCE:
+                            future_score = future_score_weight_balance(ready_vertices_forward_check, instance);
+                            break;
+                        case HCoreHDagg_parameters::SCORE_FUNC::SCALED_SUPERSTEP_COST:
+                            future_score = future_score_scaled_superstep_cost(ready_vertices_forward_check, instance);
+                            break;
+                        default:
+                            // no default
+                            break;
+                    }
+                    if (future_score < best_score * 0.875) {
+                        compute_next_iteration = false;
+                    }
+
+                }
             } else {
                 repeated_improve_failures++;
                 if (repeated_improve_failures < params.max_repeated_failures_to_improve) {
                     compute_next_iteration = true;
                 }
             }
+
             if (total_work_weight < params.min_total_work_weight_check || max_work_weight < params.min_max_work_weight_check) {
                 compute_next_iteration = true;
             }
@@ -381,13 +510,6 @@ std::pair<RETURN_STATUS, BspSchedule> HCoreHDagg::computeSchedule(const BspInsta
             }
             if (!compute_next_iteration) break;
 
-            for (const VertexType& vert : task_to_schedule) {
-                vertex_scheduled_forward_check[vert] = true;
-            }
-
-            for (const VertexType &vert : task_to_schedule) {
-                ready_vertices_forward_check.erase(vert);
-            }
 
             // Get the new vertices
             switch (params.front_type) {
@@ -395,7 +517,10 @@ std::pair<RETURN_STATUS, BspSchedule> HCoreHDagg::computeSchedule(const BspInsta
                     task_to_schedule = wavefront_get_next_vertices_forward_check(task_to_schedule, number_of_unprocessed_parents_forward_check, uf_structure, instance);
                     break;
                 case HCoreHDagg_parameters::FRONT_TYPE::WAVEFRONT_VERTEXTYPE:
-                    task_to_schedule = wavefront_vertextype_get_next_vertices_forward_check(task_to_schedule, number_of_unprocessed_parents_forward_check, ready_vertices_forward_check, preferred_order_of_adding_vertex_type_wavefront, uf_structure, instance);
+                    for (const VertexType &vert : task_to_schedule) {
+                        ready_vertices_for_node_type_forward_check.erase(vert);
+                    }
+                    task_to_schedule = wavefront_vertextype_get_next_vertices_forward_check(task_to_schedule, number_of_unprocessed_parents_forward_check, ready_vertices_for_node_type_forward_check, preferred_order_of_adding_vertex_type_wavefront, uf_structure, instance);
                     break;
                 default:
                     // no default

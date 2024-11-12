@@ -64,6 +64,8 @@ class FunnelBfs : public InstanceContractor {
     private:
         FunnelBfs_parameters parameters;
 
+        bool use_architecture_memory_contraints;
+
         void run_in_contraction();
 
         void run_out_contraction();
@@ -74,12 +76,22 @@ class FunnelBfs : public InstanceContractor {
         RETURN_STATUS run_contractions() override;
 
     public:
-        FunnelBfs(FunnelBfs_parameters parameters_ = FunnelBfs_parameters()) : InstanceContractor(), parameters(parameters_) { }
+        FunnelBfs(FunnelBfs_parameters parameters_ = FunnelBfs_parameters()) : InstanceContractor(), parameters(parameters_), use_architecture_memory_contraints(false) { }
         FunnelBfs(Scheduler* sched_, FunnelBfs_parameters parameters_ = FunnelBfs_parameters()) : FunnelBfs(sched_, nullptr, parameters_) { }
-        FunnelBfs(Scheduler* sched_, ImprovementScheduler* improver_, FunnelBfs_parameters parameters_ = FunnelBfs_parameters()) : InstanceContractor(sched_, improver_), parameters(parameters_) { }
+        FunnelBfs(Scheduler* sched_, ImprovementScheduler* improver_, FunnelBfs_parameters parameters_ = FunnelBfs_parameters()) : InstanceContractor(sched_, improver_), parameters(parameters_), use_architecture_memory_contraints(false) { }
         FunnelBfs(unsigned timelimit, Scheduler* sched_, FunnelBfs_parameters parameters_ = FunnelBfs_parameters()) : FunnelBfs(timelimit, sched_, nullptr, parameters_) { }
-        FunnelBfs(unsigned timelimit, Scheduler* sched_, ImprovementScheduler* improver_, FunnelBfs_parameters parameters_ = FunnelBfs_parameters()) : InstanceContractor(timelimit, sched_, improver_), parameters(parameters_) { }
+        FunnelBfs(unsigned timelimit, Scheduler* sched_, ImprovementScheduler* improver_, FunnelBfs_parameters parameters_ = FunnelBfs_parameters()) : InstanceContractor(timelimit, sched_, improver_), parameters(parameters_), use_architecture_memory_contraints(false) { }
         virtual ~FunnelBfs() = default;
 
         std::string getCoarserName() const override { return "FunnelBfs"; }
+
+        virtual void setUseMemoryConstraint(bool use_architecture_memory_contraints_) override {
+            use_architecture_memory_contraints = use_architecture_memory_contraints_;
+            if (sched) {
+                sched->setUseMemoryConstraint(use_architecture_memory_contraints_);
+            }
+            if (improver) {
+                improver->setUseMemoryConstraint(use_architecture_memory_contraints_);
+            }
+        }
 };

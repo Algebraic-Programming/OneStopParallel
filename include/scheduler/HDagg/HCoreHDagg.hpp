@@ -66,8 +66,10 @@ struct HCoreHDagg_parameters {
     FRONT_TYPE front_type;
     SCORE_FUNC score_func;
 
-    HCoreHDagg_parameters(unsigned min_total_work_weight_check_ = 0, unsigned min_max_work_weight_check_ = 0, unsigned max_repeated_failures_to_improve_ = 2, FRONT_TYPE front_type_ = FRONT_TYPE::WAVEFRONT, SCORE_FUNC score_func_ = SCORE_FUNC::SCALED_SUPERSTEP_COST)
-        : min_total_work_weight_check(min_total_work_weight_check_), min_max_work_weight_check(min_max_work_weight_check_), max_repeated_failures_to_improve(max_repeated_failures_to_improve_), front_type(front_type_), score_func(score_func_) {}
+    bool consider_future_score;
+
+    HCoreHDagg_parameters(unsigned min_total_work_weight_check_ = 0, unsigned min_max_work_weight_check_ = 0, unsigned max_repeated_failures_to_improve_ = 2, FRONT_TYPE front_type_ = FRONT_TYPE::WAVEFRONT, SCORE_FUNC score_func_ = SCORE_FUNC::SCALED_SUPERSTEP_COST, bool consider_future_score_ = true)
+        : min_total_work_weight_check(min_total_work_weight_check_), min_max_work_weight_check(min_max_work_weight_check_), max_repeated_failures_to_improve(max_repeated_failures_to_improve_), front_type(front_type_), score_func(score_func_), consider_future_score(consider_future_score_) {}
 };
 
 /**
@@ -83,6 +85,10 @@ class HCoreHDagg : public Scheduler {
     // scoring functions
     float score_weight_balance(unsigned max_work_weight, unsigned total_work_weight);
     float score_scaled_superstep_cost(unsigned max_work_weight, unsigned total_work_weight, const BspInstance &instance);
+
+    // future scoring functions
+    float future_score_weight_balance(const std::set<VertexType> &ready_vertices_forward_check, const BspInstance &instance);
+    float future_score_scaled_superstep_cost(const std::set<VertexType> &ready_vertices_forward_check, const BspInstance &instance);
 
     // For wavefront vertex additions
     std::vector<VertexType> wavefront_initial_vertices(const std::vector<unsigned> &number_of_unprocessed_parents, const BspInstance &instance);
