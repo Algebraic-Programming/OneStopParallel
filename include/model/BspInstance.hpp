@@ -38,7 +38,7 @@ class BspInstance {
     BspArchitecture architecture;
 
     // for problem instances with heterogeneity
-    std::vector<std::vector<bool>> nodeProcessorCompatibility;
+    std::vector<std::vector<bool>> nodeProcessorCompatibility = std::vector<std::vector<bool>>({{true}});
 
   public:
     /**
@@ -52,7 +52,7 @@ class BspInstance {
      * @param cdag The computational DAG for the instance.
      * @param architecture The BSP architecture for the instance.
      */
-    BspInstance(ComputationalDag cdag, BspArchitecture architecture) : cdag(cdag), architecture(architecture) {}
+    BspInstance(ComputationalDag cdag, BspArchitecture architecture, std::vector<std::vector<bool>> nodeProcessorCompatibility_ = std::vector<std::vector<bool>>({{true}})) : cdag(cdag), architecture(architecture), nodeProcessorCompatibility(nodeProcessorCompatibility_) {}
 
     /**
      * @brief Returns a reference to the BSP architecture for the instance.
@@ -153,8 +153,19 @@ class BspInstance {
      */
     inline bool isNumaInstance() const { return architecture.isNumaArchitecture(); }
 
-    inline unsigned memoryBound() const { return architecture.memoryBound(); }
     inline unsigned memoryBound(unsigned proc) const { return architecture.memoryBound(proc); }
+
+    unsigned maxMemoryBoundProcType(unsigned procType) const { return architecture.maxMemoryBoundProcType(procType); }
+
+    unsigned maxMemoryBoundNodeType(unsigned nodeType) const {
+        unsigned max_mem = 0;
+        for (unsigned proc = 0; proc < architecture.getNumberOfProcessorTypes(); proc++) {
+            if (isCompatibleType(nodeType, architecture.processorType(proc))) {
+                max_mem = std::max(max_mem, architecture.memoryBound(proc));
+            }
+        }
+        return max_mem;
+    }
 
     /**
      * @brief Sets the communication costs of the BSP architecture.
@@ -178,15 +189,56 @@ class BspInstance {
     inline void setNumberOfProcessors(const unsigned int num) { architecture.setNumberOfProcessors(num); }
 
     bool check_memory_constraints_feasibility() const {
-        return cdag.get_max_memory_weight() <= architecture.memoryBound();
+
+        std::vector<unsigned> max_memory_per_proc_type(architecture.getNumberOfProcessorTypes(), 0);
+        for (unsigned proc = 0; proc < architecture.numberOfProcessors(); proc++) {
+            max_memory_per_proc_type[architecture.processorType(proc)] = std::max(max_memory_per_proc_type[architecture.processorType(proc)], architecture.memoryBound(proc));
+        }
+        for (unsigned vertType = 0; vertType < cdag.getNumberOfNodeTypes(); vertType++) {
+            int max_memory_of_type = cdag.get_max_memory_weight(vertType);
+            bool fits = false;
+
+            for (unsigned proc_type = 0; proc_type < architecture.getNumberOfProcessorTypes(); proc_type++) {
+                if (isCompatibleType(vertType, proc_type)) {
+                    fits = fits | (max_memory_of_type <= max_memory_per_proc_type[proc_type]);
+                    if (fits) break;
+                }
+            }
+
+            if (!fits) return false;
+        }
+
+        return true;
     }
 
     void adjust_memory_constraints() {
 
-        const auto max_memory_weight = cdag.get_max_memory_weight();
-        if (max_memory_weight > architecture.memoryBound()) {
-            std::cout << "Warning: Computational DAG memory weight exceeds architecture memory bound. Adjusting memory bound to " << max_memory_weight << std::endl;
-            architecture.setMemoryBound(cdag.get_max_memory_weight());
+        std::vector<unsigned> max_memory_per_proc_type(architecture.getNumberOfProcessorTypes(), 0);
+        for (unsigned proc = 0; proc < architecture.numberOfProcessors(); proc++) {
+            max_memory_per_proc_type[architecture.processorType(proc)] = std::max(max_memory_per_proc_type[architecture.processorType(proc)], architecture.memoryBound(proc));
+        }
+        for (unsigned vertType = 0; vertType < cdag.getNumberOfNodeTypes(); vertType++) {
+            int max_memory_of_type = cdag.get_max_memory_weight(vertType);
+            bool fits = false;
+
+            for (unsigned proc_type = 0; proc_type < architecture.getNumberOfProcessorTypes(); proc_type++) {
+                if (isCompatibleType(vertType, proc_type)) {
+                    fits = fits | (max_memory_of_type <= max_memory_per_proc_type[proc_type]);
+                    if (fits) break;
+                }
+            }
+
+            if (!fits) {
+                std::cout << "Warning: Computational DAG memory weight exceeds architecture memory bound." << std::endl;
+                std::cout << "VertexType " << vertType << " has memory " << " and exceeds compatible processor types memory limit." << std::endl;
+
+                for (unsigned proc = 0; proc < architecture.numberOfProcessors(); proc++) {
+                    if (isCompatibleType(vertType, architecture.processorType(proc))) {
+                    std::cout << "Increasing memory of processor " << proc << " of type " << architecture.processorType(proc) << " to " << max_memory_of_type << "." << std::endl;
+                    architecture.setMemoryBound(max_memory_of_type, proc);
+                    }
+                }
+            }
         }
     }
 
@@ -196,10 +248,6 @@ class BspInstance {
 
     bool isCompatibleType(unsigned nodeType, unsigned processorType) const {
         
-        if(nodeType >= nodeProcessorCompatibility.size()
-            || processorType >= nodeProcessorCompatibility[nodeType].size())
-            return true;
-
         return nodeProcessorCompatibility[nodeType][processorType];
     }
 

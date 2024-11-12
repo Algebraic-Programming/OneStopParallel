@@ -56,11 +56,13 @@ class Funnel : public InstanceContractor {
     private:
         Funnel_parameters parameters;
 
-        void expand_in_group_dfs(const std::unordered_set<EdgeType, EdgeType_hash>& edge_mask, std::unordered_set<VertexType>& group, std::unordered_map<VertexType, unsigned>& children_not_in_group, long unsigned& group_weight, const double& max_weight, const VertexType active_node, bool& failed_to_add);
+        void expand_in_group_dfs(const std::unordered_set<EdgeType, EdgeType_hash>& edge_mask, std::unordered_set<VertexType>& group, std::unordered_map<VertexType, unsigned>& children_not_in_group, long unsigned& group_weight, const double& max_weight, const VertexType active_node, const VertexType sink_node, bool& failed_to_add);
         void run_in_contraction();
 
-        void expand_out_group_dfs(const std::unordered_set<EdgeType, EdgeType_hash>& edge_mask, std::unordered_set<VertexType>& group, std::unordered_map<VertexType, unsigned>& parents_not_in_group, long unsigned& group_weight, const double& max_weight, const VertexType active_node, bool& failed_to_add);
+        void expand_out_group_dfs(const std::unordered_set<EdgeType, EdgeType_hash>& edge_mask, std::unordered_set<VertexType>& group, std::unordered_map<VertexType, unsigned>& parents_not_in_group, long unsigned& group_weight, const double& max_weight, const VertexType active_node, const VertexType source_node, bool& failed_to_add);
         void run_out_contraction();
+
+        bool isCompatibleNodeType(const VertexType& new_node, const VertexType& old_node, const BspInstance& instance);
 
     protected:
         RETURN_STATUS run_contractions() override;

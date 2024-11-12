@@ -171,7 +171,7 @@ class BspInstance_csr {
      */
     inline bool isNumaInstance() const { return architecture.isNumaArchitecture(); }
 
-    inline unsigned memoryBound() const { return architecture.memoryBound(); }
+    inline std::vector<unsigned> memoryBound() const { return architecture.memoryBound(); }
     inline unsigned memoryBound(unsigned proc) const { return architecture.memoryBound(proc); }
 
     /**

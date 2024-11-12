@@ -71,9 +71,6 @@ class BspMemSchedule {
     // memory limit
     unsigned memory_limit;
 
-    // nodes evicted from cache after the computation of a specific node
-    std::vector<std::vector<unsigned> > nodes_evicted_after;
-
     // nodes evicted from cache in a given superstep's comm phase
     std::vector<std::vector<std::vector<unsigned> > > nodes_evicted_in_comm;
 
@@ -112,6 +109,27 @@ class BspMemSchedule {
       ConvertFromBsp(schedule);
     }
 
+    BspMemSchedule(const BspInstance &inst, unsigned Mem_limit,
+                   const std::vector<std::vector<std::vector<unsigned> > >& compute_steps,
+                   const std::vector<std::vector<std::vector<std::vector<unsigned> > > >& nodes_evicted_after_compute,
+                   const std::vector<std::vector<std::vector<unsigned> > >& nodes_sent_up_,
+                   const std::vector<std::vector<std::vector<unsigned> > >& nodes_sent_down_,
+                   const std::vector<std::vector<std::vector<unsigned> > >& nodes_evicted_in_comm_) :
+                   instance(&inst), memory_limit(Mem_limit), number_of_supersteps(0),
+                   nodes_sent_up(nodes_sent_up_), nodes_sent_down(nodes_sent_down_), nodes_evicted_in_comm(nodes_evicted_in_comm_)
+
+    {
+      compute_steps_for_proc_superstep.resize(compute_steps.size(), std::vector<std::vector<compute_step> >(compute_steps[0].size()));
+      for(unsigned proc = 0; proc < compute_steps.size(); ++proc)
+      {
+        number_of_supersteps = std::max(number_of_supersteps, (unsigned)compute_steps[proc].size());
+        for(unsigned supstep = 0; supstep < compute_steps[proc].size(); ++supstep)
+          for(unsigned step_index = 0; step_index < compute_steps[proc][supstep].size(); ++step_index)
+            compute_steps_for_proc_superstep[proc][supstep].emplace_back(compute_steps[proc][supstep][step_index],
+                                                                          nodes_evicted_after_compute[proc][supstep][step_index]);
+      }
+    }
+
     BspMemSchedule(const BspSchedule &schedule, unsigned Mem_limit, CACHE_EVICTION_STRATEGY evict_rule = LARGEST_ID)
     : instance(&schedule.getInstance()), memory_limit(Mem_limit) { ConvertFromBsp(schedule, evict_rule); }
 
@@ -120,6 +138,9 @@ class BspMemSchedule {
     // cost computation
     unsigned computeCost() const;
     unsigned computeAsynchronousCost() const;
+
+    // remove unnecessary steps (e.g. from ILP solution)
+    void cleanSchedule();
 
     // convert from unconstrained schedule
     void ConvertFromBsp(const BspSchedule &schedule, CACHE_EVICTION_STRATEGY evict_rule = LARGEST_ID);

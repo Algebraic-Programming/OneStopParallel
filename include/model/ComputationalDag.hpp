@@ -91,10 +91,12 @@ class ComputationalDag {
   private:
     GraphType graph;
 
+    unsigned number_of_vertex_types;
+
   public:
     ComputationalDag(const std::vector<std::vector<int>> &out_, const std::vector<int> &workW_,
                      const std::vector<int> &commW_,
-                     const std::unordered_map<std::pair<int, int>, int, pair_hash> &comm_edge_W) {
+                     const std::unordered_map<std::pair<int, int>, int, pair_hash> &comm_edge_W) : number_of_vertex_types(0) {
         graph.m_vertices.reserve(out_.size());
 
         assert(out_.size() == workW_.size());
@@ -110,11 +112,12 @@ class ComputationalDag {
                 addEdge(v_idx, boost::vertex(j, graph), comm_edge_W.at(std::make_pair(i, j)));
             }
         }
+        updateNumberOfNodeTypes();
     }
 
 
     ComputationalDag(const std::vector<std::vector<int>> &out_, const std::vector<int> &workW_,
-                     const std::vector<int> &commW_) {
+                     const std::vector<int> &commW_) : number_of_vertex_types(0) {
         graph.m_vertices.reserve(out_.size());
 
         assert(out_.size() == workW_.size());
@@ -129,10 +132,11 @@ class ComputationalDag {
                 addEdge(v_idx, boost::vertex(j, graph));
             }
         }
+        updateNumberOfNodeTypes();
     }
 
     ComputationalDag(const std::vector<std::vector<int>> &out_, const std::vector<int> &workW_,
-                     const std::vector<int> &commW_, const std::vector<unsigned> &nodeType_) {
+                     const std::vector<int> &commW_, const std::vector<unsigned> &nodeType_) : number_of_vertex_types(0) {
         graph.m_vertices.reserve(out_.size());
 
         assert(out_.size() == workW_.size());
@@ -148,13 +152,14 @@ class ComputationalDag {
                 addEdge(v_idx, boost::vertex(j, graph));
             }
         }
+        updateNumberOfNodeTypes();
     }
 
     /**
      * @brief Default constructor for the ComputationalDag class.
      */
-    explicit ComputationalDag() : graph(0) {}
-    explicit ComputationalDag(unsigned number_of_nodes) : graph(number_of_nodes) {}
+    explicit ComputationalDag() : graph(0), number_of_vertex_types(0) {}
+    explicit ComputationalDag(unsigned number_of_nodes) : graph(number_of_nodes), number_of_vertex_types(0) { updateNumberOfNodeTypes(); }
 
 
     unsigned int numberOfVertices() const { return boost::num_vertices(graph); }
@@ -277,10 +282,12 @@ class ComputationalDag {
 
     void setNodeMemoryWeight(const VertexType &v, const int memory_weight) { graph[v].memoryWeight = memory_weight; }
 
-
     void setNodeWorkWeight(const VertexType &v, const int work_weight) { graph[v].workWeight = work_weight; }
 
-    void setNodeType(const VertexType &v, const unsigned node_type) { graph[v].nodeType = node_type; }
+    void setNodeType(const VertexType &v, const unsigned node_type) {
+        graph[v].nodeType = node_type;
+        number_of_vertex_types = std::max(number_of_vertex_types, node_type + 1);
+    }
 
     void setNodeCommunicationWeight(const VertexType &v, const int comm_weight) {
         graph[v].communicationWeight = comm_weight;
@@ -290,7 +297,8 @@ class ComputationalDag {
         graph[e].communicationWeight = comm_weight;
     }
 
-    VertexType addVertex(const int work_weight, const int comm_weight, const int memory_weight = 0, const int node_type = 0) {
+    VertexType addVertex(const int work_weight, const int comm_weight, const int memory_weight = 0, const unsigned node_type = 0) {
+        number_of_vertex_types = std::max(number_of_vertex_types, node_type + 1);
         return boost::add_vertex(Vertex{work_weight, comm_weight, memory_weight, node_type}, graph);
     }
 
@@ -318,6 +326,8 @@ class ComputationalDag {
     size_t longestPath() const;
 
     std::vector<VertexType> longestChain() const;
+
+    int critical_path_weight() const;
 
     /**
      * @brief Computes contracted graph along the partition without self-loops.
@@ -361,9 +371,9 @@ class ComputationalDag {
     double average_degree() const;
 
 
+    int get_max_memory_weight(unsigned nodeType_) const;
     int get_max_memory_weight() const;
 
-    unsigned getNumberOfNodeTypes() const;
-
-
+    void updateNumberOfNodeTypes();
+    inline unsigned getNumberOfNodeTypes() const { return number_of_vertex_types; };
 };

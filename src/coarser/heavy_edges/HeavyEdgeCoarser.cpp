@@ -199,7 +199,7 @@ RETURN_STATUS HeavyEdgeCoarser::coarseDag(const ComputationalDag &dag_in, Comput
                              boost::out_edges(edge.m_target, graph_labeled))) {
 
                         const auto another_pair = boost::edge(in_edge.m_source, out_edge.m_target, graph_labeled);
-                        if (not pair.second) {
+                        if (not another_pair.second) {
                             const auto [new_edge, valid] =
                                 boost::add_edge(in_edge.m_source, out_edge.m_target, graph_labeled);
                             assert(valid);
@@ -223,6 +223,19 @@ RETURN_STATUS HeavyEdgeCoarser::coarseDag(const ComputationalDag &dag_in, Comput
 
         std::move(graph_labeled[edge.m_target].merged_labels.begin(), graph_labeled[edge.m_target].merged_labels.end(),
                   std::back_inserter(graph_labeled[edge.m_source].merged_labels));
+
+
+        while(boost::in_degree(edge.m_target, graph_labeled) > 0) {
+            const auto in_edge = *boost::in_edges(edge.m_target, graph_labeled).first;
+            boost::remove_edge(in_edge, graph_labeled);
+        }
+
+        while(boost::out_degree(edge.m_target, graph_labeled) > 0) {
+            const auto out_edge = *boost::out_edges(edge.m_target, graph_labeled).first;
+            boost::remove_edge(out_edge, graph_labeled);
+        }
+        
+
 
         boost::remove_vertex(edge.m_target, graph_labeled);
     }

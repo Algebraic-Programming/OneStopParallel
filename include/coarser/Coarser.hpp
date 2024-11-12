@@ -25,6 +25,7 @@ limitations under the License.
 
 #include "model/ComputationalDag.hpp"
 #include "scheduler/Scheduler.hpp"
+#include "model/DAGPartition.hpp"
 
 /**
  * @class Coarser
@@ -49,3 +50,7 @@ class Coarser {
         virtual RETURN_STATUS coarseDag(const ComputationalDag &dag_in, ComputationalDag &dag_out, std::vector<std::vector<VertexType>>& vertex_map) = 0;
         
 };
+
+std::pair<RETURN_STATUS, BspSchedule> pull_back_schedule(const BspInstance &instance_large, const BspSchedule &schedule_in, const std::vector<std::vector<VertexType>>& vertex_map);
+
+std::pair<RETURN_STATUS, DAGPartition> pull_back_partition(const BspInstance &instance_large, const DAGPartition &partition_in, const std::vector<std::vector<VertexType>>& vertex_map);

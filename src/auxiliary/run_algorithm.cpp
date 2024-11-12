@@ -163,6 +163,9 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
             ? scheduler.setMode(EtfMode::BL_EST)
             : scheduler.setMode(EtfMode::ETF);
 
+        
+
+
         return scheduler.computeSchedule(bsp_instance);
 
     } else if (algorithm.get_child("name").get_value<std::string>() == "GreedyEtfLK") {

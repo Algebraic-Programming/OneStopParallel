@@ -71,6 +71,10 @@ class GreedyVarianceFillupScheduler : public Scheduler {
     bool CanChooseNode(const BspInstance &instance, const std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> &allReady,
                        const std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> &procReady, const std::vector<bool> &procFree) const;
 
+    unsigned get_nr_parallelizable_nodes(const BspInstance &instance,
+                                            const std::vector<unsigned>& nr_ready_nodes_per_type,
+                                            const std::vector<unsigned>& nr_procs_per_type) const;
+
   public:
     /**
      * @brief Default constructor for GreedyVarianceFillupScheduler.

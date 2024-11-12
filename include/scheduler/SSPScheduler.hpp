@@ -26,101 +26,69 @@ limitations under the License.
 #include "model/BspInstance.hpp"
 #include "model/BspSchedule.hpp"
 #include "model/SspSchedule.hpp"
-
-
-enum RETURN_STATUS { SUCCESS, BEST_FOUND, TIMEOUT, ERROR };
-
-inline std::string to_string(const RETURN_STATUS status) {
-    switch (status) {
-    case SUCCESS:
-        return "SUCCESS";
-    case BEST_FOUND:
-        return "BEST FOUND";
-    case TIMEOUT:
-        return "TIMEOUT";
-    case ERROR:
-        return "ERROR";
-    default:
-        return "UNKNOWN";
-    }
-}
+#include "scheduler/Scheduler.hpp"
 
 /**
- * @class Scheduler
- * @brief Abstract base class for scheduling scheduler.
+ * @class SSPScheduler
+ * @brief Abstract base class for scheduling SSP.
  * 
- * The Scheduler class provides a common interface for scheduling scheduler in the BSP scheduling system.
+ * The Scheduler class provides a common interface for scheduling scheduler in the SSP scheduling system.
  * It defines methods for setting and getting the time limit, as well as computing schedules.
  */
-class Scheduler {
-
-    protected:
-        unsigned int timeLimitSeconds; /**< The time limit in seconds for computing a schedule. */
+class SSPScheduler : public Scheduler {
 
     public:
         /**
          * @brief Constructor for the Scheduler class.
          * @param timelimit The time limit in seconds for computing a schedule. Default is 3600 seconds (1 hour).
          */
-        Scheduler(unsigned timelimit = 3600) : timeLimitSeconds(timelimit) {}
+        SSPScheduler(unsigned timelimit = 3600) : Scheduler(timelimit) {}
 
         /**
          * @brief Destructor for the Scheduler class.
          */
-        virtual ~Scheduler() = default;
+        virtual ~SSPScheduler() = default;
 
-        /**
+                /**
          * @brief Set the time limit in seconds for computing a schedule.
          * @param limit The time limit in seconds.
          */
-        virtual void setTimeLimitSeconds(unsigned int limit) { timeLimitSeconds = limit; }
+        virtual void setTimeLimitSeconds(unsigned int limit) override { timeLimitSeconds = limit; }
 
         /**
          * @brief Set the time limit in hours for computing a schedule.
          * @param limit The time limit in hours.
          */
-        virtual void setTimeLimitHours(unsigned int limit) { timeLimitSeconds = limit * 3600; }
-
-        /**
-         * @brief Get the time limit in seconds for computing a schedule.
-         * @return The time limit in seconds.
-         */
-        inline unsigned int getTimeLimitSeconds() const { return timeLimitSeconds; }
-
-        /**
-         * @brief Get the time limit in hours for computing a schedule.
-         * @return The time limit in hours.
-         */
-        inline unsigned int getTimeLimitHours() const { return timeLimitSeconds / 3600; }
+        virtual void setTimeLimitHours(unsigned int limit) override { timeLimitSeconds = limit * 3600; }
 
         /**
          * @brief Get the name of the scheduling algorithm.
          * @return The name of the scheduling algorithm.
          */
-        virtual std::string getScheduleName() const = 0;
+        virtual std::string getScheduleName() const override = 0;
 
         /**
          * @brief Compute a BSP schedule for the given BSP instance.
          * @param instance The BSP instance for which to compute the schedule.
          * @return A pair containing the return status and the computed schedule.
          */
-        virtual std::pair<RETURN_STATUS, BspSchedule> computeSchedule(const BspInstance &instance) = 0;
+        virtual std::pair<RETURN_STATUS, BspSchedule> computeSchedule(const BspInstance &instance) override { return computeSspSchedule(instance, 1); };
 
         /**
          * @brief Compute a SSP schedule for the given BSP instance.
          * @param instance The BSP instance for which to compute the schedule.
+         * @param stale staleness of the schedule
          * @return A pair containing the return status and the computed schedule.
          */
-        virtual std::pair<RETURN_STATUS, SspSchedule> computeSspSchedule(const BspInstance &instance, unsigned stale) { throw std::runtime_error("Not implemented"); };
+        virtual std::pair<RETURN_STATUS, SspSchedule> computeSspSchedule(const BspInstance &instance, unsigned stale) = 0;
 
         /**
-         * @brief Compute a schedule for the given BSP instance within the time limit.
+         * @brief Compute a SSP schedule for the given BSP instance within the time limit.
          * @param instance The BSP instance for which to compute the schedule.
          * @return A pair containing the return status and the computed schedule.
          */
-        virtual std::pair<RETURN_STATUS, BspSchedule> computeScheduleWithTimeLimit(const BspInstance &instance);
+        virtual std::pair<RETURN_STATUS, SspSchedule> computeSspScheduleWithTimeLimit(const BspInstance &instance, unsigned stale);
 
-
-        virtual void setUseMemoryConstraint(bool use_memory_constraint_) { throw std::runtime_error("Not implemented");}
+        virtual void setUseMemoryConstraint(bool use_memory_constraint_) override { throw std::runtime_error("Not implemented");}
 };
 

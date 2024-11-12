@@ -29,18 +29,18 @@ limitations under the License.
 #include <stdexcept>
 #include <queue>
 
-#include "scheduler/Scheduler.hpp"
+#include "scheduler/SSPScheduler.hpp"
 #include "auxiliary/auxiliary.hpp"
 #include "model/BspSchedule.hpp"
 
 /**
- * @brief The GreedyVarianceScheduler class represents a scheduler that uses a greedy algorithm to compute schedules for BspInstance.
+ * @brief The GreedyVarianceSspScheduler class represents a scheduler that uses a greedy algorithm to compute schedules for BspInstance.
  * 
  * This class inherits from the Scheduler class and implements the computeSchedule() and getScheduleName() methods.
  * The computeSchedule() method computes a schedule for a given BspInstance using a greedy algorithm.
  * The getScheduleName() method returns the name of the schedule, which is "BspGreedy" in this case.
  */
-class GreedyVarianceScheduler : public Scheduler {
+class GreedyVarianceSspScheduler : public SSPScheduler {
 
   private:
 
@@ -50,7 +50,6 @@ class GreedyVarianceScheduler : public Scheduler {
     std::vector<int> current_proc_persistent_memory;
     std::vector<int> current_proc_transient_memory;
 
- 
     std::vector<double> compute_work_variance(const ComputationalDag& graph) const;
 
     struct VarianceCompare
@@ -63,39 +62,42 @@ class GreedyVarianceScheduler : public Scheduler {
    bool check_mem_feasibility(const BspInstance &instance, const std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> &allReady,
                                                const std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> &procReady) const;
 
-
     void Choose(const BspInstance &instance, const std::vector<double> &work_variance,
-                const std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> &allReady, const std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> &procReady,
-                const std::vector<bool> &procFree, VertexType &node, unsigned &p) const;
+                std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> &allReady, std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> &procReady,
+                const std::vector<bool> &procFree, VertexType &node, unsigned &p,
+                const bool endSupStep, const size_t remaining_time) const;
 
 
     bool CanChooseNode(const BspInstance &instance, const std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> &allReady,
                        const std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> &procReady, const std::vector<bool> &procFree) const;
 
     unsigned get_nr_parallelizable_nodes(const BspInstance &instance,
-                                            const std::vector<unsigned>& nr_ready_nodes_per_type,
-                                            const std::vector<unsigned>& nr_procs_per_type) const;
+                                         const unsigned &stale,
+                                         const std::vector<unsigned>& nr_old_ready_nodes_per_type,
+                                         const std::vector<unsigned>& nr_ready_nodes_per_type,
+                                         const std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> &procReady,
+                                         const std::vector<unsigned>& nr_procs_per_type) const;
 
   public:
     /**
-     * @brief Default constructor for GreedyVarianceScheduler.
+     * @brief Default constructor for GreedyVarianceSspScheduler.
      */
-    GreedyVarianceScheduler(float max_percent_idle_processors_ = 0.2, bool increase_parallelism_in_new_superstep_ = true) : Scheduler(), max_percent_idle_processors(max_percent_idle_processors_), increase_parallelism_in_new_superstep(increase_parallelism_in_new_superstep_) {}
+    GreedyVarianceSspScheduler(float max_percent_idle_processors_ = 0.2, bool increase_parallelism_in_new_superstep_ = true) : SSPScheduler(), max_percent_idle_processors(max_percent_idle_processors_), increase_parallelism_in_new_superstep(increase_parallelism_in_new_superstep_) {}
 
     /**
-     * @brief Default destructor for GreedyVarianceScheduler.
+     * @brief Default destructor for GreedyVarianceSspScheduler.
      */
-    virtual ~GreedyVarianceScheduler() = default;
+    virtual ~GreedyVarianceSspScheduler() = default;
 
     /**
-     * @brief Compute a schedule for the given BspInstance.
+     * @brief Compute a SSP schedule for the given BspInstance.
      * 
      * This method computes a schedule for the given BspInstance using a greedy algorithm.
      * 
      * @param instance The BspInstance object representing the instance to compute the schedule for.
-     * @return A pair containing the return status and the computed BspSchedule.
+     * @return A pair containing the return status and the computed SspSchedule.
      */
-    virtual std::pair<RETURN_STATUS, BspSchedule> computeSchedule(const BspInstance &instance) override;
+    virtual std::pair<RETURN_STATUS, SspSchedule> computeSspSchedule(const BspInstance &instance, unsigned stale) override;
 
     /**
      * @brief Get the name of the schedule.
@@ -107,9 +109,9 @@ class GreedyVarianceScheduler : public Scheduler {
     virtual std::string getScheduleName() const override {
 
         if (use_memory_constraint) {
-            return "VarianceGreedyMemory";
+            return "VarianceGreedySspMemory";
         } else {
-            return "VarianceGreedy";
+            return "VarianceGreedySsp";
         }
     }
 

@@ -16,34 +16,32 @@ limitations under the License.
 @author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner   
 */
 
-#include "scheduler/InstanceContractor.hpp"
+#include "scheduler/SSPInstanceContractor.hpp"
 
 
-void InstanceContractor::setTimeLimitSeconds(unsigned int limit) {
+void SSPInstanceContractor::setTimeLimitSeconds(unsigned int limit) {
     timeLimitSeconds = limit;
     if (sched) sched->setTimeLimitSeconds(limit);
     if (improver) improver->setTimeLimitSeconds(limit);
 }
 
-void InstanceContractor::setTimeLimitHours(unsigned int limit) {
+void SSPInstanceContractor::setTimeLimitHours(unsigned int limit) {
     timeLimitSeconds = limit * 3600;
     if (sched) sched->setTimeLimitHours(limit);
     if (improver) improver->setTimeLimitHours(limit);
 }
 
-void InstanceContractor::setUseMemoryConstraint(bool use_memory_constraint_) {
+void SSPInstanceContractor::setUseMemoryConstraint(bool use_memory_constraint_) {
     if (sched) sched->setUseMemoryConstraint(use_memory_constraint_);
     if (improver) improver->setUseMemoryConstraint(use_memory_constraint_);
 }
 
-RETURN_STATUS InstanceContractor::add_contraction( const std::vector<std::unordered_set<VertexType>>& partition ) {
+RETURN_STATUS SSPInstanceContractor::add_contraction( const std::vector<std::unordered_set<VertexType>>& partition ) {
     assert( ! dag_history.empty() );
     std::pair<ComputationalDag, std::unordered_map<VertexType, VertexType>> graph_and_contraction_map = dag_history.back()->getComputationalDag().contracted_graph_without_loops(partition);
 
-    // Making contracted instance
     std::unique_ptr<BspInstance> new_inst = std::make_unique<BspInstance>(graph_and_contraction_map.first, dag_history.back()->getArchitecture());
-    
-    // Making expansion map
+
     std::unique_ptr<std::unordered_map<VertexType,std::set<VertexType>>> expansion_map = std::make_unique<std::unordered_map<VertexType,std::set<VertexType>>>();
     for (auto& [origin, destination]: graph_and_contraction_map.second) {
         if ( expansion_map->find(destination) == expansion_map->cend() ) {
@@ -115,13 +113,13 @@ RETURN_STATUS InstanceContractor::add_contraction( const std::vector<std::unorde
     return SUCCESS;
 }
 
-RETURN_STATUS InstanceContractor::compute_initial_schedule() {
+RETURN_STATUS SSPInstanceContractor::compute_initial_schedule(unsigned stale) {
     active_graph = dag_history.size()-1;
-    std::pair<RETURN_STATUS, BspSchedule> initial_schedule;
+    std::pair<RETURN_STATUS, SspSchedule> initial_schedule;
     if (active_graph == 0) {
-        initial_schedule = sched->computeSchedule( *getOriginalInstance() );
+        initial_schedule = sched->computeSspSchedule( *getOriginalInstance(), stale );
     } else {
-        initial_schedule = sched->computeSchedule( *(dag_history.back()) );
+        initial_schedule = sched->computeSspSchedule( *(dag_history.back()), stale );
     }
     active_schedule = initial_schedule.second;
     auto ret = improve_active_schedule();
@@ -131,10 +129,10 @@ RETURN_STATUS InstanceContractor::compute_initial_schedule() {
 }
 
 
-BspSchedule InstanceContractor::expand_schedule(const BspSchedule& schedule, std::pair< ComputationalDag, std::unordered_map<VertexType, VertexType>> pair, const BspInstance& instance) {
+SspSchedule SSPInstanceContractor::expand_schedule(const SspSchedule& schedule, std::pair< ComputationalDag, std::unordered_map<VertexType, VertexType>> pair, const BspInstance& instance) {
 
     
-    BspSchedule expanded_schedule(instance);
+    SspSchedule expanded_schedule(instance);
 
     for ( auto node : instance.getComputationalDag().vertices() ) {
         expanded_schedule.setAssignedProcessor(node, schedule.assignedProcessor(pair.second.at(node)) );
@@ -156,16 +154,14 @@ BspSchedule InstanceContractor::expand_schedule(const BspSchedule& schedule, std
 
 
 
-RETURN_STATUS InstanceContractor::expand_active_schedule() {
+RETURN_STATUS SSPInstanceContractor::expand_active_schedule() {
     assert((active_graph >= 1) && ( (long unsigned) active_graph < dag_history.size()));
 
-    BspSchedule expanded_schedule;
+    SspSchedule expanded_schedule;
     if (active_graph == 1) {
-        //expanded_schedule = BspSchedule(*original_inst, active_schedule.numberOfSupersteps());
-        expanded_schedule = BspSchedule(*original_inst);
+        expanded_schedule = SspSchedule(*original_inst);
     } else {
-        //expanded_schedule = BspSchedule( *(dag_history[ active_graph-1 ]), active_schedule.numberOfSupersteps() );
-        expanded_schedule = BspSchedule( *(dag_history[ active_graph-1 ]));
+        expanded_schedule = SspSchedule( *(dag_history[ active_graph-1 ]));
     }
 
     for ( auto node : dag_history[active_graph-1]->getComputationalDag().vertices() ) {
@@ -184,14 +180,14 @@ RETURN_STATUS InstanceContractor::expand_active_schedule() {
     return SUCCESS;
 }
 
-RETURN_STATUS InstanceContractor::improve_active_schedule() {
+RETURN_STATUS SSPInstanceContractor::improve_active_schedule() {
     if (improver) {
-        return improver->improveSchedule( active_schedule );
+        return improver->improveSSPSchedule( active_schedule );
     }
     return SUCCESS;
 }
 
-RETURN_STATUS InstanceContractor::run_expansions() {
+RETURN_STATUS SSPInstanceContractor::run_expansions() {
     assert(active_graph >= 0 && (long unsigned) active_graph == dag_history.size()-1);
     RETURN_STATUS status = SUCCESS;
     while(active_graph>0) {
@@ -202,7 +198,7 @@ RETURN_STATUS InstanceContractor::run_expansions() {
 }
 
 
-std::pair< ComputationalDag, std::unordered_map<VertexType, VertexType> > InstanceContractor::get_contracted_graph_and_mapping( const ComputationalDag& graph ) {
+std::pair< ComputationalDag, std::unordered_map<VertexType, VertexType> > SSPInstanceContractor::get_contracted_graph_and_mapping( const ComputationalDag& graph ) {
     clear_computation_data();
 
     BspInstance tmp(graph, BspArchitecture());
@@ -226,7 +222,7 @@ std::pair< ComputationalDag, std::unordered_map<VertexType, VertexType> > Instan
     return std::make_pair( dag_history.back()->getComputationalDag(), contraction_map );    
 }
 
-std::pair<RETURN_STATUS, BspSchedule> InstanceContractor::computeSchedule(const BspInstance& instance) {
+std::pair<RETURN_STATUS, SspSchedule> SSPInstanceContractor::computeSspSchedule(const BspInstance& instance, unsigned stale) {
     clear_computation_data();
     original_inst = &instance;
     dag_history.emplace_back(std::make_unique<BspInstance>(instance));
@@ -235,18 +231,18 @@ std::pair<RETURN_STATUS, BspSchedule> InstanceContractor::computeSchedule(const 
     status = std::max(status, run_contractions());
     assert( (dag_history.size()-1 == expansion_maps.size()) && (expansion_maps.size() == contraction_maps.size()) );
 
-    status = std::max(status, compute_initial_schedule());
+    status = std::max(status, compute_initial_schedule(stale));
     
     status = std::max(status, run_expansions());
 
-    BspSchedule output = active_schedule;
+    SspSchedule output = active_schedule;
 
     clear_computation_data();
 
     return std::make_pair(status, output);
 }
 
-void InstanceContractor::clear_computation_data() {
+void SSPInstanceContractor::clear_computation_data() {
     dag_history.clear();
     dag_history.shrink_to_fit();
     
@@ -257,10 +253,10 @@ void InstanceContractor::clear_computation_data() {
     expansion_maps.shrink_to_fit();
 
     active_graph = -1;
-    active_schedule = BspSchedule();
+    active_schedule = SspSchedule();
 }
 
-void InstanceContractor::compactify_dag_history() {
+void SSPInstanceContractor::compactify_dag_history() {
     if (dag_history.size() < 3) return;
 
     size_t dag_indx_first = dag_history.size()-2;

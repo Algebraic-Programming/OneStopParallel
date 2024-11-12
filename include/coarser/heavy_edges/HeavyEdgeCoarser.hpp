@@ -36,7 +36,7 @@ class HeavyEdgeCoarser : public Coarser {
 
     public:
 
-        HeavyEdgeCoarser(float heavy_is_x_times_median_, float min_percent_components_retained_, float bound_component_weight_percent_) : 
+        HeavyEdgeCoarser(float heavy_is_x_times_median_ = 2.0, float min_percent_components_retained_ = 0.25, float bound_component_weight_percent_ = 0.25) : 
         heavy_is_x_times_median(heavy_is_x_times_median_), 
         min_percent_components_retained(min_percent_components_retained_), 
         bound_component_weight_percent(bound_component_weight_percent_) {}

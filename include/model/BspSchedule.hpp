@@ -51,7 +51,7 @@ typedef std::tuple<unsigned int, unsigned int, unsigned int> KeyTriple;
  */
 class BspSchedule : public IBspSchedule {
 
-  private:
+  protected:
     const BspInstance *instance;
 
     unsigned int number_of_supersteps;
@@ -256,7 +256,7 @@ class BspSchedule : public IBspSchedule {
      *
      * @return True if the schedule satisfies the precedence constraints of the computational DAG, false otherwise.
      */
-    bool satisfiesPrecedenceConstraints() const;
+    virtual bool satisfiesPrecedenceConstraints() const;
     bool satisfiesNodeTypeConstraints() const;
     bool satisfiesMemoryConstraints() const;
 

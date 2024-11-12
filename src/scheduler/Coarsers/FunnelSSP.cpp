@@ -16,19 +16,19 @@ limitations under the License.
 @author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner   
 */
 
-#include "scheduler/Coarsers/Funnel.hpp"
+#include "scheduler/Coarsers/FunnelSSP.hpp"
 
-bool Funnel::isCompatibleNodeType(const VertexType& new_node, const VertexType& old_node, const BspInstance& instance) {
+bool FunnelSSP::isCompatibleNodeType(const VertexType& new_node, const VertexType& old_node, const BspInstance& instance) {
     for (unsigned proc_type = 0; proc_type < instance.getArchitecture().getNumberOfProcessorTypes(); proc_type++) {
         if (instance.isCompatibleType(instance.getComputationalDag().nodeType(old_node), proc_type)
-            && (!(instance.isCompatibleType(instance.getComputationalDag().nodeType(new_node), proc_type)))) {
+            && (!instance.isCompatibleType(instance.getComputationalDag().nodeType(new_node), proc_type))) {
             return false;
         }
     }
     return true;
 }
 
-void Funnel::expand_in_group_dfs(const std::unordered_set<EdgeType, EdgeType_hash>& edge_mask, std::unordered_set<VertexType>& group, std::unordered_map<VertexType, unsigned>& children_not_in_group, long unsigned& group_weight, const double& max_weight, const VertexType active_node, const VertexType sink_node, bool& failed_to_add) {
+void FunnelSSP::expand_in_group_dfs(const std::unordered_set<EdgeType, EdgeType_hash>& edge_mask, std::unordered_set<VertexType>& group, std::unordered_map<VertexType, unsigned>& children_not_in_group, long unsigned& group_weight, const double& max_weight, const VertexType active_node, const VertexType sink_node, bool& failed_to_add) {
     if (failed_to_add) return;
     const ComputationalDag& graph = dag_history.back()->getComputationalDag();
 
@@ -54,7 +54,7 @@ void Funnel::expand_in_group_dfs(const std::unordered_set<EdgeType, EdgeType_has
         if (parameters.use_approx_transitive_reduction && (edge_mask.find(in_edge) != edge_mask.cend())) continue;
         const VertexType& par = in_edge.m_source;
         if (children_not_in_group[par] == 0) {
-            if (!isCompatibleNodeType(par, sink_node, *(dag_history.back()))) continue;
+            if (!isCompatibleNodeType(par, sink_node, *dag_history.back())) continue;
             if (group_weight + graph.nodeWorkWeight(par) > max_weight) {
                 failed_to_add = true;
                 return;
@@ -69,7 +69,7 @@ void Funnel::expand_in_group_dfs(const std::unordered_set<EdgeType, EdgeType_has
 }
 
 
-void Funnel::expand_out_group_dfs(const std::unordered_set<EdgeType, EdgeType_hash>& edge_mask, std::unordered_set<VertexType>& group, std::unordered_map<VertexType, unsigned>& parents_not_in_group, long unsigned& group_weight, const double& max_weight, const VertexType active_node, const VertexType source_node, bool& failed_to_add) {
+void FunnelSSP::expand_out_group_dfs(const std::unordered_set<EdgeType, EdgeType_hash>& edge_mask, std::unordered_set<VertexType>& group, std::unordered_map<VertexType, unsigned>& parents_not_in_group, long unsigned& group_weight, const double& max_weight, const VertexType active_node, const VertexType source_node, bool& failed_to_add) {
     if (failed_to_add) return;
     const ComputationalDag& graph = dag_history.back()->getComputationalDag();
 
@@ -95,7 +95,7 @@ void Funnel::expand_out_group_dfs(const std::unordered_set<EdgeType, EdgeType_ha
         if (parameters.use_approx_transitive_reduction && (edge_mask.find(out_edge) != edge_mask.cend() )) continue;
         const VertexType& child = out_edge.m_target;
         if (parents_not_in_group[child] == 0) {
-            if (!isCompatibleNodeType(child, source_node, *(dag_history.back()))) continue;
+            if (!isCompatibleNodeType(child, source_node, *dag_history.back())) continue;
             if (group_weight + graph.nodeWorkWeight(child) > max_weight) {
                 failed_to_add = true;
                 return;
@@ -110,7 +110,7 @@ void Funnel::expand_out_group_dfs(const std::unordered_set<EdgeType, EdgeType_ha
 }
 
 
-void Funnel::run_in_contraction() {
+void FunnelSSP::run_in_contraction() {
     const ComputationalDag& graph = dag_history.back()->getComputationalDag();
 
     const std::unordered_set<EdgeType, EdgeType_hash> edge_mask = parameters.use_approx_transitive_reduction ? graph.long_edges_in_triangles_parallel() : std::unordered_set<EdgeType, EdgeType_hash>();
@@ -147,7 +147,7 @@ void Funnel::run_in_contraction() {
 }
 
 
-void Funnel::run_out_contraction() {
+void FunnelSSP::run_out_contraction() {
     const ComputationalDag& graph = dag_history.back()->getComputationalDag();
 
     const std::unordered_set<EdgeType, EdgeType_hash> edge_mask = parameters.use_approx_transitive_reduction ? graph.long_edges_in_triangles_parallel() : std::unordered_set<EdgeType, EdgeType_hash>();
@@ -191,7 +191,7 @@ void Funnel::run_out_contraction() {
 
 
 
-RETURN_STATUS Funnel::run_contractions() {
+RETURN_STATUS FunnelSSP::run_contractions() {
     std::cout   << "Coarsen Step: " << dag_history.size()
                 << ", Number of nodes: " << dag_history.back()->numberOfVertices()
                 << ", Number of edges: " << dag_history.back()->getComputationalDag().numberOfEdges()

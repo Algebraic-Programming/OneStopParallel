@@ -752,7 +752,7 @@ bool HillClimbingScheduler::Improve() {
 bool HillClimbingScheduler::violatesMemConstraint(int node, int processor, int where)
 {
     if(memory_used[processor][schedule->assignedSuperstep(node)+where]
-        + schedule->getInstance().getComputationalDag().nodeMemoryWeight(node) > (int)schedule->getInstance().memoryBound())
+        + schedule->getInstance().getComputationalDag().nodeMemoryWeight(node) > (int)schedule->getInstance().memoryBound(processor)) // TODO ANDRAS double check change
         return true;
     
     return false;

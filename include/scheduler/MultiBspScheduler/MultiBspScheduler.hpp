@@ -21,9 +21,9 @@ limitations under the License.
 #include <boost/graph/filtered_graph.hpp>
 #include <unordered_set>
 
-#include "scheduler/Scheduler.hpp"
 #include "model/MultiBsp/MultiBspInstance.hpp"
 #include "model/MultiBsp/MultiBspSchedule.hpp"
+#include "scheduler/Scheduler.hpp"
 
 class MultiBspScheduler {
 
@@ -50,7 +50,7 @@ struct dag_projection_predicate {
         return vertices.find(e.source()) != vertices.end() && vertices.find(e.target()) != vertices.end();
     }
 
-    bool operator()(const VertexType &v) const { return vertices.find(v) == vertices.end(); }
+    bool operator()(const VertexType &v) const { return vertices.find(v) != vertices.end(); }
 };
 
 using dag_projection = boost::filtered_graph<GraphType, dag_projection_predicate, dag_projection_predicate>;
@@ -73,9 +73,8 @@ class HierarchichalMultiBspScheduler : public MultiBspScheduler {
 
         BspInstance bsp_instance = BspInstance(instance.getComputationalDag(), arch[0]);
 
-        std::cout << "Computing schedule for first architecture: " << arch[0].numberOfProcessors() << 
-        " g: " << arch[0].communicationCosts() << 
-        " l: " << arch[0].synchronisationCosts() <<  std::endl;
+        std::cout << "Computing schedule for first architecture: " << arch[0].numberOfProcessors()
+                  << " g: " << arch[0].communicationCosts() << " l: " << arch[0].synchronisationCosts() << std::endl;
 
         std::pair<RETURN_STATUS, BspSchedule> result = scheduler->computeSchedule(bsp_instance);
 
@@ -90,8 +89,7 @@ class HierarchichalMultiBspScheduler : public MultiBspScheduler {
         for (unsigned i = 0; i < processor_step_node_sets.size(); i++) {
             for (unsigned j = 0; j < processor_step_node_sets[i].size(); j++) {
 
-                std::cout << "Processor " << i << " Step " << j << " cout: " << processor_step_node_sets[i][j].size()
-                          << std::endl;
+                //ComputationalDag sub_dag = instance.getComputationalDag().getSubDag(processor_step_node_sets[i][j]);
             }
         }
 
@@ -108,4 +106,40 @@ class HierarchichalMultiBspScheduler : public MultiBspScheduler {
 
     std::vector<std::vector<std::unordered_set<VertexType>>> split_dag(const ComputationalDag &dag,
                                                                        const BspSchedule &schedule);
+
+    ComputationalDag create_sub_dag(const ComputationalDag &dag, const std::unordered_set<VertexType> &vertices,
+                                    std::vector<VertexType> &mapping) {
+
+        assert(mapping.empty());
+
+        std::unordered_map<VertexType, VertexType> rev_mapping;
+        ComputationalDag sub_dag;
+
+        for (const VertexType &v : vertices) {
+
+            VertexType new_v = sub_dag.addVertex(dag[v].workWeight, dag[v].communicationWeight, dag[v].memoryWeight,
+                                                 dag[v].nodeType);
+
+            sub_dag.set_node_mtx_entry(new_v, dag.node_mtx_entry(v));
+
+            mapping.push_back(v);
+            rev_mapping[v] = new_v;
+        }
+
+        for (const VertexType &v : vertices) {
+
+            for(const auto &e : dag.out_edges(v)) {
+
+                const VertexType &u = dag.target(e);
+                if (vertices.find(u) != vertices.end()) {
+
+                    sub_dag.addEdge(rev_mapping[v], rev_mapping[u], dag.edgeCommunicationWeight(e),
+                                    dag.edge_mtx_entry(e));
+                }
+            }
+
+        }
+
+        return sub_dag;
+    }
 };

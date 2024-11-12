@@ -54,13 +54,32 @@ void BspArchitecture::setSendCosts(const std::vector<std::vector<unsigned int>> 
 void BspArchitecture::setNumberOfProcessors(unsigned int num_proc) {
 
     number_processors = num_proc;
+    number_of_processor_types = 1;
     processor_type = std::vector<unsigned int>(number_processors, 0);
     send_costs =
         std::vector<std::vector<unsigned int>>(number_processors, std::vector<unsigned int>(number_processors, 1));
     for (unsigned i = 0; i < number_processors; i++) {
         send_costs[i][i] = 0;
     }
+    memory_bound.resize(num_proc, memory_bound.back());
+
     isNuma = false;
+}
+
+void BspArchitecture::setProcessorsWithTypes(const std::vector<unsigned> & processor_types_) {
+
+    number_processors = processor_types_.size();
+    number_of_processor_types = 0;
+    processor_type = processor_types_;
+    send_costs =
+        std::vector<std::vector<unsigned int>>(number_processors, std::vector<unsigned int>(number_processors, 1));
+    for (unsigned i = 0; i < number_processors; i++) {
+        send_costs[i][i] = 0;
+    }
+    memory_bound.resize(number_processors, memory_bound.back());
+
+    isNuma = false;
+    updateNumberOfProcessorTypes();
 }
 
 void BspArchitecture::SetUniformSendCost() {
@@ -116,11 +135,21 @@ bool BspArchitecture::are_send_cost_numa() {
     return false;
 }
 
-unsigned BspArchitecture::getNumberOfProcessorTypes() const {
-    unsigned numberOfTypes = 1;
-    for (unsigned p = 0; p < number_processors; p++)
-        if(processor_type[p] >= numberOfTypes)
-            numberOfTypes = processor_type[p]+1;
+void BspArchitecture::updateNumberOfProcessorTypes() {
+    number_of_processor_types = 0;
+    for (unsigned p = 0; p < number_processors; p++) {
+        if(processor_type[p] >= number_of_processor_types) {
+            number_of_processor_types = processor_type[p] + 1;
+        }
+    }
+}
 
-    return numberOfTypes;
+unsigned BspArchitecture::maxMemoryBoundProcType(unsigned procType) const {
+    unsigned max_mem = 0;
+    for (unsigned proc = 0; proc < number_processors; proc++) {
+        if (processor_type[proc] == procType) {
+            max_mem = std::max(max_mem, memory_bound[proc]);
+        }
+    }
+    return max_mem;
 }

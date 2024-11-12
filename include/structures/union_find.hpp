@@ -31,9 +31,10 @@ struct union_find_object {
     unsigned parent_index;
     unsigned rank;
     unsigned weight;
+    unsigned memory;
 
-    explicit union_find_object(const T &name_, int parent_index_, unsigned weight_ = 0)
-        : name(name_), parent_index(parent_index_), weight(weight_) {
+    explicit union_find_object(const T &name_, int parent_index_, unsigned weight_ = 0, unsigned memory_ = 0)
+        : name(name_), parent_index(parent_index_), weight(weight_), memory(memory_) {
         rank = 1;
     }
 };
@@ -65,6 +66,7 @@ class Union_Find_Universe {
         if (universe[index].rank >= universe[other_index].rank) {
             universe[other_index].parent_index = index;
             universe[index].weight += universe[other_index].weight;
+            universe[index].memory += universe[other_index].memory;
             component_indices.erase(other_index);
 
             if (universe[index].rank == universe[other_index].rank) {
@@ -73,6 +75,7 @@ class Union_Find_Universe {
         } else {
             universe[index].parent_index = other_index;
             universe[other_index].weight += universe[index].weight;
+            universe[other_index].memory += universe[index].memory;
             component_indices.erase(index);
         }
         return -1;
@@ -81,7 +84,7 @@ class Union_Find_Universe {
     unsigned get_index_from_name(const T &name) const { return names_to_indices.at(name); }
 
   public:
-    bool is_in_universe(const T &name) { return names_to_indices.find(name) != names_to_indices.end(); }
+    bool is_in_universe(const T &name) const { return names_to_indices.find(name) != names_to_indices.end(); }
 
     /// @brief Loops till object is its own parent
     /// @param name of object
@@ -118,12 +121,30 @@ class Union_Find_Universe {
         return component_names_and_weights;
     }
 
+    /// @brief Retrieves the (current) names of components together with their weight and memory
+    std::vector<std::tuple<T, unsigned, unsigned>> get_component_names_weights_and_memory() const {
+        std::vector<std::tuple<T, unsigned, unsigned>> component_names_weights_and_memory;
+        component_names_weights_and_memory.reserve(component_indices.size());
+        for (auto &indx : component_indices) {
+            component_names_weights_and_memory.emplace_back({universe[indx].name, universe[indx].weight, universe[indx].memory});
+        }
+        return component_names_weights_and_memory;
+    }
+
     /// @brief Retrieves the weight of the component containing the given object
     /// @param name of object
     unsigned get_weight_of_component_by_name(const T &name) {
         unsigned index = get_index_from_name(name);
         index = find_origin(index);
         return universe[index].weight;
+    }
+
+    /// @brief Retrieves the memory of the component containing the given object
+    /// @param name of object
+    unsigned get_memory_of_component_by_name(const T &name) {
+        unsigned index = get_index_from_name(name);
+        index = find_origin(index);
+        return universe[index].memory;
     }
 
     /// @brief Retrieves the connected components
@@ -180,6 +201,36 @@ class Union_Find_Universe {
         return connected_components_by_name_incl_weight;
     }
 
+    /// @brief Retrieves the connected components and their respective weights and memories
+    /// @return Partition of the names of objects according to the connected components together with their respective
+    /// weight and memory
+    std::vector<std::tuple<std::vector<T>, unsigned, unsigned>> get_connected_components_weights_and_memories() {
+        std::vector<std::vector<unsigned>> connected_components_by_index;
+        connected_components_by_index.resize(universe.size());
+        for (unsigned i = 0; i < (unsigned) universe.size(); i++) {
+            connected_components_by_index[find_origin(i)].emplace_back(i);
+        }
+
+        std::vector<std::tuple<std::vector<T>, unsigned, unsigned>> connected_components_by_name_incl_weight_memory;
+        for (auto &comp : connected_components_by_index) {
+            if (comp.empty()) {
+                continue;
+            }
+
+            unsigned comp_weight = universe[find_origin(comp[0])].weight;
+            unsigned comp_memory = universe[find_origin(comp[0])].memory;
+
+            std::vector<T> names_in_comp;
+            names_in_comp.reserve(comp.size());
+            for (auto &indx : comp) {
+                names_in_comp.emplace_back(universe[indx].name);
+            }
+            connected_components_by_name_incl_weight_memory.emplace_back(names_in_comp, comp_weight, comp_memory);
+        }
+
+        return connected_components_by_name_incl_weight_memory;
+    }
+
     /// @brief Adds object to the union-find structure
     /// @param name of object
     void add_object(const T &name) {
@@ -201,6 +252,20 @@ class Union_Find_Universe {
         }
         unsigned new_index = universe.size();
         universe.emplace_back(name, new_index, weight);
+        names_to_indices[name] = new_index;
+        component_indices.emplace(new_index);
+    }
+
+    /// @brief Adds object to the union-find structure with given weight and memory
+    /// @param name of object
+    /// @param weight of object
+    /// @param memory of object
+    void add_object(const T &name, const unsigned weight, const unsigned memory) {
+        if (names_to_indices.find(name) != names_to_indices.end()) {
+            throw std::runtime_error("This name already exists in the universe.");
+        }
+        unsigned new_index = universe.size();
+        universe.emplace_back(name, new_index, weight, memory);
         names_to_indices[name] = new_index;
         component_indices.emplace(new_index);
     }
@@ -258,6 +323,36 @@ class Union_Find_Universe {
         }
     }
 
+    /// @brief Adds objects to the union-find structure
+    /// @param names of objects
+    /// @param weights of objects
+    /// @param memories of objects
+    void add_object(const std::vector<T> &names, const std::vector<unsigned> &weights, const std::vector<unsigned> &memories) {
+        if (names.size() != weights.size()) {
+            throw std::runtime_error("Vectors of names and weights must be of equal length.");
+        }
+
+        // adjusting universe capacity
+        unsigned additional_size = names.size();
+        unsigned current_size = universe.size();
+        unsigned current_capacity = universe.capacity();
+        if (additional_size + current_size > current_capacity) {
+            unsigned new_min_capacity = std::max((current_capacity + 1) / 2 * 3, current_size + additional_size);
+            universe.reserve(new_min_capacity);
+        }
+
+        // adjusting names_to_indices capacity
+        current_size = names_to_indices.size();
+        if (additional_size + current_size > current_capacity) {
+            unsigned new_min_capacity = std::max((current_capacity + 1) / 2 * 3, current_size + additional_size);
+            names_to_indices.reserve(new_min_capacity);
+        }
+
+        for (size_t i = 0; i < names.size(); i++) {
+            add_object(names[i], weights[i], memories[i]);
+        }
+    }
+
     /// @brief Initiates a union-find structure
     explicit Union_Find_Universe() {}
 
@@ -270,5 +365,12 @@ class Union_Find_Universe {
     /// @param weights of objects
     explicit Union_Find_Universe(const std::vector<T> &names, const std::vector<unsigned> &weights) {
         add_object(names, weights);
+    }
+
+    /// @brief Initiates a union-find structure
+    /// @param names of objects
+    /// @param weights of objects
+    explicit Union_Find_Universe(const std::vector<T> &names, const std::vector<unsigned> &weights, const std::vector<unsigned> &memories) {
+        add_object(names, weights, memories);
     }
 };

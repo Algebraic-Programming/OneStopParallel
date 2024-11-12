@@ -39,7 +39,7 @@ limitations under the License.
 #include "model/VectorSchedule.hpp"
 #include "scheduler/ImprovementScheduler.hpp"
 
-// #define LK_DEBUG
+#define LK_DEBUG
 
 template<typename T>
 class LKBase : public ImprovementScheduler {
@@ -1040,14 +1040,14 @@ void LKBase<T>::computeNodeGain(unsigned node) {
             if (instance->getArchitecture().getMemoryConstraintType() == LOCAL) {
                 if (step_processor_memory[vector_schedule.assignedSuperstep(node)][new_proc] +
                         instance->getComputationalDag().nodeMemoryWeight(node) >
-                    instance->memoryBound()) {
+                    instance->memoryBound(new_proc)) {
 
                     node_gains[node][new_proc][1] = std::numeric_limits<T>::lowest();
                 }
                 if (vector_schedule.assignedSuperstep(node) > 0) {
                     if (step_processor_memory[vector_schedule.assignedSuperstep(node) - 1][new_proc] +
                             instance->getComputationalDag().nodeMemoryWeight(node) >
-                        instance->memoryBound()) {
+                        instance->memoryBound(new_proc)) {
 
                         node_gains[node][new_proc][0] = std::numeric_limits<T>::lowest();
                     }
@@ -1056,7 +1056,7 @@ void LKBase<T>::computeNodeGain(unsigned node) {
                 if (vector_schedule.assignedSuperstep(node) < num_steps - 1) {
                     if (step_processor_memory[vector_schedule.assignedSuperstep(node) + 1][new_proc] +
                             instance->getComputationalDag().nodeMemoryWeight(node) >
-                        instance->memoryBound()) {
+                        instance->memoryBound(new_proc)) {
 
                         node_gains[node][new_proc][2] = std::numeric_limits<T>::lowest();
                     }
@@ -1065,7 +1065,7 @@ void LKBase<T>::computeNodeGain(unsigned node) {
                 if (current_proc_persistent_memory[new_proc] + instance->getComputationalDag().nodeMemoryWeight(node) +
                         std::max(current_proc_transient_memory[new_proc],
                                  instance->getComputationalDag().nodeCommunicationWeight(node)) >
-                    instance->memoryBound()) {
+                    instance->memoryBound(new_proc)) {
 
                     node_gains[node][new_proc][0] = std::numeric_limits<T>::lowest();
                     node_gains[node][new_proc][1] = std::numeric_limits<T>::lowest();

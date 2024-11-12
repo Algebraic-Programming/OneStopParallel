@@ -64,7 +64,7 @@ struct bfs_visitor_ancestors : boost::default_bfs_visitor {
 
 void ComputationalDag::printGraph(std::ostream &os) const {
     for (const auto &v : vertices()) {
-        os << "[" << v << "]{work=" << nodeWorkWeight(v) << ", comm=" << nodeCommunicationWeight(v) << "}\n";
+        os << "[" << v << "]{work=" << nodeWorkWeight(v) << ", comm=" << nodeCommunicationWeight(v) << ", type=" << nodeType(v) << "}\n";
         for (const auto &e : out_edges(v)) {
             const auto &vc = target(e);
             os << "  +--(comm=" << edgeCommunicationWeight(e) << ")--> [" << vc << "]{work=" << nodeWorkWeight(vc)
@@ -79,6 +79,7 @@ EdgeType ComputationalDag::addEdge(const VertexType &src, const VertexType &tar,
         throw std::invalid_argument("Adding Edge was not sucessful");
     }
     assert(graph[edge].communicationWeight == memory_weight);
+    number_of_vertex_types = std::max(number_of_vertex_types, 1u); // in case adding edges adds vertices
     return edge;
 }
 
@@ -88,6 +89,7 @@ EdgeType ComputationalDag::addEdge(const VertexType &src, const VertexType &tar,
         throw std::invalid_argument("Adding Edge was not sucessful");
     }
     assert(graph[edge].communicationWeight == memory_weight);
+    number_of_vertex_types = std::max(number_of_vertex_types, 1u); // in case adding edges adds vertices
     return edge;
 }
 
@@ -353,6 +355,35 @@ std::vector<VertexType> ComputationalDag::longestChain() const {
 
     std::reverse(chain.begin(), chain.end());
     return chain;
+}
+
+
+int ComputationalDag::critical_path_weight() const {
+
+    if (numberOfVertices() == 0) {
+        return 0;
+    }
+
+    std::vector<int> top_length(numberOfVertices(), 0);
+    int critical_path_weight = 0;
+
+    // calculating lenght of longest path
+    for (const VertexType &node : GetTopOrder()) {
+
+        int max_temp = 0;
+        for (const auto &parent : parents(node)) {
+            max_temp = std::max(max_temp, top_length[parent]);
+        }
+
+        top_length[node] = max_temp + nodeWorkWeight(node);
+
+        if (top_length[node] > critical_path_weight) {
+            
+            critical_path_weight = top_length[node];
+        }
+    }
+
+    return critical_path_weight;
 }
 
 bool ComputationalDag::has_path(VertexType src, VertexType dest) const {
@@ -664,11 +695,22 @@ int ComputationalDag::get_max_memory_weight() const {
     return max_memory_weight;
 }
 
-unsigned ComputationalDag::getNumberOfNodeTypes() const {
-    unsigned numberOfTypes = 1;
-    for (unsigned node = 0; node < numberOfVertices(); node++)
-        if(nodeType(node) >= numberOfTypes)
-            numberOfTypes = nodeType(node)+1;
+int ComputationalDag::get_max_memory_weight(unsigned nodeType_) const {
+    int max_memory_weight = 0;
 
-    return numberOfTypes;
+    for (const auto &node : vertices()) {
+        if (nodeType(node) == nodeType_) {
+            max_memory_weight = std::max(max_memory_weight, nodeMemoryWeight(node));
+        }
+    }
+    return max_memory_weight;
+}
+
+void ComputationalDag::updateNumberOfNodeTypes() {
+    number_of_vertex_types = 0;
+    for (unsigned node = 0; node < numberOfVertices(); node++) {
+        if(nodeType(node) >= number_of_vertex_types) {
+            number_of_vertex_types = nodeType(node) + 1;
+        }
+    }
 }

@@ -91,6 +91,9 @@ class GreedyBspScheduler : public Scheduler {
     bool check_mem_feasibility(const BspInstance &instance, const std::set<VertexType> &allReady,
                                                const std::vector<std::set<VertexType>> &procReady) const;
 
+    unsigned get_nr_parallelizable_nodes(const BspInstance &instance,
+                                            const std::vector<unsigned>& nr_ready_nodes_per_type,
+                                            const std::vector<unsigned>& nr_procs_per_type) const;
 
   public:
     /**

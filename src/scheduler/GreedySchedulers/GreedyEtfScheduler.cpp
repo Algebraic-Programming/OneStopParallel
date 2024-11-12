@@ -137,7 +137,7 @@ bool GreedyEtfScheduler::check_mem_feasibility(const BspInstance &instance, cons
                 if (current_proc_persistent_memory[i] + instance.getComputationalDag().nodeMemoryWeight(node) +
                         std::max(current_proc_transient_memory[i],
                                  instance.getComputationalDag().nodeCommunicationWeight(node)) <=
-                    instance.getArchitecture().memoryBound()) {
+                    instance.getArchitecture().memoryBound(i)) {
                     return true;
                 }
             }
@@ -222,7 +222,7 @@ intTriple GreedyEtfScheduler::GetBestESTforNodes(const BspInstance &instance, CS
                 if (instance.getArchitecture().getMemoryConstraintType() == LOCAL) {
 
                     if (current_proc_persistent_memory[j] + instance.getComputationalDag().nodeMemoryWeight(node) >
-                        instance.getArchitecture().memoryBound()) {
+                        instance.getArchitecture().memoryBound(j)) {
                         continue;
                     }
 
@@ -231,7 +231,7 @@ intTriple GreedyEtfScheduler::GetBestESTforNodes(const BspInstance &instance, CS
                     if (current_proc_persistent_memory[j] + instance.getComputationalDag().nodeMemoryWeight(node) +
                             std::max(current_proc_transient_memory[j],
                                      instance.getComputationalDag().nodeCommunicationWeight(node)) >
-                        instance.getArchitecture().memoryBound()) {
+                        instance.getArchitecture().memoryBound(j)) {
                         continue;
                     }
                 }
