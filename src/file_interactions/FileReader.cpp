@@ -581,6 +581,25 @@ std::pair<bool, BspArchitecture> FileReader::readBspArchitecture(std::ifstream &
     return {true, architecture};
 };
 
+std::string removeLeadingAndTrailingQuotes(const std::string& str) {
+    if (str.empty() || str == "") {
+        return str;
+    }
+
+    size_t start = 0;
+    size_t end = str.size();
+
+    if (str[0] == '"' || str[0] == '\'') {
+        start = 1;
+    }
+
+    if (str[end - 1] == '"' || str[end - 1] == '\'') {
+        end -= 1;
+    }
+
+    return str.substr(start, end - start);
+}
+
 void parseNode(std::string line, ComputationalDag &G) {
 
     // Extract node id and properties
@@ -590,7 +609,9 @@ void parseNode(std::string line, ComputationalDag &G) {
 
     // Split properties into key-value pairs
     std::vector<std::string> keyValuePairs;
-    boost::split(keyValuePairs, properties, boost::is_any_of(" "));
+    boost::split(keyValuePairs, properties, boost::is_any_of(";"));
+
+
 
     // Create node with properties
     int work_weight = 0;
@@ -603,7 +624,10 @@ void parseNode(std::string line, ComputationalDag &G) {
         boost::split(keyValue, keyValuePair, boost::is_any_of("="));
 
         std::string key = keyValue[0];
-        std::string value = keyValue[1];
+        if (key.empty()) {
+            continue;
+        }
+        std::string value = removeLeadingAndTrailingQuotes(keyValue[1]);
 
         if (key == "work_weight") {
             work_weight = std::stoi(value);
@@ -650,7 +674,10 @@ void parseEdge(std::string line, ComputationalDag &G) {
         boost::split(keyValue, keyValuePair, boost::is_any_of("="));
 
         std::string key = keyValue[0];
-        std::string value = keyValue[1];
+        if (key.empty()) {
+            continue;
+        }
+        std::string value =  removeLeadingAndTrailingQuotes(keyValue[1]);
 
         if (key == "comm_weight") {
             comm_weight = std::stoi(value);
