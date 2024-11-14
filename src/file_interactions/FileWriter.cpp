@@ -73,7 +73,7 @@ void FileWriter::writeComputationalDagHyperDagFormat(const ComputationalDag &dag
     }
 
     for (const auto &node : dag.vertices()) {
-        outfile << node << " " << dag.nodeWorkWeight(node) << " " << dag.nodeCommunicationWeight(node) << "\n";
+        outfile << node << " " << dag.nodeWorkWeight(node) << " " << dag.nodeCommunicationWeight(node) << " " << dag.nodeMemoryWeight(node) << " " << dag.nodeType(node) << "\n";
     }
 }
 

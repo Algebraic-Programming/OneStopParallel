@@ -68,10 +68,6 @@ std::pair<bool, csr_graph> readComputationalDagMartixMarketFormat_csr(const std:
 
 std::pair<bool, csr_graph> readComputationalDagMartixMarketFormat_csr(std::ifstream &infile);
 
-std::pair<bool, BspSchedule> readBspSchdeule(const std::string &filename);
-
-std::pair<bool, BspSchedule> readBspSchdeule(std::ifstream &infile);
-
 std::pair<bool, BspArchitecture> readBspArchitecture(const std::string &filename);
 
 std::pair<bool, BspArchitecture> readBspArchitecture(std::ifstream &infile);

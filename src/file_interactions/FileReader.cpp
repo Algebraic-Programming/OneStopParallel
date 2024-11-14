@@ -231,17 +231,19 @@ std::pair<bool, ComputationalDag> FileReader::readComputationalDagHyperdagFormat
         while (!infile.eof() && line.at(0) == '%')
             getline(infile, line);
 
-        int node, work, comm; //, mem;
+        int node, work, comm; //,  mem;
+        //unsigned type;
         sscanf(line.c_str(), "%d %d %d", &node, &work, &comm);
 
-        if (node < 0 || work < 0 || comm < 0 || node >= N) {
-            std::cout << "Incorrect input file format (index out of range, our weight below 0).\n";
+        if (node < 0 || node >= N) {
+            std::cout << "Incorrect input file format, node index out of range.\n";
             return {false, dag};
         }
 
         dag.setNodeCommunicationWeight(node, comm);
         dag.setNodeWorkWeight(node, work);
-        dag.setNodeMemoryWeight(node, comm);
+        // dag.setNodeMemoryWeight(node, mem);
+        // dag.setNodeType(node, type);
     }
 
     return {true, dag};
@@ -594,6 +596,8 @@ void parseNode(std::string line, ComputationalDag &G) {
     int work_weight = 0;
     int mem_weight = 0;
     int comm_weight = 0;
+    unsigned type = 0;
+
     for (const std::string &keyValuePair : keyValuePairs) {
         std::vector<std::string> keyValue;
         boost::split(keyValue, keyValuePair, boost::is_any_of("="));
@@ -607,10 +611,12 @@ void parseNode(std::string line, ComputationalDag &G) {
             mem_weight = std::stoi(value);
         } else if (key == "comm_weight") {
             comm_weight = std::stoi(value);
+        } else if (key == "type") {
+            type = std::stoi(value);        
         }
     }
 
-    G.addVertex(work_weight, comm_weight, mem_weight);
+    G.addVertex(work_weight, comm_weight, mem_weight, type);
 }
 
 void parseEdge(std::string line, ComputationalDag &G) {
@@ -758,6 +764,7 @@ void parseNodeSchedule(std::string line, ComputationalDag &G, std::vector<unsign
     int work_weight = 0;
     int mem_weight = 0;
     int comm_weight = 0;
+    unsigned type = 0;
     for (const std::string &keyValuePair : keyValuePairs) {
 
         // std::cout << "keyValuePair: " << keyValuePair << std::endl;
@@ -795,6 +802,13 @@ void parseNodeSchedule(std::string line, ComputationalDag &G, std::vector<unsign
             std::string num = value.substr(pos_v + 1, line.find("\"") - pos_v - 1);
 
             comm_weight = std::stoi(num);
+        } else if (key == "type") {
+
+            std::size_t pos_v = value.find("\"");
+
+            std::string val = value.substr(pos_v + 1, line.find("\"") - pos_v - 1);
+
+            type = std::stoi(val);
         } else if (key == "proc") {
 
             std::size_t pos_v = value.find("\"");

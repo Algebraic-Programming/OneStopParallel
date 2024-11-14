@@ -35,10 +35,10 @@ limitations under the License.
 class BspScheduleCoarser : public Coarser {
 
   private:
-    BspSchedule schedule*;
+    BspSchedule *schedule;
 
   public:
-    BspScheduleCoarser(const BspSchedule &schedule) : schedule(&schedule) {}
+    BspScheduleCoarser(BspSchedule &schedule) : schedule(&schedule) {}
 
     /**
      * @brief Destructor for the Coarser class.
@@ -65,7 +65,7 @@ class BspScheduleCoarser : public Coarser {
 
         const ComputationalDag &dag_in_schedule = schedule->getInstance().getComputationalDag();
 
-        SetSchedule set_schedule(schedule);
+        SetSchedule set_schedule(*schedule);
 
         std::vector<unsigned> reverse_vertex_map(dag_in.numberOfVertices(), 0);
 
@@ -78,17 +78,18 @@ class BspScheduleCoarser : public Coarser {
                 if (set_schedule.step_processor_vertices[step][proc].size() > 0) {
 
                     int total_work = 0;
-                    int totel_memory = 0;
+                    int total_memory = 0;
                     int total_communication = 0;
 
                     vertex_map.push_back(std::vector<VertexType>());
 
-                    unsigned type = set_schedule.step_processor_vertices[step][proc].begin()->type;
+                    unsigned type =
+                        dag_in_schedule.nodeType(*(set_schedule.step_processor_vertices[step][proc].begin()));
                     bool homogeneous_types = true;
 
                     for (const auto &vertex : set_schedule.step_processor_vertices[step][proc]) {
 
-                        if (vertex.type != type) {
+                        if (dag_in_schedule.nodeType(vertex) != type) {
                             homogeneous_types = false;
                         }
 
@@ -115,7 +116,7 @@ class BspScheduleCoarser : public Coarser {
             }
         }
 
-        for (unsigned vertex_out = 0; vertex < dag_out.numberOfVertices(); vertex++) {
+        for (unsigned vertex_out = 0; vertex_out < dag_out.numberOfVertices(); vertex_out++) {
 
             for (unsigned vertex : vertex_map[vertex_out]) {
 
@@ -129,17 +130,13 @@ class BspScheduleCoarser : public Coarser {
 
                         if (pair.second) {
 
-                            dag_out.setEdgeCommunicationWeight(pair.first, dag_out.edgeCommunicationWeight(pair.first) +
-                                                                               edge.m_eproperty.communicationWeight);
+                            dag_out.setEdgeCommunicationWeight(pair.first,
+                                                               dag_out.edgeCommunicationWeight(pair.first) +
+                                                                   dag_in_schedule.edgeCommunicationWeight(edge));
 
                         } else {
 
-                            const auto [edge_out, valid] =
-                                dag_out.addEdge(vertex_out, target, edge.m_eproperty.communicationWeight);
-
-                            if (not valid) {
-                                throw std::invalid_argument("Adding Edge was not sucessful");
-                            }
+                            dag_out.addEdge(vertex_out, target, dag_in_schedule.edgeCommunicationWeight(edge));
                         }
                     }
                 }

@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
+@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner   
 */
 
 #pragma once
@@ -74,7 +74,7 @@ class BspArchitecture {
      * @param comm_cost The communication cost between processors.
      * @param synch_cost The synchronization cost between processors.
      */
-    BspArchitecture(unsigned processors, unsigned comm_cost, unsigned synch_cost, unsigned memory_bound_ = 100)
+    BspArchitecture(unsigned processors, unsigned comm_cost, unsigned synch_cost, unsigned memory_bound_ = 100) 
         : number_processors(processors), number_of_processor_types(1), communication_costs(comm_cost),
           synchronisation_costs(synch_cost), 
           memory_bound(std::vector<unsigned>(number_processors, memory_bound_)),
@@ -112,7 +112,7 @@ class BspArchitecture {
                         [processors](const auto &thing) { return thing.size() != processors; })) {
             throw std::invalid_argument("send_costs_ needs to be a processors x processors matrix.\n");
         }
-
+        
         for (unsigned i = 0; i < number_processors; i++) {
             send_costs[i][i] = 0;
         }
@@ -143,7 +143,7 @@ class BspArchitecture {
                         [processors](const auto &thing) { return thing.size() != processors; })) {
             throw std::invalid_argument("send_costs_ needs to be a processors x processors matrix.\n");
         }
-
+        
         for (unsigned i = 0; i < number_processors; i++) {
             send_costs[i][i] = 0;
         }
@@ -287,7 +287,7 @@ class BspArchitecture {
     unsigned sumMemoryBound() const { return std::accumulate(memory_bound.begin(), memory_bound.end(), 0); }
 
     unsigned maxMemoryBoundProcType(unsigned procType) const;
-
+    
     /**
      * Returns the number of processors in the architecture.
      *
@@ -325,7 +325,7 @@ class BspArchitecture {
 
     // the type indeces of the processor (e.g. CPU, vector/tensor core)
     inline const std::vector<unsigned int> &processorTypes() const { return processor_type; }
-
+    
     /**
      * Returns the communication costs between two processors. The communication costs are the send costs multiplied by
      * the communication costs.
@@ -359,6 +359,16 @@ class BspArchitecture {
 
         processor_type[p1] = type;
         number_of_processor_types = std::max(number_of_processor_types, type + 1);
+    }
+
+    std::vector<unsigned> getProcessorTypeCount() const {
+
+        std::vector<unsigned> type_count(number_of_processor_types, 0);
+        for (unsigned p = 0; p < number_processors; p++) {
+            type_count[processor_type[p]]++;
+        }
+        return type_count;
+
     }
 
     void updateNumberOfProcessorTypes();
