@@ -474,6 +474,40 @@ ComputationalDag::contracted_graph_without_loops(const std::vector<std::unordere
     return std::make_pair(contr_graph, contraction_map);
 }
 
+std::pair<std::vector<VertexType>, ComputationalDag> ComputationalDag::reverse_graph() const {
+    ComputationalDag rev_graph;
+    std::vector<VertexType> vertex_map(numberOfVertices());
+
+    size_t new_vertex_num = 0;
+    for (VertexType vert = numberOfVertices()-1; vert < numberOfVertices(); vert--) {
+        rev_graph.addVertex(nodeWorkWeight(vert), nodeCommunicationWeight(vert), nodeMemoryWeight(vert), nodeType(vert));
+        vertex_map[vert] = new_vertex_num;
+        new_vertex_num++;
+    }
+
+    for (VertexType vert = numberOfVertices()-1; vert < numberOfVertices(); vert--) {
+        for(const auto &edge : in_edges(vert)) {
+            rev_graph.addEdge(vertex_map[vert], vertex_map[edge.m_source], edgeCommunicationWeight(edge));
+        }
+    }
+
+    // for (const VertexType &vert : vertices()) {
+    //     rev_graph.addVertex(nodeWorkWeight(vert), nodeCommunicationWeight(vert), nodeMemoryWeight(vert), nodeType(vert));
+    // }
+
+    // for (const VertexType &vert : vertices()) {
+    //     for(const auto &edge : in_edges(vert)) {
+    //         rev_graph.addEdge(vert, edge.m_source, edgeCommunicationWeight(edge));
+    //     }
+    // }
+
+    // for (const EdgeType &edge : edges()) {
+    //     rev_graph.addEdge(edge.m_target, edge.m_source, edgeCommunicationWeight(edge));
+    // }
+
+    return {vertex_map, rev_graph};
+}
+
 std::vector<VertexType> ComputationalDag::GetFilteredTopOrder(const std::vector<bool> &valid) const {
     std::vector<VertexType> filteredOrder;
     for (const auto &node : GetTopOrder())
@@ -715,4 +749,89 @@ void ComputationalDag::updateNumberOfNodeTypes() {
             number_of_vertex_types = nodeType(node) + 1;
         }
     }
+}
+
+std::vector<ComputationalDag> ComputationalDag::createInducedSubgraphs(const std::vector<unsigned>& partition_IDs) const
+{
+    // assumes that input partition IDs are consecutive and starting from 0
+
+    unsigned number_of_parts = 0;
+    for(unsigned id : partition_IDs)
+        number_of_parts = std::max(number_of_parts, id + 1);
+
+    std::vector<ComputationalDag> split_dags(number_of_parts);
+    std::vector<unsigned> local_idx(numberOfVertices());
+    for (unsigned node = 0; node < numberOfVertices(); ++node)
+    {
+        local_idx[node] = split_dags[partition_IDs[node]].numberOfVertices();
+        split_dags[partition_IDs[node]].addVertex(nodeWorkWeight(node), nodeCommunicationWeight(node), nodeMemoryWeight(node), nodeType(node));
+    }
+    for (unsigned node = 0; node < numberOfVertices(); ++node)
+        for (const auto &out_edge : out_edges(node))
+        {
+            unsigned succ = out_edge.m_target;
+            if(partition_IDs[node] == partition_IDs[succ])
+                split_dags[partition_IDs[node]].addEdge(local_idx[node], local_idx[succ], edgeCommunicationWeight(out_edge));
+        }            
+
+    return split_dags;
+}
+
+ComputationalDag ComputationalDag::createInducedSubgraph(const std::set<unsigned>& selected_nodes, const std::set<unsigned> &extra_sources) const
+{
+    ComputationalDag subdag;
+    std::map<unsigned, unsigned> local_idx;
+    for (unsigned node : extra_sources)
+    {
+        local_idx[node] = subdag.numberOfVertices();
+        subdag.addVertex(nodeWorkWeight(node), nodeCommunicationWeight(node), nodeMemoryWeight(node), nodeType(node));
+    }
+    for (unsigned node : selected_nodes)
+    {
+        local_idx[node] = subdag.numberOfVertices();
+        subdag.addVertex(nodeWorkWeight(node), nodeCommunicationWeight(node), nodeMemoryWeight(node), nodeType(node));
+    }
+    for (unsigned node : selected_nodes)
+        for (const auto &in_edge : in_edges(node))
+        {
+            unsigned pred = in_edge.m_source;
+            if(selected_nodes.find(pred) != selected_nodes.end() || extra_sources.find(pred) != extra_sources.end())
+                subdag.addEdge(local_idx[pred], local_idx[node], edgeCommunicationWeight(in_edge));
+        }            
+
+    return subdag;
+}
+
+bool ComputationalDag::checkOrderedIsomorphism(const ComputationalDag &other) const
+{
+    if(numberOfVertices() != other.numberOfVertices() || numberOfEdges() != other.numberOfEdges())
+        return false;
+    
+    for (unsigned node = 0; node < numberOfVertices(); ++node)
+    {
+        if(nodeWorkWeight(node) != other.nodeWorkWeight(node) ||
+           nodeMemoryWeight(node) != other.nodeMemoryWeight(node) ||
+           nodeCommunicationWeight(node) != other.nodeCommunicationWeight(node) ||
+           nodeType(node) != other.nodeType(node) )
+            return false;
+        
+        std::set<std::pair<unsigned, unsigned> > children, other_children;
+        for (const auto &out_edge : out_edges(node))
+            children.emplace(out_edge.m_target, edgeCommunicationWeight(out_edge));
+        for (const auto &out_edge : other.out_edges(node))
+            other_children.emplace(out_edge.m_target, edgeCommunicationWeight(out_edge));
+
+        if(children.size() != other_children.size())
+            return false;
+
+        auto itr = children.begin(), other_itr = other_children.begin();
+        for(; itr != children.end() && other_itr != other_children.end(); ++itr)
+        {
+            if(*itr != *other_itr)
+                return false;
+            ++other_itr;
+        }
+    }
+    
+    return true;
 }

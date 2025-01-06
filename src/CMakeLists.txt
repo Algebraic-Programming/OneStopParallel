@@ -7,6 +7,11 @@ file(GLOB simulation_sources simulation/*.cpp)
 # Library: scheduler
 file(GLOB scheduler_sources scheduler/*.cpp)
 
+# Library: LKSchedulers
+file(GLOB KLLocalSearchSchedulers_sources scheduler/LocalSearchSchedulers/KernighanLin/*.cpp)
+
+# Library: scheduler
+file(GLOB dag_divider_sources dag_divider/*.cpp)
 
 # Library: LKSchedulers
 file(GLOB LocalSearchSchedulers_sources scheduler/LocalSearchSchedulers/*.cpp)
@@ -72,6 +77,8 @@ file(GLOB heavy_edge_coarser_sources coarser/heavy_edges/*.cpp)
 # Declare the main library as an interface
 add_library( BspSchedulingLibrary STATIC ${scheduler_sources}
                                   ${simulation_sources}
+                                  ${dag_divider_sources}
+                                  ${KLLocalSearchSchedulers_sources}
                                   ${LocalSearchSchedulers_sources}
                                   ${Partitioners_sources}
                                   ${GreedySchedulers_sources}

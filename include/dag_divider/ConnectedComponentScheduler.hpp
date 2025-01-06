@@ -17,8 +17,10 @@ limitations under the License.
 */
 
 #pragma once
+
 #include "scheduler/Scheduler.hpp"
-#include "dag_partitioners/ConnectedComponentPartitioner.hpp"
+#include "dag_divider/ConnectedComponentDivider.hpp"
+
 
 class ConnectedComponentScheduler : public Scheduler {
 
@@ -33,7 +35,7 @@ class ConnectedComponentScheduler : public Scheduler {
     std::pair<RETURN_STATUS, BspSchedule> computeSchedule(const BspInstance &instance) override {
 
         ComputationalDag dag = instance.getComputationalDag();
-        ConnectedComponentPartitioner partitioner;
+        ConnectedComponentDivider partitioner;
         partitioner.compute_connected_components(dag);
 
         BspSchedule schedule(instance);
@@ -53,7 +55,6 @@ class ConnectedComponentScheduler : public Scheduler {
             const unsigned sub_dag_processors = sub_dag_work_weight_percent * sub_architecture.numberOfProcessors();
             
             sub_architecture.setNumberOfProcessors(sub_dag_processors);
-
 
             BspInstance sub_instance(sub_dag, sub_architecture);
 

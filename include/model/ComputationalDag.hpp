@@ -340,6 +340,14 @@ class ComputationalDag {
     contracted_graph_without_loops(const std::vector<std::unordered_set<VertexType>> &partition) const;
 
     /**
+     * @brief Generates a graph with the direction reversed
+     * 
+     * @return std::vector<VertexType> A mapping from old vertex number (index) to new vertex number
+     * @return ComputationalDag reverse graph
+     */
+    std::pair<std::vector<VertexType>, ComputationalDag> reverse_graph() const;
+
+    /**
      * @brief Tests whether there is a path from src to dest.
      *
      * @param src source vertex
@@ -376,4 +384,25 @@ class ComputationalDag {
 
     void updateNumberOfNodeTypes();
     inline unsigned getNumberOfNodeTypes() const { return number_of_vertex_types; };
+
+    ComputationalDag createInducedSubgraph(const std::set<unsigned>& selected_nodes, const std::set<unsigned>& extra_sources) const;
+        
+    /**
+     * @brief Creates induced subgraphs based on the given partition IDs.
+     *
+     * This function generates a vector of induced subgraphs from the current 
+     * ComputationalDag instance. Each subgraph corresponds to a partition 
+     * specified by the partition_ID vector.
+     *
+     * @param partition_ID A vector of unsigned integers representing the 
+     * partition IDs. Each ID corresponds to a specific partition in the 
+     * ComputationalDag.
+     * !!! assumes that input partition IDs are consecutive and starting from 0 !!!
+     * 
+     * @return A vector of ComputationalDag objects, each representing an 
+     * induced subgraph corresponding to the given partition IDs.
+     */
+    std::vector<ComputationalDag> createInducedSubgraphs(const std::vector<unsigned>& partition_ID) const;
+
+    bool checkOrderedIsomorphism(const ComputationalDag &other) const;
 };
