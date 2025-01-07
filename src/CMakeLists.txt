@@ -50,6 +50,9 @@ file(GLOB file_interactions_sources file_interactions/*.cpp)
 # Library: model
 file(GLOB model_sources model/*.cpp)
 
+# Library: model
+file(GLOB dag_algorithms model/dag_algorithms/*.cpp)
+
 # Library: refine
 file(GLOB refine_sources scheduler/ContractRefineScheduler/refine/*.cpp)
 
@@ -78,6 +81,7 @@ file(GLOB heavy_edge_coarser_sources coarser/heavy_edges/*.cpp)
 add_library( BspSchedulingLibrary STATIC ${scheduler_sources}
                                   ${simulation_sources}
                                   ${dag_divider_sources}
+                                  ${dag_algorithms}
                                   ${KLLocalSearchSchedulers_sources}
                                   ${LocalSearchSchedulers_sources}
                                   ${Partitioners_sources}
