@@ -22,6 +22,8 @@ limitations under the License.
 #include <numeric>
 #include <stdexcept>
 #include <vector>
+#include <iomanip>
+#include <iostream>
 
 enum MEMORY_CONSTRAINT_TYPE { NONE, LOCAL, GLOBAL, PERSISTENT_AND_TRANSIENT };
 
@@ -273,6 +275,9 @@ class BspArchitecture {
      */
     inline bool isNumaArchitecture() const { return isNuma; }
 
+
+    void set_processors_consequ_types(const std::vector<unsigned> &processor_type_count_, const std::vector<unsigned> &processor_type_memory_);
+
     /**
      * Returns the memory bound of the BspArchitecture.
      *
@@ -370,6 +375,8 @@ class BspArchitecture {
         return type_count;
 
     }
+
+    void print_architecture(std::ostream& os) const;
 
     void updateNumberOfProcessorTypes();
 

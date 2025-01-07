@@ -21,6 +21,8 @@ limitations under the License.
 #include "structures/union_find.hpp"
 #include <cmath>
 
+#include "file_interactions/ComputationalDagWriter.hpp"
+#include "model/dag_algorithms/subgraph_algorithms.hpp"
 class WavefrontComponentDivider {
 
   private:

@@ -82,6 +82,34 @@ void BspArchitecture::setProcessorsWithTypes(const std::vector<unsigned> & proce
     updateNumberOfProcessorTypes();
 }
 
+void BspArchitecture::set_processors_consequ_types(const std::vector<unsigned> &processor_type_count_, const std::vector<unsigned> &processor_type_memory_) {
+
+    assert(processor_type_count_.size() == processor_type_memory_.size());
+
+    number_of_processor_types = processor_type_count_.size();
+    number_processors = std::accumulate(processor_type_count_.begin(), processor_type_count_.end(), 0);
+    processor_type = std::vector<unsigned int>(number_processors, 0);
+    memory_bound = std::vector<unsigned int>(number_processors, 0);
+
+    unsigned offset = 0;
+    for (unsigned i = 0; i < processor_type_count_.size(); i++) {
+            
+            for (unsigned j = 0; j < processor_type_count_[i]; j++) {
+                processor_type[offset + j] = i;
+                memory_bound[offset + j] = processor_type_memory_[i];
+            }
+            offset += processor_type_count_[i];
+    }
+
+    send_costs =
+        std::vector<std::vector<unsigned int>>(number_processors, std::vector<unsigned int>(number_processors, 1));
+    for (unsigned i = 0; i < number_processors; i++) {
+        send_costs[i][i] = 0;
+    }
+    isNuma = false;
+}
+
+
 void BspArchitecture::SetUniformSendCost() {
     for (unsigned i = 0; i < number_processors; i++) {
         for (unsigned j = 0; j < number_processors; j++) {
@@ -133,6 +161,29 @@ bool BspArchitecture::are_send_cost_numa() {
         }
     }
     return false;
+}
+
+void BspArchitecture::print_architecture(std::ostream& os) const {
+
+    os << "Architectur info:  number of processors: " << number_processors 
+    << ", Number of processor types: " << number_of_processor_types 
+    << ", Communication costs: " << communication_costs 
+    << ", Synchronization costs: " << synchronisation_costs << std::endl;
+    os << std::setw(17) << " Processor: ";
+    for (unsigned i = 0; i < number_processors; i++) {
+        os << std::right << std::setw(5) << i << " ";
+    }
+    os << std::endl;
+    os << std::setw(17) << "Processor type: ";
+    for (unsigned i = 0; i < number_processors; i++) {
+        os << std::right << std::setw(5) << processor_type[i] << " ";
+    }
+    os << std::endl;
+    os << std::setw(17) << "Memory bound: "; 
+    for (unsigned i = 0; i < number_processors; i++) {
+        os << std::right << std::setw(5) << memory_bound[i] << " ";
+    }
+    os << std::endl;
 }
 
 void BspArchitecture::updateNumberOfProcessorTypes() {

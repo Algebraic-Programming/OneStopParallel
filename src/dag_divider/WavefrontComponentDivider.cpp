@@ -17,7 +17,7 @@ limitations under the License.
 */
 
 #include "dag_divider/WavefrontComponentDivider.hpp"
-#include "model/dag_algorithms/subgraph_algorithms.hpp"
+
 
 void WavefrontComponentDivider::compute_isomorphism_map() {
 
@@ -58,7 +58,11 @@ void WavefrontComponentDivider::print_isomorphism_groups() const {
     for (size_t i = 0; i < isomorphism_groups.size(); i++) {
         std::cout << "Level " << i << std::endl;
         for (size_t j = 0; j < isomorphism_groups[i].size(); j++) {
-            std::cout << "Group " << j << ": ";
+            std::cout << "Group " << j << " of size " << isomorphism_groups_subgraphs[i][j].numberOfVertices() << " : ";
+            
+            //ComputationalDagWriter writer(isomorphism_groups_subgraphs[i][j]);
+            //writer.write_dot("isomorphism_group_" + std::to_string(i) + "_" + std::to_string(j) + ".dot");
+            
             for (const auto &vertex : isomorphism_groups[i][j]) {
                 std::cout << vertex << " ";
             }
@@ -346,14 +350,17 @@ void WavefrontComponentDivider::compute_backward_statistics(const std::vector<st
                            backward_statistics[level_set_idx].number_of_connected_components
                      : backward_statistics[level_set_idx].number_of_connected_components -
                                backward_statistics[level_set_idx].number_of_connected_components <=
-                           param_stableize_threshold) &&
+                           param_stableize_threshold) 
+                        &&
                 (backward_statistics[level_set_idx + 1].number_of_connected_components >
                          backward_statistics[level_set_idx + 2].number_of_connected_components
                      ? backward_statistics[level_set_idx + 1].number_of_connected_components -
                            backward_statistics[level_set_idx + 2].number_of_connected_components
                      : backward_statistics[level_set_idx + 2].number_of_connected_components -
                                backward_statistics[level_set_idx].number_of_connected_components <=
-                           param_stableize_threshold)) {
+                           param_stableize_threshold)
+                )
+                {
 
                 components_stable = true;
                 backward_stable_levels.emplace_back(level_set_idx);
