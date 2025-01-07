@@ -73,6 +73,8 @@ std::pair<RETURN_STATUS, BspSchedule> WavefrontComponentScheduler::computeSchedu
 
     BspSchedule schedule(instance);
 
+    const auto& proc_type_count = instance.getArchitecture().getProcessorTypeCount();
+
     const std::vector<std::vector<std::vector<unsigned>>> &iosmorphism_groups = divider.get_isomorphism_groups();
 
     unsigned superstep_offset = 0;
@@ -90,8 +92,17 @@ std::pair<RETURN_STATUS, BspSchedule> WavefrontComponentScheduler::computeSchedu
             total_step_work += subgraph_work_weights[j] * iosmorphism_groups[i][j].size();
         }
 
-        unsigned processors_offset = 0;
+        //unsigned processors_offset = 0;
         unsigned max_number_supersteps = 0;
+
+        std::vector<unsigned> proc_type_offsets(instance.getArchitecture().getNumberOfProcessorTypes(), 0);
+
+        for (size_t j = 1; j < proc_type_offsets.size(); j++) {
+            proc_type_offsets[j] = proc_type_offsets[j - 1] + proc_type_count[j - 1];
+        }
+
+        std::vector<unsigned> proc_type_offsets_reset(proc_type_offsets);
+        proc_type_offsets_reset.push_back(instance.numberOfProcessors());
 
         for (size_t j = 0; j < iosmorphism_groups[i].size(); j++) { // iterate through isomorphism groups
 
@@ -101,6 +112,13 @@ std::pair<RETURN_STATUS, BspSchedule> WavefrontComponentScheduler::computeSchedu
                 setup_sub_architecture(instance.getArchitecture(), sub_dag, subgraph_work_weights[j], total_step_work);
 
             BspInstance sub_instance(sub_dag, sub_architecture);
+            sub_instance.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
+
+            const auto sub_proc_type_count = sub_architecture.getProcessorTypeCount();
+            std::vector<unsigned> proc_type_corrections(sub_architecture.getNumberOfProcessorTypes(), 0);
+            for (size_t k = 1; k < proc_type_corrections.size(); k++) {
+                proc_type_corrections[k] = proc_type_corrections[k - 1] + sub_proc_type_count[k - 1];
+            }
 
             auto [status, sub_schedule] = scheduler->computeSchedule(sub_instance);
 
@@ -108,15 +126,26 @@ std::pair<RETURN_STATUS, BspSchedule> WavefrontComponentScheduler::computeSchedu
 
                 VertexType subdag_vertex = 0;
                 for (const auto &vertex : divider.get_vertex_maps()[i][group_member_idx]) {
-                    schedule.setAssignedProcessor(vertex,
-                                                  (processors_offset + sub_schedule.assignedProcessor(subdag_vertex)) %
-                                                      instance.getArchitecture().numberOfProcessors());
-                    schedule.setAssignedSuperstep(vertex,
-                                                  superstep_offset + sub_schedule.assignedSuperstep(subdag_vertex));
+
+                    const unsigned proc_orig = sub_schedule.assignedProcessor(subdag_vertex);
+                    const unsigned proc_type = sub_architecture.processorType(proc_orig);
+                    const unsigned proc = proc_orig - proc_type_corrections[proc_type];
+
+                    unsigned assign_proc = proc_type_offsets[proc_type] + proc;
+
+                    if (assign_proc >= proc_type_offsets_reset[proc_type + 1]) {
+                        assign_proc = assign_proc % proc_type_offsets_reset[proc_type + 1] + proc_type_offsets_reset[proc_type];
+                    }
+
+                    schedule.setAssignedProcessor(vertex, assign_proc);
+                    schedule.setAssignedSuperstep(vertex, superstep_offset + sub_schedule.assignedSuperstep(subdag_vertex));
                     subdag_vertex++;
                 }
-
-                processors_offset += sub_architecture.numberOfProcessors();
+                
+                for (size_t k = 0; k < sub_proc_type_count.size(); k++) {
+                    proc_type_offsets[k] += sub_proc_type_count[k];
+                }
+                //processors_offset += sub_architecture.numberOfProcessors();
             }
 
             max_number_supersteps = std::max(max_number_supersteps, sub_schedule.numberOfSupersteps());

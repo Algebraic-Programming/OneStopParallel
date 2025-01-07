@@ -256,12 +256,25 @@ class BspInstance {
         nodeProcessorCompatibility = compatibility_;
     }
     
+    const std::vector<std::vector<bool>>& getProcessorCompatibilityMatrix() const {
+        return nodeProcessorCompatibility;
+    }
+
     void setDiagonalCompatibilityMatrix(unsigned number_of_types) {
         
         nodeProcessorCompatibility = std::vector<std::vector<bool> >(number_of_types, std::vector<bool>(number_of_types, false));
         for(int i=0; i<number_of_types; ++i)
            nodeProcessorCompatibility[i][i] = true; 
     }
+
+    void setAllOnesCompatibilityMatrix() {
+        
+        unsigned number_of_node_types = cdag.getNumberOfNodeTypes();
+        unsigned number_of_proc_types = architecture.getNumberOfProcessorTypes();
+
+        nodeProcessorCompatibility = std::vector<std::vector<bool> >(number_of_node_types, std::vector<bool>(number_of_proc_types, true));
+    }
+
 
     std::vector<std::vector<unsigned>> getProcTypesCompatibleWithNodeType() const {
         unsigned numberOfNodeTypes = cdag.getNumberOfNodeTypes();
@@ -275,4 +288,6 @@ class BspInstance {
 
         return compatibleProcTypes;
     }
+
+    inline const std::vector<std::vector<bool>> &getNodeProcessorCompatibilityMatrix() const { return nodeProcessorCompatibility; }
 };
