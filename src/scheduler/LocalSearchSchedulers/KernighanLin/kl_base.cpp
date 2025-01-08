@@ -96,7 +96,7 @@ void kl_base::compute_node_gain(unsigned node) {
             compute_comm_gain(node, current_step, current_proc, new_proc);
             compute_work_gain(node, current_step, current_proc, new_proc);
 
-            if (use_memory_constraint) {
+            if (current_schedule->use_memory_constraint) {
 
                 if (current_schedule->instance->getArchitecture().getMemoryConstraintType() == LOCAL) {
                     if (current_schedule->step_processor_memory[current_schedule->vector_schedule.assignedSuperstep(
@@ -213,6 +213,11 @@ void kl_base::set_parameters() {
         parameters.max_outer_iterations = std::log(num_nodes);
 
         parameters.selection_threshold = num_nodes * 0.1;
+    }
+
+    if (parameters.quick_pass) {
+        parameters.max_outer_iterations = 25;
+        parameters.max_no_improvement_iterations = 3;
     }
 
 #ifdef KL_DEBUG

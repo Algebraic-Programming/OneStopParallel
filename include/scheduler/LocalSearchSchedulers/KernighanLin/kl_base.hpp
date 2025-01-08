@@ -172,7 +172,7 @@ class kl_base : public ImprovementScheduler, public Ikl_cost_function {
     void print_heap();
 
     bool compute_with_time_limit = false;
-    bool use_memory_constraint;
+    
 
   public:
     
@@ -192,7 +192,7 @@ class kl_base : public ImprovementScheduler, public Ikl_cost_function {
     }
 
     virtual void setUseMemoryConstraint(bool use_memory_constraint_) override {
-        use_memory_constraint = use_memory_constraint_;
+        current_schedule->use_memory_constraint = use_memory_constraint_;
     }
 
     virtual void set_compute_with_time_limit(bool compute_with_time_limit_) {

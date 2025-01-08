@@ -103,6 +103,7 @@ std::pair<RETURN_STATUS, BspSchedule> WavefrontComponentScheduler::computeSchedu
 
         std::vector<unsigned> proc_type_offsets_reset(proc_type_offsets);
         proc_type_offsets_reset.push_back(instance.numberOfProcessors());
+        bool reset_offsets = false;
 
         for (size_t j = 0; j < iosmorphism_groups[i].size(); j++) { // iterate through isomorphism groups
 
@@ -134,7 +135,8 @@ std::pair<RETURN_STATUS, BspSchedule> WavefrontComponentScheduler::computeSchedu
                     unsigned assign_proc = proc_type_offsets[proc_type] + proc;
 
                     if (assign_proc >= proc_type_offsets_reset[proc_type + 1]) {
-                        assign_proc = assign_proc % proc_type_offsets_reset[proc_type + 1] + proc_type_offsets_reset[proc_type];
+                        assign_proc = proc_type_offsets_reset[proc_type] + proc;
+                        reset_offsets = true;
                     }
 
                     schedule.setAssignedProcessor(vertex, assign_proc);
@@ -142,6 +144,13 @@ std::pair<RETURN_STATUS, BspSchedule> WavefrontComponentScheduler::computeSchedu
                     subdag_vertex++;
                 }
                 
+                if (reset_offsets) {
+                    reset_offsets = false;
+                    for (size_t k = 0; k < sub_proc_type_count.size(); k++) {
+                        proc_type_offsets[k] = proc_type_offsets_reset[k];
+                    }
+                }
+
                 for (size_t k = 0; k < sub_proc_type_count.size(); k++) {
                     proc_type_offsets[k] += sub_proc_type_count[k];
                 }

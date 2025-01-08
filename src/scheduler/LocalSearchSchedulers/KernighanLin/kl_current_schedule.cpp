@@ -237,9 +237,11 @@ void kl_current_schedule::compute_work_memory_datastructures(unsigned start_step
 
     if (use_memory_constraint) {
 
-        for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
-            current_proc_persistent_memory[proc] = 0;
-            current_proc_transient_memory[proc] = 0;
+        if (instance->getArchitecture().getMemoryConstraintType() == PERSISTENT_AND_TRANSIENT) {
+            for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
+                current_proc_persistent_memory[proc] = 0;
+                current_proc_transient_memory[proc] = 0;
+            }
         }
 
         for (unsigned step = start_step; step <= end_step; step++) {
@@ -315,14 +317,13 @@ void kl_current_schedule::remove_superstep(unsigned step) {
         set_schedule.mergeSupersteps(step - 1, step);
 
         compute_work_memory_datastructures(step - 1, step);
-    
+
     } else {
         vector_schedule.mergeSupersteps(0, 1);
         set_schedule.mergeSupersteps(0, 1);
 
         compute_work_memory_datastructures(0, 0);
     }
-    
 
     for (unsigned i = step + 1; i < num_steps(); i++) {
 
@@ -383,7 +384,8 @@ void kl_current_schedule::set_current_schedule(const IBspSchedule &schedule) {
     cost_f->compute_current_costs();
 
 #ifdef KL_DEBUG
-    std::cout << "KLCurrentSchedule set current schedule done, costs: " << current_cost << " number of supersteps: " << num_steps() << std::endl;
+    std::cout << "KLCurrentSchedule set current schedule done, costs: " << current_cost
+              << " number of supersteps: " << num_steps() << std::endl;
 #endif
 }
 

@@ -23,6 +23,16 @@ limitations under the License.
 
 #include "file_interactions/ComputationalDagWriter.hpp"
 #include "model/dag_algorithms/subgraph_algorithms.hpp"
+
+
+/**
+ * @class WavefrontComponentDivider
+ * @brief Divides the wavefronts of a computational DAG into consecutive groups or sections. 
+ * The sections are created with the aim of containing a high number of connected components. 
+ * The class also provides functionality to detect groups of isomorphic components within the sections. 
+ * 
+ * 
+ */
 class WavefrontComponentDivider {
 
   private:
@@ -73,14 +83,54 @@ class WavefrontComponentDivider {
     void set_structure_change_threshold(unsigned threshold) { param_structure_change_threshold = threshold; }
     unsigned get_structure_change_threshold() const { return param_structure_change_threshold; }
 
+
+    /**
+     * @brief Retrieves the vertex maps.
+     * 
+     * This function returns a constant reference to a three-dimensional vector
+     * containing the vertex maps. 
+     * - The first dimension represents the sections that the dag is divided into. 
+     * - The second dimension represents the connected components within each section.
+     * - The third dimension lists the vertices within each connected component.
+     * 
+     * @return const std::vector<std::vector<std::vector<unsigned>>>& 
+     *         A constant reference to the vertex maps.
+     */
     const std::vector<std::vector<std::vector<unsigned>>> &get_vertex_maps() const { return vertex_maps; }
 
+    /**
+     * @brief Retrieves the isomorphism groups.
+     * 
+     * This function returns a constant reference to a three-dimensional vector representing the isomorphism groups.
+     * - The first dimension represents the sections that the dag is divided into. 
+     * - The second dimension represents the groups of isomorphic connected components.
+     * - The third dimension lists the indices of the components in the vertex map in the group of isomorphic components.
+     * 
+     * @return const std::vector<std::vector<std::vector<unsigned>>>& 
+     *         A constant reference to the vertex maps.
+     */
     const std::vector<std::vector<std::vector<unsigned>>> &get_isomorphism_groups() const { return isomorphism_groups; }
 
+    /**
+     * @brief Retrieves the isomorphism groups subgraphs.
+     * 
+     * This function returns a constant reference to a three-dimensional vector representing the isomorphism groups subgraphs.
+     * - The first dimension represents the sections that the dag is divided into. 
+     * - The second dimension represents the groups of isomorphic connected components.
+     * - The third dimension contains the subgraph of the isomorphism group.
+     * 
+     * @return const std::vector<std::vector<ComputationalDag>>& A constant reference 
+     * to the isomorphism groups subgraphs.
+     */
     const std::vector<std::vector<ComputationalDag>> &get_isomorphism_groups_subgraphs() const {
         return isomorphism_groups_subgraphs;
     }
 
+    /**
+     * @brief Sets the computational directed acyclic graph (DAG) for the divider.
+     * 
+     * @param dag_ The computational DAG to be set.
+     */
     void set_dag(const ComputationalDag &dag_) {
         backward_stable_levels.clear();
         backward_structure_changes.clear();
@@ -92,7 +142,23 @@ class WavefrontComponentDivider {
         dag = &dag_;
     }
 
+    /**
+     * @brief Computes the isomorphism map for a computed division of the current DAG.
+     * The resulting isomorphism groups are stored in the isomorphism_groups member variable. 
+     * And the corresponding subgraphs are stored in the isomorphism_groups_subgraphs member variable.
+     *       
+     * Reqires the dag to be divided before calling this function.
+     */
     void compute_isomorphism_map();
 
+    /**
+     * @brief Divides the current dag into sections based on the wavefront component structure. 
+     * The resulting sections are stored in the vertex_maps member variable. 
+     * 
+     * Reqires the dag to be set before calling this function.
+     * 
+     * @return true iff some division into section was found. 
+     * If no division was found, the vertex_maps composes the connected components of the entire dag.
+     */
     bool divide();
 };
