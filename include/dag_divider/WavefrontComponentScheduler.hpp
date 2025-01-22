@@ -17,21 +17,33 @@ limitations under the License.
 */
 
 #pragma once
+#include "WavefrontDivider.hpp"
 #include "WavefrontComponentDivider.hpp"
+#include "IsomorphismGroups.hpp"
 #include "scheduler/Scheduler.hpp"
 
 class WavefrontComponentScheduler : public Scheduler {
 
     bool set_num_proc_crit_path = false;
 
+    IWavefrontDivider *divider;
+
     Scheduler *scheduler;
+
+    bool check_isomorphism_groups = true;
 
     BspArchitecture setup_sub_architecture(const BspArchitecture &original, const ComputationalDag &sub_dag,
                                     const double subgraph_work_weight, const double total_step_work);
 
 
+    std::pair<RETURN_STATUS, BspSchedule> computeSchedule_with_isomorphism_groups(const BspInstance &instance);
+    std::pair<RETURN_STATUS, BspSchedule> computeSchedule_without_isomorphism_groups(const BspInstance &instance);
+
   public:
-    WavefrontComponentScheduler(Scheduler &scheduler) : scheduler(&scheduler) {}
+  
+    WavefrontComponentScheduler(IWavefrontDivider &div, Scheduler &scheduler) : divider(&div), scheduler(&scheduler) {}
+
+    void set_check_isomorphism_groups(bool check) { check_isomorphism_groups = check; }
 
     std::string getScheduleName() const override { return "WavefrontComponentScheduler"; }
 

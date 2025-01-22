@@ -16,9 +16,9 @@ limitations under the License.
 @author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 
-#include "dag_divider/WavefrontComponentDivider.hpp"
+#include "dag_divider/WavefrontParallelismDivider.hpp"
 
-bool WavefrontComponentDivider::compute_split(const std::vector<double> &parallelism, size_t &split) {
+bool WavefrontParallelismDivider::compute_split(const std::vector<double> &parallelism, size_t &split) {
 
     double mean = 0.0;
     double variance = 0.0;
@@ -43,7 +43,7 @@ bool WavefrontComponentDivider::compute_split(const std::vector<double> &paralle
         double right_variance = 0;
         compute_variance(right, right_mean, right_variance);
 
-        if (((i > 1) && (i < parallelism.size() - 1)) || ((*(left.end()) == 1 && *(right.begin()) != 1 ) || (*(left.end()) != 1 && *(right.begin()) == 1))) {
+        if ((i > min_number_wavefronts) && (i < parallelism.size() - min_number_wavefronts)) {
 
             if (left_variance + right_variance < obj) {
                 split = i;
@@ -65,14 +65,14 @@ bool WavefrontComponentDivider::compute_split(const std::vector<double> &paralle
     }
 }
 
-void WavefrontComponentDivider::split_sequence(const std::vector<double> &seq, std::vector<size_t> &splits,  size_t offset) {
+void WavefrontParallelismDivider::split_sequence(const std::vector<double> &seq, std::vector<size_t> &splits,  size_t offset, unsigned depth) {
 
     double mean = 0.0;
     double variance = 0.0;
 
     compute_variance(seq, mean, variance);
 
-    if (variance > var_threshold) {
+    if ((variance > var_threshold) && (depth < max_depth)) {
        
         size_t split = 0;
         if (compute_split(seq, split)) {
@@ -82,17 +82,18 @@ void WavefrontComponentDivider::split_sequence(const std::vector<double> &seq, s
             std::vector<double> left(seq.begin(), seq.begin() + split);
             std::vector<double> right(seq.begin() + split, seq.end());
 
-            split_sequence(left, splits, offset);
-            split_sequence(right, splits, split + offset);
+            depth++;
+
+            split_sequence(left, splits, offset, depth);
+            split_sequence(right, splits, split + offset, depth);
         }
     }
 }
 
-std::vector<std::vector<std::vector<unsigned>>> WavefrontComponentDivider::divide(const ComputationalDag &dag_) {
+std::vector<std::vector<std::vector<unsigned>>> WavefrontParallelismDivider::divide(const ComputationalDag &dag_) {
 
     forward_statistics.clear();
-    backward_statistics.clear();
-
+ 
     dag = &dag_;
 
     const std::vector<unsigned> bot_distance = dag->get_top_node_distance();
@@ -109,80 +110,14 @@ std::vector<std::vector<std::vector<unsigned>>> WavefrontComponentDivider::divid
     compute_forward_statistics(level_sets, *dag);
     print_wavefront_statistics(forward_statistics);
 
-    std::cout << " ------------------- " << std::endl;
-
-    compute_backward_statistics(level_sets, *dag);
-    print_wavefront_statistics(backward_statistics, true);
-
-
     std::vector<double> forward_parallelism(forward_statistics.size());
     size_t i = 0;
     for (const auto &stat : forward_statistics) {
-        forward_parallelism[i++] = stat.number_of_connected_components;
+        forward_parallelism[i++] = stat.parallelism;
     }
-
-    std::vector<size_t> fwd_splits;
-    split_sequence(forward_parallelism, fwd_splits);
-
-    std::sort(fwd_splits.begin(), fwd_splits.end());
-
-    std::cout << "FWD Splits: ";
-    for (const auto split : fwd_splits) {
-        std::cout << split << " ";
-    }
-    std::cout << std::endl;
-
-
-    std::vector<double> backward_parallelism(backward_statistics.size());
-    i = 0;
-    for (const auto &stat : backward_statistics) {
-        backward_parallelism[i++] = stat.number_of_connected_components;
-    }
-
-    double min_components = std::numeric_limits<double>::max();
-    for (auto iter = backward_parallelism.rbegin(); iter != backward_parallelism.rend(); ++iter) {
-        min_components = std::min(*iter, min_components);
-        *iter = min_components;
-    }
-
-    std::vector<size_t> bwd_splits;
-    split_sequence(backward_parallelism, bwd_splits);
-
-    std::sort(bwd_splits.begin(), bwd_splits.end(), std::greater<>());
-
-    std::cout << "BWD Splits: ";
-    for (const auto split : bwd_splits) {
-        std::cout << split << " ";
-    }
-    std::cout << std::endl;
-
 
     std::vector<size_t> cut_levels;
-
-    if (fwd_splits.size() > 0 && bwd_splits.size() > 0) {
-
-        unsigned fwd = 0;
-        unsigned bwd = 0;
-
-        while (fwd < fwd_splits.size() && bwd < bwd_splits.size()) {
-
-            if (fwd_splits[fwd] <= bwd_splits[bwd]) {
-
-                if (((fwd + bwd) % 2) == 0) {
-                    cut_levels.emplace_back(fwd_splits[fwd++]);
-                } else {
-                    cut_levels.emplace_back(bwd_splits[bwd++]);
-                }
-
-            } else {
-                break;
-            }
-        }
-    } else if (fwd_splits.size() > 0) {
-        cut_levels = fwd_splits;
-    } else if (bwd_splits.size() > 0) {
-        cut_levels = bwd_splits;
-    }
+    split_sequence(forward_parallelism, cut_levels);
 
     std::sort(cut_levels.begin(), cut_levels.end());
 
@@ -254,14 +189,11 @@ std::vector<std::vector<std::vector<unsigned>>> WavefrontComponentDivider::divid
 
         vertex_maps = std::vector<std::vector<std::vector<unsigned>>>(1);
         vertex_maps[0] = forward_statistics.back().connected_components_vertices;
-
     }
-
     return vertex_maps;
-    //
 }
 
-void WavefrontComponentDivider::compute_forward_statistics(const std::vector<std::vector<unsigned>> &level_sets,
+void WavefrontParallelismDivider::compute_forward_statistics(const std::vector<std::vector<unsigned>> &level_sets,
                                                              const ComputationalDag &dag) {
 
     forward_statistics.resize(level_sets.size());
@@ -277,12 +209,29 @@ void WavefrontComponentDivider::compute_forward_statistics(const std::vector<std
 
     forward_statistics[level_set_idx].number_of_connected_components = components.size();
 
-
+    forward_statistics[level_set_idx].total_weight = 0;
+    forward_statistics[level_set_idx].max_weight = 0;
     for (unsigned i = 0; i < components.size(); i++) {
+
+        forward_statistics[level_set_idx].total_weight += std::get<1>(components[i]);
+
         forward_statistics[level_set_idx].connected_components_weights.emplace_back(std::get<1>(components[i]));
         forward_statistics[level_set_idx].connected_components_memories.emplace_back(std::get<2>(components[i]));
         forward_statistics[level_set_idx].connected_components_vertices.emplace_back(std::get<0>(components[i]));
+
+        for (const auto &vertex : forward_statistics[level_set_idx].connected_components_vertices[i]) {
+            forward_statistics[level_set_idx].max_weight =
+                std::max(forward_statistics[level_set_idx].max_weight, (double)dag.nodeWorkWeight(vertex));
+        }
     }
+
+    forward_statistics[level_set_idx].total_acc_weight = forward_statistics[level_set_idx].total_weight;
+    forward_statistics[level_set_idx].max_acc_weight = forward_statistics[level_set_idx].max_weight;
+
+    forward_statistics[level_set_idx].parallelism =
+        forward_statistics[level_set_idx].total_acc_weight / forward_statistics[level_set_idx].max_acc_weight;
+
+    bool components_stable = false;
 
     level_set_idx++;
 
@@ -310,82 +259,44 @@ void WavefrontComponentDivider::compute_forward_statistics(const std::vector<std
 
         forward_statistics[level_set_idx].number_of_connected_components = components.size();
 
+        forward_statistics[level_set_idx].total_weight = 0;
+        forward_statistics[level_set_idx].max_weight = 0;
+
         for (unsigned i = 0; i < components.size(); i++) {
+
+            forward_statistics[level_set_idx].total_weight += std::get<1>(components[i]);
+
             forward_statistics[level_set_idx].connected_components_weights.emplace_back(std::get<1>(components[i]));
             forward_statistics[level_set_idx].connected_components_memories.emplace_back(std::get<2>(components[i]));
             forward_statistics[level_set_idx].connected_components_vertices.emplace_back(std::get<0>(components[i]));
+
+            for (const auto &vertex : forward_statistics[level_set_idx].connected_components_vertices[i]) {
+                forward_statistics[level_set_idx].max_weight =
+                    std::max(forward_statistics[level_set_idx].max_weight, (double)dag.nodeWorkWeight(vertex));
+            }
         }
 
+        forward_statistics[level_set_idx].total_acc_weight =
+            forward_statistics[level_set_idx - 1].total_acc_weight + forward_statistics[level_set_idx].total_weight;
+        forward_statistics[level_set_idx].max_acc_weight =
+            forward_statistics[level_set_idx - 1].max_acc_weight + forward_statistics[level_set_idx].max_weight;
+
+        forward_statistics[level_set_idx].parallelism =
+            forward_statistics[level_set_idx].total_acc_weight / forward_statistics[level_set_idx].max_acc_weight;
+
+ 
         level_set_idx++;
     }
 }
 
-void WavefrontComponentDivider::compute_backward_statistics(const std::vector<std::vector<unsigned>> &level_sets,
-                                                              const ComputationalDag &dag) {
-
-    backward_statistics.resize(level_sets.size());
-
-    unsigned level_set_idx = level_sets.size() - 1;
-
-    Union_Find_Universe<unsigned> uf;
-    for (const auto vertex : level_sets[level_set_idx]) {
-        uf.add_object(vertex, dag.nodeWorkWeight(vertex), dag.nodeMemoryWeight(vertex));
-    }
-
-    const auto components = uf.get_connected_components_weights_and_memories();
-
-    backward_statistics[level_set_idx].number_of_connected_components = components.size();
-
-    for (unsigned i = 0; i < components.size(); i++) {
-        backward_statistics[level_set_idx].connected_components_weights.emplace_back(std::get<1>(components[i]));
-        backward_statistics[level_set_idx].connected_components_memories.emplace_back(std::get<2>(components[i]));
-        backward_statistics[level_set_idx].connected_components_vertices.emplace_back(std::get<0>(components[i]));
-    }
-
-    size_t min_number_of_components = dag.numberOfVertices();
-
-    while (level_set_idx > 0) {
-
-        level_set_idx--;
-        for (const auto vertex : level_sets[level_set_idx]) {
-            uf.add_object(vertex, dag.nodeWorkWeight(vertex), dag.nodeMemoryWeight(vertex));
-        }
-
-        for (const auto &node : level_sets[level_set_idx]) {
-            for (const auto &child : dag.children(node)) {
-
-                if (uf.is_in_universe(child))
-                    uf.join_by_name(node, child);
-            }
-
-            for (const auto &parent : dag.parents(node)) {
-
-                if (uf.is_in_universe(parent)) {
-                    uf.join_by_name(parent, node);
-                }
-            }
-        }
-
-        const auto components = uf.get_connected_components_weights_and_memories();
-
-        backward_statistics[level_set_idx].number_of_connected_components = components.size();
-
-        for (unsigned i = 0; i < components.size(); i++) {
-            backward_statistics[level_set_idx].connected_components_weights.emplace_back(std::get<1>(components[i]));
-            backward_statistics[level_set_idx].connected_components_memories.emplace_back(std::get<2>(components[i]));
-            backward_statistics[level_set_idx].connected_components_vertices.emplace_back(std::get<0>(components[i]));
-        }       
-    }
-}
-
-void WavefrontComponentDivider::print_wavefront_statistics(const std::vector<wavefron_statistics> &statistics,
+void WavefrontParallelismDivider::print_wavefront_statistics(const std::vector<wavefron_statistics> &statistics,
                                                              bool reverse) {
     if (reverse) {
 
         for (size_t i = 0; i < statistics.size(); i++) {
 
             std::cout << "Level " << i << " has " << statistics[i].number_of_connected_components
-                      << " connected components" << std::endl;
+                      << " connected components, and parallelism " << statistics[i].parallelism << std::endl;
             // for (size_t j = 0; j < statistics[i].connected_components_vertices.size(); j++) {
 
             //     std::cout << "Component " << j << " has " <<
@@ -398,7 +309,7 @@ void WavefrontComponentDivider::print_wavefront_statistics(const std::vector<wav
     } else {
         for (size_t i = 0; i < statistics.size(); i++) {
             std::cout << "Level " << i << " has " << statistics[i].number_of_connected_components
-                      << " connected components" << std::endl;
+                      << " connected components, and parallelism " << statistics[i].parallelism << std::endl;
             // for (size_t j = 0; j < statistics[i].connected_components_vertices.size(); j++) {
 
             //     std::cout << "Component " << j << " has " <<
@@ -410,7 +321,7 @@ void WavefrontComponentDivider::print_wavefront_statistics(const std::vector<wav
     }
 }
 
-void WavefrontComponentDivider::compute_variance(const std::vector<double> &data, double &mean, double &variance) {
+void WavefrontParallelismDivider::compute_variance(const std::vector<double> &data, double &mean, double &variance) {
 
     mean = 0;
     variance = 0;

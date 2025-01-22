@@ -64,19 +64,75 @@ BspArchitecture WavefrontComponentScheduler::setup_sub_architecture(const BspArc
 
 std::pair<RETURN_STATUS, BspSchedule> WavefrontComponentScheduler::computeSchedule(const BspInstance &instance) {
 
-    WavefrontComponentDivider divider;
+    if (check_isomorphism_groups) {
+        return computeSchedule_with_isomorphism_groups(instance);
+    } else {
+        return computeSchedule_without_isomorphism_groups(instance);
+    }
+}
 
-    divider.set_dag(instance.getComputationalDag());
+std::pair<RETURN_STATUS, BspSchedule> WavefrontComponentScheduler::computeSchedule_without_isomorphism_groups(const BspInstance &instance) {
 
-    divider.divide();
-    divider.compute_isomorphism_map();
+        auto vertex_maps = divider->divide(instance.getComputationalDag());
+
+        BspSchedule schedule(instance);
+        const auto& proc_type_count = instance.getArchitecture().getProcessorTypeCount();
+
+        unsigned superstep_offset = 0;
+
+        for (size_t i = 0; i < vertex_maps.size(); i++) {
+
+            unsigned processors_offset = 0;
+            unsigned max_number_supersteps = 0;
+
+            for (size_t j = 0; j < vertex_maps[i].size(); j++) {
+
+                const ComputationalDag &sub_dag = dag_algorithms::create_induced_subgraph_sorted(instance.getComputationalDag(), vertex_maps[i][j]);
+
+                // BspArchitecture sub_architecture =
+                //     setup_sub_architecture(instance.getArchitecture(), sub_dag, sub_dag.sumOfVerticesWorkWeights(sub_dag.vertices().begin(), sub_dag.vertices().end()),
+                //                            instance.getComputationalDag().sumOfVerticesWorkWeights(sub_dag.vertices().begin(), sub_dag.vertices().end()));
+
+                std::cout << "Subdag " << i << " " << j << " " << sub_dag.numberOfVertices() << " " << sub_dag.numberOfEdges() << std::endl;
+
+                BspInstance sub_instance(sub_dag, instance.getArchitecture());
+                //sub_instance.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
+
+                auto [status, sub_schedule] = scheduler->computeSchedule(sub_instance);
+
+                for (const auto &vertex : vertex_maps[i][j]) {
+
+                    const unsigned proc_orig = sub_schedule.assignedProcessor(vertex);
+                    const unsigned proc_type = instance.getArchitecture().processorType(proc_orig);
+                    const unsigned proc = proc_orig - processors_offset;
+
+                    schedule.setAssignedProcessor(vertex, proc);
+                    schedule.setAssignedSuperstep(vertex, superstep_offset + sub_schedule.assignedSuperstep(vertex));
+                }
+
+                processors_offset += instance.getArchitecture().numberOfProcessors();
+                max_number_supersteps = std::max(max_number_supersteps, sub_schedule.numberOfSupersteps());
+            }
+
+            superstep_offset += max_number_supersteps;
+        }
+
+        schedule.updateNumberOfSupersteps();
+        schedule.setLazyCommunicationSchedule();
+
+        return {SUCCESS, schedule};
+}
+
+std::pair<RETURN_STATUS, BspSchedule> WavefrontComponentScheduler::computeSchedule_with_isomorphism_groups(const BspInstance &instance) {
+
+    
+    IsomorphismGroups iso_groups;
+    auto vertex_maps = divider->divide(instance.getComputationalDag());
+    iso_groups.compute_isomorphism_groups(vertex_maps, instance.getComputationalDag());
 
     BspSchedule schedule(instance);
-
     const auto& proc_type_count = instance.getArchitecture().getProcessorTypeCount();
-
-    const std::vector<std::vector<std::vector<unsigned>>> &iosmorphism_groups = divider.get_isomorphism_groups();
-
+    const std::vector<std::vector<std::vector<unsigned>>> &iosmorphism_groups = iso_groups.get_isomorphism_groups();
     unsigned superstep_offset = 0;
 
     for (size_t i = 0; i < iosmorphism_groups.size(); i++) { // iterate through wavefront sets
@@ -86,7 +142,7 @@ std::pair<RETURN_STATUS, BspSchedule> WavefrontComponentScheduler::computeSchedu
 
         for (size_t j = 0; j < iosmorphism_groups[i].size(); j++) { // iterate through isomorphism groups
 
-            const ComputationalDag &sub_dag = divider.get_isomorphism_groups_subgraphs()[i][j];
+            const ComputationalDag &sub_dag = iso_groups.get_isomorphism_groups_subgraphs()[i][j];
             subgraph_work_weights[j] =
                 sub_dag.sumOfVerticesWorkWeights(sub_dag.vertices().begin(), sub_dag.vertices().end());
             total_step_work += subgraph_work_weights[j] * iosmorphism_groups[i][j].size();
@@ -107,7 +163,7 @@ std::pair<RETURN_STATUS, BspSchedule> WavefrontComponentScheduler::computeSchedu
 
         for (size_t j = 0; j < iosmorphism_groups[i].size(); j++) { // iterate through isomorphism groups
 
-            const ComputationalDag &sub_dag = divider.get_isomorphism_groups_subgraphs()[i][j];
+            const ComputationalDag &sub_dag = iso_groups.get_isomorphism_groups_subgraphs()[i][j];
 
             BspArchitecture sub_architecture =
                 setup_sub_architecture(instance.getArchitecture(), sub_dag, subgraph_work_weights[j], total_step_work);
@@ -126,7 +182,7 @@ std::pair<RETURN_STATUS, BspSchedule> WavefrontComponentScheduler::computeSchedu
             for (const auto &group_member_idx : iosmorphism_groups[i][j]) {
 
                 VertexType subdag_vertex = 0;
-                for (const auto &vertex : divider.get_vertex_maps()[i][group_member_idx]) {
+                for (const auto &vertex : vertex_maps[i][group_member_idx]) {
 
                     const unsigned proc_orig = sub_schedule.assignedProcessor(subdag_vertex);
                     const unsigned proc_type = sub_architecture.processorType(proc_orig);

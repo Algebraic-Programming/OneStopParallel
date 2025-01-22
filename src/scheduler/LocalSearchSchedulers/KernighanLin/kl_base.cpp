@@ -33,7 +33,7 @@ RETURN_STATUS kl_base::improveSchedule(BspSchedule &schedule) {
 
     bool improvement_found = run_local_search_remove_supersteps();
 
-    //assert(best_schedule->satisfiesPrecedenceConstraints());
+    // assert(best_schedule->satisfiesPrecedenceConstraints());
 
     schedule.setImprovedLazyCommunicationSchedule();
 
@@ -252,7 +252,7 @@ void kl_base::select_unlock_neighbors(VertexType node) {
 bool kl_base::check_node_unlocked(VertexType node) {
 
     if (super_locked_nodes.find(node) == super_locked_nodes.end() && locked_nodes.find(node) == locked_nodes.end()) {
-            return true;
+        return true;
     }
     return false;
 };
@@ -1057,36 +1057,37 @@ void kl_base::select_nodes_check_remove_superstep() {
             std::cout << "trying to remove superstep " << step_to_remove << std::endl;
 #endif
 
-            scatter_nodes_remove_superstep(step_to_remove);
+            if (scatter_nodes_remove_superstep(step_to_remove)) {
 
-            for (unsigned proc = 0; proc < num_procs; proc++) {
+                for (unsigned proc = 0; proc < num_procs; proc++) {
 
-                if (step_to_remove < current_schedule->num_steps()) {
-                    node_selection.insert(
-                        current_schedule->set_schedule.step_processor_vertices[step_to_remove][proc].begin(),
-                        current_schedule->set_schedule.step_processor_vertices[step_to_remove][proc].end());
+                    if (step_to_remove < current_schedule->num_steps()) {
+                        node_selection.insert(
+                            current_schedule->set_schedule.step_processor_vertices[step_to_remove][proc].begin(),
+                            current_schedule->set_schedule.step_processor_vertices[step_to_remove][proc].end());
+                    }
+
+                    if (step_to_remove > 0) {
+                        node_selection.insert(
+                            current_schedule->set_schedule.step_processor_vertices[step_to_remove - 1][proc].begin(),
+                            current_schedule->set_schedule.step_processor_vertices[step_to_remove - 1][proc].end());
+                    }
                 }
 
-                if (step_to_remove > 0) {
-                    node_selection.insert(
-                        current_schedule->set_schedule.step_processor_vertices[step_to_remove - 1][proc].begin(),
-                        current_schedule->set_schedule.step_processor_vertices[step_to_remove - 1][proc].end());
+                step_selection_counter = step_to_remove + 1;
+
+                if (step_selection_counter >= current_schedule->num_steps()) {
+                    step_selection_epoch_counter++;
                 }
-            }
 
-            step_selection_counter = step_to_remove + 1;
-
-            if (step_selection_counter >= current_schedule->num_steps()) {
-                step_selection_epoch_counter++;
-            }
-
-            parameters.violations_threshold = 0;
-            super_locked_nodes.clear();
+                parameters.violations_threshold = 0;
+                super_locked_nodes.clear();
 #ifdef KL_DEBUG
-            std::cout << "---- reset super locked nodes" << std::endl;
+                std::cout << "---- reset super locked nodes" << std::endl;
 #endif
 
-            return;
+                return;
+            }
         }
     }
 
@@ -1101,6 +1102,10 @@ void kl_base::select_nodes_check_remove_superstep() {
 
 bool kl_base::check_remove_superstep(unsigned step) {
 
+    if (current_schedule->num_steps() <= 2) {
+        return false;
+    }
+
     unsigned total_work = 0;
 
     for (unsigned proc = 0; proc < num_procs; proc++) {
@@ -1114,20 +1119,81 @@ bool kl_base::check_remove_superstep(unsigned step) {
     return false;
 }
 
-void kl_base::scatter_nodes_remove_superstep(unsigned step) {
+bool kl_base::scatter_nodes_remove_superstep(unsigned step) {
 
     assert(step < current_schedule->num_steps());
 
     std::vector<kl_move> moves;
+
+    bool abort = false;
 
     for (unsigned proc = 0; proc < num_procs; proc++) {
         for (const auto &node : current_schedule->set_schedule.step_processor_vertices[step][proc]) {
 
             compute_node_gain(node);
             moves.push_back(best_move_change_superstep(node));
+
+            if (moves.back().gain = std::numeric_limits<double>::lowest()) {
+                abort = true;
+                break;
+            }
+
+            if (current_schedule->use_memory_constraint) {
+
+                if (current_schedule->instance->getArchitecture().getMemoryConstraintType() ==
+                    PERSISTENT_AND_TRANSIENT) {
+
+                    if (moves.back().to_proc != moves.back().from_proc) {
+                        current_schedule->current_proc_persistent_memory[moves.back().to_proc] +=
+                            current_schedule->instance->getComputationalDag().nodeMemoryWeight(node);
+                        current_schedule->current_proc_persistent_memory[moves.back().from_proc] -=
+                            current_schedule->instance->getComputationalDag().nodeMemoryWeight(node);
+
+                        current_schedule->current_proc_transient_memory[moves.back().to_proc] =
+                            std::max(current_schedule->current_proc_transient_memory[moves.back().to_proc],
+                                     current_schedule->instance->getComputationalDag().nodeCommunicationWeight(node));
+                        // TODO: implement this properly if PERSISTENT_AND_TRANSIENT becomes relevant
+                    }
+
+                } else if (current_schedule->instance->getArchitecture().getMemoryConstraintType() == LOCAL) {
+                    current_schedule->step_processor_work[moves.back().to_step][moves.back().to_proc] +=
+                        current_schedule->instance->getComputationalDag().nodeWorkWeight(node);
+                }
+            }
+        }
+
+        if (abort) {
+            break;
         }
 
         current_schedule->set_schedule.step_processor_vertices[step][proc].clear();
+    }
+
+    if (abort) {
+
+        for (const auto &move : moves) {
+
+            current_schedule->set_schedule.step_processor_vertices[step][move.from_proc].insert(move.node);
+
+            if (current_schedule->use_memory_constraint) {
+
+                if (current_schedule->instance->getArchitecture().getMemoryConstraintType() ==
+                    PERSISTENT_AND_TRANSIENT) {
+
+                    if (move.to_proc != move.from_proc) {
+                        current_schedule->current_proc_persistent_memory[move.to_proc] -=
+                            current_schedule->instance->getComputationalDag().nodeMemoryWeight(move.node);
+                        current_schedule->current_proc_persistent_memory[move.from_proc] +=
+                            current_schedule->instance->getComputationalDag().nodeMemoryWeight(move.node);
+                    }
+
+                } else if (current_schedule->instance->getArchitecture().getMemoryConstraintType() == LOCAL) {
+                    current_schedule->step_processor_work[move.to_step][move.to_proc] -=
+                        current_schedule->instance->getComputationalDag().nodeWorkWeight(move.node);
+                }
+            }
+        }
+        return false;
     }
 
     for (const auto &move : moves) {
@@ -1143,8 +1209,9 @@ void kl_base::scatter_nodes_remove_superstep(unsigned step) {
     }
 
     current_schedule->remove_superstep(step);
-}
 
+    return true;
+}
 
 void kl_base::reset_run_datastructures() {
     node_selection.clear();

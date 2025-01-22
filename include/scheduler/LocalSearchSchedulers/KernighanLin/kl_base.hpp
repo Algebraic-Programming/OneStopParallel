@@ -150,7 +150,7 @@ class kl_base : public ImprovementScheduler, public Ikl_cost_function {
     unsigned step_selection_epoch_counter = 0;
 
     virtual bool check_remove_superstep(unsigned step);
-    void scatter_nodes_remove_superstep(unsigned step);
+    bool scatter_nodes_remove_superstep(unsigned step);
 
     void select_unlock_neighbors(VertexType node);
 

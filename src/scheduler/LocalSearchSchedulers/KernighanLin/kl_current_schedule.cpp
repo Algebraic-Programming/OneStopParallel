@@ -266,6 +266,10 @@ void kl_current_schedule::compute_work_memory_datastructures(unsigned start_step
                         current_proc_transient_memory[proc] =
                             std::max(current_proc_transient_memory[proc],
                                      instance->getComputationalDag().nodeCommunicationWeight(node));
+
+                        if (current_proc_transient_memory[proc] + current_proc_persistent_memory[proc] > instance->memoryBound(proc)) {
+                            throw std::runtime_error("Memory constraint PERSISTENT_AND_TRANSIENT not properly implemented");                         
+                        }
                     }
                 }
 
