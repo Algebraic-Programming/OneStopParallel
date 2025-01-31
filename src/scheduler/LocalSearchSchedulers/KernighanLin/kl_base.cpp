@@ -1031,6 +1031,202 @@ void kl_base::select_nodes_conseque_max_work(bool do_not_select_super_locked_nod
     }
 }
 
+
+void kl_base::select_nodes_check_reset_superstep() {
+
+    if (step_selection_epoch_counter > parameters.max_step_selection_epochs) {
+
+#ifdef KL_DEBUG
+        std::cout << "step selection epoch counter exceeded, reset supersteps" << std::endl;
+#endif
+
+        select_nodes();
+        return;
+    }
+
+    for (unsigned step_to_remove = step_selection_counter; step_to_remove < current_schedule->num_steps();
+         step_to_remove++) {
+
+#ifdef KL_DEBUG
+        std::cout << "checking step to reset " << step_to_remove << " / " << current_schedule->num_steps()
+                  << std::endl;
+#endif
+
+        if (check_reset_superstep(step_to_remove)) {
+
+#ifdef KL_DEBUG
+            std::cout << "trying to reset superstep " << step_to_remove << std::endl;
+#endif
+
+            if (scatter_nodes_reset_superstep(step_to_remove)) {
+
+                for (unsigned proc = 0; proc < num_procs; proc++) {
+
+                    if (step_to_remove < current_schedule->num_steps()) {
+                        node_selection.insert(
+                            current_schedule->set_schedule.step_processor_vertices[step_to_remove][proc].begin(),
+                            current_schedule->set_schedule.step_processor_vertices[step_to_remove][proc].end());
+                    }
+
+                    if (step_to_remove > 0) {
+                        node_selection.insert(
+                            current_schedule->set_schedule.step_processor_vertices[step_to_remove - 1][proc].begin(),
+                            current_schedule->set_schedule.step_processor_vertices[step_to_remove - 1][proc].end());
+                    }
+                }
+
+                step_selection_counter = step_to_remove + 1;
+
+                if (step_selection_counter >= current_schedule->num_steps()) {
+                    step_selection_counter = 0; 
+                    step_selection_epoch_counter++;
+                }
+
+                parameters.violations_threshold = 0;
+                super_locked_nodes.clear();
+#ifdef KL_DEBUG
+                std::cout << "---- reset super locked nodes" << std::endl;
+#endif
+
+                return;
+            }
+        }
+    }
+
+#ifdef KL_DEBUG
+    std::cout << "no superstep to reset" << std::endl;
+#endif
+
+    step_selection_epoch_counter++;
+    select_nodes();
+    return;
+}
+
+
+bool kl_base::check_reset_superstep(unsigned step) {
+
+    if (current_schedule->num_steps() <= 2) {
+        return false;
+    }
+
+    unsigned total_work = 0;
+    int max_total_work = 0;
+    int min_total_work = std::numeric_limits<int>::max();
+
+    for (unsigned proc = 0; proc < num_procs; proc++) {
+        total_work += current_schedule->step_processor_work[step][proc];
+        max_total_work = std::max(max_total_work, current_schedule->step_processor_work[step][proc]);
+        min_total_work = std::min(min_total_work, current_schedule->step_processor_work[step][proc]);
+    }
+
+
+#ifdef KL_DEBUG
+
+    std::cout << " avg " << static_cast<double>(total_work) / static_cast<double>(current_schedule->instance->numberOfProcessors()) << " max " << max_total_work << " min " << min_total_work << std::endl;
+#endif
+
+    if ( static_cast<double>(total_work) / static_cast<double>(current_schedule->instance->numberOfProcessors()) * 0.1 > static_cast<double>(min_total_work)) {
+        return true;
+    }
+    
+    return false;
+}
+
+bool kl_base::scatter_nodes_reset_superstep(unsigned step) {
+
+    assert(step < current_schedule->num_steps());
+
+    std::vector<kl_move> moves;
+
+    bool abort = false;
+
+    for (unsigned proc = 0; proc < num_procs; proc++) {
+        for (const auto &node : current_schedule->set_schedule.step_processor_vertices[step][proc]) {
+
+            compute_node_gain(node);
+            moves.push_back(best_move_change_superstep(node));
+
+            if (moves.back().gain == std::numeric_limits<double>::lowest()) {
+                abort = true;
+                break;
+            }
+
+            if (current_schedule->use_memory_constraint) {
+
+                if (current_schedule->instance->getArchitecture().getMemoryConstraintType() ==
+                    PERSISTENT_AND_TRANSIENT) {
+
+                    if (moves.back().to_proc != moves.back().from_proc) {
+                        current_schedule->current_proc_persistent_memory[moves.back().to_proc] +=
+                            current_schedule->instance->getComputationalDag().nodeMemoryWeight(node);
+                        current_schedule->current_proc_persistent_memory[moves.back().from_proc] -=
+                            current_schedule->instance->getComputationalDag().nodeMemoryWeight(node);
+
+                        // current_schedule->current_proc_transient_memory[moves.back().to_proc] =
+                        //     std::max(current_schedule->current_proc_transient_memory[moves.back().to_proc],
+                        //              current_schedule->instance->getComputationalDag().nodeCommunicationWeight(node));
+                        // TODO: implement this properly if PERSISTENT_AND_TRANSIENT becomes relevant
+                    }
+
+                } else if (current_schedule->instance->getArchitecture().getMemoryConstraintType() == LOCAL) {
+                    current_schedule->step_processor_work[moves.back().to_step][moves.back().to_proc] +=
+                        current_schedule->instance->getComputationalDag().nodeWorkWeight(node);
+                }
+            }
+        }
+
+        if (abort) {
+            break;
+        }
+
+        current_schedule->set_schedule.step_processor_vertices[step][proc].clear();
+    }
+
+    if (abort) {
+
+        for (const auto &move : moves) {
+
+            current_schedule->set_schedule.step_processor_vertices[step][move.from_proc].insert(move.node);
+
+            if (current_schedule->use_memory_constraint) {
+
+                if (current_schedule->instance->getArchitecture().getMemoryConstraintType() ==
+                    PERSISTENT_AND_TRANSIENT) {
+
+                    if (move.to_proc != move.from_proc) {
+                        current_schedule->current_proc_persistent_memory[move.to_proc] -=
+                            current_schedule->instance->getComputationalDag().nodeMemoryWeight(move.node);
+                        current_schedule->current_proc_persistent_memory[move.from_proc] +=
+                            current_schedule->instance->getComputationalDag().nodeMemoryWeight(move.node);
+                    }
+
+                } else if (current_schedule->instance->getArchitecture().getMemoryConstraintType() == LOCAL) {
+                    current_schedule->step_processor_work[move.to_step][move.to_proc] -=
+                        current_schedule->instance->getComputationalDag().nodeWorkWeight(move.node);
+                }
+            }
+        }
+        return false;
+    }
+
+    for (const auto &move : moves) {
+
+#ifdef KL_DEBUG
+        std::cout << "scatter node " << move.node << " to proc " << move.to_proc << " to step " << move.to_step
+                  << std::endl;
+#endif
+
+        current_schedule->vector_schedule.setAssignedSuperstep(move.node, move.to_step);
+        current_schedule->vector_schedule.setAssignedProcessor(move.node, move.to_proc);
+        current_schedule->set_schedule.step_processor_vertices[move.to_step][move.to_proc].insert(move.node);
+    }
+
+    current_schedule->reset_superstep(step);
+
+    return true;
+}
+
+
 void kl_base::select_nodes_check_remove_superstep() {
 
     if (step_selection_epoch_counter > parameters.max_step_selection_epochs) {
@@ -1077,6 +1273,7 @@ void kl_base::select_nodes_check_remove_superstep() {
                 step_selection_counter = step_to_remove + 1;
 
                 if (step_selection_counter >= current_schedule->num_steps()) {
+                    step_selection_counter = 0;
                     step_selection_epoch_counter++;
                 }
 
@@ -1133,7 +1330,7 @@ bool kl_base::scatter_nodes_remove_superstep(unsigned step) {
             compute_node_gain(node);
             moves.push_back(best_move_change_superstep(node));
 
-            if (moves.back().gain = std::numeric_limits<double>::lowest()) {
+            if (moves.back().gain == std::numeric_limits<double>::lowest()) {
                 abort = true;
                 break;
             }

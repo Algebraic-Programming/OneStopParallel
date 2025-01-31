@@ -82,23 +82,24 @@ bool kl_base::run_local_search_unlock_delay() {
 
             current_schedule->apply_move(best_move); // O(p + log n)
 
-//             if (best_move.gain <= 0.000000001) {
-//                 conseq_no_gain_moves_counter++;
+            //             if (best_move.gain <= 0.000000001) {
+            //                 conseq_no_gain_moves_counter++;
 
-//                 if (conseq_no_gain_moves_counter > 15) {
+            //                 if (conseq_no_gain_moves_counter > 15) {
 
-//                     conseq_no_gain_moves_counter = 0;
-//                     parameters.initial_penalty = 0.0;
-//                     parameters.violations_threshold = 3;
-// #ifdef KL_DEBUG
-//                     std::cout << "more than 15 moves with gain <= 0, set " << parameters.initial_penalty
-//                               << " violations threshold " << parameters.violations_threshold << std::endl;
-// #endif
-//                 }
+            //                     conseq_no_gain_moves_counter = 0;
+            //                     parameters.initial_penalty = 0.0;
+            //                     parameters.violations_threshold = 3;
+            // #ifdef KL_DEBUG
+            //                     std::cout << "more than 15 moves with gain <= 0, set " << parameters.initial_penalty
+            //                               << " violations threshold " << parameters.violations_threshold <<
+            //                               std::endl;
+            // #endif
+            //                 }
 
-//             } else {
-//                 conseq_no_gain_moves_counter = 0;
-//             }
+            //             } else {
+            //                 conseq_no_gain_moves_counter = 0;
+            //             }
 
             update_reward_penalty();
             locked_nodes.insert(best_move.node);
@@ -180,7 +181,7 @@ bool kl_base::run_local_search_unlock_delay() {
             update_node_gains(nodes_to_update);
 
             if (not current_schedule->current_violations.size() > 4 && not iter_feasible) {
-                const auto& iter = max_gain_heap.ordered_begin();
+                const auto &iter = max_gain_heap.ordered_begin();
                 if (iter->gain < parameters.gain_threshold) {
 
                     node_selection.clear();
@@ -254,7 +255,12 @@ bool kl_base::run_local_search_unlock_delay() {
         reset_locked_nodes();
 
         node_selection.clear();
-        select_nodes_check_remove_superstep();
+
+        if (reset_superstep) {
+            select_nodes_check_reset_superstep();
+        } else {
+            select_nodes_check_remove_superstep();
+        }
 
         update_reward_penalty();
 
@@ -287,7 +293,29 @@ bool kl_base::run_local_search_unlock_delay() {
 #endif
             }
 
-            if (no_improvement_iter_counter > 10) {
+            if (no_improvement_iter_counter > 10 && no_improvement_iter_counter % 15 == 0) {
+
+                step_selection_epoch_counter = 0;
+
+                reset_superstep = !reset_superstep;
+
+#ifdef KL_DEBUG
+                std::cout << "no improvement for " << no_improvement_iter_counter << " reset superstep "
+                          << reset_superstep << std::endl;
+#endif
+            }
+
+            if (no_improvement_iter_counter > 50 && no_improvement_iter_counter % 3 == 0) {
+
+                parameters.initial_penalty = 0.0;
+                parameters.violations_threshold = 5;
+                
+            } else if (no_improvement_iter_counter > 30 && no_improvement_iter_counter % 5 == 0) {
+
+                parameters.initial_penalty = 0.0;
+                parameters.violations_threshold = 4;
+
+            } else if (no_improvement_iter_counter > 9 && no_improvement_iter_counter % 10 == 0) {
 
                 parameters.initial_penalty = 0.0;
                 parameters.violations_threshold = 3;

@@ -314,6 +314,25 @@ void kl_current_schedule::compute_work_memory_datastructures(unsigned start_step
     }
 }
 
+
+void kl_current_schedule::reset_superstep(unsigned step) {
+
+    if (step > 0) {
+        compute_work_memory_datastructures(step - 1, step - 1);
+        if (step < num_steps() - 1) {
+            compute_work_memory_datastructures(step + 1, step + 1);
+        } 
+    } else {
+        compute_work_memory_datastructures(1, 1);
+    }
+
+    step_second_max_work[step] = 0;
+    step_max_work[step] = 0;
+
+    recompute_current_violations();
+    cost_f->compute_current_costs();
+}
+
 void kl_current_schedule::remove_superstep(unsigned step) {
 
     if (step > 0) {

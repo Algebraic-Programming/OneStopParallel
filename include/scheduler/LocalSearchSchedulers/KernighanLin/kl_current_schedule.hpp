@@ -16,7 +16,7 @@ limitations under the License.
 @author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 
-// #define KL_DEBUG
+#define KL_DEBUG
 
 #include "model/SetSchedule.hpp"
 #include "model/VectorSchedule.hpp"
@@ -95,6 +95,8 @@ class kl_current_schedule {
     std::unordered_set<EdgeType, EdgeType_hash> resolved_violations; 
 
     void remove_superstep(unsigned step);
+    void reset_superstep(unsigned step);
+
     inline unsigned num_steps() const { return vector_schedule.numberOfSupersteps(); }
 
     virtual void set_current_schedule(const IBspSchedule &schedule);
