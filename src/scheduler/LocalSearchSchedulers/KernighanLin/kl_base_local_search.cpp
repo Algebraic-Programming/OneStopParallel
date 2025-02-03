@@ -297,7 +297,9 @@ bool kl_base::run_local_search_unlock_delay() {
 
                 step_selection_epoch_counter = 0;
 
-                reset_superstep = !reset_superstep;
+                if (alternate_reset_remove_superstep) {
+                    reset_superstep = !reset_superstep;
+                }
 
 #ifdef KL_DEBUG
                 std::cout << "no improvement for " << no_improvement_iter_counter << " reset superstep "
@@ -309,7 +311,7 @@ bool kl_base::run_local_search_unlock_delay() {
 
                 parameters.initial_penalty = 0.0;
                 parameters.violations_threshold = 5;
-                
+
             } else if (no_improvement_iter_counter > 30 && no_improvement_iter_counter % 5 == 0) {
 
                 parameters.initial_penalty = 0.0;

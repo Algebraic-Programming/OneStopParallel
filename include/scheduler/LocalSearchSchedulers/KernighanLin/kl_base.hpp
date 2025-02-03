@@ -149,6 +149,8 @@ class kl_base : public ImprovementScheduler, public Ikl_cost_function {
     unsigned step_selection_counter = 0;
     unsigned step_selection_epoch_counter = 0;
 
+    bool auto_alternate = true;
+    bool alternate_reset_remove_superstep = true;
     bool reset_superstep = true;
 
     virtual bool check_remove_superstep(unsigned step);
@@ -208,6 +210,12 @@ class kl_base : public ImprovementScheduler, public Ikl_cost_function {
     virtual std::string getScheduleName() const = 0;
 
     virtual void set_quick_pass(bool quick_pass_) { parameters.quick_pass = quick_pass_; }
+
+    virtual void set_alternate_reset_remove_superstep(bool alternate_reset_remove_superstep_) {
+        auto_alternate = false;
+        alternate_reset_remove_superstep = alternate_reset_remove_superstep_;
+    }
+
 };
 
 

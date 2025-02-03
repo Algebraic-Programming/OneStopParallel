@@ -220,6 +220,14 @@ void kl_base::set_parameters() {
         parameters.max_no_improvement_iterations = 3;
     }
 
+    if (auto_alternate && current_schedule->instance->getArchitecture().synchronisationCosts() > 10000.0) {
+#ifdef KL_DEBUG
+        std::cout << "KLBase set parameters, large synchchost: only remove supersets" << std::endl;
+#endif
+        reset_superstep = false;    
+        alternate_reset_remove_superstep = false;    
+    }
+
 #ifdef KL_DEBUG
     if (parameters.select_all_nodes)
         std::cout << "KLBase set parameters, select all nodes" << std::endl;
@@ -1125,7 +1133,7 @@ bool kl_base::check_reset_superstep(unsigned step) {
     std::cout << " avg " << static_cast<double>(total_work) / static_cast<double>(current_schedule->instance->numberOfProcessors()) << " max " << max_total_work << " min " << min_total_work << std::endl;
 #endif
 
-    if ( static_cast<double>(total_work) / static_cast<double>(current_schedule->instance->numberOfProcessors()) * 0.1 > static_cast<double>(min_total_work)) {
+    if ( static_cast<double>(total_work) / static_cast<double>(current_schedule->instance->numberOfProcessors()) - static_cast<double>(min_total_work) > 0.1 * static_cast<double>(min_total_work)) {
         return true;
     }
     
