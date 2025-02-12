@@ -35,7 +35,7 @@ class kl_hyper_total_cut : public kl_total {
     virtual double compute_current_costs() override;
 
   public:
-    kl_hyper_total_cut(bool use_node_communication_costs_ = false) : kl_total() {}
+    kl_hyper_total_cut(bool use_node_communication_costs_ = false) : kl_total(use_node_communication_costs_) {}
 
     virtual ~kl_hyper_total_cut() = default;
 

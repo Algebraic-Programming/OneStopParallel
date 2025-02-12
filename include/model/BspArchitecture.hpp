@@ -25,7 +25,7 @@ limitations under the License.
 #include <iomanip>
 #include <iostream>
 
-enum MEMORY_CONSTRAINT_TYPE { NONE, LOCAL, GLOBAL, PERSISTENT_AND_TRANSIENT };
+enum MEMORY_CONSTRAINT_TYPE { NONE, LOCAL, GLOBAL, PERSISTENT_AND_TRANSIENT, LOCAL_IN_OUT, LOCAL_INC_EDGES};
 
 /**
  * @class BspArchitecture
@@ -224,7 +224,13 @@ class BspArchitecture {
 
     inline void setMemoryBound(const std::vector<unsigned> &memory_bound_) { memory_bound = memory_bound_; }
 
-    inline void setMemoryBound(unsigned memory_bound_, unsigned proc) { memory_bound[proc] = memory_bound_; }
+    inline void setMemoryBound(unsigned memory_bound_, unsigned proc) { 
+        
+        if (proc >= number_processors) {
+            throw std::invalid_argument("Invalid Argument setMemoryBound");
+        }
+
+        memory_bound[proc] = memory_bound_; }
 
     /**
      * @brief Sets the synchronization costs for the BspArchitecture.

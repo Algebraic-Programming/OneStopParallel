@@ -835,3 +835,27 @@ bool ComputationalDag::checkOrderedIsomorphism(const ComputationalDag &other) co
     
     return true;
 }
+
+void ComputationalDag::mergeMultipleEdges()
+{
+    std::map<std::pair<VertexType, VertexType>, int> new_edge_weights;
+    for (const auto &node : graph.vertex_set())
+    {
+        for (const auto &out_edge : out_edges(node))
+        {
+            std::pair<VertexType, VertexType> edge_pair = std::make_pair(node, out_edge.m_target);
+            if(new_edge_weights.find(edge_pair) == new_edge_weights.end())
+                new_edge_weights[edge_pair] = edgeCommunicationWeight(out_edge);
+            else
+                new_edge_weights[edge_pair] += edgeCommunicationWeight(out_edge);
+        }
+    }
+
+    // remove all old edges
+    for (const auto &node : graph.vertex_set())
+        boost::clear_vertex(node, graph);
+
+    // add new merged edges
+    for (auto itr = new_edge_weights.begin(); itr != new_edge_weights.end(); ++itr)
+        addEdge(itr->first.first, itr->first.second, itr->second);
+}

@@ -144,7 +144,7 @@ class ComputationalDag {
         assert(out_.size() == nodeType_.size());
 
         for (size_t i = 0; i < out_.size(); ++i) {
-            addVertex(workW_[i], commW_[i], nodeType_[i]);
+            addVertex(workW_[i], commW_[i], 0, nodeType_[i]);
         }
         for (size_t i = 0; i < out_.size(); ++i) {
             const auto &v_idx = boost::vertex(i, graph);
@@ -405,4 +405,6 @@ class ComputationalDag {
     std::vector<ComputationalDag> createInducedSubgraphs(const std::vector<unsigned>& partition_ID) const;
 
     bool checkOrderedIsomorphism(const ComputationalDag &other) const;
+
+    void mergeMultipleEdges();
 };

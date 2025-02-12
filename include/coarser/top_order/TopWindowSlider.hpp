@@ -13,29 +13,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner   
+@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 
 #pragma once
 
-#include <chrono>
-#include <climits>
-#include <list>
-#include <map>
-#include <set>
-#include <string>
-#include <vector>
-
-#include "LKBase.hpp"
-
-
-class LKLazyCommScheduler : public LKBase<unsigned> {
-
-  private:
-  public:
-    LKLazyCommScheduler() : LKBase() {}
-
-    virtual ~LKLazyCommScheduler() = default;
-
-    virtual std::string getScheduleName() const override { return "LKLazy"; }
-};
+#include "Coarser.hpp"

@@ -28,7 +28,6 @@ limitations under the License.
 #include "scheduler/HDagg/HDagg_simple.hpp"
 #include "scheduler/ImprovementScheduler.hpp"
 #include "scheduler/LocalSearchSchedulers/HillClimbingScheduler.hpp"
-#include "scheduler/LocalSearchSchedulers/LKTotalCommScheduler.hpp"
 #include "scheduler/SchedulePermutations/ScheduleNodePermuter.hpp"
 #include "scheduler/Serial/Serial.hpp"
 #include "scheduler/SubArchitectureSchedulers/SubArchitectures.hpp"
@@ -105,15 +104,13 @@ int main(int argc, char *argv[]) {
     GreedyVarianceScheduler variance_greedy_scheduler_hc;
     GreedyChildren chldrn_greedyS(true);
     GreedyChildren chldrn_greedy(false);
-    GreedyCilkScheduler cilk_greedy;
-    GreedyCilkScheduler cilk_greedy_hc;
+
     GreedyEtfScheduler etf_greedy;
     RandomGreedy rng_greedyS(true);
     RandomGreedy rng_greedy(false);
     GreedyLayers layer_greedy;
     MetaGreedyScheduler meta_greedy_scheduler;
-    MetaGreedyScheduler meta_greedy_scheduler_lk;
-    MetaGreedyScheduler meta_greedy_scheduler_lk_squash;
+
     MetaGreedyScheduler meta_greedy_scheduler_hc;
     MetaGreedyScheduler meta_greedy_scheduler_squash;
     MetaGreedyScheduler meta_greedy_scheduler_squash_hc;
@@ -122,7 +119,6 @@ int main(int argc, char *argv[]) {
 
     ComboScheduler bsp_greedy_hc_scheduler(&bsp_greedy_scheduler_hc, &hill_climbing_scheduler1);
     ComboScheduler variance_greedy_hc_scheduler(&variance_greedy_scheduler_hc, &hill_climbing_scheduler12);
-    ComboScheduler cilk_hc_scheduler(&cilk_greedy_hc, &hill_climbing_scheduler16);
     ComboScheduler bsp_meta_hc_scheduler(&meta_greedy_scheduler_hc, &hill_climbing_scheduler2);
 
     const unsigned bald_mixer_number_of_partitions_ = 4; // gets overriten by instance
@@ -166,7 +162,6 @@ int main(int argc, char *argv[]) {
 
     BalDMixR bald_mixer_scheduler5(params5);
     BalDMixR bald_mixer_scheduler10(params10);
-    BalDMixR bald_mixer_lk_scheduler10(params10);
     BalDMixR bald_mixer_scheduler20(params20);
     BalDMixR bald_mixer_scheduler35(params35);
     BalDMixR bald_mixer_scheduler_hc(params10);
@@ -242,7 +237,6 @@ int main(int argc, char *argv[]) {
     CoBalDMixR cobald_mixer_scheduler5(cobald_params5);
     CoBalDMixR cobald_mixer_scheduler10(cobald_params10);
     CoBalDMixR cobald_mixer_scheduler20(cobald_params20);
-    CoBalDMixR cobald_mixer_lk_scheduler20(cobald_params20);
     CoBalDMixR cobald_mixer_scheduler35(cobald_params35);
     CoBalDMixR cobald_mixer_scheduler_hc(cobald_params20);
     ComboScheduler cobald_mixer_hc_scheduler(&cobald_mixer_scheduler_hc, &hill_climbing_scheduler4);
@@ -286,15 +280,7 @@ int main(int argc, char *argv[]) {
     SquashA squasha_multi_level_hill_climbing_scheduler_30(&multi_level_hill_climbing_scheduler_30,
                                                            &hill_climbing_scheduler11);
 
-    LKTotalCommScheduler lk_scheduler1;
-    LKTotalCommScheduler lk_scheduler2;
-    LKTotalCommScheduler lk_scheduler3;
-    LKTotalCommScheduler lk_scheduler4;
-    ComboScheduler lk_hc_scheduler(&meta_greedy_scheduler_lk, &lk_scheduler1);
-    ComboScheduler lk_hc_bald_scheduler(&bald_mixer_lk_scheduler10, &lk_scheduler2);
-    ComboScheduler lk_hc_cobald_scheduler(&cobald_mixer_lk_scheduler20, &lk_scheduler3);
-    ComboScheduler lk_hc_max_greed_squash(&meta_greedy_scheduler_lk_squash, &lk_scheduler4);
-    SquashA squasha_greedy_meta_lk_scheduler(&lk_hc_max_greed_squash);
+
 
     Serial serial_scheduler;
 
@@ -320,17 +306,14 @@ int main(int argc, char *argv[]) {
         // schedulers.push_back(&bald_mixer_scheduler35);
         // schedulers.push_back(&bald_mixer_hc_scheduler);
 
-        // schedulers.push_back(&lk_hc_bald_scheduler);
+
     } else {
         // schedulers.push_back(&squash_bald_mixer_scheduler10_hc);
         // schedulers.push_back(&squash_bald_mixer_scheduler20_hc);
     }
 
-    // schedulers.push_back(&lk_hc_scheduler);
-    // schedulers.push_back(&lk_hc_cobald_scheduler);
-    schedulers.push_back(&lk_hc_scheduler);
-    schedulers.push_back(&lk_hc_cobald_scheduler);
-    schedulers.push_back(&squasha_greedy_meta_lk_scheduler);
+
+
 
     // schedulers.push_back(&cobald_mixer_scheduler5);
     // schedulers.push_back(&cobald_mixer_scheduler10);
@@ -345,8 +328,6 @@ int main(int argc, char *argv[]) {
     // schedulers.push_back(&etf_greedy);
     // schedulers.push_back(&chldrn_greedy);
     // schedulers.push_back(&chldrn_greedyS);
-    // schedulers.push_back(&cilk_greedy);
-    schedulers.push_back(&cilk_hc_scheduler);
     // schedulers.push_back(&rng_greedy);
     // schedulers.push_back(&rng_greedyS);
     // schedulers.push_back(&layer_greedy);

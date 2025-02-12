@@ -36,7 +36,7 @@ class kl_total_comm : public kl_total {
     virtual double compute_current_costs() override;
 
   public:
-    kl_total_comm(bool use_node_communication_costs_ = false) : kl_total() {}
+    kl_total_comm(bool use_node_communication_costs_ = false) : kl_total(use_node_communication_costs_) {}
 
     virtual ~kl_total_comm() = default;
 

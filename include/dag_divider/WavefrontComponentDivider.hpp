@@ -21,24 +21,32 @@ limitations under the License.
 #include "structures/union_find.hpp"
 #include <cmath>
 
+#include "WavefrontDivider.hpp"
 #include "file_interactions/ComputationalDagWriter.hpp"
 #include "model/dag_algorithms/subgraph_algorithms.hpp"
-#include "WavefrontDivider.hpp"
 
 /**
  * @class WavefrontComponentDivider
- * @brief Divides the wavefronts of a computational DAG into consecutive groups or sections. 
- * The sections are created with the aim of containing a high number of connected components. 
- * The class also provides functionality to detect groups of isomorphic components within the sections. 
- * 
- * 
+ * @brief Divides the wavefronts of a computational DAG into consecutive groups or sections.
+ * The sections are created with the aim of containing a high number of connected components.
+ * The class also provides functionality to detect groups of isomorphic components within the sections.
+ *
+ *
  */
-class WavefrontComponentDivider  : public IWavefrontDivider {
+class WavefrontComponentDivider : public IWavefrontDivider {
 
-   private:
+  public:
+    enum class SplitMethod { MIN_DIFF, VARIANCE };
 
+  private:
     double var_mult = 0.5;
     double var_threshold = 1.0;
+
+    size_t diff_threshold = 3;
+
+    int min_subseq_len = 2;
+
+    SplitMethod split_method = SplitMethod::MIN_DIFF;
 
     struct wavefron_statistics {
 
@@ -53,11 +61,17 @@ class WavefrontComponentDivider  : public IWavefrontDivider {
     std::vector<wavefron_statistics> forward_statistics;
     std::vector<wavefron_statistics> backward_statistics;
 
-    void split_sequence(const std::vector<double> &seq, std::vector<size_t> &splits, size_t offset = 0);
+    void split_sequence_min_diff_fwd(const std::vector<double> &seq, std::vector<size_t> &splits, size_t offset = 0);
 
-    bool compute_split(const std::vector<double> &parallelism, size_t &split);
-  
-    void compute_variance(const std::vector<double> &data, double &mean, double &variance);    
+    void split_sequence_min_diff_bwd(const std::vector<double> &seq, std::vector<size_t> &splits, size_t offset = 0);
+
+    bool compute_split_min_diff(const std::vector<double> &parallelism, size_t &split, bool reverse = true);
+
+    void split_sequence_var(const std::vector<double> &seq, std::vector<size_t> &splits, size_t offset = 0);
+
+    bool compute_split_var(const std::vector<double> &parallelism, size_t &split);
+
+    void compute_variance(const std::vector<double> &data, double &mean, double &variance);
 
     void print_wavefront_statistics(const std::vector<wavefron_statistics> &statistics, bool reverse = false);
 
@@ -65,9 +79,16 @@ class WavefrontComponentDivider  : public IWavefrontDivider {
 
     void compute_backward_statistics(const std::vector<std::vector<unsigned>> &level_sets, const ComputationalDag &dag);
 
-  public:
+    std::vector<size_t> combine_split_sequences(std::vector<size_t> &fwd_splits, std::vector<size_t> &bwd_splits);
 
-    WavefrontComponentDivider () = default;
-    
-    std::vector<std::vector<std::vector<unsigned>>> divide(const ComputationalDag& dag_) override;
+    std::vector<size_t> compute_cut_levels_fwd_bwd_var(std::vector<std::vector<unsigned>> &level_sets);
+
+    std::vector<size_t> compute_cut_levels_fwd_bwd_min_diff(std::vector<std::vector<unsigned>> &level_sets);
+
+  public:
+    WavefrontComponentDivider() = default;
+
+    std::vector<std::vector<std::vector<unsigned>>> divide(const ComputationalDag &dag_) override;
+
+    inline void set_split_method(SplitMethod method) { split_method = method; }
 };

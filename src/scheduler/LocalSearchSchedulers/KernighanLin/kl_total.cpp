@@ -56,9 +56,8 @@ void kl_total::initialize_datastructures() {
     parameters.initial_penalty =
         max_edge_weight * current_schedule.comm_multiplier * current_schedule.instance->communicationCosts();
 
-    parameters.gain_threshold = max_edge_weight * current_schedule.comm_multiplier * current_schedule.instance->communicationCosts();
-
-
+    parameters.gain_threshold =
+        max_edge_weight * current_schedule.comm_multiplier * current_schedule.instance->communicationCosts();
 }
 
 void kl_total::update_reward_penalty() {
@@ -69,19 +68,87 @@ void kl_total::update_reward_penalty() {
 
     } else {
         parameters.violations_threshold = 0;
-        
+
         penalty = std::log((current_schedule.current_violations.size())) * max_edge_weight *
                   current_schedule.comm_multiplier * current_schedule.instance->communicationCosts();
 
         reward = std::sqrt((current_schedule.current_violations.size() + 4)) * max_edge_weight *
-             current_schedule.comm_multiplier * current_schedule.instance->communicationCosts();
+                 current_schedule.comm_multiplier * current_schedule.instance->communicationCosts();
     }
-
-
 }
 
 void kl_total::set_initial_reward_penalty() {
 
     penalty = parameters.initial_penalty;
     reward = max_edge_weight * current_schedule.comm_multiplier * current_schedule.instance->communicationCosts();
+}
+
+void kl_total::select_nodes_comm(unsigned threshold) {
+
+    if (current_schedule.use_node_communication_costs) {
+
+        for (const auto &node : current_schedule.instance->getComputationalDag().vertices()) {
+
+            for (const auto &source : current_schedule.instance->getComputationalDag().parents(node)) {
+
+                if (current_schedule.vector_schedule.assignedProcessor(node) !=
+                    current_schedule.vector_schedule.assignedProcessor(source)) {
+
+                    if (current_schedule.instance->getComputationalDag().nodeCommunicationWeight(node) >
+                        node_comm_selection_threshold) {
+
+                        node_selection.insert(node);
+                        break;
+                    }
+                }
+            }
+
+            for (const auto &target : current_schedule.instance->getComputationalDag().children(node)) {
+
+                if (current_schedule.vector_schedule.assignedProcessor(node) !=
+                    current_schedule.vector_schedule.assignedProcessor(target)) {
+
+                    if (current_schedule.instance->getComputationalDag().nodeCommunicationWeight(node) >
+                        node_comm_selection_threshold) {
+
+                        node_selection.insert(node);
+                        break;
+                    }
+                }
+            }
+        }
+    } else {
+        for (const auto &node : current_schedule.instance->getComputationalDag().vertices()) {
+
+            for (const auto &in_edge : current_schedule.instance->getComputationalDag().in_edges(node)) {
+
+                const auto &source = in_edge.m_source;
+                if (current_schedule.vector_schedule.assignedProcessor(node) !=
+                    current_schedule.vector_schedule.assignedProcessor(source)) {
+
+                    if (current_schedule.instance->getComputationalDag().edgeCommunicationWeight(in_edge) >
+                        node_comm_selection_threshold) {
+
+                        node_selection.insert(node);
+                        break;
+                    }
+                }
+            }
+
+            for (const auto &out_edge : current_schedule.instance->getComputationalDag().out_edges(node)) {
+
+                const auto &target = out_edge.m_target;
+                if (current_schedule.vector_schedule.assignedProcessor(node) !=
+                    current_schedule.vector_schedule.assignedProcessor(target)) {
+
+                    if (current_schedule.instance->getComputationalDag().edgeCommunicationWeight(out_edge) >
+                        node_comm_selection_threshold) {
+
+                        node_selection.insert(node);
+                        break;
+                    }
+                }
+            }
+        }
+    }
 }

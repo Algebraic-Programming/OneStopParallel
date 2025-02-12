@@ -16,7 +16,7 @@ limitations under the License.
 @author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 
-#define KL_DEBUG
+// #define KL_DEBUG
 
 #include "model/SetSchedule.hpp"
 #include "model/VectorSchedule.hpp"
@@ -77,6 +77,7 @@ class kl_current_schedule {
     SetSchedule set_schedule;
 
     std::vector<std::vector<int>> step_processor_memory;
+    std::vector<std::vector<std::unordered_set<VertexType>>> step_processor_pred;
 
     std::vector<int> current_proc_persistent_memory;
     std::vector<int> current_proc_transient_memory;
@@ -96,6 +97,7 @@ class kl_current_schedule {
 
     void remove_superstep(unsigned step);
     void reset_superstep(unsigned step);
+    void recompute_neighboring_supersteps(unsigned step);
 
     inline unsigned num_steps() const { return vector_schedule.numberOfSupersteps(); }
 

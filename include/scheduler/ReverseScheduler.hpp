@@ -18,27 +18,25 @@ limitations under the License.
 
 #pragma once
 
-#include <algorithm>
-#include <chrono>
-#include <climits>
-#include <string>
-#include <vector>
+#include <tuple>
 
-#include "kl_total.hpp"
+#include "Scheduler.hpp"
 
+class ReverseScheduler : public Scheduler {
+    private:
+        Scheduler *base_scheduler;
 
-class kl_hyper_total_comm : public kl_total {
+    public:
+        virtual void setTimeLimitSeconds(unsigned int limit) override;
+        virtual void setTimeLimitHours(unsigned int limit) override;
 
-  protected:
-    
-    virtual void compute_comm_gain(unsigned node, unsigned current_step, unsigned current_proc, unsigned new_proc) override;
-    virtual double compute_current_costs() override;
+        ReverseScheduler(Scheduler *base) : base_scheduler(base) {}
+        virtual ~ReverseScheduler() = default;
 
-  public:
-    kl_hyper_total_comm(bool use_node_communication_costs_ = false) : kl_total(use_node_communication_costs_) {}
+        virtual std::pair<RETURN_STATUS, BspSchedule> computeSchedule(const BspInstance &instance) override;
 
-    virtual ~kl_hyper_total_comm() = default;
+        virtual std::string getScheduleName() const override {
+            return "Reverse" + base_scheduler->getScheduleName();
+        }
 
-    virtual std::string getScheduleName() const override { return "KLHyperTotalComm"; }
 };
-

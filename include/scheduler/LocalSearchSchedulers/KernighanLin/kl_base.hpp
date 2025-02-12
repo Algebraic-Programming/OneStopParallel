@@ -34,8 +34,11 @@ limitations under the License.
 #include "scheduler/ImprovementScheduler.hpp"
 #include "kl_current_schedule.hpp"
 
+// #define KL_PRINT_SCHEDULE
 
-
+#ifdef KL_PRINT_SCHEDULE
+#include "file_interactions/BspScheduleWriter.hpp"
+#endif
 
 struct kl_base_parameter {
 
@@ -55,7 +58,7 @@ struct kl_base_parameter {
 
   double initial_penalty = 0.0;
 
-  double gain_threshold = -1.0;
+  double gain_threshold = -10.0;
   double change_in_cost_threshold = 0.0;
 
   bool quick_pass = false;
@@ -139,6 +142,7 @@ class kl_base : public ImprovementScheduler, public Ikl_cost_function {
     std::unordered_set<VertexType> node_selection;
 
     void select_nodes(); 
+    virtual void select_nodes_comm(unsigned threshold); 
     void select_nodes_threshold(unsigned threshold);
     void select_nodes_permutation_threshold(unsigned threshold);
 
@@ -181,6 +185,11 @@ class kl_base : public ImprovementScheduler, public Ikl_cost_function {
 
     bool compute_with_time_limit = false;
     
+#ifdef KL_PRINT_SCHEDULE
+    std::string file_name_write_schedule = "kl_schedule_iter_";
+    void print_best_schedule(unsigned iteration);
+#endif
+
 
   public:
     

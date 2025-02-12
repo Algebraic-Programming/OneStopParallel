@@ -239,9 +239,78 @@ bool BspSchedule::satisfiesMemoryConstraints() const {
         }
         break;
     }
-    default:
-        // includes case NONE
+
+    case LOCAL_IN_OUT: {
+
+        SetSchedule set_schedule = SetSchedule(*this);
+
+        for (unsigned step = 0; step < number_of_supersteps; step++) {
+            for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
+
+                long int memory = 0;
+                for (const auto &node : set_schedule.step_processor_vertices[step][proc]) {
+                    memory += instance->getComputationalDag().nodeMemoryWeight(node) +
+                              instance->getComputationalDag().nodeCommunicationWeight(node);
+
+                    for (const auto &parent : instance->getComputationalDag().parents(node)) {
+
+                        if (node_to_processor_assignment[parent] == proc &&
+                            node_to_superstep_assignment[parent] == step) {
+                            memory -= instance->getComputationalDag().nodeCommunicationWeight(parent);
+                        }
+                    }
+                }
+
+                if (memory > static_cast<long int>(instance->getArchitecture().memoryBound(proc))) {
+                    return false;
+                }
+            }
+        }
+
         break;
+    }
+
+    case LOCAL_INC_EDGES: {
+
+        SetSchedule set_schedule = SetSchedule(*this);
+
+        for (unsigned step = 0; step < number_of_supersteps; step++) {
+            for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
+
+                std::unordered_set<unsigned> nodes_with_incoming_edges;
+
+                int memory = 0;
+                for (const auto &node : set_schedule.step_processor_vertices[step][proc]) {
+                    memory += instance->getComputationalDag().nodeCommunicationWeight(node);
+
+                    for (const auto &parent : instance->getComputationalDag().parents(node)) {
+
+                        if (node_to_superstep_assignment[parent] != step) {
+                            nodes_with_incoming_edges.insert(parent);
+                        }
+                    }
+                }
+
+                for (const auto &node : nodes_with_incoming_edges) {
+                    memory += instance->getComputationalDag().nodeCommunicationWeight(node);
+                }
+
+                if (memory > instance->getArchitecture().memoryBound(proc)) {
+                    return false;
+                }
+            }
+        }
+        break;
+    }
+
+    case NONE: {
+        break;
+    }
+
+    default: {
+        throw std::invalid_argument("Unknown memory constraint type.");
+        break;
+    }
     }
 
     return true;

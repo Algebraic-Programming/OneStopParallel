@@ -69,6 +69,119 @@ void kl_current_schedule::apply_move(kl_move move) {
                     }
                 }
             }
+        } else if (instance->getArchitecture().getMemoryConstraintType() == LOCAL_IN_OUT) {
+
+            step_processor_memory[move.to_step][move.to_proc] +=
+                instance->getComputationalDag().nodeMemoryWeight(move.node) +
+                instance->getComputationalDag().nodeCommunicationWeight(move.node);
+
+            step_processor_memory[move.from_step][move.from_proc] -=
+                (instance->getComputationalDag().nodeMemoryWeight(move.node) +
+                 instance->getComputationalDag().nodeCommunicationWeight(move.node));
+
+            for (const auto &pred : instance->getComputationalDag().parents(move.node)) {
+
+                if (vector_schedule.assignedProcessor(pred) == move.to_proc &&
+                    vector_schedule.assignedSuperstep(pred) == move.to_step) {
+                    step_processor_memory[move.to_step][move.to_proc] -=
+                        instance->getComputationalDag().nodeCommunicationWeight(pred);
+                } else if (vector_schedule.assignedProcessor(pred) == move.from_proc &&
+                           vector_schedule.assignedSuperstep(pred) == move.from_step) {
+                    step_processor_memory[move.from_step][move.from_proc] +=
+                        instance->getComputationalDag().nodeCommunicationWeight(pred);
+                }
+            }
+
+            for (const auto &succ : instance->getComputationalDag().children(move.node)) {
+
+                if (vector_schedule.assignedProcessor(succ) == move.to_proc &&
+                    vector_schedule.assignedSuperstep(succ) == move.to_step) {
+                    step_processor_memory[move.to_step][move.to_proc] -=
+                        instance->getComputationalDag().nodeCommunicationWeight(move.node);
+                } else if (vector_schedule.assignedProcessor(succ) == move.from_proc &&
+                           vector_schedule.assignedSuperstep(succ) == move.from_step) {
+                    step_processor_memory[move.from_step][move.from_proc] +=
+                        instance->getComputationalDag().nodeCommunicationWeight(move.node);
+                }
+            }
+        } else if (instance->getArchitecture().getMemoryConstraintType() == LOCAL_INC_EDGES) {
+
+            step_processor_memory[move.to_step][move.to_proc] +=
+                instance->getComputationalDag().nodeCommunicationWeight(move.node);
+
+            step_processor_memory[move.from_step][move.from_proc] -=
+                instance->getComputationalDag().nodeCommunicationWeight(move.node);
+
+            for (const auto &pred : instance->getComputationalDag().parents(move.node)) {
+
+                if (vector_schedule.assignedSuperstep(pred) < move.to_step) {
+
+                    auto pair = step_processor_pred[move.to_step][move.to_proc].insert(pred);
+                    if (pair.second) {
+                        step_processor_memory[move.to_step][move.to_proc] +=
+                            instance->getComputationalDag().nodeCommunicationWeight(pred);
+                    }
+                }
+
+                if (vector_schedule.assignedSuperstep(pred) < move.from_step) {
+
+                    bool remove = true;
+                    for (const auto &succ : instance->getComputationalDag().children(pred)) {
+
+                        if (succ == move.node) {
+                            continue;
+                        }
+
+                        if (vector_schedule.assignedProcessor(succ) == move.from_proc &&
+                            vector_schedule.assignedSuperstep(succ) == move.from_step) {
+                            remove = false;
+                            break;
+                        }
+                    }
+
+                    if (remove) {
+                        step_processor_memory[move.from_step][move.from_proc] -=
+                            instance->getComputationalDag().nodeCommunicationWeight(pred);
+                        step_processor_pred[move.from_step][move.from_proc].erase(pred);
+                    }
+                }
+            }
+
+            if (move.to_step != move.from_step) {
+
+                for (const auto &succ : instance->getComputationalDag().children(move.node)) {
+
+                    if (vector_schedule.assignedSuperstep(succ) > move.from_step) {
+
+                        if (step_processor_pred[vector_schedule.assignedSuperstep(
+                                succ)][vector_schedule.assignedProcessor(succ)]
+                                .find(move.node) != step_processor_pred[vector_schedule.assignedSuperstep(succ)]
+                                                                       [vector_schedule.assignedProcessor(succ)]
+                                                                           .end()) {
+
+                            step_processor_memory[vector_schedule.assignedSuperstep(succ)]
+                                                 [vector_schedule.assignedProcessor(succ)] -=
+                                instance->getComputationalDag().nodeCommunicationWeight(move.node);
+
+                            step_processor_pred[vector_schedule.assignedSuperstep(succ)]
+                                               [vector_schedule.assignedProcessor(succ)]
+                                                   .erase(move.node);
+                        }
+                    }
+
+                    if (vector_schedule.assignedSuperstep(succ) > move.to_step) {
+
+                        auto pair = step_processor_pred[vector_schedule.assignedSuperstep(succ)]
+                                                       [vector_schedule.assignedProcessor(succ)]
+                                                           .insert(move.node);
+                        if (pair.second) {
+                            step_processor_memory[vector_schedule.assignedSuperstep(succ)]
+                                                 [vector_schedule.assignedProcessor(succ)] +=
+                                instance->getComputationalDag().nodeCommunicationWeight(move.node);
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -254,21 +367,67 @@ void kl_current_schedule::compute_work_memory_datastructures(unsigned start_step
                 step_processor_work[step][proc] = 0;
 
                 if (instance->getArchitecture().getMemoryConstraintType() == LOCAL) {
+
                     step_processor_memory[step][proc] = 0;
+
+                } else if (instance->getArchitecture().getMemoryConstraintType() == LOCAL_INC_EDGES) {
+
+                    step_processor_memory[step][proc] = 0;
+                    step_processor_pred[step][proc].clear();
+
+                } else if (instance->getArchitecture().getMemoryConstraintType() == LOCAL_INC_EDGES) {
+
+                    step_processor_memory[step][proc] = 0;
+                    step_processor_pred[step][proc].clear();
                 }
+
                 for (const auto &node : set_schedule.step_processor_vertices[step][proc]) {
                     step_processor_work[step][proc] += instance->getComputationalDag().nodeWorkWeight(node);
 
                     if (instance->getArchitecture().getMemoryConstraintType() == LOCAL) {
+
                         step_processor_memory[step][proc] += instance->getComputationalDag().nodeMemoryWeight(node);
+
                     } else if (instance->getArchitecture().getMemoryConstraintType() == PERSISTENT_AND_TRANSIENT) {
                         current_proc_persistent_memory[proc] += instance->getComputationalDag().nodeMemoryWeight(node);
                         current_proc_transient_memory[proc] =
                             std::max(current_proc_transient_memory[proc],
                                      instance->getComputationalDag().nodeCommunicationWeight(node));
 
-                        if (current_proc_transient_memory[proc] + current_proc_persistent_memory[proc] > instance->memoryBound(proc)) {
-                            throw std::runtime_error("Memory constraint PERSISTENT_AND_TRANSIENT not properly implemented");                         
+                        if (current_proc_transient_memory[proc] + current_proc_persistent_memory[proc] >
+                            instance->memoryBound(proc)) {
+                            throw std::runtime_error(
+                                "Memory constraint PERSISTENT_AND_TRANSIENT not properly implemented");
+                        }
+                    } else if (instance->getArchitecture().getMemoryConstraintType() == LOCAL_IN_OUT) {
+
+                        step_processor_memory[step][proc] +=
+                            instance->getComputationalDag().nodeMemoryWeight(node) +
+                            instance->getComputationalDag().nodeCommunicationWeight(node);
+
+                        for (const auto &pred : instance->getComputationalDag().parents(node)) {
+
+                            if (vector_schedule.assignedProcessor(pred) == proc &&
+                                vector_schedule.assignedSuperstep(pred) == step) {
+
+                                step_processor_memory[step][proc] -=
+                                    instance->getComputationalDag().nodeCommunicationWeight(pred);
+                            }
+                        }
+                    } else if (instance->getArchitecture().getMemoryConstraintType() == LOCAL_INC_EDGES) {
+
+                        step_processor_memory[step][proc] += instance->getComputationalDag().nodeCommunicationWeight(node);
+
+                        for (const auto &pred : instance->getComputationalDag().parents(node)) {
+
+                            if (vector_schedule.assignedSuperstep(pred) < step) {
+
+                                auto pair = step_processor_pred[step][proc].insert(pred);
+                                if (pair.second) {
+                                    step_processor_memory[step][proc] +=
+                                        instance->getComputationalDag().nodeCommunicationWeight(pred);
+                                }
+                            }
                         }
                     }
                 }
@@ -314,6 +473,19 @@ void kl_current_schedule::compute_work_memory_datastructures(unsigned start_step
     }
 }
 
+void kl_current_schedule::recompute_neighboring_supersteps(unsigned step) {
+    if (step > 0) {
+        compute_work_memory_datastructures(step - 1, step);
+        if (step < num_steps() - 1) {
+            compute_work_memory_datastructures(step + 1, step + 1);
+        }
+    } else {
+        compute_work_memory_datastructures(0, 0);
+        if (num_steps() > 1) {
+            compute_work_memory_datastructures(1, 1);
+        }
+    }
+}
 
 void kl_current_schedule::reset_superstep(unsigned step) {
 
@@ -321,13 +493,30 @@ void kl_current_schedule::reset_superstep(unsigned step) {
         compute_work_memory_datastructures(step - 1, step - 1);
         if (step < num_steps() - 1) {
             compute_work_memory_datastructures(step + 1, step + 1);
-        } 
+        }
     } else {
         compute_work_memory_datastructures(1, 1);
     }
 
     step_second_max_work[step] = 0;
     step_max_work[step] = 0;
+
+    if (use_memory_constraint) {
+        if (instance->getArchitecture().getMemoryConstraintType() == LOCAL) {
+            for (unsigned proc = 0; proc < instance->getArchitecture().numberOfProcessors(); proc++) {
+                step_processor_memory[step][proc] = 0;
+            }
+        } else if (instance->getArchitecture().getMemoryConstraintType() == LOCAL_IN_OUT) {
+            for (unsigned proc = 0; proc < instance->getArchitecture().numberOfProcessors(); proc++) {
+                step_processor_memory[step][proc] = 0;
+            }
+        } else if (instance->getArchitecture().getMemoryConstraintType() == LOCAL_INC_EDGES) {
+            for (unsigned proc = 0; proc < instance->getArchitecture().numberOfProcessors(); proc++) {
+                step_processor_memory[step][proc] = 0;
+                step_processor_pred[step][proc].clear();
+            }
+        }
+    }
 
     recompute_current_violations();
     cost_f->compute_current_costs();
@@ -356,11 +545,43 @@ void kl_current_schedule::remove_superstep(unsigned step) {
         for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
 
             step_processor_work[i][proc] = step_processor_work[i + 1][proc];
+
+            if (use_memory_constraint) {
+                if (instance->getArchitecture().getMemoryConstraintType() == LOCAL) {
+
+                    step_processor_memory[i][proc] = step_processor_memory[i + 1][proc];
+
+                } else if (instance->getArchitecture().getMemoryConstraintType() == LOCAL_IN_OUT) {
+
+                    step_processor_memory[i][proc] = step_processor_memory[i + 1][proc];
+                } else if (instance->getArchitecture().getMemoryConstraintType() == LOCAL_INC_EDGES) {
+                    step_processor_memory[i][proc] = step_processor_memory[i + 1][proc];
+                    step_processor_pred[i][proc] = step_processor_pred[i + 1][proc];
+                }
+            }
+
         }
     }
 
     step_second_max_work[num_steps()] = 0;
     step_max_work[num_steps()] = 0;
+
+    if (use_memory_constraint) {
+        if (instance->getArchitecture().getMemoryConstraintType() == LOCAL) {
+            for (unsigned proc = 0; proc < instance->getArchitecture().numberOfProcessors(); proc++) {
+                step_processor_memory[num_steps()][proc] = 0;
+            }
+        } else if (instance->getArchitecture().getMemoryConstraintType() == LOCAL_IN_OUT) {
+            for (unsigned proc = 0; proc < instance->getArchitecture().numberOfProcessors(); proc++) {
+                step_processor_memory[num_steps()][proc] = 0;
+            }
+        } else if (instance->getArchitecture().getMemoryConstraintType() == LOCAL_INC_EDGES) {
+            for (unsigned proc = 0; proc < instance->getArchitecture().numberOfProcessors(); proc++) {
+                step_processor_memory[num_steps()][proc] = 0;
+                step_processor_pred[num_steps()][proc].clear();
+            }
+        }
+    }
 
     recompute_current_violations();
     cost_f->compute_current_costs();
@@ -424,8 +645,21 @@ void kl_current_schedule::initialize_superstep_datastructures() {
         if (instance->getArchitecture().getMemoryConstraintType() == LOCAL) {
             step_processor_memory = std::vector<std::vector<int>>(num_steps(), std::vector<int>(num_procs, 0));
         } else if (instance->getArchitecture().getMemoryConstraintType() == PERSISTENT_AND_TRANSIENT) {
+
+            throw std::runtime_error("Memory constraint PERSISTENT_AND_TRANSIENT not implemented");
+
             current_proc_persistent_memory = std::vector<int>(num_procs, 0);
             current_proc_transient_memory = std::vector<int>(num_procs, 0);
+
+        } else if (instance->getArchitecture().getMemoryConstraintType() == LOCAL_IN_OUT) {
+            step_processor_memory = std::vector<std::vector<int>>(num_steps(), std::vector<int>(num_procs, 0));
+
+             throw std::runtime_error("Memory constraint LOCAL_IN_OUT not implemented");
+
+        } else if (instance->getArchitecture().getMemoryConstraintType() == LOCAL_INC_EDGES) {
+            step_processor_memory = std::vector<std::vector<int>>(num_steps(), std::vector<int>(num_procs, 0));
+            step_processor_pred = std::vector<std::vector<std::unordered_set<VertexType>>>(
+                num_steps(), std::vector<std::unordered_set<VertexType>>(num_procs));
         }
     }
 
@@ -441,6 +675,7 @@ void kl_current_schedule::cleanup_superstep_datastructures() {
     step_second_max_work.clear();
 
     step_processor_memory.clear();
+    step_processor_pred.clear();
     current_proc_persistent_memory.clear();
     current_proc_transient_memory.clear();
 }

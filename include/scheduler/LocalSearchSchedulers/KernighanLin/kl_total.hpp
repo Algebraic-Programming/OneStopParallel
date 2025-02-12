@@ -43,14 +43,17 @@ class kl_total : public kl_base {
   protected:
     kl_current_schedule_total current_schedule;
 
+    int node_comm_selection_threshold = 0;
     double max_edge_weight = 0.0;
     virtual void initialize_datastructures() override;
 
     virtual void update_reward_penalty() override;
     virtual void set_initial_reward_penalty() override;
 
+    virtual void select_nodes_comm(unsigned threshold) override;
+
   public:
-    kl_total(bool use_node_communication_costs_ = false)
+    kl_total(bool use_node_communication_costs_)
         : kl_base(current_schedule), current_schedule(this, use_node_communication_costs_) {}
 
     virtual ~kl_total() = default;

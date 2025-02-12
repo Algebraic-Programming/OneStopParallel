@@ -26,6 +26,10 @@ bool kl_base::run_local_search_unlock_delay() {
     std::cout << "Initial costs " << initial_costs << std::endl;
 #endif
 
+#ifdef KL_PRINT_SCHEDULE
+    print_best_schedule(0);
+#endif
+
     unsigned no_improvement_iter_counter = 0;
 
     auto start_time = std::chrono::high_resolution_clock::now();
@@ -251,6 +255,13 @@ bool kl_base::run_local_search_unlock_delay() {
             std::cout << "---- reset super locked nodes" << std::endl;
 #endif
         }
+
+
+#ifdef KL_PRINT_SCHEDULE
+if (best_iter_costs > current_schedule->current_cost) {
+        print_best_schedule(outer_counter + 1);
+}
+#endif
 
         reset_locked_nodes();
 

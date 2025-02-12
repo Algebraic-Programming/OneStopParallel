@@ -83,6 +83,8 @@ class IsomorphismGroups {
      */
     const std::vector<std::vector<std::vector<unsigned>>> &get_isomorphism_groups() const { return isomorphism_groups; }
 
+    std::vector<std::vector<std::vector<unsigned>>> &get_isomorphism_groups() { return isomorphism_groups; }
+
     /**
      * @brief Retrieves the isomorphism groups subgraphs.
      * 
@@ -95,6 +97,10 @@ class IsomorphismGroups {
      * to the isomorphism groups subgraphs.
      */
     const std::vector<std::vector<ComputationalDag>> &get_isomorphism_groups_subgraphs() const {
+        return isomorphism_groups_subgraphs;
+    }
+
+    std::vector<std::vector<ComputationalDag>> &get_isomorphism_groups_subgraphs() {
         return isomorphism_groups_subgraphs;
     }
 

@@ -23,6 +23,18 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
         scheduler.setTimeLimitSeconds(timeLimit);
 
         return scheduler.computeSchedule(bsp_instance);
+    } else if (algorithm.get_child("name").get_value<std::string>() == "GreedyBspStoneAge") {
+
+        GreedyBspStoneAge scheduler;
+        // scheduler.setUseMemoryConstraint(use_memory_constraint);
+        // scheduler.setTimeLimitSeconds(timeLimit);
+
+        return scheduler.computeSchedule(bsp_instance);
+    } else if (algorithm.get_child("name").get_value<std::string>() == "GreedyBspGrowLocal") {
+
+        GreedyBspGrowLocal scheduler;
+        
+        return scheduler.computeSchedule(bsp_instance);
     } else if (algorithm.get_child("name").get_value<std::string>() == "GreedyBspLocking") {
 
         float max_percent_idle_processors =
@@ -43,7 +55,7 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
 
         bool hyperedge = algorithm.get_child("parameters").get_child("hyperedge").get_value<bool>();
 
-        LKTotalCommScheduler improver(hyperedge);
+        kl_total_comm improver;
 
         GreedyBspLocking greedy_scheduler(max_percent_idle_processors, increase_parallelism_in_new_superstep);
         ComboScheduler scheduler(&greedy_scheduler, &improver);
@@ -83,7 +95,7 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
 
         bool hyperedge = algorithm.get_child("parameters").get_child("hyperedge").get_value<bool>();
 
-        LKTotalCommScheduler improver(hyperedge);
+        kl_total_comm improver;
 
         GreedyBspFillupScheduler bsp_greedy_scheduler(max_percent_idle_processors, increase_parallelism_in_new_superstep);
         ComboScheduler scheduler(&bsp_greedy_scheduler, &improver);
@@ -103,6 +115,19 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
 
         return scheduler.computeSchedule(bsp_instance);
 
+    } else if (algorithm.get_child("name").get_value<std::string>() == "ReverseGreedyVarianceFillup") {
+
+        float max_percent_idle_processors =
+            algorithm.get_child("parameters").get_child("max_percent_idle_processors").get_value<float>();
+        bool increase_parallelism_in_new_superstep =
+            algorithm.get_child("parameters").get_child("increase_parallelism_in_new_superstep").get_value<bool>();
+
+        GreedyVarianceFillupScheduler var_scheduler(max_percent_idle_processors, increase_parallelism_in_new_superstep);
+        ReverseScheduler scheduler(&var_scheduler);
+        scheduler.setTimeLimitSeconds(timeLimit);
+
+        return scheduler.computeSchedule(bsp_instance);
+
     } else if (algorithm.get_child("name").get_value<std::string>() == "GreedyVarianceFillupLK") {
 
         float max_percent_idle_processors =
@@ -112,7 +137,7 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
 
         bool hyperedge = algorithm.get_child("parameters").get_child("hyperedge").get_value<bool>();
 
-        LKTotalCommScheduler improver(hyperedge);
+        kl_total_comm improver;
 
         GreedyVarianceFillupScheduler greedy_scheduler(max_percent_idle_processors, increase_parallelism_in_new_superstep);
         ComboScheduler scheduler(&greedy_scheduler, &improver);
@@ -146,7 +171,7 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
 
         bool hyperedge = algorithm.get_child("parameters").get_child("hyperedge").get_value<bool>();
 
-        LKTotalCommScheduler improver(hyperedge);
+        kl_total_comm improver;
 
         ComboScheduler scheduler(&cilk_scheduler, &improver);
 
@@ -179,7 +204,7 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
 
         bool hyperedge = algorithm.get_child("parameters").get_child("hyperedge").get_value<bool>();
 
-        LKTotalCommScheduler improver(hyperedge);
+        kl_total_comm improver;
 
         ComboScheduler scheduler(&etf_scheduler, &improver);
 
@@ -713,8 +738,7 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
         bool hyperedge = algorithm.get_child("parameters").get_child("hyperedge").get_value<bool>();
 
         CoBalDMixR cob_scheduler(params);
-        LKTotalCommScheduler improver(hyperedge);
-        improver.set_quick_pass(true);
+        kl_total_comm improver;
         ComboScheduler scheduler(&cob_scheduler, &improver);
         scheduler.setTimeLimitSeconds(timeLimit);
 
@@ -722,8 +746,7 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
     } else if (algorithm.get_child("name").get_value<std::string>() == "BestGreedyLK") {
 
         MetaGreedyScheduler best_greedy;
-        LKTotalCommScheduler improver;
-        improver.set_quick_pass(true);
+        kl_total_comm improver;
         ComboScheduler scheduler(&best_greedy, &improver);
         scheduler.setTimeLimitSeconds(timeLimit);
 
@@ -873,7 +896,7 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
                                                         .get_value<int>();
 
         GreedyBspScheduler greedy;
-        LKTotalCommScheduler hill_climbing;
+        kl_total_comm hill_climbing;
         SquashA scheduler(&greedy, &hill_climbing, coarse_params,
                           min_nodes_after_coarsen_per_partition * number_of_partitions);
         scheduler.setTimeLimitSeconds(timeLimit);
@@ -1078,8 +1101,7 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
                                                         .get_value<int>();
 
         MetaGreedyScheduler best_greedy_sched;
-        LKTotalCommScheduler improver;
-        improver.set_quick_pass(true);
+        kl_total_comm improver;
         ComboScheduler combo_sched(&best_greedy_sched, &improver);
         SquashA scheduler(&combo_sched, coarse_params, min_nodes_after_coarsen_per_partition * number_of_partitions);
 
@@ -1186,8 +1208,8 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
     } else if (algorithm.get_child("name").get_value<std::string>() == "CoarseHDaggBestGreedyLK") {
 
         MetaGreedyScheduler meta_greedy;
-        LKTotalCommScheduler improver;
-        improver.set_quick_pass(true);
+        kl_total_comm improver;
+
         HDaggCoarser scheduler(&meta_greedy, &improver);
         scheduler.setTimeLimitSeconds(timeLimit);
 
@@ -1712,12 +1734,37 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
                                                 min_nodes_after_coarsen_per_partition, number_of_final_no_change_reps);
 
         CoBalDMixR sched(params);
-        LKTotalCommScheduler improver;
-        improver.set_quick_pass(true);
+        kl_total_comm improver;
         HDaggCoarser scheduler(&sched, &improver);
         scheduler.setTimeLimitSeconds(timeLimit);
 
         return scheduler.computeSchedule(bsp_instance);
+
+    } else if (algorithm.get_child("name").get_value<std::string>() == "FunnelBspGrowLocal") {
+
+        float max_relative_weight =
+            algorithm.get_child("parameters").get_child("coarsen").get_child("max_relative_weight").get_value<float>();
+        bool funnel_incoming =
+            algorithm.get_child("parameters").get_child("coarsen").get_child("funnel_incoming").get_value<bool>();
+        bool funnel_outgoing =
+            algorithm.get_child("parameters").get_child("coarsen").get_child("funnel_outgoing").get_value<bool>();
+        bool first_funnel_incoming =
+            algorithm.get_child("parameters").get_child("coarsen").get_child("first_funnel_incoming").get_value<bool>();
+        bool use_approx_transitive_reduction = algorithm.get_child("parameters")
+                                                   .get_child("coarsen")
+                                                   .get_child("use_approx_transitive_reduction")
+                                                   .get_value<bool>();
+
+        Funnel_parameters params(max_relative_weight, funnel_incoming, funnel_outgoing, first_funnel_incoming,
+                                 use_approx_transitive_reduction);
+
+        GreedyBspGrowLocal scheduler_inner;
+        Funnel scheduler(&scheduler_inner, params);
+
+        scheduler.setTimeLimitSeconds(timeLimit);
+
+        return scheduler.computeSchedule(bsp_instance);
+      
     } else if (algorithm.get_child("name").get_value<std::string>() == "FunnelBspGreedy") {
 
         float max_relative_weight =
@@ -1911,7 +1958,7 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
             algorithm.get_child("parameters").get_child("increase_parallelism_in_new_superstep").get_value<bool>();
 
         GreedyBspFillupScheduler bsp_greedy(max_percent_idle_processor, increase_parallelism_in_new_superstep);
-        LKTotalCommScheduler lk;
+        kl_total_comm lk;
         ComboScheduler bsp_greedy_lk(&bsp_greedy, &lk);
         HillClimbingScheduler hc;
         HDaggCoarser scheduler(&bsp_greedy_lk, &hc);
@@ -1937,7 +1984,7 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
             algorithm.get_child("parameters").get_child("increase_parallelism_in_new_superstep").get_value<bool>();
 
         GreedyVarianceFillupScheduler greedy(max_percent_idle_processors, increase_parallelism_in_new_superstep);
-        LKTotalCommScheduler lk;
+        kl_total_comm lk;
         ComboScheduler greedy_lk(&greedy, &lk);
         HillClimbingScheduler hc;
         HDaggCoarser scheduler(&greedy_lk, &hc);
@@ -1963,7 +2010,7 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
             algorithm.get_child("parameters").get_child("increase_parallelism_in_new_superstep").get_value<bool>();
 
         GreedyBspLocking greedy(max_percent_idle_processors, increase_parallelism_in_new_superstep);
-        LKTotalCommScheduler lk;
+        kl_total_comm lk;
         ComboScheduler greedy_lk(&greedy, &lk);
         HillClimbingScheduler hc;
         HDaggCoarser scheduler(&greedy_lk, &hc);
@@ -2152,7 +2199,7 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
 
         CoBalDMixR cobald(params);
 
-        LKTotalCommScheduler lk;
+        kl_total_comm lk;
         ComboScheduler cobald_lk(&cobald, &lk);
         HillClimbingScheduler hc;
         HDaggCoarser scheduler(&cobald_lk, &hc);
@@ -2192,7 +2239,7 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
             algorithm.get_child("parameters").get_child("max_percent_idle_processors").get_value<float>();
 
         GreedyBspFillupScheduler bsp_greedy(max_percent_idle_processor);
-        LKTotalCommScheduler lk;
+        kl_total_comm lk;
         ComboScheduler bsp_greedy_lk(&bsp_greedy, &lk);
         HillClimbingScheduler hc;
         Funnel scheduler(&bsp_greedy_lk, &hc, params);
@@ -2234,7 +2281,7 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
                                  use_approx_transitive_reduction);
 
         GreedyVarianceFillupScheduler greedy(max_percent_idle_processors, increase_parallelism_in_new_superstep);
-        LKTotalCommScheduler lk;
+        kl_total_comm lk;
         ComboScheduler greedy_lk(&greedy, &lk);
         HillClimbingScheduler hc;
         Funnel scheduler(&greedy_lk, &hc);
@@ -2439,7 +2486,7 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
 
         CoBalDMixR cobald(params);
 
-        LKTotalCommScheduler lk;
+        kl_total_comm lk;
         ComboScheduler cobald_lk(&cobald, &lk);
         HillClimbingScheduler hc;
         Funnel scheduler(&cobald_lk, &hc, f_params);
@@ -2498,13 +2545,86 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
             algorithm.get_child("parameters").get_child("max_percent_idle_processors").get_value<float>();
 
         GreedyBspScheduler bsp_greedy(max_percent_idle_processor);
-        LKTotalCommScheduler lk;
+        kl_total_comm lk;
         lk.set_quick_pass(true);
         SquashA scheduler(&bsp_greedy, &lk, coarse_params,
                           min_nodes_after_coarsen_per_partition * number_of_partitions);
         scheduler.setTimeLimitSeconds(timeLimit);
 
         return scheduler.computeSchedule(bsp_instance);
+    } else {
+
+        throw std::invalid_argument("Parameter error: Unknown algorithm.\n");
+    }
+};
+
+std::pair<RETURN_STATUS, BspMemSchedule> run_algorithm_mem(const CommandLineParser &parser, const pt::ptree &algorithm,
+                                                    const BspInstance &bsp_instance, unsigned timeLimit) {
+
+    std::cout << "Running algorithm: " << algorithm.get_child("name").get_value<std::string>() << std::endl;
+
+    if(!BspMemSchedule::hasValidSolution(bsp_instance))
+    {
+        std::cout<<"ERROR: no valid solution exists with given memory bounds and type constraints."<<std::endl;
+        return std::make_pair(RETURN_STATUS:: ERROR, BspMemSchedule());
+    }
+
+    if (algorithm.get_child("name").get_value<std::string>() == "GreedyPebbling") {
+
+        BspSchedule bsp_initial;
+
+        if(algorithm.get_child("parameters").get_child("use_cilk").get_value<bool>())
+        {
+            GreedyCilkScheduler cilk;
+            bsp_initial = cilk.computeSchedule(bsp_instance).second;
+        }
+        else
+        {
+            GreedyBspScheduler greedy;
+            bsp_initial = greedy.computeSchedule(bsp_instance).second;
+        }
+        
+        BspMemSchedule::CACHE_EVICTION_STRATEGY eviction = algorithm.get_child("parameters").get_child("foresight_policy").get_value<bool>()
+                                                        ? BspMemSchedule::CACHE_EVICTION_STRATEGY::FORESIGHT
+                                                        : BspMemSchedule::CACHE_EVICTION_STRATEGY::LEAST_RECENTLY_USED;
+
+        BspMemSchedule mem_schedule(bsp_initial, eviction);
+        return std::make_pair(RETURN_STATUS::SUCCESS, mem_schedule);
+
+    } else if (algorithm.get_child("name").get_value<std::string>() == "WFLFKCUT") {
+
+        GreedyBspLocking greedy;
+        kl_total_cut kl(true);
+        FunnelBfs funnel(&greedy, &kl);
+        WavefrontComponentDivider div;
+        WavefrontComponentScheduler wlfkc(div, funnel);
+
+        auto [status, bsp_initial] = wlfkc.computeSchedule(bsp_instance);
+        
+        BspMemSchedule::CACHE_EVICTION_STRATEGY eviction = algorithm.get_child("parameters").get_child("foresight_policy").get_value<bool>()
+                                                        ? BspMemSchedule::CACHE_EVICTION_STRATEGY::FORESIGHT
+                                                        : BspMemSchedule::CACHE_EVICTION_STRATEGY::LEAST_RECENTLY_USED;
+
+        BspMemSchedule mem_schedule(bsp_initial, eviction);
+        return std::make_pair(RETURN_STATUS::SUCCESS, mem_schedule);
+
+    } else if (algorithm.get_child("name").get_value<std::string>() == "WFLFKCOMM") {
+
+        GreedyBspLocking greedy;
+        kl_total_comm kl(true);
+        FunnelBfs funnel(&greedy, &kl);
+        WavefrontComponentDivider div;
+        WavefrontComponentScheduler wlfkc(div, funnel);
+
+        auto [status, bsp_initial] = wlfkc.computeSchedule(bsp_instance);
+        
+        BspMemSchedule::CACHE_EVICTION_STRATEGY eviction = algorithm.get_child("parameters").get_child("foresight_policy").get_value<bool>()
+                                                        ? BspMemSchedule::CACHE_EVICTION_STRATEGY::FORESIGHT
+                                                        : BspMemSchedule::CACHE_EVICTION_STRATEGY::LEAST_RECENTLY_USED;
+
+        BspMemSchedule mem_schedule(bsp_initial, eviction);
+        return std::make_pair(RETURN_STATUS::SUCCESS, mem_schedule);
+
     } else {
 
         throw std::invalid_argument("Parameter error: Unknown algorithm.\n");

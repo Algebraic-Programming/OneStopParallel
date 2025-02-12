@@ -23,7 +23,6 @@ BspArchitecture WavefrontComponentScheduler::setup_sub_architecture(const BspArc
                                                                     const double subgraph_work_weight,
                                                                     const double total_step_work) {
 
-
     BspArchitecture sub_architecture(original);
 
     unsigned sub_dag_processors = 1u;
@@ -34,9 +33,11 @@ BspArchitecture WavefrontComponentScheduler::setup_sub_architecture(const BspArc
     if (set_num_proc_crit_path) {
         const double critical_path_w = sub_dag.critical_path_weight();
         const double parallelism = total_step_work / critical_path_w;
-        
+
         for (unsigned i = 0; i < sub_dag_processor_types.size(); i++) {
-            sub_dag_processor_types[i] = std::max(1u, (unsigned)std::floor(parallelism * (double)sub_dag_processors_type_count[i] / (double)original.numberOfProcessors()));
+            sub_dag_processor_types[i] =
+                std::max(1u, (unsigned)std::floor(parallelism * (double)sub_dag_processors_type_count[i] /
+                                                  (double)original.numberOfProcessors()));
         }
 
     } else {
@@ -44,20 +45,22 @@ BspArchitecture WavefrontComponentScheduler::setup_sub_architecture(const BspArc
         const double sub_dag_work_weight_percent = subgraph_work_weight / total_step_work;
 
         for (unsigned i = 0; i < sub_dag_processor_types.size(); i++) {
-                
-                sub_dag_processor_types[i] =
-                    std::max(1u, (unsigned)std::floor(sub_dag_processors_type_count[i] * sub_dag_work_weight_percent));
+
+            sub_dag_processor_types[i] =
+                std::max(1u, (unsigned)std::floor(sub_dag_processors_type_count[i] * sub_dag_work_weight_percent));
         }
     }
 
-    std::vector<unsigned> sub_dag_processor_memory(sub_dag_processors_type_count.size(), std::numeric_limits<unsigned>::max());
+    std::vector<unsigned> sub_dag_processor_memory(sub_dag_processors_type_count.size(),
+                                                   std::numeric_limits<unsigned>::max());
 
     for (unsigned i = 0; i < original.numberOfProcessors(); i++) {
-        sub_dag_processor_memory[original.processorType(i)] = std::min(original.memoryBound(i), sub_dag_processor_memory[original.processorType(i)]);
+        sub_dag_processor_memory[original.processorType(i)] =
+            std::min(original.memoryBound(i), sub_dag_processor_memory[original.processorType(i)]);
     }
 
     sub_architecture.set_processors_consequ_types(sub_dag_processor_types, sub_dag_processor_memory);
-    //sub_architecture.print_architecture(std::cout);
+    // sub_architecture.print_architecture(std::cout);
 
     return sub_architecture;
 }
@@ -71,67 +74,80 @@ std::pair<RETURN_STATUS, BspSchedule> WavefrontComponentScheduler::computeSchedu
     }
 }
 
-std::pair<RETURN_STATUS, BspSchedule> WavefrontComponentScheduler::computeSchedule_without_isomorphism_groups(const BspInstance &instance) {
+std::pair<RETURN_STATUS, BspSchedule>
+WavefrontComponentScheduler::computeSchedule_without_isomorphism_groups(const BspInstance &instance) {
 
-        auto vertex_maps = divider->divide(instance.getComputationalDag());
+    auto vertex_maps = divider->divide(instance.getComputationalDag());
 
-        BspSchedule schedule(instance);
-        const auto& proc_type_count = instance.getArchitecture().getProcessorTypeCount();
+    BspSchedule schedule(instance);
+    const auto &proc_type_count = instance.getArchitecture().getProcessorTypeCount();
 
-        unsigned superstep_offset = 0;
+    unsigned superstep_offset = 0;
 
-        for (size_t i = 0; i < vertex_maps.size(); i++) {
+    for (size_t i = 0; i < vertex_maps.size(); i++) {
 
-            unsigned processors_offset = 0;
-            unsigned max_number_supersteps = 0;
+        unsigned processors_offset = 0;
+        unsigned max_number_supersteps = 0;
 
-            for (size_t j = 0; j < vertex_maps[i].size(); j++) {
+        for (size_t j = 0; j < vertex_maps[i].size(); j++) {
 
-                const ComputationalDag &sub_dag = dag_algorithms::create_induced_subgraph_sorted(instance.getComputationalDag(), vertex_maps[i][j]);
+            ComputationalDag sub_dag =
+                dag_algorithms::create_induced_subgraph_sorted(instance.getComputationalDag(), vertex_maps[i][j]);
 
-                // BspArchitecture sub_architecture =
-                //     setup_sub_architecture(instance.getArchitecture(), sub_dag, sub_dag.sumOfVerticesWorkWeights(sub_dag.vertices().begin(), sub_dag.vertices().end()),
-                //                            instance.getComputationalDag().sumOfVerticesWorkWeights(sub_dag.vertices().begin(), sub_dag.vertices().end()));
-
-                std::cout << "Subdag " << i << " " << j << " " << sub_dag.numberOfVertices() << " " << sub_dag.numberOfEdges() << std::endl;
-
-                BspInstance sub_instance(sub_dag, instance.getArchitecture());
-                //sub_instance.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
-
-                auto [status, sub_schedule] = scheduler->computeSchedule(sub_instance);
-
-                for (const auto &vertex : vertex_maps[i][j]) {
-
-                    const unsigned proc_orig = sub_schedule.assignedProcessor(vertex);
-                    const unsigned proc_type = instance.getArchitecture().processorType(proc_orig);
-                    const unsigned proc = proc_orig - processors_offset;
-
-                    schedule.setAssignedProcessor(vertex, proc);
-                    schedule.setAssignedSuperstep(vertex, superstep_offset + sub_schedule.assignedSuperstep(vertex));
+            if (i > 0 && instance.getArchitecture().getMemoryConstraintType() == LOCAL_INC_EDGES) {
+                for (const auto &source_vertex : sub_dag.sourceVertices()) {
+                    sub_dag.setNodeCommunicationWeight(source_vertex, sub_dag.nodeCommunicationWeight(source_vertex) +
+                                                                          sub_dag.nodeMemoryWeight(source_vertex));
                 }
-
-                processors_offset += instance.getArchitecture().numberOfProcessors();
-                max_number_supersteps = std::max(max_number_supersteps, sub_schedule.numberOfSupersteps());
             }
 
-            superstep_offset += max_number_supersteps;
+
+            // BspArchitecture sub_architecture =
+            //     setup_sub_architecture(instance.getArchitecture(), sub_dag,
+            //     sub_dag.sumOfVerticesWorkWeights(sub_dag.vertices().begin(), sub_dag.vertices().end()),
+            //                            instance.getComputationalDag().sumOfVerticesWorkWeights(sub_dag.vertices().begin(),
+            //                            sub_dag.vertices().end()));
+
+            std::cout << "Subdag " << i << " " << j << " " << sub_dag.numberOfVertices() << " "
+                      << sub_dag.numberOfEdges() << std::endl;
+
+            BspInstance sub_instance(sub_dag, instance.getArchitecture());
+            // sub_instance.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
+
+            auto [status, sub_schedule] = scheduler->computeSchedule(sub_instance);
+
+            for (const auto &vertex : vertex_maps[i][j]) {
+
+                const unsigned proc_orig = sub_schedule.assignedProcessor(vertex);
+                const unsigned proc_type = instance.getArchitecture().processorType(proc_orig);
+                const unsigned proc = proc_orig - processors_offset;
+
+                schedule.setAssignedProcessor(vertex, proc);
+                schedule.setAssignedSuperstep(vertex, superstep_offset + sub_schedule.assignedSuperstep(vertex));
+            }
+
+            processors_offset += instance.getArchitecture().numberOfProcessors();
+            max_number_supersteps = std::max(max_number_supersteps, sub_schedule.numberOfSupersteps());
         }
 
-        schedule.updateNumberOfSupersteps();
-        schedule.setLazyCommunicationSchedule();
+        superstep_offset += max_number_supersteps;
+    }
 
-        return {SUCCESS, schedule};
+    schedule.updateNumberOfSupersteps();
+    schedule.setLazyCommunicationSchedule();
+
+    return {SUCCESS, schedule};
 }
 
-std::pair<RETURN_STATUS, BspSchedule> WavefrontComponentScheduler::computeSchedule_with_isomorphism_groups(const BspInstance &instance) {
+std::pair<RETURN_STATUS, BspSchedule>
+WavefrontComponentScheduler::computeSchedule_with_isomorphism_groups(const BspInstance &instance) {
 
-    
     IsomorphismGroups iso_groups;
     auto vertex_maps = divider->divide(instance.getComputationalDag());
     iso_groups.compute_isomorphism_groups(vertex_maps, instance.getComputationalDag());
 
     BspSchedule schedule(instance);
-    const auto& proc_type_count = instance.getArchitecture().getProcessorTypeCount();
+    const auto &proc_type_count = instance.getArchitecture().getProcessorTypeCount();
     const std::vector<std::vector<std::vector<unsigned>>> &iosmorphism_groups = iso_groups.get_isomorphism_groups();
     unsigned superstep_offset = 0;
 
@@ -148,7 +164,7 @@ std::pair<RETURN_STATUS, BspSchedule> WavefrontComponentScheduler::computeSchedu
             total_step_work += subgraph_work_weights[j] * iosmorphism_groups[i][j].size();
         }
 
-        //unsigned processors_offset = 0;
+        // unsigned processors_offset = 0;
         unsigned max_number_supersteps = 0;
 
         std::vector<unsigned> proc_type_offsets(instance.getArchitecture().getNumberOfProcessorTypes(), 0);
@@ -163,7 +179,29 @@ std::pair<RETURN_STATUS, BspSchedule> WavefrontComponentScheduler::computeSchedu
 
         for (size_t j = 0; j < iosmorphism_groups[i].size(); j++) { // iterate through isomorphism groups
 
-            const ComputationalDag &sub_dag = iso_groups.get_isomorphism_groups_subgraphs()[i][j];
+            ComputationalDag &sub_dag = iso_groups.get_isomorphism_groups_subgraphs()[i][j];
+
+            if (i > 0 && instance.getArchitecture().getMemoryConstraintType() == LOCAL_INC_EDGES) {
+
+                // for (const auto &vertex : sub_dag.vertices()) {
+                //     const auto vertex_original = iosmorphism_groups[i][j][vertex];
+
+                //     for (const auto& pred : instance.getComputationalDag().parents(vertex_original)) {
+
+                //         if (pred < vertex) {
+                //             sub_dag.setNodeCommunicationWeight(vertex, sub_dag.nodeCommunicationWeight(vertex) +
+                //                                                   instance.getComputationalDag().nodeCommunicationWeight(pred));
+                //         }
+                //     }
+
+                // }
+
+                // for (const auto &source_vertex : sub_dag.sourceVertices()) {
+                    
+                //     sub_dag.setNodeCommunicationWeight(source_vertex, sub_dag.nodeCommunicationWeight(source_vertex) +
+                //                                                           sub_dag.nodeMemoryWeight(source_vertex));
+                // }
+            }
 
             BspArchitecture sub_architecture =
                 setup_sub_architecture(instance.getArchitecture(), sub_dag, subgraph_work_weights[j], total_step_work);
@@ -196,10 +234,11 @@ std::pair<RETURN_STATUS, BspSchedule> WavefrontComponentScheduler::computeSchedu
                     }
 
                     schedule.setAssignedProcessor(vertex, assign_proc);
-                    schedule.setAssignedSuperstep(vertex, superstep_offset + sub_schedule.assignedSuperstep(subdag_vertex));
+                    schedule.setAssignedSuperstep(vertex,
+                                                  superstep_offset + sub_schedule.assignedSuperstep(subdag_vertex));
                     subdag_vertex++;
                 }
-                
+
                 if (reset_offsets) {
                     reset_offsets = false;
                     for (size_t k = 0; k < sub_proc_type_count.size(); k++) {
@@ -210,7 +249,7 @@ std::pair<RETURN_STATUS, BspSchedule> WavefrontComponentScheduler::computeSchedu
                 for (size_t k = 0; k < sub_proc_type_count.size(); k++) {
                     proc_type_offsets[k] += sub_proc_type_count[k];
                 }
-                //processors_offset += sub_architecture.numberOfProcessors();
+                // processors_offset += sub_architecture.numberOfProcessors();
             }
 
             max_number_supersteps = std::max(max_number_supersteps, sub_schedule.numberOfSupersteps());
