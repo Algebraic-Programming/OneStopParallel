@@ -44,7 +44,7 @@ class WavefrontComponentDivider : public IWavefrontDivider {
 
     size_t diff_threshold = 3;
 
-    int min_subseq_len = 2;
+    int min_subseq_len = 4;
 
     SplitMethod split_method = SplitMethod::MIN_DIFF;
 

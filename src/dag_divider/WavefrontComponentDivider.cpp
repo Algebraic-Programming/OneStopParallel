@@ -94,22 +94,18 @@ bool WavefrontComponentDivider::compute_split_min_diff(const std::vector<double>
                                                        bool reverse) {
 
     if (reverse) {
-        for (size_t i = sequence.size() - (min_subseq_len + 1); i > min_subseq_len - 2; i--) {
+        for (size_t i = sequence.size() - 3; i > min_subseq_len - 2; i--) {
 
             if (sequence[i] > sequence[i + 1]) {
-
-                // if (i < min_subseq_len)
 
                 split = i + 1;
                 return true;
             }
         }
     } else {
-        for (size_t i = min_subseq_len - 1; i < sequence.size() - (min_subseq_len + 1); i++) {
+        for (size_t i = 1; i < sequence.size() - (min_subseq_len + 1); i++) {
 
             if (sequence[i] < sequence[i + 1]) {
-
-                // if (i < min_subseq_len)
 
                 split = i + 1;
                 return true;
