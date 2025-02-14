@@ -153,9 +153,9 @@ class kl_base : public ImprovementScheduler, public Ikl_cost_function {
     unsigned step_selection_counter = 0;
     unsigned step_selection_epoch_counter = 0;
 
-    bool auto_alternate = true;
-    bool alternate_reset_remove_superstep = true;
-    bool reset_superstep = true;
+    bool auto_alternate = false;
+    bool alternate_reset_remove_superstep = false;
+    bool reset_superstep = false;
 
     virtual bool check_remove_superstep(unsigned step);
     bool scatter_nodes_remove_superstep(unsigned step);

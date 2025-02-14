@@ -249,6 +249,15 @@ bool kl_base::run_local_search_unlock_delay() {
             current_schedule->set_current_schedule(*best_schedule);
         }
 
+        if (compute_with_time_limit) {
+            auto finish_time = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
+            if (duration > timeLimitSeconds) {
+                break;
+            }
+        }
+
+
         if (outer_counter > 0 && outer_counter % 30 == 0) {
             super_locked_nodes.clear();
 #ifdef KL_DEBUG
@@ -267,11 +276,11 @@ if (best_iter_costs > current_schedule->current_cost) {
 
         node_selection.clear();
 
-        if (reset_superstep) {
-            select_nodes_check_reset_superstep();
-        } else {
-            select_nodes_check_remove_superstep();
-        }
+        // if (reset_superstep) {
+        //     select_nodes_check_reset_superstep();
+        // } else {
+        select_nodes_check_remove_superstep();
+        // }
 
         update_reward_penalty();
 
@@ -281,13 +290,7 @@ if (best_iter_costs > current_schedule->current_cost) {
         std::cout << "end of while, current cost " << current_schedule->current_cost << std::endl;
 #endif
 
-        if (compute_with_time_limit) {
-            auto finish_time = std::chrono::high_resolution_clock::now();
-            auto duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
-            if (duration > timeLimitSeconds) {
-                break;
-            }
-        }
+
 
         if (best_iter_costs <= current_schedule->current_cost) {
 
@@ -304,19 +307,19 @@ if (best_iter_costs > current_schedule->current_cost) {
 #endif
             }
 
-            if (no_improvement_iter_counter > 10 && no_improvement_iter_counter % 15 == 0) {
+//             if (no_improvement_iter_counter > 10 && no_improvement_iter_counter % 15 == 0) {
 
-                step_selection_epoch_counter = 0;
+//                 step_selection_epoch_counter = 0;
 
-                if (alternate_reset_remove_superstep) {
-                    reset_superstep = !reset_superstep;
-                }
+//                 if (alternate_reset_remove_superstep) {
+//                     reset_superstep = !reset_superstep;
+//                 }
 
-#ifdef KL_DEBUG
-                std::cout << "no improvement for " << no_improvement_iter_counter << " reset superstep "
-                          << reset_superstep << std::endl;
-#endif
-            }
+// #ifdef KL_DEBUG
+//                 std::cout << "no improvement for " << no_improvement_iter_counter << " reset superstep "
+//                           << reset_superstep << std::endl;
+// #endif
+//             }
 
             if (no_improvement_iter_counter > 50 && no_improvement_iter_counter % 3 == 0) {
 
@@ -358,6 +361,10 @@ if (best_iter_costs > current_schedule->current_cost) {
         } else {
             no_improvement_iter_counter = 0;
         }
+
+#ifdef KL_DEBUG
+        std::cout << "end of while, current cost " << current_schedule->current_cost << std::endl;
+#endif
 
     } // for
 

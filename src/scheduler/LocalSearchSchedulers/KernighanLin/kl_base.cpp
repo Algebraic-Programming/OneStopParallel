@@ -1594,7 +1594,7 @@ bool kl_base::check_remove_superstep(unsigned step) {
         total_work += current_schedule->step_processor_work[step][proc];
     }
 
-    if (total_work < current_schedule->instance->synchronisationCosts()) {
+    if (total_work < 2.0 * current_schedule->instance->synchronisationCosts()) {
         return true;
     }
     return false;
