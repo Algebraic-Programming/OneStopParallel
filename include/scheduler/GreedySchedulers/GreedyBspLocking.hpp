@@ -31,7 +31,7 @@ limitations under the License.
 
 #include "auxiliary/auxiliary.hpp"
 #include "model/BspSchedule.hpp"
-#include "scheduler/Scheduler.hpp"
+#include "MemConstListScheduler.hpp"
 
 /**
  * @brief The GreedyBspLocking class represents a scheduler that uses a greedy algorithm to compute schedules for
@@ -42,7 +42,7 @@ limitations under the License.
  * The getScheduleName() method returns the name of the schedule, which is "BspGreedy" in this case.
  */
 
-class GreedyBspLocking : public Scheduler {
+class GreedyBspLocking : public MemConstListScheduler {
 
   private:
     struct heap_node {
@@ -81,9 +81,7 @@ class GreedyBspLocking : public Scheduler {
 
     float max_percent_idle_processors;
     bool increase_parallelism_in_new_superstep;
-    bool use_memory_constraint = false;
-    std::vector<int> current_proc_persistent_memory;
-    std::vector<int> current_proc_transient_memory;
+
 
     std::pair<int, double> computeScore(VertexType node, unsigned proc,
                                         const BspInstance &instance);
@@ -91,8 +89,8 @@ class GreedyBspLocking : public Scheduler {
     bool check_mem_feasibility(const BspInstance &instance, const std::set<VertexType> &allReady,
                                const std::vector<std::set<VertexType>> &procReady) const;
 
-    bool Choose(const BspInstance &instance, std::set<VertexType> &allReady, std::vector<std::set<VertexType>> &procReady,
-                const std::vector<bool> &procFree, VertexType &node, unsigned &p, const bool endSupStep,
+    bool Choose(const BspInstance &instance, const BspSchedule &schedule, std::set<VertexType> &allReady, std::vector<std::set<VertexType>> &procReady,
+                const std::vector<bool> &procFree, VertexType &node, unsigned &p, const bool endSupStep, const unsigned current_superstep,
                 const size_t remaining_time);
 
     bool CanChooseNode(const BspInstance &instance, const std::set<VertexType> &allReady,
@@ -106,8 +104,8 @@ class GreedyBspLocking : public Scheduler {
     /**
      * @brief Default constructor for GreedyBspLocking.
      */
-    GreedyBspLocking(float max_percent_idle_processors_ = 0.4, bool increase_parallelism_in_new_superstep_ = true)
-        : Scheduler(), max_percent_idle_processors(max_percent_idle_processors_),
+    GreedyBspLocking(float max_percent_idle_processors_ = 0.4f, bool increase_parallelism_in_new_superstep_ = true)
+        : MemConstListScheduler(), max_percent_idle_processors(max_percent_idle_processors_),
           increase_parallelism_in_new_superstep(increase_parallelism_in_new_superstep_) {}
 
     /**
@@ -124,6 +122,9 @@ class GreedyBspLocking : public Scheduler {
      * @return A pair containing the return status and the computed BspSchedule.
      */
     virtual std::pair<RETURN_STATUS, BspSchedule> computeSchedule(const BspInstance &instance) override;
+
+
+    std::pair<RETURN_STATUS, BspSchedule> computeSchedule_with_preassignment(const BspInstance &instance, const std::vector<VertexType> &preassign_nodes);
 
     /**
      * @brief Get the name of the schedule.

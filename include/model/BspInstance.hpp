@@ -289,5 +289,20 @@ class BspInstance {
         return compatibleProcTypes;
     }
 
+    std::vector<std::vector<bool>> getNodeNodeCompatabilityMatrix() const {
+        std::vector<std::vector<bool>> compMat(cdag.getNumberOfNodeTypes(), std::vector<bool>(cdag.getNumberOfNodeTypes(), false));
+        for (unsigned nodeType1 = 0; nodeType1 < cdag.getNumberOfNodeTypes(); nodeType1++) {
+            for (unsigned nodeType2 = 0; nodeType2 < cdag.getNumberOfNodeTypes(); nodeType2++) {
+                for (unsigned procType = 0; procType < architecture.getNumberOfProcessorTypes(); procType++) {
+                    if (isCompatibleType(nodeType1, procType) && isCompatibleType(nodeType2, procType)) {
+                        compMat[nodeType1][nodeType2] = true;
+                        break;
+                    }
+                }
+            }
+        }
+        return compMat;
+    }
+
     inline const std::vector<std::vector<bool>> &getNodeProcessorCompatibilityMatrix() const { return nodeProcessorCompatibility; }
 };

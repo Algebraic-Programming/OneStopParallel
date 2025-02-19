@@ -303,6 +303,42 @@ bool BspSchedule::satisfiesMemoryConstraints() const {
         break;
     }
 
+    case LOCAL_INC_EDGES_2: {
+
+        SetSchedule set_schedule = SetSchedule(*this);
+
+        for (unsigned step = 0; step < number_of_supersteps; step++) {
+            for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
+
+                std::unordered_set<unsigned> nodes_with_incoming_edges;
+
+                int memory = 0;
+                for (const auto &node : set_schedule.step_processor_vertices[step][proc]) {
+                    
+                    if (instance->getComputationalDag().isSource(node)) {
+                        memory += instance->getComputationalDag().nodeMemoryWeight(node);
+                    }
+
+                    for (const auto &parent : instance->getComputationalDag().parents(node)) {
+
+                        if (node_to_superstep_assignment[parent] != step) {
+                            nodes_with_incoming_edges.insert(parent);
+                        }
+                    }
+                }
+
+                for (const auto &node : nodes_with_incoming_edges) {
+                    memory += instance->getComputationalDag().nodeCommunicationWeight(node);
+                }
+
+                if (memory > instance->getArchitecture().memoryBound(proc)) {
+                    return false;
+                }
+            }
+        }
+        break;
+    }
+
     case NONE: {
         break;
     }

@@ -1244,12 +1244,15 @@ void BspMemSchedule::removeEvictStepsFromEnd()
         std::cout<<"ERROR: eviction removal process created an invalid schedule."<<std::endl;
 }
 
-void BspMemSchedule::CreateFromPartialPebblings(const std::vector<BspMemSchedule>& pebblings,
+void BspMemSchedule::CreateFromPartialPebblings(const BspInstance &bsp_instance, 
+                                                const std::vector<BspMemSchedule>& pebblings,
                                                 const std::vector<std::set<unsigned> >& processors_to_parts,
                                                 const std::vector<std::map<unsigned, unsigned> >& original_node_id,
                                                 const std::vector<std::map<unsigned, unsigned> >& original_proc_id,
                                                 const std::vector<std::vector<std::set<unsigned> > >& has_reds_in_beginning)
 {
+    instance = &bsp_instance;
+
     unsigned nr_parts = processors_to_parts.size();
 
     std::vector<std::set<unsigned> > in_mem(instance->numberOfProcessors());
@@ -1350,7 +1353,7 @@ void BspMemSchedule::CreateFromPartialPebblings(const std::vector<BspMemSchedule
                     {
                         compute_steps_for_proc_superstep[proc_id].back().back().nodes_evicted_after.push_back(original_node_id[part].at(local_id));
                         in_mem[proc_id].erase(original_node_id[part].at(local_id));
-                    }
+                   }
                 }
                 for(unsigned node : pebblings[part].GetNodesSentUp(proc, supstep))
                 {
@@ -1358,15 +1361,15 @@ void BspMemSchedule::CreateFromPartialPebblings(const std::vector<BspMemSchedule
                     nodes_sent_up[proc_id].back().push_back(node_id);
                     gets_blue_in_superstep[node_id] = std::min(gets_blue_in_superstep[node_id], supstep_idx[proc_id]);
                 }
-                for(unsigned node : pebblings[part].GetNodesSentDown(proc, supstep))
-                {
-                    nodes_sent_down[proc_id].back().push_back(original_node_id[part].at(node));
-                    in_mem[proc_id].insert(original_node_id[part].at(node));
-                }
                 for(unsigned node : pebblings[part].GetNodesEvictedInComm(proc, supstep))
                 {
                     nodes_evicted_in_comm[proc_id].back().push_back(original_node_id[part].at(node));
                     in_mem[proc_id].erase(original_node_id[part].at(node));
+                }
+                for(unsigned node : pebblings[part].GetNodesSentDown(proc, supstep))
+                {
+                    nodes_sent_down[proc_id].back().push_back(original_node_id[part].at(node));
+                    in_mem[proc_id].insert(original_node_id[part].at(node));
                 }
 
                 ++supstep_idx[proc_id];

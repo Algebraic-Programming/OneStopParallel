@@ -17,8 +17,8 @@ limitations under the License.
 */
 #include "model/dag_algorithms/subgraph_algorithms.hpp"
 
-
-ComputationalDag dag_algorithms::create_induced_subgraph(const ComputationalDag &dag, const std::vector<unsigned> &selected_nodes) {
+ComputationalDag dag_algorithms::create_induced_subgraph(const ComputationalDag &dag,
+                                                         const std::vector<unsigned> &selected_nodes) {
 
     ComputationalDag subdag;
     std::map<unsigned, unsigned> local_idx;
@@ -41,7 +41,8 @@ ComputationalDag dag_algorithms::create_induced_subgraph(const ComputationalDag 
     return subdag;
 }
 
-ComputationalDag dag_algorithms::create_induced_subgraph_sorted(const ComputationalDag &dag, std::vector<unsigned> &selected_nodes) {
+ComputationalDag dag_algorithms::create_induced_subgraph_sorted(const ComputationalDag &dag,
+                                                                std::vector<unsigned> &selected_nodes) {
 
     std::sort(selected_nodes.begin(), selected_nodes.end());
 
@@ -66,3 +67,33 @@ ComputationalDag dag_algorithms::create_induced_subgraph_sorted(const Computatio
     return subdag;
 }
 
+ComputationalDag dag_algorithms::create_induced_subgraph_sorted_extra_sources(const ComputationalDag &dag,
+                                                                              std::vector<unsigned> &selected_nodes,
+                                                                              const std::set<unsigned> &extra_sources) {
+    ComputationalDag subdag;
+    std::map<unsigned, unsigned> local_idx;
+
+    std::sort(selected_nodes.begin(), selected_nodes.end());
+
+    for (unsigned node : extra_sources) {
+        local_idx[node] = subdag.numberOfVertices();
+        subdag.addVertex(dag.nodeWorkWeight(node), dag.nodeCommunicationWeight(node), dag.nodeMemoryWeight(node),
+                         dag.nodeType(node));
+    }
+
+    for (unsigned node : selected_nodes) {
+        local_idx[node] = subdag.numberOfVertices();
+        subdag.addVertex(dag.nodeWorkWeight(node), dag.nodeCommunicationWeight(node), dag.nodeMemoryWeight(node),
+                         dag.nodeType(node));
+    }
+
+    for (unsigned node : selected_nodes)
+        for (const auto &in_edge : dag.in_edges(node)) {
+            unsigned pred = in_edge.m_source;
+            if (std::binary_search(selected_nodes.begin(), selected_nodes.end(), pred) || extra_sources.find(pred) != extra_sources.end()) {
+                subdag.addEdge(local_idx[pred], local_idx[node], dag.edgeCommunicationWeight(in_edge));
+            }
+        }
+
+    return subdag;
+}

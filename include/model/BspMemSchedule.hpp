@@ -199,7 +199,8 @@ class BspMemSchedule {
     std::vector<std::set<unsigned> > getMemContentAtEnd() const;
     void removeEvictStepsFromEnd();
 
-    void CreateFromPartialPebblings(const std::vector<BspMemSchedule>& pebblings,
+    void CreateFromPartialPebblings(const BspInstance &bsp_instance,
+                                    const std::vector<BspMemSchedule>& pebblings,
                                     const std::vector<std::set<unsigned> >& processors_to_parts,
                                     const std::vector<std::map<unsigned, unsigned> >& original_node_id,
                                     const std::vector<std::map<unsigned, unsigned> >& original_proc_id,
