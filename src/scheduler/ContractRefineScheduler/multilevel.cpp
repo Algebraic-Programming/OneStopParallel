@@ -837,3 +837,59 @@ std::vector<intPair> Multilevel::ClusterCoarsen(const DAG& G, const std::vector<
 
     return contractionSteps;
 }
+
+
+ComputationalDag Multilevel::CoarsenForPebbling(const ComputationalDag& dag, double coarsen_ratio, std::vector<unsigned>& new_node_IDs, bool FastCoarsify)
+{
+    new_node_IDs.clear();
+    new_node_IDs.resize(dag.numberOfVertices());
+
+    unsigned nr_sources = 0;
+    std::set<unsigned> non_sources;
+
+    for(unsigned node = 0; node < dag.numberOfVertices(); ++node)
+        if(dag.numberOfParents(node) > 0)
+        {
+            new_node_IDs[node] = non_sources.size();
+            non_sources.insert(node);
+        }
+        else
+        {
+            new_node_IDs[node] = nr_sources;
+            ++nr_sources;
+        }
+    
+    ComputationalDag dag_without_sources = dag.createInducedSubgraph(non_sources, std::set<unsigned>());
+
+    DAG dag_format(dag_without_sources);
+    G_full = dag_format;
+    unsigned new_size = (double)dag_format.n * coarsen_ratio;
+
+    DAG coarse_dag_format = Coarsify(new_size, "", FastCoarsify);
+
+    std::vector<int> mapping_to_coarse_without_sources = GetFinalImage(dag_format, contractionHistory);
+    for(unsigned node = 0; node < dag.numberOfVertices(); ++node)
+        if(dag.numberOfParents(node) > 0)
+            new_node_IDs[node] = nr_sources + (unsigned)mapping_to_coarse_without_sources[new_node_IDs[node]];
+
+    ComputationalDag final_coarsened(nr_sources + coarse_dag_format.n);
+    for(unsigned node = 0; node < final_coarsened.numberOfVertices(); ++node)
+    {
+        final_coarsened.setNodeWorkWeight(node, 0);
+        final_coarsened.setNodeCommunicationWeight(node, 0);
+        final_coarsened.setNodeMemoryWeight(node, 0);
+    }
+
+    for(unsigned node = 0; node < dag.numberOfVertices(); ++node)
+    {
+        final_coarsened.setNodeWorkWeight(new_node_IDs[node], final_coarsened.nodeWorkWeight(new_node_IDs[node]) + dag.nodeWorkWeight(node));
+        final_coarsened.setNodeCommunicationWeight(new_node_IDs[node], final_coarsened.nodeCommunicationWeight(new_node_IDs[node]) + dag.nodeCommunicationWeight(node));
+        final_coarsened.setNodeMemoryWeight(new_node_IDs[node], final_coarsened.nodeMemoryWeight(new_node_IDs[node]) + dag.nodeMemoryWeight(node));
+        for(unsigned succ : dag.children(node))
+            if(new_node_IDs[node] != new_node_IDs[succ])
+                final_coarsened.addEdge(new_node_IDs[node], new_node_IDs[succ]);
+    }
+    final_coarsened.mergeMultipleEdges();
+
+    return final_coarsened;
+}

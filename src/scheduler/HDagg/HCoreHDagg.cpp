@@ -179,7 +179,7 @@ std::vector<unsigned> HCoreHDagg::component_allocation(const std::vector<std::tu
         bool allocated = false;
         for (auto bin_iter = bins.begin(); bin_iter != bins.cend(); bin_iter++) {
             if ( !instance.isCompatibleType(comp.vertex_type, bin_iter->bin_type) ) continue;
-            if ( use_memory_constraint && (comp.memory + bin_iter->memory > instance.getArchitecture().memoryBound(bin_iter->bin_type))) continue;
+            if ( use_memory_constraint && (comp.memory + bin_iter->memory > instance.getArchitecture().memoryBound(bin_iter->id))) continue;
 
             weighted_memory_bin new_bin = *bin_iter;
             new_bin += comp;
@@ -490,7 +490,7 @@ std::pair<RETURN_STATUS, BspSchedule> HCoreHDagg::computeSchedule(const BspInsta
                             // no default
                             break;
                     }
-                    if (future_score < best_score * 0.875) {
+                    if (future_score < best_score * params.future_score_devalue) {
                         compute_next_iteration = false;
                     }
 

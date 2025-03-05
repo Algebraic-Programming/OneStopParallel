@@ -67,9 +67,11 @@ struct HCoreHDagg_parameters {
     SCORE_FUNC score_func;
 
     bool consider_future_score;
+    float future_score_devalue;
 
-    HCoreHDagg_parameters(unsigned min_total_work_weight_check_ = 0, unsigned min_max_work_weight_check_ = 0, unsigned max_repeated_failures_to_improve_ = 2, FRONT_TYPE front_type_ = FRONT_TYPE::WAVEFRONT, SCORE_FUNC score_func_ = SCORE_FUNC::SCALED_SUPERSTEP_COST, bool consider_future_score_ = true)
-        : min_total_work_weight_check(min_total_work_weight_check_), min_max_work_weight_check(min_max_work_weight_check_), max_repeated_failures_to_improve(max_repeated_failures_to_improve_), front_type(front_type_), score_func(score_func_), consider_future_score(consider_future_score_) {}
+
+    HCoreHDagg_parameters(unsigned min_total_work_weight_check_ = 0, unsigned min_max_work_weight_check_ = 0, unsigned max_repeated_failures_to_improve_ = 2, FRONT_TYPE front_type_ = FRONT_TYPE::WAVEFRONT_VERTEXTYPE, SCORE_FUNC score_func_ = SCORE_FUNC::SCALED_SUPERSTEP_COST, bool consider_future_score_ = true, float future_score_devalue_ = 0.75)
+        : min_total_work_weight_check(min_total_work_weight_check_), min_max_work_weight_check(min_max_work_weight_check_), max_repeated_failures_to_improve(max_repeated_failures_to_improve_), front_type(front_type_), score_func(score_func_), consider_future_score(consider_future_score_), future_score_devalue(future_score_devalue_) {}
 };
 
 /**

@@ -24,6 +24,7 @@ limitations under the License.
 
 #include "auxiliary/auxiliary.hpp"
 #include "structures/dag.hpp"
+#include "model/ComputationalDag.hpp"
 
 struct Schedule;
 
@@ -33,6 +34,7 @@ struct Multilevel {
 
     DAG G_full;
     std::vector<intPair> contractionHistory;
+    Multilevel() {}
     Multilevel(const DAG &G) : G_full(G) {}
 
     // main functions for multilevel approach
@@ -80,4 +82,7 @@ struct Multilevel {
 
     std::vector<intPair> ClusterCoarsen(const DAG& G, const std::vector<bool>& valid) const;
     std::vector<int> ComputeTopLevel(const DAG& G, const std::vector<bool>& valid) const;
+
+    // utility: coarsening function for pebbling problems - leaves the source nodes intact
+    ComputationalDag CoarsenForPebbling(const ComputationalDag& dag, double coarsen_ratio, std::vector<unsigned>& new_node_IDs, bool FastCoarsify = false);
 };
