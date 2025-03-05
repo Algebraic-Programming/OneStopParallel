@@ -31,6 +31,8 @@ std::pair<RETURN_STATUS, BspSchedule> pull_back_schedule(const BspInstance &inst
         }
     }
 
+    schedule_out.setLazyCommunicationSchedule();
+
     return std::make_pair(RETURN_STATUS::SUCCESS, schedule_out);
 
 }

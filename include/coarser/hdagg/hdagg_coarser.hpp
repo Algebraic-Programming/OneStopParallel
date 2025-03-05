@@ -18,24 +18,17 @@ limitations under the License.
 
 #pragma once
 
-#include <vector>
-
 #include "coarser/Coarser.hpp"
 
-class top_order : public Coarser {
+class hdagg_coarser : public Coarser {
 
-  private:
-    
-    // input
-    const std::vector<VertexType> &top_ordering;
-    
-    // parameters
+  protected:
     int work_threshold = 100;
     int memory_threshold = 100;
     int communication_threshold = 100;
-    unsigned degree_threshold = 10;
-    unsigned super_node_size_threshold = 10;
 
+    unsigned super_node_size_threshold = 10;
+    
     MEMORY_CONSTRAINT_TYPE memory_constraint_type = NONE;  
 
     // internal data strauctures
@@ -43,31 +36,26 @@ class top_order : public Coarser {
     int current_work = 0;
     int current_communication = 0;
     VertexType current_super_node_idx = 0;
-    std::vector<VertexType> reverse_vertex_map;
 
-    void finish_super_node_add_edges(const ComputationalDag &dag_in, ComputationalDag &dag_out,
-                                     const std::vector<VertexType> &nodes);
-
-
+    void finish_super_node(ComputationalDag &dag_out);
+    void add_edges_between_super_nodes(const ComputationalDag &dag_in, ComputationalDag &dag_out,
+                                       std::vector<std::vector<VertexType>> &vertex_map,
+                                       std::vector<VertexType> &reverse_vertex_map);
     void add_new_super_node(const ComputationalDag &dag_in, ComputationalDag &dag_out, VertexType node);
-  
 
   public:
-    top_order(const std::vector<VertexType> &top_, int work_threshold_ = INT_MAX, int memory_threshold_ = INT_MAX,
-              int communication_threshold_ = INT_MAX)
-        : top_ordering(top_), work_threshold(work_threshold_), memory_threshold(memory_threshold_),
-          communication_threshold(communication_threshold_) {};
+    hdagg_coarser() {};
 
-    virtual ~top_order() = default;
+    virtual ~hdagg_coarser() = default;
 
-    inline void set_degree_threshold(unsigned degree_threshold_) { degree_threshold = degree_threshold_; }
+    virtual std::string getCoarserName() const override { return "hdagg_order_coarser"; };
+
+    virtual RETURN_STATUS coarseDag(const ComputationalDag &dag_in, ComputationalDag &dag_out,
+                                    std::vector<std::vector<VertexType>> &vertex_map) override;
+
     inline void set_work_threshold(int work_threshold_) { work_threshold = work_threshold_; }
     inline void set_memory_threshold(int memory_threshold_) { memory_threshold = memory_threshold_; }
-    inline void set_communication_threshold(int communication_threshold_) { communication_threshold = communication_threshold_; }
+    inline void set_communication_threshold(int communication_threshold_) { communication_threshold = communication_threshold_;  }
     inline void set_super_node_size_threshold(unsigned super_node_size_threshold_) { super_node_size_threshold = super_node_size_threshold_; }
     inline void set_memory_constraint_type(MEMORY_CONSTRAINT_TYPE memory_constraint_type_) { memory_constraint_type = memory_constraint_type_; }
-
-
-    virtual std::string getCoarserName() const override { return "top_order_coarser"; };
-    virtual RETURN_STATUS coarseDag(const ComputationalDag &dag_in, ComputationalDag &dag_out, std::vector<std::vector<VertexType>> &vertex_map) override;
 };

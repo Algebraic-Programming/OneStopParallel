@@ -35,9 +35,20 @@ RETURN_STATUS top_order::coarseDag(const ComputationalDag &dag_in, Computational
     for (size_t i = 1; i < top_ordering.size(); i++) {
 
         const auto v = top_ordering[i];
+
+        int node_mem = dag_in.nodeMemoryWeight(v);
+
+        if (memory_constraint_type == LOCAL_INC_EDGES_2) {
+    
+            if (not dag_in.isSource(v)) {
+                node_mem = 0;
+            }
+        }
+
         // start new super node if thresholds are exceeded
-        if (((current_memory + dag_in.nodeMemoryWeight(v) > memory_threshold) ||
+        if (((current_memory + node_mem > memory_threshold) ||
              (current_work + dag_in.nodeWorkWeight(v) > work_threshold) ||
+             (vertex_map.back().size() >= super_node_size_threshold) ||
              (current_communication + dag_in.nodeCommunicationWeight(v) > communication_threshold)) ||
             // or prev node high out degree
             (dag_in.numberOfChildren(top_ordering[i - 1]) > degree_threshold) ||
@@ -50,7 +61,7 @@ RETURN_STATUS top_order::coarseDag(const ComputationalDag &dag_in, Computational
 
         } else { // grow current super node
 
-            current_memory += dag_in.nodeMemoryWeight(v);
+            current_memory += node_mem;
             current_work += dag_in.nodeWorkWeight(v);
             current_communication += dag_in.nodeCommunicationWeight(v);
 
@@ -64,7 +75,6 @@ RETURN_STATUS top_order::coarseDag(const ComputationalDag &dag_in, Computational
     if (!vertex_map.back().empty()) {
         finish_super_node_add_edges(dag_in, dag_out, vertex_map.back());
     }
-
 
     return SUCCESS;
 }
@@ -98,7 +108,16 @@ void top_order::finish_super_node_add_edges(const ComputationalDag &dag_in, Comp
 
 void top_order::add_new_super_node(const ComputationalDag &dag_in, ComputationalDag &dag_out, VertexType node) {
 
-    current_memory = dag_in.nodeMemoryWeight(node);
+    int node_mem = dag_in.nodeMemoryWeight(node);
+
+    if (memory_constraint_type == LOCAL_INC_EDGES_2) {
+
+        if (not dag_in.isSource(node)) {
+            node_mem = 0;
+        }
+    }
+
+    current_memory = node_mem;
     current_work = dag_in.nodeWorkWeight(node);
     current_communication = dag_in.nodeCommunicationWeight(node);
     current_super_node_idx = dag_out.addVertex(current_work, current_communication, current_memory, dag_in.nodeType(node));
