@@ -58,7 +58,7 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
         kl_total_comm improver;
 
         GreedyBspLocking greedy_scheduler(max_percent_idle_processors, increase_parallelism_in_new_superstep);
-        ComboScheduler scheduler(&greedy_scheduler, &improver);
+        ComboScheduler scheduler(greedy_scheduler, improver);
 
         scheduler.setTimeLimitSeconds(timeLimit);
 
@@ -98,7 +98,7 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
         kl_total_comm improver;
 
         GreedyBspFillupScheduler bsp_greedy_scheduler(max_percent_idle_processors, increase_parallelism_in_new_superstep);
-        ComboScheduler scheduler(&bsp_greedy_scheduler, &improver);
+        ComboScheduler scheduler(bsp_greedy_scheduler, improver);
 
         scheduler.setTimeLimitSeconds(timeLimit);
 
@@ -140,7 +140,7 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
         kl_total_comm improver;
 
         GreedyVarianceFillupScheduler greedy_scheduler(max_percent_idle_processors, increase_parallelism_in_new_superstep);
-        ComboScheduler scheduler(&greedy_scheduler, &improver);
+        ComboScheduler scheduler(greedy_scheduler, improver);
 
         scheduler.setTimeLimitSeconds(timeLimit);
 
@@ -173,7 +173,7 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
 
         kl_total_comm improver;
 
-        ComboScheduler scheduler(&cilk_scheduler, &improver);
+        ComboScheduler scheduler(cilk_scheduler, improver);
 
         scheduler.setTimeLimitSeconds(timeLimit);
 
@@ -206,7 +206,7 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
 
         kl_total_comm improver;
 
-        ComboScheduler scheduler(&etf_scheduler, &improver);
+        ComboScheduler scheduler(etf_scheduler, improver);
 
         scheduler.setTimeLimitSeconds(timeLimit);
 
@@ -287,7 +287,7 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
         Wavefront wave_front_scheduler(params);
         HillClimbingScheduler wavefront_hillclimb;
         WavefrontCoarser wavefront_coarse_scheduler(&wave_front_scheduler);
-        ComboScheduler scheduler(&wavefront_coarse_scheduler, &wavefront_hillclimb);
+        ComboScheduler scheduler(wavefront_coarse_scheduler, wavefront_hillclimb);
         scheduler.setTimeLimitSeconds(timeLimit);
 
         return scheduler.computeSchedule(bsp_instance);
@@ -739,7 +739,7 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
 
         CoBalDMixR cob_scheduler(params);
         kl_total_comm improver;
-        ComboScheduler scheduler(&cob_scheduler, &improver);
+        ComboScheduler scheduler(cob_scheduler, improver);
         scheduler.setTimeLimitSeconds(timeLimit);
 
         return scheduler.computeSchedule(bsp_instance);
@@ -747,7 +747,7 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
 
         MetaGreedyScheduler best_greedy;
         kl_total_comm improver;
-        ComboScheduler scheduler(&best_greedy, &improver);
+        ComboScheduler scheduler(best_greedy, improver);
         scheduler.setTimeLimitSeconds(timeLimit);
 
         return scheduler.computeSchedule(bsp_instance);
@@ -755,7 +755,7 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
 
         MetaGreedyScheduler best_greedy;
         HillClimbingScheduler hill_climbing;
-        ComboScheduler scheduler(&best_greedy, &hill_climbing);
+        ComboScheduler scheduler(best_greedy, hill_climbing);
         scheduler.setTimeLimitSeconds(timeLimit);
 
         return scheduler.computeSchedule(bsp_instance);
@@ -1102,7 +1102,7 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
 
         MetaGreedyScheduler best_greedy_sched;
         kl_total_comm improver;
-        ComboScheduler combo_sched(&best_greedy_sched, &improver);
+        ComboScheduler combo_sched(best_greedy_sched, improver);
         SquashA scheduler(&combo_sched, coarse_params, min_nodes_after_coarsen_per_partition * number_of_partitions);
 
         scheduler.setTimeLimitSeconds(timeLimit);
@@ -1120,7 +1120,7 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
         MetaGreedyScheduler best_greedy;
         HillClimbingScheduler hill_climbing;
         WavefrontCoarser wave_coarse(&best_greedy);
-        ComboScheduler scheduler(&wave_coarse, &hill_climbing);
+        ComboScheduler scheduler(wave_coarse, hill_climbing);
         scheduler.setTimeLimitSeconds(timeLimit);
 
         return scheduler.computeSchedule(bsp_instance);
@@ -1959,7 +1959,7 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
 
         GreedyBspFillupScheduler bsp_greedy(max_percent_idle_processor, increase_parallelism_in_new_superstep);
         kl_total_comm lk;
-        ComboScheduler bsp_greedy_lk(&bsp_greedy, &lk);
+        ComboScheduler bsp_greedy_lk(bsp_greedy, lk);
         HillClimbingScheduler hc;
         HDaggCoarser scheduler(&bsp_greedy_lk, &hc);
 
@@ -1985,7 +1985,7 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
 
         GreedyVarianceFillupScheduler greedy(max_percent_idle_processors, increase_parallelism_in_new_superstep);
         kl_total_comm lk;
-        ComboScheduler greedy_lk(&greedy, &lk);
+        ComboScheduler greedy_lk(greedy, lk);
         HillClimbingScheduler hc;
         HDaggCoarser scheduler(&greedy_lk, &hc);
 
@@ -2011,7 +2011,7 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
 
         GreedyBspLocking greedy(max_percent_idle_processors, increase_parallelism_in_new_superstep);
         kl_total_comm lk;
-        ComboScheduler greedy_lk(&greedy, &lk);
+        ComboScheduler greedy_lk(greedy, lk);
         HillClimbingScheduler hc;
         HDaggCoarser scheduler(&greedy_lk, &hc);
 
@@ -2200,7 +2200,7 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
         CoBalDMixR cobald(params);
 
         kl_total_comm lk;
-        ComboScheduler cobald_lk(&cobald, &lk);
+        ComboScheduler cobald_lk(cobald, lk);
         HillClimbingScheduler hc;
         HDaggCoarser scheduler(&cobald_lk, &hc);
 
@@ -2240,7 +2240,7 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
 
         GreedyBspFillupScheduler bsp_greedy(max_percent_idle_processor);
         kl_total_comm lk;
-        ComboScheduler bsp_greedy_lk(&bsp_greedy, &lk);
+        ComboScheduler bsp_greedy_lk(bsp_greedy, lk);
         HillClimbingScheduler hc;
         Funnel scheduler(&bsp_greedy_lk, &hc, params);
 
@@ -2282,7 +2282,7 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
 
         GreedyVarianceFillupScheduler greedy(max_percent_idle_processors, increase_parallelism_in_new_superstep);
         kl_total_comm lk;
-        ComboScheduler greedy_lk(&greedy, &lk);
+        ComboScheduler greedy_lk(greedy, lk);
         HillClimbingScheduler hc;
         Funnel scheduler(&greedy_lk, &hc);
 
@@ -2487,7 +2487,7 @@ std::pair<RETURN_STATUS, BspSchedule> run_algorithm(const CommandLineParser &par
         CoBalDMixR cobald(params);
 
         kl_total_comm lk;
-        ComboScheduler cobald_lk(&cobald, &lk);
+        ComboScheduler cobald_lk(cobald, lk);
         HillClimbingScheduler hc;
         Funnel scheduler(&cobald_lk, &hc, f_params);
 

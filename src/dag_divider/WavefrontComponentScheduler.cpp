@@ -209,6 +209,25 @@ WavefrontComponentScheduler::computeSchedule_with_isomorphism_groups(const BspIn
             BspInstance sub_instance(sub_dag, sub_architecture);
             sub_instance.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
 
+            int max_mem = 0;
+            for (const auto &node : sub_dag.vertices()) {
+    
+                int node_mem = 0;
+    
+                if (sub_dag.isSource(node)) {
+                    node_mem = sub_dag.nodeMemoryWeight(node);
+                }
+    
+                for (const auto &parents : sub_dag.parents(node)) {
+                    node_mem += sub_dag.nodeCommunicationWeight(parents);
+                }
+    
+                max_mem = std::max(max_mem, node_mem);
+            }
+    
+            std::cout << "sub inst node max mem: " << max_mem << std::endl;
+
+
             const auto sub_proc_type_count = sub_architecture.getProcessorTypeCount();
             std::vector<unsigned> proc_type_corrections(sub_architecture.getNumberOfProcessorTypes(), 0);
             for (size_t k = 1; k < proc_type_corrections.size(); k++) {

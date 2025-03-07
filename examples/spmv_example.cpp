@@ -117,9 +117,9 @@ int main(int argc, char *argv[]) {
     SquashA squash_meta_greedy_scheduler(&meta_greedy_scheduler_squash);
     SquashA squash_meta_greedy_scheduler_hc(&meta_greedy_scheduler_squash, &hill_climbing_scheduler13);
 
-    ComboScheduler bsp_greedy_hc_scheduler(&bsp_greedy_scheduler_hc, &hill_climbing_scheduler1);
-    ComboScheduler variance_greedy_hc_scheduler(&variance_greedy_scheduler_hc, &hill_climbing_scheduler12);
-    ComboScheduler bsp_meta_hc_scheduler(&meta_greedy_scheduler_hc, &hill_climbing_scheduler2);
+    ComboScheduler bsp_greedy_hc_scheduler(bsp_greedy_scheduler_hc, hill_climbing_scheduler1);
+    ComboScheduler variance_greedy_hc_scheduler(variance_greedy_scheduler_hc, hill_climbing_scheduler12);
+    ComboScheduler bsp_meta_hc_scheduler(meta_greedy_scheduler_hc, hill_climbing_scheduler2);
 
     const unsigned bald_mixer_number_of_partitions_ = 4; // gets overriten by instance
     const float bald_mixer_balance_threshhold_5 = 1.05;
@@ -165,7 +165,7 @@ int main(int argc, char *argv[]) {
     BalDMixR bald_mixer_scheduler20(params20);
     BalDMixR bald_mixer_scheduler35(params35);
     BalDMixR bald_mixer_scheduler_hc(params10);
-    ComboScheduler bald_mixer_hc_scheduler(&bald_mixer_scheduler_hc, &hill_climbing_scheduler3);
+    ComboScheduler bald_mixer_hc_scheduler(bald_mixer_scheduler_hc, hill_climbing_scheduler3);
 
     BalDMixR bald_mixer_squash_scheduler10(params10);
     BalDMixR bald_mixer_squash_scheduler20(params20);
@@ -239,7 +239,7 @@ int main(int argc, char *argv[]) {
     CoBalDMixR cobald_mixer_scheduler20(cobald_params20);
     CoBalDMixR cobald_mixer_scheduler35(cobald_params35);
     CoBalDMixR cobald_mixer_scheduler_hc(cobald_params20);
-    ComboScheduler cobald_mixer_hc_scheduler(&cobald_mixer_scheduler_hc, &hill_climbing_scheduler4);
+    ComboScheduler cobald_mixer_hc_scheduler(cobald_mixer_scheduler_hc, hill_climbing_scheduler4);
 
     HDagg_parameters hdagg_param_orig5(1.05, 0, false);
     HDagg_parameters hdagg_param_orig10(1.1, 0, false);
@@ -271,7 +271,7 @@ int main(int argc, char *argv[]) {
     SquashA squash_a_hdag_hc_scheduler10(&hdagg_scheduler_squash10, &hill_climbing_scheduler6);
     SquashA squash_a_hdag_hc_scheduler20(&hdagg_scheduler_squash20, &hill_climbing_scheduler7);
     SquashA squash_a_hdag_hc_scheduler35(&hdagg_scheduler_squash35, &hill_climbing_scheduler8);
-    ComboScheduler hdag_hc_scheduler(&hdagg_scheduler_hc, &hill_climbing_scheduler9);
+    ComboScheduler hdag_hc_scheduler(hdagg_scheduler_hc, hill_climbing_scheduler9);
 
     MultiLevelHillClimbingScheduler multi_level_hill_climbing_scheduler_15(2000, 0.15);
     MultiLevelHillClimbingScheduler multi_level_hill_climbing_scheduler_30(2000, 0.3);

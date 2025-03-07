@@ -120,8 +120,8 @@ class ComboScheduler : public Scheduler {
     virtual void setTimeLimitSeconds(unsigned int limit) override;
     virtual void setTimeLimitHours(unsigned int limit) override;
 
-    ComboScheduler(Scheduler *base, ImprovementScheduler *improvement)
-        : base_scheduler(base), improvement_scheduler(improvement) {}
+    ComboScheduler(Scheduler& base, ImprovementScheduler& improvement)
+        : base_scheduler(&base), improvement_scheduler(&improvement) {}
 
     virtual ~ComboScheduler() = default;
 

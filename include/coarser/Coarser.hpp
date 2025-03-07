@@ -81,14 +81,14 @@ class CoarseAndSchedule : public Scheduler {
             }
 
             BspInstance instance_coarse(dag_coarse, instance.getArchitecture());
+            instance_coarse.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
 
             std::pair<RETURN_STATUS, BspSchedule> schedule_coarse = scheduler->computeSchedule(instance_coarse);
-            if (schedule_coarse.first != RETURN_STATUS::SUCCESS) {
+            if (schedule_coarse.first != RETURN_STATUS::SUCCESS and schedule_coarse.first != RETURN_STATUS::BEST_FOUND) {
                 return {schedule_coarse.first, BspSchedule()};
             }
-
-            std::pair<RETURN_STATUS, BspSchedule> schedule_large = pull_back_schedule(instance, schedule_coarse.second, vertex_map);
-            return schedule_large;
+             
+            return pull_back_schedule(instance, schedule_coarse.second, vertex_map);
         }
 
 
