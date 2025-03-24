@@ -1,0 +1,114 @@
+#pragma once
+
+#include "computational_dag_vector_impl.hpp"
+#include "iterator/container_iterator_adaptor.hpp"
+#include <vector>
+
+namespace osp {
+
+struct cdag_edge_impl {
+    cdag_edge_impl(int comm_weight = 1) : comm_weight(comm_weight) {}
+    int comm_weight;
+};
+
+template<typename v_impl = cdag_vertex_impl, typename e_impl = cdag_edge_impl>
+class computational_dag_edge_idx_vector_impl {
+  private:
+    static_assert(std::is_base_of<cdag_vertex_impl, v_impl>::value, "v_impl must be derived from cdag_vertex_impl");
+    static_assert(std::is_base_of<cdag_edge_impl, e_impl>::value, "e_impl must be derived from cdag_edge_impl");
+
+    std::vector<v_impl> vertices_;
+    std::vector<e_impl> edges_;
+
+    unsigned num_vertex_types_ = 0;
+
+    std::vector<std::vector<directed_edge_descriptor>> out_edges_;
+    std::vector<std::vector<directed_edge_descriptor>> in_edges_;
+
+    struct cdag_edge_source_view {
+        vertex_idx operator()(directed_edge_descriptor &p) const { return p.source; }
+        const vertex_idx operator()(directed_edge_descriptor const &p) const { return p.source; }
+    };
+
+    struct cdag_edge_target_view {
+        vertex_idx operator()(directed_edge_descriptor &p) const { return p.target; }
+        const vertex_idx operator()(directed_edge_descriptor const &p) const { return p.target; }
+    };
+
+    using edge_adapter_source_t = ContainerAdaptor<cdag_edge_source_view, const std::vector<directed_edge_descriptor>>;
+    using edge_adapter_target_t = ContainerAdaptor<cdag_edge_target_view, const std::vector<directed_edge_descriptor>>;
+
+
+  public : 
+
+    computational_dag_edge_idx_vector_impl() = default;
+    ~computational_dag_edge_idx_vector_impl() = default;
+
+    inline size_t num_edges() const { return edges_.size(); }
+    inline size_t num_vertices() const { return vertices_.size(); }
+
+    // inline auto edges() const {
+    //     return cdag_edge_iterator<computational_dag_edge_idx_vector_impl<v_impl, e_impl>>(*this);
+    // }
+
+    inline auto parents(vertex_idx v) const { return edge_adapter_source_t(in_edges_[v]); }
+    inline auto children(vertex_idx v) const { return edge_adapter_target_t(out_edges_[v]); }
+
+    inline auto vertices() const { return vertex_range<vertex_idx>(vertices_.size()); }
+
+    inline const std::vector<directed_edge_descriptor> &in_edges(vertex_idx v) const { return in_edges_[v]; }
+    inline const std::vector<directed_edge_descriptor> &out_edges(vertex_idx v) const { return out_edges_[v]; }
+
+    inline size_t in_degree(vertex_idx v) const { return in_edges_[v].size(); }
+    inline size_t out_degree(vertex_idx v) const { return out_edges_[v].size(); }
+
+    inline int edge_comm_weight(edge_idx e) const { return edges_[e].comm_weight; }
+    inline int edge_comm_weight(directed_edge_descriptor e) const { return edges_[e.idx].comm_weight; }
+
+    inline int vertex_work_weight(vertex_idx v) const { return vertices_[v].work_weight; }
+    inline int vertex_comm_weight(vertex_idx v) const { return vertices_[v].comm_weight; }
+    inline int vertex_mem_weight(vertex_idx v) const { return vertices_[v].mem_weight; }
+
+    inline unsigned num_vertex_types() const { return num_vertex_types_; }
+    inline int vertex_type(vertex_idx v) const { return vertices_[v].vertex_type; }
+
+    vertex_idx add_vertex(int work_weight, int comm_weight, int mem_weight, unsigned vertex_type) {
+
+        vertices_.emplace_back(vertices_.size(), work_weight, comm_weight, mem_weight, vertex_type);
+
+        out_edges_.push_back({});
+        in_edges_.push_back({});
+
+        num_vertex_types_ = std::max(num_vertex_types_, vertex_type);
+
+        return vertices_.back().id;
+    }
+
+    std::pair<directed_edge_descriptor, bool> add_edge(vertex_idx source, vertex_idx target,
+                                                               int comm_weight = 1) {
+
+        if (source >= vertices_.size() || target >= vertices_.size())
+            return {directed_edge_descriptor{}, false};
+
+        for (const auto edge : out_edges_[source]) {
+            if (edge.target == target) {
+                return {directed_edge_descriptor{}, false};
+            }
+        }
+
+        out_edges_[source].emplace_back(source, target, edges_.size());
+        in_edges_[target].emplace_back(source, target, edges_.size());
+
+        edges_.emplace_back(comm_weight);
+
+        return {out_edges_[source].back(), true};
+    }
+
+    inline const v_impl &get_vertex_impl(vertex_idx v) const { return vertices_[v]; }
+    inline const e_impl &get_edge_impl(edge_idx e) const { return edges_[e]; }
+};
+
+static_assert(is_directed_graph_edge_desc_v<computational_dag_edge_idx_vector_impl<cdag_vertex_impl, cdag_edge_impl>>,
+              "computational_dag_edge_idx_vector_impl must satisfy the directed_graph_edge_desc concept");
+
+} // namespace osp
