@@ -22,12 +22,14 @@ BOOST_AUTO_TEST_CASE(test_1) {
     graph.add_edge(v2, v3);
     graph.add_edge(v1, v3);
 
+  
+    
     std::vector<vertex_idx> sources = source_vertices(graph);
     std::vector<vertex_idx> sinks = sink_vertices(graph);
-
+    
     BOOST_CHECK_EQUAL(sources.size(), 1);
     BOOST_CHECK_EQUAL(sinks.size(), 1);
-
+    
     BOOST_CHECK_EQUAL(sources[0], v1);
     BOOST_CHECK_EQUAL(sinks[0], v3);
 
@@ -42,5 +44,6 @@ BOOST_AUTO_TEST_CASE(test_1) {
         std::cout << v_idx << " ";
     }
     std::cout << std::endl;
+    
 
 };

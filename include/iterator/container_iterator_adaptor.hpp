@@ -24,6 +24,25 @@ class RemovePtr {
     const T &operator()(T const *p) const { return *p; }
 };
 
+template<typename TransformerT, typename DefValueT>
+struct value_type_extractor {
+
+    template<typename TransT>
+    static std::remove_reference_t<decltype(std::declval<typename TransT::value_type>())> f(int) {
+        return typename TransT::value_type{};
+    }
+
+    template<typename TransT>
+    static DefValueT f(...) {
+        return DefValueT{};
+    }
+    using type = decltype(f<TransformerT>(0));
+    static constexpr bool value = not std::is_same_v<type, DefValueT>;
+};
+
+template<typename TransformerT, typename DefValueT>
+using value_type_extractor_t = typename value_type_extractor<TransformerT, DefValueT>::type;
+
 /// @brief adapter class for iterator, which adapts the value via the `*`
 /// operator.
 /// @tparam IterT iterator type
@@ -33,11 +52,13 @@ class IterAdaptor {
   public:
     static_assert(std::is_copy_constructible_v<TypeTransformerT>);
 
-    using iterator_category = typename IterT::iterator_category;
+    using iterator_category = typename std::iterator_traits<IterT>::iterator_category;
     using reference = decltype(std::declval<TypeTransformerT>()(*std::declval<IterT>()));
+    using pointer = decltype(&std::declval<reference>());
     using const_reference = decltype(std::declval<TypeTransformerT>()(*std::declval<const IterT>()));
-    using value_type = std::remove_reference_t<reference>;
-    using difference_type = typename IterT::difference_type;
+    using value_type = value_type_extractor_t<TypeTransformerT, std::remove_cv_t<std::remove_reference_t<reference>>>;
+
+    using difference_type = typename std::iterator_traits<IterT>::difference_type;
     using ThisT = IterAdaptor<IterT, TypeTransformerT>;
 
     static constexpr bool _is_random = std::is_convertible_v<iterator_category, std::random_access_iterator_tag>;
@@ -122,4 +143,4 @@ class ContainerAdaptor {
     ContainerT &container;
 };
 
-}
+} // namespace osp

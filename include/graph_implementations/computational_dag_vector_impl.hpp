@@ -21,12 +21,10 @@ struct cdag_vertex_impl {
     unsigned vertex_type;
 };
 
-
 template<typename v_impl = cdag_vertex_impl>
 class computational_dag_vector_impl {
 
   public:
-
     static_assert(std::is_base_of<cdag_vertex_impl, v_impl>::value, "v_impl must be derived from cdag_vertex_impl");
 
     computational_dag_vector_impl() = default;
@@ -61,8 +59,7 @@ class computational_dag_vector_impl {
 
     vertex_idx add_vertex(int work_weight, int comm_weight, int mem_weight, unsigned vertex_type) {
 
-        vertices_.emplace_back(vertices_.size(), work_weight, comm_weight, mem_weight,
-                               vertex_type);
+        vertices_.emplace_back(vertices_.size(), work_weight, comm_weight, mem_weight, vertex_type);
         out_neigbors.push_back({});
         in_neigbors.push_back({});
 
@@ -90,7 +87,6 @@ class computational_dag_vector_impl {
     }
 
   private:
-
     std::vector<v_impl> vertices_;
 
     std::vector<std::vector<vertex_idx>> out_neigbors;
@@ -98,7 +94,6 @@ class computational_dag_vector_impl {
 
     size_t num_edges_ = 0;
     unsigned num_vertex_types_ = 0;
-
 };
 
 static_assert(has_vertex_weights_v<computational_dag_vector_impl<cdag_vertex_impl>>,

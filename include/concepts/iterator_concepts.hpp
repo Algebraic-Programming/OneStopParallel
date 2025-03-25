@@ -12,10 +12,10 @@ struct is_input_range : std::false_type {};
 
 template<typename T>
 struct is_input_range<
-    T, std::void_t<decltype(std::declval<T>().begin()), decltype(std::declval<T>().end()),
+    T, std::void_t<decltype(std::begin(std::declval<T>())), 
+                    decltype(std::end(std::declval<T>())),
                    typename std::iterator_traits<decltype(std::begin(std::declval<T>()))>::iterator_category>>
-    : std::is_base_of<std::input_iterator_tag,
-                      typename std::iterator_traits<decltype(std::begin(std::declval<T>()))>::iterator_category> {};
+    : std::is_base_of<std::input_iterator_tag, typename std::iterator_traits<decltype(std::begin(std::declval<T>()))>::iterator_category> {};
 
 template<typename T>
 inline constexpr bool is_input_range_v = is_input_range<T>::value;
@@ -27,8 +27,10 @@ struct is_input_range_of : std::false_type {};
 template<typename T, typename ValueType>
 struct is_input_range_of<
     T, ValueType,
-    std::void_t<decltype(std::begin(std::declval<T>())), decltype(std::end(std::declval<T>())),
-                typename std::iterator_traits<decltype(std::begin(std::declval<T>()))>::iterator_category>>
+    std::void_t<decltype(std::begin(std::declval<T>())), 
+                decltype(std::end(std::declval<T>())),
+                typename std::iterator_traits<decltype(std::begin(std::declval<T>()))>::iterator_category,
+                typename std::iterator_traits<decltype(std::begin(std::declval<T>()))>::value_type>>
     : std::conjunction<
           std::is_same<ValueType, typename std::iterator_traits<decltype(std::begin(std::declval<T>()))>::value_type>,
           std::is_base_of<std::input_iterator_tag,
