@@ -4,43 +4,101 @@
 #include <iostream>
 #include <vector>
 
-#include "graph_implementations/computational_dag_vector_impl.hpp"
 #include "graph_algorithms/directed_graph_util.hpp"
+#include "graph_implementations/computational_dag_vector_impl.hpp"
 
 using namespace osp;
 
-BOOST_AUTO_TEST_CASE(test_1) {
+computational_dag_vector_impl<cdag_vertex_impl> constr_graph_1() {
 
-    
     computational_dag_vector_impl graph;
 
     vertex_idx v1 = graph.add_vertex(1, 2, 3, 4);
     vertex_idx v2 = graph.add_vertex(5, 6, 7, 8);
     vertex_idx v3 = graph.add_vertex(9, 10, 11, 12);
+    vertex_idx v4 = graph.add_vertex(13, 14, 15, 16);
+    vertex_idx v5 = graph.add_vertex(17, 18, 19, 20);
+    vertex_idx v6 = graph.add_vertex(21, 22, 23, 24);
+    vertex_idx v7 = graph.add_vertex(25, 26, 27, 28);
+    vertex_idx v8 = graph.add_vertex(29, 30, 31, 32);
 
     graph.add_edge(v1, v2);
-    graph.add_edge(v2, v3);
     graph.add_edge(v1, v3);
+    graph.add_edge(v1, v4);
+    graph.add_edge(v2, v5);
 
-    std::vector<vertex_idx> sources = source_vertices(graph);
-    std::vector<vertex_idx> sinks = sink_vertices(graph);
+    graph.add_edge(v3, v5);
+    graph.add_edge(v3, v6);
+    graph.add_edge(v2, v7);
+    graph.add_edge(v5, v8);
+    graph.add_edge(v4, v8);
 
-    BOOST_CHECK_EQUAL(sources.size(), 1);
-    BOOST_CHECK_EQUAL(sinks.size(), 1);
+    return graph;
+};
 
-    BOOST_CHECK_EQUAL(sources[0], v1);
-    BOOST_CHECK_EQUAL(sinks[0], v3);
+BOOST_AUTO_TEST_CASE(test_empty_dag) {
 
-    std::cout << "Sources: ";
-    for (const vertex_idx v_idx : source_vertices_iterator(graph)) {
-        std::cout << v_idx << " ";
+    computational_dag_vector_impl graph;
+    BOOST_CHECK_EQUAL(graph.num_edges(), 0);
+    BOOST_CHECK_EQUAL(graph.num_vertices(), 0);
+
+    size_t idx = 0;
+    for (const auto &v : graph.vertices()) {
+        graph.in_degree(v);
+        idx++;
     }
-    std::cout << std::endl;
+    BOOST_CHECK_EQUAL(idx, 0);
+};
 
-    std::cout << std::endl << "Sinks: ";
-    for (const vertex_idx v_idx : sinks) {
-        std::cout << v_idx << " ";
+BOOST_AUTO_TEST_CASE(test_dag) {
+
+    const computational_dag_vector_impl graph = constr_graph_1();
+
+    BOOST_CHECK_EQUAL(graph.num_edges(), 9);
+    BOOST_CHECK_EQUAL(graph.num_vertices(), 8);
+
+    std::vector<vertex_idx> vertices {0,1,2,3,4,5,6,7};
+
+    std::vector<std::vector<vertex_idx>> out_neighbors {
+        {1,2,3},
+        {4,6},
+        {4,5},
+        {7},
+        {7},
+        {},
+        {},
+        {}
+    };
+
+    std::vector<std::vector<vertex_idx>> in_neighbors {
+        {},
+        {0},
+        {0},
+        {0},
+        {1,2},
+        {2},
+        {1},
+        {4,3}
+    };
+
+
+    size_t idx = 0;
+
+    for (const auto &v : graph.vertices()) {
+
+        BOOST_CHECK_EQUAL(v, vertices[idx++]);
+        
+        size_t i = 0;
+        for (const auto &e : graph.children(v)) {
+            BOOST_CHECK_EQUAL(e, out_neighbors[v][i++]);
+        }
+
+        i = 0;
+        for (const auto &e : graph.parents(v)) {
+            BOOST_CHECK_EQUAL(e, in_neighbors[v][i++]);
+        }
+
+        BOOST_CHECK_EQUAL(graph.in_degree(v), in_neighbors[v].size());
+        BOOST_CHECK_EQUAL(graph.out_degree(v), out_neighbors[v].size());
     }
-    std::cout << std::endl;
-
 };

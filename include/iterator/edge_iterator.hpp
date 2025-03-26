@@ -120,4 +120,102 @@ class edge_range {
     auto end() const { return edge_iterator(graph.num_edges(), graph); }
 };
 
+
+class edge_source_view {
+
+    const std::vector<directed_edge_descriptor> &edges;
+
+    struct source_iterator {
+
+        std::vector<directed_edge_descriptor>::const_iterator current_edge;
+
+      public:
+        using iterator_category = std::input_iterator_tag;
+        using value_type = vertex_idx;
+        using difference_type = std::ptrdiff_t;
+        using pointer = const value_type *;
+        using reference = const value_type &;
+
+        source_iterator(const std::vector<directed_edge_descriptor>::const_iterator &current_edge_) : current_edge(current_edge_) {} 
+
+        const value_type &operator*() const { return (*current_edge).source; }
+       
+        // Prefix increment
+        source_iterator &operator++() {
+            current_edge++;
+            return *this;
+        }
+
+        // Postfix increment
+        source_iterator operator++(int) {
+            source_iterator tmp = *this;
+            ++(*this);
+            return tmp;
+        }
+
+        friend bool operator==(const source_iterator &one, const source_iterator &other) {
+            return one.current_edge == other.current_edge;
+        };
+        friend bool operator!=(const source_iterator &one, const source_iterator &other) {
+            return one.current_edge != other.current_edge;
+        };
+    };
+
+  public:
+    edge_source_view(const std::vector<directed_edge_descriptor> &edges_) : edges(edges_) {}
+
+    auto begin() const { return source_iterator(edges.begin()); }
+
+    auto end() const { return source_iterator(edges.end()); }
+};
+
+
+class edge_target_view {
+
+    const std::vector<directed_edge_descriptor> &edges;
+
+    struct target_iterator {
+
+        std::vector<directed_edge_descriptor>::const_iterator current_edge;
+
+      public:
+        using iterator_category = std::input_iterator_tag;
+        using value_type = vertex_idx;
+        using difference_type = std::ptrdiff_t;
+        using pointer = const value_type *;
+        using reference = const value_type &;
+
+        target_iterator(const std::vector<directed_edge_descriptor>::const_iterator &current_edge_) : current_edge(current_edge_) {} 
+
+        const value_type &operator*() const { return (*current_edge).target; }
+       
+        // Prefix increment
+        target_iterator &operator++() {
+            current_edge++;
+            return *this;
+        }
+
+        // Postfix increment
+        target_iterator operator++(int) {
+            target_iterator tmp = *this;
+            ++(*this);
+            return tmp;
+        }
+
+        friend bool operator==(const target_iterator &one, const target_iterator &other) {
+            return one.current_edge == other.current_edge;
+        };
+        friend bool operator!=(const target_iterator &one, const target_iterator &other) {
+            return one.current_edge != other.current_edge;
+        };
+    };
+
+  public:
+    edge_target_view(const std::vector<directed_edge_descriptor> &edges_) : edges(edges_) {}
+
+    auto begin() const { return target_iterator(edges.begin()); }
+
+    auto end() const { return target_iterator(edges.end()); }
+};
+
 } // namespace osp

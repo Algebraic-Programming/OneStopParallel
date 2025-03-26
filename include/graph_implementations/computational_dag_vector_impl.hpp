@@ -70,7 +70,7 @@ class computational_dag_vector_impl {
 
     bool add_edge(vertex_idx source, vertex_idx target) {
 
-        if (source >= vertices_.size() || target >= vertices_.size())
+        if (source >= vertices_.size() || target >= vertices_.size() || source == target)
             return false;
 
         for (const vertex_idx v_idx : out_neigbors[source]) {

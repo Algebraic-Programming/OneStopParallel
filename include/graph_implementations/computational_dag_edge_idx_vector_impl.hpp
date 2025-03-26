@@ -28,24 +28,19 @@ class computational_dag_edge_idx_vector_impl {
     std::vector<std::vector<directed_edge_descriptor>> out_edges_;
     std::vector<std::vector<directed_edge_descriptor>> in_edges_;
 
-    struct cdag_edge_source_view {
+    // struct cdag_edge_source_view {
 
-        using value_type = vertex_idx;
+    //     vertex_idx &operator()(directed_edge_descriptor &p) const { return p.source; }
+    //     const vertex_idx &operator()(directed_edge_descriptor const &p) const { return p.source; }
+    // };
 
-        value_type &operator()(directed_edge_descriptor &p) const { return p.source; }
-        const value_type &operator()(directed_edge_descriptor const &p) const { return p.source; }
-    };
+    // struct cdag_edge_target_view {
+    //     vertex_idx &operator()(directed_edge_descriptor &p) const { return p.target; }
+    //     const vertex_idx &operator()(directed_edge_descriptor const &p) const { return p.target; }
+    // };
 
-    struct cdag_edge_target_view {
-
-        using value_type = vertex_idx;
-
-        value_type &operator()(directed_edge_descriptor &p) const { return p.target; }
-        const value_type &operator()(directed_edge_descriptor const &p) const { return p.target; }
-    };
-
-    using edge_adapter_source_t = ContainerAdaptor<cdag_edge_source_view, const std::vector<directed_edge_descriptor>>;
-    using edge_adapter_target_t = ContainerAdaptor<cdag_edge_target_view, const std::vector<directed_edge_descriptor>>;
+    // using edge_adapter_source_t = ContainerAdaptor<cdag_edge_source_view, const std::vector<directed_edge_descriptor>>;
+    // using edge_adapter_target_t = ContainerAdaptor<cdag_edge_target_view, const std::vector<directed_edge_descriptor>>;
 
   public:
     computational_dag_edge_idx_vector_impl() = default;
@@ -56,8 +51,8 @@ class computational_dag_edge_idx_vector_impl {
 
     inline auto edges() const { return edge_range<ThisT>(*this); }
 
-    inline auto parents(vertex_idx v) const { return edge_adapter_source_t(in_edges_[v]); }
-    inline auto children(vertex_idx v) const { return edge_adapter_target_t(out_edges_[v]); }
+    inline auto parents(vertex_idx v) const { return edge_source_view(in_edges_[v]); }
+    inline auto children(vertex_idx v) const { return edge_target_view(out_edges_[v]); }
 
     inline auto vertices() const { return vertex_range<vertex_idx>(vertices_.size()); }
 
@@ -91,8 +86,13 @@ class computational_dag_edge_idx_vector_impl {
 
     std::pair<directed_edge_descriptor, bool> add_edge(vertex_idx source, vertex_idx target, int comm_weight = 1) {
 
-        if (source >= vertices_.size() || target >= vertices_.size())
+        if (source == target) {
             return {directed_edge_descriptor{}, false};
+        }
+
+        if (source >= vertices_.size() || target >= vertices_.size()){
+            return {directed_edge_descriptor{}, false};
+        }
 
         for (const auto edge : out_edges_[source]) {
             if (edge.target == target) {

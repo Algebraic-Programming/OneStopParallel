@@ -9,41 +9,206 @@
 
 using namespace osp;
 
-BOOST_AUTO_TEST_CASE(test_1) {
 
-    
+computational_dag_edge_idx_vector_impl<cdag_vertex_impl, cdag_edge_impl> constr_graph_1() {
+       
     computational_dag_edge_idx_vector_impl graph;
 
     vertex_idx v1 = graph.add_vertex(1, 2, 3, 4);
     vertex_idx v2 = graph.add_vertex(5, 6, 7, 8);
     vertex_idx v3 = graph.add_vertex(9, 10, 11, 12);
+    vertex_idx v4 = graph.add_vertex(13, 14, 15, 16);
+    vertex_idx v5 = graph.add_vertex(17, 18, 19, 20);
+    vertex_idx v6 = graph.add_vertex(21, 22, 23, 24);
+    vertex_idx v7 = graph.add_vertex(25, 26, 27, 28);
+    vertex_idx v8 = graph.add_vertex(29, 30, 31, 32);
 
-    graph.add_edge(v1, v2);
-    graph.add_edge(v2, v3);
-    graph.add_edge(v1, v3);
+    auto pair = graph.add_edge(v1, v2);
+    BOOST_CHECK_EQUAL(pair.second, true);
 
-  
+    pair = graph.add_edge(v1, v3);
+    BOOST_CHECK_EQUAL(pair.second, true);
     
-    std::vector<vertex_idx> sources = source_vertices(graph);
-    std::vector<vertex_idx> sinks = sink_vertices(graph);
+    pair = graph.add_edge(v1, v4);
+    BOOST_CHECK_EQUAL(pair.second, true);
     
+    pair = graph.add_edge(v2, v5);
+    BOOST_CHECK_EQUAL(pair.second, true);
+
+    pair = graph.add_edge(v2, v7);
+    BOOST_CHECK_EQUAL(pair.second, true);
+
+    pair = graph.add_edge(v3, v5);
+    BOOST_CHECK_EQUAL(pair.second, true);
+
+    pair = graph.add_edge(v3, v6);
+    BOOST_CHECK_EQUAL(pair.second, true);
+
+    pair = graph.add_edge(v4, v8);
+    BOOST_CHECK_EQUAL(pair.second, true);
+
+    pair = graph.add_edge(v5, v8);
+    BOOST_CHECK_EQUAL(pair.second, true);
+    
+    BOOST_CHECK_EQUAL(graph.num_edges(), 9);
+    BOOST_CHECK_EQUAL(graph.num_vertices(), 8);
+
+    return graph;
+}
+
+BOOST_AUTO_TEST_CASE(test_empty_dag_edge_idx) {
+
+    computational_dag_edge_idx_vector_impl graph;
+    BOOST_CHECK_EQUAL(graph.num_edges(), 0);
+    BOOST_CHECK_EQUAL(graph.num_vertices(), 0);
+}
+
+BOOST_AUTO_TEST_CASE(test_dag_edge_idx) {
+
+    computational_dag_edge_idx_vector_impl graph = constr_graph_1();
+
+
+
+    std::vector<vertex_idx> edge_sources {0,0,0,1,1,2,2,3,4};
+    std::vector<vertex_idx> edge_targets {1,2,3,4,6,4,5,7,7};
+
+    size_t edge_idx = 0;
+    for (const auto &edge : graph.edges()) {
+        
+        BOOST_CHECK_EQUAL(edge.source, edge_sources[edge_idx]);
+        BOOST_CHECK_EQUAL(edge.target, edge_targets[edge_idx]);
+        edge_idx++;    
+    }
+
+    std::vector<vertex_idx> vertices {0,1,2,3,4,5,6,7};
+
+    std::vector<std::vector<vertex_idx>> out_neighbors {
+        {1,2,3},
+        {4,6},
+        {4,5},
+        {7},
+        {7},
+        {},
+        {},
+        {}
+    };
+
+    std::vector<std::vector<vertex_idx>> in_neighbors {
+        {},
+        {0},
+        {0},
+        {0},
+        {1,2},
+        {2},
+        {1},
+        {3,4}
+    };
+
+    size_t idx = 0;
+
+    for (const auto &v : graph.vertices()) {
+
+        BOOST_CHECK_EQUAL(v, vertices[idx++]);
+        
+        size_t i = 0;
+        for (const auto &e : graph.children(v)) {
+            BOOST_CHECK_EQUAL(e, out_neighbors[v][i++]);
+        }
+
+        i = 0;
+        for (const auto &e : graph.out_edges(v)) {
+            BOOST_CHECK_EQUAL(e.target, out_neighbors[v][i++]);
+        }
+
+        i = 0;
+        for (const auto &e : graph.parents(v)) {
+            BOOST_CHECK_EQUAL(e, in_neighbors[v][i++]);
+        }
+
+        i = 0;
+        for (const auto &e : graph.in_edges(v)) {
+            BOOST_CHECK_EQUAL(e.source, in_neighbors[v][i++]);
+        }
+
+        BOOST_CHECK_EQUAL(graph.in_degree(v), in_neighbors[v].size());
+        BOOST_CHECK_EQUAL(graph.out_degree(v), out_neighbors[v].size());
+    }
+
+}
+
+
+
+BOOST_AUTO_TEST_CASE(test_util_1) {
+
+    const computational_dag_edge_idx_vector_impl graph = constr_graph_1();
+    
+    BOOST_CHECK_EQUAL(graph.num_edges(), 9);
+    BOOST_CHECK_EQUAL(graph.num_vertices(), 8);
+        
+    auto sources = source_vertices(graph);
     BOOST_CHECK_EQUAL(sources.size(), 1);
-    BOOST_CHECK_EQUAL(sinks.size(), 1);
-    
-    BOOST_CHECK_EQUAL(sources[0], v1);
-    BOOST_CHECK_EQUAL(sinks[0], v3);
+    BOOST_CHECK_EQUAL(sources[0], 0);
 
-    std::cout << "Sources: ";
-    for (const vertex_idx v_idx : source_vertices_iterator(graph)) {
-        std::cout << v_idx << " ";
-    }
-    std::cout << std::endl;
+    auto sinks = sink_vertices(graph);
+    BOOST_CHECK_EQUAL(sinks.size(), 3);
+    BOOST_CHECK_EQUAL(sinks[0], 5);
+    BOOST_CHECK_EQUAL(sinks[1], 6);
+    BOOST_CHECK_EQUAL(sinks[2], 7);
 
-    std::cout << std::endl << "Sinks: ";
-    for (const vertex_idx v_idx : sinks) {
-        std::cout << v_idx << " ";
-    }
-    std::cout << std::endl;
-    
+    BOOST_CHECK_EQUAL(has_path(0,1,graph), true);
+    BOOST_CHECK_EQUAL(has_path(0,2,graph), true);
+    BOOST_CHECK_EQUAL(has_path(0,3,graph), true);
+    BOOST_CHECK_EQUAL(has_path(0,4,graph), true);
+    BOOST_CHECK_EQUAL(has_path(0,5,graph), true);
+    BOOST_CHECK_EQUAL(has_path(0,6,graph), true);
+    BOOST_CHECK_EQUAL(has_path(0,7,graph), true);
+    BOOST_CHECK_EQUAL(has_path(1,0,graph), false);
+    BOOST_CHECK_EQUAL(has_path(2,0,graph), false);
+    BOOST_CHECK_EQUAL(has_path(3,0,graph), false);
+    BOOST_CHECK_EQUAL(has_path(4,0,graph), false);
+    BOOST_CHECK_EQUAL(has_path(5,0,graph), false);
+    BOOST_CHECK_EQUAL(has_path(6,0,graph), false);
+    BOOST_CHECK_EQUAL(has_path(7,0,graph), false);
+    BOOST_CHECK_EQUAL(has_path(1,4,graph), true);
+    BOOST_CHECK_EQUAL(has_path(1,7,graph), true);
+    BOOST_CHECK_EQUAL(has_path(1,6,graph), true);
+    BOOST_CHECK_EQUAL(has_path(2,4,graph), true);
+    BOOST_CHECK_EQUAL(has_path(2,5,graph), true);
+    BOOST_CHECK_EQUAL(has_path(2,7,graph), true);
+    BOOST_CHECK_EQUAL(has_path(3,7,graph), true);
+    BOOST_CHECK_EQUAL(has_path(4,7,graph), true);
+    BOOST_CHECK_EQUAL(has_path(1,2,graph), false);
+    BOOST_CHECK_EQUAL(has_path(1,3,graph), false);
+    BOOST_CHECK_EQUAL(has_path(2,1,graph), false);
+    BOOST_CHECK_EQUAL(has_path(2,3,graph), false);
+    BOOST_CHECK_EQUAL(has_path(2,6,graph), false);
+    BOOST_CHECK_EQUAL(has_path(3,1,graph), false);
+    BOOST_CHECK_EQUAL(has_path(3,2,graph), false);
+    BOOST_CHECK_EQUAL(has_path(3,4,graph), false);
+    BOOST_CHECK_EQUAL(has_path(3,5,graph), false);
+    BOOST_CHECK_EQUAL(has_path(3,6,graph), false);
+    BOOST_CHECK_EQUAL(has_path(4,1,graph), false);
+    BOOST_CHECK_EQUAL(has_path(4,2,graph), false);
+    BOOST_CHECK_EQUAL(has_path(4,3,graph), false);
+    BOOST_CHECK_EQUAL(has_path(4,5,graph), false);
+    BOOST_CHECK_EQUAL(has_path(4,6,graph), false);
+    BOOST_CHECK_EQUAL(has_path(5,1,graph), false);
+    BOOST_CHECK_EQUAL(has_path(5,2,graph), false);
+    BOOST_CHECK_EQUAL(has_path(5,3,graph), false);
+    BOOST_CHECK_EQUAL(has_path(5,4,graph), false);
+    BOOST_CHECK_EQUAL(has_path(5,6,graph), false);
+    BOOST_CHECK_EQUAL(has_path(5,7,graph), false);
+    BOOST_CHECK_EQUAL(has_path(6,1,graph), false);
+    BOOST_CHECK_EQUAL(has_path(6,2,graph), false);
+    BOOST_CHECK_EQUAL(has_path(6,3,graph), false);
+    BOOST_CHECK_EQUAL(has_path(6,4,graph), false);
+    BOOST_CHECK_EQUAL(has_path(6,5,graph), false);
+    BOOST_CHECK_EQUAL(has_path(6,7,graph), false);
+    BOOST_CHECK_EQUAL(has_path(7,1,graph), false);
+    BOOST_CHECK_EQUAL(has_path(7,2,graph), false);
+    BOOST_CHECK_EQUAL(has_path(7,3,graph), false);
+    BOOST_CHECK_EQUAL(has_path(7,4,graph), false);
+    BOOST_CHECK_EQUAL(has_path(7,5,graph), false);
+     BOOST_CHECK_EQUAL(has_path(7,6,graph), false);
 
 };

@@ -54,7 +54,7 @@ struct directed_edge_descriptor {
     vertex_idx target;
 
     directed_edge_descriptor() = default;
-    directed_edge_descriptor(edge_idx idx, vertex_idx source, vertex_idx target) : idx(idx), source(source), target(target) {}
+    directed_edge_descriptor(vertex_idx source, vertex_idx target, edge_idx idx) : idx(idx), source(source), target(target) {}
     ~directed_edge_descriptor() = default;
 };
 
