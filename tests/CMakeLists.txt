@@ -7,13 +7,11 @@ macro( _add_test name )
   list( APPEND tests_list test_${name} )
   # Create the test
   add_executable( test_${name} ${name}.cpp )
-  target_link_libraries( test_${name} #BspSchedulingLibrary
+  target_link_libraries( test_${name} BspSchedulingLibrary
    Boost::unit_test_framework )
   target_include_directories( test_${name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include )
   add_test( NAME test_${name} COMMAND test_${name} )
 endmacro()
-
-
 
 _add_test( graph_vector_impl )
 
@@ -21,6 +19,7 @@ _add_test( directed_graph_util )
 
 _add_test( graph_vector_edge_desc_impl )
 
+_add_test( bsp_architecture )
 
 # Custom target to compile all the tests
 add_custom_target( build_tests DEPENDS ${tests_list} )

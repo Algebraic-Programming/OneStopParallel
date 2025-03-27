@@ -22,7 +22,7 @@ bool is_source(const vertex_idx &v, const Graph_t &graph) {
 
 // Function to get source vertices
 template<typename Graph_t>
-std::vector<vertex_idx> source_vertices(Graph_t &graph) {
+std::vector<vertex_idx> source_vertices(const Graph_t &graph) {
 
     static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
     std::vector<vertex_idx> vec;
@@ -36,7 +36,7 @@ std::vector<vertex_idx> source_vertices(Graph_t &graph) {
 
 // Function to get sink vertices
 template<typename Graph_t>
-std::vector<vertex_idx> sink_vertices(Graph_t &graph) {
+std::vector<vertex_idx> sink_vertices(const Graph_t &graph) {
 
     static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
     std::vector<vertex_idx> vec;

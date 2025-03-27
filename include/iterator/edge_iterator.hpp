@@ -155,7 +155,7 @@ class edge_source_view {
 
         friend bool operator==(const source_iterator &one, const source_iterator &other) {
             return one.current_edge == other.current_edge;
-        };
+        }
         friend bool operator!=(const source_iterator &one, const source_iterator &other) {
             return one.current_edge != other.current_edge;
         };
@@ -204,10 +204,11 @@ class edge_target_view {
 
         friend bool operator==(const target_iterator &one, const target_iterator &other) {
             return one.current_edge == other.current_edge;
-        };
+        }
+        
         friend bool operator!=(const target_iterator &one, const target_iterator &other) {
             return one.current_edge != other.current_edge;
-        };
+        }
     };
 
   public:

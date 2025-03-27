@@ -1,5 +1,9 @@
-# Library: auxiliary
-# file(GLOB auxiliary_sources auxiliary/*.cpp)
+
+# Library: model
+file(GLOB model_bsp_sources model/bsp/*.cpp)
+
+#Library: auxiliary
+file(GLOB auxiliary_sources auxiliary/*.cpp)
 
 # # Library: simulation
 # file(GLOB simulation_sources simulation/*.cpp)
@@ -56,9 +60,6 @@
 # file(GLOB file_interactions_sources file_interactions/*.cpp)
 
 # # Library: model
-# file(GLOB model_sources model/*.cpp)
-
-# # Library: model
 # file(GLOB dag_algorithms model/dag_algorithms/*.cpp)
 
 # # Library: refine
@@ -91,8 +92,8 @@
 # # Library: heavy_edge_coarser
 # file(GLOB heavy_edge_coarser_sources coarser/heavy_edges/*.cpp)
 
-# Declare the main library as an interface
-#add_library( BspSchedulingLibrary STATIC 
+#Declare the main library as an interface
+add_library( BspSchedulingLibrary STATIC 
                                 #   ${scheduler_sources}
                                 #   ${IlpSchedulers_sources}
                                 #   ${simulation_sources}
@@ -109,10 +110,10 @@
                                 #   ${Coarsers_sources}
                                 #   ${MinimalMatching_sources}
                                 #   ${file_interactions_sources}
-                                #   ${model_sources}
+                                    ${model_bsp_sources}
                                 #   ${refine_sources}
                                 #   ${structures_sources}
-                                #   ${auxiliary_sources}
+                                    ${auxiliary_sources}
                                 #   ${coarsen_sources}
                                 #   ${SchedulePermutations_sources}
                                 #   ${HDagg_sources}
@@ -124,16 +125,16 @@
                                 #   ${hdagg_coarsers_sources}
                                 #   ${top_order_coarsers_sources}
                                 #   ${heavy_edge_coarser_sources}
-# )
-# target_link_libraries( BspSchedulingLibrary PUBLIC
-#     # Boost::graph
-#     # Boost::log_setup
-#     # Boost::log
-#     Threads::Threads
-#     OpenMP::OpenMP_CXX
-#     # copt_cpp
-#     # copt
-# )
+)
+target_link_libraries( BspSchedulingLibrary PUBLIC
+    # Boost::graph
+    # Boost::log_setup
+    # Boost::log
+    Threads::Threads
+    OpenMP::OpenMP_CXX
+    # copt_cpp
+    # copt
+)
 
 # # Modify the default LD_LIBRARY_PATH to include the "lib/copt" directory
 # set_target_properties( BspSchedulingLibrary PROPERTIES
