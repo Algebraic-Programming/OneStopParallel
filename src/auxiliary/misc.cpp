@@ -16,7 +16,7 @@ limitations under the License.
 @author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 
-#include "auxiliary/auxiliary.hpp"
+#include "auxiliary/misc.hpp"
 
 using namespace osp;
 

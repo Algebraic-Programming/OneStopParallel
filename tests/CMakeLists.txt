@@ -13,13 +13,30 @@ macro( _add_test name )
   add_test( NAME test_${name} COMMAND test_${name} )
 endmacro()
 
-_add_test( graph_vector_impl )
 
-_add_test( directed_graph_util )
+## graph implementations
+_add_test( graph_vector_impl )
 
 _add_test( graph_vector_edge_desc_impl )
 
+
+## graph algorithms
+_add_test( directed_graph_util )
+
+
+## bsp model
 _add_test( bsp_architecture )
+
+_add_test( bsp_instance )
+
+
+## auxiliary
+_add_test( intpower )
+
+_add_test( set_operations )
+
+_add_test( sorts_and_arrangements )
+
 
 # Custom target to compile all the tests
 add_custom_target( build_tests DEPENDS ${tests_list} )

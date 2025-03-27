@@ -27,7 +27,7 @@ limitations under the License.
 #include <stdexcept>
 #include <vector>
 
-#include "auxiliary/auxiliary.hpp"
+#include "auxiliary/misc.hpp"
 
 namespace osp {
 
