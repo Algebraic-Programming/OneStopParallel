@@ -89,4 +89,38 @@ struct is_random_access_range_of<
 template<typename T, typename ValueType>
 inline constexpr bool is_random_access_range_of_v = is_random_access_range_of<T, ValueType>::value;
 
+
+// Concept for const_iterator with forward iterator category
+template<typename T, typename = void>
+struct is_forward_iterator : std::false_type {};
+
+template<typename T>
+struct is_forward_iterator<
+    T, std::void_t<typename std::iterator_traits<T>::difference_type,
+                   typename std::iterator_traits<T>::value_type,
+                   typename std::iterator_traits<T>::pointer,
+                   typename std::iterator_traits<T>::reference,
+                   typename std::iterator_traits<T>::iterator_category>>
+    : std::conjunction<
+          std::is_base_of<std::forward_iterator_tag, typename std::iterator_traits<T>::iterator_category>> {};
+
+template<typename T>
+inline constexpr bool is_forward_iterator_v = is_forward_iterator<T>::value;
+
+// Concept for ranges with const forward iterators supporting begin or cbegin
+template<typename T, typename ValueType, typename = void>
+struct is_forward_range_of : std::false_type {};
+
+template<typename T, typename ValueType>
+struct is_forward_range_of<
+    T, ValueType,
+    std::void_t<decltype(std::begin(std::declval<T>())), 
+                decltype(std::end(std::declval<T>()))>>
+    : std::conjunction<
+          is_forward_iterator<decltype(std::begin(std::declval<T>()))>,
+          std::is_same<ValueType, typename std::iterator_traits<decltype(std::begin(std::declval<T>()))>::value_type>> {};
+
+template<typename T, typename ValueType>
+inline constexpr bool is_forward_range_of_v = is_forward_range_of<T, ValueType>::value;
+
 } // namespace osp

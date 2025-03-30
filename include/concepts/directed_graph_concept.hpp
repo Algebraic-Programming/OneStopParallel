@@ -37,45 +37,35 @@ struct is_directed_graph<T, std::void_t<
     decltype(std::declval<T>().parents(std::declval<vertex_idx>())),
     decltype(std::declval<T>().children(std::declval<vertex_idx>())),
     decltype(std::declval<T>().in_degree(std::declval<vertex_idx>())),
-    decltype(std::declval<T>().out_degree(std::declval<vertex_idx>()))>> 
+    decltype(std::declval<T>().out_degree(std::declval<vertex_idx>())),
+    decltype(T())>> 
     : std::conjunction<
-    is_input_range_of<decltype(std::declval<T>().vertices()), vertex_idx>,
+    is_forward_range_of<decltype(std::declval<T>().vertices()), vertex_idx>,
     std::is_unsigned<decltype(std::declval<T>().num_vertices())>,
     std::is_unsigned<decltype(std::declval<T>().num_edges())>,
-    is_input_range_of<decltype(std::declval<T>().parents(std::declval<vertex_idx>())), vertex_idx>,
-    is_input_range_of<decltype(std::declval<T>().children(std::declval<vertex_idx>())), vertex_idx>,
+    is_forward_range_of<decltype(std::declval<T>().parents(std::declval<vertex_idx>())), vertex_idx>,
+    is_forward_range_of<decltype(std::declval<T>().children(std::declval<vertex_idx>())), vertex_idx>,
     std::is_unsigned<decltype(std::declval<T>().in_degree(std::declval<vertex_idx>()))>,
-    std::is_unsigned<decltype(std::declval<T>().out_degree(std::declval<vertex_idx>()))>> {};
+    std::is_unsigned<decltype(std::declval<T>().out_degree(std::declval<vertex_idx>()))>,
+    std::is_default_constructible<T>> {};
 
 template<typename T>
 inline constexpr bool is_directed_graph_v = is_directed_graph<T>::value;
 
 
-// template<typename T>
-// struct is_constructable_from_directed_graph : std::false_type {};
-
-// template<typename T>
-// struct is_constructable_from_directed_graph<std::vector<T>> : std::conjunction<
-//     is_directed_graph<T>> {};
-
-// template<typename T>
-// inline constexpr bool is_constructable_from_directed_graph_v = is_constructable_from_directed_graph<T>::value;
-
-
 
 using edge_idx = size_t;
 
-struct directed_edge_descriptor {
+// Trait to specify the directed_edge_descriptor type for a graph
+template<typename T, typename = void>
+struct graph_traits {};
 
-    edge_idx idx;
-
-    vertex_idx source;
-    vertex_idx target;
-
-    directed_edge_descriptor() = default;
-    directed_edge_descriptor(vertex_idx source, vertex_idx target, edge_idx idx) : idx(idx), source(source), target(target) {}
-    ~directed_edge_descriptor() = default;
+// Specialization for graphs that define a directed_edge_descriptor
+template<typename T>
+struct graph_traits<T, std::void_t<typename T::directed_edge_descriptor>> {
+    using directed_edge_descriptor = typename T::directed_edge_descriptor;
 };
+
 
 // directed_graph_edge_idx concept
 template<typename T, typename = void>
@@ -83,17 +73,39 @@ struct is_directed_graph_edge_desc : std::false_type {};
 
 template<typename T>
 struct is_directed_graph_edge_desc<T, std::void_t<
+    typename graph_traits<T>::directed_edge_descriptor,
     decltype(std::declval<T>().edges()),
     decltype(std::declval<T>().out_edges(std::declval<vertex_idx>())),
-    decltype(std::declval<T>().in_edges(std::declval<vertex_idx>()))>> : std::conjunction<
+    decltype(std::declval<T>().in_edges(std::declval<vertex_idx>())),
+    decltype(source(std::declval<typename graph_traits<T>::directed_edge_descriptor>(), std::declval<T>())),
+    decltype(target(std::declval<typename graph_traits<T>::directed_edge_descriptor>(), std::declval<T>())),
+    decltype(edge_id(std::declval<typename graph_traits<T>::directed_edge_descriptor>(), std::declval<T>()))>> : std::conjunction<
     is_directed_graph<T>,
-    is_input_range_of<decltype(std::declval<T>().edges()), directed_edge_descriptor>,
-    is_input_range_of<decltype(std::declval<T>().out_edges(std::declval<vertex_idx>())), directed_edge_descriptor>,
-    is_input_range_of<decltype(std::declval<T>().in_edges(std::declval<vertex_idx>())), directed_edge_descriptor>
+    is_forward_range_of<decltype(std::declval<T>().edges()), typename graph_traits<T>::directed_edge_descriptor>,
+    is_forward_range_of<decltype(std::declval<T>().out_edges(std::declval<vertex_idx>())), typename graph_traits<T>::directed_edge_descriptor>,
+    is_forward_range_of<decltype(std::declval<T>().in_edges(std::declval<vertex_idx>())), typename graph_traits<T>::directed_edge_descriptor>,
+    std::is_same<decltype(source(std::declval<typename graph_traits<T>::directed_edge_descriptor>(), std::declval<T>())), vertex_idx>,
+    std::is_same<decltype(target(std::declval<typename graph_traits<T>::directed_edge_descriptor>(), std::declval<T>())), vertex_idx>,
+    std::is_same<decltype(edge_id(std::declval<typename graph_traits<T>::directed_edge_descriptor>(), std::declval<T>())), edge_idx>
     > {};
 
 template<typename T>
 inline constexpr bool is_directed_graph_edge_desc_v = is_directed_graph_edge_desc<T>::value;
 
+
+template<typename edge_desc, typename Graph_t>
+constexpr vertex_idx source(const edge_desc& edge, const Graph_t& graph) {
+    return graph.source(edge);
+}
+
+template<typename edge_desc, typename Graph_t>
+constexpr vertex_idx target(const edge_desc& edge, const Graph_t& graph) {
+    return graph.target(edge);
+}
+
+template<typename edge_desc, typename Graph_t>
+constexpr edge_idx edge_id(const edge_desc& edge, const Graph_t& graph) {
+    return graph.edge_id(edge);
+}
 
 } // namespace osp

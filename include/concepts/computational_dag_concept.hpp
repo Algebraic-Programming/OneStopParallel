@@ -19,14 +19,13 @@ limitations under the License.
 
 #pragma once
 
-#include <iterator>
 #include <type_traits>
 
 #include "directed_graph_concept.hpp"
 
 namespace osp {
 
-// weighted vertices explicit edges
+// weighted vertices
 template<typename T, typename = void>
 struct has_vertex_weights : std::false_type {};
 
@@ -110,4 +109,7 @@ template<typename T>
 inline constexpr bool is_computation_dag_typed_vertices_edge_desc_v =
     is_computation_dag_typed_vertices_edge_desc<T>::value;
 
+
+
+    
 } // namespace osp

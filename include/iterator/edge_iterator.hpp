@@ -1,3 +1,20 @@
+/*
+Copyright 2024 Huawei Technologies Co., Ltd.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
+*/
 #pragma once
 
 #include <iterator>
@@ -10,18 +27,21 @@ namespace osp {
 template<typename Graph_t>
 class edge_range {
 
+    using directed_edge_descriptor = typename graph_traits<Graph_t>::directed_edge_descriptor;
+    using iter = typename Graph_t::out_edges_iterator_t;
     const Graph_t &graph;
 
+    
     struct edge_iterator {
 
         vertex_idx current_vertex;
         edge_idx current_edge_idx;
-        std::vector<directed_edge_descriptor>::const_iterator current_edge;
+        iter current_edge;
 
         const Graph_t &graph;
 
       public:
-        using iterator_category = std::input_iterator_tag;
+        using iterator_category = std::forward_iterator_tag;
         using value_type = directed_edge_descriptor;
         using difference_type = std::ptrdiff_t;
         using pointer = const value_type *;
@@ -38,7 +58,8 @@ class edge_range {
             }
         }
 
-        edge_iterator(edge_idx current_edge_idx_, const Graph_t &graph_) : current_vertex(0u), current_edge_idx(current_edge_idx_), graph(graph_) {
+        edge_iterator(edge_idx current_edge_idx_, const Graph_t &graph_)
+            : current_vertex(0u), current_edge_idx(current_edge_idx_), graph(graph_) {
 
             if (current_edge_idx < graph.num_edges()) {
 
@@ -71,7 +92,7 @@ class edge_range {
         }
 
         const value_type &operator*() const { return *current_edge; }
-        value_type *operator->() { return current_edge.operator->(); }
+        const value_type *operator->() const { return &(*current_edge); }
 
         // Prefix increment
         edge_iterator &operator++() {
@@ -120,26 +141,32 @@ class edge_range {
     auto end() const { return edge_iterator(graph.num_edges(), graph); }
 };
 
+template<typename Graph_t>
+class edge_source_range {
 
-class edge_source_view {
+    using directed_edge_descriptor = typename graph_traits<Graph_t>::directed_edge_descriptor;
+    using iter = typename Graph_t::in_edges_iterator_t;
 
+    const Graph_t &graph;
     const std::vector<directed_edge_descriptor> &edges;
 
     struct source_iterator {
 
-        std::vector<directed_edge_descriptor>::const_iterator current_edge;
+        const Graph_t &graph;
+        iter current_edge;
 
       public:
-        using iterator_category = std::input_iterator_tag;
+        using iterator_category = std::forward_iterator_tag;
         using value_type = vertex_idx;
         using difference_type = std::ptrdiff_t;
         using pointer = const value_type *;
         using reference = const value_type &;
 
-        source_iterator(const std::vector<directed_edge_descriptor>::const_iterator &current_edge_) : current_edge(current_edge_) {} 
+        source_iterator(iter current_edge_, const Graph_t &graph_)
+            : graph(graph_), current_edge(current_edge_) {}
 
-        const value_type &operator*() const { return (*current_edge).source; }
-       
+        value_type operator*() const { return source(*current_edge, graph); }
+
         // Prefix increment
         source_iterator &operator++() {
             current_edge++;
@@ -162,33 +189,40 @@ class edge_source_view {
     };
 
   public:
-    edge_source_view(const std::vector<directed_edge_descriptor> &edges_) : edges(edges_) {}
+    edge_source_range(const std::vector<directed_edge_descriptor> &edges_, const Graph_t &graph_)
+        : graph(graph_), edges(edges_) {}
 
-    auto begin() const { return source_iterator(edges.begin()); }
+    auto begin() const { return source_iterator(edges.begin(), graph); }
 
-    auto end() const { return source_iterator(edges.end()); }
+    auto end() const { return source_iterator(edges.end(), graph); }
 };
 
+template<typename Graph_t>
+class edge_target_range {
 
-class edge_target_view {
-
+    using directed_edge_descriptor = typename graph_traits<Graph_t>::directed_edge_descriptor;
+    using iter = typename Graph_t::out_edges_iterator_t;
+    const Graph_t &graph;
     const std::vector<directed_edge_descriptor> &edges;
 
+    
     struct target_iterator {
 
-        std::vector<directed_edge_descriptor>::const_iterator current_edge;
+        const Graph_t &graph;
+        iter current_edge;
 
       public:
-        using iterator_category = std::input_iterator_tag;
+        using iterator_category = std::forward_iterator_tag;
         using value_type = vertex_idx;
         using difference_type = std::ptrdiff_t;
         using pointer = const value_type *;
         using reference = const value_type &;
 
-        target_iterator(const std::vector<directed_edge_descriptor>::const_iterator &current_edge_) : current_edge(current_edge_) {} 
+        target_iterator(iter current_edge_, const Graph_t &graph_)
+            : graph(graph_), current_edge(current_edge_) {}
 
-        const value_type &operator*() const { return (*current_edge).target; }
-       
+        value_type operator*() const { return target(*current_edge, graph); }
+
         // Prefix increment
         target_iterator &operator++() {
             current_edge++;
@@ -205,18 +239,19 @@ class edge_target_view {
         friend bool operator==(const target_iterator &one, const target_iterator &other) {
             return one.current_edge == other.current_edge;
         }
-        
+
         friend bool operator!=(const target_iterator &one, const target_iterator &other) {
             return one.current_edge != other.current_edge;
         }
     };
 
   public:
-    edge_target_view(const std::vector<directed_edge_descriptor> &edges_) : edges(edges_) {}
+    edge_target_range(const std::vector<directed_edge_descriptor> &edges_, const Graph_t &graph_)
+        : graph(graph_), edges(edges_) {}
 
-    auto begin() const { return target_iterator(edges.begin()); }
+    auto begin() const { return target_iterator(edges.begin(), graph); }
 
-    auto end() const { return target_iterator(edges.end()); }
+    auto end() const { return target_iterator(edges.end(), graph); }
 };
 
 } // namespace osp
