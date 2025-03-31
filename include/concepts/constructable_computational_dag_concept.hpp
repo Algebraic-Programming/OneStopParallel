@@ -18,25 +18,69 @@ limitations under the License.
 
 #pragma once
 
-#include <iterator>
-#include <type_traits>
-
+#include "computational_dag_concept.hpp"
 #include "directed_graph_concept.hpp"
 
 namespace osp {
 
-// constructable graph concept
+// add vertices
 template<typename T, typename = void>
-struct is_constructable_graph : std::false_type {};
+struct is_constructable_cdag_vertex : std::false_type {};
 
 template<typename T>
-struct is_constructable_graph<
-    T, std::void_t<decltype(std::declval<T>().add_vertex(std::declval<int>(), std::declval<int>(), std::declval<int>(),
-                                                         std::declval<unsigned>())),
-                   decltype(std::declval<T>().add_edge(std::declval<vertex_idx>(), std::declval<vertex_idx>(),
-                                                       std::declval<int>()))>> : std::true_type {};
+struct is_constructable_cdag_vertex<T, std::void_t<decltype(std::declval<T>().add_vertex(
+                                           std::declval<typename cdag_traits<T>::vertex_work_weight_t>(),
+                                           std::declval<typename cdag_traits<T>::vertex_comm_weight_t>(),
+                                           std::declval<typename cdag_traits<T>::vertex_mem_weight_t>())), 
+                                           decltype(std::declval<T>().set_vertex_work_weight(std::declval<vertex_idx>(), std::declval<typename cdag_traits<T>::vertex_work_weight_t>())),
+                                           decltype(std::declval<T>().set_vertex_comm_weight(std::declval<vertex_idx>(), std::declval<typename cdag_traits<T>::vertex_comm_weight_t>())),
+                                           decltype(std::declval<T>().set_vertex_mem_weight(std::declval<vertex_idx>(), std::declval<typename cdag_traits<T>::vertex_mem_weight_t>()))>>
+    : std::true_type {};
 
 template<typename T>
-inline constexpr bool is_constructable_graph_v = is_constructable_graph<T>::value;
+inline constexpr bool is_constructable_cdag_vertex_v = is_constructable_cdag_vertex<T>::value;
+
+// add vertices with types
+template<typename T, typename = void>
+struct is_constructable_cdag_typed_vertex : std::false_type {};
+
+template<typename T>
+struct is_constructable_cdag_typed_vertex<
+    T,
+    std::void_t<decltype(std::declval<T>().add_vertex(std::declval<typename cdag_traits<T>::vertex_work_weight_t>(),
+                                                      std::declval<typename cdag_traits<T>::vertex_comm_weight_t>(),
+                                                      std::declval<typename cdag_traits<T>::vertex_mem_weight_t>(),
+                                                      std::declval<typename cdag_traits<T>::vertex_type_t>())),
+                                                      decltype(std::declval<T>().set_vertex_type(std::declval<vertex_idx>(), std::declval<typename cdag_traits<T>::vertex_type_t>()))>>
+    : is_constructable_cdag_vertex<T> {}; // for default node type
+
+template<typename T>
+inline constexpr bool is_constructable_cdag_typed_vertex_v = is_constructable_cdag_typed_vertex<T>::value;
+
+// add edges
+template<typename T, typename = void>
+struct is_constructable_cdag_edge : std::false_type {};
+
+template<typename T>
+struct is_constructable_cdag_edge<
+    T, std::void_t<decltype(std::declval<T>().add_edge(std::declval<vertex_idx>(), std::declval<vertex_idx>()))>>
+    : std::true_type {};
+
+template<typename T>
+inline constexpr bool is_constructable_cdag_edge_v = is_constructable_cdag_edge<T>::value;
+
+// add edges with comm costs
+template<typename T, typename = void>
+struct is_constructable_cdag_comm_edge : std::false_type {};
+
+template<typename T>
+struct is_constructable_cdag_comm_edge<
+    T, std::void_t<decltype(std::declval<T>().add_edge(std::declval<vertex_idx>(), std::declval<vertex_idx>(),
+                                                       std::declval<typename cdag_traits<T>::edge_comm_weight_t>())),
+                                                       decltype(std::declval<T>().set_edge_comm_weight(std::declval<edge_idx>(), std::declval<typename cdag_traits<T>::edge_comm_weight_t>()))>>
+     : is_constructable_cdag_edge<T> {}; // for default edge weight
+
+template<typename T>
+inline constexpr bool is_constructable_cdag_comm_edge_v = is_constructable_cdag_comm_edge<T>::value;
 
 } // namespace osp

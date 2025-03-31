@@ -44,14 +44,22 @@ struct cdag_edge_impl {
 
 template<typename v_impl = cdag_vertex_impl, typename e_impl = cdag_edge_impl>
 class computational_dag_edge_idx_vector_impl {
+    public:
 
     static_assert(std::is_base_of<cdag_vertex_impl, v_impl>::value, "v_impl must be derived from cdag_vertex_impl");
     static_assert(std::is_base_of<cdag_edge_impl, e_impl>::value, "e_impl must be derived from cdag_edge_impl");
-  public:
   
+    // graph_traits specialization
     using directed_edge_descriptor = directed_edge_descriptor_impl;
     using out_edges_iterator_t = std::vector<directed_edge_descriptor>::const_iterator;
     using in_edges_iterator_t = std::vector<directed_edge_descriptor>::const_iterator;
+
+    // cdag_traits specialization
+    using vertex_work_weight_t = int;
+    using vertex_comm_weight_t = int;
+    using vertex_mem_weight_t = int;
+    using vertex_type_t = unsigned;
+    using edge_comm_weight_t = int;
 
   private:
     using ThisT = computational_dag_edge_idx_vector_impl<v_impl, e_impl>;
@@ -115,14 +123,14 @@ class computational_dag_edge_idx_vector_impl {
     inline vertex_idx source(const directed_edge_descriptor &e) const { return e.source; }
     inline vertex_idx target(const directed_edge_descriptor &e) const { return e.target; }
 
-    vertex_idx add_vertex(int work_weight, int comm_weight, int mem_weight, unsigned vertex_type) {
+    vertex_idx add_vertex(int work_weight, int comm_weight, int mem_weight, unsigned vertex_type = 0) {
 
         vertices_.emplace_back(vertices_.size(), work_weight, comm_weight, mem_weight, vertex_type);
 
         out_edges_.push_back({});
         in_edges_.push_back({});
 
-        num_vertex_types_ = std::max(num_vertex_types_, vertex_type);
+        num_vertex_types_ = std::max(num_vertex_types_, vertex_type + 1);
 
         return vertices_.back().id;
     }

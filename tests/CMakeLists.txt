@@ -37,6 +37,9 @@ _add_test( set_operations )
 
 _add_test( sorts_and_arrangements )
 
+## io
+_add_test( filereader )
+
 
 # Custom target to compile all the tests
 add_custom_target( build_tests DEPENDS ${tests_list} )

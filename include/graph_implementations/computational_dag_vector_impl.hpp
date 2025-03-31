@@ -40,9 +40,14 @@ struct cdag_vertex_impl {
 
 template<typename v_impl = cdag_vertex_impl>
 class computational_dag_vector_impl {
-
   public:
     static_assert(std::is_base_of<cdag_vertex_impl, v_impl>::value, "v_impl must be derived from cdag_vertex_impl");
+
+    using vertex_work_weight_t = int;
+    using vertex_comm_weight_t = int;
+    using vertex_mem_weight_t = int;
+    using vertex_type_t = unsigned;
+    using edge_comm_weight_t = int;
 
     computational_dag_vector_impl() = default;
 
@@ -74,15 +79,26 @@ class computational_dag_vector_impl {
 
     inline const v_impl &get_vertex_impl(const vertex_idx v) const { return vertices_[v]; }
 
-    vertex_idx add_vertex(int work_weight, int comm_weight, int mem_weight, unsigned vertex_type) {
+    vertex_idx add_vertex(int work_weight, int comm_weight, int mem_weight, unsigned vertex_type = 0) {
 
         vertices_.emplace_back(vertices_.size(), work_weight, comm_weight, mem_weight, vertex_type);
         out_neigbors.push_back({});
         in_neigbors.push_back({});
 
-        num_vertex_types_ = std::max(num_vertex_types_, vertex_type);
+        num_vertex_types_ = std::max(num_vertex_types_, vertex_type + 1);
 
         return vertices_.back().id;
+    }
+
+    inline void set_vertex_work_weight(vertex_idx v, int work_weight) { vertices_[v].work_weight = work_weight; }
+
+    inline void set_vertex_comm_weight(vertex_idx v, int comm_weight) { vertices_[v].comm_weight = comm_weight; }
+
+    inline void set_vertex_mem_weight(vertex_idx v, int mem_weight) { vertices_[v].mem_weight = mem_weight; }
+    
+    inline void set_vertex_type(vertex_idx v, unsigned vertex_type) {
+        vertices_[v].vertex_type = vertex_type;
+        num_vertex_types_ = std::max(num_vertex_types_, vertex_type);
     }
 
     bool add_edge(vertex_idx source, vertex_idx target) {
@@ -113,8 +129,6 @@ class computational_dag_vector_impl {
     unsigned num_vertex_types_ = 0;
 };
 
-
-
 template<typename v_impl = cdag_vertex_impl>
 std::vector<vertex_idx> source_vertices(const computational_dag_vector_impl<v_impl> &graph) {
 
@@ -127,9 +141,7 @@ std::vector<vertex_idx> source_vertices(const computational_dag_vector_impl<v_im
         }
     }
     return vec;
-    
 }
-
 
 static_assert(has_vertex_weights_v<computational_dag_vector_impl<cdag_vertex_impl>>,
               "computational_dag_vector_impl must satisfy the has_vertex_weights concept");

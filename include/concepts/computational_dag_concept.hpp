@@ -13,9 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner   
+@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
-
 
 #pragma once
 
@@ -24,6 +23,26 @@ limitations under the License.
 #include "directed_graph_concept.hpp"
 
 namespace osp {
+
+template<typename T, typename = void>
+struct cdag_traits {};
+
+// Specialization for graphs that define a directed_edge_descriptor
+template<typename T>
+struct cdag_traits<T, std::void_t<typename T::vertex_work_weight_t, 
+                                  typename T::vertex_comm_weight_t,
+                                  typename T::vertex_mem_weight_t, 
+                                 typename T::vertex_type_t,
+                                  typename T::edge_comm_weight_t>> {
+
+    using vertex_work_weight_t = typename T::vertex_work_weight_t;
+    using vertex_comm_weight_t = typename T::vertex_comm_weight_t;
+    using vertex_mem_weight_t = typename T::vertex_mem_weight_t;
+    using vertex_type_t = typename T::vertex_type_t;
+    using edge_comm_weight_t = typename T::edge_comm_weight_t;
+};
+
+
 
 // weighted vertices
 template<typename T, typename = void>
@@ -109,7 +128,4 @@ template<typename T>
 inline constexpr bool is_computation_dag_typed_vertices_edge_desc_v =
     is_computation_dag_typed_vertices_edge_desc<T>::value;
 
-
-
-    
 } // namespace osp
