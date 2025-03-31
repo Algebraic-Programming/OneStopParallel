@@ -56,8 +56,8 @@ file(GLOB auxiliary_sources auxiliary/*.cpp)
 # # Library: Minimal_matching
 # file(GLOB MinimalMatching_sources scheduler/Minimal_matching/*.cpp)
 
-# # Library: file_interactions
-# file(GLOB file_interactions_sources file_interactions/*.cpp)
+# Library: io
+file(GLOB io_sources io/*.cpp)
 
 # # Library: model
 # file(GLOB dag_algorithms model/dag_algorithms/*.cpp)
@@ -111,6 +111,7 @@ add_library( BspSchedulingLibrary STATIC
                                 #   ${MinimalMatching_sources}
                                 #   ${file_interactions_sources}
                                     ${model_bsp_sources}
+                                    ${io_sources}
                                 #   ${refine_sources}
                                 #   ${structures_sources}
                                     ${auxiliary_sources}

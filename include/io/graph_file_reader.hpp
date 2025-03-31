@@ -20,7 +20,6 @@ limitations under the License.
 
 #include <fstream>
 #include <iostream>
-#include <iterator>
 #include <utility>
 #include <vector>
 
@@ -28,7 +27,7 @@ limitations under the License.
 
 namespace osp {
 
-namespace FileReader {
+namespace file_reader {
 
 template<typename Graph_t>
 bool readComputationalDagHyperdagFormat(std::ifstream &infile, Graph_t& graph) {
@@ -122,7 +121,7 @@ bool readComputationalDagHyperdagFormat(const std::string &filename, Graph_t& gr
         return false;
     }
 
-    return FileReader::readComputationalDagHyperdagFormat(infile, graph);
+    return file_reader::readComputationalDagHyperdagFormat(infile, graph);
 }
 
 
@@ -134,9 +133,7 @@ bool readComputationalDagHyperdagFormat(const std::string &filename, Graph_t& gr
 
 // std::pair<bool, ComputationalDag> readComputationalDagMetisFormat(const std::string &filename);
 
-// std::pair<bool, BspArchitecture> readBspArchitecture(const std::string &filename);
 
-// std::pair<bool, BspArchitecture> readBspArchitecture(std::ifstream &infile);
 
 
 

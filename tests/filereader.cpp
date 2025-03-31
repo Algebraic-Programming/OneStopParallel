@@ -3,7 +3,8 @@
 
 #include "graph_implementations/computational_dag_edge_idx_vector_impl.hpp"
 #include "graph_implementations/computational_dag_vector_impl.hpp"
-#include "io/FileReader.hpp"
+#include "io/arch_file_reader.hpp"
+#include "io/graph_file_reader.hpp"
 #include <filesystem>
 #include <iostream>
 
@@ -22,9 +23,71 @@ BOOST_AUTO_TEST_CASE(test_bicgstab) {
     computational_dag_vector_impl graph;
 
     bool status =
-        FileReader::readComputationalDagHyperdagFormat((cwd / "data/spaa/tiny/instance_bicgstab.txt").string(), graph);
+        file_reader::readComputationalDagHyperdagFormat((cwd / "data/spaa/tiny/instance_bicgstab.txt").string(), graph);
 
     BOOST_CHECK(status);
     BOOST_CHECK_EQUAL(graph.num_vertices(), 54);
-    //BOOST_CHECK_EQUAL(graph.num_edges(), 101);
+};
+
+BOOST_AUTO_TEST_CASE(test_arch_smpl) {
+
+    std::filesystem::path cwd = std::filesystem::current_path();
+
+    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
+        cwd = cwd.parent_path();
+    }
+
+    BspArchitecture arch;
+
+    bool status = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.txt").string(), arch);
+
+    BOOST_CHECK(status);
+    BOOST_CHECK_EQUAL(arch.numberOfProcessors(), 3);
+    BOOST_CHECK_EQUAL(arch.communicationCosts(), 3);
+    BOOST_CHECK_EQUAL(arch.synchronisationCosts(), 5);
+    BOOST_CHECK_EQUAL(arch.getMemoryConstraintType(), NONE);
+
+}
+
+BOOST_AUTO_TEST_CASE(test_k_means) {
+
+
+    std::filesystem::path cwd = std::filesystem::current_path();
+
+    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
+        cwd = cwd.parent_path();
+    }
+
+    std::vector<int> work{1, 1, 1, 2, 1, 2, 1, 2, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 3,
+                          3, 3, 2, 1, 1, 1, 1, 1, 3, 3, 3, 2, 1, 1, 1, 1, 1, 2, 1, 1};
+    std::vector<int> comm{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                          1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+
+    computational_dag_vector_impl graph;
+
+    bool status =
+        file_reader::readComputationalDagHyperdagFormat((cwd / "data/spaa/tiny/instance_k-means.txt").string(), graph);
+
+    BOOST_CHECK(status);
+    BOOST_CHECK_EQUAL(graph.num_vertices(), 40);
+    BOOST_CHECK_EQUAL(graph.num_edges(), 45);
+
+    for (const auto &v : graph.vertices()) {
+        BOOST_CHECK_EQUAL(graph.vertex_work_weight(v), work[v]);
+        BOOST_CHECK_EQUAL(graph.vertex_comm_weight(v), comm[v]);
+    }
+
+    computational_dag_edge_idx_vector_impl graph2;
+
+    status =
+        file_reader::readComputationalDagHyperdagFormat((cwd / "data/spaa/tiny/instance_k-means.txt").string(), graph2);
+
+    BOOST_CHECK(status);
+    BOOST_CHECK_EQUAL(graph2.num_vertices(), 40);
+    BOOST_CHECK_EQUAL(graph2.num_edges(), 45);
+
+    for (const auto &v : graph2.vertices()) {
+        BOOST_CHECK_EQUAL(graph2.vertex_work_weight(v), work[v]);
+        BOOST_CHECK_EQUAL(graph2.vertex_comm_weight(v), comm[v]);
+    }
 };

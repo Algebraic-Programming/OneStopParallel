@@ -44,11 +44,10 @@ struct cdag_edge_impl {
 
 template<typename v_impl = cdag_vertex_impl, typename e_impl = cdag_edge_impl>
 class computational_dag_edge_idx_vector_impl {
-    public:
-
+  public:
     static_assert(std::is_base_of<cdag_vertex_impl, v_impl>::value, "v_impl must be derived from cdag_vertex_impl");
     static_assert(std::is_base_of<cdag_edge_impl, e_impl>::value, "e_impl must be derived from cdag_edge_impl");
-  
+
     // graph_traits specialization
     using directed_edge_descriptor = directed_edge_descriptor_impl;
     using out_edges_iterator_t = std::vector<directed_edge_descriptor>::const_iterator;
@@ -75,7 +74,7 @@ class computational_dag_edge_idx_vector_impl {
     // struct cdag_edge_source_view {
     //     using value_type = vertex_idx;
 
-    //     vertex_idx operator()(directed_edge_descriptor &p) const { return p.source; }        
+    //     vertex_idx operator()(directed_edge_descriptor &p) const { return p.source; }
     // };
 
     // struct cdag_edge_target_view {
@@ -83,9 +82,9 @@ class computational_dag_edge_idx_vector_impl {
     //     const vertex_idx &operator()(directed_edge_descriptor const &p) const { return p.target; }
     // };
 
-    //using edge_adapter_source_t = ContainerAdaptor<cdag_edge_source_view, const std::vector<directed_edge_descriptor>>; 
-    //using edge_adapter_target_t = ContainerAdaptor<cdag_edge_target_view,
-    // const std::vector<directed_edge_descriptor>>;
+    // using edge_adapter_source_t = ContainerAdaptor<cdag_edge_source_view, const
+    // std::vector<directed_edge_descriptor>>; using edge_adapter_target_t = ContainerAdaptor<cdag_edge_target_view,
+    //  const std::vector<directed_edge_descriptor>>;
 
   public:
     computational_dag_edge_idx_vector_impl() = default;
@@ -95,8 +94,6 @@ class computational_dag_edge_idx_vector_impl {
     inline size_t num_vertices() const { return vertices_.size(); }
 
     inline auto edges() const { return edge_range<ThisT>(*this); }
-
-    //inline auto parents(vertex_idx v) const {  return edge_adapter_source_t(in_edges_[v]); }
 
     inline auto parents(vertex_idx v) const { return edge_source_range(in_edges_[v], *this); }
     inline auto children(vertex_idx v) const { return edge_target_range(out_edges_[v], *this); }
@@ -157,6 +154,14 @@ class computational_dag_edge_idx_vector_impl {
         edges_.emplace_back(comm_weight);
 
         return {out_edges_[source].back(), true};
+    }
+
+    inline void set_vertex_work_weight(vertex_idx v, int work_weight) { vertices_[v].work_weight = work_weight; }
+    inline void set_vertex_comm_weight(vertex_idx v, int comm_weight) { vertices_[v].comm_weight = comm_weight; }
+    inline void set_vertex_mem_weight(vertex_idx v, int mem_weight) { vertices_[v].mem_weight = mem_weight; }
+    inline void set_vertex_type(vertex_idx v, unsigned vertex_type) {
+        vertices_[v].vertex_type = vertex_type;
+        num_vertex_types_ = std::max(num_vertex_types_, vertex_type);
     }
 
     inline const v_impl &get_vertex_impl(vertex_idx v) const { return vertices_[v]; }
