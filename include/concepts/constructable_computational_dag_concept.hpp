@@ -77,7 +77,7 @@ template<typename T>
 struct is_constructable_cdag_comm_edge<
     T, std::void_t<decltype(std::declval<T>().add_edge(std::declval<vertex_idx>(), std::declval<vertex_idx>(),
                                                        std::declval<typename cdag_traits<T>::edge_comm_weight_t>())),
-                                                       decltype(std::declval<T>().set_edge_comm_weight(std::declval<edge_idx>(), std::declval<typename cdag_traits<T>::edge_comm_weight_t>()))>>
+                                                       decltype(std::declval<T>().set_edge_comm_weight(std::declval<typename graph_traits<T>::directed_edge_descriptor>(), std::declval<typename cdag_traits<T>::edge_comm_weight_t>()))>>
      : is_constructable_cdag_edge<T> {}; // for default edge weight
 
 template<typename T>

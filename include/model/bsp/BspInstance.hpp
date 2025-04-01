@@ -18,11 +18,13 @@ limitations under the License.
 
 #pragma once
 
+
+#include <iostream>
+
 #include "BspArchitecture.hpp"
 #include "concepts/computational_dag_concept.hpp"
 #include "graph_algorithms/computational_dag_util.hpp"
 
-#include <iostream>
 
 namespace osp {
 

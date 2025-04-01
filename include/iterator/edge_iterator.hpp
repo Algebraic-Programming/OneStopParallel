@@ -35,7 +35,7 @@ class edge_range {
     struct edge_iterator {
 
         vertex_idx current_vertex;
-        edge_idx current_edge_idx;
+        size_t current_edge_idx;
         iter current_edge;
 
         const Graph_t &graph;
@@ -58,12 +58,12 @@ class edge_range {
             }
         }
 
-        edge_iterator(edge_idx current_edge_idx_, const Graph_t &graph_)
+        edge_iterator(size_t current_edge_idx_, const Graph_t &graph_)
             : current_vertex(0u), current_edge_idx(current_edge_idx_), graph(graph_) {
 
             if (current_edge_idx < graph.num_edges()) {
 
-                edge_idx tmp = 0u;
+                size_t tmp = 0u;
 
                 if (tmp < current_edge_idx) {
 

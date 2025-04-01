@@ -50,8 +50,11 @@ class computational_dag_vector_impl {
     using edge_comm_weight_t = int;
 
     computational_dag_vector_impl() = default;
-
-    ~computational_dag_vector_impl() = default;
+    computational_dag_vector_impl(const computational_dag_vector_impl &other) = default;
+    computational_dag_vector_impl(computational_dag_vector_impl &&other) = default;
+    computational_dag_vector_impl &operator=(const computational_dag_vector_impl &other) = default;
+    computational_dag_vector_impl &operator=(computational_dag_vector_impl &&other) = default;
+    virtual ~computational_dag_vector_impl() = default;
 
     inline auto vertices() const { return vertex_range<vertex_idx>(vertices_.size()); }
 
@@ -129,6 +132,8 @@ class computational_dag_vector_impl {
     unsigned num_vertex_types_ = 0;
 };
 
+
+// TODO delete this 
 template<typename v_impl = cdag_vertex_impl>
 std::vector<vertex_idx> source_vertices(const computational_dag_vector_impl<v_impl> &graph) {
 

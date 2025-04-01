@@ -26,13 +26,13 @@ namespace osp {
 
 struct directed_edge_descriptor_impl {
 
-    edge_idx idx;
+    size_t idx;
 
     vertex_idx source;
     vertex_idx target;
 
     directed_edge_descriptor_impl() = default;
-    directed_edge_descriptor_impl(vertex_idx source, vertex_idx target, edge_idx idx)
+    directed_edge_descriptor_impl(vertex_idx source, vertex_idx target, size_t idx)
         : idx(idx), source(source), target(target) {}
     ~directed_edge_descriptor_impl() = default;
 };
@@ -88,7 +88,11 @@ class computational_dag_edge_idx_vector_impl {
 
   public:
     computational_dag_edge_idx_vector_impl() = default;
-    ~computational_dag_edge_idx_vector_impl() = default;
+    computational_dag_edge_idx_vector_impl(const computational_dag_edge_idx_vector_impl &other) = default;
+    computational_dag_edge_idx_vector_impl(computational_dag_edge_idx_vector_impl &&other) = default;
+    computational_dag_edge_idx_vector_impl &operator=(const computational_dag_edge_idx_vector_impl &other) = default;
+    computational_dag_edge_idx_vector_impl &operator=(computational_dag_edge_idx_vector_impl &&other) = default;
+    virtual~computational_dag_edge_idx_vector_impl() = default;
 
     inline size_t num_edges() const { return edges_.size(); }
     inline size_t num_vertices() const { return vertices_.size(); }
@@ -106,7 +110,6 @@ class computational_dag_edge_idx_vector_impl {
     inline size_t in_degree(vertex_idx v) const { return in_edges_[v].size(); }
     inline size_t out_degree(vertex_idx v) const { return out_edges_[v].size(); }
 
-    inline int edge_comm_weight(edge_idx e) const { return edges_[e].comm_weight; }
     inline int edge_comm_weight(directed_edge_descriptor e) const { return edges_[e.idx].comm_weight; }
 
     inline int vertex_work_weight(vertex_idx v) const { return vertices_[v].work_weight; }
@@ -115,8 +118,7 @@ class computational_dag_edge_idx_vector_impl {
 
     inline unsigned num_vertex_types() const { return num_vertex_types_; }
     inline int vertex_type(vertex_idx v) const { return vertices_[v].vertex_type; }
-
-    inline edge_idx edge_id(const directed_edge_descriptor &e) const { return e.idx; }
+    
     inline vertex_idx source(const directed_edge_descriptor &e) const { return e.source; }
     inline vertex_idx target(const directed_edge_descriptor &e) const { return e.target; }
 
@@ -165,7 +167,7 @@ class computational_dag_edge_idx_vector_impl {
     }
 
     inline const v_impl &get_vertex_impl(vertex_idx v) const { return vertices_[v]; }
-    inline const e_impl &get_edge_impl(edge_idx e) const { return edges_[e]; }
+    inline const e_impl &get_edge_impl(directed_edge_descriptor e) const { return edges_[e.idx]; }
 };
 
 static_assert(is_directed_graph_edge_desc_v<computational_dag_edge_idx_vector_impl<cdag_vertex_impl, cdag_edge_impl>>,

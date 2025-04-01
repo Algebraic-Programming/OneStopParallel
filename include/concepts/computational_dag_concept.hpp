@@ -29,11 +29,9 @@ struct cdag_traits {};
 
 // Specialization for graphs that define a directed_edge_descriptor
 template<typename T>
-struct cdag_traits<T, std::void_t<typename T::vertex_work_weight_t, 
-                                  typename T::vertex_comm_weight_t,
-                                  typename T::vertex_mem_weight_t, 
-                                 typename T::vertex_type_t,
-                                  typename T::edge_comm_weight_t>> {
+struct cdag_traits<
+    T, std::void_t<typename T::vertex_work_weight_t, typename T::vertex_comm_weight_t, typename T::vertex_mem_weight_t,
+                   typename T::vertex_type_t, typename T::edge_comm_weight_t>> {
 
     using vertex_work_weight_t = typename T::vertex_work_weight_t;
     using vertex_comm_weight_t = typename T::vertex_comm_weight_t;
@@ -41,8 +39,6 @@ struct cdag_traits<T, std::void_t<typename T::vertex_work_weight_t,
     using vertex_type_t = typename T::vertex_type_t;
     using edge_comm_weight_t = typename T::edge_comm_weight_t;
 };
-
-
 
 // weighted vertices
 template<typename T, typename = void>
@@ -78,8 +74,11 @@ template<typename T, typename = void>
 struct has_edge_weights : std::false_type {};
 
 template<typename T>
-struct has_edge_weights<T, std::void_t<decltype(std::declval<T>().edge_comm_weight(std::declval<edge_idx>()))>>
-    : std::conjunction<std::is_arithmetic<decltype(std::declval<T>().edge_comm_weight(std::declval<edge_idx>()))>> {};
+struct has_edge_weights<T, std::void_t<typename graph_traits<T>::directed_edge_descriptor,
+                                       decltype(std::declval<T>().edge_comm_weight(
+                                           std::declval<typename graph_traits<T>::directed_edge_descriptor>()))>>
+    : std::conjunction<std::is_arithmetic<decltype(std::declval<T>().edge_comm_weight(
+          std::declval<typename graph_traits<T>::directed_edge_descriptor>()))>> {};
 
 template<typename T>
 inline constexpr bool has_edge_weights_v = has_edge_weights<T>::value;

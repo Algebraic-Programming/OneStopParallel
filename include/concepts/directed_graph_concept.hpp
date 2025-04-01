@@ -53,9 +53,6 @@ template<typename T>
 inline constexpr bool is_directed_graph_v = is_directed_graph<T>::value;
 
 
-
-using edge_idx = size_t;
-
 // Trait to specify the directed_edge_descriptor type for a graph
 template<typename T, typename = void>
 struct graph_traits {};
@@ -78,15 +75,13 @@ struct is_directed_graph_edge_desc<T, std::void_t<
     decltype(std::declval<T>().out_edges(std::declval<vertex_idx>())),
     decltype(std::declval<T>().in_edges(std::declval<vertex_idx>())),
     decltype(source(std::declval<typename graph_traits<T>::directed_edge_descriptor>(), std::declval<T>())),
-    decltype(target(std::declval<typename graph_traits<T>::directed_edge_descriptor>(), std::declval<T>())),
-    decltype(edge_id(std::declval<typename graph_traits<T>::directed_edge_descriptor>(), std::declval<T>()))>> : std::conjunction<
+    decltype(target(std::declval<typename graph_traits<T>::directed_edge_descriptor>(), std::declval<T>()))>> : std::conjunction<
     is_directed_graph<T>,
     is_forward_range_of<decltype(std::declval<T>().edges()), typename graph_traits<T>::directed_edge_descriptor>,
     is_forward_range_of<decltype(std::declval<T>().out_edges(std::declval<vertex_idx>())), typename graph_traits<T>::directed_edge_descriptor>,
     is_forward_range_of<decltype(std::declval<T>().in_edges(std::declval<vertex_idx>())), typename graph_traits<T>::directed_edge_descriptor>,
     std::is_same<decltype(source(std::declval<typename graph_traits<T>::directed_edge_descriptor>(), std::declval<T>())), vertex_idx>,
-    std::is_same<decltype(target(std::declval<typename graph_traits<T>::directed_edge_descriptor>(), std::declval<T>())), vertex_idx>,
-    std::is_same<decltype(edge_id(std::declval<typename graph_traits<T>::directed_edge_descriptor>(), std::declval<T>())), edge_idx>
+    std::is_same<decltype(target(std::declval<typename graph_traits<T>::directed_edge_descriptor>(), std::declval<T>())), vertex_idx>
     > {};
 
 template<typename T>
@@ -103,9 +98,5 @@ constexpr vertex_idx target(const edge_desc& edge, const Graph_t& graph) {
     return graph.target(edge);
 }
 
-template<typename edge_desc, typename Graph_t>
-constexpr edge_idx edge_id(const edge_desc& edge, const Graph_t& graph) {
-    return graph.edge_id(edge);
-}
 
 } // namespace osp
