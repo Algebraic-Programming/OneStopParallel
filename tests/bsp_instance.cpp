@@ -28,7 +28,7 @@ using namespace osp;
 BOOST_AUTO_TEST_CASE(test_1)
 {
     BspArchitecture architecture(4, 2, 3);
-    computational_dag_vector_impl graph;
+    computational_dag_vector_impl_def_t graph;
     
     BspInstance instance(graph, architecture);
 

@@ -19,6 +19,8 @@ _add_test( graph_vector_impl )
 
 _add_test( graph_vector_edge_desc_impl )
 
+_add_test( boost_graph_adaptor )
+
 
 ## graph algorithms
 _add_test( directed_graph_util )

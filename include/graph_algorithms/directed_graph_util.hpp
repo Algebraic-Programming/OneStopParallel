@@ -27,24 +27,24 @@ limitations under the License.
 namespace osp {
 
 template<typename Graph_t>
-bool is_sink(const vertex_idx &v, const Graph_t &graph) {
+bool is_sink(const vertex_idx_t<Graph_t> &v, const Graph_t &graph) {
     static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
     return graph.out_degree(v) == 0u;
 }
 
 template<typename Graph_t>
-bool is_source(const vertex_idx &v, const Graph_t &graph) {
+bool is_source(const vertex_idx_t<Graph_t> &v, const Graph_t &graph) {
     static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
     return graph.in_degree(v) == 0u;
 }
 
 // Function to get source vertices
 template<typename Graph_t>
-std::vector<vertex_idx> source_vertices(const Graph_t &graph) {
+std::vector<vertex_idx_t<Graph_t>> source_vertices(const Graph_t &graph) {
 
     static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
-    std::vector<vertex_idx> vec;
-    for (const vertex_idx v_idx : graph.vertices()) {
+    std::vector<vertex_idx_t<Graph_t>> vec;
+    for (const vertex_idx_t<Graph_t> v_idx : graph.vertices()) {
         if (graph.in_degree(v_idx) == 0) {
             vec.push_back(v_idx);
         }
@@ -54,11 +54,11 @@ std::vector<vertex_idx> source_vertices(const Graph_t &graph) {
 
 // Function to get sink vertices
 template<typename Graph_t>
-std::vector<vertex_idx> sink_vertices(const Graph_t &graph) {
+std::vector<vertex_idx_t<Graph_t>> sink_vertices(const Graph_t &graph) {
 
     static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
-    std::vector<vertex_idx> vec;
-    for (const vertex_idx v_idx : graph.vertices()) {
+    std::vector<vertex_idx_t<Graph_t>> vec;
+    for (const vertex_idx_t<Graph_t> v_idx : graph.vertices()) {
         if (graph.out_degree(v_idx) == 0) {
             vec.push_back(v_idx);
         }
@@ -67,21 +67,21 @@ std::vector<vertex_idx> sink_vertices(const Graph_t &graph) {
 }
 
 template<typename Graph_t>
-bool has_path(const vertex_idx src, const vertex_idx dest, const Graph_t &graph) {
+bool has_path(const vertex_idx_t<Graph_t> src, const vertex_idx_t<Graph_t> dest, const Graph_t &graph) {
 
     static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
 
-    std::unordered_set<vertex_idx> visited;
+    std::unordered_set<vertex_idx_t<Graph_t>> visited;
     visited.emplace(src);
 
-    std::queue<vertex_idx> next;
+    std::queue<vertex_idx_t<Graph_t>> next;
     next.push(src);
 
     while (!next.empty()) {
-        vertex_idx v = next.front();
+        vertex_idx_t<Graph_t> v = next.front();
         next.pop();
 
-        for (const vertex_idx &child : graph.children(v)) {
+        for (const vertex_idx_t<Graph_t> &child : graph.children(v)) {
 
             if (child == dest) {
                 return true;
@@ -110,7 +110,7 @@ class source_vertices_view {
 
       public:
         using iterator_category = std::input_iterator_tag;
-        using value_type = vertex_idx;
+        using value_type = vertex_idx_t<Graph_t>;
         using difference_type = std::ptrdiff_t;
         using pointer = const value_type *;
         using reference = const value_type &;
@@ -178,7 +178,7 @@ class sink_vertices_view {
 
       public:
         using iterator_category = std::input_iterator_tag;
-        using value_type = vertex_idx;
+        using value_type = vertex_idx_t<Graph_t>;
         using difference_type = std::ptrdiff_t;
         using pointer = const value_type *;
         using reference = const value_type &;

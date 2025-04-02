@@ -20,7 +20,7 @@ BOOST_AUTO_TEST_CASE(test_bicgstab) {
         std::cout << cwd << std::endl;
     }
 
-    computational_dag_vector_impl graph;
+    computational_dag_vector_impl_def_t graph;
 
     bool status =
         file_reader::readComputationalDagHyperdagFormat((cwd / "data/spaa/tiny/instance_bicgstab.txt").string(), graph);
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(test_k_means) {
     std::vector<int> comm{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                           1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
 
-    computational_dag_vector_impl graph;
+    computational_dag_vector_impl_def_t graph;
 
     bool status =
         file_reader::readComputationalDagHyperdagFormat((cwd / "data/spaa/tiny/instance_k-means.txt").string(), graph);
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(test_k_means) {
         BOOST_CHECK_EQUAL(graph.vertex_comm_weight(v), comm[v]);
     }
 
-    computational_dag_edge_idx_vector_impl graph2;
+    computational_dag_edge_idx_vector_impl_def_t graph2;
 
     status =
         file_reader::readComputationalDagHyperdagFormat((cwd / "data/spaa/tiny/instance_k-means.txt").string(), graph2);

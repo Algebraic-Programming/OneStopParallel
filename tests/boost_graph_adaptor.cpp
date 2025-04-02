@@ -5,15 +5,15 @@
 #include <vector>
 
 #include "graph_algorithms/directed_graph_util.hpp"
-#include "graph_implementations/computational_dag_edge_idx_vector_impl.hpp"
+#include "graph_implementations/boost_graphs/boost_graph_adapter.hpp"
 
 using namespace osp;
 
-computational_dag_edge_idx_vector_impl_def_t constr_graph_1() {
+boost_graph_adapter constr_graph_1() {
 
-    computational_dag_edge_idx_vector_impl_def_t graph;
+    boost_graph_adapter graph;
 
-    using vertex_idx = computational_dag_edge_idx_vector_impl_def_t::vertex_idx;
+    using vertex_idx = boost_graph_adapter::vertex_idx;
 
     vertex_idx v1 = graph.add_vertex(1, 2, 3, 4);
     vertex_idx v2 = graph.add_vertex(5, 6, 7, 8);
@@ -57,18 +57,18 @@ computational_dag_edge_idx_vector_impl_def_t constr_graph_1() {
     return graph;
 }
 
-BOOST_AUTO_TEST_CASE(test_empty_dag_edge_idx) {
+BOOST_AUTO_TEST_CASE(test_empty_dag_boost_graph_adapter) {
 
-    computational_dag_edge_idx_vector_impl_def_t graph;
+    boost_graph_adapter graph;
     BOOST_CHECK_EQUAL(graph.num_edges(), 0);
     BOOST_CHECK_EQUAL(graph.num_vertices(), 0);
 }
 
-BOOST_AUTO_TEST_CASE(test_dag_edge_idx) {
+BOOST_AUTO_TEST_CASE(test_boost_graph_adapter_1) {
 
-    computational_dag_edge_idx_vector_impl_def_t graph = constr_graph_1();
+    boost_graph_adapter graph = constr_graph_1();
 
-    using vertex_idx = computational_dag_edge_idx_vector_impl_def_t::vertex_idx;
+    using vertex_idx = boost_graph_adapter::vertex_idx;
 
     std::vector<vertex_idx> edge_sources{0, 0, 0, 1, 1, 2, 2, 3, 4};
     std::vector<vertex_idx> edge_targets{1, 2, 3, 4, 6, 4, 5, 7, 7};
@@ -76,8 +76,8 @@ BOOST_AUTO_TEST_CASE(test_dag_edge_idx) {
     size_t edge_idx = 0;
     for (const auto &edge : graph.edges()) {
 
-        BOOST_CHECK_EQUAL(edge.source, edge_sources[edge_idx]);
-        BOOST_CHECK_EQUAL(edge.target, edge_targets[edge_idx]);
+        BOOST_CHECK_EQUAL(source(edge,graph), edge_sources[edge_idx]);
+        BOOST_CHECK_EQUAL(target(edge,graph), edge_targets[edge_idx]);
         edge_idx++;
     }
 
@@ -100,11 +100,6 @@ BOOST_AUTO_TEST_CASE(test_dag_edge_idx) {
 
         i = 0;
         for (const auto &e : graph.out_edges(v)) {
-            BOOST_CHECK_EQUAL(e.target, out_neighbors[v][i++]);
-        }
-
-        i = 0;
-        for (const auto &e : graph.out_edges(v)) {
             BOOST_CHECK_EQUAL(target(e, graph), out_neighbors[v][i++]);
         }
 
@@ -118,10 +113,6 @@ BOOST_AUTO_TEST_CASE(test_dag_edge_idx) {
             BOOST_CHECK_EQUAL(e, in_neighbors[v][i++]);
         }
 
-        i = 0;
-        for (const auto &e : graph.in_edges(v)) {
-            BOOST_CHECK_EQUAL(e.source, in_neighbors[v][i++]);
-        }
 
         i = 0;
         for (const auto &e : graph.in_edges(v)) {
@@ -140,7 +131,7 @@ BOOST_AUTO_TEST_CASE(test_dag_edge_idx) {
 
 BOOST_AUTO_TEST_CASE(test_util_1) {
 
-    const computational_dag_edge_idx_vector_impl_def_t graph = constr_graph_1();
+    const boost_graph_adapter graph = constr_graph_1();
 
     BOOST_CHECK_EQUAL(graph.num_edges(), 9);
     BOOST_CHECK_EQUAL(graph.num_vertices(), 8);

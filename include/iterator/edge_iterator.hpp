@@ -27,7 +27,8 @@ namespace osp {
 template<typename Graph_t>
 class edge_range {
 
-    using directed_edge_descriptor = typename graph_traits<Graph_t>::directed_edge_descriptor;
+    using directed_edge_descriptor = typename directed_graph_edge_desc_traits<Graph_t>::directed_edge_descriptor;
+    using vertex_idx = typename directed_graph_traits<Graph_t>::vertex_idx;
     using iter = typename Graph_t::out_edges_iterator_t;
     const Graph_t &graph;
 
@@ -35,7 +36,7 @@ class edge_range {
     struct edge_iterator {
 
         vertex_idx current_vertex;
-        size_t current_edge_idx;
+        std::size_t current_edge_idx;
         iter current_edge;
 
         const Graph_t &graph;
@@ -58,12 +59,12 @@ class edge_range {
             }
         }
 
-        edge_iterator(size_t current_edge_idx_, const Graph_t &graph_)
+        edge_iterator(std::size_t current_edge_idx_, const Graph_t &graph_)
             : current_vertex(0u), current_edge_idx(current_edge_idx_), graph(graph_) {
 
             if (current_edge_idx < graph.num_edges()) {
 
-                size_t tmp = 0u;
+                std::size_t tmp = 0u;
 
                 if (tmp < current_edge_idx) {
 
@@ -144,7 +145,8 @@ class edge_range {
 template<typename Graph_t>
 class edge_source_range {
 
-    using directed_edge_descriptor = typename graph_traits<Graph_t>::directed_edge_descriptor;
+    using directed_edge_descriptor = typename directed_graph_edge_desc_traits<Graph_t>::directed_edge_descriptor;
+    using vertex_idx = typename directed_graph_traits<Graph_t>::vertex_idx;
     using iter = typename Graph_t::in_edges_iterator_t;
 
     const Graph_t &graph;
@@ -200,7 +202,8 @@ class edge_source_range {
 template<typename Graph_t>
 class edge_target_range {
 
-    using directed_edge_descriptor = typename graph_traits<Graph_t>::directed_edge_descriptor;
+    using directed_edge_descriptor = typename directed_graph_edge_desc_traits<Graph_t>::directed_edge_descriptor;
+    using vertex_idx = typename directed_graph_traits<Graph_t>::vertex_idx;  
     using iter = typename Graph_t::out_edges_iterator_t;
     const Graph_t &graph;
     const std::vector<directed_edge_descriptor> &edges;

@@ -21,7 +21,7 @@ limitations under the License.
 
 namespace osp {
 
-template<typename T = size_t>
+template<typename T>
 class vertex_range {
     T num_vertices;
 

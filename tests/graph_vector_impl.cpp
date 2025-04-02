@@ -27,9 +27,11 @@ limitations under the License.
 
 using namespace osp;
 
-computational_dag_vector_impl<cdag_vertex_impl> constr_graph_1() {
+computational_dag_vector_impl_def_t  constr_graph_1() {
 
-    computational_dag_vector_impl graph;
+    computational_dag_vector_impl_def_t graph;
+
+    using vertex_idx = computational_dag_vector_impl_def_t::vertex_idx;
 
     vertex_idx v1 = graph.add_vertex(1, 2, 3, 4);
     vertex_idx v2 = graph.add_vertex(5, 6, 7, 8);
@@ -56,7 +58,7 @@ computational_dag_vector_impl<cdag_vertex_impl> constr_graph_1() {
 
 BOOST_AUTO_TEST_CASE(test_empty_dag) {
 
-    computational_dag_vector_impl graph;
+    computational_dag_vector_impl_def_t graph;
     BOOST_CHECK_EQUAL(graph.num_edges(), 0);
     BOOST_CHECK_EQUAL(graph.num_vertices(), 0);
 
@@ -70,7 +72,9 @@ BOOST_AUTO_TEST_CASE(test_empty_dag) {
 
 BOOST_AUTO_TEST_CASE(test_dag) {
 
-    const computational_dag_vector_impl graph = constr_graph_1();
+    const computational_dag_vector_impl_def_t graph = constr_graph_1();
+
+    using vertex_idx = computational_dag_vector_impl_def_t::vertex_idx;
 
     BOOST_CHECK_EQUAL(graph.num_edges(), 9);
     BOOST_CHECK_EQUAL(graph.num_vertices(), 8);

@@ -45,14 +45,14 @@ bool readComputationalDagHyperdagFormat(std::ifstream &infile, Graph_t& graph) {
         return false;
     }
 
-    const size_t num_nodes = static_cast<size_t>(N);
+    const std::size_t num_nodes = static_cast<std::size_t>(N);
 
-    for (size_t i = 0; i < num_nodes; i++) {
+    for (std::size_t i = 0; i < num_nodes; i++) {
         graph.add_vertex(1, 1, 1);
     }
 
     // Resize(N);
-    std::vector<int> edgeSource(static_cast<size_t>(hEdges), -1);
+    std::vector<int> edgeSource(static_cast<std::size_t>(hEdges), -1);
     // read edges
     for (int i = 0; i < pins; ++i) {
         if (infile.eof()) {
@@ -71,10 +71,10 @@ bool readComputationalDagHyperdagFormat(std::ifstream &infile, Graph_t& graph) {
             return false;
         }
 
-        if (edgeSource[static_cast<size_t>(hEdge)] == -1)
-            edgeSource[static_cast<size_t>(hEdge)] = node;
+        if (edgeSource[static_cast<std::size_t>(hEdge)] == -1)
+            edgeSource[static_cast<std::size_t>(hEdge)] = node;
         else
-            graph.add_edge(static_cast<vertex_idx>(edgeSource[static_cast<size_t>(hEdge)]), static_cast<vertex_idx>(node));
+            graph.add_edge(static_cast<vertex_idx_t<Graph_t>>(edgeSource[static_cast<std::size_t>(hEdge)]), static_cast<vertex_idx_t<Graph_t>>(node));
     }
 
     for (int i = 0; i < N; ++i) {
@@ -96,8 +96,8 @@ bool readComputationalDagHyperdagFormat(std::ifstream &infile, Graph_t& graph) {
             return false;
         }
 
-        graph.set_vertex_comm_weight(static_cast<vertex_idx>(node), comm);
-        graph.set_vertex_work_weight(static_cast<vertex_idx>(node), work);
+        graph.set_vertex_comm_weight(static_cast<vertex_idx_t<Graph_t>>(node), comm);
+        graph.set_vertex_work_weight(static_cast<vertex_idx_t<Graph_t>>(node), work);
     }
 
     getline(infile, line);

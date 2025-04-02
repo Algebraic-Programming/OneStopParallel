@@ -52,7 +52,7 @@ class Coarser {
         *                   contains the indices of the original vertices that were merged.
         * @return A status code indicating the success or failure of the coarsening operation.
         */
-        virtual bool coarseDag(const Graph_t &dag_in, Graph_t &coarsened_dag, std::vector<std::vector<VertexType>>& vertex_map) = 0;
+        virtual bool coarseDag(const Graph_t &dag_in, Graph_t &coarsened_dag, std::vector<std::vector<vertex_idx_t<Graph_t>>>& vertex_map) = 0;
         
 };
 

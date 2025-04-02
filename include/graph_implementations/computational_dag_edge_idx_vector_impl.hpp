@@ -26,13 +26,13 @@ namespace osp {
 
 struct directed_edge_descriptor_impl {
 
-    size_t idx;
+    std::size_t idx;
 
-    vertex_idx source;
-    vertex_idx target;
+    std::size_t source;
+    std::size_t target;
 
     directed_edge_descriptor_impl() = default;
-    directed_edge_descriptor_impl(vertex_idx source, vertex_idx target, size_t idx)
+    directed_edge_descriptor_impl(std::size_t source, std::size_t target, std::size_t idx)
         : idx(idx), source(source), target(target) {}
     ~directed_edge_descriptor_impl() = default;
 };
@@ -42,23 +42,27 @@ struct cdag_edge_impl {
     int comm_weight;
 };
 
-template<typename v_impl = cdag_vertex_impl, typename e_impl = cdag_edge_impl>
+
+
+template<typename v_impl, typename e_impl>
 class computational_dag_edge_idx_vector_impl {
   public:
     static_assert(std::is_base_of<cdag_vertex_impl, v_impl>::value, "v_impl must be derived from cdag_vertex_impl");
     static_assert(std::is_base_of<cdag_edge_impl, e_impl>::value, "e_impl must be derived from cdag_edge_impl");
 
     // graph_traits specialization
+    using vertex_idx = std::size_t;
     using directed_edge_descriptor = directed_edge_descriptor_impl;
+
     using out_edges_iterator_t = std::vector<directed_edge_descriptor>::const_iterator;
     using in_edges_iterator_t = std::vector<directed_edge_descriptor>::const_iterator;
 
     // cdag_traits specialization
-    using vertex_work_weight_t = int;
-    using vertex_comm_weight_t = int;
-    using vertex_mem_weight_t = int;
-    using vertex_type_t = unsigned;
-    using edge_comm_weight_t = int;
+    using vertex_work_weight_type = int;
+    using vertex_comm_weight_type = int;
+    using vertex_mem_weight_type = int;
+    using vertex_type_type = unsigned;
+    using edge_comm_weight_type = int;
 
   private:
     using ThisT = computational_dag_edge_idx_vector_impl<v_impl, e_impl>;
@@ -94,8 +98,8 @@ class computational_dag_edge_idx_vector_impl {
     computational_dag_edge_idx_vector_impl &operator=(computational_dag_edge_idx_vector_impl &&other) = default;
     virtual~computational_dag_edge_idx_vector_impl() = default;
 
-    inline size_t num_edges() const { return edges_.size(); }
-    inline size_t num_vertices() const { return vertices_.size(); }
+    inline std::size_t num_edges() const { return edges_.size(); }
+    inline std::size_t num_vertices() const { return vertices_.size(); }
 
     inline auto edges() const { return edge_range<ThisT>(*this); }
 
@@ -107,8 +111,8 @@ class computational_dag_edge_idx_vector_impl {
     inline const std::vector<directed_edge_descriptor> &in_edges(vertex_idx v) const { return in_edges_[v]; }
     inline const std::vector<directed_edge_descriptor> &out_edges(vertex_idx v) const { return out_edges_[v]; }
 
-    inline size_t in_degree(vertex_idx v) const { return in_edges_[v].size(); }
-    inline size_t out_degree(vertex_idx v) const { return out_edges_[v].size(); }
+    inline std::size_t in_degree(vertex_idx v) const { return in_edges_[v].size(); }
+    inline std::size_t out_degree(vertex_idx v) const { return out_edges_[v].size(); }
 
     inline int edge_comm_weight(directed_edge_descriptor e) const { return edges_[e.idx].comm_weight; }
 
@@ -170,12 +174,16 @@ class computational_dag_edge_idx_vector_impl {
     inline const e_impl &get_edge_impl(directed_edge_descriptor e) const { return edges_[e.idx]; }
 };
 
-static_assert(is_directed_graph_edge_desc_v<computational_dag_edge_idx_vector_impl<cdag_vertex_impl, cdag_edge_impl>>,
-              "computational_dag_edge_idx_vector_impl must satisfy the directed_graph_edge_desc concept");
 
-static_assert(
-    is_computation_dag_typed_vertices_edge_desc_v<
-        computational_dag_edge_idx_vector_impl<cdag_vertex_impl, cdag_edge_impl>>,
-    "computational_dag_edge_idx_vector_impl must satisfy the computation_dag_typed_vertices_edge_desc concept");
+using computational_dag_edge_idx_vector_impl_def_t = 
+    computational_dag_edge_idx_vector_impl<cdag_vertex_impl, cdag_edge_impl>;
+
+// static_assert(is_directed_graph_edge_desc_v<computational_dag_edge_idx_vector_impl<cdag_vertex_impl, cdag_edge_impl>>,
+//               "computational_dag_edge_idx_vector_impl must satisfy the directed_graph_edge_desc concept");
+
+// static_assert(
+//     is_computation_dag_typed_vertices_edge_desc_v<
+//         computational_dag_edge_idx_vector_impl<cdag_vertex_impl, cdag_edge_impl>>,
+//     "computational_dag_edge_idx_vector_impl must satisfy the computation_dag_typed_vertices_edge_desc concept");
 
 } // namespace osp

@@ -13,19 +13,19 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner   
+@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 
 #pragma once
+
+#include "concepts/directed_graph_concept.hpp"
 
 namespace boost::extensions {
 
 template<typename IteratorType>
 struct source_iterator_range {
-  private:
-    IteratorType _begin, _end;
-
   public:
+
     IteratorType begin() { return _begin; }
     IteratorType begin() const { return _begin; }
     IteratorType cbegin() const { return _begin; }
@@ -38,6 +38,9 @@ struct source_iterator_range {
 
     template<class RangeType>
     explicit source_iterator_range(RangeType &r) : _begin(boost::begin(r)), _end(boost::end(r)) {}
+
+  private:
+    IteratorType _begin, _end;
 };
 
 template<class ForwardRange>

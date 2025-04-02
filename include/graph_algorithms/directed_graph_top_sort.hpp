@@ -25,25 +25,26 @@ limitations under the License.
 
 namespace osp {
 
+
 template<typename Graph_t>
-std::vector<vertex_idx> top_sort_dfs(const Graph_t &dag) {
+std::vector<vertex_idx_t<Graph_t>> top_sort_dfs(const Graph_t &dag) {
 
     static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
 
-    std::vector<vertex_idx> top_order;
+    std::vector<vertex_idx_t<Graph_t>> top_order;
     top_order.reserve(dag.num_vertices());
     std::vector<bool> visited(dag.num_vertices(), false);
 
-    std::function<void(vertex_idx)> dfs_visit = [&](const vertex_idx node) {
+    std::function<void(vertex_idx_t<Graph_t>)> dfs_visit = [&](const vertex_idx_t<Graph_t> node) {
         visited[node] = true;
-        for (const vertex_idx &child : dag.children(node)) {
+        for (const vertex_idx_t<Graph_t> &child : dag.children(node)) {
             if (!visited[child])
                 dfs_visit(child);
         }
         top_order.emplace_back(node);
     };
 
-    for (const vertex_idx &i : source_vertices(dag))
+    for (const vertex_idx_t<Graph_t> &i : source_vertices(dag))
         if (!visited[i])
             dfs_visit(i);
 
@@ -52,17 +53,17 @@ std::vector<vertex_idx> top_sort_dfs(const Graph_t &dag) {
 }
 
 // template<typename Graph_t>
-// std::vector<vertex_idx> top_sort_bfs(const Graph_t &dag) {
+// std::vector<vertex_idx_t<Graph_t>> top_sort_bfs(const Graph_t &dag) {
 
 //     static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
 
 //     if constexpr (has_typed_vertices_v<Graph_t>) {
 
-//         std::vector<vertex_idx> predecessors_count(dag.num_vertices(), 0);
-//         std::vector<vertex_idx> top_order(dag.num_vertices(), 0);
-//         std::vector<std::queue<vertex_idx>> next(dag.getNumberOfNodeTypes());
+//         std::vector<vertex_idx_t<Graph_t>> predecessors_count(dag.num_vertices(), 0);
+//         std::vector<vertex_idx_t<Graph_t>> top_order(dag.num_vertices(), 0);
+//         std::vector<std::queue<vertex_idx_t<Graph_t>>> next(dag.getNumberOfNodeTypes());
     
-//         for (const vertex_idx &i : dag.sourceVertices()) {
+//         for (const vertex_idx_t<Graph_t> &i : dag.sourceVertices()) {
 //             next[dag.nodeType(i)].push(i);
 //         }
     
@@ -72,11 +73,11 @@ std::vector<vertex_idx> top_sort_dfs(const Graph_t &dag) {
 //         while (idx < dag.numberOfVertices()) {
     
 //             while (not next[current_node_type].empty()) {
-//                 const vertex_idx node = next[current_node_type].front();
+//                 const vertex_idx_t<Graph_t> node = next[current_node_type].front();
 //                 next[current_node_type].pop();
 //                 top_order[idx++] = node;
     
-//                 for (const vertex_idx &current : dag.children(node)) {
+//                 for (const vertex_idx_t<Graph_t> &current : dag.children(node)) {
 //                     ++predecessors_count[current];
 //                     if (predecessors_count[current] == dag.numberOfParents(current))
 //                         next[dag.nodeType(current)].push(current);
@@ -95,22 +96,22 @@ std::vector<vertex_idx> top_sort_dfs(const Graph_t &dag) {
 // }
 
 // template<typename Graph_t>
-// std::vector<vertex_idx> top_sort_locality(const Graph_t &dag);
+// std::vector<vertex_idx_t<Graph_t>> top_sort_locality(const Graph_t &dag);
 
 // template<typename Graph_t>
-// std::vector<vertex_idx> top_sort_max_children(const Graph_t &dag);
+// std::vector<vertex_idx_t<Graph_t>> top_sort_max_children(const Graph_t &dag);
 
 // template<typename Graph_t>
-// std::vector<vertex_idx> top_sort_random(const Graph_t &dag);
+// std::vector<vertex_idx_t<Graph_t>> top_sort_random(const Graph_t &dag);
 
 // template<typename Graph_t>
-// std::vector<vertex_idx> top_sort_heavy_edges(const Graph_t &dag, bool sum = false);
+// std::vector<vertex_idx_t<Graph_t>> top_sort_heavy_edges(const Graph_t &dag, bool sum = false);
 
 // template<typename Graph_t, typename T>
-// std::vector<vertex_idx> top_sort_priority_node_type(const Graph_t &dag, const std::vector<T> &node_priority) {
+// std::vector<vertex_idx_t<Graph_t>> top_sort_priority_node_type(const Graph_t &dag, const std::vector<T> &node_priority) {
 
-//     std::vector<vertex_idx> predecessors_count(dag.numberOfVertices(), 0);
-//     std::vector<vertex_idx> top_order(dag.numberOfVertices(), 0);
+//     std::vector<vertex_idx_t<Graph_t>> predecessors_count(dag.numberOfVertices(), 0);
+//     std::vector<vertex_idx_t<Graph_t>> top_order(dag.numberOfVertices(), 0);
 
 //     struct heap_node {
 
@@ -166,10 +167,10 @@ std::vector<vertex_idx> top_sort_dfs(const Graph_t &dag) {
 // };
 
 // template<typename Graph_t, typename T>
-// std::vector<vertex_idx> top_sort_priority(const Graph_t &dag, const std::vector<T> &node_priority) {
+// std::vector<vertex_idx_t<Graph_t>> top_sort_priority(const Graph_t &dag, const std::vector<T> &node_priority) {
 
-//     std::vector<vertex_idx> predecessors_count(dag.numberOfVertices(), 0);
-//     std::vector<vertex_idx> top_order(dag.numberOfVertices(), 0);
+//     std::vector<vertex_idx_t<Graph_t>> predecessors_count(dag.numberOfVertices(), 0);
+//     std::vector<vertex_idx_t<Graph_t>> top_order(dag.numberOfVertices(), 0);
 
 //     struct heap_node {
 

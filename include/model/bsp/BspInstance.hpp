@@ -258,7 +258,7 @@ class BspInstance {
         }
     }
 
-    bool isCompatible(const vertex_idx &node, unsigned processor_id) const {
+    bool isCompatible(const vertex_idx_t<Graph_t> &node, unsigned processor_id) const {
         return isCompatibleType(cdag.node_type(node), architecture.processorType(processor_id));
     }
 
