@@ -86,7 +86,6 @@ class boost_graph_adapter {
     using vertex_type_type = unsigned;
     using edge_comm_weight_type = int;
 
-
     boost_graph_adapter(const std::vector<std::vector<vertex_idx>> &out_, const std::vector<int> &workW_,
                         const std::vector<int> &commW_,
                         const std::unordered_map<std::pair<int, int>, int, osp::pair_hash> &comm_edge_W)
@@ -100,7 +99,7 @@ class boost_graph_adapter {
             add_vertex(workW_[i], commW_[i]);
         }
         for (size_t i = 0; i < out_.size(); ++i) {
-            
+
             for (const auto &j : out_[i]) {
                 assert(comm_edge_W.find(std::make_pair(i, j)) != comm_edge_W.cend());
                 add_edge(i, j, comm_edge_W.at(std::make_pair(i, j)));
@@ -121,7 +120,7 @@ class boost_graph_adapter {
             add_vertex(workW_[i], commW_[i]);
         }
         for (size_t i = 0; i < out_.size(); ++i) {
-            
+
             for (const auto &j : out_[i]) {
                 add_edge(i, j);
             }
@@ -142,7 +141,7 @@ class boost_graph_adapter {
             add_vertex(workW_[i], commW_[i], 0, nodeType_[i]);
         }
         for (size_t i = 0; i < out_.size(); ++i) {
-            
+
             for (const auto &j : out_[i]) {
                 add_edge(i, j);
             }
@@ -170,16 +169,16 @@ class boost_graph_adapter {
     auto vertices() const { return boost::make_iterator_range(boost::vertices(graph)); }
     auto vertices() { return boost::make_iterator_range(boost::vertices(graph)); }
 
-    template<typename T> void debug() const {
-        static_assert(sizeof(T*) == 0);
-    }
+    // template<typename T>
+    // void debug() const {
+    //     static_assert(sizeof(T *) == 0);
+    // }
 
     auto parents(const vertex_idx &v) const {
-       // auto ciao = boost::extensions::make_source_iterator_range(boost::inv_adjacent_vertices(v, graph));
+        // auto ciao = boost::extensions::make_source_iterator_range(boost::inv_adjacent_vertices(v, graph));
 
-       // debug<typename std::iterator_traits<decltype(std::begin(ciao))>::value_type>();
+        // debug<typename std::iterator_traits<decltype(std::begin(ciao))>::value_type>();
 
-        
         // debug<typename decltype(ciao.begin())::value_type>();
         return boost::extensions::make_source_iterator_range(boost::inv_adjacent_vertices(v, graph));
     }
@@ -227,7 +226,7 @@ class boost_graph_adapter {
     int vertex_mem_weight(const vertex_idx &v) const { return graph[v].memoryWeight; }
     unsigned vertex_type(const vertex_idx &v) const { return graph[v].nodeType; }
 
-    int edge_comm_weight(const directed_edge_descriptor  &e) const { return graph[e].communicationWeight; }
+    int edge_comm_weight(const directed_edge_descriptor &e) const { return graph[e].communicationWeight; }
 
     void set_vertex_memory_weight(const vertex_idx &v, const int memory_weight) {
         graph[v].memoryWeight = memory_weight;
@@ -241,17 +240,18 @@ class boost_graph_adapter {
     void set_vertex_comm_weight(const vertex_idx &v, const int comm_weight) {
         graph[v].communicationWeight = comm_weight;
     }
-    void set_edge_comm_weight(const directed_edge_descriptor  &e, const int comm_weight) {
+    void set_edge_comm_weight(const directed_edge_descriptor &e, const int comm_weight) {
         graph[e].communicationWeight = comm_weight;
     }
 
     vertex_idx add_vertex(const int work_weight, const int comm_weight, const int memory_weight = 0,
-                               const unsigned node_type = 0) {
+                          const unsigned node_type = 0) {
         number_of_vertex_types = std::max(number_of_vertex_types, node_type + 1);
         return boost::add_vertex(boost_vertex{work_weight, comm_weight, memory_weight, node_type}, graph);
     }
 
-    std::pair<boost::detail::edge_desc_impl<boost::bidirectional_tag, std::size_t>, bool> add_edge(const vertex_idx &src, const vertex_idx &tar, int comm_weight = DEFAULT_EDGE_COMM_WEIGHT);
+    std::pair<boost::detail::edge_desc_impl<boost::bidirectional_tag, std::size_t>, bool>
+    add_edge(const vertex_idx &src, const vertex_idx &tar, int comm_weight = DEFAULT_EDGE_COMM_WEIGHT);
 
   private:
     boost_graph graph;
@@ -262,4 +262,7 @@ class boost_graph_adapter {
 };
 
 static_assert(osp::is_directed_graph_edge_desc_v<boost_graph_adapter>,
-             "boost_graph_adapter does not satisfy the computational_dag concept");
+              "boost_graph_adapter does not satisfy the computational_dag concept");
+
+static_assert(osp::is_computation_dag_typed_vertices_edge_desc_v<boost_graph_adapter>,
+              "boost_graph_adapter must satisfy the computation_dag_typed_vertices_edge_desc concept");

@@ -29,7 +29,7 @@ void boost_graph_adapter::updateNumberOfVertexTypes() {
     }
 }
 
-std::pair<boost::detail::edge_desc_impl<boost::bidirectional_tag, std::size_t>, bool> boost_graph_adapter::add_edge(const vertex_idx &src, const vertex_idx &tar, int comm_weight) {
+std::pair<boost::detail::edge_desc_impl<boost::bidirectional_tag, std::size_t>, bool> boost_graph_adapter::add_edge(const boost_graph_adapter::vertex_idx &src, const boost_graph_adapter::vertex_idx &tar, int comm_weight) {
 
     const auto pair = boost::add_edge(src, tar, {comm_weight}, graph);
 

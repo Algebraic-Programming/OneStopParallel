@@ -178,12 +178,12 @@ class computational_dag_edge_idx_vector_impl {
 using computational_dag_edge_idx_vector_impl_def_t = 
     computational_dag_edge_idx_vector_impl<cdag_vertex_impl, cdag_edge_impl>;
 
-// static_assert(is_directed_graph_edge_desc_v<computational_dag_edge_idx_vector_impl<cdag_vertex_impl, cdag_edge_impl>>,
-//               "computational_dag_edge_idx_vector_impl must satisfy the directed_graph_edge_desc concept");
+static_assert(is_directed_graph_edge_desc_v<computational_dag_edge_idx_vector_impl<cdag_vertex_impl, cdag_edge_impl>>,
+              "computational_dag_edge_idx_vector_impl must satisfy the directed_graph_edge_desc concept");
 
-// static_assert(
-//     is_computation_dag_typed_vertices_edge_desc_v<
-//         computational_dag_edge_idx_vector_impl<cdag_vertex_impl, cdag_edge_impl>>,
-//     "computational_dag_edge_idx_vector_impl must satisfy the computation_dag_typed_vertices_edge_desc concept");
+static_assert(
+    is_computation_dag_typed_vertices_edge_desc_v<
+        computational_dag_edge_idx_vector_impl<cdag_vertex_impl, cdag_edge_impl>>,
+    "computational_dag_edge_idx_vector_impl must satisfy the computation_dag_typed_vertices_edge_desc concept");
 
 } // namespace osp

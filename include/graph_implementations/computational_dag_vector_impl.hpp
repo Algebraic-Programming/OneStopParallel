@@ -38,7 +38,6 @@ struct cdag_vertex_impl {
     unsigned vertex_type;
 };
 
-
 template<typename v_impl>
 class computational_dag_vector_impl {
   public:
@@ -101,7 +100,7 @@ class computational_dag_vector_impl {
     inline void set_vertex_comm_weight(vertex_idx v, int comm_weight) { vertices_[v].comm_weight = comm_weight; }
 
     inline void set_vertex_mem_weight(vertex_idx v, int mem_weight) { vertices_[v].mem_weight = mem_weight; }
-    
+
     inline void set_vertex_type(vertex_idx v, unsigned vertex_type) {
         vertices_[v].vertex_type = vertex_type;
         num_vertex_types_ = std::max(num_vertex_types_, vertex_type);
@@ -135,31 +134,31 @@ class computational_dag_vector_impl {
     unsigned num_vertex_types_ = 0;
 };
 
-
 using computational_dag_vector_impl_def_t = computational_dag_vector_impl<cdag_vertex_impl>;
 
-// // TODO delete this 
-// template<typename v_impl = cdag_vertex_impl>
-// std::vector<vertex_idx> source_vertices(const computational_dag_vector_impl<v_impl> &graph) {
+// TODO delete this
+template<typename v_impl>
+std::vector<vertex_idx_t<computational_dag_vector_impl<v_impl>>>
+source_vertices(const computational_dag_vector_impl<v_impl> &graph) {
 
-//     std::cout << "calling custom source_vertices" << std::endl;
+    std::cout << "calling custom source_vertices" << std::endl;
 
-//     std::vector<vertex_idx> vec;
-//     for (const vertex_idx v_idx : graph.vertices()) {
-//         if (graph.in_degree(v_idx) == 0) {
-//             vec.push_back(v_idx);
-//         }
-//     }
-//     return vec;
-// }
+    std::vector<vertex_idx_t<computational_dag_vector_impl<v_impl>>> vec;
+    for (const auto &v_idx : graph.vertices()) {
+        if (graph.in_degree(v_idx) == 0) {
+            vec.push_back(v_idx);
+        }
+    }
+    return vec;
+}
 
-// static_assert(has_vertex_weights_v<computational_dag_vector_impl<cdag_vertex_impl>>,
-            //   "computational_dag_vector_impl must satisfy the has_vertex_weights concept");
+static_assert(has_vertex_weights_v<computational_dag_vector_impl<cdag_vertex_impl>>,
+  "computational_dag_vector_impl must satisfy the has_vertex_weights concept");
 
-// static_assert(is_directed_graph_v<computational_dag_vector_impl<cdag_vertex_impl>>,
-//               "computational_dag_vector_impl must satisfy the directed_graph concept");
+static_assert(is_directed_graph_v<computational_dag_vector_impl<cdag_vertex_impl>>,
+              "computational_dag_vector_impl must satisfy the directed_graph concept");
 
-// static_assert(is_computation_dag_typed_vertices_v<computational_dag_vector_impl<cdag_vertex_impl>>,
-//               "computational_dag_vector_impl must satisfy the is_computation_dag concept");
+static_assert(is_computation_dag_typed_vertices_v<computational_dag_vector_impl<cdag_vertex_impl>>,
+              "computational_dag_vector_impl must satisfy the is_computation_dag concept");
 
 } // namespace osp

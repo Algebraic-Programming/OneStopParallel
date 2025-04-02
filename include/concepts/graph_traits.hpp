@@ -39,7 +39,6 @@ DEFINE_TYPE_MEMBER_TEST(has_edge_comm_weight_tmember, edge_comm_weight_type)
 template<typename T>
 struct directed_graph_traits {
     static_assert(has_vertex_idx_tmember<T>::value, "graph must have vertex_idx");
-
     using vertex_idx = typename T::vertex_idx;
 };
 
@@ -49,8 +48,7 @@ using vertex_idx_t = typename directed_graph_traits<T>::vertex_idx;
 // Specialization for graphs that define a directed_edge_descriptor
 template<typename T>
 struct directed_graph_edge_desc_traits {
-    //static_assert(has_edge_desc_tmember<T>::value, "graph must have edge desc");
-
+    static_assert(has_edge_desc_tmember<T>::value, "graph must have edge desc");
     using directed_edge_descriptor = typename T::directed_edge_descriptor;
 };
 
@@ -89,8 +87,7 @@ using v_type_t = typename computational_dag_typed_vertices_traits<T>::vertex_typ
 
 template<typename T>
 struct computational_dag_edge_desc_traits {
-    //static_assert(has_edge_comm_tmember<T>::value, "cdag must have edge comm weight type");
-
+    static_assert(has_edge_comm_weight_tmember<T>::value, "cdag must have edge comm weight type");
     using edge_comm_weight_type = typename T::edge_comm_weight_type;
 };
 

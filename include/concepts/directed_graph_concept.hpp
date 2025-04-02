@@ -79,8 +79,8 @@ struct is_directed_graph_edge_desc<T, std::void_t<
     is_input_range_of<decltype(std::declval<T>().edges()), edge_desc_t<T>>,
     is_input_range_of<decltype(std::declval<T>().out_edges(std::declval<vertex_idx_t<T>>())), edge_desc_t<T>>,
     is_input_range_of<decltype(std::declval<T>().in_edges(std::declval<vertex_idx_t<T>>())), edge_desc_t<T>>,
-    std::is_convertible<decltype(source(std::declval<edge_desc_t<T>>(), std::declval<T>())), vertex_idx_t<T>>,
-    std::is_convertible<decltype(target(std::declval<edge_desc_t<T>>(), std::declval<T>())), vertex_idx_t<T>>> {};
+    std::is_same<decltype(source(std::declval<edge_desc_t<T>>(), std::declval<T>())), vertex_idx_t<T>>,
+    std::is_same<decltype(target(std::declval<edge_desc_t<T>>(), std::declval<T>())), vertex_idx_t<T>>> {};
 
 template<typename T>
 inline constexpr bool is_directed_graph_edge_desc_v = is_directed_graph_edge_desc<T>::value;
