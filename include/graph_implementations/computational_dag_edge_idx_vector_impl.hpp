@@ -20,6 +20,7 @@ limitations under the License.
 #include "computational_dag_vector_impl.hpp"
 #include "iterator/container_iterator_adaptor.hpp"
 #include "iterator/edge_iterator.hpp"
+#include "auxiliary/misc.hpp"
 #include <vector>
 
 namespace osp {
@@ -31,18 +32,29 @@ struct directed_edge_descriptor_impl {
     std::size_t source;
     std::size_t target;
 
-    directed_edge_descriptor_impl() = default;
+    directed_edge_descriptor_impl() : idx(0), source(0), target(0) {}
+    directed_edge_descriptor_impl(const directed_edge_descriptor_impl &other) = default;
+    directed_edge_descriptor_impl(directed_edge_descriptor_impl &&other) = default;
+    directed_edge_descriptor_impl &operator=(const directed_edge_descriptor_impl &other) = default;
+    directed_edge_descriptor_impl &operator=(directed_edge_descriptor_impl &&other) = default;
     directed_edge_descriptor_impl(std::size_t source, std::size_t target, std::size_t idx)
         : idx(idx), source(source), target(target) {}
     ~directed_edge_descriptor_impl() = default;
+
+    bool operator==(const directed_edge_descriptor_impl &other) const {
+        return idx == other.idx && source == other.source && target == other.target;
+    }
+
+    bool operator!=(const directed_edge_descriptor_impl &other) const {
+        return !(*this == other);
+    }
+
 };
 
 struct cdag_edge_impl {
     cdag_edge_impl(int comm_weight = 1) : comm_weight(comm_weight) {}
     int comm_weight;
 };
-
-
 
 template<typename v_impl, typename e_impl>
 class computational_dag_edge_idx_vector_impl {
@@ -96,7 +108,7 @@ class computational_dag_edge_idx_vector_impl {
     computational_dag_edge_idx_vector_impl(computational_dag_edge_idx_vector_impl &&other) = default;
     computational_dag_edge_idx_vector_impl &operator=(const computational_dag_edge_idx_vector_impl &other) = default;
     computational_dag_edge_idx_vector_impl &operator=(computational_dag_edge_idx_vector_impl &&other) = default;
-    virtual~computational_dag_edge_idx_vector_impl() = default;
+    virtual ~computational_dag_edge_idx_vector_impl() = default;
 
     inline std::size_t num_edges() const { return edges_.size(); }
     inline std::size_t num_vertices() const { return vertices_.size(); }
@@ -122,7 +134,7 @@ class computational_dag_edge_idx_vector_impl {
 
     inline unsigned num_vertex_types() const { return num_vertex_types_; }
     inline int vertex_type(vertex_idx v) const { return vertices_[v].vertex_type; }
-    
+
     inline vertex_idx source(const directed_edge_descriptor &e) const { return e.source; }
     inline vertex_idx target(const directed_edge_descriptor &e) const { return e.target; }
 
@@ -174,8 +186,7 @@ class computational_dag_edge_idx_vector_impl {
     inline const e_impl &get_edge_impl(directed_edge_descriptor e) const { return edges_[e.idx]; }
 };
 
-
-using computational_dag_edge_idx_vector_impl_def_t = 
+using computational_dag_edge_idx_vector_impl_def_t =
     computational_dag_edge_idx_vector_impl<cdag_vertex_impl, cdag_edge_impl>;
 
 static_assert(is_directed_graph_edge_desc_v<computational_dag_edge_idx_vector_impl<cdag_vertex_impl, cdag_edge_impl>>,
@@ -186,4 +197,16 @@ static_assert(
         computational_dag_edge_idx_vector_impl<cdag_vertex_impl, cdag_edge_impl>>,
     "computational_dag_edge_idx_vector_impl must satisfy the computation_dag_typed_vertices_edge_desc concept");
 
+
+
 } // namespace osp
+
+template<>
+struct std::hash<osp::directed_edge_descriptor_impl> {
+    std::size_t operator()(const osp::directed_edge_descriptor_impl &p) const noexcept {
+        auto h1 = std::hash<std::size_t>{}(p.source);
+        osp::hash_combine(h1, p.target);
+
+        return h1;
+    }
+};

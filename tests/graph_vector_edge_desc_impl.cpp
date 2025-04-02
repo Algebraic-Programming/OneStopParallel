@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "graph_algorithms/directed_graph_util.hpp"
+#include "graph_algorithms/directed_graph_edge_desc_util.hpp"
 #include "graph_implementations/computational_dag_edge_idx_vector_impl.hpp"
 
 using namespace osp;
@@ -142,6 +143,8 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
 
     const computational_dag_edge_idx_vector_impl_def_t graph = constr_graph_1();
 
+    const auto long_edges = long_edges_in_triangles(graph);
+
     BOOST_CHECK_EQUAL(graph.num_edges(), 9);
     BOOST_CHECK_EQUAL(graph.num_vertices(), 8);
 
@@ -154,6 +157,22 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
     BOOST_CHECK_EQUAL(sinks[0], 5);
     BOOST_CHECK_EQUAL(sinks[1], 6);
     BOOST_CHECK_EQUAL(sinks[2], 7);
+
+    const auto pair = edge_desc(0, 1, graph);
+    BOOST_CHECK_EQUAL(pair.second, true);
+    BOOST_CHECK_EQUAL(source(pair.first,graph), 0);
+    BOOST_CHECK_EQUAL(target(pair.first,graph), 1);
+    BOOST_CHECK_EQUAL(edge(0, 1, graph), true);
+    
+    const auto pair2 = edge_desc(0, 4, graph);
+    BOOST_CHECK_EQUAL(pair2.second, false);
+    BOOST_CHECK_EQUAL(edge(0, 4, graph), false);
+
+    const auto pair3 = edge_desc(1, 4, graph);
+    BOOST_CHECK_EQUAL(pair3.second, true);
+    BOOST_CHECK_EQUAL(source(pair3.first,graph), 1);
+    BOOST_CHECK_EQUAL(target(pair3.first,graph), 4);
+    BOOST_CHECK_EQUAL(edge(1, 4, graph), true);
 
     BOOST_CHECK_EQUAL(has_path(0, 1, graph), true);
     BOOST_CHECK_EQUAL(has_path(0, 2, graph), true);

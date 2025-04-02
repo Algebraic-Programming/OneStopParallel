@@ -27,6 +27,7 @@ limitations under the License.
 #include "concepts/computational_dag_concept.hpp"
 #include "source_iterator_range.hpp"
 
+
 struct boost_vertex {
 
     boost_vertex() : workWeight(0), communicationWeight(0), memoryWeight(0), nodeType(0) {}
@@ -266,3 +267,4 @@ static_assert(osp::is_directed_graph_edge_desc_v<boost_graph_adapter>,
 
 static_assert(osp::is_computation_dag_typed_vertices_edge_desc_v<boost_graph_adapter>,
               "boost_graph_adapter must satisfy the computation_dag_typed_vertices_edge_desc concept");
+

@@ -23,6 +23,7 @@ limitations under the License.
 #include <vector>
 
 #include "graph_algorithms/directed_graph_util.hpp"
+#include "graph_algorithms/directed_graph_edge_desc_util.hpp"
 #include "graph_algorithms/directed_graph_top_sort.hpp"
 #include "graph_implementations/computational_dag_vector_impl.hpp"
 #include "graph_implementations/boost_graphs/boost_graph_adapter.hpp"
@@ -95,6 +96,76 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
     BOOST_CHECK_EQUAL(sinks_s[0], 5);
     BOOST_CHECK_EQUAL(sinks_s[1], 6);
     BOOST_CHECK_EQUAL(sinks_s[2], 7);
+
+    BOOST_CHECK_EQUAL(edge(0,1,graph), true);
+    BOOST_CHECK_EQUAL(edge(0,2,graph), true);
+    BOOST_CHECK_EQUAL(edge(0,3,graph), true);
+    BOOST_CHECK_EQUAL(edge(0,4,graph), false);
+    BOOST_CHECK_EQUAL(edge(0,5,graph), false);
+    BOOST_CHECK_EQUAL(edge(0,6,graph), false);
+    BOOST_CHECK_EQUAL(edge(0,7,graph), false);    
+
+    BOOST_CHECK_EQUAL(edge(1,0,graph), false);
+    BOOST_CHECK_EQUAL(edge(1,1,graph), false);
+    BOOST_CHECK_EQUAL(edge(1,2,graph), false);
+    BOOST_CHECK_EQUAL(edge(1,3,graph), false);
+    BOOST_CHECK_EQUAL(edge(1,4,graph), true);
+    BOOST_CHECK_EQUAL(edge(1,5,graph), false);
+    BOOST_CHECK_EQUAL(edge(1,6,graph), true);
+    BOOST_CHECK_EQUAL(edge(1,7,graph), false);
+
+    BOOST_CHECK_EQUAL(edge(2,0,graph), false);
+    BOOST_CHECK_EQUAL(edge(2,1,graph), false);
+    BOOST_CHECK_EQUAL(edge(2,2,graph), false);
+    BOOST_CHECK_EQUAL(edge(2,3,graph), false);
+    BOOST_CHECK_EQUAL(edge(2,4,graph), true);
+    BOOST_CHECK_EQUAL(edge(2,5,graph), true);
+    BOOST_CHECK_EQUAL(edge(2,6,graph), false);
+    BOOST_CHECK_EQUAL(edge(2,7,graph), false);
+
+    BOOST_CHECK_EQUAL(edge(3,0,graph), false);
+    BOOST_CHECK_EQUAL(edge(3,1,graph), false);
+    BOOST_CHECK_EQUAL(edge(3,2,graph), false);
+    BOOST_CHECK_EQUAL(edge(3,3,graph), false);
+    BOOST_CHECK_EQUAL(edge(3,4,graph), false);
+    BOOST_CHECK_EQUAL(edge(3,5,graph), false);
+    BOOST_CHECK_EQUAL(edge(3,6,graph), false);
+    BOOST_CHECK_EQUAL(edge(3,7,graph), true);
+
+    BOOST_CHECK_EQUAL(edge(4,0,graph), false);
+    BOOST_CHECK_EQUAL(edge(4,1,graph), false);
+    BOOST_CHECK_EQUAL(edge(4,2,graph), false);
+    BOOST_CHECK_EQUAL(edge(4,3,graph), false);
+    BOOST_CHECK_EQUAL(edge(4,4,graph), false);
+    BOOST_CHECK_EQUAL(edge(4,5,graph), false);
+    BOOST_CHECK_EQUAL(edge(4,6,graph), false);
+    BOOST_CHECK_EQUAL(edge(4,7,graph), true);
+    
+    BOOST_CHECK_EQUAL(edge(5,0,graph), false);
+    BOOST_CHECK_EQUAL(edge(5,1,graph), false);
+    BOOST_CHECK_EQUAL(edge(5,2,graph), false);
+    BOOST_CHECK_EQUAL(edge(5,3,graph), false);
+    BOOST_CHECK_EQUAL(edge(5,4,graph), false);
+    BOOST_CHECK_EQUAL(edge(5,5,graph), false);
+    BOOST_CHECK_EQUAL(edge(5,6,graph), false);
+    BOOST_CHECK_EQUAL(edge(5,7,graph), false);
+
+    BOOST_CHECK_EQUAL(edge(6,0,graph), false);
+    BOOST_CHECK_EQUAL(edge(6,1,graph), false);
+    BOOST_CHECK_EQUAL(edge(6,2,graph), false);
+    BOOST_CHECK_EQUAL(edge(6,3,graph), false);
+    BOOST_CHECK_EQUAL(edge(6,4,graph), false);
+    BOOST_CHECK_EQUAL(edge(6,5,graph), false);
+    BOOST_CHECK_EQUAL(edge(6,6,graph), false);
+    BOOST_CHECK_EQUAL(edge(6,7,graph), false);
+
+    BOOST_CHECK_EQUAL(edge(7,0,graph), false);
+    BOOST_CHECK_EQUAL(edge(7,1,graph), false);
+    BOOST_CHECK_EQUAL(edge(7,2,graph), false);
+    BOOST_CHECK_EQUAL(edge(7,3,graph), false);
+    BOOST_CHECK_EQUAL(edge(7,4,graph), false);
+    BOOST_CHECK_EQUAL(edge(7,5,graph), false);
+    BOOST_CHECK_EQUAL(edge(7,6,graph), false);
 
     BOOST_CHECK_EQUAL(is_source(0, graph), true);
     BOOST_CHECK_EQUAL(is_source(1, graph), false);
@@ -169,6 +240,8 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
     BOOST_CHECK_EQUAL(has_path(7, 4, graph), false);
     BOOST_CHECK_EQUAL(has_path(7, 5, graph), false);
     BOOST_CHECK_EQUAL(has_path(7, 6, graph), false);
+
+    
 };
 
 
@@ -187,6 +260,8 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
     const boost_graph_adapter graph(out, workW, commW);
     const boost_graph_adapter graph_empty;
+
+  //  const auto long_edges = long_edges_in_triangles(graph);
 
     BOOST_CHECK_EQUAL(graph.num_vertices(), std::distance(graph.vertices().begin(), graph.vertices().end()));
     BOOST_CHECK_EQUAL(graph.num_edges(), std::distance(graph.edges().begin(), graph.edges().end()));
@@ -215,8 +290,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
     // BOOST_CHECK_EQUAL(graph_empty.sumOfVerticesWorkWeights({}), 0);
 
-    std::cout << "Checking every in edge is contained in out edge:" << std::endl;
-
+  
     std::size_t num_edges = 0;
     for (const auto &vertex : graph.vertices()) {
         num_edges += graph.out_degree(vertex);
@@ -226,8 +300,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
         }
     }
 
-    std::cout << "Checking every out edge is contained in in edge:" << std::endl;
-
+ 
     for (const auto &vertex : graph.vertices()) {
         for (const auto &child : graph.children(vertex)) {
 
@@ -236,8 +309,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
         }
     }
 
-    std::cout << "Checking topological order:" << std::endl;
-    std::vector<VertexType> top_order = GetTopOrder(AS_IT_COMES, graph);
+      std::vector<VertexType> top_order = GetTopOrder(AS_IT_COMES, graph);
     BOOST_CHECK(top_order.size() == graph.num_vertices());
     BOOST_CHECK(GetTopOrder(AS_IT_COMES, graph_empty).size() == graph_empty.num_vertices());
 
@@ -311,6 +383,8 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
                 GetFilteredTopOrder(bool_a, graph) == std::vector<VertexType>({8, 0}));
     BOOST_CHECK(GetFilteredTopOrder(bool_b, graph)[3] == 2);
     BOOST_CHECK(GetFilteredTopOrder(bool_c, graph) == std::vector<VertexType>({9, 6, 1}));
+
+
 
     // std::cout << "Checking longest path:" << std::endl;
     // BOOST_CHECK_EQUAL(graph.longestPath(all_nodes), 4);

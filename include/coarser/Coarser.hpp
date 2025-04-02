@@ -19,7 +19,8 @@ limitations under the License.
 #pragma once
 
 #include <vector>   
-
+#include "concepts/computational_dag_concept.hpp"
+#include "concepts/constructable_computational_dag_concept.hpp"
 
 /**
  * @class Coarser

@@ -27,6 +27,20 @@ limitations under the License.
 namespace osp {
 
 template<typename Graph_t>
+bool edge(const vertex_idx_t<Graph_t> &src, const vertex_idx_t<Graph_t> &dest, const Graph_t &graph) {
+
+    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+    for (const auto &child : graph.children(src)) {
+        if (child == dest) {
+            return true;
+        }
+    }
+    return false;
+}
+
+
+
+template<typename Graph_t>
 bool is_sink(const vertex_idx_t<Graph_t> &v, const Graph_t &graph) {
     static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
     return graph.out_degree(v) == 0u;
@@ -115,8 +129,7 @@ class source_vertices_view {
         using pointer = const value_type *;
         using reference = const value_type &;
 
-        sources_iterator(const Graph_t &graph_, const iterator_t &start)
-            : graph(graph_), current_source(start) {
+        sources_iterator(const Graph_t &graph_, const iterator_t &start) : graph(graph_), current_source(start) {
 
             while (current_source != graph.vertices().end()) {
                 if (graph.in_degree(*current_source) == 0) {
@@ -183,8 +196,7 @@ class sink_vertices_view {
         using pointer = const value_type *;
         using reference = const value_type &;
 
-        sinks_iterator(const Graph_t &graph_, const iterator_t &start)
-            : graph(graph_), current_sink(start) {
+        sinks_iterator(const Graph_t &graph_, const iterator_t &start) : graph(graph_), current_sink(start) {
 
             while (current_sink != graph.vertices().end()) {
                 if (graph.out_degree(*current_sink) == 0) {
