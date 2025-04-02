@@ -13,54 +13,62 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner   
+@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 
 #pragma once
 
-#include <vector>   
 #include "concepts/computational_dag_concept.hpp"
 #include "concepts/constructable_computational_dag_concept.hpp"
+#include <vector>
+
+namespace osp {
 
 /**
  * @class Coarser
  * @brief Abstract base class for coarsening ComputationalDags.
- * 
+ *
  */
-template<typename Graph_t>
+template<typename Graph_t1, typename Graph_t2>
 class Coarser {
 
-    public:
+    static_assert(is_computation_dag_edge_desc_v<Graph_t1>,
+                  "Graph_t1 must be a computational DAG");
+    static_assert(is_constructable_cdag_vertex<Graph_t2>,
+                  "Graph_t1 must be a constructable computational DAG");
+    static_assert(is_constructable_cdag_edge_v<Graph_t2>,
+                  "Graph_t2 must be a constructable computational DAG");
 
-        /**
-         * @brief Destructor for the Coarser class.
-         */
-        virtual ~Coarser() = default;
+  public:
+    /**
+     * @brief Destructor for the Coarser class.
+     */
+    virtual ~Coarser() = default;
 
-        /**
-         * @brief Get the name of the coarsening algorithm.
-         * @return A human-readable name of the coarsening algorithm, typically used for identification or logging purposes.
-         */
-        virtual std::string getCoarserName() const = 0;
-        
-        /**
-        * @brief Coarsens the input computational DAG into a simplified version.
-        * 
-        * @param dag_in The input computational DAG to be coarsened. It is expected to be a valid graph structure.
-        * @param coarsened_dag The output computational DAG after coarsening. It will be populated by this method.
-        * @param vertex_map A mapping from vertices in the coarse DAG to the corresponding vertices in the original DAG.
-        *                   Each entry in the outer vector corresponds to a vertex in the coarse DAG, and the inner vector
-        *                   contains the indices of the original vertices that were merged.
-        * @return A status code indicating the success or failure of the coarsening operation.
-        */
-        virtual bool coarseDag(const Graph_t &dag_in, Graph_t &coarsened_dag, std::vector<std::vector<vertex_idx_t<Graph_t>>>& vertex_map) = 0;
-        
+    /**
+     * @brief Get the name of the coarsening algorithm.
+     * @return A human-readable name of the coarsening algorithm, typically used for identification or logging purposes.
+     */
+    virtual std::string getCoarserName() const = 0;
+
+    /**
+     * @brief Coarsens the input computational DAG into a simplified version.
+     *
+     * @param dag_in The input computational DAG to be coarsened. It is expected to be a valid graph structure.
+     * @param coarsened_dag The output computational DAG after coarsening. It will be populated by this method.
+     * @param vertex_map A mapping from vertices in the coarse DAG to the corresponding vertices in the original DAG.
+     *                   Each entry in the outer vector corresponds to a vertex in the coarse DAG, and the inner vector
+     *                   contains the indices of the original vertices that were merged.
+     * @return A status code indicating the success or failure of the coarsening operation.
+     */
+    virtual bool coarseDag(const Graph_t1 &dag_in, Graph_t2 &coarsened_dag, std::vector<std::vector<vertex_idx_t<Graph_t1>>> &vertex_map) = 0;
 };
 
+// std::pair<RETURN_STATUS, BspSchedule> pull_back_schedule(const BspInstance &instance_large, const BspSchedule
+// &schedule_in, const std::vector<std::vector<VertexType>>& vertex_map);
 
-// std::pair<RETURN_STATUS, BspSchedule> pull_back_schedule(const BspInstance &instance_large, const BspSchedule &schedule_in, const std::vector<std::vector<VertexType>>& vertex_map);
-
-// std::pair<RETURN_STATUS, DAGPartition> pull_back_partition(const BspInstance &instance_large, const DAGPartition &partition_in, const std::vector<std::vector<VertexType>>& vertex_map);
+// std::pair<RETURN_STATUS, DAGPartition> pull_back_partition(const BspInstance &instance_large, const DAGPartition
+// &partition_in, const std::vector<std::vector<VertexType>>& vertex_map);
 
 // class CoarseAndSchedule : public Scheduler {
 
@@ -71,8 +79,7 @@ class Coarser {
 
 //     public:
 
-//         CoarseAndSchedule(Coarser& coarser_, Scheduler& scheduler_) : coarser(&coarser_), scheduler(&scheduler_) {}    
-
+//         CoarseAndSchedule(Coarser& coarser_, Scheduler& scheduler_) : coarser(&coarser_), scheduler(&scheduler_) {}
 
 //         std::string getScheduleName() const override {
 //             return "CoarseAndSchedule";
@@ -91,13 +98,14 @@ class Coarser {
 //             instance_coarse.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
 
 //             std::pair<RETURN_STATUS, BspSchedule> schedule_coarse = scheduler->computeSchedule(instance_coarse);
-//             if (schedule_coarse.first != RETURN_STATUS::SUCCESS and schedule_coarse.first != RETURN_STATUS::BEST_FOUND) {
+//             if (schedule_coarse.first != RETURN_STATUS::SUCCESS and schedule_coarse.first !=
+//             RETURN_STATUS::BEST_FOUND) {
 //                 return {schedule_coarse.first, BspSchedule()};
 //             }
-             
+
 //             return pull_back_schedule(instance, schedule_coarse.second, vertex_map);
 //         }
 
-
-
 // };
+
+} // namespace osp

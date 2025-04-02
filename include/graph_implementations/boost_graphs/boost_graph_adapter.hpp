@@ -52,17 +52,17 @@ using boost_graph = boost::adjacency_list<boost::vecS, boost::vecS, boost::bidir
 using boost_vertex_type = boost::graph_traits<boost_graph>::vertex_descriptor;
 using boost_edge_desc = boost::graph_traits<boost_graph>::edge_descriptor;
 
-struct boost_edge_type_hash {
 
-    std::size_t operator()(const boost_edge_desc &p) const {
-
-        auto h1 = std::hash<boost_vertex_type>{}(p.m_source);
+template<>
+struct std::hash<boost_edge_desc> {
+    std::size_t operator()(const boost_edge_desc &p) const noexcept {
+        auto h1 = std::hash<std::size_t>{}(p.m_source);
         osp::hash_combine(h1, p.m_target);
-        osp::hash_combine(h1, p.m_eproperty);
 
         return h1;
     }
 };
+
 
 /**
  * @class ComputationalDag

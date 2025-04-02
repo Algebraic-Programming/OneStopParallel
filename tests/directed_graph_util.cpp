@@ -23,6 +23,7 @@ limitations under the License.
 #include <vector>
 
 #include "graph_algorithms/directed_graph_util.hpp"
+#include "graph_algorithms/computational_dag_util.hpp"
 #include "graph_algorithms/directed_graph_edge_desc_util.hpp"
 #include "graph_algorithms/directed_graph_top_sort.hpp"
 #include "graph_implementations/computational_dag_vector_impl.hpp"
@@ -261,7 +262,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     const boost_graph_adapter graph(out, workW, commW);
     const boost_graph_adapter graph_empty;
 
-  //  const auto long_edges = long_edges_in_triangles(graph);
+    const auto long_edges = long_edges_in_triangles(graph);
 
     BOOST_CHECK_EQUAL(graph.num_vertices(), std::distance(graph.vertices().begin(), graph.vertices().end()));
     BOOST_CHECK_EQUAL(graph.num_edges(), std::distance(graph.edges().begin(), graph.edges().end()));
@@ -278,17 +279,16 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
         BOOST_CHECK_EQUAL(v.communicationWeight, graph.vertex_comm_weight(i));
     }
 
-    // std::cout << "Checking workW sums:" << std::endl;
-    // BOOST_CHECK_EQUAL(graph.sumOfVerticesWorkWeights({0, 1}), 2);
-    // {
-    //     int sum_of_work_weights = graph.nodeWorkWeight(0) + graph.nodeWorkWeight(1);
-    //     BOOST_CHECK_EQUAL(2, sum_of_work_weights);
-    // }
-    // BOOST_CHECK_EQUAL(graph.sumOfVerticesWorkWeights({5, 3}), 4);
-    // BOOST_CHECK_EQUAL(graph.sumOfVerticesWorkWeights({}), 0);
-    // BOOST_CHECK_EQUAL(graph.sumOfVerticesWorkWeights({0, 1, 2, 3, 4, 5}), 9);
+    BOOST_CHECK_EQUAL(sumOfVerticesWorkWeights({0, 1}, graph), 2);
+    {
+        int sum_of_work_weights = graph.vertex_work_weight(0) + graph.vertex_work_weight(1);
+        BOOST_CHECK_EQUAL(2, sum_of_work_weights);
+    }
+    BOOST_CHECK_EQUAL(sumOfVerticesWorkWeights({5, 3}, graph), 4);
+    BOOST_CHECK_EQUAL(sumOfVerticesWorkWeights({}, graph), 0);
+    BOOST_CHECK_EQUAL(sumOfVerticesWorkWeights({0, 1, 2, 3, 4, 5}, graph), 9);
 
-    // BOOST_CHECK_EQUAL(graph_empty.sumOfVerticesWorkWeights({}), 0);
+    BOOST_CHECK_EQUAL(sumOfVerticesWorkWeights({}, graph_empty), 0);
 
   
     std::size_t num_edges = 0;

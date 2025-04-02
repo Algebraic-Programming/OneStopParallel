@@ -143,8 +143,6 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
 
     const computational_dag_edge_idx_vector_impl_def_t graph = constr_graph_1();
 
-    const auto long_edges = long_edges_in_triangles(graph);
-
     BOOST_CHECK_EQUAL(graph.num_edges(), 9);
     BOOST_CHECK_EQUAL(graph.num_vertices(), 8);
 
@@ -229,4 +227,9 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
     BOOST_CHECK_EQUAL(has_path(7, 4, graph), false);
     BOOST_CHECK_EQUAL(has_path(7, 5, graph), false);
     BOOST_CHECK_EQUAL(has_path(7, 6, graph), false);
+
+    const auto long_edges = long_edges_in_triangles(graph);
+
+    BOOST_CHECK_EQUAL(long_edges.size(), 0);
+
 };

@@ -29,6 +29,7 @@ limitations under the License.
 
 namespace osp {
 
+
 enum TOP_SORT_ORDER { AS_IT_COMES, MAX_CHILDREN, RANDOM, MINIMAL_NUMBER };
 
 template<typename Graph_t>
