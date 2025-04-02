@@ -18,13 +18,138 @@ limitations under the License.
 
 #pragma once
 
+#include <limits>
 #include <queue>
+#include <random>
 #include <vector>
 
+#include "auxiliary/misc.hpp"
 #include "concepts/directed_graph_concept.hpp"
+#include "directed_graph_util.hpp"
 
 namespace osp {
 
+enum TOP_SORT_ORDER { AS_IT_COMES, MAX_CHILDREN, RANDOM, MINIMAL_NUMBER };
+
+template<typename Graph_t>
+std::vector<vertex_idx_t<Graph_t>> GetTopOrder(const TOP_SORT_ORDER q_order, const Graph_t &graph) {
+
+    using VertexType = vertex_idx_t<Graph_t>;
+
+    std::vector<VertexType> predecessors_count(graph.num_vertices(), 0);
+    std::vector<VertexType> TopOrder;
+
+    if (q_order == AS_IT_COMES) {
+        std::queue<VertexType> next;
+
+        // Find source nodes
+        for (const VertexType &v : source_vertices_view(graph))
+            next.push(v);
+
+        // Execute BFS
+        while (!next.empty()) {
+            const VertexType node = next.front();
+            next.pop();
+            TopOrder.push_back(node);
+
+            for (const VertexType &current : graph.children(node)) {
+                ++predecessors_count[current];
+                if (predecessors_count[current] == graph.in_degree(current))
+                    next.push(current);
+            }
+        }
+    }
+
+    if (q_order == MAX_CHILDREN) {
+        const auto q_cmp = [](const std::pair<VertexType, size_t> &left, const std::pair<VertexType, size_t> &right) {
+            return (left.second < right.second) || ((left.second < right.second) && (left.first < right.first));
+        };
+        std::priority_queue<std::pair<VertexType, size_t>, std::vector<std::pair<VertexType, size_t>>, decltype(q_cmp)>
+            next(q_cmp);
+
+        // Find source nodes
+        for (const VertexType &i : source_vertices_view(graph))
+            next.emplace(i, graph.out_degree(i));
+
+        // Execute BFS
+        while (!next.empty()) {
+            const auto [node, n_chldrn] = next.top();
+            next.pop();
+            TopOrder.push_back(node);
+
+            for (const VertexType &current : graph.children(node)) {
+                ++predecessors_count[current];
+                if (predecessors_count[current] == graph.in_degree(current))
+                    next.emplace(current, graph.out_degree(current));
+            }
+        }
+    }
+
+    if (q_order == RANDOM) {
+        std::vector<VertexType> next;
+
+        // Find source nodes
+        for (const VertexType &i : source_vertices_view(graph))
+            next.push_back(i);
+
+        std::random_device rd;
+        std::mt19937_64 eng(rd());
+        std::uniform_int_distribution<unsigned long> distr(0, next.size());
+
+        // Execute BFS
+        while (!next.empty()) {
+            auto node_it = next.begin();
+            std::advance(node_it, distr(eng) % next.size());
+            const VertexType node = *node_it;
+            next.erase(node_it);
+            TopOrder.push_back(node);
+
+            for (const VertexType &current : graph.children(node)) {
+                ++predecessors_count[current];
+                if (predecessors_count[current] == graph.in_degree(current))
+                    next.push_back(current);
+            }
+        }
+    }
+
+    if (q_order == MINIMAL_NUMBER) {
+        std::priority_queue<VertexType, std::vector<VertexType>, std::greater<VertexType>> next;
+
+        // Find source nodes
+        for (const VertexType &i : source_vertices_view(graph))
+            next.emplace(i);
+
+        // Execute BFS
+        while (!next.empty()) {
+            const VertexType node = next.top();
+            next.pop();
+            TopOrder.push_back(node);
+
+            for (const VertexType &current : graph.children(node)) {
+                ++predecessors_count[current];
+                if (predecessors_count[current] == graph.in_degree(current))
+                    next.emplace(current);
+            }
+        }
+    }
+
+    if (TopOrder.size() != graph.num_vertices())
+        throw std::runtime_error("Error during topological ordering: TopOrder.size() != graph.num_vertices() [" +
+                                 std::to_string(TopOrder.size()) + " != " + std::to_string(graph.num_vertices()) + "]");
+
+    return TopOrder;
+}
+
+template<typename Graph_t>
+std::vector<vertex_idx_t<Graph_t>> GetFilteredTopOrder(const std::vector<bool> &valid, const Graph_t &graph) {
+
+    std::vector<vertex_idx_t<Graph_t>> filteredOrder;
+    for (const auto &node : GetTopOrder(AS_IT_COMES, graph))
+        if (valid[node])
+            filteredOrder.push_back(node);
+
+    return filteredOrder;
+}
 
 template<typename Graph_t>
 std::vector<vertex_idx_t<Graph_t>> top_sort_dfs(const Graph_t &dag) {
@@ -62,35 +187,34 @@ std::vector<vertex_idx_t<Graph_t>> top_sort_dfs(const Graph_t &dag) {
 //         std::vector<vertex_idx_t<Graph_t>> predecessors_count(dag.num_vertices(), 0);
 //         std::vector<vertex_idx_t<Graph_t>> top_order(dag.num_vertices(), 0);
 //         std::vector<std::queue<vertex_idx_t<Graph_t>>> next(dag.getNumberOfNodeTypes());
-    
+
 //         for (const vertex_idx_t<Graph_t> &i : dag.sourceVertices()) {
 //             next[dag.nodeType(i)].push(i);
 //         }
-    
+
 //         size_t idx = 0;
 //         unsigned current_node_type = 0;
-    
+
 //         while (idx < dag.numberOfVertices()) {
-    
+
 //             while (not next[current_node_type].empty()) {
 //                 const vertex_idx_t<Graph_t> node = next[current_node_type].front();
 //                 next[current_node_type].pop();
 //                 top_order[idx++] = node;
-    
+
 //                 for (const vertex_idx_t<Graph_t> &current : dag.children(node)) {
 //                     ++predecessors_count[current];
 //                     if (predecessors_count[current] == dag.numberOfParents(current))
 //                         next[dag.nodeType(current)].push(current);
 //                 }
 //             }
-    
+
 //             current_node_type = (current_node_type + 1) % dag.getNumberOfNodeTypes();
 //         }
-    
+
 //         return top_order;
 
 //     } else {
-
 
 //     }
 // }
@@ -108,7 +232,8 @@ std::vector<vertex_idx_t<Graph_t>> top_sort_dfs(const Graph_t &dag) {
 // std::vector<vertex_idx_t<Graph_t>> top_sort_heavy_edges(const Graph_t &dag, bool sum = false);
 
 // template<typename Graph_t, typename T>
-// std::vector<vertex_idx_t<Graph_t>> top_sort_priority_node_type(const Graph_t &dag, const std::vector<T> &node_priority) {
+// std::vector<vertex_idx_t<Graph_t>> top_sort_priority_node_type(const Graph_t &dag, const std::vector<T>
+// &node_priority) {
 
 //     std::vector<vertex_idx_t<Graph_t>> predecessors_count(dag.numberOfVertices(), 0);
 //     std::vector<vertex_idx_t<Graph_t>> top_order(dag.numberOfVertices(), 0);
