@@ -416,46 +416,44 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     //     BOOST_CHECK(graph.successors(8) == std::vector<VertexType>({8, 4}));
     //     BOOST_CHECK(graph.successors(4) == std::vector<VertexType>({4}));
     // */
-    // std::vector<unsigned> top_dist({4, 3, 3, 1, 2, 2, 2, 5, 1, 1});
-    // std::vector<unsigned> bottom_dist({2, 1, 3, 4, 1, 4, 4, 1, 2, 5});
+    std::vector<unsigned> top_dist({4, 3, 3, 1, 2, 2, 2, 5, 1, 1});
+    std::vector<unsigned> bottom_dist({2, 1, 3, 4, 1, 4, 4, 1, 2, 5});
 
-    // BOOST_CHECK(graph.get_top_node_distance() == top_dist);
-    // BOOST_CHECK(graph.get_bottom_node_distance() == bottom_dist);
+    BOOST_CHECK(get_top_node_distance(graph) == top_dist);
+    BOOST_CHECK(get_bottom_node_distance(graph) == bottom_dist);
 
-    // const std::vector<std::vector<int>> graph_second_Out = {
-    //     {1, 2}, {3, 4}, {4, 5}, {6}, {}, {6}, {},
-    // };
-    // const std::vector<int> graph_second_workW = {1, 1, 1, 1, 1, 1, 3};
-    // const std::vector<int> graph_second_commW = graph_second_workW;
+    const std::vector<std::vector<VertexType>> graph_second_Out = {
+        {1, 2}, {3, 4}, {4, 5}, {6}, {}, {6}, {},
+    };
+    const std::vector<int> graph_second_workW = {1, 1, 1, 1, 1, 1, 3};
+    const std::vector<int> graph_second_commW = graph_second_workW;
 
-    // ComputationalDag graph_second(graph_second_Out, graph_second_workW, graph_second_commW);
+    boost_graph_adapter graph_second(graph_second_Out, graph_second_workW, graph_second_commW);
 
-    // std::vector<unsigned> top_dist_second({1, 2, 2, 3, 3, 3, 4});
-    // std::vector<unsigned> bottom_dist_second({4, 3, 3, 2, 1, 2, 1});
+    std::vector<unsigned> top_dist_second({1, 2, 2, 3, 3, 3, 4});
+    std::vector<unsigned> bottom_dist_second({4, 3, 3, 2, 1, 2, 1});
 
-    // BOOST_CHECK(graph_second.get_top_node_distance() == top_dist_second);
-    // BOOST_CHECK(graph_second.get_bottom_node_distance() == bottom_dist_second);
+    BOOST_CHECK(get_top_node_distance(graph_second) == top_dist_second);
+    BOOST_CHECK(get_bottom_node_distance(graph_second) == bottom_dist_second);
 
-    // std::cout << "Checking strict poset integer map:" << std::endl;
+    std::vector<double> poisson_params({0, 0.08, 0.1, 0.2, 0.5, 1, 4});
 
-    // std::vector<double> poisson_params({0, 0.08, 0.1, 0.2, 0.5, 1, 4});
+    for (unsigned loops = 0; loops < 10; loops++) {
+        for (unsigned noise = 0; noise < 6; noise++) {
+            for (auto &pois_para : poisson_params) {
 
-    // for (unsigned loops = 0; loops < 10; loops++) {
-    //     for (unsigned noise = 0; noise < 6; noise++) {
-    //         for (auto &pois_para : poisson_params) {
+                std::vector<int> poset_int_map = get_strict_poset_integer_map(noise, pois_para, graph);
 
-    //             std::vector<int> poset_int_map = graph.get_strict_poset_integer_map(noise, pois_para);
+                for (const auto &vertex : graph.vertices()) {
+                    for (const auto &child : graph.children(vertex)) {
+                        BOOST_CHECK_LE(poset_int_map[vertex] + 1, poset_int_map[child]);
+                    }
+                }
+            }
+        }
+    }
 
-    //             for (const auto &vertex : graph.vertices()) {
-    //                 for (const auto &child : graph.children(vertex)) {
-    //                     BOOST_CHECK_LE(poset_int_map[vertex] + 1, poset_int_map[child]);
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
-
-    // BOOST_CHECK(graph.critical_path_weight() == 7);
+    BOOST_CHECK(critical_path_weight(graph) == 7);
 
     // const std::pair<std::vector<VertexType>, ComputationalDag> rev_graph_pair = graph.reverse_graph();
     // const std::vector<VertexType> &vertex_mapping_rev_graph = rev_graph_pair.first;
