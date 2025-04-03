@@ -186,6 +186,7 @@ class computational_dag_edge_idx_vector_impl {
     inline const e_impl &get_edge_impl(directed_edge_descriptor e) const { return edges_[e.idx]; }
 };
 
+// default template specialization
 using computational_dag_edge_idx_vector_impl_def_t =
     computational_dag_edge_idx_vector_impl<cdag_vertex_impl, cdag_edge_impl>;
 

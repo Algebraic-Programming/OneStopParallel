@@ -81,37 +81,6 @@ std::vector<vertex_idx_t<Graph_t>> sink_vertices(const Graph_t &graph) {
 }
 
 template<typename Graph_t>
-bool has_path(const vertex_idx_t<Graph_t> src, const vertex_idx_t<Graph_t> dest, const Graph_t &graph) {
-
-    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
-
-    std::unordered_set<vertex_idx_t<Graph_t>> visited;
-    visited.emplace(src);
-
-    std::queue<vertex_idx_t<Graph_t>> next;
-    next.push(src);
-
-    while (!next.empty()) {
-        vertex_idx_t<Graph_t> v = next.front();
-        next.pop();
-
-        for (const vertex_idx_t<Graph_t> &child : graph.children(v)) {
-
-            if (child == dest) {
-                return true;
-            }
-
-            if (visited.find(child) == visited.end()) {
-                visited.emplace(child);
-                next.push(child);
-            }
-        }
-    }
-
-    return false;
-}
-
-template<typename Graph_t>
 class source_vertices_view {
 
     const Graph_t &graph;

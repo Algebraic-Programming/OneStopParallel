@@ -134,6 +134,8 @@ class computational_dag_vector_impl {
     unsigned num_vertex_types_ = 0;
 };
 
+
+// default template parameters
 using computational_dag_vector_impl_def_t = computational_dag_vector_impl<cdag_vertex_impl>;
 
 // TODO delete this

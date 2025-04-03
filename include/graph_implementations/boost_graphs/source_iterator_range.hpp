@@ -34,7 +34,7 @@ struct source_iterator_range {
     IteratorType end() const { return _end; }
     IteratorType cend() const { return _end; }
 
-    size_t size() const { return std::distance(cbegin(), cend()); }
+    std::size_t size() const { return std::distance(cbegin(), cend()); }
 
     template<class RangeType>
     explicit source_iterator_range(RangeType &r) : _begin(boost::begin(r)), _end(boost::end(r)) {}

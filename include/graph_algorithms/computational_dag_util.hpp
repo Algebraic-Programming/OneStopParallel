@@ -20,6 +20,7 @@ limitations under the License.
 #include <numeric>
 
 #include "concepts/computational_dag_concept.hpp"
+#include "directed_graph_top_sort.hpp"
 
 namespace osp {
 
@@ -75,15 +76,43 @@ v_commw_t<Graph_t> sumOfVerticesCommunicationWeights(const std::initializer_list
 
 template<typename EdgeIterator, typename Graph_t>
 e_commw_t<Graph_t> sumOfEdgesCommunicationWeights(EdgeIterator begin, EdgeIterator end, const Graph_t &graph) {
-    return std::accumulate(begin, end, 0, [&](const auto sum, const edge_desc_t<Graph_t> &e) {
-        return sum + graph.edge_comm_weight(e);
-    });
+    return std::accumulate(
+        begin, end, 0, [&](const auto sum, const edge_desc_t<Graph_t> &e) { return sum + graph.edge_comm_weight(e); });
 }
 
 template<typename Graph_t>
 e_commw_t<Graph_t> sumOfEdgesCommunicationWeights(const std::initializer_list<edge_desc_t<Graph_t>> &edges_,
                                                   const Graph_t &graph) {
     return sumOfEdgesCommunicationWeights(edges_.begin(), edges_.end(), graph);
+}
+
+template<typename Graph_t>
+v_workw_t<Graph_t> critical_path_weight(const Graph_t &graph) {
+
+    if (graph.num_vertices() == 0) {
+        return 0;
+    }
+
+    std::vector<v_workw_t<Graph_t>> top_length(graph.num_vertices(), 0);
+    v_workw_t<Graph_t> critical_path_weight = 0;
+
+    // calculating lenght of longest path
+    for (const auto &node : GetTopOrder(AS_IT_COMES, graph)) {
+
+        v_workw_t<Graph_t> max_temp = 0;
+        for (const auto &parent : graph.parents(node)) {
+            max_temp = std::max(max_temp, top_length[parent]);
+        }
+
+        top_length[node] = max_temp + graph.vertex_work_weight(node);
+
+        if (top_length[node] > critical_path_weight) {
+
+            critical_path_weight = top_length[node];
+        }
+    }
+
+    return critical_path_weight;
 }
 
 } // namespace osp

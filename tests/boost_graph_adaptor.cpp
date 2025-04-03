@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "graph_algorithms/directed_graph_util.hpp"
+#include "graph_algorithms/directed_graph_path_util.hpp"
 #include "graph_implementations/boost_graphs/boost_graph_adapter.hpp"
 
 using namespace osp;

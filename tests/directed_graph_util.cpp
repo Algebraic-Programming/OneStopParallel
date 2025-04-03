@@ -23,6 +23,7 @@ limitations under the License.
 #include <vector>
 
 #include "graph_algorithms/directed_graph_util.hpp"
+#include "graph_algorithms/directed_graph_path_util.hpp"
 #include "graph_algorithms/computational_dag_util.hpp"
 #include "graph_algorithms/directed_graph_edge_desc_util.hpp"
 #include "graph_algorithms/directed_graph_top_sort.hpp"
@@ -385,24 +386,22 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     BOOST_CHECK(GetFilteredTopOrder(bool_c, graph) == std::vector<VertexType>({9, 6, 1}));
 
 
+    BOOST_CHECK_EQUAL(longestPath(all_nodes, graph), 4);
+    BOOST_CHECK_EQUAL(longestPath(nodes_a, graph), 0);
+    BOOST_CHECK_EQUAL(longestPath(nodes_b, graph), 1);
+    BOOST_CHECK_EQUAL(longestPath(nodes_c, graph), 2);
 
-    // std::cout << "Checking longest path:" << std::endl;
-    // BOOST_CHECK_EQUAL(graph.longestPath(all_nodes), 4);
-    // BOOST_CHECK_EQUAL(graph.longestPath(nodes_a), 0);
-    // BOOST_CHECK_EQUAL(graph.longestPath(nodes_b), 1);
-    // BOOST_CHECK_EQUAL(graph.longestPath(nodes_c), 2);
+    BOOST_CHECK_EQUAL(longestPath({}, graph_empty), 0);
 
-    // BOOST_CHECK_EQUAL(graph_empty.longestPath({}), 0);
+    std::vector<VertexType> longest_path = longestChain(graph);
 
-    // std::vector<VertexType> longest_path = graph.longestChain();
+    std::vector<VertexType> long_chain1({9, 6, 2, 0, 7});
+    std::vector<VertexType> long_chain2({9, 5, 2, 0, 7});
 
-    // std::vector<VertexType> long_chain1({9, 6, 2, 0, 7});
-    // std::vector<VertexType> long_chain2({9, 5, 2, 0, 7});
+    BOOST_CHECK_EQUAL(longestPath(all_nodes, graph) + 1, longestChain(graph).size());
+    BOOST_CHECK(longest_path == long_chain1 || longest_path == long_chain2);
 
-    // BOOST_CHECK_EQUAL(graph.longestPath(all_nodes) + 1, graph.longestChain().size());
-    // BOOST_CHECK(longest_path == long_chain1 || longest_path == long_chain2);
-
-    // BOOST_CHECK(graph_empty.longestChain() == std::vector<VertexType>({}));
+    BOOST_CHECK(longestChain(graph_empty) == std::vector<VertexType>({}));
 
     // std::cout << "Checking ancestors and descendants:" << std::endl;
     // /*
