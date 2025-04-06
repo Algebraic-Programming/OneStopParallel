@@ -20,6 +20,7 @@ limitations under the License.
 #include <boost/test/unit_test.hpp>
 
 #include "model/bsp/BspInstance.hpp"
+#include "model/bsp/BspSchedule.hpp"
 #include "graph_implementations/computational_dag_vector_impl.hpp"
 
 
@@ -34,6 +35,8 @@ BOOST_AUTO_TEST_CASE(test_1)
 
     BOOST_CHECK_EQUAL(instance.numberOfVertices(), 0);
     BOOST_CHECK_EQUAL(instance.numberOfProcessors(), 4);
+
+    BspSchedule<computational_dag_vector_impl_def_t> schedule(instance);
 
 }
 

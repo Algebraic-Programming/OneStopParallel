@@ -48,9 +48,9 @@ struct boost_edge {
     int communicationWeight;
 };
 
-using boost_graph = boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS, boost_vertex, boost_edge>;
-using boost_vertex_type = boost::graph_traits<boost_graph>::vertex_descriptor;
-using boost_edge_desc = boost::graph_traits<boost_graph>::edge_descriptor;
+using boost_graph_impl = boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS, boost_vertex, boost_edge>;
+using boost_vertex_type = boost::graph_traits<boost_graph_impl>::vertex_descriptor;
+using boost_edge_desc = boost::graph_traits<boost_graph_impl>::edge_descriptor;
 
 
 template<>
@@ -74,7 +74,7 @@ struct std::hash<boost_edge_desc> {
  * calculating the longest path, and retrieving topological order of vertices.
  */
 
-class boost_graph_adapter {
+class boost_graph {
   public:
     // graph_traits specialization
     using directed_edge_descriptor = boost_edge_desc;
@@ -87,7 +87,7 @@ class boost_graph_adapter {
     using vertex_type_type = unsigned;
     using edge_comm_weight_type = int;
 
-    boost_graph_adapter(const std::vector<std::vector<vertex_idx>> &out_, const std::vector<int> &workW_,
+    boost_graph(const std::vector<std::vector<vertex_idx>> &out_, const std::vector<int> &workW_,
                         const std::vector<int> &commW_,
                         const std::unordered_map<std::pair<int, int>, int, osp::pair_hash> &comm_edge_W)
         : number_of_vertex_types(0) {
@@ -109,7 +109,7 @@ class boost_graph_adapter {
         updateNumberOfVertexTypes();
     }
 
-    boost_graph_adapter(const std::vector<std::vector<vertex_idx>> &out_, const std::vector<int> &workW_,
+    boost_graph(const std::vector<std::vector<vertex_idx>> &out_, const std::vector<int> &workW_,
                         const std::vector<int> &commW_)
         : number_of_vertex_types(0) {
         graph.m_vertices.reserve(out_.size());
@@ -129,7 +129,7 @@ class boost_graph_adapter {
         updateNumberOfVertexTypes();
     }
 
-    boost_graph_adapter(const std::vector<std::vector<vertex_idx>> &out_, const std::vector<int> &workW_,
+    boost_graph(const std::vector<std::vector<vertex_idx>> &out_, const std::vector<int> &workW_,
                         const std::vector<int> &commW_, const std::vector<unsigned> &nodeType_)
         : number_of_vertex_types(0) {
         graph.m_vertices.reserve(out_.size());
@@ -153,13 +153,13 @@ class boost_graph_adapter {
     /**
      * @brief Default constructor for the ComputationalDag class.
      */
-    explicit boost_graph_adapter() : graph(0), number_of_vertex_types(0) {}
-    explicit boost_graph_adapter(unsigned number_of_nodes) : graph(number_of_nodes), number_of_vertex_types(0) {
+    explicit boost_graph() : graph(0), number_of_vertex_types(0) {}
+    explicit boost_graph(unsigned number_of_nodes) : graph(number_of_nodes), number_of_vertex_types(0) {
         updateNumberOfVertexTypes();
     }
 
-    inline const boost_graph &get_boost_graph() const { return graph; }
-    inline boost_graph &get_boost_graph() { return graph; }
+    inline const boost_graph_impl &get_boost_graph() const { return graph; }
+    inline boost_graph_impl &get_boost_graph() { return graph; }
 
     inline size_t num_vertices() const { return boost::num_vertices(graph); }
     inline size_t num_edges() const { return boost::num_edges(graph); }
@@ -255,16 +255,16 @@ class boost_graph_adapter {
     add_edge(const vertex_idx &src, const vertex_idx &tar, int comm_weight = DEFAULT_EDGE_COMM_WEIGHT);
 
   private:
-    boost_graph graph;
+    boost_graph_impl graph;
 
     unsigned number_of_vertex_types;
 
     static constexpr int DEFAULT_EDGE_COMM_WEIGHT = 1;
 };
 
-static_assert(osp::is_directed_graph_edge_desc_v<boost_graph_adapter>,
+static_assert(osp::is_directed_graph_edge_desc_v<boost_graph>,
               "boost_graph_adapter does not satisfy the computational_dag concept");
 
-static_assert(osp::is_computation_dag_typed_vertices_edge_desc_v<boost_graph_adapter>,
+static_assert(osp::is_computation_dag_typed_vertices_edge_desc_v<boost_graph>,
               "boost_graph_adapter must satisfy the computation_dag_typed_vertices_edge_desc concept");
 

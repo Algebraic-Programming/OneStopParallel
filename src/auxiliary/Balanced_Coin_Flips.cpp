@@ -68,8 +68,19 @@ bool osp::Repeat_Chance::get_flip() {
 
 bool osp::Biased_Random_with_side_bias::get_flip() {
     unsigned genuine_random_size = 3;
-    unsigned die_size = (side_ratio.first+side_ratio.second)*genuine_random_size+abs(true_bias);
-    unsigned flip = randInt(die_size);
+
+    const long long abs_true_bias = std::abs(true_bias);
+    if (abs_true_bias > std::numeric_limits<unsigned>::max()) {
+        throw std::runtime_error("true_bias is too large!");
+    }
+
+    unsigned die_size = (side_ratio.first+side_ratio.second)*genuine_random_size+ static_cast<unsigned>(abs_true_bias);
+
+    if (die_size > std::numeric_limits<int>::max()) {
+        throw std::runtime_error("die_size is too large!");        
+    }
+
+    unsigned flip = static_cast<unsigned>(randInt(static_cast<int>(die_size)));
     if (true_bias >= 0) {
         if (flip >= side_ratio.second * genuine_random_size) {
             true_bias -= side_ratio.second;

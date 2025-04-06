@@ -28,7 +28,7 @@ limitations under the License.
 #include "graph_algorithms/directed_graph_edge_desc_util.hpp"
 #include "graph_algorithms/directed_graph_top_sort.hpp"
 #include "graph_implementations/computational_dag_vector_impl.hpp"
-#include "graph_implementations/boost_graphs/boost_graph_adapter.hpp"
+#include "graph_implementations/boost_graphs/boost_graph.hpp"
 
 
 
@@ -250,7 +250,7 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
 
 BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
-    using VertexType = vertex_idx_t<boost_graph_adapter>;
+    using VertexType = vertex_idx_t<boost_graph>;
 
     const std::vector<std::vector<VertexType>> out(
 
@@ -260,8 +260,8 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     const std::vector<int> workW({1, 1, 1, 1, 2, 3, 2, 1, 1, 1});
     const std::vector<int> commW({1, 1, 1, 1, 2, 3, 2, 1, 1, 1});
 
-    const boost_graph_adapter graph(out, workW, commW);
-    const boost_graph_adapter graph_empty;
+    const boost_graph graph(out, workW, commW);
+    const boost_graph graph_empty;
 
     const auto long_edges = long_edges_in_triangles(graph);
 
@@ -428,7 +428,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     const std::vector<int> graph_second_workW = {1, 1, 1, 1, 1, 1, 3};
     const std::vector<int> graph_second_commW = graph_second_workW;
 
-    boost_graph_adapter graph_second(graph_second_Out, graph_second_workW, graph_second_commW);
+    boost_graph graph_second(graph_second_Out, graph_second_workW, graph_second_commW);
 
     std::vector<unsigned> top_dist_second({1, 2, 2, 3, 3, 3, 4});
     std::vector<unsigned> bottom_dist_second({4, 3, 3, 2, 1, 2, 1});

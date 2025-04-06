@@ -16,11 +16,11 @@ limitations under the License.
 @author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 
-#include "graph_implementations/boost_graphs/boost_graph_adapter.hpp"
+#include "graph_implementations/boost_graphs/boost_graph.hpp"
 
 using namespace osp;
 
-void boost_graph_adapter::updateNumberOfVertexTypes() {
+void boost_graph::updateNumberOfVertexTypes() {
     number_of_vertex_types = 0;
     for (const auto &v : vertices()) {
         if (vertex_type(v) >= number_of_vertex_types) {
@@ -29,7 +29,7 @@ void boost_graph_adapter::updateNumberOfVertexTypes() {
     }
 }
 
-std::pair<boost::detail::edge_desc_impl<boost::bidirectional_tag, std::size_t>, bool> boost_graph_adapter::add_edge(const boost_graph_adapter::vertex_idx &src, const boost_graph_adapter::vertex_idx &tar, int comm_weight) {
+std::pair<boost::detail::edge_desc_impl<boost::bidirectional_tag, std::size_t>, bool> boost_graph::add_edge(const boost_graph::vertex_idx &src, const boost_graph::vertex_idx &tar, int comm_weight) {
 
     const auto pair = boost::add_edge(src, tar, {comm_weight}, graph);
 

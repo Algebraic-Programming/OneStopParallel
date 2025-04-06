@@ -97,7 +97,7 @@ class BspInstance {
      */
     inline Graph_t &getComputationalDag() { return cdag; }
 
-    inline size_t numberOfVertices() const { return cdag.num_vertices(); }
+    inline std::size_t numberOfVertices() const { return cdag.num_vertices(); }
 
     /**
      * @brief Returns the number of processors in the BSP architecture.
