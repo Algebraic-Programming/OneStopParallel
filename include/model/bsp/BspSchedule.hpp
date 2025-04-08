@@ -989,39 +989,44 @@ class BspSchedule : IBspSchedule<Graph_t> {
         if (instance->getComputationalDag().num_vertices() <= 1 || number_of_supersteps <= 1)
             return;
 
-        std::vector<std::vector<std::vector<size_t>>> step_proc_node_list(
-            number_of_supersteps,
-            std::vector<std::vector<size_t>>(instance->numberOfProcessors(), std::vector<size_t>()));
+        std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> step_proc_node_list(
+            number_of_supersteps, std::vector<std::vector<vertex_idx_t<Graph_t>>>(
+                                      instance->numberOfProcessors(), std::vector<vertex_idx_t<Graph_t>>()));
         std::vector<std::vector<bool>> node_to_proc_been_sent(instance->numberOfVertices(),
                                                               std::vector<bool>(instance->numberOfProcessors(), false));
 
-        for (size_t node = 0; node < instance->numberOfVertices(); node++) {
+        for (vertex_idx_t<Graph_t> node = 0; node < instance->numberOfVertices(); node++) {
             step_proc_node_list[node_to_superstep_assignment[node]][node_to_processor_assignment[node]].push_back(node);
             node_to_proc_been_sent[node][node_to_processor_assignment[node]] = true;
         }
 
         // processor, ordered list of (cost, node, to_processor)
-        std::vector<std::set<std::vector<size_t>, std::greater<>>> require_sending(instance->numberOfProcessors());
-        for (size_t proc = 0; proc < instance->numberOfProcessors(); proc++) {
+        std::vector<std::set<std::vector<vertex_idx_t<Graph_t>>, std::greater<>>> require_sending(
+            instance->numberOfProcessors());
+        // TODO the datastructure seems to be wrong. the vectors added to the set have elements of different types.
+        // added many static_cast below as tmp fix
+
+        for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
             for (const auto &node : step_proc_node_list[0][proc]) {
 
                 for (const auto &target : instance->getComputationalDag().children(node)) {
                     if (proc != assignedProcessor(target)) {
                         require_sending[proc].insert(
-                            {instance->getComputationalDag().vertex_comm_weight(node) *
-                                 instance->getArchitecture().sendCosts(proc, node_to_processor_assignment[target]),
+                            {static_cast<vertex_idx_t<Graph_t>>(
+                                 instance->getComputationalDag().vertex_comm_weight(node) *
+                                 instance->getArchitecture().sendCosts(proc, node_to_processor_assignment[target])),
                              node, node_to_processor_assignment[target]});
                     }
                 }
             }
         }
 
-        for (size_t step = 1; step < number_of_supersteps; step++) {
+        for (unsigned step = 1; step < number_of_supersteps; step++) {
             std::vector<v_commw_t<Graph_t>> send_cost(instance->numberOfProcessors(), 0);
             std::vector<v_commw_t<Graph_t>> receive_cost(instance->numberOfProcessors(), 0);
 
             // must send in superstep step-1
-            for (size_t proc = 0; proc < instance->numberOfProcessors(); proc++) {
+            for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
                 for (const auto &node : step_proc_node_list[step][proc]) {
                     for (const auto &source : instance->getComputationalDag().parents(node)) {
 
@@ -1033,7 +1038,8 @@ class BspSchedule : IBspSchedule<Graph_t> {
                             v_commw_t<Graph_t> comm_cost =
                                 instance->getComputationalDag().vertex_comm_weight(source) *
                                 instance->getArchitecture().sendCosts(node_to_processor_assignment[source], proc);
-                            require_sending[assignedProcessor(source)].erase({comm_cost, source, proc});
+                            require_sending[assignedProcessor(source)].erase(
+                                {static_cast<vertex_idx_t<Graph_t>>(comm_cost), source, proc});
                             send_cost[node_to_processor_assignment[source]] += comm_cost;
                             receive_cost[proc] += comm_cost;
                         }
@@ -1052,35 +1058,38 @@ class BspSchedule : IBspSchedule<Graph_t> {
             // TODO: permute the order of processors
             for (size_t proc = 0; proc < instance->numberOfProcessors(); proc++) {
                 if (require_sending[proc].empty() ||
-                    (*(require_sending[proc].rbegin()))[0] + send_cost[proc] > max_comm_cost)
+                    static_cast<v_commw_t<Graph_t>>((*(require_sending[proc].rbegin()))[0]) + send_cost[proc] >
+                        max_comm_cost)
                     continue;
                 auto iter = require_sending[proc].begin();
                 while (iter != require_sending[proc].cend()) {
-                    if ((*iter)[0] + send_cost[proc] > max_comm_cost ||
-                        (*iter)[0] + receive_cost[(*iter)[2]] > max_comm_cost) {
+                    if (static_cast<v_commw_t<Graph_t>>((*iter)[0]) + send_cost[proc] > max_comm_cost ||
+                        static_cast<v_commw_t<Graph_t>>((*iter)[0]) + receive_cost[(*iter)[2]] > max_comm_cost) {
                         iter++;
                     } else {
                         commSchedule.emplace(std::make_tuple((*iter)[1], proc, (*iter)[2]), step - 1);
                         node_to_proc_been_sent[(*iter)[1]][(*iter)[2]] = true;
-                        send_cost[proc] += (*iter)[0];
-                        receive_cost[(*iter)[2]] += (*iter)[0];
+                        send_cost[proc] += static_cast<v_commw_t<Graph_t>>((*iter)[0]);
+                        receive_cost[(*iter)[2]] += static_cast<v_commw_t<Graph_t>>((*iter)[0]);
                         iter = require_sending[proc].erase(iter);
                         if (require_sending[proc].empty() ||
-                            (*(require_sending[proc].rbegin()))[0] + send_cost[proc] > max_comm_cost)
+                            static_cast<v_commw_t<Graph_t>>((*(require_sending[proc].rbegin()))[0]) + send_cost[proc] >
+                                max_comm_cost)
                             break;
                     }
                 }
             }
 
             // updating require_sending
-            for (size_t proc = 0; proc < instance->numberOfProcessors(); proc++) {
+            for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
                 for (const auto &node : step_proc_node_list[step][proc]) {
 
                     for (const auto &target : instance->getComputationalDag().children(node))
                         if (proc != assignedProcessor(target)) {
                             require_sending[proc].insert(
-                                {instance->getComputationalDag().vertex_comm_weight(node) *
-                                     instance->getArchitecture().sendCosts(proc, node_to_processor_assignment[target]),
+                                {static_cast<vertex_idx_t<Graph_t>>(
+                                     instance->getComputationalDag().vertex_comm_weight(node) *
+                                     instance->getArchitecture().sendCosts(proc, node_to_processor_assignment[target])),
                                  node, node_to_processor_assignment[target]});
                         }
                 }
