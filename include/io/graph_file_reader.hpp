@@ -37,6 +37,7 @@ bool readComputationalDagHyperdagFormat(std::ifstream &infile, Graph_t& graph) {
     while (!infile.eof() && line.at(0) == '%')
         getline(infile, line);
 
+    // the reader cannot read graphs that have more than INT_MAX vertices
     int hEdges, pins, N;
     sscanf(line.c_str(), "%d %d %d", &hEdges, &N, &pins);
 
@@ -45,9 +46,9 @@ bool readComputationalDagHyperdagFormat(std::ifstream &infile, Graph_t& graph) {
         return false;
     }
 
-    const std::size_t num_nodes = static_cast<std::size_t>(N);
+    const vertex_idx_t<Graph_t> num_nodes = static_cast<vertex_idx_t<Graph_t>>(N);
 
-    for (std::size_t i = 0; i < num_nodes; i++) {
+    for (vertex_idx_t<Graph_t> i = 0; i < num_nodes; i++) {
         graph.add_vertex(1, 1, 1);
     }
 
@@ -71,10 +72,10 @@ bool readComputationalDagHyperdagFormat(std::ifstream &infile, Graph_t& graph) {
             return false;
         }
 
-        if (edgeSource[static_cast<std::size_t>(hEdge)] == -1)
-            edgeSource[static_cast<std::size_t>(hEdge)] = node;
+        if (edgeSource[static_cast<vertex_idx_t<Graph_t>>(hEdge)] == -1)
+            edgeSource[static_cast<vertex_idx_t<Graph_t>>(hEdge)] = node;
         else
-            graph.add_edge(static_cast<vertex_idx_t<Graph_t>>(edgeSource[static_cast<std::size_t>(hEdge)]), static_cast<vertex_idx_t<Graph_t>>(node));
+            graph.add_edge(static_cast<vertex_idx_t<Graph_t>>(edgeSource[static_cast<vertex_idx_t<Graph_t>>(hEdge)]), static_cast<vertex_idx_t<Graph_t>>(node));
     }
 
     for (int i = 0; i < N; ++i) {
@@ -87,7 +88,9 @@ bool readComputationalDagHyperdagFormat(std::ifstream &infile, Graph_t& graph) {
         while (!infile.eof() && line.at(0) == '%')
             getline(infile, line);
 
-        int node, work, comm; //,  mem;
+        int node;
+        v_workw_t<Graph_t> work;
+        v_commw_t<Graph_t> comm; //,  mem;
         //unsigned type;
         sscanf(line.c_str(), "%d %d %d", &node, &work, &comm);
 
