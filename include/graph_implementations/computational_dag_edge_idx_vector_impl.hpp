@@ -126,19 +126,19 @@ class computational_dag_edge_idx_vector_impl {
     inline std::size_t in_degree(vertex_idx v) const { return in_edges_[v].size(); }
     inline std::size_t out_degree(vertex_idx v) const { return out_edges_[v].size(); }
 
-    inline int edge_comm_weight(directed_edge_descriptor e) const { return edges_[e.idx].comm_weight; }
+    inline edge_comm_weight_type edge_comm_weight(directed_edge_descriptor e) const { return edges_[e.idx].comm_weight; }
 
-    inline int vertex_work_weight(vertex_idx v) const { return vertices_[v].work_weight; }
-    inline int vertex_comm_weight(vertex_idx v) const { return vertices_[v].comm_weight; }
-    inline int vertex_mem_weight(vertex_idx v) const { return vertices_[v].mem_weight; }
+    inline vertex_work_weight_type vertex_work_weight(vertex_idx v) const { return vertices_[v].work_weight; }
+    inline vertex_comm_weight_type vertex_comm_weight(vertex_idx v) const { return vertices_[v].comm_weight; }
+    inline vertex_mem_weight_type vertex_mem_weight(vertex_idx v) const { return vertices_[v].mem_weight; }
 
     inline unsigned num_vertex_types() const { return num_vertex_types_; }
-    inline int vertex_type(vertex_idx v) const { return vertices_[v].vertex_type; }
+    inline vertex_type_type vertex_type(vertex_idx v) const { return vertices_[v].vertex_type; }
 
     inline vertex_idx source(const directed_edge_descriptor &e) const { return e.source; }
     inline vertex_idx target(const directed_edge_descriptor &e) const { return e.target; }
 
-    vertex_idx add_vertex(int work_weight, int comm_weight, int mem_weight, unsigned vertex_type = 0) {
+    vertex_idx add_vertex(vertex_work_weight_type work_weight, vertex_comm_weight_type comm_weight, vertex_mem_weight_type mem_weight, vertex_type_type vertex_type = 0) {
 
         vertices_.emplace_back(vertices_.size(), work_weight, comm_weight, mem_weight, vertex_type);
 
@@ -150,7 +150,7 @@ class computational_dag_edge_idx_vector_impl {
         return vertices_.back().id;
     }
 
-    std::pair<directed_edge_descriptor, bool> add_edge(vertex_idx source, vertex_idx target, int comm_weight = 1) {
+    std::pair<directed_edge_descriptor, bool> add_edge(vertex_idx source, vertex_idx target, edge_comm_weight_type comm_weight = 1) {
 
         if (source == target) {
             return {directed_edge_descriptor{}, false};
@@ -174,12 +174,12 @@ class computational_dag_edge_idx_vector_impl {
         return {out_edges_[source].back(), true};
     }
 
-    inline void set_vertex_work_weight(vertex_idx v, int work_weight) { vertices_[v].work_weight = work_weight; }
-    inline void set_vertex_comm_weight(vertex_idx v, int comm_weight) { vertices_[v].comm_weight = comm_weight; }
-    inline void set_vertex_mem_weight(vertex_idx v, int mem_weight) { vertices_[v].mem_weight = mem_weight; }
-    inline void set_vertex_type(vertex_idx v, unsigned vertex_type) {
+    inline void set_vertex_work_weight(vertex_idx v, vertex_work_weight_type work_weight) { vertices_[v].work_weight = work_weight; }
+    inline void set_vertex_comm_weight(vertex_idx v, vertex_comm_weight_type comm_weight) { vertices_[v].comm_weight = comm_weight; }
+    inline void set_vertex_mem_weight(vertex_idx v, vertex_mem_weight_type mem_weight) { vertices_[v].mem_weight = mem_weight; }
+    inline void set_vertex_type(vertex_idx v, vertex_type_type vertex_type) {
         vertices_[v].vertex_type = vertex_type;
-        num_vertex_types_ = std::max(num_vertex_types_, vertex_type);
+        num_vertex_types_ = std::max(num_vertex_types_, vertex_type + 1);
     }
 
     inline const v_impl &get_vertex_impl(vertex_idx v) const { return vertices_[v]; }

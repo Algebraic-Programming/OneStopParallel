@@ -19,27 +19,63 @@ limitations under the License.
 #define BOOST_TEST_MODULE Bsp_Architecture
 #include <boost/test/unit_test.hpp>
 
-#include "model/bsp/BspArchitecture.hpp"
 #include "graph_implementations/computational_dag_vector_impl.hpp"
+#include "model/bsp/BspArchitecture.hpp"
 
 using namespace osp;
 
-BOOST_AUTO_TEST_CASE(ParameterizedConstructorTest)
-{
+BOOST_AUTO_TEST_CASE(ParameterizedConstructorTest) {
+
+    std::vector<std::vector<int>> uniform_sent_costs = {{0, 1, 1, 1}, {1, 0, 1, 1}, {1, 1, 0, 1}, {1, 1, 1, 0}};
+
     BspArchitecture<computational_dag_vector_impl_def_t> architecture(4, 2, 3);
     BOOST_TEST(architecture.numberOfProcessors() == 4);
     BOOST_TEST(architecture.communicationCosts() == 2);
     BOOST_TEST(architecture.synchronisationCosts() == 3);
+    BOOST_CHECK_EQUAL(architecture.getMemoryConstraintType(), NONE);
+    BOOST_CHECK_EQUAL(architecture.getNumberOfProcessorTypes(), 1);
+    BOOST_CHECK_EQUAL(architecture.isNumaArchitecture(), false);
 
-    std::vector<std::vector<int>> expectedSendCosts = {
-        {0, 2, 2, 2},
-        {2, 0, 2, 2},
-        {2, 2, 0, 2},
-        {2, 2, 2, 0}
-    };
+    BOOST_CHECK_EQUAL(architecture.memoryBound(0), 100);
+    BOOST_CHECK_EQUAL(architecture.memoryBound(1), 100);
+    BOOST_CHECK_EQUAL(architecture.memoryBound(2), 100);
+    BOOST_CHECK_EQUAL(architecture.memoryBound(3), 100);
+
+    BOOST_CHECK_EQUAL(architecture.processorTypes()[0], 0);
+    BOOST_CHECK_EQUAL(architecture.processorTypes()[1], 0);
+    BOOST_CHECK_EQUAL(architecture.processorTypes()[2], 0);
+    BOOST_CHECK_EQUAL(architecture.processorTypes()[3], 0);
+
+    BOOST_CHECK_EQUAL(architecture.processorType(0), 0);
+    BOOST_CHECK_EQUAL(architecture.processorType(1), 0);
+    BOOST_CHECK_EQUAL(architecture.processorType(2), 0);
+    BOOST_CHECK_EQUAL(architecture.processorType(3), 0);
+
+    BOOST_CHECK_EQUAL(architecture.communicationCosts(0, 1), 2);
+    BOOST_CHECK_EQUAL(architecture.communicationCosts(0, 0), 0);
+
+    BOOST_CHECK_EQUAL(architecture.getProcessorTypeCount().size(), 1);
+    BOOST_CHECK_EQUAL(architecture.getProcessorTypeCount()[0], 4);
+
+    BOOST_CHECK_EQUAL(architecture.getNumberOfProcessorTypes(), 1);
+
+    BOOST_CHECK_EQUAL(architecture.maxMemoryBoundProcType(0), 100);
+
+    BOOST_TEST(architecture.sendCostMatrix() == uniform_sent_costs);
+
+    std::vector<std::vector<int>> expectedSendCosts = {{0, 2, 2, 2}, {2, 0, 2, 2}, {2, 2, 0, 2}, {2, 2, 2, 0}};
 
     architecture.setSendCosts(expectedSendCosts);
     BOOST_TEST(architecture.sendCostMatrix() == expectedSendCosts);
+
+    BOOST_CHECK_EQUAL(architecture.communicationCosts(0, 1), 4);
+    BOOST_CHECK_EQUAL(architecture.communicationCosts(0, 0), 0);
+
+    architecture.SetUniformSendCost();
+    BOOST_TEST(architecture.sendCostMatrix() == uniform_sent_costs);
+
+    BOOST_CHECK_EQUAL(architecture.communicationCosts(0, 1), 2);
+    BOOST_CHECK_EQUAL(architecture.communicationCosts(0, 0), 0);
 }
 
 BOOST_AUTO_TEST_CASE(Architecture) {
@@ -106,10 +142,12 @@ BOOST_AUTO_TEST_CASE(Architecture) {
 
     // constructor
     std::vector<std::vector<int>> send_costs = {{0, 1, 1, 1, 1, 1}, {1, 0, 1, 1, 1, 1}, {1, 1, 0, 1, 1, 1},
-                                                         {1, 1, 1, 0, 1, 1}, {1, 1, 1, 1, 0, 1}, {1, 1, 1, 1, 1, 0}};
+                                                {1, 1, 1, 0, 1, 1}, {1, 1, 1, 1, 0, 1}, {1, 1, 1, 1, 1, 0}};
 
-    BOOST_CHECK_THROW(BspArchitecture<computational_dag_vector_impl_def_t> test31(7, 42942, 0, send_costs), std::invalid_argument);
-    BOOST_CHECK_THROW(BspArchitecture<computational_dag_vector_impl_def_t> test32(5, 42942, 0, send_costs), std::invalid_argument);
+    BOOST_CHECK_THROW(BspArchitecture<computational_dag_vector_impl_def_t> test31(7, 42942, 0, send_costs),
+                      std::invalid_argument);
+    BOOST_CHECK_THROW(BspArchitecture<computational_dag_vector_impl_def_t> test32(5, 42942, 0, send_costs),
+                      std::invalid_argument);
 
     BspArchitecture<computational_dag_vector_impl_def_t> test3(6, 47295, 0, send_costs);
     BOOST_CHECK_EQUAL(test3.numberOfProcessors(), 6);
@@ -132,9 +170,9 @@ BOOST_AUTO_TEST_CASE(Architecture) {
 
     // constructor
     std::vector<std::vector<int>> send_costs2 = {{0, 1, 2, 1, 1, 1}, {1, 0, 1, 1, 1, 1}, {1, 1, 0, 1, 1, 1},
-                                                          {1, 1, 1, 0, 1, 1}, {1, 1, 1, 1, 0, 1}, {1, 1, 1, 1, 1, 0}};
+                                                 {1, 1, 1, 0, 1, 1}, {1, 1, 1, 1, 0, 1}, {1, 1, 1, 1, 1, 0}};
     std::vector<std::vector<int>> send_costs3 = {{0, 1, 1, 1, 1, 1}, {1, 0, 1, 1, 1, 1}, {1, 1, 0, 1, 1, 1},
-                                                          {3, 1, 1, 0, 1, 1}, {1, 1, 1, 1, 0, 1}, {1, 1, 1, 1, 1, 0}};
+                                                 {3, 1, 1, 0, 1, 1}, {1, 1, 1, 1, 0, 1}, {1, 1, 1, 1, 1, 0}};
 
     BspArchitecture<computational_dag_vector_impl_def_t> test4(6, 0, 4294965, send_costs2);
     BOOST_CHECK_EQUAL(test4.numberOfProcessors(), 6);
@@ -166,5 +204,4 @@ BOOST_AUTO_TEST_CASE(Architecture) {
     BOOST_CHECK_EQUAL(test.synchronisationCosts(), 2);
     BOOST_CHECK_EQUAL(test.sendCosts(4, 3), 1);
     BOOST_CHECK_EQUAL(test.isNumaArchitecture(), false);
-    
 };

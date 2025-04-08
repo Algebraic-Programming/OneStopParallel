@@ -78,13 +78,13 @@ class computational_dag_vector_impl {
 
     inline int vertex_mem_weight(const vertex_idx v) const { return vertices_[v].mem_weight; }
 
-    inline unsigned vertex_type(const vertex_idx v) const { return vertices_[v].vertex_type; }
+    inline vertex_type_type vertex_type(const vertex_idx v) const { return vertices_[v].vertex_type; }
 
-    inline unsigned num_vertex_types() const { return num_vertex_types_; }
+    inline vertex_type_type num_vertex_types() const { return num_vertex_types_; }
 
     inline const v_impl &get_vertex_impl(const vertex_idx v) const { return vertices_[v]; }
 
-    vertex_idx add_vertex(int work_weight, int comm_weight, int mem_weight, unsigned vertex_type = 0) {
+    vertex_idx add_vertex(int work_weight, int comm_weight, int mem_weight, vertex_type_type vertex_type = 0) {
 
         vertices_.emplace_back(vertices_.size(), work_weight, comm_weight, mem_weight, vertex_type);
         out_neigbors.push_back({});
@@ -101,9 +101,9 @@ class computational_dag_vector_impl {
 
     inline void set_vertex_mem_weight(vertex_idx v, int mem_weight) { vertices_[v].mem_weight = mem_weight; }
 
-    inline void set_vertex_type(vertex_idx v, unsigned vertex_type) {
+    inline void set_vertex_type(vertex_idx v, vertex_type_type vertex_type) {
         vertices_[v].vertex_type = vertex_type;
-        num_vertex_types_ = std::max(num_vertex_types_, vertex_type);
+        num_vertex_types_ = std::max(num_vertex_types_, vertex_type + 1);
     }
 
     bool add_edge(vertex_idx source, vertex_idx target) {
@@ -130,7 +130,7 @@ class computational_dag_vector_impl {
     std::vector<std::vector<vertex_idx>> out_neigbors;
     std::vector<std::vector<vertex_idx>> in_neigbors;
 
-    size_t num_edges_ = 0;
+    std::size_t num_edges_ = 0;
     unsigned num_vertex_types_ = 0;
 };
 

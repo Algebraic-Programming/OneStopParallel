@@ -22,7 +22,11 @@ limitations under the License.
 #include "model/bsp/BspInstance.hpp"
 #include "model/bsp/BspSchedule.hpp"
 #include "graph_implementations/computational_dag_vector_impl.hpp"
-
+#include "graph_implementations/computational_dag_edge_idx_vector_impl.hpp"
+#include "io/arch_file_reader.hpp"
+#include "io/graph_file_reader.hpp"
+#include <filesystem>
+#include <iostream>
 
 using namespace osp;
 
@@ -35,8 +39,54 @@ BOOST_AUTO_TEST_CASE(test_1)
 
     BOOST_CHECK_EQUAL(instance.numberOfVertices(), 0);
     BOOST_CHECK_EQUAL(instance.numberOfProcessors(), 4);
+    BOOST_CHECK_EQUAL(instance.synchronisationCosts(), 3);
+    BOOST_CHECK_EQUAL(instance.communicationCosts(), 2);
 
-    BspSchedule<computational_dag_vector_impl_def_t> schedule(instance);
+
+    BspArchitecture<computational_dag_vector_impl_def_t> architecture_2(6, 3, 1);
+
+    instance.setArchitecture(architecture_2);
+
+    BOOST_CHECK_EQUAL(instance.numberOfProcessors(), 6);
+    BOOST_CHECK_EQUAL(instance.synchronisationCosts(), 1);
+    BOOST_CHECK_EQUAL(instance.communicationCosts(), 3);
+    BOOST_CHECK_EQUAL(instance.numberOfVertices(), 0);
 
 }
 
+BOOST_AUTO_TEST_CASE(test_instance_bicgstab) {
+  
+    
+    BspInstance<computational_dag_edge_idx_vector_impl_def_t> instance;
+    instance.setNumberOfProcessors(4);
+    instance.setCommunicationCosts(2);
+    instance.setSynchronisationCosts(3);
+
+    // Getting root git directory
+    std::filesystem::path cwd = std::filesystem::current_path();
+    std::cout << cwd << std::endl;
+    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
+        cwd = cwd.parent_path();
+        std::cout << cwd << std::endl;
+    }
+
+ 
+    bool status =
+        file_reader::readComputationalDagHyperdagFormat((cwd / "data/spaa/tiny/instance_bicgstab.txt").string(), instance.getComputationalDag());
+
+    BOOST_CHECK(status);
+    BOOST_CHECK_EQUAL(instance.getComputationalDag().num_vertices(), 54);
+
+    BOOST_CHECK_EQUAL(instance.getComputationalDag().num_vertex_types(), 1);
+
+    instance.getComputationalDag().set_vertex_type(0,1);
+
+    BOOST_CHECK_EQUAL(instance.getComputationalDag().num_vertex_types(), 2);
+
+    instance.getArchitecture().setProcessorType(0, 1);
+    instance.setDiagonalCompatibilityMatrix(2);
+
+    BOOST_CHECK_EQUAL(instance.isCompatible(0,0), true);
+    BOOST_CHECK_EQUAL(instance.isCompatible(1,0), false);
+
+};

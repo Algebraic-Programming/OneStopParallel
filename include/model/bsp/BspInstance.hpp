@@ -262,7 +262,7 @@ class BspInstance {
         return isCompatibleType(cdag.vertex_type(node), architecture.processorType(processor_id));
     }
 
-    bool isCompatibleType(unsigned nodeType, unsigned processorType) const {
+    bool isCompatibleType(v_type_t<Graph_t> nodeType, v_type_t<Graph_t> processorType) const {
 
         return nodeProcessorCompatibility[nodeType][processorType];
     }
@@ -278,7 +278,7 @@ class BspInstance {
 
         nodeProcessorCompatibility =
             std::vector<std::vector<bool>>(number_of_types, std::vector<bool>(number_of_types, false));
-        for (int i = 0; i < number_of_types; ++i)
+        for (unsigned i = 0; i < number_of_types; ++i)
             nodeProcessorCompatibility[i][i] = true;
     }
 
