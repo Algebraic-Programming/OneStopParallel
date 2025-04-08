@@ -108,15 +108,36 @@ class Scheduler {
 
     virtual std::pair<RETURN_STATUS, BspSchedule<Graph_t>> computeSchedule(const BspInstance<Graph_t> &instance) = 0;
 
-    /**
-     * @brief Compute a schedule for the given BSP instance within the time limit.
-     * @param instance The BSP instance for which to compute the schedule.
-     * @return A pair containing the return status and the computed schedule.
-     */
-    virtual std::pair<RETURN_STATUS, BspSchedule<Graph_t>>
-    computeScheduleWithTimeLimit(const BspInstance<Graph_t> &instance);
+    // /**
+    //  * @brief Compute a schedule for the given BSP instance within the time limit.
+    //  * @param instance The BSP instance for which to compute the schedule.
+    //  * @return A pair containing the return status and the computed schedule.
+    //  */
+    // virtual std::pair<RETURN_STATUS, BspSchedule<Graph_t>>
+    // computeScheduleWithTimeLimit(const BspInstance<Graph_t> &instance) {
 
-    virtual void setUseMemoryConstraint(bool use_memory_constraint_) { throw std::runtime_error("Not implemented"); }
+    //     std::packaged_task<std::pair<RETURN_STATUS, BspSchedule<Graph_t>>(const BspInstance<Graph_t> &)> task(
+    //         [this](const BspInstance<Graph_t> &instance) -> std::pair<RETURN_STATUS, BspSchedule<Graph_t>> {
+    //             return computeSchedule(instance);
+    //         });
+    //     auto future = task.get_future();
+    //     std::thread thr(std::move(task), std::ref(instance));
+    //     if (future.wait_for(std::chrono::seconds(getTimeLimitSeconds())) == std::future_status::timeout) {
+    //         thr.detach(); // we leave the thread still running
+    //         std::cerr << "Timeout reached, execution of computeSchedule() aborted" << std::endl;
+    //         return std::make_pair(TIMEOUT, BspSchedule<Graph_t>());
+    //     }
+    //     thr.join();
+    //     try {
+    //         const auto result = future.get();
+    //         return result;
+    //     } catch (const std::exception &e) {
+    //         std::cerr << "Exception caught in computeScheduleWithTimeLimit(): " << e.what() << std::endl;
+    //         return std::make_pair(ERROR, BspSchedule<Graph_t>());
+    //     }
+    // }
+
+    virtual void setUseMemoryConstraint(bool use_memory_constraint_) { throw std::runtime_error("Not implemented " + use_memory_constraint_); }
 };
 
 } // namespace osp

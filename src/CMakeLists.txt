@@ -1,7 +1,3 @@
-
-# Library: model
-file(GLOB model_bsp_sources model/bsp/*.cpp)
-
 #Library: auxiliary
 file(GLOB auxiliary_sources auxiliary/*.cpp)
 
@@ -59,9 +55,6 @@ file(GLOB boost_graph_sources graph_implementations/boost_graphs/*.cpp)
 # # Library: Minimal_matching
 # file(GLOB MinimalMatching_sources scheduler/Minimal_matching/*.cpp)
 
-# Library: io
-file(GLOB io_sources io/*.cpp)
-
 # # Library: model
 # file(GLOB dag_algorithms model/dag_algorithms/*.cpp)
 
@@ -113,8 +106,6 @@ add_library( BspSchedulingLibrary STATIC
                                 #   ${Coarsers_sources}
                                 #   ${MinimalMatching_sources}
                                 #   ${file_interactions_sources}
-                                    ${model_bsp_sources}
-                                    ${io_sources}
                                     ${boost_graph_sources}
                                 #   ${refine_sources}
                                 #   ${structures_sources}

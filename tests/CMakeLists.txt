@@ -45,6 +45,11 @@ _add_test( balanced_coin_flips )
 _add_test( filereader )
 
 
+## scheduler 
+
+_add_test( bsp_schedulers )
+
+
 # Custom target to compile all the tests
 add_custom_target( build_tests DEPENDS ${tests_list} )
 add_custom_target( run_tests COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS build_tests )

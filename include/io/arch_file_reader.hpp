@@ -25,8 +25,102 @@ limitations under the License.
 
 namespace osp { namespace file_reader {
 
-bool readBspArchitecture(const std::string &filename, BspArchitecture &arch);
+template<typename Graph_t>
+bool readBspArchitecture(std::ifstream &infile, BspArchitecture<Graph_t> &architecture) {
 
-bool readBspArchitecture(std::ifstream &infile, BspArchitecture &arch);
+    std::string line;
+    getline(infile, line);
+    while (!infile.eof() && line.at(0) == '%')
+        getline(infile, line);
+
+    unsigned p;
+    v_commw_t<Graph_t> g, L;
+    v_memw_t<Graph_t> M;
+    int mem_type = -1;
+    sscanf(line.c_str(), "%d %d %d %d %d", &p, &g, &L, &mem_type, &M);
+
+    architecture.setNumberOfProcessors(p);
+    architecture.setCommunicationCosts(g);
+    architecture.setSynchronisationCosts(L);
+
+    if (0 <= mem_type && mem_type <= 3) {
+
+        if (mem_type == 0) {
+            architecture.setMemoryConstraintType(NONE);
+        } else if (mem_type == 1) {
+            architecture.setMemoryConstraintType(LOCAL);
+            architecture.setMemoryBound(M);
+        } else if (mem_type == 2) {
+            architecture.setMemoryConstraintType(GLOBAL);
+            architecture.setMemoryBound(M);
+        } else if (mem_type == 3) {
+            architecture.setMemoryConstraintType(PERSISTENT_AND_TRANSIENT);
+            architecture.setMemoryBound(M);
+        }
+    } else if (mem_type == -1) {
+        std::cout << "No memory type specified. Assuming \"NONE\".\n";
+        architecture.setMemoryConstraintType(NONE);
+    } else {
+        std::cout << "Invalid memory type.\n";
+        return false;
+    }
+
+    for (unsigned i = 0; i < p * p; ++i) {
+        if (infile.eof()) {
+            std::cout << "Incorrect input file format (file terminated too early).\n";
+
+            architecture.SetUniformSendCost();
+            return false;
+        }
+        getline(infile, line);
+        while (!infile.eof() && line.at(0) == '%')
+            getline(infile, line);
+
+        unsigned fromProc, toProc;
+        v_commw_t<Graph_t> value;
+        sscanf(line.c_str(), "%d %d %d", &fromProc, &toProc, &value);
+
+        if (fromProc >= p || toProc >= p) {
+            std::cout << "Incorrect input file format (index out of range or "
+                         "negative NUMA value).\n";
+
+            architecture.SetUniformSendCost();
+            return false;
+        }
+        if (fromProc == toProc && value != 0u) {
+            std::cout << "Incorrect input file format (main diagonal of NUMA cost "
+                         "matrix must be 0).\n";
+
+            architecture.SetUniformSendCost();
+            return false;
+        }
+        architecture.setSendCosts(fromProc, toProc, value);
+    }
+
+    getline(infile, line);
+    while (!infile.eof() && line.at(0) == '%')
+        getline(infile, line);
+    if (!infile.eof()) {
+        std::cout << "Incorrect input file format (file has remaining lines).\n";
+        return false;
+    }
+
+    architecture.computeCommAverage();
+
+    return true;
+};
+
+template<typename Graph_t>
+bool readBspArchitecture(const std::string &filename, BspArchitecture<Graph_t> &architecture) {
+
+    std::ifstream infile(filename);
+    if (!infile.is_open()) {
+        std::cout << "Unable to find/open input machine parameter file.\n";
+
+        return false;
+    }
+
+    return file_reader::readBspArchitecture(infile, architecture);
+};
 
 }} // namespace osp::file_reader

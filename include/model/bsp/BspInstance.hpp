@@ -41,7 +41,7 @@ class BspInstance {
 
   private:
     Graph_t cdag;
-    BspArchitecture architecture;
+    BspArchitecture<Graph_t> architecture;
 
     // for problem instances with heterogeneity
     std::vector<std::vector<bool>> nodeProcessorCompatibility = std::vector<std::vector<bool>>({{true}});
@@ -58,7 +58,7 @@ class BspInstance {
      * @param cdag The computational DAG for the instance.
      * @param architecture The BSP architecture for the instance.
      */
-    BspInstance(Graph_t cdag, BspArchitecture architecture_,
+    BspInstance(Graph_t cdag, BspArchitecture<Graph_t> architecture_,
                 std::vector<std::vector<bool>> nodeProcessorCompatibility_ = std::vector<std::vector<bool>>({{true}}))
         : cdag(cdag), architecture(architecture_), nodeProcessorCompatibility(nodeProcessorCompatibility_) {}
 
@@ -67,21 +67,21 @@ class BspInstance {
      *
      * @return A reference to the BSP architecture for the instance.
      */
-    inline const BspArchitecture &getArchitecture() const { return architecture; }
+    inline const BspArchitecture<Graph_t> &getArchitecture() const { return architecture; }
 
     /**
      * @brief Returns a reference to the BSP architecture for the instance.
      *
      * @return A reference to the BSP architecture for the instance.
      */
-    inline BspArchitecture &getArchitecture() { return architecture; }
+    inline BspArchitecture<Graph_t> &getArchitecture() { return architecture; }
 
     /**
      * @brief Sets the BSP architecture for the instance.
      *
      * @param architecture_ The BSP architecture for the instance.
      */
-    inline void setArchitecture(const BspArchitecture &architechture_) { architecture = architechture_; }
+    inline void setArchitecture(const BspArchitecture<Graph_t> &architechture_) { architecture = architechture_; }
 
     /**
      * @brief Returns a reference to the computational DAG for the instance.
@@ -116,7 +116,7 @@ class BspInstance {
      *
      * @return The communication costs between the two processors.
      */
-    inline unsigned int communicationCosts(unsigned int p1, unsigned int p2) const {
+    inline v_commw_t<Graph_t> communicationCosts(unsigned int p1, unsigned int p2) const {
         return architecture.communicationCosts(p1, p2);
     }
 
@@ -129,14 +129,14 @@ class BspInstance {
      *
      * @return The send costs between the two processors.
      */
-    inline unsigned int sendCosts(unsigned int p1, unsigned int p2) const { return architecture.sendCosts(p1, p2); }
+    inline v_commw_t<Graph_t> sendCosts(unsigned int p1, unsigned int p2) const { return architecture.sendCosts(p1, p2); }
 
     /**
      * @brief Returns a copy of the send costs matrix.
      *
      * @return A copy of the send costs matrix.
      */
-    inline const std::vector<std::vector<unsigned int>> &sendCostMatrix() const {
+    inline const std::vector<std::vector<v_commw_t<Graph_t>>> &sendCostMatrix() const {
         return architecture.sendCostMatrix();
     }
 
@@ -145,14 +145,14 @@ class BspInstance {
      *
      * @return The communication costs as an unsigned integer.
      */
-    inline unsigned int communicationCosts() const { return architecture.communicationCosts(); }
+    inline v_commw_t<Graph_t> communicationCosts() const { return architecture.communicationCosts(); }
 
     /**
      * @brief Returns the synchronization costs of the BSP architecture.
      *
      * @return The synchronization costs as an unsigned integer.
      */
-    inline unsigned int synchronisationCosts() const { return architecture.synchronisationCosts(); }
+    inline v_commw_t<Graph_t> synchronisationCosts() const { return architecture.synchronisationCosts(); }
 
     /**
      * @brief Returns whether the architecture is NUMA.
@@ -161,12 +161,12 @@ class BspInstance {
      */
     inline bool isNumaInstance() const { return architecture.isNumaArchitecture(); }
 
-    inline unsigned memoryBound(unsigned proc) const { return architecture.memoryBound(proc); }
+    inline v_memw_t<Graph_t> memoryBound(unsigned proc) const { return architecture.memoryBound(proc); }
 
-    unsigned maxMemoryBoundProcType(unsigned procType) const { return architecture.maxMemoryBoundProcType(procType); }
+    v_memw_t<Graph_t> maxMemoryBoundProcType(unsigned procType) const { return architecture.maxMemoryBoundProcType(procType); }
 
-    unsigned maxMemoryBoundNodeType(unsigned nodeType) const {
-        unsigned max_mem = 0;
+    v_memw_t<Graph_t> maxMemoryBoundNodeType(unsigned nodeType) const {
+        int max_mem = 0;
         for (unsigned proc = 0; proc < architecture.getNumberOfProcessorTypes(); proc++) {
             if (isCompatibleType(nodeType, architecture.processorType(proc))) {
                 max_mem = std::max(max_mem, architecture.memoryBound(proc));
@@ -198,7 +198,7 @@ class BspInstance {
 
     bool check_memory_constraints_feasibility() const {
 
-        std::vector<unsigned> max_memory_per_proc_type(architecture.getNumberOfProcessorTypes(), 0);
+        std::vector<int> max_memory_per_proc_type(architecture.getNumberOfProcessorTypes(), 0);
         for (unsigned proc = 0; proc < architecture.numberOfProcessors(); proc++) {
             max_memory_per_proc_type[architecture.processorType(proc)] =
                 std::max(max_memory_per_proc_type[architecture.processorType(proc)], architecture.memoryBound(proc));
@@ -224,7 +224,7 @@ class BspInstance {
 
     void adjust_memory_constraints() {
 
-        std::vector<unsigned> max_memory_per_proc_type(architecture.getNumberOfProcessorTypes(), 0);
+        std::vector<int> max_memory_per_proc_type(architecture.getNumberOfProcessorTypes(), 0);
         for (unsigned proc = 0; proc < architecture.numberOfProcessors(); proc++) {
             max_memory_per_proc_type[architecture.processorType(proc)] =
                 std::max(max_memory_per_proc_type[architecture.processorType(proc)], architecture.memoryBound(proc));
@@ -259,7 +259,7 @@ class BspInstance {
     }
 
     bool isCompatible(const vertex_idx_t<Graph_t> &node, unsigned processor_id) const {
-        return isCompatibleType(cdag.node_type(node), architecture.processorType(processor_id));
+        return isCompatibleType(cdag.vertex_type(node), architecture.processorType(processor_id));
     }
 
     bool isCompatibleType(unsigned nodeType, unsigned processorType) const {

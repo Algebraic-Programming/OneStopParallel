@@ -28,6 +28,7 @@ limitations under the License.
 #include <vector>
 
 #include "auxiliary/misc.hpp"
+#include "concepts/graph_traits.hpp"
 
 namespace osp {
 
@@ -49,33 +50,49 @@ enum MEMORY_CONSTRAINT_TYPE {
  * synchronization costs, and send costs between processors in a BSP system. It provides methods to
  * set and retrieve these values.
  */
+template<typename Graph_t>
 class BspArchitecture {
 
   private:
     unsigned number_processors;
     unsigned number_of_processor_types;
-    unsigned communication_costs;
-    unsigned synchronisation_costs;
 
-    std::vector<unsigned> memory_bound;
+    v_commw_t<Graph_t> communication_costs;
+    v_commw_t<Graph_t> synchronisation_costs;
+
+    std::vector<v_memw_t<Graph_t>> memory_bound;
 
     bool isNuma;
 
-    std::vector<unsigned> processor_type;
+    std::vector<v_type_t<Graph_t>> processor_type;
 
-    std::vector<std::vector<unsigned>> send_costs;
+    std::vector<std::vector<v_commw_t<Graph_t>>> send_costs;
 
     MEMORY_CONSTRAINT_TYPE memory_const_type = NONE;
 
-    bool are_send_cost_numa();
+    bool are_send_cost_numa() {
+        if (number_processors == 1)
+            return false;
+
+        v_commw_t<Graph_t> val = send_costs[0][1];
+        for (unsigned p1 = 0; p1 < number_processors; p1++) {
+            for (unsigned p2 = 0; p2 < number_processors; p2++) {
+                if (p1 == p2)
+                    continue;
+                if (send_costs[p1][p2] != val)
+                    return true;
+            }
+        }
+        return false;
+    }
 
   public:
     BspArchitecture()
         : number_processors(2), number_of_processor_types(1), communication_costs(1), synchronisation_costs(2),
-          memory_bound(std::vector<unsigned>(number_processors, 100)), isNuma(false),
-          processor_type(std::vector<unsigned int>(number_processors, 0)),
-          send_costs(std::vector<std::vector<unsigned int>>(number_processors,
-                                                            std::vector<unsigned int>(number_processors, 1))) {
+          memory_bound(std::vector<v_memw_t<Graph_t>>(number_processors, 100)), isNuma(false),
+          processor_type(std::vector<v_type_t<Graph_t>>(number_processors, 0)),
+          send_costs(std::vector<std::vector<v_commw_t<Graph_t>>>(
+              number_processors, std::vector<v_commw_t<Graph_t>>(number_processors, 1))) {
         for (unsigned i = 0; i < number_processors; i++) {
             send_costs[i][i] = 0;
         }
@@ -89,12 +106,14 @@ class BspArchitecture {
      * @param comm_cost The communication cost between processors.
      * @param synch_cost The synchronization cost between processors.
      */
-    BspArchitecture(unsigned processors, unsigned comm_cost, unsigned synch_cost, unsigned memory_bound_ = 100)
+    BspArchitecture(unsigned processors, v_commw_t<Graph_t> comm_cost, v_commw_t<Graph_t> synch_cost,
+                    v_memw_t<Graph_t> memory_bound_ = 100)
         : number_processors(processors), number_of_processor_types(1), communication_costs(comm_cost),
-          synchronisation_costs(synch_cost), memory_bound(std::vector<unsigned>(number_processors, memory_bound_)),
-          isNuma(false), processor_type(std::vector<unsigned int>(number_processors, 0)),
-          send_costs(std::vector<std::vector<unsigned int>>(number_processors,
-                                                            std::vector<unsigned int>(number_processors, 1))) {
+          synchronisation_costs(synch_cost),
+          memory_bound(std::vector<v_memw_t<Graph_t>>(number_processors, memory_bound_)), isNuma(false),
+          processor_type(std::vector<v_type_t<Graph_t>>(number_processors, 0)),
+          send_costs(std::vector<std::vector<v_commw_t<Graph_t>>>(
+              number_processors, std::vector<v_commw_t<Graph_t>>(number_processors, 1))) {
 
         for (unsigned i = 0; i < number_processors; i++) {
             send_costs[i][i] = 0;
@@ -109,11 +128,11 @@ class BspArchitecture {
      * @param comm_cost The communication cost between processors.
      * @param synch_cost The synchronization cost between processors.
      */
-    BspArchitecture(unsigned int processors, unsigned int comm_cost, unsigned int synch_cost,
-                    std::vector<std::vector<unsigned>> send_costs_)
+    BspArchitecture(unsigned int processors, v_commw_t<Graph_t> comm_cost, v_commw_t<Graph_t> synch_cost,
+                    std::vector<std::vector<v_commw_t<Graph_t>>> send_costs_)
         : number_processors(processors), number_of_processor_types(1), communication_costs(comm_cost),
-          synchronisation_costs(synch_cost), memory_bound(std::vector<unsigned>(number_processors, 100)),
-          processor_type(std::vector<unsigned int>(number_processors, 0)), send_costs(send_costs_) {
+          synchronisation_costs(synch_cost), memory_bound(std::vector<v_memw_t<Graph_t>>(number_processors, 100)),
+          processor_type(std::vector<v_type_t<Graph_t>>(number_processors, 0)), send_costs(send_costs_) {
 
         if (number_processors != send_costs.size()) {
             throw std::invalid_argument("send_costs_ needs to be a processors x processors matrix.\n");
@@ -138,11 +157,12 @@ class BspArchitecture {
      * @param comm_cost The communication cost between processors.
      * @param synch_cost The synchronization cost between processors.
      */
-    BspArchitecture(unsigned int processors, unsigned int comm_cost, unsigned int synch_cost, unsigned memory_bound_,
-                    std::vector<std::vector<unsigned>> send_costs_)
+    BspArchitecture(unsigned int processors, v_commw_t<Graph_t> comm_cost, v_commw_t<Graph_t> synch_cost,
+                    v_memw_t<Graph_t> memory_bound_, std::vector<std::vector<v_commw_t<Graph_t>>> send_costs_)
         : number_processors(processors), number_of_processor_types(1), communication_costs(comm_cost),
-          synchronisation_costs(synch_cost), memory_bound(std::vector<unsigned>(number_processors, memory_bound_)),
-          processor_type(std::vector<unsigned int>(number_processors, 0)), send_costs(send_costs_) {
+          synchronisation_costs(synch_cost),
+          memory_bound(std::vector<v_memw_t<Graph_t>>(number_processors, memory_bound_)),
+          processor_type(std::vector<v_type_t<Graph_t>>(number_processors, 0)), send_costs(send_costs_) {
 
         if (number_processors != send_costs.size()) {
             throw std::invalid_argument("send_costs_ needs to be a processors x processors matrix.\n");
@@ -164,7 +184,19 @@ class BspArchitecture {
      * The send cost is set to 0 if the processors are the same, and 1 otherwise.
      * This function assumes that the number of processors has already been set.
      */
-    void SetUniformSendCost();
+    void SetUniformSendCost() {
+
+        for (unsigned i = 0; i < number_processors; i++) {
+            for (unsigned j = 0; j < number_processors; j++) {
+                if (i == j) {
+                    send_costs[i][j] = 0;
+                } else {
+                    send_costs[i][j] = 1;
+                }
+            }
+        }
+        isNuma = false;
+    }
 
     /**
      * @brief Sets the exponential send cost for the BspArchitecture.
@@ -174,7 +206,22 @@ class BspArchitecture {
      *
      * @param base The base value used to calculate the send cost.
      */
-    void SetExpSendCost(unsigned int base);
+    void SetExpSendCost(unsigned int base) {
+
+        isNuma = true;
+
+        unsigned maxPos = 1;
+        const unsigned two = 2;
+        for (; uintpow(two, maxPos + 1) <= number_processors - 1; ++maxPos) {
+        }
+        for (unsigned i = 0; i < number_processors; ++i)
+            for (unsigned j = i + 1; j < number_processors; ++j)
+                for (unsigned pos = maxPos; pos <= maxPos; --pos)
+                    if (((1 << pos) & i) != ((1 << pos) & j)) {
+                        send_costs[i][j] = send_costs[j][i] = intpow(base, pos);
+                        break;
+                    }
+    }
 
     /**
      * @brief Computes the average communication cost of the BspArchitecture.
@@ -185,7 +232,20 @@ class BspArchitecture {
      *
      * @return The average communication cost as an unsigned integer.
      */
-    unsigned int computeCommAverage() const;
+    v_commw_t<Graph_t> computeCommAverage() const {
+
+        double avg = 0;
+        for (unsigned i = 0; i < number_processors; ++i)
+            for (unsigned j = 0; j < number_processors; ++j)
+                avg += send_costs[i][j];
+        avg = avg * (double)communication_costs / (double)number_processors / (double)number_processors;
+
+        if (avg > static_cast<double>(std::numeric_limits<unsigned>::max())) {
+            throw std::invalid_argument("avg comm exceeds the limit (something is very wrong)");
+        }
+
+        return static_cast<v_commw_t<Graph_t>>(std::round(avg));
+    }
 
     /**
      * Sets the send costs for the BspArchitecture.
@@ -195,7 +255,34 @@ class BspArchitecture {
      *            Each inner vector must also have a size equal to the number of processors.
      * @throws std::invalid_argument if the size of the vector or inner vectors is invalid.
      */
-    void setSendCosts(const std::vector<std::vector<unsigned>> &vec);
+    void setSendCosts(const std::vector<std::vector<v_commw_t<Graph_t>>> &vec) {
+
+        if (vec.size() != number_processors) {
+            throw std::invalid_argument("Invalid Argument");
+        }
+
+        isNuma = false;
+        for (unsigned i = 0; i < number_processors; i++) {
+
+            if (vec[i].size() != number_processors) {
+                throw std::invalid_argument("Invalid Argument");
+            }
+
+            for (unsigned j = 0; j < number_processors; j++) {
+
+                if (i == j) {
+                    if (vec[i][j] != 0)
+                        throw std::invalid_argument("Invalid Argument, Diagonal elements should be 0");
+                } else {
+                    send_costs[i][j] = vec[i][j];
+
+                    if (number_processors > 1 && vec[i][j] != vec[0][1]) {
+                        isNuma = true;
+                    }
+                }
+            }
+        }
+    }
 
     /**
      * Sets the send costs between two processors.
@@ -207,7 +294,7 @@ class BspArchitecture {
      * @remarks If the two processors are the same, the send cost is not set.
      *          If the cost is not equal to 1, the architecture is considered NUMA.
      */
-    void setSendCosts(unsigned p1, unsigned p2, unsigned cost) {
+    void setSendCosts(unsigned p1, unsigned p2, v_commw_t<Graph_t> cost) {
 
         if (p1 >= number_processors || p2 > number_processors)
             throw std::invalid_argument("Invalid Argument");
@@ -224,13 +311,13 @@ class BspArchitecture {
      *
      * @param memory_bound_ The new memory bound for all processors.
      */
-    inline void setMemoryBound(unsigned memory_bound_) {
-        memory_bound = std::vector<unsigned>(number_processors, memory_bound_);
+    inline void setMemoryBound(v_memw_t<Graph_t> memory_bound_) {
+        memory_bound = std::vector<v_memw_t<Graph_t>>(number_processors, memory_bound_);
     }
 
-    inline void setMemoryBound(const std::vector<unsigned> &memory_bound_) { memory_bound = memory_bound_; }
+    inline void setMemoryBound(const std::vector<v_memw_t<Graph_t>> &memory_bound_) { memory_bound = memory_bound_; }
 
-    inline void setMemoryBound(unsigned memory_bound_, unsigned proc) {
+    inline void setMemoryBound(v_memw_t<Graph_t> memory_bound_, unsigned proc) {
 
         if (proc >= number_processors) {
             throw std::invalid_argument("Invalid Argument setMemoryBound");
@@ -247,7 +334,7 @@ class BspArchitecture {
      *
      * @param synch_cost The synchronization costs to be set.
      */
-    inline void setSynchronisationCosts(unsigned synch_cost) { synchronisation_costs = synch_cost; }
+    inline void setSynchronisationCosts(v_commw_t<Graph_t> synch_cost) { synchronisation_costs = synch_cost; }
 
     /**
      * @brief Sets the communication costs for the BspArchitecture.
@@ -257,7 +344,7 @@ class BspArchitecture {
      *
      * @param comm_cost The communication costs to be set.
      */
-    inline void setCommunicationCosts(unsigned comm_cost) { communication_costs = comm_cost; }
+    inline void setCommunicationCosts(v_commw_t<Graph_t> comm_cost) { communication_costs = comm_cost; }
 
     /**
      * @brief Sets the number of processors in the BSP architecture.
@@ -268,7 +355,20 @@ class BspArchitecture {
      *
      * @param num_proc The number of processors in the BSP architecture.
      */
-    void setNumberOfProcessors(unsigned num_proc);
+    void setNumberOfProcessors(unsigned num_proc) {
+
+        number_processors = num_proc;
+        number_of_processor_types = 1;
+        processor_type = std::vector<v_type_t<Graph_t>>(number_processors, 0);
+        send_costs = std::vector<std::vector<v_commw_t<Graph_t>>>(
+            number_processors, std::vector<v_commw_t<Graph_t>>(number_processors, 1));
+        for (unsigned i = 0; i < number_processors; i++) {
+            send_costs[i][i] = 0;
+        }
+        memory_bound.resize(num_proc, memory_bound.back());
+
+        isNuma = false;
+    }
 
     /**
      * @brief Sets the number of processors and their types in the BSP architecture.
@@ -279,7 +379,26 @@ class BspArchitecture {
      *
      * @param processor_types_ The type of the respective processors.
      */
-    void setProcessorsWithTypes(const std::vector<unsigned> &processor_types_);
+    void setProcessorsWithTypes(const std::vector<v_type_t<Graph_t>> &processor_types_) {
+
+        if (processor_types_.size() > std::numeric_limits<unsigned>::max()) {
+            throw std::invalid_argument("Invalid Argument, number of processors exceeds the limit");
+        }
+
+        number_processors = static_cast<unsigned>(processor_types_.size());
+
+        number_of_processor_types = 0;
+        processor_type = processor_types_;
+        send_costs = std::vector<std::vector<v_commw_t<Graph_t>>>(
+            number_processors, std::vector<v_commw_t<Graph_t>>(number_processors, 1));
+        for (unsigned i = 0; i < number_processors; i++) {
+            send_costs[i][i] = 0;
+        }
+        memory_bound.resize(number_processors, memory_bound.back());
+
+        isNuma = false;
+        updateNumberOfProcessorTypes();
+    }
 
     /**
      * Returns whether the architecture is NUMA.
@@ -288,23 +407,64 @@ class BspArchitecture {
      */
     inline bool isNumaArchitecture() const { return isNuma; }
 
-    void set_processors_consequ_types(const std::vector<unsigned> &processor_type_count_,
-                                      const std::vector<unsigned> &processor_type_memory_);
+    void set_processors_consequ_types(const std::vector<v_type_t<Graph_t>> &processor_type_count_,
+                                      const std::vector<v_memw_t<Graph_t>> &processor_type_memory_) {
+
+        if (processor_type_count_.size() != processor_type_memory_.size()) {
+            throw std::invalid_argument(
+                "Invalid Argument, processor_type_count_ and processor_type_memory_ must have the same size");
+        }
+
+        if (processor_type_count_.size() > std::numeric_limits<unsigned>::max()) {
+            throw std::invalid_argument("Invalid Argument, number of processors exceeds the limit");
+        }
+
+        number_of_processor_types = static_cast<unsigned>(processor_type_count_.size());
+        number_processors = std::accumulate(processor_type_count_.begin(), processor_type_count_.end(), 0u);
+
+        processor_type = std::vector<v_type_t<Graph_t>>(number_processors, 0);
+        memory_bound = std::vector<v_memw_t<Graph_t>>(number_processors, 0);
+
+        unsigned offset = 0;
+        for (unsigned i = 0; i < processor_type_count_.size(); i++) {
+
+            for (unsigned j = 0; j < processor_type_count_[i]; j++) {
+                processor_type[offset + j] = i;
+                memory_bound[offset + j] = processor_type_memory_[i];
+            }
+            offset += processor_type_count_[i];
+        }
+
+        send_costs = std::vector<std::vector<v_commw_t<Graph_t>>>(
+            number_processors, std::vector<v_commw_t<Graph_t>>(number_processors, 1));
+        for (unsigned i = 0; i < number_processors; i++) {
+            send_costs[i][i] = 0;
+        }
+        isNuma = false;
+    }
 
     /**
      * Returns the memory bound of the BspArchitecture.
      *
      * @return The memory bound as an unsigned integer.
      */
-    inline const std::vector<unsigned> &memoryBound() const { return memory_bound; }
+    inline const std::vector<v_memw_t<Graph_t>> &memoryBound() const { return memory_bound; }
 
-    inline unsigned memoryBound(unsigned proc) const { return memory_bound[proc]; }
+    inline v_memw_t<Graph_t> memoryBound(unsigned proc) const { return memory_bound[proc]; }
 
-    unsigned minMemoryBound() const { return *(std::min_element(memory_bound.begin(), memory_bound.end())); }
-    unsigned maxMemoryBound() const { return *(std::max_element(memory_bound.begin(), memory_bound.end())); }
-    unsigned sumMemoryBound() const { return std::accumulate(memory_bound.begin(), memory_bound.end(), 0U); }
+    v_memw_t<Graph_t> minMemoryBound() const { return *(std::min_element(memory_bound.begin(), memory_bound.end())); }
+    v_memw_t<Graph_t> maxMemoryBound() const { return *(std::max_element(memory_bound.begin(), memory_bound.end())); }
+    v_memw_t<Graph_t> sumMemoryBound() const { return std::accumulate(memory_bound.begin(), memory_bound.end(), 0); }
 
-    unsigned maxMemoryBoundProcType(unsigned procType) const;
+    v_memw_t<Graph_t> maxMemoryBoundProcType(v_type_t<Graph_t> procType) const {
+        v_memw_t<Graph_t> max_mem = 0;
+        for (unsigned proc = 0; proc < number_processors; proc++) {
+            if (processor_type[proc] == procType) {
+                max_mem = std::max(max_mem, memory_bound[proc]);
+            }
+        }
+        return max_mem;
+    }
 
     /**
      * Returns the number of processors in the architecture.
@@ -318,31 +478,31 @@ class BspArchitecture {
      *
      * @return The communication costs as an unsigned integer.
      */
-    inline unsigned communicationCosts() const { return communication_costs; }
+    inline v_commw_t<Graph_t> communicationCosts() const { return communication_costs; }
 
     /**
      * Returns the synchronization costs of the BspArchitecture.
      *
      * @return The synchronization costs as an unsigned integer.
      */
-    inline unsigned synchronisationCosts() const { return synchronisation_costs; }
+    inline v_commw_t<Graph_t> synchronisationCosts() const { return synchronisation_costs; }
 
     /**
      * Returns a copy of the send costs matrix.
      *
      * @return A copy of the send costs matrix.
      */
-    inline std::vector<std::vector<unsigned int>> sendCostMatrixCopy() const { return send_costs; }
+    inline std::vector<std::vector<v_commw_t<Graph_t>>> sendCostMatrixCopy() const { return send_costs; }
 
     /**
      * Returns a reference to the send costs matrix.
      *
      * @return A reference to the send costs matrix.
      */
-    inline const std::vector<std::vector<unsigned int>> &sendCostMatrix() const { return send_costs; }
+    inline const std::vector<std::vector<v_commw_t<Graph_t>>> &sendCostMatrix() const { return send_costs; }
 
     // the type indeces of the processor (e.g. CPU, vector/tensor core)
-    inline const std::vector<unsigned int> &processorTypes() const { return processor_type; }
+    inline const std::vector<v_type_t<Graph_t>> &processorTypes() const { return processor_type; }
 
     /**
      * Returns the communication costs between two processors. The communication costs are the send costs multiplied by
@@ -353,7 +513,7 @@ class BspArchitecture {
      *
      * @return The send costs between the two processors.
      */
-    inline unsigned communicationCosts(unsigned p1, unsigned p2) const {
+    inline v_commw_t<Graph_t> communicationCosts(unsigned p1, unsigned p2) const {
         return communication_costs * send_costs[p1][p2];
     }
 
@@ -365,12 +525,12 @@ class BspArchitecture {
      *
      * @return The send costs between the two processors.
      */
-    inline unsigned sendCosts(unsigned p1, unsigned p2) const { return send_costs[p1][p2]; }
+    inline v_commw_t<Graph_t> sendCosts(unsigned p1, unsigned p2) const { return send_costs[p1][p2]; }
 
     // the type index of the processor (e.g. CPU, vector/tensor core)
-    inline unsigned processorType(unsigned p1) const { return processor_type[p1]; }
+    inline v_type_t<Graph_t> processorType(unsigned p1) const { return processor_type[p1]; }
 
-    void setProcessorType(unsigned p1, unsigned type) {
+    void setProcessorType(unsigned p1, v_type_t<Graph_t> type) {
 
         if (p1 >= number_processors)
             throw std::invalid_argument("Invalid Argument");
@@ -388,9 +548,37 @@ class BspArchitecture {
         return type_count;
     }
 
-    void print_architecture(std::ostream &os) const;
+    void print_architecture(std::ostream &os) const {
 
-    void updateNumberOfProcessorTypes();
+        os << "Architectur info:  number of processors: " << number_processors
+           << ", Number of processor types: " << number_of_processor_types
+           << ", Communication costs: " << communication_costs << ", Synchronization costs: " << synchronisation_costs
+           << std::endl;
+        os << std::setw(17) << " Processor: ";
+        for (unsigned i = 0; i < number_processors; i++) {
+            os << std::right << std::setw(5) << i << " ";
+        }
+        os << std::endl;
+        os << std::setw(17) << "Processor type: ";
+        for (unsigned i = 0; i < number_processors; i++) {
+            os << std::right << std::setw(5) << processor_type[i] << " ";
+        }
+        os << std::endl;
+        os << std::setw(17) << "Memory bound: ";
+        for (unsigned i = 0; i < number_processors; i++) {
+            os << std::right << std::setw(5) << memory_bound[i] << " ";
+        }
+        os << std::endl;
+    }
+
+    void updateNumberOfProcessorTypes() {
+        number_of_processor_types = 0;
+        for (unsigned p = 0; p < number_processors; p++) {
+            if (processor_type[p] >= number_of_processor_types) {
+                number_of_processor_types = processor_type[p] + 1;
+            }
+        }
+    }
 
     inline unsigned getNumberOfProcessorTypes() const { return number_of_processor_types; };
 

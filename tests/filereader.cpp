@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(test_arch_smpl) {
         cwd = cwd.parent_path();
     }
 
-    BspArchitecture arch;
+    BspArchitecture<computational_dag_vector_impl_def_t> arch;
 
     bool status = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.txt").string(), arch);
 

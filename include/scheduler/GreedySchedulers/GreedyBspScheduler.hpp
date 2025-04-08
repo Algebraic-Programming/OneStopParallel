@@ -91,8 +91,8 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
         return score;
     }
 
-    void Choose(const BspInstance<Graph_t> &instance, const std::vector<std::vector<bool>> &procInHyperedge,
-                const std::set<VertexType> &allReady, const std::vector<std::set<VertexType>> &procReady,
+    void Choose(const BspInstance<Graph_t> &instance,
+                const std::vector<std::set<VertexType>> &procReady,
                 const std::vector<bool> &procFree, VertexType &node, unsigned &p) const {
 
         double max_score = -1.0;
@@ -205,7 +205,7 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
                     heap_node top_node = max_all_proc_score_heap[i].top();
 
                     if (current_proc_persistent_memory[i] +
-                            instance.getComputationalDag().vertex_nem_weight(top_node.node) +
+                            instance.getComputationalDag().vertex_mem_weight(top_node.node) +
                             std::max(current_proc_transient_memory[i],
                                      instance.getComputationalDag().vertex_comm_weight(top_node.node)) <=
                         instance.getArchitecture().memoryBound(i)) {
@@ -243,7 +243,7 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
      * @brief Default constructor for GreedyBspScheduler.
      */
     GreedyBspScheduler(float max_percent_idle_processors_ = 0.2f, bool increase_parallelism_in_new_superstep_ = true)
-        : Scheduler(), max_percent_idle_processors(max_percent_idle_processors_),
+        : max_percent_idle_processors(max_percent_idle_processors_),
           increase_parallelism_in_new_superstep(increase_parallelism_in_new_superstep_) {}
 
     /**
@@ -290,7 +290,7 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
             }
         }
 
-        const unsigned &N = instance.numberOfVertices();
+        const std::size_t &N = instance.numberOfVertices();
         const unsigned &params_p = instance.numberOfProcessors();
         const auto &G = instance.getComputationalDag();
 
@@ -300,7 +300,7 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
         node_proc_heap_handles = std::vector<std::unordered_map<VertexType, heap_handle>>(params_p);
         node_all_proc_heap_handles = std::vector<std::unordered_map<VertexType, heap_handle>>(params_p);
 
-        BspSchedule<Graph_t> schedule(instance, std::vector<unsigned>(instance.numberOfVertices(), -1),
+        BspSchedule<Graph_t> schedule(instance, std::vector<unsigned>(instance.numberOfVertices(), std::numeric_limits<unsigned>::max()),
                                       std::vector<unsigned>(instance.numberOfVertices()));
 
         std::set<VertexType> ready;
@@ -320,7 +320,7 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
         for (unsigned proc = 0; proc < params_p; ++proc)
             ++nr_procs_per_type[instance.getArchitecture().processorType(proc)];
 
-        std::set<std::pair<size_t, VertexType>> finishTimes;
+        std::set<std::pair<int, VertexType>> finishTimes;
         finishTimes.emplace(0, std::numeric_limits<VertexType>::max());
 
         for (const auto &v : source_vertices_view(G)) {
@@ -377,7 +377,7 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
                 finishTimes.emplace(0, std::numeric_limits<VertexType>::max());
             }
 
-            const size_t time = finishTimes.begin()->first;
+            const int time = finishTimes.begin()->first;
 
             // Find new ready jobs
             while (!finishTimes.empty() && finishTimes.begin()->first == time) {
@@ -419,7 +419,7 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
                                     if (current_proc_persistent_memory[schedule.assignedProcessor(node)] +
                                             instance.getComputationalDag().vertex_mem_weight(succ) +
                                             std::max(current_proc_transient_memory[schedule.assignedProcessor(node)],
-                                                     instance.getComputationalDag().vertex_com_weight(succ)) >
+                                                     instance.getComputationalDag().vertex_comm_weight(succ)) >
                                         instance.getArchitecture().memoryBound(schedule.assignedProcessor(node))) {
                                         canAdd = false;
                                     }
@@ -458,7 +458,7 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
 
                 VertexType nextNode = std::numeric_limits<VertexType>::max();
                 unsigned nextProc = instance.numberOfProcessors();
-                Choose(instance, procInHyperedge, allReady, procReady, procFree, nextNode, nextProc);
+                Choose(instance, procReady, procFree, nextNode, nextProc);
 
                 if (nextNode == std::numeric_limits<VertexType>::max() || nextProc == instance.numberOfProcessors()) {
                     endSupStep = true;
@@ -485,7 +485,7 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
                 }
 
                 ready.erase(nextNode);
-                --nr_ready_nodes_per_type[G.nodeType(nextNode)];
+                --nr_ready_nodes_per_type[G.vertex_type(nextNode)];
                 schedule.setAssignedProcessor(nextNode, nextProc);
                 schedule.setAssignedSuperstep(nextNode, supstepIdx);
 
@@ -511,13 +511,13 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
                             instance.getComputationalDag().vertex_mem_weight(nextNode);
                         current_proc_transient_memory[nextProc] =
                             std::max(current_proc_transient_memory[nextProc],
-                                     instance.getComputationalDag().vertex_com_weight(nextNode));
+                                     instance.getComputationalDag().vertex_comm_weight(nextNode));
 
                         for (const auto &node : procReady[nextProc]) {
                             if (current_proc_persistent_memory[nextProc] +
                                     instance.getComputationalDag().vertex_mem_weight(node) +
                                     std::max(current_proc_transient_memory[nextProc],
-                                             instance.getComputationalDag().vertex_com_weight(node)) >
+                                             instance.getComputationalDag().vertex_comm_weight(node)) >
                                 instance.getArchitecture().memoryBound(nextProc)) {
                                 toErase.push_back(node);
                             }
@@ -551,7 +551,7 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
                         if (child != nextNode && procReady[nextProc].find(child) != procReady[nextProc].end()) {
 
                             (*node_proc_heap_handles[nextProc][child]).score +=
-                                (double)instance.getComputationalDag().vertex_com_weight(pred) /
+                                (double)instance.getComputationalDag().vertex_comm_weight(pred) /
                                 (double)instance.getComputationalDag().out_degree(pred);
                             max_proc_score_heap[nextProc].update(node_proc_heap_handles[nextProc][child]);
                         }
@@ -560,7 +560,7 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
                             instance.isCompatible(child, nextProc)) {
 
                             (*node_all_proc_heap_handles[nextProc][child]).score +=
-                                (double)instance.getComputationalDag().vertex_com_weight(pred) /
+                                (double)instance.getComputationalDag().vertex_comm_weight(pred) /
                                 (double)instance.getComputationalDag().out_degree(pred);
                             max_all_proc_score_heap[nextProc].update(node_all_proc_heap_handles[nextProc][child]);
                         }
@@ -573,7 +573,7 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
                 return {ERROR, schedule};
             }
 
-            if (free > params_p * max_percent_idle_processors &&
+            if (free > static_cast<unsigned>((float)params_p * max_percent_idle_processors) &&
                 ((!increase_parallelism_in_new_superstep) ||
                  get_nr_parallelizable_nodes(instance, nr_ready_nodes_per_type, nr_procs_per_type) >=
                      std::min(std::min(params_p, (unsigned)(1.2 * (params_p - free))),
