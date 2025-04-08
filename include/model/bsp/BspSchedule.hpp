@@ -466,7 +466,7 @@ class BspSchedule : IBspSchedule<Graph_t> {
                 }
             }
 
-            for (vertex_idx proc = 0; proc < instance->numberOfProcessors(); proc++) {
+            for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
 
                 if (step_needed[proc] < number_of_supersteps) {
                     send[node_to_processor_assignment[node]][node_to_superstep_assignment[node]] +=
@@ -523,7 +523,7 @@ class BspSchedule : IBspSchedule<Graph_t> {
         }
 
         v_workw_t<Graph_t> total_work = 0;
-        std::vector<unsigned> work_step = std::vector<v_workw_t<Graph_t>>(number_of_supersteps, 0);
+        std::vector<v_workw_t<Graph_t>> work_step = std::vector<v_workw_t<Graph_t>>(number_of_supersteps, 0);
         for (unsigned step = 0; step < number_of_supersteps; step++) {
 
             v_workw_t<Graph_t> max_work = 0;
@@ -536,9 +536,13 @@ class BspSchedule : IBspSchedule<Graph_t> {
             total_work += max_work;
         }
 
-        return total_work +
-               total_communication * instance->communicationCosts() * (1.0 / instance->numberOfProcessors()) +
-               (number_of_supersteps - 1) * instance->synchronisationCosts();
+        v_commw_t<Graph_t> sync_cost = 0;
+
+        if (number_of_supersteps >= 1)
+            sync_cost = instance->synchronisationCosts() * static_cast<v_commw_t<Graph_t>>(number_of_supersteps - 1);
+
+        return (double) total_work +
+               total_communication * instance->communicationCosts() * (1.0 / instance->numberOfProcessors()) + sync_cost;
     }
 
     double computeBaseCommCostsTotalCommunication() const {

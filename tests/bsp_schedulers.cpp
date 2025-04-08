@@ -5,25 +5,20 @@
 #include <string>
 #include <vector>
 
-#include "scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
 #include "graph_implementations/computational_dag_vector_impl.hpp"
 #include "io/arch_file_reader.hpp"
 #include "io/graph_file_reader.hpp"
-
+#include "scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
 
 using namespace osp;
 
-
 std::vector<std::string> test_graphs() {
-    return {"data/spaa/tiny/instance_bicgstab.txt", "data/spaa/tiny/instance_CG_N2_K2_nzP0d75.txt" };
+    return {"data/spaa/tiny/instance_bicgstab.txt", "data/spaa/tiny/instance_CG_N2_K2_nzP0d75.txt"};
 }
 
-std::vector<std::string> test_architectures() {
-    return {"data/machine_params/p3.txt"};
-}
+std::vector<std::string> test_architectures() { return {"data/machine_params/p3.txt"}; }
 
-
-template <typename Graph_t>
+template<typename Graph_t>
 void run_test(Scheduler<Graph_t> *test_scheduler) {
     // static_assert(std::is_base_of<Scheduler, T>::value, "Class is not a scheduler!");
     std::vector<std::string> filenames_graph = test_graphs();
@@ -44,24 +39,24 @@ void run_test(Scheduler<Graph_t> *test_scheduler) {
             std::string name_machine = filename_machine.substr(filename_machine.find_last_of("/\\") + 1);
             name_machine = name_machine.substr(0, name_machine.rfind("."));
 
-            std::cout << std::endl << "Scheduler: " << test_scheduler->getScheduleName() << std::endl; 
+            std::cout << std::endl << "Scheduler: " << test_scheduler->getScheduleName() << std::endl;
             std::cout << "Graph: " << name_graph << std::endl;
             std::cout << "Architecture: " << name_machine << std::endl;
 
-
             BspInstance<Graph_t> instance;
 
-            bool status_graph = file_reader::readComputationalDagHyperdagFormat((cwd / filename_graph).string(), instance.getComputationalDag());
-            bool status_architecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.txt").string(), instance.getArchitecture());
+            bool status_graph = file_reader::readComputationalDagHyperdagFormat((cwd / filename_graph).string(),
+                                                                                instance.getComputationalDag());
+            bool status_architecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.txt").string(),
+                                                                        instance.getArchitecture());
 
             if (!status_graph || !status_architecture) {
 
                 std::cout << "Reading files failed." << std::endl;
                 BOOST_CHECK(false);
             }
-            
-            std::pair<RETURN_STATUS, BspSchedule<Graph_t>> result = test_scheduler->computeSchedule(instance);
 
+            std::pair<RETURN_STATUS, BspSchedule<Graph_t>> result = test_scheduler->computeSchedule(instance);
 
             BOOST_CHECK_EQUAL(SUCCESS, result.first);
             BOOST_CHECK_EQUAL(&result.second.getInstance(), &instance);
@@ -70,8 +65,6 @@ void run_test(Scheduler<Graph_t> *test_scheduler) {
         }
     }
 };
-
-
 
 BOOST_AUTO_TEST_CASE(GreedyBspScheduler_test) {
 
