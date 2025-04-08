@@ -1008,6 +1008,7 @@ class BspSchedule : IBspSchedule<Graph_t> {
         std::vector<std::set<std::vector<vertex_idx_t<Graph_t>>, std::greater<>>> require_sending(
             instance->numberOfProcessors());
         // TODO the datastructure seems to be wrong. the vectors added to the set have elements of different types.
+        // it should really be std::vector<std::set<std::tuple<v_commw_t<Graph_t>, vertex_idx_t<Graph_t>, vertex_idx_t<Graph_t>>>> 
         // added many static_cast below as tmp fix
 
         for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {

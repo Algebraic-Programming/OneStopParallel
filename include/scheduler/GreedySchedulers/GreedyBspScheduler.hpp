@@ -74,8 +74,8 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
     bool increase_parallelism_in_new_superstep;
     bool use_memory_constraint = false;
 
-    std::vector<int> current_proc_persistent_memory;
-    std::vector<int> current_proc_transient_memory;
+    std::vector<v_memw_t<Graph_t>> current_proc_persistent_memory;
+    std::vector<v_memw_t<Graph_t>> current_proc_transient_memory;
 
     double computeScore(VertexType node, unsigned proc, const std::vector<std::vector<bool>> &procInHyperedge,
                         const BspInstance<Graph_t> &instance) const {
@@ -320,7 +320,7 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
         for (unsigned proc = 0; proc < params_p; ++proc)
             ++nr_procs_per_type[instance.getArchitecture().processorType(proc)];
 
-        std::set<std::pair<int, VertexType>> finishTimes;
+        std::set<std::pair<v_workw_t<Graph_t>, VertexType>> finishTimes;
         finishTimes.emplace(0, std::numeric_limits<VertexType>::max());
 
         for (const auto &v : source_vertices_view(G)) {
@@ -377,7 +377,7 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
                 finishTimes.emplace(0, std::numeric_limits<VertexType>::max());
             }
 
-            const int time = finishTimes.begin()->first;
+            const v_workw_t<Graph_t> time = finishTimes.begin()->first;
 
             // Find new ready jobs
             while (!finishTimes.empty() && finishTimes.begin()->first == time) {

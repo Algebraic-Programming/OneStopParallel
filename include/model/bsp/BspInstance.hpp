@@ -180,31 +180,31 @@ class BspInstance {
      *
      * @param cost The communication costs to set.
      */
-    inline void setCommunicationCosts(const unsigned int cost) { architecture.setCommunicationCosts(cost); }
+    inline void setCommunicationCosts(const v_commw_t<Graph_t> cost) { architecture.setCommunicationCosts(cost); }
 
     /**
      * @brief Sets the synchronisation costs of the BSP architecture.
      *
      * @param cost The synchronisation costs to set.
      */
-    inline void setSynchronisationCosts(const unsigned int cost) { architecture.setSynchronisationCosts(cost); }
+    inline void setSynchronisationCosts(const v_commw_t<Graph_t> cost) { architecture.setSynchronisationCosts(cost); }
 
     /**
      * @brief Sets the number of processors in the BSP architecture.
      *
      * @param num The number of processors to set.
      */
-    inline void setNumberOfProcessors(const unsigned int num) { architecture.setNumberOfProcessors(num); }
+    inline void setNumberOfProcessors(const unsigned num) { architecture.setNumberOfProcessors(num); }
 
     bool check_memory_constraints_feasibility() const {
 
-        std::vector<int> max_memory_per_proc_type(architecture.getNumberOfProcessorTypes(), 0);
+        std::vector<v_memw_t<Graph_t>> max_memory_per_proc_type(architecture.getNumberOfProcessorTypes(), 0);
         for (unsigned proc = 0; proc < architecture.numberOfProcessors(); proc++) {
             max_memory_per_proc_type[architecture.processorType(proc)] =
                 std::max(max_memory_per_proc_type[architecture.processorType(proc)], architecture.memoryBound(proc));
         }
         for (unsigned vertType = 0; vertType < cdag.num_vertex_types(); vertType++) {
-            int max_memory_of_type = max_memory_weight(vertType, cdag);
+            v_memw_t<Graph_t> max_memory_of_type = max_memory_weight(vertType, cdag);
             bool fits = false;
 
             for (unsigned proc_type = 0; proc_type < architecture.getNumberOfProcessorTypes(); proc_type++) {
@@ -224,13 +224,13 @@ class BspInstance {
 
     void adjust_memory_constraints() {
 
-        std::vector<int> max_memory_per_proc_type(architecture.getNumberOfProcessorTypes(), 0);
+        std::vector<v_memw_t<Graph_t>> max_memory_per_proc_type(architecture.getNumberOfProcessorTypes(), 0);
         for (unsigned proc = 0; proc < architecture.numberOfProcessors(); proc++) {
             max_memory_per_proc_type[architecture.processorType(proc)] =
                 std::max(max_memory_per_proc_type[architecture.processorType(proc)], architecture.memoryBound(proc));
         }
         for (unsigned vertType = 0; vertType < cdag.num_vertex_types(); vertType++) {
-            int max_memory_of_type = max_memory_weight(vertType, cdag);
+            v_memw_t<Graph_t> max_memory_of_type = max_memory_weight(vertType, cdag);
             bool fits = false;
 
             for (unsigned proc_type = 0; proc_type < architecture.getNumberOfProcessorTypes(); proc_type++) {
