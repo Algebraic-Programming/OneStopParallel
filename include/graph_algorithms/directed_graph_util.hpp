@@ -38,7 +38,18 @@ bool edge(const vertex_idx_t<Graph_t> &src, const vertex_idx_t<Graph_t> &dest, c
     return false;
 }
 
+template<typename Graph_t>
+bool checkNodesInTopologicalOrder(const Graph_t &graph) {
+    for (const auto &node : graph.vertices()) {
+        for (const auto &child : graph.children(node)) {
+            if (child < node) {
+                return false;
+            }
+        }
+    }
 
+    return true;
+}
 
 template<typename Graph_t>
 bool is_sink(const vertex_idx_t<Graph_t> &v, const Graph_t &graph) {

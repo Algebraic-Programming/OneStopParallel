@@ -25,11 +25,11 @@ limitations under the License.
 #include <stdexcept>
 #include <vector>
 
-#include "BspSetSchedule.hpp"
+#include "SetSchedule.hpp"
 
 namespace osp {
 
-using KeyTriple = std::tuple<unsigned int, unsigned int, unsigned int>;
+    
 
 /**
  * @class BspSchedule
@@ -51,8 +51,11 @@ using KeyTriple = std::tuple<unsigned int, unsigned int, unsigned int>;
  */
 template<typename Graph_t>
 class BspSchedule : IBspSchedule<Graph_t> {
+public:
 
-  private:
+    using KeyTriple = std::tuple<vertex_idx_t<Graph_t>, unsigned int, unsigned int>;
+    
+private:
     using vertex_idx = vertex_idx_t<Graph_t>;
 
     const BspInstance<Graph_t> *instance;
@@ -65,7 +68,10 @@ class BspSchedule : IBspSchedule<Graph_t> {
     // contains entries: (vertex, from_proc, to_proc ) : step
     std::map<KeyTriple, unsigned> commSchedule;
 
-  public:
+public:
+
+
+
     /**
      * @brief Default constructor for the BspSchedule class.
      */
@@ -616,7 +622,7 @@ class BspSchedule : IBspSchedule<Graph_t> {
 
         case LOCAL: {
 
-            BspSetSchedule set_schedule = SetSchedule(*this);
+            SetSchedule set_schedule = SetSchedule(*this);
 
             for (unsigned step = 0; step < number_of_supersteps; step++) {
                 for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
@@ -671,7 +677,7 @@ class BspSchedule : IBspSchedule<Graph_t> {
 
         case LOCAL_IN_OUT: {
 
-            BspSetSchedule set_schedule = SetSchedule(*this);
+            SetSchedule set_schedule = SetSchedule(*this);
 
             for (unsigned step = 0; step < number_of_supersteps; step++) {
                 for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
@@ -701,7 +707,7 @@ class BspSchedule : IBspSchedule<Graph_t> {
 
         case LOCAL_INC_EDGES: {
 
-            BspSetSchedule set_schedule = SetSchedule(*this);
+            SetSchedule set_schedule = SetSchedule(*this);
 
             for (unsigned step = 0; step < number_of_supersteps; step++) {
                 for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
@@ -734,7 +740,7 @@ class BspSchedule : IBspSchedule<Graph_t> {
 
         case LOCAL_INC_EDGES_2: {
 
-            BspSetSchedule set_schedule = SetSchedule(*this);
+            SetSchedule set_schedule = SetSchedule(*this);
 
             for (unsigned step = 0; step < number_of_supersteps; step++) {
                 for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {

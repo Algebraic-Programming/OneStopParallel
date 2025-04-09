@@ -37,32 +37,32 @@ namespace osp {
  * @note This class assumes that the `BspInstance` and `ICommunicationScheduler` classes are defined and accessible.
  */
 template<typename Graph_t>
-class BspSetSchedule : public IBspSchedule<Graph_t> {
+class SetSchedule : public IBspSchedule<Graph_t> {
   private:
-    using VertexType = vertex_idx_t<Graph_t>;
+    using vertex_idx = vertex_idx_t<Graph_t>;
 
     const BspInstance<Graph_t> *instance;
 
   public:
     unsigned number_of_supersteps;
 
-    std::vector<std::vector<std::unordered_set<VertexType>>> step_processor_vertices;
+    std::vector<std::vector<std::unordered_set<vertex_idx>>> step_processor_vertices;
 
-    BspSetSchedule() = default;
+    SetSchedule() = default;
 
-    BspSetSchedule(const BspInstance<Graph_t> &inst, unsigned num_supersteps)
+    SetSchedule(const BspInstance<Graph_t> &inst, unsigned num_supersteps)
         : instance(&inst), number_of_supersteps(num_supersteps) {
 
-        step_processor_vertices = std::vector<std::vector<std::unordered_set<VertexType>>>(
-            num_supersteps, std::vector<std::unordered_set<VertexType>>(inst.numberOfProcessors()));
+        step_processor_vertices = std::vector<std::vector<std::unordered_set<vertex_idx>>>(
+            num_supersteps, std::vector<std::unordered_set<vertex_idx>>(inst.numberOfProcessors()));
     }
 
-    BspSetSchedule(const IBspSchedule<Graph_t> &schedule)
+    SetSchedule(const IBspSchedule<Graph_t> &schedule)
         : instance(&schedule.getInstance()), number_of_supersteps(schedule.numberOfSupersteps()) {
 
-        step_processor_vertices = std::vector<std::vector<std::unordered_set<VertexType>>>(
+        step_processor_vertices = std::vector<std::vector<std::unordered_set<vertex_idx>>>(
             schedule.numberOfSupersteps(),
-            std::vector<std::unordered_set<VertexType>>(schedule.getInstance().numberOfProcessors()));
+            std::vector<std::unordered_set<vertex_idx>>(schedule.getInstance().numberOfProcessors()));
 
         for (unsigned i = 0; i < schedule.getInstance().numberOfVertices(); i++) {
 
@@ -70,13 +70,13 @@ class BspSetSchedule : public IBspSchedule<Graph_t> {
         }
     }
 
-    virtual ~BspSetSchedule() = default;
+    virtual ~SetSchedule() = default;
 
     const BspInstance<Graph_t> &getInstance() const override { return *instance; }
 
     unsigned numberOfSupersteps() const override { return number_of_supersteps; }
 
-    void setAssignedSuperstep(unsigned int node, unsigned int superstep) override {
+    void setAssignedSuperstep(vertex_idx node, unsigned superstep) override {
 
         unsigned assigned_processor = 0;
         for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
@@ -93,7 +93,7 @@ class BspSetSchedule : public IBspSchedule<Graph_t> {
         step_processor_vertices[superstep][assigned_processor].insert(node);
     }
 
-    void setAssignedProcessor(unsigned int node, unsigned int processor) override {
+    void setAssignedProcessor(vertex_idx node, unsigned processor) override {
 
         unsigned assigned_step = 0;
         for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
@@ -113,7 +113,7 @@ class BspSetSchedule : public IBspSchedule<Graph_t> {
     /// @brief returns number of supersteps if the node is not assigned
     /// @param node
     /// @return the assigned superstep
-    unsigned assignedSuperstep(unsigned int node) const override {
+    unsigned assignedSuperstep(vertex_idx node) const override {
 
         for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
 
@@ -130,7 +130,7 @@ class BspSetSchedule : public IBspSchedule<Graph_t> {
     /// @brief returns number of processors if node is not assigned
     /// @param node
     /// @return the assigned processor
-    unsigned assignedProcessor(unsigned int node) const override {
+    unsigned assignedProcessor(vertex_idx node) const override {
 
         for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
 
@@ -173,7 +173,7 @@ class BspSetSchedule : public IBspSchedule<Graph_t> {
 
             step_processor_vertices.push_back(step_processor_vertices[step]);
             step_processor_vertices[step] =
-                std::vector<std::unordered_set<VertexType>>(getInstance().numberOfProcessors());
+                std::vector<std::unordered_set<vertex_idx>>(getInstance().numberOfProcessors());
         }
     }
 };

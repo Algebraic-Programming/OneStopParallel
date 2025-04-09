@@ -1,0 +1,150 @@
+/*
+Copyright 2024 Huawei Technologies Co., Ltd.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
+*/
+
+#pragma once
+
+#include "concepts/constructable_computational_dag_concept.hpp"
+#include "concepts/directed_graph_concept.hpp"
+#include <map>
+#include <set>
+#include <vector>
+
+namespace osp {
+
+template<typename Graph_t_in, typename Graph_t_out>
+Graph_t_out create_induced_subgraph(const Graph_t_in &dag, const std::set<vertex_idx_t<Graph_t_in>> &selected_nodes,
+                                    const std::set<vertex_idx_t<Graph_t_in>> &extra_sources = {}) {
+
+    static_assert(std::is_same_v<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_out>>,
+                  "Graph_t_in and out must have the same vertex_idx types");
+
+    static_assert(is_constructable_cdag_vertex_v<Graph_t_out>,
+                  "Graph_t_out must satisfy the constructable_cdag_vertex concept");
+
+    static_assert(is_constructable_cdag_edge_v<Graph_t_out>,
+                  "Graph_t_out must satisfy the constructable_cdag_edge concept");
+
+    Graph_t_out dag_out;
+    std::map<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_in>> local_idx;
+
+    for (const auto &node : extra_sources) {
+        local_idx[node] = dag_out.num_vertices();
+        if constexpr (is_constructable_cdag_typed_vertex_v<Graph_t_out> and has_typed_vertices_v<Graph_t_in>) {
+            // add extra source with type
+            dag_out.add_vertex(0, dag.vertex_comm_weight(node), dag.vertex_mem_weight(node), dag.vertex_type(node));
+        } else {
+            // add extra source without type
+            dag_out.add_vertex(0, dag.vertex_comm_weight(node), dag.vertex_mem_weight(node));
+        }
+    }
+
+    for (const auto &node : selected_nodes) {
+        local_idx[node] = dag_out.num_vertices();
+
+        if constexpr (is_constructable_cdag_typed_vertex_v<Graph_t_out> and has_typed_vertices_v<Graph_t_in>) {
+            // add vertex with type
+            dag_out.add_vertex(dag.vertex_work_weight(node), dag.vertex_comm_weight(node), dag.vertex_mem_weight(node),
+                               dag.vertex_type(node));
+        } else {
+            // add vertex without type
+            dag_out.add_vertex(dag.vertex_work_weight(node), dag.vertex_comm_weight(node), dag.vertex_mem_weight(node));
+        }
+    }
+
+    if constexpr (is_directed_graph_edge_desc_v<Graph_t_in> and is_directed_graph_edge_desc_v<Graph_t_out>) {
+
+        // add edges with edge comm weights
+        for (const auto &node : selected_nodes)
+            for (const auto &in_edge : dag.in_edges(node)) {
+                const auto &pred = in_edge.m_source;
+                if (selected_nodes.find(pred) != selected_node.end() || extra_sources.find(pred) != extra_sources.end())
+                    dag_out.add_edge(local_idx[pred], local_idx[node], dag.edge_comm_weight(in_edge));
+            }
+
+    } else {
+
+        // add edges without edge comm weights
+        for (const auto &node : selected_nodes)
+            for (const auto &pred : dag.parents(node)) {
+
+                if (selected_nodes_set.find(pred) != selected_nodes_set.end() ||
+                    extra_sources.find(pred) != extra_sources.end())
+                    dag_out.add_edge(local_idx[pred], local_idx[node]);
+            }
+    }
+    return dag_out;
+}
+
+template<typename Graph_t>
+bool checkOrderedIsomorphism(const Graph_t &first, const Graph_t &second) {
+
+    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+
+    if (first.num_vertices() != second.num_vertices() || first.num_edges() != second.num_edges())
+        return false;
+
+    for (const auto &node : first.vertices()) {
+        if (first.vertex_work_weight(node) != second.vertex_work_weight(node) ||
+            frist.vertex_mem_weight(node) != second.vertex_mem_weight(node) ||
+            first.vertex_comm_weight(node) != second.vertex_comm_weight(node) ||
+            first.vertex_type(node) != second.vertex_type(node))
+            return false;
+
+        if (frist.in_degree(node) != second.in_degree(node) || first.out_degree(node) != second.out_degree(node))
+            return false;
+
+        if constexpr (is_directed_graph_edge_desc_v<Graph_t>) {
+
+            std::set<std::pair<vertex_idx_t<Graph_t>, e_commw_t<Graph_t>>> first_children, second_children;
+
+            for (const auto &out_edge : first.out_edges(node))
+                first_children.emplace(target(out_edge, first), first.edge_commun_weight(out_edge));
+
+            for (const auto &out_edge : second.out_edges(node))
+                second_children.emplace(target(out_edge, second), second.edge_comm_weight(out_edge));
+
+            auto itr = first_children.begin(), second_itr = second_children.begin();
+            for (; itr != first_children.end() && second_itr != second_children.end(); ++itr) {
+                if (*itr != *second_itr)
+                    return false;
+                ++second_itr;
+            }
+
+        } else {
+
+            std::set<vertex_idx_t<Graph_t>> first_children, second_children;
+
+            for (const auto &child : first.children(node))
+                first_children.emplace(child);
+
+            for (const auto &child : second.children(node))
+                second_children.emplace(child);
+
+            auto itr = first_children.begin(), second_itr = second_children.begin();
+            for (; itr != first_children.end() && second_itr != second_children.end(); ++itr) {
+                if (*itr != *second_itr)
+                    return false;
+                ++second_itr;
+            }
+        }
+    }
+
+    return true;
+}
+
+}; // namespace osp
