@@ -40,6 +40,9 @@ bool edge(const vertex_idx_t<Graph_t> &src, const vertex_idx_t<Graph_t> &dest, c
 
 template<typename Graph_t>
 bool checkNodesInTopologicalOrder(const Graph_t &graph) {
+
+    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+
     for (const auto &node : graph.vertices()) {
         for (const auto &child : graph.children(node)) {
             if (child < node) {
@@ -93,6 +96,8 @@ std::vector<vertex_idx_t<Graph_t>> sink_vertices(const Graph_t &graph) {
 
 template<typename cond_eval, typename Graph_t, typename iterator_t>
 struct vertex_cond_iterator {
+
+    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
 
     const Graph_t &graph;
     iterator_t current_vertex;
@@ -149,6 +154,8 @@ struct vertex_cond_iterator {
 template<typename Graph_t>
 class source_vertices_view {
 
+    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+
     const Graph_t &graph;
     struct source_eval {
         static bool eval(const Graph_t &graph, const vertex_idx_t<Graph_t> &v) { return graph.in_degree(v) == 0; }
@@ -166,6 +173,9 @@ class source_vertices_view {
 
 template<typename Graph_t>
 class sink_vertices_view {
+
+    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+
     const Graph_t &graph;
     struct sink_eval {
         static bool eval(const Graph_t &graph, const vertex_idx_t<Graph_t> &v) { return graph.out_degree(v) == 0; }
@@ -181,12 +191,17 @@ class sink_vertices_view {
     auto end() const { return sink_iterator(graph, graph.vertices().end()); }
 };
 
-template<typename Graph_t, typename container_wrapper>
+template<typename Graph_t, typename container_wrapper, typename adj_iterator>
 struct traversal_iterator {
+
+    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
 
     const Graph_t &graph;
 
+    adj_iterator adj_iter;
+
     container_wrapper vertex_container;
+
     std::unordered_set<vertex_idx_t<Graph_t>> visited;
     vertex_idx_t<Graph_t> current_vertex;
 
@@ -198,7 +213,7 @@ struct traversal_iterator {
     using reference = const value_type &;
 
     traversal_iterator(const Graph_t &graph_, const vertex_idx_t<Graph_t> &start)
-        : graph(graph_), current_vertex(start) {
+        : graph(graph_), adj_iter(graph_), current_vertex(start) {
 
         if (graph.num_vertices() == start) {
             return;
@@ -206,9 +221,9 @@ struct traversal_iterator {
 
         visited.insert(start);
 
-        for (const auto &child : graph.children(current_vertex)) {
-            vertex_container.push(child);
-            visited.insert(child);
+        for (const auto &v : adj_iter.iterate(current_vertex)) {
+            vertex_container.push(v);
+            visited.insert(v);
         }
     }
 
@@ -216,7 +231,6 @@ struct traversal_iterator {
 
     // Prefix increment
     traversal_iterator &operator++() {
-   
 
         if (vertex_container.empty()) {
             current_vertex = graph.num_vertices();
@@ -225,10 +239,10 @@ struct traversal_iterator {
 
         current_vertex = vertex_container.pop_next();
 
-        for (const auto &child : graph.children(current_vertex)) {
-            if (visited.find(child) == visited.end()) {
-                vertex_container.push(child);
-                visited.insert(child);
+        for (const auto &v : adj_iter.iterate(current_vertex)) {
+            if (visited.find(v) == visited.end()) {
+                vertex_container.push(v);
+                visited.insert(v);
             }
         }
 
@@ -251,7 +265,18 @@ struct traversal_iterator {
 };
 
 template<typename Graph_t>
+struct child_iterator {
+    const Graph_t &graph;
+
+    child_iterator(const Graph_t &graph_) : graph(graph_) {}
+
+    inline auto iterate(const vertex_idx_t<Graph_t> &v) const { return graph.children(v); }
+};
+
+template<typename Graph_t>
 class bfs_view {
+
+    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
 
     const Graph_t &graph;
     vertex_idx_t<Graph_t> start_vertex;
@@ -270,7 +295,7 @@ class bfs_view {
         bool empty() const { return queue.empty(); }
     };
 
-    using bfs_iterator = traversal_iterator<Graph_t, bfs_queue_wrapper>;
+    using bfs_iterator = traversal_iterator<Graph_t, bfs_queue_wrapper, child_iterator<Graph_t>>;
 
   public:
     bfs_view(const Graph_t &graph_, const vertex_idx_t<Graph_t> &start) : graph(graph_), start_vertex(start) {}
@@ -282,6 +307,8 @@ class bfs_view {
 
 template<typename Graph_t>
 class dfs_view {
+
+    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
 
     const Graph_t &graph;
     vertex_idx_t<Graph_t> start_vertex;
@@ -300,7 +327,7 @@ class dfs_view {
         bool empty() const { return stack.empty(); }
     };
 
-    using dfs_iterator = traversal_iterator<Graph_t, dfs_stack_wrapper>;
+    using dfs_iterator = traversal_iterator<Graph_t, dfs_stack_wrapper, child_iterator<Graph_t>>;
 
   public:
     dfs_view(const Graph_t &graph_, const vertex_idx_t<Graph_t> &start) : graph(graph_), start_vertex(start) {}
@@ -308,6 +335,70 @@ class dfs_view {
     auto begin() const { return dfs_iterator(graph, start_vertex); }
 
     auto end() const { return dfs_iterator(graph, graph.num_vertices()); }
+};
+
+template<typename Graph_t>
+struct parents_iterator {
+    const Graph_t &graph;
+
+    parents_iterator(const Graph_t &graph_) : graph(graph_) {}
+
+    inline auto iterate(const vertex_idx_t<Graph_t> &v) const { return graph.parents(v); }
+};
+
+template<typename Graph_t>
+class bfs_reverse_view {
+
+    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+
+    const Graph_t &graph;
+    vertex_idx_t<Graph_t> start_vertex;
+
+    struct bfs_queue_wrapper {
+        std::queue<vertex_idx_t<Graph_t>> queue;
+
+        void push(const vertex_idx_t<Graph_t> &v) { queue.push(v); }
+
+        vertex_idx_t<Graph_t> pop_next() {
+            auto v = queue.front();
+            queue.pop();
+            return v;
+        }
+
+        bool empty() const { return queue.empty(); }
+    };
+
+    using bfs_iterator = traversal_iterator<Graph_t, bfs_queue_wrapper, parents_iterator<Graph_t>>;
+
+  public:
+    bfs_reverse_view(const Graph_t &graph_, const vertex_idx_t<Graph_t> &start) : graph(graph_), start_vertex(start) {}
+
+    auto begin() const { return bfs_iterator(graph, start_vertex); }
+
+    auto end() const { return bfs_iterator(graph, graph.num_vertices()); }
+};
+
+template<typename Graph_t>
+std::vector<vertex_idx_t<Graph_t>> successors(const vertex_idx_t<Graph_t> &v, const Graph_t &graph) {
+
+    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+    std::vector<vertex_idx_t<Graph_t>> vec;
+    for (const auto &suc : bfs_view(graph, v)) {
+        vec.push_back(suc);
+    }
+    return vec;
+};
+
+template<typename Graph_t>
+std::vector<vertex_idx_t<Graph_t>> ancestors(const vertex_idx_t<Graph_t> &v, const Graph_t &graph) {
+
+    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+    std::vector<vertex_idx_t<Graph_t>> vec;
+    for (const auto &anc : bfs_reverse_view(graph, v)) {
+        vec.push_back(anc);
+    }
+    return vec;
+
 };
 
 } // namespace osp

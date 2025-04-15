@@ -112,6 +112,9 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
     BOOST_CHECK_EQUAL(bfs[2], 6);
     BOOST_CHECK_EQUAL(bfs[3], 7);
 
+    auto t = successors(1, graph);
+    BOOST_CHECK_EQUAL_COLLECTIONS(bfs.begin(), bfs.end(), t.begin(), t.end());
+
     bfs.clear();
 
     for (const auto& v : bfs_view(graph, 5)) {
@@ -121,6 +124,9 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
     BOOST_CHECK_EQUAL(bfs.size(), 1);
     BOOST_CHECK_EQUAL(bfs[0], 5);
     
+    t = successors(5, graph);
+    BOOST_CHECK_EQUAL_COLLECTIONS(bfs.begin(), bfs.end(), t.begin(), t.end());
+
     bfs.clear();
 
     for (const auto& v : bfs_view(graph, 0)) {
@@ -137,6 +143,8 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
     BOOST_CHECK_EQUAL(bfs[6], 5);
     BOOST_CHECK_EQUAL(bfs[7], 7);
 
+    t = successors(0, graph);
+    BOOST_CHECK_EQUAL_COLLECTIONS(bfs.begin(), bfs.end(), t.begin(), t.end());
 
 
     std::vector<vertex_idx> dfs;
@@ -175,6 +183,62 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
     BOOST_CHECK_EQUAL(dfs[5], 4);
     BOOST_CHECK_EQUAL(dfs[6], 1);
     BOOST_CHECK_EQUAL(dfs[7], 6);
+
+
+    std::vector<vertex_idx> bfs_reverse;
+
+    for (const auto& v : bfs_reverse_view(graph, 1)) {
+        bfs_reverse.push_back(v);
+    }
+    BOOST_CHECK_EQUAL(bfs_reverse.size(), 2);
+    BOOST_CHECK_EQUAL(bfs_reverse[0], 1);
+    BOOST_CHECK_EQUAL(bfs_reverse[1], 0);
+
+    t = ancestors(1, graph);
+    BOOST_CHECK_EQUAL_COLLECTIONS(bfs_reverse.begin(), bfs_reverse.end(), t.begin(), t.end());
+
+    bfs_reverse.clear();
+
+    for (const auto& v : bfs_reverse_view(graph, 5)) {
+        bfs_reverse.push_back(v);
+    }
+
+    BOOST_CHECK_EQUAL(bfs_reverse.size(), 3);
+    BOOST_CHECK_EQUAL(bfs_reverse[0], 5);
+    BOOST_CHECK_EQUAL(bfs_reverse[1], 2);
+    BOOST_CHECK_EQUAL(bfs_reverse[2], 0);
+
+    t = ancestors(5, graph);
+    BOOST_CHECK_EQUAL_COLLECTIONS(bfs_reverse.begin(), bfs_reverse.end(), t.begin(), t.end());
+
+    bfs_reverse.clear();
+
+    for (const auto& v : bfs_reverse_view(graph, 0)) {
+        bfs_reverse.push_back(v);
+    }
+
+    BOOST_CHECK_EQUAL(bfs_reverse.size(), 1);
+    BOOST_CHECK_EQUAL(bfs_reverse[0], 0);
+
+    t = ancestors(0, graph);
+    BOOST_CHECK_EQUAL_COLLECTIONS(bfs_reverse.begin(), bfs_reverse.end(), t.begin(), t.end());
+
+    bfs_reverse.clear();
+
+    for (const auto& v : bfs_reverse_view(graph, 7)) {
+        bfs_reverse.push_back(v);
+    }
+
+    BOOST_CHECK_EQUAL(bfs_reverse.size(), 6);
+    BOOST_CHECK_EQUAL(bfs_reverse[0], 7);
+    BOOST_CHECK_EQUAL(bfs_reverse[1], 4);
+    BOOST_CHECK_EQUAL(bfs_reverse[2], 3);
+    BOOST_CHECK_EQUAL(bfs_reverse[3], 1);
+    BOOST_CHECK_EQUAL(bfs_reverse[4], 2);
+    BOOST_CHECK_EQUAL(bfs_reverse[5], 0);
+
+    t = ancestors(7, graph);
+    BOOST_CHECK_EQUAL_COLLECTIONS(bfs_reverse.begin(), bfs_reverse.end(), t.begin(), t.end());
 
 
     BOOST_CHECK_EQUAL(edge(0,1,graph), true);
