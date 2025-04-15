@@ -91,138 +91,223 @@ std::vector<vertex_idx_t<Graph_t>> sink_vertices(const Graph_t &graph) {
     return vec;
 }
 
+template<typename cond_eval, typename Graph_t, typename iterator_t>
+struct vertex_cond_iterator {
+
+    const Graph_t &graph;
+    iterator_t current_vertex;
+    cond_eval cond;
+
+  public:
+    using iterator_category = std::input_iterator_tag;
+    using value_type = vertex_idx_t<Graph_t>;
+    using difference_type = std::ptrdiff_t;
+    using pointer = const value_type *;
+    using reference = const value_type &;
+
+    vertex_cond_iterator(const Graph_t &graph_, const iterator_t &start) : graph(graph_), current_vertex(start) {
+
+        while (current_vertex != graph.vertices().end()) {
+            if (cond.eval(graph, *current_vertex)) {
+                break;
+            }
+            current_vertex++;
+        }
+    }
+
+    value_type operator*() const { return current_vertex.operator*(); }
+
+    // Prefix increment
+    vertex_cond_iterator &operator++() {
+        current_vertex++;
+
+        while (current_vertex != graph.vertices().end()) {
+            if (cond.eval(graph, *current_vertex)) {
+                break;
+            }
+            current_vertex++;
+        }
+
+        return *this;
+    }
+
+    // Postfix increment
+    vertex_cond_iterator operator++(int) {
+        vertex_cond_iterator tmp = *this;
+        ++(*this);
+        return tmp;
+    }
+
+    friend bool operator==(const vertex_cond_iterator &one, const vertex_cond_iterator &other) {
+        return one.current_vertex == other.current_vertex;
+    };
+    friend bool operator!=(const vertex_cond_iterator &one, const vertex_cond_iterator &other) {
+        return one.current_vertex != other.current_vertex;
+    };
+};
+
 template<typename Graph_t>
 class source_vertices_view {
 
     const Graph_t &graph;
-
-    template<typename iterator_t>
-    struct sources_iterator {
-
-        const Graph_t &graph;
-        iterator_t current_source;
-
-      public:
-        using iterator_category = std::input_iterator_tag;
-        using value_type = vertex_idx_t<Graph_t>;
-        using difference_type = std::ptrdiff_t;
-        using pointer = const value_type *;
-        using reference = const value_type &;
-
-        sources_iterator(const Graph_t &graph_, const iterator_t &start) : graph(graph_), current_source(start) {
-
-            while (current_source != graph.vertices().end()) {
-                if (graph.in_degree(*current_source) == 0) {
-                    break;
-                }
-                current_source++;
-            }
-        }
-
-        value_type operator*() const { return current_source.operator*(); }
-
-        // Prefix increment
-        sources_iterator &operator++() {
-            current_source++;
-
-            while (current_source != graph.vertices().end()) {
-                if (graph.in_degree(*current_source) == 0) {
-                    break;
-                }
-                current_source++;
-            }
-
-            return *this;
-        }
-
-        // Postfix increment
-        sources_iterator operator++(int) {
-            sources_iterator tmp = *this;
-            ++(*this);
-            return tmp;
-        }
-
-        friend bool operator==(const sources_iterator &one, const sources_iterator &other) {
-            return one.current_source == other.current_source;
-        };
-        friend bool operator!=(const sources_iterator &one, const sources_iterator &other) {
-            return one.current_source != other.current_source;
-        };
+    struct source_eval {
+        static bool eval(const Graph_t &graph, const vertex_idx_t<Graph_t> &v) { return graph.in_degree(v) == 0; }
     };
+
+    using source_iterator = vertex_cond_iterator<source_eval, Graph_t, decltype(graph.vertices().begin())>;
 
   public:
     source_vertices_view(const Graph_t &graph_) : graph(graph_) {}
 
-    auto begin() const { return sources_iterator(graph, graph.vertices().begin()); }
+    auto begin() const { return source_iterator(graph, graph.vertices().begin()); }
 
-    auto end() const { return sources_iterator(graph, graph.vertices().end()); }
+    auto end() const { return source_iterator(graph, graph.vertices().end()); }
 };
 
 template<typename Graph_t>
 class sink_vertices_view {
-
     const Graph_t &graph;
-
-    template<typename iterator_t>
-    struct sinks_iterator {
-
-        const Graph_t &graph;
-        iterator_t current_sink;
-
-      public:
-        using iterator_category = std::input_iterator_tag;
-        using value_type = vertex_idx_t<Graph_t>;
-        using difference_type = std::ptrdiff_t;
-        using pointer = const value_type *;
-        using reference = const value_type &;
-
-        sinks_iterator(const Graph_t &graph_, const iterator_t &start) : graph(graph_), current_sink(start) {
-
-            while (current_sink != graph.vertices().end()) {
-                if (graph.out_degree(*current_sink) == 0) {
-                    break;
-                }
-                current_sink++;
-            }
-        }
-
-        value_type operator*() const { return current_sink.operator*(); }
-
-        // Prefix increment
-        sinks_iterator &operator++() {
-            current_sink++;
-
-            while (current_sink != graph.vertices().end()) {
-                if (graph.out_degree(*current_sink) == 0) {
-                    break;
-                }
-                current_sink++;
-            }
-
-            return *this;
-        }
-
-        // Postfix increment
-        sinks_iterator operator++(int) {
-            sinks_iterator tmp = *this;
-            ++(*this);
-            return tmp;
-        }
-
-        friend bool operator==(const sinks_iterator &one, const sinks_iterator &other) {
-            return one.current_sink == other.current_sink;
-        };
-        friend bool operator!=(const sinks_iterator &one, const sinks_iterator &other) {
-            return one.current_sink != other.current_sink;
-        };
+    struct sink_eval {
+        static bool eval(const Graph_t &graph, const vertex_idx_t<Graph_t> &v) { return graph.out_degree(v) == 0; }
     };
+
+    using sink_iterator = vertex_cond_iterator<sink_eval, Graph_t, decltype(graph.vertices().begin())>;
 
   public:
     sink_vertices_view(const Graph_t &graph_) : graph(graph_) {}
 
-    auto begin() const { return sinks_iterator(graph, graph.vertices().begin()); }
+    auto begin() const { return sink_iterator(graph, graph.vertices().begin()); }
 
-    auto end() const { return sinks_iterator(graph, graph.vertices().end()); }
+    auto end() const { return sink_iterator(graph, graph.vertices().end()); }
+};
+
+template<typename Graph_t, typename container_wrapper>
+struct traversal_iterator {
+
+    const Graph_t &graph;
+
+    container_wrapper vertex_container;
+    std::unordered_set<vertex_idx_t<Graph_t>> visited;
+    vertex_idx_t<Graph_t> current_vertex;
+
+  public:
+    using iterator_category = std::input_iterator_tag;
+    using value_type = vertex_idx_t<Graph_t>;
+    using difference_type = std::ptrdiff_t;
+    using pointer = const value_type *;
+    using reference = const value_type &;
+
+    traversal_iterator(const Graph_t &graph_, const vertex_idx_t<Graph_t> &start)
+        : graph(graph_), current_vertex(start) {
+
+        if (graph.num_vertices() == start) {
+            return;
+        }
+
+        visited.insert(start);
+
+        for (const auto &child : graph.children(current_vertex)) {
+            vertex_container.push(child);
+            visited.insert(child);
+        }
+    }
+
+    value_type operator*() const { return current_vertex; }
+
+    // Prefix increment
+    traversal_iterator &operator++() {
+   
+
+        if (vertex_container.empty()) {
+            current_vertex = graph.num_vertices();
+            return *this;
+        }
+
+        current_vertex = vertex_container.pop_next();
+
+        for (const auto &child : graph.children(current_vertex)) {
+            if (visited.find(child) == visited.end()) {
+                vertex_container.push(child);
+                visited.insert(child);
+            }
+        }
+
+        return *this;
+    }
+
+    // Postfix increment !! expensive
+    traversal_iterator operator++(int) {
+        traversal_iterator tmp = *this;
+        ++(*this);
+        return tmp;
+    }
+
+    friend bool operator==(const traversal_iterator &one, const traversal_iterator &other) {
+        return one.current_vertex == other.current_vertex;
+    };
+    friend bool operator!=(const traversal_iterator &one, const traversal_iterator &other) {
+        return one.current_vertex != other.current_vertex;
+    };
+};
+
+template<typename Graph_t>
+class bfs_view {
+
+    const Graph_t &graph;
+    vertex_idx_t<Graph_t> start_vertex;
+
+    struct bfs_queue_wrapper {
+        std::queue<vertex_idx_t<Graph_t>> queue;
+
+        void push(const vertex_idx_t<Graph_t> &v) { queue.push(v); }
+
+        vertex_idx_t<Graph_t> pop_next() {
+            auto v = queue.front();
+            queue.pop();
+            return v;
+        }
+
+        bool empty() const { return queue.empty(); }
+    };
+
+    using bfs_iterator = traversal_iterator<Graph_t, bfs_queue_wrapper>;
+
+  public:
+    bfs_view(const Graph_t &graph_, const vertex_idx_t<Graph_t> &start) : graph(graph_), start_vertex(start) {}
+
+    auto begin() const { return bfs_iterator(graph, start_vertex); }
+
+    auto end() const { return bfs_iterator(graph, graph.num_vertices()); }
+};
+
+template<typename Graph_t>
+class dfs_view {
+
+    const Graph_t &graph;
+    vertex_idx_t<Graph_t> start_vertex;
+
+    struct dfs_stack_wrapper {
+        std::vector<vertex_idx_t<Graph_t>> stack;
+
+        void push(const vertex_idx_t<Graph_t> &v) { stack.push_back(v); }
+
+        vertex_idx_t<Graph_t> pop_next() {
+            auto v = stack.back();
+            stack.pop_back();
+            return v;
+        }
+
+        bool empty() const { return stack.empty(); }
+    };
+
+    using dfs_iterator = traversal_iterator<Graph_t, dfs_stack_wrapper>;
+
+  public:
+    dfs_view(const Graph_t &graph_, const vertex_idx_t<Graph_t> &start) : graph(graph_), start_vertex(start) {}
+
+    auto begin() const { return dfs_iterator(graph, start_vertex); }
+
+    auto end() const { return dfs_iterator(graph, graph.num_vertices()); }
 };
 
 } // namespace osp

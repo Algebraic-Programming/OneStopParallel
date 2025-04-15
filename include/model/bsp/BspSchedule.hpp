@@ -29,8 +29,6 @@ limitations under the License.
 
 namespace osp {
 
-    
-
 /**
  * @class BspSchedule
  * @brief Represents a schedule for the Bulk Synchronous Parallel (BSP) model.
@@ -51,11 +49,10 @@ namespace osp {
  */
 template<typename Graph_t>
 class BspSchedule : IBspSchedule<Graph_t> {
-public:
-
+  public:
     using KeyTriple = std::tuple<vertex_idx_t<Graph_t>, unsigned int, unsigned int>;
-    
-private:
+
+  private:
     using vertex_idx = vertex_idx_t<Graph_t>;
 
     const BspInstance<Graph_t> *instance;
@@ -68,10 +65,7 @@ private:
     // contains entries: (vertex, from_proc, to_proc ) : step
     std::map<KeyTriple, unsigned> commSchedule;
 
-public:
-
-
-
+  public:
     /**
      * @brief Default constructor for the BspSchedule class.
      */
@@ -117,6 +111,18 @@ public:
           node_to_superstep_assignment(superstep_assignment_), commSchedule(comm_) {
 
         updateNumberOfSupersteps();
+    }
+
+    BspSchedule(const IBspSchedule<Graph_t> &schedule)
+        : instance(&schedule.getInstance()), number_of_supersteps(schedule.numberOfSupersteps()),
+          node_to_processor_assignment(schedule.getInstance().numberOfVertices()),
+          node_to_superstep_assignment(schedule.getInstance().numberOfVertices()) {
+
+        for (const auto &v : schedule.getInstance().getComputationalDag().vertices()) {
+
+            node_to_processor_assignment[v] = schedule.assignedProcessor(v);
+            node_to_superstep_assignment[v] = schedule.assignedSuperstep(v);
+        }
     }
 
     virtual ~BspSchedule() = default;
@@ -547,8 +553,9 @@ public:
         if (number_of_supersteps >= 1)
             sync_cost = instance->synchronisationCosts() * static_cast<v_commw_t<Graph_t>>(number_of_supersteps - 1);
 
-        return (double) total_work +
-               total_communication * instance->communicationCosts() * (1.0 / instance->numberOfProcessors()) + sync_cost;
+        return (double)total_work +
+               total_communication * instance->communicationCosts() * (1.0 / instance->numberOfProcessors()) +
+               sync_cost;
     }
 
     double computeBaseCommCostsTotalCommunication() const {
@@ -1014,8 +1021,8 @@ public:
         std::vector<std::set<std::vector<vertex_idx_t<Graph_t>>, std::greater<>>> require_sending(
             instance->numberOfProcessors());
         // TODO the datastructure seems to be wrong. the vectors added to the set have elements of different types.
-        // it should really be std::vector<std::set<std::tuple<v_commw_t<Graph_t>, vertex_idx_t<Graph_t>, vertex_idx_t<Graph_t>>>> 
-        // added many static_cast below as tmp fix
+        // it should really be std::vector<std::set<std::tuple<v_commw_t<Graph_t>, vertex_idx_t<Graph_t>,
+        // vertex_idx_t<Graph_t>>>> added many static_cast below as tmp fix
 
         for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
             for (const auto &node : step_proc_node_list[0][proc]) {

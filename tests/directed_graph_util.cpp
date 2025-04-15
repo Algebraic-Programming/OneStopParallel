@@ -99,6 +99,84 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
     BOOST_CHECK_EQUAL(sinks_s[1], 6);
     BOOST_CHECK_EQUAL(sinks_s[2], 7);
 
+
+    std::vector<vertex_idx> bfs;
+
+    for (const auto& v : bfs_view(graph, 1)) {
+        bfs.push_back(v);
+    }
+
+    BOOST_CHECK_EQUAL(bfs.size(), 4);
+    BOOST_CHECK_EQUAL(bfs[0], 1);
+    BOOST_CHECK_EQUAL(bfs[1], 4);
+    BOOST_CHECK_EQUAL(bfs[2], 6);
+    BOOST_CHECK_EQUAL(bfs[3], 7);
+
+    bfs.clear();
+
+    for (const auto& v : bfs_view(graph, 5)) {
+        bfs.push_back(v);
+    }
+
+    BOOST_CHECK_EQUAL(bfs.size(), 1);
+    BOOST_CHECK_EQUAL(bfs[0], 5);
+    
+    bfs.clear();
+
+    for (const auto& v : bfs_view(graph, 0)) {
+        bfs.push_back(v);
+    }
+
+    BOOST_CHECK_EQUAL(bfs.size(), 8);
+    BOOST_CHECK_EQUAL(bfs[0], 0);
+    BOOST_CHECK_EQUAL(bfs[1], 1);
+    BOOST_CHECK_EQUAL(bfs[2], 2);
+    BOOST_CHECK_EQUAL(bfs[3], 3);
+    BOOST_CHECK_EQUAL(bfs[4], 4);
+    BOOST_CHECK_EQUAL(bfs[5], 6);
+    BOOST_CHECK_EQUAL(bfs[6], 5);
+    BOOST_CHECK_EQUAL(bfs[7], 7);
+
+
+
+    std::vector<vertex_idx> dfs;
+
+    for (const auto& v : dfs_view(graph, 1)) {
+        dfs.push_back(v);
+    }
+
+    BOOST_CHECK_EQUAL(dfs.size(), 4);
+    BOOST_CHECK_EQUAL(dfs[0], 1);
+    BOOST_CHECK_EQUAL(dfs[1], 6);
+    BOOST_CHECK_EQUAL(dfs[2], 4);
+    BOOST_CHECK_EQUAL(dfs[3], 7);
+
+
+    dfs.clear();
+    for (const auto& v : dfs_view(graph, 5)) {
+        dfs.push_back(v);
+    }
+
+    BOOST_CHECK_EQUAL(dfs.size(), 1);
+    BOOST_CHECK_EQUAL(dfs[0], 5);
+
+    dfs.clear();
+
+    for (const auto& v : dfs_view(graph, 0)) {
+        dfs.push_back(v);
+    }
+
+    BOOST_CHECK_EQUAL(dfs.size(), 8);
+    BOOST_CHECK_EQUAL(dfs[0], 0);
+    BOOST_CHECK_EQUAL(dfs[1], 3);
+    BOOST_CHECK_EQUAL(dfs[2], 7);
+    BOOST_CHECK_EQUAL(dfs[3], 2);
+    BOOST_CHECK_EQUAL(dfs[4], 5);
+    BOOST_CHECK_EQUAL(dfs[5], 4);
+    BOOST_CHECK_EQUAL(dfs[6], 1);
+    BOOST_CHECK_EQUAL(dfs[7], 6);
+
+
     BOOST_CHECK_EQUAL(edge(0,1,graph), true);
     BOOST_CHECK_EQUAL(edge(0,2,graph), true);
     BOOST_CHECK_EQUAL(edge(0,3,graph), true);
@@ -242,6 +320,8 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
     BOOST_CHECK_EQUAL(has_path(7, 4, graph), false);
     BOOST_CHECK_EQUAL(has_path(7, 5, graph), false);
     BOOST_CHECK_EQUAL(has_path(7, 6, graph), false);
+
+
 
     
 };
