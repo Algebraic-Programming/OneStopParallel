@@ -22,15 +22,13 @@ limitations under the License.
 #include <iostream>
 #include <vector>
 
-#include "graph_algorithms/directed_graph_util.hpp"
-#include "graph_algorithms/directed_graph_path_util.hpp"
 #include "graph_algorithms/computational_dag_util.hpp"
 #include "graph_algorithms/directed_graph_edge_desc_util.hpp"
+#include "graph_algorithms/directed_graph_path_util.hpp"
 #include "graph_algorithms/directed_graph_top_sort.hpp"
-#include "graph_implementations/computational_dag_vector_impl.hpp"
+#include "graph_algorithms/directed_graph_util.hpp"
 #include "graph_implementations/boost_graphs/boost_graph.hpp"
-
-
+#include "graph_implementations/computational_dag_vector_impl.hpp"
 
 using namespace osp;
 
@@ -77,7 +75,7 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
     BOOST_CHECK_EQUAL(sources[0], 0);
 
     std::vector<vertex_idx> sources_s;
-    for(const auto &v : source_vertices_view(graph)) {
+    for (const auto &v : source_vertices_view(graph)) {
         sources_s.push_back(v);
     }
     BOOST_CHECK_EQUAL(sources_s.size(), 1);
@@ -90,19 +88,18 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
     BOOST_CHECK_EQUAL(sinks[2], 7);
 
     std::vector<vertex_idx> sinks_s;
-    for(const auto &v : sink_vertices_view(graph)) {
+    for (const auto &v : sink_vertices_view(graph)) {
         sinks_s.push_back(v);
     }
-    
+
     BOOST_CHECK_EQUAL(sinks_s.size(), 3);
     BOOST_CHECK_EQUAL(sinks_s[0], 5);
     BOOST_CHECK_EQUAL(sinks_s[1], 6);
     BOOST_CHECK_EQUAL(sinks_s[2], 7);
 
-
     std::vector<vertex_idx> bfs;
 
-    for (const auto& v : bfs_view(graph, 1)) {
+    for (const auto &v : bfs_view(graph, 1)) {
         bfs.push_back(v);
     }
 
@@ -117,19 +114,19 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
 
     bfs.clear();
 
-    for (const auto& v : bfs_view(graph, 5)) {
+    for (const auto &v : bfs_view(graph, 5)) {
         bfs.push_back(v);
     }
 
     BOOST_CHECK_EQUAL(bfs.size(), 1);
     BOOST_CHECK_EQUAL(bfs[0], 5);
-    
+
     t = successors(5, graph);
     BOOST_CHECK_EQUAL_COLLECTIONS(bfs.begin(), bfs.end(), t.begin(), t.end());
 
     bfs.clear();
 
-    for (const auto& v : bfs_view(graph, 0)) {
+    for (const auto &v : bfs_view(graph, 0)) {
         bfs.push_back(v);
     }
 
@@ -146,10 +143,9 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
     t = successors(0, graph);
     BOOST_CHECK_EQUAL_COLLECTIONS(bfs.begin(), bfs.end(), t.begin(), t.end());
 
-
     std::vector<vertex_idx> dfs;
 
-    for (const auto& v : dfs_view(graph, 1)) {
+    for (const auto &v : dfs_view(graph, 1)) {
         dfs.push_back(v);
     }
 
@@ -159,9 +155,8 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
     BOOST_CHECK_EQUAL(dfs[2], 4);
     BOOST_CHECK_EQUAL(dfs[3], 7);
 
-
     dfs.clear();
-    for (const auto& v : dfs_view(graph, 5)) {
+    for (const auto &v : dfs_view(graph, 5)) {
         dfs.push_back(v);
     }
 
@@ -170,7 +165,7 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
 
     dfs.clear();
 
-    for (const auto& v : dfs_view(graph, 0)) {
+    for (const auto &v : dfs_view(graph, 0)) {
         dfs.push_back(v);
     }
 
@@ -184,10 +179,9 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
     BOOST_CHECK_EQUAL(dfs[6], 1);
     BOOST_CHECK_EQUAL(dfs[7], 6);
 
-
     std::vector<vertex_idx> bfs_reverse;
 
-    for (const auto& v : bfs_reverse_view(graph, 1)) {
+    for (const auto &v : bfs_reverse_view(graph, 1)) {
         bfs_reverse.push_back(v);
     }
     BOOST_CHECK_EQUAL(bfs_reverse.size(), 2);
@@ -199,7 +193,7 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
 
     bfs_reverse.clear();
 
-    for (const auto& v : bfs_reverse_view(graph, 5)) {
+    for (const auto &v : bfs_reverse_view(graph, 5)) {
         bfs_reverse.push_back(v);
     }
 
@@ -213,7 +207,7 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
 
     bfs_reverse.clear();
 
-    for (const auto& v : bfs_reverse_view(graph, 0)) {
+    for (const auto &v : bfs_reverse_view(graph, 0)) {
         bfs_reverse.push_back(v);
     }
 
@@ -225,7 +219,7 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
 
     bfs_reverse.clear();
 
-    for (const auto& v : bfs_reverse_view(graph, 7)) {
+    for (const auto &v : bfs_reverse_view(graph, 7)) {
         bfs_reverse.push_back(v);
     }
 
@@ -240,76 +234,75 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
     t = ancestors(7, graph);
     BOOST_CHECK_EQUAL_COLLECTIONS(bfs_reverse.begin(), bfs_reverse.end(), t.begin(), t.end());
 
+    BOOST_CHECK_EQUAL(edge(0, 1, graph), true);
+    BOOST_CHECK_EQUAL(edge(0, 2, graph), true);
+    BOOST_CHECK_EQUAL(edge(0, 3, graph), true);
+    BOOST_CHECK_EQUAL(edge(0, 4, graph), false);
+    BOOST_CHECK_EQUAL(edge(0, 5, graph), false);
+    BOOST_CHECK_EQUAL(edge(0, 6, graph), false);
+    BOOST_CHECK_EQUAL(edge(0, 7, graph), false);
 
-    BOOST_CHECK_EQUAL(edge(0,1,graph), true);
-    BOOST_CHECK_EQUAL(edge(0,2,graph), true);
-    BOOST_CHECK_EQUAL(edge(0,3,graph), true);
-    BOOST_CHECK_EQUAL(edge(0,4,graph), false);
-    BOOST_CHECK_EQUAL(edge(0,5,graph), false);
-    BOOST_CHECK_EQUAL(edge(0,6,graph), false);
-    BOOST_CHECK_EQUAL(edge(0,7,graph), false);    
+    BOOST_CHECK_EQUAL(edge(1, 0, graph), false);
+    BOOST_CHECK_EQUAL(edge(1, 1, graph), false);
+    BOOST_CHECK_EQUAL(edge(1, 2, graph), false);
+    BOOST_CHECK_EQUAL(edge(1, 3, graph), false);
+    BOOST_CHECK_EQUAL(edge(1, 4, graph), true);
+    BOOST_CHECK_EQUAL(edge(1, 5, graph), false);
+    BOOST_CHECK_EQUAL(edge(1, 6, graph), true);
+    BOOST_CHECK_EQUAL(edge(1, 7, graph), false);
 
-    BOOST_CHECK_EQUAL(edge(1,0,graph), false);
-    BOOST_CHECK_EQUAL(edge(1,1,graph), false);
-    BOOST_CHECK_EQUAL(edge(1,2,graph), false);
-    BOOST_CHECK_EQUAL(edge(1,3,graph), false);
-    BOOST_CHECK_EQUAL(edge(1,4,graph), true);
-    BOOST_CHECK_EQUAL(edge(1,5,graph), false);
-    BOOST_CHECK_EQUAL(edge(1,6,graph), true);
-    BOOST_CHECK_EQUAL(edge(1,7,graph), false);
+    BOOST_CHECK_EQUAL(edge(2, 0, graph), false);
+    BOOST_CHECK_EQUAL(edge(2, 1, graph), false);
+    BOOST_CHECK_EQUAL(edge(2, 2, graph), false);
+    BOOST_CHECK_EQUAL(edge(2, 3, graph), false);
+    BOOST_CHECK_EQUAL(edge(2, 4, graph), true);
+    BOOST_CHECK_EQUAL(edge(2, 5, graph), true);
+    BOOST_CHECK_EQUAL(edge(2, 6, graph), false);
+    BOOST_CHECK_EQUAL(edge(2, 7, graph), false);
 
-    BOOST_CHECK_EQUAL(edge(2,0,graph), false);
-    BOOST_CHECK_EQUAL(edge(2,1,graph), false);
-    BOOST_CHECK_EQUAL(edge(2,2,graph), false);
-    BOOST_CHECK_EQUAL(edge(2,3,graph), false);
-    BOOST_CHECK_EQUAL(edge(2,4,graph), true);
-    BOOST_CHECK_EQUAL(edge(2,5,graph), true);
-    BOOST_CHECK_EQUAL(edge(2,6,graph), false);
-    BOOST_CHECK_EQUAL(edge(2,7,graph), false);
+    BOOST_CHECK_EQUAL(edge(3, 0, graph), false);
+    BOOST_CHECK_EQUAL(edge(3, 1, graph), false);
+    BOOST_CHECK_EQUAL(edge(3, 2, graph), false);
+    BOOST_CHECK_EQUAL(edge(3, 3, graph), false);
+    BOOST_CHECK_EQUAL(edge(3, 4, graph), false);
+    BOOST_CHECK_EQUAL(edge(3, 5, graph), false);
+    BOOST_CHECK_EQUAL(edge(3, 6, graph), false);
+    BOOST_CHECK_EQUAL(edge(3, 7, graph), true);
 
-    BOOST_CHECK_EQUAL(edge(3,0,graph), false);
-    BOOST_CHECK_EQUAL(edge(3,1,graph), false);
-    BOOST_CHECK_EQUAL(edge(3,2,graph), false);
-    BOOST_CHECK_EQUAL(edge(3,3,graph), false);
-    BOOST_CHECK_EQUAL(edge(3,4,graph), false);
-    BOOST_CHECK_EQUAL(edge(3,5,graph), false);
-    BOOST_CHECK_EQUAL(edge(3,6,graph), false);
-    BOOST_CHECK_EQUAL(edge(3,7,graph), true);
+    BOOST_CHECK_EQUAL(edge(4, 0, graph), false);
+    BOOST_CHECK_EQUAL(edge(4, 1, graph), false);
+    BOOST_CHECK_EQUAL(edge(4, 2, graph), false);
+    BOOST_CHECK_EQUAL(edge(4, 3, graph), false);
+    BOOST_CHECK_EQUAL(edge(4, 4, graph), false);
+    BOOST_CHECK_EQUAL(edge(4, 5, graph), false);
+    BOOST_CHECK_EQUAL(edge(4, 6, graph), false);
+    BOOST_CHECK_EQUAL(edge(4, 7, graph), true);
 
-    BOOST_CHECK_EQUAL(edge(4,0,graph), false);
-    BOOST_CHECK_EQUAL(edge(4,1,graph), false);
-    BOOST_CHECK_EQUAL(edge(4,2,graph), false);
-    BOOST_CHECK_EQUAL(edge(4,3,graph), false);
-    BOOST_CHECK_EQUAL(edge(4,4,graph), false);
-    BOOST_CHECK_EQUAL(edge(4,5,graph), false);
-    BOOST_CHECK_EQUAL(edge(4,6,graph), false);
-    BOOST_CHECK_EQUAL(edge(4,7,graph), true);
-    
-    BOOST_CHECK_EQUAL(edge(5,0,graph), false);
-    BOOST_CHECK_EQUAL(edge(5,1,graph), false);
-    BOOST_CHECK_EQUAL(edge(5,2,graph), false);
-    BOOST_CHECK_EQUAL(edge(5,3,graph), false);
-    BOOST_CHECK_EQUAL(edge(5,4,graph), false);
-    BOOST_CHECK_EQUAL(edge(5,5,graph), false);
-    BOOST_CHECK_EQUAL(edge(5,6,graph), false);
-    BOOST_CHECK_EQUAL(edge(5,7,graph), false);
+    BOOST_CHECK_EQUAL(edge(5, 0, graph), false);
+    BOOST_CHECK_EQUAL(edge(5, 1, graph), false);
+    BOOST_CHECK_EQUAL(edge(5, 2, graph), false);
+    BOOST_CHECK_EQUAL(edge(5, 3, graph), false);
+    BOOST_CHECK_EQUAL(edge(5, 4, graph), false);
+    BOOST_CHECK_EQUAL(edge(5, 5, graph), false);
+    BOOST_CHECK_EQUAL(edge(5, 6, graph), false);
+    BOOST_CHECK_EQUAL(edge(5, 7, graph), false);
 
-    BOOST_CHECK_EQUAL(edge(6,0,graph), false);
-    BOOST_CHECK_EQUAL(edge(6,1,graph), false);
-    BOOST_CHECK_EQUAL(edge(6,2,graph), false);
-    BOOST_CHECK_EQUAL(edge(6,3,graph), false);
-    BOOST_CHECK_EQUAL(edge(6,4,graph), false);
-    BOOST_CHECK_EQUAL(edge(6,5,graph), false);
-    BOOST_CHECK_EQUAL(edge(6,6,graph), false);
-    BOOST_CHECK_EQUAL(edge(6,7,graph), false);
+    BOOST_CHECK_EQUAL(edge(6, 0, graph), false);
+    BOOST_CHECK_EQUAL(edge(6, 1, graph), false);
+    BOOST_CHECK_EQUAL(edge(6, 2, graph), false);
+    BOOST_CHECK_EQUAL(edge(6, 3, graph), false);
+    BOOST_CHECK_EQUAL(edge(6, 4, graph), false);
+    BOOST_CHECK_EQUAL(edge(6, 5, graph), false);
+    BOOST_CHECK_EQUAL(edge(6, 6, graph), false);
+    BOOST_CHECK_EQUAL(edge(6, 7, graph), false);
 
-    BOOST_CHECK_EQUAL(edge(7,0,graph), false);
-    BOOST_CHECK_EQUAL(edge(7,1,graph), false);
-    BOOST_CHECK_EQUAL(edge(7,2,graph), false);
-    BOOST_CHECK_EQUAL(edge(7,3,graph), false);
-    BOOST_CHECK_EQUAL(edge(7,4,graph), false);
-    BOOST_CHECK_EQUAL(edge(7,5,graph), false);
-    BOOST_CHECK_EQUAL(edge(7,6,graph), false);
+    BOOST_CHECK_EQUAL(edge(7, 0, graph), false);
+    BOOST_CHECK_EQUAL(edge(7, 1, graph), false);
+    BOOST_CHECK_EQUAL(edge(7, 2, graph), false);
+    BOOST_CHECK_EQUAL(edge(7, 3, graph), false);
+    BOOST_CHECK_EQUAL(edge(7, 4, graph), false);
+    BOOST_CHECK_EQUAL(edge(7, 5, graph), false);
+    BOOST_CHECK_EQUAL(edge(7, 6, graph), false);
 
     BOOST_CHECK_EQUAL(is_source(0, graph), true);
     BOOST_CHECK_EQUAL(is_source(1, graph), false);
@@ -384,13 +377,7 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
     BOOST_CHECK_EQUAL(has_path(7, 4, graph), false);
     BOOST_CHECK_EQUAL(has_path(7, 5, graph), false);
     BOOST_CHECK_EQUAL(has_path(7, 6, graph), false);
-
-
-
-    
 };
-
-
 
 BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
@@ -435,7 +422,6 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
     BOOST_CHECK_EQUAL(sumOfVerticesWorkWeights({}, graph_empty), 0);
 
-  
     std::size_t num_edges = 0;
     for (const auto &vertex : graph.vertices()) {
         num_edges += graph.out_degree(vertex);
@@ -445,7 +431,6 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
         }
     }
 
- 
     for (const auto &vertex : graph.vertices()) {
         for (const auto &child : graph.children(vertex)) {
 
@@ -454,7 +439,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
         }
     }
 
-      std::vector<VertexType> top_order = GetTopOrder(AS_IT_COMES, graph);
+    std::vector<VertexType> top_order = GetTopOrder(AS_IT_COMES, graph);
     BOOST_CHECK(top_order.size() == graph.num_vertices());
     BOOST_CHECK(GetTopOrder(AS_IT_COMES, graph_empty).size() == graph_empty.num_vertices());
 
@@ -529,7 +514,6 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     BOOST_CHECK(GetFilteredTopOrder(bool_b, graph)[3] == 2);
     BOOST_CHECK(GetFilteredTopOrder(bool_c, graph) == std::vector<VertexType>({9, 6, 1}));
 
-
     BOOST_CHECK_EQUAL(longestPath(all_nodes, graph), 4);
     BOOST_CHECK_EQUAL(longestPath(nodes_a, graph), 0);
     BOOST_CHECK_EQUAL(longestPath(nodes_b, graph), 1);
@@ -546,20 +530,18 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     BOOST_CHECK(longest_path == long_chain1 || longest_path == long_chain2);
 
     BOOST_CHECK(longestChain(graph_empty) == std::vector<VertexType>({}));
+    
 
-    // std::cout << "Checking ancestors and descendants:" << std::endl;
-    // /*
-    //     BOOST_CHECK(graph.ancestors(9) == std::vector<VertexType>({9}));
-    //     BOOST_CHECK(graph.ancestors(2) == std::vector<VertexType>({2, 6, 9, 5, 3}));
-    //     BOOST_CHECK(graph.ancestors(4) == std::vector<VertexType>({4, 8}));
-    //     BOOST_CHECK(graph.ancestors(5) == std::vector<VertexType>({5, 9}));
+    BOOST_CHECK(ancestors(9, graph) == std::vector<VertexType>({9}));
+    BOOST_CHECK(ancestors(2, graph) == std::vector<VertexType>({2, 3, 5, 6, 9}));
+    BOOST_CHECK(ancestors(4, graph) == std::vector<VertexType>({4, 8}));
+    BOOST_CHECK(ancestors(5, graph) == std::vector<VertexType>({5, 9}));
+    BOOST_CHECK(successors(9, graph) == std::vector<VertexType>({9, 6, 1, 5, 2, 0, 7}));
+    BOOST_CHECK(successors(3, graph) == std::vector<VertexType>({3, 2, 0, 7}));
+    BOOST_CHECK(successors(0, graph) == std::vector<VertexType>({0, 7}));
+    BOOST_CHECK(successors(8, graph) == std::vector<VertexType>({8, 4}));
+    BOOST_CHECK(successors(4, graph) == std::vector<VertexType>({4}));
 
-    //     BOOST_CHECK(graph.successors(9) == std::vector<VertexType>({9, 5, 6, 1, 2, 0, 7}));
-    //     BOOST_CHECK(graph.successors(3) == std::vector<VertexType>({3, 2, 0, 7}));
-    //     BOOST_CHECK(graph.successors(0) == std::vector<VertexType>({0, 7}));
-    //     BOOST_CHECK(graph.successors(8) == std::vector<VertexType>({8, 4}));
-    //     BOOST_CHECK(graph.successors(4) == std::vector<VertexType>({4}));
-    // */
     std::vector<unsigned> top_dist({4, 3, 3, 1, 2, 2, 2, 5, 1, 1});
     std::vector<unsigned> bottom_dist({2, 1, 3, 4, 1, 4, 4, 1, 2, 5});
 
@@ -608,7 +590,8 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
     // for (VertexType vert = 0; vert < graph.numberOfVertices(); vert++) {
     //     BOOST_CHECK_EQUAL(graph.nodeWorkWeight(vert), rev_graph.nodeWorkWeight(vertex_mapping_rev_graph[vert]));
-    //     BOOST_CHECK_EQUAL(graph.nodeCommunicationWeight(vert), rev_graph.nodeCommunicationWeight(vertex_mapping_rev_graph[vert]));
+    //     BOOST_CHECK_EQUAL(graph.nodeCommunicationWeight(vert),
+    //     rev_graph.nodeCommunicationWeight(vertex_mapping_rev_graph[vert]));
     //     BOOST_CHECK_EQUAL(graph.nodeMemoryWeight(vert), rev_graph.nodeMemoryWeight(vertex_mapping_rev_graph[vert]));
     //     BOOST_CHECK_EQUAL(graph.nodeType(vert), rev_graph.nodeType(vertex_mapping_rev_graph[vert]));
     // }
@@ -616,8 +599,9 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     // for (VertexType vert_1 = 0; vert_1 < graph.numberOfVertices(); vert_1++) {
     //     for (VertexType vert_2 = 0; vert_2 < graph.numberOfVertices(); vert_2++) {
     //         bool edge_in_graph = boost::edge(vert_1, vert_2, graph.getGraph()).second;
-    //         bool rev_edge_in_rev_graph = boost::edge(vertex_mapping_rev_graph[vert_2], vertex_mapping_rev_graph[vert_1], rev_graph.getGraph()).second;
-    //         BOOST_CHECK_EQUAL(edge_in_graph, rev_edge_in_rev_graph);
+    //         bool rev_edge_in_rev_graph = boost::edge(vertex_mapping_rev_graph[vert_2],
+    //         vertex_mapping_rev_graph[vert_1], rev_graph.getGraph()).second; BOOST_CHECK_EQUAL(edge_in_graph,
+    //         rev_edge_in_rev_graph);
     //     }
     // }
 }

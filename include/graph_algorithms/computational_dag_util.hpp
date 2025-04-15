@@ -27,6 +27,9 @@ namespace osp {
 template<typename Graph_t>
 v_memw_t<Graph_t> max_memory_weight(const Graph_t &graph) {
 
+    static_assert(is_directed_graph_edge_desc_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(has_vertex_weights_v<Graph_t>, "Graph_t must have vertex weights");
+
     v_memw_t<Graph_t> max_memory_weight = 0;
 
     for (const auto &v : graph.vertices()) {
@@ -37,6 +40,10 @@ v_memw_t<Graph_t> max_memory_weight(const Graph_t &graph) {
 
 template<typename Graph_t>
 v_memw_t<Graph_t> max_memory_weight(v_type_t<Graph_t> nodeType_, const Graph_t &graph) {
+
+    static_assert(is_directed_graph_edge_desc_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(has_vertex_weights_v<Graph_t>, "Graph_t must have vertex weights");
+    static_assert(has_typed_vertices_v<Graph_t>, "Graph_t must have typed vertices");
 
     v_memw_t<Graph_t> max_memory_weight = 0;
 
@@ -50,6 +57,8 @@ v_memw_t<Graph_t> max_memory_weight(v_type_t<Graph_t> nodeType_, const Graph_t &
 
 template<typename Graph_t, typename VertexIterator>
 v_workw_t<Graph_t> sumOfVerticesWorkWeights(VertexIterator begin, VertexIterator end, const Graph_t &graph) {
+    static_assert(has_vertex_weights_v<Graph_t>, "Graph_t must have vertex weights");
+
     return std::accumulate(begin, end, 0, [&](const auto sum, const vertex_idx_t<Graph_t> &v) {
         return sum + graph.vertex_work_weight(v);
     });
@@ -63,6 +72,7 @@ v_workw_t<Graph_t> sumOfVerticesWorkWeights(const std::initializer_list<vertex_i
 
 template<typename VertexIterator, typename Graph_t>
 v_commw_t<Graph_t> sumOfVerticesCommunicationWeights(VertexIterator begin, VertexIterator end, const Graph_t &graph) {
+    static_assert(has_vertex_weights_v<Graph_t>, "Graph_t must have vertex weights");
     return std::accumulate(begin, end, 0, [&](const auto sum, const vertex_idx_t<Graph_t> &v) {
         return sum + graph.vertex_comm_weight(v);
     });
@@ -76,6 +86,8 @@ v_commw_t<Graph_t> sumOfVerticesCommunicationWeights(const std::initializer_list
 
 template<typename EdgeIterator, typename Graph_t>
 e_commw_t<Graph_t> sumOfEdgesCommunicationWeights(EdgeIterator begin, EdgeIterator end, const Graph_t &graph) {
+
+    static_assert(has_edge_weights_v<Graph_t>, "Graph_t must have edge weights");
     return std::accumulate(
         begin, end, 0, [&](const auto sum, const edge_desc_t<Graph_t> &e) { return sum + graph.edge_comm_weight(e); });
 }
@@ -88,6 +100,9 @@ e_commw_t<Graph_t> sumOfEdgesCommunicationWeights(const std::initializer_list<ed
 
 template<typename Graph_t>
 v_workw_t<Graph_t> critical_path_weight(const Graph_t &graph) {
+
+    static_assert(is_directed_graph_edge_desc_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(has_vertex_weights_v<Graph_t>, "Graph_t must have vertex weights");
 
     if (graph.num_vertices() == 0) {
         return 0;

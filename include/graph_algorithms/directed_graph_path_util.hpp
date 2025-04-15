@@ -37,26 +37,9 @@ bool has_path(const vertex_idx_t<Graph_t> src, const vertex_idx_t<Graph_t> dest,
 
     static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
 
-    std::unordered_set<vertex_idx_t<Graph_t>> visited;
-    visited.emplace(src);
-
-    std::queue<vertex_idx_t<Graph_t>> next;
-    next.push(src);
-
-    while (!next.empty()) {
-        vertex_idx_t<Graph_t> v = next.front();
-        next.pop();
-
-        for (const vertex_idx_t<Graph_t> &child : graph.children(v)) {
-
-            if (child == dest) {
-                return true;
-            }
-
-            if (visited.find(child) == visited.end()) {
-                visited.emplace(child);
-                next.push(child);
-            }
+    for (const auto &child : bfs_view(graph, src)) {
+        if (child == dest) {
+            return true;
         }
     }
 
@@ -65,6 +48,8 @@ bool has_path(const vertex_idx_t<Graph_t> src, const vertex_idx_t<Graph_t> dest,
 
 template<typename Graph_t>
 std::size_t longestPath(const std::set<vertex_idx_t<Graph_t>> &vertices, const Graph_t &graph) {
+
+    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
 
     using VertexType = vertex_idx_t<Graph_t>;
 
@@ -110,6 +95,8 @@ std::size_t longestPath(const std::set<vertex_idx_t<Graph_t>> &vertices, const G
 template<typename Graph_t>
 std::size_t longestPath(const Graph_t &graph) {
 
+    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+
     using VertexType = vertex_idx_t<Graph_t>;
 
     std::size_t max_edgecount = 0;
@@ -142,6 +129,9 @@ std::size_t longestPath(const Graph_t &graph) {
 
 template<typename Graph_t>
 std::vector<vertex_idx_t<Graph_t>> longestChain(const Graph_t &graph) {
+
+    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+
     using VertexType = vertex_idx_t<Graph_t>;
 
     std::vector<VertexType> chain;
@@ -192,6 +182,8 @@ std::vector<vertex_idx_t<Graph_t>> longestChain(const Graph_t &graph) {
 template<typename Graph_t>
 std::vector<unsigned> get_bottom_node_distance(const Graph_t &graph) {
 
+    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+
     std::vector<unsigned> bottom_distance(graph.num_vertices(), 0);
 
     const auto top_order = GetTopOrder(AS_IT_COMES, graph);
@@ -208,6 +200,8 @@ std::vector<unsigned> get_bottom_node_distance(const Graph_t &graph) {
 
 template<typename Graph_t>
 std::vector<unsigned> get_top_node_distance(const Graph_t &graph) {
+
+    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
 
     std::vector<unsigned> top_distance(graph.num_vertices(), 0);
 

@@ -35,6 +35,8 @@ enum TOP_SORT_ORDER { AS_IT_COMES, MAX_CHILDREN, RANDOM, MINIMAL_NUMBER };
 template<typename Graph_t>
 std::vector<vertex_idx_t<Graph_t>> GetTopOrder(const TOP_SORT_ORDER q_order, const Graph_t &graph) {
 
+    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+
     using VertexType = vertex_idx_t<Graph_t>;
 
     std::vector<VertexType> predecessors_count(graph.num_vertices(), 0);
@@ -143,6 +145,8 @@ std::vector<vertex_idx_t<Graph_t>> GetTopOrder(const TOP_SORT_ORDER q_order, con
 
 template<typename Graph_t>
 std::vector<vertex_idx_t<Graph_t>> GetFilteredTopOrder(const std::vector<bool> &valid, const Graph_t &graph) {
+
+    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
 
     std::vector<vertex_idx_t<Graph_t>> filteredOrder;
     for (const auto &node : GetTopOrder(AS_IT_COMES, graph))
