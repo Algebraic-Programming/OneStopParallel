@@ -29,7 +29,6 @@ limitations under the License.
 
 namespace osp {
 
-
 enum TOP_SORT_ORDER { AS_IT_COMES, MAX_CHILDREN, RANDOM, MINIMAL_NUMBER };
 
 template<typename Graph_t>
@@ -156,196 +155,288 @@ std::vector<vertex_idx_t<Graph_t>> GetFilteredTopOrder(const std::vector<bool> &
     return filteredOrder;
 }
 
+template<typename Graph_t, typename container_wrapper>
+struct top_sort_iterator {
+
+    const Graph_t &graph;
+    container_wrapper &next;
+
+    vertex_idx_t<Graph_t> current_vertex;
+
+    std::vector<vertex_idx_t<Graph_t>> predecessors_count;
+
+  public:
+    using iterator_category = std::input_iterator_tag;
+    using value_type = vertex_idx_t<Graph_t>;
+    using difference_type = std::ptrdiff_t;
+    using pointer = const value_type *;
+    using reference = const value_type &;
+
+    top_sort_iterator(const Graph_t &graph_, container_wrapper &next_, vertex_idx_t<Graph_t> start)
+        : graph(graph_), next(next_), current_vertex(start), predecessors_count(graph_.num_vertices(), 0) {
+
+        if (current_vertex == graph.num_vertices()) {
+            return;
+        }
+
+        for (const auto &v : graph.vertices()) {
+            if (is_source(v, graph)) {
+                next.push(v);
+            } else {
+                predecessors_count[v] = graph.in_degree(v);
+            }
+        }
+        current_vertex = next.pop_next();
+
+        for (const auto &child : graph.children(current_vertex)) {
+            --predecessors_count[child];
+            if (not predecessors_count[child]) {
+                next.push(child);
+            }
+        }
+    }
+
+    value_type operator*() const { return current_vertex; }
+
+    // Prefix increment
+    top_sort_iterator &operator++() {
+
+        if (next.empty()) {
+            current_vertex = graph.num_vertices();
+            return *this;
+        }
+
+        current_vertex = next.pop_next();
+
+        for (const auto &child : graph.children(current_vertex)) {
+            --predecessors_count[child];
+            if (not predecessors_count[child]) {
+                next.push(child);
+            }
+        }
+        return *this;
+    }
+
+    // Postfix increment
+    top_sort_iterator operator++(int) {
+        top_sort_iterator tmp = *this;
+        ++(*this);
+        return tmp;
+    }
+
+    friend bool operator==(const top_sort_iterator &one, const top_sort_iterator &other) {
+        return one.current_vertex == other.current_vertex;
+    };
+    friend bool operator!=(const top_sort_iterator &one, const top_sort_iterator &other) {
+        return one.current_vertex != other.current_vertex;
+    };
+};
+
 template<typename Graph_t>
-std::vector<vertex_idx_t<Graph_t>> top_sort_dfs(const Graph_t &dag) {
+class bfs_top_sort_view {
 
     static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
 
-    std::vector<vertex_idx_t<Graph_t>> top_order;
-    top_order.reserve(dag.num_vertices());
-    std::vector<bool> visited(dag.num_vertices(), false);
+    const Graph_t &graph;
+    bfs_queue_wrapper<Graph_t> vertex_container;
 
-    std::function<void(vertex_idx_t<Graph_t>)> dfs_visit = [&](const vertex_idx_t<Graph_t> node) {
-        visited[node] = true;
-        for (const vertex_idx_t<Graph_t> &child : dag.children(node)) {
-            if (!visited[child])
-                dfs_visit(child);
-        }
-        top_order.emplace_back(node);
-    };
+    using ts_iterator = top_sort_iterator<Graph_t, bfs_queue_wrapper<Graph_t>>;
 
-    for (const vertex_idx_t<Graph_t> &i : source_vertices(dag))
-        if (!visited[i])
-            dfs_visit(i);
+  public:
+    bfs_top_sort_view(const Graph_t &graph_) : graph(graph_) {}
 
-    std::reverse(top_order.begin(), top_order.end());
-    return top_order;
+    auto begin() { return ts_iterator(graph, vertex_container, 0); }
+
+    auto end() { return ts_iterator(graph, vertex_container, graph.num_vertices()); }
+};
+
+template<typename Graph_t>
+std::vector<vertex_idx_t<Graph_t>> bfs_top_sort(const Graph_t &graph) {
+
+    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+    std::vector<vertex_idx_t<Graph_t>> top_sort;
+
+    for (const auto &node : bfs_top_sort_view(graph)) {
+        top_sort.push_back(node);
+    }
+    return top_sort;
 }
 
-// template<typename Graph_t>
-// std::vector<vertex_idx_t<Graph_t>> top_sort_bfs(const Graph_t &dag) {
+template<typename Graph_t>
+class dfs_top_sort_view {
 
-//     static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
 
-//     if constexpr (has_typed_vertices_v<Graph_t>) {
+    const Graph_t &graph;
+    dfs_stack_wrapper<Graph_t> vertex_container;
 
-//         std::vector<vertex_idx_t<Graph_t>> predecessors_count(dag.num_vertices(), 0);
-//         std::vector<vertex_idx_t<Graph_t>> top_order(dag.num_vertices(), 0);
-//         std::vector<std::queue<vertex_idx_t<Graph_t>>> next(dag.getNumberOfNodeTypes());
+    using ts_iterator = top_sort_iterator<Graph_t, dfs_stack_wrapper<Graph_t>>;
 
-//         for (const vertex_idx_t<Graph_t> &i : dag.sourceVertices()) {
-//             next[dag.nodeType(i)].push(i);
-//         }
+  public:
+    dfs_top_sort_view(const Graph_t &graph_) : graph(graph_) {}
 
-//         size_t idx = 0;
-//         unsigned current_node_type = 0;
+    auto begin() { return ts_iterator(graph, vertex_container, 0); }
 
-//         while (idx < dag.numberOfVertices()) {
+    auto end() { return ts_iterator(graph, vertex_container, graph.num_vertices()); }
+};
 
-//             while (not next[current_node_type].empty()) {
-//                 const vertex_idx_t<Graph_t> node = next[current_node_type].front();
-//                 next[current_node_type].pop();
-//                 top_order[idx++] = node;
+template<typename Graph_t>
+std::vector<vertex_idx_t<Graph_t>> dfs_top_sort(const Graph_t &graph) {
 
-//                 for (const vertex_idx_t<Graph_t> &current : dag.children(node)) {
-//                     ++predecessors_count[current];
-//                     if (predecessors_count[current] == dag.numberOfParents(current))
-//                         next[dag.nodeType(current)].push(current);
-//                 }
-//             }
+    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+    std::vector<vertex_idx_t<Graph_t>> top_sort;
 
-//             current_node_type = (current_node_type + 1) % dag.getNumberOfNodeTypes();
-//         }
+    for (const auto &node : dfs_top_sort_view(graph)) {
+        top_sort.push_back(node);
+    }
+    return top_sort;
+}
 
-//         return top_order;
+template<typename Graph_t, typename priority_eval_f, typename T>
+struct priority_queue_wrapper {
 
-//     } else {
+    const priority_eval_f &prio_f;
 
-//     }
-// }
+    struct heap_node {
 
-// template<typename Graph_t>
-// std::vector<vertex_idx_t<Graph_t>> top_sort_locality(const Graph_t &dag);
+        vertex_idx_t<Graph_t> node;
 
-// template<typename Graph_t>
-// std::vector<vertex_idx_t<Graph_t>> top_sort_max_children(const Graph_t &dag);
+        T priority;
 
-// template<typename Graph_t>
-// std::vector<vertex_idx_t<Graph_t>> top_sort_random(const Graph_t &dag);
+        heap_node() : node(0), priority(0) {}
+        heap_node(vertex_idx_t<Graph_t> n, T p) : node(n), priority(p) {}
 
-// template<typename Graph_t>
-// std::vector<vertex_idx_t<Graph_t>> top_sort_heavy_edges(const Graph_t &dag, bool sum = false);
+        bool operator<(heap_node const &rhs) const {
+            return (priority < rhs.priority) || (priority == rhs.priority and node > rhs.node);
+        }
+    };
 
-// template<typename Graph_t, typename T>
-// std::vector<vertex_idx_t<Graph_t>> top_sort_priority_node_type(const Graph_t &dag, const std::vector<T>
-// &node_priority) {
+    std::vector<heap_node> heap;
 
-//     std::vector<vertex_idx_t<Graph_t>> predecessors_count(dag.numberOfVertices(), 0);
-//     std::vector<vertex_idx_t<Graph_t>> top_order(dag.numberOfVertices(), 0);
+  public:
+    priority_queue_wrapper(const priority_eval_f &_f) : prio_f(_f) {}
 
-//     struct heap_node {
+    void push(const vertex_idx_t<Graph_t> &v) {
+        heap.emplace_back(v, prio_f.eval(v));
+        std::push_heap(heap.begin(), heap.end());
+    }
 
-//         unsigned node;
+    vertex_idx_t<Graph_t> pop_next() {
+        std::pop_heap(heap.begin(), heap.end());
+        const auto current_node = heap.back().node;
+        heap.pop_back();
+        return current_node;
+    }
 
-//         T priority;
+    bool empty() const { return heap.empty(); }
+};
 
-//         heap_node() : node(0), priority(0) {}
-//         heap_node(unsigned n, unsigned p) : node(n), priority(p) {}
+template<typename Graph_t, typename priority_eval_f, typename T>
+class priority_top_sort_view {
 
-//         bool operator<(heap_node const &rhs) const {
-//             return (priority > rhs.priority) || (priority == rhs.priority and node > rhs.node);
-//         }
-//     };
+    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
 
-//     std::vector<std::vector<heap_node>> heap(dag.getNumberOfNodeTypes());
+    const Graph_t &graph;
+    priority_queue_wrapper<Graph_t, priority_eval_f, T> vertex_container;
 
-//     for (const auto &source_vertex : dag.sourceVertices()) {
+    using ts_iterator = top_sort_iterator<Graph_t, priority_queue_wrapper<Graph_t, priority_eval_f, T>>;
 
-//         heap[dag.nodeType(source_vertex)].emplace_back(source_vertex, node_priority[source_vertex]);
-//         std::push_heap(heap[dag.nodeType(source_vertex)].begin(), heap[dag.nodeType(source_vertex)].end());
-//     }
+  public:
+    priority_top_sort_view(const Graph_t &graph_, const priority_eval_f &f) : graph(graph_), vertex_container(f) {}
 
-//     unsigned idx = 0;
+    auto begin() const { return ts_iterator(graph, vertex_container, 0); }
 
-//     unsigned current_node_type = 0;
+    auto end() const { return ts_iterator(graph, vertex_container, graph.num_vertices()); }
+};
 
-//     while (idx < dag.numberOfVertices()) {
+template<typename Graph_t>
+class locality_top_sort_view {
 
-//         while (not heap[current_node_type].empty()) { // keep the same node type as long as possible
+    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
 
-//             std::pop_heap(heap[current_node_type].begin(), heap[current_node_type].end());
-//             const unsigned current_node = heap[current_node_type].back().node;
-//             heap[current_node_type].pop_back();
+    const Graph_t &graph;
 
-//             top_order[idx++] = current_node;
+    struct loc_eval_f {
+        static auto eval(vertex_idx_t<Graph_t> v) { return std::numeric_limits<vertex_idx_t<Graph_t>>::max() - v; }
+    };
 
-//             for (const auto &child : dag.children(current_node)) {
+    priority_queue_wrapper<Graph_t, loc_eval_f, vertex_idx_t<Graph_t>> vertex_container;
 
-//                 predecessors_count[child]++;
-//                 if (predecessors_count[child] == dag.numberOfParents(child)) {
+    using ts_iterator = top_sort_iterator<Graph_t, priority_queue_wrapper<Graph_t, loc_eval_f, vertex_idx_t<Graph_t>>>;
 
-//                     heap[dag.nodeType(child)].emplace_back(child, node_priority[child]);
-//                     std::push_heap(heap[dag.nodeType(child)].begin(), heap[dag.nodeType(child)].end());
-//                 }
-//             }
-//         }
+  public:
+    locality_top_sort_view(const Graph_t &graph_) : graph(graph_), vertex_container(loc_eval_f()) {}
 
-//         current_node_type = (current_node_type + 1) % dag.getNumberOfNodeTypes();
-//     }
+    auto begin() { return ts_iterator(graph, vertex_container, 0); }
 
-//     return top_order;
-// };
+    auto end() { return ts_iterator(graph, vertex_container, graph.num_vertices()); }
+};
 
-// template<typename Graph_t, typename T>
-// std::vector<vertex_idx_t<Graph_t>> top_sort_priority(const Graph_t &dag, const std::vector<T> &node_priority) {
+template<typename Graph_t>
+class max_children_top_sort_view {
 
-//     std::vector<vertex_idx_t<Graph_t>> predecessors_count(dag.numberOfVertices(), 0);
-//     std::vector<vertex_idx_t<Graph_t>> top_order(dag.numberOfVertices(), 0);
+    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
 
-//     struct heap_node {
+    struct max_children_eval_f {
 
-//         unsigned node;
+        const Graph_t &graph;
 
-//         T priority;
+        max_children_eval_f(const Graph_t &g) : graph(g) {}
 
-//         heap_node() : node(0), priority(0) {}
-//         heap_node(unsigned n, unsigned p) : node(n), priority(p) {}
+        auto eval(vertex_idx_t<Graph_t> v) const { return graph.out_degree(v); }
+    };
 
-//         bool operator<(heap_node const &rhs) const {
-//             return (priority > rhs.priority) || (priority == rhs.priority and node > rhs.node);
-//         }
-//     };
+    max_children_eval_f eval_f;
 
-//     std::vector<heap_node> heap;
+    priority_queue_wrapper<Graph_t, max_children_eval_f, vertex_idx_t<Graph_t>> vertex_container;
 
-//     for (const auto &source_vertex : dag.sourceVertices()) {
+    using ts_iterator =
+        top_sort_iterator<Graph_t, priority_queue_wrapper<Graph_t, max_children_eval_f, vertex_idx_t<Graph_t>>>;
 
-//         heap.emplace_back(source_vertex, node_priority[source_vertex]);
-//         std::push_heap(heap.begin(), heap.end());
-//     }
+  public:
+    max_children_top_sort_view(const Graph_t &graph_) : eval_f(graph_), vertex_container(eval_f) {}
 
-//     unsigned idx = 0;
+    auto begin() { return ts_iterator(eval_f.graph, vertex_container, 0); }
 
-//     while (not heap.empty()) {
+    auto end() { return ts_iterator(eval_f.graph, vertex_container, eval_f.graph.num_vertices()); }
+};
 
-//         std::pop_heap(heap.begin(), heap.end());
-//         const unsigned current_node = heap.back().node;
-//         heap.pop_back();
+template<typename Graph_t>
+class random_top_sort_view {
 
-//         top_order[idx++] = current_node;
+    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
 
-//         for (const auto &child : dag.children(current_node)) {
+    const Graph_t &graph;
 
-//             predecessors_count[child]++;
-//             if (predecessors_count[child] == dag.numberOfParents(child)) {
+    struct random_eval_f {
 
-//                 heap.emplace_back(child, node_priority[child]);
-//                 std::push_heap(heap.begin(), heap.end());
-//             }
-//         }
-//     }
+        std::vector<vertex_idx_t<Graph_t>> priority;
 
-//     return top_order;
-// };
+        random_eval_f(const std::size_t num) : priority(num, 0) {
+
+            std::iota(priority.begin(), priority.end(), 0);
+            std::random_device rd;
+            std::mt19937 g(rd());
+            std::shuffle(priority.begin(), priority.end(), g);
+        }
+
+        auto eval(vertex_idx_t<Graph_t> v) const { return priority[v]; }
+    };
+
+    random_eval_f eval_f;
+
+    priority_queue_wrapper<Graph_t, random_eval_f, vertex_idx_t<Graph_t>> vertex_container;
+
+    using ts_iterator =
+        top_sort_iterator<Graph_t, priority_queue_wrapper<Graph_t, random_eval_f, vertex_idx_t<Graph_t>>>;
+
+  public:
+    random_top_sort_view(const Graph_t &graph_)
+        : graph(graph_), eval_f(graph.num_vertices()), vertex_container(eval_f) {}
+
+    auto begin() { return ts_iterator(graph, vertex_container, 0); }
+
+    auto end() { return ts_iterator(graph, vertex_container, graph.num_vertices()); }
+};
 
 } // namespace osp

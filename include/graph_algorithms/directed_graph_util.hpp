@@ -350,6 +350,21 @@ struct child_iterator {
     inline auto iterate(const vertex_idx_t<Graph_t> &v) const { return graph.children(v); }
 };
 
+template<typename Graph_t>
+struct bfs_queue_wrapper {
+    std::queue<vertex_idx_t<Graph_t>> queue;
+
+    void push(const vertex_idx_t<Graph_t> &v) { queue.push(v); }
+
+    vertex_idx_t<Graph_t> pop_next() {
+        auto v = queue.front();
+        queue.pop();
+        return v;
+    }
+
+    bool empty() const { return queue.empty(); }
+};
+
 /**
  * @brief Views for traversing a directed graph using BFS.
  *
@@ -364,21 +379,7 @@ class bfs_view {
     const Graph_t &graph;
     vertex_idx_t<Graph_t> start_vertex;
 
-    struct bfs_queue_wrapper {
-        std::queue<vertex_idx_t<Graph_t>> queue;
-
-        void push(const vertex_idx_t<Graph_t> &v) { queue.push(v); }
-
-        vertex_idx_t<Graph_t> pop_next() {
-            auto v = queue.front();
-            queue.pop();
-            return v;
-        }
-
-        bool empty() const { return queue.empty(); }
-    };
-
-    using bfs_iterator = traversal_iterator<Graph_t, bfs_queue_wrapper, child_iterator<Graph_t>>;
+    using bfs_iterator = traversal_iterator<Graph_t, bfs_queue_wrapper<Graph_t>, child_iterator<Graph_t>>;
 
   public:
     bfs_view(const Graph_t &graph_, const vertex_idx_t<Graph_t> &start) : graph(graph_), start_vertex(start) {}
@@ -386,6 +387,21 @@ class bfs_view {
     auto begin() const { return bfs_iterator(graph, start_vertex); }
 
     auto end() const { return bfs_iterator(graph, graph.num_vertices()); }
+};
+
+template<typename Graph_t>
+struct dfs_stack_wrapper {
+    std::vector<vertex_idx_t<Graph_t>> stack;
+
+    void push(const vertex_idx_t<Graph_t> &v) { stack.push_back(v); }
+
+    vertex_idx_t<Graph_t> pop_next() {
+        auto v = stack.back();
+        stack.pop_back();
+        return v;
+    }
+
+    bool empty() const { return stack.empty(); }
 };
 
 /**
@@ -402,21 +418,7 @@ class dfs_view {
     const Graph_t &graph;
     vertex_idx_t<Graph_t> start_vertex;
 
-    struct dfs_stack_wrapper {
-        std::vector<vertex_idx_t<Graph_t>> stack;
-
-        void push(const vertex_idx_t<Graph_t> &v) { stack.push_back(v); }
-
-        vertex_idx_t<Graph_t> pop_next() {
-            auto v = stack.back();
-            stack.pop_back();
-            return v;
-        }
-
-        bool empty() const { return stack.empty(); }
-    };
-
-    using dfs_iterator = traversal_iterator<Graph_t, dfs_stack_wrapper, child_iterator<Graph_t>>;
+    using dfs_iterator = traversal_iterator<Graph_t, dfs_stack_wrapper<Graph_t>, child_iterator<Graph_t>>;
 
   public:
     dfs_view(const Graph_t &graph_, const vertex_idx_t<Graph_t> &start) : graph(graph_), start_vertex(start) {}
@@ -449,21 +451,7 @@ class bfs_reverse_view {
     const Graph_t &graph;
     vertex_idx_t<Graph_t> start_vertex;
 
-    struct bfs_queue_wrapper {
-        std::queue<vertex_idx_t<Graph_t>> queue;
-
-        void push(const vertex_idx_t<Graph_t> &v) { queue.push(v); }
-
-        vertex_idx_t<Graph_t> pop_next() {
-            auto v = queue.front();
-            queue.pop();
-            return v;
-        }
-
-        bool empty() const { return queue.empty(); }
-    };
-
-    using bfs_iterator = traversal_iterator<Graph_t, bfs_queue_wrapper, parents_iterator<Graph_t>>;
+    using bfs_iterator = traversal_iterator<Graph_t, bfs_queue_wrapper<Graph_t>, parents_iterator<Graph_t>>;
 
   public:
     bfs_reverse_view(const Graph_t &graph_, const vertex_idx_t<Graph_t> &start) : graph(graph_), start_vertex(start) {}

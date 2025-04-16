@@ -25,6 +25,7 @@ _add_test( boost_graph_adaptor )
 ## graph algorithms
 _add_test( directed_graph_util )
 
+_add_test( directed_graph_top_sort )
 
 ## bsp model
 _add_test( bsp_architecture )
