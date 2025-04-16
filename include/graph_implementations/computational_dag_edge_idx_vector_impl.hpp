@@ -18,11 +18,13 @@ limitations under the License.
 #pragma once
 
 #include "computational_dag_vector_impl.hpp"
-#include "iterator/container_iterator_adaptor.hpp"
-#include "iterator/edge_iterator.hpp"
+#include "edge_iterator.hpp"
 #include "auxiliary/misc.hpp"
 #include <vector>
 
+
+//#include "container_iterator_adaptor.hpp"
+ 
 namespace osp {
 
 struct directed_edge_descriptor_impl {

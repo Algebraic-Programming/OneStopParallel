@@ -29,6 +29,29 @@ limitations under the License.
 
 namespace osp {
 
+/**
+ * @brief Checks if the natural order of the vertices is a topological order.
+ *
+ * @tparam Graph_t The type of the graph.
+ * @param graph The graph to check.
+ * @return true if the vertices are in topological order, false otherwise.
+ */
+template<typename Graph_t>
+bool checkNodesInTopologicalOrder(const Graph_t &graph) {
+
+    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+
+    for (const auto &node : graph.vertices()) {
+        for (const auto &child : graph.children(node)) {
+            if (child < node) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
 enum TOP_SORT_ORDER { AS_IT_COMES, MAX_CHILDREN, RANDOM, MINIMAL_NUMBER };
 
 template<typename Graph_t>
@@ -155,8 +178,45 @@ std::vector<vertex_idx_t<Graph_t>> GetFilteredTopOrder(const std::vector<bool> &
     return filteredOrder;
 }
 
+
+
+/**
+ * @brief Trait to check if a type satisfies the container wrapper requirements.
+ *
+ * This trait ensures that any container wrapper used in the top_sort_iterator
+ * provides the required interface for managing vertices during topological sorting.
+ *
+ * @tparam T The type of the container wrapper.
+ * @tparam Graph_t The type of the graph.
+ */
+template<typename T, typename Graph_t>
+struct is_container_wrapper {
+private:
+    template<typename U>
+    static auto test(int) -> decltype(
+        std::declval<U>().push(std::declval<vertex_idx_t<Graph_t>>()), 
+        std::declval<U>().pop_next(), 
+        std::declval<U>().empty(), 
+        std::true_type());
+
+    template<typename>
+    static std::false_type test(...);
+
+public:
+    static constexpr bool value = decltype(test<T>(0))::value;
+};
+
+template<typename T, typename Graph_t>
+inline constexpr bool is_container_wrapper_v = is_container_wrapper<T, Graph_t>::value;
+
+
+
+
 template<typename Graph_t, typename container_wrapper>
 struct top_sort_iterator {
+
+    static_assert(is_container_wrapper_v<container_wrapper, Graph_t>,
+                  "container_wrapper must satisfy the container wrapper concept");
 
     const Graph_t &graph;
     container_wrapper &next;

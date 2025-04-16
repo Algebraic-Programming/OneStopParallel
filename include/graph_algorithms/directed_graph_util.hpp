@@ -57,28 +57,7 @@ bool edge(const vertex_idx_t<Graph_t> &src, const vertex_idx_t<Graph_t> &dest, c
     return false;
 }
 
-/**
- * @brief Checks if the natural order of the vertices is a topological order.
- *
- * @tparam Graph_t The type of the graph.
- * @param graph The graph to check.
- * @return true if the vertices are in topological order, false otherwise.
- */
-template<typename Graph_t>
-bool checkNodesInTopologicalOrder(const Graph_t &graph) {
 
-    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
-
-    for (const auto &node : graph.vertices()) {
-        for (const auto &child : graph.children(node)) {
-            if (child < node) {
-                return false;
-            }
-        }
-    }
-
-    return true;
-}
 
 /**
  * @brief Checks if a vertex is a sink (no outgoing edges).

@@ -18,7 +18,7 @@ limitations under the License.
 #pragma once
 
 #include "concepts/computational_dag_concept.hpp"
-#include "iterator/vertex_iterator.hpp"
+#include "vertex_iterator.hpp"
 #include <vector>
 
 namespace osp {

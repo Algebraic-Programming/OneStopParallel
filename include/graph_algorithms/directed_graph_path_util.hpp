@@ -205,7 +205,7 @@ std::vector<unsigned> get_top_node_distance(const Graph_t &graph) {
 
     std::vector<unsigned> top_distance(graph.num_vertices(), 0);
 
-    for (const auto &vertex : GetTopOrder(AS_IT_COMES, graph)) {
+    for (const auto &vertex : bfs_top_sort_view(graph)) {
         unsigned max_temp = 0;
         for (const auto &j : graph.parents(vertex)) {
             max_temp = std::max(max_temp, top_distance[j]);
