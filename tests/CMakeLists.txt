@@ -50,6 +50,8 @@ _add_test( filereader )
 
 _add_test( bsp_schedulers )
 
+_add_test( coarser )
+
 
 # Custom target to compile all the tests
 add_custom_target( build_tests DEPENDS ${tests_list} )

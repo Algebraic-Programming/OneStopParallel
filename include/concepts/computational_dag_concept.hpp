@@ -68,48 +68,51 @@ struct has_edge_weights<T,
 template<typename T>
 inline constexpr bool has_edge_weights_v = has_edge_weights<T>::value;
 
-// computation dag concept without explicit edges
+// computational dag concept without explicit edges
 template<typename T, typename = void>
-struct is_computation_dag : std::false_type {};
+struct is_computational_dag : std::false_type {};
 
 template<typename T>
-struct is_computation_dag<T, std::void_t<>> : std::conjunction<is_directed_graph<T>, has_vertex_weights<T>> {};
+struct is_computational_dag<T, std::void_t<>> : std::conjunction<is_directed_graph<T>, has_vertex_weights<T>> {};
 
 template<typename T>
-inline constexpr bool is_computation_dag_v = is_computation_dag<T>::value;
+inline constexpr bool is_computational_dag_v = is_computational_dag<T>::value;
 
-// computation dag with typed vertices concept
+
+// computational dag with typed vertices concept
 template<typename T, typename = void>
-struct is_computation_dag_typed_vertices : std::false_type {};
+struct is_computational_dag_typed_vertices : std::false_type {};
 
 template<typename T>
-struct is_computation_dag_typed_vertices<T, std::void_t<>>
-    : std::conjunction<is_computation_dag<T>, has_typed_vertices<T>> {};
+struct is_computational_dag_typed_vertices<T, std::void_t<>>
+    : std::conjunction<is_computational_dag<T>, has_typed_vertices<T>> {};
 
 template<typename T>
-inline constexpr bool is_computation_dag_typed_vertices_v = is_computation_dag_typed_vertices<T>::value;
+inline constexpr bool is_computational_dag_typed_vertices_v = is_computational_dag_typed_vertices<T>::value;
 
-// computation dag with explicit edges concept
+
+
+// computational dag with explicit edges concept
 template<typename T, typename = void>
-struct is_computation_dag_edge_desc : std::false_type {};
+struct is_computational_dag_edge_desc : std::false_type {};
 
 template<typename T>
-struct is_computation_dag_edge_desc<T, std::void_t<>>
-    : std::conjunction<is_directed_graph_edge_desc<T>, is_computation_dag<T>> {};
+struct is_computational_dag_edge_desc<T, std::void_t<>>
+    : std::conjunction<is_directed_graph_edge_desc<T>, is_computational_dag<T>> {};
 
 template<typename T>
-inline constexpr bool is_computation_dag_edge_desc_v = is_computation_dag_edge_desc<T>::value;
+inline constexpr bool is_computational_dag_edge_desc_v = is_computational_dag_edge_desc<T>::value;
 
-// computation_dag_typed_vertices_edge_idx concept
+// computational_dag_typed_vertices_edge_idx concept
 template<typename T, typename = void>
-struct is_computation_dag_typed_vertices_edge_desc : std::false_type {};
+struct is_computational_dag_typed_vertices_edge_desc : std::false_type {};
 
 template<typename T>
-struct is_computation_dag_typed_vertices_edge_desc<T, std::void_t<>>
-    : std::conjunction<is_directed_graph_edge_desc<T>, is_computation_dag_typed_vertices<T>> {};
+struct is_computational_dag_typed_vertices_edge_desc<T, std::void_t<>>
+    : std::conjunction<is_directed_graph_edge_desc<T>, is_computational_dag_typed_vertices<T>> {};
 
 template<typename T>
-inline constexpr bool is_computation_dag_typed_vertices_edge_desc_v =
-    is_computation_dag_typed_vertices_edge_desc<T>::value;
+inline constexpr bool is_computational_dag_typed_vertices_edge_desc_v =
+    is_computational_dag_typed_vertices_edge_desc<T>::value;
 
 } // namespace osp

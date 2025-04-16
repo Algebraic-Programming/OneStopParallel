@@ -27,14 +27,11 @@ limitations under the License.
 namespace osp {
 
 template<typename Graph_t1, typename Graph_t2>
-class hdagg_coarser : public Coarser<Graph_t1, typename Graph_t2> {
+class hdagg_coarser : public Coarser<Graph_t1, Graph_t2> {
 
-    static_assert(std::is_same_v<v_workw_t<Graph_t1>, v_workw_t<Graph_t2>>,
-                  "Graph_t1 and Graph_t2 must have the same work weight type");
-    static_assert(std::is_same_v<v_memw_t<Graph_t1>, v_memw_t<Graph_t2>>,
-                  "Graph_t1 and Graph_t2 must have the same memory weight type");
-    static_assert(std::is_same_v<v_commw_t<Graph_t1>, v_commw_t<Graph_t2>>,
-                  "Graph_t1 and Graph_t2 must have the same communication weight type");
+    static_assert(is_directed_graph_edge_desc_v<Graph_t1>,
+                  "Graph_t1 must satisfy the directed_graph edge desc concept");
+    static_assert(has_hashable_edge_desc_v<Graph_t1>, "Graph_t1 must satisfy the has_hashable_edge_desc concept");
 
   private:
     using VertexType = vertex_idx_t<Graph_t1>;
@@ -71,16 +68,25 @@ class hdagg_coarser : public Coarser<Graph_t1, typename Graph_t2> {
             for (const auto &node : super_node) {
 
                 for (const auto &in_edge : dag_in.in_edges(node)) {
-                    const VertexType parent_rev = reverse_vertex_map[in_edge.m_source];
+                    const VertexType parent_rev = reverse_vertex_map[source(in_edge, dag_in)];
                     if (parent_rev != current_super_node_idx && parent_rev != std::numeric_limits<VertexType>::max()) {
 
-                        const auto pair = has_edge_desc(parent_rev, current_super_node_idx, dag_out);
+                        if constexpr (has_edge_weights_v<Graph_t1> and has_edge_weights_v<Graph_t2>) {
 
-                        if (pair.second) {
-                            dag_out.set_edge_comm_weight(pair.first, dag_out.edge_comm_weight(pair.first) +
-                                                                         dag_in.edge_comm_weight(in_edge));
+                            const auto pair = edge_desc(parent_rev, current_super_node_idx, dag_out);
+
+                            if (pair.second) {
+                                dag_out.set_edge_comm_weight(pair.first, dag_out.edge_comm_weight(pair.first) +
+                                                                             dag_in.edge_comm_weight(in_edge));
+                            } else {
+                                dag_out.add_edge(parent_rev, current_super_node_idx, dag_in.edge_comm_weight(in_edge));
+                            }
+
                         } else {
-                            dag_out.add_edge(parent_rev, current_super_node_idx, dag_in.edge_comm_weight(in_edge));
+
+                            if (not edge(parent_rev, current_super_node_idx, dag_out)) {
+                                dag_out.add_edge(parent_rev, current_super_node_idx);
+                            }
                         }
                     }
                 }
@@ -89,7 +95,7 @@ class hdagg_coarser : public Coarser<Graph_t1, typename Graph_t2> {
         }
     }
 
-    void add_new_super_node(const Graph_t &dag_in, Graph_t &dag_out, VertexType node) {
+    void add_new_super_node(const Graph_t1 &dag_in, Graph_t2 &dag_out, VertexType node) {
 
         v_memw_t<Graph_t1> node_mem = dag_in.vertex_mem_weight(node);
 
@@ -102,9 +108,14 @@ class hdagg_coarser : public Coarser<Graph_t1, typename Graph_t2> {
 
         current_memory = node_mem;
         current_work = dag_in.vertex_work_weight(node);
-        current_communication = dag_in.vertex_comm_weight_weight(node);
-        current_super_node_idx =
-            dag_out.add_vertex(current_work, current_communication, current_memory, dag_in.vertex_type(node));
+        current_communication = dag_in.vertex_comm_weight(node);
+
+        if constexpr (has_typed_vertices_v<Graph_t1> and has_typed_vertices_v<Graph_t2>) {
+            current_super_node_idx =
+                dag_out.add_vertex(current_work, current_communication, current_memory, dag_in.vertex_type(node));
+        } else {
+            current_super_node_idx = dag_out.add_vertex(current_work, current_communication, current_memory);
+        }
     }
 
   public:
@@ -114,13 +125,13 @@ class hdagg_coarser : public Coarser<Graph_t1, typename Graph_t2> {
 
     virtual std::string getCoarserName() const override { return "hdagg_coarser"; };
 
-    virtual bool coarseDag(const Graph_t1 &dag_in, Graph_t2 &dag_out,
-                           std::vector<std::vector<VertexType>> &vertex_map) override {
+    virtual bool coarseDag(const Graph_t1 &dag_in, Graph_t2 &dag_out, std::vector<std::vector<VertexType>> &vertex_map,
+                           std::vector<VertexType> &reverse_vertex_map) override {
 
         std::vector<bool> visited(dag_in.num_vertices(), false);
-        std::vector<VertexType> reverse_vertex_map(dag_in.num_vertices(), 0);
+        reverse_vertex_map.resize(dag_in.num_vertices(), 0);
 
-        auto edge_mask = long_edges_in_triangles_parallel(dag_in);
+        auto edge_mask = long_edges_in_triangles(dag_in);
         const auto edge_mast_end = edge_mask.cend();
 
         for (const auto &sink : sink_vertices_view(dag_in)) {
@@ -147,7 +158,7 @@ class hdagg_coarser : public Coarser<Graph_t1, typename Graph_t2> {
                         continue;
 
                     unsigned count = 0;
-                    for (const auto &out_edge : dag_in.out_edges(in_edge.m_source)) {
+                    for (const auto &out_edge : dag_in.out_edges(source(in_edge, dag_in))) {
 
                         if (edge_mask.find(out_edge) != edge_mast_end)
                             continue;
@@ -170,37 +181,38 @@ class hdagg_coarser : public Coarser<Graph_t1, typename Graph_t2> {
                         if (edge_mask.find(in_edge) != edge_mast_end)
                             continue;
 
-                        const auto &source = in_edge.m_source;
+                        const auto &edge_source = source(in_edge, dag_in);
 
-                        v_memw_t<Graph_t1> node_mem = dag_in.vertex_mem_weight(source);
+                        v_memw_t<Graph_t1> node_mem = dag_in.vertex_mem_weight(edge_source);
 
                         // if (memory_constraint_type == LOCAL_INC_EDGES_2) {
 
-                        //     if (not dag_in.isSource(source)) {
+                        //     if (not dag_in.isSource(edge_source)) {
                         //         node_mem = 0;
                         //     }
                         // }
 
                         if (((current_memory + node_mem > memory_threshold) ||
-                             (current_work + dag_in.vertex_work_weight(source) > work_threshold) ||
+                             (current_work + dag_in.vertex_work_weight(edge_source) > work_threshold) ||
                              (vertex_map[part_ind].size() >= super_node_size_threshold) ||
-                             (current_communication + dag_in.vertex_comm_weight(source) > communication_threshold)) ||
+                             (current_communication + dag_in.vertex_comm_weight(edge_source) >
+                              communication_threshold)) ||
                             // or node type changes
-                            (dag_out.vertex_type(current_super_node_idx) != dag_in.vertex_type(source))) {
+                            (dag_out.vertex_type(current_super_node_idx) != dag_in.vertex_type(edge_source))) {
 
-                            if (!visited[in_edge.m_source]) {
-                                vertex_map.push_back(std::vector<VertexType>({in_edge.m_source}));
+                            if (!visited[edge_source]) {
+                                vertex_map.push_back(std::vector<VertexType>({edge_source}));
                                 partition_size++;
-                                visited[in_edge.m_source] = true;
+                                visited[edge_source] = true;
                             }
 
                         } else {
 
                             current_memory += node_mem;
-                            current_work += dag_in.vertex_work_weight(source);
-                            current_communication += dag_in.vertex_comm_weight(source);
+                            current_work += dag_in.vertex_work_weight(edge_source);
+                            current_communication += dag_in.vertex_comm_weight(edge_source);
 
-                            vertex_map[part_ind].push_back(source);
+                            vertex_map[part_ind].push_back(edge_source);
                             part_size++;
                         }
                     }
@@ -210,10 +222,12 @@ class hdagg_coarser : public Coarser<Graph_t1, typename Graph_t2> {
                         if (edge_mask.find(in_edge) != edge_mast_end)
                             continue;
 
-                        if (!visited[in_edge.m_source]) {
-                            vertex_map.push_back(std::vector<VertexType>({in_edge.m_source}));
+                        const auto &edge_source = source(in_edge, dag_in);
+
+                        if (!visited[edge_source]) {
+                            vertex_map.push_back(std::vector<VertexType>({edge_source}));
                             partition_size++;
-                            visited[in_edge.m_source] = true;
+                            visited[edge_source] = true;
                         }
                     }
                 }

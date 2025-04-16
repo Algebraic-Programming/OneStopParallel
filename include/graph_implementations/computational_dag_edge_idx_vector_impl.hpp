@@ -184,6 +184,8 @@ class computational_dag_edge_idx_vector_impl {
         num_vertex_types_ = std::max(num_vertex_types_, vertex_type + 1);
     }
 
+    inline void set_edge_comm_weight(directed_edge_descriptor e, edge_comm_weight_type comm_weight) { edges_[e.idx].comm_weight = comm_weight; }
+
     inline const v_impl &get_vertex_impl(vertex_idx v) const { return vertices_[v]; }
     inline const e_impl &get_edge_impl(directed_edge_descriptor e) const { return edges_[e.idx]; }
 };
@@ -196,7 +198,7 @@ static_assert(is_directed_graph_edge_desc_v<computational_dag_edge_idx_vector_im
               "computational_dag_edge_idx_vector_impl must satisfy the directed_graph_edge_desc concept");
 
 static_assert(
-    is_computation_dag_typed_vertices_edge_desc_v<
+    is_computational_dag_typed_vertices_edge_desc_v<
         computational_dag_edge_idx_vector_impl<cdag_vertex_impl, cdag_edge_impl>>,
     "computational_dag_edge_idx_vector_impl must satisfy the computation_dag_typed_vertices_edge_desc concept");
 

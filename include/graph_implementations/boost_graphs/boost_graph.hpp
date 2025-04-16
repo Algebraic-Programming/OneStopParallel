@@ -263,8 +263,8 @@ class boost_graph {
 };
 
 static_assert(osp::is_directed_graph_edge_desc_v<boost_graph>,
-              "boost_graph_adapter does not satisfy the computational_dag concept");
+              "boost_graph_adapter does not satisfy the directed_graph_edge_desc concept");
 
-static_assert(osp::is_computation_dag_typed_vertices_edge_desc_v<boost_graph>,
-              "boost_graph_adapter must satisfy the computation_dag_typed_vertices_edge_desc concept");
+static_assert(osp::is_computational_dag_typed_vertices_edge_desc_v<boost_graph>,
+              "boost_graph_adapter must satisfy the computational_dag_typed_vertices_edge_desc concept");
 

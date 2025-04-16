@@ -20,6 +20,7 @@ limitations under the License.
 
 #include "concepts/computational_dag_concept.hpp"
 #include "concepts/constructable_computational_dag_concept.hpp"
+#include "model/bsp/BspSchedule.hpp"
 #include <vector>
 
 namespace osp {
@@ -32,12 +33,17 @@ namespace osp {
 template<typename Graph_t1, typename Graph_t2>
 class Coarser {
 
-    static_assert(is_computation_dag_edge_desc_v<Graph_t1>,
-                  "Graph_t1 must be a computational DAG");
-    static_assert(is_constructable_cdag_vertex<Graph_t2>,
-                  "Graph_t1 must be a constructable computational DAG");
-    static_assert(is_constructable_cdag_edge_v<Graph_t2>,
-                  "Graph_t2 must be a constructable computational DAG");
+    static_assert(is_computational_dag_v<Graph_t1>, "Graph_t1 must be a computational DAG");
+    static_assert(is_constructable_cdag_v<Graph_t2>, "Graph_t2 must be a computational DAG");
+
+    // probably too strict, need to be refined. 
+    // maybe add concept for when Gtaph_t2 is constructable/coarseable from Graph_t1
+    static_assert(std::is_same_v<v_workw_t<Graph_t1>, v_workw_t<Graph_t2>>,
+                  "Graph_t1 and Graph_t2 must have the same work weight type");
+    static_assert(std::is_same_v<v_memw_t<Graph_t1>, v_memw_t<Graph_t2>>,
+                  "Graph_t1 and Graph_t2 must have the same memory weight type");
+    static_assert(std::is_same_v<v_commw_t<Graph_t1>, v_commw_t<Graph_t2>>,
+                  "Graph_t1 and Graph_t2 must have the same communication weight type");
 
   public:
     /**
@@ -61,51 +67,48 @@ class Coarser {
      *                   contains the indices of the original vertices that were merged.
      * @return A status code indicating the success or failure of the coarsening operation.
      */
-    virtual bool coarseDag(const Graph_t1 &dag_in, Graph_t2 &coarsened_dag, std::vector<std::vector<vertex_idx_t<Graph_t1>>> &vertex_map) = 0;
+    virtual bool coarseDag(const Graph_t1 &dag_in, Graph_t2 &coarsened_dag,
+                           std::vector<std::vector<vertex_idx_t<Graph_t1>>> &vertex_map,
+                           std::vector<vertex_idx_t<Graph_t2>> &reverse_vertex_map) = 0;
 };
 
-// std::pair<RETURN_STATUS, BspSchedule> pull_back_schedule(const BspInstance &instance_large, const BspSchedule
-// &schedule_in, const std::vector<std::vector<VertexType>>& vertex_map);
 
-// std::pair<RETURN_STATUS, DAGPartition> pull_back_partition(const BspInstance &instance_large, const DAGPartition
-// &partition_in, const std::vector<std::vector<VertexType>>& vertex_map);
+template<typename Graph_t1, typename Graph_t2>
+bool pull_back_schedule(const BspSchedule<Graph_t1> &schedule_in,
+                        const std::vector<std::vector<vertex_idx_t<Graph_t1>>> &vertex_map,
+                        BspSchedule<Graph_t2> &schedule_out) {
 
-// class CoarseAndSchedule : public Scheduler {
+    for (unsigned v = 0; v < vertex_map.size(); ++v) {
 
-//     private:
+        const auto proc = schedule_in.assignedProcessor(v);
+        const auto step = schedule_in.assignedSuperstep(v);
 
-//         Coarser* coarser;
-//         Scheduler* scheduler;
+        for (const auto &u : vertex_map[v]) {
+            schedule_out.setAssignedSuperstep(u, step);
+            schedule_out.setAssignedProcessor(u, proc);
+        }
+    }
 
-//     public:
+    schedule_out.setLazyCommunicationSchedule();
 
-//         CoarseAndSchedule(Coarser& coarser_, Scheduler& scheduler_) : coarser(&coarser_), scheduler(&scheduler_) {}
+    return true;
+}
 
-//         std::string getScheduleName() const override {
-//             return "CoarseAndSchedule";
-//         }
+template<typename Graph_t1, typename Graph_t2>
+bool pull_back_schedule(const BspSchedule<Graph_t1> &schedule_in,
+                        const std::vector<vertex_idx_t<Graph_t2>> &reverse_vertex_map,
+                        BspSchedule<Graph_t2> &schedule_out) {
 
-//         std::pair<RETURN_STATUS, BspSchedule> computeSchedule(const BspInstance &instance) override {
+    for (unsigned idx = 0; idx < reverse_vertex_map.size(); ++idx) {
+        const auto &v = reverse_vertex_map[idx];
 
-//             ComputationalDag dag_coarse;
-//             std::vector<std::vector<VertexType>> vertex_map;
-//             RETURN_STATUS status = coarser->coarseDag(instance.getComputationalDag(), dag_coarse, vertex_map);
-//             if (status != RETURN_STATUS::SUCCESS) {
-//                 return {status, BspSchedule()};
-//             }
+        schedule_out.setAssignedSuperstep(idx, schedule_in.assignedSuperstep(v));
+        schedule_out.setAssignedProcessor(idx, schedule_in.assignedProcessor(v));
+    }
 
-//             BspInstance instance_coarse(dag_coarse, instance.getArchitecture());
-//             instance_coarse.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
+    schedule_out.setLazyCommunicationSchedule();
 
-//             std::pair<RETURN_STATUS, BspSchedule> schedule_coarse = scheduler->computeSchedule(instance_coarse);
-//             if (schedule_coarse.first != RETURN_STATUS::SUCCESS and schedule_coarse.first !=
-//             RETURN_STATUS::BEST_FOUND) {
-//                 return {schedule_coarse.first, BspSchedule()};
-//             }
-
-//             return pull_back_schedule(instance, schedule_coarse.second, vertex_map);
-//         }
-
-// };
+    return true;
+}
 
 } // namespace osp

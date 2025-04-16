@@ -160,7 +160,7 @@ static_assert(has_vertex_weights_v<computational_dag_vector_impl<cdag_vertex_imp
 static_assert(is_directed_graph_v<computational_dag_vector_impl<cdag_vertex_impl>>,
               "computational_dag_vector_impl must satisfy the directed_graph concept");
 
-static_assert(is_computation_dag_typed_vertices_v<computational_dag_vector_impl<cdag_vertex_impl>>,
+static_assert(is_computational_dag_typed_vertices_v<computational_dag_vector_impl<cdag_vertex_impl>>,
               "computational_dag_vector_impl must satisfy the is_computation_dag concept");
 
 } // namespace osp
