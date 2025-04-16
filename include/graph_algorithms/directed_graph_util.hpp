@@ -24,8 +24,27 @@ limitations under the License.
 
 #include "concepts/directed_graph_concept.hpp"
 
+/**
+ * @file directed_graph_util.hpp
+ * @brief Utility functions and classes for working with directed graphs.
+ *
+ * This file provides a collection of utility functions, iterators, and views
+ * for performing operations on directed graphs. These utilities include
+ * functions for checking graph properties, retrieving specific vertices,
+ * and traversing the graph using BFS and DFS.
+ */
+
 namespace osp {
 
+/**
+ * @brief Checks if there is an edge between two vertices in the graph.
+ *
+ * @tparam Graph_t The type of the graph.
+ * @param src The source vertex.
+ * @param dest The destination vertex.
+ * @param graph The graph to check.
+ * @return true if there is an edge from src to dest, false otherwise.
+ */
 template<typename Graph_t>
 bool edge(const vertex_idx_t<Graph_t> &src, const vertex_idx_t<Graph_t> &dest, const Graph_t &graph) {
 
@@ -38,6 +57,13 @@ bool edge(const vertex_idx_t<Graph_t> &src, const vertex_idx_t<Graph_t> &dest, c
     return false;
 }
 
+/**
+ * @brief Checks if the natural order of the vertices is a topological order.
+ *
+ * @tparam Graph_t The type of the graph.
+ * @param graph The graph to check.
+ * @return true if the vertices are in topological order, false otherwise.
+ */
 template<typename Graph_t>
 bool checkNodesInTopologicalOrder(const Graph_t &graph) {
 
@@ -54,46 +80,41 @@ bool checkNodesInTopologicalOrder(const Graph_t &graph) {
     return true;
 }
 
+/**
+ * @brief Checks if a vertex is a sink (no outgoing edges).
+ *
+ * @tparam Graph_t The type of the graph.
+ * @param v The vertex to check.
+ * @param graph The graph to check.
+ * @return true if the vertex is a sink, false otherwise.
+ */
 template<typename Graph_t>
 bool is_sink(const vertex_idx_t<Graph_t> &v, const Graph_t &graph) {
     static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
     return graph.out_degree(v) == 0u;
 }
 
+/**
+ * @brief Checks if a vertex is a source (no incoming edges).
+ *
+ * @tparam Graph_t The type of the graph.
+ * @param v The vertex to check.
+ * @param graph The graph to check.
+ * @return true if the vertex is a source, false otherwise.
+ */
 template<typename Graph_t>
 bool is_source(const vertex_idx_t<Graph_t> &v, const Graph_t &graph) {
     static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
     return graph.in_degree(v) == 0u;
 }
 
-// Function to get source vertices
-template<typename Graph_t>
-std::vector<vertex_idx_t<Graph_t>> source_vertices(const Graph_t &graph) {
-
-    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
-    std::vector<vertex_idx_t<Graph_t>> vec;
-    for (const vertex_idx_t<Graph_t> v_idx : graph.vertices()) {
-        if (graph.in_degree(v_idx) == 0) {
-            vec.push_back(v_idx);
-        }
-    }
-    return vec;
-}
-
-// Function to get sink vertices
-template<typename Graph_t>
-std::vector<vertex_idx_t<Graph_t>> sink_vertices(const Graph_t &graph) {
-
-    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
-    std::vector<vertex_idx_t<Graph_t>> vec;
-    for (const vertex_idx_t<Graph_t> v_idx : graph.vertices()) {
-        if (graph.out_degree(v_idx) == 0) {
-            vec.push_back(v_idx);
-        }
-    }
-    return vec;
-}
-
+/**
+ * @brief Helper struct for iterating over vertices with a condition.
+ *
+ * This struct provides an iterator that filters vertices based on a given condition.
+ * It is used to create views for source and sink vertices in a directed graph.
+ *
+ */
 template<typename cond_eval, typename Graph_t, typename iterator_t>
 struct vertex_cond_iterator {
 
@@ -151,6 +172,12 @@ struct vertex_cond_iterator {
     };
 };
 
+/**
+ * @brief Views for source vertices in a directed graph.
+ *
+ * These classes provide iterators to traverse the source and sink vertices
+ * of a directed graph.
+ */
 template<typename Graph_t>
 class source_vertices_view {
 
@@ -171,6 +198,12 @@ class source_vertices_view {
     auto end() const { return source_iterator(graph, graph.vertices().end()); }
 };
 
+/**
+ * @brief Views for sink vertices in a directed graph.
+ *
+ * These classes provide iterators to traverse the source and sink vertices
+ * of a directed graph.
+ */
 template<typename Graph_t>
 class sink_vertices_view {
 
@@ -191,6 +224,50 @@ class sink_vertices_view {
     auto end() const { return sink_iterator(graph, graph.vertices().end()); }
 };
 
+/**
+ * @brief Returns a collection containing the source vertices of a graph.
+ *
+ * @tparam Graph_t The type of the graph.
+ * @param graph The graph to check.
+ * @return A vector containing the indices of the source vertices.
+ */
+template<typename Graph_t>
+std::vector<vertex_idx_t<Graph_t>> source_vertices(const Graph_t &graph) {
+
+    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+    std::vector<vertex_idx_t<Graph_t>> vec;
+    for (const auto &source : source_vertices_view(graph)) {
+        vec.push_back(source);
+    }
+    return vec;
+}
+
+/**
+ * @brief Returns a collection containing the sink vertices of a graph.
+ *
+ * @tparam Graph_t The type of the graph.
+ * @param graph The graph to check.
+ * @return A vector containing the indices of the sink vertices.
+ */
+template<typename Graph_t>
+std::vector<vertex_idx_t<Graph_t>> sink_vertices(const Graph_t &graph) {
+
+    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+    std::vector<vertex_idx_t<Graph_t>> vec;
+
+    for (const auto &sink : sink_vertices_view(graph)) {
+        vec.push_back(sink);
+    }
+    return vec;
+}
+
+/**
+ * @brief Traversal iterator for directed graphs.
+ *
+ * This iterator allows traversing the vertices of a directed graph.
+ * It uses a container wrapper to manage the traversal order.
+ * The adj_iterator can be used to setup the traversal along children or parents.
+ */
 template<typename Graph_t, typename container_wrapper, typename adj_iterator>
 struct traversal_iterator {
 
@@ -273,6 +350,12 @@ struct child_iterator {
     inline auto iterate(const vertex_idx_t<Graph_t> &v) const { return graph.children(v); }
 };
 
+/**
+ * @brief Views for traversing a directed graph using BFS.
+ *
+ * These classes provide iterators to traverse the vertices of a directed graph strating from a given vertex
+ * using breadth-first search (BFS).
+ */
 template<typename Graph_t>
 class bfs_view {
 
@@ -305,6 +388,12 @@ class bfs_view {
     auto end() const { return bfs_iterator(graph, graph.num_vertices()); }
 };
 
+/**
+ * @brief Views for traversing a directed graph using DFS.
+ *
+ * These classes provide iterators to traverse the vertices of a directed graph strating from a given vertex
+ * using depth-first search (DFS).
+ */
 template<typename Graph_t>
 class dfs_view {
 
@@ -346,6 +435,12 @@ struct parents_iterator {
     inline auto iterate(const vertex_idx_t<Graph_t> &v) const { return graph.parents(v); }
 };
 
+/**
+ * @brief Views for traversing a directed graph using BFS in reverse order.
+ *
+ * These classes provide iterators to traverse the vertices of a directed graph strating from a given vertex
+ * using breadth-first search (BFS) in reverse order.
+ */
 template<typename Graph_t>
 class bfs_reverse_view {
 
@@ -378,6 +473,14 @@ class bfs_reverse_view {
     auto end() const { return bfs_iterator(graph, graph.num_vertices()); }
 };
 
+/**
+ * @brief Returns a collection containing the successors of a vertex in a directed graph.
+ *
+ * @tparam Graph_t The type of the graph.
+ * @param v The vertex to check.
+ * @param graph The graph to check.
+ * @return A vector containing the indices of the successors of the vertex.
+ */
 template<typename Graph_t>
 std::vector<vertex_idx_t<Graph_t>> successors(const vertex_idx_t<Graph_t> &v, const Graph_t &graph) {
 
@@ -389,6 +492,14 @@ std::vector<vertex_idx_t<Graph_t>> successors(const vertex_idx_t<Graph_t> &v, co
     return vec;
 };
 
+/**
+ * @brief Returns a collection containing the ancestors of a vertex in a directed graph.
+ *
+ * @tparam Graph_t The type of the graph.
+ * @param v The vertex to check.
+ * @param graph The graph to check.
+ * @return A vector containing the indices of the ancestors of the vertex.
+ */
 template<typename Graph_t>
 std::vector<vertex_idx_t<Graph_t>> ancestors(const vertex_idx_t<Graph_t> &v, const Graph_t &graph) {
 
@@ -398,7 +509,6 @@ std::vector<vertex_idx_t<Graph_t>> ancestors(const vertex_idx_t<Graph_t> &v, con
         vec.push_back(anc);
     }
     return vec;
-
 };
 
 } // namespace osp
