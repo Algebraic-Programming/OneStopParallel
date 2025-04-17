@@ -19,7 +19,7 @@ limitations under the License.
 #pragma once
 
 #include "Coarser.hpp"
-#include "scheduler/Scheduler.hpp"
+#include "scheduler/bsp/Scheduler.hpp"
 
 namespace osp {
 

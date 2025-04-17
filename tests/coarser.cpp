@@ -10,7 +10,7 @@
 #include "graph_implementations/computational_dag_edge_idx_vector_impl.hpp"
 #include "io/arch_file_reader.hpp"
 #include "io/graph_file_reader.hpp"
-#include "scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
+#include "scheduler/bsp/GreedySchedulers/GreedyBspScheduler.hpp"
 
 std::vector<std::string> test_graphs() { return {"data/spaa/tiny/instance_bicgstab.txt", "data/spaa/tiny/instance_k-means.txt", 
 "data/spaa/tiny/instance_pregel.txt", "data/spaa/tiny/instance_spmv_N6_nzP0d4.txt"}; }

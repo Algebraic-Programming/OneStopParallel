@@ -8,7 +8,8 @@
 #include "graph_implementations/computational_dag_vector_impl.hpp"
 #include "io/arch_file_reader.hpp"
 #include "io/graph_file_reader.hpp"
-#include "scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
+#include "scheduler/bsp/GreedySchedulers/GreedyBspScheduler.hpp"
+#include "scheduler/bsp/Serial.hpp"
 
 using namespace osp;
 
@@ -69,5 +70,11 @@ void run_test(Scheduler<Graph_t> *test_scheduler) {
 BOOST_AUTO_TEST_CASE(GreedyBspScheduler_test) {
 
     GreedyBspScheduler<computational_dag_vector_impl_def_t> test;
+    run_test(&test);
+}
+
+BOOST_AUTO_TEST_CASE(Serial_test) {
+
+    Serial<computational_dag_vector_impl_def_t> test;
     run_test(&test);
 }
