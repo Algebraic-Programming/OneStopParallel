@@ -64,7 +64,7 @@ class BspArchitecture {
 
     bool isNuma;
 
-    std::vector<v_type_t<Graph_t>> processor_type;
+    std::vector<unsigned> processor_type;
 
     std::vector<std::vector<v_commw_t<Graph_t>>> send_costs;
 

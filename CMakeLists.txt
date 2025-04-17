@@ -9,7 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_subdirectory(.githooks)
 
 add_compile_options(
-    "-DNDEBUG" "-O3" "-Wall" -Wextra "-Wfatal-errors" "-Wconversion" "-Wsign-conversion" "-Wunused" "-Wunreachable-code" "-Wuninitialized" "-Wnrvo" # "-g" "-DNDEBUG" "-O3"
+    "-DNDEBUG" "-O3" -Werror "-Wall" -Wextra "-Wfatal-errors" "-Wconversion" "-Wsign-conversion" "-Wunused" "-Wunreachable-code" "-Wuninitialized" "-Wnrvo" # "-g" "-DNDEBUG" "-O3"
 )
 
 

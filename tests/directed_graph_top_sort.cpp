@@ -27,8 +27,8 @@ limitations under the License.
 #include "graph_algorithms/directed_graph_path_util.hpp"
 #include "graph_algorithms/directed_graph_top_sort.hpp"
 #include "graph_algorithms/directed_graph_util.hpp"
-#include "graph_implementations/boost_graphs/boost_graph.hpp"
 #include "graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
+#include "graph_implementations/boost_graphs/boost_graph.hpp"
 
 using namespace osp;
 
@@ -138,7 +138,9 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     BOOST_CHECK_EQUAL(dfs_view_top_sort[9], 7);
 
     std::vector<VertexType> loc_view_top_sort;
+
     for (const auto &v : locality_top_sort_view(graph)) {
+
         loc_view_top_sort.push_back(v);
     }
 

@@ -266,13 +266,14 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
             switch (instance.getArchitecture().getMemoryConstraintType()) {
 
             case LOCAL:
-                current_proc_persistent_memory = std::vector<int>(instance.numberOfProcessors(), 0);
+                
+                current_proc_persistent_memory = std::vector<v_memw_t<Graph_t>>(instance.numberOfProcessors(), 0);
                 break;
 
             case PERSISTENT_AND_TRANSIENT:
 
-                current_proc_persistent_memory = std::vector<int>(instance.numberOfProcessors(), 0);
-                current_proc_transient_memory = std::vector<int>(instance.numberOfProcessors(), 0);
+                current_proc_persistent_memory = std::vector<v_memw_t<Graph_t>>(instance.numberOfProcessors(), 0);
+                current_proc_transient_memory = std::vector<v_commw_t<Graph_t>>(instance.numberOfProcessors(), 0);
                 break;
 
             case GLOBAL:
