@@ -26,39 +26,39 @@ limitations under the License.
 
 namespace osp {
 
-template<typename Graph_t1, typename Graph_t2>
-class hdagg_coarser : public Coarser<Graph_t1, Graph_t2> {
+template<typename Graph_t_in, typename Graph_t_out>
+class hdagg_coarser : public Coarser<Graph_t_in, Graph_t_out> {
 
-    static_assert(is_directed_graph_edge_desc_v<Graph_t1>,
+    static_assert(is_directed_graph_edge_desc_v<Graph_t_in>,
                   "Graph_t1 must satisfy the directed_graph edge desc concept");
-    static_assert(has_hashable_edge_desc_v<Graph_t1>, "Graph_t1 must satisfy the has_hashable_edge_desc concept");
+    static_assert(has_hashable_edge_desc_v<Graph_t_in>, "Graph_t1 must satisfy the has_hashable_edge_desc concept");
 
   private:
-    using VertexType = vertex_idx_t<Graph_t1>;
+    using VertexType = vertex_idx_t<Graph_t_in>;
 
   protected:
-    v_workw_t<Graph_t1> work_threshold = std::numeric_limits<v_workw_t<Graph_t1>>::max();
-    v_memw_t<Graph_t1> memory_threshold = std::numeric_limits<v_memw_t<Graph_t1>>::max();
-    v_commw_t<Graph_t1> communication_threshold = std::numeric_limits<v_commw_t<Graph_t1>>::max();
+    v_workw_t<Graph_t_in> work_threshold = std::numeric_limits<v_workw_t<Graph_t_in>>::max();
+    v_memw_t<Graph_t_in> memory_threshold = std::numeric_limits<v_memw_t<Graph_t_in>>::max();
+    v_commw_t<Graph_t_in> communication_threshold = std::numeric_limits<v_commw_t<Graph_t_in>>::max();
 
     std::size_t super_node_size_threshold = std::numeric_limits<std::size_t>::max();
 
     // MEMORY_CONSTRAINT_TYPE memory_constraint_type = NONE;
 
     // internal data strauctures
-    v_memw_t<Graph_t1> current_memory = 0;
-    v_workw_t<Graph_t1> current_work = 0;
-    v_commw_t<Graph_t1> current_communication = 0;
+    v_memw_t<Graph_t_in> current_memory = 0;
+    v_workw_t<Graph_t_in> current_work = 0;
+    v_commw_t<Graph_t_in> current_communication = 0;
     VertexType current_super_node_idx = 0;
 
-    void finish_super_node(Graph_t2 &dag_out) {
+    void finish_super_node(Graph_t_out &dag_out) {
 
         dag_out.set_vertex_mem_weight(current_super_node_idx, current_memory);
         dag_out.set_vertex_work_weight(current_super_node_idx, current_work);
         dag_out.set_vertex_comm_weight(current_super_node_idx, current_communication);
     }
 
-    void add_edges_between_super_nodes(const Graph_t1 &dag_in, Graph_t2 &dag_out,
+    void add_edges_between_super_nodes(const Graph_t_in &dag_in, Graph_t_out &dag_out,
                                        std::vector<std::vector<VertexType>> &vertex_map,
                                        std::vector<VertexType> &reverse_vertex_map) {
 
@@ -71,7 +71,7 @@ class hdagg_coarser : public Coarser<Graph_t1, Graph_t2> {
                     const VertexType parent_rev = reverse_vertex_map[source(in_edge, dag_in)];
                     if (parent_rev != current_super_node_idx && parent_rev != std::numeric_limits<VertexType>::max()) {
 
-                        if constexpr (has_edge_weights_v<Graph_t1> and has_edge_weights_v<Graph_t2>) {
+                        if constexpr (has_edge_weights_v<Graph_t_in> and has_edge_weights_v<Graph_t_out>) {
 
                             const auto pair = edge_desc(parent_rev, current_super_node_idx, dag_out);
 
@@ -95,9 +95,9 @@ class hdagg_coarser : public Coarser<Graph_t1, Graph_t2> {
         }
     }
 
-    void add_new_super_node(const Graph_t1 &dag_in, Graph_t2 &dag_out, VertexType node) {
+    void add_new_super_node(const Graph_t_in &dag_in, Graph_t_out &dag_out, VertexType node) {
 
-        v_memw_t<Graph_t1> node_mem = dag_in.vertex_mem_weight(node);
+        v_memw_t<Graph_t_in> node_mem = dag_in.vertex_mem_weight(node);
 
         // if (memory_constraint_type == LOCAL_INC_EDGES_2) {
 
@@ -110,7 +110,7 @@ class hdagg_coarser : public Coarser<Graph_t1, Graph_t2> {
         current_work = dag_in.vertex_work_weight(node);
         current_communication = dag_in.vertex_comm_weight(node);
 
-        if constexpr (has_typed_vertices_v<Graph_t1> and has_typed_vertices_v<Graph_t2>) {
+        if constexpr (has_typed_vertices_v<Graph_t_in> and has_typed_vertices_v<Graph_t_out>) {
             current_super_node_idx =
                 dag_out.add_vertex(current_work, current_communication, current_memory, dag_in.vertex_type(node));
         } else {
@@ -125,7 +125,7 @@ class hdagg_coarser : public Coarser<Graph_t1, Graph_t2> {
 
     virtual std::string getCoarserName() const override { return "hdagg_coarser"; };
 
-    virtual bool coarseDag(const Graph_t1 &dag_in, Graph_t2 &dag_out, std::vector<std::vector<VertexType>> &vertex_map,
+    virtual bool coarseDag(const Graph_t_in &dag_in, Graph_t_out &dag_out, std::vector<std::vector<VertexType>> &vertex_map,
                            std::vector<VertexType> &reverse_vertex_map) override {
 
         std::vector<bool> visited(dag_in.num_vertices(), false);
@@ -183,7 +183,7 @@ class hdagg_coarser : public Coarser<Graph_t1, Graph_t2> {
 
                         const auto &edge_source = source(in_edge, dag_in);
 
-                        v_memw_t<Graph_t1> node_mem = dag_in.vertex_mem_weight(edge_source);
+                        v_memw_t<Graph_t_in> node_mem = dag_in.vertex_mem_weight(edge_source);
 
                         // if (memory_constraint_type == LOCAL_INC_EDGES_2) {
 
@@ -244,9 +244,9 @@ class hdagg_coarser : public Coarser<Graph_t1, Graph_t2> {
         return true;
     }
 
-    inline void set_work_threshold(v_workw_t<Graph_t1> work_threshold_) { work_threshold = work_threshold_; }
-    inline void set_memory_threshold(v_memw_t<Graph_t1> memory_threshold_) { memory_threshold = memory_threshold_; }
-    inline void set_communication_threshold(v_commw_t<Graph_t1> communication_threshold_) {
+    inline void set_work_threshold(v_workw_t<Graph_t_in> work_threshold_) { work_threshold = work_threshold_; }
+    inline void set_memory_threshold(v_memw_t<Graph_t_in> memory_threshold_) { memory_threshold = memory_threshold_; }
+    inline void set_communication_threshold(v_commw_t<Graph_t_in> communication_threshold_) {
         communication_threshold = communication_threshold_;
     }
     inline void set_super_node_size_threshold(std::size_t super_node_size_threshold_) {

@@ -45,9 +45,13 @@ struct directed_graph_traits {
 template<typename T>
 using vertex_idx_t = typename directed_graph_traits<T>::vertex_idx;
 
+
 // Specialization for graphs that define a directed_edge_descriptor
+template<typename T, typename = void>
+struct directed_graph_edge_desc_traits : std::false_type {};
+
 template<typename T>
-struct directed_graph_edge_desc_traits {
+struct directed_graph_edge_desc_traits<T, std::void_t<typename T::directed_edge_descriptor>> {
     static_assert(has_edge_desc_tmember<T>::value, "graph must have edge desc");
     using directed_edge_descriptor = typename T::directed_edge_descriptor;
 };
@@ -75,8 +79,12 @@ using v_commw_t = typename computational_dag_traits<T>::vertex_comm_weight_type;
 template<typename T>
 using v_memw_t = typename computational_dag_traits<T>::vertex_mem_weight_type;
 
+
+template<typename T, typename = void>
+struct computational_dag_typed_vertices_traits : std::false_type {};
+
 template<typename T>
-struct computational_dag_typed_vertices_traits {
+struct computational_dag_typed_vertices_traits<T, std::void_t<typename T::vertex_type_type>> {
     static_assert(has_vertex_type_tmember<T>::value, "cdag must have vertex type type");
 
     using vertex_type_type = typename T::vertex_type_type;
@@ -85,8 +93,12 @@ struct computational_dag_typed_vertices_traits {
 template<typename T>
 using v_type_t = typename computational_dag_typed_vertices_traits<T>::vertex_type_type;
 
+
+template<typename T, typename = void>
+struct computational_dag_edge_desc_traits : std::false_type {};
+
 template<typename T>
-struct computational_dag_edge_desc_traits {
+struct computational_dag_edge_desc_traits<T, std::void_t<typename T::edge_comm_weight_type>> {
     static_assert(has_edge_comm_weight_tmember<T>::value, "cdag must have edge comm weight type");
     using edge_comm_weight_type = typename T::edge_comm_weight_type;
 };

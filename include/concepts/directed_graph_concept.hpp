@@ -47,6 +47,7 @@ struct is_directed_graph<
 template<typename T>
 inline constexpr bool is_directed_graph_v = is_directed_graph<T>::value;
 
+
 template<typename Graph_t>
 vertex_idx_t<Graph_t> source(const edge_desc_t<Graph_t> &edge, const Graph_t &graph) {
     return graph.source(edge);

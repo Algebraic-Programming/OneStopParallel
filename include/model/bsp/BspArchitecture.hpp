@@ -120,6 +120,23 @@ class BspArchitecture {
         }
     }
 
+    template<typename Graph_t_other>
+    BspArchitecture(const BspArchitecture<Graph_t_other> &other)
+        : number_processors(other.numberOfProcessors()), number_of_processor_types(other.getNumberOfProcessorTypes()),
+          communication_costs(other.communicationCosts()), synchronisation_costs(other.synchronisationCosts()),
+          memory_bound(other.memoryBound()), isNuma(other.isNumaArchitecture()), processor_type(other.processorTypes()),
+          send_costs(other.sendCosts()) {
+
+        static_assert(std::is_same_v<v_memw_t<Graph_t>, v_memw_t<Graph_t_other>>,
+            "BspArchitecture: Graph_t and Graph_t_other have the same memory weight type.");
+
+        static_assert(std::is_same_v<v_commw_t<Graph_t>, v_commw_t<Graph_t_other>>,
+            "BspArchitecture: Graph_t and Graph_t_other have the same communication weight type.");
+        
+        static_assert(std::is_same_v<v_type_t<Graph_t>, v_type_t<Graph_t_other>>,
+            "BspArchitecture: Graph_t and Graph_t_other have the same processor type.");
+    }
+
     /**
      * @brief Constructs a BspArchitecture object with the specified number of processors, communication cost, and
      * synchronization cost.
@@ -526,6 +543,8 @@ class BspArchitecture {
      * @return The send costs between the two processors.
      */
     inline v_commw_t<Graph_t> sendCosts(unsigned p1, unsigned p2) const { return send_costs[p1][p2]; }
+
+    inline auto sendCosts() const { return send_costs; }
 
     // the type index of the processor (e.g. CPU, vector/tensor core)
     inline v_type_t<Graph_t> processorType(unsigned p1) const { return processor_type[p1]; }

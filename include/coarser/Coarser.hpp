@@ -30,20 +30,20 @@ namespace osp {
  * @brief Abstract base class for coarsening ComputationalDags.
  *
  */
-template<typename Graph_t1, typename Graph_t2>
+template<typename Graph_t_in, typename Graph_t_out>
 class Coarser {
 
-    static_assert(is_computational_dag_v<Graph_t1>, "Graph_t1 must be a computational DAG");
-    static_assert(is_constructable_cdag_v<Graph_t2>, "Graph_t2 must be a computational DAG");
+    static_assert(is_computational_dag_v<Graph_t_in>, "Graph_t_in must be a computational DAG");
+    static_assert(is_constructable_cdag_v<Graph_t_out>, "Graph_t_out must be a computational DAG");
 
     // probably too strict, need to be refined. 
-    // maybe add concept for when Gtaph_t2 is constructable/coarseable from Graph_t1
-    static_assert(std::is_same_v<v_workw_t<Graph_t1>, v_workw_t<Graph_t2>>,
-                  "Graph_t1 and Graph_t2 must have the same work weight type");
-    static_assert(std::is_same_v<v_memw_t<Graph_t1>, v_memw_t<Graph_t2>>,
-                  "Graph_t1 and Graph_t2 must have the same memory weight type");
-    static_assert(std::is_same_v<v_commw_t<Graph_t1>, v_commw_t<Graph_t2>>,
-                  "Graph_t1 and Graph_t2 must have the same communication weight type");
+    // maybe add concept for when Gtaph_t2 is constructable/coarseable from Graph_t_in
+    static_assert(std::is_same_v<v_workw_t<Graph_t_in>, v_workw_t<Graph_t_out>>,
+                  "Graph_t_in and Graph_t_out must have the same work weight type");
+    static_assert(std::is_same_v<v_memw_t<Graph_t_in>, v_memw_t<Graph_t_out>>,
+                  "Graph_t_in and Graph_t_out must have the same memory weight type");
+    static_assert(std::is_same_v<v_commw_t<Graph_t_in>, v_commw_t<Graph_t_out>>,
+                  "Graph_t_in and Graph_t_out must have the same communication weight type");
 
   public:
     /**
@@ -67,16 +67,16 @@ class Coarser {
      *                   contains the indices of the original vertices that were merged.
      * @return A status code indicating the success or failure of the coarsening operation.
      */
-    virtual bool coarseDag(const Graph_t1 &dag_in, Graph_t2 &coarsened_dag,
-                           std::vector<std::vector<vertex_idx_t<Graph_t1>>> &vertex_map,
-                           std::vector<vertex_idx_t<Graph_t2>> &reverse_vertex_map) = 0;
+    virtual bool coarseDag(const Graph_t_in &dag_in, Graph_t_out &coarsened_dag,
+                           std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &vertex_map,
+                           std::vector<vertex_idx_t<Graph_t_out>> &reverse_vertex_map) = 0;
 };
 
 
-template<typename Graph_t1, typename Graph_t2>
-bool pull_back_schedule(const BspSchedule<Graph_t1> &schedule_in,
-                        const std::vector<std::vector<vertex_idx_t<Graph_t1>>> &vertex_map,
-                        BspSchedule<Graph_t2> &schedule_out) {
+template<typename Graph_t_in, typename Graph_t_out>
+bool pull_back_schedule(const BspSchedule<Graph_t_in> &schedule_in,
+                        const std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &vertex_map,
+                        BspSchedule<Graph_t_out> &schedule_out) {
 
     for (unsigned v = 0; v < vertex_map.size(); ++v) {
 
@@ -94,10 +94,10 @@ bool pull_back_schedule(const BspSchedule<Graph_t1> &schedule_in,
     return true;
 }
 
-template<typename Graph_t1, typename Graph_t2>
-bool pull_back_schedule(const BspSchedule<Graph_t1> &schedule_in,
-                        const std::vector<vertex_idx_t<Graph_t2>> &reverse_vertex_map,
-                        BspSchedule<Graph_t2> &schedule_out) {
+template<typename Graph_t_in, typename Graph_t_out>
+bool pull_back_schedule(const BspSchedule<Graph_t_in> &schedule_in,
+                        const std::vector<vertex_idx_t<Graph_t_out>> &reverse_vertex_map,
+                        BspSchedule<Graph_t_out> &schedule_out) {
 
     for (unsigned idx = 0; idx < reverse_vertex_map.size(); ++idx) {
         const auto &v = reverse_vertex_map[idx];
