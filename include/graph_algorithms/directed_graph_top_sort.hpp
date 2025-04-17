@@ -178,8 +178,6 @@ std::vector<vertex_idx_t<Graph_t>> GetFilteredTopOrder(const std::vector<bool> &
     return filteredOrder;
 }
 
-
-
 /**
  * @brief Trait to check if a type satisfies the container wrapper requirements.
  *
@@ -191,26 +189,20 @@ std::vector<vertex_idx_t<Graph_t>> GetFilteredTopOrder(const std::vector<bool> &
  */
 template<typename T, typename Graph_t>
 struct is_container_wrapper {
-private:
+  private:
     template<typename U>
-    static auto test(int) -> decltype(
-        std::declval<U>().push(std::declval<vertex_idx_t<Graph_t>>()), 
-        std::declval<U>().pop_next(), 
-        std::declval<U>().empty(), 
-        std::true_type());
+    static auto test(int) -> decltype(std::declval<U>().push(std::declval<vertex_idx_t<Graph_t>>()),
+                                      std::declval<U>().pop_next(), std::declval<U>().empty(), std::true_type());
 
     template<typename>
     static std::false_type test(...);
 
-public:
+  public:
     static constexpr bool value = decltype(test<T>(0))::value;
 };
 
 template<typename T, typename Graph_t>
 inline constexpr bool is_container_wrapper_v = is_container_wrapper<T, Graph_t>::value;
-
-
-
 
 template<typename Graph_t, typename container_wrapper>
 struct top_sort_iterator {
@@ -355,7 +347,7 @@ std::vector<vertex_idx_t<Graph_t>> dfs_top_sort(const Graph_t &graph) {
 template<typename Graph_t, typename priority_eval_f, typename T>
 struct priority_queue_wrapper {
 
-    const priority_eval_f &prio_f;
+    priority_eval_f prio_f;
 
     struct heap_node {
 
@@ -374,10 +366,11 @@ struct priority_queue_wrapper {
     std::vector<heap_node> heap;
 
   public:
-    priority_queue_wrapper(const priority_eval_f &_f) : prio_f(_f) {}
+    template<typename... Args>
+    priority_queue_wrapper(Args &&...args) : prio_f(std::forward<Args>(args)...) {}
 
     void push(const vertex_idx_t<Graph_t> &v) {
-        heap.emplace_back(v, prio_f.eval(v));
+        heap.emplace_back(v, prio_f(v));
         std::push_heap(heap.begin(), heap.end());
     }
 
@@ -397,12 +390,15 @@ class priority_top_sort_view {
     static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
 
     const Graph_t &graph;
-    priority_queue_wrapper<Graph_t, priority_eval_f, T> vertex_container;
+    using container = priority_queue_wrapper<Graph_t, priority_eval_f, T>;
+    container vertex_container;
 
-    using ts_iterator = top_sort_iterator<Graph_t, priority_queue_wrapper<Graph_t, priority_eval_f, T>>;
+    using ts_iterator = top_sort_iterator<Graph_t, container>;
 
   public:
-    priority_top_sort_view(const Graph_t &graph_, const priority_eval_f &f) : graph(graph_), vertex_container(f) {}
+    template<typename... Args>
+    priority_top_sort_view(const Graph_t &graph_, Args &&...args)
+        : graph(graph_), vertex_container(std::forward<Args>(args)...) {}
 
     auto begin() const { return ts_iterator(graph, vertex_container, 0); }
 
@@ -417,7 +413,7 @@ class locality_top_sort_view {
     const Graph_t &graph;
 
     struct loc_eval_f {
-        static auto eval(vertex_idx_t<Graph_t> v) { return std::numeric_limits<vertex_idx_t<Graph_t>>::max() - v; }
+        auto operator()(vertex_idx_t<Graph_t> v) { return std::numeric_limits<vertex_idx_t<Graph_t>>::max() - v; }
     };
 
     priority_queue_wrapper<Graph_t, loc_eval_f, vertex_idx_t<Graph_t>> vertex_container;
@@ -425,7 +421,7 @@ class locality_top_sort_view {
     using ts_iterator = top_sort_iterator<Graph_t, priority_queue_wrapper<Graph_t, loc_eval_f, vertex_idx_t<Graph_t>>>;
 
   public:
-    locality_top_sort_view(const Graph_t &graph_) : graph(graph_), vertex_container(loc_eval_f()) {}
+    locality_top_sort_view(const Graph_t &graph_) : graph(graph_), vertex_container() {}
 
     auto begin() { return ts_iterator(graph, vertex_container, 0); }
 
@@ -437,16 +433,16 @@ class max_children_top_sort_view {
 
     static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
 
+    const Graph_t &graph;
+
     struct max_children_eval_f {
 
         const Graph_t &graph;
 
         max_children_eval_f(const Graph_t &g) : graph(g) {}
 
-        auto eval(vertex_idx_t<Graph_t> v) const { return graph.out_degree(v); }
+        auto operator()(vertex_idx_t<Graph_t> v) const { return graph.out_degree(v); }
     };
-
-    max_children_eval_f eval_f;
 
     priority_queue_wrapper<Graph_t, max_children_eval_f, vertex_idx_t<Graph_t>> vertex_container;
 
@@ -454,11 +450,11 @@ class max_children_top_sort_view {
         top_sort_iterator<Graph_t, priority_queue_wrapper<Graph_t, max_children_eval_f, vertex_idx_t<Graph_t>>>;
 
   public:
-    max_children_top_sort_view(const Graph_t &graph_) : eval_f(graph_), vertex_container(eval_f) {}
+    max_children_top_sort_view(const Graph_t &graph_) : graph(graph_), vertex_container(graph_) {}
 
-    auto begin() { return ts_iterator(eval_f.graph, vertex_container, 0); }
+    auto begin() { return ts_iterator(graph, vertex_container, 0); }
 
-    auto end() { return ts_iterator(eval_f.graph, vertex_container, eval_f.graph.num_vertices()); }
+    auto end() { return ts_iterator(graph, vertex_container, graph.num_vertices()); }
 };
 
 template<typename Graph_t>
@@ -480,10 +476,8 @@ class random_top_sort_view {
             std::shuffle(priority.begin(), priority.end(), g);
         }
 
-        auto eval(vertex_idx_t<Graph_t> v) const { return priority[v]; }
+        auto operator()(vertex_idx_t<Graph_t> v) const { return priority[v]; }
     };
-
-    random_eval_f eval_f;
 
     priority_queue_wrapper<Graph_t, random_eval_f, vertex_idx_t<Graph_t>> vertex_container;
 
@@ -492,7 +486,7 @@ class random_top_sort_view {
 
   public:
     random_top_sort_view(const Graph_t &graph_)
-        : graph(graph_), eval_f(graph.num_vertices()), vertex_container(eval_f) {}
+        : graph(graph_), vertex_container(graph.num_vertices()) {}
 
     auto begin() { return ts_iterator(graph, vertex_container, 0); }
 

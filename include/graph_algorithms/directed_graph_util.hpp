@@ -57,8 +57,6 @@ bool edge(const vertex_idx_t<Graph_t> &src, const vertex_idx_t<Graph_t> &dest, c
     return false;
 }
 
-
-
 /**
  * @brief Checks if a vertex is a sink (no outgoing edges).
  *
@@ -98,6 +96,7 @@ template<typename cond_eval, typename Graph_t, typename iterator_t>
 struct vertex_cond_iterator {
 
     static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+    // TODO static_assert(is_callabl_v<cond_eval>;
 
     const Graph_t &graph;
     iterator_t current_vertex;
@@ -113,7 +112,8 @@ struct vertex_cond_iterator {
     vertex_cond_iterator(const Graph_t &graph_, const iterator_t &start) : graph(graph_), current_vertex(start) {
 
         while (current_vertex != graph.vertices().end()) {
-            if (cond.eval(graph, *current_vertex)) {
+            // if (cond.eval(graph, *current_vertex)) {
+            if (cond(graph, *current_vertex)) {
                 break;
             }
             current_vertex++;
@@ -127,7 +127,7 @@ struct vertex_cond_iterator {
         current_vertex++;
 
         while (current_vertex != graph.vertices().end()) {
-            if (cond.eval(graph, *current_vertex)) {
+            if (cond(graph, *current_vertex)) {
                 break;
             }
             current_vertex++;
@@ -164,7 +164,8 @@ class source_vertices_view {
 
     const Graph_t &graph;
     struct source_eval {
-        static bool eval(const Graph_t &graph, const vertex_idx_t<Graph_t> &v) { return graph.in_degree(v) == 0; }
+        // static bool eval(const Graph_t &graph, const vertex_idx_t<Graph_t> &v) { return graph.in_degree(v) == 0; }
+        bool operator()(const Graph_t &graph, const vertex_idx_t<Graph_t> &v) const { return graph.in_degree(v) == 0; }
     };
 
     using source_iterator = vertex_cond_iterator<source_eval, Graph_t, decltype(graph.vertices().begin())>;
@@ -190,7 +191,8 @@ class sink_vertices_view {
 
     const Graph_t &graph;
     struct sink_eval {
-        static bool eval(const Graph_t &graph, const vertex_idx_t<Graph_t> &v) { return graph.out_degree(v) == 0; }
+        // static bool eval(const Graph_t &graph, const vertex_idx_t<Graph_t> &v) { return graph.out_degree(v) == 0; }
+        bool operator()(const Graph_t &graph, const vertex_idx_t<Graph_t> &v) { return graph.out_degree(v) == 0; }
     };
 
     using sink_iterator = vertex_cond_iterator<sink_eval, Graph_t, decltype(graph.vertices().begin())>;
