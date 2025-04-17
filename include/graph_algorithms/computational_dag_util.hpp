@@ -27,7 +27,7 @@ namespace osp {
 template<typename Graph_t>
 v_memw_t<Graph_t> max_memory_weight(const Graph_t &graph) {
 
-    static_assert(is_directed_graph_edge_desc_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
     static_assert(has_vertex_weights_v<Graph_t>, "Graph_t must have vertex weights");
 
     v_memw_t<Graph_t> max_memory_weight = 0;
@@ -39,9 +39,9 @@ v_memw_t<Graph_t> max_memory_weight(const Graph_t &graph) {
 }
 
 template<typename Graph_t>
-v_memw_t<Graph_t> max_memory_weight(v_type_t<Graph_t> nodeType_, const Graph_t &graph) {
+v_memw_t<Graph_t> max_memory_weight(const v_type_t<Graph_t> &nodeType_, const Graph_t &graph) {
 
-    static_assert(is_directed_graph_edge_desc_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
     static_assert(has_vertex_weights_v<Graph_t>, "Graph_t must have vertex weights");
     static_assert(has_typed_vertices_v<Graph_t>, "Graph_t must have typed vertices");
 

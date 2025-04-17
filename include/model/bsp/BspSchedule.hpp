@@ -276,7 +276,7 @@ class BspSchedule : IBspSchedule<Graph_t> {
         std::vector<std::vector<v_workw_t<Graph_t>>> work = std::vector<std::vector<v_workw_t<Graph_t>>>(
             number_of_supersteps, std::vector<v_workw_t<Graph_t>>(instance->numberOfProcessors(), 0));
 
-        for (unsigned node = 0; node < instance->numberOfVertices(); node++) {
+        for (const auto &node : instance->vertices()) {
             work[node_to_superstep_assignment[node]][node_to_processor_assignment[node]] +=
                 instance->getComputationalDag().vertex_work_weight(node);
         }
@@ -304,7 +304,7 @@ class BspSchedule : IBspSchedule<Graph_t> {
         std::vector<std::vector<v_workw_t<Graph_t>>> work = std::vector<std::vector<v_workw_t<Graph_t>>>(
             number_of_supersteps, std::vector<v_workw_t<Graph_t>>(instance->numberOfProcessors(), 0));
 
-        for (unsigned node = 0; node < instance->numberOfVertices(); node++) {
+        for (const auto &node : instance->vertices()) {
             work[node_to_superstep_assignment[node]][node_to_processor_assignment[node]] +=
                 instance->getComputationalDag().vertex_work_weight(node);
         }
@@ -387,7 +387,7 @@ class BspSchedule : IBspSchedule<Graph_t> {
         std::vector<std::vector<v_commw_t<Graph_t>>> send(instance->numberOfProcessors(),
                                                           std::vector<v_commw_t<Graph_t>>(number_of_supersteps, 0));
 
-        for (unsigned node = 0; node < instance->numberOfVertices(); node++) {
+        for (const auto &node : instance->vertices()) {
 
             std::vector<unsigned> step_needed(instance->numberOfProcessors(), number_of_supersteps);
             for (const auto &target : instance->getComputationalDag().children(node)) {
@@ -433,7 +433,7 @@ class BspSchedule : IBspSchedule<Graph_t> {
         std::vector<std::vector<v_workw_t<Graph_t>>> work = std::vector<std::vector<v_workw_t<Graph_t>>>(
             instance->numberOfProcessors(), std::vector<v_workw_t<Graph_t>>(number_of_supersteps, 0));
 
-        for (unsigned node = 0; node < instance->numberOfVertices(); node++) {
+        for (const auto &node : instance->vertices()) {
             work[node_to_processor_assignment[node]][node_to_superstep_assignment[node]] +=
                 instance->getComputationalDag().vertex_work_weight(node);
         }
@@ -515,7 +515,7 @@ class BspSchedule : IBspSchedule<Graph_t> {
 
         double total_communication = 0;
 
-        for (const auto &v : instance->getComputationalDag().vertices()) {
+        for (const auto &v : instance->vertices()) {
             for (const auto &target : instance->getComputationalDag().children(v)) {
 
                 if (node_to_processor_assignment[v] != node_to_processor_assignment[target]) {
@@ -529,7 +529,7 @@ class BspSchedule : IBspSchedule<Graph_t> {
         std::vector<std::vector<v_workw_t<Graph_t>>> work = std::vector<std::vector<v_workw_t<Graph_t>>>(
             number_of_supersteps, std::vector<v_workw_t<Graph_t>>(instance->numberOfProcessors(), 0));
 
-        for (unsigned node = 0; node < instance->numberOfVertices(); node++) {
+        for (const auto &node : instance->vertices()) {
             work[node_to_superstep_assignment[node]][node_to_processor_assignment[node]] +=
                 instance->getComputationalDag().vertex_work_weight(node);
         }
@@ -564,7 +564,7 @@ class BspSchedule : IBspSchedule<Graph_t> {
 
         double total_communication = 0;
 
-        for (const auto &v : instance->getComputationalDag().vertices()) {
+        for (const auto &v : instance->vertices()) {
             for (const auto &target : instance->getComputationalDag().children(v)) {
 
                 if (node_to_processor_assignment[v] != node_to_processor_assignment[target]) {
@@ -592,7 +592,7 @@ class BspSchedule : IBspSchedule<Graph_t> {
             return false;
         }
 
-        for (const auto &v : instance->getComputationalDag().vertices()) {
+        for (const auto &v : instance->vertices()) {
             for (const auto &target : instance->getComputationalDag().children(v)) {
 
                 const unsigned different_processors =
@@ -615,7 +615,7 @@ class BspSchedule : IBspSchedule<Graph_t> {
         if (node_to_processor_assignment.size() != instance->numberOfVertices())
             return false;
 
-        for (unsigned int node = 0; node < instance->numberOfVertices(); node++) {
+        for (const auto &node : instance->vertices()) {
             if (!instance->isCompatible(node, node_to_processor_assignment[node]))
                 return false;
         }
@@ -652,7 +652,7 @@ class BspSchedule : IBspSchedule<Graph_t> {
             std::vector<v_memw_t<Graph_t>> current_proc_persistent_memory(instance->numberOfProcessors(), 0);
             std::vector<v_memw_t<Graph_t>> current_proc_transient_memory(instance->numberOfProcessors(), 0);
 
-            for (vertex_idx node = 0; node < instance->numberOfVertices(); node++) {
+            for (const auto &node : instance->vertices()) {
 
                 const unsigned proc = node_to_processor_assignment[node];
                 current_proc_persistent_memory[proc] += instance->getComputationalDag().nodeMemoryWeight(node);
@@ -670,7 +670,7 @@ class BspSchedule : IBspSchedule<Graph_t> {
         case GLOBAL: {
             std::vector<v_memw_t<Graph_t>> current_proc_memory(instance->numberOfProcessors(), 0);
 
-            for (vertex_idx node = 0; node < instance->numberOfVertices(); node++) {
+            for (const auto &node : instance->vertices()) {
 
                 const unsigned proc = node_to_processor_assignment[node];
                 current_proc_memory[proc] += instance->getComputationalDag().nodeMemoryWeight(node);
@@ -798,10 +798,10 @@ class BspSchedule : IBspSchedule<Graph_t> {
 
         std::vector<vertex_idx_t<Graph_t>> vec;
 
-        for (vertex_idx_t<Graph_t> i = 0; i < instance->numberOfVertices(); i++) {
+        for (const auto &node : instance->vertices()) {
 
-            if (node_to_processor_assignment[i] == processor) {
-                vec.push_back(i);
+            if (node_to_processor_assignment[node] == processor) {
+                vec.push_back(node);
             }
         }
 
@@ -811,10 +811,10 @@ class BspSchedule : IBspSchedule<Graph_t> {
     std::vector<vertex_idx_t<Graph_t>> getAssignedNodeVector(unsigned int processor, unsigned int superstep) const {
         std::vector<vertex_idx_t<Graph_t>> vec;
 
-        for (vertex_idx_t<Graph_t> i = 0; i < instance->numberOfVertices(); i++) {
+        for (const auto &node : instance->vertices()) {
 
-            if (node_to_processor_assignment[i] == processor && node_to_superstep_assignment[i] == superstep) {
-                vec.push_back(i);
+            if (node_to_processor_assignment[node] == processor && node_to_superstep_assignment[node] == superstep) {
+                vec.push_back(node);
             }
         }
 
@@ -829,8 +829,8 @@ class BspSchedule : IBspSchedule<Graph_t> {
 
         unsigned num = 0;
 
-        for (unsigned i = 0; i < instance->numberOfVertices(); i++) {
-            if (node_to_processor_assignment[i] == processor) {
+        for (const auto &node : instance->vertices()) {
+            if (node_to_processor_assignment[node] == processor) {
                 num++;
             }
         }
@@ -842,8 +842,8 @@ class BspSchedule : IBspSchedule<Graph_t> {
 
         std::vector<unsigned> num(instance->numberOfProcessors(), 0);
 
-        for (unsigned i = 0; i < instance->numberOfVertices(); i++) {
-            num[node_to_processor_assignment[i]]++;
+        for (const auto &node : instance->vertices()) {
+            num[node_to_processor_assignment[node]]++;
         }
 
         return num;
@@ -854,8 +854,8 @@ class BspSchedule : IBspSchedule<Graph_t> {
         std::vector<std::vector<unsigned>> num(number_of_supersteps,
                                                std::vector<unsigned>(instance->numberOfProcessors(), 0));
 
-        for (unsigned i = 0; i < instance->numberOfVertices(); i++) {
-            num[node_to_superstep_assignment[i]][node_to_processor_assignment[i]] += 1;
+        for (const auto &v : instance->vertices()) {
+            num[node_to_superstep_assignment[v]][node_to_processor_assignment[v]] += 1;
         }
 
         return num;
@@ -893,7 +893,7 @@ class BspSchedule : IBspSchedule<Graph_t> {
      * @param to_proc The processor to which the data is sent.
      * @param step The superstep in which the data is sent.
      */
-    void addCommunicationScheduleEntry(unsigned node, unsigned from_proc, unsigned to_proc, unsigned step) {
+    void addCommunicationScheduleEntry(vertex_idx node, unsigned from_proc, unsigned to_proc, unsigned step) {
         addCommunicationScheduleEntry(std::make_tuple(node, from_proc, to_proc), step);
     }
 
@@ -916,7 +916,7 @@ class BspSchedule : IBspSchedule<Graph_t> {
         std::vector<std::vector<unsigned>> first_at = std::vector<std::vector<unsigned>>(
             instance->numberOfVertices(), std::vector<unsigned>(instance->numberOfProcessors(), number_of_supersteps));
 
-        for (unsigned node = 0; node < instance->numberOfVertices(); node++) {
+        for (const auto& node : instance->vertices()) {
             first_at[node][node_to_processor_assignment[node]] = node_to_superstep_assignment[node];
         }
 

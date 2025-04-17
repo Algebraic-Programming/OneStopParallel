@@ -28,8 +28,10 @@ struct is_directed_graph : std::false_type {};
 
 template<typename T>
 struct is_directed_graph<
-    T, std::void_t<typename directed_graph_traits<T>::vertex_idx, decltype(std::declval<T>().vertices()),
-                   decltype(std::declval<T>().num_vertices()), decltype(std::declval<T>().num_edges()),
+    T, std::void_t<typename directed_graph_traits<T>::vertex_idx, 
+                   decltype(std::declval<T>().vertices()),
+                   decltype(std::declval<T>().num_vertices()), 
+                   decltype(std::declval<T>().num_edges()),
                    decltype(std::declval<T>().parents(std::declval<vertex_idx_t<T>>())),
                    decltype(std::declval<T>().children(std::declval<vertex_idx_t<T>>())),
                    decltype(std::declval<T>().in_degree(std::declval<vertex_idx_t<T>>())),
