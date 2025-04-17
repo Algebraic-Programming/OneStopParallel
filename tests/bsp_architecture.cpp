@@ -19,7 +19,7 @@ limitations under the License.
 #define BOOST_TEST_MODULE Bsp_Architecture
 #include <boost/test/unit_test.hpp>
 
-#include "graph_implementations/computational_dag_vector_impl.hpp"
+#include "graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 #include "model/bsp/BspArchitecture.hpp"
 
 using namespace osp;

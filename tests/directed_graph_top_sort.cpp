@@ -28,7 +28,7 @@ limitations under the License.
 #include "graph_algorithms/directed_graph_top_sort.hpp"
 #include "graph_algorithms/directed_graph_util.hpp"
 #include "graph_implementations/boost_graphs/boost_graph.hpp"
-#include "graph_implementations/computational_dag_vector_impl.hpp"
+#include "graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 
 using namespace osp;
 

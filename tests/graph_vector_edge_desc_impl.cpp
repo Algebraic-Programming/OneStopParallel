@@ -7,7 +7,7 @@
 #include "graph_algorithms/directed_graph_util.hpp"
 #include "graph_algorithms/directed_graph_path_util.hpp"
 #include "graph_algorithms/directed_graph_edge_desc_util.hpp"
-#include "graph_implementations/computational_dag_edge_idx_vector_impl.hpp"
+#include "graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 
 using namespace osp;
 
