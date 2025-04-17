@@ -18,44 +18,54 @@ limitations under the License.
 
 #pragma once
 
-
-#include "scheduler/Scheduler.hpp"
 #include "Coarser.hpp"
-
+#include "scheduler/Scheduler.hpp"
 
 namespace osp {
 
+template<typename Graph_t, typename Graph_t_coarse>
+class CoarseAndSchedule : public Scheduler<Graph_t> {
 
-// class CoarseAndSchedule : public Scheduler {
+  private:
+    Coarser<Graph_t, Graph_t_coarse> &coarser;
+    Scheduler<Graph_t_coarse> &scheduler;
 
-//   private:
-//     Coarser *coarser;
-//     Scheduler *scheduler;
+  public:
+    CoarseAndSchedule(Coarser<Graph_t, Graph_t_coarse> &coarser_, Scheduler<Graph_t_coarse> &scheduler_)
+        : coarser(coarser_), scheduler(scheduler_) {}
 
-//   public:
-//     CoarseAndSchedule(Coarser &coarser_, Scheduler &scheduler_) : coarser(&coarser_), scheduler(&scheduler_) {}
+    std::string getScheduleName() const override { return "CoarseAndSchedule"; }
 
-//     std::string getScheduleName() const override { return "CoarseAndSchedule"; }
+    std::pair<RETURN_STATUS, BspSchedule<Graph_t>> computeSchedule(const BspInstance<Graph_t> &instance) override {
 
-//     std::pair<RETURN_STATUS, BspSchedule> computeSchedule(const BspInstance &instance) override {
+        BspInstance<Graph_t_coarse> instance_coarse;
 
-//         ComputationalDag dag_coarse;
-//         std::vector<std::vector<VertexType>> vertex_map;
-//         RETURN_STATUS status = coarser->coarseDag(instance.getComputationalDag(), dag_coarse, vertex_map);
-//         if (status != RETURN_STATUS::SUCCESS) {
-//             return {status, BspSchedule()};
-//         }
+        std::vector<std::vector<vertex_idx_t<Graph_t>>> vertex_map;
+        std::vector<vertex_idx_t<Graph_t_coarse>> reverse_vertex_map;
 
-//         BspInstance instance_coarse(dag_coarse, instance.getArchitecture());
-//         instance_coarse.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
+        bool status = coarser.coarseDag(instance.getComputationalDag(), instance_coarse.getComputationalDag(),
+                                        vertex_map, reverse_vertex_map);
 
-//         std::pair<RETURN_STATUS, BspSchedule> schedule_coarse = scheduler->computeSchedule(instance_coarse);
-//         if (schedule_coarse.first != RETURN_STATUS::SUCCESS and schedule_coarse.first != RETURN_STATUS::BEST_FOUND) {
-//             return {schedule_coarse.first, BspSchedule()};
-//         }
+        if (!status) {
+            return {ERROR, BspSchedule<Graph_t>()};
+        }
 
-//         return pull_back_schedule(instance, schedule_coarse.second, vertex_map);
-//     }
-// };
+        instance_coarse.setArchitecture(instance.getArchitecture());
+        instance_coarse.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
+
+        std::pair<RETURN_STATUS, BspSchedule<Graph_t_coarse>> schedule_coarse =
+            scheduler.computeSchedule(instance_coarse);
+
+        if (schedule_coarse.first != SUCCESS and schedule_coarse.first != BEST_FOUND) {
+            return {schedule_coarse.first, BspSchedule<Graph_t>()};
+        }
+
+        BspSchedule<Graph_t> schedule(instance);
+
+        pull_back_schedule(schedule_coarse.second, vertex_map, schedule);
+
+        return {SUCCESS, schedule};
+    }
+};
 
 } // namespace osp

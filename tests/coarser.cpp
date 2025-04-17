@@ -6,6 +6,7 @@
 #include <iostream>
 
 #include "coarser/hdagg/hdagg_coarser.hpp"
+#include "coarser/CoarseAndSchedule.hpp"
 #include "graph_implementations/computational_dag_edge_idx_vector_impl.hpp"
 #include "io/arch_file_reader.hpp"
 #include "io/graph_file_reader.hpp"
@@ -133,6 +134,12 @@ BOOST_AUTO_TEST_CASE(coarser_hdagg_test) {
 
         BOOST_CHECK_EQUAL(pull_back_schedule(schedule, vertex_map, schedule_out), true);
         BOOST_CHECK(schedule_out.satisfiesPrecedenceConstraints());
+
+        CoarseAndSchedule<graph_t, graph_t> coarse_and_schedule(coarser, scheduler);
+        auto [status, schedule2] = coarse_and_schedule.computeSchedule(instance);
+        BOOST_CHECK(status == RETURN_STATUS::SUCCESS || status == RETURN_STATUS::BEST_FOUND);
+        BOOST_CHECK(schedule2.satisfiesPrecedenceConstraints());
+
     }
 };
 
@@ -198,5 +205,12 @@ BOOST_AUTO_TEST_CASE(coarser_hdagg_test_diff_graph_impl) {
 
         BOOST_CHECK_EQUAL(pull_back_schedule(schedule, vertex_map, schedule_out), true);
         BOOST_CHECK(schedule_out.satisfiesPrecedenceConstraints());
+
+
+        CoarseAndSchedule<graph_t1, graph_t2> coarse_and_schedule(coarser, scheduler);
+        auto [status, schedule2] = coarse_and_schedule.computeSchedule(instance);
+        BOOST_CHECK(status == RETURN_STATUS::SUCCESS || status == RETURN_STATUS::BEST_FOUND);
+        BOOST_CHECK(schedule2.satisfiesPrecedenceConstraints());
+
     }
 };

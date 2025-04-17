@@ -36,6 +36,8 @@ DEFINE_TYPE_MEMBER_TEST(has_vertex_mem_weight_tmember, vertex_mem_weight_type)
 DEFINE_TYPE_MEMBER_TEST(has_vertex_type_tmember, vertex_type_type)
 DEFINE_TYPE_MEMBER_TEST(has_edge_comm_weight_tmember, edge_comm_weight_type)
 
+
+// Every directed graph must have a vertex_idx type
 template<typename T>
 struct directed_graph_traits {
     static_assert(has_vertex_idx_tmember<T>::value, "graph must have vertex_idx");
@@ -43,6 +45,8 @@ struct directed_graph_traits {
 };
 
 template<typename T>
+
+// Macro to extract the vertex_idx type from the graph
 using vertex_idx_t = typename directed_graph_traits<T>::vertex_idx;
 
 
@@ -58,6 +62,7 @@ struct directed_graph_edge_desc_traits<T, std::void_t<typename T::directed_edge_
 
 template<typename T>
 using edge_desc_t = typename directed_graph_edge_desc_traits<T>::directed_edge_descriptor;
+
 
 template<typename T>
 struct computational_dag_traits {
@@ -79,7 +84,6 @@ using v_commw_t = typename computational_dag_traits<T>::vertex_comm_weight_type;
 template<typename T>
 using v_memw_t = typename computational_dag_traits<T>::vertex_mem_weight_type;
 
-
 template<typename T, typename = void>
 struct computational_dag_typed_vertices_traits : std::false_type {};
 
@@ -92,7 +96,6 @@ struct computational_dag_typed_vertices_traits<T, std::void_t<typename T::vertex
 
 template<typename T>
 using v_type_t = typename computational_dag_typed_vertices_traits<T>::vertex_type_type;
-
 
 template<typename T, typename = void>
 struct computational_dag_edge_desc_traits : std::false_type {};

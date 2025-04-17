@@ -47,18 +47,19 @@ struct is_directed_graph<
 template<typename T>
 inline constexpr bool is_directed_graph_v = is_directed_graph<T>::value;
 
-
+// default implementation to get the source of an edge
 template<typename Graph_t>
 vertex_idx_t<Graph_t> source(const edge_desc_t<Graph_t> &edge, const Graph_t &graph) {
     return graph.source(edge);
 }
 
+// default implementation to get the target of an edge
 template<typename Graph_t>
 vertex_idx_t<Graph_t> target(const edge_desc_t<Graph_t> &edge, const Graph_t &graph) {
     return graph.target(edge);
 }
 
-// directed_graph_edge_idx concept
+// Specialization for graphs that define a directed_edge_descriptor
 template<typename T, typename = void>
 struct is_directed_graph_edge_desc : std::false_type {};
 
@@ -82,6 +83,8 @@ struct is_directed_graph_edge_desc<T,
 template<typename T>
 inline constexpr bool is_directed_graph_edge_desc_v = is_directed_graph_edge_desc<T>::value;
 
+// Specialization for graphs that define a directed_edge_descriptor that can be used as a key in a hash table.
+// Compatible with STL hash tables.
 template<typename T, typename = void>
 struct has_hashable_edge_desc : std::false_type {};
 
@@ -90,9 +93,8 @@ struct has_hashable_edge_desc<
     T, std::void_t<decltype(std::hash<edge_desc_t<T>>{}(std::declval<edge_desc_t<T>>())),
                    decltype(std::declval<edge_desc_t<T>>() == std::declval<edge_desc_t<T>>(), void()),
                    decltype(std::declval<edge_desc_t<T>>() != std::declval<edge_desc_t<T>>(), void())>>
-    : std::conjunction<is_directed_graph_edge_desc<T>, 
-    std::is_default_constructible<edge_desc_t<T>>,
-    std::is_copy_constructible<edge_desc_t<T>>> {};
+    : std::conjunction<is_directed_graph_edge_desc<T>, std::is_default_constructible<edge_desc_t<T>>,
+                       std::is_copy_constructible<edge_desc_t<T>>> {};
 ;
 
 template<typename T>
