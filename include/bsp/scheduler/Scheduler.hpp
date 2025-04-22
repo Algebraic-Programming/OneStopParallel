@@ -23,8 +23,8 @@ limitations under the License.
 #include <iostream>
 #include <thread>
 
-#include "model/bsp/BspInstance.hpp"
-#include "model/bsp/BspSchedule.hpp"
+#include "bsp/model/BspInstance.hpp"
+#include "bsp/model/BspSchedule.hpp"
 
 namespace osp {
 

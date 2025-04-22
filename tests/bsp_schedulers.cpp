@@ -8,8 +8,8 @@
 #include "graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 #include "io/arch_file_reader.hpp"
 #include "io/graph_file_reader.hpp"
-#include "scheduler/bsp/GreedySchedulers/GreedyBspScheduler.hpp"
-#include "scheduler/bsp/Serial.hpp"
+#include "bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
+#include "bsp/scheduler/Serial.hpp"
 
 using namespace osp;
 

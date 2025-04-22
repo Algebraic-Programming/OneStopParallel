@@ -30,7 +30,7 @@ limitations under the License.
 
 #include "auxiliary/misc.hpp"
 #include "graph_algorithms/directed_graph_util.hpp"
-#include "scheduler/bsp/Scheduler.hpp"
+#include "bsp/scheduler/Scheduler.hpp"
 
 namespace osp {
 

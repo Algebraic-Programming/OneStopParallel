@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "scheduler/bsp/ImprovementScheduler.hpp"
+#include "bsp/scheduler/ImprovementScheduler.hpp"
 
 
 // std::vector<std::string> test_graphs() {

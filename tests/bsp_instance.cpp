@@ -19,8 +19,8 @@ limitations under the License.
 #define BOOST_TEST_MODULE Bsp_Architecture
 #include <boost/test/unit_test.hpp>
 
-#include "model/bsp/BspInstance.hpp"
-#include "model/bsp/BspSchedule.hpp"
+#include "bsp/model/BspInstance.hpp"
+#include "bsp/model/BspSchedule.hpp"
 #include "graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 #include "graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "io/arch_file_reader.hpp"

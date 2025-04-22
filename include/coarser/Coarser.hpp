@@ -20,7 +20,7 @@ limitations under the License.
 
 #include "concepts/computational_dag_concept.hpp"
 #include "concepts/constructable_computational_dag_concept.hpp"
-#include "model/bsp/BspSchedule.hpp"
+#include "bsp/model/BspSchedule.hpp"
 #include <vector>
 
 namespace osp {
