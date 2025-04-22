@@ -15,6 +15,7 @@ limitations under the License.
 
 @author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
+
 #pragma once
 
 #include <numeric>
