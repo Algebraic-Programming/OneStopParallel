@@ -84,5 +84,12 @@ struct Multilevel {
     std::vector<int> ComputeTopLevel(const DAG& G, const std::vector<bool>& valid) const;
 
     // utility: coarsening function for pebbling problems - leaves the source nodes intact
-    ComputationalDag CoarsenForPebbling(const ComputationalDag& dag, double coarsen_ratio, std::vector<unsigned>& new_node_IDs, bool FastCoarsify = false);
+    bool pebbling_mode = false;
+    ComputationalDag CoarsenForPebbling(const ComputationalDag& dag, double coarsen_ratio, std::vector<unsigned>& new_node_IDs, unsigned hard_constraint = 0, bool FastCoarsify = false);
+
+    // for pebbling: hard memory constraint to ensure feasibility of resulting graph
+    unsigned hard_mem_constraint = 0;
+    void setHardMemConstraint(unsigned new_constraint){ hard_mem_constraint = new_constraint;}
+    bool IncontractableForPebbling(const DAG& coarse, const intPair&) const;
+    void MergeSourcesInPebbling(DAG& coarse, const std::vector<bool>& validNode, std::vector<std::set<int>>& contains, std::map<intPair, int>& edgeWeights);
 };

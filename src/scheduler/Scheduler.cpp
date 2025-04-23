@@ -27,7 +27,7 @@ std::pair<RETURN_STATUS, BspSchedule> Scheduler::computeScheduleWithTimeLimit(co
             return computeSchedule(instance);
         });
     auto future = task.get_future();
-    std::thread thr(std::move(task), instance);
+    std::thread thr(std::move(task), std::ref(instance));
     if (future.wait_for(std::chrono::seconds(getTimeLimitSeconds())) == std::future_status::timeout) {
         thr.detach(); // we leave the thread still running
         std::cerr << "Timeout reached, execution of computeSchedule() aborted" << std::endl;

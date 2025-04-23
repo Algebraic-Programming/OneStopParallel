@@ -82,7 +82,7 @@ class GreedyVarianceSspScheduler : public SSPScheduler {
     /**
      * @brief Default constructor for GreedyVarianceSspScheduler.
      */
-    GreedyVarianceSspScheduler(float max_percent_idle_processors_ = 0.2, bool increase_parallelism_in_new_superstep_ = true) : SSPScheduler(), max_percent_idle_processors(max_percent_idle_processors_), increase_parallelism_in_new_superstep(increase_parallelism_in_new_superstep_) {}
+    GreedyVarianceSspScheduler(float max_percent_idle_processors_ = 0.2f, bool increase_parallelism_in_new_superstep_ = true) : SSPScheduler(), max_percent_idle_processors(max_percent_idle_processors_), increase_parallelism_in_new_superstep(increase_parallelism_in_new_superstep_) {}
 
     /**
      * @brief Default destructor for GreedyVarianceSspScheduler.

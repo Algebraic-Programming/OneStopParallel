@@ -51,6 +51,7 @@ class GreedyVarianceFillupScheduler : public Scheduler {
     std::vector<int> current_proc_transient_memory;
 
     std::vector<double> compute_work_variance(const ComputationalDag& graph) const;
+    std::vector<std::vector<std::vector<unsigned>>> procTypesCompatibleWithNodeType_omit_procType(const BspInstance &instance) const;
 
     struct VarianceCompare
     {
@@ -65,7 +66,8 @@ class GreedyVarianceFillupScheduler : public Scheduler {
     void Choose(const BspInstance &instance, const std::vector<double> &work_variance,
                 std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> &allReady, std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> &procReady,
                 const std::vector<bool> &procFree, VertexType &node, unsigned &p,
-                const bool endSupStep, const size_t remaining_time) const;
+                const bool endSupStep, const size_t remaining_time,
+                const std::vector<double> &work_variances, const std::vector<std::vector<std::vector<unsigned>>> &procTypesCompatibleWithNodeType_skip_proctype) const;
 
 
     bool CanChooseNode(const BspInstance &instance, const std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> &allReady,
@@ -79,7 +81,7 @@ class GreedyVarianceFillupScheduler : public Scheduler {
     /**
      * @brief Default constructor for GreedyVarianceFillupScheduler.
      */
-    GreedyVarianceFillupScheduler(float max_percent_idle_processors_ = 0.2, bool increase_parallelism_in_new_superstep_ = true) : Scheduler(), max_percent_idle_processors(max_percent_idle_processors_), increase_parallelism_in_new_superstep(increase_parallelism_in_new_superstep_) {}
+    GreedyVarianceFillupScheduler(float max_percent_idle_processors_ = 0.2f, bool increase_parallelism_in_new_superstep_ = true) : Scheduler(), max_percent_idle_processors(max_percent_idle_processors_), increase_parallelism_in_new_superstep(increase_parallelism_in_new_superstep_) {}
 
     /**
      * @brief Default destructor for GreedyVarianceFillupScheduler.

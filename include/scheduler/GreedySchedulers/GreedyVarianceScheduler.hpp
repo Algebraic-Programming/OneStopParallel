@@ -80,7 +80,7 @@ class GreedyVarianceScheduler : public Scheduler {
     /**
      * @brief Default constructor for GreedyVarianceScheduler.
      */
-    GreedyVarianceScheduler(float max_percent_idle_processors_ = 0.2, bool increase_parallelism_in_new_superstep_ = true) : Scheduler(), max_percent_idle_processors(max_percent_idle_processors_), increase_parallelism_in_new_superstep(increase_parallelism_in_new_superstep_) {}
+    GreedyVarianceScheduler(float max_percent_idle_processors_ = 0.2f, bool increase_parallelism_in_new_superstep_ = true) : Scheduler(), max_percent_idle_processors(max_percent_idle_processors_), increase_parallelism_in_new_superstep(increase_parallelism_in_new_superstep_) {}
 
     /**
      * @brief Default destructor for GreedyVarianceScheduler.

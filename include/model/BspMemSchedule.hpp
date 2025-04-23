@@ -162,9 +162,15 @@ class BspMemSchedule {
     void SplitSupersteps(const BspSchedule &schedule);
     void SetMemoryMovement(CACHE_EVICTION_STRATEGY evict_rule = LARGEST_ID);
 
+    // delete current communication schedule, and switch to foresight policy instead
+    void ResetToForesight();
+
     // other basic operations
     bool isValid() const;
     static std::vector<unsigned> minimumMemoryRequiredPerNodeType(const BspInstance& instance, const std::set<unsigned>& external_sources = std::set<unsigned>());
+
+    // expand a MemSchedule from a coarsened DAG to the original DAG
+    BspMemSchedule ExpandMemSchedule(const BspInstance& original_instance, const std::vector<unsigned> mapping_to_coarse) const;
 
     // convert to BSP (ignores vertical I/O and recomputation)
     BspSchedule ConvertToBsp() const;
@@ -205,6 +211,13 @@ class BspMemSchedule {
                                     const std::vector<std::map<unsigned, unsigned> >& original_node_id,
                                     const std::vector<std::map<unsigned, unsigned> >& original_proc_id,
                                     const std::vector<std::vector<std::set<unsigned> > >& has_reds_in_beginning);
+
+    
+    // axuiliary function to remoive some unnecessary communications after assembling from partial pebblings
+    void FixForceEvicts(const BspInstance &bsp_instance, const std::vector<std::tuple<unsigned, unsigned, unsigned> > force_evict_node_proc_step);
+
+    // auxiliary after partial pebblings: try to merge supersteps
+    void TryToMergeSupersteps(const BspInstance &bsp_instance);
 
     const std::vector<compute_step>& GetComputeStepsForProcSuperstep(unsigned proc, unsigned supstep) const {return compute_steps_for_proc_superstep[proc][supstep];}
     const std::vector<unsigned>& GetNodesEvictedInComm(unsigned proc, unsigned supstep) const {return nodes_evicted_in_comm[proc][supstep];}

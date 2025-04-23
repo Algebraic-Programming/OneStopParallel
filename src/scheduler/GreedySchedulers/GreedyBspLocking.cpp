@@ -61,7 +61,7 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyBspLocking::computeSchedule(const Bs
     const auto &G = instance.getComputationalDag();
 
     const std::vector<int> path_length = get_longest_path(G);
-    int max_path = 0;
+    int max_path = 1;
     for (int i = 0; i < N; ++i)
         if (path_length[i] > max_path)
             max_path = path_length[i];

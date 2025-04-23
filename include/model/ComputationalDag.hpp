@@ -171,12 +171,14 @@ class ComputationalDag {
     std::vector<VertexType> sourceVertices() const;
     std::vector<VertexType> sinkVertices() const;
 
-    enum TOP_SORT_ORDER { AS_IT_COMES, MAX_CHILDREN, RANDOM };
+    enum TOP_SORT_ORDER { AS_IT_COMES, MAX_CHILDREN, RANDOM, MINIMAL_NUMBER };
     std::vector<VertexType> GetTopOrder(const TOP_SORT_ORDER q_order = AS_IT_COMES) const;
 
     std::vector<VertexType> dfs_topoOrder() const;
     std::vector<VertexType> dfs_reverse_topoOrder() const;
     std::vector<VertexType> GetFilteredTopOrder(const std::vector<bool> &valid) const;
+
+    bool checkNodesInTopologicalOrder() const;
 
     auto vertices() const { return boost::make_iterator_range(boost::vertices(graph)); }
 

@@ -250,6 +250,9 @@ DAG Multilevel::Coarsify(int newN, const std::string& outfilename, bool FastCoar
         else
             edgesToContract = ClusterCoarsen(coarse, validNode);
 
+        if(edgesToContract.empty())
+            break;
+        
         // contract these edges
         for(intPair edge : edgesToContract)
         {
@@ -294,6 +297,9 @@ DAG Multilevel::Coarsify(int newN, const std::string& outfilename, bool FastCoar
                 break;
         }
     }
+
+    if(pebbling_mode)
+        MergeSourcesInPebbling(coarse, validNode, contains, edgeWeights);
 
     //Print contraction steps to file
     if(!outfilename.empty())
@@ -646,7 +652,12 @@ std::vector<contractionEdge> Multilevel::CreateEdgeCandidateList(const DAG& coar
     std::vector<contractionEdge> candidates;
 
     for (auto it= contractable.begin(); it != contractable.end(); ++it)
+    {
+        if(pebbling_mode && IncontractableForPebbling(coarse, it->first))
+            continue;
+
         candidates.emplace_back(it->first.a, it->first.b, contains[it->first.a].size() + contains[it->first.b].size(), it->second);
+    }
 
     std::sort(candidates.begin(), candidates.end());
     return candidates;
@@ -698,7 +709,7 @@ std::vector<intPair> Multilevel::ClusterCoarsen(const DAG& G, const std::vector<
         if(valid[i])
         {
             leader[i]=i;
-            weight[i]=G.workW[i];
+            weight[i]=1 /*G.workW[i]*/;
             nrBadNeighbors[i]=0;
             leaderBadNeighbors[i]=-1;
             clusterNewID[i]=i;
@@ -727,6 +738,10 @@ std::vector<intPair> Multilevel::ClusterCoarsen(const DAG& G, const std::vector<
             if(singleton[pred] && nrBadNeighbors[pred]>0)
                 continue;
 
+            // check viability for pebbling
+            if(pebbling_mode && IncontractableForPebbling(G, intPair(pred, i)))
+                continue;
+
             validNeighbors.push_back(pred);
         }
         for(int succ: G.Out[i])
@@ -739,6 +754,10 @@ std::vector<intPair> Multilevel::ClusterCoarsen(const DAG& G, const std::vector<
                 continue;
             //check condition 2 for pred if it is a singleton
             if(singleton[succ] && nrBadNeighbors[succ]>0)
+                continue;
+
+            // check viability for pebbling
+            if(pebbling_mode && IncontractableForPebbling(G, intPair(i, succ)))
                 continue;
 
             validNeighbors.push_back(succ);
@@ -839,40 +858,30 @@ std::vector<intPair> Multilevel::ClusterCoarsen(const DAG& G, const std::vector<
 }
 
 
-ComputationalDag Multilevel::CoarsenForPebbling(const ComputationalDag& dag, double coarsen_ratio, std::vector<unsigned>& new_node_IDs, bool FastCoarsify)
+ComputationalDag Multilevel::CoarsenForPebbling(const ComputationalDag& dag, double coarsen_ratio, std::vector<unsigned>& new_node_IDs, unsigned hard_constraint, bool FastCoarsify)
 {
     new_node_IDs.clear();
     new_node_IDs.resize(dag.numberOfVertices());
 
-    unsigned nr_sources = 0;
-    std::set<unsigned> non_sources;
+    if(hard_constraint > 0)
+        setHardMemConstraint(hard_constraint);
 
+    pebbling_mode = true;
+    unsigned nr_non_sources = 0;
     for(unsigned node = 0; node < dag.numberOfVertices(); ++node)
         if(dag.numberOfParents(node) > 0)
-        {
-            new_node_IDs[node] = non_sources.size();
-            non_sources.insert(node);
-        }
-        else
-        {
-            new_node_IDs[node] = nr_sources;
-            ++nr_sources;
-        }
-    
-    ComputationalDag dag_without_sources = dag.createInducedSubgraph(non_sources, std::set<unsigned>());
+            ++nr_non_sources;
 
-    DAG dag_format(dag_without_sources);
+    DAG dag_format(dag);
     G_full = dag_format;
-    unsigned new_size = (double)dag_format.n * coarsen_ratio;
-
+    unsigned new_size = (double)nr_non_sources * coarsen_ratio + (dag_format.n - nr_non_sources);
     DAG coarse_dag_format = Coarsify(new_size, "", FastCoarsify);
 
-    std::vector<int> mapping_to_coarse_without_sources = GetFinalImage(dag_format, contractionHistory);
+    std::vector<int> mapping_to_coarse = GetFinalImage(dag_format, contractionHistory);
     for(unsigned node = 0; node < dag.numberOfVertices(); ++node)
-        if(dag.numberOfParents(node) > 0)
-            new_node_IDs[node] = nr_sources + (unsigned)mapping_to_coarse_without_sources[new_node_IDs[node]];
+        new_node_IDs[node] = (unsigned)mapping_to_coarse[node];
 
-    ComputationalDag final_coarsened(nr_sources + coarse_dag_format.n);
+    ComputationalDag final_coarsened(coarse_dag_format.n);
     for(unsigned node = 0; node < final_coarsened.numberOfVertices(); ++node)
     {
         final_coarsened.setNodeWorkWeight(node, 0);
@@ -892,4 +901,133 @@ ComputationalDag Multilevel::CoarsenForPebbling(const ComputationalDag& dag, dou
     final_coarsened.mergeMultipleEdges();
 
     return final_coarsened;
+}
+
+bool Multilevel::IncontractableForPebbling(const DAG& coarse, const intPair& edge) const
+{
+    if(coarse.In[edge.a].size() == 0)
+        return true;
+
+    unsigned sum_weight = coarse.commW[edge.a] + coarse.commW[edge.b];
+    std::set<unsigned> parents;
+    for(int pred: coarse.In[edge.a])
+        parents.insert(pred);
+    for(int pred: coarse.In[edge.b])
+        if(pred != edge.a)
+            parents.insert(pred);
+    for(unsigned node : parents)
+        sum_weight += coarse.commW[node];
+
+    if(sum_weight > hard_mem_constraint)
+        return true;
+    
+    std::set<unsigned> children;
+    for(int succ: coarse.Out[edge.b])
+        children.insert(succ);
+    for(int succ: coarse.Out[edge.a])
+        if(succ != edge.b)
+            children.insert(succ);
+
+    for(unsigned child : children)
+    {
+        sum_weight = coarse.commW[edge.a] + coarse.commW[edge.b] + coarse.commW[child];
+        for(int pred: coarse.In[child])
+        {
+            if(pred != edge.a && pred != edge.b)
+                sum_weight += coarse.commW[pred];
+        }
+        
+        if(sum_weight > hard_mem_constraint)
+            return true;
+    }
+    return false;
+}
+
+void Multilevel::MergeSourcesInPebbling(DAG& coarse, const std::vector<bool>& validNode, std::vector<std::set<int>>& contains, std::map<intPair, int>& edgeWeights)
+{
+    // initialize memory requirement sums to check viability later
+    std::vector<unsigned> memory_sum(coarse.n, 0);
+    std::vector<unsigned> sources;
+    for(unsigned node = 0; node < coarse.n; ++node)
+    {
+        if(!validNode[node])
+            continue;
+
+        if(coarse.In[node].size()>0)
+        {
+            memory_sum[node] = coarse.commW[node];
+            for(int pred: coarse.In[node])
+                memory_sum[node] += coarse.commW[pred];
+        }
+        else 
+            sources.push_back(node);
+    }
+    
+    std::set<unsigned> invalidated_sources;
+    bool could_merge = true;
+    while(could_merge)
+    {
+        could_merge = false;
+        for(unsigned idx1 = 0; idx1 < sources.size(); ++idx1)
+        {
+            unsigned source_a = sources[idx1];
+            if(invalidated_sources.find(source_a) != invalidated_sources.end())
+                continue;
+            
+            for(unsigned idx2 = idx1 + 1; idx2 < sources.size(); ++idx2)
+            {
+                unsigned source_b = sources[idx2];
+                if(invalidated_sources.find(source_b) != invalidated_sources.end())
+                    continue;
+                
+                // check if we can merge source_a and source_b
+                std::set<unsigned> a_children, b_children;
+                for(int succ: coarse.Out[source_a])
+                    a_children.insert(succ);
+                for(int succ: coarse.Out[source_b])
+                    b_children.insert(succ);
+                
+                std::set<unsigned> only_a, only_b, both;
+                for(int succ: coarse.Out[source_a])
+                {
+                    if(b_children.find(succ) == b_children.end())
+                        only_a.insert(succ);
+                    else
+                        both.insert(succ);
+                }
+                for(int succ: coarse.Out[source_b])
+                {
+                    if(a_children.find(succ) == a_children.end())
+                        only_b.insert(succ);
+                }
+
+                bool violates_constraint = false;
+                for(unsigned node : only_a)
+                    if(memory_sum[node] + coarse.commW[source_b] > hard_mem_constraint)
+                        violates_constraint = true;
+                for(unsigned node : only_b)
+                    if(memory_sum[node] + coarse.commW[source_a] > hard_mem_constraint)
+                        violates_constraint = true;
+
+                if(violates_constraint)
+                    continue;
+
+                // check if we want to merge source_a and source_b
+                double sim_diff = (only_a.size() + only_b.size() == 0) ? 0.0001 : (double)(only_a.size() + only_b.size());
+                double ratio = (double) both.size() / sim_diff;
+                
+                if(ratio > 2)
+                {
+                    ContractSingleEdge(coarse, intPair(source_a, source_b), contains, edgeWeights);
+                    invalidated_sources.insert(source_b);
+                    could_merge = true;
+
+                    for(unsigned node : only_a)
+                        memory_sum[node] += coarse.commW[source_b];
+                    for(unsigned node : only_b)
+                        memory_sum[node] += coarse.commW[source_a];
+                }
+            }
+        }
+    }
 }

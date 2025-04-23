@@ -1,0 +1,97 @@
+{
+    "globalParameters": {
+        "timeLimit": 600,
+        "graphDirectory": "./graphs/",
+        "machineDirectory": "./machines/",
+        "scheduleDirectory" :"./schedules/",
+        "outputStatsFile": "./all_run_stats.txt",
+        "outputLogFile": "./log.txt",
+        "outputSchedule": false,
+        "outputDotSchedule": false,
+        "outputSankeySchedule": false
+    },
+    "inputInstances": [
+        {
+            "graphFile": "./graphs/instance_exp_N20_K4_nzP0d2.txt",
+            "machineParamsFile": "./machines/p4_g1_l5.txt"
+        },
+        {
+            "graphFile": "./graphs/instance_kNN_N20_K5_nzP0d2.txt",
+            "machineParamsFile": "./machines/p4_g1_l5.txt"
+        }
+    ],
+    "algorithms": [
+        {
+            "name": "SMFunGrowl",
+            "run" : true,
+            "parameters": {
+                "maxWeightAverageMultiplier": 5.0,
+                "minSuperstepSize": 20,
+                "syncCostMultiplierMinSuperstepWeight": 1,
+                "syncCostMultiplierParallelCheck": 4,
+                "numThreads": 1
+            }
+        },
+        {
+            "name": "SMFunGrowlv2",
+            "run" : true,
+            "parameters": {
+                "maxWeightAverageMultiplier": 5.0,
+                "minSuperstepSize": 20,
+                "syncCostMultiplierMinSuperstepWeight": 1,
+                "syncCostMultiplierParallelCheck": 4,
+                "numThreads": 1
+            }
+        },
+        {
+            "name": "SMFunOriGrowlv2",
+            "run" : true,
+            "parameters": {
+                "maxWeightMedianMultiplier": 20.0,
+                "minSuperstepSize": 20,
+                "syncCostMultiplierMinSuperstepWeight": 1,
+                "syncCostMultiplierParallelCheck": 4,
+                "numThreads": 1
+            }
+        },
+        {
+            "name": "SMGreedyBspGrowLocalAutoCoresParallel",
+            "run" : true,
+            "parameters": {
+                "minSuperstepSize": 20,
+                "syncCostMultiplierMinSuperstepWeight": 1,
+                "syncCostMultiplierParallelCheck": 4,
+                "numThreads": 1
+            }
+        },
+        {
+            "name": "SmGreedyGrowLocal",
+            "run" : true,
+            "parameters": {
+                "minimum_superstep_size": 20,
+                "maximum_imbalanced_superstep_size": 200,
+                "grow_ratio": 1.5,
+                "lower_limit_parallelization": 0.95
+            }
+        },
+        {
+            "name": "GreedyBspGrowLocalParallel",
+            "run" : true,
+            "parameters": {
+                "minimum_superstep_size": 20,
+                "maximum_imbalanced_superstep_size": 200,
+                "grow_ratio": 1.5,
+                "lower_limit_parallelization": 0.95,
+                "numThreads": 1
+            }
+        },
+        {
+            "name": "VarianceGreedyFillup",
+            "run" : true,
+            "parameters": {
+                "max_percent_idle_processors": 0.2,
+                "increase_parallelism_in_new_superstep": true
+            }
+        }
+    ]
+}

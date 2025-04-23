@@ -246,6 +246,14 @@ std::pair<bool, ComputationalDag> FileReader::readComputationalDagHyperdagFormat
         // dag.setNodeType(node, type);
     }
 
+    getline(infile, line);
+    while (!infile.eof() && line.at(0) == '%')
+        getline(infile, line);
+    if (!infile.eof()) {
+        std::cout << "Incorrect input file format (file has remaining lines).\n";
+        return {false, dag};
+    }
+
     return {true, dag};
 };
 
@@ -333,6 +341,8 @@ std::pair<bool, csr_graph> FileReader::readComputationalDagMartixMarketFormat_cs
     }
 
     getline(infile, line);
+    while (!infile.eof() && line.at(0) == '%')
+        getline(infile, line);
     if (!infile.eof()) {
         std::cout << "Incorrect input file format (file has remaining lines).\n";
         return {false, dag};
@@ -418,6 +428,8 @@ std::pair<bool, ComputationalDag> FileReader::readComputationalDagMartixMarketFo
     }
 
     getline(infile, line);
+    while (!infile.eof() && line.at(0) == '%')
+        getline(infile, line);
     if (!infile.eof()) {
         std::cout << "Incorrect input file format (file has remaining lines).\n";
         return {false, dag};
@@ -507,6 +519,8 @@ std::pair<bool, ComputationalDag> FileReader::readComputationalDagMartixMarketFo
     }
 
     getline(infile, line);
+    while (!infile.eof() && line.at(0) == '%')
+        getline(infile, line);
     if (!infile.eof()) {
         std::cout << "Incorrect input file format (file has remaining lines).\n";
         return {false, dag};
@@ -543,6 +557,12 @@ std::pair<bool, BspArchitecture> FileReader::readBspArchitecture(std::ifstream &
             architecture.setMemoryConstraintType(PERSISTENT_AND_TRANSIENT);
             architecture.setMemoryBound(M);
         }
+    } else if (mem_type == -1) {
+        std::cout << "No memory type specified. Assuming \"NONE\".\n";
+        architecture.setMemoryConstraintType(NONE);
+    } else {
+        std::cout << "Invalid memory type.\n";
+        return {false, architecture};
     }
 
     for (unsigned i = 0; i < p * p; ++i) {
@@ -574,6 +594,14 @@ std::pair<bool, BspArchitecture> FileReader::readBspArchitecture(std::ifstream &
             return {false, architecture};
         }
         architecture.setSendCosts(fromProc, toProc, value);
+    }
+
+    getline(infile, line);
+    while (!infile.eof() && line.at(0) == '%')
+        getline(infile, line);
+    if (!infile.eof()) {
+        std::cout << "Incorrect input file format (file has remaining lines).\n";
+        return {false, architecture};
     }
 
     architecture.computeCommAverage();
@@ -1201,6 +1229,94 @@ std::pair<bool, BspScheduleRecomp> FileReader::extractBspScheduleRecomp(const st
 
     return FileReader::extractBspScheduleRecomp(infile, instance);
 };
+
+std::pair<bool, ComputationalDag> FileReader::readCombinedSptrsvSpmvDagMartixMarket(const std::string &firstFilename, const std::string &secondFilename) {
+
+    std::ifstream firstInfile(firstFilename), secondInfile(secondFilename);
+    if (!firstInfile.is_open() || !secondInfile.is_open()) {
+        std::cout << "Unable to find/open input matrix file.\n";
+
+        return {false, ComputationalDag()};
+    }
+
+    bool status;
+    ComputationalDag dag;
+
+    std::tie(status, dag) = FileReader::readComputationalDagMartixMarketFormat(firstInfile);
+    if(status = false)
+        return {false, ComputationalDag()};
+
+    bool symmetric = false;
+
+    std::string line;
+    getline(secondInfile, line);
+    while (!secondInfile.eof() && line.at(0) == '%')
+    {
+        if(line.size() >= 2 && line.at(0) == '%' && line.at(1) == '%' && line.find("symmetric") != std::string::npos)
+            symmetric = true;
+
+        getline(secondInfile, line);
+    }
+
+    int nEntries, M_row, M_col;
+    sscanf(line.c_str(), "%d %d %d", &M_row, &M_col, &nEntries);
+
+    if (M_row <= 0 || M_col <= 0) {
+        std::cout << "Incorrect input file format (No rows/columns).\n";
+        return {false, ComputationalDag()};
+    }
+    if (M_col != dag.numberOfVertices()) {
+        std::cout << "Incorrect input file format: the two matrix sizes are not compatible.\n";
+        return {false, ComputationalDag()};
+    }
+
+    for(unsigned node = 0; node < M_row; ++node)
+        dag.addVertex(0, 1);
+
+    // Initialise data;
+    std::vector<int> node_work_wts(M_row, 0);
+    std::vector<int> node_comm_wts(M_row, 1);
+    // read edges
+    for (int i = 0; i < nEntries; ++i) {
+        getline(secondInfile, line);
+        while (!secondInfile.eof() && line.at(0) == '%')
+            getline(secondInfile, line);
+
+        if (secondInfile.eof()) {
+            std::cout << "Incorrect input file format (file terminated too early).\n";
+            return {false, dag};
+        }
+
+        int row, col;
+        double val;
+        sscanf(line.c_str(), "%d %d %lf", &row, &col, &val);
+        // Indexing starting at 0
+        row -= 1;
+        col -= 1;
+
+        dag.addEdge(col, M_col + row, val, 1);
+        dag.setNodeWorkWeight(M_col + row, dag.nodeWorkWeight(M_col + row) + 1);
+        dag.setNodeMemoryWeight(M_col + row, dag.nodeMemoryWeight(M_col + row) + 1);
+
+        if(symmetric && col != row)
+        {
+            dag.addEdge(row, M_col + col, val, 1);
+            dag.setNodeWorkWeight(M_col + col, dag.nodeWorkWeight(M_col + col) + 1);
+            dag.setNodeMemoryWeight(M_col + col, dag.nodeMemoryWeight(M_col + col) + 1);
+        }
+    }
+
+    getline(secondInfile, line);
+    while (!secondInfile.eof() && line.at(0) == '%')
+        getline(secondInfile, line);
+    if (!secondInfile.eof()) {
+        std::cout << "Incorrect input file format (file has remaining lines).\n";
+        return {false, dag};
+    }
+
+    return {true, dag};
+
+}
 
 // gk_fclose(fpin);
 

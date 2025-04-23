@@ -401,6 +401,52 @@ std::vector<size_t> schedule_node_permuter_basic(const BspSchedule& sched, const
     return permutation;
 }
 
+#ifdef EIGEN_FOUND
+std::vector<size_t> schedule_node_sm_permuter_basic(const SmSchedule& sched, const SCHEDULE_NODE_PERMUTATION_MODES mode) {
+    // superstep, processor, nodes
+    std::vector<std::vector<std::vector<size_t>>> allocation(sched.numberOfSupersteps(),
+                                                                std::vector<std::vector<size_t>>(sched.getInstance().numberOfProcessors(),
+                                                                    std::vector<size_t>({})));
+    for (size_t node = 0; node < sched.getInstance().numberOfVertices(); node++) {
+        allocation[ sched.assignedSuperstep(node) ][ sched.assignedProcessor(node) ].emplace_back(node);
+    }
+
+    // reordering and allocating into permutation
+    std::vector<size_t> permutation(sched.getInstance().numberOfVertices());
+
+    if(mode == LOOP_PROCESSORS || mode == SNAKE_PROCESSORS) {
+        bool forward = true;
+        size_t counter = 0;
+        for (auto step_it = allocation.begin(); step_it != allocation.cend(); step_it++) {
+            if (forward) {
+                for (auto proc_it = step_it->begin(); proc_it != step_it->cend(); proc_it++) {
+                    //topological_sort_for_data_locality_interior_basic(*proc_it, sched);
+                    for (const auto& node : *proc_it) {
+                        permutation[node] = counter;
+                        counter++;
+                    }
+                }
+            } else {
+                for (auto proc_it = step_it->rbegin(); proc_it != step_it->crend(); proc_it++) {
+                    //topological_sort_for_data_locality_interior_basic(*proc_it, sched);
+                    for (const auto& node : *proc_it) {
+                        permutation[node] = counter;
+                        counter++;
+                    }
+                }
+            }
+            
+            if (mode == SNAKE_PROCESSORS) {
+                forward = !forward;
+            }
+        }
+    } else {
+        throw std::logic_error("Permutation mode not implemented.");
+    }
+
+    return permutation;
+}
+#endif
 void topological_sort_for_data_locality_interior_basic(std::vector<size_t>& nodes, const BspSchedule& sched) {
     if (nodes.empty()) return;
 

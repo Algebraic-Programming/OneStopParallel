@@ -105,6 +105,8 @@ struct CommandLineParser {
                 scheduler.push_back(algorithm);
             }
         }
+
+        
     }
 
   public:

@@ -1,0 +1,110 @@
+{
+    "globalParameters": {
+        "timeLimit": 3600,
+        "memoryBoundFactor": 1.0,
+        "graphDirectory": "graphs/",
+        "machineDirectory": "machines/",
+        "scheduleDirectory" :"schedules/",
+        "outputStatsFile": "all_run.txt",
+        "outputLogFile": "log.txt",
+        "outputSchedule": false,
+        "outputDotSchedule": false,
+        "outputSankeySchedule": false
+    },
+    "inputInstances": [
+        {
+            "graphFile": "./graphs/instance_exp_N20_K4_nzP0d2.txt",
+            "machineParamsFile": "./machines/p4_g1_l5.txt"
+        },
+        {
+            "graphFile": "./graphs/instance_kNN_N20_K5_nzP0d2.txt",
+            "machineParamsFile": "./machines/p4_g1_l5.txt"
+        }
+    ],
+    "algorithms": [
+        {
+            "name": "FullPebblingILP",
+            "run": false,
+            "description": "ILP for MultiProcessor Pebbling (MemSchedule)",
+            "parameters": {
+                "asynchronous_objective": false,
+                "disable_recomputation": false
+            }
+        },
+        {
+            "name": "PartialPebblingILP",
+            "run": false,
+            "description": "Divide-and-conquer ILP for MultiProcessor Pebbling (MemSchedule)",
+            "parameters": {
+                "min_partition_size": 50,
+                "time_seconds_for_subILPs": 1800,
+                "asynchronous_objective": false
+            }
+        },
+        {
+            "name": "GreedyPebbling",
+            "run": true,
+            "description": "Greedy MultiProcessor Pebbling: heuristic + cache eviction rule (MemSchedule)",
+            "parameters": {
+                "use_cilk": false,
+                "foresight_policy": true
+            }
+        },
+        {
+            "name": "CoarsenedFullPebblingILP",
+            "run": false,
+            "description": "Coarsening + ILP for MultiProcessor Pebbling (MemSchedule)",
+            "parameters": {
+                "coarsening_ratio": 0.5,
+                "asynchronous_objective": false
+            }
+        },
+        {
+            "name": "CoarsenedPartialPebblingILP",
+            "run": false,
+            "description": "Coarsened Greedy MultiProcessor Pebbling: coarsening + heuristic + cache eviction rule (MemSchedule)",
+            "parameters": {
+                "coarsening_ratio": 0.5,
+                "min_partition_size": 50,
+                "time_seconds_for_subILPs": 1800,
+                "asynchronous_objective": false
+            }
+        },
+        {
+            "name": "CoarsenedGreedyPebbling",
+            "run": false,
+            "description": "Coarsened Greedy MultiProcessor Pebbling: coarsening + heuristic + cache eviction rule (MemSchedule)",
+            "parameters": {
+                "coarsening_ratio": 0.5,
+                "foresight_policy": true
+            }
+        },
+        {
+            "name": "FullPebblingILPWithBspInit",
+            "run": true,
+            "description": "ILP for MultiProcessor Pebbling (MemSchedule)",
+            "parameters": {
+                "asynchronous_objective": false
+            }
+        },
+        {
+            "name": "WFLFKCUT",
+            "run": false,
+            "description": "MultiProcessor Pebbling: heuristic + cache eviction rule (MemSchedule)",
+            "parameters": {
+                "foresight_policy": true
+            }
+        },
+        {
+            "name": "WFLFKCOMM",
+            "run": false,
+            "description": "MultiProcessor Pebbling: heuristic + cache eviction rule (MemSchedule)",
+            "parameters": {
+                "foresight_policy": true
+            }
+        }
+
+    ]
+}
+
+        

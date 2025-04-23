@@ -218,6 +218,27 @@ std::vector<VertexType> ComputationalDag::GetTopOrder(const TOP_SORT_ORDER q_ord
         }
     }
 
+    if (q_order == MINIMAL_NUMBER) {
+        std::priority_queue<VertexType, std::vector<VertexType>, std::greater<VertexType>> next;
+
+        // Find source nodes
+        for (const VertexType &i : sourceVertices())
+            next.emplace(i);
+
+        // Execute BFS
+        while (!next.empty()) {
+            const VertexType node = next.top();
+            next.pop();
+            TopOrder.push_back(node);
+
+            for (const VertexType &current : children(node)) {
+                ++predecessors_count[current];
+                if (predecessors_count[current] == parents(current).size())
+                    next.emplace(current);
+            }
+        }
+    }
+
     if (TopOrder.size() != numberOfVertices())
         throw std::runtime_error("Error during topological ordering: TopOrder.size() != numberOfVertices() [" +
                                  std::to_string(TopOrder.size()) + " != " + std::to_string(numberOfVertices()) + "]");
@@ -784,7 +805,7 @@ ComputationalDag ComputationalDag::createInducedSubgraph(const std::set<unsigned
     for (unsigned node : extra_sources)
     {
         local_idx[node] = subdag.numberOfVertices();
-        subdag.addVertex(nodeWorkWeight(node), nodeCommunicationWeight(node), nodeMemoryWeight(node), nodeType(node));
+        subdag.addVertex(0, nodeCommunicationWeight(node), nodeMemoryWeight(node), nodeType(node));
     }
     for (unsigned node : selected_nodes)
     {
@@ -858,4 +879,16 @@ void ComputationalDag::mergeMultipleEdges()
     // add new merged edges
     for (auto itr = new_edge_weights.begin(); itr != new_edge_weights.end(); ++itr)
         addEdge(itr->first.first, itr->first.second, itr->second);
+}
+
+bool ComputationalDag::checkNodesInTopologicalOrder() const {
+    for (VertexType node = 0; node < numberOfVertices(); node++) {
+        for (const auto &child: children(node)) {
+            if (child < node) {
+                return false;
+            }
+        }
+    }
+
+    return true;
 }

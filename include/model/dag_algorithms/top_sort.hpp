@@ -27,6 +27,8 @@ namespace dag_algorithms {
 
 std::vector<VertexType> top_sort_dfs(const ComputationalDag &dag);
 
+std::vector<VertexType> top_sort_dfs(const ComputationalDag &dag, std::vector<unsigned> &source_node_dist);
+
 std::vector<VertexType> top_sort_bfs(const ComputationalDag &dag);
 
 std::vector<VertexType> top_sort_locality(const ComputationalDag &dag);

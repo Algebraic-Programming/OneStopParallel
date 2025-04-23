@@ -6,7 +6,7 @@
         "scheduleDirectory" :"./schedules/",
         "outputStatsFile": "./all_run_stats.txt",
         "outputLogFile": "./log.txt",
-        "outputSchedule": true,
+        "outputSchedule": false,
         "outputDotSchedule": false,
         "outputSankeySchedule": false
     },
@@ -28,31 +28,87 @@
         },
         {
             "name": "GreedyBsp",
+            "run" : false,
+            "parameters": {
+                "max_percent_idle_processors": 0.2,
+                "increase_parallelism_in_new_superstep": true
+            }
+        },
+        {
+            "name": "GraphOptGrowLocal",
+            "run" : true,
+            "parameters": { }
+        },
+        {
+            "name": "GraphOptLocking",
             "run" : true,
             "parameters": {
-                "max_percent_idle_processors": 0.2
+                "max_percent_idle_processors": 0.2,
+                "increase_parallelism_in_new_superstep": true
+            }
+        },
+        {
+            "name": "HdaggGrowLocal",
+            "run" : true,
+            "parameters": { }
+        },
+        {
+            "name": "HdaggLocking",
+            "run" : true,
+            "parameters": {
+                "max_percent_idle_processors": 0.2,
+                "increase_parallelism_in_new_superstep": true
+            }
+        },
+        {
+            "name": "HdaggVarGrowLocal",
+            "run" : true,
+            "parameters": { }
+        },
+        {
+            "name": "HdaggVarLocking",
+            "run" : true,
+            "parameters": {
+                "max_percent_idle_processors": 0.2,
+                "increase_parallelism_in_new_superstep": true
             }
         },
         {
             "name": "GreedyVariance",
-            "run" : true,
+            "run" : false,
             "parameters": {
-                "max_percent_idle_processors": 0.2
+                "max_percent_idle_processors": 0.2,
+                "increase_parallelism_in_new_superstep": true
             }
         },
         {
             "name": "GreedyBspFillup",
-            "run" : true,
+            "run" : false,
             "parameters": {
-                "max_percent_idle_processors": 0.2
+                "max_percent_idle_processors": 0.2,
+                "increase_parallelism_in_new_superstep": true
             }
         },
         {
             "name": "GreedyVarianceFillup",
-            "run" : true,
+            "run" : false,
             "parameters": {
-                "max_percent_idle_processors": 0.2
+                "max_percent_idle_processors": 0.2,
+                "increase_parallelism_in_new_superstep": true
             }
+        },
+        {
+            "name": "ReverseGreedyVarianceFillup",
+            "run" : false,
+            "parameters": {
+                "max_percent_idle_processors": 0.2,
+                "increase_parallelism_in_new_superstep": true
+            }
+        },
+        {
+            "name": "GreedyBspGrowLocal",
+            "run" : false,
+            "parameters": { }
         },
         {
             "name": "GreedyEtf",
@@ -129,7 +185,7 @@
         },
         {
             "name": "Wavefront",
-            "run" : true,
+            "run" : false,
             "parameters": {
                 "hillclimb_balancer_iterations": 10,
                 "hungarian_alg": true
@@ -155,7 +211,7 @@
         },
         {
             "name": "HDagg_original",
-            "run" : true,
+            "run" : false,
             "parameters": {
                 "balance_threshhold": 1.1,
                 "hillclimb_balancer_iterations": 0,
@@ -165,7 +221,7 @@
         },
         {
             "name": "HDagg_original_xlogx",
-            "run" : true,
+            "run" : false,
             "parameters": {
                 "balance_threshhold": 0.003,
                 "hillclimb_balancer_iterations": 0,
@@ -175,7 +231,7 @@
         },
         {
             "name": "BalDMixR",
-            "run": false,
+            "run" : false,
             "parameters": {
                 "balance_threshhold": 1.2,
                 "part_algo": "Greedy",
@@ -192,7 +248,7 @@
         },
         {
             "name": "CoBalDMixR",
-            "run": false,
+            "run" : false,
             "parameters": {
                 "coarsen": {
                     "min_nodes_after_coarsen_per_partition": 1000,
@@ -236,7 +292,7 @@
         },
         {
             "name": "CoBalDMixRLK",
-            "run": false,
+            "run" : false,
             "parameters": {
                 "coarsen": {
                     "min_nodes_after_coarsen_per_partition": 1000,
@@ -280,17 +336,17 @@
         },
         {
             "name": "BestGreedyLK",
-            "run": false,
+            "run" : false,
             "parameters": { }
         },
         {
             "name": "BestGreedyHC",
-            "run": false,
+            "run" : false,
             "parameters": { }
         },
         {
             "name": "CoarseBestGreedyHC",
-            "run": false,
+            "run" : false,
             "parameters": {
                 "coarsen": {
                     "min_nodes_after_coarsen_per_partition": 1000,
@@ -307,7 +363,7 @@
         },
         {
             "name": "CoarseBestGreedy",
-            "run": false,
+            "run" : false,
             "parameters": {
                 "coarsen": {
                     "min_nodes_after_coarsen_per_partition": 1000,
@@ -324,7 +380,7 @@
         },
         {
             "name": "SquashHDagg",
-            "run": false,
+            "run" : false,
             "parameters": {
                 "coarsen": {
                     "min_nodes_after_coarsen_per_partition": 1000,
@@ -347,7 +403,7 @@
         },
         {
             "name": "SquashComboBestGreedyLK",
-            "run": false,
+            "run" : false,
             "parameters": {
                 "coarsen": {
                     "min_nodes_after_coarsen_per_partition": 1000,
@@ -364,41 +420,41 @@
         },
         {
             "name": "CoarseWaveBestGreedyHC",
-            "run": false,
+            "run" : false,
             "parameters": { }
         },
         {
             "name": "CoarseHDaggGreedyBsp",
-            "run": false,
+            "run" : false,
             "parameters": {
                 "max_percent_idle_processors": 0.2
             }
         },
         {
             "name": "CoarseHDaggGreedyVariance",
-            "run": false,
+            "run" : false,
             "parameters": {
                 "max_percent_idle_processors": 0.2
             }
         },
         {
             "name": "CoarseHDaggBestGreedy",
-            "run": false,
+            "run" : false,
             "parameters": { }
         },
         {
             "name": "CoarseHDaggBestGreedyHC",
-            "run": false,
+            "run" : false,
             "parameters": { }
         },
         {
             "name": "CoarseHDaggBestGreedyLK",
-            "run": false,
+            "run" : false,
             "parameters": { }
         },
         {
             "name": "CoarseHDaggCoBalDMixR",
-            "run": false,
+            "run" : false,
             "parameters": {
                 "coarsen": {
                     "min_nodes_after_coarsen_per_partition": 1000,
@@ -442,7 +498,7 @@
         },
         {
             "name": "CoarseHDaggCoBalDMixRHC",
-            "run": false,
+            "run" : false,
             "parameters": {
                 "coarsen": {
                     "min_nodes_after_coarsen_per_partition": 1000,
@@ -486,7 +542,7 @@
         },
         {
             "name": "CoarseHDaggCoBalDMixRLK",
-            "run": false,
+            "run" : false,
             "parameters": {
                 "coarsen": {
                     "min_nodes_after_coarsen_per_partition": 1000,
@@ -530,7 +586,7 @@
         },
         {
             "name": "FunnelBspGreedy",
-            "run": true,
+            "run" : false,
             "parameters": {
                 "coarsen": {
                     "max_relative_weight": 20.0,
@@ -540,13 +596,14 @@
                     "use_approx_transitive_reduction": true
                 },
                 "bsp": {
-                    "max_percent_idle_processors": 0.2
+                    "max_percent_idle_processors": 0.2,
+                    "increase_parallelism_in_new_superstep": true
                 }
             }
         },
         {
             "name": "FunnelVarianceGreedy",
-            "run": true,
+            "run" : false,
             "parameters": {
                 "coarsen": {
                     "max_relative_weight": 20.0,
@@ -556,14 +613,15 @@
                     "use_approx_transitive_reduction": true
                 },
                 "variance": {
-                    "max_percent_idle_processors": 0.2
+                    "max_percent_idle_processors": 0.2,
+                    "increase_parallelism_in_new_superstep": true
                 }
             }
         }
         ,
         {
             "name": "FunnelBspFillupGreedy",
-            "run": true,
+            "run" : false,
             "parameters": {
                 "coarsen": {
                     "max_relative_weight": 20.0,
@@ -573,13 +631,14 @@
                     "use_approx_transitive_reduction": true
                 },
                 "bsp": {
-                    "max_percent_idle_processors": 0.2
+                    "max_percent_idle_processors": 0.2,
+                    "increase_parallelism_in_new_superstep": true
                 }
             }
         },
         {
             "name": "FunnelVarianceFillupGreedy",
-            "run": true,
+            "run" : false,
             "parameters": {
                 "coarsen": {
                     "max_relative_weight": 20.0,
@@ -589,7 +648,8 @@
                     "use_approx_transitive_reduction": true
                 },
                 "variance": {
-                    "max_percent_idle_processors": 0.2
+                    "max_percent_idle_processors": 0.2,
+                    "increase_parallelism_in_new_superstep": true
                 }
             }
         }

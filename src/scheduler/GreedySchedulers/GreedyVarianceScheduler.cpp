@@ -34,7 +34,7 @@ std::vector<double> GreedyVarianceScheduler::compute_work_variance(const Computa
         }
         temp = std::log(temp) / 2 + max_priority;
 
-        double node_weight = std::log((double)graph.nodeWorkWeight(*r_iter));
+        double node_weight = std::log((double)std::max(graph.nodeWorkWeight(*r_iter), 1));
         double larger_val = node_weight > temp ? node_weight : temp;
 
         work_variance[*r_iter] =

@@ -42,7 +42,6 @@ limitations under the License.
 #include "scheduler/GreedySchedulers/GreedyLayers.hpp"
 #include "scheduler/GreedySchedulers/GreedyVarianceScheduler.hpp"
 #include "scheduler/GreedySchedulers/MetaGreedyScheduler.hpp"
-#include "scheduler/GreedySchedulers/RandomBadGreedy.hpp"
 #include "scheduler/GreedySchedulers/RandomGreedy.hpp"
 #include "scheduler/HDagg/HDagg_simple.hpp"
 #include "scheduler/ImprovementScheduler.hpp"
@@ -52,7 +51,6 @@ limitations under the License.
 
 #include "file_interactions/CommandLineParser.hpp"
 #include "file_interactions/FileReader.hpp"
-#include "file_interactions/BspScheduleWriter.hpp"
 #include "model/BspSchedule.hpp"
 
 #include "scheduler/SchedulePermutations/ScheduleNodePermuter.hpp"
@@ -60,7 +58,7 @@ limitations under the License.
 
 #include "auxiliary/run_algorithm.hpp"
 
-#define NO_PERMUTE
+// #define NO_PERMUTE
 
 namespace pt = boost::property_tree;
 
@@ -190,25 +188,30 @@ int main(int argc, char *argv[]) {
                     bool graph_status = false;
 
                     if (filename_graph.substr(filename_graph.rfind(".") + 1) == "txt") {
-                        std::tie(graph_status, bsp_instance.getComputationalDag()) = FileReader::readComputationalDagHyperdagFormat(filename_graph);
+                        std::tie(graph_status, bsp_instance.getComputationalDag()) =
+                            FileReader::readComputationalDagHyperdagFormat(filename_graph);
 
                     } else if (filename_graph.substr(filename_graph.rfind(".") + 1) == "mtx") {
                         mtx_format = true;
-                        std::tie(graph_status, bsp_instance.getComputationalDag()) = FileReader::readComputationalDagMartixMarketFormat(filename_graph);
- 
+                        std::tie(graph_status, bsp_instance.getComputationalDag()) =
+                            FileReader::readComputationalDagMartixMarketFormat(filename_graph);
+
                     } else if (filename_graph.substr(filename_graph.rfind(".") + 1) == "dot") {
-                        std::tie(graph_status, bsp_instance.getComputationalDag()) = FileReader::readComputationalDagDotFormat(filename_graph);
+                        std::tie(graph_status, bsp_instance.getComputationalDag()) =
+                            FileReader::readComputationalDagDotFormat(filename_graph);
 
                     } else {
                         log.open(log_file, std::ios_base::app);
                         log << "Unknown file ending: ." << filename_graph.substr(filename_graph.rfind(".") + 1)
                             << " ...assuming hyperDag format." << std::endl;
                         log.close();
-                        std::tie(graph_status, bsp_instance.getComputationalDag()) = FileReader::readComputationalDagHyperdagFormat(filename_graph);
+                        std::tie(graph_status, bsp_instance.getComputationalDag()) =
+                            FileReader::readComputationalDagHyperdagFormat(filename_graph);
                     }
 
                     bool arch_status = false;
-                    std::tie(arch_status, bsp_instance.getArchitecture()) = FileReader::readBspArchitecture(filename_machine);
+                    std::tie(arch_status, bsp_instance.getArchitecture()) =
+                        FileReader::readBspArchitecture(filename_machine);
 
                     ComputationalDag &graph = bsp_instance.getComputationalDag();
 
@@ -221,7 +224,7 @@ int main(int argc, char *argv[]) {
                     }
 
                     BspSptrsvCSR simulator(bsp_instance, not mtx_format);
-                    
+
                     const auto ref_solution = simulator.compute_sptrsv();
 
                     std::vector<std::string> schedulers_name(parser.scheduler.size(), "");
@@ -245,6 +248,7 @@ int main(int argc, char *argv[]) {
                         log.close();
 
                         try {
+
                             const auto start_time = std::chrono::high_resolution_clock::now();
 
                             auto [return_status, schedule] =
@@ -337,7 +341,7 @@ int main(int argc, char *argv[]) {
 
 #ifdef NO_PERMUTE
                             simulator.setup_csr_no_permutation(schedule);
-                       
+
 #else
                             simulator.setup_csr(schedule, perm);
 #endif
@@ -362,12 +366,18 @@ int main(int argc, char *argv[]) {
                                 throw std::invalid_argument("Serial not supported with NO_PERMUTE");
 #else
                                 simulator.simulate_sptrsv_serial();
+                                simulator.reset_x();
+                                simulator.simulate_sptrsv_serial();
 #endif
                             } else {
 #ifdef NO_PERMUTE
                                 simulator.simulate_sptrsv_no_permutation();
-                                //simulator.simulate_sptrsv_graph_mtx();
+                                simulator.reset_x();
+                                simulator.simulate_sptrsv_no_permutation();
+                                // simulator.simulate_sptrsv_graph_mtx();
 #else
+                                simulator.simulate_sptrsv();
+                                simulator.reset_x();
                                 simulator.simulate_sptrsv();
 #endif
                             }
@@ -399,9 +409,9 @@ int main(int argc, char *argv[]) {
 
                                     const auto start_time = std::chrono::high_resolution_clock::now();
 #ifdef NO_PERMUTE
-                                    
+
                                     simulator.simulate_sptrsv_no_permutation();
-                                    //simulator.simulate_sptrsv_graph_mtx();
+                                    // simulator.simulate_sptrsv_graph_mtx();
 #else
                                     simulator.simulate_sptrsv();
 #endif
@@ -416,7 +426,7 @@ int main(int argc, char *argv[]) {
                                     if (not check_vectors_equal(result, ref_solution)) {
 
                                         std::cout << "Solution not equal to reference solution!" << std::endl;
-                                    } 
+                                    }
 
                                     simulator.reset_x();
 

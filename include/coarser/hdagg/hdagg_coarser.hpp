@@ -23,11 +23,11 @@ limitations under the License.
 class hdagg_coarser : public Coarser {
 
   protected:
-    int work_threshold = 100;
-    int memory_threshold = 100;
-    int communication_threshold = 100;
+    int work_threshold = INT_MAX;
+    int memory_threshold = INT_MAX;
+    int communication_threshold = INT_MAX;
 
-    unsigned super_node_size_threshold = 10;
+    unsigned super_node_size_threshold = UINT_MAX;
     
     MEMORY_CONSTRAINT_TYPE memory_constraint_type = NONE;  
 
