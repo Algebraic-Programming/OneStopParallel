@@ -444,6 +444,8 @@ bool GreedyVarianceFillupScheduler::check_mem_feasibility(
 
         return false;
     }
+
+    return true;
 };
 
 

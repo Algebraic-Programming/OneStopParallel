@@ -145,6 +145,8 @@ bool GreedyEtfScheduler::check_mem_feasibility(const BspInstance &instance, cons
 
         return false;
     }
+
+    return true;
 };
 
 std::vector<int> GreedyEtfScheduler::ComputeBottomLevel(const BspInstance &instance, unsigned avg_) const {

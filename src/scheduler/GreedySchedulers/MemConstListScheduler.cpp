@@ -403,4 +403,6 @@ bool MemConstListScheduler::check_choose_node(const BspSchedule &schedule, const
             return false;
         }
     }
+
+    return true;
 }

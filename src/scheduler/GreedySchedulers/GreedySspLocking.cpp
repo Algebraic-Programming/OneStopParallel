@@ -732,6 +732,8 @@ bool GreedySspLocking::check_mem_feasibility(const BspInstance &instance, const 
 
         return false;
     }
+
+    return true;
 };
 
 // auxiliary - check if it is possible to assign a node at all

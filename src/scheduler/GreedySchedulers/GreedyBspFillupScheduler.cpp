@@ -72,6 +72,8 @@ bool GreedyBspFillupScheduler::check_mem_feasibility(const BspInstance &instance
 
         return false;
     }
+
+    return true;
 };
 
 std::pair<RETURN_STATUS, BspSchedule> GreedyBspFillupScheduler::computeSchedule(const BspInstance &instance) {
