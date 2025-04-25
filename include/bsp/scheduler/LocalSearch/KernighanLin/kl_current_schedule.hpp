@@ -21,7 +21,7 @@ limitations under the License.
 #include "bsp/model/SetSchedule.hpp"
 #include "bsp/model/VectorSchedule.hpp"
 #include "graph_algorithms/directed_graph_util.hpp"
-#include "scheduler/ImprovementScheduler.hpp"
+#include "bsp/scheduler/ImprovementScheduler.hpp"
 
 namespace osp {
 
@@ -64,9 +64,9 @@ template<typename Graph_t>
 class kl_current_schedule {
 
   private:
-    using VertexType = typename vertex_idx_t<Graph_t>;
-    using EdgeType = typename edge_idx_t<Graph_t>;
-    using kl_move = typename kl_move<Graph_t>;
+    using VertexType = vertex_idx_t<Graph_t>;
+    using EdgeType = edge_desc_t<Graph_t>;
+
 
   public:
     kl_current_schedule(Ikl_cost_function *cost_f_) : cost_f(cost_f_) {}
@@ -517,7 +517,7 @@ class kl_current_schedule {
         }
     };
 
-    virtual void apply_move(kl_move move) {
+    virtual void apply_move(kl_move<Graph_t> move) {
 
         vector_schedule.setAssignedProcessor(move.node, move.to_proc);
         vector_schedule.setAssignedSuperstep(move.node, move.to_step);
@@ -875,7 +875,7 @@ class kl_current_schedule {
         }
     }
 
-    void update_max_work_datastructures(kl_move move) {
+    void update_max_work_datastructures(kl_move<Graph_t> move) {
 
         if (move.from_step == move.to_step) {
 

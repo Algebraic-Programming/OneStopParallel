@@ -35,12 +35,12 @@ class VectorSchedule : public IBspSchedule<Graph_t> {
     std::vector<unsigned> node_to_processor_assignment;
     std::vector<unsigned> node_to_superstep_assignment;
 
-    VectorSchedule(const BspInstance &inst) : instance(inst), number_of_supersteps(0) {
+    VectorSchedule(const BspInstance<Graph_t> &inst) : instance(inst), number_of_supersteps(0) {
         node_to_processor_assignment = std::vector<unsigned>(inst.numberOfVertices(), instance->numberOfProcessors());
         node_to_superstep_assignment = std::vector<unsigned>(inst.numberOfVertices(), 0);
     }
 
-    VectorSchedule(const IBspSchedule &schedule)
+    VectorSchedule(const IBspSchedule<Graph_t> &schedule)
         : instance(&schedule.getInstance()), number_of_supersteps(schedule.numberOfSupersteps()) {
 
         node_to_processor_assignment =
@@ -57,7 +57,7 @@ class VectorSchedule : public IBspSchedule<Graph_t> {
 
     virtual ~VectorSchedule() = default;
 
-    const BspInstance &getInstance() const override { return instance; }
+    const BspInstance<Graph_t> &getInstance() const override { return instance; }
 
     void setAssignedSuperstep(vertex_idx_t<Graph_t> vertex, unsigned superstep) override {
         node_to_superstep_assignment[vertex] = superstep;

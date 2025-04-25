@@ -27,6 +27,8 @@ _add_test( directed_graph_util )
 
 _add_test( directed_graph_top_sort )
 
+_add_test( kl )
+
 ## bsp model
 _add_test( bsp_architecture )
 

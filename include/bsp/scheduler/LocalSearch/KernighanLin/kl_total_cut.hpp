@@ -646,7 +646,7 @@ class kl_total_cut : public kl_total<Graph_t> {
     }
 
   public:
-    kl_total_cut(bool use_node_communication_costs_ = false) : kl_total(use_node_communication_costs_) {}
+    kl_total_cut(bool use_node_communication_costs_ = false) : kl_total<Graph_t>(use_node_communication_costs_) {}
 
     virtual ~kl_total_cut() = default;
 
@@ -657,7 +657,7 @@ template<typename Graph_t>
 class kl_total_cut_test : public kl_total_cut<Graph_t> {
 
   public:
-    kl_total_cut_test() : kl_total_cut() {}
+    kl_total_cut_test() : kl_total_cut<Graph_t>() {}
 
     virtual ~kl_total_cut_test() = default;
 

@@ -74,7 +74,7 @@ class kl_hyper_total_cut : public kl_total<Graph_t> {
     }
 
   public:
-    kl_hyper_total_cut(bool use_node_communication_costs_ = false) : kl_total(use_node_communication_costs_) {}
+    kl_hyper_total_cut(bool use_node_communication_costs_ = false) : kl_total<Graph_t>(use_node_communication_costs_) {}
 
     virtual ~kl_hyper_total_cut() = default;
 

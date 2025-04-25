@@ -33,7 +33,7 @@ class kl_current_schedule_total : public kl_current_schedule<Graph_t> {
 
   public:
     kl_current_schedule_total(Ikl_cost_function *cost_f_, bool use_node_communication_costs_ = false)
-        : kl_current_schedule(cost_f_), use_node_communication_costs(use_node_communication_costs_) {}
+        : kl_current_schedule<Graph_t>(cost_f_), use_node_communication_costs(use_node_communication_costs_) {}
 
     double comm_multiplier = 1.0;
     bool use_node_communication_costs = true;
@@ -53,9 +53,9 @@ class kl_total : public kl_base<Graph_t> {
         std::cout << "KLTotal initialize datastructures" << std::endl;
 #endif
 
-        kl_base::initialize_datastructures();
+        kl_base<Graph_t>::initialize_datastructures();
 
-        v_commkw_t<Graph_t> max_edge_weight_ = 0;
+        v_commw_t<Graph_t> max_edge_weight_ = 0;
         v_workw_t<Graph_t> max_node_weight_ = 0;
 
         for (const auto vertex : current_schedule.instance->getComputationalDag().vertices()) {
@@ -82,37 +82,40 @@ class kl_total : public kl_base<Graph_t> {
 
         max_edge_weight = max_edge_weight_ + max_node_weight_;
 
-        parameters.initial_penalty =
+        kl_base<Graph_t>::parameters.initial_penalty =
             max_edge_weight * current_schedule.comm_multiplier * current_schedule.instance->communicationCosts();
 
-        parameters.gain_threshold =
+        kl_base<Graph_t>::parameters.gain_threshold =
             max_edge_weight * current_schedule.comm_multiplier * current_schedule.instance->communicationCosts();
     }
 
     virtual void update_reward_penalty() override {
 
-        if (current_schedule.current_violations.size() <= parameters.violations_threshold) {
-            penalty = parameters.initial_penalty;
-            reward = 0.0;
+        if (current_schedule.current_violations.size() <= kl_base<Graph_t>::parameters.violations_threshold) {
+            kl_base<Graph_t>::penalty = kl_base<Graph_t>::parameters.initial_penalty;
+            kl_base<Graph_t>::reward = 0.0;
 
         } else {
-            parameters.violations_threshold = 0;
+            kl_base<Graph_t>::parameters.violations_threshold = 0;
 
-            penalty = std::log((current_schedule.current_violations.size())) * max_edge_weight *
-                      current_schedule.comm_multiplier * current_schedule.instance->communicationCosts();
+            kl_base<Graph_t>::penalty = std::log((current_schedule.current_violations.size())) * max_edge_weight *
+                                        current_schedule.comm_multiplier *
+                                        current_schedule.instance->communicationCosts();
 
-            reward = std::sqrt((current_schedule.current_violations.size() + 4)) * max_edge_weight *
-                     current_schedule.comm_multiplier * current_schedule.instance->communicationCosts();
+            kl_base<Graph_t>::reward = std::sqrt((current_schedule.current_violations.size() + 4)) * max_edge_weight *
+                                       current_schedule.comm_multiplier *
+                                       current_schedule.instance->communicationCosts();
         }
     }
 
     virtual void set_initial_reward_penalty() override {
 
-        penalty = parameters.initial_penalty;
-        reward = max_edge_weight * current_schedule.comm_multiplier * current_schedule.instance->communicationCosts();
+        kl_base<Graph_t>::penalty = kl_base<Graph_t>::parameters.initial_penalty;
+        kl_base<Graph_t>::reward =
+            max_edge_weight * current_schedule.comm_multiplier * current_schedule.instance->communicationCosts();
     }
 
-    virtual void select_nodes_comm(unsigned threshold) override {
+    virtual void select_nodes_comm(std::size_t threshold) override {
 
         if (current_schedule.use_node_communication_costs) {
 
@@ -126,7 +129,7 @@ class kl_total : public kl_base<Graph_t> {
                         if (current_schedule.instance->getComputationalDag().vertex_comm_weight(node) >
                             node_comm_selection_threshold) {
 
-                            node_selection.insert(node);
+                              kl_base<Graph_t>::node_selection.insert(node);
                             break;
                         }
                     }
@@ -140,7 +143,7 @@ class kl_total : public kl_base<Graph_t> {
                         if (current_schedule.instance->getComputationalDag().vertex_comm_weight(node) >
                             node_comm_selection_threshold) {
 
-                            node_selection.insert(node);
+                              kl_base<Graph_t>::node_selection.insert(node);
                             break;
                         }
                     }
@@ -158,7 +161,7 @@ class kl_total : public kl_base<Graph_t> {
                         if (current_schedule.instance->getComputationalDag().edge_comm_weight(in_edge) >
                             node_comm_selection_threshold) {
 
-                            node_selection.insert(node);
+                              kl_base<Graph_t>::node_selection.insert(node);
                             break;
                         }
                     }
@@ -173,7 +176,7 @@ class kl_total : public kl_base<Graph_t> {
                         if (current_schedule.instance->getComputationalDag().edge_comm_weight(out_edge) >
                             node_comm_selection_threshold) {
 
-                            node_selection.insert(node);
+                              kl_base<Graph_t>::node_selection.insert(node);
                             break;
                         }
                     }
@@ -184,7 +187,7 @@ class kl_total : public kl_base<Graph_t> {
 
   public:
     kl_total(bool use_node_communication_costs_)
-        : kl_base(current_schedule), current_schedule(this, use_node_communication_costs_) {}
+        : kl_base<Graph_t>(current_schedule), current_schedule(this, use_node_communication_costs_) {}
 
     virtual ~kl_total() = default;
 };

@@ -78,8 +78,8 @@ template<typename Graph_t>
 class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
 
   protected:
-    using VertexType = typename vertex_idx_t<Graph_t>;
-
+    using VertexType = vertex_idx_t<Graph_t>;
+    
     kl_base_parameter parameters;
 
     std::mt19937 gen;
@@ -93,8 +93,8 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
     virtual void update_reward_penalty() = 0;
     virtual void set_initial_reward_penalty() = 0;
 
-    boost::heap::fibonacci_heap<kl_move> max_gain_heap;
-    using heap_handle = typename boost::heap::fibonacci_heap<kl_move>::handle_type;
+    boost::heap::fibonacci_heap<kl_move<Graph_t>> max_gain_heap;
+    using heap_handle = typename boost::heap::fibonacci_heap<kl_move<Graph_t>>::handle_type;
 
     std::unordered_map<VertexType, heap_handle> node_heap_handles;
 
@@ -214,7 +214,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
 
     std::unordered_set<VertexType> nodes_to_update;
 
-    void compute_nodes_to_update(kl_move move) {
+    void compute_nodes_to_update(kl_move<Graph_t> move) {
 
         nodes_to_update.clear();
 
@@ -825,7 +825,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
             // parameters.change_in_cost_threshold)
             //     return node_max_gain;
 
-            kl_move move(node, node_max_gain, node_change_in_cost,
+            kl_move<Graph_t> move(node, node_max_gain, node_change_in_cost,
                          current_schedule->vector_schedule.assignedProcessor(node),
                          current_schedule->vector_schedule.assignedSuperstep(node), node_best_proc, node_best_step);
             node_heap_handles[node] = max_gain_heap.push(move);
@@ -969,7 +969,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
         }
     }
 
-    virtual void compute_comm_gain(VertexType node, unsigned current_step, unsigned current_proc,
+    virtual void compute_comm_gain(vertex_idx_t<Graph_t> node, unsigned current_step, unsigned current_proc,
                                    unsigned new_proc) = 0;
 
     void update_node_gains(const std::unordered_set<VertexType> &nodes) {
@@ -981,7 +981,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
         }
     };
 
-    kl_move find_best_move() {
+    kl_move<Graph_t> find_best_move() {
 
         const unsigned local_max = 50;
         std::vector<VertexType> max_nodes(local_max);
@@ -1000,7 +1000,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
         std::uniform_int_distribution<> dis(0, count - 1);
         unsigned i = dis(gen);
 
-        kl_move best_move = kl_move((*node_heap_handles[max_nodes[i]]));
+        kl_move<Graph_t> best_move = kl_move<Graph_t>((*node_heap_handles[max_nodes[i]]));
 
         max_gain_heap.erase(node_heap_handles[max_nodes[i]]);
         node_heap_handles.erase(max_nodes[i]);
@@ -1008,7 +1008,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
         return best_move;
     }
 
-    kl_move compute_best_move(VertexType node) {
+    kl_move<Graph_t> compute_best_move(VertexType node) {
 
         double node_max_gain = std::numeric_limits<double>::lowest();
         double node_change_in_cost = 0;
@@ -1108,12 +1108,12 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
             }
         }
 
-        return kl_move(node, node_max_gain, node_change_in_cost,
+        return kl_move<Graph_t>(node, node_max_gain, node_change_in_cost,
                        current_schedule->vector_schedule.assignedProcessor(node),
                        current_schedule->vector_schedule.assignedSuperstep(node), node_best_proc, node_best_step);
     }
 
-    kl_move best_move_change_superstep(VertexType node) {
+    kl_move<Graph_t> best_move_change_superstep(VertexType node) {
 
         double node_max_gain = std::numeric_limits<double>::lowest();
         double node_change_in_cost = 0;
@@ -1166,7 +1166,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
             }
         }
 
-        return kl_move(node, node_max_gain, node_change_in_cost,
+        return kl_move<Graph_t>(node, node_max_gain, node_change_in_cost,
                        current_schedule->vector_schedule.assignedProcessor(node),
                        current_schedule->vector_schedule.assignedSuperstep(node), node_best_proc, node_best_step);
     }
@@ -1183,7 +1183,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
         best_schedule->updateNumberOfSupersteps();
     }
 
-    void reverse_move_best_schedule(kl_move move) {
+    void reverse_move_best_schedule(kl_move<Graph_t> move) {
         best_schedule->setAssignedProcessor(move.node, move.from_proc);
         best_schedule->setAssignedSuperstep(move.node, move.from_step);
     }
@@ -1488,7 +1488,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
 
         assert(step < current_schedule->num_steps());
 
-        std::vector<kl_move> moves;
+        std::vector<kl_move<Graph_t>> moves;
 
         bool abort = false;
 
@@ -1790,7 +1790,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
 
         assert(step < current_schedule->num_steps());
 
-        std::vector<kl_move> moves;
+        std::vector<kl_move<Graph_t>> moves;
 
         bool abort = false;
 
@@ -2125,7 +2125,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
 
                 const double iter_costs = current_schedule->current_cost;
 
-                kl_move best_move = find_best_move(); // O(log n)
+                kl_move<Graph_t> best_move = find_best_move(); // O(log n)
 
                 if (best_move.gain < -std::numeric_limits<double>::max() * .25) {
                     continue;
@@ -2229,7 +2229,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                 auto finish_time = std::chrono::high_resolution_clock::now();
                 auto duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
 
-                if (duration > timeLimitSeconds) {
+                if (duration > ImprovementScheduler<Graph_t>::timeLimitSeconds) {
                     break;
                 }
             }
@@ -2286,7 +2286,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                 const bool iter_feasible = current_schedule->current_feasible;
                 const double iter_costs = current_schedule->current_cost;
 
-                kl_move best_move = find_best_move(); // O(log n)
+                kl_move<Graph_t> best_move = find_best_move(); // O(log n)
 
                 if (best_move.gain < -std::numeric_limits<double>::max() * .25) {
 #ifdef KL_DEBUG
@@ -2443,7 +2443,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
             if (compute_with_time_limit) {
                 auto finish_time = std::chrono::high_resolution_clock::now();
                 auto duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
-                if (duration > timeLimitSeconds) {
+                if (duration > ImprovementScheduler<Graph_t>::timeLimitSeconds) {
                     break;
                 }
             }
@@ -2520,7 +2520,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                 const bool iter_feasible = current_schedule->current_feasible;
                 const double iter_costs = current_schedule->current_cost;
 
-                kl_move best_move = find_best_move(); // O(log n)
+                kl_move<Graph_t> best_move = find_best_move(); // O(log n)
 
                 if (best_move.gain < -std::numeric_limits<double>::max() * .25) {
 #ifdef KL_DEBUG
@@ -2691,7 +2691,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
             if (compute_with_time_limit) {
                 auto finish_time = std::chrono::high_resolution_clock::now();
                 auto duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
-                if (duration > timeLimitSeconds) {
+                if (duration > ImprovementScheduler<Graph_t>::timeLimitSeconds) {
                     break;
                 }
             }
@@ -2806,7 +2806,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                 const bool iter_feasible = current_schedule->current_feasible;
                 const double iter_costs = current_schedule->current_cost;
 
-                kl_move best_move = find_best_move(); // O(log n)
+                kl_move<Graph_t> best_move = find_best_move(); // O(log n)
 
                 if (best_move.gain < -std::numeric_limits<double>::max() * .25) {
 #ifdef KL_DEBUG
@@ -2926,7 +2926,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
 
                 update_node_gains(nodes_to_update);
 
-                if (not current_schedule->current_violations.size() > 4 && not iter_feasible) {
+                if (not (current_schedule->current_violations.size() > 4) && not iter_feasible) {
                     const auto &iter = max_gain_heap.ordered_begin();
                     if (iter->gain < parameters.gain_threshold) {
 
@@ -2994,7 +2994,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
             if (compute_with_time_limit) {
                 auto finish_time = std::chrono::high_resolution_clock::now();
                 auto duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
-                if (duration > timeLimitSeconds) {
+                if (duration > ImprovementScheduler<Graph_t>::timeLimitSeconds) {
                     break;
                 }
             }
@@ -3150,7 +3150,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
 #endif
 
   public:
-    kl_base(kl_current_schedule &current_schedule_) : ImprovementScheduler(), current_schedule(&current_schedule_) {
+    kl_base(kl_current_schedule<Graph_t> &current_schedule_) : ImprovementScheduler<Graph_t>(), current_schedule(&current_schedule_) {
         std::random_device rd;
         gen = std::mt19937(rd());
     }
