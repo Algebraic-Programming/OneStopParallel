@@ -26,6 +26,7 @@ limitations under the License.
 #include <vector>
 
 #include "SetSchedule.hpp"
+#include "IBspSchedule.hpp"
 
 namespace osp {
 
@@ -48,7 +49,7 @@ namespace osp {
  * @see BspInstance
  */
 template<typename Graph_t>
-class BspSchedule : IBspSchedule<Graph_t> {
+class BspSchedule : public IBspSchedule<Graph_t> {
   public:
     using KeyTriple = std::tuple<vertex_idx_t<Graph_t>, unsigned int, unsigned int>;
 

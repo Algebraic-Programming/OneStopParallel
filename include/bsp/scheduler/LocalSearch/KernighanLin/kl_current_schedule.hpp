@@ -18,8 +18,10 @@ limitations under the License.
 
 // #define KL_DEBUG
 
+#include "bsp/model/BspSchedule.hpp"
 #include "bsp/model/SetSchedule.hpp"
 #include "bsp/model/VectorSchedule.hpp"
+#include "bsp/model/IBspSchedule.hpp"
 #include "graph_algorithms/directed_graph_util.hpp"
 #include "bsp/scheduler/ImprovementScheduler.hpp"
 
@@ -489,18 +491,18 @@ class kl_current_schedule {
 
         for (const auto &edge : instance->getComputationalDag().edges()) {
 
-            const auto &source = source(edge, instance->getComputationalDag());
-            const auto &target = target(edge, instance->getComputationalDag());
+            const auto &source_v = source(edge, instance->getComputationalDag());
+            const auto &target_v = target(edge, instance->getComputationalDag());
 
-            if (vector_schedule.assignedSuperstep(source) >= vector_schedule.assignedSuperstep(target)) {
+            if (vector_schedule.assignedSuperstep(source_v) >= vector_schedule.assignedSuperstep(target_v)) {
 
-                if (vector_schedule.assignedProcessor(source) != vector_schedule.assignedProcessor(target) ||
-                    vector_schedule.assignedSuperstep(source) > vector_schedule.assignedSuperstep(target)) {
+                if (vector_schedule.assignedProcessor(source_v) != vector_schedule.assignedProcessor(target_v) ||
+                    vector_schedule.assignedSuperstep(source_v) > vector_schedule.assignedSuperstep(target_v)) {
 
                     current_violations.insert(edge);
 
 #ifdef KL_DEBUG
-                    std::cout << "Edge: " << source << " -> " << target << std::endl;
+                    std::cout << "Edge: " << source << " -> " << target_v << std::endl;
 #endif
                 }
             }

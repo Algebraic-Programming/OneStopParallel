@@ -105,7 +105,7 @@ class ImprovementScheduler {
      * @param schedule The BspSchedule to be improved.
      * @return The status of the improvement operation.
      */
-    virtual RETURN_STATUS improveScheduleWithTimeLimit(BspSchedule<Graph_t> &schedule) { return TIMEOUT; }
+    virtual RETURN_STATUS improveScheduleWithTimeLimit(BspSchedule<Graph_t> &schedule) = 0;
 
     /**
      * @brief Construct an improved BspSchedule based on the given schedule within the time limit.
@@ -115,26 +115,11 @@ class ImprovementScheduler {
     virtual std::pair<RETURN_STATUS, BspSchedule<Graph_t>>
     constructImprovedScheduleWithTimeLimit(const BspSchedule<Graph_t> &schedule) {
 
-        std::packaged_task<std::pair<RETURN_STATUS, BspSchedule<Graph_t>>(const BspSchedule<Graph_t> &)> task(
-            [this](const BspSchedule<Graph_t> &schedule) -> std::pair<RETURN_STATUS, BspSchedule<Graph_t>> {
-                return constructImprovedSchedule(schedule);
-            });
-        auto future = task.get_future();
-        std::thread thr(std::move(task), schedule);
-        if (future.wait_for(std::chrono::seconds(getTimeLimitSeconds())) == std::future_status::timeout) {
-            thr.detach(); // we leave the thread still running
-            std::cerr << "Timeout reached, execution of computeSchedule() aborted" << std::endl;
-            return std::make_pair(TIMEOUT, BspSchedule<Graph_t>());
-        }
-        thr.join();
-        try {
-            const auto result = future.get();
-            return result;
-        } catch (const std::exception &e) {
-            std::cerr << "Exception caught in computeScheduleWithTimeLimit(): " << e.what() << std::endl;
-            return std::make_pair(ERROR, BspSchedule<Graph_t>());
-        }
+        BspSchedule<Graph_t> improvedSchedule = schedule;
+        RETURN_STATUS status = improveScheduleWithTimeLimit(improvedSchedule);
+        return {status, improvedSchedule};
     }
+
 };
 
 template<typename Graph_t>

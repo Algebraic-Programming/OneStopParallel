@@ -115,7 +115,7 @@ class kl_total : public kl_base<Graph_t> {
             max_edge_weight * current_schedule.comm_multiplier * current_schedule.instance->communicationCosts();
     }
 
-    virtual void select_nodes_comm(std::size_t threshold) override {
+    virtual void select_nodes_comm() override {
 
         if (current_schedule.use_node_communication_costs) {
 
@@ -154,9 +154,9 @@ class kl_total : public kl_base<Graph_t> {
 
                 for (const auto &in_edge : current_schedule.instance->getComputationalDag().in_edges(node)) {
 
-                    const auto &source = source(in_edge, current_schedule.instance->getComputationalDag());
+                    const auto &source_v = source(in_edge, current_schedule.instance->getComputationalDag());
                     if (current_schedule.vector_schedule.assignedProcessor(node) !=
-                        current_schedule.vector_schedule.assignedProcessor(source)) {
+                        current_schedule.vector_schedule.assignedProcessor(source_v)) {
 
                         if (current_schedule.instance->getComputationalDag().edge_comm_weight(in_edge) >
                             node_comm_selection_threshold) {
@@ -169,9 +169,9 @@ class kl_total : public kl_base<Graph_t> {
 
                 for (const auto &out_edge : current_schedule.instance->getComputationalDag().out_edges(node)) {
 
-                    const auto &target = target(out_edge, current_schedule.instance->getComputationalDag());
+                    const auto &target_v = target(out_edge, current_schedule.instance->getComputationalDag());
                     if (current_schedule.vector_schedule.assignedProcessor(node) !=
-                        current_schedule.vector_schedule.assignedProcessor(target)) {
+                        current_schedule.vector_schedule.assignedProcessor(target_v)) {
 
                         if (current_schedule.instance->getComputationalDag().edge_comm_weight(out_edge) >
                             node_comm_selection_threshold) {
