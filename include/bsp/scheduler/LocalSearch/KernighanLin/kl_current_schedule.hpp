@@ -792,7 +792,7 @@ class kl_current_schedule {
 
         for (const auto &edge : instance->getComputationalDag().out_edges(node)) {
 
-            const auto &child = instance->getComputationalDag().target(edge);
+            const auto &child = target(edge, instance->getComputationalDag());
 
             if (current_violations.find(edge) == current_violations.end()) {
 
@@ -854,7 +854,7 @@ class kl_current_schedule {
             std::cout << "New violations: " << std::endl;
             for (const auto &edge : new_violations) {
                 std::cout << "Edge: " << source(edge, instance->getComputationalDag()) << " -> "
-                          << instance->getComputationalDag().target(edge.second) << std::endl;
+                          << target(edge.second, instance->getComputationalDag()) << std::endl;
             }
         }
 
@@ -862,7 +862,7 @@ class kl_current_schedule {
             std::cout << "Resolved violations: " << std::endl;
             for (const auto &edge : resolved_violations) {
                 std::cout << "Edge: " << source(edge, instance->getComputationalDag()) << " -> "
-                          << instance->getComputationalDag().target(edge) << std::endl;
+                          << target(edge, instance->getComputationalDag()) << std::endl;
             }
         }
 
