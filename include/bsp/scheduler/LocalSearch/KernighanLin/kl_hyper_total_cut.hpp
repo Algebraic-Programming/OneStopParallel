@@ -26,7 +26,7 @@ limitations under the License.
 
 #include "kl_total.hpp"
 
-
+namespace osp {
 class kl_hyper_total_cut : public kl_total {
 
   protected:
@@ -42,3 +42,4 @@ class kl_hyper_total_cut : public kl_total {
     virtual std::string getScheduleName() const override { return "KLHyperTotalCut"; }
 };
 
+}

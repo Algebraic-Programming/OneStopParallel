@@ -26,16 +26,16 @@ limitations under the License.
 
 #include "kl_base.hpp"
 
+namespace osp {
 
 class kl_current_schedule_total : public kl_current_schedule {
 
   public:
-
-    kl_current_schedule_total(Ikl_cost_function *cost_f_, bool use_node_communication_costs_ = false) : kl_current_schedule(cost_f_), use_node_communication_costs(use_node_communication_costs_) {}
+    kl_current_schedule_total(Ikl_cost_function *cost_f_, bool use_node_communication_costs_ = false)
+        : kl_current_schedule(cost_f_), use_node_communication_costs(use_node_communication_costs_) {}
 
     double comm_multiplier = 1.0;
     bool use_node_communication_costs = true;
-
 };
 
 class kl_total : public kl_base {
@@ -57,5 +57,6 @@ class kl_total : public kl_base {
         : kl_base(current_schedule), current_schedule(this, use_node_communication_costs_) {}
 
     virtual ~kl_total() = default;
-
 };
+
+} // namespace osp

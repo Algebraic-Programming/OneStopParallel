@@ -26,6 +26,7 @@ limitations under the License.
 
 #include "kl_total.hpp"
 
+namespace osp {
 
 class kl_total_cut : public kl_total {
 
@@ -131,3 +132,5 @@ class kl_total_cut_test : public kl_total_cut {
     }
 
 };
+
+}

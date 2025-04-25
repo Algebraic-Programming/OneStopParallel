@@ -285,33 +285,38 @@ class kl_current_schedule {
 
         if (use_memory_constraint) {
             if (instance->getArchitecture().getMemoryConstraintType() == LOCAL) {
-                step_processor_memory = std::vector<std::vector<int>>(num_steps(), std::vector<int>(num_procs, 0));
+                step_processor_memory = std::vector<std::vector<v_memw_t<Graph_t>>>(
+                    num_steps(), std::vector<v_memw_t<Graph_t>>(num_procs, 0));
             } else if (instance->getArchitecture().getMemoryConstraintType() == PERSISTENT_AND_TRANSIENT) {
 
                 throw std::runtime_error("Memory constraint PERSISTENT_AND_TRANSIENT not implemented");
 
-                current_proc_persistent_memory = std::vector<int>(num_procs, 0);
-                current_proc_transient_memory = std::vector<int>(num_procs, 0);
+                current_proc_persistent_memory = std::vector<v_memw_t<Graph_t>>(num_procs, 0);
+                current_proc_transient_memory = std::vector<v_commw_t<Graph_t>>(num_procs, 0);
 
             } else if (instance->getArchitecture().getMemoryConstraintType() == LOCAL_IN_OUT) {
-                step_processor_memory = std::vector<std::vector<int>>(num_steps(), std::vector<int>(num_procs, 0));
+                step_processor_memory = std::vector<std::vector<v_memw_t<Graph_t>>>(
+                    num_steps(), std::vector<v_memw_t<Graph_t>>(num_procs, 0));
 
                 throw std::runtime_error("Memory constraint LOCAL_IN_OUT not implemented");
 
             } else if (instance->getArchitecture().getMemoryConstraintType() == LOCAL_INC_EDGES) {
-                step_processor_memory = std::vector<std::vector<int>>(num_steps(), std::vector<int>(num_procs, 0));
+                step_processor_memory = std::vector<std::vector<v_memw_t<Graph_t>>>(
+                    num_steps(), std::vector<v_memw_t<Graph_t>>(num_procs, 0));
                 step_processor_pred = std::vector<std::vector<std::unordered_set<VertexType>>>(
                     num_steps(), std::vector<std::unordered_set<VertexType>>(num_procs));
             } else if (instance->getArchitecture().getMemoryConstraintType() == LOCAL_INC_EDGES_2) {
-                step_processor_memory = std::vector<std::vector<int>>(num_steps(), std::vector<int>(num_procs, 0));
+                step_processor_memory = std::vector<std::vector<v_memw_t<Graph_t>>>(
+                    num_steps(), std::vector<v_memw_t<Graph_t>>(num_procs, 0));
                 step_processor_pred = std::vector<std::vector<std::unordered_set<VertexType>>>(
                     num_steps(), std::vector<std::unordered_set<VertexType>>(num_procs));
             }
         }
 
-        step_processor_work = std::vector<std::vector<int>>(num_steps(), std::vector<int>(num_procs, 0));
-        step_max_work = std::vector<int>(num_steps(), 0);
-        step_second_max_work = std::vector<int>(num_steps(), 0);
+        step_processor_work =
+            std::vector<std::vector<v_workw_t<Graph_t>>>(num_steps(), std::vector<v_workw_t<Graph_t>>(num_procs, 0));
+        step_max_work = std::vector<v_workw_t<Graph_t>>(num_steps(), 0);
+        step_second_max_work = std::vector<v_workw_t<Graph_t>>(num_steps(), 0);
     }
 
     virtual void cleanup_superstep_datastructures() {

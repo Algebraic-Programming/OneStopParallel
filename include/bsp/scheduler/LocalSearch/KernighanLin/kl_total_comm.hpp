@@ -27,7 +27,7 @@ limitations under the License.
 #include "kl_total.hpp"
 
 
-
+namespace osp {
 class kl_total_comm : public kl_total {
 
   protected:
@@ -132,3 +132,5 @@ class kl_total_comm_test : public kl_total_comm {
     }
 
 };
+
+}
