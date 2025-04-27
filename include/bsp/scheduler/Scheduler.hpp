@@ -136,8 +136,7 @@ class Scheduler {
     //         return std::make_pair(ERROR, BspSchedule<Graph_t>());
     //     }
     // }
-
-    virtual void setUseMemoryConstraint(bool use_memory_constraint_) { throw std::runtime_error("Not implemented " + use_memory_constraint_); }
+   
 };
 
 } // namespace osp

@@ -411,10 +411,6 @@ class EtfScheduler : public Scheduler<Graph_t> {
      */
     inline bool useNuma() const { return use_numa; }
 
-    virtual void setUseMemoryConstraint(bool use_memory_constraint_) override {
-        use_memory_constraint = use_memory_constraint_;
-    }
-
     /**
      * @brief Gets the name of the schedule.
      *

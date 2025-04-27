@@ -29,10 +29,59 @@ limitations under the License.
 #include <boost/heap/fibonacci_heap.hpp>
 
 #include "auxiliary/misc.hpp"
-#include "graph_algorithms/directed_graph_util.hpp"
 #include "bsp/scheduler/Scheduler.hpp"
+#include "graph_algorithms/directed_graph_util.hpp"
 
 namespace osp {
+
+struct no_memory_constraint {};
+
+template<typename Graph_t>
+struct local_memory_constraint {
+
+    using Graph_impl_t = Graph_t;
+
+    const BspInstance<Graph_t> *instance;
+
+    std::vector<v_memw_t<Graph_t>> current_proc_memory;
+
+    local_memory_constraint() : instance(nullptr) {}
+
+    void initialize(const BspInstance<Graph_t> &instance_) {
+        instance = &instance_;
+        current_proc_memory = std::vector<v_memw_t<Graph_t>>(instance->numberOfProcessors(), 0);
+
+        if (instance->getArchitecture().getMemoryConstraintType() != LOCAL) {
+            throw std::invalid_argument("Memory constraint type is not LOCAL");
+        }
+    }
+
+    bool operator()(const vertex_idx_t<Graph_t> &v, const unsigned proc) const {
+        return current_proc_memory[proc] + instance->getComputationalDag().vertex_mem_weight(v) <=
+               instance->getArchitecture().memoryBound(proc);
+    }
+
+    void add(const vertex_idx_t<Graph_t> &v, const unsigned proc) {
+        current_proc_memory[proc] += instance->getComputationalDag().vertex_mem_weight(v);
+    }
+
+    void reset(const unsigned proc) { current_proc_memory[proc] = 0; }
+};
+
+template<typename T, typename = void>
+struct is_memory_constraint : std::false_type {};
+
+template<typename T>
+struct is_memory_constraint<
+    T, std::void_t<decltype(std::declval<T>().initialize(std::declval<BspInstance<typename T::Graph_impl_t>>())),
+                   decltype(std::declval<T>().operator()(std::declval<vertex_idx_t<typename T::Graph_impl_t>>(),
+                                                         std::declval<unsigned>())),
+                   decltype(std::declval<T>().add(std::declval<vertex_idx_t<typename T::Graph_impl_t>>(),
+                                                  std::declval<unsigned>())),
+                   decltype(std::declval<T>().reset(std::declval<unsigned>())), decltype(T())>> : std::true_type {};
+
+template<typename T>
+inline constexpr bool is_memory_constraint_v = is_memory_constraint<T>::value;
 
 /**
  * @brief The GreedyBspScheduler class represents a scheduler that uses a greedy algorithm to compute schedules for
@@ -42,11 +91,15 @@ namespace osp {
  * The computeSchedule() method computes a schedule for a given BspInstance using a greedy algorithm.
  * The getScheduleName() method returns the name of the schedule, which is "BspGreedy" in this case.
  */
-template<typename Graph_t>
+template<typename Graph_t, typename MemoryConstraint_t = no_memory_constraint>
 class GreedyBspScheduler : public Scheduler<Graph_t> {
 
   private:
     using VertexType = vertex_idx_t<Graph_t>;
+
+    constexpr static bool use_memory_constraint = is_memory_constraint_v<MemoryConstraint_t>;
+
+    MemoryConstraint_t memory_constraint;
 
     struct heap_node {
 
@@ -72,10 +125,6 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
 
     float max_percent_idle_processors;
     bool increase_parallelism_in_new_superstep;
-    bool use_memory_constraint = false;
-
-    std::vector<v_memw_t<Graph_t>> current_proc_persistent_memory;
-    std::vector<v_memw_t<Graph_t>> current_proc_transient_memory;
 
     double computeScore(VertexType node, unsigned proc, const std::vector<std::vector<bool>> &procInHyperedge,
                         const BspInstance<Graph_t> &instance) const {
@@ -91,8 +140,7 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
         return score;
     }
 
-    void Choose(const BspInstance<Graph_t> &instance,
-                const std::vector<std::set<VertexType>> &procReady,
+    void Choose(const BspInstance<Graph_t> &instance, const std::vector<std::set<VertexType>> &procReady,
                 const std::vector<bool> &procFree, VertexType &node, unsigned &p) const {
 
         double max_score = -1.0;
@@ -121,30 +169,13 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
 
             if (top_node.score > max_score) {
 
-                if (use_memory_constraint) {
+                if constexpr (use_memory_constraint) {
 
-                    if (instance.getArchitecture().getMemoryConstraintType() == LOCAL) {
+                    if (memory_constraint(top_node.node, proc)) {
 
-                        if (current_proc_persistent_memory[proc] +
-                                instance.getComputationalDag().vertex_mem_weight(top_node.node) <=
-                            instance.getArchitecture().memoryBound(proc)) {
-
-                            max_score = top_node.score;
-                            node = top_node.node;
-                            p = proc;
-                        }
-
-                    } else if (instance.getArchitecture().getMemoryConstraintType() == PERSISTENT_AND_TRANSIENT) {
-                        if (current_proc_persistent_memory[proc] +
-                                instance.getComputationalDag().vertex_mem_weight(top_node.node) +
-                                std::max(current_proc_transient_memory[proc],
-                                         instance.getComputationalDag().vertex_comm_weight(top_node.node)) <=
-                            instance.getArchitecture().memoryBound(proc)) {
-
-                            max_score = top_node.score;
-                            node = top_node.node;
-                            p = proc;
-                        }
+                        max_score = top_node.score;
+                        node = top_node.node;
+                        p = proc;
                     }
 
                 } else {
@@ -181,13 +212,10 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
             for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
                 if (!procReady[i].empty()) {
 
-                    heap_node top_node = max_proc_score_heap[i].top();
+                    const heap_node &top_node = max_proc_score_heap[i].top();
 
-                    if (current_proc_persistent_memory[i] +
-                            instance.getComputationalDag().vertex_mem_weight(top_node.node) +
-                            std::max(current_proc_transient_memory[i],
-                                     instance.getComputationalDag().vertex_comm_weight(top_node.node)) <=
-                        instance.getArchitecture().memoryBound(i)) {
+                    // todo check if this is correct
+                    if (memory_constraint(top_node.node, i)) {
                         return true;
                     }
                 } else {
@@ -202,13 +230,10 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
             if (!allReady.empty())
                 for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
 
-                    heap_node top_node = max_all_proc_score_heap[i].top();
+                    const heap_node &top_node = max_all_proc_score_heap[i].top();
 
-                    if (current_proc_persistent_memory[i] +
-                            instance.getComputationalDag().vertex_mem_weight(top_node.node) +
-                            std::max(current_proc_transient_memory[i],
-                                     instance.getComputationalDag().vertex_comm_weight(top_node.node)) <=
-                        instance.getArchitecture().memoryBound(i)) {
+                    // todo check if this is correct
+                    if (memory_constraint(top_node.node, i)) {
                         return true;
                     }
                 }
@@ -261,34 +286,8 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
      */
     std::pair<RETURN_STATUS, BspSchedule<Graph_t>> computeSchedule(const BspInstance<Graph_t> &instance) override {
 
-        if (use_memory_constraint) {
-
-            switch (instance.getArchitecture().getMemoryConstraintType()) {
-
-            case LOCAL:
-                
-                current_proc_persistent_memory = std::vector<v_memw_t<Graph_t>>(instance.numberOfProcessors(), 0);
-                break;
-
-            case PERSISTENT_AND_TRANSIENT:
-
-                current_proc_persistent_memory = std::vector<v_memw_t<Graph_t>>(instance.numberOfProcessors(), 0);
-                current_proc_transient_memory = std::vector<v_commw_t<Graph_t>>(instance.numberOfProcessors(), 0);
-                break;
-
-            case GLOBAL:
-
-                throw std::invalid_argument("Global memory constraint not supported");
-
-            case NONE:
-
-                use_memory_constraint = false;
-                std::cerr << "Warning: Memory constraint type set to NONE, ignoring memory constraint" << std::endl;
-                break;
-
-            default:
-                break;
-            }
+        if constexpr (use_memory_constraint) {
+            memory_constraint.initialize(instance);
         }
 
         const std::size_t &N = instance.numberOfVertices();
@@ -301,8 +300,9 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
         node_proc_heap_handles = std::vector<std::unordered_map<VertexType, heap_handle>>(params_p);
         node_all_proc_heap_handles = std::vector<std::unordered_map<VertexType, heap_handle>>(params_p);
 
-        BspSchedule<Graph_t> schedule(instance, std::vector<unsigned>(instance.numberOfVertices(), std::numeric_limits<unsigned>::max()),
-                                      std::vector<unsigned>(instance.numberOfVertices()));
+        BspSchedule<Graph_t> schedule(
+            instance, std::vector<unsigned>(instance.numberOfVertices(), std::numeric_limits<unsigned>::max()),
+            std::vector<unsigned>(instance.numberOfVertices()));
 
         std::set<VertexType> ready;
 
@@ -347,8 +347,8 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
                     max_proc_score_heap[proc].clear();
                     node_proc_heap_handles[proc].clear();
 
-                    if (use_memory_constraint && instance.getArchitecture().getMemoryConstraintType() == LOCAL) {
-                        current_proc_persistent_memory[proc] = 0;
+                    if constexpr (use_memory_constraint) {
+                        memory_constraint.reset(proc);
                     }
                 }
 
@@ -404,26 +404,11 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
                                 }
                             }
 
-                            if (use_memory_constraint && canAdd) {
+                            if constexpr (use_memory_constraint) {
 
-                                if (instance.getArchitecture().getMemoryConstraintType() == LOCAL) {
-
-                                    if (current_proc_persistent_memory[schedule.assignedProcessor(node)] +
-                                            instance.getComputationalDag().vertex_mem_weight(succ) >
-                                        instance.getArchitecture().memoryBound(schedule.assignedProcessor(node))) {
+                                if (canAdd) {
+                                    if (not memory_constraint(succ, schedule.assignedProcessor(node)))
                                         canAdd = false;
-                                    }
-
-                                } else if (instance.getArchitecture().getMemoryConstraintType() ==
-                                           PERSISTENT_AND_TRANSIENT) {
-
-                                    if (current_proc_persistent_memory[schedule.assignedProcessor(node)] +
-                                            instance.getComputationalDag().vertex_mem_weight(succ) +
-                                            std::max(current_proc_transient_memory[schedule.assignedProcessor(node)],
-                                                     instance.getComputationalDag().vertex_comm_weight(succ)) >
-                                        instance.getArchitecture().memoryBound(schedule.assignedProcessor(node))) {
-                                        canAdd = false;
-                                    }
                                 }
                             }
 
@@ -490,38 +475,13 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
                 schedule.setAssignedProcessor(nextNode, nextProc);
                 schedule.setAssignedSuperstep(nextNode, supstepIdx);
 
-                if (use_memory_constraint) {
+                if constexpr (use_memory_constraint) {
+                    memory_constraint.add(nextNode, nextProc);
 
                     std::vector<VertexType> toErase;
-                    if (instance.getArchitecture().getMemoryConstraintType() == LOCAL) {
-
-                        current_proc_persistent_memory[nextProc] +=
-                            instance.getComputationalDag().vertex_mem_weight(nextNode);
-
-                        for (const auto &node : procReady[nextProc]) {
-                            if (current_proc_persistent_memory[nextProc] +
-                                    instance.getComputationalDag().vertex_mem_weight(node) >
-                                instance.getArchitecture().memoryBound(nextProc)) {
-                                toErase.push_back(node);
-                            }
-                        }
-
-                    } else if (instance.getArchitecture().getMemoryConstraintType() == PERSISTENT_AND_TRANSIENT) {
-
-                        current_proc_persistent_memory[nextProc] +=
-                            instance.getComputationalDag().vertex_mem_weight(nextNode);
-                        current_proc_transient_memory[nextProc] =
-                            std::max(current_proc_transient_memory[nextProc],
-                                     instance.getComputationalDag().vertex_comm_weight(nextNode));
-
-                        for (const auto &node : procReady[nextProc]) {
-                            if (current_proc_persistent_memory[nextProc] +
-                                    instance.getComputationalDag().vertex_mem_weight(node) +
-                                    std::max(current_proc_transient_memory[nextProc],
-                                             instance.getComputationalDag().vertex_comm_weight(node)) >
-                                instance.getArchitecture().memoryBound(nextProc)) {
-                                toErase.push_back(node);
-                            }
+                    for (const auto &node : procReady[nextProc]) {
+                        if (not memory_constraint(node, nextProc)) {
+                            toErase.push_back(node);
                         }
                     }
 
@@ -569,9 +529,12 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
                 }
             }
 
-            if (use_memory_constraint && not check_mem_feasibility(instance, allReady, procReady)) {
+            if constexpr (use_memory_constraint) {
 
-                return {ERROR, schedule};
+                if (not check_mem_feasibility(instance, allReady, procReady)) {
+
+                    return {ERROR, schedule};
+                }
             }
 
             if (free > static_cast<unsigned>((float)params_p * max_percent_idle_processors) &&
@@ -597,18 +560,7 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
      *
      * @return The name of the schedule.
      */
-    std::string getScheduleName() const override {
-
-        if (use_memory_constraint) {
-            return "BspGreedyMemory";
-        } else {
-            return "BspGreedy";
-        }
-    }
-
-    void setUseMemoryConstraint(bool use_memory_constraint_) override {
-        use_memory_constraint = use_memory_constraint_;
-    }
+    std::string getScheduleName() const override { return "BspGreedy"; }
 };
 
 } // namespace osp

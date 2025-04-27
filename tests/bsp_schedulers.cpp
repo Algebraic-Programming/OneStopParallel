@@ -53,6 +53,9 @@ void run_test(Scheduler<Graph_t> *test_scheduler) {
             bool status_architecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.txt").string(),
                                                                         instance.getArchitecture());
 
+
+            instance.getArchitecture().setMemoryConstraintType(LOCAL);
+
             if (!status_graph || !status_architecture) {
 
                 std::cout << "Reading files failed." << std::endl;
@@ -77,7 +80,14 @@ BOOST_AUTO_TEST_CASE(GreedyBspScheduler_test) {
 
 BOOST_AUTO_TEST_CASE(GreedyBspScheduler_test_2) {
 
+ 
     GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_t> test;
+    run_test(&test);
+}
+
+BOOST_AUTO_TEST_CASE(GreedyBspScheduler_test_3) {
+
+    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_t, local_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>> test;
     run_test(&test);
 }
 
