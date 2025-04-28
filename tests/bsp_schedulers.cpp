@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include "bsp/scheduler/GreedySchedulers/CilkScheduler.hpp"
 #include "bsp/scheduler/GreedySchedulers/EtfScheduler.hpp"
 #include "bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
 #include "bsp/scheduler/Serial.hpp"
@@ -16,7 +17,8 @@
 using namespace osp;
 
 std::vector<std::string> test_graphs() {
-    return {"data/spaa/tiny/instance_k-means.txt", "data/spaa/tiny/instance_bicgstab.txt", "data/spaa/tiny/instance_CG_N2_K2_nzP0d75.txt"};
+    return {"data/spaa/tiny/instance_k-means.txt", "data/spaa/tiny/instance_bicgstab.txt",
+            "data/spaa/tiny/instance_CG_N2_K2_nzP0d75.txt"};
 }
 
 std::vector<std::string> test_architectures() { return {"data/machine_params/p3.txt"}; }
@@ -84,6 +86,21 @@ BOOST_AUTO_TEST_CASE(GreedyBspScheduler_test_2) {
 BOOST_AUTO_TEST_CASE(Serial_test) {
 
     Serial<computational_dag_vector_impl_def_t> test;
+    run_test(&test);
+}
+
+BOOST_AUTO_TEST_CASE(cilk_test_1) {
+
+    CilkScheduler<computational_dag_vector_impl_def_t> test;
+    test.setMode(CILK);
+    run_test(&test);
+}
+
+
+BOOST_AUTO_TEST_CASE(cilk_test_2) {
+
+    CilkScheduler<computational_dag_vector_impl_def_t> test;
+    test.setMode(SJF);
     run_test(&test);
 }
 

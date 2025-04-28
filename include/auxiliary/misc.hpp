@@ -122,7 +122,7 @@ struct contractionEdge {
     }
 };
 
-int pickRandom(const std::vector<bool> &isValid);
+
 
 // List of initializaton methods available
 static const std::vector<std::string> possibleModes{"random", "SJF",      "cilk",        "BSPg",  "ETF",

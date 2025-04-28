@@ -39,29 +39,7 @@ bool osp::isDisjoint(std::vector<intPair> &intervals) {
     return true;
 };
 
-// pick random index from valid indeces
-int osp::pickRandom(const std::vector<bool> &isValid) {
 
-    if (isValid.size() > std::numeric_limits<int>::max()) {
-        throw std::invalid_argument("isValid.size() > std::numeric_limits<int>::max()");
-    }
-
-    int nrOfOptions = 0;
-    for (size_t idx = 0; idx < isValid.size(); ++idx)
-        if (isValid[idx])
-            ++nrOfOptions;
-
-    int randomChoice = randInt(nrOfOptions);
-    int passed = 0;
-    for (size_t idx = 0; idx < isValid.size(); ++idx)
-        if (isValid[idx]) {
-            if (passed == randomChoice) {
-                return static_cast<int>(idx);
-            }
-            ++passed;
-        }
-    return -1;
-};
 
 // modify problem filename by adding substring at the right place
 std::string osp::editFilename(const std::string &filename, const std::string &toInsert) {
