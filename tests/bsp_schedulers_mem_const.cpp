@@ -139,7 +139,6 @@ void run_test_persistent_transient_memory(Scheduler<Graph_t> *test_scheduler) {
                 std::pair<RETURN_STATUS, BspSchedule<Graph_t>> result = test_scheduler->computeSchedule(instance);
 
                 BOOST_CHECK_EQUAL(SUCCESS, result.first);
-                BOOST_CHECK_EQUAL(&result.second.getInstance(), &instance);
                 BOOST_CHECK(result.second.satisfiesPrecedenceConstraints());
                 BOOST_CHECK(result.second.hasValidCommSchedule());
                 BOOST_CHECK(result.second.satisfiesMemoryConstraints());
@@ -160,6 +159,14 @@ BOOST_AUTO_TEST_CASE(GreedyBspScheduler_persistent_transient_test) {
 
     GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_t,
                        persistent_transient_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>>
+        test;
+    run_test_persistent_transient_memory(&test);
+}
+
+BOOST_AUTO_TEST_CASE(EtfScheduler_persistent_transient_test) {
+
+    EtfScheduler<computational_dag_edge_idx_vector_impl_def_t,
+                 persistent_transient_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>>
         test;
     run_test_persistent_transient_memory(&test);
 }

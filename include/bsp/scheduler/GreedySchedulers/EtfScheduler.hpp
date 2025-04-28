@@ -27,11 +27,12 @@ limitations under the License.
 #include <vector>
 
 #include "ClassicSchedule.hpp"
+#include "MemoryConstraintModules.hpp"
 #include "auxiliary/misc.hpp"
 #include "bsp/model/BspSchedule.hpp"
 #include "bsp/scheduler/Scheduler.hpp"
-#include "graph_algorithms/directed_graph_top_sort.hpp"
 #include "graph_algorithms/directed_graph_edge_desc_util.hpp"
+#include "graph_algorithms/directed_graph_top_sort.hpp"
 
 namespace osp {
 
@@ -46,7 +47,7 @@ enum EtfMode { ETF, BL_EST };
  * each processor. The algorithm selects the task with the earliest EST and assigns it to the processor with the
  * earliest available start time. The process is repeated until all tasks are scheduled.
  */
-template<typename Graph_t>
+template<typename Graph_t, typename MemoryConstraint_t = no_memory_constraint>
 class EtfScheduler : public Scheduler<Graph_t> {
 
     static_assert(is_computational_dag_v<Graph_t>, "EtfScheduler can only be used with computational DAGs.");
@@ -64,10 +65,13 @@ class EtfScheduler : public Scheduler<Graph_t> {
     EtfMode mode;  // The mode of the scheduler (ETF or BL_EST)
     bool use_numa; // Flag indicating whether to use NUMA-aware scheduling
 
-    bool use_memory_constraint = false;
+    constexpr static bool use_memory_constraint = is_memory_constraint_v<MemoryConstraint_t>;
 
-    std::vector<v_memw_t<Graph_t>> current_proc_persistent_memory;
-    std::vector<v_commw_t<Graph_t>> current_proc_transient_memory;
+    static_assert(not use_memory_constraint ||
+                      std::is_same_v<MemoryConstraint_t, persistent_transient_memory_constraint<Graph_t>>,
+                  "EtfScheduler implements only persistent_transient_memory_constraint.");
+
+    MemoryConstraint_t memory_constraint;
 
     /**
      * @brief Computes the bottom level of each task.
@@ -131,11 +135,11 @@ class EtfScheduler : public Scheduler<Graph_t> {
 
                     const auto node = node_pair.second;
 
-                    if (current_proc_persistent_memory[i] + instance.getComputationalDag().vertex_mem_weight(node) +
-                            std::max(current_proc_transient_memory[i],
-                                     instance.getComputationalDag().vertex_comm_weight(node)) <=
-                        instance.getArchitecture().memoryBound(i)) {
-                        return true;
+                    if constexpr (use_memory_constraint) {
+
+                        if (memory_constraint.can_add(node, i)) {
+                            return true;
+                        }
                     }
                 }
             }
@@ -223,23 +227,10 @@ class EtfScheduler : public Scheduler<Graph_t> {
         for (const auto &node : nodeList)
             for (unsigned j = 0; j < instance.numberOfProcessors(); ++j) {
 
-                if (use_memory_constraint) {
+                if constexpr (use_memory_constraint) {
 
-                    if (instance.getArchitecture().getMemoryConstraintType() == LOCAL) {
-
-                        if (current_proc_persistent_memory[j] + instance.getComputationalDag().vertex_mem_weight(node) >
-                            instance.getArchitecture().memoryBound(j)) {
-                            continue;
-                        }
-
-                    } else if (instance.getArchitecture().getMemoryConstraintType() == PERSISTENT_AND_TRANSIENT) {
-
-                        if (current_proc_persistent_memory[j] + instance.getComputationalDag().vertex_mem_weight(node) +
-                                std::max(current_proc_transient_memory[j],
-                                         instance.getComputationalDag().vertex_comm_weight(node)) >
-                            instance.getArchitecture().memoryBound(j)) {
-                            continue;
-                        }
+                    if (not memory_constraint.can_add(node, j)) {
+                        continue;
                     }
                 }
 
@@ -284,29 +275,8 @@ class EtfScheduler : public Scheduler<Graph_t> {
     virtual std::pair<RETURN_STATUS, BspSchedule<Graph_t>>
     computeSchedule(const BspInstance<Graph_t> &instance) override {
 
-        if (use_memory_constraint) {
-
-            switch (instance.getArchitecture().getMemoryConstraintType()) {
-
-            case LOCAL:
-                throw std::invalid_argument("Local memory constraint not supported");
-
-            case PERSISTENT_AND_TRANSIENT:
-                current_proc_persistent_memory = std::vector<v_memw_t<Graph_t>>(instance.numberOfProcessors(), 0);
-                current_proc_transient_memory = std::vector<v_commw_t<Graph_t>>(instance.numberOfProcessors(), 0);
-                break;
-
-            case GLOBAL:
-                throw std::invalid_argument("Global memory constraint not supported");
-
-            case NONE:
-                use_memory_constraint = false;
-                std::cerr << "Warning: Memory constraint type set to NONE, ignoring memory constraint" << std::endl;
-                break;
-
-            default:
-                break;
-            }
+        if constexpr (use_memory_constraint) {
+            memory_constraint.initialize(instance);
         }
 
         CSchedule<Graph_t> schedule(instance.numberOfVertices());
@@ -357,15 +327,8 @@ class EtfScheduler : public Scheduler<Graph_t> {
             schedule.time[node] = best_tv.first;
             finishTimes[best_proc] = schedule.time[node] + instance.getComputationalDag().vertex_work_weight(node);
 
-            if (use_memory_constraint) {
-
-                if (instance.getArchitecture().getMemoryConstraintType() == PERSISTENT_AND_TRANSIENT) {
-
-                    current_proc_persistent_memory[best_proc] += instance.getComputationalDag().vertex_mem_weight(node);
-                    current_proc_transient_memory[best_proc] =
-                        std::max(current_proc_transient_memory[best_proc],
-                                 instance.getComputationalDag().vertex_mem_weight(node));
-                }
+            if constexpr (use_memory_constraint) {
+                memory_constraint.add(node, best_proc);
             }
 
             for (const auto &succ : instance.getComputationalDag().children(node)) {
@@ -374,9 +337,11 @@ class EtfScheduler : public Scheduler<Graph_t> {
                     ready.insert({BL[succ], succ});
             }
 
-            if (use_memory_constraint && not check_mem_feasibility(instance, ready)) {
+            if constexpr (use_memory_constraint) {
 
-                return {ERROR, schedule.convertToBspSchedule(instance, greedyProcLists)};
+                if (not check_mem_feasibility(instance, ready)) {
+                    return {ERROR, BspSchedule<Graph_t>()};
+                }
             }
         }
 
