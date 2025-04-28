@@ -25,8 +25,8 @@ limitations under the License.
 #include <stdexcept>
 #include <vector>
 
-#include "SetSchedule.hpp"
 #include "IBspSchedule.hpp"
+#include "SetSchedule.hpp"
 
 namespace osp {
 
@@ -637,7 +637,7 @@ class BspSchedule : public IBspSchedule<Graph_t> {
 
                     v_memw_t<Graph_t> memory = 0;
                     for (const auto &node : set_schedule.step_processor_vertices[step][proc]) {
-                        memory += instance->getComputationalDag().nodeMemoryWeight(node);
+                        memory += instance->getComputationalDag().vertex_mem_weight(node);
                     }
 
                     if (memory > instance->getArchitecture().memoryBound(proc)) {
@@ -656,7 +656,7 @@ class BspSchedule : public IBspSchedule<Graph_t> {
             for (const auto &node : instance->vertices()) {
 
                 const unsigned proc = node_to_processor_assignment[node];
-                current_proc_persistent_memory[proc] += instance->getComputationalDag().nodeMemoryWeight(node);
+                current_proc_persistent_memory[proc] += instance->getComputationalDag().vertex_mem_weight(node);
                 current_proc_transient_memory[proc] = std::max(
                     current_proc_transient_memory[proc], instance->getComputationalDag().vertex_comm_weight(node));
 
@@ -674,7 +674,7 @@ class BspSchedule : public IBspSchedule<Graph_t> {
             for (const auto &node : instance->vertices()) {
 
                 const unsigned proc = node_to_processor_assignment[node];
-                current_proc_memory[proc] += instance->getComputationalDag().nodeMemoryWeight(node);
+                current_proc_memory[proc] += instance->getComputationalDag().vertex_mem_weight(node);
 
                 if (current_proc_memory[proc] > instance->getArchitecture().memoryBound(proc)) {
                     return false;
@@ -692,7 +692,7 @@ class BspSchedule : public IBspSchedule<Graph_t> {
 
                     v_memw_t<Graph_t> memory = 0;
                     for (const auto &node : set_schedule.step_processor_vertices[step][proc]) {
-                        memory += instance->getComputationalDag().nodeMemoryWeight(node) +
+                        memory += instance->getComputationalDag().vertex_mem_weight(node) +
                                   instance->getComputationalDag().vertex_comm_weight(node);
 
                         for (const auto &parent : instance->getComputationalDag().parents(node)) {
@@ -758,8 +758,8 @@ class BspSchedule : public IBspSchedule<Graph_t> {
                     v_memw_t<Graph_t> memory = 0;
                     for (const auto &node : set_schedule.step_processor_vertices[step][proc]) {
 
-                        if (instance->getComputationalDag().isSource(node)) {
-                            memory += instance->getComputationalDag().nodeMemoryWeight(node);
+                        if (is_source(node, instance->getComputationalDag())) {
+                            memory += instance->getComputationalDag().vertex_mem_weight(node);
                         }
 
                         for (const auto &parent : instance->getComputationalDag().parents(node)) {
@@ -917,7 +917,7 @@ class BspSchedule : public IBspSchedule<Graph_t> {
         std::vector<std::vector<unsigned>> first_at = std::vector<std::vector<unsigned>>(
             instance->numberOfVertices(), std::vector<unsigned>(instance->numberOfProcessors(), number_of_supersteps));
 
-        for (const auto& node : instance->vertices()) {
+        for (const auto &node : instance->vertices()) {
             first_at[node][node_to_processor_assignment[node]] = node_to_superstep_assignment[node];
         }
 

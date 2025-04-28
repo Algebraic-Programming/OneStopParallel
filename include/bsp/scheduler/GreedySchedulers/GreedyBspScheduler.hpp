@@ -18,71 +18,19 @@ limitations under the License.
 
 #pragma once
 
-#include <chrono>
+#include <boost/heap/fibonacci_heap.hpp>
 #include <climits>
-#include <list>
-#include <map>
 #include <set>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
-#include <boost/heap/fibonacci_heap.hpp>
-
+#include "MemoryConstraintModules.hpp"
 #include "auxiliary/misc.hpp"
 #include "bsp/scheduler/Scheduler.hpp"
 #include "graph_algorithms/directed_graph_util.hpp"
 
 namespace osp {
-
-struct no_memory_constraint {};
-
-template<typename Graph_t>
-struct local_memory_constraint {
-
-    using Graph_impl_t = Graph_t;
-
-    const BspInstance<Graph_t> *instance;
-
-    std::vector<v_memw_t<Graph_t>> current_proc_memory;
-
-    local_memory_constraint() : instance(nullptr) {}
-
-    void initialize(const BspInstance<Graph_t> &instance_) {
-        instance = &instance_;
-        current_proc_memory = std::vector<v_memw_t<Graph_t>>(instance->numberOfProcessors(), 0);
-
-        if (instance->getArchitecture().getMemoryConstraintType() != LOCAL) {
-            throw std::invalid_argument("Memory constraint type is not LOCAL");
-        }
-    }
-
-    bool operator()(const vertex_idx_t<Graph_t> &v, const unsigned proc) const {
-        return current_proc_memory[proc] + instance->getComputationalDag().vertex_mem_weight(v) <=
-               instance->getArchitecture().memoryBound(proc);
-    }
-
-    void add(const vertex_idx_t<Graph_t> &v, const unsigned proc) {
-        current_proc_memory[proc] += instance->getComputationalDag().vertex_mem_weight(v);
-    }
-
-    void reset(const unsigned proc) { current_proc_memory[proc] = 0; }
-};
-
-template<typename T, typename = void>
-struct is_memory_constraint : std::false_type {};
-
-template<typename T>
-struct is_memory_constraint<
-    T, std::void_t<decltype(std::declval<T>().initialize(std::declval<BspInstance<typename T::Graph_impl_t>>())),
-                   decltype(std::declval<T>().operator()(std::declval<vertex_idx_t<typename T::Graph_impl_t>>(),
-                                                         std::declval<unsigned>())),
-                   decltype(std::declval<T>().add(std::declval<vertex_idx_t<typename T::Graph_impl_t>>(),
-                                                  std::declval<unsigned>())),
-                   decltype(std::declval<T>().reset(std::declval<unsigned>())), decltype(T())>> : std::true_type {};
-
-template<typename T>
-inline constexpr bool is_memory_constraint_v = is_memory_constraint<T>::value;
-
 /**
  * @brief The GreedyBspScheduler class represents a scheduler that uses a greedy algorithm to compute schedules for
  * BspInstance.
@@ -171,7 +119,7 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
 
                 if constexpr (use_memory_constraint) {
 
-                    if (memory_constraint(top_node.node, proc)) {
+                    if (memory_constraint.can_add(top_node.node, proc)) {
 
                         max_score = top_node.score;
                         node = top_node.node;
@@ -215,7 +163,7 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
                     const heap_node &top_node = max_proc_score_heap[i].top();
 
                     // todo check if this is correct
-                    if (memory_constraint(top_node.node, i)) {
+                    if (memory_constraint.can_add(top_node.node, i)) {
                         return true;
                     }
                 } else {
@@ -233,7 +181,7 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
                     const heap_node &top_node = max_all_proc_score_heap[i].top();
 
                     // todo check if this is correct
-                    if (memory_constraint(top_node.node, i)) {
+                    if (memory_constraint.can_add(top_node.node, i)) {
                         return true;
                     }
                 }
@@ -407,7 +355,7 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
                             if constexpr (use_memory_constraint) {
 
                                 if (canAdd) {
-                                    if (not memory_constraint(succ, schedule.assignedProcessor(node)))
+                                    if (not memory_constraint.can_add(succ, schedule.assignedProcessor(node)))
                                         canAdd = false;
                                 }
                             }
@@ -480,7 +428,7 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
 
                     std::vector<VertexType> toErase;
                     for (const auto &node : procReady[nextProc]) {
-                        if (not memory_constraint(node, nextProc)) {
+                        if (not memory_constraint.can_add(node, nextProc)) {
                             toErase.push_back(node);
                         }
                     }

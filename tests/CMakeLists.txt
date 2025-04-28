@@ -52,6 +52,8 @@ _add_test( filereader )
 
 _add_test( bsp_schedulers )
 
+_add_test( bsp_schedulers_mem_const )
+
 _add_test( bsp_improvementschedulers )
 
 _add_test( coarser )
