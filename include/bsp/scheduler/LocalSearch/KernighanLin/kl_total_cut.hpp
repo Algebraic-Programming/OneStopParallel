@@ -323,41 +323,41 @@ class kl_total_cut : public kl_total<Graph_t> {
             if (current_proc == new_proc) {
 
                 for (const auto &out_edge : kl_total<Graph_t>::current_schedule.instance->getComputationalDag().out_edges(node)) {
-                    const auto &target = target(out_edge, kl_total<Graph_t>::current_schedule.instance->getComputationalDag());
+                    const auto &target_v = target(out_edge, kl_total<Graph_t>::current_schedule.instance->getComputationalDag());
 
                     const double loss =
                         (double)kl_total<Graph_t>::current_schedule.instance->getComputationalDag().edge_comm_weight(out_edge) * 1.0 *
                         kl_total<Graph_t>::current_schedule.comm_multiplier;
 
-                    if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(target) == current_step) {
+                    if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(target_v) == current_step) {
 
                         kl_total<Graph_t>::node_gains[node][new_proc][0] -= loss;
                         kl_total<Graph_t>::node_gains[node][new_proc][2] -= loss;
                         kl_total<Graph_t>::node_change_in_costs[node][new_proc][0] += loss;
                         kl_total<Graph_t>::node_change_in_costs[node][new_proc][2] += loss;
 
-                    } else if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(target) == current_step + 1) {
+                    } else if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(target_v) == current_step + 1) {
 
                         kl_total<Graph_t>::node_gains[node][new_proc][2] += loss;
                         kl_total<Graph_t>::node_change_in_costs[node][new_proc][2] -= loss;
 
-                    } else if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(target) == current_step - 1) {
+                    } else if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(target_v) == current_step - 1) {
 
                         kl_total<Graph_t>::node_gains[node][new_proc][0] += loss;
                         kl_total<Graph_t>::node_change_in_costs[node][new_proc][0] -= loss;
                     }
 
-                    if ((current_step + 1 == kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(target) &&
-                         current_proc != kl_total<Graph_t>::current_schedule.vector_schedule.assignedProcessor(target)) ||
-                        (current_step == kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(target) &&
-                         current_proc == kl_total<Graph_t>::current_schedule.vector_schedule.assignedProcessor(target))) {
+                    if ((current_step + 1 == kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(target_v) &&
+                         current_proc != kl_total<Graph_t>::current_schedule.vector_schedule.assignedProcessor(target_v)) ||
+                        (current_step == kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(target_v) &&
+                         current_proc == kl_total<Graph_t>::current_schedule.vector_schedule.assignedProcessor(target_v))) {
 
                         kl_total<Graph_t>::node_gains[node][current_proc][2] -= kl_total<Graph_t>::penalty;
 
-                    } else if ((current_step == kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(target) &&
-                                current_proc != kl_total<Graph_t>::current_schedule.vector_schedule.assignedProcessor(target)) ||
-                               (current_step - 1 == kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(target) &&
-                                current_proc == kl_total<Graph_t>::current_schedule.vector_schedule.assignedProcessor(target))) {
+                    } else if ((current_step == kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(target_v) &&
+                                current_proc != kl_total<Graph_t>::current_schedule.vector_schedule.assignedProcessor(target_v)) ||
+                               (current_step - 1 == kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(target_v) &&
+                                current_proc == kl_total<Graph_t>::current_schedule.vector_schedule.assignedProcessor(target_v))) {
 
                         kl_total<Graph_t>::node_gains[node][current_proc][0] +=
                             (double)kl_total<Graph_t>::current_schedule.instance->getComputationalDag().edge_comm_weight(out_edge) +
@@ -366,41 +366,41 @@ class kl_total_cut : public kl_total<Graph_t> {
                 }
 
                 for (const auto &in_edge : kl_total<Graph_t>::current_schedule.instance->getComputationalDag().in_edges(node)) {
-                    const auto &source = source(in_edge, kl_total<Graph_t>::current_schedule.instance->getComputationalDag());
+                    const auto &source_v = source(in_edge, kl_total<Graph_t>::current_schedule.instance->getComputationalDag());
 
                     const double loss =
                         (double)kl_total<Graph_t>::current_schedule.instance->getComputationalDag().edge_comm_weight(in_edge) * 1.0 *
                         kl_total<Graph_t>::current_schedule.comm_multiplier;
 
-                    if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(source) == current_step) {
+                    if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(source_v) == current_step) {
 
                         kl_total<Graph_t>::node_gains[node][new_proc][0] -= loss;
                         kl_total<Graph_t>::node_gains[node][new_proc][2] -= loss;
                         kl_total<Graph_t>::node_change_in_costs[node][new_proc][0] += loss;
                         kl_total<Graph_t>::node_change_in_costs[node][new_proc][2] += loss;
 
-                    } else if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(source) == current_step + 1) {
+                    } else if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(source_v) == current_step + 1) {
 
                         kl_total<Graph_t>::node_gains[node][new_proc][2] += loss;
                         kl_total<Graph_t>::node_change_in_costs[node][new_proc][2] -= loss;
 
-                    } else if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(source) == current_step - 1) {
+                    } else if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(source_v) == current_step - 1) {
 
                         kl_total<Graph_t>::node_gains[node][new_proc][0] += loss;
                         kl_total<Graph_t>::node_change_in_costs[node][new_proc][0] -= loss;
                     }
 
-                    if ((current_step - 1 == kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(source) &&
-                         current_proc != kl_total<Graph_t>::current_schedule.vector_schedule.assignedProcessor(source)) ||
-                        (current_step == kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(source) &&
-                         current_proc == kl_total<Graph_t>::current_schedule.vector_schedule.assignedProcessor(source))) {
+                    if ((current_step - 1 == kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(source_v) &&
+                         current_proc != kl_total<Graph_t>::current_schedule.vector_schedule.assignedProcessor(source_v)) ||
+                        (current_step == kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(source_v) &&
+                         current_proc == kl_total<Graph_t>::current_schedule.vector_schedule.assignedProcessor(source_v))) {
 
                         kl_total<Graph_t>::node_gains[node][current_proc][0] -= kl_total<Graph_t>::penalty;
 
-                    } else if ((current_step == kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(source) &&
-                                current_proc != kl_total<Graph_t>::current_schedule.vector_schedule.assignedProcessor(source)) ||
-                               (current_step + 1 == kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(source) &&
-                                current_proc == kl_total<Graph_t>::current_schedule.vector_schedule.assignedProcessor(source))) {
+                    } else if ((current_step == kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(source_v) &&
+                                current_proc != kl_total<Graph_t>::current_schedule.vector_schedule.assignedProcessor(source_v)) ||
+                               (current_step + 1 == kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(source_v) &&
+                                current_proc == kl_total<Graph_t>::current_schedule.vector_schedule.assignedProcessor(source_v))) {
 
                         kl_total<Graph_t>::node_gains[node][current_proc][2] +=
                             (double)kl_total<Graph_t>::current_schedule.instance->getComputationalDag().edge_comm_weight(in_edge) + kl_total<Graph_t>::reward;
@@ -412,12 +412,12 @@ class kl_total_cut : public kl_total<Graph_t> {
 
                 for (const auto &out_edge : kl_total<Graph_t>::current_schedule.instance->getComputationalDag().out_edges(node)) {
 
-                    const auto &target = target(out_edge, kl_total<Graph_t>::current_schedule.instance->getComputationalDag());
-                    const unsigned &target_proc = kl_total<Graph_t>::current_schedule.vector_schedule.assignedProcessor(target);
+                    const auto &target_v = target(out_edge, kl_total<Graph_t>::current_schedule.instance->getComputationalDag());
+                    const unsigned &target_proc = kl_total<Graph_t>::current_schedule.vector_schedule.assignedProcessor(target_v);
 
                     if (target_proc == current_proc) {
 
-                        if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(target) == current_step) {
+                        if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(target_v) == current_step) {
 
                             const double loss =
                                 (double)kl_total<Graph_t>::current_schedule.instance->getComputationalDag().edge_comm_weight(out_edge) *
@@ -433,12 +433,12 @@ class kl_total_cut : public kl_total<Graph_t> {
                             kl_total<Graph_t>::node_change_in_costs[node][new_proc][2] += loss;
                         }
 
-                        if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(target) == current_step) {
+                        if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(target_v) == current_step) {
 
                             kl_total<Graph_t>::node_gains[node][new_proc][1] -= kl_total<Graph_t>::penalty;
                             kl_total<Graph_t>::node_gains[node][new_proc][2] -= kl_total<Graph_t>::penalty;
 
-                        } else if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(target) == current_step + 1) {
+                        } else if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(target_v) == current_step + 1) {
 
                             kl_total<Graph_t>::node_gains[node][new_proc][2] -= kl_total<Graph_t>::penalty;
                         }
@@ -450,19 +450,19 @@ class kl_total_cut : public kl_total<Graph_t> {
                             kl_total<Graph_t>::current_schedule.instance->communicationCosts(current_proc, target_proc) *
                             kl_total<Graph_t>::current_schedule.comm_multiplier;
 
-                        if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(target) == current_step) {
+                        if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(target_v) == current_step) {
                             kl_total<Graph_t>::node_gains[node][new_proc][1] += gain;
                             kl_total<Graph_t>::node_change_in_costs[node][new_proc][1] -= gain;
 
-                        } else if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(target) == current_step + 1) {
+                        } else if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(target_v) == current_step + 1) {
                             kl_total<Graph_t>::node_gains[node][new_proc][2] += gain;
                             kl_total<Graph_t>::node_change_in_costs[node][new_proc][2] -= gain;
-                        } else if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(target) == current_step - 1) {
+                        } else if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(target_v) == current_step - 1) {
                             kl_total<Graph_t>::node_gains[node][new_proc][0] += gain;
                             kl_total<Graph_t>::node_change_in_costs[node][new_proc][0] -= gain;
                         }
 
-                        if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(target) == current_step) {
+                        if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(target_v) == current_step) {
 
                             kl_total<Graph_t>::node_gains[node][new_proc][1] +=
                                 (double)kl_total<Graph_t>::current_schedule.instance->getComputationalDag().edge_comm_weight(out_edge) +
@@ -471,7 +471,7 @@ class kl_total_cut : public kl_total<Graph_t> {
                                 (double)kl_total<Graph_t>::current_schedule.instance->getComputationalDag().edge_comm_weight(out_edge) +
                                 kl_total<Graph_t>::reward;
 
-                        } else if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(target) == current_step - 1) {
+                        } else if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(target_v) == current_step - 1) {
 
                             kl_total<Graph_t>::node_gains[node][new_proc][0] +=
                                 (double)kl_total<Graph_t>::current_schedule.instance->getComputationalDag().edge_comm_weight(out_edge) +
@@ -496,10 +496,10 @@ class kl_total_cut : public kl_total<Graph_t> {
                         kl_total<Graph_t>::node_change_in_costs[node][new_proc][1] -= gain;
                         kl_total<Graph_t>::node_change_in_costs[node][new_proc][2] -= gain;
 
-                        if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(target) == current_step + 1) {
+                        if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(target_v) == current_step + 1) {
 
                             kl_total<Graph_t>::node_gains[node][new_proc][2] -= kl_total<Graph_t>::penalty;
-                        } else if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(target) == current_step) {
+                        } else if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(target_v) == current_step) {
 
                             kl_total<Graph_t>::node_gains[node][new_proc][0] +=
                                 (double)kl_total<Graph_t>::current_schedule.instance->getComputationalDag().edge_comm_weight(out_edge) +
@@ -509,12 +509,12 @@ class kl_total_cut : public kl_total<Graph_t> {
                 }
 
                 for (const auto &in_edge : kl_total<Graph_t>::current_schedule.instance->getComputationalDag().in_edges(node)) {
-                    const auto &source = source(in_edge, kl_total<Graph_t>::current_schedule.instance->getComputationalDag());
+                    const auto &source_v = source(in_edge, kl_total<Graph_t>::current_schedule.instance->getComputationalDag());
 
-                    const unsigned &source_proc = kl_total<Graph_t>::current_schedule.vector_schedule.assignedProcessor(source);
+                    const unsigned &source_proc = kl_total<Graph_t>::current_schedule.vector_schedule.assignedProcessor(source_v);
                     if (source_proc == current_proc) {
 
-                        if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(source) == current_step) {
+                        if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(source_v) == current_step) {
 
                             const double loss =
                                 (double)kl_total<Graph_t>::current_schedule.instance->getComputationalDag().edge_comm_weight(in_edge) *
@@ -530,12 +530,12 @@ class kl_total_cut : public kl_total<Graph_t> {
                             kl_total<Graph_t>::node_change_in_costs[node][new_proc][2] += loss;
                         }
 
-                        if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(source) == current_step) {
+                        if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(source_v) == current_step) {
 
                             kl_total<Graph_t>::node_gains[node][new_proc][0] -= kl_total<Graph_t>::penalty;
                             kl_total<Graph_t>::node_gains[node][new_proc][1] -= kl_total<Graph_t>::penalty;
 
-                        } else if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(source) == current_step - 1) {
+                        } else if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(source_v) == current_step - 1) {
 
                             kl_total<Graph_t>::node_gains[node][new_proc][0] -= kl_total<Graph_t>::penalty;
                         }
@@ -547,19 +547,19 @@ class kl_total_cut : public kl_total<Graph_t> {
                             kl_total<Graph_t>::current_schedule.instance->communicationCosts(current_proc, new_proc) *
                             kl_total<Graph_t>::current_schedule.comm_multiplier;
 
-                        if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(source) == current_step) {
+                        if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(source_v) == current_step) {
                             kl_total<Graph_t>::node_gains[node][new_proc][1] += gain;
                             kl_total<Graph_t>::node_change_in_costs[node][new_proc][1] -= gain;
 
-                        } else if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(source) == current_step - 1) {
+                        } else if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(source_v) == current_step - 1) {
                             kl_total<Graph_t>::node_gains[node][new_proc][0] += gain;
                             kl_total<Graph_t>::node_change_in_costs[node][new_proc][0] -= gain;
-                        } else if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(source) == current_step + 1) {
+                        } else if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(source_v) == current_step + 1) {
                             kl_total<Graph_t>::node_gains[node][new_proc][2] += gain;
                             kl_total<Graph_t>::node_change_in_costs[node][new_proc][2] -= gain;
                         }
 
-                        if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(source) == current_step) {
+                        if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(source_v) == current_step) {
 
                             kl_total<Graph_t>::node_gains[node][new_proc][1] +=
                                 (double)kl_total<Graph_t>::current_schedule.instance->getComputationalDag().edge_comm_weight(in_edge) +
@@ -569,7 +569,7 @@ class kl_total_cut : public kl_total<Graph_t> {
                                 (double)kl_total<Graph_t>::current_schedule.instance->getComputationalDag().edge_comm_weight(in_edge) +
                                 kl_total<Graph_t>::reward;
 
-                        } else if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(source) == current_step + 1) {
+                        } else if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(source_v) == current_step + 1) {
 
                             kl_total<Graph_t>::node_gains[node][new_proc][2] +=
                                 (double)kl_total<Graph_t>::current_schedule.instance->getComputationalDag().edge_comm_weight(in_edge) +
@@ -593,11 +593,11 @@ class kl_total_cut : public kl_total<Graph_t> {
                         kl_total<Graph_t>::node_change_in_costs[node][new_proc][1] -= gain;
                         kl_total<Graph_t>::node_change_in_costs[node][new_proc][2] -= gain;
 
-                        if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(source) == current_step - 1) {
+                        if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(source_v) == current_step - 1) {
 
                             kl_total<Graph_t>::node_gains[node][new_proc][0] -= kl_total<Graph_t>::penalty;
 
-                        } else if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(source) == current_step) {
+                        } else if (kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(source_v) == current_step) {
 
                             kl_total<Graph_t>::node_gains[node][new_proc][2] +=
                                 (double)kl_total<Graph_t>::current_schedule.instance->getComputationalDag().edge_comm_weight(in_edge) +
@@ -619,17 +619,17 @@ class kl_total_cut : public kl_total<Graph_t> {
         double comm_costs = 0;
         for (const auto &edge : kl_total<Graph_t>::current_schedule.instance->getComputationalDag().edges()) {
 
-            const unsigned &source = source(edge, kl_total<Graph_t>::current_schedule.instance->getComputationalDag());
-            const unsigned &target = target(edge, kl_total<Graph_t>::current_schedule.instance->getComputationalDag());
-            const unsigned &source_proc = kl_total<Graph_t>::current_schedule.vector_schedule.assignedProcessor(source);
-            const unsigned &target_proc = kl_total<Graph_t>::current_schedule.vector_schedule.assignedProcessor(target);
-            const unsigned &source_step = kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(source);
-            const unsigned &target_step = kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(target);
+            const vertex_idx_t<Graph_t> &source_v = source(edge, kl_total<Graph_t>::current_schedule.instance->getComputationalDag());
+            const vertex_idx_t<Graph_t> &target_v = target(edge, kl_total<Graph_t>::current_schedule.instance->getComputationalDag());
+            const unsigned &source_proc = kl_total<Graph_t>::current_schedule.vector_schedule.assignedProcessor(source_v);
+            const unsigned &target_proc = kl_total<Graph_t>::current_schedule.vector_schedule.assignedProcessor(target_v);
+            const unsigned &source_step = kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(source_v);
+            const unsigned &target_step = kl_total<Graph_t>::current_schedule.vector_schedule.assignedSuperstep(target_v);
 
             if (source_proc != target_proc || source_step != target_step) {
 
                 if (kl_total<Graph_t>::current_schedule.use_node_communication_costs) {
-                    comm_costs += kl_total<Graph_t>::current_schedule.instance->getComputationalDag().vertex_comm_weight(source) *
+                    comm_costs += kl_total<Graph_t>::current_schedule.instance->getComputationalDag().vertex_comm_weight(source_v) *
                                   kl_total<Graph_t>::current_schedule.instance->communicationCosts(source_proc, target_proc);
                 } else {
                     comm_costs += kl_total<Graph_t>::current_schedule.instance->getComputationalDag().edge_comm_weight(edge) *
@@ -640,7 +640,7 @@ class kl_total_cut : public kl_total<Graph_t> {
 
         kl_total<Graph_t>::current_schedule.current_cost =
             work_costs + comm_costs * kl_total<Graph_t>::current_schedule.comm_multiplier +
-            (kl_total<Graph_t>::current_schedule.num_steps() - 1) * kl_total<Graph_t>::current_schedule.instance->synchronisationCosts();
+            (kl_total<Graph_t>::current_schedule.num_steps() - 1) * static_cast<double>(kl_total<Graph_t>::current_schedule.instance->synchronisationCosts());
 
         return kl_total<Graph_t>::current_schedule.current_cost;
     }
@@ -703,7 +703,7 @@ class kl_total_cut_test : public kl_total_cut<Graph_t> {
 
         bool improvement_found = kl_total<Graph_t>::run_local_search_simple();
 
-        assert(best_schedule->satisfiesPrecedenceConstraints());
+        assert(kl_total<Graph_t>::best_schedule->satisfiesPrecedenceConstraints());
 
         schedule.setImprovedLazyCommunicationSchedule();
 
@@ -726,7 +726,7 @@ class kl_total_cut_test : public kl_total_cut<Graph_t> {
 
         bool improvement_found = kl_total<Graph_t>::run_local_search_unlock_delay();
 
-        assert(best_schedule->satisfiesPrecedenceConstraints());
+        assert(kl_total<Graph_t>::best_schedule->satisfiesPrecedenceConstraints());
 
         schedule.setImprovedLazyCommunicationSchedule();
 

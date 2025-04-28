@@ -106,8 +106,8 @@ cmake-*
 Makefile
 *.marks
 .vscode/*
-!.vscode/launch.json
-!.vscode/tasks.json
+#!.vscode/launch.json
+#!.vscode/tasks.json
 #Latex files to ignore
 tex_notes/*.pdf
 tex_notes/*.synctex.gz

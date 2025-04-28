@@ -16,7 +16,7 @@
 using namespace osp;
 
 std::vector<std::string> test_graphs() {
-    return {"data/spaa/tiny/instance_bicgstab.txt", "data/spaa/tiny/instance_CG_N2_K2_nzP0d75.txt"};
+    return {"data/spaa/tiny/instance_k-means.txt", "data/spaa/tiny/instance_bicgstab.txt", "data/spaa/tiny/instance_CG_N2_K2_nzP0d75.txt"};
 }
 
 std::vector<std::string> test_architectures() { return {"data/machine_params/p3.txt"}; }

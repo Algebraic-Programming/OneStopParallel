@@ -2031,7 +2031,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
 
         } else {
 
-            parameters.max_outer_iterations = static_cast<unsigned>(std::min(10000.0,std::log(num_nodes)));
+            parameters.max_outer_iterations = static_cast<unsigned>(std::min(10000.0, std::log(num_nodes)));
 
             parameters.selection_threshold = num_nodes / 10;
         }
@@ -2772,7 +2772,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
             }
 #endif
 
-            //unsigned conseq_no_gain_moves_counter = 0;
+            // unsigned conseq_no_gain_moves_counter = 0;
 
             unsigned failed_branches = 0;
             double best_iter_costs = current_schedule.current_cost;
@@ -2909,7 +2909,8 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
 
                 update_node_gains(nodes_to_update);
 
-                if (not(current_schedule.current_violations.size() > 4) && not iter_feasible) {
+                if (not(current_schedule.current_violations.size() > 4) && not iter_feasible &&
+                    not max_gain_heap.empty()) {
                     const auto &iter = max_gain_heap.ordered_begin();
                     if (iter->gain < parameters.gain_threshold) {
 

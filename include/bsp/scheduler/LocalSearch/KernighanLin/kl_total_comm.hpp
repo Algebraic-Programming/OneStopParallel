@@ -708,7 +708,7 @@ class kl_total_comm_test : public kl_total_comm<Graph_t> {
 
         bool improvement_found = kl_total<Graph_t>::run_local_search_simple();
 
-        assert(best_schedule->satisfiesPrecedenceConstraints());
+        assert(kl_total<Graph_t>::best_schedule->satisfiesPrecedenceConstraints());
 
         schedule.setImprovedLazyCommunicationSchedule();
 
@@ -731,7 +731,7 @@ class kl_total_comm_test : public kl_total_comm<Graph_t> {
 
         bool improvement_found = kl_total<Graph_t>::run_local_search_unlock_delay();
 
-        assert(best_schedule->satisfiesPrecedenceConstraints());
+        assert(kl_total<Graph_t>::best_schedule->satisfiesPrecedenceConstraints());
 
         schedule.setImprovedLazyCommunicationSchedule();
 
