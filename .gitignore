@@ -128,3 +128,15 @@ data/florida_spd_sparse/large/*
 data/florida_spd_sparse/medium/*
 data/erdos_renyi/*
 data/random_band_matrices/*
+
+# Data
+data/*
+!data/.gitignore
+!data/machine_params
+!data/mtx_tests
+!data/spaa
+data/spaa/*
+!data/spaa/small
+!data/spaa/test
+!data/spaa/tiny
+!data/spaa/graph_spaa_stats.txt
