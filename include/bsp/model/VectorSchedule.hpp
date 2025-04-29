@@ -19,12 +19,16 @@ limitations under the License.
 #pragma once
 
 #include "IBspSchedule.hpp"
+#include "concepts/computational_dag_concept.hpp"
 #include <vector>
 
 namespace osp {
 
 template<typename Graph_t>
 class VectorSchedule : public IBspSchedule<Graph_t> {
+
+    static_assert(is_computational_dag_v<Graph_t>,
+        "BspSchedule can only be used with computational DAGs.");
 
   private:
     const BspInstance<Graph_t> *instance;

@@ -27,6 +27,7 @@ limitations under the License.
 
 #include "IBspSchedule.hpp"
 #include "SetSchedule.hpp"
+#include "concepts/computational_dag_concept.hpp"
 
 namespace osp {
 
@@ -50,6 +51,10 @@ namespace osp {
  */
 template<typename Graph_t>
 class BspSchedule : public IBspSchedule<Graph_t> {
+
+    static_assert(is_computational_dag_v<Graph_t>,
+                  "BspSchedule can only be used with computational DAGs.");
+
   public:
     using KeyTriple = std::tuple<vertex_idx_t<Graph_t>, unsigned int, unsigned int>;
 
@@ -158,6 +163,8 @@ class BspSchedule : public IBspSchedule<Graph_t> {
             }
         }
     }
+
+   
 
     /**
      * @brief Returns the superstep assigned to the specified node.

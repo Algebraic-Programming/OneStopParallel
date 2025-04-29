@@ -19,6 +19,7 @@ limitations under the License.
 #pragma once
 
 #include "IBspSchedule.hpp"
+#include "concepts/computational_dag_concept.hpp"
 
 namespace osp {
 
@@ -38,6 +39,10 @@ namespace osp {
  */
 template<typename Graph_t>
 class SetSchedule : public IBspSchedule<Graph_t> {
+
+    static_assert(is_computational_dag_v<Graph_t>,
+        "BspSchedule can only be used with computational DAGs.");
+
   private:
     using vertex_idx = vertex_idx_t<Graph_t>;
 

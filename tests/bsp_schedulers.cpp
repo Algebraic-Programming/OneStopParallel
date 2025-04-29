@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include "bsp/scheduler/GreedySchedulers/BspLocking.hpp"
 #include "bsp/scheduler/GreedySchedulers/CilkScheduler.hpp"
 #include "bsp/scheduler/GreedySchedulers/EtfScheduler.hpp"
 #include "bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
@@ -96,7 +97,6 @@ BOOST_AUTO_TEST_CASE(cilk_test_1) {
     run_test(&test);
 }
 
-
 BOOST_AUTO_TEST_CASE(cilk_test_2) {
 
     CilkScheduler<computational_dag_vector_impl_def_t> test;
@@ -107,6 +107,12 @@ BOOST_AUTO_TEST_CASE(cilk_test_2) {
 BOOST_AUTO_TEST_CASE(etf_test) {
 
     EtfScheduler<computational_dag_vector_impl_def_t> test;
+    run_test(&test);
+}
+
+BOOST_AUTO_TEST_CASE(locking_test) {
+
+    BspLocking<computational_dag_vector_impl_def_t> test;
     run_test(&test);
 }
 

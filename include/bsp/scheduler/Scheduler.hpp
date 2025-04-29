@@ -25,6 +25,7 @@ limitations under the License.
 
 #include "bsp/model/BspInstance.hpp"
 #include "bsp/model/BspSchedule.hpp"
+#include "concepts/computational_dag_concept.hpp"
 
 namespace osp {
 
@@ -54,6 +55,8 @@ inline std::string to_string(const RETURN_STATUS status) {
  */
 template<typename Graph_t>
 class Scheduler {
+
+    static_assert(is_computational_dag_v<Graph_t>, "BspSchedule can only be used with computational DAGs.");
 
   protected:
     unsigned int timeLimitSeconds; /**< The time limit in seconds for computing a schedule. */
@@ -136,7 +139,6 @@ class Scheduler {
     //         return std::make_pair(ERROR, BspSchedule<Graph_t>());
     //     }
     // }
-   
 };
 
 } // namespace osp

@@ -29,6 +29,7 @@ limitations under the License.
 
 #include "auxiliary/misc.hpp"
 #include "concepts/graph_traits.hpp"
+#include "concepts/computational_dag_concept.hpp"
 
 namespace osp {
 
@@ -52,6 +53,9 @@ enum MEMORY_CONSTRAINT_TYPE {
  */
 template<typename Graph_t>
 class BspArchitecture {
+
+    static_assert(is_computational_dag_v<Graph_t>,
+        "BspSchedule can only be used with computational DAGs.");
 
   private:
     unsigned number_processors;

@@ -18,13 +18,11 @@ limitations under the License.
 
 #pragma once
 
-
 #include <iostream>
 
 #include "BspArchitecture.hpp"
 #include "concepts/computational_dag_concept.hpp"
 #include "graph_algorithms/computational_dag_util.hpp"
-
 
 namespace osp {
 
@@ -38,6 +36,8 @@ namespace osp {
  */
 template<typename Graph_t>
 class BspInstance {
+
+    static_assert(is_computational_dag_v<Graph_t>, "BspSchedule can only be used with computational DAGs.");
 
   private:
     Graph_t cdag;
@@ -99,7 +99,7 @@ class BspInstance {
 
     inline std::size_t numberOfVertices() const { return cdag.num_vertices(); }
 
-    inline auto vertices() const {return cdag.vertices(); }
+    inline auto vertices() const { return cdag.vertices(); }
 
     /**
      * @brief Returns the number of processors in the BSP architecture.
@@ -131,7 +131,9 @@ class BspInstance {
      *
      * @return The send costs between the two processors.
      */
-    inline v_commw_t<Graph_t> sendCosts(unsigned int p1, unsigned int p2) const { return architecture.sendCosts(p1, p2); }
+    inline v_commw_t<Graph_t> sendCosts(unsigned int p1, unsigned int p2) const {
+        return architecture.sendCosts(p1, p2);
+    }
 
     /**
      * @brief Returns a copy of the send costs matrix.
@@ -165,7 +167,9 @@ class BspInstance {
 
     inline v_memw_t<Graph_t> memoryBound(unsigned proc) const { return architecture.memoryBound(proc); }
 
-    v_memw_t<Graph_t> maxMemoryBoundProcType(unsigned procType) const { return architecture.maxMemoryBoundProcType(procType); }
+    v_memw_t<Graph_t> maxMemoryBoundProcType(unsigned procType) const {
+        return architecture.maxMemoryBoundProcType(procType);
+    }
 
     v_memw_t<Graph_t> maxMemoryBoundNodeType(unsigned nodeType) const {
         int max_mem = 0;
