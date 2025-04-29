@@ -18,7 +18,7 @@ limitations under the License.
 
 #pragma once
 
-#include "bsp/model/BspInstance.hpp"
+#include "bsp/model/BspSchedule.hpp"
 
 namespace osp {
 
@@ -87,12 +87,22 @@ struct local_memory_constraint {
 };
 
 /**
+ * @brief A memory constraint module for local memory constraints.
+ *
+ * @tparam Graph_t The graph type.
+ */
+
+/**
  * @brief A memory constraint module for persistent and transient memory constraints.
  *
  * @tparam Graph_t The graph type.
  */
 template<typename Graph_t>
 struct persistent_transient_memory_constraint {
+
+    static_assert(
+        std::is_convertible_v<v_commw_t<Graph_t>, v_memw_t<Graph_t>>,
+        "persistent_transient_memory_constraint requires that memory and communication weights are convertible.");
 
     using Graph_impl_t = Graph_t;
 
@@ -130,6 +140,80 @@ struct persistent_transient_memory_constraint {
     }
 
     inline void reset(const unsigned) {}
+};
+
+template<typename T, typename = void>
+struct is_memory_constraint_schedule : std::false_type {};
+
+template<typename T>
+struct is_memory_constraint_schedule<
+    T, std::void_t<decltype(std::declval<T>().initialize(std::declval<BspSchedule<typename T::Graph_impl_t>>())),
+                   decltype(std::declval<T>().can_add(std::declval<vertex_idx_t<typename T::Graph_impl_t>>(),
+                                                      std::declval<unsigned>(), std::declval<unsigned>())),
+                   decltype(std::declval<T>().add(std::declval<vertex_idx_t<typename T::Graph_impl_t>>(),
+                                                  std::declval<unsigned>(), std::declval<unsigned>())),
+                   decltype(std::declval<T>().reset(std::declval<unsigned>())), decltype(T())>> : std::true_type {};
+
+template<typename T>
+inline constexpr bool is_memory_constraint_schedule_v = is_memory_constraint_schedule<T>::value;
+
+template<typename Graph_t>
+struct local_in_out_memory_constraint {
+
+    static_assert(std::is_convertible_v<v_commw_t<Graph_t>, v_memw_t<Graph_t>>,
+                  "local_in_out_memory_constraint requires that memory and communication weights are convertible.");
+
+    using Graph_impl_t = Graph_t;
+
+    const BspInstance<Graph_t> *instance;
+    const BspSchedule<Graph_t> *schedule;
+
+    std::vector<v_memw_t<Graph_t>> current_proc_memory;
+
+    local_in_out_memory_constraint() : instance(nullptr), schedule(nullptr) {}
+
+    inline void initialize(const BspSchedule<Graph_t> &schedule_) {
+        schedule = &schedule_;
+        instance = &schedule->getInstance();
+        current_proc_memory = std::vector<v_memw_t<Graph_t>>(instance->numberOfProcessors(), 0);
+
+        if (instance->getArchitecture().getMemoryConstraintType() != LOCAL_IN_OUT) {
+            throw std::invalid_argument("Memory constraint type is not LOCAL_IN_OUT");
+        }
+    }
+
+    inline bool can_add(const vertex_idx_t<Graph_t> &v, const unsigned proc, const unsigned supstepIdx) const {
+
+        v_memw_t<Graph_t> inc_memory = instance->getComputationalDag().vertex_mem_weight(v) +
+                                       instance->getComputationalDag().vertex_comm_weight(v);
+
+        for (const auto &pred : instance->getComputationalDag().parents(v)) {
+
+            if (schedule->assignedProcessor(pred) == schedule->assignedProcessor(v) &&
+                schedule->assignedSuperstep(pred) == supstepIdx) {
+                inc_memory -= instance->getComputationalDag().vertex_comm_weight(pred);
+            }
+        }
+
+        return current_proc_memory[proc] + inc_memory <= instance->getArchitecture().memoryBound(proc);
+    }
+
+    inline void add(const vertex_idx_t<Graph_t> &v, const unsigned proc, const unsigned supstepIdx) {
+
+        current_proc_memory[proc] += instance->getComputationalDag().vertex_mem_weight(v) +
+                                                instance->getComputationalDag().vertex_comm_weight(v);
+
+        for (const auto &pred : instance->getComputationalDag().parents(v)) {
+
+            if (schedule->assignedProcessor(pred) == schedule->assignedProcessor(v) &&
+                schedule->assignedSuperstep(pred) == supstepIdx) {
+                    current_proc_memory[proc] -= instance->getComputationalDag().vertex_comm_weight(pred);
+            }
+        }
+  
+    }
+
+    inline void reset(const unsigned proc) { current_proc_memory[proc] = 0; }
 };
 
 } // namespace osp

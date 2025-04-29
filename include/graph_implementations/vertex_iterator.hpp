@@ -23,22 +23,25 @@ namespace osp {
 
 template<typename T>
 class vertex_range {
-    T num_vertices;
+
+    T start;
+    T finish;
 
     class vertex_iterator {
         T current;
+
       public:
         using iterator_category = std::forward_iterator_tag;
         using value_type = T;
         using difference_type = std::ptrdiff_t;
-        using pointer = const T*;
-        using reference = const T&;
+        using pointer = const T *;
+        using reference = const T &;
 
         explicit vertex_iterator(T start) : current(start) {}
 
         T operator*() const { return current; }
 
-        vertex_iterator& operator++() {
+        vertex_iterator &operator++() {
             ++current;
             return *this;
         }
@@ -49,25 +52,19 @@ class vertex_range {
             return temp;
         }
 
-        bool operator==(const vertex_iterator& other) const {
-            return current == other.current;
-        }
+        bool operator==(const vertex_iterator &other) const { return current == other.current; }
 
-        bool operator!=(const vertex_iterator& other) const {
-            return !(*this == other);
-        }
+        bool operator!=(const vertex_iterator &other) const { return !(*this == other); }
     };
 
   public:
-    vertex_range(T num_vertices_) : num_vertices(num_vertices_) {}
+    vertex_range(T end_) : start(0), finish(end_) {}
+    vertex_range(T start_, T end_) : start(start_), finish(end_) {}
 
-    auto begin() const {
-        return vertex_iterator(0);
-    }
+    auto begin() const { return vertex_iterator(start); }
 
-    auto end() const {
-        return vertex_iterator(num_vertices);
-    }
+    auto end() const { return vertex_iterator(finish); }
+
 };
 
 } // namespace osp
