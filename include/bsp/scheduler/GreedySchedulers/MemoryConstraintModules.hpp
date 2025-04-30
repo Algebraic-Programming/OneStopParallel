@@ -147,11 +147,12 @@ struct is_memory_constraint_schedule : std::false_type {};
 
 template<typename T>
 struct is_memory_constraint_schedule<
-    T, std::void_t<decltype(std::declval<T>().initialize(std::declval<BspSchedule<typename T::Graph_impl_t>>())),
+    T, std::void_t<decltype(std::declval<T>().initialize(std::declval<BspSchedule<typename T::Graph_impl_t>>(),
+                                                         std::declval<unsigned>())),
                    decltype(std::declval<T>().can_add(std::declval<vertex_idx_t<typename T::Graph_impl_t>>(),
-                                                      std::declval<unsigned>(), std::declval<unsigned>())),
+                                                      std::declval<unsigned>())),
                    decltype(std::declval<T>().add(std::declval<vertex_idx_t<typename T::Graph_impl_t>>(),
-                                                  std::declval<unsigned>(), std::declval<unsigned>())),
+                                                  std::declval<unsigned>())),
                    decltype(std::declval<T>().reset(std::declval<unsigned>())), decltype(T())>> : std::true_type {};
 
 template<typename T>
@@ -168,11 +169,14 @@ struct local_in_out_memory_constraint {
     const BspInstance<Graph_t> *instance;
     const BspSchedule<Graph_t> *schedule;
 
+    const unsigned *current_superstep = 0;
+
     std::vector<v_memw_t<Graph_t>> current_proc_memory;
 
     local_in_out_memory_constraint() : instance(nullptr), schedule(nullptr) {}
 
-    inline void initialize(const BspSchedule<Graph_t> &schedule_) {
+    inline void initialize(const BspSchedule<Graph_t> &schedule_, const unsigned &supstepIdx) {
+        current_superstep = &supstepIdx;
         schedule = &schedule_;
         instance = &schedule->getInstance();
         current_proc_memory = std::vector<v_memw_t<Graph_t>>(instance->numberOfProcessors(), 0);
@@ -182,7 +186,7 @@ struct local_in_out_memory_constraint {
         }
     }
 
-    inline bool can_add(const vertex_idx_t<Graph_t> &v, const unsigned proc, const unsigned supstepIdx) const {
+    inline bool can_add(const vertex_idx_t<Graph_t> &v, const unsigned proc) const {
 
         v_memw_t<Graph_t> inc_memory = instance->getComputationalDag().vertex_mem_weight(v) +
                                        instance->getComputationalDag().vertex_comm_weight(v);
@@ -190,7 +194,7 @@ struct local_in_out_memory_constraint {
         for (const auto &pred : instance->getComputationalDag().parents(v)) {
 
             if (schedule->assignedProcessor(pred) == schedule->assignedProcessor(v) &&
-                schedule->assignedSuperstep(pred) == supstepIdx) {
+                schedule->assignedSuperstep(pred) == *current_superstep) {
                 inc_memory -= instance->getComputationalDag().vertex_comm_weight(pred);
             }
         }
@@ -198,19 +202,18 @@ struct local_in_out_memory_constraint {
         return current_proc_memory[proc] + inc_memory <= instance->getArchitecture().memoryBound(proc);
     }
 
-    inline void add(const vertex_idx_t<Graph_t> &v, const unsigned proc, const unsigned supstepIdx) {
+    inline void add(const vertex_idx_t<Graph_t> &v, const unsigned proc) {
 
         current_proc_memory[proc] += instance->getComputationalDag().vertex_mem_weight(v) +
-                                                instance->getComputationalDag().vertex_comm_weight(v);
+                                     instance->getComputationalDag().vertex_comm_weight(v);
 
         for (const auto &pred : instance->getComputationalDag().parents(v)) {
 
             if (schedule->assignedProcessor(pred) == schedule->assignedProcessor(v) &&
-                schedule->assignedSuperstep(pred) == supstepIdx) {
-                    current_proc_memory[proc] -= instance->getComputationalDag().vertex_comm_weight(pred);
+                schedule->assignedSuperstep(pred) == *current_superstep) {
+                current_proc_memory[proc] -= instance->getComputationalDag().vertex_comm_weight(pred);
             }
         }
-  
     }
 
     inline void reset(const unsigned proc) { current_proc_memory[proc] = 0; }

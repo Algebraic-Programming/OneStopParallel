@@ -128,7 +128,7 @@ class BspLocking : public Scheduler<Graph_t> {
     bool check_mem_feasibility(const BspInstance<Graph_t> &instance, const std::set<VertexType> &allReady,
                                const std::vector<std::set<VertexType>> &procReady) const {
 
-        if constexpr (is_memory_constraint_v<MemoryConstraint_t>) {
+        if constexpr (use_memory_constraint) {
 
             if (instance.getArchitecture().getMemoryConstraintType() == PERSISTENT_AND_TRANSIENT) {
 
@@ -162,8 +162,7 @@ class BspLocking : public Scheduler<Graph_t> {
 
     bool Choose(const BspInstance<Graph_t> &instance, std::set<VertexType> &allReady,
                 std::vector<std::set<VertexType>> &procReady, const std::vector<bool> &procFree, VertexType &node,
-                unsigned &p, const bool endSupStep, const v_workw_t<Graph_t> remaining_time,
-                unsigned current_superstep) {
+                unsigned &p, const bool endSupStep, const v_workw_t<Graph_t> remaining_time) {
 
         for (unsigned proc = 0; proc < instance.numberOfProcessors(); ++proc) {
 
@@ -235,20 +234,11 @@ class BspLocking : public Scheduler<Graph_t> {
 
                 if constexpr (use_memory_constraint) {
 
-                    if constexpr (is_memory_constraint_schedule_v<MemoryConstraint_t>) {
-                        if (memory_constraint.can_add(top_node.node, proc, current_superstep)) {
+                    if (memory_constraint.can_add(top_node.node, proc)) {
 
-                            best_node = top_node;
-                            node = top_node.node;
-                            p = proc;
-                        }
-                    } else if constexpr (is_memory_constraint_v<MemoryConstraint_t>) {
-                        if (memory_constraint.can_add(top_node.node, proc)) {
-
-                            best_node = top_node;
-                            node = top_node.node;
-                            p = proc;
-                        }
+                        best_node = top_node;
+                        node = top_node.node;
+                        p = proc;
                     }
 
                 } else {
@@ -323,10 +313,12 @@ class BspLocking : public Scheduler<Graph_t> {
             instance, std::vector<unsigned>(instance.numberOfVertices(), std::numeric_limits<unsigned>::max()),
             std::vector<unsigned>(instance.numberOfVertices(), 0));
 
+        unsigned supstepIdx = 0;
+
         if constexpr (is_memory_constraint_v<MemoryConstraint_t>) {
             memory_constraint.initialize(instance);
         } else if constexpr (is_memory_constraint_schedule_v<MemoryConstraint_t>) {
-            memory_constraint.initialize(schedule);
+            memory_constraint.initialize(schedule, supstepIdx);
         }
 
         const auto &N = instance.numberOfVertices();
@@ -387,7 +379,6 @@ class BspLocking : public Scheduler<Graph_t> {
             }
         }
 
-        unsigned supstepIdx = 0;
         bool endSupStep = false;
 
         while (!ready.empty() || !finishTimes.empty()) {
@@ -461,17 +452,10 @@ class BspLocking : public Scheduler<Graph_t> {
                                 }
                             }
 
-                            if constexpr (is_memory_constraint_v<MemoryConstraint_t>) {
+                            if constexpr (use_memory_constraint) {
 
                                 if (canAdd) {
                                     if (not memory_constraint.can_add(succ, schedule.assignedProcessor(node)))
-                                        canAdd = false;
-                                }
-                            } else if constexpr (is_memory_constraint_schedule_v<MemoryConstraint_t>) {
-
-                                if (canAdd) {
-                                    if (not memory_constraint.can_add(succ, schedule.assignedProcessor(node),
-                                                                      supstepIdx))
                                         canAdd = false;
                                 }
                             }
@@ -506,7 +490,7 @@ class BspLocking : public Scheduler<Graph_t> {
 
                 VertexType nextNode = std::numeric_limits<VertexType>::max();
                 unsigned nextProc = instance.numberOfProcessors();
-                Choose(instance, allReady, procReady, procFree, nextNode, nextProc, endSupStep, max_finish_time - time, supstepIdx);
+                Choose(instance, allReady, procReady, procFree, nextNode, nextProc, endSupStep, max_finish_time - time);
 
                 if (nextNode == std::numeric_limits<VertexType>::max() || nextProc == instance.numberOfProcessors()) {
                     endSupStep = true;
@@ -539,27 +523,12 @@ class BspLocking : public Scheduler<Graph_t> {
 
                 ready_phase[nextNode] = std::numeric_limits<unsigned>::max();
 
-                if constexpr (is_memory_constraint_v<MemoryConstraint_t>) {
+                if constexpr (use_memory_constraint) {
                     memory_constraint.add(nextNode, nextProc);
 
                     std::vector<VertexType> toErase;
                     for (const auto &node : procReady[nextProc]) {
                         if (not memory_constraint.can_add(node, nextProc)) {
-                            toErase.push_back(node);
-                        }
-                    }
-
-                    for (const auto &node : toErase) {
-                        procReady[nextProc].erase(node);
-                        max_proc_score_heap[nextProc].erase(node_proc_heap_handles[nextProc][node]);
-                        node_proc_heap_handles[nextProc].erase(node);
-                    }
-                } else if constexpr (is_memory_constraint_schedule_v<MemoryConstraint_t>) {
-                    memory_constraint.add(nextNode, nextProc, supstepIdx);
-
-                    std::vector<VertexType> toErase;
-                    for (const auto &node : procReady[nextProc]) {
-                        if (not memory_constraint.can_add(node, nextProc, supstepIdx)) {
                             toErase.push_back(node);
                         }
                     }
@@ -623,7 +592,7 @@ class BspLocking : public Scheduler<Graph_t> {
                 }
             }
 
-            if constexpr (is_memory_constraint_v<MemoryConstraint_t>) {
+            if constexpr (use_memory_constraint) {
 
                 if (not check_mem_feasibility(instance, allReady, procReady)) {
 
