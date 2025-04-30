@@ -19,6 +19,7 @@ limitations under the License.
 #pragma once
 
 #include "bsp/model/BspSchedule.hpp"
+#include "graph_algorithms/directed_graph_util.hpp"
 
 namespace osp {
 
@@ -219,6 +220,144 @@ struct local_in_out_memory_constraint {
     }
 
     inline void reset(const unsigned proc) { current_proc_memory[proc] = 0; }
+};
+
+template<typename Graph_t>
+struct local_inc_edges_memory_constraint {
+
+    using Graph_impl_t = Graph_t;
+
+    const BspInstance<Graph_t> *instance;
+    const BspSchedule<Graph_t> *schedule;
+
+    const unsigned *current_superstep = 0;
+
+    std::vector<v_commw_t<Graph_t>> current_proc_memory;
+    std::vector<std::unordered_set<vertex_idx_t<Graph_t>>> current_proc_predec;
+
+    local_inc_edges_memory_constraint() : instance(nullptr), schedule(nullptr) {}
+
+    inline void initialize(const BspSchedule<Graph_t> &schedule_, const unsigned &supstepIdx) {
+        current_superstep = &supstepIdx;
+        schedule = &schedule_;
+        instance = &schedule->getInstance();
+
+        current_proc_memory = std::vector<v_commw_t<Graph_t>>(instance->numberOfProcessors(), 0);
+        current_proc_predec = std::vector<std::unordered_set<vertex_idx_t<Graph_t>>>(instance->numberOfProcessors());
+
+        if (instance->getArchitecture().getMemoryConstraintType() != LOCAL_INC_EDGES) {
+            throw std::invalid_argument("Memory constraint type is not LOCAL_INC_EDGES");
+        }
+    }
+
+    inline bool can_add(const vertex_idx_t<Graph_t> &v, const unsigned proc) const {
+
+        v_commw_t<Graph_t> inc_memory = instance->getComputationalDag().vertex_comm_weight(v);
+
+        for (const auto &pred : instance->getComputationalDag().parents(v)) {
+
+            if (schedule->assignedSuperstep(pred) != *current_superstep &&
+                current_proc_predec[proc].find(pred) == current_proc_predec[proc].end()) {
+                inc_memory += instance->getComputationalDag().vertex_comm_weight(pred);
+            }
+        }
+
+        return current_proc_memory[proc] + inc_memory <= instance->getArchitecture().memoryBound(proc);
+    }
+
+    inline void add(const vertex_idx_t<Graph_t> &v, const unsigned proc) {
+
+        current_proc_memory[proc] += instance->getComputationalDag().vertex_comm_weight(v);
+
+        for (const auto &pred : instance->getComputationalDag().parents(v)) {
+
+            if (schedule->assignedSuperstep(pred) != *current_superstep) {
+                const auto pair = current_proc_predec[proc].insert(pred);
+                if (pair.second) {
+                    current_proc_memory[proc] += instance->getComputationalDag().vertex_comm_weight(pred);
+                }
+            }
+        }
+    }
+
+    inline void reset(const unsigned proc) {
+        current_proc_memory[proc] = 0;
+        current_proc_predec[proc].clear();
+    }
+};
+
+template<typename Graph_t>
+struct local_inc_edges_2_memory_constraint {
+
+    static_assert(
+        std::is_convertible_v<v_commw_t<Graph_t>, v_memw_t<Graph_t>>,
+        "local_inc_edges_2_memory_constraint requires that memory and communication weights are convertible.");
+
+    using Graph_impl_t = Graph_t;
+
+    const BspInstance<Graph_t> *instance;
+    const BspSchedule<Graph_t> *schedule;
+
+    const unsigned *current_superstep = 0;
+
+    std::vector<v_memw_t<Graph_t>> current_proc_memory;
+    std::vector<std::unordered_set<vertex_idx_t<Graph_t>>> current_proc_predec;
+
+    local_inc_edges_2_memory_constraint() : instance(nullptr), schedule(nullptr) {}
+
+    inline void initialize(const BspSchedule<Graph_t> &schedule_, const unsigned &supstepIdx) {
+        current_superstep = &supstepIdx;
+        schedule = &schedule_;
+        instance = &schedule->getInstance();
+
+        current_proc_memory = std::vector<v_memw_t<Graph_t>>(instance->numberOfProcessors(), 0);
+        current_proc_predec = std::vector<std::unordered_set<vertex_idx_t<Graph_t>>>(instance->numberOfProcessors());
+
+        if (instance->getArchitecture().getMemoryConstraintType() != LOCAL_INC_EDGES_2) {
+            throw std::invalid_argument("Memory constraint type is not LOCAL_INC_EDGES_2");
+        }
+    }
+
+    inline bool can_add(const vertex_idx_t<Graph_t> &v, const unsigned proc) const {
+
+        v_memw_t<Graph_t> inc_memory = 0;
+
+        if (is_source(v, instance->getComputationalDag())) {
+            inc_memory += instance->getComputationalDag().vertex_mem_weight(v);
+        }
+
+        for (const auto &pred : instance->getComputationalDag().parents(v)) {
+
+            if (schedule->assignedSuperstep(v) != *current_superstep &&
+                current_proc_predec[proc].find(pred) == current_proc_predec[proc].end()) {
+                inc_memory += instance->getComputationalDag().vertex_comm_weight(pred);
+            }
+        }
+
+        return current_proc_memory[proc] + inc_memory <= instance->getArchitecture().memoryBound(proc);
+    }
+
+    inline void add(const vertex_idx_t<Graph_t> &v, const unsigned proc) {
+
+        if (is_source(v, instance->getComputationalDag())) {
+            current_proc_memory[proc] += instance->getComputationalDag().vertex_mem_weight(v);
+        }
+
+        for (const auto &pred : instance->getComputationalDag().parents(v)) {
+
+            if (schedule->assignedSuperstep(pred) != *current_superstep) {
+                const auto pair = current_proc_predec[proc].insert(pred);
+                if (pair.second) {
+                    current_proc_memory[proc] += instance->getComputationalDag().vertex_comm_weight(pred);
+                }
+            }
+        }
+    }
+
+    inline void reset(const unsigned proc) {
+        current_proc_memory[proc] = 0;
+        current_proc_predec[proc].clear();
+    }
 };
 
 } // namespace osp
