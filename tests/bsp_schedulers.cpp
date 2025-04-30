@@ -5,12 +5,13 @@
 #include <string>
 #include <vector>
 
-#include "bsp/scheduler/GreedySchedulers/GreedyChildren.hpp"
-#include "bsp/scheduler/GreedySchedulers/RandomGreedy.hpp"
 #include "bsp/scheduler/GreedySchedulers/BspLocking.hpp"
 #include "bsp/scheduler/GreedySchedulers/CilkScheduler.hpp"
 #include "bsp/scheduler/GreedySchedulers/EtfScheduler.hpp"
 #include "bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
+#include "bsp/scheduler/GreedySchedulers/GreedyChildren.hpp"
+#include "bsp/scheduler/GreedySchedulers/RandomGreedy.hpp"
+#include "bsp/scheduler/GreedySchedulers/VarianceFillup.hpp"
 #include "bsp/scheduler/Serial.hpp"
 #include "graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
@@ -127,6 +128,12 @@ BOOST_AUTO_TEST_CASE(children_test) {
 BOOST_AUTO_TEST_CASE(locking_test) {
 
     BspLocking<computational_dag_vector_impl_def_t> test;
+    run_test(&test);
+}
+
+BOOST_AUTO_TEST_CASE(variancefillup_test) {
+
+    VarianceFillup<computational_dag_vector_impl_def_t> test;
     run_test(&test);
 }
 

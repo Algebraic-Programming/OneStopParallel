@@ -8,6 +8,7 @@
 #include "bsp/scheduler/GreedySchedulers/BspLocking.hpp"
 #include "bsp/scheduler/GreedySchedulers/EtfScheduler.hpp"
 #include "bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
+#include "bsp/scheduler/GreedySchedulers/VarianceFillup.hpp"
 #include "bsp/scheduler/Serial.hpp"
 #include "graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
@@ -215,6 +216,8 @@ BOOST_AUTO_TEST_CASE(GreedyBspScheduler_local_test) {
     run_test_local_memory(&test);
 };
 
+
+
 BOOST_AUTO_TEST_CASE(GreedyBspScheduler_local_in_out_test) {
 
     GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_t,
@@ -229,6 +232,14 @@ BOOST_AUTO_TEST_CASE(BspLocking_local_in_out_test) {
                local_in_out_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>>
         test;
     run_test_local_in_out_memory(&test);
+};
+
+BOOST_AUTO_TEST_CASE(variance_local_test) {
+
+    VarianceFillup<computational_dag_edge_idx_vector_impl_def_t,
+               local_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>>
+        test;
+    run_test_local_memory(&test);
 };
 
 BOOST_AUTO_TEST_CASE(BspLocking_local_test) {
