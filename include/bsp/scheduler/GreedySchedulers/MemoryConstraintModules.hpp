@@ -47,7 +47,9 @@ inline constexpr bool is_memory_constraint_v = is_memory_constraint<T>::value;
  * @brief The default memory constraint type, no memory constraints apply.
  *
  */
-struct no_memory_constraint {};
+struct no_memory_constraint {
+    using Graph_impl_t = void;
+};
 
 /**
  * @brief A memory constraint module for local memory constraints.

@@ -56,6 +56,8 @@ class BspLocking : public Scheduler<Graph_t> {
     constexpr static bool use_memory_constraint =
         is_memory_constraint_v<MemoryConstraint_t> or is_memory_constraint_schedule_v<MemoryConstraint_t>;
 
+    static_assert(not use_memory_constraint or std::is_same_v<Graph_t, typename MemoryConstraint_t::Graph_impl_t>, "Graph_t must be the same as MemoryConstraint_t::Graph_impl_t.");
+
     MemoryConstraint_t memory_constraint;
 
     struct heap_node {

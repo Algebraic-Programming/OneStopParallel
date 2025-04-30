@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 
+#include "bsp/scheduler/GreedySchedulers/GreedyChildren.hpp"
+#include "bsp/scheduler/GreedySchedulers/RandomGreedy.hpp"
 #include "bsp/scheduler/GreedySchedulers/BspLocking.hpp"
 #include "bsp/scheduler/GreedySchedulers/CilkScheduler.hpp"
 #include "bsp/scheduler/GreedySchedulers/EtfScheduler.hpp"
@@ -107,6 +109,18 @@ BOOST_AUTO_TEST_CASE(cilk_test_2) {
 BOOST_AUTO_TEST_CASE(etf_test) {
 
     EtfScheduler<computational_dag_vector_impl_def_t> test;
+    run_test(&test);
+}
+
+BOOST_AUTO_TEST_CASE(random_test) {
+
+    RandomGreedy<computational_dag_vector_impl_def_t> test;
+    run_test(&test);
+}
+
+BOOST_AUTO_TEST_CASE(children_test) {
+
+    GreedyChildren<computational_dag_vector_impl_def_t> test;
     run_test(&test);
 }
 
