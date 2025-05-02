@@ -10,6 +10,7 @@
 #include "bsp/scheduler/GreedySchedulers/EtfScheduler.hpp"
 #include "bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
 #include "bsp/scheduler/GreedySchedulers/GreedyChildren.hpp"
+#include "bsp/scheduler/GreedySchedulers/GrowLocalAutoCores.hpp"
 #include "bsp/scheduler/GreedySchedulers/RandomGreedy.hpp"
 #include "bsp/scheduler/GreedySchedulers/VarianceFillup.hpp"
 #include "bsp/scheduler/Serial.hpp"
@@ -140,5 +141,11 @@ BOOST_AUTO_TEST_CASE(variancefillup_test) {
 BOOST_AUTO_TEST_CASE(etf_test_edge_desc_impl) {
 
     EtfScheduler<computational_dag_edge_idx_vector_impl_def_t> test;
+    run_test(&test);
+}
+
+BOOST_AUTO_TEST_CASE(grow_local_auto_test_edge_desc_impl) {
+
+    GrowLocalAutoCores<computational_dag_edge_idx_vector_impl_def_t> test;
     run_test(&test);
 }
