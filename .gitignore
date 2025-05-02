@@ -102,6 +102,7 @@ doc/latex/
 [Ii]nstall/*
 cmake-*
 *.cmake
+!cmake/*.cmake
 *.in
 Makefile
 *.marks
