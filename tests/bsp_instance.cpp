@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(test_instance_bicgstab) {
 
  
     bool status =
-        file_reader::readComputationalDagHyperdagFormat((cwd / "data/spaa/tiny/instance_bicgstab.txt").string(), instance.getComputationalDag());
+        file_reader::readComputationalDagHyperdagFormat((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(), instance.getComputationalDag());
 
     BOOST_CHECK(status);
     BOOST_CHECK_EQUAL(instance.getComputationalDag().num_vertices(), 54);

@@ -14,8 +14,8 @@
 using namespace osp;
 
 std::vector<std::string> test_graphs() {
-    return {"data/spaa/tiny/instance_k-means.txt", "data/spaa/tiny/instance_bicgstab.txt",
-            "data/spaa/tiny/instance_CG_N3_K1_nzP0d5.txt"};
+    return {"data/spaa/tiny/instance_k-means.hdag", "data/spaa/tiny/instance_bicgstab.hdag",
+            "data/spaa/tiny/instance_CG_N3_K1_nzP0d5.hdag"};
 }
 
 

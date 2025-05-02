@@ -21,17 +21,31 @@
 
 using namespace osp;
 
-std::vector<std::string> test_graphs() {
-    return {"data/spaa/tiny/instance_k-means.txt", "data/spaa/tiny/instance_bicgstab.txt",
-            "data/spaa/tiny/instance_CG_N2_K2_nzP0d75.txt"};
+std::vector<std::string> tiny_spaa_graphs() {
+    return {"data/spaa/tiny/instance_bicgstab.hdag",
+            "data/spaa/tiny/instance_CG_N2_K2_nzP0d75.hdag",
+            "data/spaa/tiny/instance_CG_N3_K1_nzP0d5.hdag",
+            "data/spaa/tiny/instance_CG_N4_K1_nzP0d35.hdag",
+            "data/spaa/tiny/instance_exp_N4_K2_nzP0d5.hdag",
+            "data/spaa/tiny/instance_exp_N5_K3_nzP0d4.hdag",
+            "data/spaa/tiny/instance_exp_N6_K4_nzP0d25.hdag",
+            "data/spaa/tiny/instance_k-means.hdag",
+            "data/spaa/tiny/instance_k-NN_3_gyro_m.hdag",
+            "data/spaa/tiny/instance_kNN_N4_K3_nzP0d5.hdag",
+            "data/spaa/tiny/instance_kNN_N5_K3_nzP0d3.hdag",
+            "data/spaa/tiny/instance_kNN_N6_K4_nzP0d2.hdag",
+            "data/spaa/tiny/instance_pregel.hdag",
+            "data/spaa/tiny/instance_spmv_N6_nzP0d4.hdag",
+            "data/spaa/tiny/instance_spmv_N7_nzP0d35.hdag",
+            "data/spaa/tiny/instance_spmv_N10_nzP0d25.hdag"};
 }
 
-std::vector<std::string> test_architectures() { return {"data/machine_params/p3.txt"}; }
+std::vector<std::string> test_architectures() { return {"data/machine_params/p3.arch"}; }
 
 template<typename Graph_t>
 void run_test(Scheduler<Graph_t> *test_scheduler) {
     // static_assert(std::is_base_of<Scheduler, T>::value, "Class is not a scheduler!");
-    std::vector<std::string> filenames_graph = test_graphs();
+    std::vector<std::string> filenames_graph = tiny_spaa_graphs();
     std::vector<std::string> filenames_architectures = test_architectures();
 
     // Getting root git directory
@@ -57,7 +71,7 @@ void run_test(Scheduler<Graph_t> *test_scheduler) {
 
             bool status_graph = file_reader::readComputationalDagHyperdagFormat((cwd / filename_graph).string(),
                                                                                 instance.getComputationalDag());
-            bool status_architecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.txt").string(),
+            bool status_architecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(),
                                                                         instance.getArchitecture());
 
             if (!status_graph || !status_architecture) {

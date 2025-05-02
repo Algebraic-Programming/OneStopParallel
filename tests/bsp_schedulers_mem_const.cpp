@@ -18,10 +18,10 @@
 using namespace osp;
 
 std::vector<std::string> test_graphs() {
-    return {"data/spaa/tiny/instance_bicgstab.txt", "data/spaa/tiny/instance_CG_N2_K2_nzP0d75.txt"};
+    return {"data/spaa/tiny/instance_bicgstab.hdag", "data/spaa/tiny/instance_CG_N2_K2_nzP0d75.hdag"};
 }
 
-std::vector<std::string> test_architectures() { return {"data/machine_params/p3.txt"}; }
+std::vector<std::string> test_architectures() { return {"data/machine_params/p3.arch"}; }
 
 template<typename Graph_t>
 void add_mem_weights(Graph_t &dag) {
@@ -61,7 +61,7 @@ void run_test_local_memory(Scheduler<Graph_t> *test_scheduler) {
 
             bool status_graph = file_reader::readComputationalDagHyperdagFormat((cwd / filename_graph).string(),
                                                                                 instance.getComputationalDag());
-            bool status_architecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.txt").string(),
+            bool status_architecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(),
                                                                         instance.getArchitecture());
 
             add_mem_weights(instance.getComputationalDag());
@@ -120,7 +120,7 @@ void run_test_persistent_transient_memory(Scheduler<Graph_t> *test_scheduler) {
 
             bool status_graph = file_reader::readComputationalDagHyperdagFormat((cwd / filename_graph).string(),
                                                                                 instance.getComputationalDag());
-            bool status_architecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.txt").string(),
+            bool status_architecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(),
                                                                         instance.getArchitecture());
 
             add_mem_weights(instance.getComputationalDag());
@@ -178,7 +178,7 @@ void run_test_local_in_out_memory(Scheduler<Graph_t> *test_scheduler) {
 
             bool status_graph = file_reader::readComputationalDagHyperdagFormat((cwd / filename_graph).string(),
                                                                                 instance.getComputationalDag());
-            bool status_architecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.txt").string(),
+            bool status_architecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(),
                                                                         instance.getArchitecture());
 
             add_mem_weights(instance.getComputationalDag());
@@ -237,7 +237,7 @@ void run_test_local_inc_edges_memory(Scheduler<Graph_t> *test_scheduler) {
 
             bool status_graph = file_reader::readComputationalDagHyperdagFormat((cwd / filename_graph).string(),
                                                                                 instance.getComputationalDag());
-            bool status_architecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.txt").string(),
+            bool status_architecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(),
                                                                         instance.getArchitecture());
 
             add_mem_weights(instance.getComputationalDag());
@@ -296,7 +296,7 @@ void run_test_local_inc_edges_2_memory(Scheduler<Graph_t> *test_scheduler) {
 
             bool status_graph = file_reader::readComputationalDagHyperdagFormat((cwd / filename_graph).string(),
                                                                                 instance.getComputationalDag());
-            bool status_architecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.txt").string(),
+            bool status_architecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(),
                                                                         instance.getArchitecture());
 
             add_mem_weights(instance.getComputationalDag());
