@@ -107,6 +107,19 @@ class BspSchedule : public IBspSchedule<Graph_t> {
         }
     }
 
+    BspSchedule(const BspSchedule<Graph_t> &schedule)
+        : instance(schedule.instance), number_of_supersteps(schedule.number_of_supersteps),
+          node_to_processor_assignment(schedule.node_to_processor_assignment),
+          node_to_superstep_assignment(schedule.node_to_superstep_assignment) {}
+
+    BspSchedule(BspSchedule<Graph_t> &&schedule)
+        : instance(schedule.instance), number_of_supersteps(schedule.number_of_supersteps),
+          node_to_processor_assignment(std::move(schedule.node_to_processor_assignment)),
+          node_to_superstep_assignment(std::move(schedule.node_to_superstep_assignment)) {}
+
+    /**
+     * @brief Destructor for the BspSchedule class.
+     */
     virtual ~BspSchedule() = default;
 
     /**

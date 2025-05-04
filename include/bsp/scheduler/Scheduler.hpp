@@ -25,6 +25,7 @@ limitations under the License.
 
 #include "bsp/model/BspInstance.hpp"
 #include "bsp/model/BspSchedule.hpp"
+#include "bsp/model/BspScheduleCS.hpp"
 #include "concepts/computational_dag_concept.hpp"
 
 namespace osp {
@@ -108,8 +109,20 @@ class Scheduler {
      * @param instance The BSP instance for which to compute the schedule.
      * @return A pair containing the return status and the computed schedule.
      */
-
     virtual std::pair<RETURN_STATUS, BspSchedule<Graph_t>> computeSchedule(const BspInstance<Graph_t> &instance) = 0;
+
+
+
+    virtual std::pair<RETURN_STATUS, BspScheduleCS<Graph_t>> computeScheduleCS(const BspInstance<Graph_t> &instance) {
+
+        auto result = computeSchedule(instance);
+        if (result.first == SUCCESS || result.first == BEST_FOUND) {
+            return std::make_pair(result.first, BspScheduleCS<Graph_t>(std::move(result.second)));
+        } else {
+            return std::make_pair(result.first, BspScheduleCS<Graph_t>());
+        }
+
+    }
 
     // /**
     //  * @brief Compute a schedule for the given BSP instance within the time limit.
