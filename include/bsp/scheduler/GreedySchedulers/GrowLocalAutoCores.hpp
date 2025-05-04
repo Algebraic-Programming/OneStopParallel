@@ -308,7 +308,6 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
         }
 
         BspSchedule<Graph_t> schedule(instance, node_to_proc, node_to_supstep);
-        schedule.setAutoCommunicationSchedule();
 
         return {SUCCESS, schedule};
     }

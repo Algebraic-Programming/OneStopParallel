@@ -508,8 +508,6 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
 
         assert(schedule.satisfiesPrecedenceConstraints());
 
-        schedule.setAutoCommunicationSchedule();
-
         return {SUCCESS, schedule};
     };
 

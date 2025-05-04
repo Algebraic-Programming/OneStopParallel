@@ -84,7 +84,6 @@ void run_test_local_memory(Scheduler<Graph_t> *test_scheduler) {
                 BOOST_CHECK_EQUAL(SUCCESS, result.first);
                 BOOST_CHECK_EQUAL(&result.second.getInstance(), &instance);
                 BOOST_CHECK(result.second.satisfiesPrecedenceConstraints());
-                BOOST_CHECK(result.second.hasValidCommSchedule());
                 BOOST_CHECK(result.second.satisfiesMemoryConstraints());
             }
         }
@@ -142,7 +141,6 @@ void run_test_persistent_transient_memory(Scheduler<Graph_t> *test_scheduler) {
 
                 BOOST_CHECK_EQUAL(SUCCESS, result.first);
                 BOOST_CHECK(result.second.satisfiesPrecedenceConstraints());
-                BOOST_CHECK(result.second.hasValidCommSchedule());
                 BOOST_CHECK(result.second.satisfiesMemoryConstraints());
             }
         }
@@ -201,7 +199,6 @@ void run_test_local_in_out_memory(Scheduler<Graph_t> *test_scheduler) {
                 BOOST_CHECK_EQUAL(SUCCESS, result.first);
                 BOOST_CHECK_EQUAL(&result.second.getInstance(), &instance);
                 BOOST_CHECK(result.second.satisfiesPrecedenceConstraints());
-                BOOST_CHECK(result.second.hasValidCommSchedule());
                 BOOST_CHECK(result.second.satisfiesMemoryConstraints());
             }
         }
@@ -260,7 +257,6 @@ void run_test_local_inc_edges_memory(Scheduler<Graph_t> *test_scheduler) {
                 BOOST_CHECK_EQUAL(SUCCESS, result.first);
                 BOOST_CHECK_EQUAL(&result.second.getInstance(), &instance);
                 BOOST_CHECK(result.second.satisfiesPrecedenceConstraints());
-                BOOST_CHECK(result.second.hasValidCommSchedule());
                 BOOST_CHECK(result.second.satisfiesMemoryConstraints());
             }
         }
@@ -300,7 +296,7 @@ void run_test_local_inc_edges_2_memory(Scheduler<Graph_t> *test_scheduler) {
                                                                         instance.getArchitecture());
 
             add_mem_weights(instance.getComputationalDag());
-            instance.getArchitecture().setMemoryConstraintType(LOCAL_INC_EDGES_2);
+            instance.getArchitecture().setMemoryConstraintType(LOCAL_SOURCES_INC_EDGES);
 
             if (!status_graph || !status_architecture) {
 
@@ -319,7 +315,6 @@ void run_test_local_inc_edges_2_memory(Scheduler<Graph_t> *test_scheduler) {
                 BOOST_CHECK_EQUAL(SUCCESS, result.first);
                 BOOST_CHECK_EQUAL(&result.second.getInstance(), &instance);
                 BOOST_CHECK(result.second.satisfiesPrecedenceConstraints());
-                BOOST_CHECK(result.second.hasValidCommSchedule());
                 BOOST_CHECK(result.second.satisfiesMemoryConstraints());
             }
         }

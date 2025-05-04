@@ -113,8 +113,6 @@ class CSchedule {
             ++superStepIdx;
         }
 
-        bsp_schedule.setAutoCommunicationSchedule();
-
         return bsp_schedule;
     }
 };

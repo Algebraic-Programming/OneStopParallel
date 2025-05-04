@@ -480,8 +480,6 @@ class VarianceFillup : public Scheduler<Graph_t> {
 
         assert(schedule.satisfiesPrecedenceConstraints());
 
-        schedule.setAutoCommunicationSchedule();
-
         return {SUCCESS, schedule};
     }
 

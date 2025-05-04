@@ -549,7 +549,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                             }
                         }
                     } else if (current_schedule.instance->getArchitecture().getMemoryConstraintType() ==
-                               LOCAL_INC_EDGES_2) {
+                               LOCAL_SOURCES_INC_EDGES) {
 
                         int inc_memory = 0;
 
@@ -1583,7 +1583,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                             }
                         }
                     } else if (current_schedule.instance->getArchitecture().getMemoryConstraintType() ==
-                               LOCAL_INC_EDGES_2) {
+                               LOCAL_SOURCES_INC_EDGES) {
 
                         if (current_schedule.step_processor_pred[moves.back().to_step][moves.back().to_proc].find(
                                 node) ==
@@ -1883,7 +1883,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                             }
                         }
                     } else if (current_schedule.instance->getArchitecture().getMemoryConstraintType() ==
-                               LOCAL_INC_EDGES_2) {
+                               LOCAL_SOURCES_INC_EDGES) {
 
                         if (current_schedule.step_processor_pred[moves.back().to_step][moves.back().to_proc].find(
                                 node) ==
@@ -3156,8 +3156,6 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
         initialize_datastructures();
 
         bool improvement_found = run_local_search_unlock_delay();
-
-        schedule.setImprovedLazyCommunicationSchedule();
 
         if (improvement_found)
             return SUCCESS;

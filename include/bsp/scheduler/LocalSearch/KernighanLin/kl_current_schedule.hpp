@@ -138,7 +138,7 @@ class kl_current_schedule {
                     } else if (instance->getArchitecture().getMemoryConstraintType() == LOCAL_INC_EDGES) {
                         step_processor_memory[i][proc] = step_processor_memory[i + 1][proc];
                         step_processor_pred[i][proc] = step_processor_pred[i + 1][proc];
-                    } else if (instance->getArchitecture().getMemoryConstraintType() == LOCAL_INC_EDGES_2) {
+                    } else if (instance->getArchitecture().getMemoryConstraintType() == LOCAL_SOURCES_INC_EDGES) {
                         step_processor_memory[i][proc] = step_processor_memory[i + 1][proc];
                         step_processor_pred[i][proc] = step_processor_pred[i + 1][proc];
                     }
@@ -163,7 +163,7 @@ class kl_current_schedule {
                     step_processor_memory[num_steps()][proc] = 0;
                     step_processor_pred[num_steps()][proc].clear();
                 }
-            } else if (instance->getArchitecture().getMemoryConstraintType() == LOCAL_INC_EDGES_2) {
+            } else if (instance->getArchitecture().getMemoryConstraintType() == LOCAL_SOURCES_INC_EDGES) {
                 for (unsigned proc = 0; proc < instance->getArchitecture().numberOfProcessors(); proc++) {
                     step_processor_memory[num_steps()][proc] = 0;
                     step_processor_pred[num_steps()][proc].clear();
@@ -203,7 +203,7 @@ class kl_current_schedule {
                     step_processor_memory[step][proc] = 0;
                     step_processor_pred[step][proc].clear();
                 }
-            } else if (instance->getArchitecture().getMemoryConstraintType() == LOCAL_INC_EDGES_2) {
+            } else if (instance->getArchitecture().getMemoryConstraintType() == LOCAL_SOURCES_INC_EDGES) {
                 for (unsigned proc = 0; proc < instance->getArchitecture().numberOfProcessors(); proc++) {
                     step_processor_memory[step][proc] = 0;
                     step_processor_pred[step][proc].clear();
@@ -307,7 +307,7 @@ class kl_current_schedule {
                     num_steps(), std::vector<v_memw_t<Graph_t>>(num_procs, 0));
                 step_processor_pred = std::vector<std::vector<std::unordered_set<VertexType>>>(
                     num_steps(), std::vector<std::unordered_set<VertexType>>(num_procs));
-            } else if (instance->getArchitecture().getMemoryConstraintType() == LOCAL_INC_EDGES_2) {
+            } else if (instance->getArchitecture().getMemoryConstraintType() == LOCAL_SOURCES_INC_EDGES) {
                 step_processor_memory = std::vector<std::vector<v_memw_t<Graph_t>>>(
                     num_steps(), std::vector<v_memw_t<Graph_t>>(num_procs, 0));
                 step_processor_pred = std::vector<std::vector<std::unordered_set<VertexType>>>(
@@ -362,7 +362,7 @@ class kl_current_schedule {
                         step_processor_memory[step][proc] = 0;
                         step_processor_pred[step][proc].clear();
 
-                    } else if (instance->getArchitecture().getMemoryConstraintType() == LOCAL_INC_EDGES_2) {
+                    } else if (instance->getArchitecture().getMemoryConstraintType() == LOCAL_SOURCES_INC_EDGES) {
 
                         step_processor_memory[step][proc] = 0;
                         step_processor_pred[step][proc].clear();
@@ -419,7 +419,7 @@ class kl_current_schedule {
                                     }
                                 }
                             }
-                        } else if (instance->getArchitecture().getMemoryConstraintType() == LOCAL_INC_EDGES_2) {
+                        } else if (instance->getArchitecture().getMemoryConstraintType() == LOCAL_SOURCES_INC_EDGES) {
 
                             if (is_source(node, instance->getComputationalDag())) {
                                 step_processor_memory[step][proc] +=
@@ -685,7 +685,7 @@ class kl_current_schedule {
                         }
                     }
                 }
-            } else if (instance->getArchitecture().getMemoryConstraintType() == LOCAL_INC_EDGES_2) {
+            } else if (instance->getArchitecture().getMemoryConstraintType() == LOCAL_SOURCES_INC_EDGES) {
 
                 if (is_source(move.node, instance->getComputationalDag())) {
                     step_processor_memory[move.to_step][move.to_proc] +=

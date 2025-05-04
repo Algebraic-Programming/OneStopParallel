@@ -313,7 +313,7 @@ struct local_inc_edges_2_memory_constraint {
         current_proc_memory = std::vector<v_memw_t<Graph_t>>(instance->numberOfProcessors(), 0);
         current_proc_predec = std::vector<std::unordered_set<vertex_idx_t<Graph_t>>>(instance->numberOfProcessors());
 
-        if (instance->getArchitecture().getMemoryConstraintType() != LOCAL_INC_EDGES_2) {
+        if (instance->getArchitecture().getMemoryConstraintType() != LOCAL_SOURCES_INC_EDGES) {
             throw std::invalid_argument("Memory constraint type is not LOCAL_INC_EDGES_2");
         }
     }

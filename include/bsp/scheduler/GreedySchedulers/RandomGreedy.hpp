@@ -127,8 +127,6 @@ class RandomGreedy : public Scheduler<Graph_t> {
             superstep_counter++;
         }
 
-        sched.setAutoCommunicationSchedule();
-
         return {SUCCESS, sched};
     }
 

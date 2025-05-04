@@ -89,8 +89,6 @@ bool pull_back_schedule(const BspSchedule<Graph_t_in> &schedule_in,
         }
     }
 
-    schedule_out.setLazyCommunicationSchedule();
-
     return true;
 }
 
@@ -105,8 +103,6 @@ bool pull_back_schedule(const BspSchedule<Graph_t_in> &schedule_in,
         schedule_out.setAssignedSuperstep(idx, schedule_in.assignedSuperstep(v));
         schedule_out.setAssignedProcessor(idx, schedule_in.assignedProcessor(v));
     }
-
-    schedule_out.setLazyCommunicationSchedule();
 
     return true;
 }
