@@ -23,47 +23,67 @@ namespace osp {
 
 template<typename T>
 class vertex_range {
+    static_assert(std::is_integral<T>::value);
 
     T start;
     T finish;
 
     class vertex_iterator {
-        T current;
+      public:
+        using iterator_category = std::bidirectional_iterator_tag;
+        using difference_type = std::ptrdiff_t;
+        using value_type = T;
+        using pointer = T *;
+        using reference = T &;
+
+      private:
+        value_type current;
 
       public:
-        using iterator_category = std::forward_iterator_tag;
-        using value_type = T;
-        using difference_type = std::ptrdiff_t;
-        using pointer = const T *;
-        using reference = const T &;
+        explicit vertex_iterator(value_type start) : current(start) {}
 
-        explicit vertex_iterator(T start) : current(start) {}
+        inline value_type operator*() const { return current; }
 
-        T operator*() const { return current; }
-
-        vertex_iterator &operator++() {
+        inline vertex_iterator &operator++() {
             ++current;
             return *this;
         }
 
-        vertex_iterator operator++(int) {
+        inline vertex_iterator operator++(int) {
             vertex_iterator temp = *this;
             ++(*this);
             return temp;
         }
 
-        bool operator==(const vertex_iterator &other) const { return current == other.current; }
+        inline vertex_iterator &operator--() {
+            --current;
+            return *this;
+        }
 
-        bool operator!=(const vertex_iterator &other) const { return !(*this == other); }
+        inline vertex_iterator operator--(int) {
+            vertex_iterator temp = *this;
+            --(*this);
+            return temp;
+        }
+
+        inline bool operator==(const vertex_iterator &other) const { return current == other.current; }
+        inline bool operator!=(const vertex_iterator &other) const { return !(*this == other); }
+        
+        inline bool operator<=(const vertex_iterator &other) const { return current <= other.current; }
+        inline bool operator<(const vertex_iterator &other) const { return (*this <= other) && (*this != other); }
+        inline bool operator>=(const vertex_iterator &other) const { return (!(*this <= other)) || (*this == other); }
+        inline bool operator>(const vertex_iterator &other) const { return !(*this <= other); }
     };
 
   public:
-    vertex_range(T end_) : start(0), finish(end_) {}
+    vertex_range(T end_) : start( static_cast<T>(0) ), finish(end_) {}
     vertex_range(T start_, T end_) : start(start_), finish(end_) {}
 
-    auto begin() const { return vertex_iterator(start); }
+    inline auto begin() const { return vertex_iterator(start); }
+    inline auto cbegin() const { return vertex_iterator(start); }
 
-    auto end() const { return vertex_iterator(finish); }
+    inline auto end() const { return vertex_iterator(finish); }
+    inline auto cend() const { return vertex_iterator(finish); }
 
 };
 
