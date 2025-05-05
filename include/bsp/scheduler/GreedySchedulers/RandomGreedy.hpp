@@ -112,7 +112,7 @@ class RandomGreedy : public Scheduler<Graph_t> {
                 std::vector<VertexType> new_nodes;
                 for (const auto &chld : graph.children(node)) {
                     predecessors_count[chld]++;
-                    if (predecessors_count[chld] == graph.parents(chld).size()) {
+                    if (predecessors_count[chld] == graph.in_degree(chld)) {
                         new_nodes.emplace_back(chld);
                     }
                 }

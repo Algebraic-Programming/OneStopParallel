@@ -304,12 +304,14 @@ class BspSchedule : public IBspSchedule<Graph_t> {
             for (const auto &target : instance->getComputationalDag().children(v)) {
 
                 if (node_to_processor_assignment[v] != node_to_processor_assignment[target]) {
-                    total_communication += instance->getComputationalDag().vertex_comm_weight(v);
+                    total_communication +=
+                        instance->sendCosts(node_to_processor_assignment[v], node_to_processor_assignment[target]) *
+                        instance->getComputationalDag().vertex_comm_weight(v);
                 }
             }
         }
 
-        return total_communication * instance->communicationCosts() * (1.0 / instance->numberOfProcessors());
+        return total_communication * (double)instance->communicationCosts() / (double)instance->numberOfProcessors();
     }
 
     double computeTotalCosts() const {

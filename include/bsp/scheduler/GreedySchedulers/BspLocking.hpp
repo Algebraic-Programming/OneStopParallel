@@ -973,7 +973,7 @@ class BspLocking : public Scheduler<Graph_t> {
         if (use_memory_constraint) {
             return "BspGreedyLockingMemory";
         } else {
-            return "BspGreedyLocking_" + std::to_string(max_percent_idle_processors);
+            return "BspGreedyLocking";
         }
     }
 

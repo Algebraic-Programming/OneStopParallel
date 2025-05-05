@@ -34,6 +34,7 @@ _add_test( bsp_architecture )
 
 _add_test( bsp_instance )
 
+_add_test( bsp_schedule )
 
 ## auxiliary
 _add_test( intpower )

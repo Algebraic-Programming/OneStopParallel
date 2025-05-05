@@ -259,7 +259,7 @@ class EtfScheduler : public Scheduler<Graph_t> {
      *
      * @param mode_ The mode of the scheduler (ETF or BL_EST).
      */
-    EtfScheduler(EtfMode mode_ = ETF) : Scheduler<Graph_t>(), mode(mode_), use_numa(false) {}
+    EtfScheduler(EtfMode mode_ = ETF) : Scheduler<Graph_t>(), mode(mode_), use_numa(true) {}
 
     /**
      * @brief Default destructor for the EtfScheduler class.
