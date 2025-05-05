@@ -18,9 +18,9 @@ limitations under the License.
 
 #pragma once
 
-#include <vector>
-#include <limits>
 #include <deque>
+#include <limits>
+#include <vector>
 
 #include "bsp/model/BspSchedule.hpp"
 
@@ -38,18 +38,17 @@ class CSchedule {
     using vertex_idx = vertex_idx_t<Graph_t>;
     using workw_t = v_workw_t<Graph_t>;
 
-
   public:
-    std::vector<unsigned> proc;           /**< The processor assigned to each task. */
-    std::vector<workw_t> time; /**< The time at which each task starts. */
+    std::vector<unsigned> proc; /**< The processor assigned to each task. */
+    std::vector<workw_t> time;  /**< The time at which each task starts. */
 
     /**
      * @brief Constructs a CSchedule object with the given size.
      * @param size The size of the schedule.
      */
     CSchedule(std::size_t size)
-        : proc(std::vector<unsigned>(size, std::numeric_limits<unsigned>::max())),
-          time(std::vector<workw_t>(size, 0)) {}
+        : proc(std::vector<unsigned>(size, std::numeric_limits<unsigned>::max())), time(std::vector<workw_t>(size, 0)) {
+    }
 
     /**
      * @brief Converts the CSchedule object to a BspSchedule object.
@@ -58,11 +57,9 @@ class CSchedule {
      * @return The converted BspSchedule object.
      */
 
-    BspSchedule<Graph_t>
-    convertToBspSchedule(const BspInstance<Graph_t> &instance,
-                         const std::vector<std::deque<vertex_idx>> &procAssignmentLists) {
-
-        BspSchedule<Graph_t> bsp_schedule(instance);
+    void convertToBspSchedule(const BspInstance<Graph_t> &instance,
+                              const std::vector<std::deque<vertex_idx>> &procAssignmentLists,
+                              BspSchedule<Graph_t> &bsp_schedule) {
 
         for (const auto &v : instance.vertices())
             bsp_schedule.setAssignedProcessor(v, proc[v]);
@@ -75,7 +72,7 @@ class CSchedule {
 
         // TODO instead of std::size_t this should be a vertex_idx_t<Graph_t> but it produces a compilation error
         // what does std::size_t have that vertex_idx_t<Graph_t> does not?
-        std::vector<std::deque<std::size_t>::const_iterator> done(P), limit(P); 
+        std::vector<std::deque<std::size_t>::const_iterator> done(P), limit(P);
 
         for (unsigned j = 0; j < P; ++j)
             done[j] = procAssignmentLists[j].begin();
@@ -112,8 +109,7 @@ class CSchedule {
 
             ++superStepIdx;
         }
-
-        return bsp_schedule;
+       
     }
 };
 

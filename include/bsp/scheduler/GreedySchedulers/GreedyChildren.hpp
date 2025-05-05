@@ -38,13 +38,16 @@ class GreedyChildren : public Scheduler<Graph_t> {
     GreedyChildren(unsigned time_limit, bool ensure_enough_sources_ = true)
         : Scheduler<Graph_t>(time_limit), ensure_enough_sources(ensure_enough_sources_) {};
 
-    std::pair<RETURN_STATUS, BspSchedule<Graph_t>> computeSchedule(const BspInstance<Graph_t> &instance) override {
+    RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &sched) override {
 
         using VertexType = vertex_idx_t<Graph_t>;
+        const auto &instance = sched.getInstance();
+
+        for (const auto &v : instance.getComputationalDag().vertices()) {
+            sched.setAssignedProcessor(v, std::numeric_limits<unsigned>::max());
+        }
 
         const auto &graph = instance.getComputationalDag();
-
-        BspSchedule<Graph_t> sched(instance);
 
         unsigned superstep_counter = 0;
 
@@ -118,7 +121,7 @@ class GreedyChildren : public Scheduler<Graph_t> {
             superstep_counter++;
         }
 
-        return {SUCCESS, sched};
+        return SUCCESS;
     }
 
     std::string getScheduleName() const override {

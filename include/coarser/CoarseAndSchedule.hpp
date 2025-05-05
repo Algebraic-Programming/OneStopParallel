@@ -36,7 +36,9 @@ class CoarseAndSchedule : public Scheduler<Graph_t> {
 
     std::string getScheduleName() const override { return "CoarseAndSchedule"; }
 
-    std::pair<RETURN_STATUS, BspSchedule<Graph_t>> computeSchedule(const BspInstance<Graph_t> &instance) override {
+    RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &schedule) override {
+
+        const auto &instance = schedule.getInstance();
 
         BspInstance<Graph_t_coarse> instance_coarse;
 
@@ -47,24 +49,23 @@ class CoarseAndSchedule : public Scheduler<Graph_t> {
                                         vertex_map, reverse_vertex_map);
 
         if (!status) {
-            return {ERROR, BspSchedule<Graph_t>()};
+            return ERROR;
         }
 
         instance_coarse.setArchitecture(instance.getArchitecture());
         instance_coarse.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
 
-        std::pair<RETURN_STATUS, BspSchedule<Graph_t_coarse>> schedule_coarse =
-            scheduler.computeSchedule(instance_coarse);
+        BspSchedule<Graph_t_coarse> schedule_coarse(instance_coarse);
 
-        if (schedule_coarse.first != SUCCESS and schedule_coarse.first != BEST_FOUND) {
-            return {schedule_coarse.first, BspSchedule<Graph_t>()};
+        const auto status_coarse = scheduler.computeSchedule(schedule_coarse);
+
+        if (status_coarse != SUCCESS and status_coarse != BEST_FOUND) {
+            return status_coarse;
         }
 
-        BspSchedule<Graph_t> schedule(instance);
+        pull_back_schedule(schedule_coarse, vertex_map, schedule);
 
-        pull_back_schedule(schedule_coarse.second, vertex_map, schedule);
-
-        return {SUCCESS, schedule};
+        return SUCCESS;
     }
 };
 

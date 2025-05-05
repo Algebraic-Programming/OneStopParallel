@@ -159,9 +159,11 @@ BOOST_AUTO_TEST_CASE(coarser_hdagg_test) {
         BOOST_CHECK(check_vertex_map(vertex_map, instance.getComputationalDag().num_vertices()));
 
         GreedyBspScheduler<graph_t> scheduler;
+        BspSchedule<graph_t> schedule(coarse_instance);
 
-        auto [status_sched, schedule] = scheduler.computeSchedule(coarse_instance);
+        const auto status_sched = scheduler.computeSchedule(schedule);
 
+        BOOST_CHECK(status_sched == SUCCESS);
         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
         BspSchedule<graph_t> schedule_out(instance);
@@ -170,7 +172,9 @@ BOOST_AUTO_TEST_CASE(coarser_hdagg_test) {
         BOOST_CHECK(schedule_out.satisfiesPrecedenceConstraints());
 
         CoarseAndSchedule<graph_t, graph_t> coarse_and_schedule(coarser, scheduler);
-        auto [status, schedule2] = coarse_and_schedule.computeSchedule(instance);
+        BspSchedule<graph_t> schedule2(instance);
+        
+        const auto status = coarse_and_schedule.computeSchedule(schedule2);
         BOOST_CHECK(status == RETURN_STATUS::SUCCESS || status == RETURN_STATUS::BEST_FOUND);
         BOOST_CHECK(schedule2.satisfiesPrecedenceConstraints());
 
@@ -230,9 +234,11 @@ BOOST_AUTO_TEST_CASE(coarser_hdagg_test_diff_graph_impl) {
         BOOST_CHECK(check_vertex_map(vertex_map, instance.getComputationalDag().num_vertices()));
 
         GreedyBspScheduler<graph_t2> scheduler;
+        BspSchedule<graph_t2> schedule(coarse_instance);
 
-        auto [status_sched, schedule] = scheduler.computeSchedule(coarse_instance);
+        auto status_sched = scheduler.computeSchedule(schedule);
 
+        BOOST_CHECK(status_sched == SUCCESS);
         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
         BspSchedule<graph_t1> schedule_out(instance);
@@ -242,7 +248,9 @@ BOOST_AUTO_TEST_CASE(coarser_hdagg_test_diff_graph_impl) {
 
 
         CoarseAndSchedule<graph_t1, graph_t2> coarse_and_schedule(coarser, scheduler);
-        auto [status, schedule2] = coarse_and_schedule.computeSchedule(instance);
+        BspSchedule<graph_t1> schedule2(instance);
+        
+        auto status= coarse_and_schedule.computeSchedule(schedule2);
         BOOST_CHECK(status == RETURN_STATUS::SUCCESS || status == RETURN_STATUS::BEST_FOUND);
         BOOST_CHECK(schedule2.satisfiesPrecedenceConstraints());
 

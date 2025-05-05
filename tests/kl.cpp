@@ -36,7 +36,6 @@ std::vector<std::string> test_graphs() {
             "data/spaa/tiny/instance_CG_N3_K1_nzP0d5.hdag"};
 }
 
-
 BOOST_AUTO_TEST_CASE(kl_base_1) {
 
     using graph = computational_dag_edge_idx_vector_impl_def_t;
@@ -169,18 +168,19 @@ BOOST_AUTO_TEST_CASE(kl_total_comm_test_1) {
             BOOST_CHECK(false);
         }
 
-        std::pair<RETURN_STATUS, BspSchedule<graph>> result = test_scheduler.computeSchedule(instance);
+        BspSchedule<graph> schedule(instance);
+        const auto result = test_scheduler.computeSchedule(schedule);
 
-        BOOST_CHECK_EQUAL(SUCCESS, result.first);
-        BOOST_CHECK_EQUAL(&result.second.getInstance(), &instance);
-        BOOST_CHECK(result.second.satisfiesPrecedenceConstraints());
+        BOOST_CHECK_EQUAL(SUCCESS, result);
+        BOOST_CHECK_EQUAL(&schedule.getInstance(), &instance);
+        BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
         kl_total_comm_test<graph> kl;
 
-        auto status = kl.improve_schedule_test_1(result.second);
+        auto status = kl.improve_schedule_test_1(schedule);
 
         BOOST_CHECK(status == SUCCESS || status == BEST_FOUND);
-        BOOST_CHECK_EQUAL(result.second.satisfiesPrecedenceConstraints(), true);
+        BOOST_CHECK_EQUAL(schedule.satisfiesPrecedenceConstraints(), true);
     }
 }
 
@@ -217,18 +217,19 @@ BOOST_AUTO_TEST_CASE(kl_total_comm_test_2) {
             BOOST_CHECK(false);
         }
 
-        std::pair<RETURN_STATUS, BspSchedule<graph>> result = test_scheduler.computeSchedule(instance);
+        BspSchedule<graph> schedule(instance);
+        const auto result = test_scheduler.computeSchedule(schedule);
 
-        BOOST_CHECK_EQUAL(SUCCESS, result.first);
-        BOOST_CHECK_EQUAL(&result.second.getInstance(), &instance);
-        BOOST_CHECK(result.second.satisfiesPrecedenceConstraints());
+        BOOST_CHECK_EQUAL(SUCCESS, result);
+        BOOST_CHECK_EQUAL(&schedule.getInstance(), &instance);
+        BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
         kl_total_comm_test<graph> kl;
 
-        auto status = kl.improve_schedule_test_2(result.second);
+        auto status = kl.improve_schedule_test_2(schedule);
 
         BOOST_CHECK(status == SUCCESS || status == BEST_FOUND);
-        BOOST_CHECK_EQUAL(result.second.satisfiesPrecedenceConstraints(), true);
+        BOOST_CHECK_EQUAL(schedule.satisfiesPrecedenceConstraints(), true);
     }
 }
 
@@ -264,18 +265,19 @@ BOOST_AUTO_TEST_CASE(kl_total_cut_test_1) {
             BOOST_CHECK(false);
         }
 
-        std::pair<RETURN_STATUS, BspSchedule<graph>> result = test_scheduler.computeSchedule(instance);
+        BspSchedule<graph> schedule(instance);
+        const auto result = test_scheduler.computeSchedule(schedule);
 
-        BOOST_CHECK_EQUAL(SUCCESS, result.first);
-        BOOST_CHECK_EQUAL(&result.second.getInstance(), &instance);
-        BOOST_CHECK(result.second.satisfiesPrecedenceConstraints());
+        BOOST_CHECK_EQUAL(SUCCESS, result);
+        BOOST_CHECK_EQUAL(&schedule.getInstance(), &instance);
+        BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
         kl_total_cut_test<graph> kl;
 
-        auto status = kl.improve_schedule_test_1(result.second);
+        auto status = kl.improve_schedule_test_1(schedule);
 
         BOOST_CHECK(status == SUCCESS || status == BEST_FOUND);
-        BOOST_CHECK_EQUAL(result.second.satisfiesPrecedenceConstraints(), true);
+        BOOST_CHECK_EQUAL(schedule.satisfiesPrecedenceConstraints(), true);
     }
 }
 
@@ -311,17 +313,18 @@ BOOST_AUTO_TEST_CASE(kl_total_cut_test_2) {
             BOOST_CHECK(false);
         }
 
-        std::pair<RETURN_STATUS, BspSchedule<graph>> result = test_scheduler.computeSchedule(instance);
+        BspSchedule<graph> schedule(instance);
+        const auto result = test_scheduler.computeSchedule(schedule);
 
-        BOOST_CHECK_EQUAL(SUCCESS, result.first);
-        BOOST_CHECK_EQUAL(&result.second.getInstance(), &instance);
-        BOOST_CHECK(result.second.satisfiesPrecedenceConstraints());
+        BOOST_CHECK_EQUAL(SUCCESS, result);
+        BOOST_CHECK_EQUAL(&schedule.getInstance(), &instance);
+        BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
         kl_total_cut_test<graph> kl;
 
-        auto status = kl.improve_schedule_test_2(result.second);
+        auto status = kl.improve_schedule_test_2(schedule);
 
         BOOST_CHECK(status == SUCCESS || status == BEST_FOUND);
-        BOOST_CHECK_EQUAL(result.second.satisfiesPrecedenceConstraints(), true);
+        BOOST_CHECK_EQUAL(schedule.satisfiesPrecedenceConstraints(), true);
     }
 }

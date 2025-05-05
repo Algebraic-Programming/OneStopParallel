@@ -298,12 +298,13 @@ class VarianceFillup : public Scheduler<Graph_t> {
      * @param instance The BspInstance object representing the instance to compute the schedule for.
      * @return A pair containing the return status and the computed BspSchedule.
      */
-    virtual std::pair<RETURN_STATUS, BspSchedule<Graph_t>>
-    computeSchedule(const BspInstance<Graph_t> &instance) override {
+    virtual RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &schedule) override {
 
-        BspSchedule<Graph_t> schedule(
-            instance, std::vector<unsigned>(instance.numberOfVertices(), std::numeric_limits<unsigned>::max()),
-            std::vector<unsigned>(instance.numberOfVertices()));
+        const auto &instance = schedule.getInstance();
+
+        for (const auto &v : instance.getComputationalDag().vertices()) {
+            schedule.setAssignedProcessor(v, std::numeric_limits<unsigned>::max());
+        }
 
         unsigned supstepIdx = 0;
 
@@ -363,7 +364,8 @@ class VarianceFillup : public Scheduler<Graph_t> {
                     }
                 }
 
-                for (unsigned procType = 0; procType < instance.getArchitecture().getNumberOfProcessorTypes(); ++procType)
+                for (unsigned procType = 0; procType < instance.getArchitecture().getNumberOfProcessorTypes();
+                     ++procType)
                     allReady[procType].clear();
 
                 for (const auto &nodeAndValuePair : ready) {
@@ -466,7 +468,7 @@ class VarianceFillup : public Scheduler<Graph_t> {
 
                 if (not check_mem_feasibility(instance, allReady, procReady)) {
 
-                    return {ERROR, schedule};
+                    return ERROR;
                 }
             }
 
@@ -480,7 +482,7 @@ class VarianceFillup : public Scheduler<Graph_t> {
 
         assert(schedule.satisfiesPrecedenceConstraints());
 
-        return {SUCCESS, schedule};
+        return SUCCESS;
     }
 
     /**

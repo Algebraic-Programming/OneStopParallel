@@ -252,7 +252,7 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
 
             if (max_comm > 0) {
                 comm_cost += BspSchedule<Graph_t>::instance->synchronisationCosts() +
-                              max_comm * BspSchedule<Graph_t>::instance->communicationCosts();
+                             max_comm * BspSchedule<Graph_t>::instance->communicationCosts();
             }
         }
 

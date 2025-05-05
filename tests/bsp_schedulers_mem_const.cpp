@@ -97,12 +97,13 @@ void run_test_local_memory(Scheduler<Graph_t> *test_scheduler) {
 
                 instance.getArchitecture().setMemoryBound(bound);
 
-                std::pair<RETURN_STATUS, BspSchedule<Graph_t>> result = test_scheduler->computeSchedule(instance);
+                BspSchedule<Graph_t> schedule(instance);
+                const auto result = test_scheduler->computeSchedule(schedule);
 
-                BOOST_CHECK_EQUAL(SUCCESS, result.first);
-                BOOST_CHECK_EQUAL(&result.second.getInstance(), &instance);
-                BOOST_CHECK(result.second.satisfiesPrecedenceConstraints());
-                BOOST_CHECK(result.second.satisfiesMemoryConstraints());
+                BOOST_CHECK_EQUAL(SUCCESS, result);
+                BOOST_CHECK_EQUAL(&schedule.getInstance(), &instance);
+                BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+                BOOST_CHECK(schedule.satisfiesMemoryConstraints());
             }
         }
     }
@@ -155,11 +156,13 @@ void run_test_persistent_transient_memory(Scheduler<Graph_t> *test_scheduler) {
 
                 instance.getArchitecture().setMemoryBound(bound);
 
-                std::pair<RETURN_STATUS, BspSchedule<Graph_t>> result = test_scheduler->computeSchedule(instance);
+                BspSchedule<Graph_t> schedule(instance);
+                const auto result = test_scheduler->computeSchedule(schedule);
 
-                BOOST_CHECK_EQUAL(SUCCESS, result.first);
-                BOOST_CHECK(result.second.satisfiesPrecedenceConstraints());
-                BOOST_CHECK(result.second.satisfiesMemoryConstraints());
+                BOOST_CHECK_EQUAL(SUCCESS, result);
+                BOOST_CHECK_EQUAL(&schedule.getInstance(), &instance);
+                BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+                BOOST_CHECK(schedule.satisfiesMemoryConstraints());
             }
         }
     }
@@ -212,12 +215,13 @@ void run_test_local_in_out_memory(Scheduler<Graph_t> *test_scheduler) {
 
                 instance.getArchitecture().setMemoryBound(bound);
 
-                std::pair<RETURN_STATUS, BspSchedule<Graph_t>> result = test_scheduler->computeSchedule(instance);
+                BspSchedule<Graph_t> schedule(instance);
+                const auto result = test_scheduler->computeSchedule(schedule);
 
-                BOOST_CHECK_EQUAL(SUCCESS, result.first);
-                BOOST_CHECK_EQUAL(&result.second.getInstance(), &instance);
-                BOOST_CHECK(result.second.satisfiesPrecedenceConstraints());
-                BOOST_CHECK(result.second.satisfiesMemoryConstraints());
+                BOOST_CHECK_EQUAL(SUCCESS, result);
+                BOOST_CHECK_EQUAL(&schedule.getInstance(), &instance);
+                BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+                BOOST_CHECK(schedule.satisfiesMemoryConstraints());
             }
         }
     }
@@ -270,12 +274,13 @@ void run_test_local_inc_edges_memory(Scheduler<Graph_t> *test_scheduler) {
 
                 instance.getArchitecture().setMemoryBound(bound);
 
-                std::pair<RETURN_STATUS, BspSchedule<Graph_t>> result = test_scheduler->computeSchedule(instance);
+                BspSchedule<Graph_t> schedule(instance);
+                const auto result = test_scheduler->computeSchedule(schedule);
 
-                BOOST_CHECK_EQUAL(SUCCESS, result.first);
-                BOOST_CHECK_EQUAL(&result.second.getInstance(), &instance);
-                BOOST_CHECK(result.second.satisfiesPrecedenceConstraints());
-                BOOST_CHECK(result.second.satisfiesMemoryConstraints());
+                BOOST_CHECK_EQUAL(SUCCESS, result);
+                BOOST_CHECK_EQUAL(&schedule.getInstance(), &instance);
+                BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+                BOOST_CHECK(schedule.satisfiesMemoryConstraints());
             }
         }
     }
@@ -328,12 +333,13 @@ void run_test_local_inc_edges_2_memory(Scheduler<Graph_t> *test_scheduler) {
 
                 instance.getArchitecture().setMemoryBound(bound);
 
-                std::pair<RETURN_STATUS, BspSchedule<Graph_t>> result = test_scheduler->computeSchedule(instance);
+                BspSchedule<Graph_t> schedule(instance);
+                const auto result = test_scheduler->computeSchedule(schedule);
 
-                BOOST_CHECK_EQUAL(SUCCESS, result.first);
-                BOOST_CHECK_EQUAL(&result.second.getInstance(), &instance);
-                BOOST_CHECK(result.second.satisfiesPrecedenceConstraints());
-                BOOST_CHECK(result.second.satisfiesMemoryConstraints());
+                BOOST_CHECK_EQUAL(SUCCESS, result);
+                BOOST_CHECK_EQUAL(&schedule.getInstance(), &instance);
+                BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+                BOOST_CHECK(schedule.satisfiesMemoryConstraints());
             }
         }
     }
@@ -392,8 +398,6 @@ BOOST_AUTO_TEST_CASE(variance_local_test) {
         test;
     run_test_local_memory(&test);
 };
-
-
 
 BOOST_AUTO_TEST_CASE(GreedyBspScheduler_persistent_transient_test) {
 

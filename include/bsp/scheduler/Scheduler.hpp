@@ -109,19 +109,17 @@ class Scheduler {
      * @param instance The BSP instance for which to compute the schedule.
      * @return A pair containing the return status and the computed schedule.
      */
-    virtual std::pair<RETURN_STATUS, BspSchedule<Graph_t>> computeSchedule(const BspInstance<Graph_t> &instance) = 0;
+    virtual RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &schedule) = 0;
 
+    virtual RETURN_STATUS computeScheduleCS(BspScheduleCS<Graph_t> &schedule) {
 
-
-    virtual std::pair<RETURN_STATUS, BspScheduleCS<Graph_t>> computeScheduleCS(const BspInstance<Graph_t> &instance) {
-
-        auto result = computeSchedule(instance);
-        if (result.first == SUCCESS || result.first == BEST_FOUND) {
-            return std::make_pair(result.first, BspScheduleCS<Graph_t>(std::move(result.second)));
+        auto result = computeSchedule(schedule);
+        if (result == SUCCESS || result == BEST_FOUND) {
+            schedule.setAutoCommunicationSchedule();
+            return result;
         } else {
-            return std::make_pair(result.first, BspScheduleCS<Graph_t>());
+            return ERROR;
         }
-
     }
 
     // /**

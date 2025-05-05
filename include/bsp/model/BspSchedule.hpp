@@ -175,6 +175,7 @@ class BspSchedule : public IBspSchedule<Graph_t> {
      * @return The superstep assignment for the schedule.
      */
     inline const std::vector<unsigned> &assignedSupersteps() const { return node_to_superstep_assignment; }
+    inline std::vector<unsigned> &assignedSupersteps() { return node_to_superstep_assignment; }
 
     /**
      * @brief Returns the processor assignment for the schedule.
@@ -182,6 +183,7 @@ class BspSchedule : public IBspSchedule<Graph_t> {
      * @return The processor assignment for the schedule.
      */
     inline const std::vector<unsigned> &assignedProcessors() const { return node_to_processor_assignment; }
+    inline std::vector<unsigned> &assignedProcessors() { return node_to_processor_assignment; }
 
     /**
      * @brief Sets the superstep assigned to the specified node.
@@ -211,7 +213,7 @@ class BspSchedule : public IBspSchedule<Graph_t> {
      */
     void setAssignedProcessor(vertex_idx node, unsigned processor) {
 
-        if (node < instance->numberOfVertices() && processor < instance->numberOfProcessors()) {
+        if (node < instance->numberOfVertices()) {
             node_to_processor_assignment[node] = processor;
         } else {
             // std::cout << "node " << node << " num nodes " << instance->numberOfVertices() << "  processor " <<
@@ -229,6 +231,9 @@ class BspSchedule : public IBspSchedule<Graph_t> {
     void setAssignedSupersteps(const std::vector<unsigned> &vec) {
 
         if (vec.size() == instance->numberOfVertices()) {
+
+            number_of_supersteps = 0;
+
             for (unsigned i = 0; i < instance->numberOfVertices(); ++i) {
 
                 if (vec[i] >= number_of_supersteps) {
@@ -252,11 +257,6 @@ class BspSchedule : public IBspSchedule<Graph_t> {
 
         if (vec.size() == instance->numberOfVertices()) {
             for (unsigned i = 0; i < instance->numberOfVertices(); ++i) {
-
-                if (vec[i] >= instance->numberOfProcessors()) {
-                    throw std::invalid_argument(
-                        "Invalid Argument while assigning processors: processor index out of range.");
-                }
 
                 node_to_processor_assignment[i] = vec[i];
             }
@@ -462,6 +462,15 @@ class BspSchedule : public IBspSchedule<Graph_t> {
         }
 
         for (const auto &v : instance->vertices()) {
+
+            if (node_to_superstep_assignment[v] >= number_of_supersteps) {
+                return false;
+            }
+
+            if (node_to_processor_assignment[v] >= instance->numberOfProcessors()) {
+                return false;
+            }
+
             for (const auto &target : instance->getComputationalDag().children(v)) {
 
                 const unsigned different_processors =

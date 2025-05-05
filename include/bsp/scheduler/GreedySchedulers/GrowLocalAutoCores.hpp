@@ -58,7 +58,9 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
     /**
      * @brief Default constructor for GreedyBspGrowLocalAutoCores.
      */
-    GrowLocalAutoCores(GrowLocalAutoCores_Params<v_workw_t<Graph_t>> params_ = GrowLocalAutoCores_Params<v_workw_t<Graph_t>>()) : params(params_) {}
+    GrowLocalAutoCores(
+        GrowLocalAutoCores_Params<v_workw_t<Graph_t>> params_ = GrowLocalAutoCores_Params<v_workw_t<Graph_t>>())
+        : params(params_) {}
 
     /**
      * @brief Default destructor for GreedyBspGrowLocalAutoCores.
@@ -73,17 +75,22 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
      * @param instance The BspInstance object representing the instance to compute the schedule for.
      * @return A pair containing the return status and the computed BspSchedule.
      */
-    virtual std::pair<RETURN_STATUS, BspSchedule<Graph_t>>
-    computeSchedule(const BspInstance<Graph_t> &instance) override {
+    virtual RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &schedule) override {
 
         using vertex_idx = typename Graph_t::vertex_idx;
+        const auto &instance = schedule.getInstance();
+
+        for (const auto &v : instance.getComputationalDag().vertices()) {
+            schedule.setAssignedProcessor(v, std::numeric_limits<unsigned>::max());
+            schedule.setAssignedSuperstep(v, std::numeric_limits<unsigned>::max());
+        }
+
+        auto &node_to_proc = schedule.assignedProcessors();
+        auto &node_to_supstep = schedule.assignedSupersteps();
 
         const auto N = instance.numberOfVertices();
         const unsigned P = instance.numberOfProcessors();
         const auto &G = instance.getComputationalDag();
-
-        std::vector<unsigned> node_to_proc(N, std::numeric_limits<unsigned>::max()),
-            node_to_supstep(N, std::numeric_limits<unsigned>::max());
 
         std::set<vertex_idx> ready;
         std::vector<std::set<std::size_t>::iterator> place_in_ready(N);
@@ -307,9 +314,9 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
             ++supstep;
         }
 
-        BspSchedule<Graph_t> schedule(instance, node_to_proc, node_to_supstep);
-
-        return {SUCCESS, schedule};
+        schedule.updateNumberOfSupersteps();
+       
+        return SUCCESS;
     }
 
     /**

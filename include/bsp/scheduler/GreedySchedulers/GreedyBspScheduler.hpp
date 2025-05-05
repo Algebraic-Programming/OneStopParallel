@@ -50,8 +50,8 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
     constexpr static bool use_memory_constraint =
         is_memory_constraint_v<MemoryConstraint_t> or is_memory_constraint_schedule_v<MemoryConstraint_t>;
 
-        static_assert(not use_memory_constraint or std::is_same_v<Graph_t, typename MemoryConstraint_t::Graph_impl_t>, "Graph_t must be the same as MemoryConstraint_t::Graph_impl_t.");
-
+    static_assert(not use_memory_constraint or std::is_same_v<Graph_t, typename MemoryConstraint_t::Graph_impl_t>,
+                  "Graph_t must be the same as MemoryConstraint_t::Graph_impl_t.");
 
     MemoryConstraint_t memory_constraint;
 
@@ -95,8 +95,7 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
     }
 
     void Choose(const BspInstance<Graph_t> &instance, const std::vector<std::set<VertexType>> &procReady,
-                const std::vector<bool> &procFree, VertexType &node, unsigned &p
-                ) const {
+                const std::vector<bool> &procFree, VertexType &node, unsigned &p) const {
 
         double max_score = -1.0;
 
@@ -241,11 +240,13 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
      * @param instance The BspInstance object representing the instance to compute the schedule for.
      * @return A pair containing the return status and the computed BspSchedule.
      */
-    std::pair<RETURN_STATUS, BspSchedule<Graph_t>> computeSchedule(const BspInstance<Graph_t> &instance) override {
+    RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &schedule) override {
 
-        BspSchedule<Graph_t> schedule(
-            instance, std::vector<unsigned>(instance.numberOfVertices(), std::numeric_limits<unsigned>::max()),
-            std::vector<unsigned>(instance.numberOfVertices()));
+        const auto &instance = schedule.getInstance();
+
+        for (const auto &v : instance.getComputationalDag().vertices()) {
+            schedule.setAssignedProcessor(v, std::numeric_limits<unsigned>::max());
+        }
 
         unsigned supstepIdx = 0;
 
@@ -493,7 +494,7 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
 
                 if (not check_mem_feasibility(instance, allReady, procReady)) {
 
-                    return {ERROR, schedule};
+                    return ERROR;
                 }
             }
 
@@ -508,7 +509,7 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
 
         assert(schedule.satisfiesPrecedenceConstraints());
 
-        return {SUCCESS, schedule};
+        return SUCCESS;
     };
 
     /**

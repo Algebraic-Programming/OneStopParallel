@@ -44,8 +44,16 @@ class Serial : public Scheduler<Graph_t> {
      */
     ~Serial() override = default;
 
-    std::pair<RETURN_STATUS, BspSchedule<Graph_t>> computeSchedule(const BspInstance<Graph_t> &instance) override {
-        return {SUCCESS, BspSchedule<Graph_t>(instance)};
+    RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &schedule) override {
+
+        schedule.setNumberOfSupersteps(1);
+
+        for (const auto &v : schedule.getInstance().vertices()) {
+            schedule.setAssignedProcessor(v, 0);
+            schedule.setAssignedSuperstep(v, 0);
+        }
+
+        return SUCCESS;
     }
 
     std::string getScheduleName() const override { return "Serial"; }

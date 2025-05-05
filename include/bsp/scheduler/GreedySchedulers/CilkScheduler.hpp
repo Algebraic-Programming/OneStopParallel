@@ -138,12 +138,13 @@ class CilkScheduler : public Scheduler<Graph_t> {
      * @param instance The BSP instance to compute the schedule for.
      * @return A pair containing the return status and the computed BSP schedule.
      */
-    virtual std::pair<RETURN_STATUS, BspSchedule<Graph_t>>
-    computeSchedule(const BspInstance<Graph_t> &instance) override {
+    virtual RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &bsp_schedule) override {
 
         // if constexpr (use_memory_constraint) {
         //     memory_constraint.initialize(instance);
         // }
+
+        const auto &instance = bsp_schedule.getInstance();
 
         CSchedule<Graph_t> schedule(instance.numberOfVertices());
 
@@ -220,7 +221,9 @@ class CilkScheduler : public Scheduler<Graph_t> {
             }
         }
 
-        return {SUCCESS, schedule.convertToBspSchedule(instance, greedyProcLists)};
+        schedule.convertToBspSchedule(instance, greedyProcLists, bsp_schedule);
+
+        return SUCCESS;
     }
 
     /**

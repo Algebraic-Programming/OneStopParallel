@@ -64,47 +64,45 @@ BOOST_AUTO_TEST_CASE(test_instance_bicgstab) {
     BOOST_CHECK_EQUAL(instance.getComputationalDag().num_vertices(), 54);
     BOOST_CHECK_EQUAL(instance.getComputationalDag().num_vertex_types(), 1);
 
-    std::vector<Scheduler<graph> *> schedulers = {new BspLocking<graph>(),                                      
-                                                  new EtfScheduler<graph>(),   
-                                                  new GreedyBspScheduler<graph>(),
-                                                  new GreedyChildren<graph>(), 
-                                                  new GrowLocalAutoCores<graph>(), 
-                                                  new VarianceFillup<graph>()};
+    std::vector<Scheduler<graph> *> schedulers = {new BspLocking<graph>(),         new EtfScheduler<graph>(),
+                                                  new GreedyBspScheduler<graph>(), new GreedyChildren<graph>(),
+                                                  new GrowLocalAutoCores<graph>(), new VarianceFillup<graph>()};
 
-    std::vector<int> expected_bsp_costs = {92, 108, 100, 108, 102,  110};
+    std::vector<int> expected_bsp_costs = {92, 108, 100, 108, 102, 110};
     std::vector<double> expected_total_costs = {74, 87, 84.25, 80.25, 91.25, 86.75};
     std::vector<int> expected_buffered_sending_costs = {92, 111, 103, 105, 102, 113};
     std::vector<unsigned> expected_supersteps = {6, 7, 7, 5, 3, 7};
 
     std::vector<int> expected_bsp_cs_costs = {86, 99, 97, 99, 102, 107};
 
-
     size_t i = 0;
     for (auto &scheduler : schedulers) {
 
-        std::pair<RETURN_STATUS, BspSchedule<graph>> result = scheduler->computeSchedule(instance);
+        BspSchedule<graph> schedule(instance);
 
-        BOOST_CHECK_EQUAL(SUCCESS, result.first);
-        BOOST_CHECK_EQUAL(&result.second.getInstance(), &instance);
-        BOOST_CHECK(result.second.satisfiesPrecedenceConstraints());
+        const auto result = scheduler->computeSchedule(schedule);
 
-        BOOST_CHECK_EQUAL(result.second.computeCosts(), expected_bsp_costs[i]);
-        BOOST_CHECK_EQUAL(result.second.computeTotalCosts(), expected_total_costs[i]);
-        BOOST_CHECK_EQUAL(result.second.computeBufferedSendingCosts(), expected_buffered_sending_costs[i]);
-        BOOST_CHECK_EQUAL(result.second.numberOfSupersteps(), expected_supersteps[i]);
+        BOOST_CHECK_EQUAL(SUCCESS, result);
+        BOOST_CHECK_EQUAL(&schedule.getInstance(), &instance);
+        BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
+        BOOST_CHECK_EQUAL(schedule.computeCosts(), expected_bsp_costs[i]);
+        BOOST_CHECK_EQUAL(schedule.computeTotalCosts(), expected_total_costs[i]);
+        BOOST_CHECK_EQUAL(schedule.computeBufferedSendingCosts(), expected_buffered_sending_costs[i]);
+        BOOST_CHECK_EQUAL(schedule.numberOfSupersteps(), expected_supersteps[i]);
 
-        const auto result_cs = scheduler->computeScheduleCS(instance);
-        BOOST_CHECK_EQUAL(SUCCESS, result_cs.first);
+        BspScheduleCS<graph> schedule_cs(instance);
 
-        BOOST_CHECK(result_cs.second.hasValidCommSchedule());
+        const auto result_cs = scheduler->computeScheduleCS(schedule_cs);
 
-        BOOST_CHECK_EQUAL(result_cs.second.computeCosts(), expected_bsp_cs_costs[i]);
-        
+        BOOST_CHECK_EQUAL(SUCCESS, result_cs);
+
+        BOOST_CHECK(schedule_cs.hasValidCommSchedule());
+
+        BOOST_CHECK_EQUAL(schedule_cs.computeCosts(), expected_bsp_cs_costs[i]);
 
         i++;
 
         delete scheduler;
     }
 };
-
