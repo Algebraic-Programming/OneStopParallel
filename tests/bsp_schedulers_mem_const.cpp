@@ -101,7 +101,6 @@ void run_test_local_memory(Scheduler<Graph_t> *test_scheduler) {
                 const auto result = test_scheduler->computeSchedule(schedule);
 
                 BOOST_CHECK_EQUAL(SUCCESS, result);
-                BOOST_CHECK_EQUAL(&schedule.getInstance(), &instance);
                 BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
                 BOOST_CHECK(schedule.satisfiesMemoryConstraints());
             }
@@ -160,7 +159,6 @@ void run_test_persistent_transient_memory(Scheduler<Graph_t> *test_scheduler) {
                 const auto result = test_scheduler->computeSchedule(schedule);
 
                 BOOST_CHECK_EQUAL(SUCCESS, result);
-                BOOST_CHECK_EQUAL(&schedule.getInstance(), &instance);
                 BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
                 BOOST_CHECK(schedule.satisfiesMemoryConstraints());
             }
@@ -219,7 +217,6 @@ void run_test_local_in_out_memory(Scheduler<Graph_t> *test_scheduler) {
                 const auto result = test_scheduler->computeSchedule(schedule);
 
                 BOOST_CHECK_EQUAL(SUCCESS, result);
-                BOOST_CHECK_EQUAL(&schedule.getInstance(), &instance);
                 BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
                 BOOST_CHECK(schedule.satisfiesMemoryConstraints());
             }
@@ -278,7 +275,6 @@ void run_test_local_inc_edges_memory(Scheduler<Graph_t> *test_scheduler) {
                 const auto result = test_scheduler->computeSchedule(schedule);
 
                 BOOST_CHECK_EQUAL(SUCCESS, result);
-                BOOST_CHECK_EQUAL(&schedule.getInstance(), &instance);
                 BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
                 BOOST_CHECK(schedule.satisfiesMemoryConstraints());
             }
@@ -337,7 +333,6 @@ void run_test_local_inc_edges_2_memory(Scheduler<Graph_t> *test_scheduler) {
                 const auto result = test_scheduler->computeSchedule(schedule);
 
                 BOOST_CHECK_EQUAL(SUCCESS, result);
-                BOOST_CHECK_EQUAL(&schedule.getInstance(), &instance);
                 BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
                 BOOST_CHECK(schedule.satisfiesMemoryConstraints());
             }

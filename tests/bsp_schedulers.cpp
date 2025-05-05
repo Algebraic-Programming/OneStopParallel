@@ -102,7 +102,6 @@ void run_test(Scheduler<Graph_t> *test_scheduler) {
             const auto result = test_scheduler->computeSchedule(schedule);
 
             BOOST_CHECK_EQUAL(SUCCESS, result);
-            BOOST_CHECK_EQUAL(&schedule.getInstance(), &instance);
             BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
         }

@@ -125,15 +125,15 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
             throw std::invalid_argument(
                 "Invalid Argument while adding communication schedule entry: step out of range.");
 
-        if (std::get<0>(key) >= BspSchedule<Graph_t>::instance->numberOfVertices())
+        if (std::get<0>(key) >= BspSchedule<Graph_t>::instance.numberOfVertices())
             throw std::invalid_argument(
                 "Invalid Argument while adding communication schedule entry: node out of range.");
 
-        if (std::get<1>(key) >= BspSchedule<Graph_t>::instance->numberOfProcessors())
+        if (std::get<1>(key) >= BspSchedule<Graph_t>::instance.numberOfProcessors())
             throw std::invalid_argument(
                 "Invalid Argument while adding communication schedule entry: from processor out of range.");
 
-        if (std::get<2>(key) >= BspSchedule<Graph_t>::instance->numberOfProcessors())
+        if (std::get<2>(key) >= BspSchedule<Graph_t>::instance.numberOfProcessors())
             throw std::invalid_argument(
                 "Invalid Argument while adding communication schedule entry: to processor out of range.");
 
@@ -169,11 +169,11 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
     bool checkCommScheduleValidity(const std::map<KeyTriple, unsigned int> &cs) const {
 
         std::vector<std::vector<unsigned>> first_at = std::vector<std::vector<unsigned>>(
-            BspSchedule<Graph_t>::instance->numberOfVertices(),
-            std::vector<unsigned>(BspSchedule<Graph_t>::instance->numberOfProcessors(),
+            BspSchedule<Graph_t>::instance.numberOfVertices(),
+            std::vector<unsigned>(BspSchedule<Graph_t>::instance.numberOfProcessors(),
                                   BspSchedule<Graph_t>::number_of_supersteps));
 
-        for (const auto &node : BspSchedule<Graph_t>::instance->vertices()) {
+        for (const auto &node : BspSchedule<Graph_t>::instance.vertices()) {
             first_at[node][BspSchedule<Graph_t>::node_to_processor_assignment[node]] =
                 BspSchedule<Graph_t>::node_to_superstep_assignment[node];
         }
@@ -183,13 +183,13 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
             if (val >= BspSchedule<Graph_t>::number_of_supersteps)
                 return false;
 
-            if (std::get<0>(key) >= BspSchedule<Graph_t>::instance->numberOfVertices())
+            if (std::get<0>(key) >= BspSchedule<Graph_t>::instance.numberOfVertices())
                 return false;
 
-            if (std::get<1>(key) >= BspSchedule<Graph_t>::instance->numberOfProcessors())
+            if (std::get<1>(key) >= BspSchedule<Graph_t>::instance.numberOfProcessors())
                 return false;
 
-            if (std::get<2>(key) >= BspSchedule<Graph_t>::instance->numberOfProcessors())
+            if (std::get<2>(key) >= BspSchedule<Graph_t>::instance.numberOfProcessors())
                 return false;
 
             first_at[std::get<0>(key)][std::get<2>(key)] =
@@ -203,8 +203,8 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
             }
         }
 
-        for (const auto &v : BspSchedule<Graph_t>::instance->getComputationalDag().vertices()) {
-            for (const auto &target : BspSchedule<Graph_t>::instance->getComputationalDag().children(v)) {
+        for (const auto &v : BspSchedule<Graph_t>::instance.getComputationalDag().vertices()) {
+            for (const auto &target : BspSchedule<Graph_t>::instance.getComputationalDag().children(v)) {
 
                 if (BspSchedule<Graph_t>::node_to_processor_assignment[v] !=
                     BspSchedule<Graph_t>::node_to_processor_assignment[target]) {
@@ -223,19 +223,19 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
 
         std::vector<std::vector<v_commw_t<Graph_t>>> rec(
             BspSchedule<Graph_t>::number_of_supersteps,
-            std::vector<v_commw_t<Graph_t>>(BspSchedule<Graph_t>::instance->numberOfProcessors(), 0));
+            std::vector<v_commw_t<Graph_t>>(BspSchedule<Graph_t>::instance.numberOfProcessors(), 0));
         std::vector<std::vector<v_commw_t<Graph_t>>> send(
             BspSchedule<Graph_t>::number_of_supersteps,
-            std::vector<v_commw_t<Graph_t>>(BspSchedule<Graph_t>::instance->numberOfProcessors(), 0));
+            std::vector<v_commw_t<Graph_t>>(BspSchedule<Graph_t>::instance.numberOfProcessors(), 0));
 
         for (auto const &[key, val] : commSchedule) {
 
             send[val][std::get<1>(key)] +=
-                BspSchedule<Graph_t>::instance->sendCosts(std::get<1>(key), std::get<2>(key)) *
-                BspSchedule<Graph_t>::instance->getComputationalDag().vertex_comm_weight(std::get<0>(key));
+                BspSchedule<Graph_t>::instance.sendCosts(std::get<1>(key), std::get<2>(key)) *
+                BspSchedule<Graph_t>::instance.getComputationalDag().vertex_comm_weight(std::get<0>(key));
             rec[val][std::get<2>(key)] +=
-                BspSchedule<Graph_t>::instance->sendCosts(std::get<1>(key), std::get<2>(key)) *
-                BspSchedule<Graph_t>::instance->getComputationalDag().vertex_comm_weight(std::get<0>(key));
+                BspSchedule<Graph_t>::instance.sendCosts(std::get<1>(key), std::get<2>(key)) *
+                BspSchedule<Graph_t>::instance.getComputationalDag().vertex_comm_weight(std::get<0>(key));
         }
 
         v_commw_t<Graph_t> comm_cost = 0;
@@ -243,7 +243,7 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
 
             v_commw_t<Graph_t> max_comm = 0;
 
-            for (unsigned proc = 0; proc < BspSchedule<Graph_t>::instance->numberOfProcessors(); proc++) {
+            for (unsigned proc = 0; proc < BspSchedule<Graph_t>::instance.numberOfProcessors(); proc++) {
                 if (max_comm < send[step][proc])
                     max_comm = send[step][proc];
                 if (max_comm < rec[step][proc])
@@ -251,8 +251,8 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
             }
 
             if (max_comm > 0) {
-                comm_cost += BspSchedule<Graph_t>::instance->synchronisationCosts() +
-                             max_comm * BspSchedule<Graph_t>::instance->communicationCosts();
+                comm_cost += BspSchedule<Graph_t>::instance.synchronisationCosts() +
+                             max_comm * BspSchedule<Graph_t>::instance.communicationCosts();
             }
         }
 
@@ -305,19 +305,19 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
 
     void setImprovedLazyCommunicationSchedule() {
         commSchedule.clear();
-        if (BspSchedule<Graph_t>::instance->getComputationalDag().num_vertices() <= 1 ||
+        if (BspSchedule<Graph_t>::instance.getComputationalDag().num_vertices() <= 1 ||
             BspSchedule<Graph_t>::number_of_supersteps <= 1)
             return;
 
         std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> step_proc_node_list(
             BspSchedule<Graph_t>::number_of_supersteps,
-            std::vector<std::vector<vertex_idx_t<Graph_t>>>(BspSchedule<Graph_t>::instance->numberOfProcessors(),
+            std::vector<std::vector<vertex_idx_t<Graph_t>>>(BspSchedule<Graph_t>::instance.numberOfProcessors(),
                                                             std::vector<vertex_idx_t<Graph_t>>()));
         std::vector<std::vector<bool>> node_to_proc_been_sent(
-            BspSchedule<Graph_t>::instance->numberOfVertices(),
-            std::vector<bool>(BspSchedule<Graph_t>::instance->numberOfProcessors(), false));
+            BspSchedule<Graph_t>::instance.numberOfVertices(),
+            std::vector<bool>(BspSchedule<Graph_t>::instance.numberOfProcessors(), false));
 
-        for (vertex_idx_t<Graph_t> node = 0; node < BspSchedule<Graph_t>::instance->numberOfVertices(); node++) {
+        for (vertex_idx_t<Graph_t> node = 0; node < BspSchedule<Graph_t>::instance.numberOfVertices(); node++) {
             step_proc_node_list[BspSchedule<Graph_t>::node_to_superstep_assignment[node]]
                                [BspSchedule<Graph_t>::node_to_processor_assignment[node]]
                                    .push_back(node);
@@ -326,20 +326,20 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
 
         // processor, ordered list of (cost, node, to_processor)
         std::vector<std::set<std::vector<vertex_idx_t<Graph_t>>, std::greater<>>> require_sending(
-            BspSchedule<Graph_t>::instance->numberOfProcessors());
+            BspSchedule<Graph_t>::instance.numberOfProcessors());
         // TODO the datastructure seems to be wrong. the vectors added to the set have elements of different types.
         // it should really be std::vector<std::set<std::tuple<v_commw_t<Graph_t>, vertex_idx_t<Graph_t>,
         // vertex_idx_t<Graph_t>>>> added many static_cast below as tmp fix
 
-        for (unsigned proc = 0; proc < BspSchedule<Graph_t>::instance->numberOfProcessors(); proc++) {
+        for (unsigned proc = 0; proc < BspSchedule<Graph_t>::instance.numberOfProcessors(); proc++) {
             for (const auto &node : step_proc_node_list[0][proc]) {
 
-                for (const auto &target : BspSchedule<Graph_t>::instance->getComputationalDag().children(node)) {
+                for (const auto &target : BspSchedule<Graph_t>::instance.getComputationalDag().children(node)) {
                     if (proc != BspSchedule<Graph_t>::assignedProcessor(target)) {
                         require_sending[proc].insert(
                             {static_cast<vertex_idx_t<Graph_t>>(
-                                 BspSchedule<Graph_t>::instance->getComputationalDag().vertex_comm_weight(node) *
-                                 BspSchedule<Graph_t>::instance->getArchitecture().sendCosts(
+                                 BspSchedule<Graph_t>::instance.getComputationalDag().vertex_comm_weight(node) *
+                                 BspSchedule<Graph_t>::instance.getArchitecture().sendCosts(
                                      proc, BspSchedule<Graph_t>::node_to_processor_assignment[target])),
                              node, BspSchedule<Graph_t>::node_to_processor_assignment[target]});
                     }
@@ -348,13 +348,13 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
         }
 
         for (unsigned step = 1; step < BspSchedule<Graph_t>::number_of_supersteps; step++) {
-            std::vector<v_commw_t<Graph_t>> send_cost(BspSchedule<Graph_t>::instance->numberOfProcessors(), 0);
-            std::vector<v_commw_t<Graph_t>> receive_cost(BspSchedule<Graph_t>::instance->numberOfProcessors(), 0);
+            std::vector<v_commw_t<Graph_t>> send_cost(BspSchedule<Graph_t>::instance.numberOfProcessors(), 0);
+            std::vector<v_commw_t<Graph_t>> receive_cost(BspSchedule<Graph_t>::instance.numberOfProcessors(), 0);
 
             // must send in superstep step-1
-            for (unsigned proc = 0; proc < BspSchedule<Graph_t>::instance->numberOfProcessors(); proc++) {
+            for (unsigned proc = 0; proc < BspSchedule<Graph_t>::instance.numberOfProcessors(); proc++) {
                 for (const auto &node : step_proc_node_list[step][proc]) {
-                    for (const auto &source : BspSchedule<Graph_t>::instance->getComputationalDag().parents(node)) {
+                    for (const auto &source : BspSchedule<Graph_t>::instance.getComputationalDag().parents(node)) {
 
                         if (!node_to_proc_been_sent[source][proc]) {
                             assert(BspSchedule<Graph_t>::node_to_superstep_assignment[source] < step);
@@ -364,8 +364,8 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
                                 step - 1);
                             node_to_proc_been_sent[source][proc] = true;
                             v_commw_t<Graph_t> comm_cost =
-                                BspSchedule<Graph_t>::instance->getComputationalDag().vertex_comm_weight(source) *
-                                BspSchedule<Graph_t>::instance->getArchitecture().sendCosts(
+                                BspSchedule<Graph_t>::instance.getComputationalDag().vertex_comm_weight(source) *
+                                BspSchedule<Graph_t>::instance.getArchitecture().sendCosts(
                                     BspSchedule<Graph_t>::node_to_processor_assignment[source], proc);
                             require_sending[BspSchedule<Graph_t>::assignedProcessor(source)].erase(
                                 {static_cast<vertex_idx_t<Graph_t>>(comm_cost), source, proc});
@@ -378,14 +378,14 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
 
             // getting max costs
             v_commw_t<Graph_t> max_comm_cost = 0;
-            for (size_t proc = 0; proc < BspSchedule<Graph_t>::instance->numberOfProcessors(); proc++) {
+            for (size_t proc = 0; proc < BspSchedule<Graph_t>::instance.numberOfProcessors(); proc++) {
                 max_comm_cost = std::max(max_comm_cost, send_cost[proc]);
                 max_comm_cost = std::max(max_comm_cost, receive_cost[proc]);
             }
 
             // extra sends
             // TODO: permute the order of processors
-            for (size_t proc = 0; proc < BspSchedule<Graph_t>::instance->numberOfProcessors(); proc++) {
+            for (size_t proc = 0; proc < BspSchedule<Graph_t>::instance.numberOfProcessors(); proc++) {
                 if (require_sending[proc].empty() ||
                     static_cast<v_commw_t<Graph_t>>((*(require_sending[proc].rbegin()))[0]) + send_cost[proc] >
                         max_comm_cost)
@@ -410,15 +410,15 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
             }
 
             // updating require_sending
-            for (unsigned proc = 0; proc < BspSchedule<Graph_t>::instance->numberOfProcessors(); proc++) {
+            for (unsigned proc = 0; proc < BspSchedule<Graph_t>::instance.numberOfProcessors(); proc++) {
                 for (const auto &node : step_proc_node_list[step][proc]) {
 
-                    for (const auto &target : BspSchedule<Graph_t>::instance->getComputationalDag().children(node))
+                    for (const auto &target : BspSchedule<Graph_t>::instance.getComputationalDag().children(node))
                         if (proc != BspSchedule<Graph_t>::assignedProcessor(target)) {
                             require_sending[proc].insert(
                                 {static_cast<vertex_idx_t<Graph_t>>(
-                                     BspSchedule<Graph_t>::instance->getComputationalDag().vertex_comm_weight(node) *
-                                     BspSchedule<Graph_t>::instance->getArchitecture().sendCosts(
+                                     BspSchedule<Graph_t>::instance.getComputationalDag().vertex_comm_weight(node) *
+                                     BspSchedule<Graph_t>::instance.getArchitecture().sendCosts(
                                          proc, BspSchedule<Graph_t>::node_to_processor_assignment[target])),
                                  node, BspSchedule<Graph_t>::node_to_processor_assignment[target]});
                         }
@@ -430,8 +430,8 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
     void setLazyCommunicationSchedule() {
         commSchedule.clear();
 
-        for (const auto &source : BspSchedule<Graph_t>::instance->getComputationalDag().vertices()) {
-            for (const auto &target : BspSchedule<Graph_t>::instance->getComputationalDag().children(source)) {
+        for (const auto &source : BspSchedule<Graph_t>::instance.getComputationalDag().vertices()) {
+            for (const auto &target : BspSchedule<Graph_t>::instance.getComputationalDag().children(source)) {
 
                 if (BspSchedule<Graph_t>::node_to_processor_assignment[source] !=
                     BspSchedule<Graph_t>::node_to_processor_assignment[target]) {
@@ -452,8 +452,8 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
     void setEagerCommunicationSchedule() {
         commSchedule.clear();
 
-        for (const auto &source : BspSchedule<Graph_t>::instance->getComputationalDag().vertices()) {
-            for (const auto &target : BspSchedule<Graph_t>::instance->getComputationalDag().children(source)) {
+        for (const auto &source : BspSchedule<Graph_t>::instance.getComputationalDag().vertices()) {
+            for (const auto &target : BspSchedule<Graph_t>::instance.getComputationalDag().children(source)) {
 
                 if (BspSchedule<Graph_t>::node_to_processor_assignment[source] !=
                     BspSchedule<Graph_t>::node_to_processor_assignment[target]) {
