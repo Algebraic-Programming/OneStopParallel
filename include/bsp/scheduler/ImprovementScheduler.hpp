@@ -88,37 +88,13 @@ class ImprovementScheduler {
     virtual RETURN_STATUS improveSchedule(BspSchedule<Graph_t> &schedule) = 0;
 
     /**
-     * @brief Construct an improved BspSchedule based on the given schedule.
-     * @param schedule The BspSchedule to be improved.
-     * @return A pair containing the status of the improvement operation and the improved BspSchedule.
-     */
-    virtual std::pair<RETURN_STATUS, BspSchedule<Graph_t>>
-    constructImprovedSchedule(const BspSchedule<Graph_t> &schedule) {
-
-        BspSchedule<Graph_t> improvedSchedule = schedule;
-        RETURN_STATUS status = improveSchedule(improvedSchedule);
-        return {status, improvedSchedule};
-    }
-
-    /**
      * @brief Improve the given BspSchedule within the time limit.
      * @param schedule The BspSchedule to be improved.
      * @return The status of the improvement operation.
      */
     virtual RETURN_STATUS improveScheduleWithTimeLimit(BspSchedule<Graph_t> &schedule) = 0;
 
-    /**
-     * @brief Construct an improved BspSchedule based on the given schedule within the time limit.
-     * @param schedule The BspSchedule to be improved.
-     * @return A pair containing the status of the improvement operation and the improved BspSchedule.
-     */
-    virtual std::pair<RETURN_STATUS, BspSchedule<Graph_t>>
-    constructImprovedScheduleWithTimeLimit(const BspSchedule<Graph_t> &schedule) {
 
-        BspSchedule<Graph_t> improvedSchedule = schedule;
-        RETURN_STATUS status = improveScheduleWithTimeLimit(improvedSchedule);
-        return {status, improvedSchedule};
-    }
 
 };
 
