@@ -443,7 +443,7 @@ class BspSchedule : public IBspSchedule<Graph_t> {
         return costs;
     }
 
-    v_workw_t<Graph_t> computeCosts() const { return compute_lazy_communication_costs() + computeWorkCosts(); }
+    virtual v_workw_t<Graph_t> computeCosts() const { return compute_lazy_communication_costs() + computeWorkCosts(); }
 
     /**
      * @brief Returns true if the schedule satisfies the precedence constraints of the computational DAG.

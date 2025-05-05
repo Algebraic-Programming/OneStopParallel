@@ -21,6 +21,7 @@ limitations under the License.
 
 #include "bsp/model/BspInstance.hpp"
 #include "bsp/model/BspSchedule.hpp"
+#include "bsp/model/BspScheduleCS.hpp"
 #include "graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 #include "io/arch_file_reader.hpp"
@@ -75,6 +76,9 @@ BOOST_AUTO_TEST_CASE(test_instance_bicgstab) {
     std::vector<int> expected_buffered_sending_costs = {92, 111, 103, 105, 102, 113};
     std::vector<unsigned> expected_supersteps = {6, 7, 7, 5, 3, 7};
 
+    std::vector<int> expected_bsp_cs_costs = {86, 99, 97, 99, 102, 107};
+
+
     size_t i = 0;
     for (auto &scheduler : schedulers) {
 
@@ -89,8 +93,18 @@ BOOST_AUTO_TEST_CASE(test_instance_bicgstab) {
         BOOST_CHECK_EQUAL(result.second.computeBufferedSendingCosts(), expected_buffered_sending_costs[i]);
         BOOST_CHECK_EQUAL(result.second.numberOfSupersteps(), expected_supersteps[i]);
 
+
+        const auto result_cs = scheduler->computeScheduleCS(instance);
+        BOOST_CHECK_EQUAL(SUCCESS, result_cs.first);
+
+        BOOST_CHECK(result_cs.second.hasValidCommSchedule());
+
+        BOOST_CHECK_EQUAL(result_cs.second.computeCosts(), expected_bsp_cs_costs[i]);
+        
+
         i++;
 
         delete scheduler;
     }
 };
+
