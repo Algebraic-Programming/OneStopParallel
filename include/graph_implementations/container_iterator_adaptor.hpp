@@ -104,12 +104,14 @@ class IterAdaptor {
     reference operator*() { return transformer(*iter); }
     const reference operator*() const { return transformer(*iter); }
 
-    ThisT &operator+=(const std::enable_if_t<_is_random, std::size_t> count) {
+    template<typename SizeT = std::size_t>
+    ThisT &operator+=(const std::enable_if_t<_is_random, SizeT> count) {
         iter += count;
         return *this;
     }
 
-    inline difference_type operator-(std::enable_if_t<_is_random, ThisT const &> other) const {
+    template<typename RetT = ThisT const &>
+    inline difference_type operator-(std::enable_if_t<_is_random, RetT> other) const {
         return this->iter - other.iter;
     }
 
