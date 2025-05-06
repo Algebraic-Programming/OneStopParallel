@@ -24,6 +24,7 @@ limitations under the License.
 #include "bsp/model/BspScheduleCS.hpp"
 #include "graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
+#include "io/BspScheduleWriter.hpp"
 #include "io/arch_file_reader.hpp"
 #include "io/graph_file_reader.hpp"
 #include <filesystem>
@@ -105,4 +106,76 @@ BOOST_AUTO_TEST_CASE(test_instance_bicgstab) {
 
         delete scheduler;
     }
+};
+
+BOOST_AUTO_TEST_CASE(test_schedule_writer) {
+
+    using graph_t1 = computational_dag_edge_idx_vector_impl_def_t;
+    using graph_t2 = computational_dag_vector_impl_def_t;
+
+    BspInstance<graph_t1> instance;
+    instance.setNumberOfProcessors(4);
+    instance.setCommunicationCosts(3);
+    instance.setSynchronisationCosts(5);
+
+    // Getting root git directory
+    std::filesystem::path cwd = std::filesystem::current_path();
+    std::cout << cwd << std::endl;
+    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
+        cwd = cwd.parent_path();
+        std::cout << cwd << std::endl;
+    }
+
+    bool status = file_reader::readComputationalDagHyperdagFormat(
+        (cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(), instance.getComputationalDag());
+
+    BOOST_CHECK(status);
+    BOOST_CHECK_EQUAL(instance.getComputationalDag().num_vertices(), 54);
+    BOOST_CHECK_EQUAL(instance.getComputationalDag().num_vertex_types(), 1);
+
+    BspLocking<graph_t1> scheduler;
+    BspSchedule<graph_t1> schedule(instance);
+    const auto result = scheduler.computeSchedule(schedule);
+    BOOST_CHECK_EQUAL(SUCCESS, result);
+    BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+
+    BspScheduleWriter sched_writer;
+
+    std::cout << "Writing schedule_t1" << std::endl;
+    sched_writer.write_dot(std::cout, schedule);
+
+    BspInstance<graph_t2> instance_t2(instance);
+    BspSchedule<graph_t2> schedule_t2(instance_t2);
+
+    BOOST_CHECK_EQUAL(schedule_t2.getInstance().getComputationalDag().num_vertices(),
+                      instance.getComputationalDag().num_vertices());
+    BOOST_CHECK(schedule_t2.satisfiesPrecedenceConstraints());
+
+    BOOST_CHECK_EQUAL(instance_t2.getComputationalDag().num_vertices(), instance.getComputationalDag().num_vertices());
+    BOOST_CHECK_EQUAL(instance_t2.getComputationalDag().num_vertex_types(),
+                      instance.getComputationalDag().num_vertex_types());
+    BOOST_CHECK_EQUAL(instance_t2.getComputationalDag().num_edges(), instance.getComputationalDag().num_edges());
+
+    for (const auto &v : instance.getComputationalDag().vertices()) {
+
+        BOOST_CHECK_EQUAL(instance_t2.getComputationalDag().vertex_work_weight(v),
+                          instance.getComputationalDag().vertex_work_weight(v));
+        BOOST_CHECK_EQUAL(instance_t2.getComputationalDag().vertex_comm_weight(v),
+                          instance.getComputationalDag().vertex_comm_weight(v));
+
+        BOOST_CHECK_EQUAL(instance_t2.getComputationalDag().vertex_mem_weight(v),
+                          instance.getComputationalDag().vertex_mem_weight(v));
+
+        BOOST_CHECK_EQUAL(instance_t2.getComputationalDag().vertex_type(v),
+                          instance.getComputationalDag().vertex_type(v));
+
+        BOOST_CHECK_EQUAL(instance_t2.getComputationalDag().out_degree(v),
+                          instance.getComputationalDag().out_degree(v));
+
+        BOOST_CHECK_EQUAL(instance_t2.getComputationalDag().in_degree(v), instance.getComputationalDag().in_degree(v));
+    }
+
+    std::cout << "Writing schedule_t2" << std::endl;
+
+    sched_writer.write_dot(std::cout, schedule_t2);
 };

@@ -23,6 +23,7 @@ limitations under the License.
 #include "BspArchitecture.hpp"
 #include "concepts/computational_dag_concept.hpp"
 #include "graph_algorithms/computational_dag_util.hpp"
+#include "graph_algorithms/computational_dag_construction_util.hpp"
 
 namespace osp {
 
@@ -61,6 +62,12 @@ class BspInstance {
     BspInstance(Graph_t cdag, BspArchitecture<Graph_t> architecture_,
                 std::vector<std::vector<bool>> nodeProcessorCompatibility_ = std::vector<std::vector<bool>>({{true}}))
         : cdag(cdag), architecture(architecture_), nodeProcessorCompatibility(nodeProcessorCompatibility_) {}
+
+    template<typename Graph_t_other>
+    explicit BspInstance(const BspInstance<Graph_t_other> &other)
+        : architecture(other.getArchitecture()), nodeProcessorCompatibility(other.getNodeProcessorCompatibilityMatrix()) {
+        construct_computational_dag(other.getComputationalDag(), cdag);
+    }
 
     /**
      * @brief Returns a reference to the BSP architecture for the instance.

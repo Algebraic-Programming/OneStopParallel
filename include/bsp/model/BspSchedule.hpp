@@ -65,7 +65,6 @@ class BspSchedule : public IBspSchedule<Graph_t> {
     std::vector<unsigned> node_to_superstep_assignment;
 
   public:
-    
     BspSchedule() = delete;
 
     /**
@@ -88,13 +87,13 @@ class BspSchedule : public IBspSchedule<Graph_t> {
      */
     BspSchedule(const BspInstance<Graph_t> &inst, const std::vector<unsigned> &processor_assignment_,
                 const std::vector<unsigned> &superstep_assignment_)
-        : instance(&inst), node_to_processor_assignment(processor_assignment_),
+        : instance(inst), node_to_processor_assignment(processor_assignment_),
           node_to_superstep_assignment(superstep_assignment_) {
         updateNumberOfSupersteps();
     }
 
     BspSchedule(const IBspSchedule<Graph_t> &schedule)
-        : instance(&schedule.getInstance()), number_of_supersteps(schedule.numberOfSupersteps()),
+        : instance(schedule.getInstance()), number_of_supersteps(schedule.numberOfSupersteps()),
           node_to_processor_assignment(schedule.getInstance().numberOfVertices()),
           node_to_superstep_assignment(schedule.getInstance().numberOfVertices()) {
 
@@ -114,6 +113,12 @@ class BspSchedule : public IBspSchedule<Graph_t> {
         : instance(schedule.instance), number_of_supersteps(schedule.number_of_supersteps),
           node_to_processor_assignment(std::move(schedule.node_to_processor_assignment)),
           node_to_superstep_assignment(std::move(schedule.node_to_superstep_assignment)) {}
+
+    template<typename Graph_t_other>
+    BspSchedule(const BspInstance<Graph_t> &instance_, const BspSchedule<Graph_t_other> &schedule)
+        : instance(instance_), number_of_supersteps(schedule.numberOfSupersteps()),
+          node_to_processor_assignment(schedule.assignedProcessors()),
+          node_to_superstep_assignment(schedule.assignedSupersteps()) {}
 
     /**
      * @brief Destructor for the BspSchedule class.
@@ -532,8 +537,8 @@ class BspSchedule : public IBspSchedule<Graph_t> {
 
                 const unsigned proc = node_to_processor_assignment[node];
                 current_proc_persistent_memory[proc] += instance.getComputationalDag().vertex_mem_weight(node);
-                current_proc_transient_memory[proc] = std::max(
-                    current_proc_transient_memory[proc], instance.getComputationalDag().vertex_comm_weight(node));
+                current_proc_transient_memory[proc] = std::max(current_proc_transient_memory[proc],
+                                                               instance.getComputationalDag().vertex_comm_weight(node));
 
                 if (current_proc_persistent_memory[proc] + current_proc_transient_memory[proc] >
                     instance.getArchitecture().memoryBound(proc)) {
