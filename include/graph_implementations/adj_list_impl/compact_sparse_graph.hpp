@@ -563,6 +563,11 @@ class Compact_Sparse_Graph {
                             priorities[sibling] = log_sum_exp(priorities[sibling], pos);
                         }
                     }
+                    for (vertex_idx chld : children_tmp[vert]) {
+                        for (vertex_idx couple : parents_tmp[chld]) {
+                            priorities[couple] = log_sum_exp(priorities[couple], pos);
+                        }
+                    }
 
                     // update constraints and push to queue
                     for (vertex_idx chld : children_tmp[vert]) {
