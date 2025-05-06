@@ -59,6 +59,8 @@ _add_test( bsp_improvementschedulers )
 
 _add_test( coarser )
 
+_add_test( compact_sparse_graph )
+
 
 # Custom target to compile all the tests
 add_custom_target( build_tests DEPENDS ${tests_list} )

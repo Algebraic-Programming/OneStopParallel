@@ -30,7 +30,7 @@ limitations under the License.
 
 namespace osp {
 
-template<bool keep_vertex_order, bool use_comm_weights = false, bool use_mem_weights = false, bool use_vert_types = false, bool use_work_weights = true, typename vert_t = std::size_t, typename edge_t = std::size_t>
+template<bool keep_vertex_order, bool use_work_weights = false, bool use_comm_weights = false, bool use_mem_weights = false, bool use_vert_types = false, typename vert_t = std::size_t, typename edge_t = std::size_t>
 class Compact_Sparse_Graph {
     static_assert(std::is_integral<vert_t>::value && std::is_integral<edge_t>::value, "Vertex and edge type must be of integral nature.");
 
@@ -66,44 +66,44 @@ class Compact_Sparse_Graph {
                     return csr_target_ptr[v + 1] - csr_target_ptr[v];
                 }
 
-                class iterator {
-                    public:
-                        using iterator_category = std::random_access_iterator_tag;
-                        using difference_type = vertex_idx;
-                        using value_type = vertex_idx;
-                        using pointer = vertex_idx *;
-                        using reference = vertex_idx &;
+                // class iterator {
+                //     public:
+                //         using iterator_category = std::random_access_iterator_tag;
+                //         using difference_type = vertex_idx;
+                //         using value_type = vertex_idx;
+                //         using pointer = vertex_idx *;
+                //         using reference = vertex_idx &;
 
-                    private:
-                        const std::vector<vertex_idx> &_csr_edge_parents;
-                        edge_t _index;
+                //     private:
+                //         const std::vector<vertex_idx> &_csr_edge_parents;
+                //         edge_t _index;
 
-                    public:
-                        iterator(const std::vector<vertex_idx> &_csr_edge_parents_, edge_t index) : _csr_edge_parents(_csr_edge_parents_), _index(index) {};
+                //     public:
+                //         iterator(const std::vector<vertex_idx> &_csr_edge_parents_, edge_t index) : _csr_edge_parents(_csr_edge_parents_), _index(index) {};
 
-                        inline edge_t get_index() { return _index; }
+                //         inline edge_t get_index() { return _index; }
 
-                        inline reference operator*() const { return _csr_edge_parents[_index]; }
-                        inline pointer operator->() const { auto it = _csr_edge_parents.begin(); std::advance(it, _index); return it; }
-                        inline reference operator[](difference_type diff) const { return _csr_edge_parents[_index + diff]; }
+                //         inline reference operator*() const { return _csr_edge_parents[_index]; }
+                //         inline pointer operator->() const { auto it = _csr_edge_parents.begin(); std::advance(it, _index); return it; }
+                //         inline reference operator[](difference_type diff) const { return _csr_edge_parents[_index + diff]; }
 
-                        inline iterator &operator++() { ++_index; return *this; }
-                        inline iterator operator++(int) { iterator tmp = *this; ++(*this); return tmp; }
+                //         inline iterator &operator++() { ++_index; return *this; }
+                //         inline iterator operator++(int) { iterator tmp = *this; ++(*this); return tmp; }
 
-                        inline iterator &operator--() { --_index; return *this; }
-                        inline iterator operator--(int) { iterator tmp = *this; --(*this); return tmp; }
+                //         inline iterator &operator--() { --_index; return *this; }
+                //         inline iterator operator--(int) { iterator tmp = *this; --(*this); return tmp; }
 
-                        inline iterator operator+(difference_type diff) const { return iterator(_csr_edge_parents, _index + diff); }
-                        inline iterator operator-(difference_type diff) const { return iterator(_csr_edge_parents, _index - diff); }
+                //         inline iterator operator+(difference_type diff) const { return iterator(_csr_edge_parents, _index + diff); }
+                //         inline iterator operator-(difference_type diff) const { return iterator(_csr_edge_parents, _index - diff); }
 
-                        inline bool operator==(const iterator &other) const { return _index == other._index; }
-                        inline bool operator!=(const iterator &other) const { return !(*this == other); }
+                //         inline bool operator==(const iterator &other) const { return _index == other._index; }
+                //         inline bool operator!=(const iterator &other) const { return !(*this == other); }
                         
-                        inline bool operator<=(const iterator &other) const { return _index <= other._index; }
-                        inline bool operator<(const iterator &other) const { return (*this <= other) && (*this != other); }
-                        inline bool operator>=(const iterator &other) const { return (!(*this <= other)) || (*this == other); }
-                        inline bool operator>(const iterator &other) const { return !(*this <= other); }
-                };
+                //         inline bool operator<=(const iterator &other) const { return _index <= other._index; }
+                //         inline bool operator<(const iterator &other) const { return (*this <= other) && (*this != other); }
+                //         inline bool operator>=(const iterator &other) const { return (!(*this <= other)) || (*this == other); }
+                //         inline bool operator>(const iterator &other) const { return !(*this <= other); }
+                // };
 
                 class const_iterator {
                     public:
@@ -144,44 +144,44 @@ class Compact_Sparse_Graph {
                         inline bool operator>(const const_iterator &other) const { return !(*this <= other); }
                 };
 
-                class reverse_iterator {
-                    public:
-                        using iterator_category = std::random_access_iterator_tag;
-                        using difference_type = vertex_idx;
-                        using value_type = vertex_idx;
-                        using pointer = vertex_idx *;
-                        using reference = vertex_idx &;
+                // class reverse_iterator {
+                //     public:
+                //         using iterator_category = std::random_access_iterator_tag;
+                //         using difference_type = vertex_idx;
+                //         using value_type = vertex_idx;
+                //         using pointer = vertex_idx *;
+                //         using reference = vertex_idx &;
 
-                    private:
-                        const std::vector<vertex_idx> &_csr_edge_parents;
-                        edge_t _index;
+                //     private:
+                //         const std::vector<vertex_idx> &_csr_edge_parents;
+                //         edge_t _index;
 
-                    public:
-                        reverse_iterator(const std::vector<vertex_idx> &_csr_edge_parents_, edge_t index) : _csr_edge_parents(_csr_edge_parents_), _index(index) {};
+                //     public:
+                //         reverse_iterator(const std::vector<vertex_idx> &_csr_edge_parents_, edge_t index) : _csr_edge_parents(_csr_edge_parents_), _index(index) {};
 
-                        inline edge_t get_index() { return _index - 1; }
+                //         inline edge_t get_index() { return _index - 1; }
 
-                        inline reference operator*() const { return csr_edge_parents[_index - 1]; }
-                        inline pointer operator->() const { auto it = csr_edge_parents.begin(); std::advance(it, _index - 1); return it; }
-                        inline reference operator[](difference_type diff) const { return csr_edge_parents[_index - 1 - diff]; }
+                //         inline reference operator*() const { return csr_edge_parents[_index - 1]; }
+                //         inline pointer operator->() const { auto it = csr_edge_parents.begin(); std::advance(it, _index - 1); return it; }
+                //         inline reference operator[](difference_type diff) const { return csr_edge_parents[_index - 1 - diff]; }
 
-                        inline reverse_iterator &operator++() { --_index; return *this; }
-                        inline reverse_iterator operator++(int) { reverse_iterator tmp = *this; ++(*this); return tmp; }
+                //         inline reverse_iterator &operator++() { --_index; return *this; }
+                //         inline reverse_iterator operator++(int) { reverse_iterator tmp = *this; ++(*this); return tmp; }
 
-                        inline reverse_iterator &operator--() { ++_index; return *this; }
-                        inline reverse_iterator operator--(int) { reverse_iterator tmp = *this; --(*this); return tmp; }
+                //         inline reverse_iterator &operator--() { ++_index; return *this; }
+                //         inline reverse_iterator operator--(int) { reverse_iterator tmp = *this; --(*this); return tmp; }
 
-                        inline reverse_iterator operator+(difference_type diff) const { return reverse_iterator(_csr_edge_parents, _index - diff); }
-                        inline reverse_iterator operator-(difference_type diff) const { return reverse_iterator(_csr_edge_parents, _index + diff); }
+                //         inline reverse_iterator operator+(difference_type diff) const { return reverse_iterator(_csr_edge_parents, _index - diff); }
+                //         inline reverse_iterator operator-(difference_type diff) const { return reverse_iterator(_csr_edge_parents, _index + diff); }
 
-                        inline bool operator==(const reverse_iterator &other) const { return _index == other._index; }
-                        inline bool operator!=(const reverse_iterator &other) const { return !(*this == other); }
+                //         inline bool operator==(const reverse_iterator &other) const { return _index == other._index; }
+                //         inline bool operator!=(const reverse_iterator &other) const { return !(*this == other); }
                         
-                        inline bool operator<=(const reverse_iterator &other) const { return _index >= other._index; }
-                        inline bool operator<(const reverse_iterator &other) const { return (*this <= other) && (*this != other); }
-                        inline bool operator>=(const reverse_iterator &other) const { return (!(*this <= other)) || (*this == other); }
-                        inline bool operator>(const reverse_iterator &other) const { return !(*this <= other); }
-                };
+                //         inline bool operator<=(const reverse_iterator &other) const { return _index >= other._index; }
+                //         inline bool operator<(const reverse_iterator &other) const { return (*this <= other) && (*this != other); }
+                //         inline bool operator>=(const reverse_iterator &other) const { return (!(*this <= other)) || (*this == other); }
+                //         inline bool operator>(const reverse_iterator &other) const { return !(*this <= other); }
+                // };
 
                 class const_reverse_iterator {
                     public:
@@ -231,14 +231,14 @@ class Compact_Sparse_Graph {
                     public:
                         Parent_range (const std::vector<vertex_idx> &csr_edge_parents, const std::vector<edge_t> &csr_target_ptr, const vertex_idx vert) : _csr_edge_parents(csr_edge_parents), _csr_target_ptr(csr_target_ptr), _vert(vert) {};
 
-                        inline auto begin() const { return iterator(_csr_edge_parents, _csr_target_ptr[_vert]); }
-                        inline auto end() const { return iterator(_csr_edge_parents, _csr_target_ptr[_vert + 1]); }
+                        inline auto begin() const { return const_iterator(_csr_edge_parents, _csr_target_ptr[_vert]); }
+                        inline auto end() const { return const_iterator(_csr_edge_parents, _csr_target_ptr[_vert + 1]); }
 
                         inline auto cbegin() const { return const_iterator(_csr_edge_parents, _csr_target_ptr[_vert]); }
                         inline auto cend() const { return const_iterator(_csr_edge_parents, _csr_target_ptr[_vert + 1]); }
 
-                        inline auto rbegin() const { return reverse_iterator(_csr_edge_parents, _csr_target_ptr[_vert + 1]); }
-                        inline auto rend() const { return reverse_iterator(_csr_edge_parents, _csr_target_ptr[_vert]); }
+                        inline auto rbegin() const { return const_reverse_iterator(_csr_edge_parents, _csr_target_ptr[_vert + 1]); }
+                        inline auto rend() const { return const_reverse_iterator(_csr_edge_parents, _csr_target_ptr[_vert]); }
 
                         inline auto crbegin() const { return const_reverse_iterator(_csr_edge_parents, _csr_target_ptr[_vert + 1]); }
                         inline auto crend() const { return const_reverse_iterator(_csr_edge_parents, _csr_target_ptr[_vert]); }
@@ -268,44 +268,44 @@ class Compact_Sparse_Graph {
                     return csc_source_ptr[v + 1] - csc_source_ptr[v];
                 }
 
-                class iterator {
-                    public:
-                        using iterator_category = std::random_access_iterator_tag;
-                        using difference_type = vertex_idx;
-                        using value_type = vertex_idx;
-                        using pointer = vertex_idx *;
-                        using reference = vertex_idx &;
+                // class iterator {
+                //     public:
+                //         using iterator_category = std::random_access_iterator_tag;
+                //         using difference_type = vertex_idx;
+                //         using value_type = vertex_idx;
+                //         using pointer = vertex_idx *;
+                //         using reference = vertex_idx &;
 
-                    private:
-                        const std::vector<vertex_idx> &_csc_edge_children;
-                        edge_t _index;
+                //     private:
+                //         const std::vector<vertex_idx> &_csc_edge_children;
+                //         edge_t _index;
 
-                    public:
-                        iterator(const std::vector<vertex_idx> &csc_edge_children, edge_t index) : _csc_edge_children(csc_edge_children), _index(index) {};
+                //     public:
+                //         iterator(const std::vector<vertex_idx> &csc_edge_children, edge_t index) : _csc_edge_children(csc_edge_children), _index(index) {};
 
-                        inline edge_t get_index() { return _index; }
+                //         inline edge_t get_index() { return _index; }
 
-                        inline reference operator*() const { return _csc_edge_children[_index]; }
-                        inline pointer operator->() const { auto it = _csc_edge_children.begin(); std::advance(it, _index); return it; }
-                        inline reference operator[](difference_type diff) const { return _csc_edge_children[_index + diff]; }
+                //         inline reference operator*() const { return _csc_edge_children[_index]; }
+                //         inline pointer operator->() const { auto it = _csc_edge_children.begin(); std::advance(it, _index); return it; }
+                //         inline reference operator[](difference_type diff) const { return _csc_edge_children[_index + diff]; }
 
-                        inline iterator &operator++() { ++_index; return *this; }
-                        inline iterator operator++(int) { iterator tmp = *this; ++(*this); return tmp; }
+                //         inline iterator &operator++() { ++_index; return *this; }
+                //         inline iterator operator++(int) { iterator tmp = *this; ++(*this); return tmp; }
 
-                        inline iterator &operator--() { --_index; return *this; }
-                        inline iterator operator--(int) { iterator tmp = *this; --(*this); return tmp; }
+                //         inline iterator &operator--() { --_index; return *this; }
+                //         inline iterator operator--(int) { iterator tmp = *this; --(*this); return tmp; }
 
-                        inline iterator operator+(difference_type diff) const { return iterator(_csc_edge_children, _index + diff); }
-                        inline iterator operator-(difference_type diff) const { return iterator(_csc_edge_children, _index - diff); }
+                //         inline iterator operator+(difference_type diff) const { return iterator(_csc_edge_children, _index + diff); }
+                //         inline iterator operator-(difference_type diff) const { return iterator(_csc_edge_children, _index - diff); }
 
-                        inline bool operator==(const iterator &other) const { return _index == other._index; }
-                        inline bool operator!=(const iterator &other) const { return !(*this == other); }
+                //         inline bool operator==(const iterator &other) const { return _index == other._index; }
+                //         inline bool operator!=(const iterator &other) const { return !(*this == other); }
                         
-                        inline bool operator<=(const iterator &other) const { return _index <= other._index; }
-                        inline bool operator<(const iterator &other) const { return (*this <= other) && (*this != other); }
-                        inline bool operator>=(const iterator &other) const { return (!(*this <= other)) || (*this == other); }
-                        inline bool operator>(const iterator &other) const { return !(*this <= other); }
-                };
+                //         inline bool operator<=(const iterator &other) const { return _index <= other._index; }
+                //         inline bool operator<(const iterator &other) const { return (*this <= other) && (*this != other); }
+                //         inline bool operator>=(const iterator &other) const { return (!(*this <= other)) || (*this == other); }
+                //         inline bool operator>(const iterator &other) const { return !(*this <= other); }
+                // };
 
                 class const_iterator {
                     public:
@@ -346,44 +346,44 @@ class Compact_Sparse_Graph {
                         inline bool operator>(const const_iterator &other) const { return !(*this <= other); }
                 };
 
-                class reverse_iterator {
-                    public:
-                        using iterator_category = std::random_access_iterator_tag;
-                        using difference_type = vertex_idx;
-                        using value_type = vertex_idx;
-                        using pointer = vertex_idx *;
-                        using reference = vertex_idx &;
+                // class reverse_iterator {
+                //     public:
+                //         using iterator_category = std::random_access_iterator_tag;
+                //         using difference_type = vertex_idx;
+                //         using value_type = vertex_idx;
+                //         using pointer = vertex_idx *;
+                //         using reference = vertex_idx &;
 
-                    private:
-                        const std::vector<vertex_idx> &_csc_edge_children;
-                        edge_t _index;
+                //     private:
+                //         const std::vector<vertex_idx> &_csc_edge_children;
+                //         edge_t _index;
 
-                    public:
-                        reverse_iterator(const std::vector<vertex_idx> &csc_edge_children, edge_t index) : _csc_edge_children(csc_edge_children), _index(index) {};
+                //     public:
+                //         reverse_iterator(const std::vector<vertex_idx> &csc_edge_children, edge_t index) : _csc_edge_children(csc_edge_children), _index(index) {};
 
-                        inline edge_t get_index() { return _index - 1; }
+                //         inline edge_t get_index() { return _index - 1; }
 
-                        inline reference operator*() const { return _csc_edge_children[_index - 1]; }
-                        inline pointer operator->() const { auto it = _csc_edge_children.begin(); std::advance(it, _index - 1); return it; }
-                        inline reference operator[](difference_type diff) const { return _csc_edge_children[_index - 1 - diff]; }
+                //         inline reference operator*() const { return _csc_edge_children[_index - 1]; }
+                //         inline pointer operator->() const { auto it = _csc_edge_children.begin(); std::advance(it, _index - 1); return it; }
+                //         inline reference operator[](difference_type diff) const { return _csc_edge_children[_index - 1 - diff]; }
 
-                        inline reverse_iterator &operator++() { --_index; return *this; }
-                        inline reverse_iterator operator++(int) { reverse_iterator tmp = *this; ++(*this); return tmp; }
+                //         inline reverse_iterator &operator++() { --_index; return *this; }
+                //         inline reverse_iterator operator++(int) { reverse_iterator tmp = *this; ++(*this); return tmp; }
 
-                        inline reverse_iterator &operator--() { ++_index; return *this; }
-                        inline reverse_iterator operator--(int) { reverse_iterator tmp = *this; --(*this); return tmp; }
+                //         inline reverse_iterator &operator--() { ++_index; return *this; }
+                //         inline reverse_iterator operator--(int) { reverse_iterator tmp = *this; --(*this); return tmp; }
 
-                        inline reverse_iterator operator+(difference_type diff) const { return reverse_iterator(_csc_edge_children, _index - diff); }
-                        inline reverse_iterator operator-(difference_type diff) const { return reverse_iterator(_csc_edge_children, _index + diff); }
+                //         inline reverse_iterator operator+(difference_type diff) const { return reverse_iterator(_csc_edge_children, _index - diff); }
+                //         inline reverse_iterator operator-(difference_type diff) const { return reverse_iterator(_csc_edge_children, _index + diff); }
 
-                        inline bool operator==(const reverse_iterator &other) const { return _index == other._index; }
-                        inline bool operator!=(const reverse_iterator &other) const { return !(*this == other); }
+                //         inline bool operator==(const reverse_iterator &other) const { return _index == other._index; }
+                //         inline bool operator!=(const reverse_iterator &other) const { return !(*this == other); }
                         
-                        inline bool operator<=(const reverse_iterator &other) const { return _index >= other._index; }
-                        inline bool operator<(const reverse_iterator &other) const { return (*this <= other) && (*this != other); }
-                        inline bool operator>=(const reverse_iterator &other) const { return (!(*this <= other)) || (*this == other); }
-                        inline bool operator>(const reverse_iterator &other) const { return !(*this <= other); }
-                };
+                //         inline bool operator<=(const reverse_iterator &other) const { return _index >= other._index; }
+                //         inline bool operator<(const reverse_iterator &other) const { return (*this <= other) && (*this != other); }
+                //         inline bool operator>=(const reverse_iterator &other) const { return (!(*this <= other)) || (*this == other); }
+                //         inline bool operator>(const reverse_iterator &other) const { return !(*this <= other); }
+                // };
 
                 class const_reverse_iterator {
                     public:
@@ -433,14 +433,14 @@ class Compact_Sparse_Graph {
                     public:
                         Children_range (const std::vector<vertex_idx> &csc_edge_children, const std::vector<edge_t> &csc_source_ptr, const vertex_idx vert) : _csc_edge_children(csc_edge_children), _csc_source_ptr(csc_source_ptr), _vert(vert) {};
 
-                        inline auto begin() const { return iterator(_csc_edge_children, _csc_source_ptr[_vert]); }
-                        inline auto end() const { return iterator(_csc_edge_children, _csc_source_ptr[_vert + 1]); }
+                        inline auto begin() const { return const_iterator(_csc_edge_children, _csc_source_ptr[_vert]); }
+                        inline auto end() const { return const_iterator(_csc_edge_children, _csc_source_ptr[_vert + 1]); }
 
                         inline auto cbegin() const { return const_iterator(_csc_edge_children, _csc_source_ptr[_vert]); }
                         inline auto cend() const { return const_iterator(_csc_edge_children, _csc_source_ptr[_vert + 1]); }
 
-                        inline auto rbegin() const { return reverse_iterator(_csc_edge_children, _csc_source_ptr[_vert + 1]); }
-                        inline auto rend() const { return reverse_iterator(_csc_edge_children, _csc_source_ptr[_vert]); }
+                        inline auto rbegin() const { return const_reverse_iterator(_csc_edge_children, _csc_source_ptr[_vert + 1]); }
+                        inline auto rend() const { return const_reverse_iterator(_csc_edge_children, _csc_source_ptr[_vert]); }
 
                         inline auto crbegin() const { return const_reverse_iterator(_csc_edge_children, _csc_source_ptr[_vert + 1]); }
                         inline auto crend() const { return const_reverse_iterator(_csc_edge_children, _csc_source_ptr[_vert]); }
@@ -458,16 +458,13 @@ class Compact_Sparse_Graph {
         virtual ~Compact_Sparse_Graph() = default;
 
         // TODO more constructors
-        Compact_Sparse_Graph(vertex_idx num_vertices_, const std::vector<std::pair<vertex_idx, vertex_idx>> &edges) {
+        Compact_Sparse_Graph(vertex_idx num_vertices_, const std::vector<std::pair<vertex_idx, vertex_idx>> &edges) : number_of_vertices(num_vertices_), number_of_edges(static_cast<edge_t>(edges.size())) {
             assert((0 <= num_vertices_) && "Number of vertices must be non-negative.");
             assert(std::all_of(edges.cbegin(), edges.cend(), [num_vertices_](const std::pair<vertex_idx, vertex_idx> &edge) { return (0 <= edge.first) && (edge.first < num_vertices_) && (0 <= edge.second) && (edge.second < num_vertices_); } ) && "Source and target of edges must be non-negative and less than the number of vertices.");
             assert((edges.size() < static_cast<size_t>(std::numeric_limits<edge_t>::max())) && "Number of edge must be strictly smaller than the maximally representable number.");
             if constexpr (keep_vertex_order) {
                 assert(std::all_of(edges.cbegin(), edges.cend(), [](const std::pair<vertex_idx, vertex_idx> &edge) { return edge.first < edge.second; } ) && "Vertex order must be a topological order.");
             }
-
-            number_of_vertices = num_vertices_;
-            number_of_edges = static_cast<edge_t>(edges.size());
 
             if constexpr (use_work_weights) {
                 vert_work_weights = std::vector<vertex_work_weight_type>(num_vertices(), 1);
@@ -496,10 +493,8 @@ class Compact_Sparse_Graph {
 
             std::vector<vertex_idx> csc_edge_children;
             csc_edge_children.reserve(num_edges());
-            std::vector<edge_t> csc_source_ptr;
-            csc_source_ptr.reserve(num_vertices() + 1);
-            std::vector<vertex_idx> csr_edge_parents;
-            csr_edge_parents.reserve(num_edges());
+            std::vector<edge_t> csc_source_ptr(num_vertices() + 1);
+            std::vector<vertex_idx> csr_edge_parents(num_edges());
             std::vector<edge_t> csr_target_ptr;
             csr_target_ptr.reserve(num_vertices() + 1);
 
@@ -514,6 +509,7 @@ class Compact_Sparse_Graph {
                 }
                 csc_source_ptr[num_vertices()] = static_cast<edge_t>( csc_edge_children.size() );
 
+                csr_target_ptr = std::vector<edge_t>(num_vertices() + 1, 0);
                 std::exclusive_scan(num_parents_tmp.cbegin(), num_parents_tmp.cend(), csr_target_ptr.begin(), 0);
                 csr_target_ptr[num_vertices()] = num_edges();
 
@@ -531,7 +527,7 @@ class Compact_Sparse_Graph {
                 }
 
                 // Generating modified Gorder topological order cf. "Speedup Graph Processing by Graph Ordering" by Hao Wei, Jeffrey Xu Yu, Can Lu, and Xuemin Lin
-                const double decay = 5.0;
+                const double decay = 8.0;
 
                 std::vector<edge_t> prec_remaining = num_parents_tmp;
                 std::vector<double> priorities(num_vertices(), 0.0);
@@ -653,7 +649,7 @@ class Compact_Sparse_Graph {
             return vert_comm_weights[v];
         };
         template<typename RetT = vertex_comm_weight_type>
-        inline std::enable_if_t<not use_comm_weights, RetT> vertex_comm_weight(const vertex_idx v) const {
+        inline std::enable_if_t<not use_comm_weights, RetT> vertex_comm_weight(const vertex_idx) const {
             return static_cast<RetT>(0);
         };
 
@@ -662,7 +658,7 @@ class Compact_Sparse_Graph {
             return vert_mem_weights[v];
         };
         template<typename RetT = vertex_mem_weight_type>
-        inline std::enable_if_t<not use_mem_weights, RetT> vertex_mem_weight(const vertex_idx v) const {
+        inline std::enable_if_t<not use_mem_weights, RetT> vertex_mem_weight(const vertex_idx) const {
             return static_cast<RetT>(0);
         };
 
@@ -671,7 +667,7 @@ class Compact_Sparse_Graph {
             return vert_types[v];
         };
         template<typename RetT = vertex_type_type>
-        inline std::enable_if_t<not use_vert_types, RetT> vertex_type(const vertex_idx v) const {
+        inline std::enable_if_t<not use_vert_types, RetT> vertex_type(const vertex_idx) const {
             return static_cast<RetT>(0);
         };
 
@@ -714,6 +710,17 @@ class Compact_Sparse_Graph {
             static_assert(use_vert_types, "To set vert type, graph type must allow vertex types.");
         };
 
+        template<typename RetT = const std::vector<vertex_idx> &>
+        inline std::enable_if_t<keep_vertex_order, RetT> get_pullback_permutation() const {
+            static_assert(!keep_vertex_order, "No permutation was applied. This is a deleted function.");
+            return {};
+        }
+
+        template<typename RetT = const std::vector<vertex_idx> &>
+        inline std::enable_if_t<not keep_vertex_order, RetT> get_pullback_permutation() const {
+            return vertex_permutation_from_internal_to_original;
+        }
+
 
     private:
         const vertex_idx number_of_vertices = static_cast<vert_t>(0);
@@ -746,10 +753,10 @@ class Compact_Sparse_Graph {
         }
 };
 
-static_assert(has_vertex_weights_v<Compact_Sparse_Graph<true>>, 
+static_assert(has_vertex_weights_v<Compact_Sparse_Graph<true, true>>, 
     "Compact_Sparse_Graph must satisfy the has_vertex_weights concept");
 
-static_assert(has_vertex_weights_v<Compact_Sparse_Graph<false>>, 
+static_assert(has_vertex_weights_v<Compact_Sparse_Graph<false, true>>, 
     "Compact_Sparse_Graph must satisfy the has_vertex_weights concept");
 
 static_assert(is_directed_graph_v<Compact_Sparse_Graph<false, false, false, false, false>>, 
@@ -764,10 +771,10 @@ static_assert(is_directed_graph_v<Compact_Sparse_Graph<true, false, false, false
 static_assert(is_directed_graph_v<Compact_Sparse_Graph<true, true, true, true, true>>, 
     "Compact_Sparse_Graph must satisfy the directed_graph concept");
 
-static_assert(is_computational_dag_v<Compact_Sparse_Graph<false, true, true, false, true>>, 
+static_assert(is_computational_dag_v<Compact_Sparse_Graph<false, true, true, true, false>>, 
     "Compact_Sparse_Graph must satisfy the is_computation_dag concept");
 
-static_assert(is_computational_dag_v<Compact_Sparse_Graph<true, true, true, false, true>>, 
+static_assert(is_computational_dag_v<Compact_Sparse_Graph<true, true, true, true, false>>, 
     "Compact_Sparse_Graph must satisfy the is_computation_dag concept");
 
 static_assert(is_computational_dag_typed_vertices_v<Compact_Sparse_Graph<false, true, true, true, true>>,
