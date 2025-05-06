@@ -51,6 +51,8 @@ _add_test( filereader )
 
 ## scheduler 
 
+#_add_test( ilp_bsp_scheduler )
+
 _add_test( bsp_schedulers )
 
 _add_test( bsp_schedulers_mem_const )

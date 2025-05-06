@@ -77,6 +77,10 @@ struct kl_base_parameter {
 template<typename Graph_t>
 class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
 
+    static_assert(is_directed_graph_edge_desc_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(has_hashable_edge_desc_v<Graph_t>, "Graph_t must satisfy the has_hashable_edge_desc concept");
+    static_assert(is_computational_dag_v<Graph_t>, "Graph_t must satisfy the computational_dag concept");
+
   protected:
     using VertexType = vertex_idx_t<Graph_t>;
 

@@ -142,8 +142,7 @@ class edge_view {
     };
 
   public:
-    using dir_edge_iterator = directed_edge_iterator<
-        decltype(std::declval<Graph_t>().children(std::declval<vertex_idx_t<Graph_t>>()).begin())>;
+    using dir_edge_iterator = directed_edge_iterator<std::remove_cv_t<decltype(std::declval<Graph_t>().children(std::declval<vertex_idx_t<Graph_t>>()).begin())>>;
 
     edge_view(const Graph_t &graph_) : graph(graph_) {}
 
