@@ -580,6 +580,8 @@ class Compact_Sparse_Graph {
 
                 assert(vertex_permutation_from_internal_to_original.size() == static_cast<size_t>(num_vertices()));
 
+
+                // constructing the csr and csc
                 std::vector<vertex_idx> vert_position(num_vertices(), 0);
                 for (vertex_idx new_pos = 0; new_pos < num_vertices(); ++new_pos) {
                     vert_position[vertex_permutation_from_internal_to_original[new_pos]] = new_pos;
