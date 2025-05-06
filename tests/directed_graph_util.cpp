@@ -27,8 +27,9 @@ limitations under the License.
 #include "graph_algorithms/directed_graph_path_util.hpp"
 #include "graph_algorithms/directed_graph_top_sort.hpp"
 #include "graph_algorithms/directed_graph_util.hpp"
-#include "graph_implementations/boost_graphs/boost_graph.hpp"
+#include "graph_algorithms/directed_graph_edge_view.hpp"
 #include "graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
+#include "graph_implementations/boost_graphs/boost_graph.hpp"
 
 using namespace osp;
 
@@ -377,6 +378,18 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
     BOOST_CHECK_EQUAL(has_path(7, 4, graph), false);
     BOOST_CHECK_EQUAL(has_path(7, 5, graph), false);
     BOOST_CHECK_EQUAL(has_path(7, 6, graph), false);
+
+    std::vector<vertex_idx> edge_source = {0, 0, 0, 1, 1, 2, 2, 3, 4};
+    std::vector<vertex_idx> edge_target = {1, 2, 3, 4, 6, 4, 5, 7, 7};
+
+    size_t i = 0;
+    for (const auto &e : edge_view(graph)) {
+
+        BOOST_CHECK_EQUAL(e.source, edge_source[i]);
+        BOOST_CHECK_EQUAL(e.target, edge_target[i]);
+
+        ++i;
+    }
 };
 
 BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
@@ -530,7 +543,6 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     BOOST_CHECK(longest_path == long_chain1 || longest_path == long_chain2);
 
     BOOST_CHECK(longestChain(graph_empty) == std::vector<VertexType>({}));
-    
 
     BOOST_CHECK(ancestors(9, graph) == std::vector<VertexType>({9}));
     BOOST_CHECK(ancestors(2, graph) == std::vector<VertexType>({2, 3, 5, 6, 9}));

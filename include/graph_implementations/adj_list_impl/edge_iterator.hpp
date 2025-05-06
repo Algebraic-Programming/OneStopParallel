@@ -25,7 +25,7 @@ limitations under the License.
 namespace osp {
 
 template<typename Graph_t>
-class edge_range {
+class edge_range_vector_impl {
 
     using directed_edge_descriptor = typename directed_graph_edge_desc_traits<Graph_t>::directed_edge_descriptor;
     using vertex_idx = typename directed_graph_traits<Graph_t>::vertex_idx;
@@ -135,7 +135,7 @@ class edge_range {
     };
 
   public:
-    edge_range(const Graph_t &graph_) : graph(graph_) {}
+    edge_range_vector_impl(const Graph_t &graph_) : graph(graph_) {}
 
     auto begin() const { return edge_iterator(graph); }
 

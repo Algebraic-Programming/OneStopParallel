@@ -115,7 +115,7 @@ class computational_dag_edge_idx_vector_impl {
     inline std::size_t num_edges() const { return edges_.size(); }
     inline std::size_t num_vertices() const { return vertices_.size(); }
 
-    inline auto edges() const { return edge_range<ThisT>(*this); }
+    inline auto edges() const { return edge_range_vector_impl<ThisT>(*this); }
 
     inline auto parents(vertex_idx v) const { return edge_source_range(in_edges_[v], *this); }
     inline auto children(vertex_idx v) const { return edge_target_range(out_edges_[v], *this); }
