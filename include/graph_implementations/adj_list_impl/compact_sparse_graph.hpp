@@ -17,15 +17,20 @@ limitations under the License.
 */
 #pragma once
 
+#include <algorithm>
+#include <limits>
+#include <numeric>
+#include <queue>
 #include <type_traits>
 #include <vector>
 
+#include "auxiliary/math_helper.hpp"
 #include "concepts/computational_dag_concept.hpp"
 #include "graph_implementations/vertex_iterator.hpp"
 
 namespace osp {
 
-template<bool use_comm_weights = false, bool use_mem_weights = false, bool use_vert_types = false, bool use_work_weights = true, typename vert_t = std::size_t, typename edge_t = std::size_t>
+template<bool keep_vertex_order, bool use_comm_weights = false, bool use_mem_weights = false, bool use_vert_types = false, bool use_work_weights = true, typename vert_t = std::size_t, typename edge_t = std::size_t>
 class Compact_Sparse_Graph {
     static_assert(std::is_integral<vert_t>::value && std::is_integral<edge_t>::value, "Vertex and edge type must be of integral nature.");
 
@@ -453,6 +458,171 @@ class Compact_Sparse_Graph {
         virtual ~Compact_Sparse_Graph() = default;
 
         // TODO more constructors
+        Compact_Sparse_Graph(vertex_idx num_vertices_, const std::vector<std::pair<vertex_idx, vertex_idx>> &edges) {
+            assert((0 <= num_vertices_) && "Number of vertices must be non-negative.");
+            assert(std::all_of(edges.cbegin(), edges.cend(), [num_vertices_](const std::pair<vertex_idx, vertex_idx> &edge) { return (0 <= edge.first) && (edge.first < num_vertices_) && (0 <= edge.second) && (edge.second < num_vertices_); } ) && "Source and target of edges must be non-negative and less than the number of vertices.");
+            assert((edges.size() < static_cast<size_t>(std::numeric_limits<edge_t>::max())) && "Number of edge must be strictly smaller than the maximally representable number.");
+            if constexpr (keep_vertex_order) {
+                assert(std::all_of(edges.cbegin(), edges.cend(), [](const std::pair<vertex_idx, vertex_idx> &edge) { return edge.first < edge.second; } ) && "Vertex order must be a topological order.");
+            }
+
+            number_of_vertices = num_vertices_;
+            number_of_edges = static_cast<edge_t>(edges.size());
+
+            if constexpr (use_work_weights) {
+                vert_work_weights = std::vector<vertex_work_weight_type>(num_vertices(), 1);
+            }
+            if constexpr (use_comm_weights) {
+                vert_comm_weights = std::vector<vertex_comm_weight_type>(num_vertices(), 0);
+            }
+            if constexpr (use_mem_weights) {
+                vert_mem_weights = std::vector<vertex_mem_weight_type>(num_vertices(), 0);
+            }
+            if constexpr (use_vert_types) {
+                number_of_vertex_types = 1;
+                vert_types = std::vector<vertex_type_type>(num_vertices(), 0);
+            }
+            if constexpr (!keep_vertex_order) {
+                vertex_permutation_from_internal_to_original.reserve(num_vertices());
+            }
+
+            // Construction
+            std::vector<std::vector<vertex_idx>> children_tmp(num_vertices());
+            std::vector<edge_t> num_parents_tmp(num_vertices(), 0);
+            for (const auto &edge : edges) {
+                children_tmp[edge.first].push_back(edge.second);
+                num_parents_tmp[edge.second]++;
+            }
+
+            std::vector<vertex_idx> csc_edge_children;
+            csc_edge_children.reserve(num_edges());
+            std::vector<edge_t> csc_source_ptr;
+            csc_source_ptr.reserve(num_vertices() + 1);
+            std::vector<vertex_idx> csr_edge_parents;
+            csr_edge_parents.reserve(num_edges());
+            std::vector<edge_t> csr_target_ptr;
+            csr_target_ptr.reserve(num_vertices() + 1);
+
+            if constexpr (keep_vertex_order) {
+                for (vertex_idx vert = 0; vert < num_vertices(); ++vert) {
+                    csc_source_ptr[vert] = static_cast<edge_t>( csc_edge_children.size() );
+                    
+                    std::sort(children_tmp[vert].begin(), children_tmp[vert].end());
+                    for (const auto &chld : children_tmp[vert]) {
+                        csc_edge_children.emplace_back(chld);
+                    }
+                }
+                csc_source_ptr[num_vertices()] = static_cast<edge_t>( csc_edge_children.size() );
+
+                std::exclusive_scan(num_parents_tmp.cbegin(), num_parents_tmp.cend(), csr_target_ptr.begin(), 0);
+                csr_target_ptr[num_vertices()] = num_edges();
+
+                std::vector<edge_t> offset = csr_target_ptr;
+                for (vertex_idx vert = 0; vert < num_vertices(); ++vert) {
+                    for (const auto &chld : children_tmp[vert]) {
+                        csr_edge_parents[offset[chld]++] = vert;
+                    }
+                }
+                
+            } else {
+                std::vector<std::vector<vertex_idx>> parents_tmp(num_vertices());
+                for (const auto &edge : edges) {
+                    parents_tmp[edge.second].push_back(edge.first);
+                }
+
+                // Generating modified Gorder topological order cf. "Speedup Graph Processing by Graph Ordering" by Hao Wei, Jeffrey Xu Yu, Can Lu, and Xuemin Lin
+                const double decay = 5.0;
+
+                std::vector<edge_t> prec_remaining = num_parents_tmp;
+                std::vector<double> priorities(num_vertices(), 0.0);
+
+                auto v_cmp = [&priorities, &children_tmp] (const vertex_idx &lhs, const vertex_idx &rhs) {
+                    return  (priorities[lhs] < priorities[rhs]) ||
+                            ((priorities[lhs] == priorities[rhs]) && (children_tmp[lhs].size() > children_tmp[rhs].size())) ||
+                            ((priorities[lhs] == priorities[rhs]) && (children_tmp[lhs].size() == children_tmp[rhs].size()) && (lhs > rhs));
+                };
+
+                std::priority_queue<vertex_idx, std::vector<vertex_idx>, decltype(v_cmp)> ready_q(v_cmp);
+                for (vertex_idx vert = 0; vert < num_vertices(); ++vert) {
+                    if (prec_remaining[vert] == 0) {
+                        ready_q.push(vert);
+                    } 
+                }
+
+                while (!ready_q.empty()) {
+                    vertex_idx vert = ready_q.top();
+                    ready_q.pop();
+
+                    double pos = static_cast<double>(vertex_permutation_from_internal_to_original.size());
+                    pos /= decay;
+
+                    vertex_permutation_from_internal_to_original.push_back(vert);
+
+                    // update priorities
+                    for (vertex_idx chld : children_tmp[vert]) {
+                        priorities[chld] = log_sum_exp(priorities[chld], pos);
+                    }
+                    for (vertex_idx par : parents_tmp[vert]) {
+                        for (vertex_idx sibling : children_tmp[par]) {
+                            priorities[sibling] = log_sum_exp(priorities[sibling], pos);
+                        }
+                    }
+
+                    // update constraints and push to queue
+                    for (vertex_idx chld : children_tmp[vert]) {
+                        --prec_remaining[chld];
+                        if (prec_remaining[chld] == 0) {
+                            ready_q.push(chld);
+                        }
+                    }
+                }
+
+                assert(vertex_permutation_from_internal_to_original.size() == static_cast<size_t>(num_vertices()));
+
+                std::vector<vertex_idx> vert_position(num_vertices(), 0);
+                for (vertex_idx new_pos = 0; new_pos < num_vertices(); ++new_pos) {
+                    vert_position[vertex_permutation_from_internal_to_original[new_pos]] = new_pos;
+                }
+
+                for (vertex_idx vert_new_pos = 0; vert_new_pos < num_vertices(); ++vert_new_pos) {
+                    csc_source_ptr[vert_new_pos] = static_cast<edge_t>( csc_edge_children.size() );
+
+                    vertex_idx vert_old_name = vertex_permutation_from_internal_to_original[vert_new_pos];
+
+                    std::vector<vertex_idx> children_new_name;
+                    children_new_name.reserve( children_tmp[vert_old_name].size() );
+
+                    for (vertex_idx chld_old_name : children_tmp[vert_old_name]) {
+                        children_new_name.push_back( vert_position[chld_old_name] );
+                    }
+                    
+                    
+                    std::sort(children_new_name.begin(), children_new_name.end());
+                    for (const auto &chld : children_new_name) {
+                        csc_edge_children.emplace_back(chld);
+                    }
+                }
+                csc_source_ptr[num_vertices()] = static_cast<edge_t>( csc_edge_children.size() );
+
+                edge_t acc = 0;
+                for (vertex_idx vert_old_name : vertex_permutation_from_internal_to_original) {
+                    csr_target_ptr.push_back(acc);
+                    acc += num_parents_tmp[vert_old_name];
+                }
+                csr_target_ptr.push_back(acc);
+
+                std::vector<edge_t> offset = csr_target_ptr;
+                for (vertex_idx vert = 0; vert < num_vertices(); ++vert) {
+                    for (edge_t indx = csc_source_ptr[vert]; indx < csc_source_ptr[vert + 1]; ++indx) {
+                        const vertex_idx chld = csc_edge_children[indx];
+                        csr_edge_parents[offset[chld]++] = vert;
+                    }
+                }
+            }
+
+            csc_out_edges = Compact_Children_Edges(csc_edge_children, csc_source_ptr);
+            csr_in_edges = Compact_Parent_Edges(csr_edge_parents, csr_target_ptr);
+        };
 
         inline auto vertices() const { return vertex_range<vertex_idx>(number_of_vertices); };
 
@@ -549,6 +719,9 @@ class Compact_Sparse_Graph {
         const vertex_idx number_of_vertices = static_cast<vert_t>(0);
         const edge_t number_of_edges = static_cast<edge_t>(0);
 
+        Compact_Parent_Edges csr_in_edges;
+        Compact_Children_Edges csc_out_edges;
+
         vertex_type_type number_of_vertex_types = static_cast<vertex_type_type>(1);
 
         std::vector<vertex_work_weight_type> vert_work_weights;
@@ -556,8 +729,8 @@ class Compact_Sparse_Graph {
         std::vector<vertex_mem_weight_type> vert_mem_weights;
         std::vector<vertex_type_type> vert_types;
 
-        Compact_Parent_Edges csr_in_edges;
-        Compact_Children_Edges csc_out_edges;
+
+        std::vector<vertex_idx> vertex_permutation_from_internal_to_original;
 
         template<typename RetT = void>
         std::enable_if_t<use_vert_types, RetT> _update_num_vertex_types() {
@@ -573,16 +746,34 @@ class Compact_Sparse_Graph {
         }
 };
 
-static_assert(has_vertex_weights_v<Compact_Sparse_Graph<>>, 
+static_assert(has_vertex_weights_v<Compact_Sparse_Graph<true>>, 
     "Compact_Sparse_Graph must satisfy the has_vertex_weights concept");
 
-static_assert(is_directed_graph_v<Compact_Sparse_Graph<>>, 
+static_assert(has_vertex_weights_v<Compact_Sparse_Graph<false>>, 
+    "Compact_Sparse_Graph must satisfy the has_vertex_weights concept");
+
+static_assert(is_directed_graph_v<Compact_Sparse_Graph<false, false, false, false, false>>, 
     "Compact_Sparse_Graph must satisfy the directed_graph concept");
 
-static_assert(is_computational_dag_v<Compact_Sparse_Graph<true, true, false, true>>, 
+static_assert(is_directed_graph_v<Compact_Sparse_Graph<false, true, true, true, true>>, 
+    "Compact_Sparse_Graph must satisfy the directed_graph concept");
+
+static_assert(is_directed_graph_v<Compact_Sparse_Graph<true, false, false, false, false>>, 
+    "Compact_Sparse_Graph must satisfy the directed_graph concept");
+
+static_assert(is_directed_graph_v<Compact_Sparse_Graph<true, true, true, true, true>>, 
+    "Compact_Sparse_Graph must satisfy the directed_graph concept");
+
+static_assert(is_computational_dag_v<Compact_Sparse_Graph<false, true, true, false, true>>, 
     "Compact_Sparse_Graph must satisfy the is_computation_dag concept");
 
-static_assert(is_computational_dag_typed_vertices_v<Compact_Sparse_Graph<true, true, true, true>>, 
-        "Compact_Sparse_Graph must satisfy the is_computation_dag with types concept");
+static_assert(is_computational_dag_v<Compact_Sparse_Graph<true, true, true, false, true>>, 
+    "Compact_Sparse_Graph must satisfy the is_computation_dag concept");
+
+static_assert(is_computational_dag_typed_vertices_v<Compact_Sparse_Graph<false, true, true, true, true>>,
+    "Compact_Sparse_Graph must satisfy the is_computation_dag with types concept");
+
+static_assert(is_computational_dag_typed_vertices_v<Compact_Sparse_Graph<true, true, true, true, true>>,
+    "Compact_Sparse_Graph must satisfy the is_computation_dag with types concept");
 
 } // namespace osp
