@@ -311,8 +311,8 @@ class Compact_Sparse_Graph {
                 }
             }
 
-            csc_out_edges = Compact_Children_Edges(csc_edge_children, csc_source_ptr);
-            csr_in_edges = Compact_Parent_Edges(csr_edge_parents, csr_target_ptr);
+            csc_out_edges = Compact_Children_Edges(std::move(csc_edge_children), std::move(csc_source_ptr));
+            csr_in_edges = Compact_Parent_Edges(std::move(csr_edge_parents), std::move(csr_target_ptr));
         };
 
         inline auto vertices() const { return vertex_range<vertex_idx>(number_of_vertices); };
