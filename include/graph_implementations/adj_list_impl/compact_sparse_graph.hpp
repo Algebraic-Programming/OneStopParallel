@@ -222,7 +222,7 @@ class Compact_Sparse_Graph {
 
                 auto v_cmp = [&priorities, &children_tmp] (const vertex_idx &lhs, const vertex_idx &rhs) {
                     return  (priorities[lhs] < priorities[rhs]) ||
-                            ((priorities[lhs] == priorities[rhs]) && (children_tmp[lhs].size() > children_tmp[rhs].size())) ||
+                            ((priorities[lhs] == priorities[rhs]) && (children_tmp[lhs].size() < children_tmp[rhs].size())) ||
                             ((priorities[lhs] == priorities[rhs]) && (children_tmp[lhs].size() == children_tmp[rhs].size()) && (lhs > rhs));
                 };
 
