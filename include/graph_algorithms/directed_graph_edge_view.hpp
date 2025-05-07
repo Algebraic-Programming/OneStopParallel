@@ -36,7 +36,6 @@ struct directed_edge {
 
 template<typename Graph_t>
 class edge_view {
-  public:
   private:
     static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
 
@@ -52,18 +51,31 @@ class edge_view {
         using reference = value_type &;
 
       private:
-        const Graph_t &graph;
+        const Graph_t *graph;
 
         vertex_idx_t<Graph_t> current_vertex;
         child_iterator_t current_child;
         std::size_t current_edge_idx;
 
       public:
-        directed_edge_iterator(const Graph_t &graph_) : graph(graph_), current_vertex(0), current_edge_idx(0) {
+        directed_edge_iterator() : graph(nullptr), current_vertex(0), current_edge_idx(0) {}
+        directed_edge_iterator(const directed_edge_iterator &other)
+            : graph(other.graph), current_vertex(other.current_vertex), current_child(other.current_child),
+              current_edge_idx(other.current_edge_idx) {}
 
-            while (current_vertex != graph.num_vertices()) {
-                if (graph.children(current_vertex).begin() != graph.children(current_vertex).end()) {
-                    current_child = graph.children(current_vertex).begin();
+        directed_edge_iterator operator=(const directed_edge_iterator &other) {
+            graph = other.graph;
+            current_vertex = other.current_vertex;
+            current_child = other.current_child;
+            current_edge_idx = other.current_edge_idx;
+            return *this;
+        }
+
+        directed_edge_iterator(const Graph_t &graph_) : graph(&graph_), current_vertex(0), current_edge_idx(0) {
+
+            while (current_vertex != graph->num_vertices()) {
+                if (graph->children(current_vertex).begin() != graph->children(current_vertex).end()) {
+                    current_child = graph->children(current_vertex).begin();
                     break;
                 }
                 current_vertex++;
@@ -71,19 +83,19 @@ class edge_view {
         }
 
         directed_edge_iterator(const std::size_t edge_idx, const Graph_t &graph_)
-            : graph(graph_), current_vertex(0), current_edge_idx(edge_idx) {
+            : graph(&graph_), current_vertex(0), current_edge_idx(edge_idx) {
 
-            if (current_edge_idx < graph.num_edges()) {
+            if (current_edge_idx < graph->num_edges()) {
 
                 std::size_t tmp = 0u;
 
                 if (tmp < current_edge_idx) {
 
-                    while (current_vertex != graph.num_vertices()) {
+                    while (current_vertex != graph->num_vertices()) {
 
-                        current_child = graph.children(current_vertex).begin();
+                        current_child = graph->children(current_vertex).begin();
 
-                        while (current_child != graph.children(current_vertex).end()) {
+                        while (current_child != graph->children(current_vertex).end()) {
 
                             if (tmp == current_edge_idx) {
                                 break;
@@ -98,8 +110,8 @@ class edge_view {
                 }
 
             } else {
-                current_edge_idx = graph.num_edges();
-                current_vertex = graph.num_vertices();
+                current_edge_idx = graph->num_edges();
+                current_vertex = graph->num_vertices();
             }
         }
 
@@ -110,14 +122,14 @@ class edge_view {
             current_child++;
             current_edge_idx++;
 
-            if (current_child == graph.children(current_vertex).end()) {
+            if (current_child == graph->children(current_vertex).end()) {
 
                 current_vertex++;
 
-                while (current_vertex != graph.num_vertices()) {
+                while (current_vertex != graph->num_vertices()) {
 
-                    if (graph.children(current_vertex).begin() != graph.children(current_vertex).end()) {
-                        current_child = graph.children(current_vertex).begin();
+                    if (graph->children(current_vertex).begin() != graph->children(current_vertex).end()) {
+                        current_child = graph->children(current_vertex).begin();
                         break;
                     }
 
@@ -142,7 +154,8 @@ class edge_view {
     };
 
   public:
-    using dir_edge_iterator = directed_edge_iterator<std::remove_cv_t<decltype(std::declval<Graph_t>().children(std::declval<vertex_idx_t<Graph_t>>()).begin())>>;
+    using dir_edge_iterator = directed_edge_iterator<
+        decltype(std::declval<Graph_t>().children(std::declval<vertex_idx_t<Graph_t>>()).begin())>;
 
     edge_view(const Graph_t &graph_) : graph(graph_) {}
 

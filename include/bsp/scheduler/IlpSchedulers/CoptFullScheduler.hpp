@@ -18,12 +18,17 @@ limitations under the License.
 
 #pragma once
 
-#include "COPTEnv.hpp"
-#include "file_interactions/BspScheduleRecompWriter.hpp"
-#include "file_interactions/BspScheduleWriter.hpp"
-#include "model/BspScheduleRecomp.hpp"
-#include "model/VectorSchedule.hpp"
-#include "scheduler/Scheduler.hpp"
+#include <callbackbase.h>
+#include <coptcpp_pch.h>
+
+// #include "file_interactions/BspScheduleRecompWriter.hpp"
+#include "bsp/model/BspSchedule.hpp"
+#include "bsp/model/BspScheduleCS.hpp"
+#include "bsp/model/VectorSchedule.hpp"
+#include "bsp/scheduler/Scheduler.hpp"
+#include "io/BspScheduleWriter.hpp"
+
+namespace osp {
 
 /**
  * @class CoptFullScheduler
@@ -48,14 +53,16 @@ limitations under the License.
  * supersteps, enable/disable writing intermediate solutions, and get information about the best gap, objective value,
  * and bound found by the solver.
  */
-class CoptFullScheduler : public Scheduler {
+template<typename Graph_t>
+class CoptFullScheduler : public Scheduler<Graph_t> {
+
+    static_assert(is_computational_dag_v<Graph_t>, "CoptFullScheduler can only be used with computational DAGs.");
 
   private:
-   
     bool allow_recomputation;
     bool use_memory_constraint;
     bool use_initial_schedule;
-    const BspSchedule *initial_schedule;
+    const BspScheduleCS<Graph_t> *initial_schedule;
 
     bool write_solutions_found;
     std::string write_solutions_path;
@@ -78,14 +85,88 @@ class CoptFullScheduler : public Scheduler {
         bool allow_recomputation_cb;
         std::string write_solutions_path_cb;
         std::string solution_file_prefix_cb;
-        const BspInstance *instance_ptr;
+        const BspInstance<Graph_t> *instance_ptr;
 
         std::vector<std::vector<VarArray>> *node_to_processor_superstep_var_ptr;
         std::vector<std::vector<std::vector<VarArray>>> *comm_processor_to_processor_superstep_node_var_ptr;
 
-        void callback() override;
-        BspSchedule constructBspScheduleFromCallback();
-        BspScheduleRecomp constructBspScheduleRecompFromCallback();
+        void callback() override {
+
+            if (Where() == COPT_CBCONTEXT_MIPSOL && counter < max_number_solution &&
+                GetIntInfo(COPT_CBINFO_HASINCUMBENT)) {
+
+                try {
+
+                    if (GetDblInfo(COPT_CBINFO_BESTOBJ) < best_obj && 0.0 < GetDblInfo(COPT_CBINFO_BESTBND)) {
+
+                        best_obj = GetDblInfo(COPT_CBINFO_BESTOBJ);
+
+                        // if (allow_recomputation_cb) {
+
+                        //     auto sched = constructBspScheduleRecompFromCallback();
+                        //     BspScheduleRecompWriter sched_writer(sched);
+                        //     sched_writer.write_dot(write_solutions_path_cb + "intmed_sol_" + solution_file_prefix_cb
+                        //     + "_" +
+                        //                            std::to_string(counter) + "_schedule.dot");
+
+                        // } else {
+
+                        auto sched = constructBspScheduleFromCallback();
+                        BspScheduleWriter sched_writer;
+                        sched_writer.write_dot(write_solutions_path_cb + "intmed_sol_" + solution_file_prefix_cb + "_" +
+                                                   std::to_string(counter) + "_schedule.dot",
+                                               sched);
+                        // }
+                        counter++;
+                    }
+
+                } catch (const std::exception &e) {
+                }
+            }
+        }
+
+        BspScheduleCS<Graph_t> constructBspScheduleFromCallback() {
+
+            BspScheduleCS<Graph_t> schedule(*instance_ptr);
+
+            for (const auto &node : instance_ptr->vertices()) {
+
+                for (unsigned int processor = 0; processor < instance_ptr->numberOfProcessors(); processor++) {
+
+                    for (unsigned step = 0;
+                         step < static_cast<unsigned>((*node_to_processor_superstep_var_ptr)[0][0].Size()); step++) {
+
+                        if (GetSolution(
+                                (*node_to_processor_superstep_var_ptr)[node][processor][static_cast<int>(step)]) >=
+                            .99) {
+                            schedule.setAssignedProcessor(node, processor);
+                            schedule.setAssignedSuperstep(node, step);
+                        }
+                    }
+                }
+            }
+
+            for (const auto &node : instance_ptr->vertices()) {
+
+                for (unsigned int p_from = 0; p_from < instance_ptr->numberOfProcessors(); p_from++) {
+                    for (unsigned int p_to = 0; p_to < instance_ptr->numberOfProcessors(); p_to++) {
+                        if (p_from != p_to) {
+                            for (int step = 0; step < (*node_to_processor_superstep_var_ptr)[0][0].Size(); step++) {
+                                if (GetSolution(
+                                        (*comm_processor_to_processor_superstep_node_var_ptr)[p_from][p_to][static_cast<
+                                            unsigned>(step)][static_cast<int>(node)]) >= .99) {
+                                    schedule.addCommunicationScheduleEntry(node, p_from, p_to,
+                                                                           static_cast<unsigned>(step));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return schedule;
+        }
+        // BspScheduleRecomp constructBspScheduleRecompFromCallback();
     };
 
     // WriteSolutionCallback solution_callback;
@@ -100,29 +181,412 @@ class CoptFullScheduler : public Scheduler {
     VarArray max_comm_superstep_var;
     VarArray max_work_superstep_var;
 
-    BspSchedule constructBspScheduleFromSolution(const BspInstance &instance, bool cleanup_ = false);
+    void constructBspScheduleFromSolution(BspScheduleCS<Graph_t> &schedule, bool cleanup_ = false) {
 
-    BspScheduleRecomp constructBspScheduleRecompFromSolution(const BspInstance &instance, bool cleanup_ = false);
+        const auto &instance = schedule.getInstance();
 
-    void loadInitialSchedule(Model &model);
+        for (const auto &node : instance.vertices()) {
 
-    void setupVariablesConstraintsObjective(const BspInstance &instance, Model &model);
+            for (unsigned processor = 0; processor < instance.numberOfProcessors(); processor++) {
+
+                for (unsigned step = 0; step < max_number_supersteps; step++) {
+
+                    if (node_to_processor_superstep_var[node][processor][static_cast<int>(step)].Get(
+                            COPT_DBLINFO_VALUE) >= .99) {
+                        schedule.setAssignedProcessor(node, processor);
+                        schedule.setAssignedSuperstep(node, step);
+                    }
+                }
+            }
+        }
+
+        for (const auto &node : instance.vertices()) {
+
+            for (unsigned int p_from = 0; p_from < instance.numberOfProcessors(); p_from++) {
+                for (unsigned int p_to = 0; p_to < instance.numberOfProcessors(); p_to++) {
+                    if (p_from != p_to) {
+                        for (unsigned int step = 0; step < max_number_supersteps; step++) {
+                            if (comm_processor_to_processor_superstep_node_var[p_from][p_to][step]
+                                                                              [static_cast<int>(node)]
+                                                                                  .Get(COPT_DBLINFO_VALUE) >= .99) {
+                                schedule.addCommunicationScheduleEntry(node, p_from, p_to, step);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (cleanup_) {
+            node_to_processor_superstep_var.clear();
+            comm_processor_to_processor_superstep_node_var.clear();
+        }
+    }
+
+    // BspScheduleRecomp constructBspScheduleRecompFromSolution(const BspInstance &instance, bool cleanup_ = false);
+
+    void loadInitialSchedule(Model &model) {
+
+        assert(max_number_supersteps <= std::numeric_limits<int>::max());
+        for (unsigned step = 0; step < max_number_supersteps; step++) {
+
+            if (step < initial_schedule->numberOfSupersteps()) {
+                model.SetMipStart(superstep_used_var[static_cast<int>(step)], 1);
+
+            } else {
+                model.SetMipStart(superstep_used_var[static_cast<int>(step)], 0);
+            }
+
+            // model.SetMipStart(max_work_superstep_var[step], COPT_INFINITY);
+            // model.SetMipStart(max_comm_superstep_var[step], COPT_INFINITY);
+        }
+
+        const auto &cs = initial_schedule->getCommunicationSchedule();
+        for (const auto &node : initial_schedule->getInstance().vertices()) {
+
+            for (unsigned p1 = 0; p1 < initial_schedule->getInstance().numberOfProcessors(); p1++) {
+
+                for (unsigned step = 0; step < max_number_supersteps; step++) {
+
+                    for (unsigned p2 = 0; p2 < initial_schedule->getInstance().numberOfProcessors(); p2++) {
+
+                        if (p1 != p2) {
+
+                            const auto &key = std::make_tuple(node, p1, p2);
+                            if (cs.find(key) != cs.end()) {
+
+                                if (cs.at(key) == step) {
+                                    model.SetMipStart(
+                                        comm_processor_to_processor_superstep_node_var[p1][p2][step]
+                                                                                      [static_cast<int>(node)],
+                                        1);
+                                } else {
+                                    model.SetMipStart(
+                                        comm_processor_to_processor_superstep_node_var[p1][p2][step]
+                                                                                      [static_cast<int>(node)],
+                                        0);
+                                }
+                            }
+                        } else {
+                            // p1 == p2
+                            if (p1 == initial_schedule->assignedProcessor(node) &&
+                                step == initial_schedule->assignedSuperstep(node)) {
+                                model.SetMipStart(
+                                    comm_processor_to_processor_superstep_node_var[p1][p2][step]
+                                                                                  [static_cast<int>(node)],
+                                    1);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        for (const auto &node : initial_schedule->getInstance().vertices()) {
+
+            for (unsigned proc = 0; proc < initial_schedule->getInstance().numberOfProcessors(); proc++) {
+
+                for (unsigned step = 0; step < max_number_supersteps; step++) {
+
+                    if (proc == initial_schedule->assignedProcessor(node) &&
+                        step == initial_schedule->assignedSuperstep(node)) {
+                        model.SetMipStart(node_to_processor_superstep_var[node][proc][static_cast<int>(step)], 1);
+
+                    } else {
+
+                        model.SetMipStart(node_to_processor_superstep_var[node][proc][static_cast<int>(step)], 0);
+                    }
+                }
+            }
+        }
+
+        std::vector<std::vector<v_workw_t<Graph_t>>> work(
+            max_number_supersteps,
+            std::vector<v_workw_t<Graph_t>>(initial_schedule->getInstance().numberOfProcessors(), 0));
+
+        for (const auto &node : initial_schedule->getInstance().vertices()) {
+            work[initial_schedule->assignedSuperstep(node)][initial_schedule->assignedProcessor(node)] +=
+                initial_schedule->getInstance().getComputationalDag().vertex_work_weight(node);
+        }
+
+        std::vector<std::vector<v_commw_t<Graph_t>>> send(
+            max_number_supersteps,
+            std::vector<v_commw_t<Graph_t>>(initial_schedule->getInstance().numberOfProcessors(), 0));
+
+        std::vector<std::vector<v_commw_t<Graph_t>>> rec(
+            max_number_supersteps,
+            std::vector<v_commw_t<Graph_t>>(initial_schedule->getInstance().numberOfProcessors(), 0));
+
+        for (const auto &[key, val] : initial_schedule->getCommunicationSchedule()) {
+
+            send[val][std::get<1>(key)] +=
+                initial_schedule->getInstance().getComputationalDag().vertex_comm_weight(std::get<0>(key)) *
+                initial_schedule->getInstance().sendCosts(std::get<1>(key), std::get<2>(key));
+
+            rec[val][std::get<2>(key)] +=
+                initial_schedule->getInstance().getComputationalDag().vertex_comm_weight(std::get<0>(key)) *
+                initial_schedule->getInstance().sendCosts(std::get<1>(key), std::get<2>(key));
+        }
+
+        for (unsigned step = 0; step < max_number_supersteps; step++) {
+            v_workw_t<Graph_t> max_work = 0;
+            for (unsigned i = 0; i < initial_schedule->getInstance().numberOfProcessors(); i++) {
+                if (max_work < work[step][i]) {
+                    max_work = work[step][i];
+                }
+            }
+
+            v_commw_t<Graph_t> max_comm = 0;
+            for (unsigned i = 0; i < initial_schedule->getInstance().numberOfProcessors(); i++) {
+                if (max_comm < send[step][i]) {
+                    max_comm = send[step][i];
+                }
+                if (max_comm < rec[step][i]) {
+                    max_comm = rec[step][i];
+                }
+            }
+
+            model.SetMipStart(max_work_superstep_var[static_cast<int>(step)], max_work);
+            model.SetMipStart(max_comm_superstep_var[static_cast<int>(step)], max_comm);
+        }
+
+        model.LoadMipStart();
+        model.SetIntParam(COPT_INTPARAM_MIPSTARTMODE, 2);
+    }
+
+    void setupVariablesConstraintsObjective(const BspInstance<Graph_t> &instance, Model &model) {
+
+        /*
+       Variables
+       */
+
+        assert(max_number_supersteps <= std::numeric_limits<int>::max());
+        assert(instance.numberOfProcessors() <= std::numeric_limits<int>::max());
+
+        // variables indicating if superstep is used at all
+        superstep_used_var = model.AddVars(static_cast<int>(max_number_supersteps), COPT_BINARY, "superstep_used");
+
+        node_to_processor_superstep_var = std::vector<std::vector<VarArray>>(
+            instance.numberOfVertices(), std::vector<VarArray>(instance.numberOfProcessors()));
+
+        // variables for assigments of nodes to processor and superstep
+        for (const auto &node : instance.vertices()) {
+
+            for (unsigned int processor = 0; processor < instance.numberOfProcessors(); processor++) {
+
+                node_to_processor_superstep_var[node][processor] =
+                    model.AddVars(static_cast<int>(max_number_supersteps), COPT_BINARY, "node_to_processor_superstep");
+            }
+        }
+
+        /*
+        Constraints
+          */
+        if (use_memory_constraint) {
+
+            for (unsigned int processor = 0; processor < instance.numberOfProcessors(); processor++) {
+                for (unsigned step = 0; step < max_number_supersteps; step++) {
+
+                    Expr expr;
+                    for (const auto &node : instance.vertices()) {
+                        expr += node_to_processor_superstep_var[node][processor][static_cast<int>(step)] *
+                                instance.getComputationalDag().vertex_mem_weight(node);
+                    }
+
+                    model.AddConstr(expr <= instance.getArchitecture().memoryBound(processor));
+                }
+            }
+        }
+
+        //  use consecutive supersteps starting from 0
+        model.AddConstr(superstep_used_var[0] == 1);
+
+        for (unsigned int step = 0; step < max_number_supersteps - 1; step++) {
+            model.AddConstr(superstep_used_var[static_cast<int>(step)] >= superstep_used_var[static_cast<int>(step + 1)]);
+        }
+
+        // superstep is used at all
+        for (unsigned int step = 0; step < max_number_supersteps; step++) {
+
+            Expr expr;
+            for (const auto &node : instance.vertices()) {
+
+                for (unsigned int processor = 0; processor < instance.numberOfProcessors(); processor++) {
+                    expr += node_to_processor_superstep_var[node][processor][static_cast<int>(step)];
+                }
+            }
+            model.AddConstr(expr <= (double)(instance.numberOfVertices() * instance.numberOfProcessors()) *
+                                        superstep_used_var.GetVar(static_cast<int>(step)));
+        }
+
+        // nodes are assigend depending on whether recomputation is allowed or not
+        for (const auto &node : instance.vertices()) {
+
+            Expr expr;
+            for (unsigned int processor = 0; processor < instance.numberOfProcessors(); processor++) {
+
+                for (unsigned int step = 0; step < max_number_supersteps; step++) {
+                    expr += node_to_processor_superstep_var[node][processor].GetVar(static_cast<int>(step));
+                }
+            }
+
+            model.AddConstr(allow_recomputation ? expr >= .99 : expr == 1);
+        }
+        if (allow_recomputation)
+            std::cout << "setting up constraints with recomputation: " << allow_recomputation << std::endl;
+
+        comm_processor_to_processor_superstep_node_var = std::vector<std::vector<std::vector<VarArray>>>(
+            instance.numberOfProcessors(),
+            std::vector<std::vector<VarArray>>(instance.numberOfProcessors(),
+                                               std::vector<VarArray>(max_number_supersteps)));
+
+        for (unsigned int p1 = 0; p1 < instance.numberOfProcessors(); p1++) {
+
+            for (unsigned int p2 = 0; p2 < instance.numberOfProcessors(); p2++) {
+                for (unsigned int step = 0; step < max_number_supersteps; step++) {
+
+                    comm_processor_to_processor_superstep_node_var[p1][p2][step] =
+                        model.AddVars(static_cast<int>(instance.numberOfVertices()), COPT_BINARY,
+                                      "comm_processor_to_processor_superstep_node");
+                }
+            }
+        }
+
+        // precedence constraint: if task is computed then all of its predecessors must have been present
+        for (const auto &node : instance.vertices()) {
+
+            if (instance.getComputationalDag().in_degree(node) > 0) {
+                for (unsigned int step = 0; step < max_number_supersteps; step++) {
+                    for (unsigned int processor = 0; processor < instance.numberOfProcessors(); processor++) {
+
+                        Expr expr;
+                        for (const auto &parent : instance.getComputationalDag().parents(node)) {
+                            expr += comm_processor_to_processor_superstep_node_var[processor][processor][step]
+                                                                                  [static_cast<int>(parent)];
+                        }
+
+                        model.AddConstr(expr >=
+                                        (double)instance.getComputationalDag().in_degree(node) *
+                                            node_to_processor_superstep_var[node][processor][static_cast<int>(step)]);
+                    }
+                }
+            }
+        }
+
+        // combines two constraints: node can only be communicated if it is present; and node is present if it was
+        // computed or communicated
+        for (unsigned int step = 0; step < max_number_supersteps; step++) {
+            for (unsigned int processor = 0; processor < instance.numberOfProcessors(); processor++) {
+                for (const auto &node : instance.vertices()) {
+
+                    Expr expr1, expr2;
+                    if (step > 0) {
+
+                        for (unsigned int p_from = 0; p_from < instance.numberOfProcessors(); p_from++) {
+                            expr1 += comm_processor_to_processor_superstep_node_var[p_from][processor][step - 1]
+                                                                                   [static_cast<int>(node)];
+                        }
+                    }
+
+                    expr1 += node_to_processor_superstep_var[node][processor][static_cast<int>(step)];
+
+                    for (unsigned int p_to = 0; p_to < instance.numberOfProcessors(); p_to++) {
+                        expr2 += comm_processor_to_processor_superstep_node_var[processor][p_to][step]
+                                                                               [static_cast<int>(node)];
+                    }
+
+                    model.AddConstr(instance.numberOfProcessors() * (expr1) >= expr2);
+                }
+            }
+        }
+
+        max_comm_superstep_var =
+            model.AddVars(static_cast<int>(max_number_supersteps), COPT_INTEGER, "max_comm_superstep");
+        // coptModel.AddVars(max_number_supersteps, 0, COPT_INFINITY, 0, COPT_INTEGER, "max_comm_superstep");
+
+        max_work_superstep_var =
+            model.AddVars(static_cast<int>(max_number_supersteps), COPT_INTEGER, "max_work_superstep");
+        // coptModel.AddVars(max_number_supersteps, 0, COPT_INFINITY, 0, COPT_INTEGER, "max_work_superstep");
+
+        for (unsigned int step = 0; step < max_number_supersteps; step++) {
+            for (unsigned int processor = 0; processor < instance.numberOfProcessors(); processor++) {
+
+                Expr expr;
+                for (unsigned int node = 0; node < instance.numberOfVertices(); node++) {
+                    expr += instance.getComputationalDag().vertex_work_weight(node) *
+                            node_to_processor_superstep_var[node][processor][static_cast<int>(step)];
+                }
+
+                model.AddConstr(max_work_superstep_var[static_cast<int>(step)] >= expr);
+            }
+        }
+
+        for (unsigned int step = 0; step < max_number_supersteps; step++) {
+            for (unsigned int processor = 0; processor < instance.numberOfProcessors(); processor++) {
+
+                Expr expr;
+                for (const auto &node : instance.vertices()) {
+                    for (unsigned int p_to = 0; p_to < instance.numberOfProcessors(); p_to++) {
+                        if (processor != p_to) {
+                            expr += instance.getComputationalDag().vertex_comm_weight(node) *
+                                    instance.sendCosts(processor, p_to) *
+                                    comm_processor_to_processor_superstep_node_var[processor][p_to][step]
+                                                                                  [static_cast<int>(node)];
+                        }
+                    }
+                }
+
+                model.AddConstr(max_comm_superstep_var[static_cast<int>(step)] >= expr);
+            }
+        }
+
+        for (unsigned int step = 0; step < max_number_supersteps; step++) {
+            for (unsigned int processor = 0; processor < instance.numberOfProcessors(); processor++) {
+
+                Expr expr;
+                for (const auto &node : instance.vertices()) {
+                    for (unsigned int p_from = 0; p_from < instance.numberOfProcessors(); p_from++) {
+                        if (processor != p_from) {
+                            expr += instance.getComputationalDag().vertex_comm_weight(node) *
+                                    instance.sendCosts(p_from, processor) *
+                                    comm_processor_to_processor_superstep_node_var[p_from][processor][step]
+                                                                                  [static_cast<int>(node)];
+                        }
+                    }
+                }
+
+                model.AddConstr(max_comm_superstep_var[static_cast<int>(step)] >= expr);
+            }
+        }
+
+        /*
+        Objective function
+          */
+        Expr expr;
+
+        for (unsigned int step = 0; step < max_number_supersteps; step++) {
+            expr += max_work_superstep_var[static_cast<int>(step)] +
+                    instance.communicationCosts() * max_comm_superstep_var[static_cast<int>(step)] +
+                    instance.synchronisationCosts() * superstep_used_var[static_cast<int>(step)];
+        }
+
+        model.SetObjective(expr - instance.synchronisationCosts(), COPT_MINIMIZE);
+    }
 
   public:
     CoptFullScheduler(unsigned steps = 5)
-        : Scheduler(), allow_recomputation(false),
-          use_memory_constraint(false), use_initial_schedule(false), initial_schedule(0), write_solutions_found(false),
-          max_number_supersteps(steps) {
+        : allow_recomputation(false), use_memory_constraint(false), use_initial_schedule(false), initial_schedule(0),
+          write_solutions_found(false), max_number_supersteps(steps) {
 
         // solution_callback.comm_processor_to_processor_superstep_node_var_ptr =
         //     &comm_processor_to_processor_superstep_node_var;
         // solution_callback.node_to_processor_superstep_var_ptr = &node_to_processor_superstep_var;
     }
 
-    CoptFullScheduler(const BspSchedule &schedule)
-        : Scheduler(), allow_recomputation(false),
-          use_memory_constraint(false), use_initial_schedule(true), initial_schedule(&schedule),
-          write_solutions_found(false), max_number_supersteps(schedule.numberOfSupersteps()) {
+    CoptFullScheduler(const BspSchedule<Graph_t> &schedule)
+        : allow_recomputation(false), use_memory_constraint(false), use_initial_schedule(true),
+          initial_schedule(&schedule), write_solutions_found(false),
+          max_number_supersteps(schedule.numberOfSupersteps()) {
 
         // solution_callback.comm_processor_to_processor_superstep_node_var_ptr =
         //     &comm_processor_to_processor_superstep_node_var;
@@ -141,9 +605,89 @@ class CoptFullScheduler : public Scheduler {
      * @throws std::invalid_argument if the instance parameters do not
      *         agree with those of the initial schedule's instance
      */
-    virtual std::pair<RETURN_STATUS, BspSchedule> computeSchedule(const BspInstance &instance) override;
+    virtual RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &schedule) override {
 
-    virtual std::pair<RETURN_STATUS, BspScheduleRecomp> computeScheduleRecomp(const BspInstance &instance);
+        BspScheduleCS<Graph_t> schedule_cs(schedule.getInstance());
+        RETURN_STATUS status = computeScheduleCS(schedule_cs);
+        if (status == SUCCESS || status == BEST_FOUND) {
+            schedule = std::move(schedule_cs);
+            return status;
+        } else {
+            return status;
+        }
+    }
+    virtual RETURN_STATUS computeScheduleCS(BspScheduleCS<Graph_t> &schedule) override {
+
+        auto &instance = schedule.getInstance();
+
+        if (use_initial_schedule &&
+            (max_number_supersteps < initial_schedule->numberOfSupersteps() ||
+             instance.numberOfProcessors() != initial_schedule->getInstance().numberOfProcessors() ||
+             instance.numberOfVertices() != initial_schedule->getInstance().numberOfVertices())) {
+            throw std::invalid_argument("Invalid Argument while computeSchedule(instance): instance parameters do not "
+                                        "agree with those of the initial schedule's instance!");
+        }
+
+        Envr env;
+        Model model = env.CreateModel("bsp_schedule_cs");
+
+        setupVariablesConstraintsObjective(instance, model);
+
+        if (use_initial_schedule) {
+            loadInitialSchedule(model);
+        }
+
+        model.SetDblParam(COPT_DBLPARAM_TIMELIMIT, Scheduler<Graph_t>::timeLimitSeconds);
+        model.SetIntParam(COPT_INTPARAM_THREADS, 128);
+
+        model.SetIntParam(COPT_INTPARAM_STRONGBRANCHING, 1);
+        model.SetIntParam(COPT_INTPARAM_LPMETHOD, 1);
+        model.SetIntParam(COPT_INTPARAM_ROUNDINGHEURLEVEL, 1);
+
+        model.SetIntParam(COPT_INTPARAM_SUBMIPHEURLEVEL, 1);
+        // model.SetIntParam(COPT_INTPARAM_PRESOLVE, 1);
+        // model.SetIntParam(COPT_INTPARAM_CUTLEVEL, 0);
+        model.SetIntParam(COPT_INTPARAM_TREECUTLEVEL, 2);
+        // model.SetIntParam(COPT_INTPARAM_DIVINGHEURLEVEL, 2);
+
+        if (write_solutions_found) {
+
+            WriteSolutionCallback solution_callback;
+            solution_callback.comm_processor_to_processor_superstep_node_var_ptr =
+                &comm_processor_to_processor_superstep_node_var;
+            solution_callback.node_to_processor_superstep_var_ptr = &node_to_processor_superstep_var;
+            solution_callback.solution_file_prefix_cb = solution_file_prefix;
+            solution_callback.write_solutions_path_cb = write_solutions_path;
+            solution_callback.instance_ptr = &instance;
+
+            model.SetCallback(&solution_callback, COPT_CBCONTEXT_MIPSOL);
+        }
+
+        model.Solve();
+
+        if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_OPTIMAL) {
+
+            constructBspScheduleFromSolution(schedule, true);
+            return SUCCESS;
+
+        } else if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_INF_OR_UNB) {
+
+            return ERROR;
+
+        } else {
+
+            if (model.GetIntAttr(COPT_INTATTR_HASMIPSOL)) {
+
+                constructBspScheduleFromSolution(schedule, true);
+                return BEST_FOUND;
+
+            } else {
+                return TIMEOUT;
+            }
+        }
+    }
+
+    // virtual std::pair<RETURN_STATUS, BspScheduleRecomp> computeScheduleRecomp(const BspInstance &instance);
 
     /**
      * @brief Sets the provided schedule as the initial solution for the ILP.
@@ -154,7 +698,7 @@ class CoptFullScheduler : public Scheduler {
      *
      * @param schedule The provided schedule.
      */
-    inline void setInitialSolutionFromBspSchedule(const BspSchedule &schedule) {
+    inline void setInitialSolutionFromBspSchedule(const BspSchedule<Graph_t> &schedule) {
 
         initial_schedule = &schedule;
 
@@ -234,30 +778,11 @@ class CoptFullScheduler : public Scheduler {
     inline unsigned getMaxNumberOfSupersteps() const { return max_number_supersteps; }
 
     /**
-     * @brief Get the best gap found by the solver.
-     *
-     * @return The best gap found by the solver.
-     */
-    //inline double bestGap() { return model.GetDblAttr(COPT_DBLATTR_BESTGAP); }
-
-    /**
-     * @brief Get the best objective value found by the solver.
-     *
-     * @return The best objective value found by the solver.
-     */
-    //inline double bestObjective() { return model.GetDblAttr(COPT_DBLATTR_BESTOBJ); }
-
-    /**
-     * @brief Get the best bound found by the solver.
-     *
-     * @return The best bound found by the solver.
-     */
-    //inline double bestBound() { return model.GetDblAttr(COPT_DBLATTR_BESTBND); }
-
-    /**
      * @brief Get the name of the schedule.
      *
      * @return The name of the schedule.
      */
     virtual std::string getScheduleName() const override { return "FullIlp"; }
 };
+
+} // namespace osp

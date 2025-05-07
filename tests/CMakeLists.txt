@@ -50,8 +50,11 @@ _add_test( filereader )
 
 
 ## scheduler 
+if (COPT_FOUND)
 
 #_add_test( ilp_bsp_scheduler )
+
+endif()
 
 _add_test( bsp_schedulers )
 

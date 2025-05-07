@@ -40,7 +40,15 @@ class vertex_range {
         value_type current;
 
       public:
+        vertex_iterator() : current(0) {}
         explicit vertex_iterator(value_type start) : current(start) {}
+        vertex_iterator(const vertex_iterator &other) : current(other.current) {}
+        vertex_iterator &operator=(const vertex_iterator &other) {
+            if (this != &other) {
+                current = other.current;
+            }
+            return *this;
+        }
 
         inline value_type operator*() const { return current; }
 
@@ -68,7 +76,7 @@ class vertex_range {
 
         inline bool operator==(const vertex_iterator &other) const { return current == other.current; }
         inline bool operator!=(const vertex_iterator &other) const { return !(*this == other); }
-        
+
         inline bool operator<=(const vertex_iterator &other) const { return current <= other.current; }
         inline bool operator<(const vertex_iterator &other) const { return (*this <= other) && (*this != other); }
         inline bool operator>=(const vertex_iterator &other) const { return (!(*this <= other)) || (*this == other); }
@@ -76,7 +84,7 @@ class vertex_range {
     };
 
   public:
-    vertex_range(T end_) : start( static_cast<T>(0) ), finish(end_) {}
+    vertex_range(T end_) : start(static_cast<T>(0)), finish(end_) {}
     vertex_range(T start_, T end_) : start(start_), finish(end_) {}
 
     inline auto begin() const { return vertex_iterator(start); }
@@ -84,7 +92,6 @@ class vertex_range {
 
     inline auto end() const { return vertex_iterator(finish); }
     inline auto cend() const { return vertex_iterator(finish); }
-
 };
 
 } // namespace osp
