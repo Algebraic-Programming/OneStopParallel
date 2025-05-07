@@ -102,6 +102,12 @@ class BspArchitecture {
         }
     }
 
+    BspArchitecture(const BspArchitecture &other) = default;
+    BspArchitecture(BspArchitecture &&other) = default;
+    BspArchitecture &operator=(const BspArchitecture &other) = default;
+    BspArchitecture &operator=(BspArchitecture &&other) = default;
+    ~BspArchitecture() = default;
+
     /**
      * @brief Constructs a BspArchitecture object with the specified number of processors, communication cost, and
      * synchronization cost.

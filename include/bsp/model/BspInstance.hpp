@@ -69,6 +69,14 @@ class BspInstance {
         construct_computational_dag(other.getComputationalDag(), cdag);
     }
 
+    BspInstance(const BspInstance<Graph_t> &other) = default;
+    BspInstance(BspInstance<Graph_t> &&other) = default;
+
+    BspInstance<Graph_t> &operator=(const BspInstance<Graph_t> &other) = default;
+    BspInstance<Graph_t> &operator=(BspInstance<Graph_t> &&other) = default;
+
+
+
     /**
      * @brief Returns a reference to the BSP architecture for the instance.
      *

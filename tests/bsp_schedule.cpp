@@ -179,3 +179,84 @@ BOOST_AUTO_TEST_CASE(test_schedule_writer) {
 
     sched_writer.write_dot(std::cout, schedule_t2);
 };
+
+BOOST_AUTO_TEST_CASE(test_bsp_schedule_cs) {
+
+    using graph = computational_dag_edge_idx_vector_impl_def_t;
+
+    BspInstance<graph> instance;
+    instance.setNumberOfProcessors(4);
+    instance.setCommunicationCosts(3);
+    instance.setSynchronisationCosts(5);
+
+    // Getting root git directory
+    std::filesystem::path cwd = std::filesystem::current_path();
+    std::cout << cwd << std::endl;
+    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
+        cwd = cwd.parent_path();
+        std::cout << cwd << std::endl;
+    }
+
+    file_reader::readComputationalDagHyperdagFormat((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(),
+                                                    instance.getComputationalDag());
+
+    BspSchedule<graph> schedule(instance);
+    BspLocking<graph> scheduler;
+
+    const auto result = scheduler.computeSchedule(schedule);
+
+    BOOST_CHECK_EQUAL(SUCCESS, result);
+    BOOST_CHECK_EQUAL(&schedule.getInstance(), &instance);
+    BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+
+    BspSchedule<graph> schedule_t2(schedule);
+
+    BOOST_CHECK_EQUAL(schedule_t2.getInstance().getComputationalDag().num_vertices(),
+                      instance.getComputationalDag().num_vertices());
+    BOOST_CHECK(schedule_t2.satisfiesPrecedenceConstraints());
+    BOOST_CHECK_EQUAL(schedule_t2.numberOfSupersteps(), schedule.numberOfSupersteps());
+
+    for (const auto &v : instance.getComputationalDag().vertices()) {
+
+        BOOST_CHECK_EQUAL(schedule_t2.assignedSuperstep(v), schedule.assignedSuperstep(v));
+        BOOST_CHECK_EQUAL(schedule_t2.assignedProcessor(v), schedule.assignedProcessor(v));
+    }
+
+    BspSchedule<graph> schedule_t3(instance);
+    schedule_t3 = schedule_t2;
+    BOOST_CHECK_EQUAL(schedule_t3.getInstance().getComputationalDag().num_vertices(),
+                      instance.getComputationalDag().num_vertices());
+    BOOST_CHECK(schedule_t3.satisfiesPrecedenceConstraints());
+    BOOST_CHECK_EQUAL(schedule_t3.numberOfSupersteps(), schedule.numberOfSupersteps());
+
+    for (const auto &v : instance.getComputationalDag().vertices()) {
+
+        BOOST_CHECK_EQUAL(schedule_t3.assignedSuperstep(v), schedule.assignedSuperstep(v));
+        BOOST_CHECK_EQUAL(schedule_t3.assignedProcessor(v), schedule.assignedProcessor(v));
+    }
+
+    BspSchedule<graph> schedule_t4(instance);
+    schedule_t4 = std::move(schedule_t3);
+
+    BOOST_CHECK_EQUAL(schedule_t4.getInstance().getComputationalDag().num_vertices(),
+                      instance.getComputationalDag().num_vertices());
+    BOOST_CHECK(schedule_t4.satisfiesPrecedenceConstraints());
+    BOOST_CHECK_EQUAL(schedule_t4.numberOfSupersteps(), schedule.numberOfSupersteps());
+    for (const auto &v : instance.getComputationalDag().vertices()) {
+
+        BOOST_CHECK_EQUAL(schedule_t4.assignedSuperstep(v), schedule.assignedSuperstep(v));
+        BOOST_CHECK_EQUAL(schedule_t4.assignedProcessor(v), schedule.assignedProcessor(v));
+    }
+
+    BspSchedule<graph> schedule_t5(std::move(schedule_t4));
+    BOOST_CHECK_EQUAL(schedule_t5.getInstance().getComputationalDag().num_vertices(),
+                      instance.getComputationalDag().num_vertices());
+    BOOST_CHECK(schedule_t5.satisfiesPrecedenceConstraints());
+    BOOST_CHECK_EQUAL(schedule_t5.numberOfSupersteps(), schedule.numberOfSupersteps());
+
+    for (const auto &v : instance.getComputationalDag().vertices()) {
+
+        BOOST_CHECK_EQUAL(schedule_t5.assignedSuperstep(v), schedule.assignedSuperstep(v));
+        BOOST_CHECK_EQUAL(schedule_t5.assignedProcessor(v), schedule.assignedProcessor(v));
+    }
+};
