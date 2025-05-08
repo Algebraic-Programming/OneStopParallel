@@ -27,8 +27,9 @@ limitations under the License.
 namespace osp {
 
 template<typename Graph_t_in, typename Graph_t_out>
-Graph_t_out create_induced_subgraph(const Graph_t_in &dag, const std::set<vertex_idx_t<Graph_t_in>> &selected_nodes,
-                                    const std::set<vertex_idx_t<Graph_t_in>> &extra_sources = {}) {
+void create_induced_subgraph(const Graph_t_in &dag, Graph_t_out &dag_out,
+                             const std::set<vertex_idx_t<Graph_t_in>> &selected_nodes,
+                             const std::set<vertex_idx_t<Graph_t_in>> &extra_sources = {}) {
 
     static_assert(std::is_same_v<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_out>>,
                   "Graph_t_in and out must have the same vertex_idx types");
@@ -39,7 +40,8 @@ Graph_t_out create_induced_subgraph(const Graph_t_in &dag, const std::set<vertex
     static_assert(is_constructable_cdag_edge_v<Graph_t_out>,
                   "Graph_t_out must satisfy the constructable_cdag_edge concept");
 
-    Graph_t_out dag_out;
+    assert(dag_out.num_vertices() == 0);
+
     std::map<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_in>> local_idx;
 
     for (const auto &node : extra_sources) {
@@ -145,6 +147,68 @@ bool checkOrderedIsomorphism(const Graph_t &first, const Graph_t &second) {
     }
 
     return true;
+}
+
+template<typename Graph_t_in, typename Graph_t_out>
+std::vector<Graph_t_out> create_induced_subgraphs(const Graph_t_in &dag_in,
+                                                  const std::vector<vertex_idx_t<Graph_t_in>> &partition_IDs) {
+    // assumes that input partition IDs are consecutive and starting from 0
+
+    static_assert(std::is_same_v<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_out>>,
+                  "Graph_t_in and out must have the same vertex_idx types");
+
+    static_assert(is_constructable_cdag_vertex_v<Graph_t_out>,
+                  "Graph_t_out must satisfy the constructable_cdag_vertex concept");
+
+    static_assert(is_constructable_cdag_edge_v<Graph_t_out>,
+                  "Graph_t_out must satisfy the constructable_cdag_edge concept");
+
+
+
+    vertex_idx_t<Graph_t_in> number_of_parts = 0;
+    for (const auto id : partition_IDs)
+        number_of_parts = std::max(number_of_parts, id + 1);
+
+    std::vector<Graph_t_out> split_dags(number_of_parts);
+
+    std::vector<vertex_idx_t<Graph_t_out>> local_idx(dag_in.num_vertices());
+
+    for (const auto node : dag_in.vertices()) {
+        local_idx[node] = split_dags[partition_IDs[node]].num_vertices();
+
+        if constexpr (is_constructable_cdag_typed_vertex_v<Graph_t_out> and has_typed_vertices_v<Graph_t_in>) {
+
+            split_dags[partition_IDs[node]].add_vertex(dag_in.vertex_work_weight(node), dag_in.vertex_comm_weight(node),
+                                                       dag_in.vertex_mem_weight(node), dag_in.vertex_type(node));
+        } else {
+            split_dags[partition_IDs[node]].add_vertex(dag_in.vertex_work_weight(node), dag_in.vertex_comm_weight(node),
+                                                       dag_in.vertex_mem_weight(node));
+        }
+    }
+
+    if constexpr (is_directed_graph_edge_desc_v<Graph_t_in> and is_directed_graph_edge_desc_v<Graph_t_out>) {
+
+        for (const auto node : dag_in.vertices()) {
+            for (const auto &out_edge : out_edges(node)) {
+
+                auto succ = target(out_edge, dag_in);
+
+                if (partition_IDs[node] == partition_IDs[succ])
+                    split_dags[partition_IDs[node]].add_edge(local_idx[node], local_idx[succ],
+                                                            dag_in.edge_comm_weight(out_edge));
+            }
+        }
+    } else {
+
+        for (const auto node : dag_in.vertices()) {
+            for (const auto &child : dag_in.children(node)) {
+                if (partition_IDs[node] == partition_IDs[child])
+                    split_dags[partition_IDs[node]].add_edge(local_idx[node], local_idx[child]);
+            }
+        }
+    }
+
+    return split_dags;
 }
 
 }; // namespace osp
