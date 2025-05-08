@@ -65,6 +65,15 @@ v_workw_t<Graph_t> sumOfVerticesWorkWeights(VertexIterator begin, VertexIterator
     });
 };
 
+template<typename Graph_t, typename VertexIterator>
+v_workw_t<Graph_t> sumOfVerticesWorkWeights(const Graph_t &graph) {
+    static_assert(has_vertex_weights_v<Graph_t>, "Graph_t must have vertex weights");
+
+    return std::accumulate(graph.vertices().begin(), graph.vertices().end(), 0, [&](const auto sum, const vertex_idx_t<Graph_t> &v) {
+        return sum + graph.vertex_work_weight(v);
+    });
+};
+
 template<typename Graph_t>
 v_workw_t<Graph_t> sumOfVerticesWorkWeights(const std::initializer_list<vertex_idx_t<Graph_t>> vertices_,
                                             const Graph_t &graph) {

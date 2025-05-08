@@ -39,6 +39,8 @@ _add_test( bsp_schedule )
 ## auxiliary
 _add_test( intpower )
 
+_add_test( uf_structures )
+
 _add_test( set_operations )
 
 _add_test( sorts_and_arrangements )
