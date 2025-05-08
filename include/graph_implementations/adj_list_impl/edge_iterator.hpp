@@ -152,6 +152,8 @@ class edge_range_vector_impl {
     auto begin() const { return edge_iterator(graph); }
 
     auto end() const { return edge_iterator(graph.num_edges(), graph); }
+
+    auto size() const { return graph.num_edges(); }
 };
 
 template<typename Graph_t>

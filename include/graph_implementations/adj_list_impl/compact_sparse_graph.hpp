@@ -146,10 +146,21 @@ class Compact_Sparse_Graph {
         virtual ~Compact_Sparse_Graph() = default;
 
         // TODO more constructors
-        Compact_Sparse_Graph(vertex_idx num_vertices_, const std::vector<std::pair<vertex_idx, vertex_idx>> &edges) : number_of_vertices(num_vertices_), number_of_edges(static_cast<edge_t>(edges.size())) {
+        template <typename edge_list_type>
+        Compact_Sparse_Graph(vertex_idx num_vertices_, const edge_list_type & edges) : number_of_vertices(num_vertices_), number_of_edges(static_cast<edge_t>(edges.size())) {
+            static_assert( std::is_same<edge_list_type, std::vector<std::pair<vertex_idx, vertex_idx>> >::value
+                        || is_edge_list_type<edge_list_type, vertex_idx, edge_t>::value);
+            
             assert((0 <= num_vertices_) && "Number of vertices must be non-negative.");
-            assert(std::all_of(edges.cbegin(), edges.cend(), [num_vertices_](const std::pair<vertex_idx, vertex_idx> &edge) { return (0 <= edge.first) && (edge.first < num_vertices_) && (0 <= edge.second) && (edge.second < num_vertices_); } ) && "Source and target of edges must be non-negative and less than the number of vertices.");
             assert((edges.size() < static_cast<size_t>(std::numeric_limits<edge_t>::max())) && "Number of edge must be strictly smaller than the maximally representable number.");
+            
+            if constexpr ( std::is_same<edge_list_type, std::vector<std::pair<vertex_idx, vertex_idx>>>::value ) {
+                assert(std::all_of(edges.cbegin(), edges.cend(), [num_vertices_](const std::pair<vertex_idx, vertex_idx> &edge) { return (0 <= edge.first) && (edge.first < num_vertices_) && (0 <= edge.second) && (edge.second < num_vertices_); } ) && "Source and target of edges must be non-negative and less than the number of vertices.");
+            }
+            if constexpr ( is_edge_list_type<edge_list_type, vertex_idx, edge_t>::value ) {
+                assert(std::all_of(edges.begin(), edges.end(), [num_vertices_](const std::pair<vertex_idx, vertex_idx> &edge) { return (0 <= edge.source) && (edge.source < num_vertices_) && (0 <= edge.target) && (edge.target < num_vertices_); } ) && "Source and target of edges must be non-negative and less than the number of vertices.");
+            }
+
             if constexpr (keep_vertex_order) {
                 assert(std::all_of(edges.cbegin(), edges.cend(), [](const std::pair<vertex_idx, vertex_idx> &edge) { return edge.first < edge.second; } ) && "Vertex order must be a topological order.");
             }
@@ -174,9 +185,18 @@ class Compact_Sparse_Graph {
             // Construction
             std::vector<std::vector<vertex_idx>> children_tmp(num_vertices());
             std::vector<edge_t> num_parents_tmp(num_vertices(), 0);
-            for (const auto &edge : edges) {
-                children_tmp[edge.first].push_back(edge.second);
-                num_parents_tmp[edge.second]++;
+
+            if constexpr ( std::is_same<edge_list_type, std::vector<std::pair<vertex_idx, vertex_idx>>>::value ) {
+                for (const auto &edge : edges) {
+                    children_tmp[edge.first].push_back(edge.second);
+                    num_parents_tmp[edge.second]++;
+                }
+            }
+            if constexpr ( is_edge_list_type<edge_list_type, vertex_idx, edge_t>::value ) {
+                for (const auto &edge : edges) {
+                    children_tmp[edge.source].push_back(edge.target);
+                    num_parents_tmp[edge.target]++;
+                }
             }
 
             std::vector<vertex_idx> csc_edge_children;
@@ -210,8 +230,16 @@ class Compact_Sparse_Graph {
                 
             } else {
                 std::vector<std::vector<vertex_idx>> parents_tmp(num_vertices());
-                for (const auto &edge : edges) {
-                    parents_tmp[edge.second].push_back(edge.first);
+
+                if constexpr ( std::is_same<edge_list_type, std::vector<std::pair<vertex_idx, vertex_idx>>>::value ) {
+                    for (const auto &edge : edges) {
+                        parents_tmp[edge.second].push_back(edge.first);
+                    }
+                }
+                if constexpr ( is_edge_list_type<edge_list_type, vertex_idx, edge_t>::value ) {
+                    for (const auto &edge : edges) {
+                        parents_tmp[edge.target].push_back(edge.source);
+                    }
                 }
 
                 // Generating modified Gorder topological order cf. "Speedup Graph Processing by Graph Ordering" by Hao Wei, Jeffrey Xu Yu, Can Lu, and Xuemin Lin

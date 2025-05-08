@@ -102,4 +102,28 @@ struct has_hashable_edge_desc<
 template<typename T>
 inline constexpr bool has_hashable_edge_desc_v = has_hashable_edge_desc<T>::value;
 
+
+
+template<typename T, typename v_type, typename e_type, typename = void>
+struct is_edge_list_type : std::false_type {};
+
+template<typename T, typename v_type, typename e_type>
+struct is_edge_list_type<
+    T, v_type, e_type, std::void_t<decltype(std::declval<T>().begin()),
+                   decltype(std::declval<T>().end()),
+                   decltype(std::declval<T>().size()),
+                   typename std::iterator_traits<decltype(std::begin(std::declval<T>()))>::value_type,
+                   decltype(std::declval<typename std::iterator_traits<decltype(std::begin(std::declval<T>()))>::value_type>().source),
+                   decltype(std::declval<typename std::iterator_traits<decltype(std::begin(std::declval<T>()))>::value_type>().target)>>
+                //    decltype((*(std::declval<T>().begin())).source())>>
+                //    decltype(std::declval<*(std::declval<T>().begin())>().target())>>
+    : std::conjunction< std::is_same<decltype(std::declval<typename std::iterator_traits<decltype(std::begin(std::declval<T>()))>::value_type>().source), v_type>,
+                        std::is_same<decltype(std::declval<typename std::iterator_traits<decltype(std::begin(std::declval<T>()))>::value_type>().target), v_type>,
+                        std::is_same<decltype(std::declval<T>().size()), e_type>> {};
+
+template<typename T, typename v_type, typename e_type>
+inline constexpr bool is_edge_list_type_v = is_edge_list_type<T, v_type, e_type>::value;
+
+
+
 } // namespace osp
