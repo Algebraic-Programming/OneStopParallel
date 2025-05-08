@@ -60,7 +60,7 @@ class Compact_Sparse_Graph {
                 virtual ~Compact_Parent_Edges() = default;
 
                 Compact_Parent_Edges(const std::vector<vertex_idx> &csr_edge_parents_, const std::vector<edge_t> &csr_target_ptr_) : csr_edge_parents(csr_edge_parents_), csr_target_ptr(csr_target_ptr_) {};
-                Compact_Parent_Edges(std::vector<vertex_idx> &&csr_edge_parents_, std::vector<edge_t> &&csr_target_ptr_) : csr_edge_parents(csr_edge_parents_), csr_target_ptr(csr_target_ptr_) {};
+                Compact_Parent_Edges(std::vector<vertex_idx> &&csr_edge_parents_, std::vector<edge_t> &&csr_target_ptr_) : csr_edge_parents(std::move(csr_edge_parents_)), csr_target_ptr(std::move(csr_target_ptr_)) {};
 
                 inline edge_t number_of_parents(const vertex_idx v) const {
                     return csr_target_ptr[v + 1] - csr_target_ptr[v];
@@ -106,7 +106,7 @@ class Compact_Sparse_Graph {
                 virtual ~Compact_Children_Edges() = default;
 
                 Compact_Children_Edges(const std::vector<vertex_idx> &csc_edge_children_, const std::vector<edge_t> &csc_source_ptr_) : csc_edge_children(csc_edge_children_), csc_source_ptr(csc_source_ptr_) {};
-                Compact_Children_Edges(std::vector<vertex_idx> &&csc_edge_children_, std::vector<edge_t> &&csc_source_ptr_) : csc_edge_children(csc_edge_children_), csc_source_ptr(csc_source_ptr_) {};
+                Compact_Children_Edges(std::vector<vertex_idx> &&csc_edge_children_, std::vector<edge_t> &&csc_source_ptr_) : csc_edge_children(std::move(csc_edge_children_)), csc_source_ptr(std::move(csc_source_ptr_)) {};
 
                 inline edge_t number_of_children(const vertex_idx v) const {
                     return csc_source_ptr[v + 1] - csc_source_ptr[v];
