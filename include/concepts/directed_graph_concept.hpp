@@ -35,7 +35,7 @@ struct is_directed_graph<
                    decltype(std::declval<T>().parents(std::declval<vertex_idx_t<T>>())),
                    decltype(std::declval<T>().children(std::declval<vertex_idx_t<T>>())),
                    decltype(std::declval<T>().in_degree(std::declval<vertex_idx_t<T>>())),
-                   decltype(std::declval<T>().out_degree(std::declval<vertex_idx_t<T>>())), decltype(T())>>
+                   decltype(std::declval<T>().out_degree(std::declval<vertex_idx_t<T>>()))>>
     : std::conjunction<
           is_forward_range_of<decltype(std::declval<T>().vertices()), vertex_idx_t<T>>,
           std::is_unsigned<decltype(std::declval<T>().num_vertices())>,
@@ -44,7 +44,11 @@ struct is_directed_graph<
           is_input_range_of<decltype(std::declval<T>().children(std::declval<vertex_idx_t<T>>())), vertex_idx_t<T>>,
           std::is_unsigned<decltype(std::declval<T>().in_degree(std::declval<vertex_idx_t<T>>()))>,
           std::is_unsigned<decltype(std::declval<T>().out_degree(std::declval<vertex_idx_t<T>>()))>,
-          std::is_default_constructible<T>> {};
+          std::is_default_constructible<T>,
+          std::is_move_constructible<T>,
+          std::is_copy_constructible<T>,
+          std::is_copy_assignable<T>,
+          std::is_move_assignable<T>> {};
 
 template<typename T>
 inline constexpr bool is_directed_graph_v = is_directed_graph<T>::value;
