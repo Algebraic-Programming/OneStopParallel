@@ -746,7 +746,7 @@ BOOST_AUTO_TEST_CASE(Graph_type_copy_contruction) {
     BOOST_CHECK_EQUAL(graph.num_vertices(), 8);
 
 
-    Compact_Sparse_Graph<true, true, true, true, true, vertex_idx, std::size_t, computational_dag_edge_idx_vector_impl_def_t::vertex_work_weight_type, computational_dag_edge_idx_vector_impl_def_t::vertex_comm_weight_type, computational_dag_edge_idx_vector_impl_def_t::vertex_mem_weight_type, computational_dag_edge_idx_vector_impl_def_t::vertex_type_type > copy_graph(graph);
+    Compact_Sparse_Graph<true, true, true, true, true, vertex_idx, std::size_t, computational_dag_edge_idx_vector_impl_def_t::vertex_work_weight_type, computational_dag_edge_idx_vector_impl_def_t::vertex_comm_weight_type, computational_dag_edge_idx_vector_impl_def_t::vertex_mem_weight_type, computational_dag_edge_idx_vector_impl_def_t::vertex_type_type > copy_graph(graph, nullptr);
     BOOST_CHECK_EQUAL(copy_graph.num_vertices(), 8);
     BOOST_CHECK_EQUAL(copy_graph.num_edges(), 9);
 
@@ -798,7 +798,7 @@ BOOST_AUTO_TEST_CASE(Graph_type_copy_contruction) {
         }
     }
 
-    Compact_Sparse_Graph<false, true, true, true, true, vertex_idx, std::size_t, computational_dag_edge_idx_vector_impl_def_t::vertex_work_weight_type, computational_dag_edge_idx_vector_impl_def_t::vertex_comm_weight_type, computational_dag_edge_idx_vector_impl_def_t::vertex_mem_weight_type, computational_dag_edge_idx_vector_impl_def_t::vertex_type_type> reorder_graph(graph);
+    Compact_Sparse_Graph<false, true, true, true, true, vertex_idx, std::size_t, computational_dag_edge_idx_vector_impl_def_t::vertex_work_weight_type, computational_dag_edge_idx_vector_impl_def_t::vertex_comm_weight_type, computational_dag_edge_idx_vector_impl_def_t::vertex_mem_weight_type, computational_dag_edge_idx_vector_impl_def_t::vertex_type_type> reorder_graph(graph, nullptr);
     BOOST_CHECK_EQUAL(reorder_graph.num_vertices(), 8);
     BOOST_CHECK_EQUAL(reorder_graph.num_edges(), 9);
 

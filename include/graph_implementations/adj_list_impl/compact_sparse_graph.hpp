@@ -45,6 +45,8 @@ class Compact_Sparse_Graph {
         using vertex_type_type = vertex_type_template_type;
 
     private:
+        using ThisT = Compact_Sparse_Graph<keep_vertex_order, use_work_weights, use_comm_weights, use_mem_weights, use_vert_types, vert_t, edge_t, work_weight_type, comm_weight_type, mem_weight_type, vertex_type_template_type>;
+
         class Compact_Parent_Edges {
             private:
                 // Compressed Sparse Row (CSR)
@@ -575,8 +577,8 @@ class Compact_Sparse_Graph {
             }
         }
 
-        template <typename Graph_type, typename = typename std::enable_if_t<is_directed_graph_v<Graph_type>>>
-        Compact_Sparse_Graph(const Graph_type& graph) : Compact_Sparse_Graph(graph.num_vertices(), edge_view(graph)) {
+        template <typename Graph_type>
+        Compact_Sparse_Graph(const Graph_type  & graph, void*) : Compact_Sparse_Graph(graph.num_vertices(), edge_view(graph)) {
             static_assert(is_directed_graph_v<Graph_type>);
 
             if constexpr (is_computational_dag_v<Graph_type> && use_work_weights) {
