@@ -81,6 +81,11 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
     static_assert(has_hashable_edge_desc_v<Graph_t>, "Graph_t must satisfy the has_hashable_edge_desc concept");
     static_assert(is_computational_dag_v<Graph_t>, "Graph_t must satisfy the computational_dag concept");
 
+  private:
+    using memw_t = v_memw_t<Graph_t>;
+    using commw_t = v_commw_t<Graph_t>;
+    using workw_t = v_workw_t<Graph_t>;
+
   protected:
     using VertexType = vertex_idx_t<Graph_t>;
 
@@ -352,11 +357,11 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                         }
                     } else if (current_schedule.instance->getArchitecture().getMemoryConstraintType() == LOCAL_IN_OUT) {
 
-                        int inc_memory_0 = current_schedule.instance->getComputationalDag().vertex_mem_weight(node) +
-                                           current_schedule.instance->getComputationalDag().vertex_comm_weight(node);
+                        memw_t inc_memory_0 = current_schedule.instance->getComputationalDag().vertex_mem_weight(node) +
+                                              current_schedule.instance->getComputationalDag().vertex_comm_weight(node);
 
-                        int inc_memory_1 = inc_memory_0;
-                        int inc_memory_2 = inc_memory_0;
+                        memw_t inc_memory_1 = inc_memory_0;
+                        memw_t inc_memory_2 = inc_memory_0;
 
                         for (const auto &pred : current_schedule.instance->getComputationalDag().parents(node)) {
 
@@ -400,7 +405,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                             if (current_schedule.step_processor_memory[current_schedule.vector_schedule
                                                                            .assignedSuperstep(node)][new_proc] +
                                     inc_memory_1 >
-                                static_cast<int>(current_schedule.instance->memoryBound(new_proc))) {
+                                current_schedule.instance->memoryBound(new_proc)) {
 
                                 node_gains[node][new_proc][1] = std::numeric_limits<double>::lowest();
                             }
@@ -410,7 +415,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                                 if (current_schedule.step_processor_memory
                                             [current_schedule.vector_schedule.assignedSuperstep(node) - 1][new_proc] +
                                         inc_memory_0 >
-                                    static_cast<int>(current_schedule.instance->memoryBound(new_proc))) {
+                                    current_schedule.instance->memoryBound(new_proc)) {
 
                                     node_gains[node][new_proc][0] = std::numeric_limits<double>::lowest();
                                 }
@@ -422,7 +427,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                                 if (current_schedule.step_processor_memory
                                             [current_schedule.vector_schedule.assignedSuperstep(node) + 1][new_proc] +
                                         inc_memory_2 >
-                                    static_cast<int>(current_schedule.instance->memoryBound(new_proc))) {
+                                    current_schedule.instance->memoryBound(new_proc)) {
 
                                     node_gains[node][new_proc][2] = std::numeric_limits<double>::lowest();
                                 }
@@ -431,7 +436,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                     } else if (current_schedule.instance->getArchitecture().getMemoryConstraintType() ==
                                LOCAL_INC_EDGES) {
 
-                        int inc_memory = 0;
+                        memw_t inc_memory = 0;
                         for (const auto &pred : current_schedule.instance->getComputationalDag().parents(node)) {
 
                             if (current_schedule.vector_schedule.assignedSuperstep(pred) <
@@ -555,7 +560,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                     } else if (current_schedule.instance->getArchitecture().getMemoryConstraintType() ==
                                LOCAL_SOURCES_INC_EDGES) {
 
-                        int inc_memory = 0;
+                        memw_t inc_memory = 0;
 
                         if (is_source(node, current_schedule.instance->getComputationalDag())) {
                             inc_memory += current_schedule.instance->getComputationalDag().vertex_mem_weight(node);

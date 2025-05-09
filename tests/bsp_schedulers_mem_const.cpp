@@ -43,10 +43,13 @@ std::vector<std::string> test_architectures() { return {"data/machine_params/p3.
 
 template<typename Graph_t>
 void add_mem_weights(Graph_t &dag) {
-    int weight = 1;
+    
+    v_memw_t<Graph_t> mem_weight = static_cast<v_memw_t<Graph_t>>(1);
+    v_commw_t<Graph_t> comm_weight = static_cast<v_commw_t<Graph_t>>(1);
+    
     for (const auto &v : dag.vertices()) {
-        dag.set_vertex_mem_weight(v, weight++ % 3 + 1);
-        dag.set_vertex_comm_weight(v, weight++ % 3 + 1);
+        dag.set_vertex_mem_weight(v, mem_weight++ % static_cast<v_memw_t<Graph_t>>(3) + static_cast<v_memw_t<Graph_t>>(1));
+        dag.set_vertex_comm_weight(v, comm_weight++ % static_cast<v_commw_t<Graph_t>>(3) + static_cast<v_commw_t<Graph_t>>(1));
     }
 }
 

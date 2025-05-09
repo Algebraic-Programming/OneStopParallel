@@ -53,16 +53,24 @@ struct directed_edge_descriptor_impl {
 
 };
 
+template< typename edge_comm_weight_t>
 struct cdag_edge_impl {
-    cdag_edge_impl(int comm_weight = 1) : comm_weight(comm_weight) {}
-    int comm_weight;
+
+    using cdag_edge_comm_weight_type = edge_comm_weight_t;
+
+    cdag_edge_impl(edge_comm_weight_t comm_weight = 1) : comm_weight(comm_weight) {}
+    edge_comm_weight_t comm_weight;
 };
+
+
+using cdag_edge_impl_int = cdag_edge_impl<int>;
+using cdag_edge_impl_unsigned = cdag_edge_impl<unsigned>;
 
 template<typename v_impl, typename e_impl>
 class computational_dag_edge_idx_vector_impl {
   public:
-    static_assert(std::is_base_of<cdag_vertex_impl, v_impl>::value, "v_impl must be derived from cdag_vertex_impl");
-    static_assert(std::is_base_of<cdag_edge_impl, e_impl>::value, "e_impl must be derived from cdag_edge_impl");
+   // static_assert(std::is_base_of<cdag_vertex_impl_unsigned, v_impl>::value, "v_impl must be derived from cdag_vertex_impl");
+   // static_assert(std::is_base_of<cdag_edge_impl_unsigned, e_impl>::value, "e_impl must be derived from cdag_edge_impl");
 
     // graph_traits specialization
     using vertex_idx = std::size_t;
@@ -72,11 +80,11 @@ class computational_dag_edge_idx_vector_impl {
     using in_edges_iterator_t = std::vector<directed_edge_descriptor>::const_iterator;
 
     // cdag_traits specialization
-    using vertex_work_weight_type = int;
-    using vertex_comm_weight_type = int;
-    using vertex_mem_weight_type = int;
-    using vertex_type_type = unsigned;
-    using edge_comm_weight_type = int;
+    using vertex_work_weight_type = typename v_impl::work_weight_type;
+    using vertex_comm_weight_type = typename v_impl::comm_weight_type;
+    using vertex_mem_weight_type = typename v_impl::mem_weight_type;
+    using vertex_type_type = typename v_impl::vertex_type_type;
+    using edge_comm_weight_type = typename e_impl::cdag_edge_comm_weight_type;
 
   private:
     using ThisT = computational_dag_edge_idx_vector_impl<v_impl, e_impl>;
@@ -192,14 +200,13 @@ class computational_dag_edge_idx_vector_impl {
 
 // default template specialization
 using computational_dag_edge_idx_vector_impl_def_t =
-    computational_dag_edge_idx_vector_impl<cdag_vertex_impl, cdag_edge_impl>;
+    computational_dag_edge_idx_vector_impl<cdag_vertex_impl_unsigned, cdag_edge_impl_unsigned>;
 
-static_assert(is_directed_graph_edge_desc_v<computational_dag_edge_idx_vector_impl<cdag_vertex_impl, cdag_edge_impl>>,
+static_assert(is_directed_graph_edge_desc_v<computational_dag_edge_idx_vector_impl_def_t>,
               "computational_dag_edge_idx_vector_impl must satisfy the directed_graph_edge_desc concept");
 
 static_assert(
-    is_computational_dag_typed_vertices_edge_desc_v<
-        computational_dag_edge_idx_vector_impl<cdag_vertex_impl, cdag_edge_impl>>,
+    is_computational_dag_typed_vertices_edge_desc_v<computational_dag_edge_idx_vector_impl_def_t>,
     "computational_dag_edge_idx_vector_impl must satisfy the computation_dag_typed_vertices_edge_desc concept");
 
 

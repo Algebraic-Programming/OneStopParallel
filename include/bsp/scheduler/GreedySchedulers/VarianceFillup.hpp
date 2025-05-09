@@ -81,7 +81,7 @@ class VarianceFillup : public Scheduler<Graph_t> {
             }
             temp = std::log(temp) / 2 + max_priority;
 
-            double node_weight = std::log((double)std::max(graph.vertex_work_weight(*r_iter), 1));
+            double node_weight = std::log((double)std::max(graph.vertex_work_weight(*r_iter), static_cast<v_workw_t<Graph_t>>(1)));
             double larger_val = node_weight > temp ? node_weight : temp;
 
             work_variance[*r_iter] =

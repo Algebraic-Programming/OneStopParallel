@@ -337,8 +337,10 @@ class BspLocking : public Scheduler<Graph_t> {
 
         default_value.clear();
         default_value.resize(N, 0);
-        for (const auto &i : instance.vertices())
-            default_value[i] = path_length[i] * 20 / max_path;
+        for (const auto &i : instance.vertices()) {
+            assert(path_length[i] * 20 / max_path <= std::numeric_limits<int>::max());
+            default_value[i] = static_cast<int>(path_length[i] * 20 / max_path);
+        }
 
         max_proc_score_heap = std::vector<boost::heap::fibonacci_heap<heap_node>>(params_p);
         max_all_proc_score_heap = std::vector<boost::heap::fibonacci_heap<heap_node>>(params_p);
