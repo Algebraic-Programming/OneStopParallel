@@ -164,6 +164,8 @@ class edge_view {
 
     inline auto end() const { return dir_edge_iterator(graph.num_edges(), graph); }
     inline auto cend() const { return dir_edge_iterator(graph.num_edges(), graph); }
+
+    inline auto size() const { return graph.num_edges(); }
 };
 
 } // namespace osp

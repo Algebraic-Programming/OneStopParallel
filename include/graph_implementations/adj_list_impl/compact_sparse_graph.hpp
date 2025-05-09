@@ -26,23 +26,23 @@ limitations under the License.
 
 #include "auxiliary/math_helper.hpp"
 #include "concepts/computational_dag_concept.hpp"
+#include "graph_algorithms/directed_graph_edge_view.hpp"
 #include "graph_implementations/vertex_iterator.hpp"
+
 
 namespace osp {
 
-template<bool keep_vertex_order, bool use_work_weights = false, bool use_comm_weights = false, bool use_mem_weights = false, bool use_vert_types = false, typename vert_t = std::size_t, typename edge_t = std::size_t>
+template<bool keep_vertex_order, bool use_work_weights = false, bool use_comm_weights = false, bool use_mem_weights = false, bool use_vert_types = false, typename vert_t = std::size_t, typename edge_t = std::size_t, typename work_weight_type = unsigned, typename comm_weight_type = unsigned, typename mem_weight_type = unsigned, typename vertex_type_template_type = unsigned>
 class Compact_Sparse_Graph {
     static_assert(std::is_integral<vert_t>::value && std::is_integral<edge_t>::value, "Vertex and edge type must be of integral nature.");
 
     public:
         using vertex_idx = vert_t;
 
-        using vertex_work_weight_type = edge_t;
-        using vertex_comm_weight_type = unsigned;
-        using vertex_mem_weight_type = unsigned;
-        using vertex_type_type = unsigned;
-
-        using edge_comm_weight_type = unsigned;
+        using vertex_work_weight_type = std::conditional_t<use_work_weights, work_weight_type, edge_t>;
+        using vertex_comm_weight_type = comm_weight_type;
+        using vertex_mem_weight_type = mem_weight_type;
+        using vertex_type_type = vertex_type_template_type;
 
     private:
         class Compact_Parent_Edges {
@@ -145,7 +145,6 @@ class Compact_Sparse_Graph {
         Compact_Sparse_Graph &operator=(Compact_Sparse_Graph &&other) = default;
         virtual ~Compact_Sparse_Graph() = default;
 
-        // TODO more constructors
         template <typename edge_list_type>
         Compact_Sparse_Graph(vertex_idx num_vertices_, const edge_list_type & edges) : number_of_vertices(num_vertices_), number_of_edges(static_cast<edge_t>(edges.size())) {
             static_assert( std::is_same<edge_list_type, std::vector<std::pair<vertex_idx, vertex_idx>> >::value
@@ -180,6 +179,7 @@ class Compact_Sparse_Graph {
             }
             if constexpr (!keep_vertex_order) {
                 vertex_permutation_from_internal_to_original.reserve(num_vertices());
+                vertex_permutation_from_original_to_internal.reserve(num_vertices());
             }
 
             // Construction
@@ -298,9 +298,9 @@ class Compact_Sparse_Graph {
 
 
                 // constructing the csr and csc
-                std::vector<vertex_idx> vert_position(num_vertices(), 0);
+                vertex_permutation_from_original_to_internal = std::vector<vertex_idx>(num_vertices(), 0);
                 for (vertex_idx new_pos = 0; new_pos < num_vertices(); ++new_pos) {
-                    vert_position[vertex_permutation_from_internal_to_original[new_pos]] = new_pos;
+                    vertex_permutation_from_original_to_internal[vertex_permutation_from_internal_to_original[new_pos]] = new_pos;
                 }
 
                 for (vertex_idx vert_new_pos = 0; vert_new_pos < num_vertices(); ++vert_new_pos) {
@@ -312,7 +312,7 @@ class Compact_Sparse_Graph {
                     children_new_name.reserve( children_tmp[vert_old_name].size() );
 
                     for (vertex_idx chld_old_name : children_tmp[vert_old_name]) {
-                        children_new_name.push_back( vert_position[chld_old_name] );
+                        children_new_name.push_back( vertex_permutation_from_original_to_internal[chld_old_name] );
                     }
                     
                     
@@ -342,6 +342,267 @@ class Compact_Sparse_Graph {
             csc_out_edges = Compact_Children_Edges(std::move(csc_edge_children), std::move(csc_source_ptr));
             csr_in_edges = Compact_Parent_Edges(std::move(csr_edge_parents), std::move(csr_target_ptr));
         };
+
+        template <typename edge_list_type>
+        Compact_Sparse_Graph(vertex_idx num_vertices_, const edge_list_type & edges, const std::vector<vertex_work_weight_type> &ww) : Compact_Sparse_Graph(num_vertices_, edges) {
+            static_assert(use_work_weights, "To set work weight, graph type must allow work weights.");
+            assert((ww.size() == static_cast<std::size_t>(num_vertices())) && "Work weights vector must have the same length as the number of vertices.");
+            
+            if constexpr (keep_vertex_order) {
+                vert_work_weights = ww;
+            } else {
+                for (auto vert : vertices()) {
+                    vert_work_weights[vert] = ww[vertex_permutation_from_internal_to_original[vert]];
+                }
+            }
+        }
+
+        template <typename edge_list_type>
+        Compact_Sparse_Graph(vertex_idx num_vertices_, edge_list_type && edges, const std::vector<vertex_work_weight_type> &ww) : Compact_Sparse_Graph(num_vertices_, edges) {
+            static_assert(use_work_weights, "To set work weight, graph type must allow work weights.");
+            assert((ww.size() == static_cast<std::size_t>(num_vertices())) && "Work weights vector must have the same length as the number of vertices.");
+
+            if constexpr (keep_vertex_order) {
+                vert_work_weights = std::move(ww);
+            } else {
+                for (auto vert : vertices()) {
+                    vert_work_weights[vert] = ww[vertex_permutation_from_internal_to_original[vert]];
+                }
+            }
+        }
+
+        template <typename edge_list_type>
+        Compact_Sparse_Graph(vertex_idx num_vertices_, const edge_list_type & edges, const std::vector<vertex_work_weight_type> &ww, const std::vector<vertex_comm_weight_type> &cw) : Compact_Sparse_Graph(num_vertices_, edges) {
+            static_assert(use_work_weights, "To set work weight, graph type must allow work weights.");
+            static_assert(use_comm_weights, "To set communication weight, graph type must allow communication weights.");
+            assert((ww.size() == static_cast<std::size_t>(num_vertices())) && "Work weights vector must have the same length as the number of vertices.");
+            assert((cw.size() == static_cast<std::size_t>(num_vertices())) && "Communication weights vector must have the same length as the number of vertices.");
+
+            if constexpr (keep_vertex_order) {
+                vert_work_weights = ww;
+            } else {
+                for (auto vert : vertices()) {
+                    vert_work_weights[vert] = ww[vertex_permutation_from_internal_to_original[vert]];
+                }
+            }
+
+            if constexpr (keep_vertex_order) {
+                vert_comm_weights = cw;
+            } else {
+                for (auto vert : vertices()) {
+                    vert_comm_weights[vert] = cw[vertex_permutation_from_internal_to_original[vert]];
+                }
+            }
+        }
+
+        template <typename edge_list_type>
+        Compact_Sparse_Graph(vertex_idx num_vertices_, const edge_list_type & edges, std::vector<vertex_work_weight_type> &&ww, std::vector<vertex_comm_weight_type> &&cw) : Compact_Sparse_Graph(num_vertices_, edges) {
+            static_assert(use_work_weights, "To set work weight, graph type must allow work weights.");
+            static_assert(use_comm_weights, "To set communication weight, graph type must allow communication weights.");
+            assert((ww.size() == static_cast<std::size_t>(num_vertices())) && "Work weights vector must have the same length as the number of vertices.");
+            assert((cw.size() == static_cast<std::size_t>(num_vertices())) && "Communication weights vector must have the same length as the number of vertices.");
+
+            if constexpr (keep_vertex_order) {
+                vert_work_weights = std::move(ww);
+            } else {
+                for (auto vert : vertices()) {
+                    vert_work_weights[vert] = ww[vertex_permutation_from_internal_to_original[vert]];
+                }
+            }
+
+            if constexpr (keep_vertex_order) {
+                vert_comm_weights = std::move(cw);
+            } else {
+                for (auto vert : vertices()) {
+                    vert_comm_weights[vert] = cw[vertex_permutation_from_internal_to_original[vert]];
+                }
+            }
+        }
+
+        template <typename edge_list_type>
+        Compact_Sparse_Graph(vertex_idx num_vertices_, const edge_list_type & edges, const std::vector<vertex_work_weight_type> &ww, const std::vector<vertex_comm_weight_type> &cw, const std::vector<vertex_mem_weight_type> &mw) : Compact_Sparse_Graph(num_vertices_, edges) {
+            static_assert(use_work_weights, "To set work weight, graph type must allow work weights.");
+            static_assert(use_comm_weights, "To set communication weight, graph type must allow communication weights.");
+            static_assert(use_mem_weights, "To set memory weight, graph type must allow memory weights.");
+            assert((ww.size() == static_cast<std::size_t>(num_vertices())) && "Work weights vector must have the same length as the number of vertices.");
+            assert((cw.size() == static_cast<std::size_t>(num_vertices())) && "Communication weights vector must have the same length as the number of vertices.");
+            assert((mw.size() == static_cast<std::size_t>(num_vertices())) && "Memory weights vector must have the same length as the number of vertices.");
+
+            if constexpr (keep_vertex_order) {
+                vert_work_weights = ww;
+            } else {
+                for (auto vert : vertices()) {
+                    vert_work_weights[vert] = ww[vertex_permutation_from_internal_to_original[vert]];
+                }
+            }
+
+            if constexpr (keep_vertex_order) {
+                vert_comm_weights = cw;
+            } else {
+                for (auto vert : vertices()) {
+                    vert_comm_weights[vert] = cw[vertex_permutation_from_internal_to_original[vert]];
+                }
+            }
+
+            if constexpr (keep_vertex_order) {
+                vert_mem_weights = mw;
+            } else {
+                for (auto vert : vertices()) {
+                    vert_mem_weights[vert] = mw[vertex_permutation_from_internal_to_original[vert]];
+                }
+            }
+        }
+
+        template <typename edge_list_type>
+        Compact_Sparse_Graph(vertex_idx num_vertices_, const edge_list_type & edges, std::vector<vertex_work_weight_type> &&ww, std::vector<vertex_comm_weight_type> &&cw, std::vector<vertex_mem_weight_type> &&mw) : Compact_Sparse_Graph(num_vertices_, edges) {
+            static_assert(use_work_weights, "To set work weight, graph type must allow work weights.");
+            static_assert(use_comm_weights, "To set communication weight, graph type must allow communication weights.");
+            static_assert(use_mem_weights, "To set memory weight, graph type must allow memory weights.");
+            assert((ww.size() == static_cast<std::size_t>(num_vertices())) && "Work weights vector must have the same length as the number of vertices.");
+            assert((cw.size() == static_cast<std::size_t>(num_vertices())) && "Communication weights vector must have the same length as the number of vertices.");
+            assert((mw.size() == static_cast<std::size_t>(num_vertices())) && "Memory weights vector must have the same length as the number of vertices.");
+
+            if constexpr (keep_vertex_order) {
+                vert_work_weights = std::move(ww);
+            } else {
+                for (auto vert : vertices()) {
+                    vert_work_weights[vert] = ww[vertex_permutation_from_internal_to_original[vert]];
+                }
+            }
+
+            if constexpr (keep_vertex_order) {
+                vert_comm_weights = std::move(cw);
+            } else {
+                for (auto vert : vertices()) {
+                    vert_comm_weights[vert] = cw[vertex_permutation_from_internal_to_original[vert]];
+                }
+            }
+
+            if constexpr (keep_vertex_order) {
+                vert_mem_weights = std::move(mw);
+            } else {
+                for (auto vert : vertices()) {
+                    vert_mem_weights[vert] = mw[vertex_permutation_from_internal_to_original[vert]];
+                }
+            }
+        }
+
+        template <typename edge_list_type>
+        Compact_Sparse_Graph(vertex_idx num_vertices_, const edge_list_type & edges, const std::vector<vertex_work_weight_type> &ww, const std::vector<vertex_comm_weight_type> &cw, const std::vector<vertex_mem_weight_type> &mw, const std::vector<vertex_type_type> &vt) : Compact_Sparse_Graph(num_vertices_, edges) {
+            static_assert(use_work_weights, "To set work weight, graph type must allow work weights.");
+            static_assert(use_comm_weights, "To set communication weight, graph type must allow communication weights.");
+            static_assert(use_mem_weights, "To set memory weight, graph type must allow memory weights.");
+            static_assert(use_vert_types, "To set vertex types, graph type must allow vertex types.");
+            assert((ww.size() == static_cast<std::size_t>(num_vertices())) && "Work weights vector must have the same length as the number of vertices.");
+            assert((cw.size() == static_cast<std::size_t>(num_vertices())) && "Communication weights vector must have the same length as the number of vertices.");
+            assert((mw.size() == static_cast<std::size_t>(num_vertices())) && "Memory weights vector must have the same length as the number of vertices.");
+            assert((vt.size() == static_cast<std::size_t>(num_vertices())) && "Vertex type vector must have the same length as the number of vertices.");
+
+            if constexpr (keep_vertex_order) {
+                vert_work_weights = ww;
+            } else {
+                for (auto vert : vertices()) {
+                    vert_work_weights[vert] = ww[vertex_permutation_from_internal_to_original[vert]];
+                }
+            }
+
+            if constexpr (keep_vertex_order) {
+                vert_comm_weights = cw;
+            } else {
+                for (auto vert : vertices()) {
+                    vert_comm_weights[vert] = cw[vertex_permutation_from_internal_to_original[vert]];
+                }
+            }
+
+            if constexpr (keep_vertex_order) {
+                vert_mem_weights = mw;
+            } else {
+                for (auto vert : vertices()) {
+                    vert_mem_weights[vert] = mw[vertex_permutation_from_internal_to_original[vert]];
+                }
+            }
+
+            if constexpr (keep_vertex_order) {
+                vert_types = vt;
+            } else {
+                for (auto vert : vertices()) {
+                    vert_types[vert] = vt[vertex_permutation_from_internal_to_original[vert]];
+                }
+            }
+        }
+
+        template <typename edge_list_type>
+        Compact_Sparse_Graph(vertex_idx num_vertices_, const edge_list_type & edges, std::vector<vertex_work_weight_type> &&ww, std::vector<vertex_comm_weight_type> &&cw, std::vector<vertex_mem_weight_type> &&mw, std::vector<vertex_type_type> &&vt) : Compact_Sparse_Graph(num_vertices_, edges) {
+            static_assert(use_work_weights, "To set work weight, graph type must allow work weights.");
+            static_assert(use_comm_weights, "To set communication weight, graph type must allow communication weights.");
+            static_assert(use_mem_weights, "To set memory weight, graph type must allow memory weights.");
+            static_assert(use_vert_types, "To set vertex types, graph type must allow vertex types.");
+            assert((ww.size() == static_cast<std::size_t>(num_vertices())) && "Work weights vector must have the same length as the number of vertices.");
+            assert((cw.size() == static_cast<std::size_t>(num_vertices())) && "Communication weights vector must have the same length as the number of vertices.");
+            assert((mw.size() == static_cast<std::size_t>(num_vertices())) && "Memory weights vector must have the same length as the number of vertices.");
+            assert((vt.size() == static_cast<std::size_t>(num_vertices())) && "Vertex type vector must have the same length as the number of vertices.");
+
+            if constexpr (keep_vertex_order) {
+                vert_work_weights = std::move(ww);
+            } else {
+                for (auto vert : vertices()) {
+                    vert_work_weights[vert] = ww[vertex_permutation_from_internal_to_original[vert]];
+                }
+            }
+
+            if constexpr (keep_vertex_order) {
+                vert_comm_weights = std::move(cw);
+            } else {
+                for (auto vert : vertices()) {
+                    vert_comm_weights[vert] = cw[vertex_permutation_from_internal_to_original[vert]];
+                }
+            }
+
+            if constexpr (keep_vertex_order) {
+                vert_mem_weights = std::move(mw);
+            } else {
+                for (auto vert : vertices()) {
+                    vert_mem_weights[vert] = mw[vertex_permutation_from_internal_to_original[vert]];
+                }
+            }
+
+            if constexpr (keep_vertex_order) {
+                vert_types = std::move(vt);
+            } else {
+                for (auto vert : vertices()) {
+                    vert_types[vert] = vt[vertex_permutation_from_internal_to_original[vert]];
+                }
+            }
+        }
+
+        template <typename Graph_type, typename = typename std::enable_if_t<is_directed_graph_v<Graph_type>>>
+        Compact_Sparse_Graph(const Graph_type& graph) : Compact_Sparse_Graph(graph.num_vertices(), edge_view(graph)) {
+            static_assert(is_directed_graph_v<Graph_type>);
+
+            if constexpr (is_computational_dag_v<Graph_type> && use_work_weights) {
+                for (const auto &vert : graph.vertices()) {
+                    set_vertex_work_weight(vert, graph.vertex_work_weight(vert));
+                }
+            }
+
+            if constexpr (is_computational_dag_v<Graph_type> && use_comm_weights) {
+                for (const auto &vert : graph.vertices()) {
+                    set_vertex_comm_weight(vert, graph.vertex_comm_weight(vert));
+                }
+            }
+
+            if constexpr (is_computational_dag_v<Graph_type> && use_mem_weights) {
+                for (const auto &vert : graph.vertices()) {
+                    set_vertex_mem_weight(vert, graph.vertex_mem_weight(vert));
+                }
+            }
+
+            if constexpr (is_computational_dag_typed_vertices_v<Graph_type> && use_vert_types) {
+                for (const auto &vert : graph.vertices()) {
+                    set_vertex_type(vert, graph.vertex_type(vert));
+                }
+            }
+        }
 
         inline auto vertices() const { return vertex_range<vertex_idx>(number_of_vertices); };
 
@@ -398,7 +659,11 @@ class Compact_Sparse_Graph {
 
         template<typename RetT = void>
         inline std::enable_if_t<use_work_weights, RetT> set_vertex_work_weight(const vertex_idx v, const vertex_work_weight_type work_weight) {
-            vert_work_weights[v] = work_weight;
+            if constexpr (keep_vertex_order) {
+                vert_work_weights[v] = work_weight;
+            } else {
+                vert_work_weights[vertex_permutation_from_original_to_internal[v]] = work_weight;
+            }
         };
         template<typename RetT = void>
         inline std::enable_if_t<not use_work_weights, RetT> set_vertex_work_weight(const vertex_idx v, const vertex_work_weight_type work_weight) {
@@ -407,7 +672,11 @@ class Compact_Sparse_Graph {
 
         template<typename RetT = void>
         inline std::enable_if_t<use_comm_weights, RetT> set_vertex_comm_weight(const vertex_idx v, const vertex_comm_weight_type comm_weight) {
-            vert_comm_weights[v] = comm_weight;
+            if constexpr (keep_vertex_order) {
+                vert_comm_weights[v] = comm_weight;
+            } else {
+                vert_comm_weights[vertex_permutation_from_original_to_internal[v]] = comm_weight;
+            }
         };
         template<typename RetT = void>
         inline std::enable_if_t<not use_comm_weights, RetT> set_vertex_comm_weight(const vertex_idx v, const vertex_comm_weight_type comm_weight) {
@@ -416,7 +685,11 @@ class Compact_Sparse_Graph {
         
         template<typename RetT = void>
         inline std::enable_if_t<use_mem_weights, RetT> set_vertex_mem_weight(const vertex_idx v, const vertex_mem_weight_type mem_weight) {
-            vert_mem_weights[v] = mem_weight;
+            if constexpr (keep_vertex_order) {
+                vert_mem_weights[v] = mem_weight;
+            } else {
+                vert_mem_weights[vertex_permutation_from_original_to_internal[v]] = mem_weight;
+            }
         };
         template<typename RetT = void>
         inline std::enable_if_t<not use_mem_weights, RetT> set_vertex_mem_weight(const vertex_idx v, const vertex_mem_weight_type mem_weight) {
@@ -425,7 +698,11 @@ class Compact_Sparse_Graph {
         
         template<typename RetT = void>
         inline std::enable_if_t<use_vert_types, RetT> set_vertex_type(const vertex_idx v, const vertex_type_type vertex_type_) {
-            vert_types[v] = vertex_type_;
+            if constexpr (keep_vertex_order) {
+                vert_types[v] = vertex_type_;
+            } else {
+                vert_types[vertex_permutation_from_original_to_internal[v]] = vertex_type_;
+            }
             number_of_vertex_types = std::max(number_of_vertex_types, vertex_type_);
         };
         template<typename RetT = void>
@@ -442,6 +719,17 @@ class Compact_Sparse_Graph {
         template<typename RetT = const std::vector<vertex_idx> &>
         inline std::enable_if_t<not keep_vertex_order, RetT> get_pullback_permutation() const {
             return vertex_permutation_from_internal_to_original;
+        }
+
+        template<typename RetT = const std::vector<vertex_idx> &>
+        inline std::enable_if_t<keep_vertex_order, RetT> get_pushforward_permutation() const {
+            static_assert(!keep_vertex_order, "No permutation was applied. This is a deleted function.");
+            return {};
+        }
+
+        template<typename RetT = const std::vector<vertex_idx> &>
+        inline std::enable_if_t<not keep_vertex_order, RetT> get_pushforward_permutation() const {
+            return vertex_permutation_from_original_to_internal;
         }
 
 
@@ -461,6 +749,7 @@ class Compact_Sparse_Graph {
 
 
         std::vector<vertex_idx> vertex_permutation_from_internal_to_original;
+        std::vector<vertex_idx> vertex_permutation_from_original_to_internal;
 
         template<typename RetT = void>
         std::enable_if_t<use_vert_types, RetT> _update_num_vertex_types() {
