@@ -75,7 +75,7 @@ class RandomGreedy : public Scheduler<Graph_t> {
             while (!next.empty() && fail_counter < 20) {
 
                 std::uniform_int_distribution<VertexType> rand_node_idx(0, next.size() - 1);
-                size_t node_ind = rand_node_idx(g);
+                VertexType node_ind = rand_node_idx(g);
                 const auto &node = next[node_ind];
                 bool processor_set = false;
                 bool failed_to_allocate = false;
@@ -122,8 +122,10 @@ class RandomGreedy : public Scheduler<Graph_t> {
                         new_nodes.emplace_back(chld);
                     }
                 }
-                assert(node_ind < static_cast<size_t>(std::numeric_limits<long>::max()));
-                next.erase(std::next(next.begin(), static_cast<long>(node_ind)));
+
+                auto it = next.begin();
+                std::advance(it, node_ind);
+                next.erase(it);
                 next.insert(next.end(), new_nodes.cbegin(), new_nodes.cend());
 
                 if (ensure_enough_sources && few_sources && next.size() >= instance.numberOfProcessors())

@@ -263,7 +263,7 @@ std::vector<int> get_strict_poset_integer_map(unsigned const noise, double const
         if (max_path - top_distance[sink] + 1U + 2U * noise > static_cast<unsigned>( std::numeric_limits<int>::max() )) {
             throw std::overflow_error("Overflow in get_strict_poset_integer_map");
         }        
-        new_bot[sink] = randInt(static_cast<int>(max_path - top_distance[sink] + 1 + 2 * noise)) - static_cast<int>(noise);
+        new_bot[sink] = randInt(static_cast<int>(max_path - top_distance[sink] + 1U + 2U * noise)) - static_cast<int>(noise);
     }
 
     for (const auto &vertex : top_order) {
