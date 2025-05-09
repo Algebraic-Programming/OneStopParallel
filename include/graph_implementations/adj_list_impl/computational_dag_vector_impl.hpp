@@ -30,7 +30,7 @@ template<typename workw_t, typename commw_t, typename memw_t, typename vertex_ty
     using work_weight_type = workw_t;
     using comm_weight_type = commw_t;
     using mem_weight_type = memw_t;
-    using vertex_type_type = vertex_type_t;
+    using cdag_vertex_type_type = vertex_type_t;
 
     cdag_vertex_impl(std::size_t vertex_idx_, workw_t work_weight, commw_t comm_weight, memw_t mem_weight, vertex_type_t vertex_type)
         : id(vertex_idx_), work_weight(work_weight), comm_weight(comm_weight), mem_weight(mem_weight),
@@ -58,7 +58,7 @@ class computational_dag_vector_impl {
     using vertex_work_weight_type = typename v_impl::work_weight_type;
     using vertex_comm_weight_type = typename v_impl::comm_weight_type;
     using vertex_mem_weight_type = typename v_impl::mem_weight_type;
-    using vertex_type_type = typename v_impl::vertex_type_type;
+    using vertex_type_type = typename v_impl::cdag_vertex_type_type;
     using edge_comm_weight_type = typename v_impl::comm_weight_type;
 
     computational_dag_vector_impl() = default;
@@ -70,17 +70,17 @@ class computational_dag_vector_impl {
 
     inline auto vertices() const { return vertex_range<vertex_idx>(vertices_.size()); }
 
-    inline vertex_idx  num_vertices() const { return vertices_.size(); }
+    inline std::size_t num_vertices() const { return vertices_.size(); }
 
-    inline vertex_idx  num_edges() const { return num_edges_; }
+    inline std::size_t num_edges() const { return num_edges_; }
 
     inline const std::vector<vertex_idx> &parents(const vertex_idx v) const { return in_neigbors[v]; }
 
     inline const std::vector<vertex_idx> &children(const vertex_idx v) const { return out_neigbors[v]; }
 
-    inline vertex_idx in_degree(const vertex_idx v) const { return in_neigbors[v].size(); }
+    inline std::size_t in_degree(const vertex_idx v) const { return in_neigbors[v].size(); }
 
-    inline vertex_idx out_degree(const vertex_idx v) const { return out_neigbors[v].size(); }
+    inline std::size_t out_degree(const vertex_idx v) const { return out_neigbors[v].size(); }
 
     inline vertex_work_weight_type vertex_work_weight(const vertex_idx v) const { return vertices_[v].work_weight; }
 

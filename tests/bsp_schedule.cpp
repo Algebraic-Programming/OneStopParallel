@@ -43,7 +43,7 @@ using namespace osp;
 
 BOOST_AUTO_TEST_CASE(test_instance_bicgstab) {
 
-    using graph = computational_dag_edge_idx_vector_impl_def_t;
+    using graph = computational_dag_edge_idx_vector_impl_def_int_t;
 
     BspInstance<graph> instance;
     instance.setNumberOfProcessors(4);
@@ -110,8 +110,8 @@ BOOST_AUTO_TEST_CASE(test_instance_bicgstab) {
 
 BOOST_AUTO_TEST_CASE(test_schedule_writer) {
 
-    using graph_t1 = computational_dag_edge_idx_vector_impl_def_t;
-    using graph_t2 = computational_dag_vector_impl_def_t;
+    using graph_t1 = computational_dag_edge_idx_vector_impl_def_int_t;
+    using graph_t2 = computational_dag_vector_impl_def_int_t;
 
     BspInstance<graph_t1> instance;
     instance.setNumberOfProcessors(4);
@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE(test_schedule_writer) {
 
 BOOST_AUTO_TEST_CASE(test_bsp_schedule_cs) {
 
-    using graph = computational_dag_edge_idx_vector_impl_def_t;
+    using graph = computational_dag_edge_idx_vector_impl_def_int_t;
 
     BspInstance<graph> instance;
     instance.setNumberOfProcessors(4);

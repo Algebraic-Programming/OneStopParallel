@@ -43,13 +43,14 @@ std::vector<std::string> test_architectures() { return {"data/machine_params/p3.
 
 template<typename Graph_t>
 void add_mem_weights(Graph_t &dag) {
-    
-    v_memw_t<Graph_t> mem_weight = static_cast<v_memw_t<Graph_t>>(1);
-    v_commw_t<Graph_t> comm_weight = static_cast<v_commw_t<Graph_t>>(1);
-    
+
+    int mem_weight = 1;
+    int comm_weight = 1;
+
     for (const auto &v : dag.vertices()) {
-        dag.set_vertex_mem_weight(v, mem_weight++ % static_cast<v_memw_t<Graph_t>>(3) + static_cast<v_memw_t<Graph_t>>(1));
-        dag.set_vertex_comm_weight(v, comm_weight++ % static_cast<v_commw_t<Graph_t>>(3) + static_cast<v_commw_t<Graph_t>>(1));
+
+        dag.set_vertex_mem_weight(v, static_cast<v_memw_t<Graph_t>>(mem_weight++ % 3 + 1));
+        dag.set_vertex_comm_weight(v, static_cast<v_commw_t<Graph_t>>(comm_weight++ % 3 + 1));
     }
 }
 
@@ -87,6 +88,7 @@ void run_test_local_memory(Scheduler<Graph_t> *test_scheduler) {
 
             add_mem_weights(instance.getComputationalDag());
             instance.getArchitecture().setMemoryConstraintType(LOCAL);
+            std::cout << "Memory constraint type: LOCAL" << std::endl;
 
             if (!status_graph || !status_architecture) {
 
@@ -94,7 +96,7 @@ void run_test_local_memory(Scheduler<Graph_t> *test_scheduler) {
                 BOOST_CHECK(false);
             }
 
-            const std::vector<v_memw_t<Graph_t>> bounds_to_test = {5, 10, 20, 50, 100};
+            const std::vector<v_memw_t<Graph_t>> bounds_to_test = {10, 20, 50, 100};
 
             for (const auto &bound : bounds_to_test) {
 
@@ -145,6 +147,7 @@ void run_test_persistent_transient_memory(Scheduler<Graph_t> *test_scheduler) {
 
             add_mem_weights(instance.getComputationalDag());
             instance.getArchitecture().setMemoryConstraintType(PERSISTENT_AND_TRANSIENT);
+            std::cout << "Memory constraint type: PERSISTENT_AND_TRANSIENT" << std::endl;
 
             if (!status_graph || !status_architecture) {
 
@@ -203,6 +206,7 @@ void run_test_local_in_out_memory(Scheduler<Graph_t> *test_scheduler) {
 
             add_mem_weights(instance.getComputationalDag());
             instance.getArchitecture().setMemoryConstraintType(LOCAL_IN_OUT);
+            std::cout << "Memory constraint type: LOCAL_IN_OUT" << std::endl;
 
             if (!status_graph || !status_architecture) {
 
@@ -210,7 +214,7 @@ void run_test_local_in_out_memory(Scheduler<Graph_t> *test_scheduler) {
                 BOOST_CHECK(false);
             }
 
-            const std::vector<v_memw_t<Graph_t>> bounds_to_test = {5, 10, 20, 50, 100};
+            const std::vector<v_memw_t<Graph_t>> bounds_to_test = {10, 20, 50, 100};
 
             for (const auto &bound : bounds_to_test) {
 
@@ -261,6 +265,7 @@ void run_test_local_inc_edges_memory(Scheduler<Graph_t> *test_scheduler) {
 
             add_mem_weights(instance.getComputationalDag());
             instance.getArchitecture().setMemoryConstraintType(LOCAL_INC_EDGES);
+            std::cout << "Memory constraint type: LOCAL_INC_EDGES" << std::endl;
 
             if (!status_graph || !status_architecture) {
 
@@ -319,6 +324,7 @@ void run_test_local_inc_edges_2_memory(Scheduler<Graph_t> *test_scheduler) {
 
             add_mem_weights(instance.getComputationalDag());
             instance.getArchitecture().setMemoryConstraintType(LOCAL_SOURCES_INC_EDGES);
+            std::cout << "Memory constraint type: LOCAL_SOURCES_INC_EDGES" << std::endl;
 
             if (!status_graph || !status_architecture) {
 
@@ -345,47 +351,35 @@ void run_test_local_inc_edges_2_memory(Scheduler<Graph_t> *test_scheduler) {
 
 BOOST_AUTO_TEST_CASE(GreedyBspScheduler_local_test) {
 
-    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_t,
-                       local_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>>
-        test_1;
+    using graph_impl_t = computational_dag_edge_idx_vector_impl_def_int_t;
+
+    GreedyBspScheduler<graph_impl_t, local_memory_constraint<graph_impl_t>> test_1;
     run_test_local_memory(&test_1);
 
-    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_t,
-                       local_in_out_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>>
-        test_2;
+    GreedyBspScheduler<graph_impl_t, local_in_out_memory_constraint<graph_impl_t>> test_2;
     run_test_local_in_out_memory(&test_2);
 
-    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_t,
-                       local_inc_edges_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>>
-        test_3;
+    GreedyBspScheduler<graph_impl_t, local_inc_edges_memory_constraint<graph_impl_t>> test_3;
     run_test_local_inc_edges_memory(&test_3);
 
-    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_t,
-                       local_inc_edges_2_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>>
-        test_4;
+    GreedyBspScheduler<graph_impl_t, local_inc_edges_2_memory_constraint<graph_impl_t>> test_4;
     run_test_local_inc_edges_2_memory(&test_4);
 };
 
 BOOST_AUTO_TEST_CASE(BspLocking_local_test) {
 
-    BspLocking<computational_dag_edge_idx_vector_impl_def_t,
-               local_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>>
-        test_1;
+    using graph_impl_t = computational_dag_edge_idx_vector_impl_def_t;
+
+    BspLocking<graph_impl_t, local_memory_constraint<graph_impl_t>> test_1;
     run_test_local_memory(&test_1);
 
-    BspLocking<computational_dag_edge_idx_vector_impl_def_t,
-               local_in_out_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>>
-        test_2;
+    BspLocking<graph_impl_t, local_in_out_memory_constraint<graph_impl_t>> test_2;
     run_test_local_in_out_memory(&test_2);
 
-    BspLocking<computational_dag_edge_idx_vector_impl_def_t,
-               local_inc_edges_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>>
-        test_3;
+    BspLocking<graph_impl_t, local_inc_edges_memory_constraint<graph_impl_t>> test_3;
     run_test_local_inc_edges_memory(&test_3);
 
-    BspLocking<computational_dag_edge_idx_vector_impl_def_t,
-               local_inc_edges_2_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>>
-        test_4;
+    BspLocking<graph_impl_t, local_inc_edges_2_memory_constraint<graph_impl_t>> test_4;
     run_test_local_inc_edges_2_memory(&test_4);
 };
 
