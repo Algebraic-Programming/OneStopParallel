@@ -25,6 +25,8 @@ namespace osp {
 template<typename Graph_t>
 struct directed_edge {
 
+    
+
     vertex_idx_t<Graph_t> source;
     vertex_idx_t<Graph_t> target;
 
