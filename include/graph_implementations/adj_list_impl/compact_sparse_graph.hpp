@@ -35,6 +35,10 @@ namespace osp {
 template<bool keep_vertex_order, bool use_work_weights = false, bool use_comm_weights = false, bool use_mem_weights = false, bool use_vert_types = false, typename vert_t = std::size_t, typename edge_t = std::size_t, typename work_weight_type = unsigned, typename comm_weight_type = unsigned, typename mem_weight_type = unsigned, typename vertex_type_template_type = unsigned>
 class Compact_Sparse_Graph {
     static_assert(std::is_integral<vert_t>::value && std::is_integral<edge_t>::value, "Vertex and edge type must be of integral nature.");
+    static_assert(std::is_arithmetic_v<work_weight_type> && "Work weight must be of arithmetic type.");
+    static_assert(std::is_arithmetic_v<comm_weight_type> && "Communication weight must be of arithmetic type.");
+    static_assert(std::is_arithmetic_v<mem_weight_type> && "Memory weight must be of arithmetic type.");
+    static_assert(std::is_integral_v<vertex_type_template_type> && "Vertex type type must be of integral type.");
 
     public:
         using vertex_idx = vert_t;

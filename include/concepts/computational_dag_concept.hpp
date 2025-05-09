@@ -49,7 +49,7 @@ template<typename T>
 struct has_typed_vertices<T, std::void_t<decltype(std::declval<T>().vertex_type(std::declval<vertex_idx_t<T>>())),
                                          decltype(std::declval<T>().num_vertex_types())>>
     : std::conjunction<std::is_integral<decltype(std::declval<T>().vertex_type(std::declval<vertex_idx_t<T>>()))>,
-                       std::is_unsigned<decltype(std::declval<T>().num_vertex_types())>> {};
+                       std::is_integral<decltype(std::declval<T>().num_vertex_types())>> {};
 
 template<typename T>
 inline constexpr bool has_typed_vertices_v = has_typed_vertices<T>::value;
