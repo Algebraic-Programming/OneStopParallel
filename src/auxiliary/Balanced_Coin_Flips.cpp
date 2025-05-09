@@ -76,7 +76,7 @@ bool osp::Biased_Random_with_side_bias::get_flip() {
 
     unsigned die_size = (side_ratio.first+side_ratio.second)*genuine_random_size+ static_cast<unsigned>(abs_true_bias);
 
-    if (die_size > std::numeric_limits<int>::max()) {
+    if (die_size > static_cast<unsigned>(std::numeric_limits<int>::max())) {
         throw std::runtime_error("die_size is too large!");        
     }
 

@@ -122,7 +122,7 @@ class RandomGreedy : public Scheduler<Graph_t> {
                         new_nodes.emplace_back(chld);
                     }
                 }
-                assert(node_ind < std::numeric_limits<long>::max());
+                assert(node_ind < static_cast<size_t>(std::numeric_limits<long>::max()));
                 next.erase(std::next(next.begin(), static_cast<long>(node_ind)));
                 next.insert(next.end(), new_nodes.cbegin(), new_nodes.cend());
 

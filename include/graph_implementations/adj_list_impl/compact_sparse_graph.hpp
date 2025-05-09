@@ -159,16 +159,21 @@ class Compact_Sparse_Graph {
             assert((0 <= num_vertices_) && "Number of vertices must be non-negative.");
             assert((edges.size() < static_cast<size_t>(std::numeric_limits<edge_t>::max())) && "Number of edge must be strictly smaller than the maximally representable number.");
             
-            if constexpr ( std::is_same<edge_list_type, std::vector<std::pair<vertex_idx, vertex_idx>>>::value ) {
-                assert(std::all_of(edges.cbegin(), edges.cend(), [num_vertices_](const std::pair<vertex_idx, vertex_idx> &edge) { return (0 <= edge.first) && (edge.first < num_vertices_) && (0 <= edge.second) && (edge.second < num_vertices_); } ) && "Source and target of edges must be non-negative and less than the number of vertices.");
+            if constexpr ( std::is_same_v<edge_list_type, std::vector<std::pair<vertex_idx, vertex_idx>>> ) {
+                assert(std::all_of(edges.cbegin(), edges.cend(), [num_vertices_](const auto &edge) { return (0 <= edge.first) && (edge.first < num_vertices_) && (0 <= edge.second) && (edge.second < num_vertices_); } ) && "Source and target of edges must be non-negative and less than the number of vertices.");
             }
 
-            if constexpr ( is_edge_list_type<edge_list_type, vertex_idx, edge_t>::value ) {
-                assert(std::all_of(edges.begin(), edges.end(), [num_vertices_](const std::pair<vertex_idx, vertex_idx> &edge) { return (0 <= edge.source) && (edge.source < num_vertices_) && (0 <= edge.target) && (edge.target < num_vertices_); } ) && "Source and target of edges must be non-negative and less than the number of vertices.");
+            if constexpr ( is_edge_list_type_v<edge_list_type, vertex_idx, edge_t> ) {
+                assert(std::all_of(edges.begin(), edges.end(), [num_vertices_](const auto &edge) { return (0 <= edge.source) && (edge.source < num_vertices_) && (0 <= edge.target) && (edge.target < num_vertices_); } ) && "Source and target of edges must be non-negative and less than the number of vertices.");
             }
 
             if constexpr (keep_vertex_order) {
-                assert(std::all_of(edges.cbegin(), edges.cend(), [](const std::pair<vertex_idx, vertex_idx> &edge) { return edge.first < edge.second; } ) && "Vertex order must be a topological order.");
+                if constexpr ( std::is_same_v<edge_list_type, std::vector<std::pair<vertex_idx, vertex_idx>>> ) {
+                    assert(std::all_of(edges.cbegin(), edges.cend(), [](const auto &edge) { return edge.first < edge.second; } ) && "Vertex order must be a topological order.");
+                }
+                if constexpr ( is_edge_list_type_v<edge_list_type, vertex_idx, edge_t> ) {
+                    assert(std::all_of(edges.begin(), edges.end(), [](const auto &edge) { return edge.source < edge.target; } ) && "Vertex order must be a topological order.");
+                }
             }
 
             if constexpr (use_work_weights) {
@@ -193,13 +198,13 @@ class Compact_Sparse_Graph {
             std::vector<std::vector<vertex_idx>> children_tmp(num_vertices());
             std::vector<edge_t> num_parents_tmp(num_vertices(), 0);
 
-            if constexpr ( std::is_same<edge_list_type, std::vector<std::pair<vertex_idx, vertex_idx>>>::value ) {
+            if constexpr ( std::is_same_v<edge_list_type, std::vector<std::pair<vertex_idx, vertex_idx>>> ) {
                 for (const auto &edge : edges) {
                     children_tmp[edge.first].push_back(edge.second);
                     num_parents_tmp[edge.second]++;
                 }
             }
-            if constexpr ( is_edge_list_type<edge_list_type, vertex_idx, edge_t>::value ) {
+            if constexpr ( is_edge_list_type_v<edge_list_type, vertex_idx, edge_t> ) {
                 for (const auto &edge : edges) {
                     children_tmp[edge.source].push_back(edge.target);
                     num_parents_tmp[edge.target]++;
@@ -238,12 +243,12 @@ class Compact_Sparse_Graph {
             } else {
                 std::vector<std::vector<vertex_idx>> parents_tmp(num_vertices());
 
-                if constexpr ( std::is_same<edge_list_type, std::vector<std::pair<vertex_idx, vertex_idx>>>::value ) {
+                if constexpr ( std::is_same_v<edge_list_type, std::vector<std::pair<vertex_idx, vertex_idx>>> ) {
                     for (const auto &edge : edges) {
                         parents_tmp[edge.second].push_back(edge.first);
                     }
                 }
-                if constexpr ( is_edge_list_type<edge_list_type, vertex_idx, edge_t>::value ) {
+                if constexpr ( is_edge_list_type_v<edge_list_type, vertex_idx, edge_t> ) {
                     for (const auto &edge : edges) {
                         parents_tmp[edge.target].push_back(edge.source);
                     }

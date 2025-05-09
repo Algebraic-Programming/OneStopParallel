@@ -395,7 +395,7 @@ BOOST_AUTO_TEST_CASE(Graph_edge_contruction) {
     BOOST_CHECK_EQUAL(graph.num_vertices(), 8);
 
 
-    Compact_Sparse_Graph<true, false, false, false, false, vertex_idx> copy_graph(graph.num_vertices(), graph.edges());
+    Compact_Sparse_Graph<true, false, false, false, false, vertex_idx> copy_graph(graph.num_vertices(), edge_view(graph));
     BOOST_CHECK_EQUAL(copy_graph.num_vertices(), 8);
     BOOST_CHECK_EQUAL(copy_graph.num_edges(), 9);
 
@@ -440,7 +440,7 @@ BOOST_AUTO_TEST_CASE(Graph_edge_contruction) {
         }
     }
 
-    Compact_Sparse_Graph<false, false, false, false, false, vertex_idx> reorder_graph(graph.num_vertices(), graph.edges());
+    Compact_Sparse_Graph<false, false, false, false, false, vertex_idx> reorder_graph(graph.num_vertices(), edge_view(graph));
     BOOST_CHECK_EQUAL(reorder_graph.num_vertices(), 8);
     BOOST_CHECK_EQUAL(reorder_graph.num_edges(), 9);
 

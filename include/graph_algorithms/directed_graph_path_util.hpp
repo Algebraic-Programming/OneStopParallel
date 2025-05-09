@@ -220,7 +220,7 @@ std::vector<int> get_strict_poset_integer_map(unsigned const noise, double const
 
     static_assert(is_directed_graph_edge_desc_v<Graph_t>, "Graph_t must satisfy the directed_graph_edge_desc concept");
 
-    if (noise > std::numeric_limits<int>::max()) {
+    if (noise > static_cast<unsigned>( std::numeric_limits<int>::max() )) {
         throw std::overflow_error("Overflow in get_strict_poset_integer_map");
     }
 
@@ -253,14 +253,14 @@ std::vector<int> get_strict_poset_integer_map(unsigned const noise, double const
 
     for (const auto &source : source_vertices_view(graph)) {
         
-        if (max_path - bot_distance[source] + 1 + 2 * noise > std::numeric_limits<int>::max()) {
+        if (max_path - bot_distance[source] + 1U + 2U * noise > static_cast<unsigned>( std::numeric_limits<int>::max() )) {
             throw std::overflow_error("Overflow in get_strict_poset_integer_map");
         }
         new_top[source] = randInt(static_cast<int>(max_path - bot_distance[source] + 1 + 2 * noise)) - static_cast<int>(noise);
     }
 
     for (const auto &sink : sink_vertices_view(graph)) {
-        if (max_path - top_distance[sink] + 1 + 2 * noise > std::numeric_limits<int>::max()) {
+        if (max_path - top_distance[sink] + 1U + 2U * noise > static_cast<unsigned>( std::numeric_limits<int>::max() )) {
             throw std::overflow_error("Overflow in get_strict_poset_integer_map");
         }        
         new_bot[sink] = randInt(static_cast<int>(max_path - top_distance[sink] + 1 + 2 * noise)) - static_cast<int>(noise);
