@@ -574,7 +574,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     BOOST_CHECK(get_top_node_distance(graph_second) == top_dist_second);
     BOOST_CHECK(get_bottom_node_distance(graph_second) == bottom_dist_second);
 
-    std::vector<double> poisson_params({0, 0.08, 0.1, 0.2, 0.5, 1, 4});
+    std::vector<double> poisson_params({0.0000001, 0.08, 0.1, 0.2, 0.5, 1, 4});
 
     for (unsigned loops = 0; loops < 10; loops++) {
         for (unsigned noise = 0; noise < 6; noise++) {
