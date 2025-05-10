@@ -143,12 +143,8 @@ struct vertex_cond_iterator {
         return tmp;
     }
 
-    friend bool operator==(const vertex_cond_iterator &one, const vertex_cond_iterator &other) {
-        return one.current_vertex == other.current_vertex;
-    };
-    friend bool operator!=(const vertex_cond_iterator &one, const vertex_cond_iterator &other) {
-        return one.current_vertex != other.current_vertex;
-    };
+    inline bool operator==(const vertex_cond_iterator &other) { return current_vertex == other.current_vertex; };
+    inline bool operator!=(const vertex_cond_iterator &other) { return current_vertex != other.current_vertex; };
 };
 
 /**
@@ -176,6 +172,8 @@ class source_vertices_view {
     auto begin() const { return source_iterator(graph, graph.vertices().begin()); }
 
     auto end() const { return source_iterator(graph, graph.vertices().end()); }
+
+    auto size() const { return graph.num_vertices(); }
 };
 
 /**
@@ -203,6 +201,8 @@ class sink_vertices_view {
     auto begin() const { return sink_iterator(graph, graph.vertices().begin()); }
 
     auto end() const { return sink_iterator(graph, graph.vertices().end()); }
+
+    auto size() const { return graph.num_vertices(); }
 };
 
 /**
@@ -314,12 +314,8 @@ struct traversal_iterator {
         return tmp;
     }
 
-    friend bool operator==(const traversal_iterator &one, const traversal_iterator &other) {
-        return one.current_vertex == other.current_vertex;
-    };
-    friend bool operator!=(const traversal_iterator &one, const traversal_iterator &other) {
-        return one.current_vertex != other.current_vertex;
-    };
+    inline bool operator==(const traversal_iterator &other) { return current_vertex == other.current_vertex; };
+    inline bool operator!=(const traversal_iterator &other) { return current_vertex != other.current_vertex; };
 };
 
 template<typename Graph_t>
@@ -368,6 +364,8 @@ class bfs_view {
     auto begin() const { return bfs_iterator(graph, start_vertex); }
 
     auto end() const { return bfs_iterator(graph, graph.num_vertices()); }
+
+    auto size() const { return graph.num_vertices(); }
 };
 
 template<typename Graph_t>
@@ -407,6 +405,8 @@ class dfs_view {
     auto begin() const { return dfs_iterator(graph, start_vertex); }
 
     auto end() const { return dfs_iterator(graph, graph.num_vertices()); }
+
+    auto size() const { return graph.num_vertices(); }
 };
 
 template<typename Graph_t>
@@ -440,6 +440,8 @@ class bfs_reverse_view {
     auto begin() const { return bfs_iterator(graph, start_vertex); }
 
     auto end() const { return bfs_iterator(graph, graph.num_vertices()); }
+
+    auto size() const { return graph.num_vertices(); }
 };
 
 /**
