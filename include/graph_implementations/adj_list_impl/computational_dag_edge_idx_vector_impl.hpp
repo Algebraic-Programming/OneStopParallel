@@ -64,9 +64,6 @@ using cdag_edge_impl_unsigned = cdag_edge_impl<unsigned>;
 template<typename v_impl, typename e_impl>
 class computational_dag_edge_idx_vector_impl {
   public:
-    // static_assert(std::is_base_of<cdag_vertex_impl_unsigned, v_impl>::value, "v_impl must be derived from
-    // cdag_vertex_impl"); static_assert(std::is_base_of<cdag_edge_impl_unsigned, e_impl>::value, "e_impl must be
-    // derived from cdag_edge_impl");
 
     // graph_traits specialization
     using vertex_idx = std::size_t;

@@ -52,9 +52,7 @@ using cdag_vertex_impl_unsigned = cdag_vertex_impl<unsigned, unsigned, unsigned,
 template<typename v_impl>
 class computational_dag_vector_impl {
   public:
-    // static_assert(std::is_base_of<cdag_vertex_impl_unsigned, v_impl>::value, "v_impl must be derived from
-    // cdag_vertex_impl");
-
+   
     using vertex_idx = std::size_t;
 
     using vertex_work_weight_type = typename v_impl::work_weight_type;
@@ -67,9 +65,10 @@ class computational_dag_vector_impl {
     computational_dag_vector_impl(const computational_dag_vector_impl &other) = default;
 
     template<typename Graph_t>
-    computational_dag_vector_impl(const Graph_t &other) {
+    computational_dag_vector_impl(const Graph_t &other) {      
 
-        std::cout << "computational_dag_vector_impl copy constructor" << std::endl;
+        static_assert(is_computational_dag_v<Graph_t>,
+                      "Graph_t must satisfy the is_computation_dag concept");
 
         for (const auto &v_idx : other.vertices()) {
 

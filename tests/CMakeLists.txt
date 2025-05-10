@@ -47,6 +47,8 @@ _add_test( sorts_and_arrangements )
 
 _add_test( balanced_coin_flips )
 
+_add_test( iterators )
+
 ## io
 _add_test( filereader )
 
