@@ -19,6 +19,7 @@ limitations under the License.
 
 #include "auxiliary/misc.hpp"
 #include "computational_dag_vector_impl.hpp"
+#include "graph_algorithms/computational_dag_construction_util.hpp"
 #include "edge_iterator.hpp"
 #include <vector>
 
@@ -108,6 +109,16 @@ class computational_dag_edge_idx_vector_impl {
   public:
     computational_dag_edge_idx_vector_impl() = default;
     computational_dag_edge_idx_vector_impl(const computational_dag_edge_idx_vector_impl &other) = default;
+
+    template<typename Graph_t>
+    computational_dag_edge_idx_vector_impl(const Graph_t &other) {      
+
+        static_assert(is_computational_dag_v<Graph_t>,
+                      "Graph_t must satisfy the is_computation_dag concept");
+
+        construct_computational_dag(other, *this);
+    };
+
     computational_dag_edge_idx_vector_impl(computational_dag_edge_idx_vector_impl &&other) = default;
     computational_dag_edge_idx_vector_impl &operator=(const computational_dag_edge_idx_vector_impl &other) = default;
     computational_dag_edge_idx_vector_impl &operator=(computational_dag_edge_idx_vector_impl &&other) = default;

@@ -33,11 +33,14 @@ bool construct_computational_dag(const Graph_from &from, Graph_to &to) {
     static_assert(is_constructable_cdag_vertex_v<Graph_to>,
                   "Graph_to must satisfy the constructable_cdag_vertex concept");
 
-    for (const auto &v : from.vertices()) {
-        to.add_vertex(from.vertex_work_weight(v), from.vertex_comm_weight(v), from.vertex_mem_weight(v));
+    for (const auto &v_idx : from.vertices()) {
 
         if constexpr (has_typed_vertices_v<Graph_from> and has_typed_vertices_v<Graph_to>) {
-            to.set_vertex_type(v, from.vertex_type(v));
+            to.add_vertex(from.vertex_work_weight(v_idx), from.vertex_comm_weight(v_idx),
+                          from.vertex_mem_weight(v_idx), from.vertex_type(v_idx));
+        } else {
+            to.add_vertex(from.vertex_work_weight(v_idx), from.vertex_comm_weight(v_idx),
+                          from.vertex_mem_weight(v_idx));
         }
     }
 
@@ -48,9 +51,7 @@ bool construct_computational_dag(const Graph_from &from, Graph_to &to) {
         }
 
     } else {
-
         for (const auto &v : from.vertices()) {
-
             for (const auto &child : from.children(v)) {
                 to.add_edge(v, child);
             }

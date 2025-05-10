@@ -18,7 +18,7 @@ limitations under the License.
 #pragma once
 
 #include "concepts/computational_dag_concept.hpp"
-#include "graph_algorithms/directed_graph_edge_view.hpp"
+#include "graph_algorithms/computational_dag_construction_util.hpp"
 #include "graph_implementations/vertex_iterator.hpp"
 #include <vector>
 
@@ -70,20 +70,7 @@ class computational_dag_vector_impl {
         static_assert(is_computational_dag_v<Graph_t>,
                       "Graph_t must satisfy the is_computation_dag concept");
 
-        for (const auto &v_idx : other.vertices()) {
-
-            if constexpr (has_typed_vertices_v<Graph_t>) {
-                add_vertex( other.vertex_work_weight(v_idx), other.vertex_comm_weight(v_idx),
-                           other.vertex_mem_weight(v_idx), other.vertex_type(v_idx));
-            } else {
-                add_vertex(other.vertex_work_weight(v_idx), other.vertex_comm_weight(v_idx),
-                           other.vertex_mem_weight(v_idx));
-            }
-        }
-
-        for (const auto &edge : edge_view(other)) {
-            add_edge(edge.source, edge.target);
-        }
+        construct_computational_dag(other, *this);
     };
 
     
