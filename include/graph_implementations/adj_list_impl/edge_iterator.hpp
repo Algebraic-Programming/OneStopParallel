@@ -138,12 +138,8 @@ class edge_range_vector_impl {
             return tmp;
         }
 
-        friend bool operator==(const edge_iterator &one, const edge_iterator &other) {
-            return one.current_edge_idx == other.current_edge_idx;
-        };
-        friend bool operator!=(const edge_iterator &one, const edge_iterator &other) {
-            return one.current_edge_idx != other.current_edge_idx;
-        };
+        inline bool operator==(const edge_iterator &other) { return current_edge_idx == other.current_edge_idx; }
+        inline bool operator!=(const edge_iterator &other) { return current_edge_idx != other.current_edge_idx; }
     };
 
   public:
@@ -207,12 +203,8 @@ class edge_source_range {
             return tmp;
         }
 
-        friend bool operator==(const source_iterator &one, const source_iterator &other) {
-            return one.current_edge == other.current_edge;
-        }
-        friend bool operator!=(const source_iterator &one, const source_iterator &other) {
-            return one.current_edge != other.current_edge;
-        };
+        inline bool operator==(const source_iterator &other) { return current_edge == other.current_edge; }
+        inline bool operator!=(const source_iterator &other) { return current_edge != other.current_edge; }
     };
 
   public:
@@ -222,6 +214,8 @@ class edge_source_range {
     auto begin() const { return source_iterator(edges.begin(), graph); }
 
     auto end() const { return source_iterator(edges.end(), graph); }
+
+    auto size() const { return edges.size(); }
 };
 
 template<typename Graph_t>
@@ -273,13 +267,8 @@ class edge_target_range {
             return tmp;
         }
 
-        friend bool operator==(const target_iterator &one, const target_iterator &other) {
-            return one.current_edge == other.current_edge;
-        }
-
-        friend bool operator!=(const target_iterator &one, const target_iterator &other) {
-            return one.current_edge != other.current_edge;
-        }
+        inline bool operator==(const target_iterator &other) { return current_edge == other.current_edge; }
+        inline bool operator!=(const target_iterator &other) { return current_edge != other.current_edge; }
     };
 
   public:
@@ -289,6 +278,8 @@ class edge_target_range {
     auto begin() const { return target_iterator(edges.begin(), graph); }
 
     auto end() const { return target_iterator(edges.end(), graph); }
+
+    auto size() const { return edges.size(); }
 };
 
 } // namespace osp
