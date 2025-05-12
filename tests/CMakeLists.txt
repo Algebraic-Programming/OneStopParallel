@@ -21,6 +21,8 @@ _add_test( graph_vector_edge_desc_impl )
 
 _add_test( boost_graph_adaptor )
 
+_add_test ( connected_components_part )
+
 
 ## graph algorithms
 _add_test( directed_graph_util )

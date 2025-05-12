@@ -65,7 +65,7 @@ v_workw_t<Graph_t> sumOfVerticesWorkWeights(VertexIterator begin, VertexIterator
     });
 };
 
-template<typename Graph_t, typename VertexIterator>
+template<typename Graph_t>
 v_workw_t<Graph_t> sumOfVerticesWorkWeights(const Graph_t &graph) {
     static_assert(has_vertex_weights_v<Graph_t>, "Graph_t must have vertex weights");
 

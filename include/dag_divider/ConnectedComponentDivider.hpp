@@ -18,19 +18,19 @@ limitations under the License.
 
 #pragma once
 
-#include <iostream>
 #include <limits>
 #include <queue>
 #include <unordered_map>
 #include <vector>
 
+#include "DagDivider.hpp"
 #include "concepts/graph_traits.hpp"
 #include "graph_algorithms/subgraph_algorithms.hpp"
 
 namespace osp {
 
 template<typename Graph_t>
-class ConnectedComponentDivider {
+class ConnectedComponentDivider : public IDagDivider<Graph_t> {
 
     static_assert(is_computational_dag_v<Graph_t>, "Graph must be a computational DAG");
 
@@ -40,9 +40,9 @@ class ConnectedComponentDivider {
     std::vector<Graph_t> sub_dags;
     std::vector<std::unordered_map<vertex_idx, vertex_idx>> vertex_mapping;
 
-    std::vector<unsigned> component; // vertex id -> component id
+    std::vector<vertex_idx> component; // vertex id -> component id
 
-    std::vector<unsigned> vertex_map;
+    std::vector<vertex_idx> vertex_map;
 
   public:
     inline const std::vector<Graph_t> &get_sub_dags() const { return sub_dags; }
@@ -51,19 +51,33 @@ class ConnectedComponentDivider {
         return vertex_mapping;
     }
 
-    inline const std::vector<unsigned> &get_component() const { return component; }
+    inline const std::vector<vertex_idx> &get_component() const { return component; }
 
-    inline const std::vector<unsigned> &get_vertex_map() const { return vertex_map; }
+    inline const std::vector<vertex_idx> &get_vertex_map() const { return vertex_map; }
+
+    virtual std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> divide(const Graph_t &dag) override {
+
+        compute_connected_components(dag);
+
+        std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> vertex_maps(1);
+        vertex_maps[0].resize(sub_dags.size());
+
+        for (const auto &v : dag.vertices()) {
+
+            vertex_maps[0][component[v]].push_back(v);
+        }
+        return vertex_maps;
+    }
 
     void compute_connected_components(const Graph_t &dag) {
 
         vertex_mapping.clear();
-        component = std::vector<unsigned>(dag.numberOfVertices(), std::numeric_limits<unsigned>::max());
-        vertex_map = std::vector<unsigned>(dag.numberOfVertices(), 0);
+        component = std::vector<vertex_idx>(dag.num_vertices(), std::numeric_limits<vertex_idx>::max());
+        vertex_map = std::vector<vertex_idx>(dag.num_vertices(), 0);
 
-        unsigned component_id = 0;
+        vertex_idx component_id = 0;
         for (const auto &v : dag.vertices()) {
-            if (component[v] == std::numeric_limits<unsigned>::max()) {
+            if (component[v] == std::numeric_limits<vertex_idx>::max()) {
 
                 component[v] = component_id;
                 std::queue<vertex_idx> q;
@@ -76,7 +90,7 @@ class ConnectedComponentDivider {
 
                     for (const auto &child : dag.children(current)) {
 
-                        if (component[child] == std::numeric_limits<unsigned>::max()) {
+                        if (component[child] == std::numeric_limits<vertex_idx>::max()) {
                             q.push(child);
                             component[child] = component_id;
                         }
@@ -84,7 +98,7 @@ class ConnectedComponentDivider {
 
                     for (const auto &parent : dag.parents(current)) {
 
-                        if (component[parent] == std::numeric_limits<unsigned>::max()) {
+                        if (component[parent] == std::numeric_limits<vertex_idx>::max()) {
                             q.push(parent);
                             component[parent] = component_id;
                         }
@@ -95,17 +109,15 @@ class ConnectedComponentDivider {
             }
         }
 
-        sub_dags = create_induced_subgraphs(dag, component);
+        sub_dags = create_induced_subgraphs<Graph_t, Graph_t>(dag, component);
         vertex_mapping.resize(sub_dags.size());
-        std::vector<unsigned> current_index_in_subdag(sub_dags.size(), 0);
+        std::vector<vertex_idx> current_index_in_subdag(sub_dags.size(), 0);
         for (const auto &v : dag.vertices()) {
             vertex_map[v] = current_index_in_subdag[component[v]];
             std::unordered_map<vertex_idx, vertex_idx> &current_vertex_mapping = vertex_mapping[component[v]];
             current_vertex_mapping[current_index_in_subdag[component[v]]] = v;
             ++current_index_in_subdag[component[v]];
         }
-
-        std::cout << "size 0: " << sub_dags[0].num_vertices() << std::endl;
     }
 };
 

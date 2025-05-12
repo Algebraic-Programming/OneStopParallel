@@ -74,7 +74,7 @@ void create_induced_subgraph(const Graph_t_in &dag, Graph_t_out &dag_out,
         for (const auto &node : selected_nodes)
             for (const auto &in_edge : dag.in_edges(node)) {
                 const auto &pred = in_edge.m_source;
-                if (selected_nodes.find(pred) != selected_node.end() || extra_sources.find(pred) != extra_sources.end())
+                if (selected_nodes.find(pred) != selected_nodes.end() || extra_sources.find(pred) != extra_sources.end())
                     dag_out.add_edge(local_idx[pred], local_idx[node], dag.edge_comm_weight(in_edge));
             }
 
@@ -84,7 +84,7 @@ void create_induced_subgraph(const Graph_t_in &dag, Graph_t_out &dag_out,
         for (const auto &node : selected_nodes)
             for (const auto &pred : dag.parents(node)) {
 
-                if (selected_nodes_set.find(pred) != selected_nodes_set.end() ||
+                if (selected_nodes.find(pred) != selected_nodes.end() ||
                     extra_sources.find(pred) != extra_sources.end())
                     dag_out.add_edge(local_idx[pred], local_idx[node]);
             }
@@ -102,12 +102,12 @@ bool checkOrderedIsomorphism(const Graph_t &first, const Graph_t &second) {
 
     for (const auto &node : first.vertices()) {
         if (first.vertex_work_weight(node) != second.vertex_work_weight(node) ||
-            frist.vertex_mem_weight(node) != second.vertex_mem_weight(node) ||
+            first.vertex_mem_weight(node) != second.vertex_mem_weight(node) ||
             first.vertex_comm_weight(node) != second.vertex_comm_weight(node) ||
             first.vertex_type(node) != second.vertex_type(node))
             return false;
 
-        if (frist.in_degree(node) != second.in_degree(node) || first.out_degree(node) != second.out_degree(node))
+        if (first.in_degree(node) != second.in_degree(node) || first.out_degree(node) != second.out_degree(node))
             return false;
 
         if constexpr (is_directed_graph_edge_desc_v<Graph_t>) {
