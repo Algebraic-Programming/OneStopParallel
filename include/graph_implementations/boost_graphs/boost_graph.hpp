@@ -25,8 +25,8 @@ limitations under the License.
 
 #include "auxiliary/misc.hpp"
 #include "concepts/computational_dag_concept.hpp"
+#include "concepts/constructable_computational_dag_concept.hpp"
 #include "source_iterator_range.hpp"
-
 
 struct boost_vertex {
 
@@ -48,10 +48,10 @@ struct boost_edge {
     int communicationWeight;
 };
 
-using boost_graph_impl = boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS, boost_vertex, boost_edge>;
+using boost_graph_impl =
+    boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS, boost_vertex, boost_edge>;
 using boost_vertex_type = boost::graph_traits<boost_graph_impl>::vertex_descriptor;
 using boost_edge_desc = boost::graph_traits<boost_graph_impl>::edge_descriptor;
-
 
 template<>
 struct std::hash<boost_edge_desc> {
@@ -62,7 +62,6 @@ struct std::hash<boost_edge_desc> {
         return h1;
     }
 };
-
 
 /**
  * @class ComputationalDag
@@ -88,8 +87,8 @@ class boost_graph {
     using edge_comm_weight_type = int;
 
     boost_graph(const std::vector<std::vector<vertex_idx>> &out_, const std::vector<int> &workW_,
-                        const std::vector<int> &commW_,
-                        const std::unordered_map<std::pair<int, int>, int, osp::pair_hash> &comm_edge_W)
+                const std::vector<int> &commW_,
+                const std::unordered_map<std::pair<int, int>, int, osp::pair_hash> &comm_edge_W)
         : number_of_vertex_types(0) {
         graph.m_vertices.reserve(out_.size());
 
@@ -110,7 +109,7 @@ class boost_graph {
     }
 
     boost_graph(const std::vector<std::vector<vertex_idx>> &out_, const std::vector<int> &workW_,
-                        const std::vector<int> &commW_)
+                const std::vector<int> &commW_)
         : number_of_vertex_types(0) {
         graph.m_vertices.reserve(out_.size());
 
@@ -130,7 +129,7 @@ class boost_graph {
     }
 
     boost_graph(const std::vector<std::vector<vertex_idx>> &out_, const std::vector<int> &workW_,
-                        const std::vector<int> &commW_, const std::vector<unsigned> &nodeType_)
+                const std::vector<int> &commW_, const std::vector<unsigned> &nodeType_)
         : number_of_vertex_types(0) {
         graph.m_vertices.reserve(out_.size());
 
@@ -229,9 +228,7 @@ class boost_graph {
 
     int edge_comm_weight(const directed_edge_descriptor &e) const { return graph[e].communicationWeight; }
 
-    void set_vertex_memory_weight(const vertex_idx &v, const int memory_weight) {
-        graph[v].memoryWeight = memory_weight;
-    }
+    void set_vertex_mem_weight(const vertex_idx &v, const int memory_weight) { graph[v].memoryWeight = memory_weight; }
     void set_vertex_work_weight(const vertex_idx &v, const int work_weight) { graph[v].workWeight = work_weight; }
     void set_vertex_type(const vertex_idx &v, const unsigned node_type) {
         graph[v].nodeType = node_type;
@@ -268,3 +265,14 @@ static_assert(osp::is_directed_graph_edge_desc_v<boost_graph>,
 static_assert(osp::is_computational_dag_typed_vertices_edge_desc_v<boost_graph>,
               "boost_graph_adapter must satisfy the computational_dag_typed_vertices_edge_desc concept");
 
+static_assert(osp::is_constructable_cdag_vertex_v<boost_graph>,
+              "boost_graph_adapter must satisfy the is_constructable_cdag_vertex concept");
+
+static_assert(osp::is_constructable_cdag_typed_vertex_v<boost_graph>,
+              "boost_graph_adapter must satisfy the is_constructable_cdag_typed_vertex concept");
+
+static_assert(osp::is_constructable_cdag_edge_v<boost_graph>,
+              "boost_graph_adapter must satisfy the is_constructable_cdag_edge concept");
+
+static_assert(osp::is_constructable_cdag_comm_edge_v<boost_graph>,
+              "boost_graph_adapter must satisfy the is_constructable_cdag_comm_edge concept");

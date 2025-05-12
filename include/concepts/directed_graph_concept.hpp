@@ -47,8 +47,6 @@ struct is_directed_graph<
           std::is_default_constructible<T>,
           std::is_move_constructible<T>,
           std::is_copy_constructible<T>
-          //std::is_copy_assignable<T>
-          //std::is_move_assignable<T>
           > {};
 
 template<typename T>
