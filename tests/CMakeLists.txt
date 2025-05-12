@@ -22,6 +22,9 @@ _add_test( graph_vector_edge_desc_impl )
 _add_test( boost_graph_adaptor )
 
 _add_test ( connected_components_part )
+IF(Eigen3_FOUND)
+_add_test ( sparse_matrix_impl )
+ENDIF()
 
 
 ## graph algorithms

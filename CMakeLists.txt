@@ -56,7 +56,11 @@ if(Eigen3_FOUND)
     set(DEIGEN ON)
     add_definitions(-DEIGEN_FOUND)
     get_target_property(eigen_incs Eigen3::Eigen INTERFACE_INCLUDE_DIRECTORIES)
-    include_directories(${eigen_incs})
+
+    # Mark Eigen includes as SYSTEM to suppress warnings
+    foreach(eigen_inc ${eigen_incs})
+        include_directories(SYSTEM "${eigen_inc}")
+    endforeach()
 else()
     message(WARNING "Eigen3 not found. Some features may be disabled.")
 endif()
