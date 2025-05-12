@@ -143,6 +143,39 @@ class Compact_Sparse_Graph {
                 inline Children_range children(const vertex_idx vert) const { return Children_range(csc_edge_children, csc_source_ptr, vert); }
         };
 
+
+
+        const vertex_idx number_of_vertices = static_cast<vert_t>(0);
+        const edge_t number_of_edges = static_cast<edge_t>(0);
+
+        Compact_Parent_Edges csr_in_edges;
+        Compact_Children_Edges csc_out_edges;
+
+        vertex_type_type number_of_vertex_types = static_cast<vertex_type_type>(1);
+
+        std::vector<vertex_work_weight_type> vert_work_weights;
+        std::vector<vertex_comm_weight_type> vert_comm_weights;
+        std::vector<vertex_mem_weight_type> vert_mem_weights;
+        std::vector<vertex_type_type> vert_types;
+
+
+        std::vector<vertex_idx> vertex_permutation_from_internal_to_original;
+        std::vector<vertex_idx> vertex_permutation_from_original_to_internal;
+
+        template<typename RetT = void>
+        std::enable_if_t<not use_vert_types, RetT> _update_num_vertex_types() {
+            number_of_vertex_types = static_cast<vertex_type_type>(1);
+        }
+
+        template<typename RetT = void>
+        std::enable_if_t<use_vert_types, RetT> _update_num_vertex_types() {
+            number_of_vertex_types = static_cast<vertex_type_type>(1);
+            for (const auto vt : vert_types) {
+                number_of_vertex_types = std::max(number_of_vertex_types, vt);
+            }
+        }
+    
+
     public:
         Compact_Sparse_Graph() = default;
         Compact_Sparse_Graph(const Compact_Sparse_Graph &other) = default;
@@ -588,7 +621,7 @@ class Compact_Sparse_Graph {
         }
 
         template <typename Graph_type>
-        Compact_Sparse_Graph(const Graph_type  & graph, void*) : Compact_Sparse_Graph(graph.num_vertices(), edge_view(graph)) {
+        Compact_Sparse_Graph(const Graph_type  & graph) : Compact_Sparse_Graph(graph.num_vertices(), edge_view(graph)) {
             static_assert(is_directed_graph_v<Graph_type>);
 
             if constexpr (is_computational_dag_v<Graph_type> && use_work_weights) {
@@ -742,38 +775,6 @@ class Compact_Sparse_Graph {
         template<typename RetT = const std::vector<vertex_idx> &>
         inline std::enable_if_t<not keep_vertex_order, RetT> get_pushforward_permutation() const {
             return vertex_permutation_from_original_to_internal;
-        }
-
-
-    private:
-        const vertex_idx number_of_vertices = static_cast<vert_t>(0);
-        const edge_t number_of_edges = static_cast<edge_t>(0);
-
-        Compact_Parent_Edges csr_in_edges;
-        Compact_Children_Edges csc_out_edges;
-
-        vertex_type_type number_of_vertex_types = static_cast<vertex_type_type>(1);
-
-        std::vector<vertex_work_weight_type> vert_work_weights;
-        std::vector<vertex_comm_weight_type> vert_comm_weights;
-        std::vector<vertex_mem_weight_type> vert_mem_weights;
-        std::vector<vertex_type_type> vert_types;
-
-
-        std::vector<vertex_idx> vertex_permutation_from_internal_to_original;
-        std::vector<vertex_idx> vertex_permutation_from_original_to_internal;
-
-        template<typename RetT = void>
-        std::enable_if_t<use_vert_types, RetT> _update_num_vertex_types() {
-            number_of_vertex_types = static_cast<vertex_type_type>(1);
-            for (const auto vt : vert_types) {
-                number_of_vertex_types = std::max(number_of_vertex_types, vt);
-            }
-        }
-            
-        template<typename RetT = void>
-        std::enable_if_t<not use_vert_types, RetT> _update_num_vertex_types() {
-            number_of_vertex_types = static_cast<vertex_type_type>(1);
         }
 };
 
