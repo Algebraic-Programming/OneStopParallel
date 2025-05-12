@@ -82,11 +82,23 @@ BOOST_AUTO_TEST_CASE(LineGraph_keep_order) {
             for (const std::size_t &chld : graph.children(vert)) {
                 BOOST_CHECK_EQUAL(chld, vert + 1);
             }
+            auto chldren = graph.children(vert);
+            BOOST_CHECK_EQUAL(chldren.crend() - chldren.crbegin(), graph.out_degree(vert));
+            for (auto it = chldren.crbegin(); it != chldren.crend(); ++it) {
+                BOOST_CHECK_EQUAL(*it, vert + 1);
+            }
+
         } else {
             BOOST_CHECK_EQUAL(graph.out_degree(vert), 0);
             for (const std::size_t &chld : graph.children(vert)) {
                 BOOST_CHECK(false);
                 BOOST_CHECK_EQUAL(chld, 100);
+            }
+            auto chldren = graph.children(vert);
+            BOOST_CHECK_EQUAL(chldren.crend() - chldren.crbegin(), graph.out_degree(vert));
+            for (auto it = chldren.crbegin(); it != chldren.crend(); ++it) {
+                BOOST_CHECK(false);
+                BOOST_CHECK_EQUAL(*it, 100);
             }
         }
     }
@@ -96,11 +108,22 @@ BOOST_AUTO_TEST_CASE(LineGraph_keep_order) {
             for (const std::size_t &par : graph.parents(vert)) {
                 BOOST_CHECK_EQUAL(par, vert - 1);
             }
+            auto prnts = graph.parents(vert);
+            BOOST_CHECK_EQUAL(prnts.crend() - prnts.crbegin(), graph.in_degree(vert));
+            for (auto it = prnts.crbegin(); it != prnts.crend(); ++it) {
+                BOOST_CHECK_EQUAL(*it, vert - 1);
+            }
         } else {
             BOOST_CHECK_EQUAL(graph.in_degree(vert), 0);
             for (const std::size_t &par : graph.parents(vert)) {
                 BOOST_CHECK(false);
                 BOOST_CHECK_EQUAL(par, 100);
+            }
+            auto prnts = graph.parents(vert);
+            BOOST_CHECK_EQUAL(prnts.crend() - prnts.crbegin(), graph.in_degree(vert));
+            for (auto it = prnts.crbegin(); it != prnts.crend(); ++it) {
+                BOOST_CHECK(false);
+                BOOST_CHECK_EQUAL(*it, 100);
             }
         }
     }
@@ -140,11 +163,22 @@ BOOST_AUTO_TEST_CASE(LineGraph_reorder) {
             for (const std::size_t &chld : graph.children(vert)) {
                 BOOST_CHECK_EQUAL(chld, vert + 1);
             }
+            auto chldren = graph.children(vert);
+            BOOST_CHECK_EQUAL(chldren.crend() - chldren.crbegin(), graph.out_degree(vert));
+            for (auto it = chldren.crbegin(); it != chldren.crend(); ++it) {
+                BOOST_CHECK_EQUAL(*it, vert + 1);
+            }
         } else {
             BOOST_CHECK_EQUAL(graph.out_degree(vert), 0);
             for (const std::size_t &chld : graph.children(vert)) {
                 BOOST_CHECK(false);
                 BOOST_CHECK_EQUAL(chld, 100);
+            }
+            auto chldren = graph.children(vert);
+            BOOST_CHECK_EQUAL(chldren.crend() - chldren.crbegin(), graph.out_degree(vert));
+            for (auto it = chldren.crbegin(); it != chldren.crend(); ++it) {
+                BOOST_CHECK(false);
+                BOOST_CHECK_EQUAL(*it, 100);
             }
         }
     }
@@ -154,11 +188,22 @@ BOOST_AUTO_TEST_CASE(LineGraph_reorder) {
             for (const std::size_t &par : graph.parents(vert)) {
                 BOOST_CHECK_EQUAL(par, vert - 1);
             }
+            auto prnts = graph.parents(vert);
+            BOOST_CHECK_EQUAL(prnts.crend() - prnts.crbegin(), graph.in_degree(vert));
+            for (auto it = prnts.crbegin(); it != prnts.crend(); ++it) {
+                BOOST_CHECK_EQUAL(*it, vert - 1);
+            }
         } else {
             BOOST_CHECK_EQUAL(graph.in_degree(vert), 0);
             for (const std::size_t &par : graph.parents(vert)) {
                 BOOST_CHECK(false);
                 BOOST_CHECK_EQUAL(par, 100);
+            }
+            auto prnts = graph.parents(vert);
+            BOOST_CHECK_EQUAL(prnts.crend() - prnts.crbegin(), graph.in_degree(vert));
+            for (auto it = prnts.crbegin(); it != prnts.crend(); ++it) {
+                BOOST_CHECK(false);
+                BOOST_CHECK_EQUAL(*it, 100);
             }
         }
     }
@@ -222,6 +267,12 @@ BOOST_AUTO_TEST_CASE(Graph1_keep_order) {
             BOOST_CHECK_EQUAL(chld, out_edges[vert][cntr]);
             ++cntr;
         }
+        auto chldrn = graph.children(vert);
+        BOOST_CHECK_EQUAL(chldrn.crend() - chldrn.crbegin(), graph.out_degree(vert));
+        for (auto it = chldrn.crbegin(); it != chldrn.crend(); ++it) {
+            --cntr;
+            BOOST_CHECK_EQUAL(*it, out_edges[vert][cntr]);
+        }
     }
 
     std::vector<std::vector<std::size_t>> in_edges({
@@ -244,6 +295,12 @@ BOOST_AUTO_TEST_CASE(Graph1_keep_order) {
         for (const auto &par : graph.parents(vert)) {
             BOOST_CHECK_EQUAL(par, in_edges[vert][cntr]);
             ++cntr;
+        }
+        auto prnts = graph.parents(vert);
+        BOOST_CHECK_EQUAL(prnts.crend() - prnts.crbegin(), graph.in_degree(vert));
+        for (auto it = prnts.crbegin(); it != prnts.crend(); ++it) {
+            --cntr;
+            BOOST_CHECK_EQUAL(*it, in_edges[vert][cntr]);
         }
     }
     
@@ -306,6 +363,18 @@ BOOST_AUTO_TEST_CASE(Graph1_reorder) {
             previous_chld = chld;
             ++cntr;
         }
+        auto chldrn = graph.children(vert);
+        BOOST_CHECK_EQUAL(chldrn.crend() - chldrn.crbegin(), graph.out_degree(vert));
+        for (auto it = chldrn.crbegin(); it != chldrn.crend(); ++it) {
+            if (cntr < graph.out_degree(vert)) {
+                BOOST_CHECK_GE(previous_chld, *it);
+            }
+
+            --cntr;
+            BOOST_CHECK(std::find(out_edges[ori_vert].cbegin(), out_edges[ori_vert].cend(), graph_perm[*it]) != out_edges[ori_vert].cend());
+
+            previous_chld = *it;
+        }
     }
 
     std::vector<std::vector<std::size_t>> in_edges({
@@ -337,6 +406,18 @@ BOOST_AUTO_TEST_CASE(Graph1_reorder) {
 
             previous_par = par;
             ++cntr;
+        }
+        auto prnts = graph.parents(vert);
+        BOOST_CHECK_EQUAL(prnts.crend() - prnts.crbegin(), graph.in_degree(vert));
+        for (auto it = prnts.crbegin(); it != prnts.crend(); ++it) {
+            if (cntr < graph.out_degree(vert)) {
+                BOOST_CHECK_GE(previous_par, *it);
+            }
+
+            --cntr;
+            BOOST_CHECK(std::find(in_edges[ori_vert].cbegin(), in_edges[ori_vert].cend(), graph_perm[*it]) != in_edges[ori_vert].cend());
+
+            previous_par = *it;
         }
     }
     

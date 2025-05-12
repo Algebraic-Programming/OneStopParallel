@@ -81,17 +81,17 @@ class Compact_Sparse_Graph {
                     public:
                         Parent_range (const std::vector<vertex_idx> &csr_edge_parents, const std::vector<edge_t> &csr_target_ptr, const vertex_idx vert) : _csr_edge_parents(csr_edge_parents), _csr_target_ptr(csr_target_ptr), _vert(vert) {};
 
-                        inline auto begin() const { auto it = _csr_edge_parents.cbegin(); std::advance(it, _csr_target_ptr[_vert]); return it; }
-                        inline auto end() const { auto it = _csr_edge_parents.cbegin(); std::advance(it, _csr_target_ptr[_vert + 1]); return it; }
-
                         inline auto cbegin() const { auto it = _csr_edge_parents.cbegin(); std::advance(it, _csr_target_ptr[_vert]); return it; }
                         inline auto cend() const { auto it = _csr_edge_parents.cbegin(); std::advance(it, _csr_target_ptr[_vert + 1]); return it; }
+                        
+                        inline auto begin() const { return cbegin(); }
+                        inline auto end() const { return cend(); }
 
-                        inline auto rbegin() const { auto it = _csr_edge_parents.crbegin(); std::advance(it, _csr_target_ptr[_csr_target_ptr.size() - 1] - 1 - _csr_target_ptr[_vert + 1]); return it; };
-                        inline auto rend() const { auto it = _csr_edge_parents.crbegin(); std::advance(it, _csr_target_ptr[_csr_target_ptr.size() - 1] - 1 - _csr_target_ptr[_vert]); return it; };
+                        inline auto crbegin() const { auto it = _csr_edge_parents.crbegin(); std::advance(it, _csr_target_ptr[_csr_target_ptr.size() - 1] - _csr_target_ptr[_vert + 1]); return it; };
+                        inline auto crend() const { auto it = _csr_edge_parents.crbegin(); std::advance(it, _csr_target_ptr[_csr_target_ptr.size() - 1] - _csr_target_ptr[_vert]); return it; };
 
-                        inline auto crbegin() const { auto it = _csr_edge_parents.crbegin(); std::advance(it, _csr_target_ptr[_csr_target_ptr.size() - 1] - 1 - _csr_target_ptr[_vert + 1]); return it; };
-                        inline auto crend() const { auto it = _csr_edge_parents.crbegin(); std::advance(it, _csr_target_ptr[_csr_target_ptr.size() - 1] - 1 - _csr_target_ptr[_vert]); return it; };
+                        inline auto rbegin() const { return crbegin(); };
+                        inline auto rend() const { return crend(); };
                 };
 
                 inline Parent_range parents(const vertex_idx vert) const { return Parent_range(csr_edge_parents, csr_target_ptr, vert); }
@@ -127,17 +127,17 @@ class Compact_Sparse_Graph {
                     public:
                         Children_range (const std::vector<vertex_idx> &csc_edge_children, const std::vector<edge_t> &csc_source_ptr, const vertex_idx vert) : _csc_edge_children(csc_edge_children), _csc_source_ptr(csc_source_ptr), _vert(vert) {};
 
-                        inline auto begin() const { auto it = _csc_edge_children.cbegin(); std::advance(it, _csc_source_ptr[_vert]); return it; };
-                        inline auto end() const { auto it = _csc_edge_children.cbegin(); std::advance(it, _csc_source_ptr[_vert + 1]); return it; };
-
                         inline auto cbegin() const { auto it = _csc_edge_children.cbegin(); std::advance(it, _csc_source_ptr[_vert]); return it; };
                         inline auto cend() const { auto it = _csc_edge_children.cbegin(); std::advance(it, _csc_source_ptr[_vert + 1]); return it; };
 
-                        inline auto rbegin() const { auto it = _csc_edge_children.crbegin(); std::advance(it, _csc_source_ptr[csc_source_ptr.size() - 1] - 1 - _csc_source_ptr[_vert + 1]); return it; };
-                        inline auto rend() const { auto it = _csc_edge_children.crbegin(); std::advance(it, _csc_source_ptr[csc_source_ptr.size() - 1] - 1 - _csc_source_ptr[_vert]); return it; };
+                        inline auto begin() const { return cbegin(); };
+                        inline auto end() const { return cend(); };
 
-                        inline auto crbegin() const { auto it = _csc_edge_children.crbegin(); std::advance(it, _csc_source_ptr[csc_source_ptr.size() - 1] - 1 - _csc_source_ptr[_vert + 1]); return it; };
-                        inline auto crend() const { auto it = _csc_edge_children.crbegin(); std::advance(it, _csc_source_ptr[csc_source_ptr.size() - 1] - 1 - _csc_source_ptr[_vert]); return it; };
+                        inline auto crbegin() const { auto it = _csc_edge_children.crbegin(); std::advance(it, _csc_source_ptr[_csc_source_ptr.size() - 1] - _csc_source_ptr[_vert + 1]); return it; };
+                        inline auto crend() const { auto it = _csc_edge_children.crbegin(); std::advance(it, _csc_source_ptr[_csc_source_ptr.size() - 1] - _csc_source_ptr[_vert]); return it; };
+
+                        inline auto rbegin() const { return crbegin(); };
+                        inline auto rend() const { return crend(); };
                 };
 
                 inline Children_range children(const vertex_idx vert) const { return Children_range(csc_edge_children, csc_source_ptr, vert); }
