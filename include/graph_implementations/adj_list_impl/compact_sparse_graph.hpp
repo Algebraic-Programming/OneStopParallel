@@ -180,8 +180,8 @@ class Compact_Sparse_Graph {
         Compact_Sparse_Graph() = default;
         Compact_Sparse_Graph(const Compact_Sparse_Graph &other) = default;
         Compact_Sparse_Graph(Compact_Sparse_Graph &&other) = default;
-        Compact_Sparse_Graph &operator=(const Compact_Sparse_Graph &other) = default;
-        Compact_Sparse_Graph &operator=(Compact_Sparse_Graph &&other) = default;
+        Compact_Sparse_Graph &operator=(const Compact_Sparse_Graph &other) = delete;
+        Compact_Sparse_Graph &operator=(Compact_Sparse_Graph &&other) = delete;
         virtual ~Compact_Sparse_Graph() = default;
 
         template <typename edge_list_type>
