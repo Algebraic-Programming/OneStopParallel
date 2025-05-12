@@ -23,6 +23,7 @@ limitations under the License.
 #include <random>
 #include <vector>
 
+#include "auxiliary/math_helper.hpp"
 #include "auxiliary/misc.hpp"
 #include "concepts/directed_graph_concept.hpp"
 #include "directed_graph_util.hpp"
@@ -52,7 +53,7 @@ bool checkNodesInTopologicalOrder(const Graph_t &graph) {
     return true;
 }
 
-enum TOP_SORT_ORDER { AS_IT_COMES, MAX_CHILDREN, RANDOM, MINIMAL_NUMBER };
+enum TOP_SORT_ORDER { AS_IT_COMES, MAX_CHILDREN, RANDOM, MINIMAL_NUMBER, GORDER };
 
 template<typename Graph_t>
 std::vector<vertex_idx_t<Graph_t>> GetTopOrder(const TOP_SORT_ORDER q_order, const Graph_t &graph) {
@@ -63,6 +64,7 @@ std::vector<vertex_idx_t<Graph_t>> GetTopOrder(const TOP_SORT_ORDER q_order, con
 
     std::vector<VertexType> predecessors_count(graph.num_vertices(), 0);
     std::vector<VertexType> TopOrder;
+    TopOrder.reserve(graph.num_vertices());
 
     if (q_order == AS_IT_COMES) {
         std::queue<VertexType> next;
@@ -158,11 +160,68 @@ std::vector<vertex_idx_t<Graph_t>> GetTopOrder(const TOP_SORT_ORDER q_order, con
         }
     }
 
+    // Generating modified Gorder topological order cf. "Speedup Graph Processing by Graph Ordering" by Hao Wei, Jeffrey Xu Yu, Can Lu, and Xuemin Lin
+    if (q_order == GORDER) {
+        const double decay = 8.0;
+
+        std::vector<double> priorities(graph.num_vertices(), 0.0);
+
+        auto v_cmp = [&priorities, &graph] (const VertexType &lhs, const VertexType &rhs) {
+            return  (priorities[lhs] < priorities[rhs]) ||
+                    ((priorities[lhs] == priorities[rhs]) && (graph.out_degree(lhs) <  graph.out_degree(rhs))) ||
+                    ((priorities[lhs] == priorities[rhs]) && (graph.out_degree(lhs) == graph.out_degree(rhs)) && (lhs > rhs));
+        };
+
+        std::priority_queue<VertexType, std::vector<VertexType>, decltype(v_cmp)> ready_q(v_cmp);
+        for (const VertexType &vert : source_vertices_view(graph)) {
+            ready_q.push(vert); 
+        }
+
+        while (!ready_q.empty()) {
+            VertexType vert = ready_q.top();
+            ready_q.pop();
+
+            double pos = static_cast<double>(TopOrder.size());
+            pos /= decay;
+
+            TopOrder.push_back(vert);
+
+            // update priorities
+            for (const VertexType &chld : graph.children(vert)) {
+                priorities[chld] = log_sum_exp(priorities[chld], pos);
+            }
+            for (const VertexType &par : graph.parents(vert)) {
+                for (const VertexType &sibling : graph.children(par)) {
+                    priorities[sibling] = log_sum_exp(priorities[sibling], pos);
+                }
+            }
+            for (const VertexType &chld : graph.children(vert)) {
+                for (const VertexType &couple : graph.parents(chld)) {
+                    priorities[couple] = log_sum_exp(priorities[couple], pos);
+                }
+            }
+
+            // update constraints and push to queue
+            for (const VertexType &chld : graph.children(vert)) {
+                ++predecessors_count[chld];
+                if (predecessors_count[chld] == graph.in_degree(chld)) {
+                    ready_q.push(chld);
+                }
+            }
+        }
+
+    }
+
     if (TopOrder.size() != graph.num_vertices())
         throw std::runtime_error("Error during topological ordering: TopOrder.size() != graph.num_vertices() [" +
                                  std::to_string(TopOrder.size()) + " != " + std::to_string(graph.num_vertices()) + "]");
 
     return TopOrder;
+}
+
+template<typename Graph_t>
+std::vector<vertex_idx_t<Graph_t>> GetTopOrder(const Graph_t &graph) {
+    return GetTopOrder(AS_IT_COMES, graph);
 }
 
 template<typename Graph_t>
