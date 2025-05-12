@@ -135,6 +135,7 @@ data/*
 !data/.gitignore
 !data/machine_params
 !data/mtx_tests
+!data/dot
 !data/spaa
 data/spaa/*
 !data/spaa/small

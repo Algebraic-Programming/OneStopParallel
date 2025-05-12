@@ -120,31 +120,27 @@ BOOST_AUTO_TEST_CASE(test_dot_graph) {
         cwd = cwd.parent_path();
     }
 
+    std::vector<unsigned> work{5, 2, 4, 5, 1, 8, 12, 8, 2, 9, 3};
+    std::vector<unsigned> comm{4, 3, 2, 4, 3, 2, 4, 3, 2, 2, 2};
+    std::vector<unsigned> mem{3, 5, 5, 3, 5, 5, 3, 5, 5, 5, 5};
+    std::vector<unsigned> type{0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0};
+
     computational_dag_vector_impl_def_t graph;
 
     bool status =
-        file_reader::readComputationalDagDotFormat((cwd / "data/dot/test_dot_graph.dot").string(), graph);
+        file_reader::readComputationalDagDotFormat((cwd / "data/dot/smpl_dot_graph_1.dot").string(), graph);
 
     BOOST_CHECK(status);
     BOOST_CHECK_EQUAL(graph.num_vertices(), 11);
     BOOST_CHECK_EQUAL(graph.num_edges(), 10);
+    BOOST_CHECK_EQUAL(graph.num_vertex_types(), 2);
 
-    // for (const auto &v : graph.vertices()) {
-    //     BOOST_CHECK_EQUAL(graph.vertex_work_weight(v), work[v]);
-    //     BOOST_CHECK_EQUAL(graph.vertex_comm_weight(v), comm[v]);
-    // }
+    for (const auto &v : graph.vertices()) {
+        BOOST_CHECK_EQUAL(graph.vertex_work_weight(v), work[v]);
+        BOOST_CHECK_EQUAL(graph.vertex_comm_weight(v), comm[v]);
+        BOOST_CHECK_EQUAL(graph.vertex_mem_weight(v), mem[v]);
+        BOOST_CHECK_EQUAL(graph.vertex_type(v), type[v]);
+    }
 
-    // computational_dag_edge_idx_vector_impl_def_t graph2;
 
-    // status =
-    //     file_reader::readComputationalDagHyperdagFormat((cwd / "data/spaa/tiny/instance_k-means.hdag").string(), graph2);
-
-    // BOOST_CHECK(status);
-    // BOOST_CHECK_EQUAL(graph2.num_vertices(), 40);
-    // BOOST_CHECK_EQUAL(graph2.num_edges(), 45);
-
-    // for (const auto &v : graph2.vertices()) {
-    //     BOOST_CHECK_EQUAL(graph2.vertex_work_weight(v), work[v]);
-    //     BOOST_CHECK_EQUAL(graph2.vertex_comm_weight(v), comm[v]);
-    // }
 };
