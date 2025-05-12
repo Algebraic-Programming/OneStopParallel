@@ -24,7 +24,7 @@ limitations under the License.
 #include "graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 #include "io/arch_file_reader.hpp"
-#include "io/graph_file_reader.hpp"
+#include "io/hdag_graph_file_reader.hpp"
 #include <filesystem>
 #include <iostream>
 

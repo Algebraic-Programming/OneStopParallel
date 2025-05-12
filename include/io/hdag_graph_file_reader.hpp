@@ -22,6 +22,7 @@ limitations under the License.
 #include <iostream>
 #include <utility>
 #include <vector>
+#include <boost/algorithm/string.hpp>
 
 #include "concepts/computational_dag_concept.hpp"
 
@@ -132,12 +133,6 @@ bool readComputationalDagHyperdagFormat(const std::string &filename, Graph_t& gr
 
 // std::pair<bool, BspInstance> readBspInstance(const std::string &filename);
 
-// std::pair<bool, ComputationalDag> readComputationalDagMetisFormat(std::ifstream &infile);
-
-// std::pair<bool, ComputationalDag> readComputationalDagMetisFormat(const std::string &filename);
-
-
-
 
 
 // std::pair<bool, ComputationalDag>
@@ -162,9 +157,6 @@ bool readComputationalDagHyperdagFormat(const std::string &filename, Graph_t& gr
 
 // std::pair<bool, BspArchitecture> readBspArchitecture(std::ifstream &infile);
 
-// std::pair<bool, ComputationalDag> readComputationalDagDotFormat(std::ifstream &infile);
-
-// std::pair<bool, ComputationalDag> readComputationalDagDotFormat(const std::string &filename);
 
 // std::pair<bool, BspSchedule> readBspSchdeuleTxtFormat(const BspInstance &instance, const std::string &filename);
 

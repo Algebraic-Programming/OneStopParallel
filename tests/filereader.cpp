@@ -22,7 +22,8 @@ limitations under the License.
 #include "graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 #include "io/arch_file_reader.hpp"
-#include "io/graph_file_reader.hpp"
+#include "io/hdag_graph_file_reader.hpp"
+#include "io/dot_graph_file_reader.hpp"
 #include <filesystem>
 #include <iostream>
 
@@ -108,4 +109,42 @@ BOOST_AUTO_TEST_CASE(test_k_means) {
         BOOST_CHECK_EQUAL(graph2.vertex_work_weight(v), work[v]);
         BOOST_CHECK_EQUAL(graph2.vertex_comm_weight(v), comm[v]);
     }
+};
+
+BOOST_AUTO_TEST_CASE(test_dot_graph) {
+
+
+    std::filesystem::path cwd = std::filesystem::current_path();
+
+    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
+        cwd = cwd.parent_path();
+    }
+
+    computational_dag_vector_impl_def_t graph;
+
+    bool status =
+        file_reader::readComputationalDagDotFormat((cwd / "data/dot/test_dot_graph.dot").string(), graph);
+
+    BOOST_CHECK(status);
+    BOOST_CHECK_EQUAL(graph.num_vertices(), 11);
+    BOOST_CHECK_EQUAL(graph.num_edges(), 10);
+
+    // for (const auto &v : graph.vertices()) {
+    //     BOOST_CHECK_EQUAL(graph.vertex_work_weight(v), work[v]);
+    //     BOOST_CHECK_EQUAL(graph.vertex_comm_weight(v), comm[v]);
+    // }
+
+    // computational_dag_edge_idx_vector_impl_def_t graph2;
+
+    // status =
+    //     file_reader::readComputationalDagHyperdagFormat((cwd / "data/spaa/tiny/instance_k-means.hdag").string(), graph2);
+
+    // BOOST_CHECK(status);
+    // BOOST_CHECK_EQUAL(graph2.num_vertices(), 40);
+    // BOOST_CHECK_EQUAL(graph2.num_edges(), 45);
+
+    // for (const auto &v : graph2.vertices()) {
+    //     BOOST_CHECK_EQUAL(graph2.vertex_work_weight(v), work[v]);
+    //     BOOST_CHECK_EQUAL(graph2.vertex_comm_weight(v), comm[v]);
+    // }
 };
