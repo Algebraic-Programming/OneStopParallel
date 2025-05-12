@@ -83,8 +83,8 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     const boost_graph graph(out, workW, commW);
     const boost_graph graph_empty;
 
-    std::vector<VertexType> top_order = GetTopOrder(AS_IT_COMES, graph);
-    std::vector<size_t> index_in_top_order = sorting_arrangement(top_order);
+    std::vector<VertexType> top_order;
+    std::vector<size_t> index_in_top_order;
 
     for (auto top_order_type : {MAX_CHILDREN, RANDOM, MINIMAL_NUMBER, GORDER, AS_IT_COMES}) { // AS_IT_COMES last
         top_order = GetTopOrder(top_order_type, graph);
