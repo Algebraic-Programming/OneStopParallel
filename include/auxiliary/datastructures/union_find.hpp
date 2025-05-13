@@ -24,6 +24,8 @@ limitations under the License.
 #include <unordered_map>
 #include <vector>
 
+#include "concepts/graph_traits.hpp"
+
 namespace osp {
 
 /// @brief Structure to execute a union-find algorithm
@@ -379,5 +381,10 @@ class Union_Find_Universe {
         add_object(names, weights, memories);
     }
 };
+
+template<typename Graph_t>
+using union_find_universe_t = Union_Find_Universe<vertex_idx_t<Graph_t>, vertex_idx_t<Graph_t>, v_workw_t<Graph_t>,
+                                               v_memw_t<Graph_t>>;
+
 
 } // namespace osp  

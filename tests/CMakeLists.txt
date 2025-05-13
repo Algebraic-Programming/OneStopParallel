@@ -78,6 +78,8 @@ _add_test( coarser )
 
 _add_test( compact_sparse_graph )
 
+_add_test( wavefront_divider )
+
 ## pebbling ILPs
 
 if (COPT_FOUND)

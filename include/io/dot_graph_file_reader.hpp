@@ -22,6 +22,7 @@ limitations under the License.
 #include <iostream>
 #include <utility>
 #include <vector>
+#include <boost/algorithm/string.hpp>
 
 #include "concepts/computational_dag_concept.hpp"
 

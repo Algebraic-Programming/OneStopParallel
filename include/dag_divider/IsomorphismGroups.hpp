@@ -40,7 +40,7 @@ class IsomorphismGroups {
         for (std::size_t i = 0; i < isomorphism_groups.size(); i++) {
             std::cout << "Level " << i << std::endl;
             for (size_t j = 0; j < isomorphism_groups[i].size(); j++) {
-                std::cout << "Group " << j << " of size " << isomorphism_groups_subgraphs[i][j].numberOfVertices()
+                std::cout << "Group " << j << " of size " << isomorphism_groups_subgraphs[i][j].num_vertices()
                           << " : ";
 
                 // ComputationalDagWriter writer(isomorphism_groups_subgraphs[i][j]);
@@ -116,7 +116,7 @@ class IsomorphismGroups {
             for (vertex_idx_t<Graph_t> j = 0; j < static_cast<vertex_idx_t<Graph_t>>(vertex_maps[i].size()); j++) {
 
                 Graph_t current_subgraph;
-                create_induced_subgraph_sorted(dag, current_subgraph, vertex_maps[i][j]);
+                create_induced_subgraph(dag, current_subgraph, vertex_maps[i][j]);
 
                 bool isomorphism_group_found = false;
                 for (size_t k = 0; k < isomorphism_groups[i].size(); k++) {
@@ -131,7 +131,7 @@ class IsomorphismGroups {
 
                 if (!isomorphism_group_found) {
 
-                    isomorphism_groups[i].emplace_back(std::vector<unsigned>{j});
+                    isomorphism_groups[i].emplace_back(std::vector<vertex_idx_t<Graph_t>>{j});
                     isomorphism_groups_subgraphs[i].emplace_back(std::move(current_subgraph));
                 }
             }

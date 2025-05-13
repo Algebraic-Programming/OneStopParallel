@@ -17,8 +17,8 @@ limitations under the License.
 */
 
 #pragma once
-#include "scheduler/Scheduler.hpp"
 #include "auxiliary/datastructures/union_find.hpp"
+#include "bsp/scheduler/Scheduler.hpp"
 #include <cmath>
 #include <iostream>
 #include <limits>
@@ -36,6 +36,8 @@ class WavefrontParallelismDivider : public IDagDivider<Graph_t> {
                   "WavefrontParallelismDivider can only be used with computational DAGs.");
 
   private:
+    using VertexType = vertex_idx_t<Graph_t>;
+
     double var_mult = 0.6;
     double var_threshold = 1000.0;
 
@@ -188,7 +190,7 @@ class WavefrontParallelismDivider : public IDagDivider<Graph_t> {
 
         unsigned level_set_idx = 0;
 
-        Union_Find_Universe<unsigned> uf;
+        union_find_universe_t<Graph_t> uf;
         for (const auto vertex : level_sets[level_set_idx]) {
             uf.add_object(vertex, dag.nodeWorkWeight(vertex), dag.nodeMemoryWeight(vertex));
         }
@@ -281,7 +283,7 @@ class WavefrontParallelismDivider : public IDagDivider<Graph_t> {
   public:
     WavefrontParallelismDivider() = default;
 
-    virtual std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> divide(const Graph_t &dag) override {
+    virtual std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> divide(const Graph_t &dag_) override {
 
         forward_statistics.clear();
 
@@ -327,7 +329,7 @@ class WavefrontParallelismDivider : public IDagDivider<Graph_t> {
             unsigned level_set_idx = 0;
             for (unsigned i = 0; i < cut_levels.size(); i++) {
 
-                Union_Find_Universe<unsigned> uf;
+                union_find_universe_t<Graph_t> uf;
                 for (; level_set_idx < cut_levels[i]; level_set_idx++) {
                     for (const auto vertex : level_sets[level_set_idx]) {
                         uf.add_object(vertex, dag->nodeWorkWeight(vertex), dag->nodeMemoryWeight(vertex));
@@ -350,7 +352,7 @@ class WavefrontParallelismDivider : public IDagDivider<Graph_t> {
                 vertex_maps[i] = uf.get_connected_components();
             }
 
-            Union_Find_Universe<unsigned> uf;
+            union_find_universe_t<Graph_t> uf;
             for (; level_set_idx < level_sets.size(); level_set_idx++) {
                 for (const auto vertex : level_sets[level_set_idx]) {
                     uf.add_object(vertex, dag->nodeWorkWeight(vertex), dag->nodeMemoryWeight(vertex));
