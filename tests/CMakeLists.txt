@@ -41,6 +41,9 @@ _add_test( bsp_instance )
 
 _add_test( bsp_schedule )
 
+## pebbling model
+_add_test( pebbling_schedule_class )
+
 ## auxiliary
 _add_test( intpower )
 
@@ -74,6 +77,14 @@ _add_test( bsp_improvementschedulers )
 _add_test( coarser )
 
 _add_test( compact_sparse_graph )
+
+## pebbling ILPs
+
+if (COPT_FOUND)
+
+#_add_test( ilp_pebbling_scheduler )
+
+endif()
 
 
 # Custom target to compile all the tests

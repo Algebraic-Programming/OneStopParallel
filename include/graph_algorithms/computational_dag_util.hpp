@@ -69,7 +69,7 @@ template<typename Graph_t>
 v_workw_t<Graph_t> sumOfVerticesWorkWeights(const Graph_t &graph) {
     static_assert(has_vertex_weights_v<Graph_t>, "Graph_t must have vertex weights");
 
-    return std::accumulate(graph.vertices().begin(), graph.vertices().end(), 0, [&](const auto sum, const vertex_idx_t<Graph_t> &v) {
+    return std::accumulate(graph.vertices().begin(), graph.vertices().end(), static_cast<v_workw_t<Graph_t>>(0), [&](const v_workw_t<Graph_t> sum, const vertex_idx_t<Graph_t> &v) {
         return sum + graph.vertex_work_weight(v);
     });
 };
@@ -87,6 +87,15 @@ v_commw_t<Graph_t> sumOfVerticesCommunicationWeights(VertexIterator begin, Verte
         return sum + graph.vertex_comm_weight(v);
     });
 }
+
+template<typename Graph_t>
+v_commw_t<Graph_t> sumOfVerticesCommunicationWeights(const Graph_t &graph) {
+    static_assert(has_vertex_weights_v<Graph_t>, "Graph_t must have vertex weights");
+
+    return std::accumulate(graph.vertices().begin(), graph.vertices().end(), static_cast<v_commw_t<Graph_t>>(0), [&](const v_commw_t<Graph_t> sum, const vertex_idx_t<Graph_t> &v) {
+        return sum + graph.vertex_comm_weight(v);
+    });
+};
 
 template<typename Graph_t>
 v_commw_t<Graph_t> sumOfVerticesCommunicationWeights(const std::initializer_list<vertex_idx_t<Graph_t>> &vertices_,

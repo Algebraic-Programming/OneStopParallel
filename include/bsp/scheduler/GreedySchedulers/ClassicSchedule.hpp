@@ -70,12 +70,10 @@ class CSchedule {
         unsigned superStepIdx = 0, totalNodesDone = 0;
         std::vector<bool> processed(N, false);
 
-        // TODO instead of std::size_t this should be a vertex_idx_t<Graph_t> but it produces a compilation error
-        // what does std::size_t have that vertex_idx_t<Graph_t> does not?
-        std::vector<std::deque<std::size_t>::const_iterator> done(P), limit(P);
+        std::vector<decltype(procAssignmentLists[0].cbegin())> done(P), limit(P);
 
         for (unsigned j = 0; j < P; ++j)
-            done[j] = procAssignmentLists[j].begin();
+            done[j] = procAssignmentLists[j].cbegin();
 
         while (totalNodesDone < N) {
             // create next superstep
