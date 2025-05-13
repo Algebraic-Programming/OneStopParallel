@@ -8,7 +8,7 @@
 #include "bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
 #include "pebbling/PebblingSchedule.hpp"
 #include "bsp/scheduler/Scheduler.hpp"
-#include "io/graph_file_reader.hpp"
+#include "io/hdag_graph_file_reader.hpp"
 #include "io/arch_file_reader.hpp"
 
 #include "graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
