@@ -372,7 +372,6 @@ struct top_sort_iterator {
 
 
 
-template<typename Graph_t>
 /**
  * @class top_sort_view
  * @brief Provides a view for iterating over the vertices of a directed graph in topological order.
@@ -385,6 +384,7 @@ template<typename Graph_t>
  * @tparam Graph_t The type of the directed graph. Must satisfy the `is_directed_graph` concept.
  *
  */
+template<typename Graph_t>
 class top_sort_view {
 
     static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
@@ -436,7 +436,7 @@ class dfs_top_sort_view {
     using ts_iterator = top_sort_iterator<Graph_t, dfs_stack_wrapper<Graph_t>>;
 
   public:
-    top_sort_view(const Graph_t &graph_) : graph(graph_) {}
+    dfs_top_sort_view(const Graph_t &graph_) : graph(graph_) {}
 
     auto begin() { return ts_iterator(graph, vertex_container, 0); }
 
