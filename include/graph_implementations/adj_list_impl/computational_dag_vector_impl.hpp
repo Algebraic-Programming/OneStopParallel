@@ -166,24 +166,6 @@ class computational_dag_vector_impl {
 using computational_dag_vector_impl_def_t = computational_dag_vector_impl<cdag_vertex_impl_unsigned>;
 using computational_dag_vector_impl_def_int_t = computational_dag_vector_impl<cdag_vertex_impl_int>;
 
-// TODO delete this
-template<typename v_impl>
-std::vector<vertex_idx_t<computational_dag_vector_impl<v_impl>>>
-source_vertices(const computational_dag_vector_impl<v_impl> &graph) {
-
-    std::cout << "calling custom source_vertices" << std::endl;
-
-    std::vector<vertex_idx_t<computational_dag_vector_impl<v_impl>>> vec;
-    for (const auto &v_idx : graph.vertices()) {
-        if (graph.in_degree(v_idx) == 0) {
-            vec.push_back(v_idx);
-        }
-    }
-    return vec;
-}
-
-
-
 static_assert(has_vertex_weights_v<computational_dag_vector_impl<cdag_vertex_impl_unsigned>>,
               "computational_dag_vector_impl must satisfy the has_vertex_weights concept");
 

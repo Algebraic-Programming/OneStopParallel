@@ -28,6 +28,7 @@ limitations under the License.
 #include "graph_algorithms/directed_graph_top_sort.hpp"
 #include "graph_algorithms/directed_graph_util.hpp"
 #include "graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
+#include "graph_implementations/adj_list_impl/compact_sparse_graph.hpp"
 #include "graph_implementations/boost_graphs/boost_graph.hpp"
 
 using namespace osp;
@@ -119,7 +120,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     }
 
     std::vector<VertexType> dfs_view_top_sort;
-    for (const auto &v : dfs_top_sort_view(graph)) {
+    for (const auto &v : top_sort_view(graph)) {
         dfs_view_top_sort.push_back(v);
     }
 
@@ -184,12 +185,6 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
         }
     }
 
-    std::cout << "max_children_view_top_sort: ";
-    for (const auto &i : max_children_view_top_sort) {
-        std::cout << i << " ";
-    }
-    std::cout << std::endl;
-
     BOOST_CHECK_EQUAL(max_children_view_top_sort[0], 9);
     BOOST_CHECK_EQUAL(max_children_view_top_sort[1], 6);
     BOOST_CHECK_EQUAL(max_children_view_top_sort[2], 5);
@@ -214,4 +209,38 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
             BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]);
         }
     }
+}
+
+
+BOOST_AUTO_TEST_CASE(top_sort_template_overload_csr) {
+
+    using VertexType = vertex_idx_t<boost_graph>;
+
+    const std::vector<std::vector<VertexType>> out(
+
+        {{7}, {}, {0}, {2}, {}, {2, 0}, {1, 2, 0}, {}, {4}, {6, 1, 5}}
+
+    );
+    const std::vector<int> workW({1, 1, 1, 1, 2, 3, 2, 1, 1, 1});
+    const std::vector<int> commW({1, 1, 1, 1, 2, 3, 2, 1, 1, 1});
+
+    const boost_graph graph(out, workW, commW);
+  
+    
+    Compact_Sparse_Graph<true> graph_csr(graph);
+
+    BOOST_CHECK_EQUAL(graph_csr.num_vertices(), 10);
+    BOOST_CHECK_EQUAL(graph_csr.num_edges(), 12);
+
+    auto top_order = GetTopOrder(graph_csr);
+    BOOST_CHECK_EQUAL(top_order.size(), graph_csr.num_vertices());
+
+    std::vector<size_t> expected_top_order{0,1,2,3,4,5,6,7,8,9};
+
+    size_t idx = 0;
+    for (const auto &v : top_sort_view(graph_csr)) {
+        BOOST_CHECK_EQUAL(top_order[idx], v);
+        BOOST_CHECK_EQUAL(expected_top_order[idx], v);
+        ++idx;
+    }    
 }

@@ -48,6 +48,10 @@ class Compact_Sparse_Graph {
         using vertex_mem_weight_type = mem_weight_type;
         using vertex_type_type = vertex_type_template_type;
 
+        static bool constexpr vertices_in_top_order = true;
+        static bool constexpr children_in_top_order = true;
+        static bool constexpr parents_in_top_order  = true;
+    
     private:
         using ThisT = Compact_Sparse_Graph<keep_vertex_order, use_work_weights, use_comm_weights, use_mem_weights, use_vert_types, vert_t, edge_t, work_weight_type, comm_weight_type, mem_weight_type, vertex_type_template_type>;
 
@@ -808,12 +812,5 @@ static_assert(is_computational_dag_typed_vertices_v<Compact_Sparse_Graph<false, 
 static_assert(is_computational_dag_typed_vertices_v<Compact_Sparse_Graph<true, true, true, true, true>>,
     "Compact_Sparse_Graph must satisfy the is_computation_dag with types concept");
 
-
-template<bool keep_vertex_order, bool use_work_weights, bool use_comm_weights, bool use_mem_weights, bool use_vert_types, typename vert_t, typename edge_t, typename work_weight_type, typename comm_weight_type, typename mem_weight_type, typename vertex_type_template_type>
-std::vector<vert_t> GetTopOrder(const Compact_Sparse_Graph<keep_vertex_order, use_work_weights, use_comm_weights, use_mem_weights, use_vert_types, vert_t, edge_t, work_weight_type, comm_weight_type, mem_weight_type, vertex_type_template_type> &graph) {
-    std::vector<vert_t> topOrd(graph.num_vertices());
-    std::iota(topOrd.begin(), topOrd.end(), static_cast<vert_t>(0));
-    return topOrd;
-}
 
 } // namespace osp
