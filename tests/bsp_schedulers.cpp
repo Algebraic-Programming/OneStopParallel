@@ -252,7 +252,7 @@ BOOST_AUTO_TEST_CASE(grow_local_auto_parallel_top_test_1) {
 
         params.numThreads = 1;
 
-        GrowLocalAutoCoresParallel<Graph_t> test;
+        GrowLocalAutoCoresParallel<Graph_t> test(params);
         run_test(&test);
     }
 }
@@ -264,7 +264,7 @@ BOOST_AUTO_TEST_CASE(grow_local_auto_parallel_top_test_2) {
 
         params.numThreads = 2;
 
-        GrowLocalAutoCoresParallel<Graph_t> test;
+        GrowLocalAutoCoresParallel<Graph_t> test(params);
         run_test(&test);
     }
 }
@@ -276,7 +276,7 @@ BOOST_AUTO_TEST_CASE(grow_local_auto_parallel_top_test_5) {
 
         params.numThreads = 5;
 
-        GrowLocalAutoCoresParallel<Graph_t> test;
+        GrowLocalAutoCoresParallel<Graph_t> test(params);
         run_test(&test);
     }
 }
@@ -288,7 +288,7 @@ BOOST_AUTO_TEST_CASE(grow_local_auto_parallel_test_1) {
 
         params.numThreads = 1;
 
-        GrowLocalAutoCoresParallel<Graph_t> test;
+        GrowLocalAutoCoresParallel<Graph_t> test(params);
         run_test_2(&test);
     }
 }
@@ -300,7 +300,7 @@ BOOST_AUTO_TEST_CASE(grow_local_auto_parallel_test_2) {
 
         params.numThreads = 2;
 
-        GrowLocalAutoCoresParallel<Graph_t> test;
+        GrowLocalAutoCoresParallel<Graph_t> test(params);
         run_test_2(&test);
     }
 }
@@ -312,7 +312,7 @@ BOOST_AUTO_TEST_CASE(grow_local_auto_parallel_test_5) {
 
         params.numThreads = 5;
 
-        GrowLocalAutoCoresParallel<Graph_t> test;
+        GrowLocalAutoCoresParallel<Graph_t> test(params);
         run_test_2(&test);
     }
 }

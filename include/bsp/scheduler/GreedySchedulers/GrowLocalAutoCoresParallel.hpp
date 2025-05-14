@@ -18,7 +18,7 @@ limitations under the License.
 
 #pragma once
 
-#include <chrono>
+
 #include <climits>
 #include <list>
 #include <map>
@@ -26,9 +26,12 @@ limitations under the License.
 #include <string>
 #include <vector>
 
+#include <omp.h>
+
 // #define TIME_THREADS_GROW_LOCAL_PARALLEL
 #ifdef TIME_THREADS_GROW_LOCAL_PARALLEL
     #include <chrono>
+    #include <iostream>
 #endif
 
 #include "auxiliary/misc.hpp"
