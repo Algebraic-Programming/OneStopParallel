@@ -108,6 +108,14 @@ class computational_dag_edge_idx_vector_impl {
 
   public:
     computational_dag_edge_idx_vector_impl() = default;
+    
+    computational_dag_edge_idx_vector_impl(vertex_idx num_vertices) : vertices_(num_vertices), out_edges_(num_vertices),
+                                                                        in_edges_(num_vertices) {
+        for (vertex_idx i = 0; i < num_vertices; ++i) {
+            vertices_[i].id = i;
+        }
+    }
+
     computational_dag_edge_idx_vector_impl(const computational_dag_edge_idx_vector_impl &other) = default;
 
     template<typename Graph_t>

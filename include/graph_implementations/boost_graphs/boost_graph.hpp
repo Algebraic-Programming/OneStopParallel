@@ -87,7 +87,7 @@ class boost_graph {
     using edge_comm_weight_type = int;
 
     boost_graph(const std::vector<std::vector<vertex_idx>> &out_, const std::vector<int> &workW_,
-                const std::vector<int> &commW_,
+                const std::vector<vertex_comm_weight_type> &commW_,
                 const std::unordered_map<std::pair<int, int>, int, osp::pair_hash> &comm_edge_W)
         : number_of_vertex_types(0) {
         graph.m_vertices.reserve(out_.size());
@@ -109,7 +109,7 @@ class boost_graph {
     }
 
     boost_graph(const std::vector<std::vector<vertex_idx>> &out_, const std::vector<int> &workW_,
-                const std::vector<int> &commW_)
+                const std::vector<vertex_comm_weight_type> &commW_)
         : number_of_vertex_types(0) {
         graph.m_vertices.reserve(out_.size());
 
@@ -129,7 +129,7 @@ class boost_graph {
     }
 
     boost_graph(const std::vector<std::vector<vertex_idx>> &out_, const std::vector<int> &workW_,
-                const std::vector<int> &commW_, const std::vector<unsigned> &nodeType_)
+                const std::vector<vertex_comm_weight_type> &commW_, const std::vector<unsigned> &nodeType_)
         : number_of_vertex_types(0) {
         graph.m_vertices.reserve(out_.size());
 
@@ -153,8 +153,7 @@ class boost_graph {
      * @brief Default constructor for the ComputationalDag class.
      */
     explicit boost_graph() : graph(0), number_of_vertex_types(0) {}
-    explicit boost_graph(unsigned number_of_nodes) : graph(number_of_nodes), number_of_vertex_types(0) {
-        updateNumberOfVertexTypes();
+    explicit boost_graph(unsigned number_of_nodes) : graph(number_of_nodes), number_of_vertex_types(0) {     
     }
 
     inline const boost_graph_impl &get_boost_graph() const { return graph; }
@@ -221,28 +220,28 @@ class boost_graph {
     inline size_t out_degree(const vertex_idx &v) const { return boost::out_degree(v, graph); }
     inline size_t in_degree(const vertex_idx &v) const { return boost::in_degree(v, graph); }
 
-    int vertex_work_weight(const vertex_idx &v) const { return graph[v].workWeight; }
-    int vertex_comm_weight(const vertex_idx &v) const { return graph[v].communicationWeight; }
+    vertex_work_weight_type vertex_work_weight(const vertex_idx &v) const { return graph[v].workWeight; }
+    vertex_comm_weight_type vertex_comm_weight(const vertex_idx &v) const { return graph[v].communicationWeight; }
     int vertex_mem_weight(const vertex_idx &v) const { return graph[v].memoryWeight; }
     unsigned vertex_type(const vertex_idx &v) const { return graph[v].nodeType; }
 
     int edge_comm_weight(const directed_edge_descriptor &e) const { return graph[e].communicationWeight; }
 
     void set_vertex_mem_weight(const vertex_idx &v, const int memory_weight) { graph[v].memoryWeight = memory_weight; }
-    void set_vertex_work_weight(const vertex_idx &v, const int work_weight) { graph[v].workWeight = work_weight; }
+    void set_vertex_work_weight(const vertex_idx &v, const vertex_work_weight_type work_weight) { graph[v].workWeight = work_weight; }
     void set_vertex_type(const vertex_idx &v, const unsigned node_type) {
         graph[v].nodeType = node_type;
         number_of_vertex_types = std::max(number_of_vertex_types, node_type + 1);
     }
 
-    void set_vertex_comm_weight(const vertex_idx &v, const int comm_weight) {
+    void set_vertex_comm_weight(const vertex_idx &v, const vertex_comm_weight_type comm_weight) {
         graph[v].communicationWeight = comm_weight;
     }
-    void set_edge_comm_weight(const directed_edge_descriptor &e, const int comm_weight) {
+    void set_edge_comm_weight(const directed_edge_descriptor &e, const edge_comm_weight_type comm_weight) {
         graph[e].communicationWeight = comm_weight;
     }
 
-    vertex_idx add_vertex(const int work_weight, const int comm_weight, const int memory_weight = 0,
+    vertex_idx add_vertex(const vertex_work_weight_type work_weight, const vertex_comm_weight_type comm_weight, const int memory_weight = 0,
                           const unsigned node_type = 0) {
         number_of_vertex_types = std::max(number_of_vertex_types, node_type + 1);
         return boost::add_vertex(boost_vertex{work_weight, comm_weight, memory_weight, node_type}, graph);
@@ -251,12 +250,22 @@ class boost_graph {
     std::pair<boost::detail::edge_desc_impl<boost::bidirectional_tag, std::size_t>, bool>
     add_edge(const vertex_idx &src, const vertex_idx &tar, int comm_weight = DEFAULT_EDGE_COMM_WEIGHT);
 
+    void remove_edge(const directed_edge_descriptor &e) {
+        boost::remove_edge(e, graph);
+    }
+
+    void remove_vertex(const vertex_idx &v) {
+        boost::remove_vertex(v, graph);
+        updateNumberOfVertexTypes();
+    }
+
+
   private:
     boost_graph_impl graph;
 
     unsigned number_of_vertex_types;
 
-    static constexpr int DEFAULT_EDGE_COMM_WEIGHT = 1;
+    static constexpr edge_comm_weight_type DEFAULT_EDGE_COMM_WEIGHT = 1;
 };
 
 static_assert(osp::is_directed_graph_edge_desc_v<boost_graph>,

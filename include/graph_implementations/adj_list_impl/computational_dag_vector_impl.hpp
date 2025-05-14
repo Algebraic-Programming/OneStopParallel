@@ -32,6 +32,13 @@ struct cdag_vertex_impl {
     using mem_weight_type = memw_t;
     using cdag_vertex_type_type = vertex_type_t;
 
+    cdag_vertex_impl() : id(0), work_weight(0), comm_weight(0), mem_weight(0), vertex_type(0) {}
+    
+    cdag_vertex_impl(const cdag_vertex_impl &other) = default;
+    cdag_vertex_impl(cdag_vertex_impl &&other) = default;
+    cdag_vertex_impl &operator=(const cdag_vertex_impl &other) = default;
+    cdag_vertex_impl &operator=(cdag_vertex_impl &&other) = default;
+
     cdag_vertex_impl(std::size_t vertex_idx_, workw_t work_weight, commw_t comm_weight, memw_t mem_weight,
                      vertex_type_t vertex_type)
         : id(vertex_idx_), work_weight(work_weight), comm_weight(comm_weight), mem_weight(mem_weight),
@@ -62,6 +69,16 @@ class computational_dag_vector_impl {
     using edge_comm_weight_type = typename v_impl::comm_weight_type;
 
     computational_dag_vector_impl() = default;
+
+    computational_dag_vector_impl(vertex_idx num_vertices) : vertices_(num_vertices), 
+        out_neigbors(num_vertices), in_neigbors(num_vertices), num_edges_(0), num_vertex_types_(0) {
+
+        for (vertex_idx i = 0; i < num_vertices; ++i) {
+            vertices_[i].id = i;
+        }
+
+    }
+
     computational_dag_vector_impl(const computational_dag_vector_impl &other) = default;
 
     template<typename Graph_t>
