@@ -40,7 +40,7 @@ class ConnectedComponentDivider : public IDagDivider<Graph_t> {
     std::vector<Graph_t> sub_dags;
     std::vector<std::unordered_map<vertex_idx, vertex_idx>> vertex_mapping;
 
-    std::vector<vertex_idx> component; // vertex id -> component id
+    std::vector<unsigned> component; // vertex id -> component id
 
     std::vector<vertex_idx> vertex_map;
 
@@ -51,7 +51,7 @@ class ConnectedComponentDivider : public IDagDivider<Graph_t> {
         return vertex_mapping;
     }
 
-    inline const std::vector<vertex_idx> &get_component() const { return component; }
+    inline const std::vector<unsigned> &get_component() const { return component; }
 
     inline const std::vector<vertex_idx> &get_vertex_map() const { return vertex_map; }
 
@@ -72,12 +72,12 @@ class ConnectedComponentDivider : public IDagDivider<Graph_t> {
     void compute_connected_components(const Graph_t &dag) {
 
         vertex_mapping.clear();
-        component = std::vector<vertex_idx>(dag.num_vertices(), std::numeric_limits<vertex_idx>::max());
+        component = std::vector<unsigned>(dag.num_vertices(), UINT_MAX);
         vertex_map = std::vector<vertex_idx>(dag.num_vertices(), 0);
 
-        vertex_idx component_id = 0;
+        unsigned component_id = 0;
         for (const auto &v : dag.vertices()) {
-            if (component[v] == std::numeric_limits<vertex_idx>::max()) {
+            if (component[v] == UINT_MAX) {
 
                 component[v] = component_id;
                 std::queue<vertex_idx> q;
@@ -90,7 +90,7 @@ class ConnectedComponentDivider : public IDagDivider<Graph_t> {
 
                     for (const auto &child : dag.children(current)) {
 
-                        if (component[child] == std::numeric_limits<vertex_idx>::max()) {
+                        if (component[child] == UINT_MAX) {
                             q.push(child);
                             component[child] = component_id;
                         }
@@ -98,7 +98,7 @@ class ConnectedComponentDivider : public IDagDivider<Graph_t> {
 
                     for (const auto &parent : dag.parents(current)) {
 
-                        if (component[parent] == std::numeric_limits<vertex_idx>::max()) {
+                        if (component[parent] == UINT_MAX) {
                             q.push(parent);
                             component[parent] = component_id;
                         }

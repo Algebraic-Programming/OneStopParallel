@@ -54,11 +54,10 @@ class PebblingSchedule {
 
   private:
     using vertex_idx = vertex_idx_t<Graph_t>;
-    using workweight_type = v_workw_t<Graph_t>;
-    using commweight_type = v_commw_t<Graph_t>;
+    using cost_type = v_workw_t<Graph_t>;
     using memweight_type = v_memw_t<Graph_t>;
 
-    static_assert(std::is_same_v<workweight_type, commweight_type>, "PebblingSchedule requires work and comm. weights to have the same type.");
+    static_assert(std::is_same_v<v_workw_t<Graph_t>, v_commw_t<Graph_t>>, "PebblingSchedule requires work and comm. weights to have the same type.");
 
     const BspInstance<Graph_t> *instance;
 
@@ -156,8 +155,8 @@ class PebblingSchedule {
     virtual ~PebblingSchedule() = default;
 
     // cost computation
-    workweight_type computeCost() const;
-    workweight_type computeAsynchronousCost() const;
+    cost_type computeCost() const;
+    cost_type computeAsynchronousCost() const;
 
     // remove unnecessary steps (e.g. from ILP solution)
     void cleanSchedule();
@@ -223,10 +222,10 @@ class PebblingSchedule {
 
     
     // auxiliary function to remove some unnecessary communications after assembling from partial pebblings
-    void FixForceEvicts(const BspInstance<Graph_t> &bsp_instance, const std::vector<std::tuple<vertex_idx, unsigned, unsigned> > force_evict_node_proc_step);
+    void FixForceEvicts(const std::vector<std::tuple<vertex_idx, unsigned, unsigned> > force_evict_node_proc_step);
 
     // auxiliary after partial pebblings: try to merge supersteps
-    void TryToMergeSupersteps(const BspInstance<Graph_t> &bsp_instance);
+    void TryToMergeSupersteps();
 
     const std::vector<compute_step>& GetComputeStepsForProcSuperstep(unsigned proc, unsigned supstep) const {return compute_steps_for_proc_superstep[proc][supstep];}
     const std::vector<vertex_idx>& GetNodesEvictedInComm(unsigned proc, unsigned supstep) const {return nodes_evicted_in_comm[proc][supstep];}
@@ -260,14 +259,14 @@ void PebblingSchedule<Graph_t>::updateNumberOfSupersteps(unsigned new_number_of_
 template<typename Graph_t>
 v_workw_t<Graph_t> PebblingSchedule<Graph_t>::computeCost() const
 {
-    workweight_type total_costs = 0;
+    cost_type total_costs = 0;
     for(unsigned step = 0; step < number_of_supersteps; ++step)
     {
         // compute phase
-        workweight_type max_work = std::numeric_limits<workweight_type>::min();
+        cost_type max_work = std::numeric_limits<cost_type>::min();
         for(unsigned proc = 0; proc < instance->getArchitecture().numberOfProcessors(); ++proc)
         {
-            workweight_type work = 0;
+            cost_type work = 0;
             for(const auto& computeStep : compute_steps_for_proc_superstep[proc][step])
                 work += instance->getComputationalDag().vertex_work_weight(computeStep.node);
 
@@ -277,26 +276,26 @@ v_workw_t<Graph_t> PebblingSchedule<Graph_t>::computeCost() const
         total_costs += max_work;
 
         // communication phase
-        commweight_type max_send_up = std::numeric_limits<commweight_type>::min();
+        cost_type max_send_up = std::numeric_limits<cost_type>::min();
         for(unsigned proc = 0; proc < instance->getArchitecture().numberOfProcessors(); ++proc)
         {
-            commweight_type send_up = 0;
-            for(unsigned node : nodes_sent_up[proc][step])
-                send_up += instance->getComputationalDag().vertex_comm_weight(node) * (int)instance->getArchitecture().communicationCosts();
+            cost_type send_up = 0;
+            for(vertex_idx node : nodes_sent_up[proc][step])
+                send_up += instance->getComputationalDag().vertex_comm_weight(node) * instance->getArchitecture().communicationCosts();
 
             if(send_up > max_send_up)
                 max_send_up = send_up;
         }
         total_costs += max_send_up;
 
-        total_costs += static_cast<commweight_type>(instance->getArchitecture().synchronisationCosts());
+        total_costs += static_cast<cost_type>(instance->getArchitecture().synchronisationCosts());
 
-        commweight_type max_send_down = std::numeric_limits<commweight_type>::min();
+        cost_type max_send_down = std::numeric_limits<cost_type>::min();
         for(unsigned proc = 0; proc < instance->getArchitecture().numberOfProcessors(); ++proc)
         {
-            commweight_type send_down = 0;
-            for(unsigned node : nodes_sent_down[proc][step])
-                send_down += instance->getComputationalDag().vertex_comm_weight(node) * (int)instance->getArchitecture().communicationCosts();
+            cost_type send_down = 0;
+            for(vertex_idx node : nodes_sent_down[proc][step])
+                send_down += instance->getComputationalDag().vertex_comm_weight(node) * instance->getArchitecture().communicationCosts();
 
             if(send_down > max_send_down)
                 max_send_down = send_down;
@@ -311,8 +310,8 @@ v_workw_t<Graph_t> PebblingSchedule<Graph_t>::computeCost() const
 template<typename Graph_t>
 v_workw_t<Graph_t> PebblingSchedule<Graph_t>::computeAsynchronousCost() const{
 
-    std::vector<workweight_type> current_time_at_processor(instance->getArchitecture().numberOfProcessors(), 0);
-    std::vector<workweight_type> time_when_node_gets_blue(instance->getComputationalDag().num_vertices(), std::numeric_limits<workweight_type>::max());
+    std::vector<cost_type> current_time_at_processor(instance->getArchitecture().numberOfProcessors(), 0);
+    std::vector<cost_type> time_when_node_gets_blue(instance->getComputationalDag().num_vertices(), std::numeric_limits<cost_type>::max());
     if(need_to_load_inputs)
         for(vertex_idx node = 0; node < instance->numberOfVertices(); ++node)
             if(instance->getComputationalDag().in_degree(node) == 0)
@@ -345,7 +344,7 @@ v_workw_t<Graph_t> PebblingSchedule<Graph_t>::computeAsynchronousCost() const{
 
     }
 
-    workweight_type makespan = 0;
+    cost_type makespan = 0;
     for(unsigned proc = 0; proc < instance->getArchitecture().numberOfProcessors(); ++proc)
         if(current_time_at_processor[proc] > makespan)
             makespan = current_time_at_processor[proc];
@@ -442,7 +441,7 @@ void PebblingSchedule<Graph_t>::cleanSchedule() {
                 has_red[node][proc] = true;
     
     std::vector<bool> has_blue(instance->numberOfVertices());
-    std::vector<workweight_type> time_when_node_gets_blue(instance->getComputationalDag().num_vertices(), std::numeric_limits<workweight_type>::max());
+    std::vector<cost_type> time_when_node_gets_blue(instance->getComputationalDag().num_vertices(), std::numeric_limits<cost_type>::max());
     if(need_to_load_inputs)
         for(vertex_idx node = 0; node < instance->numberOfVertices(); ++node)
             if(instance->getComputationalDag().in_degree(node) == 0)
@@ -451,7 +450,7 @@ void PebblingSchedule<Graph_t>::cleanSchedule() {
                 time_when_node_gets_blue[node] = 0;
             }
 
-    std::vector<workweight_type> current_time_at_processor(instance->getArchitecture().numberOfProcessors(), 0);
+    std::vector<cost_type> current_time_at_processor(instance->getArchitecture().numberOfProcessors(), 0);
 
     for(unsigned superstep = 0; superstep < number_of_supersteps; ++superstep)
     {
@@ -517,7 +516,7 @@ void PebblingSchedule<Graph_t>::cleanSchedule() {
                 if(!ever_needed_as_blue[node])
                     continue;
 
-                workweight_type new_time_at_processor = current_time_at_processor[proc] + instance->getComputationalDag().vertex_comm_weight(node) * instance->getArchitecture().communicationCosts();
+                cost_type new_time_at_processor = current_time_at_processor[proc] + instance->getComputationalDag().vertex_comm_weight(node) * instance->getArchitecture().communicationCosts();
 
                 // only copy send up step if it is not obsolete in at least one of the two cases (sync or async schedule)
                 if(!has_blue[node] || new_time_at_processor < time_when_node_gets_blue[node])
@@ -807,9 +806,9 @@ void PebblingSchedule<Graph_t>::SetMemoryMovement(CACHE_EVICTION_STRATEGY evict_
             place_in_evictable[node][proc] = evictable[proc].end();
 
     // utility for LRU eviction strategy
-    std::vector<std::vector<workweight_type> > node_last_used_on_proc;
+    std::vector<std::vector<cost_type> > node_last_used_on_proc;
     if(evict_rule == CACHE_EVICTION_STRATEGY::LEAST_RECENTLY_USED)
-        node_last_used_on_proc.resize(N, std::vector<workweight_type>(instance->numberOfProcessors(), 0));
+        node_last_used_on_proc.resize(N, std::vector<cost_type>(instance->numberOfProcessors(), 0));
     std::vector<unsigned> total_step_count_on_proc(instance->numberOfProcessors(), 0);
 
     // select a representative compute step for each node, in case of being computed multiple times
@@ -1486,7 +1485,7 @@ void PebblingSchedule<Graph_t>::removeEvictStepsFromEnd()
             bottleneck[proc] = std::min(bottleneck[proc], instance->getArchitecture().memoryBound(proc) - mem_used[proc]);
 
             // computation phase
-            for(unsigned stepIndex = compute_steps_for_proc_superstep[proc][step].size(); stepIndex > 0;)
+            for(unsigned stepIndex = static_cast<unsigned>(compute_steps_for_proc_superstep[proc][step].size()); stepIndex > 0;)
             {
                 --stepIndex;
                 auto &computeStep = compute_steps_for_proc_superstep[proc][step][stepIndex];
@@ -1526,7 +1525,7 @@ void PebblingSchedule<Graph_t>::CreateFromPartialPebblings(const BspInstance<Gra
 {
     instance = &bsp_instance;
 
-    unsigned nr_parts = processors_to_parts.size();
+    unsigned nr_parts = static_cast<unsigned>(processors_to_parts.size());
 
     std::vector<std::set<vertex_idx> > in_mem(instance->numberOfProcessors());
     std::vector<std::tuple<vertex_idx, unsigned, unsigned> > force_evicts;
@@ -1667,12 +1666,12 @@ void PebblingSchedule<Graph_t>::CreateFromPartialPebblings(const BspInstance<Gra
     number_of_supersteps = max_step_index;
     need_to_load_inputs = true;
 
-    FixForceEvicts(*instance, force_evicts);
-    TryToMergeSupersteps(*instance);
+    FixForceEvicts(force_evicts);
+    TryToMergeSupersteps();
 }
 
 template<typename Graph_t>
-void PebblingSchedule<Graph_t>::FixForceEvicts(const BspInstance<Graph_t> &bsp_instance, const std::vector<std::tuple<vertex_idx, unsigned, unsigned> > force_evict_node_proc_step)
+void PebblingSchedule<Graph_t>::FixForceEvicts(const std::vector<std::tuple<vertex_idx, unsigned, unsigned> > force_evict_node_proc_step)
 {
     // Some values were evicted only because they weren't present in the next part - see if we can undo those evictions
     for(auto force_evict : force_evict_node_proc_step)
@@ -1711,13 +1710,11 @@ void PebblingSchedule<Graph_t>::FixForceEvicts(const BspInstance<Graph_t> &bsp_i
         if(!next_in_comp && !next_in_comm)
             continue;
         
-        bool eraseit=false;
         PebblingSchedule<Graph_t> test_schedule = *this;
         for(auto itr = test_schedule.nodes_evicted_in_comm[proc][superstep].begin(); itr != test_schedule.nodes_evicted_in_comm[proc][superstep].end(); ++itr)
             if(*itr == node)
             {
                 test_schedule.nodes_evicted_in_comm[proc][superstep].erase(itr);
-                eraseit = true;
                 break;
             }
 
@@ -1768,7 +1765,7 @@ void PebblingSchedule<Graph_t>::FixForceEvicts(const BspInstance<Graph_t> &bsp_i
 }
 
 template<typename Graph_t>
-void PebblingSchedule<Graph_t>::TryToMergeSupersteps(const BspInstance<Graph_t> &bsp_instance)
+void PebblingSchedule<Graph_t>::TryToMergeSupersteps()
 {
     std::vector<bool> is_removed(number_of_supersteps, false);
 

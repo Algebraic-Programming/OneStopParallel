@@ -27,6 +27,7 @@ limitations under the License.
 #include <iostream>
 
 #include "pebbling/pebblers/pebblingILP/MultiProcessorPebbling.hpp"
+#include "pebbling/pebblers/pebblingILP/PebblingPartialILP.hpp"
 #include "bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
 
 using namespace osp;
@@ -68,6 +69,40 @@ BOOST_AUTO_TEST_CASE(test_full) {
     mpp.setTimeLimitSeconds(10);
     auto status_and_solution = mpp.computePebblingWithInitialSolution(instance, initial_sol);
     status_and_solution.second.cleanSchedule();
+    BOOST_CHECK(status_and_solution.second.isValid());
+
+};
+
+BOOST_AUTO_TEST_CASE(test_partial) {
+
+    using graph = computational_dag_vector_impl_def_t;
+
+    BspInstance<graph> instance;
+    instance.setNumberOfProcessors(2);
+    instance.setCommunicationCosts(3);
+    instance.setSynchronisationCosts(5);
+
+    // Getting root git directory
+    std::filesystem::path cwd = std::filesystem::current_path();
+    std::cout << cwd << std::endl;
+    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
+        cwd = cwd.parent_path();
+        std::cout << cwd << std::endl;
+    }
+
+    bool status = file_reader::readComputationalDagHyperdagFormat(
+        (cwd / "data/spaa/tiny/instance_spmv_N10_nzP0d25.hdag").string(), instance.getComputationalDag());
+
+    BOOST_CHECK(status);
+
+    std::vector<v_memw_t<graph> > minimum_memory_required_vector = PebblingSchedule<graph>::minimumMemoryRequiredPerNodeType(instance);
+    v_memw_t<graph> max_required = *std::max_element(minimum_memory_required_vector.begin(), minimum_memory_required_vector.end());
+    instance.getArchitecture().setMemoryBound(max_required);
+
+    PebblingPartialILP<graph> mpp;
+    mpp.setMinSize(15);
+    mpp.setSecondsForSubILP(5);
+    auto status_and_solution = mpp.computePebbling(instance);
     BOOST_CHECK(status_and_solution.second.isValid());
 
 };

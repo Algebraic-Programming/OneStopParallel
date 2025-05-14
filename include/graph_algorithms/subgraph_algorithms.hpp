@@ -158,7 +158,7 @@ bool checkOrderedIsomorphism(const Graph_t &first, const Graph_t &second) {
 
 template<typename Graph_t_in, typename Graph_t_out>
 std::vector<Graph_t_out> create_induced_subgraphs(const Graph_t_in &dag_in,
-                                                  const std::vector<vertex_idx_t<Graph_t_in>> &partition_IDs) {
+                                                  const std::vector<unsigned> &partition_IDs) {
     // assumes that input partition IDs are consecutive and starting from 0
 
     static_assert(std::is_same_v<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_out>>,
@@ -172,7 +172,7 @@ std::vector<Graph_t_out> create_induced_subgraphs(const Graph_t_in &dag_in,
 
 
 
-    vertex_idx_t<Graph_t_in> number_of_parts = 0;
+    unsigned number_of_parts = 0;
     for (const auto id : partition_IDs)
         number_of_parts = std::max(number_of_parts, id + 1);
 
