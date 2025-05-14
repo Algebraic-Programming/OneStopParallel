@@ -23,21 +23,22 @@ limitations under the License.
 #include "bsp/scheduler/Scheduler.hpp"
 #include "graph_algorithms/computational_dag_util.hpp"
 #include "graph_algorithms/subgraph_algorithms.hpp"
+#include "graph_implementations/boost_graphs/boost_graph.hpp"
 
 namespace osp {
 
-template<typename Graph_t>
+template<typename Graph_t, typename constr_graph_t>
 class WavefrontComponentScheduler : public Scheduler<Graph_t> {
-
+ 
     bool set_num_proc_crit_path = false;
 
     IDagDivider<Graph_t> *divider;
 
-    Scheduler<Graph_t> *scheduler;
+    Scheduler<constr_graph_t> *scheduler;
 
     bool check_isomorphism_groups = true;
 
-    BspArchitecture<Graph_t> setup_sub_architecture(const BspArchitecture<Graph_t> &original, const Graph_t &sub_dag,
+    BspArchitecture<Graph_t> setup_sub_architecture(const BspArchitecture<Graph_t> &original, const constr_graph_t &sub_dag,
                                                     const double subgraph_work_weight, const double total_step_work) {
 
         BspArchitecture sub_architecture(original);
@@ -86,26 +87,25 @@ class WavefrontComponentScheduler : public Scheduler<Graph_t> {
 
         const auto &instance = schedule.getInstance();
 
-        IsomorphismGroups<Graph_t> iso_groups;
+        IsomorphismGroups<Graph_t, constr_graph_t> iso_groups;
         auto vertex_maps = divider->divide(instance.getComputationalDag());
         iso_groups.compute_isomorphism_groups(vertex_maps, instance.getComputationalDag());
 
         const auto &proc_type_count = instance.getArchitecture().getProcessorTypeCount();
-        const std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> &iosmorphism_groups =
-            iso_groups.get_isomorphism_groups();
+        const auto &iosmorphism_groups = iso_groups.get_isomorphism_groups();
         unsigned superstep_offset = 0;
 
         for (std::size_t i = 0; i < iosmorphism_groups.size(); i++) { // iterate through wavefront sets
 
-            std::vector<v_workw_t<Graph_t>> subgraph_work_weights(iosmorphism_groups[i].size());
-            v_workw_t<Graph_t> total_step_work = 0;
+            std::vector<v_workw_t<constr_graph_t>> subgraph_work_weights(iosmorphism_groups[i].size());
+            v_workw_t<constr_graph_t> total_step_work = 0;
 
             for (std::size_t j = 0; j < iosmorphism_groups[i].size(); j++) { // iterate through isomorphism groups
 
-                const Graph_t &sub_dag = iso_groups.get_isomorphism_groups_subgraphs()[i][j];
+                const constr_graph_t &sub_dag = iso_groups.get_isomorphism_groups_subgraphs()[i][j];
 
                 subgraph_work_weights[j] = sumOfVerticesWorkWeights(sub_dag);
-                total_step_work += subgraph_work_weights[j] * static_cast<v_workw_t<Graph_t>>(iosmorphism_groups[i][j].size());
+                total_step_work += subgraph_work_weights[j] * static_cast<v_workw_t<constr_graph_t>>(iosmorphism_groups[i][j].size());
             }
 
             // unsigned processors_offset = 0;
@@ -123,7 +123,7 @@ class WavefrontComponentScheduler : public Scheduler<Graph_t> {
 
             for (std::size_t j = 0; j < iosmorphism_groups[i].size(); j++) { // iterate through isomorphism groups
 
-                Graph_t &sub_dag = iso_groups.get_isomorphism_groups_subgraphs()[i][j];
+                constr_graph_t &sub_dag = iso_groups.get_isomorphism_groups_subgraphs()[i][j];
 
                 if (i > 0 && instance.getArchitecture().getMemoryConstraintType() == LOCAL_INC_EDGES) {
 
@@ -148,17 +148,17 @@ class WavefrontComponentScheduler : public Scheduler<Graph_t> {
                     // }
                 }
 
-                BspInstance<Graph_t> sub_instance(sub_dag,
+                BspInstance<constr_graph_t> sub_instance(sub_dag,
                                                   setup_sub_architecture(instance.getArchitecture(), sub_dag,
                                                                          subgraph_work_weights[j], total_step_work));
                 sub_instance.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
 
-                const BspArchitecture<Graph_t> &sub_architecture = sub_instance.getArchitecture();
+                const BspArchitecture<constr_graph_t> &sub_architecture = sub_instance.getArchitecture();
 
-                v_memw_t<Graph_t> max_mem = 0;
+                v_memw_t<constr_graph_t> max_mem = 0;
                 for (const auto &node : sub_dag.vertices()) {
 
-                    v_memw_t<Graph_t> node_mem = 0;
+                    v_memw_t<constr_graph_t> node_mem = 0;
 
                     if (is_source(node, sub_dag)) {
                         node_mem = sub_dag.vertex_mem_weight(node);
@@ -177,7 +177,7 @@ class WavefrontComponentScheduler : public Scheduler<Graph_t> {
                     proc_type_corrections[k] = proc_type_corrections[k - 1] + sub_proc_type_count[k - 1];
                 }
 
-                BspSchedule<Graph_t> sub_schedule(sub_instance);
+                BspSchedule<constr_graph_t> sub_schedule(sub_instance);
                 auto status = scheduler->computeSchedule(sub_schedule);
 
                 if (status != SUCCESS && status != BEST_FOUND) {
@@ -186,7 +186,7 @@ class WavefrontComponentScheduler : public Scheduler<Graph_t> {
                 
                 for (const auto &group_member_idx : iosmorphism_groups[i][j]) {
 
-                    vertex_idx_t<Graph_t> subdag_vertex = 0;
+                    vertex_idx_t<constr_graph_t> subdag_vertex = 0;
                     for (const auto &vertex : vertex_maps[i][group_member_idx]) {
 
                         const unsigned proc_orig = sub_schedule.assignedProcessor(subdag_vertex);
@@ -245,7 +245,7 @@ class WavefrontComponentScheduler : public Scheduler<Graph_t> {
 
             for (std::size_t j = 0; j < vertex_maps[i].size(); j++) {
 
-                BspInstance<Graph_t> sub_instance;
+                BspInstance<constr_graph_t> sub_instance;
                 sub_instance.setArchitecture(instance.getArchitecture());
                 sub_instance.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
                 
@@ -262,7 +262,7 @@ class WavefrontComponentScheduler : public Scheduler<Graph_t> {
                     }
                 }
 
-                BspSchedule<Graph_t> sub_schedule(sub_instance);
+                BspSchedule<constr_graph_t> sub_schedule(sub_instance);
                 const auto status = scheduler->computeSchedule(sub_schedule);
 
                 if (status != SUCCESS && status != BEST_FOUND) {
@@ -290,7 +290,7 @@ class WavefrontComponentScheduler : public Scheduler<Graph_t> {
     }
 
   public:
-    WavefrontComponentScheduler(IDagDivider<Graph_t> &div, Scheduler<Graph_t> &scheduler)
+    WavefrontComponentScheduler(IDagDivider<Graph_t> &div, Scheduler<constr_graph_t> &scheduler)
         : divider(&div), scheduler(&scheduler) {}
 
     void set_check_isomorphism_groups(bool check) { check_isomorphism_groups = check; }
@@ -306,5 +306,9 @@ class WavefrontComponentScheduler : public Scheduler<Graph_t> {
         }
     }
 };
+
+template<typename Graph_t>
+using WavefrontComponentScheduler_def_t = WavefrontComponentScheduler<Graph_t, boost_graph>;
+
 
 } // namespace osp

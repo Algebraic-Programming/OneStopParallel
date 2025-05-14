@@ -26,13 +26,13 @@ limitations under the License.
 
 namespace osp {
 
-template<typename Graph_t>
+template<typename Graph_t, typename Constr_Graph_t>
 class IsomorphismGroups {
 
   private:
-    std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> isomorphism_groups;
+    std::vector<std::vector<std::vector<std::size_t>>> isomorphism_groups;
 
-    std::vector<std::vector<Graph_t>> isomorphism_groups_subgraphs;
+    std::vector<std::vector<Constr_Graph_t>> isomorphism_groups_subgraphs;
 
     void print_isomorphism_groups() const {
 
@@ -71,11 +71,11 @@ class IsomorphismGroups {
      * @return const std::vector<std::vector<std::vector<unsigned>>>&
      *         A constant reference to the vertex maps.
      */
-    const std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> &get_isomorphism_groups() const {
+    const std::vector<std::vector<std::vector<std::size_t>>> &get_isomorphism_groups() const {
         return isomorphism_groups;
     }
 
-    std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> &get_isomorphism_groups() {
+    std::vector<std::vector<std::vector<std::size_t>>> &get_isomorphism_groups() {
         return isomorphism_groups;
     }
 
@@ -91,11 +91,11 @@ class IsomorphismGroups {
      * @return const std::vector<std::vector<Graph_t>>& A constant reference
      * to the isomorphism groups subgraphs.
      */
-    const std::vector<std::vector<Graph_t>> &get_isomorphism_groups_subgraphs() const {
+    const std::vector<std::vector<Constr_Graph_t>> &get_isomorphism_groups_subgraphs() const {
         return isomorphism_groups_subgraphs;
     }
 
-    std::vector<std::vector<Graph_t>> &get_isomorphism_groups_subgraphs() { return isomorphism_groups_subgraphs; }
+    std::vector<std::vector<Constr_Graph_t>> &get_isomorphism_groups_subgraphs() { return isomorphism_groups_subgraphs; }
 
     /**
      * @brief Computes the isomorphism map for a computed division of the current DAG.
@@ -107,15 +107,15 @@ class IsomorphismGroups {
     void compute_isomorphism_groups(std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> &vertex_maps,
                                     const Graph_t &dag) {
 
-        isomorphism_groups = std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>>(vertex_maps.size());
+        isomorphism_groups = std::vector<std::vector<std::vector<std::size_t>>>(vertex_maps.size());
 
-        isomorphism_groups_subgraphs = std::vector<std::vector<Graph_t>>(vertex_maps.size());
+        isomorphism_groups_subgraphs = std::vector<std::vector<Constr_Graph_t>>(vertex_maps.size());
 
         for (size_t i = 0; i < vertex_maps.size(); i++) {
 
-            for (vertex_idx_t<Graph_t> j = 0; j < static_cast<vertex_idx_t<Graph_t>>(vertex_maps[i].size()); j++) {
+            for (std::size_t j = 0; j < vertex_maps[i].size(); j++) {
 
-                Graph_t current_subgraph;
+                Constr_Graph_t current_subgraph;
                 create_induced_subgraph(dag, current_subgraph, vertex_maps[i][j]);
 
                 bool isomorphism_group_found = false;
@@ -131,7 +131,7 @@ class IsomorphismGroups {
 
                 if (!isomorphism_group_found) {
 
-                    isomorphism_groups[i].emplace_back(std::vector<vertex_idx_t<Graph_t>>{j});
+                    isomorphism_groups[i].emplace_back(std::vector<std::size_t>{j});
                     isomorphism_groups_subgraphs[i].emplace_back(std::move(current_subgraph));
                 }
             }

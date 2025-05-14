@@ -48,7 +48,7 @@ class ConnectedComponentScheduler : public Scheduler<Graph_t> {
 
         unsigned num_processors_offset = 0;
 
-        for (unsigned i = 0; i < partitioner.get_sub_dags().size(); i++) {
+        for (std::size_t i = 0; i < partitioner.get_sub_dags().size(); i++) {
             const auto &sub_dag = partitioner.get_sub_dags()[i];
             const auto &mapping = partitioner.get_vertex_mapping()[i];
 

@@ -30,6 +30,7 @@ limitations under the License.
 #include "bsp/scheduler/LocalSearch/KernighanLin/kl_total_cut.hpp"
 #include "bsp/scheduler/LocalSearch/KernighanLin/kl_total_comm.hpp"
 
+#include "graph_implementations/boost_graphs/boost_graph.hpp"
 #include "graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 
 using namespace osp;
@@ -165,7 +166,7 @@ BOOST_AUTO_TEST_CASE(wavefront_component_divider_4) {
         kl_total_cut<graph_t> kl_cut;
         
 
-        WavefrontComponentScheduler<graph_t> scheduler(wavefront, greedy);
+        WavefrontComponentScheduler<graph_t, graph_t> scheduler(wavefront, greedy);
         scheduler.set_check_isomorphism_groups(true);
 
         // BspArchitecture arch(75u, 1u, 10000u);
