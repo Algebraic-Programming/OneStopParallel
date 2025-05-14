@@ -31,6 +31,7 @@ template<typename T>
 struct is_constructable_cdag_vertex<
     T, std::void_t<decltype(std::declval<T>().add_vertex(std::declval<v_workw_t<T>>(), std::declval<v_commw_t<T>>(),
                                                          std::declval<v_memw_t<T>>())),
+                                                         decltype(T(std::declval<vertex_idx_t<T>>())),
                    decltype(std::declval<T>().set_vertex_work_weight(std::declval<vertex_idx_t<T>>(),
                                                                      std::declval<v_workw_t<T>>())),
                    decltype(std::declval<T>().set_vertex_comm_weight(std::declval<vertex_idx_t<T>>(),

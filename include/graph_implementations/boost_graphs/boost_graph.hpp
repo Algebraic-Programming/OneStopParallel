@@ -153,7 +153,7 @@ class boost_graph {
      * @brief Default constructor for the ComputationalDag class.
      */
     explicit boost_graph() : graph(0), number_of_vertex_types(0) {}
-    explicit boost_graph(unsigned number_of_nodes) : graph(number_of_nodes), number_of_vertex_types(0) {     
+    explicit boost_graph(vertex_idx number_of_nodes) : graph(number_of_nodes), number_of_vertex_types(0) {     
     }
 
     inline const boost_graph_impl &get_boost_graph() const { return graph; }
