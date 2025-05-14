@@ -100,7 +100,7 @@ class MultiProcessorPebbling : public Scheduler<Graph_t> {
     std::vector<std::set<vertex_idx> > has_red_in_beginning;
     bool verbose = false;
 
-    PebblingSchedule<Graph_t> constructPebblingScheduleFromSolution(const BspInstance<Graph_t> &instance);
+    void constructPebblingScheduleFromSolution(PebblingSchedule<Graph_t> &schedule);
 
     void setInitialSolution(const BspInstance<Graph_t> &instance,
                             const std::vector<std::vector<std::vector<vertex_idx> > >& computeSteps,
@@ -130,11 +130,11 @@ class MultiProcessorPebbling : public Scheduler<Graph_t> {
     virtual ~MultiProcessorPebbling() = default;
 
     virtual RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &schedule) override;
-    virtual std::pair<RETURN_STATUS, PebblingSchedule<Graph_t> > computeSynchPebbling(const BspInstance<Graph_t> &instance);
+    virtual RETURN_STATUS computeSynchPebbling(PebblingSchedule<Graph_t> &schedule);
 
-    virtual std::pair<RETURN_STATUS, PebblingSchedule<Graph_t> > computePebbling(const BspInstance<Graph_t> &instance, bool use_async = false);
+    virtual RETURN_STATUS computePebbling(PebblingSchedule<Graph_t> &schedule, bool use_async = false);
 
-    virtual  std::pair<RETURN_STATUS, PebblingSchedule<Graph_t> > computePebblingWithInitialSolution(const BspInstance<Graph_t> &instance, const PebblingSchedule<Graph_t>& initial_solution, bool use_async = false);
+    virtual RETURN_STATUS computePebblingWithInitialSolution(const PebblingSchedule<Graph_t>& initial_solution, PebblingSchedule<Graph_t> &out_schedule, bool use_async = false);
 
     /**
      * @brief Enables writing intermediate solutions.
@@ -272,8 +272,10 @@ RETURN_STATUS MultiProcessorPebbling<Graph_t>::computeSchedule(BspSchedule<Graph
 };
 
 template<typename Graph_t>
-std::pair<RETURN_STATUS, PebblingSchedule<Graph_t> > MultiProcessorPebbling<Graph_t>::computeSynchPebbling(const BspInstance<Graph_t> &instance) {
+RETURN_STATUS MultiProcessorPebbling<Graph_t>::computeSynchPebbling(PebblingSchedule<Graph_t> &schedule) {
 
+    const BspInstance<Graph_t>& instance = schedule.getInstance();
+    
     if(max_time == 0)
         max_time = 2 * static_cast<unsigned>(instance.numberOfVertices());
     
@@ -287,27 +289,31 @@ std::pair<RETURN_STATUS, PebblingSchedule<Graph_t> > MultiProcessorPebbling<Grap
 
     if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_OPTIMAL) {
 
-        return {SUCCESS, constructPebblingScheduleFromSolution(instance)};
+        constructPebblingScheduleFromSolution(schedule);
+        return SUCCESS;
 
     } else if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_INF_OR_UNB) {
 
-        return {ERROR, PebblingSchedule<Graph_t>()};
+        return ERROR;
 
     } else {
 
         if (model.GetIntAttr(COPT_INTATTR_HASMIPSOL)) {
 
-            return {BEST_FOUND, constructPebblingScheduleFromSolution(instance)};
+            constructPebblingScheduleFromSolution(schedule);
+            return SUCCESS;
 
         } else {
-            return {TIMEOUT, PebblingSchedule<Graph_t>()};
+            return TIMEOUT;
         }
     }
 }
 
 template<typename Graph_t>
-std::pair<RETURN_STATUS, PebblingSchedule<Graph_t> > MultiProcessorPebbling<Graph_t>::computePebbling(const BspInstance<Graph_t> &instance, bool use_async) {
+RETURN_STATUS MultiProcessorPebbling<Graph_t>::computePebbling(PebblingSchedule<Graph_t> &schedule, bool use_async) {
 
+    const BspInstance<Graph_t>& instance = schedule.getInstance();
+    
     if(max_time == 0)
         max_time = 2 * static_cast<unsigned>(instance.numberOfVertices());
 
@@ -326,29 +332,31 @@ std::pair<RETURN_STATUS, PebblingSchedule<Graph_t> > MultiProcessorPebbling<Grap
 
     if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_OPTIMAL) {
 
-        PebblingSchedule<Graph_t> schedule = constructPebblingScheduleFromSolution(instance);
-        return {schedule.isValid() ? SUCCESS : ERROR, schedule};
+        constructPebblingScheduleFromSolution(schedule);
+        return schedule.isValid() ? SUCCESS : ERROR;
 
     } else if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_INF_OR_UNB) {
 
-        return {ERROR, PebblingSchedule<Graph_t>()};
+        return ERROR;
 
     } else {
 
         if (model.GetIntAttr(COPT_INTATTR_HASMIPSOL)) {
 
-            PebblingSchedule<Graph_t> schedule = constructPebblingScheduleFromSolution(instance);
-            return {schedule.isValid() ? SUCCESS : ERROR, schedule};
+            constructPebblingScheduleFromSolution(schedule);
+            return schedule.isValid() ? SUCCESS : ERROR;
 
         } else {
-            return {TIMEOUT, PebblingSchedule<Graph_t>()};
+            return TIMEOUT;
         }
     }
 }
 
 template<typename Graph_t>
-std::pair<RETURN_STATUS, PebblingSchedule<Graph_t> > MultiProcessorPebbling<Graph_t>::computePebblingWithInitialSolution(const BspInstance<Graph_t> &instance, const PebblingSchedule<Graph_t>& initial_solution, bool use_async)
+RETURN_STATUS MultiProcessorPebbling<Graph_t>::computePebblingWithInitialSolution(const PebblingSchedule<Graph_t>& initial_solution, PebblingSchedule<Graph_t> &out_schedule, bool use_async)
 {
+    const BspInstance<Graph_t>& instance = initial_solution.getInstance();
+
     std::vector<std::vector<std::vector<vertex_idx> > > computeSteps;
     std::vector<std::vector<std::vector<vertex_idx> > > sendUpSteps;
     std::vector<std::vector<std::vector<vertex_idx> > > sendDownSteps;
@@ -381,22 +389,22 @@ std::pair<RETURN_STATUS, PebblingSchedule<Graph_t> > MultiProcessorPebbling<Grap
 
     if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_OPTIMAL) {
 
-        PebblingSchedule<Graph_t> schedule = constructPebblingScheduleFromSolution(instance);
-        return {schedule.isValid() ? SUCCESS : ERROR, schedule};
+        constructPebblingScheduleFromSolution(out_schedule);
+        return out_schedule.isValid() ? SUCCESS : ERROR;
 
     } else if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_INF_OR_UNB) {
 
-        return {ERROR, PebblingSchedule<Graph_t>()};
+        return ERROR;
 
     } else {
 
         if (model.GetIntAttr(COPT_INTATTR_HASMIPSOL)) {
 
-            PebblingSchedule<Graph_t> schedule = constructPebblingScheduleFromSolution(instance);
-            return {schedule.isValid() ? SUCCESS : ERROR, schedule};
+            constructPebblingScheduleFromSolution(out_schedule);
+            return out_schedule.isValid() ? SUCCESS : ERROR;
 
         } else {
-            return {TIMEOUT, PebblingSchedule<Graph_t>()};
+            return TIMEOUT;
         }
     }
 }
@@ -1055,8 +1063,10 @@ void MultiProcessorPebbling<Graph_t>::WriteSolutionCallback::callback() {
 };
 
 template<typename Graph_t>
-PebblingSchedule<Graph_t> MultiProcessorPebbling<Graph_t>::constructPebblingScheduleFromSolution(const BspInstance<Graph_t> &instance)
+void MultiProcessorPebbling<Graph_t>::constructPebblingScheduleFromSolution(PebblingSchedule<Graph_t> &schedule)
 {
+    const BspInstance<Graph_t>& instance = schedule.getInstance();
+
     std::vector<std::vector<std::set< std::pair<unsigned, vertex_idx> > > > nodes_computed(instance.numberOfProcessors(), std::vector<std::set<std::pair<unsigned, vertex_idx> > >(max_time));
     std::vector<std::vector<std::deque<vertex_idx> > > nodes_sent_up(instance.numberOfProcessors(), std::vector<std::deque<vertex_idx> >(max_time));
     std::vector<std::vector<std::deque<vertex_idx> > > nodes_sent_down(instance.numberOfProcessors(), std::vector<std::deque<vertex_idx> >(max_time));
@@ -1384,8 +1394,8 @@ PebblingSchedule<Graph_t> MultiProcessorPebbling<Graph_t>::constructPebblingSche
 
     std::cout<<"MPP ILP best solution value: "<<model.GetDblAttr(COPT_DBLATTR_BESTOBJ)<<", best lower bound: "<<model.GetDblAttr(COPT_DBLATTR_BESTBND)<<std::endl;
 
-    return PebblingSchedule(instance, compute_steps_per_supstep, nodes_evicted_after_compute,
-                            nodes_sent_up_in_supstep, nodes_sent_down_in_supstep, nodes_evicted_in_comm_phase, needs_blue_at_end, has_red_in_beginning, need_to_load_inputs);
+    schedule = PebblingSchedule<Graph_t>(instance, compute_steps_per_supstep, nodes_evicted_after_compute,
+                            nodes_sent_up_in_supstep, nodes_sent_down_in_supstep, nodes_evicted_in_comm_phase, needs_blue_at_end, has_red_in_beginning, need_to_load_inputs); 
 }
 
 template<typename Graph_t>

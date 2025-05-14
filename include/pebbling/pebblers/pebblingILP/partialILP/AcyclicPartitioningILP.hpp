@@ -82,7 +82,7 @@ class AcyclicPartitioningILP : public Scheduler<Graph_t> {
 
     virtual ~AcyclicPartitioningILP() = default;
 
-    std::pair<RETURN_STATUS, std::vector<unsigned> > computePartitioning(const BspInstance<Graph_t> &instance);
+    RETURN_STATUS computePartitioning(const BspInstance<Graph_t> &instance, std::vector<unsigned>& partitioning);
 
     // not used, only here for using scheduler class base functionality (status enums, timelimits, etc)
     virtual RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &schedule) override;
@@ -173,8 +173,10 @@ void AcyclicPartitioningILP<Graph_t>::solveILP() {
 }
 
 template<typename Graph_t>
-std::pair<RETURN_STATUS, std::vector<unsigned> > AcyclicPartitioningILP<Graph_t>::computePartitioning(const BspInstance<Graph_t> &instance)
+RETURN_STATUS AcyclicPartitioningILP<Graph_t>::computePartitioning(const BspInstance<Graph_t> &instance, std::vector<unsigned>& partitioning)
 {
+    partitioning.clear();
+
     if(numberOfParts == 0)
     {
         numberOfParts = static_cast<unsigned>(std::floor(static_cast<double>(instance.numberOfVertices())  / static_cast<double>(minPartitionSize)));
@@ -187,20 +189,24 @@ std::pair<RETURN_STATUS, std::vector<unsigned> > AcyclicPartitioningILP<Graph_t>
 
     if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_OPTIMAL) {
 
-        return {SUCCESS, returnAssignment(instance)};
+        partitioning = returnAssignment(instance);
+        return SUCCESS;
 
     } else if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_INF_OR_UNB) {
 
-        return {ERROR, std::vector<unsigned>(instance.numberOfVertices(), UINT_MAX)};
+        partitioning.resize(instance.numberOfVertices(), UINT_MAX);
+        return ERROR;
 
     } else {
 
         if (model.GetIntAttr(COPT_INTATTR_HASMIPSOL)) {
 
-            return {BEST_FOUND, returnAssignment(instance)};
+            partitioning = returnAssignment(instance);
+            return SUCCESS;
 
         } else {
-            return {TIMEOUT, std::vector<unsigned>(instance.numberOfVertices(), UINT_MAX)};
+            partitioning.resize(instance.numberOfVertices(), UINT_MAX);
+            return ERROR;
         }
     }
 }

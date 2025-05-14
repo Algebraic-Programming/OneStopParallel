@@ -36,7 +36,6 @@ class SubproblemMultiScheduling : public Scheduler<Graph_t> {
 
     std::vector<vertex_idx> last_node_on_proc;
     std::vector<std::vector<vertex_idx> > proc_task_lists;
-    std::vector<std::set<unsigned> > processors_to_nodes;
     std::vector<workweight_type> longest_outgoing_path;
 
   public:
@@ -44,7 +43,7 @@ class SubproblemMultiScheduling : public Scheduler<Graph_t> {
 
     virtual ~SubproblemMultiScheduling() = default;
 
-    std::pair<RETURN_STATUS, std::vector<std::set<unsigned> > > computeMultiSchedule(const BspInstance<Graph_t> &instance);
+    RETURN_STATUS computeMultiSchedule(const BspInstance<Graph_t> &instance, std::vector<std::set<unsigned> >& processors_to_node);
 
     std::vector<std::pair<vertex_idx, unsigned> > makeAssignment(const BspInstance<Graph_t> &instance,
                                                     const std::set<std::pair<unsigned, vertex_idx> > &nodes_available,
@@ -89,14 +88,14 @@ std::vector<v_workw_t<Graph_t> > SubproblemMultiScheduling<Graph_t>::get_longest
 }
 
 template<typename Graph_t>
-std::pair<RETURN_STATUS, std::vector<std::set<unsigned> > > SubproblemMultiScheduling<Graph_t>::computeMultiSchedule(const BspInstance<Graph_t> &instance)
+RETURN_STATUS SubproblemMultiScheduling<Graph_t>::computeMultiSchedule(const BspInstance<Graph_t> &instance, std::vector<std::set<unsigned> >& processors_to_node)
 {
     const unsigned &N = static_cast<unsigned>(instance.numberOfVertices());
     const unsigned &P = instance.numberOfProcessors();
     const auto &G = instance.getComputationalDag();
 
-    processors_to_nodes.clear();
-    processors_to_nodes.resize(N);
+    processors_to_node.clear();
+    processors_to_node.resize(N);
 
     proc_task_lists.clear();
     proc_task_lists.resize(P);
@@ -143,7 +142,7 @@ std::pair<RETURN_STATUS, std::vector<std::set<unsigned> > > SubproblemMultiSched
                     if (nrPredecRemain[succ] == 0)
                         readySet.emplace(-longest_outgoing_path[succ], succ);
                 }
-                for(unsigned proc : processors_to_nodes[node])
+                for(unsigned proc : processors_to_node[node])
                     free_procs.insert(proc);
             }
         }
@@ -158,7 +157,7 @@ std::pair<RETURN_STATUS, std::vector<std::set<unsigned> > > SubproblemMultiSched
             vertex_idx node = entry.first;
             unsigned proc = entry.second;
 
-            processors_to_nodes[node].insert(proc);
+            processors_to_node[node].insert(proc);
             proc_task_lists[proc].push_back(node);
             finishTimes.emplace(time + G.vertex_work_weight(node), node);
             node_finish_time[node] = time + G.vertex_work_weight(node);
@@ -178,7 +177,7 @@ std::pair<RETURN_STATUS, std::vector<std::set<unsigned> > > SubproblemMultiSched
             while(itr_latest !=finishTimes.rend() && itr_latest->first + 0.0001 > last_finish_time)
             {
                 vertex_idx node = itr_latest->second;
-                double new_finish_time = time + static_cast<double>(G.vertex_work_weight(node)) / (static_cast<double>(processors_to_nodes[node].size()) + 1);
+                double new_finish_time = time + static_cast<double>(G.vertex_work_weight(node)) / (static_cast<double>(processors_to_node[node].size()) + 1);
                 if(new_finish_time + 0.0001 < itr_latest->first)
                     possible_nodes.emplace(-longest_outgoing_path[node], node);
                 
@@ -190,10 +189,10 @@ std::pair<RETURN_STATUS, std::vector<std::set<unsigned> > > SubproblemMultiSched
                 vertex_idx node = entry.first;
                 unsigned proc = entry.second;
 
-                processors_to_nodes[node].insert(proc);
+                processors_to_node[node].insert(proc);
                 proc_task_lists[proc].push_back(node);
                 finishTimes.erase({node_finish_time[node], node});
-                double new_finish_time = time + static_cast<double>(G.vertex_work_weight(node)) / (static_cast<double>(processors_to_nodes[node].size()));
+                double new_finish_time = time + static_cast<double>(G.vertex_work_weight(node)) / (static_cast<double>(processors_to_node[node].size()));
                 finishTimes.emplace(new_finish_time, node);
                 node_finish_time[node] = new_finish_time;
                 last_node_on_proc[proc] = node;
@@ -205,7 +204,7 @@ std::pair<RETURN_STATUS, std::vector<std::set<unsigned> > > SubproblemMultiSched
 
     }
 
-    return {SUCCESS, processors_to_nodes};
+    return SUCCESS;
 }
 
 template<typename Graph_t>

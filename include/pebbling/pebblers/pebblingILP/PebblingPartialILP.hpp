@@ -51,7 +51,7 @@ class PebblingPartialILP : public Scheduler<Graph_t> {
 
     virtual ~PebblingPartialILP() = default;
 
-    std::pair<RETURN_STATUS, PebblingSchedule<Graph_t> > computePebbling(const BspInstance<Graph_t> &instance);
+    RETURN_STATUS computePebbling(PebblingSchedule<Graph_t> &schedule);
 
     // not used, only here for using scheduler class base functionality (status enums, timelimits, etc)
     virtual RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &schedule) override;
@@ -75,10 +75,12 @@ class PebblingPartialILP : public Scheduler<Graph_t> {
 };
 
 template<typename Graph_t>
-std::pair<RETURN_STATUS, PebblingSchedule<Graph_t> > PebblingPartialILP<Graph_t>::computePebbling(const BspInstance<Graph_t> &instance){
+RETURN_STATUS PebblingPartialILP<Graph_t>::computePebbling(PebblingSchedule<Graph_t> &schedule){
+
+    const BspInstance<Graph_t>& instance = schedule.getInstance();
 
     if(!PebblingSchedule<Graph_t>::hasValidSolution(instance))
-        return {ERROR, PebblingSchedule<Graph_t>()};
+        return ERROR;
     
     // STEP 1: divide DAG acyclicly with partitioning ILP
 
@@ -95,7 +97,8 @@ std::pair<RETURN_STATUS, PebblingSchedule<Graph_t> > PebblingPartialILP<Graph_t>
     BspInstance<Graph_t> contracted_instance(contracted_dag, instance.getArchitecture(), instance.getNodeProcessorCompatibilityMatrix());
 
     SubproblemMultiScheduling<Graph_t> multi_scheduler;
-    std::vector<std::set<unsigned> > processors_to_parts_and_types = multi_scheduler.computeMultiSchedule(contracted_instance).second;
+    std::vector<std::set<unsigned> > processors_to_parts_and_types;
+    multi_scheduler.computeMultiSchedule(contracted_instance, processors_to_parts_and_types);
 
     std::vector<std::set<unsigned> > processors_to_parts(nr_parts);
     for(unsigned part = 0; part < nr_parts; ++part)
@@ -294,11 +297,10 @@ std::pair<RETURN_STATUS, PebblingSchedule<Graph_t> > PebblingPartialILP<Graph_t>
         mpp.setNeedToLoadInputs(need_to_load_inputs);
         mpp.setHasRedInBeginning(has_reds_in_beginning[part]);
 
-        std::pair<RETURN_STATUS, PebblingSchedule<Graph_t> > ILP_result;
-        ILP_result = mpp.computePebblingWithInitialSolution(subInstance[part], heuristic_pebbling, asynchronous);
-        if(ILP_result.first == RETURN_STATUS::SUCCESS || ILP_result.first == RETURN_STATUS::BEST_FOUND)
+        PebblingSchedule<Graph_t> pebblingILP(subInstance[part]);
+        RETURN_STATUS status = mpp.computePebblingWithInitialSolution(heuristic_pebbling, pebblingILP, asynchronous);
+        if(status == RETURN_STATUS::SUCCESS || status == RETURN_STATUS::BEST_FOUND)
         {
-            PebblingSchedule<Graph_t> pebblingILP = ILP_result.second;
             if(!pebblingILP.isValid())
                 std::cout<<"ERROR: Pebbling ILP INVALID!"<<std::endl;
 
@@ -326,10 +328,9 @@ std::pair<RETURN_STATUS, PebblingSchedule<Graph_t> > PebblingPartialILP<Graph_t>
     }
 
     // AUX: assemble final schedule from subschedules
-    PebblingSchedule<Graph_t> final_pebbling;
-    final_pebbling.CreateFromPartialPebblings(instance, pebbling, processors_to_parts, original_node_id, original_proc_id, has_reds_in_beginning);
-    final_pebbling.cleanSchedule();
-    return {final_pebbling.isValid() ? SUCCESS : ERROR, final_pebbling};
+    schedule.CreateFromPartialPebblings(instance, pebbling, processors_to_parts, original_node_id, original_proc_id, has_reds_in_beginning);
+    schedule.cleanSchedule();
+    return schedule.isValid() ? SUCCESS : ERROR;
 
 }
 

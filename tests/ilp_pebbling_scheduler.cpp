@@ -67,9 +67,10 @@ BOOST_AUTO_TEST_CASE(test_full) {
 
     MultiProcessorPebbling<graph> mpp;
     mpp.setTimeLimitSeconds(10);
-    auto status_and_solution = mpp.computePebblingWithInitialSolution(instance, initial_sol);
-    status_and_solution.second.cleanSchedule();
-    BOOST_CHECK(status_and_solution.second.isValid());
+    PebblingSchedule<graph> schedule(instance);
+    mpp.computePebblingWithInitialSolution(initial_sol, schedule);
+    schedule.cleanSchedule();
+    BOOST_CHECK(schedule.isValid());
 
 };
 
@@ -102,7 +103,8 @@ BOOST_AUTO_TEST_CASE(test_partial) {
     PebblingPartialILP<graph> mpp;
     mpp.setMinSize(15);
     mpp.setSecondsForSubILP(5);
-    auto status_and_solution = mpp.computePebbling(instance);
-    BOOST_CHECK(status_and_solution.second.isValid());
+    PebblingSchedule<graph> schedule(instance);
+    mpp.computePebbling(schedule);
+    BOOST_CHECK(schedule.isValid());
 
 };
