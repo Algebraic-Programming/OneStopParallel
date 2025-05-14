@@ -33,6 +33,8 @@ limitations under the License.
 
 namespace osp {
 
+static constexpr unsigned CacheLineSize = 64;
+
 enum MEMORY_CONSTRAINT_TYPE {
     NONE,
     LOCAL,
