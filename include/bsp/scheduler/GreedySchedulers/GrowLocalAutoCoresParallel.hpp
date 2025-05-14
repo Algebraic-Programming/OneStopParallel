@@ -87,8 +87,8 @@ class GrowLocalAutoCoresParallel : public Scheduler<Graph_t> {
 #ifdef TIME_THREADS_GROW_LOCAL_PARALLEL
         double startTime = omp_get_wtime();
 #endif
-        const BspInstance<Graph_t> instance = schedule.getInstance();
-        const Graph_t& graph = instance.getComputationalDag();
+        const BspInstance<Graph_t> &instance = schedule.getInstance();
+        const Graph_t &graph = instance.getComputationalDag();
 
         const VertexType N = endNode - startNode;
         const unsigned P = instance.numberOfProcessors();
@@ -127,7 +127,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<Graph_t> {
                 VertexType vert = topOrder[index];
                 for (const VertexType &par : graph.parents(vert)) {
                     VertexType posPar = posInTopOrder[par];
-                    if ( posPar >= startNode && posPar < endNode ) {
+                    if ( posPar >= startNode ) {
                         ++predec[index - startNode];
                     }
                 }
@@ -216,7 +216,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<Graph_t> {
                                 }
                             }
                         } else {
-                            if (posInTopOrder[succ] < startNode || posInTopOrder[succ] >= endNode) {
+                            if (posInTopOrder[succ] >= endNode) {
                                 continue;
                             }
                         }
@@ -279,7 +279,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<Graph_t> {
                                     }
                                 }
                             } else {
-                                if (posInTopOrder[succ] < startNode || posInTopOrder[succ] >= endNode) {
+                                if (posInTopOrder[succ] >= endNode) {
                                     continue;
                                 }
                             }
@@ -369,7 +369,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<Graph_t> {
                                     }
                                 }
                             } else {
-                                if (posInTopOrder[succ] < startNode || posInTopOrder[succ] >= endNode) {
+                                if (posInTopOrder[succ] >= endNode) {
                                     continue;
                                 }
                             }
@@ -400,7 +400,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<Graph_t> {
                                     }
                                 }
                             } else {
-                                if (posInTopOrder[succ] < startNode || posInTopOrder[succ] >= endNode) {
+                                if (posInTopOrder[succ] >= endNode) {
                                     continue;
                                 }
                             }
@@ -446,7 +446,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<Graph_t> {
                                 }
                             }
                         } else {
-                            if (posInTopOrder[succ] < startNode || posInTopOrder[succ] >= endNode) {
+                            if (posInTopOrder[succ] >= endNode) {
                                 continue;
                             }
                         }
@@ -493,8 +493,8 @@ class GrowLocalAutoCoresParallel : public Scheduler<Graph_t> {
 
     RETURN_STATUS computeScheduleParallel(BspSchedule<Graph_t> &schedule, unsigned int numThreads) const {
 
-        const BspInstance<Graph_t> instance = schedule.getInstance();
-        const Graph_t& graph = instance.getComputationalDag();
+        const BspInstance<Graph_t> &instance = schedule.getInstance();
+        const Graph_t &graph = instance.getComputationalDag();
         
         const VertexType N = instance.numberOfVertices();
 
