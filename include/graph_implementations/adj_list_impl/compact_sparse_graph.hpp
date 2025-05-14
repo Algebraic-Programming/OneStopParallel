@@ -43,14 +43,16 @@ class Compact_Sparse_Graph {
     public:
         using vertex_idx = vert_t;
 
-        using vertex_work_weight_type = std::conditional_t<use_work_weights, work_weight_type, edge_t>;
-        using vertex_comm_weight_type = comm_weight_type;
-        using vertex_mem_weight_type = mem_weight_type;
-        using vertex_type_type = vertex_type_template_type;
+        using vertex_work_weight_type   = std::conditional_t<use_work_weights, work_weight_type, edge_t>;
+        using vertex_comm_weight_type   = comm_weight_type;
+        using vertex_mem_weight_type    = mem_weight_type;
+        using vertex_type_type          = vertex_type_template_type;
 
-        static bool constexpr vertices_in_top_order = true;
-        static bool constexpr children_in_top_order = true;
-        static bool constexpr parents_in_top_order  = true;
+        static bool constexpr vertices_in_top_order     = true;
+        static bool constexpr children_in_top_order     = true;
+        static bool constexpr children_in_vertex_order  = true;
+        static bool constexpr parents_in_top_order      = true;
+        static bool constexpr parents_in_vertex_order   = true;
     
     private:
         using ThisT = Compact_Sparse_Graph<keep_vertex_order, use_work_weights, use_comm_weights, use_mem_weights, use_vert_types, vert_t, edge_t, work_weight_type, comm_weight_type, mem_weight_type, vertex_type_template_type>;
