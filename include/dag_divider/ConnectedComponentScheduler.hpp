@@ -21,16 +21,17 @@ limitations under the License.
 #include "ConnectedComponentDivider.hpp"
 #include "bsp/scheduler/Scheduler.hpp"
 #include "graph_algorithms/computational_dag_util.hpp"
+#include "graph_implementations/boost_graphs/boost_graph.hpp"
 
 namespace osp {
 
 template<typename Graph_t>
 class ConnectedComponentScheduler : public Scheduler<Graph_t> {
 
-    Scheduler<Graph_t> *scheduler;
+    Scheduler<boost_graph> *scheduler;
 
   public:
-    ConnectedComponentScheduler(Scheduler<Graph_t> &scheduler) : scheduler(&scheduler) {}
+    ConnectedComponentScheduler(Scheduler<boost_graph> &scheduler) : scheduler(&scheduler) {}
 
     std::string getScheduleName() const override { return "SubDagScheduler"; }
 
@@ -39,7 +40,7 @@ class ConnectedComponentScheduler : public Scheduler<Graph_t> {
         const auto &instance = schedule.getInstance();
 
         const Graph_t &dag = instance.getComputationalDag();
-        ConnectedComponentDivider<Graph_t> partitioner;
+        ConnectedComponentDivider<Graph_t, boost_graph> partitioner;
 
         partitioner.compute_connected_components(dag);
 
@@ -51,17 +52,17 @@ class ConnectedComponentScheduler : public Scheduler<Graph_t> {
             const auto &sub_dag = partitioner.get_sub_dags()[i];
             const auto &mapping = partitioner.get_vertex_mapping()[i];
 
-            v_workw_t<Graph_t> sub_dag_work_weight = sumOfVerticesWorkWeights(sub_dag);
+            v_workw_t<boost_graph> sub_dag_work_weight = sumOfVerticesWorkWeights(sub_dag);
 
-            BspInstance<Graph_t> sub_instance(sub_dag, instance.getArchitecture());
-            BspArchitecture<Graph_t> &sub_architecture = sub_instance.getArchitecture();
+            BspInstance<boost_graph> sub_instance(sub_dag, instance.getArchitecture());
+            BspArchitecture<boost_graph> &sub_architecture = sub_instance.getArchitecture();
 
             const double sub_dag_work_weight_percent = (double)sub_dag_work_weight / (double)total_work_weight;
             const unsigned sub_dag_processors = (unsigned)(sub_dag_work_weight_percent * sub_architecture.numberOfProcessors());
 
             sub_architecture.setNumberOfProcessors(sub_dag_processors);
 
-            BspSchedule<Graph_t> sub_schedule(sub_instance);
+            BspSchedule<boost_graph> sub_schedule(sub_instance);
             auto status = scheduler->computeSchedule(sub_schedule);
 
             if (status != SUCCESS && status != BEST_FOUND) {

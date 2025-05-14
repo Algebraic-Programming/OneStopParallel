@@ -29,15 +29,23 @@ limitations under the License.
 
 namespace osp {
 
-template<typename Graph_t>
+template<typename Graph_t, typename Constr_Graph_t>
 class ConnectedComponentDivider : public IDagDivider<Graph_t> {
 
     static_assert(is_computational_dag_v<Graph_t>, "Graph must be a computational DAG");
 
-  private:
-    using vertex_idx = typename directed_graph_traits<Graph_t>::vertex_idx;
+    static_assert(is_computational_dag_v<Constr_Graph_t>, "Constr_Graph_t must be a computational DAG");
 
-    std::vector<Graph_t> sub_dags;
+    static_assert(is_constructable_cdag_v<Constr_Graph_t>,
+                  "Constr_Graph_t must satisfy the constructable_cdag_vertex concept");
+
+    static_assert(std::is_same_v<vertex_idx_t<Graph_t>, vertex_idx_t<Constr_Graph_t>>,
+                  "Graph_t and Constr_Graph_t must have the same vertex_idx types");
+
+  private:
+    using vertex_idx = vertex_idx_t<Graph_t>;
+
+    std::vector<Constr_Graph_t> sub_dags;
     std::vector<std::unordered_map<vertex_idx, vertex_idx>> vertex_mapping;
 
     std::vector<unsigned> component; // vertex id -> component id
@@ -45,7 +53,7 @@ class ConnectedComponentDivider : public IDagDivider<Graph_t> {
     std::vector<vertex_idx> vertex_map;
 
   public:
-    inline const std::vector<Graph_t> &get_sub_dags() const { return sub_dags; }
+    inline const std::vector<Constr_Graph_t> &get_sub_dags() const { return sub_dags; }
 
     inline const std::vector<std::unordered_map<vertex_idx, vertex_idx>> &get_vertex_mapping() const {
         return vertex_mapping;
@@ -72,12 +80,12 @@ class ConnectedComponentDivider : public IDagDivider<Graph_t> {
     void compute_connected_components(const Graph_t &dag) {
 
         vertex_mapping.clear();
-        component = std::vector<unsigned>(dag.num_vertices(), UINT_MAX);
+        component = std::vector<unsigned>(dag.num_vertices(), std::numeric_limits<unsigned>::max());
         vertex_map = std::vector<vertex_idx>(dag.num_vertices(), 0);
 
         unsigned component_id = 0;
         for (const auto &v : dag.vertices()) {
-            if (component[v] == UINT_MAX) {
+            if (component[v] == std::numeric_limits<unsigned>::max()) {
 
                 component[v] = component_id;
                 std::queue<vertex_idx> q;
@@ -90,7 +98,7 @@ class ConnectedComponentDivider : public IDagDivider<Graph_t> {
 
                     for (const auto &child : dag.children(current)) {
 
-                        if (component[child] == UINT_MAX) {
+                        if (component[child] == std::numeric_limits<unsigned>::max()) {
                             q.push(child);
                             component[child] = component_id;
                         }
@@ -98,7 +106,7 @@ class ConnectedComponentDivider : public IDagDivider<Graph_t> {
 
                     for (const auto &parent : dag.parents(current)) {
 
-                        if (component[parent] == UINT_MAX) {
+                        if (component[parent] == std::numeric_limits<unsigned>::max()) {
                             q.push(parent);
                             component[parent] = component_id;
                         }
@@ -109,7 +117,7 @@ class ConnectedComponentDivider : public IDagDivider<Graph_t> {
             }
         }
 
-        sub_dags = create_induced_subgraphs<Graph_t, Graph_t>(dag, component);
+        sub_dags = create_induced_subgraphs<Graph_t, Constr_Graph_t>(dag, component);
         vertex_mapping.resize(sub_dags.size());
         std::vector<vertex_idx> current_index_in_subdag(sub_dags.size(), 0);
         for (const auto &v : dag.vertices()) {

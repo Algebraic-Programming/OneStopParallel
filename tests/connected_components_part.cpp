@@ -58,11 +58,11 @@ BOOST_AUTO_TEST_CASE(ConnectedComponentPart_test) {
     dag.add_edge(v5, v8);
     dag.add_edge(v4, v8);
 
-    ConnectedComponentDivider<computational_dag_vector_impl_def_int_t> partitioner;
+    ConnectedComponentDivider<computational_dag_vector_impl_def_int_t, computational_dag_vector_impl_def_int_t> partitioner;
 
     partitioner.compute_connected_components(dag);
 
-    GreedyBspScheduler<computational_dag_vector_impl_def_int_t> bsp_scheduler;
+    GreedyBspScheduler<boost_graph> bsp_scheduler;
     ConnectedComponentScheduler<computational_dag_vector_impl_def_int_t> scheduler(bsp_scheduler);
 
     BspArchitecture<computational_dag_vector_impl_def_int_t> arch = instance.getArchitecture();
