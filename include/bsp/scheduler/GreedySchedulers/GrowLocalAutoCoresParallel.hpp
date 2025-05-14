@@ -502,10 +502,6 @@ class GrowLocalAutoCoresParallel : public Scheduler<Graph_t> {
             schedule.setAssignedProcessor(vert, UINT_MAX);
         }
 
-        for (VertexType vert = 0; vert < N; ++vert ) {
-            schedule.setAssignedSuperstep_noUpdateNumSuperstep(vert, UINT_MAX);
-        }
-
         VertexType numNodesPerThread = N / numThreads;
         std::vector<VertexType> startNodes;
         startNodes.reserve(numThreads + 1);
@@ -516,7 +512,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<Graph_t> {
         }
         startNodes.push_back(N);
 
-        constexpr unsigned UnsignedPadding = (CacheLineSize + sizeof(unsigned) - 1) / sizeof(unsigned);
+        static constexpr unsigned UnsignedPadding = (CacheLineSize + sizeof(unsigned) - 1) / sizeof(unsigned);
         std::vector<unsigned> superstepsThread(numThreads * UnsignedPadding, 0);
         std::vector<unsigned> supstepIncr(numThreads, 0);
         unsigned incr = 0;
