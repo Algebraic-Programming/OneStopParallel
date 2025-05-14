@@ -131,6 +131,7 @@ void parseDotEdge(std::string line, Graph_t &G) {
         G.add_edge(source, target, comm_weight);
     } else {
         G.add_edge(source, target);
+        comm_weight++; // delete me
     }
 }
 
