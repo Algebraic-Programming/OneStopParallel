@@ -227,7 +227,7 @@ BOOST_AUTO_TEST_CASE(top_sort_template_overload_csr) {
     const boost_graph graph(out, workW, commW);
   
     
-    Compact_Sparse_Graph<true> graph_csr(graph);
+    Compact_Sparse_Graph<false> graph_csr(graph);
 
     BOOST_CHECK_EQUAL(graph_csr.num_vertices(), 10);
     BOOST_CHECK_EQUAL(graph_csr.num_edges(), 12);
