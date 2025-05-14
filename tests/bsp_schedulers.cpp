@@ -29,9 +29,11 @@ limitations under the License.
 #include "bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
 #include "bsp/scheduler/GreedySchedulers/GreedyChildren.hpp"
 #include "bsp/scheduler/GreedySchedulers/GrowLocalAutoCores.hpp"
+#include "bsp/scheduler/GreedySchedulers/GrowLocalAutoCoresParallel.hpp"
 #include "bsp/scheduler/GreedySchedulers/RandomGreedy.hpp"
 #include "bsp/scheduler/GreedySchedulers/VarianceFillup.hpp"
 #include "bsp/scheduler/Serial.hpp"
+#include "graph_implementations/adj_list_impl/compact_sparse_graph.hpp"
 #include "graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 #include "io/arch_file_reader.hpp"
@@ -108,6 +110,67 @@ void run_test(Scheduler<Graph_t> *test_scheduler) {
     }
 };
 
+
+
+
+
+template<typename Graph_t>
+void run_test_2(Scheduler<Graph_t> *test_scheduler) {
+    // static_assert(std::is_base_of<Scheduler, T>::value, "Class is not a scheduler!");
+    std::vector<std::string> filenames_graph = tiny_spaa_graphs();
+    std::vector<std::string> filenames_architectures = test_architectures();
+
+    // Getting root git directory
+    std::filesystem::path cwd = std::filesystem::current_path();
+    std::cout << cwd << std::endl;
+    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
+        cwd = cwd.parent_path();
+        std::cout << cwd << std::endl;
+    }
+
+    for (auto &filename_graph : filenames_graph) {
+        for (auto &filename_machine : filenames_architectures) {
+            std::string name_graph = filename_graph.substr(filename_graph.find_last_of("/\\") + 1);
+            name_graph = name_graph.substr(0, name_graph.find_last_of("."));
+            std::string name_machine = filename_machine.substr(filename_machine.find_last_of("/\\") + 1);
+            name_machine = name_machine.substr(0, name_machine.rfind("."));
+
+            std::cout << std::endl << "Scheduler: " << test_scheduler->getScheduleName() << std::endl;
+            std::cout << "Graph: " << name_graph << std::endl;
+            std::cout << "Architecture: " << name_machine << std::endl;
+
+            
+            computational_dag_edge_idx_vector_impl_def_t graph;
+            BspArchitecture<Graph_t> arch;
+            
+            bool status_graph = file_reader::readComputationalDagHyperdagFormat((cwd / filename_graph).string(), graph);
+            bool status_architecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), arch);
+            
+            if (!status_graph || !status_architecture) {
+                
+                std::cout << "Reading files failed." << std::endl;
+                BOOST_CHECK(false);
+            }
+
+            BspInstance<Graph_t> instance(graph, arch);
+
+            BspSchedule<Graph_t> schedule(instance);
+            const auto result = test_scheduler->computeSchedule(schedule);
+
+            BOOST_CHECK_EQUAL(SUCCESS, result);
+            BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+
+        }
+    }
+};
+
+
+
+
+
+
+
+
 BOOST_AUTO_TEST_CASE(GreedyBspScheduler_test) {
 
     GreedyBspScheduler<computational_dag_vector_impl_def_t> test;
@@ -180,4 +243,76 @@ BOOST_AUTO_TEST_CASE(grow_local_auto_test_edge_desc_impl) {
 
     GrowLocalAutoCores<computational_dag_edge_idx_vector_impl_def_t> test;
     run_test(&test);
+}
+
+BOOST_AUTO_TEST_CASE(grow_local_auto_parallel_top_test_1) {
+    {
+        using Graph_t = computational_dag_vector_impl_def_t;
+        GrowLocalAutoCoresParallel_Params< vertex_idx_t<Graph_t>, v_workw_t<Graph_t>  > params;
+
+        params.numThreads = 1;
+
+        GrowLocalAutoCoresParallel<Graph_t> test;
+        run_test(&test);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(grow_local_auto_parallel_top_test_2) {
+    {
+        using Graph_t = computational_dag_vector_impl_def_t;
+        GrowLocalAutoCoresParallel_Params< vertex_idx_t<Graph_t>, v_workw_t<Graph_t>  > params;
+
+        params.numThreads = 2;
+
+        GrowLocalAutoCoresParallel<Graph_t> test;
+        run_test(&test);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(grow_local_auto_parallel_top_test_5) {
+    {
+        using Graph_t = computational_dag_vector_impl_def_t;
+        GrowLocalAutoCoresParallel_Params< vertex_idx_t<Graph_t>, v_workw_t<Graph_t>  > params;
+
+        params.numThreads = 5;
+
+        GrowLocalAutoCoresParallel<Graph_t> test;
+        run_test(&test);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(grow_local_auto_parallel_test_1) {
+    {
+        using Graph_t = Compact_Sparse_Graph<true, true>;
+        GrowLocalAutoCoresParallel_Params< vertex_idx_t<Graph_t>, v_workw_t<Graph_t>  > params;
+
+        params.numThreads = 1;
+
+        GrowLocalAutoCoresParallel<Graph_t> test;
+        run_test_2(&test);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(grow_local_auto_parallel_test_2) {
+    {
+        using Graph_t = Compact_Sparse_Graph<true, true>;
+        GrowLocalAutoCoresParallel_Params< vertex_idx_t<Graph_t>, v_workw_t<Graph_t>  > params;
+
+        params.numThreads = 2;
+
+        GrowLocalAutoCoresParallel<Graph_t> test;
+        run_test_2(&test);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(grow_local_auto_parallel_test_5) {
+    {
+        using Graph_t = Compact_Sparse_Graph<true, true>;
+        GrowLocalAutoCoresParallel_Params< vertex_idx_t<Graph_t>, v_workw_t<Graph_t>  > params;
+
+        params.numThreads = 5;
+
+        GrowLocalAutoCoresParallel<Graph_t> test;
+        run_test_2(&test);
+    }
 }
