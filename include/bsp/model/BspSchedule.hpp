@@ -231,21 +231,23 @@ class BspSchedule : public IBspSchedule<Graph_t> {
     }
 
     /**
+     * @brief Sets the superstep assigned to the specified node.
+     *
+     * @param node The node for which to set the assigned superstep.
+     * @param superstep The superstep to assign to the node.
+     */
+    inline void setAssignedSuperstep_noUpdateNumSuperstep(vertex_idx node, unsigned superstep) {
+        node_to_superstep_assignment.at(node) = superstep;
+    }
+
+    /**
      * @brief Sets the processor assigned to the specified node.
      *
      * @param node The node for which to set the assigned processor.
      * @param processor The processor to assign to the node.
      */
-    void setAssignedProcessor(vertex_idx node, unsigned processor) {
-
-        if (node < instance->numberOfVertices()) {
-            node_to_processor_assignment[node] = processor;
-        } else {
-            // std::cout << "node " << node << " num nodes " << instance->numberOfVertices() << "  processor " <<
-            // processor
-            //          << " num proc " << instance->numberOfProcessors() << std::endl;
-            throw std::invalid_argument("Invalid Argument while assigning node to processor");
-        }
+    inline void setAssignedProcessor(vertex_idx node, unsigned processor) {
+        node_to_processor_assignment.at(node) = processor;
     }
 
     /**
@@ -255,7 +257,7 @@ class BspSchedule : public IBspSchedule<Graph_t> {
      */
     void setAssignedSupersteps(const std::vector<unsigned> &vec) {
 
-        if (vec.size() == instance->numberOfVertices()) {
+        if (vec.size() == static_cast<std::size_t>( instance->numberOfVertices() )) {
 
             number_of_supersteps = 0;
 
@@ -274,17 +276,46 @@ class BspSchedule : public IBspSchedule<Graph_t> {
     }
 
     /**
+     * @brief Sets the superstep assignment for the schedule.
+     *
+     * @param vec The superstep assignment to set.
+     */
+    void setAssignedSupersteps(std::vector<unsigned> &&vec) {
+
+        if (vec.size() == static_cast<std::size_t>( instance->numberOfVertices() )) {
+            node_to_superstep_assignment = std::move(vec);
+        } else {
+            throw std::invalid_argument(
+                "Invalid Argument while assigning supersteps: size does not match number of nodes.");
+        }
+        
+        updateNumberOfSupersteps();
+    }
+
+    /**
      * @brief Sets the processor assignment for the schedule.
      *
      * @param vec The processor assignment to set.
      */
     void setAssignedProcessors(const std::vector<unsigned> &vec) {
 
-        if (vec.size() == instance->numberOfVertices()) {
-            for (unsigned i = 0; i < instance->numberOfVertices(); ++i) {
+        if (vec.size() == static_cast<std::size_t>( instance->numberOfVertices() )) {
+            node_to_processor_assignment = vec;
+        } else {
+            throw std::invalid_argument(
+                "Invalid Argument while assigning processors: size does not match number of nodes.");
+        }
+    }
 
-                node_to_processor_assignment[i] = vec[i];
-            }
+    /**
+     * @brief Sets the processor assignment for the schedule.
+     *
+     * @param vec The processor assignment to set.
+     */
+    void setAssignedProcessors(std::vector<unsigned> &&vec) {
+
+        if (vec.size() == static_cast<std::size_t>( instance->numberOfVertices() )) {
+            node_to_processor_assignment = std::move(vec);
         } else {
             throw std::invalid_argument(
                 "Invalid Argument while assigning processors: size does not match number of nodes.");
