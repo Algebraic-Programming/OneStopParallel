@@ -22,21 +22,39 @@ limitations under the License.
 #include <filesystem>
 #include <iostream>
 
+#include "bsp/scheduler/GreedySchedulers/BspLocking.hpp"
+#include "bsp/scheduler/LocalSearch/KernighanLin/kl_total_comm.hpp"
+#include "bsp/scheduler/LocalSearch/KernighanLin/kl_total_cut.hpp"
 #include "dag_divider/WavefrontComponentDivider.hpp"
 #include "dag_divider/WavefrontComponentScheduler.hpp"
 #include "dag_divider/WavefrontParallelismDivider.hpp"
 #include "io/dot_graph_file_reader.hpp"
-#include "bsp/scheduler/GreedySchedulers/BspLocking.hpp"
-#include "bsp/scheduler/LocalSearch/KernighanLin/kl_total_cut.hpp"
-#include "bsp/scheduler/LocalSearch/KernighanLin/kl_total_comm.hpp"
+#include "io/hdag_graph_file_reader.hpp"
 
-#include "graph_implementations/boost_graphs/boost_graph.hpp"
 #include "graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
+#include "graph_implementations/boost_graphs/boost_graph.hpp"
 
 using namespace osp;
 
-std::vector<std::string> test_graphs_dot() {
-    return { "data/dot/smpl_dot_graph_1.dot"
+std::vector<std::string> test_graphs_dot() { return {"data/dot/smpl_dot_graph_1.dot"}; }
+
+std::vector<std::string> tiny_spaa_graphs() {
+    return {
+        "data/spaa/tiny/instance_bicgstab.hdag", "data/spaa/tiny/instance_CG_N2_K2_nzP0d75.hdag"
+        //         "data/spaa/tiny/instance_CG_N3_K1_nzP0d5.hdag",
+        //         "data/spaa/tiny/instance_CG_N4_K1_nzP0d35.hdag",
+        //         "data/spaa/tiny/instance_exp_N4_K2_nzP0d5.hdag",
+        //         "data/spaa/tiny/instance_exp_N5_K3_nzP0d4.hdag",
+        //         "data/spaa/tiny/instance_exp_N6_K4_nzP0d25.hdag",
+        //         "data/spaa/tiny/instance_k-means.hdag",
+        //         "data/spaa/tiny/instance_k-NN_3_gyro_m.hdag",
+        //         "data/spaa/tiny/instance_kNN_N4_K3_nzP0d5.hdag",
+        //         "data/spaa/tiny/instance_kNN_N5_K3_nzP0d3.hdag",
+        //         "data/spaa/tiny/instance_kNN_N6_K4_nzP0d2.hdag",
+        //         "data/spaa/tiny/instance_pregel.hdag",
+        //         "data/spaa/tiny/instance_spmv_N6_nzP0d4.hdag",
+        //         "data/spaa/tiny/instance_spmv_N7_nzP0d35.hdag",
+        //         "data/spaa/tiny/instance_spmv_N10_nzP0d25.hdag",
     };
 }
 
@@ -55,66 +73,7 @@ bool check_vertex_maps(const std::vector<std::vector<std::vector<vertex_idx_t<Gr
     return all_vertices.size() == dag.num_vertices();
 }
 
-
-// BOOST_AUTO_TEST_CASE(wavefront_component_divider_2) {
-
-//     std::vector<std::string> filenames_graph = test_graphs_dot();
-
-//     // Getting root git directory
-//     std::filesystem::path cwd = std::filesystem::current_path();
-//     std::cout << cwd << std::endl;
-//     while ((!cwd.empty()) && (cwd.filename() != "one-stop-parallel")) {
-//         cwd = cwd.parent_path();
-//         std::cout << cwd << std::endl;
-//     }
-
-//     for (auto &filename_graph : filenames_graph) {
-
-//         auto [status_graph, graph] = FileReader::readComputationalDagDotFormat((cwd / filename_graph).string());
-
-//         if (!status_graph) {
-
-//             std::cout << "Reading files failed." << std::endl;
-//             BOOST_CHECK(false);
-//         } else {
-//             std::cout << "File read:" << filename_graph << std::endl;
-//         }
-
-//         // for(const auto& vertex : graph.vertices()) {
-//         //     graph.setNodeType(vertex, 0);
-//         // }
-
-//         WavefrontComponentDivider wavefront;
-//         wavefront.set_split_method(WavefrontComponentDivider::SplitMethod::VARIANCE);
-
-//         auto maps = wavefront.divide(graph);
-
-//         BOOST_CHECK(check_vertex_maps(maps, graph));
-
-//         GreedyBspLocking greedy;
-
-//         WavefrontComponentScheduler scheduler(wavefront, greedy);
-//         scheduler.set_check_isomorphism_groups(true);
-
-//         BspArchitecture arch(90u, 1u, 1u);
-
-//         arch.set_processors_consequ_types({30u, 60u}, {1000000, 500000});
-//         // arch.print_architecture(std::cout);
-
-//         BspInstance instance(graph, arch);
-//         instance.setDiagonalCompatibilityMatrix(2);
-
-//         auto [status, schedule] = scheduler.computeSchedule(instance);
-
-//         BOOST_CHECK(status == RETURN_STATUS::SUCCESS);
-
-//         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
-//         BOOST_CHECK(schedule.satisfiesNodeTypeConstraints());
-//         BOOST_CHECK(schedule.hasValidCommSchedule());
-//     }
-// }
-
-BOOST_AUTO_TEST_CASE(wavefront_component_divider_4) {
+BOOST_AUTO_TEST_CASE(wavefront_component_divider) {
 
     std::vector<std::string> filenames_graph = test_graphs_dot();
 
@@ -128,12 +87,10 @@ BOOST_AUTO_TEST_CASE(wavefront_component_divider_4) {
 
     using graph_t = computational_dag_edge_idx_vector_impl_def_t;
 
-
     for (auto &filename_graph : filenames_graph) {
 
-
         BspInstance<graph_t> instance;
-        auto& graph = instance.getComputationalDag();
+        auto &graph = instance.getComputationalDag();
 
         auto status_graph = file_reader::readComputationalDagDotFormat((cwd / filename_graph).string(), graph);
 
@@ -144,12 +101,6 @@ BOOST_AUTO_TEST_CASE(wavefront_component_divider_4) {
         } else {
             std::cout << "File read:" << filename_graph << std::endl;
         }
-
-
-
-        // for(const auto& vertex : graph.vertices()) {
-        //     graph.setNodeType(vertex, 0);
-        // }
 
         WavefrontComponentDivider<graph_t> wavefront;
         wavefront.set_split_method(WavefrontComponentDivider<graph_t>::MIN_DIFF);
@@ -162,18 +113,9 @@ BOOST_AUTO_TEST_CASE(wavefront_component_divider_4) {
         }
 
         BspLocking<graph_t> greedy;
-        
-        kl_total_cut<graph_t> kl_cut;
-        
 
         WavefrontComponentScheduler<graph_t, graph_t> scheduler(wavefront, greedy);
         scheduler.set_check_isomorphism_groups(true);
-
-        // BspArchitecture arch(75u, 1u, 10000u);
-        // arch.setMemoryConstraintType(LOCAL_INC_EDGES);
-        // arch.set_processors_consequ_types({25u, 50u}, {100000000, 5000000});
-   
-        // instance.setDiagonalCompatibilityMatrix(2);
 
         BspSchedule<graph_t> schedule(instance);
         auto status = scheduler.computeSchedule(schedule);
@@ -181,9 +123,56 @@ BOOST_AUTO_TEST_CASE(wavefront_component_divider_4) {
         BOOST_CHECK(status == SUCCESS);
 
         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
-        // BOOST_CHECK(schedule.satisfiesNodeTypeConstraints());
-        // BOOST_CHECK(schedule.satisfiesMemoryConstraints());
-
     }
 }
 
+BOOST_AUTO_TEST_CASE(wavefront_component_parallelism_divider) {
+
+    std::vector<std::string> filenames_graph = tiny_spaa_graphs();
+
+    // Getting root git directory
+    std::filesystem::path cwd = std::filesystem::current_path();
+    std::cout << cwd << std::endl;
+    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
+        cwd = cwd.parent_path();
+        std::cout << cwd << std::endl;
+    }
+
+    using graph_t = computational_dag_edge_idx_vector_impl_def_t;
+
+    for (auto &filename_graph : filenames_graph) {
+
+        BspInstance<graph_t> instance;
+        auto &graph = instance.getComputationalDag();
+
+        auto status_graph = file_reader::readComputationalDagHyperdagFormat((cwd / filename_graph).string(), graph);
+
+        if (!status_graph) {
+
+            std::cout << "Reading files failed." << std::endl;
+            BOOST_CHECK(false);
+        } else {
+            std::cout << "File read:" << filename_graph << std::endl;
+        }
+
+        WavefrontParallelismDivider<graph_t> wavefront;
+
+        auto maps = wavefront.divide(graph);
+
+        if (!maps.empty()) {
+
+            BOOST_CHECK(check_vertex_maps(maps, graph));
+        }
+
+        BspLocking<graph_t> greedy;
+
+        WavefrontComponentScheduler<graph_t, graph_t> scheduler(wavefront, greedy);
+        scheduler.set_check_isomorphism_groups(false);
+
+        BspSchedule<graph_t> schedule(instance);
+        auto status = scheduler.computeSchedule(schedule);
+
+        BOOST_CHECK(status == SUCCESS);
+        BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+    }
+}

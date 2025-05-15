@@ -26,6 +26,7 @@ limitations under the License.
 
 #include "DagDivider.hpp"
 #include "graph_algorithms/subgraph_algorithms.hpp"
+#include "graph_algorithms/directed_graph_path_util.hpp"
 
 namespace osp {
 
@@ -48,7 +49,7 @@ class WavefrontParallelismDivider : public IDagDivider<Graph_t> {
 
     struct wavefron_statistics {
 
-        unsigned number_of_connected_components;
+        std::size_t number_of_connected_components;
         double parallelism;
         double max_weight;
         double max_acc_weight;
@@ -78,8 +79,11 @@ class WavefrontParallelismDivider : public IDagDivider<Graph_t> {
 
                 splits.push_back(split + offset);
 
-                std::vector<double> left(seq.begin(), seq.begin() + split);
-                std::vector<double> right(seq.begin() + split, seq.end());
+                auto it = seq.begin();
+                std::advance(it, split);
+
+                std::vector<double> left(seq.begin(), it);
+                std::vector<double> right(it, seq.end());
 
                 depth++;
 
@@ -103,8 +107,11 @@ class WavefrontParallelismDivider : public IDagDivider<Graph_t> {
 
         while (i < parallelism.size()) {
 
-            std::vector<double> left(parallelism.begin(), parallelism.begin() + i);
-            std::vector<double> right(parallelism.begin() + i, parallelism.end());
+            auto it = parallelism.begin();
+            std::advance(it, i);
+
+            std::vector<double> left(parallelism.begin(), it);
+            std::vector<double> right(it, parallelism.end());
 
             double left_mean = 0;
             double left_variance = 0;
@@ -144,13 +151,13 @@ class WavefrontParallelismDivider : public IDagDivider<Graph_t> {
         for (const auto &d : data) {
             mean += d;
         }
-        mean /= data.size();
+        mean /= static_cast<double>(data.size());
 
         for (const auto &d : data) {
             variance += (d - mean) * (d - mean);
         }
 
-        variance /= data.size();
+        variance /= static_cast<double>(data.size());
     }
 
     void print_wavefront_statistics(const std::vector<wavefron_statistics> &statistics, bool reverse = false) {
@@ -184,7 +191,7 @@ class WavefrontParallelismDivider : public IDagDivider<Graph_t> {
         }
     }
 
-    void compute_forward_statistics(const std::vector<std::vector<unsigned>> &level_sets, const Graph_t &dag) {
+    void compute_forward_statistics(const std::vector<std::vector<VertexType>> &level_sets, const Graph_t &dag) {
 
         forward_statistics.resize(level_sets.size());
 
@@ -192,7 +199,7 @@ class WavefrontParallelismDivider : public IDagDivider<Graph_t> {
 
         union_find_universe_t<Graph_t> uf;
         for (const auto vertex : level_sets[level_set_idx]) {
-            uf.add_object(vertex, dag.nodeWorkWeight(vertex), dag.nodeMemoryWeight(vertex));
+            uf.add_object(vertex, dag.vertex_work_weight(vertex), dag.vertex_mem_weight(vertex));
         }
 
         const auto components = uf.get_connected_components_weights_and_memories();
@@ -211,7 +218,7 @@ class WavefrontParallelismDivider : public IDagDivider<Graph_t> {
 
             for (const auto &vertex : forward_statistics[level_set_idx].connected_components_vertices[i]) {
                 forward_statistics[level_set_idx].max_weight =
-                    std::max(forward_statistics[level_set_idx].max_weight, (double)dag.nodeWorkWeight(vertex));
+                    std::max(forward_statistics[level_set_idx].max_weight, (double)dag.vertex_work_weight(vertex));
             }
         }
 
@@ -221,14 +228,13 @@ class WavefrontParallelismDivider : public IDagDivider<Graph_t> {
         forward_statistics[level_set_idx].parallelism =
             forward_statistics[level_set_idx].total_acc_weight / forward_statistics[level_set_idx].max_acc_weight;
 
-        bool components_stable = false;
 
         level_set_idx++;
 
         while (level_set_idx < level_sets.size()) {
 
             for (const auto vertex : level_sets[level_set_idx]) {
-                uf.add_object(vertex, dag.nodeWorkWeight(vertex), dag.nodeMemoryWeight(vertex));
+                uf.add_object(vertex, dag.vertex_work_weight(vertex), dag.vertex_mem_weight(vertex));
             }
 
             for (const auto &node : level_sets[level_set_idx]) {
@@ -264,7 +270,7 @@ class WavefrontParallelismDivider : public IDagDivider<Graph_t> {
 
                 for (const auto &vertex : forward_statistics[level_set_idx].connected_components_vertices[i]) {
                     forward_statistics[level_set_idx].max_weight =
-                        std::max(forward_statistics[level_set_idx].max_weight, (double)dag.nodeWorkWeight(vertex));
+                        std::max(forward_statistics[level_set_idx].max_weight, (double)dag.vertex_work_weight(vertex));
                 }
             }
 
@@ -289,9 +295,9 @@ class WavefrontParallelismDivider : public IDagDivider<Graph_t> {
 
         dag = &dag_;
 
-        const std::vector<unsigned> bot_distance = dag->get_top_node_distance();
+        const auto bot_distance = get_top_node_distance(*dag);
 
-        std::vector<std::vector<unsigned>> level_sets(1);
+        std::vector<std::vector<VertexType>> level_sets(1);
 
         for (VertexType v = 0; v < bot_distance.size(); v++) {
             if (bot_distance[v] - 1 >= level_sets.size()) {
@@ -320,11 +326,11 @@ class WavefrontParallelismDivider : public IDagDivider<Graph_t> {
         }
         std::cout << std::endl;
 
-        std::vector<std::vector<std::vector<unsigned>>> vertex_maps;
+        std::vector<std::vector<std::vector<VertexType>>> vertex_maps;
 
         if (cut_levels.size() > 0) {
 
-            vertex_maps = std::vector<std::vector<std::vector<unsigned>>>(cut_levels.size() + 1);
+            vertex_maps = std::vector<std::vector<std::vector<VertexType>>>(cut_levels.size() + 1);
 
             unsigned level_set_idx = 0;
             for (unsigned i = 0; i < cut_levels.size(); i++) {
@@ -332,7 +338,7 @@ class WavefrontParallelismDivider : public IDagDivider<Graph_t> {
                 union_find_universe_t<Graph_t> uf;
                 for (; level_set_idx < cut_levels[i]; level_set_idx++) {
                     for (const auto vertex : level_sets[level_set_idx]) {
-                        uf.add_object(vertex, dag->nodeWorkWeight(vertex), dag->nodeMemoryWeight(vertex));
+                        uf.add_object(vertex, dag->vertex_work_weight(vertex), dag->vertex_mem_weight(vertex));
                     }
 
                     for (const auto &node : level_sets[level_set_idx]) {
@@ -355,7 +361,7 @@ class WavefrontParallelismDivider : public IDagDivider<Graph_t> {
             union_find_universe_t<Graph_t> uf;
             for (; level_set_idx < level_sets.size(); level_set_idx++) {
                 for (const auto vertex : level_sets[level_set_idx]) {
-                    uf.add_object(vertex, dag->nodeWorkWeight(vertex), dag->nodeMemoryWeight(vertex));
+                    uf.add_object(vertex, dag->vertex_work_weight(vertex), dag->vertex_mem_weight(vertex));
                 }
 
                 for (const auto &node : level_sets[level_set_idx]) {
@@ -381,7 +387,7 @@ class WavefrontParallelismDivider : public IDagDivider<Graph_t> {
                       << forward_statistics.back().number_of_connected_components << " connected cmponents."
                       << std::endl;
 
-            vertex_maps = std::vector<std::vector<std::vector<unsigned>>>(1);
+            vertex_maps = std::vector<std::vector<std::vector<VertexType>>>(1);
             vertex_maps[0] = forward_statistics.back().connected_components_vertices;
         }
         return vertex_maps;
