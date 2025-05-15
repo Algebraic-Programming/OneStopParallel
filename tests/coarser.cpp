@@ -23,12 +23,13 @@ limitations under the License.
 #include <filesystem>
 #include <iostream>
 
-#include "coarser/hdagg/hdagg_coarser.hpp"
 #include "bsp/scheduler/CoarseAndSchedule.hpp"
+#include "bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
+#include "coarser/BspScheduleCoarser.hpp"
+#include "coarser/hdagg/hdagg_coarser.hpp"
 #include "graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "io/arch_file_reader.hpp"
 #include "io/hdag_graph_file_reader.hpp"
-#include "bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
 
 std::vector<std::string> tiny_spaa_graphs() {
     return {"data/spaa/tiny/instance_bicgstab.hdag",
@@ -136,8 +137,8 @@ BOOST_AUTO_TEST_CASE(coarser_hdagg_test) {
         bool status_graph = file_reader::readComputationalDagHyperdagFormat((cwd / filename_graph).string(),
                                                                             instance.getComputationalDag());
 
-        bool status_architecture =
-            file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.getArchitecture());
+        bool status_architecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(),
+                                                                    instance.getArchitecture());
 
         if (!status_graph || !status_architecture) {
 
@@ -149,7 +150,6 @@ BOOST_AUTO_TEST_CASE(coarser_hdagg_test) {
         coarse_instance.setArchitecture(instance.getArchitecture());
         std::vector<std::vector<VertexType>> vertex_map;
         std::vector<VertexType> reverse_vertex_map;
-
 
         hdagg_coarser<graph_t, graph_t> coarser;
 
@@ -173,14 +173,12 @@ BOOST_AUTO_TEST_CASE(coarser_hdagg_test) {
 
         CoarseAndSchedule<graph_t, graph_t> coarse_and_schedule(coarser, scheduler);
         BspSchedule<graph_t> schedule2(instance);
-        
+
         const auto status = coarse_and_schedule.computeSchedule(schedule2);
         BOOST_CHECK(status == RETURN_STATUS::SUCCESS || status == RETURN_STATUS::BEST_FOUND);
         BOOST_CHECK(schedule2.satisfiesPrecedenceConstraints());
-
     }
 };
-
 
 BOOST_AUTO_TEST_CASE(coarser_hdagg_test_diff_graph_impl) {
     // static_assert(std::is_base_of<Scheduler, T>::value, "Class is not a scheduler!");
@@ -204,14 +202,13 @@ BOOST_AUTO_TEST_CASE(coarser_hdagg_test_diff_graph_impl) {
         using graph_t1 = computational_dag_edge_idx_vector_impl_def_t;
         using graph_t2 = computational_dag_vector_impl_def_t;
 
-
         BspInstance<graph_t1> instance;
 
         bool status_graph = file_reader::readComputationalDagHyperdagFormat((cwd / filename_graph).string(),
                                                                             instance.getComputationalDag());
 
-        bool status_architecture =
-            file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.getArchitecture());
+        bool status_architecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(),
+                                                                    instance.getArchitecture());
 
         if (!status_graph || !status_architecture) {
 
@@ -225,7 +222,6 @@ BOOST_AUTO_TEST_CASE(coarser_hdagg_test_diff_graph_impl) {
         std::vector<std::vector<VertexType>> vertex_map;
         std::vector<VertexType> reverse_vertex_map;
 
-        
         hdagg_coarser<graph_t1, graph_t2> coarser;
 
         coarser.coarseDag(instance.getComputationalDag(), coarse_instance.getComputationalDag(), vertex_map,
@@ -246,13 +242,88 @@ BOOST_AUTO_TEST_CASE(coarser_hdagg_test_diff_graph_impl) {
         BOOST_CHECK_EQUAL(pull_back_schedule(schedule, vertex_map, schedule_out), true);
         BOOST_CHECK(schedule_out.satisfiesPrecedenceConstraints());
 
-
         CoarseAndSchedule<graph_t1, graph_t2> coarse_and_schedule(coarser, scheduler);
         BspSchedule<graph_t1> schedule2(instance);
-        
-        auto status= coarse_and_schedule.computeSchedule(schedule2);
+
+        auto status = coarse_and_schedule.computeSchedule(schedule2);
         BOOST_CHECK(status == RETURN_STATUS::SUCCESS || status == RETURN_STATUS::BEST_FOUND);
         BOOST_CHECK(schedule2.satisfiesPrecedenceConstraints());
+    }
+};
 
+BOOST_AUTO_TEST_CASE(coarser_bspschedule_test) {
+    // static_assert(std::is_base_of<Scheduler, T>::value, "Class is not a scheduler!");
+    std::vector<std::string> filenames_graph = tiny_spaa_graphs();
+
+    // Getting root git directory
+    std::filesystem::path cwd = std::filesystem::current_path();
+    std::cout << cwd << std::endl;
+    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
+        cwd = cwd.parent_path();
+        std::cout << cwd << std::endl;
+    }
+
+    for (auto &filename_graph : filenames_graph) {
+
+        std::string name_graph = filename_graph.substr(filename_graph.find_last_of("/\\") + 1);
+        name_graph = name_graph.substr(0, name_graph.find_last_of("."));
+
+        std::cout << std::endl << "Graph: " << name_graph << std::endl;
+
+        using graph_t = computational_dag_edge_idx_vector_impl_def_t;
+
+        BspInstance<graph_t> instance;
+
+        bool status_graph = file_reader::readComputationalDagHyperdagFormat((cwd / filename_graph).string(),
+                                                                            instance.getComputationalDag());
+
+        bool status_architecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(),
+                                                                    instance.getArchitecture());
+
+        if (!status_graph || !status_architecture) {
+
+            std::cout << "Reading files failed." << std::endl;
+            BOOST_CHECK(false);
+        }
+
+        BspInstance<graph_t> coarse_instance;
+        coarse_instance.setArchitecture(instance.getArchitecture());
+        std::vector<std::vector<VertexType>> vertex_map;
+        std::vector<VertexType> reverse_vertex_map;
+
+        GreedyBspScheduler<graph_t> scheduler;
+        BspSchedule<graph_t> schedule_orig(instance);
+
+        const auto status_sched_orig = scheduler.computeSchedule(schedule_orig);
+
+        BOOST_CHECK(status_sched_orig == SUCCESS);
+        BOOST_CHECK(schedule_orig.satisfiesPrecedenceConstraints());
+
+        BspScheduleCoarser<graph_t, graph_t> coarser(schedule_orig);
+
+        coarser.coarseDag(instance.getComputationalDag(), coarse_instance.getComputationalDag(), vertex_map,
+                          reverse_vertex_map);
+
+        BOOST_CHECK(check_vertex_map(vertex_map, instance.getComputationalDag().num_vertices()));
+
+        
+        BspSchedule<graph_t> schedule(coarse_instance);
+
+        const auto status_sched = scheduler.computeSchedule(schedule);
+
+        BOOST_CHECK(status_sched == SUCCESS);
+        BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+
+        BspSchedule<graph_t> schedule_out(instance);
+
+        BOOST_CHECK_EQUAL(pull_back_schedule(schedule, vertex_map, schedule_out), true);
+        BOOST_CHECK(schedule_out.satisfiesPrecedenceConstraints());
+
+        CoarseAndSchedule<graph_t, graph_t> coarse_and_schedule(coarser, scheduler);
+        BspSchedule<graph_t> schedule2(instance);
+
+        const auto status = coarse_and_schedule.computeSchedule(schedule2);
+        BOOST_CHECK(status == RETURN_STATUS::SUCCESS || status == RETURN_STATUS::BEST_FOUND);
+        BOOST_CHECK(schedule2.satisfiesPrecedenceConstraints());
     }
 };
