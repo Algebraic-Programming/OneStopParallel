@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(test_mtx_boost_graph) {
         std::cout << cwd << std::endl;
     }
 
-    boost_graph graph;
+    boost_graph_int_t graph;
 
     bool status =
         file_reader::readComputationalDagMartixMarketFormat((cwd / "data/mtx_tests/ErdosRenyi_8_19_A.mtx").string(), graph);
