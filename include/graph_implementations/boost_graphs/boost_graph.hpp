@@ -156,6 +156,12 @@ class boost_graph {
     explicit boost_graph(vertex_idx number_of_nodes) : graph(number_of_nodes), number_of_vertex_types(0) {     
     }
 
+    boost_graph(const boost_graph &other) = default;
+    boost_graph(boost_graph &&other) = default;
+    boost_graph &operator=(const boost_graph &other) = default;
+    boost_graph &operator=(boost_graph &&other) = default;
+    virtual ~boost_graph() = default;
+
     inline const boost_graph_impl &get_boost_graph() const { return graph; }
     inline boost_graph_impl &get_boost_graph() { return graph; }
 
