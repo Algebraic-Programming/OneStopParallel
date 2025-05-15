@@ -26,14 +26,14 @@ limitations under the License.
 
 namespace osp {
 
-class BspScheduleWriter {
+class DotFileWriter {
   private:
     template<typename Graph_t>
 
-    struct EdgeWriterSchedule_DOT {
+    struct EdgeWriter_DOT {
         const Graph_t &graph;
 
-        EdgeWriterSchedule_DOT(const Graph_t &graph_) : graph(graph_) {}
+        EdgeWriter_DOT(const Graph_t &graph_) : graph(graph_) {}
 
         void operator()(std::ostream &out, const edge_desc_t<Graph_t> &i) const {
             out << source(i, graph) << "->" << target(i, graph) << " ["
@@ -67,13 +67,35 @@ class BspScheduleWriter {
         }
     };
 
+    template<typename Graph_t>
+    struct VertexWriterGraph_DOT {
+
+        const Graph_t &graph;
+
+        VertexWriterGraph_DOT(const Graph_t &graph_) : graph(graph_) {}
+
+        void operator()(std::ostream &out, const vertex_idx_t<Graph_t> &i) const {
+            out << i << " ["
+                << "work_weight=\"" << graph.vertex_work_weight(i) << "\";"
+                << "comm_weight=\"" << graph.vertex_comm_weight(i) << "\";"
+                << "mem_weight=\"" << graph.vertex_mem_weight(i) << "\";";
+
+            if constexpr (has_typed_vertices_v<Graph_t>) {
+
+                out << "type=\"" << graph.vertex_type(i) << "\";";
+            }
+
+            out << "]";
+        }
+    };
+
   public:
     /**
-     * Constructs a BspScheduleWriter object with the given BspSchdule.
+     * Constructs a DotFileWriter object with the given BspSchdule.
      *
      * @param schdule_
      */
-    BspScheduleWriter() {}
+    DotFileWriter() {}
 
     /**
      * Writes the BspSchedule to the specified output stream in DOT format.
@@ -97,7 +119,7 @@ class BspScheduleWriter {
         }
 
         if constexpr (is_directed_graph_edge_desc_v<Graph_t>) {
-            EdgeWriterSchedule_DOT<Graph_t> edge_writer(schedule.getInstance().getComputationalDag());
+            EdgeWriter_DOT<Graph_t> edge_writer(schedule.getInstance().getComputationalDag());
 
             for (const auto &e : schedule.getInstance().getComputationalDag().edges()) {
                 edge_writer(os, e);
@@ -134,6 +156,47 @@ class BspScheduleWriter {
     void write_dot(const std::string &filename, const BspSchedule<Graph_t> &schedule) const {
         std::ofstream os(filename);
         write_dot(os, schedule);
+    }
+
+    template<typename Graph_t>
+    void write_dot(std::ostream &os, const Graph_t &graph) const {
+
+        static_assert(is_computational_dag_v<Graph_t>, "Graph_t must be a computational DAG");
+
+        VertexWriterGraph_DOT<Graph_t> vertex_writer(graph);
+
+        os << "digraph G {\n";
+        for (const auto &v : graph.vertices()) {
+            vertex_writer(os, v);
+            os << "\n";
+        }
+
+        if constexpr (is_directed_graph_edge_desc_v<Graph_t>) {
+            EdgeWriter_DOT<Graph_t> edge_writer(graph);
+
+            for (const auto &e : graph.edges()) {
+                edge_writer(os, e);
+                os << "\n";
+            }
+
+        } else {
+
+            for (const auto &v : graph.vertices()) {
+                for (const auto &child : graph.children(v)) {
+                    os << v << "->" << child << "\n";
+                }
+            }
+        }
+        os << "}\n";
+    }
+
+    template<typename Graph_t>
+    void write_dot(const std::string &filename, const Graph_t &graph) const {
+
+        static_assert(is_computational_dag_v<Graph_t>, "Graph_t must be a computational DAG");
+
+        std::ofstream os(filename);
+        write_dot(os, graph);
     }
 
     // void write_txt(const std::string &filename) const {

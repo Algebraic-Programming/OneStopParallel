@@ -40,7 +40,7 @@ limitations under the License.
 // #define KL_PRINT_SCHEDULE
 
 #ifdef KL_PRINT_SCHEDULE
-#include "file_interactions/BspScheduleWriter.hpp"
+#include "file_interactions/DotFileWriter.hpp"
 #endif
 
 namespace osp {

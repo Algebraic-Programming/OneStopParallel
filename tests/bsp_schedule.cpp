@@ -24,7 +24,7 @@ limitations under the License.
 #include "bsp/model/BspScheduleCS.hpp"
 #include "graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
-#include "io/BspScheduleWriter.hpp"
+#include "io/DotFileWriter.hpp"
 #include "io/arch_file_reader.hpp"
 #include "io/hdag_graph_file_reader.hpp"
 #include <filesystem>
@@ -139,7 +139,12 @@ BOOST_AUTO_TEST_CASE(test_schedule_writer) {
     BOOST_CHECK_EQUAL(SUCCESS, result);
     BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
-    BspScheduleWriter sched_writer;
+    DotFileWriter sched_writer;
+
+
+    std::cout << "Writing Graph" << std::endl;
+    sched_writer.write_dot(std::cout, instance.getComputationalDag());
+
 
     std::cout << "Writing schedule_t1" << std::endl;
     sched_writer.write_dot(std::cout, schedule);
@@ -178,6 +183,7 @@ BOOST_AUTO_TEST_CASE(test_schedule_writer) {
     std::cout << "Writing schedule_t2" << std::endl;
 
     sched_writer.write_dot(std::cout, schedule_t2);
+
 };
 
 BOOST_AUTO_TEST_CASE(test_bsp_schedule_cs) {

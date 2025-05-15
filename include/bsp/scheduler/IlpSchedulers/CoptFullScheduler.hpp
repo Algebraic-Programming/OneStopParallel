@@ -26,7 +26,7 @@ limitations under the License.
 #include "bsp/model/BspScheduleCS.hpp"
 #include "bsp/model/VectorSchedule.hpp"
 #include "bsp/scheduler/Scheduler.hpp"
-#include "io/BspScheduleWriter.hpp"
+#include "io/DotFileWriter.hpp"
 
 namespace osp {
 
@@ -112,7 +112,7 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
                         // } else {
 
                         auto sched = constructBspScheduleFromCallback();
-                        BspScheduleWriter sched_writer;
+                        DotFileWriter sched_writer;
                         sched_writer.write_dot(write_solutions_path_cb + "intmed_sol_" + solution_file_prefix_cb + "_" +
                                                    std::to_string(counter) + "_schedule.dot",
                                                sched);

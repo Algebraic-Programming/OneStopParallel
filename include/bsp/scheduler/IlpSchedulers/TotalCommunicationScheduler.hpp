@@ -24,7 +24,7 @@ limitations under the License.
 #include "bsp/scheduler/LocalSearch/KernighanLin/kl_total_comm.hpp"
 #include "bsp/scheduler/Scheduler.hpp"
 #include "graph_algorithms/directed_graph_edge_view.hpp"
-#include "io/BspScheduleWriter.hpp"
+#include "io/DotFileWriter.hpp"
 
 namespace osp {
 
@@ -75,7 +75,7 @@ class TotalCommunicationScheduler : public Scheduler<Graph_t> {
                         best_obj = GetDblInfo(COPT_CBINFO_BESTOBJ);
 
                         auto sched = constructBspScheduleFromCallback();
-                        BspScheduleWriter sched_writer;
+                        DotFileWriter sched_writer;
                         sched_writer.write_dot(write_solutions_path_cb + "intmed_sol_" + solution_file_prefix_cb + "_" +
                                                    std::to_string(counter) + "_schedule.dot",
                                                sched);
