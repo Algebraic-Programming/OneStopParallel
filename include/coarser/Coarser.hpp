@@ -73,38 +73,5 @@ class Coarser {
 };
 
 
-template<typename Graph_t_in, typename Graph_t_out>
-bool pull_back_schedule(const BspSchedule<Graph_t_in> &schedule_in,
-                        const std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &vertex_map,
-                        BspSchedule<Graph_t_out> &schedule_out) {
-
-    for (unsigned v = 0; v < vertex_map.size(); ++v) {
-
-        const auto proc = schedule_in.assignedProcessor(v);
-        const auto step = schedule_in.assignedSuperstep(v);
-
-        for (const auto &u : vertex_map[v]) {
-            schedule_out.setAssignedSuperstep(u, step);
-            schedule_out.setAssignedProcessor(u, proc);
-        }
-    }
-
-    return true;
-}
-
-template<typename Graph_t_in, typename Graph_t_out>
-bool pull_back_schedule(const BspSchedule<Graph_t_in> &schedule_in,
-                        const std::vector<vertex_idx_t<Graph_t_out>> &reverse_vertex_map,
-                        BspSchedule<Graph_t_out> &schedule_out) {
-
-    for (unsigned idx = 0; idx < reverse_vertex_map.size(); ++idx) {
-        const auto &v = reverse_vertex_map[idx];
-
-        schedule_out.setAssignedSuperstep(idx, schedule_in.assignedSuperstep(v));
-        schedule_out.setAssignedProcessor(idx, schedule_in.assignedProcessor(v));
-    }
-
-    return true;
-}
 
 } // namespace osp

@@ -24,7 +24,7 @@ limitations under the License.
 #include <iostream>
 
 #include "coarser/hdagg/hdagg_coarser.hpp"
-#include "coarser/CoarseAndSchedule.hpp"
+#include "bsp/scheduler/CoarseAndSchedule.hpp"
 #include "graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "io/arch_file_reader.hpp"
 #include "io/hdag_graph_file_reader.hpp"
