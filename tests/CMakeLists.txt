@@ -91,6 +91,10 @@ if (COPT_FOUND)
 
 endif()
 
+## coarsening
+
+_add_test( stepbystep_coarsen_and_multilevel )
+
 
 # Custom target to compile all the tests
 add_custom_target( build_tests DEPENDS ${tests_list} )

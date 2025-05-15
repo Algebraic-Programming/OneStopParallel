@@ -314,6 +314,11 @@ class boost_graph {
         updateNumberOfVertexTypes();
     }
 
+    void clear_vertex(const vertex_idx &v) {
+        boost::clear_vertex(v, graph);
+    }
+
+
   private:
     boost_graph_impl_t graph;
 
