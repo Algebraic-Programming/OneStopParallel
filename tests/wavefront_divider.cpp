@@ -32,7 +32,7 @@ limitations under the License.
 #include "io/hdag_graph_file_reader.hpp"
 
 #include "graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
-#include "graph_implementations/boost_graphs/boost_graph.hpp"
+
 
 using namespace osp;
 

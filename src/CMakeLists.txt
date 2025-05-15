@@ -18,12 +18,9 @@
 #Library: auxiliary
 file(GLOB auxiliary_sources auxiliary/*.cpp)
 
-#Library: auxiliary
-file(GLOB boost_graph_sources graph_implementations/boost_graphs/*.cpp)
 
 #Declare the main library as an interface
 add_library( BspSchedulingLibrary STATIC 
-                                    ${boost_graph_sources}
                                     ${auxiliary_sources}
 )
 

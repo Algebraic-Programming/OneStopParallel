@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(test_constr_dag) {
     BOOST_CHECK_EQUAL(graph_2.vertex_work_weight(3), 13);
     BOOST_CHECK_EQUAL(graph_2.vertex_comm_weight(3), 14);
 
-    boost_graph b_g1;
+    boost_graph_int_t b_g1;
 
     b_g1.add_vertex(1, 2, 3, 4);
     b_g1.add_vertex(5, 6, 7, 8);
