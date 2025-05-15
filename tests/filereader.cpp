@@ -21,13 +21,161 @@ limitations under the License.
 
 #include "graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
+#include "graph_implementations/boost_graphs/boost_graph.hpp"
 #include "io/arch_file_reader.hpp"
 #include "io/hdag_graph_file_reader.hpp"
 #include "io/dot_graph_file_reader.hpp"
+#include "io/mtx_graph_file_reader.hpp"
 #include <filesystem>
 #include <iostream>
 
 using namespace osp;
+
+
+BOOST_AUTO_TEST_CASE(test_mtx_computational_dag_vector_impl) {
+
+    // Getting root git directory
+    std::filesystem::path cwd = std::filesystem::current_path();
+    std::cout << cwd << std::endl;
+    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
+        cwd = cwd.parent_path();
+        std::cout << cwd << std::endl;
+    }
+
+    computational_dag_vector_impl_def_t graph;
+
+    bool status =
+        file_reader::readComputationalDagMartixMarketFormat((cwd / "data/mtx_tests/ErdosRenyi_8_19_A.mtx").string(), graph);
+
+    std::cout << "STATUS:" << status << std::endl;
+    BOOST_CHECK(status);
+    BOOST_CHECK_EQUAL(graph.num_vertices(), 8);
+    BOOST_CHECK_EQUAL(graph.num_edges(),  19);
+
+    // ---- Node 0
+    std::vector<int> p0{ };
+    std::vector<int> c0{4, 6, 3, 5, 2};
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(graph.parents(0).begin(), graph.parents(0).end(), p0.begin(), p0.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(graph.children(0).begin(), graph.children(0).end(), c0.begin(), c0.end());
+
+    // ---- Node 1
+    std::vector<int> p1{ };
+    std::vector<int> c1{3, 5, 2, 6};
+    BOOST_CHECK_EQUAL_COLLECTIONS(graph.parents(1).begin(), graph.parents(1).end(), p1.begin(), p1.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(graph.children(1).begin(), graph.children(1).end(), c1.begin(), c1.end());
+
+    // ---- Node 2
+    std::vector<int> p2{0, 1};
+    std::vector<int> c2{3, 5};
+    BOOST_CHECK_EQUAL_COLLECTIONS(graph.parents(2).begin(), graph.parents(2).end(), p2.begin(), p2.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(graph.children(2).begin(), graph.children(2).end(), c2.begin(), c2.end());
+
+    // ---- Node 3
+    std::vector<int> p3{0, 1, 2};
+    std::vector<int> c3{5, 4, 6, 7};
+    BOOST_CHECK_EQUAL_COLLECTIONS(graph.parents(3).begin(), graph.parents(3).end(), p3.begin(), p3.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(graph.children(3).begin(), graph.children(3).end(), c3.begin(), c3.end());
+
+    // ---- Node 4
+    std::vector<int> p4{0, 3};
+    std::vector<int> c4{5, 6, 7};
+    BOOST_CHECK_EQUAL_COLLECTIONS(graph.parents(4).begin(), graph.parents(4).end(), p4.begin(), p4.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(graph.children(4).begin(), graph.children(4).end(), c4.begin(), c4.end());
+
+    // ---- Node 5
+    std::vector<int> p5{0, 1, 2, 3, 4};
+    std::vector<int> c5{ };
+    BOOST_CHECK_EQUAL_COLLECTIONS(graph.parents(5).begin(), graph.parents(5).end(), p5.begin(), p5.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(graph.children(5).begin(), graph.children(5).end(), c5.begin(), c5.end());
+
+    // ---- Node 6
+    std::vector<int> p6{0, 1, 3, 4};
+    std::vector<int> c6{7};
+    BOOST_CHECK_EQUAL_COLLECTIONS(graph.parents(6).begin(), graph.parents(6).end(), p6.begin(), p6.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(graph.children(6).begin(), graph.children(6).end(), c6.begin(), c6.end());
+
+    // ---- Node 7
+    std::vector<int> p7{3, 4, 6};
+    std::vector<int> c7{ };
+    BOOST_CHECK_EQUAL_COLLECTIONS(graph.parents(7).begin(), graph.parents(7).end(), p7.begin(), p7.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(graph.children(7).begin(), graph.children(7).end(), c7.begin(), c7.end());
+
+};
+
+
+BOOST_AUTO_TEST_CASE(test_mtx_boost_graph) {
+
+    // Getting root git directory
+    std::filesystem::path cwd = std::filesystem::current_path();
+    std::cout << cwd << std::endl;
+    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
+        cwd = cwd.parent_path();
+        std::cout << cwd << std::endl;
+    }
+
+    boost_graph graph;
+
+    bool status =
+        file_reader::readComputationalDagMartixMarketFormat((cwd / "data/mtx_tests/ErdosRenyi_8_19_A.mtx").string(), graph);
+
+    std::cout << "STATUS:" << status << std::endl;
+    BOOST_CHECK(status);
+    BOOST_CHECK_EQUAL(graph.num_vertices(), 8);
+    BOOST_CHECK_EQUAL(graph.num_edges(),  19);
+
+    // ---- Node 0
+    std::vector<int> p0{ };
+    std::vector<int> c0{4, 6, 3, 5, 2};
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(graph.parents(0).begin(), graph.parents(0).end(), p0.begin(), p0.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(graph.children(0).begin(), graph.children(0).end(), c0.begin(), c0.end());
+
+    // ---- Node 1
+    std::vector<int> p1{ };
+    std::vector<int> c1{3, 5, 2, 6};
+    BOOST_CHECK_EQUAL_COLLECTIONS(graph.parents(1).begin(), graph.parents(1).end(), p1.begin(), p1.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(graph.children(1).begin(), graph.children(1).end(), c1.begin(), c1.end());
+
+    // ---- Node 2
+    std::vector<int> p2{0, 1};
+    std::vector<int> c2{3, 5};
+    BOOST_CHECK_EQUAL_COLLECTIONS(graph.parents(2).begin(), graph.parents(2).end(), p2.begin(), p2.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(graph.children(2).begin(), graph.children(2).end(), c2.begin(), c2.end());
+
+    // ---- Node 3
+    std::vector<int> p3{0, 1, 2};
+    std::vector<int> c3{5, 4, 6, 7};
+    BOOST_CHECK_EQUAL_COLLECTIONS(graph.parents(3).begin(), graph.parents(3).end(), p3.begin(), p3.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(graph.children(3).begin(), graph.children(3).end(), c3.begin(), c3.end());
+
+    // ---- Node 4
+    std::vector<int> p4{0, 3};
+    std::vector<int> c4{5, 6, 7};
+    BOOST_CHECK_EQUAL_COLLECTIONS(graph.parents(4).begin(), graph.parents(4).end(), p4.begin(), p4.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(graph.children(4).begin(), graph.children(4).end(), c4.begin(), c4.end());
+
+    // ---- Node 5
+    std::vector<int> p5{0, 1, 2, 3, 4};
+    std::vector<int> c5{ };
+    BOOST_CHECK_EQUAL_COLLECTIONS(graph.parents(5).begin(), graph.parents(5).end(), p5.begin(), p5.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(graph.children(5).begin(), graph.children(5).end(), c5.begin(), c5.end());
+
+    // ---- Node 6
+    std::vector<int> p6{0, 1, 3, 4};
+    std::vector<int> c6{7};
+    BOOST_CHECK_EQUAL_COLLECTIONS(graph.parents(6).begin(), graph.parents(6).end(), p6.begin(), p6.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(graph.children(6).begin(), graph.children(6).end(), c6.begin(), c6.end());
+
+    // ---- Node 7
+    std::vector<int> p7{3, 4, 6};
+    std::vector<int> c7{ };
+    BOOST_CHECK_EQUAL_COLLECTIONS(graph.parents(7).begin(), graph.parents(7).end(), p7.begin(), p7.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(graph.children(7).begin(), graph.children(7).end(), c7.begin(), c7.end());
+
+};
+
+
 
 BOOST_AUTO_TEST_CASE(test_bicgstab) {
 
