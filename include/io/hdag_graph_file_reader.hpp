@@ -25,6 +25,7 @@ limitations under the License.
 #include <boost/algorithm/string.hpp>
 
 #include "concepts/computational_dag_concept.hpp"
+#include "graph_algorithms/directed_graph_util.hpp"
 
 namespace osp {
 
@@ -111,6 +112,8 @@ bool readComputationalDagHyperdagFormat(std::ifstream &infile, Graph_t& graph) {
         std::cout << "Incorrect input file format (file has remaining lines).\n";
         return false;
     }
+
+    assert(is_acyclic(graph));
 
     return true;
 };

@@ -78,6 +78,7 @@ BOOST_AUTO_TEST_CASE(test_empty_graph) {
     BOOST_CHECK_EQUAL(sinks.size(), 0);
 
     BOOST_CHECK_EQUAL(is_acyclic(graph), true);
+    BOOST_CHECK_EQUAL(is_connected(graph), true);
 };
 
 BOOST_AUTO_TEST_CASE(test_util_1) {
@@ -410,10 +411,15 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
     }
 
     BOOST_CHECK_EQUAL(is_acyclic(graph), true);
+    BOOST_CHECK_EQUAL(is_connected(graph), true);
+    
     graph.add_edge(7, 5);
     BOOST_CHECK_EQUAL(is_acyclic(graph), true);
     graph.add_edge(7, 0);
     BOOST_CHECK_EQUAL(is_acyclic(graph), false);
+
+    graph.add_vertex(1, 2, 3, 4);
+    BOOST_CHECK_EQUAL(is_connected(graph), false);
 };
 
 BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
@@ -430,6 +436,17 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
     const boost_graph_int_t graph(out, workW, commW);
     const boost_graph_int_t graph_empty;
+
+    BOOST_CHECK_EQUAL(graph.num_edges(), 12);
+    BOOST_CHECK_EQUAL(graph.num_vertices(), 10);
+    BOOST_CHECK_EQUAL(graph_empty.num_edges(), 0);
+    BOOST_CHECK_EQUAL(graph_empty.num_vertices(), 0);
+    BOOST_CHECK_EQUAL(graph.num_vertex_types(), 1);
+
+    BOOST_CHECK_EQUAL(is_acyclic(graph), true);
+    BOOST_CHECK_EQUAL(is_acyclic(graph_empty), true);
+    BOOST_CHECK_EQUAL(is_connected(graph), false);
+    BOOST_CHECK_EQUAL(is_connected(graph_empty), true);
 
     const auto long_edges = long_edges_in_triangles(graph);
 

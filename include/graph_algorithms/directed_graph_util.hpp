@@ -489,6 +489,9 @@ bool is_acyclic(const Graph_t &graph) {
 
     using VertexType = vertex_idx_t<Graph_t>;
 
+    if (graph.num_vertices() < 2)
+        return true;
+
     std::vector<VertexType> predecessors_count(graph.num_vertices(), 0);
 
     std::queue<VertexType> next;
@@ -507,6 +510,39 @@ bool is_acyclic(const Graph_t &graph) {
             ++predecessors_count[current];
             if (predecessors_count[current] == graph.in_degree(current))
                 next.push(current);
+        }
+    }
+
+    return node_count == graph.num_vertices();
+}
+
+template<typename Graph_t>
+bool is_connected(const Graph_t &graph) {
+
+    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+
+    using VertexType = vertex_idx_t<Graph_t>;
+
+    if (graph.num_vertices() < 2)
+        return true;
+
+    std::unordered_set<VertexType> visited;
+
+    std::queue<VertexType> next;
+    next.push(0);
+    visited.insert(0);
+
+    VertexType node_count = 0;
+    while (!next.empty()) {
+        const VertexType node = next.front();
+        next.pop();
+        ++node_count;
+
+        for (const VertexType &current : graph.children(node)) {
+            if (visited.find(current) == visited.end()) {
+                next.push(current);
+                visited.insert(current);
+            }
         }
     }
 
