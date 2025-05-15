@@ -24,10 +24,10 @@ limitations under the License.
 
 #include "graph_algorithms/computational_dag_util.hpp"
 #include "graph_algorithms/directed_graph_edge_desc_util.hpp"
+#include "graph_algorithms/directed_graph_edge_view.hpp"
 #include "graph_algorithms/directed_graph_path_util.hpp"
 #include "graph_algorithms/directed_graph_top_sort.hpp"
 #include "graph_algorithms/directed_graph_util.hpp"
-#include "graph_algorithms/directed_graph_edge_view.hpp"
 #include "graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 #include "graph_implementations/boost_graphs/boost_graph.hpp"
 
@@ -62,9 +62,27 @@ computational_dag_vector_impl_def_t constr_graph_1() {
     return graph;
 };
 
+BOOST_AUTO_TEST_CASE(test_empty_graph) {
+
+    computational_dag_vector_impl_def_t graph;
+
+    using vertex_idx = computational_dag_vector_impl_def_t::vertex_idx;
+
+    BOOST_CHECK_EQUAL(graph.num_edges(), 0);
+    BOOST_CHECK_EQUAL(graph.num_vertices(), 0);
+
+    std::vector<vertex_idx> sources = source_vertices(graph);
+    BOOST_CHECK_EQUAL(sources.size(), 0);
+
+    std::vector<vertex_idx> sinks = sink_vertices(graph);
+    BOOST_CHECK_EQUAL(sinks.size(), 0);
+
+    BOOST_CHECK_EQUAL(is_acyclic(graph), true);
+};
+
 BOOST_AUTO_TEST_CASE(test_util_1) {
 
-    const computational_dag_vector_impl_def_t graph = constr_graph_1();
+    computational_dag_vector_impl_def_t graph = constr_graph_1();
 
     using vertex_idx = computational_dag_vector_impl_def_t::vertex_idx;
 
@@ -390,6 +408,12 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
 
         ++i;
     }
+
+    BOOST_CHECK_EQUAL(is_acyclic(graph), true);
+    graph.add_edge(7, 5);
+    BOOST_CHECK_EQUAL(is_acyclic(graph), true);
+    graph.add_edge(7, 0);
+    BOOST_CHECK_EQUAL(is_acyclic(graph), false);
 };
 
 BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {

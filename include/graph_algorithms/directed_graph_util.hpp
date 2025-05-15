@@ -482,4 +482,35 @@ std::vector<vertex_idx_t<Graph_t>> ancestors(const vertex_idx_t<Graph_t> &v, con
     return vec;
 };
 
+template<typename Graph_t>
+bool is_acyclic(const Graph_t &graph) {
+
+    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+
+    using VertexType = vertex_idx_t<Graph_t>;
+
+    std::vector<VertexType> predecessors_count(graph.num_vertices(), 0);
+
+    std::queue<VertexType> next;
+
+    // Find source nodes
+    for (const VertexType &v : source_vertices_view(graph))
+        next.push(v);
+
+    VertexType node_count = 0;
+    while (!next.empty()) {
+        const VertexType node = next.front();
+        next.pop();
+        ++node_count;
+
+        for (const VertexType &current : graph.children(node)) {
+            ++predecessors_count[current];
+            if (predecessors_count[current] == graph.in_degree(current))
+                next.push(current);
+        }
+    }
+
+    return node_count == graph.num_vertices();
+}
+
 } // namespace osp
