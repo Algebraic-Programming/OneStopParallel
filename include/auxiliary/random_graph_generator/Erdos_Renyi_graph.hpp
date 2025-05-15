@@ -20,6 +20,8 @@ limitations under the License.
 
 #include <random>
 #include <vector>
+#include <unordered_set>
+#include <numeric>
 
 #include "concepts/constructable_computational_dag_concept.hpp"
 
@@ -45,7 +47,7 @@ void erdos_renyi_graph_gen(Graph_t& dag_out, vertex_idx_t<Graph_t> num_vertices,
     for (const auto &v : dag_out.vertices()) {
 
         const auto one = static_cast<vertex_idx_t<Graph_t>>(1);
-        std::binomial_distribution<vertex_idx_t<Graph_t>> bino_dist(num_vertices - one - i,
+        std::binomial_distribution<vertex_idx_t<Graph_t>> bino_dist(num_vertices - one - v,
                                                                     chance / double(num_vertices));
         auto out_edges_num = bino_dist(gen);
 

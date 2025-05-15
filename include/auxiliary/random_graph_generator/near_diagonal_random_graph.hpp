@@ -35,7 +35,7 @@ namespace osp {
  * @return DAG
  */
 template<typename Graph_t>
-void near_diag_random_graph(Graph_t &dagout, vertex_idx_t<Graph_t> num_vertices, double bandwidth, double prob) {
+void near_diag_random_graph(Graph_t &dag_out, vertex_idx_t<Graph_t> num_vertices, double bandwidth, double prob) {
 
     static_assert(is_constructable_cdag_v<Graph_t>, "Graph_t must be a constructable computational DAG type");
 
@@ -44,25 +44,19 @@ void near_diag_random_graph(Graph_t &dagout, vertex_idx_t<Graph_t> num_vertices,
     std::random_device rd;
     std::mt19937 gen(rd());
 
-    std::vector<std::vector<int>> in_(num_vertices);
-    std::vector<std::vector<int>> out_(num_vertices);
+    for (const auto &v : dag_out.vertices()) {
 
-    for (long int i = 1; i <  (long int) num_vertices; i++) {
-        std::binomial_distribution<> bino_dist( num_vertices-i , prob * std::exp( (1-i) / bandwidth ) );
-        unsigned off_diag_edges_num = bino_dist(gen);
+        std::binomial_distribution<vertex_idx_t<Graph_t>> bino_dist(vertex_idx_t<Graph_t>(num_vertices - v), prob * std::exp((static_cast<double>(1 - v) / bandwidth)));
+        vertex_idx_t<Graph_t> off_diag_edges_num = bino_dist(gen);
 
-        // std::cout << "Probability: " << prob << " product: " << prob * std::exp(  (1-i) / bandwidth) << " exponent: " << (1-i) / bandwidth << std::endl;
-        // std::cout << "Off diag: " << i << " Number: " << off_diag_edges_num << std::endl;
-        
-        std::vector<unsigned> range(num_vertices-i,0);
+        std::vector<vertex_idx_t<Graph_t>> range(num_vertices - v, 0);
         std::iota(range.begin(), range.end(), 0);
-        std::vector<unsigned> sampled;
+        std::vector<vertex_idx_t<Graph_t>> sampled;
 
         std::sample(range.begin(), range.end(), std::back_inserter(sampled), off_diag_edges_num, gen);
 
-        for ( const unsigned& j : sampled ) {
-            out_[j].emplace_back(j+i);
-            in_[j+i].emplace_back(j);
+        for (const auto &j : sampled) {
+            dag_out.add_edge(j, j + 1);
         }
     }
 }

@@ -58,6 +58,8 @@ _add_test( balanced_coin_flips )
 
 _add_test( iterators )
 
+_add_test( random_graph_gen )
+
 ## io
 _add_test( filereader )
 
