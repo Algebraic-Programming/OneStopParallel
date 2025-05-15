@@ -115,15 +115,7 @@ struct has_vertices_in_top_order_trait<T, std::void_t<decltype(T::vertices_in_to
 template<typename T>
 inline constexpr bool has_vertices_in_top_order_v = has_vertices_in_top_order_trait<T>::value;
 
-template<typename T, typename = void>
-struct has_children_in_top_order_trait : std::false_type {};
 
-template<typename T>
-struct has_children_in_top_order_trait<T, std::void_t<decltype(T::children_in_top_order)>>
-    : std::bool_constant<std::is_same_v<decltype(T::children_in_top_order), const bool> && T::children_in_top_order> {};
-
-template<typename T>
-inline constexpr bool has_children_in_top_order_v = has_children_in_top_order_trait<T>::value;
 
 template<typename T, typename = void>
 struct has_children_in_vertex_order_trait : std::false_type {};
@@ -136,16 +128,6 @@ template<typename T>
 inline constexpr bool has_children_in_vertex_order_v = has_children_in_vertex_order_trait<T>::value;
 
 template<typename T, typename = void>
-struct has_parents_in_top_order_trait : std::false_type {};
-
-template<typename T>
-struct has_parents_in_top_order_trait<T, std::void_t<decltype(T::parents_in_top_order)>>
-    : std::bool_constant<std::is_same_v<decltype(T::parents_in_top_order), const bool> && T::parents_in_top_order> {};
-
-template<typename T>
-inline constexpr bool has_parents_in_top_order_v = has_parents_in_top_order_trait<T>::value;
-
-template<typename T, typename = void>
 struct has_parents_in_vertex_order_trait : std::false_type {};
 
 template<typename T>
@@ -154,9 +136,5 @@ struct has_parents_in_vertex_order_trait<T, std::void_t<decltype(T::parents_in_v
 
 template<typename T>
 inline constexpr bool has_parents_in_vertex_order_v = has_parents_in_vertex_order_trait<T>::value;
-
-template<typename T>
-inline constexpr bool has_parents_and_children_in_top_order_v =
-    has_parents_in_top_order_trait<T>::value and has_children_in_top_order_trait<T>::value;
 
 } // namespace osp
