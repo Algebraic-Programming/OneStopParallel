@@ -32,6 +32,7 @@ template<typename Graph_t>
 class StepByStepCoarser : Coarser<Graph_t, Graph_t> {
 
     using vertex_idx = vertex_idx_t<Graph_t>;
+    using boost_graph_t = boost_graph<v_workw_t<Graph_t>, v_commw_t<Graph_t>, v_memw_t<Graph_t>, v_type_t<Graph_t>, v_commw_t<Graph_t> >;
 
   public:
     enum COARSENING_STRATEGY
@@ -69,7 +70,7 @@ class StepByStepCoarser : Coarser<Graph_t, Graph_t> {
     unsigned target_nr_of_nodes = 0;
 
     Graph_t G_full;
-    boost_graph G_coarse;
+    boost_graph_t G_coarse;
 
     std::vector<std::set<vertex_idx>> contains;
 

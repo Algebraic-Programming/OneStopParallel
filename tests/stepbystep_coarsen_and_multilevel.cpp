@@ -15,8 +15,8 @@ using namespace osp;
 
 BOOST_AUTO_TEST_CASE(StepByStepCoarser_test) {
 
-    using graph = boost_graph;
-    StepByStepCoarser<boost_graph> test;
+    using graph = boost_graph_uint_t;
+    StepByStepCoarser<graph> test;
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
