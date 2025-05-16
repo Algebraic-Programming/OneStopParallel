@@ -85,6 +85,8 @@ _add_test( compact_sparse_graph )
 
 _add_test( wavefront_divider )
 
+_add_test( cuthill_mckee )
+
 ## pebbling ILPs
 
 if (COPT_FOUND)
