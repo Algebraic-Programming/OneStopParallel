@@ -19,7 +19,7 @@ limitations under the License.
 #pragma once
 
 #include "computational_dag_concept.hpp"
-#include "directed_graph_concept.hpp"
+
 
 namespace osp {
 
@@ -33,7 +33,8 @@ struct is_constructable_cdag_vertex<
                    decltype(std::declval<T>().set_vertex_work_weight(std::declval<vertex_idx_t<T>>(), std::declval<v_workw_t<T>>())),
                    decltype(std::declval<T>().set_vertex_comm_weight(std::declval<vertex_idx_t<T>>(), std::declval<v_commw_t<T>>())),
                    decltype(std::declval<T>().set_vertex_mem_weight(std::declval<vertex_idx_t<T>>(), std::declval<v_memw_t<T>>()))>>
-    : std::conjunction<std::is_default_constructible<T>, 
+    : std::conjunction<osp::is_computational_dag<T>,
+                       std::is_default_constructible<T>, 
                        std::is_constructible<T, vertex_idx_t<T>>,
                        std::is_copy_constructible<T>, 
                        std::is_move_constructible<T>, 
@@ -51,7 +52,8 @@ template<typename T>
 struct is_constructable_cdag_typed_vertex<
     T, std::void_t<decltype(std::declval<T>().add_vertex(std::declval<v_workw_t<T>>(), std::declval<v_commw_t<T>>(), std::declval<v_memw_t<T>>(), std::declval<v_type_t<T>>())),
                    decltype(std::declval<T>().set_vertex_type(std::declval<vertex_idx_t<T>>(), std::declval<v_type_t<T>>()))>>
-    : is_constructable_cdag_vertex<T> {}; // for default node type
+    : std::conjunction<is_constructable_cdag_vertex<T>, 
+                       osp::is_computational_dag_typed_vertices<T>> {}; // for default node type
 
 template<typename T>
 inline constexpr bool is_constructable_cdag_typed_vertex_v = is_constructable_cdag_typed_vertex<T>::value;
@@ -63,7 +65,7 @@ struct is_constructable_cdag_edge : std::false_type {};
 template<typename T>
 struct is_constructable_cdag_edge<T, std::void_t<decltype(std::declval<T>().add_edge(std::declval<vertex_idx_t<T>>(),
                                                                                      std::declval<vertex_idx_t<T>>()))>>
-    : std::true_type {};
+    : is_directed_graph<T> {};
 
 template<typename T>
 inline constexpr bool is_constructable_cdag_edge_v = is_constructable_cdag_edge<T>::value;
@@ -76,7 +78,8 @@ template<typename T>
 struct is_constructable_cdag_comm_edge<
     T, std::void_t<decltype(std::declval<T>().add_edge(std::declval<vertex_idx_t<T>>(), std::declval<vertex_idx_t<T>>(), std::declval<e_commw_t<T>>())),
                    decltype(std::declval<T>().set_edge_comm_weight(std::declval<edge_desc_t<T>>(), std::declval<e_commw_t<T>>()))>>
-    : is_constructable_cdag_edge<T> {}; // for default edge weight
+    : std::conjunction<is_constructable_cdag_edge<T>, 
+                       osp::is_computational_dag_edge_desc<T>> {}; // for default edge weight
 
 template<typename T>
 inline constexpr bool is_constructable_cdag_comm_edge_v = is_constructable_cdag_comm_edge<T>::value;
