@@ -265,4 +265,44 @@ BOOST_AUTO_TEST_CASE(test_bsp_schedule_cs) {
         BOOST_CHECK_EQUAL(schedule_t5.assignedSuperstep(v), schedule.assignedSuperstep(v));
         BOOST_CHECK_EQUAL(schedule_t5.assignedProcessor(v), schedule.assignedProcessor(v));
     }
+
+    BspScheduleCS<graph> schedule_cs(schedule_t5);
+    BOOST_CHECK_EQUAL(schedule_cs.getInstance().getComputationalDag().num_vertices(),
+                      instance.getComputationalDag().num_vertices());
+    BOOST_CHECK(schedule_cs.satisfiesPrecedenceConstraints());
+    BOOST_CHECK(schedule_cs.hasValidCommSchedule());
+    BOOST_CHECK_EQUAL(schedule_cs.numberOfSupersteps(), schedule.numberOfSupersteps());
+
+    for (const auto &v : instance.getComputationalDag().vertices()) {
+
+        BOOST_CHECK_EQUAL(schedule_cs.assignedSuperstep(v), schedule.assignedSuperstep(v));
+        BOOST_CHECK_EQUAL(schedule_cs.assignedProcessor(v), schedule.assignedProcessor(v));
+    }
+
+    // schedule_t5 is still valid
+    BOOST_CHECK_EQUAL(schedule_t5.getInstance().getComputationalDag().num_vertices(),
+                      instance.getComputationalDag().num_vertices());
+    BOOST_CHECK(schedule_t5.satisfiesPrecedenceConstraints());
+    BOOST_CHECK_EQUAL(schedule_t5.numberOfSupersteps(), schedule.numberOfSupersteps());
+
+    for (const auto &v : instance.getComputationalDag().vertices()) {
+
+        BOOST_CHECK_EQUAL(schedule_t5.assignedSuperstep(v), schedule.assignedSuperstep(v));
+        BOOST_CHECK_EQUAL(schedule_t5.assignedProcessor(v), schedule.assignedProcessor(v));
+    }
+
+
+    BspScheduleCS<graph> schedule_cs_t2(std::move(schedule_t5));
+    BOOST_CHECK_EQUAL(schedule_cs_t2.getInstance().getComputationalDag().num_vertices(),
+                      instance.getComputationalDag().num_vertices());
+    BOOST_CHECK(schedule_cs_t2.satisfiesPrecedenceConstraints());
+    BOOST_CHECK(schedule_cs_t2.hasValidCommSchedule());
+    BOOST_CHECK_EQUAL(schedule_cs_t2.numberOfSupersteps(), schedule.numberOfSupersteps());
+
+    for (const auto &v : instance.getComputationalDag().vertices()) {
+
+        BOOST_CHECK_EQUAL(schedule_cs_t2.assignedSuperstep(v), schedule.assignedSuperstep(v));
+        BOOST_CHECK_EQUAL(schedule_cs_t2.assignedProcessor(v), schedule.assignedProcessor(v));
+    }
+
 };

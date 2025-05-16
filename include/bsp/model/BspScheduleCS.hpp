@@ -62,9 +62,8 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
     std::map<KeyTriple, unsigned> commSchedule;
 
   public:
-
     BspScheduleCS() = delete;
-    
+
     /**
      * @brief Constructs a BspSchedule object with the specified BspInstance.
      *
@@ -110,6 +109,17 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
         comm_.clear();
     }
 
+    BspScheduleCS(const BspSchedule<Graph_t> &schedule) : BspSchedule<Graph_t>(schedule) {
+        setAutoCommunicationSchedule();
+    }
+
+    BspScheduleCS(const BspSchedule<Graph_t> &schedule, const std::map<KeyTriple, unsigned int> &comm_)
+        : BspSchedule<Graph_t>(schedule), commSchedule(comm_) {}
+
+    BspScheduleCS(const BspScheduleCS &other) = default;
+    BspScheduleCS(BspScheduleCS &&other) = default;
+    BspScheduleCS &operator=(const BspScheduleCS &other) = default;
+    BspScheduleCS &operator=(BspScheduleCS &&other) = default;
     virtual ~BspScheduleCS() = default;
 
     inline const std::map<KeyTriple, unsigned> &getCommunicationSchedule() const { return commSchedule; }
