@@ -153,8 +153,10 @@ BOOST_AUTO_TEST_CASE(coarser_hdagg_test) {
 
         hdagg_coarser<graph_t, graph_t> coarser;
 
-        coarser.coarseDag(instance.getComputationalDag(), coarse_instance.getComputationalDag(), vertex_map,
+        coarser.coarsenDag(instance.getComputationalDag(), coarse_instance.getComputationalDag(),
                           reverse_vertex_map);
+
+        vertex_map = coarser.vertex_expansion_map(reverse_vertex_map);
 
         BOOST_CHECK(check_vertex_map(vertex_map, instance.getComputationalDag().num_vertices()));
 
@@ -224,8 +226,10 @@ BOOST_AUTO_TEST_CASE(coarser_hdagg_test_diff_graph_impl) {
 
         hdagg_coarser<graph_t1, graph_t2> coarser;
 
-        coarser.coarseDag(instance.getComputationalDag(), coarse_instance.getComputationalDag(), vertex_map,
+        coarser.coarsenDag(instance.getComputationalDag(), coarse_instance.getComputationalDag(),
                           reverse_vertex_map);
+
+        vertex_map = coarser.vertex_expansion_map(reverse_vertex_map);
 
         BOOST_CHECK(check_vertex_map(vertex_map, instance.getComputationalDag().num_vertices()));
 
@@ -301,8 +305,10 @@ BOOST_AUTO_TEST_CASE(coarser_bspschedule_test) {
 
         BspScheduleCoarser<graph_t, graph_t> coarser(schedule_orig);
 
-        coarser.coarseDag(instance.getComputationalDag(), coarse_instance.getComputationalDag(), vertex_map,
+        coarser.coarsenDag(instance.getComputationalDag(), coarse_instance.getComputationalDag(),
                           reverse_vertex_map);
+
+        vertex_map = coarser.vertex_expansion_map(reverse_vertex_map);
 
         BOOST_CHECK(check_vertex_map(vertex_map, instance.getComputationalDag().num_vertices()));
 

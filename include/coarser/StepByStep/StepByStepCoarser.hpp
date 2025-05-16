@@ -29,7 +29,7 @@ limitations under the License.
 namespace osp {
 
 template<typename Graph_t>
-class StepByStepCoarser : Coarser<Graph_t, Graph_t> {
+class StepByStepCoarser : public Coarser<Graph_t, Graph_t> {
 
     using vertex_idx = vertex_idx_t<Graph_t>;
 
@@ -93,15 +93,12 @@ class StepByStepCoarser : Coarser<Graph_t, Graph_t> {
 
 
     // DAG coarsening
-    virtual bool coarseDag(const Graph_t &dag_in, Graph_t &coarsened_dag,
-                           std::vector<std::vector<vertex_idx_t<Graph_t>>> &old_vertex_ids,
-                           std::vector<vertex_idx_t<Graph_t>> &new_vertex_id) override;
+    virtual std::vector<vertex_idx_t<Graph_t>> generate_vertex_contraction_map(const Graph_t &dag_in) override;
 
 
 
     // Coarsening for pebbling problems - leaves source nodes intact, considers memory bound
     void coarsenForPebbling(const Graph_t& dag_in, Graph_t &coarsened_dag,
-                           std::vector<std::vector<vertex_idx_t<Graph_t>>> &old_vertex_ids,
                            std::vector<vertex_idx_t<Graph_t>> &new_vertex_id);
 
 
@@ -129,8 +126,7 @@ class StepByStepCoarser : Coarser<Graph_t, Graph_t> {
 
     // Utility for contracting into final format
     void Contract(const std::vector<vertex_idx_t<Graph_t>> &new_vertex_id, Graph_t& G_contracted) const;
-    void SetIdVectors(std::vector<std::vector<vertex_idx_t<Graph_t>>> &old_vertex_ids,
-                           std::vector<vertex_idx_t<Graph_t>> &new_vertex_id) const;
+    void SetIdVector(std::vector<vertex_idx_t<Graph_t>> &new_vertex_id) const;
 
     void setCoarseningStrategy(COARSENING_STRATEGY strategy_){ coarsening_strategy = strategy_;}
     void setTargetNumberOfNodes(const unsigned nr_nodes_){ target_nr_of_nodes = nr_nodes_;}
@@ -139,10 +135,13 @@ class StepByStepCoarser : Coarser<Graph_t, Graph_t> {
     std::vector<std::pair<vertex_idx, vertex_idx> > getContractionHistory() const {return contractionHistory;}
 };
 
+// template<typename Graph_t>
+// bool StepByStepCoarser<Graph_t>::coarseDag(const Graph_t& dag_in, Graph_t &dag_out,
+//                         std::vector<std::vector<vertex_idx_t<Graph_t>>> &old_vertex_ids,
+//                         std::vector<vertex_idx_t<Graph_t>> &new_vertex_id)
+
 template<typename Graph_t>
-bool StepByStepCoarser<Graph_t>::coarseDag(const Graph_t& dag_in, Graph_t &dag_out,
-                        std::vector<std::vector<vertex_idx_t<Graph_t>>> &old_vertex_ids,
-                        std::vector<vertex_idx_t<Graph_t>> &new_vertex_id)
+std::vector<vertex_idx_t<Graph_t>> StepByStepCoarser<Graph_t>::generate_vertex_contraction_map(const Graph_t &dag_in)
 {
     const unsigned N = static_cast<unsigned>(dag_in.num_vertices());
 
@@ -257,10 +256,10 @@ bool StepByStepCoarser<Graph_t>::coarseDag(const Graph_t& dag_in, Graph_t &dag_o
     if(problem_type == PROBLEM_TYPE::PEBBLING)
         MergeSourcesInPebbling();
 
-    SetIdVectors(old_vertex_ids, new_vertex_id);
-    Contract(new_vertex_id, dag_out);
+    std::vector<vertex_idx_t<Graph_t>> new_vertex_id;
+    SetIdVector(new_vertex_id);
 
-    return true;
+    return new_vertex_id;
 }
 
 template<typename Graph_t>
@@ -731,7 +730,6 @@ void StepByStepCoarser<Graph_t>::ComputeFilteredTopOrderIdx() {
 
 template<typename Graph_t> 
 void StepByStepCoarser<Graph_t>::coarsenForPebbling(const Graph_t& dag_in, Graph_t &coarsened_dag,
-                           std::vector<std::vector<vertex_idx_t<Graph_t>>> &old_vertex_ids,
                            std::vector<vertex_idx_t<Graph_t>> &new_vertex_id)
 {
     std::vector<vertex_idx> new_node_IDs(dag_in.num_vertices());
@@ -746,7 +744,7 @@ void StepByStepCoarser<Graph_t>::coarsenForPebbling(const Graph_t& dag_in, Graph
 
     target_nr_of_nodes = std::max(target_nr_of_nodes, nr_sources + 1);
 
-    coarseDag(dag_in, coarsened_dag, old_vertex_ids, new_vertex_id);
+    Coarser<Graph_t, Graph_t>::coarsenDag(dag_in, coarsened_dag, new_vertex_id);
 }
 
 template<typename Graph_t> 
@@ -920,10 +918,8 @@ void StepByStepCoarser<Graph_t>::Contract(const std::vector<vertex_idx_t<Graph_t
 }
 
 template<typename Graph_t> 
-void StepByStepCoarser<Graph_t>::SetIdVectors(std::vector<std::vector<vertex_idx_t<Graph_t>>> &old_vertex_ids,
-                           std::vector<vertex_idx_t<Graph_t>> &new_vertex_id) const
+void StepByStepCoarser<Graph_t>::SetIdVector(std::vector<vertex_idx_t<Graph_t>> &new_vertex_id) const
 {
-    old_vertex_ids.clear();
     new_vertex_id.clear();
     new_vertex_id.resize(G_full.num_vertices());
 
@@ -931,10 +927,8 @@ void StepByStepCoarser<Graph_t>::SetIdVectors(std::vector<std::vector<vertex_idx
     for (vertex_idx node = 0; node < G_coarse.num_vertices(); ++node)
         if(node_valid[node])
         {
-            old_vertex_ids.emplace_back();
             for(vertex_idx contracted_node : contains[node])
             {
-                old_vertex_ids[index].push_back(contracted_node);
                 new_vertex_id[contracted_node] = index;
             }
             ++index;

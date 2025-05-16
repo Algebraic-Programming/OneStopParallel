@@ -45,12 +45,14 @@ class CoarseAndSchedule : public Scheduler<Graph_t> {
         std::vector<std::vector<vertex_idx_t<Graph_t>>> vertex_map;
         std::vector<vertex_idx_t<Graph_t_coarse>> reverse_vertex_map;
 
-        bool status = coarser.coarseDag(instance.getComputationalDag(), instance_coarse.getComputationalDag(),
-                                        vertex_map, reverse_vertex_map);
+        bool status = coarser.coarsenDag(instance.getComputationalDag(), instance_coarse.getComputationalDag(),
+                                        reverse_vertex_map);
 
         if (!status) {
             return ERROR;
         }
+
+        vertex_map = coarser.vertex_expansion_map(reverse_vertex_map);
 
         instance_coarse.setArchitecture(instance.getArchitecture());
         instance_coarse.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());

@@ -41,8 +41,10 @@ BOOST_AUTO_TEST_CASE(StepByStepCoarser_test) {
     std::vector<std::vector<vertex_idx_t<graph>>> old_vertex_ids;
     std::vector<vertex_idx_t<graph>> new_vertex_id;
 
-    coarser.coarseDag(DAG, coarsened_dag1, old_vertex_ids, new_vertex_id);
+    coarser.coarsenDag(DAG, coarsened_dag1, new_vertex_id);
+    old_vertex_ids = coarser.vertex_expansion_map(new_vertex_id);
 
-    coarser.coarsenForPebbling(DAG, coarsened_dag2, old_vertex_ids, new_vertex_id);
+    coarser.coarsenForPebbling(DAG, coarsened_dag2, new_vertex_id);
+    old_vertex_ids = coarser.vertex_expansion_map(new_vertex_id);
 
 };

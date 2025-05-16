@@ -51,20 +51,22 @@ class BspScheduleCoarser : public Coarser<Graph_t_in, Graph_t_out> {
      */
     virtual std::string getCoarserName() const override { return "BspScheduleCoarser"; }
 
-    virtual bool coarseDag(const Graph_t_in &dag_in, Graph_t_out &dag_out,
-                           std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &vertex_map,
-                           std::vector<vertex_idx_t<Graph_t_out>> &reverse_vertex_map) override {
+    // virtual bool coarseDag(const Graph_t_in &dag_in, Graph_t_out &dag_out,
+    //                        std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &vertex_map,
+    //                        std::vector<vertex_idx_t<Graph_t_out>> &reverse_vertex_map) override {
 
-        using VertexType = vertex_idx_t<Graph_t_in>;
+    virtual std::vector<vertex_idx_t<Graph_t_out>> generate_vertex_contraction_map(const Graph_t_in &dag_in) override {
+
+        using VertexType_in = vertex_idx_t<Graph_t_in>;
+        using VertexType_out = vertex_idx_t<Graph_t_out>;
 
         assert(&dag_in == &schedule->getInstance().getComputationalDag());
-        assert(dag_out.num_vertices() == 0);
-        assert(vertex_map.empty());
-        assert(reverse_vertex_map.empty());
         assert(schedule->satisfiesPrecedenceConstraints());
 
+
         SetSchedule<Graph_t_in> set_schedule(*schedule);
-        reverse_vertex_map.resize(dag_in.num_vertices(), 0);
+        std::vector<VertexType_out> reverse_vertex_map(dag_in.num_vertices(), 0);
+        std::vector<std::vector<VertexType_in>> vertex_map;
 
         bool schedule_respects_types = true;
 
@@ -78,7 +80,7 @@ class BspScheduleCoarser : public Coarser<Graph_t_in, Graph_t_out> {
                     v_memw_t<Graph_t_in> total_memory = 0;
                     v_commw_t<Graph_t_in> total_communication = 0;
 
-                    vertex_map.push_back(std::vector<VertexType>());
+                    vertex_map.push_back(std::vector<VertexType_in>());
 
                     v_type_t<Graph_t_in> type =
                         dag_in.vertex_type(*(set_schedule.step_processor_vertices[step][proc].begin()));
@@ -100,63 +102,11 @@ class BspScheduleCoarser : public Coarser<Graph_t_in, Graph_t_out> {
 
                     if (schedule_respects_types)
                         schedule_respects_types = homogeneous_types;
-
-                    dag_out.add_vertex(total_work, total_communication, total_memory, type);
                 }
             }
         }
 
-        if (not schedule_respects_types) {
-
-            for (auto vertex : dag_out.vertices()) {
-                dag_out.set_vertex_type(vertex, 0);
-            }
-        }
-
-        for (const auto &vertex_out : dag_out.vertices()) {
-
-            for (auto vertex : vertex_map[vertex_out]) {
-
-                if constexpr (is_constructable_cdag_comm_edge_v<Graph_t_out> and
-                              is_computational_dag_edge_desc_v<Graph_t_in>) {
-
-                    for (const auto &edge : dag_in.out_edges(vertex)) {
-
-                        const auto child = reverse_vertex_map[target(edge, dag_in)];
-
-                        if (child != vertex_out) {
-
-                            const auto pair = edge_desc(vertex_out, child, dag_out);
-
-                            if (pair.second) {
-
-                                dag_out.set_edge_comm_weight(pair.first, dag_out.edge_comm_weight(pair.first) +
-                                                                             dag_in.edge_comm_weight(edge));
-                            } else {
-
-                                dag_out.add_edge(vertex_out, child, dag_in.edge_comm_weight(edge));
-                            }
-                        }
-                    }
-
-                } else {
-
-                    for (const auto &child : dag_in.children(vertex)) {
-
-                        const auto child_out = reverse_vertex_map[child];
-
-                        if (child_out != vertex_out) {
-
-                            if (not edge(vertex_out, child_out, dag_out)) {
-                                dag_out.add_edge(vertex_out, child_out);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        return true;
+        return reverse_vertex_map;
     }
 };
 
