@@ -1,4 +1,4 @@
-#define BOOST_TEST_MODULE BSP_MEM_SCHEDULERS
+#define BOOST_TEST_MODULE STEPBYSTEP_AND_MULTILEVEL
 #include <boost/test/unit_test.hpp>
 
 #include <filesystem>

@@ -16,7 +16,7 @@ limitations under the License.
 @author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 
-#define BOOST_TEST_MODULE Bsp_Architecture
+#define BOOST_TEST_MODULE PEBBLING_ILP
 #include <boost/test/unit_test.hpp>
 
 #include "graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
