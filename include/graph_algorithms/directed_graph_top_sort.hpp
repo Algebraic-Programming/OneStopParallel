@@ -31,7 +31,7 @@ limitations under the License.
 /**
  * @file directed_graph_top_sort.hpp
  * @brief This file contains various algorithms and utilities for topological sorting of directed graphs.
- * 
+ *
  * The provided functionalities include:
  * - Checking if a given order of vertices is a valid topological order.
  * - Generating topological orders based on different strategies such as:
@@ -42,9 +42,9 @@ limitations under the License.
  * - Iterators and views for BFS and DFS-based topological sorting.
  * - Priority-based topological sorting with customizable evaluation functions.
  * - Utility traits and concepts to ensure graph and container compatibility.
- * 
+ *
  * The algorithms are implemented as templates to support various graph representations.
- * 
+ *
  */
 namespace osp {
 
@@ -377,7 +377,7 @@ struct top_sort_iterator {
  * @brief Provides a view for iterating over the vertices of a directed graph in topological order.
  *
  * This class supports two modes of iteration:
- * 1. If the graph type `Graph_t` has a predefined topological order (determined by the 
+ * 1. If the graph type `Graph_t` has a predefined topological order (determined by the
  *    `has_vertices_in_top_order_v` trait), the iteration will directly use the graph's vertices.
  * 2. Otherwise, it performs a topological sort using a depth-first search (DFS) stack wrapper.
  *
@@ -423,7 +423,7 @@ class top_sort_view {
  * approach to generate a topological ordering of the vertices in the graph.
  *
  * @tparam Graph_t The type of the graph, which must satisfy the `is_directed_graph` concept.
- * 
+ *
  */
 template<typename Graph_t>
 class dfs_top_sort_view {
@@ -446,12 +446,12 @@ class dfs_top_sort_view {
 /**
  * @class bfs_top_sort_view
  * @brief Provides a view for performing a topological sort on a directed graph using breadth-first search (BFS).
- * 
+ *
  * This class is designed to work with graphs that satisfy the `directed_graph` concept. It uses a BFS-based
  * approach to generate a topological ordering of the vertices in the graph.
  *
  * @tparam Graph_t The type of the graph, which must satisfy the `is_directed_graph` concept.
- * 
+ *
  */
 template<typename Graph_t>
 class bfs_top_sort_view {
@@ -637,6 +637,35 @@ class random_top_sort_view {
 
   public:
     random_top_sort_view(const Graph_t &graph_) : graph(graph_), vertex_container(graph.num_vertices()) {}
+
+    auto begin() { return ts_iterator(graph, vertex_container, 0); }
+
+    auto end() { return ts_iterator(graph, vertex_container, graph.num_vertices()); }
+};
+
+template<typename Graph_t, typename prio_t>
+class priority_vec_top_sort_view {
+
+    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+
+    const Graph_t &graph;
+
+    struct priority_eval_f {
+
+        const std::vector<prio_t> &priority;
+
+        priority_eval_f(const std::vector<prio_t> &p) : priority(p) {}
+
+        prio_t operator()(vertex_idx_t<Graph_t> v) const { return priority[v]; }
+    };
+
+    priority_queue_wrapper<Graph_t, priority_eval_f, prio_t> vertex_container;
+
+    using ts_iterator = top_sort_iterator<Graph_t, priority_queue_wrapper<Graph_t, priority_eval_f, prio_t>>;
+
+  public:
+    priority_vec_top_sort_view(const Graph_t &graph_, const std::vector<prio_t> &priorities_vec)
+        : graph(graph_), vertex_container(priorities_vec) {}
 
     auto begin() { return ts_iterator(graph, vertex_container, 0); }
 
