@@ -65,8 +65,8 @@ using boost_graph_impl =
                           boost_vertex<vertex_workw_t, vertex_commw_t, vertex_memw_t, vertex_type_t>,
                           boost_edge<edge_commw_t>>;
 
-
-using boost_edge_desc = typename boost::graph_traits<boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS>>::edge_descriptor;
+using boost_edge_desc = typename boost::graph_traits<
+    boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS>>::edge_descriptor;
 
 template<>
 struct std::hash<boost_edge_desc> {
@@ -175,19 +175,38 @@ class boost_graph {
      * @brief Default constructor for the ComputationalDag class.
      */
     explicit boost_graph() : graph(0), number_of_vertex_types(0) {}
-    explicit boost_graph(vertex_idx number_of_nodes) : graph(number_of_nodes), number_of_vertex_types(0) {}
+    boost_graph(vertex_idx number_of_nodes) : graph(number_of_nodes), number_of_vertex_types(0) {}
+    boost_graph(unsigned number_of_nodes)
+        : graph(static_cast<vertex_idx>(number_of_nodes)), number_of_vertex_types(0) {}
 
     boost_graph(const boost_graph &other) = default;
-    boost_graph(boost_graph &&other) = default;
+
     boost_graph &operator=(const boost_graph &other) = default;
-    boost_graph &operator=(boost_graph &&other) = default;
+
+    boost_graph(boost_graph &&other) : number_of_vertex_types(other.number_of_vertex_types) {
+        std::swap(this->graph, other.graph);
+        other.number_of_vertex_types = 0;
+        other.graph.clear();
+    }
+
+    boost_graph &operator=(boost_graph &&other) {
+        if (this != &other) {
+            std::swap(graph, other.graph);
+            number_of_vertex_types = other.number_of_vertex_types;
+            other.number_of_vertex_types = 0;
+            other.graph.clear();
+        }
+        return *this;
+    }
+
     virtual ~boost_graph() = default;
 
     template<typename Graph_t>
     boost_graph(const Graph_t &other) : number_of_vertex_types(0) {
-        graph.m_vertices.reserve(other.num_vertices());
 
         static_assert(osp::is_computational_dag_v<Graph_t>, "Graph_t must satisfy the is_computation_dag concept");
+
+        graph.m_vertices.reserve(other.num_vertices());
 
         osp::construct_computational_dag(other, *this);
     };
@@ -314,10 +333,7 @@ class boost_graph {
         updateNumberOfVertexTypes();
     }
 
-    void clear_vertex(const vertex_idx &v) {
-        boost::clear_vertex(v, graph);
-    }
-
+    void clear_vertex(const vertex_idx &v) { boost::clear_vertex(v, graph); }
 
   private:
     boost_graph_impl_t graph;

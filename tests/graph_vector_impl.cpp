@@ -153,4 +153,29 @@ BOOST_AUTO_TEST_CASE(test_constr_dag) {
     BOOST_CHECK_EQUAL(graph_3.vertex_work_weight(1), 5);
     BOOST_CHECK_EQUAL(graph_3.vertex_comm_weight(1), 6);
     BOOST_CHECK_EQUAL(graph_3.vertex_mem_weight(1), 7);
+
+    computational_dag_vector_impl_def_int_t graph_4(graph_3);
+
+    BOOST_CHECK_EQUAL(graph_4.num_edges(), 1);
+    BOOST_CHECK_EQUAL(graph_4.num_vertices(), 2);
+    BOOST_CHECK_EQUAL(graph_4.vertex_work_weight(0), 1);
+    BOOST_CHECK_EQUAL(graph_4.vertex_comm_weight(0), 2);
+    BOOST_CHECK_EQUAL(graph_4.vertex_mem_weight(0), 3);
+    BOOST_CHECK_EQUAL(graph_4.vertex_work_weight(1), 5);
+    BOOST_CHECK_EQUAL(graph_4.vertex_comm_weight(1), 6);
+    BOOST_CHECK_EQUAL(graph_4.vertex_mem_weight(1), 7);
+
+    computational_dag_vector_impl_def_int_t graph_move_1(std::move(graph_4));
+
+    BOOST_CHECK_EQUAL(graph_4.num_edges(), 0);
+    BOOST_CHECK_EQUAL(graph_4.num_vertices(), 0);
+
+    BOOST_CHECK_EQUAL(graph_move_1.num_edges(), 1);
+    BOOST_CHECK_EQUAL(graph_move_1.num_vertices(), 2);
+    BOOST_CHECK_EQUAL(graph_move_1.vertex_work_weight(0), 1);
+    BOOST_CHECK_EQUAL(graph_move_1.vertex_comm_weight(0), 2);
+    BOOST_CHECK_EQUAL(graph_move_1.vertex_mem_weight(0), 3);
+    BOOST_CHECK_EQUAL(graph_move_1.vertex_work_weight(1), 5);
+    BOOST_CHECK_EQUAL(graph_move_1.vertex_comm_weight(1), 6);
+    BOOST_CHECK_EQUAL(graph_move_1.vertex_mem_weight(1), 7);
 }
