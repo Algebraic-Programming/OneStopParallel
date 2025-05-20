@@ -186,7 +186,6 @@ class boost_graph {
     boost_graph(boost_graph &&other) : number_of_vertex_types(other.number_of_vertex_types) {
         std::swap(this->graph, other.graph);
         other.number_of_vertex_types = 0;
-        other.graph.clear();
     }
 
     boost_graph &operator=(boost_graph &&other) {
