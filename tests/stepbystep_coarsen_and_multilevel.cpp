@@ -26,7 +26,9 @@ limitations under the License.
 
 #include "coarser/StepByStep/StepByStepCoarser.hpp"
 #include "bsp/scheduler/Scheduler.hpp"
+#include "bsp/scheduler/CoarsenRefineSchedulers/MultiLevelHillClimbing.hpp"
 #include "io/hdag_graph_file_reader.hpp"
+#include "io/arch_file_reader.hpp"
 
 #include "graph_implementations/boost_graphs/boost_graph.hpp"
 
@@ -65,5 +67,48 @@ BOOST_AUTO_TEST_CASE(StepByStepCoarser_test) {
 
     coarser.coarsenForPebbling(DAG, coarsened_dag2, new_vertex_id);
     old_vertex_ids = coarser.vertex_expansion_map(new_vertex_id);
+
+};
+
+BOOST_AUTO_TEST_CASE(Multilevel_test) {
+
+    using graph = boost_graph_uint_t;
+    StepByStepCoarser<graph> test;
+
+    BspInstance<graph> instance;
+    instance.setNumberOfProcessors(2);
+    instance.setCommunicationCosts(3);
+    instance.setSynchronisationCosts(5);
+
+    // Getting root git directory
+    std::filesystem::path cwd = std::filesystem::current_path();
+    std::cout << cwd << std::endl;
+    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
+        cwd = cwd.parent_path();
+        std::cout << cwd << std::endl;
+    }
+
+    bool status = file_reader::readComputationalDagHyperdagFormat(
+        (cwd / "data/spaa/tiny/instance_pregel.hdag").string(), instance.getComputationalDag());
+
+    BOOST_CHECK(status);
+
+
+    MultiLevelHillClimbingScheduler<graph> multi1, multi2;
+    BspSchedule<graph> schedule1(instance), schedule2(instance);
+
+    multi1.setTargetNumberOfNodes(static_cast<unsigned>(instance.getComputationalDag().num_vertices())/3);
+    multi1.setLinearRefinementPoints(static_cast<vertex_idx_t<graph> >(instance.getComputationalDag().num_vertices()), 5);
+
+    auto result = multi1.computeSchedule(schedule1);
+    BOOST_CHECK_EQUAL(SUCCESS, result);
+    BOOST_CHECK(schedule1.satisfiesPrecedenceConstraints());
+
+    multi2.setTargetNumberOfNodes(static_cast<unsigned>(instance.getComputationalDag().num_vertices())/3);
+    multi2.setExponentialRefinementPoints(static_cast<vertex_idx_t<graph> >(instance.getComputationalDag().num_vertices()), 1.2);
+
+    result = multi2.computeSchedule(schedule2);
+    BOOST_CHECK_EQUAL(SUCCESS, result);
+    BOOST_CHECK(schedule2.satisfiesPrecedenceConstraints());
 
 };
