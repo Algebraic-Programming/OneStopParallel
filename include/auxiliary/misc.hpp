@@ -195,13 +195,13 @@ std::vector<size_t> sort_and_sorting_arrangement(std::vector<T> &a) {
     return rearrangement;
 }
 
-template<typename T>
-std::vector<size_t> sorting_arrangement(const std::vector<T> &a, bool increasing = true) {
-    std::vector<size_t> rearrangement;
+template<typename T, typename retT = size_t>
+std::vector<retT> sorting_arrangement(const std::vector<T> &a, bool increasing = true) {
+    std::vector<retT> rearrangement;
     rearrangement.resize(a.size());
     std::iota(rearrangement.begin(), rearrangement.end(), 0);
 
-    std::vector<std::pair<T, size_t>> zipped = zip(a, rearrangement);
+    std::vector<std::pair<T, retT>> zipped = zip(a, rearrangement);
     std::sort(zipped.begin(), zipped.end());
     if (!increasing) {
         std::reverse(zipped.begin(), zipped.end());
