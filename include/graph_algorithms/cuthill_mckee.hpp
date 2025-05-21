@@ -64,16 +64,12 @@ std::vector<vertex_idx_t<Graph_t>> cuthill_mckee_wavefront(const Graph_t &dag, b
         current_wavefront.push_back(cm_vertex(source, dag.out_degree(source), 0));
     }
 
+    std::vector<cm_vertex> new_wavefront;
     VertexType node_counter = 0;
     while (node_counter < dag.num_vertices()) {
 
+        new_wavefront.clear();
         std::sort(current_wavefront.begin(), current_wavefront.end());
-
-        // std::cout << "node counter: " << node_counter << " Wavefront: ";
-        // for (const auto &v : current_wavefront) {
-        //     std::cout << v.vertex << " ";
-        // }
-        // std::cout << std::endl;
 
         if (permutation) {
             for (VertexType i = 0; i < static_cast<VertexType>(current_wavefront.size()); i++) {
@@ -90,8 +86,6 @@ std::vector<vertex_idx_t<Graph_t>> cuthill_mckee_wavefront(const Graph_t &dag, b
         if (node_counter + static_cast<VertexType>(current_wavefront.size()) == dag.num_vertices())
             break;
 
-        std::vector<cm_vertex> new_wavefront;
-
         for (VertexType i = 0; i < static_cast<VertexType>(current_wavefront.size()); i++) {
 
             for (const auto &child : dag.children(current_wavefront[i].vertex)) {
@@ -107,7 +101,7 @@ std::vector<vertex_idx_t<Graph_t>> cuthill_mckee_wavefront(const Graph_t &dag, b
 
         node_counter += static_cast<VertexType>(current_wavefront.size());
 
-        current_wavefront = std::move(new_wavefront);
+        std::swap(current_wavefront, new_wavefront);
     }
 
     return result;

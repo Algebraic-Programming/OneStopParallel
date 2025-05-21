@@ -19,8 +19,8 @@ limitations under the License.
 
 #include "auxiliary/misc.hpp"
 #include "computational_dag_vector_impl.hpp"
-#include "graph_algorithms/computational_dag_construction_util.hpp"
 #include "edge_iterator.hpp"
+#include "graph_algorithms/computational_dag_construction_util.hpp"
 #include <vector>
 
 // #include "container_iterator_adaptor.hpp"
@@ -65,7 +65,6 @@ using cdag_edge_impl_unsigned = cdag_edge_impl<unsigned>;
 template<typename v_impl, typename e_impl>
 class computational_dag_edge_idx_vector_impl {
   public:
-
     // graph_traits specialization
     using vertex_idx = std::size_t;
     using directed_edge_descriptor = directed_edge_descriptor_impl;
@@ -108,9 +107,9 @@ class computational_dag_edge_idx_vector_impl {
 
   public:
     computational_dag_edge_idx_vector_impl() = default;
-    
-    computational_dag_edge_idx_vector_impl(vertex_idx num_vertices) : vertices_(num_vertices), out_edges_(num_vertices),
-                                                                        in_edges_(num_vertices) {
+
+    computational_dag_edge_idx_vector_impl(vertex_idx num_vertices)
+        : vertices_(num_vertices), out_edges_(num_vertices), in_edges_(num_vertices) {
         for (vertex_idx i = 0; i < num_vertices; ++i) {
             vertices_[i].id = i;
         }
@@ -119,17 +118,35 @@ class computational_dag_edge_idx_vector_impl {
     computational_dag_edge_idx_vector_impl(const computational_dag_edge_idx_vector_impl &other) = default;
 
     template<typename Graph_t>
-    computational_dag_edge_idx_vector_impl(const Graph_t &other) {      
+    computational_dag_edge_idx_vector_impl(const Graph_t &other) {
 
-        static_assert(is_computational_dag_v<Graph_t>,
-                      "Graph_t must satisfy the is_computation_dag concept");
+        static_assert(is_computational_dag_v<Graph_t>, "Graph_t must satisfy the is_computation_dag concept");
 
         construct_computational_dag(other, *this);
     };
 
-    computational_dag_edge_idx_vector_impl(computational_dag_edge_idx_vector_impl &&other) = default;
     computational_dag_edge_idx_vector_impl &operator=(const computational_dag_edge_idx_vector_impl &other) = default;
-    computational_dag_edge_idx_vector_impl &operator=(computational_dag_edge_idx_vector_impl &&other) = default;
+
+    computational_dag_edge_idx_vector_impl(computational_dag_edge_idx_vector_impl &&other)
+        : vertices_(std::move(other.vertices_)), edges_(std::move(other.edges_)),
+          num_vertex_types_(other.num_vertex_types_), out_edges_(std::move(other.out_edges_)),
+          in_edges_(std::move(other.in_edges_)) {
+
+        other.num_vertex_types_ = 0;
+    }
+
+    computational_dag_edge_idx_vector_impl &operator=(computational_dag_edge_idx_vector_impl &&other) {
+        if (this != &other) {
+            vertices_ = std::move(other.vertices_);
+            edges_ = std::move(other.edges_);
+            out_edges_ = std::move(other.out_edges_);
+            in_edges_ = std::move(other.in_edges_);
+            num_vertex_types_ = other.num_vertex_types_;
+            other.num_vertex_types_ = 0;
+        }
+        return *this;
+    }
+
     virtual ~computational_dag_edge_idx_vector_impl() = default;
 
     inline std::size_t num_edges() const { return edges_.size(); }

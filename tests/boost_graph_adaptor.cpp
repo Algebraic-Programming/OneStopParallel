@@ -22,8 +22,9 @@ limitations under the License.
 #include <iostream>
 #include <vector>
 
-#include "graph_algorithms/directed_graph_util.hpp"
 #include "graph_algorithms/directed_graph_path_util.hpp"
+#include "graph_algorithms/directed_graph_util.hpp"
+#include "graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "graph_implementations/boost_graphs/boost_graph.hpp"
 
 using namespace osp;
@@ -95,8 +96,8 @@ BOOST_AUTO_TEST_CASE(test_boost_graph_adapter_1) {
     size_t edge_idx = 0;
     for (const auto &edge : graph.edges()) {
 
-        BOOST_CHECK_EQUAL(source(edge,graph), edge_sources[edge_idx]);
-        BOOST_CHECK_EQUAL(target(edge,graph), edge_targets[edge_idx]);
+        BOOST_CHECK_EQUAL(source(edge, graph), edge_sources[edge_idx]);
+        BOOST_CHECK_EQUAL(target(edge, graph), edge_targets[edge_idx]);
         edge_idx++;
     }
 
@@ -131,7 +132,6 @@ BOOST_AUTO_TEST_CASE(test_boost_graph_adapter_1) {
         for (const auto &e : graph.parents(v)) {
             BOOST_CHECK_EQUAL(e, in_neighbors[v][i++]);
         }
-
 
         i = 0;
         for (const auto &e : graph.in_edges(v)) {
@@ -221,3 +221,124 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
     BOOST_CHECK_EQUAL(has_path(7, 5, graph), false);
     BOOST_CHECK_EQUAL(has_path(7, 6, graph), false);
 };
+
+BOOST_AUTO_TEST_CASE(test_constr_dag) {
+
+    boost_graph_int_t graph;
+
+    graph.add_vertex(1, 2, 3);
+    graph.add_vertex(5, 6, 7);
+    graph.add_vertex(9, 10, 11);
+    graph.add_vertex(13, 14, 15);
+
+    graph.add_edge(0, 1);
+    graph.add_edge(0, 2);
+    graph.add_edge(0, 3);
+
+    boost_graph_int_t graph_2(graph);
+
+    BOOST_CHECK_EQUAL(graph_2.num_edges(), 3);
+    BOOST_CHECK_EQUAL(graph_2.num_vertices(), 4);
+    BOOST_CHECK_EQUAL(graph_2.vertex_work_weight(0), 1);
+    BOOST_CHECK_EQUAL(graph_2.vertex_comm_weight(0), 2);
+    BOOST_CHECK_EQUAL(graph_2.vertex_mem_weight(0), 3);
+    BOOST_CHECK_EQUAL(graph_2.vertex_work_weight(1), 5);
+    BOOST_CHECK_EQUAL(graph_2.vertex_comm_weight(1), 6);
+    BOOST_CHECK_EQUAL(graph_2.vertex_mem_weight(1), 7);
+    BOOST_CHECK_EQUAL(graph_2.vertex_work_weight(2), 9);
+    BOOST_CHECK_EQUAL(graph_2.vertex_comm_weight(2), 10);
+    BOOST_CHECK_EQUAL(graph_2.vertex_mem_weight(2), 11);
+    BOOST_CHECK_EQUAL(graph_2.vertex_work_weight(3), 13);
+    BOOST_CHECK_EQUAL(graph_2.vertex_comm_weight(3), 14);
+
+    computational_dag_edge_idx_vector_impl_def_int_t graph_other;
+
+    graph_other.add_vertex(1, 2, 3, 4);
+    graph_other.add_vertex(5, 6, 7, 8);
+    graph_other.add_edge(0, 1, 9);
+
+    boost_graph_int_t graph_3(graph_other);
+
+    BOOST_CHECK_EQUAL(graph_3.num_edges(), 1);
+    BOOST_CHECK_EQUAL(graph_3.num_vertices(), 2);
+    BOOST_CHECK_EQUAL(graph_3.vertex_work_weight(0), 1);
+    BOOST_CHECK_EQUAL(graph_3.vertex_comm_weight(0), 2);
+    BOOST_CHECK_EQUAL(graph_3.vertex_mem_weight(0), 3);
+    BOOST_CHECK_EQUAL(graph_3.vertex_work_weight(1), 5);
+    BOOST_CHECK_EQUAL(graph_3.vertex_comm_weight(1), 6);
+    BOOST_CHECK_EQUAL(graph_3.vertex_mem_weight(1), 7);
+}
+
+BOOST_AUTO_TEST_CASE(test_boost_graph_const_1) {
+
+    boost_graph_int_t graph(10u);
+    BOOST_CHECK_EQUAL(graph.num_edges(), 0);
+    BOOST_CHECK_EQUAL(graph.num_vertices(), 10);
+}
+
+BOOST_AUTO_TEST_CASE(test_boost_graph_const_2) {
+
+    boost_graph_int_t graph_1 = constr_graph_1();
+
+    boost_graph_int_t graph_copy(graph_1);
+    BOOST_CHECK_EQUAL(graph_copy.num_edges(), 9);
+    BOOST_CHECK_EQUAL(graph_copy.num_vertices(), 8);
+
+    BOOST_CHECK_EQUAL(has_path(2, 7, graph_copy), true);
+    BOOST_CHECK_EQUAL(has_path(3, 7, graph_copy), true);
+    BOOST_CHECK_EQUAL(has_path(4, 7, graph_copy), true);
+    BOOST_CHECK_EQUAL(has_path(1, 2, graph_copy), false);
+    BOOST_CHECK_EQUAL(has_path(1, 3, graph_copy), false);
+    BOOST_CHECK_EQUAL(has_path(2, 1, graph_copy), false);
+
+    boost_graph_int_t graph_copy_2 = graph_1;
+
+    BOOST_CHECK_EQUAL(graph_1.num_edges(), 9);
+    BOOST_CHECK_EQUAL(graph_1.num_vertices(), 8);
+
+    BOOST_CHECK_EQUAL(has_path(2, 7, graph_1), true);
+    BOOST_CHECK_EQUAL(has_path(3, 7, graph_1), true);
+    BOOST_CHECK_EQUAL(has_path(4, 7, graph_1), true);
+    BOOST_CHECK_EQUAL(has_path(1, 2, graph_1), false);
+    BOOST_CHECK_EQUAL(has_path(1, 3, graph_1), false);
+    BOOST_CHECK_EQUAL(has_path(2, 1, graph_1), false);
+
+    BOOST_CHECK_EQUAL(graph_copy_2.num_edges(), 9);
+    BOOST_CHECK_EQUAL(graph_copy_2.num_vertices(), 8);
+
+    BOOST_CHECK_EQUAL(has_path(2, 7, graph_copy_2), true);
+    BOOST_CHECK_EQUAL(has_path(3, 7, graph_copy_2), true);
+    BOOST_CHECK_EQUAL(has_path(4, 7, graph_copy_2), true);
+    BOOST_CHECK_EQUAL(has_path(1, 2, graph_copy_2), false);
+    BOOST_CHECK_EQUAL(has_path(1, 3, graph_copy_2), false);
+    BOOST_CHECK_EQUAL(has_path(2, 1, graph_copy_2), false);
+
+    boost_graph_int_t graph_move_1(std::move(graph_copy));
+
+    BOOST_CHECK_EQUAL(graph_copy.num_edges(), 0);
+    BOOST_CHECK_EQUAL(graph_copy.num_vertices(), 0);
+
+    BOOST_CHECK_EQUAL(graph_move_1.num_edges(), 9);
+    BOOST_CHECK_EQUAL(graph_move_1.num_vertices(), 8);
+
+    BOOST_CHECK_EQUAL(has_path(2, 7, graph_move_1), true);
+    BOOST_CHECK_EQUAL(has_path(3, 7, graph_move_1), true);
+    BOOST_CHECK_EQUAL(has_path(4, 7, graph_move_1), true);
+    BOOST_CHECK_EQUAL(has_path(1, 2, graph_move_1), false);
+    BOOST_CHECK_EQUAL(has_path(1, 3, graph_move_1), false);
+    BOOST_CHECK_EQUAL(has_path(2, 1, graph_move_1), false);
+
+    boost_graph_int_t graph_move_2 = std::move(graph_copy_2);
+    BOOST_CHECK_EQUAL(graph_copy_2.num_edges(), 0);
+    BOOST_CHECK_EQUAL(graph_copy_2.num_vertices(), 0);
+
+    BOOST_CHECK_EQUAL(graph_move_2.num_edges(), 9);
+    BOOST_CHECK_EQUAL(graph_move_2.num_vertices(), 8);
+
+    BOOST_CHECK_EQUAL(has_path(2, 7, graph_move_2), true);
+    BOOST_CHECK_EQUAL(has_path(3, 7, graph_move_2), true);
+    BOOST_CHECK_EQUAL(has_path(4, 7, graph_move_2), true);
+    BOOST_CHECK_EQUAL(has_path(1, 2, graph_move_2), false);
+    BOOST_CHECK_EQUAL(has_path(1, 3, graph_move_2), false);
+    BOOST_CHECK_EQUAL(has_path(2, 1, graph_move_2), false);
+}

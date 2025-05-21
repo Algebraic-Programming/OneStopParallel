@@ -33,7 +33,7 @@ struct cdag_vertex_impl {
     using cdag_vertex_type_type = vertex_type_t;
 
     cdag_vertex_impl() : id(0), work_weight(0), comm_weight(0), mem_weight(0), vertex_type(0) {}
-    
+
     cdag_vertex_impl(const cdag_vertex_impl &other) = default;
     cdag_vertex_impl(cdag_vertex_impl &&other) = default;
     cdag_vertex_impl &operator=(const cdag_vertex_impl &other) = default;
@@ -59,7 +59,6 @@ using cdag_vertex_impl_unsigned = cdag_vertex_impl<unsigned, unsigned, unsigned,
 template<typename v_impl>
 class computational_dag_vector_impl {
   public:
-   
     using vertex_idx = std::size_t;
 
     using vertex_work_weight_type = typename v_impl::work_weight_type;
@@ -70,30 +69,49 @@ class computational_dag_vector_impl {
 
     computational_dag_vector_impl() = default;
 
-    computational_dag_vector_impl(vertex_idx num_vertices) : vertices_(num_vertices), 
-        out_neigbors(num_vertices), in_neigbors(num_vertices), num_edges_(0), num_vertex_types_(0) {
+    computational_dag_vector_impl(vertex_idx num_vertices)
+        : vertices_(num_vertices), out_neigbors(num_vertices), in_neigbors(num_vertices), num_edges_(0),
+          num_vertex_types_(0) {
 
         for (vertex_idx i = 0; i < num_vertices; ++i) {
             vertices_[i].id = i;
         }
-
     }
 
     computational_dag_vector_impl(const computational_dag_vector_impl &other) = default;
+    computational_dag_vector_impl &operator=(const computational_dag_vector_impl &other) = default;
 
     template<typename Graph_t>
-    computational_dag_vector_impl(const Graph_t &other) {      
+    computational_dag_vector_impl(const Graph_t &other) {
 
-        static_assert(is_computational_dag_v<Graph_t>,
-                      "Graph_t must satisfy the is_computation_dag concept");
+        static_assert(is_computational_dag_v<Graph_t>, "Graph_t must satisfy the is_computation_dag concept");
 
         construct_computational_dag(other, *this);
     };
 
-    
-    computational_dag_vector_impl(computational_dag_vector_impl &&other) = default;
-    computational_dag_vector_impl &operator=(const computational_dag_vector_impl &other) = default;
-    computational_dag_vector_impl &operator=(computational_dag_vector_impl &&other) = default;
+    computational_dag_vector_impl(computational_dag_vector_impl &&other)
+        : vertices_(std::move(other.vertices_)), out_neigbors(std::move(other.out_neigbors)),
+          in_neigbors(std::move(other.in_neigbors)), num_edges_(other.num_edges_),
+          num_vertex_types_(other.num_vertex_types_) {
+
+        other.num_edges_ = 0;
+        other.num_vertex_types_ = 0;
+    };
+
+    computational_dag_vector_impl &operator=(computational_dag_vector_impl &&other) {
+        if (this != &other) {
+            vertices_ = std::move(other.vertices_);
+            out_neigbors = std::move(other.out_neigbors);
+            in_neigbors = std::move(other.in_neigbors);
+            num_edges_ = other.num_edges_;
+            num_vertex_types_ = other.num_vertex_types_;
+
+            other.num_edges_ = 0;
+            other.num_vertex_types_ = 0;
+        }
+        return *this;
+    }
+
     virtual ~computational_dag_vector_impl() = default;
 
     inline auto vertices() const { return vertex_range<vertex_idx>(vertices_.size()); }
