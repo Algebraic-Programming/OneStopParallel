@@ -32,6 +32,7 @@ limitations under the License.
 #include "bsp/scheduler/GreedySchedulers/GrowLocalAutoCoresParallel.hpp"
 #include "bsp/scheduler/GreedySchedulers/RandomGreedy.hpp"
 #include "bsp/scheduler/GreedySchedulers/VarianceFillup.hpp"
+#include "bsp/scheduler/LoadBalanceScheduler/VariancePartitioner.hpp"
 #include "bsp/scheduler/Serial.hpp"
 #include "graph_implementations/adj_list_impl/compact_sparse_graph.hpp"
 #include "graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
@@ -105,14 +106,9 @@ void run_test(Scheduler<Graph_t> *test_scheduler) {
 
             BOOST_CHECK_EQUAL(SUCCESS, result);
             BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
-
         }
     }
 };
-
-
-
-
 
 template<typename Graph_t>
 void run_test_2(Scheduler<Graph_t> *test_scheduler) {
@@ -139,15 +135,15 @@ void run_test_2(Scheduler<Graph_t> *test_scheduler) {
             std::cout << "Graph: " << name_graph << std::endl;
             std::cout << "Architecture: " << name_machine << std::endl;
 
-            
             computational_dag_edge_idx_vector_impl_def_t graph;
             BspArchitecture<Graph_t> arch;
-            
+
             bool status_graph = file_reader::readComputationalDagHyperdagFormat((cwd / filename_graph).string(), graph);
-            bool status_architecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), arch);
-            
+            bool status_architecture =
+                file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), arch);
+
             if (!status_graph || !status_architecture) {
-                
+
                 std::cout << "Reading files failed." << std::endl;
                 BOOST_CHECK(false);
             }
@@ -159,17 +155,9 @@ void run_test_2(Scheduler<Graph_t> *test_scheduler) {
 
             BOOST_CHECK_EQUAL(SUCCESS, result);
             BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
-
         }
     }
 };
-
-
-
-
-
-
-
 
 BOOST_AUTO_TEST_CASE(GreedyBspScheduler_test) {
 
@@ -248,7 +236,7 @@ BOOST_AUTO_TEST_CASE(grow_local_auto_test_edge_desc_impl) {
 BOOST_AUTO_TEST_CASE(grow_local_auto_parallel_top_test_1) {
     {
         using Graph_t = computational_dag_vector_impl_def_t;
-        GrowLocalAutoCoresParallel_Params< vertex_idx_t<Graph_t>, v_workw_t<Graph_t>  > params;
+        GrowLocalAutoCoresParallel_Params<vertex_idx_t<Graph_t>, v_workw_t<Graph_t>> params;
 
         params.numThreads = 1;
 
@@ -260,7 +248,7 @@ BOOST_AUTO_TEST_CASE(grow_local_auto_parallel_top_test_1) {
 BOOST_AUTO_TEST_CASE(grow_local_auto_parallel_top_test_2) {
     {
         using Graph_t = computational_dag_vector_impl_def_t;
-        GrowLocalAutoCoresParallel_Params< vertex_idx_t<Graph_t>, v_workw_t<Graph_t>  > params;
+        GrowLocalAutoCoresParallel_Params<vertex_idx_t<Graph_t>, v_workw_t<Graph_t>> params;
 
         params.numThreads = 2;
 
@@ -272,7 +260,7 @@ BOOST_AUTO_TEST_CASE(grow_local_auto_parallel_top_test_2) {
 BOOST_AUTO_TEST_CASE(grow_local_auto_parallel_top_test_5) {
     {
         using Graph_t = computational_dag_vector_impl_def_t;
-        GrowLocalAutoCoresParallel_Params< vertex_idx_t<Graph_t>, v_workw_t<Graph_t>  > params;
+        GrowLocalAutoCoresParallel_Params<vertex_idx_t<Graph_t>, v_workw_t<Graph_t>> params;
 
         params.numThreads = 5;
 
@@ -284,7 +272,7 @@ BOOST_AUTO_TEST_CASE(grow_local_auto_parallel_top_test_5) {
 BOOST_AUTO_TEST_CASE(grow_local_auto_parallel_test_1) {
     {
         using Graph_t = Compact_Sparse_Graph<true, true>;
-        GrowLocalAutoCoresParallel_Params< vertex_idx_t<Graph_t>, v_workw_t<Graph_t>  > params;
+        GrowLocalAutoCoresParallel_Params<vertex_idx_t<Graph_t>, v_workw_t<Graph_t>> params;
 
         params.numThreads = 1;
 
@@ -296,7 +284,7 @@ BOOST_AUTO_TEST_CASE(grow_local_auto_parallel_test_1) {
 BOOST_AUTO_TEST_CASE(grow_local_auto_parallel_test_2) {
     {
         using Graph_t = Compact_Sparse_Graph<true, true>;
-        GrowLocalAutoCoresParallel_Params< vertex_idx_t<Graph_t>, v_workw_t<Graph_t>  > params;
+        GrowLocalAutoCoresParallel_Params<vertex_idx_t<Graph_t>, v_workw_t<Graph_t>> params;
 
         params.numThreads = 2;
 
@@ -308,11 +296,25 @@ BOOST_AUTO_TEST_CASE(grow_local_auto_parallel_test_2) {
 BOOST_AUTO_TEST_CASE(grow_local_auto_parallel_test_5) {
     {
         using Graph_t = Compact_Sparse_Graph<true, true>;
-        GrowLocalAutoCoresParallel_Params< vertex_idx_t<Graph_t>, v_workw_t<Graph_t>  > params;
+        GrowLocalAutoCoresParallel_Params<vertex_idx_t<Graph_t>, v_workw_t<Graph_t>> params;
 
         params.numThreads = 5;
 
         GrowLocalAutoCoresParallel<Graph_t> test(params);
         run_test_2(&test);
     }
+}
+
+BOOST_AUTO_TEST_CASE(VariancePartitioner_test) {
+    VariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, linear_interpolation> test_linear;
+    run_test(&test_linear);
+
+    VariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, flat_spline_interpolation> test_flat;
+    run_test(&test_flat);
+
+    VariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, superstep_only_interpolation> test_superstep;
+    run_test(&test_superstep);
+
+    VariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, global_only_interpolation> test_global;
+    run_test(&test_global);
 }

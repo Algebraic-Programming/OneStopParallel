@@ -23,6 +23,7 @@ limitations under the License.
 #include <string>
 #include <vector>
 
+#include "bsp/scheduler/LoadBalanceScheduler/VariancePartitioner.hpp"
 #include "bsp/scheduler/GreedySchedulers/BspLocking.hpp"
 #include "bsp/scheduler/GreedySchedulers/EtfScheduler.hpp"
 #include "bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
@@ -406,3 +407,35 @@ BOOST_AUTO_TEST_CASE(EtfScheduler_persistent_transient_test) {
         test;
     run_test_persistent_transient_memory(&test);
 };
+
+
+BOOST_AUTO_TEST_CASE(VariancePartitioner_test) {
+    VariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, linear_interpolation, local_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>> test_linear;
+    run_test_local_memory(&test_linear);
+
+    VariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, flat_spline_interpolation, local_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>> test_flat;
+    run_test_local_memory(&test_flat);
+
+    VariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, superstep_only_interpolation, local_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>> test_superstep;
+    run_test_local_memory(&test_superstep);
+
+    VariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, global_only_interpolation, local_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>> test_global;
+    run_test_local_memory(&test_global);
+
+    VariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, linear_interpolation, persistent_transient_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>> test_linear_tp;
+    run_test_persistent_transient_memory(&test_linear_tp);
+
+    VariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, flat_spline_interpolation, persistent_transient_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>> test_flat_tp;
+    run_test_persistent_transient_memory(&test_flat_tp);
+
+    VariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, superstep_only_interpolation, persistent_transient_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>> test_superstep_tp;
+    run_test_persistent_transient_memory(&test_superstep_tp);
+
+    VariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, global_only_interpolation, persistent_transient_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>> test_global_tp;
+    run_test_persistent_transient_memory(&test_global_tp);
+
+}
+
+
+
+
