@@ -62,13 +62,43 @@ class Coarser {
     accumulationMethod v_mem_weight_acc_method  = accumulationMethod::SUM;
     accumulationMethod e_comm_weight_acc_method = accumulationMethod::SUM;
 
+    static bool check_valid_expansion_map(const std::vector<std::vector<vertex_idx_t<Graph_t_in>>> & vertex_expansion_map) {
+        std::size_t cntr = 0;
+        
+        std::vector<bool> preImage;
+        for (const std::vector<vertex_idx_t<Graph_t_in>> &group : vertex_expansion_map) {
+            if (group.size() == 0) {
+                return false;
+            }
+
+            for (const vertex_idx_t<Graph_t_in> vert : group) {
+                if (vert < static_cast<vertex_idx_t<Graph_t_in>>(0)) {
+                    return false;
+                }
+
+                if (static_cast<std::size_t>(vert) >= preImage.size()) {
+                    preImage.resize(vert+1, false);
+                }
+
+                if (preImage[vert]) {
+                    return false;
+                }
+
+                preImage[vert] = true;
+                cntr++;
+            }
+        }
+
+        return (cntr == preImage.size()); 
+    }
+
     static bool check_valid_contraction_map(const std::vector<vertex_idx_t<Graph_t_out>> & vertex_contraction_map) {
         std::set<vertex_idx_t<Graph_t_out>> image(vertex_contraction_map.cbegin(), vertex_contraction_map.cend());
         const vertex_idx_t<Graph_t_out> image_size = static_cast<vertex_idx_t<Graph_t_out>>( image.size() );
         return std::all_of(image.cbegin(), image.cend(), [image_size](const vertex_idx_t<Graph_t_out>& vert) { return (vert >= static_cast<vertex_idx_t<Graph_t_out>>(0)) && (vert < image_size); } );
     }
 
-    static std::vector<std::vector<vertex_idx_t<Graph_t_in>>> vertex_expansion_map(const std::vector<vertex_idx_t<Graph_t_out>> & vertex_contraction_map) {
+    static std::vector<std::vector<vertex_idx_t<Graph_t_in>>> invert_vertex_contraction_map(const std::vector<vertex_idx_t<Graph_t_out>> &vertex_contraction_map) {
         assert(check_valid_contraction_map(vertex_contraction_map));
 
         vertex_idx_t<Graph_t_out> max_vert = *std::max_element(vertex_contraction_map.cbegin(), vertex_contraction_map.cend());
@@ -82,6 +112,27 @@ class Coarser {
         return expansion_map;
     }
 
+    static std::vector<vertex_idx_t<Graph_t_out>> invert_vertex_expansion_map(const std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &vertex_expansion_map) {
+        assert(check_valid_expansion_map(vertex_expansion_map));
+
+        vertex_idx_t<Graph_t_in> num_vert = 0;
+        for (const auto &group : vertex_expansion_map) {
+            for (const vertex_idx_t<Graph_t_in> &vert : group) {
+                num_vert = std::max(num_vert, vert + 1);
+            }
+        }
+
+        std::vector<vertex_idx_t<Graph_t_out>> vertex_contraction_map(num_vert);
+        for (std::size_t i = 0; i < vertex_expansion_map.size(); i++) {
+            for (const vertex_idx_t<Graph_t_in> &vert : vertex_expansion_map[i]) {
+                vertex_contraction_map[vert] = i;
+            }
+        }
+        
+        return vertex_contraction_map;
+    }
+
+    virtual std::vector<std::vector<vertex_idx_t<Graph_t_in>>> generate_vertex_expansion_map(const Graph_t_in &dag_in) = 0;
     virtual std::vector<vertex_idx_t<Graph_t_out>> generate_vertex_contraction_map(const Graph_t_in &dag_in) = 0;
 
     /**

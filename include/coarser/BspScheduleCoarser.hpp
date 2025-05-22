@@ -18,7 +18,7 @@ limitations under the License.
 
 #pragma once
 
-#include "Coarser.hpp"
+#include "coarser/Coarser_gen_cont_map.hpp"
 #include "bsp/model/BspSchedule.hpp"
 #include "bsp/model/SetSchedule.hpp"
 #include "bsp/scheduler/Scheduler.hpp"
@@ -32,7 +32,7 @@ namespace osp {
  *
  */
 template<typename Graph_t_in, typename Graph_t_out>
-class BspScheduleCoarser : public Coarser<Graph_t_in, Graph_t_out> {
+class BspScheduleCoarser : public CoarserGenContractionMap<Graph_t_in, Graph_t_out> {
 
   private:
     const BspSchedule<Graph_t_in> *schedule;

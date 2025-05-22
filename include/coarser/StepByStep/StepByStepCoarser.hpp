@@ -23,13 +23,13 @@ limitations under the License.
 #include "graph_algorithms/directed_graph_edge_desc_util.hpp"
 #include "graph_algorithms/computational_dag_construction_util.hpp"
 #include "graph_algorithms/directed_graph_top_sort.hpp"
-#include "coarser/Coarser.hpp"
+#include "coarser/Coarser_gen_cont_map.hpp"
 #include "graph_implementations/boost_graphs/boost_graph.hpp"
 
 namespace osp {
 
 template<typename Graph_t>
-class StepByStepCoarser : public Coarser<Graph_t, Graph_t> {
+class StepByStepCoarser : public CoarserGenContractionMap<Graph_t, Graph_t> {
 
     using vertex_idx = vertex_idx_t<Graph_t>;
 

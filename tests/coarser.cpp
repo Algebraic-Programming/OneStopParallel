@@ -153,10 +153,12 @@ BOOST_AUTO_TEST_CASE(coarser_hdagg_test) {
 
         hdagg_coarser<graph_t, graph_t> coarser;
 
+        BOOST_CHECK_EQUAL(coarser.getCoarserName(), "hdagg_coarser");
+
         coarser.coarsenDag(instance.getComputationalDag(), coarse_instance.getComputationalDag(),
                           reverse_vertex_map);
 
-        vertex_map = coarser.vertex_expansion_map(reverse_vertex_map);
+        vertex_map = coarser.invert_vertex_contraction_map(reverse_vertex_map);
 
         BOOST_CHECK(check_vertex_map(vertex_map, instance.getComputationalDag().num_vertices()));
 
@@ -229,7 +231,7 @@ BOOST_AUTO_TEST_CASE(coarser_hdagg_test_diff_graph_impl) {
         coarser.coarsenDag(instance.getComputationalDag(), coarse_instance.getComputationalDag(),
                           reverse_vertex_map);
 
-        vertex_map = coarser.vertex_expansion_map(reverse_vertex_map);
+        vertex_map = coarser.invert_vertex_contraction_map(reverse_vertex_map);
 
         BOOST_CHECK(check_vertex_map(vertex_map, instance.getComputationalDag().num_vertices()));
 
@@ -308,7 +310,7 @@ BOOST_AUTO_TEST_CASE(coarser_bspschedule_test) {
         coarser.coarsenDag(instance.getComputationalDag(), coarse_instance.getComputationalDag(),
                           reverse_vertex_map);
 
-        vertex_map = coarser.vertex_expansion_map(reverse_vertex_map);
+        vertex_map = coarser.invert_vertex_contraction_map(reverse_vertex_map);
 
         BOOST_CHECK(check_vertex_map(vertex_map, instance.getComputationalDag().num_vertices()));
 

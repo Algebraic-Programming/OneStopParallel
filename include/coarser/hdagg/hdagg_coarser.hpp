@@ -18,7 +18,7 @@ limitations under the License.
 
 #pragma once
 
-#include "coarser/Coarser.hpp"
+#include "coarser/Coarser_gen_cont_map.hpp"
 
 #include "graph_algorithms/directed_graph_edge_desc_util.hpp"
 #include "graph_algorithms/directed_graph_util.hpp"
@@ -27,7 +27,7 @@ limitations under the License.
 namespace osp {
 
 template<typename Graph_t_in, typename Graph_t_out>
-class hdagg_coarser : public Coarser<Graph_t_in, Graph_t_out> {
+class hdagg_coarser : public CoarserGenContractionMap<Graph_t_in, Graph_t_out> {
 
     static_assert(is_directed_graph_edge_desc_v<Graph_t_in>,
                   "Graph_t_in must satisfy the directed_graph edge desc concept");

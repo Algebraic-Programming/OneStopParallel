@@ -52,7 +52,7 @@ class CoarseAndSchedule : public Scheduler<Graph_t> {
             return ERROR;
         }
 
-        vertex_map = coarser.vertex_expansion_map(reverse_vertex_map);
+        vertex_map = coarser.invert_vertex_contraction_map(reverse_vertex_map);
 
         instance_coarse.setArchitecture(instance.getArchitecture());
         instance_coarse.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
