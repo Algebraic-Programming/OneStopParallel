@@ -29,7 +29,9 @@ class VariancePartitioner : public LoadBalancerBase<Graph_t, Interpolation_t> {
 
     static_assert(is_computational_dag_v<Graph_t>, "VariancePartitioner can only be used with computational DAGs.");
 
-    constexpr static bool use_memory_constraint = is_memory_constraint_v<MemoryConstraint_t>;
+  protected:
+    constexpr static bool use_memory_constraint =
+        is_memory_constraint_v<MemoryConstraint_t> or is_memory_constraint_schedule_v<MemoryConstraint_t>;
 
     static_assert(not use_memory_constraint or std::is_same_v<Graph_t, typename MemoryConstraint_t::Graph_impl_t>,
                   "Graph_t must be the same as MemoryConstraint_t::Graph_impl_t.");
@@ -38,7 +40,6 @@ class VariancePartitioner : public LoadBalancerBase<Graph_t, Interpolation_t> {
 
     using VertexType = vertex_idx_t<Graph_t>;
 
-  private:
     /// @brief threshold percentage of idle processors as to when a new superstep should be introduced
     double max_percent_idle_processors;
 
@@ -47,10 +48,6 @@ class VariancePartitioner : public LoadBalancerBase<Graph_t, Interpolation_t> {
 
     /// @brief whether or not parallelism should be increased in the next superstep
     bool increase_parallelism_in_new_superstep;
-
-    /// @brief the multiplier by which the memory bound should increase if it the scheduler determines it should be
-    /// breached
-    double memory_capacity_increase;
 
     /// @brief percentage of the average workload by which the processor priorities may diverge
     float max_priority_difference_percent;
@@ -97,11 +94,10 @@ class VariancePartitioner : public LoadBalancerBase<Graph_t, Interpolation_t> {
 
   public:
     VariancePartitioner(double max_percent_idle_processors_ = 0.2, double variance_power_ = 2.0,
-                        bool increase_parallelism_in_new_superstep_ = true, double memory_capacity_increase_ = 1.1,
+                        bool increase_parallelism_in_new_superstep_ = true,
                         float max_priority_difference_percent_ = 0.34f, float slack_ = 0.0f)
         : max_percent_idle_processors(max_percent_idle_processors_), variance_power(variance_power_),
           increase_parallelism_in_new_superstep(increase_parallelism_in_new_superstep_),
-          memory_capacity_increase(memory_capacity_increase_),
           max_priority_difference_percent(max_priority_difference_percent_), slack(slack_) {};
 
     virtual ~VariancePartitioner() = default;
@@ -113,8 +109,12 @@ class VariancePartitioner : public LoadBalancerBase<Graph_t, Interpolation_t> {
         const unsigned &n_processors = instance.numberOfProcessors();
         const auto &graph = instance.getComputationalDag();
 
+        unsigned superstep = 0;
+
         if constexpr (is_memory_constraint_v<MemoryConstraint_t>) {
             memory_constraint.initialize(instance);
+        } else if constexpr (is_memory_constraint_schedule_v<MemoryConstraint_t>) {
+            memory_constraint.initialize(schedule, superstep);
         }
 
         v_workw_t<Graph_t> total_work = 0;
@@ -149,7 +149,6 @@ class VariancePartitioner : public LoadBalancerBase<Graph_t, Interpolation_t> {
 
         std::set<unsigned> free_processors;
 
-        unsigned superstep = 0;
         bool endsuperstep = false;
         unsigned num_unable_to_partition_node_loop = 0;
         // RETURN_STATUS status = SUCCESS;

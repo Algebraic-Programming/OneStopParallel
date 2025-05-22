@@ -99,6 +99,7 @@ endif()
 
 _add_test( stepbystep_coarsen_and_multilevel )
 
+_add_test (heavy_edge_preprocessing)
 
 # Custom target to compile all the tests
 add_custom_target( build_tests DEPENDS ${tests_list} )
