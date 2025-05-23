@@ -36,27 +36,24 @@ template<typename Graph_t_in, typename Graph_t_out>
 class CoarserGenExpansionMap : public Coarser<Graph_t_in, Graph_t_out> {
 
   public:
+    virtual std::vector<std::vector<vertex_idx_t<Graph_t_in>>>
+    generate_vertex_expansion_map(const Graph_t_in &dag_in) = 0;
 
-    virtual std::vector<std::vector<vertex_idx_t<Graph_t_in>>> generate_vertex_expansion_map(const Graph_t_in &dag_in) override = 0;
+    virtual bool coarsenDag(const Graph_t_in &dag_in, Graph_t_out &coarsened_dag,
+                            std::vector<vertex_idx_t<Graph_t_out>> &vertex_contraction_map) override {
 
-    std::vector<vertex_idx_t<Graph_t_out>> generate_vertex_contraction_map(const Graph_t_in &dag_in) override {
-    
-        std::vector<std::vector<vertex_idx_t<Graph_t_in>>> vertex_expansion_map = generate_vertex_expansion_map(dag_in);
-        return Coarser<Graph_t_in, Graph_t_out>::invert_vertex_expansion_map(vertex_expansion_map);
-    };
+        auto vertex_expansion_map = generate_vertex_expansion_map(dag_in);
+        assert(check_valid_expansion_map(vertex_expansion_map));
 
-    // /**
-    //  * @brief Get the name of the coarsening algorithm.
-    //  * @return A human-readable name of the coarsening algorithm, typically used for identification or logging purposes.
-    //  */
-    // virtual std::string getCoarserName() const override = 0;
+        vertex_contraction_map = invert_vertex_expansion_map(vertex_expansion_map);
+
+        return coarser_util::construct_coarse_dag(dag_in, coarsened_dag, vertex_contraction_map);
+    }
 
     /**
      * @brief Destructor for the CoarserGenExpansionMap class.
      */
     virtual ~CoarserGenExpansionMap() = default;
 };
-
-
 
 } // namespace osp

@@ -30,6 +30,7 @@ limitations under the License.
 #include "graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "io/arch_file_reader.hpp"
 #include "io/hdag_graph_file_reader.hpp"
+#include "coarser/coarser_util.hpp"
 
 std::vector<std::string> tiny_spaa_graphs() {
     return {"data/spaa/tiny/instance_bicgstab.hdag",
@@ -158,7 +159,7 @@ BOOST_AUTO_TEST_CASE(coarser_hdagg_test) {
         coarser.coarsenDag(instance.getComputationalDag(), coarse_instance.getComputationalDag(),
                           reverse_vertex_map);
 
-        vertex_map = coarser.invert_vertex_contraction_map(reverse_vertex_map);
+        vertex_map = coarser_util::invert_vertex_contraction_map<graph_t, graph_t>(reverse_vertex_map);
 
         BOOST_CHECK(check_vertex_map(vertex_map, instance.getComputationalDag().num_vertices()));
 
@@ -231,7 +232,7 @@ BOOST_AUTO_TEST_CASE(coarser_hdagg_test_diff_graph_impl) {
         coarser.coarsenDag(instance.getComputationalDag(), coarse_instance.getComputationalDag(),
                           reverse_vertex_map);
 
-        vertex_map = coarser.invert_vertex_contraction_map(reverse_vertex_map);
+        vertex_map = coarser_util::invert_vertex_contraction_map<graph_t1, graph_t2>(reverse_vertex_map);
 
         BOOST_CHECK(check_vertex_map(vertex_map, instance.getComputationalDag().num_vertices()));
 
@@ -310,7 +311,7 @@ BOOST_AUTO_TEST_CASE(coarser_bspschedule_test) {
         coarser.coarsenDag(instance.getComputationalDag(), coarse_instance.getComputationalDag(),
                           reverse_vertex_map);
 
-        vertex_map = coarser.invert_vertex_contraction_map(reverse_vertex_map);
+        vertex_map = coarser_util::invert_vertex_contraction_map<graph_t, graph_t>(reverse_vertex_map);
 
         BOOST_CHECK(check_vertex_map(vertex_map, instance.getComputationalDag().num_vertices()));
 

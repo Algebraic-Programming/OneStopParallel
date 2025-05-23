@@ -24,7 +24,6 @@ limitations under the License.
 
 #include "coarser/Coarser.hpp"
 
-
 namespace osp {
 
 /**
@@ -35,31 +34,21 @@ namespace osp {
 template<typename Graph_t_in, typename Graph_t_out>
 class CoarserGenContractionMap : public Coarser<Graph_t_in, Graph_t_out> {
 
-
-    
-
   public:
+    virtual std::vector<vertex_idx_t<Graph_t_out>> generate_vertex_contraction_map(const Graph_t_in &dag_in) = 0;
 
-    virtual std::vector<vertex_idx_t<Graph_t_out>> generate_vertex_contraction_map(const Graph_t_in &dag_in) override = 0;
+    virtual bool coarsenDag(const Graph_t_in &dag_in, Graph_t_out &coarsened_dag,
+                            std::vector<vertex_idx_t<Graph_t_out>> &vertex_contraction_map) override {
 
-    std::vector<std::vector<vertex_idx_t<Graph_t_in>>> generate_vertex_expansion_map(const Graph_t_in &dag_in) override {
+        vertex_contraction_map = generate_vertex_contraction_map(dag_in);
 
-        std::vector<vertex_idx_t<Graph_t_out>>  vertex_contraction_map = generate_vertex_contraction_map(dag_in);
-        return Coarser<Graph_t_in, Graph_t_out>::invert_vertex_contraction_map(vertex_contraction_map);
+        return coarser_util::construct_coarse_dag(dag_in, coarsened_dag, vertex_contraction_map);
     }
-
-    // /**
-    //  * @brief Get the name of the coarsening algorithm.
-    //  * @return A human-readable name of the coarsening algorithm, typically used for identification or logging purposes.
-    //  */
-    // virtual std::string getCoarserName() const override = 0;
 
     /**
      * @brief Destructor for the CoarserGenContractionMap class.
      */
     virtual ~CoarserGenContractionMap() = default;
 };
-
-
 
 } // namespace osp

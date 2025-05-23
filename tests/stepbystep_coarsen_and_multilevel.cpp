@@ -29,6 +29,7 @@ limitations under the License.
 #include "bsp/scheduler/CoarsenRefineSchedulers/MultiLevelHillClimbing.hpp"
 #include "io/hdag_graph_file_reader.hpp"
 #include "io/arch_file_reader.hpp"
+#include "coarser/coarser_util.hpp"
 
 #include "graph_implementations/boost_graphs/boost_graph.hpp"
 
@@ -63,10 +64,10 @@ BOOST_AUTO_TEST_CASE(StepByStepCoarser_test) {
     std::vector<vertex_idx_t<graph>> new_vertex_id;
 
     coarser.coarsenDag(DAG, coarsened_dag1, new_vertex_id);
-    old_vertex_ids = coarser.invert_vertex_contraction_map(new_vertex_id);
+    old_vertex_ids = coarser_util::invert_vertex_contraction_map<graph, graph>(new_vertex_id);
 
     coarser.coarsenForPebbling(DAG, coarsened_dag2, new_vertex_id);
-    old_vertex_ids = coarser.invert_vertex_contraction_map(new_vertex_id);
+    old_vertex_ids = coarser_util::invert_vertex_contraction_map<graph, graph>(new_vertex_id);
 
 };
 
