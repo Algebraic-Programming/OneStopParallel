@@ -19,7 +19,8 @@ limitations under the License.
 #pragma once
 
 #include "auxiliary/datastructures/union_find.hpp"
-#include "coarser/Coarser.hpp"
+#include "coarser/Coarser_gen_exp_map.hpp"
+#include "graph_implementations/boost_graphs/boost_graph.hpp"
 
 namespace osp {
 
@@ -29,15 +30,75 @@ namespace osp {
  *
  */
 template<typename Graph_t_in, typename Graph_t_out>
-class HeavyEdgeCoarser : public Coarser<Graph_t_in, Graph_t_out> {
+class HeavyEdgeCoarser : public CoarserGenExpansionMap<Graph_t_in, Graph_t_out> {
 
-    const float heavy_is_x_times_median;
-    const float min_percent_components_retained;
-    const float bound_component_weight_percent;
+    static_assert(is_computational_dag_edge_desc_v<Graph_t_in>,
+                  "HeavyEdgePreProcess can only be used with computational DAGs with edge weights.");
+
+    using VertexType = vertex_idx_t<Graph_t_in>;
+    using EdgeType = edge_desc_t<Graph_t_in>;
+
+    using vertex_type_t_or_default =
+        std::conditional_t<is_computational_dag_typed_vertices_v<Graph_t_in>, v_type_t<Graph_t_in>, unsigned>;
+
+    struct mutable_vertex_labeled {
+
+        mutable_vertex_labeled() : work_weight(0), comm_weight(0), mem_weight(0), vertex_type(0) {}
+
+        v_workw_t<Graph_t_in> work_weight;
+        v_commw_t<Graph_t_in> comm_weight;
+        v_memw_t<Graph_t_in> mem_weight;
+
+        vertex_type_t_or_default vertex_type;
+
+        std::vector<VertexType> merged_labels;
+    };
+
+    struct mutable_edge {
+        mutable_edge() : comm_weight(0) {}
+        e_commw_t<Graph_t_in> comm_weight;
+    };
+
+    using mutable_graph_t =
+        boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS, mutable_vertex_labeled, mutable_edge>;
+
+    using mutable_vertex = typename boost::graph_traits<mutable_graph_t>::vertex_descriptor;
+
+    bool mutable_has_path(mutable_vertex src, mutable_vertex dest, mutable_graph_t &g) {
+
+        std::unordered_set<mutable_vertex> visited;
+        visited.emplace(src);
+
+        std::queue<mutable_vertex> next;
+        next.push(src);
+
+        while (!next.empty()) {
+            auto v = next.front();
+            next.pop();
+
+            for (const auto &child : boost::extensions::make_source_iterator_range(boost::adjacent_vertices(v, g))) {
+
+                if (child == dest) {
+                    return true;
+                }
+
+                if (visited.find(child) == visited.end()) {
+                    visited.emplace(child);
+                    next.push(child);
+                }
+            }
+        }
+
+        return false;
+    }
+
+    const double heavy_is_x_times_median;
+    const double min_percent_components_retained;
+    const double bound_component_weight_percent;
 
   public:
-    HeavyEdgeCoarser(float heavy_is_x_times_median_ = 2.0, float min_percent_components_retained_ = 0.25,
-                     float bound_component_weight_percent_ = 0.25)
+    HeavyEdgeCoarser(double heavy_is_x_times_median_ = 2.0, double min_percent_components_retained_ = 0.25,
+                     double bound_component_weight_percent_ = 0.25)
         : heavy_is_x_times_median(heavy_is_x_times_median_),
           min_percent_components_retained(min_percent_components_retained_),
           bound_component_weight_percent(bound_component_weight_percent_) {}
@@ -53,19 +114,8 @@ class HeavyEdgeCoarser : public Coarser<Graph_t_in, Graph_t_out> {
      */
     virtual std::string getCoarserName() const override { return "HeavyEdgeCoarser"; }
 
-    virtual std::vector<vertex_idx_t<Graph_t_out>> generate_vertex_contraction_map(const Graph_t_in &dag_in) {
-
-        static_assert(is_computational_dag_edge_desc_v<Graph_t_in>,
-                      "HeavyEdgePreProcess can only be used with computational DAGs with edge weights.");
-
-        using VertexType = vertex_idx_t<Graph_t_in>;
-        using EdgeType = edge_desc_t<Graph_t_in>;
-
-        // Initialising the union find structure
-        union_find_universe_t<Graph_t_in> uf_structure;
-        for (const VertexType &vert : graph.vertices()) {
-            uf_structure.add_object(vert, graph.vertex_work_weight(vert));
-        }
+    virtual bool coarsenDag(const Graph_t_in &dag_in, Graph_t_out &coarsened_dag,
+                            std::vector<vertex_idx_t<Graph_t_out>> &vertex_contraction_map) override {
 
         // Making edge comunications list
         std::vector<e_commw_t<Graph_t_in>> edge_communications;
@@ -75,133 +125,63 @@ class HeavyEdgeCoarser : public Coarser<Graph_t_in, Graph_t_out> {
         }
 
         // Computing the median and setting it to at least one
-        e_commw_t<Graph_t_in> median_edge_weight = 1;
+        e_commw_t<Graph_t> median_edge_weight = 1;
         if (not edge_communications.empty()) {
 
             auto median_it = edge_communications.begin();
             std::advance(median_it, edge_communications.size() / 2);
             std::nth_element(edge_communications.begin(), median_it, edge_communications.end());
             median_edge_weight =
-                std::max(edge_communications[edge_communications.size() / 2], static_cast<e_commw_t<Graph_t_in>>(1));
+                std::max(edge_communications[edge_communications.size() / 2], static_cast<e_commw_t<Graph_t>>(1));
         }
 
-        // Making edge list
-        e_commw_t<Graph_t_in> minimal_edge_weight =
-            static_cast<e_commw_t<Graph_t_in>>(heavy_is_x_times_median * median_edge_weight);
-        std::vector<EdgeType> edge_list;
-        edge_list.reserve(graph.num_edges());
-        for (const auto &edge : graph.edges()) {
-            if (graph.edge_comm_weight(edge) > minimal_edge_weight) {
-                edge_list.emplace_back(edge);
-            }
-        }
-
-        // Sorting edge list
-        std::sort(edge_list.begin(), edge_list.end(), [graph](const EdgeType &left, const EdgeType &right) {
-            return graph.edge_comm_weight(left) > graph.edge_comm_weight(right);
-        });
+        e_commw_t<Graph_t> minimal_edge_weight =
+            static_cast<e_commw_t<Graph_t>>(heavy_is_x_times_median * median_edge_weight);
 
         // Computing max component size
-        v_workw_t<Graph_t_in> max_component_size = 0;
+        std::unordered_map<VertexType, std::vector<VertexType>> map;
+        v_workw_t<Graph_t> max_component_size = 0;
         for (const VertexType &vert : graph.vertices()) {
             max_component_size += graph.vertex_work_weight(vert);
+            map[vert] = std::vector<VertexType>{vert};
         }
 
-        max_component_size = static_cast<v_workw_t<Graph_t_in>>(max_component_size * bound_component_weight_percent);
+        max_component_size = static_cast<v_workw_t<Graph_t>>(max_component_size * bound_component_weight_percent);
 
-        // Joining heavy edges
-        for (const EdgeType &edge : edge_list) {
-            if (static_cast<double>(uf_structure.get_number_of_connected_components()) - 1.0 <
-                min_percent_components_retained * static_cast<double>(graph.num_vertices()))
-                break;
+        mutable_graph_t mutable_graph(dag_in.num_vertices());
 
-            v_workw_t<Graph_t_in> weight_comp_a = uf_structure.get_weight_of_component_by_name(source(edge, graph));
-            v_workw_t<Graph_t_in> weight_comp_b = uf_structure.get_weight_of_component_by_name(target(edge, graph));
-            if (weight_comp_a + weight_comp_b > max_component_size)
-                continue;
-
-            uf_structure.join_by_name(edge.m_source, edge.m_target);
-        }
-
-        return uf_structure.get_connected_components();
-    }
-
-    
-    virtual bool coarsenDag(const Graph_t_in &dag_in, Graph_t_out &coarsened_dag,
-                            std::vector<vertex_idx_t<Graph_t_out>> &vertex_contraction_map) override {
-
-        assert(dag_out.numberOfVertices() == 0);
-        assert(map.empty());
-
-        // Making edge comunications list
-        std::vector<int> edge_communications(dag_in.numberOfEdges());
-
-        for (const auto &edge : dag_in.edges()) {
-            edge_communications.emplace_back(dag_in[edge].communicationWeight);
-        }
-
-        // Computing the median and setting it to at least one
-        int median_edge_weight;
-        if (edge_communications.size() == 0) {
-            median_edge_weight = 0;
-        } else {
-            auto median_it = edge_communications.begin() + edge_communications.size() / 2;
-            std::nth_element(edge_communications.begin(), median_it, edge_communications.end());
-            median_edge_weight = edge_communications[edge_communications.size() / 2];
-        }
-        median_edge_weight = std::max(median_edge_weight, 1);
-
-        // Making edge list
-        float minimal_edge_weight = heavy_is_x_times_median * median_edge_weight;
-
-        // std::vector<EdgeType> edge_list(dag_in.numberOfEdges());
-
-        // for (const auto &edge : dag_in.edges()) {
-        //     if (dag_in[edge].communicationWeight > minimal_edge_weight) {
-        //         edge_list.emplace_back(edge);
-        //     }
-        // }
-
-        // // Sorting edge list
-        // std::sort(edge_list.begin(), edge_list.end(), [dag_in](const EdgeType &left, const EdgeType &right) {
-        //     return dag_in[left].communicationWeight > dag_in[right].communicationWeight;
-        // });
-
-        // Computing max component size
-        unsigned max_component_size = 0;
         for (const VertexType &vert : dag_in.vertices()) {
-            max_component_size += dag_in.nodeWorkWeight(vert);
-        }
-        max_component_size *= bound_component_weight_percent;
+            mutable_graph[vert].work_weight = dag_in.vertex_work_weight(vert);
+            mutable_graph[vert].comm_weight = dag_in.vertex_comm_weight(vert);
+            mutable_graph[vert].mem_weight = dag_in.vertex_mem_weight(vert);
 
-        GraphType_labeled graph_labeled(dag_in.numberOfVertices());
+            if constexpr (is_computational_dag_typed_vertices_v<Graph_t_in>) {
+                mutable_graph[vert].vertex_type = dag_in.vertex_type(vert);
+            } else {
+                mutable_graph[vert].vertex_type = 0;
+            }
 
-        unsigned label = 0;
-        for (const VertexType &vert : dag_in.vertices()) {
-            graph_labeled[vert] = dag_in[vert];
-            graph_labeled[vert].label = label;
-            graph_labeled[vert].merged_labels.push_back(label);
-            label++;
+            mutable_graph[vert].merged_labels.push_back(vert);
         }
 
         for (const EdgeType &edge : dag_in.edges()) {
-            const auto [edge_labeled, valid] = boost::add_edge(edge.m_source, edge.m_target, graph_labeled);
-            if (not valid) {
-                throw std::invalid_argument("Adding Edge was not sucessful");
-            }
-            graph_labeled[edge_labeled] = dag_in[edge];
+            const auto [edge_labeled, valid] =
+                boost::add_edge(source(edge, dag_in), target(edge, dag_in), mutable_graph);
+            mutable_graph[edge_labeled].comm_weight = dag_in.edge_comm_weight(edge);
         }
 
-        while (boost::num_vertices(graph_labeled) > min_percent_components_retained * dag_in.numberOfVertices()) {
+        while (boost::num_vertices(mutable_graph) > min_percent_components_retained * dag_in.num_vertices()) {
 
-            EdgeType edge;
-            int max_weight = 0;
-            for (const auto e : boost::extensions::make_source_iterator_range(boost::edges(graph_labeled))) {
+            mutable_edge contract_edge;
+            e_commw_t<Graph_t> max_weight = 0;
+            for (const auto e : boost::extensions::make_source_iterator_range(boost::edges(mutable_graph))) {
 
-                if (graph_labeled[e].communicationWeight > max_weight &&
-                    graph_labeled[e.m_source].workWeight + graph_labeled[e.m_target].workWeight < max_component_size) {
-                    max_weight = graph_labeled[e].communicationWeight;
-                    edge = e;
+                if (mutable_graph[e].comm_weight > max_weight &&
+                    mutable_graph[e.m_source].vertex_type == mutable_graph[e.m_target].vertex_type &&
+                    mutable_graph[e.m_source].work_weight + mutable_graph[e.m_target].work_weight <
+                        max_component_size) {
+                    max_weight = mutable_graph[e].comm_weight;
+                    contract_edge = e;
                 }
             }
 
@@ -209,113 +189,122 @@ class HeavyEdgeCoarser : public Coarser<Graph_t_in, Graph_t_out> {
                 break;
             }
 
-            for (const auto &out_edge :
-                 boost::extensions::make_source_iterator_range(boost::out_edges(edge.m_target, graph_labeled))) {
-                // for (const auto &out_edge : dag_out.out_edges(edge.m_target)) {
+            for (const auto &out_edge : boost::extensions::make_source_iterator_range(
+                     boost::out_edges(contract_edge.m_target, mutable_graph))) {
 
-                const auto pair = boost::edge(edge.m_source, out_edge.m_target, graph_labeled);
+                const auto pair = boost::edge(contract_edge.m_source, out_edge.m_target, mutable_graph);
                 if (pair.second) {
-                    graph_labeled[pair.first].communicationWeight += graph_labeled[out_edge].communicationWeight;
+                    mutable_graph[pair.first].communicationWeight += mutable_graph[out_edge].communicationWeight;
                 } else {
-                    const auto [new_edge, valid] = boost::add_edge(edge.m_source, out_edge.m_target, graph_labeled);
+                    const auto [new_edge, valid] =
+                        boost::add_edge(contract_edge.m_source, out_edge.m_target, mutable_graph);
                     assert(valid);
-                    graph_labeled[new_edge].communicationWeight = graph_labeled[out_edge].communicationWeight;
+                    mutable_graph[new_edge].communicationWeight = mutable_graph[out_edge].communicationWeight;
                 }
             }
 
-            // add in_edges of edge.m_target to edge.m_source
-            for (const auto &in_edge :
-                 boost::extensions::make_source_iterator_range(boost::in_edges(edge.m_target, graph_labeled))) {
+            // add in_edges of contract_edge.m_target to contract_edge.m_source
+            for (const auto &in_edge : boost::extensions::make_source_iterator_range(
+                     boost::in_edges(contract_edge.m_target, mutable_graph))) {
 
-                // skip edge
-                if (in_edge == edge) {
+                // skip contract_edge
+                if (in_edge == contract_edge) {
                     continue;
                 }
 
-                const auto pair = boost::edge(in_edge.m_source, edge.m_source, graph_labeled);
+                const auto pair = boost::edge(in_edge.m_source, contract_edge.m_source, mutable_graph);
 
                 if (pair.second) { // edge already exists
-                    graph_labeled[pair.first].communicationWeight += graph_labeled[in_edge].communicationWeight;
+                    mutable_graph[pair.first].communicationWeight += mutable_graph[in_edge].communicationWeight;
                 } else {
 
-                    if (has_path(edge.m_source, in_edge.m_source, graph_labeled)) { // merge is closing cycle
+                    if (mutable_has_path(contract_edge.m_source, in_edge.m_source, mutable_graph)) { // merge is closing cycle
 
-                        const auto other_pair = boost::edge(edge.m_source, in_edge.m_source, graph_labeled);
+                        const auto other_pair = boost::edge(contract_edge.m_source, in_edge.m_source, mutable_graph);
 
                         if (other_pair.second) {
-                            graph_labeled[other_pair.first].communicationWeight +=
-                                graph_labeled[in_edge].communicationWeight;
+                            mutable_graph[other_pair.first].communicationWeight +=
+                                mutable_graph[in_edge].communicationWeight;
                         } else {
 
                             const auto [new_edge, valid] =
-                                boost::add_edge(edge.m_source, in_edge.m_source, graph_labeled);
+                                boost::add_edge(contract_edge.m_source, in_edge.m_source, mutable_graph);
                             assert(valid);
-                            graph_labeled[new_edge].communicationWeight = graph_labeled[in_edge].communicationWeight;
+                            mutable_graph[new_edge].communicationWeight = mutable_graph[in_edge].communicationWeight;
                         }
 
                         // add zero weight edges to repair precedence constraints
                         for (const auto &out_edge : boost::extensions::make_source_iterator_range(
-                                 boost::out_edges(edge.m_target, graph_labeled))) {
+                                 boost::out_edges(contract_edge.m_target, mutable_graph))) {
 
-                            const auto another_pair = boost::edge(in_edge.m_source, out_edge.m_target, graph_labeled);
+                            const auto another_pair = boost::edge(in_edge.m_source, out_edge.m_target, mutable_graph);
                             if (not another_pair.second) {
                                 const auto [new_edge, valid] =
-                                    boost::add_edge(in_edge.m_source, out_edge.m_target, graph_labeled);
+                                    boost::add_edge(in_edge.m_source, out_edge.m_target, mutable_graph);
                                 assert(valid);
-                                graph_labeled[new_edge].communicationWeight = 0;
+                                mutable_graph[new_edge].communicationWeight = 0;
                                 // dag_out.addEdge(in_edge.m_source, out_edge.m_target, 0);
                             }
                         }
 
                     } else {
 
-                        const auto [new_edge, valid] = boost::add_edge(in_edge.m_source, edge.m_source, graph_labeled);
+                        const auto [new_edge, valid] =
+                            boost::add_edge(in_edge.m_source, contract_edge.m_source, mutable_graph);
                         assert(valid);
-                        graph_labeled[new_edge].communicationWeight = graph_labeled[in_edge].communicationWeight;
+                        mutable_graph[new_edge].communicationWeight = mutable_graph[in_edge].communicationWeight;
                     }
                 }
             }
 
-            graph_labeled[edge.m_source].workWeight += graph_labeled[edge.m_target].workWeight;
-            graph_labeled[edge.m_source].memoryWeight += graph_labeled[edge.m_target].memoryWeight;
-            graph_labeled[edge.m_source].communicationWeight += graph_labeled[edge.m_target].communicationWeight;
+            mutable_graph[contract_edge.m_source].workWeight += mutable_graph[contract_edge.m_target].workWeight;
+            mutable_graph[contract_edge.m_source].memoryWeight += mutable_graph[contract_edge.m_target].memoryWeight;
+            mutable_graph[contract_edge.m_source].communicationWeight +=
+                mutable_graph[contract_edge.m_target].communicationWeight;
 
-            std::move(graph_labeled[edge.m_target].merged_labels.begin(),
-                      graph_labeled[edge.m_target].merged_labels.end(),
-                      std::back_inserter(graph_labeled[edge.m_source].merged_labels));
+            std::move(mutable_graph[contract_edge.m_target].merged_labels.begin(),
+                      mutable_graph[contract_edge.m_target].merged_labels.end(),
+                      std::back_inserter(mutable_graph[contract_edge.m_source].merged_labels));
 
-            while (boost::in_degree(edge.m_target, graph_labeled) > 0) {
-                const auto in_edge = *boost::in_edges(edge.m_target, graph_labeled).first;
-                boost::remove_edge(in_edge, graph_labeled);
+            while (boost::in_degree(contract_edge.m_target, mutable_graph) > 0) {
+                const auto in_edge = *boost::in_edges(contract_edge.m_target, mutable_graph).first;
+                boost::remove_edge(in_edge, mutable_graph);
             }
 
-            while (boost::out_degree(edge.m_target, graph_labeled) > 0) {
-                const auto out_edge = *boost::out_edges(edge.m_target, graph_labeled).first;
-                boost::remove_edge(out_edge, graph_labeled);
+            while (boost::out_degree(contract_edge.m_target, mutable_graph) > 0) {
+                const auto out_edge = *boost::out_edges(contract_edge.m_target, mutable_graph).first;
+                boost::remove_edge(out_edge, mutable_graph);
             }
 
-            boost::remove_vertex(edge.m_target, graph_labeled);
+            boost::remove_vertex(contract_edge.m_target, mutable_graph);
         }
 
-        dag_out = ComputationalDag(boost::num_vertices(graph_labeled));
-        map = std::vector<std::vector<VertexType>>(dag_out.numberOfVertices());
+        coarsened_dag = Graph_t_out(mutable_graph.num_vertices());
 
-        unsigned idx = 0;
-        for (const VertexType &vert : dag_out.vertices()) {
-            dag_out[vert].workWeight = graph_labeled[vert].workWeight;
-            dag_out[vert].communicationWeight = graph_labeled[vert].communicationWeight;
-            dag_out[vert].memoryWeight = graph_labeled[vert].memoryWeight;
-            map[idx] = graph_labeled[vert].merged_labels;
-            idx++;
+        vertex_contraction_map = std::vector<vertex_idx_t<Graph_t_out>>(dag_in.num_vertices());
+
+        for (const VertexType &vert : coarsened_dag.vertices()) {
+
+            coarsened_dag.set_vertex_work_weight(vert, mutable_graph[vert].work_weight);
+            coarsened_dag.set_vertex_comm_weight(vert, mutable_graph[vert].comm_weight);
+            coarsened_dag.set_vertex_mem_weight(vert, mutable_graph[vert].mem_weight);
+
+            if constexpr (is_computational_dag_typed_vertices_v<Graph_t_out>) {
+                coarsened_dag.set_vertex_type(vert, mutable_graph[vert].vertex_type);
+            }
+
+            for (const auto &orig_vert : mutable_graph[vert].merged_labels) {
+                vertex_contraction_map[orig_vert] = vert;
+            }
         }
 
-        for (const auto &edge : boost::extensions::make_source_iterator_range(boost::edges(graph_labeled))) {
+        for (const auto &edge : boost::extensions::make_source_iterator_range(boost::edges(mutable_graph))) {
 
-            dag_out.addEdge(edge.m_source, edge.m_target, graph_labeled[edge].communicationWeight);
+            dag_out.add_edge(edge.m_source, edge.m_target, mutable_graph[edge].comm_weight);
         }
 
-        return RETURN_STATUS::SUCCESS;
+        return true;
     }
-}
+};
 
-}; // namespace osp
+} // namespace osp
