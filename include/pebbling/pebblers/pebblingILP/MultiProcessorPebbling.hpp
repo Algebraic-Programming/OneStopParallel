@@ -1076,7 +1076,7 @@ void MultiProcessorPebbling<Graph_t>::constructPebblingScheduleFromSolution(Pebb
     std::vector<std::vector<bool > > sent_down_already(instance.numberOfVertices(), std::vector<bool>(instance.numberOfProcessors(), false));
     std::vector<std::vector<bool > > ignore_red(instance.numberOfVertices(), std::vector<bool>(instance.numberOfProcessors(), false));
 
-    std::vector<vertex_idx> topOrder = GetTopOrder(TOP_SORT_ORDER::AS_IT_COMES, instance.getComputationalDag());
+    std::vector<vertex_idx> topOrder = GetTopOrder(instance.getComputationalDag());
     std::vector<unsigned> topOrderPosition(instance.numberOfVertices());
     for(unsigned index = 0; index < instance.numberOfVertices(); ++index)
         topOrderPosition[topOrder[index]] = index;

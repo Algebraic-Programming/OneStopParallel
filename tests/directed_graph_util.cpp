@@ -493,9 +493,9 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
         }
     }
 
-    std::vector<VertexType> top_order = GetTopOrder(AS_IT_COMES, graph);
+    std::vector<VertexType> top_order = GetTopOrder(graph);
     BOOST_CHECK(top_order.size() == graph.num_vertices());
-    BOOST_CHECK(GetTopOrder(AS_IT_COMES, graph_empty).size() == graph_empty.num_vertices());
+    BOOST_CHECK(GetTopOrder(graph_empty).size() == graph_empty.num_vertices());
 
     std::vector<size_t> index_in_top_order = sorting_arrangement(top_order);
 
@@ -505,9 +505,9 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
         }
     }
 
-    top_order = GetTopOrder(MAX_CHILDREN, graph);
+    top_order = GetTopOrderMaxChildren(graph);
     BOOST_CHECK(top_order.size() == graph.num_vertices());
-    BOOST_CHECK(GetTopOrder(AS_IT_COMES, graph_empty).size() == graph_empty.num_vertices());
+    BOOST_CHECK(GetTopOrder(graph_empty).size() == graph_empty.num_vertices());
 
     index_in_top_order = sorting_arrangement(top_order);
 
@@ -517,9 +517,9 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
         }
     }
 
-    top_order = GetTopOrder(RANDOM, graph);
+    top_order = GetTopOrderRandom(graph);
     BOOST_CHECK(top_order.size() == graph.num_vertices());
-    BOOST_CHECK(GetTopOrder(RANDOM, graph_empty).size() == graph_empty.num_vertices());
+    BOOST_CHECK(GetTopOrderRandom(graph_empty).size() == graph_empty.num_vertices());
 
     index_in_top_order = sorting_arrangement(top_order);
 
@@ -529,9 +529,9 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
         }
     }
 
-    top_order = GetTopOrder(MINIMAL_NUMBER, graph);
+    top_order = GetTopOrderMinIndex(graph);
     BOOST_CHECK(top_order.size() == graph.num_vertices());
-    BOOST_CHECK(GetTopOrder(MINIMAL_NUMBER, graph_empty).size() == graph_empty.num_vertices());
+    BOOST_CHECK(GetTopOrderMinIndex(graph_empty).size() == graph_empty.num_vertices());
 
     index_in_top_order = sorting_arrangement(top_order);
 

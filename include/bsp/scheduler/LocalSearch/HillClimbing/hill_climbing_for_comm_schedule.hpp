@@ -410,7 +410,7 @@ void HillClimbingForCommSteps<Graph_t>::CreateSupstepLists() {
     supsteplists.clear();
     supsteplists.resize(M, std::vector<std::list<vertex_idx>>(P));
 
-    const std::vector<vertex_idx> topOrder = GetTopOrder(TOP_SORT_ORDER::AS_IT_COMES, G);
+    const std::vector<vertex_idx> topOrder = GetTopOrder(G);
     for (vertex_idx node : topOrder)
         supsteplists[schedule->assignedSuperstep(node)][schedule->assignedProcessor(node)].push_back(node);
 

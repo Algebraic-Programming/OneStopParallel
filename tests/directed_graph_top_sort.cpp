@@ -27,8 +27,8 @@ limitations under the License.
 #include "graph_algorithms/directed_graph_path_util.hpp"
 #include "graph_algorithms/directed_graph_top_sort.hpp"
 #include "graph_algorithms/directed_graph_util.hpp"
-#include "graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 #include "graph_implementations/adj_list_impl/compact_sparse_graph.hpp"
+#include "graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 #include "graph_implementations/boost_graphs/boost_graph.hpp"
 
 using namespace osp;
@@ -87,18 +87,64 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     std::vector<VertexType> top_order;
     std::vector<size_t> index_in_top_order;
 
-    for (auto top_order_type : {MAX_CHILDREN, RANDOM, MINIMAL_NUMBER, GORDER, AS_IT_COMES}) { // AS_IT_COMES last
-        top_order = GetTopOrder(top_order_type, graph);
+    top_order = GetTopOrderMaxChildren(graph);
 
-        BOOST_CHECK(top_order.size() == graph.num_vertices());
-        BOOST_CHECK(GetTopOrder(top_order_type, graph_empty).size() == graph_empty.num_vertices());
+    BOOST_CHECK(top_order.size() == graph.num_vertices());
 
-        index_in_top_order = sorting_arrangement(top_order);
+    index_in_top_order = sorting_arrangement(top_order);
 
-        for (const auto &i : top_order) {
-            for (const auto &j : graph.children(i)) {
-                BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]);
-            }
+    for (const auto &i : top_order) {
+        for (const auto &j : graph.children(i)) {
+            BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]);
+        }
+    }
+
+    top_order = GetTopOrderRandom(graph);
+
+    BOOST_CHECK(top_order.size() == graph.num_vertices());
+
+    index_in_top_order = sorting_arrangement(top_order);
+
+    for (const auto &i : top_order) {
+        for (const auto &j : graph.children(i)) {
+            BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]);
+        }
+    }
+
+    top_order = GetTopOrderMinIndex(graph);
+
+    BOOST_CHECK(top_order.size() == graph.num_vertices());
+
+    index_in_top_order = sorting_arrangement(top_order);
+
+    for (const auto &i : top_order) {
+        for (const auto &j : graph.children(i)) {
+            BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]);
+        }
+    }
+
+    top_order = GetTopOrderGorder(graph);
+
+    BOOST_CHECK(top_order.size() == graph.num_vertices());
+
+    index_in_top_order = sorting_arrangement(top_order);
+
+    for (const auto &i : top_order) {
+        for (const auto &j : graph.children(i)) {
+            BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]);
+        }
+    }
+
+    top_order = GetTopOrder(graph);
+
+    BOOST_CHECK(top_order.size() == graph.num_vertices());
+    BOOST_CHECK(GetTopOrder(graph_empty).size() == graph_empty.num_vertices());
+
+    index_in_top_order = sorting_arrangement(top_order);
+
+    for (const auto &i : top_order) {
+        for (const auto &j : graph.children(i)) {
+            BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]);
         }
     }
 
@@ -211,7 +257,6 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     }
 }
 
-
 BOOST_AUTO_TEST_CASE(top_sort_template_overload_csr) {
 
     using VertexType = vertex_idx_t<boost_graph_int_t>;
@@ -225,8 +270,7 @@ BOOST_AUTO_TEST_CASE(top_sort_template_overload_csr) {
     const std::vector<int> commW({1, 1, 1, 1, 2, 3, 2, 1, 1, 1});
 
     const boost_graph_int_t graph(out, workW, commW);
-  
-    
+
     Compact_Sparse_Graph<false> graph_csr(graph);
 
     BOOST_CHECK_EQUAL(graph_csr.num_vertices(), 10);
@@ -235,12 +279,12 @@ BOOST_AUTO_TEST_CASE(top_sort_template_overload_csr) {
     auto top_order = GetTopOrder(graph_csr);
     BOOST_CHECK_EQUAL(top_order.size(), graph_csr.num_vertices());
 
-    std::vector<size_t> expected_top_order{0,1,2,3,4,5,6,7,8,9};
+    std::vector<size_t> expected_top_order{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
 
     size_t idx = 0;
     for (const auto &v : top_sort_view(graph_csr)) {
         BOOST_CHECK_EQUAL(top_order[idx], v);
         BOOST_CHECK_EQUAL(expected_top_order[idx], v);
         ++idx;
-    }    
+    }
 }

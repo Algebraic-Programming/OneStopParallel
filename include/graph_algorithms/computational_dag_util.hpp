@@ -131,7 +131,7 @@ v_workw_t<Graph_t> critical_path_weight(const Graph_t &graph) {
     v_workw_t<Graph_t> critical_path_weight = 0;
 
     // calculating lenght of longest path
-    for (const auto &node : GetTopOrder(AS_IT_COMES, graph)) {
+    for (const auto &node : GetTopOrder(graph)) {
 
         v_workw_t<Graph_t> max_temp = 0;
         for (const auto &parent : graph.parents(node)) {

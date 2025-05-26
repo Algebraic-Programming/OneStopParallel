@@ -204,7 +204,7 @@ std::vector<unsigned> AcyclicDagDivider<Graph_t>::getTopologicalSplit(const Grap
 {
     std::vector<unsigned> node_to_part(G.num_vertices());
 
-    std::vector<vertex_idx> top_order = GetTopOrder(TOP_SORT_ORDER::AS_IT_COMES, G);
+    std::vector<vertex_idx> top_order = GetTopOrder(G);
     std::vector<unsigned> top_order_idx(G.num_vertices());
     for(unsigned idx = 0; idx < G.num_vertices(); ++idx)
         top_order_idx[top_order[idx]] = idx;

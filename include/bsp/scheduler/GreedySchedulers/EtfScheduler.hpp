@@ -84,7 +84,7 @@ class EtfScheduler : public Scheduler<Graph_t> {
 
         std::vector<v_workw_t<Graph_t>> BL(instance.numberOfVertices(), 0);
 
-        const std::vector<vertex_idx_t<Graph_t>> topOrder = GetTopOrder(AS_IT_COMES, instance.getComputationalDag());
+        const std::vector<vertex_idx_t<Graph_t>> topOrder = GetTopOrder(instance.getComputationalDag());
         auto r_iter = topOrder.rbegin();
 
         for (; r_iter != topOrder.rend(); ++r_iter) {

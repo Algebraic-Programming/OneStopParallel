@@ -70,7 +70,7 @@ template<typename Graph_t>
 std::vector<v_workw_t<Graph_t> > SubproblemMultiScheduling<Graph_t>::get_longest_path(const Graph_t &graph) {
     std::vector<workweight_type> longest_path(graph.num_vertices(), 0);
 
-    std::vector<vertex_idx> top_order = GetTopOrder(TOP_SORT_ORDER::AS_IT_COMES, graph);
+    std::vector<vertex_idx> top_order = GetTopOrder(graph);
 
     for (auto r_iter = top_order.rbegin(); r_iter != top_order.crend(); r_iter++) {
         longest_path[*r_iter] = graph.vertex_work_weight(*r_iter);

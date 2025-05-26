@@ -82,7 +82,7 @@ class BspLocking : public Scheduler<Graph_t> {
 
         std::vector<v_workw_t<Graph_t>> longest_path(graph.num_vertices(), 0);
 
-        const std::vector<VertexType> top_order = GetTopOrder(AS_IT_COMES, graph);
+        const std::vector<VertexType> top_order = GetTopOrder(graph);
 
         for (auto r_iter = top_order.rbegin(); r_iter != top_order.crend(); r_iter++) {
             longest_path[*r_iter] = graph.vertex_work_weight(*r_iter);

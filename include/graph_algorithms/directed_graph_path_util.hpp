@@ -146,7 +146,7 @@ std::vector<vertex_idx_t<Graph_t>> longestChain(const Graph_t &graph) {
     VertexType end_longest_chain = 0;
 
     // calculating lenght of longest path
-    for (const VertexType &node : GetTopOrder(AS_IT_COMES, graph)) {
+    for (const VertexType &node : top_sort_view(graph)) {
 
         unsigned max_temp = 0;
         for (const auto &parent : graph.parents(node)) {
@@ -186,7 +186,7 @@ std::vector<unsigned> get_bottom_node_distance(const Graph_t &graph) {
 
     std::vector<unsigned> bottom_distance(graph.num_vertices(), 0);
 
-    const auto top_order = GetTopOrder(AS_IT_COMES, graph);
+    const auto top_order = GetTopOrder(graph);
     for (std::size_t i = top_order.size() - 1; i < top_order.size(); i--) {
 
         unsigned max_temp = 0;
@@ -227,7 +227,7 @@ std::vector<int> get_strict_poset_integer_map(unsigned const noise, double const
     using VertexType = vertex_idx_t<Graph_t>;
     using EdgeType = edge_desc_t<Graph_t>;
 
-    std::vector<VertexType> top_order = GetTopOrder(AS_IT_COMES, graph);
+    std::vector<VertexType> top_order = GetTopOrder(graph);
 
     Repeat_Chance repeater_coin;
 

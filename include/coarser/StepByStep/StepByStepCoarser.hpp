@@ -710,8 +710,7 @@ template<typename Graph_t>
 std::vector<unsigned> StepByStepCoarser<Graph_t>::ComputeFilteredTopLevel() const
 {
     std::vector<unsigned> TopLevel(G_full.num_vertices());
-    const std::vector<vertex_idx> topOrder = GetTopOrder(TOP_SORT_ORDER::AS_IT_COMES, G_coarse);
-    for (const vertex_idx node : topOrder) {
+    for (const vertex_idx node : top_sort_view(G_coarse)) {
         if(!node_valid[node])
             continue;
 
