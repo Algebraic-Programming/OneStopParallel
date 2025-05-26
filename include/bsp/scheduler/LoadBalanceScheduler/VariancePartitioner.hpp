@@ -29,6 +29,13 @@ class VariancePartitioner : public LoadBalancerBase<Graph_t, Interpolation_t> {
 
     static_assert(is_computational_dag_v<Graph_t>, "VariancePartitioner can only be used with computational DAGs.");
 
+    using VertexType = vertex_idx_t<Graph_t>;
+    struct VarianceCompare {
+        bool operator()(const std::pair<VertexType, double> &lhs, const std::pair<VertexType, double> &rhs) const {
+            return ((lhs.second > rhs.second) || ((lhs.second == rhs.second) && (lhs.first < rhs.first)));
+        }
+    };
+
   protected:
     constexpr static bool use_memory_constraint =
         is_memory_constraint_v<MemoryConstraint_t> or is_memory_constraint_schedule_v<MemoryConstraint_t>;
@@ -37,8 +44,6 @@ class VariancePartitioner : public LoadBalancerBase<Graph_t, Interpolation_t> {
                   "Graph_t must be the same as MemoryConstraint_t::Graph_impl_t.");
 
     MemoryConstraint_t memory_constraint;
-
-    using VertexType = vertex_idx_t<Graph_t>;
 
     /// @brief threshold percentage of idle processors as to when a new superstep should be introduced
     double max_percent_idle_processors;
@@ -85,12 +90,6 @@ class VariancePartitioner : public LoadBalancerBase<Graph_t, Interpolation_t> {
 
         return work_variance;
     }
-
-    struct VarianceCompare {
-        bool operator()(const std::pair<VertexType, double> &lhs, const std::pair<VertexType, double> &rhs) const {
-            return ((lhs.second > rhs.second) || ((lhs.second == rhs.second) && (lhs.first < rhs.first)));
-        }
-    };
 
   public:
     VariancePartitioner(double max_percent_idle_processors_ = 0.2, double variance_power_ = 2.0,

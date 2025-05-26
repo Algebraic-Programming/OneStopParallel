@@ -28,6 +28,7 @@ limitations under the License.
 #include "bsp/scheduler/GreedySchedulers/EtfScheduler.hpp"
 #include "bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
 #include "bsp/scheduler/GreedySchedulers/VarianceFillup.hpp"
+#include "bsp/scheduler/LoadBalanceScheduler/LightEdgeVariancePartitioner.hpp"
 #include "bsp/scheduler/Serial.hpp"
 #include "graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
@@ -437,5 +438,29 @@ BOOST_AUTO_TEST_CASE(VariancePartitioner_test) {
 }
 
 
+BOOST_AUTO_TEST_CASE(LightEdgeVariancePartitioner_test) {
+    LightEdgeVariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, linear_interpolation, local_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>> test_linear;
+    run_test_local_memory(&test_linear);
 
+    LightEdgeVariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, flat_spline_interpolation, local_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>> test_flat;
+    run_test_local_memory(&test_flat);
 
+    LightEdgeVariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, superstep_only_interpolation, local_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>> test_superstep;
+    run_test_local_memory(&test_superstep);
+
+    LightEdgeVariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, global_only_interpolation, local_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>> test_global;
+    run_test_local_memory(&test_global);
+
+    LightEdgeVariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, linear_interpolation, persistent_transient_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>> test_linear_tp;
+    run_test_persistent_transient_memory(&test_linear_tp);
+
+    LightEdgeVariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, flat_spline_interpolation, persistent_transient_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>> test_flat_tp;
+    run_test_persistent_transient_memory(&test_flat_tp);
+
+    LightEdgeVariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, superstep_only_interpolation, persistent_transient_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>> test_superstep_tp;
+    run_test_persistent_transient_memory(&test_superstep_tp);
+
+    LightEdgeVariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, global_only_interpolation, persistent_transient_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>> test_global_tp;
+    run_test_persistent_transient_memory(&test_global_tp);
+
+}

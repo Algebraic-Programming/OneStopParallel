@@ -93,7 +93,7 @@ heavy_edge_preprocess(const Graph_t &graph, const double heavy_is_x_times_median
         if (weight_comp_a + weight_comp_b > max_component_size)
             continue;
 
-        uf_structure.join_by_name(edge.m_source, edge.m_target);
+        uf_structure.join_by_name(source(edge, graph), target(edge, graph));
     }
 
     return uf_structure.get_connected_components();

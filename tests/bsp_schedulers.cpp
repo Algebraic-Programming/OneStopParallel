@@ -32,6 +32,7 @@ limitations under the License.
 #include "bsp/scheduler/GreedySchedulers/GrowLocalAutoCoresParallel.hpp"
 #include "bsp/scheduler/GreedySchedulers/RandomGreedy.hpp"
 #include "bsp/scheduler/GreedySchedulers/VarianceFillup.hpp"
+#include "bsp/scheduler/LoadBalanceScheduler/LightEdgeVariancePartitioner.hpp"
 #include "bsp/scheduler/LoadBalanceScheduler/VariancePartitioner.hpp"
 #include "bsp/scheduler/Serial.hpp"
 #include "graph_implementations/adj_list_impl/compact_sparse_graph.hpp"
@@ -316,5 +317,20 @@ BOOST_AUTO_TEST_CASE(VariancePartitioner_test) {
     run_test(&test_superstep);
 
     VariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, global_only_interpolation> test_global;
+    run_test(&test_global);
+}
+
+BOOST_AUTO_TEST_CASE(LightEdgeVariancePartitioner_test) {
+    LightEdgeVariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, linear_interpolation> test_linear;
+    run_test(&test_linear);
+
+    LightEdgeVariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, flat_spline_interpolation> test_flat;
+    run_test(&test_flat);
+
+    LightEdgeVariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, superstep_only_interpolation>
+        test_superstep;
+    run_test(&test_superstep);
+
+    LightEdgeVariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, global_only_interpolation> test_global;
     run_test(&test_global);
 }
