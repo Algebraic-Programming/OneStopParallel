@@ -86,6 +86,15 @@ struct local_memory_constraint {
         current_proc_memory[proc] += instance->getComputationalDag().vertex_mem_weight(v);
     }
 
+    inline bool can_add(const unsigned proc, const v_memw_t<Graph_t> &custom_mem_weight,
+                        const v_memw_t<Graph_t>&) const {
+        return current_proc_memory[proc] + custom_mem_weight <= instance->getArchitecture().memoryBound(proc);
+    }
+
+    inline void add(const unsigned proc, const v_memw_t<Graph_t> &custom_mem_weight, const v_memw_t<Graph_t>&) {
+        current_proc_memory[proc] += custom_mem_weight;
+    }
+
     inline void reset(const unsigned proc) { current_proc_memory[proc] = 0; }
 };
 
@@ -140,6 +149,62 @@ struct persistent_transient_memory_constraint {
         current_proc_persistent_memory[proc] += instance->getComputationalDag().vertex_mem_weight(v);
         current_proc_transient_memory[proc] =
             std::max(current_proc_transient_memory[proc], instance->getComputationalDag().vertex_comm_weight(v));
+    }
+
+    inline bool can_add(const unsigned proc, const v_memw_t<Graph_t> &custom_mem_weight,
+                        const v_commw_t<Graph_t> &custom_comm_weight) const {
+
+        return (current_proc_persistent_memory[proc] + custom_mem_weight +
+                    std::max(current_proc_transient_memory[proc], custom_comm_weight) <=
+                instance->getArchitecture().memoryBound(proc));
+    }
+
+    inline void add(const unsigned proc, const v_memw_t<Graph_t> &custom_mem_weight,
+                    const v_commw_t<Graph_t> &custom_comm_weight ) {
+
+        current_proc_persistent_memory[proc] += custom_mem_weight;
+        current_proc_transient_memory[proc] = std::max(current_proc_transient_memory[proc], custom_comm_weight);
+    }
+
+    inline void reset(const unsigned) {}
+};
+
+template<typename Graph_t>
+struct global_memory_constraint {
+
+    using Graph_impl_t = Graph_t;
+
+    const BspInstance<Graph_t> *instance;
+
+    std::vector<v_memw_t<Graph_t>> current_proc_memory;
+
+    global_memory_constraint() : instance(nullptr) {}
+
+    inline void initialize(const BspInstance<Graph_t> &instance_) {
+        instance = &instance_;
+        current_proc_memory = std::vector<v_memw_t<Graph_t>>(instance->numberOfProcessors(), 0);
+
+        if (instance->getArchitecture().getMemoryConstraintType() != GLOBAL) {
+            throw std::invalid_argument("Memory constraint type is not GLOBAL");
+        }
+    }
+
+    inline bool can_add(const vertex_idx_t<Graph_t> &v, const unsigned proc) const {
+        return current_proc_memory[proc] + instance->getComputationalDag().vertex_mem_weight(v) <=
+               instance->getArchitecture().memoryBound(proc);
+    }
+
+    inline void add(const vertex_idx_t<Graph_t> &v, const unsigned proc) {
+        current_proc_memory[proc] += instance->getComputationalDag().vertex_mem_weight(v);
+    }
+
+    inline bool can_add(const unsigned proc, const v_memw_t<Graph_t> &custom_mem_weight,
+                        const v_commw_t<Graph_t> &) const {
+        return current_proc_memory[proc] + custom_mem_weight <= instance->getArchitecture().memoryBound(proc);
+    }
+
+    inline void add(const unsigned proc, const v_memw_t<Graph_t> &custom_mem_weight, const v_commw_t<Graph_t> &) {
+        current_proc_memory[proc] += custom_mem_weight;
     }
 
     inline void reset(const unsigned) {}
