@@ -62,7 +62,7 @@ std::vector<unsigned> AcyclicDagDivider<Graph_t>::computePartitioning(const BspI
     const unsigned N = static_cast<unsigned>(instance.numberOfVertices());
 
     // split to connected components first
-    ConnectedComponentDivider<Graph_t> connected_comp;
+    ConnectedComponentDivider<Graph_t, Graph_t> connected_comp;
     connected_comp.compute_connected_components(instance.getComputationalDag());
 
     std::vector<Graph_t> subDags = connected_comp.get_sub_dags();
