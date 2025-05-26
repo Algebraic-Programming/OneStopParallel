@@ -72,7 +72,7 @@ class LoadBalancerBase : public Scheduler<Graph_t> {
 
         std::vector<float> proc_prio(instance.numberOfProcessors());
         for (size_t i = 0; i < proc_prio.size(); i++) {
-            assert(total_partition_work[i] < std::numeric_limits<float>::max() && superstep_partition_work[i] < std::numeric_limits<float>::max()); 
+            assert(static_cast<double>(total_partition_work[i]) < std::numeric_limits<float>::max() && static_cast<double>(superstep_partition_work[i]) < std::numeric_limits<float>::max()); 
             proc_prio[i] = ((1 - value) * static_cast<float>(superstep_partition_work[i])) + (value * static_cast<float>(total_partition_work[i]));
         }
 

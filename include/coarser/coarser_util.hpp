@@ -66,7 +66,7 @@ template<typename Graph_t_in, typename Graph_t_out, typename v_work_acc_method =
 bool construct_coarse_dag(const Graph_t_in &dag_in, Graph_t_out &coarsened_dag,
                          const std::vector<vertex_idx_t<Graph_t_out>> &vertex_contraction_map) {
 
-    assert(check_valid_contraction_map(vertex_contraction_map));
+    assert(check_valid_contraction_map<Graph_t_out>(vertex_contraction_map));
 
     // todo
     // if constexpr (has_quotient_graph_construction_method<Graph_t_in, Graph_t_out>) {
@@ -187,7 +187,7 @@ bool check_valid_expansion_map(const std::vector<std::vector<vertex_idx_t<Graph_
 template<typename Graph_t_in, typename Graph_t_out>
 std::vector<std::vector<vertex_idx_t<Graph_t_in>>>
 invert_vertex_contraction_map(const std::vector<vertex_idx_t<Graph_t_out>> &vertex_contraction_map) {
-    assert(check_valid_contraction_map(vertex_contraction_map));
+    assert(check_valid_contraction_map<Graph_t_out>(vertex_contraction_map));
 
     vertex_idx_t<Graph_t_out> max_vert =
         *std::max_element(vertex_contraction_map.cbegin(), vertex_contraction_map.cend());
