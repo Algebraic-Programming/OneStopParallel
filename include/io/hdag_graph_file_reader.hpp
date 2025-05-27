@@ -152,9 +152,7 @@ bool readComputationalDagHyperdagFormat(const std::string &filename, Graph_t& gr
 
 // std::pair<bool, ComputationalDag> readCombinedSptrsvSpmvDagMartixMarket(const std::string &firstFilename, const std::string &secondFilename);
 
-// std::pair<bool, csr_graph> readComputationalDagMartixMarketFormat_csr(const std::string &filename);
 
-// std::pair<bool, csr_graph> readComputationalDagMartixMarketFormat_csr(std::ifstream &infile);
 
 // std::pair<bool, BspArchitecture> readBspArchitecture(const std::string &filename);
 
