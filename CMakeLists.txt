@@ -78,6 +78,7 @@ add_subdirectory(src)
 
 # Add subdirectory for executables
 add_subdirectory(apps)
+add_subdirectory(apps/graph_generator)
 
 # Add subdirectory for tests
 if( NOT Boost_unit_test_framework_FOUND )

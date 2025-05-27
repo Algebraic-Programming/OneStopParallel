@@ -271,7 +271,7 @@ std::vector<int> get_strict_poset_integer_map(unsigned const noise, double const
         if (is_source(vertex, graph))
             continue;
 
-        int max_temp = INT_MIN;
+        int max_temp = std::numeric_limits<int>::min();
 
         for (const auto &edge : graph.in_edges(vertex)) {
 
@@ -289,7 +289,7 @@ std::vector<int> get_strict_poset_integer_map(unsigned const noise, double const
         if (is_sink(*iter, graph))
             continue;
 
-        int max_temp = INT_MIN;
+        int max_temp = std::numeric_limits<int>::min();
 
         for (const auto &edge : graph.out_edges(*iter)) {
             int temp = new_bot[target(edge, graph)];

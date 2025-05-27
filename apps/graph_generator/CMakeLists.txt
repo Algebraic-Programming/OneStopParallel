@@ -1,19 +1,20 @@
 # Create an empty list for the examples
-set( executable_list "" )
+set( graph_generator_list "" )
 
 # Function to create an example
 macro( _add_executable name)
   # Add the example to the list
-  list( APPEND executable_list ${name} )
+  list( APPEND graph_generator ${name} )
   # Create the example
   add_executable( ${name} ${name}.cpp )
   target_link_libraries( ${name} PUBLIC BspSchedulingLibrary )
 endmacro()
 
-_add_executable( osp_turnus )
+if(Eigen3_FOUND)
+_add_executable( post_incomplete_cholesky )
+endif()
 
-_add_executable( graph_analyser )
 
 # Custom target to compile all the examples
-add_custom_target( build_executables DEPENDS ${executable_list} )
-add_custom_target( executable DEPENDS ${executable_list} )
+add_custom_target( build_graph_generator DEPENDS ${graph_generator} )
+add_custom_target( graph_generator DEPENDS ${graph_generator} )
