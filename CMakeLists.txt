@@ -76,6 +76,8 @@ find_package(OpenMP REQUIRED)
 #Add subdirectory for sources
 add_subdirectory(src)
 
+# Add subdirectory for executables
+add_subdirectory(apps)
 
 # Add subdirectory for tests
 if( NOT Boost_unit_test_framework_FOUND )
