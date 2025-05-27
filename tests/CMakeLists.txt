@@ -44,6 +44,8 @@ _add_test( bsp_instance )
 
 _add_test( bsp_schedule )
 
+_add_test( bsp_schedule_recomp )
+
 ## pebbling model
 _add_test( pebbling_schedule_class )
 
