@@ -43,10 +43,7 @@ struct is_directed_graph<
           is_input_range_of<decltype(std::declval<T>().parents(std::declval<vertex_idx_t<T>>())), vertex_idx_t<T>>,
           is_input_range_of<decltype(std::declval<T>().children(std::declval<vertex_idx_t<T>>())), vertex_idx_t<T>>,
           std::is_integral<decltype(std::declval<T>().in_degree(std::declval<vertex_idx_t<T>>()))>,
-          std::is_integral<decltype(std::declval<T>().out_degree(std::declval<vertex_idx_t<T>>()))>,
-          std::is_default_constructible<T>,
-          std::is_move_constructible<T>,
-          std::is_copy_constructible<T>
+          std::is_integral<decltype(std::declval<T>().out_degree(std::declval<vertex_idx_t<T>>()))>
           > {};
 
 template<typename T>
