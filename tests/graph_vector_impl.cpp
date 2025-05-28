@@ -24,6 +24,7 @@ limitations under the License.
 
 #include "graph_algorithms/directed_graph_util.hpp"
 #include "graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
+#include "graph_implementations/adj_list_impl/dag_vector_adapter.hpp"
 #include "graph_implementations/boost_graphs/boost_graph.hpp"
 
 using namespace osp;
@@ -179,3 +180,39 @@ BOOST_AUTO_TEST_CASE(test_constr_dag) {
     BOOST_CHECK_EQUAL(graph_move_1.vertex_comm_weight(1), 6);
     BOOST_CHECK_EQUAL(graph_move_1.vertex_mem_weight(1), 7);
 }
+
+BOOST_AUTO_TEST_CASE(test_dag_vector_adapter) {
+
+    std::vector<int> vertices{0, 1, 2, 3, 4, 5, 6, 7};
+
+    std::vector<std::vector<int>> out_neighbors{{1, 2, 3}, {4, 6}, {4, 5}, {7}, {7}, {}, {}, {}};
+
+    std::vector<std::vector<int>> in_neighbors{{}, {0}, {0}, {0}, {1, 2}, {2}, {1}, {4, 3}};
+
+    using v_impl = cdag_vertex_impl<int, int, int, int, unsigned>;
+    using graph_t = dag_vector_adapter<v_impl>;
+
+    graph_t graph(out_neighbors, in_neighbors);
+
+    size_t idx = 0;
+
+    for (const auto &v : graph.vertices()) {
+
+        BOOST_CHECK_EQUAL(v, vertices[idx++]);
+
+        unsigned vv = static_cast<unsigned>(v);
+
+        size_t i = 0;
+        for (const auto &e : graph.children(v)) {
+            BOOST_CHECK_EQUAL(e, out_neighbors[vv][i++]);
+        }
+
+        i = 0;
+        for (const auto &e : graph.parents(v)) {
+            BOOST_CHECK_EQUAL(e, in_neighbors[vv][i++]);
+        }
+
+        BOOST_CHECK_EQUAL(graph.in_degree(v), in_neighbors[vv].size());
+        BOOST_CHECK_EQUAL(graph.out_degree(v), out_neighbors[vv].size());
+    }
+};

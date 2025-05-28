@@ -24,9 +24,10 @@ limitations under the License.
 
 namespace osp {
 
-template<typename workw_t, typename commw_t, typename memw_t, typename vertex_type_t>
+template<typename vertex_idx_t, typename workw_t, typename commw_t, typename memw_t, typename vertex_type_t>
 struct cdag_vertex_impl {
 
+    using vertex_idx_type = vertex_idx_t;
     using work_weight_type = workw_t;
     using comm_weight_type = commw_t;
     using mem_weight_type = memw_t;
@@ -39,12 +40,12 @@ struct cdag_vertex_impl {
     cdag_vertex_impl &operator=(const cdag_vertex_impl &other) = default;
     cdag_vertex_impl &operator=(cdag_vertex_impl &&other) = default;
 
-    cdag_vertex_impl(std::size_t vertex_idx_, workw_t work_weight, commw_t comm_weight, memw_t mem_weight,
+    cdag_vertex_impl(vertex_idx_t vertex_idx_, workw_t work_weight, commw_t comm_weight, memw_t mem_weight,
                      vertex_type_t vertex_type)
         : id(vertex_idx_), work_weight(work_weight), comm_weight(comm_weight), mem_weight(mem_weight),
           vertex_type(vertex_type) {}
 
-    std::size_t id;
+    vertex_idx_t id;
 
     workw_t work_weight;
     commw_t comm_weight;
@@ -53,13 +54,13 @@ struct cdag_vertex_impl {
     vertex_type_t vertex_type;
 };
 
-using cdag_vertex_impl_int = cdag_vertex_impl<int, int, int, unsigned>;
-using cdag_vertex_impl_unsigned = cdag_vertex_impl<unsigned, unsigned, unsigned, unsigned>;
+using cdag_vertex_impl_int = cdag_vertex_impl<size_t, int, int, int, unsigned>;
+using cdag_vertex_impl_unsigned = cdag_vertex_impl<size_t, unsigned, unsigned, unsigned, unsigned>;
 
 template<typename v_impl>
 class computational_dag_vector_impl {
   public:
-    using vertex_idx = std::size_t;
+    using vertex_idx = typename v_impl::vertex_idx_type;
 
     using vertex_work_weight_type = typename v_impl::work_weight_type;
     using vertex_comm_weight_type = typename v_impl::comm_weight_type;
@@ -114,7 +115,7 @@ class computational_dag_vector_impl {
 
     virtual ~computational_dag_vector_impl() = default;
 
-    inline auto vertices() const { return vertex_range<vertex_idx>(vertices_.size()); }
+    inline auto vertices() const { return vertex_range<vertex_idx>(static_cast<vertex_idx>(vertices_.size())); }
 
     inline std::size_t num_vertices() const { return vertices_.size(); }
 

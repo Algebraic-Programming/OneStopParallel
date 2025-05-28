@@ -157,7 +157,7 @@ class computational_dag_edge_idx_vector_impl {
     inline auto parents(vertex_idx v) const { return edge_source_range(in_edges_[v], *this); }
     inline auto children(vertex_idx v) const { return edge_target_range(out_edges_[v], *this); }
 
-    inline auto vertices() const { return vertex_range<vertex_idx>(vertices_.size()); }
+    inline auto vertices() const { return vertex_range<vertex_idx>(static_cast<vertex_idx>(vertices_.size())); }
 
     inline const std::vector<directed_edge_descriptor> &in_edges(vertex_idx v) const { return in_edges_[v]; }
     inline const std::vector<directed_edge_descriptor> &out_edges(vertex_idx v) const { return out_edges_[v]; }
