@@ -21,9 +21,9 @@ limitations under the License.
 #include <callbackbase.h>
 #include <coptcpp_pch.h>
 
-// #include "file_interactions/BspScheduleRecompWriter.hpp"
 #include "bsp/model/BspSchedule.hpp"
 #include "bsp/model/BspScheduleCS.hpp"
+#include "bsp/model/BspScheduleRecomp.hpp"
 #include "bsp/model/VectorSchedule.hpp"
 #include "bsp/scheduler/Scheduler.hpp"
 #include "io/DotFileWriter.hpp"
@@ -101,22 +101,21 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
 
                         best_obj = GetDblInfo(COPT_CBINFO_BESTOBJ);
 
-                        // if (allow_recomputation_cb) {
+                        if (allow_recomputation_cb) {
 
-                        //     auto sched = constructBspScheduleRecompFromCallback();
-                        //     BspScheduleRecompWriter sched_writer(sched);
-                        //     sched_writer.write_dot(write_solutions_path_cb + "intmed_sol_" + solution_file_prefix_cb
-                        //     + "_" +
-                        //                            std::to_string(counter) + "_schedule.dot");
-
-                        // } else {
-
-                        auto sched = constructBspScheduleFromCallback();
+                        auto sched = constructBspScheduleRecompFromCallback();
                         DotFileWriter sched_writer;
                         sched_writer.write_dot(write_solutions_path_cb + "intmed_sol_" + solution_file_prefix_cb + "_" +
-                                                   std::to_string(counter) + "_schedule.dot",
-                                               sched);
-                        // }
+                                            std::to_string(counter) + "_schedule.dot", sched.getInstance().getComputationalDag());
+                                            // TODO replace with recomp schedule file writing once it's available
+
+                        } else {
+
+                        BspSchedule<Graph_t> sched = constructBspScheduleFromCallback();
+                        DotFileWriter sched_writer;
+                        sched_writer.write_dot(write_solutions_path_cb + "intmed_sol_" + solution_file_prefix_cb + "_" +
+                                                   std::to_string(counter) + "_schedule.dot", sched);
+                        }
                         counter++;
                     }
 
@@ -166,7 +165,51 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
 
             return schedule;
         }
-        // BspScheduleRecomp constructBspScheduleRecompFromCallback();
+        
+        BspScheduleRecomp<Graph_t> constructBspScheduleRecompFromCallback() {
+
+            unsigned number_of_supersteps = 0;
+            BspScheduleRecomp<Graph_t> schedule(*instance_ptr);
+
+            for (unsigned int node = 0; node < instance_ptr->numberOfVertices(); node++) {
+
+                for (unsigned int processor = 0; processor < instance_ptr->numberOfProcessors(); processor++) {
+
+                    for (unsigned step = 0; step < static_cast<unsigned>((*node_to_processor_superstep_var_ptr)[0][0].Size()); step++) {
+
+                        if (GetSolution((*node_to_processor_superstep_var_ptr)[node][processor][static_cast<int>(step)]) >= .99) {
+                            schedule.assignments(node).emplace_back(processor, step);
+
+                            if (step >= number_of_supersteps) {
+                                number_of_supersteps = step + 1;
+                            }
+                        }
+                    }
+                }
+            }
+
+            schedule.setNumberOfSupersteps(number_of_supersteps);
+
+            for (unsigned int node = 0; node < instance_ptr->numberOfVertices(); node++) {
+
+                for (unsigned int p_from = 0; p_from < instance_ptr->numberOfProcessors(); p_from++) {
+                    for (unsigned int p_to = 0; p_to < instance_ptr->numberOfProcessors(); p_to++) {
+                        if (p_from != p_to) {
+                            for (unsigned step = 0; step < static_cast<unsigned>((*node_to_processor_superstep_var_ptr)[0][0].Size()); step++) {
+                                if (GetSolution(
+                                        (*comm_processor_to_processor_superstep_node_var_ptr)[p_from][p_to][step][static_cast<int>(node)]) >=
+                                    .99) {
+
+                                    schedule.addCommunicationScheduleEntry(node, p_from, p_to, step);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return schedule;
+        }
     };
 
     // WriteSolutionCallback solution_callback;
@@ -223,7 +266,53 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
         }
     }
 
-    // BspScheduleRecomp constructBspScheduleRecompFromSolution(const BspInstance &instance, bool cleanup_ = false);
+    void constructBspScheduleRecompFromSolution(BspScheduleRecomp<Graph_t> &schedule, bool cleanup_) {
+        unsigned number_of_supersteps = 0;
+
+        for (unsigned step = 0; step < max_number_supersteps; step++) {
+
+            if (superstep_used_var[static_cast<int>(step)].Get(COPT_DBLINFO_VALUE) >= .99) {
+                number_of_supersteps++;
+            }
+        }
+
+        schedule.setNumberOfSupersteps(number_of_supersteps);
+
+        for (unsigned node = 0; node < schedule.getInstance().numberOfVertices(); node++) {
+
+            for (unsigned processor = 0; processor < schedule.getInstance().numberOfProcessors(); processor++) {
+
+                for (unsigned step = 0; step < max_number_supersteps; step++) {
+
+                    if (node_to_processor_superstep_var[node][processor][static_cast<int>(step)].Get(COPT_DBLINFO_VALUE) >= .99) {
+                        schedule.assignments(node).emplace_back(processor, step);
+                    }
+                }
+            }
+        }
+
+        for (unsigned int node = 0; node < schedule.getInstance().numberOfVertices(); node++) {
+
+            for (unsigned int p_from = 0; p_from < schedule.getInstance().numberOfProcessors(); p_from++) {
+                for (unsigned int p_to = 0; p_to < schedule.getInstance().numberOfProcessors(); p_to++) {
+                    if (p_from != p_to) {
+                        for (unsigned int step = 0; step < max_number_supersteps; step++) {
+                            if (comm_processor_to_processor_superstep_node_var[p_from][p_to][step][static_cast<int>(node)].Get(
+                                    COPT_DBLINFO_VALUE) >= .99) {
+                                schedule.addCommunicationScheduleEntry(node, p_from, p_to, step);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (cleanup_) {
+            node_to_processor_superstep_var.clear();
+            comm_processor_to_processor_superstep_node_var.clear();
+        }
+    }
+
 
     void loadInitialSchedule(Model &model) {
 
@@ -687,7 +776,80 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
         }
     }
 
-    // virtual std::pair<RETURN_STATUS, BspScheduleRecomp> computeScheduleRecomp(const BspInstance &instance);
+    virtual RETURN_STATUS computeScheduleRecomp(BspScheduleRecomp<Graph_t> &schedule) {
+
+        allow_recomputation = true;
+
+        if (use_initial_schedule &&
+            (max_number_supersteps < initial_schedule->numberOfSupersteps() ||
+            schedule.getInstance().numberOfProcessors() != initial_schedule->getInstance().numberOfProcessors() ||
+            schedule.getInstance().numberOfVertices() != initial_schedule->getInstance().numberOfVertices())) {
+            throw std::invalid_argument("Invalid Argument while computeScheduleRecomp: instance parameters do not "
+                                        "agree with those of the initial schedule's instance!");
+        }
+
+        Envr env;
+        Model model = env.CreateModel("bsp_schedule");
+
+        setupVariablesConstraintsObjective(schedule.getInstance(), model);
+
+        if (use_initial_schedule) {
+            loadInitialSchedule(model);
+        }
+
+        model.SetDblParam(COPT_DBLPARAM_TIMELIMIT, Scheduler<Graph_t>::timeLimitSeconds);
+        model.SetIntParam(COPT_INTPARAM_THREADS, 128);
+
+        model.SetIntParam(COPT_INTPARAM_STRONGBRANCHING, 1);
+        model.SetIntParam(COPT_INTPARAM_LPMETHOD, 1);
+        model.SetIntParam(COPT_INTPARAM_ROUNDINGHEURLEVEL, 1);
+
+        model.SetIntParam(COPT_INTPARAM_SUBMIPHEURLEVEL, 1);
+        // model.SetIntParam(COPT_INTPARAM_PRESOLVE, 1);
+        // model.SetIntParam(COPT_INTPARAM_CUTLEVEL, 0);
+        model.SetIntParam(COPT_INTPARAM_TREECUTLEVEL, 2);
+        // model.SetIntParam(COPT_INTPARAM_DIVINGHEURLEVEL, 2);
+
+        if (write_solutions_found) {
+
+            WriteSolutionCallback solution_callback;
+            solution_callback.instance_ptr = &schedule.getInstance();
+            solution_callback.comm_processor_to_processor_superstep_node_var_ptr =
+                &comm_processor_to_processor_superstep_node_var;
+            solution_callback.node_to_processor_superstep_var_ptr = &node_to_processor_superstep_var;
+            solution_callback.solution_file_prefix_cb = solution_file_prefix;
+            solution_callback.write_solutions_path_cb = write_solutions_path;
+            solution_callback.allow_recomputation_cb = allow_recomputation;
+            std::cout << "setting up callback with recomputation: " << allow_recomputation << std::endl;
+            model.SetCallback(&solution_callback, COPT_CBCONTEXT_MIPSOL);
+        }
+
+        model.Solve();
+
+        allow_recomputation = false;
+
+        if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_OPTIMAL) {
+
+            constructBspScheduleRecompFromSolution(schedule, true);
+            return SUCCESS;
+
+        } else if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_INF_OR_UNB) {
+
+            return ERROR;
+
+        } else {
+
+            if (model.GetIntAttr(COPT_INTATTR_HASMIPSOL)) {
+
+                constructBspScheduleRecompFromSolution(schedule, true);
+                return BEST_FOUND;
+
+            } else {
+                return TIMEOUT;
+            }
+        }
+    };
+
 
     /**
      * @brief Sets the provided schedule as the initial solution for the ILP.

@@ -105,6 +105,13 @@ BOOST_AUTO_TEST_CASE(test_full) {
     BOOST_CHECK_EQUAL(BEST_FOUND, result_to);
     BOOST_CHECK(schedule_to.satisfiesPrecedenceConstraints());
 
+    CoptFullScheduler<graph> scheduler_recomp;
+    BspScheduleRecomp<graph> schedule_recomp(instance);
+    scheduler_recomp.setTimeLimitSeconds(10);
+    scheduler_recomp.computeScheduleRecomp(schedule_recomp);
+    BOOST_CHECK(schedule_recomp.satisfiesConstraints());
+
+
     BspScheduleCS<graph> schedule(instance);
 
     CoptFullScheduler<graph> scheduler;

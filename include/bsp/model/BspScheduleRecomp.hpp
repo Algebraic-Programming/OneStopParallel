@@ -39,7 +39,7 @@ class BspScheduleRecomp {
 
     const BspInstance<Graph_t> *instance;
 
-    unsigned int number_of_supersteps;
+    unsigned int number_of_supersteps = 0;
    
 
   public:
@@ -49,6 +49,9 @@ class BspScheduleRecomp {
     std::map<KeyTriple, unsigned> commSchedule;
 
     BspScheduleRecomp() = default;
+
+    BspScheduleRecomp(const BspInstance<Graph_t> &inst) : instance(&inst)
+                            {node_to_processor_and_supertep_assignment.resize(inst.numberOfVertices());}
 
     BspScheduleRecomp(const BspScheduleCS<Graph_t> &schedule);
     BspScheduleRecomp(const BspSchedule<Graph_t> &schedule) : BspScheduleRecomp<Graph_t>(BspScheduleCS<Graph_t>(schedule)) {}
