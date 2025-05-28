@@ -16,11 +16,12 @@ limitations under the License.
 @author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 
-#define BOOST_TEST_MODULE Bsp_Architecture
+#define BOOST_TEST_MODULE COPT_ILP_SCHEDULING
 #include <boost/test/unit_test.hpp>
 
 #include "bsp/model/BspInstance.hpp"
 #include "bsp/model/BspSchedule.hpp"
+#include "bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
 #include "graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 #include "io/arch_file_reader.hpp"
@@ -111,7 +112,43 @@ BOOST_AUTO_TEST_CASE(test_full) {
     scheduler_recomp.computeScheduleRecomp(schedule_recomp);
     BOOST_CHECK(schedule_recomp.satisfiesConstraints());
 
+    // WITH INITIALIZATION
 
+    BspSchedule<graph> schedule_init(instance);
+    GreedyBspScheduler<graph> greedy;
+    greedy.computeSchedule(schedule_init);
+    BOOST_CHECK(schedule_init.satisfiesPrecedenceConstraints());
+    BspScheduleCS<graph> schedule_init_cs(schedule_init);
+    BOOST_CHECK(schedule_init_cs.hasValidCommSchedule());
+
+    // initialize with standard schedule, return standard schedule
+    CoptFullScheduler<graph> scheduler_init;
+    BspScheduleCS<graph> schedule_improved(instance);
+    scheduler_init.setTimeLimitSeconds(10);
+    scheduler_init.setInitialSolutionFromBspSchedule(schedule_init_cs);
+    const auto result_init = scheduler_init.computeScheduleCS(schedule_improved);
+    BOOST_CHECK_EQUAL(BEST_FOUND, result_init);
+    BOOST_CHECK(schedule_improved.satisfiesPrecedenceConstraints());
+    BOOST_CHECK(schedule_improved.hasValidCommSchedule());
+
+    // initialize with standard schedule, return recomputing schedule
+    CoptFullScheduler<graph> scheduler_init2(schedule_init_cs);
+    BspScheduleRecomp<graph> schedule_improved2(instance);
+    scheduler_init2.setTimeLimitSeconds(10);
+    const auto result_init2 = scheduler_init2.computeScheduleRecomp(schedule_improved2);
+    BOOST_CHECK_EQUAL(BEST_FOUND, result_init2);
+    BOOST_CHECK(schedule_improved2.satisfiesConstraints());
+
+    // initialize with recomputing schedule, return recomputing schedule
+    BspScheduleRecomp<graph> schedule_improved3(instance),schedule_init3(schedule_init_cs);
+    CoptFullScheduler<graph> scheduler_init3(schedule_init3);
+    scheduler_init3.setTimeLimitSeconds(10);
+    const auto result_init3 = scheduler_init3.computeScheduleRecomp(schedule_improved3);
+    BOOST_CHECK_EQUAL(BEST_FOUND, result_init3);
+    BOOST_CHECK(schedule_improved3.satisfiesConstraints());
+
+
+    // longer time
     BspScheduleCS<graph> schedule(instance);
 
     CoptFullScheduler<graph> scheduler;

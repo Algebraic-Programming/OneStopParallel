@@ -68,11 +68,11 @@ class BspScheduleRecomp {
     unsigned numberOfSupersteps() const { return number_of_supersteps; }
     void setNumberOfSupersteps(unsigned number_of_supersteps_) { number_of_supersteps = number_of_supersteps_; }
 
-    std::vector<std::pair<unsigned, unsigned>>& assignments(unsigned node) {
+    std::vector<std::pair<unsigned, unsigned>>& assignments(vertex_idx node) {
         return node_to_processor_and_supertep_assignment[node];
     }
 
-    const std::vector<std::pair<unsigned, unsigned>>& assignments(unsigned node) const {
+    const std::vector<std::pair<unsigned, unsigned>>& assignments(vertex_idx node) const {
         return node_to_processor_and_supertep_assignment[node];
     }
 

@@ -61,8 +61,11 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
   private:
     bool allow_recomputation;
     bool use_memory_constraint;
-    bool use_initial_schedule;
+    bool use_initial_schedule = false;
     const BspScheduleCS<Graph_t> *initial_schedule;
+
+    bool use_initial_schedule_recomp = false;
+    const BspScheduleRecomp<Graph_t> *initial_schedule_recomp;
 
     bool write_solutions_found;
     std::string write_solutions_path;
@@ -316,10 +319,30 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
 
     void loadInitialSchedule(Model &model) {
 
+        const auto& DAG = use_initial_schedule_recomp ?
+                        initial_schedule_recomp->getInstance().getComputationalDag() :
+                        initial_schedule->getInstance().getComputationalDag();
+
+        const auto& arch = use_initial_schedule_recomp ?
+                        initial_schedule_recomp->getInstance().getArchitecture() :
+                        initial_schedule->getInstance().getArchitecture();
+
+        const unsigned& num_processors = use_initial_schedule_recomp ?
+                        initial_schedule_recomp->getInstance().numberOfProcessors() :
+                        initial_schedule->getInstance().numberOfProcessors();
+
+        const unsigned& num_supersteps = use_initial_schedule_recomp ?
+                        initial_schedule_recomp->numberOfSupersteps() :
+                        initial_schedule->numberOfSupersteps();
+
+        const auto &cs = use_initial_schedule_recomp ?
+                        initial_schedule_recomp->getCommunicationSchedule() :
+                        initial_schedule->getCommunicationSchedule();
+
         assert(max_number_supersteps <= std::numeric_limits<int>::max());
         for (unsigned step = 0; step < max_number_supersteps; step++) {
 
-            if (step < initial_schedule->numberOfSupersteps()) {
+            if (step < num_supersteps) {
                 model.SetMipStart(superstep_used_var[static_cast<int>(step)], 1);
 
             } else {
@@ -330,14 +353,23 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
             // model.SetMipStart(max_comm_superstep_var[step], COPT_INFINITY);
         }
 
-        const auto &cs = initial_schedule->getCommunicationSchedule();
-        for (const auto &node : initial_schedule->getInstance().vertices()) {
+        std::vector<std::set<std::pair<unsigned, unsigned> > > computed(DAG.num_vertices());
+        for (const auto &node : DAG.vertices())
+        {
+            if(use_initial_schedule_recomp)
+                for (const std::pair<unsigned, unsigned>& assignment : initial_schedule_recomp->assignments(node))
+                    computed[node].emplace(assignment);
+            else
+                computed[node].emplace(initial_schedule->assignedProcessor(node),initial_schedule->assignedSuperstep(node));
+        }
 
-            for (unsigned p1 = 0; p1 < initial_schedule->getInstance().numberOfProcessors(); p1++) {
+        for (const auto &node : DAG.vertices()) {
+
+            for (unsigned p1 = 0; p1 < num_processors; p1++) {
 
                 for (unsigned step = 0; step < max_number_supersteps; step++) {
 
-                    for (unsigned p2 = 0; p2 < initial_schedule->getInstance().numberOfProcessors(); p2++) {
+                    for (unsigned p2 = 0; p2 < num_processors; p2++) {
 
                         if (p1 != p2) {
 
@@ -356,29 +388,26 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
                                         0);
                                 }
                             }
-                        } else {
-                            // p1 == p2
-                            if (p1 == initial_schedule->assignedProcessor(node) &&
-                                step == initial_schedule->assignedSuperstep(node)) {
-                                model.SetMipStart(
-                                    comm_processor_to_processor_superstep_node_var[p1][p2][step]
-                                                                                  [static_cast<int>(node)],
-                                    1);
-                            }
                         }
                     }
                 }
             }
+
+            for(const std::pair<unsigned, unsigned>& proc_step : computed[node]){
+                for(unsigned step = proc_step.second; step < max_number_supersteps; step++){
+                    model.SetMipStart(comm_processor_to_processor_superstep_node_var[proc_step.first][proc_step.first][step]
+                                                                                    [static_cast<int>(node)], 1);
+                }
+            }
         }
 
-        for (const auto &node : initial_schedule->getInstance().vertices()) {
+        for (const auto &node : DAG.vertices()) {            
 
-            for (unsigned proc = 0; proc < initial_schedule->getInstance().numberOfProcessors(); proc++) {
+            for (unsigned proc = 0; proc < num_processors; proc++) {
 
                 for (unsigned step = 0; step < max_number_supersteps; step++) {
 
-                    if (proc == initial_schedule->assignedProcessor(node) &&
-                        step == initial_schedule->assignedSuperstep(node)) {
+                    if (computed[node].find(std::make_pair(proc, step)) != computed[node].end()) {
                         model.SetMipStart(node_to_processor_superstep_var[node][proc][static_cast<int>(step)], 1);
 
                     } else {
@@ -391,42 +420,53 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
 
         std::vector<std::vector<v_workw_t<Graph_t>>> work(
             max_number_supersteps,
-            std::vector<v_workw_t<Graph_t>>(initial_schedule->getInstance().numberOfProcessors(), 0));
+            std::vector<v_workw_t<Graph_t>>(num_processors, 0));
 
-        for (const auto &node : initial_schedule->getInstance().vertices()) {
-            work[initial_schedule->assignedSuperstep(node)][initial_schedule->assignedProcessor(node)] +=
-                initial_schedule->getInstance().getComputationalDag().vertex_work_weight(node);
+        if(use_initial_schedule_recomp)
+        {
+            for (const auto &node : initial_schedule_recomp->getInstance().vertices()) {
+                for (const std::pair<unsigned, unsigned>& assignment : initial_schedule_recomp->assignments(node)) {
+                    work[assignment.second][assignment.first] +=
+                    DAG.vertex_work_weight(node);
+                }
+            }
+        }
+        else
+        {
+            for (const auto &node : initial_schedule->getInstance().vertices())
+                work[initial_schedule->assignedSuperstep(node)][initial_schedule->assignedProcessor(node)] +=
+                    DAG.vertex_work_weight(node);
         }
 
         std::vector<std::vector<v_commw_t<Graph_t>>> send(
             max_number_supersteps,
-            std::vector<v_commw_t<Graph_t>>(initial_schedule->getInstance().numberOfProcessors(), 0));
+            std::vector<v_commw_t<Graph_t>>(num_processors, 0));
 
         std::vector<std::vector<v_commw_t<Graph_t>>> rec(
             max_number_supersteps,
-            std::vector<v_commw_t<Graph_t>>(initial_schedule->getInstance().numberOfProcessors(), 0));
+            std::vector<v_commw_t<Graph_t>>(num_processors, 0));
 
-        for (const auto &[key, val] : initial_schedule->getCommunicationSchedule()) {
+        for (const auto &[key, val] : cs) {
 
             send[val][std::get<1>(key)] +=
-                initial_schedule->getInstance().getComputationalDag().vertex_comm_weight(std::get<0>(key)) *
-                initial_schedule->getInstance().sendCosts(std::get<1>(key), std::get<2>(key));
+                DAG.vertex_comm_weight(std::get<0>(key)) *
+                arch.sendCosts(std::get<1>(key), std::get<2>(key));
 
             rec[val][std::get<2>(key)] +=
-                initial_schedule->getInstance().getComputationalDag().vertex_comm_weight(std::get<0>(key)) *
-                initial_schedule->getInstance().sendCosts(std::get<1>(key), std::get<2>(key));
+                DAG.vertex_comm_weight(std::get<0>(key)) *
+                arch.sendCosts(std::get<1>(key), std::get<2>(key));
         }
 
         for (unsigned step = 0; step < max_number_supersteps; step++) {
             v_workw_t<Graph_t> max_work = 0;
-            for (unsigned i = 0; i < initial_schedule->getInstance().numberOfProcessors(); i++) {
+            for (unsigned i = 0; i < num_processors; i++) {
                 if (max_work < work[step][i]) {
                     max_work = work[step][i];
                 }
             }
 
             v_commw_t<Graph_t> max_comm = 0;
-            for (unsigned i = 0; i < initial_schedule->getInstance().numberOfProcessors(); i++) {
+            for (unsigned i = 0; i < num_processors; i++) {
                 if (max_comm < send[step][i]) {
                     max_comm = send[step][i];
                 }
@@ -672,7 +712,7 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
         // solution_callback.node_to_processor_superstep_var_ptr = &node_to_processor_superstep_var;
     }
 
-    CoptFullScheduler(const BspSchedule<Graph_t> &schedule)
+    CoptFullScheduler(const BspScheduleCS<Graph_t> &schedule)
         : allow_recomputation(false), use_memory_constraint(false), use_initial_schedule(true),
           initial_schedule(&schedule), write_solutions_found(false),
           max_number_supersteps(schedule.numberOfSupersteps()) {
@@ -680,6 +720,12 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
         // solution_callback.comm_processor_to_processor_superstep_node_var_ptr =
         //     &comm_processor_to_processor_superstep_node_var;
         // solution_callback.node_to_processor_superstep_var_ptr = &node_to_processor_superstep_var;
+    }
+
+        CoptFullScheduler(const BspScheduleRecomp<Graph_t> &schedule)
+        : allow_recomputation(true), use_memory_constraint(false), use_initial_schedule_recomp(true),
+          initial_schedule_recomp(&schedule), write_solutions_found(false),
+          max_number_supersteps(schedule.numberOfSupersteps()) {
     }
 
     virtual ~CoptFullScheduler() = default;
@@ -788,12 +834,20 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
                                         "agree with those of the initial schedule's instance!");
         }
 
+        if (use_initial_schedule_recomp &&
+            (max_number_supersteps < initial_schedule_recomp->numberOfSupersteps() ||
+            schedule.getInstance().numberOfProcessors() != initial_schedule_recomp->getInstance().numberOfProcessors() ||
+            schedule.getInstance().numberOfVertices() != initial_schedule_recomp->getInstance().numberOfVertices())) {
+            throw std::invalid_argument("Invalid Argument while computeScheduleRecomp: instance parameters do not "
+                                        "agree with those of the initial schedule's instance!");
+        }
+
         Envr env;
         Model model = env.CreateModel("bsp_schedule");
 
         setupVariablesConstraintsObjective(schedule.getInstance(), model);
 
-        if (use_initial_schedule) {
+        if (use_initial_schedule || use_initial_schedule_recomp) {
             loadInitialSchedule(model);
         }
 
@@ -860,7 +914,7 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
      *
      * @param schedule The provided schedule.
      */
-    inline void setInitialSolutionFromBspSchedule(const BspSchedule<Graph_t> &schedule) {
+    inline void setInitialSolutionFromBspSchedule(const BspScheduleCS<Graph_t> &schedule) {
 
         initial_schedule = &schedule;
 
