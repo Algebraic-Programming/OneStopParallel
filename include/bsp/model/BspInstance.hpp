@@ -59,9 +59,19 @@ class BspInstance {
      * @param cdag The computational DAG for the instance.
      * @param architecture The BSP architecture for the instance.
      */
-    BspInstance(Graph_t cdag, BspArchitecture<Graph_t> architecture_,
+    BspInstance(const Graph_t &cdag, const BspArchitecture<Graph_t> &architecture_,
                 std::vector<std::vector<bool>> nodeProcessorCompatibility_ = std::vector<std::vector<bool>>({{true}}))
         : cdag(cdag), architecture(architecture_), nodeProcessorCompatibility(nodeProcessorCompatibility_) {}
+
+    /**
+     * @brief Constructs a BspInstance object with the specified computational DAG and BSP architecture.
+     *
+     * @param cdag The computational DAG for the instance.
+     * @param architecture The BSP architecture for the instance.
+     */
+    BspInstance(Graph_t &&cdag, BspArchitecture<Graph_t> &&architecture_,
+                std::vector<std::vector<bool>> nodeProcessorCompatibility_ = std::vector<std::vector<bool>>({{true}}))
+        : cdag(move(cdag)), architecture(move(architecture_)), nodeProcessorCompatibility(nodeProcessorCompatibility_) {}
 
     template<typename Graph_t_other>
     explicit BspInstance(const BspInstance<Graph_t_other> &other)
