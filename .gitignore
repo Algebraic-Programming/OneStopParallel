@@ -141,4 +141,5 @@ data/spaa/*
 !data/spaa/small
 !data/spaa/test
 !data/spaa/tiny
+!data/spaa/large
 !data/spaa/graph_spaa_stats.txt
