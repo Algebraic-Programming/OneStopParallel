@@ -392,7 +392,7 @@ void test_coarser_same_graph(Coarser<graph_t, graph_t> &coarser) {
 
         BspSchedule<graph_t> schedule_out(instance);
 
-        BOOST_CHECK_EQUAL(pull_back_schedule(schedule, vertex_map, schedule_out), true);
+        BOOST_CHECK_EQUAL(coarser_util::pull_back_schedule(schedule, vertex_map, schedule_out), true);
         BOOST_CHECK(schedule_out.satisfiesPrecedenceConstraints());
 
         CoarseAndSchedule<graph_t, graph_t> coarse_and_schedule(coarser, scheduler);
