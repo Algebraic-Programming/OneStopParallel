@@ -200,17 +200,26 @@ RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::computeSched
     status = std::max(status, run_contractions());
     assert( (dag_history.size() == contraction_maps.size()) );
 
-    if ( dag_history.size() == 0 ) {
-        std::vector<vertex_idx_t<Graph_t_coarse>> contraction_map( schedule.getInstance().numberOfVertices() );
-        std::iota(contraction_map.begin(), contraction_map.end(), 0);
-        
-        add_contraction(move(contraction_map));
+    if constexpr (std::is_same_v<Graph_t, Graph_t_coarse>) {
+        if ( dag_history.size() == 0 ) {
+            status = std::max(status, sched->computeSchedule(schedule));
+        } else {
+            status = std::max(status, compute_initial_schedule());
+            status = std::max(status, run_expansions());
+        }
+    } else {
+        if ( dag_history.size() == 0 ) {
+            std::vector<vertex_idx_t<Graph_t_coarse>> contraction_map( schedule.getInstance().numberOfVertices() );
+            std::iota(contraction_map.begin(), contraction_map.end(), 0);
+            
+            add_contraction(move(contraction_map));
+        }
+    
+        assert(dag_history.size() > 0);
+    
+        status = std::max(status, compute_initial_schedule());
+        status = std::max(status, run_expansions());
     }
-
-    assert(dag_history.size() > 0);
-
-    status = std::max(status, compute_initial_schedule());
-    status = std::max(status, run_expansions());
 
     assert(active_graph == -1);
 
