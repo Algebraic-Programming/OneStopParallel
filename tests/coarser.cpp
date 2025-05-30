@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(coarser_hdagg_test) {
 
         BspSchedule<graph_t> schedule_out(instance);
 
-        BOOST_CHECK_EQUAL(pull_back_schedule(schedule, vertex_map, schedule_out), true);
+        BOOST_CHECK_EQUAL(coarser_util::pull_back_schedule(schedule, vertex_map, schedule_out), true);
         BOOST_CHECK(schedule_out.satisfiesPrecedenceConstraints());
 
         CoarseAndSchedule<graph_t, graph_t> coarse_and_schedule(coarser, scheduler);
@@ -246,7 +246,7 @@ BOOST_AUTO_TEST_CASE(coarser_hdagg_test_diff_graph_impl) {
 
         BspSchedule<graph_t1> schedule_out(instance);
 
-        BOOST_CHECK_EQUAL(pull_back_schedule(schedule, vertex_map, schedule_out), true);
+        BOOST_CHECK_EQUAL(coarser_util::pull_back_schedule(schedule, vertex_map, schedule_out), true);
         BOOST_CHECK(schedule_out.satisfiesPrecedenceConstraints());
 
         CoarseAndSchedule<graph_t1, graph_t2> coarse_and_schedule(coarser, scheduler);
@@ -325,7 +325,7 @@ BOOST_AUTO_TEST_CASE(coarser_bspschedule_test) {
 
         BspSchedule<graph_t> schedule_out(instance);
 
-        BOOST_CHECK_EQUAL(pull_back_schedule(schedule, vertex_map, schedule_out), true);
+        BOOST_CHECK_EQUAL(coarser_util::pull_back_schedule(schedule, vertex_map, schedule_out), true);
         BOOST_CHECK(schedule_out.satisfiesPrecedenceConstraints());
 
         CoarseAndSchedule<graph_t, graph_t> coarse_and_schedule(coarser, scheduler);
