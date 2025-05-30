@@ -42,7 +42,8 @@ std::unordered_set<edge_desc_t<Graph_t>> long_edges_in_triangles_parallel(const 
     std::vector<std::vector<edge_desc_t<Graph_t>>> deleted_edges_thread(static_cast<size_t>(omp_get_max_threads()));
 
 #pragma omp parallel for schedule(dynamic, 4)
-    for (const auto &vertex : graph.vertices()) {
+    for (vertex_idx_t<Graph_t> vertex = 0; vertex < graph.num_vertices(); ++vertex) {
+    // for (const auto &vertex : graph.vertices()) {
 
         const unsigned int proc = static_cast<unsigned>(omp_get_thread_num());
 

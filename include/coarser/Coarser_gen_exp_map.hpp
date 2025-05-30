@@ -42,10 +42,10 @@ class CoarserGenExpansionMap : public Coarser<Graph_t_in, Graph_t_out> {
     virtual bool coarsenDag(const Graph_t_in &dag_in, Graph_t_out &coarsened_dag,
                             std::vector<vertex_idx_t<Graph_t_out>> &vertex_contraction_map) override {
 
-        auto vertex_expansion_map = generate_vertex_expansion_map(dag_in);
-        assert(check_valid_expansion_map(vertex_expansion_map));
+        std::vector<std::vector<vertex_idx_t<Graph_t_in>>> vertex_expansion_map = generate_vertex_expansion_map(dag_in);
+        assert(coarser_util::check_valid_expansion_map(vertex_expansion_map));
 
-        vertex_contraction_map = invert_vertex_expansion_map(vertex_expansion_map);
+        vertex_contraction_map = coarser_util::invert_vertex_expansion_map<Graph_t_in, Graph_t_out>(vertex_expansion_map);
 
         return coarser_util::construct_coarse_dag(dag_in, coarsened_dag, vertex_contraction_map);
     }
