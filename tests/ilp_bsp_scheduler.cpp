@@ -147,6 +147,26 @@ BOOST_AUTO_TEST_CASE(test_full) {
     BOOST_CHECK_EQUAL(BEST_FOUND, result_init3);
     BOOST_CHECK(schedule_improved3.satisfiesConstraints());
 
+    // with vertex types
+    BspInstance<graph> instance_typed = instance;
+    instance_typed.getArchitecture().setProcessorType(0, 1);
+    instance_typed.getArchitecture().setProcessorType(1, 1);
+    for(vertex_idx_t<graph> node = 0; node < static_cast<vertex_idx_t<graph> >(instance_typed.numberOfVertices()); ++node)
+        instance_typed.getComputationalDag().set_vertex_type(node, node%2);
+    instance_typed.setDiagonalCompatibilityMatrix(2);
+
+    BspSchedule<graph> schedule_typed(instance_typed);
+    greedy.computeSchedule(schedule_typed);
+    BOOST_CHECK(schedule_typed.satisfiesPrecedenceConstraints());
+    BOOST_CHECK(schedule_typed.satisfiesNodeTypeConstraints());
+
+    CoptFullScheduler<graph> scheduler_typed;
+    scheduler_typed.setTimeLimitSeconds(10);
+    scheduler_typed.setInitialSolutionFromBspSchedule(schedule_typed);
+    const auto result_typed = scheduler_typed.computeSchedule(schedule_typed);
+    BOOST_CHECK_EQUAL(BEST_FOUND, result_typed);
+    BOOST_CHECK(schedule_typed.satisfiesPrecedenceConstraints());
+    BOOST_CHECK(schedule_typed.satisfiesNodeTypeConstraints());
 
     // longer time
     BspScheduleCS<graph> schedule(instance);

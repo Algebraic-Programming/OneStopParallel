@@ -688,6 +688,17 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
             }
         }
 
+        // vertex type restrictions
+        for (const vertex_idx_t<Graph_t> &node : instance.vertices()) {
+            for (unsigned int processor = 0; processor < instance.numberOfProcessors(); processor++) {
+                if(!instance.isCompatible(node, processor)) {
+                    for (unsigned int step = 0; step < max_number_supersteps; step++) {
+                        model.AddConstr(node_to_processor_superstep_var[node][processor][static_cast<int>(step)] == 0);
+                    }
+                }
+            }
+        }
+
         /*
         Objective function
           */
