@@ -14,6 +14,11 @@ _add_executable( osp_turnus )
 
 _add_executable( graph_analyser )
 
+
+if (COPT_FOUND)
+_add_executable( ilp_scheduler_app )
+endif()
+
 # Custom target to compile all the examples
 add_custom_target( build_executables DEPENDS ${executable_list} )
 add_custom_target( executable DEPENDS ${executable_list} )

@@ -173,7 +173,7 @@ bool BspScheduleRecomp<Graph_t>::satisfiesConstraints() const {
     // find first availability
     
     std::vector<std::vector<unsigned> > node_first_available_on_proc(instance->numberOfVertices(),
-                                                                    std::vector<unsigned>(instance->numberOfProcessors(), UINT_MAX));
+                                                                    std::vector<unsigned>(instance->numberOfProcessors(), std::numeric_limits<unsigned>::max()));
 
     for(vertex_idx node = 0; node < instance->numberOfVertices(); ++node)
         for(const std::pair<unsigned, unsigned>& compute_step : node_to_processor_and_supertep_assignment[node])
