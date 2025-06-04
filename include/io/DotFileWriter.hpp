@@ -123,6 +123,52 @@ class DotFileWriter {
     };
 
     template<typename Graph_t>
+    struct VertexWriterScheduleCS_DOT {
+
+        const BspScheduleCS<Graph_t> &schedule;
+
+        VertexWriterScheduleCS_DOT(const BspScheduleCS<Graph_t> &schedule_) : schedule(schedule_) {}
+
+        void operator()(std::ostream &out, const vertex_idx_t<Graph_t> &i) const {
+            out << i << " ["
+                << "work_weight=\"" << schedule.getInstance().getComputationalDag().vertex_work_weight(i) << "\";"
+                << "comm_weight=\"" << schedule.getInstance().getComputationalDag().vertex_comm_weight(i) << "\";"
+                << "mem_weight=\"" << schedule.getInstance().getComputationalDag().vertex_mem_weight(i) << "\";";
+
+            if constexpr (has_typed_vertices_v<Graph_t>) {
+
+                out << "type=\"" << schedule.getInstance().getComputationalDag().vertex_type(i) << "\";";
+            }
+
+            out << "proc=\"" << schedule.assignedProcessor(i) << "\";" << "superstep=\""
+                << schedule.assignedSuperstep(i) << "\";";
+
+            bool found = false;
+
+            for (const auto &[key, val] : schedule.getCommunicationSchedule()) {
+
+                if (std::get<0>(key) == i) {
+
+                    if (!found) {
+                        out << "cs=\"[";
+                        found = true;
+                    } else {
+                        out << ";";
+                    }
+
+                    out << "(" << std::get<1>(key) << "," << std::get<2>(key) << "," << val << ")";
+                }
+            }
+
+            if (found) {
+                out << "]\";";
+            }
+
+            out << "]";
+        }
+    };
+
+    template<typename Graph_t>
     struct VertexWriterGraph_DOT {
 
         const Graph_t &graph;
@@ -144,118 +190,8 @@ class DotFileWriter {
         }
     };
 
-  public:
-    /**
-     * Constructs a DotFileWriter object with the given BspSchdule.
-     *
-     * @param schdule_
-     */
-    DotFileWriter() {}
-
-    /**
-     * Writes the BspSchedule to the specified output stream in DOT format.
-     *
-     * @tparam VertexWriterType The type of the vertex writer to be used.
-     *         Default is VertexWriter_DOT.
-     * @tparam EdgeWriterType The type of the edge writer to be used.
-     *         Default is EdgeWriter_DOT.
-     *
-     * @param os The output stream to write the DOT representation of the computational DAG.
-     */
-    template<typename Graph_t>
-    void write_schedule(std::ostream &os, const BspSchedule<Graph_t> &schedule) const {
-
-        VertexWriterSchedule_DOT<Graph_t> vertex_writer(schedule);
-
-        os << "digraph G {\n";
-        for (const auto &v : schedule.getInstance().vertices()) {
-            vertex_writer(os, v);
-            os << "\n";
-        }
-
-        if constexpr (is_directed_graph_edge_desc_v<Graph_t>) {
-            EdgeWriter_DOT<Graph_t> edge_writer(schedule.getInstance().getComputationalDag());
-
-            for (const auto &e : schedule.getInstance().getComputationalDag().edges()) {
-                edge_writer(os, e);
-                os << "\n";
-            }
-
-        } else {
-
-            const auto &graph = schedule.getInstance().getComputationalDag();
-            for (const auto &v : graph.vertices()) {
-                for (const auto &child : graph.children(v)) {
-                    os << v << "->" << child << "\n";
-                }
-            }
-        }
-        os << "}\n";
-    }
-
-    /**
-     * Writes the BspSchedule to the specified file in DOT format.
-     *
-     * @note The file will be overwritten if it already exists.
-     * @note The file will be created if it does not exist.
-     * @note This function is an alias for `write_dot(std::ostream &os)`
-     *
-     * @tparam VertexWriterType The type of the vertex writer to be used.
-     *         Default is VertexWriter_DOT.
-     * @tparam EdgeWriterType The type of the edge writer to be used.
-     *         Default is EdgeWriter_DOT.
-     *
-     * @param filename The name of the file to write the DOT representation of the computational DAG.
-     */
-    template<typename Graph_t>
-    void write_schedule(const std::string &filename, const BspSchedule<Graph_t> &schedule) const {
-        std::ofstream os(filename);
-        write_schedule(os, schedule);
-    }
-
-    template<typename Graph_t>
-    void write_schedule_recomp(std::ostream &os, const BspScheduleRecomp<Graph_t> &schedule) const {
-
-        VertexWriterScheduleRecomp_DOT<Graph_t> vertex_writer(schedule);
-
-        os << "digraph G {\n";
-        for (const auto &v : schedule.getInstance().vertices()) {
-            vertex_writer(os, v);
-            os << "\n";
-        }
-
-        if constexpr (is_directed_graph_edge_desc_v<Graph_t>) {
-            EdgeWriter_DOT<Graph_t> edge_writer(schedule.getInstance().getComputationalDag());
-
-            for (const auto &e : schedule.getInstance().getComputationalDag().edges()) {
-                edge_writer(os, e);
-                os << "\n";
-            }
-
-        } else {
-
-            const auto &graph = schedule.getInstance().getComputationalDag();
-            for (const auto &v : graph.vertices()) {
-                for (const auto &child : graph.children(v)) {
-                    os << v << "->" << child << "\n";
-                }
-            }
-        }
-        os << "}\n";
-    }
-
-    template<typename Graph_t>
-    void write_schedule_recomp(const std::string &filename, const BspScheduleRecomp<Graph_t> &schedule) const {
-        std::ofstream os(filename);
-        write_schedule_recomp(os, schedule);
-    }
-
-    template<typename Graph_t>
-    void write_graph(std::ostream &os, const Graph_t &graph) const {
-
-        static_assert(is_computational_dag_v<Graph_t>, "Graph_t must be a computational DAG");
-
-        VertexWriterGraph_DOT<Graph_t> vertex_writer(graph);
+    template<typename Graph_t, typename vertex_writer_t>
+    void write_graph_structure(std::ostream &os, const Graph_t &graph, const vertex_writer_t &vertex_writer) const {
 
         os << "digraph G {\n";
         for (const auto &v : graph.vertices()) {
@@ -280,6 +216,85 @@ class DotFileWriter {
             }
         }
         os << "}\n";
+    }
+
+  public:
+    /**
+     * Constructs a DotFileWriter object with the given BspSchdule.
+     *
+     * @param schdule_
+     */
+    DotFileWriter() {}
+
+    /**
+     * Writes the BspSchedule to the specified output stream in DOT format.
+     *
+     * @tparam VertexWriterType The type of the vertex writer to be used.
+     *         Default is VertexWriter_DOT.
+     * @tparam EdgeWriterType The type of the edge writer to be used.
+     *         Default is EdgeWriter_DOT.
+     *
+     * @param os The output stream to write the DOT representation of the computational DAG.
+     */
+    template<typename Graph_t>
+    void write_schedule(std::ostream &os, const BspSchedule<Graph_t> &schedule) const {
+
+        write_graph_structure(os, schedule.getInstance().getComputationalDag(),
+                              VertexWriterSchedule_DOT<Graph_t>(schedule));
+    }
+
+    /**
+     * Writes the BspSchedule to the specified file in DOT format.
+     *
+     * @note The file will be overwritten if it already exists.
+     * @note The file will be created if it does not exist.
+     * @note This function is an alias for `write_dot(std::ostream &os)`
+     *
+     * @tparam VertexWriterType The type of the vertex writer to be used.
+     *         Default is VertexWriter_DOT.
+     * @tparam EdgeWriterType The type of the edge writer to be used.
+     *         Default is EdgeWriter_DOT.
+     *
+     * @param filename The name of the file to write the DOT representation of the computational DAG.
+     */
+    template<typename Graph_t>
+    void write_schedule(const std::string &filename, const BspSchedule<Graph_t> &schedule) const {
+        std::ofstream os(filename);
+        write_schedule(os, schedule);
+    }
+
+    template<typename Graph_t>
+    void write_schedule_cs(std::ostream &os, const BspScheduleCS<Graph_t> &schedule) const {
+
+        write_graph_structure(os, schedule.getInstance().getComputationalDag(),
+                              VertexWriterScheduleCS_DOT<Graph_t>(schedule));
+    }
+
+    template<typename Graph_t>
+    void write_schedule_cs(const std::string &filename, const BspScheduleCS<Graph_t> &schedule) const {
+        std::ofstream os(filename);
+        write_schedule_cs(os, schedule);
+    }
+
+    template<typename Graph_t>
+    void write_schedule_recomp(std::ostream &os, const BspScheduleRecomp<Graph_t> &schedule) const {
+
+        write_graph_structure(os, schedule.getInstance().getComputationalDag(),
+                              VertexWriterScheduleRecomp_DOT<Graph_t>(schedule));
+    }
+
+    template<typename Graph_t>
+    void write_schedule_recomp(const std::string &filename, const BspScheduleRecomp<Graph_t> &schedule) const {
+        std::ofstream os(filename);
+        write_schedule_recomp(os, schedule);
+    }
+
+    template<typename Graph_t>
+    void write_graph(std::ostream &os, const Graph_t &graph) const {
+
+        static_assert(is_computational_dag_v<Graph_t>, "Graph_t must be a computational DAG");
+
+        write_graph_structure(os, graph, VertexWriterGraph_DOT<Graph_t>(graph));
     }
 
     template<typename Graph_t>

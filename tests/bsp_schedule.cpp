@@ -22,6 +22,7 @@ limitations under the License.
 #include "bsp/model/BspInstance.hpp"
 #include "bsp/model/BspSchedule.hpp"
 #include "bsp/model/BspScheduleCS.hpp"
+#include "bsp/model/BspScheduleRecomp.hpp"
 #include "graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 #include "io/DotFileWriter.hpp"
@@ -141,10 +142,8 @@ BOOST_AUTO_TEST_CASE(test_schedule_writer) {
 
     DotFileWriter sched_writer;
 
-
     std::cout << "Writing Graph" << std::endl;
     sched_writer.write_graph(std::cout, instance.getComputationalDag());
-
 
     std::cout << "Writing schedule_t1" << std::endl;
     sched_writer.write_schedule(std::cout, schedule);
@@ -183,6 +182,19 @@ BOOST_AUTO_TEST_CASE(test_schedule_writer) {
     std::cout << "Writing schedule_t2" << std::endl;
 
     sched_writer.write_schedule(std::cout, schedule_t2);
+
+    BspScheduleRecomp<graph_t2> schedule_recomp(schedule_t2);
+
+    schedule_recomp.assignments(0).emplace_back(1, 0);
+    schedule_recomp.assignments(0).emplace_back(2, 0);
+    schedule_recomp.assignments(0).emplace_back(3, 0);
+
+    std::cout << "Writing schedule_recomp" << std::endl;
+    sched_writer.write_schedule_recomp(std::cout, schedule_recomp);
+
+    std::cout << "Writing schedule_t2 CS" << std::endl;
+    BspScheduleCS<graph_t2> schedule_cs(schedule_t2);
+    sched_writer.write_schedule_cs(std::cout, schedule_cs);
 
 };
 
@@ -291,7 +303,6 @@ BOOST_AUTO_TEST_CASE(test_bsp_schedule_cs) {
         BOOST_CHECK_EQUAL(schedule_t5.assignedProcessor(v), schedule.assignedProcessor(v));
     }
 
-
     BspScheduleCS<graph> schedule_cs_t2(std::move(schedule_t5));
     BOOST_CHECK_EQUAL(schedule_cs_t2.getInstance().getComputationalDag().num_vertices(),
                       instance.getComputationalDag().num_vertices());
@@ -304,5 +315,4 @@ BOOST_AUTO_TEST_CASE(test_bsp_schedule_cs) {
         BOOST_CHECK_EQUAL(schedule_cs_t2.assignedSuperstep(v), schedule.assignedSuperstep(v));
         BOOST_CHECK_EQUAL(schedule_cs_t2.assignedProcessor(v), schedule.assignedProcessor(v));
     }
-
 };
