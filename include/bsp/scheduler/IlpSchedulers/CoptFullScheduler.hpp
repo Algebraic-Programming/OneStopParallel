@@ -108,15 +108,14 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
 
                         auto sched = constructBspScheduleRecompFromCallback();
                         DotFileWriter sched_writer;
-                        sched_writer.write_dot(write_solutions_path_cb + "intmed_sol_" + solution_file_prefix_cb + "_" +
-                                            std::to_string(counter) + "_schedule.dot", sched.getInstance().getComputationalDag());
-                                            // TODO replace with recomp schedule file writing once it's available
+                        sched_writer.write_schedule_recomp(write_solutions_path_cb + "intmed_sol_" + solution_file_prefix_cb + "_" +
+                                            std::to_string(counter) + "_schedule.dot", sched);
 
                         } else {
 
                         BspSchedule<Graph_t> sched = constructBspScheduleFromCallback();
                         DotFileWriter sched_writer;
-                        sched_writer.write_dot(write_solutions_path_cb + "intmed_sol_" + solution_file_prefix_cb + "_" +
+                        sched_writer.write_schedule(write_solutions_path_cb + "intmed_sol_" + solution_file_prefix_cb + "_" +
                                                    std::to_string(counter) + "_schedule.dot", sched);
                         }
                         counter++;

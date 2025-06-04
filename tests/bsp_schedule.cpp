@@ -143,11 +143,11 @@ BOOST_AUTO_TEST_CASE(test_schedule_writer) {
 
 
     std::cout << "Writing Graph" << std::endl;
-    sched_writer.write_dot(std::cout, instance.getComputationalDag());
+    sched_writer.write_graph(std::cout, instance.getComputationalDag());
 
 
     std::cout << "Writing schedule_t1" << std::endl;
-    sched_writer.write_dot(std::cout, schedule);
+    sched_writer.write_schedule(std::cout, schedule);
 
     BspInstance<graph_t2> instance_t2(instance);
     BspSchedule<graph_t2> schedule_t2(instance_t2);
@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE(test_schedule_writer) {
 
     std::cout << "Writing schedule_t2" << std::endl;
 
-    sched_writer.write_dot(std::cout, schedule_t2);
+    sched_writer.write_schedule(std::cout, schedule_t2);
 
 };
 

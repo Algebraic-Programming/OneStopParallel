@@ -42,29 +42,29 @@ int main(int argc, char *argv[]) {
 
     BspInstance<ComputationalDag> instance;
     ComputationalDag &graph = instance.getComputationalDag();
-    bool status = false;
+    bool status_graph = false;
 
     if (filename_graph.substr(filename_graph.rfind(".") + 1) == "hdag") {
 
-        status = file_reader::readComputationalDagHyperdagFormat(filename_graph, graph);
+        status_graph = file_reader::readComputationalDagHyperdagFormat(filename_graph, graph);
 
     } else if (filename_graph.substr(filename_graph.rfind(".") + 1) == "mtx") {
 
-        status = file_reader::readComputationalDagMartixMarketFormat(filename_graph, graph);
+        status_graph = file_reader::readComputationalDagMartixMarketFormat(filename_graph, graph);
 
     } else if (filename_graph.substr(filename_graph.rfind(".") + 1) == "dot") {
 
-        status = file_reader::readComputationalDagDotFormat(filename_graph, graph);
+        status_graph = file_reader::readComputationalDagDotFormat(filename_graph, graph);
 
     } else {
         std::cout << "Unknown file ending: ." << filename_graph.substr(filename_graph.rfind(".") + 1)
                   << " ...assuming hyperDag format." << std::endl;
-        status = file_reader::readComputationalDagHyperdagFormat(filename_graph, graph);
+        status_graph = file_reader::readComputationalDagHyperdagFormat(filename_graph, graph);
     }
 
     bool status_arch = file_reader::readBspArchitecture(filename_machine, instance.getArchitecture());
 
-    if (!status || !status_arch) {
+    if (!status_graph || !status_arch) {
 
         std::cout << "Reading files failed." << std::endl;
         return 1;
@@ -77,7 +77,6 @@ int main(int argc, char *argv[]) {
 
     CoptFullScheduler<ComputationalDag> scheduler;
     scheduler.setMaxNumberOfSupersteps(steps);
-    scheduler.setTimeLimitHours(48);
 
     BspSchedule<ComputationalDag> schedule(instance);
 
@@ -86,7 +85,7 @@ int main(int argc, char *argv[]) {
     if (status_schedule == SUCCESS) {
 
         DotFileWriter dot_writer;
-        dot_writer.write_dot(name_graph + "_" + name_machine + "_maxS_" + std::to_string(steps) + "_" +
+        dot_writer.write_schedule(name_graph + "_" + name_machine + "_maxS_" + std::to_string(steps) + "_" +
                                scheduler.getScheduleName() + "_schedule.dot", schedule);
 
         std::cout << "Schedule computed with costs: " << schedule.computeCosts() << std::endl;
