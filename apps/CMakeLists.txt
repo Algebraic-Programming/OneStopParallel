@@ -16,7 +16,7 @@ _add_executable( graph_analyser )
 
 
 if (COPT_FOUND)
-_add_executable( ilp_scheduler_app )
+_add_executable( ilp_bsp_scheduler )
 endif()
 
 # Custom target to compile all the examples
