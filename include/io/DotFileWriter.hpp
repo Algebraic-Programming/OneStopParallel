@@ -21,6 +21,7 @@ limitations under the License.
 #include "bsp/model/BspSchedule.hpp"
 #include "bsp/model/BspScheduleRecomp.hpp"
 #include "concepts/computational_dag_concept.hpp"
+#include "graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 
 #include <fstream>
 #include <string>
@@ -117,6 +118,31 @@ class DotFileWriter {
             if (found) {
                 out << "]\";";
             }
+
+            out << "]";
+        }
+    };
+
+    template<typename Graph_t>
+    struct VertexWriterDuplicateRecompSchedule_DOT {
+        const BspScheduleRecomp<Graph_t> &schedule;
+        const std::vector<std::string> name;
+        const std::vector<unsigned> node_to_proc;
+        const std::vector<unsigned> node_to_superstep;
+
+        VertexWriterDuplicateRecompSchedule_DOT(const BspScheduleRecomp<Graph_t> &schedule_,
+                                                const std::vector<std::string> &name_,
+                                                std::vector<unsigned> &node_to_proc_,
+                                                std::vector<unsigned> &node_to_superstep_)
+            : schedule(schedule_), name(name_), node_to_proc(node_to_proc_), node_to_superstep(node_to_superstep_) {}
+
+        template<class VertexOrEdge>
+        void operator()(std::ostream &out, const VertexOrEdge &i) const {
+            out << i << " [" << "label=\"" << name[i] << "\";" << "work_weight=\""
+                << schedule.getInstance().getComputationalDag().vertex_work_weight(i) << "\";" << "comm_weight=\""
+                << schedule.getInstance().getComputationalDag().vertex_comm_weight(i) << "\";" << "mem_weight=\""
+                << schedule.getInstance().getComputationalDag().vertex_mem_weight(i) << "\";" << "proc=\""
+                << node_to_proc[i] << "\";" << "superstep=\"" << node_to_superstep[i] << "\";";
 
             out << "]";
         }
@@ -287,6 +313,114 @@ class DotFileWriter {
     void write_schedule_recomp(const std::string &filename, const BspScheduleRecomp<Graph_t> &schedule) const {
         std::ofstream os(filename);
         write_schedule_recomp(os, schedule);
+    }
+
+    template<typename Graph_t>
+    void write_schedule_recomp_duplicate(std::ostream &os, const BspScheduleRecomp<Graph_t> &schedule) const {
+
+        const auto &g = schedule.getInstance().getComputationalDag();
+
+        using VertexType = vertex_idx_t<Graph_t>;
+
+        std::vector<std::string> names(schedule.getTotalAssignments());
+        std::vector<unsigned> node_to_proc(schedule.getTotalAssignments());
+        std::vector<unsigned> node_to_superstep(schedule.getTotalAssignments());
+
+        std::unordered_map<VertexType, std::vector<size_t>> vertex_to_idx;
+
+        using vertex_type_t_or_default =
+            std::conditional_t<is_computational_dag_typed_vertices_v<Graph_t>, v_type_t<Graph_t>, unsigned>;
+        using edge_commw_t_or_default =
+            std::conditional_t<is_computational_dag_edge_desc_v<Graph_t>, e_commw_t<Graph_t>, v_commw_t<Graph_t>>;
+
+        using cdag_vertex_impl_t = cdag_vertex_impl<vertex_idx_t<Graph_t>, v_workw_t<Graph_t>, v_commw_t<Graph_t>,
+                                                    v_memw_t<Graph_t>, vertex_type_t_or_default>;
+        using cdag_edge_impl_t = cdag_edge_impl<edge_commw_t_or_default>;
+
+        using graph_t = computational_dag_edge_idx_vector_impl<cdag_vertex_impl_t, cdag_edge_impl_t>;
+
+        graph_t g2;
+
+        size_t idx_new = 0;
+
+        for (const auto &node : g.vertices()) {
+
+            if (schedule.assignments(node).size() == 1) {
+
+                g2.add_vertex(g.vertex_work_weight(node), g.vertex_comm_weight(node), g.vertex_mem_weight(node),
+                              g.vertex_type(node));
+
+                names[idx_new] = std::to_string(node);
+                node_to_proc[idx_new] = schedule.assignments(node)[0].first;
+                node_to_superstep[idx_new] = schedule.assignments(node)[0].second;
+
+                vertex_to_idx.insert({node, {idx_new}});
+                idx_new++;
+
+            } else {
+
+                std::vector<size_t> idxs;
+                for (unsigned i = 0; i < schedule.assignments(node).size(); ++i) {
+
+                    g2.add_vertex(g.vertex_work_weight(node), g.vertex_comm_weight(node), g.vertex_mem_weight(node),
+                                  g.vertex_type(node));
+
+                    names[idx_new] = std::to_string(node).append("_").append(std::to_string(i));
+                    node_to_proc[idx_new] = schedule.assignments(node)[i].first;
+                    node_to_superstep[idx_new] = schedule.assignments(node)[i].second;
+
+                    idxs.push_back(idx_new++);
+                }
+                vertex_to_idx.insert({node, idxs});
+            }
+        }
+
+        for (const auto &[key, val] : vertex_to_idx) {
+
+            if (val.size() == 1) {
+
+                for (const auto &target : g.children(key)) {
+
+                    for (const auto &new_node_target : vertex_to_idx[target]) {
+                        g2.add_edge(val[0], new_node_target);
+                    }
+                }
+
+            } else {
+
+                std::unordered_set<unsigned> assigned_processors;
+
+                for (const auto &assignment : schedule.assignments(key)) {
+
+                    assigned_processors.insert(assignment.first);
+                }
+
+                for (unsigned i = 0; i < val.size(); i++) {
+
+                    for (const auto &target : g.children(key)) {
+
+                        for (size_t j = 0; j < vertex_to_idx[target].size(); j++) {
+
+                            if (assigned_processors.find(node_to_proc[vertex_to_idx[target][j]]) ==
+                                    assigned_processors.end() ||
+                                node_to_proc[val[i]] == node_to_proc[vertex_to_idx[target][j]]) {
+                                g2.add_edge(val[i], vertex_to_idx[target][j]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        write_graph_structure(
+            os, g2, VertexWriterDuplicateRecompSchedule_DOT<Graph_t>(schedule, names, node_to_proc, node_to_superstep));
+    }
+
+    template<typename Graph_t>
+    void write_schedule_recomp_duplicate(const std::string &filename,
+                                         const BspScheduleRecomp<Graph_t> &schedule) const {
+        std::ofstream os(filename);
+        write_schedule_recomp_duplicate(os, schedule);
     }
 
     template<typename Graph_t>

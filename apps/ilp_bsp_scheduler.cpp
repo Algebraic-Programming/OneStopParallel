@@ -78,6 +78,8 @@ int main(int argc, char *argv[]) {
     }
 
     bool status_arch = file_reader::readBspArchitecture(filename_machine, instance.getArchitecture());
+    // instance.setDiagonalCompatibilityMatrix(graph.num_vertex_types());
+    // instance.getArchitecture().setProcessorsWithTypes({0,0,1,1,1,1});
 
     if (!status_graph || !status_arch) {
 
@@ -92,6 +94,7 @@ int main(int argc, char *argv[]) {
 
     CoptFullScheduler<ComputationalDag> scheduler;
     scheduler.setMaxNumberOfSupersteps(steps);
+    scheduler.setTimeLimitHours(48);
 
     if (recomp) {
 
@@ -105,6 +108,11 @@ int main(int argc, char *argv[]) {
             dot_writer.write_schedule_recomp(name_graph + "_" + name_machine + "_maxS_" + std::to_string(steps) + "_" +
                                                  scheduler.getScheduleName() + "_recomp_schedule.dot",
                                              schedule);
+
+            dot_writer.write_schedule_recomp_duplicate(name_graph + "_" + name_machine + "_maxS_" +
+                                                           std::to_string(steps) + "_" + scheduler.getScheduleName() +
+                                                           "_duplicate_recomp_schedule.dot",
+                                                       schedule);
 
             std::cout << "Recomp Schedule computed with costs: " << schedule.computeCosts() << std::endl;
 

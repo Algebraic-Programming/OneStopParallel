@@ -192,10 +192,12 @@ BOOST_AUTO_TEST_CASE(test_schedule_writer) {
     std::cout << "Writing schedule_recomp" << std::endl;
     sched_writer.write_schedule_recomp(std::cout, schedule_recomp);
 
+    std::cout << "Writing schedule_recomp_duplicate" << std::endl;
+    sched_writer.write_schedule_recomp_duplicate(std::cout, schedule_recomp);
+
     std::cout << "Writing schedule_t2 CS" << std::endl;
     BspScheduleCS<graph_t2> schedule_cs(schedule_t2);
     sched_writer.write_schedule_cs(std::cout, schedule_cs);
-
 };
 
 BOOST_AUTO_TEST_CASE(test_bsp_schedule_cs) {
