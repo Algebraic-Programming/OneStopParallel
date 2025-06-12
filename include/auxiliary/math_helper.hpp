@@ -25,7 +25,7 @@ template<typename float_type>
 float_type log_sum_exp(float_type lhs, float_type rhs) {
     static_assert(std::is_floating_point_v<float_type>);
 
-    float_type max = std::max(lhs, rhs);
+    const float_type max = std::max(lhs, rhs);
     
     float_type result = max;
     result += std::log2( std::exp2(lhs - max) + std::exp2(rhs - max) );

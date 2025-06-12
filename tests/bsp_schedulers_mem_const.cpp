@@ -25,6 +25,7 @@ limitations under the License.
 
 #include "bsp/scheduler/LoadBalanceScheduler/VariancePartitioner.hpp"
 #include "bsp/scheduler/GreedySchedulers/BspLocking.hpp"
+#include "bsp/scheduler/GreedySchedulers/GrowLocalAutoCores.hpp"
 #include "bsp/scheduler/GreedySchedulers/EtfScheduler.hpp"
 #include "bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
 #include "bsp/scheduler/GreedySchedulers/VarianceFillup.hpp"
@@ -365,6 +366,23 @@ BOOST_AUTO_TEST_CASE(GreedyBspScheduler_local_test) {
     run_test_local_inc_edges_memory(&test_3);
 
     GreedyBspScheduler<graph_impl_t, local_inc_edges_2_memory_constraint<graph_impl_t>> test_4;
+    run_test_local_inc_edges_2_memory(&test_4);
+};
+
+BOOST_AUTO_TEST_CASE(GrowLocalAutoCores_local_test) {
+
+    using graph_impl_t = computational_dag_edge_idx_vector_impl_def_int_t;
+
+    GrowLocalAutoCores<graph_impl_t, local_memory_constraint<graph_impl_t>> test_1;
+    run_test_local_memory(&test_1);
+
+    GrowLocalAutoCores<graph_impl_t, local_in_out_memory_constraint<graph_impl_t>> test_2;
+    run_test_local_in_out_memory(&test_2);
+
+    GrowLocalAutoCores<graph_impl_t, local_inc_edges_memory_constraint<graph_impl_t>> test_3;
+    run_test_local_inc_edges_memory(&test_3);
+
+    GrowLocalAutoCores<graph_impl_t, local_inc_edges_2_memory_constraint<graph_impl_t>> test_4;
     run_test_local_inc_edges_2_memory(&test_4);
 };
 

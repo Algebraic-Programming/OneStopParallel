@@ -26,6 +26,7 @@ limitations under the License.
 #include <string>
 #include <vector>
 
+#include "MemoryConstraintModules.hpp"
 #include "auxiliary/misc.hpp"
 #include "bsp/model/BspSchedule.hpp"
 #include "bsp/scheduler/Scheduler.hpp"
@@ -48,11 +49,20 @@ struct GrowLocalAutoCores_Params {
  * The getScheduleName() method returns the name of the schedule, which is "GreedyBspGrowLocalAutoCores" in this
  * case.
  */
-template<typename Graph_t>
+template<typename Graph_t, typename MemoryConstraint_t = no_memory_constraint>
 class GrowLocalAutoCores : public Scheduler<Graph_t> {
 
   private:
     GrowLocalAutoCores_Params<v_workw_t<Graph_t>> params;
+
+    constexpr static bool use_memory_constraint =
+        is_memory_constraint_v<MemoryConstraint_t> or is_memory_constraint_schedule_v<MemoryConstraint_t>;
+
+    static_assert(not use_memory_constraint or std::is_same_v<Graph_t, typename MemoryConstraint_t::Graph_impl_t>,
+                  "Graph_t must be the same as MemoryConstraint_t::Graph_impl_t.");
+
+    MemoryConstraint_t local_memory_constraint;
+    MemoryConstraint_t global_memory_constraint;
 
   public:
     /**
@@ -83,6 +93,16 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
         for (const auto &v : instance.getComputationalDag().vertices()) {
             schedule.setAssignedProcessor(v, std::numeric_limits<unsigned>::max());
             schedule.setAssignedSuperstep(v, std::numeric_limits<unsigned>::max());
+        }
+
+        unsigned supstep = 0;
+
+        if constexpr (is_memory_constraint_v<MemoryConstraint_t>) {
+            local_memory_constraint.initialize(instance);
+            global_memory_constraint.initialize(instance);
+        } else if constexpr (is_memory_constraint_schedule_v<MemoryConstraint_t>) {
+            local_memory_constraint.initialize(schedule, supstep);
+            global_memory_constraint.initialize(schedule, supstep);
         }
 
         auto &node_to_proc = schedule.assignedProcessors();
@@ -121,7 +141,6 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
 
         double desiredParallelism = static_cast<double>(P);
 
-        unsigned supstep = 0;
         vertex_idx total_assigned = 0;
         while (total_assigned < N) {
 
@@ -132,29 +151,76 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
             bool continueSuperstepAttempts = true;
 
             while (continueSuperstepAttempts) {
-                for (unsigned p = 0; p < P; p++) {
-                    new_assignments[p].clear();
-                }
-                new_ready.clear();
 
                 for (unsigned p = 0; p < P; p++) {
+                    new_assignments[p].clear();
                     procReady[p].clear();
                 }
 
+                new_ready.clear();
                 allReady = ready;
 
                 vertex_idx new_total_assigned = 0;
                 v_workw_t<Graph_t> weight_limit = 0, total_weight_assigned = 0;
 
+                bool early_memory_break = false;
+
                 // Processor 0
                 while (new_assignments[0].size() < limit) {
                     vertex_idx chosen_node = std::numeric_limits<vertex_idx>::max();
                     if (!procReady[0].empty()) {
-                        chosen_node = *procReady[0].begin();
-                        procReady[0].erase(procReady[0].begin());
+
+                        if constexpr (use_memory_constraint) {
+
+                            if (local_memory_constraint.can_add(*procReady[0].begin(), 0)) {
+                                chosen_node = *procReady[0].begin();
+                                procReady[0].erase(procReady[0].begin());
+                            } else if (!allReady.empty() && local_memory_constraint.can_add(*allReady.begin(), 0)) {
+                                chosen_node = *allReady.begin();
+                                allReady.erase(allReady.begin());
+                            } else {
+                                early_memory_break = true;
+                                break;
+                            }
+
+                            // for (auto it = procReady[0].begin(); it != procReady[0].end(); ++it) {
+                            //     if (memory_constraint.can_add(*it, 0)) {
+                            //         chosen_node = *it;
+                            //         procReady[0].erase(it);
+                            //         break;
+                            //     }
+                            // }
+
+                        } else {
+
+                            chosen_node = *procReady[0].begin();
+                            procReady[0].erase(procReady[0].begin());
+                        }
                     } else if (!allReady.empty()) {
-                        chosen_node = *allReady.begin();
-                        allReady.erase(allReady.begin());
+
+                        if constexpr (use_memory_constraint) {
+
+                            if (local_memory_constraint.can_add(*allReady.begin(), 0)) {
+                                chosen_node = *allReady.begin();
+                                allReady.erase(allReady.begin());
+                            } else {
+                                early_memory_break = true;
+                                break;
+                            }
+
+                            // for (auto it = allReady[0].begin(); it != allReady[0].end(); ++it) {
+                            //     if (memory_constraint.can_add(*it, 0)) {
+                            //         chosen_node = *it;
+                            //         allReady[0].erase(it);
+                            //         break;
+                            //     }
+                            // }
+
+                        } else {
+
+                            chosen_node = *allReady.begin();
+                            allReady.erase(allReady.begin());
+                        }
                     } else {
                         break;
                     }
@@ -163,6 +229,10 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
                     node_to_proc[chosen_node] = 0;
                     new_total_assigned++;
                     weight_limit += G.vertex_work_weight(chosen_node);
+
+                    if constexpr (use_memory_constraint) {
+                        local_memory_constraint.add(chosen_node, 0);
+                    }
 
                     for (const auto &succ : G.children(chosen_node)) {
                         if (node_to_proc[succ] == std::numeric_limits<unsigned>::max()) {
@@ -176,6 +246,7 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
                             new_ready.push_back(succ);
 
                             if (node_to_proc[succ] == 0) {
+
                                 procReady[0].insert(succ);
                             }
                         }
@@ -190,18 +261,55 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
                     while (current_weight_assigned < weight_limit) {
                         vertex_idx chosen_node = std::numeric_limits<vertex_idx>::max();
                         if (!procReady[proc].empty()) {
-                            chosen_node = *procReady[proc].begin();
-                            procReady[proc].erase(procReady[proc].begin());
+
+                            if constexpr (use_memory_constraint) {
+
+                                if (local_memory_constraint.can_add(*procReady[proc].begin(), proc)) {
+                                    chosen_node = *procReady[proc].begin();
+                                    procReady[proc].erase(procReady[proc].begin());
+                                } else if (!allReady.empty() &&
+                                           local_memory_constraint.can_add(*allReady.begin(), proc)) {
+                                    chosen_node = *allReady.begin();
+                                    allReady.erase(allReady.begin());
+                                } else {
+                                    early_memory_break = true;
+                                    break;
+                                }
+
+                            } else {
+                                chosen_node = *procReady[proc].begin();
+                                procReady[proc].erase(procReady[proc].begin());
+                            }
+
                         } else if (!allReady.empty()) {
-                            chosen_node = *allReady.begin();
-                            allReady.erase(allReady.begin());
-                        } else
+
+                            if constexpr (use_memory_constraint) {
+
+                                if (local_memory_constraint.can_add(*allReady.begin(), proc)) {
+                                    chosen_node = *allReady.begin();
+                                    allReady.erase(allReady.begin());
+                                } else {
+                                    early_memory_break = true;
+                                    break;
+                                }
+
+                            } else {
+
+                                chosen_node = *allReady.begin();
+                                allReady.erase(allReady.begin());
+                            }
+                        } else {
                             break;
+                        }
 
                         new_assignments[proc].push_back(chosen_node);
                         node_to_proc[chosen_node] = proc;
                         new_total_assigned++;
                         current_weight_assigned += G.vertex_work_weight(chosen_node);
+
+                        if constexpr (use_memory_constraint) {
+                            local_memory_constraint.add(chosen_node, proc);
+                        }
 
                         for (const auto &succ : G.children(chosen_node)) {
                             if (node_to_proc[succ] == std::numeric_limits<unsigned>::max()) {
@@ -214,6 +322,7 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
                                 new_ready.push_back(succ);
 
                                 if (node_to_proc[succ] == proc) {
+
                                     procReady[proc].insert(succ);
                                 }
                             }
@@ -259,26 +368,25 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
                     continueSuperstepAttempts = false;
                 }
 
+                if constexpr (use_memory_constraint) {
+                    if (early_memory_break) {
+                        continueSuperstepAttempts = false;
+                    }
+                }
+
                 // undo proc assingments and predec decreases in any case
                 for (unsigned proc = 0; proc < P; ++proc) {
                     for (const auto &node : new_assignments[proc]) {
                         node_to_proc[node] = std::numeric_limits<unsigned>::max();
-                    }
-                }
 
-                for (unsigned proc = 0; proc < P; ++proc) {
-                    for (const auto &node : new_assignments[proc]) {
                         for (const auto &succ : G.children(node)) {
                             predec[succ]++;
-                        }
-                    }
-                }
-
-                for (unsigned proc = 0; proc < P; ++proc) {
-                    for (const auto &node : new_assignments[proc]) {
-                        for (const auto &succ : G.children(node)) {
                             node_to_proc[succ] = std::numeric_limits<unsigned>::max();
                         }
+                    }
+
+                    if constexpr (use_memory_constraint) {
+                        local_memory_constraint.reset(proc);
                     }
                 }
 
@@ -302,6 +410,7 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
                     node_to_supstep[node] = supstep;
                     ready.erase(place_in_ready[node]);
                     ++total_assigned;
+
                     for (const auto &succ : G.children(node)) {
                         predec[succ]--;
                     }
@@ -315,7 +424,7 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
         }
 
         schedule.updateNumberOfSupersteps();
-       
+
         return SUCCESS;
     }
 
