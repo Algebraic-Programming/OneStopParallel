@@ -204,7 +204,7 @@ invert_vertex_contraction_map(const std::vector<vertex_idx_t<Graph_t_out>> &vert
 template<typename Graph_t_in, typename Graph_t_out>
 std::vector<vertex_idx_t<Graph_t_out>>
 invert_vertex_expansion_map(const std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &vertex_expansion_map) {
-    assert(check_valid_expansion_map(vertex_expansion_map));
+    assert(check_valid_expansion_map<Graph_t_in>(vertex_expansion_map));
 
     vertex_idx_t<Graph_t_in> num_vert = 0;
     for (const auto &group : vertex_expansion_map) {
