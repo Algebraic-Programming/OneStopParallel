@@ -50,8 +50,8 @@ BOOST_AUTO_TEST_CASE(Erdos_Renyi_graph_test) {
 BOOST_AUTO_TEST_CASE(near_diag_random_graph_test) {
 
     std::vector<size_t> graph_sizes({100, 500, 500});
-    std::vector<double> graph_bw({1, 2, 3});
-    std::vector<double> graph_prob({10, 8, 20});
+    std::vector<double> graph_bw({10, 20, 30});
+    std::vector<double> graph_prob({0.14, 0.02 , 0.07});
 
     for (size_t i = 0; i < graph_sizes.size(); i++) {
         computational_dag_vector_impl_def_int_t graph;
