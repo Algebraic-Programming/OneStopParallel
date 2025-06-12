@@ -61,8 +61,12 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
     static_assert(not use_memory_constraint or std::is_same_v<Graph_t, typename MemoryConstraint_t::Graph_impl_t>,
                   "Graph_t must be the same as MemoryConstraint_t::Graph_impl_t.");
 
+    static_assert(not use_memory_constraint or not (std::is_same_v<MemoryConstraint_t, persistent_transient_memory_constraint<Graph_t>> or std::is_same_v<MemoryConstraint_t, global_memory_constraint<Graph_t>>), 
+                  "MemoryConstraint_t must not be persistent_transient_memory_constraint or global_memory_constraint. Not supported in GrowLocalAutoCores.");
+               
+
     MemoryConstraint_t local_memory_constraint;
-    MemoryConstraint_t global_memory_constraint;
+ 
 
   public:
     /**
@@ -99,10 +103,8 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
 
         if constexpr (is_memory_constraint_v<MemoryConstraint_t>) {
             local_memory_constraint.initialize(instance);
-            global_memory_constraint.initialize(instance);
         } else if constexpr (is_memory_constraint_schedule_v<MemoryConstraint_t>) {
             local_memory_constraint.initialize(schedule, supstep);
-            global_memory_constraint.initialize(schedule, supstep);
         }
 
         auto &node_to_proc = schedule.assignedProcessors();
