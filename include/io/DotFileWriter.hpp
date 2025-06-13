@@ -125,23 +125,23 @@ class DotFileWriter {
 
     template<typename Graph_t>
     struct VertexWriterDuplicateRecompSchedule_DOT {
-        const BspScheduleRecomp<Graph_t> &schedule;
+        const Graph_t &graph;
         const std::vector<std::string> name;
         const std::vector<unsigned> node_to_proc;
         const std::vector<unsigned> node_to_superstep;
 
-        VertexWriterDuplicateRecompSchedule_DOT(const BspScheduleRecomp<Graph_t> &schedule_,
+        VertexWriterDuplicateRecompSchedule_DOT(const Graph_t &graph_,
                                                 const std::vector<std::string> &name_,
                                                 std::vector<unsigned> &node_to_proc_,
                                                 std::vector<unsigned> &node_to_superstep_)
-            : schedule(schedule_), name(name_), node_to_proc(node_to_proc_), node_to_superstep(node_to_superstep_) {}
+            : graph(graph_), name(name_), node_to_proc(node_to_proc_), node_to_superstep(node_to_superstep_) {}
 
         template<class VertexOrEdge>
         void operator()(std::ostream &out, const VertexOrEdge &i) const {
             out << i << " [" << "label=\"" << name[i] << "\";" << "work_weight=\""
-                << schedule.getInstance().getComputationalDag().vertex_work_weight(i) << "\";" << "comm_weight=\""
-                << schedule.getInstance().getComputationalDag().vertex_comm_weight(i) << "\";" << "mem_weight=\""
-                << schedule.getInstance().getComputationalDag().vertex_mem_weight(i) << "\";" << "proc=\""
+                << graph.vertex_work_weight(i) << "\";" << "comm_weight=\""
+                << graph.vertex_comm_weight(i) << "\";" << "mem_weight=\""
+                << graph.vertex_mem_weight(i) << "\";" << "proc=\""
                 << node_to_proc[i] << "\";" << "superstep=\"" << node_to_superstep[i] << "\";";
 
             out << "]";
@@ -413,7 +413,7 @@ class DotFileWriter {
         }
 
         write_graph_structure(
-            os, g2, VertexWriterDuplicateRecompSchedule_DOT<Graph_t>(schedule, names, node_to_proc, node_to_superstep));
+            os, g2, VertexWriterDuplicateRecompSchedule_DOT<Graph_t>(g2, names, node_to_proc, node_to_superstep));
     }
 
     template<typename Graph_t>

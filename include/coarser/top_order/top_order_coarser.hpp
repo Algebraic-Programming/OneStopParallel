@@ -33,9 +33,6 @@ class top_order_coarser : public Coarser<Graph_t_in, Graph_t_out> {
   private:
     using VertexType = vertex_idx_t<Graph_t_in>;
 
-    // input
-    // const std::vector<VertexType> &top_ordering;
-
     // parameters
     v_workw_t<Graph_t_in> work_threshold = std::numeric_limits<v_workw_t<Graph_t_in>>::max();
     v_memw_t<Graph_t_in> memory_threshold = std::numeric_limits<v_memw_t<Graph_t_in>>::max();
@@ -118,7 +115,6 @@ class top_order_coarser : public Coarser<Graph_t_in, Graph_t_out> {
 
   public:
     top_order_coarser() {};
-
     virtual ~top_order_coarser() = default;
 
     inline void set_degree_threshold(unsigned degree_threshold_) { degree_threshold = degree_threshold_; }
@@ -127,9 +123,11 @@ class top_order_coarser : public Coarser<Graph_t_in, Graph_t_out> {
     inline void set_communication_threshold(v_commw_t<Graph_t_in> communication_threshold_) {
         communication_threshold = communication_threshold_;
     }
+
     inline void set_super_node_size_threshold(VertexType super_node_size_threshold_) {
         super_node_size_threshold = super_node_size_threshold_;
     }
+    
     inline void set_node_dist_threshold(unsigned node_dist_threshold_) { node_dist_threshold = node_dist_threshold_; }
 
     // inline void set_memory_constraint_type(MEMORY_CONSTRAINT_TYPE memory_constraint_type_) { memory_constraint_type =
@@ -140,7 +138,6 @@ class top_order_coarser : public Coarser<Graph_t_in, Graph_t_out> {
     virtual bool coarsenDag(const Graph_t_in &dag_in, Graph_t_out &dag_out,
                             std::vector<vertex_idx_t<Graph_t_out>> &reverse_vertex_map) override {
 
-        // assert(dag_in.num_vertices() == top_ordering.size());
         assert(dag_out.num_vertices() == 0);
 
         std::vector<VertexType> top_ordering = top_sort_func(dag_in);
