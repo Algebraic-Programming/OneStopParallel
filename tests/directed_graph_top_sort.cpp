@@ -87,6 +87,18 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     std::vector<VertexType> top_order;
     std::vector<size_t> index_in_top_order;
 
+    top_order = GetTopOrderReverse(graph);
+
+    BOOST_CHECK(top_order.size() == graph.num_vertices());
+
+    index_in_top_order = sorting_arrangement(top_order);
+
+    for (const auto &i : top_order) {
+        for (const auto &j : graph.children(i)) {
+            BOOST_CHECK_GT(index_in_top_order[i], index_in_top_order[j]);
+        }
+    }
+
     top_order = GetTopOrderMaxChildren(graph);
 
     BOOST_CHECK(top_order.size() == graph.num_vertices());

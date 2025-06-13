@@ -117,6 +117,14 @@ std::vector<vertex_idx_t<Graph_t>> GetTopOrder(const Graph_t &graph) {
 }
 
 template<typename Graph_t>
+std::vector<vertex_idx_t<Graph_t>> GetTopOrderReverse(const Graph_t &graph) {
+
+    std::vector<vertex_idx_t<Graph_t>> TopOrder = GetTopOrder(graph);
+    std::reverse(TopOrder.begin(), TopOrder.end());
+    return TopOrder;
+}
+
+template<typename Graph_t>
 std::vector<vertex_idx_t<Graph_t>> GetTopOrderGorder(const Graph_t &graph) {
 
     // Generating modified Gorder topological order cf. "Speedup Graph Processing by Graph Ordering" by Hao Wei, Jeffrey
