@@ -14,6 +14,9 @@ if(Eigen3_FOUND)
 _add_executable( post_incomplete_cholesky )
 endif()
 
+_add_executable( gen_Erdos-Renyi_graph )
+
+_add_executable( gen_near_diag_random_graph )
 
 # Custom target to compile all the examples
 add_custom_target( build_graph_generator DEPENDS ${graph_generator} )
