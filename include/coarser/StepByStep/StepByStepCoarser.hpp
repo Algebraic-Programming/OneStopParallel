@@ -149,9 +149,12 @@ std::vector<vertex_idx_t<Graph_t>> StepByStepCoarser<Graph_t>::generate_vertex_c
 {
     const unsigned N = static_cast<unsigned>(dag_in.num_vertices());
 
-    problem_type = PROBLEM_TYPE::SCHEDULING;
-
     G_full = dag_in;
+    for(vertex_idx node = G_coarse.num_vertices(); node > 0;)
+    {
+        --node;
+        G_coarse.remove_vertex(node);
+    }
 
     construct_computational_dag(G_full, G_coarse);
 
@@ -741,7 +744,6 @@ template<typename Graph_t>
 void StepByStepCoarser<Graph_t>::coarsenForPebbling(const Graph_t& dag_in, Graph_t &coarsened_dag,
                            std::vector<vertex_idx_t<Graph_t>> &new_vertex_id)
 {
-    std::vector<vertex_idx> new_node_IDs(dag_in.num_vertices());
 
     problem_type = PROBLEM_TYPE::PEBBLING;
     coarsening_strategy = COARSENING_STRATEGY::EDGE_BY_EDGE;
@@ -753,7 +755,7 @@ void StepByStepCoarser<Graph_t>::coarsenForPebbling(const Graph_t& dag_in, Graph
 
     target_nr_of_nodes = std::max(target_nr_of_nodes, nr_sources + 1);
 
-     CoarserGenContractionMap<Graph_t, Graph_t>::coarsenDag(dag_in, coarsened_dag, new_vertex_id);
+    CoarserGenContractionMap<Graph_t, Graph_t>::coarsenDag(dag_in, coarsened_dag, new_vertex_id);
 }
 
 template<typename Graph_t> 

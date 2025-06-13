@@ -66,6 +66,7 @@ BOOST_AUTO_TEST_CASE(StepByStepCoarser_test) {
     coarser.coarsenDag(DAG, coarsened_dag1, new_vertex_id);
     old_vertex_ids = coarser_util::invert_vertex_contraction_map<graph, graph>(new_vertex_id);
 
+    coarser.setTargetNumberOfNodes(static_cast<unsigned>(DAG.num_vertices())*2/3);
     coarser.coarsenForPebbling(DAG, coarsened_dag2, new_vertex_id);
     old_vertex_ids = coarser_util::invert_vertex_contraction_map<graph, graph>(new_vertex_id);
 
