@@ -23,7 +23,7 @@ limitations under the License.
 #include "graph_algorithms/directed_graph_edge_desc_util.hpp"
 #include "graph_algorithms/computational_dag_construction_util.hpp"
 #include "graph_algorithms/directed_graph_top_sort.hpp"
-#include "coarser/Coarser_gen_cont_map.hpp"
+#include "coarser/Coarser.hpp"
 #include "graph_implementations/boost_graphs/boost_graph.hpp"
 
 namespace osp {

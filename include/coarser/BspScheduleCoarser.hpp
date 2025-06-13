@@ -18,7 +18,7 @@ limitations under the License.
 
 #pragma once
 
-#include "coarser/Coarser_gen_cont_map.hpp"
+#include "coarser/Coarser.hpp"
 #include "bsp/model/BspSchedule.hpp"
 #include "bsp/model/SetSchedule.hpp"
 #include "bsp/scheduler/Scheduler.hpp"

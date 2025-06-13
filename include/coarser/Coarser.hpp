@@ -23,10 +23,10 @@ limitations under the License.
 #include <vector>
 
 #include "bsp/model/BspSchedule.hpp"
+#include "coarser_util.hpp"
 #include "concepts/computational_dag_concept.hpp"
 #include "concepts/constructable_computational_dag_concept.hpp"
 #include "concepts/graph_traits.hpp"
-#include "coarser_util.hpp"
 
 namespace osp {
 
@@ -72,6 +72,61 @@ class Coarser {
      * @brief Destructor for the Coarser class.
      */
     virtual ~Coarser() = default;
+};
+
+/**
+ * @class Coarser
+ * @brief Abstract base class for coarsening ComputationalDags.
+ *
+ */
+template<typename Graph_t_in, typename Graph_t_out>
+class CoarserGenContractionMap : public Coarser<Graph_t_in, Graph_t_out> {
+
+  public:
+    virtual std::vector<vertex_idx_t<Graph_t_out>> generate_vertex_contraction_map(const Graph_t_in &dag_in) = 0;
+
+    virtual bool coarsenDag(const Graph_t_in &dag_in, Graph_t_out &coarsened_dag,
+                            std::vector<vertex_idx_t<Graph_t_out>> &vertex_contraction_map) override {
+
+        vertex_contraction_map = generate_vertex_contraction_map(dag_in);
+
+        return coarser_util::construct_coarse_dag(dag_in, coarsened_dag, vertex_contraction_map);
+    }
+
+    /**
+     * @brief Destructor for the CoarserGenContractionMap class.
+     */
+    virtual ~CoarserGenContractionMap() = default;
+};
+
+/**
+ * @class Coarser
+ * @brief Abstract base class for coarsening ComputationalDags.
+ *
+ */
+template<typename Graph_t_in, typename Graph_t_out>
+class CoarserGenExpansionMap : public Coarser<Graph_t_in, Graph_t_out> {
+
+  public:
+    virtual std::vector<std::vector<vertex_idx_t<Graph_t_in>>>
+    generate_vertex_expansion_map(const Graph_t_in &dag_in) = 0;
+
+    virtual bool coarsenDag(const Graph_t_in &dag_in, Graph_t_out &coarsened_dag,
+                            std::vector<vertex_idx_t<Graph_t_out>> &vertex_contraction_map) override {
+
+        std::vector<std::vector<vertex_idx_t<Graph_t_in>>> vertex_expansion_map = generate_vertex_expansion_map(dag_in);
+        assert(coarser_util::check_valid_expansion_map<Graph_t_in>(vertex_expansion_map));
+
+        vertex_contraction_map =
+            coarser_util::invert_vertex_expansion_map<Graph_t_in, Graph_t_out>(vertex_expansion_map);
+
+        return coarser_util::construct_coarse_dag(dag_in, coarsened_dag, vertex_contraction_map);
+    }
+
+    /**
+     * @brief Destructor for the CoarserGenExpansionMap class.
+     */
+    virtual ~CoarserGenExpansionMap() = default;
 };
 
 } // namespace osp

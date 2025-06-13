@@ -17,7 +17,7 @@ limitations under the License.
 */
 
 #pragma once
-#include "coarser/Coarser_gen_exp_map.hpp"
+#include "coarser/Coarser.hpp"
 #include "graph_algorithms/directed_graph_edge_desc_util_parallel.hpp"
 #include <limits>
 
