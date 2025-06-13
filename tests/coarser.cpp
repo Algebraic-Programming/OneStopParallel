@@ -28,6 +28,7 @@ limitations under the License.
 #include "coarser/BspScheduleCoarser.hpp"
 #include "coarser/coarser_util.hpp"
 #include "coarser/funnel/FunnelBfs.hpp"
+#include "coarser/top_order/top_order_coarser.hpp"
 #include "coarser/hdagg/hdagg_coarser.hpp"
 #include "graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "io/arch_file_reader.hpp"
@@ -423,4 +424,26 @@ BOOST_AUTO_TEST_CASE(coarser_funndel_bfs_test) {
     FunnelBfs<graph_t, graph_t> coarser_params_2(params);
 
     test_coarser_same_graph<graph_t>(coarser_params_2);
+}
+
+
+BOOST_AUTO_TEST_CASE(coarser_top_sort_test) {
+
+    using graph_t = computational_dag_edge_idx_vector_impl_def_t;
+    top_order_coarser<graph_t, graph_t, GetTopOrder> coarser;
+
+    test_coarser_same_graph<graph_t>(coarser);
+
+    // FunnelBfs<graph_t, graph_t>::FunnelBfs_parameters params{std::numeric_limits<v_workw_t<graph_t>>::max(),
+    //                                                          std::numeric_limits<v_memw_t<graph_t>>::max(),
+    //                                                          std::numeric_limits<unsigned>::max(), false, true};
+
+    // FunnelBfs<graph_t, graph_t> coarser_params(params);
+
+    // test_coarser_same_graph<graph_t>(coarser_params);
+
+    // params.max_depth = 2;
+    // FunnelBfs<graph_t, graph_t> coarser_params_2(params);
+
+    // test_coarser_same_graph<graph_t>(coarser_params_2);
 }
