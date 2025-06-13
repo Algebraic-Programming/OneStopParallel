@@ -532,16 +532,7 @@ class WavefrontComponentDivider : public IDagDivider<Graph_t> {
 
         dag = &dag_;
 
-        const auto bot_distance = get_top_node_distance(*dag);
-
-        std::vector<std::vector<VertexType>> level_sets(1);
-
-        for (VertexType v = 0; v < bot_distance.size(); v++) {
-            if (bot_distance[v] - 1 >= level_sets.size()) {
-                level_sets.resize(bot_distance[v]);
-            }
-            level_sets[bot_distance[v] - 1].emplace_back(v);
-        }
+        std::vector<std::vector<VertexType>> level_sets = compute_wavefronts(*dag);
 
         std::vector<size_t> cut_levels;
 

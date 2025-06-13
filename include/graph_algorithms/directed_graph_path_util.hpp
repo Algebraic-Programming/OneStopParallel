@@ -216,11 +216,52 @@ std::vector<unsigned> get_top_node_distance(const Graph_t &graph) {
 }
 
 template<typename Graph_t>
+std::vector<std::vector<vertex_idx_t<Graph_t>>> compute_wavefronts(const Graph_t &graph) {
+
+    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+
+    std::vector<std::vector<vertex_idx_t<Graph_t>>> wavefronts;
+    std::vector<vertex_idx_t<Graph_t>> parents_visited(graph.num_vertices(), 0);
+
+    wavefronts.push_back(std::vector<vertex_idx_t<Graph_t>>());
+    for (const auto &vertex : graph.vertices()) {
+
+        if (graph.in_degree(vertex) == 0) {
+            wavefronts.back().push_back(vertex);
+        } else {
+            parents_visited[vertex] = graph.in_degree(vertex);
+        }
+    }
+
+    vertex_idx_t<Graph_t> counter = wavefronts.back().size();
+
+    while (counter < graph.num_vertices()) {
+
+        std::vector<vertex_idx_t<Graph_t>> next_wavefront;
+        for (const auto &v_prev_wavefront : wavefronts.back()) {
+
+            for (const auto &child : graph.children(v_prev_wavefront)) {
+
+                parents_visited[child]--;
+                if (parents_visited[child] == 0) {
+                    next_wavefront.push_back(child);
+                    counter++;
+                }
+            }
+        }
+
+        wavefronts.push_back(next_wavefront);
+    }
+
+    return wavefronts;
+}
+
+template<typename Graph_t>
 std::vector<int> get_strict_poset_integer_map(unsigned const noise, double const poisson_param, const Graph_t &graph) {
 
     static_assert(is_directed_graph_edge_desc_v<Graph_t>, "Graph_t must satisfy the directed_graph_edge_desc concept");
 
-    if (noise > static_cast<unsigned>( std::numeric_limits<int>::max() )) {
+    if (noise > static_cast<unsigned>(std::numeric_limits<int>::max())) {
         throw std::overflow_error("Overflow in get_strict_poset_integer_map");
     }
 
@@ -252,18 +293,21 @@ std::vector<int> get_strict_poset_integer_map(unsigned const noise, double const
     }
 
     for (const auto &source : source_vertices_view(graph)) {
-        
-        if (max_path - bot_distance[source] + 1U + 2U * noise > static_cast<unsigned>( std::numeric_limits<int>::max() )) {
+
+        if (max_path - bot_distance[source] + 1U + 2U * noise >
+            static_cast<unsigned>(std::numeric_limits<int>::max())) {
             throw std::overflow_error("Overflow in get_strict_poset_integer_map");
         }
-        new_top[source] = randInt(static_cast<int>(max_path - bot_distance[source] + 1 + 2 * noise)) - static_cast<int>(noise);
+        new_top[source] =
+            randInt(static_cast<int>(max_path - bot_distance[source] + 1 + 2 * noise)) - static_cast<int>(noise);
     }
 
     for (const auto &sink : sink_vertices_view(graph)) {
-        if (max_path - top_distance[sink] + 1U + 2U * noise > static_cast<unsigned>( std::numeric_limits<int>::max() )) {
+        if (max_path - top_distance[sink] + 1U + 2U * noise > static_cast<unsigned>(std::numeric_limits<int>::max())) {
             throw std::overflow_error("Overflow in get_strict_poset_integer_map");
-        }        
-        new_bot[sink] = randInt(static_cast<int>(max_path - top_distance[sink] + 1U + 2U * noise)) - static_cast<int>(noise);
+        }
+        new_bot[sink] =
+            randInt(static_cast<int>(max_path - top_distance[sink] + 1U + 2U * noise)) - static_cast<int>(noise);
     }
 
     for (const auto &vertex : top_order) {

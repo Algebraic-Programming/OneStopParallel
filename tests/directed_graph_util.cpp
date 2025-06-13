@@ -412,7 +412,7 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
 
     BOOST_CHECK_EQUAL(is_acyclic(graph), true);
     BOOST_CHECK_EQUAL(is_connected(graph), true);
-    
+
     graph.add_edge(7, 5);
     BOOST_CHECK_EQUAL(is_acyclic(graph), true);
     graph.add_edge(7, 0);
@@ -633,6 +633,24 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     }
 
     BOOST_CHECK(critical_path_weight(graph) == 7);
+
+    auto wavefronts = compute_wavefronts(graph);
+
+    std::vector<std::vector<VertexType>> expected_wavefronts = {{3, 8, 9}, {4, 6, 5}, {1, 2}, {0}, {7}};
+
+    size_t size = 0;
+    size_t counter = 0;
+    for (const auto &wavefront : wavefronts) {
+        size += wavefront.size();
+        BOOST_CHECK(!wavefront.empty());
+
+        BOOST_CHECK_EQUAL_COLLECTIONS(wavefront.begin(), wavefront.end(), expected_wavefronts[counter].begin(),
+                                      expected_wavefronts[counter].end());
+
+        counter++;
+    }
+
+    BOOST_CHECK_EQUAL(size, graph.num_vertices());
 
     // const std::pair<std::vector<VertexType>, ComputationalDag> rev_graph_pair = graph.reverse_graph();
     // const std::vector<VertexType> &vertex_mapping_rev_graph = rev_graph_pair.first;

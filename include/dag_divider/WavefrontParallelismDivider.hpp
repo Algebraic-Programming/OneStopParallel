@@ -25,8 +25,8 @@ limitations under the License.
 #include <vector>
 
 #include "DagDivider.hpp"
-#include "graph_algorithms/subgraph_algorithms.hpp"
 #include "graph_algorithms/directed_graph_path_util.hpp"
+#include "graph_algorithms/subgraph_algorithms.hpp"
 
 namespace osp {
 
@@ -228,7 +228,6 @@ class WavefrontParallelismDivider : public IDagDivider<Graph_t> {
         forward_statistics[level_set_idx].parallelism =
             forward_statistics[level_set_idx].total_acc_weight / forward_statistics[level_set_idx].max_acc_weight;
 
-
         level_set_idx++;
 
         while (level_set_idx < level_sets.size()) {
@@ -295,16 +294,7 @@ class WavefrontParallelismDivider : public IDagDivider<Graph_t> {
 
         dag = &dag_;
 
-        const auto bot_distance = get_top_node_distance(*dag);
-
-        std::vector<std::vector<VertexType>> level_sets(1);
-
-        for (VertexType v = 0; v < bot_distance.size(); v++) {
-            if (bot_distance[v] - 1 >= level_sets.size()) {
-                level_sets.resize(bot_distance[v]);
-            }
-            level_sets[bot_distance[v] - 1].emplace_back(v);
-        }
+        std::vector<std::vector<VertexType>> level_sets = compute_wavefronts(*dag);
 
         compute_forward_statistics(level_sets, *dag);
         print_wavefront_statistics(forward_statistics);
