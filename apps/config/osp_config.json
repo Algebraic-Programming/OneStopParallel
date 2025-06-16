@@ -1,0 +1,41 @@
+{
+    "globalParameters": {
+        "timeLimit": 3600,
+        "outputSchedule": false,
+        "outputDotSchedule": false,
+        "outputSankeySchedule": false,
+        "use_memory_constraints": true
+    },
+    "algorithms": [
+        {
+            "name": "Serial",
+            "description": "\tSerial Scheduler.",
+            "parameters": {}
+        },
+        {
+            "name": "GreedyBsp",
+            "description": "Greedy scheduler that assigns tasks to processors in a BSP fashion.",
+            "parameters": {
+                "max_percent_idle_processors": 0.2,
+                "increase_parallelism_in_new_superstep": true
+            }
+        },
+        {
+            "name": "BspLocking",
+            "description": "Bsp scheduler that assigns tasks to processors in a BSP fashion.",
+            "parameters": {
+                "max_percent_idle_processors": 0.4,
+                "increase_parallelism_in_new_superstep": true
+            }
+        },
+        {
+            "name": "GrowLocal",
+            "description": "Greedy Scheduler which prioritses locality and automatically detects number of cores to use",
+            "parameters": {
+                "minSuperstepSize": 20,
+                "syncCostMultiplierMinSuperstepWeight": 1,
+                "syncCostMultiplierParallelCheck": 4
+            }
+        }
+    ]
+}

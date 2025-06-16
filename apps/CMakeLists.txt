@@ -14,6 +14,9 @@ _add_executable( osp_turnus )
 
 _add_executable( graph_analyser )
 
+_add_executable ( OneStopParallel )
+
+configure_file(config/osp_config.json osp_config.json COPYONLY)
 
 if (COPT_FOUND)
 _add_executable( ilp_bsp_scheduler )
