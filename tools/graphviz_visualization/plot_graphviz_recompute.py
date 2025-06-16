@@ -74,10 +74,12 @@ digraph {
         procs_in_superstep = 0
         found_in_superstep = False
         nodes_in_superstep = []
+        node_labels = {}
         for node in graph.nodes(data=True):
             if int(node[1].get("superstep")) == superstep_idx:
                 found_in_superstep = True
                 nodes_in_superstep.append(node)
+                node_labels[node[0]] = node[1].get("label")
                 procs_in_superstep = max(procs_in_superstep, int(node[1].get("proc")) + 1)
 
         # If no node was found in the superstep, break the loop
@@ -95,7 +97,7 @@ digraph {
             gv_content += f"            "
             for node in nodes_in_superstep:
                 if int(node[1].get("proc")) == proc:
-                    gv_content += f"{node[0]}; "
+                    gv_content += f"{node[0]} [label=\"{node_labels[node[0]]}\"]; "
             gv_content += f"\n"
             gv_content += f"        }};\n"
         gv_content += f'        label="Super-step #{superstep_idx}";\n'
