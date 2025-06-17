@@ -189,8 +189,8 @@ BOOST_AUTO_TEST_CASE(test_dag_vector_adapter) {
 
     std::vector<std::vector<int>> in_neighbors{{}, {0}, {0}, {0}, {1, 2}, {2}, {1}, {4, 3}};
 
-    using v_impl = cdag_vertex_impl<int, int, int, int, unsigned>;
-    using graph_t = dag_vector_adapter<v_impl>;
+    using v_impl = cdag_vertex_impl<unsigned, int, int, int, unsigned>;
+    using graph_t = dag_vector_adapter<v_impl,int>;
 
     graph_t graph(out_neighbors, in_neighbors);
 
