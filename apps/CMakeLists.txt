@@ -16,6 +16,8 @@ _add_executable( graph_analyser )
 
 _add_executable ( OneStopParallel )
 
+_add_executable (moe_test )
+
 configure_file(config/osp_config.json osp_config.json COPYONLY)
 
 if (COPT_FOUND)
