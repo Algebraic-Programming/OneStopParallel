@@ -18,13 +18,15 @@ limitations under the License.
 
 #pragma once
 
+
+#include "IBspScheduleEval.hpp"
 #include "bsp/model/BspScheduleCS.hpp"
 #include "concepts/computational_dag_concept.hpp"
 
 namespace osp {
 
 template<typename Graph_t>
-class BspScheduleRecomp {
+class BspScheduleRecomp :public IBspScheduleEval<Graph_t> {
 
   public:
     using vertex_idx = vertex_idx_t<Graph_t>;
@@ -64,7 +66,7 @@ class BspScheduleRecomp {
      *
      * @return The number of supersteps in the schedule.
      */
-    unsigned numberOfSupersteps() const { return number_of_supersteps; }
+    virtual unsigned numberOfSupersteps() const override { return number_of_supersteps; }
     void setNumberOfSupersteps(unsigned number_of_supersteps_) { number_of_supersteps = number_of_supersteps_; }
 
     std::vector<std::pair<unsigned, unsigned>>& assignments(vertex_idx node) {
@@ -110,9 +112,9 @@ class BspScheduleRecomp {
 
     std::map<KeyTriple, unsigned int> &getCommunicationSchedule() { return commSchedule; }
 
-    cost_type computeWorkCosts() const;
+    virtual cost_type computeWorkCosts() const override;
 
-    cost_type computeCosts() const;
+    virtual cost_type computeCosts() const override;
 
     /**
      * @brief Returns true if the schedule is valid, i.e. if every time we compute a node, all its parents are already available

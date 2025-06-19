@@ -25,6 +25,7 @@ limitations under the License.
 #include <stdexcept>
 #include <vector>
 
+#include "IBspScheduleEval.hpp"
 #include "IBspSchedule.hpp"
 #include "SetSchedule.hpp"
 #include "concepts/computational_dag_concept.hpp"
@@ -50,7 +51,7 @@ namespace osp {
  * @see BspInstance
  */
 template<typename Graph_t>
-class BspSchedule : public IBspSchedule<Graph_t> {
+class BspSchedule : public IBspSchedule<Graph_t>, IBspScheduleEval<Graph_t> {
 
     static_assert(is_computational_dag_v<Graph_t>, "BspSchedule can only be used with computational DAGs.");
     static_assert(std::is_same_v<v_workw_t<Graph_t>, v_commw_t<Graph_t> >, "BspSchedule requires work and comm. weights to have the same type.");
@@ -322,7 +323,7 @@ class BspSchedule : public IBspSchedule<Graph_t> {
         }
     }
 
-    v_workw_t<Graph_t> computeWorkCosts() const {
+    virtual v_workw_t<Graph_t> computeWorkCosts() const override {
 
         std::vector<std::vector<v_workw_t<Graph_t>>> work = std::vector<std::vector<v_workw_t<Graph_t>>>(
             number_of_supersteps, std::vector<v_workw_t<Graph_t>>(instance->numberOfProcessors(), 0));
@@ -499,7 +500,7 @@ class BspSchedule : public IBspSchedule<Graph_t> {
         return costs;
     }
 
-    virtual v_workw_t<Graph_t> computeCosts() const { return compute_lazy_communication_costs() + computeWorkCosts(); }
+    virtual v_workw_t<Graph_t> computeCosts() const override { return compute_lazy_communication_costs() + computeWorkCosts(); }
 
     /**
      * @brief Returns true if the schedule satisfies the precedence constraints of the computational DAG.

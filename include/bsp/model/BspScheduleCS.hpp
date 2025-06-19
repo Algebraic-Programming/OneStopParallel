@@ -25,6 +25,8 @@ limitations under the License.
 #include <stdexcept>
 #include <vector>
 
+
+#include "IBspScheduleEval.hpp"
 #include "BspSchedule.hpp"
 
 namespace osp {
