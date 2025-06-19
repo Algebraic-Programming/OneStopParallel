@@ -52,19 +52,19 @@ class PebblingTestSuiteRunner : public AbstractTestSuiteRunner<PebblingSchedule<
     bool use_memory_constraint;
 
   protected:
-    PebblingSchedule<concrete_graph_t> compute_target_object_impl(const BspInstance<concrete_graph_t> &instance,
-                                                                  const pt::ptree &algo_config, RETURN_STATUS &status,
-                                                                  long long &computation_time_ms) override {
-        PebblingSchedule<concrete_graph_t> schedule(instance);
+        RETURN_STATUS compute_target_object_impl(const BspInstance<concrete_graph_t> &instance,
+                                             PebblingSchedule<concrete_graph_t> *schedule, const pt::ptree &algo_config,
+                                             long long &computation_time_ms) override {
+        schedule = new PebblingSchedule<concrete_graph_t>(instance);
 
         const auto start_time = std::chrono::high_resolution_clock::now();
 
-        // status = run_bsp_scheduler(this->parser, algo_config, schedule);
+        // RETURN_STATUS status = run_bsp_scheduler(this->parser, algo_config, schedule);
 
         const auto finish_time = std::chrono::high_resolution_clock::now();
         computation_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(finish_time - start_time).count();
 
-        return schedule;
+        return status;
     }
 
     void create_and_register_statistic_modules(const std::string &module_name) override {
@@ -83,8 +83,7 @@ class PebblingTestSuiteRunner : public AbstractTestSuiteRunner<PebblingSchedule<
     // }
 
   public:
-    PebblingTestSuiteRunner()
-        : AbstractTestSuiteRunner<PebblingSchedule<concrete_graph_t>, concrete_graph_t>() {}
+    PebblingTestSuiteRunner() : AbstractTestSuiteRunner<PebblingSchedule<concrete_graph_t>, concrete_graph_t>() {}
 };
 
 } // namespace osp

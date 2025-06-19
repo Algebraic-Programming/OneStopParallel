@@ -37,24 +37,25 @@ class BspScheduleTestSuiteRunner : public AbstractTestSuiteRunner<BspSchedule<co
     bool use_memory_constraint_for_bsp;
 
   protected:
-    BspSchedule<concrete_graph_t> compute_target_object_impl(const BspInstance<concrete_graph_t> &instance,
-                                                             const pt::ptree &algo_config, RETURN_STATUS &status,
+    RETURN_STATUS compute_target_object_impl(const BspInstance<concrete_graph_t> &instance, BspSchedule<concrete_graph_t> * schedule,
+                                                             const pt::ptree &algo_config,  
                                                              long long &computation_time_ms) override {
-        BspSchedule<concrete_graph_t> schedule(instance);
+        
+        schedule = new BspSchedule<concrete_graph_t>(instance);
 
         const auto start_time = std::chrono::high_resolution_clock::now();
 
-        status = run_bsp_scheduler(this->parser, algo_config, schedule);
+        RETURN_STATUS status = run_bsp_scheduler(this->parser, algo_config, *schedule);
 
         const auto finish_time = std::chrono::high_resolution_clock::now();
         computation_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(finish_time - start_time).count();
 
-        return schedule;
+        return status;
     }
 
     void create_and_register_statistic_modules(const std::string &module_name) override {
         if (module_name == "BasicBspStats") {
-            this->active_stats_modules.push_back(std::make_unique<BasicBspStatsModule<concrete_graph_t>>());
+            this->active_stats_modules.push_back(std::make_unique<BasicBspStatsModule<BspSchedule<concrete_graph_t>>>());
         } else if (module_name == "BspCommStats") {
             this->active_stats_modules.push_back(std::make_unique<BspCommStatsModule<concrete_graph_t>>());
         }

@@ -19,7 +19,7 @@ limitations under the License.
 #pragma once
 
 #include "IStatisticsModule.hpp"
-#include "bsp/model/BspSchedule.hpp"
+#include "bsp/model/IBspScheduleEval.hpp"
 #include "graph_implementations/boost_graphs/boost_graph.hpp" // For graph_t
 #include <string>
 #include <vector>
@@ -27,8 +27,8 @@ limitations under the License.
 
 namespace osp {
 
-template<typename Graph_t>
-class BasicBspStatsModule : public IStatisticModule<BspSchedule<Graph_t>> { 
+template<typename TargetObjectType>
+class BasicBspStatsModule : public IStatisticModule<TargetObjectType> { 
 public:
 
 private:
@@ -43,7 +43,7 @@ public:
     }
 
     std::map<std::string, std::string> record_statistics(
-                            const osp::BspSchedule<Graph_t>& schedule, 
+                            const TargetObjectType& schedule, 
                             std::ofstream& /*log_stream*/) const override { 
         std::map<std::string, std::string> stats;
         const auto bsp_cost = schedule.computeCosts();

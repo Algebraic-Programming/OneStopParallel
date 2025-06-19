@@ -162,8 +162,8 @@ class AbstractTestSuiteRunner {
         }
     }
 
-    virtual TargetObjectType compute_target_object_impl(const BspInstance<GraphType> &instance,
-                                                        const pt::ptree &algo_config, RETURN_STATUS &status,
+    virtual RETURN_STATUS compute_target_object_impl(const BspInstance<GraphType> &instance, TargetObjectType* target_object,
+                                                        const pt::ptree &algo_config,  
                                                         long long &computation_time_ms) = 0;
 
     virtual void create_and_register_statistic_modules(const std::string &module_name) = 0;
@@ -288,23 +288,26 @@ class AbstractTestSuiteRunner {
                         algo_config.get_child("name").get_value<std::string>() + name_suffix;
                     log_stream << "Start Algorithm " + current_algo_name + "\n";
 
-                    RETURN_STATUS exec_status;
+                    
                     long long computation_time_ms;
-
-                    TargetObjectType target_object =
-                        compute_target_object_impl(bsp_instance, algo_config, exec_status, computation_time_ms);
+                    TargetObjectType *target_object = nullptr; 
+                    
+                    RETURN_STATUS exec_status = compute_target_object_impl(bsp_instance, target_object, algo_config, computation_time_ms);
 
                     if (exec_status != RETURN_STATUS::SUCCESS && exec_status != RETURN_STATUS::BEST_FOUND) {
                         if (exec_status == RETURN_STATUS::ERROR)
                             log_stream << "Error computing with " << current_algo_name << "." << std::endl;
                         else if (exec_status == RETURN_STATUS::TIMEOUT)
                             log_stream << "Scheduler " << current_algo_name << " timed out." << std::endl;
+
+                        delete target_object;
+                            
                         continue;
                     }
 
                     if (write_target_object_to_file) {
                         try {
-                            write_target_object_hook(target_object, name_graph, name_machine, current_algo_name);
+                            write_target_object_hook(*target_object, name_graph, name_machine, current_algo_name);
                         } catch (const std::exception &e) {
                             log_stream << "Writing target object file for " << name_graph << ", " << name_machine
                                        << ", " << current_algo_name << " has failed: " << e.what() << std::endl;
@@ -319,7 +322,7 @@ class AbstractTestSuiteRunner {
                         current_row_values["TimeToCompute"] = std::to_string(computation_time_ms);
 
                         for (auto &stat_module : active_stats_modules) {
-                            auto module_metrics = stat_module->record_statistics(target_object, log_stream);
+                            auto module_metrics = stat_module->record_statistics(*target_object, log_stream);
                             current_row_values.insert(module_metrics.begin(), module_metrics.end());
                         }
 
@@ -329,6 +332,8 @@ class AbstractTestSuiteRunner {
                         }
                         stats_out_stream << "\n";
                     }
+
+                    delete target_object;
                 }
             }
         }
