@@ -34,7 +34,6 @@ limitations under the License.
 #include "CommandLineParser.hpp"
 #include "StatisticModules/IStatisticModule.hpp"
 #include "bsp/model/BspInstance.hpp"
-#include "run_bsp_scheduler.hpp"
 
 #include "io/arch_file_reader.hpp"
 #include "io/dot_graph_file_reader.hpp"
@@ -118,7 +117,12 @@ class AbstractTestSuiteRunner {
         std::set<std::string> unique_module_metric_headers;
         for (const auto &mod : active_stats_modules) {
             for (const auto &header : mod->get_metric_headers()) {
-                unique_module_metric_headers.insert(header);
+                auto pair = unique_module_metric_headers.insert(header);
+
+                if (!pair.second) {
+                    log_stream << "Warning: Duplicate metric header '" << header
+                               << "' found across statistic modules. Using the first one encountered." << std::endl;
+                }
             }
         }
 

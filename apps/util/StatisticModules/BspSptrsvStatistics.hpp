@@ -27,13 +27,14 @@ limitations under the License.
 
 namespace osp {
 
+
 template<typename Graph_t>
-class BasicBspStatsModule : public IStatisticModule<BspSchedule<Graph_t>> { 
+class BspSptrsvModule : public IStatisticModule<osp::BspSchedule<Graph_t>> { 
 public:
 
 private:
     const std::vector<std::string> metric_headers = {
-        "BspCost", "WorkCost", "CommCost", "Supersteps"
+        "Permutation", "SpTrSV_Runtime"
     };
 
 public:
@@ -44,14 +45,12 @@ public:
 
     std::map<std::string, std::string> record_statistics(
                             const osp::BspSchedule<Graph_t>& schedule, 
-                            std::ofstream& /*log_stream*/) const override { 
+                            std::ofstream&) const override { 
+
         std::map<std::string, std::string> stats;
-        const auto bsp_cost = schedule.computeCosts();
-        const auto work_cost = schedule.computeWorkCosts();
-        stats["BspCost"] = std::to_string(bsp_cost);
-        stats["WorkCost"] = std::to_string(work_cost);
-        stats["CommCost"] = std::to_string(bsp_cost - work_cost); 
-        stats["Supersteps"] = std::to_string(schedule.numberOfSupersteps());
+
+        // TODO
+        
         return stats;
     }
 };

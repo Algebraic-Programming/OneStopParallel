@@ -27,10 +27,8 @@ limitations under the License.
 
 namespace osp {
 
-// Assuming graph_t is osp::boost_graph_int_t for this context
-using graph_t_for_stats = osp::boost_graph_int_t; 
-
-class CommStatsModule : public IStatisticModule<osp::BspSchedule<graph_t_for_stats>> { 
+template<typename Graph_t>
+class CommStatsModule : public IStatisticModule<osp::BspSchedule<Graph_t>> { 
 public:
 
 private:
@@ -45,7 +43,7 @@ public:
     }
 
     std::map<std::string, std::string> record_statistics(
-                            const osp::BspSchedule<graph_t_for_stats>& schedule, 
+                            const osp::BspSchedule<Graph_t>& schedule, 
                             std::ofstream& /*log_stream*/) const override {
         std::map<std::string, std::string> stats;
         stats["TotalCommCost"] = std::to_string(schedule.computeCostsTotalCommunication());
