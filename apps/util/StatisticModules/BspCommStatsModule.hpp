@@ -19,17 +19,19 @@ limitations under the License.
 #pragma once
 
 #include "IStatisticModule.hpp"
-#include "bsp/model/BspSchedule.hpp"
+#include "bsp/model/BspSchedule.hpp" // Still needed
+#include "graph_implementations/boost_graphs/boost_graph.hpp" // For graph_t
 #include <string>
 #include <vector>
 #include <map>
 
 namespace osp {
 
-template<typename Graph_t_>
-class CommStatsModule : public IStatisticModule<Graph_t_> { 
+// Assuming graph_t is osp::boost_graph_int_t for this context
+using graph_t_for_stats = osp::boost_graph_int_t; 
+
+class CommStatsModule : public IStatisticModule<osp::BspSchedule<graph_t_for_stats>> { 
 public:
-    using Graph_t = Graph_t_;
 
 private:
     const std::vector<std::string> metric_headers = {
@@ -37,12 +39,13 @@ private:
     };
 
 public:
+
     std::vector<std::string> get_metric_headers() const override {
         return metric_headers;
     }
 
     std::map<std::string, std::string> record_statistics(
-                            const osp::BspSchedule<Graph_t>& schedule,
+                            const osp::BspSchedule<graph_t_for_stats>& schedule, 
                             std::ofstream& /*log_stream*/) const override {
         std::map<std::string, std::string> stats;
         stats["TotalCommCost"] = std::to_string(schedule.computeCostsTotalCommunication());

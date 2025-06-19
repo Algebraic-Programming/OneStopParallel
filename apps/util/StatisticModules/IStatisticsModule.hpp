@@ -22,27 +22,26 @@ limitations under the License.
 #include <fstream>
 #include <string>
 #include <vector>
-#include <map>
-#include "bsp/model/BspSchedule.hpp"
+ #include <map>
+// #include "bsp/model/BspSchedule.hpp" // TargetObject will be passed, no specific include here
 
 // Forward declarations to avoid circular dependencies
 namespace osp { // Ensure this is within the osp namespace
 
 namespace pt = boost::property_tree;
 
-template<typename Graph_t_>
-class IStatisticModule {
+template<typename TargetObjectType>
+class IStatisticModule { // Changed from Graph_t_ to TargetObjectType
   public:
-    using Graph_t = Graph_t_;
     virtual ~IStatisticModule() = default;
 
     // Returns a list of column headers this module provides.
     virtual std::vector<std::string> get_metric_headers() const = 0;
 
-    // Called for each generated schedule.
+    // Called for each generated target_object.
     // Returns a map of {header_name: value_string}.
     virtual std::map<std::string, std::string> record_statistics(
-                                   const osp::BspSchedule<Graph_t> &schedule,
+                                   const TargetObjectType &target_object, // Changed parameter
                                    std::ofstream &log_stream) const = 0;
 };
 
