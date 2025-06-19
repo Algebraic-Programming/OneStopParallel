@@ -22,10 +22,27 @@ limitations under the License.
 
 #include "BspArchitecture.hpp"
 #include "concepts/computational_dag_concept.hpp"
-#include "graph_algorithms/computational_dag_util.hpp"
 #include "graph_algorithms/computational_dag_construction_util.hpp"
+#include "graph_algorithms/computational_dag_util.hpp"
 
 namespace osp {
+
+enum RETURN_STATUS { SUCCESS, BEST_FOUND, TIMEOUT, ERROR };
+
+inline std::string to_string(const RETURN_STATUS status) {
+    switch (status) {
+    case SUCCESS:
+        return "SUCCESS";
+    case BEST_FOUND:
+        return "BEST FOUND";
+    case TIMEOUT:
+        return "TIMEOUT";
+    case ERROR:
+        return "ERROR";
+    default:
+        return "UNKNOWN";
+    }
+}
 
 /**
  * @class BspInstance
@@ -71,11 +88,13 @@ class BspInstance {
      */
     BspInstance(Graph_t &&cdag, BspArchitecture<Graph_t> &&architecture_,
                 std::vector<std::vector<bool>> nodeProcessorCompatibility_ = std::vector<std::vector<bool>>({{true}}))
-        : cdag(move(cdag)), architecture(move(architecture_)), nodeProcessorCompatibility(nodeProcessorCompatibility_) {}
+        : cdag(move(cdag)), architecture(move(architecture_)), nodeProcessorCompatibility(nodeProcessorCompatibility_) {
+    }
 
     template<typename Graph_t_other>
     explicit BspInstance(const BspInstance<Graph_t_other> &other)
-        : architecture(other.getArchitecture()), nodeProcessorCompatibility(other.getNodeProcessorCompatibilityMatrix()) {
+        : architecture(other.getArchitecture()),
+          nodeProcessorCompatibility(other.getNodeProcessorCompatibilityMatrix()) {
         construct_computational_dag(other.getComputationalDag(), cdag);
     }
 
@@ -84,8 +103,6 @@ class BspInstance {
 
     BspInstance<Graph_t> &operator=(const BspInstance<Graph_t> &other) = default;
     BspInstance<Graph_t> &operator=(BspInstance<Graph_t> &&other) = default;
-
-
 
     /**
      * @brief Returns a reference to the BSP architecture for the instance.

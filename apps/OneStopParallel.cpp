@@ -34,7 +34,7 @@ limitations under the License.
 #include "io/dot_graph_file_reader.hpp"
 #include "io/hdag_graph_file_reader.hpp"
 #include "io/mtx_graph_file_reader.hpp"
-#include "util/CommandLineParser.hpp"
+#include "util/ConfigParser.hpp"
 #include "util/run_bsp_scheduler.hpp"
 
 namespace pt = boost::property_tree;
@@ -47,7 +47,7 @@ std::filesystem::path getExecutablePath() { return std::filesystem::canonical("/
 // invoked upon program call
 int main(int argc, char *argv[]) {
 
-    CommandLineParser parser(getExecutablePath().remove_filename().string() += "osp_config.json");
+    ConfigParser parser(getExecutablePath().remove_filename().string() += "osp_config.json");
 
     try {
         parser.parse_args(argc, argv);
