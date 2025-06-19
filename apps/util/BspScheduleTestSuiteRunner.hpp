@@ -69,8 +69,8 @@ class BspScheduleTestSuiteRunner : public AbstractTestSuiteRunner<BspSchedule<co
     // }
 
   public:
-    BspScheduleTestSuiteRunner(int argc, char *argv[], const std::string &main_config_path)
-        : AbstractTestSuiteRunner<BspSchedule<concrete_graph_t>, concrete_graph_t>(argc, argv, main_config_path) {}
+    BspScheduleTestSuiteRunner()
+        : AbstractTestSuiteRunner<BspSchedule<concrete_graph_t>, concrete_graph_t>() {}
 };
 
 } // namespace osp

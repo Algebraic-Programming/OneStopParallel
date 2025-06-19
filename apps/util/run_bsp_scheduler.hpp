@@ -67,14 +67,14 @@ limitations under the License.
 // #include "dag_divider/WavefrontComponentDivider.hpp"
 // #include "dag_divider/WavefrontComponentScheduler.hpp"
 
-#include "CommandLineParser.hpp"
+#include "ConfigParser.hpp"
 #include "bsp/model/BspSchedule.hpp"
 #include "bsp/scheduler/Scheduler.hpp"
 
 namespace osp {
 
 template<typename Graph_t>
-RETURN_STATUS run_bsp_scheduler(const CommandLineParser &parser, const boost::property_tree::ptree &algorithm,
+RETURN_STATUS run_bsp_scheduler(const ConfigParser &parser, const boost::property_tree::ptree &algorithm,
                                 BspSchedule<Graph_t> &schedule) {
 
     const unsigned timeLimit = parser.global_params.get_child("timeLimit").get_value<unsigned>();

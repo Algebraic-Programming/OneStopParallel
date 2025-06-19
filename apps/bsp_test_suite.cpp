@@ -26,11 +26,8 @@ using graph_t = boost_graph_int_t;
 
 int main(int argc, char *argv[]) {
 
-    std::string main_config_location =
-        std::filesystem::canonical("/proc/self/exe").remove_filename().string() + "main_config.json";
-
-    osp::BspScheduleTestSuiteRunner<graph_t> runner(argc, argv, main_config_location);
-    return runner.run();
+    osp::BspScheduleTestSuiteRunner<graph_t> runner;
+    return runner.run(argc, argv);
 
     return 0;
 }

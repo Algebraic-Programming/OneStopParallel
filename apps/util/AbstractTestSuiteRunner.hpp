@@ -31,7 +31,7 @@ limitations under the License.
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
-#include "CommandLineParser.hpp"
+#include "ConfigParser.hpp"
 #include "StatisticModules/IStatisticsModule.hpp"
 #include "bsp/model/BspInstance.hpp"
 
@@ -48,9 +48,7 @@ template<typename TargetObjectType, typename GraphType>
 class AbstractTestSuiteRunner {
   protected:
     std::string executable_dir;
-    int argc_;
-    char **argv_;
-    CommandLineParser parser;
+    ConfigParser parser;
     std::ofstream log_stream;
     std::ofstream stats_out_stream;
     std::vector<std::string> all_csv_headers;
@@ -74,13 +72,13 @@ class AbstractTestSuiteRunner {
             if (graph_dir_path.substr(0, 1) != "/")
                 graph_dir_path = executable_dir + graph_dir_path;
 
-            machine_dir_path = parser.global_params.get_child("machineDirectory").get_value<std::string>();
+            machine_dir_path = parser.global_params.get_child("archDirectory").get_value<std::string>();
             if (machine_dir_path.substr(0, 1) != "/")
                 machine_dir_path = executable_dir + machine_dir_path;
 
             if (write_target_object_to_file) {
                 output_target_object_dir_path = parser.global_params.get_child("scheduleDirectory")
-                                                    .get_value<std::string>(); // Name might need to be generic
+                                                    .get_value<std::string>(); 
                 if (output_target_object_dir_path.substr(0, 1) != "/")
                     output_target_object_dir_path = executable_dir + output_target_object_dir_path;
                 if (!output_target_object_dir_path.empty() && !std::filesystem::exists(output_target_object_dir_path)) {
@@ -93,7 +91,7 @@ class AbstractTestSuiteRunner {
                 log_file_path = executable_dir + log_file_path;
 
             statistics_output_file_path =
-                parser.global_params.get_child("outputStatisticsFile").get_value<std::string>();
+                parser.global_params.get_child("outputStatsFile").get_value<std::string>();
             if (statistics_output_file_path.substr(0, 1) != "/")
                 statistics_output_file_path = executable_dir + statistics_output_file_path;
 
@@ -175,8 +173,7 @@ class AbstractTestSuiteRunner {
     } // default in case TargetObjectType cannot be written to file
 
   public:
-    AbstractTestSuiteRunner(int argc, char *argv[], const std::string &main_config_path)
-        : argc_(argc), argv_(argv), parser(main_config_path) {}
+    AbstractTestSuiteRunner() {}
 
     virtual ~AbstractTestSuiteRunner() {
         if (log_stream.is_open())
@@ -185,10 +182,10 @@ class AbstractTestSuiteRunner {
             stats_out_stream.close();
     }
 
-    int run() {
+    int run(int argc, char *argv[]) {
 
         try {
-            parser.parse_args(argc_, argv_);
+            parser.parse_args(argc, argv);
         } catch (const std::exception &e) {
             std::cerr << "Error parsing command line arguments: " << e.what() << std::endl;
             return 1;
@@ -276,10 +273,17 @@ class AbstractTestSuiteRunner {
 
                 for (auto &algorithm_config_pair : parser.scheduler) {
                     const pt::ptree &algo_config = algorithm_config_pair.second;
-                    std::string name_suffix =
-                        algo_config.get_child("name_suffix").get_value_optional<std::string>().value_or("");
+                    
+                    std::string name_suffix = "";
+                    try {
+                        name_suffix = algo_config.get_child("name_suffix").get_value<std::string>();
+                    } catch (const pt::ptree_bad_path &e) {
+                    }
+                    
                     if (!name_suffix.empty())
                         name_suffix = "_" + name_suffix;
+
+
                     std::string current_algo_name =
                         algo_config.get_child("name").get_value<std::string>() + name_suffix;
                     log_stream << "Start Algorithm " + current_algo_name + "\n";
