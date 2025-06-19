@@ -40,13 +40,12 @@ class BspScheduleRecomp {
     const BspInstance<Graph_t> *instance;
 
     unsigned int number_of_supersteps = 0;
-   
-
-  public:
 
     std::vector<std::vector<std::pair<unsigned, unsigned>>> node_to_processor_and_supertep_assignment;
 
     std::map<KeyTriple, unsigned> commSchedule;
+
+  public:
 
     BspScheduleRecomp() = default;
 
@@ -124,7 +123,8 @@ class BspScheduleRecomp {
     bool satisfiesConstraints() const;
 
     vertex_idx getTotalAssignments() const;
-   
+
+    void mergeSupersteps();   
 
 };
 
@@ -297,6 +297,35 @@ vertex_idx_t<Graph_t> BspScheduleRecomp<Graph_t>::getTotalAssignments() const {
         total += node_to_processor_and_supertep_assignment[node].size();
     }
     return total;
+}
+
+template<typename Graph_t>
+void BspScheduleRecomp<Graph_t>::mergeSupersteps()
+{
+    std::vector<unsigned> new_step_idx(number_of_supersteps);
+    std::vector<bool> comm_phase_empty(number_of_supersteps, true);
+
+    for (auto const &[key, val] : commSchedule)
+        comm_phase_empty[val] = false;
+
+    unsigned current_step_idx = 0;
+    for(unsigned step = 0; step < number_of_supersteps; ++step)
+    {
+        new_step_idx[step] = current_step_idx;
+        if(!comm_phase_empty[step] || step == number_of_supersteps - 1)
+            ++current_step_idx;
+    }
+    for(vertex_idx node = 0; node < instance->numberOfVertices(); ++node)
+    {
+        std::vector<std::pair<unsigned, unsigned>> new_assignment;
+        for(const std::pair<unsigned, unsigned>& entry : node_to_processor_and_supertep_assignment[node])
+            new_assignment.emplace_back(entry.first, new_step_idx[entry.second]);
+        node_to_processor_and_supertep_assignment[node] = new_assignment; 
+    }
+    for (auto &[key, step] : commSchedule)
+        step = new_step_idx[step];
+
+    number_of_supersteps = current_step_idx;
 }
 
 } // namespace osp

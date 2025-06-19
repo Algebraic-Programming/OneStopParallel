@@ -209,6 +209,8 @@ RETURN_STATUS GreedyRecomputer<Graph_t>::computeRecompSchedule(BspScheduleCS<Gra
       for(const KeyTriple& entry : comm_steps[step])
         out_schedule.getCommunicationSchedule().emplace(entry, step);
 
+    out_schedule.mergeSupersteps();
+
     return SUCCESS;
 }
 
