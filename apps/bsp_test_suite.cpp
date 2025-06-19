@@ -22,7 +22,7 @@ limitations under the License.
 #include <iostream>
 #include <string>
 
-using graph_t = osp::boost_graph_int_t;
+using graph_t = boost_graph_int_t;
 
 int main(int argc, char *argv[]) {
 
@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
         std::filesystem::canonical("/proc/self/exe").remove_filename().string() + "main_config.json";
 
     osp::BspScheduleTestSuiteRunner<graph_t> runner(argc, argv, main_config_location);
-    return runner.run(argc, argv);
+    return runner.run();
 
     return 0;
 }

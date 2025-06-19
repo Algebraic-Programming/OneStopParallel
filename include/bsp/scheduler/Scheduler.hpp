@@ -30,22 +30,7 @@ limitations under the License.
 
 namespace osp {
 
-enum RETURN_STATUS { SUCCESS, BEST_FOUND, TIMEOUT, ERROR };
 
-inline std::string to_string(const RETURN_STATUS status) {
-    switch (status) {
-    case SUCCESS:
-        return "SUCCESS";
-    case BEST_FOUND:
-        return "BEST FOUND";
-    case TIMEOUT:
-        return "TIMEOUT";
-    case ERROR:
-        return "ERROR";
-    default:
-        return "UNKNOWN";
-    }
-}
 
 /**
  * @class Scheduler

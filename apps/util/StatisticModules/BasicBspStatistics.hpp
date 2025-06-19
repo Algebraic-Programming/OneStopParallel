@@ -18,7 +18,7 @@ limitations under the License.
 
 #pragma once
 
-#include "IStatisticModule.hpp"
+#include "IStatisticsModule.hpp"
 #include "bsp/model/BspSchedule.hpp"
 #include "graph_implementations/boost_graphs/boost_graph.hpp" // For graph_t
 #include <string>

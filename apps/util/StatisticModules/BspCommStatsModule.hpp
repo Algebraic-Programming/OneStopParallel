@@ -18,7 +18,7 @@ limitations under the License.
 
 #pragma once
 
-#include "IStatisticModule.hpp"
+#include "IStatisticsModule.hpp"
 #include "bsp/model/BspSchedule.hpp" // Still needed
 #include "graph_implementations/boost_graphs/boost_graph.hpp" // For graph_t
 #include <string>
@@ -28,7 +28,7 @@ limitations under the License.
 namespace osp {
 
 template<typename Graph_t>
-class CommStatsModule : public IStatisticModule<osp::BspSchedule<Graph_t>> { 
+class BspCommStatsModule : public IStatisticModule<BspSchedule<Graph_t>> { 
 public:
 
 private:
@@ -43,11 +43,11 @@ public:
     }
 
     std::map<std::string, std::string> record_statistics(
-                            const osp::BspSchedule<Graph_t>& schedule, 
+                            const BspSchedule<Graph_t>& schedule, 
                             std::ofstream& /*log_stream*/) const override {
         std::map<std::string, std::string> stats;
-        stats["TotalCommCost"] = std::to_string(schedule.computeCostsTotalCommunication());
-        stats["BufferedSendingCosts"] = std::to_string(schedule.computeCostsBufferedSending());
+        stats["TotalCommCost"] = std::to_string(schedule.computeTotalCosts());
+        stats["BufferedSendingCosts"] = std::to_string(schedule.computeBufferedSendingCosts());
         return stats;
     }
 };

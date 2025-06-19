@@ -32,7 +32,7 @@ limitations under the License.
 #include <boost/property_tree/ptree.hpp>
 
 #include "CommandLineParser.hpp"
-#include "StatisticModules/IStatisticModule.hpp"
+#include "StatisticModules/IStatisticsModule.hpp"
 #include "bsp/model/BspInstance.hpp"
 
 #include "io/arch_file_reader.hpp"
@@ -168,8 +168,7 @@ class AbstractTestSuiteRunner {
                                                         const pt::ptree &algo_config, RETURN_STATUS &status,
                                                         long long &computation_time_ms) = 0;
 
-    virtual void create_and_register_statistic_modules(const std::string &module_name,
-                                                       const pt::ptree &module_config) = 0;
+    virtual void create_and_register_statistic_modules(const std::string &module_name) = 0;
 
     virtual void write_target_object_hook(const TargetObjectType &, const std::string &, const std::string &,
                                           const std::string &) {
@@ -177,7 +176,7 @@ class AbstractTestSuiteRunner {
 
   public:
     AbstractTestSuiteRunner(int argc, char *argv[], const std::string &main_config_path)
-        : argc(argc_), argv(argv_), parser(main_config_path) {}
+        : argc_(argc), argv_(argv), parser(main_config_path) {}
 
     virtual ~AbstractTestSuiteRunner() {
         if (log_stream.is_open())
@@ -189,7 +188,7 @@ class AbstractTestSuiteRunner {
     int run() {
 
         try {
-            parser.parse_args(argc, argv);
+            parser.parse_args(argc_, argv_);
         } catch (const std::exception &e) {
             std::cerr << "Error parsing command line arguments: " << e.what() << std::endl;
             return 1;
@@ -211,16 +210,7 @@ class AbstractTestSuiteRunner {
         }
 
         for (const std::string &module_name : active_module_names_from_config) {
-            pt::ptree module_specific_config;
-            try {
-                module_specific_config =
-                    parser.global_params.get_child_optional("statisticModuleSettings." + module_name)
-                        .value_or(pt::ptree());
-            } catch (const std::exception &e) {
-                log_stream << "Warning: Could not get settings for stat module " << module_name
-                           << ". Error: " << e.what() << std::endl;
-            }
-            create_and_register_statistic_modules(module_name, module_specific_config);
+            create_and_register_statistic_modules(module_name);
         }
 
         if (active_stats_modules.empty()) {
@@ -320,7 +310,7 @@ class AbstractTestSuiteRunner {
                     if (stats_out_stream.is_open()) {
                         std::map<std::string, std::string> current_row_values;
                         current_row_values["Graph"] = name_graph;
-                        current_row_values["Machine"] = machine_name;
+                        current_row_values["Machine"] = name_machine;
                         current_row_values["Algorithm"] = current_algo_name;
                         current_row_values["TimeToCompute"] = std::to_string(computation_time_ms);
 

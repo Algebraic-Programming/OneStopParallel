@@ -25,7 +25,7 @@ limitations under the License.
 #include "run_bsp_scheduler.hpp"
 
 #include "StatisticModules/BasicBspStatistics.hpp"
-#include "StatisticModules/CommStatsModule.hpp"
+#include "StatisticModules/BspCommStatsModule.hpp"
 
 namespace osp {
 
@@ -52,11 +52,11 @@ class BspScheduleTestSuiteRunner : public AbstractTestSuiteRunner<BspSchedule<co
         return schedule;
     }
 
-    void create_and_register_statistic_modules(const std::string &module_name, const pt::ptree &) override {
+    void create_and_register_statistic_modules(const std::string &module_name) override {
         if (module_name == "BasicBspStats") {
-            this->active_stats_modules.push_back(std::make_unique<BasicBspStatistic>());
+            this->active_stats_modules.push_back(std::make_unique<BasicBspStatsModule<concrete_graph_t>>());
         } else if (module_name == "BspCommStats") {
-            this->active_stats_modules.push_back(std::make_unique<BspCommStatsModule>());
+            this->active_stats_modules.push_back(std::make_unique<BspCommStatsModule<concrete_graph_t>>());
         }
     }
 
