@@ -160,13 +160,13 @@ class AbstractTestSuiteRunner {
         }
     }
 
-    virtual RETURN_STATUS compute_target_object_impl(const BspInstance<GraphType> &instance, TargetObjectType* target_object,
+    virtual RETURN_STATUS compute_target_object_impl(const BspInstance<GraphType> &instance, std::unique_ptr<TargetObjectType>& target_object,
                                                         const pt::ptree &algo_config,  
                                                         long long &computation_time_ms) = 0;
 
     virtual void create_and_register_statistic_modules(const std::string &module_name) = 0;
 
-    virtual void write_target_object_hook(const TargetObjectType &, const std::string &, const std::string &,
+    virtual void write_target_object_hook(const TargetObjectType&, const std::string &, const std::string &,
                                           const std::string &) {
     } // default in case TargetObjectType cannot be written to file
 
@@ -288,7 +288,7 @@ class AbstractTestSuiteRunner {
 
                     
                     long long computation_time_ms;
-                    TargetObjectType *target_object = nullptr; 
+                    std::unique_ptr<TargetObjectType> target_object; 
                     
                     RETURN_STATUS exec_status = compute_target_object_impl(bsp_instance, target_object, algo_config, computation_time_ms);
 
@@ -296,10 +296,7 @@ class AbstractTestSuiteRunner {
                         if (exec_status == RETURN_STATUS::ERROR)
                             log_stream << "Error computing with " << current_algo_name << "." << std::endl;
                         else if (exec_status == RETURN_STATUS::TIMEOUT)
-                            log_stream << "Scheduler " << current_algo_name << " timed out." << std::endl;
-
-                        delete target_object;
-                            
+                            log_stream << "Scheduler " << current_algo_name << " timed out." << std::endl;                           
                         continue;
                     }
 
@@ -330,8 +327,6 @@ class AbstractTestSuiteRunner {
                         }
                         stats_out_stream << "\n";
                     }
-
-                    delete target_object;
                 }
             }
         }

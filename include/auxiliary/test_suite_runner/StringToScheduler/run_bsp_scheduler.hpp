@@ -83,8 +83,7 @@ RETURN_STATUS run_bsp_scheduler(const ConfigParser &parser, const boost::propert
                                 BspSchedule<Graph_t> &schedule) {
 
     const unsigned timeLimit = parser.global_params.get_child("timeLimit").get_value<unsigned>();
-    // const bool use_memory_constraint = parser.global_params.get_child("use_memory_constraints").get_value<bool>();
-
+   
     std::cout << "Running algorithm: " << algorithm.get_child("name").get_value<std::string>() << std::endl;
 
     if (algorithm.get_child("name").get_value<std::string>() == "Serial") {

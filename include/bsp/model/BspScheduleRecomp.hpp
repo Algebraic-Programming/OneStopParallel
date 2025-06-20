@@ -26,7 +26,7 @@ limitations under the License.
 namespace osp {
 
 template<typename Graph_t>
-class BspScheduleRecomp :public IBspScheduleEval<Graph_t> {
+class BspScheduleRecomp : public IBspScheduleEval<Graph_t> {
 
   public:
     using vertex_idx = vertex_idx_t<Graph_t>;

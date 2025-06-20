@@ -18,6 +18,7 @@ limitations under the License.
 
 #include "graph_implementations/boost_graphs/boost_graph.hpp"
 #include "auxiliary/test_suite_runner/BspScheduleTestSuiteRunner.hpp"
+#include "auxiliary/test_suite_runner/BspScheduleRecompTestSuiteRunner.hpp"
 #include <filesystem>
 #include <iostream>
 #include <string>
@@ -26,7 +27,7 @@ using graph_t = boost_graph_int_t;
 
 int main(int argc, char *argv[]) {
 
-    osp::BspScheduleTestSuiteRunner<graph_t> runner;
+    osp::BspScheduleRecompTestSuiteRunner<graph_t> runner;
     return runner.run(argc, argv);
 
     return 0;

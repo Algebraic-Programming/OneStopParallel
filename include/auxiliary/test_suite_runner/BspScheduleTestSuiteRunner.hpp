@@ -32,14 +32,12 @@ class BspScheduleTestSuiteRunner : public AbstractTestSuiteRunner<BspSchedule<co
   private:
     using base = AbstractTestSuiteRunner<BspSchedule<concrete_graph_t>, concrete_graph_t>;
 
-    bool use_memory_constraint_for_bsp;
-
   protected:
-    RETURN_STATUS compute_target_object_impl(const BspInstance<concrete_graph_t> &instance, BspSchedule<concrete_graph_t> * schedule,
+    RETURN_STATUS compute_target_object_impl(const BspInstance<concrete_graph_t> &instance, std::unique_ptr<BspSchedule<concrete_graph_t>>& schedule,
                                                              const pt::ptree &algo_config,  
                                                              long long &computation_time_ms) override {
         
-        schedule = new BspSchedule<concrete_graph_t>(instance);
+        schedule = std::unique_ptr<BspSchedule<concrete_graph_t>>(new BspSchedule<concrete_graph_t>{instance});
 
         const auto start_time = std::chrono::high_resolution_clock::now();
 

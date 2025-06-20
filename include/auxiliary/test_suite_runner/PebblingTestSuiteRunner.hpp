@@ -20,7 +20,7 @@ limitations under the License.
 
 #include "AbstractTestSuiteRunner.hpp"
 #include "pebbling/PebblingSchedule.hpp"
-#include "StringToScheduler/run_pebbler.hpp" // TODO create
+#include "StringToScheduler/run_pebbler.hpp" 
 #include "StatsModules/IStatsModule.hpp"
 
 namespace osp {
@@ -50,14 +50,14 @@ class PebblingTestSuiteRunner : public AbstractTestSuiteRunner<PebblingSchedule<
     bool use_memory_constraint;
 
   protected:
-        RETURN_STATUS compute_target_object_impl(const BspInstance<concrete_graph_t> &instance,
-                                             PebblingSchedule<concrete_graph_t> *schedule, const pt::ptree &algo_config,
+        RETURN_STATUS compute_target_object_impl(const BspInstance<concrete_graph_t> &instance, std::unique_ptr<PebblingSchedule<concrete_graph_t>>& schedule, const pt::ptree &algo_config,
                                              long long &computation_time_ms) override {
-        schedule = new PebblingSchedule<concrete_graph_t>(instance);
-
+        
+        schedule = std::unique_ptr<PebblingSchedule<concrete_graph_t>>(new PebblingSchedule<concrete_graph_t>{instance});
+        
         const auto start_time = std::chrono::high_resolution_clock::now();
 
-        // RETURN_STATUS status = run_bsp_scheduler(this->parser, algo_config, schedule);
+        RETURN_STATUS status = run_pebbler(this->parser, algo_config, *schedule);
 
         const auto finish_time = std::chrono::high_resolution_clock::now();
         computation_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(finish_time - start_time).count();

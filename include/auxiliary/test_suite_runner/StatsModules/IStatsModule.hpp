@@ -40,7 +40,7 @@ class IStatisticModule { // Changed from Graph_t_ to TargetObjectType
 
     // Called for each generated target_object.
     // Returns a map of {header_name: value_string}.
-    virtual std::map<std::string, std::string> record_statistics(
+    virtual std::map<std::string, std::string> record_statistics( 
                                    const TargetObjectType &target_object, // Changed parameter
                                    std::ofstream &log_stream) const = 0;
 };

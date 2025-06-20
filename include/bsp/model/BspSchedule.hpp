@@ -51,7 +51,7 @@ namespace osp {
  * @see BspInstance
  */
 template<typename Graph_t>
-class BspSchedule : public IBspSchedule<Graph_t>, IBspScheduleEval<Graph_t> {
+class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_t> {
 
     static_assert(is_computational_dag_v<Graph_t>, "BspSchedule can only be used with computational DAGs.");
     static_assert(std::is_same_v<v_workw_t<Graph_t>, v_commw_t<Graph_t> >, "BspSchedule requires work and comm. weights to have the same type.");

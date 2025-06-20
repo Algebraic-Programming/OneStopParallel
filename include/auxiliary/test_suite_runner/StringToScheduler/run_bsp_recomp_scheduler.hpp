@@ -37,7 +37,7 @@ namespace osp {
 const std::set<std::string> get_available_bsp_recomp_scheduler_names() { return {"GreedyRecomputer"}; }
 
 template<typename Graph_t>
-RETURN_STATUS run_bsp_recomp_scheduler(const ConfigParser &parser, const boost::property_tree::ptree &algorithm,
+RETURN_STATUS run_bsp_recomp_scheduler(const ConfigParser &, const boost::property_tree::ptree &algorithm,
                                 BspScheduleRecomp<Graph_t> &schedule) {
 
     //const unsigned timeLimit = parser.global_params.get_child("timeLimit").get_value<unsigned>();
@@ -51,7 +51,7 @@ RETURN_STATUS run_bsp_recomp_scheduler(const ConfigParser &parser, const boost::
         BspScheduleCS<Graph_t> initial_schedule(schedule.getInstance());
 
         GreedyBspScheduler<Graph_t> bsp_scheduler;
-        auto status = bsp_schedule.computeScheduleCS(initial_schedule);
+        auto status = bsp_scheduler.computeScheduleCS(initial_schedule);
 
         if (status == ERROR)    
             return ERROR;

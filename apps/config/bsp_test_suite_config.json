@@ -8,11 +8,16 @@
         "outputLogFile": "log.txt",
         "outputSchedule": false,
         "scheduleDirectory" :"schedules/",
-        "activeStatisticModules": ["BasicBspStats", "BspCommStats"] 
+        "activeStatisticModules": ["BasicBspStats"] 
     },
     "algorithms": [
          {
             "name": "Serial",
+            "run" : true,
+            "parameters": {}
+        },
+        {
+            "name": "GreedyRecomputer",
             "run" : true,
             "parameters": {}
         },
