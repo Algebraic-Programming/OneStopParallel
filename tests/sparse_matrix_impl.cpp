@@ -18,7 +18,7 @@ limitations under the License.
 
 #ifdef EIGEN_FOUND
 
-#define BOOST_TEST_MODULE ApproxEdgeReduction
+#define BOOST_TEST_MODULE SparseMatrixImpl
 
 #include <boost/test/unit_test.hpp>
 #include <iostream>
@@ -111,7 +111,7 @@ i ↓
 
     size_t idx = 0;
 
-    for (const vertex_idx &v : graph.vertices()) {
+    for (const long unsigned int &v : graph.vertices()) {
 
         BOOST_CHECK_EQUAL(v, vertices[idx++]);
         

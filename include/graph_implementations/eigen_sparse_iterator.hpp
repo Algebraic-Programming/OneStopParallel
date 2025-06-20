@@ -26,27 +26,29 @@ limitations under the License.
 #include "concepts/graph_traits.hpp"
 
 namespace osp {
+
 template<typename Graph, typename eigen_idx_type>
 class EigenCSRRange {
     const Graph& graph_;
     eigen_idx_type index_;
 
 public:
-    using vertex_idx = vertex_idx_t<Graph>;
     using CSRMatrix = Eigen::SparseMatrix<double, Eigen::RowMajor, int32_t>;
     using Inner = typename CSRMatrix::InnerIterator;
 
     class iterator {
         Inner it_;
-        vertex_idx skip_;
+        eigen_idx_type skip_;
         bool at_end_;
 
         void skip_diagonal() {
-            while (!at_end_ && it_.col() == skip_) ++(*this);
+            while (!at_end_ && it_.row() == static_cast<Eigen::Index>(skip_) && it_.col() == static_cast<Eigen::Index>(skip_)) {
+                ++(*this);
+            }
         }
 
     public:
-        using value_type = vertex_idx;
+        using value_type = std::size_t;
         using reference = value_type;
         using pointer = void;
         using difference_type = std::ptrdiff_t;
@@ -55,13 +57,13 @@ public:
         iterator(const CSRMatrix& mat, eigen_idx_type idx, bool end = false)
             : skip_(idx), at_end_(end) {
             if (!end) {
-                it_ = Inner(mat, idx);
+                it_ = Inner(mat, static_cast<Eigen::Index>(idx));
                 at_end_ = !it_;
                 skip_diagonal();
             }
         }
 
-        reference operator*() const { return static_cast<vertex_idx>(it_.col()); }
+        reference operator*() const { return static_cast<std::size_t>(it_.col()); }
         iterator& operator++() {
             ++it_;
             at_end_ = !it_;
@@ -91,21 +93,22 @@ class EigenCSCRange {
     eigen_idx_type index_;
 
 public:
-    using vertex_idx = vertex_idx_t<Graph>;
     using CSCMatrix = Eigen::SparseMatrix<double, Eigen::ColMajor, int32_t>;
     using Inner = typename CSCMatrix::InnerIterator;
 
     class iterator {
         Inner it_;
-        vertex_idx skip_;
+        eigen_idx_type skip_;
         bool at_end_;
 
         void skip_diagonal() {
-            while (!at_end_ && it_.row() == skip_) ++(*this);
+            while (!at_end_ && it_.row() == static_cast<Eigen::Index>(skip_) && it_.col() == static_cast<Eigen::Index>(skip_)) {
+                ++(*this);
+            }
         }
-
+        
     public:
-        using value_type = vertex_idx;
+        using value_type = std::size_t;
         using reference = value_type;
         using pointer = void;
         using difference_type = std::ptrdiff_t;
@@ -114,13 +117,13 @@ public:
         iterator(const CSCMatrix& mat, eigen_idx_type idx, bool end = false)
             : skip_(idx), at_end_(end) {
             if (!end) {
-                it_ = Inner(mat, idx);
+                it_ = Inner(mat, static_cast<Eigen::Index>(idx));
                 at_end_ = !it_;
                 skip_diagonal();
             }
         }
 
-        reference operator*() const { return static_cast<vertex_idx>(it_.row()); }
+        reference operator*() const { return static_cast<std::size_t>(it_.row()); }
         iterator& operator++() {
             ++it_;
             at_end_ = !it_;
@@ -142,9 +145,6 @@ public:
         return iterator(*static_cast<const CSCMatrix*>(graph_.getCSC()), index_, true);
     }
 };
-
-
 } // namespace osp
-
 
 #endif

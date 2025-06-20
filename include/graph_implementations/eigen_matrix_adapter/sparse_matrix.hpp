@@ -32,6 +32,7 @@ namespace osp {
 ///        Wraps Eigen's sparse matrix and exposes graph-like methods for scheduling and analysis.
 template<typename eigen_idx_type>
 class SparseMatrixImp {
+    static_assert(std::is_integral_v<eigen_idx_type>, "Eigen index type must be integral");
 private:
     // Define Eigen-compatible matrix types using eigen_idx_type as the index type
     using MatrixCSR = Eigen::SparseMatrix<double, Eigen::RowMajor, eigen_idx_type>;  // For parents
@@ -43,13 +44,15 @@ private:
 
 public:
     // Vertex index type must match Eigen's StorageIndex (signed 32-bit)
-    using vertex_idx = eigen_idx_type;
+    using vertex_idx = size_t;
 
     // Required graph trait aliases (used in concept checks)
     using directed_edge_descriptor = int;
     using vertex_work_weight_type = eigen_idx_type;
     using vertex_comm_weight_type = int;
     using vertex_mem_weight_type = int;
+    using vertex_type_type = size_t;
+    
 
     SparseMatrixImp() = default;
 
@@ -62,13 +65,13 @@ public:
     const MatrixCSC* getCSC() const { return L_csc_p; }
 
     /// @brief Number of vertices = number of rows in the matrix
-    vertex_idx num_vertices() const noexcept {
-        return static_cast<vertex_idx>(L_csr_p->rows());
+    size_t num_vertices() const noexcept {
+        return static_cast<size_t>(L_csr_p->rows());
     }
 
     /// @brief Return a range over all vertices [0, num_vertices)
     auto vertices() const {
-        return osp::vertex_range<vertex_idx>(num_vertices());
+        return osp::vertex_range<size_t>(num_vertices());
     }
 
     /// @brief Number of edges = total non-zeros minus diagonal elements

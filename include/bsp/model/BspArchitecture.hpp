@@ -123,7 +123,7 @@ class BspArchitecture {
         : number_processors(processors), number_of_processor_types(1), communication_costs(comm_cost),
           synchronisation_costs(synch_cost),
           memory_bound(std::vector<v_memw_t<Graph_t>>(number_processors, memory_bound_)), isNuma(false),
-          processor_type(std::vector<v_type_t<Graph_t>>(number_processors, 0)),
+          processor_type(std::vector<unsigned>(number_processors, 0)),
           send_costs(std::vector<std::vector<v_commw_t<Graph_t>>>(
               number_processors, std::vector<v_commw_t<Graph_t>>(number_processors, 1))) {
 
