@@ -34,6 +34,7 @@ limitations under the License.
 #include "io/dot_graph_file_reader.hpp"
 #include "io/hdag_graph_file_reader.hpp"
 #include "io/mtx_graph_file_reader.hpp"
+#include "io/bsp_schedule_file_writer.hpp"
 #include "auxiliary/test_suite_runner/ConfigParser.hpp"
 #include "auxiliary/test_suite_runner/StringToScheduler/run_bsp_scheduler.hpp"
 
@@ -160,32 +161,32 @@ int main(int argc, char *argv[]) {
                 schedulers_work_costs[algorithm_counter] = schedule.computeWorkCosts();
                 schedulers_supersteps[algorithm_counter] = schedule.numberOfSupersteps();
 
-                // BspScheduleWriter sched_writer(schedule);
-                // if (parser.global_params.get_child("outputSchedule").get_value<bool>()) {
-                //     try {
-                //         sched_writer.write_txt(name_graph + "_" + name_machine + "_" +
-                //                                algorithm.second.get_child("name").get_value<std::string>() +
-                //                                "_schedule.txt");
-                //     } catch (std::exception &e) {
-                //         std::cerr << "Writing schedule file for " + name_graph + ", " + name_machine + ", " +
-                //                          schedulers_name[algorithm_counter] + " has failed."
-                //                   << std::endl;
-                //         std::cerr << e.what() << std::endl;
-                //     }
-                // }
+                if (parser.global_params.get_child("outputSchedule").get_value<bool>()) {
+                    try {
 
-                // if (parser.global_params.get_child("outputSankeySchedule").get_value<bool>()) {
-                //     try {
-                //         sched_writer.write_sankey(name_graph + "_" + name_machine + "_" +
-                //                                   algorithm.second.get_child("name").get_value<std::string>() +
-                //                                   "_sankey.sankey");
-                //     } catch (std::exception &e) {
-                //         std::cerr << "Writing sankey file for " + name_graph + ", " + name_machine + ", " +
-                //                          schedulers_name[algorithm_counter] + " has failed."
-                //                   << std::endl;
-                //         std::cerr << e.what() << std::endl;
-                //     }
-                // }
+                        file_writer::write_txt(name_graph + "_" + name_machine + "_" +
+                                               algorithm.second.get_child("name").get_value<std::string>() +
+                                               "_schedule.txt", schedule);
+                    } catch (std::exception &e) {
+                        std::cerr << "Writing schedule file for " + name_graph + ", " + name_machine + ", " +
+                                         schedulers_name[algorithm_counter] + " has failed."
+                                  << std::endl;
+                        std::cerr << e.what() << std::endl;
+                    }
+                }
+
+                if (parser.global_params.get_child("outputSankeySchedule").get_value<bool>()) {
+                    try {
+                       file_writer::write_sankey(name_graph + "_" + name_machine + "_" +
+                                                  algorithm.second.get_child("name").get_value<std::string>() +
+                                                  "_sankey.sankey", BspScheduleCS<graph_t>(schedule));
+                    } catch (std::exception &e) {
+                        std::cerr << "Writing sankey file for " + name_graph + ", " + name_machine + ", " +
+                                         schedulers_name[algorithm_counter] + " has failed."
+                                  << std::endl;
+                        std::cerr << e.what() << std::endl;
+                    }
+                }
 
                 if (parser.global_params.get_child("outputDotSchedule").get_value<bool>()) {
                     try {
