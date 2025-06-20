@@ -156,7 +156,8 @@ RETURN_STATUS GreedyRecomputer<Graph_t>::computeRecompSchedule(BspScheduleCS<Gra
             decrease += initial_schedule.getInstance().getArchitecture().synchronisationCosts();
 
           // check how much it would increase the work cost instead
-          unsigned best_step = S, smallest_increase = std::numeric_limits<cost_type>::max();
+          unsigned best_step = S; 
+          cost_type smallest_increase = std::numeric_limits<cost_type>::max();
           for(unsigned comp_step = first_computable[node][to_proc]; comp_step <= *needed_on_proc[node][to_proc].begin(); ++comp_step)
           {
             cost_type increase = work_cost[to_proc][comp_step] + G.vertex_work_weight(node) > max_work[comp_step] ?
