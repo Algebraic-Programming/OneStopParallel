@@ -20,10 +20,8 @@ limitations under the License.
 
 #include "AbstractTestSuiteRunner.hpp"
 #include "pebbling/PebblingSchedule.hpp"
-
-#include "run_pebbler.hpp" // TODO create
-
-#include "StatisticModules/IStatisticModule.hpp"
+#include "StringToScheduler/run_pebbler.hpp" // TODO create
+#include "StatsModules/IStatsModule.hpp"
 
 namespace osp {
 

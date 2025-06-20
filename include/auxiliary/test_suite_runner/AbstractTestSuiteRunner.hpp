@@ -30,11 +30,9 @@ limitations under the License.
 
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
-
 #include "ConfigParser.hpp"
-#include "StatisticModules/IStatisticsModule.hpp"
+#include "StatsModules/IStatsModule.hpp"
 #include "bsp/model/BspInstance.hpp"
-
 #include "io/arch_file_reader.hpp"
 #include "io/dot_graph_file_reader.hpp"
 #include "io/hdag_graph_file_reader.hpp"

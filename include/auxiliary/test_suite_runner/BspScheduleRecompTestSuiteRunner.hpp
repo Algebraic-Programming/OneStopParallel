@@ -24,12 +24,10 @@ limitations under the License.
 #include "bsp/model/BspSchedule.hpp"
 #include "bsp/model/BspScheduleRecomp.hpp"
 #include "bsp/model/IBspScheduleEval.hpp"
-
 #include "io/bsp_schedule_file_writer.hpp"
-#include "run_bsp_scheduler.hpp"
-
-#include "StatisticModules/BasicBspStatistics.hpp"
-#include "StatisticModules/BspCommStatsModule.hpp"
+#include "StringToScheduler/run_bsp_scheduler.hpp"
+#include "StatsModules/BasicBspStatsModule.hpp"
+#include "StatsModules/BspCommStatsModule.hpp"
 
 namespace osp {
 
@@ -37,7 +35,7 @@ template<typename concrete_graph_t>
 class BspScheduleRecompTestSuiteRunner
     : public AbstractTestSuiteRunner<IBspScheduleEval<concrete_graph_t>, concrete_graph_t> {
   private:
-    std::set < std::string >> recomp_algos{"GreedyRecomputer"};
+    
     bool use_memory_constraint_for_bsp;
 
   protected:
@@ -46,24 +44,9 @@ class BspScheduleRecompTestSuiteRunner
                                              long long &computation_time_ms) override {
 
         std::string algo_name = algorithm.get_child("name").get_value<std::string>();
+        const auto scheduler_names = get_available_scheduler_names();
 
-        if (recomp_algos.find(algo_name) != recomp_algos.end()) {
-            BspScheduleRecomp<concrete_graph_t> *bsp_schedule = new BspScheduleRecomp<concrete_graph_t>(instance);
-
-            const auto start_time = std::chrono::high_resolution_clock::now();
-
-            // RETURN_STATUS status = run_bsp_recomp_scheduler(this->parser, algo_config, bsp_schedule);
-
-            const auto finish_time = std::chrono::high_resolution_clock::now();
-            computation_time_ms =
-                std::chrono::duration_cast<std::chrono::milliseconds>(finish_time - start_time).count();
-
-            schedule = bsp_schedule;
-
-            return status;
-
-        } else //if () 
-        {
+        if (scheduler_names.find(algo_name) != scheduler_names.end()) {
             BspSchedule<concrete_graph_t> *bsp_schedule = new BspSchedule<concrete_graph_t>(instance);
 
             const auto start_time = std::chrono::high_resolution_clock::now();
@@ -78,7 +61,24 @@ class BspScheduleRecompTestSuiteRunner
 
             return status;
 
-        } // else {
+        } else {
+
+            BspScheduleRecomp<concrete_graph_t> *bsp_schedule = new BspScheduleRecomp<concrete_graph_t>(instance);
+
+            const auto start_time = std::chrono::high_resolution_clock::now();
+
+            // RETURN_STATUS status = run_bsp_recomp_scheduler(this->parser, algo_config, bsp_schedule);
+
+            const auto finish_time = std::chrono::high_resolution_clock::now();
+            computation_time_ms =
+                std::chrono::duration_cast<std::chrono::milliseconds>(finish_time - start_time).count();
+
+            schedule = bsp_schedule;
+
+            return status;
+        }
+
+        // else {
 
         //     std::cerr << "No matching category found for algorithm" << std::endl;
         //     return RETURN_STATUS::ERROR;
@@ -87,7 +87,8 @@ class BspScheduleRecompTestSuiteRunner
 
     void create_and_register_statistic_modules(const std::string &module_name) override {
         if (module_name == "BasicBspStats") {
-            this->active_stats_modules.push_back(std::make_unique<BasicBspStatsModule<IBspScheduleEval<concrete_graph_t>>>());
+            this->active_stats_modules.push_back(
+                std::make_unique<BasicBspStatsModule<IBspScheduleEval<concrete_graph_t>>>());
         }
     }
 

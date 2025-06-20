@@ -20,12 +20,10 @@ limitations under the License.
 
 #include "AbstractTestSuiteRunner.hpp"
 #include "bsp/model/BspSchedule.hpp"
-
 #include "io/bsp_schedule_file_writer.hpp"
-#include "run_bsp_scheduler.hpp"
-
-#include "StatisticModules/BasicBspStatistics.hpp"
-#include "StatisticModules/BspCommStatsModule.hpp"
+#include "StringToScheduler/run_bsp_scheduler.hpp"
+#include "StatsModules/BasicBspStatsModule.hpp"
+#include "StatsModules/BspCommStatsModule.hpp"
 
 namespace osp {
 

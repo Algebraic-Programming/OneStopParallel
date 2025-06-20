@@ -67,11 +67,16 @@ limitations under the License.
 // #include "dag_divider/WavefrontComponentDivider.hpp"
 // #include "dag_divider/WavefrontComponentScheduler.hpp"
 
-#include "ConfigParser.hpp"
+#include "auxiliary/test_suite_runner/ConfigParser.hpp"
 #include "bsp/model/BspSchedule.hpp"
 #include "bsp/scheduler/Scheduler.hpp"
 
 namespace osp {
+
+
+const std::set<std::string> get_available_bsp_scheduler_names() {
+    return {"Serial", "GreedyBsp", "GrowLocal", "BspLocking"};
+}
 
 template<typename Graph_t>
 RETURN_STATUS run_bsp_scheduler(const ConfigParser &parser, const boost::property_tree::ptree &algorithm,

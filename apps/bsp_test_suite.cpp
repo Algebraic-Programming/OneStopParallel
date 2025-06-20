@@ -17,7 +17,7 @@ limitations under the License.
 */
 
 #include "graph_implementations/boost_graphs/boost_graph.hpp"
-#include "util/BspScheduleTestSuiteRunner.hpp"
+#include "auxiliary/test_suite_runner/BspScheduleTestSuiteRunner.hpp"
 #include <filesystem>
 #include <iostream>
 #include <string>

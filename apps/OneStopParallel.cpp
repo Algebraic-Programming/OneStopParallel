@@ -34,8 +34,8 @@ limitations under the License.
 #include "io/dot_graph_file_reader.hpp"
 #include "io/hdag_graph_file_reader.hpp"
 #include "io/mtx_graph_file_reader.hpp"
-#include "util/ConfigParser.hpp"
-#include "util/run_bsp_scheduler.hpp"
+#include "auxiliary/test_suite_runner/ConfigParser.hpp"
+#include "auxiliary/test_suite_runner/StringToScheduler/run_bsp_scheduler.hpp"
 
 namespace pt = boost::property_tree;
 using namespace osp;
