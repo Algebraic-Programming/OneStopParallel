@@ -26,6 +26,7 @@ limitations under the License.
 #include "bsp/model/IBspScheduleEval.hpp"
 #include "io/bsp_schedule_file_writer.hpp"
 #include "StringToScheduler/run_bsp_scheduler.hpp"
+#include "StringToScheduler/run_bsp_recomp_scheduler.hpp"
 #include "StatsModules/BasicBspStatsModule.hpp"
 #include "StatsModules/BspCommStatsModule.hpp"
 
@@ -45,6 +46,7 @@ class BspScheduleRecompTestSuiteRunner
 
         std::string algo_name = algorithm.get_child("name").get_value<std::string>();
         const auto scheduler_names = get_available_scheduler_names();
+        const auto scheduler_recomp_names = get_available_scheduler_recomp_names();
 
         if (scheduler_names.find(algo_name) != scheduler_names.end()) {
             BspSchedule<concrete_graph_t> *bsp_schedule = new BspSchedule<concrete_graph_t>(instance);
@@ -61,19 +63,19 @@ class BspScheduleRecompTestSuiteRunner
 
             return status;
 
-        } else {
+        } else if (scheduler_recomp_names.find(algo_name) != scheduler_recomp_names.end()) {
 
-            BspScheduleRecomp<concrete_graph_t> *bsp_schedule = new BspScheduleRecomp<concrete_graph_t>(instance);
+            BspScheduleRecomp<concrete_graph_t> *bsp_recom_schedule = new BspScheduleRecomp<concrete_graph_t>(instance);
 
             const auto start_time = std::chrono::high_resolution_clock::now();
 
-            // RETURN_STATUS status = run_bsp_recomp_scheduler(this->parser, algo_config, bsp_schedule);
+            RETURN_STATUS status = run_bsp_recomp_scheduler(this->parser, algo_config, bsp_recomp_schedule);
 
             const auto finish_time = std::chrono::high_resolution_clock::now();
             computation_time_ms =
                 std::chrono::duration_cast<std::chrono::milliseconds>(finish_time - start_time).count();
 
-            schedule = bsp_schedule;
+            schedule = bsp_recomp_schedule;
 
             return status;
         }
