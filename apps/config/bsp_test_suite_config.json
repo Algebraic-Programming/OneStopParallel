@@ -45,6 +45,41 @@
                 "syncCostMultiplierMinSuperstepWeight": 1,
                 "syncCostMultiplierParallelCheck": 4
             }
+        },
+        {
+            "name": "LocalSearch",
+            "run" : true,
+            "name_suffix" : "GrowLocalKL",
+            "parameters": {
+                "improver": {
+                    "name" : "kl_total_comm" 
+                },
+                "scheduler": {
+                    "name": "GrowLocal",
+                    "parameters": {
+                        "minSuperstepSize": 20,
+                        "syncCostMultiplierMinSuperstepWeight": 1,
+                        "syncCostMultiplierParallelCheck": 4
+                    }
+                }                
+            }
+        },
+        {
+            "name": "LocalSearch",
+            "run" : true,
+            "name_suffix" : "LockingKL",
+            "parameters": {
+                "improver": {
+                    "name" : "kl_total_comm" 
+                },
+                "scheduler": {
+                    "name": "BspLocking",
+                    "parameters": {
+                    "max_percent_idle_processors": 0.4,
+                    "increase_parallelism_in_new_superstep": true
+                    }                    
+                }                
+            }
         }
     ]
 }

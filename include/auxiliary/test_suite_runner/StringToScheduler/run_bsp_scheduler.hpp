@@ -25,9 +25,12 @@ limitations under the License.
 #include <string>
 #include <tuple>
 
-#include "bsp/scheduler/GreedySchedulers/GrowLocalAutoCores.hpp"
 #include "bsp/scheduler/GreedySchedulers/BspLocking.hpp"
 #include "bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
+#include "bsp/scheduler/GreedySchedulers/GrowLocalAutoCores.hpp"
+#include "bsp/scheduler/LocalSearch/HillClimbing/hill_climbing.hpp"
+#include "bsp/scheduler/LocalSearch/KernighanLin/kl_total_comm.hpp"
+#include "bsp/scheduler/LocalSearch/KernighanLin/kl_total_cut.hpp"
 #include "bsp/scheduler/Serial.hpp"
 
 // #include "scheduler/GreedySchedulers/GreedyChildren.hpp"
@@ -73,9 +76,34 @@ limitations under the License.
 
 namespace osp {
 
-
 const std::set<std::string> get_available_bsp_scheduler_names() {
-    return {"Serial", "GreedyBsp", "GrowLocal", "BspLocking"};
+    return {"Serial", "GreedyBsp", "GrowLocal", "BspLocking", "LocalSearch", "CoarseAndSchedule"};
+}
+
+template<typename Graph_t>
+RETURN_STATUS run_bsp_improver(const ConfigParser &, const boost::property_tree::ptree &algorithm,
+                               BspSchedule<Graph_t> &schedule) {
+
+    const std::string improver_name = algorithm.get_child("name").get_value<std::string>();
+
+    if (improver_name == "kl_total_comm") {
+
+        kl_total_comm<Graph_t> improver;
+        return improver.improveSchedule(schedule);
+
+    } else if (improver_name == "kl_total_cut") {
+
+        kl_total_cut<Graph_t> improver;
+        return improver.improveSchedule(schedule);
+
+    } else if (improver_name == "hill_climb") {
+
+        HillClimbingScheduler<Graph_t> improver;
+        return improver.improveSchedule(schedule);
+
+    } else {
+        throw std::invalid_argument("Invalid improver name: " + improver_name);
+    }
 }
 
 template<typename Graph_t>
@@ -83,7 +111,7 @@ RETURN_STATUS run_bsp_scheduler(const ConfigParser &parser, const boost::propert
                                 BspSchedule<Graph_t> &schedule) {
 
     const unsigned timeLimit = parser.global_params.get_child("timeLimit").get_value<unsigned>();
-   
+
     std::cout << "Running algorithm: " << algorithm.get_child("name").get_value<std::string>() << std::endl;
 
     if (algorithm.get_child("name").get_value<std::string>() == "Serial") {
@@ -109,10 +137,12 @@ RETURN_STATUS run_bsp_scheduler(const ConfigParser &parser, const boost::propert
         GrowLocalAutoCores_Params<v_workw_t<Graph_t>> params;
 
         params.minSuperstepSize = algorithm.get_child("parameters").get_child("minSuperstepSize").get_value<unsigned>();
-        params.syncCostMultiplierMinSuperstepWeight =
-            algorithm.get_child("parameters").get_child("syncCostMultiplierMinSuperstepWeight").get_value<v_workw_t<Graph_t>>();
-        params.syncCostMultiplierParallelCheck =
-            algorithm.get_child("parameters").get_child("syncCostMultiplierParallelCheck").get_value<v_workw_t<Graph_t>>();
+        params.syncCostMultiplierMinSuperstepWeight = algorithm.get_child("parameters")
+                                                          .get_child("syncCostMultiplierMinSuperstepWeight")
+                                                          .get_value<v_workw_t<Graph_t>>();
+        params.syncCostMultiplierParallelCheck = algorithm.get_child("parameters")
+                                                     .get_child("syncCostMultiplierParallelCheck")
+                                                     .get_value<v_workw_t<Graph_t>>();
 
         GrowLocalAutoCores<Graph_t> scheduler(params);
 
@@ -128,6 +158,24 @@ RETURN_STATUS run_bsp_scheduler(const ConfigParser &parser, const boost::propert
         scheduler.setTimeLimitSeconds(timeLimit);
 
         return scheduler.computeSchedule(schedule);
+
+    } else if (algorithm.get_child("name").get_value<std::string>() == "LocalSearch") {
+
+        RETURN_STATUS status = run_bsp_scheduler(parser, algorithm.get_child("parameters").get_child("scheduler"), schedule);
+
+        if (status == ERROR) {
+            return ERROR;
+        }
+        return run_bsp_improver(parser, algorithm.get_child("parameters").get_child("improver"), schedule);
+
+    } else if (algorithm.get_child("name").get_value<std::string>() == "CoarseAndSchedule") {
+
+        auto scheduler_name = algorithm.get_child("parameters").get_child("scheduler");
+
+        std::string coarser_name = algorithm.get_child("parameters").get_child("caorser").get_value<std::string>();
+
+        return ERROR;
+
     }
     // else if (algorithm.get_child("name").get_value<std::string>() == "TopSortCoarse") {
 
@@ -198,39 +246,6 @@ RETURN_STATUS run_bsp_scheduler(const ConfigParser &parser, const boost::propert
     //             run_algorithm(parser, scheduler_name, coarse_instance, timeLimit, use_memory_constraint);
 
     //         return pull_back_schedule(bsp_instance, schedule, vertex_map);
-
-    //     } else if (algorithm.get_child("name").get_value<std::string>() == "ComboScheduler") {
-
-    //         auto scheduler_name = algorithm.get_child("parameters").get_child("scheduler");
-    //         std::string improver_name =
-    //         algorithm.get_child("parameters").get_child("improver").get_value<std::string>();
-
-    //         ImprovementScheduler *improver;
-
-    //         if (improver_name == "kl_total_comm") {
-
-    //             improver = new kl_total_comm();
-
-    //         } else if (improver_name == "kl_total_cut") {
-
-    //             improver = new kl_total_cut();
-
-    //         } else if (improver_name == "hill_climb") {
-
-    //             improver = new HillClimbingScheduler();
-
-    //         } else {
-    //             throw std::invalid_argument("Invalid improver name: " + improver_name);
-    //         }
-
-    //         auto [status, schedule] = run_algorithm(parser, scheduler_name, bsp_instance, timeLimit,
-    //         use_memory_constraint);
-
-    //         auto status_improver = improver->improveSchedule(schedule);
-
-    //         delete improver;
-
-    //         return {status_improver, schedule};
 
     //     } else if (algorithm.get_child("name").get_value<std::string>() == "TwoLevelTopOrderCoarseScheduler") {
 
