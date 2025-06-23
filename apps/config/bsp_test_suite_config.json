@@ -2,8 +2,8 @@
     "globalParameters": {
         "timeLimit": 32600,
         "useMemoryConstraint" : false,
-        "graphDirectory": "/home/toni/work/OneStopParallel/data/spaa/tiny/",
-        "archDirectory": "/home/toni/work/OneStopParallel/data/machine_params/",
+        "graphDirectory": "data/spaa/tiny/",
+        "archDirectory": "data/machine_params/",
         "outputStatsFile": "all_run_stats.csv",
         "outputLogFile": "log.txt",
         "outputSchedule": false,
