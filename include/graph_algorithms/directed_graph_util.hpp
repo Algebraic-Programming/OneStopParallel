@@ -549,4 +549,44 @@ bool is_connected(const Graph_t &graph) {
     return node_count == graph.num_vertices();
 }
 
+template<typename Graph_t>
+std::size_t num_common_parents(const Graph_t &graph, vertex_idx_t<Graph_t> v1, vertex_idx_t<Graph_t> v2) {
+    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+    
+    std::unordered_set<vertex_idx_t<Graph_t>>  parents;
+    parents.reserve(graph.in_degree(v1));
+    for (const auto &par : graph.parents(v1)) {
+        parents.emplace(par);
+    }
+    
+    std::size_t num = 0;
+    for (const auto &par : graph.parents(v2)) {
+        if(parents.find(par) != parents.end()) {
+            ++num;
+        }
+    }
+
+    return num;
+}
+
+template<typename Graph_t>
+std::size_t num_common_children(const Graph_t &graph, vertex_idx_t<Graph_t> v1, vertex_idx_t<Graph_t> v2) {
+    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+
+    std::unordered_set<vertex_idx_t<Graph_t>> childrn;
+    childrn.reserve(graph.out_degree(v1));
+    for (const auto &chld : graph.children(v1)) {
+        childrn.emplace(chld);
+    }
+    
+    std::size_t num = 0;
+    for (const auto &chld : graph.children(v2)) {
+        if(childrn.find(chld) != childrn.end()) {
+            ++num;
+        }
+    }
+
+    return num;
+}
+
 } // namespace osp

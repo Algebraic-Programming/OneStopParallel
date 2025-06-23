@@ -168,10 +168,10 @@ class Union_Find_Universe {
             }
             std::vector<T> names_in_comp;
             names_in_comp.reserve(comp.size());
-            for (auto &indx : comp) {
+            for (const auto &indx : comp) {
                 names_in_comp.emplace_back(universe[indx].name);
             }
-            connected_components_by_name.emplace_back(names_in_comp);
+            connected_components_by_name.push_back(names_in_comp);
         }
 
         return connected_components_by_name;
@@ -265,7 +265,7 @@ class Union_Find_Universe {
     /// @param name of object
     /// @param weight of object
     /// @param memory of object
-    void add_object(const T &name, const unsigned weight, const unsigned memory) {
+    void add_object(const T &name, const workw_t weight, const memw_t memory) {
         if (names_to_indices.find(name) != names_to_indices.end()) {
             throw std::runtime_error("This name already exists in the universe.");
         }
@@ -333,7 +333,7 @@ class Union_Find_Universe {
     /// @param weights of objects
     /// @param memories of objects
     void add_object(const std::vector<T> &names, const std::vector<unsigned> &weights,
-                    const std::vector<unsigned> &memories) {
+                    const std::vector<memw_t> &memories) {
         if (names.size() != weights.size()) {
             throw std::runtime_error("Vectors of names and weights must be of equal length.");
         }

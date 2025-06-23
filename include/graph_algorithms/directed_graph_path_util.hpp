@@ -21,6 +21,7 @@ limitations under the License.
 #include <map>
 #include <queue>
 #include <set>
+#include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -179,17 +180,18 @@ std::vector<vertex_idx_t<Graph_t>> longestChain(const Graph_t &graph) {
     return chain;
 }
 
-template<typename Graph_t>
-std::vector<unsigned> get_bottom_node_distance(const Graph_t &graph) {
+template<typename Graph_t, typename T = unsigned>
+std::vector<T> get_bottom_node_distance(const Graph_t &graph) {
+    static_assert(std::is_integral_v<T>, "T must be of integral type");
 
     static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
 
-    std::vector<unsigned> bottom_distance(graph.num_vertices(), 0);
+    std::vector<T> bottom_distance(graph.num_vertices(), 0);
 
     const auto top_order = GetTopOrder(graph);
     for (std::size_t i = top_order.size() - 1; i < top_order.size(); i--) {
 
-        unsigned max_temp = 0;
+        T max_temp = 0;
         for (const auto &j : graph.children(top_order[i])) {
             max_temp = std::max(max_temp, bottom_distance[j]);
         }
@@ -198,15 +200,16 @@ std::vector<unsigned> get_bottom_node_distance(const Graph_t &graph) {
     return bottom_distance;
 }
 
-template<typename Graph_t>
-std::vector<unsigned> get_top_node_distance(const Graph_t &graph) {
+template<typename Graph_t, typename T = unsigned>
+std::vector<T> get_top_node_distance(const Graph_t &graph) {
+    static_assert(std::is_integral_v<T>, "T must be of integral type");
 
     static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
 
-    std::vector<unsigned> top_distance(graph.num_vertices(), 0);
+    std::vector<T> top_distance(graph.num_vertices(), 0);
 
     for (const auto &vertex : bfs_top_sort_view(graph)) {
-        unsigned max_temp = 0;
+        T max_temp = 0;
         for (const auto &j : graph.parents(vertex)) {
             max_temp = std::max(max_temp, top_distance[j]);
         }

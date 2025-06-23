@@ -141,5 +141,8 @@ data/spaa/*
 !data/spaa/small
 !data/spaa/test
 !data/spaa/tiny
-!data/spaa/large
+!data/spaa/large/instance_CG_N24_K22_nzP0d2.hdag
+!data/spaa/large/instance_exp_N50_K12_nzP0d15.hdag
+!data/spaa/large/instance_kNN_N45_K15_nzP0d16.hdag
+!data/spaa/large/instance_spmv_N120_nzP0d18.hdag
 !data/spaa/graph_spaa_stats.txt

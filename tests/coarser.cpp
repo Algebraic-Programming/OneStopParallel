@@ -29,6 +29,7 @@ limitations under the License.
 #include "coarser/coarser_util.hpp"
 #include "coarser/funnel/FunnelBfs.hpp"
 #include "coarser/hdagg/hdagg_coarser.hpp"
+#include "coarser/SquashA/SquashA.hpp"
 #include "coarser/top_order/top_order_coarser.hpp"
 #include "graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "io/arch_file_reader.hpp"
@@ -440,4 +441,22 @@ BOOST_AUTO_TEST_CASE(coarser_top_sort_test) {
     top_order_coarser<graph_t, graph_t, GetTopOrderGorder> coarser_3;
 
     test_coarser_same_graph<graph_t>(coarser_3);
+}
+
+BOOST_AUTO_TEST_CASE(squashA_test) {
+    using graph_t = computational_dag_edge_idx_vector_impl_def_t;
+    // using graph_t = computational_dag_vector_impl_def_t;
+
+    SquashA<graph_t, graph_t>::Parameters params;
+    params.mode = SquashA<graph_t, graph_t>::Mode::EDGE_WEIGHT;
+
+    SquashA<graph_t, graph_t> coarser(params);
+
+    test_coarser_same_graph<graph_t>(coarser);
+    
+    
+    params.mode = SquashA<graph_t, graph_t>::Mode::TRIANGLES;
+    coarser.setParams(params);
+    
+    test_coarser_same_graph<graph_t>(coarser);
 }
