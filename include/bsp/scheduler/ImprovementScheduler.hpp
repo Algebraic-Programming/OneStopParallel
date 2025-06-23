@@ -76,10 +76,6 @@ class ImprovementScheduler {
      */
     virtual std::string getScheduleName() const = 0;
 
-    virtual void setUseMemoryConstraint(bool use_memory_constraint_) {
-        throw std::runtime_error("Not implemented " + use_memory_constraint_);
-    }
-
     /**
      * @brief Improve the given BspSchedule.
      * @param schedule The BspSchedule to be improved.

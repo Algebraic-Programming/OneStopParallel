@@ -313,387 +313,406 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                 compute_comm_gain(node, current_step, current_proc, new_proc);
                 compute_work_gain(node, current_step, current_proc, new_proc);
 
-                if (current_schedule.use_memory_constraint) {
+                if constexpr (current_schedule.use_memory_constraint) {
 
-                    if (current_schedule.instance->getArchitecture().getMemoryConstraintType() == LOCAL) {
-                        if (current_schedule.step_processor_memory[current_schedule.vector_schedule.assignedSuperstep(
-                                node)][new_proc] +
-                                current_schedule.instance->getComputationalDag().vertex_mem_weight(node) >
-                            current_schedule.instance->memoryBound(new_proc)) {
+                    if (not current_schedule.memory_constraint.can_add(node, new_proc,
+                                                      current_schedule.vector_schedule.assignedSuperstep(node))) {
+                        node_gains[node][new_proc][1] = std::numeric_limits<double>::lowest();
+                    }
 
-                            node_gains[node][new_proc][1] = std::numeric_limits<double>::lowest();
-                        }
-                        if (current_schedule.vector_schedule.assignedSuperstep(node) > 0) {
-                            if (current_schedule.step_processor_memory
-                                        [current_schedule.vector_schedule.assignedSuperstep(node) - 1][new_proc] +
-                                    current_schedule.instance->getComputationalDag().vertex_mem_weight(node) >
-                                current_schedule.instance->memoryBound(new_proc)) {
-
-                                node_gains[node][new_proc][0] = std::numeric_limits<double>::lowest();
-                            }
-                        }
-
-                        if (current_schedule.vector_schedule.assignedSuperstep(node) <
-                            current_schedule.num_steps() - 1) {
-                            if (current_schedule.step_processor_memory
-                                        [current_schedule.vector_schedule.assignedSuperstep(node) + 1][new_proc] +
-                                    current_schedule.instance->getComputationalDag().vertex_mem_weight(node) >
-                                current_schedule.instance->memoryBound(new_proc)) {
-
-                                node_gains[node][new_proc][2] = std::numeric_limits<double>::lowest();
-                            }
-                        }
-                    } else if (current_schedule.instance->getArchitecture().getMemoryConstraintType() ==
-                               PERSISTENT_AND_TRANSIENT) {
-                        if (current_schedule.current_proc_persistent_memory[new_proc] +
-                                current_schedule.instance->getComputationalDag().vertex_mem_weight(node) +
-                                std::max(current_schedule.current_proc_transient_memory[new_proc],
-                                         current_schedule.instance->getComputationalDag().vertex_comm_weight(node)) >
-                            current_schedule.instance->memoryBound(new_proc)) {
-
+                    if (current_schedule.vector_schedule.assignedSuperstep(node) > 0) {
+                        if (not current_schedule.memory_constraint.can_add(
+                                node, new_proc, current_schedule.vector_schedule.assignedSuperstep(node) - 1)) {
                             node_gains[node][new_proc][0] = std::numeric_limits<double>::lowest();
-                            node_gains[node][new_proc][1] = std::numeric_limits<double>::lowest();
+                        }
+                    }
+                    if (current_schedule.vector_schedule.assignedSuperstep(node) < current_schedule.num_steps() - 1) {
+                        if (not current_schedule.memory_constraint.can_add(
+                                node, new_proc, current_schedule.vector_schedule.assignedSuperstep(node) + 1)) {
                             node_gains[node][new_proc][2] = std::numeric_limits<double>::lowest();
-                        }
-                    } else if (current_schedule.instance->getArchitecture().getMemoryConstraintType() == LOCAL_IN_OUT) {
-
-                        memw_t inc_memory_0 = current_schedule.instance->getComputationalDag().vertex_mem_weight(node) +
-                                              current_schedule.instance->getComputationalDag().vertex_comm_weight(node);
-
-                        memw_t inc_memory_1 = inc_memory_0;
-                        memw_t inc_memory_2 = inc_memory_0;
-
-                        for (const auto &pred : current_schedule.instance->getComputationalDag().parents(node)) {
-
-                            if (current_schedule.vector_schedule.assignedProcessor(pred) == new_proc) {
-
-                                if (current_schedule.vector_schedule.assignedSuperstep(pred) ==
-                                    current_schedule.vector_schedule.assignedSuperstep(node)) {
-                                    inc_memory_1 -=
-                                        current_schedule.instance->getComputationalDag().vertex_comm_weight(pred);
-                                } else if (current_schedule.vector_schedule.assignedSuperstep(pred) ==
-                                           (current_schedule.vector_schedule.assignedSuperstep(node) - 1)) {
-                                    inc_memory_0 -=
-                                        current_schedule.instance->getComputationalDag().vertex_comm_weight(pred);
-                                } else if (current_schedule.vector_schedule.assignedSuperstep(pred) ==
-                                           (current_schedule.vector_schedule.assignedSuperstep(node) + 1)) {
-                                    inc_memory_2 -=
-                                        current_schedule.instance->getComputationalDag().vertex_comm_weight(pred);
-                                }
-                            }
-
-                            for (const auto &succ : current_schedule.instance->getComputationalDag().children(node)) {
-
-                                if (current_schedule.vector_schedule.assignedProcessor(succ) == new_proc) {
-
-                                    if (current_schedule.vector_schedule.assignedSuperstep(succ) ==
-                                        current_schedule.vector_schedule.assignedSuperstep(node)) {
-                                        inc_memory_1 -=
-                                            current_schedule.instance->getComputationalDag().vertex_comm_weight(node);
-                                    } else if (current_schedule.vector_schedule.assignedSuperstep(succ) ==
-                                               (current_schedule.vector_schedule.assignedSuperstep(node) - 1)) {
-                                        inc_memory_0 -=
-                                            current_schedule.instance->getComputationalDag().vertex_comm_weight(node);
-                                    } else if (current_schedule.vector_schedule.assignedSuperstep(succ) ==
-                                               (current_schedule.vector_schedule.assignedSuperstep(node) + 1)) {
-                                        inc_memory_2 -=
-                                            current_schedule.instance->getComputationalDag().vertex_comm_weight(node);
-                                    }
-                                }
-                            }
-
-                            if (current_schedule.step_processor_memory[current_schedule.vector_schedule
-                                                                           .assignedSuperstep(node)][new_proc] +
-                                    inc_memory_1 >
-                                current_schedule.instance->memoryBound(new_proc)) {
-
-                                node_gains[node][new_proc][1] = std::numeric_limits<double>::lowest();
-                            }
-
-                            if (current_schedule.vector_schedule.assignedSuperstep(node) > 0) {
-
-                                if (current_schedule.step_processor_memory
-                                            [current_schedule.vector_schedule.assignedSuperstep(node) - 1][new_proc] +
-                                        inc_memory_0 >
-                                    current_schedule.instance->memoryBound(new_proc)) {
-
-                                    node_gains[node][new_proc][0] = std::numeric_limits<double>::lowest();
-                                }
-                            }
-
-                            if (current_schedule.vector_schedule.assignedSuperstep(node) <
-                                current_schedule.num_steps() - 1) {
-
-                                if (current_schedule.step_processor_memory
-                                            [current_schedule.vector_schedule.assignedSuperstep(node) + 1][new_proc] +
-                                        inc_memory_2 >
-                                    current_schedule.instance->memoryBound(new_proc)) {
-
-                                    node_gains[node][new_proc][2] = std::numeric_limits<double>::lowest();
-                                }
-                            }
-                        }
-                    } else if (current_schedule.instance->getArchitecture().getMemoryConstraintType() ==
-                               LOCAL_INC_EDGES) {
-
-                        memw_t inc_memory = 0;
-                        for (const auto &pred : current_schedule.instance->getComputationalDag().parents(node)) {
-
-                            if (current_schedule.vector_schedule.assignedSuperstep(pred) <
-                                current_schedule.vector_schedule.assignedSuperstep(node)) {
-
-                                if (current_schedule
-                                        .step_processor_pred[current_schedule.vector_schedule.assignedSuperstep(node)]
-                                                            [new_proc]
-                                        .find(pred) ==
-                                    current_schedule
-                                        .step_processor_pred[current_schedule.vector_schedule.assignedSuperstep(node)]
-                                                            [new_proc]
-                                        .end()) {
-                                    inc_memory +=
-                                        current_schedule.instance->getComputationalDag().vertex_comm_weight(pred);
-                                }
-                            }
-                        }
-
-                        if (current_schedule.step_processor_memory[current_schedule.vector_schedule.assignedSuperstep(
-                                node)][new_proc] +
-                                current_schedule.instance->getComputationalDag().vertex_comm_weight(node) + inc_memory >
-                            current_schedule.instance->memoryBound(new_proc)) {
-
-                            node_gains[node][new_proc][1] = std::numeric_limits<double>::lowest();
-                        }
-
-                        if (current_schedule.vector_schedule.assignedSuperstep(node) + 1 <
-                            current_schedule.num_steps()) {
-
-                            inc_memory = 0;
-                            for (const auto &pred : current_schedule.instance->getComputationalDag().parents(node)) {
-
-                                if (current_schedule.vector_schedule.assignedSuperstep(pred) <
-                                    current_schedule.vector_schedule.assignedSuperstep(node) + 1) {
-
-                                    if (current_schedule
-                                            .step_processor_pred
-                                                [current_schedule.vector_schedule.assignedSuperstep(node) + 1][new_proc]
-                                            .find(pred) ==
-                                        current_schedule
-                                            .step_processor_pred
-                                                [current_schedule.vector_schedule.assignedSuperstep(node) + 1][new_proc]
-                                            .end()) {
-                                        inc_memory +=
-                                            current_schedule.instance->getComputationalDag().vertex_comm_weight(pred);
-                                    }
-                                }
-                            }
-
-                            if (current_schedule
-                                    .step_processor_pred[current_schedule.vector_schedule.assignedSuperstep(node) + 1]
-                                                        [new_proc]
-                                    .find(node) !=
-                                current_schedule
-                                    .step_processor_pred[current_schedule.vector_schedule.assignedSuperstep(node) + 1]
-                                                        [new_proc]
-                                    .end()) {
-                                inc_memory -= current_schedule.instance->getComputationalDag().vertex_comm_weight(node);
-                            }
-
-                            if (current_schedule.step_processor_memory
-                                        [current_schedule.vector_schedule.assignedSuperstep(node) + 1][new_proc] +
-                                    current_schedule.instance->getComputationalDag().vertex_comm_weight(node) +
-                                    inc_memory >
-                                current_schedule.instance->memoryBound(new_proc)) {
-
-                                node_gains[node][new_proc][2] = std::numeric_limits<double>::lowest();
-                            }
-                        }
-
-                        if (current_schedule.vector_schedule.assignedSuperstep(node) > 0) {
-
-                            inc_memory = 0;
-
-                            for (const auto &pred : current_schedule.instance->getComputationalDag().parents(node)) {
-
-                                if (current_schedule.vector_schedule.assignedSuperstep(pred) <
-                                    current_schedule.vector_schedule.assignedSuperstep(node) - 1) {
-
-                                    if (current_schedule
-                                            .step_processor_pred
-                                                [current_schedule.vector_schedule.assignedSuperstep(node) - 1][new_proc]
-                                            .find(pred) ==
-                                        current_schedule
-                                            .step_processor_pred
-                                                [current_schedule.vector_schedule.assignedSuperstep(node) - 1][new_proc]
-                                            .end()) {
-                                        inc_memory +=
-                                            current_schedule.instance->getComputationalDag().vertex_comm_weight(pred);
-                                    }
-                                }
-                            }
-
-                            if (current_schedule.step_processor_memory
-                                        [current_schedule.vector_schedule.assignedSuperstep(node) - 1][new_proc] +
-                                    current_schedule.instance->getComputationalDag().vertex_comm_weight(node) +
-                                    inc_memory >
-                                current_schedule.instance->memoryBound(new_proc)) {
-
-                                node_gains[node][new_proc][0] = std::numeric_limits<double>::lowest();
-                            }
-
-                            for (const auto &succ : current_schedule.instance->getComputationalDag().children(node)) {
-
-                                if (current_schedule.vector_schedule.assignedSuperstep(succ) ==
-                                    current_schedule.vector_schedule.assignedSuperstep(node)) {
-
-                                    if (current_schedule.step_processor_memory
-                                                [current_schedule.vector_schedule.assignedSuperstep(succ)]
-                                                [current_schedule.vector_schedule.assignedProcessor(succ)] +
-                                            current_schedule.instance->getComputationalDag().vertex_comm_weight(node) >
-                                        current_schedule.instance->memoryBound(
-                                            current_schedule.vector_schedule.assignedProcessor(succ))) {
-
-                                        node_gains[node][new_proc][0] = std::numeric_limits<double>::lowest();
-                                    }
-                                }
-                            }
-                        }
-                    } else if (current_schedule.instance->getArchitecture().getMemoryConstraintType() ==
-                               LOCAL_SOURCES_INC_EDGES) {
-
-                        memw_t inc_memory = 0;
-
-                        if (is_source(node, current_schedule.instance->getComputationalDag())) {
-                            inc_memory += current_schedule.instance->getComputationalDag().vertex_mem_weight(node);
-                        }
-
-                        for (const auto &pred : current_schedule.instance->getComputationalDag().parents(node)) {
-
-                            if (current_schedule.vector_schedule.assignedSuperstep(pred) <
-                                current_schedule.vector_schedule.assignedSuperstep(node)) {
-
-                                if (current_schedule
-                                        .step_processor_pred[current_schedule.vector_schedule.assignedSuperstep(node)]
-                                                            [new_proc]
-                                        .find(pred) ==
-                                    current_schedule
-                                        .step_processor_pred[current_schedule.vector_schedule.assignedSuperstep(node)]
-                                                            [new_proc]
-                                        .end()) {
-                                    inc_memory +=
-                                        current_schedule.instance->getComputationalDag().vertex_comm_weight(pred);
-                                }
-                            }
-                        }
-
-                        if (current_schedule.step_processor_memory[current_schedule.vector_schedule.assignedSuperstep(
-                                node)][new_proc] +
-                                inc_memory >
-                            current_schedule.instance->memoryBound(new_proc)) {
-
-                            node_gains[node][new_proc][1] = std::numeric_limits<double>::lowest();
-                        }
-
-                        if (current_schedule.vector_schedule.assignedSuperstep(node) + 1 <
-                            current_schedule.num_steps()) {
-
-                            inc_memory = 0;
-                            if (is_source(node, current_schedule.instance->getComputationalDag())) {
-                                inc_memory += current_schedule.instance->getComputationalDag().vertex_mem_weight(node);
-                            }
-
-                            for (const auto &pred : current_schedule.instance->getComputationalDag().parents(node)) {
-
-                                if (current_schedule.vector_schedule.assignedSuperstep(pred) <
-                                    current_schedule.vector_schedule.assignedSuperstep(node) + 1) {
-
-                                    if (current_schedule
-                                            .step_processor_pred
-                                                [current_schedule.vector_schedule.assignedSuperstep(node) + 1][new_proc]
-                                            .find(pred) ==
-                                        current_schedule
-                                            .step_processor_pred
-                                                [current_schedule.vector_schedule.assignedSuperstep(node) + 1][new_proc]
-                                            .end()) {
-                                        inc_memory +=
-                                            current_schedule.instance->getComputationalDag().vertex_comm_weight(pred);
-                                    }
-                                }
-                            }
-
-                            if (current_schedule
-                                    .step_processor_pred[current_schedule.vector_schedule.assignedSuperstep(node) + 1]
-                                                        [new_proc]
-                                    .find(node) !=
-                                current_schedule
-                                    .step_processor_pred[current_schedule.vector_schedule.assignedSuperstep(node) + 1]
-                                                        [new_proc]
-                                    .end()) {
-                                inc_memory -= current_schedule.instance->getComputationalDag().vertex_comm_weight(node);
-                            }
-
-                            if (current_schedule.step_processor_memory
-                                        [current_schedule.vector_schedule.assignedSuperstep(node) + 1][new_proc] +
-                                    inc_memory >
-                                current_schedule.instance->memoryBound(new_proc)) {
-
-                                node_gains[node][new_proc][2] = std::numeric_limits<double>::lowest();
-                            }
-                        }
-
-                        if (current_schedule.vector_schedule.assignedSuperstep(node) > 0) {
-
-                            inc_memory = 0;
-
-                            if (is_source(node, current_schedule.instance->getComputationalDag())) {
-                                inc_memory += current_schedule.instance->getComputationalDag().vertex_mem_weight(node);
-                            }
-
-                            for (const auto &pred : current_schedule.instance->getComputationalDag().parents(node)) {
-
-                                if (current_schedule.vector_schedule.assignedSuperstep(pred) <
-                                    current_schedule.vector_schedule.assignedSuperstep(node) - 1) {
-
-                                    if (current_schedule
-                                            .step_processor_pred
-                                                [current_schedule.vector_schedule.assignedSuperstep(node) - 1][new_proc]
-                                            .find(pred) ==
-                                        current_schedule
-                                            .step_processor_pred
-                                                [current_schedule.vector_schedule.assignedSuperstep(node) - 1][new_proc]
-                                            .end()) {
-                                        inc_memory +=
-                                            current_schedule.instance->getComputationalDag().vertex_comm_weight(pred);
-                                    }
-                                }
-                            }
-
-                            if (current_schedule.step_processor_memory
-                                        [current_schedule.vector_schedule.assignedSuperstep(node) - 1][new_proc] +
-                                    inc_memory >
-                                current_schedule.instance->memoryBound(new_proc)) {
-
-                                node_gains[node][new_proc][0] = std::numeric_limits<double>::lowest();
-                            }
-
-                            for (const auto &succ : current_schedule.instance->getComputationalDag().children(node)) {
-
-                                if (current_schedule.vector_schedule.assignedSuperstep(succ) ==
-                                    current_schedule.vector_schedule.assignedSuperstep(node)) {
-
-                                    if (current_schedule.step_processor_memory
-                                                [current_schedule.vector_schedule.assignedSuperstep(succ)]
-                                                [current_schedule.vector_schedule.assignedProcessor(succ)] +
-                                            current_schedule.instance->getComputationalDag().vertex_comm_weight(node) >
-                                        current_schedule.instance->memoryBound(
-                                            current_schedule.vector_schedule.assignedProcessor(succ))) {
-
-                                        node_gains[node][new_proc][0] = std::numeric_limits<double>::lowest();
-                                    }
-                                }
-                            }
                         }
                     }
                 }
+
+                // if (current_schedule.use_memory_constraint) {
+
+                //     if (current_schedule.instance->getArchitecture().getMemoryConstraintType() == LOCAL) {
+                //         if (current_schedule.step_processor_memory[current_schedule.vector_schedule.assignedSuperstep(
+                //                 node)][new_proc] +
+                //                 current_schedule.instance->getComputationalDag().vertex_mem_weight(node) >
+                //             current_schedule.instance->memoryBound(new_proc)) {
+                //         }
+                //         if (current_schedule.vector_schedule.assignedSuperstep(node) > 0) {
+                //             if (current_schedule.step_processor_memory
+                //                         [current_schedule.vector_schedule.assignedSuperstep(node) - 1][new_proc] +
+                //                     current_schedule.instance->getComputationalDag().vertex_mem_weight(node) >
+                //                 current_schedule.instance->memoryBound(new_proc)) {
+
+                //                 node_gains[node][new_proc][0] = std::numeric_limits<double>::lowest();
+                //             }
+                //         }
+
+                //         if (current_schedule.vector_schedule.assignedSuperstep(node) <
+                //             current_schedule.num_steps() - 1) {
+                //             if (current_schedule.step_processor_memory
+                //                         [current_schedule.vector_schedule.assignedSuperstep(node) + 1][new_proc] +
+                //                     current_schedule.instance->getComputationalDag().vertex_mem_weight(node) >
+                //                 current_schedule.instance->memoryBound(new_proc)) {
+
+                //                 node_gains[node][new_proc][2] = std::numeric_limits<double>::lowest();
+                //             }
+                //         }
+                //     } else if (current_schedule.instance->getArchitecture().getMemoryConstraintType() ==
+                //                PERSISTENT_AND_TRANSIENT) {
+                //         if (current_schedule.current_proc_persistent_memory[new_proc] +
+                //                 current_schedule.instance->getComputationalDag().vertex_mem_weight(node) +
+                //                 std::max(current_schedule.current_proc_transient_memory[new_proc],
+                //                          current_schedule.instance->getComputationalDag().vertex_comm_weight(node)) >
+                //             current_schedule.instance->memoryBound(new_proc)) {
+
+                //             node_gains[node][new_proc][0] = std::numeric_limits<double>::lowest();
+                //             node_gains[node][new_proc][1] = std::numeric_limits<double>::lowest();
+                //             node_gains[node][new_proc][2] = std::numeric_limits<double>::lowest();
+                //         }
+                //     } else if (current_schedule.instance->getArchitecture().getMemoryConstraintType() == LOCAL_IN_OUT) {
+
+                //         memw_t inc_memory_0 = current_schedule.instance->getComputationalDag().vertex_mem_weight(node) +
+                //                               current_schedule.instance->getComputationalDag().vertex_comm_weight(node);
+
+                //         memw_t inc_memory_1 = inc_memory_0;
+                //         memw_t inc_memory_2 = inc_memory_0;
+
+                //         for (const auto &pred : current_schedule.instance->getComputationalDag().parents(node)) {
+
+                //             if (current_schedule.vector_schedule.assignedProcessor(pred) == new_proc) {
+
+                //                 if (current_schedule.vector_schedule.assignedSuperstep(pred) ==
+                //                     current_schedule.vector_schedule.assignedSuperstep(node)) {
+                //                     inc_memory_1 -=
+                //                         current_schedule.instance->getComputationalDag().vertex_comm_weight(pred);
+                //                 } else if (current_schedule.vector_schedule.assignedSuperstep(pred) ==
+                //                            (current_schedule.vector_schedule.assignedSuperstep(node) - 1)) {
+                //                     inc_memory_0 -=
+                //                         current_schedule.instance->getComputationalDag().vertex_comm_weight(pred);
+                //                 } else if (current_schedule.vector_schedule.assignedSuperstep(pred) ==
+                //                            (current_schedule.vector_schedule.assignedSuperstep(node) + 1)) {
+                //                     inc_memory_2 -=
+                //                         current_schedule.instance->getComputationalDag().vertex_comm_weight(pred);
+                //                 }
+                //             }
+
+                //             for (const auto &succ : current_schedule.instance->getComputationalDag().children(node)) {
+
+                //                 if (current_schedule.vector_schedule.assignedProcessor(succ) == new_proc) {
+
+                //                     if (current_schedule.vector_schedule.assignedSuperstep(succ) ==
+                //                         current_schedule.vector_schedule.assignedSuperstep(node)) {
+                //                         inc_memory_1 -=
+                //                             current_schedule.instance->getComputationalDag().vertex_comm_weight(node);
+                //                     } else if (current_schedule.vector_schedule.assignedSuperstep(succ) ==
+                //                                (current_schedule.vector_schedule.assignedSuperstep(node) - 1)) {
+                //                         inc_memory_0 -=
+                //                             current_schedule.instance->getComputationalDag().vertex_comm_weight(node);
+                //                     } else if (current_schedule.vector_schedule.assignedSuperstep(succ) ==
+                //                                (current_schedule.vector_schedule.assignedSuperstep(node) + 1)) {
+                //                         inc_memory_2 -=
+                //                             current_schedule.instance->getComputationalDag().vertex_comm_weight(node);
+                //                     }
+                //                 }
+                //             }
+
+                //             if (current_schedule.step_processor_memory[current_schedule.vector_schedule
+                //                                                            .assignedSuperstep(node)][new_proc] +
+                //                     inc_memory_1 >
+                //                 current_schedule.instance->memoryBound(new_proc)) {
+
+                //                 node_gains[node][new_proc][1] = std::numeric_limits<double>::lowest();
+                //             }
+
+                //             if (current_schedule.vector_schedule.assignedSuperstep(node) > 0) {
+
+                //                 if (current_schedule.step_processor_memory
+                //                             [current_schedule.vector_schedule.assignedSuperstep(node) - 1][new_proc] +
+                //                         inc_memory_0 >
+                //                     current_schedule.instance->memoryBound(new_proc)) {
+
+                //                     node_gains[node][new_proc][0] = std::numeric_limits<double>::lowest();
+                //                 }
+                //             }
+
+                //             if (current_schedule.vector_schedule.assignedSuperstep(node) <
+                //                 current_schedule.num_steps() - 1) {
+
+                //                 if (current_schedule.step_processor_memory
+                //                             [current_schedule.vector_schedule.assignedSuperstep(node) + 1][new_proc] +
+                //                         inc_memory_2 >
+                //                     current_schedule.instance->memoryBound(new_proc)) {
+
+                //                     node_gains[node][new_proc][2] = std::numeric_limits<double>::lowest();
+                //                 }
+                //             }
+                //         }
+                //     } else if (current_schedule.instance->getArchitecture().getMemoryConstraintType() ==
+                //                LOCAL_INC_EDGES) {
+
+                //         memw_t inc_memory = 0;
+                //         for (const auto &pred : current_schedule.instance->getComputationalDag().parents(node)) {
+
+                //             if (current_schedule.vector_schedule.assignedSuperstep(pred) <
+                //                 current_schedule.vector_schedule.assignedSuperstep(node)) {
+
+                //                 if (current_schedule
+                //                         .step_processor_pred[current_schedule.vector_schedule.assignedSuperstep(node)]
+                //                                             [new_proc]
+                //                         .find(pred) ==
+                //                     current_schedule
+                //                         .step_processor_pred[current_schedule.vector_schedule.assignedSuperstep(node)]
+                //                                             [new_proc]
+                //                         .end()) {
+                //                     inc_memory +=
+                //                         current_schedule.instance->getComputationalDag().vertex_comm_weight(pred);
+                //                 }
+                //             }
+                //         }
+
+                //         if (current_schedule.step_processor_memory[current_schedule.vector_schedule.assignedSuperstep(
+                //                 node)][new_proc] +
+                //                 current_schedule.instance->getComputationalDag().vertex_comm_weight(node) + inc_memory >
+                //             current_schedule.instance->memoryBound(new_proc)) {
+
+                //             node_gains[node][new_proc][1] = std::numeric_limits<double>::lowest();
+                //         }
+
+                //         if (current_schedule.vector_schedule.assignedSuperstep(node) + 1 <
+                //             current_schedule.num_steps()) {
+
+                //             inc_memory = 0;
+                //             for (const auto &pred : current_schedule.instance->getComputationalDag().parents(node)) {
+
+                //                 if (current_schedule.vector_schedule.assignedSuperstep(pred) <
+                //                     current_schedule.vector_schedule.assignedSuperstep(node) + 1) {
+
+                //                     if (current_schedule
+                //                             .step_processor_pred
+                //                                 [current_schedule.vector_schedule.assignedSuperstep(node) + 1][new_proc]
+                //                             .find(pred) ==
+                //                         current_schedule
+                //                             .step_processor_pred
+                //                                 [current_schedule.vector_schedule.assignedSuperstep(node) + 1][new_proc]
+                //                             .end()) {
+                //                         inc_memory +=
+                //                             current_schedule.instance->getComputationalDag().vertex_comm_weight(pred);
+                //                     }
+                //                 }
+                //             }
+
+                //             if (current_schedule
+                //                     .step_processor_pred[current_schedule.vector_schedule.assignedSuperstep(node) + 1]
+                //                                         [new_proc]
+                //                     .find(node) !=
+                //                 current_schedule
+                //                     .step_processor_pred[current_schedule.vector_schedule.assignedSuperstep(node) + 1]
+                //                                         [new_proc]
+                //                     .end()) {
+                //                 inc_memory -= current_schedule.instance->getComputationalDag().vertex_comm_weight(node);
+                //             }
+
+                //             if (current_schedule.step_processor_memory
+                //                         [current_schedule.vector_schedule.assignedSuperstep(node) + 1][new_proc] +
+                //                     current_schedule.instance->getComputationalDag().vertex_comm_weight(node) +
+                //                     inc_memory >
+                //                 current_schedule.instance->memoryBound(new_proc)) {
+
+                //                 node_gains[node][new_proc][2] = std::numeric_limits<double>::lowest();
+                //             }
+                //         }
+
+                //         if (current_schedule.vector_schedule.assignedSuperstep(node) > 0) {
+
+                //             inc_memory = 0;
+
+                //             for (const auto &pred : current_schedule.instance->getComputationalDag().parents(node)) {
+
+                //                 if (current_schedule.vector_schedule.assignedSuperstep(pred) <
+                //                     current_schedule.vector_schedule.assignedSuperstep(node) - 1) {
+
+                //                     if (current_schedule
+                //                             .step_processor_pred
+                //                                 [current_schedule.vector_schedule.assignedSuperstep(node) - 1][new_proc]
+                //                             .find(pred) ==
+                //                         current_schedule
+                //                             .step_processor_pred
+                //                                 [current_schedule.vector_schedule.assignedSuperstep(node) - 1][new_proc]
+                //                             .end()) {
+                //                         inc_memory +=
+                //                             current_schedule.instance->getComputationalDag().vertex_comm_weight(pred);
+                //                     }
+                //                 }
+                //             }
+
+                //             if (current_schedule.step_processor_memory
+                //                         [current_schedule.vector_schedule.assignedSuperstep(node) - 1][new_proc] +
+                //                     current_schedule.instance->getComputationalDag().vertex_comm_weight(node) +
+                //                     inc_memory >
+                //                 current_schedule.instance->memoryBound(new_proc)) {
+
+                //                 node_gains[node][new_proc][0] = std::numeric_limits<double>::lowest();
+                //             }
+
+                //             for (const auto &succ : current_schedule.instance->getComputationalDag().children(node)) {
+
+                //                 if (current_schedule.vector_schedule.assignedSuperstep(succ) ==
+                //                     current_schedule.vector_schedule.assignedSuperstep(node)) {
+
+                //                     if (current_schedule.step_processor_memory
+                //                                 [current_schedule.vector_schedule.assignedSuperstep(succ)]
+                //                                 [current_schedule.vector_schedule.assignedProcessor(succ)] +
+                //                             current_schedule.instance->getComputationalDag().vertex_comm_weight(node) >
+                //                         current_schedule.instance->memoryBound(
+                //                             current_schedule.vector_schedule.assignedProcessor(succ))) {
+
+                //                         node_gains[node][new_proc][0] = std::numeric_limits<double>::lowest();
+                //                     }
+                //                 }
+                //             }
+                //         }
+                //     } else if (current_schedule.instance->getArchitecture().getMemoryConstraintType() ==
+                //                LOCAL_SOURCES_INC_EDGES) {
+
+                //         memw_t inc_memory = 0;
+
+                //         if (is_source(node, current_schedule.instance->getComputationalDag())) {
+                //             inc_memory += current_schedule.instance->getComputationalDag().vertex_mem_weight(node);
+                //         }
+
+                //         for (const auto &pred : current_schedule.instance->getComputationalDag().parents(node)) {
+
+                //             if (current_schedule.vector_schedule.assignedSuperstep(pred) <
+                //                 current_schedule.vector_schedule.assignedSuperstep(node)) {
+
+                //                 if (current_schedule
+                //                         .step_processor_pred[current_schedule.vector_schedule.assignedSuperstep(node)]
+                //                                             [new_proc]
+                //                         .find(pred) ==
+                //                     current_schedule
+                //                         .step_processor_pred[current_schedule.vector_schedule.assignedSuperstep(node)]
+                //                                             [new_proc]
+                //                         .end()) {
+                //                     inc_memory +=
+                //                         current_schedule.instance->getComputationalDag().vertex_comm_weight(pred);
+                //                 }
+                //             }
+                //         }
+
+                //         if (current_schedule.step_processor_memory[current_schedule.vector_schedule.assignedSuperstep(
+                //                 node)][new_proc] +
+                //                 inc_memory >
+                //             current_schedule.instance->memoryBound(new_proc)) {
+
+                //             node_gains[node][new_proc][1] = std::numeric_limits<double>::lowest();
+                //         }
+
+                //         if (current_schedule.vector_schedule.assignedSuperstep(node) + 1 <
+                //             current_schedule.num_steps()) {
+
+                //             inc_memory = 0;
+                //             if (is_source(node, current_schedule.instance->getComputationalDag())) {
+                //                 inc_memory += current_schedule.instance->getComputationalDag().vertex_mem_weight(node);
+                //             }
+
+                //             for (const auto &pred : current_schedule.instance->getComputationalDag().parents(node)) {
+
+                //                 if (current_schedule.vector_schedule.assignedSuperstep(pred) <
+                //                     current_schedule.vector_schedule.assignedSuperstep(node) + 1) {
+
+                //                     if (current_schedule
+                //                             .step_processor_pred
+                //                                 [current_schedule.vector_schedule.assignedSuperstep(node) + 1][new_proc]
+                //                             .find(pred) ==
+                //                         current_schedule
+                //                             .step_processor_pred
+                //                                 [current_schedule.vector_schedule.assignedSuperstep(node) + 1][new_proc]
+                //                             .end()) {
+                //                         inc_memory +=
+                //                             current_schedule.instance->getComputationalDag().vertex_comm_weight(pred);
+                //                     }
+                //                 }
+                //             }
+
+                //             if (current_schedule
+                //                     .step_processor_pred[current_schedule.vector_schedule.assignedSuperstep(node) + 1]
+                //                                         [new_proc]
+                //                     .find(node) !=
+                //                 current_schedule
+                //                     .step_processor_pred[current_schedule.vector_schedule.assignedSuperstep(node) + 1]
+                //                                         [new_proc]
+                //                     .end()) {
+                //                 inc_memory -= current_schedule.instance->getComputationalDag().vertex_comm_weight(node);
+                //             }
+
+                //             if (current_schedule.step_processor_memory
+                //                         [current_schedule.vector_schedule.assignedSuperstep(node) + 1][new_proc] +
+                //                     inc_memory >
+                //                 current_schedule.instance->memoryBound(new_proc)) {
+
+                //                 node_gains[node][new_proc][2] = std::numeric_limits<double>::lowest();
+                //             }
+                //         }
+
+                //         if (current_schedule.vector_schedule.assignedSuperstep(node) > 0) {
+
+                //             inc_memory = 0;
+
+                //             if (is_source(node, current_schedule.instance->getComputationalDag())) {
+                //                 inc_memory += current_schedule.instance->getComputationalDag().vertex_mem_weight(node);
+                //             }
+
+                //             for (const auto &pred : current_schedule.instance->getComputationalDag().parents(node)) {
+
+                //                 if (current_schedule.vector_schedule.assignedSuperstep(pred) <
+                //                     current_schedule.vector_schedule.assignedSuperstep(node) - 1) {
+
+                //                     if (current_schedule
+                //                             .step_processor_pred
+                //                                 [current_schedule.vector_schedule.assignedSuperstep(node) - 1][new_proc]
+                //                             .find(pred) ==
+                //                         current_schedule
+                //                             .step_processor_pred
+                //                                 [current_schedule.vector_schedule.assignedSuperstep(node) - 1][new_proc]
+                //                             .end()) {
+                //                         inc_memory +=
+                //                             current_schedule.instance->getComputationalDag().vertex_comm_weight(pred);
+                //                     }
+                //                 }
+                //             }
+
+                //             if (current_schedule.step_processor_memory
+                //                         [current_schedule.vector_schedule.assignedSuperstep(node) - 1][new_proc] +
+                //                     inc_memory >
+                //                 current_schedule.instance->memoryBound(new_proc)) {
+
+                //                 node_gains[node][new_proc][0] = std::numeric_limits<double>::lowest();
+                //             }
+
+                //             for (const auto &succ : current_schedule.instance->getComputationalDag().children(node)) {
+
+                //                 if (current_schedule.vector_schedule.assignedSuperstep(succ) ==
+                //                     current_schedule.vector_schedule.assignedSuperstep(node)) {
+
+                //                     if (current_schedule.step_processor_memory
+                //                                 [current_schedule.vector_schedule.assignedSuperstep(succ)]
+                //                                 [current_schedule.vector_schedule.assignedProcessor(succ)] +
+                //                             current_schedule.instance->getComputationalDag().vertex_comm_weight(node) >
+                //                         current_schedule.instance->memoryBound(
+                //                             current_schedule.vector_schedule.assignedProcessor(succ))) {
+
+                //                         node_gains[node][new_proc][0] = std::numeric_limits<double>::lowest();
+                //                     }
+                //                 }
+                //             }
+                //         }
+                //     }
+                // }
 
             } else {
 
@@ -1499,150 +1518,155 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                     break;
                 }
 
-                if (current_schedule.use_memory_constraint) {
-
-                    if (current_schedule.instance->getArchitecture().getMemoryConstraintType() ==
-                        PERSISTENT_AND_TRANSIENT) {
-
-                        if (moves.back().to_proc != moves.back().from_proc) {
-                            current_schedule.current_proc_persistent_memory[moves.back().to_proc] +=
-                                current_schedule.instance->getComputationalDag().vertex_mem_weight(node);
-                            current_schedule.current_proc_persistent_memory[moves.back().from_proc] -=
-                                current_schedule.instance->getComputationalDag().vertex_mem_weight(node);
-
-                            current_schedule.current_proc_transient_memory[moves.back().to_proc] =
-                                std::max(current_schedule.current_proc_transient_memory[moves.back().to_proc],
-                                         current_schedule.instance->getComputationalDag().vertex_comm_weight(node));
-                            // TODO: implement this properly if PERSISTENT_AND_TRANSIENT becomes relevant
-                        }
-
-                    } else if (current_schedule.instance->getArchitecture().getMemoryConstraintType() == LOCAL) {
-                        current_schedule.step_processor_memory[moves.back().to_step][moves.back().to_proc] +=
-                            current_schedule.instance->getComputationalDag().vertex_mem_weight(node);
-
-                    } else if (current_schedule.instance->getArchitecture().getMemoryConstraintType() == LOCAL_IN_OUT) {
-
-                        current_schedule.step_processor_memory[moves.back().to_step][moves.back().to_proc] +=
-                            current_schedule.instance->getComputationalDag().vertex_mem_weight(node) +
-                            current_schedule.instance->getComputationalDag().vertex_comm_weight(node);
-
-                        for (const auto &pred : current_schedule.instance->getComputationalDag().parents(node)) {
-
-                            if (current_schedule.vector_schedule.assignedProcessor(pred) == moves.back().to_proc &&
-                                current_schedule.vector_schedule.assignedSuperstep(pred) == moves.back().to_step) {
-
-                                current_schedule.step_processor_memory[moves.back().to_step][moves.back().to_proc] -=
-                                    current_schedule.instance->getComputationalDag().vertex_comm_weight(pred);
-                            }
-                        }
-
-                        for (const auto &succ : current_schedule.instance->getComputationalDag().children(node)) {
-
-                            if (current_schedule.vector_schedule.assignedProcessor(succ) == moves.back().to_proc &&
-                                current_schedule.vector_schedule.assignedSuperstep(succ) == moves.back().to_step) {
-
-                                current_schedule.step_processor_memory[moves.back().to_step][moves.back().to_proc] -=
-                                    current_schedule.instance->getComputationalDag().vertex_comm_weight(node);
-                            }
-                        }
-                    } else if (current_schedule.instance->getArchitecture().getMemoryConstraintType() ==
-                               LOCAL_INC_EDGES) {
-
-                        if (current_schedule.step_processor_pred[moves.back().to_step][moves.back().to_proc].find(
-                                node) ==
-                            current_schedule.step_processor_pred[moves.back().to_step][moves.back().to_proc].end()) {
-                            current_schedule.step_processor_memory[moves.back().to_step][moves.back().to_proc] +=
-                                current_schedule.instance->getComputationalDag().vertex_comm_weight(node);
-                        }
-
-                        for (const auto &pred : current_schedule.instance->getComputationalDag().parents(node)) {
-
-                            if (current_schedule.vector_schedule.assignedSuperstep(pred) < moves.back().to_step) {
-
-                                if (current_schedule.step_processor_pred[moves.back().to_step][moves.back().to_proc]
-                                        .find(pred) ==
-                                    current_schedule.step_processor_pred[moves.back().to_step][moves.back().to_proc]
-                                        .end()) {
-
-                                    current_schedule
-                                        .step_processor_memory[moves.back().to_step][moves.back().to_proc] +=
-                                        current_schedule.instance->getComputationalDag().vertex_comm_weight(pred);
-                                }
-                            }
-                        }
-
-                        for (const auto &succ : current_schedule.instance->getComputationalDag().children(node)) {
-
-                            if (current_schedule.vector_schedule.assignedSuperstep(succ) > moves.back().to_step) {
-
-                                if (current_schedule
-                                        .step_processor_pred[current_schedule.vector_schedule.assignedSuperstep(succ)]
-                                                            [current_schedule.vector_schedule.assignedProcessor(succ)]
-                                        .find(node) ==
-                                    current_schedule
-                                        .step_processor_pred[current_schedule.vector_schedule.assignedSuperstep(succ)]
-                                                            [current_schedule.vector_schedule.assignedProcessor(succ)]
-                                        .end()) {
-
-                                    current_schedule
-                                        .step_processor_memory[current_schedule.vector_schedule.assignedSuperstep(
-                                            succ)][current_schedule.vector_schedule.assignedProcessor(succ)] +=
-                                        current_schedule.instance->getComputationalDag().vertex_comm_weight(node);
-                                }
-                            }
-                        }
-                    } else if (current_schedule.instance->getArchitecture().getMemoryConstraintType() ==
-                               LOCAL_SOURCES_INC_EDGES) {
-
-                        if (current_schedule.step_processor_pred[moves.back().to_step][moves.back().to_proc].find(
-                                node) ==
-                            current_schedule.step_processor_pred[moves.back().to_step][moves.back().to_proc].end()) {
-
-                            if (is_source(node, current_schedule.instance->getComputationalDag())) {
-
-                                current_schedule.step_processor_memory[moves.back().to_step][moves.back().to_proc] +=
-                                    current_schedule.instance->getComputationalDag().vertex_mem_weight(node);
-                            }
-                        }
-
-                        for (const auto &pred : current_schedule.instance->getComputationalDag().parents(node)) {
-
-                            if (current_schedule.vector_schedule.assignedSuperstep(pred) < moves.back().to_step) {
-
-                                if (current_schedule.step_processor_pred[moves.back().to_step][moves.back().to_proc]
-                                        .find(pred) ==
-                                    current_schedule.step_processor_pred[moves.back().to_step][moves.back().to_proc]
-                                        .end()) {
-
-                                    current_schedule
-                                        .step_processor_memory[moves.back().to_step][moves.back().to_proc] +=
-                                        current_schedule.instance->getComputationalDag().vertex_comm_weight(pred);
-                                }
-                            }
-                        }
-
-                        for (const auto &succ : current_schedule.instance->getComputationalDag().children(node)) {
-
-                            if (current_schedule.vector_schedule.assignedSuperstep(succ) > moves.back().to_step) {
-
-                                if (current_schedule
-                                        .step_processor_pred[current_schedule.vector_schedule.assignedSuperstep(succ)]
-                                                            [current_schedule.vector_schedule.assignedProcessor(succ)]
-                                        .find(node) ==
-                                    current_schedule
-                                        .step_processor_pred[current_schedule.vector_schedule.assignedSuperstep(succ)]
-                                                            [current_schedule.vector_schedule.assignedProcessor(succ)]
-                                        .end()) {
-
-                                    current_schedule
-                                        .step_processor_memory[current_schedule.vector_schedule.assignedSuperstep(
-                                            succ)][current_schedule.vector_schedule.assignedProcessor(succ)] +=
-                                        current_schedule.instance->getComputationalDag().vertex_comm_weight(node);
-                                }
-                            }
-                        }
-                    }
+                if constexpr (current_schedule.use_memory_constraint) {
+                    current_schedule.memory_constraint.apply_move(node, proc, step, moves.back().to_proc, moves.back().to_step);
                 }
+
+
+                // if (current_schedule.use_memory_constraint) {
+
+                //     if (current_schedule.instance->getArchitecture().getMemoryConstraintType() ==
+                //         PERSISTENT_AND_TRANSIENT) {
+
+                //         if (moves.back().to_proc != moves.back().from_proc) {
+                //             current_schedule.current_proc_persistent_memory[moves.back().to_proc] +=
+                //                 current_schedule.instance->getComputationalDag().vertex_mem_weight(node);
+                //             current_schedule.current_proc_persistent_memory[moves.back().from_proc] -=
+                //                 current_schedule.instance->getComputationalDag().vertex_mem_weight(node);
+
+                //             current_schedule.current_proc_transient_memory[moves.back().to_proc] =
+                //                 std::max(current_schedule.current_proc_transient_memory[moves.back().to_proc],
+                //                          current_schedule.instance->getComputationalDag().vertex_comm_weight(node));
+                //             // TODO: implement this properly if PERSISTENT_AND_TRANSIENT becomes relevant
+                //         }
+
+                //     } else if (current_schedule.instance->getArchitecture().getMemoryConstraintType() == LOCAL) {
+                //         current_schedule.step_processor_memory[moves.back().to_step][moves.back().to_proc] +=
+                //             current_schedule.instance->getComputationalDag().vertex_mem_weight(node);
+
+                //     } else if (current_schedule.instance->getArchitecture().getMemoryConstraintType() == LOCAL_IN_OUT) {
+
+                //         current_schedule.step_processor_memory[moves.back().to_step][moves.back().to_proc] +=
+                //             current_schedule.instance->getComputationalDag().vertex_mem_weight(node) +
+                //             current_schedule.instance->getComputationalDag().vertex_comm_weight(node);
+
+                //         for (const auto &pred : current_schedule.instance->getComputationalDag().parents(node)) {
+
+                //             if (current_schedule.vector_schedule.assignedProcessor(pred) == moves.back().to_proc &&
+                //                 current_schedule.vector_schedule.assignedSuperstep(pred) == moves.back().to_step) {
+
+                //                 current_schedule.step_processor_memory[moves.back().to_step][moves.back().to_proc] -=
+                //                     current_schedule.instance->getComputationalDag().vertex_comm_weight(pred);
+                //             }
+                //         }
+
+                //         for (const auto &succ : current_schedule.instance->getComputationalDag().children(node)) {
+
+                //             if (current_schedule.vector_schedule.assignedProcessor(succ) == moves.back().to_proc &&
+                //                 current_schedule.vector_schedule.assignedSuperstep(succ) == moves.back().to_step) {
+
+                //                 current_schedule.step_processor_memory[moves.back().to_step][moves.back().to_proc] -=
+                //                     current_schedule.instance->getComputationalDag().vertex_comm_weight(node);
+                //             }
+                //         }
+                //     } else if (current_schedule.instance->getArchitecture().getMemoryConstraintType() ==
+                //                LOCAL_INC_EDGES) {
+
+                //         if (current_schedule.step_processor_pred[moves.back().to_step][moves.back().to_proc].find(
+                //                 node) ==
+                //             current_schedule.step_processor_pred[moves.back().to_step][moves.back().to_proc].end()) {
+                //             current_schedule.step_processor_memory[moves.back().to_step][moves.back().to_proc] +=
+                //                 current_schedule.instance->getComputationalDag().vertex_comm_weight(node);
+                //         }
+
+                //         for (const auto &pred : current_schedule.instance->getComputationalDag().parents(node)) {
+
+                //             if (current_schedule.vector_schedule.assignedSuperstep(pred) < moves.back().to_step) {
+
+                //                 if (current_schedule.step_processor_pred[moves.back().to_step][moves.back().to_proc]
+                //                         .find(pred) ==
+                //                     current_schedule.step_processor_pred[moves.back().to_step][moves.back().to_proc]
+                //                         .end()) {
+
+                //                     current_schedule
+                //                         .step_processor_memory[moves.back().to_step][moves.back().to_proc] +=
+                //                         current_schedule.instance->getComputationalDag().vertex_comm_weight(pred);
+                //                 }
+                //             }
+                //         }
+
+                //         for (const auto &succ : current_schedule.instance->getComputationalDag().children(node)) {
+
+                //             if (current_schedule.vector_schedule.assignedSuperstep(succ) > moves.back().to_step) {
+
+                //                 if (current_schedule
+                //                         .step_processor_pred[current_schedule.vector_schedule.assignedSuperstep(succ)]
+                //                                             [current_schedule.vector_schedule.assignedProcessor(succ)]
+                //                         .find(node) ==
+                //                     current_schedule
+                //                         .step_processor_pred[current_schedule.vector_schedule.assignedSuperstep(succ)]
+                //                                             [current_schedule.vector_schedule.assignedProcessor(succ)]
+                //                         .end()) {
+
+                //                     current_schedule
+                //                         .step_processor_memory[current_schedule.vector_schedule.assignedSuperstep(
+                //                             succ)][current_schedule.vector_schedule.assignedProcessor(succ)] +=
+                //                         current_schedule.instance->getComputationalDag().vertex_comm_weight(node);
+                //                 }
+                //             }
+                //         }
+                //     } else if (current_schedule.instance->getArchitecture().getMemoryConstraintType() ==
+                //                LOCAL_SOURCES_INC_EDGES) {
+
+                //         if (current_schedule.step_processor_pred[moves.back().to_step][moves.back().to_proc].find(
+                //                 node) ==
+                //             current_schedule.step_processor_pred[moves.back().to_step][moves.back().to_proc].end()) {
+
+                //             if (is_source(node, current_schedule.instance->getComputationalDag())) {
+
+                //                 current_schedule.step_processor_memory[moves.back().to_step][moves.back().to_proc] +=
+                //                     current_schedule.instance->getComputationalDag().vertex_mem_weight(node);
+                //             }
+                //         }
+
+                //         for (const auto &pred : current_schedule.instance->getComputationalDag().parents(node)) {
+
+                //             if (current_schedule.vector_schedule.assignedSuperstep(pred) < moves.back().to_step) {
+
+                //                 if (current_schedule.step_processor_pred[moves.back().to_step][moves.back().to_proc]
+                //                         .find(pred) ==
+                //                     current_schedule.step_processor_pred[moves.back().to_step][moves.back().to_proc]
+                //                         .end()) {
+
+                //                     current_schedule
+                //                         .step_processor_memory[moves.back().to_step][moves.back().to_proc] +=
+                //                         current_schedule.instance->getComputationalDag().vertex_comm_weight(pred);
+                //                 }
+                //             }
+                //         }
+
+                //         for (const auto &succ : current_schedule.instance->getComputationalDag().children(node)) {
+
+                //             if (current_schedule.vector_schedule.assignedSuperstep(succ) > moves.back().to_step) {
+
+                //                 if (current_schedule
+                //                         .step_processor_pred[current_schedule.vector_schedule.assignedSuperstep(succ)]
+                //                                             [current_schedule.vector_schedule.assignedProcessor(succ)]
+                //                         .find(node) ==
+                //                     current_schedule
+                //                         .step_processor_pred[current_schedule.vector_schedule.assignedSuperstep(succ)]
+                //                                             [current_schedule.vector_schedule.assignedProcessor(succ)]
+                //                         .end()) {
+
+                //                     current_schedule
+                //                         .step_processor_memory[current_schedule.vector_schedule.assignedSuperstep(
+                //                             succ)][current_schedule.vector_schedule.assignedProcessor(succ)] +=
+                //                         current_schedule.instance->getComputationalDag().vertex_comm_weight(node);
+                //                 }
+                //             }
+                //         }
+                //     }
+                // }
             }
 
             if (abort) {
@@ -1798,151 +1822,156 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                     break;
                 }
 
-                if (current_schedule.use_memory_constraint) {
-
-                    if (current_schedule.instance->getArchitecture().getMemoryConstraintType() ==
-                        PERSISTENT_AND_TRANSIENT) {
-
-                        if (moves.back().to_proc != moves.back().from_proc) {
-                            current_schedule.current_proc_persistent_memory[moves.back().to_proc] +=
-                                current_schedule.instance->getComputationalDag().vertex_mem_weight(node);
-                            current_schedule.current_proc_persistent_memory[moves.back().from_proc] -=
-                                current_schedule.instance->getComputationalDag().vertex_mem_weight(node);
-
-                            // current_schedule.current_proc_transient_memory[moves.back().to_proc] =
-                            //     std::max(current_schedule.current_proc_transient_memory[moves.back().to_proc],
-                            //              current_schedule.instance->getComputationalDag().vertex_comm_weight(node));
-                            // TODO: implement this properly if PERSISTENT_AND_TRANSIENT becomes relevant
-                        }
-
-                    } else if (current_schedule.instance->getArchitecture().getMemoryConstraintType() == LOCAL) {
-
-                        current_schedule.step_processor_memory[moves.back().to_step][moves.back().to_proc] +=
-                            current_schedule.instance->getComputationalDag().vertex_mem_weight(node);
-
-                    } else if (current_schedule.instance->getArchitecture().getMemoryConstraintType() == LOCAL_IN_OUT) {
-
-                        current_schedule.step_processor_memory[moves.back().to_step][moves.back().to_proc] +=
-                            current_schedule.instance->getComputationalDag().vertex_mem_weight(node) +
-                            current_schedule.instance->getComputationalDag().vertex_comm_weight(node);
-
-                        for (const auto &pred : current_schedule.instance->getComputationalDag().parents(node)) {
-
-                            if (current_schedule.vector_schedule.assignedProcessor(pred) == moves.back().to_proc &&
-                                current_schedule.vector_schedule.assignedSuperstep(pred) == moves.back().to_step) {
-
-                                current_schedule.step_processor_memory[moves.back().to_step][moves.back().to_proc] -=
-                                    current_schedule.instance->getComputationalDag().vertex_comm_weight(pred);
-                            }
-                        }
-
-                        for (const auto &succ : current_schedule.instance->getComputationalDag().children(node)) {
-
-                            if (current_schedule.vector_schedule.assignedProcessor(succ) == moves.back().to_proc &&
-                                current_schedule.vector_schedule.assignedSuperstep(succ) == moves.back().to_step) {
-
-                                current_schedule.step_processor_memory[moves.back().to_step][moves.back().to_proc] -=
-                                    current_schedule.instance->getComputationalDag().vertex_comm_weight(node);
-                            }
-                        }
-                    } else if (current_schedule.instance->getArchitecture().getMemoryConstraintType() ==
-                               LOCAL_INC_EDGES) {
-
-                        if (current_schedule.step_processor_pred[moves.back().to_step][moves.back().to_proc].find(
-                                node) ==
-                            current_schedule.step_processor_pred[moves.back().to_step][moves.back().to_proc].end()) {
-                            current_schedule.step_processor_memory[moves.back().to_step][moves.back().to_proc] +=
-                                current_schedule.instance->getComputationalDag().vertex_comm_weight(node);
-                        }
-
-                        for (const auto &pred : current_schedule.instance->getComputationalDag().parents(node)) {
-
-                            if (current_schedule.vector_schedule.assignedSuperstep(pred) < moves.back().to_step) {
-
-                                if (current_schedule.step_processor_pred[moves.back().to_step][moves.back().to_proc]
-                                        .find(pred) ==
-                                    current_schedule.step_processor_pred[moves.back().to_step][moves.back().to_proc]
-                                        .end()) {
-
-                                    current_schedule
-                                        ->step_processor_memory[moves.back().to_step][moves.back().to_proc] +=
-                                        current_schedule.instance->getComputationalDag().vertex_comm_weight(pred);
-                                }
-                            }
-                        }
-
-                        for (const auto &succ : current_schedule.instance->getComputationalDag().children(node)) {
-
-                            if (current_schedule.vector_schedule.assignedSuperstep(succ) > moves.back().to_step) {
-
-                                if (current_schedule
-                                        ->step_processor_pred[current_schedule.vector_schedule.assignedSuperstep(succ)]
-                                                             [current_schedule.vector_schedule.assignedProcessor(succ)]
-                                        .find(node) ==
-                                    current_schedule
-                                        ->step_processor_pred[current_schedule.vector_schedule.assignedSuperstep(succ)]
-                                                             [current_schedule.vector_schedule.assignedProcessor(succ)]
-                                        .end()) {
-
-                                    current_schedule
-                                        ->step_processor_memory[current_schedule.vector_schedule.assignedSuperstep(
-                                            succ)][current_schedule.vector_schedule.assignedProcessor(succ)] +=
-                                        current_schedule.instance->getComputationalDag().vertex_comm_weight(node);
-                                }
-                            }
-                        }
-                    } else if (current_schedule.instance->getArchitecture().getMemoryConstraintType() ==
-                               LOCAL_SOURCES_INC_EDGES) {
-
-                        if (current_schedule.step_processor_pred[moves.back().to_step][moves.back().to_proc].find(
-                                node) ==
-                            current_schedule.step_processor_pred[moves.back().to_step][moves.back().to_proc].end()) {
-
-                            if (is_source(node, current_schedule.instance->getComputationalDag())) {
-
-                                current_schedule.step_processor_memory[moves.back().to_step][moves.back().to_proc] +=
-                                    current_schedule.instance->getComputationalDag().vertex_mem_weight(node);
-                            }
-                        }
-
-                        for (const auto &pred : current_schedule.instance->getComputationalDag().parents(node)) {
-
-                            if (current_schedule.vector_schedule.assignedSuperstep(pred) < moves.back().to_step) {
-
-                                if (current_schedule.step_processor_pred[moves.back().to_step][moves.back().to_proc]
-                                        .find(pred) ==
-                                    current_schedule.step_processor_pred[moves.back().to_step][moves.back().to_proc]
-                                        .end()) {
-
-                                    current_schedule
-                                        ->step_processor_memory[moves.back().to_step][moves.back().to_proc] +=
-                                        current_schedule.instance->getComputationalDag().vertex_comm_weight(pred);
-                                }
-                            }
-                        }
-
-                        for (const auto &succ : current_schedule.instance->getComputationalDag().children(node)) {
-
-                            if (current_schedule.vector_schedule.assignedSuperstep(succ) > moves.back().to_step) {
-
-                                if (current_schedule
-                                        ->step_processor_pred[current_schedule.vector_schedule.assignedSuperstep(succ)]
-                                                             [current_schedule.vector_schedule.assignedProcessor(succ)]
-                                        .find(node) ==
-                                    current_schedule
-                                        ->step_processor_pred[current_schedule.vector_schedule.assignedSuperstep(succ)]
-                                                             [current_schedule.vector_schedule.assignedProcessor(succ)]
-                                        .end()) {
-
-                                    current_schedule
-                                        ->step_processor_memory[current_schedule.vector_schedule.assignedSuperstep(
-                                            succ)][current_schedule.vector_schedule.assignedProcessor(succ)] +=
-                                        current_schedule.instance->getComputationalDag().vertex_comm_weight(node);
-                                }
-                            }
-                        }
-                    }
+                if constexpr (current_schedule.use_memory_constraint) {
+                    current_schedule.memory_constraint.apply_move(node, proc, step, moves.back().to_proc, moves.back().to_step);
                 }
+
+
+                // if (current_schedule.use_memory_constraint) {
+
+                //     if (current_schedule.instance->getArchitecture().getMemoryConstraintType() ==
+                //         PERSISTENT_AND_TRANSIENT) {
+
+                //         if (moves.back().to_proc != moves.back().from_proc) {
+                //             current_schedule.current_proc_persistent_memory[moves.back().to_proc] +=
+                //                 current_schedule.instance->getComputationalDag().vertex_mem_weight(node);
+                //             current_schedule.current_proc_persistent_memory[moves.back().from_proc] -=
+                //                 current_schedule.instance->getComputationalDag().vertex_mem_weight(node);
+
+                //             // current_schedule.current_proc_transient_memory[moves.back().to_proc] =
+                //             //     std::max(current_schedule.current_proc_transient_memory[moves.back().to_proc],
+                //             //              current_schedule.instance->getComputationalDag().vertex_comm_weight(node));
+                //             // TODO: implement this properly if PERSISTENT_AND_TRANSIENT becomes relevant
+                //         }
+
+                //     } else if (current_schedule.instance->getArchitecture().getMemoryConstraintType() == LOCAL) {
+
+                //         current_schedule.step_processor_memory[moves.back().to_step][moves.back().to_proc] +=
+                //             current_schedule.instance->getComputationalDag().vertex_mem_weight(node);
+
+                //     } else if (current_schedule.instance->getArchitecture().getMemoryConstraintType() == LOCAL_IN_OUT) {
+
+                //         current_schedule.step_processor_memory[moves.back().to_step][moves.back().to_proc] +=
+                //             current_schedule.instance->getComputationalDag().vertex_mem_weight(node) +
+                //             current_schedule.instance->getComputationalDag().vertex_comm_weight(node);
+
+                //         for (const auto &pred : current_schedule.instance->getComputationalDag().parents(node)) {
+
+                //             if (current_schedule.vector_schedule.assignedProcessor(pred) == moves.back().to_proc &&
+                //                 current_schedule.vector_schedule.assignedSuperstep(pred) == moves.back().to_step) {
+
+                //                 current_schedule.step_processor_memory[moves.back().to_step][moves.back().to_proc] -=
+                //                     current_schedule.instance->getComputationalDag().vertex_comm_weight(pred);
+                //             }
+                //         }
+
+                //         for (const auto &succ : current_schedule.instance->getComputationalDag().children(node)) {
+
+                //             if (current_schedule.vector_schedule.assignedProcessor(succ) == moves.back().to_proc &&
+                //                 current_schedule.vector_schedule.assignedSuperstep(succ) == moves.back().to_step) {
+
+                //                 current_schedule.step_processor_memory[moves.back().to_step][moves.back().to_proc] -=
+                //                     current_schedule.instance->getComputationalDag().vertex_comm_weight(node);
+                //             }
+                //         }
+                //     } else if (current_schedule.instance->getArchitecture().getMemoryConstraintType() ==
+                //                LOCAL_INC_EDGES) {
+
+                //         if (current_schedule.step_processor_pred[moves.back().to_step][moves.back().to_proc].find(
+                //                 node) ==
+                //             current_schedule.step_processor_pred[moves.back().to_step][moves.back().to_proc].end()) {
+                //             current_schedule.step_processor_memory[moves.back().to_step][moves.back().to_proc] +=
+                //                 current_schedule.instance->getComputationalDag().vertex_comm_weight(node);
+                //         }
+
+                //         for (const auto &pred : current_schedule.instance->getComputationalDag().parents(node)) {
+
+                //             if (current_schedule.vector_schedule.assignedSuperstep(pred) < moves.back().to_step) {
+
+                //                 if (current_schedule.step_processor_pred[moves.back().to_step][moves.back().to_proc]
+                //                         .find(pred) ==
+                //                     current_schedule.step_processor_pred[moves.back().to_step][moves.back().to_proc]
+                //                         .end()) {
+
+                //                     current_schedule
+                //                         ->step_processor_memory[moves.back().to_step][moves.back().to_proc] +=
+                //                         current_schedule.instance->getComputationalDag().vertex_comm_weight(pred);
+                //                 }
+                //             }
+                //         }
+
+                //         for (const auto &succ : current_schedule.instance->getComputationalDag().children(node)) {
+
+                //             if (current_schedule.vector_schedule.assignedSuperstep(succ) > moves.back().to_step) {
+
+                //                 if (current_schedule
+                //                         ->step_processor_pred[current_schedule.vector_schedule.assignedSuperstep(succ)]
+                //                                              [current_schedule.vector_schedule.assignedProcessor(succ)]
+                //                         .find(node) ==
+                //                     current_schedule
+                //                         ->step_processor_pred[current_schedule.vector_schedule.assignedSuperstep(succ)]
+                //                                              [current_schedule.vector_schedule.assignedProcessor(succ)]
+                //                         .end()) {
+
+                //                     current_schedule
+                //                         ->step_processor_memory[current_schedule.vector_schedule.assignedSuperstep(
+                //                             succ)][current_schedule.vector_schedule.assignedProcessor(succ)] +=
+                //                         current_schedule.instance->getComputationalDag().vertex_comm_weight(node);
+                //                 }
+                //             }
+                //         }
+                //     } else if (current_schedule.instance->getArchitecture().getMemoryConstraintType() ==
+                //                LOCAL_SOURCES_INC_EDGES) {
+
+                //         if (current_schedule.step_processor_pred[moves.back().to_step][moves.back().to_proc].find(
+                //                 node) ==
+                //             current_schedule.step_processor_pred[moves.back().to_step][moves.back().to_proc].end()) {
+
+                //             if (is_source(node, current_schedule.instance->getComputationalDag())) {
+
+                //                 current_schedule.step_processor_memory[moves.back().to_step][moves.back().to_proc] +=
+                //                     current_schedule.instance->getComputationalDag().vertex_mem_weight(node);
+                //             }
+                //         }
+
+                //         for (const auto &pred : current_schedule.instance->getComputationalDag().parents(node)) {
+
+                //             if (current_schedule.vector_schedule.assignedSuperstep(pred) < moves.back().to_step) {
+
+                //                 if (current_schedule.step_processor_pred[moves.back().to_step][moves.back().to_proc]
+                //                         .find(pred) ==
+                //                     current_schedule.step_processor_pred[moves.back().to_step][moves.back().to_proc]
+                //                         .end()) {
+
+                //                     current_schedule
+                //                         ->step_processor_memory[moves.back().to_step][moves.back().to_proc] +=
+                //                         current_schedule.instance->getComputationalDag().vertex_comm_weight(pred);
+                //                 }
+                //             }
+                //         }
+
+                //         for (const auto &succ : current_schedule.instance->getComputationalDag().children(node)) {
+
+                //             if (current_schedule.vector_schedule.assignedSuperstep(succ) > moves.back().to_step) {
+
+                //                 if (current_schedule
+                //                         ->step_processor_pred[current_schedule.vector_schedule.assignedSuperstep(succ)]
+                //                                              [current_schedule.vector_schedule.assignedProcessor(succ)]
+                //                         .find(node) ==
+                //                     current_schedule
+                //                         ->step_processor_pred[current_schedule.vector_schedule.assignedSuperstep(succ)]
+                //                                              [current_schedule.vector_schedule.assignedProcessor(succ)]
+                //                         .end()) {
+
+                //                     current_schedule
+                //                         ->step_processor_memory[current_schedule.vector_schedule.assignedSuperstep(
+                //                             succ)][current_schedule.vector_schedule.assignedProcessor(succ)] +=
+                //                         current_schedule.instance->getComputationalDag().vertex_comm_weight(node);
+                //                 }
+                //             }
+                //         }
+                //     }
+                // }
             }
 
             if (abort) {
@@ -3175,10 +3204,6 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
     virtual RETURN_STATUS improveScheduleWithTimeLimit(BspSchedule<Graph_t> &schedule) override {
         compute_with_time_limit = true;
         return improveSchedule(schedule);
-    }
-
-    virtual void setUseMemoryConstraint(bool use_memory_constraint_) override {
-        current_schedule.use_memory_constraint = use_memory_constraint_;
     }
 
     virtual void set_compute_with_time_limit(bool compute_with_time_limit_) {
