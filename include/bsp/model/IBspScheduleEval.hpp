@@ -36,7 +36,7 @@ class IBspScheduleEval {
     virtual v_workw_t<Graph_t> computeCosts() const = 0;
     virtual v_workw_t<Graph_t> computeWorkCosts() const = 0;
     virtual unsigned numberOfSupersteps() const = 0;
-
+    virtual const BspInstance<Graph_t> &getInstance() const = 0;
 
 };
 

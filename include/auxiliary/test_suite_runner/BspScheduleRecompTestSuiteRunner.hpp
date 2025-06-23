@@ -22,7 +22,7 @@ limitations under the License.
 
 #include "AbstractTestSuiteRunner.hpp"
 #include "StatsModules/BasicBspStatsModule.hpp"
-#include "StatsModules/BspCommStatsModule.hpp"
+#include "StatsModules/GraphStatsModule.hpp"
 #include "StringToScheduler/run_bsp_recomp_scheduler.hpp"
 #include "StringToScheduler/run_bsp_scheduler.hpp"
 #include "bsp/model/BspSchedule.hpp"
@@ -88,6 +88,9 @@ class BspScheduleRecompTestSuiteRunner
         if (module_name == "BasicBspStats") {
             this->active_stats_modules.push_back(
                 std::make_unique<BasicBspStatsModule<IBspScheduleEval<concrete_graph_t>>>());
+        } else if (module_name == "GraphStats") {
+            this->active_stats_modules.push_back(
+                std::make_unique<GraphStatsModule<IBspScheduleEval<concrete_graph_t>>>());
         }
     }
 

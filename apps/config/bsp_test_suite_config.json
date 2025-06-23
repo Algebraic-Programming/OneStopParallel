@@ -2,13 +2,13 @@
     "globalParameters": {
         "timeLimit": 32600,
         "useMemoryConstraint" : false,
-        "graphDirectory": "data/spaa/tiny/",
-        "archDirectory": "data/machine_params/",
+        "graphDirectory": "/home/toni/work/OneStopParallel/data/spaa/tiny/",
+        "archDirectory": "/home/toni/work/OneStopParallel/data/machine_params/",
         "outputStatsFile": "all_run_stats.csv",
         "outputLogFile": "log.txt",
         "outputSchedule": false,
         "scheduleDirectory" :"schedules/",
-        "activeStatisticModules": ["BasicBspStats"] 
+        "activeStatisticModules": ["GraphStats", "BasicBspStats"] 
     },
     "algorithms": [
          {
@@ -19,6 +19,7 @@
         {
             "name": "GreedyRecomputer",
             "run" : true,
+            "name_suffix" : "Locking",
             "parameters": {
                 "scheduler": {
                     "name": "BspLocking",
@@ -87,6 +88,58 @@
                     "increase_parallelism_in_new_superstep": true
                     }                    
                 }                
+            }
+        },
+        {
+            "name": "Coarser",
+            "run" : true,
+            "name_suffix" : "FunnelLocking",
+            "parameters": {
+                "coarser": {
+                    "name" : "funnel",
+                    "parameters" : {
+                        "funnel_incoming" : true,
+                        "use_approx_transitive_reduction" : true                        
+                    }
+                },
+                "scheduler": {
+                    "name": "BspLocking",
+                    "parameters": {
+                    "max_percent_idle_processors": 0.4,
+                    "increase_parallelism_in_new_superstep": true
+                    }                    
+                }                
+            }
+        },
+        {
+            "name": "Coarser",
+            "run" : true,
+            "name_suffix" : "FunnelLockingKL",
+            "parameters": {
+                "coarser": {
+                    "name" : "funnel",
+                    "parameters" : {
+                        "funnel_incoming" : true,
+                        "use_approx_transitive_reduction" : true                        
+                    }
+                },
+                "scheduler":  {
+                    "name": "LocalSearch",
+                    "run" : true,
+                    "name_suffix" : "LockingKL",
+                    "parameters": {
+                        "improver": {
+                            "name" : "kl_total_comm" 
+                        },
+                        "scheduler": {
+                            "name": "BspLocking",
+                            "parameters": {
+                            "max_percent_idle_processors": 0.4,
+                            "increase_parallelism_in_new_superstep": true
+                            }                    
+                        }                
+                    }
+                }  
             }
         }
     ]

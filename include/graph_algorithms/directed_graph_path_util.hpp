@@ -105,7 +105,7 @@ std::size_t longestPath(const Graph_t &graph) {
     std::vector<VertexType> distances(graph.num_vertices(), 0), visit_counter(graph.num_vertices(), 0);
 
     // Find source nodes
-    for (const auto &node : source_vertex_view(graph)) {
+    for (const auto &node : source_vertices_view(graph)) {
         bfs_queue.push(node);
     }
 
