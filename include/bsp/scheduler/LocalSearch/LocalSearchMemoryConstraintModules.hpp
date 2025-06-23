@@ -18,6 +18,7 @@ limitations under the License.
 
 #pragma once
 
+#include "bsp/model/SetSchedule.hpp"
 #include "bsp/model/BspSchedule.hpp"
 #include "graph_algorithms/directed_graph_util.hpp"
 
@@ -32,17 +33,17 @@ namespace osp {
 template<typename T, typename = void>
 struct is_local_search_memory_constraint : std::false_type {};
 
-template<typename T>
-struct is_local_search_memory_constraint<
-    T, std::void_t<decltype(std::declval<T>().initialize(std::declval<BspInstance<typename T::Graph_impl_t>>())),
-                   decltype(std::declval<T>().can_add(std::declval<vertex_idx_t<typename T::Graph_impl_t>>(),
-                                                      std::declval<unsigned>())),
-                   decltype(std::declval<T>().add(std::declval<vertex_idx_t<typename T::Graph_impl_t>>(),
-                                                  std::declval<unsigned>())),
-                   decltype(std::declval<T>().reset(std::declval<unsigned>())), decltype(T())>> : std::true_type {};
+// template<typename T>
+// struct is_local_search_memory_constraint<
+//     T, std::void_t<decltype(std::declval<T>().initialize(std::declval<BspInstance<typename T::Graph_impl_t>>())),
+//                    decltype(std::declval<T>().can_add(std::declval<vertex_idx_t<typename T::Graph_impl_t>>(),
+//                                                       std::declval<unsigned>())),
+//                    decltype(std::declval<T>().add(std::declval<vertex_idx_t<typename T::Graph_impl_t>>(),
+//                                                   std::declval<unsigned>())),
+//                    decltype(std::declval<T>().reset(std::declval<unsigned>())), decltype(T())>> : std::true_type {};
 
-template<typename T>
-inline constexpr bool is_local_search_memory_constraint = is_memory_constraint<T>::value;
+// template<typename T>
+// inline constexpr bool is_local_search_memory_constraint = is_memory_constraint<T>::value;
 
 /**
  * @brief The default memory constraint type, no memory constraints apply.
@@ -62,40 +63,82 @@ struct local_search_local_memory_constraint {
 
     using Graph_impl_t = Graph_t;
 
-    const BspInstance<Graph_t> *instance;
+    const SetSchedule<Graph_t> *set_schedule;
+    const Graph_t * graph;
 
-    std::vector<v_memw_t<Graph_t>> current_proc_memory;
+    std::vector<std::vector<v_memw_t<Graph_t>>> step_processor_memory;
+  
+    local_memory_constraint() : schedule(nullptr) {}
 
-    local_memory_constraint() : instance(nullptr) {}
-
-    inline void initialize(const BspInstance<Graph_t> &instance_) {
-        instance = &instance_;
-        current_proc_memory = std::vector<v_memw_t<Graph_t>>(instance->numberOfProcessors(), 0);
-
-        if (instance->getArchitecture().getMemoryConstraintType() != LOCAL) {
+    inline void initialize(const SetSchedule<Graph_t> &set_schedule_) {
+        
+        if (set_schedule_->getInstance()->getArchitecture().getMemoryConstraintType() != LOCAL) {
             throw std::invalid_argument("Memory constraint type is not LOCAL");
+        }
+
+        set_schedule = &set_schedule_;
+        graph = &set_schedule->getInstance().getComputationalDag();
+        step_processor_memory = std::vector<std::vector<v_memw_t<Graph_t>>>(set_schedule->numberOfSupersteps(), std::vector<v_memw_t<Graph_t>>(set_schedule->getInstance()->numberOfProcessors(), 0));
+
+    }
+
+    inline void apply_move(vertex_idx_t<Graph_t> vertex, unsigned from_proc, unsigned from_step, unsigned to_proc, unsigned to_step) {
+            step_processor_memory[to_step][to_proc] += graph->vertex_mem_weight(vertex);
+            step_processor_memory[from_step][from_proc] -= graph->vertex_mem_weight(vertex);
+    }
+
+    void recompute_memory_datastructure(unsigned start_step, unsigned end_step) {
+
+        for (unsigned step = start_step; step <= end_step; step++) {
+
+            for (unsigned proc = 0; proc < set_schedule->getInstance().numberOfProcessors(); proc++) {
+
+                step_processor_memory[step][proc] = 0;
+
+                for (const auto &node : set_schedule->step_processor_vertices[step][proc]) {
+
+                    step_processor_memory[step][proc] += graph->vertex_mem_weight(node);
+
+                }
+            }
         }
     }
 
-    inline bool can_add(const vertex_idx_t<Graph_t> &v, const unsigned proc) const {
-        return current_proc_memory[proc] + instance->getComputationalDag().vertex_mem_weight(v) <=
-               instance->getArchitecture().memoryBound(proc);
+    inline void clear() {
+        step_processor_memory.clear();
     }
 
-    inline void add(const vertex_idx_t<Graph_t> &v, const unsigned proc) {
-        current_proc_memory[proc] += instance->getComputationalDag().vertex_mem_weight(v);
+    inline void reset_superstep(unsigned step) {
+
+        for (unsigned proc = 0; proc < set_schedule->getInstance().getArchitecture().numberOfProcessors(); proc++) {
+            step_processor_memory[step][proc] = 0;
+        }
     }
 
-    inline bool can_add(const unsigned proc, const v_memw_t<Graph_t> &custom_mem_weight,
-                        const v_memw_t<Graph_t>&) const {
-        return current_proc_memory[proc] + custom_mem_weight <= instance->getArchitecture().memoryBound(proc);
+    void override_superstep(unsigned step, unsigned proc, unsigned with_step, unsigned with_proc) {
+        step_processor_memory[step][proc] = step_processor_memory[with_step][with_proc];
     }
 
-    inline void add(const unsigned proc, const v_memw_t<Graph_t> &custom_mem_weight, const v_memw_t<Graph_t>&) {
-        current_proc_memory[proc] += custom_mem_weight;
-    }
 
-    inline void reset(const unsigned proc) { current_proc_memory[proc] = 0; }
+    // inline bool can_add(const vertex_idx_t<Graph_t> &v, const unsigned proc) const {
+    //     return current_proc_memory[proc] + instance->getComputationalDag().vertex_mem_weight(v) <=
+    //            instance->getArchitecture().memoryBound(proc);
+    // }
+
+    // inline void add(const vertex_idx_t<Graph_t> &v, const unsigned proc) {
+    //     current_proc_memory[proc] += instance->getComputationalDag().vertex_mem_weight(v);
+    // }
+
+    // inline bool can_add(const unsigned proc, const v_memw_t<Graph_t> &custom_mem_weight,
+    //                     const v_memw_t<Graph_t>&) const {
+    //     return current_proc_memory[proc] + custom_mem_weight <= instance->getArchitecture().memoryBound(proc);
+    // }
+
+    // inline void add(const unsigned proc, const v_memw_t<Graph_t> &custom_mem_weight, const v_memw_t<Graph_t>&) {
+    //     current_proc_memory[proc] += custom_mem_weight;
+    // }
+
+    // inline void reset(const unsigned proc) { current_proc_memory[proc] = 0; }
 };
 
 } // namespace osp
