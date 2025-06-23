@@ -23,11 +23,11 @@ limitations under the License.
 #include <set>
 #include <vector>
 
+#include "bsp/model/BspInstance.hpp"
+#include "bsp/model/BspSchedule.hpp"
+#include "bsp/scheduler/ImprovementScheduler.hpp"
+#include "bsp/scheduler/Scheduler.hpp"
 #include "coarser/coarser_util.hpp"
-#include "model/BspInstance.hpp"
-#include "model/BspSchedule.hpp"
-#include "scheduler/ImprovementScheduler.hpp"
-#include "scheduler/Scheduler.hpp"
 
 
 namespace osp {
@@ -37,7 +37,7 @@ class MultilevelCoarseAndSchedule : public Scheduler<Graph_t> {
   private:
     const BspInstance<Graph_t> *original_inst;
   protected:
-    inline const BspInstance<Graph_t> * const getOriginalInstance() const { return original_inst; };
+    inline const BspInstance<Graph_t> * getOriginalInstance() const { return original_inst; };
 
     Scheduler<Graph_t_coarse> *sched;
     ImprovementScheduler<Graph_t_coarse> *improver;
@@ -73,8 +73,8 @@ class MultilevelCoarseAndSchedule : public Scheduler<Graph_t> {
         : Scheduler<Graph_t>(timelimit), original_inst(nullptr), sched(sched_), improver(improver_), active_graph(-1L){};
     virtual ~MultilevelCoarseAndSchedule() = default;
 
-    inline void setInitialScheduler(Scheduler<Graph_t_coarse> *const sched_) { sched = sched_; };
-    inline void setImprovementScheduler(ImprovementScheduler<Graph_t_coarse> *const improver_) { improver = improver_; };
+    inline void setInitialScheduler(Scheduler<Graph_t_coarse> * sched_) { sched = sched_; };
+    inline void setImprovementScheduler(ImprovementScheduler<Graph_t_coarse> * improver_) { improver = improver_; };
 
     RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &schedule) override;
 
@@ -98,12 +98,12 @@ RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::compute_init
     active_graph = static_cast<long int>(dag_history.size());
     active_graph--;
 
-    assert((active_graph >= 0) && "Must have done at least one coarsening!");
+    assert((active_graph >= 0L) && "Must have done at least one coarsening!");
     
     RETURN_STATUS status;
     
-    active_schedule = std::make_unique< BspSchedule<Graph_t_coarse> >( *(dag_history[active_graph]) );
-    status = sched->computeSchedule( active_schedule );
+    active_schedule = std::make_unique< BspSchedule<Graph_t_coarse> >( *(dag_history[ static_cast<std::size_t>(active_graph) ]) );
+    status = sched->computeSchedule( *active_schedule );
 
     RETURN_STATUS ret = improve_active_schedule();
 
@@ -114,7 +114,7 @@ RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::compute_init
 template<typename Graph_t, typename Graph_t_coarse>
 RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::improve_active_schedule() {
     if (improver) {
-        return improver->improveSchedule( active_schedule );
+        return improver->improveSchedule( *active_schedule );
     }
     return SUCCESS;
 }
@@ -124,17 +124,17 @@ RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::improve_acti
 
 template<typename Graph_t, typename Graph_t_coarse>
 RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::expand_active_schedule() {
-    assert((active_graph > 0) && ( (long unsigned) active_graph < dag_history.size()));
+    assert((active_graph > 0L) && ( (long unsigned) active_graph < dag_history.size()));
 
-    BspSchedule<Graph_t_coarse> expanded_schedule( *(dag_history[ active_graph - 1 ]) );
+    BspSchedule<Graph_t_coarse> expanded_schedule( *(dag_history[ static_cast<std::size_t>(active_graph) - 1 ]) );
 
-    for (const auto &node : dag_history[active_graph - 1]->getComputationalDag().vertices() ) {
-        expanded_schedule.setAssignedProcessor(node, active_schedule.assignedProcessor(contraction_maps[active_graph - 1]->at(node)) );
-        expanded_schedule.setAssignedSuperstep(node, active_schedule.assignedSuperstep(contraction_maps[active_graph - 1]->at(node)) );
+    for (const auto &node : dag_history[ static_cast<std::size_t>(active_graph) - 1]->getComputationalDag().vertices() ) {
+        expanded_schedule.setAssignedProcessor(node, active_schedule->assignedProcessor(contraction_maps[ static_cast<std::size_t>(active_graph)]->at(node)) );
+        expanded_schedule.setAssignedSuperstep(node, active_schedule->assignedSuperstep(contraction_maps[ static_cast<std::size_t>(active_graph)]->at(node)) );
     }
 
     active_graph--;
-    active_schedule = std::make_unique<BspSchedule<Graph_t_coarse>>( move(expanded_schedule) );
+    active_schedule = std::make_unique<BspSchedule<Graph_t_coarse>>( std::move(expanded_schedule) );
     
     return SUCCESS;
 }
@@ -142,11 +142,11 @@ RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::expand_activ
 
 template<typename Graph_t, typename Graph_t_coarse>
 RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::expand_active_schedule_to_original_schedule(BspSchedule<Graph_t>& schedule) {
-    assert(active_graph == 0);
+    assert(active_graph == 0L);
 
-    for (const auto &node : dag_history[active_graph - 1]->getComputationalDag().vertices() ) {
-        schedule.setAssignedProcessor(node, active_schedule.assignedProcessor(contraction_maps[active_graph - 1]->at(node)) );
-        schedule.setAssignedSuperstep(node, active_schedule.assignedSuperstep(contraction_maps[active_graph - 1]->at(node)) );
+    for (const auto &node : getOriginalInstance()->getComputationalDag().vertices() ) {
+        schedule.setAssignedProcessor(node, active_schedule->assignedProcessor(contraction_maps[ static_cast<std::size_t>(active_graph)]->at(node)) );
+        schedule.setAssignedSuperstep(node, active_schedule->assignedSuperstep(contraction_maps[ static_cast<std::size_t>(active_graph)]->at(node)) );
     }
 
     active_graph--;
@@ -162,11 +162,11 @@ RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::expand_activ
 
 template<typename Graph_t, typename Graph_t_coarse>
 RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::run_expansions(BspSchedule<Graph_t>& schedule) {
-    assert(active_graph >= 0 && (long unsigned) active_graph == dag_history.size()-1);
+    assert(active_graph >= 0L && (long unsigned) active_graph == dag_history.size()-1);
 
     RETURN_STATUS status = SUCCESS;
     
-    while(active_graph > 0) {
+    while(active_graph > 0L) {
         status = std::max(status, expand_active_schedule());
         status = std::max(status, improve_active_schedule());
     }
@@ -185,7 +185,7 @@ void MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::clear_computation_dat
     contraction_maps.clear();
     contraction_maps.shrink_to_fit();
 
-    active_graph = -1;
+    active_graph = -1L;
     active_schedule = std::unique_ptr<BspSchedule<Graph_t_coarse>>();
 }
 
@@ -194,6 +194,8 @@ void MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::clear_computation_dat
 template<typename Graph_t, typename Graph_t_coarse>
 RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::computeSchedule(BspSchedule<Graph_t>& schedule) {
     clear_computation_data();
+
+    original_inst = &schedule.getInstance();
 
     RETURN_STATUS status = SUCCESS;
 
@@ -205,23 +207,23 @@ RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::computeSched
             status = std::max(status, sched->computeSchedule(schedule));
         } else {
             status = std::max(status, compute_initial_schedule());
-            status = std::max(status, run_expansions());
+            status = std::max(status, run_expansions(schedule));
         }
     } else {
         if ( dag_history.size() == 0 ) {
             std::vector<vertex_idx_t<Graph_t_coarse>> contraction_map( schedule.getInstance().numberOfVertices() );
             std::iota(contraction_map.begin(), contraction_map.end(), 0);
             
-            add_contraction(move(contraction_map));
+            add_contraction(std::move(contraction_map));
         }
     
         assert(dag_history.size() > 0);
     
         status = std::max(status, compute_initial_schedule());
-        status = std::max(status, run_expansions());
+        status = std::max(status, run_expansions(schedule));
     }
 
-    assert(active_graph == -1);
+    assert(active_graph == -1L);
 
     clear_computation_data();
 
@@ -311,17 +313,26 @@ RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::add_contract
 
 template<typename Graph_t, typename Graph_t_coarse>
 RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::add_contraction(const std::vector<vertex_idx_t<Graph_t_coarse>> &contraction_map, const Graph_t_coarse &contracted_graph) {
-    dag_history.emplace_back({contracted_graph, getOriginalInstance()->getArchitecture()});
-    contraction_maps.emplace_back(contraction_map);
+    BspArchitecture<Graph_t_coarse> architecture = getOriginalInstance()->getArchitecture();
+    
+    std::unique_ptr<BspInstance<Graph_t_coarse>> bsp_inst_ptr = std::make_unique<BspInstance<Graph_t_coarse>>(contracted_graph, architecture);
+    dag_history.emplace_back(std::move(bsp_inst_ptr));
+    
+    std::unique_ptr<std::vector<vertex_idx_t<Graph_t_coarse>>> contr_map_ptr(new std::vector<vertex_idx_t<Graph_t_coarse>>(contraction_map));
+    contraction_maps.emplace_back(std::move(contr_map_ptr));
 
     return SUCCESS;
 }
 
 template<typename Graph_t, typename Graph_t_coarse>
 RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::add_contraction(std::vector<vertex_idx_t<Graph_t_coarse>> &&contraction_map, Graph_t_coarse &&contracted_graph) {
-    BspArchitecture<Graph_t> architecture = getOriginalInstance()->getArchitecture();
-    dag_history.emplace_back({move(contracted_graph), move(architecture)});
-    contraction_maps.emplace_back(move(contraction_map));
+    BspArchitecture<Graph_t_coarse> architecture = getOriginalInstance()->getArchitecture();
+
+    std::unique_ptr<BspInstance<Graph_t_coarse>> bsp_inst_ptr = std::make_unique<BspInstance<Graph_t_coarse>>(std::move(contracted_graph), std::move(architecture));
+    dag_history.emplace_back(std::move(bsp_inst_ptr));
+
+    std::unique_ptr<std::vector<vertex_idx_t<Graph_t_coarse>>> contr_map_ptr(new std::vector<vertex_idx_t<Graph_t_coarse>>(std::move(contraction_map)));
+    contraction_maps.emplace_back(std::move(contr_map_ptr));
 
     return SUCCESS;
 }
@@ -330,16 +341,22 @@ RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::add_contract
 
 template<typename Graph_t, typename Graph_t_coarse>
 RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::add_contraction(const std::vector<vertex_idx_t<Graph_t_coarse>> &contraction_map, const BspInstance<Graph_t_coarse> &contracted_instance) {
-    dag_history.emplace_back(contracted_instance);
-    contraction_maps.emplace_back(contraction_map);
+    std::unique_ptr<BspInstance<Graph_t_coarse>> bsp_inst_ptr = std::make_unique<BspInstance<Graph_t_coarse>>(contracted_instance);
+    dag_history.emplace_back(std::move(bsp_inst_ptr));
+
+    std::unique_ptr<std::vector<vertex_idx_t<Graph_t_coarse>>> contr_map_ptr(new std::vector<vertex_idx_t<Graph_t_coarse>>(contraction_map));
+    contraction_maps.emplace_back(std::move(contr_map_ptr));
 
     return SUCCESS;
 }
 
 template<typename Graph_t, typename Graph_t_coarse>
 RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::add_contraction(std::vector<vertex_idx_t<Graph_t_coarse>> &&contraction_map, BspInstance<Graph_t_coarse> &&contracted_instance) {
-    dag_history.emplace_back(move(contracted_instance));
-    contraction_maps.emplace_back(move(contraction_map));
+    std::unique_ptr<BspInstance<Graph_t_coarse>> bsp_inst_ptr = std::make_unique<BspInstance<Graph_t_coarse>>(std::move(contracted_instance));
+    dag_history.emplace_back(std::move(bsp_inst_ptr));
+
+    std::unique_ptr<std::vector<vertex_idx_t<Graph_t_coarse>>> contr_map_ptr(new std::vector<vertex_idx_t<Graph_t_coarse>>(std::move(contraction_map)));
+    contraction_maps.emplace_back(std::move(contr_map_ptr));
 
     return SUCCESS;
 }

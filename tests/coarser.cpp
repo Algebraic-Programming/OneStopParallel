@@ -447,15 +447,23 @@ BOOST_AUTO_TEST_CASE(squashA_test) {
     using graph_t = computational_dag_edge_idx_vector_impl_def_t;
     // using graph_t = computational_dag_vector_impl_def_t;
 
-    SquashA<graph_t, graph_t>::Parameters params;
-    params.mode = SquashA<graph_t, graph_t>::Mode::EDGE_WEIGHT;
+    SquashAParams::Parameters params;
+    params.mode = SquashAParams::Mode::EDGE_WEIGHT;
+    params.use_structured_poset = false;
 
     SquashA<graph_t, graph_t> coarser(params);
 
     test_coarser_same_graph<graph_t>(coarser);
     
     
-    params.mode = SquashA<graph_t, graph_t>::Mode::TRIANGLES;
+    params.mode = SquashAParams::Mode::TRIANGLES;
+    params.use_structured_poset = true;
+    params.use_top_poset = true;
+    coarser.setParams(params);
+    
+    test_coarser_same_graph<graph_t>(coarser);
+
+    params.use_top_poset = false;
     coarser.setParams(params);
     
     test_coarser_same_graph<graph_t>(coarser);
