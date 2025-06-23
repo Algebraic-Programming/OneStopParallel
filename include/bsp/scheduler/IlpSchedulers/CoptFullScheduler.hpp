@@ -338,7 +338,7 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
                         initial_schedule_recomp->getCommunicationSchedule() :
                         initial_schedule->getCommunicationSchedule();
 
-        assert(max_number_supersteps <= std::numeric_limits<int>::max());
+        assert(max_number_supersteps <= static_cast<unsigned>( std::numeric_limits<int>::max()) );
         for (unsigned step = 0; step < max_number_supersteps; step++) {
 
             if (step < num_supersteps) {
@@ -488,8 +488,8 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
        Variables
        */
 
-        assert(max_number_supersteps <= std::numeric_limits<int>::max());
-        assert(instance.numberOfProcessors() <= std::numeric_limits<int>::max());
+        assert(max_number_supersteps <= static_cast<unsigned>( std::numeric_limits<int>::max() ));
+        assert(instance.numberOfProcessors() <= static_cast<unsigned>( std::numeric_limits<int>::max()) );
 
         // variables indicating if superstep is used at all
         superstep_used_var = model.AddVars(static_cast<int>(max_number_supersteps), COPT_BINARY, "superstep_used");
