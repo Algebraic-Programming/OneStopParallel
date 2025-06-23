@@ -53,7 +53,7 @@ class PebblingTestSuiteRunner : public AbstractTestSuiteRunner<PebblingSchedule<
         RETURN_STATUS compute_target_object_impl(const BspInstance<concrete_graph_t> &instance, std::unique_ptr<PebblingSchedule<concrete_graph_t>>& schedule, const pt::ptree &algo_config,
                                              long long &computation_time_ms) override {
         
-        schedule = std::unique_ptr<PebblingSchedule<concrete_graph_t>>(new PebblingSchedule<concrete_graph_t>{instance});
+        schedule = std::make_unique<PebblingSchedule<concrete_graph_t>>(instance);
         
         const auto start_time = std::chrono::high_resolution_clock::now();
 
