@@ -31,13 +31,15 @@ limitations under the License.
 #include "auxiliary/test_suite_runner/ConfigParser.hpp"
 #include "bsp/model/BspScheduleRecomp.hpp"
 #include "bsp/scheduler/Scheduler.hpp"
+#include "run_bsp_scheduler.hpp"
+
 
 namespace osp {
 
 const std::set<std::string> get_available_bsp_recomp_scheduler_names() { return {"GreedyRecomputer"}; }
 
 template<typename Graph_t>
-RETURN_STATUS run_bsp_recomp_scheduler(const ConfigParser &, const boost::property_tree::ptree &algorithm,
+RETURN_STATUS run_bsp_recomp_scheduler(const ConfigParser &parser, const boost::property_tree::ptree &algorithm,
                                 BspScheduleRecomp<Graph_t> &schedule) {
 
     //const unsigned timeLimit = parser.global_params.get_child("timeLimit").get_value<unsigned>();
@@ -47,11 +49,11 @@ RETURN_STATUS run_bsp_recomp_scheduler(const ConfigParser &, const boost::proper
 
     if (algorithm.get_child("name").get_value<std::string>() == "GreedyRecomputer") {
 
+        BspSchedule<Graph_t> bsp_schedule(schedule.getInstance());
 
-        BspScheduleCS<Graph_t> initial_schedule(schedule.getInstance());
+        RETURN_STATUS status = run_bsp_scheduler(parser, algorithm.get_child("parameters").get_child("scheduler"), bsp_schedule);
 
-        GreedyBspScheduler<Graph_t> bsp_scheduler;
-        auto status = bsp_scheduler.computeScheduleCS(initial_schedule);
+        BspScheduleCS<Graph_t> initial_schedule(std::move(bsp_schedule));
 
         if (status == ERROR)    
             return ERROR;

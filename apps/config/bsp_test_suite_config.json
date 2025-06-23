@@ -19,7 +19,15 @@
         {
             "name": "GreedyRecomputer",
             "run" : true,
-            "parameters": {}
+            "parameters": {
+                "scheduler": {
+                    "name": "BspLocking",
+                    "parameters": {
+                    "max_percent_idle_processors": 0.4,
+                    "increase_parallelism_in_new_superstep": true
+                    }                    
+                } 
+            }
         },
         {
             "name": "GreedyBsp",
