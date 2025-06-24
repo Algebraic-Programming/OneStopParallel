@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(kl_base_1) {
 
     kl.test_setup_schedule(schedule);
 
-    kl_current_schedule_total<graph> &kl_current_schedule = kl.get_current_schedule();
+    kl_current_schedule_total<graph, no_local_search_memory_constraint> &kl_current_schedule = kl.get_current_schedule();
 
     BOOST_CHECK_EQUAL(kl_current_schedule.step_max_work[0], 44.0);
     BOOST_CHECK_EQUAL(kl_current_schedule.step_second_max_work[0], 0.0);

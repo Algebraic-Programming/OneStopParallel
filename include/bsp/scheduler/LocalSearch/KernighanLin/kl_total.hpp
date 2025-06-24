@@ -28,22 +28,22 @@ limitations under the License.
 
 namespace osp {
 
-template<typename Graph_t>
-class kl_current_schedule_total : public kl_current_schedule<Graph_t> {
+template<typename Graph_t, typename MemoryConstraint_t>
+class kl_current_schedule_total : public kl_current_schedule<Graph_t, MemoryConstraint_t> {
 
   public:
     kl_current_schedule_total(Ikl_cost_function *cost_f_, bool use_node_communication_costs_ = false)
-        : kl_current_schedule<Graph_t>(cost_f_), use_node_communication_costs(use_node_communication_costs_) {}
+        : kl_current_schedule<Graph_t, MemoryConstraint_t>(cost_f_), use_node_communication_costs(use_node_communication_costs_) {}
 
     double comm_multiplier = 1.0;
     bool use_node_communication_costs = true;
 };
 
-template<typename Graph_t>
-class kl_total : public kl_base<Graph_t> {
+template<typename Graph_t, typename MemoryConstraint_t>
+class kl_total : public kl_base<Graph_t, MemoryConstraint_t> {
 
   protected:
-    kl_current_schedule_total<Graph_t> current_schedule;
+    kl_current_schedule_total<Graph_t, MemoryConstraint_t> current_schedule;
 
     v_commw_t<Graph_t> node_comm_selection_threshold = 0;
     double max_edge_weight = 0.0;
@@ -53,7 +53,7 @@ class kl_total : public kl_base<Graph_t> {
         std::cout << "KLTotal initialize datastructures" << std::endl;
 #endif
 
-        kl_base<Graph_t>::initialize_datastructures();
+        kl_base<Graph_t, MemoryConstraint_t>::initialize_datastructures();
 
         v_commw_t<Graph_t> max_edge_weight_ = 0;
         v_workw_t<Graph_t> max_node_weight_ = 0;
@@ -82,27 +82,27 @@ class kl_total : public kl_base<Graph_t> {
 
         max_edge_weight = max_edge_weight_ + max_node_weight_;
 
-        kl_base<Graph_t>::parameters.initial_penalty =
+        kl_base<Graph_t, MemoryConstraint_t>::parameters.initial_penalty =
             max_edge_weight * current_schedule.comm_multiplier * current_schedule.instance->communicationCosts();
 
-        kl_base<Graph_t>::parameters.gain_threshold =
+        kl_base<Graph_t, MemoryConstraint_t>::parameters.gain_threshold =
             max_edge_weight * current_schedule.comm_multiplier * current_schedule.instance->communicationCosts();
     }
 
     virtual void update_reward_penalty() override {
 
-        if (current_schedule.current_violations.size() <= kl_base<Graph_t>::parameters.violations_threshold) {
-            kl_base<Graph_t>::penalty = kl_base<Graph_t>::parameters.initial_penalty;
-            kl_base<Graph_t>::reward = 0.0;
+        if (current_schedule.current_violations.size() <= kl_base<Graph_t, MemoryConstraint_t>::parameters.violations_threshold) {
+            kl_base<Graph_t, MemoryConstraint_t>::penalty = kl_base<Graph_t, MemoryConstraint_t>::parameters.initial_penalty;
+            kl_base<Graph_t, MemoryConstraint_t>::reward = 0.0;
 
         } else {
-            kl_base<Graph_t>::parameters.violations_threshold = 0;
+            kl_base<Graph_t, MemoryConstraint_t>::parameters.violations_threshold = 0;
 
-            kl_base<Graph_t>::penalty = std::log((current_schedule.current_violations.size())) * max_edge_weight *
+            kl_base<Graph_t, MemoryConstraint_t>::penalty = std::log((current_schedule.current_violations.size())) * max_edge_weight *
                                         current_schedule.comm_multiplier *
                                         current_schedule.instance->communicationCosts();
 
-            kl_base<Graph_t>::reward = std::sqrt((current_schedule.current_violations.size() + 4)) * max_edge_weight *
+            kl_base<Graph_t, MemoryConstraint_t>::reward = std::sqrt((current_schedule.current_violations.size() + 4)) * max_edge_weight *
                                        current_schedule.comm_multiplier *
                                        current_schedule.instance->communicationCosts();
         }
@@ -110,8 +110,8 @@ class kl_total : public kl_base<Graph_t> {
 
     virtual void set_initial_reward_penalty() override {
 
-        kl_base<Graph_t>::penalty = kl_base<Graph_t>::parameters.initial_penalty;
-        kl_base<Graph_t>::reward =
+        kl_base<Graph_t, MemoryConstraint_t>::penalty = kl_base<Graph_t, MemoryConstraint_t>::parameters.initial_penalty;
+        kl_base<Graph_t, MemoryConstraint_t>::reward =
             max_edge_weight * current_schedule.comm_multiplier * current_schedule.instance->communicationCosts();
     }
 
@@ -129,7 +129,7 @@ class kl_total : public kl_base<Graph_t> {
                         if (current_schedule.instance->getComputationalDag().vertex_comm_weight(node) >
                             node_comm_selection_threshold) {
 
-                              kl_base<Graph_t>::node_selection.insert(node);
+                              kl_base<Graph_t, MemoryConstraint_t>::node_selection.insert(node);
                             break;
                         }
                     }
@@ -143,7 +143,7 @@ class kl_total : public kl_base<Graph_t> {
                         if (current_schedule.instance->getComputationalDag().vertex_comm_weight(node) >
                             node_comm_selection_threshold) {
 
-                              kl_base<Graph_t>::node_selection.insert(node);
+                              kl_base<Graph_t, MemoryConstraint_t>::node_selection.insert(node);
                             break;
                         }
                     }
@@ -161,7 +161,7 @@ class kl_total : public kl_base<Graph_t> {
                         if (current_schedule.instance->getComputationalDag().edge_comm_weight(in_edge) >
                             node_comm_selection_threshold) {
 
-                              kl_base<Graph_t>::node_selection.insert(node);
+                              kl_base<Graph_t, MemoryConstraint_t>::node_selection.insert(node);
                             break;
                         }
                     }
@@ -176,7 +176,7 @@ class kl_total : public kl_base<Graph_t> {
                         if (current_schedule.instance->getComputationalDag().edge_comm_weight(out_edge) >
                             node_comm_selection_threshold) {
 
-                              kl_base<Graph_t>::node_selection.insert(node);
+                              kl_base<Graph_t, MemoryConstraint_t>::node_selection.insert(node);
                             break;
                         }
                     }
@@ -187,7 +187,7 @@ class kl_total : public kl_base<Graph_t> {
 
   public:
     kl_total(bool use_node_communication_costs_)
-        : kl_base<Graph_t>(current_schedule), current_schedule(this, use_node_communication_costs_) {}
+        : kl_base<Graph_t, MemoryConstraint_t>(current_schedule), current_schedule(this, use_node_communication_costs_) {}
 
     virtual ~kl_total() = default;
 };
