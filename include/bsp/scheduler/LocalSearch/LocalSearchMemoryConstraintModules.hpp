@@ -97,6 +97,12 @@ struct local_search_local_memory_constraint {
         step_processor_memory[from_step][from_proc] -= graph->vertex_mem_weight(vertex);
     }
 
+    inline void forward_move(vertex_idx_t<Graph_t> vertex, unsigned , unsigned , unsigned to_proc,
+                           unsigned to_step) {
+        step_processor_memory[to_step][to_proc] += graph->vertex_mem_weight(vertex);
+        // step_processor_memory[from_step][from_proc] -= graph->vertex_mem_weight(vertex);
+    }
+
     void recompute_memory_datastructure(unsigned start_step, unsigned end_step) {
 
         for (unsigned step = start_step; step <= end_step; step++) {

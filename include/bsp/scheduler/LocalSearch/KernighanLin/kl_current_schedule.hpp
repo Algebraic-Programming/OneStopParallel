@@ -16,7 +16,7 @@ limitations under the License.
 @author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 
-// #define KL_DEBUG
+#define KL_DEBUG
 
 #include "bsp/model/BspSchedule.hpp"
 #include "bsp/model/IBspSchedule.hpp"
@@ -72,7 +72,15 @@ class kl_current_schedule {
 
   public:
 
-    kl_current_schedule(Ikl_cost_function *cost_f_) : cost_f(cost_f_) {}
+    kl_current_schedule(Ikl_cost_function *cost_f_) : cost_f(cost_f_) {
+
+        if constexpr (use_memory_constraint) {
+            std::cout << "KLCurrentSchedule constructor with memory constraint" << std::endl;
+        } else {
+            std::cout << "KLCurrentSchedule constructor without memory constraint" << std::endl;
+        }
+
+    }
 
     virtual ~kl_current_schedule() = default;
 
@@ -308,7 +316,7 @@ class kl_current_schedule {
                     current_violations.insert(edge);
 
 #ifdef KL_DEBUG
-                    std::cout << "Edge: " << source << " -> " << target_v << std::endl;
+                    std::cout << "Edge: " << source_v << " -> " << target_v << std::endl;
 #endif
                 }
             }
@@ -435,7 +443,7 @@ class kl_current_schedule {
         if (new_violations.size() > 0) {
             std::cout << "New violations: " << std::endl;
             for (const auto &edge : new_violations) {
-                std::cout << "Edge: " << source(edge, instance->getComputationalDag()) << " -> "
+                std::cout << "Edge: " << source(edge.second, instance->getComputationalDag()) << " -> "
                           << target(edge.second, instance->getComputationalDag()) << std::endl;
             }
         }

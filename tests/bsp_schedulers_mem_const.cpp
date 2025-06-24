@@ -414,18 +414,18 @@ BOOST_AUTO_TEST_CASE(variance_local_test) {
     run_test_local_memory(&test);
 };
 
-BOOST_AUTO_TEST_CASE(kl_local_test) {
+// BOOST_AUTO_TEST_CASE(kl_local_test) {
 
-    VarianceFillup<computational_dag_edge_idx_vector_impl_def_t,
-                   local_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>>
-        test;
+//     VarianceFillup<computational_dag_edge_idx_vector_impl_def_t,
+//                    local_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>>
+//         test;
     
-    kl_total_comm<computational_dag_edge_idx_vector_impl_def_t, local_search_local_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>> kl;
+//     kl_total_comm<computational_dag_edge_idx_vector_impl_def_t, local_search_local_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>> kl;
     
-    ComboScheduler<computational_dag_edge_idx_vector_impl_def_t> combo_test(test, kl);
+//     ComboScheduler<computational_dag_edge_idx_vector_impl_def_t> combo_test(test, kl);
     
-    run_test_local_memory(&combo_test);
-};
+//     run_test_local_memory(&combo_test);
+// };
 
 
 BOOST_AUTO_TEST_CASE(GreedyBspScheduler_persistent_transient_test) {

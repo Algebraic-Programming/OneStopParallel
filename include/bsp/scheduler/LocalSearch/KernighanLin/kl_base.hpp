@@ -1137,7 +1137,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                 }
 
                 if constexpr (current_schedule.use_memory_constraint) {
-                    current_schedule.memory_constraint.apply_move(node, proc, step, moves.back().to_proc, moves.back().to_step);
+                    current_schedule.memory_constraint.forward_move(node, proc, step, moves.back().to_proc, moves.back().to_step);
                 }
 
 
@@ -1441,7 +1441,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                 }
 
                 if constexpr (current_schedule.use_memory_constraint) {
-                    current_schedule.memory_constraint.apply_move(node, proc, step, moves.back().to_proc, moves.back().to_step);
+                    current_schedule.memory_constraint.forward_move(node, proc, step, moves.back().to_proc, moves.back().to_step);
                 }
 
 
@@ -2519,7 +2519,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                             reverse_move_best_schedule(best_move);
 #ifdef KL_DEBUG
                             std::cout << "KLBase save best schedule with (source node comm) cost "
-                                      << best_schedule->computeCostsTotalCommunication() << " and number of supersteps "
+                                      << best_schedule->computeTotalCosts() << " and number of supersteps "
                                       << best_schedule->numberOfSupersteps() << std::endl;
 #endif
                         }
@@ -2540,7 +2540,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                         reverse_move_best_schedule(best_move);
 #ifdef KL_DEBUG
                         std::cout << "KLBase save best schedule with (source node comm) cost "
-                                  << best_schedule->computeCostsTotalCommunication() << " and number of supersteps "
+                                  << best_schedule->computeTotalCosts() << " and number of supersteps "
                                   << best_schedule->numberOfSupersteps() << std::endl;
 #endif
                     }
@@ -2621,7 +2621,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                     best_schedule_costs = current_schedule.current_cost;
 #ifdef KL_DEBUG
                     std::cout << "KLBase save best schedule with (source node comm) cost "
-                              << best_schedule->computeCostsTotalCommunication() << " and number of supersteps "
+                              << best_schedule->computeTotalCosts() << " and number of supersteps "
                               << best_schedule->numberOfSupersteps() << std::endl;
 #endif
                 } else {

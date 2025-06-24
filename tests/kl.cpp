@@ -36,6 +36,19 @@ std::vector<std::string> test_graphs() {
             "data/spaa/tiny/instance_CG_N3_K1_nzP0d5.hdag"};
 }
 
+template<typename Graph_t>
+void add_mem_weights(Graph_t &dag) {
+
+    int mem_weight = 1;
+    int comm_weight = 1;
+
+    for (const auto &v : dag.vertices()) {
+
+        dag.set_vertex_mem_weight(v, static_cast<v_memw_t<Graph_t>>(mem_weight++ % 3 + 1));
+        dag.set_vertex_comm_weight(v, static_cast<v_commw_t<Graph_t>>(comm_weight++ % 3 + 1));
+    }
+}
+
 BOOST_AUTO_TEST_CASE(kl_base_1) {
 
     using graph = computational_dag_edge_idx_vector_impl_def_t;
@@ -78,7 +91,8 @@ BOOST_AUTO_TEST_CASE(kl_base_1) {
 
     kl.test_setup_schedule(schedule);
 
-    kl_current_schedule_total<graph, no_local_search_memory_constraint> &kl_current_schedule = kl.get_current_schedule();
+    kl_current_schedule_total<graph, no_local_search_memory_constraint> &kl_current_schedule =
+        kl.get_current_schedule();
 
     BOOST_CHECK_EQUAL(kl_current_schedule.step_max_work[0], 44.0);
     BOOST_CHECK_EQUAL(kl_current_schedule.step_second_max_work[0], 0.0);
@@ -328,3 +342,4 @@ BOOST_AUTO_TEST_CASE(kl_total_cut_test_2) {
         BOOST_CHECK_EQUAL(schedule.satisfiesPrecedenceConstraints(), true);
     }
 }
+
