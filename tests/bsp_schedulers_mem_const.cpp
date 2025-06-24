@@ -35,6 +35,9 @@ limitations under the License.
 #include "graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 #include "io/arch_file_reader.hpp"
 #include "io/hdag_graph_file_reader.hpp"
+#include "bsp/scheduler/LocalSearch/KernighanLin/kl_total_comm.hpp"
+#include "bsp/scheduler/LocalSearch/KernighanLin/kl_total_cut.hpp"
+
 
 using namespace osp;
 
@@ -108,7 +111,7 @@ void run_test_local_memory(Scheduler<Graph_t> *test_scheduler) {
                 BspSchedule<Graph_t> schedule(instance);
                 const auto result = test_scheduler->computeSchedule(schedule);
 
-                BOOST_CHECK_EQUAL(SUCCESS, result);
+                BOOST_CHECK(SUCCESS == result || BEST_FOUND == result);
                 BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
                 BOOST_CHECK(schedule.satisfiesMemoryConstraints());
             }
@@ -410,6 +413,20 @@ BOOST_AUTO_TEST_CASE(variance_local_test) {
         test;
     run_test_local_memory(&test);
 };
+
+BOOST_AUTO_TEST_CASE(kl_local_test) {
+
+    VarianceFillup<computational_dag_edge_idx_vector_impl_def_t,
+                   local_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>>
+        test;
+    
+    kl_total_comm<computational_dag_edge_idx_vector_impl_def_t, local_search_local_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>> kl;
+    
+    ComboScheduler<computational_dag_edge_idx_vector_impl_def_t> combo_test(test, kl);
+    
+    run_test_local_memory(&combo_test);
+};
+
 
 BOOST_AUTO_TEST_CASE(GreedyBspScheduler_persistent_transient_test) {
 

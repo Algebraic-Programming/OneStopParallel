@@ -811,7 +811,6 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
     void save_best_schedule(const IBspSchedule<Graph_t> &schedule) {
 
         for (const auto &node : current_schedule.instance->vertices())
-        // for (unsigned node = 0; node < num_nodes; node++)
         {
 
             best_schedule->setAssignedProcessor(node, schedule.assignedProcessor(node));
@@ -832,7 +831,6 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
         if (parameters.select_all_nodes) {
 
             for (const auto &node : current_schedule.instance->vertices())
-            // for (unsigned i = 0; i < num_nodes; i++)
             {
                 if (super_locked_nodes.find(node) == super_locked_nodes.end())
                     node_selection.insert(node);

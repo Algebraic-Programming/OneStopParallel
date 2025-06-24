@@ -80,7 +80,7 @@ struct local_search_local_memory_constraint {
 
     inline void initialize(const SetSchedule<Graph_t> &set_schedule_, const VectorSchedule<Graph_t> &) {
 
-        if (set_schedule_->getInstance()->getArchitecture().getMemoryConstraintType() != LOCAL) {
+        if (set_schedule_.getInstance().getArchitecture().getMemoryConstraintType() != LOCAL) {
             throw std::invalid_argument("Memory constraint type is not LOCAL");
         }
 
@@ -88,7 +88,7 @@ struct local_search_local_memory_constraint {
         graph = &set_schedule->getInstance().getComputationalDag();
         step_processor_memory = std::vector<std::vector<v_memw_t<Graph_t>>>(
             set_schedule->numberOfSupersteps(),
-            std::vector<v_memw_t<Graph_t>>(set_schedule->getInstance()->numberOfProcessors(), 0));
+            std::vector<v_memw_t<Graph_t>>(set_schedule->getInstance().numberOfProcessors(), 0));
     }
 
     inline void apply_move(vertex_idx_t<Graph_t> vertex, unsigned from_proc, unsigned from_step, unsigned to_proc,
@@ -149,7 +149,7 @@ struct search_local_local_inc_edges_memory_constraint {
 
     inline void initialize(const SetSchedule<Graph_t> &set_schedule_, const VectorSchedule<Graph_t> &vec_schedule_) {
 
-        if (set_schedule_->getInstance()->getArchitecture().getMemoryConstraintType() != LOCAL_INC_EDGES) {
+        if (set_schedule_.getInstance().getArchitecture().getMemoryConstraintType() != LOCAL_INC_EDGES) {
             throw std::invalid_argument("Memory constraint type is not LOCAL_INC_EDGES");
         }
 
@@ -352,7 +352,7 @@ struct local_search_local_sources_inc_edges_memory_constraint {
 
     inline void initialize(const SetSchedule<Graph_t> &set_schedule_, const VectorSchedule<Graph_t> &vec_schedule_) {
 
-        if (set_schedule_->getInstance()->getArchitecture().getMemoryConstraintType() != LOCAL_SOURCES_INC_EDGES) {
+        if (set_schedule_.getInstance().getArchitecture().getMemoryConstraintType() != LOCAL_SOURCES_INC_EDGES) {
             throw std::invalid_argument("Memory constraint type is not LOCAL_SOURCES_INC_EDGES");
         }
 

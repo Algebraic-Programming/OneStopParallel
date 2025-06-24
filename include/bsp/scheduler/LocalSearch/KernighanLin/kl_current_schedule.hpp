@@ -235,7 +235,7 @@ class kl_current_schedule {
 
         if constexpr (use_memory_constraint) {
 
-            memory_constraint.initialize(set_schedule);
+            memory_constraint.initialize(set_schedule, vector_schedule);
         }
 
         step_processor_work =
