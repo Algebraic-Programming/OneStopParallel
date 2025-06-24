@@ -93,8 +93,8 @@ struct has_hashable_edge_desc : std::false_type {};
 template<typename T>
 struct has_hashable_edge_desc<
     T, std::void_t<decltype(std::hash<edge_desc_t<T>>{}(std::declval<edge_desc_t<T>>())),
-                   decltype(std::declval<edge_desc_t<T>>() == std::declval<edge_desc_t<T>>(), void()),
-                   decltype(std::declval<edge_desc_t<T>>() != std::declval<edge_desc_t<T>>(), void())>>
+                   decltype(std::declval<edge_desc_t<T>>() == std::declval<edge_desc_t<T>>()),
+                   decltype(std::declval<edge_desc_t<T>>() != std::declval<edge_desc_t<T>>())>>
     : std::conjunction<is_directed_graph_edge_desc<T>, std::is_default_constructible<edge_desc_t<T>>,
                        std::is_copy_constructible<edge_desc_t<T>>> {};
 ;
