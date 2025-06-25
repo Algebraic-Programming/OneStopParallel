@@ -190,6 +190,9 @@ class kl_total : public kl_base<Graph_t, MemoryConstraint_t> {
         : kl_base<Graph_t, MemoryConstraint_t>(current_schedule), current_schedule(this, use_node_communication_costs_) {}
 
     virtual ~kl_total() = default;
+
+    void set_use_node_communication_costs(bool value) { current_schedule.use_node_communication_costs = value;}
+
 };
 
 } // namespace osp

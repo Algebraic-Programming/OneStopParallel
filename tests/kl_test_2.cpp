@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(kl_local_memconst) {
 
     std::vector<std::string> filenames_graph = test_graphs();
 
-    using graph = computational_dag_edge_idx_vector_impl_def_t;
+    using graph = computational_dag_edge_idx_vector_impl_def_int_t;
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(kl_local_memconst) {
         instance.getArchitecture().setMemoryConstraintType(LOCAL);
         instance.getArchitecture().setSynchronisationCosts(80);
 
-        const std::vector<unsigned> bounds_to_test = {10, 20};
+        const std::vector<int> bounds_to_test = {10, 20};
 
         add_mem_weights(instance.getComputationalDag());
 

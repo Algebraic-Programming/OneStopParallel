@@ -42,8 +42,10 @@ class kl_total_cut : public kl_total<Graph_t, MemoryConstraint_t> {
 
                 for (const auto &target : kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->getComputationalDag().children(node)) {
 
+                    const unsigned &target_proc = kl_total<Graph_t, MemoryConstraint_t>::current_schedule.vector_schedule.assignedProcessor(target);
                     const double loss =
-                        (double)kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->getComputationalDag().vertex_comm_weight(node) * 1.0 *
+                        static_cast<double>(kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->getComputationalDag().vertex_comm_weight(node)) *
+                        kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->communicationCosts(new_proc, target_proc) *
                         kl_total<Graph_t, MemoryConstraint_t>::current_schedule.comm_multiplier;
 
                     if (kl_total<Graph_t, MemoryConstraint_t>::current_schedule.vector_schedule.assignedSuperstep(target) == current_step) {
@@ -76,14 +78,16 @@ class kl_total_cut : public kl_total<Graph_t, MemoryConstraint_t> {
                                 current_proc == kl_total<Graph_t, MemoryConstraint_t>::current_schedule.vector_schedule.assignedProcessor(target))) {
 
                                     kl_total<Graph_t, MemoryConstraint_t>::node_gains[node][current_proc][0] +=
-                            (double)kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->getComputationalDag().vertex_comm_weight(node) + kl_total<Graph_t, MemoryConstraint_t>::reward;
+                            static_cast<double>(kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->getComputationalDag().vertex_comm_weight(node)) + kl_total<Graph_t, MemoryConstraint_t>::reward;
                     }
                 }
 
                 for (const auto &source : kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->getComputationalDag().parents(node)) {
 
+                    const unsigned &source_proc = kl_total<Graph_t, MemoryConstraint_t>::current_schedule.vector_schedule.assignedProcessor(source);
                     const double loss =
-                        (double)kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->getComputationalDag().vertex_comm_weight(source) * 1.0 *
+                        static_cast<double>(kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->getComputationalDag().vertex_comm_weight(source)) *
+                        kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->communicationCosts(new_proc, source_proc) *
                         kl_total<Graph_t, MemoryConstraint_t>::current_schedule.comm_multiplier;
 
                     if (kl_total<Graph_t, MemoryConstraint_t>::current_schedule.vector_schedule.assignedSuperstep(source) == current_step) {
@@ -116,7 +120,7 @@ class kl_total_cut : public kl_total<Graph_t, MemoryConstraint_t> {
                                 current_proc == kl_total<Graph_t, MemoryConstraint_t>::current_schedule.vector_schedule.assignedProcessor(source))) {
 
                                     kl_total<Graph_t, MemoryConstraint_t>::node_gains[node][current_proc][2] +=
-                            (double)kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->getComputationalDag().vertex_comm_weight(source) +
+                            static_cast<double>(kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->getComputationalDag().vertex_comm_weight(source)) +
                             kl_total<Graph_t, MemoryConstraint_t>::reward;
                     }
                 }
@@ -132,7 +136,7 @@ class kl_total_cut : public kl_total<Graph_t, MemoryConstraint_t> {
                         if (kl_total<Graph_t, MemoryConstraint_t>::current_schedule.vector_schedule.assignedSuperstep(target) == current_step) {
 
                             const double loss =
-                                (double)kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->getComputationalDag().vertex_comm_weight(node) *
+                                static_cast<double>(kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->getComputationalDag().vertex_comm_weight(node)) *
                                 kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->communicationCosts(new_proc, target_proc) *
                                 kl_total<Graph_t, MemoryConstraint_t>::current_schedule.comm_multiplier;
 
@@ -324,9 +328,11 @@ class kl_total_cut : public kl_total<Graph_t, MemoryConstraint_t> {
 
                 for (const auto &out_edge : kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->getComputationalDag().out_edges(node)) {
                     const auto &target_v = target(out_edge, kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->getComputationalDag());
+                    const unsigned &target_proc = kl_total<Graph_t, MemoryConstraint_t>::current_schedule.vector_schedule.assignedProcessor(target_v);
 
                     const double loss =
-                        (double)kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->getComputationalDag().edge_comm_weight(out_edge) * 1.0 *
+                        (double)kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->getComputationalDag().edge_comm_weight(out_edge) *
+                        kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->communicationCosts(new_proc, target_proc) * 
                         kl_total<Graph_t, MemoryConstraint_t>::current_schedule.comm_multiplier;
 
                     if (kl_total<Graph_t, MemoryConstraint_t>::current_schedule.vector_schedule.assignedSuperstep(target_v) == current_step) {
@@ -367,9 +373,11 @@ class kl_total_cut : public kl_total<Graph_t, MemoryConstraint_t> {
 
                 for (const auto &in_edge : kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->getComputationalDag().in_edges(node)) {
                     const auto &source_v = source(in_edge, kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->getComputationalDag());
+                    const unsigned &source_proc = kl_total<Graph_t, MemoryConstraint_t>::current_schedule.vector_schedule.assignedProcessor(source_v);
 
                     const double loss =
-                        (double)kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->getComputationalDag().edge_comm_weight(in_edge) * 1.0 *
+                        (double)kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->getComputationalDag().edge_comm_weight(in_edge) * 
+                        kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->communicationCosts(new_proc, source_proc) *
                         kl_total<Graph_t, MemoryConstraint_t>::current_schedule.comm_multiplier;
 
                     if (kl_total<Graph_t, MemoryConstraint_t>::current_schedule.vector_schedule.assignedSuperstep(source_v) == current_step) {
@@ -646,7 +654,7 @@ class kl_total_cut : public kl_total<Graph_t, MemoryConstraint_t> {
     }
 
   public:
-    kl_total_cut(bool use_node_communication_costs_ = false) : kl_total<Graph_t, MemoryConstraint_t>(use_node_communication_costs_) {}
+    kl_total_cut(bool use_node_communication_costs_ = true) : kl_total<Graph_t, MemoryConstraint_t>(use_node_communication_costs_) {}
 
     virtual ~kl_total_cut() = default;
 

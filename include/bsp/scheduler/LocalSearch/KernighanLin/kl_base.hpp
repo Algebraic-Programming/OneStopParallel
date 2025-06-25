@@ -315,8 +315,8 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
 
                 if constexpr (current_schedule.use_memory_constraint) {
 
-                    if (not current_schedule.memory_constraint.can_move(node, new_proc,
-                                                      current_schedule.vector_schedule.assignedSuperstep(node))) {
+                    if (not current_schedule.memory_constraint.can_move(
+                            node, new_proc, current_schedule.vector_schedule.assignedSuperstep(node))) {
                         node_gains[node][new_proc][1] = std::numeric_limits<double>::lowest();
                     }
 
@@ -494,16 +494,20 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                         current_schedule.instance->getComputationalDag().vertex_work_weight(node) >
                     new_max_work) {
 
-                    const double gain = current_schedule.step_max_work[current_step] -
-                                        (current_schedule.step_processor_work[current_step][new_proc] +
-                                         current_schedule.instance->getComputationalDag().vertex_work_weight(node));
+                    const double gain =
+                        static_cast<double>(current_schedule.step_max_work[current_step]) -
+                        (static_cast<double>(current_schedule.step_processor_work[current_step][new_proc]) +
+                         static_cast<double>(
+                             current_schedule.instance->getComputationalDag().vertex_work_weight(node)));
 
                     node_gains[node][new_proc][1] += gain;
                     node_change_in_costs[node][new_proc][1] -= gain;
 
                 } else {
 
-                    const double gain = current_schedule.step_max_work[current_step] - new_max_work;
+                    const double gain =
+                        static_cast<double>(current_schedule.step_max_work[current_step]) - static_cast<double>(new_max_work);
+
                     node_gains[node][new_proc][1] += gain;
                     node_change_in_costs[node][new_proc][1] -= gain;
                 }
@@ -514,9 +518,9 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                     current_schedule.instance->getComputationalDag().vertex_work_weight(node) +
                         current_schedule.step_processor_work[current_step][new_proc]) {
 
-                    const double gain = (current_schedule.instance->getComputationalDag().vertex_work_weight(node) +
-                                         current_schedule.step_processor_work[current_step][new_proc] -
-                                         current_schedule.step_max_work[current_step]);
+                    const double gain = (static_cast<double>(current_schedule.instance->getComputationalDag().vertex_work_weight(node)) +
+                                         static_cast<double>(current_schedule.step_processor_work[current_step][new_proc]) -
+                                         static_cast<double>(current_schedule.step_max_work[current_step]));
 
                     node_gains[node][new_proc][1] -= gain;
                     node_change_in_costs[node][new_proc][1] += gain;
@@ -530,9 +534,9 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                 current_schedule.step_processor_work[current_step - 1][new_proc] +
                     current_schedule.instance->getComputationalDag().vertex_work_weight(node)) {
 
-                const double gain = current_schedule.step_processor_work[current_step - 1][new_proc] +
-                                    current_schedule.instance->getComputationalDag().vertex_work_weight(node) -
-                                    current_schedule.step_max_work[current_step - 1];
+                const double gain = static_cast<double>(current_schedule.step_processor_work[current_step - 1][new_proc]) +
+                                    static_cast<double>(current_schedule.instance->getComputationalDag().vertex_work_weight(node)) -
+                                    static_cast<double>(current_schedule.step_max_work[current_step - 1]);
 
                 node_gains[node][new_proc][0] -= gain;
 
@@ -551,10 +555,12 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                     const double gain = current_schedule.instance->getComputationalDag().vertex_work_weight(node);
                     node_gains[node][new_proc][0] += gain;
                     node_change_in_costs[node][new_proc][0] -= gain;
+
                 } else {
 
                     const double gain = current_schedule.step_max_work[current_step] -
                                         current_schedule.step_second_max_work[current_step];
+
                     node_gains[node][new_proc][0] += gain;
                     node_change_in_costs[node][new_proc][0] -= gain;
                 }
@@ -571,9 +577,9 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                 current_schedule.step_processor_work[current_step + 1][new_proc] +
                     current_schedule.instance->getComputationalDag().vertex_work_weight(node)) {
 
-                const double gain = current_schedule.step_processor_work[current_step + 1][new_proc] +
-                                    current_schedule.instance->getComputationalDag().vertex_work_weight(node) -
-                                    current_schedule.step_max_work[current_step + 1];
+                const double gain = static_cast<double>(current_schedule.step_processor_work[current_step + 1][new_proc]) +
+                                    static_cast<double>(current_schedule.instance->getComputationalDag().vertex_work_weight(node)) -
+                                    static_cast<double>(current_schedule.step_max_work[current_step + 1]);
 
                 node_gains[node][new_proc][2] -= gain;
                 node_change_in_costs[node][new_proc][2] += gain;
@@ -589,6 +595,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                     current_schedule.step_second_max_work[current_step]) {
 
                     const double gain = current_schedule.instance->getComputationalDag().vertex_work_weight(node);
+
                     node_gains[node][new_proc][2] += gain;
                     node_change_in_costs[node][new_proc][2] -= gain;
 
@@ -596,6 +603,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
 
                     const double gain = current_schedule.step_max_work[current_step] -
                                         current_schedule.step_second_max_work[current_step];
+
                     node_gains[node][new_proc][2] += gain;
                     node_change_in_costs[node][new_proc][2] -= gain;
                 }
@@ -810,8 +818,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
 
     void save_best_schedule(const IBspSchedule<Graph_t> &schedule) {
 
-        for (const auto &node : current_schedule.instance->vertices())
-        {
+        for (const auto &node : current_schedule.instance->vertices()) {
 
             best_schedule->setAssignedProcessor(node, schedule.assignedProcessor(node));
             best_schedule->setAssignedSuperstep(node, schedule.assignedSuperstep(node));
@@ -830,8 +837,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
 
         if (parameters.select_all_nodes) {
 
-            for (const auto &node : current_schedule.instance->vertices())
-            {
+            for (const auto &node : current_schedule.instance->vertices()) {
                 if (super_locked_nodes.find(node) == super_locked_nodes.end())
                     node_selection.insert(node);
             }
@@ -1137,9 +1143,9 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                 }
 
                 if constexpr (current_schedule.use_memory_constraint) {
-                    current_schedule.memory_constraint.forward_move(node, proc, step, moves.back().to_proc, moves.back().to_step);
+                    current_schedule.memory_constraint.forward_move(node, proc, step, moves.back().to_proc,
+                                                                    moves.back().to_step);
                 }
-
 
                 // if (current_schedule.use_memory_constraint) {
 
@@ -1162,7 +1168,8 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                 //         current_schedule.step_processor_memory[moves.back().to_step][moves.back().to_proc] +=
                 //             current_schedule.instance->getComputationalDag().vertex_mem_weight(node);
 
-                //     } else if (current_schedule.instance->getArchitecture().getMemoryConstraintType() == LOCAL_IN_OUT) {
+                //     } else if (current_schedule.instance->getArchitecture().getMemoryConstraintType() ==
+                //     LOCAL_IN_OUT) {
 
                 //         current_schedule.step_processor_memory[moves.back().to_step][moves.back().to_proc] +=
                 //             current_schedule.instance->getComputationalDag().vertex_mem_weight(node) +
@@ -1441,9 +1448,9 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                 }
 
                 if constexpr (current_schedule.use_memory_constraint) {
-                    current_schedule.memory_constraint.forward_move(node, proc, step, moves.back().to_proc, moves.back().to_step);
+                    current_schedule.memory_constraint.forward_move(node, proc, step, moves.back().to_proc,
+                                                                    moves.back().to_step);
                 }
-
 
                 // if (current_schedule.use_memory_constraint) {
 
@@ -1458,7 +1465,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
 
                 //             // current_schedule.current_proc_transient_memory[moves.back().to_proc] =
                 //             //     std::max(current_schedule.current_proc_transient_memory[moves.back().to_proc],
-                //             //              current_schedule.instance->getComputationalDag().vertex_comm_weight(node));
+                //             // current_schedule.instance->getComputationalDag().vertex_comm_weight(node));
                 //             // TODO: implement this properly if PERSISTENT_AND_TRANSIENT becomes relevant
                 //         }
 
@@ -1467,7 +1474,8 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                 //         current_schedule.step_processor_memory[moves.back().to_step][moves.back().to_proc] +=
                 //             current_schedule.instance->getComputationalDag().vertex_mem_weight(node);
 
-                //     } else if (current_schedule.instance->getArchitecture().getMemoryConstraintType() == LOCAL_IN_OUT) {
+                //     } else if (current_schedule.instance->getArchitecture().getMemoryConstraintType() ==
+                //     LOCAL_IN_OUT) {
 
                 //         current_schedule.step_processor_memory[moves.back().to_step][moves.back().to_proc] +=
                 //             current_schedule.instance->getComputationalDag().vertex_mem_weight(node) +

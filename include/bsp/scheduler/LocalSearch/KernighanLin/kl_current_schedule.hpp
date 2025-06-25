@@ -74,11 +74,13 @@ class kl_current_schedule {
 
     kl_current_schedule(Ikl_cost_function *cost_f_) : cost_f(cost_f_) {
 
+#ifdef KL_DEBUG        
         if constexpr (use_memory_constraint) {
             std::cout << "KLCurrentSchedule constructor with memory constraint" << std::endl;
         } else {
             std::cout << "KLCurrentSchedule constructor without memory constraint" << std::endl;
         }
+#endif
 
     }
 

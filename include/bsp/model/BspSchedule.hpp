@@ -380,7 +380,7 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
                 ? instance->synchronisationCosts() * static_cast<v_commw_t<Graph_t>>(number_of_supersteps - 1)
                 : 0;
 
-        return (double)computeWorkCosts() + compute_total_communication_costs() + sync_cost;
+        return static_cast<double>(computeWorkCosts()) + compute_total_communication_costs() + sync_cost;
     }
 
     v_commw_t<Graph_t> compute_buffered_sending_communication_costs() const {

@@ -51,7 +51,7 @@ void add_mem_weights(Graph_t &dag) {
 
 BOOST_AUTO_TEST_CASE(kl_base_1) {
 
-    using graph = computational_dag_edge_idx_vector_impl_def_t;
+    using graph = computational_dag_edge_idx_vector_impl_def_int_t;
     using VertexType = graph::vertex_idx;
 
     graph dag;
@@ -88,6 +88,7 @@ BOOST_AUTO_TEST_CASE(kl_base_1) {
     using kl_move = kl_move<graph>;
 
     kl_total_comm_test<graph> kl;
+    kl.set_use_node_communication_costs(false);
 
     kl.test_setup_schedule(schedule);
 
@@ -153,7 +154,7 @@ BOOST_AUTO_TEST_CASE(kl_total_comm_test_1) {
 
     std::vector<std::string> filenames_graph = test_graphs();
 
-    using graph = computational_dag_edge_idx_vector_impl_def_t;
+    using graph = computational_dag_edge_idx_vector_impl_def_int_t;
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -163,7 +164,7 @@ BOOST_AUTO_TEST_CASE(kl_total_comm_test_1) {
         std::cout << cwd << std::endl;
     }
 
-    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_t> test_scheduler;
+    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_int_t> test_scheduler;
 
     for (auto &filename_graph : filenames_graph) {
 
@@ -202,7 +203,7 @@ BOOST_AUTO_TEST_CASE(kl_total_comm_test_2) {
 
     std::vector<std::string> filenames_graph = test_graphs();
 
-    using graph = computational_dag_edge_idx_vector_impl_def_t;
+    using graph = computational_dag_edge_idx_vector_impl_def_int_t;
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -212,7 +213,7 @@ BOOST_AUTO_TEST_CASE(kl_total_comm_test_2) {
         std::cout << cwd << std::endl;
     }
 
-    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_t> test_scheduler;
+    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_int_t> test_scheduler;
 
     for (auto &filename_graph : filenames_graph) {
 
@@ -251,7 +252,7 @@ BOOST_AUTO_TEST_CASE(kl_total_cut_test_1) {
 
     std::vector<std::string> filenames_graph = test_graphs();
 
-    using graph = computational_dag_edge_idx_vector_impl_def_t;
+    using graph = computational_dag_edge_idx_vector_impl_def_int_t;
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -261,7 +262,7 @@ BOOST_AUTO_TEST_CASE(kl_total_cut_test_1) {
         std::cout << cwd << std::endl;
     }
 
-    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_t> test_scheduler;
+    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_int_t> test_scheduler;
 
     for (auto &filename_graph : filenames_graph) {
 
@@ -299,7 +300,7 @@ BOOST_AUTO_TEST_CASE(kl_total_cut_test_2) {
 
     std::vector<std::string> filenames_graph = test_graphs();
 
-    using graph = computational_dag_edge_idx_vector_impl_def_t;
+    using graph = computational_dag_edge_idx_vector_impl_def_int_t;
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -309,7 +310,7 @@ BOOST_AUTO_TEST_CASE(kl_total_cut_test_2) {
         std::cout << cwd << std::endl;
     }
 
-    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_t> test_scheduler;
+    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_int_t> test_scheduler;
 
     for (auto &filename_graph : filenames_graph) {
 

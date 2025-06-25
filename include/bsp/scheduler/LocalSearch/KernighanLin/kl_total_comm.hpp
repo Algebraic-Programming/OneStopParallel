@@ -649,7 +649,7 @@ class kl_total_comm : public kl_total<Graph_t, MemoryConstraint_t> {
     }
 
   public:
-    kl_total_comm(bool use_node_communication_costs_ = false) : kl_total<Graph_t, MemoryConstraint_t>(use_node_communication_costs_) {}
+    kl_total_comm(bool use_node_communication_costs_ = true) : kl_total<Graph_t, MemoryConstraint_t>(use_node_communication_costs_) {}
 
     virtual ~kl_total_comm() = default;
 
