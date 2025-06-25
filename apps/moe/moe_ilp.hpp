@@ -301,7 +301,7 @@ class moe_ilp_solver {
             model.SetCallback(&solution_callback, COPT_CBCONTEXT_MIPSOL);
         }
 
-        model.SetDblParam(COPT_DBLPARAM_TIMELIMIT, 3600);
+        model.SetDblParam(COPT_DBLPARAM_TIMELIMIT, 172800);
         model.SetIntParam(COPT_INTPARAM_THREADS, 128);
         std::cout << "Starting to solve ILP model..." << std::endl;
 
