@@ -28,7 +28,7 @@ int main() {
 
     std::cout << "Reading token passes from file..." << std::endl;
     std::vector<token_pass> passes =
-        read_token_passes_from_file("data/moe/routing_expert_token_0.txt");
+        read_token_passes_from_file("/home/toni/work/OneStopParallel/data/moe/routing_expert_token_0.txt");
     // print_token_passes(passes);
 
     std::cout << "Creating MoE ILP parameters from token passes..." << std::endl;
@@ -39,17 +39,17 @@ int main() {
     std::cout << "  Number of GPUs: " << params.num_gpus << std::endl;
     std::cout << "  Number of Edges defined: " << params.edges.size() << std::endl;
 
-    //print_layer_details(params, 1);
+    print_layer_details(params, 1);
 
     // 2. Create the ILP solver instance
     std::cout << "Creating MoE ILP solver..." << std::endl;
+        
     moe_ilp_solver solver(params);
+    moe_ilp_solution solution = solver.solve_ilp();
 
-    // 3. Optionally, enable writing intermediate solutions
-    // The final solution is written by default to "./moe_final_solution_final_expert_assignment.txt"
-    // solver.enableWriteIntermediateSol("./", "test_intermediate_moe");
-    // std::cout << "Intermediate solution writing enabled (if any found)." << std::endl;
-
+    // 3. Solve the ILP
+    std::cout << "Solving MoE ILP..." << std::endl;
+    solution.print_solution();
 
     solver.solve_ilp();
 

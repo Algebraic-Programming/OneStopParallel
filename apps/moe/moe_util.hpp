@@ -48,13 +48,9 @@ struct active_experts {
     std::vector<int> experts;
 };
 
-
 struct token_pass {
-
     std::vector<active_experts> layer_experts;
-
 };
-
 
 struct moe_ilp_params {
 

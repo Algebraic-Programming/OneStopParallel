@@ -29,6 +29,30 @@ limitations under the License.
 
 
 
+struct moe_ilp_solution {
+
+    std::vector<std::vector<int>> expert_assignment; 
+    double objective_value;
+
+
+    void print_solution() {
+
+        std::cout << "Objective Value: " << objective_value << std::endl;
+        std::cout << "Expert Assignment (Expert, Layer, Assigned GPU):" << std::endl;
+        for (unsigned expert = 0; expert < expert_assignment.size(); ++expert) {
+            for (unsigned layer = 0; layer < expert_assignment[expert].size(); ++layer) {
+                if (expert_assignment[expert][layer] != -1) {
+                    std::cout << "  Expert " << expert << ", Layer " << layer << ": GPU "
+                              << expert_assignment[expert][layer] << std::endl;
+                } else {
+                    std::cout << "  Expert " << expert << ", Layer " << layer << ": Not assigned (or recomputed)"
+                              << std::endl;
+                }
+            }
+        }
+    }
+};
+
 class moe_ilp_solver {
 
   private:
@@ -256,7 +280,7 @@ class moe_ilp_solver {
     explicit moe_ilp_solver(moe_ilp_params &p_params) : params(p_params) {}
     virtual ~moe_ilp_solver() = default;
 
-    void solve_ilp() {
+    moe_ilp_solution solve_ilp() {
 
         Envr env;
         Model model = env.CreateModel("moe_placement");
@@ -288,6 +312,8 @@ class moe_ilp_solver {
             std::string filepath = final_solution_path + final_solution_file_prefix + "_final_expert_assignment.txt";
             _write_model_solution_to_file(filepath);
         }
+
+        return _get_model_solution(model);
     }
 
     inline void enableWriteIntermediateSol(std::string path, std::string file_prefix) {
@@ -297,6 +323,44 @@ class moe_ilp_solver {
     }
 
   private:
+
+    moe_ilp_solution _get_model_solution(Model& model) {        
+        
+        moe_ilp_solution solution;
+        solution.objective_value = 0.0; // Initialize with a default value
+
+        // Check if a solution exists
+        if (model.GetIntAttr(COPT_INTATTR_HASMIPSOL)) {
+            solution.objective_value = model.GetDblAttr(COPT_DBLINFO_OBJ);
+
+            solution.expert_assignment.resize(params.num_experts);
+            for (unsigned expert = 0; expert < params.num_experts; ++expert) {
+                solution.expert_assignment[expert].resize(params.num_layers);
+                for (unsigned layer = 0; layer < params.num_layers; ++layer) {
+                    solution.expert_assignment[expert][layer] = -1; // Default to unassigned
+
+                    for (unsigned gpu = 0; gpu < params.num_gpus; ++gpu) {
+                        double val =
+                            expert_layer_proc[expert][layer].GetVar(static_cast<int>(gpu)).Get(COPT_DBLINFO_VALUE);
+                        if (val >= 0.99) { // If assigned to this GPU
+                            solution.expert_assignment[expert][layer] = static_cast<int>(gpu);
+                            break; // An expert can only be assigned to one GPU
+                        }
+                    }
+                }
+            }
+        } else {
+            // Handle case where no solution is found (e.g., set all assignments to -1, objective to infinity)
+            solution.objective_value = COPT_INFINITY;
+            solution.expert_assignment.resize(params.num_experts);
+            for (unsigned expert = 0; expert < params.num_experts; ++expert) {
+                solution.expert_assignment[expert].resize(params.num_layers, -1);
+            }
+        }
+        return solution;
+    }
+
+
     void _write_model_solution_to_file(const std::string &filepath) {
         std::ofstream outfile(filepath);
         if (outfile.is_open()) {
