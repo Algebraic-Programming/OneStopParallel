@@ -18,10 +18,31 @@ limitations under the License.
 
 #pragma once
 
+#include <set>
+
 #include "computational_dag_concept.hpp"
 
 
 namespace osp {
+
+// modify vertices
+template<typename T, typename = void>
+struct is_modifiable_cdag_vertex : std::false_type {};
+
+template<typename T>
+struct is_modifiable_cdag_vertex<
+    T, std::void_t<decltype(std::declval<T>().set_vertex_work_weight(std::declval<vertex_idx_t<T>>(), std::declval<v_workw_t<T>>())),
+                   decltype(std::declval<T>().set_vertex_comm_weight(std::declval<vertex_idx_t<T>>(), std::declval<v_commw_t<T>>())),
+                   decltype(std::declval<T>().set_vertex_mem_weight(std::declval<vertex_idx_t<T>>(), std::declval<v_memw_t<T>>()))>>
+    : std::conjunction<is_computational_dag<T>,
+                       std::is_default_constructible<T>,
+                       std::is_copy_constructible<T>, 
+                       std::is_move_constructible<T>, 
+                       std::is_copy_assignable<T>,
+                       std::is_move_assignable<T>> {};
+
+template<typename T>
+inline constexpr bool is_modifiable_cdag_vertex_v = is_modifiable_cdag_vertex<T>::value;
 
 // add vertices
 template<typename T, typename = void>
@@ -29,20 +50,25 @@ struct is_constructable_cdag_vertex : std::false_type {};
 
 template<typename T>
 struct is_constructable_cdag_vertex<
-    T, std::void_t<decltype(std::declval<T>().add_vertex(std::declval<v_workw_t<T>>(), std::declval<v_commw_t<T>>(), std::declval<v_memw_t<T>>())),
-                   decltype(std::declval<T>().set_vertex_work_weight(std::declval<vertex_idx_t<T>>(), std::declval<v_workw_t<T>>())),
-                   decltype(std::declval<T>().set_vertex_comm_weight(std::declval<vertex_idx_t<T>>(), std::declval<v_commw_t<T>>())),
-                   decltype(std::declval<T>().set_vertex_mem_weight(std::declval<vertex_idx_t<T>>(), std::declval<v_memw_t<T>>()))>>
-    : std::conjunction<osp::is_computational_dag<T>,
-                       std::is_default_constructible<T>, 
-                       std::is_constructible<T, vertex_idx_t<T>>,
-                       std::is_copy_constructible<T>, 
-                       std::is_move_constructible<T>, 
-                       std::is_copy_assignable<T>,
-                       std::is_move_assignable<T>> {};
+    T, std::void_t<decltype(std::declval<T>().add_vertex(std::declval<v_workw_t<T>>(), std::declval<v_commw_t<T>>(), std::declval<v_memw_t<T>>()))>>
+    : std::conjunction<is_modifiable_cdag_vertex<T>, 
+                       std::is_constructible<T, vertex_idx_t<T>>> {};
 
 template<typename T>
 inline constexpr bool is_constructable_cdag_vertex_v = is_constructable_cdag_vertex<T>::value;
+
+// modify vertices types
+template<typename T, typename = void>
+struct is_modifiable_cdag_typed_vertex : std::false_type {};
+
+template<typename T>
+struct is_modifiable_cdag_typed_vertex<
+    T, std::void_t<decltype(std::declval<T>().set_vertex_type(std::declval<vertex_idx_t<T>>(), std::declval<v_type_t<T>>()))>>
+    : std::conjunction<is_modifiable_cdag_vertex<T>, 
+                       is_computational_dag_typed_vertices<T>> {}; // for default node type
+
+template<typename T>
+inline constexpr bool is_modifiable_cdag_typed_vertex_v = is_modifiable_cdag_typed_vertex<T>::value;
 
 // add vertices with types
 template<typename T, typename = void>
@@ -50,10 +76,9 @@ struct is_constructable_cdag_typed_vertex : std::false_type {};
 
 template<typename T>
 struct is_constructable_cdag_typed_vertex<
-    T, std::void_t<decltype(std::declval<T>().add_vertex(std::declval<v_workw_t<T>>(), std::declval<v_commw_t<T>>(), std::declval<v_memw_t<T>>(), std::declval<v_type_t<T>>())),
-                   decltype(std::declval<T>().set_vertex_type(std::declval<vertex_idx_t<T>>(), std::declval<v_type_t<T>>()))>>
+    T, std::void_t<decltype(std::declval<T>().add_vertex(std::declval<v_workw_t<T>>(), std::declval<v_commw_t<T>>(), std::declval<v_memw_t<T>>(), std::declval<v_type_t<T>>()))>>
     : std::conjunction<is_constructable_cdag_vertex<T>, 
-                       osp::is_computational_dag_typed_vertices<T>> {}; // for default node type
+                       is_modifiable_cdag_typed_vertex<T>> {}; // for default node type
 
 template<typename T>
 inline constexpr bool is_constructable_cdag_typed_vertex_v = is_constructable_cdag_typed_vertex<T>::value;
@@ -70,16 +95,28 @@ struct is_constructable_cdag_edge<T, std::void_t<decltype(std::declval<T>().add_
 template<typename T>
 inline constexpr bool is_constructable_cdag_edge_v = is_constructable_cdag_edge<T>::value;
 
+// modify edges with comm costs
+template<typename T, typename = void>
+struct is_modifiable_cdag_comm_edge : std::false_type {};
+
+template<typename T>
+struct is_modifiable_cdag_comm_edge<
+    T, std::void_t<decltype(std::declval<T>().set_edge_comm_weight(std::declval<edge_desc_t<T>>(), std::declval<e_commw_t<T>>()))>>
+    : std::conjunction<is_computational_dag_edge_desc<T>> {}; // for default edge weight
+
+template<typename T>
+inline constexpr bool is_modifiable_cdag_comm_edge_v = is_modifiable_cdag_comm_edge<T>::value;
+
 // add edges with comm costs
 template<typename T, typename = void>
 struct is_constructable_cdag_comm_edge : std::false_type {};
 
 template<typename T>
 struct is_constructable_cdag_comm_edge<
-    T, std::void_t<decltype(std::declval<T>().add_edge(std::declval<vertex_idx_t<T>>(), std::declval<vertex_idx_t<T>>(), std::declval<e_commw_t<T>>())),
-                   decltype(std::declval<T>().set_edge_comm_weight(std::declval<edge_desc_t<T>>(), std::declval<e_commw_t<T>>()))>>
+    T, std::void_t<decltype(std::declval<T>().add_edge(std::declval<vertex_idx_t<T>>(), std::declval<vertex_idx_t<T>>(), std::declval<e_commw_t<T>>()))>>
     : std::conjunction<is_constructable_cdag_edge<T>, 
-                       osp::is_computational_dag_edge_desc<T>> {}; // for default edge weight
+                       is_computational_dag_edge_desc<T>,
+                       is_modifiable_cdag_comm_edge<T>> {}; // for default edge weight
 
 template<typename T>
 inline constexpr bool is_constructable_cdag_comm_edge_v = is_constructable_cdag_comm_edge<T>::value;
@@ -93,5 +130,8 @@ struct is_constructable_cdag<T, std::void_t<>>
 
 template<typename T>
 inline constexpr bool is_constructable_cdag_v = is_constructable_cdag<T>::value;
+
+template<typename T>
+inline constexpr bool is_direct_constructable_cdag_v = std::is_constructible<T, vertex_idx_t<T>, std::set<std::pair<vertex_idx_t<T>, vertex_idx_t<T>>>>::value;
 
 } // namespace osp

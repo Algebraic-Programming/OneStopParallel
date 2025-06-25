@@ -39,7 +39,7 @@ template<typename Graph_t_in, typename Graph_t_out>
 class Coarser {
 
     static_assert(is_computational_dag_v<Graph_t_in>, "Graph_t_in must be a computational DAG");
-    static_assert(is_constructable_cdag_v<Graph_t_out>, "Graph_t_out must be a constructable computational DAG");
+    static_assert(is_constructable_cdag_v<Graph_t_out> || is_direct_constructable_cdag_v<Graph_t_out>, "Graph_t_out must be a (direct) constructable computational DAG");
 
     // probably too strict, need to be refined.
     // maybe add concept for when Gtaph_t2 is constructable/coarseable from Graph_t_in

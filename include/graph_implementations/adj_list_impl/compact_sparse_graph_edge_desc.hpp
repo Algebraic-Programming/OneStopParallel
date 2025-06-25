@@ -140,8 +140,8 @@ class Compact_Sparse_Graph_EdgeDesc : public Compact_Sparse_Graph<keep_vertex_or
         Compact_Sparse_Graph_EdgeDesc() = default;
         Compact_Sparse_Graph_EdgeDesc(const Compact_Sparse_Graph_EdgeDesc &other) = default;
         Compact_Sparse_Graph_EdgeDesc(Compact_Sparse_Graph_EdgeDesc &&other) = default;
-        Compact_Sparse_Graph_EdgeDesc &operator=(const Compact_Sparse_Graph_EdgeDesc &other) = delete;
-        Compact_Sparse_Graph_EdgeDesc &operator=(Compact_Sparse_Graph_EdgeDesc &&other) = delete;
+        Compact_Sparse_Graph_EdgeDesc &operator=(const Compact_Sparse_Graph_EdgeDesc &other) = default;
+        Compact_Sparse_Graph_EdgeDesc &operator=(Compact_Sparse_Graph_EdgeDesc &&other) = default;
         virtual ~Compact_Sparse_Graph_EdgeDesc() = default;
 
         template <typename edge_list_type>
@@ -269,6 +269,28 @@ class Compact_Sparse_Graph_EdgeDesc : public Compact_Sparse_Graph<keep_vertex_or
 };
 
 
+
+
+template<bool keep_vertex_order, bool use_work_weights, bool use_comm_weights, bool use_mem_weights, bool use_edge_comm_weights, bool use_vert_types, typename vert_t, typename edge_t, typename work_weight_type, typename comm_weight_type, typename mem_weight_type, typename e_comm_weight_type, typename vertex_type_template_type>
+struct is_Compact_Sparse_Graph<Compact_Sparse_Graph_EdgeDesc<keep_vertex_order, use_work_weights, use_comm_weights, use_mem_weights, use_edge_comm_weights, use_vert_types, vert_t, edge_t, work_weight_type, comm_weight_type, mem_weight_type, e_comm_weight_type, vertex_type_template_type>, void> : std::true_type {};
+
+template<bool use_work_weights, bool use_comm_weights, bool use_mem_weights, bool use_edge_comm_weights, bool use_vert_types, typename vert_t, typename edge_t, typename work_weight_type, typename comm_weight_type, typename mem_weight_type, typename e_comm_weight_type, typename vertex_type_template_type>
+struct is_Compact_Sparse_Graph_reorder<Compact_Sparse_Graph_EdgeDesc<false, use_work_weights, use_comm_weights, use_mem_weights, use_edge_comm_weights, use_vert_types, vert_t, edge_t, work_weight_type, comm_weight_type, mem_weight_type, e_comm_weight_type, vertex_type_template_type>, void> : std::true_type {};
+
+
+
+
+
+
+
+
+
+static_assert(is_Compact_Sparse_Graph_v<Compact_Sparse_Graph_EdgeDesc<true>>);
+static_assert(is_Compact_Sparse_Graph_v<Compact_Sparse_Graph_EdgeDesc<false>>);
+static_assert(!is_Compact_Sparse_Graph_reorder_v<Compact_Sparse_Graph_EdgeDesc<true>>);
+static_assert(is_Compact_Sparse_Graph_reorder_v<Compact_Sparse_Graph_EdgeDesc<false>>);
+
+
 static_assert(has_vertex_weights_v<Compact_Sparse_Graph_EdgeDesc<true, true>>, 
             "Compact_Sparse_Graph_EdgeDesc must satisfy the has_vertex_weights concept");
 
@@ -322,7 +344,9 @@ static_assert(has_hashable_edge_desc_v<Compact_Sparse_Graph_EdgeDesc<true, true>
 
 static_assert(has_hashable_edge_desc_v<Compact_Sparse_Graph_EdgeDesc<false, true>>, 
     "Compact_Sparse_Graph_EdgeDesc must satisfy the has_hashable_edge_desc concept");
-    
 
+
+
+using CSGE = Compact_Sparse_Graph_EdgeDesc<false, true, true, true, true, true, std::size_t, std::size_t, unsigned, unsigned, unsigned, unsigned, unsigned>;
 
 } // namespace osp

@@ -63,7 +63,8 @@ struct has_edge_weights<T,
                         std::void_t<typename directed_graph_edge_desc_traits<T>::directed_edge_descriptor,
                                     decltype(std::declval<T>().edge_comm_weight(std::declval<edge_desc_t<T>>()))>>
     : std::conjunction<
-          std::is_arithmetic<decltype(std::declval<T>().edge_comm_weight(std::declval<edge_desc_t<T>>()))>> {};
+          std::is_arithmetic<decltype(std::declval<T>().edge_comm_weight(std::declval<edge_desc_t<T>>()))>,
+          is_directed_graph_edge_desc<T>> {};
 
 template<typename T>
 inline constexpr bool has_edge_weights_v = has_edge_weights<T>::value;

@@ -27,9 +27,10 @@ limitations under the License.
 
 #include "auxiliary/math_helper.hpp"
 #include "concepts/computational_dag_concept.hpp"
+#include "concepts/constructable_computational_dag_concept.hpp"
+#include "concepts/specific_graph_impl.hpp"
 #include "graph_algorithms/directed_graph_edge_view.hpp"
 #include "graph_implementations/vertex_iterator.hpp"
-
 
 namespace osp {
 
@@ -158,8 +159,8 @@ class Compact_Sparse_Graph {
 
 
 
-        const vertex_idx number_of_vertices = static_cast<vert_t>(0);
-        const edge_t number_of_edges = static_cast<edge_t>(0);
+        vertex_idx number_of_vertices = static_cast<vert_t>(0);
+        edge_t number_of_edges = static_cast<edge_t>(0);
 
         Compact_Parent_Edges csr_in_edges;
         Compact_Children_Edges csc_out_edges;
@@ -192,8 +193,8 @@ class Compact_Sparse_Graph {
         Compact_Sparse_Graph() = default;
         Compact_Sparse_Graph(const Compact_Sparse_Graph &other) = default;
         Compact_Sparse_Graph(Compact_Sparse_Graph &&other) = default;
-        Compact_Sparse_Graph &operator=(const Compact_Sparse_Graph &other) = delete;
-        Compact_Sparse_Graph &operator=(Compact_Sparse_Graph &&other) = delete;
+        Compact_Sparse_Graph &operator=(const Compact_Sparse_Graph &other) = default;
+        Compact_Sparse_Graph &operator=(Compact_Sparse_Graph &&other) = default;
         virtual ~Compact_Sparse_Graph() = default;
 
         template <typename edge_list_type>
@@ -790,6 +791,30 @@ class Compact_Sparse_Graph {
         }
 };
 
+
+
+
+
+template<bool keep_vertex_order, bool use_work_weights, bool use_comm_weights, bool use_mem_weights, bool use_vert_types, typename vert_t, typename edge_t, typename work_weight_type, typename comm_weight_type, typename mem_weight_type, typename vertex_type_template_type>
+struct is_Compact_Sparse_Graph<Compact_Sparse_Graph<keep_vertex_order, use_work_weights, use_comm_weights, use_mem_weights, use_vert_types, vert_t, edge_t, work_weight_type, comm_weight_type, mem_weight_type, vertex_type_template_type>, void> : std::true_type {};
+
+template<bool use_work_weights, bool use_comm_weights, bool use_mem_weights, bool use_vert_types, typename vert_t, typename edge_t, typename work_weight_type, typename comm_weight_type, typename mem_weight_type, typename vertex_type_template_type>
+struct is_Compact_Sparse_Graph_reorder<Compact_Sparse_Graph<false, use_work_weights, use_comm_weights, use_mem_weights, use_vert_types, vert_t, edge_t, work_weight_type, comm_weight_type, mem_weight_type, vertex_type_template_type>, void> : std::true_type {};
+
+
+
+
+
+
+
+static_assert(is_Compact_Sparse_Graph_v<Compact_Sparse_Graph<true>>);
+static_assert(is_Compact_Sparse_Graph_v<Compact_Sparse_Graph<false>>);
+static_assert(!is_Compact_Sparse_Graph_reorder_v<Compact_Sparse_Graph<true>>);
+static_assert(is_Compact_Sparse_Graph_reorder_v<Compact_Sparse_Graph<false>>);
+
+
+
+
 static_assert(has_vertex_weights_v<Compact_Sparse_Graph<true, true>>, 
     "Compact_Sparse_Graph must satisfy the has_vertex_weights concept");
 
@@ -819,6 +844,138 @@ static_assert(is_computational_dag_typed_vertices_v<Compact_Sparse_Graph<false, 
 
 static_assert(is_computational_dag_typed_vertices_v<Compact_Sparse_Graph<true, true, true, true, true>>,
     "Compact_Sparse_Graph must satisfy the is_computation_dag with types concept");
+
+static_assert(is_direct_constructable_cdag_v<Compact_Sparse_Graph<true, true>>, 
+    "Compact_Sparse_Graph must be directly constructable");
+
+static_assert(is_direct_constructable_cdag_v<Compact_Sparse_Graph<false, true>>, 
+    "Compact_Sparse_Graph must be directly constructable");
+
+
+
+
+
+using CSG = Compact_Sparse_Graph<false, true, true, true, true, std::size_t, std::size_t, unsigned, unsigned, unsigned, unsigned>;
+
+
+
+
+
+
+
+
+// // Graph specific implementations
+
+// template<typename Graph_t_in, typename v_work_acc_method, typename v_comm_acc_method, typename v_mem_acc_method, typename e_comm_acc_method,
+//          bool use_work_weights, bool use_comm_weights, bool use_mem_weights, bool use_vert_types, typename vert_t, typename edge_t,
+//          typename work_weight_type, typename comm_weight_type, typename mem_weight_type, typename vertex_type_template_type>
+// bool coarser_util::construct_coarse_dag(
+//             const Graph_t_in &dag_in,
+//             Compact_Sparse_Graph<false, use_work_weights, use_comm_weights, use_mem_weights, use_vert_types, vert_t, edge_t, work_weight_type, comm_weight_type, mem_weight_type, vertex_type_template_type> &coarsened_dag,
+//             std::vector<vertex_idx_t<Compact_Sparse_Graph<false, use_work_weights, use_comm_weights, use_mem_weights, use_vert_types, vert_t, edge_t, work_weight_type, comm_weight_type, mem_weight_type, vertex_type_template_type>>> &vertex_contraction_map) {
+
+//     using Graph_out_type = Compact_Sparse_Graph<false, use_work_weights, use_comm_weights, use_mem_weights, use_vert_types, vert_t, edge_t, work_weight_type, comm_weight_type, mem_weight_type, vertex_type_template_type>;
+
+//     static_assert(is_directed_graph_v<Graph_t_in> && is_directed_graph_v<Graph_out_type>, "Graph types need to satisfy the is_directed_graph concept.");
+//     static_assert(is_computational_dag_v<Graph_t_in>, "Graph_t_in must be a computational DAG");
+//     static_assert(is_constructable_cdag_v<Graph_out_type> || is_direct_constructable_cdag_v<Graph_out_type>, "Graph_out_type must be a (direct) constructable computational DAG");
+
+//     assert(check_valid_contraction_map<Graph_out_type>(vertex_contraction_map));
+
+
+//     const vertex_idx_t<Graph_out_type> num_vert_quotient =
+//         (*std::max_element(vertex_contraction_map.cbegin(), vertex_contraction_map.cend())) + 1;
+
+//     std::set<std::pair<vertex_idx_t<Graph_out_type>, vertex_idx_t<Graph_out_type>>> quotient_edges;
+
+//     for (const vertex_idx_t<Graph_t_in> &vert : dag_in.vertices()) {
+//         for (const vertex_idx_t<Graph_t_in> &chld : dag_in.children(vert)) {
+//             if (vertex_contraction_map[vert] == vertex_contraction_map[chld]) {
+//                 continue;
+//             }
+//             quotient_edges.emplace(vertex_contraction_map[vert], vertex_contraction_map[chld]);
+//         }
+//     }
+
+//     coarsened_dag = Graph_out_type(num_vert_quotient, quotient_edges);
+
+//     const auto& pushforward_map = coarsened_dag.get_pushforward_permutation();
+//     std::vector<vertex_idx_t<Graph_out_type>> combined_expansion_map(dag_in.num_vertices());
+//     for (const auto &vert : dag_in.vertices()) {
+//         combined_expansion_map[vert] = pushforward_map[vertex_contraction_map[vert]];
+//     }
+
+//     if constexpr (has_vertex_weights_v<Graph_t_in> && is_modifiable_cdag_vertex_v<Graph_out_type>) {
+//         static_assert(std::is_same_v<v_workw_t<Graph_t_in>, v_workw_t<Graph_out_type>>, "Work weight types of in-graph and out-graph must be the same.");
+//         static_assert(std::is_same_v<v_commw_t<Graph_t_in>, v_commw_t<Graph_out_type>>, "Vertex communication types of in-graph and out-graph must be the same.");
+//         static_assert(std::is_same_v<v_memw_t<Graph_t_in>, v_memw_t<Graph_out_type>>, "Memory weight types of in-graph and out-graph must be the same.");
+
+//         for (const vertex_idx_t<Graph_t_in> &vert : coarsened_dag.vertices()) {
+//             coarsened_dag.set_vertex_work_weight(vert, 0);
+//             coarsened_dag.set_vertex_comm_weight(vert, 0);
+//             coarsened_dag.set_vertex_mem_weight(vert, 0);
+//         }
+
+//         for (const vertex_idx_t<Graph_t_in> &vert : dag_in.vertices()) {
+//             coarsened_dag.set_vertex_work_weight(
+//                 vertex_contraction_map[vert],
+//                 v_work_acc_method()(coarsened_dag.vertex_work_weight(combined_expansion_map[vert]),
+//                                 dag_in.vertex_work_weight(vert)));
+
+//             coarsened_dag.set_vertex_comm_weight(
+//                 vertex_contraction_map[vert],
+//                 v_comm_acc_method()(coarsened_dag.vertex_comm_weight(combined_expansion_map[vert]),
+//                                 dag_in.vertex_comm_weight(vert)));
+
+//             coarsened_dag.set_vertex_mem_weight(
+//                 vertex_contraction_map[vert],
+//                 v_mem_acc_method()(coarsened_dag.vertex_mem_weight(combined_expansion_map[vert]),
+//                                 dag_in.vertex_mem_weight(vert)));
+//         }
+//     }
+
+//     if constexpr (has_typed_vertices_v<Graph_t_in> && is_modifiable_cdag_typed_vertex_v<Graph_out_type>) {
+//         static_assert(std::is_same_v<v_type_t<Graph_t_in>, v_type_t<Graph_out_type>>,
+//                         "Vertex type types of in graph and out graph must be the same!");
+
+//         for (const vertex_idx_t<Graph_t_in> &vert : dag_in.vertices()) {
+//             coarsened_dag.set_vertex_type(vertex_contraction_map[vert], dag_in.vertex_type(vert));
+//         }
+//         // assert(std::all_of(dag_in.vertices().begin(), dag_in.vertices().end(),
+//         //         [&dag_in, &vertex_contraction_map, &coarsened_dag](const auto &vert){ return
+//         //         dag_in.vertex_type(vert) ==  coarsened_dag.vertex_type(vertex_contraction_map[vert]); })
+//         //                 && "Contracted vertices must be of the same type");
+//     }
+
+//     std::swap(vertex_contraction_map, combined_expansion_map);
+
+//     std::cout << "Specific Template construct coarsen dag" << std::endl;
+
+    
+//     return true;
+// };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 } // namespace osp
