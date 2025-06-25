@@ -51,8 +51,9 @@ public:
     using vertex_work_weight_type = eigen_idx_type;
     using vertex_comm_weight_type = int;
     using vertex_mem_weight_type = int;
-    using vertex_type_type = size_t;
-    
+    using vertex_type_type = unsigned;
+
+    using eigen_idx_t = eigen_idx_type;    
 
     SparseMatrixImp() = default;
 
@@ -107,7 +108,14 @@ public:
     // Default zero weights (placeholders, extend as needed)
     vertex_comm_weight_type vertex_comm_weight(vertex_idx) const noexcept { return 0; }
     vertex_mem_weight_type vertex_mem_weight(vertex_idx) const noexcept  { return 0; }
+
+    inline unsigned num_vertex_types() const { return 1; };
+    inline vertex_type_type vertex_type(const vertex_idx v) const { return v-v; }
 };
+
+using sparse_matrix_graph_int32_t = SparseMatrixImp<int32_t>;
+using sparse_matrix_graph_int64_t = SparseMatrixImp<int64_t>;
+
 
 // Verify that SparseMatrixImp satisfies the directed graph concept
 static_assert(is_directed_graph_v<SparseMatrixImp<int32_t>>,

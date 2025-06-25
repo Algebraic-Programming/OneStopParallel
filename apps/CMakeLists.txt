@@ -37,6 +37,10 @@ configure_file(config/osp_config.json osp_config.json COPYONLY)
 
 _add_executable ( bsp_test_suite )
 
+if(Eigen3_FOUND)
+_add_executable ( sptrsv_test_suite )
+endif()
+
 if (COPT_FOUND)
 _add_executable( ilp_bsp_scheduler )
 endif()

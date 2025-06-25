@@ -78,10 +78,10 @@ BOOST_AUTO_TEST_CASE(test_eigen_sptrsv) {
     SparseMatrixImp<int32_t> graph;
 
     SM_csr L_csr;
-    bool matrix_load_succes = Eigen::loadMarket(L_csr, filename);
-    BOOST_CHECK(matrix_load_succes);
+    bool matrix_load_success = Eigen::loadMarket(L_csr, filename);
+    BOOST_CHECK(matrix_load_success);
 
-    if (!matrix_load_succes) {
+    if (!matrix_load_success) {
         std::cerr << "Failed to read matrix from " << filename << std::endl;
         return;
     }
@@ -107,8 +107,21 @@ BOOST_AUTO_TEST_CASE(test_eigen_sptrsv) {
     BspScheduleCS<SparseMatrixImp<int32_t>> schedule_cs(instance);
     auto result_cs = scheduler.computeScheduleCS(schedule_cs);
 
+    /*
+    for (const auto &node : instance.vertices()) {
+        std::cout << "Vertex " << node << " children:" <<  std::endl;
+        for (const auto &target : instance.getComputationalDag().children(node)) {
+            std::cout << "target:" << target << std::endl;
+        }
+        std::cout << std::endl;
+    }
+    */
+   
     BOOST_CHECK_EQUAL(result_cs, SUCCESS);
     BOOST_CHECK(schedule_cs.hasValidCommSchedule());
+
+    //std::cout << "Scheduling Costs:" << schedule_cs.computeCosts() << std::endl;
+    //std::cout << "lazy com Costs:" <<schedule_cs.compute_lazy_communication_costs() << std::endl;
 
     // Eigen L solve
     Eigen::VectorXd L_b_ref, L_x_ref; // Declare vectors
@@ -129,7 +142,7 @@ BOOST_AUTO_TEST_CASE(test_eigen_sptrsv) {
     auto L_x_osp = L_x_ref;
     auto L_b_osp = L_b_ref;
     L_b_osp.setOnes();
-    L_x_osp.setZero();
+    //L_x_osp.setZero();
     sim.x = &L_x_osp[0];
     sim.b = &L_b_osp[0];
     sim.lsolve_no_permutation();
@@ -142,7 +155,7 @@ BOOST_AUTO_TEST_CASE(test_eigen_sptrsv) {
     L_x_ref = L_view.solve(L_b_ref);
     // OSP
     L_b_osp.setOnes();
-    L_x_osp.setZero();
+    //L_x_osp.setZero();
     sim.lsolve_serial();
     BOOST_CHECK(compare_vectors(L_x_ref,L_x_osp));
 

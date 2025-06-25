@@ -24,6 +24,7 @@ limitations under the License.
 #include "StringToScheduler/run_bsp_scheduler.hpp"
 #include "StatsModules/BasicBspStatsModule.hpp"
 #include "StatsModules/BspCommStatsModule.hpp"
+#include "StatsModules/BspSptrsvStatsModule.hpp"
 
 namespace osp {
 
@@ -54,7 +55,9 @@ class BspScheduleTestSuiteRunner : public AbstractTestSuiteRunner<BspSchedule<co
             this->active_stats_modules.push_back(std::make_unique<BasicBspStatsModule<BspSchedule<concrete_graph_t>>>());
         } else if (module_name == "BspCommStats") {
             this->active_stats_modules.push_back(std::make_unique<BspCommStatsModule<concrete_graph_t>>());
-        }
+        } else if (module_name == "BspSptrsvStats") {
+            this->active_stats_modules.push_back(std::make_unique<BspSptrsvStatsModule<BspSchedule<concrete_graph_t>>>());
+        } 
     }
 
     // TODO

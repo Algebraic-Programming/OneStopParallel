@@ -25,6 +25,7 @@ limitations under the License.
 #include <string>
 #include <tuple>
 
+#include "graph_implementations/boost_graphs/boost_graph.hpp"
 #include "bsp/scheduler/GreedySchedulers/BspLocking.hpp"
 #include "bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
 #include "bsp/scheduler/GreedySchedulers/GrowLocalAutoCores.hpp"
@@ -64,6 +65,8 @@ RETURN_STATUS run_bsp_improver(const ConfigParser &, const boost::property_tree:
 
     const std::string improver_name = algorithm.get_child("name").get_value<std::string>();
 
+    if constexpr (is_directed_graph_edge_desc_v<Graph_t>) {
+
     if (improver_name == "kl_total_comm") {
 
         kl_total_comm<Graph_t> improver;
@@ -74,7 +77,11 @@ RETURN_STATUS run_bsp_improver(const ConfigParser &, const boost::property_tree:
         kl_total_cut<Graph_t> improver;
         return improver.improveSchedule(schedule);
 
-    } else if (improver_name == "hill_climb") {
+    } 
+    
+    }
+    
+    if (improver_name == "hill_climb") {
 
         HillClimbingScheduler<Graph_t> improver;
         return improver.improveSchedule(schedule);
@@ -147,46 +154,47 @@ RETURN_STATUS run_bsp_scheduler(const ConfigParser &parser, const boost::propert
         }
         return run_bsp_improver(parser, algorithm.get_child("parameters").get_child("improver"), schedule);
 
-    } else if (algorithm.get_child("name").get_value<std::string>() == "Coarser") {
+    } 
+    // else if (algorithm.get_child("name").get_value<std::string>() == "Coarser") {
 
-        std::unique_ptr<Coarser<Graph_t, Graph_t>> coarser =
-            get_coarser_by_name<Graph_t>(parser, algorithm.get_child("parameters").get_child("coarser"));
+    //     std::unique_ptr<Coarser<Graph_t, boost_graph_int_t>> coarser =
+    //         get_coarser_by_name<Graph_t, boost_graph_int_t>(parser, algorithm.get_child("parameters").get_child("coarser"));
 
-        const auto &instance = schedule.getInstance();
+    //     const auto &instance = schedule.getInstance();
 
-        BspInstance<Graph_t> instance_coarse;
+    //     BspInstance<boost_graph_int_t> instance_coarse;
 
-        std::vector<vertex_idx_t<Graph_t>> reverse_vertex_map;
+    //     std::vector<vertex_idx_t<boost_graph_int_t>> reverse_vertex_map;
 
-        bool status = coarser->coarsenDag(instance.getComputationalDag(), instance_coarse.getComputationalDag(),
-                                         reverse_vertex_map);
+    //     bool status = coarser->coarsenDag(instance.getComputationalDag(), instance_coarse.getComputationalDag(),
+    //                                      reverse_vertex_map);
 
-        if (!status) {
-            return ERROR;
-        }
+    //     if (!status) {
+    //         return ERROR;
+    //     }
 
-        instance_coarse.setArchitecture(instance.getArchitecture());
-        instance_coarse.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
+    //     instance_coarse.setArchitecture(instance.getArchitecture());
+    //     instance_coarse.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
 
-        BspSchedule<Graph_t> schedule_coarse(instance_coarse);
+    //     BspSchedule<boost_graph_int_t> schedule_coarse(instance_coarse);
 
-        const auto status_coarse =
-            run_bsp_scheduler(parser, algorithm.get_child("parameters").get_child("scheduler"), schedule_coarse);
+    //     const auto status_coarse =
+    //         run_bsp_scheduler(parser, algorithm.get_child("parameters").get_child("scheduler"), schedule_coarse);
 
-        if (status_coarse != SUCCESS and status_coarse != BEST_FOUND) {
-            return status_coarse;
-        }
+    //     if (status_coarse != SUCCESS and status_coarse != BEST_FOUND) {
+    //         return status_coarse;
+    //     }
 
-        status = coarser_util::pull_back_schedule(schedule_coarse, reverse_vertex_map, schedule);
+    //     status = coarser_util::pull_back_schedule(schedule_coarse, reverse_vertex_map, schedule);
 
 
-        if (!status) {
-            return ERROR;
-        }
+    //     if (!status) {
+    //         return ERROR;
+    //     }
 
-        return SUCCESS;
+    //     return SUCCESS;
 
-    }
+    // }
       //     } else if (algorithm.get_child("name").get_value<std::string>() == "GreedyCilk") {
 
     //         GreedyCilkScheduler scheduler;

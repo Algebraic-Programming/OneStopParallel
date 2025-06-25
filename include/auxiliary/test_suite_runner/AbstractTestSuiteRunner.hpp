@@ -38,6 +38,15 @@ limitations under the License.
 #include "io/hdag_graph_file_reader.hpp"
 #include "io/mtx_graph_file_reader.hpp"
 
+//#define EIGEN_FOUND 1
+
+#ifdef EIGEN_FOUND
+#include <Eigen/Sparse>
+#include <unsupported/Eigen/SparseExtra>
+
+#include "graph_implementations/eigen_matrix_adapter/sparse_matrix.hpp"
+#endif
+
 namespace osp {
 
 namespace pt = boost::property_tree;
@@ -108,7 +117,7 @@ class AbstractTestSuiteRunner {
     }
 
     virtual void setup_statistics_file() {
-        all_csv_headers = {"Graph", "Machine", "Algorithm", "TimeToCompute"};
+        all_csv_headers = {"Graph", "Machine", "Algorithm", "TimeToCompute(ms)"};
 
         std::set<std::string> unique_module_metric_headers;
         for (const auto &mod : active_stats_modules) {
@@ -249,21 +258,64 @@ class AbstractTestSuiteRunner {
                 if (filename_graph.rfind('.') != std::string::npos)
                     ext = filename_graph.substr(filename_graph.rfind('.') + 1);
 
-                if (ext == "hdag")
-                    graph_status = file_reader::readComputationalDagHyperdagFormat(filename_graph,
-                                                                                   bsp_instance.getComputationalDag());
-                else if (ext == "mtx")
-                    graph_status = file_reader::readComputationalDagMartixMarketFormat(
-                        filename_graph, bsp_instance.getComputationalDag());
-                else if (ext == "dot")
-                    graph_status =
-                        file_reader::readComputationalDagDotFormat(filename_graph, bsp_instance.getComputationalDag());
-                else {
-                    log_stream << "Unknown file ending: ." << ext << " ...assuming hyperDag format." << std::endl;
-                    graph_status = file_reader::readComputationalDagHyperdagFormat(filename_graph,
-                                                                                   bsp_instance.getComputationalDag());
-                }
+#ifdef EIGEN_FOUND
 
+                using SM_csr_int32 = Eigen::SparseMatrix<double, Eigen::RowMajor, int32_t>;
+                using SM_csc_int32 = Eigen::SparseMatrix<double, Eigen::ColMajor, int32_t>;
+                using SM_csr_int64 = Eigen::SparseMatrix<double, Eigen::RowMajor, int64_t>;
+                using SM_csc_int64 = Eigen::SparseMatrix<double, Eigen::ColMajor, int64_t>;
+                SM_csr_int32 L_csr_int32;
+                SM_csr_int64 L_csr_int64;
+                SM_csc_int32 L_csc_int32{};
+                SM_csc_int64 L_csc_int64{};
+
+                if constexpr (std::is_same_v<GraphType, sparse_matrix_graph_int32_t> || std::is_same_v<GraphType, sparse_matrix_graph_int64_t>) {
+                    if (ext != "mtx"){
+                        log_stream << "Error: Only .mtx file is accepted for SpTRSV" << std::endl;
+                        return 0;
+                    }
+                    
+                    if constexpr (std::is_same_v<GraphType, sparse_matrix_graph_int32_t>){
+                        graph_status = Eigen::loadMarket(L_csr_int32, filename_graph);
+                        if (!graph_status) {
+                            std::cerr << "Failed to read matrix from " << filename_graph << std::endl;
+                            return -1;
+                        }
+
+                        bsp_instance.getComputationalDag().setCSR(&L_csr_int32);
+                        L_csc_int32 = L_csr_int32;
+                        bsp_instance.getComputationalDag().setCSC(&L_csc_int32);
+                    } else {
+
+                        graph_status = Eigen::loadMarket(L_csr_int64, filename_graph);
+                        if (!graph_status) {
+                            std::cerr << "Failed to read matrix from " << filename_graph << std::endl;
+                            return -1;
+                        }
+
+                        bsp_instance.getComputationalDag().setCSR(&L_csr_int64);
+                        L_csc_int64 = L_csr_int64;
+                        bsp_instance.getComputationalDag().setCSC(&L_csc_int64);
+                    }
+                } else {
+#endif
+                    if (ext == "hdag")
+                        graph_status = file_reader::readComputationalDagHyperdagFormat(filename_graph,
+                                                                                    bsp_instance.getComputationalDag());
+                    else if (ext == "mtx")
+                        graph_status = file_reader::readComputationalDagMartixMarketFormat(
+                            filename_graph, bsp_instance.getComputationalDag());
+                    else if (ext == "dot")
+                        graph_status =
+                            file_reader::readComputationalDagDotFormat(filename_graph, bsp_instance.getComputationalDag());
+                    else {
+                        log_stream << "Unknown file ending: ." << ext << " ...assuming hyperDag format." << std::endl;
+                        graph_status = file_reader::readComputationalDagHyperdagFormat(filename_graph,
+                                                                                    bsp_instance.getComputationalDag());
+                    }
+#ifdef EIGEN_FOUND
+                }
+#endif
                 if (!graph_status) {
                     log_stream << "Reading graph file " << filename_graph << " failed." << std::endl;
                     continue;
@@ -281,12 +333,10 @@ class AbstractTestSuiteRunner {
                     if (!name_suffix.empty())
                         name_suffix = "_" + name_suffix;
 
-
                     std::string current_algo_name =
                         algo_config.get_child("name").get_value<std::string>() + name_suffix;
                     log_stream << "Start Algorithm " + current_algo_name + "\n";
 
-                    
                     long long computation_time_ms;
                     std::unique_ptr<TargetObjectType> target_object; 
                     
@@ -314,7 +364,7 @@ class AbstractTestSuiteRunner {
                         current_row_values["Graph"] = name_graph;
                         current_row_values["Machine"] = name_machine;
                         current_row_values["Algorithm"] = current_algo_name;
-                        current_row_values["TimeToCompute"] = std::to_string(computation_time_ms);
+                        current_row_values["TimeToCompute(ms)"] = std::to_string(computation_time_ms);
 
                         for (auto &stat_module : active_stats_modules) {
                             auto module_metrics = stat_module->record_statistics(*target_object, log_stream);
