@@ -34,14 +34,14 @@ bool readBspArchitecture(std::ifstream &infile, BspArchitecture<Graph_t> &archit
         getline(infile, line);
 
     unsigned p;
-    v_commw_t<Graph_t> g, L;
-    v_memw_t<Graph_t> M;
+    int g, L;
+    int M;
     int mem_type = -1;
     sscanf(line.c_str(), "%d %d %d %d %d", &p, &g, &L, &mem_type, &M);
 
     architecture.setNumberOfProcessors(p);
-    architecture.setCommunicationCosts(g);
-    architecture.setSynchronisationCosts(L);
+    architecture.setCommunicationCosts(static_cast<v_commw_t<Graph_t>>(g));
+    architecture.setSynchronisationCosts(static_cast<v_commw_t<Graph_t>>(L));
 
     if (0 <= mem_type && mem_type <= 3) {
 
@@ -49,13 +49,13 @@ bool readBspArchitecture(std::ifstream &infile, BspArchitecture<Graph_t> &archit
             architecture.setMemoryConstraintType(NONE);
         } else if (mem_type == 1) {
             architecture.setMemoryConstraintType(LOCAL);
-            architecture.setMemoryBound(M);
+            architecture.setMemoryBound(static_cast<v_memw_t<Graph_t>>(M));
         } else if (mem_type == 2) {
             architecture.setMemoryConstraintType(GLOBAL);
-            architecture.setMemoryBound(M);
+            architecture.setMemoryBound(static_cast<v_memw_t<Graph_t>>(M));
         } else if (mem_type == 3) {
             architecture.setMemoryConstraintType(PERSISTENT_AND_TRANSIENT);
-            architecture.setMemoryBound(M);
+            architecture.setMemoryBound(static_cast<v_memw_t<Graph_t>>(M));
         }
     } else if (mem_type == -1) {
         std::cout << "No memory type specified. Assuming \"NONE\".\n";
@@ -77,7 +77,7 @@ bool readBspArchitecture(std::ifstream &infile, BspArchitecture<Graph_t> &archit
             getline(infile, line);
 
         unsigned fromProc, toProc;
-        v_commw_t<Graph_t> value;
+        int value;
         sscanf(line.c_str(), "%d %d %d", &fromProc, &toProc, &value);
 
         if (fromProc >= p || toProc >= p) {
@@ -87,14 +87,14 @@ bool readBspArchitecture(std::ifstream &infile, BspArchitecture<Graph_t> &archit
             architecture.SetUniformSendCost();
             return false;
         }
-        if (fromProc == toProc && value != 0u) {
+        if (fromProc == toProc && value != 0) {
             std::cout << "Incorrect input file format (main diagonal of NUMA cost "
                          "matrix must be 0).\n";
 
             architecture.SetUniformSendCost();
             return false;
         }
-        architecture.setSendCosts(fromProc, toProc, value);
+        architecture.setSendCosts(fromProc, toProc, static_cast<v_commw_t<Graph_t>>(value));
     }
 
     getline(infile, line);
