@@ -20,14 +20,11 @@ limitations under the License.
 #include <filesystem>
 #include <iostream>
 #include <string>
-
-
-using namespace osp;
-
+#include "graph_implementations/eigen_matrix_adapter/sparse_matrix.hpp"
 
 #ifdef EIGEN_FOUND
 
-using graph_t = sparse_matrix_graph_int32_t;
+using graph_t = osp::sparse_matrix_graph_int32_t;
 
 int main(int argc, char *argv[]) {
 

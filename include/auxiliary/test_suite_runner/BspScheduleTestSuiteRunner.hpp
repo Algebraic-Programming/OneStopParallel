@@ -25,14 +25,14 @@ limitations under the License.
 #include "StatsModules/BasicBspStatsModule.hpp"
 #include "StatsModules/BspCommStatsModule.hpp"
 #include "StatsModules/BspSptrsvStatsModule.hpp"
+#include "StatsModules/GraphStatsModule.hpp"
 
 namespace osp {
 
 template<typename concrete_graph_t>
 class BspScheduleTestSuiteRunner : public AbstractTestSuiteRunner<BspSchedule<concrete_graph_t>, concrete_graph_t> {
   private:
-    using base = AbstractTestSuiteRunner<BspSchedule<concrete_graph_t>, concrete_graph_t>;
-
+  
   protected:
     RETURN_STATUS compute_target_object_impl(const BspInstance<concrete_graph_t> &instance, std::unique_ptr<BspSchedule<concrete_graph_t>>& schedule,
                                                              const pt::ptree &algo_config,  
@@ -57,7 +57,10 @@ class BspScheduleTestSuiteRunner : public AbstractTestSuiteRunner<BspSchedule<co
             this->active_stats_modules.push_back(std::make_unique<BspCommStatsModule<concrete_graph_t>>());
         } else if (module_name == "BspSptrsvStats") {
             this->active_stats_modules.push_back(std::make_unique<BspSptrsvStatsModule<BspSchedule<concrete_graph_t>>>());
-        } 
+        } else if (module_name == "GraphStats") {
+            this->active_stats_modules.push_back(
+                std::make_unique<GraphStatsModule<BspSchedule<concrete_graph_t>>>());
+        }
     }
 
     // TODO

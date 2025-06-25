@@ -266,7 +266,7 @@ class BspArchitecture {
         double avg = 0;
         for (unsigned i = 0; i < number_processors; ++i)
             for (unsigned j = 0; j < number_processors; ++j)
-                avg += send_costs[i][j];
+                avg += static_cast<double>(send_costs[i][j]);
         avg = avg * (double)communication_costs / (double)number_processors / (double)number_processors;
 
         if (avg > static_cast<double>(std::numeric_limits<unsigned>::max())) {
