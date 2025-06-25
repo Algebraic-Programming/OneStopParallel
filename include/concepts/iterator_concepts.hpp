@@ -57,6 +57,22 @@ struct is_forward_range_of<
 template<typename T, typename ValueType>
 inline constexpr bool is_forward_range_of_v = is_forward_range_of<T, ValueType>::value;
 
+// Concept for containers
+template<typename T, typename ValueType, typename = void>
+struct is_container_of : std::false_type {};
+
+template<typename T, typename ValueType>
+struct is_container_of<
+    T, ValueType,
+    std::void_t<decltype(std::size(std::declval<T>()))>>
+    : std::conjunction<
+          is_forward_range_of<T, ValueType>> {};
+
+template<typename T, typename ValueType>
+inline constexpr bool is_container_of_v = is_container_of<T, ValueType>::value;
+
+
+
 // Concept for const_iterator with forward iterator category
 template<typename T, typename = void>
 struct is_input_iterator : std::false_type {};

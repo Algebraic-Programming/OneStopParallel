@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(No_Edges_Graph_reorder) {
 };
 
 BOOST_AUTO_TEST_CASE(LineGraph_keep_order) {
-    const std::vector<std::pair<std::size_t, std::size_t>> edges({{0, 1}, {1, 2}, {2, 3}, {3, 4}, {4, 5}, {5, 6}, {6, 7}});
+    const std::set<std::pair<std::size_t, std::size_t>> edges({{0, 1}, {1, 2}, {2, 3}, {3, 4}, {4, 5}, {5, 6}, {6, 7}});
 
     Compact_Sparse_Graph<true> graph(8, edges);
 

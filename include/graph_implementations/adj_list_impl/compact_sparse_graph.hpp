@@ -198,14 +198,14 @@ class Compact_Sparse_Graph {
 
         template <typename edge_list_type>
         Compact_Sparse_Graph(vertex_idx num_vertices_, const edge_list_type & edges) : number_of_vertices(num_vertices_), number_of_edges(static_cast<edge_t>(edges.size())) {
-            static_assert( std::is_same<edge_list_type, std::vector<std::pair<vertex_idx, vertex_idx>> >::value
+            static_assert( is_container_of<edge_list_type, std::pair<vertex_idx, vertex_idx>>::value
                         || is_edge_list_type<edge_list_type, vertex_idx, edge_t>::value);
             
             assert((0 <= num_vertices_) && "Number of vertices must be non-negative.");
-            assert((edges.size() < static_cast<size_t>(std::numeric_limits<edge_t>::max())) && "Number of edge must be strictly smaller than the maximally representable number.");
+            assert((edges.size() < static_cast<size_t>(std::numeric_limits<edge_t>::max())) && "Number of edges must be strictly smaller than the maximally representable number.");
             
-            if constexpr ( std::is_same_v<edge_list_type, std::vector<std::pair<vertex_idx, vertex_idx>>> ) {
-                assert(std::all_of(edges.cbegin(), edges.cend(), [num_vertices_](const auto &edge) { return (0 <= edge.first) && (edge.first < num_vertices_) && (0 <= edge.second) && (edge.second < num_vertices_); } ) && "Source and target of edges must be non-negative and less than the number of vertices.");
+            if constexpr ( is_container_of<edge_list_type, std::pair<vertex_idx, vertex_idx>>::value ) {
+                assert(std::all_of(edges.begin(), edges.end(), [num_vertices_](const auto &edge) { return (0 <= edge.first) && (edge.first < num_vertices_) && (0 <= edge.second) && (edge.second < num_vertices_); } ) && "Source and target of edges must be non-negative and less than the number of vertices.");
             }
 
             if constexpr ( is_edge_list_type_v<edge_list_type, vertex_idx, edge_t> ) {
@@ -213,8 +213,8 @@ class Compact_Sparse_Graph {
             }
 
             if constexpr (keep_vertex_order) {
-                if constexpr ( std::is_same_v<edge_list_type, std::vector<std::pair<vertex_idx, vertex_idx>>> ) {
-                    assert(std::all_of(edges.cbegin(), edges.cend(), [](const auto &edge) { return edge.first < edge.second; } ) && "Vertex order must be a topological order.");
+                if constexpr ( is_container_of<edge_list_type, std::pair<vertex_idx, vertex_idx>>::value ) {
+                    assert(std::all_of(edges.begin(), edges.end(), [](const auto &edge) { return edge.first < edge.second; } ) && "Vertex order must be a topological order.");
                 }
                 if constexpr ( is_edge_list_type_v<edge_list_type, vertex_idx, edge_t> ) {
                     assert(std::all_of(edges.begin(), edges.end(), [](const auto &edge) { return edge.source < edge.target; } ) && "Vertex order must be a topological order.");
@@ -243,7 +243,7 @@ class Compact_Sparse_Graph {
             std::vector<std::vector<vertex_idx>> children_tmp(num_vertices());
             std::vector<edge_t> num_parents_tmp(num_vertices(), 0);
 
-            if constexpr ( std::is_same_v<edge_list_type, std::vector<std::pair<vertex_idx, vertex_idx>>> ) {
+            if constexpr ( is_container_of<edge_list_type, std::pair<vertex_idx, vertex_idx>>::value ) {
                 for (const auto &edge : edges) {
                     children_tmp[edge.first].push_back(edge.second);
                     num_parents_tmp[edge.second]++;
@@ -288,7 +288,7 @@ class Compact_Sparse_Graph {
             } else {
                 std::vector<std::vector<vertex_idx>> parents_tmp(num_vertices());
 
-                if constexpr ( std::is_same_v<edge_list_type, std::vector<std::pair<vertex_idx, vertex_idx>>> ) {
+                if constexpr ( is_container_of<edge_list_type, std::pair<vertex_idx, vertex_idx>>::value ) {
                     for (const auto &edge : edges) {
                         parents_tmp[edge.second].push_back(edge.first);
                     }
