@@ -25,45 +25,9 @@ limitations under the License.
 #include <callbackbase.h>
 #include <coptcpp_pch.h>
 
-struct edge {
+#include "moe_util.hpp"
 
-    unsigned layer;
-    unsigned expert_from; // expert in layer
-    unsigned expert_to;   // expert in layer + 1
 
-    unsigned weight;
-};
-
-struct moe_ilp_params {
-
-    moe_ilp_params() {}
-    moe_ilp_params(unsigned num_experts_, unsigned num_layers_, unsigned num_gpus_)
-        : num_gpus(num_gpus_), num_layers(num_layers_), num_experts(num_experts_) {
-
-        expert_weights = std::vector<std::vector<unsigned>>(num_experts_, std::vector<unsigned>(num_layers_, 1));
-    }
-
-    moe_ilp_params(std::vector<std::vector<unsigned>> &expert_weights_, std::vector<edge> &edges_, unsigned num_gpus_)
-        : num_gpus(num_gpus_), expert_weights(expert_weights_), edges(edges_) {
-
-        num_experts = static_cast<unsigned>(expert_weights_.size());
-        num_layers = static_cast<unsigned>(expert_weights_[0].size());
-
-        for (unsigned expert = 0; expert < num_experts; expert++) {
-            if (expert_weights[expert].size() != num_layers)
-                throw std::invalid_argument(
-                    "Invalid Argument while constructing moe_ilp_params: expert_weights must be a rectangular matrix!");
-        }
-    }
-
-    unsigned num_gpus = 0;
-
-    std::vector<std::vector<unsigned>> expert_weights;
-    std::vector<edge> edges;
-
-    unsigned num_layers = 0;
-    unsigned num_experts = 0;
-};
 
 class moe_ilp_solver {
 
