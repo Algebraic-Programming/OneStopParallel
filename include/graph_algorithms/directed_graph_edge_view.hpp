@@ -23,20 +23,6 @@ limitations under the License.
 namespace osp {
 
 template<typename Graph_t>
-struct directed_edge {
-
-    
-
-    vertex_idx_t<Graph_t> source;
-    vertex_idx_t<Graph_t> target;
-
-    std::size_t idx;
-
-    directed_edge(vertex_idx_t<Graph_t> src, vertex_idx_t<Graph_t> tgt, std::size_t idx_)
-        : source(src), target(tgt), idx(idx_) {}
-};
-
-template<typename Graph_t>
 class edge_view {
   private:
     static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
@@ -53,11 +39,10 @@ class edge_view {
         using reference = value_type &;
 
       private:
-        const Graph_t *graph;
-
-        vertex_idx_t<Graph_t> current_vertex;
-        child_iterator_t current_child;
-        std::size_t current_edge_idx;
+        const Graph_t *graph;                 // Pointer to the graph
+        vertex_idx_t<Graph_t> current_vertex; // Current source vertex
+        child_iterator_t current_child; // Iterator to the current target vertex in current_vertex's adjacency list
+        std::size_t current_edge_idx;   // Global index of the current edge in the traversal order
 
       public:
         directed_edge_iterator() : graph(nullptr), current_vertex(0), current_edge_idx(0) {}
@@ -117,7 +102,7 @@ class edge_view {
             }
         }
 
-        inline value_type operator*() const { return {current_vertex, *current_child, current_edge_idx}; }
+        inline value_type operator*() const { return {current_vertex, *current_child}; }
 
         inline directed_edge_iterator &operator++() {
 
@@ -170,9 +155,164 @@ class edge_view {
     inline auto size() const { return graph.num_edges(); }
 };
 
-} // namespace osp
-
+/**
+ * @brief A view over the outgoing edges of a specific vertex in a directed graph.
+ *
+ * This class provides an iterator-based view to iterate over the outgoing edges
+ * of a given vertex `u`. It is a lightweight, non-owning view.
+ *
+ * @tparam Graph_t The type of the graph, which must satisfy the `is_directed_graph_v` concept.
+ */
 template<typename Graph_t>
-struct std::hash<osp::directed_edge<Graph_t>> {
-    std::size_t operator()(const osp::directed_edge<Graph_t> &p) const noexcept { return p.idx; }
+class out_edge_view {
+  private:
+    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+
+    const Graph_t &graph;
+    vertex_idx_t<Graph_t> source_vertex;
+
+    template<typename child_iterator_t>
+    class out_edge_iterator {
+      public:
+        using iterator_category = typename std::iterator_traits<child_iterator_t>::iterator_category;
+        using difference_type = std::ptrdiff_t;
+        using value_type = directed_edge<Graph_t>;
+        using pointer = value_type *;
+        using reference = value_type &;
+
+      private:
+        vertex_idx_t<Graph_t> source_vertex;
+        child_iterator_t current_child_it;
+
+      public:
+        out_edge_iterator() = default;
+        out_edge_iterator(vertex_idx_t<Graph_t> u, child_iterator_t it) : source_vertex(u), current_child_it(it) {}
+
+        inline value_type operator*() const { return {source_vertex, *current_child_it}; }
+
+        inline out_edge_iterator &operator++() {
+            ++current_child_it;
+            return *this;
+        }
+
+        inline out_edge_iterator operator++(int) {
+            out_edge_iterator temp = *this;
+            ++(*this);
+            return temp;
+        }
+
+        inline out_edge_iterator &operator--() {
+            --current_child_it;
+            return *this;
+        }
+
+        inline out_edge_iterator operator--(int) {
+            out_edge_iterator temp = *this;
+            --(*this);
+            return temp;
+        }
+
+        inline bool operator==(const out_edge_iterator &other) const {
+            return current_child_it == other.current_child_it;
+        }
+
+        inline bool operator!=(const out_edge_iterator &other) const { return !(*this == other); }
+    };
+
+  public:
+    using iterator =
+        out_edge_iterator<decltype(std::declval<Graph_t>().children(std::declval<vertex_idx_t<Graph_t>>()).begin())>;
+    using const_iterator = iterator;
+
+    out_edge_view(const Graph_t &graph_, vertex_idx_t<Graph_t> u) : graph(graph_), source_vertex(u) {}
+
+    inline auto begin() const { return iterator(source_vertex, graph.children(source_vertex).begin()); }
+    inline auto cbegin() const { return begin(); }
+
+    inline auto end() const { return iterator(source_vertex, graph.children(source_vertex).end()); }
+    inline auto cend() const { return end(); }
+
+    inline auto size() const { return graph.out_degree(source_vertex); }
 };
+
+/**
+ * @brief A view over the incoming edges of a specific vertex in a directed graph.
+ *
+ * This class provides an iterator-based view to iterate over the incoming edges
+ * of a given vertex `v`. It is a lightweight, non-owning view.
+ *
+ * @tparam Graph_t The type of the graph, which must satisfy the `is_directed_graph_v` concept.
+ */
+template<typename Graph_t>
+class in_edge_view {
+  private:
+    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+
+    const Graph_t &graph;
+    vertex_idx_t<Graph_t> target_vertex;
+
+    template<typename parent_iterator_t>
+    class in_edge_iterator {
+      public:
+        using iterator_category = typename std::iterator_traits<parent_iterator_t>::iterator_category;
+        using difference_type = std::ptrdiff_t;
+        using value_type = directed_edge<Graph_t>;
+        using pointer = value_type *;
+        using reference = value_type &;
+
+      private:
+        vertex_idx_t<Graph_t> target_vertex;
+        parent_iterator_t current_parent_it;
+
+      public:
+        in_edge_iterator() = default;
+        in_edge_iterator(vertex_idx_t<Graph_t> v, parent_iterator_t it) : target_vertex(v), current_parent_it(it) {}
+
+        inline value_type operator*() const { return {*current_parent_it, target_vertex}; }
+
+        inline in_edge_iterator &operator++() {
+            ++current_parent_it;
+            return *this;
+        }
+
+        inline in_edge_iterator operator++(int) {
+            in_edge_iterator temp = *this;
+            ++(*this);
+            return temp;
+        }
+
+        inline in_edge_iterator &operator--() {
+            --current_parent_it;
+            return *this;
+        }
+
+        inline in_edge_iterator operator--(int) {
+            in_edge_iterator temp = *this;
+            --(*this);
+            return temp;
+        }
+
+        inline bool operator==(const in_edge_iterator &other) const {
+            return current_parent_it == other.current_parent_it;
+        }
+
+        inline bool operator!=(const in_edge_iterator &other) const { return !(*this == other); }
+    };
+
+  public:
+    using iterator =
+        in_edge_iterator<decltype(std::declval<Graph_t>().parents(std::declval<vertex_idx_t<Graph_t>>()).begin())>;
+    using const_iterator = iterator;
+
+    in_edge_view(const Graph_t &graph_, vertex_idx_t<Graph_t> v) : graph(graph_), target_vertex(v) {}
+
+    inline auto begin() const { return iterator(target_vertex, graph.parents(target_vertex).begin()); }
+    inline auto cbegin() const { return begin(); }
+
+    inline auto end() const { return iterator(target_vertex, graph.parents(target_vertex).end()); }
+    inline auto cend() const { return end(); }
+
+    inline auto size() const { return graph.in_degree(target_vertex); }
+};
+
+} // namespace osp

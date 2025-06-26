@@ -23,7 +23,6 @@ limitations under the License.
 #include <type_traits>
 #include <vector>
 
-#include "auxiliary/Balanced_Coin_Flips.hpp"
 #include "auxiliary/datastructures/union_find.hpp"
 #include "coarser/Coarser.hpp"
 #include "graph_algorithms/directed_graph_path_util.hpp"
@@ -31,25 +30,27 @@ limitations under the License.
 
 namespace osp {
 
+    namespace SquashAParams {
+        enum class Mode { EDGE_WEIGHT, TRIANGLES };
+        struct Parameters {
+            double geom_decay_num_nodes{ 17.0/16.0 };
+            double poisson_par{ 0.0 };
+            unsigned noise{ 0U };
+            std::pair<unsigned, unsigned> edge_sort_ratio{3, 2};
+            unsigned num_rep_without_node_decrease{ 4 };
+            double temperature_multiplier{ 1.125 };
+            unsigned number_of_temperature_increases{ 14 };
+            Mode mode{ Mode::EDGE_WEIGHT };
+            bool use_structured_poset{false};
+            bool use_top_poset{true};
+        };
+    } // end namespace SquashAParams
+
 
     template<typename Graph_t_in, typename Graph_t_out>
     class SquashA : public CoarserGenExpansionMap<Graph_t_in, Graph_t_out> {
-        public:
-            enum class Mode { EDGE_WEIGHT, TRIANGLES };
-            struct Parameters {
-                double geom_decay_num_nodes{ 17.0/16.0 };
-                double poisson_par{ 0.0 };
-                unsigned noise{ 0U };
-                std::pair<unsigned, unsigned> edge_sort_ratio{3, 2};
-                int num_rep_without_node_decrease{ 4 };
-                double temperature_multiplier{ 1.125 };
-                unsigned number_of_temperature_increases{ 14 };
-                Mode mode{ Mode::EDGE_WEIGHT };
-            };
         private:
-            Parameters params;
-            Thue_Morse_Sequence coin{};
-            Biased_Random balanced_random{};
+            SquashAParams::Parameters params;
 
             std::vector<int> generate_poset_in_map(const Graph_t_in &dag_in);
             
@@ -149,8 +150,6 @@ namespace osp {
                 if (num_nodes_decrease > 0 && num_nodes_decrease >= min_node_decrease) {
                     partition_vec = connected_components.get_connected_components();
                     
-                    std::cout << "Used UF" << std::endl; 
-
                 } else {
                     partition_vec.reserve(dag_in.num_vertices());
                     for (const auto &vert : dag_in.vertices()) {
@@ -166,7 +165,7 @@ namespace osp {
         public:
             virtual std::vector<std::vector<vertex_idx_t<Graph_t_in>>> generate_vertex_expansion_map(const Graph_t_in &dag_in) override;
 
-            SquashA(Parameters params_ = Parameters()) : params(params_) {};
+            SquashA(SquashAParams::Parameters params_ = SquashAParams::Parameters()) : params(params_) {};
 
             SquashA(const SquashA&) = default;
             SquashA(SquashA&&) = default;
@@ -174,8 +173,8 @@ namespace osp {
             SquashA& operator=(SquashA&&) = default;
             virtual ~SquashA() override = default;
 
-            inline Parameters &getParams() { return params; }
-            inline void setParams(Parameters params_) { params = params_; }
+            inline SquashAParams::Parameters &getParams() { return params; }
+            inline void setParams(SquashAParams::Parameters params_) { params = params_; }
 
             std::string getCoarserName() const override { return "SquashA"; }
     };
@@ -183,11 +182,11 @@ namespace osp {
     template<typename Graph_t_in, typename Graph_t_out>
     std::vector<int> SquashA<Graph_t_in, Graph_t_out>::generate_poset_in_map(const Graph_t_in &dag_in) {
         std::vector<int> poset_int_mapping;
-        if ( coin.get_flip() ) {
+        if ( !params.use_structured_poset ) {
             poset_int_mapping = get_strict_poset_integer_map<Graph_t_in>( params.noise, params.poisson_par, dag_in );
         }
         else {
-            if ( balanced_random.get_flip() ) {
+            if ( params.use_top_poset ) {
                 poset_int_mapping = get_top_node_distance<Graph_t_in, int>(dag_in);
             } else {
                 std::vector<int> bot_dist = get_bottom_node_distance<Graph_t_in, int>(dag_in);
@@ -209,7 +208,7 @@ namespace osp {
 
         std::vector<int> poset_int_mapping = generate_poset_in_map(dag_in);
 
-        if (params.mode == Mode::EDGE_WEIGHT) {
+        if (params.mode == SquashAParams::Mode::EDGE_WEIGHT) {
             auto edge_w_cmp = [](const std::pair<edge_desc_t<Graph_t_in>, e_commw_t<Graph_t_in> > &lhs, const std::pair<edge_desc_t<Graph_t_in>, e_commw_t<Graph_t_in> > &rhs) { return lhs.second < rhs.second; };
             std::multiset< std::pair<edge_desc_t<Graph_t_in>, e_commw_t<Graph_t_in> >, decltype(edge_w_cmp)> edge_weights(edge_w_cmp);
             {
@@ -221,7 +220,7 @@ namespace osp {
 
             return gen_exp_map_from_contractable_edges<e_commw_t<Graph_t_in>, decltype(edge_w_cmp)>(edge_weights, poset_int_mapping, dag_in);
 
-        } else if (params.mode == Mode::TRIANGLES) {
+        } else if (params.mode == SquashAParams::Mode::TRIANGLES) {
                 auto edge_w_cmp = [](const std::pair<edge_desc_t<Graph_t_in>, std::size_t> &lhs, const std::pair<edge_desc_t<Graph_t_in>, std::size_t> &rhs) { return lhs.second < rhs.second; };
             std::multiset< std::pair<edge_desc_t<Graph_t_in>, std::size_t>, decltype(edge_w_cmp)> edge_weights(edge_w_cmp);
             {

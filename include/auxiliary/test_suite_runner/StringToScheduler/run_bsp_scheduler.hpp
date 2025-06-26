@@ -32,6 +32,7 @@ limitations under the License.
 #include "bsp/scheduler/LocalSearch/KernighanLin/kl_total_comm.hpp"
 #include "bsp/scheduler/LocalSearch/KernighanLin/kl_total_cut.hpp"
 #include "bsp/scheduler/Serial.hpp"
+#include "graph_implementations/boost_graphs/boost_graph.hpp"
 
 // #include "scheduler/GreedySchedulers/GreedyChildren.hpp"
 // #include "scheduler/GreedySchedulers/GreedyCilkScheduler.hpp"
@@ -44,7 +45,6 @@ limitations under the License.
 // #include "scheduler/GreedySchedulers/RandomGreedy.hpp"
 // #include "scheduler/GreedySchedulers/GreedyBspStoneAge.hpp"
 // #include "scheduler/LocalSearchSchedulers/HillClimbingScheduler.hpp"
-
 
 #include "auxiliary/test_suite_runner/ConfigParser.hpp"
 #include "bsp/model/BspSchedule.hpp"
@@ -64,24 +64,27 @@ RETURN_STATUS run_bsp_improver(const ConfigParser &, const boost::property_tree:
 
     const std::string improver_name = algorithm.get_child("name").get_value<std::string>();
 
-    if (improver_name == "kl_total_comm") {
+    if constexpr (is_directed_graph_edge_desc_v<Graph_t>) {
 
-        kl_total_comm<Graph_t> improver;
-        return improver.improveSchedule(schedule);
+        if (improver_name == "kl_total_comm") {
 
-    } else if (improver_name == "kl_total_cut") {
+            kl_total_comm<Graph_t> improver;
+            return improver.improveSchedule(schedule);
 
-        kl_total_cut<Graph_t> improver;
-        return improver.improveSchedule(schedule);
+        } else if (improver_name == "kl_total_cut") {
 
-    } else if (improver_name == "hill_climb") {
+            kl_total_cut<Graph_t> improver;
+            return improver.improveSchedule(schedule);
+        }
+    }
+
+    if (improver_name == "hill_climb") {
 
         HillClimbingScheduler<Graph_t> improver;
         return improver.improveSchedule(schedule);
-
-    } else {
-        throw std::invalid_argument("Invalid improver name: " + improver_name);
     }
+
+    throw std::invalid_argument("Invalid improver name: " + improver_name);
 }
 
 template<typename Graph_t>
@@ -149,17 +152,21 @@ RETURN_STATUS run_bsp_scheduler(const ConfigParser &parser, const boost::propert
 
     } else if (algorithm.get_child("name").get_value<std::string>() == "Coarser") {
 
-        std::unique_ptr<Coarser<Graph_t, Graph_t>> coarser =
-            get_coarser_by_name<Graph_t>(parser, algorithm.get_child("parameters").get_child("coarser"));
+        using vertex_type_t_or_default = std::conditional_t<is_computational_dag_typed_vertices_v<Graph_t>, v_type_t<Graph_t>, unsigned>;
+        using edge_commw_t_or_default = std::conditional_t<is_computational_dag_edge_desc_v<Graph_t>, e_commw_t<Graph_t>, v_commw_t<Graph_t>>;
+    
+        using boost_graph_t = boost_graph<v_workw_t<Graph_t>, v_commw_t<Graph_t>, v_memw_t<Graph_t>, vertex_type_t_or_default, edge_commw_t_or_default >;
+
+        std::unique_ptr<Coarser<Graph_t, boost_graph_t>> coarser = get_coarser_by_name<Graph_t, boost_graph_t>(
+            parser, algorithm.get_child("parameters").get_child("coarser"));
 
         const auto &instance = schedule.getInstance();
 
-        BspInstance<Graph_t> instance_coarse;
+        BspInstance<boost_graph_t> instance_coarse;
 
-        std::vector<vertex_idx_t<Graph_t>> reverse_vertex_map;
+        std::vector<vertex_idx_t<boost_graph_t>> reverse_vertex_map;
 
-        bool status = coarser->coarsenDag(instance.getComputationalDag(), instance_coarse.getComputationalDag(),
-                                         reverse_vertex_map);
+        bool status = coarser->coarsenDag(instance.getComputationalDag(), instance_coarse.getComputationalDag(), reverse_vertex_map);
 
         if (!status) {
             return ERROR;
@@ -168,7 +175,7 @@ RETURN_STATUS run_bsp_scheduler(const ConfigParser &parser, const boost::propert
         instance_coarse.setArchitecture(instance.getArchitecture());
         instance_coarse.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
 
-        BspSchedule<Graph_t> schedule_coarse(instance_coarse);
+        BspSchedule<boost_graph_t> schedule_coarse(instance_coarse);
 
         const auto status_coarse =
             run_bsp_scheduler(parser, algorithm.get_child("parameters").get_child("scheduler"), schedule_coarse);
@@ -179,7 +186,6 @@ RETURN_STATUS run_bsp_scheduler(const ConfigParser &parser, const boost::propert
 
         status = coarser_util::pull_back_schedule(schedule_coarse, reverse_vertex_map, schedule);
 
-
         if (!status) {
             return ERROR;
         }
@@ -187,7 +193,8 @@ RETURN_STATUS run_bsp_scheduler(const ConfigParser &parser, const boost::propert
         return SUCCESS;
 
     }
-      //     } else if (algorithm.get_child("name").get_value<std::string>() == "GreedyCilk") {
+
+    //     } else if (algorithm.get_child("name").get_value<std::string>() == "GreedyCilk") {
 
     //         GreedyCilkScheduler scheduler;
     //         scheduler.setTimeLimitSeconds(timeLimit);
@@ -624,7 +631,7 @@ RETURN_STATUS run_bsp_scheduler(const ConfigParser &parser, const boost::propert
     //         scheduler.setTimeLimitSeconds(timeLimit);
 
     //         return scheduler.computeSchedule(bsp_instance);
-   
+
     //     } else if (algorithm.get_child("name").get_value<std::string>() == "BestGreedyLK") {
 
     //         MetaGreedyScheduler best_greedy;
@@ -942,7 +949,7 @@ RETURN_STATUS run_bsp_scheduler(const ConfigParser &parser, const boost::propert
     //         scheduler.setTimeLimitSeconds(timeLimit);
 
     //         return scheduler.computeSchedule(bsp_instance);
-    //     }  
+    //     }
     else {
 
         throw std::invalid_argument("Parameter error: Unknown algorithm.\n");

@@ -23,6 +23,7 @@ limitations under the License.
 #include <string>
 #include <vector>
 
+#include "bsp/scheduler/CoarsenRefineSchedulers/SquashAMul.hpp"
 #include "bsp/scheduler/GreedySchedulers/BspLocking.hpp"
 #include "bsp/scheduler/GreedySchedulers/CilkScheduler.hpp"
 #include "bsp/scheduler/GreedySchedulers/EtfScheduler.hpp"
@@ -34,6 +35,7 @@ limitations under the License.
 #include "bsp/scheduler/GreedySchedulers/VarianceFillup.hpp"
 #include "bsp/scheduler/LoadBalanceScheduler/LightEdgeVariancePartitioner.hpp"
 #include "bsp/scheduler/LoadBalanceScheduler/VariancePartitioner.hpp"
+#include "bsp/scheduler/LocalSearch/HillClimbing/hill_climbing.hpp"
 #include "bsp/scheduler/Serial.hpp"
 #include "graph_implementations/adj_list_impl/compact_sparse_graph.hpp"
 #include "graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
@@ -333,4 +335,26 @@ BOOST_AUTO_TEST_CASE(LightEdgeVariancePartitioner_test) {
 
     LightEdgeVariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, global_only_interpolation> test_global;
     run_test(&test_global);
+}
+
+BOOST_AUTO_TEST_CASE(SquashAMul_test) {
+    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_t> sched;
+
+    SquashAMul<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t> coarsen_test;
+    coarsen_test.setInitialScheduler(&sched);
+    coarsen_test.setMinimumNumberVertices(1);
+    
+    run_test(&coarsen_test);
+}
+
+BOOST_AUTO_TEST_CASE(SquashAMul_improver_test) {
+    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_t> sched;
+    HillClimbingScheduler<computational_dag_edge_idx_vector_impl_def_t> improver;
+
+    SquashAMul<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t> coarsen_test;
+    coarsen_test.setInitialScheduler(&sched);
+    coarsen_test.setImprovementScheduler(&improver);
+    coarsen_test.setMinimumNumberVertices(1);
+    
+    run_test(&coarsen_test);
 }

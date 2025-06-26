@@ -72,7 +72,7 @@ void write_txt(std::ostream &os, const BspScheduleCS<Graph_t> &schedule) {
         os << "\%\% Communication schedule available." << std::endl;
 
         for (const auto &[key, val] : schedule.getCommunicationSchedule()) {
-            os << get<0>(key) << " " << get<1>(key) << " " << get<2>(key) << " " << val << std::endl;
+            os << std::get<0>(key) << " " << std::get<1>(key) << " " << std::get<2>(key) << " " << val << std::endl;
         }
     }
 }

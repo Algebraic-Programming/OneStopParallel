@@ -68,8 +68,8 @@ class vector_cast_view {
             return tmp;
         }
 
-        inline bool operator==(const cast_iterator &other) { return current_edge == other.current_edge; }
-        inline bool operator!=(const cast_iterator &other) { return current_edge != other.current_edge; }
+        inline bool operator==(const cast_iterator &other) const { return current_edge == other.current_edge; }
+        inline bool operator!=(const cast_iterator &other) const { return current_edge != other.current_edge; }
     };
 
   public:
@@ -112,7 +112,7 @@ class dag_vector_adapter {
 
     inline auto vertices() const { return vertex_range<vertex_idx>(static_cast<vertex_idx>(vertices_.size())); }
 
-    inline std::size_t num_vertices() const { return vertices_.size(); }
+    inline vertex_idx num_vertices() const { return static_cast<vertex_idx>(vertices_.size()); }
 
     inline std::size_t num_edges() const { return num_edges_; }
 
@@ -162,6 +162,10 @@ class dag_vector_adapter {
     std::size_t num_edges_ = 0;
     unsigned num_vertex_types_ = 0;
 };
+
+
+static_assert(is_other_directed_graph_edge_desc_v<dag_vector_adapter<cdag_vertex_impl_unsigned, int>>,
+              "computational_dag_edge_idx_vector_impl must satisfy the directed_graph_edge_desc concept");
 
 static_assert(has_vertex_weights_v<dag_vector_adapter<cdag_vertex_impl_unsigned, int>>,
               "computational_dag_vector_impl must satisfy the has_vertex_weights concept");

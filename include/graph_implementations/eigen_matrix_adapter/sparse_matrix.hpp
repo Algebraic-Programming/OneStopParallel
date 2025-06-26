@@ -22,6 +22,7 @@ limitations under the License.
 
 #include <Eigen/SparseCore>
 #include "concepts/directed_graph_concept.hpp"
+#include "concepts/directed_graph_edge_desc_concept.hpp"
 #include "concepts/computational_dag_concept.hpp"
 #include "graph_implementations/vertex_iterator.hpp"
 #include "graph_implementations/eigen_sparse_iterator.hpp"
@@ -47,12 +48,13 @@ public:
     using vertex_idx = size_t;
 
     // Required graph trait aliases (used in concept checks)
-    using directed_edge_descriptor = int;
+    using edge_comm_weight_type = void;
     using vertex_work_weight_type = eigen_idx_type;
-    using vertex_comm_weight_type = int;
+    using vertex_comm_weight_type = eigen_idx_type;
     using vertex_mem_weight_type = int;
-    using vertex_type_type = size_t;
-    
+    using vertex_type_type = unsigned;
+
+    using eigen_idx_t = eigen_idx_type;    
 
     SparseMatrixImp() = default;
 
@@ -107,7 +109,17 @@ public:
     // Default zero weights (placeholders, extend as needed)
     vertex_comm_weight_type vertex_comm_weight(vertex_idx) const noexcept { return 0; }
     vertex_mem_weight_type vertex_mem_weight(vertex_idx) const noexcept  { return 0; }
+
+    inline unsigned num_vertex_types() const { return 1; };
+    inline vertex_type_type vertex_type(const vertex_idx ) const { return 0; }
 };
+
+using sparse_matrix_graph_int32_t = SparseMatrixImp<int32_t>;
+using sparse_matrix_graph_int64_t = SparseMatrixImp<int64_t>;
+
+
+static_assert(is_other_directed_graph_edge_desc_v<SparseMatrixImp<int32_t>>,
+              "SparseMatrix must satisfy the directed_graph_edge_desc concept");
 
 // Verify that SparseMatrixImp satisfies the directed graph concept
 static_assert(is_directed_graph_v<SparseMatrixImp<int32_t>>,
@@ -122,6 +134,9 @@ static_assert(has_vertex_weights_v<SparseMatrixImp<int32_t>>,
 
 static_assert(has_vertex_weights_v<SparseMatrixImp<int64_t>>, 
     "Compact_Sparse_Graph must satisfy the has_vertex_weights concept");
+
+static_assert(is_computational_dag_typed_vertices_v<SparseMatrixImp<int32_t>>,
+              "Compact_Sparse_Graph must satisfy the is_computation_dag concept");
 
 
 

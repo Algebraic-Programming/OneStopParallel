@@ -25,6 +25,7 @@ limitations under the License.
 
 #include "auxiliary/misc.hpp"
 #include "concepts/computational_dag_concept.hpp"
+#include "concepts/directed_graph_edge_desc_concept.hpp"
 #include "concepts/constructable_computational_dag_concept.hpp"
 #include "graph_algorithms/computational_dag_construction_util.hpp"
 #include "source_iterator_range.hpp"
@@ -342,8 +343,39 @@ class boost_graph {
     static constexpr edge_comm_weight_type DEFAULT_EDGE_COMM_WEIGHT = 1;
 };
 
+template<typename vertex_workw_t, typename vertex_commw_t, typename vertex_memw_t, typename vertex_type_t, typename edge_commw_t>
+inline auto edges(const boost_graph<vertex_workw_t, vertex_commw_t, vertex_memw_t, vertex_type_t, edge_commw_t> &graph) {
+    return graph.edges();
+}
+
+template<typename vertex_workw_t, typename vertex_commw_t, typename vertex_memw_t, typename vertex_type_t, typename edge_commw_t>
+inline auto out_edges(osp::vertex_idx_t<boost_graph<vertex_workw_t, vertex_commw_t, vertex_memw_t, vertex_type_t, edge_commw_t>> v,
+                      const boost_graph<vertex_workw_t, vertex_commw_t, vertex_memw_t, vertex_type_t, edge_commw_t> &graph) {
+    return graph.out_edges(v);
+}
+
+template<typename vertex_workw_t, typename vertex_commw_t, typename vertex_memw_t, typename vertex_type_t, typename edge_commw_t>
+inline auto in_edges(osp::vertex_idx_t<boost_graph<vertex_workw_t, vertex_commw_t, vertex_memw_t, vertex_type_t, edge_commw_t>> v,
+                     const boost_graph<vertex_workw_t, vertex_commw_t, vertex_memw_t, vertex_type_t, edge_commw_t> &graph) {
+    return graph.in_edges(v);
+}
+
+template<typename vertex_workw_t, typename vertex_commw_t, typename vertex_memw_t, typename vertex_type_t, typename edge_commw_t>
+inline osp::vertex_idx_t<boost_graph<vertex_workw_t, vertex_commw_t, vertex_memw_t, vertex_type_t, edge_commw_t>> source(const osp::edge_desc_t<boost_graph<vertex_workw_t, vertex_commw_t, vertex_memw_t, vertex_type_t, edge_commw_t>> &edge, const boost_graph<vertex_workw_t, vertex_commw_t, vertex_memw_t, vertex_type_t, edge_commw_t> &graph) {
+    return graph.source(edge);
+}
+
+template<typename vertex_workw_t, typename vertex_commw_t, typename vertex_memw_t, typename vertex_type_t, typename edge_commw_t>
+inline osp::vertex_idx_t<boost_graph<vertex_workw_t, vertex_commw_t, vertex_memw_t, vertex_type_t, edge_commw_t>> target(const osp::edge_desc_t<boost_graph<vertex_workw_t, vertex_commw_t, vertex_memw_t, vertex_type_t, edge_commw_t>> &edge, const boost_graph<vertex_workw_t, vertex_commw_t, vertex_memw_t, vertex_type_t, edge_commw_t> &graph) {
+    return graph.target(edge);
+}
+
 using boost_graph_int_t = boost_graph<int, int, int, unsigned, int>;
 using boost_graph_uint_t = boost_graph<unsigned, unsigned, unsigned, unsigned, unsigned>;
+
+
+static_assert(osp::is_other_directed_graph_edge_desc_v<boost_graph_int_t>,
+              "cboost_graph_adapter must satisfy the directed_graph_edge_desc concept");
 
 static_assert(osp::is_directed_graph_edge_desc_v<boost_graph_int_t>,
               "boost_graph_adapter does not satisfy the directed_graph_edge_desc concept");

@@ -23,6 +23,11 @@ _add_test( graph_vector_edge_desc_impl )
 _add_test( boost_graph_adaptor )
 
 _add_test ( connected_components_part )
+
+_add_test( compact_sparse_graph )
+
+_add_test( compact_sparse_graph_edge_desc )
+
 IF(Eigen3_FOUND)
 _add_test ( sparse_matrix_impl )
 _add_test( sptrsv )
@@ -90,8 +95,6 @@ _add_test( bsp_schedulers_mem_const )
 _add_test( bsp_improvementschedulers )
 
 _add_test( coarser )
-
-_add_test( compact_sparse_graph )
 
 _add_test( wavefront_divider )
 

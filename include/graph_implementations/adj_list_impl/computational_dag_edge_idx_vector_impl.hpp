@@ -239,12 +239,47 @@ class computational_dag_edge_idx_vector_impl {
     inline const e_impl &get_edge_impl(directed_edge_descriptor e) const { return edges_[e.idx]; }
 };
 
+template<typename v_impl, typename e_impl>
+inline auto edges(const computational_dag_edge_idx_vector_impl<v_impl, e_impl> &graph) {
+    return graph.edges();
+}
+
+template<typename v_impl, typename e_impl>
+inline auto out_edges(vertex_idx_t<computational_dag_edge_idx_vector_impl<v_impl, e_impl>> v,
+                      const computational_dag_edge_idx_vector_impl<v_impl, e_impl> &graph) {
+    return graph.out_edges(v);
+}
+
+template<typename v_impl, typename e_impl>
+inline auto in_edges(vertex_idx_t<computational_dag_edge_idx_vector_impl<v_impl, e_impl>> v,
+                     const computational_dag_edge_idx_vector_impl<v_impl, e_impl> &graph) {
+    return graph.in_edges(v);
+}
+
+
+// default implementation to get the source of an edge
+template<typename v_impl, typename e_impl>
+inline vertex_idx_t<computational_dag_edge_idx_vector_impl<v_impl, e_impl>> source(const edge_desc_t<computational_dag_edge_idx_vector_impl<v_impl, e_impl>> &edge, const computational_dag_edge_idx_vector_impl<v_impl, e_impl> &graph) {
+    return graph.source(edge);
+}
+
+// default implementation to get the target of an edge
+template<typename v_impl, typename e_impl>
+inline vertex_idx_t<computational_dag_edge_idx_vector_impl<v_impl, e_impl>> target(const edge_desc_t<computational_dag_edge_idx_vector_impl<v_impl, e_impl>> &edge, const computational_dag_edge_idx_vector_impl<v_impl, e_impl> &graph) {
+    return graph.target(edge);
+}
+
+
 // default template specialization
 using computational_dag_edge_idx_vector_impl_def_t =
     computational_dag_edge_idx_vector_impl<cdag_vertex_impl_unsigned, cdag_edge_impl_unsigned>;
 
 using computational_dag_edge_idx_vector_impl_def_int_t =
     computational_dag_edge_idx_vector_impl<cdag_vertex_impl_int, cdag_edge_impl_int>;
+
+
+static_assert(is_other_directed_graph_edge_desc_v<computational_dag_edge_idx_vector_impl_def_t>,
+              "computational_dag_edge_idx_vector_impl must satisfy the directed_graph_edge_desc concept");
 
 static_assert(is_directed_graph_edge_desc_v<computational_dag_edge_idx_vector_impl_def_t>,
               "computational_dag_edge_idx_vector_impl must satisfy the directed_graph_edge_desc concept");

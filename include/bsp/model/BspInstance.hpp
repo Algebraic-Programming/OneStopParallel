@@ -88,7 +88,7 @@ class BspInstance {
      */
     BspInstance(Graph_t &&cdag, BspArchitecture<Graph_t> &&architecture_,
                 std::vector<std::vector<bool>> nodeProcessorCompatibility_ = std::vector<std::vector<bool>>({{true}}))
-        : cdag(move(cdag)), architecture(move(architecture_)), nodeProcessorCompatibility(nodeProcessorCompatibility_) {
+        : cdag(std::move(cdag)), architecture(std::move(architecture_)), nodeProcessorCompatibility(nodeProcessorCompatibility_) {
     }
 
     template<typename Graph_t_other>

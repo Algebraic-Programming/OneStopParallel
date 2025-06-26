@@ -96,7 +96,7 @@ class BspArchitecture {
     BspArchitecture()
         : number_processors(2), number_of_processor_types(1), communication_costs(1), synchronisation_costs(2),
           memory_bound(std::vector<v_memw_t<Graph_t>>(number_processors, 100)), isNuma(false),
-          processor_type(std::vector<v_type_t<Graph_t>>(number_processors, 0)),
+          processor_type(std::vector<unsigned>(number_processors, 0)),
           send_costs(std::vector<std::vector<v_commw_t<Graph_t>>>(
               number_processors, std::vector<v_commw_t<Graph_t>>(number_processors, 1))) {
         for (unsigned i = 0; i < number_processors; i++) {
@@ -266,7 +266,7 @@ class BspArchitecture {
         double avg = 0;
         for (unsigned i = 0; i < number_processors; ++i)
             for (unsigned j = 0; j < number_processors; ++j)
-                avg += send_costs[i][j];
+                avg += static_cast<double>(send_costs[i][j]);
         avg = avg * (double)communication_costs / (double)number_processors / (double)number_processors;
 
         if (avg > static_cast<double>(std::numeric_limits<unsigned>::max())) {
@@ -388,7 +388,7 @@ class BspArchitecture {
 
         number_processors = num_proc;
         number_of_processor_types = 1;
-        processor_type = std::vector<v_type_t<Graph_t>>(number_processors, 0);
+        processor_type = std::vector<unsigned>(number_processors, 0);
         send_costs = std::vector<std::vector<v_commw_t<Graph_t>>>(
             number_processors, std::vector<v_commw_t<Graph_t>>(number_processors, 1));
         for (unsigned i = 0; i < number_processors; i++) {
@@ -531,7 +531,7 @@ class BspArchitecture {
     inline const std::vector<std::vector<v_commw_t<Graph_t>>> &sendCostMatrix() const { return send_costs; }
 
     // the type indeces of the processor (e.g. CPU, vector/tensor core)
-    inline const std::vector<v_type_t<Graph_t>> &processorTypes() const { return processor_type; }
+    inline const std::vector<unsigned> &processorTypes() const { return processor_type; }
 
     /**
      * Returns the communication costs between two processors. The communication costs are the send costs multiplied by

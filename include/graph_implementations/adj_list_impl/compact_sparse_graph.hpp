@@ -18,6 +18,7 @@ limitations under the License.
 #pragma once
 
 #include <algorithm>
+#include <iterator>
 #include <limits>
 #include <numeric>
 #include <queue>
@@ -26,9 +27,11 @@ limitations under the License.
 
 #include "auxiliary/math_helper.hpp"
 #include "concepts/computational_dag_concept.hpp"
+#include "concepts/directed_graph_edge_desc_concept.hpp"
+#include "concepts/constructable_computational_dag_concept.hpp"
+#include "concepts/specific_graph_impl.hpp"
 #include "graph_algorithms/directed_graph_edge_view.hpp"
 #include "graph_implementations/vertex_iterator.hpp"
-
 
 namespace osp {
 
@@ -57,6 +60,7 @@ class Compact_Sparse_Graph {
     private:
         using ThisT = Compact_Sparse_Graph<keep_vertex_order, use_work_weights, use_comm_weights, use_mem_weights, use_vert_types, vert_t, edge_t, work_weight_type, comm_weight_type, mem_weight_type, vertex_type_template_type>;
 
+    protected:    
         class Compact_Parent_Edges {
             private:
                 // Compressed Sparse Row (CSR)
@@ -124,6 +128,11 @@ class Compact_Sparse_Graph {
                     return csc_source_ptr[v + 1] - csc_source_ptr[v];
                 }
 
+                inline vertex_idx source(const edge_t &indx) const { auto it = std::upper_bound(csc_source_ptr.cbegin(), csc_source_ptr.cend(), indx); vertex_idx src = static_cast<vertex_idx>(std::distance(csc_source_ptr.cbegin(), it) - 1); return src;};
+                inline vertex_idx target(const edge_t &indx) const { return csc_edge_children[indx]; };
+
+                inline edge_t children_indx_begin(const vertex_idx &vert) const { return csc_source_ptr[vert]; };
+
                 class Children_range {
                     private:
                         const std::vector<vertex_idx> &_csc_edge_children;
@@ -151,8 +160,8 @@ class Compact_Sparse_Graph {
 
 
 
-        const vertex_idx number_of_vertices = static_cast<vert_t>(0);
-        const edge_t number_of_edges = static_cast<edge_t>(0);
+        vertex_idx number_of_vertices = static_cast<vert_t>(0);
+        edge_t number_of_edges = static_cast<edge_t>(0);
 
         Compact_Parent_Edges csr_in_edges;
         Compact_Children_Edges csc_out_edges;
@@ -163,7 +172,6 @@ class Compact_Sparse_Graph {
         std::vector<vertex_comm_weight_type> vert_comm_weights;
         std::vector<vertex_mem_weight_type> vert_mem_weights;
         std::vector<vertex_type_type> vert_types;
-
 
         std::vector<vertex_idx> vertex_permutation_from_internal_to_original;
         std::vector<vertex_idx> vertex_permutation_from_original_to_internal;
@@ -186,20 +194,20 @@ class Compact_Sparse_Graph {
         Compact_Sparse_Graph() = default;
         Compact_Sparse_Graph(const Compact_Sparse_Graph &other) = default;
         Compact_Sparse_Graph(Compact_Sparse_Graph &&other) = default;
-        Compact_Sparse_Graph &operator=(const Compact_Sparse_Graph &other) = delete;
-        Compact_Sparse_Graph &operator=(Compact_Sparse_Graph &&other) = delete;
+        Compact_Sparse_Graph &operator=(const Compact_Sparse_Graph &other) = default;
+        Compact_Sparse_Graph &operator=(Compact_Sparse_Graph &&other) = default;
         virtual ~Compact_Sparse_Graph() = default;
 
         template <typename edge_list_type>
         Compact_Sparse_Graph(vertex_idx num_vertices_, const edge_list_type & edges) : number_of_vertices(num_vertices_), number_of_edges(static_cast<edge_t>(edges.size())) {
-            static_assert( std::is_same<edge_list_type, std::vector<std::pair<vertex_idx, vertex_idx>> >::value
+            static_assert( is_container_of<edge_list_type, std::pair<vertex_idx, vertex_idx>>::value
                         || is_edge_list_type<edge_list_type, vertex_idx, edge_t>::value);
             
             assert((0 <= num_vertices_) && "Number of vertices must be non-negative.");
-            assert((edges.size() < static_cast<size_t>(std::numeric_limits<edge_t>::max())) && "Number of edge must be strictly smaller than the maximally representable number.");
+            assert((edges.size() < static_cast<size_t>(std::numeric_limits<edge_t>::max())) && "Number of edges must be strictly smaller than the maximally representable number.");
             
-            if constexpr ( std::is_same_v<edge_list_type, std::vector<std::pair<vertex_idx, vertex_idx>>> ) {
-                assert(std::all_of(edges.cbegin(), edges.cend(), [num_vertices_](const auto &edge) { return (0 <= edge.first) && (edge.first < num_vertices_) && (0 <= edge.second) && (edge.second < num_vertices_); } ) && "Source and target of edges must be non-negative and less than the number of vertices.");
+            if constexpr ( is_container_of<edge_list_type, std::pair<vertex_idx, vertex_idx>>::value ) {
+                assert(std::all_of(edges.begin(), edges.end(), [num_vertices_](const auto &edge) { return (0 <= edge.first) && (edge.first < num_vertices_) && (0 <= edge.second) && (edge.second < num_vertices_); } ) && "Source and target of edges must be non-negative and less than the number of vertices.");
             }
 
             if constexpr ( is_edge_list_type_v<edge_list_type, vertex_idx, edge_t> ) {
@@ -207,8 +215,8 @@ class Compact_Sparse_Graph {
             }
 
             if constexpr (keep_vertex_order) {
-                if constexpr ( std::is_same_v<edge_list_type, std::vector<std::pair<vertex_idx, vertex_idx>>> ) {
-                    assert(std::all_of(edges.cbegin(), edges.cend(), [](const auto &edge) { return edge.first < edge.second; } ) && "Vertex order must be a topological order.");
+                if constexpr ( is_container_of<edge_list_type, std::pair<vertex_idx, vertex_idx>>::value ) {
+                    assert(std::all_of(edges.begin(), edges.end(), [](const auto &edge) { return edge.first < edge.second; } ) && "Vertex order must be a topological order.");
                 }
                 if constexpr ( is_edge_list_type_v<edge_list_type, vertex_idx, edge_t> ) {
                     assert(std::all_of(edges.begin(), edges.end(), [](const auto &edge) { return edge.source < edge.target; } ) && "Vertex order must be a topological order.");
@@ -237,7 +245,7 @@ class Compact_Sparse_Graph {
             std::vector<std::vector<vertex_idx>> children_tmp(num_vertices());
             std::vector<edge_t> num_parents_tmp(num_vertices(), 0);
 
-            if constexpr ( std::is_same_v<edge_list_type, std::vector<std::pair<vertex_idx, vertex_idx>>> ) {
+            if constexpr ( is_container_of<edge_list_type, std::pair<vertex_idx, vertex_idx>>::value ) {
                 for (const auto &edge : edges) {
                     children_tmp[edge.first].push_back(edge.second);
                     num_parents_tmp[edge.second]++;
@@ -282,7 +290,7 @@ class Compact_Sparse_Graph {
             } else {
                 std::vector<std::vector<vertex_idx>> parents_tmp(num_vertices());
 
-                if constexpr ( std::is_same_v<edge_list_type, std::vector<std::pair<vertex_idx, vertex_idx>>> ) {
+                if constexpr ( is_container_of<edge_list_type, std::pair<vertex_idx, vertex_idx>>::value ) {
                     for (const auto &edge : edges) {
                         parents_tmp[edge.second].push_back(edge.first);
                     }
@@ -409,7 +417,7 @@ class Compact_Sparse_Graph {
         }
 
         template <typename edge_list_type>
-        Compact_Sparse_Graph(vertex_idx num_vertices_, edge_list_type && edges, const std::vector<vertex_work_weight_type> &ww) : Compact_Sparse_Graph(num_vertices_, edges) {
+        Compact_Sparse_Graph(vertex_idx num_vertices_, edge_list_type & edges, const std::vector<vertex_work_weight_type> &&ww) : Compact_Sparse_Graph(num_vertices_, edges) {
             static_assert(use_work_weights, "To set work weight, graph type must allow work weights.");
             assert((ww.size() == static_cast<std::size_t>(num_vertices())) && "Work weights vector must have the same length as the number of vertices.");
 
@@ -660,27 +668,27 @@ class Compact_Sparse_Graph {
         inline vert_t num_vertices() const { return number_of_vertices; };
         inline edge_t num_edges() const { return number_of_edges; }
 
-        inline auto parents(const vertex_idx v) const { return csr_in_edges.parents(v); };
-        inline auto children(const vertex_idx v) const { return csc_out_edges.children(v); };
+        inline auto parents(const vertex_idx &v) const { return csr_in_edges.parents(v); };
+        inline auto children(const vertex_idx &v) const { return csc_out_edges.children(v); };
 
-        inline edge_t in_degree(const vertex_idx v) const {
+        inline edge_t in_degree(const vertex_idx &v) const {
             return csr_in_edges.number_of_parents(v);
         };
-        inline edge_t out_degree(const vertex_idx v) const {
+        inline edge_t out_degree(const vertex_idx &v) const {
             return csc_out_edges.number_of_children(v);
         };
 
         template<typename RetT = vertex_work_weight_type>
-        inline std::enable_if_t<use_work_weights, RetT> vertex_work_weight(const vertex_idx v) const {
+        inline std::enable_if_t<use_work_weights, RetT> vertex_work_weight(const vertex_idx &v) const {
             return vert_work_weights[v];
         };
         template<typename RetT = vertex_work_weight_type>
-        inline std::enable_if_t<not use_work_weights, RetT> vertex_work_weight(const vertex_idx v) const {
+        inline std::enable_if_t<not use_work_weights, RetT> vertex_work_weight(const vertex_idx &v) const {
             return static_cast<RetT>(1) + in_degree(v);
         };
 
         template<typename RetT = vertex_comm_weight_type>
-        inline std::enable_if_t<use_comm_weights, RetT> vertex_comm_weight(const vertex_idx v) const {
+        inline std::enable_if_t<use_comm_weights, RetT> vertex_comm_weight(const vertex_idx &v) const {
             return vert_comm_weights[v];
         };
         template<typename RetT = vertex_comm_weight_type>
@@ -689,7 +697,7 @@ class Compact_Sparse_Graph {
         };
 
         template<typename RetT = vertex_mem_weight_type>
-        inline std::enable_if_t<use_mem_weights, RetT> vertex_mem_weight(const vertex_idx v) const {
+        inline std::enable_if_t<use_mem_weights, RetT> vertex_mem_weight(const vertex_idx &v) const {
             return vert_mem_weights[v];
         };
         template<typename RetT = vertex_mem_weight_type>
@@ -698,7 +706,7 @@ class Compact_Sparse_Graph {
         };
 
         template<typename RetT = vertex_type_type>
-        inline std::enable_if_t<use_vert_types, RetT> vertex_type(const vertex_idx v) const {
+        inline std::enable_if_t<use_vert_types, RetT> vertex_type(const vertex_idx &v) const {
             return vert_types[v];
         };
         template<typename RetT = vertex_type_type>
@@ -709,7 +717,7 @@ class Compact_Sparse_Graph {
         inline vertex_type_type num_vertex_types() const { return number_of_vertex_types; };
 
         template<typename RetT = void>
-        inline std::enable_if_t<use_work_weights, RetT> set_vertex_work_weight(const vertex_idx v, const vertex_work_weight_type work_weight) {
+        inline std::enable_if_t<use_work_weights, RetT> set_vertex_work_weight(const vertex_idx &v, const vertex_work_weight_type work_weight) {
             if constexpr (keep_vertex_order) {
                 vert_work_weights[v] = work_weight;
             } else {
@@ -717,12 +725,12 @@ class Compact_Sparse_Graph {
             }
         };
         template<typename RetT = void>
-        inline std::enable_if_t<not use_work_weights, RetT> set_vertex_work_weight(const vertex_idx v, const vertex_work_weight_type work_weight) {
+        inline std::enable_if_t<not use_work_weights, RetT> set_vertex_work_weight(const vertex_idx &v, const vertex_work_weight_type work_weight) {
             static_assert(use_work_weights, "To set work weight, graph type must allow work weights.");
         };
 
         template<typename RetT = void>
-        inline std::enable_if_t<use_comm_weights, RetT> set_vertex_comm_weight(const vertex_idx v, const vertex_comm_weight_type comm_weight) {
+        inline std::enable_if_t<use_comm_weights, RetT> set_vertex_comm_weight(const vertex_idx &v, const vertex_comm_weight_type comm_weight) {
             if constexpr (keep_vertex_order) {
                 vert_comm_weights[v] = comm_weight;
             } else {
@@ -730,12 +738,12 @@ class Compact_Sparse_Graph {
             }
         };
         template<typename RetT = void>
-        inline std::enable_if_t<not use_comm_weights, RetT> set_vertex_comm_weight(const vertex_idx v, const vertex_comm_weight_type comm_weight) {
+        inline std::enable_if_t<not use_comm_weights, RetT> set_vertex_comm_weight(const vertex_idx &v, const vertex_comm_weight_type comm_weight) {
             static_assert(use_comm_weights, "To set comm weight, graph type must allow comm weights.");
         };
         
         template<typename RetT = void>
-        inline std::enable_if_t<use_mem_weights, RetT> set_vertex_mem_weight(const vertex_idx v, const vertex_mem_weight_type mem_weight) {
+        inline std::enable_if_t<use_mem_weights, RetT> set_vertex_mem_weight(const vertex_idx &v, const vertex_mem_weight_type mem_weight) {
             if constexpr (keep_vertex_order) {
                 vert_mem_weights[v] = mem_weight;
             } else {
@@ -743,12 +751,12 @@ class Compact_Sparse_Graph {
             }
         };
         template<typename RetT = void>
-        inline std::enable_if_t<not use_mem_weights, RetT> set_vertex_mem_weight(const vertex_idx v, const vertex_mem_weight_type mem_weight) {
+        inline std::enable_if_t<not use_mem_weights, RetT> set_vertex_mem_weight(const vertex_idx &v, const vertex_mem_weight_type mem_weight) {
             static_assert(use_mem_weights, "To set mem weight, graph type must allow mem weights.");
         };
         
         template<typename RetT = void>
-        inline std::enable_if_t<use_vert_types, RetT> set_vertex_type(const vertex_idx v, const vertex_type_type vertex_type_) {
+        inline std::enable_if_t<use_vert_types, RetT> set_vertex_type(const vertex_idx &v, const vertex_type_type vertex_type_) {
             if constexpr (keep_vertex_order) {
                 vert_types[v] = vertex_type_;
             } else {
@@ -757,7 +765,7 @@ class Compact_Sparse_Graph {
             number_of_vertex_types = std::max(number_of_vertex_types, vertex_type_);
         };
         template<typename RetT = void>
-        inline std::enable_if_t<not use_vert_types, RetT> set_vertex_type(const vertex_idx v, const vertex_type_type vertex_type_) {
+        inline std::enable_if_t<not use_vert_types, RetT> set_vertex_type(const vertex_idx &v, const vertex_type_type vertex_type_) {
             static_assert(use_vert_types, "To set vert type, graph type must allow vertex types.");
         };
 
@@ -783,6 +791,30 @@ class Compact_Sparse_Graph {
             return vertex_permutation_from_original_to_internal;
         }
 };
+
+
+
+
+
+template<bool keep_vertex_order, bool use_work_weights, bool use_comm_weights, bool use_mem_weights, bool use_vert_types, typename vert_t, typename edge_t, typename work_weight_type, typename comm_weight_type, typename mem_weight_type, typename vertex_type_template_type>
+struct is_Compact_Sparse_Graph<Compact_Sparse_Graph<keep_vertex_order, use_work_weights, use_comm_weights, use_mem_weights, use_vert_types, vert_t, edge_t, work_weight_type, comm_weight_type, mem_weight_type, vertex_type_template_type>, void> : std::true_type {};
+
+template<bool use_work_weights, bool use_comm_weights, bool use_mem_weights, bool use_vert_types, typename vert_t, typename edge_t, typename work_weight_type, typename comm_weight_type, typename mem_weight_type, typename vertex_type_template_type>
+struct is_Compact_Sparse_Graph_reorder<Compact_Sparse_Graph<false, use_work_weights, use_comm_weights, use_mem_weights, use_vert_types, vert_t, edge_t, work_weight_type, comm_weight_type, mem_weight_type, vertex_type_template_type>, void> : std::true_type {};
+
+
+
+
+
+
+
+static_assert(is_Compact_Sparse_Graph_v<Compact_Sparse_Graph<true>>);
+static_assert(is_Compact_Sparse_Graph_v<Compact_Sparse_Graph<false>>);
+static_assert(!is_Compact_Sparse_Graph_reorder_v<Compact_Sparse_Graph<true>>);
+static_assert(is_Compact_Sparse_Graph_reorder_v<Compact_Sparse_Graph<false>>);
+
+
+
 
 static_assert(has_vertex_weights_v<Compact_Sparse_Graph<true, true>>, 
     "Compact_Sparse_Graph must satisfy the has_vertex_weights concept");
@@ -813,6 +845,136 @@ static_assert(is_computational_dag_typed_vertices_v<Compact_Sparse_Graph<false, 
 
 static_assert(is_computational_dag_typed_vertices_v<Compact_Sparse_Graph<true, true, true, true, true>>,
     "Compact_Sparse_Graph must satisfy the is_computation_dag with types concept");
+
+static_assert(is_direct_constructable_cdag_v<Compact_Sparse_Graph<true, true>>, 
+    "Compact_Sparse_Graph must be directly constructable");
+
+static_assert(is_direct_constructable_cdag_v<Compact_Sparse_Graph<false, true>>, 
+    "Compact_Sparse_Graph must be directly constructable");
+
+using CSG = Compact_Sparse_Graph<false, true, true, true, true, std::size_t, std::size_t, unsigned, unsigned, unsigned, unsigned>;
+
+static_assert(is_other_directed_graph_edge_desc_v<CSG>,
+              "CSG must satisfy the directed_graph_edge_desc concept");
+
+
+
+
+
+
+
+// // Graph specific implementations
+
+// template<typename Graph_t_in, typename v_work_acc_method, typename v_comm_acc_method, typename v_mem_acc_method, typename e_comm_acc_method,
+//          bool use_work_weights, bool use_comm_weights, bool use_mem_weights, bool use_vert_types, typename vert_t, typename edge_t,
+//          typename work_weight_type, typename comm_weight_type, typename mem_weight_type, typename vertex_type_template_type>
+// bool coarser_util::construct_coarse_dag(
+//             const Graph_t_in &dag_in,
+//             Compact_Sparse_Graph<false, use_work_weights, use_comm_weights, use_mem_weights, use_vert_types, vert_t, edge_t, work_weight_type, comm_weight_type, mem_weight_type, vertex_type_template_type> &coarsened_dag,
+//             std::vector<vertex_idx_t<Compact_Sparse_Graph<false, use_work_weights, use_comm_weights, use_mem_weights, use_vert_types, vert_t, edge_t, work_weight_type, comm_weight_type, mem_weight_type, vertex_type_template_type>>> &vertex_contraction_map) {
+
+//     using Graph_out_type = Compact_Sparse_Graph<false, use_work_weights, use_comm_weights, use_mem_weights, use_vert_types, vert_t, edge_t, work_weight_type, comm_weight_type, mem_weight_type, vertex_type_template_type>;
+
+//     static_assert(is_directed_graph_v<Graph_t_in> && is_directed_graph_v<Graph_out_type>, "Graph types need to satisfy the is_directed_graph concept.");
+//     static_assert(is_computational_dag_v<Graph_t_in>, "Graph_t_in must be a computational DAG");
+//     static_assert(is_constructable_cdag_v<Graph_out_type> || is_direct_constructable_cdag_v<Graph_out_type>, "Graph_out_type must be a (direct) constructable computational DAG");
+
+//     assert(check_valid_contraction_map<Graph_out_type>(vertex_contraction_map));
+
+
+//     const vertex_idx_t<Graph_out_type> num_vert_quotient =
+//         (*std::max_element(vertex_contraction_map.cbegin(), vertex_contraction_map.cend())) + 1;
+
+//     std::set<std::pair<vertex_idx_t<Graph_out_type>, vertex_idx_t<Graph_out_type>>> quotient_edges;
+
+//     for (const vertex_idx_t<Graph_t_in> &vert : dag_in.vertices()) {
+//         for (const vertex_idx_t<Graph_t_in> &chld : dag_in.children(vert)) {
+//             if (vertex_contraction_map[vert] == vertex_contraction_map[chld]) {
+//                 continue;
+//             }
+//             quotient_edges.emplace(vertex_contraction_map[vert], vertex_contraction_map[chld]);
+//         }
+//     }
+
+//     coarsened_dag = Graph_out_type(num_vert_quotient, quotient_edges);
+
+//     const auto& pushforward_map = coarsened_dag.get_pushforward_permutation();
+//     std::vector<vertex_idx_t<Graph_out_type>> combined_expansion_map(dag_in.num_vertices());
+//     for (const auto &vert : dag_in.vertices()) {
+//         combined_expansion_map[vert] = pushforward_map[vertex_contraction_map[vert]];
+//     }
+
+//     if constexpr (has_vertex_weights_v<Graph_t_in> && is_modifiable_cdag_vertex_v<Graph_out_type>) {
+//         static_assert(std::is_same_v<v_workw_t<Graph_t_in>, v_workw_t<Graph_out_type>>, "Work weight types of in-graph and out-graph must be the same.");
+//         static_assert(std::is_same_v<v_commw_t<Graph_t_in>, v_commw_t<Graph_out_type>>, "Vertex communication types of in-graph and out-graph must be the same.");
+//         static_assert(std::is_same_v<v_memw_t<Graph_t_in>, v_memw_t<Graph_out_type>>, "Memory weight types of in-graph and out-graph must be the same.");
+
+//         for (const vertex_idx_t<Graph_t_in> &vert : coarsened_dag.vertices()) {
+//             coarsened_dag.set_vertex_work_weight(vert, 0);
+//             coarsened_dag.set_vertex_comm_weight(vert, 0);
+//             coarsened_dag.set_vertex_mem_weight(vert, 0);
+//         }
+
+//         for (const vertex_idx_t<Graph_t_in> &vert : dag_in.vertices()) {
+//             coarsened_dag.set_vertex_work_weight(
+//                 vertex_contraction_map[vert],
+//                 v_work_acc_method()(coarsened_dag.vertex_work_weight(combined_expansion_map[vert]),
+//                                 dag_in.vertex_work_weight(vert)));
+
+//             coarsened_dag.set_vertex_comm_weight(
+//                 vertex_contraction_map[vert],
+//                 v_comm_acc_method()(coarsened_dag.vertex_comm_weight(combined_expansion_map[vert]),
+//                                 dag_in.vertex_comm_weight(vert)));
+
+//             coarsened_dag.set_vertex_mem_weight(
+//                 vertex_contraction_map[vert],
+//                 v_mem_acc_method()(coarsened_dag.vertex_mem_weight(combined_expansion_map[vert]),
+//                                 dag_in.vertex_mem_weight(vert)));
+//         }
+//     }
+
+//     if constexpr (has_typed_vertices_v<Graph_t_in> && is_modifiable_cdag_typed_vertex_v<Graph_out_type>) {
+//         static_assert(std::is_same_v<v_type_t<Graph_t_in>, v_type_t<Graph_out_type>>,
+//                         "Vertex type types of in graph and out graph must be the same!");
+
+//         for (const vertex_idx_t<Graph_t_in> &vert : dag_in.vertices()) {
+//             coarsened_dag.set_vertex_type(vertex_contraction_map[vert], dag_in.vertex_type(vert));
+//         }
+//         // assert(std::all_of(dag_in.vertices().begin(), dag_in.vertices().end(),
+//         //         [&dag_in, &vertex_contraction_map, &coarsened_dag](const auto &vert){ return
+//         //         dag_in.vertex_type(vert) ==  coarsened_dag.vertex_type(vertex_contraction_map[vert]); })
+//         //                 && "Contracted vertices must be of the same type");
+//     }
+
+//     std::swap(vertex_contraction_map, combined_expansion_map);
+
+//     std::cout << "Specific Template construct coarsen dag" << std::endl;
+
+    
+//     return true;
+// };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 } // namespace osp
