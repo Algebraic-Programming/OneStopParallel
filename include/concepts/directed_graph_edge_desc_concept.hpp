@@ -76,12 +76,3 @@ inline constexpr bool is_other_directed_graph_edge_desc_v = is_other_directed_gr
 
 } // namespace osp
 
-template<typename Graph_t>
-struct std::hash<osp::directed_edge<Graph_t>> {
-    std::size_t operator()(const osp::directed_edge<Graph_t> &p) const noexcept {
-        // Combine hashes of source and target
-        std::size_t h1 = std::hash<osp::vertex_idx_t<Graph_t>>{}(p.source);
-        std::size_t h2 = std::hash<osp::vertex_idx_t<Graph_t>>{}(p.target);
-        return h1 ^ (h2 << 1); // Simple hash combining
-    }
-};

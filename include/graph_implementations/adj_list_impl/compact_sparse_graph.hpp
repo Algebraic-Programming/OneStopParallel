@@ -852,13 +852,10 @@ static_assert(is_direct_constructable_cdag_v<Compact_Sparse_Graph<true, true>>,
 static_assert(is_direct_constructable_cdag_v<Compact_Sparse_Graph<false, true>>, 
     "Compact_Sparse_Graph must be directly constructable");
 
-
-
 using CSG = Compact_Sparse_Graph<false, true, true, true, true, std::size_t, std::size_t, unsigned, unsigned, unsigned, unsigned>;
 
-
 static_assert(is_other_directed_graph_edge_desc_v<CSG>,
-              "computational_dag_edge_idx_vector_impl must satisfy the directed_graph_edge_desc concept");
+              "CSG must satisfy the directed_graph_edge_desc concept");
 
 
 

@@ -205,7 +205,7 @@ using computational_dag_vector_impl_def_int_t = computational_dag_vector_impl<cd
 
 
 static_assert(is_other_directed_graph_edge_desc_v<computational_dag_vector_impl<cdag_vertex_impl_unsigned>>,
-              "computational_dag_edge_idx_vector_impl must satisfy the directed_graph_edge_desc concept");
+              "computational_dag_vector_impl must satisfy the directed_graph_edge_desc concept");
 
 static_assert(has_vertex_weights_v<computational_dag_vector_impl<cdag_vertex_impl_unsigned>>,
               "computational_dag_vector_impl must satisfy the has_vertex_weights concept");

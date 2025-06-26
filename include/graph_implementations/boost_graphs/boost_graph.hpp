@@ -375,7 +375,7 @@ using boost_graph_uint_t = boost_graph<unsigned, unsigned, unsigned, unsigned, u
 
 
 static_assert(osp::is_other_directed_graph_edge_desc_v<boost_graph_int_t>,
-              "computational_dag_edge_idx_vector_impl must satisfy the directed_graph_edge_desc concept");
+              "cboost_graph_adapter must satisfy the directed_graph_edge_desc concept");
 
 static_assert(osp::is_directed_graph_edge_desc_v<boost_graph_int_t>,
               "boost_graph_adapter does not satisfy the directed_graph_edge_desc concept");

@@ -371,12 +371,9 @@ static_assert(has_hashable_edge_desc_v<Compact_Sparse_Graph_EdgeDesc<true, true>
 static_assert(has_hashable_edge_desc_v<Compact_Sparse_Graph_EdgeDesc<false, true>>, 
     "Compact_Sparse_Graph_EdgeDesc must satisfy the has_hashable_edge_desc concept");
 
-
-
 using CSGE = Compact_Sparse_Graph_EdgeDesc<false, true, true, true, true, true, std::size_t, std::size_t, unsigned, unsigned, unsigned, unsigned, unsigned>;
 
-
 static_assert(is_other_directed_graph_edge_desc_v<CSGE>,
-              "computational_dag_edge_idx_vector_impl must satisfy the directed_graph_edge_desc concept");
+              "CSGE must satisfy the directed_graph_edge_desc concept");
 
 } // namespace osp

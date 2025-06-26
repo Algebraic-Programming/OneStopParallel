@@ -160,3 +160,13 @@ template<typename T>
 inline constexpr bool has_parents_in_vertex_order_v = has_parents_in_vertex_order_trait<T>::value;
 
 } // namespace osp
+
+template<typename Graph_t>
+struct std::hash<osp::directed_edge<Graph_t>> {
+    std::size_t operator()(const osp::directed_edge<Graph_t> &p) const noexcept {
+        // Combine hashes of source and target
+        std::size_t h1 = std::hash<osp::vertex_idx_t<Graph_t>>{}(p.source);
+        std::size_t h2 = std::hash<osp::vertex_idx_t<Graph_t>>{}(p.target);
+        return h1 ^ (h2 << 1); // Simple hash combining
+    }
+};
