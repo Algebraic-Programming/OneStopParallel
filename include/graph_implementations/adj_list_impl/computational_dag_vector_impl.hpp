@@ -18,6 +18,7 @@ limitations under the License.
 #pragma once
 
 #include "concepts/computational_dag_concept.hpp"
+#include "concepts/directed_graph_edge_desc_concept.hpp"
 #include "graph_algorithms/computational_dag_construction_util.hpp"
 #include "graph_implementations/vertex_iterator.hpp"
 #include <vector>

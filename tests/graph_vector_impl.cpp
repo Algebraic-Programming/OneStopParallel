@@ -103,6 +103,13 @@ BOOST_AUTO_TEST_CASE(test_dag) {
             BOOST_CHECK_EQUAL(e, in_neighbors[v][i++]);
         }
 
+        i = 0;
+        for (const auto &e : out_edges(v, graph)) {
+
+            BOOST_CHECK_EQUAL(target(e, graph), out_neighbors[v][i++]);
+
+        }
+
         BOOST_CHECK_EQUAL(graph.in_degree(v), in_neighbors[v].size());
         BOOST_CHECK_EQUAL(graph.out_degree(v), out_neighbors[v].size());
     }

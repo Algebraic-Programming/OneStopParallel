@@ -23,16 +23,6 @@ limitations under the License.
 namespace osp {
 
 template<typename Graph_t>
-struct directed_edge {
-
-    vertex_idx_t<Graph_t> source;
-    vertex_idx_t<Graph_t> target; 
-
-    directed_edge(vertex_idx_t<Graph_t> src, vertex_idx_t<Graph_t> tgt)
-        : source(src), target(tgt) {}
-};
-
-template<typename Graph_t>
 class edge_view {
   private:
     static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
@@ -49,12 +39,10 @@ class edge_view {
         using reference = value_type &;
 
       private:
-
-        const Graph_t *graph; // Pointer to the graph
+        const Graph_t *graph;                 // Pointer to the graph
         vertex_idx_t<Graph_t> current_vertex; // Current source vertex
         child_iterator_t current_child; // Iterator to the current target vertex in current_vertex's adjacency list
-        std::size_t current_edge_idx; // Global index of the current edge in the traversal order
- 
+        std::size_t current_edge_idx;   // Global index of the current edge in the traversal order
 
       public:
         directed_edge_iterator() : graph(nullptr), current_vertex(0), current_edge_idx(0) {}
@@ -198,8 +186,7 @@ class out_edge_view {
 
       public:
         out_edge_iterator() = default;
-        out_edge_iterator(vertex_idx_t<Graph_t> u, child_iterator_t it)
-            : source_vertex(u), current_child_it(it) {}
+        out_edge_iterator(vertex_idx_t<Graph_t> u, child_iterator_t it) : source_vertex(u), current_child_it(it) {}
 
         inline value_type operator*() const { return {source_vertex, *current_child_it}; }
 
@@ -233,8 +220,8 @@ class out_edge_view {
     };
 
   public:
-    using iterator = out_edge_iterator<
-        decltype(std::declval<Graph_t>().children(std::declval<vertex_idx_t<Graph_t>>()).begin())>;
+    using iterator =
+        out_edge_iterator<decltype(std::declval<Graph_t>().children(std::declval<vertex_idx_t<Graph_t>>()).begin())>;
     using const_iterator = iterator;
 
     out_edge_view(const Graph_t &graph_, vertex_idx_t<Graph_t> u) : graph(graph_), source_vertex(u) {}
@@ -279,8 +266,7 @@ class in_edge_view {
 
       public:
         in_edge_iterator() = default;
-        in_edge_iterator(vertex_idx_t<Graph_t> v, parent_iterator_t it)
-            : target_vertex(v), current_parent_it(it) {}
+        in_edge_iterator(vertex_idx_t<Graph_t> v, parent_iterator_t it) : target_vertex(v), current_parent_it(it) {}
 
         inline value_type operator*() const { return {*current_parent_it, target_vertex}; }
 

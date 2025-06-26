@@ -193,10 +193,10 @@ std::vector<Graph_t_out> create_induced_subgraphs(const Graph_t_in &dag_in,
         }
     }
 
-    if constexpr (is_directed_graph_edge_desc_v<Graph_t_in> and is_directed_graph_edge_desc_v<Graph_t_out>) {
+    if constexpr (has_edge_weights_v<Graph_t_in> and has_edge_weights_v<Graph_t_out>) {
 
         for (const auto node : dag_in.vertices()) {
-            for (const auto &out_edge : out_edges(node)) {
+            for (const auto &out_edge : dag_in.out_edges(node)) {
 
                 auto succ = target(out_edge, dag_in);
 

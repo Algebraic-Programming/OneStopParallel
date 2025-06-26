@@ -47,14 +47,38 @@ template<typename T>
 // Macro to extract the vertex_idx type from the graph
 using vertex_idx_t = typename directed_graph_traits<T>::vertex_idx;
 
-// Specialization for graphs that define a directed_edge_descriptor
-template<typename T, typename = void>
-struct directed_graph_edge_desc_traits : std::false_type {};
+template<typename Graph_t>
+struct directed_edge {
+
+    vertex_idx_t<Graph_t> source;
+    vertex_idx_t<Graph_t> target;
+
+    bool operator==(const directed_edge &other) const { return source == other.source && target == other.target; }
+    bool operator!=(const directed_edge &other) const { return !(*this == other); }
+    directed_edge() : source(0), target(0) {}
+    directed_edge(const directed_edge &other) = default;
+    directed_edge(directed_edge &&other) = default;
+    directed_edge &operator=(const directed_edge &other) = default;
+    directed_edge &operator=(directed_edge &&other) = default;
+    ~directed_edge() = default;
+
+    directed_edge(vertex_idx_t<Graph_t> src, vertex_idx_t<Graph_t> tgt) : source(src), target(tgt) {}
+};
+
+template<typename T, bool has_edge>
+struct directed_graph_edge_desc_traits_helper {
+    using directed_edge_descriptor = directed_edge<T>;
+};
 
 template<typename T>
-struct directed_graph_edge_desc_traits<T, std::void_t<typename T::directed_edge_descriptor>> {
-    static_assert(has_edge_desc_tmember<T>::value, "graph must have edge desc");
+struct directed_graph_edge_desc_traits_helper<T, true> {
     using directed_edge_descriptor = typename T::directed_edge_descriptor;
+};
+
+template<typename T>
+struct directed_graph_edge_desc_traits {
+    using directed_edge_descriptor =
+        typename directed_graph_edge_desc_traits_helper<T, has_edge_desc_tmember<T>::value>::directed_edge_descriptor;
 };
 
 template<typename T>

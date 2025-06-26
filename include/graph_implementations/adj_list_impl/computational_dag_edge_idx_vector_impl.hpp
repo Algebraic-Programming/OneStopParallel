@@ -239,6 +239,23 @@ class computational_dag_edge_idx_vector_impl {
     inline const e_impl &get_edge_impl(directed_edge_descriptor e) const { return edges_[e.idx]; }
 };
 
+template<typename v_impl, typename e_impl>
+auto edges(const computational_dag_edge_idx_vector_impl<v_impl, e_impl> &graph) {
+    return graph.edges();
+}
+
+template<typename v_impl, typename e_impl>
+auto out_edges(vertex_idx_t<computational_dag_edge_idx_vector_impl<v_impl, e_impl>> u,
+    vertex_idx_t<computational_dag_edge_idx_vector_impl<v_impl, e_impl>> &graph) {
+    return graph.out_edges(u);
+}
+
+template<typename v_impl, typename e_impl>
+auto in_edges(vertex_idx_t<computational_dag_edge_idx_vector_impl<v_impl, e_impl>> v,
+              const computational_dag_edge_idx_vector_impl<v_impl, e_impl> &graph) {
+    return graph.in_edges(v);
+}
+
 // default template specialization
 using computational_dag_edge_idx_vector_impl_def_t =
     computational_dag_edge_idx_vector_impl<cdag_vertex_impl_unsigned, cdag_edge_impl_unsigned>;
