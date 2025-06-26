@@ -54,6 +54,16 @@ public:
         using difference_type = std::ptrdiff_t;
         using iterator_category = std::input_iterator_tag;
 
+        iterator() = default;
+        iterator(const iterator& other) : it_(other.it_), skip_(other.skip_), at_end_(other.at_end_) {}
+        iterator& operator=(const iterator& other) {
+            it_ = other.it_;
+            skip_ = other.skip_;
+            at_end_ = other.at_end_;
+            return *this;
+        }
+        
+
         iterator(const CSRMatrix& mat, eigen_idx_type idx, bool end = false)
             : skip_(idx), at_end_(end) {
             if (!end) {
@@ -71,6 +81,13 @@ public:
             return *this;
         }
 
+        iterator operator++(int) {
+            iterator temp = *this;
+            ++(*this);
+            return temp;
+        }
+        
+        bool operator==(const iterator&) const { return at_end_; }
         bool operator!=(const iterator&) const { return !at_end_; }
     };
 
@@ -114,6 +131,16 @@ public:
         using difference_type = std::ptrdiff_t;
         using iterator_category = std::input_iterator_tag;
 
+        iterator() = default;
+        iterator(const iterator& other) : it_(other.it_), skip_(other.skip_), at_end_(other.at_end_) {}
+        iterator& operator=(const iterator& other) {
+            it_ = other.it_;
+            skip_ = other.skip_;
+            at_end_ = other.at_end_;
+            return *this;
+        }
+
+
         iterator(const CSCMatrix& mat, eigen_idx_type idx, bool end = false)
             : skip_(idx), at_end_(end) {
             if (!end) {
@@ -131,6 +158,14 @@ public:
             return *this;
         }
 
+        iterator operator++(int) {
+            iterator temp = *this;
+            ++(*this);
+            return temp;
+        }
+        
+
+        bool operator==(const iterator&) const { return at_end_; }
         bool operator!=(const iterator&) const { return !at_end_; }
     };
 

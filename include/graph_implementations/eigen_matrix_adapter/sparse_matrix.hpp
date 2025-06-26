@@ -22,6 +22,7 @@ limitations under the License.
 
 #include <Eigen/SparseCore>
 #include "concepts/directed_graph_concept.hpp"
+#include "concepts/directed_graph_edge_desc_concept.hpp"
 #include "concepts/computational_dag_concept.hpp"
 #include "graph_implementations/vertex_iterator.hpp"
 #include "graph_implementations/eigen_sparse_iterator.hpp"
@@ -47,8 +48,7 @@ public:
     using vertex_idx = size_t;
 
     // Required graph trait aliases (used in concept checks)
-    using directed_edge_descriptor = int;
-    using edge_comm_weight_type = int;
+    using edge_comm_weight_type = void;
     using vertex_work_weight_type = eigen_idx_type;
     using vertex_comm_weight_type = eigen_idx_type;
     using vertex_mem_weight_type = int;

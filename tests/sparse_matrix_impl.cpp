@@ -127,10 +127,29 @@ i ↓
             BOOST_CHECK_EQUAL(e, in_neighbors[vi][i++]);
         }
 
+        i = 0;
+        for (const auto &e : out_edges(v, graph)) {
+            BOOST_CHECK_EQUAL(target(e, graph), out_neighbors[vi][i++]);
+        }
+
+        i = 0;
+        for (const auto &e : in_edges(v, graph)) {
+            BOOST_CHECK_EQUAL(source(e, graph), in_neighbors[vi][i++]);
+        }
+
+
         BOOST_CHECK_EQUAL(graph.in_degree(v), in_neighbors[vi].size());
         BOOST_CHECK_EQUAL(graph.out_degree(v), out_neighbors[vi].size());
         
     }
+
+    unsigned count = 0;
+    for (const auto & e: edges(graph)) {
+        
+        std::cout << e.source << " -> " << e.target << std::endl;
+        count++;
+    }
+    BOOST_CHECK_EQUAL(count, 11);
 
 }
 
