@@ -110,6 +110,31 @@ BOOST_AUTO_TEST_CASE(test_dag_edge_idx) {
         edge_idx++;
     }
 
+    edge_idx = 0;
+    for (auto &edge : edges(graph)) {
+
+        BOOST_CHECK_EQUAL(edge.source, edge_sources[edge_idx]);
+        BOOST_CHECK_EQUAL(edge.target, edge_targets[edge_idx]);
+        edge_idx++;
+    }
+
+
+    edge_idx = 0;
+    for (const auto edge : edges(graph)) {
+
+        BOOST_CHECK_EQUAL(edge.source, edge_sources[edge_idx]);
+        BOOST_CHECK_EQUAL(edge.target, edge_targets[edge_idx]);
+        edge_idx++;
+    }
+
+    edge_idx = 0;
+    for (auto edge : edges(graph)) {
+
+        BOOST_CHECK_EQUAL(edge.source, edge_sources[edge_idx]);
+        BOOST_CHECK_EQUAL(edge.target, edge_targets[edge_idx]);
+        edge_idx++;
+    }
+
     std::vector<vertex_idx> vertices{0, 1, 2, 3, 4, 5, 6, 7};
 
     std::vector<std::vector<vertex_idx>> out_neighbors{{1, 2, 3}, {4, 6}, {4, 5}, {7}, {7}, {}, {}, {}};

@@ -123,3 +123,13 @@ inline in_edge_view<Graph_t> in_edges(vertex_idx_t<Graph_t> v, const Graph_t &gr
 // inline constexpr bool is_edge_list_type_v = is_edge_list_type<T, v_type, e_type>::value;
 
 } // namespace osp
+
+template<typename Graph_t>
+struct std::hash<osp::directed_edge<Graph_t>> {
+    std::size_t operator()(const osp::directed_edge<Graph_t> &p) const noexcept {
+        // Combine hashes of source and target
+        std::size_t h1 = std::hash<osp::vertex_idx_t<Graph_t>>{}(p.source);
+        std::size_t h2 = std::hash<osp::vertex_idx_t<Graph_t>>{}(p.target);
+        return h1 ^ (h2 << 1); // Simple hash combining
+    }
+};

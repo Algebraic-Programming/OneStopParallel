@@ -101,6 +101,15 @@ BOOST_AUTO_TEST_CASE(test_boost_graph_adapter_1) {
         edge_idx++;
     }
 
+    edge_idx = 0;
+    for (const auto &edge : edges(graph)) {
+
+        BOOST_CHECK_EQUAL(source(edge, graph), edge_sources[edge_idx]);
+        BOOST_CHECK_EQUAL(target(edge, graph), edge_targets[edge_idx]);
+        edge_idx++;
+    }
+
+
     std::vector<vertex_idx> vertices{0, 1, 2, 3, 4, 5, 6, 7};
 
     std::vector<std::vector<vertex_idx>> out_neighbors{{1, 2, 3}, {4, 6}, {4, 5}, {7}, {7}, {}, {}, {}};
@@ -141,6 +150,16 @@ BOOST_AUTO_TEST_CASE(test_boost_graph_adapter_1) {
         i = 0;
         for (const auto &e : graph.in_edges(v)) {
             BOOST_CHECK_EQUAL(graph.source(e), in_neighbors[v][i++]);
+        }
+
+        i = 0;
+        for (const auto &e : in_edges(v, graph)) {
+            BOOST_CHECK_EQUAL(source(e, graph), in_neighbors[v][i++]);
+        }
+
+        i = 0;
+        for (const auto &e : out_edges(v, graph)) {
+            BOOST_CHECK_EQUAL(target(e, graph), out_neighbors[v][i++]);
         }
 
         BOOST_CHECK_EQUAL(graph.in_degree(v), in_neighbors[v].size());

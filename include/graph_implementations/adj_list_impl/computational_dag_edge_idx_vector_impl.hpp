@@ -256,6 +256,20 @@ inline auto in_edges(vertex_idx_t<computational_dag_edge_idx_vector_impl<v_impl,
     return graph.in_edges(v);
 }
 
+
+// default implementation to get the source of an edge
+template<typename v_impl, typename e_impl>
+inline vertex_idx_t<computational_dag_edge_idx_vector_impl<v_impl, e_impl>> source(const edge_desc_t<computational_dag_edge_idx_vector_impl<v_impl, e_impl>> &edge, const computational_dag_edge_idx_vector_impl<v_impl, e_impl> &graph) {
+    return graph.source(edge);
+}
+
+// default implementation to get the target of an edge
+template<typename v_impl, typename e_impl>
+inline vertex_idx_t<computational_dag_edge_idx_vector_impl<v_impl, e_impl>> target(const edge_desc_t<computational_dag_edge_idx_vector_impl<v_impl, e_impl>> &edge, const computational_dag_edge_idx_vector_impl<v_impl, e_impl> &graph) {
+    return graph.target(edge);
+}
+
+
 // default template specialization
 using computational_dag_edge_idx_vector_impl_def_t =
     computational_dag_edge_idx_vector_impl<cdag_vertex_impl_unsigned, cdag_edge_impl_unsigned>;
