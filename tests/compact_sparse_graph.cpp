@@ -273,6 +273,13 @@ BOOST_AUTO_TEST_CASE(Graph1_keep_order) {
             --cntr;
             BOOST_CHECK_EQUAL(*it, out_edges[vert][cntr]);
         }
+
+        cntr = 0;
+        for (const auto &e : osp::out_edges(vert, graph)) {
+
+            BOOST_CHECK_EQUAL(target(e, graph), out_edges[vert][cntr++]);
+
+        }
     }
 
     std::vector<std::vector<std::size_t>> in_edges({
@@ -302,8 +309,24 @@ BOOST_AUTO_TEST_CASE(Graph1_keep_order) {
             --cntr;
             BOOST_CHECK_EQUAL(*it, in_edges[vert][cntr]);
         }
+
+        cntr = 0;
+        for (const auto &e : osp::in_edges(vert, graph)) {
+
+            BOOST_CHECK_EQUAL(source(e, graph), in_edges[vert][cntr++]);
+
+        }
     }
     
+    unsigned count = 0;
+    for (const auto & e: osp::edges(graph)) {
+        
+        std::cout << e.source << " -> " << e.target << std::endl;
+        count++;
+    }
+
+    BOOST_CHECK_EQUAL(count, 11);
+
     for (const auto &vert : graph.vertices()) {
         BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), 1 + in_edges[vert].size());
     }

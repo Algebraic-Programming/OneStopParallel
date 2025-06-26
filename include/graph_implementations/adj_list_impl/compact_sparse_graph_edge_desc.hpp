@@ -18,7 +18,7 @@ limitations under the License.
 #pragma once
 
 #include "graph_implementations/adj_list_impl/compact_sparse_graph.hpp"
-
+#include "concepts/directed_graph_edge_desc_concept.hpp"
 
 namespace osp {
 
@@ -269,6 +269,32 @@ class Compact_Sparse_Graph_EdgeDesc : public Compact_Sparse_Graph<keep_vertex_or
 };
 
 
+template<bool keep_vertex_order, bool use_work_weights, bool use_comm_weights, bool use_mem_weights, bool use_edge_comm_weights, bool use_vert_types, typename vert_t, typename edge_t, typename work_weight_type, typename comm_weight_type, typename mem_weight_type, typename e_comm_weight_type, typename vertex_type_template_type>
+inline auto edges(const Compact_Sparse_Graph_EdgeDesc<keep_vertex_order, use_work_weights, use_comm_weights, use_mem_weights, use_edge_comm_weights, use_vert_types, vert_t, edge_t, work_weight_type, comm_weight_type, mem_weight_type, e_comm_weight_type, vertex_type_template_type> &graph) {
+    return graph.edges();
+}
+
+template<bool keep_vertex_order, bool use_work_weights, bool use_comm_weights, bool use_mem_weights, bool use_edge_comm_weights, bool use_vert_types, typename vert_t, typename edge_t, typename work_weight_type, typename comm_weight_type, typename mem_weight_type, typename e_comm_weight_type, typename vertex_type_template_type>
+inline auto out_edges(vertex_idx_t<Compact_Sparse_Graph_EdgeDesc<keep_vertex_order, use_work_weights, use_comm_weights, use_mem_weights, use_edge_comm_weights, use_vert_types, vert_t, edge_t, work_weight_type, comm_weight_type, mem_weight_type, e_comm_weight_type, vertex_type_template_type>> v,
+                      const Compact_Sparse_Graph_EdgeDesc<keep_vertex_order, use_work_weights, use_comm_weights, use_mem_weights, use_edge_comm_weights, use_vert_types, vert_t, edge_t, work_weight_type, comm_weight_type, mem_weight_type, e_comm_weight_type, vertex_type_template_type> &graph) {
+    return graph.out_edges(v);
+}
+
+template<bool keep_vertex_order, bool use_work_weights, bool use_comm_weights, bool use_mem_weights, bool use_edge_comm_weights, bool use_vert_types, typename vert_t, typename edge_t, typename work_weight_type, typename comm_weight_type, typename mem_weight_type, typename e_comm_weight_type, typename vertex_type_template_type>
+inline auto in_edges(vertex_idx_t<Compact_Sparse_Graph_EdgeDesc<keep_vertex_order, use_work_weights, use_comm_weights, use_mem_weights, use_edge_comm_weights, use_vert_types, vert_t, edge_t, work_weight_type, comm_weight_type, mem_weight_type, e_comm_weight_type, vertex_type_template_type>> v,
+                     const Compact_Sparse_Graph_EdgeDesc<keep_vertex_order, use_work_weights, use_comm_weights, use_mem_weights, use_edge_comm_weights, use_vert_types, vert_t, edge_t, work_weight_type, comm_weight_type, mem_weight_type, e_comm_weight_type, vertex_type_template_type> &graph) {
+    return graph.in_edges(v);
+}
+
+template<bool keep_vertex_order, bool use_work_weights, bool use_comm_weights, bool use_mem_weights, bool use_edge_comm_weights, bool use_vert_types, typename vert_t, typename edge_t, typename work_weight_type, typename comm_weight_type, typename mem_weight_type, typename e_comm_weight_type, typename vertex_type_template_type>
+inline vertex_idx_t<Compact_Sparse_Graph_EdgeDesc<keep_vertex_order, use_work_weights, use_comm_weights, use_mem_weights, use_edge_comm_weights, use_vert_types, vert_t, edge_t, work_weight_type, comm_weight_type, mem_weight_type, e_comm_weight_type, vertex_type_template_type>> source(const edge_desc_t<Compact_Sparse_Graph_EdgeDesc<keep_vertex_order, use_work_weights, use_comm_weights, use_mem_weights, use_edge_comm_weights, use_vert_types, vert_t, edge_t, work_weight_type, comm_weight_type, mem_weight_type, e_comm_weight_type, vertex_type_template_type>> &edge, const Compact_Sparse_Graph_EdgeDesc<keep_vertex_order, use_work_weights, use_comm_weights, use_mem_weights, use_edge_comm_weights, use_vert_types, vert_t, edge_t, work_weight_type, comm_weight_type, mem_weight_type, e_comm_weight_type, vertex_type_template_type> &graph) {
+    return graph.source(edge);
+}
+
+template<bool keep_vertex_order, bool use_work_weights, bool use_comm_weights, bool use_mem_weights, bool use_edge_comm_weights, bool use_vert_types, typename vert_t, typename edge_t, typename work_weight_type, typename comm_weight_type, typename mem_weight_type, typename e_comm_weight_type, typename vertex_type_template_type>
+inline vertex_idx_t<Compact_Sparse_Graph_EdgeDesc<keep_vertex_order, use_work_weights, use_comm_weights, use_mem_weights, use_edge_comm_weights, use_vert_types, vert_t, edge_t, work_weight_type, comm_weight_type, mem_weight_type, e_comm_weight_type, vertex_type_template_type>> target(const edge_desc_t<Compact_Sparse_Graph_EdgeDesc<keep_vertex_order, use_work_weights, use_comm_weights, use_mem_weights, use_edge_comm_weights, use_vert_types, vert_t, edge_t, work_weight_type, comm_weight_type, mem_weight_type, e_comm_weight_type, vertex_type_template_type>> &edge, const Compact_Sparse_Graph_EdgeDesc<keep_vertex_order, use_work_weights, use_comm_weights, use_mem_weights, use_edge_comm_weights, use_vert_types, vert_t, edge_t, work_weight_type, comm_weight_type, mem_weight_type, e_comm_weight_type, vertex_type_template_type> &graph) {
+    return graph.target(edge);
+}
 
 
 template<bool keep_vertex_order, bool use_work_weights, bool use_comm_weights, bool use_mem_weights, bool use_edge_comm_weights, bool use_vert_types, typename vert_t, typename edge_t, typename work_weight_type, typename comm_weight_type, typename mem_weight_type, typename e_comm_weight_type, typename vertex_type_template_type>
@@ -348,5 +374,9 @@ static_assert(has_hashable_edge_desc_v<Compact_Sparse_Graph_EdgeDesc<false, true
 
 
 using CSGE = Compact_Sparse_Graph_EdgeDesc<false, true, true, true, true, true, std::size_t, std::size_t, unsigned, unsigned, unsigned, unsigned, unsigned>;
+
+
+static_assert(is_other_directed_graph_edge_desc_v<CSGE>,
+              "computational_dag_edge_idx_vector_impl must satisfy the directed_graph_edge_desc concept");
 
 } // namespace osp

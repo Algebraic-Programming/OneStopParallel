@@ -27,6 +27,7 @@ limitations under the License.
 
 #include "auxiliary/math_helper.hpp"
 #include "concepts/computational_dag_concept.hpp"
+#include "concepts/directed_graph_edge_desc_concept.hpp"
 #include "concepts/constructable_computational_dag_concept.hpp"
 #include "concepts/specific_graph_impl.hpp"
 #include "graph_algorithms/directed_graph_edge_view.hpp"
@@ -853,10 +854,11 @@ static_assert(is_direct_constructable_cdag_v<Compact_Sparse_Graph<false, true>>,
 
 
 
-
-
 using CSG = Compact_Sparse_Graph<false, true, true, true, true, std::size_t, std::size_t, unsigned, unsigned, unsigned, unsigned>;
 
+
+static_assert(is_other_directed_graph_edge_desc_v<CSG>,
+              "computational_dag_edge_idx_vector_impl must satisfy the directed_graph_edge_desc concept");
 
 
 

@@ -118,6 +118,9 @@ using sparse_matrix_graph_int32_t = SparseMatrixImp<int32_t>;
 using sparse_matrix_graph_int64_t = SparseMatrixImp<int64_t>;
 
 
+static_assert(is_other_directed_graph_edge_desc_v<SparseMatrixImp<int32_t>>,
+              "computational_dag_edge_idx_vector_impl must satisfy the directed_graph_edge_desc concept");
+
 // Verify that SparseMatrixImp satisfies the directed graph concept
 static_assert(is_directed_graph_v<SparseMatrixImp<int32_t>>,
               "SparseMatrix must satisfy directed_graph_concept");

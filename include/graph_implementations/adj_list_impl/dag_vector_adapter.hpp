@@ -163,6 +163,10 @@ class dag_vector_adapter {
     unsigned num_vertex_types_ = 0;
 };
 
+
+static_assert(is_other_directed_graph_edge_desc_v<dag_vector_adapter<cdag_vertex_impl_unsigned, int>>,
+              "computational_dag_edge_idx_vector_impl must satisfy the directed_graph_edge_desc concept");
+
 static_assert(has_vertex_weights_v<dag_vector_adapter<cdag_vertex_impl_unsigned, int>>,
               "computational_dag_vector_impl must satisfy the has_vertex_weights concept");
 

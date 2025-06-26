@@ -233,15 +233,37 @@ BOOST_AUTO_TEST_CASE(LineGraph_keep_order) {
     }
     BOOST_CHECK_EQUAL(edge_counter, graph.num_edges());
 
+    edge_counter = 0;
+    for (const auto& edge : osp::edges(graph)) {
+        BOOST_CHECK_EQUAL(source(edge, graph), edge_counter);
+        BOOST_CHECK_EQUAL(target(edge, graph), edge_counter+1);
+
+        BOOST_CHECK_EQUAL(edge, graph.edge(graph.source(edge), graph.target(edge)));
+
+        ++edge_counter;
+    }
+    BOOST_CHECK_EQUAL(edge_counter, graph.num_edges());
+
     std::size_t vert_counter = 0;
     for (const auto& vert : graph.vertices()) {
         for (const auto &edge : graph.in_edges(vert)) {
             BOOST_CHECK_EQUAL(graph.source(edge), vert - 1);
             BOOST_CHECK_EQUAL(graph.target(edge), vert);
         }
+
+        for (const auto &edge : in_edges(vert, graph)) {
+            BOOST_CHECK_EQUAL(source(edge, graph), vert - 1);
+            BOOST_CHECK_EQUAL(target(edge, graph), vert);
+        }
+
         for (const auto &edge : graph.out_edges(vert)) {
             BOOST_CHECK_EQUAL(graph.source(edge), vert);
             BOOST_CHECK_EQUAL(graph.target(edge), vert + 1);
+        }
+
+        for (const auto &edge : out_edges(vert, graph)) {
+            BOOST_CHECK_EQUAL(source(edge, graph), vert);
+            BOOST_CHECK_EQUAL(target(edge, graph), vert + 1);
         }
 
         ++vert_counter;

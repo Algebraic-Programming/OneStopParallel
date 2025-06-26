@@ -38,89 +38,41 @@ inline vertex_idx_t<Graph_t> target(const directed_edge<Graph_t> &edge, const Gr
 
 template<typename Graph_t>
 inline edge_view<Graph_t> edges(const Graph_t &graph) {
-    std::cout << "default edges" << std::endl;
     return edge_view(graph);
 }
 
 template<typename Graph_t>
 inline out_edge_view<Graph_t> out_edges(vertex_idx_t<Graph_t> u, const Graph_t &graph) {
-    std::cout << "default out_edges" << std::endl;
     return out_edge_view(graph, u);
 }
 
 template<typename Graph_t>
 inline in_edge_view<Graph_t> in_edges(vertex_idx_t<Graph_t> v, const Graph_t &graph) {
-    std::cout << "default in_edges" << std::endl;
     return in_edge_view(graph, v);
 }
 
-// template<typename T, typename = void>
-// struct is_directed_graph_edge_desc : std::false_type {};
+template<typename T, typename = void>
+struct is_other_directed_graph_edge_desc : std::false_type {};
 
-// template<typename T>
-// struct is_directed_graph_edge_desc<T,
-//                                    std::void_t<typename directed_graph_edge_desc_traits<T>::directed_edge_descriptor,
-//                                                decltype(edges(std::declval<T>())),
-//                                                decltype(out_edges(std::declval<vertex_idx_t<T>>(), std::declval<T>())),
-//                                                decltype(in_edges(std::declval<vertex_idx_t<T>>(), std::declval<T>())),
-//                                                decltype(source(std::declval<edge_desc_t<T>>(), std::declval<T>())),
-//                                                decltype(target(std::declval<edge_desc_t<T>>(), std::declval<T>()))>>
-//     : std::conjunction<
-//           is_directed_graph<T>, std::is_default_constructible<edge_desc_t<T>>,
-//           std::is_copy_constructible<edge_desc_t<T>>,
-//           //is_input_range_of<decltype(edges(std::declval<T>())), edge_desc_t<T>>,
-//           //is_input_range_of<decltype(out_edges(std::declval<vertex_idx_t<T>>(), std::declval<T>())), edge_desc_t<T>>,
-//          // is_input_range_of<decltype(in_edges(std::declval<vertex_idx_t<T>>(), std::declval<T>())), edge_desc_t<T>>,
-//           std::is_same<decltype(source(std::declval<edge_desc_t<T>>(), std::declval<T>())), vertex_idx_t<T>>,
-//           std::is_same<decltype(target(std::declval<edge_desc_t<T>>(), std::declval<T>())), vertex_idx_t<T>>> {};
+template<typename T>
+struct is_other_directed_graph_edge_desc<T,
+                                   std::void_t<typename directed_graph_edge_desc_traits<T>::directed_edge_descriptor,
+                                               decltype(edges(std::declval<T>())),
+                                               decltype(out_edges(std::declval<vertex_idx_t<T>>(), std::declval<T>())),
+                                               decltype(in_edges(std::declval<vertex_idx_t<T>>(), std::declval<T>())),
+                                               decltype(source(std::declval<edge_desc_t<T>>(), std::declval<T>())),
+                                               decltype(target(std::declval<edge_desc_t<T>>(), std::declval<T>()))>>
+    : std::conjunction<
+          is_directed_graph<T>, std::is_default_constructible<edge_desc_t<T>>,
+          std::is_copy_constructible<edge_desc_t<T>>,
+          is_input_range_of<decltype(edges(std::declval<T>())), edge_desc_t<T>>,
+          is_input_range_of<decltype(out_edges(std::declval<vertex_idx_t<T>>(), std::declval<T>())), edge_desc_t<T>>,
+          is_input_range_of<decltype(in_edges(std::declval<vertex_idx_t<T>>(), std::declval<T>())), edge_desc_t<T>>,
+          std::is_same<decltype(source(std::declval<edge_desc_t<T>>(), std::declval<T>())), vertex_idx_t<T>>,
+          std::is_same<decltype(target(std::declval<edge_desc_t<T>>(), std::declval<T>())), vertex_idx_t<T>>> {};
 
-// template<typename T>
-// inline constexpr bool is_directed_graph_edge_desc_v = is_directed_graph_edge_desc<T>::value;
-
-// // Specialization for graphs that define a directed_edge_descriptor that can be used as a key in a hash table.
-// // Compatible with STL hash tables.
-// template<typename T, typename = void>
-// struct has_hashable_edge_desc : std::false_type {};
-
-// template<typename T>
-// struct has_hashable_edge_desc<T,
-//                               std::void_t<decltype(std::hash<edge_desc_t<T>>{}(std::declval<edge_desc_t<T>>())),
-//                                           decltype(std::declval<edge_desc_t<T>>() == std::declval<edge_desc_t<T>>()),
-//                                           decltype(std::declval<edge_desc_t<T>>() != std::declval<edge_desc_t<T>>())>>
-//     : std::conjunction<is_directed_graph_edge_desc<T>, std::is_default_constructible<edge_desc_t<T>>,
-//                        std::is_copy_constructible<edge_desc_t<T>>> {};
-// ;
-
-// template<typename T>
-// inline constexpr bool has_hashable_edge_desc_v = has_hashable_edge_desc<T>::value;
-
-// template<typename T, typename v_type, typename e_type, typename = void>
-// struct is_edge_list_type : std::false_type {};
-
-// template<typename T, typename v_type, typename e_type>
-// struct is_edge_list_type<
-//     T, v_type, e_type,
-//     std::void_t<
-//         decltype(std::declval<T>().begin()), decltype(std::declval<T>().end()), decltype(std::declval<T>().size()),
-//         typename std::iterator_traits<decltype(std::begin(std::declval<T>()))>::value_type,
-//         decltype(std::declval<typename std::iterator_traits<decltype(std::begin(std::declval<T>()))>::value_type>()
-//                      .source),
-//         decltype(std::declval<typename std::iterator_traits<decltype(std::begin(std::declval<T>()))>::value_type>()
-//                      .target)>>
-//     //    decltype((*(std::declval<T>().begin())).source())>>
-//     //    decltype(std::declval<*(std::declval<T>().begin())>().target())>>
-//     : std::conjunction<std::is_same<decltype(std::declval<typename std::iterator_traits<decltype(std::begin(
-//                                                  std::declval<T>()))>::value_type>()
-//                                                  .source),
-//                                     v_type>,
-//                        std::is_same<decltype(std::declval<typename std::iterator_traits<decltype(std::begin(
-//                                                  std::declval<T>()))>::value_type>()
-//                                                  .target),
-//                                     v_type>,
-//                        std::is_same<decltype(std::declval<T>().size()), e_type>> {};
-
-// template<typename T, typename v_type, typename e_type>
-// inline constexpr bool is_edge_list_type_v = is_edge_list_type<T, v_type, e_type>::value;
+template<typename T>
+inline constexpr bool is_other_directed_graph_edge_desc_v = is_other_directed_graph_edge_desc<T>::value;
 
 } // namespace osp
 
