@@ -138,8 +138,8 @@ class edge_range_vector_impl {
             return tmp;
         }
 
-        inline bool operator==(const edge_iterator &other) { return current_edge_idx == other.current_edge_idx; }
-        inline bool operator!=(const edge_iterator &other) { return current_edge_idx != other.current_edge_idx; }
+        inline bool operator==(const edge_iterator &other) const { return current_edge_idx == other.current_edge_idx; }
+        inline bool operator!=(const edge_iterator &other) const { return current_edge_idx != other.current_edge_idx; }
     };
 
   public:
@@ -203,8 +203,8 @@ class edge_source_range {
             return tmp;
         }
 
-        inline bool operator==(const source_iterator &other) { return current_edge == other.current_edge; }
-        inline bool operator!=(const source_iterator &other) { return current_edge != other.current_edge; }
+        inline bool operator==(const source_iterator &other) const { return current_edge == other.current_edge; }
+        inline bool operator!=(const source_iterator &other) const { return current_edge != other.current_edge; }
     };
 
   public:
@@ -267,8 +267,8 @@ class edge_target_range {
             return tmp;
         }
 
-        inline bool operator==(const target_iterator &other) { return current_edge == other.current_edge; }
-        inline bool operator!=(const target_iterator &other) { return current_edge != other.current_edge; }
+        inline bool operator==(const target_iterator &other) const { return current_edge == other.current_edge; }
+        inline bool operator!=(const target_iterator &other) const { return current_edge != other.current_edge; }
     };
 
   public:

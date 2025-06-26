@@ -26,28 +26,31 @@ namespace osp {
 
 // default implementation to get the source of an edge
 template<typename Graph_t>
-vertex_idx_t<Graph_t> source(const directed_edge<Graph_t> &edge, const Graph_t &) {
+inline vertex_idx_t<Graph_t> source(const directed_edge<Graph_t> &edge, const Graph_t &) {
     return edge.source;
 }
 
 // default implementation to get the target of an edge
 template<typename Graph_t>
-vertex_idx_t<Graph_t> target(const directed_edge<Graph_t> &edge, const Graph_t &) {
+inline vertex_idx_t<Graph_t> target(const directed_edge<Graph_t> &edge, const Graph_t &) {
     return edge.target;
 }
 
 template<typename Graph_t>
-edge_view<Graph_t> edges(const Graph_t &graph) {
+inline edge_view<Graph_t> edges(const Graph_t &graph) {
+    std::cout << "default edges" << std::endl;
     return edge_view(graph);
 }
 
 template<typename Graph_t>
-out_edge_view<Graph_t> out_edges(vertex_idx_t<Graph_t> u, const Graph_t &graph) {
+inline out_edge_view<Graph_t> out_edges(vertex_idx_t<Graph_t> u, const Graph_t &graph) {
+    std::cout << "default out_edges" << std::endl;
     return out_edge_view(graph, u);
 }
 
 template<typename Graph_t>
-in_edge_view<Graph_t> in_edges(vertex_idx_t<Graph_t> v, const Graph_t &graph) {
+inline in_edge_view<Graph_t> in_edges(vertex_idx_t<Graph_t> v, const Graph_t &graph) {
+    std::cout << "default in_edges" << std::endl;
     return in_edge_view(graph, v);
 }
 

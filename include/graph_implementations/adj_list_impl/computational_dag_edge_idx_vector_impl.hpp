@@ -240,19 +240,19 @@ class computational_dag_edge_idx_vector_impl {
 };
 
 template<typename v_impl, typename e_impl>
-auto edges(const computational_dag_edge_idx_vector_impl<v_impl, e_impl> &graph) {
+inline auto edges(const computational_dag_edge_idx_vector_impl<v_impl, e_impl> &graph) {
     return graph.edges();
 }
 
 template<typename v_impl, typename e_impl>
-auto out_edges(vertex_idx_t<computational_dag_edge_idx_vector_impl<v_impl, e_impl>> u,
-    vertex_idx_t<computational_dag_edge_idx_vector_impl<v_impl, e_impl>> &graph) {
-    return graph.out_edges(u);
+inline auto out_edges(vertex_idx_t<computational_dag_edge_idx_vector_impl<v_impl, e_impl>> v,
+                      const computational_dag_edge_idx_vector_impl<v_impl, e_impl> &graph) {
+    return graph.out_edges(v);
 }
 
 template<typename v_impl, typename e_impl>
-auto in_edges(vertex_idx_t<computational_dag_edge_idx_vector_impl<v_impl, e_impl>> v,
-              const computational_dag_edge_idx_vector_impl<v_impl, e_impl> &graph) {
+inline auto in_edges(vertex_idx_t<computational_dag_edge_idx_vector_impl<v_impl, e_impl>> v,
+                     const computational_dag_edge_idx_vector_impl<v_impl, e_impl> &graph) {
     return graph.in_edges(v);
 }
 

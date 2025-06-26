@@ -51,13 +51,13 @@ inline constexpr bool is_directed_graph_v = is_directed_graph<T>::value;
 
 // default implementation to get the source of an edge
 template<typename Graph_t>
-vertex_idx_t<Graph_t> source(const edge_desc_t<Graph_t> &edge, const Graph_t &graph) {
+inline vertex_idx_t<Graph_t> source(const edge_desc_t<Graph_t> &edge, const Graph_t &graph) {
     return graph.source(edge);
 }
 
 // default implementation to get the target of an edge
 template<typename Graph_t>
-vertex_idx_t<Graph_t> target(const edge_desc_t<Graph_t> &edge, const Graph_t &graph) {
+inline vertex_idx_t<Graph_t> target(const edge_desc_t<Graph_t> &edge, const Graph_t &graph) {
     return graph.target(edge);
 }
 

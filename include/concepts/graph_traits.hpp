@@ -139,8 +139,6 @@ struct has_vertices_in_top_order_trait<T, std::void_t<decltype(T::vertices_in_to
 template<typename T>
 inline constexpr bool has_vertices_in_top_order_v = has_vertices_in_top_order_trait<T>::value;
 
-
-
 template<typename T, typename = void>
 struct has_children_in_vertex_order_trait : std::false_type {};
 
