@@ -67,7 +67,7 @@ struct no_local_search_memory_constraint {
  * @tparam Graph_t The graph type.
  */
 template<typename Graph_t>
-struct local_search_local_memory_constraint {
+struct ls_local_memory_constraint {
 
     using Graph_impl_t = Graph_t;
 
@@ -76,7 +76,7 @@ struct local_search_local_memory_constraint {
 
     std::vector<std::vector<v_memw_t<Graph_t>>> step_processor_memory;
 
-    local_search_local_memory_constraint() : set_schedule(nullptr), graph(nullptr) {}
+    ls_local_memory_constraint() : set_schedule(nullptr), graph(nullptr) {}
 
     inline void initialize(const SetSchedule<Graph_t> &set_schedule_, const VectorSchedule<Graph_t> &) {
 
@@ -139,7 +139,7 @@ struct local_search_local_memory_constraint {
 };
 
 template<typename Graph_t>
-struct search_local_local_inc_edges_memory_constraint {
+struct ls_local_inc_edges_memory_constraint {
 
     using Graph_impl_t = Graph_t;
 
@@ -150,7 +150,7 @@ struct search_local_local_inc_edges_memory_constraint {
     std::vector<std::vector<v_memw_t<Graph_t>>> step_processor_memory;
     std::vector<std::vector<std::unordered_set<vertex_idx_t<Graph_t>>>> step_processor_pred;
 
-    search_local_local_inc_edges_memory_constraint()
+    ls_local_inc_edges_memory_constraint()
         : set_schedule(nullptr), vector_schedule(nullptr), graph(nullptr) {}
 
     inline void initialize(const SetSchedule<Graph_t> &set_schedule_, const VectorSchedule<Graph_t> &vec_schedule_) {
@@ -164,10 +164,10 @@ struct search_local_local_inc_edges_memory_constraint {
         graph = &set_schedule->getInstance().getComputationalDag();
         step_processor_memory = std::vector<std::vector<v_memw_t<Graph_t>>>(
             set_schedule->numberOfSupersteps(),
-            std::vector<v_memw_t<Graph_t>>(set_schedule->getInstance()->numberOfProcessors(), 0));
+            std::vector<v_memw_t<Graph_t>>(set_schedule->getInstance().numberOfProcessors(), 0));
         step_processor_pred = std::vector<std::vector<std::unordered_set<vertex_idx_t<Graph_t>>>>(
             set_schedule->numberOfSupersteps(),
-            std::vector<std::unordered_set<vertex_idx_t<Graph_t>>>(set_schedule->getInstance()->numberOfProcessors()));
+            std::vector<std::unordered_set<vertex_idx_t<Graph_t>>>(set_schedule->getInstance().numberOfProcessors()));
     }
 
     inline void apply_move(vertex_idx_t<Graph_t> vertex, unsigned from_proc, unsigned from_step, unsigned to_proc,
@@ -312,7 +312,7 @@ struct search_local_local_inc_edges_memory_constraint {
         }
 
         if (step >= vector_schedule->assignedSuperstep(vertex)) {
-            return step_processor_memory[step][proc] + graph->vertex_mevertex_comm_weightm_weight(vertex) + inc_memory <=
+            return step_processor_memory[step][proc] + graph->vertex_comm_weight(vertex) + inc_memory <=
                    set_schedule->getInstance().getArchitecture().memoryBound(proc);
         }
 
@@ -342,7 +342,7 @@ struct search_local_local_inc_edges_memory_constraint {
 };
 
 template<typename Graph_t>
-struct local_search_local_sources_inc_edges_memory_constraint {
+struct ls_local_sources_inc_edges_memory_constraint {
 
     using Graph_impl_t = Graph_t;
 
@@ -353,7 +353,7 @@ struct local_search_local_sources_inc_edges_memory_constraint {
     std::vector<std::vector<v_memw_t<Graph_t>>> step_processor_memory;
     std::vector<std::vector<std::unordered_set<vertex_idx_t<Graph_t>>>> step_processor_pred;
 
-    local_search_local_sources_inc_edges_memory_constraint()
+    ls_local_sources_inc_edges_memory_constraint()
         : set_schedule(nullptr), vector_schedule(nullptr), graph(nullptr) {}
 
     inline void initialize(const SetSchedule<Graph_t> &set_schedule_, const VectorSchedule<Graph_t> &vec_schedule_) {
@@ -367,10 +367,10 @@ struct local_search_local_sources_inc_edges_memory_constraint {
         graph = &set_schedule->getInstance().getComputationalDag();
         step_processor_memory = std::vector<std::vector<v_memw_t<Graph_t>>>(
             set_schedule->numberOfSupersteps(),
-            std::vector<v_memw_t<Graph_t>>(set_schedule->getInstance()->numberOfProcessors(), 0));
+            std::vector<v_memw_t<Graph_t>>(set_schedule->getInstance().numberOfProcessors(), 0));
         step_processor_pred = std::vector<std::vector<std::unordered_set<vertex_idx_t<Graph_t>>>>(
             set_schedule->numberOfSupersteps(),
-            std::vector<std::unordered_set<vertex_idx_t<Graph_t>>>(set_schedule->getInstance()->numberOfProcessors()));
+            std::vector<std::unordered_set<vertex_idx_t<Graph_t>>>(set_schedule->getInstance().numberOfProcessors()));
     }
 
     inline void apply_move(vertex_idx_t<Graph_t> vertex, unsigned from_proc, unsigned from_step, unsigned to_proc,

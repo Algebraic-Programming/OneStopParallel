@@ -16,7 +16,7 @@ limitations under the License.
 @author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 
-#define KL_DEBUG
+//#define KL_DEBUG
 
 #include "bsp/model/BspSchedule.hpp"
 #include "bsp/model/IBspSchedule.hpp"

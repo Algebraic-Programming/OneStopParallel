@@ -368,7 +368,7 @@ BOOST_AUTO_TEST_CASE(GreedyBspScheduler_local_test) {
     GreedyBspScheduler<graph_impl_t, local_inc_edges_memory_constraint<graph_impl_t>> test_3;
     run_test_local_inc_edges_memory(&test_3);
 
-    GreedyBspScheduler<graph_impl_t, local_inc_edges_2_memory_constraint<graph_impl_t>> test_4;
+    GreedyBspScheduler<graph_impl_t, local_sources_inc_edges_memory_constraint<graph_impl_t>> test_4;
     run_test_local_inc_edges_2_memory(&test_4);
 };
 
@@ -385,7 +385,7 @@ BOOST_AUTO_TEST_CASE(GrowLocalAutoCores_local_test) {
     GrowLocalAutoCores<graph_impl_t, local_inc_edges_memory_constraint<graph_impl_t>> test_3;
     run_test_local_inc_edges_memory(&test_3);
 
-    GrowLocalAutoCores<graph_impl_t, local_inc_edges_2_memory_constraint<graph_impl_t>> test_4;
+    GrowLocalAutoCores<graph_impl_t, local_sources_inc_edges_memory_constraint<graph_impl_t>> test_4;
     run_test_local_inc_edges_2_memory(&test_4);
 };
 
@@ -402,7 +402,7 @@ BOOST_AUTO_TEST_CASE(BspLocking_local_test) {
     BspLocking<graph_impl_t, local_inc_edges_memory_constraint<graph_impl_t>> test_3;
     run_test_local_inc_edges_memory(&test_3);
 
-    BspLocking<graph_impl_t, local_inc_edges_2_memory_constraint<graph_impl_t>> test_4;
+    BspLocking<graph_impl_t, local_sources_inc_edges_memory_constraint<graph_impl_t>> test_4;
     run_test_local_inc_edges_2_memory(&test_4);
 };
 
