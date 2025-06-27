@@ -40,8 +40,7 @@ namespace osp {
 template<typename Graph_t>
 class SetSchedule : public IBspSchedule<Graph_t> {
 
-    static_assert(is_computational_dag_v<Graph_t>,
-        "BspSchedule can only be used with computational DAGs.");
+    static_assert(is_computational_dag_v<Graph_t>, "BspSchedule can only be used with computational DAGs.");
 
   private:
     using vertex_idx = vertex_idx_t<Graph_t>;
@@ -182,5 +181,89 @@ class SetSchedule : public IBspSchedule<Graph_t> {
         }
     }
 };
+
+
+template<typename Graph_t>
+static void printSetScheduleWorkMemNodesGrid(std::ostream &os, const SetSchedule<Graph_t> &set_schedule, bool print_detailed_node_assignment = false) {
+    const auto &instance = set_schedule.getInstance();
+    const unsigned num_processors = instance.numberOfProcessors();
+    const unsigned num_supersteps = set_schedule.numberOfSupersteps();
+
+    // Data structures to store aggregated work, memory, and nodes
+    std::vector<std::vector<v_workw_t<Graph_t>>> total_work_per_cell(
+        num_processors, std::vector<v_workw_t<Graph_t>>(num_supersteps, 0.0));
+    std::vector<std::vector<v_memw_t<Graph_t>>> total_memory_per_cell(
+        num_processors, std::vector<v_memw_t<Graph_t>>(num_supersteps, 0.0));
+    std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> nodes_per_cell(
+        num_processors, std::vector<std::vector<vertex_idx_t<Graph_t>>>(num_supersteps));
+
+    // Aggregate work, memory, and collect nodes
+    // Loop order (p, s) matches total_work_per_cell[p][s] and nodes_per_cell[p][s]
+    for (unsigned p = 0; p < num_processors; ++p) {
+        for (unsigned s = 0; s < num_supersteps; ++s) {
+            // Access set_schedule.step_processor_vertices[s][p] as per the provided snippet.
+            // Add checks for bounds as set_schedule.step_processor_vertices might not be fully initialized
+            // for all s, p combinations if it's dynamically sized.
+            if (s < set_schedule.step_processor_vertices.size() && p < set_schedule.step_processor_vertices[s].size()) {
+                for (const auto &node_idx : set_schedule.step_processor_vertices[s][p]) {
+                    total_work_per_cell[p][s] += instance.getComputationalDag().vertex_work_weight(node_idx);
+                    total_memory_per_cell[p][s] += instance.getComputationalDag().vertex_mem_weight(node_idx);
+                    nodes_per_cell[p][s].push_back(node_idx);
+                }
+            }
+        }
+    }
+
+    // Determine cell width for formatting
+    // Accommodates "W:XXXXX M:XXXXX N:XXXXX" (max 5 digits for each)
+    const int cell_width = 25;
+
+    // Print header row (Supersteps)
+    os << std::left << std::setw(cell_width) << "P\\SS";
+    for (unsigned s = 0; s < num_supersteps; ++s) {
+        os << std::setw(cell_width) << ("SS " + std::to_string(s));
+    }
+    os << "\n";
+
+    // Print separator line
+    os << std::string(cell_width * (num_supersteps + 1), '-') << "\n";
+
+    // Print data rows (Processors)
+    for (unsigned p = 0; p < num_processors; ++p) {
+        os << std::left << std::setw(cell_width) << ("P " + std::to_string(p));
+        for (unsigned s = 0; s < num_supersteps; ++s) {
+            std::stringstream cell_content;
+            cell_content << "W:" << std::fixed << std::setprecision(0) << total_work_per_cell[p][s]
+                         << " M:" << std::fixed << std::setprecision(0) << total_memory_per_cell[p][s]
+                         << " N:" << nodes_per_cell[p][s].size(); // Add node count
+            os << std::left << std::setw(cell_width) << cell_content.str();
+        }
+        os << "\n";
+    }
+    
+    if (print_detailed_node_assignment) {
+        os << "\n"; // Add a newline for separation between grid and detailed list
+
+
+        // Print detailed node lists below the grid
+        os << "Detailed Node Assignments:\n";
+        os << std::string(30, '=') << "\n"; // Separator
+        for (unsigned p = 0; p < num_processors; ++p) {
+            for (unsigned s = 0; s < num_supersteps; ++s) {
+                if (!nodes_per_cell[p][s].empty()) {
+                    os << "P" << p << " SS" << s << " Nodes: [";
+                    for (size_t i = 0; i < nodes_per_cell[p][s].size(); ++i) {
+                        os << nodes_per_cell[p][s][i];
+                        if (i < nodes_per_cell[p][s].size() - 1) {
+                            os << ", ";
+                        }
+                    }
+                    os << "]\n";
+                }
+            }
+        }
+        os << std::string(30, '=') << "\n"; // Separator
+    }
+}
 
 } // namespace osp

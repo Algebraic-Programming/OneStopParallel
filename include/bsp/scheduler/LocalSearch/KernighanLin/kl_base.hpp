@@ -2453,6 +2453,8 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                 const bool iter_feasible = current_schedule.current_feasible;
                 const double iter_costs = current_schedule.current_cost;
 
+                print_heap();
+
                 kl_move<Graph_t> best_move = find_best_move(); // O(log n)
 
                 if (best_move.gain < -std::numeric_limits<double>::max() * .25) {
@@ -2471,7 +2473,9 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                           << current_schedule.current_cost + best_move.change_in_cost << std::endl;
 #endif
 
+                printSetScheduleWorkMemNodesGrid(std::cout, current_schedule.set_schedule, true);
                 current_schedule.apply_move(best_move); // O(p + log n)
+
 
                 //             if (best_move.gain <= 0.000000001) {
                 //                 conseq_no_gain_moves_counter++;
@@ -2784,7 +2788,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
             std::cout << "node " << it->node << " gain " << it->gain << " to proc " << it->to_proc << " to step "
                       << it->to_step << std::endl;
 
-            if (count++ > 25) {
+            if (count++ > 15 || it->gain <= 0) {
                 break;
             }
         }
