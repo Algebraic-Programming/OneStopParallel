@@ -283,7 +283,7 @@ std::vector<int> get_strict_poset_integer_map(unsigned const noise, double const
 
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::poisson_distribution<> poisson_gen(poisson_param);
+    std::poisson_distribution<> poisson_gen(poisson_param + 1.0e-12);
 
     std::vector<unsigned> top_distance = get_top_node_distance(graph);
     std::vector<unsigned> bot_distance = get_bottom_node_distance(graph);
@@ -324,7 +324,11 @@ std::vector<int> get_strict_poset_integer_map(unsigned const noise, double const
 
             int temp = new_top[source(edge, graph)];
             if (up_or_down.at(edge)) {
-                temp += 1 + poisson_gen(gen);
+                if (poisson_param == 0.0) {
+                    temp += 1;
+                } else {
+                    temp += 1 + poisson_gen(gen);
+                }
             }
             max_temp = std::max(max_temp, temp);
         }
