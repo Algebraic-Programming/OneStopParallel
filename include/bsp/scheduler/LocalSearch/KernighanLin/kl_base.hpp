@@ -2788,7 +2788,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
             std::cout << "node " << it->node << " gain " << it->gain << " to proc " << it->to_proc << " to step "
                       << it->to_step << std::endl;
 
-            if (count++ > 15 || it->gain <= 0) {
+            if (count++ > 15 || it->gain <=) {
                 break;
             }
         }

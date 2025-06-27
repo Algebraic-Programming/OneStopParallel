@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(kl_local_memconst) {
             BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
             BOOST_CHECK(schedule.satisfiesMemoryConstraints());
 
-            kl_total_cut_test<graph, local_search_local_memory_constraint<graph>> kl;
+            kl_total_comm_test<graph, local_search_local_memory_constraint<graph>> kl;
 
             auto status = kl.improve_schedule_test_2(schedule);
 
