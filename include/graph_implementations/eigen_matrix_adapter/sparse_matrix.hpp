@@ -93,12 +93,12 @@ public:
 
     /// @brief Get the children (dependents) of vertex v using CSC layout
     auto children(vertex_idx v) const {
-        return osp::EigenCSCRange<SparseMatrixImp, vertex_idx>(*this, v);
+        return osp::EigenCSCRange<SparseMatrixImp, eigen_idx_type>(*this, static_cast<eigen_idx_type>(v));
     }
 
     /// @brief Get the parents (dependencies) of vertex v using CSR layout
     auto parents(vertex_idx v) const {
-        return osp::EigenCSRRange<SparseMatrixImp, vertex_idx>(*this, v);
+        return osp::EigenCSRRange<SparseMatrixImp, eigen_idx_type>(*this, static_cast<eigen_idx_type>(v));
     }
 
     /// @brief Work weight of a vertex (e.g., row size)

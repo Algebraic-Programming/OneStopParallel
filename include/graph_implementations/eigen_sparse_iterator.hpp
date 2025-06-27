@@ -33,7 +33,7 @@ class EigenCSRRange {
     eigen_idx_type index_;
 
 public:
-    using CSRMatrix = Eigen::SparseMatrix<double, Eigen::RowMajor, int32_t>;
+    using CSRMatrix = Eigen::SparseMatrix<double, Eigen::RowMajor, eigen_idx_type>;
     using Inner = typename CSRMatrix::InnerIterator;
 
     class iterator {
@@ -42,7 +42,7 @@ public:
         bool at_end_;
 
         void skip_diagonal() {
-            while (!at_end_ && it_.row() == static_cast<Eigen::Index>(skip_) && it_.col() == static_cast<Eigen::Index>(skip_)) {
+            while ( ((!at_end_) && (it_.row() == skip_ )) & (it_.col() == skip_)) {
                 ++(*this);
             }
         }
@@ -67,7 +67,7 @@ public:
         iterator(const CSRMatrix& mat, eigen_idx_type idx, bool end = false)
             : skip_(idx), at_end_(end) {
             if (!end) {
-                it_ = Inner(mat, static_cast<Eigen::Index>(idx));
+                it_ = Inner(mat, idx);
                 at_end_ = !it_;
                 skip_diagonal();
             }
@@ -95,11 +95,11 @@ public:
         : graph_(graph), index_(idx) {}
 
     iterator begin() const {
-        return iterator(*static_cast<const CSRMatrix*>(graph_.getCSR()), index_);
+        return iterator(*graph_.getCSR(), index_);
     }
 
     iterator end() const {
-        return iterator(*static_cast<const CSRMatrix*>(graph_.getCSR()), index_, true);
+        return iterator(*graph_.getCSR(), index_, true);
     }
 };
 
@@ -110,7 +110,7 @@ class EigenCSCRange {
     eigen_idx_type index_;
 
 public:
-    using CSCMatrix = Eigen::SparseMatrix<double, Eigen::ColMajor, int32_t>;
+    using CSCMatrix = Eigen::SparseMatrix<double, Eigen::ColMajor, eigen_idx_type>;
     using Inner = typename CSCMatrix::InnerIterator;
 
     class iterator {
@@ -119,7 +119,7 @@ public:
         bool at_end_;
 
         void skip_diagonal() {
-            while (!at_end_ && it_.row() == static_cast<Eigen::Index>(skip_) && it_.col() == static_cast<Eigen::Index>(skip_)) {
+            while ((!at_end_) & (it_.row() == skip_) & (it_.col() == skip_)) {
                 ++(*this);
             }
         }
@@ -144,7 +144,7 @@ public:
         iterator(const CSCMatrix& mat, eigen_idx_type idx, bool end = false)
             : skip_(idx), at_end_(end) {
             if (!end) {
-                it_ = Inner(mat, static_cast<Eigen::Index>(idx));
+                it_ = Inner(mat, idx);
                 at_end_ = !it_;
                 skip_diagonal();
             }
@@ -173,11 +173,11 @@ public:
         : graph_(graph), index_(idx) {}
 
     iterator begin() const {
-        return iterator(*static_cast<const CSCMatrix*>(graph_.getCSC()), index_);
+        return iterator(*graph_.getCSC(), index_);
     }
 
     iterator end() const {
-        return iterator(*static_cast<const CSCMatrix*>(graph_.getCSC()), index_, true);
+        return iterator(*graph_.getCSC(), index_, true);
     }
 };
 } // namespace osp
