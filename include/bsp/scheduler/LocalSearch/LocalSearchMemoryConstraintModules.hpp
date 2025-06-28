@@ -97,8 +97,7 @@ struct ls_local_memory_constraint {
         step_processor_memory[from_step][from_proc] -= graph->vertex_mem_weight(vertex);
     }
 
-    inline void forward_move(vertex_idx_t<Graph_t> vertex, unsigned , unsigned , unsigned to_proc,
-                           unsigned to_step) {
+    inline void forward_move(vertex_idx_t<Graph_t> vertex, unsigned, unsigned, unsigned to_proc, unsigned to_step) {
         step_processor_memory[to_step][to_proc] += graph->vertex_mem_weight(vertex);
         // step_processor_memory[from_step][from_proc] -= graph->vertex_mem_weight(vertex);
     }
@@ -150,8 +149,7 @@ struct ls_local_inc_edges_memory_constraint {
     std::vector<std::vector<v_memw_t<Graph_t>>> step_processor_memory;
     std::vector<std::vector<std::unordered_set<vertex_idx_t<Graph_t>>>> step_processor_pred;
 
-    ls_local_inc_edges_memory_constraint()
-        : set_schedule(nullptr), vector_schedule(nullptr), graph(nullptr) {}
+    ls_local_inc_edges_memory_constraint() : set_schedule(nullptr), vector_schedule(nullptr), graph(nullptr) {}
 
     inline void initialize(const SetSchedule<Graph_t> &set_schedule_, const VectorSchedule<Graph_t> &vec_schedule_) {
 
@@ -256,7 +254,7 @@ struct ls_local_inc_edges_memory_constraint {
                 step_processor_pred[step][proc].clear();
 
                 for (const auto &node : set_schedule->step_processor_vertices[step][proc]) {
-  
+
                     step_processor_memory[step][proc] += graph->vertex_comm_weight(node);
 
                     for (const auto &pred : graph->parents(node)) {
@@ -294,7 +292,7 @@ struct ls_local_inc_edges_memory_constraint {
 
     inline bool can_move(vertex_idx_t<Graph_t> vertex, const unsigned proc, unsigned step) const {
 
-        v_memw_t<Graph_t> inc_memory = 0;
+        v_memw_t<Graph_t> inc_memory = graph->vertex_comm_weight(vertex);
         for (const auto &pred : graph->parents(vertex)) {
 
             if (vector_schedule->assignedSuperstep(pred) < step) {
@@ -312,11 +310,11 @@ struct ls_local_inc_edges_memory_constraint {
         }
 
         if (step >= vector_schedule->assignedSuperstep(vertex)) {
-            return step_processor_memory[step][proc] + graph->vertex_comm_weight(vertex) + inc_memory <=
+            return step_processor_memory[step][proc] + inc_memory <=
                    set_schedule->getInstance().getArchitecture().memoryBound(proc);
         }
 
-        if (step_processor_memory[step][proc] + graph->vertex_comm_weight(vertex) + inc_memory >
+        if (step_processor_memory[step][proc] + inc_memory >
             set_schedule->getInstance().getArchitecture().memoryBound(proc)) {
 
             return false;
@@ -324,13 +322,14 @@ struct ls_local_inc_edges_memory_constraint {
 
         for (const auto &succ : graph->children(vertex)) {
 
-            const auto& succ_step = vector_schedule->assignedSuperstep(succ);
-            const auto& succ_proc = vector_schedule->assignedProcessor(succ);
+            const auto &succ_step = vector_schedule->assignedSuperstep(succ);
+            const auto &succ_proc = vector_schedule->assignedProcessor(succ);
 
+            if (succ_step == vector_schedule->assignedSuperstep(vertex) and
+                succ_proc != vector_schedule->assignedProcessor(vertex)) {
 
-            if (succ_step == vector_schedule->assignedSuperstep(vertex)) {
-
-                if (step_processor_memory[succ_step][succ_proc] + graph->vertex_comm_weight(vertex) > set_schedule->getInstance().getArchitecture().memoryBound(succ_proc)) {
+                if (step_processor_memory[succ_step][succ_proc] + graph->vertex_comm_weight(vertex) >
+                    set_schedule->getInstance().getArchitecture().memoryBound(succ_proc)) {
 
                     return false;
                 }
@@ -353,8 +352,7 @@ struct ls_local_sources_inc_edges_memory_constraint {
     std::vector<std::vector<v_memw_t<Graph_t>>> step_processor_memory;
     std::vector<std::vector<std::unordered_set<vertex_idx_t<Graph_t>>>> step_processor_pred;
 
-    ls_local_sources_inc_edges_memory_constraint()
-        : set_schedule(nullptr), vector_schedule(nullptr), graph(nullptr) {}
+    ls_local_sources_inc_edges_memory_constraint() : set_schedule(nullptr), vector_schedule(nullptr), graph(nullptr) {}
 
     inline void initialize(const SetSchedule<Graph_t> &set_schedule_, const VectorSchedule<Graph_t> &vec_schedule_) {
 
@@ -500,7 +498,7 @@ struct ls_local_sources_inc_edges_memory_constraint {
     }
 
     inline bool can_move(vertex_idx_t<Graph_t> vertex, const unsigned proc, unsigned step) const {
-        
+
         v_memw_t<Graph_t> inc_memory = 0;
 
         if (is_source(vertex, *graph)) {
@@ -511,7 +509,7 @@ struct ls_local_sources_inc_edges_memory_constraint {
 
             if (vector_schedule->assignedSuperstep(pred) < step) {
 
-                if (step_processor_pred[step][proc].find(pred) ==  step_processor_pred[step][proc].end()) {
+                if (step_processor_pred[step][proc].find(pred) == step_processor_pred[step][proc].end()) {
                     inc_memory += graph->vertex_comm_weight(pred);
                 }
             }
@@ -524,11 +522,11 @@ struct ls_local_sources_inc_edges_memory_constraint {
         }
 
         if (vector_schedule->assignedSuperstep(vertex) <= step) {
-        
-            return step_processor_memory[step][proc] + inc_memory <= set_schedule->getInstance().getArchitecture().memoryBound(proc);
+
+            return step_processor_memory[step][proc] + inc_memory <=
+                   set_schedule->getInstance().getArchitecture().memoryBound(proc);
         }
 
-        
         if (step_processor_memory[step][proc] + inc_memory >
             set_schedule->getInstance().getArchitecture().memoryBound(proc)) {
             return false;
@@ -536,16 +534,34 @@ struct ls_local_sources_inc_edges_memory_constraint {
 
         for (const auto &succ : graph->children(vertex)) {
 
-            const auto& succ_step = vector_schedule->assignedSuperstep(succ);
-            const auto& succ_proc = vector_schedule->assignedProcessor(succ);
+            const auto &succ_step = vector_schedule->assignedSuperstep(succ);
+            const auto &succ_proc = vector_schedule->assignedProcessor(succ);
 
             if (succ_step == vector_schedule->assignedSuperstep(vertex)) {
-                if (step_processor_memory[succ_step][succ_proc] + graph->vertex_comm_weight(vertex) > set_schedule->getInstance().getArchitecture().memoryBound(succ_proc)) {
-                    return false;
+
+                if (vector_schedule->assignedProcessor(vertex) != succ_proc || (not is_source(vertex, *graph))) {
+
+                    if (step_processor_memory[succ_step][succ_proc] + graph->vertex_comm_weight(vertex) >
+                        set_schedule->getInstance().getArchitecture().memoryBound(succ_proc)) {
+                        return false;
+                    }
+
+                } else {
+
+                    if (is_source(vertex, *graph)) {
+
+                        if (step_processor_memory[succ_step][succ_proc] + graph->vertex_comm_weight(vertex) -
+                                graph->vertex_mem_weight(vertex) >
+                            set_schedule->getInstance().getArchitecture().memoryBound(succ_proc)) {
+                            return false;
+                        }
+                    }
                 }
             }
         }
-        return true;   
+
+        return true;
+    
     }
 };
 
