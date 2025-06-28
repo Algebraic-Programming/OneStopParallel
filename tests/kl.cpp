@@ -36,9 +36,22 @@ std::vector<std::string> test_graphs() {
             "data/spaa/tiny/instance_CG_N3_K1_nzP0d5.hdag"};
 }
 
+template<typename Graph_t>
+void add_mem_weights(Graph_t &dag) {
+
+    int mem_weight = 1;
+    int comm_weight = 1;
+
+    for (const auto &v : dag.vertices()) {
+
+        dag.set_vertex_mem_weight(v, static_cast<v_memw_t<Graph_t>>(mem_weight++ % 3 + 1));
+        dag.set_vertex_comm_weight(v, static_cast<v_commw_t<Graph_t>>(comm_weight++ % 3 + 1));
+    }
+}
+
 BOOST_AUTO_TEST_CASE(kl_base_1) {
 
-    using graph = computational_dag_edge_idx_vector_impl_def_t;
+    using graph = computational_dag_edge_idx_vector_impl_def_int_t;
     using VertexType = graph::vertex_idx;
 
     graph dag;
@@ -75,10 +88,12 @@ BOOST_AUTO_TEST_CASE(kl_base_1) {
     using kl_move = kl_move<graph>;
 
     kl_total_comm_test<graph> kl;
+    kl.set_use_node_communication_costs(false);
 
     kl.test_setup_schedule(schedule);
 
-    kl_current_schedule_total<graph> &kl_current_schedule = kl.get_current_schedule();
+    kl_current_schedule_total<graph, no_local_search_memory_constraint> &kl_current_schedule =
+        kl.get_current_schedule();
 
     BOOST_CHECK_EQUAL(kl_current_schedule.step_max_work[0], 44.0);
     BOOST_CHECK_EQUAL(kl_current_schedule.step_second_max_work[0], 0.0);
@@ -139,7 +154,7 @@ BOOST_AUTO_TEST_CASE(kl_total_comm_test_1) {
 
     std::vector<std::string> filenames_graph = test_graphs();
 
-    using graph = computational_dag_edge_idx_vector_impl_def_t;
+    using graph = computational_dag_edge_idx_vector_impl_def_int_t;
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -149,7 +164,7 @@ BOOST_AUTO_TEST_CASE(kl_total_comm_test_1) {
         std::cout << cwd << std::endl;
     }
 
-    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_t> test_scheduler;
+    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_int_t> test_scheduler;
 
     for (auto &filename_graph : filenames_graph) {
 
@@ -188,7 +203,7 @@ BOOST_AUTO_TEST_CASE(kl_total_comm_test_2) {
 
     std::vector<std::string> filenames_graph = test_graphs();
 
-    using graph = computational_dag_edge_idx_vector_impl_def_t;
+    using graph = computational_dag_edge_idx_vector_impl_def_int_t;
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -198,7 +213,7 @@ BOOST_AUTO_TEST_CASE(kl_total_comm_test_2) {
         std::cout << cwd << std::endl;
     }
 
-    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_t> test_scheduler;
+    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_int_t> test_scheduler;
 
     for (auto &filename_graph : filenames_graph) {
 
@@ -237,7 +252,7 @@ BOOST_AUTO_TEST_CASE(kl_total_cut_test_1) {
 
     std::vector<std::string> filenames_graph = test_graphs();
 
-    using graph = computational_dag_edge_idx_vector_impl_def_t;
+    using graph = computational_dag_edge_idx_vector_impl_def_int_t;
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -247,7 +262,7 @@ BOOST_AUTO_TEST_CASE(kl_total_cut_test_1) {
         std::cout << cwd << std::endl;
     }
 
-    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_t> test_scheduler;
+    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_int_t> test_scheduler;
 
     for (auto &filename_graph : filenames_graph) {
 
@@ -285,7 +300,7 @@ BOOST_AUTO_TEST_CASE(kl_total_cut_test_2) {
 
     std::vector<std::string> filenames_graph = test_graphs();
 
-    using graph = computational_dag_edge_idx_vector_impl_def_t;
+    using graph = computational_dag_edge_idx_vector_impl_def_int_t;
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -295,7 +310,7 @@ BOOST_AUTO_TEST_CASE(kl_total_cut_test_2) {
         std::cout << cwd << std::endl;
     }
 
-    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_t> test_scheduler;
+    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_int_t> test_scheduler;
 
     for (auto &filename_graph : filenames_graph) {
 
@@ -328,3 +343,4 @@ BOOST_AUTO_TEST_CASE(kl_total_cut_test_2) {
         BOOST_CHECK_EQUAL(schedule.satisfiesPrecedenceConstraints(), true);
     }
 }
+

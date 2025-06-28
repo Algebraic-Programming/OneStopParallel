@@ -352,11 +352,11 @@ struct local_inc_edges_memory_constraint {
 };
 
 template<typename Graph_t>
-struct local_inc_edges_2_memory_constraint {
+struct local_sources_inc_edges_memory_constraint {
 
     static_assert(
         std::is_convertible_v<v_commw_t<Graph_t>, v_memw_t<Graph_t>>,
-        "local_inc_edges_2_memory_constraint requires that memory and communication weights are convertible.");
+        "local_sources_inc_edges_memory_constraint requires that memory and communication weights are convertible.");
 
     using Graph_impl_t = Graph_t;
 
@@ -368,7 +368,7 @@ struct local_inc_edges_2_memory_constraint {
     std::vector<v_memw_t<Graph_t>> current_proc_memory;
     std::vector<std::unordered_set<vertex_idx_t<Graph_t>>> current_proc_predec;
 
-    local_inc_edges_2_memory_constraint() : instance(nullptr), schedule(nullptr) {}
+    local_sources_inc_edges_memory_constraint() : instance(nullptr), schedule(nullptr) {}
 
     inline void initialize(const BspSchedule<Graph_t> &schedule_, const unsigned &supstepIdx) {
         current_superstep = &supstepIdx;

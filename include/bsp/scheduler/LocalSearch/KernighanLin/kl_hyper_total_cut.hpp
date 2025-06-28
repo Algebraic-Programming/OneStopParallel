@@ -27,8 +27,8 @@ limitations under the License.
 #include "kl_total.hpp"
 
 namespace osp {
-template<typename Graph_t>
-class kl_hyper_total_cut : public kl_total<Graph_t> {
+template<typename Graph_t, typename MemoryConstraint_t>
+class kl_hyper_total_cut : public kl_total<Graph_t, MemoryConstraint_t> {
 
   protected:
     virtual void compute_comm_gain(vertex_idx_t<Graph_t> node, unsigned current_step, unsigned current_proc,

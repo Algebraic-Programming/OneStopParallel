@@ -76,10 +76,6 @@ class ImprovementScheduler {
      */
     virtual std::string getScheduleName() const = 0;
 
-    virtual void setUseMemoryConstraint(bool use_memory_constraint_) {
-        throw std::runtime_error("Not implemented " + use_memory_constraint_);
-    }
-
     /**
      * @brief Improve the given BspSchedule.
      * @param schedule The BspSchedule to be improved.
@@ -93,9 +89,6 @@ class ImprovementScheduler {
      * @return The status of the improvement operation.
      */
     virtual RETURN_STATUS improveScheduleWithTimeLimit(BspSchedule<Graph_t> &schedule) = 0;
-
-
-
 };
 
 template<typename Graph_t>
@@ -110,7 +103,7 @@ class ComboScheduler : public Scheduler<Graph_t> {
         : Scheduler<Graph_t>(), base_scheduler(base), improvement_scheduler(improvement) {}
 
     virtual void setTimeLimitSeconds(unsigned int limit) override {
-      
+
         Scheduler<Graph_t>::timeLimitSeconds = limit;
         base_scheduler.setTimeLimitSeconds(limit);
         improvement_scheduler.setTimeLimitSeconds(limit);
@@ -126,18 +119,17 @@ class ComboScheduler : public Scheduler<Graph_t> {
     virtual ~ComboScheduler() = default;
 
     virtual std::string getScheduleName() const override {
-        return base_scheduler->getScheduleName() + "+" + improvement_scheduler->getScheduleName();
+        return base_scheduler.getScheduleName() + "+" + improvement_scheduler.getScheduleName();
     }
 
-    virtual std::pair<RETURN_STATUS, BspSchedule<Graph_t>>
-    computeSchedule(const BspInstance<Graph_t> &instance) override {
+    virtual RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &schedule) override {
 
-        std::pair<RETURN_STATUS, BspSchedule<Graph_t>> base_schedule = base_scheduler.computeSchedule(instance);
-        if (base_schedule.first != SUCCESS) {
-            return base_schedule;
+        RETURN_STATUS status = base_scheduler.computeSchedule(schedule);
+        if (status != SUCCESS and status != BEST_FOUND) {
+            return status;
         }
-        RETURN_STATUS improve_status = improvement_scheduler.improveSchedule(base_schedule.second);
-        return {improve_status, base_schedule.second};
+
+        return improvement_scheduler.improveSchedule(schedule);
     }
 };
 

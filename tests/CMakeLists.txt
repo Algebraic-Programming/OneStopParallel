@@ -44,6 +44,8 @@ _add_test( directed_graph_top_sort )
 
 _add_test( kl )
 
+_add_test( kl_mem_constr )
+
 _add_test( hill_climbing )
 
 ## bsp model

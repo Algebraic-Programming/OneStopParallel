@@ -28,8 +28,8 @@ limitations under the License.
 
 namespace osp {
 
-template<typename Graph_t>
-class kl_hyper_total_comm : public kl_total<Graph_t> {
+template<typename Graph_t, typename MemoryConstraint_t>
+class kl_hyper_total_comm : public kl_total<Graph_t, MemoryConstraint_t> {
 
   protected:
     
