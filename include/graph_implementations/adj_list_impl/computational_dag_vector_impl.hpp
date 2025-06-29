@@ -67,7 +67,6 @@ class computational_dag_vector_impl {
     using vertex_comm_weight_type = typename v_impl::comm_weight_type;
     using vertex_mem_weight_type = typename v_impl::mem_weight_type;
     using vertex_type_type = typename v_impl::cdag_vertex_type_type;
-    using edge_comm_weight_type = typename v_impl::comm_weight_type;
 
     computational_dag_vector_impl() = default;
 

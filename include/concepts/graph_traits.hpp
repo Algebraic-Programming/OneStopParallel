@@ -105,12 +105,12 @@ template<typename T>
 using v_memw_t = typename computational_dag_traits<T>::vertex_mem_weight_type;
 
 template<typename T, typename = void>
-struct computational_dag_typed_vertices_traits : std::false_type {};
+struct computational_dag_typed_vertices_traits {
+    using vertex_type_type = void;
+};
 
 template<typename T>
 struct computational_dag_typed_vertices_traits<T, std::void_t<typename T::vertex_type_type>> {
-    static_assert(has_vertex_type_tmember<T>::value, "cdag must have vertex type type");
-
     using vertex_type_type = typename T::vertex_type_type;
 };
 
@@ -118,11 +118,12 @@ template<typename T>
 using v_type_t = typename computational_dag_typed_vertices_traits<T>::vertex_type_type;
 
 template<typename T, typename = void>
-struct computational_dag_edge_desc_traits : std::false_type {};
+struct computational_dag_edge_desc_traits {
+    using edge_comm_weight_type = void;
+};
 
 template<typename T>
 struct computational_dag_edge_desc_traits<T, std::void_t<typename T::edge_comm_weight_type>> {
-    static_assert(has_edge_comm_weight_tmember<T>::value, "cdag must have edge comm weight type");
     using edge_comm_weight_type = typename T::edge_comm_weight_type;
 };
 

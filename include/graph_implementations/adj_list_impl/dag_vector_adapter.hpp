@@ -92,7 +92,6 @@ class dag_vector_adapter {
     using vertex_comm_weight_type = typename v_impl::comm_weight_type;
     using vertex_mem_weight_type = typename v_impl::mem_weight_type;
     using vertex_type_type = typename v_impl::cdag_vertex_type_type;
-    using edge_comm_weight_type = typename v_impl::comm_weight_type;
 
     dag_vector_adapter(std::vector<std::vector<index_t>> &out_neigbors_,
                        std::vector<std::vector<index_t>> &in_neigbors_)

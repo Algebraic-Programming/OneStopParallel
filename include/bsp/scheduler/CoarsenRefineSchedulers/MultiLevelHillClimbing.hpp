@@ -29,7 +29,7 @@ class MultiLevelHillClimbingScheduler : public Scheduler<Graph_t> {
     using vertex_idx = vertex_idx_t<Graph_t>;
 
     using vertex_type_t_or_default = std::conditional_t<is_computational_dag_typed_vertices_v<Graph_t>, v_type_t<Graph_t>, unsigned>;
-    using edge_commw_t_or_default = std::conditional_t<is_computational_dag_edge_desc_v<Graph_t>, e_commw_t<Graph_t>, v_commw_t<Graph_t>>;
+    using edge_commw_t_or_default = std::conditional_t<has_edge_weights_v<Graph_t>, e_commw_t<Graph_t>, v_commw_t<Graph_t>>;
 
     private:
 

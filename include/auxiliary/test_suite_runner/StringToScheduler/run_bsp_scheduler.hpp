@@ -147,10 +147,8 @@ RETURN_STATUS run_bsp_scheduler(const ConfigParser &parser, const boost::propert
 
     } else if (algorithm.get_child("name").get_value<std::string>() == "Coarser") {
 
-        using vertex_type_t_or_default =
-            std::conditional_t<is_computational_dag_typed_vertices_v<Graph_t>, v_type_t<Graph_t>, unsigned>;
-        using edge_commw_t_or_default =
-            std::conditional_t<is_computational_dag_edge_desc_v<Graph_t>, e_commw_t<Graph_t>, v_commw_t<Graph_t>>;
+        using vertex_type_t_or_default = std::conditional_t<is_computational_dag_typed_vertices_v<Graph_t>, v_type_t<Graph_t>, unsigned>;
+        using edge_commw_t_or_default = std::conditional_t<has_edge_weights_v<Graph_t>, e_commw_t<Graph_t>, v_commw_t<Graph_t>>;
 
         using boost_graph_t = boost_graph<v_workw_t<Graph_t>, v_commw_t<Graph_t>, v_memw_t<Graph_t>,
                                           vertex_type_t_or_default, edge_commw_t_or_default>;

@@ -55,7 +55,7 @@ class EtfScheduler : public Scheduler<Graph_t> {
     static_assert(std::is_convertible_v<v_commw_t<Graph_t>, v_workw_t<Graph_t>>,
                   "EtfScheduler requires that work and communication weights are convertible.");
 
-    static_assert(not is_computational_dag_edge_desc_v<Graph_t> ||
+    static_assert(not has_edge_weights_v<Graph_t> ||
                       std::is_convertible_v<e_commw_t<Graph_t>, v_workw_t<Graph_t>>,
                   "EtfScheduler requires that work and communication weights are convertible.");
 

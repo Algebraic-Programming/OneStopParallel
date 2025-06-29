@@ -49,7 +49,6 @@ struct is_directed_graph<
 template<typename T>
 inline constexpr bool is_directed_graph_v = is_directed_graph<T>::value;
 
-
 template<typename T, typename v_type, typename e_type, typename = void>
 struct is_edge_list_type : std::false_type {};
 

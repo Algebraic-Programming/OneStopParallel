@@ -48,7 +48,6 @@ public:
     using vertex_idx = size_t;
 
     // Required graph trait aliases (used in concept checks)
-    using edge_comm_weight_type = int;
     using vertex_work_weight_type = eigen_idx_type;
     using vertex_comm_weight_type = eigen_idx_type;
     using vertex_mem_weight_type = int;

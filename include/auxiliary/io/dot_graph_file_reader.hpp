@@ -95,6 +95,9 @@ void parseDotNode(std::string line, Graph_t &G) {
 template<typename Graph_t>
 void parseDotEdge(std::string line, Graph_t &G) {
 
+
+    using edge_commw_t_or_default   = std::conditional_t<has_edge_weights_v<Graph_t>, e_commw_t<Graph_t>, v_commw_t<Graph_t>>;
+
     std::size_t pos = line.find('[');
     std::string nodes = line.substr(0, pos);
     std::string properties = line.substr(pos + 1, line.find(']') - pos - 1);
@@ -110,7 +113,7 @@ void parseDotEdge(std::string line, Graph_t &G) {
     boost::split(keyValuePairs, properties, boost::is_any_of(" "));
 
     // Create edge with properties
-    e_commw_t<Graph_t> comm_weight = 0;
+    edge_commw_t_or_default comm_weight = 0;
 
     for (const std::string &keyValuePair : keyValuePairs) {
         std::vector<std::string> keyValue;
@@ -123,7 +126,7 @@ void parseDotEdge(std::string line, Graph_t &G) {
         std::string value = removeLeadingAndTrailingQuotes(keyValue[1]);
 
         if (key == "comm_weight") {
-            comm_weight = static_cast<e_commw_t<Graph_t>>(std::stoll(value));
+            comm_weight = static_cast<edge_commw_t_or_default>(std::stoll(value));
         }
     }
 
