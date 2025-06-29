@@ -44,7 +44,12 @@ heavy_edge_preprocess(const Graph_t &graph, const double heavy_is_x_times_median
     std::vector<e_commw_t<Graph_t>> edge_communications;
     edge_communications.reserve(graph.num_edges());
     for (const auto &edge : edges(graph)) {
-        edge_communications.emplace_back(graph.edge_comm_weight(edge));
+
+        if constexpr (has_edge_weights_v<Graph_t>) {
+            edge_communications.emplace_back(graph.edge_comm_weight(edge));
+        } else {
+            edge_communications.emplace_back(graph.vertex_comm_weight(source(edge, graph)));
+        }
     }
 
     // Computing the median and setting it to at least one
@@ -64,15 +69,28 @@ heavy_edge_preprocess(const Graph_t &graph, const double heavy_is_x_times_median
     std::vector<EdgeType> edge_list;
     edge_list.reserve(graph.num_edges());
     for (const auto &edge : edges(graph)) {
-        if (graph.edge_comm_weight(edge) > minimal_edge_weight) {
-            edge_list.emplace_back(edge);
+
+        if constexpr (has_edge_weights_v<Graph_t>) {
+            if (graph.edge_comm_weight(edge) > minimal_edge_weight) {
+                edge_list.emplace_back(edge);
+            }
+        } else {
+            if (graph.vertex_comm_weight(source(edge, graph)) > minimal_edge_weight) {
+                edge_list.emplace_back(edge);
+            }
         }
     }
 
-    // Sorting edge list
-    std::sort(edge_list.begin(), edge_list.end(), [graph](const EdgeType &left, const EdgeType &right) {
-        return graph.edge_comm_weight(left) > graph.edge_comm_weight(right);
-    });
+    if constexpr (has_edge_weights_v<Graph_t>) {
+        // Sorting edge list
+        std::sort(edge_list.begin(), edge_list.end(), [graph](const EdgeType &left, const EdgeType &right) {
+            return graph.edge_comm_weight(left) > graph.edge_comm_weight(right);
+        });
+    } else {
+        std::sort(edge_list.begin(), edge_list.end(), [graph](const EdgeType &left, const EdgeType &right) {
+            return graph.vertex_comm_weight(source(left, graph)) > graph.vertex_comm_weight(source(right, graph));
+        });
+    }
 
     // Computing max component size
     v_workw_t<Graph_t> max_component_size = 0;

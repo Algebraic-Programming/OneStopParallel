@@ -27,7 +27,7 @@ limitations under the License.
 #include <vector>
 
 #include "auxiliary/Balanced_Coin_Flips.hpp"
-#include "concepts/directed_graph_concept.hpp"
+#include "concepts/directed_graph_edge_desc_concept.hpp"
 #include "directed_graph_top_sort.hpp"
 #include "directed_graph_util.hpp"
 

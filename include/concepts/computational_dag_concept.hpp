@@ -20,7 +20,7 @@ limitations under the License.
 
 #include <type_traits>
 
-#include "directed_graph_concept.hpp"
+#include "directed_graph_edge_desc_concept.hpp"
 
 namespace osp {
 

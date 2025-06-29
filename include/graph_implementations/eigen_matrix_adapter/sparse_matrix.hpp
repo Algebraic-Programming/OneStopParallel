@@ -48,7 +48,7 @@ public:
     using vertex_idx = size_t;
 
     // Required graph trait aliases (used in concept checks)
-    using edge_comm_weight_type = void;
+    using edge_comm_weight_type = int;
     using vertex_work_weight_type = eigen_idx_type;
     using vertex_comm_weight_type = eigen_idx_type;
     using vertex_mem_weight_type = int;
@@ -118,7 +118,7 @@ using sparse_matrix_graph_int32_t = SparseMatrixImp<int32_t>;
 using sparse_matrix_graph_int64_t = SparseMatrixImp<int64_t>;
 
 
-static_assert(is_other_directed_graph_edge_desc_v<SparseMatrixImp<int32_t>>,
+static_assert(is_directed_graph_edge_desc_v<SparseMatrixImp<int32_t>>,
               "SparseMatrix must satisfy the directed_graph_edge_desc concept");
 
 // Verify that SparseMatrixImp satisfies the directed graph concept
@@ -127,7 +127,6 @@ static_assert(is_directed_graph_v<SparseMatrixImp<int32_t>>,
 
 static_assert(is_directed_graph_v<SparseMatrixImp<int64_t>>,
               "SparseMatrix must satisfy directed_graph_concept");
-
 
 static_assert(has_vertex_weights_v<SparseMatrixImp<int32_t>>, 
     "Compact_Sparse_Graph must satisfy the has_vertex_weights concept");

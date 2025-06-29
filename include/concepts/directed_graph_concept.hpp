@@ -50,49 +50,6 @@ template<typename T>
 inline constexpr bool is_directed_graph_v = is_directed_graph<T>::value;
 
 
-// Specialization for graphs that define a directed_edge_descriptor
-template<typename T, typename = void>
-struct is_directed_graph_edge_desc : std::false_type {};
-
-template<typename T>
-struct is_directed_graph_edge_desc<T,
-                                   std::void_t<typename directed_graph_edge_desc_traits<T>::directed_edge_descriptor,
-                                               decltype(std::declval<T>().edges()),
-                                               decltype(std::declval<T>().out_edges(std::declval<vertex_idx_t<T>>())),
-                                               decltype(std::declval<T>().in_edges(std::declval<vertex_idx_t<T>>())),
-                                               decltype(source(std::declval<edge_desc_t<T>>(), std::declval<T>())),
-                                               decltype(target(std::declval<edge_desc_t<T>>(), std::declval<T>()))>>
-    : std::conjunction<
-          is_directed_graph<T>, std::is_default_constructible<edge_desc_t<T>>,
-          std::is_copy_constructible<edge_desc_t<T>>,
-          is_input_range_of<decltype(std::declval<T>().edges()), edge_desc_t<T>>,
-          is_input_range_of<decltype(std::declval<T>().out_edges(std::declval<vertex_idx_t<T>>())), edge_desc_t<T>>,
-          is_input_range_of<decltype(std::declval<T>().in_edges(std::declval<vertex_idx_t<T>>())), edge_desc_t<T>>,
-          std::is_same<decltype(source(std::declval<edge_desc_t<T>>(), std::declval<T>())), vertex_idx_t<T>>,
-          std::is_same<decltype(target(std::declval<edge_desc_t<T>>(), std::declval<T>())), vertex_idx_t<T>>> {};
-
-template<typename T>
-inline constexpr bool is_directed_graph_edge_desc_v = is_directed_graph_edge_desc<T>::value;
-
-// Specialization for graphs that define a directed_edge_descriptor that can be used as a key in a hash table.
-// Compatible with STL hash tables.
-template<typename T, typename = void>
-struct has_hashable_edge_desc : std::false_type {};
-
-template<typename T>
-struct has_hashable_edge_desc<
-    T, std::void_t<decltype(std::hash<edge_desc_t<T>>{}(std::declval<edge_desc_t<T>>())),
-                   decltype(std::declval<edge_desc_t<T>>() == std::declval<edge_desc_t<T>>()),
-                   decltype(std::declval<edge_desc_t<T>>() != std::declval<edge_desc_t<T>>())>>
-    : std::conjunction<is_directed_graph_edge_desc<T>, std::is_default_constructible<edge_desc_t<T>>,
-                       std::is_copy_constructible<edge_desc_t<T>>> {};
-;
-
-template<typename T>
-inline constexpr bool has_hashable_edge_desc_v = has_hashable_edge_desc<T>::value;
-
-
-
 template<typename T, typename v_type, typename e_type, typename = void>
 struct is_edge_list_type : std::false_type {};
 
@@ -112,7 +69,6 @@ struct is_edge_list_type<
 
 template<typename T, typename v_type, typename e_type>
 inline constexpr bool is_edge_list_type_v = is_edge_list_type<T, v_type, e_type>::value;
-
 
 
 } // namespace osp

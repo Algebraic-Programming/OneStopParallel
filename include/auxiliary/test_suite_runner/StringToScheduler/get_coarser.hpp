@@ -41,52 +41,43 @@ get_coarser_by_name(const ConfigParser &, const boost::property_tree::ptree &coa
 
     const std::string coarser_name = coarser_algorithm.get_child("name").get_value<std::string>();
 
+    if (coarser_name == "funnel") {
 
-    if constexpr (is_directed_graph_edge_desc_v<Graph_t_in>) {
-    
-        if (coarser_name == "funnel") {
+        typename FunnelBfs<Graph_t_in, Graph_t_out>::FunnelBfs_parameters funnel_parameters;
 
-            typename FunnelBfs<Graph_t_in, Graph_t_out>::FunnelBfs_parameters funnel_parameters;
+        funnel_parameters.funnel_incoming = coarser_algorithm.get_child("parameters")
+                                                .get_child("funnel_incoming")
+                                                .get_value_optional<bool>()
+                                                .value_or(true);
+        funnel_parameters.use_approx_transitive_reduction = coarser_algorithm.get_child("parameters")
+                                                                .get_child("use_approx_transitive_reduction")
+                                                                .get_value_optional<bool>()
+                                                                .value_or(true);
+        // funnel_parameters.max_depth =
+        // coarser_algorithm.get_child("parameters").get_child("max_depth").get_value_optional<unsigned>().value_or(std::numeric_limits<unsigned>::max());
 
-            funnel_parameters.funnel_incoming = coarser_algorithm.get_child("parameters")
-                                                    .get_child("funnel_incoming")
-                                                    .get_value_optional<bool>()
-                                                    .value_or(true);
-            funnel_parameters.use_approx_transitive_reduction = coarser_algorithm.get_child("parameters")
-                                                                    .get_child("use_approx_transitive_reduction")
-                                                                    .get_value_optional<bool>()
-                                                                    .value_or(true);
-            // funnel_parameters.max_depth =
-            // coarser_algorithm.get_child("parameters").get_child("max_depth").get_value_optional<unsigned>().value_or(std::numeric_limits<unsigned>::max());
+        return std::make_unique<FunnelBfs<Graph_t_in, Graph_t_out>>(funnel_parameters);
+    } else if (coarser_name == "hdagg") {
 
-            return std::make_unique<FunnelBfs<Graph_t_in, Graph_t_out>>(funnel_parameters);
-        }
+        auto coarser = std::make_unique<hdagg_coarser<Graph_t_in, Graph_t_out>>();
 
-    
-        if (coarser_name == "hdagg") {
+        coarser->set_work_threshold(coarser_algorithm.get_child("parameters")
+                                        .get_child("max_work_weight")
+                                        .get_value_optional<v_workw_t<Graph_t_in>>()
+                                        .value_or(std::numeric_limits<v_workw_t<Graph_t_in>>::max()));
+        coarser->set_memory_threshold(coarser_algorithm.get_value_optional<v_memw_t<Graph_t_in>>().value_or(
+            std::numeric_limits<v_memw_t<Graph_t_in>>::max()));
+        coarser->set_communication_threshold(coarser_algorithm.get_child("parameters")
+                                                 .get_child("max_communication_weight")
+                                                 .get_value_optional<v_commw_t<Graph_t_in>>()
+                                                 .value_or(std::numeric_limits<v_commw_t<Graph_t_in>>::max()));
+        coarser->set_super_node_size_threshold(coarser_algorithm.get_child("parameters")
+                                                   .get_child("max_super_node_size")
+                                                   .get_value_optional<std::size_t>()
+                                                   .value_or(std::numeric_limits<std::size_t>::max()));
 
-            auto coarser = std::make_unique<hdagg_coarser<Graph_t_in, Graph_t_out>>();
-
-            coarser->set_work_threshold(coarser_algorithm.get_child("parameters")
-                                            .get_child("max_work_weight")
-                                            .get_value_optional<v_workw_t<Graph_t_in>>()
-                                            .value_or(std::numeric_limits<v_workw_t<Graph_t_in>>::max()));
-            coarser->set_memory_threshold(coarser_algorithm.get_value_optional<v_memw_t<Graph_t_in>>().value_or(
-                std::numeric_limits<v_memw_t<Graph_t_in>>::max()));
-            coarser->set_communication_threshold(coarser_algorithm.get_child("parameters")
-                                                     .get_child("max_communication_weight")
-                                                     .get_value_optional<v_commw_t<Graph_t_in>>()
-                                                     .value_or(std::numeric_limits<v_commw_t<Graph_t_in>>::max()));
-            coarser->set_super_node_size_threshold(coarser_algorithm.get_child("parameters")
-                                                       .get_child("max_super_node_size")
-                                                       .get_value_optional<std::size_t>()
-                                                       .value_or(std::numeric_limits<std::size_t>::max()));
-
-            return coarser;
-        }
-    }
-
-    if (coarser_name == "top_order") {
+        return coarser;
+    } else if (coarser_name == "top_order") {
 
         auto coarser = std::make_unique<top_order_coarser<Graph_t_in, Graph_t_out, GetTopOrder>>();
 

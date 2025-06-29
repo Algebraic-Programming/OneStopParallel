@@ -68,7 +68,7 @@ void create_induced_subgraph(const Graph_t_in &dag, Graph_t_out &dag_out,
         }
     }
 
-    if constexpr (is_directed_graph_edge_desc_v<Graph_t_in> and is_directed_graph_edge_desc_v<Graph_t_out>) {
+    if constexpr (has_edge_weights_v<Graph_t_in> and has_edge_weights_v<Graph_t_out>) {
 
         // add edges with edge comm weights
         for (const auto &node : selected_nodes)
@@ -117,7 +117,7 @@ bool checkOrderedIsomorphism(const Graph_t &first, const Graph_t &second) {
         if (first.in_degree(node) != second.in_degree(node) || first.out_degree(node) != second.out_degree(node))
             return false;
 
-        if constexpr (is_directed_graph_edge_desc_v<Graph_t>) {
+        if constexpr (has_edge_weights_v<Graph_t>) {
 
             std::set<std::pair<vertex_idx_t<Graph_t>, e_commw_t<Graph_t>>> first_children, second_children;
 

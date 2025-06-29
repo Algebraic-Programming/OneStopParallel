@@ -64,8 +64,7 @@ RETURN_STATUS run_bsp_improver(const ConfigParser &, const boost::property_tree:
 
     const std::string improver_name = algorithm.get_child("name").get_value<std::string>();
 
-    if constexpr (is_directed_graph_edge_desc_v<Graph_t>) {
-
+    if constexpr (has_edge_weights_v<Graph_t>) {
         if (improver_name == "kl_total_comm") {
 
             kl_total_comm<Graph_t> improver;
@@ -77,7 +76,6 @@ RETURN_STATUS run_bsp_improver(const ConfigParser &, const boost::property_tree:
             return improver.improveSchedule(schedule);
         }
     }
-
     if (improver_name == "hill_climb") {
 
         HillClimbingScheduler<Graph_t> improver;
@@ -152,13 +150,16 @@ RETURN_STATUS run_bsp_scheduler(const ConfigParser &parser, const boost::propert
 
     } else if (algorithm.get_child("name").get_value<std::string>() == "Coarser") {
 
-        using vertex_type_t_or_default = std::conditional_t<is_computational_dag_typed_vertices_v<Graph_t>, v_type_t<Graph_t>, unsigned>;
-        using edge_commw_t_or_default = std::conditional_t<is_computational_dag_edge_desc_v<Graph_t>, e_commw_t<Graph_t>, v_commw_t<Graph_t>>;
-    
-        using boost_graph_t = boost_graph<v_workw_t<Graph_t>, v_commw_t<Graph_t>, v_memw_t<Graph_t>, vertex_type_t_or_default, edge_commw_t_or_default >;
+        using vertex_type_t_or_default =
+            std::conditional_t<is_computational_dag_typed_vertices_v<Graph_t>, v_type_t<Graph_t>, unsigned>;
+        using edge_commw_t_or_default =
+            std::conditional_t<is_computational_dag_edge_desc_v<Graph_t>, e_commw_t<Graph_t>, v_commw_t<Graph_t>>;
 
-        std::unique_ptr<Coarser<Graph_t, boost_graph_t>> coarser = get_coarser_by_name<Graph_t, boost_graph_t>(
-            parser, algorithm.get_child("parameters").get_child("coarser"));
+        using boost_graph_t = boost_graph<v_workw_t<Graph_t>, v_commw_t<Graph_t>, v_memw_t<Graph_t>,
+                                          vertex_type_t_or_default, edge_commw_t_or_default>;
+
+        std::unique_ptr<Coarser<Graph_t, boost_graph_t>> coarser =
+            get_coarser_by_name<Graph_t, boost_graph_t>(parser, algorithm.get_child("parameters").get_child("coarser"));
 
         const auto &instance = schedule.getInstance();
 
@@ -166,7 +167,8 @@ RETURN_STATUS run_bsp_scheduler(const ConfigParser &parser, const boost::propert
 
         std::vector<vertex_idx_t<boost_graph_t>> reverse_vertex_map;
 
-        bool status = coarser->coarsenDag(instance.getComputationalDag(), instance_coarse.getComputationalDag(), reverse_vertex_map);
+        bool status = coarser->coarsenDag(instance.getComputationalDag(), instance_coarse.getComputationalDag(),
+                                          reverse_vertex_map);
 
         if (!status) {
             return ERROR;

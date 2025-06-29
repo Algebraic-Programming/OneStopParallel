@@ -57,7 +57,7 @@ class top_order_coarser : public Coarser<Graph_t_in, Graph_t_out> {
 
         for (const auto &node : nodes) {
 
-            if constexpr (is_directed_graph_edge_desc_v<Graph_t_in> && is_directed_graph_edge_desc_v<Graph_t_out>) {
+            if constexpr (has_edge_weights_v<Graph_t_in> && has_edge_weights_v<Graph_t_out>) {
 
                 for (const auto &in_edge : in_edges(node, dag_in)) {
 
