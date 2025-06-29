@@ -64,19 +64,16 @@ RETURN_STATUS run_bsp_improver(const ConfigParser &, const boost::property_tree:
 
     const std::string improver_name = algorithm.get_child("name").get_value<std::string>();
 
-    if constexpr (has_edge_weights_v<Graph_t>) {
-        if (improver_name == "kl_total_comm") {
+    if (improver_name == "kl_total_comm") {
 
-            kl_total_comm<Graph_t> improver;
-            return improver.improveSchedule(schedule);
+        kl_total_comm<Graph_t> improver;
+        return improver.improveSchedule(schedule);
 
-        } else if (improver_name == "kl_total_cut") {
+    } else if (improver_name == "kl_total_cut") {
 
-            kl_total_cut<Graph_t> improver;
-            return improver.improveSchedule(schedule);
-        }
-    }
-    if (improver_name == "hill_climb") {
+        kl_total_cut<Graph_t> improver;
+        return improver.improveSchedule(schedule);
+    } else if (improver_name == "hill_climb") {
 
         HillClimbingScheduler<Graph_t> improver;
         return improver.improveSchedule(schedule);

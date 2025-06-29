@@ -87,12 +87,11 @@ BOOST_AUTO_TEST_CASE(kl_base_1) {
 
     using kl_move = kl_move<graph>;
 
-    kl_total_comm_test<graph> kl;
-    kl.set_use_node_communication_costs(false);
+    kl_total_comm_test<graph, no_local_search_memory_constraint, false> kl;    
 
     kl.test_setup_schedule(schedule);
 
-    kl_current_schedule_total<graph, no_local_search_memory_constraint> &kl_current_schedule =
+    auto &kl_current_schedule =
         kl.get_current_schedule();
 
     BOOST_CHECK_EQUAL(kl_current_schedule.step_max_work[0], 44.0);
