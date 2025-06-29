@@ -228,7 +228,7 @@ class DotFileWriter {
         if constexpr (has_edge_weights_v<Graph_t>) {
             EdgeWriter_DOT<Graph_t> edge_writer(graph);
 
-            for (const auto &e : graph.edges()) {
+            for (const auto &e : edges(graph)) {
                 edge_writer(os, e);
                 os << "\n";
             }

@@ -305,7 +305,7 @@ class kl_current_schedule {
         std::cout << "Recompute current violations:" << std::endl;
 #endif
 
-        for (const auto &edge : instance->getComputationalDag().edges()) {
+        for (const auto &edge : edges(instance->getComputationalDag())) {
 
             const auto &source_v = source(edge, instance->getComputationalDag());
             const auto &target_v = target(edge, instance->getComputationalDag());

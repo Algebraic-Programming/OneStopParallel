@@ -213,10 +213,10 @@ class Compact_Sparse_Graph_EdgeDesc : public Compact_Sparse_Graph<keep_vertex_or
                 edge_comm_weights = std::vector<edge_comm_weight_type>(BaseT::num_edges(), static_cast<edge_comm_weight_type>(0));
             }
 
-            if constexpr (is_directed_graph_edge_desc_v<Graph_type> && has_edge_weights_v<Graph_type> && use_edge_comm_weights) {
-                for (const auto& edge : graph.edges()) {
-                    const auto src = graph.source(edge);
-                    const auto tgt = graph.target(edge);
+            if constexpr (has_edge_weights_v<Graph_type> && use_edge_comm_weights) {
+                for (const auto& edge : edges(graph)) {
+                    const auto src = source(edge, graph);
+                    const auto tgt = target(edge, graph);
                     set_edge_comm_weight(src, tgt, graph.edge_comm_weight(edge));
                 }
             }

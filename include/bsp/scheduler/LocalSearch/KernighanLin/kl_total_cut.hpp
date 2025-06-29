@@ -625,7 +625,7 @@ class kl_total_cut : public kl_total<Graph_t, MemoryConstraint_t> {
         }
 
         double comm_costs = 0;
-        for (const auto &edge : kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->getComputationalDag().edges()) {
+        for (const auto &edge : edges(kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->getComputationalDag())) {
 
             const vertex_idx_t<Graph_t> &source_v = source(edge, kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->getComputationalDag());
             const vertex_idx_t<Graph_t> &target_v = target(edge, kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->getComputationalDag());

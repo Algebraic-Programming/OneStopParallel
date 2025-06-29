@@ -74,7 +74,7 @@ class kl_total : public kl_base<Graph_t, MemoryConstraint_t> {
 
             max_edge_weight_ = 0;
 
-            for (const auto &edge : current_schedule.instance->getComputationalDag().edges()) {
+            for (const auto &edge : edges(current_schedule.instance->getComputationalDag())) {
                 max_edge_weight_ =
                     std::max(max_edge_weight_, current_schedule.instance->getComputationalDag().edge_comm_weight(edge));
             }

@@ -43,7 +43,7 @@ heavy_edge_preprocess(const Graph_t &graph, const double heavy_is_x_times_median
     // Making edge comunications list
     std::vector<e_commw_t<Graph_t>> edge_communications;
     edge_communications.reserve(graph.num_edges());
-    for (const auto &edge : graph.edges()) {
+    for (const auto &edge : edges(graph)) {
         edge_communications.emplace_back(graph.edge_comm_weight(edge));
     }
 
@@ -63,7 +63,7 @@ heavy_edge_preprocess(const Graph_t &graph, const double heavy_is_x_times_median
         static_cast<e_commw_t<Graph_t>>(heavy_is_x_times_median * median_edge_weight);
     std::vector<EdgeType> edge_list;
     edge_list.reserve(graph.num_edges());
-    for (const auto &edge : graph.edges()) {
+    for (const auto &edge : edges(graph)) {
         if (graph.edge_comm_weight(edge) > minimal_edge_weight) {
             edge_list.emplace_back(edge);
         }

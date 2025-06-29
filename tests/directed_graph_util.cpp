@@ -451,7 +451,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     const auto long_edges = long_edges_in_triangles(graph);
 
     BOOST_CHECK_EQUAL(graph.num_vertices(), std::distance(graph.vertices().begin(), graph.vertices().end()));
-    BOOST_CHECK_EQUAL(graph.num_edges(), std::distance(graph.edges().begin(), graph.edges().end()));
+    BOOST_CHECK_EQUAL(graph.num_edges(), std::distance(edges(graph).begin(), edges(graph).end()));
     for (const auto &v : graph.vertices()) {
         BOOST_CHECK_EQUAL(graph.in_degree(v), std::distance(graph.parents(v).begin(), graph.parents(v).end()));
         BOOST_CHECK_EQUAL(graph.out_degree(v), std::distance(graph.children(v).begin(), graph.children(v).end()));

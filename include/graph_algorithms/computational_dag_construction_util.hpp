@@ -46,7 +46,7 @@ bool construct_computational_dag(const Graph_from &from, Graph_to &to) {
 
     if constexpr (has_edge_weights_v<Graph_from> and has_edge_weights_v<Graph_to>) {
 
-        for (const auto &e : from.edges()) {
+        for (const auto &e : edges(from)) {
             to.add_edge(source(e, from), target(e, from), from.edge_comm_weight(e));
         }
 

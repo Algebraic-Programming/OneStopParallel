@@ -277,7 +277,7 @@ std::vector<int> get_strict_poset_integer_map(unsigned const noise, double const
 
     std::unordered_map<EdgeType, bool> up_or_down;
 
-    for (const auto &edge : graph.edges()) {
+    for (const auto &edge : edges(graph)) {
         up_or_down.emplace(edge, repeater_coin.get_flip());
     }
 

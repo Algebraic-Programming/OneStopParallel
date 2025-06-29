@@ -43,8 +43,8 @@ void add_graph_stats(const ComputationalDag &graph, std::ofstream &outfile) {
 
     std::vector<unsigned> top_level = get_top_node_distance(graph);
     std::multiset<unsigned> edge_lengths;
-    for (const auto &edge : graph.edges()) {
-        unsigned diff = top_level[edge.m_target] - top_level[edge.m_source];
+    for (const auto &edge : edges(graph)) {
+        unsigned diff = top_level[target(edge, graph)] - top_level[source(edge, graph)];
 
         edge_lengths.emplace(diff);
         sum_edge_length += diff;
@@ -86,7 +86,7 @@ void add_graph_stats(const ComputationalDag &graph, std::ofstream &outfile) {
 
     // // Number of Triangles
     // size_t number_triangles = 0;
-    // for (const auto& edge : graph.edges()) {
+    // for (const auto& edge : edges(graph)) {
     //     std::set<int> neighbour_src;
     //     std::set<int> neighbour_tgt;
 

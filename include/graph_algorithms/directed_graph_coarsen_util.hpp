@@ -40,7 +40,7 @@ std::vector<edge_desc_t<Graph_t>> get_contractable_edges_from_poset_int_map(cons
 
     std::vector<edge_desc_t<Graph_t>> output;
 
-    for (const auto &edge : graph.edges()) {
+    for (const auto &edge : edges(graph)) {
         vertex_idx_t<Graph_t> src = source(edge, graph);
         vertex_idx_t<Graph_t> tgt = target(edge, graph);
         

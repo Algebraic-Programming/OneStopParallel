@@ -619,7 +619,7 @@ class kl_total_comm : public kl_total<Graph_t, MemoryConstraint_t> {
         }
 
         double comm_costs = 0;
-        for (const auto &edge : kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->getComputationalDag().edges()) {
+        for (const auto &edge : edges(kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->getComputationalDag())) {
 
             const auto &source_v = source(edge, kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->getComputationalDag());
             const unsigned &source_proc = kl_total<Graph_t, MemoryConstraint_t>::current_schedule.vector_schedule.assignedProcessor(source_v);

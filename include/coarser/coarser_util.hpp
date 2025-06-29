@@ -144,9 +144,9 @@ bool construct_coarse_dag(const Graph_t_in &dag_in, Graph_t_out &coarsened_dag,
                         "Edge weight type of in graph and out graph must be the same!");
 
             
-            for (const auto &ori_edge : dag_in.edges()) {
-                vertex_idx_t<Graph_t_out> src = vertex_contraction_map[dag_in.source(ori_edge)];
-                vertex_idx_t<Graph_t_out> tgt = vertex_contraction_map[dag_in.target(ori_edge)];
+            for (const auto &ori_edge : edges(dag_in)) {
+                vertex_idx_t<Graph_t_out> src = vertex_contraction_map[source(ori_edge, dag_in)];
+                vertex_idx_t<Graph_t_out> tgt = vertex_contraction_map[target(ori_edge, dag_in)];
                 
                 if (src == tgt) continue;
 
@@ -155,14 +155,14 @@ bool construct_coarse_dag(const Graph_t_in &dag_in, Graph_t_out &coarsened_dag,
 
 
 
-            for (const auto &ori_edge : dag_in.edges()) {
-                vertex_idx_t<Graph_t_out> src = vertex_contraction_map[dag_in.source(ori_edge)];
-                vertex_idx_t<Graph_t_out> tgt = vertex_contraction_map[dag_in.target(ori_edge)];
+            for (const auto &ori_edge : edges(dag_in)) {
+                vertex_idx_t<Graph_t_out> src = vertex_contraction_map[source(ori_edge, dag_in)];
+                vertex_idx_t<Graph_t_out> tgt = vertex_contraction_map[target(ori_edge, dag_in)];
                 
                 if (src == tgt) continue;
 
                 const auto cont_edge = coarsened_dag.edge(pushforward_map[src], pushforward_map[tgt]);
-                assert(coarsened_dag.source(cont_edge) == pushforward_map[src] && coarsened_dag.target(cont_edge) == pushforward_map[tgt]);
+                assert(source(cont_edge, coarsened_dag) == pushforward_map[src] && target(cont_edge, coarsened_dag) == pushforward_map[tgt]);
                 coarsened_dag.set_edge_comm_weight(src, tgt, e_comm_acc_method()(coarsened_dag.edge_comm_weight(cont_edge), dag_in.edge_comm_weight(ori_edge)));
             }
         }
@@ -240,13 +240,13 @@ bool construct_coarse_dag(const Graph_t_in &dag_in, Graph_t_out &coarsened_dag,
             static_assert(std::is_same_v<e_commw_t<Graph_t_in>, e_commw_t<Graph_t_out>>,
                         "Edge weight type of in graph and out graph must be the same!");
 
-            for (const auto &edge : coarsened_dag.edges()) {
+            for (const auto &edge : edges(coarsened_dag)) {
                 coarsened_dag.set_edge_comm_weight(edge, 0);
             }
 
-            for (const auto &ori_edge : dag_in.edges()) {
-                vertex_idx_t<Graph_t_out> src = vertex_contraction_map[dag_in.source(ori_edge)];
-                vertex_idx_t<Graph_t_out> tgt = vertex_contraction_map[dag_in.target(ori_edge)];
+            for (const auto &ori_edge : edges(dag_in)) {
+                vertex_idx_t<Graph_t_out> src = vertex_contraction_map[source(ori_edge, dag_in)];
+                vertex_idx_t<Graph_t_out> tgt = vertex_contraction_map[target(ori_edge, dag_in)];
                 
                 if (src == tgt) continue;
 
