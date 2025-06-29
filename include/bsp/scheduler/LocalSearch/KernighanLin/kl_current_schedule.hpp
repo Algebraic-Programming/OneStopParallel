@@ -382,7 +382,7 @@ class kl_current_schedule {
         new_violations.clear();
         resolved_violations.clear();
 
-        for (const auto &edge : instance->getComputationalDag().out_edges(node)) {
+        for (const auto &edge : out_edges(node, instance->getComputationalDag())) {
 
             const auto &child = target(edge, instance->getComputationalDag());
 
@@ -411,7 +411,7 @@ class kl_current_schedule {
             }
         }
 
-        for (const auto &edge : instance->getComputationalDag().in_edges(node)) {
+        for (const auto &edge : in_edges(node, instance->getComputationalDag())) {
 
             const auto &parent = source(edge, instance->getComputationalDag());
 

@@ -152,7 +152,7 @@ class kl_total : public kl_base<Graph_t, MemoryConstraint_t> {
         } else {
             for (const auto &node : current_schedule.instance->getComputationalDag().vertices()) {
 
-                for (const auto &in_edge : current_schedule.instance->getComputationalDag().in_edges(node)) {
+                for (const auto &in_edge : in_edges(node, current_schedule.instance->getComputationalDag())) {
 
                     const auto &source_v = source(in_edge, current_schedule.instance->getComputationalDag());
                     if (current_schedule.vector_schedule.assignedProcessor(node) !=
@@ -167,7 +167,7 @@ class kl_total : public kl_base<Graph_t, MemoryConstraint_t> {
                     }
                 }
 
-                for (const auto &out_edge : current_schedule.instance->getComputationalDag().out_edges(node)) {
+                for (const auto &out_edge : out_edges(node, current_schedule.instance->getComputationalDag())) {
 
                     const auto &target_v = target(out_edge, current_schedule.instance->getComputationalDag());
                     if (current_schedule.vector_schedule.assignedProcessor(node) !=

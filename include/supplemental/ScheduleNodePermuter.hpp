@@ -18,15 +18,12 @@ limitations under the License.
 
 #pragma once
 
-#ifdef EIGEN_FOUND
 
 #include <vector>
 #include <algorithm>
 #include <set>
 #include <queue>
 
-#include <boost/heap/fibonacci_heap.hpp>
-#include "graph_implementations/eigen_matrix_adapter/sparse_matrix.hpp"
 #include "bsp/model/BspSchedule.hpp"
 
 namespace osp {
@@ -87,5 +84,3 @@ std::vector<size_t> schedule_node_permuter_basic(const BspSchedule<Graph_t>& sch
 }
 
 }
-
-#endif

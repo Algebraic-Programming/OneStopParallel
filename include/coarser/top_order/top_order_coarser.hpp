@@ -59,7 +59,7 @@ class top_order_coarser : public Coarser<Graph_t_in, Graph_t_out> {
 
             if constexpr (is_directed_graph_edge_desc_v<Graph_t_in> && is_directed_graph_edge_desc_v<Graph_t_out>) {
 
-                for (const auto &in_edge : dag_in.in_edges(node)) {
+                for (const auto &in_edge : in_edges(node, dag_in)) {
 
                     const VertexType parent_rev = reverse_vertex_map[source(in_edge, dag_in)];
                     if (parent_rev != current_super_node_idx && parent_rev != std::numeric_limits<VertexType>::max()) {

@@ -913,7 +913,7 @@ Graph_t StepByStepCoarser<Graph_t>::Contract(const std::vector<vertex_idx_t<Grap
     }
 
     for (vertex_idx node = 0; node < G_full.num_vertices(); ++node)
-        for (const auto &out_edge : G_full.out_edges(node))
+        for (const auto &out_edge : out_edges(node, G_full))
         {
             const vertex_idx succ = target(out_edge, G_full);
 

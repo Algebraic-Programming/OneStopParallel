@@ -326,7 +326,7 @@ class kl_total_cut : public kl_total<Graph_t, MemoryConstraint_t> {
 
             if (current_proc == new_proc) {
 
-                for (const auto &out_edge : kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->getComputationalDag().out_edges(node)) {
+                for (const auto &out_edge : out_edges(node, kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->getComputationalDag())) {
                     const auto &target_v = target(out_edge, kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->getComputationalDag());
                     const unsigned &target_proc = kl_total<Graph_t, MemoryConstraint_t>::current_schedule.vector_schedule.assignedProcessor(target_v);
 
@@ -371,7 +371,7 @@ class kl_total_cut : public kl_total<Graph_t, MemoryConstraint_t> {
                     }
                 }
 
-                for (const auto &in_edge : kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->getComputationalDag().in_edges(node)) {
+                for (const auto &in_edge : in_edges(node, kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->getComputationalDag())) {
                     const auto &source_v = source(in_edge, kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->getComputationalDag());
                     const unsigned &source_proc = kl_total<Graph_t, MemoryConstraint_t>::current_schedule.vector_schedule.assignedProcessor(source_v);
 
@@ -418,7 +418,7 @@ class kl_total_cut : public kl_total<Graph_t, MemoryConstraint_t> {
 
                 // current_proc != new_proc
 
-                for (const auto &out_edge : kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->getComputationalDag().out_edges(node)) {
+                for (const auto &out_edge : out_edges(node, kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->getComputationalDag())) {
 
                     const auto &target_v = target(out_edge, kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->getComputationalDag());
                     const unsigned &target_proc = kl_total<Graph_t, MemoryConstraint_t>::current_schedule.vector_schedule.assignedProcessor(target_v);
@@ -516,7 +516,7 @@ class kl_total_cut : public kl_total<Graph_t, MemoryConstraint_t> {
                     }
                 }
 
-                for (const auto &in_edge : kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->getComputationalDag().in_edges(node)) {
+                for (const auto &in_edge : in_edges(node, kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->getComputationalDag())) {
                     const auto &source_v = source(in_edge, kl_total<Graph_t, MemoryConstraint_t>::current_schedule.instance->getComputationalDag());
 
                     const unsigned &source_proc = kl_total<Graph_t, MemoryConstraint_t>::current_schedule.vector_schedule.assignedProcessor(source_v);

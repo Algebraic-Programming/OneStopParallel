@@ -155,7 +155,7 @@ class FunnelBfs : public CoarserGenExpansionMap<Graph_t_in, Graph_t_out> {
                 work_weight_of_group += graph.vertex_work_weight(active_node);
                 memory_weight_of_group += graph.vertex_mem_weight(active_node);
 
-                for (const auto &in_edge : graph.in_edges(active_node)) {
+                for (const auto &in_edge : in_edges(active_node, graph)) {
 
                     if (parameters.use_approx_transitive_reduction && (edge_mask.find(in_edge) != edge_mask.cend()))
                         continue;
@@ -171,7 +171,7 @@ class FunnelBfs : public CoarserGenExpansionMap<Graph_t_in, Graph_t_out> {
 
                             children_not_in_group[par] = 0;
 
-                            for (const auto out_edge : graph.out_edges(par)) {
+                            for (const auto out_edge : out_edges(par, graph)) {
                                 if (edge_mask.find(out_edge) != edge_mask.cend())
                                     continue;
                                 children_not_in_group[par] += 1;
@@ -183,7 +183,7 @@ class FunnelBfs : public CoarserGenExpansionMap<Graph_t_in, Graph_t_out> {
                         children_not_in_group[par] -= 1;
                     }
                 }
-                for (const auto &in_edge : graph.in_edges(active_node)) {
+                for (const auto &in_edge : in_edges(active_node, graph)) {
 
                     if (parameters.use_approx_transitive_reduction && (edge_mask.find(in_edge) != edge_mask.cend()))
                         continue;
@@ -262,7 +262,7 @@ class FunnelBfs : public CoarserGenExpansionMap<Graph_t_in, Graph_t_out> {
                 work_weight_of_group += graph.vertex_work_weight(active_node);
                 memory_weight_of_group += graph.vertex_mem_weight(active_node);
 
-                for (const auto &out_edge : graph.out_edges(active_node)) {
+                for (const auto &out_edge : out_edges(active_node, graph)) {
 
                     if (parameters.use_approx_transitive_reduction && (edge_mask.find(out_edge) != edge_mask.cend()))
                         continue;
@@ -278,7 +278,7 @@ class FunnelBfs : public CoarserGenExpansionMap<Graph_t_in, Graph_t_out> {
 
                             parents_not_in_group[child] = 0;
 
-                            for (const auto in_edge : graph.in_edges(child)) {
+                            for (const auto in_edge : in_edges(child, graph)) {
                                 if (edge_mask.find(in_edge) != edge_mask.cend())
                                     continue;
                                 parents_not_in_group[child] += 1;
@@ -290,7 +290,7 @@ class FunnelBfs : public CoarserGenExpansionMap<Graph_t_in, Graph_t_out> {
                         parents_not_in_group[child] -= 1;
                     }
                 }
-                for (const auto &out_edge : graph.out_edges(active_node)) {
+                for (const auto &out_edge : out_edges(active_node, graph)) {
 
                     if (parameters.use_approx_transitive_reduction && (edge_mask.find(out_edge) != edge_mask.cend()))
                         continue;

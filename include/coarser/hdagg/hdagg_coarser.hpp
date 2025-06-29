@@ -99,13 +99,13 @@ class hdagg_coarser : public CoarserGenContractionMap<Graph_t_in, Graph_t_out> {
                 reverse_vertex_map[vert] = current_super_node_idx;
                 bool indegree_one = true;
 
-                for (const auto &in_edge : dag_in.in_edges(vert)) {
+                for (const auto &in_edge : in_edges(vert, dag_in)) {
 
                     if (edge_mask.find(in_edge) != edge_mast_end)
                         continue;
 
                     unsigned count = 0;
-                    for (const auto &out_edge : dag_in.out_edges(source(in_edge, dag_in))) {
+                    for (const auto &out_edge : out_edges(source(in_edge, dag_in), dag_in)) {
 
                         if (edge_mask.find(out_edge) != edge_mast_end)
                             continue;
@@ -123,7 +123,7 @@ class hdagg_coarser : public CoarserGenContractionMap<Graph_t_in, Graph_t_out> {
                 }
 
                 if (indegree_one) {
-                    for (const auto &in_edge : dag_in.in_edges(vert)) {
+                    for (const auto &in_edge : in_edges(vert, dag_in)) {
 
                         if (edge_mask.find(in_edge) != edge_mast_end)
                             continue;
@@ -157,7 +157,7 @@ class hdagg_coarser : public CoarserGenContractionMap<Graph_t_in, Graph_t_out> {
                         }
                     }
                 } else {
-                    for (const auto &in_edge : dag_in.in_edges(vert)) {
+                    for (const auto &in_edge : in_edges(vert, dag_in)) {
 
                         if (edge_mask.find(in_edge) != edge_mast_end)
                             continue;

@@ -32,7 +32,7 @@ std::pair<edge_desc_t<Graph_t>, bool> edge_desc(const vertex_idx_t<Graph_t> &src
 
     static_assert(is_directed_graph_edge_desc_v<Graph_t>, "Graph_t must satisfy the directed_graph edge desc concept");
 
-    for (const auto &edge : graph.out_edges(src)) {
+    for (const auto &edge : out_edges(src, graph)) {
         if (target(edge, graph) == dest) {
             return {edge, true};
         }
@@ -56,7 +56,7 @@ std::unordered_set<edge_desc_t<Graph_t>> long_edges_in_triangles(const Graph_t &
             children_set.emplace(v);
         }
 
-        for (const auto &edge : graph.out_edges(vertex)) {
+        for (const auto &edge : out_edges(vertex, graph)) {
 
             const auto &child = target(edge, graph);
 

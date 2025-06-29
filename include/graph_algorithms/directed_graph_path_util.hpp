@@ -320,7 +320,7 @@ std::vector<int> get_strict_poset_integer_map(unsigned const noise, double const
 
         int max_temp = std::numeric_limits<int>::min();
 
-        for (const auto &edge : graph.in_edges(vertex)) {
+        for (const auto &edge : in_edges(vertex, graph)) {
 
             int temp = new_top[source(edge, graph)];
             if (up_or_down.at(edge)) {
@@ -342,7 +342,7 @@ std::vector<int> get_strict_poset_integer_map(unsigned const noise, double const
 
         int max_temp = std::numeric_limits<int>::min();
 
-        for (const auto &edge : graph.out_edges(*iter)) {
+        for (const auto &edge : out_edges(*iter, graph)) {
             int temp = new_bot[target(edge, graph)];
             if (!up_or_down.at(edge)) {
                 temp += 1 + poisson_gen(gen);

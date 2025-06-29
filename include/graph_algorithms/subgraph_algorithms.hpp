@@ -72,7 +72,7 @@ void create_induced_subgraph(const Graph_t_in &dag, Graph_t_out &dag_out,
 
         // add edges with edge comm weights
         for (const auto &node : selected_nodes)
-            for (const auto &in_edge : dag.in_edges(node)) {
+            for (const auto &in_edge : in_edges(node, dag)) {
                 const auto &pred = source(in_edge, dag);
                 if (selected_nodes.find(pred) != selected_nodes.end() || extra_sources.find(pred) != extra_sources.end())
                     dag_out.add_edge(local_idx[pred], local_idx[node], dag.edge_comm_weight(in_edge));
@@ -121,10 +121,10 @@ bool checkOrderedIsomorphism(const Graph_t &first, const Graph_t &second) {
 
             std::set<std::pair<vertex_idx_t<Graph_t>, e_commw_t<Graph_t>>> first_children, second_children;
 
-            for (const auto &out_edge : first.out_edges(node))
+            for (const auto &out_edge : out_edges(node, first))
                 first_children.emplace(target(out_edge, first), first.edge_comm_weight(out_edge));
 
-            for (const auto &out_edge : second.out_edges(node))
+            for (const auto &out_edge : out_edges(node, second))
                 second_children.emplace(target(out_edge, second), second.edge_comm_weight(out_edge));
 
             auto itr = first_children.begin(), second_itr = second_children.begin();
@@ -196,7 +196,7 @@ std::vector<Graph_t_out> create_induced_subgraphs(const Graph_t_in &dag_in,
     if constexpr (has_edge_weights_v<Graph_t_in> and has_edge_weights_v<Graph_t_out>) {
 
         for (const auto node : dag_in.vertices()) {
-            for (const auto &out_edge : dag_in.out_edges(node)) {
+            for (const auto &out_edge : out_edges(node, dag_in)) {
 
                 auto succ = target(out_edge, dag_in);
 
