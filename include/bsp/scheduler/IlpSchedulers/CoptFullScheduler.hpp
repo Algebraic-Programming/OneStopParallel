@@ -26,7 +26,7 @@ limitations under the License.
 #include "bsp/model/BspScheduleRecomp.hpp"
 #include "bsp/model/VectorSchedule.hpp"
 #include "bsp/scheduler/Scheduler.hpp"
-#include "io/DotFileWriter.hpp"
+#include "auxiliary/io/DotFileWriter.hpp"
 
 namespace osp {
 

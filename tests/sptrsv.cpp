@@ -35,10 +35,9 @@ limitations under the License.
 #include "graph_algorithms/directed_graph_util.hpp"
 #include "graph_algorithms/directed_graph_path_util.hpp"
 #include "graph_implementations/eigen_matrix_adapter/sparse_matrix.hpp"
-#include "supplemental/sptrsv.hpp"
 #include "bsp/scheduler/GreedySchedulers/GrowLocalAutoCores.hpp"
-#include "supplemental/ScheduleNodePermuter.hpp"
-#include "supplemental/sptrsv.hpp"
+#include "auxiliary/sptrsv_simulator/ScheduleNodePermuter.hpp"
+#include "auxiliary/sptrsv_simulator/sptrsv.hpp"
 
 using namespace osp;
 

@@ -23,7 +23,7 @@ limitations under the License.
 #include "bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
 
 #include "graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
-#include "io/hdag_graph_file_reader.hpp"
+#include "auxiliary/io/hdag_graph_file_reader.hpp"
 #include <filesystem>
 #include <iostream>
 

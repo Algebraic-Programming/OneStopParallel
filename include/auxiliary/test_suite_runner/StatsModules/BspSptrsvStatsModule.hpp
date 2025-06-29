@@ -24,7 +24,7 @@ limitations under the License.
 #include "bsp/model/BspSchedule.hpp"
 #include "graph_implementations/boost_graphs/boost_graph.hpp" // For graph_t
 #include "graph_implementations/eigen_matrix_adapter/sparse_matrix.hpp"
-#include "supplemental/sptrsv.hpp"
+#include "auxiliary/sptrsv_simulator/sptrsv.hpp"
 #include <Eigen/Core>
 #include <string>
 #include <vector>

@@ -27,8 +27,8 @@ limitations under the License.
 #include "coarser/StepByStep/StepByStepCoarser.hpp"
 #include "bsp/scheduler/Scheduler.hpp"
 #include "bsp/scheduler/CoarsenRefineSchedulers/MultiLevelHillClimbing.hpp"
-#include "io/hdag_graph_file_reader.hpp"
-#include "io/arch_file_reader.hpp"
+#include "auxiliary/io/hdag_graph_file_reader.hpp"
+#include "auxiliary/io/arch_file_reader.hpp"
 #include "coarser/coarser_util.hpp"
 
 #include "graph_implementations/boost_graphs/boost_graph.hpp"

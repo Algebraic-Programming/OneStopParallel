@@ -24,7 +24,7 @@ limitations under the License.
 #include "bsp/scheduler/LocalSearch/KernighanLin/kl_total_comm.hpp"
 #include "bsp/scheduler/Scheduler.hpp"
 #include "graph_algorithms/directed_graph_edge_view.hpp"
-#include "io/DotFileWriter.hpp"
+#include "auxiliary/io/DotFileWriter.hpp"
 
 namespace osp {
 

@@ -34,8 +34,8 @@ limitations under the License.
 #include "graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "graph_implementations/adj_list_impl/compact_sparse_graph.hpp"
 #include "graph_implementations/adj_list_impl/compact_sparse_graph_edge_desc.hpp"
-#include "io/arch_file_reader.hpp"
-#include "io/hdag_graph_file_reader.hpp"
+#include "auxiliary/io/arch_file_reader.hpp"
+#include "auxiliary/io/hdag_graph_file_reader.hpp"
 
 std::vector<std::string> tiny_spaa_graphs() {
     return {"data/spaa/tiny/instance_bicgstab.hdag",

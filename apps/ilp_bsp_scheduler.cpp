@@ -27,12 +27,12 @@ limitations under the License.
 #include "bsp/scheduler/IlpSchedulers/CoptFullScheduler.hpp"
 #include "graph_algorithms/directed_graph_path_util.hpp"
 #include "graph_implementations/boost_graphs/boost_graph.hpp"
-#include "io/DotFileWriter.hpp"
-#include "io/arch_file_reader.hpp"
-#include "io/bsp_schedule_file_writer.hpp"
-#include "io/dot_graph_file_reader.hpp"
-#include "io/hdag_graph_file_reader.hpp"
-#include "io/mtx_graph_file_reader.hpp"
+#include "auxiliary/io/DotFileWriter.hpp"
+#include "auxiliary/io/arch_file_reader.hpp"
+#include "auxiliary/io/bsp_schedule_file_writer.hpp"
+#include "auxiliary/io/dot_graph_file_reader.hpp"
+#include "auxiliary/io/hdag_graph_file_reader.hpp"
+#include "auxiliary/io/mtx_graph_file_reader.hpp"
 
 using namespace osp;
 

@@ -7,7 +7,7 @@
 
 #include "coarser/heavy_edges/HeavyEdgePreProcess.hpp"
 #include "graph_implementations/boost_graphs/boost_graph.hpp"
-#include "io/hdag_graph_file_reader.hpp"
+#include "auxiliary/io/hdag_graph_file_reader.hpp"
 
 std::vector<std::string> test_graphs() {
     return {"data/spaa/tiny/instance_bicgstab.hdag", "data/spaa/tiny/instance_CG_N2_K2_nzP0d75.hdag"};

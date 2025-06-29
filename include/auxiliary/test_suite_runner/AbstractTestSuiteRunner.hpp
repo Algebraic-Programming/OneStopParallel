@@ -33,10 +33,10 @@ limitations under the License.
 #include "ConfigParser.hpp"
 #include "StatsModules/IStatsModule.hpp"
 #include "bsp/model/BspInstance.hpp"
-#include "io/arch_file_reader.hpp"
-#include "io/dot_graph_file_reader.hpp"
-#include "io/hdag_graph_file_reader.hpp"
-#include "io/mtx_graph_file_reader.hpp"
+#include "auxiliary/io/arch_file_reader.hpp"
+#include "auxiliary/io/dot_graph_file_reader.hpp"
+#include "auxiliary/io/hdag_graph_file_reader.hpp"
+#include "auxiliary/io/mtx_graph_file_reader.hpp"
 
 //#define EIGEN_FOUND 1
 

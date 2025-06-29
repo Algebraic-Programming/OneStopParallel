@@ -24,8 +24,8 @@ limitations under the License.
 #include "bsp/scheduler/LocalSearch/KernighanLin/kl_base.hpp"
 #include "bsp/scheduler/LocalSearch/KernighanLin/kl_total_comm.hpp"
 #include "bsp/scheduler/LocalSearch/KernighanLin/kl_total_cut.hpp"
-#include "io/arch_file_reader.hpp"
-#include "io/hdag_graph_file_reader.hpp"
+#include "auxiliary/io/arch_file_reader.hpp"
+#include "auxiliary/io/hdag_graph_file_reader.hpp"
 
 #include "graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 

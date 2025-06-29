@@ -28,7 +28,7 @@ limitations under the License.
 #include "bsp/model/BspSchedule.hpp"
 #include "bsp/model/BspScheduleRecomp.hpp"
 #include "bsp/model/IBspScheduleEval.hpp"
-#include "io/bsp_schedule_file_writer.hpp"
+#include "auxiliary/io/bsp_schedule_file_writer.hpp"
 
 namespace osp {
 

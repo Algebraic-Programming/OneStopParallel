@@ -28,8 +28,8 @@ limitations under the License.
 #include "dag_divider/WavefrontComponentDivider.hpp"
 #include "dag_divider/WavefrontComponentScheduler.hpp"
 #include "dag_divider/WavefrontParallelismDivider.hpp"
-#include "io/dot_graph_file_reader.hpp"
-#include "io/hdag_graph_file_reader.hpp"
+#include "auxiliary/io/dot_graph_file_reader.hpp"
+#include "auxiliary/io/hdag_graph_file_reader.hpp"
 
 #include "graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 

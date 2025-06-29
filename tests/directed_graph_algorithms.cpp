@@ -32,7 +32,7 @@ limitations under the License.
 #include "graph_algorithms/directed_graph_util.hpp"
 #include "graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 #include "graph_implementations/boost_graphs/boost_graph.hpp"
-#include "io/hdag_graph_file_reader.hpp"
+#include "auxiliary/io/hdag_graph_file_reader.hpp"
 
 
 std::vector<std::string> large_spaa_graphs() {
