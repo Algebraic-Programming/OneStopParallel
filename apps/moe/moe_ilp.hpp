@@ -192,8 +192,8 @@ class moe_ilp_solver {
                     total_weight_gpu_layer += params.expert_weights[expert][layer] *
                                               expert_layer_proc[expert][layer].GetVar(static_cast<int>(gpu));
                 }
-                model.AddConstr(total_weight_gpu_layer <= (total_weight_layer * (1 + epsilon))) /
-                    static_cast<double>(params.num_gpus);
+                model.AddConstr(total_weight_gpu_layer <= (total_weight_layer * (1 + epsilon)) /
+                    static_cast<double>(params.num_gpus));
             }
         }
     }
