@@ -27,13 +27,10 @@ limitations under the License.
 
 #include "moe_util.hpp"
 
-
-
 struct moe_ilp_solution {
 
-    std::vector<std::vector<int>> expert_assignment; 
+    std::vector<std::vector<int>> expert_assignment;
     double objective_value;
-
 
     void print_solution() {
 
@@ -83,7 +80,7 @@ class moe_ilp_solver {
         edge_cut = model.AddVars(static_cast<int>(params.edges.size()), COPT_BINARY, "edge_cut");
     }
 
-    void setup_expert_assign_constr(Model &model, bool allow_recomputation = false) {
+    void setup_expert_assign_constr(Model &model, unsigned gpu_expert_capacity = 0, bool allow_recomputation = false) {
 
         for (unsigned expert = 0; expert < params.num_experts; expert++) {
 
@@ -96,6 +93,22 @@ class moe_ilp_solver {
                 }
 
                 model.AddConstr(allow_recomputation ? expr >= .99 : expr == 1);
+            }
+        }
+
+        if (gpu_expert_capacity > 0) {
+
+            for (unsigned gpu = 0; gpu < params.num_gpus; gpu++) {
+
+                Expr expr;
+                for (unsigned expert = 0; expert < params.num_experts; expert++) {
+
+                    for (unsigned layer = 0; layer < params.num_layers; layer++) {
+                        expr += expert_layer_proc[expert][layer].GetVar(static_cast<int>(gpu));
+                    }
+                }
+
+                model.AddConstr(expr <= gpu_expert_capacity);
             }
         }
     }
@@ -161,7 +174,7 @@ class moe_ilp_solver {
                 }
             }
 
-            model.AddConstr(total_weight_gpu <= total_weight * (1 + epsilon));
+            model.AddConstr(total_weight_gpu <= (total_weight * (1 + epsilon)) / static_cast<double>(params.num_gpus));
         }
     }
 
@@ -179,7 +192,8 @@ class moe_ilp_solver {
                     total_weight_gpu_layer += params.expert_weights[expert][layer] *
                                               expert_layer_proc[expert][layer].GetVar(static_cast<int>(gpu));
                 }
-                model.AddConstr(total_weight_gpu_layer <= total_weight_layer * (1 + epsilon));
+                model.AddConstr(total_weight_gpu_layer <= (total_weight_layer * (1 + epsilon))) /
+                    static_cast<double>(params.num_gpus);
             }
         }
     }
@@ -323,9 +337,8 @@ class moe_ilp_solver {
     }
 
   private:
+    moe_ilp_solution _get_model_solution(Model &model) {
 
-    moe_ilp_solution _get_model_solution(Model& model) {        
-        
         moe_ilp_solution solution;
         solution.objective_value = 0.0; // Initialize with a default value
 
@@ -359,7 +372,6 @@ class moe_ilp_solver {
         }
         return solution;
     }
-
 
     void _write_model_solution_to_file(const std::string &filepath) {
         std::ofstream outfile(filepath);
