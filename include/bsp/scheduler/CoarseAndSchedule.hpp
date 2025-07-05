@@ -49,7 +49,7 @@ class CoarseAndSchedule : public Scheduler<Graph_t> {
                                         reverse_vertex_map);
 
         if (!status) {
-            return ERROR;
+            return RETURN_STATUS::ERROR;
         }  
 
         instance_coarse.setArchitecture(instance.getArchitecture());
@@ -59,13 +59,13 @@ class CoarseAndSchedule : public Scheduler<Graph_t> {
 
         const auto status_coarse = scheduler.computeSchedule(schedule_coarse);
 
-        if (status_coarse != SUCCESS and status_coarse != BEST_FOUND) {
+        if (status_coarse != RETURN_STATUS::SUCCESS and status_coarse != RETURN_STATUS::BEST_FOUND) {
             return status_coarse;
         }
 
         coarser_util::pull_back_schedule(schedule_coarse, reverse_vertex_map, schedule);
 
-        return SUCCESS;
+        return RETURN_STATUS::SUCCESS;
     }
 };
 

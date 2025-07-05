@@ -712,9 +712,9 @@ class kl_total_cut_test : public kl_total_cut<Graph_t, MemoryConstraint_t, true>
         bool improvement_found = kl_total<Graph_t, MemoryConstraint_t, true>::run_local_search_simple();
 
         if (improvement_found)
-            return SUCCESS;
+            return RETURN_STATUS::SUCCESS;
         else
-            return BEST_FOUND;
+            return RETURN_STATUS::BEST_FOUND;
     }
 
     RETURN_STATUS improve_schedule_test_2(BspSchedule<Graph_t> &schedule) {
@@ -731,9 +731,9 @@ class kl_total_cut_test : public kl_total_cut<Graph_t, MemoryConstraint_t, true>
         bool improvement_found = kl_total<Graph_t, MemoryConstraint_t, true>::run_local_search_unlock_delay();
 
         if (improvement_found)
-            return SUCCESS;
+            return RETURN_STATUS::SUCCESS;
         else
-            return BEST_FOUND;
+            return RETURN_STATUS::BEST_FOUND;
     }
 };
 

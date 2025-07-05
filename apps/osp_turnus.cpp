@@ -124,7 +124,7 @@ int main(int argc, char *argv[]) {
 
     auto scheduler_status = scheduler->computeSchedule(bsp_schedule);
 
-    if (scheduler_status == ERROR) {
+    if (scheduler_status == RETURN_STATUS::ERROR) {
         std::cout << "Error while scheduling!" << std::endl;
         delete scheduler;
         return 1;

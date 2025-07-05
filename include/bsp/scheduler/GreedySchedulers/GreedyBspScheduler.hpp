@@ -494,7 +494,7 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
 
                 if (not check_mem_feasibility(instance, allReady, procReady)) {
 
-                    return ERROR;
+                    return RETURN_STATUS::ERROR;
                 }
             }
 
@@ -509,7 +509,7 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
 
         assert(schedule.satisfiesPrecedenceConstraints());
 
-        return SUCCESS;
+        return RETURN_STATUS::SUCCESS;
     };
 
     /**

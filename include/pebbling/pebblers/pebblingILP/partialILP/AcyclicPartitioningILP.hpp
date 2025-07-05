@@ -190,23 +190,23 @@ RETURN_STATUS AcyclicPartitioningILP<Graph_t>::computePartitioning(const BspInst
     if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_OPTIMAL) {
 
         partitioning = returnAssignment(instance);
-        return SUCCESS;
+        return RETURN_STATUS::SUCCESS;
 
     } else if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_INF_OR_UNB) {
 
         partitioning.resize(instance.numberOfVertices(), UINT_MAX);
-        return ERROR;
+        return RETURN_STATUS::ERROR;
 
     } else {
 
         if (model.GetIntAttr(COPT_INTATTR_HASMIPSOL)) {
 
             partitioning = returnAssignment(instance);
-            return SUCCESS;
+            return RETURN_STATUS::SUCCESS;
 
         } else {
             partitioning.resize(instance.numberOfVertices(), UINT_MAX);
-            return ERROR;
+            return RETURN_STATUS::ERROR;
         }
     }
 }
@@ -349,7 +349,7 @@ std::vector<unsigned> AcyclicPartitioningILP<Graph_t>::returnAssignment(const Bs
 
 template<typename Graph_t>
 RETURN_STATUS AcyclicPartitioningILP<Graph_t>::computeSchedule(BspSchedule<Graph_t> &) {
-    return ERROR;
+    return RETURN_STATUS::ERROR;
 }
 
 }

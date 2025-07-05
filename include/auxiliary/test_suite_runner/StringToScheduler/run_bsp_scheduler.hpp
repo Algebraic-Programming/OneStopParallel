@@ -182,8 +182,8 @@ RETURN_STATUS run_bsp_scheduler(const ConfigParser &parser, const boost::propert
         RETURN_STATUS status =
             run_bsp_scheduler(parser, algorithm.get_child("parameters").get_child("scheduler"), schedule);
 
-        if (status == ERROR) {
-            return ERROR;
+        if (status == RETURN_STATUS::ERROR) {
+            return RETURN_STATUS::ERROR;
         }
         return run_bsp_improver(parser, algorithm.get_child("parameters").get_child("improver"), schedule);
 
@@ -210,7 +210,7 @@ RETURN_STATUS run_bsp_scheduler(const ConfigParser &parser, const boost::propert
                                           reverse_vertex_map);
 
         if (!status) {
-            return ERROR;
+            return RETURN_STATUS::ERROR;
         }
 
         instance_coarse.setArchitecture(instance.getArchitecture());
@@ -221,17 +221,17 @@ RETURN_STATUS run_bsp_scheduler(const ConfigParser &parser, const boost::propert
         const auto status_coarse =
             run_bsp_scheduler(parser, algorithm.get_child("parameters").get_child("scheduler"), schedule_coarse);
 
-        if (status_coarse != SUCCESS and status_coarse != BEST_FOUND) {
+        if (status_coarse != RETURN_STATUS::SUCCESS and status_coarse != RETURN_STATUS::BEST_FOUND) {
             return status_coarse;
         }
 
         status = coarser_util::pull_back_schedule(schedule_coarse, reverse_vertex_map, schedule);
 
         if (!status) {
-            return ERROR;
+            return RETURN_STATUS::ERROR;
         }
 
-        return SUCCESS;
+        return RETURN_STATUS::SUCCESS;
     }
 
     if constexpr (is_constructable_cdag_v<Graph_t> || is_direct_constructable_cdag_v<Graph_t>) {

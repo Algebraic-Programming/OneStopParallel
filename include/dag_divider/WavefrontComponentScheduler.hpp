@@ -146,7 +146,7 @@ class WavefrontComponentScheduler : public Scheduler<Graph_t> {
                 BspSchedule<constr_graph_t> sub_schedule(sub_instance);
                 auto status = scheduler->computeSchedule(sub_schedule);
 
-                if (status != SUCCESS && status != BEST_FOUND) {
+                if (status != RETURN_STATUS::SUCCESS && status != RETURN_STATUS::BEST_FOUND) {
                     return status;
                 }
 
@@ -197,7 +197,7 @@ class WavefrontComponentScheduler : public Scheduler<Graph_t> {
             superstep_offset += max_number_supersteps;
         }
 
-        return SUCCESS;
+        return RETURN_STATUS::SUCCESS;
     }
 
     RETURN_STATUS computeSchedule_without_isomorphism_groups(BspSchedule<Graph_t> &schedule) {
@@ -232,7 +232,7 @@ class WavefrontComponentScheduler : public Scheduler<Graph_t> {
             BspSchedule<constr_graph_t> sub_schedule(sub_instance);
             const auto status = scheduler->computeSchedule(sub_schedule);
 
-            if (status != SUCCESS && status != BEST_FOUND) {
+            if (status != RETURN_STATUS::SUCCESS && status != RETURN_STATUS::BEST_FOUND) {
                 return status;
             }
 
@@ -255,7 +255,7 @@ class WavefrontComponentScheduler : public Scheduler<Graph_t> {
             superstep_offset += sub_schedule.numberOfSupersteps();
         }
 
-        return SUCCESS;
+        return RETURN_STATUS::SUCCESS;
     }
 
   public:

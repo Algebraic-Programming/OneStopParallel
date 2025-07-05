@@ -103,14 +103,14 @@ BOOST_AUTO_TEST_CASE(Multilevel_test) {
     multi1.setLinearRefinementPoints(static_cast<vertex_idx_t<graph> >(instance.getComputationalDag().num_vertices()), 5);
 
     auto result = multi1.computeSchedule(schedule1);
-    BOOST_CHECK_EQUAL(SUCCESS, result);
+    BOOST_CHECK_EQUAL(RETURN_STATUS::SUCCESS, result);
     BOOST_CHECK(schedule1.satisfiesPrecedenceConstraints());
 
     multi2.setTargetNumberOfNodes(static_cast<unsigned>(instance.getComputationalDag().num_vertices())/3);
     multi2.setExponentialRefinementPoints(static_cast<vertex_idx_t<graph> >(instance.getComputationalDag().num_vertices()), 1.2);
 
     result = multi2.computeSchedule(schedule2);
-    BOOST_CHECK_EQUAL(SUCCESS, result);
+    BOOST_CHECK_EQUAL(RETURN_STATUS::SUCCESS, result);
     BOOST_CHECK(schedule2.satisfiesPrecedenceConstraints());
 
 };

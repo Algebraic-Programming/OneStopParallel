@@ -710,9 +710,9 @@ class kl_total_comm_test : public kl_total_comm<Graph_t, MemoryConstraint_t, use
         
 
         if (improvement_found)
-            return SUCCESS;
+            return RETURN_STATUS::SUCCESS;
         else
-            return BEST_FOUND;
+            return RETURN_STATUS::BEST_FOUND;
     }
 
     RETURN_STATUS improve_schedule_test_2(BspSchedule<Graph_t> &schedule) {
@@ -731,9 +731,9 @@ class kl_total_comm_test : public kl_total_comm<Graph_t, MemoryConstraint_t, use
        
 
         if (improvement_found)
-            return SUCCESS;
+            return RETURN_STATUS::SUCCESS;
         else
-            return BEST_FOUND;
+            return RETURN_STATUS::BEST_FOUND;
     }
 };
 

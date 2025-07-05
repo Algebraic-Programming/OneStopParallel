@@ -121,7 +121,7 @@ class GreedyChildren : public Scheduler<Graph_t> {
             superstep_counter++;
         }
 
-        return SUCCESS;
+        return RETURN_STATUS::SUCCESS;
     }
 
     std::string getScheduleName() const override {

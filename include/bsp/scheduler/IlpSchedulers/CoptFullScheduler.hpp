@@ -754,7 +754,7 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
 
         BspScheduleCS<Graph_t> schedule_cs(schedule.getInstance());
         RETURN_STATUS status = computeScheduleCS(schedule_cs);
-        if (status == SUCCESS || status == BEST_FOUND) {
+        if (status == RETURN_STATUS::SUCCESS || status == RETURN_STATUS::BEST_FOUND) {
             schedule = std::move(schedule_cs);
             return status;
         } else {
@@ -813,21 +813,21 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
         if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_OPTIMAL) {
 
             constructBspScheduleFromSolution(schedule, true);
-            return SUCCESS;
+            return RETURN_STATUS::SUCCESS;
 
         } else if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_INF_OR_UNB) {
 
-            return ERROR;
+            return RETURN_STATUS::ERROR;
 
         } else {
 
             if (model.GetIntAttr(COPT_INTATTR_HASMIPSOL)) {
 
                 constructBspScheduleFromSolution(schedule, true);
-                return BEST_FOUND;
+                return RETURN_STATUS::BEST_FOUND;
 
             } else {
-                return TIMEOUT;
+                return RETURN_STATUS::TIMEOUT;
             }
         }
     }
@@ -895,21 +895,21 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
         if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_OPTIMAL) {
 
             constructBspScheduleRecompFromSolution(schedule, true);
-            return SUCCESS;
+            return RETURN_STATUS::SUCCESS;
 
         } else if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_INF_OR_UNB) {
 
-            return ERROR;
+            return RETURN_STATUS::ERROR;
 
         } else {
 
             if (model.GetIntAttr(COPT_INTATTR_HASMIPSOL)) {
 
                 constructBspScheduleRecompFromSolution(schedule, true);
-                return BEST_FOUND;
+                return RETURN_STATUS::BEST_FOUND;
 
             } else {
-                return TIMEOUT;
+                return RETURN_STATUS::TIMEOUT;
             }
         }
     };

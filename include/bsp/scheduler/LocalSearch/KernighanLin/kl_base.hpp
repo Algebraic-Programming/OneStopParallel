@@ -2598,9 +2598,9 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
         bool improvement_found = run_local_search_unlock_delay();
 
         if (improvement_found)
-            return SUCCESS;
+            return RETURN_STATUS::SUCCESS;
         else
-            return BEST_FOUND;
+            return RETURN_STATUS::BEST_FOUND;
     }
 
     virtual RETURN_STATUS improveScheduleWithTimeLimit(BspSchedule<Graph_t> &schedule) override {

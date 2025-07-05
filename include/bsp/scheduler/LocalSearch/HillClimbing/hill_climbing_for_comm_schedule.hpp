@@ -99,7 +99,7 @@ RETURN_STATUS HillClimbingForCommSteps<Graph_t>::improveScheduleWithTimeLimit(Bs
     schedule = &input_schedule;
 
     if(schedule->numberOfSupersteps() <= 2)
-        return SUCCESS;
+        return RETURN_STATUS::SUCCESS;
 
     Init();
     //ConvertCommSchedule();
@@ -120,7 +120,7 @@ RETURN_STATUS HillClimbingForCommSteps<Graph_t>::improveScheduleWithTimeLimit(Bs
 
     ConvertCommSchedule();
 
-    return SUCCESS;
+    return RETURN_STATUS::SUCCESS;
 
 }
 

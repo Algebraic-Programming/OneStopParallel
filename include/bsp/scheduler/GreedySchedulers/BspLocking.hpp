@@ -603,7 +603,7 @@ class BspLocking : public Scheduler<Graph_t> {
 
                 if (not check_mem_feasibility(instance, allReady, procReady)) {
 
-                    return ERROR;
+                    return RETURN_STATUS::ERROR;
                 }
             }
 
@@ -620,7 +620,7 @@ class BspLocking : public Scheduler<Graph_t> {
 
         assert(schedule.satisfiesPrecedenceConstraints());
 
-        return SUCCESS;
+        return RETURN_STATUS::SUCCESS;
     }
 
     // std::pair<RETURN_STATUS, BspSchedule<Graph_t>>
@@ -949,7 +949,7 @@ class BspLocking : public Scheduler<Graph_t> {
 
     //         if (use_memory_constraint && not check_mem_feasibility(instance, allReady, procReady)) {
 
-    //             return {ERROR, schedule};
+    //             return {RETURN_STATUS::ERROR, schedule};
     //         }
 
     //         if (free > params_p * max_percent_idle_processors &&

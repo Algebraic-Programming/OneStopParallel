@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(test_total) {
     scheduler_to.setTimeLimitSeconds(10);
 
     const auto result_to = scheduler_to.computeSchedule(schedule_to);
-    BOOST_CHECK_EQUAL(BEST_FOUND, result_to);
+    BOOST_CHECK_EQUAL(RETURN_STATUS::BEST_FOUND, result_to);
     BOOST_CHECK(schedule_to.satisfiesPrecedenceConstraints());
 
     BspSchedule<graph> schedule(instance);
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(test_total) {
     scheduler.setTimeLimitSeconds(3600);
     const auto result = scheduler.computeSchedule(schedule);
 
-    BOOST_CHECK_EQUAL(SUCCESS, result);
+    BOOST_CHECK_EQUAL(RETURN_STATUS::SUCCESS, result);
     BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 };
 
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(test_full) {
     scheduler_to.setTimeLimitSeconds(10);
 
     const auto result_to = scheduler_to.computeScheduleCS(schedule_to);
-    BOOST_CHECK_EQUAL(BEST_FOUND, result_to);
+    BOOST_CHECK_EQUAL(RETURN_STATUS::BEST_FOUND, result_to);
     BOOST_CHECK(schedule_to.satisfiesPrecedenceConstraints());
 
     CoptFullScheduler<graph> scheduler_recomp;
@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(test_full) {
     scheduler_init.setTimeLimitSeconds(10);
     scheduler_init.setInitialSolutionFromBspSchedule(schedule_init_cs);
     const auto result_init = scheduler_init.computeScheduleCS(schedule_improved);
-    BOOST_CHECK_EQUAL(BEST_FOUND, result_init);
+    BOOST_CHECK_EQUAL(RETURN_STATUS::BEST_FOUND, result_init);
     BOOST_CHECK(schedule_improved.satisfiesPrecedenceConstraints());
     BOOST_CHECK(schedule_improved.hasValidCommSchedule());
 
@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(test_full) {
     BspScheduleRecomp<graph> schedule_improved2(instance);
     scheduler_init2.setTimeLimitSeconds(10);
     const auto result_init2 = scheduler_init2.computeScheduleRecomp(schedule_improved2);
-    BOOST_CHECK_EQUAL(BEST_FOUND, result_init2);
+    BOOST_CHECK_EQUAL(RETURN_STATUS::BEST_FOUND, result_init2);
     BOOST_CHECK(schedule_improved2.satisfiesConstraints());
 
     // initialize with recomputing schedule, return recomputing schedule
@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE(test_full) {
     CoptFullScheduler<graph> scheduler_init3(schedule_init3);
     scheduler_init3.setTimeLimitSeconds(10);
     const auto result_init3 = scheduler_init3.computeScheduleRecomp(schedule_improved3);
-    BOOST_CHECK_EQUAL(BEST_FOUND, result_init3);
+    BOOST_CHECK_EQUAL(RETURN_STATUS::BEST_FOUND, result_init3);
     BOOST_CHECK(schedule_improved3.satisfiesConstraints());
 
     // with vertex types
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(test_full) {
     scheduler_typed.setTimeLimitSeconds(10);
     scheduler_typed.setInitialSolutionFromBspSchedule(schedule_typed);
     const auto result_typed = scheduler_typed.computeSchedule(schedule_typed);
-    BOOST_CHECK_EQUAL(BEST_FOUND, result_typed);
+    BOOST_CHECK_EQUAL(RETURN_STATUS::BEST_FOUND, result_typed);
     BOOST_CHECK(schedule_typed.satisfiesPrecedenceConstraints());
     BOOST_CHECK(schedule_typed.satisfiesNodeTypeConstraints());
 
@@ -175,6 +175,6 @@ BOOST_AUTO_TEST_CASE(test_full) {
     scheduler.setTimeLimitSeconds(3600);
     const auto result = scheduler.computeScheduleCS(schedule);
 
-    BOOST_CHECK_EQUAL(SUCCESS, result);
+    BOOST_CHECK_EQUAL(RETURN_STATUS::SUCCESS, result);
     BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 };

@@ -135,7 +135,7 @@ class RandomGreedy : public Scheduler<Graph_t> {
             superstep_counter++;
         }
 
-        return SUCCESS;
+        return RETURN_STATUS::SUCCESS;
     }
 
     std::string getScheduleName() const override { return ensure_enough_sources ? "RandomGreedyS" : "RandomGreedy"; }

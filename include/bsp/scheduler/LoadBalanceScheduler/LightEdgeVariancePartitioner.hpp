@@ -151,7 +151,7 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<Graph_t, Interpo
                 if constexpr (base::use_memory_constraint) {
 
                     if (num_unable_to_partition_node_loop >= 2) {
-                        return ERROR;
+                        return RETURN_STATUS::ERROR;
                     }
                 }
             }
@@ -432,7 +432,7 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<Graph_t, Interpo
             }
         }
 
-        return SUCCESS;
+        return RETURN_STATUS::SUCCESS;
     }
 };
 

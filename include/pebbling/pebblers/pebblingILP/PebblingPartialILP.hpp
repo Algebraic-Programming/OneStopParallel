@@ -80,7 +80,7 @@ RETURN_STATUS PebblingPartialILP<Graph_t>::computePebbling(PebblingSchedule<Grap
     const BspInstance<Graph_t>& instance = schedule.getInstance();
 
     if(!PebblingSchedule<Graph_t>::hasValidSolution(instance))
-        return ERROR;
+        return RETURN_STATUS::ERROR;
     
     // STEP 1: divide DAG acyclicly with partitioning ILP
 
@@ -330,7 +330,7 @@ RETURN_STATUS PebblingPartialILP<Graph_t>::computePebbling(PebblingSchedule<Grap
     // AUX: assemble final schedule from subschedules
     schedule.CreateFromPartialPebblings(instance, pebbling, processors_to_parts, original_node_id, original_proc_id, has_reds_in_beginning);
     schedule.cleanSchedule();
-    return schedule.isValid() ? SUCCESS : ERROR;
+    return schedule.isValid() ? RETURN_STATUS::SUCCESS : RETURN_STATUS::ERROR;
 
 }
 
@@ -385,7 +385,7 @@ Graph_t PebblingPartialILP<Graph_t>::contractByPartition(const BspInstance<Graph
 
 template<typename Graph_t>
 RETURN_STATUS PebblingPartialILP<Graph_t>::computeSchedule(BspSchedule<Graph_t>&) {
-    return ERROR;
+    return RETURN_STATUS::ERROR;
 }
 
 }

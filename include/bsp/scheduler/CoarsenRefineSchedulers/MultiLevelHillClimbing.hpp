@@ -89,7 +89,7 @@ RETURN_STATUS MultiLevelHillClimbingScheduler<Graph_t>::computeSchedule(BspSched
 
     schedule = Refine(schedule.getInstance(), coarser, coarse_schedule);
 
-    return SUCCESS;
+    return RETURN_STATUS::SUCCESS;
 }
 
 // run refinement: uncoarsify the DAG in small batches, and apply some steps of hill climbing after each iteration

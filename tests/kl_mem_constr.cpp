@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(kl_local_memconst) {
             BspSchedule<graph> schedule(instance);
             const auto result = test_scheduler.computeSchedule(schedule);
 
-            BOOST_CHECK_EQUAL(SUCCESS, result);
+            BOOST_CHECK_EQUAL(RETURN_STATUS::SUCCESS, result);
             BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
             BOOST_CHECK(schedule.satisfiesMemoryConstraints());
 
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(kl_local_memconst) {
 
             auto status = kl.improve_schedule_test_2(schedule);
 
-            BOOST_CHECK(status == SUCCESS || status == BEST_FOUND);
+            BOOST_CHECK(status == RETURN_STATUS::SUCCESS || status == RETURN_STATUS::BEST_FOUND);
             BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
             BOOST_CHECK(schedule.satisfiesMemoryConstraints());
         }
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(kl_local_inc_memconst) {
             BspSchedule<graph> schedule(instance);
             const auto result = test_scheduler.computeSchedule(schedule);
 
-            BOOST_CHECK_EQUAL(SUCCESS, result);
+            BOOST_CHECK_EQUAL(RETURN_STATUS::SUCCESS, result);
             BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
             BOOST_CHECK(schedule.satisfiesMemoryConstraints());
 
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(kl_local_inc_memconst) {
 
             auto status = kl.improve_schedule_test_2(schedule);
 
-            BOOST_CHECK(status == SUCCESS || status == BEST_FOUND);
+            BOOST_CHECK(status == RETURN_STATUS::SUCCESS || status == RETURN_STATUS::BEST_FOUND);
             BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
             BOOST_CHECK(schedule.satisfiesMemoryConstraints());
         }
@@ -220,7 +220,7 @@ BOOST_AUTO_TEST_CASE(kl_local_sources_inc_memconst) {
             BspSchedule<graph> schedule(instance);
             const auto result = test_scheduler.computeSchedule(schedule);
 
-            BOOST_CHECK_EQUAL(SUCCESS, result);
+            BOOST_CHECK_EQUAL(RETURN_STATUS::SUCCESS, result);
             BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
             BOOST_CHECK(schedule.satisfiesMemoryConstraints());
 
@@ -228,7 +228,7 @@ BOOST_AUTO_TEST_CASE(kl_local_sources_inc_memconst) {
 
             auto status = kl.improve_schedule_test_2(schedule);
 
-            BOOST_CHECK(status == SUCCESS || status == BEST_FOUND);
+            BOOST_CHECK(status == RETURN_STATUS::SUCCESS || status == RETURN_STATUS::BEST_FOUND);
             BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
             BOOST_CHECK(schedule.satisfiesMemoryConstraints());
         }

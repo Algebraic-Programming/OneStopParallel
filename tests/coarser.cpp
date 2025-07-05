@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(coarser_hdagg_test) {
 
         const auto status_sched = scheduler.computeSchedule(schedule);
 
-        BOOST_CHECK(status_sched == SUCCESS);
+        BOOST_CHECK(status_sched == RETURN_STATUS::SUCCESS);
         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
         BspSchedule<graph_t> schedule_out(instance);
@@ -244,7 +244,7 @@ BOOST_AUTO_TEST_CASE(coarser_hdagg_test_diff_graph_impl) {
 
         auto status_sched = scheduler.computeSchedule(schedule);
 
-        BOOST_CHECK(status_sched == SUCCESS);
+        BOOST_CHECK(status_sched == RETURN_STATUS::SUCCESS);
         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
         BspSchedule<graph_t1> schedule_out(instance);
@@ -306,7 +306,7 @@ BOOST_AUTO_TEST_CASE(coarser_bspschedule_test) {
 
         const auto status_sched_orig = scheduler.computeSchedule(schedule_orig);
 
-        BOOST_CHECK(status_sched_orig == SUCCESS);
+        BOOST_CHECK(status_sched_orig == RETURN_STATUS::SUCCESS);
         BOOST_CHECK(schedule_orig.satisfiesPrecedenceConstraints());
 
         BspScheduleCoarser<graph_t, graph_t> coarser(schedule_orig);
@@ -321,7 +321,7 @@ BOOST_AUTO_TEST_CASE(coarser_bspschedule_test) {
 
         const auto status_sched = scheduler.computeSchedule(schedule);
 
-        BOOST_CHECK(status_sched == SUCCESS);
+        BOOST_CHECK(status_sched == RETURN_STATUS::SUCCESS);
         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
         BspSchedule<graph_t> schedule_out(instance);
@@ -391,7 +391,7 @@ void test_coarser_same_graph(Coarser<graph_t, graph_t> &coarser) {
 
         const auto status_sched = scheduler.computeSchedule(schedule);
 
-        BOOST_CHECK(status_sched == SUCCESS);
+        BOOST_CHECK(status_sched == RETURN_STATUS::SUCCESS);
         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
         BspSchedule<graph_t> schedule_out(instance);
@@ -536,7 +536,7 @@ BOOST_AUTO_TEST_CASE(coarser_SquashA_test_diff_graph_impl_CSG) {
 
         auto status_sched = scheduler.computeSchedule(schedule);
 
-        BOOST_CHECK(status_sched == SUCCESS);
+        BOOST_CHECK(status_sched == RETURN_STATUS::SUCCESS);
         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
         BspSchedule<graph_t1> schedule_out(instance);
@@ -612,7 +612,7 @@ BOOST_AUTO_TEST_CASE(coarser_SquashA_test_diff_graph_impl_CSGE) {
 
         auto status_sched = scheduler.computeSchedule(schedule);
 
-        BOOST_CHECK(status_sched == SUCCESS);
+        BOOST_CHECK(status_sched == RETURN_STATUS::SUCCESS);
         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
         BspSchedule<graph_t1> schedule_out(instance);

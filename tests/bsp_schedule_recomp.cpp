@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test)
     GreedyBspScheduler<graph> scheduler;
     const auto result = scheduler.computeSchedule(schedule);
 
-    BOOST_CHECK_EQUAL(SUCCESS, result);
+    BOOST_CHECK_EQUAL(RETURN_STATUS::SUCCESS, result);
     BOOST_CHECK_EQUAL(&schedule.getInstance(), &instance);
     BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 

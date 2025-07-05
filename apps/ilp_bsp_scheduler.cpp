@@ -118,7 +118,7 @@ int main(int argc, char *argv[]) {
 
         auto status_schedule = scheduler.computeScheduleRecomp(schedule);
 
-        if (status_schedule == SUCCESS || status_schedule == BEST_FOUND) {
+        if (status_schedule == RETURN_STATUS::SUCCESS || status_schedule == RETURN_STATUS::BEST_FOUND) {
 
             DotFileWriter dot_writer;
             dot_writer.write_schedule_recomp(name_graph + "_" + name_machine + "_maxS_" + std::to_string(steps) + "_" +
@@ -143,7 +143,7 @@ int main(int argc, char *argv[]) {
 
         auto status_schedule = scheduler.computeSchedule(schedule);
 
-        if (status_schedule == SUCCESS || status_schedule == BEST_FOUND) {
+        if (status_schedule == RETURN_STATUS::SUCCESS || status_schedule == RETURN_STATUS::BEST_FOUND) {
 
             DotFileWriter dot_writer;
             dot_writer.write_schedule(name_graph + "_" + name_machine + "_maxS_" + std::to_string(steps) + "_" +

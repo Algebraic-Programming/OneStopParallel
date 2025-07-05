@@ -151,7 +151,7 @@ class TotalCommunicationScheduler : public Scheduler<Graph_t> {
                         if (sched.numberOfSupersteps() > 2) {
                             auto status = lk_heuristic.improveSchedule(sched);
 
-                            if (status == SUCCESS) {
+                            if (status == RETURN_STATUS::SUCCESS) {
                                 feedImprovedSchedule(sched);
                             }
                         }
@@ -691,20 +691,20 @@ class TotalCommunicationScheduler : public Scheduler<Graph_t> {
 
         if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_OPTIMAL) {
 
-            return SUCCESS; //, constructBspScheduleFromSolution(instance, true)};
+            return RETURN_STATUS::SUCCESS; //, constructBspScheduleFromSolution(instance, true)};
 
         } else if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_INF_OR_UNB) {
 
-            return ERROR;
+            return RETURN_STATUS::ERROR;
 
         } else {
 
             if (model.GetIntAttr(COPT_INTATTR_HASMIPSOL)) {
 
-                return BEST_FOUND; //, constructBspScheduleFromSolution(instance, true)};
+                return RETURN_STATUS::BEST_FOUND; //, constructBspScheduleFromSolution(instance, true)};
 
             } else {
-                return TIMEOUT;
+                return RETURN_STATUS::TIMEOUT;
             }
         }
     };

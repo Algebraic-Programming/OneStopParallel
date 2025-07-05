@@ -341,14 +341,14 @@ class EtfScheduler : public Scheduler<Graph_t> {
             if constexpr (use_memory_constraint) {
 
                 if (not check_mem_feasibility(instance, ready)) {
-                    return ERROR;
+                    return RETURN_STATUS::ERROR;
                 }
             }
         }
 
         schedule.convertToBspSchedule(instance, greedyProcLists, bsp_schedule);
 
-        return SUCCESS;
+        return RETURN_STATUS::SUCCESS;
     }
 
     /**

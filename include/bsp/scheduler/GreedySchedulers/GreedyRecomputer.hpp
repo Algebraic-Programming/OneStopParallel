@@ -212,7 +212,7 @@ RETURN_STATUS GreedyRecomputer<Graph_t>::computeRecompSchedule(BspScheduleCS<Gra
 
     out_schedule.mergeSupersteps();
 
-    return SUCCESS;
+    return RETURN_STATUS::SUCCESS;
 }
 
 } // namespace osp

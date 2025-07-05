@@ -253,20 +253,20 @@ RETURN_STATUS MultiProcessorPebbling<Graph_t>::computeSchedule(BspSchedule<Graph
 
     if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_OPTIMAL) {
 
-        return SUCCESS;
+        return RETURN_STATUS::SUCCESS;
 
     } else if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_INF_OR_UNB) {
 
-        return ERROR;
+        return RETURN_STATUS::ERROR;
 
     } else {
 
         if (model.GetIntAttr(COPT_INTATTR_HASMIPSOL)) {
 
-            return BEST_FOUND;
+            return RETURN_STATUS::BEST_FOUND;
 
         } else {
-            return TIMEOUT;
+            return RETURN_STATUS::TIMEOUT;
         }
     }
 };
@@ -290,21 +290,21 @@ RETURN_STATUS MultiProcessorPebbling<Graph_t>::computeSynchPebbling(PebblingSche
     if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_OPTIMAL) {
 
         constructPebblingScheduleFromSolution(schedule);
-        return SUCCESS;
+        return RETURN_STATUS::SUCCESS;
 
     } else if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_INF_OR_UNB) {
 
-        return ERROR;
+        return RETURN_STATUS::ERROR;
 
     } else {
 
         if (model.GetIntAttr(COPT_INTATTR_HASMIPSOL)) {
 
             constructPebblingScheduleFromSolution(schedule);
-            return SUCCESS;
+            return RETURN_STATUS::SUCCESS;
 
         } else {
-            return TIMEOUT;
+            return RETURN_STATUS::TIMEOUT;
         }
     }
 }
@@ -333,21 +333,21 @@ RETURN_STATUS MultiProcessorPebbling<Graph_t>::computePebbling(PebblingSchedule<
     if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_OPTIMAL) {
 
         constructPebblingScheduleFromSolution(schedule);
-        return schedule.isValid() ? SUCCESS : ERROR;
+        return schedule.isValid() ? RETURN_STATUS::SUCCESS : RETURN_STATUS::ERROR;
 
     } else if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_INF_OR_UNB) {
 
-        return ERROR;
+        return RETURN_STATUS::ERROR;
 
     } else {
 
         if (model.GetIntAttr(COPT_INTATTR_HASMIPSOL)) {
 
             constructPebblingScheduleFromSolution(schedule);
-            return schedule.isValid() ? SUCCESS : ERROR;
+            return schedule.isValid() ? RETURN_STATUS::SUCCESS : RETURN_STATUS::ERROR;
 
         } else {
-            return TIMEOUT;
+            return RETURN_STATUS::TIMEOUT;
         }
     }
 }
@@ -390,21 +390,21 @@ RETURN_STATUS MultiProcessorPebbling<Graph_t>::computePebblingWithInitialSolutio
     if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_OPTIMAL) {
 
         constructPebblingScheduleFromSolution(out_schedule);
-        return out_schedule.isValid() ? SUCCESS : ERROR;
+        return out_schedule.isValid() ? RETURN_STATUS::SUCCESS : RETURN_STATUS::ERROR;
 
     } else if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_INF_OR_UNB) {
 
-        return ERROR;
+        return RETURN_STATUS::ERROR;
 
     } else {
 
         if (model.GetIntAttr(COPT_INTATTR_HASMIPSOL)) {
 
             constructPebblingScheduleFromSolution(out_schedule);
-            return out_schedule.isValid() ? SUCCESS : ERROR;
+            return out_schedule.isValid() ? RETURN_STATUS::SUCCESS : RETURN_STATUS::ERROR;
 
         } else {
-            return TIMEOUT;
+            return RETURN_STATUS::TIMEOUT;
         }
     }
 }

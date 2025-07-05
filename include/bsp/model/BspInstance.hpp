@@ -27,21 +27,32 @@ limitations under the License.
 
 namespace osp {
 
-enum RETURN_STATUS { SUCCESS, BEST_FOUND, TIMEOUT, ERROR };
+enum class RETURN_STATUS { SUCCESS, BEST_FOUND, TIMEOUT, ERROR };
 
 inline std::string to_string(const RETURN_STATUS status) {
     switch (status) {
-    case SUCCESS:
+    case RETURN_STATUS::SUCCESS:
         return "SUCCESS";
-    case BEST_FOUND:
+    case RETURN_STATUS::BEST_FOUND:
         return "BEST FOUND";
-    case TIMEOUT:
+    case RETURN_STATUS::TIMEOUT:
         return "TIMEOUT";
-    case ERROR:
+    case RETURN_STATUS::ERROR:
         return "ERROR";
     default:
         return "UNKNOWN";
     }
+}
+
+std::ostream& operator<<(std::ostream& os, RETURN_STATUS status) {
+    switch (status) {
+        case RETURN_STATUS::SUCCESS:        os << "SUCCESS";        break;
+        case RETURN_STATUS::BEST_FOUND:     os << "BEST_FOUND";     break;
+        case RETURN_STATUS::TIMEOUT:        os << "TIMEOUT";        break;
+        case RETURN_STATUS::ERROR:          os << "ERROR";          break;
+        default:                            os << "UNKNOWN";        break; 
+    }
+    return os;
 }
 
 /**

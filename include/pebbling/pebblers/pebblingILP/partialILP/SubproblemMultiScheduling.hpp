@@ -204,7 +204,7 @@ RETURN_STATUS SubproblemMultiScheduling<Graph_t>::computeMultiSchedule(const Bsp
 
     }
 
-    return SUCCESS;
+    return RETURN_STATUS::SUCCESS;
 }
 
 template<typename Graph_t>
@@ -253,7 +253,7 @@ std::vector<std::pair<vertex_idx_t<Graph_t>, unsigned> > SubproblemMultiScheduli
 
 template<typename Graph_t>
 RETURN_STATUS SubproblemMultiScheduling<Graph_t>::computeSchedule(BspSchedule<Graph_t> &) {
-    return ERROR;
+    return RETURN_STATUS::ERROR;
 }
 
 }
