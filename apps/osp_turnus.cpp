@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
 
     bsp_instance.getArchitecture().setNumberOfProcessors(static_cast<unsigned>(std::stoul(argv[2])));
     bsp_instance.getArchitecture().setMemoryBound(std::atoi(argv[3]));
-    bsp_instance.getArchitecture().setMemoryConstraintType(PERSISTENT_AND_TRANSIENT);
+    bsp_instance.getArchitecture().setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::PERSISTENT_AND_TRANSIENT);
 
     std::string algorithm_name = argv[4];
 

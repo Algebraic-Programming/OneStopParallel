@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(test_arch_smpl) {
     BOOST_CHECK_EQUAL(arch.numberOfProcessors(), 3);
     BOOST_CHECK_EQUAL(arch.communicationCosts(), 3);
     BOOST_CHECK_EQUAL(arch.synchronisationCosts(), 5);
-    BOOST_CHECK_EQUAL(arch.getMemoryConstraintType(), NONE);
+    BOOST_CHECK_EQUAL(arch.getMemoryConstraintType(), MEMORY_CONSTRAINT_TYPE::NONE);
 
 }
 

@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(kl_local_memconst) {
         instance.getArchitecture().setSynchronisationCosts(10);
         instance.getArchitecture().setCommunicationCosts(5);
         instance.getArchitecture().setNumberOfProcessors(4);
-        instance.getArchitecture().setMemoryConstraintType(LOCAL);
+        instance.getArchitecture().setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::LOCAL);
         instance.getArchitecture().setSynchronisationCosts(80);
 
         const std::vector<int> bounds_to_test = {10, 20};
@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(kl_local_inc_memconst) {
         instance.getArchitecture().setSynchronisationCosts(10);
         instance.getArchitecture().setCommunicationCosts(5);
         instance.getArchitecture().setNumberOfProcessors(4);
-        instance.getArchitecture().setMemoryConstraintType(LOCAL_INC_EDGES);
+        instance.getArchitecture().setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::LOCAL_INC_EDGES);
         instance.getArchitecture().setSynchronisationCosts(80);
 
         const std::vector<int> bounds_to_test = {10, 20};
@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(kl_local_sources_inc_memconst) {
         instance.getArchitecture().setSynchronisationCosts(10);
         instance.getArchitecture().setCommunicationCosts(5);
         instance.getArchitecture().setNumberOfProcessors(4);
-        instance.getArchitecture().setMemoryConstraintType(LOCAL_SOURCES_INC_EDGES);
+        instance.getArchitecture().setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::LOCAL_SOURCES_INC_EDGES);
         instance.getArchitecture().setSynchronisationCosts(80);
 
         const std::vector<int> bounds_to_test = {10, 20};

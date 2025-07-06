@@ -125,7 +125,7 @@ class VarianceFillup : public Scheduler<Graph_t> {
         const std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> &procReady) const {
 
         if constexpr (use_memory_constraint) {
-            if (instance.getArchitecture().getMemoryConstraintType() == PERSISTENT_AND_TRANSIENT) {
+            if (instance.getArchitecture().getMemoryConstraintType() == MEMORY_CONSTRAINT_TYPE::PERSISTENT_AND_TRANSIENT) {
 
                 for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
                     if (!procReady[i].empty()) {

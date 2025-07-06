@@ -126,7 +126,7 @@ class WavefrontComponentScheduler : public Scheduler<Graph_t> {
 
                 constr_graph_t &sub_dag = iso_groups.get_isomorphism_groups_subgraphs()[i][j];
 
-                if (i > 0 && instance.getArchitecture().getMemoryConstraintType() == LOCAL_INC_EDGES) {
+                if (i > 0 && instance.getArchitecture().getMemoryConstraintType() == MEMORY_CONSTRAINT_TYPE::LOCAL_INC_EDGES) {
 
                     for (const auto &source_vertex : source_vertices_view(sub_dag)) {
 
@@ -221,7 +221,7 @@ class WavefrontComponentScheduler : public Scheduler<Graph_t> {
 
             auto &sub_dag = sub_instance.getComputationalDag();
 
-            if (i > 0 && instance.getArchitecture().getMemoryConstraintType() == LOCAL_INC_EDGES) {
+            if (i > 0 && instance.getArchitecture().getMemoryConstraintType() == MEMORY_CONSTRAINT_TYPE::LOCAL_INC_EDGES) {
 
                 for (const auto &source_vertex : source_vertices_view(sub_dag)) {
                     sub_dag.set_vertex_comm_weight(source_vertex, sub_dag.vertex_comm_weight(source_vertex) +

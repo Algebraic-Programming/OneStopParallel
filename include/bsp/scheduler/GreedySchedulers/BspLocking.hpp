@@ -133,7 +133,7 @@ class BspLocking : public Scheduler<Graph_t> {
 
         if constexpr (use_memory_constraint) {
 
-            if (instance.getArchitecture().getMemoryConstraintType() == PERSISTENT_AND_TRANSIENT) {
+            if (instance.getArchitecture().getMemoryConstraintType() == MEMORY_CONSTRAINT_TYPE::PERSISTENT_AND_TRANSIENT) {
 
                 for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
                     if (!procReady[i].empty()) {

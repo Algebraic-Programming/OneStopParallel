@@ -161,7 +161,7 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
 
         if constexpr (use_memory_constraint) {
 
-            if (instance.getArchitecture().getMemoryConstraintType() == PERSISTENT_AND_TRANSIENT) {
+            if (instance.getArchitecture().getMemoryConstraintType() == MEMORY_CONSTRAINT_TYPE::PERSISTENT_AND_TRANSIENT) {
 
                 unsigned num_empty_proc = 0;
 

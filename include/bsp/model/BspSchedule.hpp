@@ -562,7 +562,7 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
 
         switch (instance->getArchitecture().getMemoryConstraintType()) {
 
-        case LOCAL: {
+        case MEMORY_CONSTRAINT_TYPE::LOCAL: {
 
             SetSchedule set_schedule = SetSchedule(*this);
 
@@ -583,7 +583,7 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
             break;
         }
 
-        case PERSISTENT_AND_TRANSIENT: {
+        case MEMORY_CONSTRAINT_TYPE::PERSISTENT_AND_TRANSIENT: {
             std::vector<v_memw_t<Graph_t>> current_proc_persistent_memory(instance->numberOfProcessors(), 0);
             std::vector<v_memw_t<Graph_t>> current_proc_transient_memory(instance->numberOfProcessors(), 0);
 
@@ -602,7 +602,7 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
             break;
         }
 
-        case GLOBAL: {
+        case MEMORY_CONSTRAINT_TYPE::GLOBAL: {
             std::vector<v_memw_t<Graph_t>> current_proc_memory(instance->numberOfProcessors(), 0);
 
             for (const auto &node : instance->vertices()) {
@@ -617,7 +617,7 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
             break;
         }
 
-        case LOCAL_IN_OUT: {
+        case MEMORY_CONSTRAINT_TYPE::LOCAL_IN_OUT: {
 
             SetSchedule set_schedule = SetSchedule(*this);
 
@@ -647,7 +647,7 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
             break;
         }
 
-        case LOCAL_INC_EDGES: {
+        case MEMORY_CONSTRAINT_TYPE::LOCAL_INC_EDGES: {
 
             SetSchedule set_schedule = SetSchedule(*this);
 
@@ -680,7 +680,7 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
             break;
         }
 
-        case LOCAL_SOURCES_INC_EDGES: {
+        case MEMORY_CONSTRAINT_TYPE::LOCAL_SOURCES_INC_EDGES: {
 
             SetSchedule set_schedule = SetSchedule(*this);
 
@@ -716,7 +716,7 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
             break;
         }
 
-        case NONE: {
+        case MEMORY_CONSTRAINT_TYPE::NONE: {
             break;
         }
 

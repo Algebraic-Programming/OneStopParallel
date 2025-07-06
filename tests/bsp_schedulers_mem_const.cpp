@@ -93,7 +93,7 @@ void run_test_local_memory(Scheduler<Graph_t> *test_scheduler) {
                                                                         instance.getArchitecture());
 
             add_mem_weights(instance.getComputationalDag());
-            instance.getArchitecture().setMemoryConstraintType(LOCAL);
+            instance.getArchitecture().setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::LOCAL);
             std::cout << "Memory constraint type: LOCAL" << std::endl;
 
             if (!status_graph || !status_architecture) {
@@ -152,7 +152,7 @@ void run_test_persistent_transient_memory(Scheduler<Graph_t> *test_scheduler) {
                                                                         instance.getArchitecture());
 
             add_mem_weights(instance.getComputationalDag());
-            instance.getArchitecture().setMemoryConstraintType(PERSISTENT_AND_TRANSIENT);
+            instance.getArchitecture().setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::PERSISTENT_AND_TRANSIENT);
             std::cout << "Memory constraint type: PERSISTENT_AND_TRANSIENT" << std::endl;
 
             if (!status_graph || !status_architecture) {
@@ -211,7 +211,7 @@ void run_test_local_in_out_memory(Scheduler<Graph_t> *test_scheduler) {
                                                                         instance.getArchitecture());
 
             add_mem_weights(instance.getComputationalDag());
-            instance.getArchitecture().setMemoryConstraintType(LOCAL_IN_OUT);
+            instance.getArchitecture().setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::LOCAL_IN_OUT);
             std::cout << "Memory constraint type: LOCAL_IN_OUT" << std::endl;
 
             if (!status_graph || !status_architecture) {
@@ -270,7 +270,7 @@ void run_test_local_inc_edges_memory(Scheduler<Graph_t> *test_scheduler) {
                                                                         instance.getArchitecture());
 
             add_mem_weights(instance.getComputationalDag());
-            instance.getArchitecture().setMemoryConstraintType(LOCAL_INC_EDGES);
+            instance.getArchitecture().setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::LOCAL_INC_EDGES);
             std::cout << "Memory constraint type: LOCAL_INC_EDGES" << std::endl;
 
             if (!status_graph || !status_architecture) {
@@ -329,7 +329,7 @@ void run_test_local_inc_edges_2_memory(Scheduler<Graph_t> *test_scheduler) {
                                                                         instance.getArchitecture());
 
             add_mem_weights(instance.getComputationalDag());
-            instance.getArchitecture().setMemoryConstraintType(LOCAL_SOURCES_INC_EDGES);
+            instance.getArchitecture().setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::LOCAL_SOURCES_INC_EDGES);
             std::cout << "Memory constraint type: LOCAL_SOURCES_INC_EDGES" << std::endl;
 
             if (!status_graph || !status_architecture) {

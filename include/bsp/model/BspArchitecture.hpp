@@ -28,14 +28,14 @@ limitations under the License.
 #include <vector>
 
 #include "auxiliary/misc.hpp"
-#include "concepts/graph_traits.hpp"
 #include "concepts/computational_dag_concept.hpp"
+#include "concepts/graph_traits.hpp"
 
 namespace osp {
 
 static constexpr unsigned CacheLineSize = 64;
 
-enum MEMORY_CONSTRAINT_TYPE {
+enum class MEMORY_CONSTRAINT_TYPE {
     NONE,
     LOCAL,
     GLOBAL,
@@ -44,6 +44,36 @@ enum MEMORY_CONSTRAINT_TYPE {
     LOCAL_INC_EDGES,
     LOCAL_SOURCES_INC_EDGES
 };
+
+std::ostream &operator<<(std::ostream &os, MEMORY_CONSTRAINT_TYPE type) {
+    switch (type) {
+    case MEMORY_CONSTRAINT_TYPE::NONE:
+        os << "NONE";
+        break;
+    case MEMORY_CONSTRAINT_TYPE::LOCAL:
+        os << "LOCAL";
+        break;
+    case MEMORY_CONSTRAINT_TYPE::GLOBAL:
+        os << "GLOBAL";
+        break;
+    case MEMORY_CONSTRAINT_TYPE::PERSISTENT_AND_TRANSIENT:
+        os << "PERSISTENT_AND_TRANSIENT";
+        break;
+    case MEMORY_CONSTRAINT_TYPE::LOCAL_IN_OUT:
+        os << "LOCAL_IN_OUT";
+        break;
+    case MEMORY_CONSTRAINT_TYPE::LOCAL_INC_EDGES:
+        os << "LOCAL_INC_EDGES";
+        break;
+    case MEMORY_CONSTRAINT_TYPE::LOCAL_SOURCES_INC_EDGES:
+        os << "LOCAL_SOURCES_INC_EDGES";
+        break;
+    default:
+        os << "UNKNOWN";
+        break;
+    }
+    return os;
+}
 
 /**
  * @class BspArchitecture
@@ -56,8 +86,7 @@ enum MEMORY_CONSTRAINT_TYPE {
 template<typename Graph_t>
 class BspArchitecture {
 
-    static_assert(is_computational_dag_v<Graph_t>,
-        "BspSchedule can only be used with computational DAGs.");
+    static_assert(is_computational_dag_v<Graph_t>, "BspSchedule can only be used with computational DAGs.");
 
   private:
     unsigned number_processors;
@@ -74,7 +103,7 @@ class BspArchitecture {
 
     std::vector<std::vector<v_commw_t<Graph_t>>> send_costs;
 
-    MEMORY_CONSTRAINT_TYPE memory_const_type = NONE;
+    MEMORY_CONSTRAINT_TYPE memory_const_type = MEMORY_CONSTRAINT_TYPE::NONE;
 
     bool are_send_cost_numa() {
         if (number_processors == 1)
@@ -140,13 +169,13 @@ class BspArchitecture {
           send_costs(other.sendCosts()) {
 
         static_assert(std::is_same_v<v_memw_t<Graph_t>, v_memw_t<Graph_t_other>>,
-            "BspArchitecture: Graph_t and Graph_t_other have the same memory weight type.");
+                      "BspArchitecture: Graph_t and Graph_t_other have the same memory weight type.");
 
         static_assert(std::is_same_v<v_commw_t<Graph_t>, v_commw_t<Graph_t_other>>,
-            "BspArchitecture: Graph_t and Graph_t_other have the same communication weight type.");
-        
+                      "BspArchitecture: Graph_t and Graph_t_other have the same communication weight type.");
+
         static_assert(std::is_same_v<v_type_t<Graph_t>, v_type_t<Graph_t_other>>,
-            "BspArchitecture: Graph_t and Graph_t_other have the same processor type.");
+                      "BspArchitecture: Graph_t and Graph_t_other have the same processor type.");
     }
 
     /**

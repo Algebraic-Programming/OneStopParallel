@@ -46,20 +46,20 @@ bool readBspArchitecture(std::ifstream &infile, BspArchitecture<Graph_t> &archit
     if (0 <= mem_type && mem_type <= 3) {
 
         if (mem_type == 0) {
-            architecture.setMemoryConstraintType(NONE);
+            architecture.setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::NONE);
         } else if (mem_type == 1) {
-            architecture.setMemoryConstraintType(LOCAL);
+            architecture.setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::LOCAL);
             architecture.setMemoryBound(static_cast<v_memw_t<Graph_t>>(M));
         } else if (mem_type == 2) {
-            architecture.setMemoryConstraintType(GLOBAL);
+            architecture.setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::GLOBAL);
             architecture.setMemoryBound(static_cast<v_memw_t<Graph_t>>(M));
         } else if (mem_type == 3) {
-            architecture.setMemoryConstraintType(PERSISTENT_AND_TRANSIENT);
+            architecture.setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::PERSISTENT_AND_TRANSIENT);
             architecture.setMemoryBound(static_cast<v_memw_t<Graph_t>>(M));
         }
     } else if (mem_type == -1) {
         std::cout << "No memory type specified. Assuming \"NONE\".\n";
-        architecture.setMemoryConstraintType(NONE);
+        architecture.setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::NONE);
     } else {
         std::cout << "Invalid memory type.\n";
         return false;
