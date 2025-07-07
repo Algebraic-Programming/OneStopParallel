@@ -41,10 +41,10 @@ struct cdag_vertex_impl {
     cdag_vertex_impl &operator=(const cdag_vertex_impl &other) = default;
     cdag_vertex_impl &operator=(cdag_vertex_impl &&other) = default;
 
-    cdag_vertex_impl(vertex_idx_t vertex_idx_, workw_t work_weight, commw_t comm_weight, memw_t mem_weight,
-                     vertex_type_t vertex_type)
-        : id(vertex_idx_), work_weight(work_weight), comm_weight(comm_weight), mem_weight(mem_weight),
-          vertex_type(vertex_type) {}
+    cdag_vertex_impl(vertex_idx_t vertex_idx_, workw_t work_w, commw_t comm_w, memw_t mem_w,
+                     vertex_type_t vertex_t)
+        : id(vertex_idx_), work_weight(work_w), comm_weight(comm_w), mem_weight(mem_w),
+          vertex_type(vertex_t) {}
 
     vertex_idx_t id;
 
