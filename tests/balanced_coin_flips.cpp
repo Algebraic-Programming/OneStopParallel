@@ -21,7 +21,7 @@ limitations under the License.
 
 #include <bitset>
 #include <iostream>
-#include "auxiliary/Balanced_Coin_Flips.hpp"
+#include "osp/auxiliary/Balanced_Coin_Flips.hpp"
 
 
 using namespace osp;

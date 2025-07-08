@@ -19,8 +19,8 @@ limitations under the License.
 #pragma once
 
 #include "IStatsModule.hpp"
-#include "bsp/model/IBspScheduleEval.hpp"
-#include "graph_implementations/boost_graphs/boost_graph.hpp" // For graph_t
+#include "osp/bsp/model/IBspScheduleEval.hpp"
+#include "osp/graph_implementations/boost_graphs/boost_graph.hpp" // For graph_t
 #include <string>
 #include <vector>
 #include <map>

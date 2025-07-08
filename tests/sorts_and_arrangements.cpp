@@ -23,7 +23,7 @@ limitations under the License.
 #include <string>
 #include <vector>
 
-#include "auxiliary/misc.hpp"
+#include "osp/auxiliary/misc.hpp"
 
 using namespace osp;
 

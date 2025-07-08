@@ -19,16 +19,16 @@ limitations under the License.
 #define BOOST_TEST_MODULE PEBBLING_ILP
 #include <boost/test/unit_test.hpp>
 
-#include "graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
-#include "graph_implementations/boost_graphs/boost_graph.hpp"
-#include "auxiliary/io/arch_file_reader.hpp"
-#include "auxiliary/io/hdag_graph_file_reader.hpp"
+#include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
+#include "osp/graph_implementations/boost_graphs/boost_graph.hpp"
+#include "osp/auxiliary/io/arch_file_reader.hpp"
+#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 #include <filesystem>
 #include <iostream>
 
-#include "pebbling/pebblers/pebblingILP/MultiProcessorPebbling.hpp"
-#include "pebbling/pebblers/pebblingILP/PebblingPartialILP.hpp"
-#include "bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
+#include "osp/pebbling/pebblers/pebblingILP/MultiProcessorPebbling.hpp"
+#include "osp/pebbling/pebblers/pebblingILP/PebblingPartialILP.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
 
 using namespace osp;
 

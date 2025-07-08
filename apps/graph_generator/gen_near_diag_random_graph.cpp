@@ -16,9 +16,9 @@ limitations under the License.
 @author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 
-#include "auxiliary/misc.hpp"
-#include "auxiliary/random_graph_generator/near_diagonal_random_graph.hpp"
-#include "graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
+#include "osp/auxiliary/misc.hpp"
+#include "osp/auxiliary/random_graph_generator/near_diagonal_random_graph.hpp"
+#include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 
 #include <fstream>
 #include <iostream>

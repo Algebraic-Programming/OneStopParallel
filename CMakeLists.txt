@@ -58,9 +58,9 @@ target_compile_options(ProjectExecutableFlags INTERFACE
         # Else (not Debug)
         $<IF:$<CONFIG:RelWithDebInfo>,
             # RelWithDebInfo flags
-            "-O2;-g;-DNDEBUG",
+            -O2;-g;-DNDEBUG,
             # Release and other/custom flags
-            "-O3;-DNDEBUG"
+            -O3;-DNDEBUG
         >
     >
 )

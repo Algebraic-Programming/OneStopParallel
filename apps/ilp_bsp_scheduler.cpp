@@ -23,16 +23,16 @@ limitations under the License.
 #include <string>
 #include <vector>
 
-#include "auxiliary/misc.hpp"
-#include "bsp/scheduler/IlpSchedulers/CoptFullScheduler.hpp"
-#include "graph_algorithms/directed_graph_path_util.hpp"
-#include "graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
-#include "auxiliary/io/DotFileWriter.hpp"
-#include "auxiliary/io/arch_file_reader.hpp"
-#include "auxiliary/io/bsp_schedule_file_writer.hpp"
-#include "auxiliary/io/dot_graph_file_reader.hpp"
-#include "auxiliary/io/hdag_graph_file_reader.hpp"
-#include "auxiliary/io/mtx_graph_file_reader.hpp"
+#include "osp/auxiliary/misc.hpp"
+#include "osp/bsp/scheduler/IlpSchedulers/CoptFullScheduler.hpp"
+#include "osp/graph_algorithms/directed_graph_path_util.hpp"
+#include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
+#include "osp/auxiliary/io/DotFileWriter.hpp"
+#include "osp/auxiliary/io/arch_file_reader.hpp"
+#include "osp/auxiliary/io/bsp_schedule_file_writer.hpp"
+#include "osp/auxiliary/io/dot_graph_file_reader.hpp"
+#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
+#include "osp/auxiliary/io/mtx_graph_file_reader.hpp"
 
 using namespace osp;
 

@@ -16,11 +16,11 @@ limitations under the License.
 @author Toni Boehnlein, Christos Matzoros, Pal Andras Papp, Raphael S. Steiner
 */
 
-#include "test_suite_runner/BspScheduleTestSuiteRunner.hpp"
 #include <filesystem>
 #include <iostream>
 #include <string>
-#include "graph_implementations/eigen_matrix_adapter/sparse_matrix.hpp"
+#include "osp/graph_implementations/eigen_matrix_adapter/sparse_matrix.hpp"
+#include "test_suite_runner/BspScheduleTestSuiteRunner.hpp"
 
 #ifdef EIGEN_FOUND
 

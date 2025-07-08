@@ -24,9 +24,9 @@ limitations under the License.
 #include <iostream>
 #include <vector>
 
-#include "graph_algorithms/directed_graph_util.hpp"
-#include "graph_algorithms/directed_graph_path_util.hpp"
-#include "graph_implementations/eigen_matrix_adapter/sparse_matrix.hpp"
+#include "osp/graph_algorithms/directed_graph_util.hpp"
+#include "osp/graph_algorithms/directed_graph_path_util.hpp"
+#include "osp/graph_implementations/eigen_matrix_adapter/sparse_matrix.hpp"
 
 using namespace osp;
 

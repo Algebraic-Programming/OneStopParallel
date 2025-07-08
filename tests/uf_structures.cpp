@@ -20,7 +20,7 @@ limitations under the License.
 #define BOOST_TEST_MODULE Union_Find
 #include <boost/test/unit_test.hpp>
 
-#include "auxiliary/datastructures/union_find.hpp"
+#include "osp/auxiliary/datastructures/union_find.hpp"
 #include <iostream>
 #include <string>
 #include <vector>

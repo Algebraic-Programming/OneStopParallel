@@ -24,14 +24,14 @@ limitations under the License.
 #include <string>
 #include <vector>
 
-#include "coarser/StepByStep/StepByStepCoarser.hpp"
-#include "bsp/scheduler/Scheduler.hpp"
-#include "bsp/scheduler/CoarsenRefineSchedulers/MultiLevelHillClimbing.hpp"
-#include "auxiliary/io/hdag_graph_file_reader.hpp"
-#include "auxiliary/io/arch_file_reader.hpp"
-#include "coarser/coarser_util.hpp"
+#include "osp/coarser/StepByStep/StepByStepCoarser.hpp"
+#include "osp/bsp/scheduler/Scheduler.hpp"
+#include "osp/bsp/scheduler/CoarsenRefineSchedulers/MultiLevelHillClimbing.hpp"
+#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
+#include "osp/auxiliary/io/arch_file_reader.hpp"
+#include "osp/coarser/coarser_util.hpp"
 
-#include "graph_implementations/boost_graphs/boost_graph.hpp"
+#include "osp/graph_implementations/boost_graphs/boost_graph.hpp"
 
 using namespace osp;
 

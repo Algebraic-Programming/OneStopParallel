@@ -20,10 +20,10 @@ limitations under the License.
 #include <boost/test/unit_test.hpp>
 #include <filesystem>
 
-#include "graph_algorithms/cuthill_mckee.hpp"
-#include "graph_algorithms/directed_graph_top_sort.hpp"
-#include "graph_implementations/boost_graphs/boost_graph.hpp"
-#include "auxiliary/io/hdag_graph_file_reader.hpp"
+#include "osp/graph_algorithms/cuthill_mckee.hpp"
+#include "osp/graph_algorithms/directed_graph_top_sort.hpp"
+#include "osp/graph_implementations/boost_graphs/boost_graph.hpp"
+#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 
 std::vector<std::string> tiny_spaa_graphs() {
     return {"data/spaa/tiny/instance_bicgstab.hdag",

@@ -22,14 +22,14 @@ limitations under the License.
 #include <iostream>
 #include <vector>
 
-#include "graph_algorithms/computational_dag_util.hpp"
-#include "graph_algorithms/directed_graph_edge_desc_util.hpp"
-#include "graph_algorithms/directed_graph_path_util.hpp"
-#include "graph_algorithms/directed_graph_top_sort.hpp"
-#include "graph_algorithms/directed_graph_util.hpp"
-#include "graph_implementations/adj_list_impl/compact_sparse_graph.hpp"
-#include "graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
-#include "graph_implementations/boost_graphs/boost_graph.hpp"
+#include "osp/graph_algorithms/computational_dag_util.hpp"
+#include "osp/graph_algorithms/directed_graph_edge_desc_util.hpp"
+#include "osp/graph_algorithms/directed_graph_path_util.hpp"
+#include "osp/graph_algorithms/directed_graph_top_sort.hpp"
+#include "osp/graph_algorithms/directed_graph_util.hpp"
+#include "osp/graph_implementations/adj_list_impl/compact_sparse_graph.hpp"
+#include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
+#include "osp/graph_implementations/boost_graphs/boost_graph.hpp"
 
 using namespace osp;
 

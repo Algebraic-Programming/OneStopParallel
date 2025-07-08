@@ -23,7 +23,7 @@ limitations under the License.
 #include <string>
 #include <vector>
 
-#include "bsp/scheduler/ImprovementScheduler.hpp"
+#include "osp/bsp/scheduler/ImprovementScheduler.hpp"
 
 
 // std::vector<std::string> test_graphs() {

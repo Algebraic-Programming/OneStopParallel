@@ -26,7 +26,7 @@ limitations under the License.
 #include <tuple>
 
 #include "../ConfigParser.hpp"
-#include "pebbling/PebblingSchedule.hpp"
+#include "osp/pebbling/PebblingSchedule.hpp"
 
 namespace osp {
 

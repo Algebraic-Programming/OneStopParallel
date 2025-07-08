@@ -19,10 +19,10 @@ limitations under the License.
 #define BOOST_TEST_MODULE BSP_GREEDY_RECOMPUTER
 #include <boost/test/unit_test.hpp>
 
-#include "bsp/scheduler/GreedySchedulers/BspLocking.hpp"
-#include "bsp/scheduler/GreedySchedulers/GreedyRecomputer.hpp"
-#include "graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
-#include "auxiliary/io/hdag_graph_file_reader.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/BspLocking.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/GreedyRecomputer.hpp"
+#include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
+#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 #include <filesystem>
 #include <iostream>
 

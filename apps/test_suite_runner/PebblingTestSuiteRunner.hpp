@@ -19,7 +19,7 @@ limitations under the License.
 #pragma once
 
 #include "AbstractTestSuiteRunner.hpp"
-#include "pebbling/PebblingSchedule.hpp"
+#include "osp/pebbling/PebblingSchedule.hpp"
 #include "StringToScheduler/run_pebbler.hpp" 
 #include "StatsModules/IStatsModule.hpp"
 

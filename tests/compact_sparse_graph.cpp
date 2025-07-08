@@ -19,8 +19,8 @@ limitations under the License.
 #define BOOST_TEST_MODULE Sparse_Compact_Graph
 #include <boost/test/unit_test.hpp>
 
-#include <graph_implementations/adj_list_impl/compact_sparse_graph.hpp>
-#include "graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
+#include "osp/graph_implementations/adj_list_impl/compact_sparse_graph.hpp"
+#include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 
 using namespace osp;
 

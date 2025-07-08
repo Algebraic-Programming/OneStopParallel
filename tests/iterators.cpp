@@ -19,7 +19,7 @@ limitations under the License.
 #define BOOST_TEST_MODULE Bsp_Architecture
 #include <boost/test/unit_test.hpp>
 
-#include "graph_implementations/vertex_iterator.hpp"
+#include "osp/graph_implementations/vertex_iterator.hpp"
 
 using namespace osp;
 

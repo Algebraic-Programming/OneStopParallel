@@ -23,20 +23,20 @@ limitations under the License.
 #include <string>
 #include <vector>
 
-#include "bsp/scheduler/LoadBalanceScheduler/VariancePartitioner.hpp"
-#include "bsp/scheduler/GreedySchedulers/BspLocking.hpp"
-#include "bsp/scheduler/GreedySchedulers/GrowLocalAutoCores.hpp"
-#include "bsp/scheduler/GreedySchedulers/EtfScheduler.hpp"
-#include "bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
-#include "bsp/scheduler/GreedySchedulers/VarianceFillup.hpp"
-#include "bsp/scheduler/LoadBalanceScheduler/LightEdgeVariancePartitioner.hpp"
-#include "bsp/scheduler/Serial.hpp"
-#include "graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
-#include "graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
-#include "auxiliary/io/arch_file_reader.hpp"
-#include "auxiliary/io/hdag_graph_file_reader.hpp"
-#include "bsp/scheduler/LocalSearch/KernighanLin/kl_total_comm.hpp"
-#include "bsp/scheduler/LocalSearch/KernighanLin/kl_total_cut.hpp"
+#include "osp/bsp/scheduler/LoadBalanceScheduler/VariancePartitioner.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/BspLocking.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/GrowLocalAutoCores.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/EtfScheduler.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/VarianceFillup.hpp"
+#include "osp/bsp/scheduler/LoadBalanceScheduler/LightEdgeVariancePartitioner.hpp"
+#include "osp/bsp/scheduler/Serial.hpp"
+#include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
+#include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
+#include "osp/auxiliary/io/arch_file_reader.hpp"
+#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
+#include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_total_comm.hpp"
+#include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_total_cut.hpp"
 
 
 using namespace osp;

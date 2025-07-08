@@ -26,15 +26,15 @@ limitations under the License.
 #include <string>
 #include <tuple>
 
-#include "auxiliary/misc.hpp"
-#include "bsp/model/BspSchedule.hpp"
-#include "graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
-#include "auxiliary/io/DotFileWriter.hpp"
-#include "auxiliary/io/arch_file_reader.hpp"
-#include "auxiliary/io/dot_graph_file_reader.hpp"
-#include "auxiliary/io/hdag_graph_file_reader.hpp"
-#include "auxiliary/io/mtx_graph_file_reader.hpp"
-#include "auxiliary/io/bsp_schedule_file_writer.hpp"
+#include "osp/auxiliary/misc.hpp"
+#include "osp/bsp/model/BspSchedule.hpp"
+#include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
+#include "osp/auxiliary/io/DotFileWriter.hpp"
+#include "osp/auxiliary/io/arch_file_reader.hpp"
+#include "osp/auxiliary/io/dot_graph_file_reader.hpp"
+#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
+#include "osp/auxiliary/io/mtx_graph_file_reader.hpp"
+#include "osp/auxiliary/io/bsp_schedule_file_writer.hpp"
 #include "test_suite_runner/ConfigParser.hpp"
 #include "test_suite_runner/StringToScheduler/run_bsp_scheduler.hpp"
 

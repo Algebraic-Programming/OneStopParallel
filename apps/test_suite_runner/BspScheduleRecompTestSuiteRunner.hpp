@@ -25,10 +25,10 @@ limitations under the License.
 #include "StatsModules/GraphStatsModule.hpp"
 #include "StringToScheduler/run_bsp_recomp_scheduler.hpp"
 #include "StringToScheduler/run_bsp_scheduler.hpp"
-#include "bsp/model/BspSchedule.hpp"
-#include "bsp/model/BspScheduleRecomp.hpp"
-#include "bsp/model/IBspScheduleEval.hpp"
-#include "auxiliary/io/bsp_schedule_file_writer.hpp"
+#include "osp/bsp/model/BspSchedule.hpp"
+#include "osp/bsp/model/BspScheduleRecomp.hpp"
+#include "osp/bsp/model/IBspScheduleEval.hpp"
+#include "osp/auxiliary/io/bsp_schedule_file_writer.hpp"
 
 namespace osp {
 

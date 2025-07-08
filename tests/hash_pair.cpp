@@ -19,7 +19,7 @@ limitations under the License.
 #define BOOST_TEST_MODULE Hash_Pair
 #include <boost/test/unit_test.hpp>
 
-#include "auxiliary/misc.hpp"
+#include "osp/auxiliary/misc.hpp"
 
 using namespace osp;
 

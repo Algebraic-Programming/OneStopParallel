@@ -19,18 +19,18 @@ limitations under the License.
 #define BOOST_TEST_MODULE COPT_ILP_SCHEDULING
 #include <boost/test/unit_test.hpp>
 
-#include "bsp/model/BspInstance.hpp"
-#include "bsp/model/BspSchedule.hpp"
-#include "bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
-#include "graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
-#include "graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
-#include "auxiliary/io/arch_file_reader.hpp"
-#include "auxiliary/io/hdag_graph_file_reader.hpp"
+#include "osp/bsp/model/BspInstance.hpp"
+#include "osp/bsp/model/BspSchedule.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
+#include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
+#include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
+#include "osp/auxiliary/io/arch_file_reader.hpp"
+#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 #include <filesystem>
 #include <iostream>
 
-#include "bsp/scheduler/IlpSchedulers/CoptFullScheduler.hpp"
-#include "bsp/scheduler/IlpSchedulers/TotalCommunicationScheduler.hpp"
+#include "osp/bsp/scheduler/IlpSchedulers/CoptFullScheduler.hpp"
+#include "osp/bsp/scheduler/IlpSchedulers/TotalCommunicationScheduler.hpp"
 
 using namespace osp;
 

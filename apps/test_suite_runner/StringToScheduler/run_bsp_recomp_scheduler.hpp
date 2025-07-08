@@ -25,12 +25,11 @@ limitations under the License.
 #include <string>
 #include <tuple>
 
-#include "bsp/scheduler/GreedySchedulers/GreedyRecomputer.hpp"
-#include "bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
-
+#include "osp/bsp/scheduler/GreedySchedulers/GreedyRecomputer.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
 #include "../ConfigParser.hpp"
-#include "bsp/model/BspScheduleRecomp.hpp"
-#include "bsp/scheduler/Scheduler.hpp"
+#include "osp/bsp/model/BspScheduleRecomp.hpp"
+#include "osp/bsp/scheduler/Scheduler.hpp"
 #include "run_bsp_scheduler.hpp"
 
 

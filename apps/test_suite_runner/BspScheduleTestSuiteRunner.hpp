@@ -19,8 +19,8 @@ limitations under the License.
 #pragma once
 
 #include "AbstractTestSuiteRunner.hpp"
-#include "bsp/model/BspSchedule.hpp"
-#include "auxiliary/io/bsp_schedule_file_writer.hpp"
+#include "osp/bsp/model/BspSchedule.hpp"
+#include "osp/auxiliary/io/bsp_schedule_file_writer.hpp"
 #include "StringToScheduler/run_bsp_scheduler.hpp"
 #include "StatsModules/BasicBspStatsModule.hpp"
 #include "StatsModules/BspCommStatsModule.hpp"

@@ -19,7 +19,7 @@ limitations under the License.
 #define BOOST_TEST_MODULE Sparse_Compact_Graph_Edge_Desc
 #include <boost/test/unit_test.hpp>
 
-#include <graph_implementations/adj_list_impl/compact_sparse_graph_edge_desc.hpp>
+#include "osp/graph_implementations/adj_list_impl/compact_sparse_graph_edge_desc.hpp"
 
 using namespace osp;
 

@@ -26,10 +26,10 @@ limitations under the License.
 #include <unordered_set>
 #include <vector>
 
-#include "auxiliary/random_graph_generator/Erdos_Renyi_graph.hpp"
-#include "auxiliary/random_graph_generator/near_diagonal_random_graph.hpp"
-#include "graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
-#include "graph_algorithms/directed_graph_util.hpp"
+#include "osp/auxiliary/random_graph_generator/Erdos_Renyi_graph.hpp"
+#include "osp/auxiliary/random_graph_generator/near_diagonal_random_graph.hpp"
+#include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
+#include "osp/graph_algorithms/directed_graph_util.hpp"
 
 using namespace osp;
 

@@ -23,7 +23,7 @@ limitations under the License.
 #include <string>
 #include <vector>
  #include <map>
-// #include "bsp/model/BspSchedule.hpp" // TargetObject will be passed, no specific include here
+// #include "osp/bsp/model/BspSchedule.hpp" // TargetObject will be passed, no specific include here
 
 // Forward declarations to avoid circular dependencies
 namespace osp { // Ensure this is within the osp namespace

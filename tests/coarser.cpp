@@ -23,19 +23,19 @@ limitations under the License.
 #include <filesystem>
 #include <iostream>
 
-#include "bsp/scheduler/CoarseAndSchedule.hpp"
-#include "bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
-#include "coarser/BspScheduleCoarser.hpp"
-#include "coarser/coarser_util.hpp"
-#include "coarser/funnel/FunnelBfs.hpp"
-#include "coarser/hdagg/hdagg_coarser.hpp"
-#include "coarser/SquashA/SquashA.hpp"
-#include "coarser/top_order/top_order_coarser.hpp"
-#include "graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
-#include "graph_implementations/adj_list_impl/compact_sparse_graph.hpp"
-#include "graph_implementations/adj_list_impl/compact_sparse_graph_edge_desc.hpp"
-#include "auxiliary/io/arch_file_reader.hpp"
-#include "auxiliary/io/hdag_graph_file_reader.hpp"
+#include "osp/bsp/scheduler/CoarseAndSchedule.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
+#include "osp/coarser/BspScheduleCoarser.hpp"
+#include "osp/coarser/coarser_util.hpp"
+#include "osp/coarser/funnel/FunnelBfs.hpp"
+#include "osp/coarser/hdagg/hdagg_coarser.hpp"
+#include "osp/coarser/SquashA/SquashA.hpp"
+#include "osp/coarser/top_order/top_order_coarser.hpp"
+#include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
+#include "osp/graph_implementations/adj_list_impl/compact_sparse_graph.hpp"
+#include "osp/graph_implementations/adj_list_impl/compact_sparse_graph_edge_desc.hpp"
+#include "osp/auxiliary/io/arch_file_reader.hpp"
+#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 
 std::vector<std::string> tiny_spaa_graphs() {
     return {"data/spaa/tiny/instance_bicgstab.hdag",

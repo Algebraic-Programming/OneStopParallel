@@ -32,12 +32,12 @@ limitations under the License.
 #include <unsupported/Eigen/SparseExtra>
 
 
-#include "graph_algorithms/directed_graph_util.hpp"
-#include "graph_algorithms/directed_graph_path_util.hpp"
-#include "graph_implementations/eigen_matrix_adapter/sparse_matrix.hpp"
-#include "bsp/scheduler/GreedySchedulers/GrowLocalAutoCores.hpp"
-#include "auxiliary/sptrsv_simulator/ScheduleNodePermuter.hpp"
-#include "auxiliary/sptrsv_simulator/sptrsv.hpp"
+#include "osp/graph_algorithms/directed_graph_util.hpp"
+#include "osp/graph_algorithms/directed_graph_path_util.hpp"
+#include "osp/graph_implementations/eigen_matrix_adapter/sparse_matrix.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/GrowLocalAutoCores.hpp"
+#include "osp/auxiliary/sptrsv_simulator/ScheduleNodePermuter.hpp"
+#include "osp/auxiliary/sptrsv_simulator/sptrsv.hpp"
 
 using namespace osp;
 

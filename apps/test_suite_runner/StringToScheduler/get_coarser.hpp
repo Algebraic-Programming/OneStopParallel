@@ -26,12 +26,12 @@ limitations under the License.
 #include <string>
 
 #include "../ConfigParser.hpp"
-#include "bsp/model/BspSchedule.hpp"
-#include "bsp/scheduler/Scheduler.hpp"
-#include "coarser/Coarser.hpp"
-#include "coarser/funnel/FunnelBfs.hpp"
-#include "coarser/hdagg/hdagg_coarser.hpp"
-#include "coarser/top_order/top_order_coarser.hpp"
+#include "osp/bsp/model/BspSchedule.hpp"
+#include "osp/bsp/scheduler/Scheduler.hpp"
+#include "osp/coarser/Coarser.hpp"
+#include "osp/coarser/funnel/FunnelBfs.hpp"
+#include "osp/coarser/hdagg/hdagg_coarser.hpp"
+#include "osp/coarser/top_order/top_order_coarser.hpp"
 
 namespace osp {
 

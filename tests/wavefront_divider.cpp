@@ -22,16 +22,16 @@ limitations under the License.
 #include <filesystem>
 #include <iostream>
 
-#include "bsp/scheduler/GreedySchedulers/BspLocking.hpp"
-#include "bsp/scheduler/LocalSearch/KernighanLin/kl_total_comm.hpp"
-#include "bsp/scheduler/LocalSearch/KernighanLin/kl_total_cut.hpp"
-#include "dag_divider/WavefrontComponentDivider.hpp"
-#include "dag_divider/WavefrontComponentScheduler.hpp"
-#include "dag_divider/WavefrontParallelismDivider.hpp"
-#include "auxiliary/io/dot_graph_file_reader.hpp"
-#include "auxiliary/io/hdag_graph_file_reader.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/BspLocking.hpp"
+#include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_total_comm.hpp"
+#include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_total_cut.hpp"
+#include "osp/dag_divider/WavefrontComponentDivider.hpp"
+#include "osp/dag_divider/WavefrontComponentScheduler.hpp"
+#include "osp/dag_divider/WavefrontParallelismDivider.hpp"
+#include "osp/auxiliary/io/dot_graph_file_reader.hpp"
+#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 
-#include "graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
+#include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 
 
 using namespace osp;

@@ -32,11 +32,11 @@ limitations under the License.
 #include <boost/property_tree/ptree.hpp>
 #include "ConfigParser.hpp"
 #include "StatsModules/IStatsModule.hpp"
-#include "bsp/model/BspInstance.hpp"
-#include "auxiliary/io/arch_file_reader.hpp"
-#include "auxiliary/io/dot_graph_file_reader.hpp"
-#include "auxiliary/io/hdag_graph_file_reader.hpp"
-#include "auxiliary/io/mtx_graph_file_reader.hpp"
+#include "osp/bsp/model/BspInstance.hpp"
+#include "osp/auxiliary/io/arch_file_reader.hpp"
+#include "osp/auxiliary/io/dot_graph_file_reader.hpp"
+#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
+#include "osp/auxiliary/io/mtx_graph_file_reader.hpp"
 
 //#define EIGEN_FOUND 1
 
@@ -44,7 +44,7 @@ limitations under the License.
 #include <Eigen/Sparse>
 #include <unsupported/Eigen/SparseExtra>
 
-#include "graph_implementations/eigen_matrix_adapter/sparse_matrix.hpp"
+#include "osp/graph_implementations/eigen_matrix_adapter/sparse_matrix.hpp"
 #endif
 
 namespace osp {

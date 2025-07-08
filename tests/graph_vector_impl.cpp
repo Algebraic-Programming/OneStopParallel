@@ -22,10 +22,10 @@ limitations under the License.
 #include <iostream>
 #include <vector>
 
-#include "graph_algorithms/directed_graph_util.hpp"
-#include "graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
-#include "graph_implementations/adj_list_impl/dag_vector_adapter.hpp"
-#include "graph_implementations/boost_graphs/boost_graph.hpp"
+#include "osp/graph_algorithms/directed_graph_util.hpp"
+#include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
+#include "osp/graph_implementations/adj_list_impl/dag_vector_adapter.hpp"
+#include "osp/graph_implementations/boost_graphs/boost_graph.hpp"
 
 using namespace osp;
 

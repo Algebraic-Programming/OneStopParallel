@@ -20,11 +20,6 @@ limitations under the License.
 
 #ifdef EIGEN_FOUND
 
-#include "IStatsModule.hpp"
-#include "bsp/model/BspSchedule.hpp"
-#include "graph_implementations/boost_graphs/boost_graph.hpp" // For graph_t
-#include "graph_implementations/eigen_matrix_adapter/sparse_matrix.hpp"
-#include "auxiliary/sptrsv_simulator/sptrsv.hpp"
 #include <Eigen/Core>
 #include <string>
 #include <vector>
@@ -36,6 +31,11 @@ limitations under the License.
 #include <cmath>
 #include <sstream>
 
+#include "IStatsModule.hpp"
+#include "osp/bsp/model/BspSchedule.hpp"
+#include "osp/graph_implementations/boost_graphs/boost_graph.hpp" // For graph_t
+#include "osp/graph_implementations/eigen_matrix_adapter/sparse_matrix.hpp"
+#include "osp/auxiliary/sptrsv_simulator/sptrsv.hpp"
 
 namespace osp {
 

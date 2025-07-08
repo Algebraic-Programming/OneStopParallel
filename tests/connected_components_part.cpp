@@ -19,11 +19,11 @@ limitations under the License.
 #define BOOST_TEST_MODULE ConnectedComponentPartitioner_test
 #include <boost/test/unit_test.hpp>
 
-#include "bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
-#include "dag_divider/ConnectedComponentDivider.hpp"
-#include "dag_divider/ConnectedComponentScheduler.hpp"
-#include "graph_implementations/boost_graphs/boost_graph.hpp"
-#include "graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
+#include "osp/dag_divider/ConnectedComponentDivider.hpp"
+#include "osp/dag_divider/ConnectedComponentScheduler.hpp"
+#include "osp/graph_implementations/boost_graphs/boost_graph.hpp"
+#include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 
 using namespace osp;
 

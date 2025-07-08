@@ -19,26 +19,26 @@ limitations under the License.
 #define BOOST_TEST_MODULE Bsp_Architecture
 #include <boost/test/unit_test.hpp>
 
-#include "bsp/model/BspInstance.hpp"
-#include "bsp/model/BspSchedule.hpp"
-#include "bsp/model/BspScheduleCS.hpp"
-#include "bsp/model/BspScheduleRecomp.hpp"
-#include "graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
-#include "graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
-#include "auxiliary/io/DotFileWriter.hpp"
-#include "auxiliary/io/arch_file_reader.hpp"
-#include "auxiliary/io/hdag_graph_file_reader.hpp"
+#include "osp/bsp/model/BspInstance.hpp"
+#include "osp/bsp/model/BspSchedule.hpp"
+#include "osp/bsp/model/BspScheduleCS.hpp"
+#include "osp/bsp/model/BspScheduleRecomp.hpp"
+#include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
+#include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
+#include "osp/auxiliary/io/DotFileWriter.hpp"
+#include "osp/auxiliary/io/arch_file_reader.hpp"
+#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 #include <filesystem>
 #include <iostream>
 
-#include "bsp/scheduler/GreedySchedulers/BspLocking.hpp"
-#include "bsp/scheduler/GreedySchedulers/CilkScheduler.hpp"
-#include "bsp/scheduler/GreedySchedulers/EtfScheduler.hpp"
-#include "bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
-#include "bsp/scheduler/GreedySchedulers/GreedyChildren.hpp"
-#include "bsp/scheduler/GreedySchedulers/GrowLocalAutoCores.hpp"
-#include "bsp/scheduler/GreedySchedulers/RandomGreedy.hpp"
-#include "bsp/scheduler/GreedySchedulers/VarianceFillup.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/BspLocking.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/CilkScheduler.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/EtfScheduler.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/GreedyChildren.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/GrowLocalAutoCores.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/RandomGreedy.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/VarianceFillup.hpp"
 
 using namespace osp;
 

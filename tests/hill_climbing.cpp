@@ -19,13 +19,13 @@ limitations under the License.
 #define BOOST_TEST_MODULE HILL_CLIMBING
 #include <boost/test/unit_test.hpp>
 
-#include "bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
-#include "bsp/scheduler/LocalSearch/HillClimbing/hill_climbing.hpp"
-#include "bsp/scheduler/LocalSearch/HillClimbing/hill_climbing_for_comm_schedule.hpp"
-#include "auxiliary/io/hdag_graph_file_reader.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
+#include "osp/bsp/scheduler/LocalSearch/HillClimbing/hill_climbing.hpp"
+#include "osp/bsp/scheduler/LocalSearch/HillClimbing/hill_climbing_for_comm_schedule.hpp"
+#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 #include <filesystem>
 
-#include "graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
+#include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 
 using namespace osp;
 

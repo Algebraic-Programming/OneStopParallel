@@ -16,11 +16,12 @@ limitations under the License.
 @author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 
-#include "graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
-#include "test_suite_runner/BspScheduleRecompTestSuiteRunner.hpp"
 #include <filesystem>
 #include <iostream>
 #include <string>
+
+#include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
+#include "test_suite_runner/BspScheduleRecompTestSuiteRunner.hpp"
 
 using graph_t = osp::computational_dag_edge_idx_vector_impl_def_int_t;
 

@@ -20,15 +20,14 @@ limitations under the License.
 #include <iostream>
 #include <string>
 
-#include "graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
-#include "auxiliary/io/dot_graph_file_reader.hpp"
-#include "auxiliary/io/hdag_graph_file_reader.hpp"
-#include "auxiliary/io/mtx_graph_file_reader.hpp"
-#include "auxiliary/io/bsp_schedule_file_writer.hpp"
-
-#include "bsp/scheduler/GreedySchedulers/EtfScheduler.hpp"
-#include "bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
-#include "bsp/scheduler/LoadBalanceScheduler/LightEdgeVariancePartitioner.hpp"
+#include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
+#include "osp/auxiliary/io/dot_graph_file_reader.hpp"
+#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
+#include "osp/auxiliary/io/mtx_graph_file_reader.hpp"
+#include "osp/auxiliary/io/bsp_schedule_file_writer.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/EtfScheduler.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
+#include "osp/bsp/scheduler/LoadBalanceScheduler/LightEdgeVariancePartitioner.hpp"
 
 using namespace osp;
 
