@@ -7,7 +7,7 @@ macro( _add_executable name)
   list( APPEND graph_generator ${name} )
   # Create the example
   add_executable( ${name} ${name}.cpp )
-  target_link_libraries( ${name} PUBLIC BspSchedulingLibrary )
+  target_link_libraries( ${name} PUBLIC BspSchedulingDependencies )
 endmacro()
 
 if(Eigen3_FOUND)

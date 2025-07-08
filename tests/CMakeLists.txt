@@ -7,7 +7,7 @@ macro( _add_test name )
   list( APPEND tests_list test_${name} )
   # Create the test
   add_executable( test_${name} ${name}.cpp )
-  target_link_libraries( test_${name} BspSchedulingLibrary
+  target_link_libraries( test_${name} BspSchedulingDependencies
    Boost::unit_test_framework
    OpenMP::OpenMP_CXX )
   target_include_directories( test_${name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include )

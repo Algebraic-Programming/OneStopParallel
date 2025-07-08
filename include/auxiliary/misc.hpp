@@ -35,7 +35,13 @@ limitations under the License.
 namespace osp {
 
 // unbiased random int generator
-int randInt(int lim);
+int randInt(int lim) {
+    int rnd = std::rand();
+    while (rnd >= RAND_MAX - RAND_MAX % lim)
+        rnd = std::rand();
+
+    return rnd % lim;
+};
 
 // pair of integers
 template<typename T1, typename T2>
@@ -70,7 +76,15 @@ struct Triple {
 };
 using intTriple = Triple<int, int, int>;
 
-bool isDisjoint(std::vector<intPair> &intervals);
+bool isDisjoint(std::vector<intPair> &intervals) {
+
+    sort(intervals.begin(), intervals.end());
+    for (size_t i = 0; i + 1 < intervals.size(); ++i)
+        if (intervals[i].b > intervals[i + 1].a)
+            return false;
+
+    return true;
+};
 
 // computes power of an integer
 template<typename T>
@@ -129,7 +143,16 @@ static const std::vector<std::string> possibleModes{"random", "SJF",      "cilk"
                                                     "BL-EST", "ETF-NUMA", "BL-EST-NUMA", "Layers"};
 
 // modify problem filename by adding substring at the right place
-std::string editFilename(const std::string &filename, const std::string &toInsert);
+std::string editFilename(const std::string &filename, const std::string &toInsert) {
+    auto pos = filename.find("_coarse");
+    if (pos == std::string::npos)
+        pos = filename.find("_instance");
+    if (pos == std::string::npos)
+        return toInsert + filename;
+
+    return filename.substr(0, pos) + toInsert + filename.substr(pos, filename.length() - pos);
+}
+
 
 // unordered set intersection
 template<typename T>
@@ -215,7 +238,19 @@ std::vector<retT> sorting_arrangement(const std::vector<T> &a, bool increasing =
 }
 
 // checks if a vector is rearrangement of 0... N-1
-bool check_vector_is_rearrangement_of_0_to_N(const std::vector<size_t> &a);
+bool check_vector_is_rearrangement_of_0_to_N(const std::vector<size_t> &a) {
+    std::vector<bool> contained(a.size(), false);
+    for (auto &val : a) {
+        if (val >= a.size()) {
+            return false;
+        } else if (contained[val]) {
+            return false;
+        } else {
+            contained[val] = true;
+        }
+    }
+    return true;
+}
 
 // sorts a vector like the arrangement
 template<typename T>
@@ -250,9 +285,6 @@ void sort_like(std::vector<S> &a, const std::vector<T> &b) {
     std::vector<size_t> arrangement = sorting_arrangement(b);
     sort_like_arrangement(a, arrangement);
 }
-
-// Print int vector
-void print_int_vector(const std::vector<int> &vec);
 
 /**
  * @brief Get median of a sorted set or multiset

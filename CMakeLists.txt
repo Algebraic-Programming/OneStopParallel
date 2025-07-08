@@ -106,8 +106,25 @@ find_package(Threads REQUIRED)
 find_package(OpenMP REQUIRED)
 
 
+add_library( BspSchedulingDependencies INTERFACE)
+
+target_link_libraries(BspSchedulingDependencies INTERFACE
+    Boost::graph
+    Boost::log_setup
+    Boost::log
+    Threads::Threads
+    OpenMP::OpenMP_CXX
+)
+
+if (COPT_FOUND)
+    target_link_libraries(BspSchedulingDependencies INTERFACE COPT::COPT)
+
+    set_target_properties(BspSchedulingDependencies PROPERTIES
+        BUILD_RPATH "${COPT_RPATHS}"
+    )
+endif()
+
 # --- Subdirectories for Source and Executables ---
-add_subdirectory(src)
 add_subdirectory(apps)
 add_subdirectory(apps/graph_generator)
 

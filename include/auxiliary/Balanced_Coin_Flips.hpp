@@ -37,7 +37,30 @@ class BalancedCoinFlips {
 
 class Biased_Random : public BalancedCoinFlips {
   public:
-    bool get_flip() override;
+    bool get_flip() override {
+        int genuine_random_size = 3;
+        int die_size = 2 * genuine_random_size + abs(true_bias);
+        int flip = randInt(die_size);
+        if (true_bias >= 0) {
+            if (flip >= genuine_random_size) {
+                true_bias--;
+                return true;
+            } else {
+                true_bias++;
+                return false;
+            }
+        } else {
+            if (flip >= genuine_random_size) {
+                true_bias++;
+                return false;
+            } else {
+                true_bias--;
+                return true;
+            }
+        }
+        throw std::runtime_error("Coin landed on its side!");
+    }
+
     Biased_Random() : true_bias(0) {};
 
   private:
@@ -56,7 +79,16 @@ class Thue_Morse_Sequence : public BalancedCoinFlips {
 
     Thue_Morse_Sequence(long unsigned int shift) : next(shift) { sequence.emplace_back(false); }
 
-    bool get_flip() override;
+    bool get_flip() override {
+        for (long unsigned int i = sequence.size(); i <= next; i++) {
+            if (i % 2 == 0) {
+                sequence.emplace_back(sequence[i / 2]);
+            } else {
+                sequence.emplace_back(!sequence[i / 2]);
+            }
+        }
+        return sequence[next++];
+    }
 
   private:
     long unsigned int next;
@@ -66,7 +98,13 @@ class Thue_Morse_Sequence : public BalancedCoinFlips {
 /// @brief Coin flip with 1/3 chance to return previous toss otherwise fair toss
 class Repeat_Chance : public BalancedCoinFlips {
   public:
-    bool get_flip() override;
+    bool get_flip() override {
+        if (randInt(3) > 0) {
+            previous = (randInt(2) == 0);
+        }
+        return previous;
+    }
+
     Repeat_Chance() { previous = (randInt(2) == 0); };
 
   private:
@@ -75,7 +113,42 @@ class Repeat_Chance : public BalancedCoinFlips {
 
 class Biased_Random_with_side_bias : public BalancedCoinFlips {
   public:
-    bool get_flip() override;
+    bool get_flip() override {
+        unsigned genuine_random_size = 3;
+
+        const long long abs_true_bias = std::abs(true_bias);
+        if (abs_true_bias > std::numeric_limits<unsigned>::max()) {
+            throw std::runtime_error("true_bias is too large!");
+        }
+
+        unsigned die_size =
+            (side_ratio.first + side_ratio.second) * genuine_random_size + static_cast<unsigned>(abs_true_bias);
+
+        if (die_size > static_cast<unsigned>(std::numeric_limits<int>::max())) {
+            throw std::runtime_error("die_size is too large!");
+        }
+
+        unsigned flip = static_cast<unsigned>(randInt(static_cast<int>(die_size)));
+        if (true_bias >= 0) {
+            if (flip >= side_ratio.second * genuine_random_size) {
+                true_bias -= side_ratio.second;
+                return true;
+            } else {
+                true_bias += side_ratio.first;
+                return false;
+            }
+        } else {
+            if (flip >= side_ratio.first * genuine_random_size) {
+                true_bias += side_ratio.first;
+                return false;
+            } else {
+                true_bias -= side_ratio.second;
+                return true;
+            }
+        }
+        throw std::runtime_error("Coin landed on its side!");
+    }
+
     Biased_Random_with_side_bias(const std::pair<unsigned, unsigned> side_ratio_ = std::make_pair(1, 1))
         : true_bias(0), side_ratio(side_ratio_) {};
 
@@ -86,4 +159,4 @@ class Biased_Random_with_side_bias : public BalancedCoinFlips {
     const std::pair<unsigned, unsigned> side_ratio;
 };
 
-} // namespace ops
+} // namespace osp
