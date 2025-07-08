@@ -99,7 +99,7 @@ class Scheduler {
     virtual RETURN_STATUS computeScheduleCS(BspScheduleCS<Graph_t> &schedule) {
 
         auto result = computeSchedule(schedule);
-        if (result == RETURN_STATUS::SUCCESS || result == RETURN_STATUS::BEST_FOUND) {
+        if (result == RETURN_STATUS::OSP_SUCCESS || result == RETURN_STATUS::BEST_FOUND) {
             schedule.setAutoCommunicationSchedule();
             return result;
         } else {

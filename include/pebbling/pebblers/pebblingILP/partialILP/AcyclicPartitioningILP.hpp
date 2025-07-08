@@ -190,7 +190,7 @@ RETURN_STATUS AcyclicPartitioningILP<Graph_t>::computePartitioning(const BspInst
     if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_OPTIMAL) {
 
         partitioning = returnAssignment(instance);
-        return RETURN_STATUS::SUCCESS;
+        return RETURN_STATUS::OSP_SUCCESS;
 
     } else if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_INF_OR_UNB) {
 
@@ -202,7 +202,7 @@ RETURN_STATUS AcyclicPartitioningILP<Graph_t>::computePartitioning(const BspInst
         if (model.GetIntAttr(COPT_INTATTR_HASMIPSOL)) {
 
             partitioning = returnAssignment(instance);
-            return RETURN_STATUS::SUCCESS;
+            return RETURN_STATUS::OSP_SUCCESS;
 
         } else {
             partitioning.resize(instance.numberOfVertices(), UINT_MAX);

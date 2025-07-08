@@ -712,7 +712,7 @@ class kl_total_cut_test : public kl_total_cut<Graph_t, MemoryConstraint_t, true>
         bool improvement_found = kl_total<Graph_t, MemoryConstraint_t, true>::run_local_search_simple();
 
         if (improvement_found)
-            return RETURN_STATUS::SUCCESS;
+            return RETURN_STATUS::OSP_SUCCESS;
         else
             return RETURN_STATUS::BEST_FOUND;
     }
@@ -731,7 +731,7 @@ class kl_total_cut_test : public kl_total_cut<Graph_t, MemoryConstraint_t, true>
         bool improvement_found = kl_total<Graph_t, MemoryConstraint_t, true>::run_local_search_unlock_delay();
 
         if (improvement_found)
-            return RETURN_STATUS::SUCCESS;
+            return RETURN_STATUS::OSP_SUCCESS;
         else
             return RETURN_STATUS::BEST_FOUND;
     }

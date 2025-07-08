@@ -348,7 +348,7 @@ class EtfScheduler : public Scheduler<Graph_t> {
 
         schedule.convertToBspSchedule(instance, greedyProcLists, bsp_schedule);
 
-        return RETURN_STATUS::SUCCESS;
+        return RETURN_STATUS::OSP_SUCCESS;
     }
 
     /**

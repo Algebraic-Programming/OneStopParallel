@@ -150,7 +150,7 @@ class VariancePartitioner : public LoadBalancerBase<Graph_t, Interpolation_t> {
 
         bool endsuperstep = false;
         unsigned num_unable_to_partition_node_loop = 0;
-        // RETURN_STATUS status = RETURN_STATUS::SUCCESS;
+        // RETURN_STATUS status = RETURN_STATUS::OSP_SUCCESS;
 
         while (!ready.empty()) {
             // Increase memory capacity if needed
@@ -356,7 +356,7 @@ class VariancePartitioner : public LoadBalancerBase<Graph_t, Interpolation_t> {
             }
         }
 
-        return RETURN_STATUS::SUCCESS;
+        return RETURN_STATUS::OSP_SUCCESS;
     }
 
     std::string getScheduleName() const override { return "VariancePartitioner"; };

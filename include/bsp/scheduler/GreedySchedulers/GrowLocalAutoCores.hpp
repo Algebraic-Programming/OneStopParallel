@@ -427,7 +427,7 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
 
         schedule.updateNumberOfSupersteps();
 
-        return RETURN_STATUS::SUCCESS;
+        return RETURN_STATUS::OSP_SUCCESS;
     }
 
     /**

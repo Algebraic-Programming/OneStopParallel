@@ -754,7 +754,7 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
 
         BspScheduleCS<Graph_t> schedule_cs(schedule.getInstance());
         RETURN_STATUS status = computeScheduleCS(schedule_cs);
-        if (status == RETURN_STATUS::SUCCESS || status == RETURN_STATUS::BEST_FOUND) {
+        if (status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND) {
             schedule = std::move(schedule_cs);
             return status;
         } else {
@@ -813,7 +813,7 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
         if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_OPTIMAL) {
 
             constructBspScheduleFromSolution(schedule, true);
-            return RETURN_STATUS::SUCCESS;
+            return RETURN_STATUS::OSP_SUCCESS;
 
         } else if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_INF_OR_UNB) {
 
@@ -895,7 +895,7 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
         if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_OPTIMAL) {
 
             constructBspScheduleRecompFromSolution(schedule, true);
-            return RETURN_STATUS::SUCCESS;
+            return RETURN_STATUS::OSP_SUCCESS;
 
         } else if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_INF_OR_UNB) {
 

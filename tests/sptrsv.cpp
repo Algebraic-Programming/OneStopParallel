@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(test_eigen_sptrsv) {
     BspSchedule<SparseMatrixImp<int32_t>> schedule(instance);
     auto result = scheduler.computeSchedule(schedule);
 
-    BOOST_CHECK_EQUAL(result, RETURN_STATUS::SUCCESS);
+    BOOST_CHECK_EQUAL(result, RETURN_STATUS::OSP_SUCCESS);
     BOOST_CHECK_EQUAL(&schedule.getInstance(), &instance);
     BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(test_eigen_sptrsv) {
     }
     */
    
-    BOOST_CHECK_EQUAL(result_cs, RETURN_STATUS::SUCCESS);
+    BOOST_CHECK_EQUAL(result_cs, RETURN_STATUS::OSP_SUCCESS);
     BOOST_CHECK(schedule_cs.hasValidCommSchedule());
 
     //std::cout << "Scheduling Costs:" << schedule_cs.computeCosts() << std::endl;

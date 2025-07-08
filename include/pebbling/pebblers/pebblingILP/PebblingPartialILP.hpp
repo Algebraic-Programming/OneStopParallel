@@ -299,7 +299,7 @@ RETURN_STATUS PebblingPartialILP<Graph_t>::computePebbling(PebblingSchedule<Grap
 
         PebblingSchedule<Graph_t> pebblingILP(subInstance[part]);
         RETURN_STATUS status = mpp.computePebblingWithInitialSolution(heuristic_pebbling, pebblingILP, asynchronous);
-        if(status == RETURN_STATUS::SUCCESS || status == RETURN_STATUS::BEST_FOUND)
+        if(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND)
         {
             if(!pebblingILP.isValid())
                 std::cout<<"ERROR: Pebbling ILP INVALID!"<<std::endl;
@@ -330,7 +330,7 @@ RETURN_STATUS PebblingPartialILP<Graph_t>::computePebbling(PebblingSchedule<Grap
     // AUX: assemble final schedule from subschedules
     schedule.CreateFromPartialPebblings(instance, pebbling, processors_to_parts, original_node_id, original_proc_id, has_reds_in_beginning);
     schedule.cleanSchedule();
-    return schedule.isValid() ? RETURN_STATUS::SUCCESS : RETURN_STATUS::ERROR;
+    return schedule.isValid() ? RETURN_STATUS::OSP_SUCCESS : RETURN_STATUS::ERROR;
 
 }
 

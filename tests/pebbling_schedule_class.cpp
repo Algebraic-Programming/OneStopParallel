@@ -92,7 +92,7 @@ void run_test(Scheduler<Graph_t> *test_scheduler) {
             BspSchedule bsp_schedule(instance);
 
             RETURN_STATUS result = test_scheduler->computeSchedule(bsp_schedule);
-            BOOST_CHECK_EQUAL(RETURN_STATUS::SUCCESS, result);
+            BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
 
             std::vector<v_memw_t<Graph_t> > minimum_memory_required_vector = PebblingSchedule<Graph_t>::minimumMemoryRequiredPerNodeType(instance);
             v_memw_t<Graph_t> max_required = *std::max_element(minimum_memory_required_vector.begin(), minimum_memory_required_vector.end());

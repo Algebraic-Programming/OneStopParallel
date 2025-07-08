@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(test_instance_bicgstab) {
 
         const auto result = scheduler->computeSchedule(schedule);
 
-        BOOST_CHECK_EQUAL(RETURN_STATUS::SUCCESS, result);
+        BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
         BOOST_CHECK_EQUAL(&schedule.getInstance(), &instance);
         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(test_instance_bicgstab) {
 
         const auto result_cs = scheduler->computeScheduleCS(schedule_cs);
 
-        BOOST_CHECK_EQUAL(RETURN_STATUS::SUCCESS, result_cs);
+        BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result_cs);
 
         BOOST_CHECK(schedule_cs.hasValidCommSchedule());
 
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(test_schedule_writer) {
     BspLocking<graph_t1> scheduler;
     BspSchedule<graph_t1> schedule(instance);
     const auto result = scheduler.computeSchedule(schedule);
-    BOOST_CHECK_EQUAL(RETURN_STATUS::SUCCESS, result);
+    BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
     BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
     DotFileWriter sched_writer;
@@ -225,7 +225,7 @@ BOOST_AUTO_TEST_CASE(test_bsp_schedule_cs) {
 
     const auto result = scheduler.computeSchedule(schedule);
 
-    BOOST_CHECK_EQUAL(RETURN_STATUS::SUCCESS, result);
+    BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
     BOOST_CHECK_EQUAL(&schedule.getInstance(), &instance);
     BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 

@@ -65,7 +65,7 @@ class ConnectedComponentScheduler : public Scheduler<Graph_t> {
             BspSchedule<Constr_Graph_t> sub_schedule(sub_instance);
             auto status = scheduler->computeSchedule(sub_schedule);
 
-            if (status != RETURN_STATUS::SUCCESS && status != RETURN_STATUS::BEST_FOUND) {
+            if (status != RETURN_STATUS::OSP_SUCCESS && status != RETURN_STATUS::BEST_FOUND) {
                 return status;
             }
 
@@ -77,7 +77,7 @@ class ConnectedComponentScheduler : public Scheduler<Graph_t> {
             num_processors_offset += sub_architecture.numberOfProcessors();
         }
 
-        return RETURN_STATUS::SUCCESS;
+        return RETURN_STATUS::OSP_SUCCESS;
     }
 };
 

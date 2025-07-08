@@ -27,11 +27,11 @@ limitations under the License.
 
 namespace osp {
 
-enum class RETURN_STATUS { SUCCESS, BEST_FOUND, TIMEOUT, ERROR };
+enum class RETURN_STATUS { OSP_SUCCESS, BEST_FOUND, TIMEOUT, ERROR };
 
 inline std::string to_string(const RETURN_STATUS status) {
     switch (status) {
-    case RETURN_STATUS::SUCCESS:
+    case RETURN_STATUS::OSP_SUCCESS:
         return "SUCCESS";
     case RETURN_STATUS::BEST_FOUND:
         return "BEST FOUND";
@@ -46,7 +46,7 @@ inline std::string to_string(const RETURN_STATUS status) {
 
 std::ostream& operator<<(std::ostream& os, RETURN_STATUS status) {
     switch (status) {
-        case RETURN_STATUS::SUCCESS:        os << "SUCCESS";        break;
+        case RETURN_STATUS::OSP_SUCCESS:        os << "SUCCESS";        break;
         case RETURN_STATUS::BEST_FOUND:     os << "BEST_FOUND";     break;
         case RETURN_STATUS::TIMEOUT:        os << "TIMEOUT";        break;
         case RETURN_STATUS::ERROR:          os << "ERROR";          break;
@@ -87,9 +87,9 @@ class BspInstance {
      * @param cdag The computational DAG for the instance.
      * @param architecture The BSP architecture for the instance.
      */
-    BspInstance(const Graph_t &cdag, const BspArchitecture<Graph_t> &architecture_,
+    BspInstance(const Graph_t &cdag_, const BspArchitecture<Graph_t> &architecture_,
                 std::vector<std::vector<bool>> nodeProcessorCompatibility_ = std::vector<std::vector<bool>>({{true}}))
-        : cdag(cdag), architecture(architecture_), nodeProcessorCompatibility(nodeProcessorCompatibility_) {}
+        : cdag(cdag_), architecture(architecture_), nodeProcessorCompatibility(nodeProcessorCompatibility_) {}
 
     /**
      * @brief Constructs a BspInstance object with the specified computational DAG and BSP architecture.
@@ -97,9 +97,9 @@ class BspInstance {
      * @param cdag The computational DAG for the instance.
      * @param architecture The BSP architecture for the instance.
      */
-    BspInstance(Graph_t &&cdag, BspArchitecture<Graph_t> &&architecture_,
+    BspInstance(Graph_t &&cdag_, BspArchitecture<Graph_t> &&architecture_,
                 std::vector<std::vector<bool>> nodeProcessorCompatibility_ = std::vector<std::vector<bool>>({{true}}))
-        : cdag(std::move(cdag)), architecture(std::move(architecture_)), nodeProcessorCompatibility(nodeProcessorCompatibility_) {
+        : cdag(std::move(cdag_)), architecture(std::move(architecture_)), nodeProcessorCompatibility(nodeProcessorCompatibility_) {
     }
 
     template<typename Graph_t_other>

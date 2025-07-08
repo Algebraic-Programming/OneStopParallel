@@ -710,7 +710,7 @@ class kl_total_comm_test : public kl_total_comm<Graph_t, MemoryConstraint_t, use
         
 
         if (improvement_found)
-            return RETURN_STATUS::SUCCESS;
+            return RETURN_STATUS::OSP_SUCCESS;
         else
             return RETURN_STATUS::BEST_FOUND;
     }
@@ -731,7 +731,7 @@ class kl_total_comm_test : public kl_total_comm<Graph_t, MemoryConstraint_t, use
        
 
         if (improvement_found)
-            return RETURN_STATUS::SUCCESS;
+            return RETURN_STATUS::OSP_SUCCESS;
         else
             return RETURN_STATUS::BEST_FOUND;
     }

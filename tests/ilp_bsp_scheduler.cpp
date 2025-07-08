@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(test_total) {
     scheduler.setTimeLimitSeconds(3600);
     const auto result = scheduler.computeSchedule(schedule);
 
-    BOOST_CHECK_EQUAL(RETURN_STATUS::SUCCESS, result);
+    BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
     BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 };
 
@@ -175,6 +175,6 @@ BOOST_AUTO_TEST_CASE(test_full) {
     scheduler.setTimeLimitSeconds(3600);
     const auto result = scheduler.computeScheduleCS(schedule);
 
-    BOOST_CHECK_EQUAL(RETURN_STATUS::SUCCESS, result);
+    BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
     BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 };

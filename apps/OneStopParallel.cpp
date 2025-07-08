@@ -139,7 +139,7 @@ int main(int argc, char *argv[]) {
             schedulers_compute_time[algorithm_counter] =
                 std::chrono::duration_cast<std::chrono::milliseconds>(finish_time - start_time).count();
 
-            if (return_status != RETURN_STATUS::SUCCESS && return_status != RETURN_STATUS::BEST_FOUND) {
+            if (return_status != RETURN_STATUS::OSP_SUCCESS && return_status != RETURN_STATUS::BEST_FOUND) {
 
                 schedulers_failed[algorithm_counter] = true;
                 if (return_status == RETURN_STATUS::ERROR) {

@@ -432,7 +432,7 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<Graph_t, Interpo
             }
         }
 
-        return RETURN_STATUS::SUCCESS;
+        return RETURN_STATUS::OSP_SUCCESS;
     }
 };
 

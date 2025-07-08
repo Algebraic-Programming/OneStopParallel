@@ -482,7 +482,7 @@ class VarianceFillup : public Scheduler<Graph_t> {
 
         assert(schedule.satisfiesPrecedenceConstraints());
 
-        return RETURN_STATUS::SUCCESS;
+        return RETURN_STATUS::OSP_SUCCESS;
     }
 
     /**

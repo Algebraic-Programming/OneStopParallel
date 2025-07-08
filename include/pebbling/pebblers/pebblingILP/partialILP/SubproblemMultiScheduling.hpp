@@ -204,7 +204,7 @@ RETURN_STATUS SubproblemMultiScheduling<Graph_t>::computeMultiSchedule(const Bsp
 
     }
 
-    return RETURN_STATUS::SUCCESS;
+    return RETURN_STATUS::OSP_SUCCESS;
 }
 
 template<typename Graph_t>

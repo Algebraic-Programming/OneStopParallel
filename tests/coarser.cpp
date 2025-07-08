@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(coarser_hdagg_test) {
 
         const auto status_sched = scheduler.computeSchedule(schedule);
 
-        BOOST_CHECK(status_sched == RETURN_STATUS::SUCCESS);
+        BOOST_CHECK(status_sched == RETURN_STATUS::OSP_SUCCESS);
         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
         BspSchedule<graph_t> schedule_out(instance);
@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(coarser_hdagg_test) {
         BspSchedule<graph_t> schedule2(instance);
 
         const auto status = coarse_and_schedule.computeSchedule(schedule2);
-        BOOST_CHECK(status == RETURN_STATUS::SUCCESS || status == RETURN_STATUS::BEST_FOUND);
+        BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
         BOOST_CHECK(schedule2.satisfiesPrecedenceConstraints());
     }
 };
@@ -244,7 +244,7 @@ BOOST_AUTO_TEST_CASE(coarser_hdagg_test_diff_graph_impl) {
 
         auto status_sched = scheduler.computeSchedule(schedule);
 
-        BOOST_CHECK(status_sched == RETURN_STATUS::SUCCESS);
+        BOOST_CHECK(status_sched == RETURN_STATUS::OSP_SUCCESS);
         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
         BspSchedule<graph_t1> schedule_out(instance);
@@ -256,7 +256,7 @@ BOOST_AUTO_TEST_CASE(coarser_hdagg_test_diff_graph_impl) {
         BspSchedule<graph_t1> schedule2(instance);
 
         auto status = coarse_and_schedule.computeSchedule(schedule2);
-        BOOST_CHECK(status == RETURN_STATUS::SUCCESS || status == RETURN_STATUS::BEST_FOUND);
+        BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
         BOOST_CHECK(schedule2.satisfiesPrecedenceConstraints());
     }
 };
@@ -306,7 +306,7 @@ BOOST_AUTO_TEST_CASE(coarser_bspschedule_test) {
 
         const auto status_sched_orig = scheduler.computeSchedule(schedule_orig);
 
-        BOOST_CHECK(status_sched_orig == RETURN_STATUS::SUCCESS);
+        BOOST_CHECK(status_sched_orig == RETURN_STATUS::OSP_SUCCESS);
         BOOST_CHECK(schedule_orig.satisfiesPrecedenceConstraints());
 
         BspScheduleCoarser<graph_t, graph_t> coarser(schedule_orig);
@@ -321,7 +321,7 @@ BOOST_AUTO_TEST_CASE(coarser_bspschedule_test) {
 
         const auto status_sched = scheduler.computeSchedule(schedule);
 
-        BOOST_CHECK(status_sched == RETURN_STATUS::SUCCESS);
+        BOOST_CHECK(status_sched == RETURN_STATUS::OSP_SUCCESS);
         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
         BspSchedule<graph_t> schedule_out(instance);
@@ -333,7 +333,7 @@ BOOST_AUTO_TEST_CASE(coarser_bspschedule_test) {
         BspSchedule<graph_t> schedule2(instance);
 
         const auto status = coarse_and_schedule.computeSchedule(schedule2);
-        BOOST_CHECK(status == RETURN_STATUS::SUCCESS || status == RETURN_STATUS::BEST_FOUND);
+        BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
         BOOST_CHECK(schedule2.satisfiesPrecedenceConstraints());
     }
 };
@@ -391,7 +391,7 @@ void test_coarser_same_graph(Coarser<graph_t, graph_t> &coarser) {
 
         const auto status_sched = scheduler.computeSchedule(schedule);
 
-        BOOST_CHECK(status_sched == RETURN_STATUS::SUCCESS);
+        BOOST_CHECK(status_sched == RETURN_STATUS::OSP_SUCCESS);
         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
         BspSchedule<graph_t> schedule_out(instance);
@@ -403,7 +403,7 @@ void test_coarser_same_graph(Coarser<graph_t, graph_t> &coarser) {
         BspSchedule<graph_t> schedule2(instance);
 
         const auto status = coarse_and_schedule.computeSchedule(schedule2);
-        BOOST_CHECK(status == RETURN_STATUS::SUCCESS || status == RETURN_STATUS::BEST_FOUND);
+        BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
         BOOST_CHECK(schedule2.satisfiesPrecedenceConstraints());
     }
 };
@@ -536,7 +536,7 @@ BOOST_AUTO_TEST_CASE(coarser_SquashA_test_diff_graph_impl_CSG) {
 
         auto status_sched = scheduler.computeSchedule(schedule);
 
-        BOOST_CHECK(status_sched == RETURN_STATUS::SUCCESS);
+        BOOST_CHECK(status_sched == RETURN_STATUS::OSP_SUCCESS);
         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
         BspSchedule<graph_t1> schedule_out(instance);
@@ -548,7 +548,7 @@ BOOST_AUTO_TEST_CASE(coarser_SquashA_test_diff_graph_impl_CSG) {
         BspSchedule<graph_t1> schedule2(instance);
 
         auto status = coarse_and_schedule.computeSchedule(schedule2);
-        BOOST_CHECK(status == RETURN_STATUS::SUCCESS || status == RETURN_STATUS::BEST_FOUND);
+        BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
         BOOST_CHECK(schedule2.satisfiesPrecedenceConstraints());
     }
 };
@@ -612,7 +612,7 @@ BOOST_AUTO_TEST_CASE(coarser_SquashA_test_diff_graph_impl_CSGE) {
 
         auto status_sched = scheduler.computeSchedule(schedule);
 
-        BOOST_CHECK(status_sched == RETURN_STATUS::SUCCESS);
+        BOOST_CHECK(status_sched == RETURN_STATUS::OSP_SUCCESS);
         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
         BspSchedule<graph_t1> schedule_out(instance);
@@ -624,7 +624,7 @@ BOOST_AUTO_TEST_CASE(coarser_SquashA_test_diff_graph_impl_CSGE) {
         BspSchedule<graph_t1> schedule2(instance);
 
         auto status = coarse_and_schedule.computeSchedule(schedule2);
-        BOOST_CHECK(status == RETURN_STATUS::SUCCESS || status == RETURN_STATUS::BEST_FOUND);
+        BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
         BOOST_CHECK(schedule2.satisfiesPrecedenceConstraints());
     }
 };

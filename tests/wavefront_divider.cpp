@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(wavefront_component_divider) {
         BspSchedule<graph_t> schedule(instance);
         auto status = scheduler.computeSchedule(schedule);
 
-        BOOST_CHECK(status == RETURN_STATUS::SUCCESS);
+        BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS);
 
         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
     }
@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(wavefront_component_parallelism_divider) {
         BspSchedule<graph_t> schedule(instance);
         auto status = scheduler.computeSchedule(schedule);
 
-        BOOST_CHECK(status == RETURN_STATUS::SUCCESS);
+        BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS);
         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
     }
 }

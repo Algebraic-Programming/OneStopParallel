@@ -60,7 +60,7 @@ void SquashAMul<Graph_t, Graph_t_coarse>::updateParams() {
 
 template<typename Graph_t, typename Graph_t_coarse>
 RETURN_STATUS SquashAMul<Graph_t, Graph_t_coarse>::run_contractions() {
-    RETURN_STATUS status = RETURN_STATUS::SUCCESS;
+    RETURN_STATUS status = RETURN_STATUS::OSP_SUCCESS;
 
     if (min_nodes == 0) {
         min_nodes = MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::getOriginalInstance()->numberOfProcessors() * 1000;

@@ -53,7 +53,7 @@ class Serial : public Scheduler<Graph_t> {
             schedule.setAssignedSuperstep(v, 0);
         }
 
-        return RETURN_STATUS::SUCCESS;
+        return RETURN_STATUS::OSP_SUCCESS;
     }
 
     std::string getScheduleName() const override { return "Serial"; }

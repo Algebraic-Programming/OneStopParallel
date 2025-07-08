@@ -160,7 +160,7 @@ RETURN_STATUS HillClimbingScheduler<Graph_t>::improveScheduleWithTimeLimit(BspSc
             }
         }
 
-    return RETURN_STATUS::SUCCESS;
+    return RETURN_STATUS::OSP_SUCCESS;
 }
 
 template<typename Graph_t>
@@ -175,7 +175,7 @@ RETURN_STATUS HillClimbingScheduler<Graph_t>::improveScheduleWithStepLimit(BspSc
         if (!Improve())
             break;
 
-    return RETURN_STATUS::SUCCESS;
+    return RETURN_STATUS::OSP_SUCCESS;
 }
 
 template<typename Graph_t>

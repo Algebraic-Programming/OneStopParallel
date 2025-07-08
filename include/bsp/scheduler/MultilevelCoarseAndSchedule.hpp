@@ -116,7 +116,7 @@ RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::improve_acti
     if (improver) {
         return improver->improveSchedule( *active_schedule );
     }
-    return RETURN_STATUS::SUCCESS;
+    return RETURN_STATUS::OSP_SUCCESS;
 }
 
 
@@ -136,7 +136,7 @@ RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::expand_activ
     active_graph--;
     active_schedule = std::make_unique<BspSchedule<Graph_t_coarse>>( std::move(expanded_schedule) );
     
-    return RETURN_STATUS::SUCCESS;
+    return RETURN_STATUS::OSP_SUCCESS;
 }
 
 
@@ -152,7 +152,7 @@ RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::expand_activ
     active_graph--;
     active_schedule = std::unique_ptr<BspSchedule<Graph_t_coarse>>();
     
-    return RETURN_STATUS::SUCCESS;
+    return RETURN_STATUS::OSP_SUCCESS;
 }
 
 
@@ -164,7 +164,7 @@ template<typename Graph_t, typename Graph_t_coarse>
 RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::run_expansions(BspSchedule<Graph_t>& schedule) {
     assert(active_graph >= 0L && (long unsigned) active_graph == dag_history.size()-1);
 
-    RETURN_STATUS status = RETURN_STATUS::SUCCESS;
+    RETURN_STATUS status = RETURN_STATUS::OSP_SUCCESS;
     
     while(active_graph > 0L) {
         status = std::max(status, expand_active_schedule());
@@ -197,7 +197,7 @@ RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::computeSched
 
     original_inst = &schedule.getInstance();
 
-    RETURN_STATUS status = RETURN_STATUS::SUCCESS;
+    RETURN_STATUS status = RETURN_STATUS::OSP_SUCCESS;
 
     status = std::max(status, run_contractions());
     assert( (dag_history.size() == contraction_maps.size()) );
@@ -282,7 +282,7 @@ RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::add_contract
     }
 
     if (success) {
-        return RETURN_STATUS::SUCCESS;
+        return RETURN_STATUS::OSP_SUCCESS;
     } else {
         return RETURN_STATUS::ERROR;
     }
@@ -304,7 +304,7 @@ RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::add_contract
     }
 
     if (success) {
-        return RETURN_STATUS::SUCCESS;
+        return RETURN_STATUS::OSP_SUCCESS;
     } else {
         return RETURN_STATUS::ERROR;
     }
@@ -321,7 +321,7 @@ RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::add_contract
     std::unique_ptr<std::vector<vertex_idx_t<Graph_t_coarse>>> contr_map_ptr(new std::vector<vertex_idx_t<Graph_t_coarse>>(contraction_map));
     contraction_maps.emplace_back(std::move(contr_map_ptr));
 
-    return RETURN_STATUS::SUCCESS;
+    return RETURN_STATUS::OSP_SUCCESS;
 }
 
 template<typename Graph_t, typename Graph_t_coarse>
@@ -334,7 +334,7 @@ RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::add_contract
     std::unique_ptr<std::vector<vertex_idx_t<Graph_t_coarse>>> contr_map_ptr(new std::vector<vertex_idx_t<Graph_t_coarse>>(std::move(contraction_map)));
     contraction_maps.emplace_back(std::move(contr_map_ptr));
 
-    return RETURN_STATUS::SUCCESS;
+    return RETURN_STATUS::OSP_SUCCESS;
 }
 
 
@@ -347,7 +347,7 @@ RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::add_contract
     std::unique_ptr<std::vector<vertex_idx_t<Graph_t_coarse>>> contr_map_ptr(new std::vector<vertex_idx_t<Graph_t_coarse>>(contraction_map));
     contraction_maps.emplace_back(std::move(contr_map_ptr));
 
-    return RETURN_STATUS::SUCCESS;
+    return RETURN_STATUS::OSP_SUCCESS;
 }
 
 template<typename Graph_t, typename Graph_t_coarse>
@@ -358,7 +358,7 @@ RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::add_contract
     std::unique_ptr<std::vector<vertex_idx_t<Graph_t_coarse>>> contr_map_ptr(new std::vector<vertex_idx_t<Graph_t_coarse>>(std::move(contraction_map)));
     contraction_maps.emplace_back(std::move(contr_map_ptr));
 
-    return RETURN_STATUS::SUCCESS;
+    return RETURN_STATUS::OSP_SUCCESS;
 }
 
 

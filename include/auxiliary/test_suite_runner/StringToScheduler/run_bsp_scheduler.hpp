@@ -221,7 +221,7 @@ RETURN_STATUS run_bsp_scheduler(const ConfigParser &parser, const boost::propert
         const auto status_coarse =
             run_bsp_scheduler(parser, algorithm.get_child("parameters").get_child("scheduler"), schedule_coarse);
 
-        if (status_coarse != RETURN_STATUS::SUCCESS and status_coarse != RETURN_STATUS::BEST_FOUND) {
+        if (status_coarse != RETURN_STATUS::OSP_SUCCESS and status_coarse != RETURN_STATUS::BEST_FOUND) {
             return status_coarse;
         }
 
@@ -231,7 +231,7 @@ RETURN_STATUS run_bsp_scheduler(const ConfigParser &parser, const boost::propert
             return RETURN_STATUS::ERROR;
         }
 
-        return RETURN_STATUS::SUCCESS;
+        return RETURN_STATUS::OSP_SUCCESS;
     }
 
     if constexpr (is_constructable_cdag_v<Graph_t> || is_direct_constructable_cdag_v<Graph_t>) {

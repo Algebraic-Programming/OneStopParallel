@@ -342,7 +342,7 @@ class AbstractTestSuiteRunner {
                     
                     RETURN_STATUS exec_status = compute_target_object_impl(bsp_instance, target_object, algo_config, computation_time_ms);
 
-                    if (exec_status != RETURN_STATUS::SUCCESS && exec_status != RETURN_STATUS::BEST_FOUND) {
+                    if (exec_status != RETURN_STATUS::OSP_SUCCESS && exec_status != RETURN_STATUS::BEST_FOUND) {
                         if (exec_status == RETURN_STATUS::ERROR)
                             log_stream << "Error computing with " << current_algo_name << "." << std::endl;
                         else if (exec_status == RETURN_STATUS::TIMEOUT)

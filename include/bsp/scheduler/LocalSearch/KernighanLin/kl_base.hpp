@@ -2598,7 +2598,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
         bool improvement_found = run_local_search_unlock_delay();
 
         if (improvement_found)
-            return RETURN_STATUS::SUCCESS;
+            return RETURN_STATUS::OSP_SUCCESS;
         else
             return RETURN_STATUS::BEST_FOUND;
     }

@@ -560,7 +560,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<Graph_t> {
 
         schedule.setNumberOfSupersteps(incr);
 
-        return RETURN_STATUS::SUCCESS;
+        return RETURN_STATUS::OSP_SUCCESS;
     }
 
     /**
