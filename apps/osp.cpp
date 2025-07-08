@@ -28,7 +28,7 @@ limitations under the License.
 
 #include "auxiliary/misc.hpp"
 #include "bsp/model/BspSchedule.hpp"
-#include "graph_implementations/boost_graphs/boost_graph.hpp"
+#include "graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "auxiliary/io/DotFileWriter.hpp"
 #include "auxiliary/io/arch_file_reader.hpp"
 #include "auxiliary/io/dot_graph_file_reader.hpp"
@@ -41,7 +41,7 @@ limitations under the License.
 namespace pt = boost::property_tree;
 using namespace osp;
 
-using graph_t = boost_graph_int_t;
+using graph_t = computational_dag_edge_idx_vector_impl_def_int_t;
 
 std::filesystem::path getExecutablePath() { return std::filesystem::canonical("/proc/self/exe"); }
 

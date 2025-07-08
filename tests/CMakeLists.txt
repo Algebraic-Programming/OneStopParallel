@@ -1,16 +1,22 @@
 # Create an empty list for the tests
-set( tests_list "" )
+set( tests_list )
 
 # Function to create a test
 macro( _add_test name )
+  # cmake-format: off
+  cmake_parse_arguments(ARG "" "" "DATA" ${ARGN})
+  # cmake-format: on
   # Add the test to the list
   list( APPEND tests_list test_${name} )
   # Create the test
-  add_executable( test_${name} ${name}.cpp )
-  target_link_libraries( test_${name} BspSchedulingDependencies
-   Boost::unit_test_framework
-   OpenMP::OpenMP_CXX )
+  add_executable(test_${name} ${name}.cpp)
+  target_link_libraries(test_${name} PRIVATE OneStopParallel Boost::unit_test_framework)
   target_include_directories( test_${name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include )
+
+  if(ARG_DATA)
+    target_compile_definitions(test_${name} PRIVATE OSP_TEST_DATA_DIR="${OSP_DATA_DIR}")
+  endif()
+
   add_test( NAME test_${name} COMMAND test_${name} )
 endmacro()
 
@@ -78,7 +84,7 @@ _add_test( iterators )
 _add_test( random_graph_gen )
 
 ## io
-_add_test( filereader )
+_add_test( filereader DATA )
 
 
 ## scheduler 
@@ -117,4 +123,3 @@ _add_test (heavy_edge_preprocessing)
 # Custom target to compile all the tests
 add_custom_target( build_tests DEPENDS ${tests_list} )
 add_custom_target( run_tests COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS build_tests )
-add_custom_target( tests COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS ${tests_list} )

@@ -16,14 +16,14 @@ limitations under the License.
 @author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 
-#include "graph_implementations/boost_graphs/boost_graph.hpp"
+#include "graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "auxiliary/test_suite_runner/BspScheduleTestSuiteRunner.hpp"
 #include "auxiliary/test_suite_runner/BspScheduleRecompTestSuiteRunner.hpp"
 #include <filesystem>
 #include <iostream>
 #include <string>
 
-using graph_t = boost_graph_int_t;
+using graph_t = osp::computational_dag_edge_idx_vector_impl_def_int_t;
 
 int main(int argc, char *argv[]) {
 

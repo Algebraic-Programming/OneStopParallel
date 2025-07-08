@@ -19,10 +19,7 @@ limitations under the License.
 #pragma once
 
 #include <chrono>
-#include <future>
 #include <iostream>
-#include <thread>
-
 #include "bsp/model/BspInstance.hpp"
 #include "bsp/model/BspSchedule.hpp"
 #include "bsp/model/BspScheduleCS.hpp"

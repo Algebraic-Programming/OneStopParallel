@@ -26,7 +26,7 @@ limitations under the License.
 #include "auxiliary/misc.hpp"
 #include "bsp/scheduler/IlpSchedulers/CoptFullScheduler.hpp"
 #include "graph_algorithms/directed_graph_path_util.hpp"
-#include "graph_implementations/boost_graphs/boost_graph.hpp"
+#include "graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "auxiliary/io/DotFileWriter.hpp"
 #include "auxiliary/io/arch_file_reader.hpp"
 #include "auxiliary/io/bsp_schedule_file_writer.hpp"
@@ -36,7 +36,7 @@ limitations under the License.
 
 using namespace osp;
 
-using ComputationalDag = boost_graph_int_t;
+using ComputationalDag = computational_dag_edge_idx_vector_impl_def_int_t;
 
 int main(int argc, char *argv[]) {
     if (argc < 4) {

@@ -16,7 +16,7 @@
 
 
 # Create an empty list for the executables
-set( executable_list "" )
+set( executable_list )
 
 # Function to create an example
 macro( _add_executable name)
@@ -24,14 +24,14 @@ macro( _add_executable name)
   list( APPEND executable_list ${name} )
   # Create the example
   add_executable( ${name} ${name}.cpp )
-  target_link_libraries( ${name} PUBLIC BspSchedulingDependencies )
+  target_link_libraries( ${name} PRIVATE OneStopParallel )
 endmacro()
 
 _add_executable( osp_turnus )
 
 _add_executable( graph_analyser )
 
-_add_executable ( OneStopParallel )
+_add_executable ( osp )
 
 configure_file(config/osp_config.json osp_config.json COPYONLY)
 
@@ -47,4 +47,3 @@ endif()
 
 # Custom target to compile all the examples
 add_custom_target( build_executables DEPENDS ${executable_list} )
-add_custom_target( executable DEPENDS ${executable_list} )

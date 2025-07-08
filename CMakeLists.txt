@@ -14,8 +14,9 @@
 
 # @author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 
+
 cmake_minimum_required(VERSION 3.12)
-project(one-stop-parallel VERSION 1.0.0 LANGUAGES CXX)
+project(OneStopParallel VERSION 1.0.0 LANGUAGES CXX)
 
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
@@ -42,86 +43,98 @@ set(COMMON_CXX_WARNING_FLAGS
     "-Werror"
 )
 
-# Set compile options based on build type
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    message(STATUS "Configuring for Debug build. Debug symbols enabled.")
-    # For Debug builds: enable debug symbols
-    add_compile_options("-g" ${COMMON_CXX_WARNING_FLAGS})
-elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-    message(STATUS "Configuring for Release build. Optimization -O3 and NDEBUG enabled.")
-    # For Release builds: enable optimization and disable asserts
-    add_compile_options("-O3" "-DNDEBUG" ${COMMON_CXX_WARNING_FLAGS})
-elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-    message(STATUS "Configuring for Release with Debug Info build. Optimization -O2 and debug symbols enabled.")
-    # For RelWithDebInfo builds: optimize and include debug info
-    add_compile_options("-O2" "-g" "-DNDEBUG" ${COMMON_CXX_WARNING_FLAGS})
-else()
-    message(STATUS "Configuring for custom build type '${CMAKE_BUILD_TYPE}'. Applying default optimization and warnings.")
-    # Default for other build types if not specified
-    add_compile_options("-O3" "-DNDEBUG" ${COMMON_CXX_WARNING_FLAGS})
-endif()
-
-
-# --- Include Directories ---
-# Global include directories. For more precise control, use target_include_directories in sub-CMakeLists.txt files.
-include_directories(include)
-
 
 # --- Find External Libraries ---
-
 # Find COPT libraries
 find_package(COPT)
 
-# Find ICU libraries
-find_package(ICU COMPONENTS data i18n uc REQUIRED)
-include_directories(${ICU_INCLUDE_DIR}) # Use include_directories for global include paths
 
 # Find Boost libraries
 # Note: link_directories is deprecated. It's better to link against Boost targets directly
 # using target_link_libraries in your specific executable/library targets.
-find_package(Boost 1.71.0 REQUIRED COMPONENTS graph log log_setup OPTIONAL_COMPONENTS unit_test_framework)
-include_directories(${Boost_INCLUDE_DIRS}) # Use include_directories for global include paths
+find_package(Boost 1.71.0 REQUIRED OPTIONAL_COMPONENTS graph unit_test_framework)
+# The modern CMake approach uses target-based properties, so global include_directories is avoided.
 
 # Allow user to manually specify the Eigen include path
 find_package(Eigen3 3.4)
 if(Eigen3_FOUND)
     message(STATUS "Eigen3 found!")
-    set(DEIGEN ON)
-    add_definitions(-DEIGEN_FOUND)
-    get_target_property(eigen_incs Eigen3::Eigen INTERFACE_INCLUDE_DIRECTORIES)
-
-    # Mark Eigen includes as SYSTEM to suppress warnings from third-party headers
-    foreach(eigen_inc ${eigen_incs})
-        include_directories(SYSTEM "${eigen_inc}")
-    endforeach()
 else()
     message(WARNING "Eigen3 not found. Some features may be disabled.")
 endif()
 
-# Find pthread library
-set(THREADS_PREFER_PTHREAD_FLAG ON)
-find_package(Threads REQUIRED)
-
 # Find OpenMP
-find_package(OpenMP REQUIRED)
+find_package(OpenMP)
+if(OpenMP_FOUND)
+    set(OSP_DEPENDS_ON_OPENMP ON)
+    message(STATUS "OpenMP found, enabling OpenMP support.")
+else()
+    set(OSP_DEPENDS_ON_OPENMP OFF)
+    message(WARNING "OpenMP not found. The library will be built without OpenMP support.")
+endif()
 
+# --- Library Definition ---
+add_library(OneStopParallel INTERFACE)
 
-add_library( BspSchedulingDependencies INTERFACE)
-
-target_link_libraries(BspSchedulingDependencies INTERFACE
-    Boost::graph
-    Boost::log_setup
-    Boost::log
-    Threads::Threads
-    OpenMP::OpenMP_CXX
+target_include_directories(OneStopParallel INTERFACE
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
 )
 
-if (COPT_FOUND)
-    target_link_libraries(BspSchedulingDependencies INTERFACE COPT::COPT)
+# --- Compile Options ---
+# Add compile options directly to the INTERFACE target. This ensures that any
+# executable or library linking against OneStopParallel will inherit these options.
+target_compile_options(OneStopParallel INTERFACE ${COMMON_CXX_WARNING_FLAGS})
 
-    set_target_properties(BspSchedulingDependencies PROPERTIES
+# Set build-type specific compile options using modern generator expressions
+# Use a nested IF to handle all build types in a single, robust expression.
+target_compile_options(OneStopParallel INTERFACE
+    $<IF:$<CONFIG:Debug>,
+        # Debug flags
+        -g,
+        # Else (not Debug)
+        $<IF:$<CONFIG:RelWithDebInfo>,
+            # RelWithDebInfo flags
+            "-O2;-g;-DNDEBUG",
+            # Release and other/custom flags
+            "-O3;-DNDEBUG"
+        >
+    >
+)
+
+# Display status messages for build types
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    message(STATUS "Configuring for Debug build. Debug symbols enabled.")
+elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+    message(STATUS "Configuring for Release build. Optimization -O3 and NDEBUG enabled.")
+elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+    message(STATUS "Configuring for Release with Debug Info build. Optimization -O2 and debug symbols enabled.")
+else()
+    message(STATUS "Configuring for custom build type '${CMAKE_BUILD_TYPE}'. Applying default optimization and warnings.")
+endif()
+
+
+if(OpenMP_FOUND)
+    target_link_libraries(OneStopParallel INTERFACE OpenMP::OpenMP_CXX)
+endif()
+
+if(Boost_graph_FOUND)
+    set(OSP_DEPENDS_ON_BOOST_GRAPH ON)
+    target_link_libraries(OneStopParallel INTERFACE Boost::graph)
+else()
+    set(OSP_DEPENDS_ON_BOOST_GRAPH OFF)
+endif()
+if (COPT_FOUND)
+    target_link_libraries(OneStopParallel INTERFACE COPT::COPT)
+
+    set_target_properties(OneStopParallel PROPERTIES
         BUILD_RPATH "${COPT_RPATHS}"
     )
+endif()
+
+if(Eigen3_FOUND)
+    target_link_libraries(OneStopParallel INTERFACE Eigen3::Eigen)
+    target_compile_definitions(OneStopParallel INTERFACE EIGEN_FOUND)
 endif()
 
 # --- Subdirectories for Source and Executables ---
@@ -131,6 +144,7 @@ add_subdirectory(apps/graph_generator)
 
 # --- Build Tests Configuration ---
 # Option to control whether tests are built.
+set(OSP_DATA_DIR ${PROJECT_SOURCE_DIR}/data CACHE INTERNAL "Path to project data files")
 # Defaults to ON, but will be OFF if CMAKE_BUILD_TYPE is Release.
 option(BUILD_TESTS "Build tests for the project" ON)
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
@@ -140,8 +154,12 @@ endif()
 
 if(BUILD_TESTS)
     # Check if Boost::unit_test_framework was found for tests to be enabled.
-    if(NOT Boost_unit_test_framework_FOUND)
-        message(WARNING "Boost::unit_test_framework cannot be found. Tests are disabled even though BUILD_TESTS is ON.")
+    if(NOT Boost_graph_FOUND)
+        message(WARNING "Boost::graph component not found. Tests require it and will be disabled.")
+    elseif(NOT Boost_unit_test_framework_FOUND)
+        message(WARNING "Boost::unit_test_framework component not found. Tests require it and will be disabled.")
+    elseif(NOT OpenMP_FOUND)
+        message(WARNING "OpenMP not found. Tests require it and will be disabled.")
     else()
         enable_testing()
         add_subdirectory(tests)
@@ -166,3 +184,44 @@ if(DOXYGEN_FOUND)
 else()
     message(STATUS "Doxygen not found. Documentation target 'doc' will not be available.")
 endif()
+
+
+# --- Installation ---
+# Set a default installation prefix for local development if the user has not specified one.
+# This avoids needing sudo for a typical build-and-install cycle.
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX "${PROJECT_BINARY_DIR}/install" CACHE PATH "Default install path for developer builds" FORCE)
+    message(STATUS "Setting default install prefix to ${CMAKE_INSTALL_PREFIX}")
+endif()
+
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+
+install(TARGETS OneStopParallel EXPORT OneStopParallelTargets)
+
+install(DIRECTORY include/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
+write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/OneStopParallelConfigVersion.cmake"
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY AnyNewerVersion
+)
+
+configure_package_config_file(cmake/OneStopParallelConfig.cmake.in
+    "${CMAKE_CURRENT_BINARY_DIR}/OneStopParallelConfig.cmake"
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/OneStopParallel
+)
+
+install(EXPORT OneStopParallelTargets
+    FILE OneStopParallelTargets.cmake
+    NAMESPACE OneStopParallel::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/OneStopParallel
+)
+
+install(FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/OneStopParallelConfig.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/OneStopParallelConfigVersion.cmake"
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/OneStopParallel
+)
