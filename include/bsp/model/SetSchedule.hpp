@@ -68,9 +68,8 @@ class SetSchedule : public IBspSchedule<Graph_t> {
             schedule.numberOfSupersteps(),
             std::vector<std::unordered_set<vertex_idx>>(schedule.getInstance().numberOfProcessors()));
 
-        for (unsigned i = 0; i < schedule.getInstance().numberOfVertices(); i++) {
-
-            step_processor_vertices[schedule.assignedSuperstep(i)][schedule.assignedProcessor(i)].insert(i);
+        for (const auto v : schedule.getInstance().vertices()) {
+            step_processor_vertices[schedule.assignedSuperstep(v)][schedule.assignedProcessor(v)].insert(v);
         }
     }
 

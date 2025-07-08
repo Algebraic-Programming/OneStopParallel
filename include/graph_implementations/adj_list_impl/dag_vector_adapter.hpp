@@ -115,6 +115,16 @@ class dag_vector_adapter {
 
         out_neigbors = &out_neigbors_;
         in_neigbors = &in_neigbors_;
+
+        vertices_.resize(out_neigbors->size());
+
+        num_edges_ = 0;
+        for (vertex_idx i = 0; i < out_neigbors_.size(); ++i) {
+            vertices_[i].id = i;
+            num_edges_ += out_neigbors_[i].size();
+        }
+
+        num_vertex_types_ = 1;
     }
 
     inline auto vertices() const { return vertex_range<vertex_idx>(static_cast<vertex_idx>(vertices_.size())); }
