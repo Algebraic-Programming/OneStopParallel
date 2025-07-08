@@ -43,6 +43,27 @@ set(COMMON_CXX_WARNING_FLAGS
     "-Werror"
 )
 
+# --- Project-specific Compile Flags ---
+# An interface library to hold compile flags for executables built in this project.
+# This avoids polluting the main OneStopParallel interface library with flags that
+# should not be imposed on downstream consumers.
+add_library(ProjectExecutableFlags INTERFACE)
+target_compile_options(ProjectExecutableFlags INTERFACE ${COMMON_CXX_WARNING_FLAGS})
+
+# Set build-type specific compile options using modern generator expressions
+target_compile_options(ProjectExecutableFlags INTERFACE
+    $<IF:$<CONFIG:Debug>,
+        # Debug flags
+        -g,
+        # Else (not Debug)
+        $<IF:$<CONFIG:RelWithDebInfo>,
+            # RelWithDebInfo flags
+            "-O2;-g;-DNDEBUG",
+            # Release and other/custom flags
+            "-O3;-DNDEBUG"
+        >
+    >
+)
 
 # --- Find External Libraries ---
 # Find COPT libraries
@@ -84,26 +105,9 @@ target_include_directories(OneStopParallel INTERFACE
     $<INSTALL_INTERFACE:include>
 )
 
-# --- Compile Options ---
-# Add compile options directly to the INTERFACE target. This ensures that any
-# executable or library linking against OneStopParallel will inherit these options.
-target_compile_options(OneStopParallel INTERFACE ${COMMON_CXX_WARNING_FLAGS})
-
-# Set build-type specific compile options using modern generator expressions
-# Use a nested IF to handle all build types in a single, robust expression.
-target_compile_options(OneStopParallel INTERFACE
-    $<IF:$<CONFIG:Debug>,
-        # Debug flags
-        -g,
-        # Else (not Debug)
-        $<IF:$<CONFIG:RelWithDebInfo>,
-            # RelWithDebInfo flags
-            "-O2;-g;-DNDEBUG",
-            # Release and other/custom flags
-            "-O3;-DNDEBUG"
-        >
-    >
-)
+# The OneStopParallel INTERFACE library itself should not impose compile flags
+# on consumers. Project-internal executables will link to ProjectExecutableFlags
+# to get the desired settings.
 
 # Display status messages for build types
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")

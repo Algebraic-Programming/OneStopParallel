@@ -7,7 +7,7 @@ macro( _add_executable name)
   list( APPEND graph_generator_list ${name} )
   # Create the example
   add_executable( ${name} ${name}.cpp )
-  target_link_libraries( ${name} PRIVATE OneStopParallel )
+  target_link_libraries( ${name} PRIVATE OneStopParallel ProjectExecutableFlags )
 endmacro()
 
 if(Eigen3_FOUND)
