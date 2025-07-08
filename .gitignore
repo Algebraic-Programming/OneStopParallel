@@ -100,12 +100,12 @@ doc/latex/
 !**/*/CMakeLists.txt
 [Bb]uild/*
 [Ii]nstall/*
+# Ignore build artifacts but keep necessary template and config files.
 cmake-*
 *.cmake
+*.in
 !cmake/*.cmake
 !cmake/*.cmake.in
-!cmake/OneStopParallelConfig.cmake.in
-*.in
 Makefile
 *.marks
 .vscode/*
