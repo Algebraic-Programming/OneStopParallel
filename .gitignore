@@ -104,6 +104,7 @@ cmake-*
 *.cmake
 !cmake/*.cmake
 !cmake/*.cmake.in
+!cmake/OneStopParallelConfig.cmake.in
 *.in
 Makefile
 *.marks
