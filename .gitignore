@@ -103,6 +103,7 @@ doc/latex/
 cmake-*
 *.cmake
 !cmake/*.cmake
+!cmake/*.cmake.in
 *.in
 Makefile
 *.marks
