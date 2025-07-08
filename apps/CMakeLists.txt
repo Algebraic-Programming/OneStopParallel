@@ -27,9 +27,12 @@ macro( _add_executable name)
   target_link_libraries( ${name} PRIVATE OneStopParallel )
 endmacro()
 
-_add_executable( osp_turnus )
 
 _add_executable( graph_analyser )
+
+if(Boost_FOUND)
+
+_add_executable( osp_turnus )
 
 _add_executable ( osp )
 
@@ -43,6 +46,8 @@ endif()
 
 if (COPT_FOUND)
 _add_executable( ilp_bsp_scheduler )
+endif()
+
 endif()
 
 # Custom target to compile all the examples

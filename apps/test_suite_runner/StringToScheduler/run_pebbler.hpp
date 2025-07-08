@@ -25,7 +25,7 @@ limitations under the License.
 #include <string>
 #include <tuple>
 
-#include "auxiliary/test_suite_runner/ConfigParser.hpp"
+#include "../ConfigParser.hpp"
 #include "pebbling/PebblingSchedule.hpp"
 
 namespace osp {

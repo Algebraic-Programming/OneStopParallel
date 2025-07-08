@@ -25,7 +25,7 @@ limitations under the License.
 #include <memory>
 #include <string>
 
-#include "auxiliary/test_suite_runner/ConfigParser.hpp"
+#include "../ConfigParser.hpp"
 #include "bsp/model/BspSchedule.hpp"
 #include "bsp/scheduler/Scheduler.hpp"
 #include "coarser/Coarser.hpp"

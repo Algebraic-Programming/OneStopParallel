@@ -16,7 +16,7 @@ limitations under the License.
 @author Toni Boehnlein, Christos Matzoros, Pal Andras Papp, Raphael S. Steiner
 */
 
-#include "auxiliary/test_suite_runner/BspScheduleTestSuiteRunner.hpp"
+#include "test_suite_runner/BspScheduleTestSuiteRunner.hpp"
 #include <filesystem>
 #include <iostream>
 #include <string>

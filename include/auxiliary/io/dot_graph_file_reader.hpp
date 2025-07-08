@@ -20,28 +20,40 @@ limitations under the License.
 
 #include <fstream>
 #include <iostream>
-#include <utility>
+#include <string>
 #include <vector>
-#include <boost/algorithm/string.hpp>
+#include <sstream> // Required for std::stringstream
+#include <utility>
 
 #include "concepts/computational_dag_concept.hpp"
 
 namespace osp { namespace file_reader {
 
+// Helper function to split a string by a delimiter
+std::vector<std::string> split(const std::string &s, char delimiter) {
+    std::vector<std::string> tokens;
+    std::string token;
+    std::istringstream tokenStream(s);
+    while (std::getline(tokenStream, token, delimiter)) {
+        tokens.push_back(token);
+    }
+    return tokens;
+}
+
 std::string removeLeadingAndTrailingQuotes(const std::string &str) {
-    if (str.empty() || str == "") {
+    if (str.empty()) {
         return str;
     }
 
     size_t start = 0;
-    size_t end = str.size();
+    size_t end = str.length();
 
-    if (str[0] == '"' || str[0] == '\'') {
+    if (end > 0 && (str.front() == '"' || str.front() == '\'')) {
         start = 1;
     }
 
-    if (str[end - 1] == '"' || str[end - 1] == '\'') {
-        end -= 1;
+    if (end > start && (str.back() == '"' || str.back() == '\'')) {
+        end--;
     }
 
     return str.substr(start, end - start);
@@ -49,14 +61,16 @@ std::string removeLeadingAndTrailingQuotes(const std::string &str) {
 
 template<typename Graph_t>
 void parseDotNode(std::string line, Graph_t &G) {
-
     // Extract node id and properties
     std::size_t pos = line.find('[');
-    std::string properties = line.substr(pos + 1, line.find(']') - pos - 1);
+    if (pos == std::string::npos) return;
+    std::size_t end_pos = line.find(']');
+    if (end_pos == std::string::npos) return;
+
+    std::string properties = line.substr(pos + 1, end_pos - pos - 1);
 
     // Split properties into key-value pairs
-    std::vector<std::string> keyValuePairs;
-    boost::split(keyValuePairs, properties, boost::is_any_of(";"));
+    std::vector<std::string> keyValuePairs = split(properties, ';');
 
     // Create node with properties
     v_workw_t<Graph_t> work_weight = 0;
@@ -65,10 +79,14 @@ void parseDotNode(std::string line, Graph_t &G) {
     v_type_t<Graph_t> type = 0;
 
     for (const std::string &keyValuePair : keyValuePairs) {
-        std::vector<std::string> keyValue;
-        boost::split(keyValue, keyValuePair, boost::is_any_of("="));
+        std::vector<std::string> keyValue = split(keyValuePair, '=');
+        if (keyValue.size() != 2) continue;
 
         std::string key = keyValue[0];
+        // trim leading/trailing whitespace from key
+        key.erase(0, key.find_first_not_of(" \t\n\r\f\v"));
+        key.erase(key.find_last_not_of(" \t\n\r\f\v") + 1);
+
         if (key.empty()) {
             continue;
         }
@@ -94,57 +112,74 @@ void parseDotNode(std::string line, Graph_t &G) {
 
 template<typename Graph_t>
 void parseDotEdge(std::string line, Graph_t &G) {
+    using edge_commw_t_or_default = std::conditional_t<has_edge_weights_v<Graph_t>, e_commw_t<Graph_t>, v_commw_t<Graph_t>>;
+
+    std::size_t arrow_pos = line.find("->");
+    if (arrow_pos == std::string::npos) return;
+
+    std::string source_str = line.substr(0, arrow_pos);
+    source_str.erase(source_str.find_last_not_of(" \t\n\r\f\v") + 1);
 
 
-    using edge_commw_t_or_default   = std::conditional_t<has_edge_weights_v<Graph_t>, e_commw_t<Graph_t>, v_commw_t<Graph_t>>;
+    std::size_t bracket_pos = line.find('[');
+    std::string target_str;
+    if (bracket_pos != std::string::npos) {
+        target_str = line.substr(arrow_pos + 2, bracket_pos - (arrow_pos + 2));
+    } else {
+        target_str = line.substr(arrow_pos + 2);
+    }
+    target_str.erase(0, target_str.find_first_not_of(" \t\n\r\f\v"));
+    target_str.erase(target_str.find_last_not_of(" \t\n\r\f\v") + 1);
 
-    std::size_t pos = line.find('[');
-    std::string nodes = line.substr(0, pos);
-    std::string properties = line.substr(pos + 1, line.find(']') - pos - 1);
 
-    std::vector<std::string> sourceTarget;
-    boost::split(sourceTarget, nodes, boost::is_any_of("-"));
+    vertex_idx_t<Graph_t> source_node = static_cast<vertex_idx_t<Graph_t>>(std::stoll(source_str));
+    vertex_idx_t<Graph_t> target_node = static_cast<vertex_idx_t<Graph_t>>(std::stoll(target_str));
 
-    vertex_idx_t<Graph_t> source = static_cast<vertex_idx_t<Graph_t>>(std::stoll(sourceTarget[0]));
-    vertex_idx_t<Graph_t> target = static_cast<vertex_idx_t<Graph_t>>(std::stoll(sourceTarget[1].substr(1)));
-
-    // Split properties into key-value pairs
-    std::vector<std::string> keyValuePairs;
-    boost::split(keyValuePairs, properties, boost::is_any_of(" "));
-
-    // Create edge with properties
     edge_commw_t_or_default comm_weight = 0;
 
-    for (const std::string &keyValuePair : keyValuePairs) {
-        std::vector<std::string> keyValue;
-        boost::split(keyValue, keyValuePair, boost::is_any_of("="));
+    if (bracket_pos != std::string::npos) {
+        std::size_t end_bracket_pos = line.find(']', bracket_pos);
+        if (end_bracket_pos != std::string::npos) {
+            std::string properties = line.substr(bracket_pos + 1, end_bracket_pos - bracket_pos - 1);
 
-        std::string key = keyValue[0];
-        if (key.empty()) {
-            continue;
-        }
-        std::string value = removeLeadingAndTrailingQuotes(keyValue[1]);
+            // Split properties into key-value pairs
+            std::vector<std::string> keyValuePairs = split(properties, ';');
 
-        if (key == "comm_weight") {
-            comm_weight = static_cast<edge_commw_t_or_default>(std::stoll(value));
+            for (const std::string &keyValuePair : keyValuePairs) {
+                std::vector<std::string> keyValue = split(keyValuePair, '=');
+                if (keyValue.size() != 2) continue;
+                
+                std::string key = keyValue[0];
+                key.erase(0, key.find_first_not_of(" \t\n\r\f\v"));
+                key.erase(key.find_last_not_of(" \t\n\r\f\v") + 1);
+
+                if (key.empty()) {
+                    continue;
+                }
+                std::string value = removeLeadingAndTrailingQuotes(keyValue[1]);
+
+                if (key == "comm_weight") {
+                    comm_weight = static_cast<edge_commw_t_or_default>(std::stoll(value));
+                }
+            }
         }
     }
 
     if constexpr (is_constructable_cdag_comm_edge_v<Graph_t>) {
-        G.add_edge(source, target, comm_weight);
+        G.add_edge(source_node, target_node, comm_weight);
     } else {
-        G.add_edge(source, target);
-        comm_weight++; // delete me
+        G.add_edge(source_node, target_node);
     }
 }
 
 template<typename Graph_t>
 bool readComputationalDagDotFormat(std::ifstream &infile, Graph_t &graph) {
-
     std::string line;
     while (std::getline(infile, line)) {
-        // Skip lines that do not contain opening or closing brackets
-        if (line.find('{') != std::string::npos || line.find('}') != std::string::npos) {
+        // Trim leading whitespace
+        line.erase(0, line.find_first_not_of(" \t\n\r\f\v"));
+        // Skip empty or comment lines
+        if (line.empty() || line.rfind("digraph", 0) == 0 || line.rfind("}", 0) == 0) {
             continue;
         }
 
@@ -152,27 +187,21 @@ bool readComputationalDagDotFormat(std::ifstream &infile, Graph_t &graph) {
         if (line.find("->") != std::string::npos) {
             // This is an edge
             parseDotEdge(line, graph);
-            // Add the edge to the graph
-        } else {
+        } else if (line.find('[') != std::string::npos) {
             // This is a node
             parseDotNode(line, graph);
-            // Add the node to the graph
         }
     }
-
     return true;
 }
 
 template<typename Graph_t>
 bool readComputationalDagDotFormat(const std::string &filename, Graph_t &graph) {
-
     std::ifstream infile(filename);
     if (!infile.is_open()) {
-        std::cout << "Unable to find/open input dag file.\n";
-
+        std::cerr << "Unable to find/open input dag file: " << filename << std::endl;
         return false;
     }
-
     return readComputationalDagDotFormat(infile, graph);
 }
 

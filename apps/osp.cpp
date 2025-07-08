@@ -35,8 +35,8 @@ limitations under the License.
 #include "auxiliary/io/hdag_graph_file_reader.hpp"
 #include "auxiliary/io/mtx_graph_file_reader.hpp"
 #include "auxiliary/io/bsp_schedule_file_writer.hpp"
-#include "auxiliary/test_suite_runner/ConfigParser.hpp"
-#include "auxiliary/test_suite_runner/StringToScheduler/run_bsp_scheduler.hpp"
+#include "test_suite_runner/ConfigParser.hpp"
+#include "test_suite_runner/StringToScheduler/run_bsp_scheduler.hpp"
 
 namespace pt = boost::property_tree;
 using namespace osp;

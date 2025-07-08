@@ -20,7 +20,6 @@ limitations under the License.
 
 #include <fstream>
 #include <iostream>
-
 #include "bsp/model/BspArchitecture.hpp"
 
 namespace osp { namespace file_reader {

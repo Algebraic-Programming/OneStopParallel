@@ -17,8 +17,8 @@ limitations under the License.
 */
 
 #include "graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
-#include "auxiliary/test_suite_runner/BspScheduleTestSuiteRunner.hpp"
-#include "auxiliary/test_suite_runner/BspScheduleRecompTestSuiteRunner.hpp"
+#include "test_suite_runner/BspScheduleTestSuiteRunner.hpp"
+#include "test_suite_runner/BspScheduleRecompTestSuiteRunner.hpp"
 #include <filesystem>
 #include <iostream>
 #include <string>

@@ -28,7 +28,7 @@ limitations under the License.
 #include "bsp/scheduler/GreedySchedulers/GreedyRecomputer.hpp"
 #include "bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
 
-#include "auxiliary/test_suite_runner/ConfigParser.hpp"
+#include "../ConfigParser.hpp"
 #include "bsp/model/BspScheduleRecomp.hpp"
 #include "bsp/scheduler/Scheduler.hpp"
 #include "run_bsp_scheduler.hpp"
