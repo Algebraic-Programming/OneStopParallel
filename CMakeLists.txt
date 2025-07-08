@@ -52,8 +52,11 @@ find_package(COPT)
 # Find Boost libraries
 # Note: link_directories is deprecated. It's better to link against Boost targets directly
 # using target_link_libraries in your specific executable/library targets.
-find_package(Boost 1.71.0 REQUIRED OPTIONAL_COMPONENTS graph unit_test_framework)
+find_package(Boost 1.71.0 OPTIONAL_COMPONENTS graph unit_test_framework)
 # The modern CMake approach uses target-based properties, so global include_directories is avoided.
+if(NOT Boost_FOUND)
+    message(WARNING "Boost not found. Any features or tests depending on it will be disabled.")
+endif()
 
 # Allow user to manually specify the Eigen include path
 find_package(Eigen3 3.4)
