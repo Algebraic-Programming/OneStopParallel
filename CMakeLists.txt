@@ -28,7 +28,6 @@ set(CMAKE_CXX_EXTENSIONS OFF) # Ensure C++17 standard is strictly enforced
 # Configure git hooks
 add_subdirectory(.githooks)
 
-
 # --- Compile Options Configuration ---
 # Common compile options including strict warnings and error-on-warning
 set(COMMON_CXX_WARNING_FLAGS
@@ -45,12 +44,10 @@ set(COMMON_CXX_WARNING_FLAGS
 
 # --- Project-specific Compile Flags ---
 # An interface library to hold compile flags for executables built in this project.
-# This avoids polluting the main OneStopParallel interface library with flags that
-# should not be imposed on downstream consumers.
 add_library(ProjectExecutableFlags INTERFACE)
 target_compile_options(ProjectExecutableFlags INTERFACE ${COMMON_CXX_WARNING_FLAGS})
 
-# Set build-type specific compile options using modern generator expressions
+# Set build-type specific compile options
 target_compile_options(ProjectExecutableFlags INTERFACE
     $<IF:$<CONFIG:Debug>,
         # Debug flags
@@ -69,17 +66,14 @@ target_compile_options(ProjectExecutableFlags INTERFACE
 # Find COPT libraries
 find_package(COPT)
 
-
 # Find Boost libraries
-# Note: link_directories is deprecated. It's better to link against Boost targets directly
-# using target_link_libraries in your specific executable/library targets.
 find_package(Boost 1.71.0 OPTIONAL_COMPONENTS graph unit_test_framework)
 # The modern CMake approach uses target-based properties, so global include_directories is avoided.
 if(NOT Boost_FOUND)
     message(WARNING "Boost not found. Any features or tests depending on it will be disabled.")
 endif()
 
-# Allow user to manually specify the Eigen include path
+# Find Eigen
 find_package(Eigen3 3.4)
 if(Eigen3_FOUND)
     message(STATUS "Eigen3 found!")
@@ -105,10 +99,6 @@ target_include_directories(OneStopParallel INTERFACE
     $<INSTALL_INTERFACE:include>
 )
 
-# The OneStopParallel INTERFACE library itself should not impose compile flags
-# on consumers. Project-internal executables will link to ProjectExecutableFlags
-# to get the desired settings.
-
 # Display status messages for build types
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     message(STATUS "Configuring for Debug build. Debug symbols enabled.")
@@ -119,7 +109,6 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
 else()
     message(STATUS "Configuring for custom build type '${CMAKE_BUILD_TYPE}'. Applying default optimization and warnings.")
 endif()
-
 
 if(OpenMP_FOUND)
     target_link_libraries(OneStopParallel INTERFACE OpenMP::OpenMP_CXX)
@@ -147,7 +136,6 @@ endif()
 # --- Subdirectories for Source and Executables ---
 add_subdirectory(apps)
 add_subdirectory(apps/graph_generator)
-
 
 # --- Build Tests Configuration ---
 # Option to control whether tests are built.
@@ -195,7 +183,6 @@ endif()
 
 # --- Installation ---
 # Set a default installation prefix for local development if the user has not specified one.
-# This avoids needing sudo for a typical build-and-install cycle.
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set(CMAKE_INSTALL_PREFIX "${PROJECT_BINARY_DIR}/install" CACHE PATH "Default install path for developer builds" FORCE)
     message(STATUS "Setting default install prefix to ${CMAKE_INSTALL_PREFIX}")

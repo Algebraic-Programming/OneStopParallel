@@ -18,11 +18,11 @@
 # Create an empty list for the executables
 set( executable_list )
 
-# Function to create an example
+# Function to create an executable
 macro( _add_executable name)
-  # Add the example to the list
+  # Add the executable to the list
   list( APPEND executable_list ${name} )
-  # Create the example
+  # Create the executable
   add_executable( ${name} ${name}.cpp )
   target_link_libraries( ${name} PRIVATE OneStopParallel ProjectExecutableFlags )
 endmacro()
@@ -50,5 +50,5 @@ endif()
 
 endif()
 
-# Custom target to compile all the examples
+# Custom target to compile all the executables
 add_custom_target( build_executables DEPENDS ${executable_list} )
