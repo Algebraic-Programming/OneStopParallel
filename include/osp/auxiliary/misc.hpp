@@ -35,7 +35,7 @@ limitations under the License.
 namespace osp {
 
 // unbiased random int generator
-int randInt(int lim) {
+inline int randInt(int lim) {
     int rnd = std::rand();
     while (rnd >= RAND_MAX - RAND_MAX % lim)
         rnd = std::rand();
@@ -76,7 +76,7 @@ struct Triple {
 };
 using intTriple = Triple<int, int, int>;
 
-bool isDisjoint(std::vector<intPair> &intervals) {
+inline bool isDisjoint(std::vector<intPair> &intervals) {
 
     sort(intervals.begin(), intervals.end());
     for (size_t i = 0; i + 1 < intervals.size(); ++i)
@@ -143,7 +143,7 @@ static const std::vector<std::string> possibleModes{"random", "SJF",      "cilk"
                                                     "BL-EST", "ETF-NUMA", "BL-EST-NUMA", "Layers"};
 
 // modify problem filename by adding substring at the right place
-std::string editFilename(const std::string &filename, const std::string &toInsert) {
+inline std::string editFilename(const std::string &filename, const std::string &toInsert) {
     auto pos = filename.find("_coarse");
     if (pos == std::string::npos)
         pos = filename.find("_instance");
@@ -238,7 +238,7 @@ std::vector<retT> sorting_arrangement(const std::vector<T> &a, bool increasing =
 }
 
 // checks if a vector is rearrangement of 0... N-1
-bool check_vector_is_rearrangement_of_0_to_N(const std::vector<size_t> &a) {
+inline bool check_vector_is_rearrangement_of_0_to_N(const std::vector<size_t> &a) {
     std::vector<bool> contained(a.size(), false);
     for (auto &val : a) {
         if (val >= a.size()) {

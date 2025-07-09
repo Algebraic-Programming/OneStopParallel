@@ -44,7 +44,7 @@ inline std::string to_string(const RETURN_STATUS status) {
     }
 }
 
-std::ostream& operator<<(std::ostream& os, RETURN_STATUS status) {
+inline std::ostream& operator<<(std::ostream& os, RETURN_STATUS status) {
     switch (status) {
         case RETURN_STATUS::OSP_SUCCESS:        os << "SUCCESS";        break;
         case RETURN_STATUS::BEST_FOUND:     os << "BEST_FOUND";     break;

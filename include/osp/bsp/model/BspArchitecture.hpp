@@ -45,7 +45,7 @@ enum class MEMORY_CONSTRAINT_TYPE {
     LOCAL_SOURCES_INC_EDGES
 };
 
-std::ostream &operator<<(std::ostream &os, MEMORY_CONSTRAINT_TYPE type) {
+inline std::ostream &operator<<(std::ostream &os, MEMORY_CONSTRAINT_TYPE type) {
     switch (type) {
     case MEMORY_CONSTRAINT_TYPE::NONE:
         os << "NONE";
