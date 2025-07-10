@@ -123,9 +123,7 @@ endif()
 if (COPT_FOUND)
     target_link_libraries(OneStopParallel INTERFACE COPT::COPT)
 
-    set_target_properties(OneStopParallel PROPERTIES
-        BUILD_RPATH "${COPT_RPATHS}"
-    )
+    list(APPEND CMAKE_BUILD_RPATH ${COPT_RPATHS})
 endif()
 
 if(Eigen3_FOUND)
