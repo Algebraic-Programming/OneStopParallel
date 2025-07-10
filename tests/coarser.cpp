@@ -29,6 +29,7 @@ limitations under the License.
 #include "osp/coarser/coarser_util.hpp"
 #include "osp/coarser/funnel/FunnelBfs.hpp"
 #include "osp/coarser/hdagg/hdagg_coarser.hpp"
+#include "osp/coarser/Sarkar/Sarkar.hpp"
 #include "osp/coarser/SquashA/SquashA.hpp"
 #include "osp/coarser/top_order/top_order_coarser.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
@@ -631,3 +632,39 @@ BOOST_AUTO_TEST_CASE(coarser_SquashA_test_diff_graph_impl_CSGE) {
 
 
 
+
+
+
+
+
+BOOST_AUTO_TEST_CASE(Sarkar_test) {
+    using graph_t = computational_dag_edge_idx_vector_impl_def_t;
+    // using graph_t = computational_dag_vector_impl_def_t;
+
+    SarkarParams::Parameters<v_workw_t<graph_t>> params;
+    params.mode = SarkarParams::Mode::LINES;
+    params.commCost = 100;
+    params.useTopPoset = true;
+
+    Sarkar<graph_t, graph_t> coarser(params);
+
+    test_coarser_same_graph<graph_t>(coarser);
+
+    
+    params.useTopPoset = false;
+    coarser.setParameters(params);
+
+    test_coarser_same_graph<graph_t>(coarser);
+    
+    
+    params.mode = SarkarParams::Mode::FAN_IN;
+    coarser.setParameters(params);
+    
+    test_coarser_same_graph<graph_t>(coarser);
+
+    
+    params.mode = SarkarParams::Mode::FAN_OUT;
+    coarser.setParameters(params);
+    
+    test_coarser_same_graph<graph_t>(coarser);
+}
