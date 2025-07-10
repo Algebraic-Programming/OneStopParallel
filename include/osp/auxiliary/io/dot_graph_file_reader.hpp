@@ -135,37 +135,37 @@ void parseDotEdge(std::string line, Graph_t &G) {
     vertex_idx_t<Graph_t> source_node = static_cast<vertex_idx_t<Graph_t>>(std::stoll(source_str));
     vertex_idx_t<Graph_t> target_node = static_cast<vertex_idx_t<Graph_t>>(std::stoll(target_str));
 
-    edge_commw_t_or_default comm_weight = 0;
+    if constexpr (is_constructable_cdag_comm_edge_v<Graph_t>) {
+        edge_commw_t_or_default comm_weight = 0;
 
-    if (bracket_pos != std::string::npos) {
-        std::size_t end_bracket_pos = line.find(']', bracket_pos);
-        if (end_bracket_pos != std::string::npos) {
-            std::string properties = line.substr(bracket_pos + 1, end_bracket_pos - bracket_pos - 1);
+        if (bracket_pos != std::string::npos) {
+            std::size_t end_bracket_pos = line.find(']', bracket_pos);
+            if (end_bracket_pos != std::string::npos) {
+                std::string properties = line.substr(bracket_pos + 1, end_bracket_pos - bracket_pos - 1);
 
-            // Split properties into key-value pairs
-            std::vector<std::string> keyValuePairs = split(properties, ';');
+                // Split properties into key-value pairs
+                std::vector<std::string> keyValuePairs = split(properties, ';');
 
-            for (const std::string &keyValuePair : keyValuePairs) {
-                std::vector<std::string> keyValue = split(keyValuePair, '=');
-                if (keyValue.size() != 2) continue;
-                
-                std::string key = keyValue[0];
-                key.erase(0, key.find_first_not_of(" \t\n\r\f\v"));
-                key.erase(key.find_last_not_of(" \t\n\r\f\v") + 1);
+                for (const std::string &keyValuePair : keyValuePairs) {
+                    std::vector<std::string> keyValue = split(keyValuePair, '=');
+                    if (keyValue.size() != 2) continue;
+                    
+                    std::string key = keyValue[0];
+                    key.erase(0, key.find_first_not_of(" \t\n\r\f\v"));
+                    key.erase(key.find_last_not_of(" \t\n\r\f\v") + 1);
 
-                if (key.empty()) {
-                    continue;
-                }
-                std::string value = removeLeadingAndTrailingQuotes(keyValue[1]);
+                    if (key.empty()) {
+                        continue;
+                    }
+                    std::string value = removeLeadingAndTrailingQuotes(keyValue[1]);
 
-                if (key == "comm_weight") {
-                    comm_weight = static_cast<edge_commw_t_or_default>(std::stoll(value));
+                    if (key == "comm_weight") {
+                        comm_weight = static_cast<edge_commw_t_or_default>(std::stoll(value));
+                    }
                 }
             }
         }
-    }
 
-    if constexpr (is_constructable_cdag_comm_edge_v<Graph_t>) {
         G.add_edge(source_node, target_node, comm_weight);
     } else {
         G.add_edge(source_node, target_node);
