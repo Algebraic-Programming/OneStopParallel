@@ -30,6 +30,8 @@ endmacro()
 
 _add_executable( graph_analyser )
 
+_add_executable( graph_converter )
+
 if(Boost_FOUND)
 
 _add_executable( osp_turnus )
