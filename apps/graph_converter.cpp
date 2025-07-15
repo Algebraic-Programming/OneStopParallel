@@ -70,6 +70,8 @@ int main(int argc, char *argv[]) {
 
     if (input_ext == ".hdag") {
         read_success = file_reader::readComputationalDagHyperdagFormat(input_filename, graph);
+    } else if (input_ext == ".txt") {
+        read_success = file_reader::readComputationalDagHyperdagFormatDB(input_filename, graph);
     } else if (input_ext == ".mtx") {
         read_success = file_reader::readComputationalDagMartixMarketFormat(input_filename, graph);
     } else if (input_ext == ".dot") {
