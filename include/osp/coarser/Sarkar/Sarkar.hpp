@@ -39,6 +39,7 @@ struct Parameters {
     double leniency{0.0};
     Mode mode{Mode::LINES};
     commCostType commCost{ static_cast<commCostType>(0) };
+    commCostType maxWeight{ std::numeric_limits<commCostType>::max() };
     bool useTopPoset{true};
 };
 } // end namespace SarkarParams
@@ -161,6 +162,7 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::singleContraction(v_wo
             if (vertexPoset[edgeSrc] + 1 != vertexPoset[edgeTgt]) continue;
             if (topDist[edgeSrc] + commCost + graph.vertex_work_weight(edgeTgt) != topDist[edgeTgt]) continue;
             if (botDist[edgeTgt] + commCost + graph.vertex_work_weight(edgeSrc) != botDist[edgeSrc]) continue;
+            if (graph.vertex_work_weight(edgeSrc) + graph.vertex_work_weight(edgeTgt) > params.maxWeight) continue;
 
             v_workw_t<Graph_t_in> maxPath = topDist[edgeSrc] + botDist[edgeTgt] + commCost;
             v_workw_t<Graph_t_in> maxParentDist = 0;
@@ -290,6 +292,11 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::allChildrenContraction
             }
         }
         if (shouldSkip) continue;
+        v_workw_t<Graph_t_in> combined_weight = graph.vertex_work_weight(groupHead);
+        for (const VertexType &groupFoot : graph.children(groupHead)) {
+            combined_weight += graph.vertex_work_weight(groupFoot);
+        }
+        if (combined_weight > params.maxWeight) continue;
 
         v_workw_t<Graph_t_in> maxPath = topDist[groupHead] + botDist[groupHead] - graph.vertex_work_weight(groupHead);
         v_workw_t<Graph_t_in> maxParentDist = 0;
@@ -410,6 +417,11 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::allParentsContraction(
             }
         }
         if (shouldSkip) continue;
+        v_workw_t<Graph_t_in> combined_weight = graph.vertex_work_weight(groupFoot);
+        for (const VertexType &groupHead : graph.parents(groupFoot)) {
+            combined_weight += graph.vertex_work_weight(groupHead);
+        }
+        if (combined_weight > params.maxWeight) continue;
 
         v_workw_t<Graph_t_in> maxPath = topDist[groupFoot] + botDist[groupFoot] - graph.vertex_work_weight(groupFoot);
         v_workw_t<Graph_t_in> maxParentDist = 0;
