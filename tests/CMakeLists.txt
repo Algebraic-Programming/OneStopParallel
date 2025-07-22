@@ -52,6 +52,8 @@ _add_test( kl )
 
 _add_test( kl_mem_constr )
 
+_add_test( merkle_hash_computer )
+
 _add_test( hill_climbing )
 
 ## bsp model
