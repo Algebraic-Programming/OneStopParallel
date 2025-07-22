@@ -28,17 +28,20 @@ limitations under the License.
 
 namespace osp {
 
-template<typename VertexType>
+template<typename VertexType, std::size_t ret = 11>
 struct default_node_hash_func {
 
     std::size_t operator()(const VertexType& ) {
-        return 11;
+        return ret;
     }
 
 };
 
 template<typename Graph_t, typename node_hash_func_t = default_node_hash_func<vertex_idx_t<Graph_t>>>
 class MerkleHashComputer {
+
+    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(std::is_invocable_r<std::size_t, node_hash_func_t, vertex_idx_t<Graph_t>>::value, "node_hash_func_t must be invocable with one vertex_idx_t<Graph_t> argument and return std::size_t.");
 
     using VertexType = vertex_idx_t<Graph_t>;
 

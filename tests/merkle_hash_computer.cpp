@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test)
 
     file_reader::readComputationalDagHyperdagFormat((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(), graph);
 
-    MerkleHashComputer m_hash(graph);
+    MerkleHashComputer<graph_t, default_node_hash_func<vertex_idx_t<graph_t>, 11>> m_hash(graph);
 
     BOOST_CHECK_EQUAL(m_hash.get_vertex_hashes().size(), graph.num_vertices());
     
