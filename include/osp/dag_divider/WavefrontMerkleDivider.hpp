@@ -96,7 +96,7 @@ class WavefrontMerkleDivider : public IDagDivider<Graph_t> {
 
     unsigned next_id;
 
-    work_weight_t threshold = 1000;
+    work_weight_t work_weight_threshold = 7000;
     
     
     inline subgraph_t create_subgraph(const Graph_t &dag, std::size_t hash_arg, const VertexType &v, unsigned wavefront) {
@@ -105,14 +105,32 @@ class WavefrontMerkleDivider : public IDagDivider<Graph_t> {
 
     }
   
-    template<typename RandomAccessIterator>
-    void merge_active_subgraphs(const RandomAccessIterator& start, const RandomAccessIterator& end, VertexType v, unsigned end_wavefront, std::size_t hash_arg, const Graph_t &dag) {
+    inline void add_active_subgraph(const Graph_t &dag, std::size_t hash_arg, const VertexType &v, unsigned wavefront) {
+        active_subgraphs[next_id] = {v, hash_arg, dag.vertex_work_weight(v), dag.vertex_mem_weight(v), wavefront};
+        sub_graph_id[v] = next_id;
+        next_id++;  
+    }    
+    
+    inline void add_active_subgraph(subgraph_t && subg) {
+        active_subgraphs.emplace(next_id, std::move(subg));
+        next_id++;  
+    }
+    
+
+    void merge_active_subgraphs_many_to_one(std::set<unsigned> & subgraphs_, VertexType v, unsigned end_wavefront, std::size_t hash_arg, const Graph_t &dag) {
 
         subgraph_t subg(v, hash_arg, dag.vertex_work_weight(v), dag.vertex_mem_weight(v), end_wavefront);
 
-        for (auto it = start; it != end; ++it) {
+        sub_graph_id[v] = next_id;
+
+        std::cout << "merging vertex " << v << " with subgraphs: ";
+
+        for (const unsigned & subgraph_id : subgraphs_) {
         
-            const subgraph_t & g = active_subgraphs[*it];
+            std::cout << subgraph_id << ", ";
+
+
+            const subgraph_t & g = active_subgraphs[subgraph_id];
 
             for (const auto & v : g.vertices) {
                 subg.vertices.push_back(v);
@@ -123,18 +141,21 @@ class WavefrontMerkleDivider : public IDagDivider<Graph_t> {
             subg.memory_weight += g.memory_weight;
             subg.start_wavefront = std::min(subg.start_wavefront, g.start_wavefront); // max or min?
             
-            active_subgraphs.erase(*it);
+            active_subgraphs.erase(subgraph_id);
         
         }
+
+        std::cout << std::endl;
+
 
         add_active_subgraph(std::move(subg));
     }
     
 
-    std::pair<bool,bool> check_extension(const std::vector<VertexType> & orbit, std::unordered_map<VertexType, std::set<unsigned>> & extends_sugraphs) {
+    std::pair<bool,bool> check_extension(const Graph_t & dag, const std::vector<VertexType> & orbit, std::unordered_map<VertexType, std::set<unsigned>> & extends_sugraphs, std::set<unsigned> & all_extensions) {
 
         bool no_merge_extension = true;
-        std::set<unsigned>() all_extensions;
+        std::set<unsigned> common_subgraphs;
         for (const auto & v : orbit) {
             extends_sugraphs[v] = std::set<unsigned>();
             for (const auto & parent : dag.parents(v)) {   
@@ -142,23 +163,57 @@ class WavefrontMerkleDivider : public IDagDivider<Graph_t> {
                 const unsigned parent_id = sub_graph_id[parent];
 
                 if (active_subgraphs.find(parent_id) != active_subgraphs.end()) {
-                    extends_sugraphs[v].insert(parent_id);    
-                    all_extensions.insert(parent_id);
+                    auto pair_ext = extends_sugraphs[v].insert(parent_id);    
+                    auto pair_all = all_extensions.insert(parent_id);
+                    if (pair_ext.second && not pair_all.second) {
+                        common_subgraphs.insert(parent_id);
+                    }
                 }
             }
 
-            if (no_merge_extension && extends_sugraphs[v].size() > 1) {
+            if (no_merge_extension && extends_sugraphs[v].size() != 1) {
                 no_merge_extension = false;
             }            
         }
         
+        std::cout << "common subgraphs: {";
+        for( const auto& common : common_subgraphs) {
+            std::cout << common << ", ";
+        }
+        std::cout << " } orbit 0 {" ;
+
+        for( const auto& common : extends_sugraphs[orbit[0]]) {
+            std::cout << common << ", ";
+        }
+        std::cout << " }" << std::endl;
+
+        if (common_subgraphs.empty() || common_subgraphs.size() >= extends_sugraphs[orbit[0]].size()) {
+            return {no_merge_extension, all_extensions.size() == orbit.size()};
+        }
+
+        std::cout << "pendant" << std::endl;
+
+        no_merge_extension = true; 
+            
+        
+        for(const auto& common : common_subgraphs) { 
+            all_extensions.erase(common);
+        }
+
+        for (const auto & v : orbit) {
+            for( const auto& common : common_subgraphs) {                                  
+                extends_sugraphs[v].erase(common);
+            }
+            
+            if (no_merge_extension && extends_sugraphs[v].size() != 1) {
+                no_merge_extension = false;
+            }            
+        }       
+    
         return {no_merge_extension, all_extensions.size() == orbit.size()};
+
     }
 
-    inline void add_active_subgraph(subgraph_t && subg) {
-        active_subgraphs[next_id] = subg; 
-        next_id++;  
-    }
 
   public:
     WavefrontMerkleDivider() = default;
@@ -190,8 +245,6 @@ class WavefrontMerkleDivider : public IDagDivider<Graph_t> {
                 } else {
                     bw_orbits[m_bw_hash.get_vertex_hash(v)].push_back(v);
                 }
-
-
             }
 
             std::cout << "fw: ";
@@ -217,86 +270,100 @@ class WavefrontMerkleDivider : public IDagDivider<Graph_t> {
 
             }
             std::cout << std::endl;
-            
-
- 
-
-            for (const auto v : level) {
-                add_active_subgraph(create_subgraph(dag, m_fw_hash.get_vertex_hash(v), v, wf_index));
-            }
-                
-
-
+   
+           
             for (const auto& [hash, orbit] : fw_orbits) { 
                             
-                if (orbit.size() == 1) {
+                // if (orbit.size() == 1) {
 
-                    const VertexType v = orbit[0];
+                //     const VertexType v = orbit[0];
 
-                    work_weight_t acc_weight = 0;
-                    std::set<unsigned> visited_parents;
-                    for (const auto & parent : dag.parents(v)) {
-                        const unsigned parent_id = sub_graph_id[parent];
-                        if (active_subgraphs.find(parent_id) != active_subgraphs.end()) {
+                //     work_weight_t acc_weight = 0;
+                //     std::set<unsigned> visited_parents;
+                //     for (const auto & parent : dag.parents(v)) {
+                //         const unsigned parent_id = sub_graph_id[parent];
+                //         if (active_subgraphs.find(parent_id) != active_subgraphs.end()) {
                         
-                            auto pair = visited_parents.insert(parent_id);
+                //             auto pair = visited_parents.insert(parent_id);
                             
-                            if (pair.second)
-                                acc_weight += active_subgraphs[parent_id].work_weight;                            
-                        } 
-                    }
+                //             if (pair.second)
+                //                 acc_weight += active_subgraphs[parent_id].work_weight;                            
+                //         } 
+                //     }
 
-                    if (acc_weight > threshold) {
-
-                        // for (const auto & id : visited_parents) {
-                        //     sub_graphs.push_back(std::move(active_subgraphs[id]));
-                        //     active_subgraphs.erase(id);
-                        // }
-
-                        add_active_subgraph(create_subgraph(dag, m_fw_hash.get_vertex_hash(v), v, wf_index));
-
-
-                    } else {
-                        merge_active_subgraphs(visited_parents.begin(), visited_parents.end(), v, wf_index, m_fw_hash, dag);
-                    }
+                //     if (acc_weight > work_weight_threshold) {
+                //         add_active_subgraph(create_subgraph(dag, m_fw_hash.get_vertex_hash(v), v, wf_index));
+                //     } else {
+                //         merge_active_subgraphs_many_to_one(visited_parents, v, wf_index, m_fw_hash.get_vertex_hash(v), dag);
+                //     }
                     
+                // } else {
 
+                std::cout << "Checking orbit: {";
+                for (const auto & v: orbit) {
+                    std::cout << v << ", ";
+                } 
+                std::cout << "}, ";
+
+
+                std::unordered_map<VertexType, std::set<unsigned>> extends_sugraphs_set;
+                std::set<unsigned> all_extensions;
+
+                auto bool_pair = check_extension(dag, orbit, extends_sugraphs_set, all_extensions);
+                if(bool_pair.first && bool_pair.second) { 
+
+                    std::cout << "iso extend" << std::endl;
+
+                    for (const auto & [v, ext_subg ] : extends_sugraphs_set) {
+                        active_subgraphs[*ext_subg.begin()].extend_by_vertex(v, dag.vertex_work_weight(v), dag.vertex_mem_weight(v), wf_index, m_fw_hash.get_vertex_hash(v));
+                        sub_graph_id[v] = *extends_sugraphs_set[v].begin(); 
+                    }
+
+                } else if (bool_pair.first) {
+                
+
+                    std::cout << "one to many extend, orbit size: " << orbit.size() << " all extension: {";
+                    for (const auto & x : all_extensions) {
+                        std::cout << x << ", ";
+                    }
+                    std::cout << "}" << std::endl;
+
+                    if (orbit.size() > 2 * all_extensions.size()) { // this needs to be weighted somehow
+                        for (const auto & v : orbit) {
+                            add_active_subgraph(dag, m_fw_hash.get_vertex_hash(v), v, wf_index);
+                        }
+                    } else {
+
+                        for (const auto & v : orbit) {
+                            active_subgraphs[*extends_sugraphs_set[v].begin()].extend_by_vertex(v, dag.vertex_work_weight(v), dag.vertex_mem_weight(v), wf_index, m_fw_hash.get_vertex_hash(v));
+                            sub_graph_id[v] = *extends_sugraphs_set[v].begin();                        
+                        }
+                    }
+                
                 } else {
 
-                    std::unordered_map<VertexType, std::set<unsigned>> & extends_sugraphs;
-                    auto bool_pair = check_extension(orbit, extends_sugraphs )
-                    if(bool_pair.first && bool_pair.second) { 
+                    std::cout << "many to one extend " << std::endl;
 
-                        for (const auto & [v : ext_subg ] : extends_sugraphs) {
-                            active_subgraphs[*ext_subg.begin()].extend_by_vertex(v, dag.vertex_work_weight(v), dag.vertex_mem_weight(v), wf_index, m_fw_hash.get_vertex_hash(v));
+                    for (auto& [v, ext_subg ] : extends_sugraphs_set) {
+
+                        work_weight_t acc_weight = dag.vertex_work_weight(v);
+                        for (const unsigned & subgraph_id : ext_subg) {
+                            acc_weight += active_subgraphs[subgraph_id].work_weight;
                         }
 
-                    } else if (bool_pair.first) {
-                    
-                        // possible all
-                    
-                    } else {
-
-                        for (const auto & [v : ext_subg ] : extends_sugraphs) {
-
-                            work_weight_t acc_weight = 0;
-                            for (const unsigned & subgraph_id : ext_subg) {
-                                acc_weight += active_subgraphs[subgraph_id].work_weight;
-                            }
-
-                            if (acc_weight > threshold) {
-                                add_active_subgraph(create_subgraph(dag, m_fw_hash.get_vertex_hash(v), v, wf_index));
-                            } else {
-                                merge_active_subgraphs(ext_subg.begin(), ext_subg.end(), v, wf_index, m_fw_hash, dag);
-                            }
+                        std::cout << "acc_weight: " << acc_weight << std::endl;
+                        if (acc_weight > work_weight_threshold) {
+                            add_active_subgraph(dag, m_fw_hash.get_vertex_hash(v), v, wf_index);
+                        } else {
+                            merge_active_subgraphs_many_to_one(ext_subg, v, wf_index, m_fw_hash.get_vertex_hash(v), dag);
                         }
                     }
                 }
-            }  
-                                
-        
-            wf_index++;
-        
+                // }
+            } 
+
+            print_active_subgraphs(wf_index);
+            wf_index++;        
         }
      
 
@@ -305,6 +372,21 @@ class WavefrontMerkleDivider : public IDagDivider<Graph_t> {
     
         return vertex_maps;
         //
+    }
+
+
+
+    void print_active_subgraphs(unsigned wf) {
+
+        std::cout << "Active subgraphs " << wf << std::endl;
+        for ( const auto & [key, value] : active_subgraphs) {
+
+            std::cout << "Subgraph " << key << ": ";
+            for (const auto & v : value.vertices) {
+                std::cout << v << ", ";
+            }
+            std::cout << " weight: " << value.work_weight << std::endl;
+        }
     }
 
 };
