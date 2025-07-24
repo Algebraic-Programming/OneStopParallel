@@ -37,7 +37,7 @@ struct default_node_hash_func {
 
 };
 
-template<typename Graph_t, typename node_hash_func_t = default_node_hash_func<vertex_idx_t<Graph_t>>>
+template<typename Graph_t, typename node_hash_func_t = default_node_hash_func<vertex_idx_t<Graph_t>>, bool forward = true>
 class MerkleHashComputer {
 
     static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
@@ -50,22 +50,13 @@ class MerkleHashComputer {
 
     node_hash_func_t node_hash_func;
 
-    void compute_hashes(const Graph_t & graph) {
+    inline void compute_hashes_helper(const VertexType &v, std::vector<std::size_t> & parent_child_hashes) {
 
-        vertex_hashes.resize(graph.num_vertices());
-        
-        for (const VertexType &v : top_sort_view(graph)) {
-
-            std::vector<std::size_t> parent_hashes;
-            for (const VertexType& parent : graph.parents(v)) {
-                parent_hashes.push_back(vertex_hashes[parent]);
-            }
-
-            std::sort(parent_hashes.begin(),parent_hashes.end());
+            std::sort(parent_child_hashes.begin(),parent_child_hashes.end());
 
             std::size_t hash = node_hash_func(v);
-            for (const VertexType& parent_hash : parent_hashes) {
-                hash_combine(hash, parent_hash); 
+            for (const VertexType& pc_hash : parent_child_hashes) {
+                hash_combine(hash, pc_hash); 
             }
    
             vertex_hashes[v] = hash;
@@ -75,14 +66,44 @@ class MerkleHashComputer {
             } else {
                 orbits[hash].push_back(v);
             }
+    }
+
+    template<typename RetT = void> 
+    std::enable_if_t<forward, RetT> compute_hashes(const Graph_t & graph) {
+
+        vertex_hashes.resize(graph.num_vertices());
+        
+        for (const VertexType &v : top_sort_view(graph)) {
+            std::vector<std::size_t> parent_hashes;
+            for (const VertexType& parent : graph.parents(v)) {
+                parent_hashes.push_back(vertex_hashes[parent]);
+            }
+            compute_hashes_helper(v, parent_hashes);
         }
+    }
+
+    template<typename RetT = void> 
+    std::enable_if_t<not forward, RetT> compute_hashes(const Graph_t & graph) {
+
+        vertex_hashes.resize(graph.num_vertices());
+        
+        const auto top_sort = GetTopOrderReverse(graph);
+        for (auto it = top_sort.rbegin(); it != top_sort.rend(); ++it) {
+            const VertexType &v = *it;
+            std::vector<std::size_t> child_hashes;
+            for (const VertexType& child : graph.children(v)) {
+                child_hashes.push_back(vertex_hashes[child]);
+            }
+            compute_hashes_helper(v, child_hashes);  
+        }      
     }
 
   public:
 
     MerkleHashComputer(const Graph_t & g) {
-        compute_hashes(g);
+        compute_hashes(g);        
     }
+
     virtual ~MerkleHashComputer() = default;
 
     std::size_t get_vertex_hash(const VertexType &v) { return vertex_hashes[v]; }
@@ -93,13 +114,12 @@ class MerkleHashComputer {
     const std::unordered_map<std::size_t, std::vector<VertexType>> &get_orbits() { return orbits; }
 
     const std::vector<VertexType>& get_orbit_from_hash(const std::size_t& hash) const {
-    try {
-        return orbits.at(hash);
-    } catch (const std::out_of_range& oor) {
-        throw std::out_of_range("No orbit found for the given hash.");
+        try {
+            return orbits.at(hash);
+        } catch (const std::out_of_range& oor) {
+            throw std::out_of_range("No orbit found for the given hash.");
+        }
     }
-}
-
 };
 
 
