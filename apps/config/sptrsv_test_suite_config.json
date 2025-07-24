@@ -13,11 +13,13 @@
     "algorithms": [
          {
             "name": "Serial",
+            "id": "Serial",
             "run" : true,
             "parameters": {}
         },
         {
             "name": "GreedyBsp",
+            "id": "GreedyBsp",
             "run" : true,
             "parameters": {
                 "max_percent_idle_processors": 0.2,
@@ -26,6 +28,7 @@
         },
         {
             "name": "BspLocking",
+            "id": "BspLocking",
             "run" : true,
             "parameters": {
                 "max_percent_idle_processors": 0.4,
@@ -34,6 +37,7 @@
         },
         {
             "name": "GrowLocal",
+            "id": "GrowLocal",
             "run" : true,
             "parameters": {
                 "minSuperstepSize": 20,

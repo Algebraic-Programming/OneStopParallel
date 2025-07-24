@@ -324,17 +324,9 @@ class AbstractTestSuiteRunner {
                 for (auto &algorithm_config_pair : parser.scheduler) {
                     const pt::ptree &algo_config = algorithm_config_pair.second;
                     
-                    std::string name_suffix = "";
-                    try {
-                        name_suffix = algo_config.get_child("name_suffix").get_value<std::string>();
-                    } catch (const pt::ptree_bad_path &e) {
-                    }
-                    
-                    if (!name_suffix.empty())
-                        name_suffix = "_" + name_suffix;
+        
 
-                    std::string current_algo_name =
-                        algo_config.get_child("name").get_value<std::string>() + name_suffix;
+                    std::string current_algo_name = algo_config.get_child("name").get_value<std::string>();
                     log_stream << "Start Algorithm " + current_algo_name + "\n";
 
                     long long computation_time_ms;

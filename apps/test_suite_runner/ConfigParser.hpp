@@ -79,7 +79,7 @@ struct ConfigParser {
             std::string alg_name = algorithm.second.get_child("name").get_value<std::string>();
 
             std::transform(alg_name.begin(), alg_name.end(), alg_name.begin(),
-                           [](unsigned char c) { return std::tolower(c); });
+                           [](unsigned char c) { return c; });
 
             if (alg_name == algorithm_identifier) {
                 scheduler.push_back(algorithm);
@@ -168,7 +168,7 @@ struct ConfigParser {
 
                     std::string flag = argv[i];
                     std::transform(flag.begin(), flag.end(), flag.begin(),
-                                   [](unsigned char c) { return std::tolower(c); });
+                                   [](unsigned char c) { return c; });
 
                     if (std::string(flag) == "--config") {
                         usage();
@@ -186,13 +186,13 @@ struct ConfigParser {
                                std::string(flag) == "-d" || std::string(flag) == "-dot") {
                         global_params.put("outputDotSchedule", true);
 
-                    } else if (std::string(flag) == "--inputdag" || std::string(flag) == "--g" ||
-                               std::string(flag) == "-inputdag" || std::string(flag) == "-g") {
+                    } else if (std::string(flag) == "--inputDag" || std::string(flag) == "--g" ||
+                               std::string(flag) == "-inputDag" || std::string(flag) == "-g") {
                         instance.put("graphFile", argv[++i]);
                         graph_specified = true;
 
-                    } else if (std::string(flag) == "--inputmachine" || std::string(flag) == "--m" ||
-                               std::string(flag) == "-inputmachine" || std::string(flag) == "-m") {
+                    } else if (std::string(flag) == "--inputMachine" || std::string(flag) == "--m" ||
+                               std::string(flag) == "-inputMachine" || std::string(flag) == "-m") {
                         instance.put("machineParamsFile", argv[++i]);
                         machine_specified = true;
 

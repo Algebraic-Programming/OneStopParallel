@@ -9,11 +9,13 @@
     "algorithms": [
         {
             "name": "Serial",
+            "id" : "Serial",
             "description": "\tSerial Scheduler.",
             "parameters": {}
         },
         {
             "name": "GreedyBsp",
+            "id" : "GreedyBsp",
             "description": "Greedy scheduler that assigns tasks to processors in a BSP fashion.",
             "parameters": {
                 "max_percent_idle_processors": 0.2,
@@ -22,6 +24,7 @@
         },
         {
             "name": "BspLocking",
+            "id" : "BspLocking",
             "description": "Bsp scheduler that assigns tasks to processors in a BSP fashion.",
             "parameters": {
                 "max_percent_idle_processors": 0.4,
@@ -30,11 +33,153 @@
         },
         {
             "name": "GrowLocal",
-            "description": "Greedy Scheduler which prioritses locality and automatically detects number of cores to use",
+            "id" : "GrowLocal",
+            "description": "Greedy Scheduler which prioritses locality and automatically detects number of cores to use.",
             "parameters": {
                 "minSuperstepSize": 20,
                 "syncCostMultiplierMinSuperstepWeight": 1,
                 "syncCostMultiplierParallelCheck": 4
+            }
+        },
+        {
+            "name": "Variance",
+            "id": "Variance",
+            "run" : true,
+            "description": "Variance.",
+            "parameters": {
+                "max_percent_idle_processors": 0.4,
+                "increase_parallelism_in_new_superstep": true
+            }
+        },
+        {
+            "name": "Cilk",
+            "id": "Cilk",
+            "run" : true,
+            "description": "Cilk.",
+            "parameters": {
+                "mode": "Cilk"
+            }
+        },
+        {
+            "name": "Etf",
+            "id": "Etf",
+            "run" : true,
+            "description": "Etf.",
+            "parameters": {
+                "mode": "Etf"
+            }
+        },                
+        {
+            "name": "GreedyRandom",
+            "id": "GreedyRandom",
+            "description": "GreedyRandom.",
+            "run" : true
+        },
+        {
+            "name": "GreedyChildren",
+            "id": "GreedyChildren",
+            "description": "GreedyChildren.",
+            "run" : true
+        },
+
+        {
+            "name": "GrowLocalKL",
+            "id": "LocalSearch",
+            "run" : true,
+            "name_suffix" : "GrowLocalKL",
+            "description": "GrowLocalKL.",
+            "parameters": {
+                "improver": {
+                    "name" : "kl_total_comm" 
+                },
+                "scheduler": {
+                    "name": "GrowLocal",
+                    "id": "GrowLocal",
+                    "parameters": {
+                        "minSuperstepSize": 20,
+                        "syncCostMultiplierMinSuperstepWeight": 1,
+                        "syncCostMultiplierParallelCheck": 4
+                    }
+                }                
+            }
+        },
+        {
+            "name": "LockingKL",
+            "id": "LocalSearch",
+            "run" : true,
+            "name_suffix" : "LockingKL",
+            "description": "LockingKL.",
+            "parameters": {
+                "improver": {
+                    "name" : "kl_total_comm" 
+                },
+                "scheduler": {
+                    "name": "BspLocking",
+                    "id": "BspLocking",
+                    "parameters": {
+                    "max_percent_idle_processors": 0.4,
+                    "increase_parallelism_in_new_superstep": true
+                    }                    
+                }                
+            }
+        },
+        {
+            "name": "FunnelLocking",
+            "id" : "Coarser",
+            "run" : true,
+            "name_suffix" : "FunnelLocking",
+            "description": "FunnelLocking.",
+            "parameters": {
+                "coarser": {
+                    "name" : "funnel",
+                    "parameters" : {
+                        "funnel_incoming" : true,
+                        "use_approx_transitive_reduction" : true                        
+                    }
+                },
+                "scheduler": {
+                    "name": "BspLocking",
+                    "id" : "BspLocking",
+                    "parameters": {
+                    "max_percent_idle_processors": 0.4,
+                    "increase_parallelism_in_new_superstep": true
+                    }                    
+                }                
+            }
+        },
+        {
+            "name": "FunnelLockingKL",
+            "id" : "Coarser",
+            "run" : true,
+            "name_suffix" : "FunnelLockingKL",
+            "description": "FunnelLockingKL.",
+            "parameters": {
+                "coarser": {
+                    "name" : "funnel",
+                    "parameters" : {
+                        "funnel_incoming" : true,
+                        "use_approx_transitive_reduction" : true                        
+                    }
+                },
+                "scheduler":  {
+                    "name": "LockingKL",
+                    "id": "LocalSearch",
+                    "run" : true,
+                    "name_suffix" : "LockingKL",
+                    "parameters": {
+                        "improver": {
+                            "name" : "kl_total_comm" 
+                        },
+                        "scheduler": {
+                            "name": "BspLocking",
+                            "id": "BspLocking",
+                            "parameters": {
+                            "max_percent_idle_processors": 0.4,
+                            "increase_parallelism_in_new_superstep": true
+                            }                    
+                        }                
+                    }
+                }  
             }
         }
     ]

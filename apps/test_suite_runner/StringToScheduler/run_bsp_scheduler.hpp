@@ -82,15 +82,17 @@ RETURN_STATUS run_bsp_scheduler(const ConfigParser &parser, const boost::propert
 
     const unsigned timeLimit = parser.global_params.get_child("timeLimit").get_value<unsigned>();
 
-    std::cout << "Running algorithm: " << algorithm.get_child("name").get_value<std::string>() << std::endl;
+    const std::string id = algorithm.get_child("id").get_value<std::string>();
 
-    if (algorithm.get_child("name").get_value<std::string>() == "Serial") {
+    std::cout << "Running algorithm: " << id << std::endl;
+
+    if (id == "Serial") {
 
         Serial<Graph_t> scheduler;
         scheduler.setTimeLimitSeconds(timeLimit);
         return scheduler.computeSchedule(schedule);
 
-    } else if (algorithm.get_child("name").get_value<std::string>() == "GreedyBsp") {
+    } else if (id == "GreedyBsp") {
 
         float max_percent_idle_processors =
             algorithm.get_child("parameters").get_child("max_percent_idle_processors").get_value<float>();
@@ -102,7 +104,7 @@ RETURN_STATUS run_bsp_scheduler(const ConfigParser &parser, const boost::propert
 
         return scheduler.computeSchedule(schedule);
 
-    } else if (algorithm.get_child("name").get_value<std::string>() == "GrowLocal") {
+    } else if (id == "GrowLocal") {
 
         GrowLocalAutoCores_Params<v_workw_t<Graph_t>> params;
 
@@ -117,7 +119,7 @@ RETURN_STATUS run_bsp_scheduler(const ConfigParser &parser, const boost::propert
         GrowLocalAutoCores<Graph_t> scheduler(params);
 
         return scheduler.computeSchedule(schedule);
-    } else if (algorithm.get_child("name").get_value<std::string>() == "BspLocking") {
+    } else if (id == "BspLocking") {
 
         float max_percent_idle_processors =
             algorithm.get_child("parameters").get_child("max_percent_idle_processors").get_value<float>();
@@ -129,7 +131,7 @@ RETURN_STATUS run_bsp_scheduler(const ConfigParser &parser, const boost::propert
 
         return scheduler.computeSchedule(schedule);
 
-    } else if (algorithm.get_child("name").get_value<std::string>() == "Cilk") {
+    } else if (id == "Cilk") {
 
         CilkScheduler<Graph_t> scheduler;
         scheduler.setTimeLimitSeconds(timeLimit);
@@ -140,7 +142,7 @@ RETURN_STATUS run_bsp_scheduler(const ConfigParser &parser, const boost::propert
 
         return scheduler.computeSchedule(schedule);
 
-    } else if (algorithm.get_child("name").get_value<std::string>() == "Etf") {
+    } else if (id == "Etf") {
 
         EtfScheduler<Graph_t> scheduler;
         scheduler.setTimeLimitSeconds(timeLimit);
@@ -151,21 +153,21 @@ RETURN_STATUS run_bsp_scheduler(const ConfigParser &parser, const boost::propert
 
         return scheduler.computeSchedule(schedule);
 
-    } else if (algorithm.get_child("name").get_value<std::string>() == "GreedyRandom") {
+    } else if (id == "GreedyRandom") {
 
         RandomGreedy<Graph_t> scheduler;
         scheduler.setTimeLimitSeconds(timeLimit);
 
         return scheduler.computeSchedule(schedule);
 
-    } else if (algorithm.get_child("name").get_value<std::string>() == "GreedyChildren") {
+    } else if (id == "GreedyChildren") {
 
         GreedyChildren<Graph_t> scheduler;
         scheduler.setTimeLimitSeconds(timeLimit);
 
         return scheduler.computeSchedule(schedule);
 
-    } else if (algorithm.get_child("name").get_value<std::string>() == "Variance") {
+    } else if (id == "Variance") {
 
         float max_percent_idle_processors =
             algorithm.get_child("parameters").get_child("max_percent_idle_processors").get_value<float>();
@@ -177,7 +179,7 @@ RETURN_STATUS run_bsp_scheduler(const ConfigParser &parser, const boost::propert
 
         return scheduler.computeSchedule(schedule);
 
-    } else if (algorithm.get_child("name").get_value<std::string>() == "LocalSearch") {
+    } else if (id == "LocalSearch") {
 
         RETURN_STATUS status =
             run_bsp_scheduler(parser, algorithm.get_child("parameters").get_child("scheduler"), schedule);
@@ -187,7 +189,7 @@ RETURN_STATUS run_bsp_scheduler(const ConfigParser &parser, const boost::propert
         }
         return run_bsp_improver(parser, algorithm.get_child("parameters").get_child("improver"), schedule);
 
-    } else if (algorithm.get_child("name").get_value<std::string>() == "Coarser") {
+    } else if (id == "Coarser") {
 
         using vertex_type_t_or_default =
             std::conditional_t<is_computational_dag_typed_vertices_v<Graph_t>, v_type_t<Graph_t>, unsigned>;
@@ -236,7 +238,7 @@ RETURN_STATUS run_bsp_scheduler(const ConfigParser &parser, const boost::propert
 
     if constexpr (is_constructable_cdag_v<Graph_t> || is_direct_constructable_cdag_v<Graph_t>) {
 
-        if (algorithm.get_child("name").get_value<std::string>() == "MultiHC") {
+        if (id == "MultiHC") {
 
             MultiLevelHillClimbingScheduler<Graph_t> scheduler;
             scheduler.setTimeLimitSeconds(timeLimit);
