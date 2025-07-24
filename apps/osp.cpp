@@ -157,7 +157,7 @@ int main(int argc, char *argv[]) {
                 }
             } else {
 
-                schedulers_costs[algorithm_counter] = schedule.computeCosts();
+                schedulers_costs[algorithm_counter] = BspScheduleCS<graph_t>(schedule).computeCosts();
                 schedulers_work_costs[algorithm_counter] = schedule.computeWorkCosts();
                 schedulers_supersteps[algorithm_counter] = schedule.numberOfSupersteps();
 
