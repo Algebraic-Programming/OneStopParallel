@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test)
         std::cout << cwd << std::endl;
     }
 
-    file_reader::readComputationalDagDotFormat("/home/toni/work/data/ast/llama_128_128.dot", graph);
+    file_reader::readComputationalDagDotFormat("/home/toni/work/data/ast/deepseekAttention_s_1.dot", graph);
 
     WavefrontMerkleDivider<graph_t> divider; 
 

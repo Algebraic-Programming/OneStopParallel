@@ -27,6 +27,7 @@ limitations under the License.
 #include "DagDivider.hpp"
 #include "osp/graph_algorithms/subgraph_algorithms.hpp"
 #include "osp/graph_algorithms/directed_graph_path_util.hpp"
+#include "osp/auxiliary/io/DotFileWriter.hpp"
 
 namespace osp {
 
@@ -96,7 +97,7 @@ class WavefrontMerkleDivider : public IDagDivider<Graph_t> {
 
     unsigned next_id;
 
-    work_weight_t work_weight_threshold = 7000;
+    work_weight_t work_weight_threshold = 10000;
     
     
     inline subgraph_t create_subgraph(const Graph_t &dag, std::size_t hash_arg, const VertexType &v, unsigned wavefront) {
@@ -397,6 +398,20 @@ class WavefrontMerkleDivider : public IDagDivider<Graph_t> {
             wf_index++;        
         }
      
+        std::vector<unsigned> colors(dag.num_vertices(),0);
+
+        unsigned color = 0;
+        for (const auto & [key, value] : active_subgraphs) {
+
+            for (const auto & v : value.vertices) {
+                colors[v] = color;
+            }
+            color++;
+        }
+
+        DotFileWriter dot_writer;
+
+        dot_writer.write_colored_graph("colored_graph.dot", dag, colors);
 
         std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> vertex_maps;
 

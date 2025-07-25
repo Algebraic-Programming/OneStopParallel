@@ -194,6 +194,7 @@ class DotFileWriter {
         }
     };
 
+
     template<typename Graph_t>
     struct VertexWriterGraph_DOT {
 
@@ -204,6 +205,53 @@ class DotFileWriter {
         void operator()(std::ostream &out, const vertex_idx_t<Graph_t> &i) const {
             out << i << " ["
                 << "work_weight=\"" << graph.vertex_work_weight(i) << "\";"
+                << "comm_weight=\"" << graph.vertex_comm_weight(i) << "\";"
+                << "mem_weight=\"" << graph.vertex_mem_weight(i) << "\";";
+
+            if constexpr (has_typed_vertices_v<Graph_t>) {
+
+                out << "type=\"" << graph.vertex_type(i) << "\";";
+            }
+
+            out << "]";
+        }
+    };
+
+    template<typename Graph_t>
+    struct ColoredVertexWriterGraph_DOT {
+
+        const Graph_t &graph;
+        const std::vector<unsigned> &colors;
+        std::vector<std::string> color_strings;
+
+
+        ColoredVertexWriterGraph_DOT(const Graph_t &graph_, const std::vector<unsigned> &colors_) : graph(graph_), colors(colors_) {
+
+           color_strings = {
+                "lightcoral", "palegreen", "lightblue", "gold", "orchid", "sandybrown", "aquamarine", "burlywood",
+                "hotpink", "yellowgreen", "skyblue", "khaki", "violet", "salmon", "turquoise", "tan",
+                "deeppink", "chartreuse", "deepskyblue", "lemonchiffon", "magenta", "orangered", "cyan", "wheat",
+                "mediumvioletred", "limegreen", "dodgerblue", "lightyellow", "darkviolet", "tomato", "paleturquoise", "bisque",
+                "crimson", "lime", "steelblue", "papayawhip", "purple", "darkorange", "cadetblue", "peachpuff",
+                "indianred", "springgreen", "powderblue", "cornsilk", "mediumorchid", "chocolate", "darkturquoise", "navajowhite",
+                "firebrick", "seagreen", "royalblue", "lightgoldenrodyellow", "darkmagenta", "coral", "teal", "moccasin",
+                "maroon", "forestgreen", "blue", "yellow", "darkorchid", "red", "green", "navy",
+                "darkred", "darkgreen", "mediumblue", "ivory", "indigo", "orange", "darkcyan", "antiquewhite"
+            };
+        }
+
+        void operator()(std::ostream &out, const vertex_idx_t<Graph_t> &i) const {
+
+            if (i >= colors.size() || color_strings.empty()) {
+                 // Fallback for safety: print without color if colors vector is mismatched or palette is empty.
+                 out << i << " [";
+            } else {
+                 // Use modulo operator to cycle through the fixed palette if there are more color
+                 // groups than available colors.
+                 const std::string& color = color_strings[colors[i] % color_strings.size()];
+                 out << i << " [style=filled;fillcolor=" << color << ";";
+            }
+            out << "work_weight=\"" << graph.vertex_work_weight(i) << "\";"
                 << "comm_weight=\"" << graph.vertex_comm_weight(i) << "\";"
                 << "mem_weight=\"" << graph.vertex_mem_weight(i) << "\";";
 
@@ -419,6 +467,23 @@ class DotFileWriter {
                                          const BspScheduleRecomp<Graph_t> &schedule) const {
         std::ofstream os(filename);
         write_schedule_recomp_duplicate(os, schedule);
+    }
+
+    template<typename Graph_t>
+    void write_colored_graph(std::ostream &os, const Graph_t &graph, std::vector<unsigned> &colors) const {
+
+        static_assert(is_computational_dag_v<Graph_t>, "Graph_t must be a computational DAG");
+
+        write_graph_structure(os, graph, ColoredVertexWriterGraph_DOT<Graph_t>(graph, colors));
+    }
+
+    template<typename Graph_t>
+    void write_colored_graph(const std::string &filename, const Graph_t &graph, std::vector<unsigned> &colors) const {
+
+        static_assert(is_computational_dag_v<Graph_t>, "Graph_t must be a computational DAG");
+
+        std::ofstream os(filename);
+        write_colored_graph(os, graph, colors);
     }
 
     template<typename Graph_t>
