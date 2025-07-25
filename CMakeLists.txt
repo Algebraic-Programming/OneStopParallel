@@ -55,7 +55,7 @@ target_compile_options(ProjectExecutableFlags INTERFACE
         # Else (not Debug)
         $<IF:$<CONFIG:RelWithDebInfo>,
             # RelWithDebInfo flags
-            -O2;-g;-DNDEBUG,
+            -O2;-g,
             # Release and other/custom flags
             -O3;-DNDEBUG
         >
@@ -105,7 +105,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
     message(STATUS "Configuring for Release build. Optimization -O3 and NDEBUG enabled.")
 elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-    message(STATUS "Configuring for Release with Debug Info build. Optimization -O2 and debug symbols enabled.")
+    message(STATUS "Configuring for Release with Debug Info build. Optimization -O3 and debug symbols enabled.")
 else()
     message(STATUS "Configuring for custom build type '${CMAKE_BUILD_TYPE}'. Applying default optimization and warnings.")
 endif()
