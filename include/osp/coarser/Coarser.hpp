@@ -117,6 +117,8 @@ class CoarserGenExpansionMap : public Coarser<Graph_t_in, Graph_t_out> {
         std::vector<std::vector<vertex_idx_t<Graph_t_in>>> vertex_expansion_map = generate_vertex_expansion_map(dag_in);
         assert(coarser_util::check_valid_expansion_map<Graph_t_in>(vertex_expansion_map));
 
+        coarser_util::reorder_expansion_map<Graph_t_in>(dag_in, vertex_expansion_map);
+
         vertex_contraction_map =
             coarser_util::invert_vertex_expansion_map<Graph_t_in, Graph_t_out>(vertex_expansion_map);
 

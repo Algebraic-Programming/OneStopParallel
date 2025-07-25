@@ -85,6 +85,8 @@ _add_test( iterators )
 
 _add_test( random_graph_gen )
 
+_add_test( permutations )
+
 ## io
 _add_test( filereader DATA )
 
