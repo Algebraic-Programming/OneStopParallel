@@ -28,6 +28,7 @@ limitations under the License.
 #include "osp/bsp/scheduler/Scheduler.hpp"
 #include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 #include "osp/auxiliary/io/arch_file_reader.hpp"
+#include "osp/auxiliary/io/pebbling_schedule_file_writer.hpp"
 
 #include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 
@@ -127,3 +128,44 @@ BOOST_AUTO_TEST_CASE(GreedyBspScheduler_test) {
     GreedyBspScheduler<computational_dag_vector_impl_def_t> test;
     run_test(&test);
 }
+
+BOOST_AUTO_TEST_CASE(test_pebbling_schedule_writer) {
+
+    using graph = computational_dag_vector_impl_def_int_t;
+
+    BspInstance<graph> instance;
+    instance.setNumberOfProcessors(3);
+    instance.setCommunicationCosts(3);
+    instance.setSynchronisationCosts(5);
+
+    // Getting root git directory
+    std::filesystem::path cwd = std::filesystem::current_path();
+    std::cout << cwd << std::endl;
+    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
+        cwd = cwd.parent_path();
+        std::cout << cwd << std::endl;
+    }
+
+    bool status = file_reader::readComputationalDagHyperdagFormat(
+        (cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(), instance.getComputationalDag());
+
+    BOOST_CHECK(status);
+    BOOST_CHECK_EQUAL(instance.getComputationalDag().num_vertices(), 54);
+    BOOST_CHECK_EQUAL(instance.getComputationalDag().num_vertex_types(), 1);
+
+    BspSchedule bsp_schedule(instance);
+    GreedyBspScheduler<graph> scheduler;
+
+    RETURN_STATUS result = scheduler.computeSchedule(bsp_schedule);
+    BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
+
+    std::vector<v_memw_t<graph> > minimum_memory_required_vector = PebblingSchedule<graph>::minimumMemoryRequiredPerNodeType(instance);
+    v_memw_t<graph> max_required = *std::max_element(minimum_memory_required_vector.begin(), minimum_memory_required_vector.end());
+    instance.getArchitecture().setMemoryBound(max_required + 3);          
+
+    PebblingSchedule<graph> memSchedule(bsp_schedule, PebblingSchedule<graph>::CACHE_EVICTION_STRATEGY::LEAST_RECENTLY_USED);
+    BOOST_CHECK(memSchedule.isValid());
+
+    std::cout << "Writing pebbling schedule" << std::endl;
+    file_writer::write_txt(std::cout, memSchedule);
+};
