@@ -78,9 +78,6 @@ struct ConfigParser {
 
             std::string alg_name = algorithm.second.get_child("name").get_value<std::string>();
 
-            std::transform(alg_name.begin(), alg_name.end(), alg_name.begin(),
-                           [](unsigned char c) { return c; });
-
             if (alg_name == algorithm_identifier) {
                 scheduler.push_back(algorithm);
                 algorithm_found = true;
@@ -167,8 +164,6 @@ struct ConfigParser {
                     }
 
                     std::string flag = argv[i];
-                    std::transform(flag.begin(), flag.end(), flag.begin(),
-                                   [](unsigned char c) { return c; });
 
                     if (std::string(flag) == "--config") {
                         usage();
