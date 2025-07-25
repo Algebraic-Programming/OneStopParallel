@@ -675,8 +675,11 @@ BOOST_AUTO_TEST_CASE(Sarkar_test) {
     coarser.setParameters(params);
     test_coarser_same_graph<graph_t>(coarser);
 
-    // params.mode = SarkarParams::Mode::LEVEL;
-    // coarser.setParameters(params);
-    // test_coarser_same_graph<graph_t>(coarser);
+    params.mode = SarkarParams::Mode::LEVEL_EVEN;
+    coarser.setParameters(params);
+    test_coarser_same_graph<graph_t>(coarser);
     
+    params.mode = SarkarParams::Mode::LEVEL_ODD;
+    coarser.setParameters(params);
+    test_coarser_same_graph<graph_t>(coarser);
 }
