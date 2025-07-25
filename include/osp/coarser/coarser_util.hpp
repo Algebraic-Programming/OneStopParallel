@@ -451,8 +451,8 @@ void reorder_expansion_map(const Graph_t_in &graph, std::vector<std::vector<vert
 
     while (!ready.empty()) {
         const std::size_t next_group = ready.top();
-        topOrder.emplace_back(next_group);
         ready.pop();
+        topOrder.emplace_back(next_group);
 
         for (const auto &vert : vertex_expansion_map[next_group]) {
             for (const auto &chld : graph.children(vert)) {
@@ -465,9 +465,9 @@ void reorder_expansion_map(const Graph_t_in &graph, std::vector<std::vector<vert
             } 
         }
     }
-    assert(topOrder.size() == vertex_contraction_map.size());
+    assert(topOrder.size() == vertex_expansion_map.size());
 
-    inverse_permute_inplace(vertex_contraction_map, topOrder);
+    inverse_permute_inplace(vertex_expansion_map, topOrder);
 
     return;
 };
