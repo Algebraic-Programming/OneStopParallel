@@ -181,10 +181,10 @@ endif()
 
 # --- Installation ---
 # Set a default installation prefix for local development if the user has not specified one.
-if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-    set(CMAKE_INSTALL_PREFIX "${PROJECT_BINARY_DIR}/install" CACHE PATH "Default install path for developer builds" FORCE)
-    message(STATUS "Setting default install prefix to ${CMAKE_INSTALL_PREFIX}")
-endif()
+#if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+#    set(CMAKE_INSTALL_PREFIX "${PROJECT_BINARY_DIR}/install" CACHE PATH "Default install path for developer builds" FORCE)
+#    message(STATUS "Setting default install prefix to ${CMAKE_INSTALL_PREFIX}")
+#endif()
 
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
