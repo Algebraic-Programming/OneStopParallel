@@ -26,6 +26,7 @@ limitations under the License.
 #include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 #include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 #include "osp/auxiliary/io/dot_graph_file_reader.hpp"
+#include "osp/dag_divider/IsomorphismGroups.hpp"
 
 #include <filesystem>
 #include <iostream>
@@ -47,15 +48,17 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test)
         std::cout << cwd << std::endl;
     }
 
-    file_reader::readComputationalDagDotFormat("/home/toni/work/data/ast/deepseekAttention_s_1.dot", graph);
+    file_reader::readComputationalDagDotFormat("/home/toni/work/data/ast/llama_128_128.dot", graph);
 
     WavefrontMerkleDivider<graph_t> divider; 
 
 
-    divider.divide(graph);
+    auto maps = divider.divide(graph);
 
-    WavefrontComponentDivider<graph_t> wf_divider;
-    wf_divider.divide(graph);
+    IsomorphismGroups<graph_t, graph_t> iso_groups;
+    iso_groups.compute_isomorphism_groups(maps, graph);
+
+    
 
 
 };

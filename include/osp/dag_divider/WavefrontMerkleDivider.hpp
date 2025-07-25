@@ -347,6 +347,10 @@ class WavefrontMerkleDivider : public IDagDivider<Graph_t> {
                 } else if (type == extention_type::ONE_TO_MANY) {
                 
 
+                    if (all_extensions.size() == 1) {
+                        cut_levels.push_back(wf_index);
+                    }
+
                     std::cout << "one to many extend, orbit size: " << orbit.size() << " all extension: {";
                     for (const auto & x : all_extensions) {
                         std::cout << x << ", ";
@@ -354,6 +358,9 @@ class WavefrontMerkleDivider : public IDagDivider<Graph_t> {
                     std::cout << "}" << std::endl;
 
                     if (orbit.size() > 2 * all_extensions.size()) { // this needs to be weighted somehow
+                        
+                        
+                        
                         for (const auto & v : orbit) {
                             add_active_subgraph(dag, m_fw_hash.get_vertex_hash(v), v, wf_index);
                         }
@@ -368,6 +375,10 @@ class WavefrontMerkleDivider : public IDagDivider<Graph_t> {
 
                         std::cout << "many to many extend" << std::endl;
 
+
+                        cut_levels.push_back(wf_index);
+
+
                         for (const auto & v : orbit) {
                             add_active_subgraph(dag, m_fw_hash.get_vertex_hash(v), v, wf_index);
                         }
@@ -375,6 +386,11 @@ class WavefrontMerkleDivider : public IDagDivider<Graph_t> {
                 } else if (type == extention_type::MANY_TO_ONE) {
 
                     std::cout << "many to one extend " << std::endl;
+
+                    if (orbit.size() == 1) {
+                        cut_levels.push_back(wf_index);
+                    }
+
 
                     for (auto& [v, ext_subg ] : extends_sugraphs_set) {
 
@@ -414,6 +430,12 @@ class WavefrontMerkleDivider : public IDagDivider<Graph_t> {
         dot_writer.write_colored_graph("colored_graph.dot", dag, colors);
 
         std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> vertex_maps;
+
+            std::cout << "cut_levels: {";
+            for (const auto & v: cut_levels) {
+                std::cout << v << ", ";
+            } 
+            std::cout << "}, ";
 
         if (cut_levels.size() > 0) {
 
