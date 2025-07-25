@@ -116,6 +116,7 @@ class WavefrontMerkleDivider : public IDagDivider<Graph_t> {
         next_id++;  
     }
     
+    
 
     void merge_active_subgraphs_many_to_one(std::set<unsigned> & subgraphs_, VertexType v, unsigned end_wavefront, std::size_t hash_arg, const Graph_t &dag) {
 
@@ -151,8 +152,9 @@ class WavefrontMerkleDivider : public IDagDivider<Graph_t> {
         add_active_subgraph(std::move(subg));
     }
     
+    enum class extention_type { ONE_TO_MANY, MANY_TO_ONE, ONE_TO_ONE , MANY_TO_MANY };
 
-    std::pair<bool,bool> check_extension(const Graph_t & dag, const std::vector<VertexType> & orbit, std::unordered_map<VertexType, std::set<unsigned>> & extends_sugraphs, std::set<unsigned> & all_extensions) {
+    extention_type check_extension(const Graph_t & dag, const std::vector<VertexType> & orbit, std::unordered_map<VertexType, std::set<unsigned>> & extends_sugraphs, std::set<unsigned> & all_extensions) {
 
         bool no_merge_extension = true;
         std::set<unsigned> common_subgraphs;
@@ -176,19 +178,31 @@ class WavefrontMerkleDivider : public IDagDivider<Graph_t> {
             }            
         }
         
-        std::cout << "common subgraphs: {";
+        std::cout << "all extension: {";
+        for( const auto& all : all_extensions) {
+            std::cout << all << ", ";
+        }
+        std::cout << " } common subgraphs: {";
         for( const auto& common : common_subgraphs) {
             std::cout << common << ", ";
         }
         std::cout << " } orbit 0 {" ;
-
         for( const auto& common : extends_sugraphs[orbit[0]]) {
             std::cout << common << ", ";
         }
         std::cout << " }" << std::endl;
 
         if (common_subgraphs.empty() || common_subgraphs.size() >= extends_sugraphs[orbit[0]].size()) {
-            return {no_merge_extension, all_extensions.size() == orbit.size()};
+
+            if (no_merge_extension && all_extensions.size() == orbit.size()) {
+                return extention_type::ONE_TO_ONE;
+            } else if (no_merge_extension) {
+                return extention_type::ONE_TO_MANY;
+            } else if (extends_sugraphs[orbit[0]].size() == common_subgraphs.size() && common_subgraphs.size() > 1) {
+                return extention_type::MANY_TO_MANY;
+            } else {
+                return extention_type::MANY_TO_ONE;
+            }
         }
 
         std::cout << "pendant" << std::endl;
@@ -210,8 +224,15 @@ class WavefrontMerkleDivider : public IDagDivider<Graph_t> {
             }            
         }       
     
-        return {no_merge_extension, all_extensions.size() == orbit.size()};
-
+        if (no_merge_extension && all_extensions.size() == orbit.size()) {
+            return extention_type::ONE_TO_ONE;
+        } else if (no_merge_extension) {
+            return extention_type::ONE_TO_MANY;
+        } else if (extends_sugraphs[orbit[0]].size() == common_subgraphs.size() && common_subgraphs.size() > 1) {
+            return extention_type::MANY_TO_MANY;
+        } else {
+            return extention_type::MANY_TO_ONE;
+        }
     }
 
 
@@ -225,6 +246,9 @@ class WavefrontMerkleDivider : public IDagDivider<Graph_t> {
         std::vector<std::vector<VertexType>> level_sets = compute_wavefronts(dag);
         MerkleHashComputer_fw_t m_fw_hash(dag);
         MerkleHashComputer_bw_t m_bw_hash(dag);
+
+        std::vector<size_t> cut_levels;
+
 
         unsigned wf_index = 0;
         for (const auto& level : level_sets) {
@@ -309,17 +333,17 @@ class WavefrontMerkleDivider : public IDagDivider<Graph_t> {
                 std::unordered_map<VertexType, std::set<unsigned>> extends_sugraphs_set;
                 std::set<unsigned> all_extensions;
 
-                auto bool_pair = check_extension(dag, orbit, extends_sugraphs_set, all_extensions);
-                if(bool_pair.first && bool_pair.second) { 
+                const auto type = check_extension(dag, orbit, extends_sugraphs_set, all_extensions);
+                if(type == extention_type::ONE_TO_ONE) { 
 
-                    std::cout << "iso extend" << std::endl;
+                    std::cout << "one to one extend" << std::endl;
 
                     for (const auto & [v, ext_subg ] : extends_sugraphs_set) {
                         active_subgraphs[*ext_subg.begin()].extend_by_vertex(v, dag.vertex_work_weight(v), dag.vertex_mem_weight(v), wf_index, m_fw_hash.get_vertex_hash(v));
                         sub_graph_id[v] = *extends_sugraphs_set[v].begin(); 
                     }
 
-                } else if (bool_pair.first) {
+                } else if (type == extention_type::ONE_TO_MANY) {
                 
 
                     std::cout << "one to many extend, orbit size: " << orbit.size() << " all extension: {";
@@ -339,8 +363,15 @@ class WavefrontMerkleDivider : public IDagDivider<Graph_t> {
                             sub_graph_id[v] = *extends_sugraphs_set[v].begin();                        
                         }
                     }
+                } else if (type == extention_type::MANY_TO_MANY) {
+
+                        std::cout << "many to many extend" << std::endl;
+
+                        for (const auto & v : orbit) {
+                            add_active_subgraph(dag, m_fw_hash.get_vertex_hash(v), v, wf_index);
+                        }
                 
-                } else {
+                } else if (type == extention_type::MANY_TO_ONE) {
 
                     std::cout << "many to one extend " << std::endl;
 
@@ -367,14 +398,66 @@ class WavefrontMerkleDivider : public IDagDivider<Graph_t> {
         }
      
 
-
         std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> vertex_maps;
-    
+
+        if (cut_levels.size() > 0) {
+
+            vertex_maps = std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>>(cut_levels.size() + 1);
+
+            unsigned level_set_idx = 0;
+            for (unsigned i = 0; i < cut_levels.size(); i++) {
+
+                union_find_universe_t<Graph_t> uf;
+                for (; level_set_idx < cut_levels[i]; level_set_idx++) {
+                    for (const auto vertex : level_sets[level_set_idx]) {
+                        uf.add_object(vertex, dag.vertex_work_weight(vertex), dag.vertex_mem_weight(vertex));
+                    }
+
+                    for (const auto &node : level_sets[level_set_idx]) {
+                        for (const auto &child : dag.children(node)) {
+
+                            if (uf.is_in_universe(child))
+                                uf.join_by_name(node, child);
+                        }
+
+                        for (const auto &parent : dag.parents(node)) {
+                            if (uf.is_in_universe(parent)) {
+                                uf.join_by_name(parent, node);
+                            }
+                        }
+                    }
+                }
+                vertex_maps[i] = uf.get_connected_components();
+            }
+
+            union_find_universe_t<Graph_t> uf;
+            for (; level_set_idx < level_sets.size(); level_set_idx++) {
+                for (const auto vertex : level_sets[level_set_idx]) {
+                    uf.add_object(vertex, dag.vertex_work_weight(vertex), dag.vertex_mem_weight(vertex));
+                }
+
+                for (const auto &node : level_sets[level_set_idx]) {
+                    for (const auto &child : dag.children(node)) {
+
+                        if (uf.is_in_universe(child))
+                            uf.join_by_name(node, child);
+                    }
+
+                    for (const auto &parent : dag.parents(node)) {
+                        if (uf.is_in_universe(parent)) {
+                            uf.join_by_name(parent, node);
+                        }
+                    }
+                }
+            }
+
+            vertex_maps.back() = uf.get_connected_components();
+
+        } 
+
         return vertex_maps;
         //
     }
-
-
 
     void print_active_subgraphs(unsigned wf) {
 
@@ -385,7 +468,7 @@ class WavefrontMerkleDivider : public IDagDivider<Graph_t> {
             for (const auto & v : value.vertices) {
                 std::cout << v << ", ";
             }
-            std::cout << " weight: " << value.work_weight << std::endl;
+            std::cout << " weight: " << value.work_weight << " start step: " << value.start_wavefront << " end step: " << value.end_wavefront << std::endl;
         }
     }
 
