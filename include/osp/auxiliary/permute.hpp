@@ -40,7 +40,7 @@ void permute_inplace(std::vector<T> &vec, std::vector<Ind> &perm) {
         }
         return true;
     }());
-    assert(&vec != &perm);
+    assert((void *)&vec != (void *)&perm);
 
     for (Ind i = 0; i < perm.size(); ++i) {
         while (perm[i] != i) {
@@ -66,7 +66,7 @@ void inverse_permute_inplace(std::vector<T> &vec, std::vector<Ind> &perm) {
         }
         return true;
     }());
-    assert(&vec != &perm);
+    assert((void *)&vec != (void *)&perm);
 
     for (Ind i = 0; i < perm.size(); ++i) {
 
