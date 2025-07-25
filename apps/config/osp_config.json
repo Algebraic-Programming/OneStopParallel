@@ -10,13 +10,13 @@
         {
             "name": "Serial",
             "id" : "Serial",
-            "description": "\tSerial Scheduler.",
+            "description": "\tSchedules all tasks serially on the same processor.",
             "parameters": {}
         },
         {
             "name": "GreedyBsp",
             "id" : "GreedyBsp",
-            "description": "Greedy scheduler that assigns tasks to processors in a BSP fashion.",
+            "description": "Barrier list scheduler; focuses on reducing communication volume (besides work balance).",
             "parameters": {
                 "max_percent_idle_processors": 0.2,
                 "increase_parallelism_in_new_superstep": true
@@ -25,7 +25,7 @@
         {
             "name": "BspLocking",
             "id" : "BspLocking",
-            "description": "Bsp scheduler that assigns tasks to processors in a BSP fashion.",
+            "description": "Barrier list scheduler; focuses on having less synchronization barriers (besides work balance).",
             "parameters": {
                 "max_percent_idle_processors": 0.4,
                 "increase_parallelism_in_new_superstep": true
@@ -34,7 +34,7 @@
         {
             "name": "GrowLocal",
             "id" : "GrowLocal",
-            "description": "Greedy Scheduler which prioritses locality and automatically detects number of cores to use.",
+            "description": "Scheduling heuristic that focuses on work balance and on preserving inherent locality.",
             "parameters": {
                 "minSuperstepSize": 20,
                 "syncCostMultiplierMinSuperstepWeight": 1,
@@ -45,7 +45,7 @@
             "name": "Variance",
             "id": "Variance",
             "run" : true,
-            "description": "Variance.",
+            "description": "Barrier list scheduler; focuses on workload balance and uses static priorities.",
             "parameters": {
                 "max_percent_idle_processors": 0.4,
                 "increase_parallelism_in_new_superstep": true
@@ -55,7 +55,7 @@
             "name": "Cilk",
             "id": "Cilk",
             "run" : true,
-            "description": "Cilk.",
+            "description": "The classic Cilk work-stealing scheduler.",
             "parameters": {
                 "mode": "Cilk"
             }
@@ -64,7 +64,7 @@
             "name": "Etf",
             "id": "Etf",
             "run" : true,
-            "description": "Etf.",
+            "description": "The classic Earliest Time First scheduler.",
             "parameters": {
                 "mode": "Etf"
             }
@@ -72,13 +72,13 @@
         {
             "name": "GreedyRandom",
             "id": "GreedyRandom",
-            "description": "GreedyRandom.",
+            "description": "Greedy scheduler that select the next nodes in a randomized fashion.",
             "run" : true
         },
         {
             "name": "GreedyChildren",
             "id": "GreedyChildren",
-            "description": "GreedyChildren.",
+            "description": "Greedy scheduler that prioritises nodes with higher number of children.",
             "run" : true
         },
 
@@ -87,7 +87,7 @@
             "id": "LocalSearch",
             "run" : true,
             "name_suffix" : "GrowLocalKL",
-            "description": "GrowLocalKL.",
+            "description": "Initialization with GrowLocal, then improvement by Kernighan-Lin local search.",
             "parameters": {
                 "improver": {
                     "name" : "kl_total_comm" 
@@ -108,7 +108,7 @@
             "id": "LocalSearch",
             "run" : true,
             "name_suffix" : "LockingKL",
-            "description": "LockingKL.",
+            "description": "Initialization with BspLocking, then improvement by Kernighan-Lin-type local search.",
             "parameters": {
                 "improver": {
                     "name" : "kl_total_comm" 
@@ -128,7 +128,7 @@
             "id" : "Coarser",
             "run" : true,
             "name_suffix" : "FunnelLocking",
-            "description": "FunnelLocking.",
+            "description": "DAG coarsening with Funnel, then scheduling with BspLocking.",
             "parameters": {
                 "coarser": {
                     "name" : "funnel",
@@ -152,7 +152,7 @@
             "id" : "Coarser",
             "run" : true,
             "name_suffix" : "FunnelLockingKL",
-            "description": "FunnelLockingKL.",
+            "description": "Coarsening with Funnel, scheduling with BspLocking, improvement by Kernighan-Lin local search.",
             "parameters": {
                 "coarser": {
                     "name" : "funnel",
