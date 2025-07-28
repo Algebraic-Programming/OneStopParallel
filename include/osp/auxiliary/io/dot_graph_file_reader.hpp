@@ -88,11 +88,12 @@ void parseDotNode(const std::string& line, Graph_t& G) {
     v_commw_t<Graph_t> comm_weight = 0;
     v_type_t<Graph_t> type = 0;
 
-    for (const auto& keyValuePair : keyValuePairs) {
+    for (const std::string &keyValuePair : keyValuePairs) {
         std::vector<std::string> keyValue = split(keyValuePair, '=');
         if (keyValue.size() != 2) continue;
 
         std::string key = keyValue[0];
+        // trim leading/trailing whitespace from key
         key.erase(0, key.find_first_not_of(" \t\n\r\f\v"));
         key.erase(key.find_last_not_of(" \t\n\r\f\v") + 1);
 
@@ -197,8 +198,10 @@ bool readComputationalDagDotFormat(std::ifstream& infile, Graph_t& graph) {
         if (line.empty() || line.rfind("digraph", 0) == 0 || line.rfind("}", 0) == 0) continue;
 
         if (line.find("->") != std::string::npos) {
+            // This is an edge
             parseDotEdge(line, graph);
         } else if (line.find('[') != std::string::npos) {
+            // This is a node
             parseDotNode(line, graph);
         }
     }
@@ -220,7 +223,7 @@ bool readComputationalDagDotFormat(const std::string& filename, Graph_t& graph) 
 
     std::ifstream infile(filename);
     if (!infile.is_open()) {
-        std::cerr << "Unable to find/open input dag file: " << filename << "\n";
+        std::cerr << "Unable to find/open input dag file: " << filename << std::endl;
         return false;
     }
 
