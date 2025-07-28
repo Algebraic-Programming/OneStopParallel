@@ -13,21 +13,42 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
+@author Toni Boehnlein, Christos Matzoros, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 
 #pragma once
 
 #include <fstream>
 #include <iostream>
-#include <utility>
+#include <sstream>
+#include <string>
 #include <vector>
+#include <limits>
+#include <filesystem>
 
 #include "osp/concepts/computational_dag_concept.hpp"
+#define MAX_LINE_LENGTH 1024         // Prevents memory abuse via long lines
 
 namespace osp {
-
 namespace file_reader {
+
+// Validates the path is within the current working directory (avoids path traversal)
+bool isArchPathSafe(const std::string& path) {
+    try {
+        std::filesystem::path resolved = std::filesystem::weakly_canonical(path);
+
+        // Block symlinks and non-regular files
+        if (std::filesystem::is_symlink(resolved)) return false;
+        if (!std::filesystem::is_regular_file(resolved)) return false;
+
+        // Optional: basic name sanity (no nulls)
+        if (resolved.string().find('\0') != std::string::npos) return false;
+
+        return true; //  File exists, is canonical, is not a symlink, and is regular
+    } catch (...) {
+        return false;
+    }
+}
 
 
 template<typename Graph_t>
@@ -35,92 +56,145 @@ bool readComputationalDagMartixMarketFormat(std::ifstream& infile, Graph_t& grap
     using vertex_t = vertex_idx_t<Graph_t>;
 
     std::string line;
-    getline(infile, line);
-    while (!infile.eof() && line.at(0) == '%')
-        getline(infile, line);
 
-    int nEntries, M_row, M_col;
-    sscanf(line.c_str(), "%d %d %d", &M_row, &M_col, &nEntries);
+    // Skip comments or empty lines (robustly)
+    while (std::getline(infile, line)) {
+        if (line.empty() || line[0] == '%') continue;
 
-    if (M_row <= 0 || M_col <= 0 || M_row != M_col) {
-        std::cout << "Incorrect input file format (No rows/columns or not a square matrix).\n";
+        // Null byte check
+        if (line.find('\0') != std::string::npos) {
+            std::cerr << "Error: Null byte detected in header line.\n";
+            return false;
+        }
+
+        if (line.size() > MAX_LINE_LENGTH) {
+            std::cerr << "Error: Line too long, possible malformed or malicious file.\n";
+            return false;
+        }
+        break; // We found the actual header line
+    }
+
+    if (infile.eof()) {
+        std::cerr << "Error: Unexpected end of file while reading header.\n";
+        return false;
+    }
+
+    int M_row = 0, M_col = 0, nEntries = 0;
+
+    std::istringstream header_stream(line);
+    if (!(header_stream >> M_row >> M_col >> nEntries) ||
+        M_row <= 0 || M_col <= 0 || M_row != M_col) {
+        std::cerr << "Error: Invalid header or non-square matrix.\n";
         return false;
     }
 
     const vertex_t num_nodes = static_cast<vertex_t>(M_row);
-    std::vector<int> node_work_wts(num_nodes, 0);
-    std::vector<int> node_comm_wts(num_nodes, 1);  // default communication weight = 1
-
-    // Add vertices with placeholder weights
-    for (vertex_t i = 0; i < num_nodes; ++i) {
-        graph.add_vertex(1, 1, 1);  // work, comm, mem
+    if (num_nodes > std::numeric_limits<vertex_t>::max()) {
+        std::cerr << "Error: Matrix dimension too large for vertex type.\n";
+        return false;
     }
 
-    // Read entries
-    for (int i = 0; i < nEntries; ++i) {
-        getline(infile, line);
-        while (!infile.eof() && line.at(0) == '%')
-            getline(infile, line);
+    std::vector<int> node_work_wts(num_nodes, 0);
+    std::vector<int> node_comm_wts(num_nodes, 1);
 
-        if (infile.eof()) {
-            std::cout << "Incorrect input file format (file terminated too early).\n";
+    for (vertex_t i = 0; i < num_nodes; ++i) {
+        graph.add_vertex(1, 1, 1);
+    }
+
+    int entries_read = 0;
+    while (entries_read < nEntries && std::getline(infile, line)) {
+        if (line.empty() || line[0] == '%') continue;
+        if (line.size() > MAX_LINE_LENGTH) {
+            std::cerr << "Error: Line too long.\n";
             return false;
         }
 
-        int row, col;
-        double val; 
-        sscanf(line.c_str(), "%d %d %lf", &row, &col, &val);
-        row -= 1;
-        col -= 1;
+        std::istringstream entry_stream(line);
+        int row = -1, col = -1;
+        double val = 0.0;
+
+        if (!(entry_stream >> row >> col >> val)) {
+            std::cerr << "Error: Malformed matrix entry.\n";
+            return false;
+        }
+
+        row -= 1; col -= 1; // Convert to 0-based
 
         if (row < 0 || col < 0 || row >= M_row || col >= M_col) {
-            std::cout << "Incorrect input file format (index out of range).\n";
+            std::cerr << "Error: Matrix entry out of bounds.\n";
+            return false;
+        }
+
+        if (static_cast<vertex_t>(row) >= num_nodes || static_cast<vertex_t>(col) >= num_nodes) {
+            std::cerr << "Error: Index exceeds vertex type limit.\n";
             return false;
         }
 
         if (row < col) {
-            std::cout << "Incorrect input file format (matrix is not lower triangular).\n";
+            std::cerr << "Error: Expected lower-triangular matrix.\n";
             return false;
-        } else if (col != row) {
+        }
+
+        if (row != col) {
             graph.add_edge(static_cast<vertex_t>(col), static_cast<vertex_t>(row));
             node_work_wts[static_cast<vertex_t>(row)] += 1;
         }
 
+        ++entries_read;
     }
 
-    // Update vertex weights
+    if (entries_read != nEntries) {
+        std::cerr << "Error: Incomplete matrix entries.\n";
+        return false;
+    }
+
     for (vertex_t i = 0; i < num_nodes; ++i) {
         graph.set_vertex_work_weight(i, static_cast<v_workw_t<Graph_t>>(node_work_wts[i]));
         graph.set_vertex_comm_weight(i, static_cast<v_commw_t<Graph_t>>(node_comm_wts[i]));
         graph.set_vertex_mem_weight(i, static_cast<v_memw_t<Graph_t>>(node_work_wts[i]));
     }
 
-    // Check for trailing non-comment lines
-    getline(infile, line);
-    while (!infile.eof() && line.at(0) == '%')
-        getline(infile, line);
-    if (!infile.eof()) {
-        std::cout << "Incorrect input file format (file has remaining lines).\n";
-        return false;
+    while (std::getline(infile, line)) {
+        if (!line.empty() && line[0] != '%') {
+            std::cerr << "Error: Extra data after matrix content.\n";
+            return false;
+        }
     }
 
     return true;
 }
 
-
 template<typename Graph_t>
-bool readComputationalDagMartixMarketFormat(const std::string &filename, Graph_t& graph) {
-
-    std::ifstream infile(filename);
-    if (!infile.is_open()) {
-        std::cout << "Unable to find/open input dag file: " << filename << "\n";
-
+bool readComputationalDagMartixMarketFormat(const std::string& filename, Graph_t& graph) {
+    // Ensure the file is .mtx format
+    if (std::filesystem::path(filename).extension() != ".mtx") {
+        std::cerr << "Error: Only .mtx files are accepted.\n";
         return false;
     }
 
-    return file_reader::readComputationalDagMartixMarketFormat(infile, graph);
-}
+    if (!isArchPathSafe(filename)) {
+        std::cerr << "Error: Unsafe file path (potential traversal attack).\n";
+        return false;
+    }
 
+    if (std::filesystem::is_symlink(filename)) {
+        std::cerr << "Error: Symbolic links are not allowed.\n";
+        return false;
+    }
+
+    if (!std::filesystem::is_regular_file(filename)) {
+        std::cerr << "Error: Input is not a regular file.\n";
+        return false;
+    }
+
+    std::ifstream infile(filename);
+    if (!infile.is_open()) {
+        std::cerr << "Error: Failed to open file.\n";
+        return false;
+    }
+
+    return readComputationalDagMartixMarketFormat(infile, graph);
+}
 
 
 // bool readProblem(const std::string &filename, DAG &G, BSPproblem &params, bool NoNUMA = true);

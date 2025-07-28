@@ -13,113 +13,130 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
+@author Toni Boehnlein, Christos Matzoros, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 
 #pragma once
 
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include "osp/bsp/model/BspArchitecture.hpp"
 
 namespace osp { namespace file_reader {
 
 template<typename Graph_t>
 bool readBspArchitecture(std::ifstream &infile, BspArchitecture<Graph_t> &architecture) {
-
     std::string line;
-    getline(infile, line);
-    while (!infile.eof() && line.at(0) == '%')
-        getline(infile, line);
 
-    unsigned p;
-    int g, L;
-    int M;
+    // Skip comment lines
+    while (std::getline(infile, line)) {
+        if (!line.empty() && line[0] != '%') break;
+    }
+
+    // Parse architecture parameters
+    unsigned p = 0;
+    int g = 0, L = 0;
     int mem_type = -1;
-    sscanf(line.c_str(), "%d %d %d %d %d", &p, &g, &L, &mem_type, &M);
+    int M = 0;
+
+    std::istringstream iss(line);
+    if (!(iss >> p >> g >> L)) {
+        std::cerr << "Error: Failed to parse p, g, L.\n";
+        return false;
+    }
+
+    // Try to read optional mem_type and M
+    if (!(iss >> mem_type >> M)) {
+        mem_type = -1; // Memory info not present
+    }
 
     architecture.setNumberOfProcessors(p);
     architecture.setCommunicationCosts(static_cast<v_commw_t<Graph_t>>(g));
     architecture.setSynchronisationCosts(static_cast<v_commw_t<Graph_t>>(L));
 
     if (0 <= mem_type && mem_type <= 3) {
-
-        if (mem_type == 0) {
-            architecture.setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::NONE);
-        } else if (mem_type == 1) {
-            architecture.setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::LOCAL);
-            architecture.setMemoryBound(static_cast<v_memw_t<Graph_t>>(M));
-        } else if (mem_type == 2) {
-            architecture.setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::GLOBAL);
-            architecture.setMemoryBound(static_cast<v_memw_t<Graph_t>>(M));
-        } else if (mem_type == 3) {
-            architecture.setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::PERSISTENT_AND_TRANSIENT);
-            architecture.setMemoryBound(static_cast<v_memw_t<Graph_t>>(M));
+        using memw_t = v_memw_t<Graph_t>;
+        switch (mem_type) {
+            case 0:
+                architecture.setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::NONE);
+                break;
+            case 1:
+                architecture.setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::LOCAL);
+                architecture.setMemoryBound(static_cast<memw_t>(M));
+                break;
+            case 2:
+                architecture.setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::GLOBAL);
+                architecture.setMemoryBound(static_cast<memw_t>(M));
+                break;
+            case 3:
+                architecture.setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::PERSISTENT_AND_TRANSIENT);
+                architecture.setMemoryBound(static_cast<memw_t>(M));
+                break;
         }
     } else if (mem_type == -1) {
         std::cout << "No memory type specified. Assuming \"NONE\".\n";
         architecture.setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::NONE);
     } else {
-        std::cout << "Invalid memory type.\n";
+        std::cerr << "Invalid memory type.\n";
         return false;
     }
 
+    // Parse NUMA matrix (p x p entries)
     for (unsigned i = 0; i < p * p; ++i) {
-        if (infile.eof()) {
-            std::cout << "Incorrect input file format (file terminated too early).\n";
-
-            architecture.SetUniformSendCost();
-            return false;
-        }
-        getline(infile, line);
-        while (!infile.eof() && line.at(0) == '%')
-            getline(infile, line);
+        do {
+            if (!std::getline(infile, line)) {
+                std::cerr << "Error: File ended before NUMA matrix was fully read.\n";
+                architecture.SetUniformSendCost();
+                return false;
+            }
+        } while (!line.empty() && line[0] == '%');
 
         unsigned fromProc, toProc;
         int value;
-        sscanf(line.c_str(), "%d %d %d", &fromProc, &toProc, &value);
+        std::istringstream matrixStream(line);
+        if (!(matrixStream >> fromProc >> toProc >> value)) {
+            std::cerr << "Error: Failed to parse NUMA matrix line.\n";
+            architecture.SetUniformSendCost();
+            return false;
+        }
 
         if (fromProc >= p || toProc >= p) {
-            std::cout << "Incorrect input file format (index out of range or "
-                         "negative NUMA value).\n";
-
+            std::cerr << "Error: NUMA index out of range.\n";
             architecture.SetUniformSendCost();
             return false;
         }
+
         if (fromProc == toProc && value != 0) {
-            std::cout << "Incorrect input file format (main diagonal of NUMA cost "
-                         "matrix must be 0).\n";
-
+            std::cerr << "Error: Diagonal value in NUMA matrix must be zero.\n";
             architecture.SetUniformSendCost();
             return false;
         }
+
         architecture.setSendCosts(fromProc, toProc, static_cast<v_commw_t<Graph_t>>(value));
     }
 
-    getline(infile, line);
-    while (!infile.eof() && line.at(0) == '%')
-        getline(infile, line);
-    if (!infile.eof()) {
-        std::cout << "Incorrect input file format (file has remaining lines).\n";
-        return false;
+    // Ensure there are no remaining non-comment lines
+    while (std::getline(infile, line)) {
+        if (!line.empty() && line[0] != '%') {
+            std::cerr << "Error: Unexpected extra line after NUMA matrix.\n";
+            return false;
+        }
     }
 
     architecture.computeCommAverage();
-
     return true;
-};
+}
 
 template<typename Graph_t>
 bool readBspArchitecture(const std::string &filename, BspArchitecture<Graph_t> &architecture) {
-
     std::ifstream infile(filename);
     if (!infile.is_open()) {
-        std::cout << "Unable to find/open input machine parameter file.\n";
-
+        std::cerr << "Unable to open machine parameter file: " << filename << '\n';
         return false;
     }
 
-    return file_reader::readBspArchitecture(infile, architecture);
-};
+    return readBspArchitecture(infile, architecture);
+}
 
 }} // namespace osp::file_reader
