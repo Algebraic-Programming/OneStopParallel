@@ -13,89 +13,116 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
+@author Toni Boehnlein, Christos Matzoros, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 
 #pragma once
 
 #include <fstream>
 #include <iostream>
-#include <utility>
+#include <sstream>
+#include <string>
 #include <vector>
+#include <limits>
+#include <filesystem>
 
 #include "osp/concepts/computational_dag_concept.hpp"
 #include "osp/graph_algorithms/directed_graph_util.hpp"
+#define MAX_LINE_LENGTH 1024         // Prevents memory abuse via long lines
 
-namespace osp { namespace file_reader {
+namespace osp {
+namespace file_reader {
+
+// Validates the path is within the current working directory (avoids path traversal)
+inline bool isHdagPathSafe(const std::string& path) {
+    try {
+        std::filesystem::path resolved = std::filesystem::weakly_canonical(path);
+
+        // Reject symlinks
+        if (std::filesystem::is_symlink(resolved)) return false;
+
+        // Reject non-regular files (e.g., directories, devices)
+        if (!std::filesystem::is_regular_file(resolved)) return false;
+
+        // Optional: block null characters to avoid injection issues
+        if (resolved.string().find('\0') != std::string::npos) return false;
+
+        return true;
+    } catch (...) {
+        return false;
+    }
+}
 
 template<typename Graph_t>
-bool readComputationalDagHyperdagFormat(std::ifstream &infile, Graph_t &graph) {
-
+bool readComputationalDagHyperdagFormat(std::ifstream& infile, Graph_t& graph) {
     std::string line;
-    getline(infile, line);
-    while (!infile.eof() && line.at(0) == '%')
-        getline(infile, line);
 
-    // the reader cannot read graphs that have more than INT_MAX vertices
+    // Skip comment lines starting with '%'
+    while (std::getline(infile, line) && line[0] == '%') {}
+
+    if (line.length() > MAX_LINE_LENGTH) {
+        std::cerr << "Error: Input line too long.\n";
+        return false;
+    }
+
     int hEdges, pins, N;
-    sscanf(line.c_str(), "%d %d %d", &hEdges, &N, &pins);
-
-    if (N <= 0 || hEdges <= 0 || pins <= 0) {
-        std::cout << "Incorrect input file format (number of nodes/hyperedges/pins is not positive).\n";
+    std::istringstream headerStream(line);
+    if (!(headerStream >> hEdges >> N >> pins) || N <= 0 || hEdges <= 0 || pins <= 0) {
+        std::cerr << "Incorrect input file format (invalid or non-positive sizes).\n";
         return false;
     }
 
     const vertex_idx_t<Graph_t> num_nodes = static_cast<vertex_idx_t<Graph_t>>(N);
-
     for (vertex_idx_t<Graph_t> i = 0; i < num_nodes; i++) {
         graph.add_vertex(1, 1, 1);
     }
 
-    // Resize(N);
     std::vector<int> edgeSource(static_cast<std::size_t>(hEdges), -1);
-    // read edges
+
+    // Read pins
     for (int i = 0; i < pins; ++i) {
-        if (infile.eof()) {
-            std::cout << "Incorrect input file format (file terminated too early).\n";
+        while (std::getline(infile, line) && line[0] == '%') {}
+        if (line.empty() || line.length() > MAX_LINE_LENGTH) {
+            std::cerr << "Incorrect input file format (invalid or long line).\n";
             return false;
         }
-        getline(infile, line);
-        while (!infile.eof() && line.at(0) == '%')
-            getline(infile, line);
 
+        std::istringstream pinStream(line);
         int hEdge, node;
-        sscanf(line.c_str(), "%d %d", &hEdge, &node);
-
-        if (hEdge < 0 || node < 0 || hEdge >= hEdges || node >= N) {
-            std::cout << "Incorrect input file format (index out of range).\n";
+        if (!(pinStream >> hEdge >> node) || hEdge < 0 || node < 0 || hEdge >= hEdges || node >= N) {
+            std::cerr << "Incorrect input file format (invalid pin line or out-of-range index).\n";
             return false;
         }
 
-        if (edgeSource[static_cast<vertex_idx_t<Graph_t>>(hEdge)] == -1)
-            edgeSource[static_cast<vertex_idx_t<Graph_t>>(hEdge)] = node;
-        else
-            graph.add_edge(static_cast<vertex_idx_t<Graph_t>>(edgeSource[static_cast<vertex_idx_t<Graph_t>>(hEdge)]),
-                           static_cast<vertex_idx_t<Graph_t>>(node));
+        const std::size_t edgeIdx = static_cast<std::size_t>(hEdge);
+        if (edgeIdx >= edgeSource.size()) {
+            std::cerr << "Error: hEdge out of bounds.\n";
+            return false;
+        }
+
+        if (edgeSource[edgeIdx] == -1) {
+            edgeSource[edgeIdx] = node;
+        } else {
+            graph.add_edge(static_cast<vertex_idx_t<Graph_t>>(edgeSource[edgeIdx]),
+                        static_cast<vertex_idx_t<Graph_t>>(node));
+        }
     }
 
+    // Read node weights
     for (int i = 0; i < N; ++i) {
-        if (infile.eof()) {
-            std::cout << "Incorrect input file format (file terminated too early).\n";
+        while (std::getline(infile, line) && line[0] == '%') {}
+        if (line.empty() || line.length() > MAX_LINE_LENGTH) {
+            std::cerr << "Incorrect input file format (invalid or long line).\n";
             return false;
         }
 
-        getline(infile, line);
-        while (!infile.eof() && line.at(0) == '%')
-            getline(infile, line);
-
+        std::istringstream weightStream(line);
         int node;
         v_workw_t<Graph_t> work;
-        v_commw_t<Graph_t> comm; //,  mem;
-        // unsigned type;
-        sscanf(line.c_str(), "%d %d %d", &node, &work, &comm);
+        v_commw_t<Graph_t> comm;
 
-        if (node < 0 || node >= N) {
-            std::cout << "Incorrect input file format, node index out of range.\n";
+        if (!(weightStream >> node >> work >> comm) || node < 0 || node >= N) {
+            std::cerr << "Incorrect input file format (invalid node or weights).\n";
             return false;
         }
 
@@ -103,95 +130,105 @@ bool readComputationalDagHyperdagFormat(std::ifstream &infile, Graph_t &graph) {
         graph.set_vertex_work_weight(static_cast<vertex_idx_t<Graph_t>>(node), work);
     }
 
-    getline(infile, line);
-    while (!infile.eof() && line.at(0) == '%')
-        getline(infile, line);
-    if (!infile.eof()) {
-        std::cout << "Incorrect input file format (file has remaining lines).\n";
+    // Check for unexpected trailing lines
+    /*
+    while (std::getline(infile, line)) {
+        if (!line.empty() && line[0] != '%') {
+            std::cerr << "Incorrect input file format (file has unexpected trailing lines).\n";
+            return false;
+        }
+    }
+    */
+    
+    if (!is_acyclic(graph)) {
+        std::cerr << "Error: DAG is not acyclic.\n";
         return false;
     }
-
-    assert(is_acyclic(graph));
 
     return true;
-};
-
-template<typename Graph_t>
-bool readComputationalDagHyperdagFormat(const std::string &filename, Graph_t &graph) {
-
-    std::ifstream infile(filename);
-    if (!infile.is_open()) {
-        std::cout << "Unable to find/open input dag file: " << filename << "\n";
-
-        return false;
-    }
-
-    return file_reader::readComputationalDagHyperdagFormat(infile, graph);
 }
 
 template<typename Graph_t>
-bool readComputationalDagHyperdagFormatDB(std::ifstream &infile, Graph_t &graph) {
+bool readComputationalDagHyperdagFormat(const std::string& filename, Graph_t& graph) {
+    if (!isHdagPathSafe(filename)) {
+        std::cerr << "Error: Unsafe file path (possible traversal or invalid type).\n";
+        return false;
+    }
 
+    std::ifstream infile(filename);
+    if (!infile.is_open()) {
+        std::cerr << "Error: Failed to open file.\n";
+        return false;
+    }
+
+    return readComputationalDagHyperdagFormat(infile, graph);
+}
+
+
+template<typename Graph_t>
+bool readComputationalDagHyperdagFormatDB(std::ifstream& infile, Graph_t& graph) {
     std::string line;
-    getline(infile, line);
-    while (!infile.eof() && line.at(0) == '%')
-        getline(infile, line);
 
-    // the reader cannot read graphs that have more than INT_MAX vertices
-    int hEdges, pins, N;
-    sscanf(line.c_str(), "%d %d %d", &hEdges, &N, &pins);
+    // Skip comment lines
+    while (std::getline(infile, line) && line[0] == '%') {}
 
-    if (N <= 0 || hEdges <= 0 || pins <= 0) {
-        std::cout << "Incorrect input file format (number of nodes/hyperedges/pins is not positive).\n";
+    if (line.empty() || line.length() > MAX_LINE_LENGTH) {
+        std::cerr << "Error: Invalid or excessively long header line.\n";
+        return false;
+    }
+
+    int hEdges = 0, pins = 0, N = 0;
+    std::istringstream headerStream(line);
+    if (!(headerStream >> hEdges >> N >> pins) || N <= 0 || hEdges <= 0 || pins <= 0) {
+        std::cerr << "Incorrect input file format (invalid or non-positive sizes).\n";
         return false;
     }
 
     std::vector<v_commw_t<Graph_t>> hyperedge_weights(static_cast<size_t>(hEdges), 1);
-    // read hyperedges and vertices, create them
+
+    // Read hyperedges
     for (int i = 0; i < hEdges; ++i) {
-        getline(infile, line);
-        while (!infile.eof() && line.at(0) == '%')
-            getline(infile, line);
-
-        int hEdge = -1;
-        int weight = 1; // Default hyperedge weight if not specified
-        int items_read = sscanf(line.c_str(), "%d %d", &hEdge, &weight);
-
-        if (items_read < 1) {
-            std::cout << "Warning: Could not read hyperedge ID for hyperedge " << i << ". This line will be ignored."
-                      << std::endl;
+        while (std::getline(infile, line) && line[0] == '%') {}
+        if (line.empty() || line.length() > MAX_LINE_LENGTH) {
+            std::cerr << "Warning: Skipping invalid or overly long line for hyperedge " << i << ".\n";
             continue;
         }
+
+        std::istringstream edgeStream(line);
+        int hEdge = -1, weight = 1;
+        if (!(edgeStream >> hEdge)) {
+            std::cerr << "Warning: Could not read hyperedge ID for hyperedge " << i << ".\n";
+            continue;
+        }
+        edgeStream >> weight; // optional
 
         if (hEdge < 0 || hEdge >= hEdges) {
-            std::cout << "Error: Hyperedge ID " << hEdge << " is out of range (0 to " << hEdges - 1
-                      << "). Ignoring hyperedge." << std::endl;
+            std::cerr << "Error: Hyperedge ID " << hEdge << " is out of range (0 to " << hEdges - 1 << ").\n";
             continue;
         }
-        hyperedge_weights[static_cast<size_t>(hEdge)] = weight;
+        hyperedge_weights[static_cast<size_t>(hEdge)] = static_cast<v_commw_t<Graph_t>>(weight);
     }
 
     graph = Graph_t(static_cast<vertex_idx_t<Graph_t>>(N));
 
+    // Read vertices
     for (int i = 0; i < N; ++i) {
-        getline(infile, line);
-        while (!infile.eof() && line.at(0) == '%')
-            getline(infile, line);
-
-        int node = -1;
-        int work = 1;
-        int comm = 1;
-        int items_read = sscanf(line.c_str(), "%d %d %d", &node, &work, &comm);
-
-        if (items_read < 1) {
-            std::cout << "Warning: Could not read vertex ID for vertex " << i << ". This line will be ignored."
-                      << std::endl;
+        while (std::getline(infile, line) && line[0] == '%') {}
+        if (line.empty() || line.length() > MAX_LINE_LENGTH) {
+            std::cerr << "Warning: Skipping invalid or overly long line for vertex " << i << ".\n";
             continue;
         }
 
+        std::istringstream vertexStream(line);
+        int node = -1, work = 1, comm = 1;
+        if (!(vertexStream >> node)) {
+            std::cerr << "Warning: Could not read vertex ID for vertex " << i << ".\n";
+            continue;
+        }
+        vertexStream >> work >> comm;
+
         if (node < 0 || node >= N) {
-            std::cout << "Error: Vertex ID " << node << " is out of range (0 to " << N - 1 << "). Ignoring vertex."
-                      << std::endl;
+            std::cerr << "Error: Vertex ID " << node << " is out of range (0 to " << N - 1 << ").\n";
             continue;
         }
 
@@ -200,59 +237,71 @@ bool readComputationalDagHyperdagFormatDB(std::ifstream &infile, Graph_t &graph)
     }
 
     std::vector<int> edgeSource(static_cast<std::size_t>(hEdges), -1);
+
+    // Read pins
     for (int i = 0; i < pins; ++i) {
-        if (infile.eof()) {
-            std::cout << "Incorrect input file format (file terminated too early).\n";
-            return false;
-        }
-        getline(infile, line);
-        while (!infile.eof() && line.at(0) == '%')
-            getline(infile, line);
-
-        int hEdge = -1;
-        int node = -1;
-
-        if (sscanf(line.c_str(), "%d %d", &hEdge, &node) != 2) {
-            std::cout << "Warning: Could not read both hyperedge and node IDs for pin " << i
-                      << ". This line will be ignored." << std::endl;
-            continue;
-        }
-        if (hEdge < 0 || hEdge >= hEdges) {
-            std::cout << "Error: Hyperedge ID " << hEdge << " is out of range (0 to " << hEdges - 1
-                      << "). Ignoring pin." << std::endl;
-            continue;
-        }
-        if (node < 0 || node >= N) {
-            std::cout << "Error: Node ID " << node << " is out of range (0 to " << N - 1 << "). Ignoring pin."
-                      << std::endl;
+        while (std::getline(infile, line) && line[0] == '%') {}
+        if (line.empty() || line.length() > MAX_LINE_LENGTH) {
+            std::cerr << "Warning: Skipping invalid or overly long line for pin " << i << ".\n";
             continue;
         }
 
-        if (edgeSource[static_cast<size_t>(hEdge)] == -1) {
-            edgeSource[static_cast<size_t>(hEdge)] = node;
+        std::istringstream pinStream(line);
+        int hEdge = -1, node = -1;
+        if (!(pinStream >> hEdge >> node)) {
+            std::cerr << "Warning: Could not read both hyperedge and node IDs for pin " << i << ".\n";
+            continue;
+        }
+
+        if (hEdge < 0 || hEdge >= hEdges || node < 0 || node >= N) {
+            std::cerr << "Error: Invalid pin indices at line " << i << ".\n";
+            continue;
+        }
+
+        std::size_t edgeIdx = static_cast<std::size_t>(hEdge);
+        std::size_t nodeIdx = static_cast<std::size_t>(node);
+
+        if (edgeSource[edgeIdx] == -1) {
+            edgeSource[edgeIdx] = node;
         } else {
-            auto edge = graph.add_edge(static_cast<vertex_idx_t<Graph_t>>(edgeSource[static_cast<size_t>(hEdge)]), static_cast<vertex_idx_t<Graph_t>>(node));
+            auto edge = graph.add_edge(static_cast<vertex_idx_t<Graph_t>>(edgeSource[edgeIdx]),
+                                    static_cast<vertex_idx_t<Graph_t>>(nodeIdx));
 
             if constexpr (is_modifiable_cdag_comm_edge_v<Graph_t>) {
-                graph.set_edge_comm_weight(edge.first, static_cast<e_commw_t<Graph_t>>(hyperedge_weights[static_cast<size_t>(hEdge)]));
+                graph.set_edge_comm_weight(edge.first,
+                    static_cast<e_commw_t<Graph_t>>(hyperedge_weights[edgeIdx]));
             }
         }
     }
-    assert(is_acyclic(graph));
-    return true;
-};
 
-template<typename Graph_t>
-bool readComputationalDagHyperdagFormatDB(const std::string &filename, Graph_t &graph) {
-
-    std::ifstream infile(filename);
-    if (!infile.is_open()) {
-        std::cout << "Unable to find/open input dag file: " << filename << "\n";
-
+    if (!is_acyclic(graph)) {
+        std::cerr << "Error: Constructed DAG is not acyclic.\n";
         return false;
     }
 
-    return file_reader::readComputationalDagHyperdagFormatDB(infile, graph);
+    return true;
+}
+
+template<typename Graph_t>
+bool readComputationalDagHyperdagFormatDB(const std::string& filename, Graph_t& graph) {
+    // Optional: limit file extension for safety
+    if (std::filesystem::path(filename).extension() != ".hdagdb") {
+        std::cerr << "Error: Only .hdagdb files are accepted.\n";
+        return false;
+    }
+
+    if (!isHdagPathSafe(filename)) {
+        std::cerr << "Error: Unsafe file path (potential traversal or invalid type).\n";
+        return false;
+    }
+
+    std::ifstream infile(filename);
+    if (!infile.is_open()) {
+        std::cerr << "Error: Failed to open file.\n";
+        return false;
+    }
+
+    return readComputationalDagHyperdagFormatDB(infile, graph);
 }
 
 // bool readProblem(const std::string &filename, DAG &G, BSPproblem &params, bool NoNUMA = true);
