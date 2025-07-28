@@ -94,7 +94,7 @@ bool readComputationalDagHyperdagFormat(std::ifstream& infile, Graph_t& graph) {
             return false;
         }
 
-        const std::size_t edgeIdx = static_cast<std::size_t>(hEdge);
+        const std::size_t edgeIdx = static_cast<vertex_idx_t<Graph_t>>(hEdge);
         if (edgeIdx >= edgeSource.size()) {
             std::cerr << "Error: hEdge out of bounds.\n";
             return false;
@@ -206,7 +206,7 @@ bool readComputationalDagHyperdagFormatDB(std::ifstream& infile, Graph_t& graph)
             std::cerr << "Error: Hyperedge ID " << hEdge << " is out of range (0 to " << hEdges - 1 << ").\n";
             continue;
         }
-        hyperedge_weights[static_cast<size_t>(hEdge)] = static_cast<v_commw_t<Graph_t>>(weight);
+        hyperedge_weights[static_cast<size_t>(hEdge)] = weight;
     }
 
     graph = Graph_t(static_cast<vertex_idx_t<Graph_t>>(N));
@@ -236,6 +236,7 @@ bool readComputationalDagHyperdagFormatDB(std::ifstream& infile, Graph_t& graph)
         graph.set_vertex_comm_weight(static_cast<vertex_idx_t<Graph_t>>(node), static_cast<v_commw_t<Graph_t>>(comm));
     }
 
+    // Resize(N);
     std::vector<int> edgeSource(static_cast<std::size_t>(hEdges), -1);
 
     // Read pins
