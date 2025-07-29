@@ -40,14 +40,15 @@ bool readGraph(const std::string& filename, Graph_t& graph) {
     }
 
     bool status;
-    if (filename.substr(filename.rfind(".") + 1) == "hdag") {
+    std::string file_ending = filename.substr(filename.rfind(".") + 1);
+    if (file_ending == "hdag") {
         status = file_reader::readComputationalDagHyperdagFormat(infile, graph);
-    } else if (filename.substr(filename.rfind(".") + 1) == "mtx") {
+    } else if (file_ending == "mtx") {
         status = file_reader::readComputationalDagMartixMarketFormat(infile, graph);
-    } else if (filename.substr(filename.rfind(".") + 1) == "dot") {
+    } else if (file_ending == "dot") {
         status = file_reader::readComputationalDagDotFormat(infile, graph);
     } else {
-        std::cout << "Unknown file ending: ." << filename.substr(filename.rfind(".") + 1)
+        std::cout << "Unknown file ending: ." << file_ending
                     << " ...assuming hyperDag format." << std::endl;
         status = file_reader::readComputationalDagHyperdagFormat(infile, graph);
     }
