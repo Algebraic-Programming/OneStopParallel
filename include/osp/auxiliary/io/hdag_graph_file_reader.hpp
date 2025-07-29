@@ -28,30 +28,11 @@ limitations under the License.
 
 #include "osp/concepts/computational_dag_concept.hpp"
 #include "osp/graph_algorithms/directed_graph_util.hpp"
+#include "osp/auxiliary/io/filepath_checker.hpp"
 #define MAX_LINE_LENGTH 1024         // Prevents memory abuse via long lines
 
 namespace osp {
 namespace file_reader {
-
-// Validates the path is within the current working directory (avoids path traversal)
-inline bool isHdagPathSafe(const std::string& path) {
-    try {
-        std::filesystem::path resolved = std::filesystem::weakly_canonical(path);
-
-        // Reject symlinks
-        if (std::filesystem::is_symlink(resolved)) return false;
-
-        // Reject non-regular files (e.g., directories, devices)
-        if (!std::filesystem::is_regular_file(resolved)) return false;
-
-        // Optional: block null characters to avoid injection issues
-        if (resolved.string().find('\0') != std::string::npos) return false;
-
-        return true;
-    } catch (...) {
-        return false;
-    }
-}
 
 template<typename Graph_t>
 bool readComputationalDagHyperdagFormat(std::ifstream& infile, Graph_t& graph) {
@@ -150,7 +131,7 @@ bool readComputationalDagHyperdagFormat(std::ifstream& infile, Graph_t& graph) {
 
 template<typename Graph_t>
 bool readComputationalDagHyperdagFormat(const std::string& filename, Graph_t& graph) {
-    if (!isHdagPathSafe(filename)) {
+    if (!isPathSafe(filename)) {
         std::cerr << "Error: Unsafe file path (possible traversal or invalid type).\n";
         return false;
     }
@@ -291,7 +272,7 @@ bool readComputationalDagHyperdagFormatDB(const std::string& filename, Graph_t& 
         return false;
     }
 
-    if (!isHdagPathSafe(filename)) {
+    if (!isPathSafe(filename)) {
         std::cerr << "Error: Unsafe file path (potential traversal or invalid type).\n";
         return false;
     }

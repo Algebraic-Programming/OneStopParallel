@@ -29,22 +29,10 @@ limitations under the License.
 #define MAX_LINE_LENGTH 1024         // Prevents memory abuse via long lines
 
 #include "osp/concepts/computational_dag_concept.hpp"
+#include "osp/auxiliary/io/filepath_checker.hpp"
 
 namespace osp {
 namespace file_reader {
-
-// Path safety to avoid symlink, traversal or malicious file types
-inline bool isDotPathSafe(const std::string& path) {
-    try {
-        std::filesystem::path resolved = std::filesystem::weakly_canonical(path);
-        if (std::filesystem::is_symlink(resolved)) return false;
-        if (!std::filesystem::is_regular_file(resolved)) return false;
-        if (resolved.string().find('\0') != std::string::npos) return false;
-        return true;
-    } catch (...) {
-        return false;
-    }
-}
 
 std::vector<std::string> split(const std::string &s, char delimiter) {
     std::vector<std::string> tokens;
@@ -216,7 +204,7 @@ bool readComputationalDagDotFormat(const std::string& filename, Graph_t& graph) 
         return false;
     }
 
-    if (!isDotPathSafe(filename)) {
+    if (!isPathSafe(filename)) {
         std::cerr << "Error: Unsafe file path.\n";
         return false;
     }

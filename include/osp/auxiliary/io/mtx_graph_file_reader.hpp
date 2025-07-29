@@ -27,29 +27,11 @@ limitations under the License.
 #include <filesystem>
 
 #include "osp/concepts/computational_dag_concept.hpp"
+#include "osp/auxiliary/io/filepath_checker.hpp"
 #define MAX_LINE_LENGTH 1024         // Prevents memory abuse via long lines
 
 namespace osp {
 namespace file_reader {
-
-// Validates the path is within the current working directory (avoids path traversal)
-bool isArchPathSafe(const std::string& path) {
-    try {
-        std::filesystem::path resolved = std::filesystem::weakly_canonical(path);
-
-        // Block symlinks and non-regular files
-        if (std::filesystem::is_symlink(resolved)) return false;
-        if (!std::filesystem::is_regular_file(resolved)) return false;
-
-        // Optional: basic name sanity (no nulls)
-        if (resolved.string().find('\0') != std::string::npos) return false;
-
-        return true; //  File exists, is canonical, is not a symlink, and is regular
-    } catch (...) {
-        return false;
-    }
-}
-
 
 template<typename Graph_t>
 bool readComputationalDagMartixMarketFormat(std::ifstream& infile, Graph_t& graph) {
@@ -172,7 +154,7 @@ bool readComputationalDagMartixMarketFormat(const std::string& filename, Graph_t
         return false;
     }
 
-    if (!isArchPathSafe(filename)) {
+    if (!isPathSafe(filename)) {
         std::cerr << "Error: Unsafe file path (potential traversal attack).\n";
         return false;
     }
