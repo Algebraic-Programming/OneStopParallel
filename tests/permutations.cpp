@@ -21,6 +21,8 @@ limitations under the License.
 
 #include <algorithm>
 #include <numeric>
+#include <random>
+
 
 #include "osp/auxiliary/permute.hpp"
 
@@ -31,8 +33,11 @@ BOOST_AUTO_TEST_CASE(In_Place_Permutation_random) {
     std::iota(vec.begin(), vec.end(), 0);
     std::vector<unsigned> sol(vec);
 
+    std::random_device rd;
+    std::mt19937 gen(rd());
+
     for (unsigned i = 0; i < 5U; ++i) {
-        std::random_shuffle(vec.begin(), vec.end());
+        std::shuffle(vec.begin(), vec.end(), gen);
         std::vector<unsigned> perm(vec);
 
         permute_inplace(vec, perm);
@@ -63,8 +68,11 @@ BOOST_AUTO_TEST_CASE(In_Place_Inverse_Permutation_random) {
     std::iota(vec.begin(), vec.end(), 0);
     std::vector<unsigned> sol(vec);
 
+    std::random_device rd;
+    std::mt19937 gen(rd());
+
     for (unsigned i = 0; i < 5U; ++i) {
-        std::random_shuffle(vec.begin(), vec.end());
+        std::shuffle(vec.begin(), vec.end(), gen);
 
         std::vector<unsigned> inv_perm(vec.size());
         for (unsigned j = 0; j < vec.size(); ++j) {
