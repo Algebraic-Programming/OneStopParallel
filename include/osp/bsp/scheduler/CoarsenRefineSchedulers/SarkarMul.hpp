@@ -1,0 +1,214 @@
+/*
+Copyright 2025 Huawei Technologies Co., Ltd.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+@author Toni Boehnlein, Pal Andras Papp, Raphael S. Steiner
+*/
+
+#pragma once
+
+#include "osp/auxiliary/Balanced_Coin_Flips.hpp"
+#include "osp/bsp/scheduler/MultilevelCoarseAndSchedule.hpp"
+#include "osp/coarser/Sarkar/Sarkar.hpp"
+
+namespace osp {
+
+namespace SarkarParams {
+
+template<typename commCostType>
+struct MulParameters {
+    double geomDecay{0.875};
+    double leniency{0.0};
+    std::vector< commCostType > commCostVec{ std::initializer_list<commCostType>{} };
+    commCostType maxWeight{ std::numeric_limits<commCostType>::max() };
+    unsigned max_num_iteration_without_changes{3U};
+};
+} // end namespace SarkarParams
+
+template<typename Graph_t, typename Graph_t_coarse>
+class SarkarMul : public MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse> {
+    private:
+        bool first_coarsen{true};
+        Thue_Morse_Sequence thue_coin{};
+        Biased_Random balanced_random{};
+
+        // Multilevel coarser parameters
+        SarkarParams::MulParameters< v_workw_t<Graph_t> > ml_params;
+        // Coarser parameters
+        SarkarParams::Parameters< v_workw_t<Graph_t> > params;
+        // Initial coarser
+        Sarkar<Graph_t, Graph_t_coarse> coarser_initial;
+        // Subsequent coarser
+        Sarkar<Graph_t_coarse, Graph_t_coarse> coarser_secondary;
+
+        void initParams();
+        void updateParams();
+        
+        RETURN_STATUS run_single_contraction_mode(vertex_idx_t<Graph_t> &diff_vertices);
+        RETURN_STATUS run_contractions() override;
+        
+    public:
+        void setParameters(SarkarParams::MulParameters< v_workw_t<Graph_t> > ml_params_) { ml_params = std::move(ml_params_); initParams(); };
+        
+        std::string getCoarserName() const { return "Sarkar"; };
+};
+
+template<typename Graph_t, typename Graph_t_coarse>
+void SarkarMul<Graph_t, Graph_t_coarse>::initParams() {
+    first_coarsen = true;
+
+    params.geomDecay = ml_params.geomDecay;
+    params.leniency = ml_params.leniency;
+    params.maxWeight = ml_params.maxWeight;
+
+    if (ml_params.commCostVec.empty()) {
+        v_workw_t<Graph_t> syncCosts = MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::getOriginalInstance()->synchronisationCosts();
+        syncCosts = std::max(syncCosts, static_cast<v_workw_t<Graph_t>>(1));
+        
+        while (syncCosts >= static_cast<v_workw_t<Graph_t>>(1)) {
+            ml_params.commCostVec.emplace_back( syncCosts );
+            syncCosts /= 2;
+        }
+    }
+
+    std::sort(ml_params.commCostVec.begin(), ml_params.commCostVec.end());
+    
+    updateParams();
+};
+
+template<typename Graph_t, typename Graph_t_coarse>
+void SarkarMul<Graph_t, Graph_t_coarse>::updateParams() {
+    coarser_initial.setParameters(params);
+    coarser_secondary.setParameters(params);
+};
+
+template<typename Graph_t, typename Graph_t_coarse>
+RETURN_STATUS SarkarMul<Graph_t, Graph_t_coarse>::run_single_contraction_mode(vertex_idx_t<Graph_t> &diff_vertices) {
+    RETURN_STATUS status = RETURN_STATUS::OSP_SUCCESS;
+
+    vertex_idx_t<Graph_t> current_num_vertices;
+    if (first_coarsen) {
+        current_num_vertices = MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::getOriginalInstance()->numberOfVertices();
+    } else {
+        current_num_vertices = MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::dag_history.back()->numberOfVertices();
+    }
+
+    Graph_t_coarse coarsened_dag;
+    std::vector<vertex_idx_t<Graph_t_coarse>> contraction_map;
+    bool coarsen_success;
+
+    if (first_coarsen) {
+        coarsen_success = coarser_initial.coarsenDag(MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::getOriginalInstance()->getComputationalDag(), coarsened_dag, contraction_map);
+        first_coarsen = false;
+    } else {
+        coarsen_success = coarser_secondary.coarsenDag(MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::dag_history.back()->getComputationalDag(), coarsened_dag, contraction_map);
+    }
+    
+    if (!coarsen_success) {
+        status = RETURN_STATUS::ERROR;
+    }
+
+    status = std::max(status, MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::add_contraction(std::move(contraction_map), std::move(coarsened_dag)));
+    
+    vertex_idx_t<Graph_t> new_num_vertices = MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::dag_history.back()->numberOfVertices();
+    diff_vertices = current_num_vertices - new_num_vertices;
+
+    return status;
+};
+
+template<typename Graph_t, typename Graph_t_coarse>
+RETURN_STATUS SarkarMul<Graph_t, Graph_t_coarse>::run_contractions() {
+    initParams();
+
+    RETURN_STATUS status = RETURN_STATUS::OSP_SUCCESS;
+    unsigned outer_no_change = 0;
+    vertex_idx_t<Graph_t> diff = 0;
+
+    for (const v_workw_t<Graph_t> commCost : ml_params.commCostVec) {
+        params.commCost = commCost;
+        updateParams();
+    
+        while (outer_no_change < ml_params.max_num_iteration_without_changes) {
+            unsigned inner_no_change = 0;
+            bool outer_change = false;
+
+            // Lines
+            while (inner_no_change < ml_params.max_num_iteration_without_changes) {
+                params.mode = SarkarParams::Mode::LINES;
+                params.useTopPoset = thue_coin.get_flip();
+                updateParams();
+
+                status = std::max(status, run_single_contraction_mode(diff));
+
+                if (diff > 0) {
+                    outer_change = true;
+                    inner_no_change = 0;
+                } else {
+                    inner_no_change++;
+                }
+            }
+            inner_no_change = 0;
+
+            // Fans
+            while (inner_no_change < ml_params.max_num_iteration_without_changes) {
+                params.mode = thue_coin.get_flip() ? SarkarParams::Mode::FAN_IN_PARTIAL : SarkarParams::Mode::FAN_OUT_PARTIAL;
+                updateParams();
+
+                status = std::max(status, run_single_contraction_mode(diff));
+
+                if (diff > 0) {
+                    outer_change = true;
+                    inner_no_change = 0;
+                } else {
+                    inner_no_change++;
+                }
+            }
+            inner_no_change = 0;
+
+            // Levels
+            while (inner_no_change < ml_params.max_num_iteration_without_changes) {
+                params.mode = thue_coin.get_flip()? SarkarParams::Mode::LEVEL_EVEN : SarkarParams::Mode::LEVEL_ODD;
+                params.useTopPoset = balanced_random.get_flip();
+                updateParams();
+
+                status = std::max(status, run_single_contraction_mode(diff));
+
+                if (diff > 0) {
+                    outer_change = true;
+                    inner_no_change = 0;
+                } else {
+                    inner_no_change++;
+                }
+            }
+
+
+
+            if (outer_change) {
+                outer_change = 0;
+            } else {
+                outer_no_change++;
+            }
+        }
+    }
+
+    return status;
+};
+
+
+
+
+
+
+
+} // end namespace osp

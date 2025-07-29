@@ -19,9 +19,11 @@ limitations under the License.
 #pragma once
 
 #include <algorithm>
+#include <queue>
 #include <set>
 #include <vector>
 
+#include "osp/auxiliary/permute.hpp"
 #include "osp/bsp/model/BspSchedule.hpp"
 #include "osp/concepts/computational_dag_concept.hpp"
 #include "osp/concepts/constructable_computational_dag_concept.hpp"
@@ -407,6 +409,67 @@ invert_vertex_expansion_map(const std::vector<std::vector<vertex_idx_t<Graph_t_i
     }
 
     return vertex_contraction_map;
+};
+
+
+template<typename Graph_t_in>
+void reorder_expansion_map(const Graph_t_in &graph, std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &vertex_expansion_map) {
+    assert(check_valid_expansion_map<Graph_t_in>(vertex_expansion_map));
+
+    std::vector<std::size_t> vertex_contraction_map(graph.num_vertices());
+    for (std::size_t i = 0; i < vertex_expansion_map.size(); i++) {
+        for (const vertex_idx_t<Graph_t_in> &vert : vertex_expansion_map[i]) {
+            vertex_contraction_map[vert] = i;
+        }
+    }
+
+    std::vector<std::size_t> prec(vertex_expansion_map.size(), 0);
+    for (const auto &vert : graph.vertices()) {
+        for (const auto &par : graph.parents(vert)) {
+            if (vertex_contraction_map.at(par) != vertex_contraction_map.at(vert)) {
+                prec[vertex_contraction_map.at(vert)] += 1;
+            }
+        }
+    }
+
+    for (auto &comp : vertex_expansion_map) {
+        std::nth_element(comp.begin(), comp.begin(), comp.end());
+    }
+
+    auto cmp = [&vertex_expansion_map](const std::size_t &lhs, const std::size_t &rhs) {
+        return vertex_expansion_map[lhs] > vertex_expansion_map[rhs];                       // because priority queue is a max_priority queue
+    };
+
+    std::priority_queue<std::size_t, std::vector<std::size_t>, decltype(cmp)> ready(cmp);
+    std::vector<std::size_t> topOrder;
+    topOrder.reserve(vertex_expansion_map.size());
+    for (std::size_t i = 0; i < vertex_expansion_map.size(); ++i) {
+        if (prec[i] == 0) {
+            ready.emplace(i);
+        }
+    }
+
+    while (!ready.empty()) {
+        const std::size_t next_group = ready.top();
+        ready.pop();
+        topOrder.emplace_back(next_group);
+
+        for (const auto &vert : vertex_expansion_map[next_group]) {
+            for (const auto &chld : graph.children(vert)) {
+                if (vertex_contraction_map.at(vert) != vertex_contraction_map.at(chld)) {
+                    prec[vertex_contraction_map.at(chld)] -= 1;
+                    if (prec[vertex_contraction_map.at(chld)] == 0) {
+                        ready.emplace(vertex_contraction_map.at(chld));
+                    }
+                }
+            } 
+        }
+    }
+    assert(topOrder.size() == vertex_expansion_map.size());
+
+    inverse_permute_inplace(vertex_expansion_map, topOrder);
+
+    return;
 };
 
 

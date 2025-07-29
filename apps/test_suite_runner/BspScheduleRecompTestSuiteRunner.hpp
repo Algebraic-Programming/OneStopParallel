@@ -42,7 +42,7 @@ class BspScheduleRecompTestSuiteRunner
     RETURN_STATUS compute_target_object_impl(const BspInstance<concrete_graph_t> &instance, std::unique_ptr<IBspScheduleEval<concrete_graph_t>>& schedule, const pt::ptree &algo_config,
                                              long long &computation_time_ms) override {
 
-        std::string algo_name = algo_config.get_child("name").get_value<std::string>();
+        std::string algo_name = algo_config.get_child("id").get_value<std::string>();
         const std::set<std::string> scheduler_names = get_available_bsp_scheduler_names();
         const std::set<std::string> scheduler_recomp_names = get_available_bsp_recomp_scheduler_names();
 

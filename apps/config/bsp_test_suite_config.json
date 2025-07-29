@@ -13,6 +13,7 @@
     "algorithms": [
          {
             "name": "Serial",
+            "id" : "Serial",
             "run" : true,
             "parameters": {}
         },
@@ -32,6 +33,7 @@
         },
         {
             "name": "GreedyBsp",
+            "id" : "GreedyBsp",
             "run" : true,
             "parameters": {
                 "max_percent_idle_processors": 0.2,
@@ -40,6 +42,7 @@
         },
         {
             "name": "BspLocking",
+            "id" : "BspLocking",
             "run" : true,
             "parameters": {
                 "max_percent_idle_processors": 0.4,
@@ -48,6 +51,7 @@
         },
         {
             "name": "Variance",
+            "id": "Variance",
             "run" : true,
             "parameters": {
                 "max_percent_idle_processors": 0.4,
@@ -56,6 +60,7 @@
         },
         {
             "name": "GrowLocal",
+            "id" : "GrowLocal",
             "run" : true,
             "parameters": {
                 "minSuperstepSize": 20,
@@ -65,6 +70,7 @@
         },
         {
             "name": "Cilk",
+            "id": "Cilk",
             "run" : true,
             "parameters": {
                 "mode": "Cilk"
@@ -72,6 +78,7 @@
         },
         {
             "name": "Etf",
+            "id": "Etf",
             "run" : true,
             "parameters": {
                 "mode": "Etf"
@@ -79,14 +86,17 @@
         },                
         {
             "name": "GreedyRandom",
+            "id": "GreedyRandom",
             "run" : true
         },
         {
             "name": "GreedyChildren",
+            "id": "GreedyChildren",
             "run" : true
         },
         {
-            "name": "LocalSearch",
+            "name": "GrowLocalKL",
+            "id": "LocalSearch",
             "run" : true,
             "name_suffix" : "GrowLocalKL",
             "parameters": {
@@ -95,6 +105,7 @@
                 },
                 "scheduler": {
                     "name": "GrowLocal",
+                    "id": "GrowLocal",
                     "parameters": {
                         "minSuperstepSize": 20,
                         "syncCostMultiplierMinSuperstepWeight": 1,
@@ -104,7 +115,8 @@
             }
         },
         {
-            "name": "LocalSearch",
+            "name": "LockingKL",
+            "id": "LocalSearch",
             "run" : true,
             "name_suffix" : "LockingKL",
             "parameters": {
@@ -113,6 +125,7 @@
                 },
                 "scheduler": {
                     "name": "BspLocking",
+                    "id": "BspLocking",
                     "parameters": {
                     "max_percent_idle_processors": 0.4,
                     "increase_parallelism_in_new_superstep": true
@@ -121,7 +134,8 @@
             }
         },
         {
-            "name": "Coarser",
+            "name": "FunnelLocking",
+            "id" : "Coarser",
             "run" : true,
             "name_suffix" : "FunnelLocking",
             "parameters": {
@@ -134,6 +148,7 @@
                 },
                 "scheduler": {
                     "name": "BspLocking",
+                    "id" : "BspLocking",
                     "parameters": {
                     "max_percent_idle_processors": 0.4,
                     "increase_parallelism_in_new_superstep": true
@@ -142,7 +157,8 @@
             }
         },
         {
-            "name": "Coarser",
+            "name": "FunnelLockingKL",
+            "id" : "Coarser",
             "run" : true,
             "name_suffix" : "FunnelLockingKL",
             "parameters": {
@@ -154,7 +170,8 @@
                     }
                 },
                 "scheduler":  {
-                    "name": "LocalSearch",
+                    "name": "LockingKL",
+                    "id": "LocalSearch",
                     "run" : true,
                     "name_suffix" : "LockingKL",
                     "parameters": {
@@ -163,6 +180,7 @@
                         },
                         "scheduler": {
                             "name": "BspLocking",
+                            "id": "BspLocking",
                             "parameters": {
                             "max_percent_idle_processors": 0.4,
                             "increase_parallelism_in_new_superstep": true

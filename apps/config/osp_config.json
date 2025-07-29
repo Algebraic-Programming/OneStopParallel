@@ -9,12 +9,14 @@
     "algorithms": [
         {
             "name": "Serial",
-            "description": "\tSerial Scheduler.",
+            "id" : "Serial",
+            "description": "\tSchedules all tasks serially on the same processor.",
             "parameters": {}
         },
         {
             "name": "GreedyBsp",
-            "description": "Greedy scheduler that assigns tasks to processors in a BSP fashion.",
+            "id" : "GreedyBsp",
+            "description": "Barrier list scheduler; focuses on reducing communication volume (besides work balance).",
             "parameters": {
                 "max_percent_idle_processors": 0.2,
                 "increase_parallelism_in_new_superstep": true
@@ -22,7 +24,8 @@
         },
         {
             "name": "BspLocking",
-            "description": "Bsp scheduler that assigns tasks to processors in a BSP fashion.",
+            "id" : "BspLocking",
+            "description": "Barrier list scheduler; focuses on having less synchronization barriers (besides work balance).",
             "parameters": {
                 "max_percent_idle_processors": 0.4,
                 "increase_parallelism_in_new_superstep": true
@@ -30,11 +33,153 @@
         },
         {
             "name": "GrowLocal",
-            "description": "Greedy Scheduler which prioritses locality and automatically detects number of cores to use",
+            "id" : "GrowLocal",
+            "description": "Scheduling heuristic that focuses on work balance and on preserving inherent locality.",
             "parameters": {
                 "minSuperstepSize": 20,
                 "syncCostMultiplierMinSuperstepWeight": 1,
                 "syncCostMultiplierParallelCheck": 4
+            }
+        },
+        {
+            "name": "Variance",
+            "id": "Variance",
+            "run" : true,
+            "description": "Barrier list scheduler; focuses on workload balance and uses static priorities.",
+            "parameters": {
+                "max_percent_idle_processors": 0.4,
+                "increase_parallelism_in_new_superstep": true
+            }
+        },
+        {
+            "name": "Cilk",
+            "id": "Cilk",
+            "run" : true,
+            "description": "The classic Cilk work-stealing scheduler.",
+            "parameters": {
+                "mode": "Cilk"
+            }
+        },
+        {
+            "name": "Etf",
+            "id": "Etf",
+            "run" : true,
+            "description": "The classic Earliest Time First scheduler.",
+            "parameters": {
+                "mode": "Etf"
+            }
+        },                
+        {
+            "name": "GreedyRandom",
+            "id": "GreedyRandom",
+            "description": "Greedy scheduler that select the next nodes in a randomized fashion.",
+            "run" : true
+        },
+        {
+            "name": "GreedyChildren",
+            "id": "GreedyChildren",
+            "description": "Greedy scheduler that prioritises nodes with higher number of children.",
+            "run" : true
+        },
+
+        {
+            "name": "GrowLocalKL",
+            "id": "LocalSearch",
+            "run" : true,
+            "name_suffix" : "GrowLocalKL",
+            "description": "Initialization with GrowLocal, then improvement by Kernighan-Lin local search.",
+            "parameters": {
+                "improver": {
+                    "name" : "kl_total_comm" 
+                },
+                "scheduler": {
+                    "name": "GrowLocal",
+                    "id": "GrowLocal",
+                    "parameters": {
+                        "minSuperstepSize": 20,
+                        "syncCostMultiplierMinSuperstepWeight": 1,
+                        "syncCostMultiplierParallelCheck": 4
+                    }
+                }                
+            }
+        },
+        {
+            "name": "LockingKL",
+            "id": "LocalSearch",
+            "run" : true,
+            "name_suffix" : "LockingKL",
+            "description": "Initialization with BspLocking, then improvement by Kernighan-Lin-type local search.",
+            "parameters": {
+                "improver": {
+                    "name" : "kl_total_comm" 
+                },
+                "scheduler": {
+                    "name": "BspLocking",
+                    "id": "BspLocking",
+                    "parameters": {
+                    "max_percent_idle_processors": 0.4,
+                    "increase_parallelism_in_new_superstep": true
+                    }                    
+                }                
+            }
+        },
+        {
+            "name": "FunnelLocking",
+            "id" : "Coarser",
+            "run" : true,
+            "name_suffix" : "FunnelLocking",
+            "description": "DAG coarsening with Funnel, then scheduling with BspLocking.",
+            "parameters": {
+                "coarser": {
+                    "name" : "funnel",
+                    "parameters" : {
+                        "funnel_incoming" : true,
+                        "use_approx_transitive_reduction" : true                        
+                    }
+                },
+                "scheduler": {
+                    "name": "BspLocking",
+                    "id" : "BspLocking",
+                    "parameters": {
+                    "max_percent_idle_processors": 0.4,
+                    "increase_parallelism_in_new_superstep": true
+                    }                    
+                }                
+            }
+        },
+        {
+            "name": "FunnelLockingKL",
+            "id" : "Coarser",
+            "run" : true,
+            "name_suffix" : "FunnelLockingKL",
+            "description": "Coarsening with Funnel, scheduling with BspLocking, improvement by Kernighan-Lin local search.",
+            "parameters": {
+                "coarser": {
+                    "name" : "funnel",
+                    "parameters" : {
+                        "funnel_incoming" : true,
+                        "use_approx_transitive_reduction" : true                        
+                    }
+                },
+                "scheduler":  {
+                    "name": "LockingKL",
+                    "id": "LocalSearch",
+                    "run" : true,
+                    "name_suffix" : "LockingKL",
+                    "parameters": {
+                        "improver": {
+                            "name" : "kl_total_comm" 
+                        },
+                        "scheduler": {
+                            "name": "BspLocking",
+                            "id": "BspLocking",
+                            "parameters": {
+                            "max_percent_idle_processors": 0.4,
+                            "increase_parallelism_in_new_superstep": true
+                            }                    
+                        }                
+                    }
+                }  
             }
         }
     ]

@@ -79,7 +79,7 @@ class RandomGreedy : public Scheduler<Graph_t> {
                 const auto &node = next[node_ind];
                 bool processor_set = false;
                 bool failed_to_allocate = false;
-                unsigned processor_to_be_allocated;
+                unsigned processor_to_be_allocated = 0;
 
                 for (const auto &par : graph.parents(node)) {
                     if (processor_set &&

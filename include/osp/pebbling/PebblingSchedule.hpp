@@ -806,9 +806,9 @@ void PebblingSchedule<Graph_t>::SetMemoryMovement(CACHE_EVICTION_STRATEGY evict_
             place_in_evictable[node][proc] = evictable[proc].end();
 
     // utility for LRU eviction strategy
-    std::vector<std::vector<cost_type> > node_last_used_on_proc;
+    std::vector<std::vector<unsigned> > node_last_used_on_proc;
     if(evict_rule == CACHE_EVICTION_STRATEGY::LEAST_RECENTLY_USED)
-        node_last_used_on_proc.resize(N, std::vector<cost_type>(instance->numberOfProcessors(), 0));
+        node_last_used_on_proc.resize(N, std::vector<unsigned>(instance->numberOfProcessors(), 0));
     std::vector<unsigned> total_step_count_on_proc(instance->numberOfProcessors(), 0);
 
     // select a representative compute step for each node, in case of being computed multiple times
