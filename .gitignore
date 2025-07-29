@@ -118,16 +118,8 @@ tex_notes/*.log
 tex_notes/*.blg
 tex_notes/*.bbl
 tex_notes/*.aux
-# Data
-data/*
-!data/machine_params
-!data/mtx_tests
-!data/spaa
-data/spaa/*
-!data/spaa/small
-!data/spaa/test
-!data/spaa/tiny
-!data/spaa/graph_spaa_stats.txt
+
+
 
 
 
