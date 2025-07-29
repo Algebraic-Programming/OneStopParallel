@@ -429,8 +429,6 @@ bool GreedyVarianceScheduler::check_mem_feasibility(
 
         return false;
     }
-
-    return true;
 };
 
 // get number of ready nodes that can be run in parallel, to check whether more parallelism is available

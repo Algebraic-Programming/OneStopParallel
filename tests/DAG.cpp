@@ -348,8 +348,8 @@ BOOST_AUTO_TEST_CASE(DAG1) {
         BOOST_CHECK( intersec == supposed_intersec );
     }
 
-    for (int  i = 0; i < static_cast<int>(graph.n); i++) {
-        for (int j = 0; j < static_cast<int>(graph.n); j++) {
+    for (unsigned i = 0; i < graph.n; i++) {
+        for (unsigned j = 0; j< graph.n; j++) {
             std::unordered_set<int> desc = graph.descendants(i);
             std::unordered_set<int> anc = graph.ancestors(j);
             std::unordered_set<int> intersec = get_intersection(desc,anc);
