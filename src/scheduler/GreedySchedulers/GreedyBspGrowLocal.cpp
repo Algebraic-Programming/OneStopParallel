@@ -141,7 +141,7 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyBspGrowLocal::computeSchedule(const 
                 for(unsigned node : new_assignments[parity][proc])
                     node_to_proc[node] = UINT_MAX;
 
-            for(const unsigned &succ : predec_increased[parity])
+            for(unsigned succ : predec_increased[parity])
                 --predec[succ];
 
             parity = (parity + 1) % 2;
@@ -153,11 +153,11 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyBspGrowLocal::computeSchedule(const 
         }
 
         // apply best iteration
-        for(const unsigned &node : new_ready[parity])
+        for(unsigned node : new_ready[parity])
             place_in_ready[node] = ready.insert(node).first;
 
         for(unsigned proc = 0; proc < P; ++proc)
-            for(const unsigned &node : new_assignments[parity][proc])
+            for(unsigned node : new_assignments[parity][proc])
             {
                 node_to_proc[node] = proc;
                 node_to_supstep[node] = supstep;
@@ -165,7 +165,7 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyBspGrowLocal::computeSchedule(const 
                 ++total_assigned;
             }
         
-        for(const unsigned &node : predec_increased[parity])
+        for(unsigned node : predec_increased[parity])
             ++predec[node];
 
         ++supstep;
@@ -301,10 +301,10 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyBspGrowLocal::computeSchedule_csr(co
 
             // undo proc assingments and predec increases in any case
             for(unsigned proc = 0; proc < P; ++proc)
-                for(const unsigned &node : new_assignments[parity][proc])
+                for(unsigned node : new_assignments[parity][proc])
                     node_to_proc[node] = UINT_MAX;
 
-            for(const unsigned &succ : predec_increased[parity])
+            for(unsigned succ : predec_increased[parity])
                 --predec[succ];
 
             parity = (parity + 1) % 2;
@@ -316,11 +316,11 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyBspGrowLocal::computeSchedule_csr(co
         }
 
         // apply best iteration
-        for(const unsigned &node : new_ready[parity])
+        for(unsigned node : new_ready[parity])
             place_in_ready[node] = ready.insert(node).first;
 
         for(unsigned proc = 0; proc < P; ++proc)
-            for(const unsigned &node : new_assignments[parity][proc])
+            for(unsigned node : new_assignments[parity][proc])
             {
                 node_to_proc[node] = proc;
                 node_to_supstep[node] = supstep;
@@ -328,7 +328,7 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyBspGrowLocal::computeSchedule_csr(co
                 ++total_assigned;
             }
         
-        for(const unsigned &node : predec_increased[parity])
+        for(unsigned node : predec_increased[parity])
             ++predec[node];
 
         ++supstep;

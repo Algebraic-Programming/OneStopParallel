@@ -64,8 +64,6 @@ std::pair<bool, ComputationalDag> readComputationalDagMartixMarketFormat(const s
 
 std::pair<bool, ComputationalDag> readComputationalDagMartixMarketFormat(std::ifstream &infile);
 
-std::pair<bool, ComputationalDag> readCombinedSptrsvSpmvDagMartixMarket(const std::string &firstFilename, const std::string &secondFilename);
-
 std::pair<bool, csr_graph> readComputationalDagMartixMarketFormat_csr(const std::string &filename);
 
 std::pair<bool, csr_graph> readComputationalDagMartixMarketFormat_csr(std::ifstream &infile);

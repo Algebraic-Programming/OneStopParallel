@@ -3,8 +3,7 @@
         "timeLimit": 3600,
         "outputSchedule": false,
         "outputDotSchedule": false,
-        "outputSankeySchedule": false,
-        "use_memory_constraints": true
+        "outputSankeySchedule": false
     },
     "algorithms": [
         {
@@ -13,124 +12,24 @@
             "parameters": { }
         },
         {
-            "name": "FullILP",
-            "description": "\tFull ILP.",
-            "parameters": {
-                "max_number_of_supersteps": 4,
-                "write_intermediate_solutions": false,
-                "intermediate_solutions_directory": ".",
-                "intermediate_solutions_prefix": "interm_sol",
-                "use_initial_solution": false,
-                "initial_solution_scheduler": "GreedyBsp"
-            }
-        },
-        {
-            "name": "TotalCommIlp",
-            "description": "\tTotalComm ILP.",
-            "parameters": {
-                "max_number_of_supersteps": 4,
-                "use_lk_heuristic_callback": false,
-                "write_intermediate_solutions": false,
-                "intermediate_solutions_directory": ".",
-                "intermediate_solutions_prefix": "interm_sol",
-                "use_initial_solution": false,
-                "initial_solution_scheduler": "GreedyBsp"
-            }
-        },
-        {
-            "name": "GreedyBsp",
+            "name": "BspLocking",
             "description": "Greedy scheduler that assigns tasks to processors in a BSP fashion.",
             "parameters": {
-                "max_percent_idle_processors": 0.2,
-                "increase_parallelism_in_new_superstep": true
+                "max_percent_idle_processors": 0.4
             }
         },
         {
-            "name": "GreedyBspFillup",
-            "description": "Greedy scheduler that assigns tasks to processors in a BSP fashion with fillup mechanism.",
-            "parameters": {
-                "max_percent_idle_processors": 0.2,
-                "increase_parallelism_in_new_superstep": true
-            }
-        },
-        {
-            "name": "GreedyBspFillupLK",
-            "description": "GreedyBspFillup with Lin-Kernighan improvement heuristics.",
-            "parameters": {
-                "hyperedge" : false,
-                "max_percent_idle_processors": 0.2,
-                "increase_parallelism_in_new_superstep": true
-            }
-        },
-        {
-            "name": "GreedyBspLocking",
-            "description": "Greedy scheduler that assigns tasks to processors in a BSP fashion with locking mechanism.",
-            "parameters": {
-                "max_percent_idle_processors": 0.4,
-                "increase_parallelism_in_new_superstep": true
-            }
-        },
-        {
-            "name": "GreedyBspLockingLK",
-            "description": "GreedyBspLocking with Lin-Kernighan improvement heuristics.",
-            "parameters": {
-                "hyperedge" : false,
-                "max_percent_idle_processors": 0.4,
-                "increase_parallelism_in_new_superstep": true
-            }
-        },
-        {
-            "name": "GreedyVariance",
+            "name": "Variance",
             "description": "Greedy scheduler that assigns tasks to processors in a Descendant-Work-Variance fashion.",
             "parameters": {
-                "max_percent_idle_processors": 0.2,
-                "increase_parallelism_in_new_superstep": true
+                "max_percent_idle_processors": 0.2
             }
-        },
-        {
-            "name": "GreedyVarianceFillup",
-            "description": "Greedy scheduler that assigns tasks to processors in a Descendant-Work-Variance fashion with fillup mechanism.",
-            "parameters": {
-                "max_percent_idle_processors": 0.2,
-                "increase_parallelism_in_new_superstep": true
-            }
-        },
-        {
-            "name": "ReverseGreedyVarianceFillup",
-            "description": "Greedy scheduler that assigns tasks to processors in a Descendant-Work-Variance fashion in reverse.",
-            "parameters": {
-                "max_percent_idle_processors": 0.2,
-                "increase_parallelism_in_new_superstep": true
-            }
-        },
-        {
-            "name": "GreedyVarianceFillupLK",
-            "description": "GreedyVarianceFillup with Lin-Kernighan improvement heuristics.",
-            "parameters": {
-                "hyperedge" : false,
-                "max_percent_idle_processors": 0.2,
-                "increase_parallelism_in_new_superstep": true
-            }
-        },
-        {
-            "name": "GreedyBspGrowLocal",
-            "description": "Greedy scheduler that grows supersteps, trying to also maintain locality.",
-            "parameters": { }
         },
         {
             "name": "GreedyEtf",
             "description": "Greedy scheduler that assigns tasks to processors in a ETF fashion.",
             "parameters": {
-                "mode": "ETF",
-                "hyperedge" : true
-            }
-        },
-        {
-            "name": "GreedyEtfLK",
-            "description": "Greedy scheduler that assigns tasks to processors in a ETF fashion.",
-            "parameters": {
-                "mode": "BL_EST",
-                "hyperedge" : true
+                "mode": "ETF"
             }
         },
         {
@@ -141,19 +40,11 @@
             }
         },
         {
-            "name": "GreedyCilkLK",
-            "description": "GreedyCilk with Lin-Kernighan improvement heuristics.",
-            "parameters": {
-                "hyperedge" : false,
-                "mode": "CILK"
-            }
-        },
-       {
             "name": "GreedyMeta",
             "description": "Greedy scheduler that runs all greedy schedulers and selects the best solution.",
             "parameters": {}
         },
-       {
+        {
             "name": "MultiHC",
             "description": "\tMulti-level hill climbing scheduler.",
             "parameters": {
@@ -164,59 +55,16 @@
             }
         },
         {
-            "name": "SquashBspGreedyHC",
-            "description": "Applies BspGreedy + heavy edge weight matching + HC.",
-            "parameters": {
-                "coarsen": {
-                    "min_nodes_after_coarsen_per_partition": 20,
-                    "geom_decay_num_nodes": 1.0625,
-                    "poisson_par": 0,
-                    "noise": 0,
-                    "edge_sort_ratio_triangle": 0,
-                    "edge_sort_ratio_weight": 1,
-                    "num_rep_without_node_decrease": 4,
-                    "temperature_multiplier": 1.125,
-                    "number_of_temperature_increases": 14
-                }
-            }
-        },
-        {
-            "name": "SquashBspGreedyLK",
-            "description": "Applies BspGreedy + heavy edge weight matching + LK.",
-            "parameters": {
-                "coarsen": {
-                    "min_nodes_after_coarsen_per_partition": 20,
-                    "geom_decay_num_nodes": 1.0625,
-                    "poisson_par": 0,
-                    "noise": 0,
-                    "edge_sort_ratio_triangle": 0,
-                    "edge_sort_ratio_weight": 1,
-                    "num_rep_without_node_decrease": 4,
-                    "temperature_multiplier": 1.125,
-                    "number_of_temperature_increases": 14
-                }
-            }
-        },
-        {
-            "name": "SquashBspGreedy",
-            "description": "\tApplies BspGreedy + heavy edge weight matching.",
-            "parameters": {
-                "coarsen": {
-                    "min_nodes_after_coarsen_per_partition": 20,
-                    "geom_decay_num_nodes": 1.0625,
-                    "poisson_par": 0,
-                    "noise": 0,
-                    "edge_sort_ratio_triangle": 0,
-                    "edge_sort_ratio_weight": 1,
-                    "num_rep_without_node_decrease": 4,
-                    "temperature_multiplier": 1.125,
-                    "number_of_temperature_increases": 14
-                }
-            }
-        },
-        {
             "name": "Wavefront",
             "description": "Wavefront scheduler.",
+            "parameters": {
+                "hillclimb_balancer_iterations": 10,
+                "hungarian_alg": true
+            }
+        },
+        {
+            "name": "CoarseWavefront",
+            "description": "Wavefront scheduler with initial random wavefront coarsening and hill climbing.",
             "parameters": {
                 "hillclimb_balancer_iterations": 10,
                 "hungarian_alg": true
@@ -230,6 +78,26 @@
                 "hillclimb_balancer_iterations": 10,
                 "hungarian_alg": true,
                 "balance_func": "maximum"
+            }
+        },
+        {
+            "name": "HDagg_original",
+            "description": "Wavefront scheduler based on Zarebavani, Behrooz, et al. 'HDagg: hybrid aggregation of loop-carried dependence iterations in sparse matrix computations.',\n\t\t\t\t2022 IEEE International Parallel and Distributed Processing Symposium (IPDPS). IEEE, 2022.",
+            "parameters": {
+                "balance_threshhold": 1.1,
+                "hillclimb_balancer_iterations": 0,
+                "hungarian_alg": false,
+                "balance_func": "maximum"
+            }
+        },
+        {
+            "name": "HDagg_original_xlogx",
+            "description": "Wavefront scheduler based on Zarebavani, Behrooz, et al. 'HDagg: hybrid aggregation of loop-carried dependence iterations in sparse matrix computations.',\n\t\t\t\t2022 IEEE International Parallel and Distributed Processing Symposium (IPDPS). IEEE, 2022.",
+            "parameters": {
+                "balance_threshhold": 0.003,
+                "hillclimb_balancer_iterations": 0,
+                "hungarian_alg": false,
+                "balance_func": "xlogx"
             }
         },
         {
@@ -295,9 +163,8 @@
         },
         {
             "name": "CoBalDMixRLK",
-            "description": "CoBalDMixR with Lin-Kernighan improvement.",
+            "description": "Coarsen, Balance, Divide, Mix, Repeat! A scheduler that tries to improve the fitness of parallel execution with Lin-Kernighan improvement.",
             "parameters": {
-                "hyperedge" : false,
                 "coarsen": {
                     "min_nodes_after_coarsen_per_partition": 1000,
                     "number_of_final_no_change_reps": 4,
@@ -339,29 +206,7 @@
             }
         },
         {
-            "name": "BestGreedyLK",
-            "description": "Takes the best greedy and applies Lin-Kernighan improvement heuristics.",
-            "parameters": { }
-        },
-        {
-            "name": "SquashComboBestGreedyLK",
-            "description": "Applies Kernighan-Lin heuristics on the BestGreedy schedule on a coarsened graph.",
-            "parameters": {
-                "coarsen": {
-                    "min_nodes_after_coarsen_per_partition": 1000,
-                    "geom_decay_num_nodes": 1.0625,
-                    "poisson_par": 0,
-                    "noise": 0,
-                    "edge_sort_ratio_triangle": 3,
-                    "edge_sort_ratio_weight": 2,
-                    "num_rep_without_node_decrease": 4,
-                    "temperature_multiplier": 1.125,
-                    "number_of_temperature_increases": 14
-                }
-            }
-        },
-       {
-            "name": "FunnelBspGreedy",
+            "name": "FunnelBsp",
             "description": "Funnel Coarsening with BspGreedy",
             "parameters": {
                 "coarsen": {
@@ -372,13 +217,12 @@
                     "use_approx_transitive_reduction": true
                 },
                 "bsp": {
-                    "max_percent_idle_processors": 0.2,
-                    "increase_parallelism_in_new_superstep": true
+                    "max_percent_idle_processors": 0.2
                 }
             }
         },
         {
-            "name": "FunnelVarianceGreedy",
+            "name": "FunnelVariance",
             "description": "Funnel Coarsening with VarianceGreedy",
             "parameters": {
                 "coarsen": {
@@ -389,67 +233,12 @@
                     "use_approx_transitive_reduction": true
                 },
                 "variance": {
-                    "max_percent_idle_processors": 0.2,
-                    "increase_parallelism_in_new_superstep": true
+                    "max_percent_idle_processors": 0.2
                 }
             }
         },
         {
-            "name": "HDaggCoarseLockGLK+HC",
-            "description": "HDagg Coarsening with BspGreedyLK and Hill Climbing",
-            "parameters": {
-                "max_percent_idle_processors": 0.2,
-                "increase_parallelism_in_new_superstep": true,
-                "trans_edge_contraction": true
-            }
-        },
-        {
-            "name": "HDaggCoarseCobaldLK+HC",
-            "description": "HDagg Coarsening with CobaldMixer LK and Hill Climbing",
-            "parameters": {
-                "trans_edge_contraction": true,
-                "coarsen": {
-                    "min_nodes_after_coarsen_per_partition": 1000,
-                    "number_of_final_no_change_reps": 4,
-                    "geom_decay_num_nodes": 1.0625,
-                    "poisson_par": 0,
-                    "noise": 0,
-                    "edge_sort_ratio_triangle": 3,
-                    "edge_sort_ratio_weight": 2,
-                    "num_rep_without_node_decrease": 4,
-                    "temperature_multiplier": 1.125,
-                    "number_of_temperature_increases": 20
-                },
-                "initial": {
-                    "balance_threshhold": 1.2,
-                    "part_algo": "Greedy",
-                    "coin_type": "Thue_Morse",
-                    "clumps_per_partition": 6,
-                    "nodes_per_clump": 4,
-                    "nodes_per_partition": 15,
-                    "max_weight_for_flag": 0.3333,
-                    "balanced_cut_ratio": 0.3333,
-                    "min_weight_for_split": 0.0208333,
-                    "hill_climb_simple_improvement_attemps": 10,
-                    "min_comp_generation_when_shaving": 3
-                },
-                "final": {
-                    "balance_threshhold": 1.2,
-                    "part_algo": "Greedy",
-                    "coin_type": "Thue_Morse",
-                    "clumps_per_partition": 6,
-                    "nodes_per_clump": 4,
-                    "nodes_per_partition": 15,
-                    "max_weight_for_flag": 0.3333,
-                    "balanced_cut_ratio": 0.3333,
-                    "min_weight_for_split": 0.0208333,
-                    "hill_climb_simple_improvement_attemps": 10,
-                    "min_comp_generation_when_shaving": 3
-                }
-            }
-        },
-        {
-            "name": "FunnelCoarseBspGLK+HC",
+            "name": "FunnelCoarseBspLK+HC",
             "description": "Funnel Coarsening with BspGreedyLK + HC",
             "parameters": {
                 "coarsen": {
@@ -460,12 +249,11 @@
                     "use_approx_transitive_reduction": true
                 },
                 "max_percent_idle_processors": 0.2,
-                "increase_parallelism_in_new_superstep": true,
                 "trans_edge_contraction": true
             }
         },
         {
-            "name": "FunnelCoarseVarGLK+HC",
+            "name": "FunnelCoarseVarLK+HC",
             "description": "Funnel Coarsening with Variance GreedyLK + HC",
             "parameters": {
                 "coarsen": {
@@ -476,7 +264,6 @@
                     "use_approx_transitive_reduction": true
                 },
                 "max_percent_idle_processors": 0.2,
-                "increase_parallelism_in_new_superstep": true,
                 "trans_edge_contraction": true
             }
         },
@@ -530,41 +317,7 @@
                     "min_comp_generation_when_shaving": 3
                 },
                 "max_percent_idle_processors": 0.2,
-                "increase_parallelism_in_new_superstep": true,
                 "trans_edge_contraction": true
-            }
-        },
-        {
-            "name": "FullPebblingILP",
-            "description": "ILP for MultiProcessor Pebbling (MemSchedule)",
-            "parameters": {
-                "asynchronous_objective": false
-            }
-        },
-        {
-            "name": "PartialPebblingILP",
-            "description": "Divide-and-conquer ILP for MultiProcessor Pebbling (MemSchedule)",
-            "parameters": {
-                "min_partition_size": 50,
-                "time_seconds_for_subILPs": 1800,
-                "asynchronous_objective": false
-            }
-        },
-        {
-            "name": "GreedyPebbling",
-            "description": "Greedy MultiProcessor Pebbling: heuristic + cache eviction rule (MemSchedule)",
-            "parameters": {
-                "use_cilk": false,
-                "foresight_policy": true
-            }
-        },
-        {
-            "name": "GreedyBspGrowLocalAutoCores",
-            "description": "Greedy Scheduler which prioritses locality and automatically detects number of cores to use",
-            "parameters": {
-                "minSuperstepSize": 20,
-                "syncCostMultiplierMinSuperstepWeight": 1,
-                "syncCostMultiplierParallelCheck": 4
             }
         }
     ]

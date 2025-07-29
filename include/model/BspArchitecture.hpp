@@ -295,7 +295,7 @@ class BspArchitecture {
 
     unsigned minMemoryBound() const { return *(std::min_element(memory_bound.begin(), memory_bound.end())); }
     unsigned maxMemoryBound() const { return *(std::max_element(memory_bound.begin(), memory_bound.end())); }
-    unsigned sumMemoryBound() const { return std::accumulate(memory_bound.begin(), memory_bound.end(), 0U); }
+    unsigned sumMemoryBound() const { return std::accumulate(memory_bound.begin(), memory_bound.end(), 0); }
 
     unsigned maxMemoryBoundProcType(unsigned procType) const;
     

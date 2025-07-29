@@ -8,21 +8,12 @@ macro( _add_example name )
   # Create the example
   add_executable( ${name} ${name}.cpp )
   target_link_libraries( ${name} PUBLIC BspSchedulingLibrary )
-  if (COPT_FOUND)
-    target_link_libraries( ${name} PUBLIC COPT::COPT )
-  endif()
 endmacro()
 
 
-IF(Eigen3_FOUND)
-_add_example( post_incomplete_cholesky )
-ENDIF()
-
+# Examples
 _add_example( spmv_example )
 _add_example( graph_analyser )
-_add_example( gen_Erdos-Renyi_graph )
-_add_example( gen_near_diag_random_graph )
-
 
 
 # Custom target to compile all the examples

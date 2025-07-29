@@ -34,7 +34,7 @@ std::vector<double> GreedyVarianceFillupScheduler::compute_work_variance(const C
         }
         temp = std::log(temp) / 2 + max_priority;
 
-        double node_weight = std::log((double)std::max(graph.nodeWorkWeight(*r_iter), 1));
+        double node_weight = std::log((double)graph.nodeWorkWeight(*r_iter));
         double larger_val = node_weight > temp ? node_weight : temp;
 
         work_variance[*r_iter] =
@@ -85,8 +85,7 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyVarianceFillupScheduler::computeSche
     std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> procReady(params_p);
     std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> allReady(instance.getArchitecture().getNumberOfProcessorTypes());
     
-    const std::vector<std::vector<unsigned>> procTypesCompatibleWithNodeType = instance.getProcTypesCompatibleWithNodeType();
-    const std::vector<std::vector<std::vector<unsigned>>> procTypesCompatibleWithNodeType_skip_proctype = procTypesCompatibleWithNodeType_omit_procType(instance);
+    std::vector<std::vector<unsigned>> procTypesCompatibleWithNodeType = instance.getProcTypesCompatibleWithNodeType();
 
     std::vector<unsigned> nr_ready_nodes_per_type(G.getNumberOfNodeTypes(), 0);
     std::vector<unsigned> nr_procs_per_type(instance.getArchitecture().getNumberOfProcessorTypes(), 0);
@@ -207,11 +206,19 @@ std::pair<RETURN_STATUS, BspSchedule> GreedyVarianceFillupScheduler::computeSche
             VertexType nextNode = std::numeric_limits<VertexType>::max();
             unsigned nextProc = params_p;
             Choose(instance, work_variances, allReady, procReady, procFree, nextNode, nextProc, endSupStep,
-                   max_finish_time - time, work_variances, procTypesCompatibleWithNodeType_skip_proctype);
+                   max_finish_time - time);
 
             if (nextNode == std::numeric_limits<VertexType>::max() || nextProc == params_p) {
                 endSupStep = true;
                 break;
+            }
+
+            if (procReady[nextProc].find(std::make_pair(nextNode, work_variances[nextNode])) !=
+                procReady[nextProc].end()) {
+                procReady[nextProc].erase(std::make_pair(nextNode, work_variances[nextNode]));
+            } else {
+                for(unsigned procType : procTypesCompatibleWithNodeType[G.nodeType(nextNode)])
+                    allReady[procType].erase(std::make_pair(nextNode, work_variances[nextNode]));
             }
 
             ready.erase(std::make_pair(nextNode, work_variances[nextNode]));
@@ -303,8 +310,7 @@ void GreedyVarianceFillupScheduler::Choose(
     const BspInstance &instance, const std::vector<double> &work_variance,
     std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> &allReady,
     std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> &procReady, const std::vector<bool> &procFree,
-    VertexType &node, unsigned &p, const bool endSupStep, const size_t remaining_time,
-    const std::vector<double> &work_variances, const std::vector<std::vector<std::vector<unsigned>>> &procTypesCompatibleWithNodeType_skip_proctype) const {
+    VertexType &node, unsigned &p, const bool endSupStep, const size_t remaining_time) const {
 
     double maxScore = -1;
     bool found_allocation = false;
@@ -324,15 +330,16 @@ void GreedyVarianceFillupScheduler::Choose(
                     maxScore = score;
                     node = node_pair_it->first;
                     p = i;
-
-                    procReady[i].erase(node_pair_it);
-                    return;
+                    found_allocation = true;
+                    break;
                 }
                 node_pair_it++;
             }
         }
     }
 
+    if (found_allocation)
+        return;
     
     for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
         if (procFree[i] && !allReady[instance.getArchitecture().processorType(i)].empty()) {
@@ -357,11 +364,6 @@ void GreedyVarianceFillupScheduler::Choose(
 
                                 node = it->first;
                                 p = i;
-
-                                allReady[instance.getArchitecture().processorType(i)].erase(it);
-                                for(unsigned procType : procTypesCompatibleWithNodeType_skip_proctype[instance.getArchitecture().processorType(i)][instance.getComputationalDag().nodeType(node)]) {
-                                    allReady[procType].erase(std::make_pair(node, work_variances[node]));
-                                }
                                 return;
                             }
 
@@ -374,11 +376,6 @@ void GreedyVarianceFillupScheduler::Choose(
 
                                 node = it->first;
                                 p = i;
-
-                                allReady[instance.getArchitecture().processorType(i)].erase(it);
-                                for(unsigned procType : procTypesCompatibleWithNodeType_skip_proctype[instance.getArchitecture().processorType(i)][instance.getComputationalDag().nodeType(node)]) {
-                                    allReady[procType].erase(std::make_pair(node, work_variances[node]));
-                                }
                                 return;
                             }
                         }
@@ -386,11 +383,6 @@ void GreedyVarianceFillupScheduler::Choose(
                     } else {
                         node = it->first;
                         p = i;
-
-                        allReady[instance.getArchitecture().processorType(i)].erase(it);
-                        for(unsigned procType : procTypesCompatibleWithNodeType_skip_proctype[instance.getArchitecture().processorType(i)][instance.getComputationalDag().nodeType(node)]) {
-                            allReady[procType].erase(std::make_pair(node, work_variances[node]));
-                        }
                         return;
                     }
                 }
@@ -467,20 +459,4 @@ unsigned GreedyVarianceFillupScheduler::get_nr_parallelizable_nodes(const BspIns
             }
 
     return nr_nodes;
-}
-
-std::vector<std::vector<std::vector<unsigned>>> GreedyVarianceFillupScheduler::procTypesCompatibleWithNodeType_omit_procType(const BspInstance &instance) const {
-    const std::vector<std::vector<unsigned>> procTypesCompatibleWithNodeType = instance.getProcTypesCompatibleWithNodeType();
-
-    std::vector<std::vector<std::vector<unsigned>>> procTypesCompatibleWithNodeType_skip(instance.getArchitecture().getNumberOfProcessorTypes(), std::vector<std::vector<unsigned>>(instance.getComputationalDag().getNumberOfNodeTypes()));
-    for (unsigned procType = 0; procType < instance.getArchitecture().getNumberOfProcessorTypes(); procType++) {
-        for (unsigned nodeType = 0; nodeType < instance.getComputationalDag().getNumberOfNodeTypes(); nodeType++) {
-            for (unsigned otherProcType : procTypesCompatibleWithNodeType[nodeType]) {
-                if (procType == otherProcType) continue;
-                procTypesCompatibleWithNodeType_skip[procType][nodeType].emplace_back(otherProcType);
-            }
-        }
-    }
-
-    return procTypesCompatibleWithNodeType_skip;
 }

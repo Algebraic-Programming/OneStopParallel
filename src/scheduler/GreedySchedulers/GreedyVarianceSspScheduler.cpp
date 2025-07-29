@@ -34,7 +34,7 @@ std::vector<double> GreedyVarianceSspScheduler::compute_work_variance(const Comp
         }
         temp = std::log(temp) / 2 + max_priority;
 
-        double node_weight = std::log((double)std::max(graph.nodeWorkWeight(*r_iter), 1));
+        double node_weight = std::log((double)graph.nodeWorkWeight(*r_iter));
         double larger_val = node_weight > temp ? node_weight : temp;
 
         work_variance[*r_iter] =
@@ -104,31 +104,28 @@ std::pair<RETURN_STATUS, SspSchedule> GreedyVarianceSspScheduler::computeSspSche
             nr_ready_stale_nodes_per_type[0][G.nodeType(node)]++;
         }
     }
-    // if (!use_memory_constraint || !(instance.getArchitecture().getMemoryConstraintType() == LOCAL)) {
-    //     unsigned tasks_per_ready_queue = ready[0].size() / stale;
-    //     for (size_t i = stale - 1; i > 0; i--) {
-    //         for (unsigned j = 0; j < tasks_per_ready_queue; j++) {
-    //             auto last_it = ready[0].end();
-    //             last_it--;
-    //             unsigned nodeType = G.nodeType(last_it->first);
+    if (!use_memory_constraint || !(instance.getArchitecture().getMemoryConstraintType() == LOCAL)) {
+        unsigned tasks_per_ready_queue = ready[0].size() / stale;
+        for (size_t i = stale - 1; i > 0; i--) {
+            for (unsigned j = 0; j < tasks_per_ready_queue; j++) {
+                auto last_it = ready[0].end();
+                last_it--;
+                unsigned nodeType = G.nodeType(last_it->first);
 
-    //             ready[i].insert(ready[i].begin(), *last_it);
-    //             ready[0].erase(last_it);
+                ready[i].insert(ready[i].begin(), *last_it);
+                ready[0].erase(last_it);
 
-    //             nr_ready_stale_nodes_per_type[i][nodeType]++;
-    //             nr_ready_stale_nodes_per_type[0][nodeType]--;
-    //         }
-    //     }
-    // }
+                nr_ready_stale_nodes_per_type[i][nodeType]++;
+                nr_ready_stale_nodes_per_type[0][nodeType]--;
+            }
+        }
+    }
 
     std::vector<bool> procFree(params_p, true);
     unsigned free = params_p;
 
     std::set<std::pair<size_t, VertexType>> finishTimes;
     finishTimes.emplace(0, std::numeric_limits<VertexType>::max());
-
-    std::vector<unsigned> number_of_allocated_allReady_tasks_in_superstep(instance.getArchitecture().getNumberOfProcessorTypes(), 0);
-    std::vector<unsigned> limit_of_number_of_allocated_allReady_tasks_in_superstep(instance.getArchitecture().getNumberOfProcessorTypes(), 0);
 
     unsigned supstepIdx = 0;
     bool endSupStep = true;
@@ -137,17 +134,15 @@ std::pair<RETURN_STATUS, SspSchedule> GreedyVarianceSspScheduler::computeSspSche
     unsigned successive_empty_supersteps = 0;
     while (!old_ready.empty() || std::any_of(ready.cbegin(), ready.cend(), [](const std::set<std::pair<VertexType, double>, VarianceCompare>& ready_set) { return !ready_set.empty(); } ) || !finishTimes.empty()) {
         if (finishTimes.empty() && endSupStep) {
-            able_to_schedule_in_step = false;
-            number_of_allocated_allReady_tasks_in_superstep = std::vector<unsigned>(instance.getArchitecture().getNumberOfProcessorTypes(), 0);
-
-            for (unsigned i = 0; i < params_p; ++i) {
-                procReady[supstepIdx % stale][i].clear();
-            }
-
             if (!begin_outer_while) {
                 supstepIdx++;
             } else {
                 begin_outer_while = false;
+            }
+            able_to_schedule_in_step = false;
+
+            for (unsigned i = 0; i < params_p; ++i) {
+                procReady[supstepIdx % stale][i].clear();
             }
 
             for(int procType = 0; procType < instance.getArchitecture().getNumberOfProcessorTypes(); ++procType) {
@@ -172,13 +167,6 @@ std::pair<RETURN_STATUS, SspSchedule> GreedyVarianceSspScheduler::computeSspSche
                 for (unsigned proc = 0; proc < params_p; proc++) {
                     current_proc_persistent_memory[proc] = 0;
                 }
-            }
-
-            for (unsigned procType = 0; procType < instance.getArchitecture().getNumberOfProcessorTypes(); procType++) {
-                unsigned equal_split = (allReady[procType].size() + stale - 1) / stale;
-                unsigned at_least_for_long_step = 3 * nr_procs_per_type[procType];
-
-                limit_of_number_of_allocated_allReady_tasks_in_superstep[procType] = std::max(at_least_for_long_step, equal_split);
             }
 
             endSupStep = false;
@@ -273,11 +261,6 @@ std::pair<RETURN_STATUS, SspSchedule> GreedyVarianceSspScheduler::computeSspSche
                     allReady[procType].erase(std::make_pair(nextNode, work_variances[nextNode]));
                 }
                 nr_old_ready_nodes_per_type[G.nodeType(nextNode)]--;
-                const unsigned nextProcType = instance.getArchitecture().processorType(nextProc);
-                number_of_allocated_allReady_tasks_in_superstep[nextProcType]++;
-                if (number_of_allocated_allReady_tasks_in_superstep[nextProcType] >= limit_of_number_of_allocated_allReady_tasks_in_superstep[nextProcType]) {
-                    allReady[nextProcType].clear();
-                }
             }
 
             for (size_t i = 0; i < stale; i++) {

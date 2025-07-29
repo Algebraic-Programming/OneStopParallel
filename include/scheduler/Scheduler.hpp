@@ -107,11 +107,19 @@ class Scheduler {
         virtual std::pair<RETURN_STATUS, BspSchedule> computeSchedule(const BspInstance &instance) = 0;
 
         /**
+         * @brief Compute a SSP schedule for the given BSP instance.
+         * @param instance The BSP instance for which to compute the schedule.
+         * @return A pair containing the return status and the computed schedule.
+         */
+        virtual std::pair<RETURN_STATUS, SspSchedule> computeSspSchedule(const BspInstance &instance, unsigned stale) { throw std::runtime_error("Not implemented"); };
+
+        /**
          * @brief Compute a schedule for the given BSP instance within the time limit.
          * @param instance The BSP instance for which to compute the schedule.
          * @return A pair containing the return status and the computed schedule.
          */
         virtual std::pair<RETURN_STATUS, BspSchedule> computeScheduleWithTimeLimit(const BspInstance &instance);
+
 
         virtual void setUseMemoryConstraint(bool use_memory_constraint_) { throw std::runtime_error("Not implemented");}
 };

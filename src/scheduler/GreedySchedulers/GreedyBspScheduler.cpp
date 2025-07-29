@@ -434,7 +434,9 @@ void GreedyBspScheduler::Choose(const BspInstance &instance, const std::vector<s
 bool GreedyBspScheduler::check_mem_feasibility(const BspInstance &instance, const std::set<VertexType> &allReady,
                                                const std::vector<std::set<VertexType>> &procReady) const {
 
-    if (instance.getArchitecture().getMemoryConstraintType() == PERSISTENT_AND_TRANSIENT) {
+    if (instance.getArchitecture().getMemoryConstraintType() == LOCAL) {
+        return true;
+    } else if (instance.getArchitecture().getMemoryConstraintType() == PERSISTENT_AND_TRANSIENT) {
 
         unsigned num_empty_proc = 0;
 
@@ -472,8 +474,6 @@ bool GreedyBspScheduler::check_mem_feasibility(const BspInstance &instance, cons
             }
 
         return false;
-    } else {
-        return true;
     }
 };
 

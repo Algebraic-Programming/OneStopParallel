@@ -238,18 +238,8 @@ class LooseSuperStep {
                 new_allocation = greedy_partitioner(params.number_of_partitions, coll_weights);
             }
             break;
-#ifdef COPT
-        case ILP:
-            try {
-                new_allocation = ilp_partitioner(params.number_of_partitions, coll_weights);
-            }
-            catch (...) {
-                std::cout << "ILP failed or reached time limit." << std::endl;
-                std::cout << "Running Greedy partitioner instead." << std::endl;
-                new_allocation = greedy_partitioner(params.number_of_partitions, coll_weights);
-            }
-            break;
-#endif
+
+
         default:
             new_allocation = greedy_partitioner(params.number_of_partitions, coll_weights);
             break;

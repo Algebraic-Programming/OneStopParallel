@@ -28,8 +28,8 @@ limitations under the License.
 
 #include "file_interactions/CommandLineParser.hpp"
 #include "file_interactions/FileReader.hpp"
+#include "file_interactions/BspScheduleWriter.hpp"
 #include "model/BspSchedule.hpp"
-#include "model/BspMemSchedule.hpp"
 
 #include "auxiliary/run_algorithm.hpp"
 
@@ -41,19 +41,9 @@ std::filesystem::path getExecutablePath() { return std::filesystem::canonical("/
 int main(int argc, char *argv[]) {
 
     std::string main_config_location = getExecutablePath().remove_filename().string();
-
-#ifdef COPT
+   
     main_config_location += "main_config.json";
-#else
-    main_config_location += "main_config_no_copt.json";
-#endif
 
-
-#ifdef COPT
-    const std::set<std::string> mem_schedule_names = {"FullPebblingILP", "PartialPebblingILP", "GreedyPebbling", "CoarsenedFullPebblingILP", "CoarsenedPartialPebblingILP", "CoarsenedGreedyPebbling", "WFLFKCUT", "WFLFKCOMM", "FullPebblingILPWithBspInit"};
-#else
-const std::set<std::string> mem_schedule_names = {"GreedyPebbling", "CoarsenedGreedyPebbling", "WFLFKCUT", "WFLFKCOMM"};
-#endif
     try {
         const CommandLineParser parser(argc, argv, main_config_location);
 
@@ -111,9 +101,6 @@ const std::set<std::string> mem_schedule_names = {"GreedyPebbling", "CoarsenedGr
                 if (!status_graph) {
                     throw std::invalid_argument("Reading graph file " + filename_graph + " failed.");
                 }
-
-                std::cout << "Warning: assuming all node types can be scheduled on all processor types!\n";
-                bsp_instance.setAllOnesCompatibilityMatrix();
   
                 std::vector<std::string> schedulers_name(parser.scheduler.size(), "");
                 std::vector<bool> schedulers_failed(parser.scheduler.size(), false);
@@ -126,34 +113,13 @@ const std::set<std::string> mem_schedule_names = {"GreedyPebbling", "CoarsenedGr
                 for (auto &algorithm : parser.scheduler) {
                     schedulers_name[algorithm_counter] = algorithm.second.get_child("name").get_value<std::string>();
 
-                    bool is_bsp_mem_algorithm = (mem_schedule_names.find(schedulers_name[algorithm_counter]) != mem_schedule_names.end());
-
                     try {
                         const auto start_time = std::chrono::high_resolution_clock::now();
 
-                        RETURN_STATUS return_status;
-                        BspSchedule schedule;
-                        BspMemSchedule mem_schedule;
-
-                        if(!is_bsp_mem_algorithm)
-                        {
-                            auto algo_return_value =
-                                run_algorithm(parser, algorithm.second, bsp_instance,
-                                            parser.global_params.get_child("timeLimit").get_value<unsigned>(),
-                                            parser.global_params.get_child("use_memory_constraints").get_value<bool>());
-
-                            return_status = algo_return_value.first;
-                            schedule = algo_return_value.second;
-                        }
-                        else
-                        {
-                            auto algo_return_value =
-                                run_algorithm_mem(parser, algorithm.second, bsp_instance,
-                                            parser.global_params.get_child("timeLimit").get_value<unsigned>());
-
-                            return_status = algo_return_value.first;
-                            mem_schedule = algo_return_value.second;
-                        }
+                        auto [return_status, schedule] =
+                            run_algorithm(parser, algorithm.second, bsp_instance,
+                                          parser.global_params.get_child("timeLimit").get_value<unsigned>(),
+                                          parser.global_params.get_child("use_memory_constraints").get_value<bool>());
 
                         const auto finish_time = std::chrono::high_resolution_clock::now();
 
@@ -173,18 +139,9 @@ const std::set<std::string> mem_schedule_names = {"GreedyPebbling", "CoarsenedGr
                             }
                         }
 
-                        if(!is_bsp_mem_algorithm)
-                        {
-                            schedulers_costs[algorithm_counter] = schedule.computeCosts();
-                            schedulers_work_costs[algorithm_counter] = schedule.computeWorkCosts();
-                            schedulers_supersteps[algorithm_counter] = schedule.numberOfSupersteps();
-                        }
-                        else
-                        {
-                            schedulers_costs[algorithm_counter] = mem_schedule.computeCost();
-                            schedulers_work_costs[algorithm_counter] = mem_schedule.computeAsynchronousCost();
-                            schedulers_supersteps[algorithm_counter] = mem_schedule.numberOfSupersteps();
-                        }
+                        schedulers_costs[algorithm_counter] = schedule.computeCosts();
+                        schedulers_work_costs[algorithm_counter] = schedule.computeWorkCosts();
+                        schedulers_supersteps[algorithm_counter] = schedule.numberOfSupersteps();
 
                         // unsigned total_costs = schedule.computeCosts();
                         // unsigned work_costs = schedule.computeWorkCosts();
@@ -199,45 +156,42 @@ const std::set<std::string> mem_schedule_names = {"GreedyPebbling", "CoarsenedGr
                         //         << "\t scheduler: " << algorithm.second.get_child("name").get_value<std::string>()
                         //         << std::endl;
 
-                        if(!is_bsp_mem_algorithm)
-                        {
-                            BspScheduleWriter sched_writer(schedule);
-                            if (parser.global_params.get_child("outputSchedule").get_value<bool>()) {
-                                try {
-                                    sched_writer.write_txt(name_graph + "_" + name_machine + "_" +
-                                                        algorithm.second.get_child("name").get_value<std::string>() +
-                                                        "_schedule.txt");
-                                } catch (std::exception &e) {
-                                    std::cerr << "Writing schedule file for " + name_graph + ", " + name_machine + ", " +
-                                                    schedulers_name[algorithm_counter] + " has failed."
-                                            << std::endl;
-                                    std::cerr << e.what() << std::endl;
-                                }
+                        BspScheduleWriter sched_writer(schedule);
+                        if (parser.global_params.get_child("outputSchedule").get_value<bool>()) {
+                            try {
+                                sched_writer.write_txt(name_graph + "_" + name_machine + "_" +
+                                                       algorithm.second.get_child("name").get_value<std::string>() +
+                                                       "_schedule.txt");
+                            } catch (std::exception &e) {
+                                std::cerr << "Writing schedule file for " + name_graph + ", " + name_machine + ", " +
+                                                 schedulers_name[algorithm_counter] + " has failed."
+                                          << std::endl;
+                                std::cerr << e.what() << std::endl;
                             }
+                        }
 
-                            if (parser.global_params.get_child("outputSankeySchedule").get_value<bool>()) {
-                                try {
-                                    sched_writer.write_sankey(name_graph + "_" + name_machine + "_" +
-                                                            algorithm.second.get_child("name").get_value<std::string>() +
-                                                            "_sankey.sankey");
-                                } catch (std::exception &e) {
-                                    std::cerr << "Writing sankey file for " + name_graph + ", " + name_machine + ", " +
-                                                    schedulers_name[algorithm_counter] + " has failed."
-                                            << std::endl;
-                                    std::cerr << e.what() << std::endl;
-                                }
+                        if (parser.global_params.get_child("outputSankeySchedule").get_value<bool>()) {
+                            try {
+                                sched_writer.write_sankey(name_graph + "_" + name_machine + "_" +
+                                                          algorithm.second.get_child("name").get_value<std::string>() +
+                                                          "_sankey.sankey");
+                            } catch (std::exception &e) {
+                                std::cerr << "Writing sankey file for " + name_graph + ", " + name_machine + ", " +
+                                                 schedulers_name[algorithm_counter] + " has failed."
+                                          << std::endl;
+                                std::cerr << e.what() << std::endl;
                             }
-                            if (parser.global_params.get_child("outputDotSchedule").get_value<bool>()) {
-                                try {
-                                    sched_writer.write_dot(name_graph + "_" + name_machine + "_" +
-                                                        algorithm.second.get_child("name").get_value<std::string>() +
-                                                        "_schedule.dot");
-                                } catch (std::exception &e) {
-                                    std::cerr << "Writing dot file for " + name_graph + ", " + name_machine + ", " +
-                                                    schedulers_name[algorithm_counter] + " has failed."
-                                            << std::endl;
-                                    std::cerr << e.what() << std::endl;
-                                }
+                        }
+                        if (parser.global_params.get_child("outputDotSchedule").get_value<bool>()) {
+                            try {
+                                sched_writer.write_dot(name_graph + "_" + name_machine + "_" +
+                                                       algorithm.second.get_child("name").get_value<std::string>() +
+                                                       "_schedule.dot");
+                            } catch (std::exception &e) {
+                                std::cerr << "Writing dot file for " + name_graph + ", " + name_machine + ", " +
+                                                 schedulers_name[algorithm_counter] + " has failed."
+                                          << std::endl;
+                                std::cerr << e.what() << std::endl;
                             }
                         }
 

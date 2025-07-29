@@ -27,10 +27,6 @@ limitations under the License.
 
 #include "model/BspSchedule.hpp"
 
-#ifdef EIGEN_FOUND
-#include "model/SmSchedule.hpp"
-#endif
-
 enum SCHEDULE_NODE_PERMUTATION_MODES { LOOP_PROCESSORS, SNAKE_PROCESSORS, PROCESSOR_FIRST };
 
 /**
@@ -50,18 +46,6 @@ std::vector<size_t> schedule_node_permuter(const BspSchedule& sched, unsigned ca
  * @return std::vector<size_t> vec[prev_node_name] = new_node_name(location)
  */
 std::vector<size_t> schedule_node_permuter_basic(const BspSchedule& sched, const SCHEDULE_NODE_PERMUTATION_MODES mode = LOOP_PROCESSORS);
-
-
-#ifdef EIGEN_FOUND
-/**
- * @brief Computes a permutation to improve locality of a schedule, looping through processors
- * 
- * @param sched Sparse Matrix Schedule
- * @param mode ordering of processors
- * @return std::vector<size_t> vec[prev_node_name] = new_node_name(location)
- */
-std::vector<size_t> schedule_node_sm_permuter_basic(const SmSchedule& sched, const SCHEDULE_NODE_PERMUTATION_MODES mode = LOOP_PROCESSORS);
-#endif
 
 /**
  * @brief Computes a permutation to improve locality of a schedule, looping through processors

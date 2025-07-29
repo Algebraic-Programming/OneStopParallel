@@ -412,22 +412,10 @@ void BspMemSchedule::SplitSupersteps(const BspSchedule &schedule)
             while(start_idx < top_orders[proc][step].size())
             {
                 // binary search for largest segment that still statisfies mem constraint
-                bool doubling_phase = true;
                 unsigned end_lower_bound = start_idx, end_upper_bound = top_orders[proc][step].size()-1;
                 while(end_lower_bound < end_upper_bound)
                 {
-                    unsigned end_current;
-                    
-                    if(doubling_phase)
-                    {
-                        if(end_lower_bound == start_idx)
-                            end_current = start_idx + 1;
-                        else
-                            end_current = std::min(start_idx + 2* (end_lower_bound - start_idx),
-                                                (unsigned) top_orders[proc][step].size()-1);
-                    }
-                    else
-                        end_current = end_lower_bound + (end_upper_bound - end_lower_bound + 1) / 2;
+                    unsigned end_current = end_lower_bound + (end_upper_bound - end_lower_bound + 1) / 2;
 
                     // check if this segment is valid
                     bool valid = true;
@@ -492,19 +480,9 @@ void BspMemSchedule::SplitSupersteps(const BspSchedule &schedule)
                     }
 
                     if(valid)
-                    {
                         end_lower_bound = end_current;
-                        if(end_current == top_orders[proc][step].size()-1)
-                        {
-                            doubling_phase = false;
-                            end_upper_bound = end_current;
-                        }
-                    }
                     else
-                    {
-                        doubling_phase = false;
                         end_upper_bound = end_current - 1;
-                    }
 
                 }
                 segments.emplace_back(start_idx, end_lower_bound);
@@ -640,7 +618,7 @@ void BspMemSchedule::SetMemoryMovement(CACHE_EVICTION_STRATEGY evict_rule)
                 for(unsigned pred : instance->getComputationalDag().parents(node))
                     node_used_at_proc_lists[pred][proc].back().emplace_back(superstep, stepIndex);
                 
-                node_used_at_proc_lists[node][proc].emplace_back();
+                node_used_at_proc_lists[node][proc].push_back(std::deque<std::pair<unsigned, unsigned> >());
             }
 
     // set up initial content of fast memories
@@ -850,20 +828,6 @@ void BspMemSchedule::SetMemoryMovement(CACHE_EVICTION_STRATEGY evict_rule)
         }
     }
 
-}
-
-void BspMemSchedule::ResetToForesight()
-{
-    nodes_evicted_in_comm.clear();
-    nodes_evicted_in_comm.resize(instance->numberOfProcessors(), std::vector<std::vector<unsigned> >(number_of_supersteps));
-
-    nodes_sent_down.clear();
-    nodes_sent_down.resize(instance->numberOfProcessors(), std::vector<std::vector<unsigned> >(number_of_supersteps));
-
-    nodes_sent_up.clear();
-    nodes_sent_up.resize(instance->numberOfProcessors(), std::vector<std::vector<unsigned> >(number_of_supersteps));
-
-    SetMemoryMovement(CACHE_EVICTION_STRATEGY::FORESIGHT);
 }
 
 bool BspMemSchedule::isValid() const
@@ -1292,7 +1256,6 @@ void BspMemSchedule::CreateFromPartialPebblings(const BspInstance &bsp_instance,
     unsigned nr_parts = processors_to_parts.size();
 
     std::vector<std::set<unsigned> > in_mem(instance->numberOfProcessors());
-    std::vector<std::tuple<unsigned, unsigned, unsigned> > force_evicts;
 
     compute_steps_for_proc_superstep.clear();
     nodes_sent_up.clear();
@@ -1367,7 +1330,6 @@ void BspMemSchedule::CreateFromPartialPebblings(const BspInstance &bsp_instance,
             {
                 in_mem[proc_id].erase(node);
                 nodes_evicted_in_comm[proc_id].back().push_back(node);
-                force_evicts.push_back(std::make_tuple(node, proc_id, nodes_evicted_in_comm[proc_id].size()-1));
             } 
         }
         
@@ -1429,254 +1391,6 @@ void BspMemSchedule::CreateFromPartialPebblings(const BspInstance &bsp_instance,
         }
     number_of_supersteps = max_step_index;
     need_to_load_inputs = true;
-
-    FixForceEvicts(*instance, force_evicts);
-    TryToMergeSupersteps(*instance);
-}
-
-void BspMemSchedule::FixForceEvicts(const BspInstance &bsp_instance, const std::vector<std::tuple<unsigned, unsigned, unsigned> > force_evict_node_proc_step)
-{
-    // Some values were evicted only because they weren't present in the next part - see if we can undo those evictions
-    for(auto force_evict : force_evict_node_proc_step)
-    {
-        unsigned node = std::get<0>(force_evict);
-        unsigned proc = std::get<1>(force_evict);
-        unsigned superstep = std::get<2>(force_evict);
-
-        bool next_in_comp = false;
-        bool next_in_comm = false;
-        std::pair<unsigned, unsigned> where;
-
-        for(unsigned find_supstep = superstep + 1; find_supstep < numberOfSupersteps(); ++find_supstep)
-        {
-            for(unsigned stepIndex = 0; stepIndex < compute_steps_for_proc_superstep[proc][find_supstep].size(); ++stepIndex)
-                if(compute_steps_for_proc_superstep[proc][find_supstep][stepIndex].node == node)
-                {
-                    next_in_comp = true;
-                    where = std::make_pair(find_supstep, stepIndex);
-                    break;
-                }
-            if(next_in_comp)
-                break;
-            for(unsigned send_down : nodes_sent_down[proc][find_supstep])
-                if(send_down == node)
-                {
-                    next_in_comm = true;
-                    where = std::make_pair(find_supstep, 0);
-                    break;
-                }
-            if(next_in_comm)
-                break;
-        }
-
-        // check new schedule for validity
-        if(!next_in_comp && !next_in_comm)
-            continue;
-        
-        bool eraseit=false;
-        BspMemSchedule test_schedule = *this;
-        for(auto itr = test_schedule.nodes_evicted_in_comm[proc][superstep].begin(); itr != test_schedule.nodes_evicted_in_comm[proc][superstep].end(); ++itr)
-            if(*itr == node)
-            {
-                test_schedule.nodes_evicted_in_comm[proc][superstep].erase(itr);
-                eraseit = true;
-                break;
-            }
-
-        if(next_in_comp)
-        {            
-            for(auto itr = test_schedule.compute_steps_for_proc_superstep[proc][where.first].begin(); itr != test_schedule.compute_steps_for_proc_superstep[proc][where.first].end(); ++itr)
-                if(itr->node == node)
-                {
-                    if(where.second > 0)
-                    {
-                        auto previous_step = itr;
-                        --previous_step;
-                        for(unsigned to_evict : itr->nodes_evicted_after)
-                            previous_step->nodes_evicted_after.push_back(to_evict);
-                    }
-                    else
-                    {
-                        for(unsigned to_evict : itr->nodes_evicted_after)
-                            test_schedule.nodes_evicted_in_comm[proc][where.first-1].push_back(to_evict);
-                    }
-                    test_schedule.compute_steps_for_proc_superstep[proc][where.first].erase(itr);
-                    break;
-                }
-
-            if(test_schedule.isValid())
-            {
-                nodes_evicted_in_comm[proc][superstep] = test_schedule.nodes_evicted_in_comm[proc][superstep];
-                compute_steps_for_proc_superstep[proc][where.first] = test_schedule.compute_steps_for_proc_superstep[proc][where.first];
-                nodes_evicted_in_comm[proc][where.first-1] = test_schedule.nodes_evicted_in_comm[proc][where.first-1];
-            }
-        }
-        else if(next_in_comm)
-        {
-            for(auto itr = test_schedule.nodes_sent_down[proc][where.first].begin(); itr != test_schedule.nodes_sent_down[proc][where.first].end(); ++itr)
-                if(*itr == node)
-                {
-                    test_schedule.nodes_sent_down[proc][where.first].erase(itr);
-                    break;
-                }
-                
-            if(test_schedule.isValid())
-            {
-                nodes_evicted_in_comm[proc][superstep] = test_schedule.nodes_evicted_in_comm[proc][superstep];
-                nodes_sent_down[proc][where.first] = test_schedule.nodes_sent_down[proc][where.first];
-            }
-        }
-    }
-}
-
-void BspMemSchedule::TryToMergeSupersteps(const BspInstance &bsp_instance)
-{
-    std::vector<bool> is_removed(number_of_supersteps, false);
-
-    for(unsigned step = 1; step < number_of_supersteps; ++step)
-    {
-        if(is_removed[step])
-            continue;
-
-        unsigned prev_step = step - 1;
-        while(is_removed[prev_step])
-            --prev_step;
-
-        for(unsigned next_step = step + 1; next_step < number_of_supersteps; ++next_step)
-        {
-            // Try to merge step and next_step
-            BspMemSchedule test_schedule = *this;
-
-            for(unsigned proc = 0; proc < instance->numberOfProcessors(); ++proc)
-            {
-                test_schedule.compute_steps_for_proc_superstep[proc][step].insert(
-                        test_schedule.compute_steps_for_proc_superstep[proc][step].end(),
-                        test_schedule.compute_steps_for_proc_superstep[proc][next_step].begin(),
-                        test_schedule.compute_steps_for_proc_superstep[proc][next_step].end());
-                test_schedule.compute_steps_for_proc_superstep[proc][next_step].clear();
-                
-                test_schedule.nodes_sent_up[proc][step].insert(
-                        test_schedule.nodes_sent_up[proc][step].end(),
-                        test_schedule.nodes_sent_up[proc][next_step].begin(),
-                        test_schedule.nodes_sent_up[proc][next_step].end());
-                test_schedule.nodes_sent_up[proc][next_step].clear();
-
-                test_schedule.nodes_sent_down[proc][prev_step].insert(
-                        test_schedule.nodes_sent_down[proc][prev_step].end(),
-                        test_schedule.nodes_sent_down[proc][step].begin(),
-                        test_schedule.nodes_sent_down[proc][step].end());
-                test_schedule.nodes_sent_down[proc][step].clear();
-
-                test_schedule.nodes_evicted_in_comm[proc][step].insert(
-                        test_schedule.nodes_evicted_in_comm[proc][step].end(),
-                        test_schedule.nodes_evicted_in_comm[proc][next_step].begin(),
-                        test_schedule.nodes_evicted_in_comm[proc][next_step].end());
-                test_schedule.nodes_evicted_in_comm[proc][next_step].clear();
-
-            }
-
-            if(test_schedule.isValid())
-            {
-                is_removed[next_step] = true;
-                for(unsigned proc = 0; proc < instance->numberOfProcessors(); ++proc)
-                {
-                    compute_steps_for_proc_superstep[proc][step] = test_schedule.compute_steps_for_proc_superstep[proc][step];
-                    compute_steps_for_proc_superstep[proc][next_step].clear();
-                    
-                    nodes_sent_up[proc][step] = test_schedule.nodes_sent_up[proc][step];
-                    nodes_sent_up[proc][next_step].clear();
-
-                    nodes_sent_down[proc][prev_step] = test_schedule.nodes_sent_down[proc][prev_step];
-                    nodes_sent_down[proc][step] = nodes_sent_down[proc][next_step];
-                    nodes_sent_down[proc][next_step].clear();
-
-                    nodes_evicted_in_comm[proc][step] = test_schedule.nodes_evicted_in_comm[proc][step];
-                    nodes_evicted_in_comm[proc][next_step].clear();
-                }
-            }
-            else
-                break;
-        }
-    }
-
-    unsigned new_nr_supersteps = 0;
-    for(unsigned step = 0; step < number_of_supersteps; ++step)
-        if(!is_removed[step])
-            ++new_nr_supersteps;
-    
-    if(new_nr_supersteps == number_of_supersteps)
-        return;
-
-    BspMemSchedule shortened_schedule = *this;
-    shortened_schedule.updateNumberOfSupersteps(new_nr_supersteps);
-
-    unsigned new_index = 0;
-    for(unsigned step = 0; step < number_of_supersteps; ++step)
-    {
-        if(is_removed[step])
-            continue;
-
-        for(unsigned proc = 0; proc < instance->numberOfProcessors(); ++proc)
-        {
-            shortened_schedule.compute_steps_for_proc_superstep[proc][new_index] = compute_steps_for_proc_superstep[proc][step];
-            shortened_schedule.nodes_sent_up[proc][new_index] = nodes_sent_up[proc][step];
-            shortened_schedule.nodes_sent_down[proc][new_index] = nodes_sent_down[proc][step];
-            shortened_schedule.nodes_evicted_in_comm[proc][new_index] = nodes_evicted_in_comm[proc][step];
-        }
-
-        ++new_index;
-    }
-    
-    *this = shortened_schedule;
-
-    if(!isValid())
-        std::cout<<"ERROR: schedule is not valid after superstep merging."<<std::endl;
-
-}
-
-BspMemSchedule BspMemSchedule::ExpandMemSchedule(const BspInstance& original_instance, const std::vector<unsigned> mapping_to_coarse) const
-{
-    std::map<unsigned, std::set<unsigned> > original_vertices_for_coarse_ID;
-    for(unsigned node = 0; node < original_instance.numberOfVertices(); ++node)
-        original_vertices_for_coarse_ID[mapping_to_coarse[node]].insert(node);
-
-    BspMemSchedule fine_schedule;
-    fine_schedule.instance = &original_instance;
-    fine_schedule.updateNumberOfSupersteps(number_of_supersteps);
-
-    for(unsigned step=0; step<number_of_supersteps; ++step)
-    {
-        for(unsigned proc=0; proc<instance->numberOfProcessors(); ++proc)
-        {
-            // computation phase
-            for(const auto& computeStep : compute_steps_for_proc_superstep[proc][step])
-            {
-                unsigned node = computeStep.node;
-                for(unsigned original_node : original_vertices_for_coarse_ID[node])
-                    fine_schedule.compute_steps_for_proc_superstep[proc][step].emplace_back(original_node);
-
-                for(unsigned to_remove : computeStep.nodes_evicted_after)
-                    for(unsigned original_node : original_vertices_for_coarse_ID[to_remove])
-                        fine_schedule.compute_steps_for_proc_superstep[proc][step].back().nodes_evicted_after.push_back(original_node);
-            }
-
-            //communication phase
-            for(unsigned node : nodes_sent_up[proc][step])
-                for(unsigned original_node : original_vertices_for_coarse_ID[node])
-                    fine_schedule.nodes_sent_up[proc][step].push_back(original_node);
-            
-            for(unsigned node : nodes_evicted_in_comm[proc][step])
-                for(unsigned original_node : original_vertices_for_coarse_ID[node])
-                    fine_schedule.nodes_evicted_in_comm[proc][step].push_back(original_node);
-
-            for(unsigned node : nodes_sent_down[proc][step])
-                for(unsigned original_node : original_vertices_for_coarse_ID[node])
-                    fine_schedule.nodes_sent_down[proc][step].push_back(original_node);
-        }
-    }
-
-    fine_schedule.cleanSchedule();
-    return fine_schedule;
 }
 
 BspSchedule BspMemSchedule::ConvertToBsp() const

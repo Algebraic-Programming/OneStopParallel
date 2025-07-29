@@ -34,35 +34,8 @@ std::vector<VertexType> dag_algorithms::top_sort_dfs(const ComputationalDag &dag
     };
 
     for (const VertexType &i : dag.sourceVertices())
-        dfs_visit(i);
-
-    std::reverse(top_order.begin(), top_order.end());
-    return top_order;
-}
-
-std::vector<VertexType> dag_algorithms::top_sort_dfs(const ComputationalDag &dag, std::vector<unsigned> &source_node_dist) {
-
-    std::vector<VertexType> top_order;
-    top_order.reserve(dag.numberOfVertices());
-    source_node_dist.resize(dag.numberOfVertices(), 0);
-
-    std::vector<bool> visited(dag.numberOfVertices(), false);
-
-    std::function<void(VertexType,unsigned)> dfs_visit = [&](VertexType node, unsigned depth) {
-        visited[node] = true;
-        
-        for (const VertexType &child : dag.children(node)) {
-            
-            source_node_dist[child] = std::max(depth+1, source_node_dist[child]);
-            
-            if (!visited[child])
-                dfs_visit(child, depth + 1);
-        }
-        top_order.push_back(node);
-    };
-
-    for (const VertexType &i : dag.sourceVertices())
-        dfs_visit(i, 0);
+        if (!visited[i])
+            dfs_visit(i);
 
     std::reverse(top_order.begin(), top_order.end());
     return top_order;

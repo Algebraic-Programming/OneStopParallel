@@ -22,7 +22,7 @@ limitations under the License.
 #include <numeric>
 
 #include "scheduler/ImprovementScheduler.hpp"
-#include <coptcpp_pch.h>
+#include "scheduler/IlpSchedulers/coptcpp_inc/coptcpp_pch.h"
 #include "file_interactions/BspScheduleWriter.hpp"
 
 class numa_processor_reordering_heuristic : public ImprovementScheduler {

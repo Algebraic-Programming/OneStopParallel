@@ -1,6 +1,6 @@
-# OneStopParallel
+# one-stop-parallel
 
-This repository, OneStopParallel, is copyright by the
+This repository, one-stop-parallel, is copyright by the
 Computing Systems Laboratory, Zurich Research Center, Huawei Technologies
 Switzerland AG.
 
@@ -46,40 +46,10 @@ The output is generated in the same folder and has the same name as the input wh
 
 ## Quickstart
 
-You can compile the project with the following steps:
+Compile the project using the following commands:
 
-1. To enable the use of the cardinal optimizer (COPT) solvers you need to set COPT_HOME to the directory of COPT (copt_dir):
-
-    ```bash
-    export COPT_HOME=/path/copt_dir
-    ```
-
-2. To enable the option of using eigen library for specific shedulers:
-    You can install eigen using 2 options:
-    1. Either by using the package manager: ```sudo apt install libeigen3-dev```
-    2. Or by installing by cloning the official repository:
-        ```bash
-        git clone https://gitlab.com/libeigen/eigen.git
-        cd eigen && mkdir build && cd build 
-        cmake .. -DCMAKE_INSTALL_PREFIX=../install
-        make -j$(nproc) install
-        ```
-
-
-3. To install:
-    1. If you have installed eigen using git clone:
-        ```bash
-        mkdir -p build && cd build
-        cmake .. -DEigen3_ROOT=/full_path_to/eigen/install/
-        make -j$(nproc)
-        ```
-
-    2. Otherwise:
-        ```bash
-        mkdir -p build && cd build
-        cmake ..
-        make -j$(nproc)
-        ```
-
-
-
+```bash
+mkdir -p build && cd build
+cmake ..
+make -j$(nproc)
+```

@@ -88,7 +88,6 @@ main
 tests/*
 !tests/*.cpp
 !tests/include/
-!tests/example_schedule_tests/
 !tests/include/*.hpp
 !lib/**/*
 doc/html/
@@ -100,16 +99,15 @@ doc/latex/
 !*/CMakeLists.txt
 !**/*/CMakeLists.txt
 [Bb]uild/*
-[Bb]uild-arm/*
-[Bb]uild-debug/*
 [Ii]nstall/*
 cmake-*
 *.cmake
-!cmake/*.cmake
 *.in
 Makefile
 *.marks
 .vscode/*
+!.vscode/launch.json
+!.vscode/tasks.json
 #Latex files to ignore
 tex_notes/*.pdf
 tex_notes/*.synctex.gz
@@ -118,313 +116,15 @@ tex_notes/*.log
 tex_notes/*.blg
 tex_notes/*.bbl
 tex_notes/*.aux
-
-
-
-
-
-
-
-
-
-## Core latex/pdflatex auxiliary files:
-doc_pdf/**/*.aux
-doc_pdf/**/*.lof
-doc_pdf/**/*.log
-doc_pdf/**/*.lot
-doc_pdf/**/*.fls
-doc_pdf/**/*.out
-doc_pdf/**/*.toc
-doc_pdf/**/*.fmt
-doc_pdf/**/*.fot
-doc_pdf/**/*.cb
-doc_pdf/**/*.cb2
-.doc_pdf/**/*.lb
-
-## Intermediate documents:
-doc_pdf/**/*.dvi
-doc_pdf/**/*.xdv
-*-converted-to.*
-# these rules might exclude image files for figures etc.
-# doc_pdf/**/*.ps
-# doc_pdf/**/*.eps
-# doc_pdf/**/*.pdf
-
-## Generated if empty string is given at "Please type another file name for output:"
-.pdf
-
-## Bibliography auxiliary files (bibtex/biblatex/biber):
-doc_pdf/**/*.bbl
-doc_pdf/**/*.bcf
-doc_pdf/**/*.blg
-*-blx.aux
-*-blx.bib
-doc_pdf/**/*.run.xml
-
-## Build tool auxiliary files:
-doc_pdf/**/*.fdb_latexmk
-doc_pdf/**/*.synctex
-doc_pdf/**/*.synctex(busy)
-doc_pdf/**/*.synctex.gz
-doc_pdf/**/*.synctex.gz(busy)
-doc_pdf/**/*.pdfsync
-
-## Build tool directories for auxiliary files
-# latexrun
-latex.out/
-
-## Auxiliary and intermediate files from other packages:
-# algorithms
-doc_pdf/**/*.alg
-doc_pdf/**/*.loa
-
-# achemso
-acs-doc_pdf/**/*.bib
-
-# amsthm
-doc_pdf/**/*.thm
-
-# beamer
-doc_pdf/**/*.nav
-doc_pdf/**/*.pre
-doc_pdf/**/*.snm
-doc_pdf/**/*.vrb
-
-# changes
-doc_pdf/**/*.soc
-
-# comment
-doc_pdf/**/*.cut
-
-# cprotect
-doc_pdf/**/*.cpt
-
-# elsarticle (documentclass of Elsevier journals)
-doc_pdf/**/*.spl
-
-# endnotes
-doc_pdf/**/*.ent
-
-# fixme
-doc_pdf/**/*.lox
-
-# feynmf/feynmp
-doc_pdf/**/*.mf
-doc_pdf/**/*.mp
-doc_pdf/**/*.t[1-9]
-doc_pdf/**/*.t[1-9][0-9]
-doc_pdf/**/*.tfm
-
-#(r)(e)ledmac/(r)(e)ledpar
-doc_pdf/**/*.end
-doc_pdf/**/*.?end
-doc_pdf/**/*.[1-9]
-doc_pdf/**/*.[1-9][0-9]
-doc_pdf/**/*.[1-9][0-9][0-9]
-doc_pdf/**/*.[1-9]R
-doc_pdf/**/*.[1-9][0-9]R
-doc_pdf/**/*.[1-9][0-9][0-9]R
-doc_pdf/**/*.eledsec[1-9]
-doc_pdf/**/*.eledsec[1-9]R
-doc_pdf/**/*.eledsec[1-9][0-9]
-doc_pdf/**/*.eledsec[1-9][0-9]R
-doc_pdf/**/*.eledsec[1-9][0-9][0-9]
-doc_pdf/**/*.eledsec[1-9][0-9][0-9]R
-
-# glossaries
-doc_pdf/**/*.acn
-doc_pdf/**/*.acr
-doc_pdf/**/*.glg
-doc_pdf/**/*.glo
-doc_pdf/**/*.gls
-doc_pdf/**/*.glsdefs
-doc_pdf/**/*.lzo
-doc_pdf/**/*.lzs
-doc_pdf/**/*.slg
-doc_pdf/**/*.slo
-doc_pdf/**/*.sls
-
-# uncomment this for glossaries-extra (will ignore makeindex's style files!)
-# doc_pdf/**/*.ist
-
-# gnuplot
-doc_pdf/**/*.gnuplot
-doc_pdf/**/*.table
-
-# gnuplottex
-*-gnuplottex-*
-
-# gregoriotex
-doc_pdf/**/*.gaux
-doc_pdf/**/*.glog
-doc_pdf/**/*.gtex
-
-# htlatex
-doc_pdf/**/*.4ct
-doc_pdf/**/*.4tc
-doc_pdf/**/*.idv
-doc_pdf/**/*.lg
-doc_pdf/**/*.trc
-doc_pdf/**/*.xref
-
-# hyperref
-doc_pdf/**/*.brf
-
-# knitr
-*-concordance.tex
-# TODO Uncomment the next line if you use knitr and want to ignore its generated tikz files
-# doc_pdf/**/*.tikz
-*-tikzDictionary
-
-# listings
-doc_pdf/**/*.lol
-
-# luatexja-ruby
-doc_pdf/**/*.ltjruby
-
-# makeidx
-doc_pdf/**/*.idx
-doc_pdf/**/*.ilg
-doc_pdf/**/*.ind
-
-# minitoc
-doc_pdf/**/*.maf
-doc_pdf/**/*.mlf
-doc_pdf/**/*.mlt
-doc_pdf/**/*.mtc[0-9]*
-doc_pdf/**/*.slf[0-9]*
-doc_pdf/**/*.slt[0-9]*
-doc_pdf/**/*.stc[0-9]*
-
-# minted
-_minted*
-doc_pdf/**/*.pyg
-
-# morewrites
-doc_pdf/**/*.mw
-
-# newpax
-doc_pdf/**/*.newpax
-
-# nomencl
-doc_pdf/**/*.nlg
-doc_pdf/**/*.nlo
-doc_pdf/**/*.nls
-
-# pax
-doc_pdf/**/*.pax
-
-# pdfpcnotes
-doc_pdf/**/*.pdfpc
-
-# sagetex
-doc_pdf/**/*.sagetex.sage
-doc_pdf/**/*.sagetex.py
-doc_pdf/**/*.sagetex.scmd
-
-# scrwfile
-doc_pdf/**/*.wrt
-
-# svg
-svg-inkscape/
-
-# sympy
-doc_pdf/**/*.sout
-doc_pdf/**/*.sympy
-sympy-plots-for-doc_pdf/**/*.tex/
-
-# pdfcomment
-doc_pdf/**/*.upa
-doc_pdf/**/*.upb
-
-# pythontex
-doc_pdf/**/*.pytxcode
-pythontex-files-*/
-
-# tcolorbox
-doc_pdf/**/*.listing
-
-# thmtools
-doc_pdf/**/*.loe
-
-# TikZ & PGF
-doc_pdf/**/*.dpth
-doc_pdf/**/*.md5
-doc_pdf/**/*.auxlock
-
-# titletoc
-doc_pdf/**/*.ptc
-
-# todonotes
-doc_pdf/**/*.tdo
-
-# vhistory
-doc_pdf/**/*.hst
-doc_pdf/**/*.ver
-
-# easy-todo
-doc_pdf/**/*.lod
-
-# xcolor
-doc_pdf/**/*.xcp
-
-# xmpincl
-doc_pdf/**/*.xmpi
-
-# xindy
-doc_pdf/**/*.xdy
-
-# xypic precompiled matrices and outlines
-doc_pdf/**/*.xyc
-doc_pdf/**/*.xyd
-
-# endfloat
-doc_pdf/**/*.ttt
-doc_pdf/**/*.fff
-
-# Latexian
-TSWLatexianTemp*
-
-## Editors:
-# WinEdt
-doc_pdf/**/*.bak
-doc_pdf/**/*.sav
-
-# Texpad
-.texpadtmp
-
-# LyX
-doc_pdf/**/*.lyx~
-
-# Kile
-doc_pdf/**/*.backup
-
-# gummi
-.doc_pdf/**/*.swp
-
-# KBibTeX
-*~[0-9]*
-
-# TeXnicCenter
-doc_pdf/**/*.tps
-
-# auto folder when using emacs and auctex
-./auto/*
-doc_pdf/**/*.el
-
-# expex forward references with \gathertags
-*-tags.tex
-
-# standalone packages
-doc_pdf/**/*.sta
-
-# Makeindex log files
-doc_pdf/**/*.lpz
-
-# xwatermark package
-doc_pdf/**/*.xwm
-
-# REVTeX puts footnotes in the bibliography by default, unless the nofootinbib
-# option is specified. Footnotes are the stored in a file with suffix Notes.bib.
-# Uncomment the next line to have this generated file ignored.
-#*Notes.bib
+license.key
+license.dat
+#Huge Test Graphs
+data/eda_emir_data/*
+data/florida_spd_sparse/huge_untracked/*
+#lib/copt/*.so
+#include/algorithms/IlpSchedulers/coptcpp_inc/*
+data/florida_spd_sparse/huge/*
+data/florida_spd_sparse/large/*
+data/florida_spd_sparse/medium/*
+data/erdos_renyi/*
+data/random_band_matrices/*

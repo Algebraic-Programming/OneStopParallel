@@ -32,9 +32,6 @@ limitations under the License.
 #include "auxiliary/auxiliary.hpp"
 #include "model/BspSchedule.hpp"
 
-
-
-
 /**
  * @brief The GreedyBspScheduler class represents a scheduler that uses a greedy algorithm to compute schedules for
  * BspInstance.
@@ -43,7 +40,7 @@ limitations under the License.
  * The computeSchedule() method computes a schedule for a given BspInstance using a greedy algorithm.
  * The getScheduleName() method returns the name of the schedule, which is "BspGreedy" in this case.
  */
-class GreedyBspScheduler : public Scheduler {
+class GreedyBspPebbler : public Scheduler {
 
   private:
     struct heap_node {
@@ -70,42 +67,26 @@ class GreedyBspScheduler : public Scheduler {
 
     float max_percent_idle_processors;
     bool increase_parallelism_in_new_superstep;
-    bool use_memory_constraint = false;
+    unsigned mem_limit;
 
-    std::vector<int> current_proc_persistent_memory;
-    std::vector<int> current_proc_transient_memory;
-
-
-
-    double computeScore(VertexType node, unsigned proc, const std::vector<std::vector<bool>> &procInHyperedge,
-                        const BspInstance &instance);
-
-
-    void Choose(const BspInstance &instance, const std::vector<std::vector<bool>> &procInHyperedge,
+    void ChooseHeap(const BspInstance &instance, const std::vector<std::vector<bool>> &procInHyperedge,
                     const std::set<VertexType> &allReady, const std::vector<std::set<VertexType>> &procReady,
                     const std::vector<bool> &procFree, VertexType &node, unsigned &p) const;
 
-    bool CanChooseNode(const BspInstance &instance, const std::set<VertexType> &allReady,
+    bool CanChooseNodeHeap(const BspInstance &instance, const std::set<VertexType> &allReady,
                            const std::vector<std::set<VertexType>> &procReady, const std::vector<bool> &procFree) const;
-
-    bool check_mem_feasibility(const BspInstance &instance, const std::set<VertexType> &allReady,
-                                               const std::vector<std::set<VertexType>> &procReady) const;
-
-    unsigned get_nr_parallelizable_nodes(const BspInstance &instance,
-                                            const std::vector<unsigned>& nr_ready_nodes_per_type,
-                                            const std::vector<unsigned>& nr_procs_per_type) const;
 
   public:
     /**
      * @brief Default constructor for GreedyBspScheduler.
      */
-    GreedyBspScheduler(float max_percent_idle_processors_ = 0.2, bool increase_parallelism_in_new_superstep_ = true)
-        : Scheduler(), max_percent_idle_processors(max_percent_idle_processors_), increase_parallelism_in_new_superstep(increase_parallelism_in_new_superstep_) {}
+    GreedyBspPebbler(unsigned mem_limit_, float max_percent_idle_processors_ = 0.2, bool increase_parallelism_in_new_superstep_ = true)
+        : Scheduler(), max_percent_idle_processors(max_percent_idle_processors_), increase_parallelism_in_new_superstep(increase_parallelism_in_new_superstep_), mem_limit(mem_limit_) {}
 
     /**
      * @brief Default destructor for GreedyBspScheduler.
      */
-    virtual ~GreedyBspScheduler() = default;
+    virtual ~GreedyBspPebbler() = default;
 
     /**
      * @brief Compute a schedule for the given BspInstance.
@@ -115,6 +96,7 @@ class GreedyBspScheduler : public Scheduler {
      * @param instance The BspInstance object representing the instance to compute the schedule for.
      * @return A pair containing the return status and the computed BspSchedule.
      */
+
     virtual std::pair<RETURN_STATUS, BspSchedule> computeSchedule(const BspInstance &instance) override;
 
     /**
@@ -125,15 +107,10 @@ class GreedyBspScheduler : public Scheduler {
      * @return The name of the schedule.
      */
     virtual std::string getScheduleName() const override {
-
-        if (use_memory_constraint) {
-            return "BspGreedyMemory";
-        } else {
-            return "BspGreedy";
-        }
+        return "BspGreedyPebbler";
     }
 
-    virtual void setUseMemoryConstraint(bool use_memory_constraint_) override {
-        use_memory_constraint = use_memory_constraint_;
+    virtual void setMemLimit(unsigned limit) {
+        mem_limit = limit;
     }
 };

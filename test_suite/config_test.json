@@ -1,12 +1,12 @@
 {
     "globalParameters": {
-        "timeLimit": 600,
-        "graphDirectory": "./graphs/",
-        "machineDirectory": "./machines/",
-        "scheduleDirectory" :"./schedules/",
-        "outputStatsFile": "./all_run_stats.txt",
-        "outputLogFile": "./log.txt",
-        "outputSchedule": true,
+        "timeLimit": 3600,
+        "graphDirectory": "/storage/projects/opdas/test_suite/graphs03/",
+        "machineDirectory": "/storage/projects/opdas/test_suite/machines22/",
+        "scheduleDirectory" :"/storage/projects/opdas/test_suite/schedules/",
+        "outputStatsFile": "/storage/projects/opdas/test_suite/results_no_flush/all_run_test2_m22.txt",
+        "outputLogFile": "/storage/projects/opdas/test_suite/results_no_flush/log_test2_m22.txt",
+       "outputSchedule": true,
         "outputDotSchedule": false,
         "outputSankeySchedule": false
     },
@@ -28,14 +28,14 @@
         },
         {
             "name": "GreedyBsp",
-            "run" : true,
+            "run" : false,
             "parameters": {
                 "max_percent_idle_processors": 0.2
             }
         },
         {
             "name": "GreedyVariance",
-            "run" : true,
+            "run" : false,
             "parameters": {
                 "max_percent_idle_processors": 0.2
             }
@@ -90,42 +90,8 @@
         },
         {
             "name": "GreedyMeta",
-            "run" : false,
+            "run" : true,
             "parameters": {}
-        },
-        {
-            "name": "FullILP",
-            "run" : false,
-            "parameters": {
-                "max_number_of_supersteps": 4,
-                "write_intermediate_solutions": false,
-                "intermediate_solutions_directory": ".",
-                "intermediate_solutions_prefix": "interm_sol",
-                "use_initial_solution": false,
-                "initial_solution_scheduler": "GreedyBsp"
-            }
-        },
-        {
-            "name": "TotalCommILP",
-            "run" : false,
-            "parameters": {
-                "max_number_of_supersteps": 4,
-                "write_intermediate_solutions": false,
-                "intermediate_solutions_directory": ".",
-                "intermediate_solutions_prefix": "interm_sol",
-                "use_initial_solution": false,
-                "initial_solution_scheduler": "BspGreedy"
-            }
-        },
-        {
-            "name": "MultiHC",
-            "run" : false,
-            "parameters": {
-                "compute_best_contraction_rate" : false,
-                "contraction_rate": 0.15,
-                "hill_climbing_steps": 300,
-                "fast_coarsification": true
-            }
         },
         {
             "name": "Wavefront",
@@ -145,7 +111,7 @@
         },
         {
             "name": "HDagg",
-            "run" : false,
+            "run" : true,
             "parameters": {
                 "balance_threshhold": 1.1,
                 "hillclimb_balancer_iterations": 10,
@@ -171,111 +137,6 @@
                 "hillclimb_balancer_iterations": 0,
                 "hungarian_alg": false,
                 "balance_func": "xlogx"
-            }
-        },
-        {
-            "name": "BalDMixR",
-            "run": false,
-            "parameters": {
-                "balance_threshhold": 1.2,
-                "part_algo": "Greedy",
-                "coin_type": "Thue_Morse",
-                "clumps_per_partition": 6,
-                "nodes_per_clump": 4,
-                "nodes_per_partition": 15,
-                "max_weight_for_flag": 0.3333,
-                "balanced_cut_ratio": 0.3333,
-                "min_weight_for_split": 0.0208333,
-                "hill_climb_simple_improvement_attemps": 10,
-                "min_comp_generation_when_shaving": 3
-            }
-        },
-        {
-            "name": "CoBalDMixR",
-            "run": false,
-            "parameters": {
-                "coarsen": {
-                    "min_nodes_after_coarsen_per_partition": 1000,
-                    "number_of_final_no_change_reps": 4,
-                    "geom_decay_num_nodes": 1.0625,
-                    "poisson_par": 0,
-                    "noise": 0,
-                    "edge_sort_ratio_triangle": 3,
-                    "edge_sort_ratio_weight": 2,
-                    "num_rep_without_node_decrease": 4,
-                    "temperature_multiplier": 1.125,
-                    "number_of_temperature_increases": 20
-                },
-                "initial": {
-                    "balance_threshhold": 1.2,
-                    "part_algo": "Greedy",
-                    "coin_type": "Thue_Morse",
-                    "clumps_per_partition": 6,
-                    "nodes_per_clump": 4,
-                    "nodes_per_partition": 15,
-                    "max_weight_for_flag": 0.3333,
-                    "balanced_cut_ratio": 0.3333,
-                    "min_weight_for_split": 0.0208333,
-                    "hill_climb_simple_improvement_attemps": 10,
-                    "min_comp_generation_when_shaving": 3
-                },
-                "final": {
-                    "balance_threshhold": 1.2,
-                    "part_algo": "Greedy",
-                    "coin_type": "Thue_Morse",
-                    "clumps_per_partition": 6,
-                    "nodes_per_clump": 4,
-                    "nodes_per_partition": 15,
-                    "max_weight_for_flag": 0.3333,
-                    "balanced_cut_ratio": 0.3333,
-                    "min_weight_for_split": 0.0208333,
-                    "hill_climb_simple_improvement_attemps": 10,
-                    "min_comp_generation_when_shaving": 3
-                }
-            }
-        },
-        {
-            "name": "CoBalDMixRLK",
-            "run": false,
-            "parameters": {
-                "coarsen": {
-                    "min_nodes_after_coarsen_per_partition": 1000,
-                    "number_of_final_no_change_reps": 4,
-                    "geom_decay_num_nodes": 1.0625,
-                    "poisson_par": 0,
-                    "noise": 0,
-                    "edge_sort_ratio_triangle": 3,
-                    "edge_sort_ratio_weight": 2,
-                    "num_rep_without_node_decrease": 4,
-                    "temperature_multiplier": 1.125,
-                    "number_of_temperature_increases": 20
-                },
-                "initial": {
-                    "balance_threshhold": 1.2,
-                    "part_algo": "Greedy",
-                    "coin_type": "Thue_Morse",
-                    "clumps_per_partition": 6,
-                    "nodes_per_clump": 4,
-                    "nodes_per_partition": 15,
-                    "max_weight_for_flag": 0.3333,
-                    "balanced_cut_ratio": 0.3333,
-                    "min_weight_for_split": 0.0208333,
-                    "hill_climb_simple_improvement_attemps": 10,
-                    "min_comp_generation_when_shaving": 3
-                },
-                "final": {
-                    "balance_threshhold": 1.2,
-                    "part_algo": "Greedy",
-                    "coin_type": "Thue_Morse",
-                    "clumps_per_partition": 6,
-                    "nodes_per_clump": 4,
-                    "nodes_per_partition": 15,
-                    "max_weight_for_flag": 0.3333,
-                    "balanced_cut_ratio": 0.3333,
-                    "min_weight_for_split": 0.0208333,
-                    "hill_climb_simple_improvement_attemps": 10,
-                    "min_comp_generation_when_shaving": 3
-                }
             }
         },
         {
@@ -363,13 +224,50 @@
             }
         },
         {
+            "name": "SquashBspQLK",
+            "run": false,
+            "parameters": {
+                "max_percent_idle_processors": 0.2,
+                "coarsen": {
+                    "min_nodes_after_coarsen_per_partition": 1000,
+                    "geom_decay_num_nodes": 1.0625,
+                    "poisson_par": 0,
+                    "noise": 0,
+                    "edge_sort_ratio_triangle": 3,
+                    "edge_sort_ratio_weight": 2,
+                    "num_rep_without_node_decrease": 4,
+                    "temperature_multiplier": 1.125,
+                    "number_of_temperature_increases": 14
+                }
+            }
+        },
+        {
+            "name": "CoarseWaveBestGreedy",
+            "run": false,
+            "parameters": { }
+        },
+        {
             "name": "CoarseWaveBestGreedyHC",
             "run": false,
             "parameters": { }
         },
         {
+            "name": "CoarseHDaggGreedyBspFillup",
+            "run": true,
+            "parameters": {
+                "max_percent_idle_processors": 0.2
+            }
+        },
+        {
             "name": "CoarseHDaggGreedyBsp",
             "run": false,
+            "parameters": {
+                "max_percent_idle_processors": 0.2
+            }
+        },
+        {
+            "name": "CoarseHDaggGreedyVarianceFillup",
+            "run": true,
             "parameters": {
                 "max_percent_idle_processors": 0.2
             }
@@ -383,7 +281,7 @@
         },
         {
             "name": "CoarseHDaggBestGreedy",
-            "run": false,
+            "run": true,
             "parameters": { }
         },
         {
@@ -529,8 +427,30 @@
             }
         },
         {
-            "name": "FunnelBspGreedy",
+            "name": "CoarseHDaggGreedyLocking",
             "run": true,
+            "parameters": {
+                "max_percent_idle_processors": 0.2
+            }
+        },
+        {
+            "name": "GreedyBspLocking",
+            "run": true,
+                     "parameters": {
+                "max_percent_idle_processors": 0.2
+            }
+        },
+        {
+            "name": "HDaggCoarseLockGLK+HC",
+            "run": false,
+            "parameters": {
+                "max_percent_idle_processors": 0.2,
+                "trans_edge_contraction": true
+            }
+        },
+        {
+            "name": "FunnelBspGreedy",
+            "run": false,
             "parameters": {
                 "coarsen": {
                     "max_relative_weight": 20.0,
@@ -546,7 +466,7 @@
         },
         {
             "name": "FunnelVarianceGreedy",
-            "run": true,
+            "run": false,
             "parameters": {
                 "coarsen": {
                     "max_relative_weight": 20.0,
@@ -559,8 +479,7 @@
                     "max_percent_idle_processors": 0.2
                 }
             }
-        }
-        ,
+        },
         {
             "name": "FunnelBspFillupGreedy",
             "run": true,
@@ -592,6 +511,182 @@
                     "max_percent_idle_processors": 0.2
                 }
             }
+        },
+        {
+            "name": "FunnelBspLocking",
+            "run": true,
+            "parameters": {
+                "coarsen": {
+                    "max_relative_weight": 20.0,
+                    "funnel_incoming": true,
+                    "funnel_outgoing": false,
+                    "first_funnel_incoming": true,
+                    "use_approx_transitive_reduction": true
+                },
+                "bsp": {
+                    "max_percent_idle_processors": 0.2
+                }
+            }
+        },
+        {
+            "name": "FunnelBestGreedy",
+            "run": true,
+            "parameters": {
+                "coarsen": {
+                    "max_relative_weight": 20.0,
+                    "funnel_incoming": true,
+                    "funnel_outgoing": false,
+                    "first_funnel_incoming": true,
+                    "use_approx_transitive_reduction": true
+                }
+            }
+        },
+        {
+            "name": "HDaggCoarseBspGLK+HC",
+            "run": false,
+            "parameters": {
+                "max_percent_idle_processors": 0.2,
+                "trans_edge_contraction": true
+            }
+        },
+        {
+            "name": "HDaggCoarseVarGLK+HC",
+            "run": false,
+            "parameters": {
+                "max_percent_idle_processors": 0.2,
+                "trans_edge_contraction": true
+            }
+        },
+        {
+            "name": "HDaggCoarseCobaldLK+HC",
+            "run": false,
+            "parameters": {
+                "trans_edge_contraction": true,
+                "coarsen": {
+                    "min_nodes_after_coarsen_per_partition": 1000,
+                    "number_of_final_no_change_reps": 4,
+                    "geom_decay_num_nodes": 1.0625,
+                    "poisson_par": 0,
+                    "noise": 0,
+                    "edge_sort_ratio_triangle": 3,
+                    "edge_sort_ratio_weight": 2,
+                    "num_rep_without_node_decrease": 4,
+                    "temperature_multiplier": 1.125,
+                    "number_of_temperature_increases": 20
+                },
+                "initial": {
+                    "balance_threshhold": 1.2,
+                    "part_algo": "Greedy",
+                    "coin_type": "Thue_Morse",
+                    "clumps_per_partition": 6,
+                    "nodes_per_clump": 4,
+                    "nodes_per_partition": 15,
+                    "max_weight_for_flag": 0.3333,
+                    "balanced_cut_ratio": 0.3333,
+                    "min_weight_for_split": 0.0208333,
+                    "hill_climb_simple_improvement_attemps": 10,
+                    "min_comp_generation_when_shaving": 3
+                },
+                "final": {
+                    "balance_threshhold": 1.2,
+                    "part_algo": "Greedy",
+                    "coin_type": "Thue_Morse",
+                    "clumps_per_partition": 6,
+                    "nodes_per_clump": 4,
+                    "nodes_per_partition": 15,
+                    "max_weight_for_flag": 0.3333,
+                    "balanced_cut_ratio": 0.3333,
+                    "min_weight_for_split": 0.0208333,
+                    "hill_climb_simple_improvement_attemps": 10,
+                    "min_comp_generation_when_shaving": 3
+                }
+            }
+        },
+        {
+            "name": "FunnelCoarseBspGLK+HC",
+            "run": false,
+            "parameters": {
+                "coarsen": {
+                    "max_relative_weight": 10.0,
+                    "funnel_incoming": true,
+                    "funnel_outgoing": false,
+                    "first_funnel_incoming": true,
+                    "use_approx_transitive_reduction": true
+                },
+                "max_percent_idle_processors": 0.2,
+                "trans_edge_contraction": true
+            }
+        },
+        {
+            "name": "FunnelCoarseVarGLK+HC",
+            "run": false,
+            "parameters": {
+                "coarsen": {
+                    "max_relative_weight": 10.0,
+                    "funnel_incoming": true,
+                    "funnel_outgoing": false,
+                    "first_funnel_incoming": true,
+                    "use_approx_transitive_reduction": true
+                },
+                "max_percent_idle_processors": 0.2,
+                "trans_edge_contraction": true
+            }
+        },
+        {
+            "name": "FunnelCoarseCobaldLK+HC",
+            "run": false,
+            "parameters": {
+                "funnel": {
+                    "max_relative_weight": 10.0,
+                    "funnel_incoming": true,
+                    "funnel_outgoing": false,
+                    "first_funnel_incoming": true,
+                    "use_approx_transitive_reduction": true
+                },
+                "coarsen": {
+                    "min_nodes_after_coarsen_per_partition": 1000,
+                    "number_of_final_no_change_reps": 4,
+                    "geom_decay_num_nodes": 1.0625,
+                    "poisson_par": 0,
+                    "noise": 0,
+                    "edge_sort_ratio_triangle": 3,
+                    "edge_sort_ratio_weight": 2,
+                    "num_rep_without_node_decrease": 4,
+                    "temperature_multiplier": 1.125,
+                    "number_of_temperature_increases": 20
+                },
+                "initial": {
+                    "balance_threshhold": 1.2,
+                    "part_algo": "Greedy",
+                    "coin_type": "Thue_Morse",
+                    "clumps_per_partition": 6,
+                    "nodes_per_clump": 4,
+                    "nodes_per_partition": 15,
+                    "max_weight_for_flag": 0.3333,
+                    "balanced_cut_ratio": 0.3333,
+                    "min_weight_for_split": 0.0208333,
+                    "hill_climb_simple_improvement_attemps": 10,
+                    "min_comp_generation_when_shaving": 3
+                },
+                "final": {
+                    "balance_threshhold": 1.2,
+                    "part_algo": "Greedy",
+                    "coin_type": "Thue_Morse",
+                    "clumps_per_partition": 6,
+                    "nodes_per_clump": 4,
+                    "nodes_per_partition": 15,
+                    "max_weight_for_flag": 0.3333,
+                    "balanced_cut_ratio": 0.3333,
+                    "min_weight_for_split": 0.0208333,
+                    "hill_climb_simple_improvement_attemps": 10,
+                    "min_comp_generation_when_shaving": 3
+                },
+                "max_percent_idle_processors": 0.2,
+                "trans_edge_contraction": true
+            }
         }
+
     ]
 }
+
+        
