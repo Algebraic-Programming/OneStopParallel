@@ -1,0 +1,27 @@
+# Copyright 2024 Huawei Technologies Co., Ltd.
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+
+if(@OSP_DEPENDS_ON_OPENMP@)
+    find_dependency(OpenMP REQUIRED)
+endif()
+if(@OSP_DEPENDS_ON_BOOST_GRAPH@)
+    find_dependency(Boost 1.71.0 REQUIRED COMPONENTS graph)
+endif()
+if(@COPT_FOUND@)
+    find_dependency(COPT)
+endif()
+if(@Eigen3_FOUND@)
+    find_dependency(Eigen3 3.4)
+endif()
+
+include("${CMAKE_CURRENT_LIST_DIR}/OneStopParallelTargets.cmake")

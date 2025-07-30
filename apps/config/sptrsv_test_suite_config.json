@@ -1,0 +1,49 @@
+{
+    "globalParameters": {
+        "timeLimit": 32600,
+        "useMemoryConstraint" : false,
+        "graphDirectory": "data/mtx_tests/",
+        "archDirectory": "data/machine_params/",
+        "outputStatsFile": "all_run_stats_sptrsv.csv",
+        "outputLogFile": "log_sptrsv.txt",
+        "outputSchedule": false,
+        "scheduleDirectory" :"schedules/",
+        "activeStatisticModules": [ "BspSptrsvStats" ] 
+    },
+    "algorithms": [
+         {
+            "name": "Serial",
+            "id": "Serial",
+            "run" : true,
+            "parameters": {}
+        },
+        {
+            "name": "GreedyBsp",
+            "id": "GreedyBsp",
+            "run" : true,
+            "parameters": {
+                "max_percent_idle_processors": 0.2,
+                "increase_parallelism_in_new_superstep": true
+            }
+        },
+        {
+            "name": "BspLocking",
+            "id": "BspLocking",
+            "run" : true,
+            "parameters": {
+                "max_percent_idle_processors": 0.4,
+                "increase_parallelism_in_new_superstep": true
+            }
+        },
+        {
+            "name": "GrowLocal",
+            "id": "GrowLocal",
+            "run" : true,
+            "parameters": {
+                "minSuperstepSize": 20,
+                "syncCostMultiplierMinSuperstepWeight": 1,
+                "syncCostMultiplierParallelCheck": 4
+            }
+        }
+    ]
+}
