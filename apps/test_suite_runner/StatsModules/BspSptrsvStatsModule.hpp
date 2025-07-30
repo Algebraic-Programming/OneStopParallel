@@ -39,17 +39,16 @@ limitations under the License.
 
 namespace osp {
 
-#define EPSILON 1e-10 
 bool compare_vectors(Eigen::VectorXd &v1, Eigen::VectorXd &v2) {
     std::cout << std::fixed;
     std::cout << std::setprecision(15);
 
     assert(v1.size() == v2.size());
     bool same = true;
-
+    const double epsilon = 1e-10;
     for (long long int i=0; i < v1.size(); ++i){
         //std::cout << "Ind: " << i << ": | " << v1[i] << " - " << v2[i] << " | = " << abs(v1[i]-v2[i]) << "\n";  
-        if( abs(v1[i] - v2[i]) / (abs(v1[i]) + abs(v2[i]) + EPSILON) > EPSILON ){
+        if( abs(v1[i] - v2[i]) / (abs(v1[i]) + abs(v2[i]) + epsilon) > epsilon ){
             std::cout << "We have differences in the matrix in position: " << i << std::endl;
             std::cout << v1[i] << " , " << v2[i] << std::endl;
             same = false;
