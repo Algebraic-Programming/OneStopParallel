@@ -42,6 +42,8 @@ configure_file(config/osp_config.json osp_config.json COPYONLY)
 
 _add_executable ( bsp_test_suite )
 
+_add_executable( coarser_plotter )
+
 if(Eigen3_FOUND)
 _add_executable ( sptrsv_test_suite )
 endif()
