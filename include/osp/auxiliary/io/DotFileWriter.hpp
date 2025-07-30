@@ -223,7 +223,7 @@ class DotFileWriter {
         const Graph_t &graph;
         const std::vector<unsigned> &colors;
         std::vector<std::string> color_strings;
-
+        std::vector<std::string> shape_strings;
 
         ColoredVertexWriterGraph_DOT(const Graph_t &graph_, const std::vector<unsigned> &colors_) : graph(graph_), colors(colors_) {
 
@@ -238,11 +238,15 @@ class DotFileWriter {
                 "maroon", "forestgreen", "blue", "yellow", "darkorchid", "red", "green", "navy",
                 "darkred", "darkgreen", "mediumblue", "ivory", "indigo", "orange", "darkcyan", "antiquewhite"
             };
+                
+            shape_strings = {
+                 "oval", "rect", "hexagon", "parallelogram"
+            };
         }
 
         void operator()(std::ostream &out, const vertex_idx_t<Graph_t> &i) const {
 
-            if (i >= colors.size() || color_strings.empty()) {
+            if (i >= colors.size()) {
                  // Fallback for safety: print without color if colors vector is mismatched or palette is empty.
                  out << i << " [";
             } else {
@@ -251,13 +255,13 @@ class DotFileWriter {
                  const std::string& color = color_strings[colors[i] % color_strings.size()];
                  out << i << " [style=filled;fillcolor=" << color << ";";
             }
+          
             out << "work_weight=\"" << graph.vertex_work_weight(i) << "\";"
                 << "comm_weight=\"" << graph.vertex_comm_weight(i) << "\";"
                 << "mem_weight=\"" << graph.vertex_mem_weight(i) << "\";";
 
             if constexpr (has_typed_vertices_v<Graph_t>) {
-
-                out << "type=\"" << graph.vertex_type(i) << "\";";
+                out << "type=\"" << graph.vertex_type(i) << "\";shape=\"" << shape_strings[graph.vertex_type(i) % shape_strings.size()] << "\";"; 
             }
 
             out << "]";
