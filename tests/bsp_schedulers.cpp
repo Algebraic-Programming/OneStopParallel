@@ -23,8 +23,7 @@ limitations under the License.
 #include <string>
 #include <vector>
 
-#include "osp/bsp/scheduler/CoarsenRefineSchedulers/SquashAMul.hpp"
-#include "osp/bsp/scheduler/CoarsenRefineSchedulers/SarkarMul.hpp"
+#include "osp/bsp/scheduler/MultilevelCoarseAndSchedule.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/BspLocking.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/CilkScheduler.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/EtfScheduler.hpp"
@@ -38,6 +37,8 @@ limitations under the License.
 #include "osp/bsp/scheduler/LoadBalanceScheduler/VariancePartitioner.hpp"
 #include "osp/bsp/scheduler/LocalSearch/HillClimbing/hill_climbing.hpp"
 #include "osp/bsp/scheduler/Serial.hpp"
+#include "osp/coarser/Sarkar/SarkarMul.hpp"
+#include "osp/coarser/SquashA/SquashAMul.hpp"
 #include "osp/graph_implementations/adj_list_impl/compact_sparse_graph.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
@@ -341,9 +342,8 @@ BOOST_AUTO_TEST_CASE(LightEdgeVariancePartitioner_test) {
 BOOST_AUTO_TEST_CASE(SquashAMul_test) {
     GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_t> sched;
 
-    SquashAMul<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t> coarsen_test;
-    coarsen_test.setInitialScheduler(&sched);
-    coarsen_test.setMinimumNumberVertices(1);
+    SquashAMul<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t> ml_coarsen;
+    MultilevelCoarseAndSchedule<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t> coarsen_test(sched, ml_coarsen);
     
     run_test(&coarsen_test);
 }
@@ -352,10 +352,9 @@ BOOST_AUTO_TEST_CASE(SquashAMul_improver_test) {
     GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_t> sched;
     HillClimbingScheduler<computational_dag_edge_idx_vector_impl_def_t> improver;
 
-    SquashAMul<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t> coarsen_test;
-    coarsen_test.setInitialScheduler(&sched);
-    coarsen_test.setImprovementScheduler(&improver);
-    coarsen_test.setMinimumNumberVertices(1);
+    SquashAMul<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t> ml_coarsen;
+    MultilevelCoarseAndSchedule<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t> coarsen_test(sched, improver, ml_coarsen);
+    
     
     run_test(&coarsen_test);
 }
@@ -364,8 +363,8 @@ BOOST_AUTO_TEST_CASE(SquashAMul_improver_test) {
 BOOST_AUTO_TEST_CASE(SarkarMul_test) {
     GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_t> sched;
 
-    SarkarMul<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t> coarsen_test;
-    coarsen_test.setInitialScheduler(&sched);
+    SarkarMul<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t> ml_coarsen;
+    MultilevelCoarseAndSchedule<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t> coarsen_test(sched, ml_coarsen);
     
     run_test(&coarsen_test);
 }
@@ -374,9 +373,8 @@ BOOST_AUTO_TEST_CASE(SarkarMul_improver_test) {
     GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_t> sched;
     HillClimbingScheduler<computational_dag_edge_idx_vector_impl_def_t> improver;
 
-    SarkarMul<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t> coarsen_test;
-    coarsen_test.setInitialScheduler(&sched);
-    coarsen_test.setImprovementScheduler(&improver);
+    SarkarMul<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t> ml_coarsen;
+    MultilevelCoarseAndSchedule<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t> coarsen_test(sched, improver, ml_coarsen);
     
     run_test(&coarsen_test);
 }

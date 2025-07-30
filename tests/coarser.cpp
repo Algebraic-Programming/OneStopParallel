@@ -30,7 +30,9 @@ limitations under the License.
 #include "osp/coarser/funnel/FunnelBfs.hpp"
 #include "osp/coarser/hdagg/hdagg_coarser.hpp"
 #include "osp/coarser/Sarkar/Sarkar.hpp"
+#include "osp/coarser/Sarkar/SarkarMul.hpp"
 #include "osp/coarser/SquashA/SquashA.hpp"
+#include "osp/coarser/SquashA/SquashAMul.hpp"
 #include "osp/coarser/top_order/top_order_coarser.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "osp/graph_implementations/adj_list_impl/compact_sparse_graph.hpp"
@@ -382,7 +384,10 @@ void test_coarser_same_graph(Coarser<graph_t, graph_t> &coarser) {
 
         GreedyBspScheduler<graph_t> scheduler;
 
-        coarser.coarsenDag(instance.getComputationalDag(), coarse_instance.getComputationalDag(), reverse_vertex_map);
+
+        bool coarse_success = coarser.coarsenDag(instance.getComputationalDag(), coarse_instance.getComputationalDag(), reverse_vertex_map);
+        BOOST_CHECK(coarse_success);
+
 
         vertex_map = coarser_util::invert_vertex_contraction_map<graph_t, graph_t>(reverse_vertex_map);
 
@@ -675,11 +680,36 @@ BOOST_AUTO_TEST_CASE(Sarkar_test) {
     coarser.setParameters(params);
     test_coarser_same_graph<graph_t>(coarser);
 
+
     params.mode = SarkarParams::Mode::LEVEL_EVEN;
     coarser.setParameters(params);
     test_coarser_same_graph<graph_t>(coarser);
     
+    
     params.mode = SarkarParams::Mode::LEVEL_ODD;
     coarser.setParameters(params);
+    test_coarser_same_graph<graph_t>(coarser);
+}
+
+
+BOOST_AUTO_TEST_CASE(SarkarML_test) {
+    using graph_t = computational_dag_edge_idx_vector_impl_def_t;
+    // using graph_t = computational_dag_vector_impl_def_t;
+
+    SarkarParams::MulParameters<v_workw_t<graph_t>> params;
+    params.commCostVec = {100};
+
+    SarkarMul<graph_t, graph_t> coarser;
+    coarser.setParameters(params);
+
+    test_coarser_same_graph<graph_t>(coarser);
+}
+
+BOOST_AUTO_TEST_CASE(SquashAML_test) {
+    using graph_t = computational_dag_edge_idx_vector_impl_def_t;
+    // using graph_t = computational_dag_vector_impl_def_t;
+
+    SquashAMul<graph_t, graph_t> coarser;
+    
     test_coarser_same_graph<graph_t>(coarser);
 }

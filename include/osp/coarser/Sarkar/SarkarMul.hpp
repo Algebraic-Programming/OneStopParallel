@@ -19,7 +19,7 @@ limitations under the License.
 #pragma once
 
 #include "osp/auxiliary/Balanced_Coin_Flips.hpp"
-#include "osp/bsp/scheduler/MultilevelCoarseAndSchedule.hpp"
+#include "osp/coarser/MultilevelCoarser.hpp"
 #include "osp/coarser/Sarkar/Sarkar.hpp"
 
 namespace osp {
@@ -37,7 +37,7 @@ struct MulParameters {
 } // end namespace SarkarParams
 
 template<typename Graph_t, typename Graph_t_coarse>
-class SarkarMul : public MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse> {
+class SarkarMul : public MultilevelCoarser<Graph_t, Graph_t_coarse> {
     private:
         bool first_coarsen{true};
         Thue_Morse_Sequence thue_coin{};
@@ -73,7 +73,7 @@ void SarkarMul<Graph_t, Graph_t_coarse>::initParams() {
     params.maxWeight = ml_params.maxWeight;
 
     if (ml_params.commCostVec.empty()) {
-        v_workw_t<Graph_t> syncCosts = MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::getOriginalInstance()->synchronisationCosts();
+        v_workw_t<Graph_t> syncCosts = 128;
         syncCosts = std::max(syncCosts, static_cast<v_workw_t<Graph_t>>(1));
         
         while (syncCosts >= static_cast<v_workw_t<Graph_t>>(1)) {
@@ -99,9 +99,9 @@ RETURN_STATUS SarkarMul<Graph_t, Graph_t_coarse>::run_single_contraction_mode(ve
 
     vertex_idx_t<Graph_t> current_num_vertices;
     if (first_coarsen) {
-        current_num_vertices = MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::getOriginalInstance()->numberOfVertices();
+        current_num_vertices = MultilevelCoarser<Graph_t, Graph_t_coarse>::getOriginalGraph()->num_vertices();
     } else {
-        current_num_vertices = MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::dag_history.back()->numberOfVertices();
+        current_num_vertices = MultilevelCoarser<Graph_t, Graph_t_coarse>::dag_history.back()->num_vertices();
     }
 
     Graph_t_coarse coarsened_dag;
@@ -109,19 +109,19 @@ RETURN_STATUS SarkarMul<Graph_t, Graph_t_coarse>::run_single_contraction_mode(ve
     bool coarsen_success;
 
     if (first_coarsen) {
-        coarsen_success = coarser_initial.coarsenDag(MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::getOriginalInstance()->getComputationalDag(), coarsened_dag, contraction_map);
+        coarsen_success = coarser_initial.coarsenDag(*(MultilevelCoarser<Graph_t, Graph_t_coarse>::getOriginalGraph()), coarsened_dag, contraction_map);
         first_coarsen = false;
     } else {
-        coarsen_success = coarser_secondary.coarsenDag(MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::dag_history.back()->getComputationalDag(), coarsened_dag, contraction_map);
+        coarsen_success = coarser_secondary.coarsenDag(*(MultilevelCoarser<Graph_t, Graph_t_coarse>::dag_history.back()), coarsened_dag, contraction_map);
     }
     
     if (!coarsen_success) {
         status = RETURN_STATUS::ERROR;
     }
 
-    status = std::max(status, MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::add_contraction(std::move(contraction_map), std::move(coarsened_dag)));
+    status = std::max(status, MultilevelCoarser<Graph_t, Graph_t_coarse>::add_contraction(std::move(contraction_map), std::move(coarsened_dag)));
     
-    vertex_idx_t<Graph_t> new_num_vertices = MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::dag_history.back()->numberOfVertices();
+    vertex_idx_t<Graph_t> new_num_vertices = MultilevelCoarser<Graph_t, Graph_t_coarse>::dag_history.back()->num_vertices();
     diff_vertices = current_num_vertices - new_num_vertices;
 
     return status;
