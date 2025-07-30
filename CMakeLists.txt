@@ -106,6 +106,8 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
     message(STATUS "Configuring for Release build. Optimization -O3 and NDEBUG enabled.")
 elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
     message(STATUS "Configuring for Release with Debug Info build. Optimization -O3 and debug symbols enabled.")
+elseif(CMAKE_BUILD_TYPE STREQUAL "Library")
+    message(STATUS "Configuring for Library build. Only installing headers.")
 else()
     message(STATUS "Configuring for custom build type '${CMAKE_BUILD_TYPE}'. Applying default optimization and warnings.")
 endif()
@@ -132,17 +134,24 @@ if(Eigen3_FOUND)
 endif()
 
 # --- Subdirectories for Source and Executables ---
-add_subdirectory(apps)
-add_subdirectory(apps/graph_generator)
+if(CMAKE_BUILD_TYPE STREQUAL "Library")
+    message(STATUS "Library build type: apps will not be built by 'make all' or 'make install'.")
+    add_subdirectory(apps EXCLUDE_FROM_ALL)
+    add_subdirectory(apps/graph_generator EXCLUDE_FROM_ALL)
+else()
+    message(STATUS "Build type is not Library: apps will be built by 'make all' and 'make install'.")
+    add_subdirectory(apps)
+    add_subdirectory(apps/graph_generator)
+endif()
 
 # --- Build Tests Configuration ---
 # Option to control whether tests are built.
 set(OSP_DATA_DIR ${PROJECT_SOURCE_DIR}/data CACHE INTERNAL "Path to project data files")
-# Defaults to ON, but will be OFF if CMAKE_BUILD_TYPE is Release.
+# Defaults to ON, but will be OFF if CMAKE_BUILD_TYPE is Library.
 option(BUILD_TESTS "Build tests for the project" ON)
-if(CMAKE_BUILD_TYPE STREQUAL "Release")
+if(CMAKE_BUILD_TYPE STREQUAL "Library")
     set(BUILD_TESTS OFF)
-    message(STATUS "CMAKE_BUILD_TYPE is Release, so BUILD_TESTS is forced to OFF.")
+    message(STATUS "CMAKE_BUILD_TYPE is Library, so BUILD_TESTS is forced to OFF.")
 endif()
 
 if(BUILD_TESTS)
