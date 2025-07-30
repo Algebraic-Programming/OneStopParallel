@@ -132,13 +132,13 @@ RETURN_STATUS SarkarMul<Graph_t, Graph_t_coarse>::run_contractions() {
     initParams();
 
     RETURN_STATUS status = RETURN_STATUS::OSP_SUCCESS;
-    unsigned outer_no_change = 0;
     vertex_idx_t<Graph_t> diff = 0;
-
+    
     for (const v_workw_t<Graph_t> commCost : ml_params.commCostVec) {
         params.commCost = commCost;
         updateParams();
-    
+        
+        unsigned outer_no_change = 0;
         while (outer_no_change < ml_params.max_num_iteration_without_changes) {
             unsigned inner_no_change = 0;
             bool outer_change = false;
@@ -160,9 +160,25 @@ RETURN_STATUS SarkarMul<Graph_t, Graph_t_coarse>::run_contractions() {
             }
             inner_no_change = 0;
 
-            // Fans
+            // Partial Fans
             while (inner_no_change < ml_params.max_num_iteration_without_changes) {
                 params.mode = thue_coin.get_flip() ? SarkarParams::Mode::FAN_IN_PARTIAL : SarkarParams::Mode::FAN_OUT_PARTIAL;
+                updateParams();
+
+                status = std::max(status, run_single_contraction_mode(diff));
+
+                if (diff > 0) {
+                    outer_change = true;
+                    inner_no_change = 0;
+                } else {
+                    inner_no_change++;
+                }
+            }
+            inner_no_change = 0;
+
+            // Full Fans
+            while (inner_no_change < ml_params.max_num_iteration_without_changes) {
+                params.mode = thue_coin.get_flip() ? SarkarParams::Mode::FAN_IN_FULL : SarkarParams::Mode::FAN_OUT_FULL;
                 updateParams();
 
                 status = std::max(status, run_single_contraction_mode(diff));
@@ -195,7 +211,7 @@ RETURN_STATUS SarkarMul<Graph_t, Graph_t_coarse>::run_contractions() {
 
 
             if (outer_change) {
-                outer_change = 0;
+                outer_no_change = 0;
             } else {
                 outer_no_change++;
             }

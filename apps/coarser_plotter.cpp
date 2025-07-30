@@ -48,8 +48,10 @@ int main(int argc, char *argv[]) {
 
 
     SarkarParams::MulParameters< v_workw_t<Graph_t> > params;
-    params.commCostVec = std::vector<v_workw_t<Graph_t>>({1, 2, 5, 10, 20, 50, 100, 200, 500, 1000});
-    params.max_num_iteration_without_changes = 10;
+    params.commCostVec = std::vector<v_workw_t<Graph_t>>({1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000});
+    params.max_num_iteration_without_changes = 4;
+    params.leniency = 0.02;
+    // params.maxWeight = 15000;
 
     SarkarMul<Graph_t, Graph_t> coarser;
     coarser.setParameters(params);

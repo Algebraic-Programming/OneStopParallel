@@ -574,6 +574,8 @@ std::vector<std::vector<vertex_idx_t<Graph_t_in>>> Sarkar<Graph_t_in, Graph_t_ou
             break;
     }
 
+    // std::cout << "Mode: " << (int) params.mode << " Diff: " << diff << '\n';
+
     return expansionMap;
 };
 
