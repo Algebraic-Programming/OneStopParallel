@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
 
 
     SarkarParams::MulParameters< v_workw_t<Graph_t> > params;
-    params.commCostVec = std::vector<v_workw_t<Graph_t>>({1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000});
+    params.commCostVec = std::vector<v_workw_t<Graph_t>>({1, 2, 5, 10, 20, 50, 100, 200, 500, 1000});
     params.max_num_iteration_without_changes = 4;
     params.leniency = 0.02;
     // params.maxWeight = 15000;
@@ -59,7 +59,16 @@ int main(int argc, char *argv[]) {
     Graph_t coarse_graph;
     std::vector<vertex_idx_t<Graph_t>> contraction_map;
 
-    coarser.coarsenDag(graph, coarse_graph, contraction_map);
+    Graph_t graph_copy = graph;
+    bool ignore_vertex_types = false;
+    
+    if (ignore_vertex_types) {
+        for (const auto &vert : graph_copy.vertices()) {
+            graph_copy.set_vertex_type(vert, 0);
+        }
+    }
+
+    coarser.coarsenDag(graph_copy, coarse_graph, contraction_map);
 
     std::vector<unsigned> colours(contraction_map.size());
     for (std::size_t i = 0; i < contraction_map.size(); ++i) {
@@ -74,6 +83,19 @@ int main(int argc, char *argv[]) {
 
     DotFileWriter writer;
     writer.write_colored_graph(out_dot, graph, colours);
+
+    if (argc >=4 ) {
+        std::ofstream coarse_out_dot(argv[3]);
+        if (!coarse_out_dot.is_open()) {
+            std::cout << "Unable to write/open output file.\n";
+            return 1;
+        }
+
+        std::vector<unsigned> coarse_colours(coarse_graph.num_vertices());
+        std::iota(coarse_colours.begin(), coarse_colours.end(), 0);
+
+        writer.write_colored_graph(coarse_out_dot, coarse_graph, coarse_colours);
+    }
 
     return 0;
 };

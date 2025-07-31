@@ -56,6 +56,7 @@ class SarkarMul : public MultilevelCoarser<Graph_t, Graph_t_coarse> {
         void updateParams();
         
         RETURN_STATUS run_single_contraction_mode(vertex_idx_t<Graph_t> &diff_vertices);
+        RETURN_STATUS run_contractions(v_workw_t<Graph_t> commCost);
         RETURN_STATUS run_contractions() override;
         
     public:
@@ -128,6 +129,97 @@ RETURN_STATUS SarkarMul<Graph_t, Graph_t_coarse>::run_single_contraction_mode(ve
 };
 
 template<typename Graph_t, typename Graph_t_coarse>
+RETURN_STATUS SarkarMul<Graph_t, Graph_t_coarse>::run_contractions(v_workw_t<Graph_t> commCost) {
+    RETURN_STATUS status = RETURN_STATUS::OSP_SUCCESS;
+    vertex_idx_t<Graph_t> diff = 0;
+    
+    params.commCost = commCost;
+    updateParams();
+    
+    unsigned outer_no_change = 0;
+    while (outer_no_change < ml_params.max_num_iteration_without_changes) {
+        unsigned inner_no_change = 0;
+        bool outer_change = false;
+
+        // Lines
+        while (inner_no_change < ml_params.max_num_iteration_without_changes) {
+            params.mode = SarkarParams::Mode::LINES;
+            params.useTopPoset = thue_coin.get_flip();
+            updateParams();
+
+            status = std::max(status, run_single_contraction_mode(diff));
+
+            if (diff > 0) {
+                outer_change = true;
+                inner_no_change = 0;
+            } else {
+                inner_no_change++;
+            }
+        }
+        inner_no_change = 0;
+
+        // Partial Fans
+        while (inner_no_change < ml_params.max_num_iteration_without_changes) {
+            params.mode = thue_coin.get_flip() ? SarkarParams::Mode::FAN_IN_PARTIAL : SarkarParams::Mode::FAN_OUT_PARTIAL;
+            updateParams();
+
+            status = std::max(status, run_single_contraction_mode(diff));
+
+            if (diff > 0) {
+                outer_change = true;
+                inner_no_change = 0;
+            } else {
+                inner_no_change++;
+            }
+        }
+        inner_no_change = 0;
+
+        // Full Fans
+        while (inner_no_change < ml_params.max_num_iteration_without_changes) {
+            params.mode = thue_coin.get_flip() ? SarkarParams::Mode::FAN_IN_FULL : SarkarParams::Mode::FAN_OUT_FULL;
+            updateParams();
+
+            status = std::max(status, run_single_contraction_mode(diff));
+
+            if (diff > 0) {
+                outer_change = true;
+                inner_no_change = 0;
+            } else {
+                inner_no_change++;
+            }
+        }
+        inner_no_change = 0;
+
+        // Levels
+        while (inner_no_change < ml_params.max_num_iteration_without_changes) {
+            params.mode = thue_coin.get_flip()? SarkarParams::Mode::LEVEL_EVEN : SarkarParams::Mode::LEVEL_ODD;
+            params.useTopPoset = balanced_random.get_flip();
+            updateParams();
+
+            status = std::max(status, run_single_contraction_mode(diff));
+
+            if (diff > 0) {
+                outer_change = true;
+                inner_no_change = 0;
+            } else {
+                inner_no_change++;
+            }
+        }
+
+
+
+        if (outer_change) {
+            outer_no_change = 0;
+        } else {
+            outer_no_change++;
+        }
+    }
+
+    return status;
+};
+
+
+template<typename Graph_t, typename Graph_t_coarse>
 RETURN_STATUS SarkarMul<Graph_t, Graph_t_coarse>::run_contractions() {
     initParams();
 
@@ -135,86 +227,38 @@ RETURN_STATUS SarkarMul<Graph_t, Graph_t_coarse>::run_contractions() {
     vertex_idx_t<Graph_t> diff = 0;
     
     for (const v_workw_t<Graph_t> commCost : ml_params.commCostVec) {
-        params.commCost = commCost;
-        updateParams();
-        
-        unsigned outer_no_change = 0;
-        while (outer_no_change < ml_params.max_num_iteration_without_changes) {
-            unsigned inner_no_change = 0;
-            bool outer_change = false;
+        status = std::max(status, run_contractions(commCost));
+    }
 
-            // Lines
-            while (inner_no_change < ml_params.max_num_iteration_without_changes) {
-                params.mode = SarkarParams::Mode::LINES;
-                params.useTopPoset = thue_coin.get_flip();
-                updateParams();
+    if constexpr (has_typed_vertices_v<Graph_t>) {
+        unsigned no_change = 0;
 
-                status = std::max(status, run_single_contraction_mode(diff));
+        while (no_change < ml_params.max_num_iteration_without_changes) {
+            vertex_idx_t<Graph_t> total_diff = 0;
+            params.mode = thue_coin.get_flip()? SarkarParams::Mode::FAN_IN_BUFFER : SarkarParams::Mode::FAN_OUT_BUFFER;
+            updateParams();
 
-                if (diff > 0) {
-                    outer_change = true;
-                    inner_no_change = 0;
-                } else {
-                    inner_no_change++;
-                }
-            }
-            inner_no_change = 0;
+            status = std::max(status, run_single_contraction_mode(diff));
+            total_diff += diff;
 
-            // Partial Fans
-            while (inner_no_change < ml_params.max_num_iteration_without_changes) {
-                params.mode = thue_coin.get_flip() ? SarkarParams::Mode::FAN_IN_PARTIAL : SarkarParams::Mode::FAN_OUT_PARTIAL;
-                updateParams();
-
-                status = std::max(status, run_single_contraction_mode(diff));
-
-                if (diff > 0) {
-                    outer_change = true;
-                    inner_no_change = 0;
-                } else {
-                    inner_no_change++;
-                }
-            }
-            inner_no_change = 0;
-
-            // Full Fans
-            while (inner_no_change < ml_params.max_num_iteration_without_changes) {
-                params.mode = thue_coin.get_flip() ? SarkarParams::Mode::FAN_IN_FULL : SarkarParams::Mode::FAN_OUT_FULL;
-                updateParams();
-
-                status = std::max(status, run_single_contraction_mode(diff));
-
-                if (diff > 0) {
-                    outer_change = true;
-                    inner_no_change = 0;
-                } else {
-                    inner_no_change++;
-                }
-            }
-            inner_no_change = 0;
-
-            // Levels
-            while (inner_no_change < ml_params.max_num_iteration_without_changes) {
-                params.mode = thue_coin.get_flip()? SarkarParams::Mode::LEVEL_EVEN : SarkarParams::Mode::LEVEL_ODD;
-                params.useTopPoset = balanced_random.get_flip();
-                updateParams();
-
-                status = std::max(status, run_single_contraction_mode(diff));
-
-                if (diff > 0) {
-                    outer_change = true;
-                    inner_no_change = 0;
-                } else {
-                    inner_no_change++;
-                }
-            }
-
-
-
-            if (outer_change) {
-                outer_no_change = 0;
+            if (params.mode == SarkarParams::Mode::FAN_IN_BUFFER){
+                params.mode = SarkarParams::Mode::FAN_OUT_BUFFER;
             } else {
-                outer_no_change++;
+                params.mode = SarkarParams::Mode::FAN_IN_BUFFER;
             }
+
+            updateParams();
+
+            status = std::max(status, run_single_contraction_mode(diff));
+            total_diff += diff;
+
+            if (total_diff > 0) {
+                no_change = 0;
+            } else {
+                no_change++;
+            }
+
+            status = std::max(status, run_contractions( ml_params.commCostVec.back() ));        
         }
     }
 
