@@ -154,6 +154,8 @@ class BspInstance {
 
     inline auto vertices() const { return cdag.vertices(); }
 
+    inline auto processors() const { return architecture.processors(); }
+
     /**
      * @brief Returns the number of processors in the BSP architecture.
      *
@@ -317,11 +319,13 @@ class BspInstance {
         }
     }
 
-    bool isCompatible(const vertex_idx_t<Graph_t> &node, unsigned processor_id) const {
+    inline v_type_t<Graph_t> processorType(unsigned p1) const { return architecture.processorType(p1); }
+
+    inline bool isCompatible(const vertex_idx_t<Graph_t> &node, unsigned processor_id) const {
         return isCompatibleType(cdag.vertex_type(node), architecture.processorType(processor_id));
     }
 
-    bool isCompatibleType(v_type_t<Graph_t> nodeType, v_type_t<Graph_t> processorType) const {
+    inline bool isCompatibleType(v_type_t<Graph_t> nodeType, v_type_t<Graph_t> processorType) const {
 
         return nodeProcessorCompatibility[nodeType][processorType];
     }
@@ -383,5 +387,55 @@ class BspInstance {
         return nodeProcessorCompatibility;
     }
 };
+
+template<typename Graph_t>
+class compatible_processor_range {
+
+    std::vector<std::vector<unsigned>> type_processor_idx;
+    const BspInstance<Graph_t> *instance = nullptr;
+
+    public:
+
+    compatible_processor_range() = default;
+    
+    compatible_processor_range(const BspInstance<Graph_t> &inst) {
+        initialize(inst);
+    }
+    
+    inline void initialize(const BspInstance<Graph_t> &inst) {
+
+        instance = &inst;
+
+        if constexpr (has_typed_vertices_v<Graph_t>) {                
+         
+            type_processor_idx = std::vector<std::vector<unsigned>>(inst.getComputationalDag().num_vertex_types());
+
+            for (v_type_t<Graph_t> v_type = 0; v_type < inst.getComputationalDag().num_vertex_types(); v_type++) {
+                for (unsigned proc = 0; proc < inst.numberOfProcessors(); proc++) 
+                    if (inst.isCompatibleType(v_type, inst.processorType(proc))) 
+                        type_processor_idx[v_type].push_back(proc);                     
+                
+            }
+        } 
+    }
+
+    inline auto compatible_processors_type(v_type_t<Graph_t> type) {
+
+        assert(instance != nullptr);
+
+        if constexpr (has_typed_vertices_v<Graph_t>) {
+            return type_processor_idx[type];                       
+        } else {
+            return instance->processors();
+        }
+    }
+
+    inline auto compatible_processors_vertex(vertex_idx_t<Graph_t> vertex) {
+        return compatible_processors_type(instance->getComputationalDag().vertex_type(vertex));
+    }
+
+
+};
+
 
 } // namespace osp

@@ -84,6 +84,38 @@ BOOST_AUTO_TEST_CASE(test_instance_bicgstab) {
     BOOST_CHECK_EQUAL(instance.isCompatible(0, 0), true);
     BOOST_CHECK_EQUAL(instance.isCompatible(1, 0), false);
 
+
+    compatible_processor_range range(instance);
+
+    BOOST_CHECK_EQUAL(range.compatible_processors_type(0).size(), 3);
+    BOOST_CHECK_EQUAL(range.compatible_processors_type(1).size(), 1);
+
+    std::cout << "Compatible processors type 0: " << std::endl;
+
+    for (const auto &p : range.compatible_processors_type(0)) {
+        std::cout << p;
+    }
+    std::cout << std::endl;
+
+
+    std::cout << "Compatible processors type 1: " << std::endl;
+
+    for (const auto &p : range.compatible_processors_type(1)) {
+        std::cout << p;
+    }
+    std::cout << std::endl;
+
+
+    BOOST_CHECK_EQUAL(range.compatible_processors_vertex(0).size(), 1);
+    BOOST_CHECK_EQUAL(range.compatible_processors_vertex(1).size(), 3);
+    BOOST_CHECK_EQUAL(range.compatible_processors_vertex(2).size(), 3);
+    BOOST_CHECK_EQUAL(range.compatible_processors_vertex(3).size(), 3);
+
+    BOOST_CHECK_EQUAL(range.compatible_processors_type(1)[0], 0);
+    BOOST_CHECK_EQUAL(range.compatible_processors_type(0)[0], 1);
+    BOOST_CHECK_EQUAL(range.compatible_processors_type(0)[1], 2);
+    BOOST_CHECK_EQUAL(range.compatible_processors_type(0)[2], 3);
+
     BspInstance<computational_dag_vector_impl_def_t> instance_t2(instance);
 
     BOOST_CHECK_EQUAL(instance_t2.getComputationalDag().num_vertices(), instance.getComputationalDag().num_vertices());

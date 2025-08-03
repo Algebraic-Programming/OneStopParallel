@@ -103,6 +103,12 @@ class VectorSchedule : public IBspSchedule<Graph_t> {
 
     virtual ~VectorSchedule() = default;
 
+    void clear() {
+        node_to_processor_assignment.clear();
+        node_to_superstep_assignment.clear();
+        number_of_supersteps = 0;
+    }
+
     const BspInstance<Graph_t> &getInstance() const override { return *instance; }
 
     void setAssignedSuperstep(vertex_idx_t<Graph_t> vertex, unsigned superstep) override {

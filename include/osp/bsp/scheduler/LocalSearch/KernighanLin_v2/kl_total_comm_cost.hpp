@@ -1,0 +1,443 @@
+/*
+Copyright 2024 Huawei Technologies Co., Ltd.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
+*/
+
+#pragma once
+
+#include "kl_active_schedule.hpp"
+#include "kl_improver.hpp"
+
+namespace osp {
+template<typename Graph_t, typename cost_t, typename MemoryConstraint_t, unsigned window_size = 1, bool use_node_communication_costs_arg = true> 
+struct kl_total_comm_cost_function {
+    
+    using VertexType = vertex_idx_t<Graph_t>;
+    using kl_move = kl_move_struct<cost_t, VertexType>;
+    using kl_gain_update_info = kl_update_info<VertexType>;
+   
+    constexpr static unsigned window_range = 2 * window_size + 1;
+    constexpr static bool use_node_communication_costs = use_node_communication_costs_arg || not has_edge_weights_v<Graph_t>;
+
+    std::vector<std::vector<std::vector<cost_t>>> *affinity_table;     
+    kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t> *active_schedule;
+
+    compatible_processor_range<Graph_t> *proc_range;
+
+    const Graph_t *graph;
+    const BspInstance<Graph_t> *instance;
+
+    cost_t comm_multiplier = 1; 
+    cost_t max_comm_weight = 0;
+
+    inline cost_t get_comm_multiplier() { return comm_multiplier; }
+    inline cost_t get_max_comm_weight() { return max_comm_weight; }
+
+    const std::string name() const { return "toal_comm_cost"; }
+
+    void initialize(kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t> &sched, std::vector<std::vector<std::vector<cost_t>>> &affinity_tab, compatible_processor_range<Graph_t> &p_range) {
+        affinity_table = &affinity_tab;
+        active_schedule = &sched;
+        proc_range = &p_range;
+        instance = &sched.getInstance();
+        graph = &instance->getComputationalDag();
+        comm_multiplier = 1.0 / instance->numberOfProcessors();        
+    }
+
+
+    cost_t compute_schedule_cost() {
+
+        cost_t work_costs = 0;
+        for (unsigned step = 0; step < active_schedule->num_steps(); step++) {
+            work_costs += active_schedule->get_step_max_work(step);
+        }
+
+        cost_t comm_costs = 0;
+        for (const auto &edge : edges(*graph)) {
+
+            const auto &source_v = source(edge, *graph);
+            const auto &target_v = target(edge, *graph);
+
+            const unsigned &source_proc = active_schedule->assigned_processor(source_v);
+            const unsigned &target_proc = active_schedule->assigned_processor(target_v);
+
+            if (source_proc != target_proc) {
+
+                if constexpr (use_node_communication_costs) {
+                    const cost_t source_comm_cost = graph->vertex_comm_weight(source_v); 
+                    max_comm_weight = std::max(max_comm_weight, source_comm_cost);
+                    comm_costs += source_comm_cost * instance->communicationCosts(source_proc, target_proc);
+                } else {
+                    const cost_t source_comm_cost = graph->edge_comm_weight(edge);
+                    max_comm_weight = std::max(max_comm_weight, source_comm_cost);
+                    comm_costs += source_comm_cost * instance->communicationCosts(source_proc, target_proc);
+                }
+            }
+        }  
+
+        return work_costs + comm_costs * comm_multiplier + static_cast<v_commw_t<Graph_t>>(active_schedule->num_steps() - 1) * instance->synchronisationCosts();
+    }
+
+    template<typename lock_manager_t, typename container_t>
+    std::vector<VertexType> update_node_comm_affinity(kl_move move, container_t &selcted_nodes, lock_manager_t &lock_manager, const cost_t& penalty, const cost_t& reward, std::map<VertexType, kl_gain_update_info> & max_gain_recompute) {
+
+        std::vector<VertexType> new_nodes;
+                
+        for (const auto &target : instance->getComputationalDag().children(move.node)) {
+
+            if(lock_manager.is_locked(target))
+                continue;
+
+            if (selcted_nodes.find(target) == selcted_nodes.end()) {
+                new_nodes.push_back(target);  
+                continue;
+            }
+
+            if (max_gain_recompute.find(target) != max_gain_recompute.end()) {
+                max_gain_recompute[target].full_update = true;                
+            } else {
+                max_gain_recompute[target] = kl_gain_update_info(target, true);
+            }           
+
+            const unsigned target_proc = active_schedule->assigned_processor(target);
+            const unsigned target_step = active_schedule->assigned_superstep(target);                
+         
+            if (move.from_step < target_step + (move.from_proc == target_proc)) {
+
+                const unsigned diff = target_step - move.from_step;                
+                const unsigned bound = window_size >= diff ? window_size - diff + 1: 0;  
+                unsigned idx = start_idx(target_step); 
+                for (; idx < bound; idx++) {
+                    for (const unsigned p : proc_range->compatible_processors_vertex(target)) { 
+                        affinity_table->at(target)[p][idx] -= penalty;
+                    }                                                
+                } 
+
+                if (idx - 1 < bound) {
+                    affinity_table->at(target)[move.from_proc][idx - 1] += penalty;    
+                }
+
+            } else {
+
+                const unsigned diff = move.from_step - target_step;
+                const unsigned window_bound = end_idx(target_step);  
+                unsigned idx = std::min(window_size + diff, window_bound);                  
+                
+                if (idx < window_bound) { 
+                    affinity_table->at(target)[move.from_proc][idx++] += reward; 
+                }
+                
+                for (; idx < window_bound; idx++) {
+                    for (const unsigned p : proc_range->compatible_processors_vertex(target)) { 
+                        affinity_table->at(target)[p][idx] += reward;
+                    }                        
+                } 
+            }
+
+            if (move.to_step < target_step + (move.to_proc == target_proc)) {
+                unsigned idx = start_idx(target_step); 
+                const unsigned diff = target_step - move.to_step;                
+                const unsigned bound = window_size >= diff ? window_size - diff + 1: 0;  
+                for (; idx < bound; idx++) {
+                    for (const unsigned p : proc_range->compatible_processors_vertex(target)) { 
+                        affinity_table->at(target)[p][idx] += penalty;
+                    }                                                
+                } 
+
+                if (idx - 1 < bound) {
+                    affinity_table->at(target)[move.to_proc][idx - 1] -= penalty;    
+                }
+
+            } else {
+
+                const unsigned diff = move.to_step - target_step;
+                const unsigned window_bound = end_idx(target_step); 
+                unsigned idx = std::min(window_size + diff, window_bound);                                                     
+                
+                if (idx < window_bound) {
+                    affinity_table->at(target)[move.to_proc][idx++] -= reward; 
+                }
+                                    
+                for (; idx < window_bound; idx++) {
+                    for (const unsigned p : proc_range->compatible_processors_vertex(target)) { 
+                        affinity_table->at(target)[p][idx] -= reward;
+                    }                        
+                } 
+            }
+
+            if (move.to_proc != move.from_proc) {
+                
+                const auto from_proc_target_comm_cost = instance->communicationCosts(move.from_proc, target_proc);
+                const auto to_proc_target_comm_cost = instance->communicationCosts(move.to_proc, target_proc);
+
+                const cost_t comm_gain = graph->vertex_comm_weight(move.node) * comm_multiplier;
+
+                unsigned idx = start_idx(target_step);
+                const unsigned window_bound = end_idx(target_step);
+                for (; idx < window_bound; idx++) {
+                    for (const unsigned p : proc_range->compatible_processors_vertex(target)) {
+                        const auto x = change_comm_cost(instance->communicationCosts(p, move.to_proc), to_proc_target_comm_cost, comm_gain); 
+                        const auto y = change_comm_cost(instance->communicationCosts(p, move.from_proc), from_proc_target_comm_cost, comm_gain);
+                        affinity_table->at(target)[p][idx] += x - y;  
+                    }
+                }
+            } 
+        }
+
+        for (const auto &source : instance->getComputationalDag().parents(move.node)) {
+
+            if(lock_manager.is_locked(source))
+                continue;
+
+            if (selcted_nodes.find(source) == selcted_nodes.end()) {
+                new_nodes.push_back(source);
+                continue;
+            }
+
+            if (max_gain_recompute.find(source) != max_gain_recompute.end()) {
+                max_gain_recompute[source].full_update = true;                
+            } else {
+                max_gain_recompute[source] = kl_gain_update_info(source, true);
+            } 
+
+            const unsigned source_proc = active_schedule->assigned_processor(source);
+            const unsigned source_step = active_schedule->assigned_superstep(source);                 
+
+            const unsigned window_bound = end_idx(source_step);
+
+            if (move.from_step < source_step + (move.from_proc != source_proc)) {
+
+                const unsigned diff = source_step - move.from_step; 
+                const unsigned bound = window_size > diff ? window_size - diff : 0; 
+                unsigned idx = start_idx(source_step);
+                for (; idx < bound; idx++) {
+                    for (const unsigned p : proc_range->compatible_processors_vertex(source)) {  
+                        affinity_table->at(source)[p][idx] += reward;
+                    } 
+                }
+
+                if (idx < window_bound) {
+                    affinity_table->at(source)[move.from_proc][idx] += reward;    
+                }
+
+            } else {        
+
+                const unsigned diff = move.from_step - source_step;
+                unsigned idx = window_size + diff; 
+                
+                if (idx < window_bound) {
+                    affinity_table->at(source)[move.from_proc][idx] += penalty;                        
+                }
+
+                for (; idx < window_bound; idx++) {
+                    for (const unsigned p : proc_range->compatible_processors_vertex(source)) { 
+                        affinity_table->at(source)[p][idx] -= penalty;
+                    }                        
+                }                     
+            }
+
+            if (move.to_step < source_step + (move.to_proc != source_proc)) {
+
+                const unsigned diff = source_step - move.to_step; 
+                const unsigned bound = window_size > diff ? window_size - diff : 0; 
+                unsigned idx = start_idx(source_step);
+                for (; idx < bound; idx++) {
+                    for (const unsigned p : proc_range->compatible_processors_vertex(source)) {  
+                        affinity_table->at(source)[p][idx] -= reward;
+                    } 
+                }
+
+                if (idx < window_bound) {
+                    affinity_table->at(source)[move.to_proc][idx] -= reward;    
+                }
+
+            } else {        
+
+                const unsigned diff = move.to_step - source_step;
+                unsigned idx = window_size + diff; 
+
+                if (idx < window_bound) {
+                    affinity_table->at(source)[move.to_proc][idx] -= penalty;                         
+                }
+                for (; idx < window_bound; idx++) {
+                    for (const unsigned p : proc_range->compatible_processors_vertex(source)) { 
+                        affinity_table->at(source)[p][idx] += penalty;
+                    }                        
+                }                     
+            }  
+
+            if (move.to_proc != move.from_proc) {
+                
+                const auto from_proc_source_comm_cost = instance->communicationCosts(source_proc, move.from_proc);
+                const auto to_proc_source_comm_cost = instance->communicationCosts(source_proc, move.to_proc);
+
+                const cost_t comm_gain = graph->vertex_comm_weight(source) * comm_multiplier;
+
+                unsigned idx = start_idx(source_step);
+                const unsigned window_bound = end_idx(source_step);
+                for (; idx < window_bound; idx++) {
+                    for (const unsigned p : proc_range->compatible_processors_vertex(source)) { 
+                        const auto x = change_comm_cost(instance->communicationCosts(move.to_proc, p), to_proc_source_comm_cost, comm_gain); 
+                        const auto y = change_comm_cost(instance->communicationCosts(move.from_proc, p), from_proc_source_comm_cost, comm_gain);
+                        affinity_table->at(source)[p][idx] += x - y;  
+                    }
+                }
+            }
+        }                
+        return new_nodes;
+    }
+
+
+    inline unsigned start_idx(unsigned node_step) { return node_step < window_size ? window_size - node_step : 0; }
+    inline unsigned end_idx(unsigned node_step) { return node_step + window_size < active_schedule->num_steps() ? window_range : window_range - (node_step + window_size + 1 - active_schedule->num_steps()); }
+
+    inline cost_t change_comm_cost(const v_commw_t<Graph_t> &p_target_comm_cost, const v_commw_t<Graph_t> &node_target_comm_cost, const cost_t &comm_gain) { return p_target_comm_cost > node_target_comm_cost ? (p_target_comm_cost - node_target_comm_cost) * comm_gain : (node_target_comm_cost - p_target_comm_cost) * comm_gain * -1.0;}
+
+    void compute_comm_affinity(VertexType node, const cost_t& penalty, const cost_t& reward) {
+
+        const unsigned node_step = active_schedule->assigned_superstep(node);
+        const unsigned node_proc = active_schedule->assigned_processor(node);
+
+        for (const auto &target : instance->getComputationalDag().children(node)) {
+
+            const cost_t comm_gain = graph->vertex_comm_weight(node) * comm_multiplier;
+
+            const unsigned target_step = active_schedule->assigned_superstep(target);
+            const unsigned target_proc = active_schedule->assigned_processor(target);          
+                
+            const auto node_target_comm_cost = instance->communicationCosts(node_proc, target_proc);
+            unsigned idx = start_idx(node_step);
+            const unsigned window_bound = end_idx(node_step);
+
+            if (target_step < node_step + (target_proc != node_proc)) {
+
+                const unsigned diff = node_step - target_step; 
+                const unsigned bound = window_size > diff ? window_size - diff : 0; 
+
+                for (; idx < bound; idx++) {
+                    for (const unsigned p : proc_range->compatible_processors_vertex(node)) { 
+                        const cost_t comm_cost = change_comm_cost(instance->communicationCosts(p, target_proc), node_target_comm_cost, comm_gain);
+                        affinity_table->at(node)[p][idx] -= reward + comm_cost;
+                    } 
+                }
+
+                if (idx < window_bound) {
+                    for (const unsigned p : proc_range->compatible_processors_vertex(node)) { 
+                        affinity_table->at(node)[p][idx] += change_comm_cost(instance->communicationCosts(p, target_proc), node_target_comm_cost, comm_gain);
+                    } 
+
+                    affinity_table->at(node)[target_proc][idx++] -= reward;    
+                }
+                
+                for (; idx < window_bound; idx++) {  
+                    for (const unsigned p : proc_range->compatible_processors_vertex(node)) { 
+                        const cost_t comm_cost = change_comm_cost(instance->communicationCosts(p, target_proc), node_target_comm_cost, comm_gain);
+                        affinity_table->at(node)[p][idx] += comm_cost;
+                    } 
+                } 
+
+            } else {        
+
+                const unsigned diff = target_step - node_step;
+                const unsigned bound = std::min(window_size + diff, window_bound);
+
+                for (; idx < bound; idx++) { 
+                    for (const unsigned p : proc_range->compatible_processors_vertex(node)) {  
+                        const cost_t comm_cost = change_comm_cost(instance->communicationCosts(p, target_proc), node_target_comm_cost, comm_gain);
+                        affinity_table->at(node)[p][idx] += comm_cost;
+                    }
+                }
+
+                if (idx < window_bound) {
+                    affinity_table->at(node)[target_proc][idx] -= penalty; 
+                }
+
+                for (; idx < window_bound; idx++) {
+                    for (const unsigned p : proc_range->compatible_processors_vertex(node)) {
+                        const cost_t comm_cost = change_comm_cost(instance->communicationCosts(p, target_proc), node_target_comm_cost, comm_gain);
+                        affinity_table->at(node)[p][idx] += penalty + comm_cost;
+                    }                        
+                }                     
+            }            
+        } // traget
+
+        for (const auto &source : instance->getComputationalDag().parents(node)) {
+
+            const unsigned source_step = active_schedule->assigned_superstep(source);
+            const unsigned source_proc = active_schedule->assigned_processor(source);
+
+            const cost_t comm_gain = graph->vertex_comm_weight(source) * comm_multiplier;
+
+            unsigned idx = start_idx(node_step);
+            const unsigned window_bound = end_idx(node_step);
+            const auto source_node_comm_cost = instance->communicationCosts(source_proc, node_proc);
+            if (source_step < node_step + (source_proc == node_proc)) {
+
+                const unsigned diff = node_step - source_step;                
+                const unsigned bound = window_size >= diff ? window_size - diff + 1: 0;  
+
+                for (; idx < bound; idx++) {
+                    for (const unsigned p : proc_range->compatible_processors_vertex(node)) { 
+                        const cost_t comm_cost = change_comm_cost(instance->communicationCosts(p, source_proc), source_node_comm_cost, comm_gain);
+                        affinity_table->at(node)[p][idx] +=  comm_cost + penalty ;
+                    }                                                
+                }
+
+                if (idx - 1 < bound) {
+                    affinity_table->at(node)[source_proc][idx - 1] -= penalty;    
+                }
+
+                for (; idx < window_bound; idx++) {
+                    for (const unsigned p : proc_range->compatible_processors_vertex(node)) {
+                        const cost_t comm_cost = change_comm_cost(instance->communicationCosts(p, source_proc), source_node_comm_cost, comm_gain);
+                        affinity_table->at(node)[p][idx] += comm_cost;
+                    }                        
+                } 
+
+            } else {
+
+                const unsigned diff = source_step - node_step;
+                const unsigned bound = std::min(window_size + diff, window_bound);
+
+                for (const unsigned p : proc_range->compatible_processors_vertex(node)) { 
+                    const cost_t comm_cost = change_comm_cost(instance->communicationCosts(p, source_proc), source_node_comm_cost, comm_gain);                   
+                    for (; idx < bound; idx++) {                   
+                        affinity_table->at(node)[p][idx] += comm_cost;
+                    }  
+                }
+
+                if (idx < window_bound) {
+
+                    for (const unsigned p : proc_range->compatible_processors_vertex(node)) { 
+                        affinity_table->at(node)[p][idx] += change_comm_cost(instance->communicationCosts(p, source_proc), source_node_comm_cost, comm_gain);
+                    } 
+
+                    affinity_table->at(node)[source_proc][idx++] -= reward;  
+                }    
+
+                for (; idx < window_bound; idx++) {
+                    for (const unsigned p : proc_range->compatible_processors_vertex(node)) { 
+                        const cost_t comm_cost = change_comm_cost(instance->communicationCosts(p, source_proc), source_node_comm_cost, comm_gain);                    
+                        affinity_table->at(node)[p][idx] += comm_cost - reward;
+                    }                        
+                } 
+            }
+        } // source
+    }
+};
+
+} // namespace osp
+
