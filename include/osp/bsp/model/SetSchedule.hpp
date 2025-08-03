@@ -75,6 +75,11 @@ class SetSchedule : public IBspSchedule<Graph_t> {
 
     virtual ~SetSchedule() = default;
 
+    void clear() {
+        step_processor_vertices.clear();
+        number_of_supersteps = 0;
+    }
+
     const BspInstance<Graph_t> &getInstance() const override { return *instance; }
 
     unsigned numberOfSupersteps() const override { return number_of_supersteps; }
