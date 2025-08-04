@@ -106,19 +106,15 @@ class MerkleHashComputer {
 
     virtual ~MerkleHashComputer() = default;
 
-    std::size_t get_vertex_hash(const VertexType &v) { return vertex_hashes[v]; }
-    const std::vector<std::size_t> &get_vertex_hashes() { return vertex_hashes; }
-    std::size_t num_orbits() { return orbits.size(); }
+    inline std::size_t get_vertex_hash(const VertexType &v) { return vertex_hashes[v]; }
+    inline const std::vector<std::size_t> &get_vertex_hashes() { return vertex_hashes; }
+    inline std::size_t num_orbits() { return orbits.size(); }
     
-    const std::vector<VertexType> &get_orbit(const VertexType &v) { return get_orbit_from_hash(get_vertex_hash(v)); }
-    const std::unordered_map<std::size_t, std::vector<VertexType>> &get_orbits() { return orbits; }
+    inline const std::vector<VertexType> &get_orbit(const VertexType &v) { return get_orbit_from_hash(get_vertex_hash(v)); }
+    inline const std::unordered_map<std::size_t, std::vector<VertexType>> &get_orbits() { return orbits; }
 
-    const std::vector<VertexType>& get_orbit_from_hash(const std::size_t& hash) const {
-        try {
-            return orbits.at(hash);
-        } catch (const std::out_of_range& oor) {
-            throw std::out_of_range("No orbit found for the given hash.");
-        }
+    inline const std::vector<VertexType>& get_orbit_from_hash(const std::size_t& hash) const {
+        return orbits.at(hash);
     }
 };
 
