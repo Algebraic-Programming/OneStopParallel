@@ -177,25 +177,19 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::singleContraction(v_wo
             v_workw_t<Graph_t_in> maxChildDist = 0;
 
             for (const auto &par : graph.parents(edgeSrc)) {
-                maxParentDist = std::max(maxParentDist, topDist[par]);
+                maxParentDist = std::max(maxParentDist, topDist[par] + commCost);
             }
             for (const auto &par : graph.parents(edgeTgt)) {
                 if (par == edgeSrc) continue;
-                maxParentDist = std::max(maxParentDist, topDist[par]);
-            }
-            if (graph.in_degree(edgeSrc) > 0 || graph.in_degree(edgeTgt) > 1) {
-                maxParentDist += commCost;
+                maxParentDist = std::max(maxParentDist, topDist[par] + commCost);
             }
 
             for (const auto &chld : graph.children(edgeSrc)) {
                 if (chld == edgeTgt) continue;
-                maxChildDist = std::max(maxChildDist, botDist[chld]);
+                maxChildDist = std::max(maxChildDist, botDist[chld] + commCost);
             }
             for (const auto &chld : graph.children(edgeTgt)) {
-                maxChildDist = std::max(maxChildDist, botDist[chld]);
-            }
-            if (graph.out_degree(edgeSrc) > 1 || graph.out_degree(edgeTgt) > 0) {
-                maxChildDist += commCost;
+                maxChildDist = std::max(maxChildDist, botDist[chld] + commCost);
             }
 
             v_workw_t<Graph_t_in> newMaxPath = maxParentDist + maxChildDist + graph.vertex_work_weight(edgeSrc) + graph.vertex_work_weight(edgeTgt);
@@ -237,7 +231,7 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::singleContraction(v_wo
             }
         }
         bool shouldSkipTgt = false;
-        for (const VertexType &par : graph.children(edgeTgt)) {
+        for (const VertexType &par : graph.parents(edgeTgt)) {
             if ((vertexPoset[par] + 1 == vertexPoset[edgeTgt]) && partitionedSourceFlag[par]) {
                 shouldSkipTgt = true;
                 break;
@@ -532,6 +526,8 @@ template<typename Graph_t_in, typename Graph_t_out>
 std::vector<std::vector<vertex_idx_t<Graph_t_in>>> Sarkar<Graph_t_in, Graph_t_out>::generate_vertex_expansion_map(const Graph_t_in &dag_in, vertex_idx_t<Graph_t_in> &diff) {
     std::vector<std::vector<vertex_idx_t<Graph_t_in>>> expansionMap;
 
+    // std::cout << "Mode: " << (int) params.mode;
+
     switch (params.mode)
     {
         case SarkarParams::Mode::LINES:
@@ -589,7 +585,7 @@ std::vector<std::vector<vertex_idx_t<Graph_t_in>>> Sarkar<Graph_t_in, Graph_t_ou
             break;
     }
 
-    // std::cout << "Mode: " << (int) params.mode << " Diff: " << diff << '\n';
+    // std::cout << " Diff: " << diff << '\n';
 
     return expansionMap;
 };
