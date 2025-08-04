@@ -224,5 +224,6 @@ install(EXPORT OneStopParallelTargets
 install(FILES
     "${CMAKE_CURRENT_BINARY_DIR}/OneStopParallelConfig.cmake"
     "${CMAKE_CURRENT_BINARY_DIR}/OneStopParallelConfigVersion.cmake"
+    "${PROJECT_SOURCE_DIR}/cmake/FindCOPT.cmake"
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/OneStopParallel
 )
