@@ -14,6 +14,27 @@
             "parameters": {}
         },
         {
+            "name": "FullILP",
+            "id" : "FullILP",
+            "description": "\tFull ILP.",
+            "parameters": {
+                "max_number_of_supersteps": 4,
+                "use_initial_solution": false,
+                "write_intermediate_solutions": false,
+                "intermediate_solutions_directory": ".",
+                "intermediate_solutions_prefix": "interm_sol",
+                "initial_solution_scheduler": {
+                    "name": "GrowLocal",
+                    "id": "GrowLocal",
+                    "parameters": {
+                        "minSuperstepSize": 20,
+                        "syncCostMultiplierMinSuperstepWeight": 1,
+                        "syncCostMultiplierParallelCheck": 4
+                    }
+                }
+            }
+        },
+        {
             "name": "GreedyBsp",
             "id" : "GreedyBsp",
             "description": "Barrier list scheduler; focuses on reducing communication volume (besides work balance).",

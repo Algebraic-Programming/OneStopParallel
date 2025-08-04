@@ -45,11 +45,17 @@ limitations under the License.
 #include "get_coarser.hpp"
 #include "osp/graph_implementations/boost_graphs/boost_graph.hpp"
 
+#ifdef COPT
+#include "osp/bsp/scheduler/IlpSchedulers/CoptFullScheduler.hpp"
+//#include "osp/bsp/scheduler/IlpSchedulers/TotalCommunicationScheduler.hpp"
+#endif
+
+
 namespace osp {
 
 const std::set<std::string> get_available_bsp_scheduler_names() {
     return {"Serial",       "GreedyBsp",      "GrowLocal", "BspLocking", "Cilk",        "Etf",
-            "GreedyRandom", "GreedyChildren", "Variance",  "MultiHC",    "LocalSearch", "Coarser"};
+            "GreedyRandom", "GreedyChildren", "Variance",  "MultiHC",    "LocalSearch", "Coarser", "FullILP"};;
 }
 
 template<typename Graph_t>
@@ -179,6 +185,42 @@ RETURN_STATUS run_bsp_scheduler(const ConfigParser &parser, const boost::propert
 
         return scheduler.computeSchedule(schedule);
 
+#ifdef COPT
+    } else if (id == "FullILP") {
+        CoptFullScheduler<Graph_t> scheduler;
+        scheduler.setTimeLimitSeconds(timeLimit);
+
+        // max supersteps
+        scheduler.setMaxNumberOfSupersteps(
+            algorithm.get_child("parameters").get_child("max_number_of_supersteps").get_value<unsigned>());
+
+        // initial solution
+        if (algorithm.get_child("parameters").get_child("use_initial_solution").get_value<bool>()) {
+            std::string init_sched = algorithm.get_child("parameters").get_child("initial_solution_scheduler").get_value<std::string>();
+            if (init_sched == "FullILP") {
+                throw std::invalid_argument("Parameter error: Initial solution cannot be FullILP.\n");
+            }
+
+            BspSchedule<Graph_t> initial_schedule(schedule.getInstance());
+
+            RETURN_STATUS status =
+            run_bsp_scheduler(parser, algorithm.get_child("parameters").get_child("initial_solution_scheduler"), initial_schedule);
+
+            if (status != RETURN_STATUS::OSP_SUCCESS && status != RETURN_STATUS::BEST_FOUND) {
+                throw std::invalid_argument("Error while computing initial solution.\n");
+            }
+            scheduler.setInitialSolutionFromBspSchedule(initial_schedule);
+        }
+
+        // intermediate solutions
+        if (algorithm.get_child("parameters").get_child("write_intermediate_solutions").get_value<bool>()) {
+            scheduler.enableWriteIntermediateSol(
+                algorithm.get_child("parameters").get_child("intermediate_solutions_directory").get_value<std::string>(),
+                algorithm.get_child("parameters").get_child("intermediate_solutions_prefix").get_value<std::string>());
+        }
+
+        return scheduler.computeSchedule(schedule);
+#endif
     } else if (id == "LocalSearch") {
 
         RETURN_STATUS status =
