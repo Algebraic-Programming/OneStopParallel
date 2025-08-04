@@ -28,7 +28,6 @@ limitations under the License.
 
 #include "osp/concepts/computational_dag_concept.hpp"
 #include "osp/auxiliary/io/filepath_checker.hpp"
-#define MAX_LINE_LENGTH 1024         // Prevents memory abuse via long lines
 
 namespace osp {
 namespace file_reader {

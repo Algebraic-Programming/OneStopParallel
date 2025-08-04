@@ -29,6 +29,8 @@ limitations under the License.
 namespace osp {
 namespace file_reader {
     
+constexpr std::size_t MAX_LINE_LENGTH = 1 << 14; // 16 KB
+
 // Path safety to avoid symlink, traversal or malicious file types
 inline bool isPathSafe(const std::string& path) {
     try {
