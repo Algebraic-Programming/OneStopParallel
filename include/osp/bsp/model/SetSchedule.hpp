@@ -172,18 +172,6 @@ class SetSchedule : public IBspSchedule<Graph_t> {
             }
         }
     }
-
-    void insertSupersteps(unsigned step_before, unsigned num_new_steps) {
-
-        number_of_supersteps += num_new_steps;
-
-        for (unsigned step = step_before + 1; step < number_of_supersteps; step++) {
-
-            step_processor_vertices.push_back(step_processor_vertices[step]);
-            step_processor_vertices[step] =
-                std::vector<std::unordered_set<vertex_idx>>(getInstance().numberOfProcessors());
-        }
-    }
 };
 
 
