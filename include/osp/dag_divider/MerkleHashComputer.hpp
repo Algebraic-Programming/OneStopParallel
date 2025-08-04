@@ -88,7 +88,7 @@ class MerkleHashComputer {
         vertex_hashes.resize(graph.num_vertices());
         
         const auto top_sort = GetTopOrderReverse(graph);
-        for (auto it = top_sort.rbegin(); it != top_sort.rend(); ++it) {
+        for (auto it = top_sort.cbegin(); it != top_sort.cend(); ++it) {
             const VertexType &v = *it;
             std::vector<std::size_t> child_hashes;
             for (const VertexType& child : graph.children(v)) {
