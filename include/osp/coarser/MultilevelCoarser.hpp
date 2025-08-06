@@ -147,10 +147,10 @@ RETURN_STATUS MultilevelCoarser<Graph_t, Graph_t_coarse>::add_contraction(const 
 
     bool success = false;
 
-    if (dag_history.size() == 1) {
+    if (dag_history.size() == 0) {
         success = coarser_util::construct_coarse_dag<Graph_t, Graph_t_coarse>(*(getOriginalGraph()), *new_graph, *(contraction_maps.back()) );
     } else {
-        success = coarser_util::construct_coarse_dag<Graph_t, Graph_t_coarse>(*(dag_history.back()), *new_graph, *(contraction_maps.back()) );
+        success = coarser_util::construct_coarse_dag<Graph_t_coarse, Graph_t_coarse>(*(dag_history.back()), *new_graph, *(contraction_maps.back()) );
     }
 
     dag_history.emplace_back( std::move(new_graph) );
@@ -172,10 +172,10 @@ RETURN_STATUS MultilevelCoarser<Graph_t, Graph_t_coarse>::add_contraction(std::v
 
     bool success = false;
 
-    if (dag_history.size() == 1) {
+    if (dag_history.size() == 0) {
         success = coarser_util::construct_coarse_dag<Graph_t, Graph_t_coarse>(*(getOriginalGraph()), *new_graph, *(contraction_maps.back()) );
     } else {
-        success = coarser_util::construct_coarse_dag<Graph_t, Graph_t_coarse>(*(dag_history.back()), *new_graph, *(contraction_maps.back()) );
+        success = coarser_util::construct_coarse_dag<Graph_t_coarse, Graph_t_coarse>(*(dag_history.back()), *new_graph, *(contraction_maps.back()) );
     }
 
     dag_history.emplace_back( std::move(new_graph) );
