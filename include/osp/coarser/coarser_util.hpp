@@ -510,5 +510,17 @@ bool pull_back_schedule(const BspSchedule<Graph_t_in> &schedule_in,
     return true;
 }
 
+template<typename IntegralType>
+std::vector<IntegralType> compose_vertex_contraction_map(const std::vector<IntegralType> &firstMap, const std::vector<IntegralType> &secondMap) {
+    static_assert(std::is_integral_v<IntegralType>);
+    std::vector<IntegralType> composedMap(firstMap.size());
+
+    for (std::size_t i = 0; i < composedMap.size(); ++i) {
+        composedMap[i] = secondMap[ firstMap[i] ];
+    }
+
+    return composedMap;
+}
+
 } // end namespace coarser_util
 } // end namespace osp
