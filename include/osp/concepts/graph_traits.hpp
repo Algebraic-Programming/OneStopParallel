@@ -43,8 +43,8 @@ struct directed_graph_traits {
     using vertex_idx = typename T::vertex_idx;
 };
 
-template<typename T>
 // Macro to extract the vertex_idx type from the graph
+template<typename T>
 using vertex_idx_t = typename directed_graph_traits<T>::vertex_idx;
 
 template<typename Graph_t>
