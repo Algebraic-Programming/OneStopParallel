@@ -111,6 +111,7 @@ RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::compute_init
 template<typename Graph_t, typename Graph_t_coarse>
 RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::improve_active_schedule() {
     if (improver) {
+        if (active_instance->getComputationalDag().num_vertices() == 0) return RETURN_STATUS::OSP_SUCCESS;
         return improver->improveSchedule( *active_schedule );
     }
     return RETURN_STATUS::OSP_SUCCESS;

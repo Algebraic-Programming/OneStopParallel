@@ -28,6 +28,7 @@ limitations under the License.
 #include "osp/auxiliary/io/DotFileWriter.hpp"
 #include "osp/auxiliary/io/arch_file_reader.hpp"
 #include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
+#include "osp/auxiliary/io/general_file_reader.hpp"
 #include <filesystem>
 #include <iostream>
 
@@ -59,7 +60,7 @@ BOOST_AUTO_TEST_CASE(test_instance_bicgstab) {
         std::cout << cwd << std::endl;
     }
 
-    bool status = file_reader::readComputationalDagHyperdagFormat(
+    bool status = file_reader::readGraph(
         (cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(), instance.getComputationalDag());
 
     BOOST_CHECK(status);
@@ -127,7 +128,7 @@ BOOST_AUTO_TEST_CASE(test_schedule_writer) {
         std::cout << cwd << std::endl;
     }
 
-    bool status = file_reader::readComputationalDagHyperdagFormat(
+    bool status = file_reader::readGraph(
         (cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(), instance.getComputationalDag());
 
     BOOST_CHECK(status);
@@ -217,7 +218,7 @@ BOOST_AUTO_TEST_CASE(test_bsp_schedule_cs) {
         std::cout << cwd << std::endl;
     }
 
-    file_reader::readComputationalDagHyperdagFormat((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(),
+    file_reader::readGraph((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(),
                                                     instance.getComputationalDag());
 
     BspSchedule<graph> schedule(instance);

@@ -44,6 +44,7 @@ limitations under the License.
 #include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 #include "osp/auxiliary/io/arch_file_reader.hpp"
 #include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
+#include "osp/auxiliary/io/general_file_reader.hpp"
 
 using namespace osp;
 
@@ -63,7 +64,9 @@ std::vector<std::string> tiny_spaa_graphs() {
             "data/spaa/tiny/instance_pregel.hdag",
             "data/spaa/tiny/instance_spmv_N6_nzP0d4.hdag",
             "data/spaa/tiny/instance_spmv_N7_nzP0d35.hdag",
-            "data/spaa/tiny/instance_spmv_N10_nzP0d25.hdag"};
+            "data/spaa/tiny/instance_spmv_N10_nzP0d25.hdag",
+            "data/dot/empty_graph.dot"    
+        };
 }
 
 std::vector<std::string> test_architectures() { return {"data/machine_params/p3.arch"}; }
@@ -95,7 +98,7 @@ void run_test(Scheduler<Graph_t> *test_scheduler) {
 
             BspInstance<Graph_t> instance;
 
-            bool status_graph = file_reader::readComputationalDagHyperdagFormat((cwd / filename_graph).string(),
+            bool status_graph = file_reader::readGraph((cwd / filename_graph).string(),
                                                                                 instance.getComputationalDag());
             bool status_architecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(),
                                                                         instance.getArchitecture());
@@ -143,7 +146,7 @@ void run_test_2(Scheduler<Graph_t> *test_scheduler) {
             computational_dag_edge_idx_vector_impl_def_t graph;
             BspArchitecture<Graph_t> arch;
 
-            bool status_graph = file_reader::readComputationalDagHyperdagFormat((cwd / filename_graph).string(), graph);
+            bool status_graph = file_reader::readGraph((cwd / filename_graph).string(), graph);
             bool status_architecture =
                 file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), arch);
 

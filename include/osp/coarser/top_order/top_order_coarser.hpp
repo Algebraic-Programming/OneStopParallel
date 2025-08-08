@@ -139,6 +139,10 @@ class top_order_coarser : public Coarser<Graph_t_in, Graph_t_out> {
                             std::vector<vertex_idx_t<Graph_t_out>> &reverse_vertex_map) override {
 
         assert(dag_out.num_vertices() == 0);
+        if (dag_in.num_vertices() == 0) {
+            reverse_vertex_map = std::vector<vertex_idx_t<Graph_t_out>>();
+            return true;
+        }
 
         std::vector<VertexType> top_ordering = top_sort_func(dag_in);
 

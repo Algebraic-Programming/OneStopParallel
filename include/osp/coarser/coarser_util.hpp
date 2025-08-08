@@ -74,6 +74,11 @@ bool construct_coarse_dag(const Graph_t_in &dag_in, Graph_t_out &coarsened_dag,
 
     assert(check_valid_contraction_map<Graph_t_out>(vertex_contraction_map));
 
+    if (vertex_contraction_map.size() == 0) {
+        coarsened_dag = Graph_t_out();
+        return true;
+    }
+
 
     if constexpr (is_Compact_Sparse_Graph_reorder_v<Graph_t_out>) {
         const vertex_idx_t<Graph_t_out> num_vert_quotient =
@@ -377,10 +382,12 @@ std::vector<std::vector<vertex_idx_t<Graph_t_in>>>
 invert_vertex_contraction_map(const std::vector<vertex_idx_t<Graph_t_out>> &vertex_contraction_map) {
     assert(check_valid_contraction_map<Graph_t_out>(vertex_contraction_map));
 
-    vertex_idx_t<Graph_t_out> max_vert =
-        *std::max_element(vertex_contraction_map.cbegin(), vertex_contraction_map.cend());
 
-    std::vector<std::vector<vertex_idx_t<Graph_t_in>>> expansion_map(max_vert + 1);
+
+    vertex_idx_t<Graph_t_out> num_vert = vertex_contraction_map.size() == 0? 0 :
+        *std::max_element(vertex_contraction_map.cbegin(), vertex_contraction_map.cend()) + 1;
+
+    std::vector<std::vector<vertex_idx_t<Graph_t_in>>> expansion_map(num_vert);
 
     for (std::size_t i = 0; i < vertex_contraction_map.size(); ++i) {
         expansion_map[vertex_contraction_map[i]].push_back(i);

@@ -39,6 +39,7 @@ limitations under the License.
 #include "osp/graph_implementations/adj_list_impl/compact_sparse_graph_edge_desc.hpp"
 #include "osp/auxiliary/io/arch_file_reader.hpp"
 #include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
+#include "osp/auxiliary/io/general_file_reader.hpp"
 
 std::vector<std::string> tiny_spaa_graphs() {
     return {"data/spaa/tiny/instance_bicgstab.hdag",
@@ -56,7 +57,8 @@ std::vector<std::string> tiny_spaa_graphs() {
             "data/spaa/tiny/instance_pregel.hdag",
             "data/spaa/tiny/instance_spmv_N6_nzP0d4.hdag",
             "data/spaa/tiny/instance_spmv_N7_nzP0d35.hdag",
-            "data/spaa/tiny/instance_spmv_N10_nzP0d25.hdag"};
+            "data/spaa/tiny/instance_spmv_N10_nzP0d25.hdag",
+            "data/dot/empty_graph.dot"};
 }
 
 using namespace osp;
@@ -143,7 +145,7 @@ BOOST_AUTO_TEST_CASE(coarser_hdagg_test) {
 
         BspInstance<graph_t> instance;
 
-        bool status_graph = file_reader::readComputationalDagHyperdagFormat((cwd / filename_graph).string(),
+        bool status_graph = file_reader::readGraph((cwd / filename_graph).string(),
                                                                             instance.getComputationalDag());
 
         bool status_architecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(),
@@ -216,7 +218,7 @@ BOOST_AUTO_TEST_CASE(coarser_hdagg_test_diff_graph_impl) {
 
         BspInstance<graph_t1> instance;
 
-        bool status_graph = file_reader::readComputationalDagHyperdagFormat((cwd / filename_graph).string(),
+        bool status_graph = file_reader::readGraph((cwd / filename_graph).string(),
                                                                             instance.getComputationalDag());
 
         bool status_architecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(),
@@ -287,7 +289,7 @@ BOOST_AUTO_TEST_CASE(coarser_bspschedule_test) {
 
         BspInstance<graph_t> instance;
 
-        bool status_graph = file_reader::readComputationalDagHyperdagFormat((cwd / filename_graph).string(),
+        bool status_graph = file_reader::readGraph((cwd / filename_graph).string(),
                                                                             instance.getComputationalDag());
 
         bool status_architecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(),
@@ -365,7 +367,7 @@ void test_coarser_same_graph(Coarser<graph_t, graph_t> &coarser) {
 
         BspInstance<graph_t> instance;
 
-        bool status_graph = file_reader::readComputationalDagHyperdagFormat((cwd / filename_graph).string(),
+        bool status_graph = file_reader::readGraph((cwd / filename_graph).string(),
                                                                             instance.getComputationalDag());
 
         bool status_architecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(),
@@ -507,7 +509,7 @@ BOOST_AUTO_TEST_CASE(coarser_SquashA_test_diff_graph_impl_CSG) {
 
         BspInstance<graph_t1> instance;
 
-        bool status_graph = file_reader::readComputationalDagHyperdagFormat((cwd / filename_graph).string(),
+        bool status_graph = file_reader::readGraph((cwd / filename_graph).string(),
                                                                             instance.getComputationalDag());
 
         bool status_architecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(),
@@ -583,7 +585,7 @@ BOOST_AUTO_TEST_CASE(coarser_SquashA_test_diff_graph_impl_CSGE) {
 
         BspInstance<graph_t1> instance;
 
-        bool status_graph = file_reader::readComputationalDagHyperdagFormat((cwd / filename_graph).string(),
+        bool status_graph = file_reader::readGraph((cwd / filename_graph).string(),
                                                                             instance.getComputationalDag());
 
         bool status_architecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(),
