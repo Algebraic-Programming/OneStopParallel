@@ -286,8 +286,14 @@ RETURN_STATUS run_bsp_scheduler(const ConfigParser &parser, const boost::propert
             scheduler.setTimeLimitSeconds(timeLimit);
 
             unsigned step = algorithm.get_child("parameters").get_child("hill_climbing_steps").get_value<unsigned>();
-
             scheduler.setNumberOfHcSteps(step);
+
+            float contraction_rate = algorithm.get_child("parameters").get_child("contraction_rate").get_value<float>();
+            unsigned target_number_nodes = std::max(100U, static_cast<unsigned>(static_cast<float>(schedule.getInstance().numberOfVertices()) * contraction_rate));
+            target_number_nodes = std::min(target_number_nodes, static_cast<unsigned>(schedule.getInstance().numberOfVertices()));
+            scheduler.setTargetNumberOfNodes(target_number_nodes);
+
+            scheduler.setLinearRefinementPoints(static_cast<unsigned>(schedule.getInstance().numberOfVertices()), 20);
 
             return scheduler.computeSchedule(schedule);
         }        

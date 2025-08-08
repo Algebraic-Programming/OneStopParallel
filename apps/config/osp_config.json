@@ -104,6 +104,17 @@
         },
 
         {
+            "name": "MultiHC",
+            "id": "MultiHC",
+            "description": "Multilevel hill climbing scheduler (coarsen-solve-refine paradigm).",
+            "run" : true,
+            "parameters": {
+                "hill_climbing_steps": 50,
+                "contraction_rate": 0.5
+            }
+        },
+
+        {
             "name": "GrowLocalKL",
             "id": "LocalSearch",
             "run" : true,
@@ -140,6 +151,26 @@
                     "parameters": {
                     "max_percent_idle_processors": 0.4,
                     "increase_parallelism_in_new_superstep": true
+                    }                    
+                }                
+            }
+        },
+        {
+            "name": "GreedyBspHC",
+            "id": "LocalSearch",
+            "run" : true,
+            "name_suffix" : "GreedyBspHC",
+            "description": "Initialization with GreedyBsp, then improvement by Hill Climbing local search.",
+            "parameters": {
+                "improver": {
+                    "name" : "hill_climb" 
+                },
+                "scheduler": {
+                    "name": "GreedyBsp",
+                    "id": "GreedyBsp",
+                    "parameters": {
+                        "max_percent_idle_processors": 0.2,
+                        "increase_parallelism_in_new_superstep": true
                     }                    
                 }                
             }
