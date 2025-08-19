@@ -19,16 +19,20 @@ limitations under the License.
 
 #pragma once
 
-#define KL_DEBUG
+//#define KL_DEBUG
+//#define KL_DEBUG_1
 
 #include "kl_improver.hpp"
 #include "kl_total_comm_cost.hpp"
+#include "kl_hyper_total_comm_cost.hpp"
 
 namespace osp {
 
 template<typename Graph_t, typename MemoryConstraint_t = no_local_search_memory_constraint, unsigned window_size = 1, bool use_node_communication_costs_arg = true> 
 using kl_total_comm_improver = kl_improver<Graph_t, kl_total_comm_cost_function<Graph_t, double, MemoryConstraint_t, window_size, use_node_communication_costs_arg>, MemoryConstraint_t, window_size, double>; 
 
+template<typename Graph_t, typename MemoryConstraint_t = no_local_search_memory_constraint, unsigned window_size = 1, bool use_node_communication_costs_arg = true> 
+using kl_total_lambda_comm_improver = kl_improver<Graph_t, kl_hyper_total_comm_cost_function<Graph_t, double, MemoryConstraint_t, window_size, use_node_communication_costs_arg>, MemoryConstraint_t, window_size, double>; 
 
 } // namespace osp
 

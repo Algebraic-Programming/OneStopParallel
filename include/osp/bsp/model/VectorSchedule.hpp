@@ -146,7 +146,7 @@ class VectorSchedule : public IBspSchedule<Graph_t> {
         }
     }
 
-    void insertSupersteps(unsigned step_before, unsigned num_new_steps) {
+    void insertSupersteps(const unsigned step_before, const unsigned num_new_steps) {
 
         number_of_supersteps += num_new_steps;
 
