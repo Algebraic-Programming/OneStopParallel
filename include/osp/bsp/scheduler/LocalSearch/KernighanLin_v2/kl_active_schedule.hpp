@@ -230,7 +230,6 @@ struct kl_active_schedule_work_datastructures {
         std::swap(step_max_work_processor_count[step], step_max_work_processor_count[next_step]);
     }
     
-
     void override_next_superstep(unsigned step) {
 
         const unsigned next_step = step + 1;
@@ -515,9 +514,7 @@ class kl_active_schedule {
 
 template<typename Graph_t, typename cost_t, typename MemoryConstraint_t>
 void kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t>::clear() {
-
     work_datastructures.clear();
-
     vector_schedule.clear();
     set_schedule.clear();
 
@@ -554,9 +551,7 @@ void kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t>::compute_violations
 
 template<typename Graph_t, typename cost_t, typename MemoryConstraint_t>
 void kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t>::initialize(const IBspSchedule<Graph_t> &schedule) {
-
     instance = &schedule.getInstance();
-
     vector_schedule = VectorSchedule(schedule);
     set_schedule = SetSchedule(schedule);
     work_datastructures.initialize(set_schedule, *instance, num_steps());
@@ -575,7 +570,6 @@ void kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t>::initialize(const I
 
 template<typename Graph_t, typename cost_t, typename MemoryConstraint_t>
 void kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t>::compute_work_memory_datastructures(unsigned start_step, unsigned end_step) {
-
     if constexpr (use_memory_constraint) {
         memory_constraint.recompute_memory_datastructure(start_step, end_step);
     }
@@ -584,7 +578,6 @@ void kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t>::compute_work_memor
 
 template<typename Graph_t, typename cost_t, typename MemoryConstraint_t>
 void kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t>::write_schedule (BspSchedule<Graph_t> &schedule) {
-
     for (const auto v : instance->vertices()) {
         schedule.setAssignedProcessor(v, vector_schedule.assignedProcessor(v));
         schedule.setAssignedSuperstep(v, vector_schedule.assignedSuperstep(v));

@@ -62,7 +62,8 @@ void add_mem_weights(Graph_t &dag) {
     }
 }
 
-void check_equal_affinity_table(const std::vector<std::vector<std::vector<double>>> & table_1, const std::vector<std::vector<std::vector<double>>> & table_2, const std::set<size_t> & nodes) {
+template<typename table_t>
+void check_equal_affinity_table(table_t & table_1, table_t & table_2, const std::set<size_t> & nodes) {
 
     for ( auto i : nodes) {
         for (size_t j = 0; j < table_1[i].size(); ++j) {
@@ -114,7 +115,7 @@ void check_equal_lambda_map(const std::vector<std::map<unsigned,unsigned>> & map
 //         bool status_graph = file_reader::readComputationalDagHyperdagFormat((cwd / filename_graph).string(),
 //                                                                             instance.getComputationalDag());
 
-//         instance.getArchitecture().setSynchronisationCosts(5);
+//         instance.getArchitecture().setSynchronisationCosts(500);
 //         instance.getArchitecture().setCommunicationCosts(5);
 //         instance.getArchitecture().setNumberOfProcessors(4);
 
@@ -271,6 +272,7 @@ BOOST_AUTO_TEST_CASE(kl_lambda_0) {
     kl.setup_schedule(schedule);
 
     const std::vector<VertexType> v_set = {12, 34, 18, 4, 13, 26, 36, 7 ,3 ,37, 39 , 35, 20, 6, 38};
+       
     auto node_selection = kl.insert_gain_heap_test(v_set);
 
     std::set<VertexType> nodes_to_check(v_set.begin(), v_set.end());
