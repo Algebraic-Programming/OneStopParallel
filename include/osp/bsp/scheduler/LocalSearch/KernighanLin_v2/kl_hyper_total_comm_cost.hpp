@@ -132,9 +132,7 @@ struct kl_hyper_total_comm_cost_function {
     }
 
     template<typename lock_manager_t, typename container_t>
-    std::vector<VertexType> update_node_comm_affinity(const kl_move &move, container_t &selcted_nodes, lock_manager_t &lock_manager, const cost_t& penalty, const cost_t& reward, std::map<VertexType, kl_gain_update_info> & max_gain_recompute) {
-
-        std::vector<VertexType> new_nodes;
+    void update_node_comm_affinity(const kl_move &move, container_t &selcted_nodes, lock_manager_t &lock_manager, const cost_t& penalty, const cost_t& reward, std::map<VertexType, kl_gain_update_info> & max_gain_recompute, std::vector<VertexType> &new_nodes) {
                 
         for (const auto &target : instance->getComputationalDag().children(move.node)) {
             if(lock_manager.is_locked(target))
@@ -457,8 +455,7 @@ struct kl_hyper_total_comm_cost_function {
                     }
                 }                 
             }                
-        }        
-        return new_nodes;
+        }  
     }
 
     inline unsigned start_idx(unsigned node_step) { return node_step < window_size ? window_size - node_step : 0; }

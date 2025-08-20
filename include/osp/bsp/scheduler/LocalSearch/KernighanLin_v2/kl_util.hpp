@@ -21,9 +21,7 @@ limitations under the License.
 #include <unordered_set>
 #include "kl_active_schedule.hpp"
 
-
 namespace osp {
-
 
 template<typename cost_t, typename comm_cost_function_t, typename kl_active_schedule_t>
 struct reward_penalty_strategy {
@@ -64,11 +62,12 @@ struct reward_penalty_strategy {
     }
 };
 
-
 template<typename VertexType>
 struct set_vertex_lock_manger {
 
     std::unordered_set<VertexType> locked_nodes;
+
+    void initialize(size_t ) {}
 
     void lock(VertexType node) {
         locked_nodes.insert(node);
@@ -87,13 +86,60 @@ struct set_vertex_lock_manger {
     }
 };
 
+template<typename VertexType>
+struct vector_vertex_lock_manger {
+
+    std::vector<bool> locked_nodes;
+
+    void initialize(size_t num_nodes) {
+        locked_nodes.resize(num_nodes);
+    }
+
+    void lock(VertexType node) {
+        locked_nodes[node] = true;
+    }
+
+    void unlock(VertexType node) {
+        locked_nodes[node] = false;
+    }
+
+    bool is_locked(VertexType node) {
+        return locked_nodes[node];
+    }
+
+    void clear() {
+        locked_nodes.assign(locked_nodes.size(), false);
+    }
+};
+
+
+template<typename Graph_t, typename cost_t, typename handle_t, typename kl_active_schedule_t>
+struct adaptive_affinity_table {
+
+    using VertexType = vertex_idx_t<Graph_t>;
+
+    const kl_active_schedule_t *active_schedule;
+    const Graph_t * graph; 
+
+    std::vector<bool> node_is_selected;
+    std::vector<size_t> selected_nodes_idx;
+
+    std::vector<std::vector<std::vector<cost_t>>> affinity_table;
+    std::vector<handle_t> heap_handles;
+    std::vector<VertexType> selected_nodes;
+
+    std::vector<size_t> gaps;
+
+};
+
+
 template<typename Graph_t, typename container_t, typename handle_t, typename kl_active_schedule_t>
 struct vertex_selection_strategy {
 
     const kl_active_schedule_t *active_schedule;
     const Graph_t * graph; 
     std::mt19937 * gen;
-    std::size_t selection_threshold;
+    std::size_t selection_threshold = 0;
     unsigned strategy_counter = 0;
 
     std::vector<vertex_idx_t<Graph_t>> permutation;
@@ -106,9 +152,7 @@ struct vertex_selection_strategy {
         graph = &(sche_.getInstance().getComputationalDag());        
         gen = &gen_;
 
-        strategy_counter = 0;
-        selection_threshold = static_cast<std::size_t>(std::ceil(5.0 * std::log(graph->num_vertices())));
-
+        strategy_counter = 0; 
         permutation = std::vector<vertex_idx_t<Graph_t>>(graph->num_vertices());
         std::iota(std::begin(permutation), std::end(permutation), 0);
         permutation_idx = 0;
