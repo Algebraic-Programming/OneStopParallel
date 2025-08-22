@@ -48,17 +48,13 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test)
         std::cout << cwd << std::endl;
     }
 
-    file_reader::readComputationalDagDotFormat("/home/toni/work/data/ast/llama_128_128.dot", graph);
+    file_reader::readComputationalDagDotFormat("", graph);
 
     WavefrontMerkleDivider<graph_t> divider; 
-
 
     auto maps = divider.divide(graph);
 
     IsomorphismGroups<graph_t, graph_t> iso_groups;
     iso_groups.compute_isomorphism_groups(maps, graph);
-
-    
-
 
 };

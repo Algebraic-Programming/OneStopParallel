@@ -144,7 +144,7 @@ class IsomorphismGroups {
 
         //     for (size_t j = 0; j < isomorphism_groups[i].size(); j++) {
 
-        //         const size_t size = static_cast<int>(isomorphism_groups[i][j].size());
+        //         const size_t size = isomorphism_groups[i][j].size();
 
         //         if (size > 8u) {
 
@@ -155,7 +155,7 @@ class IsomorphismGroups {
         //                 size_t mult = size / 8;
         //                 std::cout << "mult: " << mult << std::endl;
 
-        //                 std::vector<std::vector<unsigned>> new_groups(8);
+        //                 std::vector<std::vector<size_t>> new_groups(8);
 
         //                 unsigned idx = 0;
         //                 for (auto& group : new_groups) {
@@ -168,11 +168,9 @@ class IsomorphismGroups {
         //                 }
 
         //                 vertex_maps[i] = new_groups;
-        //                 isomorphism_groups[i] = std::vector<std::vector<unsigned>>(1,
-        //                 std::vector<unsigned>({0,1,2,3,4,5,6,7})); isomorphism_groups_subgraphs[i] =
-        //                 std::vector<Graph_t>(1, dag_algorithms::create_induced_subgraph_sorted(dag,
-        //                 new_groups[0]));
-
+        //                 isomorphism_groups[i] = std::vector<std::vector<std::size_t>>(1, std::vector<std::size_t>({0,1,2,3,4,5,6,7}));                         
+        //                 isomorphism_groups_subgraphs[i] = std::vector<Graph_t>(1);                                                 
+        //                 create_induced_subgraph(dag, isomorphism_groups_subgraphs[i][0], new_groups[0]);
         //             }
         //         }
         //     }
