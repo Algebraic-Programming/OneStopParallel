@@ -48,13 +48,30 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test)
         std::cout << cwd << std::endl;
     }
 
-    file_reader::readComputationalDagDotFormat("", graph);
+    file_reader::readComputationalDagDotFormat("/home/toni/work/data/ast/dynamic_pa_high_throughput_dview_large.dot", graph);
 
-    WavefrontMerkleDivider<graph_t> divider; 
 
-    auto maps = divider.divide(graph);
+    
+
+
+
+    WavefrontComponentDivider<graph_t> wavefront;
+    wavefront.set_split_method(WavefrontComponentDivider<graph_t>::MIN_DIFF);
+    // WavefrontMerkleDivider<graph_t> divider; 
+
+
+    auto maps = wavefront.divide(graph);
 
     IsomorphismGroups<graph_t, graph_t> iso_groups;
     iso_groups.compute_isomorphism_groups(maps, graph);
+
+    
+    // auto other_graph = iso_groups.get_isomorphism_groups_subgraphs()[1][0];
+
+    // auto other_maps = wavefront.divide(other_graph);
+
+    // IsomorphismGroups<graph_t, graph_t> other_iso_groups;
+    // other_iso_groups.compute_isomorphism_groups(other_maps, other_graph);
+
 
 };

@@ -41,7 +41,7 @@ limitations under the License.
 namespace osp {
 
 struct kl_parameter {
-    double time_quality = 1.0;
+    double time_quality = 0.5;
     double superstep_remove_strength = 0.5;
 
     unsigned max_inner_iterations_reset = 500;
@@ -142,6 +142,7 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
     inline unsigned start_idx(unsigned node_step) { return node_step < window_size ? window_size - node_step : 0; }
     inline unsigned rel_step_idx(const unsigned node_step, const unsigned move_step) { return (move_step >= node_step) ? ((move_step - node_step) + window_size) : (window_size - (node_step - move_step)); }
     inline unsigned end_idx(unsigned node_step) { return node_step + window_size < active_schedule.num_steps() ? window_range : window_range - (node_step + window_size + 1 - active_schedule.num_steps()); }
+    inline bool is_compatible(VertexType node, unsigned proc) { return active_schedule.getInstance().isCompatible(node, proc); }
 
     kl_move get_best_move() {
         const unsigned local_max = 50;
@@ -267,7 +268,7 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
                         }
                     }  
                     
-                    if (node_proc != move.from_proc) {
+                    if (node_proc != move.from_proc && is_compatible(node, move.from_proc)) {
                         const work_weight_t prev_new_weight = vertex_weight + active_schedule.get_step_processor_work(node_step, move.from_proc) + graph->vertex_work_weight(move.node);
                         const cost_t prev_other_affinity = compute_same_step_affinity(prev_max_work, prev_new_weight, prev_node_proc_affinity);   
                         const work_weight_t new_weight = vertex_weight + active_schedule.get_step_processor_work(node_step, move.from_proc);
@@ -275,7 +276,7 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
                         affinity_table[node][move.from_proc][window_size] += (other_affinity - prev_other_affinity);  
                     } 
                     
-                    if (node_proc != move.to_proc) {
+                    if (node_proc != move.to_proc && is_compatible(node, move.to_proc)) {
                         const work_weight_t prev_new_weight = vertex_weight + active_schedule.get_step_processor_work(node_step, move.to_proc) - graph->vertex_work_weight(move.node);
                         const cost_t prev_other_affinity = compute_same_step_affinity(prev_max_work, prev_new_weight, prev_node_proc_affinity);      
                         const work_weight_t new_weight = vertex_weight + active_schedule.get_step_processor_work(node_step, move.to_proc);
@@ -309,19 +310,23 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
                         }                            
                     } else {
                         // update only move.from_proc and move.to_proc
-                        const work_weight_t from_new_weight = vertex_weight + active_schedule.get_step_processor_work(move.from_step, move.from_proc);
-                        const work_weight_t from_prev_new_weight = from_new_weight + graph->vertex_work_weight(move.node);
-                        const work_weight_t from_prev_affinity = prev_max_work < from_prev_new_weight ? from_prev_new_weight - prev_max_work : 0;
+                        if (is_compatible(node, move.from_proc)) {
+                            const work_weight_t from_new_weight = vertex_weight + active_schedule.get_step_processor_work(move.from_step, move.from_proc);
+                            const work_weight_t from_prev_new_weight = from_new_weight + graph->vertex_work_weight(move.node);
+                            const work_weight_t from_prev_affinity = prev_max_work < from_prev_new_weight ? from_prev_new_weight - prev_max_work : 0;
 
-                        const work_weight_t from_new_affinity = new_max_weight < from_new_weight ? from_new_weight - new_max_weight : 0;
-                        affinity_table[node][move.from_proc][idx] += from_new_affinity - from_prev_affinity;
+                            const work_weight_t from_new_affinity = new_max_weight < from_new_weight ? from_new_weight - new_max_weight : 0;
+                            affinity_table[node][move.from_proc][idx] += from_new_affinity - from_prev_affinity;
+                        }
 
-                        const work_weight_t to_new_weight = vertex_weight + active_schedule.get_step_processor_work(move.to_step, move.to_proc);
-                        const work_weight_t to_prev_new_weight = to_new_weight - graph->vertex_work_weight(move.node);
-                        const work_weight_t to_prev_affinity = prev_max_work < to_prev_new_weight ? to_prev_new_weight - prev_max_work : 0;
+                        if (is_compatible(node, move.to_proc)) {
+                            const work_weight_t to_new_weight = vertex_weight + active_schedule.get_step_processor_work(move.to_step, move.to_proc);
+                            const work_weight_t to_prev_new_weight = to_new_weight - graph->vertex_work_weight(move.node);
+                            const work_weight_t to_prev_affinity = prev_max_work < to_prev_new_weight ? to_prev_new_weight - prev_max_work : 0;
 
-                        const work_weight_t to_new_affinity = new_max_weight < to_new_weight ? to_new_weight - new_max_weight : 0;
-                        affinity_table[node][move.to_proc][idx] += to_new_affinity - to_prev_affinity;
+                            const work_weight_t to_new_affinity = new_max_weight < to_new_weight ? to_new_weight - new_max_weight : 0;
+                            affinity_table[node][move.to_proc][idx] += to_new_affinity - to_prev_affinity;
+                        }
                     }
                 }
             }
@@ -426,6 +431,12 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
 #endif
                     break;
                 }
+
+#ifdef KL_DEBUG_1
+                if (not active_schedule.getInstance().isCompatible(best_move.node, best_move.to_proc)) {
+                    std::cout << "move to incompatibe node" << std::endl;
+                }
+#endif
 
                 const auto prev_work_data = active_schedule.get_pre_move_work_data(best_move);
                 apply_move(best_move);
@@ -766,14 +777,14 @@ void kl_improver<Graph_t, comm_cost_function_t, MemoryConstraint_t, window_size,
         } else {
             if (pair.second.update_entire_from_step) {
                 update_best_move(pair.first, move.from_step, nodes);
-            } else if (pair.second.update_from_step) {
+            } else if (pair.second.update_from_step && is_compatible(pair.first, move.from_proc)) {
                 update_best_move(pair.first, move.from_step, move.from_proc, nodes);
             } 
 
             if (move.from_step != move.to_step || not pair.second.update_entire_from_step) {
                 if (pair.second.update_entire_to_step) {
                     update_best_move(pair.first, move.to_step, nodes);
-                } else if (pair.second.update_to_step) {
+                } else if (pair.second.update_to_step && is_compatible(pair.first, move.to_proc)) {
                     update_best_move(pair.first, move.to_step, move.to_proc, nodes);
                 }
             }
@@ -854,7 +865,7 @@ void kl_improver<Graph_t, comm_cost_function_t, MemoryConstraint_t, window_size,
                 }
             }
             
-            if (node_proc != move_proc) {
+            if (node_proc != move_proc && is_compatible(node, move_proc)) {
                 const work_weight_t prev_new_weight = vertex_weight + active_schedule.get_step_processor_work(node_step, move_proc) + move_correction_node_weight;
                 const cost_t prev_other_affinity = compute_same_step_affinity(prev_move_step_max_work, prev_new_weight, prev_node_proc_affinity);  
                 const work_weight_t new_weight = vertex_weight + active_schedule.get_step_processor_work(node_step, move_proc);
@@ -888,12 +899,14 @@ void kl_improver<Graph_t, comm_cost_function_t, MemoryConstraint_t, window_size,
                 }                        
             } else {
                 // update only move_proc
-                const work_weight_t new_weight = vertex_weight + active_schedule.get_step_processor_work(move_step, move_proc);
-                const work_weight_t prev_new_weight = new_weight + move_correction_node_weight;
-                const work_weight_t prev_affinity = prev_move_step_max_work < prev_new_weight ? prev_new_weight - prev_move_step_max_work : 0;
+                if (is_compatible(node, move_proc)) {
+                    const work_weight_t new_weight = vertex_weight + active_schedule.get_step_processor_work(move_step, move_proc);
+                    const work_weight_t prev_new_weight = new_weight + move_correction_node_weight;
+                    const work_weight_t prev_affinity = prev_move_step_max_work < prev_new_weight ? prev_new_weight - prev_move_step_max_work : 0;
 
-                const work_weight_t new_affinity = new_max_weight < new_weight ? new_weight - new_max_weight : 0;
-                affinity_table[node][move_proc][idx] += new_affinity - prev_affinity;
+                    const work_weight_t new_affinity = new_max_weight < new_weight ? new_weight - new_max_weight : 0;
+                    affinity_table[node][move_proc][idx] += new_affinity - prev_affinity;
+                }
             }
         }
     }
@@ -1045,7 +1058,6 @@ void kl_improver<Graph_t, comm_cost_function_t, MemoryConstraint_t, window_size,
 
 template<typename Graph_t, typename comm_cost_function_t, typename MemoryConstraint_t, unsigned window_size, typename cost_t>
 void kl_improver<Graph_t, comm_cost_function_t, MemoryConstraint_t, window_size, cost_t>::update_best_move(VertexType node, unsigned step, unsigned proc, node_selection_container_t &nodes) {
-    
     const unsigned node_proc = active_schedule.assigned_processor(node);
     const unsigned node_step = active_schedule.assigned_superstep(node);
 
@@ -1238,6 +1250,7 @@ class kl_improver_test : public kl_improver<Graph_t, comm_cost_function_t, Memor
         const auto prev_work_data = this->active_schedule.get_pre_move_work_data(best_move);
         this->apply_move(best_move);
 
+        this->affinity_table.trim();
         this->update_node_work_affinity(this->affinity_table, best_move, prev_work_data, recompute_max_gain);
         this->comm_cost_f.update_node_comm_affinity(best_move, this->affinity_table, this->lock_manager, this->reward_penalty_strat.penalty, this->reward_penalty_strat.reward, recompute_max_gain, new_nodes);
 

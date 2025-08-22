@@ -48,6 +48,8 @@ struct kl_total_comm_cost_function {
 
     const std::string name() const { return "toal_comm_cost"; }
 
+    inline bool is_compatible(VertexType node, unsigned proc) { return active_schedule->getInstance().isCompatible(node, proc); }
+
     void initialize(kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t> &sched, compatible_processor_range<Graph_t> &p_range) {
         active_schedule = &sched;
         proc_range = &p_range;
@@ -129,7 +131,7 @@ struct kl_total_comm_cost_function {
                     }                                                
                 } 
 
-                if (idx - 1 < bound) {
+                if (idx - 1 < bound && is_compatible(target, move.from_proc)) {
                     affinity_table.at(target)[move.from_proc][idx - 1] += penalty;    
                 }
 
@@ -139,7 +141,7 @@ struct kl_total_comm_cost_function {
                 const unsigned window_bound = end_idx(target_step);  
                 unsigned idx = std::min(window_size + diff, window_bound);                  
                 
-                if (idx < window_bound) { 
+                if (idx < window_bound && is_compatible(target, move.from_proc)) { 
                     affinity_table.at(target)[move.from_proc][idx++] += reward; 
                 }
                 
@@ -160,7 +162,7 @@ struct kl_total_comm_cost_function {
                     }                                                
                 } 
 
-                if (idx - 1 < bound) {
+                if (idx - 1 < bound && is_compatible(target, move.to_proc)) {
                     affinity_table.at(target)[move.to_proc][idx - 1] -= penalty;    
                 }
 
@@ -170,7 +172,7 @@ struct kl_total_comm_cost_function {
                 const unsigned window_bound = end_idx(target_step); 
                 unsigned idx = std::min(window_size + diff, window_bound);                                                     
                 
-                if (idx < window_bound) {
+                if (idx < window_bound && is_compatible(target, move.to_proc)) {
                     affinity_table.at(target)[move.to_proc][idx++] -= reward; 
                 }
                                     
@@ -230,7 +232,7 @@ struct kl_total_comm_cost_function {
                     } 
                 }
 
-                if (window_size >= diff) {
+                if (window_size >= diff && is_compatible(source, move.from_proc)) {
                     affinity_table.at(source)[move.from_proc][idx] += reward;    
                 }
 
@@ -239,7 +241,7 @@ struct kl_total_comm_cost_function {
                 const unsigned diff = move.from_step - source_step;
                 unsigned idx = window_size + diff; 
                 
-                if (idx < window_bound) {
+                if (idx < window_bound && is_compatible(source, move.from_proc)) {
                     affinity_table.at(source)[move.from_proc][idx] += penalty;                        
                 }
 
@@ -260,7 +262,7 @@ struct kl_total_comm_cost_function {
                     } 
                 }
 
-                if (window_size >= diff) {
+                if (window_size >= diff && is_compatible(source, move.to_proc)) {
                     affinity_table.at(source)[move.to_proc][idx] -= reward;    
                 }
 
@@ -268,7 +270,7 @@ struct kl_total_comm_cost_function {
                 const unsigned diff = move.to_step - source_step;
                 unsigned idx = window_size + diff; 
 
-                if (idx < window_bound) {
+                if (idx < window_bound && is_compatible(source, move.to_proc)) {
                     affinity_table.at(source)[move.to_proc][idx] -= penalty;                         
                 }
                 for (; idx < window_bound; idx++) {
@@ -324,7 +326,7 @@ struct kl_total_comm_cost_function {
                     } 
                 }
 
-                if (window_size >= diff) {
+                if (window_size >= diff && is_compatible(node, target_proc)) {
                     affinity_table.at(node)[target_proc][idx] -= reward;    
                 }  
 
@@ -332,7 +334,7 @@ struct kl_total_comm_cost_function {
                 const unsigned diff = target_step - node_step;
                 unsigned idx = window_size + diff;
 
-                if (idx < window_bound) {
+                if (idx < window_bound && is_compatible(node, target_proc)) {
                     affinity_table.at(node)[target_proc][idx] -= penalty; 
                 }
 
@@ -370,7 +372,7 @@ struct kl_total_comm_cost_function {
                     }                                                
                 }
 
-                if (idx - 1 < bound) {
+                if (idx - 1 < bound && is_compatible(node, source_proc)) {
                     affinity_table.at(node)[source_proc][idx - 1] -= penalty;    
                 }
 
@@ -378,7 +380,7 @@ struct kl_total_comm_cost_function {
                 const unsigned diff = source_step - node_step;
                 unsigned idx = std::min(window_size + diff, window_bound);
 
-                if (idx < window_bound) {
+                if (idx < window_bound && is_compatible(node, source_proc)) {
                     affinity_table.at(node)[source_proc][idx++] -= reward;  
                 }    
 

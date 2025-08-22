@@ -62,6 +62,15 @@ void add_mem_weights(Graph_t &dag) {
     }
 }
 
+template<typename Graph_t>
+void add_node_types(Graph_t &dag) {
+    unsigned node_type = 0;
+
+    for (const auto &v : dag.vertices()) {
+        dag.set_vertex_type(v, node_type++ % 2);
+    }    
+}
+
 template<typename table_t>
 void check_equal_affinity_table(table_t & table_1, table_t & table_2, const std::set<size_t> & nodes) {
 
@@ -94,7 +103,6 @@ void check_equal_lambda_map(const std::vector<std::map<unsigned,unsigned>> & map
         }
     }
 }
-
 
 // BOOST_AUTO_TEST_CASE(kl_lambda_total_comm_large_test_graphs) {
 //     std::vector<std::string> filenames_graph = large_test_graphs();
@@ -175,6 +183,68 @@ void check_equal_lambda_map(const std::vector<std::map<unsigned,unsigned>> & map
 
 //     }
 // }
+
+BOOST_AUTO_TEST_CASE(kl_total_lambda_comm_node_type_test_graphs) {
+
+    std::vector<std::string> filenames_graph = test_graphs();
+
+    using graph = computational_dag_edge_idx_vector_impl_def_int_t;
+
+    // Getting root git directory
+    std::filesystem::path cwd = std::filesystem::current_path();
+    std::cout << cwd << std::endl;
+    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
+        cwd = cwd.parent_path();
+        std::cout << cwd << std::endl;
+    }
+
+    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_int_t> test_scheduler;
+
+    for (auto &filename_graph : filenames_graph) {
+
+        BspInstance<graph> instance;
+
+        bool status_graph = file_reader::readComputationalDagHyperdagFormat((cwd / filename_graph).string(),
+                                                                            instance.getComputationalDag());
+
+        instance.getArchitecture().setSynchronisationCosts(5);
+        instance.getArchitecture().setCommunicationCosts(5);
+        instance.getArchitecture().setNumberOfProcessors(4);
+
+        if (!status_graph) {
+
+            std::cout << "Reading files failed." << std::endl;
+            BOOST_CHECK(false);
+        }
+
+        std::cout << "Instance: " << filename_graph << std::endl;
+
+        add_mem_weights(instance.getComputationalDag());
+        add_node_types(instance.getComputationalDag());
+
+        instance.getArchitecture().setProcessorsWithTypes({0,0,1,1});
+
+        instance.setDiagonalCompatibilityMatrix(2);
+
+        BspSchedule<graph> schedule(instance);
+        const auto result = test_scheduler.computeSchedule(schedule);
+
+        BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
+        BOOST_CHECK_EQUAL(&schedule.getInstance(), &instance);
+        BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+        BOOST_CHECK(schedule.satisfiesNodeTypeConstraints());
+
+        kl_total_lambda_comm_improver<graph> kl;
+        
+        auto status = kl.improveSchedule(schedule);
+
+        BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
+        BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+        BOOST_CHECK(schedule.satisfiesNodeTypeConstraints());
+        
+    }
+}
+
 
 
 BOOST_AUTO_TEST_CASE(kl_total_comm_test_graphs) {

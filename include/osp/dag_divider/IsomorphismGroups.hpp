@@ -169,7 +169,7 @@ class IsomorphismGroups {
 
         //                 vertex_maps[i] = new_groups;
         //                 isomorphism_groups[i] = std::vector<std::vector<std::size_t>>(1, std::vector<std::size_t>({0,1,2,3,4,5,6,7}));                         
-        //                 isomorphism_groups_subgraphs[i] = std::vector<Graph_t>(1);                                                 
+        //                 isomorphism_groups_subgraphs[i] = std::vector<Constr_Graph_t>(1);                                                 
         //                 create_induced_subgraph(dag, isomorphism_groups_subgraphs[i][0], new_groups[0]);
         //             }
         //         }
