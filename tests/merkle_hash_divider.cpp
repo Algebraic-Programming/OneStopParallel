@@ -51,9 +51,9 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test)
     }
 
     BspInstance<graph_t> instance;
-    file_reader::readComputationalDagDotFormat("/home/toni/work/data/ast/MlaPrologV2_bfloat16_4_32_1_256_7168_1536.dot", instance.getComputationalDag());
+    file_reader::readComputationalDagDotFormat("/home/toni/work/data/ast/llama_1024_128.dot", instance.getComputationalDag());
 
-    instance.getArchitecture().setProcessorsWithTypes({0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1});
+    instance.getArchitecture().setProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1});
     instance.setDiagonalCompatibilityMatrix(2);
 
     BspLocking<graph_t> greedy;

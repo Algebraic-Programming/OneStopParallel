@@ -32,10 +32,11 @@ class WavefrontComponentScheduler : public Scheduler<Graph_t> {
 
     //bool set_num_proc_crit_path = false;
 
+    // --- Member variables ---
+    bool set_num_proc_crit_path = false;
     IDagDivider<Graph_t> *divider;
     Scheduler<constr_graph_t> *scheduler;
     bool check_isomorphism_groups = true;
-    // Use static constexpr for compile-time debugging code removal
     static constexpr bool enable_debug_prints = true;
 
     /**
@@ -62,19 +63,17 @@ class WavefrontComponentScheduler : public Scheduler<Graph_t> {
             return allocation;
         }
 
-        unsigned num_active_components = active_indices.size();
+        size_t num_active_components = active_indices.size();
         unsigned remaining_procs = total_processors_of_type;
         
-        // If we have enough processors, guarantee one for each active component first.
         if (total_processors_of_type >= num_active_components) {
             for (size_t idx : active_indices) {
                 allocation[idx] = 1;
             }
-            remaining_procs -= num_active_components;
+            remaining_procs -= static_cast<unsigned>(num_active_components);
         }
 
         if (remaining_procs > 0) {
-            // Distribute the rest (or all, in case of scarcity) proportionally.
             std::vector<double> active_work_weights;
             double active_total_work = 0;
             for(size_t idx : active_indices) {
@@ -143,7 +142,7 @@ class WavefrontComponentScheduler : public Scheduler<Graph_t> {
         unsigned superstep_offset = 0;
 
         for (std::size_t i = 0; i < isomorphism_groups.size(); ++i) {
-            if constexpr (enable_debug_prints) std::cout << "\n--- Processing Wavefront Set " << i << " ---" << std::endl;
+            if (enable_debug_prints) std::cout << "\n--- Processing Wavefront Set " << i << " ---" << std::endl;
 
             std::vector<std::vector<double>> group_work_by_type(
                 isomorphism_groups[i].size(), std::vector<double>(original_proc_type_count.size(), 0.0));
@@ -167,11 +166,7 @@ class WavefrontComponentScheduler : public Scheduler<Graph_t> {
                 }
 
                 if (sum_of_compatible_works_for_rep > total_rep_work + 1e-9) {
-                    if constexpr (enable_debug_prints) {
-                        std::cerr << "ERROR: Sum of compatible work (" << sum_of_compatible_works_for_rep 
-                                  << ") exceeds total work (" << total_rep_work 
-                                  << ") for a sub-dag. Aborting." << std::endl;
-                    }
+                    if (enable_debug_prints) std::cerr << "ERROR: Sum of compatible work exceeds total work. Aborting." << std::endl;
                     return RETURN_STATUS::ERROR;
                 }
             }
@@ -191,76 +186,111 @@ class WavefrontComponentScheduler : public Scheduler<Graph_t> {
                 }
             }
 
-            if constexpr (enable_debug_prints) {
-                std::cout << "Processor Allocation for this Wavefront Set:" << std::endl;
-                for (size_t j = 0; j < group_proc_allocations.size(); ++j) {
-                    std::cout << "  Iso Group " << j << " (" << isomorphism_groups[i][j].size() << " copies): { ";
-                    for (unsigned type_idx = 0; type_idx < group_proc_allocations[j].size(); ++type_idx) {
-                        std::cout << "Type " << type_idx << ": " << group_proc_allocations[j][type_idx] << "; ";
-                    }
-                    std::cout << "}" << std::endl;
-                }
-            }
-
             unsigned max_number_supersteps = 0;
             std::vector<unsigned> proc_type_offsets(original_arch.getNumberOfProcessorTypes(), 0);
             
             for (std::size_t j = 0; j < isomorphism_groups[i].size(); ++j) {
-                constr_graph_t &sub_dag = iso_groups.get_isomorphism_groups_subgraphs()[i][j];
+                const auto& procs_for_group = group_proc_allocations[j];
+                const size_t num_members = isomorphism_groups[i][j].size();
 
-                std::vector<unsigned> single_sub_dag_proc_types = group_proc_allocations[j];
-                size_t num_members = isomorphism_groups[i][j].size();
+                bool scarcity_found = false;
                 if (num_members > 0) {
-                    for(unsigned type_idx = 0; type_idx < single_sub_dag_proc_types.size(); ++type_idx) {
-                        auto& count = single_sub_dag_proc_types[type_idx];
-                        if (count > 0 && (count / static_cast<unsigned>(num_members) == 0)) {
-                            count = 1;
-                        } else {
-                            count /= static_cast<unsigned>(num_members);
+                    for (unsigned type_idx = 0; type_idx < procs_for_group.size(); ++type_idx) {
+                        if (procs_for_group[type_idx] > 0 && procs_for_group[type_idx] < num_members) {
+                            scarcity_found = true;
+                            break;
                         }
                     }
                 }
 
-                if constexpr (enable_debug_prints) {
-                    std::cout << "  Creating sub-architecture for Iso Group " << j << " representative: { ";
-                    for (unsigned type_idx = 0; type_idx < single_sub_dag_proc_types.size(); ++type_idx) {
-                        std::cout << "Type " << type_idx << ": " << single_sub_dag_proc_types[type_idx] << "; ";
-                    }
-                    std::cout << "}" << std::endl;
-                }
+                if (scarcity_found) {
+                    // --- SCARCITY CASE: Schedule sequentially on the shared processor block ---
+                    if (enable_debug_prints) std::cout << "  Group " << j << ": Scarcity detected. Scheduling " << num_members << " copies sequentially." << std::endl;
+                    
+                    BspArchitecture<constr_graph_t> sub_architecture = createSubArchitecture(original_arch, procs_for_group);
+                    const constr_graph_t &rep_sub_dag = iso_groups.get_isomorphism_groups_subgraphs()[i][j];
+                    BspInstance<constr_graph_t> sub_instance(rep_sub_dag, sub_architecture);
+                    sub_instance.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
 
-                BspArchitecture<constr_graph_t> sub_architecture = createSubArchitecture(original_arch, single_sub_dag_proc_types);
-                BspInstance<constr_graph_t> sub_instance(sub_dag, sub_architecture);
-                sub_instance.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
-                BspSchedule<constr_graph_t> sub_schedule(sub_instance);
-                auto status = scheduler->computeSchedule(sub_schedule);
-                
-                if (status != RETURN_STATUS::OSP_SUCCESS && status != RETURN_STATUS::BEST_FOUND) return status;
+                    unsigned sequential_superstep_offset = 0;
+                    for (const auto &group_member_idx : isomorphism_groups[i][j]) {
+                        BspSchedule<constr_graph_t> sub_schedule(sub_instance);
+                        auto status = scheduler->computeSchedule(sub_schedule);
+                        if (status != RETURN_STATUS::OSP_SUCCESS && status != RETURN_STATUS::BEST_FOUND) return status;
 
-                const auto sub_proc_type_count = sub_architecture.getProcessorTypeCount();
-                std::vector<unsigned> sub_proc_type_corrections(sub_architecture.getNumberOfProcessorTypes(), 0);
-                for (std::size_t k = 1; k < sub_proc_type_corrections.size(); ++k) {
-                    sub_proc_type_corrections[k] = sub_proc_type_corrections[k - 1] + sub_proc_type_count[k - 1];
-                }
+                        const auto sub_proc_type_count = sub_architecture.getProcessorTypeCount();
+                        std::vector<unsigned> sub_proc_type_corrections(sub_architecture.getNumberOfProcessorTypes(), 0);
+                        for (std::size_t k = 1; k < sub_proc_type_corrections.size(); ++k) sub_proc_type_corrections[k] = sub_proc_type_corrections[k - 1] + sub_proc_type_count[k - 1];
 
-                for (const auto &group_member_idx : isomorphism_groups[i][j]) {
-                    vertex_idx_t<constr_graph_t> subdag_vertex = 0;
-                    for (const auto &vertex : vertex_maps[i][group_member_idx]) {
-                        const unsigned proc_in_sub_sched = sub_schedule.assignedProcessor(subdag_vertex);
-                        const unsigned proc_type = sub_architecture.processorType(proc_in_sub_sched);
-                        const unsigned local_proc_id_within_type = proc_in_sub_sched - sub_proc_type_corrections[proc_type];
-                        unsigned global_proc_id = global_ids_by_type[proc_type][proc_type_offsets[proc_type] + local_proc_id_within_type];
+                        // --- BUG FIX: Sort vertices to ensure consistent mapping ---
+                        std::vector<vertex_idx_t<Graph_t>> sorted_component_vertices(vertex_maps[i][group_member_idx].begin(), vertex_maps[i][group_member_idx].end());
+                        std::sort(sorted_component_vertices.begin(), sorted_component_vertices.end());
                         
-                        schedule.setAssignedProcessor(vertex, global_proc_id);
-                        schedule.setAssignedSuperstep(vertex, superstep_offset + sub_schedule.assignedSuperstep(subdag_vertex));
-                        subdag_vertex++;
+                        vertex_idx_t<constr_graph_t> subdag_vertex = 0;
+                        for (const auto &vertex : sorted_component_vertices) {
+                            const unsigned proc_in_sub_sched = sub_schedule.assignedProcessor(subdag_vertex);
+                            const unsigned proc_type = sub_architecture.processorType(proc_in_sub_sched);
+                            const unsigned local_proc_id_within_type = proc_in_sub_sched - sub_proc_type_corrections[proc_type];
+                            unsigned global_proc_id = global_ids_by_type[proc_type][proc_type_offsets[proc_type] + local_proc_id_within_type];
+                            
+                            schedule.setAssignedProcessor(vertex, global_proc_id);
+                            schedule.setAssignedSuperstep(vertex, superstep_offset + sequential_superstep_offset + sub_schedule.assignedSuperstep(subdag_vertex));
+                            subdag_vertex++;
+                        }
+                        sequential_superstep_offset += sub_schedule.numberOfSupersteps();
+                    }
+                    max_number_supersteps = std::max(max_number_supersteps, sequential_superstep_offset);
+
+                } else {
+                    // --- ABUNDANCE CASE: Replicate Schedule ---
+                    if (enable_debug_prints && num_members > 0) std::cout << "  Group " << j << ": Abundance detected. Replicating schedule for " << num_members << " copies." << std::endl;
+                    
+                    std::vector<unsigned> single_sub_dag_proc_types = procs_for_group;
+                    if (num_members > 0) {
+                        for(auto& count : single_sub_dag_proc_types) count /= static_cast<unsigned>(num_members);
                     }
 
-                    for (size_t k = 0; k < sub_proc_type_count.size(); ++k) {
-                        proc_type_offsets[k] += sub_proc_type_count[k];
+                    BspArchitecture<constr_graph_t> sub_architecture = createSubArchitecture(original_arch, single_sub_dag_proc_types);
+                    BspInstance<constr_graph_t> sub_instance(iso_groups.get_isomorphism_groups_subgraphs()[i][j], sub_architecture);
+                    sub_instance.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
+
+                    BspSchedule<constr_graph_t> sub_schedule(sub_instance);
+                    auto status = scheduler->computeSchedule(sub_schedule);
+                    if (status != RETURN_STATUS::OSP_SUCCESS && status != RETURN_STATUS::BEST_FOUND) return status;
+                    
+                    const auto sub_proc_type_count = sub_architecture.getProcessorTypeCount();
+                    std::vector<unsigned> sub_proc_type_corrections(sub_architecture.getNumberOfProcessorTypes(), 0);
+                    for (std::size_t k = 1; k < sub_proc_type_corrections.size(); ++k) sub_proc_type_corrections[k] = sub_proc_type_corrections[k - 1] + sub_proc_type_count[k - 1];
+
+                    std::vector<unsigned> current_member_proc_offsets = proc_type_offsets;
+                    for (const auto &group_member_idx : isomorphism_groups[i][j]) {
+                        // --- BUG FIX: Sort vertices to ensure consistent mapping ---
+                        std::vector<vertex_idx_t<Graph_t>> sorted_component_vertices(vertex_maps[i][group_member_idx].begin(), vertex_maps[i][group_member_idx].end());
+                        std::sort(sorted_component_vertices.begin(), sorted_component_vertices.end());
+
+                        vertex_idx_t<constr_graph_t> subdag_vertex = 0;
+                        for (const auto &vertex : sorted_component_vertices) {
+                            const unsigned proc_in_sub_sched = sub_schedule.assignedProcessor(subdag_vertex);
+                            const unsigned proc_type = sub_architecture.processorType(proc_in_sub_sched);
+                            const unsigned local_proc_id_within_type = proc_in_sub_sched - sub_proc_type_corrections[proc_type];
+                            unsigned global_proc_id = global_ids_by_type[proc_type][current_member_proc_offsets[proc_type] + local_proc_id_within_type];
+                            
+                            schedule.setAssignedProcessor(vertex, global_proc_id);
+                            schedule.setAssignedSuperstep(vertex, superstep_offset + sub_schedule.assignedSuperstep(subdag_vertex));
+                            subdag_vertex++;
+                        }
+                        // Advance the offsets for the next member's block
+                        for (size_t k = 0; k < sub_proc_type_count.size(); ++k) {
+                            current_member_proc_offsets[k] += sub_proc_type_count[k];
+                        }
                     }
+                    max_number_supersteps = std::max(max_number_supersteps, sub_schedule.numberOfSupersteps());
                 }
-                max_number_supersteps = std::max(max_number_supersteps, sub_schedule.numberOfSupersteps());
+
+                // Advance main offsets by the total processors used by the entire group
+                for (size_t k = 0; k < procs_for_group.size(); ++k) {
+                    proc_type_offsets[k] += procs_for_group[k];
+                }
             }
             superstep_offset += max_number_supersteps;
         }
@@ -282,7 +312,7 @@ class WavefrontComponentScheduler : public Scheduler<Graph_t> {
         unsigned superstep_offset = 0;
 
         for (std::size_t i = 0; i < vertex_maps.size(); ++i) { // For each wavefront set
-            if constexpr (enable_debug_prints) std::cout << "\n--- Processing Wavefront Set " << i << " (No Isomorphism) ---" << std::endl;
+            if (enable_debug_prints) std::cout << "\n--- Processing Wavefront Set " << i << " (No Isomorphism) ---" << std::endl;
             
             const auto& components = vertex_maps[i];
             std::vector<constr_graph_t> sub_dags(components.size());
@@ -303,7 +333,7 @@ class WavefrontComponentScheduler : public Scheduler<Graph_t> {
                     sum_compatible += sumOfCompatibleWorkWeights(sub_dags[j], instance, type_idx);
                 }
                 if (sum_compatible > total_work + 1e-9) {
-                    if constexpr (enable_debug_prints) std::cerr << "ERROR: Sum of compatible work exceeds total work. Aborting." << std::endl;
+                    if (enable_debug_prints) std::cerr << "ERROR: Sum of compatible work exceeds total work. Aborting." << std::endl;
                     return RETURN_STATUS::ERROR;
                 }
             }
@@ -342,7 +372,6 @@ class WavefrontComponentScheduler : public Scheduler<Graph_t> {
                 }
 
                 vertex_idx_t<constr_graph_t> subdag_vertex = 0;
-                // This needs to be a sorted list of vertices to map correctly to the induced subgraph
                 std::vector<vertex_idx_t<Graph_t>> sorted_component_vertices(components[j].begin(), components[j].end());
                 std::sort(sorted_component_vertices.begin(), sorted_component_vertices.end());
 
