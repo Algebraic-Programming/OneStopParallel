@@ -23,6 +23,7 @@ limitations under the License.
 
 #include "osp/concepts/graph_traits.hpp"
 #include "osp/graph_algorithms/subgraph_algorithms.hpp"
+#include "osp/dag_divider/MerkleHashComputer.hpp"
 
 namespace osp {
 
@@ -137,46 +138,80 @@ class IsomorphismGroups {
             }
         }
 
-        // for (size_t i = 0; i < vertex_maps.size(); i++) {
-
-        //     if (isomorphism_groups[i].size() > 1)
-        //         continue;
-
-        //     for (size_t j = 0; j < isomorphism_groups[i].size(); j++) {
-
-        //         const size_t size = isomorphism_groups[i][j].size();
-
-        //         if (size > 8u) {
-
-        //             std::cout << "iso group more than 8 components " << size << std::endl;
-
-        //             if ((size & (size - 1)) == 0) {
-
-        //                 size_t mult = size / 8;
-        //                 std::cout << "mult: " << mult << std::endl;
-
-        //                 std::vector<std::vector<size_t>> new_groups(8);
-
-        //                 unsigned idx = 0;
-        //                 for (auto& group : new_groups) {
-
-        //                     for (size_t k = 0; k < mult; k++) {
-        //                         group.insert(group.end(), vertex_maps[i][isomorphism_groups[i][j][idx]].begin(),
-        //                         vertex_maps[i][isomorphism_groups[i][j][idx]].end()); idx++;
-        //                     }
-        //                     std::sort(group.begin(), group.end());
-        //                 }
-
-        //                 vertex_maps[i] = new_groups;
-        //                 isomorphism_groups[i] = std::vector<std::vector<std::size_t>>(1, std::vector<std::size_t>({0,1,2,3,4,5,6,7}));                         
-        //                 isomorphism_groups_subgraphs[i] = std::vector<Constr_Graph_t>(1);                                                 
-        //                 create_induced_subgraph(dag, isomorphism_groups_subgraphs[i][0], new_groups[0]);
-        //             }
-        //         }
-        //     }
-        // }
-
         print_isomorphism_groups();
+    }
+
+    /**
+     * @brief Merges large isomorphism groups to avoid resource scarcity in the scheduler.
+     * * @param vertex_maps The original vertex maps, which will be modified in place.
+     * @param dag The full computational DAG.
+     * @param merge_threshold If a group has more members than this, it will be merged.
+     * @param target_group_count The number of larger groups to create from a single large group.
+     */
+    void merge_large_isomorphism_groups(
+        std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>>& vertex_maps,
+        const Graph_t& dag,
+        size_t merge_threshold,
+        size_t target_group_count = 8) {
+
+        // Ensure the merge logic is sound: the threshold must be larger than the target.
+        assert(merge_threshold > target_group_count);
+
+        for (size_t i = 0; i < isomorphism_groups.size(); ++i) {
+            
+            std::vector<std::vector<vertex_idx_t<Graph_t>>> new_vertex_maps_for_level;
+            std::vector<std::vector<std::size_t>> new_iso_groups_for_level;
+            std::vector<Constr_Graph_t> new_iso_subgraphs_for_level;
+            
+            size_t new_component_idx = 0;
+
+            for (size_t j = 0; j < isomorphism_groups[i].size(); ++j) {
+                const auto& group = isomorphism_groups[i][j];
+                
+                if (group.size() <= merge_threshold) {
+                    // This group is small enough, copy it over as is.
+                    std::vector<std::size_t> new_group;
+                    for (const auto& original_comp_idx : group) {
+                        new_vertex_maps_for_level.push_back(vertex_maps[i][original_comp_idx]);
+                        new_group.push_back(new_component_idx++);
+                    }
+                    new_iso_groups_for_level.push_back(new_group);
+                    new_iso_subgraphs_for_level.push_back(isomorphism_groups_subgraphs[i][j]);
+                } else {
+                    // This group is too large and needs to be merged.
+                    std::cout << "Merging iso group of size " << group.size() << " into " << target_group_count << " new groups." << std::endl;
+                    
+                    size_t base_mult = group.size() / target_group_count;
+                    size_t remainder = group.size() % target_group_count;
+                    
+                    std::vector<std::size_t> new_merged_group_indices;
+                    size_t current_original_idx = 0;
+
+                    for (size_t k = 0; k < target_group_count; ++k) {
+                        std::vector<vertex_idx_t<Graph_t>> merged_component;
+                        size_t num_to_merge = base_mult + (k < remainder ? 1 : 0);
+
+                        for (size_t m = 0; m < num_to_merge; ++m) {
+                            const auto& original_comp = vertex_maps[i][group[current_original_idx++]];
+                            merged_component.insert(merged_component.end(), original_comp.begin(), original_comp.end());
+                        }
+                        std::sort(merged_component.begin(), merged_component.end());
+                        new_vertex_maps_for_level.push_back(merged_component);
+                        new_merged_group_indices.push_back(new_component_idx++);
+                    }
+
+                    new_iso_groups_for_level.push_back(new_merged_group_indices);
+                    Constr_Graph_t new_rep_subgraph;
+                    create_induced_subgraph(dag, new_rep_subgraph, new_vertex_maps_for_level.back());
+                    new_iso_subgraphs_for_level.push_back(new_rep_subgraph);
+                }
+            }
+            // Replace the old level data with the new, potentially merged data.
+            vertex_maps[i] = new_vertex_maps_for_level;
+            isomorphism_groups[i] = new_iso_groups_for_level;
+            isomorphism_groups_subgraphs[i] = new_iso_subgraphs_for_level;
+        }
+        // print_isomorphism_groups();
     }
 };
 
