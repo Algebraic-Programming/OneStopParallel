@@ -118,5 +118,50 @@ class MerkleHashComputer {
     }
 };
 
+/**
+ * @brief Tests if two graphs are isomorphic based on their Merkle hashes.
+ *
+ * This function provides a strong heuristic for isomorphism. It is fast but not a
+ * definitive proof. The direction of the hash (forward or backward) and the 
+ * node-level hash function can be customized via template parameters.
+ *
+ * @tparam Graph_t The graph type, which must be a directed graph.
+ * @tparam node_hash_func_t The function object type to use for hashing individual nodes.
+ * @tparam Forward If true, computes a forward (top-down) hash; if false, a backward (bottom-up) hash.
+ * @param g1 The first graph.
+ * @param g2 The second graph.
+ * @return True if the graphs are likely isomorphic based on Merkle hashes, false otherwise.
+ */
+template<typename Graph_t, typename node_hash_func_t = default_node_hash_func<vertex_idx_t<Graph_t>>, bool Forward = true>
+bool are_isomorphic_by_merkle_hash(const Graph_t& g1, const Graph_t& g2) {
+    // Basic check: Different numbers of vertices or edges mean they can't be isomorphic.
+    if (g1.num_vertices() != g2.num_vertices() || g1.num_edges() != g2.num_edges()) {
+        return false;
+    }
+
+    // --- Compute Hashes in the Specified Direction ---
+    MerkleHashComputer<Graph_t, node_hash_func_t, Forward> hash1(g1);
+    MerkleHashComputer<Graph_t, node_hash_func_t, Forward> hash2(g2);
+    
+    const auto& orbits1 = hash1.get_orbits();
+    const auto& orbits2 = hash2.get_orbits();
+
+    if (orbits1.size() != orbits2.size()) {
+        return false;
+    }
+
+    for (const auto& pair : orbits1) {
+        const std::size_t hash = pair.first;
+        const auto& orbit_vec = pair.second;
+
+        auto it = orbits2.find(hash);
+        if (it == orbits2.end() || it->second.size() != orbit_vec.size()) {
+            return false;
+        }
+    }
+    
+    return true;
+}
+
 
 } // namespace osp
