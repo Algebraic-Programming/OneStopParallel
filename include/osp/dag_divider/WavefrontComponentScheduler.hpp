@@ -123,6 +123,30 @@ class WavefrontComponentScheduler : public Scheduler<Graph_t> {
         return sub_architecture;
     }
 
+    /**
+     * @brief Helper function to validate that compatible work does not exceed total work.
+     * @return True if the distribution is valid, false otherwise.
+     */
+    bool validateWorkDistribution(const std::vector<constr_graph_t>& sub_dags, const BspInstance<Graph_t>& instance) {
+        const auto& original_arch = instance.getArchitecture();
+        for (const auto& rep_sub_dag : sub_dags) {
+            const double total_rep_work = sumOfVerticesWorkWeights(rep_sub_dag);
+            
+            double sum_of_compatible_works_for_rep = 0.0;
+            for (unsigned type_idx = 0; type_idx < original_arch.getNumberOfProcessorTypes(); ++type_idx) {
+                sum_of_compatible_works_for_rep += sumOfCompatibleWorkWeights(rep_sub_dag, instance, type_idx);
+            }
+
+            if (sum_of_compatible_works_for_rep > total_rep_work + 1e-9) {
+                if constexpr (enable_debug_prints) std::cerr << "ERROR: Sum of compatible work (" << sum_of_compatible_works_for_rep 
+                                              << ") exceeds total work (" << total_rep_work 
+                                              << ") for a sub-dag. Aborting." << std::endl;
+                return false;
+            }
+        }
+        return true;
+    }
+
 
     RETURN_STATUS computeSchedule_with_isomorphism_groups(BspSchedule<Graph_t> &schedule) {
         const auto &instance = schedule.getInstance();
@@ -142,7 +166,7 @@ class WavefrontComponentScheduler : public Scheduler<Graph_t> {
         unsigned superstep_offset = 0;
 
         for (std::size_t i = 0; i < isomorphism_groups.size(); ++i) {
-            if (enable_debug_prints) std::cout << "\n--- Processing Wavefront Set " << i << " ---" << std::endl;
+            if constexpr (enable_debug_prints) std::cout << "\n--- Processing Wavefront Set " << i << " ---" << std::endl;
 
             std::vector<std::vector<double>> group_work_by_type(
                 isomorphism_groups[i].size(), std::vector<double>(original_proc_type_count.size(), 0.0));
@@ -155,21 +179,14 @@ class WavefrontComponentScheduler : public Scheduler<Graph_t> {
                 }
             }
 
-            // --- VALIDATION STEP ---
-            for (std::size_t j = 0; j < isomorphism_groups[i].size(); ++j) {
-                const constr_graph_t &rep_sub_dag = iso_groups.get_isomorphism_groups_subgraphs()[i][j];
-                const double total_rep_work = sumOfVerticesWorkWeights(rep_sub_dag);
-                
-                double sum_of_compatible_works_for_rep = 0.0;
-                for (unsigned type_idx = 0; type_idx < original_proc_type_count.size(); ++type_idx) {
-                    sum_of_compatible_works_for_rep += sumOfCompatibleWorkWeights(rep_sub_dag, instance, type_idx);
+            assert([&]() {
+                std::vector<constr_graph_t> rep_sub_dags;
+                for(size_t j = 0; j < isomorphism_groups[i].size(); ++j) {
+                    rep_sub_dags.push_back(iso_groups.get_isomorphism_groups_subgraphs()[i][j]);
                 }
+                return validateWorkDistribution(rep_sub_dags, instance);
+            }());
 
-                if (sum_of_compatible_works_for_rep > total_rep_work + 1e-9) {
-                    if (enable_debug_prints) std::cerr << "ERROR: Sum of compatible work exceeds total work. Aborting." << std::endl;
-                    return RETURN_STATUS::ERROR;
-                }
-            }
 
             std::vector<std::vector<unsigned>> group_proc_allocations(isomorphism_groups[i].size(), std::vector<unsigned>(original_proc_type_count.size()));
             for(unsigned type_idx = 0; type_idx < original_proc_type_count.size(); ++type_idx) {
@@ -183,6 +200,17 @@ class WavefrontComponentScheduler : public Scheduler<Graph_t> {
                 auto type_alloc = distributeProcessors(original_proc_type_count[type_idx], work_for_this_type, total_work_for_this_type);
                 for(size_t group_idx = 0; group_idx < isomorphism_groups[i].size(); ++group_idx) {
                     group_proc_allocations[group_idx][type_idx] = type_alloc[group_idx];
+                }
+            }
+
+            if constexpr (enable_debug_prints) {
+                std::cout << "Processor Allocation for this Wavefront Set:" << std::endl;
+                for (size_t j = 0; j < group_proc_allocations.size(); ++j) {
+                    std::cout << "  Iso Group " << j << " (" << isomorphism_groups[i][j].size() << " copies): { ";
+                    for (unsigned type_idx = 0; type_idx < group_proc_allocations[j].size(); ++type_idx) {
+                        std::cout << "Type " << type_idx << ": " << group_proc_allocations[j][type_idx] << "; ";
+                    }
+                    std::cout << "}" << std::endl;
                 }
             }
 
@@ -205,12 +233,18 @@ class WavefrontComponentScheduler : public Scheduler<Graph_t> {
 
                 if (scarcity_found) {
                     // --- SCARCITY CASE: Schedule sequentially on the shared processor block ---
-                    if (enable_debug_prints) std::cout << "  Group " << j << ": Scarcity detected. Scheduling " << num_members << " copies sequentially." << std::endl;
+                    if constexpr (enable_debug_prints) std::cout << "  Group " << j << ": Scarcity detected. Scheduling " << num_members << " copies sequentially." << std::endl;
                     
-                    BspArchitecture<constr_graph_t> sub_architecture = createSubArchitecture(original_arch, procs_for_group);
-                    const constr_graph_t &rep_sub_dag = iso_groups.get_isomorphism_groups_subgraphs()[i][j];
-                    BspInstance<constr_graph_t> sub_instance(rep_sub_dag, sub_architecture);
+                    BspInstance<constr_graph_t> sub_instance(iso_groups.get_isomorphism_groups_subgraphs()[i][j], createSubArchitecture(original_arch, procs_for_group));
                     sub_instance.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
+                    auto & sub_architecture = sub_instance.getArchitecture();
+                    if constexpr (enable_debug_prints) {
+                        std::cout << "    Sub-architecture for sequential scheduling: { ";
+                        for (unsigned type_idx = 0; type_idx < sub_architecture.getNumberOfProcessorTypes(); ++type_idx) {
+                            std::cout << "Type " << type_idx << ": " << sub_architecture.getProcessorTypeCount()[type_idx] << "; ";
+                        }
+                        std::cout << "}" << std::endl;
+                    }             
 
                     unsigned sequential_superstep_offset = 0;
                     for (const auto &group_member_idx : isomorphism_groups[i][j]) {
@@ -220,9 +254,10 @@ class WavefrontComponentScheduler : public Scheduler<Graph_t> {
 
                         const auto sub_proc_type_count = sub_architecture.getProcessorTypeCount();
                         std::vector<unsigned> sub_proc_type_corrections(sub_architecture.getNumberOfProcessorTypes(), 0);
-                        for (std::size_t k = 1; k < sub_proc_type_corrections.size(); ++k) sub_proc_type_corrections[k] = sub_proc_type_corrections[k - 1] + sub_proc_type_count[k - 1];
+                        for (std::size_t k = 1; k < sub_proc_type_corrections.size(); ++k) {
+                            sub_proc_type_corrections[k] = sub_proc_type_corrections[k - 1] + sub_proc_type_count[k - 1];
+                        }
 
-                        // --- BUG FIX: Sort vertices to ensure consistent mapping ---
                         std::vector<vertex_idx_t<Graph_t>> sorted_component_vertices(vertex_maps[i][group_member_idx].begin(), vertex_maps[i][group_member_idx].end());
                         std::sort(sorted_component_vertices.begin(), sorted_component_vertices.end());
                         
@@ -243,16 +278,26 @@ class WavefrontComponentScheduler : public Scheduler<Graph_t> {
 
                 } else {
                     // --- ABUNDANCE CASE: Replicate Schedule ---
-                    if (enable_debug_prints && num_members > 0) std::cout << "  Group " << j << ": Abundance detected. Replicating schedule for " << num_members << " copies." << std::endl;
+                    if constexpr (enable_debug_prints) {
+                        if (num_members > 0) std::cout << "  Group " << j << ": Abundance detected. Replicating schedule for " << num_members << " copies." << std::endl;
+                    }
                     
                     std::vector<unsigned> single_sub_dag_proc_types = procs_for_group;
                     if (num_members > 0) {
                         for(auto& count : single_sub_dag_proc_types) count /= static_cast<unsigned>(num_members);
                     }
 
-                    BspArchitecture<constr_graph_t> sub_architecture = createSubArchitecture(original_arch, single_sub_dag_proc_types);
-                    BspInstance<constr_graph_t> sub_instance(iso_groups.get_isomorphism_groups_subgraphs()[i][j], sub_architecture);
+                    BspInstance<constr_graph_t> sub_instance(iso_groups.get_isomorphism_groups_subgraphs()[i][j], createSubArchitecture(original_arch, single_sub_dag_proc_types));
                     sub_instance.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
+                    BspArchitecture<constr_graph_t> & sub_architecture = sub_instance.getArchitecture();
+
+                    if constexpr (enable_debug_prints) {
+                        std::cout << "    Sub-architecture for replication: { ";
+                        for (unsigned type_idx = 0; type_idx < sub_architecture.getNumberOfProcessorTypes(); ++type_idx) {
+                            std::cout << "Type " << type_idx << ": " << sub_architecture.getProcessorTypeCount()[type_idx] << "; ";
+                        }
+                        std::cout << "}" << std::endl;
+                    }
 
                     BspSchedule<constr_graph_t> sub_schedule(sub_instance);
                     auto status = scheduler->computeSchedule(sub_schedule);
@@ -264,7 +309,6 @@ class WavefrontComponentScheduler : public Scheduler<Graph_t> {
 
                     std::vector<unsigned> current_member_proc_offsets = proc_type_offsets;
                     for (const auto &group_member_idx : isomorphism_groups[i][j]) {
-                        // --- BUG FIX: Sort vertices to ensure consistent mapping ---
                         std::vector<vertex_idx_t<Graph_t>> sorted_component_vertices(vertex_maps[i][group_member_idx].begin(), vertex_maps[i][group_member_idx].end());
                         std::sort(sorted_component_vertices.begin(), sorted_component_vertices.end());
 
@@ -279,7 +323,6 @@ class WavefrontComponentScheduler : public Scheduler<Graph_t> {
                             schedule.setAssignedSuperstep(vertex, superstep_offset + sub_schedule.assignedSuperstep(subdag_vertex));
                             subdag_vertex++;
                         }
-                        // Advance the offsets for the next member's block
                         for (size_t k = 0; k < sub_proc_type_count.size(); ++k) {
                             current_member_proc_offsets[k] += sub_proc_type_count[k];
                         }
@@ -325,18 +368,7 @@ class WavefrontComponentScheduler : public Scheduler<Graph_t> {
                 }
             }
 
-            // Validation Step
-            for (std::size_t j = 0; j < components.size(); ++j) {
-                const double total_work = sumOfVerticesWorkWeights(sub_dags[j]);
-                double sum_compatible = 0.0;
-                for (unsigned type_idx = 0; type_idx < original_proc_type_count.size(); ++type_idx) {
-                    sum_compatible += sumOfCompatibleWorkWeights(sub_dags[j], instance, type_idx);
-                }
-                if (sum_compatible > total_work + 1e-9) {
-                    if (enable_debug_prints) std::cerr << "ERROR: Sum of compatible work exceeds total work. Aborting." << std::endl;
-                    return RETURN_STATUS::ERROR;
-                }
-            }
+            assert(validateWorkDistribution(sub_dags, instance));
 
             // Distribute Processors
             std::vector<std::vector<unsigned>> proc_allocations(components.size(), std::vector<unsigned>(original_proc_type_count.size()));
@@ -358,6 +390,14 @@ class WavefrontComponentScheduler : public Scheduler<Graph_t> {
 
             for (std::size_t j = 0; j < components.size(); ++j) {
                 BspArchitecture<constr_graph_t> sub_architecture = createSubArchitecture(original_arch, proc_allocations[j]);
+                if constexpr (enable_debug_prints) {
+                    std::cout << "  Component " << j << " sub-architecture: { ";
+                    for (unsigned type_idx = 0; type_idx < sub_architecture.getNumberOfProcessorTypes(); ++type_idx) {
+                        std::cout << "Type " << type_idx << ": " << sub_architecture.getProcessorTypeCount()[type_idx] << "; ";
+                    }
+                    std::cout << "}" << std::endl;
+                }
+
                 BspInstance<constr_graph_t> sub_instance(sub_dags[j], sub_architecture);
                 sub_instance.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
 
