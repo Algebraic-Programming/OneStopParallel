@@ -371,6 +371,9 @@ struct vertex_selection_strategy {
 
     void select_nodes_max_work_proc(const std::size_t & threshold, container_t & node_selection) {        
         while (node_selection.size() < threshold - 1) {
+            if (max_work_counter >= active_schedule->num_steps())
+                max_work_counter = 0;
+                
             select_nodes_max_work_proc_helper(threshold - node_selection.size(), max_work_counter, node_selection);
             max_work_counter++;
             if(max_work_counter >= active_schedule->num_steps()) {

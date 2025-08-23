@@ -807,7 +807,7 @@ void kl_improver<Graph_t, comm_cost_function_t, MemoryConstraint_t, window_size,
 
         for (const unsigned proc : proc_range.compatible_processors_vertex(node)) { 
             const work_weight_t new_weight = vertex_weight + active_schedule.get_step_processor_work(step, proc);
-            affinity_table[node][proc][idx] = std::max(0, new_weight - max_work_for_step);
+            affinity_table[node][proc][idx] = std::max(static_cast<v_workw_t<Graph_t>>(0), new_weight - max_work_for_step);
         }
     }
 

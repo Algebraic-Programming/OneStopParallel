@@ -27,6 +27,10 @@ limitations under the License.
 #include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 #include "osp/auxiliary/io/dot_graph_file_reader.hpp"
 #include "osp/dag_divider/IsomorphismGroups.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/BspLocking.hpp"
+#include "osp/bsp/scheduler/ImprovementScheduler.hpp"
+#include "osp/dag_divider/WavefrontComponentScheduler.hpp"
+#include "osp/bsp/scheduler/LocalSearch/KernighanLin_v2/kl_include.hpp"
 
 #include <filesystem>
 #include <iostream>
@@ -38,8 +42,6 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test)
 
     using graph_t = computational_dag_vector_impl_def_t;
 
-    graph_t graph;
-
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
     std::cout << cwd << std::endl;
@@ -48,22 +50,36 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test)
         std::cout << cwd << std::endl;
     }
 
-    file_reader::readComputationalDagDotFormat("/home/toni/work/data/ast/dynamic_pa_high_throughput_dview_large.dot", graph);
+    BspInstance<graph_t> instance;
+    file_reader::readComputationalDagDotFormat("/home/toni/work/data/ast/MlaPrologV2_bfloat16_4_32_1_256_7168_1536.dot", instance.getComputationalDag());
 
+    instance.getArchitecture().setProcessorsWithTypes({0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1});
+    instance.setDiagonalCompatibilityMatrix(2);
 
-    
-
-
+    BspLocking<graph_t> greedy;
+    //kl_total_comm_improver<graph_t> kl;
+    //ComboScheduler<graph_t> combo(greedy, kl);
 
     WavefrontComponentDivider<graph_t> wavefront;
     wavefront.set_split_method(WavefrontComponentDivider<graph_t>::MIN_DIFF);
+
+    WavefrontComponentScheduler<graph_t, graph_t> scheduler(wavefront, greedy);
+    scheduler.set_check_isomorphism_groups(true);
+
+    BspSchedule<graph_t> schedule(instance);
+
+    scheduler.computeSchedule(schedule);
+
+    BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+    BOOST_CHECK(schedule.satisfiesNodeTypeConstraints());
+
     // WavefrontMerkleDivider<graph_t> divider; 
 
 
-    auto maps = wavefront.divide(graph);
+    // auto maps = wavefront.divide(graph);
 
-    IsomorphismGroups<graph_t, graph_t> iso_groups;
-    iso_groups.compute_isomorphism_groups(maps, graph);
+    // IsomorphismGroups<graph_t, graph_t> iso_groups;
+    // iso_groups.compute_isomorphism_groups(maps, graph);
 
     
     // auto other_graph = iso_groups.get_isomorphism_groups_subgraphs()[1][0];

@@ -88,6 +88,34 @@ v_commw_t<Graph_t> sumOfVerticesCommunicationWeights(VertexIterator begin, Verte
     });
 }
 
+/**
+ * @brief Calculates the sum of work weights for vertices compatible with a specific processor type.
+ * @tparam SubGraph_t The type of the subgraph being analyzed.
+ * @tparam Instance_t The type of the instance object (e.g., BspInstance) used for compatibility checks.
+ * @tparam VertexIterator An iterator over vertex indices of the subgraph.
+ */
+template<typename SubGraph_t, typename Instance_t, typename VertexIterator>
+v_workw_t<SubGraph_t> sumOfCompatibleWorkWeights(VertexIterator begin, VertexIterator end, const SubGraph_t &graph,
+                                                 const Instance_t& main_instance, unsigned processorType) {
+    static_assert(has_vertex_weights_v<SubGraph_t>, "SubGraph_t must have vertex weights");
+    return std::accumulate(begin, end, static_cast<v_workw_t<SubGraph_t>>(0),
+        [&](const v_workw_t<SubGraph_t> sum, const vertex_idx_t<SubGraph_t> &v) {
+            if (main_instance.isCompatibleType(graph.vertex_type(v), processorType)) {
+                return sum + graph.vertex_work_weight(v);
+            }
+            return sum;
+        });
+}
+
+/**
+ * @brief Overload to calculate compatible work weight for all vertices in a graph.
+ */
+template<typename SubGraph_t, typename Instance_t>
+v_workw_t<SubGraph_t> sumOfCompatibleWorkWeights(const SubGraph_t &graph, const Instance_t& main_instance,
+                                                 unsigned processorType) {
+    return sumOfCompatibleWorkWeights(graph.vertices().begin(), graph.vertices().end(), graph, main_instance, processorType);
+}
+
 template<typename Graph_t>
 v_commw_t<Graph_t> sumOfVerticesCommunicationWeights(const Graph_t &graph) {
     static_assert(has_vertex_weights_v<Graph_t>, "Graph_t must have vertex weights");
