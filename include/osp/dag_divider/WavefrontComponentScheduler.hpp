@@ -19,7 +19,6 @@ limitations under the License.
 #pragma once
 #include "DagDivider.hpp"
 #include "IsomorphismGroups.hpp"
-#include "WavefrontComponentDivider.hpp"
 #include "osp/bsp/scheduler/Scheduler.hpp"
 #include "osp/graph_algorithms/computational_dag_util.hpp"
 #include "osp/graph_algorithms/subgraph_algorithms.hpp"

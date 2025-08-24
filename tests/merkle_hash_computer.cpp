@@ -19,7 +19,7 @@ limitations under the License.
 #define BOOST_TEST_MODULE BSP_SCHEDULE_RECOMP
 #include <boost/test/unit_test.hpp>
 
-#include "osp/dag_divider/MerkleHashComputer.hpp"
+#include "osp/dag_divider/isomorphism_divider/MerkleHashComputer.hpp"
 #include "osp/graph_algorithms/directed_graph_util.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 #include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
