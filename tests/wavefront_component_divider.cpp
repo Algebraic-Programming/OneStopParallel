@@ -19,7 +19,10 @@ limitations under the License.
 
 #define BOOST_TEST_MODULE SequenceSplitterTest
 #include <boost/test/unit_test.hpp>
+#include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "osp/dag_divider/wavefront_divider/SequenceSplitter.hpp" 
+#include "osp/dag_divider/wavefront_divider/WavefrontStatisticsCollector.hpp"
+
 
 BOOST_AUTO_TEST_CASE(VarianceSplitterTest) {
     osp::VarianceSplitter splitter(0.5, 0.1);
@@ -114,4 +117,90 @@ BOOST_AUTO_TEST_CASE(ThresholdScanSplitterTest) {
     std::vector<double> seq5 = {};
     std::vector<size_t> splits5 = splitter.split(seq5);
     BOOST_CHECK(splits5.empty());
+}
+
+using graph = osp::computational_dag_edge_idx_vector_impl_def_int_t;
+using VertexType = graph::vertex_idx;
+
+BOOST_AUTO_TEST_CASE(ForwardAndBackwardPassTest) {
+    
+    graph dag;
+    const auto v1 = dag.add_vertex(2, 1, 9);
+    const auto v2 = dag.add_vertex(3, 1, 8);
+    const auto v3 = dag.add_vertex(4, 1, 7);
+    const auto v4 = dag.add_vertex(5, 1, 6);
+    const auto v5 = dag.add_vertex(6, 1, 5);
+    const auto v6 = dag.add_vertex(7, 1, 4);
+    const auto v7 = dag.add_vertex(8, 1, 3); // Note: v7 is not connected in the example
+    const auto v8 = dag.add_vertex(9, 1, 2);
+
+    dag.add_edge(v1, v2);
+    dag.add_edge(v1, v3);
+    dag.add_edge(v1, v4);
+    dag.add_edge(v2, v5);
+    dag.add_edge(v2, v6);
+    dag.add_edge(v3, v5);
+    dag.add_edge(v3, v6);
+    dag.add_edge(v5, v8);
+    dag.add_edge(v4, v8);
+
+    // Manually defined level sets for this DAG
+    const std::vector<std::vector<VertexType>> level_sets = {
+        {v1},       // Level 0
+        {v2, v3, v4}, // Level 1
+        {v5, v6},   // Level 2
+        {v8},       // Level 3
+        {v7}        // Level 4 (isolated vertex)
+    };
+
+    osp::WavefrontStatisticsCollector<graph> collector(dag, level_sets);
+
+    // --- Test Forward Pass ---
+    auto forward_stats = collector.compute_forward();
+    BOOST_REQUIRE_EQUAL(forward_stats.size(), 5);
+
+    // Level 0
+    BOOST_CHECK_EQUAL(forward_stats[0].connected_components_vertices.size(), 1);
+    BOOST_CHECK_EQUAL(forward_stats[0].connected_components_weights[0], 2);
+    BOOST_CHECK_EQUAL(forward_stats[0].connected_components_memories[0], 9);
+
+    // Level 1
+    BOOST_CHECK_EQUAL(forward_stats[1].connected_components_vertices.size(), 1);
+    BOOST_CHECK_EQUAL(forward_stats[1].connected_components_weights[0], 2 + 3 + 4 + 5); // v1,v2,v3,v4
+    BOOST_CHECK_EQUAL(forward_stats[1].connected_components_memories[0], 9 + 8 + 7 + 6);
+
+    // Level 2
+    BOOST_CHECK_EQUAL(forward_stats[2].connected_components_vertices.size(), 1);
+    BOOST_CHECK_EQUAL(forward_stats[2].connected_components_weights[0], 14 + 6 + 7); // v1-v6
+    BOOST_CHECK_EQUAL(forward_stats[2].connected_components_memories[0], 30 + 5 + 4);
+
+    // Level 3
+    BOOST_CHECK_EQUAL(forward_stats[3].connected_components_vertices.size(), 1);
+    BOOST_CHECK_EQUAL(forward_stats[3].connected_components_weights[0], 27 + 9); // v1-v6, v8
+    BOOST_CHECK_EQUAL(forward_stats[3].connected_components_memories[0], 39 + 2);
+
+    // Level 4 (isolated vertex shows up as a new component)
+    BOOST_CHECK_EQUAL(forward_stats[4].connected_components_vertices.size(), 2);
+
+
+    // --- Test Backward Pass ---
+    auto backward_stats = collector.compute_backward();
+    BOOST_REQUIRE_EQUAL(backward_stats.size(), 5);
+
+    // Level 4
+    BOOST_CHECK_EQUAL(backward_stats[4].connected_components_vertices.size(), 1);
+    BOOST_CHECK_EQUAL(backward_stats[4].connected_components_weights[0], 8); // v7
+    BOOST_CHECK_EQUAL(backward_stats[4].connected_components_memories[0], 3);
+
+    // Level 3
+    BOOST_CHECK_EQUAL(backward_stats[3].connected_components_vertices.size(), 2); // {v8}, {v7}
+
+    // Level 2
+    BOOST_CHECK_EQUAL(backward_stats[2].connected_components_vertices.size(), 3); // {v5,v8}, {v6}, {v7}
+
+    // Level 1
+    BOOST_CHECK_EQUAL(backward_stats[1].connected_components_vertices.size(), 2); // {v2,v3,v4,v5,v6,v8}, {v7}
+
+    // Level 0
+    BOOST_CHECK_EQUAL(backward_stats[0].connected_components_vertices.size(), 2); // {v1-v6,v8}, {v7}
 }
