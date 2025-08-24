@@ -23,6 +23,8 @@ limitations under the License.
 #include "osp/dag_divider/wavefront_divider/SequenceSplitter.hpp" 
 #include "osp/dag_divider/wavefront_divider/WavefrontStatisticsCollector.hpp"
 #include "osp/dag_divider/wavefront_divider/SequenceGenerator.hpp" 
+#include "osp/dag_divider/wavefront_divider/ScanWavefrontDivider.hpp"
+#include "osp/dag_divider/wavefront_divider/RecursiveWavefrontDivider.hpp"
 
 BOOST_AUTO_TEST_CASE(VarianceSplitterTest) {
     osp::VarianceSplitter splitter(0.5, 0.1);
@@ -255,3 +257,191 @@ BOOST_AUTO_TEST_CASE(SequenceGenerationTest) {
         BOOST_CHECK_CLOSE(parallelism_seq[i], expected_parallelism[i], 1e-9);
     }
 }
+
+struct TestFixture {
+    graph dag;
+    std::vector<VertexType> vertices;
+
+    TestFixture() {
+        // --- Test Setup ---
+        // Note: The compute_wavefronts method will determine the levels.
+        // The actual level sets for this graph are:
+        // Level 0: {v1, v7}
+        // Level 1: {v2, v3, v4}
+        // Level 2: {v5, v6}
+        // Level 3: {v8}
+        const auto v1 = dag.add_vertex(2, 1, 9);
+        const auto v2 = dag.add_vertex(3, 1, 8);
+        const auto v3 = dag.add_vertex(4, 1, 7);
+        const auto v4 = dag.add_vertex(5, 1, 6);
+        const auto v5 = dag.add_vertex(6, 1, 5);
+        const auto v6 = dag.add_vertex(7, 1, 4);
+        const auto v7 = dag.add_vertex(8, 1, 3); // Isolated vertex
+        const auto v8 = dag.add_vertex(9, 1, 2);
+        
+        vertices = {v1, v2, v3, v4, v5, v6, v7, v8};
+
+        dag.add_edge(v1, v2);
+        dag.add_edge(v1, v3);
+        dag.add_edge(v1, v4);
+        dag.add_edge(v2, v5);
+        dag.add_edge(v2, v6);
+        dag.add_edge(v3, v5);
+        dag.add_edge(v3, v6);
+        dag.add_edge(v5, v8);
+        dag.add_edge(v4, v8);
+    }
+};
+
+BOOST_FIXTURE_TEST_SUITE(ScanWavefrontDividerTestSuite, TestFixture)
+
+BOOST_AUTO_TEST_CASE(LargestStepDivisionTest) {
+    osp::ScanWavefrontDivider<graph> divider;
+    divider.set_metric(osp::SequenceMetric::AVAILABLE_PARALLELISM);
+    divider.set_algorithm(osp::SplitAlgorithm::LARGEST_STEP);
+    // Actual parallelism seq: {10, 11, 11.6667, 11}. Largest step is 1.0 (between 10 and 11).
+    divider.set_largest_step_params(0.9, 2); // Threshold of 0.9 should trigger a cut at level 1.
+
+    auto sections = divider.divide(dag);
+
+    // Expecting a cut after level 0. This results in 2 sections.
+    BOOST_REQUIRE_EQUAL(sections.size(), 2);
+
+    // Section 1: level 0. Components: {v1}, {v7}
+    BOOST_REQUIRE_EQUAL(sections[0].size(), 2);
+
+    // Section 2: levels 1, 2, 3. The rest of the main component.
+    BOOST_REQUIRE_EQUAL(sections[1].size(), 1);
+    BOOST_CHECK_EQUAL(sections[1][0].size(), 6); // v2,v3,v4,v5,v6,v8
+}
+
+BOOST_AUTO_TEST_CASE(ThresholdScanDivisionTest) {
+    osp::ScanWavefrontDivider<graph> divider;
+    divider.set_metric(osp::SequenceMetric::AVAILABLE_PARALLELISM);
+    divider.set_algorithm(osp::SplitAlgorithm::THRESHOLD_SCAN);
+    // Actual parallelism seq: {10, 11, 11.6667, 11}
+    divider.set_threshold_scan_params(2.0, 11.5); // High diff threshold, absolute threshold at 11.5
+
+    auto sections = divider.divide(dag);
+
+    // A cut is expected when the sequence crosses 11.5 (at level 2) and crosses back (at level 3)
+    // The splitter should return cuts at levels 2 and 3.
+    // This results in 3 sections: {levels 0,1}, {level 2}, {level 3}
+    BOOST_REQUIRE_EQUAL(sections.size(), 3);
+
+    // Section 1: levels 0, 1. Components: {v1,v2,v3,v4}, {v7}
+    BOOST_REQUIRE_EQUAL(sections[0].size(), 2);
+    // Section 2: level 2. Vertices {v5, v6}. They are not connected within this level, so they are 2 components.
+    BOOST_REQUIRE_EQUAL(sections[1].size(), 2);
+    // Section 3: level 3. Components: {v8}
+    BOOST_REQUIRE_EQUAL(sections[2].size(), 1);
+}
+
+
+BOOST_AUTO_TEST_CASE(NoCutDivisionTest) {
+    osp::ScanWavefrontDivider<graph> divider;
+    divider.set_metric(osp::SequenceMetric::COMPONENT_COUNT);
+    divider.set_algorithm(osp::SplitAlgorithm::LARGEST_STEP);
+    // Component count sequence is {2, 2, 2, 2}, so largest step is 0.
+    divider.set_largest_step_params(2.0, 2); // High threshold, no cut expected
+
+    auto sections = divider.divide(dag);
+
+    // Expecting a single section containing all components
+    BOOST_REQUIRE_EQUAL(sections.size(), 1);
+    BOOST_REQUIRE_EQUAL(sections[0].size(), 2); // Two final components
+}
+
+BOOST_AUTO_TEST_CASE(EmptyGraphTest) {
+    osp::ScanWavefrontDivider<graph> divider;
+    graph empty_dag;
+    auto sections = divider.divide(empty_dag);
+    BOOST_CHECK(sections.empty());
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+struct TestFixture_2 {
+    graph dag;
+    std::vector<VertexType> vertices;
+
+    TestFixture_2() {
+        // --- Test Setup ---
+        // This graph is designed to have a component count sequence of {2, 2, 2, 1}
+        // to properly test the recursive divider's splitting logic.
+        // Levels: {v1,v2}, {v3,v4}, {v5,v6}, {v7}
+        const auto v1 = dag.add_vertex(1, 1, 1);
+        const auto v2 = dag.add_vertex(1, 1, 1);
+        const auto v3 = dag.add_vertex(1, 1, 1);
+        const auto v4 = dag.add_vertex(1, 1, 1);
+        const auto v5 = dag.add_vertex(1, 1, 1);
+        const auto v6 = dag.add_vertex(1, 1, 1);
+        const auto v7 = dag.add_vertex(1, 1, 1);
+        
+        vertices = {v1, v2, v3, v4, v5, v6, v7};
+
+        dag.add_edge(v1, v3);
+        dag.add_edge(v2, v4);
+        dag.add_edge(v3, v5);
+        dag.add_edge(v4, v6);
+        dag.add_edge(v5, v7);
+        dag.add_edge(v6, v7);
+    }
+};
+
+BOOST_FIXTURE_TEST_SUITE(RecursiveWavefrontDividerTestSuite, TestFixture_2)
+
+BOOST_AUTO_TEST_CASE(BasicRecursionTest) {
+    // The component count sequence is {2, 2, 2, 1}. Largest drop is 1.
+    // A low threshold should trigger a cut.
+    osp::RecursiveWavefrontDivider<graph> divider(0.5, 4); 
+    auto sections = divider.divide(dag);
+
+    // Expecting a cut after level 2, where component count drops from 2 to 1.
+    // This results in 2 sections: {levels 0,1,2} and {level 3}.
+    BOOST_REQUIRE_EQUAL(sections.size(), 2);
+
+    // Section 1: levels 0-2. Components: {v1,v3,v5}, {v2,v4,v6}
+    BOOST_REQUIRE_EQUAL(sections[0].size(), 2);
+
+    // Section 2: level 3. Component: {v7}
+    BOOST_REQUIRE_EQUAL(sections[1].size(), 1);
+    BOOST_CHECK_EQUAL(sections[1][0].size(), 1);
+}
+
+BOOST_AUTO_TEST_CASE(NoCutTest) {
+    // A high threshold should prevent any cuts.
+    osp::RecursiveWavefrontDivider<graph> divider(2.0, 4);
+    auto sections = divider.divide(dag);
+
+    // Expecting a single section containing all components, which merge into one.
+    BOOST_REQUIRE_EQUAL(sections.size(), 1);
+    BOOST_REQUIRE_EQUAL(sections[0].size(), 1);
+}
+
+BOOST_AUTO_TEST_CASE(MinSubsequenceLengthTest) {
+    // The graph has 4 wavefronts. A min_subseq_len of 5 should prevent division.
+    osp::RecursiveWavefrontDivider<graph> divider(0.5, 5);
+    auto sections = divider.divide(dag);
+
+    BOOST_REQUIRE_EQUAL(sections.size(), 1);
+    BOOST_REQUIRE_EQUAL(sections[0].size(), 1);
+}
+
+BOOST_AUTO_TEST_CASE(MaxDepthTest) {
+    // Setting max_depth to 0 should prevent any recursion.
+    osp::RecursiveWavefrontDivider<graph> divider(0.5, 2, 0);
+    auto sections = divider.divide(dag);
+
+    BOOST_REQUIRE_EQUAL(sections.size(), 1);
+    BOOST_REQUIRE_EQUAL(sections[0].size(), 1);
+}
+
+BOOST_AUTO_TEST_CASE(EmptyGraphTest) {
+    osp::RecursiveWavefrontDivider<graph> divider;
+    graph empty_dag;
+    auto sections = divider.divide(empty_dag);
+    BOOST_CHECK(sections.empty());
+}
+
+BOOST_AUTO_TEST_SUITE_END()

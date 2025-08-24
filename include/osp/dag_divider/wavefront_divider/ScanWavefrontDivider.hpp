@@ -17,8 +17,13 @@ limitations under the License.
 */
 #pragma once
 
+#include <vector>
+#include <algorithm>
+#include <iostream>
+#include <memory>
 #include "AbstractWavefrontDivider.hpp"
-
+#include "SequenceSplitter.hpp"
+#include "SequenceGenerator.hpp"
 
 namespace osp {
 
@@ -39,7 +44,9 @@ public:
             std::cout << "[DEBUG] Starting scan-all division." << std::endl;
         }
         std::vector<std::vector<vertex_idx_t<Graph_t>>> level_sets = this->compute_wavefronts(dag);
-        if (level_sets.empty()) return {};
+        if (level_sets.empty()) {
+            return {};
+        }
 
         SequenceGenerator<Graph_t> generator(dag, level_sets);
         std::vector<double> sequence = generator.generate(sequence_metric_);
@@ -108,23 +115,26 @@ private:
 
     std::vector<std::vector<std::vector<VertexType>>> create_vertex_maps_from_cuts(
         const std::vector<size_t>& cut_levels,
-        const std::vector<std::vector<VertexType>>& level_sets) {
+        const std::vector<std::vector<VertexType>>& level_sets) const {
         
         if (cut_levels.empty()) {
-            if (!level_sets.empty()) {
-                return { this->get_components_for_range(0, level_sets.size(), level_sets) };
-            }
-            return {};
+            // If there are no cuts, return a single section with all components.
+            return { this->get_components_for_range(0, level_sets.size(), level_sets) };
         }
 
         std::vector<std::vector<std::vector<VertexType>>> vertex_maps;
         size_t start_level = 0;
 
         for (const auto& cut_level : cut_levels) {
-            vertex_maps.push_back(this->get_components_for_range(start_level, cut_level, level_sets));
+            if (start_level < cut_level) { // Avoid creating empty sections
+                vertex_maps.push_back(this->get_components_for_range(start_level, cut_level, level_sets));
+            }
             start_level = cut_level;
         }
-        vertex_maps.push_back(this->get_components_for_range(start_level, level_sets.size(), level_sets));
+        // Add the final section from the last cut to the end of the levels
+        if (start_level < level_sets.size()) {
+            vertex_maps.push_back(this->get_components_for_range(start_level, level_sets.size(), level_sets));
+        }
 
         return vertex_maps;
     }

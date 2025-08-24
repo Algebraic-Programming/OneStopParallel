@@ -25,6 +25,8 @@ limitations under the License.
 
 namespace osp {
 
+enum class SplitAlgorithm { LARGEST_STEP, VARIANCE, THRESHOLD_SCAN };
+
 /**
  * @class SequenceSplitter
  * @brief Abstract base class for algorithms that split a sequence of numbers.

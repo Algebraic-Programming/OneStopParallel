@@ -18,14 +18,16 @@ limitations under the License.
 #pragma once
 
 #include <vector>
-#include <algorithm>
+#include <numeric>
+#include <queue>
+#include <unordered_map>
+#include <unordered_set>
 #include "osp/auxiliary/datastructures/union_find.hpp"
 #include "SequenceSplitter.hpp"
 #include "SequenceGenerator.hpp"
+#include "osp/dag_divider/DagDivider.hpp"
 
 namespace osp {
-
-enum class SplitAlgorithm { LARGEST_STEP, VARIANCE, THRESHOLD_SCAN };
 
 /**
  * @class AbstractWavefrontDivider
@@ -41,9 +43,13 @@ protected:
 
     const Graph_t* dag_ptr_ = nullptr;
 
+    /**
+     * @brief Helper to get connected components for a specific range of levels.
+     * This method is now const-correct.
+     */
     std::vector<std::vector<VertexType>> get_components_for_range(
         size_t start_level, size_t end_level,
-        const std::vector<std::vector<VertexType>>& level_sets) {
+        const std::vector<std::vector<VertexType>>& level_sets) const {
         
         union_find_universe_t<Graph_t> uf;
         for (size_t i = start_level; i < end_level; ++i) {
@@ -62,12 +68,20 @@ protected:
         return uf.get_connected_components();
     }
 
+    /**
+     * @brief Computes wavefronts for the entire DAG.
+     * This method is now const.
+     */
     std::vector<std::vector<VertexType>> compute_wavefronts(const Graph_t& dag) const {
         std::vector<VertexType> all_vertices(dag.num_vertices());
         std::iota(all_vertices.begin(), all_vertices.end(), 0);
         return compute_wavefronts_for_subgraph(all_vertices);
     }
 
+    /**
+     * @brief Computes wavefronts for a specific subset of vertices.
+     * This method is now const.
+     */
     std::vector<std::vector<VertexType>> compute_wavefronts_for_subgraph(
         const std::vector<VertexType>& vertices) const {
         
