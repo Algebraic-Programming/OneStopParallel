@@ -22,7 +22,7 @@ limitations under the License.
 #include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "osp/dag_divider/wavefront_divider/SequenceSplitter.hpp" 
 #include "osp/dag_divider/wavefront_divider/WavefrontStatisticsCollector.hpp"
-
+#include "osp/dag_divider/wavefront_divider/SequenceGenerator.hpp" 
 
 BOOST_AUTO_TEST_CASE(VarianceSplitterTest) {
     osp::VarianceSplitter splitter(0.5, 0.1);
@@ -203,4 +203,55 @@ BOOST_AUTO_TEST_CASE(ForwardAndBackwardPassTest) {
 
     // Level 0
     BOOST_CHECK_EQUAL(backward_stats[0].connected_components_vertices.size(), 2); // {v1-v6,v8}, {v7}
+}
+
+BOOST_AUTO_TEST_CASE(SequenceGenerationTest) {
+    // --- Test Setup ---
+    graph dag;
+    const auto v1 = dag.add_vertex(2, 1, 9);
+    const auto v2 = dag.add_vertex(3, 1, 8);
+    const auto v3 = dag.add_vertex(4, 1, 7);
+    const auto v4 = dag.add_vertex(5, 1, 6);
+    const auto v5 = dag.add_vertex(6, 1, 5);
+    const auto v6 = dag.add_vertex(7, 1, 4);
+    const auto v7 = dag.add_vertex(8, 1, 3); // Isolated vertex
+    const auto v8 = dag.add_vertex(9, 1, 2);
+
+    dag.add_edge(v1, v2);
+    dag.add_edge(v1, v3);
+    dag.add_edge(v1, v4);
+    dag.add_edge(v2, v5);
+    dag.add_edge(v2, v6);
+    dag.add_edge(v3, v5);
+    dag.add_edge(v3, v6);
+    dag.add_edge(v5, v8);
+    dag.add_edge(v4, v8);
+
+    const std::vector<std::vector<VertexType>> level_sets = {
+        {v1}, {v2, v3, v4}, {v5, v6}, {v8}, {v7}
+    };
+
+    osp::SequenceGenerator<graph> generator(dag, level_sets);
+
+    // --- Test Component Count ---
+    auto component_seq = generator.generate(osp::SequenceMetric::COMPONENT_COUNT);
+    std::vector<double> expected_components = {1.0, 1.0, 1.0, 1.0, 2.0};
+    BOOST_CHECK_EQUAL_COLLECTIONS(component_seq.begin(), component_seq.end(),
+                                  expected_components.begin(), expected_components.end());
+
+    // --- Test Available Parallelism ---
+    auto parallelism_seq = generator.generate(osp::SequenceMetric::AVAILABLE_PARALLELISM);
+    
+    // Manual calculation for expected values:
+    // L0: 2 / 1 = 2
+    // L1: (2 + 3+4+5) / 2 = 14 / 2 = 7
+    // L2: (14 + 6+7) / 3 = 27 / 3 = 9
+    // L3: (27 + 9) / 4 = 36 / 4 = 9
+    // L4: (36 + 8) / 5 = 44 / 5 = 8.8
+    std::vector<double> expected_parallelism = {2.0, 7.0, 9.0, 9.0, 8.8};
+
+    BOOST_REQUIRE_EQUAL(parallelism_seq.size(), expected_parallelism.size());
+    for (size_t i = 0; i < parallelism_seq.size(); ++i) {
+        BOOST_CHECK_CLOSE(parallelism_seq[i], expected_parallelism[i], 1e-9);
+    }
 }

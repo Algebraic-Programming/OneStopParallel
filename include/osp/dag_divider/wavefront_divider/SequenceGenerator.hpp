@@ -18,7 +18,7 @@ limitations under the License.
 #pragma once
 
 #include <vector>
-#include <algorithm>
+#include <numeric>
 #include "WavefrontStatisticsCollector.hpp"
 
 namespace osp {
@@ -37,7 +37,7 @@ public:
     SequenceGenerator(const Graph_t& dag, const std::vector<std::vector<VertexType>>& level_sets)
         : dag_(dag), level_sets_(level_sets) {}
 
-    std::vector<double> generate(SequenceMetric metric) {
+    std::vector<double> generate(SequenceMetric metric) const {
         switch (metric) {
             case SequenceMetric::AVAILABLE_PARALLELISM:
                 return generate_available_parallelism();
@@ -48,7 +48,7 @@ public:
     }
 
 private:
-    std::vector<double> generate_component_count() {
+    std::vector<double> generate_component_count() const {
         WavefrontStatisticsCollector<Graph_t> collector(dag_, level_sets_);
         auto fwd_stats = collector.compute_forward();
         std::vector<double> seq;
@@ -59,15 +59,17 @@ private:
         return seq;
     }
 
-    std::vector<double> generate_available_parallelism() {
+    std::vector<double> generate_available_parallelism() const {
         std::vector<double> seq;
         seq.reserve(level_sets_.size());
         double cumulative_work = 0.0;
         for (size_t i = 0; i < level_sets_.size(); ++i) {
+            double level_work = 0.0;
             for (const auto& vertex : level_sets_[i]) {
-                cumulative_work += dag_.vertex_work_weight(vertex);
+                level_work += dag_.vertex_work_weight(vertex);
             }
-            seq.push_back(cumulative_work / (i + 1.0));
+            cumulative_work += level_work;
+            seq.push_back(cumulative_work / (static_cast<double>(i) + 1.0));
         }
         return seq;
     }
