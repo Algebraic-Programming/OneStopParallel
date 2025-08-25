@@ -114,7 +114,6 @@ BOOST_AUTO_TEST_CASE(wavefront_component_divider) {
         // BspLocking<graph_t> greedy;
 
         // WavefrontComponentScheduler<graph_t, graph_t> scheduler(wavefront, greedy);
-        // scheduler.set_check_isomorphism_groups(true);
 
         // BspSchedule<graph_t> schedule(instance);
         // auto status = scheduler.computeSchedule(schedule);
@@ -166,15 +165,14 @@ BOOST_AUTO_TEST_CASE(wavefront_component_parallelism_divider) {
             BOOST_CHECK(check_vertex_maps(maps, graph));
         }
 
-        // BspLocking<graph_t> greedy;
+        BspLocking<graph_t> greedy;
 
-        // WavefrontComponentScheduler<graph_t, graph_t> scheduler(wavefront, greedy);
-        // scheduler.set_check_isomorphism_groups(false);
+        WavefrontComponentScheduler<graph_t, graph_t> scheduler(wavefront, greedy);
 
-        // BspSchedule<graph_t> schedule(instance);
-        // auto status = scheduler.computeSchedule(schedule);
+        BspSchedule<graph_t> schedule(instance);
+        auto status = scheduler.computeSchedule(schedule);
 
-        // BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS);
-        // BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+        BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS);
+        BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
     }
 }

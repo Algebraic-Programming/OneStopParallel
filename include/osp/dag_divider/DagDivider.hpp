@@ -17,7 +17,7 @@ limitations under the License.
 */
 
 #pragma once
-
+#include "osp/concepts/directed_graph_concept.hpp"
 #include "osp/concepts/graph_traits.hpp"
 #include <vector>
 

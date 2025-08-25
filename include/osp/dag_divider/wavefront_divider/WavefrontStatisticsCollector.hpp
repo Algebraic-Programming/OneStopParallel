@@ -20,7 +20,6 @@ limitations under the License.
 #include <algorithm> // for std::reverse
 #include "osp/auxiliary/datastructures/union_find.hpp"
 
-
 namespace osp {
 
 /**
@@ -108,7 +107,6 @@ private:
         stats.connected_components_weights.reserve(components.size());
         stats.connected_components_memories.reserve(components.size());
 
-        // Use C++17 structured bindings for readability
         for (const auto& comp : components) {
             auto& [vertices, weight, memory] = comp;
             stats.connected_components_vertices.emplace_back(vertices);

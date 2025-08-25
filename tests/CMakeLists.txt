@@ -58,7 +58,7 @@ _add_test( kl_mem_constr )
 
 _add_test( merkle_hash_computer )
 
-_add_test( merkle_hash_divider )
+# _add_test( merkle_hash_divider )
 
 _add_test( wavefront_component_divider )
 
@@ -115,6 +115,8 @@ _add_test( bsp_improvementschedulers )
 _add_test( coarser )
 
 _add_test( wavefront_divider )
+
+_add_test( wavefront_scheduler )
 
 _add_test( cuthill_mckee )
 

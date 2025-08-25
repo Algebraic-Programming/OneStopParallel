@@ -63,9 +63,8 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test)
     WavefrontComponentDivider<graph_t> wavefront;
     wavefront.set_split_method(WavefrontComponentDivider<graph_t>::MIN_DIFF);
 
-    WavefrontComponentScheduler<graph_t, graph_t> scheduler(wavefront, greedy);
-    scheduler.set_check_isomorphism_groups(true);
-
+    IsomorphicWavefrontComponentScheduler<graph_t, graph_t> scheduler(wavefront, greedy);
+  
     BspSchedule<graph_t> schedule(instance);
 
     scheduler.computeSchedule(schedule);
