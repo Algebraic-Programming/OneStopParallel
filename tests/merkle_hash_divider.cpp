@@ -19,17 +19,14 @@ limitations under the License.
 #define BOOST_TEST_MODULE BSP_SCHEDULE_RECOMP
 #include <boost/test/unit_test.hpp>
 
-#include "osp/dag_divider/WavefrontComponentDivider.hpp"
-#include "osp/dag_divider/WavefrontMerkleDivider.hpp"
-#include "osp/dag_divider/MerkleHashComputer.hpp"
+#include "osp/dag_divider/wavefront_divider/ScanWavefrontDivider.hpp"
+#include "osp/dag_divider/wavefront_divider/RecursiveWavefrontDivider.hpp"
 #include "osp/graph_algorithms/directed_graph_util.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 #include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 #include "osp/auxiliary/io/dot_graph_file_reader.hpp"
-#include "osp/dag_divider/IsomorphismGroups.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/BspLocking.hpp"
-#include "osp/bsp/scheduler/ImprovementScheduler.hpp"
-#include "osp/dag_divider/WavefrontComponentScheduler.hpp"
+#include "osp/dag_divider/IsomorphicWavefrontComponentScheduler.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin_v2/kl_include.hpp"
 
 #include <filesystem>
@@ -51,17 +48,21 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test)
     }
 
     BspInstance<graph_t> instance;
-    file_reader::readComputationalDagDotFormat("/home/toni/work/data/ast/llama_1024_128.dot", instance.getComputationalDag());
+    file_reader::readComputationalDagDotFormat(".dot", instance.getComputationalDag());
 
-    instance.getArchitecture().setProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1});
+    instance.getArchitecture().setProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1 , 1, 1, 1, 1, 1, 1, 1, 1 , 1, 1, 1, 1, 1, 1, 1, 1 , 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1});
     instance.setDiagonalCompatibilityMatrix(2);
+    //instance.setSynchronisationCosts(800000);
 
     BspLocking<graph_t> greedy;
-    //kl_total_comm_improver<graph_t> kl;
-    //ComboScheduler<graph_t> combo(greedy, kl);
+    // kl_total_lambda_comm_improver<graph_t> kl;
+    // ComboScheduler<graph_t> combo(greedy, kl);
 
-    WavefrontComponentDivider<graph_t> wavefront;
-    wavefront.set_split_method(WavefrontComponentDivider<graph_t>::MIN_DIFF);
+    RecursiveWavefrontDivider<graph_t> wavefront;
+    wavefront.use_threshold_scan_splitter(8.0, 8.0, 2);
+    // ScanWavefrontDivider<graph_t> wavefront;
+    //wavefront.set_algorithm(SplitAlgorithm::THRESHOLD_SCAN);
+    //wavefront.set_threshold_scan_params(8.0, 8.0);
 
     IsomorphicWavefrontComponentScheduler<graph_t, graph_t> scheduler(wavefront, greedy);
   

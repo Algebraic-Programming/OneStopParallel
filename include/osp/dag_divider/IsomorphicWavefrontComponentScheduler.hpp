@@ -78,6 +78,10 @@ private:
         const auto &original_arch = instance.getArchitecture();
         const auto& original_proc_type_count = original_arch.getProcessorTypeCount();
 
+        if constexpr (this->enable_debug_prints) {
+            std::cout << "  Found " << iso_groups_for_set.size() << " isomorphism groups in this wavefront set." << std::endl;
+        }
+
         // Calculate work for each isomorphism group
         std::vector<std::vector<double>> group_work_by_type(
             iso_groups_for_set.size(), std::vector<double>(original_proc_type_count.size(), 0.0));
@@ -157,7 +161,6 @@ private:
         bool scarcity_found = false;
         if (num_members > 0) {
             for (unsigned type_idx = 0; type_idx < procs_for_group.size(); ++type_idx) {
-                // Scarcity exists if processors are not perfectly divisible among members.
                 if (procs_for_group[type_idx] % num_members != 0) {
                     scarcity_found = true;
                     break;
@@ -167,9 +170,19 @@ private:
 
         if (scarcity_found) {
             // --- SCARCITY/INDIVISIBLE CASE: Schedule sequentially on the shared processor block ---
+            if constexpr (this->enable_debug_prints) std::cout << "  Group with " << num_members << " members: Scarcity/Indivisible case. Scheduling sequentially." << std::endl;
+            
             BspInstance<constr_graph_t> sub_instance(rep_sub_dag, this->createSubArchitecture(original_arch, procs_for_group));
             sub_instance.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
             auto & sub_architecture = sub_instance.getArchitecture();
+
+            if constexpr (this->enable_debug_prints) {
+                std::cout << "    Sub-architecture for sequential scheduling: { ";
+                for (unsigned type_idx = 0; type_idx < sub_architecture.getNumberOfProcessorTypes(); ++type_idx) {
+                    std::cout << "Type " << type_idx << ": " << sub_architecture.getProcessorTypeCount()[type_idx] << "; ";
+                }
+                std::cout << "}" << std::endl;
+            }
 
             unsigned sequential_superstep_offset = 0;
             for (const auto &group_member_idx : group_members) {
@@ -203,6 +216,8 @@ private:
 
         } else {
             // --- ABUNDANCE/DIVISIBLE CASE: Replicate Schedule ---
+            if constexpr (this->enable_debug_prints) std::cout << "  Group with " << num_members << " members: Abundance/Divisible case. Replicating schedule." << std::endl;
+
             std::vector<unsigned> single_sub_dag_proc_types = procs_for_group;
             if (num_members > 0) {
                 for(auto& count : single_sub_dag_proc_types) count /= static_cast<unsigned>(num_members);
@@ -210,6 +225,15 @@ private:
 
             BspInstance<constr_graph_t> sub_instance(rep_sub_dag, this->createSubArchitecture(original_arch, single_sub_dag_proc_types));
             sub_instance.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
+            
+            if constexpr (this->enable_debug_prints) {
+                const auto& sub_arch = sub_instance.getArchitecture();
+                std::cout << "    Sub-architecture for replication (per member): { ";
+                for (unsigned type_idx = 0; type_idx < sub_arch.getNumberOfProcessorTypes(); ++type_idx) {
+                    std::cout << "Type " << type_idx << ": " << sub_arch.getProcessorTypeCount()[type_idx] << "; ";
+                }
+                std::cout << "}" << std::endl;
+            }
             
             BspSchedule<constr_graph_t> sub_schedule(sub_instance);
             auto status = this->scheduler->computeSchedule(sub_schedule);

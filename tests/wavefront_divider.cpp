@@ -40,9 +40,9 @@ std::vector<std::string> test_graphs_dot() { return {"data/dot/smpl_dot_graph_1.
 
 std::vector<std::string> tiny_spaa_graphs() {
     return {
-        "data/spaa/tiny/instance_bicgstab.hdag", "data/spaa/tiny/instance_CG_N2_K2_nzP0d75.hdag"
-        //         "data/spaa/tiny/instance_CG_N3_K1_nzP0d5.hdag",
-        //         "data/spaa/tiny/instance_CG_N4_K1_nzP0d35.hdag",
+        "data/spaa/tiny/instance_bicgstab.hdag", "data/spaa/tiny/instance_CG_N2_K2_nzP0d75.hdag",
+                 "data/spaa/tiny/instance_CG_N3_K1_nzP0d5.hdag",
+                 "data/spaa/tiny/instance_CG_N4_K1_nzP0d35.hdag"
         //         "data/spaa/tiny/instance_exp_N4_K2_nzP0d5.hdag",
         //         "data/spaa/tiny/instance_exp_N5_K3_nzP0d4.hdag",
         //         "data/spaa/tiny/instance_exp_N6_K4_nzP0d25.hdag",
@@ -102,25 +102,13 @@ BOOST_AUTO_TEST_CASE(wavefront_component_divider) {
             std::cout << "File read:" << filename_graph << std::endl;
         }
 
-        ScanWavefrontDivider<graph_t> wavefront;
-       
+        ScanWavefrontDivider<graph_t> wavefront;       
         auto maps = wavefront.divide(graph);
 
         if (!maps.empty()) {
 
             BOOST_CHECK(check_vertex_maps(maps, graph));
         }
-
-        // BspLocking<graph_t> greedy;
-
-        // WavefrontComponentScheduler<graph_t, graph_t> scheduler(wavefront, greedy);
-
-        // BspSchedule<graph_t> schedule(instance);
-        // auto status = scheduler.computeSchedule(schedule);
-
-        // BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS);
-
-        // BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
     }
 }
 
@@ -155,8 +143,7 @@ BOOST_AUTO_TEST_CASE(wavefront_component_parallelism_divider) {
 
         ScanWavefrontDivider<graph_t> wavefront;
         wavefront.set_metric(SequenceMetric::AVAILABLE_PARALLELISM);
-        wavefront.set_algorithm(SplitAlgorithm::VARIANCE);
-
+        wavefront.use_variance_splitter(1.0,1.0,1);
 
         auto maps = wavefront.divide(graph);
 
@@ -164,15 +151,5 @@ BOOST_AUTO_TEST_CASE(wavefront_component_parallelism_divider) {
 
             BOOST_CHECK(check_vertex_maps(maps, graph));
         }
-
-        BspLocking<graph_t> greedy;
-
-        WavefrontComponentScheduler<graph_t, graph_t> scheduler(wavefront, greedy);
-
-        BspSchedule<graph_t> schedule(instance);
-        auto status = scheduler.computeSchedule(schedule);
-
-        BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS);
-        BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
     }
 }

@@ -17,6 +17,7 @@ limitations under the License.
 */
 #pragma once
 
+#include "osp/concepts/computational_dag_concept.hpp"
 #include <vector>
 #include <numeric>
 #include <queue>
@@ -72,8 +73,8 @@ protected:
      * @brief Computes wavefronts for the entire DAG.
      * This method is now const.
      */
-    std::vector<std::vector<VertexType>> compute_wavefronts(const Graph_t& dag) const {
-        std::vector<VertexType> all_vertices(dag.num_vertices());
+    std::vector<std::vector<VertexType>> compute_wavefronts() const {
+        std::vector<VertexType> all_vertices(dag_ptr_->num_vertices());
         std::iota(all_vertices.begin(), all_vertices.end(), 0);
         return compute_wavefronts_for_subgraph(all_vertices);
     }

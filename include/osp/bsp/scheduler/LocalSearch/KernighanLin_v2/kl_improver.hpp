@@ -726,7 +726,7 @@ void kl_improver<Graph_t, comm_cost_function_t, MemoryConstraint_t, window_size,
     
     unsigned log_num_nodes = static_cast<unsigned>(std::log(num_nodes)); 
 
-    selection_strategy.selection_threshold = static_cast<std::size_t>(std::ceil(parameters.time_quality * 10 * log_num_nodes));
+    selection_strategy.selection_threshold = static_cast<std::size_t>(std::ceil(parameters.time_quality * 100 * log_num_nodes + log_num_nodes));
     parameters.max_outer_iterations = static_cast<unsigned>(static_cast<double>(num_nodes) * (parameters.time_quality + 0.4));
     min_inner_iter = std::min(static_cast<unsigned>(log_num_nodes * (1.0 + parameters.time_quality)), static_cast<unsigned>(num_nodes / 10));
     parameters.max_no_vioaltions_removed_backtrack_reset = parameters.time_quality < 0.75 ? 1 : parameters.time_quality < 1.0 ? 2 : 3;

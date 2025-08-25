@@ -30,20 +30,24 @@ namespace osp {
 /**
  * @class ScanWavefrontDivider
  * @brief Divides a DAG by scanning all wavefronts and applying a splitting algorithm.
+ * This revised version uses a fluent API for safer and clearer algorithm configuration.
  */
 template<typename Graph_t>
 class ScanWavefrontDivider : public AbstractWavefrontDivider<Graph_t> {
 public:
     constexpr static bool enable_debug_print = true;
 
-    ScanWavefrontDivider() = default;
+    ScanWavefrontDivider() {
+        use_largest_step_splitter(3.0, 4);
+    }
 
     std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> divide(const Graph_t &dag) override {
         this->dag_ptr_ = &dag;
         if constexpr (enable_debug_print) {
             std::cout << "[DEBUG] Starting scan-all division." << std::endl;
         }
-        std::vector<std::vector<vertex_idx_t<Graph_t>>> level_sets = this->compute_wavefronts(dag);
+
+        std::vector<std::vector<vertex_idx_t<Graph_t>>> level_sets = this->compute_wavefronts();
         if (level_sets.empty()) {
             return {};
         }
@@ -52,28 +56,13 @@ public:
         std::vector<double> sequence = generator.generate(sequence_metric_);
         
         if constexpr (enable_debug_print) {
-            std::cout << "[DEBUG]   Metric: " << static_cast<int>(sequence_metric_) 
-                      << ", Algorithm: " << static_cast<int>(split_algorithm_) << std::endl;
+            std::cout << "[DEBUG]   Metric: " << static_cast<int>(sequence_metric_) << std::endl;
             std::cout << "[DEBUG]   Generated sequence: ";
             for(const auto& val : sequence) std::cout << val << " ";
             std::cout << std::endl;
         }
-
-        std::unique_ptr<SequenceSplitter> splitter;
-        switch(split_algorithm_) {
-            case SplitAlgorithm::VARIANCE:
-                splitter = std::make_unique<VarianceSplitter>(var_mult_, var_threshold_);
-                break;
-            case SplitAlgorithm::THRESHOLD_SCAN:
-                splitter = std::make_unique<ThresholdScanSplitter>(diff_threshold_, absolute_threshold_);
-                break;
-            case SplitAlgorithm::LARGEST_STEP:
-            default:
-                splitter = std::make_unique<LargestStepSplitter>(diff_threshold_, min_subseq_len_);
-                break;
-        }
-        
-        std::vector<size_t> cut_levels = splitter->split(sequence);
+ 
+        std::vector<size_t> cut_levels = splitter_->split(sequence);
         std::sort(cut_levels.begin(), cut_levels.end());
         cut_levels.erase(std::unique(cut_levels.begin(), cut_levels.end()), cut_levels.end());
         
@@ -86,32 +75,31 @@ public:
         return create_vertex_maps_from_cuts(cut_levels, level_sets);
     }
 
-    void set_metric(SequenceMetric metric) { sequence_metric_ = metric; }
-    void set_algorithm(SplitAlgorithm algorithm) { split_algorithm_ = algorithm; }
-    void set_variance_params(double mult, double threshold) {
-        var_mult_ = mult;
-        var_threshold_ = threshold;
+    ScanWavefrontDivider& set_metric(SequenceMetric metric) {
+        sequence_metric_ = metric;
+        return *this;
     }
-    void set_largest_step_params(double threshold, size_t min_len) {
-        diff_threshold_ = threshold;
-        min_subseq_len_ = min_len;
+
+    ScanWavefrontDivider& use_variance_splitter(double mult, double threshold, size_t min_len = 1) {
+        splitter_ = std::make_unique<VarianceSplitter>(mult, threshold, min_len);
+        return *this;
     }
-    void set_threshold_scan_params(double diff_threshold, double abs_threshold) {
-        diff_threshold_ = diff_threshold;
-        absolute_threshold_ = abs_threshold;
+
+    ScanWavefrontDivider& use_largest_step_splitter(double threshold, size_t min_len) {
+        splitter_ = std::make_unique<LargestStepSplitter>(threshold, min_len);
+        return *this;
+    }
+
+    ScanWavefrontDivider& use_threshold_scan_splitter(double diff_threshold, double abs_threshold, size_t min_len = 1) {
+        splitter_ = std::make_unique<ThresholdScanSplitter>(diff_threshold, abs_threshold, min_len);
+        return *this;
     }
 
 private:
     using VertexType = vertex_idx_t<Graph_t>;
 
     SequenceMetric sequence_metric_ = SequenceMetric::COMPONENT_COUNT;
-    SplitAlgorithm split_algorithm_ = SplitAlgorithm::LARGEST_STEP;
-    
-    double var_mult_ = 0.5;
-    double var_threshold_ = 1.0;
-    double diff_threshold_ = 3.0;
-    size_t min_subseq_len_ = 4;
-    double absolute_threshold_ = 10.0;
+    std::unique_ptr<SequenceSplitter> splitter_;
 
     std::vector<std::vector<std::vector<VertexType>>> create_vertex_maps_from_cuts(
         const std::vector<size_t>& cut_levels,
