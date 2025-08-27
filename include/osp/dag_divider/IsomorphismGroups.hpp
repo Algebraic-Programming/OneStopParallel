@@ -23,7 +23,7 @@ limitations under the License.
 
 #include "osp/concepts/graph_traits.hpp"
 #include "osp/graph_algorithms/subgraph_algorithms.hpp"
-#include "osp/dag_divider/MerkleHashComputer.hpp"
+#include "osp/dag_divider/isomorphism_divider/MerkleHashComputer.hpp"
 
 namespace osp {
 
@@ -122,7 +122,7 @@ class IsomorphismGroups {
                 bool isomorphism_group_found = false;
                 for (size_t k = 0; k < isomorphism_groups[i].size(); k++) {
 
-                    if (checkOrderedIsomorphism(isomorphism_groups_subgraphs[i][k], current_subgraph)) {
+                    if (are_isomorphic_by_merkle_hash(isomorphism_groups_subgraphs[i][k], current_subgraph)) {
 
                         isomorphism_groups[i][k].emplace_back(j);
                         isomorphism_group_found = true;

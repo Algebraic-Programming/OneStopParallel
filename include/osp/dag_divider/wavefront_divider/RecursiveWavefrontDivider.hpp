@@ -21,7 +21,7 @@ limitations under the License.
 #include <algorithm>
 #include <iostream>
 #include <memory>
-#include <iterator> // Required for std::distance
+#include <iterator>
 #include "AbstractWavefrontDivider.hpp"
 #include "SequenceSplitter.hpp"
 #include "SequenceGenerator.hpp"

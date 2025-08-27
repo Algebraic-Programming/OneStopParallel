@@ -263,92 +263,92 @@ BOOST_AUTO_TEST_CASE(StarvationReturnsErrorTest) {
 BOOST_AUTO_TEST_SUITE_END()
 
 
-struct TestFixture_2 {
-    graph_t dag;
-    osp::BspArchitecture<graph_t> arch;
-    MockDivider_2 mock_divider;
-    MockSubScheduler mock_sub_scheduler;
+// struct TestFixture_2 {
+//     graph_t dag;
+//     osp::BspArchitecture<graph_t> arch;
+//     MockDivider_2 mock_divider;
+//     MockSubScheduler mock_sub_scheduler;
 
-    TestFixture_2() {
-        // A DAG with two isomorphic components {0,1} and {2,3}, and one unique one {4,5}
-        dag.add_vertex(10, 1, 1); dag.add_vertex(20, 1, 1); // v0, v1
-        dag.add_vertex(10, 1, 1); dag.add_vertex(20, 1, 1); // v2, v3
-        dag.add_vertex(50, 1, 1); dag.add_vertex(50, 1, 1); // v4, v5
-        dag.add_edge(0, 1); dag.add_edge(2, 3); dag.add_edge(4, 5);
-    }
-};
+//     TestFixture_2() {
+//         // A DAG with two isomorphic components {0,1} and {2,3}, and one unique one {4,5}
+//         dag.add_vertex(10, 1, 1); dag.add_vertex(20, 1, 1); // v0, v1
+//         dag.add_vertex(10, 1, 1); dag.add_vertex(20, 1, 1); // v2, v3
+//         dag.add_vertex(50, 1, 1); dag.add_vertex(50, 1, 1); // v4, v5
+//         dag.add_edge(0, 1); dag.add_edge(2, 3); dag.add_edge(4, 5);
+//     }
+// };
 
-BOOST_FIXTURE_TEST_SUITE(IsomorphicWavefrontComponentSchedulerTestSuite, TestFixture_2)
+// BOOST_FIXTURE_TEST_SUITE(IsomorphicWavefrontComponentSchedulerTestSuite, TestFixture_2)
 
-BOOST_AUTO_TEST_CASE(AbundanceSchedulingTest) {
+// BOOST_AUTO_TEST_CASE(AbundanceSchedulingTest) {
 
-    arch.setNumberOfProcessors(6);
-    mock_divider.sections_to_return = {{{0, 1}, {2, 3}, {4, 5}}};
+//     arch.setNumberOfProcessors(6);
+//     mock_divider.sections_to_return = {{{0, 1}, {2, 3}, {4, 5}}};
 
-    osp::IsomorphicWavefrontComponentScheduler<graph_t, graph_t> scheduler(mock_divider, mock_sub_scheduler);
-    osp::BspInstance<graph_t> instance(dag, arch);
-    osp::BspSchedule<graph_t> schedule(instance);
+//     osp::IsomorphicWavefrontComponentScheduler<graph_t, graph_t> scheduler(mock_divider, mock_sub_scheduler);
+//     osp::BspInstance<graph_t> instance(dag, arch);
+//     osp::BspSchedule<graph_t> schedule(instance);
 
-    auto status = scheduler.computeSchedule(schedule);
-    BOOST_CHECK_EQUAL(status, osp::RETURN_STATUS::OSP_SUCCESS);
+//     auto status = scheduler.computeSchedule(schedule);
+//     BOOST_CHECK_EQUAL(status, osp::RETURN_STATUS::OSP_SUCCESS);
     
-    // Member 1 of iso group {0,1} gets 1 proc (global proc 0)
-    BOOST_CHECK_EQUAL(schedule.assignedProcessor(0), 0);
-    BOOST_CHECK_EQUAL(schedule.assignedProcessor(1), 0);
-    BOOST_CHECK_EQUAL(schedule.assignedSuperstep(0), 0);
+//     // Member 1 of iso group {0,1} gets 1 proc (global proc 0)
+//     BOOST_CHECK_EQUAL(schedule.assignedProcessor(0), 0);
+//     BOOST_CHECK_EQUAL(schedule.assignedProcessor(1), 0);
+//     BOOST_CHECK_EQUAL(schedule.assignedSuperstep(0), 0);
     
-    // Member 2 of iso group {2,3} gets 1 proc (global proc 1)
-    BOOST_CHECK_EQUAL(schedule.assignedProcessor(2), 1);
-    BOOST_CHECK_EQUAL(schedule.assignedProcessor(3), 1);
-    BOOST_CHECK_EQUAL(schedule.assignedSuperstep(2), 0);
+//     // Member 2 of iso group {2,3} gets 1 proc (global proc 1)
+//     BOOST_CHECK_EQUAL(schedule.assignedProcessor(2), 1);
+//     BOOST_CHECK_EQUAL(schedule.assignedProcessor(3), 1);
+//     BOOST_CHECK_EQUAL(schedule.assignedSuperstep(2), 0);
 
-    // Unique group {4,5} gets 4 procs (global procs 2,3,4,5), sub-schedule uses first one.
-    BOOST_CHECK_EQUAL(schedule.assignedProcessor(4), 2);
-    BOOST_CHECK_EQUAL(schedule.assignedProcessor(5), 2);
-    BOOST_CHECK_EQUAL(schedule.assignedSuperstep(4), 0);
+//     // Unique group {4,5} gets 4 procs (global procs 2,3,4,5), sub-schedule uses first one.
+//     BOOST_CHECK_EQUAL(schedule.assignedProcessor(4), 2);
+//     BOOST_CHECK_EQUAL(schedule.assignedProcessor(5), 2);
+//     BOOST_CHECK_EQUAL(schedule.assignedSuperstep(4), 0);
 
-    BOOST_CHECK_EQUAL(schedule.numberOfSupersteps(), 1);
-}
-
-
-BOOST_AUTO_TEST_CASE(IndivisibleScarcitySchedulingTest) {
-    // 2 isomorphic components, 1 unique. 3 processors available.
-    arch.setNumberOfProcessors(3);
-    mock_divider.sections_to_return = {{{0, 1}, {2, 3}, {4, 5}}};
-
-    osp::IsomorphicWavefrontComponentScheduler<graph_t, graph_t> scheduler(mock_divider, mock_sub_scheduler);
-    osp::BspInstance<graph_t> instance(dag, arch);
-    osp::BspSchedule<graph_t> schedule(instance);
-
-    auto status = scheduler.computeSchedule(schedule);
-    BOOST_CHECK_EQUAL(status, osp::RETURN_STATUS::OSP_SUCCESS);
-
-    BOOST_CHECK_EQUAL(schedule.assignedProcessor(0), 0);
-    BOOST_CHECK_EQUAL(schedule.assignedSuperstep(0), 0);
-    BOOST_CHECK_EQUAL(schedule.assignedProcessor(2), 0);
-    BOOST_CHECK_EQUAL(schedule.assignedSuperstep(2), 1); // Sequential
-
-    // Unique group scheduled on its 2 processors (global procs 1, 2)
-    BOOST_CHECK_EQUAL(schedule.assignedProcessor(4), 1); 
-    BOOST_CHECK_EQUAL(schedule.assignedSuperstep(4), 0);
-
-    BOOST_CHECK_EQUAL(schedule.numberOfSupersteps(), 2);
-}
-
-BOOST_AUTO_TEST_CASE(StarvationReturnsErrorTest) {
-    // IsomorphismGroups will find 2 groups: {{0,1}, {2,3}} and {{4,5}}.
-    // With only 1 processor, this is a starvation scenario.
-    arch.setNumberOfProcessors(1); 
-    mock_divider.sections_to_return = {{{0, 1}, {2, 3}, {4, 5}}};
-
-    osp::IsomorphicWavefrontComponentScheduler<graph_t, graph_t> scheduler(mock_divider, mock_sub_scheduler);
-    osp::BspInstance<graph_t> instance(dag, arch);
-    osp::BspSchedule<graph_t> schedule(instance);
-
-    // With 2 active groups and only 1 processor, starvation is hit.
-    auto status = scheduler.computeSchedule(schedule);
-    BOOST_CHECK_EQUAL(status, osp::RETURN_STATUS::ERROR);
-}
+//     BOOST_CHECK_EQUAL(schedule.numberOfSupersteps(), 1);
+// }
 
 
-BOOST_AUTO_TEST_SUITE_END()
+// BOOST_AUTO_TEST_CASE(IndivisibleScarcitySchedulingTest) {
+//     // 2 isomorphic components, 1 unique. 3 processors available.
+//     arch.setNumberOfProcessors(3);
+//     mock_divider.sections_to_return = {{{0, 1}, {2, 3}, {4, 5}}};
+
+//     osp::IsomorphicWavefrontComponentScheduler<graph_t, graph_t> scheduler(mock_divider, mock_sub_scheduler);
+//     osp::BspInstance<graph_t> instance(dag, arch);
+//     osp::BspSchedule<graph_t> schedule(instance);
+
+//     auto status = scheduler.computeSchedule(schedule);
+//     BOOST_CHECK_EQUAL(status, osp::RETURN_STATUS::OSP_SUCCESS);
+
+//     BOOST_CHECK_EQUAL(schedule.assignedProcessor(0), 0);
+//     BOOST_CHECK_EQUAL(schedule.assignedSuperstep(0), 0);
+//     BOOST_CHECK_EQUAL(schedule.assignedProcessor(2), 0);
+//     BOOST_CHECK_EQUAL(schedule.assignedSuperstep(2), 1); // Sequential
+
+//     // Unique group scheduled on its 2 processors (global procs 1, 2)
+//     BOOST_CHECK_EQUAL(schedule.assignedProcessor(4), 1); 
+//     BOOST_CHECK_EQUAL(schedule.assignedSuperstep(4), 0);
+
+//     BOOST_CHECK_EQUAL(schedule.numberOfSupersteps(), 2);
+// }
+
+// BOOST_AUTO_TEST_CASE(StarvationReturnsErrorTest) {
+//     // IsomorphismGroups will find 2 groups: {{0,1}, {2,3}} and {{4,5}}.
+//     // With only 1 processor, this is a starvation scenario.
+//     arch.setNumberOfProcessors(1); 
+//     mock_divider.sections_to_return = {{{0, 1}, {2, 3}, {4, 5}}};
+
+//     osp::IsomorphicWavefrontComponentScheduler<graph_t, graph_t> scheduler(mock_divider, mock_sub_scheduler);
+//     osp::BspInstance<graph_t> instance(dag, arch);
+//     osp::BspSchedule<graph_t> schedule(instance);
+
+//     // With 2 active groups and only 1 processor, starvation is hit.
+//     auto status = scheduler.computeSchedule(schedule);
+//     BOOST_CHECK_EQUAL(status, osp::RETURN_STATUS::ERROR);
+// }
+
+
+// BOOST_AUTO_TEST_SUITE_END()

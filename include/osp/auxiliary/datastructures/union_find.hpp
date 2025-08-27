@@ -88,6 +88,13 @@ class Union_Find_Universe {
     index_t get_index_from_name(const T &name) const { return names_to_indices.at(name); }
 
   public:
+
+    void reset() {
+        universe.clear();
+        names_to_indices.clear();
+        component_indices.clear();
+    }
+
     bool is_in_universe(const T &name) const { return names_to_indices.find(name) != names_to_indices.end(); }
 
     /// @brief Loops till object is its own parent

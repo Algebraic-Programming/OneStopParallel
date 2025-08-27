@@ -30,11 +30,9 @@ namespace osp {
 
 template<typename VertexType, std::size_t ret = 11>
 struct default_node_hash_func {
-
     std::size_t operator()(const VertexType& ) {
         return ret;
     }
-
 };
 
 template<typename Graph_t, typename node_hash_func_t = default_node_hash_func<vertex_idx_t<Graph_t>>, bool forward = true>

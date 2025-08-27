@@ -24,7 +24,7 @@ limitations under the License.
 #include "osp/bsp/scheduler/Scheduler.hpp"
 #include "MerkleHashComputer.hpp"
 #include "osp/auxiliary/datastructures/union_find.hpp"
-#include "DagDivider.hpp"
+#include "osp/dag_divider/DagDivider.hpp"
 #include "osp/graph_algorithms/subgraph_algorithms.hpp"
 #include "osp/graph_algorithms/directed_graph_path_util.hpp"
 #include "osp/auxiliary/io/DotFileWriter.hpp"

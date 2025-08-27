@@ -42,7 +42,7 @@ class ConnectedComponentScheduler : public Scheduler<Graph_t> {
         const Graph_t &dag = instance.getComputationalDag();
         ConnectedComponentDivider<Graph_t, Constr_Graph_t> partitioner;
 
-        partitioner.compute_connected_components(dag);
+        partitioner.divide(dag);
 
         v_workw_t<Graph_t> total_work_weight = sumOfVerticesWorkWeights(dag);
 
