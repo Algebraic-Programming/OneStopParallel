@@ -20,7 +20,7 @@ limitations under the License.
 #pragma once
 
 //#define KL_DEBUG
-//#define KL_DEBUG_1
+#define KL_DEBUG_1
 
 #include "kl_improver.hpp"
 #include "kl_total_comm_cost.hpp"

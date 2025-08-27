@@ -2137,8 +2137,8 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
 
         const double initial_costs = current_schedule.current_cost;
 
-#ifdef KL_DEBUG
-        std::cout << "Initial costs " << initial_costs << std::endl;
+#ifdef KL_DEBUG_1
+        std::cout << "Initial costs " << initial_costs << " with " << best_schedule->numberOfSupersteps() << " supersteps."<< std::endl;
 #endif
 
 #ifdef KL_PRINT_SCHEDULE
@@ -2533,8 +2533,8 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
 
         cleanup_datastructures();
 
-#ifdef KL_DEBUG
-        std::cout << "kl done, current cost " << best_schedule_costs << " vs " << initial_costs << " initial costs"
+#ifdef KL_DEBUG_1
+        std::cout << "kl done, current cost " << best_schedule_costs << " with " << best_schedule->numberOfSupersteps() << " supersteps vs " << initial_costs << " initial costs"
                   << std::endl;
         assert(best_schedule->satisfiesPrecedenceConstraints());
 #endif

@@ -27,38 +27,23 @@ template<typename cost_t, typename comm_cost_function_t, typename kl_active_sche
 struct reward_penalty_strategy {
     
     kl_active_schedule_t *active_schedule;
-    cost_t instance_comm_cost;
-    cost_t max_comm_weight;
+    cost_t max_weight;
 
     unsigned violations_threshold = 0;
     cost_t initial_penalty = 10.0;
     cost_t penalty = 0;
     cost_t reward = 0; 
 
-    void initalize(kl_active_schedule_t & sched, const cost_t max_comm) {
-        max_comm_weight = max_comm;
+    void initalize(kl_active_schedule_t & sched, const cost_t max_comm, const cost_t max_work) {
+        max_weight = std::max(max_work, max_comm * sched.getInstance().communicationCosts());
         active_schedule = &sched;
-        instance_comm_cost = sched.getInstance().communicationCosts();
-        initial_penalty = max_comm_weight * instance_comm_cost;
+        initial_penalty = std::sqrt(max_weight);
     }
  
-    void init_reward_penalty(double reward_multiplier = 1.0) {
-        penalty = (initial_penalty + 1) * reward_multiplier;
-        reward = reward_multiplier * max_comm_weight * max_comm_weight * instance_comm_cost;
-    }
-
-    void update_reward_penalty() {
-
-        const size_t num_violations = active_schedule->get_current_violations().size();
-
-        if (num_violations <= violations_threshold) {
-            penalty = initial_penalty;
-            reward = 0.0;
-        } else {
-            violations_threshold = 0;
-            penalty = std::log((num_violations)) * max_comm_weight * instance_comm_cost;
-            reward = std::sqrt((num_violations + 4)) * max_comm_weight * instance_comm_cost;
-        }
+    void init_reward_penalty(double multiplier = 1.0) {
+        multiplier = std::min(multiplier, 10.0); 
+        penalty = initial_penalty * multiplier;
+        reward = max_weight * multiplier;
     }
 };
 
@@ -289,6 +274,93 @@ public:
         }
         gaps.clear();
     }
+};
+
+template<typename Graph_t, typename cost_t, typename handle_t, typename kl_active_schedule_t, unsigned window_size>
+struct static_affinity_table {
+    constexpr static unsigned window_range = 2 * window_size + 1;
+    using VertexType = vertex_idx_t<Graph_t>;
+
+private:
+    const kl_active_schedule_t *active_schedule;
+    const Graph_t * graph; 
+
+    std::unordered_map<VertexType, handle_t> selected_nodes; 
+
+    std::vector<std::vector<std::vector<cost_t>>> affinity_table;
+
+public:
+
+    void initialize(const kl_active_schedule_t & sche_, const std::size_t ) {
+        active_schedule = &sche_;
+        graph = &(sche_.getInstance().getComputationalDag());
+
+        affinity_table.resize(graph->num_vertices());
+        const unsigned num_procs = sche_.getInstance().numberOfProcessors();
+        for (auto &table : affinity_table) {
+            table.resize(num_procs);
+            for (auto &row : table) {
+                row.resize(window_range);
+            }
+        }    
+    }
+
+    inline std::vector<VertexType> get_selected_nodes() const {
+        std::vector<VertexType> snode;
+        snode.reserve(selected_nodes.size());
+        for (const auto & [key, value] : selected_nodes) {
+            snode.push_back(key);
+        }
+        return snode;
+    }
+
+    inline size_t size() const {
+        return selected_nodes.size();
+    }
+
+    inline bool is_selected(VertexType node) const {
+        return selected_nodes.find(node) != selected_nodes.end(); 
+    }
+
+    inline std::vector<std::vector<cost_t>> & operator[](VertexType node) {
+        return affinity_table[node];
+    }
+
+    inline std::vector<std::vector<cost_t>> & at(VertexType node) {
+        return affinity_table[node];
+    }
+
+    inline const std::vector<std::vector<cost_t>> & at(VertexType node) const {
+        return affinity_table[node];
+    }
+
+    inline std::vector<std::vector<cost_t>> & get_affinity_table(VertexType node) {
+        return affinity_table[node];
+    }
+
+    inline handle_t & get_heap_handle(VertexType node) {
+        return selected_nodes[node];
+    }
+
+    bool insert(VertexType node) {
+        selected_nodes[node] = handle_t();
+        return true;
+    }
+
+    void remove(VertexType node) {
+        selected_nodes.erase(node);
+    }
+    
+    void reset_node_selection() {
+        selected_nodes.clear();       
+    }
+    
+    void clear() {
+        affinity_table.clear();
+        selected_nodes.clear();
+    }
+
+    void trim() {}
 };
 
 template<typename Graph_t, typename container_t, typename handle_t, typename kl_active_schedule_t>

@@ -58,7 +58,7 @@ _add_test( kl_mem_constr )
 
 _add_test( merkle_hash_computer )
 
-# _add_test( merkle_hash_divider )
+_add_test( merkle_hash_divider )
 
 _add_test( wavefront_component_divider )
 

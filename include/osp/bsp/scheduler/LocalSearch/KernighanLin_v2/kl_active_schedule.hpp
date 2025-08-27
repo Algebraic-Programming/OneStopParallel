@@ -102,6 +102,8 @@ struct kl_active_schedule_work_datastructures {
     std::vector<std::vector<weight_proc>> step_processor_work_;
     std::vector<std::vector<unsigned>> step_processor_position;
     std::vector<unsigned> step_max_work_processor_count;
+    work_weight_t max_work_weight;
+    work_weight_t total_work_weight;     
 
     inline work_weight_t step_max_work(unsigned step) const { return step_processor_work_[step][0].work; }
     inline work_weight_t step_second_max_work(unsigned step) const { return step_processor_work_[step][step_max_work_processor_count[step]].work; }
@@ -117,6 +119,8 @@ struct kl_active_schedule_work_datastructures {
     inline void initialize(const SetSchedule<Graph_t> &sched, const BspInstance<Graph_t> &inst, unsigned num_steps) {
         instance = &inst;
         set_schedule = &sched;
+        max_work_weight = 0;
+        total_work_weight = 0;
         step_processor_work_ = std::vector<std::vector<weight_proc>>(num_steps, std::vector<weight_proc>(instance->numberOfProcessors()));
         step_processor_position = std::vector<std::vector<unsigned>>(num_steps, std::vector<unsigned>(instance->numberOfProcessors(), 0));
         step_max_work_processor_count = std::vector<unsigned>(num_steps, 0);
@@ -258,7 +262,10 @@ struct kl_active_schedule_work_datastructures {
                 step_processor_work_[step][proc].proc = proc;
 
                 for (const auto &node : set_schedule->step_processor_vertices[step][proc]) {
-                    step_processor_work_[step][proc].work += instance->getComputationalDag().vertex_work_weight(node);
+                    const work_weight_t vertex_work_weight = instance->getComputationalDag().vertex_work_weight(node);
+                    total_work_weight += vertex_work_weight;
+                    max_work_weight = std::max(vertex_work_weight, max_work_weight);
+                    step_processor_work_[step][proc].work += vertex_work_weight;
                 }
 
                 if (step_processor_work_[step][proc].work > max_work) {
@@ -321,6 +328,8 @@ class kl_active_schedule {
     inline std::vector<unsigned> & get_step_max_work_processor_count() {return work_datastructures.step_max_work_processor_count; }    
     inline v_workw_t<Graph_t> get_step_processor_work(unsigned step, unsigned proc) const {return work_datastructures.step_proc_work(step, proc); }
     inline pre_move_work_data<v_workw_t<Graph_t>> get_pre_move_work_data(kl_move move) { return work_datastructures.get_pre_move_work_data(move); }
+    inline v_workw_t<Graph_t> get_max_work_weight() { return work_datastructures.max_work_weight; }
+    inline v_workw_t<Graph_t> get_total_work_weight() { return work_datastructures.total_work_weight; }
     
     constexpr static bool use_memory_constraint = is_local_search_memory_constraint_v<MemoryConstraint_t>;
 
@@ -439,22 +448,16 @@ class kl_active_schedule {
             const auto &child = target(edge, instance->getComputationalDag());
 
             if (current_violations.find(edge) == current_violations.end()) {
-                if (vector_schedule.assignedSuperstep(node) >= vector_schedule.assignedSuperstep(child)) {
-                    if (vector_schedule.assignedProcessor(node) != vector_schedule.assignedProcessor(child) ||
-                        vector_schedule.assignedSuperstep(node) > vector_schedule.assignedSuperstep(child)) {
-
+                if ((vector_schedule.assignedSuperstep(node) > vector_schedule.assignedSuperstep(child)) || 
+                    (vector_schedule.assignedSuperstep(node) == vector_schedule.assignedSuperstep(child) && vector_schedule.assignedProcessor(node) != vector_schedule.assignedProcessor(child))) {
                         current_violations.insert(edge);
-                        new_violations[child] = edge;
-                    }
+                        new_violations[child] = edge;                    
                 }
             } else {
-                if (vector_schedule.assignedSuperstep(node) <= vector_schedule.assignedSuperstep(child)) {
-                    if (vector_schedule.assignedProcessor(node) == vector_schedule.assignedProcessor(child) ||
-                        vector_schedule.assignedSuperstep(node) < vector_schedule.assignedSuperstep(child)) {
-
+                if ((vector_schedule.assignedSuperstep(node) < vector_schedule.assignedSuperstep(child)) || 
+                    (vector_schedule.assignedSuperstep(node) == vector_schedule.assignedSuperstep(child) && vector_schedule.assignedProcessor(node) == vector_schedule.assignedProcessor(child))) {
                         current_violations.erase(edge);
-                        resolved_violations.insert(edge);
-                    }
+                        resolved_violations.insert(edge);                    
                 }
             }
         }
@@ -462,23 +465,17 @@ class kl_active_schedule {
         for (const auto &edge : in_edges(node, instance->getComputationalDag())) {
             const auto &parent = source(edge, instance->getComputationalDag());
 
-            if (current_violations.find(edge) == current_violations.end()) {
-                if (vector_schedule.assignedSuperstep(node) <= vector_schedule.assignedSuperstep(parent)) {
-                    if (vector_schedule.assignedProcessor(node) != vector_schedule.assignedProcessor(parent) ||
-                        vector_schedule.assignedSuperstep(node) < vector_schedule.assignedSuperstep(parent)) {
-
+            if (current_violations.find(edge) == current_violations.end()) {   
+                if ((vector_schedule.assignedSuperstep(node) < vector_schedule.assignedSuperstep(parent)) || 
+                    (vector_schedule.assignedSuperstep(node) == vector_schedule.assignedSuperstep(parent) && vector_schedule.assignedProcessor(node) != vector_schedule.assignedProcessor(parent))) {
                         current_violations.insert(edge);
-                        new_violations[parent] = edge;
-                    }
+                        new_violations[parent] = edge;                    
                 }
             } else {
-                if (vector_schedule.assignedSuperstep(node) >= vector_schedule.assignedSuperstep(parent)) {
-                    if (vector_schedule.assignedProcessor(node) == vector_schedule.assignedProcessor(parent) ||
-                        vector_schedule.assignedSuperstep(node) > vector_schedule.assignedSuperstep(parent)) {
-
+                if ((vector_schedule.assignedSuperstep(node) > vector_schedule.assignedSuperstep(parent)) || 
+                    (vector_schedule.assignedSuperstep(node) == vector_schedule.assignedSuperstep(parent) && vector_schedule.assignedProcessor(node) == vector_schedule.assignedProcessor(parent))) {
                         current_violations.erase(edge);
                         resolved_violations.insert(edge);
-                    }
                 }
             }
         }

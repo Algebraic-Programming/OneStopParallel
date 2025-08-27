@@ -28,6 +28,7 @@ limitations under the License.
 #include "osp/bsp/scheduler/GreedySchedulers/BspLocking.hpp"
 #include "osp/dag_divider/IsomorphicWavefrontComponentScheduler.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin_v2/kl_include.hpp"
+#include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_total_comm.hpp"
 
 #include <filesystem>
 #include <iostream>
@@ -48,23 +49,28 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test)
     }
 
     BspInstance<graph_t> instance;
-    file_reader::readComputationalDagDotFormat(".dot", instance.getComputationalDag());
+    file_reader::readComputationalDagDotFormat("/home/toni/work/data/ast/dynamic_pa_high_throughput_dview_large.dot", instance.getComputationalDag());
+
+    for (const auto& v : instance.vertices()) {
+
+        instance.getComputationalDag().set_vertex_comm_weight(v, instance.getComputationalDag().vertex_comm_weight(v) / 1064 + 1);
+        instance.getComputationalDag().set_vertex_work_weight(v, instance.getComputationalDag().vertex_work_weight(v) / 1000 + 1);
+    }
 
     instance.getArchitecture().setProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1 , 1, 1, 1, 1, 1, 1, 1, 1 , 1, 1, 1, 1, 1, 1, 1, 1 , 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1});
     instance.setDiagonalCompatibilityMatrix(2);
-    //instance.setSynchronisationCosts(800000);
+    instance.setSynchronisationCosts(100000);
 
     BspLocking<graph_t> greedy;
-    // kl_total_lambda_comm_improver<graph_t> kl;
-    // ComboScheduler<graph_t> combo(greedy, kl);
+    kl_total_comm_improver<graph_t> kl;
+    ComboScheduler<graph_t> combo(greedy, kl);
 
-    RecursiveWavefrontDivider<graph_t> wavefront;
+    ScanWavefrontDivider<graph_t> wavefront;
+    
+    //RecursiveWavefrontDivider<graph_t> wavefront;
     wavefront.use_threshold_scan_splitter(8.0, 8.0, 2);
-    // ScanWavefrontDivider<graph_t> wavefront;
-    //wavefront.set_algorithm(SplitAlgorithm::THRESHOLD_SCAN);
-    //wavefront.set_threshold_scan_params(8.0, 8.0);
-
-    IsomorphicWavefrontComponentScheduler<graph_t, graph_t> scheduler(wavefront, greedy);
+    
+    IsomorphicWavefrontComponentScheduler<graph_t, graph_t> scheduler(wavefront, combo);
   
     BspSchedule<graph_t> schedule(instance);
 

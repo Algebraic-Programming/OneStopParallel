@@ -142,8 +142,10 @@ struct kl_total_comm_cost_function {
                 unsigned idx = std::min(window_size + diff, window_bound);                  
                 
                 if (idx < window_bound && is_compatible(target, move.from_proc)) { 
-                    affinity_table.at(target)[move.from_proc][idx++] += reward; 
+                    affinity_table.at(target)[move.from_proc][idx] += reward; 
                 }
+
+                idx++;
                 
                 for (; idx < window_bound; idx++) {
                     for (const unsigned p : proc_range->compatible_processors_vertex(target)) { 
@@ -167,14 +169,15 @@ struct kl_total_comm_cost_function {
                 }
 
             } else {
-
                 const unsigned diff = move.to_step - target_step;
                 const unsigned window_bound = end_idx(target_step); 
                 unsigned idx = std::min(window_size + diff, window_bound);                                                     
                 
                 if (idx < window_bound && is_compatible(target, move.to_proc)) {
-                    affinity_table.at(target)[move.to_proc][idx++] -= reward; 
+                    affinity_table.at(target)[move.to_proc][idx] -= reward; 
                 }
+
+                idx++;
                                     
                 for (; idx < window_bound; idx++) {
                     for (const unsigned p : proc_range->compatible_processors_vertex(target)) { 
@@ -381,8 +384,10 @@ struct kl_total_comm_cost_function {
                 unsigned idx = std::min(window_size + diff, window_bound);
 
                 if (idx < window_bound && is_compatible(node, source_proc)) {
-                    affinity_table.at(node)[source_proc][idx++] -= reward;  
-                }    
+                    affinity_table.at(node)[source_proc][idx] -= reward;  
+                }
+                
+                idx++;
 
                 for (; idx < window_bound; idx++) {
                     for (const unsigned p : proc_range->compatible_processors_vertex(node)) {                        
