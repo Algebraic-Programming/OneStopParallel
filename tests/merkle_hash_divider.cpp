@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test)
     }
 
     BspInstance<graph_t> instance;
-    file_reader::readComputationalDagDotFormat("/home/toni/work/data/ast/dynamic_pa_high_throughput_dview_large.dot", instance.getComputationalDag());
+    file_reader::readComputationalDagDotFormat(".dot", instance.getComputationalDag());
 
     for (const auto& v : instance.vertices()) {
 
