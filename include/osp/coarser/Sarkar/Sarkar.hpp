@@ -632,7 +632,7 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::someChildrenContractio
         
         auto chld_iter = childrenPriority.cbegin();
         v_workw_t<Graph_t_in> added_weight = 0;
-        v_workw_t<Graph_t_in> limit_weight = botDist[groupHead] - commCost - graph.vertex_work_weight(groupHead);
+        const v_workw_t<Graph_t_in> limit_weight = botDist[groupHead] - commCost - graph.vertex_work_weight(groupHead);
         while (chld_iter != childrenPriority.cend()) {
             if constexpr (has_typed_vertices_v<Graph_t_in>) {
                 if (graph.vertex_type(groupHead) != graph.vertex_type(*chld_iter)) {
@@ -652,9 +652,11 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::someChildrenContractio
                 break;
             }
 
+            const v_workw_t<Graph_t_in> curr_botDist = botDist[*chld_iter];
             chld_iter++;
             if (chld_iter == childrenPriority.cend()) break;
-            if (botDist[*chld_iter] + added_weight <= limit_weight) break;
+            const v_workw_t<Graph_t_in> next_botDist = botDist[*chld_iter];
+            if ((curr_botDist != next_botDist) && (next_botDist + added_weight <= limit_weight)) break;
         }
         if (shouldSkip) continue;
 
@@ -791,7 +793,7 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::someParentsContraction
         
         auto par_iter = parentsPriority.cbegin();
         v_workw_t<Graph_t_in> added_weight = 0;
-        v_workw_t<Graph_t_in> limit_weight = topDist[groupFoot] - commCost - graph.vertex_work_weight(groupFoot);
+        const v_workw_t<Graph_t_in> limit_weight = topDist[groupFoot] - commCost - graph.vertex_work_weight(groupFoot);
         while (par_iter != parentsPriority.cend()) {
             if constexpr (has_typed_vertices_v<Graph_t_in>) {
                 if (graph.vertex_type(groupFoot) != graph.vertex_type(*par_iter)) {
@@ -811,9 +813,11 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::someParentsContraction
                 break;
             }
 
+            const v_workw_t<Graph_t_in> curr_topDist = topDist[*par_iter];
             par_iter++;
             if (par_iter == parentsPriority.cend()) break;
-            if (topDist[*par_iter] + added_weight <= limit_weight) break;
+            const v_workw_t<Graph_t_in> next_topDist = topDist[*par_iter];
+            if ((curr_topDist != next_topDist) && (next_topDist + added_weight <= limit_weight)) break;
         }
         if (shouldSkip) continue;
 
