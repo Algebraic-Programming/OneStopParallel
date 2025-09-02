@@ -195,7 +195,8 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::singleContraction(v_wo
             v_workw_t<Graph_t_in> newMaxPath = maxParentDist + maxChildDist + graph.vertex_work_weight(edgeSrc) + graph.vertex_work_weight(edgeTgt);
             long savings = static_cast<long>(maxPath) - static_cast<long>(newMaxPath);
 
-            if (savings + static_cast<long>(params.leniency * static_cast<double>(maxPath)) >= 0) {
+            // cannot have leniency here as it may destroy symmetries
+            if (savings >= 0) {
                 edgePriority.emplace(savings, edgeSrc, edgeTgt);
             }
         }
@@ -617,7 +618,7 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::someChildrenContractio
     std::set<std::pair<long, std::vector<VertexType>>, decltype(cmp)> vertPriority(cmp);
 
     for (const VertexType &groupHead : graph.vertices()) {
-        if (graph.out_degree(groupHead) == 0) continue;
+        if (graph.out_degree(groupHead) < 2) continue;
 
         auto cmp_chld = [&botDist](const VertexType &lhs, const VertexType &rhs) {
             return (botDist[lhs] > botDist[rhs])
@@ -653,7 +654,7 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::someChildrenContractio
             }
 
             const v_workw_t<Graph_t_in> curr_botDist = botDist[*chld_iter];
-            chld_iter++;
+            ++chld_iter;
             if (chld_iter == childrenPriority.cend()) break;
             const v_workw_t<Graph_t_in> next_botDist = botDist[*chld_iter];
             if ((curr_botDist != next_botDist) && (next_botDist + added_weight <= limit_weight)) break;
@@ -778,7 +779,7 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::someParentsContraction
     std::set<std::pair<long, std::vector<VertexType>>, decltype(cmp)> vertPriority(cmp);
 
     for (const VertexType &groupFoot : graph.vertices()) {
-        if (graph.in_degree(groupFoot) == 0) continue;
+        if (graph.in_degree(groupFoot) < 2) continue;
 
         auto cmp_par = [&topDist](const VertexType &lhs, const VertexType &rhs) {
             return (topDist[lhs] > topDist[rhs])
@@ -814,7 +815,7 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::someParentsContraction
             }
 
             const v_workw_t<Graph_t_in> curr_topDist = topDist[*par_iter];
-            par_iter++;
+            ++par_iter;
             if (par_iter == parentsPriority.cend()) break;
             const v_workw_t<Graph_t_in> next_topDist = topDist[*par_iter];
             if ((curr_topDist != next_topDist) && (next_topDist + added_weight <= limit_weight)) break;
@@ -973,10 +974,6 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::levelContraction(v_wor
                     if (graph.vertex_type(srcVert) != graph.vertex_type(tgtVert)) continue;
                 }
 
-                if (uf.find_origin_by_name(srcVert) == uf.find_origin_by_name(tgtVert)) continue;
-
-                if (uf.get_weight_of_component_by_name(srcVert) + uf.get_weight_of_component_by_name(tgtVert) > params.maxWeight) continue;
-
                 uf.join_by_name(srcVert, tgtVert);
             }
         }
@@ -984,6 +981,7 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::levelContraction(v_wor
         std::vector<std::vector<VertexType>> components = uf.get_connected_components();
         for (std::vector<VertexType> &comp : components) {
             if (comp.size() < 2) continue;
+            if (uf.get_weight_of_component_by_name(comp.at(0)) > params.maxWeight) continue; 
 
             std::sort(comp.begin(), comp.end());
 
