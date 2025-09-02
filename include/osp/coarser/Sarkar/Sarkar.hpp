@@ -278,7 +278,7 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::allChildrenContraction
     std::set<std::pair<long, VertexType>, decltype(cmp)> vertPriority(cmp);
 
     for (const VertexType &groupHead : graph.vertices()) {
-        if (graph.out_degree(groupHead) == 0) continue;
+        if (graph.out_degree(groupHead) < 2) continue;
 
         bool shouldSkip = false;
         if constexpr (has_typed_vertices_v<Graph_t_in>) {
@@ -405,7 +405,7 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::allParentsContraction(
     std::set<std::pair<long, VertexType>, decltype(cmp)> vertPriority(cmp);
 
     for (const VertexType &groupFoot : graph.vertices()) {
-        if (graph.in_degree(groupFoot) == 0) continue;
+        if (graph.in_degree(groupFoot) < 2) continue;
 
         bool shouldSkip = false;
         if constexpr (has_typed_vertices_v<Graph_t_in>) {
