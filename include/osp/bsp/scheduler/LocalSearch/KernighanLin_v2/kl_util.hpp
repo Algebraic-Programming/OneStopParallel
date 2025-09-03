@@ -251,14 +251,21 @@ public:
     }
 
     void trim() {
-        while (!gaps.empty() && last_idx > 0) {
+        while (!gaps.empty() && last_idx > 0) {            
+            size_t last_element_idx = last_idx - 1;
+
+            // The last element could be a gap itself. If so, just shrink the size.
+            // We don't need to touch the `gaps` vector, as it will be cleared.
+            if (!node_is_selected[selected_nodes[last_element_idx]]) {
+                last_idx--;
+                continue;
+            }
+
             size_t gap_idx = gaps.back();
             gaps.pop_back();
 
-            size_t last_element_idx = last_idx - 1;
-
-            if (gap_idx >= last_element_idx) {
-                last_idx--;
+            // If the gap we picked is now at or after the end, we can ignore it.
+            if (gap_idx >= last_idx) {
                 continue;
             }
 
@@ -267,7 +274,6 @@ public:
             std::swap(affinity_table[gap_idx], affinity_table[last_element_idx]);
             std::swap(heap_handles[gap_idx],   heap_handles[last_element_idx]);
             std::swap(selected_nodes[gap_idx], selected_nodes[last_element_idx]);
-
             selected_nodes_idx[node_to_move] = gap_idx;
 
             last_idx--;

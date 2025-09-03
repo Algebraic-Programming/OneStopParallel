@@ -316,6 +316,7 @@ class kl_active_schedule {
     inline const VectorSchedule<Graph_t> & getVectorSchedule() const { return vector_schedule; }
     inline const SetSchedule<Graph_t> & getSetSchedule() const { return set_schedule; }
     inline const std::vector<kl_move> & getAppliedMoves() const { return applied_moves; }
+    inline unsigned getBestScheduleIdx() const { return best_schedule_idx; }
     inline cost_t get_cost() { return cost; }
     inline cost_t get_best_cost() { return best_cost; }
     inline bool is_feasible() { return feasible; }
@@ -415,6 +416,31 @@ class kl_active_schedule {
         feasible = true;
         cost = best_cost;
     }
+
+    template<typename comm_datastructures_t>
+    void revert_schedule_to_bound(size_t bound, cost_t new_cost, bool is_feasible, comm_datastructures_t & comm_datastructures) {
+
+        while (applied_moves.size() > bound) {
+            const auto move = applied_moves.back().reverse_move();
+            applied_moves.pop_back();
+
+            vector_schedule.setAssignedProcessor(move.node, move.to_proc);
+            vector_schedule.setAssignedSuperstep(move.node, move.to_step);  
+
+            set_schedule.step_processor_vertices[move.from_step][move.from_proc].erase(move.node);
+            set_schedule.step_processor_vertices[move.to_step][move.to_proc].insert(move.node);
+            work_datastructures.apply_move(move, instance->getComputationalDag().vertex_work_weight(move.node));
+            comm_datastructures.update_datastructure_after_move(move);
+            if constexpr (use_memory_constraint) {
+                memory_constraint.apply_move(move.node, move.from_proc, move.from_step, move.to_proc, move.to_step);
+            }
+        }
+
+        current_violations.clear();
+        feasible = is_feasible;
+        cost = new_cost;
+    }
+
 
     inline void update_cost(cost_t change_in_cost) {
         cost += change_in_cost;        

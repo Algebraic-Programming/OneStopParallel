@@ -82,6 +82,7 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
   protected:
 
     constexpr static unsigned window_range = 2 * window_size + 1;
+    constexpr static bool enable_quick_moves = true;
 
     using memw_t = v_memw_t<Graph_t>;
     using commw_t = v_commw_t<Graph_t>;
@@ -366,7 +367,7 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
         return 0.0;
     }
     
-    inline void apply_move(kl_move move) {
+    inline cost_t apply_move(kl_move move) {
         active_schedule.apply_move(move);
         comm_cost_f.update_datastructure_after_move(move); 
         cost_t change_in_cost = -move.gain;
@@ -378,6 +379,8 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
         std::cout << "apply move, previous cost: " << active_schedule.get_cost() << ", new cost: " << active_schedule.get_cost() + change_in_cost << ", " << (active_schedule.is_feasible() ? "feasible," : "infeasible,") << std::endl;
 #endif
         active_schedule.update_cost(change_in_cost);
+
+        return change_in_cost;
     }    
 
     bool run_local_search() {
@@ -432,7 +435,7 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
                 kl_move best_move = get_best_move(); // locks best_move.node and removes it from node_selection
                 update_avg_gain(best_move.gain, inner_iter);
 #ifdef KL_DEBUG
-                std::cout << "move node " << best_move.node << " with gain " << best_move.gain << ", from proc|step: " << best_move.from_proc << "|" << best_move.from_step << " to: " << best_move.to_proc << "|" << best_move.to_step << ",avg gain: " << average_gain << std::endl;
+                std::cout << " >>> move node " << best_move.node << " with gain " << best_move.gain << ", from proc|step: " << best_move.from_proc << "|" << best_move.from_step << " to: " << best_move.to_proc << "|" << best_move.to_step << ",avg gain: " << average_gain << std::endl;
 #endif
                 if (inner_iter > min_inner_iter && average_gain < 0.0) {
 #ifdef KL_DEBUG
@@ -448,7 +451,98 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
 #endif
 
                 const auto prev_work_data = active_schedule.get_pre_move_work_data(best_move);
-                apply_move(best_move);
+                const cost_t change_in_cost = apply_move(best_move);
+
+                if constexpr (enable_quick_moves) {
+                    if (iter_inital_feasible && active_schedule.new_violations.size() > 0) {
+
+#ifdef KL_DEBUG
+                        std::cout << "Starting quick moves sequence." << std::endl;
+#endif
+                        inner_iter++;
+
+                        const size_t num_applied_moves = active_schedule.getAppliedMoves().size() - 1;
+                        const cost_t saved_cost = active_schedule.get_cost() - change_in_cost;
+
+                        std::unordered_set<VertexType> local_lock;
+                        local_lock.insert(best_move.node);
+                        std::vector<VertexType> quick_moves_stack;
+                        quick_moves_stack.reserve(10 + active_schedule.new_violations.size() * 2);
+
+                        for (const auto& [key, value] : active_schedule.new_violations) {
+                            quick_moves_stack.push_back(key);
+                        }
+
+                        while (quick_moves_stack.size() > 0) {
+
+                            auto next_node_to_move = quick_moves_stack.back();
+                            quick_moves_stack.pop_back();
+
+                            affinity_table.insert(next_node_to_move);
+                            reward_penalty_strat.init_reward_penalty(static_cast<double>(active_schedule.get_current_violations().size()) + 1.0);
+                            compute_node_affinities(next_node_to_move);
+                            kl_move best_quick_move = compute_best_move<true>(next_node_to_move);
+
+#ifdef KL_DEBUG
+                            std::cout << " >>> move node " << best_quick_move.node << " with gain " << best_quick_move.gain << ", from proc|step: " << best_quick_move.from_proc << "|" << best_quick_move.from_step << " to: " << best_quick_move.to_proc << "|" << best_quick_move.to_step << std::endl;
+#endif
+
+                            apply_move(best_quick_move);                          
+                            local_lock.insert(next_node_to_move);
+
+                            inner_iter++;
+
+                            if (active_schedule.new_violations.size() > 0) {
+                                bool abort = false;
+
+                                for (const auto& [key, value] : active_schedule.new_violations) {
+                                    if(local_lock.find(key) != local_lock.end()) {
+                                        abort = true;
+                                        break;
+                                    }                                    
+                                    quick_moves_stack.push_back(key);
+                                }
+
+                                if (abort) break;
+
+                            } else if (active_schedule.is_feasible()) {
+                                break;
+                            }
+                        }
+
+                        if (!active_schedule.is_feasible()) {
+                            active_schedule.revert_schedule_to_bound(num_applied_moves, saved_cost ,true, comm_cost_f);
+#ifdef KL_DEBUG
+                            std::cout << "Ending quick moves sequence with infeasible solution." << std::endl;
+#endif
+                        } 
+#ifdef KL_DEBUG
+                        else {
+                            std::cout << "Ending quick moves sequence with feasible solution." << std::endl;
+                        }
+#endif
+                        local_lock.erase(best_move.node);
+                        for (const auto & node : local_lock) {
+                            affinity_table.remove(node);
+                        }
+
+                        affinity_table.trim();
+                        max_gain_heap.clear();
+                        reward_penalty_strat.init_reward_penalty(static_cast<double>(active_schedule.get_current_violations().size()) + 1.0);
+                        insert_gain_heap(affinity_table);
+
+                        
+
+#ifdef KL_DEBUG_1
+                        if (std::abs(comm_cost_f.compute_schedule_cost_test() - active_schedule.get_cost()) > 0.00001 ) {
+                            std::cout << "computed cost: " << comm_cost_f.compute_schedule_cost_test() << ", current cost: " << active_schedule.get_cost() << std::endl;
+                            std::cout << ">>>>>>>>>>>>>>>>>>>>>> compute cost not equal to new cost <<<<<<<<<<<<<<<<<<<<" << std::endl;
+                        }
+#endif
+
+                        continue;
+                    }
+                }
 
                 if (active_schedule.get_current_violations().size() > 0) {
                     if (active_schedule.resolved_violations.size() > 0) {
@@ -530,8 +624,13 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
 #endif
                
             active_schedule.revert_to_best_schedule(local_search_start_step, step_to_remove, comm_cost_f);
-            if (local_search_start_step > step_to_remove)
+            if (local_search_start_step > active_schedule.getBestScheduleIdx()) {
                 step_selection_counter++;
+                if (step_selection_counter >= active_schedule.num_steps()) {
+                    step_selection_counter = 0;
+                    step_selection_epoch_counter++;
+                }            
+            }
 
 #ifdef KL_DEBUG_1
             if (std::abs(comm_cost_f.compute_schedule_cost_test() - active_schedule.get_cost()) > 0.00001 ) {

@@ -37,8 +37,7 @@ limitations under the License.
 #include "osp/bsp/scheduler/GreedySchedulers/RandomGreedy.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/VarianceFillup.hpp"
 #include "osp/bsp/scheduler/LocalSearch/HillClimbing/hill_climbing.hpp"
-#include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_total_comm.hpp"
-#include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_total_cut.hpp"
+#include "osp/bsp/scheduler/LocalSearch/KernighanLin_v2/kl_include.hpp"
 #include "osp/bsp/scheduler/Scheduler.hpp"
 #include "osp/bsp/scheduler/Serial.hpp"
 #include "osp/coarser/coarser_util.hpp"
@@ -66,12 +65,12 @@ RETURN_STATUS run_bsp_improver(const ConfigParser &, const boost::property_tree:
 
     if (improver_name == "kl_total_comm") {
 
-        kl_total_comm<Graph_t> improver;
+        kl_total_comm_improver<Graph_t> improver;
         return improver.improveSchedule(schedule);
 
-    } else if (improver_name == "kl_total_cut") {
+    } else if (improver_name == "kl_total_lambda_comm") {
 
-        kl_total_cut<Graph_t> improver;
+        kl_total_lambda_comm_improver<Graph_t> improver;
         return improver.improveSchedule(schedule);
     } else if (improver_name == "hill_climb") {
 
