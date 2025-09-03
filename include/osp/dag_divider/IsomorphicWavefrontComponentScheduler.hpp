@@ -125,12 +125,15 @@ private:
         unsigned max_supersteps = 0;
         std::vector<unsigned> proc_type_offsets(original_arch.getNumberOfProcessorTypes(), 0);
         
+        std::vector<unsigned> num_supersteps_per_iso_group(iso_groups_for_set.size());
+
         for (std::size_t j = 0; j < iso_groups_for_set.size(); ++j) {
             unsigned supersteps_for_group = 0;
             auto status = schedule_isomorphism_group(schedule, vertex_map_for_set, iso_groups_for_set[j], subgraphs_for_set[j],
                                                      group_proc_allocations[j], global_ids_by_type, proc_type_offsets,
                                                      superstep_offset, supersteps_for_group);
             if (status != RETURN_STATUS::OSP_SUCCESS) return status;
+            num_supersteps_per_iso_group[j] = supersteps_for_group;
             max_supersteps = std::max(max_supersteps, supersteps_for_group);
 
             // Advance offsets for the next group
@@ -138,6 +141,22 @@ private:
                 proc_type_offsets[k] += group_proc_allocations[j][k];
             }
         }
+
+        for (std::size_t j = 0; j < iso_groups_for_set.size(); ++j) {
+            num_supersteps_per_iso_group[j] = max_supersteps - num_supersteps_per_iso_group[j];
+            
+            if (num_supersteps_per_iso_group[j] > 0) { // This is the padding
+                const auto& group_members = iso_groups_for_set[j];
+                for (const auto& original_comp_idx : group_members) {
+                    const auto& component_vertices = vertex_map_for_set[original_comp_idx];
+                    for (const auto& vertex : component_vertices) {
+                        schedule.setAssignedSuperstep(vertex, schedule.assignedSuperstep(vertex) + num_supersteps_per_iso_group[j]);
+                    }
+                }
+            }
+        }
+
+
         supersteps_in_set = max_supersteps;
         return RETURN_STATUS::OSP_SUCCESS;
     }

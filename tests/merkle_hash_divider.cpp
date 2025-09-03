@@ -73,12 +73,15 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test)
 
     // //RecursiveWavefrontDivider<graph_t> wavefront;
     // //wavefront.use_threshold_scan_splitter(8.0, 8.0, 2);
-    
-    IsomorphicWavefrontComponentScheduler<graph_t, graph_t> scheduler(wavefront, combo);
-  
-    BspSchedule<graph_t> schedule(instance);
 
-    scheduler.computeSchedule(schedule);
+    wavefront.divide(instance.getComputationalDag());
+
+
+    // IsomorphicWavefrontComponentScheduler<graph_t, graph_t> scheduler(wavefront, combo);
+  
+    // BspSchedule<graph_t> schedule(instance);
+
+    // scheduler.computeSchedule(schedule);
 
     // BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
     // BOOST_CHECK(schedule.satisfiesNodeTypeConstraints());
