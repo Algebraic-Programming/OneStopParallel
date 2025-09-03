@@ -28,6 +28,7 @@ namespace SarkarParams {
 
 template<typename commCostType>
 struct MulParameters {
+    std::size_t seed{42U};
     double geomDecay{0.875};
     double leniency{0.0};
     std::vector< commCostType > commCostVec{ std::initializer_list<commCostType>{} };
@@ -41,8 +42,8 @@ template<typename Graph_t, typename Graph_t_coarse>
 class SarkarMul : public MultilevelCoarser<Graph_t, Graph_t_coarse> {
     private:
         bool first_coarsen{true};
-        Thue_Morse_Sequence thue_coin{};
-        Biased_Random balanced_random{};
+        Thue_Morse_Sequence thue_coin{42U};
+        Biased_Random balanced_random{42U};
 
         // Multilevel coarser parameters
         SarkarParams::MulParameters< v_workw_t<Graph_t> > ml_params;
@@ -53,6 +54,7 @@ class SarkarMul : public MultilevelCoarser<Graph_t, Graph_t_coarse> {
         // Subsequent coarser
         Sarkar<Graph_t_coarse, Graph_t_coarse> coarser_secondary;
 
+        void setSeed();
         void initParams();
         void updateParams();
         
@@ -61,10 +63,16 @@ class SarkarMul : public MultilevelCoarser<Graph_t, Graph_t_coarse> {
         RETURN_STATUS run_contractions() override;
         
     public:
-        void setParameters(SarkarParams::MulParameters< v_workw_t<Graph_t> > ml_params_) { ml_params = std::move(ml_params_); initParams(); };
+        void setParameters(SarkarParams::MulParameters< v_workw_t<Graph_t> > ml_params_) { ml_params = std::move(ml_params_); setSeed(); initParams(); };
         
         std::string getCoarserName() const { return "Sarkar"; };
 };
+
+template<typename Graph_t, typename Graph_t_coarse>
+void SarkarMul<Graph_t, Graph_t_coarse>::setSeed() {
+    thue_coin = Thue_Morse_Sequence(ml_params.seed % 4096U);
+    balanced_random = Biased_Random(ml_params.seed);
+}
 
 template<typename Graph_t, typename Graph_t_coarse>
 void SarkarMul<Graph_t, Graph_t_coarse>::initParams() {

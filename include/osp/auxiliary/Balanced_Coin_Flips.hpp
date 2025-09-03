@@ -40,7 +40,8 @@ class Biased_Random : public BalancedCoinFlips {
     bool get_flip() override {
         int genuine_random_size = 3;
         int die_size = 2 * genuine_random_size + abs(true_bias);
-        int flip = randInt(die_size);
+        std::uniform_int_distribution<int> distrib(0, die_size - 1);
+        int flip = distrib(gen);
         if (true_bias >= 0) {
             if (flip >= genuine_random_size) {
                 true_bias--;
@@ -61,9 +62,11 @@ class Biased_Random : public BalancedCoinFlips {
         throw std::runtime_error("Coin landed on its side!");
     }
 
-    Biased_Random() : true_bias(0) {};
+    Biased_Random(std::size_t seed = 1729U) : gen(seed), true_bias(0) {};
 
   private:
+    /// @brief Random number generator
+    std::mt19937 gen;
     /// @brief Biases the coin towards true
     int true_bias;
 };
