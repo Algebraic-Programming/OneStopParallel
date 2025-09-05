@@ -95,6 +95,8 @@ _add_test( random_graph_gen )
 
 _add_test( permutations )
 
+_add_test( bit_mask )
+
 ## io
 _add_test( filereader DATA )
 
