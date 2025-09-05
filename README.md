@@ -1,6 +1,6 @@
-# one-stop-parallel
+# OneStopParallel
 
-This repository, one-stop-parallel, is copyright by the
+This repository, OneStopParallel, is copyright by the
 Computing Systems Laboratory, Zurich Research Center, Huawei Technologies
 Switzerland AG.
 
@@ -13,43 +13,111 @@ for the specific language governing permissions and limitations.
 This project aims to develop scheduling algorithms for parallel computing systems based on the Bulk Synchronous Parallel (BSP) model. The algorithms optimize the allocation of tasks to processors, taking into account factors such as load balancing, memory constraints and communication overhead. 
 
 
-
 ## Tools
 
-All tools in this directory are licensed under the Apache License, Version 2.0
-(the "License"); you may not use the tools except in compliance with the
-License. You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
+All tools in this repository are licensed under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0).
 
 
-# Command line tool
+## Command-Line Tool
 
-The main purpose of this file is to provide a command-line interface for users to execute some of the scheduling algorithms implemented in this project. It allows users to input an instance consisting of a computational DAG and machine parameters and execute the desired scheduling algorithm. For further instructions ./main can be invoked without an parameters.
+A command-line interface is provided to execute scheduling algorithms.  
+Users can input an instance (computational DAG + machine parameters) and run the desired scheduler.
 
-For example, to run a greedy bsp algortihm on an example instance, the follwing command can be executed (relative to this folder).
+For example, to run a **Greedy BSP** algorithm on an example instance:
+
 ```bash
-./build/main -g examples/instances/instance_bicgstab.txt -m examples/instances/p4_g3_l5.txt --GreedyBsp
+./build/apps/osp -g data/spaa/tiny/instance_bicgstab.hdag -m data/machine_params/p3.arch --GreedyBsp
 ```
 
-# Sankey visualization
+To see available options:
 
-The tool provides a visualzation for BspSchedules. For more details, [see here.](third/SankeyPlots/README.md)
+```bash
+./build/apps/osp
+```
 
-# Dot visualization
 
+## Visualizations
+
+### Sankey Visualization
+BSP schedules can be visualized using Sankey diagrams.  
+For details, see [SankeyPlots README](third/SankeyPlots/README.md).
+
+### Graphviz Visualization
 The folder tools contains a python script to generate a representation of a BspSchedule based on graphviz. The input is a BspSchedule saved in the .dot format. Schedules in the .dot format can, for example, be generated with the command line tool adding the flag "-d". The python script is invoked with the location of the input file, e.g.,
 ```bash
-python /tools/plot_graphviz.py tool/instance_bicgstab_p4_g3_l5_GreedyBsp_schedule.dot
+python3 tools/graphviz_visualization/plot_graphviz.py tools/graphviz_visualization/instance_bicgstab_p4_g3_l5_GreedyBsp_schedule.dot
 ```
 The output is generated in the same folder and has the same name as the input where the file ending is changed from .dot to .gv.
 
+
 ## Quickstart
 
-Compile the project using the following commands:
+### Build
 
 ```bash
 mkdir -p build && cd build
 cmake ..
 make -j$(nproc)
 ```
+
+### Install
+
+The project supports CMake installation. From the build directory:
+
+```bash
+make install
+```
+
+
+## CMake Options and Build Types
+
+When configuring with CMake, several options and build types influence the build:
+
+### Build Types (`CMAKE_BUILD_TYPE`)
+
+- **Debug**  
+  Adds debug symbols (`-g`) and enables strict warnings.  
+  ```bash
+  cmake -DCMAKE_BUILD_TYPE=Debug ..
+  ```
+
+- **Release**  
+  Optimized build with `-O3 -DNDEBUG`.  
+  ```bash
+  cmake -DCMAKE_BUILD_TYPE=Release ..
+  ```
+
+- **RelWithDebInfo**  
+  Optimized build with debug symbols (`-O3 -g`).  
+  ```bash
+  cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
+  ```
+
+- **Library**  
+  Installs only the header-only library (apps/tests are excluded).  
+  Useful if you just want to consume the library in another project.  
+  ```bash
+  cmake -DCMAKE_BUILD_TYPE=Library ..
+  ```
+
+If no build type is given, CMake applies default optimizations and warnings.
+
+---
+
+### Options
+
+- **`BUILD_TESTS` (default: ON)**  
+  Build and run the test suite.  
+  Automatically forced to `OFF` if `CMAKE_BUILD_TYPE=Library`.  
+  Requires Boost (graph + unit_test_framework) and OpenMP.  
+  ```bash
+  cmake -DBUILD_TESTS=OFF ..
+  ```
+
+## Dependencies
+Some algorithms and executables are only enabled with following optional dependencies:
+  - [Boost (≥ 1.71)]
+  - [Eigen3 (≥ 3.4)](https://eigen.tuxfamily.org/)
+  - [OpenMP](https://www.openmp.org/)
+  - [COPT](https://github.com/huawei-noah/COPT)
+
