@@ -848,25 +848,38 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
 };
 
 
+
 template<typename Graph_t, typename comm_cost_function_t, typename MemoryConstraint_t, unsigned window_size, typename cost_t>
 void kl_improver<Graph_t, comm_cost_function_t, MemoryConstraint_t, window_size, cost_t>::set_parameters(vertex_idx_t<Graph_t> num_nodes) {
     
-    unsigned log_num_nodes = static_cast<unsigned>(std::log(num_nodes)); 
+    const unsigned log_num_nodes = (num_nodes > 1) ? static_cast<unsigned>(std::log(num_nodes)) : 1; 
 
+    // The number of nodes to consider in each inner iteration. Proportional to log(N).
     selection_strategy.selection_threshold = static_cast<std::size_t>(std::ceil(parameters.time_quality * 10 * log_num_nodes + log_num_nodes));
+    // Total number of outer iterations. Proportional to N.
     parameters.max_outer_iterations = static_cast<unsigned>(static_cast<double>(num_nodes) * (parameters.time_quality + 0.4));
+    // Minimum number of moves to perform in an inner iteration.
     min_inner_iter = static_cast<unsigned>(log_num_nodes + log_num_nodes * (1.0 + parameters.time_quality));
+    // Number of times to reset the search for violations before giving up.
     parameters.max_no_vioaltions_removed_backtrack_reset = parameters.time_quality < 0.75 ? 1 : parameters.time_quality < 1.0 ? 2 : 3;
 
+    // Parameters for the superstep removal heuristic.
     parameters.max_no_vioaltions_removed_backtrack_for_remove_step_reset = 3 + static_cast<unsigned>(parameters.superstep_remove_strength * 14);
     parameters.node_max_step_selection_epochs = parameters.superstep_remove_strength < 0.75 ? 1 : parameters.superstep_remove_strength < 1.0 ? 2 : 3;
     parameters.remove_step_epocs = static_cast<unsigned>(parameters.superstep_remove_strength * 5.0);
- 
 
+    // Number of iterations without improvement before reducing penalty.
     no_improvement_iterations_reduce_penalty = parameters.max_no_improvement_iterations / 5;
+    // Number of iterations without improvement before increasing the minimum inner iterations.
     no_improvement_iterations_increase_inner_iter = 10;
 
-    parameters.try_remove_step_after_num_outer_iterations = parameters.max_outer_iterations / parameters.remove_step_epocs;
+    if (parameters.remove_step_epocs > 0) {
+        parameters.try_remove_step_after_num_outer_iterations = parameters.max_outer_iterations / parameters.remove_step_epocs;
+    } else {
+        // Effectively disable superstep removal if remove_step_epocs is 0.
+        parameters.try_remove_step_after_num_outer_iterations = parameters.max_outer_iterations + 1;
+    }
+    
     max_inner_iterations = parameters.max_inner_iterations_reset; 
 
     #ifdef KL_DEBUG_1
@@ -899,7 +912,7 @@ void kl_improver<Graph_t, comm_cost_function_t, MemoryConstraint_t, window_size,
 template<typename Graph_t, typename comm_cost_function_t, typename MemoryConstraint_t, unsigned window_size, typename cost_t>
 void kl_improver<Graph_t, comm_cost_function_t, MemoryConstraint_t, window_size, cost_t>::update_max_gain(kl_move move, std::map<VertexType, kl_gain_update_info> &recompute_max_gain, node_selection_container_t &nodes) {
     for (auto& pair : recompute_max_gain) { 
-        if (true || pair.second.full_update) {
+        if (pair.second.full_update) {
             recompute_node_max_gain(pair.first, nodes); 
         } else {
             if (pair.second.update_entire_from_step) {
