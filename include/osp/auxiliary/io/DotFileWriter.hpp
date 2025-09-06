@@ -217,15 +217,15 @@ class DotFileWriter {
         }
     };
 
-    template<typename Graph_t>
+    template<typename Graph_t, typename color_container_t>
     struct ColoredVertexWriterGraph_DOT {
 
         const Graph_t &graph;
-        const std::vector<unsigned> &colors;
+        const color_container_t &colors;
         std::vector<std::string> color_strings;
         std::vector<std::string> shape_strings;
 
-        ColoredVertexWriterGraph_DOT(const Graph_t &graph_, const std::vector<unsigned> &colors_) : graph(graph_), colors(colors_) {
+        ColoredVertexWriterGraph_DOT(const Graph_t &graph_, const color_container_t &colors_) : graph(graph_), colors(colors_) {
 
            color_strings = {
                 "lightcoral", "palegreen", "lightblue", "gold", "orchid", "sandybrown", "aquamarine", "burlywood",
@@ -473,16 +473,16 @@ class DotFileWriter {
         write_schedule_recomp_duplicate(os, schedule);
     }
 
-    template<typename Graph_t>
-    void write_colored_graph(std::ostream &os, const Graph_t &graph, std::vector<unsigned> &colors) const {
+    template<typename Graph_t, typename color_container_t>
+    void write_colored_graph(std::ostream &os, const Graph_t &graph, const color_container_t & colors) const {
 
         static_assert(is_computational_dag_v<Graph_t>, "Graph_t must be a computational DAG");
 
-        write_graph_structure(os, graph, ColoredVertexWriterGraph_DOT<Graph_t>(graph, colors));
+        write_graph_structure(os, graph, ColoredVertexWriterGraph_DOT<Graph_t, color_container_t>(graph, colors));
     }
 
-    template<typename Graph_t>
-    void write_colored_graph(const std::string &filename, const Graph_t &graph, std::vector<unsigned> &colors) const {
+    template<typename Graph_t, typename color_container_t>
+    void write_colored_graph(const std::string &filename, const Graph_t &graph, const color_container_t & colors) const {
 
         static_assert(is_computational_dag_v<Graph_t>, "Graph_t must be a computational DAG");
 

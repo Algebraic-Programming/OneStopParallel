@@ -832,8 +832,8 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
 #endif                   
         } 
 
-        if ((outer_iter + 1) % (parameters.try_remove_step_after_num_outer_iterations) == 0) {
-            thread_data.step_selection_epoch_counter = 0;
+        if (parameters.try_remove_step_after_num_outer_iterations > 0 && ((outer_iter + 1) % parameters.try_remove_step_after_num_outer_iterations) == 0) {
+            thread_data.step_selection_epoch_counter = 0;;
 #ifdef KL_DEBUG
             std::cout << "reset remove epoc counter after " << outer_iter << " iterations." << std::endl;
 #endif

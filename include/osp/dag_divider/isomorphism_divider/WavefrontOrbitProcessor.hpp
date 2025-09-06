@@ -35,6 +35,7 @@ limitations under the License.
 #include "osp/auxiliary/datastructures/union_find.hpp"
 #include "osp/graph_algorithms/directed_graph_path_util.hpp"
 #include "osp/dag_divider/DagDivider.hpp"
+#include "osp/coarser/coarser_util.hpp"
 
 namespace osp {
 
@@ -64,7 +65,6 @@ struct subgraph {
           start_wavefront(wavefront_arg), end_wavefront(wavefront_arg) {}
 };
 
-
 /**
  * @class IsomorphicLayoutDivider
  * @brief Identifies large, structurally isomorphic subgraphs within a DAG.
@@ -77,17 +77,12 @@ struct subgraph {
  * a size threshold. In a second step, any parent groups that were broken or did
  * not produce children are finalized.
  */
-template<typename Graph_t, typename node_hash_func_t = default_node_hash_func<vertex_idx_t<Graph_t>>>
-class WavefrontOrbitProcessor : public IDagDivider<Graph_t> {
+template<typename Graph_t, typename node_hash_func_t = uniform_node_hash_func<vertex_idx_t<Graph_t>>>
+class WavefrontOrbitProcessor {
     static_assert(is_computational_dag_v<Graph_t>,
                   "IsomorphicComponentDivider can only be used with computational DAGs.");
 
-private:
-    using VertexType = vertex_idx_t<Graph_t>;
-    using Subgraph = subgraph<Graph_t>;
-    using MerkleHashComputer_t = MerkleHashComputer<Graph_t, node_hash_func_t, true>;
-    using InternalConstrGraph_t = Graph_t;
-
+public:
     // A group is uniquely identified by its structure (hash) and its lineage (family_id).
     using GroupKey = std::pair<size_t, unsigned>;
     struct GroupKeyHash {
@@ -98,6 +93,15 @@ private:
             return seed;
         }
     };
+
+private:
+
+    static constexpr bool verbose = false;
+
+    using VertexType = vertex_idx_t<Graph_t>;
+    using Subgraph = subgraph<Graph_t>;
+    using MerkleHashComputer_t = MerkleHashComputer<Graph_t, node_hash_func_t, true>;
+    using InternalConstrGraph_t = Graph_t;
 
     // Represents a node in the family lineage tree.
     struct FamilyTreeNode {
@@ -171,12 +175,18 @@ public:
         : min_iso_group_size_threshold_(min_iso_group_size_threshold) {}
 
 
-    std::vector<std::vector<std::vector<VertexType>>> divide(const Graph_t &dag) override {       
+    void discover_isomorphic_groups(const Graph_t &dag) {       
         std::vector<std::vector<VertexType>> level_sets = compute_wavefronts(dag);
-        return process_wavefronts(dag, level_sets);
+        process_wavefronts(dag, level_sets);
     }
 
-    std::vector<std::vector<std::vector<VertexType>>> process_wavefronts(const Graph_t &dag, const std::vector<std::vector<VertexType>> & level_sets) {
+    inline const std::vector<unsigned> get_vertex_color_map() const { return vertex_to_subgraph_id_; }
+    inline const std::vector<Subgraph>& get_finalized_subgraphs() const { return finalized_subgraphs_; }
+    inline std::vector<std::vector<unsigned>> get_isomorphic_groups() { return build_isomorphic_groups_from_finalized(); }
+
+private:
+
+    void process_wavefronts(const Graph_t &dag, const std::vector<std::vector<VertexType>> & level_sets) {
         dag_ = &dag;
         next_subgraph_id_ = 0;
         next_family_id_ = 0;
@@ -189,18 +199,24 @@ public:
        
         MerkleHashComputer_t m_fw_hash(dag);    
 
-        print_orbit_wavefront_summary(dag, level_sets, m_fw_hash);
+        if constexpr (verbose) {
+            print_orbit_wavefront_summary(dag, level_sets, m_fw_hash);
+        }
 
         // --- 3. Main Loop: Process Wavefronts ---
         for (unsigned wf_idx = 0; wf_idx < level_sets.size(); ++wf_idx) {
             const auto& level = level_sets[wf_idx];
-            std::cout << "\n" << std::string(80, '=') << "\n";
-            std::cout << "🌊 Processing Wavefront " << wf_idx << " (Size: " << level.size() << ")\n";
-            std::cout << std::string(80, '=') << std::endl;
+            if constexpr (verbose) {
+                std::cout << "\n" << std::string(80, '=') << "\n";
+                std::cout << "🌊 Processing Wavefront " << wf_idx << " (Size: " << level.size() << ")\n";
+                std::cout << std::string(80, '=') << std::endl;
+            }
 
             // Group vertices in the current wavefront by their forward Merkle hash.
             std::unordered_map<size_t, std::vector<VertexType>> orbits = get_orbits(level, m_fw_hash);
-            print_orbit_summary(orbits);
+            if constexpr (verbose) {
+                print_orbit_summary(orbits);
+            }
 
             if (wf_idx == 0) {
                 // For the first wavefront (sources), all vertices start new subgraphs.
@@ -213,30 +229,36 @@ public:
                     }
                 }
                 rebuild_isomorphic_groups();
-                print_active_groups_summary(wf_idx);
+                if constexpr (verbose) {
+                    print_active_groups_summary(wf_idx);
+                }
                 continue;
             }            
 
             process_wavefront_orbits(orbits, wf_idx, m_fw_hash);
             
-            print_family_tree();
-            print_active_groups_summary(wf_idx);
+            if constexpr (verbose) {
+                print_family_tree();
+                print_active_groups_summary(wf_idx);
+            }
         }
 
         // --- 4. Finalization ---
         // Any remaining active subgraphs are finalized at the end.
-        std::cout << "\n" << std::string(80, '=') << "\n";
-        std::cout << "✅ Finalizing all remaining active subgraphs." << std::endl;
+        if constexpr (verbose) {
+            std::cout << "\n" << std::string(80, '=') << "\n";
+            std::cout << "✅ Finalizing all remaining active subgraphs." << std::endl;
+        }
 
         for (const auto& [id, sg] : active_subgraphs_) {
             finalize_subgraph(id, sg);
         }
  
-        std::cout << "Total finalized subgraphs: " << finalized_subgraphs_.size() << std::endl;
+        if constexpr (verbose) {
+            std::cout << "Total finalized subgraphs: " << finalized_subgraphs_.size() << std::endl;
 
-        print_final_layout_summary();
-
-        return convert_to_output_format();
+            print_final_layout_summary();
+        }
     }
 
 
@@ -289,15 +311,15 @@ private:
         return {true, first_root};
     }
 
-
 private:
 
-    void process_wavefront_orbits(const std::unordered_map<size_t, std::vector<VertexType>>& orbits, unsigned wf_idx, MerkleHashComputer_t& hasher) {
-        
+    void process_wavefront_orbits(const std::unordered_map<size_t, std::vector<VertexType>>& orbits, unsigned wf_idx, MerkleHashComputer_t& hasher) {        
         std::unordered_map<unsigned, Subgraph> next_active_subgraphs;
         std::set<unsigned> consumed_sg_ids;
 
-        std::cout << "\n--- ⚖️ Phase 1: Analyze & Decide ---\n";
+        if constexpr (verbose) {
+            std::cout << "\n--- ⚖️ Phase 1: Analyze & Decide ---\n";
+        }
 
         // This map will own the analysis objects for this wavefront.
         std::unordered_map<size_t, OrbitAnalysis> analysis_storage;        
@@ -307,7 +329,9 @@ private:
         
         analyze_and_classify_orbits(orbits, parent_evolutions, new_orbits_list, complex_orbits, analysis_storage);
 
-        std::cout << "\n--- 🚀 Phase 2: Execute Actions ---\n";\
+        if constexpr (verbose) {
+            std::cout << "\n--- 🚀 Phase 2: Execute Actions ---\n";
+        }
 
         // --- Step 1: Execute simple continuations, breaks, and new orbits ---
         for (auto& [parent_key, evolution] : parent_evolutions) {            
@@ -328,11 +352,15 @@ private:
                     unsigned family_id_for_break;
                     if (inherit_family) {
                         family_id_for_break = parent_key.second;
-                        std::cout << "    -> 💥 Breaking off with orbit " << analysis->hash << " (starting new group, inheriting Family " << family_id_for_break << ").\n";
+                        if constexpr (verbose) {
+                            std::cout << "    -> 💥 Breaking off with orbit " << analysis->hash << " (starting new group, inheriting Family " << family_id_for_break << ").\n";
+                        }
                     } else {
                         family_id_for_break = next_family_id_++;
                         add_family_node(family_id_for_break, parent_key.second, wf_idx);
-                        std::cout << "    -> 🔱 Breaking off with orbit " << analysis->hash << " (SPLITTING into new Family " << family_id_for_break << ").\n";
+                        if constexpr (verbose) {
+                            std::cout << "    -> 🔱 Breaking off with orbit " << analysis->hash << " (SPLITTING into new Family " << family_id_for_break << ").\n";
+                        }
                     }
                     start_new_group(analysis->hash, *analysis->vertices, wf_idx, family_id_for_break, next_active_subgraphs);
                 }
@@ -342,7 +370,9 @@ private:
         for (const auto* analysis : new_orbits_list) {
             unsigned new_family_id = next_family_id_++;
             add_family_node(new_family_id, std::numeric_limits<unsigned>::max(), wf_idx);
-            std::cout << "  - Orbit " << analysis->hash << " has no active parents. Starting new group (Family " << new_family_id << ").\n";
+            if constexpr (verbose) {
+                std::cout << "  - Orbit " << analysis->hash << " has no active parents. Starting new group (Family " << new_family_id << ").\n";
+            }
             start_new_group(analysis->hash, *analysis->vertices, wf_idx, new_family_id, next_active_subgraphs);
         }
         
@@ -352,11 +382,15 @@ private:
         }
 
         // --- Phase 3: Finalize Old Groups ---
-        std::cout << "\n--- 📋 Phase 3: Finalizing Old Groups ---\n";
+        if constexpr (verbose) {
+            std::cout << "\n--- 📋 Phase 3: Finalizing Old Groups ---\n";
+        }
         // Any active subgraph that was not consumed (i.e., its lineage was not continued or broken) must be finalized.
         for (const auto& [id, sg] : active_subgraphs_) {
             if (consumed_sg_ids.find(id) == consumed_sg_ids.end()) {
-                std::cout << "  - Subgraph " << id << " (H:" << sg.current_hash << "/F:" << sg.family_id << ") had no children. Finalizing.\n";
+                if constexpr (verbose) {
+                    std::cout << "  - Subgraph " << id << " (H:" << sg.current_hash << "/F:" << sg.family_id << ") had no children. Finalizing.\n";
+                }
                 finalize_subgraph(id, sg);
             }
         }
@@ -373,7 +407,9 @@ private:
         std::set<unsigned>& consumed_sg_ids,
         MerkleHashComputer_t& hasher)
     {
-        std::cout << "  - Handling " << complex_orbits.size() << " complex orbit(s) by re-analyzing connectivity.\n";
+        if constexpr (verbose) {
+            std::cout << "  - Handling " << complex_orbits.size() << " complex orbit(s) by re-analyzing connectivity.\n";
+        }
 
         // 1. Re-analyze connectivity for each complex orbit to find its *currently active* parents.
         std::unordered_map<size_t, OrbitParentGroupConnections> live_parent_connections;
@@ -446,7 +482,9 @@ private:
         }
 
         auto components = uf.get_connected_components();
-        std::cout << "    -> Grouped into " << components.size() << " complex merge region(s) based on live and finalized parents.\n";
+        if constexpr (verbose) {
+            std::cout << "    -> Grouped into " << components.size() << " complex merge region(s) based on live and finalized parents.\n";
+        }
 
         // 3. Process each component of complex orbits
         std::unordered_map<size_t, const OrbitAnalysis*> hash_to_analysis;
@@ -455,7 +493,9 @@ private:
         }
 
         for (const auto& component : components) {
-            std::cout << "      - Processing complex region with " << component.size() << " orbit(s).\n";
+            if constexpr (verbose) {
+                std::cout << "      - Processing complex region with " << component.size() << " orbit(s).\n";
+            }
 
             // A. Collect all unique parent families and subgraphs for this component
             std::set<unsigned> all_parent_families;
@@ -476,10 +516,14 @@ private:
             if (has_common_root) {
                 // CASE A: Re-joining related branches (or trivial case with <=1 parent family).
                 // Here, we finalize the parents and start a new family that is a child of the common ancestor.
-                std::cout << "        - Complex merge joins branches of a common ancestor. Finalizing parents and creating new family.\n";
+                if constexpr (verbose) {
+                    std::cout << "        - Complex merge joins branches of a common ancestor. Finalizing parents and creating new family.\n";
+                }
 
                 if (!all_parent_sg_ids.empty()) {
-                    std::cout << "        - Consuming and finalizing " << all_parent_sg_ids.size() << " parent subgraphs involved in this merge.\n";
+                    if constexpr (verbose) {
+                        std::cout << "        - Consuming and finalizing " << all_parent_sg_ids.size() << " parent subgraphs involved in this merge.\n";
+                    }
                     for (unsigned sg_id : all_parent_sg_ids) {
                         if (next_active_subgraphs.count(sg_id)) {
                             finalize_subgraph(sg_id, next_active_subgraphs.at(sg_id));
@@ -499,13 +543,17 @@ private:
                     // Create a new family for EACH orbit.
                     unsigned new_family_id = next_family_id_++;
                     add_family_node(new_family_id, parent_for_tree, wf_idx);
-                    std::cout << "        - Orbit " << orbit_hash << " starts new group in new Family " << new_family_id 
-                              << " (parent: " << (parent_for_tree == std::numeric_limits<unsigned>::max() ? "none" : std::to_string(parent_for_tree)) << ").\n";
+                    if constexpr (verbose) {
+                        std::cout << "        - Orbit " << orbit_hash << " starts new group in new Family " << new_family_id 
+                                  << " (parent: " << (parent_for_tree == std::numeric_limits<unsigned>::max() ? "none" : std::to_string(parent_for_tree)) << ").\n";
+                    }
                     start_new_group(analysis->hash, *analysis->vertices, wf_idx, new_family_id, next_active_subgraphs);
                 }
             } else {
                 // CASE B: Merging unrelated branches. We must check if a true merge is viable.
-                std::cout << "        - Complex merge joins distinct family trees. Checking for merge viability...\n";
+                if constexpr (verbose) {
+                    std::cout << "        - Complex merge joins distinct family trees. Checking for merge viability...\n";
+                }
 
                 // 1. Collect all vertices and build a map of all potential parent subgraphs for this component.
                 std::vector<VertexType> component_vertices;
@@ -543,16 +591,33 @@ private:
                 const size_t current_size = all_parent_sg_ids.size();
                 const size_t orbit_size = component_vertices.size();
 
+                bool parent_sets_overlap = false;
+                if (parent_set_to_children.size() > 1) {
+                    std::set<unsigned> seen_parents;
+                    size_t total_parents_in_sets = 0;
+                    for (const auto& [pset, children] : parent_set_to_children) {
+                        total_parents_in_sets += pset.size();
+                        seen_parents.insert(pset.begin(), pset.end());
+                    }
+                    if (seen_parents.size() < total_parents_in_sets) {
+                        parent_sets_overlap = true;
+                    }
+                }
+
                 bool is_viable = new_size >= min_iso_group_size_threshold_ || new_size >= current_size;
                 if (orbit_size >= min_iso_group_size_threshold_ && current_size < min_iso_group_size_threshold_) {
                     is_viable = false;
                 }
 
-                std::cout << "        - Viability check: merging " << current_size << " parents with "
-                          << component.size() << " orbits would result in " << new_size << " new subgraphs.\n";
+                if constexpr (verbose) {
+                    std::cout << "        - Viability check: merging " << current_size << " parents with "
+                              << component.size() << " orbits would result in " << new_size << " new subgraphs.\n";
+                }
 
-                if (!is_viable && !parent_set_to_children.empty()) {
-                    std::cout << "        - Merge not viable. Opting for full break.\n";
+                if ((!is_viable || parent_sets_overlap) && !parent_set_to_children.empty()) {
+                    if constexpr (verbose) {
+                        std::cout << "        - Merge not viable or parent sets overlap. Opting for full break.\n";
+                    }
                     // Perform the "full break" action: finalize parents and start new groups.
                     if (!all_parent_sg_ids.empty()) {
                         for (unsigned sg_id : all_parent_sg_ids) {
@@ -570,11 +635,15 @@ private:
                         // Create a new root family for EACH orbit.
                         unsigned new_family_id = next_family_id_++;
                         add_family_node(new_family_id, std::numeric_limits<unsigned>::max(), wf_idx);
-                        std::cout << "        - Orbit " << orbit_hash << " starts new group in new root Family " << new_family_id << ".\n";
+                        if constexpr (verbose) {
+                            std::cout << "        - Orbit " << orbit_hash << " starts new group in new root Family " << new_family_id << ".\n";
+                        }
                         start_new_group(analysis->hash, *analysis->vertices, wf_idx, new_family_id, next_active_subgraphs);
                     }
                 } else {
-                    std::cout << "        - Merge is viable. Performing full merge of unrelated families.\n";
+                    if constexpr (verbose) {
+                        std::cout << "        - Merge is viable. Performing full merge of unrelated families.\n";
+                    }
                     // Perform a true merge.
                     perform_full_merge(component, all_parent_sg_ids, parent_set_to_children, all_potential_parents, hasher,
                                        live_parent_connections, wf_idx, next_active_subgraphs, consumed_sg_ids);
@@ -606,7 +675,9 @@ private:
         // b. Create a new root family for the merged result
         unsigned new_family_id = next_family_id_++;
         add_family_node(new_family_id, std::numeric_limits<unsigned>::max(), wf_idx);
-        std::cout << "        - Creating new root Family " << new_family_id << " for the merged group.\n";
+        if constexpr (verbose) {
+            std::cout << "        - Creating new root Family " << new_family_id << " for the merged group.\n";
+        }
 
         // c. Compute a new hash for the merged group from all involved parent and orbit hashes
         size_t merged_group_hash = 0;
@@ -754,53 +825,54 @@ private:
             }
         }
 
-        print_analysis_summary(analysis_storage);
+        if constexpr (verbose)
+            print_analysis_summary(analysis_storage);
     }
 
     void print_analysis_summary(
         const std::unordered_map<size_t, OrbitAnalysis>& analysis_storage) const
     {
-        std::cout << "\n--- 📊 Orbit Analysis Summary ---\n";
-        for (const auto& [hash, analysis] : analysis_storage) {
-            std::cout << "  - Orbit " << hash << " (size: " << analysis.vertices->size() << "): ";
-            switch (analysis.fate) {
-                case OrbitAnalysis::Fate::CONTINUE:
-                    std::cout << "CONTINUE Group (H:" << analysis.target_parent_group.first 
-                              << "/F:" << analysis.target_parent_group.second << ")\n";
-                    break;
-                case OrbitAnalysis::Fate::BREAK:
-                    std::cout << "BREAK from Group (H:" << analysis.target_parent_group.first 
-                              << "/F:" << analysis.target_parent_group.second << ")\n";
-                    break;
-                case OrbitAnalysis::Fate::NEW:
-                    std::cout << "NEW group\n";
-                    if (!analysis.finalized_parent_families.empty()) {
-                        std::cout << "    - Connects to finalized families: ";
-                        for (unsigned fam_id : analysis.finalized_parent_families) {
-                            std::cout << fam_id << " ";
+            std::cout << "\n--- 📊 Orbit Analysis Summary ---\n";
+            for (const auto& [hash, analysis] : analysis_storage) {
+                std::cout << "  - Orbit " << hash << " (size: " << analysis.vertices->size() << "): ";
+                switch (analysis.fate) {
+                    case OrbitAnalysis::Fate::CONTINUE:
+                        std::cout << "CONTINUE Group (H:" << analysis.target_parent_group.first 
+                                  << "/F:" << analysis.target_parent_group.second << ")\n";
+                        break;
+                    case OrbitAnalysis::Fate::BREAK:
+                        std::cout << "BREAK from Group (H:" << analysis.target_parent_group.first 
+                                  << "/F:" << analysis.target_parent_group.second << ")\n";
+                        break;
+                    case OrbitAnalysis::Fate::NEW:
+                        std::cout << "NEW group\n";
+                        if (!analysis.finalized_parent_families.empty()) {
+                            std::cout << "    - Connects to finalized families: ";
+                            for (unsigned fam_id : analysis.finalized_parent_families) {
+                                std::cout << fam_id << " ";
+                            }
+                            std::cout << "\n";
                         }
-                        std::cout << "\n";
-                    }
-                    break;
-                case OrbitAnalysis::Fate::COMPLEX_MERGE:
-                    std::cout << "COMPLEX_MERGE involving groups:\n";
-                    for (const auto& [pkey, sgs] : analysis.parent_groups) {
-                        std::cout << "    - Group (H:" << pkey.first << "/F:" << pkey.second << ")\n";
-                    }
-                    if (!analysis.finalized_parent_families.empty()) {
-                        std::cout << "    - Also connects to finalized families: ";
-                        for (unsigned fam_id : analysis.finalized_parent_families) {
-                            std::cout << fam_id << " ";
+                        break;
+                    case OrbitAnalysis::Fate::COMPLEX_MERGE:
+                        std::cout << "COMPLEX_MERGE involving groups:\n";
+                        for (const auto& [pkey, sgs] : analysis.parent_groups) {
+                            std::cout << "    - Group (H:" << pkey.first << "/F:" << pkey.second << ")\n";
                         }
-                        std::cout << "\n";
-                    }
-                    break;
-                case OrbitAnalysis::Fate::UNCLASSIFIED:
-                    std::cout << "UNCLASSIFIED\n";
-                    break;
+                        if (!analysis.finalized_parent_families.empty()) {
+                            std::cout << "    - Also connects to finalized families: ";
+                            for (unsigned fam_id : analysis.finalized_parent_families) {
+                                std::cout << fam_id << " ";
+                            }
+                            std::cout << "\n";
+                        }
+                        break;
+                    case OrbitAnalysis::Fate::UNCLASSIFIED:
+                        std::cout << "UNCLASSIFIED\n";
+                        break;
+                }
             }
-        }
-        std::cout << "--------------------------------\n";
+            std::cout << "--------------------------------\n";
     }
 
     void sequentially_merge_orbits(
@@ -810,7 +882,9 @@ private:
         unsigned wf_idx,
         std::unordered_map<unsigned, Subgraph>& next_active_subgraphs)
     {
-        std::cout << "      -> Sequentially merging " << orbits.size() << " orbits into " << initial_parent_ids.size() << " parents (Family " << family_id << ").\n";
+        if constexpr (verbose) {
+            std::cout << "      -> Sequentially merging " << orbits.size() << " orbits into " << initial_parent_ids.size() << " parents (Family " << family_id << ").\n";
+        }
 
         // 1. Sort orbits by simplicity (parent degree). Since all vertices in an orbit are
         // structurally identical, we only need to check the first vertex.
@@ -829,11 +903,13 @@ private:
                 return degree_a < degree_b;
             });
 
-        std::cout << "         - Sorted orbit order (by simplicity): ";
-        for (const auto* o : orbits) {
-            std::cout << o->hash << " ";
+        if constexpr (verbose) {
+            std::cout << "         - Sorted orbit order (by simplicity): ";
+            for (const auto* o : orbits) {
+                std::cout << o->hash << " ";
+            }
+            std::cout << "\n";
         }
-        std::cout << "\n";
 
         // 2. Initial state: the subgraphs to evolve are the initial parents.
         std::unordered_map<unsigned, Subgraph> evolving_sgs;
@@ -843,9 +919,13 @@ private:
 
         // 3. Sequentially merge each orbit
         for (const auto* orbit : orbits) {
-            std::cout << "         - Processing orbit " << orbit->hash << " (size " << orbit->vertices->size() << ") against " << evolving_sgs.size() << " evolving subgraphs.\n";
+            if constexpr (verbose) {
+                std::cout << "         - Processing orbit " << orbit->hash << " (size " << orbit->vertices->size() << ") against " << evolving_sgs.size() << " evolving subgraphs.\n";
+            }
             if (evolving_sgs.empty()) { // All parents were consumed by a break
-                std::cout << "           - No evolving parents left. Starting new group for this orbit.\n";
+                if constexpr (verbose) {
+                    std::cout << "           - No evolving parents left. Starting new group for this orbit.\n";
+                }
                 start_new_group(orbit->hash, *orbit->vertices, wf_idx, family_id, next_active_subgraphs);
                 continue;
             }
@@ -871,10 +951,12 @@ private:
                 }
             }
 
-            std::cout << "           - Re-analyzed connectivity: " << parent_set_to_children.size() << " unique parent sets found.\n";
-            if (parent_set_to_children.size() < 10) { // Avoid spamming for large merges
-                for (const auto& [pset, children] : parent_set_to_children) {
-                    std::cout << "             - Set of " << pset.size() << " parents connects to " << children.size() << " children.\n";
+            if constexpr (verbose) {
+                std::cout << "           - Re-analyzed connectivity: " << parent_set_to_children.size() << " unique parent sets found.\n";
+                if (parent_set_to_children.size() < 10) { // Avoid spamming for large merges
+                    for (const auto& [pset, children] : parent_set_to_children) {
+                        std::cout << "             - Set of " << pset.size() << " parents connects to " << children.size() << " children.\n";
+                    }
                 }
             }
 
@@ -883,8 +965,10 @@ private:
             if (new_size < min_iso_group_size_threshold_ && new_size > 0 && new_size < evolving_sgs.size()) {
                 unsigned new_family_for_break = next_family_id_++;
                 add_family_node(new_family_for_break, family_id, wf_idx);
-                std::cout << "           - Orbit " << orbit->hash << " would break the evolving group (new size " << new_size 
-                          << "). Splitting into new Family " << new_family_for_break << ".\n";
+                if constexpr (verbose) {
+                    std::cout << "           - Orbit " << orbit->hash << " would break the evolving group (new size " << new_size 
+                              << "). Splitting into new Family " << new_family_for_break << ".\n";
+                }
                 start_new_group(orbit->hash, *orbit->vertices, wf_idx, new_family_for_break, next_active_subgraphs);
                 continue; // This orbit breaks off, but the evolving group continues to the next orbit.
             }
@@ -922,13 +1006,17 @@ private:
             }
             
             evolving_sgs = std::move(next_evolving_sgs);
-            std::cout << "           - Merging... Consumed " << consumed_ids.size() << " parents, carried over " << num_unconsumed
-                      << ", created " << num_created_sgs << " new subgraphs.\n";
-            std::cout << "           - State after merge: " << evolving_sgs.size() << " evolving subgraphs.\n";
+            if constexpr (verbose) {
+                std::cout << "           - Merging... Consumed " << consumed_ids.size() << " parents, carried over " << num_unconsumed
+                          << ", created " << num_created_sgs << " new subgraphs.\n";
+                std::cout << "           - State after merge: " << evolving_sgs.size() << " evolving subgraphs.\n";
+            }
         }
 
         // 4. Finalize: move the fully evolved subgraphs to the main `next_active_subgraphs` map
-        std::cout << "      -> Sequential merge complete. Finalizing " << evolving_sgs.size() << " subgraphs for Family " << family_id << ".\n";
+        if constexpr (verbose) {
+            std::cout << "      -> Sequential merge complete. Finalizing " << evolving_sgs.size() << " subgraphs for Family " << family_id << ".\n";
+        }
         for (auto& [_, sg] : evolving_sgs) {
             unsigned new_id = next_subgraph_id_++;
             for (const auto& v : sg.vertices) {
@@ -945,8 +1033,10 @@ private:
         std::unordered_map<unsigned, Subgraph>& next_active_subgraphs,
         std::set<unsigned>& consumed_sg_ids)
     {
-        std::cout << "  - Handling multi-orbit continuation for Group (H:" << parent_key.first << "/F:" << parent_key.second << ") with "
-                  << evolution.continuing_orbits.size() << " orbits.\n";
+        if constexpr (verbose) {
+            std::cout << "  - Handling multi-orbit continuation for Group (H:" << parent_key.first << "/F:" << parent_key.second << ") with "
+                      << evolution.continuing_orbits.size() << " orbits.\n";
+        }
 
         // 1. Check for splitting by grouping parents by the set of orbits that connect to them.
         const auto& parent_sg_ids_vec = isomorphic_groups_.at(parent_key);
@@ -975,25 +1065,29 @@ private:
 
         if (orbit_set_to_parents.size() > 1) {
             // --- Handle Splitting ---
-            std::cout << "    -> 🔱 Group (H:" << parent_key.first << "/F:" << parent_key.second << ") is SPLIT by "
-                      << evolution.continuing_orbits.size() << " orbits into " << orbit_set_to_parents.size() << " new families.\n";
+            if constexpr (verbose) {
+                std::cout << "    -> 🔱 Group (H:" << parent_key.first << "/F:" << parent_key.second << ") is SPLIT by "
+                          << evolution.continuing_orbits.size() << " orbits into " << orbit_set_to_parents.size() << " new families.\n";
+            }
 
             for (const auto& [orbit_hashes, parent_subset_ids] : orbit_set_to_parents) {
                 unsigned new_family_id = next_family_id_++;
                 add_family_node(new_family_id, parent_key.second, wf_idx);
-                std::cout << "      - Split part: " << parent_subset_ids.size() << " parents evolving with "
-                          << orbit_hashes.size() << " orbits into new Family " << new_family_id << ".\n";
+                if constexpr (verbose) {
+                    std::cout << "      - Split part: " << parent_subset_ids.size() << " parents evolving with "
+                              << orbit_hashes.size() << " orbits into new Family " << new_family_id << ".\n";
 
-                std::cout << "        - Parent SG IDs: ";
-                for(auto id : parent_subset_ids) {
-                    std::cout << id << " ";
+                    std::cout << "        - Parent SG IDs: ";
+                    for(auto id : parent_subset_ids) {
+                        std::cout << id << " ";
+                    }
+                    std::cout << "\n";
+                    std::cout << "        - Orbit Hashes: ";
+                    for(auto h : orbit_hashes) {
+                        std::cout << h << " ";
+                    }
+                    std::cout << "\n";
                 }
-                std::cout << "\n";
-                std::cout << "        - Orbit Hashes: ";
-                for(auto h : orbit_hashes) {
-                    std::cout << h << " ";
-                }
-                std::cout << "\n";
 
                 std::vector<const OrbitAnalysis*> relevant_orbits;
                 for (const auto* o : evolution.continuing_orbits) {
@@ -1008,13 +1102,15 @@ private:
             }
         } else {
             // --- Handle Non-Splitting Multi-Orbit Merge ---
-            std::cout << "  - Group (H:" << parent_key.first << "/F:" << parent_key.second << ") of size "   
-                      << parent_sg_ids.size() << " is being CONTINUED--multiple--by " << evolution.continuing_orbits.size() << " orbits." << std::endl; 
-            std::cout << "    - Orbit Hashes involved: ";
-            for (const auto* orbit : evolution.continuing_orbits) {
-                std::cout << orbit->hash << " ";
+            if constexpr (verbose) {
+                std::cout << "  - Group (H:" << parent_key.first << "/F:" << parent_key.second << ") of size "   
+                          << parent_sg_ids.size() << " is being CONTINUED--multiple--by " << evolution.continuing_orbits.size() << " orbits." << std::endl; 
+                std::cout << "    - Orbit Hashes involved: ";
+                for (const auto* orbit : evolution.continuing_orbits) {
+                    std::cout << orbit->hash << " ";
+                }
+                std::cout << "\n";
             }
-            std::cout << "\n";
             
             sequentially_merge_orbits(parent_sg_ids_vec, evolution.continuing_orbits, parent_key.second, wf_idx, next_active_subgraphs);
         }
@@ -1027,8 +1123,10 @@ private:
         std::unordered_map<unsigned, Subgraph>& next_active_subgraphs,
         std::set<unsigned>& consumed_sg_ids)
     {
-        std::cout << "  - Group (H:" << parent_key.first << "/F:" << parent_key.second << ") of size "   
-                  << isomorphic_groups_.at(parent_key).size() << " is being CONTINUED--simple--by one orbit of size " << analysis.vertices->size() << std::endl; 
+        if constexpr (verbose) {
+            std::cout << "  - Group (H:" << parent_key.first << "/F:" << parent_key.second << ") of size "   
+                      << isomorphic_groups_.at(parent_key).size() << " is being CONTINUED--simple--by one orbit of size " << analysis.vertices->size() << std::endl; 
+        }
 
         auto just_consumed = merge_and_continue_group(parent_key, analysis, wf_idx, next_active_subgraphs);
         consumed_sg_ids.insert(just_consumed.begin(), just_consumed.end());
@@ -1157,6 +1255,21 @@ private:
         }
     }
     
+    std::vector<std::vector<unsigned>> build_isomorphic_groups_from_finalized() {
+        isomorphic_groups_.clear();
+        unsigned idx = 0;
+        for (const auto& sg : finalized_subgraphs_) {
+            isomorphic_groups_[{sg.current_hash, sg.family_id}].push_back(idx++);
+        }
+
+        std::vector<std::vector<unsigned>> result;
+        result.reserve(isomorphic_groups_.size());
+        for (const auto& [key, sg_ids] : isomorphic_groups_) {
+            result.push_back(sg_ids);
+        }
+        return result;
+    }
+
     std::vector<std::vector<std::vector<VertexType>>> convert_to_output_format() {
         if (finalized_subgraphs_.empty()) {
             return {};
@@ -1352,31 +1465,31 @@ private:
     }
 
     void print_family_tree_node(unsigned family_id, unsigned depth, std::unordered_set<unsigned>& visited) const {
-        if (visited.count(family_id)) return;
-        visited.insert(family_id);
+            if (visited.count(family_id)) return;
+            visited.insert(family_id);
 
-        const auto& node = family_tree_.at(family_id);
-        std::cout << std::string(depth * 2, ' ') << "-> Family " << node.id 
-                  << " (created at WF " << node.creation_wavefront << ")\n";
+            const auto& node = family_tree_.at(family_id);
+            std::cout << std::string(depth * 2, ' ') << "-> Family " << node.id 
+                      << " (created at WF " << node.creation_wavefront << ")\n";
 
-        for (unsigned child_id : node.children_ids) {
-            print_family_tree_node(child_id, depth + 1, visited);
+            for (unsigned child_id : node.children_ids) {
+                print_family_tree_node(child_id, depth + 1, visited);
         }
     }
 
     void print_family_tree() const {
-        std::cout << "\n--- 🌳 Family Lineage Tree ---\n";
-        if (family_tree_.empty()) {
-            std::cout << "  (No families tracked yet.)\n";
-        } else {
-            std::unordered_set<unsigned> visited;
-            for (const auto& [id, node] : family_tree_) {
-                if (node.parent_id == std::numeric_limits<unsigned>::max()) {
-                    print_family_tree_node(node.id, 0, visited);
+            std::cout << "\n--- 🌳 Family Lineage Tree ---\n";
+            if (family_tree_.empty()) {
+                std::cout << "  (No families tracked yet.)\n";
+            } else {
+                std::unordered_set<unsigned> visited;
+                for (const auto& [id, node] : family_tree_) {
+                    if (node.parent_id == std::numeric_limits<unsigned>::max()) {
+                        print_family_tree_node(node.id, 0, visited);
+                    }
                 }
             }
-        }
-        std::cout << "---------------------------\n";
+            std::cout << "---------------------------\n";
     }
 
     void print_orbit_wavefront_summary(const Graph_t & dag, const std::vector<std::vector<VertexType>>& levels, MerkleHashComputer_t& hasher) const {
@@ -1389,27 +1502,27 @@ private:
             }
         }
 
-        // Print table header
-        std::cout << std::string(230, '=') << "\n";
-        std::cout << "📈 DAG Structural Rhythm Analysis\n";
-        std::cout << std::string(230, '=') << std::endl;
-        std::cout << std::left
-                << std::setw(4)  << "WF"       << "| "
-                << std::setw(7)  << "Orbits"   << "| "
-                << std::setw(10) << "Min Orbit"<< "| "
-                << std::setw(10) << "Max Orbit"<< "| "
-                << std::setw(9)  << "WF Work"  << "| "
-                << std::setw(10) << "WF Work %" << "| "
-                << std::setw(22) << "Min-W Orbit (size)" << "| "
-                << std::setw(22) << "Max-W Orbit (size)" << "| "
-                << std::setw(9)  << "WF Comm"  << "| "
-                << std::setw(10) << "WF Comm %" << "| "
-                << std::setw(22) << "Min-C Orbit (size)" << "| "
-                << std::setw(22) << "Max-C Orbit (size)" << "| "
-                << std::setw(20) << "Comment"  << "| "
-                << "Orbit Sizes\n";
+            // Print table header
+            std::cout << std::string(230, '=') << "\n";
+            std::cout << "📈 DAG Structural Rhythm Analysis\n";
+            std::cout << std::string(230, '=') << std::endl;
+            std::cout << std::left
+                    << std::setw(4)  << "WF"       << "| "
+                    << std::setw(7)  << "Orbits"   << "| "
+                    << std::setw(10) << "Min Orbit"<< "| "
+                    << std::setw(10) << "Max Orbit"<< "| "
+                    << std::setw(9)  << "WF Work"  << "| "
+                    << std::setw(10) << "WF Work %" << "| "
+                    << std::setw(22) << "Min-W Orbit (size)" << "| "
+                    << std::setw(22) << "Max-W Orbit (size)" << "| "
+                    << std::setw(9)  << "WF Comm"  << "| "
+                    << std::setw(10) << "WF Comm %" << "| "
+                    << std::setw(22) << "Min-C Orbit (size)" << "| "
+                    << std::setw(22) << "Max-C Orbit (size)" << "| "
+                    << std::setw(20) << "Comment"  << "| "
+                    << "Orbit Sizes\n";
 
-        std::cout << "----+--------+-----------+-----------+----------+-----------+------------------------+------------------------+----------+-----------+------------------------+------------------------+---------------------+---------------------------\n";
+            std::cout << "----+--------+-----------+-----------+----------+-----------+------------------------+------------------------+----------+-----------+------------------------+------------------------+---------------------+---------------------------\n";
 
         size_t prev_orbits = 0;
         for (size_t i = 0; i < levels.size(); ++i) {
@@ -1505,30 +1618,95 @@ private:
                 ? (100.0 * static_cast<double>(wf_comm) / static_cast<double>(total_dag_comm_weight))
                 : 0.0;
 
-            std::cout << std::left << std::setw(4)  << i << "| "
-                    << std::setw(7)  << orbits.size() << "| "
-                    << std::setw(10) << min_size << "| "
-                    << std::setw(10) << max_size << "| "
-                    << std::setw(9)  << wf_work << "| "
-                    << std::fixed << std::setprecision(1)
-                    << std::setw(10) << wf_work_percent << "| " << std::defaultfloat
-                    << std::setw(22) << min_work_ss.str() << "| "
-                    << std::setw(22) << max_work_ss.str() << "| "
-                    << std::setw(9)  << wf_comm << "| "
-                    << std::fixed << std::setprecision(1)
-                    << std::setw(10) << wf_comm_percent << "| " << std::defaultfloat
-                    << std::setw(22) << min_comm_ss.str() << "| "
-                    << std::setw(22) << max_comm_ss.str() << "| "
-                    << std::setw(20) << comment << "| "
-                    << sizes_str << std::endl;
+                std::cout << std::left << std::setw(4)  << i << "| "
+                        << std::setw(7)  << orbits.size() << "| "
+                        << std::setw(10) << min_size << "| "
+                        << std::setw(10) << max_size << "| "
+                        << std::setw(9)  << wf_work << "| "
+                        << std::fixed << std::setprecision(1)
+                        << std::setw(10) << wf_work_percent << "| " << std::defaultfloat
+                        << std::setw(22) << min_work_ss.str() << "| "
+                        << std::setw(22) << max_work_ss.str() << "| "
+                        << std::setw(9)  << wf_comm << "| "
+                        << std::fixed << std::setprecision(1)
+                        << std::setw(10) << wf_comm_percent << "| " << std::defaultfloat
+                        << std::setw(22) << min_comm_ss.str() << "| "
+                        << std::setw(22) << max_comm_ss.str() << "| "
+                        << std::setw(20) << comment << "| "
+                        << sizes_str << std::endl;
 
             prev_orbits = orbits.size();
 
         }
-        std::cout << std::string(230, '=') << std::endl;
+            std::cout << std::string(230, '=') << std::endl;
     }
 
 
+};
+
+template<typename Graph_t>
+struct subgrah_scheduler_input {
+
+    using GroupKey = typename WavefrontOrbitProcessor<Graph_t>::GroupKey;
+    using GroupKeyHash = typename WavefrontOrbitProcessor<Graph_t>::GroupKeyHash;
+
+    BspInstance<Graph_t> instance;
+    std::vector<unsigned> multiplicities;
+    std::vector<std::vector<v_workw_t<Graph_t>>> required_proc_types;
+
+    static constexpr bool verbose = false;
+
+    void prepare_subgraph_scheduling_input(const BspInstance<Graph_t>& original_instance, const std::vector<subgraph<Graph_t>> & finalized_subgraphs, const std::vector<std::vector<unsigned>> & isomorphic_groups) {
+        instance.setArchitecture(original_instance.getArchitecture());
+        const unsigned num_proc_types = original_instance.getArchitecture().getNumberOfProcessorTypes();
+        const unsigned min_proc_type_count = original_instance.getArchitecture().getMinProcessorTypeCount();
+
+        multiplicities.resize(isomorphic_groups.size());
+        required_proc_types.resize(isomorphic_groups.size());
+        std::vector<vertex_idx_t<Graph_t>> contraction_map(original_instance.numberOfVertices());
+
+        size_t i = 0;
+        for (const auto &sg_ids : isomorphic_groups) {
+            multiplicities[i] = std::gcd(min_proc_type_count, static_cast<unsigned>(sg_ids.size()));
+            required_proc_types[i].resize(num_proc_types, 0);
+
+            for (const auto sg_id : sg_ids) {
+                const auto &subgraph = finalized_subgraphs.at(sg_id);
+                for (const auto &vertex : subgraph.vertices) {
+                    contraction_map[vertex] = i;
+                    const auto vertex_work = original_instance.getComputationalDag().vertex_work_weight(vertex);
+                    const auto vertex_type = original_instance.getComputationalDag().vertex_type(vertex);
+                    for (unsigned j = 0; j < num_proc_types; ++j) {
+                        if (original_instance.isCompatibleType(vertex_type, j)) {
+                            required_proc_types[i][j] += vertex_work;
+                        }
+                    }
+                }
+            }
+            ++i;
+        }
+        coarser_util::construct_coarse_dag(original_instance.getComputationalDag(), instance.getComputationalDag(),
+                                        contraction_map);
+
+        if constexpr (verbose) {
+        std::cout << "\n--- 🏗️ Preparing Subgraph Scheduling Input ---\n";
+        std::cout << "Found " << isomorphic_groups.size() << " isomorphic groups to schedule as coarse nodes.\n";
+        std::cout << std::string(80, '-') << std::endl;
+        for (size_t j = 0; j < isomorphic_groups.size(); ++j) {
+            std::cout << "  - Coarse Node " << j << " (from " << isomorphic_groups[j].size()
+                    << " isomorphic subgraphs):\n";
+            std::cout << "    - Multiplicity for scheduling: " << multiplicities[j] << "\n";
+            std::cout << "    - Total Work (in coarse graph): " << instance.getComputationalDag().vertex_work_weight(j)
+                    << "\n";
+            std::cout << "    - Required Proc Work (for whole group): [";
+            for (unsigned k = 0; k < num_proc_types; ++k) {
+                std::cout << "T" << k << ":" << required_proc_types[j][k] << (k == num_proc_types - 1 ? "" : ", ");
+            }
+            std::cout << "]\n";
+        }
+        std::cout << std::string(80, '-') << std::endl;
+        }
+    }
 };
 
 } // namespace osp

@@ -21,15 +21,20 @@ limitations under the License.
 
 #include "osp/dag_divider/wavefront_divider/ScanWavefrontDivider.hpp"
 #include "osp/dag_divider/wavefront_divider/RecursiveWavefrontDivider.hpp"
-#include "osp/dag_divider/isomorphism_divider/IsomorphicComponentDivider.hpp"
 #include "osp/graph_algorithms/directed_graph_util.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 #include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 #include "osp/auxiliary/io/dot_graph_file_reader.hpp"
+#include "osp/auxiliary/io/DotFileWriter.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/BspLocking.hpp"
 #include "osp/dag_divider/IsomorphicWavefrontComponentScheduler.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin_v2/kl_include.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_total_comm.hpp"
+#include "osp/coarser/coarser_util.hpp"
+#include "osp/dag_divider/isomorphism_divider/WavefrontOrbitProcessor.hpp"
+#include "osp/dag_divider/isomorphism_divider/EftSubgraphScheduler.hpp"
+#include "osp/dag_divider/isomorphism_divider/IsomorphicSubgraphScheduler.hpp"
+
 
 #include <filesystem>
 #include <iostream>
@@ -50,7 +55,7 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test)
     }
 
     BspInstance<graph_t> instance;
-    file_reader::readComputationalDagDotFormat(".dot", instance.getComputationalDag());
+    file_reader::readComputationalDagDotFormat("/home/toni/work/data/ast/.dot", instance.getComputationalDag());
 
     for (const auto& v : instance.vertices()) {
 
@@ -60,21 +65,51 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test)
 
     instance.getArchitecture().setProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1 , 1, 1, 1, 1, 1, 1, 1, 1 , 1, 1, 1, 1, 1, 1, 1, 1 , 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1});
     instance.setDiagonalCompatibilityMatrix(2);
-    instance.setSynchronisationCosts(100000);
+    instance.setSynchronisationCosts(10000);
 
     BspLocking<graph_t> greedy;
     kl_total_comm_improver<graph_t> kl;
     ComboScheduler<graph_t> combo(greedy, kl);
 
-    // IsomorphicComponentDivider<graph_t> wavefront;
-    WavefrontOrbitProcessor<graph_t> wavefront(8);
+    // // IsomorphicComponentDivider<graph_t> wavefront;
+    // WavefrontOrbitProcessor<graph_t> wavefront(2);
 
-    //wavefront.divide(instance.getComputationalDag());
+    // //wavefront.divide(instance.getComputationalDag());
 
-    // //RecursiveWavefrontDivider<graph_t> wavefront;
-    // //wavefront.use_threshold_scan_splitter(8.0, 8.0, 2);
+    // // //RecursiveWavefrontDivider<graph_t> wavefront;
+    // // //wavefront.use_threshold_scan_splitter(8.0, 8.0, 2);
 
-    wavefront.divide(instance.getComputationalDag());
+    // wavefront.discover_isomorphic_groups(instance.getComputationalDag());
+
+    // DotFileWriter writer;
+
+    // writer.write_colored_graph("graph.dot", instance.getComputationalDag(), wavefront.get_vertex_color_map());
+
+    // subgrah_scheduler_input<graph_t> input;
+    // input.prepare_subgraph_scheduling_input(instance, wavefront.get_finalized_subgraphs(), wavefront.get_isomorphic_groups());
+
+    // bool acyc = is_acyclic(input.instance.getComputationalDag());
+    // std::cout << "Coarse dag is " << (acyc ? "acyclic." : "not acyclic.");
+    
+    // writer.write_graph("graph_2.dot", input.instance.getComputationalDag());
+
+    // EftSubgraphScheduler<graph_t> pre_scheduler;
+    
+    // auto schedule = pre_scheduler.run(input.instance, input.multiplicities, input.required_proc_types);
+
+    IsomorphicSubgraphScheduler<graph_t, graph_t> iso_scheduler(combo);
+    iso_scheduler.set_symmetry(2);
+    iso_scheduler.set_plot_dot_graphs(true);
+
+    auto partition = iso_scheduler.compute_partitions(instance);
+
+    graph_t corase_graph;
+    coarser_util::construct_coarse_dag(instance.getComputationalDag(), corase_graph,
+                                            partition);
+
+    bool acyc = is_acyclic(corase_graph);
+    std::cout << "Coarse dag is " << (acyc ? "acyclic." : "not acyclic.");
+    
 
 
     // IsomorphicWavefrontComponentScheduler<graph_t, graph_t> scheduler(wavefront, combo);

@@ -64,6 +64,10 @@ _add_test( merkle_hash_computer )
 
 #_add_test( merkle_hash_divider )
 
+_add_test( eft_subgraph_scheduler )
+
+_add_test( wavefront_orbit_processor )
+
 _add_test( wavefront_component_divider )
 
 _add_test( hill_climbing )

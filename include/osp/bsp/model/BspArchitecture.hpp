@@ -611,6 +611,14 @@ class BspArchitecture {
         return type_count;
     }
 
+    unsigned getMinProcessorTypeCount() const {
+        const auto &type_count = getProcessorTypeCount();
+        if (type_count.empty()) {
+            return 0;
+        }
+        return *std::min_element(type_count.begin(), type_count.end());
+    }
+
     void print_architecture(std::ostream &os) const {
 
         os << "Architectur info:  number of processors: " << number_processors
