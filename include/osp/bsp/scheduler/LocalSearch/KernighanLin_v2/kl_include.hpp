@@ -21,6 +21,7 @@ limitations under the License.
 
 //#define KL_DEBUG
 //#define KL_DEBUG_1
+//#define KL_DEBUG_COST_CHECK
 
 #include "kl_improver.hpp"
 #include "kl_total_comm_cost.hpp"

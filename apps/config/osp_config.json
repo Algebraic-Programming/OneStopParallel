@@ -102,7 +102,6 @@
             "description": "Greedy scheduler that prioritises nodes with higher number of children.",
             "run" : true
         },
-
         {
             "name": "MultiHC",
             "id": "MultiHC",
@@ -113,7 +112,23 @@
                 "contraction_rate": 0.5
             }
         },
-
+        {
+            "name": "GreedyChildrenKL",
+            "id": "LocalSearch",
+            "run" : true,
+            "name_suffix" : "GreedyChildrenKL",
+            "description": "Initialization with GreedyChildren, then improvement by Kernighan-Lin local search.",
+            "parameters": {
+                "improver": {
+                    "name" : "kl_total_lambda_comm" 
+                },
+                "scheduler": {
+                    "name": "GreedyChildren",
+                    "id": "GreedyChildren",
+                    "description": "Greedy scheduler that prioritises nodes with higher number of children."
+                }                
+            }
+        },
         {
             "name": "GrowLocalKL",
             "id": "LocalSearch",
@@ -122,7 +137,7 @@
             "description": "Initialization with GrowLocal, then improvement by Kernighan-Lin local search.",
             "parameters": {
                 "improver": {
-                    "name" : "kl_total_comm" 
+                    "name" : "kl_total_lambda_comm" 
                 },
                 "scheduler": {
                     "name": "GrowLocal",
@@ -143,7 +158,7 @@
             "description": "Initialization with BspLocking, then improvement by Kernighan-Lin-type local search.",
             "parameters": {
                 "improver": {
-                    "name" : "kl_total_comm" 
+                    "name" : "kl_total_lambda_comm" 
                 },
                 "scheduler": {
                     "name": "BspLocking",
@@ -220,7 +235,7 @@
                     "name_suffix" : "LockingKL",
                     "parameters": {
                         "improver": {
-                            "name" : "kl_total_comm" 
+                            "name" : "kl_total_lambda_comm" 
                         },
                         "scheduler": {
                             "name": "BspLocking",

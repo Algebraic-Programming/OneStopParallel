@@ -16,7 +16,6 @@ limitations under the License.
 @author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 
-// #define KL_DEBUG
 
 #pragma once
 
@@ -226,9 +225,7 @@ struct kl_active_schedule_work_datastructures {
         step_max_work_processor_count[prev_step] = step_max_work_processor_count[step];
     }
 
-    void swap_with_next_superstep(const unsigned step) {
-        const unsigned next_step = step + 1;
-
+    void swap_with_next_superstep(const unsigned step, const unsigned next_step) {
         std::swap(step_processor_work_[step], step_processor_work_[next_step]);
         std::swap(step_processor_position[step], step_processor_position[next_step]);
         std::swap(step_max_work_processor_count[step], step_max_work_processor_count[next_step]);
@@ -285,6 +282,44 @@ struct kl_active_schedule_work_datastructures {
     }
 };
 
+template<typename Graph_t, typename cost_t>
+struct thread_local_active_schedule_data {
+
+    using VertexType = vertex_idx_t<Graph_t>;
+    using EdgeType = edge_desc_t<Graph_t>;
+
+    using kl_move = kl_move_struct<cost_t, VertexType>;
+
+    std::unordered_set<EdgeType> current_violations;
+    std::vector<kl_move> applied_moves;
+
+    cost_t cost = 0;
+    cost_t initial_cost = 0;
+    bool feasible = true;
+
+    cost_t best_cost = 0;
+    unsigned best_schedule_idx = 0;
+
+    std::unordered_map<VertexType, EdgeType> new_violations;
+    std::unordered_set<EdgeType> resolved_violations;
+
+    inline void initialize_cost(cost_t cost_) {
+        initial_cost = cost_;
+        cost = cost_;
+        best_cost = cost_;
+        feasible = true;
+    }  
+   
+    inline void update_cost(cost_t change_in_cost) {
+        cost += change_in_cost;        
+
+        if (cost <= best_cost && feasible) {
+            best_cost = cost;
+            best_schedule_idx = static_cast<unsigned>(applied_moves.size());
+        }    
+    }
+};
+
 template<typename Graph_t, typename cost_t, typename MemoryConstraint_t>
 class kl_active_schedule {
 
@@ -294,6 +329,8 @@ class kl_active_schedule {
 
     using kl_move = kl_move_struct<cost_t, VertexType>;
 
+    using thread_data_t = thread_local_active_schedule_data<Graph_t, cost_t>;
+
     const BspInstance<Graph_t> *instance;
 
     VectorSchedule<Graph_t> vector_schedule;
@@ -302,25 +339,15 @@ class kl_active_schedule {
     cost_t cost = 0;
     bool feasible = true;
 
-    std::unordered_set<EdgeType> current_violations;
-
-    std::vector<kl_move> applied_moves;
-
-    cost_t best_cost = 0;
-    unsigned best_schedule_idx = 0;
-
   public:
     virtual ~kl_active_schedule() = default;
 
     inline const BspInstance<Graph_t> & getInstance() const { return *instance; }
     inline const VectorSchedule<Graph_t> & getVectorSchedule() const { return vector_schedule; }
+    inline VectorSchedule<Graph_t> & getVectorSchedule() { return vector_schedule; }
     inline const SetSchedule<Graph_t> & getSetSchedule() const { return set_schedule; }
-    inline const std::vector<kl_move> & getAppliedMoves() const { return applied_moves; }
-    inline unsigned getBestScheduleIdx() const { return best_schedule_idx; }
     inline cost_t get_cost() { return cost; }
-    inline cost_t get_best_cost() { return best_cost; }
     inline bool is_feasible() { return feasible; }
-    inline const std::unordered_set<EdgeType> &get_current_violations() const { return current_violations; }
     inline unsigned num_steps() const { return vector_schedule.numberOfSupersteps(); }
     inline unsigned assigned_processor(VertexType node) const { return vector_schedule.assignedProcessor(node); }
     inline unsigned assigned_superstep(VertexType node) const { return vector_schedule.assignedSuperstep(node); }
@@ -331,15 +358,14 @@ class kl_active_schedule {
     inline pre_move_work_data<v_workw_t<Graph_t>> get_pre_move_work_data(kl_move move) { return work_datastructures.get_pre_move_work_data(move); }
     inline v_workw_t<Graph_t> get_max_work_weight() { return work_datastructures.max_work_weight; }
     inline v_workw_t<Graph_t> get_total_work_weight() { return work_datastructures.total_work_weight; }
-    
+    inline void set_cost(cost_t cost_) { cost = cost_; }  
+
     constexpr static bool use_memory_constraint = is_local_search_memory_constraint_v<MemoryConstraint_t>;
 
     MemoryConstraint_t memory_constraint;
 
     kl_active_schedule_work_datastructures<Graph_t> work_datastructures;
 
-    std::unordered_map<VertexType, EdgeType> new_violations;
-    std::unordered_set<EdgeType> resolved_violations;
 
     inline v_workw_t<Graph_t> get_step_total_work(unsigned step) const {        
         v_workw_t<Graph_t> total_work = 0;        
@@ -349,15 +375,15 @@ class kl_active_schedule {
         return total_work;
     }
 
-    void apply_move(kl_move move) {
+    void apply_move(kl_move move, thread_data_t &thread_data) {
         vector_schedule.setAssignedProcessor(move.node, move.to_proc);
         vector_schedule.setAssignedSuperstep(move.node, move.to_step);
 
         set_schedule.step_processor_vertices[move.from_step][move.from_proc].erase(move.node);
         set_schedule.step_processor_vertices[move.to_step][move.to_proc].insert(move.node);
        
-        update_violations(move.node);
-        applied_moves.push_back(move);
+        update_violations(move.node, thread_data);
+        thread_data.applied_moves.push_back(move);
 
         work_datastructures.apply_move(move, instance->getComputationalDag().vertex_work_weight(move.node));
         if constexpr (use_memory_constraint) {
@@ -366,124 +392,92 @@ class kl_active_schedule {
     }
 
     template<typename comm_datastructures_t>
-    void revert_to_best_schedule(unsigned start_move, unsigned insert_step, comm_datastructures_t & comm_datastructures) {
-        const unsigned bound = std::max(start_move, best_schedule_idx);
+    void revert_to_best_schedule(unsigned start_move, unsigned insert_step, comm_datastructures_t & comm_datastructures, thread_data_t & thread_data, unsigned start_step, unsigned & end_step) {
+        const unsigned bound = std::max(start_move, thread_data.best_schedule_idx);
+        revert_moves(bound, comm_datastructures, thread_data, start_step, end_step);
 
-        while (applied_moves.size() > bound) {
-            const auto move = applied_moves.back().reverse_move();
-            applied_moves.pop_back();
-
-            vector_schedule.setAssignedProcessor(move.node, move.to_proc);
-            vector_schedule.setAssignedSuperstep(move.node, move.to_step);  
-
-            set_schedule.step_processor_vertices[move.from_step][move.from_proc].erase(move.node);
-            set_schedule.step_processor_vertices[move.to_step][move.to_proc].insert(move.node);
-            work_datastructures.apply_move(move, instance->getComputationalDag().vertex_work_weight(move.node));
-            comm_datastructures.update_datastructure_after_move(move);
-            if constexpr (use_memory_constraint) {
-                memory_constraint.apply_move(move.node, move.from_proc, move.from_step, move.to_proc, move.to_step);
-            }
+        if (start_move > thread_data.best_schedule_idx) {
+            swap_empty_step_bwd(++end_step, insert_step);
         }
 
-        if (start_move > best_schedule_idx) {
-            insert_empty_step(insert_step);
-        }
-
-        while (applied_moves.size() > best_schedule_idx) {
-            const auto move = applied_moves.back().reverse_move();
-            applied_moves.pop_back();
-
-            vector_schedule.setAssignedProcessor(move.node, move.to_proc);
-            vector_schedule.setAssignedSuperstep(move.node, move.to_step);  
-
-            set_schedule.step_processor_vertices[move.from_step][move.from_proc].erase(move.node);
-            set_schedule.step_processor_vertices[move.to_step][move.to_proc].insert(move.node);
-            work_datastructures.apply_move(move, instance->getComputationalDag().vertex_work_weight(move.node));
-            comm_datastructures.update_datastructure_after_move(move);
-            if constexpr (use_memory_constraint) {
-                memory_constraint.apply_move(move.node, move.from_proc, move.from_step, move.to_proc, move.to_step);
-            }
-        }
+        revert_moves(thread_data.best_schedule_idx, comm_datastructures, thread_data, start_step, end_step);
 
 #ifdef KL_DEBUG
-        if (not feasible)
-            std::cout << "Reverted to best schedule with cost: " << best_cost << " and " << vector_schedule.number_of_supersteps << " supersteps" << std::endl;
+        if (not thread_data.feasible)
+            std::cout << "Reverted to best schedule with cost: " << thread_data.best_cost << " and " << vector_schedule.number_of_supersteps << " supersteps" << std::endl;
 #endif
 
-        applied_moves.clear();
-        best_schedule_idx = 0;
-        current_violations.clear();
-        feasible = true;
-        cost = best_cost;
+        thread_data.applied_moves.clear();
+        thread_data.best_schedule_idx = 0;
+        thread_data.current_violations.clear();
+        thread_data.feasible = true;
+        thread_data.cost = thread_data.best_cost;
     }
 
     template<typename comm_datastructures_t>
-    void revert_schedule_to_bound(size_t bound, cost_t new_cost, bool is_feasible, comm_datastructures_t & comm_datastructures) {
+    void revert_schedule_to_bound(const size_t bound, const cost_t new_cost, const bool is_feasible, comm_datastructures_t & comm_datastructures, thread_data_t & thread_data, unsigned start_step, unsigned end_step) {
+        revert_moves(bound, comm_datastructures, thread_data, start_step, end_step);
 
-        while (applied_moves.size() > bound) {
-            const auto move = applied_moves.back().reverse_move();
-            applied_moves.pop_back();
-
-            vector_schedule.setAssignedProcessor(move.node, move.to_proc);
-            vector_schedule.setAssignedSuperstep(move.node, move.to_step);  
-
-            set_schedule.step_processor_vertices[move.from_step][move.from_proc].erase(move.node);
-            set_schedule.step_processor_vertices[move.to_step][move.to_proc].insert(move.node);
-            work_datastructures.apply_move(move, instance->getComputationalDag().vertex_work_weight(move.node));
-            comm_datastructures.update_datastructure_after_move(move);
-            if constexpr (use_memory_constraint) {
-                memory_constraint.apply_move(move.node, move.from_proc, move.from_step, move.to_proc, move.to_step);
-            }
-        }
-
-        current_violations.clear();
-        feasible = is_feasible;
-        cost = new_cost;
+        thread_data.current_violations.clear();
+        thread_data.feasible = is_feasible;
+        thread_data.cost = new_cost;
     }
 
 
-    inline void update_cost(cost_t change_in_cost) {
-        cost += change_in_cost;        
-
-        if (cost <= best_cost && feasible) {
-            best_cost = cost;
-            best_schedule_idx = static_cast<unsigned>(applied_moves.size());
-        }    
-    }
-
-    inline void initialize_cost(cost_t cost_) {
-        cost = cost_;
-        best_cost = cost_;
-    }  
-
-    void compute_violations();
+    void compute_violations(thread_data_t & thread_data);
     void compute_work_memory_datastructures(unsigned start_step, unsigned end_step);
     void write_schedule (BspSchedule<Graph_t> &schedule);
     inline void initialize(const IBspSchedule<Graph_t> &schedule);
     inline void clear();
+    void remove_steps(unsigned first, unsigned num_to_remove);
     void remove_empty_step(unsigned step);
     void insert_empty_step(unsigned step);
+    void swap_empty_step_fwd(const unsigned step, const unsigned to_step);
+    void swap_empty_step_bwd(const unsigned to_step, const unsigned empty_step);
+    void swap_empty_step(const unsigned step, const unsigned empty_step);
 
   private:
 
-    void update_violations(VertexType node) {
-        new_violations.clear();
-        resolved_violations.clear();
+    template<typename comm_datastructures_t>
+    void revert_moves(const size_t bound, comm_datastructures_t & comm_datastructures, thread_data_t & thread_data, unsigned start_step, unsigned end_step) {
+        while (thread_data.applied_moves.size() > bound) {
+            const auto move = thread_data.applied_moves.back().reverse_move();
+            thread_data.applied_moves.pop_back();
+
+            vector_schedule.setAssignedProcessor(move.node, move.to_proc);
+            vector_schedule.setAssignedSuperstep(move.node, move.to_step);  
+
+            set_schedule.step_processor_vertices[move.from_step][move.from_proc].erase(move.node);
+            set_schedule.step_processor_vertices[move.to_step][move.to_proc].insert(move.node);
+            work_datastructures.apply_move(move, instance->getComputationalDag().vertex_work_weight(move.node));
+            comm_datastructures.update_datastructure_after_move(move, start_step, end_step);
+            if constexpr (use_memory_constraint) {
+                memory_constraint.apply_move(move.node, move.from_proc, move.from_step, move.to_proc, move.to_step);
+            }
+        }
+    }
+
+    void update_violations(VertexType node, thread_data_t &thread_data) {
+        thread_data.new_violations.clear();
+        thread_data.resolved_violations.clear();
+
+        const unsigned node_step = vector_schedule.assignedSuperstep(node);
+        const unsigned node_proc = vector_schedule.assignedProcessor(node);
 
         for (const auto &edge : out_edges(node, instance->getComputationalDag())) {
             const auto &child = target(edge, instance->getComputationalDag());
 
-            if (current_violations.find(edge) == current_violations.end()) {
-                if ((vector_schedule.assignedSuperstep(node) > vector_schedule.assignedSuperstep(child)) || 
-                    (vector_schedule.assignedSuperstep(node) == vector_schedule.assignedSuperstep(child) && vector_schedule.assignedProcessor(node) != vector_schedule.assignedProcessor(child))) {
-                        current_violations.insert(edge);
-                        new_violations[child] = edge;                    
+            if (thread_data.current_violations.find(edge) == thread_data.current_violations.end()) {
+                if ((node_step > vector_schedule.assignedSuperstep(child)) || 
+                    (node_step == vector_schedule.assignedSuperstep(child) && node_proc != vector_schedule.assignedProcessor(child))) {
+                        thread_data.current_violations.insert(edge);
+                        thread_data.new_violations[child] = edge;                    
                 }
             } else {
-                if ((vector_schedule.assignedSuperstep(node) < vector_schedule.assignedSuperstep(child)) || 
-                    (vector_schedule.assignedSuperstep(node) == vector_schedule.assignedSuperstep(child) && vector_schedule.assignedProcessor(node) == vector_schedule.assignedProcessor(child))) {
-                        current_violations.erase(edge);
-                        resolved_violations.insert(edge);                    
+                if ((node_step < vector_schedule.assignedSuperstep(child)) || 
+                    (node_step == vector_schedule.assignedSuperstep(child) && node_proc == vector_schedule.assignedProcessor(child))) {
+                        thread_data.current_violations.erase(edge);
+                        thread_data.resolved_violations.insert(edge);                    
                 }
             }
         }
@@ -491,34 +485,34 @@ class kl_active_schedule {
         for (const auto &edge : in_edges(node, instance->getComputationalDag())) {
             const auto &parent = source(edge, instance->getComputationalDag());
 
-            if (current_violations.find(edge) == current_violations.end()) {   
-                if ((vector_schedule.assignedSuperstep(node) < vector_schedule.assignedSuperstep(parent)) || 
-                    (vector_schedule.assignedSuperstep(node) == vector_schedule.assignedSuperstep(parent) && vector_schedule.assignedProcessor(node) != vector_schedule.assignedProcessor(parent))) {
-                        current_violations.insert(edge);
-                        new_violations[parent] = edge;                    
+            if (thread_data.current_violations.find(edge) == thread_data.current_violations.end()) {   
+                if ((node_step < vector_schedule.assignedSuperstep(parent)) || 
+                    (node_step == vector_schedule.assignedSuperstep(parent) && node_proc != vector_schedule.assignedProcessor(parent))) {
+                        thread_data.current_violations.insert(edge);
+                        thread_data.new_violations[parent] = edge;                    
                 }
             } else {
-                if ((vector_schedule.assignedSuperstep(node) > vector_schedule.assignedSuperstep(parent)) || 
-                    (vector_schedule.assignedSuperstep(node) == vector_schedule.assignedSuperstep(parent) && vector_schedule.assignedProcessor(node) == vector_schedule.assignedProcessor(parent))) {
-                        current_violations.erase(edge);
-                        resolved_violations.insert(edge);
+                if ((node_step > vector_schedule.assignedSuperstep(parent)) || 
+                    (node_step == vector_schedule.assignedSuperstep(parent) && node_proc == vector_schedule.assignedProcessor(parent))) {
+                        thread_data.current_violations.erase(edge);
+                        thread_data.resolved_violations.insert(edge);
                 }
             }
         }
 
 #ifdef KL_DEBUG
 
-        if (new_violations.size() > 0) {
+        if (thread_data.new_violations.size() > 0) {
             std::cout << "New violations: " << std::endl;
-            for (const auto &edge : new_violations) {
+            for (const auto &edge : thread_data.new_violations) {
                 std::cout << "Edge: " << source(edge.second, instance->getComputationalDag()) << " -> "
                           << target(edge.second, instance->getComputationalDag()) << std::endl;
             }
         }
 
-        if (resolved_violations.size() > 0) {
+        if (thread_data.resolved_violations.size() > 0) {
             std::cout << "Resolved violations: " << std::endl;
-            for (const auto &edge : resolved_violations) {
+            for (const auto &edge : thread_data.resolved_violations) {
                 std::cout << "Edge: " << source(edge, instance->getComputationalDag()) << " -> "
                           << target(edge, instance->getComputationalDag()) << std::endl;
             }
@@ -526,10 +520,10 @@ class kl_active_schedule {
 
 #endif
 
-        if (current_violations.size() > 0) {
-            feasible = false;
+        if (thread_data.current_violations.size() > 0) {
+            thread_data.feasible = false;
         } else {
-            feasible = true;
+            thread_data.feasible = true;
         }
     }
 
@@ -547,9 +541,10 @@ void kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t>::clear() {
 }
 
 template<typename Graph_t, typename cost_t, typename MemoryConstraint_t>
-void kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t>::compute_violations() {
+void kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t>::compute_violations(thread_data_t & thread_data) {
 
-    current_violations.clear();
+    thread_data.current_violations.clear();
+    thread_data.feasible = true;
 
     for (const auto &edge : edges(instance->getComputationalDag())) {
 
@@ -562,14 +557,10 @@ void kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t>::compute_violations
         const unsigned target_step = assigned_superstep(target_v);
     
         if (source_step > target_step || (source_step == target_step && source_proc != target_proc)) {
-            current_violations.insert(edge);
-            feasible = false;
+            thread_data.current_violations.insert(edge);
+            thread_data.feasible = false;
         } 
-    }  
-    
-    if (current_violations.empty()) {
-        feasible = true;
-    }  
+    }    
 }
 
 template<typename Graph_t, typename cost_t, typename MemoryConstraint_t>
@@ -580,9 +571,7 @@ void kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t>::initialize(const I
     work_datastructures.initialize(set_schedule, *instance, num_steps());
 
     cost = 0;
-    best_cost = 0;
     feasible = true;
-    best_schedule_idx = 0;
 
     if constexpr (use_memory_constraint) {
         memory_constraint.initialize(set_schedule, vector_schedule);
@@ -617,7 +606,7 @@ void kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t>::remove_empty_step(
             }
         }
         std::swap(set_schedule.step_processor_vertices[i], set_schedule.step_processor_vertices[i + 1]);
-        work_datastructures.swap_with_next_superstep(i);
+        work_datastructures.swap_with_next_superstep(i, i+1);
     }
     vector_schedule.number_of_supersteps--;
     // for (unsigned i = step + 1; i < num_steps(); i++) {
@@ -629,6 +618,19 @@ void kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t>::remove_empty_step(
     // if constexpr (use_memory_constraint) {
     //     memory_constraint.reset_superstep(num_steps());
     // }
+}
+
+template<typename Graph_t, typename cost_t, typename MemoryConstraint_t>
+void kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t>::swap_empty_step_fwd(const unsigned step, const unsigned to_step) {    
+    for (unsigned i = step; i < to_step; i++) {
+        for(unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
+            for (const auto node : set_schedule.step_processor_vertices[i + 1][proc]){
+                vector_schedule.setAssignedSuperstep(node, i);
+            }
+        }
+        std::swap(set_schedule.step_processor_vertices[i], set_schedule.step_processor_vertices[i + 1]);
+        work_datastructures.swap_with_next_superstep(i, i + 1);
+    }
 }
 
 
@@ -643,9 +645,34 @@ void kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t>::insert_empty_step(
             }
         }
         std::swap(set_schedule.step_processor_vertices[i], set_schedule.step_processor_vertices[i - 1]);
-        work_datastructures.swap_with_next_superstep(i-1);
+        work_datastructures.swap_with_next_superstep(i-1, i);
     } 
-     
 }
-} // namespace osp
 
+template<typename Graph_t, typename cost_t, typename MemoryConstraint_t>
+void kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t>::swap_empty_step_bwd(const unsigned to_step, const unsigned empty_step) {
+    unsigned i = to_step;  
+ 
+    for (; i > empty_step; i--) {
+        for(unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
+            for (const auto node : set_schedule.step_processor_vertices[i-1][proc]){
+                vector_schedule.setAssignedSuperstep(node, i);
+            }
+        }
+        std::swap(set_schedule.step_processor_vertices[i], set_schedule.step_processor_vertices[i - 1]);
+        work_datastructures.swap_with_next_superstep(i-1, i);
+    }     
+}
+
+template<typename Graph_t, typename cost_t, typename MemoryConstraint_t>
+void kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t>::swap_empty_step(const unsigned step, const unsigned empty_step) {
+    for(unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
+        for (const auto node : set_schedule.step_processor_vertices[step][proc]){
+            vector_schedule.setAssignedSuperstep(node, empty_step);
+        }
+    }
+    std::swap(set_schedule.step_processor_vertices[step], set_schedule.step_processor_vertices[empty_step]);
+    work_datastructures.swap_with_next_superstep(step, empty_step);     
+}
+
+} // namespace osp

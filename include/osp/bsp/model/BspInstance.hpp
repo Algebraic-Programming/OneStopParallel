@@ -419,7 +419,7 @@ class compatible_processor_range {
         } 
     }
 
-    inline auto compatible_processors_type(v_type_t<Graph_t> type) {
+    inline const auto & compatible_processors_type(v_type_t<Graph_t> type) const {
 
         assert(instance != nullptr);
 
@@ -430,7 +430,7 @@ class compatible_processor_range {
         }
     }
 
-    inline auto compatible_processors_vertex(vertex_idx_t<Graph_t> vertex) {
+    inline const auto & compatible_processors_vertex(vertex_idx_t<Graph_t> vertex) const {
         return compatible_processors_type(instance->getComputationalDag().vertex_type(vertex));
     }
 

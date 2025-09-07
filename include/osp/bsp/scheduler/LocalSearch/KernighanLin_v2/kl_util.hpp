@@ -34,7 +34,7 @@ struct reward_penalty_strategy {
     cost_t penalty = 0;
     cost_t reward = 0; 
 
-    void initalize(kl_active_schedule_t & sched, const cost_t max_comm, const cost_t max_work) {
+    void initialize(kl_active_schedule_t & sched, const cost_t max_comm, const cost_t max_work) {
         max_weight = std::max(max_work, max_comm * sched.getInstance().communicationCosts());
         active_schedule = &sched;
         initial_penalty = std::sqrt(max_weight);
@@ -372,6 +372,8 @@ public:
 template<typename Graph_t, typename container_t, typename handle_t, typename kl_active_schedule_t>
 struct vertex_selection_strategy {
 
+    using EdgeType = edge_desc_t<Graph_t>;
+
     const kl_active_schedule_t *active_schedule;
     const Graph_t * graph; 
     std::mt19937 * gen;
@@ -383,81 +385,91 @@ struct vertex_selection_strategy {
 
     unsigned max_work_counter = 0;
 
-    inline void initialize(const kl_active_schedule_t & sche_, std::mt19937 & gen_) {
+    inline void initialize(const kl_active_schedule_t & sche_, std::mt19937 & gen_, const unsigned start_step, const unsigned end_step) {
         active_schedule = &sche_;
         graph = &(sche_.getInstance().getComputationalDag());        
         gen = &gen_;
 
-        strategy_counter = 0; 
-        permutation = std::vector<vertex_idx_t<Graph_t>>(graph->num_vertices());
-        std::iota(std::begin(permutation), std::end(permutation), 0);
+        permutation.reserve(graph->num_vertices() / active_schedule->num_steps() * (end_step - start_step));
+    }
+
+    inline void setup(const unsigned start_step, const unsigned end_step) {
+        max_work_counter = start_step;
+        strategy_counter = 0;
+        permutation.clear();
+
+        const unsigned num_procs = active_schedule->getInstance().numberOfProcessors();
+        for (unsigned step = start_step; step <= end_step; ++step) {
+            const auto & processor_vertices = active_schedule->getSetSchedule().step_processor_vertices[step]; 
+            for (unsigned proc = 0; proc < num_procs; ++proc) {
+                for (const auto node : processor_vertices[proc]) {
+                    permutation.push_back(node);
+                }
+            }
+        }
+
         permutation_idx = 0;
         std::shuffle(permutation.begin(), permutation.end(), *gen);
     }
 
-    void add_neighbours_to_selection(vertex_idx_t<Graph_t> node, container_t &nodes) {
-        for (const auto parent : graph->parents(node))
-            nodes.insert(parent);
 
-        for (const auto child : graph->children(node))
-            nodes.insert(child);
-    }
+    // void add_neighbours_to_selection(vertex_idx_t<Graph_t> node, container_t &nodes) {
+    //     for (const auto parent : graph->parents(node))
+    //         nodes.insert(parent);
 
-    inline void select_active_nodes(container_t & node_selection) {        
+    //     for (const auto child : graph->children(node))
+    //         nodes.insert(child);
+    // }
+
+    inline void select_active_nodes(container_t & node_selection, const unsigned start_step, const unsigned end_step) {        
         if (strategy_counter < 3) {
             select_nodes_permutation_threshold(selection_threshold, node_selection);    
         } else if (strategy_counter == 4) {
-            select_nodes_max_work_proc(selection_threshold, node_selection);
-        }
+            select_nodes_max_work_proc(selection_threshold, node_selection, start_step, end_step);
+        } 
 
         strategy_counter++;
         strategy_counter %= 5;
     }
 
-    void select_nodes_comm(container_t & node_selection) {
-        for (const auto &node : graph->vertices()) {
-            for (const auto &source : graph->parents(node)) {
-                if (active_schedule->assigned_processor(node) !=
-                    active_schedule->assigned_processor(source)) {
-                    node_selection.insert(node);
-                    break;
-                }
-            }
-        }
-    }
-
-    void select_nodes_violations(container_t & node_selection) {
-        for (const auto & edge : active_schedule->get_current_violations()) {
-            node_selection.insert(source(edge, *graph));
-            node_selection.insert(target(edge, *graph));
+    void select_nodes_violations(container_t & node_selection, std::unordered_set<EdgeType>& current_violations, const unsigned start_step, const unsigned end_step) {
+        for (const auto & edge : current_violations) {
+            const auto source_v = source(edge, *graph);
+            const auto target_v = target(edge, *graph);
+            
+            const unsigned source_step = active_schedule->assigned_superstep(source_v);
+            if (source_step >= start_step && source_step <= end_step)
+                node_selection.insert(source_v);
+            
+            const unsigned target_step = active_schedule->assigned_superstep(target_v);
+            if (target_step >= start_step && target_step <= end_step)
+                node_selection.insert(target_v);
         }
     }
 
     void select_nodes_permutation_threshold(const std::size_t & threshold, container_t & node_selection) {
 
-        const size_t bound = std::min(threshold + permutation_idx, graph->num_vertices());
+        const size_t bound = std::min(threshold + permutation_idx, permutation.size());
         for (std::size_t i = permutation_idx; i < bound; i++) { 
                 node_selection.insert(permutation[i]);
         }
 
         permutation_idx = bound;
-        if (permutation_idx + threshold >= graph->num_vertices()) {
+        if (permutation_idx + threshold >= permutation.size()) {
             permutation_idx = 0;
             std::shuffle(permutation.begin(), permutation.end(), *gen);
         }
     }
 
-    void select_nodes_max_work_proc(const std::size_t & threshold, container_t & node_selection) {        
-        while (node_selection.size() < threshold - 1) {
-            if (max_work_counter >= active_schedule->num_steps())
-                max_work_counter = 0;
-                
+    void select_nodes_max_work_proc(const std::size_t & threshold, container_t & node_selection, const unsigned start_step, const unsigned end_step) {        
+        while (node_selection.size() < threshold) {
+            if (max_work_counter > end_step) {
+                max_work_counter = start_step; // wrap around
+                break;                         // stop after one full pass
+            }
+
             select_nodes_max_work_proc_helper(threshold - node_selection.size(), max_work_counter, node_selection);
             max_work_counter++;
-            if(max_work_counter >= active_schedule->num_steps()) {
-                max_work_counter = 0;
-                break;
-            }
         }
     }
 
