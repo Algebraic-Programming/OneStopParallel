@@ -304,6 +304,10 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::allChildrenContraction
         if (combined_weight > params.maxWeight) continue;
 
         v_workw_t<Graph_t_in> maxPath = topDist[groupHead] + botDist[groupHead] - graph.vertex_work_weight(groupHead);
+        for (const VertexType &chld : graph.children(groupHead)) {
+            maxPath = std::max(maxPath, topDist[chld] + botDist[chld] - graph.vertex_work_weight(chld));
+        }
+
         v_workw_t<Graph_t_in> maxParentDist = 0;
         v_workw_t<Graph_t_in> maxChildDist = 0;
 
@@ -431,6 +435,10 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::allParentsContraction(
         if (combined_weight > params.maxWeight) continue;
 
         v_workw_t<Graph_t_in> maxPath = topDist[groupFoot] + botDist[groupFoot] - graph.vertex_work_weight(groupFoot);
+        for (const VertexType &par : graph.parents(groupFoot)) {
+            maxPath = std::max(maxPath, topDist[par] + botDist[par] - graph.vertex_work_weight(par));
+        }
+
         v_workw_t<Graph_t_in> maxParentDist = 0;
         v_workw_t<Graph_t_in> maxChildDist = 0;
 
@@ -620,83 +628,94 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::someChildrenContractio
     for (const VertexType &groupHead : graph.vertices()) {
         if (graph.out_degree(groupHead) < 2) continue;
 
-        auto cmp_chld = [&botDist](const VertexType &lhs, const VertexType &rhs) {
-            return (botDist[lhs] > botDist[rhs])
-                    || ((botDist[lhs] == botDist[rhs]) && (lhs < rhs));
+        auto cmp_chld = [&topDist, &botDist](const VertexType &lhs, const VertexType &rhs) {
+            return (topDist[lhs] < topDist[rhs])
+                    || ((topDist[lhs] == topDist[rhs]) && (botDist[lhs] > botDist[rhs]))
+                    || ((topDist[lhs] == topDist[rhs]) && (botDist[lhs] == botDist[rhs]) && (lhs < rhs));
         };
         std::set<VertexType, decltype(cmp_chld)> childrenPriority(cmp_chld);
         for (const VertexType &chld : graph.children(groupHead)) {
             childrenPriority.emplace(chld);
         }
 
-        bool shouldSkip = false;
-        
-        auto chld_iter = childrenPriority.cbegin();
-        v_workw_t<Graph_t_in> added_weight = 0;
-        const v_workw_t<Graph_t_in> limit_weight = botDist[groupHead] - commCost - graph.vertex_work_weight(groupHead);
-        while (chld_iter != childrenPriority.cend()) {
+        std::vector< std::pair< typename std::set<VertexType, decltype(cmp_chld)>::const_iterator, typename std::set<VertexType, decltype(cmp_chld)>::const_iterator > > admissble_children_groups;
+        for (auto chld_iter_start = childrenPriority.cbegin(); chld_iter_start != childrenPriority.cend();) {
             if constexpr (has_typed_vertices_v<Graph_t_in>) {
-                if (graph.vertex_type(groupHead) != graph.vertex_type(*chld_iter)) {
-                    shouldSkip = true;
-                    break;
+                if (graph.vertex_type(groupHead) != graph.vertex_type(*chld_iter_start)) {
+                    ++chld_iter_start;
+                    continue;
                 }
             }
 
-            if (vertexPoset[*chld_iter] != vertexPoset[groupHead] + 1) {
-                shouldSkip = true;
-                break;
+            const v_workw_t<Graph_t_in> t_dist = topDist[*chld_iter_start];
+            const v_workw_t<Graph_t_in> b_dist = botDist[*chld_iter_start];
+            auto chld_iter_end = chld_iter_start;
+            while (chld_iter_end != childrenPriority.cend() && t_dist == topDist[*chld_iter_end] && b_dist == botDist[*chld_iter_end]) {
+                if constexpr (has_typed_vertices_v<Graph_t_in>) {
+                    if (graph.vertex_type(groupHead) != graph.vertex_type(*chld_iter_end)) {
+                        break;
+                    }
+                }
+                ++chld_iter_end;
             }
 
-            added_weight += graph.vertex_work_weight(*chld_iter);
-            if (added_weight + graph.vertex_work_weight(groupHead) > params.maxWeight) {
-                shouldSkip = true;
-                break;
-            }
-
-            const v_workw_t<Graph_t_in> curr_botDist = botDist[*chld_iter];
-            ++chld_iter;
-            if (chld_iter == childrenPriority.cend()) break;
-            const v_workw_t<Graph_t_in> next_botDist = botDist[*chld_iter];
-            if ((curr_botDist != next_botDist) && (next_botDist + added_weight <= limit_weight)) break;
+            admissble_children_groups.emplace_back(chld_iter_start, chld_iter_end);
+            chld_iter_start = chld_iter_end;
         }
-        if (shouldSkip) continue;
 
         std::vector<VertexType> contractionEnsemble;
+        std::set<VertexType> contractionChildrenSet;
         contractionEnsemble.reserve(1 + graph.out_degree(groupHead));
         contractionEnsemble.emplace_back(groupHead);
-        for (auto it = childrenPriority.cbegin(); it != chld_iter; ++it) {
-            contractionEnsemble.emplace_back(*it);
-        }
+        v_workw_t<Graph_t_in> added_weight = graph.vertex_work_weight(groupHead);
 
-        v_workw_t<Graph_t_in> maxPath = topDist[groupHead] + botDist[groupHead] - graph.vertex_work_weight(groupHead);
-        v_workw_t<Graph_t_in> maxParentDist = 0;
-        v_workw_t<Graph_t_in> maxChildDist = 0;
+        for (std::size_t i = 0U; i < admissble_children_groups.size(); ++i) {
+            const auto &first = admissble_children_groups[i].first;
+            const auto &last = admissble_children_groups[i].second;
 
-        for (const VertexType &vert : contractionEnsemble) {
-            for (const VertexType &par : graph.parents(vert)) {
-                if (par == groupHead) continue;
-                maxParentDist = std::max(maxParentDist, topDist[par] + commCost);
+            for (auto it = first; it != last; ++it) {
+                contractionEnsemble.emplace_back(*it);
+                contractionChildrenSet.emplace(*it);
+                added_weight += graph.vertex_work_weight(*it);
             }
-        }
+            if (added_weight > params.maxWeight) break;
 
-        if (chld_iter != childrenPriority.cend()) {
-            maxChildDist = std::max(maxChildDist, botDist[*chld_iter] + commCost);
-        }
-
-        for (std::size_t i = 1; i < contractionEnsemble.size(); i++) {
-            for (const VertexType &chld : graph.children(contractionEnsemble[i])) {
-                maxChildDist = std::max(maxChildDist, botDist[chld] + commCost);
+            v_workw_t<Graph_t_in> maxPath = 0;
+            for (const VertexType &vert : contractionEnsemble) {
+                maxPath = std::max(maxPath, topDist[vert] + botDist[vert] - graph.vertex_work_weight(vert));
             }
-        }
 
-        v_workw_t<Graph_t_in> newMaxPath = maxParentDist + maxChildDist;
-        for (const VertexType &vert : contractionEnsemble) {
-            newMaxPath += graph.vertex_work_weight(vert);
-        }
+            v_workw_t<Graph_t_in> maxParentDist = 0;
+            v_workw_t<Graph_t_in> maxChildDist = 0;
 
-        long savings = static_cast<long>(maxPath) - static_cast<long>(newMaxPath);
-        if (savings + static_cast<long>(params.leniency * static_cast<double>(maxPath)) >= 0) {
-            vertPriority.emplace(savings, contractionEnsemble);
+            for (const VertexType &vert : contractionEnsemble) {
+                for (const VertexType &par : graph.parents(vert)) {
+                    if (par == groupHead) continue;
+                    maxParentDist = std::max(maxParentDist, topDist[par] + commCost);
+                }
+            }
+
+            for (const VertexType &chld : graph.children(groupHead)) {
+                if (contractionChildrenSet.find(chld) == contractionChildrenSet.end()) {
+                    maxChildDist = std::max(maxChildDist, botDist[chld] + commCost);
+                }
+            }
+
+            for (std::size_t i = 1; i < contractionEnsemble.size(); i++) {
+                for (const VertexType &chld : graph.children(contractionEnsemble[i])) {
+                    maxChildDist = std::max(maxChildDist, botDist[chld] + commCost);
+                }
+            }
+
+            v_workw_t<Graph_t_in> newMaxPath = maxParentDist + maxChildDist;
+            for (const VertexType &vert : contractionEnsemble) {
+                newMaxPath += graph.vertex_work_weight(vert);
+            }
+
+            long savings = static_cast<long>(maxPath) - static_cast<long>(newMaxPath);
+            if (savings + static_cast<long>(params.leniency * static_cast<double>(maxPath)) >= 0) {
+                vertPriority.emplace(savings, contractionEnsemble);
+            }
         }
     }
 
