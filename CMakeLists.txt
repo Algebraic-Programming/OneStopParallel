@@ -153,6 +153,10 @@ if(CMAKE_BUILD_TYPE STREQUAL "Library")
     set(BUILD_TESTS OFF)
     message(STATUS "CMAKE_BUILD_TYPE is Library, so BUILD_TESTS is forced to OFF.")
 endif()
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    set(BUILD_TESTS OFF)
+    message(STATUS "CMAKE_BUILD_TYPE is Release, so BUILD_TESTS is forced to OFF.")
+endif()
 
 if(BUILD_TESTS)
     # Check if Boost::unit_test_framework was found for tests to be enabled.
