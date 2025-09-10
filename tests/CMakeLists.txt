@@ -44,6 +44,8 @@ ENDIF()
 
 _add_test( directed_graph_algorithms )
 
+_add_test( strongly_connected_components )
+
 _add_test( directed_graph_util )
 
 _add_test( directed_graph_top_sort )
