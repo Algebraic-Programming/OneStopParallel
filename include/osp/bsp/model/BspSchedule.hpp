@@ -23,6 +23,7 @@ limitations under the License.
 #include <list>
 #include <map>
 #include <stdexcept>
+#include <unordered_set>
 #include <vector>
 
 #include "IBspScheduleEval.hpp"
@@ -368,7 +369,7 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
             }
         }
 
-        return total_communication * (double)instance->communicationCosts() / (double)instance->numberOfProcessors();
+        return total_communication * static_cast<double>(instance->communicationCosts()) / static_cast<double>(instance->numberOfProcessors());
     }
 
     double computeTotalCosts() const {
@@ -381,6 +382,44 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
                 : 0;
 
         return static_cast<double>(computeWorkCosts()) + compute_total_communication_costs() + sync_cost;
+    }
+
+    double compute_total_lambda_communication_cost() const {
+
+        assert(satisfiesPrecedenceConstraints());
+
+        double comm_costs = 0;
+        const double comm_multiplier = 1.0 / instance->numberOfProcessors();
+
+        for (const auto &v : instance->vertices()) {
+            if (instance->getComputationalDag().out_degree(v) == 0)
+                continue;
+
+            std::unordered_set<unsigned> target_procs;
+            for (const auto &target : instance->getComputationalDag().children(v)) {
+                target_procs.insert(node_to_processor_assignment[target]);
+            }
+
+            const unsigned source_proc = node_to_processor_assignment[v];
+            const auto v_comm_cost = instance->getComputationalDag().vertex_comm_weight(v);
+
+            for (const auto& target_proc : target_procs) {
+                comm_costs += v_comm_cost * instance->sendCosts(source_proc, target_proc);
+            }
+        }
+
+        return comm_costs * comm_multiplier * static_cast<double>(instance->communicationCosts());
+    }
+    
+    double computeTotalLambdaCosts() const {
+        assert(satisfiesPrecedenceConstraints());
+
+        const v_commw_t<Graph_t> sync_cost =
+            number_of_supersteps >= 1
+                ? instance->synchronisationCosts() * static_cast<v_commw_t<Graph_t>>(number_of_supersteps - 1)
+                : 0;
+
+        return static_cast<double>(computeWorkCosts()) + compute_total_lambda_communication_cost() + sync_cost;
     }
 
     v_commw_t<Graph_t> compute_buffered_sending_communication_costs() const {

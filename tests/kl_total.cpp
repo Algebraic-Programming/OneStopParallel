@@ -317,7 +317,7 @@ BOOST_AUTO_TEST_CASE(kl_improver_superstep_removal_test) {
     const VertexType v1 = dag.add_vertex(2, 9, 2);
     const VertexType v2 = dag.add_vertex(3, 8, 4);
     const VertexType v3 = dag.add_vertex(4, 7, 3);
-    const VertexType v4 = dag.add_vertex(5, 6, 2);
+    const VertexType v4 = dag.add_vertex(1, 6, 2);
     const VertexType v5 = dag.add_vertex(6, 5, 6);
     const VertexType v6 = dag.add_vertex(7, 4, 2);
     dag.add_vertex(8, 3, 4);
@@ -340,9 +340,8 @@ BOOST_AUTO_TEST_CASE(kl_improver_superstep_removal_test) {
 
     // Create a schedule with an almost empty superstep (step 1)
     schedule.setAssignedProcessors({0, 0, 0, 0, 1, 1, 1, 1});
-    schedule.setAssignedSupersteps({0, 2, 3, 4, 5, 6, 7, 8});
-    schedule.setAssignedSuperstep(v6, 1); // node 5, work 7, in its own step
-
+    schedule.setAssignedSupersteps({0, 0, 0, 0, 1, 2, 2, 2});
+    
     schedule.updateNumberOfSupersteps();
     unsigned original_steps = schedule.numberOfSupersteps();
     
@@ -660,7 +659,7 @@ BOOST_AUTO_TEST_CASE(kl_improver_violation_handling_test) {
 //         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
 //         kl_total_comm_improver<graph,no_local_search_memory_constraint,1,true> kl;
-        
+//         kl.set_max_num_threads(1);
 //         auto start_time = std::chrono::high_resolution_clock::now();
 //         auto status = kl.improveSchedule(schedule);
 //         auto finish_time = std::chrono::high_resolution_clock::now();

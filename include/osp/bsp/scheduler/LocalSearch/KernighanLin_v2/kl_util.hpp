@@ -413,13 +413,19 @@ struct vertex_selection_strategy {
     }
 
 
-    // void add_neighbours_to_selection(vertex_idx_t<Graph_t> node, container_t &nodes) {
-    //     for (const auto parent : graph->parents(node))
-    //         nodes.insert(parent);
+    void add_neighbours_to_selection(vertex_idx_t<Graph_t> node, container_t &nodes, const unsigned start_step, const unsigned end_step) {
+        for (const auto parent : graph->parents(node)) {
+            const unsigned parent_step = active_schedule->assigned_superstep(parent);
+            if (parent_step >= start_step && parent_step <= end_step)         
+                nodes.insert(parent);
+        }
 
-    //     for (const auto child : graph->children(node))
-    //         nodes.insert(child);
-    // }
+        for (const auto child : graph->children(node)) {
+            const unsigned child_step = active_schedule->assigned_superstep(child);
+            if (child_step >= start_step && child_step <= end_step)
+                nodes.insert(child);
+        }
+    }
 
     inline void select_active_nodes(container_t & node_selection, const unsigned start_step, const unsigned end_step) {        
         if (strategy_counter < 3) {

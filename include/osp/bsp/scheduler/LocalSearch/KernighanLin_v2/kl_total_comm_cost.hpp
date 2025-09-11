@@ -313,9 +313,9 @@ struct kl_total_comm_cost_function {
         } 
     }
 
-    inline unsigned start_idx(const unsigned node_step, const unsigned start_step) { return node_step < window_size + start_step ? window_size - (node_step - start_step) : 0; }
-    inline unsigned end_idx(const unsigned node_step, const unsigned end_step) { return node_step + window_size <= end_step ? window_range : window_range - (node_step + window_size - end_step); }
-   
+    inline unsigned start_idx(const unsigned node_step, const unsigned start_step) { return (node_step < window_size + start_step) ? window_size - (node_step - start_step) : 0; }
+    inline unsigned end_idx(const unsigned node_step, const unsigned end_step) { return (node_step + window_size <= end_step) ? window_range : window_range - (node_step + window_size - end_step); }
+
     inline cost_t change_comm_cost(const v_commw_t<Graph_t> &p_target_comm_cost, const v_commw_t<Graph_t> &node_target_comm_cost, const cost_t &comm_gain) { return p_target_comm_cost > node_target_comm_cost ? (p_target_comm_cost - node_target_comm_cost) * comm_gain : (node_target_comm_cost - p_target_comm_cost) * comm_gain * -1.0;}
 
     template<typename affinity_table_t>
