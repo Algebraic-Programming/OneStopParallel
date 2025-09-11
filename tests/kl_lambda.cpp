@@ -664,22 +664,22 @@ BOOST_AUTO_TEST_CASE(kl_lambda_improver_inner_loop_lambda_map_test) {
         
     auto& lambda_map = kl.get_comm_cost_f().node_lambda_map;
 
-    BOOST_CHECK(lambda_map[v1][0] == 2);
-    BOOST_CHECK(lambda_map[v1][1] == 1);
-    BOOST_CHECK(lambda_map[v2].find(0) == lambda_map[v2].end());
-    BOOST_CHECK(lambda_map[v2][1] == 1);
-    BOOST_CHECK(lambda_map[v3][0] == 1);
-    BOOST_CHECK(lambda_map[v3][1] == 1);
-    BOOST_CHECK(lambda_map[v4].find(0) == lambda_map[v4].end());
-    BOOST_CHECK(lambda_map[v4][1] == 1);
-    BOOST_CHECK(lambda_map[v5].find(0) == lambda_map[v5].end());
-    BOOST_CHECK(lambda_map[v5][1] == 1);
-    BOOST_CHECK(lambda_map[v6].find(0) == lambda_map[v6].end());
-    BOOST_CHECK(lambda_map[v6].find(0) == lambda_map[v6].end());
-    BOOST_CHECK(lambda_map[v7].find(0) == lambda_map[v7].end());
-    BOOST_CHECK(lambda_map[v7].find(0) == lambda_map[v7].end());
-    BOOST_CHECK(lambda_map[v8].find(0) == lambda_map[v8].end());
-    BOOST_CHECK(lambda_map[v8].find(0) == lambda_map[v8].end());
+    BOOST_CHECK(lambda_map.get_proc_entry(v1, 0) == 2);
+    BOOST_CHECK(lambda_map.get_proc_entry(v1, 1) == 1);
+    BOOST_CHECK(lambda_map.has_no_proc_entry(v2, 0));
+    BOOST_CHECK(lambda_map.get_proc_entry(v2, 1) == 1);
+    BOOST_CHECK(lambda_map.get_proc_entry(v3, 0) == 1);
+    BOOST_CHECK(lambda_map.get_proc_entry(v3, 1) == 1);
+    BOOST_CHECK(lambda_map.has_no_proc_entry(v4, 0));
+    BOOST_CHECK(lambda_map.get_proc_entry(v4, 1) == 1);
+    BOOST_CHECK(lambda_map.has_no_proc_entry(v5, 0));
+    BOOST_CHECK(lambda_map.get_proc_entry(v5, 1) == 1);
+    BOOST_CHECK(lambda_map.has_no_proc_entry(v6, 0));
+    BOOST_CHECK(lambda_map.has_no_proc_entry(v6, 0));
+    BOOST_CHECK(lambda_map.has_no_proc_entry(v7, 0));
+    BOOST_CHECK(lambda_map.has_no_proc_entry(v7, 0));
+    BOOST_CHECK(lambda_map.has_no_proc_entry(v8, 0));
+    BOOST_CHECK(lambda_map.has_no_proc_entry(v8, 0));
 
     recompute_max_gain = kl.run_inner_iteration_test();
     std::cout << "recompute max_gain: { "; 

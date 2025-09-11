@@ -149,6 +149,7 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
     comm_cost_function_t comm_cost_f;
     std::vector<ThreadSearchContext> thread_data_vec;
     std::vector<bool> thread_finished_vec;
+    unsigned max_num_threads = std::numeric_limits<unsigned>::max();
 
     inline unsigned rel_step_idx(const unsigned node_step, const unsigned move_step) const { return (move_step >= node_step) ? ((move_step - node_step) + window_size) : (window_size - (node_step - move_step)); }
     inline bool is_compatible(VertexType node, unsigned proc) const { return active_schedule.getInstance().isCompatible(node, proc); }
@@ -956,11 +957,15 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
     virtual ~kl_improver() = default;
 
     virtual RETURN_STATUS improveSchedule(BspSchedule<Graph_t> &schedule) override {
-        unsigned num_threads = static_cast<unsigned>(omp_get_max_threads());
+        unsigned num_threads = std::max(max_num_threads, static_cast<unsigned>(omp_get_max_threads()));
         set_num_threads(num_threads, schedule.numberOfSupersteps());
 
         thread_data_vec.resize(num_threads);      
         thread_finished_vec.assign(num_threads, true);
+
+        if (num_threads == 1) {
+            parameters.num_parallel_loops = 1; // no parallelization with one thread. Affects parameters.max_out_iteration calculation in set_parameters()
+        }
 
         set_parameters(schedule.getInstance().numberOfVertices());
         initialize_datastructures(schedule); 
@@ -979,9 +984,11 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
             }
         
             synchronize_active_schedule(num_threads);
-            active_schedule.set_cost(comm_cost_f.compute_schedule_cost());
-            set_num_threads(num_threads, schedule.numberOfSupersteps());
-            thread_finished_vec.resize(num_threads);
+            if (num_threads > 1) {
+                active_schedule.set_cost(comm_cost_f.compute_schedule_cost());
+                set_num_threads(num_threads, schedule.numberOfSupersteps());
+                thread_finished_vec.resize(num_threads);
+            }
         }               
 
         if (initial_cost > active_schedule.get_cost()) {
@@ -1001,6 +1008,10 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
 
     void set_compute_with_time_limit(bool compute_with_time_limit_) {
         compute_with_time_limit = compute_with_time_limit_;
+    }
+
+    void set_max_num_threads(const unsigned num_threads) {
+        max_num_threads = num_threads;
     }
 
     virtual std::string getScheduleName() const {

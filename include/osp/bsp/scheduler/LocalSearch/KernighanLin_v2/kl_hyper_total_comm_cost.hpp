@@ -21,7 +21,140 @@ limitations under the License.
 #include "kl_active_schedule.hpp"
 #include "kl_improver.hpp"
 
+#include <unordered_map>
 namespace osp {
+
+
+struct lambda_map_container {
+
+    std::vector<std::unordered_map<unsigned,unsigned>> node_lambda_map;
+
+    inline void initialize(const size_t num_vertices, const unsigned) { node_lambda_map.resize(num_vertices); }
+    inline void reset_node(const size_t node) { node_lambda_map[node].clear(); }
+    inline void clear() { node_lambda_map.clear(); }
+    inline bool has_proc_entry(const size_t node, const unsigned proc) const { return (node_lambda_map[node].find(proc) != node_lambda_map[node].end()); }
+    inline bool has_no_proc_entry(const size_t node, const unsigned proc) const { return (node_lambda_map[node].find(proc) == node_lambda_map[node].end()); }
+    inline unsigned & get_proc_entry(const size_t node, const unsigned proc) { return node_lambda_map[node][proc]; }
+
+    inline bool increase_proc_count(const size_t node, const unsigned proc) {
+        if (has_proc_entry(node, proc)) {
+            node_lambda_map[node][proc]++;
+            return false;
+        } else {
+            node_lambda_map[node][proc] = 1;
+            return true;
+        }
+    }
+
+    inline bool decrease_proc_count(const size_t node, const unsigned proc) {
+        assert(has_proc_entry(node, proc));
+        if (node_lambda_map[node][proc] == 1) {
+            node_lambda_map[node].erase(proc);
+            return true;
+        } else {
+            node_lambda_map[node][proc]--;
+            return false;
+        }
+    }
+
+    inline const auto & iterate_proc_entries(const size_t node) {
+        return node_lambda_map[node];
+    }
+
+};
+
+struct lambda_vector_container {
+   
+    class lambda_vector_range {
+        private:
+            const std::vector<unsigned> & vec_;
+
+        public:
+        class lambda_vector_iterator {
+        
+            using iterator_category = std::input_iterator_tag;
+            using value_type = std::pair<unsigned, unsigned>;
+            using difference_type = std::ptrdiff_t;
+            using pointer = value_type*;
+            using reference = value_type&;
+        private:
+            const std::vector<unsigned>& vec_;
+            size_t index_;
+        public:
+
+        lambda_vector_iterator(const std::vector<unsigned>& vec) : vec_(vec), index_(0) {
+            // Advance to the first valid entry
+            while (index_ < vec_.size() && vec_[index_] == 0) {
+                ++index_;
+            }
+        }
+
+        lambda_vector_iterator(const std::vector<unsigned>& vec, size_t index) : vec_(vec), index_(index) {}
+
+        lambda_vector_iterator& operator++() {
+                ++index_;
+                while (index_ < vec_.size() && vec_[index_] == 0) {
+                    ++index_;
+                }
+                return *this;
+            }
+
+            value_type operator*() const {
+                return std::make_pair(static_cast<unsigned>(index_), vec_[index_]);
+            }
+
+            bool operator==(const lambda_vector_iterator& other) const {
+                return index_ == other.index_;
+            }
+
+            bool operator!=(const lambda_vector_iterator& other) const {
+                return !(*this == other);
+            }
+        };
+
+        lambda_vector_range(const std::vector<unsigned>& vec) : vec_(vec) {}
+
+        lambda_vector_iterator begin() { return lambda_vector_iterator(vec_); }
+        lambda_vector_iterator end() { return lambda_vector_iterator(vec_, vec_.size()); }
+    };
+
+    std::vector<std::vector<unsigned>> node_lambda_vec;
+    unsigned num_procs_ = 0;
+
+    inline void initialize(const size_t num_vertices, const unsigned num_procs) { 
+        node_lambda_vec.assign(num_vertices, {num_procs});
+        num_procs_ = num_procs; 
+    }
+
+
+    inline void reset_node(const size_t node) { node_lambda_vec[node].assign(num_procs_, 0); }
+    inline void clear() { node_lambda_vec.clear(); }
+    inline bool has_proc_entry(const size_t node, const unsigned proc) const { return node_lambda_vec[node][proc] > 0; }
+    inline bool has_no_proc_entry(const size_t node, const unsigned proc) const { return node_lambda_vec[node][proc] == 0; }
+    inline unsigned & get_proc_entry(const size_t node, const unsigned proc) { return node_lambda_vec[node][proc]; }
+
+    inline unsigned get_proc_entry(const size_t node, const unsigned proc) const {
+        assert(has_proc_entry(node, proc));
+        return node_lambda_vec[node][proc];
+    }
+
+    inline bool increase_proc_count(const size_t node, const unsigned proc) {
+        node_lambda_vec[node][proc]++;
+        return node_lambda_vec[node][proc] == 1;
+    }
+
+    inline bool decrease_proc_count(const size_t node, const unsigned proc) {
+        assert(has_proc_entry(node, proc));
+        node_lambda_vec[node][proc]--;
+        return node_lambda_vec[node][proc] == 0;
+    }
+
+    inline auto iterate_proc_entries(const size_t node) {
+        return lambda_vector_range(node_lambda_vec[node]);
+    }
+
+};
+
 template<typename Graph_t, typename cost_t, typename MemoryConstraint_t, unsigned window_size = 1, bool use_node_communication_costs_arg = true> 
 struct kl_hyper_total_comm_cost_function {
     
@@ -42,7 +175,7 @@ struct kl_hyper_total_comm_cost_function {
     cost_t comm_multiplier = 1; 
     cost_t max_comm_weight = 0;
 
-    std::vector<std::map<unsigned,unsigned>> node_lambda_map;
+    lambda_vector_container node_lambda_map;
 
     inline cost_t get_comm_multiplier() { return comm_multiplier; }
     inline cost_t get_max_comm_weight() { return max_comm_weight; }
@@ -58,7 +191,7 @@ struct kl_hyper_total_comm_cost_function {
         instance = &sched.getInstance();
         graph = &instance->getComputationalDag();
         comm_multiplier = 1.0 / instance->numberOfProcessors();  
-        node_lambda_map.resize(graph->num_vertices());      
+        node_lambda_map.initialize(graph->num_vertices(), instance->numberOfProcessors());      
     }
 
     cost_t compute_schedule_cost() {
@@ -73,17 +206,14 @@ struct kl_hyper_total_comm_cost_function {
             const cost_t v_comm_cost = graph->vertex_comm_weight(vertex);
             max_comm_weight = std::max(max_comm_weight, v_comm_cost);
 
-            node_lambda_map[vertex].clear();
+            node_lambda_map.reset_node(vertex);
 
             for (const auto &target : instance->getComputationalDag().children(vertex)) {
                 const unsigned target_proc = active_schedule->assigned_processor(target);
 
-                if (node_lambda_map[vertex].find(target_proc) == node_lambda_map[vertex].end()) {
-                    node_lambda_map[vertex][target_proc] = 1;
+                if (node_lambda_map.increase_proc_count(vertex, target_proc)) {
                     comm_costs += v_comm_cost * instance->communicationCosts(vertex_proc, target_proc); // is 0 if target_proc == vertex_proc
-                } else {
-                    node_lambda_map[vertex][target_proc]++;
-                }               
+                }
             } 
         }
 
@@ -100,7 +230,7 @@ struct kl_hyper_total_comm_cost_function {
         for(const auto vertex : graph->vertices()) {
             const unsigned vertex_proc = active_schedule->assigned_processor(vertex);
             const cost_t v_comm_cost = graph->vertex_comm_weight(vertex);
-            for (const auto [lambda_proc, mult] : node_lambda_map[vertex]) {
+            for (const auto [lambda_proc, mult] : node_lambda_map.iterate_proc_entries(vertex)) {
                 comm_costs += v_comm_cost * instance->communicationCosts(vertex_proc, lambda_proc);
             } 
         }
@@ -120,17 +250,8 @@ struct kl_hyper_total_comm_cost_function {
     }
 
     inline void update_source_after_move(const kl_move & move, VertexType source) {
-        if (node_lambda_map[source][move.from_proc] == 1) {
-            node_lambda_map[source].erase(move.from_proc);
-        } else {
-            node_lambda_map[source][move.from_proc]--;
-        }
-
-        if (node_lambda_map[source].find(move.to_proc) == node_lambda_map[source].end()) {
-            node_lambda_map[source][move.to_proc] = 1;
-        } else {
-            node_lambda_map[source][move.to_proc]++;
-        }
+        node_lambda_map.decrease_proc_count(source, move.from_proc);
+        node_lambda_map.increase_proc_count(source, move.to_proc);
     }
 
     template<typename thread_data_t>
@@ -233,8 +354,7 @@ struct kl_hyper_total_comm_cost_function {
                 for (const unsigned p : proc_range->compatible_processors_vertex(target)) { 
                     if (p == target_proc)
                         continue;
-
-                    if (node_lambda_map[move.node][target_proc] == 1) {
+                    if (node_lambda_map.get_proc_entry(move.node, target_proc) == 1) {
                         for (unsigned idx = target_start_idx; idx < window_bound; idx++) {
                             const cost_t x = instance->communicationCosts(move.from_proc, target_proc) * comm_gain;
                             const cost_t y = instance->communicationCosts(move.to_proc, target_proc) * comm_gain;
@@ -242,7 +362,7 @@ struct kl_hyper_total_comm_cost_function {
                         } 
                     }
 
-                    if (node_lambda_map[move.node].find(p) == node_lambda_map[move.node].end()) {
+                    if (node_lambda_map.has_no_proc_entry(move.node, p)) {
                         for (unsigned idx = target_start_idx; idx < window_bound; idx++) {
                             const cost_t x = instance->communicationCosts(move.from_proc, p) * comm_gain;
                             const cost_t y = instance->communicationCosts(move.to_proc, p) * comm_gain;
@@ -257,7 +377,7 @@ struct kl_hyper_total_comm_cost_function {
 
             if (move.to_proc != move.from_proc) {
                 const unsigned source_proc = active_schedule->assigned_processor(source);   
-                if (node_lambda_map[source].find(move.from_proc) == node_lambda_map[source].end()) {                    
+                if (node_lambda_map.has_no_proc_entry(source, move.from_proc)) {                    
                     const cost_t comm_gain = graph->vertex_comm_weight(source) * comm_multiplier;
 
                     for (const auto &target : instance->getComputationalDag().children(source)) {
@@ -280,7 +400,7 @@ struct kl_hyper_total_comm_cost_function {
                             }
                         }
                     }                    
-                } else if (node_lambda_map[source][move.from_proc] == 1)  {
+                } else if (node_lambda_map.get_proc_entry(source, move.from_proc) == 1)  {
                     const cost_t comm_gain = graph->vertex_comm_weight(source) * comm_multiplier;
 
                     for (const auto &target : instance->getComputationalDag().children(source)) {
@@ -313,7 +433,7 @@ struct kl_hyper_total_comm_cost_function {
                     }                    
                 }
 
-                if (node_lambda_map[source][move.to_proc] == 1) {
+                if (node_lambda_map.get_proc_entry(source, move.to_proc) == 1) {
                     const cost_t comm_gain = graph->vertex_comm_weight(source) * comm_multiplier;
                     
                     for (const auto &target : instance->getComputationalDag().children(source)) {
@@ -336,7 +456,7 @@ struct kl_hyper_total_comm_cost_function {
                             }                              
                         }
                     }
-                } else if (node_lambda_map[source][move.to_proc] == 2) {  
+                } else if (node_lambda_map.get_proc_entry(source, move.to_proc) == 2) {  
                     for (const auto &target : instance->getComputationalDag().children(source)) {
                         const unsigned target_step = active_schedule->assigned_superstep(target);
                         if ((target_step < start_step || target_step > end_step) || (target == move.node) || (not thread_data.affinity_table.is_selected(target)) || thread_data.lock_manager.is_locked(target))  
@@ -452,7 +572,7 @@ struct kl_hyper_total_comm_cost_function {
             }  
         
             if (move.to_proc != move.from_proc) {   
-                if (node_lambda_map[source].find(move.from_proc) == node_lambda_map[source].end()) {                    
+                if (node_lambda_map.has_no_proc_entry(source, move.from_proc)) {                    
                     const cost_t comm_gain = graph->vertex_comm_weight(source) * comm_multiplier;
 
                     for (const unsigned p : proc_range->compatible_processors_vertex(source)) {        
@@ -466,7 +586,7 @@ struct kl_hyper_total_comm_cost_function {
                     }                  
                 } 
 
-                if (node_lambda_map[source][move.to_proc] == 1) {
+                if (node_lambda_map.get_proc_entry(source, move.to_proc) == 1) {
                     const cost_t comm_gain = graph->vertex_comm_weight(source) * comm_multiplier;
 
                     for (const unsigned p : proc_range->compatible_processors_vertex(source)) {        
@@ -536,7 +656,7 @@ struct kl_hyper_total_comm_cost_function {
             if (p == node_proc)
                 continue;
 
-            for (const auto [lambda_proc, mult] : node_lambda_map[node]) {
+            for (const auto [lambda_proc, mult] : node_lambda_map.iterate_proc_entries(node)) {
                 const cost_t comm_cost = change_comm_cost(instance->communicationCosts(p, lambda_proc), instance->communicationCosts(node_proc, lambda_proc), comm_gain);
                 for (unsigned idx = node_start_idx; idx < window_bound; idx++) {
                     affinity_table_node[p][idx] += comm_cost;
@@ -585,13 +705,13 @@ struct kl_hyper_total_comm_cost_function {
                 if (p == node_proc)
                     continue;
 
-                if (source_proc != node_proc && node_lambda_map[source][node_proc] == 1) {
+                if (source_proc != node_proc && node_lambda_map.get_proc_entry(source, node_proc) == 1) {
                     for (unsigned idx = node_start_idx; idx < window_bound; idx++) {
                         affinity_table_node[p][idx] -= instance->communicationCosts(source_proc, node_proc) * source_comm_gain;
                     } 
                 }
 
-                if (source_proc != p && node_lambda_map[source].find(p) == node_lambda_map[source].end()) {
+                if (source_proc != p && node_lambda_map.has_no_proc_entry(source, p)) {
                     for (unsigned idx = node_start_idx; idx < window_bound; idx++) {
                         affinity_table_node[p][idx] += instance->communicationCosts(source_proc, p) * source_comm_gain;
                     }
@@ -602,4 +722,3 @@ struct kl_hyper_total_comm_cost_function {
 };
 
 } // namespace osp
-
