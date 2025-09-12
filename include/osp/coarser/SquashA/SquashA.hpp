@@ -236,30 +236,33 @@ SquashA<Graph_t_in, Graph_t_out>::generate_vertex_expansion_map(const Graph_t_in
 
     std::vector<int> poset_int_mapping = generate_poset_in_map(dag_in);
 
-    if (params.mode == SquashAParams::Mode::EDGE_WEIGHT) {
-        auto edge_w_cmp = [](const std::pair<edge_desc_t<Graph_t_in>, e_commw_t<Graph_t_in>> &lhs,
-                             const std::pair<edge_desc_t<Graph_t_in>, e_commw_t<Graph_t_in>> &rhs) {
-            return lhs.second < rhs.second;
-        };
-        std::multiset<std::pair<edge_desc_t<Graph_t_in>, e_commw_t<Graph_t_in>>, decltype(edge_w_cmp)> edge_weights(
-            edge_w_cmp);
-        {
-            std::vector<edge_desc_t<Graph_t_in>> contractable_edges =
-                get_contractable_edges_from_poset_int_map<Graph_t_in>(poset_int_mapping, dag_in);
-            for (const auto &edge : contractable_edges) {
+    if constexpr (has_edge_weights_v<Graph_t_in>) {
+        if (params.mode == SquashAParams::Mode::EDGE_WEIGHT) {
+            auto edge_w_cmp = [](const std::pair<edge_desc_t<Graph_t_in>, e_commw_t<Graph_t_in>> &lhs,
+                                const std::pair<edge_desc_t<Graph_t_in>, e_commw_t<Graph_t_in>> &rhs) {
+                return lhs.second < rhs.second;
+            };
+            std::multiset<std::pair<edge_desc_t<Graph_t_in>, e_commw_t<Graph_t_in>>, decltype(edge_w_cmp)> edge_weights(
+                edge_w_cmp);
+            {
+                std::vector<edge_desc_t<Graph_t_in>> contractable_edges =
+                    get_contractable_edges_from_poset_int_map<Graph_t_in>(poset_int_mapping, dag_in);
+                for (const auto &edge : contractable_edges) {
 
-                if constexpr (has_edge_weights_v<Graph_t_in>) {
-                    edge_weights.emplace(edge, dag_in.edge_comm_weight(edge));
-                } else {
-                    edge_weights.emplace(edge, dag_in.vertex_comm_weight(source(edge, dag_in)));
+                    if constexpr (has_edge_weights_v<Graph_t_in>) {
+                        edge_weights.emplace(edge, dag_in.edge_comm_weight(edge));
+                    } else {
+                        edge_weights.emplace(edge, dag_in.vertex_comm_weight(source(edge, dag_in)));
+                    }
                 }
             }
+
+            return gen_exp_map_from_contractable_edges<e_commw_t<Graph_t_in>, decltype(edge_w_cmp)>(
+                edge_weights, poset_int_mapping, dag_in);
+
         }
-
-        return gen_exp_map_from_contractable_edges<e_commw_t<Graph_t_in>, decltype(edge_w_cmp)>(
-            edge_weights, poset_int_mapping, dag_in);
-
-    } else if (params.mode == SquashAParams::Mode::TRIANGLES) {
+    }    
+    if (params.mode == SquashAParams::Mode::TRIANGLES) {
         auto edge_w_cmp = [](const std::pair<edge_desc_t<Graph_t_in>, std::size_t> &lhs,
                              const std::pair<edge_desc_t<Graph_t_in>, std::size_t> &rhs) {
             return lhs.second < rhs.second;

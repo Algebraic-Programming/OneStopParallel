@@ -337,7 +337,7 @@ BOOST_AUTO_TEST_CASE(kl_improver_superstep_removal_test) {
     BspInstance<graph> instance(dag, arch);
 
     BspSchedule schedule(instance);
-
+    instance.getArchitecture().setSynchronisationCosts(50);
     // Create a schedule with an almost empty superstep (step 1)
     schedule.setAssignedProcessors({0, 0, 0, 0, 1, 1, 1, 1});
     schedule.setAssignedSupersteps({0, 0, 0, 0, 1, 2, 2, 2});

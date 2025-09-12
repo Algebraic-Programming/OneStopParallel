@@ -23,7 +23,6 @@ limitations under the License.
 #include <map>
 #include "IStatsModule.hpp"
 #include "osp/bsp/model/BspSchedule.hpp" // Still needed
-#include "osp/graph_implementations/boost_graphs/boost_graph.hpp" // For graph_t
 
 namespace osp {
 
@@ -33,7 +32,7 @@ public:
 
 private:
     const std::vector<std::string> metric_headers = {
-        "TotalCommCost", "BufferedSendingCosts"
+        "TotalCommCost", "TotalLambdaCommCost", "BufferedSendingCosts" 
     };
 
 public:
@@ -47,6 +46,7 @@ public:
                             std::ofstream& /*log_stream*/) const override {
         std::map<std::string, std::string> stats;
         stats["TotalCommCost"] = std::to_string(schedule.computeTotalCosts());
+        stats["TotalLambdaCommCost"] = std::to_string(schedule.computeTotalLambdaCosts());
         stats["BufferedSendingCosts"] = std::to_string(schedule.computeBufferedSendingCosts());
         return stats;
     }

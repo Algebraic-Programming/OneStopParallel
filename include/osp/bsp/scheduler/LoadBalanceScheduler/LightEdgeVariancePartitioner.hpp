@@ -19,7 +19,7 @@ limitations under the License.
 #pragma once
 
 #include "VariancePartitioner.hpp"
-#include "osp/coarser/heavy_edges/HeavyEdgePreProcess.hpp"
+#include "HeavyEdgePreProcess.hpp"
 
 namespace osp {
 

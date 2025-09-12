@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "osp/coarser/heavy_edges/HeavyEdgePreProcess.hpp"
+#include "osp/bsp/scheduler/LoadBalanceScheduler/HeavyEdgePreProcess.hpp"
 #include "osp/graph_implementations/boost_graphs/boost_graph.hpp"
 #include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 

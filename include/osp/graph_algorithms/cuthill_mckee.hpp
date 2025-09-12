@@ -25,7 +25,7 @@ limitations under the License.
 #include "osp/concepts/computational_dag_concept.hpp"
 #include "osp/graph_algorithms/directed_graph_util.hpp"
 #include "osp/graph_algorithms/directed_graph_path_util.hpp"
-
+#include "osp/graph_algorithms/directed_graph_top_sort.hpp"
 
 namespace osp {
 
@@ -274,5 +274,34 @@ std::vector<vertex_idx_t<Graph_t>> cuthill_mckee_undirected(const Graph_t &dag, 
 
     return cm_order;
 }
+
+// Cuthill-McKee Wavefront
+template<typename Graph_t>
+inline std::vector<vertex_idx_t<Graph_t>> GetTopOrderCuthillMcKeeWavefront(const Graph_t &dag) {
+    std::vector<vertex_idx_t<Graph_t>> order;
+    if (dag.num_vertices() > 0) {
+        std::vector<vertex_idx_t<Graph_t>> priority = cuthill_mckee_wavefront(dag);
+        order.reserve(dag.num_vertices());
+        for (const auto &v : priority_vec_top_sort_view(dag, priority)) {
+            order.push_back(v);
+        }
+    }
+    return order;
+}
+
+// Cuthill-McKee Undirected
+template<typename Graph_t>
+inline std::vector<vertex_idx_t<Graph_t>> GetTopOrderCuthillMcKeeUndirected(const Graph_t &dag) {
+    std::vector<vertex_idx_t<Graph_t>> order;
+    if (dag.num_vertices() > 0) {
+        std::vector<vertex_idx_t<Graph_t>> priority = cuthill_mckee_undirected(dag, true, true);
+        order.reserve(dag.num_vertices());
+        for (const auto &v : priority_vec_top_sort_view(dag, priority)) {
+            order.push_back(v);
+        }
+    }
+    return order;
+}
+
 
 }; // namespace osp

@@ -89,13 +89,7 @@
             "parameters": {
                 "mode": "Etf"
             }
-        },                
-        {
-            "name": "GreedyRandom",
-            "id": "GreedyRandom",
-            "description": "Greedy scheduler that select the next nodes in a randomized fashion.",
-            "run" : true
-        },
+        },   
         {
             "name": "GreedyChildren",
             "id": "GreedyChildren",
@@ -110,6 +104,29 @@
             "parameters": {
                 "hill_climbing_steps": 50,
                 "contraction_rate": 0.5
+            }
+        },
+        {
+            "name": "SarkarLockingHC",
+            "id" : "MultiLevel",
+            "run" : true,
+            "name_suffix" : "SarkarLockingHC",
+            "description": "Coarsen with Sarkar, then initialization with Locking, then improvement by Hill Climbing local search.",
+            "parameters": {
+                "coarser": {
+                    "name" : "Sarkar"
+                },
+                "improver": {
+                    "name" : "hill_climb" 
+                },
+                "scheduler": {
+                    "name": "BspLocking",
+                    "id": "BspLocking",
+                    "parameters": {
+                    "max_percent_idle_processors": 0.4,
+                    "increase_parallelism_in_new_superstep": true
+                    }                    
+                }                
             }
         },
         {
@@ -147,26 +164,6 @@
                         "syncCostMultiplierMinSuperstepWeight": 1,
                         "syncCostMultiplierParallelCheck": 4
                     }
-                }                
-            }
-        },
-        {
-            "name": "LockingKL",
-            "id": "LocalSearch",
-            "run" : true,
-            "name_suffix" : "LockingKL",
-            "description": "Initialization with BspLocking, then improvement by Kernighan-Lin-type local search.",
-            "parameters": {
-                "improver": {
-                    "name" : "kl_total_lambda_comm" 
-                },
-                "scheduler": {
-                    "name": "BspLocking",
-                    "id": "BspLocking",
-                    "parameters": {
-                    "max_percent_idle_processors": 0.4,
-                    "increase_parallelism_in_new_superstep": true
-                    }                    
                 }                
             }
         },
@@ -212,41 +209,6 @@
                     "increase_parallelism_in_new_superstep": true
                     }                    
                 }                
-            }
-        },
-        {
-            "name": "FunnelLockingKL",
-            "id" : "Coarser",
-            "run" : true,
-            "name_suffix" : "FunnelLockingKL",
-            "description": "Coarsening with Funnel, scheduling with BspLocking, improvement by Kernighan-Lin local search.",
-            "parameters": {
-                "coarser": {
-                    "name" : "funnel",
-                    "parameters" : {
-                        "funnel_incoming" : true,
-                        "use_approx_transitive_reduction" : true                        
-                    }
-                },
-                "scheduler":  {
-                    "name": "LockingKL",
-                    "id": "LocalSearch",
-                    "run" : true,
-                    "name_suffix" : "LockingKL",
-                    "parameters": {
-                        "improver": {
-                            "name" : "kl_total_lambda_comm" 
-                        },
-                        "scheduler": {
-                            "name": "BspLocking",
-                            "id": "BspLocking",
-                            "parameters": {
-                            "max_percent_idle_processors": 0.4,
-                            "increase_parallelism_in_new_superstep": true
-                            }                    
-                        }                
-                    }
-                }  
             }
         }
     ]
