@@ -208,6 +208,7 @@ get_multilevel_coarser_by_name(const ConfigParser &, const boost::property_tree:
                 for (const auto &item : params_pt.get_child("commCostVec")) {
                     ml_params.commCostVec.push_back(item.second.get_value<v_workw_t<Graph_t_in>>());
                 }
+                std::sort(ml_params.commCostVec.begin(), ml_params.commCostVec.end());
             }
             ml_params.maxWeight =
                 params_pt.get_optional<v_workw_t<Graph_t_in>>("maxWeight").value_or(ml_params.maxWeight);

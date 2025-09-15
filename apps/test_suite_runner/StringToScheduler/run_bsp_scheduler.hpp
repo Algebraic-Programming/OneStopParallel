@@ -139,6 +139,7 @@ get_base_bsp_scheduler_by_name(const ConfigParser &parser, const boost::property
     if constexpr (is_constructable_cdag_v<Graph_t> || is_direct_constructable_cdag_v<Graph_t>) {
         if (id == "MultiHC") {
             auto scheduler = std::make_unique<MultiLevelHillClimbingScheduler<Graph_t>>();
+            const unsigned timeLimit = parser.global_params.get_child("timeLimit").get_value<unsigned>();
             scheduler->setTimeLimitSeconds(timeLimit);
 
             unsigned step = algorithm.get_child("parameters").get_child("hill_climbing_steps").get_value<unsigned>();
@@ -149,7 +150,7 @@ get_base_bsp_scheduler_by_name(const ConfigParser &parser, const boost::property
             target_number_nodes = std::min(target_number_nodes, static_cast<unsigned>(num_original_vertices));
             scheduler->setTargetNumberOfNodes(target_number_nodes);
 
-            scheduler->setLinearRefinementPoints(static_cast<unsigned>(num_original_vertices), 20);
+            scheduler->setLinearRefinementPoints(static_cast<unsigned>(num_original_vertices), 20U);
             return scheduler;
         }
     }
@@ -165,7 +166,6 @@ RETURN_STATUS run_bsp_scheduler(const ConfigParser &parser, const boost::propert
     using edge_commw_t_or_default = std::conditional_t<has_edge_weights_v<Graph_t>, e_commw_t<Graph_t>, v_commw_t<Graph_t>>;
     using boost_graph_t = boost_graph<v_workw_t<Graph_t>, v_commw_t<Graph_t>, v_memw_t<Graph_t>, vertex_type_t_or_default, edge_commw_t_or_default>;
 
-    const unsigned timeLimit = parser.global_params.get_child("timeLimit").get_value<unsigned>();
     const std::string id = algorithm.get_child("id").get_value<std::string>();
 
     std::cout << "Running algorithm: " << id << std::endl;
@@ -179,6 +179,7 @@ RETURN_STATUS run_bsp_scheduler(const ConfigParser &parser, const boost::propert
 #ifdef COPT
     } else if (id == "FullILP") {
         CoptFullScheduler<Graph_t> scheduler;
+        const unsigned timeLimit = parser.global_params.get_child("timeLimit").get_value<unsigned>();
         scheduler.setTimeLimitSeconds(timeLimit);
 
         // max supersteps
