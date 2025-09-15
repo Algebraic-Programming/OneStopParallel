@@ -81,7 +81,6 @@ std::unique_ptr<Scheduler<Graph_t>>
 get_base_bsp_scheduler_by_name(const ConfigParser &parser, const boost::property_tree::ptree &algorithm,
                                size_t num_original_vertices) {
 
-    const unsigned timeLimit = parser.global_params.get_child("timeLimit").get_value<unsigned>();
     const std::string id = algorithm.get_child("id").get_value<std::string>();
 
     if (id == "Serial") {
