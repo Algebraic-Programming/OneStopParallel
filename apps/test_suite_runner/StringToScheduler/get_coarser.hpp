@@ -161,6 +161,8 @@ get_coarser_by_name(const ConfigParser &, const boost::property_tree::ptree &coa
                 else if (mode_str == "LEVEL_ODD") params.mode = SarkarParams::Mode::LEVEL_ODD;
                 else if (mode_str == "FAN_IN_BUFFER") params.mode = SarkarParams::Mode::FAN_IN_BUFFER;
                 else if (mode_str == "FAN_OUT_BUFFER") params.mode = SarkarParams::Mode::FAN_OUT_BUFFER;
+                else throw std::invalid_argument("Invalid Sarkar mode: " + mode_str
+                    + "!\nChoose from: LINES, FAN_IN_FULL, FAN_IN_PARTIAL, FAN_OUT_FULL, FAN_OUT_PARTIAL, LEVEL_EVEN, LEVEL_ODD, FAN_IN_BUFFER, FAN_OUT_BUFFER.");
             }
         }
         return std::make_unique<Sarkar<Graph_t_in, Graph_t_out>>(params);
@@ -176,6 +178,8 @@ get_coarser_by_name(const ConfigParser &, const boost::property_tree::ptree &coa
             if (auto mode_str_opt = params_pt.get_optional<std::string>("mode")) {
                 if (mode_str_opt.get() == "EDGE_WEIGHT") params.mode = SquashAParams::Mode::EDGE_WEIGHT;
                 else if (mode_str_opt.get() == "TRIANGLES") params.mode = SquashAParams::Mode::TRIANGLES;
+                else throw std::invalid_argument("Invalid Squash mode: " + mode_str_opt.get()
+                    + "!\nChoose from: EDGE_WEIGHT, TRIANGLES.");
             }
         }
         coarser->setParams(params);
@@ -246,6 +250,9 @@ get_multilevel_coarser_by_name(const ConfigParser &, const boost::property_tree:
                     params.mode = SquashAParams::Mode::EDGE_WEIGHT;
                 } else if (mode_str_opt.get() == "TRIANGLES") {
                     params.mode = SquashAParams::Mode::TRIANGLES;
+                } else {
+                    throw std::invalid_argument("Invalid Squash mode: " + mode_str_opt.get()
+                    + "!\nChoose from: EDGE_WEIGHT, TRIANGLES.");
                 }
             }
 
