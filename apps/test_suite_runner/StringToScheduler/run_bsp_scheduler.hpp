@@ -78,8 +78,7 @@ std::unique_ptr<ImprovementScheduler<Graph_t>> get_bsp_improver_by_name(const Co
 
 template<typename Graph_t>
 std::unique_ptr<Scheduler<Graph_t>>
-get_base_bsp_scheduler_by_name(const ConfigParser &parser, const boost::property_tree::ptree &algorithm,
-                               size_t num_original_vertices) {
+get_base_bsp_scheduler_by_name(const ConfigParser &parser, const boost::property_tree::ptree &algorithm) {
 
     const std::string id = algorithm.get_child("id").get_value<std::string>();
 
@@ -144,12 +143,10 @@ get_base_bsp_scheduler_by_name(const ConfigParser &parser, const boost::property
             unsigned step = algorithm.get_child("parameters").get_child("hill_climbing_steps").get_value<unsigned>();
             scheduler->setNumberOfHcSteps(step);
 
-            float contraction_rate = algorithm.get_child("parameters").get_child("contraction_rate").get_value<float>();
-            unsigned target_number_nodes = std::max(100U, static_cast<unsigned>(static_cast<float>(num_original_vertices) * contraction_rate));
-            target_number_nodes = std::min(target_number_nodes, static_cast<unsigned>(num_original_vertices));
-            scheduler->setTargetNumberOfNodes(target_number_nodes);
-
-            scheduler->setLinearRefinementPoints(static_cast<unsigned>(num_original_vertices), 20U);
+            const double contraction_rate = algorithm.get_child("parameters").get_child("contraction_rate").get_value<double>();            
+            scheduler->setContractionRate(contraction_rate);
+            scheduler->useLinearRefinementSteps(20U);
+            scheduler->setMinTargetNrOfNodes(100U);
             return scheduler;
         }
     }
@@ -235,12 +232,12 @@ RETURN_STATUS run_bsp_scheduler(const ConfigParser &parser, const boost::propert
     } else if (id == "MultiLevel") {
         std::unique_ptr<MultilevelCoarser<Graph_t, boost_graph_t>> ml_coarser = get_multilevel_coarser_by_name<Graph_t, boost_graph_t>(parser, algorithm.get_child("parameters").get_child("coarser"));
         std::unique_ptr<ImprovementScheduler<boost_graph_t>> improver = get_bsp_improver_by_name<boost_graph_t>(parser, algorithm.get_child("parameters").get_child("improver"));
-        std::unique_ptr<Scheduler<boost_graph_t>> scheduler = get_base_bsp_scheduler_by_name<boost_graph_t>(parser, algorithm.get_child("parameters").get_child("scheduler"), schedule.getInstance().numberOfVertices());
+        std::unique_ptr<Scheduler<boost_graph_t>> scheduler = get_base_bsp_scheduler_by_name<boost_graph_t>(parser, algorithm.get_child("parameters").get_child("scheduler"));
 
         MultilevelCoarseAndSchedule<Graph_t, boost_graph_t> coarse_and_schedule(*scheduler, *improver, *ml_coarser);
         return coarse_and_schedule.computeSchedule(schedule);
     } else {
-        auto scheduler = get_base_bsp_scheduler_by_name<Graph_t>(parser, algorithm, schedule.getInstance().numberOfVertices());
+        auto scheduler = get_base_bsp_scheduler_by_name<Graph_t>(parser, algorithm);
         return scheduler->computeSchedule(schedule);
     }
 };

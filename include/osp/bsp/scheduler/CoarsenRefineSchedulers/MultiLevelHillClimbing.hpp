@@ -36,6 +36,14 @@ class MultiLevelHillClimbingScheduler : public Scheduler<Graph_t> {
     typename StepByStepCoarser<Graph_t>::COARSENING_STRATEGY coarsening_strategy = StepByStepCoarser<Graph_t>::COARSENING_STRATEGY::EDGE_BY_EDGE;
     unsigned number_hc_steps;
     unsigned target_nr_of_nodes = 0;
+    unsigned min_target_nr_of_nodes_ = 1U;
+    double contraction_rate_ = 0.5;
+
+    unsigned linear_refinement_step_size_ = 20;
+    bool use_linear_refinement_ = true;
+
+    double exponential_refinement_step_ratio_ = 1.1;
+    bool use_exponential_refinement_ = false;
 
     std::deque<vertex_idx> refinement_points;
 
@@ -46,6 +54,19 @@ class MultiLevelHillClimbingScheduler : public Scheduler<Graph_t> {
                                                 const BspInstance<Graph_t>& full_instance,
                                                 const BspSchedule<Graph_t> &coarse_schedule, vertex_idx index_until) const;
 
+    void setLinearRefinementPoints(vertex_idx OriginalNrOfNodes, unsigned stepSize);
+    void setExponentialRefinementPoints(vertex_idx OriginalNrOfNodes, double stepRatio);
+
+    void set_parameter(const size_t num_vertices) {
+        target_nr_of_nodes = std::max(min_target_nr_of_nodes_, static_cast<unsigned>(static_cast<float>(num_vertices) * contraction_rate_));
+        target_nr_of_nodes = std::min(target_nr_of_nodes, static_cast<unsigned>(num_vertices));
+
+        if(use_linear_refinement_) {
+            setLinearRefinementPoints(num_vertices, linear_refinement_step_size_);
+        } else if (use_exponential_refinement_)  {
+            setExponentialRefinementPoints(num_vertices, exponential_refinement_step_ratio_);
+        }
+    }
 
   public:
 
@@ -56,11 +77,21 @@ class MultiLevelHillClimbingScheduler : public Scheduler<Graph_t> {
     virtual std::string getScheduleName() const override { return "MultiLevelHillClimbing"; }
 
     void setCoarseningStrategy(typename StepByStepCoarser<Graph_t>::COARSENING_STRATEGY strategy_){ coarsening_strategy = strategy_;}
-    void setTargetNumberOfNodes(const unsigned nr_nodes_){ target_nr_of_nodes = nr_nodes_;}
+    void setContractionRate(double rate_){ contraction_rate_ = rate_;}
     void setNumberOfHcSteps(unsigned steps_) { number_hc_steps = steps_; }
+    void setMinTargetNrOfNodes(unsigned min_target_nr_of_nodes) { min_target_nr_of_nodes_ = min_target_nr_of_nodes; }
 
-    void setLinearRefinementPoints(vertex_idx OriginalNrOfNodes, unsigned stepSize);
-    void setExponentialRefinementPoints(vertex_idx OriginalNrOfNodes, double stepRatio);
+    void useLinearRefinementSteps(unsigned steps) { 
+        use_linear_refinement_ = true;
+        use_exponential_refinement_ = false;
+        linear_refinement_step_size_ = steps;
+    }
+
+    void useExponentialRefinementPoints(double ratio) { 
+        use_exponential_refinement_ = true;
+        use_linear_refinement_ = false;
+        exponential_refinement_step_ratio_ = ratio;
+    }
 
 };
 
@@ -70,6 +101,9 @@ RETURN_STATUS MultiLevelHillClimbingScheduler<Graph_t>::computeSchedule(BspSched
     StepByStepCoarser<Graph_t> coarser;
     Graph_t coarseDAG;
     std::vector<vertex_idx> new_vertex_id;
+
+    const auto num_verices = schedule.getInstance().numberOfVertices();
+    set_parameter(num_verices);
 
     coarser.coarsenDag(schedule.getInstance().getComputationalDag(), coarseDAG, new_vertex_id);
 
@@ -83,7 +117,7 @@ RETURN_STATUS MultiLevelHillClimbingScheduler<Graph_t>::computeSchedule(BspSched
     coarse_hc.improveSchedule(coarse_schedule);
 
     if(refinement_points.empty())
-        setExponentialRefinementPoints(schedule.getInstance().numberOfVertices(), 1.1);
+        setExponentialRefinementPoints(num_verices, 1.1);
     while(!refinement_points.empty() && refinement_points.front() <= coarseDAG.num_vertices())
         refinement_points.pop_front();
 
