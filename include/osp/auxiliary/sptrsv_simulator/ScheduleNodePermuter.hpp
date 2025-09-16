@@ -28,7 +28,7 @@ limitations under the License.
 
 namespace osp {
 
-enum SCHEDULE_NODE_PERMUTATION_MODES { LOOP_PROCESSORS, SNAKE_PROCESSORS, PROCESSOR_FIRST };
+enum SCHEDULE_NODE_PERMUTATION_MODES { LOOP_PROCESSORS, SNAKE_PROCESSORS, PROCESSOR_FIRST, NO_PERMUTE };
 
 /**
  * @brief Computes a permutation to improve locality of a schedule, looping through processors

@@ -8,7 +8,7 @@
         "outputLogFile": "log_sptrsv.txt",
         "outputSchedule": false,
         "scheduleDirectory" :"schedules/",
-        "activeStatisticModules": [ "BspSptrsvStats" ] 
+        "activeStatisticModules": [ "BspSptrsvStats", "BspSptrsvPermLoopProcessorsStats" ] 
     },
     "algorithms": [
          {

@@ -56,7 +56,11 @@ class BspScheduleTestSuiteRunner : public AbstractTestSuiteRunner<BspSchedule<co
         } else if (module_name == "BspCommStats") {
             this->active_stats_modules.push_back(std::make_unique<BspCommStatsModule<concrete_graph_t>>());
         } else if (module_name == "BspSptrsvStats") {
-            this->active_stats_modules.push_back(std::make_unique<BspSptrsvStatsModule<BspSchedule<concrete_graph_t>>>());
+            this->active_stats_modules.push_back(std::make_unique<BspSptrsvStatsModule<BspSchedule<concrete_graph_t>>>(NO_PERMUTE));
+        } else if (module_name == "BspSptrsvPermLoopProcessorsStats") {
+            this->active_stats_modules.push_back(std::make_unique<BspSptrsvStatsModule<BspSchedule<concrete_graph_t>>>(LOOP_PROCESSORS));
+        } else if (module_name == "BspSptrsvPermSnakeProcessorsStats") {
+            this->active_stats_modules.push_back(std::make_unique<BspSptrsvStatsModule<BspSchedule<concrete_graph_t>>>(SNAKE_PROCESSORS));
         } else if (module_name == "GraphStats") {
             this->active_stats_modules.push_back(
                 std::make_unique<GraphStatsModule<BspSchedule<concrete_graph_t>>>());

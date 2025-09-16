@@ -410,6 +410,28 @@ class Sptrsv {
         }
     }
 
+    void lsolve_with_permutation() {
+        #pragma omp parallel num_threads(instance->numberOfProcessors())
+        {
+            for (unsigned step = 0; step < num_supersteps; step++) {
+
+                const size_t proc = static_cast<size_t>(omp_get_thread_num());
+                const uVertType upper_limit = step_proc_ptr[step][proc] + step_proc_num[step][proc];
+                for (uVertType row_idx = step_proc_ptr[step][proc]; row_idx < upper_limit; row_idx++) {
+                    x[row_idx] = b[row_idx];
+                    for (uVertType i = row_ptr[row_idx]; i < row_ptr[row_idx + 1] - 1; i++) {
+                        x[row_idx] -= val[i] * x[col_idx[i]];
+                    }
+
+                    x[row_idx] /= val[row_ptr[row_idx + 1] - 1];
+                }
+
+    #pragma omp barrier
+            }
+        }
+    }
+
+
     void reset_x() {
         eigen_idx_type number_of_vertices = static_cast<eigen_idx_type>(instance->numberOfVertices());
         for (eigen_idx_type i = 0; i < number_of_vertices; i++) {
