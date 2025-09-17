@@ -24,18 +24,11 @@ limitations under the License.
 #include <stdexcept> 
 #include "osp/concepts/computational_dag_concept.hpp"
 #include "osp/graph_algorithms/directed_graph_top_sort.hpp"
-#include "osp/auxiliary/misc.hpp"
+#include "osp/auxiliary/hash_util.hpp"
 
 namespace osp {
 
-template<typename VertexType, std::size_t ret = 11>
-struct default_node_hash_func {
-    std::size_t operator()(const VertexType& ) {
-        return ret;
-    }
-};
-
-template<typename Graph_t, typename node_hash_func_t = default_node_hash_func<vertex_idx_t<Graph_t>>, bool forward = true>
+template<typename Graph_t, typename node_hash_func_t = uniform_node_hash_func<vertex_idx_t<Graph_t>>, bool forward = true>
 class MerkleHashComputer {
 
     static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
@@ -130,7 +123,7 @@ class MerkleHashComputer {
  * @param g2 The second graph.
  * @return True if the graphs are likely isomorphic based on Merkle hashes, false otherwise.
  */
-template<typename Graph_t, typename node_hash_func_t = default_node_hash_func<vertex_idx_t<Graph_t>>, bool Forward = true>
+template<typename Graph_t, typename node_hash_func_t = uniform_node_hash_func<vertex_idx_t<Graph_t>>, bool Forward = true>
 bool are_isomorphic_by_merkle_hash(const Graph_t& g1, const Graph_t& g2) {
     // Basic check: Different numbers of vertices or edges mean they can't be isomorphic.
     if (g1.num_vertices() != g2.num_vertices() || g1.num_edges() != g2.num_edges()) {

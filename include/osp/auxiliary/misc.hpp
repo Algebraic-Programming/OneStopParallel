@@ -360,24 +360,4 @@ T Get_lower_third_percentile(SetType ordered_set) {
     return *it;
 };
 
-template<class T>
-void hash_combine(std::size_t &seed, const T &v) {
-    std::hash<T> hasher;
-    seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-}
-
-struct pair_hash {
-    template<class T1, class T2>
-    std::size_t operator()(const std::pair<T1, T2> &p) const {
-        auto h1 = std::hash<T1>{}(p.first);
-
-        // const auto h2 = std::hash<T2>{}(p.second);
-
-        // Mainly for demonstration purposes, i.e. works but is overly simple
-        // In the real world, use sth. like boost.hash_combine
-        hash_combine(h1, p.second);
-        return h1;
-    }
-};
-
 } // namespace osp

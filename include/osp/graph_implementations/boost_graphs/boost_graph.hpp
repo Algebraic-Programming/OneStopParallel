@@ -23,7 +23,7 @@ limitations under the License.
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/graph_traits.hpp>
 
-#include "osp/auxiliary/misc.hpp"
+#include "osp/auxiliary/hash_util.hpp"
 #include "osp/concepts/computational_dag_concept.hpp"
 #include "osp/concepts/directed_graph_edge_desc_concept.hpp"
 #include "osp/concepts/constructable_computational_dag_concept.hpp"
