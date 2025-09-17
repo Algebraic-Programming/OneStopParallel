@@ -22,9 +22,11 @@ limitations under the License.
 #include <limits>
 #include <set>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 #include "osp/auxiliary/datastructures/union_find.hpp"
+#include "osp/auxiliary/hash_util.hpp"
 #include "osp/coarser/Coarser.hpp"
 #include "osp/graph_algorithms/directed_graph_path_util.hpp"
 
@@ -46,15 +48,15 @@ struct Parameters {
 };
 } // end namespace SarkarParams
 
-template<typename Graph_t_in, typename Graph_t_out>
+template<typename Graph_t_in, typename Graph_t_out, typename node_hash_func_t = uniform_node_hash_func< vertex_idx_t<Graph_t_in> >>
 class Sarkar : public CoarserGenExpansionMap<Graph_t_in, Graph_t_out> {
     private:
         SarkarParams::Parameters< v_workw_t<Graph_t_in> > params;
-
+        
         std::vector< vertex_idx_t<Graph_t_in> > getBotPosetMap(const Graph_t_in &graph) const;
         std::vector< v_workw_t<Graph_t_in> > getTopDistance(v_workw_t<Graph_t_in> commCost, const Graph_t_in &graph) const;
         std::vector< v_workw_t<Graph_t_in> > getBotDistance(v_workw_t<Graph_t_in> commCost, const Graph_t_in &graph) const;
-
+        
         vertex_idx_t<Graph_t_in> singleContraction(v_workw_t<Graph_t_in> commCost, const Graph_t_in &graph, std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &expansionMapOutput) const;
         vertex_idx_t<Graph_t_in> allChildrenContraction(v_workw_t<Graph_t_in> commCost, const Graph_t_in &graph, std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &expansionMapOutput) const;
         vertex_idx_t<Graph_t_in> someChildrenContraction(v_workw_t<Graph_t_in> commCost, const Graph_t_in &graph, std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &expansionMapOutput) const;
@@ -64,6 +66,10 @@ class Sarkar : public CoarserGenExpansionMap<Graph_t_in, Graph_t_out> {
         
         vertex_idx_t<Graph_t_in> out_buffer_merge(v_workw_t<Graph_t_in> commCost, const Graph_t_in &graph, std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &expansionMapOutput) const;
         vertex_idx_t<Graph_t_in> in_buffer_merge(v_workw_t<Graph_t_in> commCost, const Graph_t_in &graph, std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &expansionMapOutput) const;
+        
+        std::vector<std::size_t> nodeHashes;
+        void computeNodeHashes(const Graph_t_in &graph);
+        std::unordered_map<std::size_t, std::set< vertex_idx_t<Graph_t_in> >> computeHashOrbits() const;
 
     public:
         virtual std::vector<std::vector<vertex_idx_t<Graph_t_in>>> generate_vertex_expansion_map(const Graph_t_in &dag_in) override;
@@ -89,8 +95,8 @@ class Sarkar : public CoarserGenExpansionMap<Graph_t_in, Graph_t_out> {
 
 
 
-template<typename Graph_t_in, typename Graph_t_out>
-std::vector< vertex_idx_t<Graph_t_in> > Sarkar<Graph_t_in, Graph_t_out>::getBotPosetMap(const Graph_t_in &graph) const {
+template<typename Graph_t_in, typename Graph_t_out, typename node_hash_func_t>
+std::vector< vertex_idx_t<Graph_t_in> > Sarkar<Graph_t_in, Graph_t_out, node_hash_func_t>::getBotPosetMap(const Graph_t_in &graph) const {
     std::vector< vertex_idx_t<Graph_t_in> > botPosetMap = get_bottom_node_distance<Graph_t_in, vertex_idx_t<Graph_t_in>>(graph);
 
     vertex_idx_t<Graph_t_in> max = *std::max_element(botPosetMap.begin(), botPosetMap.end());
@@ -103,8 +109,8 @@ std::vector< vertex_idx_t<Graph_t_in> > Sarkar<Graph_t_in, Graph_t_out>::getBotP
     return botPosetMap;
 }
 
-template<typename Graph_t_in, typename Graph_t_out>
-std::vector< v_workw_t<Graph_t_in> > Sarkar<Graph_t_in, Graph_t_out>::getTopDistance(v_workw_t<Graph_t_in> commCost, const Graph_t_in &graph) const {
+template<typename Graph_t_in, typename Graph_t_out, typename node_hash_func_t>
+std::vector< v_workw_t<Graph_t_in> > Sarkar<Graph_t_in, Graph_t_out, node_hash_func_t>::getTopDistance(v_workw_t<Graph_t_in> commCost, const Graph_t_in &graph) const {
     std::vector< v_workw_t<Graph_t_in> > topDist(graph.num_vertices(), 0);
 
     for (const auto &vertex : GetTopOrder<Graph_t_in>(graph)) {
@@ -123,8 +129,8 @@ std::vector< v_workw_t<Graph_t_in> > Sarkar<Graph_t_in, Graph_t_out>::getTopDist
     return topDist;
 }
 
-template<typename Graph_t_in, typename Graph_t_out>
-std::vector< v_workw_t<Graph_t_in> > Sarkar<Graph_t_in, Graph_t_out>::getBotDistance(v_workw_t<Graph_t_in> commCost, const Graph_t_in &graph) const {
+template<typename Graph_t_in, typename Graph_t_out, typename node_hash_func_t>
+std::vector< v_workw_t<Graph_t_in> > Sarkar<Graph_t_in, Graph_t_out, node_hash_func_t>::getBotDistance(v_workw_t<Graph_t_in> commCost, const Graph_t_in &graph) const {
     std::vector< v_workw_t<Graph_t_in> > botDist(graph.num_vertices(), 0);
 
     for (const auto &vertex : GetTopOrderReverse<Graph_t_in>(graph)) {
@@ -144,8 +150,8 @@ std::vector< v_workw_t<Graph_t_in> > Sarkar<Graph_t_in, Graph_t_out>::getBotDist
 }
 
 
-template<typename Graph_t_in, typename Graph_t_out>
-vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::singleContraction(v_workw_t<Graph_t_in> commCost, const Graph_t_in &graph, std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &expansionMapOutput) const {
+template<typename Graph_t_in, typename Graph_t_out, typename node_hash_func_t>
+vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out, node_hash_func_t>::singleContraction(v_workw_t<Graph_t_in> commCost, const Graph_t_in &graph, std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &expansionMapOutput) const {
     using VertexType = vertex_idx_t<Graph_t_in>;
     assert(expansionMapOutput.size() == 0);
 
@@ -262,8 +268,8 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::singleContraction(v_wo
 };
 
 
-template<typename Graph_t_in, typename Graph_t_out>
-vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::allChildrenContraction(v_workw_t<Graph_t_in> commCost, const Graph_t_in &graph, std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &expansionMapOutput) const {
+template<typename Graph_t_in, typename Graph_t_out, typename node_hash_func_t>
+vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out, node_hash_func_t>::allChildrenContraction(v_workw_t<Graph_t_in> commCost, const Graph_t_in &graph, std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &expansionMapOutput) const {
     using VertexType = vertex_idx_t<Graph_t_in>;
     assert(expansionMapOutput.size() == 0);
 
@@ -393,8 +399,8 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::allChildrenContraction
 
 
 
-template<typename Graph_t_in, typename Graph_t_out>
-vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::allParentsContraction(v_workw_t<Graph_t_in> commCost, const Graph_t_in &graph, std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &expansionMapOutput) const {
+template<typename Graph_t_in, typename Graph_t_out, typename node_hash_func_t>
+vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out, node_hash_func_t>::allParentsContraction(v_workw_t<Graph_t_in> commCost, const Graph_t_in &graph, std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &expansionMapOutput) const {
     using VertexType = vertex_idx_t<Graph_t_in>;
     assert(expansionMapOutput.size() == 0);
 
@@ -531,11 +537,11 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::allParentsContraction(
 
 
 
-template<typename Graph_t_in, typename Graph_t_out>
-std::vector<std::vector<vertex_idx_t<Graph_t_in>>> Sarkar<Graph_t_in, Graph_t_out>::generate_vertex_expansion_map(const Graph_t_in &dag_in, vertex_idx_t<Graph_t_in> &diff) {
+template<typename Graph_t_in, typename Graph_t_out, typename node_hash_func_t>
+std::vector<std::vector<vertex_idx_t<Graph_t_in>>> Sarkar<Graph_t_in, Graph_t_out, node_hash_func_t>::generate_vertex_expansion_map(const Graph_t_in &dag_in, vertex_idx_t<Graph_t_in> &diff) {
     std::vector<std::vector<vertex_idx_t<Graph_t_in>>> expansionMap;
 
-    // std::cout << "Mode: " << (int) params.mode;
+    // std::cout << "Mode: " << (int) params.mode << "\n";
 
     switch (params.mode)
     {
@@ -602,16 +608,16 @@ std::vector<std::vector<vertex_idx_t<Graph_t_in>>> Sarkar<Graph_t_in, Graph_t_ou
 
 
 
-template<typename Graph_t_in, typename Graph_t_out>
-std::vector<std::vector<vertex_idx_t<Graph_t_in>>> Sarkar<Graph_t_in, Graph_t_out>::generate_vertex_expansion_map(const Graph_t_in &dag_in) {
+template<typename Graph_t_in, typename Graph_t_out, typename node_hash_func_t>
+std::vector<std::vector<vertex_idx_t<Graph_t_in>>> Sarkar<Graph_t_in, Graph_t_out, node_hash_func_t>::generate_vertex_expansion_map(const Graph_t_in &dag_in) {
     vertex_idx_t<Graph_t_in> dummy;
     return generate_vertex_expansion_map(dag_in, dummy);
 };
 
 
 
-template<typename Graph_t_in, typename Graph_t_out>
-vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::someChildrenContraction(v_workw_t<Graph_t_in> commCost, const Graph_t_in &graph, std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &expansionMapOutput) const {
+template<typename Graph_t_in, typename Graph_t_out, typename node_hash_func_t>
+vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out, node_hash_func_t>::someChildrenContraction(v_workw_t<Graph_t_in> commCost, const Graph_t_in &graph, std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &expansionMapOutput) const {
     using VertexType = vertex_idx_t<Graph_t_in>;
     assert(expansionMapOutput.size() == 0);
 
@@ -785,8 +791,8 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::someChildrenContractio
 
 
 
-template<typename Graph_t_in, typename Graph_t_out>
-vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::someParentsContraction(v_workw_t<Graph_t_in> commCost, const Graph_t_in &graph, std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &expansionMapOutput) const {
+template<typename Graph_t_in, typename Graph_t_out, typename node_hash_func_t>
+vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out, node_hash_func_t>::someParentsContraction(v_workw_t<Graph_t_in> commCost, const Graph_t_in &graph, std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &expansionMapOutput) const {
     using VertexType = vertex_idx_t<Graph_t_in>;
     assert(expansionMapOutput.size() == 0);
 
@@ -963,8 +969,8 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::someParentsContraction
 
 
 
-template<typename Graph_t_in, typename Graph_t_out>
-vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::levelContraction(v_workw_t<Graph_t_in> commCost, const Graph_t_in &graph, std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &expansionMapOutput) const {
+template<typename Graph_t_in, typename Graph_t_out, typename node_hash_func_t>
+vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out, node_hash_func_t>::levelContraction(v_workw_t<Graph_t_in> commCost, const Graph_t_in &graph, std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &expansionMapOutput) const {
     using VertexType = vertex_idx_t<Graph_t_in>;
     assert(expansionMapOutput.size() == 0);
 
@@ -1121,8 +1127,8 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::levelContraction(v_wor
 };
 
 
-template<typename Graph_t_in, typename Graph_t_out>
-vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::out_buffer_merge(v_workw_t<Graph_t_in> commCost, const Graph_t_in &graph, std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &expansionMapOutput) const {
+template<typename Graph_t_in, typename Graph_t_out, typename node_hash_func_t>
+vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out, node_hash_func_t>::out_buffer_merge(v_workw_t<Graph_t_in> commCost, const Graph_t_in &graph, std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &expansionMapOutput) const {
     using VertexType = vertex_idx_t<Graph_t_in>;
     assert(expansionMapOutput.size() == 0);
 
@@ -1251,8 +1257,8 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::out_buffer_merge(v_wor
 
 
 
-template<typename Graph_t_in, typename Graph_t_out>
-vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::in_buffer_merge(v_workw_t<Graph_t_in> commCost, const Graph_t_in &graph, std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &expansionMapOutput) const {
+template<typename Graph_t_in, typename Graph_t_out, typename node_hash_func_t>
+vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out, node_hash_func_t>::in_buffer_merge(v_workw_t<Graph_t_in> commCost, const Graph_t_in &graph, std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &expansionMapOutput) const {
     using VertexType = vertex_idx_t<Graph_t_in>;
     assert(expansionMapOutput.size() == 0);
 
@@ -1378,6 +1384,47 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::in_buffer_merge(v_work
 };
 
 
+
+template<typename Graph_t_in, typename Graph_t_out, typename node_hash_func_t>
+void Sarkar<Graph_t_in, Graph_t_out, node_hash_func_t>::computeNodeHashes(const Graph_t_in &graph) {
+    node_hash_func_t nodeHasher;
+    constexpr std::size_t defaultHash = 1729U;
+
+    nodeHashes.resize(graph.num_vertices());
+    for (const auto &vertex : GetTopOrder<Graph_t_in>(graph)) {
+        nodeHashes[vertex] = defaultHash;
+        for (const auto &par : graph.parents(vertex)) {
+            hash_combine(nodeHashes[vertex], nodeHashes[par]);
+        }
+        hash_combine(nodeHashes[vertex], nodeHasher(vertex));
+    }
+    
+    std::vector<std::size_t> bottomUpPass(graph.num_vertices());
+    for (const auto &vertex : GetTopOrderReverse<Graph_t_in>(graph)) {
+        bottomUpPass[vertex] = defaultHash;
+        for (const auto &chld : graph.children(vertex)) {
+            hash_combine(bottomUpPass[vertex], bottomUpPass[chld]);
+        }
+        hash_combine(bottomUpPass[vertex], nodeHasher(vertex));
+        hash_combine(nodeHashes[vertex], bottomUpPass[vertex]);
+    }
+}
+
+template<typename Graph_t_in, typename Graph_t_out, typename node_hash_func_t>
+std::unordered_map<std::size_t, std::set< vertex_idx_t<Graph_t_in> >> Sarkar<Graph_t_in, Graph_t_out, node_hash_func_t>::computeHashOrbits() const {
+    std::unordered_map<std::size_t, std::set< vertex_idx_t<Graph_t_in> >> orbits;
+
+    for (vertex_idx_t<Graph_t_in> vert = 0; vert < static_cast<vertex_idx_t<Graph_t_in>>(nodeHashes.size()); ++vert) {
+        const std::size_t hash = nodeHashes[vert];
+        if (orbits.find(hash) == orbits.end()) {
+            orbits.emplace(std::piecewise_construct, std::forward_as_tuple(hash), std::forward_as_tuple(std::initializer_list< vertex_idx_t<Graph_t_in> >{vert}));
+        } else {
+            orbits.at(hash).emplace(vert);
+        }
+    }
+
+    return orbits;
+}
 
 
 
