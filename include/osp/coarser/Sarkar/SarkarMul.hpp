@@ -70,7 +70,8 @@ class SarkarMul : public MultilevelCoarser<Graph_t, Graph_t_coarse> {
 
 template<typename Graph_t, typename Graph_t_coarse>
 void SarkarMul<Graph_t, Graph_t_coarse>::setSeed() {
-    thue_coin = Thue_Morse_Sequence(ml_params.seed % 4096U);
+    constexpr std::size_t seedReduction = 4096U;
+    thue_coin = Thue_Morse_Sequence(ml_params.seed % seedReduction);
     balanced_random = Biased_Random(ml_params.seed);
 }
 
