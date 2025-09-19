@@ -995,8 +995,8 @@ private:
                 consumed_ids.insert(parent_set.begin(), parent_set.end());
             }
 
-            size_t num_created_sgs = next_evolving_sgs.size();
-            size_t num_unconsumed = evolving_sgs.size() - consumed_ids.size();
+            // size_t num_created_sgs = next_evolving_sgs.size();
+            //size_t num_unconsumed = evolving_sgs.size() - consumed_ids.size();
 
             // D. Carry over unconsumed subgraphs
             for (const auto& [id, sg] : evolving_sgs) {
@@ -1006,11 +1006,11 @@ private:
             }
             
             evolving_sgs = std::move(next_evolving_sgs);
-            if constexpr (verbose) {
-                std::cout << "           - Merging... Consumed " << consumed_ids.size() << " parents, carried over " << num_unconsumed
-                          << ", created " << num_created_sgs << " new subgraphs.\n";
-                std::cout << "           - State after merge: " << evolving_sgs.size() << " evolving subgraphs.\n";
-            }
+            // if constexpr (verbose) {
+            //     std::cout << "           - Merging... Consumed " << consumed_ids.size() << " parents, carried over " << num_unconsumed
+            //               << ", created " << num_created_sgs << " new subgraphs.\n";
+            //     std::cout << "           - State after merge: " << evolving_sgs.size() << " evolving subgraphs.\n";
+            // }
         }
 
         // 4. Finalize: move the fully evolved subgraphs to the main `next_active_subgraphs` map
