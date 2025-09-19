@@ -33,12 +33,13 @@ struct MulParameters {
     double leniency{0.0};
     std::vector< commCostType > commCostVec{ std::initializer_list<commCostType>{} };
     commCostType maxWeight{ std::numeric_limits<commCostType>::max() };
+    commCostType smallWeightThreshold{ std::numeric_limits<commCostType>::lowest() };
     unsigned max_num_iteration_without_changes{3U};
     bool use_buffer_merge{false};
 };
 } // end namespace SarkarParams
 
-template<typename Graph_t, typename Graph_t_coarse, typename node_hash_func_t = uniform_node_hash_func< vertex_idx_t<Graph_t> >>
+template<typename Graph_t, typename Graph_t_coarse>
 class SarkarMul : public MultilevelCoarser<Graph_t, Graph_t_coarse> {
     private:
         bool first_coarsen{true};
@@ -68,20 +69,21 @@ class SarkarMul : public MultilevelCoarser<Graph_t, Graph_t_coarse> {
         std::string getCoarserName() const { return "Sarkar"; };
 };
 
-template<typename Graph_t, typename Graph_t_coarse, typename node_hash_func_t>
-void SarkarMul<Graph_t, Graph_t_coarse, node_hash_func_t>::setSeed() {
+template<typename Graph_t, typename Graph_t_coarse>
+void SarkarMul<Graph_t, Graph_t_coarse>::setSeed() {
     constexpr std::size_t seedReduction = 4096U;
     thue_coin = Thue_Morse_Sequence(ml_params.seed % seedReduction);
     balanced_random = Biased_Random(ml_params.seed);
 }
 
-template<typename Graph_t, typename Graph_t_coarse, typename node_hash_func_t>
-void SarkarMul<Graph_t, Graph_t_coarse, node_hash_func_t>::initParams() {
+template<typename Graph_t, typename Graph_t_coarse>
+void SarkarMul<Graph_t, Graph_t_coarse>::initParams() {
     first_coarsen = true;
 
     params.geomDecay = ml_params.geomDecay;
     params.leniency = ml_params.leniency;
     params.maxWeight = ml_params.maxWeight;
+    params.smallWeightThreshold = ml_params.smallWeightThreshold;
 
     if (ml_params.commCostVec.empty()) {
         v_workw_t<Graph_t> syncCosts = 128;
@@ -98,14 +100,14 @@ void SarkarMul<Graph_t, Graph_t_coarse, node_hash_func_t>::initParams() {
     updateParams();
 };
 
-template<typename Graph_t, typename Graph_t_coarse, typename node_hash_func_t>
-void SarkarMul<Graph_t, Graph_t_coarse, node_hash_func_t>::updateParams() {
+template<typename Graph_t, typename Graph_t_coarse>
+void SarkarMul<Graph_t, Graph_t_coarse>::updateParams() {
     coarser_initial.setParameters(params);
     coarser_secondary.setParameters(params);
 };
 
-template<typename Graph_t, typename Graph_t_coarse, typename node_hash_func_t>
-RETURN_STATUS SarkarMul<Graph_t, Graph_t_coarse, node_hash_func_t>::run_single_contraction_mode(vertex_idx_t<Graph_t> &diff_vertices) {
+template<typename Graph_t, typename Graph_t_coarse>
+RETURN_STATUS SarkarMul<Graph_t, Graph_t_coarse>::run_single_contraction_mode(vertex_idx_t<Graph_t> &diff_vertices) {
     RETURN_STATUS status = RETURN_STATUS::OSP_SUCCESS;
 
     vertex_idx_t<Graph_t> current_num_vertices;
@@ -138,8 +140,8 @@ RETURN_STATUS SarkarMul<Graph_t, Graph_t_coarse, node_hash_func_t>::run_single_c
     return status;
 };
 
-template<typename Graph_t, typename Graph_t_coarse, typename node_hash_func_t>
-RETURN_STATUS SarkarMul<Graph_t, Graph_t_coarse, node_hash_func_t>::run_contractions(v_workw_t<Graph_t> commCost) {
+template<typename Graph_t, typename Graph_t_coarse>
+RETURN_STATUS SarkarMul<Graph_t, Graph_t_coarse>::run_contractions(v_workw_t<Graph_t> commCost) {
     RETURN_STATUS status = RETURN_STATUS::OSP_SUCCESS;
     vertex_idx_t<Graph_t> diff = 0;
     
@@ -229,8 +231,8 @@ RETURN_STATUS SarkarMul<Graph_t, Graph_t_coarse, node_hash_func_t>::run_contract
 };
 
 
-template<typename Graph_t, typename Graph_t_coarse, typename node_hash_func_t>
-RETURN_STATUS SarkarMul<Graph_t, Graph_t_coarse, node_hash_func_t>::run_contractions() {
+template<typename Graph_t, typename Graph_t_coarse>
+RETURN_STATUS SarkarMul<Graph_t, Graph_t_coarse>::run_contractions() {
     initParams();
 
     RETURN_STATUS status = RETURN_STATUS::OSP_SUCCESS;
