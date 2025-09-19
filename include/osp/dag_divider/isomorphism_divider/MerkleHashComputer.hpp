@@ -89,10 +89,11 @@ class MerkleHashComputer {
         }      
     }
 
-  public:
+  public:   
 
-    MerkleHashComputer(const Graph_t & g) {
-        compute_hashes(g);        
+    template<typename... Args>
+    MerkleHashComputer(const Graph_t &graph, Args &&...args) : node_hash_func(std::forward<Args>(args)...) {
+        compute_hashes(graph);        
     }
 
     virtual ~MerkleHashComputer() = default;
