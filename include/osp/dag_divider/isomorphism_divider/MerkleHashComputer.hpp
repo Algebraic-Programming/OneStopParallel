@@ -98,9 +98,9 @@ class MerkleHashComputer {
 
     virtual ~MerkleHashComputer() = default;
 
-    inline std::size_t get_vertex_hash(const VertexType &v) { return vertex_hashes[v]; }
-    inline const std::vector<std::size_t> &get_vertex_hashes() { return vertex_hashes; }
-    inline std::size_t num_orbits() { return orbits.size(); }
+    inline std::size_t get_vertex_hash(const VertexType &v) const { return vertex_hashes[v]; }
+    inline const std::vector<std::size_t> &get_vertex_hashes() const { return vertex_hashes; }
+    inline std::size_t num_orbits() const { return orbits.size(); }
     
     inline const std::vector<VertexType> &get_orbit(const VertexType &v) { return get_orbit_from_hash(get_vertex_hash(v)); }
     inline const std::unordered_map<std::size_t, std::vector<VertexType>> &get_orbits() { return orbits; }
@@ -155,5 +155,17 @@ bool are_isomorphic_by_merkle_hash(const Graph_t& g1, const Graph_t& g2) {
     return true;
 }
 
+
+template<typename Graph_t>
+struct bwd_merkle_node_hash_func {
+
+    MerkleHashComputer<Graph_t, uniform_node_hash_func<vertex_idx_t<Graph_t>>, false> bw_merkle_hash;
+
+    bwd_merkle_node_hash_func(const Graph_t & graph) : bw_merkle_hash(graph) {}
+
+    std::size_t operator()(const vertex_idx_t<Graph_t> & v) const {
+        return bw_merkle_hash.get_vertex_hash(v);
+    }
+};
 
 } // namespace osp

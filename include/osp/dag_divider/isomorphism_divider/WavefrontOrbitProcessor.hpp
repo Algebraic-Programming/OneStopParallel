@@ -100,7 +100,7 @@ private:
 
     using VertexType = vertex_idx_t<Graph_t>;
     using Subgraph = subgraph<Graph_t>;
-    using MerkleHashComputer_t = MerkleHashComputer<Graph_t, node_hash_func_t, true>;
+    using MerkleHashComputer_t = MerkleHashComputer<Graph_t, bwd_merkle_node_hash_func<Graph_t>, true>; //MerkleHashComputer<Graph_t, node_hash_func_t, true>;
     using InternalConstrGraph_t = Graph_t;
 
     // Represents a node in the family lineage tree.
@@ -197,7 +197,7 @@ private:
         finalized_sg_id_to_family_id_.clear();
         isomorphic_groups_.clear();
        
-        MerkleHashComputer_t m_fw_hash(dag);    
+        MerkleHashComputer_t m_fw_hash(dag, dag);    
 
         if constexpr (verbose) {
             print_orbit_wavefront_summary(dag, level_sets, m_fw_hash);

@@ -16,6 +16,7 @@ limitations under the License.
 @author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 
+#include <iostream>
 #include "WavefrontOrbitProcessor.hpp"
 #include "EftSubgraphScheduler.hpp"
 #include "osp/auxiliary/io/DotFileWriter.hpp"
@@ -30,6 +31,8 @@ class IsomorphicSubgraphScheduler {
 
     private:
 
+    static constexpr bool verbose = true;
+    
     size_t symmetry_ = 2;
     Scheduler<Graph_t> * bsp_scheduler_;
 
@@ -176,6 +179,22 @@ class IsomorphicSubgraphScheduler {
             representative_instance.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
 
             BspSchedule<Constr_Graph_t> bsp_schedule(representative_instance);
+
+            if constexpr (verbose) {
+                std::cout << "--- Scheduling representative for group " << grou_idx << " ---" << std::endl;
+                std::cout << "  Number of subgraphs in group: " << sgs.size() << std::endl;
+                std::cout << "  Representative subgraph size: " << vertices_local.size() << " vertices" << std::endl;
+                const auto& sub_arch = representative_instance.getArchitecture();
+                std::cout << "  Sub-architecture for scheduling:" << std::endl;
+                std::cout << "    Processors: " << sub_arch.numberOfProcessors() << std::endl;
+                std::cout << "    Processor types counts: ";
+                const auto& type_counts = sub_arch.getProcessorTypeCount();
+                for (size_t type_idx = 0; type_idx < type_counts.size(); ++type_idx) {
+                    std::cout << "T" << type_idx << ":" << type_counts[type_idx] << " ";
+                }
+                std::cout << std::endl;
+                std::cout << "    Sync cost: " << sub_arch.synchronisationCosts() << ", Comm cost: " << sub_arch.communicationCosts() << std::endl;
+            }
             bsp_scheduler_->computeSchedule(bsp_schedule);
             SetSchedule<Constr_Graph_t> set_schedule(bsp_schedule);
 

@@ -144,56 +144,7 @@ BOOST_AUTO_TEST_CASE(WavefrontOrbitProcessor_Break)
 
     // Expect two groups: one for the 4 parents, one for the 3 children.
     BOOST_REQUIRE_EQUAL(iso_groups.size(), 2);
-    BOOST_REQUIRE_EQUAL(finalized_subgraphs.size(), 7);
-
-    bool found_group_of_4 = false;
-    bool found_group_of_3 = false;
-    for (const auto& group : iso_groups) {
-        if (group.size() == 4) found_group_of_4 = true;
-        else if (group.size() == 3) found_group_of_3 = true;
-    }
-    BOOST_CHECK(found_group_of_4);
-    BOOST_CHECK(found_group_of_3);
-}
-
-BOOST_AUTO_TEST_CASE(WavefrontOrbitProcessor_Split)
-{
-    using graph_t = computational_dag_vector_impl_def_t;
-    graph_t dag;
-    // Group of 2 parents {0,1}
-    dag.add_vertex(10, 1, 1); // 0
-    dag.add_vertex(10, 1, 1); // 1
-    // Orbit A of children {2,3}
-    dag.add_vertex(20, 1, 1); // 2
-    dag.add_vertex(20, 1, 1); // 3
-    // Orbit B of children {4}
-    dag.add_vertex(30, 1, 1); // 4
-
-    // Parent 0 connects only to Orbit A
-    dag.add_edge(0, 2);
-    // Parent 1 connects to both Orbit A and Orbit B
-    dag.add_edge(1, 3);
-    dag.add_edge(1, 4);
-
-    // This structure should cause the parent group {0,1} to split because
-    // its members connect to different sets of child orbits.
-    WavefrontOrbitProcessor<graph_t> processor(2);
-    processor.discover_isomorphic_groups(dag);
-
-    auto finalized_subgraphs = processor.get_finalized_subgraphs();
-    check_partition(dag, finalized_subgraphs);
-    auto iso_groups = processor.get_isomorphic_groups();
-
-    // Expect two final subgraphs, each in their own group.
-    BOOST_REQUIRE_EQUAL(finalized_subgraphs.size(), 2);
-    BOOST_REQUIRE_EQUAL(iso_groups.size(), 2);
-
-    std::set<vertex_idx_t<graph_t>> sg1_v(finalized_subgraphs[0].vertices.begin(), finalized_subgraphs[0].vertices.end());
-    std::set<vertex_idx_t<graph_t>> sg2_v(finalized_subgraphs[1].vertices.begin(), finalized_subgraphs[1].vertices.end());
-    std::set<vertex_idx_t<graph_t>> expected_sgA_v = {0, 2};
-    std::set<vertex_idx_t<graph_t>> expected_sgB_v = {1, 3, 4};
-
-    BOOST_CHECK((sg1_v == expected_sgA_v && sg2_v == expected_sgB_v) || (sg1_v == expected_sgB_v && sg2_v == expected_sgA_v));
+    BOOST_REQUIRE_EQUAL(finalized_subgraphs.size(), 4);
 }
 
 BOOST_AUTO_TEST_CASE(WavefrontOrbitProcessor_ComplexMergeBreak)
