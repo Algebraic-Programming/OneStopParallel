@@ -51,7 +51,7 @@ public:
 
 private:
 
-    static constexpr bool verbose = false;
+    static constexpr bool verbose = true;
 
     using job_id_t = vertex_idx_t<Graph_t>;
 
@@ -380,7 +380,10 @@ private:
         result.makespan = current_time;
         result.node_assigned_worker_per_type.resize(jobs_.size());
         for(const auto& job : jobs_) {
-            result.node_assigned_worker_per_type[job.id] = job.assigned_workers;
+            result.node_assigned_worker_per_type[job.id].resize(num_worker_types);
+            for (size_t i = 0; i < num_worker_types; ++i) {
+                result.node_assigned_worker_per_type[job.id][i] = job.assigned_workers[i] > 0 ? job.assigned_workers[i] / job.multiplicity : 0;
+            }
         }
 
         return result;
