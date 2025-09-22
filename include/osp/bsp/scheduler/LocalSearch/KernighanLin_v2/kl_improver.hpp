@@ -27,9 +27,8 @@ limitations under the License.
 #include <string>
 #include <unordered_set>
 #include <vector>
-#include <omp.h>
 
-#include <boost/heap/fibonacci_heap.hpp>
+#include "osp/auxiliary/datastructures/heaps/PairingHeap.hpp"
 #include "osp/auxiliary/misc.hpp"
 #include "osp/bsp/scheduler/ImprovementScheduler.hpp"
 #include "osp/graph_algorithms/directed_graph_edge_desc_util.hpp"
@@ -102,10 +101,9 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
     using EdgeType = edge_desc_t<Graph_t>;
 
     using kl_move = kl_move_struct<cost_t, VertexType>;
-    using heap_datastructure = typename boost::heap::fibonacci_heap<kl_move>;
-    using heap_handle = typename heap_datastructure::handle_type;
+    using heap_datastructure = MaxPairingHeap<VertexType, kl_move>;
     using active_schedule_t = kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t>;
-    using node_selection_container_t = adaptive_affinity_table<Graph_t, cost_t, heap_handle, active_schedule_t, window_size>;
+    using node_selection_container_t = adaptive_affinity_table<Graph_t, cost_t, active_schedule_t, window_size>;
     using kl_gain_update_info = kl_update_info<VertexType>;
 
     struct ThreadSearchContext {
@@ -120,7 +118,7 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
         node_selection_container_t affinity_table;
         std::vector<std::vector<cost_t>> local_affinity_table;
         reward_penalty_strategy<cost_t, comm_cost_function_t, active_schedule_t> reward_penalty_strat;
-        vertex_selection_strategy<Graph_t, node_selection_container_t, heap_handle, active_schedule_t> selection_strategy;
+        vertex_selection_strategy<Graph_t, node_selection_container_t, active_schedule_t> selection_strategy;
         thread_local_active_schedule_data<Graph_t, cost_t> active_schedule_data;
 
         double average_gain = 0.0;
@@ -157,8 +155,7 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
     comm_cost_function_t comm_cost_f;
     std::vector<ThreadSearchContext> thread_data_vec;
     std::vector<bool> thread_finished_vec;
-    unsigned max_num_threads = std::numeric_limits<unsigned>::max();
-
+    
     inline unsigned rel_step_idx(const unsigned node_step, const unsigned move_step) const { return (move_step >= node_step) ? ((move_step - node_step) + window_size) : (window_size - (node_step - move_step)); }
     inline bool is_compatible(VertexType node, unsigned proc) const { return active_schedule.getInstance().isCompatible(node, proc); }
 
@@ -183,24 +180,18 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
         // To introduce non-determinism and help escape local optima, if there are multiple moves with the same
         // top gain, we randomly select one. We check up to `local_max` ties.
         const unsigned local_max = 50;
-        std::vector<VertexType> top_gain_nodes;
-        top_gain_nodes.reserve(local_max);
-        const cost_t top_gain = max_gain_heap.top().gain;
+        std::vector<VertexType> top_gain_nodes = max_gain_heap.get_top_keys(local_max);
 
-        for (auto iter = max_gain_heap.ordered_begin(); iter != max_gain_heap.ordered_end(); ++iter) {
-            if (iter->gain == top_gain && top_gain_nodes.size() < local_max) {
-                top_gain_nodes.push_back(iter->node);
-            } else {
-                // The sequence is ordered by gain, so we can break early.
-                break;
-            }
+        if (top_gain_nodes.empty()) {
+            // This case is guarded by the caller, but for safety:
+            top_gain_nodes.push_back(max_gain_heap.top());
         }
 
         std::uniform_int_distribution<size_t> dis(0, top_gain_nodes.size() - 1);
         const VertexType node = top_gain_nodes[dis(gen)];
 
-        kl_move best_move = (*affinity_table.get_heap_handle(node));
-        max_gain_heap.erase(affinity_table.get_heap_handle(node));
+        kl_move best_move = max_gain_heap.get_value(node);
+        max_gain_heap.erase(node);
         lock_manager.lock(node);
         affinity_table.remove(node);
 
@@ -387,11 +378,7 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
 
     inline void recompute_node_max_gain(VertexType node, node_selection_container_t &affinity_table, ThreadSearchContext & thread_data) {
         const auto best_move = compute_best_move<true>(node, affinity_table[node], thread_data);
-        heap_handle & node_handle = affinity_table.get_heap_handle(node);
-        (*node_handle).gain = best_move.gain;
-        (*node_handle).to_proc = best_move.to_proc;
-        (*node_handle).to_step = best_move.to_step;
-        thread_data.max_gain_heap.update(node_handle);
+        thread_data.max_gain_heap.update(node, best_move);   
     }
 
     inline cost_t compute_same_step_affinity(const work_weight_t &max_work_for_step, const work_weight_t &new_weight, const cost_t &node_proc_affinity) {
@@ -603,6 +590,7 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
             }
 #endif
 #ifdef KL_DEBUG_COST_CHECK
+                active_schedule.getVectorSchedule().number_of_supersteps = thread_data_vec[0].num_steps();
                 if (std::abs(comm_cost_f.compute_schedule_cost_test() - thread_data.active_schedule_data.cost) > 0.00001 ) {
                     std::cout << "computed cost: " << comm_cost_f.compute_schedule_cost_test() << ", current cost: " << thread_data.active_schedule_data.cost << std::endl;
                     std::cout << ">>>>>>>>>>>>>>>>>>>>>> compute cost not equal to new cost <<<<<<<<<<<<<<<<<<<<" << std::endl;
@@ -636,6 +624,7 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
                     if (iter_inital_feasible && thread_data.active_schedule_data.new_violations.size() > 0) {
                         run_quick_moves(inner_iter, thread_data, change_in_cost, best_move.node);
 #ifdef KL_DEBUG_COST_CHECK
+                active_schedule.getVectorSchedule().number_of_supersteps = thread_data_vec[0].num_steps();
                 if (std::abs(comm_cost_f.compute_schedule_cost_test() - thread_data.active_schedule_data.cost) > 0.00001 ) {
                     std::cout << "computed cost: " << comm_cost_f.compute_schedule_cost_test() << ", current cost: " << thread_data.active_schedule_data.cost << std::endl;
                     std::cout << ">>>>>>>>>>>>>>>>>>>>>> compute cost not equal to new cost <<<<<<<<<<<<<<<<<<<<" << std::endl;
@@ -706,6 +695,7 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
                 std::cout << "}" << std::endl;
 #endif
 #ifdef KL_DEBUG_COST_CHECK
+                active_schedule.getVectorSchedule().number_of_supersteps = thread_data_vec[0].num_steps();
                 if (std::abs(comm_cost_f.compute_schedule_cost_test() - thread_data.active_schedule_data.cost) > 0.00001 ) {
                     std::cout << "computed cost: " << comm_cost_f.compute_schedule_cost_test() << ", current cost: " << thread_data.active_schedule_data.cost << std::endl;
                     std::cout << ">>>>>>>>>>>>>>>>>>>>>> compute cost not equal to new cost <<<<<<<<<<<<<<<<<<<<" << std::endl;
@@ -739,6 +729,7 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
 
 
 #ifdef KL_DEBUG_COST_CHECK
+            active_schedule.getVectorSchedule().number_of_supersteps = thread_data_vec[0].num_steps();
             if (std::abs(comm_cost_f.compute_schedule_cost_test() - thread_data.active_schedule_data.cost) > 0.00001 ) {
                 std::cout << "computed cost: " << comm_cost_f.compute_schedule_cost_test() << ", current cost: " << thread_data.active_schedule_data.cost << std::endl;
                 std::cout << ">>>>>>>>>>>>>>>>>>>>>> compute cost not equal to new cost <<<<<<<<<<<<<<<<<<<<" << std::endl;
@@ -933,6 +924,7 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
 #endif
 
 #ifdef KL_DEBUG_COST_CHECK
+                active_schedule.getVectorSchedule().number_of_supersteps = thread_data_vec[0].num_steps();
                 if (std::abs(comm_cost_f.compute_schedule_cost_test() - thread_data.active_schedule_data.cost) > 0.00001 ) {
                     std::cout << "computed cost: " << comm_cost_f.compute_schedule_cost_test() << ", current cost: " << thread_data.active_schedule_data.cost << std::endl;
                     std::cout << ">>>>>>>>>>>>>>>>>>>>>> compute cost not equal to new cost <<<<<<<<<<<<<<<<<<<<" << std::endl;
@@ -952,69 +944,6 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
             return false;
         }
         return true;
-    }
-
-    void set_num_threads(unsigned &num_threads, const unsigned num_steps) {
-        unsigned max_allowed_threads = 0;
-        if (num_steps >= parameters.thread_min_range + parameters.thread_range_gap) {
-            const unsigned divisor = parameters.thread_min_range + parameters.thread_range_gap;
-            if (divisor > 0) {
-                // This calculation is based on the constraint that one thread's range is
-                // 'min_range' larger than the others, and all ranges are at least 'min_range'.
-                max_allowed_threads = (num_steps + parameters.thread_range_gap - parameters.thread_min_range) / divisor;
-            } else {
-                max_allowed_threads = num_steps;
-            }
-        } else if (num_steps >= parameters.thread_min_range) {
-            max_allowed_threads = 1;
-        }
-
-        if (num_threads > max_allowed_threads) {
-            num_threads = max_allowed_threads;
-        }
-
-        if (num_threads == 0) {
-            num_threads = 1;
-        }
-#ifdef KL_DEBUG_1
-        std::cout << "num threads: " << num_threads << " number of supersteps: " << num_steps << ", max allowed threads: " << max_allowed_threads << std::endl;
-#endif        
-    
-    }
-
-    void set_thread_boundaries(unsigned &num_threads, const unsigned num_steps, bool last_thread_large_range) {
-
-        if (num_threads == 1) {
-            set_start_step(0, thread_data_vec[0]);
-            thread_data_vec[0].end_step = (num_steps > 0) ? num_steps - 1 : 0;
-            thread_data_vec[0].original_end_step = thread_data_vec[0].end_step;
-            return;
-        } else {
-            const unsigned total_gap_size = (num_threads - 1) * parameters.thread_range_gap;
-            const unsigned bonus = parameters.thread_min_range;
-            const unsigned steps_to_distribute = num_steps - total_gap_size - bonus;
-            const unsigned base_range = steps_to_distribute / num_threads;
-            const unsigned remainder = steps_to_distribute % num_threads;
-            const unsigned large_range_thread_idx = last_thread_large_range ? num_threads - 1 : 0;
-
-            unsigned current_start_step = 0;
-            for (unsigned i = 0; i < num_threads; ++i) {
-                thread_finished_vec[i] = false;
-                set_start_step(current_start_step, thread_data_vec[i]);
-                unsigned current_range = base_range + (i < remainder ? 1 : 0);
-                if (i == large_range_thread_idx) {
-                    current_range += bonus;
-                }
-
-                const unsigned end_step = current_start_step + current_range - 1;
-                thread_data_vec[i].end_step = end_step;
-                thread_data_vec[i].original_end_step = thread_data_vec[i].end_step;
-                current_start_step = end_step + 1 + parameters.thread_range_gap;
-#ifdef KL_DEBUG_1
-                std::cout << "thread " << i << ": start_step=" << thread_data_vec[i].start_step << ", end_step=" << thread_data_vec[i].end_step << std::endl;
-#endif
-            }
-        }
     }
 
     void synchronize_active_schedule(const unsigned num_threads) {
@@ -1041,7 +970,6 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
         active_schedule.set_cost(new_cost);
     }
 
-
   public:
     kl_improver() : ImprovementScheduler<Graph_t>() {
 
@@ -1052,39 +980,25 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
     virtual ~kl_improver() = default;
 
     virtual RETURN_STATUS improveSchedule(BspSchedule<Graph_t> &schedule) override {
-        unsigned num_threads = std::min(max_num_threads, static_cast<unsigned>(omp_get_max_threads()));
-        set_num_threads(num_threads, schedule.numberOfSupersteps());
-
+        const unsigned num_threads = 1;
+        
         thread_data_vec.resize(num_threads);      
         thread_finished_vec.assign(num_threads, true);
 
-        if (num_threads == 1) {
-            parameters.num_parallel_loops = 1; // no parallelization with one thread. Affects parameters.max_out_iteration calculation in set_parameters()
-        }
-
         set_parameters(schedule.getInstance().numberOfVertices());
         initialize_datastructures(schedule); 
-        const cost_t initial_cost = active_schedule.get_cost();
+        const cost_t initial_cost = active_schedule.get_cost();   
+        const unsigned num_steps = schedule.numberOfSupersteps();
 
-        for (size_t i = 0; i < parameters.num_parallel_loops; ++i) {
-            set_thread_boundaries(num_threads, schedule.numberOfSupersteps(), i % 2 == 0);                       
+        set_start_step(0, thread_data_vec[0]);
+        thread_data_vec[0].end_step = (num_steps > 0) ? num_steps - 1 : 0;                   
 
-            #pragma omp parallel num_threads(num_threads) 
-            {
-                const size_t thread_id = static_cast<size_t>(omp_get_thread_num());
-                auto & thread_data = this->thread_data_vec[thread_id];
-                thread_data.active_schedule_data.initialize_cost(active_schedule.get_cost());
-                thread_data.selection_strategy.setup(thread_data.start_step, thread_data.end_step);
-                run_local_search(thread_data); 
-            }
-        
-            synchronize_active_schedule(num_threads);
-            if (num_threads > 1) {
-                active_schedule.set_cost(comm_cost_f.compute_schedule_cost());
-                set_num_threads(num_threads, schedule.numberOfSupersteps());
-                thread_finished_vec.resize(num_threads);
-            }
-        }               
+        auto & thread_data = this->thread_data_vec[0];
+        thread_data.active_schedule_data.initialize_cost(active_schedule.get_cost());
+        thread_data.selection_strategy.setup(thread_data.start_step, thread_data.end_step);
+        run_local_search(thread_data); 
+            
+        synchronize_active_schedule(num_threads);                       
 
         if (initial_cost > active_schedule.get_cost()) {
             active_schedule.write_schedule(schedule);
@@ -1103,10 +1017,6 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
 
     void set_compute_with_time_limit(bool compute_with_time_limit_) {
         compute_with_time_limit = compute_with_time_limit_;
-    }
-
-    void set_max_num_threads(const unsigned num_threads) {
-        max_num_threads = num_threads;
     }
 
     virtual std::string getScheduleName() const {
@@ -1418,7 +1328,7 @@ void kl_improver<Graph_t, comm_cost_function_t, MemoryConstraint_t, window_size,
     for (size_t i = 0; i < active_count; ++i) {
         const VertexType node = thread_data.affinity_table.get_selected_nodes()[i]; 
         compute_node_affinities(node, thread_data.affinity_table.at(node), thread_data);
-        thread_data.affinity_table.get_heap_handle(node) = thread_data.max_gain_heap.push(compute_best_move<true>(node, thread_data.affinity_table[node], thread_data));
+        thread_data.max_gain_heap.push(node, compute_best_move<true>(node, thread_data.affinity_table[node], thread_data));
     }
 }
 
@@ -1427,7 +1337,7 @@ void kl_improver<Graph_t, comm_cost_function_t, MemoryConstraint_t, window_size,
     for (const auto &node : new_nodes) {
         nodes.insert(node);
         compute_node_affinities(node, thread_data.affinity_table.at(node), thread_data);
-        nodes.get_heap_handle(node) = thread_data.max_gain_heap.push(compute_best_move<true>(node, thread_data.affinity_table[node], thread_data));        
+        thread_data.max_gain_heap.push(node, compute_best_move<true>(node, thread_data.affinity_table[node], thread_data));        
     }
 }
 
@@ -1440,17 +1350,22 @@ void kl_improver<Graph_t, comm_cost_function_t, MemoryConstraint_t, window_size,
 template<typename Graph_t, typename comm_cost_function_t, typename MemoryConstraint_t, unsigned window_size, typename cost_t>
 void kl_improver<Graph_t, comm_cost_function_t, MemoryConstraint_t, window_size, cost_t>::print_heap(heap_datastructure & max_gain_heap) const {
 
-    std::cout << "heap current size: " << max_gain_heap.size() << std::endl;
-    std::cout << "heap top node " << max_gain_heap.top().node << " gain " << max_gain_heap.top().gain << std::endl;
+    if (max_gain_heap.is_empty()) {
+        std::cout << "heap is empty" << std::endl;
+        return;
+    }
+    heap_datastructure temp_heap = max_gain_heap; // requires copy constructor
+
+    std::cout << "heap current size: " << temp_heap.size() << std::endl;
+    const auto& top_val = temp_heap.get_value(temp_heap.top());
+    std::cout << "heap top node " << top_val.node << " gain " << top_val.gain << std::endl;
 
     unsigned count = 0;
-    for (auto it = max_gain_heap.ordered_begin(); it != max_gain_heap.ordered_end(); ++it) {
-        std::cout << "node " << it->node << " gain " << it->gain << " to proc " << it->to_proc << " to step "
-                    << it->to_step << std::endl;
-
-        if (count++ > 15) {
-            break;
-        }
+    while (!temp_heap.is_empty() && count++ < 15) {
+        const auto& val = temp_heap.get_value(temp_heap.top());
+        std::cout << "node " << val.node << " gain " << val.gain << " to proc " << val.to_proc << " to step "
+                    << val.to_step << std::endl;
+        temp_heap.pop();
     }
 }
 
@@ -1462,11 +1377,12 @@ void kl_improver<Graph_t, comm_cost_function_t, MemoryConstraint_t, window_size,
     if((node_proc == proc) && (node_step == step)) 
         return;
 
-    const heap_handle & node_handle = affinity_table.get_heap_handle(node);
-    cost_t max_gain = (*node_handle).gain;
+
+    kl_move node_move = thread_data.max_gain_heap.get_value(node);
+    cost_t max_gain = node_move.gain;
     
-    unsigned max_proc = (*node_handle).to_proc;
-    unsigned max_step = (*node_handle).to_step;
+    unsigned max_proc = node_move.to_proc;
+    unsigned max_step = node_move.to_step;
 
     if ((max_step == step) && (max_proc == proc)) {
         recompute_node_max_gain(node, affinity_table, thread_data);
@@ -1479,11 +1395,11 @@ void kl_improver<Graph_t, comm_cost_function_t, MemoryConstraint_t, window_size,
             max_step = step; 
         } 
     
-        if ((max_gain != (*node_handle).gain) || (max_proc != (*node_handle).to_proc) || (max_step != (*node_handle).to_step)) {
-            (*node_handle).gain = max_gain;
-            (*node_handle).to_proc = max_proc;
-            (*node_handle).to_step = max_step;
-            thread_data.max_gain_heap.update(node_handle);
+        if ((max_gain != node_move.gain) || (max_proc != node_move.to_proc) || (max_step != node_move.to_step)) {
+            node_move.gain = max_gain;
+            node_move.to_proc = max_proc;
+            node_move.to_step = max_step;
+            thread_data.max_gain_heap.update(node, node_move);
         }        
     }
 }
@@ -1494,11 +1410,11 @@ void kl_improver<Graph_t, comm_cost_function_t, MemoryConstraint_t, window_size,
     const unsigned node_proc = active_schedule.assigned_processor(node);
     const unsigned node_step = active_schedule.assigned_superstep(node);
 
-    const heap_handle & node_handle = affinity_table.get_heap_handle(node);
-    cost_t max_gain = (*node_handle).gain;
+    kl_move node_move = thread_data.max_gain_heap.get_value(node);
+    cost_t max_gain = node_move.gain;
     
-    unsigned max_proc = (*node_handle).to_proc;
-    unsigned max_step = (*node_handle).to_step;
+    unsigned max_proc = node_move.to_proc;
+    unsigned max_step = node_move.to_step;
 
     if (max_step == step) {
         recompute_node_max_gain(node, affinity_table, thread_data);   
@@ -1527,12 +1443,12 @@ void kl_improver<Graph_t, comm_cost_function_t, MemoryConstraint_t, window_size,
             }
         }        
 
-        if ((max_gain != (*node_handle).gain) || (max_proc != (*node_handle).to_proc) || (max_step != (*node_handle).to_step)) {
-            (*node_handle).gain = max_gain;
-            (*node_handle).to_proc = max_proc;
-            (*node_handle).to_step = max_step;
-            thread_data.max_gain_heap.update(node_handle);
-        }       
+        if ((max_gain != node_move.gain) || (max_proc != node_move.to_proc) || (max_step != node_move.to_step)) {
+            node_move.gain = max_gain;
+            node_move.to_proc = max_proc;
+            node_move.to_step = max_step;
+            thread_data.max_gain_heap.update(node, node_move);
+        }        
     } 
 }   
 

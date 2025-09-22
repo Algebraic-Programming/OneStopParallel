@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(lock_managers_test) {
 
 // Tests for adaptive_affinity_table
 BOOST_AUTO_TEST_CASE(adaptive_affinity_table_test) {
-    using affinity_table_t = adaptive_affinity_table<graph, double, int, kl_active_schedule_t, 1>;
+    using affinity_table_t = adaptive_affinity_table<graph, double, kl_active_schedule_t, 1>;
     affinity_table_t table;
     table.initialize(active_schedule, 5);
 
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(adaptive_affinity_table_test) {
 
 // Tests for static_affinity_table
 BOOST_AUTO_TEST_CASE(static_affinity_table_test) {
-    using affinity_table_t = static_affinity_table<graph, double, int, kl_active_schedule_t, 1>;
+    using affinity_table_t = static_affinity_table<graph, double, kl_active_schedule_t, 1>;
     affinity_table_t table;
     table.initialize(active_schedule, 0); // size is ignored
 
@@ -213,8 +213,8 @@ BOOST_AUTO_TEST_CASE(static_affinity_table_test) {
 
 // Tests for vertex_selection_strategy
 BOOST_AUTO_TEST_CASE(vertex_selection_strategy_test) {
-    using affinity_table_t = adaptive_affinity_table<graph, double, int, kl_active_schedule_t, 1>;
-    using selection_strategy_t = vertex_selection_strategy<graph, affinity_table_t, int, kl_active_schedule_t>;
+    using affinity_table_t = adaptive_affinity_table<graph, double, kl_active_schedule_t, 1>;
+    using selection_strategy_t = vertex_selection_strategy<graph, affinity_table_t, kl_active_schedule_t>;
     
     selection_strategy_t strategy;
     std::mt19937 gen(0);

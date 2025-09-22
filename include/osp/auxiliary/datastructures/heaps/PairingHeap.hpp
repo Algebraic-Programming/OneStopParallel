@@ -19,6 +19,7 @@ limitations under the License.
 #pragma once
 
 #include <functional>
+#include <algorithm>
 #include <stdexcept>
 #include <unordered_map>
 #include <vector>
@@ -122,9 +123,69 @@ template <typename Key, typename Value, typename Compare> class PairingHeap {
   public:
     PairingHeap() = default;
     ~PairingHeap() { clear(); }
+    
+    PairingHeap(const PairingHeap& other) : num_elements(other.num_elements), comp(other.comp) {
+        root = nullptr;
+        if (!other.root) {
+            return;
+        }
 
-    PairingHeap(const PairingHeap &) = delete;
-    PairingHeap &operator=(const PairingHeap &) = delete;
+        std::unordered_map<const Node*, Node*> old_to_new;
+        std::vector<const Node*> q;
+        q.reserve(other.num_elements);
+        
+        // Create root
+        root = new Node{other.root->key, other.root->value};
+        node_map[root->key] = root;
+        old_to_new[other.root] = root;
+        q.push_back(other.root);
+
+        size_t head = 0;
+        while(head < q.size()) {
+            const Node* old_parent = q[head++];
+            Node* new_parent = old_to_new[old_parent];
+
+            if (old_parent->child) {
+                const Node* old_child = old_parent->child;
+                
+                // First child
+                Node* new_child = new Node{old_child->key, old_child->value};
+                new_parent->child = new_child;
+                new_child->prev_or_parent = new_parent;
+                node_map[new_child->key] = new_child;
+                old_to_new[old_child] = new_child;
+                q.push_back(old_child);
+
+                // Siblings
+                Node* prev_new_sibling = new_child;
+                while(old_child->next_sibling) {
+                    old_child = old_child->next_sibling;
+                    new_child = new Node{old_child->key, old_child->value};
+                    
+                    prev_new_sibling->next_sibling = new_child;
+                    new_child->prev_or_parent = prev_new_sibling;
+
+                    node_map[new_child->key] = new_child;
+                    old_to_new[old_child] = new_child;
+                    q.push_back(old_child);
+
+                    prev_new_sibling = new_child;
+                }
+            }
+        }
+    }
+
+    PairingHeap& operator=(const PairingHeap& other) {
+        if (this != &other) {
+            PairingHeap temp(other);
+            std::swap(root, temp.root);
+            std::swap(node_map, temp.node_map);
+            std::swap(num_elements, temp.num_elements);
+            std::swap(comp, temp.comp);
+        }
+        return *this;
+    }
+
     PairingHeap(PairingHeap &&) = default;
     PairingHeap &operator=(PairingHeap &&) = default;
 
@@ -209,6 +270,8 @@ template <typename Key, typename Value, typename Compare> class PairingHeap {
                 old_root->child = nullptr;
                 root = meld(root, old_root);
             }
+        } else {
+            node->value = new_value;
         }
         // If values are equal, do nothing.
     }
@@ -276,6 +339,44 @@ template <typename Key, typename Value, typename Compare> class PairingHeap {
         root = nullptr;
         node_map.clear();
         num_elements = 0;
+    }
+
+    // Retrieves keys with the top value, up to a specified limit.
+    // If limit is 0, all keys with the top value are returned.
+    std::vector<Key> get_top_keys(size_t limit = 0) const {
+        std::vector<Key> top_keys;
+        if (is_empty()) {
+            return top_keys;
+        }
+
+        if (limit > 0) {
+            top_keys.reserve(limit);
+        }
+
+        const Value& top_value = root->value;
+        std::vector<const Node*> q;
+        q.push_back(root);
+        size_t head = 0;
+
+        while (head < q.size()) {
+            const Node* current = q[head++];
+
+            if (comp(top_value, current->value)) {
+                continue;
+            }
+
+            top_keys.push_back(current->key);
+            if (limit > 0 && top_keys.size() >= limit) {
+                return top_keys;
+            }
+
+            Node* child = current->child;
+            while (child) {
+                q.push_back(child);
+                child = child->next_sibling;
+            }
+        }
+        return top_keys;
     }
 };
 

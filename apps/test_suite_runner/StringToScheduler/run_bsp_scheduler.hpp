@@ -41,6 +41,7 @@ limitations under the License.
 #include "osp/bsp/scheduler/GreedySchedulers/VarianceFillup.hpp"
 #include "osp/bsp/scheduler/LocalSearch/HillClimbing/hill_climbing.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin_v2/kl_include.hpp"
+#include "osp/bsp/scheduler/LocalSearch/KernighanLin_v2/kl_include_mt.hpp"
 #include "osp/bsp/scheduler/Scheduler.hpp"
 #include "osp/bsp/scheduler/Serial.hpp"
 #include "osp/coarser/coarser_util.hpp"
@@ -66,9 +67,9 @@ std::unique_ptr<ImprovementScheduler<Graph_t>> get_bsp_improver_by_name(const Co
     const std::string improver_name = algorithm.get_child("name").get_value<std::string>();
 
     if (improver_name == "kl_total_comm") {
-        return std::make_unique<kl_total_comm_improver<Graph_t>>();
+        return std::make_unique<kl_total_comm_improver_mt<Graph_t>>();
     } else if (improver_name == "kl_total_lambda_comm") {
-        return std::make_unique<kl_total_lambda_comm_improver<Graph_t>>();
+        return std::make_unique<kl_total_lambda_comm_improver_mt<Graph_t>>();
     } else if (improver_name == "hill_climb") {
         return std::make_unique<HillClimbingScheduler<Graph_t>>();
     }

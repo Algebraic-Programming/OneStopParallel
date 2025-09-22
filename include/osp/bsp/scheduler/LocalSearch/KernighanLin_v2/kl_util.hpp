@@ -97,7 +97,7 @@ struct vector_vertex_lock_manger {
     }
 };
 
-template<typename Graph_t, typename cost_t, typename handle_t, typename kl_active_schedule_t, unsigned window_size>
+template<typename Graph_t, typename cost_t, typename kl_active_schedule_t, unsigned window_size>
 struct adaptive_affinity_table {
     constexpr static unsigned window_range = 2 * window_size + 1;
     using VertexType = vertex_idx_t<Graph_t>;
@@ -110,7 +110,6 @@ private:
     std::vector<size_t> selected_nodes_idx;
 
     std::vector<std::vector<std::vector<cost_t>>> affinity_table;
-    std::vector<handle_t> heap_handles;
     std::vector<VertexType> selected_nodes;
 
     std::vector<size_t> gaps;
@@ -126,7 +125,6 @@ public:
  
         node_is_selected.resize(graph->num_vertices());
         selected_nodes_idx.resize(graph->num_vertices());
-        heap_handles.resize(initial_table_size);
         selected_nodes.resize(initial_table_size);
 
         node_is_selected.assign(node_is_selected.size(), false);
@@ -185,11 +183,6 @@ public:
         return affinity_table[selected_nodes_idx[node]];
     }
 
-    inline handle_t & get_heap_handle(VertexType node) {
-        assert(node_is_selected[node]);
-        return heap_handles[selected_nodes_idx[node]];
-    }
-
     bool insert(VertexType node) {
         if (node_is_selected[node])
             return false; // Node is already in the table.
@@ -205,7 +198,6 @@ public:
                 const size_t old_size = selected_nodes.size();
                 const size_t new_size = std::min(old_size * 2, graph->num_vertices());
                 
-                heap_handles.resize(new_size);
                 selected_nodes.resize(new_size);
                 affinity_table.resize(new_size);
 
@@ -244,7 +236,6 @@ public:
         node_is_selected.clear();
         selected_nodes_idx.clear();
         affinity_table.clear();
-        heap_handles.clear();
         selected_nodes.clear();
         gaps.clear();
         last_idx = 0;
@@ -272,7 +263,6 @@ public:
             VertexType node_to_move = selected_nodes[last_element_idx];
 
             std::swap(affinity_table[gap_idx], affinity_table[last_element_idx]);
-            std::swap(heap_handles[gap_idx],   heap_handles[last_element_idx]);
             std::swap(selected_nodes[gap_idx], selected_nodes[last_element_idx]);
             selected_nodes_idx[node_to_move] = gap_idx;
 
@@ -282,7 +272,7 @@ public:
     }
 };
 
-template<typename Graph_t, typename cost_t, typename handle_t, typename kl_active_schedule_t, unsigned window_size>
+template<typename Graph_t, typename cost_t, typename kl_active_schedule_t, unsigned window_size>
 struct static_affinity_table {
     constexpr static unsigned window_range = 2 * window_size + 1;
     using VertexType = vertex_idx_t<Graph_t>;
@@ -291,7 +281,7 @@ private:
     const kl_active_schedule_t *active_schedule;
     const Graph_t * graph; 
 
-    std::unordered_map<VertexType, handle_t> selected_nodes; 
+    std::unordered_set<VertexType> selected_nodes; 
 
     std::vector<std::vector<std::vector<cost_t>>> affinity_table;
 
@@ -312,12 +302,7 @@ public:
     }
 
     inline std::vector<VertexType> get_selected_nodes() const {
-        std::vector<VertexType> snode;
-        snode.reserve(selected_nodes.size());
-        for (const auto & [key, value] : selected_nodes) {
-            snode.push_back(key);
-        }
-        return snode;
+        return {selected_nodes.begin(), selected_nodes.end()};
     }
 
     inline size_t size() const {
@@ -344,13 +329,9 @@ public:
         return affinity_table[node];
     }
 
-    inline handle_t & get_heap_handle(VertexType node) {
-        return selected_nodes[node];
-    }
-
     bool insert(VertexType node) {
-        selected_nodes[node] = handle_t();
-        return true;
+        const auto pair = selected_nodes.insert(node);
+        return pair.second;
     }
 
     void remove(VertexType node) {
@@ -369,7 +350,7 @@ public:
     void trim() {}
 };
 
-template<typename Graph_t, typename container_t, typename handle_t, typename kl_active_schedule_t>
+template<typename Graph_t, typename container_t, typename kl_active_schedule_t>
 struct vertex_selection_strategy {
 
     using EdgeType = edge_desc_t<Graph_t>;

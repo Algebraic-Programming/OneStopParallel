@@ -51,6 +51,10 @@ struct kl_move_struct {
         return (gain < rhs.gain) or (gain == rhs.gain and node > rhs.node);
     }
 
+    bool operator>(kl_move_struct<cost_t, vertex_idx_t> const &rhs) const {
+        return (gain > rhs.gain) or (gain == rhs.gain and node < rhs.node);
+    }
+    
     kl_move_struct<cost_t, vertex_idx_t> reverse_move() const {
         return kl_move_struct(node, -gain, to_proc, to_step, from_proc, from_step);
     }
@@ -326,9 +330,7 @@ class kl_active_schedule {
   private:
     using VertexType = vertex_idx_t<Graph_t>;
     using EdgeType = edge_desc_t<Graph_t>;
-
     using kl_move = kl_move_struct<cost_t, VertexType>;
-
     using thread_data_t = thread_local_active_schedule_data<Graph_t, cost_t>;
 
     const BspInstance<Graph_t> *instance;

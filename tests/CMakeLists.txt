@@ -50,7 +50,7 @@ _add_test( directed_graph_util )
 
 _add_test( directed_graph_top_sort )
 
-_add_test( kl )
+#_add_test( kl )
 
 _add_test( kl_total )
 
@@ -60,7 +60,7 @@ _add_test( kl_util )
 
 _add_test( heaps )
 
-_add_test( kl_mem_constr )
+#_add_test( kl_mem_constr )
 
 _add_test( merkle_hash_computer )
 

@@ -21,15 +21,179 @@ limitations under the License.
 
 #include "osp/auxiliary/datastructures/heaps/DaryHeap.hpp"
 #include "osp/auxiliary/datastructures/heaps/PairingHeap.hpp"
+#include <boost/heap/fibonacci_heap.hpp>
 
 #include <algorithm>
+#include <set>
 #include <string>
+#include <unordered_map>
 #include <vector>
 #include <chrono>
 #include <iostream>
 #include <random>
 
 namespace osp::test {
+
+// Wrapper for boost::heap::fibonacci_heap to match the test interface
+template <typename Key, typename Value, bool IsMinHeap = true>
+class BoostFibonacciHeapWrapper {
+private:
+    struct Node {
+        Key key;
+        Value value;
+    };
+
+    struct NodeCompare {
+        bool operator()(const Node& a, const Node& b) const {
+            if constexpr (IsMinHeap) {
+                return a.value > b.value; // For min-heap
+            } else {
+                return a.value < b.value; // For max-heap
+            }
+        }
+    };
+
+    using BoostHeap = boost::heap::fibonacci_heap<Node, boost::heap::compare<NodeCompare>>;
+    using handle_type = typename BoostHeap::handle_type;
+
+    BoostHeap heap;
+    std::unordered_map<Key, handle_type> handles;
+
+public:
+    BoostFibonacciHeapWrapper() = default;
+
+    bool is_empty() const { return heap.empty(); }
+    size_t size() const { return heap.size(); }
+    bool contains(const Key& key) const { return handles.count(key); }
+
+    const Key& top() const {
+        if (is_empty()) throw std::out_of_range("Heap is empty");
+        return heap.top().key;
+    }
+
+    Key pop() {
+        if (is_empty()) throw std::out_of_range("Heap is empty");
+        Key top_key = heap.top().key;
+        heap.pop();
+        handles.erase(top_key);
+        return top_key;
+    }
+
+    void push(const Key& key, const Value& value) {
+        if (contains(key)) throw std::invalid_argument("Key already exists");
+        handle_type handle = heap.push({key, value});
+        handles[key] = handle;
+    }
+
+    Value get_value(const Key& key) const {
+        if (!contains(key)) throw std::out_of_range("Key not found");
+        return (*handles.at(key)).value;
+    }
+
+    void update(const Key& key, const Value& new_value) {
+        if (!contains(key)) throw std::invalid_argument("Key not found for update");
+        handle_type handle = handles.at(key);
+        (*handle).value = new_value;
+        heap.update(handle);
+    }
+
+    void erase(const Key& key) {
+        if (!contains(key)) throw std::invalid_argument("Key not found for erase");
+        heap.erase(handles.at(key));
+        handles.erase(key);
+    }
+
+    void clear() {
+        heap.clear();
+        handles.clear();
+    }
+};
+
+template <typename Key, typename Value>
+using MinBoostFibonacciHeap = BoostFibonacciHeapWrapper<Key, Value, true>;
+
+template <typename Key, typename Value>
+using MaxBoostFibonacciHeap = BoostFibonacciHeapWrapper<Key, Value, false>;
+
+// Wrapper for std::set to match the test interface
+template <typename Key, typename Value, bool IsMinHeap = true>
+class StdSetWrapper {
+private:
+    struct NodeCompare {
+        bool operator()(const std::pair<Value, Key>& a, const std::pair<Value, Key>& b) const {
+            if (a.first != b.first) {
+                if constexpr (IsMinHeap) {
+                    return a.first < b.first; // For min-heap
+                } else {
+                    return a.first > b.first; // For max-heap
+                }
+            }
+            return a.second < b.second; // Tie-breaking
+        }
+    };
+
+    using SetType = std::set<std::pair<Value, Key>, NodeCompare>;
+    SetType data_set;
+    std::unordered_map<Key, Value> value_map;
+
+public:
+    StdSetWrapper() = default;
+
+    bool is_empty() const { return data_set.empty(); }
+    size_t size() const { return data_set.size(); }
+    bool contains(const Key& key) const { return value_map.count(key); }
+
+    const Key& top() const {
+        if (is_empty()) throw std::out_of_range("Heap is empty");
+        return data_set.begin()->second;
+    }
+
+    Key pop() {
+        if (is_empty()) throw std::out_of_range("Heap is empty");
+        auto top_node = *data_set.begin();
+        data_set.erase(data_set.begin());
+        value_map.erase(top_node.second);
+        return top_node.second;
+    }
+
+    void push(const Key& key, const Value& value) {
+        if (contains(key)) throw std::invalid_argument("Key already exists");
+        data_set.insert({value, key});
+        value_map[key] = value;
+    }
+
+    Value get_value(const Key& key) const {
+        if (!contains(key)) throw std::out_of_range("Key not found");
+        return value_map.at(key);
+    }
+
+    void update(const Key& key, const Value& new_value) {
+        if (!contains(key)) throw std::invalid_argument("Key not found for update");
+        Value old_value = value_map.at(key);
+        if (old_value == new_value) return;
+        data_set.erase({old_value, key});
+        data_set.insert({new_value, key});
+        value_map[key] = new_value;
+    }
+
+    void erase(const Key& key) {
+        if (!contains(key)) throw std::invalid_argument("Key not found for erase");
+        Value value = value_map.at(key);
+        data_set.erase({value, key});
+        value_map.erase(key);
+    }
+
+    void clear() {
+        data_set.clear();
+        value_map.clear();
+    }
+};
+
+template <typename Key, typename Value>
+using MinStdSetHeap = StdSetWrapper<Key, Value, true>;
+
+template <typename Key, typename Value>
+using MaxStdSetHeap = StdSetWrapper<Key, Value, false>;
 
 // Generic test suite for any min-heap implementation that follows the API.
 template <typename HeapType> void test_min_heap_functionality() {
@@ -199,6 +363,8 @@ void run_performance_test(const std::string &heap_name, size_t num_items, size_t
     std::cout << "Bulk Pop (" << num_items << " items): " << duration.count() << " ms" << std::endl;
 
     BOOST_CHECK(heap.is_empty());
+  
+
 
     // Scenario 4: Random Operations (Push, Erase, Update)
     heap.clear();
@@ -237,13 +403,90 @@ void run_performance_test(const std::string &heap_name, size_t num_items, size_t
     duration = end - start;
     std::cout << "Random Ops (" << num_random_ops << " ops of push/erase/update): " << duration.count() << " ms"
               << std::endl;
-}
 
+    // Scenario 5: Mixed Workload with Re-initialization
+    const size_t num_outer_loops_s5 = 500;
+    const size_t num_inner_loops_s5 = 10;
+    const size_t num_initial_pushes_s5 = 100;
+    const size_t num_pushes_per_iter_s5 = 25;
+    const size_t num_updates_per_iter_s5 = 25;
+
+    // A large pool of keys to draw from for pushes, to avoid collisions.
+    const size_t key_pool_size_s5 =
+        num_outer_loops_s5 * (num_initial_pushes_s5 + num_inner_loops_s5 * num_pushes_per_iter_s5);
+    std::vector<std::string> keys_s5(key_pool_size_s5);
+    std::vector<int> priorities_s5(key_pool_size_s5);
+    for (size_t i = 0; i < key_pool_size_s5; ++i) {
+        keys_s5[i] = "s5_" + std::to_string(i);
+        priorities_s5[i] = distrib(gen);
+    }
+
+    size_t key_idx_counter_s5 = 0;
+
+    start = std::chrono::high_resolution_clock::now();
+
+    for (size_t outer_i = 0; outer_i < num_outer_loops_s5; ++outer_i) {
+        heap.clear();
+        std::vector<std::string> present_keys_s5;
+        present_keys_s5.reserve(num_initial_pushes_s5 + num_inner_loops_s5 * (num_pushes_per_iter_s5 - 1));
+
+        // Initial push
+        for (size_t i = 0; i < num_initial_pushes_s5; ++i) {
+            const auto &key = keys_s5[key_idx_counter_s5];
+            heap.push(key, priorities_s5[key_idx_counter_s5]);
+            present_keys_s5.push_back(key);
+            key_idx_counter_s5++;
+        }
+
+        for (size_t inner_i = 0; inner_i < num_inner_loops_s5; ++inner_i) {
+            // 1. Pop once
+            if (!heap.is_empty()) {
+                std::string popped_key = heap.pop();
+                // Remove from present_keys_s5 efficiently
+                auto it = std::find(present_keys_s5.begin(), present_keys_s5.end(), popped_key);
+                if (it != present_keys_s5.end()) {
+                    std::swap(*it, present_keys_s5.back());
+                    present_keys_s5.pop_back();
+                }
+            }
+
+            // 2. Push 25 keys
+            for (size_t j = 0; j < num_pushes_per_iter_s5; ++j) {
+                const auto &key = keys_s5[key_idx_counter_s5];
+                heap.push(key, priorities_s5[key_idx_counter_s5]);
+                present_keys_s5.push_back(key);
+                key_idx_counter_s5++;
+            }
+
+            // 3. Update 25 keys
+            if (!present_keys_s5.empty()) {
+                std::uniform_int_distribution<size_t> present_key_dist(0, present_keys_s5.size() - 1);
+                for (size_t j = 0; j < num_updates_per_iter_s5; ++j) {
+                    const auto &key_to_update = present_keys_s5[present_key_dist(gen)];
+                    heap.update(key_to_update, heap.get_value(key_to_update) - dec_dist(gen));
+                }
+            }
+        }
+    }
+
+    end = std::chrono::high_resolution_clock::now();
+    duration = end - start;
+    std::cout << "Mixed Re-Init (" << num_outer_loops_s5 << " runs of init + " << num_inner_loops_s5
+              << "x(pop/push/update)): " << duration.count() << " ms" << std::endl;
+}
 BOOST_AUTO_TEST_SUITE(HeapTests)
 
 BOOST_AUTO_TEST_CASE(PairingHeapTest) { test_min_heap_functionality<MinPairingHeap<std::string, int>>(); }
 BOOST_AUTO_TEST_CASE(MaxPairingHeapTest) { test_max_heap_functionality<MaxPairingHeap<std::string, int>>(); }
 BOOST_AUTO_TEST_CASE(PairingHeapStressTest) { stress_test_heap<MinPairingHeap<std::string, int>>(); }
+
+BOOST_AUTO_TEST_CASE(BoostFibonacciHeapTest) { test_min_heap_functionality<MinBoostFibonacciHeap<std::string, int>>(); }
+BOOST_AUTO_TEST_CASE(MaxBoostFibonacciHeapTest) { test_max_heap_functionality<MaxBoostFibonacciHeap<std::string, int>>(); }
+BOOST_AUTO_TEST_CASE(BoostFibonacciHeapStressTest) { stress_test_heap<MinBoostFibonacciHeap<std::string, int>>(); }
+
+BOOST_AUTO_TEST_CASE(StdSetHeapTest) { test_min_heap_functionality<MinStdSetHeap<std::string, int>>(); }
+BOOST_AUTO_TEST_CASE(MaxStdSetHeapTest) { test_max_heap_functionality<MaxStdSetHeap<std::string, int>>(); }
+BOOST_AUTO_TEST_CASE(StdSetHeapStressTest) { stress_test_heap<MinStdSetHeap<std::string, int>>(); }
 
 BOOST_AUTO_TEST_CASE(DaryHeap_D2_Test) { test_min_heap_functionality<MinDaryHeap<std::string, int, 2>>(); }
 BOOST_AUTO_TEST_CASE(MaxDaryHeap_D2_Test) { test_max_heap_functionality<MaxDaryHeap<std::string, int, 2>>(); }
@@ -260,9 +503,12 @@ BOOST_AUTO_TEST_SUITE(HeapPerformanceTests)
 BOOST_AUTO_TEST_CASE(HeapPerformanceComparison) {
     const size_t num_items = 10000;
     const size_t num_updates = 5000;
-    const size_t num_random_ops = 20000;
+    const size_t num_random_ops = 40000;
 
     run_performance_test<MinPairingHeap<std::string, int>>("Pairing Heap", num_items, num_updates, num_random_ops);
+    run_performance_test<MinBoostFibonacciHeap<std::string, int>>("Boost Fibonacci Heap", num_items, num_updates,
+                                                                  num_random_ops);
+    run_performance_test<MinStdSetHeap<std::string, int>>("std::set", num_items, num_updates, num_random_ops);
     run_performance_test<MinDaryHeap<std::string, int, 2>>("Binary Heap (d=2)", num_items, num_updates,
                                                            num_random_ops);
     run_performance_test<MinDaryHeap<std::string, int, 4>>("4-ary Heap (d=4)", num_items, num_updates, num_random_ops);

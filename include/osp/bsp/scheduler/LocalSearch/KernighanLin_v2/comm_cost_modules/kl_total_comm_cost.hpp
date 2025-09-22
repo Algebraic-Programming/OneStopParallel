@@ -18,8 +18,8 @@ limitations under the License.
 
 #pragma once
 
-#include "kl_active_schedule.hpp"
-#include "kl_improver.hpp"
+#include "../kl_active_schedule.hpp"
+#include "../kl_improver.hpp"
 
 namespace osp {
 template<typename Graph_t, typename cost_t, typename MemoryConstraint_t, unsigned window_size = 1, bool use_node_communication_costs_arg = true> 

@@ -18,12 +18,12 @@ limitations under the License.
 
 #pragma once
 
-#include "kl_active_schedule.hpp"
-#include "kl_improver.hpp"
+#include "../kl_active_schedule.hpp"
+#include "../kl_improver.hpp"
 
 #include <unordered_map>
-namespace osp {
 
+namespace osp {
 
 struct lambda_map_container {
 
@@ -60,7 +60,6 @@ struct lambda_map_container {
     inline const auto & iterate_proc_entries(const size_t node) {
         return node_lambda_map[node];
     }
-
 };
 
 struct lambda_vector_container {
@@ -126,7 +125,6 @@ struct lambda_vector_container {
         num_procs_ = num_procs; 
     }
 
-
     inline void reset_node(const size_t node) { node_lambda_vec[node].assign(num_procs_, 0); }
     inline void clear() { node_lambda_vec.clear(); }
     inline bool has_proc_entry(const size_t node, const unsigned proc) const { return node_lambda_vec[node][proc] > 0; }
@@ -152,7 +150,6 @@ struct lambda_vector_container {
     inline auto iterate_proc_entries(const size_t node) {
         return lambda_vector_range(node_lambda_vec[node]);
     }
-
 };
 
 template<typename Graph_t, typename cost_t, typename MemoryConstraint_t, unsigned window_size = 1, bool use_node_communication_costs_arg = true> 
@@ -180,9 +177,7 @@ struct kl_hyper_total_comm_cost_function {
     inline cost_t get_comm_multiplier() { return comm_multiplier; }
     inline cost_t get_max_comm_weight() { return max_comm_weight; }
     inline cost_t get_max_comm_weight_multiplied() { return max_comm_weight * comm_multiplier; }
-
     const std::string name() const { return "toal_comm_cost"; }
-
     inline bool is_compatible(VertexType node, unsigned proc) { return active_schedule->getInstance().isCompatible(node, proc); }
 
     void initialize(kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t> &sched, compatible_processor_range<Graph_t> &p_range) {
@@ -604,8 +599,7 @@ struct kl_hyper_total_comm_cost_function {
     }
 
     inline unsigned start_idx(const unsigned node_step, const unsigned start_step) { return node_step < window_size + start_step ? window_size - (node_step - start_step) : 0; }
-    inline unsigned end_idx(const unsigned node_step, const unsigned end_step) { return node_step + window_size <= end_step ? window_range : window_range - (node_step + window_size - end_step); }
-   
+    inline unsigned end_idx(const unsigned node_step, const unsigned end_step) { return node_step + window_size <= end_step ? window_range : window_range - (node_step + window_size - end_step); }   
     inline cost_t change_comm_cost(const v_commw_t<Graph_t> &p_target_comm_cost, const v_commw_t<Graph_t> &node_target_comm_cost, const cost_t &comm_gain) { return p_target_comm_cost > node_target_comm_cost ? (p_target_comm_cost - node_target_comm_cost) * comm_gain : (node_target_comm_cost - p_target_comm_cost) * comm_gain * -1.0;}
 
     template<typename affinity_table_t>
