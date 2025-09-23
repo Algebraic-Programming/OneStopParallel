@@ -980,6 +980,9 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
     virtual ~kl_improver() = default;
 
     virtual RETURN_STATUS improveSchedule(BspSchedule<Graph_t> &schedule) override {
+        if (schedule.getInstance().numberOfProcessors() < 2)
+            return RETURN_STATUS::BEST_FOUND;
+
         const unsigned num_threads = 1;
         
         thread_data_vec.resize(num_threads);      

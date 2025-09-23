@@ -107,6 +107,9 @@ class kl_improver_mt : public kl_improver<Graph_t, comm_cost_function_t, MemoryC
     }
 
     virtual RETURN_STATUS improveSchedule(BspSchedule<Graph_t> &schedule) override {
+        if (schedule.getInstance().numberOfProcessors() < 2)
+            return RETURN_STATUS::BEST_FOUND;
+
         unsigned num_threads = std::min(max_num_threads, static_cast<unsigned>(omp_get_max_threads()));
         set_num_threads(num_threads, schedule.numberOfSupersteps());
 

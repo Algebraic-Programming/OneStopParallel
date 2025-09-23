@@ -28,7 +28,7 @@ limitations under the License.
 #include "osp/auxiliary/io/DotFileWriter.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/BspLocking.hpp"
 #include "osp/dag_divider/IsomorphicWavefrontComponentScheduler.hpp"
-#include "osp/bsp/scheduler/LocalSearch/KernighanLin_v2/kl_include.hpp"
+#include "osp/bsp/scheduler/LocalSearch/KernighanLin_v2/kl_include_mt.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_total_comm.hpp"
 #include "osp/coarser/coarser_util.hpp"
 #include "osp/dag_divider/isomorphism_divider/WavefrontOrbitProcessor.hpp"
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test)
     instance.setSynchronisationCosts(10000);
 
     BspLocking<graph_t> greedy;
-    kl_total_comm_improver<graph_t> kl;
+    kl_total_comm_improver_mt<graph_t> kl;
     ComboScheduler<graph_t> combo(greedy, kl);
 
     // // IsomorphicComponentDivider<graph_t> wavefront;
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test)
     iso_scheduler.set_symmetry(2);
     iso_scheduler.set_plot_dot_graphs(true);
 
-    auto partition = iso_scheduler.compute_partitions(instance);
+    auto partition = iso_scheduler.compute_partition(instance);
 
     graph_t corase_graph;
     coarser_util::construct_coarse_dag(instance.getComputationalDag(), corase_graph,

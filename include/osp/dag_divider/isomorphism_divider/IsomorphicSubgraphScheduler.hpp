@@ -51,7 +51,7 @@ class IsomorphicSubgraphScheduler {
         plot_dot_graphs_ = plot;
     }
 
-    std::vector<vertex_idx_t<Graph_t>> compute_partitions(BspInstance<Graph_t>& instance) {
+    std::vector<vertex_idx_t<Graph_t>> compute_partition(const BspInstance<Graph_t>& instance) {
         WavefrontOrbitProcessor<Graph_t> wavefront(symmetry_);
         wavefront.discover_isomorphic_groups(instance.getComputationalDag());
         auto isomorphic_groups = wavefront.get_isomorphic_groups();
@@ -153,7 +153,7 @@ class IsomorphicSubgraphScheduler {
     }
 
     
-    void schedule_isomorphic_group(BspInstance<Graph_t>& instance, const std::vector<subgraph<Graph_t>> & finalized_subgraphs, const std::vector<std::vector<unsigned>> & isomorphic_groups, const SubgraphSchedule & sub_sched, std::vector<vertex_idx_t<Graph_t>> & partition) {
+    void schedule_isomorphic_group(const BspInstance<Graph_t>& instance, const std::vector<subgraph<Graph_t>> & finalized_subgraphs, const std::vector<std::vector<unsigned>> & isomorphic_groups, const SubgraphSchedule & sub_sched, std::vector<vertex_idx_t<Graph_t>> & partition) {
         vertex_idx_t<Graph_t> current_partition_idx = 0;
 
         for (size_t grou_idx = 0; grou_idx < isomorphic_groups.size(); ++grou_idx) {
