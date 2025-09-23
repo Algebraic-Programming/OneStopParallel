@@ -34,13 +34,13 @@ class IsomorphicSubgraphScheduler {
     static constexpr bool verbose = true;
     
     size_t symmetry_ = 2;
-    Scheduler<Graph_t> * bsp_scheduler_;
+    Scheduler<Constr_Graph_t> * bsp_scheduler_;
 
     bool plot_dot_graphs_ = false;
 
     public:
 
-    IsomorphicSubgraphScheduler(Scheduler<Graph_t> & bsp_scheduler) : symmetry_(2), bsp_scheduler_(&bsp_scheduler), plot_dot_graphs_(false) {}
+    IsomorphicSubgraphScheduler(Scheduler<Constr_Graph_t> & bsp_scheduler) : symmetry_(2), bsp_scheduler_(&bsp_scheduler), plot_dot_graphs_(false) {}
     virtual ~IsomorphicSubgraphScheduler() {}
 
     void set_symmetry(size_t symmetry) {
@@ -172,9 +172,10 @@ class IsomorphicSubgraphScheduler {
             create_induced_subgraph(instance.getComputationalDag(), representative_instance.getComputationalDag(), vertices_local);
 
             representative_instance.setArchitecture(instance.getArchitecture());
-            std::vector<v_memw_t<Graph_t>> dummy_mem_weights(sub_sched.node_assigned_worker_per_type[grou_idx].size(), 0);
-            for (unsigned proc_type = 0; proc_type < sub_sched.node_assigned_worker_per_type[grou_idx].size(); ++proc_type)
-                dummy_mem_weights[proc_type] = instance.getArchitecture().maxMemoryBoundProcType(proc_type);
+            std::vector<v_memw_t<Constr_Graph_t>> dummy_mem_weights(sub_sched.node_assigned_worker_per_type[grou_idx].size(), 0);
+            for (unsigned proc_type = 0; proc_type < sub_sched.node_assigned_worker_per_type[grou_idx].size(); ++proc_type) {
+                dummy_mem_weights[proc_type] = static_cast<v_memw_t<Constr_Graph_t>>(instance.getArchitecture().maxMemoryBoundProcType(proc_type));
+            }
             representative_instance.getArchitecture().set_processors_consequ_types(sub_sched.node_assigned_worker_per_type[grou_idx], dummy_mem_weights);
             representative_instance.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
 
