@@ -65,7 +65,7 @@ class IsomorphicSubgraphScheduler {
         const unsigned min_proc_type_count = instance.getArchitecture().getMinProcessorTypeCount();
         trim_subgraph_groups(finalized_subgraphs, isomorphic_groups, min_proc_type_count);
 
-        subgrah_scheduler_input<Graph_t> input;
+        subgrah_scheduler_input<Graph_t, Constr_Graph_t> input;
         input.prepare_subgraph_scheduling_input(instance, finalized_subgraphs, isomorphic_groups);
 
         if (plot_dot_graphs_) {
@@ -73,7 +73,7 @@ class IsomorphicSubgraphScheduler {
             writer.write_graph("iso_groups_contracted.dot", input.instance.getComputationalDag());
         }
 
-        EftSubgraphScheduler<Graph_t> etf_scheduler;
+        EftSubgraphScheduler<Constr_Graph_t> etf_scheduler;
         SubgraphSchedule subgraph_schedule = etf_scheduler.run(input.instance, input.multiplicities, input.required_proc_types);
 
         std::vector<vertex_idx_t<Graph_t>> partition(instance.numberOfVertices(), 0);

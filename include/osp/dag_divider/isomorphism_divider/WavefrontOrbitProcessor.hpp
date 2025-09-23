@@ -1644,13 +1644,13 @@ private:
 
 };
 
-template<typename Graph_t>
+template<typename Graph_t, typename Constr_Graph_t>
 struct subgrah_scheduler_input {
 
     using GroupKey = typename WavefrontOrbitProcessor<Graph_t>::GroupKey;
     using GroupKeyHash = typename WavefrontOrbitProcessor<Graph_t>::GroupKeyHash;
 
-    BspInstance<Graph_t> instance;
+    BspInstance<Constr_Graph_t> instance;
     std::vector<unsigned> multiplicities;
     std::vector<std::vector<v_workw_t<Graph_t>>> required_proc_types;
 
@@ -1663,7 +1663,7 @@ struct subgrah_scheduler_input {
 
         multiplicities.resize(isomorphic_groups.size());
         required_proc_types.resize(isomorphic_groups.size());
-        std::vector<vertex_idx_t<Graph_t>> contraction_map(original_instance.numberOfVertices());
+        std::vector<vertex_idx_t<Constr_Graph_t>> contraction_map(original_instance.numberOfVertices());
 
         size_t i = 0;
         for (const auto &sg_ids : isomorphic_groups) {
@@ -1673,7 +1673,7 @@ struct subgrah_scheduler_input {
             for (const auto sg_id : sg_ids) {
                 const auto &subgraph = finalized_subgraphs.at(sg_id);
                 for (const auto &vertex : subgraph.vertices) {
-                    contraction_map[vertex] = i;
+                    contraction_map[vertex] = static_cast<vertex_idx_t<Constr_Graph_t>>(i);
                     const auto vertex_work = original_instance.getComputationalDag().vertex_work_weight(vertex);
                     const auto vertex_type = original_instance.getComputationalDag().vertex_type(vertex);
                     for (unsigned j = 0; j < num_proc_types; ++j) {

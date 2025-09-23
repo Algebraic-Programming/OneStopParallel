@@ -232,11 +232,11 @@ std::vector<std::vector<vertex_idx_t<Graph_t>>> compute_wavefronts(const Graph_t
         if (graph.in_degree(vertex) == 0) {
             wavefronts.back().push_back(vertex);
         } else {
-            parents_visited[vertex] = graph.in_degree(vertex);
+            parents_visited[vertex] = static_cast<vertex_idx_t<Graph_t>>(graph.in_degree(vertex));
         }
     }
 
-    vertex_idx_t<Graph_t> counter = wavefronts.back().size();
+    vertex_idx_t<Graph_t> counter = static_cast<vertex_idx_t<Graph_t>>(wavefronts.back().size());
 
     while (counter < graph.num_vertices()) {
 
