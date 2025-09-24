@@ -27,9 +27,8 @@ limitations under the License.
 #include <string>
 #include <vector>
 
-#include <boost/heap/fibonacci_heap.hpp>
-
 #include "MemoryConstraintModules.hpp"
+#include "osp/auxiliary/datastructures/heaps/PairingHeap.hpp"
 #include "osp/auxiliary/misc.hpp"
 #include "osp/bsp/scheduler/Scheduler.hpp"
 #include "osp/graph_algorithms/directed_graph_top_sort.hpp"
@@ -61,24 +60,26 @@ class BspLocking : public Scheduler<Graph_t> {
 
     MemoryConstraint_t memory_constraint;
 
-    struct heap_node {
+    using Priority = std::tuple<int, unsigned, VertexType>;
 
-        VertexType node;
-
-        int score;
-        unsigned secondary_score;
-
-        heap_node() : node(0), score(0), secondary_score(0) {}
-        heap_node(VertexType node, int score, unsigned secondary_score)
-            : node(node), score(score), secondary_score(secondary_score) {}
-
-        bool operator<(heap_node const &rhs) const {
-            return (score < rhs.score) || (score == rhs.score and secondary_score < rhs.secondary_score) ||
-                   (score == rhs.score and secondary_score == rhs.secondary_score and node > rhs.node);
+    struct PriorityCompare {
+        bool operator()(const Priority &a, const Priority &b) const {
+            if (std::get<0>(a) != std::get<0>(b)) {
+                return std::get<0>(a) > std::get<0>(b); // Higher score is better
+            }
+            if (std::get<1>(a) != std::get<1>(b)) {
+                return std::get<1>(a) > std::get<1>(b); // Higher secondary_score is better
+            }
+            return std::get<2>(a) < std::get<2>(b); // Smaller node index is better for tie-breaking
         }
     };
 
-    std::vector<v_workw_t<Graph_t>> get_longest_path(const Graph_t &graph) const {
+    using MaxHeap = PairingHeap<VertexType, Priority, PriorityCompare>;
+
+    std::vector<MaxHeap> max_proc_score_heap;
+    std::vector<MaxHeap> max_all_proc_score_heap;
+
+    static std::vector<v_workw_t<Graph_t>> get_longest_path(const Graph_t &graph) {
 
         std::vector<v_workw_t<Graph_t>> longest_path(graph.num_vertices(), 0);
 
@@ -99,14 +100,6 @@ class BspLocking : public Scheduler<Graph_t> {
         return longest_path;
     }
 
-    std::vector<boost::heap::fibonacci_heap<heap_node>> max_proc_score_heap;
-    std::vector<boost::heap::fibonacci_heap<heap_node>> max_all_proc_score_heap;
-
-    using heap_handle = typename boost::heap::fibonacci_heap<heap_node>::handle_type;
-
-    std::vector<std::unordered_map<VertexType, heap_handle>> node_proc_heap_handles;
-    std::vector<std::unordered_map<VertexType, heap_handle>> node_all_proc_heap_handles;
-
     std::deque<VertexType> locked_set;
     std::vector<unsigned> locked;
     int lock_penalty = 1;
@@ -117,7 +110,7 @@ class BspLocking : public Scheduler<Graph_t> {
     double max_percent_idle_processors;
     bool increase_parallelism_in_new_superstep;
 
-    std::pair<int, double> computeScore(VertexType node, unsigned proc, const BspInstance<Graph_t> &instance) {
+    int computeScore(VertexType node, unsigned proc, const BspInstance<Graph_t> &instance) {
 
         int score = 0;
         for (const auto &succ : instance.getComputationalDag().children(node)) {
@@ -125,7 +118,7 @@ class BspLocking : public Scheduler<Graph_t> {
                 score -= lock_penalty;
         }
 
-        return std::pair<int, double>(score + default_value[node], 0);
+        return score + default_value[node];
     };
 
     bool check_mem_feasibility(const BspInstance<Graph_t> &instance, const std::set<VertexType> &allReady,
@@ -138,9 +131,9 @@ class BspLocking : public Scheduler<Graph_t> {
                 for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
                     if (!procReady[i].empty()) {
 
-                        heap_node top_node = max_proc_score_heap[i].top();
+                        VertexType top_node = max_proc_score_heap[i].top();
 
-                        if (memory_constraint.can_add(top_node.node, i)) {
+                        if (memory_constraint.can_add(top_node, i)) {
                             return true;
                         }
                     }
@@ -149,9 +142,9 @@ class BspLocking : public Scheduler<Graph_t> {
                 if (!allReady.empty())
                     for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
 
-                        heap_node top_node = max_all_proc_score_heap[i].top();
+                        VertexType top_node = max_all_proc_score_heap[i].top();
 
-                        if (memory_constraint.can_add(top_node.node, i)) {
+                        if (memory_constraint.can_add(top_node, i)) {
                             return true;
                         }
                     }
@@ -172,16 +165,14 @@ class BspLocking : public Scheduler<Graph_t> {
             if (procFree[proc] && !procReady[proc].empty()) {
 
                 // select node
-                heap_node top_node = max_proc_score_heap[proc].top();
+                VertexType top_node = max_proc_score_heap[proc].top();
 
                 // filling up
                 bool procready_empty = false;
-                while (endSupStep &&
-                       (remaining_time < instance.getComputationalDag().vertex_work_weight(top_node.node))) {
-                    procReady[proc].erase(top_node.node);
-                    ready_phase[top_node.node] = std::numeric_limits<unsigned>::max();
+                while (endSupStep && (remaining_time < instance.getComputationalDag().vertex_work_weight(top_node))) {
+                    procReady[proc].erase(top_node);
+                    ready_phase[top_node] = std::numeric_limits<unsigned>::max();
                     max_proc_score_heap[proc].pop();
-                    node_proc_heap_handles[proc].erase(top_node.node);
                     if (!procReady[proc].empty()) {
                         top_node = max_proc_score_heap[proc].top();
                     } else {
@@ -193,7 +184,7 @@ class BspLocking : public Scheduler<Graph_t> {
                     continue;
                 }
 
-                node = top_node.node;
+                node = top_node;
                 p = proc;
             }
         }
@@ -201,60 +192,59 @@ class BspLocking : public Scheduler<Graph_t> {
         if (p < instance.numberOfProcessors())
             return true;
 
-        heap_node best_node(instance.numberOfVertices(), std::numeric_limits<int>::min(), 0);
+        Priority best_priority = {std::numeric_limits<int>::min(), 0, 0};
+        bool found_node = false;
 
         for (unsigned proc = 0; proc < instance.numberOfProcessors(); ++proc) {
-            if (!procFree[proc] or max_all_proc_score_heap[proc].empty())
+            if (!procFree[proc] or max_all_proc_score_heap[proc].is_empty())
                 continue;
 
-            heap_node top_node = max_all_proc_score_heap[proc].top();
+            VertexType top_node = max_all_proc_score_heap[proc].top();
 
             // filling up
             bool all_procready_empty = false;
-            while (endSupStep && (remaining_time < instance.getComputationalDag().vertex_work_weight(top_node.node))) {
-                allReady.erase(top_node.node);
+            while (endSupStep && (remaining_time < instance.getComputationalDag().vertex_work_weight(top_node))) {
+                allReady.erase(top_node);
                 for (unsigned proc_del = 0; proc_del < instance.numberOfProcessors(); proc_del++) {
-                    if (proc_del == proc || !instance.isCompatible(top_node.node, proc_del))
+                    if (proc_del == proc || !instance.isCompatible(top_node, proc_del))
                         continue;
-                    max_all_proc_score_heap[proc_del].erase(node_all_proc_heap_handles[proc_del][top_node.node]);
-                    node_all_proc_heap_handles[proc_del].erase(top_node.node);
+                    max_all_proc_score_heap[proc_del].erase(top_node);
                 }
                 max_all_proc_score_heap[proc].pop();
-                node_all_proc_heap_handles[proc].erase(top_node.node);
-                ready_phase[top_node.node] = std::numeric_limits<unsigned>::max();
-                if (!max_all_proc_score_heap[proc].empty()) {
+                ready_phase[top_node] = std::numeric_limits<unsigned>::max();
+                if (!max_all_proc_score_heap[proc].is_empty()) {
                     top_node = max_all_proc_score_heap[proc].top();
                 } else {
                     all_procready_empty = true;
                     break;
                 }
             }
-            if (all_procready_empty) {
+            if (all_procready_empty)
                 continue;
-            }
 
-            if (best_node < top_node) {
+            Priority top_priority = max_all_proc_score_heap[proc].get_value(top_node);
+            if (!found_node || PriorityCompare{}(top_priority, best_priority)) {
 
                 if constexpr (use_memory_constraint) {
-
-                    if (memory_constraint.can_add(top_node.node, proc)) {
-
-                        best_node = top_node;
-                        node = top_node.node;
+                    if (memory_constraint.can_add(top_node, proc)) {
+                        best_priority = top_priority;
+                        node = top_node;
                         p = proc;
+                        found_node = true;
                     }
 
                 } else {
 
-                    best_node = top_node;
-                    node = top_node.node;
+                    best_priority = top_priority;
+                    node = top_node;
                     p = proc;
+                    found_node = true;
                 }
             }
         }
-        return (best_node.score > -3);
+        return (found_node && std::get<0>(best_priority) > -3);
     }
-
+    
     bool CanChooseNode(const BspInstance<Graph_t> &instance, const std::vector<std::set<VertexType>> &procReady,
                        const std::vector<bool> &procFree) const {
 
@@ -263,7 +253,7 @@ class BspLocking : public Scheduler<Graph_t> {
                 return true;
 
         for (unsigned i = 0; i < instance.numberOfProcessors(); ++i)
-            if (procFree[i] && !max_all_proc_score_heap[i].empty())
+            if (procFree[i] && !max_all_proc_score_heap[i].is_empty())
                 return true;
 
         return false;
@@ -342,11 +332,8 @@ class BspLocking : public Scheduler<Graph_t> {
             default_value[i] = static_cast<int>(path_length[i] * static_cast<v_workw_t<Graph_t>>(20) / max_path);
         }
 
-        max_proc_score_heap = std::vector<boost::heap::fibonacci_heap<heap_node>>(params_p);
-        max_all_proc_score_heap = std::vector<boost::heap::fibonacci_heap<heap_node>>(params_p);
-
-        node_proc_heap_handles = std::vector<std::unordered_map<VertexType, heap_handle>>(params_p);
-        node_all_proc_heap_handles = std::vector<std::unordered_map<VertexType, heap_handle>>(params_p);
+        max_proc_score_heap = std::vector<MaxHeap>(params_p);
+        max_all_proc_score_heap = std::vector<MaxHeap>(params_p);
 
         locked_set.clear();
         locked.clear();
@@ -379,8 +366,8 @@ class BspLocking : public Scheduler<Graph_t> {
 
             for (unsigned proc = 0; proc < params_p; ++proc) {
                 if (instance.isCompatible(v, proc)) {
-                    heap_node new_node(v, default_value[v], static_cast<unsigned>(G.out_degree(v)));
-                    node_all_proc_heap_handles[proc][v] = max_all_proc_score_heap[proc].push(new_node);
+                    Priority priority = {default_value[v], static_cast<unsigned>(G.out_degree(v)), v};
+                    max_all_proc_score_heap[proc].push(v, priority);
                 }
             }
         }
@@ -393,7 +380,6 @@ class BspLocking : public Scheduler<Graph_t> {
                 for (unsigned proc = 0; proc < params_p; ++proc) {
                     procReady[proc].clear();
                     max_proc_score_heap[proc].clear();
-                    node_proc_heap_handles[proc].clear();
 
                     if constexpr (use_memory_constraint) {
                         memory_constraint.reset(proc);
@@ -408,7 +394,6 @@ class BspLocking : public Scheduler<Graph_t> {
 
                 for (unsigned proc = 0; proc < params_p; ++proc) {
                     max_all_proc_score_heap[proc].clear();
-                    node_all_proc_heap_handles[proc].clear();
                 }
 
                 for (const auto &v : ready) {
@@ -418,9 +403,9 @@ class BspLocking : public Scheduler<Graph_t> {
                         if (!instance.isCompatible(v, proc))
                             continue;
 
-                        std::pair<int, double> score = computeScore(v, proc, instance);
-                        heap_node new_node(v, score.first, static_cast<unsigned>(G.out_degree(v)));
-                        node_all_proc_heap_handles[proc][v] = max_all_proc_score_heap[proc].push(new_node);
+                        int score = computeScore(v, proc, instance);
+                        Priority priority = {score, static_cast<unsigned>(G.out_degree(v)), v};
+                        max_all_proc_score_heap[proc].push(v, priority);
                     }
                 }
 
@@ -473,12 +458,10 @@ class BspLocking : public Scheduler<Graph_t> {
                                 procReady[schedule.assignedProcessor(node)].insert(succ);
                                 ready_phase[succ] = schedule.assignedProcessor(node);
 
-                                std::pair<int, double> score =
-                                    computeScore(succ, schedule.assignedProcessor(node), instance);
-                                heap_node new_node(succ, score.first, static_cast<unsigned>(G.out_degree(succ)));
+                                int score = computeScore(succ, schedule.assignedProcessor(node), instance);
+                                Priority priority = {score, static_cast<unsigned>(G.out_degree(succ)), succ};
 
-                                node_proc_heap_handles[schedule.assignedProcessor(node)][succ] =
-                                    max_proc_score_heap[schedule.assignedProcessor(node)].push(new_node);
+                                max_proc_score_heap[schedule.assignedProcessor(node)].push(succ, priority);
                             }
                         }
                     }
@@ -507,17 +490,15 @@ class BspLocking : public Scheduler<Graph_t> {
 
                     procReady[nextProc].erase(nextNode);
 
-                    max_proc_score_heap[nextProc].erase(node_proc_heap_handles[nextProc][nextNode]);
-                    node_proc_heap_handles[nextProc].erase(nextNode);
+                    max_proc_score_heap[nextProc].erase(nextNode);
 
                 } else {
 
                     allReady.erase(nextNode);
 
                     for (unsigned proc = 0; proc < instance.numberOfProcessors(); ++proc) {
-                        if (instance.isCompatible(nextNode, proc)) {
-                            max_all_proc_score_heap[proc].erase(node_all_proc_heap_handles[proc][nextNode]);
-                            node_all_proc_heap_handles[proc].erase(nextNode);
+                        if (instance.isCompatible(nextNode, proc) && max_all_proc_score_heap[proc].contains(nextNode)) {
+                            max_all_proc_score_heap[proc].erase(nextNode);
                         }
                     }
                 }
@@ -541,8 +522,7 @@ class BspLocking : public Scheduler<Graph_t> {
 
                     for (const auto &node : toErase) {
                         procReady[nextProc].erase(node);
-                        max_proc_score_heap[nextProc].erase(node_proc_heap_handles[nextProc][node]);
-                        node_proc_heap_handles[nextProc].erase(node);
+                        max_proc_score_heap[nextProc].erase(node);
                         ready_phase[node] = std::numeric_limits<unsigned>::max();
                     }
                 }
@@ -559,17 +539,21 @@ class BspLocking : public Scheduler<Graph_t> {
                         for (const auto &parent : G.parents(succ)) {
                             if (ready_phase[parent] < std::numeric_limits<unsigned>::max() &&
                                 ready_phase[parent] < params_p && ready_phase[parent] != locked[succ]) {
-                                (*node_proc_heap_handles[ready_phase[parent]][parent]).score += lock_penalty;
-                                max_proc_score_heap[ready_phase[parent]].update(
-                                    node_proc_heap_handles[ready_phase[parent]][parent]);
+                                Priority p = max_proc_score_heap[ready_phase[parent]].get_value(parent);
+                                std::get<0>(p) += lock_penalty;
+                                max_proc_score_heap[ready_phase[parent]].update(parent, p);
                             }
                             if (ready_phase[parent] == params_p) {
                                 for (unsigned proc = 0; proc < params_p; ++proc) {
                                     if (proc == locked[succ] || !instance.isCompatible(parent, proc))
                                         continue;
-
-                                    (*node_all_proc_heap_handles[proc][parent]).score += lock_penalty;
-                                    max_all_proc_score_heap[proc].update(node_all_proc_heap_handles[proc][parent]);
+                                    
+                                    if (max_all_proc_score_heap[proc].contains(parent))
+                                    {
+                                        Priority p = max_all_proc_score_heap[proc].get_value(parent);
+                                        std::get<0>(p) += lock_penalty;
+                                        max_all_proc_score_heap[proc].update(parent, p);
+                                    }
                                 }
                             }
                         }
@@ -581,17 +565,21 @@ class BspLocking : public Scheduler<Graph_t> {
                         for (const auto &parent : G.parents(succ)) {
                             if (ready_phase[parent] < std::numeric_limits<unsigned>::max() &&
                                 ready_phase[parent] < params_p && ready_phase[parent] != nextProc) {
-                                (*node_proc_heap_handles[ready_phase[parent]][parent]).score -= lock_penalty;
-                                max_proc_score_heap[ready_phase[parent]].update(
-                                    node_proc_heap_handles[ready_phase[parent]][parent]);
+                                Priority p = max_proc_score_heap[ready_phase[parent]].get_value(parent);
+                                std::get<0>(p) -= lock_penalty;
+                                max_proc_score_heap[ready_phase[parent]].update(parent, p);
                             }
                             if (ready_phase[parent] == params_p) {
                                 for (unsigned proc = 0; proc < params_p; ++proc) {
                                     if (proc == nextProc || !instance.isCompatible(parent, proc))
                                         continue;
 
-                                    (*node_all_proc_heap_handles[proc][parent]).score -= lock_penalty;
-                                    max_all_proc_score_heap[proc].update(node_all_proc_heap_handles[proc][parent]);
+                                    if (max_all_proc_score_heap[proc].contains(parent))
+                                    {
+                                        Priority p = max_all_proc_score_heap[proc].get_value(parent);
+                                        std::get<0>(p) -= lock_penalty;
+                                        max_all_proc_score_heap[proc].update(parent, p);
+                                    }
                                 }
                             }
                         }
@@ -622,351 +610,6 @@ class BspLocking : public Scheduler<Graph_t> {
 
         return RETURN_STATUS::OSP_SUCCESS;
     }
-
-    // std::pair<RETURN_STATUS, BspSchedule<Graph_t>>
-    // computeSchedule_with_preassignment(const BspInstance<Graph_t> &instance,
-    //                                    const std::vector<VertexType> &preassign_nodes) {
-
-    //     init_mem_const_data_structures(instance.getArchitecture());
-
-    //     const unsigned &N = instance.numberOfVertices();
-    //     const unsigned &params_p = instance.numberOfProcessors();
-    //     const auto &G = instance.getComputationalDag();
-
-    //     const std::vector<v_workw_t<Graph_t>> path_length = get_longest_path(G);
-    //     v_workw_t<Graph_t> max_path = 0;
-    //     for (const auto &i : instance.vertices())
-    //         if (path_length[i] > max_path)
-    //             max_path = path_length[i];
-
-    //     default_value.clear();
-    //     default_value.resize(N, 0);
-    //     for (const auto &i : instance.vertices())
-    //         default_value[i] = path_length[i] * 20 / max_path;
-
-    //     max_proc_score_heap = std::vector<boost::heap::fibonacci_heap<heap_node>>(params_p);
-    //     max_all_proc_score_heap = std::vector<boost::heap::fibonacci_heap<heap_node>>(params_p);
-
-    //     node_proc_heap_handles = std::vector<std::unordered_map<VertexType, heap_handle>>(params_p);
-    //     node_all_proc_heap_handles = std::vector<std::unordered_map<VertexType, heap_handle>>(params_p);
-
-    //     locked_set.clear();
-    //     locked.clear();
-    //     locked.resize(N, -1);
-
-    //     BspSchedule<Graph_t> schedule(instance, std::vector<unsigned>(instance.numberOfVertices(), ),
-    //                          std::vector<unsigned>(instance.numberOfVertices()));
-
-    //     std::set<VertexType> ready;
-    //     ready_phase.clear();
-    //     ready_phase.resize(N, -1);
-
-    //     std::vector<std::set<VertexType>> procReady(params_p);
-    //     std::set<VertexType> allReady;
-
-    //     std::vector<unsigned> nrPredecDone(N, 0);
-    //     std::vector<bool> procFree(params_p, true);
-    //     unsigned free = params_p;
-
-    //     std::vector<unsigned> nr_ready_nodes_per_type(G.num_vertex_types(), 0);
-    //     std::vector<unsigned> nr_procs_per_type(instance.getArchitecture().getNumberOfProcessorTypes(), 0);
-    //     for (unsigned proc = 0; proc < params_p; ++proc)
-    //         ++nr_procs_per_type[instance.getArchitecture().processorType(proc)];
-
-    //     std::set<std::pair<size_t, VertexType>> finishTimes;
-    //     finishTimes.emplace(0, std::numeric_limits<VertexType>::max());
-
-    //     std::vector<VertexType> default_proc_type(params_p, 0);
-    //     for (unsigned proc = 0; proc < params_p; ++proc) {
-    //         default_proc_type[instance.getArchitecture().processorType(proc)] = proc;
-    //     }
-
-    //     for (const auto &node : preassign_nodes) {
-    //         schedule.setAssignedProcessor(node, default_proc_type[G.vertex_type(node)]);
-    //         schedule.setAssignedSuperstep(node, 0);
-    //     }
-
-    //     std::unordered_set<VertexType> visited;
-    //     std::unordered_set<VertexType> pre_assigned_set(preassign_nodes.begin(), preassign_nodes.end());
-
-    //     for (const auto &v : G.sourceVertices()) {
-
-    //         if (pre_assigned_set.find(v) == pre_assigned_set.end()) {
-
-    //             ready.insert(v);
-    //             allReady.insert(v);
-    //             ++nr_ready_nodes_per_type[G.vertex_type(v)];
-    //             ready_phase[v] = params_p;
-
-    //             for (unsigned proc = 0; proc < params_p; ++proc) {
-    //                 if (instance.isCompatible(v, proc)) {
-    //                     heap_node new_node(v, default_value[v], G.out_degree(v));
-    //                     node_all_proc_heap_handles[proc][v] = max_all_proc_score_heap[proc].push(new_node);
-    //                 }
-    //             }
-    //         } else {
-
-    //             for (const auto &succ : G.children(v)) {
-
-    //                 if (visited.find(succ) == visited.end()) {
-
-    //                     bool is_ready_ = true;
-    //                     for (const auto &pred : G.parents(succ)) {
-    //                         if (pre_assigned_set.find(pred) == pre_assigned_set.end()) {
-    //                             is_ready_ = false;
-    //                             break;
-    //                         }
-    //                     }
-
-    //                     visited.insert(succ);
-
-    //                     if (is_ready_) {
-
-    //                         ready.insert(v);
-    //                         allReady.insert(v);
-    //                         ++nr_ready_nodes_per_type[G.vertex_type(v)];
-    //                         ready_phase[v] = params_p;
-
-    //                         for (unsigned proc = 0; proc < params_p; ++proc) {
-    //                             if (instance.isCompatible(v, proc)) {
-    //                                 heap_node new_node(v, default_value[v], G.out_degree(v));
-    //                                 node_all_proc_heap_handles[proc][v] =
-    //                                 max_all_proc_score_heap[proc].push(new_node);
-    //                             }
-    //                         }
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
-
-    //     unsigned supstepIdx = 1;
-    //     bool endSupStep = false;
-
-    //     while (!ready.empty() || !finishTimes.empty()) {
-
-    //         if (finishTimes.empty() && endSupStep) {
-    //             for (unsigned proc = 0; proc < params_p; ++proc) {
-    //                 procReady[proc].clear();
-    //                 max_proc_score_heap[proc].clear();
-    //                 node_proc_heap_handles[proc].clear();
-
-    //                 reset_mem_const_datastructures_new_superstep(proc);
-    //             }
-
-    //             allReady = ready;
-
-    //             for (int node : locked_set)
-    //                 locked[node] = -1;
-    //             locked_set.clear();
-
-    //             for (unsigned proc = 0; proc < params_p; ++proc) {
-    //                 max_all_proc_score_heap[proc].clear();
-    //                 node_all_proc_heap_handles[proc].clear();
-    //             }
-
-    //             for (const auto &v : ready) {
-    //                 ready_phase[v] = params_p;
-    //                 for (unsigned proc = 0; proc < params_p; ++proc) {
-
-    //                     if (!instance.isCompatible(v, proc))
-    //                         continue;
-
-    //                     std::pair<int, double> score = computeScore(v, proc, instance);
-    //                     heap_node new_node(v, score.first, G.out_degree(v));
-    //                     node_all_proc_heap_handles[proc][v] = max_all_proc_score_heap[proc].push(new_node);
-    //                 }
-    //             }
-
-    //             ++supstepIdx;
-
-    //             endSupStep = false;
-
-    //             finishTimes.emplace(0, std::numeric_limits<VertexType>::max());
-    //         }
-
-    //         const size_t time = finishTimes.begin()->first;
-    //         const size_t max_finish_time = finishTimes.rbegin()->first;
-
-    //         // Find new ready jobs
-    //         while (!finishTimes.empty() && finishTimes.begin()->first == time) {
-
-    //             const VertexType node = finishTimes.begin()->second;
-    //             finishTimes.erase(finishTimes.begin());
-
-    //             if (node != std::numeric_limits<VertexType>::max()) {
-    //                 for (const auto &succ : G.children(node)) {
-
-    //                     ++nrPredecDone[succ];
-    //                     if (nrPredecDone[succ] == G.in_degree(succ)) {
-    //                         ready.insert(succ);
-    //                         ++nr_ready_nodes_per_type[G.vertex_type(succ)];
-
-    //                         bool canAdd = true;
-    //                         for (const auto &pred : G.parents(succ)) {
-
-    //                             if ((schedule.assignedProcessor(pred) != schedule.assignedProcessor(node) &&
-    //                                  schedule.assignedSuperstep(pred) == supstepIdx) ||
-    //                                 (pre_assigned_set.find(pred) != pre_assigned_set.end())) {
-    //                                 canAdd = false;
-    //                                 break;
-    //                             }
-    //                         }
-
-    //                         if (use_memory_constraint && canAdd) {
-    //                             canAdd = check_can_add(schedule, instance, node, succ, supstepIdx);
-    //                         }
-
-    //                         if (!instance.isCompatible(succ, schedule.assignedProcessor(node)))
-    //                             canAdd = false;
-
-    //                         if (canAdd) {
-    //                             procReady[schedule.assignedProcessor(node)].insert(succ);
-    //                             ready_phase[succ] = schedule.assignedProcessor(node);
-
-    //                             std::pair<int, double> score =
-    //                                 computeScore(succ, schedule.assignedProcessor(node), instance);
-    //                             heap_node new_node(succ, score.first, G.out_degree(succ));
-
-    //                             node_proc_heap_handles[schedule.assignedProcessor(node)][succ] =
-    //                                 max_proc_score_heap[schedule.assignedProcessor(node)].push(new_node);
-    //                         }
-    //                     }
-    //                 }
-    //                 procFree[schedule.assignedProcessor(node)] = true;
-    //                 ++free;
-    //             }
-    //         }
-
-    //         // Assign new jobs to processors
-    //         if (!CanChooseNode(instance, procReady, procFree)) {
-    //             endSupStep = true;
-    //         }
-
-    //         while (CanChooseNode(instance, procReady, procFree)) {
-
-    //             VertexType nextNode = std::numeric_limits<VertexType>::max();
-    //             unsigned nextProc = instance.numberOfProcessors();
-    //             Choose(instance, allReady, procReady, procFree, nextNode, nextProc, endSupStep,
-    //                    max_finish_time - time);
-
-    //             if (nextNode == std::numeric_limits<VertexType>::max() || nextProc == instance.numberOfProcessors())
-    //             {
-    //                 endSupStep = true;
-    //                 break;
-    //             }
-
-    //             if (ready_phase[nextNode] < params_p) {
-
-    //                 procReady[nextProc].erase(nextNode);
-
-    //                 max_proc_score_heap[nextProc].erase(node_proc_heap_handles[nextProc][nextNode]);
-    //                 node_proc_heap_handles[nextProc].erase(nextNode);
-
-    //             } else {
-
-    //                 allReady.erase(nextNode);
-
-    //                 for (unsigned proc = 0; proc < instance.numberOfProcessors(); ++proc) {
-    //                     if (instance.isCompatible(nextNode, proc)) {
-    //                         max_all_proc_score_heap[proc].erase(node_all_proc_heap_handles[proc][nextNode]);
-    //                         node_all_proc_heap_handles[proc].erase(nextNode);
-    //                     }
-    //                 }
-    //             }
-
-    //             ready.erase(nextNode);
-    //             --nr_ready_nodes_per_type[G.vertex_type(nextNode)];
-    //             schedule.setAssignedProcessor(nextNode, nextProc);
-    //             schedule.setAssignedSuperstep(nextNode, supstepIdx);
-
-    //             ready_phase[nextNode] = -1;
-
-    //             if (use_memory_constraint) {
-
-    //                 std::vector<VertexType> toErase = update_mem_const_datastructure_after_assign(
-    //                     schedule, instance, nextNode, nextProc, supstepIdx, procReady);
-
-    //                 for (const auto &node : toErase) {
-    //                     procReady[nextProc].erase(node);
-    //                     max_proc_score_heap[nextProc].erase(node_proc_heap_handles[nextProc][node]);
-    //                     node_proc_heap_handles[nextProc].erase(node);
-    //                     ready_phase[node] = -1;
-    //                 }
-    //             }
-
-    //             finishTimes.emplace(time + G.vertex_work_weight(nextNode), nextNode);
-    //             procFree[nextProc] = false;
-    //             --free;
-
-    //             // update auxiliary structures
-
-    //             for (const auto &succ : G.children(nextNode)) {
-
-    //                 if (locked[succ] >= 0 && locked[succ] < params_p && locked[succ] != nextProc) {
-    //                     for (const auto &parent : G.parents(succ)) {
-    //                         if (ready_phase[parent] >= 0 && ready_phase[parent] < params_p &&
-    //                             ready_phase[parent] != locked[succ]) {
-    //                             (*node_proc_heap_handles[ready_phase[parent]][parent]).score += lock_penalty;
-    //                             max_proc_score_heap[ready_phase[parent]].update(
-    //                                 node_proc_heap_handles[ready_phase[parent]][parent]);
-    //                         }
-    //                         if (ready_phase[parent] == params_p) {
-    //                             for (int proc = 0; proc < params_p; ++proc) {
-    //                                 if (proc == locked[succ] || !instance.isCompatible(parent, proc))
-    //                                     continue;
-
-    //                                 (*node_all_proc_heap_handles[proc][parent]).score += lock_penalty;
-    //                                 max_all_proc_score_heap[proc].update(node_all_proc_heap_handles[proc][parent]);
-    //                             }
-    //                         }
-    //                     }
-    //                     locked[succ] = params_p;
-    //                 } else if (locked[succ] == -1) {
-    //                     locked_set.push_back(succ);
-    //                     locked[succ] = nextProc;
-
-    //                     for (const auto &parent : G.parents(succ)) {
-    //                         if (ready_phase[parent] >= 0 && ready_phase[parent] < params_p &&
-    //                             ready_phase[parent] != nextProc) {
-    //                             (*node_proc_heap_handles[ready_phase[parent]][parent]).score -= lock_penalty;
-    //                             max_proc_score_heap[ready_phase[parent]].update(
-    //                                 node_proc_heap_handles[ready_phase[parent]][parent]);
-    //                         }
-    //                         if (ready_phase[parent] == params_p) {
-    //                             for (int proc = 0; proc < params_p; ++proc) {
-    //                                 if (proc == nextProc || !instance.isCompatible(parent, proc))
-    //                                     continue;
-
-    //                                 (*node_all_proc_heap_handles[proc][parent]).score -= lock_penalty;
-    //                                 max_all_proc_score_heap[proc].update(node_all_proc_heap_handles[proc][parent]);
-    //                             }
-    //                         }
-    //                     }
-    //                 }
-    //             }
-    //         }
-
-    //         if (use_memory_constraint && not check_mem_feasibility(instance, allReady, procReady)) {
-
-    //             return {RETURN_STATUS::ERROR, schedule};
-    //         }
-
-    //         if (free > params_p * max_percent_idle_processors &&
-    //             ((!increase_parallelism_in_new_superstep) ||
-    //              get_nr_parallelizable_nodes(instance, nr_ready_nodes_per_type, nr_procs_per_type) >=
-    //                  std::min(std::min(params_p, (unsigned)(1.2 * (params_p - free))),
-    //                           params_p - free + ((unsigned)(0.5 * free))))) {
-    //             endSupStep = true;
-    //         }
-    //     }
-
-    //     assert(schedule.satisfiesPrecedenceConstraints());
-
-    //     schedule.setAutoCommunicationSchedule();
-
-    //     return {SUCCESS, schedule};
-    // }
 
     /**
      * @brief Get the name of the schedule.
