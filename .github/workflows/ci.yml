@@ -1,0 +1,149 @@
+name: OSP CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            make gcc g++ git libboost-all-dev \
+            doxygen graphviz python3-pip libeigen3-dev
+          pip3 install --upgrade pip
+          pip3 install cmake==3.21.3
+
+      - name: Configure (CMake)
+        run: cmake -S . -B build
+
+      - name: Build
+        run: cmake --build build -j$(nproc)
+
+  test:
+    runs-on: ubuntu-20.04
+    needs: build
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            make gcc g++ git libboost-all-dev \
+            doxygen graphviz python3-pip libeigen3-dev
+          pip3 install --upgrade pip
+          pip3 install cmake==3.21.3
+
+      - name: Configure (CMake)
+        run: cmake -S . -B build -DBUILD_TESTS=ON
+
+      - name: Build tests
+        run: cmake --build build --target build_tests -j$(nproc)
+
+      - name: Run tests
+        run: cd build && ctest --output-on-failure --output-junit test_results.xml
+        continue-on-error: true
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: build/test_results.xml
+
+  test_simple_greedy_small_dag:
+    runs-on: ubuntu-20.04
+    needs: build
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            make gcc g++ git libboost-all-dev \
+            libeigen3-dev python3-pip
+          pip3 install cmake==3.21.3
+
+      - name: Configure (CMake)
+        run: cmake -S . -B build
+
+      - name: Build executables
+        run: cmake --build build --target OneStopParallel OneStopParallel_Partition -j$(nproc)
+
+      - name: Run simple DAG test
+        run: |
+          cd build
+          ./OneStopParallel \
+            --inputDag ../data/spaa/tiny/instance_bicgstab.txt \
+            --inputMachine ../data/machine_params/p3.txt \
+            --Serial --GreedyBsp --GreedyBspFillup --GreedyBspFillupLK --GreedyBspLocking \
+            --GreedyBspLockingLK --GreedyVariance --GreedyVarianceFillup --GreedyVarianceFillupLK \
+            --GreedyEtf --GreedyCilk --GreedyCilkLK --GreedyMeta --MultiHC --SquashBspGreedyHC \
+            --SquashBspGreedyLK --SquashBspGreedy --Wavefront --HDagg --BalDMixR --CoBalDMixR \
+            --CoBalDMixRLK --BestGreedyLK --SquashComboBestGreedyLK --FunnelBspGreedy \
+            --FunnelVarianceGreedy --HDaggCoarseLockGLK+HC --HDaggCoarseCobaldLK+HC \
+            --FunnelCoarseBspGLK+HC --FunnelCoarseVarGLK+HC --FunnelCoarseCobaldLK+HC \
+            --ReverseGreedyVarianceFillup --GreedyBspGrowLocal --GreedyBspGrowLocalAutoCores
+          ./OneStopParallel_Partition \
+            --inputDag ../data/spaa/tiny/instance_bicgstab.txt \
+            --inputMachine ../data/machine_params/p3.txt \
+            --VariancePartitioner --LightEdgeVariancePartitioner
+
+  docs:
+    runs-on: ubuntu-20.04
+    needs: build
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            doxygen graphviz libeigen3-dev cmake g++
+
+      - name: Build docs
+        run: |
+          cmake -S . -B build
+          cmake --build build --target doc
+          mkdir -p public
+          cp -r doc/html/* public
+
+      - name: Upload docs artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  deploy:
+    runs-on: ubuntu-20.04
+    needs: docs
+    if: github.ref == 'refs/heads/main'
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
