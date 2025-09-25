@@ -106,7 +106,7 @@ jobs:
   docs:
     runs-on: ubuntu-20.04
     needs: build
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/master'
 
     steps:
       - name: Checkout source
@@ -133,7 +133,7 @@ jobs:
   deploy:
     runs-on: ubuntu-20.04
     needs: docs
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/master'
 
     permissions:
       pages: write
