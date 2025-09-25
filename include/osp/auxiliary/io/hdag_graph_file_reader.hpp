@@ -164,7 +164,8 @@ bool readComputationalDagHyperdagFormatDB(std::ifstream& infile, Graph_t& graph)
         return false;
     }
 
-    std::vector<v_commw_t<Graph_t>> hyperedge_weights(static_cast<size_t>(hEdges), 1);
+    std::vector<v_commw_t<Graph_t>> hyperedge_comm_weights(static_cast<size_t>(hEdges), 1);
+    std::vector<v_memw_t<Graph_t>> hyperedge_mem_weights(static_cast<size_t>(hEdges), 1);
 
     // Read hyperedges
     for (int i = 0; i < hEdges; ++i) {
@@ -175,18 +176,19 @@ bool readComputationalDagHyperdagFormatDB(std::ifstream& infile, Graph_t& graph)
         }
 
         std::istringstream edgeStream(line);
-        int hEdge = -1, weight = 1;
+        int hEdge = -1, comm_weight = 1, mem_weight = 1;
         if (!(edgeStream >> hEdge)) {
             std::cerr << "Warning: Could not read hyperedge ID for hyperedge " << i << ".\n";
             continue;
         }
-        edgeStream >> weight; // optional
+        edgeStream >> comm_weight >> mem_weight; // optional
 
         if (hEdge < 0 || hEdge >= hEdges) {
             std::cerr << "Error: Hyperedge ID " << hEdge << " is out of range (0 to " << hEdges - 1 << ").\n";
             continue;
         }
-        hyperedge_weights[static_cast<size_t>(hEdge)] = weight;
+        hyperedge_comm_weights[static_cast<size_t>(hEdge)] = static_cast<v_commw_t<Graph_t>>(comm_weight);
+        hyperedge_mem_weights[static_cast<size_t>(hEdge)] = static_cast<v_memw_t<Graph_t>>(mem_weight);
     }
 
     graph = Graph_t(static_cast<vertex_idx_t<Graph_t>>(N));
@@ -200,12 +202,12 @@ bool readComputationalDagHyperdagFormatDB(std::ifstream& infile, Graph_t& graph)
         }
 
         std::istringstream vertexStream(line);
-        int node = -1, work = 1, comm = 1;
+        int node = -1, work = 1, type = 0;
         if (!(vertexStream >> node)) {
             std::cerr << "Warning: Could not read vertex ID for vertex " << i << ".\n";
             continue;
         }
-        vertexStream >> work >> comm;
+        vertexStream >> work >> type;
 
         if (node < 0 || node >= N) {
             std::cerr << "Error: Vertex ID " << node << " is out of range (0 to " << N - 1 << ").\n";
@@ -213,7 +215,10 @@ bool readComputationalDagHyperdagFormatDB(std::ifstream& infile, Graph_t& graph)
         }
 
         graph.set_vertex_work_weight(static_cast<vertex_idx_t<Graph_t>>(node), static_cast<v_workw_t<Graph_t>>(work));
-        graph.set_vertex_comm_weight(static_cast<vertex_idx_t<Graph_t>>(node), static_cast<v_commw_t<Graph_t>>(comm));
+
+        if constexpr (has_typed_vertices_v<Graph_t>) {
+            graph.set_vertex_type(static_cast<vertex_idx_t<Graph_t>>(node), static_cast<v_type_t<Graph_t>>(type));
+        }  
     }
 
     // Resize(N);
@@ -239,18 +244,20 @@ bool readComputationalDagHyperdagFormatDB(std::ifstream& infile, Graph_t& graph)
             continue;
         }
 
-        std::size_t edgeIdx = static_cast<std::size_t>(hEdge);
-        std::size_t nodeIdx = static_cast<std::size_t>(node);
+        const std::size_t edgeIdx = static_cast<std::size_t>(hEdge);
+        const std::size_t nodeIdx = static_cast<std::size_t>(node);
 
         if (edgeSource[edgeIdx] == -1) {
             edgeSource[edgeIdx] = node;
+            graph.set_vertex_comm_weight(static_cast<vertex_idx_t<Graph_t>>(node), hyperedge_comm_weights[edgeIdx]);
+            graph.set_vertex_mem_weight(static_cast<vertex_idx_t<Graph_t>>(node), hyperedge_mem_weights[edgeIdx]);
         } else {
             auto edge = graph.add_edge(static_cast<vertex_idx_t<Graph_t>>(edgeSource[edgeIdx]),
                                     static_cast<vertex_idx_t<Graph_t>>(nodeIdx));
 
             if constexpr (is_modifiable_cdag_comm_edge_v<Graph_t>) {
                 graph.set_edge_comm_weight(edge.first,
-                    static_cast<e_commw_t<Graph_t>>(hyperedge_weights[edgeIdx]));
+                    static_cast<e_commw_t<Graph_t>>(hyperedge_comm_weights[edgeIdx]));
             }
         }
     }
