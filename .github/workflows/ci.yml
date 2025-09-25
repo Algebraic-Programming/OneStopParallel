@@ -87,21 +87,11 @@ jobs:
       - name: Run simple DAG test
         run: |
           cd build
-          ./OneStopParallel \
-            --inputDag ../data/spaa/tiny/instance_bicgstab.txt \
-            --inputMachine ../data/machine_params/p3.txt \
-            --Serial --GreedyBsp --GreedyBspFillup --GreedyBspFillupLK --GreedyBspLocking \
-            --GreedyBspLockingLK --GreedyVariance --GreedyVarianceFillup --GreedyVarianceFillupLK \
-            --GreedyEtf --GreedyCilk --GreedyCilkLK --GreedyMeta --MultiHC --SquashBspGreedyHC \
-            --SquashBspGreedyLK --SquashBspGreedy --Wavefront --HDagg --BalDMixR --CoBalDMixR \
-            --CoBalDMixRLK --BestGreedyLK --SquashComboBestGreedyLK --FunnelBspGreedy \
-            --FunnelVarianceGreedy --HDaggCoarseLockGLK+HC --HDaggCoarseCobaldLK+HC \
-            --FunnelCoarseBspGLK+HC --FunnelCoarseVarGLK+HC --FunnelCoarseCobaldLK+HC \
-            --ReverseGreedyVarianceFillup --GreedyBspGrowLocal --GreedyBspGrowLocalAutoCores
-          ./OneStopParallel_Partition \
-            --inputDag ../data/spaa/tiny/instance_bicgstab.txt \
-            --inputMachine ../data/machine_params/p3.txt \
-            --VariancePartitioner --LightEdgeVariancePartitioner
+          ./apps/osp \
+            --inputDag ../data/spaa/tiny/instance_bicgstab.hdag \
+            --inputMachine ../data/machine_params/p3.arch \
+            --Serial --GreedyBsp --BspLocking --GrowLocal --Variance --Cilk  --Etf --GreedyChildren \
+            --MultiHC --SarkarLockingHC --GreedyChildrenKL --GrowLocalKL --GreedyBspHC --FunnelLocking
 
   docs:
     runs-on: ubuntu-20.04
