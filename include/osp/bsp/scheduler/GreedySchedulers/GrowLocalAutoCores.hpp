@@ -21,8 +21,9 @@ limitations under the License.
 #include <chrono>
 #include <climits>
 #include <list>
+#include <queue>
 #include <map>
-#include <set>
+#include <unordered_set>
 #include <string>
 #include <vector>
 
@@ -114,11 +115,10 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
         const unsigned P = instance.numberOfProcessors();
         const auto &G = instance.getComputationalDag();
 
-        std::set<vertex_idx> ready;
-        std::vector<std::set<std::size_t>::iterator> place_in_ready(N);
+        std::unordered_set<vertex_idx> ready;  
 
-        std::set<vertex_idx> allReady;
-        std::vector<std::set<vertex_idx>> procReady(P);
+        std::vector<vertex_idx> allReady;
+        std::vector<std::vector<vertex_idx>> procReady(P);
 
         std::vector<vertex_idx> predec(N);
 
@@ -126,7 +126,7 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
             predec[node] = G.in_degree(node);
 
             if (predec[node] == 0) {
-                place_in_ready[node] = ready.insert(node).first;
+                ready.insert(node);
             }
         }
 
@@ -160,7 +160,8 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
                 }
 
                 new_ready.clear();
-                allReady = ready;
+                allReady.assign(ready.begin(), ready.end());
+                std::make_heap(allReady.begin(), allReady.end(), std::greater<vertex_idx>());
 
                 vertex_idx new_total_assigned = 0;
                 v_workw_t<Graph_t> weight_limit = 0, total_weight_assigned = 0;
@@ -172,23 +173,27 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
                     vertex_idx chosen_node = std::numeric_limits<vertex_idx>::max();
 
                     if constexpr (use_memory_constraint) {
-                        if (!procReady[0].empty() && local_memory_constraint.can_add(*procReady[0].begin(), 0)) {
-                            chosen_node = *procReady[0].begin();
-                            procReady[0].erase(procReady[0].begin());
-                        } else if (!allReady.empty() && local_memory_constraint.can_add(*allReady.begin(), 0)) {
-                            chosen_node = *allReady.begin();
-                            allReady.erase(allReady.begin());
+                        if (!procReady[0].empty() && local_memory_constraint.can_add(procReady[0].front(), 0)) {
+                            chosen_node = procReady[0].front();
+                            std::pop_heap(procReady[0].begin(), procReady[0].end(), std::greater<vertex_idx>());
+                            procReady[0].pop_back();
+                        } else if (!allReady.empty() && local_memory_constraint.can_add(allReady.front(), 0)) {
+                            chosen_node = allReady.front();
+                            std::pop_heap(allReady.begin(), allReady.end(), std::greater<vertex_idx>());
+                            allReady.pop_back();
                         } else {
                             early_memory_break = true;
                             break;
                         }
                     } else {
                         if (!procReady[0].empty()) {
-                            chosen_node = *procReady[0].begin();
-                            procReady[0].erase(procReady[0].begin());
+                            chosen_node = procReady[0].front();
+                            std::pop_heap(procReady[0].begin(), procReady[0].end(), std::greater<vertex_idx>());
+                            procReady[0].pop_back();
                         } else if (!allReady.empty()) {
-                            chosen_node = *allReady.begin();
-                            allReady.erase(allReady.begin());
+                            chosen_node = allReady.front();
+                            std::pop_heap(allReady.begin(), allReady.end(), std::greater<vertex_idx>());
+                            allReady.pop_back();
                         } else {
                             break;
                         }
@@ -215,7 +220,8 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
                             new_ready.push_back(succ);
 
                             if (node_to_proc[succ] == 0) {
-                                procReady[0].insert(succ);
+                                procReady[0].push_back(succ);
+                                std::push_heap(procReady[0].begin(), procReady[0].end(), std::greater<vertex_idx>());
                             }
                         }
                     }
@@ -230,23 +236,27 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
                         vertex_idx chosen_node = std::numeric_limits<vertex_idx>::max();
 
                         if constexpr (use_memory_constraint) {
-                            if (!procReady[proc].empty() && local_memory_constraint.can_add(*procReady[proc].begin(), proc)) {
-                                chosen_node = *procReady[proc].begin();
-                                procReady[proc].erase(procReady[proc].begin());
-                            } else if (!allReady.empty() && local_memory_constraint.can_add(*allReady.begin(), proc)) {
-                                chosen_node = *allReady.begin();
-                                allReady.erase(allReady.begin());
+                            if (!procReady[proc].empty() && local_memory_constraint.can_add(procReady[proc].front(), proc)) {
+                                chosen_node = procReady[proc].front();
+                                std::pop_heap(procReady[proc].begin(), procReady[proc].end(), std::greater<vertex_idx>());
+                                procReady[proc].pop_back();
+                            } else if (!allReady.empty() && local_memory_constraint.can_add(allReady.front(), proc)) {
+                                chosen_node = allReady.front();
+                                std::pop_heap(allReady.begin(), allReady.end(), std::greater<vertex_idx>());
+                                allReady.pop_back();
                             } else {
                                 early_memory_break = true;
                                 break;
                             }
                         } else {
                             if (!procReady[proc].empty()) {
-                                chosen_node = *procReady[proc].begin();
-                                procReady[proc].erase(procReady[proc].begin());
+                                chosen_node = procReady[proc].front();
+                                std::pop_heap(procReady[proc].begin(), procReady[proc].end(), std::greater<vertex_idx>());
+                                procReady[proc].pop_back();
                             } else if (!allReady.empty()) {
-                                chosen_node = *allReady.begin();
-                                allReady.erase(allReady.begin());
+                                chosen_node = allReady.front();
+                                std::pop_heap(allReady.begin(), allReady.end(), std::greater<vertex_idx>());
+                                allReady.pop_back();
                             } else {
                                 break;
                             }
@@ -272,7 +282,8 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
                                 new_ready.push_back(succ);
 
                                 if (node_to_proc[succ] == proc) {
-                                    procReady[proc].insert(succ);
+                                    procReady[proc].push_back(succ);
+                                    std::push_heap(procReady[proc].begin(), procReady[proc].end(), std::greater<vertex_idx>());
                                 }
                             }
                         }
@@ -350,14 +361,14 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
 
             // apply best iteration
             for (const auto &node : best_new_ready) {
-                place_in_ready[node] = ready.insert(node).first;
+                ready.insert(node);
             }
 
             for (unsigned proc = 0; proc < P; ++proc) {
                 for (const auto &node : best_new_assignments[proc]) {
                     node_to_proc[node] = proc;
                     node_to_supstep[node] = supstep;
-                    ready.erase(place_in_ready[node]);
+                    ready.erase(node);
                     ++total_assigned;
 
                     for (const auto &succ : G.children(node)) {
