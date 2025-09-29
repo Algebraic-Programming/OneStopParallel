@@ -22,6 +22,8 @@ limitations under the License.
 #include "osp/bsp/model/BspInstance.hpp"
 #include "osp/bsp/model/BspSchedule.hpp"
 #include "osp/bsp/model/BspScheduleCS.hpp"
+#include "osp/bsp/model/MaxBspSchedule.hpp"
+#include "osp/bsp/model/MaxBspScheduleCS.hpp"
 #include "osp/bsp/model/BspScheduleRecomp.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
@@ -319,3 +321,148 @@ BOOST_AUTO_TEST_CASE(test_bsp_schedule_cs) {
         BOOST_CHECK_EQUAL(schedule_cs_t2.assignedProcessor(v), schedule.assignedProcessor(v));
     }
 };
+
+BOOST_AUTO_TEST_CASE(test_max_bsp_schedule) {
+
+    using graph = computational_dag_edge_idx_vector_impl_def_int_t;
+
+    BspInstance<graph> instance;
+    instance.setNumberOfProcessors(2);
+    instance.setCommunicationCosts(10); // g=10
+    instance.setSynchronisationCosts(100); // l=100 (not used in MaxBspSchedule cost model)
+
+    auto &dag = instance.getComputationalDag();
+    dag.add_vertex(10, 1, 0); // Node 0
+    dag.add_vertex(5, 2, 0);  // Node 1
+    dag.add_vertex(5, 3, 0);  // Node 2
+    dag.add_vertex(10, 4, 0); // Node 3
+    dag.add_edge(0, 1);
+    dag.add_edge(0, 2);
+    dag.add_edge(1, 3);
+    dag.add_edge(2, 3);
+
+    // Test a valid schedule with staleness = 2
+    {
+        MaxBspSchedule<graph> schedule(instance);
+        schedule.setAssignedProcessor(0, 0);
+        schedule.setAssignedSuperstep(0, 0);
+        schedule.setAssignedProcessor(1, 0);
+        schedule.setAssignedSuperstep(1, 1);
+        schedule.setAssignedProcessor(2, 1);
+        schedule.setAssignedSuperstep(2, 2); // 0->2 is cross-proc, 2 >= 0+2
+        schedule.setAssignedProcessor(3, 0);
+        schedule.setAssignedSuperstep(3, 4); // 2->3 is cross-proc, 4 >= 2+2
+        schedule.updateNumberOfSupersteps();
+
+        BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+
+        // Manual cost calculation:
+        // Superstep 0: work = {10, 0} -> max_work = 10. comm = 0. Cost = max(10, 0) = 10.
+        // Superstep 1: work = {5, 0} -> max_work = 5. comm from SS0: 0->2 (P0->P1) needed at SS2, comm sent in SS1. comm=1*10=10. Cost = max(5,0) = 5.
+        // Superstep 2: work = {0, 5} -> max_work = 5. comm from SS1: 10. Cost = max(5, 10) + l = 10 + 100 = 110.
+        // Superstep 3: work = {0, 0} -> max_work = 0. comm from SS2: 2->3 (P1->P0) needed at SS4, comm sent in SS3. comm=3*10=30. Cost = max(0,0) = 0.
+        // Superstep 4: work = {10, 0} -> max_work = 10. comm from SS3: 30. Cost = max(10, 30) + l = 30 + 100 = 130.
+        // Total cost = 10 + 5 + 110 + 0 + 130 = 255
+        BOOST_CHECK_EQUAL(schedule.computeCosts(), 255);
+    }
+
+    // Test another valid schedule
+    {
+        MaxBspSchedule<graph> schedule(instance);
+        schedule.setAssignedProcessor(0, 0);
+        schedule.setAssignedSuperstep(0, 0);
+        schedule.setAssignedProcessor(1, 1);
+        schedule.setAssignedSuperstep(1, 2); // 0->1 is cross-proc, 2 >= 0+2
+        schedule.setAssignedProcessor(2, 1);
+        schedule.setAssignedSuperstep(2, 2); // 0->2 is cross-proc, 2 >= 0+2
+        schedule.setAssignedProcessor(3, 0);
+        schedule.setAssignedSuperstep(3, 4); // 1->3, 2->3 are cross-proc, 4 >= 2+2
+        schedule.updateNumberOfSupersteps();
+
+        BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+
+        // Manual cost calculation:
+        // Superstep 0: work = {10, 0} -> max_work = 10. comm = 0. Cost = max(10, 0) = 10.
+        // Superstep 1: work = {0, 0} -> max_work = 0. comm from SS0: 0->1, 0->2 (P0->P1) needed at SS2, comm sent in SS1. comm=1*10=10. Cost = max(0,0)=0.
+        // Superstep 2: work = {0, 10} -> max_work = 10. comm from SS1: 10. Cost = max(10, 10) + l = 10 + 100 = 110.
+        // Superstep 3: work = {0, 0} -> max_work = 0. comm from SS2: 1->3, 2->3 (P1->P0) needed at SS4, comm sent in SS3. comm=(2+3)*10=50. Cost = max(0,0)=0.
+        // Superstep 4: work = {10, 0} -> max_work = 10. comm from SS3: 50. Cost = max(10, 50) + l = 50 + 100 = 150.
+        // Total cost = 10 + 0 + 110 + 0 + 150 = 270
+        BOOST_CHECK_EQUAL(schedule.computeCosts(), 270);
+    }
+
+    // Test an invalid schedule (violates staleness=2)
+    {
+        MaxBspSchedule<graph> schedule(instance);
+        schedule.setAssignedProcessor(0, 0);
+        schedule.setAssignedSuperstep(0, 0);
+        schedule.setAssignedProcessor(1, 1); // 0->1 on different procs
+        schedule.setAssignedSuperstep(1, 1); // step(0)+2 > step(1) is FALSE (0+2 > 1)
+        schedule.updateNumberOfSupersteps();
+
+        BOOST_CHECK(!schedule.satisfiesPrecedenceConstraints());
+    }
+}
+
+BOOST_AUTO_TEST_CASE(test_max_bsp_schedule_cs) {
+
+    using graph = computational_dag_edge_idx_vector_impl_def_int_t;
+
+    BspInstance<graph> instance;
+    instance.setNumberOfProcessors(2);
+    instance.setCommunicationCosts(10); // g=10
+    instance.setSynchronisationCosts(100); // l=100
+
+    auto &dag = instance.getComputationalDag();
+    dag.add_vertex(10, 1, 0); // Node 0
+    dag.add_vertex(5, 2, 0);  // Node 1
+    dag.add_vertex(5, 3, 0);  // Node 2
+    dag.add_vertex(10, 4, 0); // Node 3
+    dag.add_edge(0, 1);
+    dag.add_edge(0, 2);
+    dag.add_edge(1, 3);
+    dag.add_edge(2, 3);
+
+    // Test a valid schedule with staleness = 2
+    {
+        MaxBspScheduleCS<graph> schedule(instance);
+        schedule.setAssignedProcessor(0, 0);
+        schedule.setAssignedSuperstep(0, 0);
+        schedule.setAssignedProcessor(1, 0);
+        schedule.setAssignedSuperstep(1, 1);
+        schedule.setAssignedProcessor(2, 1);
+        schedule.setAssignedSuperstep(2, 2); // 0->2 is cross-proc, 2 >= 0+2
+        schedule.setAssignedProcessor(3, 0);
+        schedule.setAssignedSuperstep(3, 4); // 2->3 is cross-proc, 4 >= 2+2
+        schedule.updateNumberOfSupersteps();
+
+        BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+
+        // Set communication schedule (eager)
+        schedule.addCommunicationScheduleEntry(0, 0, 1, 0); // 0->2 (P0->P1) sent in SS0
+        schedule.addCommunicationScheduleEntry(2, 1, 0, 2); // 2->3 (P1->P0) sent in SS2
+
+        BOOST_CHECK(schedule.hasValidCommSchedule());
+
+        // Manual cost calculation:
+        // SS0: work={10,0}, max_work=10. comm_send(P0)=1, comm_rec(P1)=0. max_comm_h=1. Cost=max(10, 0)=10.
+        // SS1: work={5,0}, max_work=5. comm from SS0: h=1, cost=1*10=10. Cost=max(5,10)+l=10+100=110.
+        // SS2: work={0,5}, max_work=5. comm from SS1: h=0, cost=0. Cost=max(5,0)=5.
+        // SS3: work={0,0}, max_work=0. comm from SS2: h=3, cost=3*10=30. Cost=max(0,30)+l=30+100=130.
+        // SS4: work={10,0}, max_work=10. comm from SS3: h=0, cost=0. Cost=max(10,0)=10.
+        // Total cost = 10 + 110 + 5 + 130 + 10 = 265
+        BOOST_CHECK_EQUAL(schedule.computeCosts(), 265);
+    }
+
+    // Test an invalid schedule (violates staleness=2)
+    {
+        MaxBspScheduleCS<graph> schedule(instance);
+        schedule.setAssignedProcessor(0, 0);
+        schedule.setAssignedSuperstep(0, 0);
+        schedule.setAssignedProcessor(1, 1); // 0->1 on different procs
+        schedule.setAssignedSuperstep(1, 1); // step(0)+2 > step(1) is FALSE (0+2 > 1)
+        schedule.updateNumberOfSupersteps();
+
+        BOOST_CHECK(!schedule.satisfiesPrecedenceConstraints());
+    }
+}

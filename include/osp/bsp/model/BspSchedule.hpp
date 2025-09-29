@@ -67,6 +67,105 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
     std::vector<unsigned> node_to_processor_assignment;
     std::vector<unsigned> node_to_superstep_assignment;
 
+    template<unsigned staleness>
+    inline bool satisfies_precedence_constraints_staleness() const {
+
+        if (node_to_processor_assignment.size() != instance->numberOfVertices() ||
+            node_to_superstep_assignment.size() != instance->numberOfVertices()) {
+            return false;
+        }
+
+        for (const auto &v : instance->vertices()) {
+
+            if (node_to_superstep_assignment[v] >= number_of_supersteps) {
+                return false;
+            }
+
+            if (node_to_processor_assignment[v] >= instance->numberOfProcessors()) {
+                return false;
+            }
+
+            for (const auto &target : instance->getComputationalDag().children(v)) {
+
+                const unsigned different_processors =
+                    (node_to_processor_assignment[v] == node_to_processor_assignment[target]) ? 0u : staleness;
+
+                if (node_to_superstep_assignment[v] + different_processors > node_to_superstep_assignment[target]) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    void compute_lazy_communication_costs_helper(std::vector<std::vector<v_commw_t<Graph_t>>> & rec, std::vector<std::vector<v_commw_t<Graph_t>>> & send) const {
+        for (const auto &node : instance->vertices()) {
+
+            std::vector<unsigned> step_needed(instance->numberOfProcessors(), number_of_supersteps);
+            for (const auto &target : instance->getComputationalDag().children(node)) {
+
+                if (node_to_processor_assignment[node] != node_to_processor_assignment[target]) {
+                    step_needed[node_to_processor_assignment[target]] = std::min(
+                        step_needed[node_to_processor_assignment[target]], node_to_superstep_assignment[target]);
+                }
+            }
+
+            for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
+
+                if (step_needed[proc] < number_of_supersteps) {
+
+                    send[node_to_processor_assignment[node]][step_needed[proc] - 1] +=
+                        instance->sendCosts(node_to_processor_assignment[node], proc) *
+                        instance->getComputationalDag().vertex_comm_weight(node);
+
+                    rec[proc][step_needed[proc] - 1] += instance->sendCosts(node_to_processor_assignment[node], proc) *
+                                                        instance->getComputationalDag().vertex_comm_weight(node);
+                }
+            }
+        }
+    }
+
+    std::vector<v_commw_t<Graph_t>> compute_max_comm_per_step_helper(const std::vector<std::vector<v_commw_t<Graph_t>>> & rec, const std::vector<std::vector<v_commw_t<Graph_t>>> & send) const {
+        std::vector<v_commw_t<Graph_t>> max_comm_per_step(number_of_supersteps, 0);
+        for (unsigned step = 0; step < number_of_supersteps; step++) {
+            v_commw_t<Graph_t> max_send = 0;
+            v_commw_t<Graph_t> max_rec = 0;
+
+            for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
+                if (max_send < send[proc][step])
+                    max_send = send[proc][step];
+                if (max_rec < rec[proc][step])
+                    max_rec = rec[proc][step];
+            }
+            max_comm_per_step[step] = std::max(max_send, max_rec) * instance->communicationCosts();
+        }
+        return max_comm_per_step;
+    }
+
+    std::vector<v_workw_t<Graph_t>> compute_max_work_per_step_helper() const {
+        std::vector<std::vector<v_workw_t<Graph_t>>> work = std::vector<std::vector<v_workw_t<Graph_t>>>(
+            number_of_supersteps, std::vector<v_workw_t<Graph_t>>(instance->numberOfProcessors(), 0));
+        for (const auto &node : instance->vertices()) {
+            work[node_to_superstep_assignment[node]][node_to_processor_assignment[node]] +=
+                instance->getComputationalDag().vertex_work_weight(node);
+        }
+
+        std::vector<v_workw_t<Graph_t>> max_work_per_step(number_of_supersteps, 0);
+        for (unsigned step = 0; step < number_of_supersteps; step++) {
+            v_workw_t<Graph_t> max_work = 0;
+            for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
+                if (max_work < work[step][proc]) {
+                    max_work = work[step][proc];
+                }
+            }
+
+            max_work_per_step[step] = max_work;
+        }
+
+        return max_work_per_step;
+    }
+
   public:
   
     BspSchedule() = delete;
@@ -169,11 +268,8 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
      * @return The number of processors in the schedule.
      */
     void updateNumberOfSupersteps() {
-
         number_of_supersteps = 0;
-
         for (unsigned i = 0; i < instance->numberOfVertices(); ++i) {
-
             if (node_to_superstep_assignment[i] >= number_of_supersteps) {
                 number_of_supersteps = node_to_superstep_assignment[i] + 1;
             }
@@ -325,31 +421,8 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
     }
 
     virtual v_workw_t<Graph_t> computeWorkCosts() const override {
-
-        std::vector<std::vector<v_workw_t<Graph_t>>> work = std::vector<std::vector<v_workw_t<Graph_t>>>(
-            number_of_supersteps, std::vector<v_workw_t<Graph_t>>(instance->numberOfProcessors(), 0));
-
-        for (const auto &node : instance->vertices()) {
-            work[node_to_superstep_assignment[node]][node_to_processor_assignment[node]] +=
-                instance->getComputationalDag().vertex_work_weight(node);
-        }
-
-        v_workw_t<Graph_t> total_costs = 0;
-        for (unsigned step = 0; step < number_of_supersteps; step++) {
-
-            v_workw_t<Graph_t> max_work = 0;
-
-            for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
-
-                if (max_work < work[step][proc]) {
-                    max_work = work[step][proc];
-                }
-            }
-
-            total_costs += max_work;
-        }
-
-        return total_costs;
+        const std::vector<v_workw_t<Graph_t>> work_per_step = compute_max_work_per_step_helper();
+        return std::accumulate(work_per_step.begin(), work_per_step.end(), static_cast<v_workw_t<Graph_t>>(0));
     }
 
     double compute_total_communication_costs() const {
@@ -453,27 +526,17 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
             }
         }
 
+        const std::vector<v_commw_t<Graph_t>> max_comm_per_step = compute_max_comm_per_step_helper(rec, send);
+
         v_commw_t<Graph_t> costs = 0;
         for (unsigned step = 0; step < number_of_supersteps; step++) {
-            v_commw_t<Graph_t> max_send = 0;
-            v_commw_t<Graph_t> max_rec = 0;
-
-            for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
-                if (max_send < send[proc][step])
-                    max_send = send[proc][step];
-                if (max_rec < rec[proc][step])
-                    max_rec = rec[proc][step];
-            }
-
-            const auto step_comm_cost = std::max(max_send, max_rec) * instance->communicationCosts();
-
+            const auto step_comm_cost = max_comm_per_step[step];
             costs += step_comm_cost;
 
             if (step_comm_cost > 0) {
                 costs += instance->synchronisationCosts();
             }
         }
-
         return costs;
     }
 
@@ -490,45 +553,12 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
         std::vector<std::vector<v_commw_t<Graph_t>>> send(instance->numberOfProcessors(),
                                                           std::vector<v_commw_t<Graph_t>>(number_of_supersteps, 0));
 
-        for (const auto &node : instance->vertices()) {
-
-            std::vector<unsigned> step_needed(instance->numberOfProcessors(), number_of_supersteps);
-            for (const auto &target : instance->getComputationalDag().children(node)) {
-
-                if (node_to_processor_assignment[node] != node_to_processor_assignment[target]) {
-                    step_needed[node_to_processor_assignment[target]] = std::min(
-                        step_needed[node_to_processor_assignment[target]], node_to_superstep_assignment[target]);
-                }
-            }
-
-            for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
-
-                if (step_needed[proc] < number_of_supersteps) {
-
-                    send[node_to_processor_assignment[node]][step_needed[proc] - 1] +=
-                        instance->sendCosts(node_to_processor_assignment[node], proc) *
-                        instance->getComputationalDag().vertex_comm_weight(node);
-
-                    rec[proc][step_needed[proc] - 1] += instance->sendCosts(node_to_processor_assignment[node], proc) *
-                                                        instance->getComputationalDag().vertex_comm_weight(node);
-                }
-            }
-        }
+        compute_lazy_communication_costs_helper(rec, send);
+        const std::vector<v_commw_t<Graph_t>> max_comm_per_step = compute_max_comm_per_step_helper(rec, send);
 
         v_commw_t<Graph_t> costs = 0;
         for (unsigned step = 0; step < number_of_supersteps; step++) {
-            v_commw_t<Graph_t> max_send = 0;
-            v_commw_t<Graph_t> max_rec = 0;
-
-            for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
-                if (max_send < send[proc][step])
-                    max_send = send[proc][step];
-                if (max_rec < rec[proc][step])
-                    max_rec = rec[proc][step];
-            }
-
-            const auto step_comm_cost = std::max(max_send, max_rec) * instance->communicationCosts();
-
+            const auto step_comm_cost = max_comm_per_step[step];
             costs += step_comm_cost;
 
             if (step_comm_cost > 0) {
@@ -550,38 +580,8 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
      *
      * @return True if the schedule satisfies the precedence constraints of the computational DAG, false otherwise.
      */
-    bool satisfiesPrecedenceConstraints() const {
-
-        if (node_to_processor_assignment.size() != instance->numberOfVertices() ||
-            node_to_superstep_assignment.size() != instance->numberOfVertices()) {
-            return false;
-        }
-
-        for (const auto &v : instance->vertices()) {
-
-            if (node_to_superstep_assignment[v] >= number_of_supersteps) {
-                return false;
-            }
-
-            if (node_to_processor_assignment[v] >= instance->numberOfProcessors()) {
-                return false;
-            }
-
-            for (const auto &target : instance->getComputationalDag().children(v)) {
-
-                const unsigned different_processors =
-                    (node_to_processor_assignment[v] == node_to_processor_assignment[target]) ? 0u : 1u;
-
-                if (node_to_superstep_assignment[v] + different_processors > node_to_superstep_assignment[target]) {
-                    // std::cout << "This is not a valid scheduling (problems with nodes " << v << " and " << target <<
-                    // ")."
-                    //           << std::endl; // todo should be removed
-                    return false;
-                }
-            }
-        }
-
-        return true;
+    virtual bool satisfiesPrecedenceConstraints() const {
+        return satisfies_precedence_constraints_staleness<1>();
     };
 
     bool satisfiesNodeTypeConstraints() const {
