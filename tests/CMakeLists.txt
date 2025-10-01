@@ -60,7 +60,7 @@ _add_test( kl_util )
 
 _add_test( heaps )
 
-#_add_test( kl_mem_constr )
+_add_test( kl_mem_constr )
 
 _add_test( isomorphic_subgraph_scheduler )
 

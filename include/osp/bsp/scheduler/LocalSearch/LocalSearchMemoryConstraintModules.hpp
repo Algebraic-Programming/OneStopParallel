@@ -41,8 +41,9 @@ struct is_local_search_memory_constraint<
                    decltype(std::declval<T>().apply_move(std::declval<vertex_idx_t<typename T::Graph_impl_t>>(),
                                                          std::declval<unsigned>(), std::declval<unsigned>(),
                                                          std::declval<unsigned>(), std::declval<unsigned>())),
-                   decltype(std::declval<T>().recompute_memory_datastructure(std::declval<unsigned>(),
+                   decltype(std::declval<T>().compute_memory_datastructure(std::declval<unsigned>(),
                                                                              std::declval<unsigned>())),
+                   decltype(std::declval<T>().swap_steps(std::declval<unsigned>(), std::declval<unsigned>())),
                    decltype(std::declval<T>().reset_superstep(std::declval<unsigned>())),
                    decltype(std::declval<T>().override_superstep(std::declval<unsigned>(), std::declval<unsigned>(),
                                                                  std::declval<unsigned>(), std::declval<unsigned>())),
@@ -97,12 +98,16 @@ struct ls_local_memory_constraint {
         step_processor_memory[from_step][from_proc] -= graph->vertex_mem_weight(vertex);
     }
 
-    inline void forward_move(vertex_idx_t<Graph_t> vertex, unsigned, unsigned, unsigned to_proc, unsigned to_step) {
-        step_processor_memory[to_step][to_proc] += graph->vertex_mem_weight(vertex);
-        // step_processor_memory[from_step][from_proc] -= graph->vertex_mem_weight(vertex);
+    inline bool can_move(vertex_idx_t<Graph_t> vertex, const unsigned proc, unsigned step) const {
+        return step_processor_memory[step][proc] + graph->vertex_mem_weight(vertex) <=
+               set_schedule->getInstance().getArchitecture().memoryBound(proc);
     }
 
-    void recompute_memory_datastructure(unsigned start_step, unsigned end_step) {
+    void swap_steps(const unsigned step1, const unsigned step2) {
+        std::swap(step_processor_memory[step1], step_processor_memory[step2]);
+    } 
+
+    void compute_memory_datastructure(unsigned start_step, unsigned end_step) {
 
         for (unsigned step = start_step; step <= end_step; step++) {
 
@@ -120,6 +125,11 @@ struct ls_local_memory_constraint {
 
     inline void clear() { step_processor_memory.clear(); }
 
+    inline void forward_move(vertex_idx_t<Graph_t> vertex, unsigned, unsigned, unsigned to_proc, unsigned to_step) {
+        step_processor_memory[to_step][to_proc] += graph->vertex_mem_weight(vertex);
+        // step_processor_memory[from_step][from_proc] -= graph->vertex_mem_weight(vertex);
+    }
+
     inline void reset_superstep(unsigned step) {
 
         for (unsigned proc = 0; proc < set_schedule->getInstance().getArchitecture().numberOfProcessors(); proc++) {
@@ -131,10 +141,16 @@ struct ls_local_memory_constraint {
         step_processor_memory[step][proc] = step_processor_memory[with_step][with_proc];
     }
 
-    inline bool can_move(vertex_idx_t<Graph_t> vertex, const unsigned proc, unsigned step) const {
-        return step_processor_memory[step][proc] + graph->vertex_mem_weight(vertex) <=
-               set_schedule->getInstance().getArchitecture().memoryBound(proc);
-    }
+    bool satisfied_memory_constraint() const {
+        for (unsigned step = 0; step < set_schedule->numberOfSupersteps(); step++) {
+            for (unsigned proc = 0; proc < set_schedule->getInstance().numberOfProcessors(); proc++) {
+                if (step_processor_memory[step][proc] > set_schedule->getInstance().getArchitecture().memoryBound(proc)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }  
 };
 
 template<typename Graph_t>
@@ -244,7 +260,12 @@ struct ls_local_inc_edges_memory_constraint {
         }
     }
 
-    void recompute_memory_datastructure(unsigned start_step, unsigned end_step) {
+    void swap_steps(const unsigned step1, const unsigned step2) {
+        std::swap(step_processor_memory[step1], step_processor_memory[step2]);
+        std::swap(step_processor_pred[step1], step_processor_pred[step2]);
+    }
+
+    void compute_memory_datastructure(unsigned start_step, unsigned end_step) {
 
         for (unsigned step = start_step; step <= end_step; step++) {
 
@@ -354,6 +375,11 @@ struct ls_local_sources_inc_edges_memory_constraint {
 
     ls_local_sources_inc_edges_memory_constraint() : set_schedule(nullptr), vector_schedule(nullptr), graph(nullptr) {}
 
+    inline void swap_steps(const unsigned step1, const unsigned step2) {
+        std::swap(step_processor_memory[step1], step_processor_memory[step2]);
+        std::swap(step_processor_pred[step1], step_processor_pred[step2]);
+    }    
+
     inline void initialize(const SetSchedule<Graph_t> &set_schedule_, const VectorSchedule<Graph_t> &vec_schedule_) {
 
         if (set_schedule_.getInstance().getArchitecture().getMemoryConstraintType() != MEMORY_CONSTRAINT_TYPE::LOCAL_SOURCES_INC_EDGES) {
@@ -449,7 +475,7 @@ struct ls_local_sources_inc_edges_memory_constraint {
         }
     }
 
-    void recompute_memory_datastructure(unsigned start_step, unsigned end_step) {
+    void compute_memory_datastructure(unsigned start_step, unsigned end_step) {
 
         for (unsigned step = start_step; step <= end_step; step++) {
 
@@ -566,230 +592,3 @@ struct ls_local_sources_inc_edges_memory_constraint {
 };
 
 } // namespace osp
-
-// APPLY MOVE
-//         } else if (instance->getArchitecture().getMemoryConstraintType() == PERSISTENT_AND_TRANSIENT) {
-
-//             if (move.to_proc != move.from_proc) {
-
-//                 current_proc_persistent_memory[move.to_proc] +=
-//                     instance->getComputationalDag().vertex_mem_weight(move.node);
-//                 current_proc_persistent_memory[move.from_proc] -=
-//                     instance->getComputationalDag().vertex_mem_weight(move.node);
-
-//                 current_proc_transient_memory[move.to_proc] =
-//                     std::max(current_proc_transient_memory[move.to_proc],
-//                              instance->getComputationalDag().vertex_comm_weight(move.node));
-
-//                 if (current_proc_transient_memory[move.from_proc] ==
-//                     instance->getComputationalDag().vertex_comm_weight(move.node)) {
-
-//                     current_proc_transient_memory[move.from_proc] = 0;
-
-//                     for (unsigned step = 0; step < num_steps(); step++) {
-//                         for (const auto &node : set_schedule.step_processor_vertices[step][move.from_proc]) {
-//                             current_proc_transient_memory[move.from_proc] =
-//                                 std::max(current_proc_transient_memory[move.from_proc],
-//                                          instance->getComputationalDag().vertex_comm_weight(node));
-//                         }
-//                     }
-//                 }
-//             }
-//         } else if (instance->getArchitecture().getMemoryConstraintType() == LOCAL_IN_OUT) {
-
-//             step_processor_memory[move.to_step][move.to_proc] +=
-//                 instance->getComputationalDag().vertex_mem_weight(move.node) +
-//                 instance->getComputationalDag().vertex_comm_weight(move.node);
-
-//             step_processor_memory[move.from_step][move.from_proc] -=
-//                 (instance->getComputationalDag().vertex_mem_weight(move.node) +
-//                  instance->getComputationalDag().vertex_comm_weight(move.node));
-
-//             for (const auto &pred : instance->getComputationalDag().parents(move.node)) {
-
-//                 if (vector_schedule.assignedProcessor(pred) == move.to_proc &&
-//                     vector_schedule.assignedSuperstep(pred) == move.to_step) {
-//                     step_processor_memory[move.to_step][move.to_proc] -=
-//                         instance->getComputationalDag().vertex_comm_weight(pred);
-//                 } else if (vector_schedule.assignedProcessor(pred) == move.from_proc &&
-//                            vector_schedule.assignedSuperstep(pred) == move.from_step) {
-//                     step_processor_memory[move.from_step][move.from_proc] +=
-//                         instance->getComputationalDag().vertex_comm_weight(pred);
-//                 }
-//             }
-
-//             for (const auto &succ : instance->getComputationalDag().children(move.node)) {
-
-//                 if (vector_schedule.assignedProcessor(succ) == move.to_proc &&
-//                     vector_schedule.assignedSuperstep(succ) == move.to_step) {
-//                     step_processor_memory[move.to_step][move.to_proc] -=
-//                         instance->getComputationalDag().vertex_comm_weight(move.node);
-//                 } else if (vector_schedule.assignedProcessor(succ) == move.from_proc &&
-//                            vector_schedule.assignedSuperstep(succ) == move.from_step) {
-//                     step_processor_memory[move.from_step][move.from_proc] +=
-//                         instance->getComputationalDag().vertex_comm_weight(move.node);
-//                 }
-//             }
-
-// COMPUTE
-// if (use_memory_constraint) {
-
-//     if (instance->getArchitecture().getMemoryConstraintType() == PERSISTENT_AND_TRANSIENT) {
-//         for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
-//             current_proc_persistent_memory[proc] = 0;
-//             current_proc_transient_memory[proc] = 0;
-//         }
-//     }
-
-//     for (unsigned step = start_step; step <= end_step; step++) {
-
-//         step_max_work[step] = 0;
-//         step_second_max_work[step] = 0;
-
-//         for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
-
-//             step_processor_work[step][proc] = 0;
-
-//             if (instance->getArchitecture().getMemoryConstraintType() == LOCAL) {
-
-//                 step_processor_memory[step][proc] = 0;
-
-//             } else if (instance->getArchitecture().getMemoryConstraintType() == LOCAL_INC_EDGES) {
-
-//                 step_processor_memory[step][proc] = 0;
-//                 step_processor_pred[step][proc].clear();
-
-//             } else if (instance->getArchitecture().getMemoryConstraintType() == LOCAL_SOURCES_INC_EDGES) {
-
-//                 step_processor_memory[step][proc] = 0;
-//                 step_processor_pred[step][proc].clear();
-//             }
-
-//             for (const auto &node : set_schedule.step_processor_vertices[step][proc]) {
-//                 step_processor_work[step][proc] += instance->getComputationalDag().vertex_work_weight(node);
-
-//                 if (instance->getArchitecture().getMemoryConstraintType() == LOCAL) {
-
-//                     step_processor_memory[step][proc] +=
-//                         instance->getComputationalDag().vertex_mem_weight(node);
-
-//                 } else if (instance->getArchitecture().getMemoryConstraintType() == PERSISTENT_AND_TRANSIENT)
-//                 {
-//                     current_proc_persistent_memory[proc] +=
-//                         instance->getComputationalDag().vertex_mem_weight(node);
-//                     current_proc_transient_memory[proc] =
-//                         std::max(current_proc_transient_memory[proc],
-//                                  instance->getComputationalDag().vertex_comm_weight(node));
-
-//                     if (current_proc_transient_memory[proc] + current_proc_persistent_memory[proc] >
-//                         instance->memoryBound(proc)) {
-//                         throw std::runtime_error(
-//                             "Memory constraint PERSISTENT_AND_TRANSIENT not properly implemented");
-//                     }
-//                 } else if (instance->getArchitecture().getMemoryConstraintType() == LOCAL_IN_OUT) {
-
-//                     step_processor_memory[step][proc] +=
-//                         instance->getComputationalDag().vertex_mem_weight(node) +
-//                         instance->getComputationalDag().vertex_comm_weight(node);
-
-//                     for (const auto &pred : instance->getComputationalDag().parents(node)) {
-
-//                         if (vector_schedule.assignedProcessor(pred) == proc &&
-//                             vector_schedule.assignedSuperstep(pred) == step) {
-
-//                             step_processor_memory[step][proc] -=
-//                                 instance->getComputationalDag().vertex_comm_weight(pred);
-//                         }
-//                     }
-
-// CAN ADD
-//     } else if (current_schedule.instance->getArchitecture().getMemoryConstraintType() ==
-//                PERSISTENT_AND_TRANSIENT) {
-//         if (current_schedule.current_proc_persistent_memory[new_proc] +
-//                 current_schedule.instance->getComputationalDag().vertex_mem_weight(node) +
-//                 std::max(current_schedule.current_proc_transient_memory[new_proc],
-//                          current_schedule.instance->getComputationalDag().vertex_comm_weight(node)) >
-//             current_schedule.instance->memoryBound(new_proc)) {
-
-//             node_gains[node][new_proc][0] = std::numeric_limits<double>::lowest();
-//             node_gains[node][new_proc][1] = std::numeric_limits<double>::lowest();
-//             node_gains[node][new_proc][2] = std::numeric_limits<double>::lowest();
-//         }
-//     } else if (current_schedule.instance->getArchitecture().getMemoryConstraintType() == LOCAL_IN_OUT) {
-
-//         memw_t inc_memory_0 = current_schedule.instance->getComputationalDag().vertex_mem_weight(node) +
-//                               current_schedule.instance->getComputationalDag().vertex_comm_weight(node);
-
-//         memw_t inc_memory_1 = inc_memory_0;
-//         memw_t inc_memory_2 = inc_memory_0;
-
-//         for (const auto &pred : current_schedule.instance->getComputationalDag().parents(node)) {
-
-//             if (current_schedule.vector_schedule.assignedProcessor(pred) == new_proc) {
-
-//                 if (current_schedule.vector_schedule.assignedSuperstep(pred) ==
-//                     current_schedule.vector_schedule.assignedSuperstep(node)) {
-//                     inc_memory_1 -=
-//                         current_schedule.instance->getComputationalDag().vertex_comm_weight(pred);
-//                 } else if (current_schedule.vector_schedule.assignedSuperstep(pred) ==
-//                            (current_schedule.vector_schedule.assignedSuperstep(node) - 1)) {
-//                     inc_memory_0 -=
-//                         current_schedule.instance->getComputationalDag().vertex_comm_weight(pred);
-//                 } else if (current_schedule.vector_schedule.assignedSuperstep(pred) ==
-//                            (current_schedule.vector_schedule.assignedSuperstep(node) + 1)) {
-//                     inc_memory_2 -=
-//                         current_schedule.instance->getComputationalDag().vertex_comm_weight(pred);
-//                 }
-//             }
-
-//             for (const auto &succ : current_schedule.instance->getComputationalDag().children(node)) {
-
-//                 if (current_schedule.vector_schedule.assignedProcessor(succ) == new_proc) {
-
-//                     if (current_schedule.vector_schedule.assignedSuperstep(succ) ==
-//                         current_schedule.vector_schedule.assignedSuperstep(node)) {
-//                         inc_memory_1 -=
-//                             current_schedule.instance->getComputationalDag().vertex_comm_weight(node);
-//                     } else if (current_schedule.vector_schedule.assignedSuperstep(succ) ==
-//                                (current_schedule.vector_schedule.assignedSuperstep(node) - 1)) {
-//                         inc_memory_0 -=
-//                             current_schedule.instance->getComputationalDag().vertex_comm_weight(node);
-//                     } else if (current_schedule.vector_schedule.assignedSuperstep(succ) ==
-//                                (current_schedule.vector_schedule.assignedSuperstep(node) + 1)) {
-//                         inc_memory_2 -=
-//                             current_schedule.instance->getComputationalDag().vertex_comm_weight(node);
-//                     }
-//                 }
-//             }
-
-//             if (current_schedule.step_processor_memory[current_schedule.vector_schedule
-//                                                            .assignedSuperstep(node)][new_proc] +
-//                     inc_memory_1 >
-//                 current_schedule.instance->memoryBound(new_proc)) {
-
-//                 node_gains[node][new_proc][1] = std::numeric_limits<double>::lowest();
-//             }
-
-//             if (current_schedule.vector_schedule.assignedSuperstep(node) > 0) {
-
-//                 if (current_schedule.step_processor_memory
-//                             [current_schedule.vector_schedule.assignedSuperstep(node) - 1][new_proc] +
-//                         inc_memory_0 >
-//                     current_schedule.instance->memoryBound(new_proc)) {
-
-//                     node_gains[node][new_proc][0] = std::numeric_limits<double>::lowest();
-//                 }
-//             }
-
-//             if (current_schedule.vector_schedule.assignedSuperstep(node) <
-//                 current_schedule.num_steps() - 1) {
-
-//                 if (current_schedule.step_processor_memory
-//                             [current_schedule.vector_schedule.assignedSuperstep(node) + 1][new_proc] +
-//                         inc_memory_2 >
-//                     current_schedule.instance->memoryBound(new_proc)) {
-
-//                     node_gains[node][new_proc][2] = std::numeric_limits<double>::lowest();
-//                 }
-//             }
-//         }

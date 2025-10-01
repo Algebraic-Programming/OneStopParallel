@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(kl_lambda_improver_with_node_types_test) {
         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
         BOOST_CHECK(schedule.satisfiesNodeTypeConstraints());
 
-        kl_total_lambda_comm_improver<graph, no_local_search_memory_constraint, 1, true> kl;
+        kl_total_lambda_comm_improver<graph, no_local_search_memory_constraint, 1> kl;
         
         auto status = kl.improveSchedule(schedule);
 
@@ -203,7 +203,7 @@ BOOST_AUTO_TEST_CASE(kl_lambda_improver_on_test_graphs) {
         BOOST_CHECK_EQUAL(&schedule.getInstance(), &instance);
         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
-        kl_total_lambda_comm_improver<graph, no_local_search_memory_constraint, 1, true> kl;
+        kl_total_lambda_comm_improver<graph, no_local_search_memory_constraint, 1> kl;
         
         auto status = kl.improveSchedule(schedule);
 
@@ -253,7 +253,7 @@ BOOST_AUTO_TEST_CASE(kl_lambda_improver_on_test_graphs) {
 
 //     schedule.updateNumberOfSupersteps();
     
-//     using cost_f = kl_hyper_total_comm_cost_function<graph, double, no_local_search_memory_constraint, 1, true>;  
+//     using cost_f = kl_hyper_total_comm_cost_function<graph, double, no_local_search_memory_constraint, 1>;  
 //     using kl_improver_test = kl_improver_test<graph, cost_f, no_local_search_memory_constraint, 1, double>;
 //     kl_improver_test kl;
     
@@ -402,7 +402,7 @@ BOOST_AUTO_TEST_CASE(kl_lambda_improver_on_test_graphs) {
 
 //     schedule.updateNumberOfSupersteps();
     
-//     using cost_f = kl_hyper_total_comm_cost_function<graph, double, no_local_search_memory_constraint, 1, true>; 
+//     using cost_f = kl_hyper_total_comm_cost_function<graph, double, no_local_search_memory_constraint, 1>; 
 //     using kl_improver_test = kl_improver_test<graph, cost_f, no_local_search_memory_constraint, 1, double>;
 //     kl_improver_test kl;
     
@@ -534,7 +534,7 @@ BOOST_AUTO_TEST_CASE(kl_lambda_improver_inner_loop_penalty_test) {
     schedule.updateNumberOfSupersteps();
 
     
-    using cost_f = kl_hyper_total_comm_cost_function<graph, double, no_local_search_memory_constraint, 1, true>; 
+    using cost_f = kl_hyper_total_comm_cost_function<graph, double, no_local_search_memory_constraint, 1>; 
     using kl_improver_test = kl_improver_test<graph, cost_f, no_local_search_memory_constraint, 1, double>;
     kl_improver_test kl;
     
@@ -630,7 +630,7 @@ BOOST_AUTO_TEST_CASE(kl_lambda_improver_inner_loop_lambda_map_test) {
 
     schedule.updateNumberOfSupersteps();
     
-    using cost_f = kl_hyper_total_comm_cost_function<graph, double, no_local_search_memory_constraint, 1, true>; 
+    using cost_f = kl_hyper_total_comm_cost_function<graph, double, no_local_search_memory_constraint, 1>; 
     using kl_improver_test = kl_improver_test<graph, cost_f, no_local_search_memory_constraint, 1, double>;
     kl_improver_test kl;
     
@@ -698,7 +698,7 @@ BOOST_AUTO_TEST_CASE(kl_lambda_improver_inner_loop_lambda_map_test) {
 };
 
 // BOOST_AUTO_TEST_CASE(kl_lambda_total_comm_large_test_graphs) {
-//     std::vector<std::string> filenames_graph = large_test_graphs();
+//     std::vector<std::string> filenames_graph = large_spaa_graphs();
 //     using graph = computational_dag_edge_idx_vector_impl_def_int_t;
 //     // Getting root git directory
 //     std::filesystem::path cwd = std::filesystem::current_path();
@@ -747,7 +747,7 @@ BOOST_AUTO_TEST_CASE(kl_lambda_improver_inner_loop_lambda_map_test) {
 //         BOOST_CHECK_EQUAL(&schedule.getInstance(), &instance);
 //         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
-//         kl_total_lambda_comm_improver<graph,no_local_search_memory_constraint,1,true> kl;
+//         kl_total_lambda_comm_improver<graph,no_local_search_memory_constraint,1> kl;
 //         auto start_time = std::chrono::high_resolution_clock::now();
 //         auto status = kl.improveSchedule(schedule);
 //         auto finish_time = std::chrono::high_resolution_clock::now();
@@ -776,7 +776,7 @@ BOOST_AUTO_TEST_CASE(kl_lambda_improver_inner_loop_lambda_map_test) {
 
 
 // BOOST_AUTO_TEST_CASE(kl_lambda_total_comm_large_test_graphs_mt) {
-//     std::vector<std::string> filenames_graph = large_test_graphs();
+//     std::vector<std::string> filenames_graph = large_spaa_graphs();
 //     using graph = computational_dag_edge_idx_vector_impl_def_int_t;
 //     // Getting root git directory
 //     std::filesystem::path cwd = std::filesystem::current_path();
@@ -825,7 +825,7 @@ BOOST_AUTO_TEST_CASE(kl_lambda_improver_inner_loop_lambda_map_test) {
 //         BOOST_CHECK_EQUAL(&schedule.getInstance(), &instance);
 //         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
-//         kl_total_lambda_comm_improver_mt<graph,no_local_search_memory_constraint,1,true> kl;
+//         kl_total_lambda_comm_improver_mt<graph,no_local_search_memory_constraint,1> kl;
 //         auto start_time = std::chrono::high_resolution_clock::now();
 //         auto status = kl.improveSchedule(schedule);
 //         auto finish_time = std::chrono::high_resolution_clock::now();

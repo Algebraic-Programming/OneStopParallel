@@ -268,7 +268,7 @@ class kl_current_schedule {
     virtual void compute_work_memory_datastructures(unsigned start_step, unsigned end_step) {
 
         if constexpr (use_memory_constraint) {
-            memory_constraint.recompute_memory_datastructure(start_step, end_step);
+            memory_constraint.compute_memory_datastructure(start_step, end_step);
         }
 
         for (unsigned step = start_step; step <= end_step; step++) {
