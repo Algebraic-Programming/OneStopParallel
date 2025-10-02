@@ -23,27 +23,17 @@ limitations under the License.
 #include "osp/graph_algorithms/directed_graph_util.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 #include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
-#include <filesystem>
-#include <iostream>
+#include "test_utils.hpp"
 
 using namespace osp;
 
 BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test)
 {
-
     using graph_t = computational_dag_vector_impl_def_t;
-
     graph_t graph;
 
-    // Getting root git directory
-    std::filesystem::path cwd = std::filesystem::current_path();
-    std::cout << cwd << std::endl;
-    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
-        cwd = cwd.parent_path();
-        std::cout << cwd << std::endl;
-    }
-
-    file_reader::readComputationalDagHyperdagFormat((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(), graph);
+    const auto project_root = get_project_root();
+    file_reader::readComputationalDagHyperdagFormat((project_root / "data/spaa/tiny/instance_bicgstab.hdag").string(), graph);
 
     MerkleHashComputer<graph_t, uniform_node_hash_func<vertex_idx_t<graph_t>>> m_hash(graph);
 

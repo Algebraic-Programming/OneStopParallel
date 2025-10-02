@@ -27,7 +27,7 @@ limitations under the License.
 #include <filesystem>
 #include <limits>
 
-#include "osp/concepts/computational_dag_concept.hpp"
+#include "osp/concepts/constructable_computational_dag_concept.hpp"
 #include "osp/auxiliary/io/filepath_checker.hpp"
 
 namespace osp {

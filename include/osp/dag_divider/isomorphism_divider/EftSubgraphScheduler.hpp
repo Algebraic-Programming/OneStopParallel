@@ -51,7 +51,7 @@ public:
 
 private:
 
-    static constexpr bool verbose = true;
+    static constexpr bool verbose = false;
 
     using job_id_t = vertex_idx_t<Graph_t>;
 

@@ -17,7 +17,8 @@ limitations under the License.
 */
 
 #include <iostream>
-#include "WavefrontOrbitProcessor.hpp"
+#include "OrbitGraphProcessor.hpp"
+#include "WavefrontOrbitProcessor.hpp" // For subgraph struct
 #include "EftSubgraphScheduler.hpp"
 #include "osp/auxiliary/io/DotFileWriter.hpp"
 #include "osp/bsp/scheduler/Scheduler.hpp"
@@ -31,7 +32,7 @@ class IsomorphicSubgraphScheduler {
 
     private:
 
-    static constexpr bool verbose = true;
+    static constexpr bool verbose = false;
     
     size_t symmetry_ = 2;
     Scheduler<Constr_Graph_t> * bsp_scheduler_;
@@ -52,14 +53,38 @@ class IsomorphicSubgraphScheduler {
     }
 
     std::vector<vertex_idx_t<Graph_t>> compute_partition(const BspInstance<Graph_t>& instance) {
-        WavefrontOrbitProcessor<Graph_t> wavefront(symmetry_);
-        wavefront.discover_isomorphic_groups(instance.getComputationalDag());
-        auto isomorphic_groups = wavefront.get_isomorphic_groups();
-        auto finalized_subgraphs = wavefront.get_finalized_subgraphs();
+        OrbitGraphProcessor<Graph_t> processor(symmetry_);
+        processor.discover_isomorphic_groups(instance.getComputationalDag());
+        const auto& orbit_processor_groups = processor.get_final_groups();
+
+        // Adapt data structures from OrbitGraphProcessor to the format expected by the rest of the function.
+        std::vector<subgraph<Graph_t>> finalized_subgraphs;
+        std::vector<std::vector<unsigned>> isomorphic_groups;
+        isomorphic_groups.reserve(orbit_processor_groups.size());
+
+        for (const auto& group : orbit_processor_groups) {
+            std::vector<unsigned> new_iso_group_indices;
+            new_iso_group_indices.reserve(group.subgraphs.size());
+            for (const auto& sg_vertices : group.subgraphs) {
+                subgraph<Graph_t> new_sg;
+                new_sg.vertices = sg_vertices;
+                // The following properties are not directly provided by OrbitGraphProcessor
+                // but are needed by downstream logic. We can compute them.
+                new_sg.work_weight = 0;
+                new_sg.memory_weight = 0;
+                for (const auto& v : sg_vertices) {
+                    new_sg.work_weight += instance.getComputationalDag().vertex_work_weight(v);
+                    new_sg.memory_weight += instance.getComputationalDag().vertex_mem_weight(v);
+                }
+                new_iso_group_indices.push_back(static_cast<unsigned>(finalized_subgraphs.size()));
+                finalized_subgraphs.push_back(std::move(new_sg));
+            }
+            isomorphic_groups.push_back(std::move(new_iso_group_indices));
+        }
 
         if (plot_dot_graphs_) {
             DotFileWriter writer;
-            writer.write_colored_graph("isomorphic_groups.dot", instance.getComputationalDag(), wavefront.get_vertex_color_map());
+            writer.write_colored_graph("isomorphic_groups.dot", instance.getComputationalDag(), processor.get_final_contraction_map());
         }
 
         const unsigned min_proc_type_count = instance.getArchitecture().getMinProcessorTypeCount();

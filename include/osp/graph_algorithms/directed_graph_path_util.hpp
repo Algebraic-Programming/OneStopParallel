@@ -32,7 +32,18 @@ limitations under the License.
 #include "directed_graph_util.hpp"
 
 namespace osp {
-
+/**
+ * @brief Checks if a path exists between two vertices in a directed graph.
+ *
+ * This function performs a Breadth-First Search (BFS) starting from the `src`
+ * vertex to determine if the `dest` vertex is reachable.
+ *
+ * @tparam Graph_t The type of the graph.
+ * @param src The source vertex.
+ * @param dest The destination vertex.
+ * @param graph The graph to search in.
+ * @return true if a path exists from src to dest, false otherwise.
+ */
 template<typename Graph_t>
 bool has_path(const vertex_idx_t<Graph_t> src, const vertex_idx_t<Graph_t> dest, const Graph_t &graph) {
 

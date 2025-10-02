@@ -46,14 +46,14 @@ struct subgraph {
     using VertexType = vertex_idx_t<Graph_t>;
 
     std::vector<VertexType> vertices;
-    size_t current_hash; // Hash of the orbit this subgraph currently belongs to
-    unsigned family_id;
+    size_t current_hash = 0; // Hash of the orbit this subgraph currently belongs to
+    unsigned family_id = 0;
 
-    v_workw_t<Graph_t> work_weight;
-    v_memw_t<Graph_t> memory_weight;
+    v_workw_t<Graph_t> work_weight = 0;
+    v_memw_t<Graph_t> memory_weight = 0;
     
-    unsigned start_wavefront;
-    unsigned end_wavefront;
+    unsigned start_wavefront = 0;
+    unsigned end_wavefront = 0;
 
     subgraph() = default;
 

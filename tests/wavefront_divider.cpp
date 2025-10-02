@@ -19,9 +19,6 @@ limitations under the License.
 #define BOOST_TEST_MODULE wavefront_divider
 #include <boost/test/unit_test.hpp>
 
-#include <filesystem>
-#include <iostream>
-
 #include "osp/bsp/scheduler/GreedySchedulers/BspLocking.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_total_comm.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_total_cut.hpp"
@@ -30,6 +27,7 @@ limitations under the License.
 #include "osp/dag_divider/WavefrontComponentScheduler.hpp"
 #include "osp/auxiliary/io/dot_graph_file_reader.hpp"
 #include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
+#include "test_utils.hpp"
 
 #include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 
@@ -77,22 +75,15 @@ BOOST_AUTO_TEST_CASE(wavefront_component_divider) {
 
     std::vector<std::string> filenames_graph = test_graphs_dot();
 
-    // Getting root git directory
-    std::filesystem::path cwd = std::filesystem::current_path();
-    std::cout << cwd << std::endl;
-    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
-        cwd = cwd.parent_path();
-        std::cout << cwd << std::endl;
-    }
+    const auto project_root = get_project_root();
 
     using graph_t = computational_dag_edge_idx_vector_impl_def_t;
 
     for (auto &filename_graph : filenames_graph) {
-
         BspInstance<graph_t> instance;
         auto &graph = instance.getComputationalDag();
 
-        auto status_graph = file_reader::readComputationalDagDotFormat((cwd / filename_graph).string(), graph);
+        auto status_graph = file_reader::readComputationalDagDotFormat((project_root / filename_graph).string(), graph);
 
         if (!status_graph) {
 
@@ -116,22 +107,15 @@ BOOST_AUTO_TEST_CASE(wavefront_component_parallelism_divider) {
 
     std::vector<std::string> filenames_graph = tiny_spaa_graphs();
 
-    // Getting root git directory
-    std::filesystem::path cwd = std::filesystem::current_path();
-    std::cout << cwd << std::endl;
-    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
-        cwd = cwd.parent_path();
-        std::cout << cwd << std::endl;
-    }
+    const auto project_root = get_project_root();
 
     using graph_t = computational_dag_edge_idx_vector_impl_def_t;
 
     for (auto &filename_graph : filenames_graph) {
-
         BspInstance<graph_t> instance;
         auto &graph = instance.getComputationalDag();
 
-        auto status_graph = file_reader::readComputationalDagHyperdagFormat((cwd / filename_graph).string(), graph);
+        auto status_graph = file_reader::readComputationalDagHyperdagFormat((project_root / filename_graph).string(), graph);
 
         if (!status_graph) {
 

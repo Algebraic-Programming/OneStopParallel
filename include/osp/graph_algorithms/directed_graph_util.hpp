@@ -589,4 +589,68 @@ std::size_t num_common_children(const Graph_t &graph, vertex_idx_t<Graph_t> v1, 
     return num;
 }
 
+/**
+ * @brief Computes the weakly connected components of a directed graph.
+ *
+ * A weakly connected component is a maximal subgraph where for any two vertices
+ * u, v in the subgraph, there is a path between u and v in the underlying
+ * undirected graph.
+ *
+ * @tparam Graph_t The type of the graph, which must satisfy the `directed_graph` concept.
+ * @param graph The input directed graph.
+ * @param[out] components A vector where `components[i]` will be the component ID for vertex `i`.
+ * @return The total number of weakly connected components.
+ */
+template<typename Graph_t>
+std::size_t compute_weakly_connected_components(const Graph_t &graph, std::vector<vertex_idx_t<Graph_t>>& components) {
+    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+    using VertexType = vertex_idx_t<Graph_t>;
+
+    if (graph.num_vertices() == 0) {
+        components.clear();
+        return 0;
+    }
+
+    components.assign(graph.num_vertices(), std::numeric_limits<VertexType>::max());
+    VertexType component_id = 0;
+
+    for (const auto& v : graph.vertices()) {
+        if (components[v] == std::numeric_limits<VertexType>::max()) {
+            std::vector<VertexType> q;
+            q.push_back(v);
+            components[v] = component_id;
+            size_t head = 0;
+
+            while(head < q.size()) {
+                VertexType u = q[head++];
+                for (const auto& neighbor : graph.parents(u)) {
+                    if (components[neighbor] == std::numeric_limits<VertexType>::max()) {
+                        components[neighbor] = component_id;
+                        q.push_back(neighbor);
+                    }
+                }
+                for (const auto& neighbor : graph.children(u)) {
+                    if (components[neighbor] == std::numeric_limits<VertexType>::max()) {
+                        components[neighbor] = component_id;
+                        q.push_back(neighbor);
+                    }
+                }
+            }
+            component_id++;
+        }
+    }
+    return component_id;
+}
+
+/**
+ * @brief Counts the number of weakly connected components in a directed graph.
+ * @param graph The input directed graph.
+ * @return The number of weakly connected components.
+ */
+template<typename Graph_t>
+std::size_t count_weakly_connected_components(const Graph_t &graph) {
+    std::vector<vertex_idx_t<Graph_t>> components;
+    return compute_weakly_connected_components(graph, components);
+}
+
 } // namespace osp

@@ -35,27 +35,16 @@ limitations under the License.
 #include "osp/dag_divider/isomorphism_divider/EftSubgraphScheduler.hpp"
 #include "osp/dag_divider/isomorphism_divider/IsomorphicSubgraphScheduler.hpp"
 
-
-#include <filesystem>
-#include <iostream>
+#include "test_utils.hpp"
 
 using namespace osp;
 
 BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test)
 {
-
     using graph_t = computational_dag_vector_impl_def_t;
 
-    // Getting root git directory
-    std::filesystem::path cwd = std::filesystem::current_path();
-    std::cout << cwd << std::endl;
-    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
-        cwd = cwd.parent_path();
-        std::cout << cwd << std::endl;
-    }
-
     BspInstance<graph_t> instance;
-    file_reader::readComputationalDagDotFormat(".dot", instance.getComputationalDag());
+    file_reader::readComputationalDagDotFormat("", instance.getComputationalDag());
 
     for (const auto& v : instance.vertices()) {
 

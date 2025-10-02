@@ -21,7 +21,6 @@ limitations under the License.
 #include <boost/test/unit_test.hpp>
 #include <iostream>
 #include <vector>
-#include <filesystem>
 
 #include "osp/graph_algorithms/computational_dag_util.hpp"
 #include "osp/graph_algorithms/directed_graph_edge_desc_util.hpp"
@@ -33,6 +32,7 @@ limitations under the License.
 #include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 #include "osp/graph_implementations/boost_graphs/boost_graph.hpp"
 #include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
+#include "test_utils.hpp"
 
 
 std::vector<std::string> large_spaa_graphs() {
@@ -55,20 +55,13 @@ BOOST_AUTO_TEST_CASE(longest_edge_triangle_parallel) {
     // static_assert(std::is_base_of<Scheduler, T>::value, "Class is not a scheduler!");
     std::vector<std::string> filenames_graph = large_spaa_graphs();
 
-    std::filesystem::path cwd = std::filesystem::current_path();
-    std::cout << cwd << std::endl;
-    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
-        cwd = cwd.parent_path();
-        std::cout << cwd << std::endl;
-    }
-
+    const auto project_root = get_project_root();
 
     for (auto &filename_graph : filenames_graph) {
-
         graph_t graph;
 
 
-        bool status_graph = file_reader::readComputationalDagHyperdagFormat((cwd / filename_graph).string(),
+        bool status_graph = file_reader::readComputationalDagHyperdagFormat((project_root / filename_graph).string(),
                                                                                 graph);
 
         BOOST_CHECK(status_graph);
