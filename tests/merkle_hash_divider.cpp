@@ -23,6 +23,7 @@ limitations under the License.
 #include "osp/dag_divider/wavefront_divider/RecursiveWavefrontDivider.hpp"
 #include "osp/graph_algorithms/directed_graph_util.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
+#include "osp/graph_implementations/adj_list_impl/dag_vector_adapter.hpp"
 #include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 #include "osp/auxiliary/io/dot_graph_file_reader.hpp"
 #include "osp/auxiliary/io/DotFileWriter.hpp"
@@ -42,9 +43,11 @@ using namespace osp;
 BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test)
 {
     using graph_t = computational_dag_vector_impl_def_t;
-
-    BspInstance<graph_t> instance;
-    file_reader::readComputationalDagDotFormat("", instance.getComputationalDag());
+    using graph_t2 = graph_t;
+    //using graph_t2 = dag_vector_adapter<cdag_vertex_impl_unsigned,int>;
+   
+    BspInstance<graph_t2> instance;
+    //file_reader::readComputationalDagDotFormat("", instance.getComputationalDag());
 
     for (const auto& v : instance.vertices()) {
 
@@ -86,7 +89,7 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test)
     
     // auto schedule = pre_scheduler.run(input.instance, input.multiplicities, input.required_proc_types);
 
-    IsomorphicSubgraphScheduler<graph_t, graph_t> iso_scheduler(combo);
+    IsomorphicSubgraphScheduler<graph_t2, graph_t> iso_scheduler(combo);
     iso_scheduler.set_symmetry(2);
     iso_scheduler.set_plot_dot_graphs(true);
 

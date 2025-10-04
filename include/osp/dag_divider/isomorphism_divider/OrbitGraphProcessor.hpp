@@ -38,9 +38,16 @@ namespace osp {
  * It then partitions the DAG by grouping all nodes with the same hash into an "orbit".
  * A coarse graph is constructed where each node represents one such orbit.
  */
-template<typename Graph_t, typename node_hash_func_t = uniform_node_hash_func<vertex_idx_t<Graph_t>>>
+template<typename Graph_t, typename Constr_Graph_t>
 class OrbitGraphProcessor {
 public:
+    static_assert(is_computational_dag_v<Graph_t>, "Graph must be a computational DAG");
+    static_assert(is_computational_dag_v<Constr_Graph_t>, "Constr_Graph_t must be a computational DAG");
+    static_assert(is_constructable_cdag_v<Constr_Graph_t>,
+                  "Constr_Graph_t must satisfy the constructable_cdag_vertex concept");
+    static_assert(std::is_same_v<vertex_idx_t<Graph_t>, vertex_idx_t<Constr_Graph_t>>,
+                  "Graph_t and Constr_Graph_t must have the same vertex_idx types");
+
     using VertexType = vertex_idx_t<Graph_t>;
     
     // Represents a group of isomorphic subgraphs, corresponding to a single node in a coarse graph.
@@ -57,11 +64,11 @@ private:
     // using MerkleHashComputer_t = MerkleHashComputer<Graph_t, node_hash_func_t, true>;
 
     // Results from the first (orbit) coarsening step
-    Graph_t coarse_graph_;
+    Constr_Graph_t coarse_graph_;
     std::vector<VertexType> contraction_map_;
 
     // Results from the second (custom) coarsening step
-    Graph_t final_coarse_graph_;
+    Constr_Graph_t final_coarse_graph_;
     std::vector<VertexType> final_contraction_map_;
     std::vector<Group> final_groups_;
 
@@ -86,9 +93,9 @@ public:
      * @param dag The input computational DAG.
      */
     void discover_isomorphic_groups(const Graph_t &dag) {
-        coarse_graph_ = Graph_t();
+        coarse_graph_ = Constr_Graph_t();
         contraction_map_.clear();
-        final_coarse_graph_ = Graph_t();
+        final_coarse_graph_ = Constr_Graph_t();
         final_contraction_map_.clear();
         final_groups_.clear();
 
@@ -111,7 +118,7 @@ public:
 
         coarser_util::construct_coarse_dag(dag, coarse_graph_, contraction_map_);
 
-        Graph_t transitive_reduction; 
+        Constr_Graph_t transitive_reduction; 
         transitive_reduction_sparse(coarse_graph_, transitive_reduction);
         coarse_graph_ = std::move(transitive_reduction);
 
@@ -123,15 +130,15 @@ private:
     /**
      * @brief Greedily merges nodes in the orbit graph based on structural and symmetry constraints.
      */
-    void perform_coarsening(const Graph_t& original_dag, const Graph_t& initial_coarse_graph) {
-        final_coarse_graph_ = Graph_t();
+    void perform_coarsening(const Graph_t& original_dag, const Constr_Graph_t& initial_coarse_graph) {
+        final_coarse_graph_ = Constr_Graph_t();
         final_contraction_map_.clear();
         
         if (initial_coarse_graph.num_vertices() == 0) {
             return;
         }
 
-        Graph_t current_coarse_graph = initial_coarse_graph;
+        Constr_Graph_t current_coarse_graph = initial_coarse_graph;
         std::vector<Group> current_groups(initial_coarse_graph.num_vertices());
         std::vector<VertexType> current_contraction_map = contraction_map_;
 
@@ -166,7 +173,7 @@ private:
                 }
                 
                 // 2. Acyclicity & Critical Path
-                Graph_t temp_coarse_graph;
+                Constr_Graph_t temp_coarse_graph;
                 std::vector<VertexType> temp_contraction_map(current_coarse_graph.num_vertices());
                 VertexType new_idx = 0;
                 for (VertexType i = 0; i < temp_contraction_map.size(); ++i) {
@@ -276,7 +283,7 @@ private:
         std::sort(all_nodes.begin(), all_nodes.end());
 
         // 2. Create an induced subgraph and find its weakly connected components.
-        Graph_t induced_subgraph;
+        Constr_Graph_t induced_subgraph;
         create_induced_subgraph(original_dag, induced_subgraph, all_nodes);
 
         std::vector<VertexType> components; // local -> component_id

@@ -36,7 +36,7 @@ using namespace osp;
 using graph_t = computational_dag_vector_impl_def_t;
 
 template <typename Graph_t>
-void check_partitioning(const Graph_t& dag, const OrbitGraphProcessor<Graph_t>& processor) {
+void check_partitioning(const Graph_t& dag, const OrbitGraphProcessor<Graph_t, Graph_t>& processor) {
     const auto& final_coarse_graph = processor.get_final_coarse_graph();
     const auto& final_groups = processor.get_final_groups();
 
@@ -66,7 +66,7 @@ void check_partitioning(const Graph_t& dag, const OrbitGraphProcessor<Graph_t>& 
 //     graph_t dag;
 //     file_reader::readComputationalDagDotFormat("", dag);
 
-//     OrbitGraphProcessor<graph_t> processor(2); // Using a symmetry threshold of 2
+//     OrbitGraphProcessor<graph_t, graph_t> processor(2); // Using a symmetry threshold of 2
 //     processor.discover_isomorphic_groups(dag);
 
 //     const auto& coarse_graph = processor.get_coarse_graph();
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessor_SimpleMerge) {
 
     // Initial orbits: {0, 2} and {1, 3}. Coarse graph: 0 -> 1
     // With threshold 2, these should be merged.
-    OrbitGraphProcessor<graph_t> processor(2);
+    OrbitGraphProcessor<graph_t, graph_t> processor(2);
     processor.discover_isomorphic_groups(dag);
 
     const auto& final_coarse_graph = processor.get_final_coarse_graph();
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessor_ForkJoinNoMerge) {
     // Initial orbits: {0}, {1,2}, {3}. Coarse graph: 0 -> 1 -> 2
     // Merging 0 and 1 would result in a group of size 1 ({0,1,2}), which is not viable (threshold 2).
     // Merging 1 and 2 would also result in a group of size 1 ({1,2,3}), not viable.
-    OrbitGraphProcessor<graph_t> processor(2);
+    OrbitGraphProcessor<graph_t, graph_t> processor(2);
     processor.discover_isomorphic_groups(dag);
 
     const auto& final_coarse_graph = processor.get_final_coarse_graph();
@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessor_PartitionCheck_MediumGraph) {
     BOOST_REQUIRE_GT(dag.num_vertices(), 0);
 
     // Use a higher threshold to encourage more merging on this larger graph
-    OrbitGraphProcessor<graph_t> processor(4);
+    OrbitGraphProcessor<graph_t, graph_t> processor(4);
     processor.discover_isomorphic_groups(dag);
 
     // The main purpose of this test is to ensure the output is a valid partition.
@@ -203,7 +203,7 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessor_MultiPipelineMerge) {
     const auto dag = construct_multi_pipeline_dag<graph_t>(5, 4);
     BOOST_REQUIRE_EQUAL(dag.num_vertices(), 20);
 
-    OrbitGraphProcessor<graph_t> processor(5); // Set threshold to match pipeline count
+    OrbitGraphProcessor<graph_t, graph_t> processor(5); // Set threshold to match pipeline count
     processor.discover_isomorphic_groups(dag);
 
     const auto& final_coarse_graph = processor.get_final_coarse_graph();
@@ -230,7 +230,7 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessor_LadderNoMerge) {
     const auto dag = construct_ladder_dag<graph_t>(10);
     BOOST_REQUIRE_EQUAL(dag.num_vertices(), 22);
 
-    OrbitGraphProcessor<graph_t> processor(2);
+    OrbitGraphProcessor<graph_t, graph_t> processor(2);
     processor.discover_isomorphic_groups(dag);
     
     const auto& initial_coarse_graph = processor.get_coarse_graph();
@@ -249,7 +249,7 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessor_AsymmetricNoMerge) {
     const auto dag = construct_asymmetric_dag<graph_t>(30);
     BOOST_REQUIRE_EQUAL(dag.num_vertices(), 30);
 
-    OrbitGraphProcessor<graph_t> processor(2);
+    OrbitGraphProcessor<graph_t, graph_t> processor(2);
     processor.discover_isomorphic_groups(dag);
 
     const auto& final_coarse_graph = processor.get_final_coarse_graph();
@@ -270,7 +270,7 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessor_BinaryTreeNoMerge) {
     const auto dag = construct_binary_out_tree<graph_t>(4);
     BOOST_REQUIRE_EQUAL(dag.num_vertices(), (1 << 5) - 1);
 
-    OrbitGraphProcessor<graph_t> processor(2);
+    OrbitGraphProcessor<graph_t, graph_t> processor(2);
     processor.discover_isomorphic_groups(dag);
 
     const auto& final_coarse_graph = processor.get_final_coarse_graph();
@@ -289,7 +289,7 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessor_ButterflyMerge) {
     const auto dag = construct_butterfly_dag<graph_t>(3);
     BOOST_REQUIRE_EQUAL(dag.num_vertices(), (3 + 1) * 8);
 
-    OrbitGraphProcessor<graph_t> processor(16); // Threshold is larger than any group size
+    OrbitGraphProcessor<graph_t, graph_t> processor(16); // Threshold is larger than any group size
     processor.discover_isomorphic_groups(dag);
 
     const auto& final_coarse_graph = processor.get_final_coarse_graph();

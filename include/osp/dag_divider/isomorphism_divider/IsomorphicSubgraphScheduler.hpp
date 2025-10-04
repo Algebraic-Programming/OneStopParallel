@@ -26,9 +26,14 @@ limitations under the License.
 
 namespace osp {
 
-
 template<typename Graph_t, typename Constr_Graph_t>
 class IsomorphicSubgraphScheduler {
+    static_assert(is_computational_dag_v<Graph_t>, "Graph must be a computational DAG");
+    static_assert(is_computational_dag_v<Constr_Graph_t>, "Constr_Graph_t must be a computational DAG");
+    static_assert(is_constructable_cdag_v<Constr_Graph_t>,
+                  "Constr_Graph_t must satisfy the constructable_cdag_vertex concept");
+    static_assert(std::is_same_v<vertex_idx_t<Graph_t>, vertex_idx_t<Constr_Graph_t>>,
+                  "Graph_t and Constr_Graph_t must have the same vertex_idx types");
 
     private:
 
@@ -53,7 +58,7 @@ class IsomorphicSubgraphScheduler {
     }
 
     std::vector<vertex_idx_t<Graph_t>> compute_partition(const BspInstance<Graph_t>& instance) {
-        OrbitGraphProcessor<Graph_t> processor(symmetry_);
+        OrbitGraphProcessor<Graph_t, Constr_Graph_t> processor(symmetry_);
         processor.discover_isomorphic_groups(instance.getComputationalDag());
         const auto& orbit_processor_groups = processor.get_final_groups();
 
@@ -68,8 +73,6 @@ class IsomorphicSubgraphScheduler {
             for (const auto& sg_vertices : group.subgraphs) {
                 subgraph<Graph_t> new_sg;
                 new_sg.vertices = sg_vertices;
-                // The following properties are not directly provided by OrbitGraphProcessor
-                // but are needed by downstream logic. We can compute them.
                 new_sg.work_weight = 0;
                 new_sg.memory_weight = 0;
                 for (const auto& v : sg_vertices) {
