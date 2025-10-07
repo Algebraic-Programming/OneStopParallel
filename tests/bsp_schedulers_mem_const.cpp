@@ -37,13 +37,9 @@ limitations under the License.
 #include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_total_comm.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_total_cut.hpp"
-
+#include "test_graphs.hpp"
 
 using namespace osp;
-
-std::vector<std::string> test_graphs() {
-    return {"data/spaa/tiny/instance_bicgstab.hdag", "data/spaa/tiny/instance_CG_N2_K2_nzP0d75.hdag"};
-}
 
 std::vector<std::string> test_architectures() { return {"data/machine_params/p3.arch"}; }
 

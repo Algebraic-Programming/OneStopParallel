@@ -41,18 +41,6 @@ std::vector<std::string> tiny_spaa_graphs() {
         "data/spaa/tiny/instance_bicgstab.hdag", "data/spaa/tiny/instance_CG_N2_K2_nzP0d75.hdag",
                  "data/spaa/tiny/instance_CG_N3_K1_nzP0d5.hdag",
                  "data/spaa/tiny/instance_CG_N4_K1_nzP0d35.hdag"
-        //         "data/spaa/tiny/instance_exp_N4_K2_nzP0d5.hdag",
-        //         "data/spaa/tiny/instance_exp_N5_K3_nzP0d4.hdag",
-        //         "data/spaa/tiny/instance_exp_N6_K4_nzP0d25.hdag",
-        //         "data/spaa/tiny/instance_k-means.hdag",
-        //         "data/spaa/tiny/instance_k-NN_3_gyro_m.hdag",
-        //         "data/spaa/tiny/instance_kNN_N4_K3_nzP0d5.hdag",
-        //         "data/spaa/tiny/instance_kNN_N5_K3_nzP0d3.hdag",
-        //         "data/spaa/tiny/instance_kNN_N6_K4_nzP0d2.hdag",
-        //         "data/spaa/tiny/instance_pregel.hdag",
-        //         "data/spaa/tiny/instance_spmv_N6_nzP0d4.hdag",
-        //         "data/spaa/tiny/instance_spmv_N7_nzP0d35.hdag",
-        //         "data/spaa/tiny/instance_spmv_N10_nzP0d25.hdag",
     };
 }
 

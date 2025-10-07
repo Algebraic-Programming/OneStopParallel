@@ -24,15 +24,11 @@ limitations under the License.
 #include "osp/bsp/scheduler/LocalSearch/HillClimbing/hill_climbing_for_comm_schedule.hpp"
 #include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 #include <filesystem>
-
+#include "test_graphs.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 
 using namespace osp;
 
-std::vector<std::string> test_graphs() {
-    return {"data/spaa/tiny/instance_k-means.hdag", "data/spaa/tiny/instance_bicgstab.hdag",
-            "data/spaa/tiny/instance_CG_N4_K1_nzP0d35.hdag"};
-}
 
 BOOST_AUTO_TEST_CASE(hill_climbing) {
 

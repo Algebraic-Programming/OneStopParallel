@@ -33,19 +33,9 @@ limitations under the License.
 #include "osp/graph_implementations/boost_graphs/boost_graph.hpp"
 #include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 #include "test_utils.hpp"
-
-
-std::vector<std::string> large_spaa_graphs() {
-    return {"data/spaa/large/instance_exp_N50_K12_nzP0d15.hdag",
-            "data/spaa/large/instance_CG_N24_K22_nzP0d2.hdag",
-            "data/spaa/large/instance_kNN_N45_K15_nzP0d16.hdag",
-            "data/spaa/large/instance_spmv_N120_nzP0d18.hdag"
-};
-}
-
+#include "test_graphs.hpp"
 
 using namespace osp;
-
 
 BOOST_AUTO_TEST_CASE(longest_edge_triangle_parallel) {
 

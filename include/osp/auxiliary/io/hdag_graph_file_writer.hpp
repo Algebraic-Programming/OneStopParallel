@@ -45,14 +45,11 @@ void writeComputationalDagHyperdagFormatDB(std::ostream &os, const Graph_t &grap
     const auto num_vertices = graph.num_vertices();
     unsigned num_hyperedges = 0;
     unsigned num_pins = 0;
-
-    std::vector<unsigned> node_to_hyperedge_idx(num_vertices);
-    std::vector<const vertex_idx_t<Graph_t> *> hyperedge_idx_to_node;
+    std::vector<vertex_idx_t<Graph_t>> hyperedge_idx_to_node;
 
     for (const auto &u : graph.vertices()) {
         if (graph.out_degree(u) > 0) {
-            node_to_hyperedge_idx[u] = num_hyperedges;
-            hyperedge_idx_to_node.push_back(&u);
+            hyperedge_idx_to_node.push_back(u);
             num_hyperedges++;
             num_pins += (graph.out_degree(u) + 1);
         }
@@ -65,7 +62,7 @@ void writeComputationalDagHyperdagFormatDB(std::ostream &os, const Graph_t &grap
     // Hyperedges
     os << "%% Hyperedges: ID comm_weight mem_weight\n";
     for (unsigned i = 0; i < num_hyperedges; ++i) {
-        const auto u = *hyperedge_idx_to_node[i];
+        const auto u = hyperedge_idx_to_node[i];
         os << i << " " << graph.vertex_comm_weight(u) << " " << graph.vertex_mem_weight(u) << "\n";
     }
 
@@ -84,7 +81,7 @@ void writeComputationalDagHyperdagFormatDB(std::ostream &os, const Graph_t &grap
     // Pins
     os << "%% Pins: HyperedgeID NodeID\n";
     for (unsigned i = 0; i < num_hyperedges; ++i) {
-        const auto u = *hyperedge_idx_to_node[i];
+        const auto u = hyperedge_idx_to_node[i];
         os << i << " " << u << "\n"; // Source pin
         for (const auto &v : graph.children(u)) {
             os << i << " " << v << "\n"; // Target pins

@@ -87,6 +87,7 @@ main
 *.test
 tests/*
 !tests/*.cpp
+!tests/*.hpp
 !tests/include/
 !tests/include/*.hpp
 !lib/**/*

@@ -26,15 +26,10 @@ limitations under the License.
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_total_cut.hpp"
 #include "osp/auxiliary/io/arch_file_reader.hpp"
 #include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
-
+#include "test_graphs.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 
 using namespace osp;
-
-std::vector<std::string> test_graphs() {
-    return {"data/spaa/tiny/instance_k-means.hdag", "data/spaa/tiny/instance_bicgstab.hdag",
-            "data/spaa/tiny/instance_CG_N3_K1_nzP0d5.hdag"};
-}
 
 template<typename Graph_t>
 void add_mem_weights(Graph_t &dag) {
