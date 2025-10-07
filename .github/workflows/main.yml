@@ -2,17 +2,19 @@ name: OSP CI
 
 on:
   push:
-    branches: [ master ]
+    branches: ["*"]
   pull_request:
-    branches: [ master ]
+    branches: ["*"]
+
+env:
+  BUILD_TYPE: Release
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v3
 
       - name: Install dependencies
         run: |
@@ -23,19 +25,19 @@ jobs:
           pip3 install --upgrade pip
           pip3 install cmake==3.21.3
 
-      - name: Configure (CMake)
-        run: cmake -S . -B build
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
 
       - name: Build
-        run: cmake --build build -j$(nproc)
+        working-directory: ${{ github.workspace }}/build
+        run: cmake --build . -j$(nproc)
 
   test:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     needs: build
 
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v3
 
       - name: Install dependencies
         run: |
@@ -46,14 +48,16 @@ jobs:
           pip3 install --upgrade pip
           pip3 install cmake==3.21.3
 
-      - name: Configure (CMake)
-        run: cmake -S . -B build -DBUILD_TESTS=ON
+      - name: Configure (with tests)
+        run: cmake -S . -B build -DBUILD_TESTS=ON -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
 
       - name: Build tests
-        run: cmake --build build --target build_tests -j$(nproc)
+        working-directory: ${{ github.workspace }}/build
+        run: cmake --build . --target build_tests -j$(nproc)
 
       - name: Run tests
-        run: cd build && ctest --output-on-failure --output-junit test_results.xml
+        working-directory: ${{ github.workspace }}/build
+        run: ctest --output-on-failure --output-junit test_results.xml
         continue-on-error: true
 
       - name: Upload test results
@@ -63,44 +67,43 @@ jobs:
           path: build/test_results.xml
 
   test_simple_greedy_small_dag:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     needs: build
 
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v3
 
       - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            make gcc g++ git libboost-all-dev \
-            libeigen3-dev python3-pip
+            make gcc g++ git libboost-all-dev libeigen3-dev python3-pip
           pip3 install cmake==3.21.3
 
-      - name: Configure (CMake)
-        run: cmake -S . -B build
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
 
       - name: Build executables
-        run: cmake --build build --target OneStopParallel OneStopParallel_Partition -j$(nproc)
+        working-directory: ${{ github.workspace }}/build
+        run: cmake --build . --target OneStopParallel OneStopParallel_Partition -j$(nproc)
 
       - name: Run simple DAG test
+        working-directory: ${{ github.workspace }}/build
         run: |
-          cd build
           ./apps/osp \
             --inputDag ../data/spaa/tiny/instance_bicgstab.hdag \
             --inputMachine ../data/machine_params/p3.arch \
-            --Serial --GreedyBsp --BspLocking --GrowLocal --Variance --Cilk  --Etf --GreedyChildren \
-            --MultiHC --SarkarLockingHC --GreedyChildrenKL --GrowLocalKL --GreedyBspHC --FunnelLocking
+            --Serial --GreedyBsp --BspLocking --GrowLocal --Variance --Cilk \
+            --Etf --GreedyChildren --MultiHC --SarkarLockingHC \
+            --GreedyChildrenKL --GrowLocalKL --GreedyBspHC --FunnelLocking
 
   docs:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     needs: build
     if: github.ref == 'refs/heads/master'
 
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v3
 
       - name: Install dependencies
         run: |
@@ -116,24 +119,7 @@ jobs:
           cp -r doc/html/* public
 
       - name: Upload docs artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
+          name: docs
           path: public
-
-  deploy:
-    runs-on: ubuntu-20.04
-    needs: docs
-    if: github.ref == 'refs/heads/master'
-
-    permissions:
-      pages: write
-      id-token: write
-
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
