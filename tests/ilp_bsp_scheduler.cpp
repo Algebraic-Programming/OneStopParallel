@@ -28,7 +28,6 @@ limitations under the License.
 #include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 #include <filesystem>
 #include <iostream>
-
 #include "osp/bsp/scheduler/IlpSchedulers/CoptFullScheduler.hpp"
 #include "osp/bsp/scheduler/IlpSchedulers/TotalCommunicationScheduler.hpp"
 
@@ -52,7 +51,7 @@ BOOST_AUTO_TEST_CASE(test_total) {
     }
 
     bool status = file_reader::readComputationalDagHyperdagFormat(
-        (cwd / "data/spaa/tiny/instance_spmv_N6_nzP0d4.hdag").string(), instance.getComputationalDag());
+        (cwd / "data/spaa/tiny/instance_spmv_N6_nzP0d4.lhdag").string(), instance.getComputationalDag());
 
     BOOST_CHECK(status);
 
@@ -93,7 +92,7 @@ BOOST_AUTO_TEST_CASE(test_full) {
     }
 
     bool status = file_reader::readComputationalDagHyperdagFormat(
-        (cwd / "data/spaa/tiny/instance_spmv_N6_nzP0d4.hdag").string(), instance.getComputationalDag());
+        (cwd / "data/spaa/tiny/instance_spmv_N6_nzP0d4.lhdag").string(), instance.getComputationalDag());
 
     BOOST_CHECK(status);
 

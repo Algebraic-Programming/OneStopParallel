@@ -10,7 +10,7 @@
 #include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 
 std::vector<std::string> test_graphs() {
-    return {"data/spaa/tiny/instance_bicgstab.hdag", "data/spaa/tiny/instance_CG_N2_K2_nzP0d75.hdag"};
+    return {"data/spaa/tiny/instance_bicgstab.lhdag", "data/spaa/tiny/instance_CG_N2_K2_nzP0d75.lhdag"};
 }
 
 using namespace osp;

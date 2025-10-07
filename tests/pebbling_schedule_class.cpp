@@ -29,29 +29,10 @@ limitations under the License.
 #include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 #include "osp/auxiliary/io/arch_file_reader.hpp"
 #include "osp/auxiliary/io/pebbling_schedule_file_writer.hpp"
-
+#include "test_graphs.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 
 using namespace osp;
-
-std::vector<std::string> tiny_spaa_graphs() {
-    return {"data/spaa/tiny/instance_bicgstab.hdag",
-            "data/spaa/tiny/instance_CG_N2_K2_nzP0d75.hdag",
-            "data/spaa/tiny/instance_CG_N3_K1_nzP0d5.hdag",
-            "data/spaa/tiny/instance_CG_N4_K1_nzP0d35.hdag",
-            "data/spaa/tiny/instance_exp_N4_K2_nzP0d5.hdag",
-            "data/spaa/tiny/instance_exp_N5_K3_nzP0d4.hdag",
-            "data/spaa/tiny/instance_exp_N6_K4_nzP0d25.hdag",
-            "data/spaa/tiny/instance_k-means.hdag",
-            "data/spaa/tiny/instance_k-NN_3_gyro_m.hdag",
-            "data/spaa/tiny/instance_kNN_N4_K3_nzP0d5.hdag",
-            "data/spaa/tiny/instance_kNN_N5_K3_nzP0d3.hdag",
-            "data/spaa/tiny/instance_kNN_N6_K4_nzP0d2.hdag",
-            "data/spaa/tiny/instance_pregel.hdag",
-            "data/spaa/tiny/instance_spmv_N6_nzP0d4.hdag",
-            "data/spaa/tiny/instance_spmv_N7_nzP0d35.hdag",
-            "data/spaa/tiny/instance_spmv_N10_nzP0d25.hdag"};
-}
 
 std::vector<std::string> test_architectures() { return {"data/machine_params/p3.arch"}; }
 
@@ -147,7 +128,7 @@ BOOST_AUTO_TEST_CASE(test_pebbling_schedule_writer) {
     }
 
     bool status = file_reader::readComputationalDagHyperdagFormat(
-        (cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(), instance.getComputationalDag());
+        (cwd / "data/spaa/tiny/instance_bicgstab.lhdag").string(), instance.getComputationalDag());
 
     BOOST_CHECK(status);
     BOOST_CHECK_EQUAL(instance.getComputationalDag().num_vertices(), 54);

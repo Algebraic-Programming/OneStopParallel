@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(test_bicgstab) {
     computational_dag_vector_impl_def_t graph;
 
     bool status =
-        file_reader::readComputationalDagHyperdagFormat((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(), graph);
+        file_reader::readComputationalDagHyperdagFormat((cwd / "data/spaa/tiny/instance_bicgstab.lhdag").string(), graph);
 
     BOOST_CHECK(status);
     BOOST_CHECK_EQUAL(graph.num_vertices(), 54);
@@ -209,7 +209,7 @@ BOOST_AUTO_TEST_CASE(test_hdag_boost) {
     boost_graph_int_t graph;
 
     bool status =
-        file_reader::readComputationalDagHyperdagFormat((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(), graph);
+        file_reader::readComputationalDagHyperdagFormat((cwd / "data/spaa/tiny/instance_bicgstab.lhdag").string(), graph);
 
     BOOST_CHECK(status);
     BOOST_CHECK_EQUAL(graph.num_vertices(), 54);
@@ -272,7 +272,7 @@ BOOST_AUTO_TEST_CASE(test_k_means) {
     computational_dag_vector_impl_def_t graph;
 
     bool status =
-        file_reader::readComputationalDagHyperdagFormat((cwd / "data/spaa/tiny/instance_k-means.hdag").string(), graph);
+        file_reader::readComputationalDagHyperdagFormat((cwd / "data/spaa/tiny/instance_k-means.lhdag").string(), graph);
 
     BOOST_CHECK(status);
     BOOST_CHECK_EQUAL(graph.num_vertices(), 40);
@@ -286,7 +286,7 @@ BOOST_AUTO_TEST_CASE(test_k_means) {
     computational_dag_edge_idx_vector_impl_def_t graph2;
 
     status =
-        file_reader::readComputationalDagHyperdagFormat((cwd / "data/spaa/tiny/instance_k-means.hdag").string(), graph2);
+        file_reader::readComputationalDagHyperdagFormat((cwd / "data/spaa/tiny/instance_k-means.lhdag").string(), graph2);
 
     BOOST_CHECK(status);
     BOOST_CHECK_EQUAL(graph2.num_vertices(), 40);

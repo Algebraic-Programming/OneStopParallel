@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(test_recomputer) {
     }
 
     bool status = file_reader::readComputationalDagHyperdagFormat(
-        (cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(), instance2.getComputationalDag());
+        (cwd / "data/spaa/tiny/instance_bicgstab.lhdag").string(), instance2.getComputationalDag());
 
     BOOST_CHECK(status);
 

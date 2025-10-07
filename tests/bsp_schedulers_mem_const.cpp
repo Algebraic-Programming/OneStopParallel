@@ -42,7 +42,7 @@ limitations under the License.
 using namespace osp;
 
 std::vector<std::string> test_graphs() {
-    return {"data/spaa/tiny/instance_bicgstab.hdag", "data/spaa/tiny/instance_CG_N2_K2_nzP0d75.hdag"};
+    return {"data/spaa/tiny/instance_bicgstab.lhdag", "data/spaa/tiny/instance_CG_N2_K2_nzP0d75.lhdag"};
 }
 
 std::vector<std::string> test_architectures() { return {"data/machine_params/p3.arch"}; }

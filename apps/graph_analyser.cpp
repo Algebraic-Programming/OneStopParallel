@@ -27,9 +27,7 @@ limitations under the License.
 #include "osp/graph_algorithms/directed_graph_path_util.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "osp/auxiliary/io/bsp_schedule_file_writer.hpp"
-#include "osp/auxiliary/io/dot_graph_file_reader.hpp"
-#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
-#include "osp/auxiliary/io/mtx_graph_file_reader.hpp"
+#include "osp/auxiliary/io/general_file_reader.hpp"
 
 using namespace osp;
 
@@ -161,28 +159,11 @@ int main(int argc, char *argv[]) {
         std::string path_str = dirEntry.path();
 
         ComputationalDag graph;
-        bool status = false;
-
-        if (path_str.substr(path_str.rfind(".") + 1) == "hdag") {
-
-            status = file_reader::readComputationalDagHyperdagFormat(dirEntry.path(), graph);
-
-        } else if (path_str.substr(path_str.rfind(".") + 1) == "mtx") {
-
-            status = file_reader::readComputationalDagMartixMarketFormat(dirEntry.path(), graph);
-
-        } else if (path_str.substr(path_str.rfind(".") + 1) == "dot") {
-
-            status = file_reader::readComputationalDagDotFormat(dirEntry.path(), graph);
-
-        } else {
-            std::cout << "Unknown file ending: ." << path_str.substr(path_str.rfind(".") + 1)
-                      << " ...assuming hyperDag format." << std::endl;
-            status = file_reader::readComputationalDagHyperdagFormat(dirEntry.path(), graph);
+        bool status = file_reader::readGraph(dirEntry.path(), graph);
+        if (!status) {
+            std::cout << "Failed to read graph\n";
+            return 1;
         }
-
-        if (!status)
-            continue;
 
         std::string graph_name = path_str.substr(path_str.rfind("/") + 1);
         graph_name = graph_name.substr(0, graph_name.rfind("."));

@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(test_instance_bicgstab) {
     }
 
     bool status = file_reader::readGraph(
-        (cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(), instance.getComputationalDag());
+        (cwd / "data/spaa/tiny/instance_bicgstab.lhdag").string(), instance.getComputationalDag());
 
     BOOST_CHECK(status);
     BOOST_CHECK_EQUAL(instance.getComputationalDag().num_vertices(), 54);
@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(test_schedule_writer) {
     }
 
     bool status = file_reader::readGraph(
-        (cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(), instance.getComputationalDag());
+        (cwd / "data/spaa/tiny/instance_bicgstab.lhdag").string(), instance.getComputationalDag());
 
     BOOST_CHECK(status);
     BOOST_CHECK_EQUAL(instance.getComputationalDag().num_vertices(), 54);
@@ -220,7 +220,7 @@ BOOST_AUTO_TEST_CASE(test_bsp_schedule_cs) {
         std::cout << cwd << std::endl;
     }
 
-    file_reader::readGraph((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(),
+    file_reader::readGraph((cwd / "data/spaa/tiny/instance_bicgstab.lhdag").string(),
                                                     instance.getComputationalDag());
 
     BspSchedule<graph> schedule(instance);
