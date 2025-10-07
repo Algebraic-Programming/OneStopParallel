@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(StepByStepCoarser_test) {
 
     graph DAG;
 
-    bool status = file_reader::readComputationalDagHyperdagFormat(
+    bool status = file_reader::readComputationalDagHyperdagFormatDB(
         (cwd / "data/spaa/tiny/instance_spmv_N10_nzP0d25.hdag").string(), DAG);
 
     BOOST_CHECK(status);
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(Multilevel_test) {
         std::cout << cwd << std::endl;
     }
 
-    bool status = file_reader::readComputationalDagHyperdagFormat(
+    bool status = file_reader::readComputationalDagHyperdagFormatDB(
         (cwd / "data/spaa/tiny/instance_pregel.hdag").string(), instance.getComputationalDag());
 
     BOOST_CHECK(status);

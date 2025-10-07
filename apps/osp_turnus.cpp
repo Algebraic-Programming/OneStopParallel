@@ -21,9 +21,7 @@ limitations under the License.
 #include <string>
 
 #include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
-#include "osp/auxiliary/io/dot_graph_file_reader.hpp"
-#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
-#include "osp/auxiliary/io/mtx_graph_file_reader.hpp"
+#include "osp/auxiliary/io/general_file_reader.hpp"
 #include "osp/auxiliary/io/bsp_schedule_file_writer.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/EtfScheduler.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
@@ -53,25 +51,7 @@ int main(int argc, char *argv[]) {
 
     std::string filename_graph = argv[1];
 
-    bool status_graph = false;
-
-    if (filename_graph.substr(filename_graph.rfind(".") + 1) == "hdag") {
-        status_graph =
-            file_reader::readComputationalDagHyperdagFormat(filename_graph, bsp_instance.getComputationalDag());
-
-    } else if (filename_graph.substr(filename_graph.rfind(".") + 1) == "mtx") {
-
-        status_graph = file_reader::readComputationalDagMartixMarketFormat(filename_graph, bsp_instance.getComputationalDag());
-
-    } else if (filename_graph.substr(filename_graph.rfind(".") + 1) == "dot") {
-        status_graph = file_reader::readComputationalDagDotFormat(filename_graph, bsp_instance.getComputationalDag());
-
-    } else {
-        std::cout << "Unknown file ending: ." << filename_graph.substr(filename_graph.rfind(".") + 1)
-                  << " ...assuming hyperDag format." << std::endl;
-        status_graph =
-            file_reader::readComputationalDagHyperdagFormat(filename_graph, bsp_instance.getComputationalDag());
-    }
+    bool status_graph = file_reader::readGraph(filename_graph, bsp_instance.getComputationalDag());
 
     if (!status_graph) {
         std::cout << "Error while reading the graph from file: " << filename_graph << std::endl;

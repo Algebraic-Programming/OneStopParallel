@@ -44,7 +44,7 @@ void writeComputationalDagHyperdagFormatDB(std::ostream &os, const Graph_t &grap
 
     const auto num_vertices = graph.num_vertices();
     unsigned num_hyperedges = 0;
-    unsigned num_pins = 0;
+    vertex_idx_t<Graph_t> num_pins = 0;
     std::vector<vertex_idx_t<Graph_t>> hyperedge_idx_to_node;
 
     for (const auto &u : graph.vertices()) {

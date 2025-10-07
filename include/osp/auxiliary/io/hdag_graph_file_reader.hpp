@@ -273,8 +273,8 @@ bool readComputationalDagHyperdagFormatDB(std::ifstream& infile, Graph_t& graph)
 template<typename Graph_t>
 bool readComputationalDagHyperdagFormatDB(const std::string& filename, Graph_t& graph) {
     // Optional: limit file extension for safety
-    if (std::filesystem::path(filename).extension() != ".hdagdb") {
-        std::cerr << "Error: Only .hdagdb files are accepted.\n";
+    if (std::filesystem::path(filename).extension() != ".hdag") {
+        std::cerr << "Error: Only .hdag files are accepted.\n";
         return false;
     }
 
@@ -291,71 +291,5 @@ bool readComputationalDagHyperdagFormatDB(const std::string& filename, Graph_t& 
 
     return readComputationalDagHyperdagFormatDB(infile, graph);
 }
-
-// bool readProblem(const std::string &filename, DAG &G, BSPproblem &params, bool NoNUMA = true);
-
-// std::pair<bool, BspInstance> readBspInstance(const std::string &filename);
-
-// std::pair<bool, ComputationalDag>
-// readComputationalDagMartixMarketFormat(const std::string &filename,
-//                                        std::unordered_map<std::pair<VertexType, VertexType>, double, pair_hash>
-//                                        &mtx);
-
-// std::pair<bool, ComputationalDag>
-// readComputationalDagMartixMarketFormat(std::ifstream &infile,
-//                                        std::unordered_map<std::pair<VertexType, VertexType>, double, pair_hash>
-//                                        &mtx);
-
-// std::pair<bool, ComputationalDag> readComputationalDagMartixMarketFormat(const std::string &filename);
-
-// std::pair<bool, ComputationalDag> readComputationalDagMartixMarketFormat(std::ifstream &infile);
-
-// std::pair<bool, ComputationalDag> readCombinedSptrsvSpmvDagMartixMarket(const std::string &firstFilename, const
-// std::string &secondFilename);
-
-// std::pair<bool, BspArchitecture> readBspArchitecture(const std::string &filename);
-
-// std::pair<bool, BspArchitecture> readBspArchitecture(std::ifstream &infile);
-
-// std::pair<bool, BspSchedule> readBspSchdeuleTxtFormat(const BspInstance &instance, const std::string &filename);
-
-// std::pair<bool, BspSchedule> readBspSchdeuleTxtFormat(const BspInstance &instance, std::ifstream &infile);
-
-// /**
-//  * Reads a BspSchedule AND Instance in Dot format from a file. The parameter BspInstance is set as the instance of
-//  the
-//  * schedule. The ComputationalDag of the intance is supposed to be empty. Vertices are added as specified in the Dot
-//  * file.
-//  *
-//  *
-//  */
-// std::tuple<bool, BspSchedule> readBspScheduleDotFormat(const std::string &filename, BspInstance &instance);
-
-// /**
-//  * Reads a BspSchedule AND Instance in Dot format from a file. The parameter BspInstance is set as the instance of
-//  the
-//  * schedule. The ComputationalDag of the intance is supposed to be empty. Vertices are added as specified in the Dot
-//  * file.
-//  *
-//  *
-//  */
-// std::tuple<bool, BspSchedule> readBspScheduleDotFormat(std::ifstream &infile, BspInstance &instance);
-
-// /**
-//  * Reads a BspSchedule in Dot format from a file. Does not read an Instance form the DOT file. An appropriate
-//  instance
-//  * is meant to be passed as an agument and is set as the BspInstance of the schedule.
-//  *
-//  */
-// std::pair<bool, BspScheduleRecomp> extractBspScheduleRecomp(const std::string &filename, const BspInstance
-// &instance);
-
-// /**
-//  * Reads a BspSchedule in Dot format from a file. Does not read an Instance form the DOT file. An appropriate
-//  instance
-//  * is meant to be passed as an agument and is set as the BspInstance of the schedule.
-//  *
-//  */
-// std::pair<bool, BspScheduleRecomp> extractBspScheduleRecomp(std::ifstream &infile, const BspInstance &instance);
 
 }} // namespace osp::file_reader

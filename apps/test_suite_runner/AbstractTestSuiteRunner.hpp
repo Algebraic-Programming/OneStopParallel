@@ -34,9 +34,7 @@ limitations under the License.
 #include "StatsModules/IStatsModule.hpp"
 #include "osp/bsp/model/BspInstance.hpp"
 #include "osp/auxiliary/io/arch_file_reader.hpp"
-#include "osp/auxiliary/io/dot_graph_file_reader.hpp"
-#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
-#include "osp/auxiliary/io/mtx_graph_file_reader.hpp"
+#include "osp/auxiliary/io/general_file_reader.hpp"
 
 //#define EIGEN_FOUND 1
 
@@ -299,20 +297,8 @@ class AbstractTestSuiteRunner {
                     }
                 } else {
 #endif
-                    if (ext == "hdag")
-                        graph_status = file_reader::readComputationalDagHyperdagFormat(filename_graph,
-                                                                                    bsp_instance.getComputationalDag());
-                    else if (ext == "mtx")
-                        graph_status = file_reader::readComputationalDagMartixMarketFormat(
-                            filename_graph, bsp_instance.getComputationalDag());
-                    else if (ext == "dot")
-                        graph_status =
-                            file_reader::readComputationalDagDotFormat(filename_graph, bsp_instance.getComputationalDag());
-                    else {
-                        log_stream << "Unknown file ending: ." << ext << " ...assuming hyperDag format." << std::endl;
-                        graph_status = file_reader::readComputationalDagHyperdagFormat(filename_graph,
-                                                                                    bsp_instance.getComputationalDag());
-                    }
+                graph_status = file_reader::readGraph(filename_graph, bsp_instance.getComputationalDag());
+
 #ifdef EIGEN_FOUND
                 }
 #endif

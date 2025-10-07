@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(longest_edge_triangle_parallel) {
         graph_t graph;
 
 
-        bool status_graph = file_reader::readComputationalDagHyperdagFormat((project_root / filename_graph).string(),
+        bool status_graph = file_reader::readComputationalDagHyperdagFormatDB((project_root / filename_graph).string(),
                                                                                 graph);
 
         BOOST_CHECK(status_graph);

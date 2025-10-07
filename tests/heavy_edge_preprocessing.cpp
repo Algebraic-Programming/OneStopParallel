@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(HeavyEdgePartitioning) {
 
         Graph_t graph;
 
-        bool status_graph = file_reader::readComputationalDagHyperdagFormat((cwd / filename_graph).string(), graph);
+        bool status_graph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(), graph);
 
         if (!status_graph) {
 

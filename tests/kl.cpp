@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(kl_total_comm_test_1) {
 
         BspInstance<graph> instance;
 
-        bool status_graph = file_reader::readComputationalDagHyperdagFormat((cwd / filename_graph).string(),
+        bool status_graph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(),
                                                                             instance.getComputationalDag());
 
         instance.getArchitecture().setSynchronisationCosts(5);
@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE(kl_total_comm_test_2) {
 
         BspInstance<graph> instance;
 
-        bool status_graph = file_reader::readComputationalDagHyperdagFormat((cwd / filename_graph).string(),
+        bool status_graph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(),
                                                                             instance.getComputationalDag());
 
         instance.getArchitecture().setSynchronisationCosts(5);
@@ -262,7 +262,7 @@ BOOST_AUTO_TEST_CASE(kl_total_cut_test_1) {
 
         BspInstance<graph> instance;
 
-        bool status_graph = file_reader::readComputationalDagHyperdagFormat((cwd / filename_graph).string(),
+        bool status_graph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(),
                                                                             instance.getComputationalDag());
         instance.getArchitecture().setSynchronisationCosts(5);
         instance.getArchitecture().setCommunicationCosts(5);
@@ -310,7 +310,7 @@ BOOST_AUTO_TEST_CASE(kl_total_cut_test_2) {
 
         BspInstance<graph> instance;
 
-        bool status_graph = file_reader::readComputationalDagHyperdagFormat((cwd / filename_graph).string(),
+        bool status_graph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(),
                                                                             instance.getComputationalDag());
         instance.getArchitecture().setSynchronisationCosts(5);
         instance.getArchitecture().setCommunicationCosts(5);

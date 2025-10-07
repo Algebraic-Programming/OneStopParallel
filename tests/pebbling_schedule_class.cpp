@@ -80,7 +80,7 @@ void run_test(Scheduler<Graph_t> *test_scheduler) {
 
             BspInstance<Graph_t> instance;
 
-            bool status_graph = file_reader::readComputationalDagHyperdagFormat((cwd / filename_graph).string(), instance.getComputationalDag());
+            bool status_graph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(), instance.getComputationalDag());
             
             bool status_architecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.getArchitecture());
 
@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(test_pebbling_schedule_writer) {
         std::cout << cwd << std::endl;
     }
 
-    bool status = file_reader::readComputationalDagHyperdagFormat(
+    bool status = file_reader::readComputationalDagHyperdagFormatDB(
         (cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(), instance.getComputationalDag());
 
     BOOST_CHECK(status);
