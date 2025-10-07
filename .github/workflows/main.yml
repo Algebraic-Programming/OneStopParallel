@@ -10,8 +10,15 @@ env:
   BUILD_TYPE: Release
 
 jobs:
-  build_and_test:
+  # -------------------------------------------------
+  # 1. MULTI-CONFIGURATION BUILD TESTS
+  # -------------------------------------------------
+  build_matrix:
+    name: Build (${{ matrix.build_type }})
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        build_type: [Debug, RelWithDebInfo, Release]
 
     steps:
       - uses: actions/checkout@v3
@@ -25,10 +32,37 @@ jobs:
           pip3 install --upgrade pip
           pip3 install cmake==3.21.3
 
-      - name: Configure
-        run: cmake -S . -B build
+      - name: Configure (${{ matrix.build_type }})
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
 
-      - name: Build (core)
+      - name: Build (${{ matrix.build_type }})
+        working-directory: ${{ github.workspace }}/build
+        run: cmake --build . -j$(nproc)
+
+  # -------------------------------------------------
+  # 2. FULL BUILD + TEST + SIMPLE DAG RUN
+  # -------------------------------------------------
+  test_and_run:
+    name: Build & Test (RelWithDebInfo)
+    runs-on: ubuntu-latest
+    needs: build_matrix
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            make gcc g++ git libboost-all-dev \
+            doxygen graphviz python3-pip libeigen3-dev
+          pip3 install --upgrade pip
+          pip3 install cmake==3.21.3
+
+      - name: Configure (RelWithDebInfo + tests)
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_TESTS=ON
+
+      - name: Build all targets
         working-directory: ${{ github.workspace }}/build
         run: cmake --build . -j$(nproc)
 
@@ -36,18 +70,14 @@ jobs:
         working-directory: ${{ github.workspace }}/build
         run: ctest --output-on-failure --output-junit test_results.xml
         continue-on-error: true
-    
+
       - name: Upload test results
         uses: actions/upload-artifact@v4
         with:
           name: test-results
           path: build/test_results.xml
 
-      - name: Build all executables
-        working-directory: ${{ github.workspace }}/build
-        run: cmake --build . -j$(nproc)
-
-      - name: Run simple DAG test
+      - name: Run osp example (simple DAG)
         working-directory: ${{ github.workspace }}/build
         run: |
           ./apps/osp \
@@ -57,9 +87,13 @@ jobs:
             --Etf --GreedyChildren --MultiHC --SarkarLockingHC \
             --GreedyChildrenKL --GrowLocalKL --GreedyBspHC --FunnelLocking
 
+  # -------------------------------------------------
+  # 3. BUILD DOCUMENTATION (only on master)
+  # -------------------------------------------------
   docs:
+    name: Build Docs
     runs-on: ubuntu-latest
-    needs: build
+    needs: test_and_run
     if: github.ref == 'refs/heads/master'
 
     steps:
@@ -73,7 +107,7 @@ jobs:
 
       - name: Build docs
         run: |
-          cmake -S . -B build
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
           cmake --build build --target doc
           mkdir -p public
           cp -r doc/html/* public
