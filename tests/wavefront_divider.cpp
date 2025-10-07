@@ -38,9 +38,9 @@ std::vector<std::string> test_graphs_dot() { return {"data/dot/smpl_dot_graph_1.
 
 std::vector<std::string> tiny_spaa_graphs() {
     return {
-        "data/spaa/tiny/instance_bicgstab.lhdag", "data/spaa/tiny/instance_CG_N2_K2_nzP0d75.lhdag",
-                 "data/spaa/tiny/instance_CG_N3_K1_nzP0d5.lhdag",
-                 "data/spaa/tiny/instance_CG_N4_K1_nzP0d35.lhdag"
+        "data/spaa/tiny/instance_bicgstab.hdag", "data/spaa/tiny/instance_CG_N2_K2_nzP0d75.hdag",
+                 "data/spaa/tiny/instance_CG_N3_K1_nzP0d5.hdag",
+                 "data/spaa/tiny/instance_CG_N4_K1_nzP0d35.hdag"
     };
 }
 
