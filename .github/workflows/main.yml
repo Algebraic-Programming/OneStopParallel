@@ -1,9 +1,10 @@
 name: OSP CI
 
-on: [push]
-
-env:
-  BUILD_TYPE: Release
+on:
+  push:
+    branches: ["*"]
+  pull_request:
+    branches: ["*"]
 
 jobs:
   # -------------------------------------------------
@@ -14,12 +15,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        build_type: [Debug, RelWithDebInfo, Release]
+        build_type: [Debug, RelWithDebInfo, Release, RelWithDebInfo-noEigen]
 
     steps:
       - uses: actions/checkout@v3
 
       - name: Install dependencies
+        if: matrix.build_type != 'RelWithDebInfo-noEigen'
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
@@ -28,18 +30,33 @@ jobs:
           pip3 install --upgrade pip
           pip3 install cmake==3.21.3
 
+      - name: Install dependencies (no Eigen)
+        if: matrix.build_type == 'RelWithDebInfo-noEigen'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            make gcc g++ git libboost-all-dev \
+            doxygen graphviz python3-pip
+          pip3 install --upgrade pip
+          pip3 install cmake==3.21.3
+
       - name: Configure (${{ matrix.build_type }})
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        run: |
+          if [ "${{ matrix.build_type }}" = "RelWithDebInfo-noEigen" ]; then
+            cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo
+          else
+            cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+          fi
 
       - name: Build (${{ matrix.build_type }})
         working-directory: ${{ github.workspace }}/build
         run: cmake --build . -j$(nproc)
 
   # -------------------------------------------------
-  # 2. FULL BUILD + TEST + SIMPLE DAG RUN
+  # 2. FULL BUILD + TEST + SIMPLE DAG RUN (with Eigen)
   # -------------------------------------------------
   test_and_run:
-    name: Build & Test (RelWithDebInfo)
+    name: Build & Test (RelWithDebInfo + Eigen)
     runs-on: ubuntu-latest
     needs: build_matrix
 
@@ -84,12 +101,50 @@ jobs:
             --GreedyChildrenKL --GrowLocalKL --GreedyBspHC --FunnelLocking
 
   # -------------------------------------------------
-  # 3. BUILD DOCUMENTATION (only on master)
+  # 3. FULL BUILD + TEST (NO EIGEN)
+  # -------------------------------------------------
+  test_no_eigen:
+    name: Build & Test (RelWithDebInfo, no Eigen)
+    runs-on: ubuntu-latest
+    needs: build_matrix
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install dependencies (no Eigen)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            make gcc g++ git libboost-all-dev \
+            doxygen graphviz python3-pip
+          pip3 install --upgrade pip
+          pip3 install cmake==3.21.3
+
+      - name: Configure (RelWithDebInfo + tests, no Eigen)
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_TESTS=ON
+
+      - name: Build all targets
+        working-directory: ${{ github.workspace }}/build
+        run: cmake --build . -j$(nproc)
+
+      - name: Run tests (no Eigen)
+        working-directory: ${{ github.workspace }}/build
+        run: ctest --output-on-failure --output-junit test_results_no_eigen.xml
+        continue-on-error: true
+
+      - name: Upload test results (no Eigen)
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-no-eigen
+          path: build/test_results_no_eigen.xml
+
+  # -------------------------------------------------
+  # 4. BUILD DOCUMENTATION (only on master)
   # -------------------------------------------------
   docs:
     name: Build Docs
     runs-on: ubuntu-latest
-    needs: test_and_run
+    needs: [test_and_run, test_no_eigen]
     if: github.ref == 'refs/heads/master'
 
     steps:
