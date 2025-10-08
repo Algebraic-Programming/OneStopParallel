@@ -2,7 +2,10 @@ name: OSP CI
 
 on:
   push:
-    branches: ["*"]
+    branches: [master]
+  pull_request:
+    branches: [master]
+    types: [opened, reopened, synchronize, ready_for_review]
 
 jobs:
   # -------------------------------------------------
@@ -11,6 +14,7 @@ jobs:
   build_matrix:
     name: Build (${{ matrix.build_type }})
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/master'
     strategy:
       matrix:
         build_type: [Debug, RelWithDebInfo, Release, RelWithDebInfo-noEigen]
@@ -57,6 +61,7 @@ jobs:
     name: Build & Test (RelWithDebInfo + Eigen)
     runs-on: ubuntu-latest
     needs: build_matrix
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/master'
 
     steps:
       - uses: actions/checkout@v3
@@ -105,6 +110,7 @@ jobs:
     name: Build & Test (RelWithDebInfo, no Eigen)
     runs-on: ubuntu-latest
     needs: build_matrix
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/master'
 
     steps:
       - uses: actions/checkout@v3
