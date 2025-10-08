@@ -9,7 +9,7 @@ on:
 
 jobs:
   # -------------------------------------------------
-  # 1. MULTI-CONFIGURATION BUILD TESTS
+  # 1. QUICK BUILD TESTS (Debug + Release)
   # -------------------------------------------------
   build_matrix:
     name: Build (${{ matrix.build_type }})
@@ -17,13 +17,12 @@ jobs:
     if: github.event_name == 'pull_request' || github.ref == 'refs/heads/master'
     strategy:
       matrix:
-        build_type: [Debug, RelWithDebInfo, Release, RelWithDebInfo-noEigen]
+        build_type: [Debug, Release]
 
     steps:
       - uses: actions/checkout@v3
 
       - name: Install dependencies
-        if: matrix.build_type != 'RelWithDebInfo-noEigen'
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
@@ -32,30 +31,15 @@ jobs:
           pip3 install --upgrade pip
           pip3 install cmake==3.21.3
 
-      - name: Install dependencies (no Eigen)
-        if: matrix.build_type == 'RelWithDebInfo-noEigen'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            make gcc g++ git libboost-all-dev \
-            doxygen graphviz python3-pip
-          pip3 install --upgrade pip
-          pip3 install cmake==3.21.3
-
       - name: Configure (${{ matrix.build_type }})
-        run: |
-          if [ "${{ matrix.build_type }}" = "RelWithDebInfo-noEigen" ]; then
-            cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo
-          else
-            cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-          fi
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
 
       - name: Build (${{ matrix.build_type }})
         working-directory: ${{ github.workspace }}/build
         run: cmake --build . -j$(nproc)
 
   # -------------------------------------------------
-  # 2. FULL BUILD + TEST + SIMPLE DAG RUN (with Eigen)
+  # 2. FULL BUILD + TEST + SIMPLE DAG RUN (RelWithDebInfo + Eigen)
   # -------------------------------------------------
   test_and_run:
     name: Build & Test (RelWithDebInfo + Eigen)
@@ -104,10 +88,10 @@ jobs:
             --GreedyChildrenKL --GrowLocalKL --GreedyBspHC --FunnelLocking
 
   # -------------------------------------------------
-  # 3. FULL BUILD + TEST (NO EIGEN)
+  # 3. FULL BUILD + TEST (RelWithDebInfo-noEigen)
   # -------------------------------------------------
   test_no_eigen:
-    name: Build & Test (RelWithDebInfo, no Eigen)
+    name: Build & Test (RelWithDebInfo-noEigen)
     runs-on: ubuntu-latest
     needs: build_matrix
     if: github.event_name == 'pull_request' || github.ref == 'refs/heads/master'
