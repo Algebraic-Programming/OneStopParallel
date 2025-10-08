@@ -82,7 +82,7 @@ limitations under the License.
 //             std::cout << "Architecture: " << name_machine << std::endl;
 
 //             auto [status_graph, graph] =
-//                 FileReader::readComputationalDagHyperdagFormat((cwd / filename_graph).string());
+//                 FileReader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string());
 //             auto [status_architecture, architecture] =
 //                 FileReader::readBspArchitecture((cwd / filename_machine).string());
 

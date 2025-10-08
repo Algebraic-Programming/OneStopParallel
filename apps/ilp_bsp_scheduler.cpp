@@ -30,9 +30,7 @@ limitations under the License.
 #include "osp/auxiliary/io/DotFileWriter.hpp"
 #include "osp/auxiliary/io/arch_file_reader.hpp"
 #include "osp/auxiliary/io/bsp_schedule_file_writer.hpp"
-#include "osp/auxiliary/io/dot_graph_file_reader.hpp"
-#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
-#include "osp/auxiliary/io/mtx_graph_file_reader.hpp"
+#include "osp/auxiliary/io/general_file_reader.hpp"
 
 using namespace osp;
 
@@ -73,26 +71,8 @@ int main(int argc, char *argv[]) {
 
     BspInstance<ComputationalDag> instance;
     ComputationalDag &graph = instance.getComputationalDag();
-    bool status_graph = false;
 
-    if (filename_graph.substr(filename_graph.rfind(".") + 1) == "hdag") {
-
-        status_graph = file_reader::readComputationalDagHyperdagFormat(filename_graph, graph);
-
-    } else if (filename_graph.substr(filename_graph.rfind(".") + 1) == "mtx") {
-
-        status_graph = file_reader::readComputationalDagMartixMarketFormat(filename_graph, graph);
-
-    } else if (filename_graph.substr(filename_graph.rfind(".") + 1) == "dot") {
-
-        status_graph = file_reader::readComputationalDagDotFormat(filename_graph, graph);
-
-    } else {
-        std::cout << "Unknown file ending: ." << filename_graph.substr(filename_graph.rfind(".") + 1)
-                  << " ...assuming hyperDag format." << std::endl;
-        status_graph = file_reader::readComputationalDagHyperdagFormat(filename_graph, graph);
-    }
-
+    bool status_graph = file_reader::readGraph(filename_graph, graph);
     bool status_arch = file_reader::readBspArchitecture(filename_machine, instance.getArchitecture());
     // instance.setDiagonalCompatibilityMatrix(graph.num_vertex_types());
     // instance.getArchitecture().setProcessorsWithTypes({0,0,1,1,1,1});

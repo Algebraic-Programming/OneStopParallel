@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(wavefront_component_parallelism_divider) {
         BspInstance<graph_t> instance;
         auto &graph = instance.getComputationalDag();
 
-        auto status_graph = file_reader::readComputationalDagHyperdagFormat((project_root / filename_graph).string(), graph);
+        auto status_graph = file_reader::readComputationalDagHyperdagFormatDB((project_root / filename_graph).string(), graph);
 
         if (!status_graph) {
 

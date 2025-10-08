@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(kl_local_memconst) {
         std::cout << filename_graph << std::endl;
         BspInstance<graph> instance;
 
-        bool status_graph = file_reader::readComputationalDagHyperdagFormat((cwd / filename_graph).string(),
+        bool status_graph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(),
                                                                             instance.getComputationalDag());
         instance.getArchitecture().setSynchronisationCosts(10);
         instance.getArchitecture().setCommunicationCosts(5);
@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(kl_local_inc_memconst) {
 
         BspInstance<graph> instance;
 
-        bool status_graph = file_reader::readComputationalDagHyperdagFormat((cwd / filename_graph).string(),
+        bool status_graph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(),
                                                                             instance.getComputationalDag());
         instance.getArchitecture().setSynchronisationCosts(10);
         instance.getArchitecture().setCommunicationCosts(5);
@@ -195,7 +195,7 @@ BOOST_AUTO_TEST_CASE(kl_local_sources_inc_memconst) {
 
         std::cout << filename_graph << std::endl;
 
-        bool status_graph = file_reader::readComputationalDagHyperdagFormat((cwd / filename_graph).string(),
+        bool status_graph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(),
                                                                             instance.getComputationalDag());
         instance.getArchitecture().setSynchronisationCosts(10);
         instance.getArchitecture().setCommunicationCosts(5);

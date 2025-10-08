@@ -31,9 +31,7 @@ limitations under the License.
 #include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "osp/auxiliary/io/DotFileWriter.hpp"
 #include "osp/auxiliary/io/arch_file_reader.hpp"
-#include "osp/auxiliary/io/dot_graph_file_reader.hpp"
-#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
-#include "osp/auxiliary/io/mtx_graph_file_reader.hpp"
+#include "osp/auxiliary/io/general_file_reader.hpp"
 #include "osp/auxiliary/io/bsp_schedule_file_writer.hpp"
 #include "test_suite_runner/ConfigParser.hpp"
 #include "test_suite_runner/StringToScheduler/run_bsp_scheduler.hpp"
@@ -77,28 +75,7 @@ int main(int argc, char *argv[]) {
             continue;
         }
 
-        bool status_graph = false;
-
-        if (filename_graph.substr(filename_graph.rfind(".") + 1) == "hdag") {
-            status_graph =
-                file_reader::readComputationalDagHyperdagFormat(filename_graph, bsp_instance.getComputationalDag());
-
-        } else if (filename_graph.substr(filename_graph.rfind(".") + 1) == "mtx") {
-
-            status_graph =
-                file_reader::readComputationalDagMartixMarketFormat(filename_graph, bsp_instance.getComputationalDag());
-
-        } else if (filename_graph.substr(filename_graph.rfind(".") + 1) == "dot") {
-            status_graph =
-                file_reader::readComputationalDagDotFormat(filename_graph, bsp_instance.getComputationalDag());
-
-        } else {
-            std::cout << "Unknown file ending: ." << filename_graph.substr(filename_graph.rfind(".") + 1)
-                      << " ...assuming hyperDag format." << std::endl;
-            status_graph =
-                file_reader::readComputationalDagHyperdagFormat(filename_graph, bsp_instance.getComputationalDag());
-        }
-
+        bool status_graph = file_reader::readGraph(filename_graph, bsp_instance.getComputationalDag()); 
         if (!status_graph) {
             std::cerr << "Reading graph files " + filename_graph << " failed." << std::endl;
             continue;

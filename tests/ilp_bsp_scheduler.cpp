@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(test_total) {
         std::cout << cwd << std::endl;
     }
 
-    bool status = file_reader::readComputationalDagHyperdagFormat(
+    bool status = file_reader::readComputationalDagHyperdagFormatDB(
         (cwd / "data/spaa/tiny/instance_spmv_N6_nzP0d4.hdag").string(), instance.getComputationalDag());
 
     BOOST_CHECK(status);
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(test_full) {
         std::cout << cwd << std::endl;
     }
 
-    bool status = file_reader::readComputationalDagHyperdagFormat(
+    bool status = file_reader::readComputationalDagHyperdagFormatDB(
         (cwd / "data/spaa/tiny/instance_spmv_N6_nzP0d4.hdag").string(), instance.getComputationalDag());
 
     BOOST_CHECK(status);

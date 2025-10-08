@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test)
     graph_t graph;
 
     const auto project_root = get_project_root();
-    file_reader::readComputationalDagHyperdagFormat((project_root / "data/spaa/tiny/instance_bicgstab.hdag").string(), graph);
+    file_reader::readComputationalDagHyperdagFormatDB((project_root / "data/spaa/tiny/instance_bicgstab.hdag").string(), graph);
 
     MerkleHashComputer<graph_t, uniform_node_hash_func<vertex_idx_t<graph_t>>> m_hash(graph);
 

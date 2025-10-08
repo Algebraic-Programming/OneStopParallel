@@ -83,7 +83,7 @@ void run_test_local_memory(Scheduler<Graph_t> *test_scheduler) {
 
             BspInstance<Graph_t> instance;
 
-            bool status_graph = file_reader::readComputationalDagHyperdagFormat((cwd / filename_graph).string(),
+            bool status_graph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(),
                                                                                 instance.getComputationalDag());
             bool status_architecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(),
                                                                         instance.getArchitecture());
@@ -142,7 +142,7 @@ void run_test_persistent_transient_memory(Scheduler<Graph_t> *test_scheduler) {
 
             BspInstance<Graph_t> instance;
 
-            bool status_graph = file_reader::readComputationalDagHyperdagFormat((cwd / filename_graph).string(),
+            bool status_graph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(),
                                                                                 instance.getComputationalDag());
             bool status_architecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(),
                                                                         instance.getArchitecture());
@@ -201,7 +201,7 @@ void run_test_local_in_out_memory(Scheduler<Graph_t> *test_scheduler) {
 
             BspInstance<Graph_t> instance;
 
-            bool status_graph = file_reader::readComputationalDagHyperdagFormat((cwd / filename_graph).string(),
+            bool status_graph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(),
                                                                                 instance.getComputationalDag());
             bool status_architecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(),
                                                                         instance.getArchitecture());
@@ -260,7 +260,7 @@ void run_test_local_inc_edges_memory(Scheduler<Graph_t> *test_scheduler) {
 
             BspInstance<Graph_t> instance;
 
-            bool status_graph = file_reader::readComputationalDagHyperdagFormat((cwd / filename_graph).string(),
+            bool status_graph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(),
                                                                                 instance.getComputationalDag());
             bool status_architecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(),
                                                                         instance.getArchitecture());
@@ -319,7 +319,7 @@ void run_test_local_inc_edges_2_memory(Scheduler<Graph_t> *test_scheduler) {
 
             BspInstance<Graph_t> instance;
 
-            bool status_graph = file_reader::readComputationalDagHyperdagFormat((cwd / filename_graph).string(),
+            bool status_graph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(),
                                                                                 instance.getComputationalDag());
             bool status_architecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(),
                                                                         instance.getArchitecture());

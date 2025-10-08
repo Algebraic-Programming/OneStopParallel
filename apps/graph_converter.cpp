@@ -21,9 +21,8 @@ limitations under the License.
 #include <string>
 
 #include "osp/auxiliary/io/DotFileWriter.hpp"
-#include "osp/auxiliary/io/dot_graph_file_reader.hpp"
-#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
-#include "osp/auxiliary/io/mtx_graph_file_reader.hpp"
+#include "osp/auxiliary/io/general_file_reader.hpp"
+#include "osp/auxiliary/io/hdag_graph_file_writer.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 
 using namespace osp;
@@ -31,11 +30,31 @@ using namespace osp;
 using ComputationalDag = computational_dag_edge_idx_vector_impl_def_int_t;
 
 void print_usage(const char *prog_name) {
-    std::cerr << "Usage: " << prog_name << " <input_file> <output_file>" << std::endl;
-    std::cerr << "Converts a graph from one file format to another." << std::endl;
-    std::cerr << "If <output_file> is '.dot', the output file will be named after the input file with a .dot extension." << std::endl;
-    std::cerr << "Supported input formats (by extension): .hdag, .mtx, .dot" << std::endl;
-    std::cerr << "Supported output formats (by extension): .dot" << std::endl;
+    std::cerr << "Graph Format Converter" << std::endl;
+    std::cerr << "----------------------" << std::endl;
+    std::cerr << "This tool converts a directed graph from one file format to another. The desired output" << std::endl;
+    std::cerr << "format is determined by the file extension of the output file." << std::endl
+              << std::endl;
+    std::cerr << "Usage: " << prog_name << " <input_file> <output_file>" << std::endl << std::endl;
+    std::cerr << "Arguments:" << std::endl;
+    std::cerr << "  <input_file>   Path to the input graph file." << std::endl
+              << std::endl;
+    std::cerr << "  <output_file>  Path for the output graph file. Special values of '.dot' or '.hdag' can be" << std::endl;
+    std::cerr << "                 used to automatically generate the output filename by replacing the input" << std::endl;
+    std::cerr << "                 file's extension with the specified one." << std::endl;
+    std::cerr << std::endl;
+    std::cerr << "Supported Formats:" << std::endl;
+    std::cerr << "  Input (by extension):  .hdag, .mtx, .dot" << std::endl;
+    std::cerr << "  Output (by extension): .hdag, .dot" << std::endl
+              << std::endl;
+    std::cerr << "The .hdag format is the HyperdagDB format. A detailed description can be found at:" << std::endl;
+    std::cerr << "https://github.com/Algebraic-Programming/HyperDAG_DB" << std::endl
+              << std::endl;
+    std::cerr << "Examples:" << std::endl;
+    std::cerr << "  " << prog_name << " my_graph.mtx my_graph.hdag" << std::endl;
+    std::cerr << "  " << prog_name << " my_graph.hdag my_graph.dot" << std::endl;
+    std::cerr << "  " << prog_name << " my_graph.mtx .dot           # Creates my_graph.dot" << std::endl;
+    std::cerr << "  " << prog_name << " my_graph.dot .hdag          # Creates my_graph.hdag" << std::endl;
 }
 
 int main(int argc, char *argv[]) {
@@ -59,30 +78,23 @@ int main(int argc, char *argv[]) {
             return 1;
         }
         output_filename = std::filesystem::path(input_filename).replace_extension(".dot").string();
+    } else if (output_filename_arg == ".hdag") {
+        if (input_ext == ".hdag") {
+            std::cerr << "Error: Input file is already a .hdag file. Cannot use '.hdag' as the output file argument in "
+                         "this case."
+                      << std::endl;
+            return 1;
+        }
+        output_filename = std::filesystem::path(input_filename).replace_extension(".hdag").string();
     } else {
         output_filename = output_filename_arg;
     }
 
     ComputationalDag graph;
-    bool read_success = false;
-
     std::cout << "Attempting to read graph from " << input_filename << "..." << std::endl;
-
-    if (input_ext == ".hdag") {
-        read_success = file_reader::readComputationalDagHyperdagFormat(input_filename, graph);
-    } else if (input_ext == ".txt") {
-        read_success = file_reader::readComputationalDagHyperdagFormatDB(input_filename, graph);
-    } else if (input_ext == ".mtx") {
-        read_success = file_reader::readComputationalDagMartixMarketFormat(input_filename, graph);
-    } else if (input_ext == ".dot") {
-        read_success = file_reader::readComputationalDagDotFormat(input_filename, graph);
-    } else {
-        std::cerr << "Unknown input file extension: " << input_ext << ". Assuming .hdag format." << std::endl;
-        read_success = file_reader::readComputationalDagHyperdagFormat(input_filename, graph);
-    }
-
-    if (!read_success) {
-        std::cerr << "Error: Failed to read graph from " << input_filename << std::endl;
+    bool status = file_reader::readGraph(input_filename, graph);
+    if (!status) {
+        std::cout << "Failed to read graph\n";
         return 1;
     }
 
@@ -95,6 +107,8 @@ int main(int argc, char *argv[]) {
     if (output_ext == ".dot") {
         DotFileWriter writer;
         writer.write_graph(output_filename, graph);
+    } else if (output_ext == ".hdag") {
+        file_writer::writeComputationalDagHyperdagFormatDB(output_filename, graph);
     } else {
         std::cerr << "Error: Unsupported output file format: " << output_ext << std::endl;
         print_usage(argv[0]);

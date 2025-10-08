@@ -154,7 +154,7 @@ BOOST_AUTO_TEST_CASE(cuthill_mckee_2) {
     for (auto &filename_graph : filenames_graph) {
 
         ComputationalDag graph;
-        auto status_graph = file_reader::readComputationalDagHyperdagFormat((cwd / filename_graph).string(), graph);
+        auto status_graph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(), graph);
 
         if (!status_graph) {
 
