@@ -71,8 +71,8 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_SimpleChain)
 
     // Job 1 should use 2 workers of type 0 and 2 of type 1
     BOOST_REQUIRE_EQUAL(schedule.node_assigned_worker_per_type[1].size(), 2);
-    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[1][0], 1);
-    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[1][1], 1);
+    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[1][0], 2);
+    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[1][1], 2);
 
     // Job 2 should use 2 workers of type 1
     BOOST_REQUIRE_EQUAL(schedule.node_assigned_worker_per_type[2].size(), 2);
@@ -117,6 +117,18 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ForkJoin)
     SubgraphSchedule schedule = scheduler.run(instance, multiplicities, required_proc_types);
 
     // 4. Assertions
+    // Manual calculation:
+    // Ranks: 0:500, 1:300, 2:400, 3:100. Prio order: 0,2,1,3
+    // T=0: Start 0 (4w). Finishes at 100/4=25.
+    // T=25: ReadyQ {1,2}. Avail=4. Prio order {2,1}.
+    //       Phase 1: Job 2 (mult 1) gets 1w. Avail=3. Job 1 (mult 2) gets 2w. Avail=1.
+    //       Phase 2 (proportional on 1w): Job 2 (prio 400) gets floor(1*400/700)=0. Job 1 (prio 300) gets floor(1*300/700)=0.
+    //       Phase 2.5 (greedy on 1w): Job 2 (higher prio) gets the remaining 1 worker.
+    //       Final allocation: Job 2 gets 1+1=2 workers. Job 1 gets 2 workers.
+    //       Job 2 (work 300, 2w) duration 150. Finishes at 25 + 150 = 175.
+    //       Job 1 (work 200, 2w) duration 100. Finishes at 25 + 100 = 125.
+    // T=125: Job 1 finishes.
+    // T=175: Job 2 finishes. Job 3 becomes ready. Starts with 4w. Duration 100/4=25. Ends 200.
     BOOST_CHECK_CLOSE(schedule.makespan, 200.0, 1e-9);
 
     BOOST_REQUIRE_EQUAL(schedule.node_assigned_worker_per_type.size(), 4);
@@ -127,7 +139,7 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ForkJoin)
 
     // Job 1 should use 2 workers
     BOOST_REQUIRE_EQUAL(schedule.node_assigned_worker_per_type[1].size(), 1);
-    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[1][0], 1);
+    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[1][0], 2);
 
     // Job 2 should use 2 workers
     BOOST_REQUIRE_EQUAL(schedule.node_assigned_worker_per_type[2].size(), 1);
@@ -135,7 +147,7 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ForkJoin)
 
     // Job 3 should use 4 workers
     BOOST_REQUIRE_EQUAL(schedule.node_assigned_worker_per_type[3].size(), 1);
-    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[3][0], 1);
+    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[3][0], 4);
 }
 
 BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_Deadlock)
@@ -208,28 +220,15 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ComplexDAG)
     EftSubgraphScheduler<graph_t> scheduler;
     SubgraphSchedule schedule = scheduler.run(instance, multiplicities, required_proc_types);
 
-    // 4. Assertions
-    // Manual calculation:
-    // Ranks: 0:380, 1:240, 2:330, 3:140, 4:180, 5:60. Prio order: 0,2,1,4,3,5
-    // T=0: Start 0 (4xT0). Finishes at 50/4 = 12.5
-    // T=12.5: ReadyQ {1,2}. Avail {4,4}. Prio sum=570.
-    //         Job 2 (prio 330, T1, mult 1) gets floor(4*330/570)=2 workers. Dur: 150/2=75. Ends 87.5.
-    //         Job 1 (prio 240, T0, mult 2) gets floor(4*240/570)=1 chunk=2 workers. Dur: 100/2=50. Ends 62.5.
-    // T=62.5: Job 1 finishes.
-    // T=87.5: Job 2 finishes. ReadyQ {3,4}. Avail {4,4}. Prio order {4,3}.
-    //         Runnable check: Job 4 (mult 2, T1) can run. Temp Avail {4,2}. Job 3 (mult 4, T0&T1) cannot run.
-    //         So only Job 4 runs. It gets all available T1 workers = 4. Dur: 120/4=30. Ends 117.5.
-    // T=117.5: Job 4 finishes. ReadyQ {3}. Avail {4,4}. Job 3 starts (4xT0, 4xT1). Dur: max(40/4, 40/4)=10. Ends 127.5.
-    // T=127.5: Job 3 finishes. ReadyQ {5}. Avail {4,4}. Job 5 starts (4xT0). Dur: 60/4=15. Ends 142.5.
-    BOOST_CHECK_CLOSE(schedule.makespan, 142.5, 1e-9);
+    BOOST_CHECK_CLOSE(schedule.makespan, 105.0, 1e-9);
 
     BOOST_REQUIRE_EQUAL(schedule.node_assigned_worker_per_type.size(), 6);
     BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[0][0], 4);
-    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[1][0], 1);
-    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[2][1], 2);
-    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[3][0], 1);
-    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[3][1], 1);
-    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[4][1], 2);
+    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[1][0], 4);
+    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[2][1], 4);
+    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[3][0], 4);
+    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[3][1], 4);
+    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[4][1], 4);
     BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[5][0], 4);
 }
 
@@ -275,24 +274,24 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ResourceContention)
     // Manual calculation:
     // Ranks: 0:120, 1:110, 2:60, 3:30, 4:10. Prio order: 0,1,2,3,4
     // T=0: Start 0 (4w). Finishes at 10/4=2.5.
-    // T=2.5: ReadyQ {1,2,3}. Avail=4. Runnable check: {1,2} can run.
-    //        Job 1 (prio 110) and 2 (prio 60) start, both get 2 workers.
-    //        Job 2 duration 50/2=25 (ends 27.5).
-    //        Job 1 (work 100, 2w) should have duration 50, but a bug causes it to be 60, so it ends at 2.5+60=62.5.
+    // T=2.5: ReadyQ {1,2,3}. Avail=4. Runnable check: {1,2} can run (each needs mult=2).
+    //        Guarantee phase: Job 1 gets 2w, Job 2 gets 2w. Remaining=0.
+    //        Job 1 (work 100, 2w) duration 50. Finishes at 2.5 + 50 = 52.5.
+    //        Job 2 (work 50, 2w) duration 25. Finishes at 2.5 + 25 = 27.5.
     // T=27.5: Job 2 finishes. 2 workers free. Job 3 starts. Duration 20/2=10 (ends 37.5).
     // T=37.5: Job 3 finishes.
-    // T=62.5: Job 1 finishes. Job 4 becomes ready. Starts with 4 workers. Duration 10/4=2.5 (ends 65.0).
-    BOOST_CHECK_CLOSE(schedule.makespan, 65.0, 1e-9);
+    // T=52.5: Job 1 finishes. Job 4 becomes ready. Starts with 4 workers. Duration 10/4=2.5 (ends 55.0).
+    BOOST_CHECK_CLOSE(schedule.makespan, 55.0, 1e-9);
 
     BOOST_REQUIRE_EQUAL(schedule.node_assigned_worker_per_type.size(), 5);
     // Job 0: 4 workers
     BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[0][0], 4);
     // Job 1 (high rank): gets 2 workers
-    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[1][0], 1);
+    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[1][0], 2);
     // Job 2 (mid rank): gets 2 workers
-    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[2][0], 1);
+    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[2][0], 2);
     // Job 3 (low rank): has to wait, then gets 2 workers
-    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[3][0], 1);
+    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[3][0], 2);
     // Job 4: gets 4 workers
     BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[4][0], 4);
 }
@@ -331,20 +330,21 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ProportionalAllocation)
     // Manual calculation:
     // Ranks: 0:310, 1:300, 2:100. Prio: 0,1,2
     // T=0: Start 0 (10 workers). Finishes at 10/10=1.0
-    // T=1.0: ReadyQ: {1,2}. Available: 10.
-    //        Total prio = 300+100=400.
-    //        Job 1 (prio 300) gets floor(10 * 300/400) = floor(7.5) = 7 workers.
-    //        Job 2 (prio 100) gets floor(10 * 100/400) = floor(2.5) = 2 workers.
-    //        Job 1 finishes at 1 + 300/7 = 43.857...
-    //        Job 2 finishes at 1 + 100/2 = 51.0
-    //        Makespan is 51.0
-    BOOST_CHECK_CLOSE(schedule.makespan, 51.0, 1e-9);
+    // T=1.0: ReadyQ: {1,2}. Available: 10. All mult=1.
+    //        Guarantee phase: Job 1 gets 1w, Job 2 gets 1w. Remaining=8.
+    //        Proportional phase (on remaining 8): Total prio = 300+100=400.
+    //        Job 1 gets floor(8 * 300/400) = 6 additional workers. Total = 1+6=7.
+    //        Job 2 gets floor(8 * 100/400) = 2 additional workers. Total = 1+2=3.
+    //        Job 1 finishes at 1 + 300/7 = 1 + 42.857... = 43.857...
+    //        Job 2 finishes at 1 + 100/3 = 1 + 33.333... = 34.333...
+    //        Makespan is 43.857...
+    BOOST_CHECK_CLOSE(schedule.makespan, 1.0 + 300.0/7.0, 1e-9);
 
     BOOST_REQUIRE_EQUAL(schedule.node_assigned_worker_per_type.size(), 3);
     // Job 0: 10 workers
     BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[0][0], 10);
     // Job 1 (high rank): gets 7 workers (75% of 10, floored)
     BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[1][0], 7);
-    // Job 2 (low rank): gets 2 workers (25% of 10, floored)
-    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[2][0], 2);
+    // Job 2 (low rank): gets 3 workers
+    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[2][0], 3);
 }

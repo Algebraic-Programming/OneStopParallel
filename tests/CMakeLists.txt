@@ -62,6 +62,8 @@ _add_test( heaps )
 
 #_add_test( kl_mem_constr )
 
+_add_test( isomorphic_subgraph_scheduler )
+
 _add_test( merkle_hash_computer )
 
 #_add_test( merkle_hash_divider )
@@ -69,8 +71,6 @@ _add_test( merkle_hash_computer )
 _add_test( orbit_graph_processor )
 
 _add_test( eft_subgraph_scheduler )
-
-_add_test( wavefront_orbit_processor )
 
 _add_test( wavefront_component_divider )
 

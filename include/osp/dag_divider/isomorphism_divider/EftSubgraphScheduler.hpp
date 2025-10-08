@@ -23,7 +23,6 @@ limitations under the License.
 #include "osp/bsp/model/BspInstance.hpp"
 #include <iostream>
 #include <vector>
-#include <map>
 #include <string>
 #include <numeric>
 #include <algorithm>
@@ -51,7 +50,7 @@ public:
 
 private:
 
-    static constexpr bool verbose = false;
+    static constexpr bool verbose = true;
 
     using job_id_t = vertex_idx_t<Graph_t>;
 
@@ -80,14 +79,20 @@ private:
         double start_time = -1.0;
         double finish_time = -1.0;
 
-        bool operator<(Job const &rhs) const {
-            return (upward_rank > rhs.upward_rank) || (upward_rank == rhs.upward_rank and id > rhs.id);
-        }
+    };
 
+    // Custom comparator for storing Job pointers in the ready set, sorted by rank.
+    struct JobPtrCompare {
+        bool operator()(const Job* lhs, const Job* rhs) const {
+            if (lhs->upward_rank != rhs->upward_rank) {
+                return lhs->upward_rank > rhs->upward_rank;
+            }
+            return lhs->id > rhs->id; // Tie-breaking
+        }
     };
 
     std::vector<Job> jobs_;
-    std::set<Job> ready_jobs_;
+    std::set<const Job*, JobPtrCompare> ready_jobs_;
 
     void prepare_for_scheduling(const BspInstance<Graph_t>& instance, const std::vector<unsigned>& multiplicities, const std::vector<std::vector<v_workw_t<Graph_t>>> & required_proc_types) {        
         jobs_.resize(instance.numberOfVertices());
@@ -106,7 +111,7 @@ private:
             job.in_degree_current = graph.in_degree(idx);
             if (job.in_degree_current == 0) {
                 job.status = JobStatus::READY;
-                ready_jobs_.insert(job);
+                ready_jobs_.insert(&job);
             } else {
                 job.status = JobStatus::WAITING;
             }
@@ -126,27 +131,17 @@ private:
     }
 
     void calculate_upward_ranks(const Graph_t & graph) {
-        for (const auto & vertex : graph.vertices()) {
-            if (is_sink(vertex, graph)) {
-                calculate_rank_recursive(vertex, graph);
+        const auto reverse_top_order = GetTopOrderReverse(graph);
+
+        for (const auto& vertex : reverse_top_order) {
+            double max_successor_rank = 0.0;
+            for (const auto& child : graph.children(vertex)) {
+                max_successor_rank = std::max(max_successor_rank, jobs_.at(child).upward_rank);
             }
-        }  
-    }
-    
-    double calculate_rank_recursive(vertex_idx_t<Graph_t> vertex, const Graph_t & graph) {
-        Job& job = jobs_.at(vertex);
-        if (job.upward_rank > 0.0) {
-            return job.upward_rank; // Memoization
+            
+            Job& job = jobs_.at(vertex);
+            job.upward_rank = static_cast<double>(graph.vertex_work_weight(vertex)) + max_successor_rank;
         }
-
-        double max_successor_rank = 0.0;
-        for (const auto& child : graph.children(vertex)) {
-            max_successor_rank = std::max(max_successor_rank, calculate_rank_recursive(child, graph));
-        }
-
-        
-        job.upward_rank = static_cast<double>(graph.vertex_work_weight(vertex)) + max_successor_rank;
-        return job.upward_rank;
     }
 
     SubgraphSchedule execute_schedule(const BspInstance<Graph_t>& instance) {
@@ -176,154 +171,109 @@ private:
                 std::cout << "Ready queue size: " << ready_jobs_.size() << ". Running jobs: " << running_jobs.size() << std::endl;
             }
 
-            // 1a. Find all ready jobs that could potentially start.
-            std::vector<job_id_t> candidate_ids;
-            if constexpr (verbose) std::cout << "Finding candidate jobs from ready set:" << std::endl;
-            for (const auto& ready_job_template : ready_jobs_) {
-                const Job& job = jobs_[ready_job_template.id];
-                bool can_potentially_start = true;
+            std::vector<Job*> jobs_to_start;
+            double total_runnable_priority = 0.0;
+
+            // Iterate through ready jobs and assign minimum resources if available.
+            for (const Job* job_ptr : ready_jobs_) {
+                Job& job = jobs_[job_ptr->id];
+                bool can_start = true;
                 for (size_t type_idx = 0; type_idx < num_worker_types; ++type_idx) {
                     if (job.required_proc_types[type_idx] > 0 && available_workers[type_idx] < job.multiplicity) {
-                        can_potentially_start = false;
+                        can_start = false;
                         break;
                     }
                 }
-                if (can_potentially_start) {
-                    candidate_ids.push_back(job.id);
-                }
-            }
 
-            // 1b. From the candidates, find which can actually run in this step and calculate their total priority.
-            // This is a greedy approach: we check candidates in priority order and provisionally "assign"
-            // one chunk of resources to see who else fits.
-            std::vector<job_id_t> runnable_ids;
-            double total_runnable_priority = 0.0;
-            std::vector<unsigned> temp_available_workers = available_workers;
-            for (const job_id_t job_id : candidate_ids) {
-                const Job& job = jobs_[job_id];
-                bool can_run_now = true;
-                for (size_t type_idx = 0; type_idx < num_worker_types; ++type_idx) {
-                    if (job.required_proc_types[type_idx] > 0 && temp_available_workers[type_idx] < job.multiplicity) {
-                        can_run_now = false;
-                        break;
-                    }
-                }
-                if (can_run_now) {
-                    runnable_ids.push_back(job_id);
+                if (can_start) {
+                    jobs_to_start.push_back(&job);
                     total_runnable_priority += job.upward_rank;
                     for (size_t type_idx = 0; type_idx < num_worker_types; ++type_idx) {
                         if (job.required_proc_types[type_idx] > 0) {
-                            temp_available_workers[type_idx] -= job.multiplicity;
+                            job.assigned_workers[type_idx] = job.multiplicity;
+                            available_workers[type_idx] -= job.multiplicity;
                         }
                     }
                 }
             }
 
-            std::vector<Job> newly_started_jobs;
-            if (!runnable_ids.empty()) {
+            if (!jobs_to_start.empty()) {
                 if constexpr (verbose) {
-                    std::cout << "Allocating workers to " << runnable_ids.size() << " runnable jobs..." << std::endl;
+                    std::cout << "Allocating workers to " << jobs_to_start.size() << " runnable jobs..." << std::endl;
                 }
-                const std::vector<unsigned> initial_available_workers = available_workers;
 
-                for (const job_id_t job_id : runnable_ids) {
-                    Job& job = jobs_[job_id];
-                    
-                    // 1c. Double-check if it can still start, as higher-priority jobs might have taken workers.
-                    bool can_start = true;
+                //Distribute remaining workers proportionally among the jobs that just started.
+                const std::vector<unsigned> remaining_workers_pool = available_workers;
+                for (Job* job_ptr : jobs_to_start) {
+                    Job& job = *job_ptr;
                     for (size_t type_idx = 0; type_idx < num_worker_types; ++type_idx) {
-                        if (job.required_proc_types[type_idx] > 0 && available_workers[type_idx] < job.multiplicity) {
-                            can_start = false;
-                            break;
+                        if (job.required_proc_types[type_idx] > 0) {
+                            const double proportion = (total_runnable_priority > 0) ? (job.upward_rank / total_runnable_priority) : (1.0 / static_cast<double>(jobs_to_start.size()));
+                            const unsigned proportional_share = static_cast<unsigned>(static_cast<double>(remaining_workers_pool[type_idx]) * proportion);
+                            const unsigned num_additional_chunks = (job.multiplicity > 0) ? proportional_share / job.multiplicity : 0;
+                            const unsigned num_available_chunks = (job.multiplicity > 0) ? available_workers[type_idx] / job.multiplicity : 0;
+                            const unsigned num_chunks_to_assign = std::min(num_additional_chunks, num_available_chunks);
+                            const unsigned assigned = num_chunks_to_assign * job.multiplicity;
+                            job.assigned_workers[type_idx] += assigned;
+                            available_workers[type_idx] -= assigned;
                         }
-                    }
-
-                    if (can_start) {
-                        if constexpr (verbose) std::cout << "  - Starting Job " << job.id << ":" << std::endl;
-                        // 1d. This job will start. Allocate workers to it, respecting the proportional cap.
-                        for (size_t type_idx = 0; type_idx < num_worker_types; ++type_idx) {
-                            if (job.required_proc_types[type_idx] > 0) {
-                                // Greedily determine how many chunks are available right now.
-                                unsigned num_available_chunks = available_workers[type_idx] / job.multiplicity;
-
-                                // Calculate the max number of chunks this job is allowed based on its priority-weighted share
-                                // of the *initial* pool of workers for this time step.
-                                double proportion = (total_runnable_priority > 0) ? (job.upward_rank / total_runnable_priority) : (1.0 / static_cast<double>(runnable_ids.size()));
-                                unsigned cap = static_cast<unsigned>(initial_available_workers[type_idx] * proportion);
-                                unsigned num_capped_chunks = cap / job.multiplicity;
-
-                                // Assign the minimum of what's available and what the cap allows.
-                                unsigned num_chunks_to_assign = std::min(num_available_chunks, num_capped_chunks);
-                                
-                                // We must assign at least one chunk for the job to start. The can_start check ensures this is safe.
-                                num_chunks_to_assign = std::max(1u, num_chunks_to_assign);
-
-                                unsigned assigned = num_chunks_to_assign * job.multiplicity;
-                                job.assigned_workers[type_idx] = assigned;
-                                available_workers[type_idx] -= assigned;
-                                if constexpr (verbose) {
-                                    std::cout << "    - Type " << type_idx << ": assigned " << assigned << " workers (" << num_chunks_to_assign << " chunks). "
-                                              << "Available now: " << available_workers[type_idx] << std::endl;
-                                }
-                            }
-                        }
-
-                        // 1e. Finalize starting the job.
-                        job.status = JobStatus::RUNNING;
-                        job.start_time = current_time;
-
-                        // Calculate finish time based on the bottleneck worker type.
-                        double max_exec_time = 0.0;
-                        for (size_t type_idx = 0; type_idx < num_worker_types; ++type_idx) {
-                            if (job.required_proc_types[type_idx] > 0) {
-                                double exec_time = static_cast<double>(job.required_proc_types[type_idx]) / job.assigned_workers[type_idx];
-                                max_exec_time = std::max(max_exec_time, exec_time);
-                            }
-                        }
-                        job.finish_time = current_time + max_exec_time;
-                        
-                        if constexpr (verbose) {
-                            std::cout << "    - Job " << job.id << " started at " << job.start_time << ", will finish at " << job.finish_time << std::endl;
-                        }
-                        
-                        running_jobs.push_back(job.id);
-                        newly_started_jobs.push_back(job);
                     }
                 }
-            }
 
-            // Remove newly started jobs from the ready set.
-            for(const auto& started_job : newly_started_jobs) {
-                ready_jobs_.erase(started_job);
+                //Greedily assign any remaining workers to the highest-rank jobs that can take them.
+                for (Job* job_ptr : jobs_to_start) {
+                    Job& job = *job_ptr;
+                    for (size_t type_idx = 0; type_idx < num_worker_types; ++type_idx) {
+                        if (job.required_proc_types[type_idx] > 0 && job.multiplicity > 0) {
+                            unsigned num_additional_chunks = available_workers[type_idx] / job.multiplicity;
+                            unsigned assigned = num_additional_chunks * job.multiplicity;
+                            job.assigned_workers[type_idx] += assigned;
+                            available_workers[type_idx] -= assigned;
+                        }
+                    }
+                }
+
+                for (Job* job_ptr : jobs_to_start) {
+                    Job& job = *job_ptr;
+
+                    job.status = JobStatus::RUNNING;
+                    job.start_time = current_time;
+
+                    // Calculate finish time based on total work and total assigned workers.
+                    unsigned total_assigned_workers = std::accumulate(job.assigned_workers.begin(), job.assigned_workers.end(), 0u);
+                    double exec_time = (total_assigned_workers > 0) ? static_cast<double>(job.total_work) / static_cast<double>(total_assigned_workers) : 0.0;
+                    job.finish_time = current_time + exec_time;
+
+                    running_jobs.push_back(job.id);
+                    ready_jobs_.erase(&job);
+                }
             }
 
             // 2. ADVANCE TIME
-            if (running_jobs.empty()) {
-                if (completed_count < jobs_.size()) {
-                     std::cerr << "Error: Deadlock detected. No running jobs and " 
-                               << jobs_.size() - completed_count << " jobs incomplete." << std::endl;
-                    if constexpr (verbose) {
-                        std::cout << "Deadlock! Ready queue:" << std::endl;
-                        for (const auto& ready_job_template : ready_jobs_) {
-                            const Job& job = jobs_[ready_job_template.id];
-                            std::cout << "  - Job " << job.id << " (mult " << job.multiplicity << ") needs workers: ";
-                            for(size_t type_idx = 0; type_idx < num_worker_types; ++type_idx) {
-                                if (job.required_proc_types[type_idx] > 0) {
-                                    std::cout << "T" << type_idx << ":" << job.multiplicity << " ";
-                                }
+            if (running_jobs.empty() && completed_count < jobs_.size()) {
+                 std::cerr << "Error: Deadlock detected. No running jobs and " 
+                           << jobs_.size() - completed_count << " jobs incomplete." << std::endl;
+                if constexpr (verbose) {
+                    std::cout << "Deadlock! Ready queue:" << std::endl;
+                    for (const auto* ready_job_ptr : ready_jobs_) {
+                        const Job& job = *ready_job_ptr;
+                        std::cout << "  - Job " << job.id << " (mult " << job.multiplicity << ") needs workers: ";
+                        for(size_t type_idx = 0; type_idx < num_worker_types; ++type_idx) {
+                            if (job.required_proc_types[type_idx] > 0) {
+                                std::cout << "T" << type_idx << ":" << job.multiplicity << " ";
                             }
-                            std::cout << std::endl;
                         }
-                        std::cout << "Available workers: ";
-                        for(size_t i=0; i<num_worker_types; ++i) std::cout << "T" << i << ":" << available_workers[i] << " ";
                         std::cout << std::endl;
                     }
-                     SubgraphSchedule result;
-                     result.makespan = -1.0;
-                     return result;
+                    std::cout << "Available workers: ";
+                    for(size_t i=0; i<num_worker_types; ++i) std::cout << "T" << i << ":" << available_workers[i] << " ";
+                    std::cout << std::endl;
                 }
-                break; // All jobs are done
+                 SubgraphSchedule result;
+                 result.makespan = -1.0;
+                 return result;
             }
+            if (running_jobs.empty()) break; // All jobs are done
             
             double next_event_time = std::numeric_limits<double>::max();
             for (job_id_t id : running_jobs) {
@@ -352,7 +302,7 @@ private:
                         successor_job.in_degree_current--;
                         if (successor_job.in_degree_current == 0) {
                             successor_job.status = JobStatus::READY;
-                            ready_jobs_.insert(successor_job);
+                            ready_jobs_.insert(&successor_job);
                             if constexpr (verbose) std::cout << "    - Successor " << successor_job.id << " is now READY." << std::endl;
                         }
                     }
@@ -382,7 +332,7 @@ private:
         for(const auto& job : jobs_) {
             result.node_assigned_worker_per_type[job.id].resize(num_worker_types);
             for (size_t i = 0; i < num_worker_types; ++i) {
-                result.node_assigned_worker_per_type[job.id][i] = job.assigned_workers[i] > 0 ? job.assigned_workers[i] / job.multiplicity : 0;
+                result.node_assigned_worker_per_type[job.id][i] = job.assigned_workers[i];
             }
         }
 

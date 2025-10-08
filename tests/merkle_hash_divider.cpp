@@ -32,7 +32,6 @@ limitations under the License.
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin_v2/kl_include_mt.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_total_comm.hpp"
 #include "osp/coarser/coarser_util.hpp"
-#include "osp/dag_divider/isomorphism_divider/WavefrontOrbitProcessor.hpp"
 #include "osp/dag_divider/isomorphism_divider/EftSubgraphScheduler.hpp"
 #include "osp/dag_divider/isomorphism_divider/IsomorphicSubgraphScheduler.hpp"
 
@@ -57,16 +56,13 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test)
 
     instance.getArchitecture().setProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1 , 1, 1, 1, 1, 1, 1, 1, 1 , 1, 1, 1, 1, 1, 1, 1, 1 , 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1});
     instance.setDiagonalCompatibilityMatrix(2);
-    instance.setSynchronisationCosts(10000);
+    instance.setSynchronisationCosts(10000000);
+    instance.setCommunicationCosts(10);
 
     BspLocking<graph_t> greedy;
     kl_total_comm_improver_mt<graph_t> kl;
     ComboScheduler<graph_t> combo(greedy, kl);
 
-    // // IsomorphicComponentDivider<graph_t> wavefront;
-    // WavefrontOrbitProcessor<graph_t> wavefront(2);
-
-    // //wavefront.divide(instance.getComputationalDag());
 
     // // //RecursiveWavefrontDivider<graph_t> wavefront;
     // // //wavefront.use_threshold_scan_splitter(8.0, 8.0, 2);
@@ -101,7 +97,8 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test)
 
     bool acyc = is_acyclic(corase_graph);
     std::cout << "Coarse dag is " << (acyc ? "acyclic." : "not acyclic.");
-    
+    BOOST_CHECK(acyc);
+
 
 
     // IsomorphicWavefrontComponentScheduler<graph_t, graph_t> scheduler(wavefront, combo);
