@@ -33,6 +33,7 @@ limitations under the License.
 #include "osp/bsp/scheduler/GreedySchedulers/GrowLocalAutoCoresParallel.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/RandomGreedy.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/VarianceFillup.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/GreedyVarianceSspScheduler.hpp"
 #include "osp/bsp/scheduler/LoadBalanceScheduler/LightEdgeVariancePartitioner.hpp"
 #include "osp/bsp/scheduler/LoadBalanceScheduler/VariancePartitioner.hpp"
 #include "osp/bsp/scheduler/LocalSearch/HillClimbing/hill_climbing.hpp"
@@ -208,6 +209,12 @@ BOOST_AUTO_TEST_CASE(variancefillup_test) {
     VarianceFillup<computational_dag_vector_impl_def_t> test;
     run_test(&test);
 }
+
+BOOST_AUTO_TEST_CASE(greedyvariancesspscheduler_test){
+    GreedyVarianceSspScheduler<computational_dag_vector_impl_def_t> test;
+    run_test(&test);
+}
+
 
 BOOST_AUTO_TEST_CASE(etf_test_edge_desc_impl) {
 
