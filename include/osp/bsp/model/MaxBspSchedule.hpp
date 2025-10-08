@@ -114,8 +114,8 @@ class MaxBspSchedule : public BspSchedule<Graph_t> {
 
         v_workw_t<Graph_t> costs = 0U;
         for (unsigned step = 0U; step < this->number_of_supersteps; step++) {
-            const auto step_comm_cost = (step == 0U) ? 0U : max_comm_per_step[step - 1U];
-            if (step_comm_cost > 0U) {
+            v_commw_t<Graph_t> step_comm_cost = (step == 0U) ? static_cast<v_commw_t<Graph_t>>(0) : max_comm_per_step[step - 1U];
+            if (step_comm_cost > static_cast<v_commw_t<Graph_t>>(0)) {
                 step_comm_cost += this->instance->synchronisationCosts();
             }
             costs += std::max(step_comm_cost, max_work_per_step[step]);
