@@ -106,14 +106,14 @@ class MaxBspScheduleCS : public BspScheduleCS<Graph_t> {
         const std::vector<v_commw_t<Graph_t>> max_comm_per_step = this->compute_max_comm_per_step_helper(rec, send);
         const std::vector<v_workw_t<Graph_t>> max_work_per_step = this->compute_max_work_per_step_helper();
 
-        v_workw_t<Graph_t> costs = 0;
-        for (unsigned step = 0; step < this->number_of_supersteps; step++) {
-            const auto step_comm_cost = (step == 0) ? 0 : max_comm_per_step[step - 1];
+        v_workw_t<Graph_t> costs = 0U;
+        for (unsigned step = 0U; step < this->number_of_supersteps; step++) {
+            const auto step_comm_cost = (step == 0U) ? 0U : max_comm_per_step[step - 1U];
+            if (step_comm_cost > 0U) {
+                step_comm_cost += this->instance->synchronisationCosts();
+            }
             costs += std::max(step_comm_cost, max_work_per_step[step]);
 
-            if (step_comm_cost > 0) {
-                costs += this->instance->synchronisationCosts();
-            }
         }
         return costs;
     }
