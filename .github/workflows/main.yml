@@ -70,7 +70,7 @@ jobs:
           pip3 install --upgrade pip
           pip3 install cmake==3.21.3
 
-      - name: Configure (RelWithDebInfo + tests)
+      - name: Configure
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_TESTS=ON
 
       - name: Build all targets
@@ -88,7 +88,7 @@ jobs:
           name: test-results
           path: build/test_results.xml
 
-      - name: Run osp example (simple DAG)
+      - name: Run osp example
         working-directory: ${{ github.workspace }}/build
         run: |
           ./apps/osp \
@@ -109,7 +109,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install dependencies (no Eigen)
+      - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
@@ -118,26 +118,36 @@ jobs:
           pip3 install --upgrade pip
           pip3 install cmake==3.21.3
 
-      - name: Configure (RelWithDebInfo + tests, no Eigen)
+      - name: Configure
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_TESTS=ON
 
       - name: Build all targets
         working-directory: ${{ github.workspace }}/build
         run: cmake --build . -j$(nproc)
 
-      - name: Run tests (no Eigen)
+      - name: Run tests
         working-directory: ${{ github.workspace }}/build
         run: ctest --output-on-failure --output-junit test_results_no_eigen.xml
         continue-on-error: true
 
-      - name: Upload test results (no Eigen)
+      - name: Upload test results
         uses: actions/upload-artifact@v4
         with:
           name: test-results-no-eigen
           path: build/test_results_no_eigen.xml
 
+      - name: Run osp example
+        working-directory: ${{ github.workspace }}/build
+        run: |
+          ./apps/osp \
+            --inputDag ../data/spaa/tiny/instance_bicgstab.hdag \
+            --inputMachine ../data/machine_params/p3.arch \
+            --Serial --GreedyBsp --BspLocking --GrowLocal --Variance --Cilk \
+            --Etf --GreedyChildren --MultiHC --SarkarLockingHC \
+            --GreedyChildrenKL --GrowLocalKL --GreedyBspHC --FunnelLocking
+
   # -------------------------------------------------
-  # 4. BUILD DOCUMENTATION (only on master + PR)
+  # 4. BUILD DOCUMENTATION (only on master)
   # -------------------------------------------------
   docs:
     name: Build Docs
