@@ -185,7 +185,8 @@ void MultiLevelHillClimbingScheduler<Graph_t>::setLinearRefinementPoints(vertex_
     for (vertex_idx nextN = target_nr_of_nodes + stepSize; nextN < OriginalNrOfNodes; nextN += stepSize)
         refinement_points.push_back(nextN);
 
-    refinement_points.pop_back();
+    if (!refinement_points.empty())
+        refinement_points.pop_back();
     refinement_points.push_back(OriginalNrOfNodes);
 }
 
