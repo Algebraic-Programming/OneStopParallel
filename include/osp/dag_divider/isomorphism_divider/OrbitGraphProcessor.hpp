@@ -293,7 +293,31 @@ private:
         for (VertexType i = 0; i < induced_subgraph.num_vertices(); ++i) {
             out_new_subgraphs[components[i]].push_back(all_nodes[i]);
         }
-        return num_components >= symmetry_threshold_;
+
+        if (num_components < symmetry_threshold_) {
+            return false;
+        }
+
+        // 3. Verify that all new components are isomorphic and have the same size.
+        if (num_components > 1) {
+            const size_t first_sg_size = out_new_subgraphs[0].size();
+            Constr_Graph_t rep_sg;
+            create_induced_subgraph(original_dag, rep_sg, out_new_subgraphs[0]);
+
+            for (size_t i = 1; i < num_components; ++i) {
+                if (out_new_subgraphs[i].size() != first_sg_size) {
+                    return false;
+                }
+                
+                Constr_Graph_t current_sg;
+                create_induced_subgraph(original_dag, current_sg, out_new_subgraphs[i]);
+                if (!are_isomorphic_by_merkle_hash(rep_sg, current_sg)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
 public:

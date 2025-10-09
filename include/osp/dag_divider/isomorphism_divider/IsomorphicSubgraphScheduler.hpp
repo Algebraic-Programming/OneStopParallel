@@ -36,7 +36,7 @@ class IsomorphicSubgraphScheduler {
 
     private:
 
-    static constexpr bool verbose = true;
+    static constexpr bool verbose = false;
     
     size_t symmetry_ = 2;
     Scheduler<Constr_Graph_t> * bsp_scheduler_;
