@@ -2,24 +2,27 @@ name: OSP CI
 
 on:
   push:
-    branches: ["*"]
+    branches: [master]
+  pull_request:
+    branches: [master]
+    types: [opened, reopened, synchronize, ready_for_review]
 
 jobs:
   # -------------------------------------------------
-  # 1. MULTI-CONFIGURATION BUILD TESTS
+  # 1. QUICK BUILD TESTS (Debug + Release)
   # -------------------------------------------------
   build_matrix:
     name: Build (${{ matrix.build_type }})
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/master'
     strategy:
       matrix:
-        build_type: [Debug, RelWithDebInfo, Release, RelWithDebInfo-noEigen]
+        build_type: [Debug, Release]
 
     steps:
       - uses: actions/checkout@v3
 
       - name: Install dependencies
-        if: matrix.build_type != 'RelWithDebInfo-noEigen'
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
@@ -28,35 +31,21 @@ jobs:
           pip3 install --upgrade pip
           pip3 install cmake==3.21.3
 
-      - name: Install dependencies (no Eigen)
-        if: matrix.build_type == 'RelWithDebInfo-noEigen'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            make gcc g++ git libboost-all-dev \
-            doxygen graphviz python3-pip
-          pip3 install --upgrade pip
-          pip3 install cmake==3.21.3
-
       - name: Configure (${{ matrix.build_type }})
-        run: |
-          if [ "${{ matrix.build_type }}" = "RelWithDebInfo-noEigen" ]; then
-            cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo
-          else
-            cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-          fi
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
 
       - name: Build (${{ matrix.build_type }})
         working-directory: ${{ github.workspace }}/build
         run: cmake --build . -j$(nproc)
 
   # -------------------------------------------------
-  # 2. FULL BUILD + TEST + SIMPLE DAG RUN (with Eigen)
+  # 2. FULL BUILD + TEST + SIMPLE DAG RUN + DOCS (RelWithDebInfo + Eigen)
   # -------------------------------------------------
   test_and_run:
     name: Build & Test (RelWithDebInfo + Eigen)
     runs-on: ubuntu-latest
     needs: build_matrix
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/master'
 
     steps:
       - uses: actions/checkout@v3
@@ -98,13 +87,26 @@ jobs:
             --Etf --GreedyChildren --MultiHC --SarkarLockingHC \
             --GreedyChildrenKL --GrowLocalKL --GreedyBspHC --FunnelLocking
 
+      - name: Build documentation
+        run: |
+          cmake --build build --target doc
+          mkdir -p public
+          cp -r doc/html/* public
+
+      - name: Upload docs artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docs
+          path: public
+
   # -------------------------------------------------
-  # 3. FULL BUILD + TEST (NO EIGEN)
+  # 3. FULL BUILD + TEST (RelWithDebInfo-noEigen)
   # -------------------------------------------------
   test_no_eigen:
-    name: Build & Test (RelWithDebInfo, no Eigen)
+    name: Build & Test (RelWithDebInfo-noEigen)
     runs-on: ubuntu-latest
     needs: build_matrix
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/master'
 
     steps:
       - uses: actions/checkout@v3
@@ -145,34 +147,3 @@ jobs:
             --Serial --GreedyBsp --BspLocking --GrowLocal --Variance --Cilk \
             --Etf --GreedyChildren --MultiHC --SarkarLockingHC \
             --GreedyChildrenKL --GrowLocalKL --GreedyBspHC --FunnelLocking
-
-  # -------------------------------------------------
-  # 4. BUILD DOCUMENTATION (only on master)
-  # -------------------------------------------------
-  docs:
-    name: Build Docs
-    runs-on: ubuntu-latest
-    needs: [test_and_run, test_no_eigen]
-    if: github.ref == 'refs/heads/master'
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            doxygen graphviz libeigen3-dev cmake g++
-
-      - name: Build docs
-        run: |
-          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-          cmake --build build --target doc
-          mkdir -p public
-          cp -r doc/html/* public
-
-      - name: Upload docs artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: docs
-          path: public
