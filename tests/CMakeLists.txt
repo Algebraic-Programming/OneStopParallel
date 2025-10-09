@@ -90,6 +90,9 @@ _add_test( bsp_greedy_recomputer )
 ## pebbling model
 _add_test( pebbling_schedule_class )
 
+## partitioning model
+_add_test( hypergraph_and_partition )
+
 ## auxiliary
 _add_test( intpower )
 
