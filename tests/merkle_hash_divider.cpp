@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test)
     //using graph_t2 = dag_vector_adapter<cdag_vertex_impl_unsigned,int>;
    
     BspInstance<graph_t2> instance;
-    //file_reader::readComputationalDagDotFormat("", instance.getComputationalDag());
+    file_reader::readComputationalDagDotFormat("", instance.getComputationalDag());
 
     for (const auto& v : instance.vertices()) {
 
@@ -56,8 +56,8 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test)
 
     instance.getArchitecture().setProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1 , 1, 1, 1, 1, 1, 1, 1, 1 , 1, 1, 1, 1, 1, 1, 1, 1 , 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1});
     instance.setDiagonalCompatibilityMatrix(2);
-    instance.setSynchronisationCosts(10000000);
-    instance.setCommunicationCosts(10);
+    instance.setSynchronisationCosts(1000);
+    instance.setCommunicationCosts(1);
 
     BspLocking<graph_t> greedy;
     kl_total_comm_improver_mt<graph_t> kl;
@@ -96,6 +96,11 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test)
                                             partition);
 
     bool acyc = is_acyclic(corase_graph);
+
+    DotFileWriter writer;
+
+    writer.write_graph("graph.dot", corase_graph);
+
     std::cout << "Coarse dag is " << (acyc ? "acyclic." : "not acyclic.");
     BOOST_CHECK(acyc);
 

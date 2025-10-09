@@ -36,11 +36,11 @@ class IsomorphicSubgraphScheduler {
 
     private:
 
-    static constexpr bool verbose = false;
-    
+    static constexpr bool verbose = false;    
     size_t symmetry_ = 2;
     Scheduler<Constr_Graph_t> * bsp_scheduler_;
-
+    bool use_max_group_size_ = false;
+    unsigned max_group_size_ = 0;
     bool plot_dot_graphs_ = false;
 
     public:
@@ -48,13 +48,14 @@ class IsomorphicSubgraphScheduler {
     IsomorphicSubgraphScheduler(Scheduler<Constr_Graph_t> & bsp_scheduler) : symmetry_(2), bsp_scheduler_(&bsp_scheduler), plot_dot_graphs_(false) {}
     virtual ~IsomorphicSubgraphScheduler() {}
 
-    void set_symmetry(size_t symmetry) {
-        symmetry_ = symmetry;
+    void set_symmetry(size_t symmetry) { symmetry_ = symmetry; }
+    void set_plot_dot_graphs(bool plot) { plot_dot_graphs_ = plot; }
+    void disable_use_max_group_size() { use_max_group_size_ = false; }
+    void enable_use_max_group_size(const unsigned max_group_size) {
+        use_max_group_size_ = true;
+        max_group_size_ = max_group_size;
     }
 
-    void set_plot_dot_graphs(bool plot) {
-        plot_dot_graphs_ = plot;
-    }
 
     std::vector<vertex_idx_t<Graph_t>> compute_partition(const BspInstance<Graph_t>& instance) {
         OrbitGraphProcessor<Graph_t, Constr_Graph_t> orbit_processor(symmetry_);
@@ -66,7 +67,7 @@ class IsomorphicSubgraphScheduler {
             writer.write_colored_graph("isomorphic_groups.dot", instance.getComputationalDag(), orbit_processor.get_final_contraction_map());
         }
 
-        const unsigned min_proc_type_count = instance.getArchitecture().getMinProcessorTypeCount();
+        const unsigned min_proc_type_count = use_max_group_size_ ? max_group_size_ : instance.getArchitecture().getMinProcessorTypeCount();
         trim_subgraph_groups(isomorphic_groups, min_proc_type_count);
 
         auto input = prepare_subgraph_scheduling_input(instance, isomorphic_groups);
@@ -192,28 +193,23 @@ class IsomorphicSubgraphScheduler {
                 continue;
             }
 
-            // --- Schedule Representative and Create Pattern ---
+            // Schedule the Representative Subgraph to get a BSP schedule pattern ---
             auto rep_subgraph_vertices_sorted = group.subgraphs[0];
             std::sort(rep_subgraph_vertices_sorted.begin(), rep_subgraph_vertices_sorted.end());
 
             BspInstance<Constr_Graph_t> representative_instance;
-
             create_induced_subgraph(instance.getComputationalDag(), representative_instance.getComputationalDag(), rep_subgraph_vertices_sorted);
             
-            // Create a map from original vertex ID to its local index in the induced subgraph
-            std::unordered_map<vertex_idx_t<Graph_t>, vertex_idx_t<Constr_Graph_t>> vertex_to_local_idx;
-            for (size_t j = 0; j < rep_subgraph_vertices_sorted.size(); ++j) {
-                vertex_to_local_idx[rep_subgraph_vertices_sorted[j]] = static_cast<vertex_idx_t<Constr_Graph_t>>(j);
-            }
-
             representative_instance.setArchitecture(instance.getArchitecture());
             std::vector<v_memw_t<Constr_Graph_t>> dummy_mem_weights(sub_sched.node_assigned_worker_per_type[grou_idx].size(), 0);
             for (unsigned proc_type = 0; proc_type < sub_sched.node_assigned_worker_per_type[grou_idx].size(); ++proc_type) {
                 dummy_mem_weights[proc_type] = static_cast<v_memw_t<Constr_Graph_t>>(instance.getArchitecture().maxMemoryBoundProcType(proc_type));
             }
-            representative_instance.getArchitecture().set_processors_consequ_types(sub_sched.node_assigned_worker_per_type[grou_idx], dummy_mem_weights);
+            const auto& procs_for_group = sub_sched.node_assigned_worker_per_type[grou_idx];
+            representative_instance.getArchitecture().set_processors_consequ_types(procs_for_group, dummy_mem_weights);
             representative_instance.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
 
+            // Schedule the representative to get the pattern
             BspSchedule<Constr_Graph_t> bsp_schedule(representative_instance);
 
             if constexpr (verbose) {
@@ -232,65 +228,58 @@ class IsomorphicSubgraphScheduler {
                 std::cout << "    Sync cost: " << sub_arch.synchronisationCosts() << ", Comm cost: " << sub_arch.communicationCosts() << std::endl;
             }
             bsp_scheduler_->computeSchedule(bsp_schedule);
-            SetSchedule<Constr_Graph_t> set_schedule(bsp_schedule);
 
-            // --- Build Pattern Map ---
+            // Build data structures for applying the pattern ---
+            // Map (superstep, processor) -> relative partition ID
             std::map<std::pair<unsigned, unsigned>, vertex_idx_t<Graph_t>> sp_proc_to_relative_partition;
             vertex_idx_t<Graph_t> num_partitions_per_subgraph = 0;
-            for (unsigned s = 0; s < set_schedule.step_processor_vertices.size(); ++s) {
-                const auto& procs = set_schedule.step_processor_vertices[s];
-                for (unsigned p = 0; p < procs.size(); ++p) {
-                    if (!procs[p].empty()) {
-                        sp_proc_to_relative_partition[{s, p}] = num_partitions_per_subgraph;
-                        num_partitions_per_subgraph++;
-                    }
+            for (size_t j = 0; j < rep_subgraph_vertices_sorted.size(); ++j) {
+                const auto sp_pair = std::make_pair(bsp_schedule.assignedSuperstep(j), bsp_schedule.assignedProcessor(j));
+                if (sp_proc_to_relative_partition.find(sp_pair) == sp_proc_to_relative_partition.end()) {
+                    sp_proc_to_relative_partition[sp_pair] = num_partitions_per_subgraph++;
                 }
             }
 
-            // --- Replicate Pattern for ALL Subgraphs in the Group ---
+            // Pre-compute hashes for the representative to use for mapping
+            MerkleHashComputer<Constr_Graph_t> rep_hasher(representative_instance.getComputationalDag());
+
+            // Replicate the schedule pattern for ALL subgraphs in the group ---
             for (size_t i = 0; i < group.subgraphs.size(); ++i) {
                 auto current_subgraph_vertices_sorted = group.subgraphs[i];
                 std::sort(current_subgraph_vertices_sorted.begin(), current_subgraph_vertices_sorted.end());
 
-                for (size_t j = 0; j < current_subgraph_vertices_sorted.size(); ++j) {
-                    vertex_idx_t<Graph_t> original_rep_vertex = rep_subgraph_vertices_sorted[j];
-                    vertex_idx_t<Constr_Graph_t> local_idx = vertex_to_local_idx.at(original_rep_vertex);
-                    vertex_idx_t<Graph_t> relative_partition = sp_proc_to_relative_partition.at({bsp_schedule.assignedSuperstep(local_idx), bsp_schedule.assignedProcessor(local_idx)});
-                    partition[current_subgraph_vertices_sorted[j]] = current_partition_idx + relative_partition;
+                // Map from a vertex in the current subgraph to its corresponding local index (0, 1, ...) in the representative's schedule
+                std::unordered_map<vertex_idx_t<Graph_t>, vertex_idx_t<Constr_Graph_t>> current_vertex_to_rep_local_idx;
+
+                if (i == 0) { // The first subgraph is the representative itself
+                    for (size_t j = 0; j < rep_subgraph_vertices_sorted.size(); ++j) {
+                        current_vertex_to_rep_local_idx[rep_subgraph_vertices_sorted[j]] = static_cast<vertex_idx_t<Constr_Graph_t>>(j);
+                    }
+                } else { // For other subgraphs, build the isomorphic mapping
+                    Constr_Graph_t current_subgraph_graph;
+                    create_induced_subgraph(instance.getComputationalDag(), current_subgraph_graph, current_subgraph_vertices_sorted);
+
+                    MerkleHashComputer<Constr_Graph_t> current_hasher(current_subgraph_graph);
+
+                    for(const auto& [hash, rep_orbit_nodes] : rep_hasher.get_orbits()) {
+                        const auto& current_orbit_nodes = current_hasher.get_orbit_from_hash(hash);
+                        for(size_t k = 0; k < rep_orbit_nodes.size(); ++k) {
+                            // Map: current_subgraph_vertex -> representative_subgraph_local_idx
+                            current_vertex_to_rep_local_idx[current_subgraph_vertices_sorted[current_orbit_nodes[k]]] = static_cast<vertex_idx_t<Constr_Graph_t>>(rep_orbit_nodes[k]);
+                        }
+                    }
+                }
+
+                // Apply the partition pattern
+                for (const auto& current_vertex : current_subgraph_vertices_sorted) {
+                    const auto rep_local_idx = current_vertex_to_rep_local_idx.at(current_vertex);
+                    const auto sp_pair = std::make_pair(bsp_schedule.assignedSuperstep(rep_local_idx), bsp_schedule.assignedProcessor(rep_local_idx));
+                    partition[current_vertex] = current_partition_idx + sp_proc_to_relative_partition.at(sp_pair);
                 }
                 current_partition_idx += num_partitions_per_subgraph;
             }
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 };
 
 }

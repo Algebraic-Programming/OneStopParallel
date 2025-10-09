@@ -72,7 +72,6 @@ private:
     std::vector<VertexType> final_contraction_map_;
     std::vector<Group> final_groups_;
 
-    // --- Algorithm Parameters ---
     size_t symmetry_threshold_ = 2;
     static constexpr bool verbose = false;
 
@@ -118,11 +117,10 @@ public:
 
         coarser_util::construct_coarse_dag(dag, coarse_graph_, contraction_map_);
 
-        Constr_Graph_t transitive_reduction; 
-        transitive_reduction_sparse(coarse_graph_, transitive_reduction);
-        coarse_graph_ = std::move(transitive_reduction);
+        // Constr_Graph_t transitive_reduction; 
+        // transitive_reduction_sparse(coarse_graph_, transitive_reduction);
+        // coarse_graph_ = std::move(transitive_reduction);
 
-        // --- Step 2: Perform specialized coarsening on the orbit graph ---
         perform_coarsening(dag, coarse_graph_);
     }
 
@@ -164,7 +162,7 @@ private:
                 std::vector<std::vector<VertexType>> new_subgraphs;
 
                 // --- Check Constraints ---
-                // 1. Symmetry Threshold
+                // Symmetry Threshold
                 const bool merge_viable = is_merge_viable(original_dag, current_groups[u], current_groups[v], new_subgraphs);
                 const bool both_below_symmetry_threshold = (current_groups[u].size() < symmetry_threshold_) && (current_groups[v].size() < symmetry_threshold_);                
                 if (!merge_viable && !both_below_symmetry_threshold) {
@@ -172,7 +170,7 @@ private:
                     continue;
                 }
                 
-                // 2. Acyclicity & Critical Path
+                // Acyclicity & Critical Path
                 Constr_Graph_t temp_coarse_graph;
                 std::vector<VertexType> temp_contraction_map(current_coarse_graph.num_vertices());
                 VertexType new_idx = 0;
@@ -261,9 +259,9 @@ private:
      */
     bool is_merge_viable(const Graph_t& original_dag, const Group& group_u, const Group& group_v,
                          std::vector<std::vector<VertexType>>& out_new_subgraphs) const {
-        // 1. Collect all vertices from both groups.
+
         std::vector<VertexType> all_nodes;
-        all_nodes.reserve(group_u.subgraphs.size() + group_v.subgraphs.size()); // Approximation
+        all_nodes.reserve(group_u.subgraphs.size() + group_v.subgraphs.size());
         for (const auto& sg : group_u.subgraphs) {
             all_nodes.insert(all_nodes.end(), sg.begin(), sg.end());
         }
@@ -271,18 +269,14 @@ private:
             all_nodes.insert(all_nodes.end(), sg.begin(), sg.end());
         }
 
-        // In debug builds, verify that the groups are disjoint as expected.
-        // This lambda is evaluated only when assertions are enabled.
         assert([&]() {
             std::vector<VertexType> temp_nodes_for_check = all_nodes;
             std::sort(temp_nodes_for_check.begin(), temp_nodes_for_check.end());
             return std::unique(temp_nodes_for_check.begin(), temp_nodes_for_check.end()) == temp_nodes_for_check.end();
         }() && "Assumption failed: Vertices in groups being merged are not disjoint.");
 
-        // Sort nodes to use the create_induced_subgraph overload that provides an implicit mapping.
         std::sort(all_nodes.begin(), all_nodes.end());
 
-        // 2. Create an induced subgraph and find its weakly connected components.
         Constr_Graph_t induced_subgraph;
         create_induced_subgraph(original_dag, induced_subgraph, all_nodes);
 
@@ -298,7 +292,6 @@ private:
             return false;
         }
 
-        // 3. Verify that all new components are isomorphic and have the same size.
         if (num_components > 1) {
             const size_t first_sg_size = out_new_subgraphs[0].size();
             Constr_Graph_t rep_sg;

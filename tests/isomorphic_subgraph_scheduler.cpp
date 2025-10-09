@@ -205,4 +205,142 @@ BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroup_HeterogeneousArch) {
     BOOST_CHECK_EQUAL(partition_ids.size(), 4);
 }
 
+BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroup_ShuffledIDs) {
+    // --- Setup ---
+    // This test ensures that the isomorphism mapping works correctly even if
+    // the vertex IDs of isomorphic subgraphs are not in the same relative order.
+    BspInstance<graph_t> instance;
+    auto& dag = instance.getComputationalDag();
+
+    // Group 0, Subgraph 1: 0 -> 1
+    dag.add_vertex(10, 1, 1, 0); // 0
+    dag.add_vertex(20, 1, 1, 0); // 1
+    dag.add_edge(0, 1);
+
+    // Group 0, Subgraph 2 (isomorphic to 1, but with shuffled IDs): 3 -> 2
+    dag.add_vertex(20, 1, 1, 0); // 2 (work 20, corresponds to node 1)
+    dag.add_vertex(10, 1, 1, 0); // 3 (work 10, corresponds to node 0)
+    dag.add_edge(3, 2);
+
+    // Architecture: 2 processors, so each subgraph gets its own partition space.
+    instance.getArchitecture().setProcessorsWithTypes({0, 0});
+    instance.setDiagonalCompatibilityMatrix(1);
+
+    // Manually define the isomorphic groups.
+    // Subgraph 1 vertices: {0, 1}
+    // Subgraph 2 vertices: {2, 3}
+    std::vector<group_t> iso_groups = {
+        group_t{ { {0, 1}, {2, 3} } }
+    };
+
+    // Mock SubgraphSchedule: The single group gets all 2 processors.
+    SubgraphSchedule sub_sched;
+    sub_sched.node_assigned_worker_per_type.resize(1);
+    sub_sched.node_assigned_worker_per_type[0] = {2};
+
+    std::vector<vertex_idx_t<graph_t>> partition(dag.num_vertices());
+
+    // Use a simple greedy scheduler for the sub-problems.
+    GreedyBspScheduler<constr_graph_t> greedy_scheduler;
+    IsomorphicSubgraphSchedulerTester<graph_t, constr_graph_t> tester(greedy_scheduler);
+
+    // --- Execute ---
+    tester.test_schedule_isomorphic_group(instance, iso_groups, sub_sched, partition);
+
+    // --- Assert ---
+    // The representative subgraph is {0, 1}. The greedy scheduler will likely put
+    // both nodes on the same processor, creating a single partition for them.
+    // Let's call this partition P0.
+    // The second subgraph {2, 3} is isomorphic. Node 3 corresponds to node 0,
+    // and node 2 corresponds to node 1. They should also be placed in a single
+    // partition together, let's call it P1.
+    // We expect P0 != P1.
+
+    // Check Subgraph 1 partitioning
+    BOOST_CHECK_EQUAL(partition[0], partition[1]);
+
+    // Check Subgraph 2 partitioning
+    BOOST_CHECK_EQUAL(partition[2], partition[3]);
+
+    // Check that the two subgraphs are in different partitions
+    BOOST_CHECK_NE(partition[0], partition[2]);
+}
+
+// BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroup_ComplexShuffled) {
+//     // --- Setup ---
+//     // This test uses a more complex structure (fork-join) with shuffled IDs
+//     // to ensure the pattern replication is robust.
+//     BspInstance<graph_t> instance;
+//     auto& dag = instance.getComputationalDag();
+
+//     // Group 0, Subgraph 1: 0 -> {1,2} -> 3
+//     dag.add_vertex(10, 1, 1, 0); // 0 (source)
+//     dag.add_vertex(20, 1, 1, 0); // 1 (middle)
+//     dag.add_vertex(20, 1, 1, 0); // 2 (middle)
+//     dag.add_vertex(30, 1, 1, 0); // 3 (sink)
+//     dag.add_edge(0, 1);
+//     dag.add_edge(0, 2);
+//     dag.add_edge(1, 3);
+//     dag.add_edge(2, 3);
+
+//     // Group 0, Subgraph 2 (isomorphic, but with shuffled IDs and different topology)
+//     // Structure: 7 -> {5,4} -> 6
+//     dag.add_vertex(20, 1, 1, 0); // 4 (middle, corresponds to node 2)
+//     dag.add_vertex(20, 1, 1, 0); // 5 (middle, corresponds to node 1)
+//     dag.add_vertex(30, 1, 1, 0); // 6 (sink, corresponds to node 3)
+//     dag.add_vertex(10, 1, 1, 0); // 7 (source, corresponds to node 0)
+//     dag.add_edge(7, 4);
+//     dag.add_edge(7, 5);
+//     dag.add_edge(4, 6);
+//     dag.add_edge(5, 6);
+
+//     // Architecture: 4 processors, so each subgraph gets its own partition space.
+//     instance.getArchitecture().setProcessorsWithTypes({0, 0, 0, 0});
+//     instance.setDiagonalCompatibilityMatrix(1);
+
+//     // Manually define the isomorphic groups.
+//     std::vector<group_t> iso_groups = {
+//         group_t{ { {0, 1, 2, 3}, {4, 5, 6, 7} } }
+//     };
+
+//     // Mock SubgraphSchedule: The single group gets all 4 processors.
+//     SubgraphSchedule sub_sched;
+//     sub_sched.node_assigned_worker_per_type.resize(1);
+//     sub_sched.node_assigned_worker_per_type[0] = {4};
+
+//     std::vector<vertex_idx_t<graph_t>> partition(dag.num_vertices());
+
+//     GreedyBspScheduler<constr_graph_t> greedy_scheduler;
+//     IsomorphicSubgraphSchedulerTester<graph_t, constr_graph_t> tester(greedy_scheduler);
+
+//     // --- Execute ---
+//     tester.test_schedule_isomorphic_group(instance, iso_groups, sub_sched, partition);
+
+//     // --- Assert ---
+//     // The representative is {0,1,2,3}. The greedy scheduler on 4 procs will likely
+//     // create 3 partitions: P_A for {0}, P_B for {1,2}, P_C for {3}.
+//     // The second subgraph {4,5,6,7} is isomorphic.
+//     // Node 7 corresponds to 0 (source).
+//     // Nodes {4,5} correspond to {1,2} (middle).
+//     // Node 6 corresponds to 3 (sink).
+//     // We expect the same partitioning pattern, but with an offset.
+//     // P_D for {7}, P_E for {4,5}, P_F for {6}.
+//     // All partitions P_A..F should be distinct.
+
+//     // Check partitioning within subgraphs based on structural roles
+//     BOOST_CHECK_EQUAL(partition[1], partition[2]); // Middle nodes together
+//     BOOST_CHECK_NE(partition[0], partition[1]);    // Source separate from middle
+//     BOOST_CHECK_NE(partition[1], partition[3]);    // Middle separate from sink
+
+//     BOOST_CHECK_EQUAL(partition[4], partition[5]); // Corresponding middle nodes together
+//     BOOST_CHECK_NE(partition[7], partition[4]);    // Corresponding source separate
+//     BOOST_CHECK_NE(partition[4], partition[6]);    // Corresponding middle separate
+
+//     // Check that the partitions for corresponding nodes are different across subgraphs
+//     BOOST_CHECK_NE(partition[0], partition[7]); // Sources
+//     BOOST_CHECK_NE(partition[1], partition[5]); // Middle nodes
+//     BOOST_CHECK_NE(partition[2], partition[4]); // Middle nodes
+//     BOOST_CHECK_NE(partition[3], partition[6]); // Sinks
+// }
+
 BOOST_AUTO_TEST_SUITE_END()
