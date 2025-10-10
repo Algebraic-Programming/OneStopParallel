@@ -28,6 +28,7 @@ limitations under the License.
 #include "osp/auxiliary/io/dot_graph_file_reader.hpp"
 #include "osp/auxiliary/io/DotFileWriter.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/BspLocking.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/GrowLocalAutoCores.hpp"
 #include "osp/dag_divider/IsomorphicWavefrontComponentScheduler.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin_v2/kl_include_mt.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_total_comm.hpp"
@@ -46,7 +47,7 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test)
     //using graph_t2 = dag_vector_adapter<cdag_vertex_impl_unsigned,int>;
    
     BspInstance<graph_t2> instance;
-    file_reader::readComputationalDagDotFormat("", instance.getComputationalDag());
+    file_reader::readComputationalDagDotFormat("dot", instance.getComputationalDag());
 
     for (const auto& v : instance.vertices()) {
 
@@ -59,7 +60,7 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test)
     instance.setSynchronisationCosts(1000);
     instance.setCommunicationCosts(1);
 
-    BspLocking<graph_t> greedy;
+    GrowLocalAutoCores<graph_t> greedy;
     kl_total_comm_improver_mt<graph_t> kl;
     ComboScheduler<graph_t> combo(greedy, kl);
 

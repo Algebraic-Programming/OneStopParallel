@@ -36,7 +36,7 @@ class IsomorphicSubgraphScheduler {
 
     private:
 
-    static constexpr bool verbose = false;    
+    static constexpr bool verbose = true;    
     size_t symmetry_ = 2;
     Scheduler<Constr_Graph_t> * bsp_scheduler_;
     bool use_max_group_size_ = false;
@@ -70,6 +70,20 @@ class IsomorphicSubgraphScheduler {
         const unsigned min_proc_type_count = use_max_group_size_ ? max_group_size_ : instance.getArchitecture().getMinProcessorTypeCount();
         trim_subgraph_groups(isomorphic_groups, min_proc_type_count);
 
+        if (plot_dot_graphs_) {
+            std::vector<vertex_idx_t<Graph_t>> trimmed_contraction_map(instance.numberOfVertices());
+            vertex_idx_t<Graph_t> current_color = 0;
+            for (const auto& group : isomorphic_groups) {
+                for (const auto& subgraph : group.subgraphs) {
+                    for (const auto& vertex : subgraph) {
+                        trimmed_contraction_map[vertex] = current_color;
+                    }
+                }
+                current_color++;
+            }
+            DotFileWriter writer;
+            writer.write_colored_graph("trimmed_isomorphic_groups.dot", instance.getComputationalDag(), trimmed_contraction_map);
+        }
         auto input = prepare_subgraph_scheduling_input(instance, isomorphic_groups);
 
         if (plot_dot_graphs_) {
@@ -105,6 +119,10 @@ class IsomorphicSubgraphScheduler {
                               const unsigned min_proc_type_count) {
         if (min_proc_type_count <= 1) return;
 
+        if constexpr (verbose) {
+            std::cout << "--- Trimming Subgraph Groups (min_proc_type_count = " << min_proc_type_count << ") ---" << std::endl;
+        }
+
         for (auto& group : isomorphic_groups) {
             const unsigned group_size = static_cast<unsigned>(group.subgraphs.size());
             if (group_size == 0)
@@ -113,6 +131,11 @@ class IsomorphicSubgraphScheduler {
 
             if (gcd < group_size) {
                 const unsigned merge_size = group_size / gcd;
+                if constexpr (verbose) {
+                    std::cout << "  - Group with " << group_size << " subgraphs will be merged." << std::endl;
+                    std::cout << "    gcd(" << group_size << ", " << min_proc_type_count << ") = " << gcd << ". Merging " << merge_size << " subgraphs at a time." << std::endl;
+                    std::cout << "    Resulting in " << gcd << " new, larger subgraphs." << std::endl;
+                }
                 std::vector<std::vector<vertex_idx_t<Graph_t>>> new_subgraphs;
                 new_subgraphs.reserve(gcd);
 
@@ -206,6 +229,7 @@ class IsomorphicSubgraphScheduler {
                 dummy_mem_weights[proc_type] = static_cast<v_memw_t<Constr_Graph_t>>(instance.getArchitecture().maxMemoryBoundProcType(proc_type));
             }
             const auto& procs_for_group = sub_sched.node_assigned_worker_per_type[grou_idx];
+            std::cout << "proc 0 " << procs_for_group[0] << " " << procs_for_group[1] << std::endl;
             representative_instance.getArchitecture().set_processors_consequ_types(procs_for_group, dummy_mem_weights);
             representative_instance.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
 

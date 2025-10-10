@@ -23,6 +23,7 @@ limitations under the License.
 #include <set>
 #include <tuple>
 #include <utility>
+#include <functional>
 #include <vector>
 
 #include "osp/auxiliary/datastructures/union_find.hpp"
@@ -51,6 +52,9 @@ struct Parameters {
 
 template<typename Graph_t_in, typename Graph_t_out>
 class Sarkar : public CoarserGenExpansionMap<Graph_t_in, Graph_t_out> {
+    public:
+        using ContractionConstraint = std::function<bool(const Graph_t_in&, vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_in>)>;
+
     private:
         SarkarParams::Parameters< v_workw_t<Graph_t_in> > params;
         
@@ -71,14 +75,21 @@ class Sarkar : public CoarserGenExpansionMap<Graph_t_in, Graph_t_out> {
         std::vector<std::size_t> nodeHashes;
         void computeNodeHashes(const Graph_t_in &graph);
         std::unordered_map<std::size_t, std::set< vertex_idx_t<Graph_t_in> >> computeHashOrbits() const;
+        std::vector<ContractionConstraint> contraction_constraints;
 
     public:
+
+        
+
         virtual std::vector<std::vector<vertex_idx_t<Graph_t_in>>> generate_vertex_expansion_map(const Graph_t_in &dag_in) override;
         std::vector<std::vector<vertex_idx_t<Graph_t_in>>> generate_vertex_expansion_map(const Graph_t_in &dag_in, vertex_idx_t<Graph_t_in> &diff);
 
         inline void setParameters(const SarkarParams::Parameters< v_workw_t<Graph_t_in> >& params_) { params = params_; };
         inline SarkarParams::Parameters< v_workw_t<Graph_t_in> >& getParameters() { return params; };
         inline const SarkarParams::Parameters< v_workw_t<Graph_t_in> >& getParameters() const { return params; };
+        void addContractionConstraint(ContractionConstraint constr) {
+            contraction_constraints.push_back(constr);
+        }
 
         Sarkar(SarkarParams::Parameters< v_workw_t<Graph_t_in> > params_ = SarkarParams::Parameters< v_workw_t<Graph_t_in> >()) : params(params_) {};
 
@@ -179,6 +190,16 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::singleContraction(v_wo
             if (botDist[edgeTgt] + commCost + graph.vertex_work_weight(edgeSrc) != botDist[edgeSrc]) continue;
             if (graph.vertex_work_weight(edgeSrc) + graph.vertex_work_weight(edgeTgt) > params.maxWeight) continue;
 
+            // Apply custom contraction constraints
+            bool constr_violated = false;
+            for (const auto& constr : contraction_constraints) {
+                if (!constr(graph, edgeSrc, edgeTgt)) {
+                    constr_violated = true;
+                    break;
+                }
+            }
+            if (constr_violated) continue;
+            
             v_workw_t<Graph_t_in> maxPath = topDist[edgeSrc] + botDist[edgeTgt] + commCost;
             v_workw_t<Graph_t_in> maxParentDist = 0;
             v_workw_t<Graph_t_in> maxChildDist = 0;

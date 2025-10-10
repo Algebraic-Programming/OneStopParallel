@@ -25,7 +25,9 @@ limitations under the License.
 #include "osp/graph_algorithms/directed_graph_path_util.hpp"
 #include "osp/graph_algorithms/directed_graph_util.hpp"
 #include "osp/graph_algorithms/subgraph_algorithms.hpp"
+#include "osp/auxiliary/hash_util.hpp"
 #include "osp/graph_algorithms/transitive_reduction.hpp"
+#include "osp/coarser/Sarkar/Sarkar.hpp"
 #include <numeric>
 
 namespace osp {
@@ -62,7 +64,7 @@ public:
 private:
     using MerkleHashComputer_t = MerkleHashComputer<Graph_t, bwd_merkle_node_hash_func<Graph_t>, true>; //MerkleHashComputer<Graph_t, node_hash_func_t, true>;
     // using MerkleHashComputer_t = MerkleHashComputer<Graph_t, node_hash_func_t, true>;
-
+    
     // Results from the first (orbit) coarsening step
     Constr_Graph_t coarse_graph_;
     std::vector<VertexType> contraction_map_;
@@ -73,7 +75,7 @@ private:
     std::vector<Group> final_groups_;
 
     size_t symmetry_threshold_ = 2;
-    static constexpr bool verbose = false;
+    static constexpr bool verbose = true;
 
 public:
     explicit OrbitGraphProcessor(size_t symmetry_threshold = 2)
@@ -120,6 +122,24 @@ public:
     }
 
 private:
+
+    std::vector<Group> m_current_groups;
+    std::unordered_map<std::pair<VertexType, VertexType>, std::vector<std::vector<VertexType>>, pair_hash> new_subgraphs;
+    const Graph_t * original_dag_ptr = nullptr;
+
+    SarkarParams::Parameters<v_workw_t<Graph_t>> get_sarkar_params() const {
+        SarkarParams::Parameters<v_workw_t<Graph_t>> params;
+        params.geomDecay = 0.0;
+        params.leniency = 0.0;
+        params.mode = SarkarParams::Mode::LINES; // Default mode, can be changed
+        params.commCost = 0; // Default communication cost
+        params.maxWeight = std::numeric_limits<v_workw_t<Graph_t>>::max(); // Default max weight
+        params.smallWeightThreshold = std::numeric_limits<v_workw_t<Graph_t>>::lowest(); // Default small weight threshold
+        params.useTopPoset = true; // Default        
+        return params;
+    }
+
+
     /**
      * @brief Greedily merges nodes in the orbit graph based on structural and symmetry constraints.
      */
@@ -131,103 +151,82 @@ private:
             return;
         }
 
+        original_dag_ptr = &original_dag;
         Constr_Graph_t current_coarse_graph = initial_coarse_graph;
-        std::vector<Group> current_groups(initial_coarse_graph.num_vertices());
+        for (const auto & v : current_coarse_graph.vertices())
+            current_coarse_graph.set_vertex_type(v, 0);
+
+
+        m_current_groups.resize(current_coarse_graph.num_vertices());
         std::vector<VertexType> current_contraction_map = contraction_map_;
 
         // Initialize groups: each group corresponds to an orbit.
         for (VertexType i = 0; i < original_dag.num_vertices(); ++i) {
             const VertexType coarse_node = contraction_map_[i];
-            current_groups[coarse_node].subgraphs.push_back({i});
+            m_current_groups[coarse_node].subgraphs.push_back({i});
         }
 
+        Sarkar<Constr_Graph_t, Constr_Graph_t> sarkar(get_sarkar_params());
+        sarkar.addContractionConstraint([&](const Constr_Graph_t& graph, VertexType u, VertexType v) {
+                return is_merge_viable_constr(graph, u, v);
+            });
+            
 
         bool changed = true;
         while (changed) {
+            
+            new_subgraphs.clear();
+            Constr_Graph_t new_coarse_graph;
+            std::vector<vertex_idx_t<Constr_Graph_t>> contraction_map; 
+            sarkar.coarsenDag(current_coarse_graph, new_coarse_graph, contraction_map);
 
-            const std::vector< vertex_idx_t<Constr_Graph_t> > vertexPoset =  get_top_node_distance<Constr_Graph_t, vertex_idx_t<Constr_Graph_t>>(current_coarse_graph);
+            if (current_coarse_graph.num_vertices() == new_coarse_graph.num_vertices()) {
+                changed = false;
+                break;
+            } 
 
-            changed = false;
-            for (const auto& edge : edges(current_coarse_graph)) {
-                VertexType u = source(edge, current_coarse_graph);
-                VertexType v = target(edge, current_coarse_graph);
+            current_coarse_graph = std::move(new_coarse_graph);
 
-                if (vertexPoset[u] + 1 != vertexPoset[v]) continue;
+            // Update groups
+            std::vector<Group> next_groups(current_coarse_graph.num_vertices());
+            std::vector<bool> already_matched(contraction_map.size(), false);
+            for (std::size_t i = 0; i < contraction_map.size(); ++i) {
+                if (already_matched[i]) continue;
 
-                std::vector<std::vector<VertexType>> new_subgraphs;
-
-                // --- Check Constraints ---
-                // Symmetry Threshold
-                const bool merge_viable = is_merge_viable(original_dag, current_groups[u], current_groups[v], new_subgraphs);
-                const bool both_below_symmetry_threshold = (current_groups[u].size() < symmetry_threshold_) && (current_groups[v].size() < symmetry_threshold_);                
-                if (!merge_viable && !both_below_symmetry_threshold) {
-                    if constexpr (verbose) { std::cout << "  - Merge of " << u << " and " << v << " not viable (symmetry threshold)\n"; }
-                    continue;
-                }
-                
-                // Acyclicity & Critical Path
-                Constr_Graph_t temp_coarse_graph;
-                std::vector<VertexType> temp_contraction_map(current_coarse_graph.num_vertices());
-                VertexType new_idx = 0;
-                for (VertexType i = 0; i < temp_contraction_map.size(); ++i) {
-                    if (i != v) {
-                        temp_contraction_map[i] = new_idx++;
+                const VertexType & v = contraction_map[i];
+                VertexType u;
+                bool i_is_merged_with_u = false;
+                for (std::size_t j = i + 1; j < contraction_map.size(); ++j) {                    
+                    if (contraction_map[j] == v) {
+                        u = j;
+                        already_matched[j] = true;
+                        i_is_merged_with_u = true;
+                        break;
                     }
                 }
-                // Assign 'v' the same new index as 'u'.
-                temp_contraction_map[v] = temp_contraction_map[u];
-                coarser_util::construct_coarse_dag(current_coarse_graph, temp_coarse_graph, temp_contraction_map);
 
-                if (!is_acyclic(temp_coarse_graph)) {
-                    if constexpr (verbose) { std::cout << "  - Merge of " << u << " and " << v << " creates a cycle. Skipping.\n"; }
-                    continue;
+                if (i_is_merged_with_u) {
+                    const auto pair = std::make_pair(i, u);
+                    if (new_subgraphs.find(pair) == new_subgraphs.end()) {
+                        next_groups[v] = {std::move(new_subgraphs[std::make_pair(u, i)])};
+                    } else {
+                        next_groups[v] = {std::move(new_subgraphs[pair])};
+                    }                    
+                } else {
+                    next_groups[v] = std::move(m_current_groups[i]);
                 }
-
-                if (critical_path_weight(temp_coarse_graph) > critical_path_weight(current_coarse_graph)) {
-                    if constexpr (verbose) { std::cout << "  - Merge of " << u << " and " << v << " increases critical path. Skipping.\n"; }
-                    continue;
-                }
-
-                // --- If all checks pass, execute the merge ---
-                if constexpr (verbose) { std::cout << "  - Merging " << v << " into " << u << ". New coarse graph has " << temp_coarse_graph.num_vertices() << " nodes.\n"; }
-                // The new coarse graph is the one we just tested
-                current_coarse_graph = std::move(temp_coarse_graph);
-
-                // Update groups
-                std::vector<Group> next_groups(current_coarse_graph.num_vertices());
-                std::vector<VertexType> group_remap(current_groups.size());
-                new_idx = 0;
-                for (VertexType i = 0; i < group_remap.size(); ++i) {
-                    if (i != v) {
-                        group_remap[i] = new_idx++;
-                    }
-                }
-                group_remap[v] = group_remap[u];
-
-                // Move existing groups that are not part of the merge
-                for (VertexType i = 0; i < current_groups.size(); ++i) {
-                    if (i != u && i != v) {
-                        next_groups[group_remap[i]] = std::move(current_groups[i]);
-                    }
-                }
-                // Install the newly computed merged group
-                next_groups[group_remap[u]].subgraphs = std::move(new_subgraphs);
-                current_groups = std::move(next_groups);
-
-                // Update the main contraction map
-                for (VertexType i = 0; i < current_contraction_map.size(); ++i) {
-                    current_contraction_map[i] = group_remap[current_contraction_map[i]];
-                }
-
-                changed = true;
-                break; // Restart scan on the new, smaller graph
+            }
+            m_current_groups = std::move(next_groups);  
+        
+            for (VertexType i = 0; i < current_contraction_map.size(); ++i) {
+                    current_contraction_map[i] = contraction_map[current_contraction_map[i]];
             }
         }
 
         // --- Finalize ---
         final_coarse_graph_ = std::move(current_coarse_graph);
         final_contraction_map_ = std::move(current_contraction_map);
-        final_groups_ = std::move(current_groups);
+        final_groups_ = std::move(m_current_groups);
 
         if constexpr (verbose) {
             print_final_groups_summary();
@@ -252,8 +251,9 @@ private:
      * This is analogous to WavefrontOrbitProcessor::is_viable_continuation.
      * If viable, it populates the `out_new_subgraphs` with the structure of the merged group.
      */
-    bool is_merge_viable(const Graph_t& original_dag, const Group& group_u, const Group& group_v,
-                         std::vector<std::vector<VertexType>>& out_new_subgraphs) const {
+    bool is_merge_viable_constr(const Constr_Graph_t& , const VertexType& u, const VertexType& v) {
+        auto & group_u = m_current_groups[u];
+        auto & group_v = m_current_groups[v];
 
         std::vector<VertexType> all_nodes;
         all_nodes.reserve(group_u.subgraphs.size() + group_v.subgraphs.size());
@@ -273,38 +273,40 @@ private:
         std::sort(all_nodes.begin(), all_nodes.end());
 
         Constr_Graph_t induced_subgraph;
-        create_induced_subgraph(original_dag, induced_subgraph, all_nodes);
+        create_induced_subgraph(*original_dag_ptr, induced_subgraph, all_nodes);
 
         std::vector<VertexType> components; // local -> component_id
-        size_t num_components = compute_weakly_connected_components(induced_subgraph, components);
+        size_t num_components = compute_weakly_connected_components(induced_subgraph, components);      
 
-        out_new_subgraphs.assign(num_components, std::vector<VertexType>());
+        std::vector<std::vector<VertexType>> new_subgraphs_group{num_components, std::vector<VertexType>()};
         for (VertexType i = 0; i < induced_subgraph.num_vertices(); ++i) {
-            out_new_subgraphs[components[i]].push_back(all_nodes[i]);
+            new_subgraphs_group[components[i]].push_back(all_nodes[i]);
         }
-
+        
         if (num_components < symmetry_threshold_) {
-            return false;
+            new_subgraphs[std::make_pair(u, v)] = std::move(new_subgraphs_group);
+            const bool both_below_symmetry_threshold = (group_u.size() < symmetry_threshold_) && (group_v.size() < symmetry_threshold_); 
+            return both_below_symmetry_threshold;
         }
-
+       
         if (num_components > 1) {
-            const size_t first_sg_size = out_new_subgraphs[0].size();
+            const size_t first_sg_size = new_subgraphs_group[0].size();
             Constr_Graph_t rep_sg;
-            create_induced_subgraph(original_dag, rep_sg, out_new_subgraphs[0]);
+            create_induced_subgraph(*original_dag_ptr, rep_sg, new_subgraphs_group[0]);
 
             for (size_t i = 1; i < num_components; ++i) {
-                if (out_new_subgraphs[i].size() != first_sg_size) {
+                if (new_subgraphs_group[i].size() != first_sg_size) {
                     return false;
                 }
                 
                 Constr_Graph_t current_sg;
-                create_induced_subgraph(original_dag, current_sg, out_new_subgraphs[i]);
+                create_induced_subgraph(*original_dag_ptr, current_sg, new_subgraphs_group[i]);
                 if (!are_isomorphic_by_merkle_hash(rep_sg, current_sg)) {
                     return false;
                 }
             }
         }
-
+        new_subgraphs[std::make_pair(u, v)] = std::move(new_subgraphs_group);
         return true;
     }
 

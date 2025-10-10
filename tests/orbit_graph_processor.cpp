@@ -63,45 +63,52 @@ void check_partitioning(const Graph_t& dag, const OrbitGraphProcessor<Graph_t, G
 
 // BOOST_AUTO_TEST_CASE(OrbitGraphProcessor_SmokeTest) {
 //     // The test reads a file, but the path is absolute, so we don't need the project root here.
-//     graph_t dag;
-//     file_reader::readComputationalDagDotFormat("", dag);
 
-//     OrbitGraphProcessor<graph_t, graph_t> processor(2); // Using a symmetry threshold of 2
-//     processor.discover_isomorphic_groups(dag);
+    
+//     std::vector<std::string> graph_names = {"deepseekAttention_s_1", "deepseekAttention_pre", "deepseek_qkvPre", "dynamic_pa_high_throughput_dview_large", "llama_128_128", "llama_1024_128", "graph_10"};
 
-//     const auto& coarse_graph = processor.get_coarse_graph();
-//     const auto& final_coarse_graph = processor.get_final_coarse_graph();
-//     const auto& final_groups = processor.get_final_groups();
-//     const auto& final_contraction_map = processor.get_final_contraction_map();
+//     for (const auto & graph_name : graph_names) {
 
-//     DotFileWriter writer;
-//     // Color by initial orbits
-//     writer.write_colored_graph("orbit_graph_orbits_colored.dot", dag, processor.get_contraction_map());
-//     writer.write_graph("orbit_graph_coarse_graph.dot", coarse_graph);
+//         graph_t dag;
+//         file_reader::readComputationalDagDotFormat("" + graph_name + ".dot", dag);
 
-//     // Color by final merged groups
-//     writer.write_colored_graph("orbit_graph_groups_colored.dot", dag, final_contraction_map);
+//         OrbitGraphProcessor<graph_t, graph_t> processor(2); // Using a symmetry threshold of 2
+//         processor.discover_isomorphic_groups(dag);
 
-//     // Color by final subgraphs (each subgraph gets a unique color)
-//     std::vector<unsigned> subgraph_colors(dag.num_vertices());
-//     unsigned current_subgraph_color = 0;
-//     for (const auto& group : final_groups) {
-//         for (const auto& subgraph : group.subgraphs) {
-//             for (const auto& vertex : subgraph) {
-//                 subgraph_colors[vertex] = current_subgraph_color;
+//         const auto& coarse_graph = processor.get_coarse_graph();
+//         const auto& final_coarse_graph = processor.get_final_coarse_graph();
+//         const auto& final_groups = processor.get_final_groups();
+//         const auto& final_contraction_map = processor.get_final_contraction_map();
+
+//         DotFileWriter writer;
+//         // Color by initial orbits
+//         writer.write_colored_graph("orbit_graph_orbits_colored" + graph_name + ".dot", dag, processor.get_contraction_map());
+//         writer.write_graph("orbit_graph_coarse_graph" + graph_name + ".dot", coarse_graph);
+
+//         // Color by final merged groups
+//         writer.write_colored_graph("orbit_graph_groups_colored" + graph_name + ".dot", dag, final_contraction_map);
+
+//         // Color by final subgraphs (each subgraph gets a unique color)
+//         std::vector<unsigned> subgraph_colors(dag.num_vertices());
+//         unsigned current_subgraph_color = 0;
+//         for (const auto& group : final_groups) {
+//             for (const auto& subgraph : group.subgraphs) {
+//                 for (const auto& vertex : subgraph) {
+//                     subgraph_colors[vertex] = current_subgraph_color;
+//                 }
+//                 current_subgraph_color++;
 //             }
-//             current_subgraph_color++;
 //         }
+//         writer.write_colored_graph("orbit_graph_subgraphs_colored" + graph_name + ".dot", dag, subgraph_colors);
+//         writer.write_graph("orbit_graph_final_coarse_graph" + graph_name + ".dot", final_coarse_graph);
+
+//         BOOST_CHECK_GT(coarse_graph.num_vertices(), 0);
+//         BOOST_CHECK_LT(coarse_graph.num_vertices(), dag.num_vertices());
+//         BOOST_CHECK_GT(final_coarse_graph.num_vertices(), 0);
+//         BOOST_CHECK_LE(final_coarse_graph.num_vertices(), coarse_graph.num_vertices());
+
+//         check_partitioning(dag, processor);
 //     }
-//     writer.write_colored_graph("orbit_graph_subgraphs_colored.dot", dag, subgraph_colors);
-//     writer.write_graph("orbit_graph_final_coarse_graph.dot", final_coarse_graph);
-
-//     BOOST_CHECK_GT(coarse_graph.num_vertices(), 0);
-//     BOOST_CHECK_LT(coarse_graph.num_vertices(), dag.num_vertices());
-//     BOOST_CHECK_GT(final_coarse_graph.num_vertices(), 0);
-//     BOOST_CHECK_LE(final_coarse_graph.num_vertices(), coarse_graph.num_vertices());
-
-//     check_partitioning(dag, processor);
 // }
 
 BOOST_AUTO_TEST_CASE(OrbitGraphProcessor_SimpleMerge) {
