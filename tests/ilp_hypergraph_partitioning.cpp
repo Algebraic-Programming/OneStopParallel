@@ -72,8 +72,15 @@ BOOST_AUTO_TEST_CASE(test_full) {
     partitioner.computePartitioning(partition);
 
     BOOST_CHECK(partition.satisfiesBalanceConstraint());
-    BOOST_CHECK(partition.computeConnectivityCost() >= partition.computeCutNetCost());
+    int cutNetCost = partition.computeCutNetCost(), connectivityCost = partition.computeConnectivityCost();
+    BOOST_CHECK(connectivityCost >= cutNetCost);
 
+    instance.setMaxMemoryWeightExplicitly(37);
+    partitioner.computePartitioning(partition);
+    BOOST_CHECK(partition.satisfiesBalanceConstraint());
+    BOOST_CHECK(cutNetCost == partition.computeCutNetCost());
+    BOOST_CHECK(connectivityCost == partition.computeConnectivityCost());
+    instance.setMaxMemoryWeightExplicitly(std::numeric_limits<int>::max());
 
     // ILP with replication
 
@@ -94,7 +101,7 @@ BOOST_AUTO_TEST_CASE(test_full) {
     BOOST_CHECK(partition_rep.satisfiesBalanceConstraint());
     BOOST_CHECK(partition_rep.computeConnectivityCost() == 0);
 
-    instance.setMaxWeightExplicitly(60);
+    instance.setMaxWorkWeightExplicitly(60);
     for(unsigned node = 0; node < Hgraph.num_vertices(); ++node)
         partition_rep.setAssignedPartitions(node, {node % 3, (node+1)%3});
 
@@ -102,8 +109,8 @@ BOOST_AUTO_TEST_CASE(test_full) {
     BOOST_CHECK(partition_rep.satisfiesBalanceConstraint());
     BOOST_CHECK(partition_rep.computeConnectivityCost() == 0);
 
-    // same tests with other replicaiton formulation
-    instance.setMaxWeightExplicitly(35);
+    // same tests with other replication formulation
+    instance.setMaxWorkWeightExplicitly(35);
     partitioner_rep.setReplicationModel(HypergraphPartitioningILPWithReplication::REPLICATION_MODEL_IN_ILP::GENERAL);
     partitioner_rep.setUseInitialSolution(false);
     partitioner_rep.computePartitioning(partition_rep);
@@ -119,7 +126,7 @@ BOOST_AUTO_TEST_CASE(test_full) {
     BOOST_CHECK(partition_rep.satisfiesBalanceConstraint());
     BOOST_CHECK(partition_rep.computeConnectivityCost() == 0);
 
-    instance.setMaxWeightExplicitly(60);
+    instance.setMaxWorkWeightExplicitly(60);
     for(unsigned node = 0; node < Hgraph.num_vertices(); ++node)
         partition_rep.setAssignedPartitions(node, {node % 3, (node+1)%3});
 

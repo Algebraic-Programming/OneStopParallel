@@ -63,8 +63,8 @@ void GenericFM::ImprovePartitioning(Partitioning& partition)
         max_degree = std::max(max_degree, static_cast<unsigned>(Hgraph.get_incident_hyperedges(node).size()));
 
     if(max_nodes_in_part == 0) // if not initialized
-        max_nodes_in_part = static_cast<unsigned>(ceil(static_cast<double>(Hgraph.num_vertices()) * static_cast<double>(partition.getInstance().getMaxWeightPerPartition())
-                                         / static_cast<double>(Hgraph.compute_total_vertex_weight()) ));
+        max_nodes_in_part = static_cast<unsigned>(ceil(static_cast<double>(Hgraph.num_vertices()) * static_cast<double>(partition.getInstance().getMaxWorkWeightPerPartition())
+                                         / static_cast<double>(Hgraph.compute_total_vertex_work_weight()) ));
 
     for(unsigned pass_idx = 0; pass_idx < max_number_of_passes; ++pass_idx)
     {

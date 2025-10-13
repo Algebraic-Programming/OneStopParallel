@@ -93,13 +93,13 @@ BOOST_AUTO_TEST_CASE(Hypergraph_and_Partition_test) {
     BOOST_CHECK(connectivityCost >= cutNetCost);
 
     for(unsigned node = 0; node < Hgraph.num_vertices(); ++node)
-        instance.getHypergraph().set_vertex_weight(node, 1);
+        instance.getHypergraph().set_vertex_work_weight(node, 1);
 
-    instance.setMaxWeightViaImbalanceFactor(0);
+    instance.setMaxWorkWeightViaImbalanceFactor(0);
     BOOST_CHECK(partition.satisfiesBalanceConstraint());
 
     instance.setNumberOfPartitions(5);
-    instance.setMaxWeightViaImbalanceFactor(0);
+    instance.setMaxWorkWeightViaImbalanceFactor(0);
     BOOST_CHECK(!partition.satisfiesBalanceConstraint());
 
     for(unsigned node = 0; node < Hgraph.num_vertices(); ++node)
@@ -108,6 +108,12 @@ BOOST_AUTO_TEST_CASE(Hypergraph_and_Partition_test) {
     BOOST_CHECK(partition.satisfiesBalanceConstraint());
     BOOST_CHECK(partition.computeConnectivityCost() >= partition.computeCutNetCost());
 
+    for(unsigned node = 0; node < Hgraph.num_vertices(); ++node)
+        instance.getHypergraph().set_vertex_memory_weight(node, 1);
+    instance.setMaxMemoryWeightExplicitly(10);
+    BOOST_CHECK(partition.satisfiesBalanceConstraint() == false);
+    instance.setMaxMemoryWeightExplicitly(std::numeric_limits<int>::max());
+
     file_writer::write_txt(std::cout, partition);
 
 
@@ -115,7 +121,7 @@ BOOST_AUTO_TEST_CASE(Hypergraph_and_Partition_test) {
 
     instance.getHypergraph().convert_from_cdag_as_hyperdag(DAG);
     instance.setNumberOfPartitions(3);
-    instance.setMaxWeightExplicitly(30);
+    instance.setMaxWorkWeightExplicitly(30);
     PartitioningWithReplication partition_with_rep(instance);
     for(unsigned node = 0; node < Hgraph.num_vertices(); ++node)
         partition_with_rep.setAssignedPartitions(node, {node % 3});
@@ -124,14 +130,14 @@ BOOST_AUTO_TEST_CASE(Hypergraph_and_Partition_test) {
     BOOST_CHECK(partition_with_rep.computeCutNetCost() == cutNetCost);
     BOOST_CHECK(partition_with_rep.computeConnectivityCost() == connectivityCost);
 
-    instance.setMaxWeightExplicitly(60);
+    instance.setMaxWorkWeightExplicitly(60);
     for(unsigned node = 0; node < Hgraph.num_vertices(); ++node)
         partition_with_rep.setAssignedPartitions(node, {node % 3, (node+1)%3});
 
     BOOST_CHECK(partition_with_rep.satisfiesBalanceConstraint());
     BOOST_CHECK(partition_with_rep.computeConnectivityCost() >= partition_with_rep.computeCutNetCost());
 
-    instance.setMaxWeightExplicitly(Hgraph.compute_total_vertex_weight());
+    instance.setMaxWorkWeightExplicitly(Hgraph.compute_total_vertex_work_weight());
     for(unsigned node = 0; node < Hgraph.num_vertices(); ++node)
         partition_with_rep.setAssignedPartitions(node, {0, 1, 2});
 
@@ -145,9 +151,9 @@ BOOST_AUTO_TEST_CASE(Hypergraph_and_Partition_test) {
     // Generic FM
 
     instance.setNumberOfPartitions(2);
-    instance.setMaxWeightExplicitly(/*35*/ 4000);
+    instance.setMaxWorkWeightExplicitly(/*35*/ 4000);
     for(unsigned node = 0; node < instance.getHypergraph().num_vertices(); ++node)
-        instance.getHypergraph().set_vertex_weight(node, 1);
+        instance.getHypergraph().set_vertex_work_weight(node, 1);
 
     Partitioning partition_to_improve(instance);
     for(unsigned node = 0; node < instance.getHypergraph().num_vertices(); ++node)
@@ -168,9 +174,9 @@ BOOST_AUTO_TEST_CASE(Hypergraph_and_Partition_test) {
         (cwd / "data/spaa/large/instance_CG_N24_K22_nzP0d2.hdag").string(), larger_DAG);
     instance.getHypergraph().convert_from_cdag_as_hyperdag(larger_DAG);
 
-    instance.setMaxWeightExplicitly(4000);
+    instance.setMaxWorkWeightExplicitly(4000);
     for(unsigned node = 0; node < instance.getHypergraph().num_vertices(); ++node)
-        instance.getHypergraph().set_vertex_weight(node, 1);
+        instance.getHypergraph().set_vertex_work_weight(node, 1);
 
     partition_to_improve.resetPartition();
     for(unsigned node = 0; node < instance.getHypergraph().num_vertices(); ++node)

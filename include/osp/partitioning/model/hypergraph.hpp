@@ -30,7 +30,8 @@ class Hypergraph {
     Hypergraph() = default;
 
     Hypergraph(unsigned num_vertices_, unsigned num_hyperedges_)
-        : Num_vertices(num_vertices_), Num_hyperedges(num_hyperedges_), vertex_weights(num_vertices_, 1), hyperedge_weights(num_hyperedges_, 1),
+        : Num_vertices(num_vertices_), Num_hyperedges(num_hyperedges_), vertex_work_weights(num_vertices_, 1),
+        vertex_memory_weights(num_vertices_, 1), hyperedge_weights(num_hyperedges_, 1),
         incident_hyperedges_to_vertex(num_vertices_), vertices_in_hyperedge(num_hyperedges_){}
 
     Hypergraph(const Hypergraph &other) = default;
@@ -41,17 +42,20 @@ class Hypergraph {
     inline unsigned num_vertices() const { return Num_vertices; }
     inline unsigned num_hyperedges() const { return Num_hyperedges; }
     inline unsigned num_pins() const { return Num_pins; }
-    inline int get_vertex_weight(unsigned node) const { return vertex_weights[node]; }
+    inline int get_vertex_work_weight(unsigned node) const { return vertex_work_weights[node]; }
+    inline int get_vertex_memory_weight(unsigned node) const { return vertex_memory_weights[node]; }
     inline int get_hyperedge_weight(unsigned hyperedge) const { return hyperedge_weights[hyperedge]; }
 
     void add_pin(unsigned vertex_idx, unsigned hyperedge_idx);
-    void add_vertex(int weight = 1);
+    void add_vertex(int work_weight = 1, int memory_weight = 1);
     void add_empty_hyperedge(int weight = 1);
     void add_hyperedge(const std::vector<unsigned>& pins, int weight = 1);
-    void set_vertex_weight(unsigned vertex_idx, int weight);
+    void set_vertex_work_weight(unsigned vertex_idx, int weight);
+    void set_vertex_memory_weight(unsigned vertex_idx, int weight);
     void set_hyperedge_weight(unsigned hyperedge_idx, int weight);
 
-    int compute_total_vertex_weight() const;
+    int compute_total_vertex_work_weight() const;
+    int compute_total_vertex_memory_weight() const;
 
     void clear();
     void reset(unsigned num_vertices_, unsigned num_hyperedges_);
@@ -68,7 +72,8 @@ class Hypergraph {
   private:
     unsigned Num_vertices = 0, Num_hyperedges = 0, Num_pins = 0;
 
-    std::vector<int> vertex_weights;
+    std::vector<int> vertex_work_weights;
+    std::vector<int> vertex_memory_weights;
     std::vector<int> hyperedge_weights;
 
     std::vector<std::vector<unsigned>> incident_hyperedges_to_vertex;
@@ -92,9 +97,10 @@ void Hypergraph::add_pin(unsigned vertex_idx, unsigned hyperedge_idx)
     }
 }
 
-void Hypergraph::add_vertex(int weight)
+void Hypergraph::add_vertex(int work_weight, int memory_weight)
 {
-    vertex_weights.push_back(weight);
+    vertex_work_weights.push_back(work_weight);
+    vertex_memory_weights.push_back(memory_weight);
     incident_hyperedges_to_vertex.emplace_back();
     ++Num_vertices;
 }
@@ -116,12 +122,20 @@ void Hypergraph::add_hyperedge(const std::vector<unsigned>& pins, int weight)
     Num_pins += static_cast<unsigned>(pins.size());
 }
 
-void Hypergraph::set_vertex_weight(unsigned vertex_idx, int weight)
+void Hypergraph::set_vertex_work_weight(unsigned vertex_idx, int weight)
 {
     if(vertex_idx >= Num_vertices)
         throw std::invalid_argument("Invalid Argument while setting vertex weight: vertex index out of range.");
     else   
-        vertex_weights[vertex_idx] = weight;
+        vertex_work_weights[vertex_idx] = weight;
+}
+
+void Hypergraph::set_vertex_memory_weight(unsigned vertex_idx, int weight)
+{
+    if(vertex_idx >= Num_vertices)
+        throw std::invalid_argument("Invalid Argument while setting vertex weight: vertex index out of range.");
+    else   
+        vertex_memory_weights[vertex_idx] = weight;
 }
 
 void Hypergraph::set_hyperedge_weight(unsigned hyperedge_idx, int weight)
@@ -132,11 +146,19 @@ void Hypergraph::set_hyperedge_weight(unsigned hyperedge_idx, int weight)
         hyperedge_weights[hyperedge_idx] = weight;
 }
 
-int Hypergraph::compute_total_vertex_weight() const
+int Hypergraph::compute_total_vertex_work_weight() const
 {
     int total = 0;
     for(unsigned node = 0; node < Num_vertices; ++node)
-        total += vertex_weights[node];
+        total += vertex_work_weights[node];
+    return total;
+}
+
+int Hypergraph::compute_total_vertex_memory_weight() const
+{
+    int total = 0;
+    for(unsigned node = 0; node < Num_vertices; ++node)
+        total += vertex_memory_weights[node];
     return total;
 }
 
@@ -146,7 +168,8 @@ void Hypergraph::clear()
     Num_hyperedges = 0;
     Num_pins = 0;
 
-    vertex_weights.clear();
+    vertex_work_weights.clear();
+    vertex_memory_weights.clear();
     hyperedge_weights.clear();
     incident_hyperedges_to_vertex.clear();
     vertices_in_hyperedge.clear();
@@ -159,7 +182,8 @@ void Hypergraph::reset(unsigned num_vertices_, unsigned num_hyperedges_)
     Num_vertices = num_vertices_;
     Num_hyperedges = num_hyperedges_;
 
-    vertex_weights.resize(num_vertices_, 1);
+    vertex_work_weights.resize(num_vertices_, 1);
+    vertex_memory_weights.resize(num_vertices_, 1);
     hyperedge_weights.resize(num_hyperedges_, 1);
     incident_hyperedges_to_vertex.resize(num_vertices_);
     vertices_in_hyperedge.resize(num_hyperedges_);
@@ -171,7 +195,8 @@ void Hypergraph::convert_from_cdag_as_dag(const Graph_t& dag)
     reset(static_cast<unsigned>(dag.num_vertices()), 0);
     for(const auto &node : dag.vertices())
     {
-        set_vertex_weight(static_cast<unsigned>(node), static_cast<int>(dag.vertex_work_weight(node)));
+        set_vertex_work_weight(static_cast<unsigned>(node), static_cast<int>(dag.vertex_work_weight(node)));
+        set_vertex_memory_weight(static_cast<unsigned>(node), static_cast<int>(dag.vertex_mem_weight(node)));
         for (const auto &child : dag.children(node))
             add_hyperedge({static_cast<unsigned>(node), static_cast<unsigned>(child)}); // TODO add edge weights if present
     }
@@ -183,7 +208,8 @@ void Hypergraph::convert_from_cdag_as_hyperdag(const Graph_t& dag)
     reset(static_cast<unsigned>(dag.num_vertices()), 0);
     for(const auto &node : dag.vertices())
     {
-        set_vertex_weight(static_cast<unsigned>(node), static_cast<int>(dag.vertex_work_weight(node)));
+        set_vertex_work_weight(static_cast<unsigned>(node), static_cast<int>(dag.vertex_work_weight(node)));
+        set_vertex_memory_weight(static_cast<unsigned>(node), static_cast<int>(dag.vertex_mem_weight(node)));
         if(dag.out_degree(node) == 0)
             continue;
         std::vector<unsigned> new_hyperedge({static_cast<unsigned>(node)});

@@ -150,17 +150,25 @@ int Partitioning::computeCutNetCost() const {
 }
 
 bool Partitioning::satisfiesBalanceConstraint() const {
-    std::vector<int> weight(instance->getNumberOfPartitions(), 0);
+    std::vector<int> work_weight(instance->getNumberOfPartitions(), 0);
+    std::vector<int> memory_weight(instance->getNumberOfPartitions(), 0);
     for (unsigned node = 0; node < node_to_partition_assignment.size(); ++node) {
         if (node_to_partition_assignment[node] > instance->getNumberOfPartitions())
             throw std::invalid_argument("Invalid Argument while checking balance constraint: partition ID out of range.");
         else
-            weight[node_to_partition_assignment[node]] += instance->getHypergraph().get_vertex_weight(node);
+        {
+            work_weight[node_to_partition_assignment[node]] += instance->getHypergraph().get_vertex_work_weight(node);
+            memory_weight[node_to_partition_assignment[node]] += instance->getHypergraph().get_vertex_memory_weight(node);
+        }
     }
 
     for(unsigned part = 0; part < instance->getNumberOfPartitions(); ++part)
-        if(weight[part] > instance->getMaxWeightPerPartition())
+    {
+        if(work_weight[part] > instance->getMaxWorkWeightPerPartition())
             return false;
+        if(memory_weight[part] > instance->getMaxMemoryWeightPerPartition())
+            return false;
+    }
 
     return true;
 };

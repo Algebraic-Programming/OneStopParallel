@@ -79,7 +79,8 @@ bool readHypergraphMartixMarketFormat(std::ifstream& infile, Hypergraph& hgraph)
 
     hgraph.reset(num_nodes, 0);
     for (unsigned node = 0; node < num_nodes; ++node) {
-        hgraph.set_vertex_weight(node, 1);
+        hgraph.set_vertex_work_weight(node, 1);
+        hgraph.set_vertex_memory_weight(node, 1);
     }
 
     std::vector<std::vector<unsigned>> row_hyperedges(static_cast<unsigned>(M_row));

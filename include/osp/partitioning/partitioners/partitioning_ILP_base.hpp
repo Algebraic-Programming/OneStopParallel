@@ -89,14 +89,28 @@ void HypergraphPartitioningILPBase::setupFundamentalVariablesConstraintsObjectiv
         hyperedge_uses_partition[hyperedge] = model.AddVars(static_cast<int>(numberOfParts), COPT_BINARY, "hyperedge_uses_partition");
     
     // partition size constraints
-    for (unsigned part = 0; part < numberOfParts; part++)
+    if(instance.getMaxWorkWeightPerPartition() < std::numeric_limits<int>::max())
     {
-        Expr expr;
-        for (unsigned node = 0; node < numberOfVertices; node++)
-            expr += instance.getHypergraph().get_vertex_weight(node) * node_in_partition[node][static_cast<int>(part)];
+        for (unsigned part = 0; part < numberOfParts; part++)
+        {
+            Expr expr;
+            for (unsigned node = 0; node < numberOfVertices; node++)
+                expr += instance.getHypergraph().get_vertex_work_weight(node) * node_in_partition[node][static_cast<int>(part)];
 
-        model.AddConstr(expr <= instance.getMaxWeightPerPartition());
+            model.AddConstr(expr <= instance.getMaxWorkWeightPerPartition());
+        }
     }    
+    if(instance.getMaxMemoryWeightPerPartition() < std::numeric_limits<int>::max())
+    {
+        for (unsigned part = 0; part < numberOfParts; part++)
+        {
+            Expr expr;
+            for (unsigned node = 0; node < numberOfVertices; node++)
+                expr += instance.getHypergraph().get_vertex_memory_weight(node) * node_in_partition[node][static_cast<int>(part)];
+
+            model.AddConstr(expr <= instance.getMaxMemoryWeightPerPartition());
+        }
+    } 
 
     // set objective
     Expr expr;
