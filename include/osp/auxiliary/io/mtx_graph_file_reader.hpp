@@ -69,12 +69,12 @@ bool readComputationalDagMartixMarketFormat(std::ifstream& infile, Graph_t& grap
         return false;
     }
 
-    const vertex_t num_nodes = static_cast<vertex_t>(M_row);
-    if (num_nodes > std::numeric_limits<vertex_t>::max()) {
+    if (static_cast<unsigned long long>(M_row) > std::numeric_limits<vertex_t>::max()) {
         std::cerr << "Error: Matrix dimension too large for vertex type.\n";
         return false;
     }
 
+    const vertex_t num_nodes = static_cast<vertex_t>(M_row);
     std::vector<int> node_work_wts(num_nodes, 0);
     std::vector<int> node_comm_wts(num_nodes, 1);
 
