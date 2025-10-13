@@ -121,6 +121,8 @@ if (COPT_FOUND)
 
 #_add_test( ilp_bsp_scheduler )
 
+#_add_test( ilp_hypergraph_partitioning )
+
 endif()
 
 _add_test( bsp_schedulers )

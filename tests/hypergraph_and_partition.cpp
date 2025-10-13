@@ -23,9 +23,14 @@ limitations under the License.
 #include <string>
 #include <vector>
 
-#include "osp/partitioning/model/hypergraph.hpp"
+#include "osp/partitioning/model/partitioning.hpp"
+#include "osp/partitioning/model/partitioning_replication.hpp"
+#include "osp/partitioning/partitioners/generic_FM.hpp"
 #include "osp/graph_implementations/boost_graphs/boost_graph.hpp"
 #include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
+#include "osp/auxiliary/io/mtx_hypergraph_file_reader.hpp"
+#include "osp/auxiliary/io/partitioning_file_writer.hpp"
+
 
 using namespace osp;
 
@@ -39,7 +44,7 @@ BOOST_AUTO_TEST_CASE(Hypergraph_and_Partition_test) {
     while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
         cwd = cwd.parent_path();
         std::cout << cwd << std::endl;
-    }
+    } 
 
     graph DAG;
 
@@ -48,13 +53,136 @@ BOOST_AUTO_TEST_CASE(Hypergraph_and_Partition_test) {
 
     BOOST_CHECK(status);
 
-    hypergraph Hgraph;
-    
+    Hypergraph Hgraph;
+
+    // Matrix format, one hyperedge for each row/column
+    status = file_reader::readHypergraphMartixMarketFormat((cwd / "data/mtx_tests/ErdosRenyi_8_19_A.mtx").string(), Hgraph);
+    BOOST_CHECK(status);
+    BOOST_CHECK_EQUAL(Hgraph.num_vertices(), 27);
+    BOOST_CHECK_EQUAL(Hgraph.num_hyperedges(), 16);
+
+    // DAG format, all hyperedges have size 2
     Hgraph.convert_from_cdag_as_dag(DAG);
     BOOST_CHECK_EQUAL(DAG.num_vertices(), Hgraph.num_vertices());
     BOOST_CHECK_EQUAL(DAG.num_edges(), Hgraph.num_hyperedges());
     BOOST_CHECK_EQUAL(DAG.num_edges()*2, Hgraph.num_pins());
 
+    // HyperDAG format, one hypredge for each non-sink node
+    unsigned nr_of_non_sinks = 0;
+    for(const auto &node : DAG.vertices())
+        if(DAG.out_degree(node) > 0)
+            ++ nr_of_non_sinks;
+
     Hgraph.convert_from_cdag_as_hyperdag(DAG);
+    BOOST_CHECK_EQUAL(DAG.num_vertices(), Hgraph.num_vertices());
+    BOOST_CHECK_EQUAL(nr_of_non_sinks, Hgraph.num_hyperedges());
+    BOOST_CHECK_EQUAL(DAG.num_edges() + nr_of_non_sinks, Hgraph.num_pins());
+
+
+    // Dummy partitioning
+
+    PartitioningProblem instance(Hgraph, 3, 30);
+
+    Partitioning partition(instance);
+    for(unsigned node = 0; node < Hgraph.num_vertices(); ++node)
+        partition.setAssignedPartition(node, node % 3);
+
+    BOOST_CHECK(partition.satisfiesBalanceConstraint());
+    int cutNetCost = partition.computeCutNetCost();
+    int connectivityCost = partition.computeConnectivityCost();
+    BOOST_CHECK(connectivityCost >= cutNetCost);
+
+    for(unsigned node = 0; node < Hgraph.num_vertices(); ++node)
+        instance.getHypergraph().set_vertex_weight(node, 1);
+
+    instance.setMaxWeightViaImbalanceFactor(0);
+    BOOST_CHECK(partition.satisfiesBalanceConstraint());
+
+    instance.setNumberOfPartitions(5);
+    instance.setMaxWeightViaImbalanceFactor(0);
+    BOOST_CHECK(!partition.satisfiesBalanceConstraint());
+
+    for(unsigned node = 0; node < Hgraph.num_vertices(); ++node)
+        partition.setAssignedPartition(node, node % 5);
+
+    BOOST_CHECK(partition.satisfiesBalanceConstraint());
+    BOOST_CHECK(partition.computeConnectivityCost() >= partition.computeCutNetCost());
+
+    file_writer::write_txt(std::cout, partition);
+
+
+    // Dummy partitioning with replication
+
+    instance.getHypergraph().convert_from_cdag_as_hyperdag(DAG);
+    instance.setNumberOfPartitions(3);
+    instance.setMaxWeightExplicitly(30);
+    PartitioningWithReplication partition_with_rep(instance);
+    for(unsigned node = 0; node < Hgraph.num_vertices(); ++node)
+        partition_with_rep.setAssignedPartitions(node, {node % 3});
+
+    BOOST_CHECK(partition_with_rep.satisfiesBalanceConstraint());
+    BOOST_CHECK(partition_with_rep.computeCutNetCost() == cutNetCost);
+    BOOST_CHECK(partition_with_rep.computeConnectivityCost() == connectivityCost);
+
+    instance.setMaxWeightExplicitly(60);
+    for(unsigned node = 0; node < Hgraph.num_vertices(); ++node)
+        partition_with_rep.setAssignedPartitions(node, {node % 3, (node+1)%3});
+
+    BOOST_CHECK(partition_with_rep.satisfiesBalanceConstraint());
+    BOOST_CHECK(partition_with_rep.computeConnectivityCost() >= partition_with_rep.computeCutNetCost());
+
+    instance.setMaxWeightExplicitly(Hgraph.compute_total_vertex_weight());
+    for(unsigned node = 0; node < Hgraph.num_vertices(); ++node)
+        partition_with_rep.setAssignedPartitions(node, {0, 1, 2});
+
+    BOOST_CHECK(partition_with_rep.satisfiesBalanceConstraint());
+    BOOST_CHECK(partition_with_rep.computeConnectivityCost() == 0);
+    BOOST_CHECK(partition_with_rep.computeCutNetCost() == 0);
+
+    file_writer::write_txt(std::cout, partition_with_rep);
+
+
+    // Generic FM
+
+    instance.setNumberOfPartitions(2);
+    instance.setMaxWeightExplicitly(/*35*/ 4000);
+    for(unsigned node = 0; node < instance.getHypergraph().num_vertices(); ++node)
+        instance.getHypergraph().set_vertex_weight(node, 1);
+
+    Partitioning partition_to_improve(instance);
+    for(unsigned node = 0; node < instance.getHypergraph().num_vertices(); ++node)
+        partition_to_improve.setAssignedPartition(node, node % 2);
+
+    int original_cost = partition_to_improve.computeConnectivityCost();
+
+    GenericFM fm;
+    fm.ImprovePartitioning(partition_to_improve);
+    int new_cost = partition_to_improve.computeConnectivityCost();
+
+    BOOST_CHECK(partition_to_improve.satisfiesBalanceConstraint());
+    BOOST_CHECK(new_cost <= original_cost);
+    std::cout<<original_cost<<" --> "<<new_cost<<std::endl;
+
+    graph larger_DAG;
+    file_reader::readComputationalDagHyperdagFormatDB(
+        (cwd / "data/spaa/large/instance_CG_N24_K22_nzP0d2.hdag").string(), larger_DAG);
+    instance.getHypergraph().convert_from_cdag_as_hyperdag(larger_DAG);
+
+    instance.setMaxWeightExplicitly(4000);
+    for(unsigned node = 0; node < instance.getHypergraph().num_vertices(); ++node)
+        instance.getHypergraph().set_vertex_weight(node, 1);
+
+    partition_to_improve.resetPartition();
+    for(unsigned node = 0; node < instance.getHypergraph().num_vertices(); ++node)
+        partition_to_improve.setAssignedPartition(node, node % 2);
+
+    original_cost = partition_to_improve.computeConnectivityCost();
+
+    fm.ImprovePartitioning(partition_to_improve);
+    new_cost = partition_to_improve.computeConnectivityCost();
+
+    BOOST_CHECK(partition_to_improve.satisfiesBalanceConstraint());
+    BOOST_CHECK(new_cost <= original_cost);
+    std::cout<<original_cost<<" --> "<<new_cost<<std::endl;
 
 };
