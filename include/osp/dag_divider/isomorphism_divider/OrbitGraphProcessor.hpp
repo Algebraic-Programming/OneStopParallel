@@ -116,11 +116,6 @@ public:
         }
 
         coarser_util::construct_coarse_dag(dag, coarse_graph_, contraction_map_);
-
-        // Constr_Graph_t transitive_reduction; 
-        // transitive_reduction_sparse(coarse_graph_, transitive_reduction);
-        // coarse_graph_ = std::move(transitive_reduction);
-
         perform_coarsening(dag, coarse_graph_);
     }
 
@@ -149,15 +144,15 @@ private:
 
         bool changed = true;
         while (changed) {
+
+            const std::vector< vertex_idx_t<Constr_Graph_t> > vertexPoset =  get_top_node_distance<Constr_Graph_t, vertex_idx_t<Constr_Graph_t>>(current_coarse_graph);
+
             changed = false;
             for (const auto& edge : edges(current_coarse_graph)) {
                 VertexType u = source(edge, current_coarse_graph);
                 VertexType v = target(edge, current_coarse_graph);
 
-                if (current_coarse_graph.in_degree(v) != 1) {
-                    if constexpr (verbose) { std::cout << "  - Skipping edge " << u << " -> " << v << " target in-degree > 1" << std::endl; }
-                    continue;
-                }
+                if (vertexPoset[u] + 1 != vertexPoset[v]) continue;
 
                 std::vector<std::vector<VertexType>> new_subgraphs;
 

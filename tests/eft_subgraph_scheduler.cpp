@@ -61,20 +61,13 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_SimpleChain)
 
     // 4. Assertions
     BOOST_CHECK_CLOSE(schedule.makespan, 250.0, 1e-9);
-
     BOOST_REQUIRE_EQUAL(schedule.node_assigned_worker_per_type.size(), 3);
-
-    // Job 0 should use 2 workers of type 0
     BOOST_REQUIRE_EQUAL(schedule.node_assigned_worker_per_type[0].size(), 2);
     BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[0][0], 2);
     BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[0][1], 0);
-
-    // Job 1 should use 2 workers of type 0 and 2 of type 1
     BOOST_REQUIRE_EQUAL(schedule.node_assigned_worker_per_type[1].size(), 2);
-    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[1][0], 2);
-    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[1][1], 2);
-
-    // Job 2 should use 2 workers of type 1
+    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[1][0], 1);
+    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[1][1], 1);
     BOOST_REQUIRE_EQUAL(schedule.node_assigned_worker_per_type[2].size(), 2);
     BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[2][0], 0);
     BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[2][1], 2);
@@ -132,22 +125,14 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ForkJoin)
     BOOST_CHECK_CLOSE(schedule.makespan, 200.0, 1e-9);
 
     BOOST_REQUIRE_EQUAL(schedule.node_assigned_worker_per_type.size(), 4);
-
-    // Job 0 should use 4 workers
     BOOST_REQUIRE_EQUAL(schedule.node_assigned_worker_per_type[0].size(), 1);
     BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[0][0], 4);
-
-    // Job 1 should use 2 workers
     BOOST_REQUIRE_EQUAL(schedule.node_assigned_worker_per_type[1].size(), 1);
-    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[1][0], 2);
-
-    // Job 2 should use 2 workers
+    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[1][0], 1);
     BOOST_REQUIRE_EQUAL(schedule.node_assigned_worker_per_type[2].size(), 1);
     BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[2][0], 2);
-
-    // Job 3 should use 4 workers
     BOOST_REQUIRE_EQUAL(schedule.node_assigned_worker_per_type[3].size(), 1);
-    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[3][0], 4);
+    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[3][0], 1);
 }
 
 BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_Deadlock)
@@ -224,11 +209,11 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ComplexDAG)
 
     BOOST_REQUIRE_EQUAL(schedule.node_assigned_worker_per_type.size(), 6);
     BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[0][0], 4);
-    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[1][0], 4);
+    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[1][0], 2);
     BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[2][1], 4);
-    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[3][0], 4);
-    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[3][1], 4);
-    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[4][1], 4);
+    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[3][0], 1);
+    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[3][1], 1);
+    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[4][1], 2);
     BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[5][0], 4);
 }
 
@@ -284,15 +269,10 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ResourceContention)
     BOOST_CHECK_CLOSE(schedule.makespan, 55.0, 1e-9);
 
     BOOST_REQUIRE_EQUAL(schedule.node_assigned_worker_per_type.size(), 5);
-    // Job 0: 4 workers
     BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[0][0], 4);
-    // Job 1 (high rank): gets 2 workers
-    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[1][0], 2);
-    // Job 2 (mid rank): gets 2 workers
-    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[2][0], 2);
-    // Job 3 (low rank): has to wait, then gets 2 workers
-    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[3][0], 2);
-    // Job 4: gets 4 workers
+    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[1][0], 1);
+    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[2][0], 1);
+    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[3][0], 1);
     BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[4][0], 4);
 }
 

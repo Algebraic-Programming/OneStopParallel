@@ -332,7 +332,7 @@ private:
         for(const auto& job : jobs_) {
             result.node_assigned_worker_per_type[job.id].resize(num_worker_types);
             for (size_t i = 0; i < num_worker_types; ++i) {
-                result.node_assigned_worker_per_type[job.id][i] = job.assigned_workers[i];
+                result.node_assigned_worker_per_type[job.id][i] = job.assigned_workers[i] / job.multiplicity;
             }
         }
 
