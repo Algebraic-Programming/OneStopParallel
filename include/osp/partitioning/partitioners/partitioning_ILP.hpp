@@ -111,7 +111,7 @@ void HypergraphPartitioningILP<index_type, workw_type, memw_type, commw_type>::s
 template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
 std::vector<unsigned> HypergraphPartitioningILP<index_type, workw_type, memw_type, commw_type>::readCoptAssignment(const PartitioningProblem<index_type, workw_type, memw_type, commw_type> &instance, Model& model)
 {
-    std::vector<unsigned> node_to_partition(instance.getHypergraph().num_vertices(), UINT_MAX);
+    std::vector<unsigned> node_to_partition(instance.getHypergraph().num_vertices(), std::numeric_limits<unsigned>::max());
     std::vector<std::vector<unsigned> > assignmentsGenericForm = this->readAllCoptAssignments(instance, model);
 
     for (index_type node = 0; node < instance.getHypergraph().num_vertices(); node++)

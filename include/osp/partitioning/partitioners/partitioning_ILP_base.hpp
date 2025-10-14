@@ -146,7 +146,7 @@ std::vector<std::vector<unsigned> > HypergraphPartitioningILPBase<index_type, wo
         if(chosen_partitions.empty())
         {
             std::cout<<"Error: partitioning returned by ILP seems incomplete!"<<std::endl;
-            chosen_partitions.push_back(UINT_MAX);
+            chosen_partitions.push_back(std::numeric_limits<unsigned>::max());
         }
     
     unsigned current_index = 0;
