@@ -24,23 +24,25 @@ limitations under the License.
 
 namespace osp{
 
+template<typename index_type = size_t, typename workw_type = int, typename memw_type = int, typename commw_type = int>
 class GenericFM {
 
   protected:
     unsigned max_number_of_passes = 10;
-    unsigned max_nodes_in_part = 0;
+    index_type max_nodes_in_part = 0;
 
   public:
 
-    void ImprovePartitioning(Partitioning& partition);
+    void ImprovePartitioning(Partitioning<index_type, workw_type, memw_type, commw_type>& partition);
 
     inline unsigned getMaxNumberOfPasses() const { return max_number_of_passes; }
     inline void setMaxNumberOfPasses(unsigned passes_) { max_number_of_passes = passes_; }
-    inline unsigned getMaxNodesInPart() const { return max_nodes_in_part; }
-    inline void setMaxNodesInPart(unsigned max_nodes_) { max_nodes_in_part = max_nodes_; }
+    inline index_type getMaxNodesInPart() const { return max_nodes_in_part; }
+    inline void setMaxNodesInPart(index_type max_nodes_) { max_nodes_in_part = max_nodes_; }
 };
 
-void GenericFM::ImprovePartitioning(Partitioning& partition)
+template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
+void GenericFM<index_type, workw_type, memw_type, commw_type>::ImprovePartitioning(Partitioning<index_type, workw_type, memw_type, commw_type>& partition)
 {
     // Note: this algorithm disregards hyperedge weights, in order to keep the size of the gain bucket array bounded!
 
@@ -56,14 +58,14 @@ void GenericFM::ImprovePartitioning(Partitioning& partition)
         return;
     }
 
-    const Hypergraph& Hgraph = partition.getInstance().getHypergraph();
+    const Hypergraph<index_type, workw_type, memw_type, commw_type>& Hgraph = partition.getInstance().getHypergraph();
 
-    unsigned max_degree = 0;
-    for(unsigned node = 0; node < Hgraph.num_vertices(); ++node)
-        max_degree = std::max(max_degree, static_cast<unsigned>(Hgraph.get_incident_hyperedges(node).size()));
+    index_type max_degree = 0;
+    for(index_type node = 0; node < Hgraph.num_vertices(); ++node)
+        max_degree = std::max(max_degree, static_cast<index_type>(Hgraph.get_incident_hyperedges(node).size()));
 
     if(max_nodes_in_part == 0) // if not initialized
-        max_nodes_in_part = static_cast<unsigned>(ceil(static_cast<double>(Hgraph.num_vertices()) * static_cast<double>(partition.getInstance().getMaxWorkWeightPerPartition())
+        max_nodes_in_part = static_cast<index_type>(ceil(static_cast<double>(Hgraph.num_vertices()) * static_cast<double>(partition.getInstance().getMaxWorkWeightPerPartition())
                                          / static_cast<double>(Hgraph.compute_total_vertex_work_weight()) ));
 
     for(unsigned pass_idx = 0; pass_idx < max_number_of_passes; ++pass_idx)
@@ -71,18 +73,18 @@ void GenericFM::ImprovePartitioning(Partitioning& partition)
         std::vector<unsigned> node_to_new_part = partition.assignedPartitions();
         std::vector<bool> locked(Hgraph.num_vertices(), false);
         std::vector<int> gain(Hgraph.num_vertices(), 0);
-        std::vector<std::vector<unsigned> > nr_nodes_in_hyperedge_on_side(Hgraph.num_hyperedges(), std::vector<unsigned>(2, 0));
+        std::vector<std::vector<index_type> > nr_nodes_in_hyperedge_on_side(Hgraph.num_hyperedges(), std::vector<index_type>(2, 0));
         int cost = 0;
 
-        unsigned left_side = 0;
-        for(unsigned node = 0; node < Hgraph.num_vertices(); ++node)
+        index_type left_side = 0;
+        for(index_type node = 0; node < Hgraph.num_vertices(); ++node)
             if(partition.assignedPartition(node) == 0)
                 ++left_side;
 
         // Initialize gain values
-        for(unsigned hyperedge = 0; hyperedge < Hgraph.num_hyperedges(); ++hyperedge)
+        for(index_type hyperedge = 0; hyperedge < Hgraph.num_hyperedges(); ++hyperedge)
         {
-            for(unsigned node : Hgraph.get_vertices_in_hyperedge(hyperedge))
+            for(index_type node : Hgraph.get_vertices_in_hyperedge(hyperedge))
                 ++nr_nodes_in_hyperedge_on_side[hyperedge][partition.assignedPartition(node)];
 
             if(Hgraph.get_vertices_in_hyperedge(hyperedge).size() < 2)
@@ -91,7 +93,7 @@ void GenericFM::ImprovePartitioning(Partitioning& partition)
             for(unsigned part = 0; part < 2; ++part)
             {
                 if(nr_nodes_in_hyperedge_on_side[hyperedge][part] == 1)
-                    for(unsigned node : Hgraph.get_vertices_in_hyperedge(hyperedge))
+                    for(index_type node : Hgraph.get_vertices_in_hyperedge(hyperedge))
                         if(partition.assignedPartition(node) == part)
                             ++gain[node];
             }
@@ -99,23 +101,23 @@ void GenericFM::ImprovePartitioning(Partitioning& partition)
 
         // build gain bucket array
         std::vector<int> max_gain(2, -static_cast<int>(max_degree)-1);
-        std::vector<std::vector<std::vector<unsigned> > > gain_bucket_array(2, std::vector<std::vector<unsigned> >(2*max_degree+1));
-        for(unsigned node = 0; node < Hgraph.num_vertices(); ++node)
+        std::vector<std::vector<std::vector<index_type> > > gain_bucket_array(2, std::vector<std::vector<index_type> >(2*max_degree+1));
+        for(index_type node = 0; node < Hgraph.num_vertices(); ++node)
         {
             const unsigned& part = partition.assignedPartition(node);
             gain_bucket_array[part][static_cast<unsigned>(gain[node] + static_cast<int>(max_degree))].push_back(node);
             max_gain[part] = std::max(max_gain[part], gain[node]);
         }
 
-        unsigned best_index = 0;
+        index_type best_index = 0;
         int best_cost = 0;
-        std::vector<unsigned> moved_nodes;
+        std::vector<index_type> moved_nodes;
 
         // the pass itself: make moves
         while(moved_nodes.size() < Hgraph.num_vertices())
         {
             // select move
-            unsigned to_move = std::numeric_limits<unsigned>::max();
+            index_type to_move = std::numeric_limits<index_type>::max();
             unsigned chosen_part = std::numeric_limits<unsigned>::max();
 
             unsigned gain_index = static_cast<unsigned>(std::max(max_gain[0], max_gain[1]) + static_cast<int>(max_degree));
@@ -140,7 +142,7 @@ void GenericFM::ImprovePartitioning(Partitioning& partition)
                 --gain_index;
             }
 
-            if(to_move == std::numeric_limits<unsigned>::max())
+            if(to_move == std::numeric_limits<index_type>::max())
                 break;
             
             // make move
@@ -150,7 +152,7 @@ void GenericFM::ImprovePartitioning(Partitioning& partition)
             if(cost < best_cost)
             {
                 best_cost = cost;
-                best_index = static_cast<unsigned>(moved_nodes.size()) + 1;
+                best_index = static_cast<index_type>(moved_nodes.size()) + 1;
             }
             locked[to_move] = true;
             node_to_new_part[to_move] = 1 - node_to_new_part[to_move];
@@ -163,16 +165,16 @@ void GenericFM::ImprovePartitioning(Partitioning& partition)
             unsigned other_part = 1-chosen_part;
 
             // update gain values
-            for(unsigned hyperedge : Hgraph.get_incident_hyperedges(to_move))
+            for(index_type hyperedge : Hgraph.get_incident_hyperedges(to_move))
             {
                 if(nr_nodes_in_hyperedge_on_side[hyperedge][chosen_part] == 1)
                 {
-                    for(unsigned node : Hgraph.get_vertices_in_hyperedge(hyperedge))
+                    for(index_type node : Hgraph.get_vertices_in_hyperedge(hyperedge))
                     {
                         if(locked[node])
                             continue;
 
-                        std::vector<unsigned>& vec = gain_bucket_array[other_part][static_cast<unsigned>(gain[node] + static_cast<int>(max_degree))];
+                        std::vector<index_type>& vec = gain_bucket_array[other_part][static_cast<unsigned>(gain[node] + static_cast<int>(max_degree))];
                         vec.erase(std::remove(vec.begin(), vec.end(), node), vec.end());
                         --gain[node];
                         gain_bucket_array[other_part][static_cast<unsigned>(gain[node] + static_cast<int>(max_degree))].push_back(node);
@@ -180,11 +182,11 @@ void GenericFM::ImprovePartitioning(Partitioning& partition)
                 }
                 else if(nr_nodes_in_hyperedge_on_side[hyperedge][chosen_part] == 2)
                 {
-                    for(unsigned node : Hgraph.get_vertices_in_hyperedge(hyperedge))
+                    for(index_type node : Hgraph.get_vertices_in_hyperedge(hyperedge))
                     {
                         if(node_to_new_part[node] == chosen_part && !locked[node])
                         {
-                            std::vector<unsigned>& vec = gain_bucket_array[chosen_part][static_cast<unsigned>(gain[node] + static_cast<int>(max_degree))];
+                            std::vector<index_type>& vec = gain_bucket_array[chosen_part][static_cast<unsigned>(gain[node] + static_cast<int>(max_degree))];
                             vec.erase(std::remove(vec.begin(), vec.end(), node), vec.end());
                             ++gain[node];
                             gain_bucket_array[chosen_part][static_cast<unsigned>(gain[node] + static_cast<int>(max_degree))].push_back(node);
@@ -195,11 +197,11 @@ void GenericFM::ImprovePartitioning(Partitioning& partition)
                 }
                 if(nr_nodes_in_hyperedge_on_side[hyperedge][other_part] == 1)
                 {
-                    for(unsigned node : Hgraph.get_vertices_in_hyperedge(hyperedge))
+                    for(index_type node : Hgraph.get_vertices_in_hyperedge(hyperedge))
                     {
                         if(node_to_new_part[node] == other_part && !locked[node])
                         {
-                            std::vector<unsigned>& vec = gain_bucket_array[other_part][static_cast<unsigned>(gain[node] + static_cast<int>(max_degree))];
+                            std::vector<index_type>& vec = gain_bucket_array[other_part][static_cast<unsigned>(gain[node] + static_cast<int>(max_degree))];
                             vec.erase(std::remove(vec.begin(), vec.end(), node), vec.end());
                             --gain[node];
                             gain_bucket_array[other_part][static_cast<unsigned>(gain[node] + static_cast<int>(max_degree))].push_back(node);
@@ -209,12 +211,12 @@ void GenericFM::ImprovePartitioning(Partitioning& partition)
                 }
                 else if(nr_nodes_in_hyperedge_on_side[hyperedge][other_part] == 0)
                 {
-                    for(unsigned node : Hgraph.get_vertices_in_hyperedge(hyperedge))
+                    for(index_type node : Hgraph.get_vertices_in_hyperedge(hyperedge))
                     {
                         if(locked[node])
                             continue;
 
-                        std::vector<unsigned>& vec = gain_bucket_array[chosen_part][static_cast<unsigned>(gain[node] + static_cast<int>(max_degree))];
+                        std::vector<index_type>& vec = gain_bucket_array[chosen_part][static_cast<unsigned>(gain[node] + static_cast<int>(max_degree))];
                         vec.erase(std::remove(vec.begin(), vec.end(), node), vec.end());
                         ++gain[node];
                         gain_bucket_array[chosen_part][static_cast<unsigned>(gain[node] + static_cast<int>(max_degree))].push_back(node);
@@ -230,7 +232,7 @@ void GenericFM::ImprovePartitioning(Partitioning& partition)
         if(best_index == 0)
             break;
 
-        for(unsigned node_idx = 0; node_idx < best_index; ++node_idx)
+        for(index_type node_idx = 0; node_idx < best_index; ++node_idx)
             partition.setAssignedPartition(moved_nodes[node_idx], 1U-partition.assignedPartition(moved_nodes[node_idx]));
 
     }

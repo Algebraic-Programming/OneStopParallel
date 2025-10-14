@@ -26,36 +26,38 @@ limitations under the License.
 
 namespace osp{
 
-class HypergraphPartitioningILP : public HypergraphPartitioningILPBase {
+template<typename index_type = size_t, typename workw_type = int, typename memw_type = int, typename commw_type = int>
+class HypergraphPartitioningILP : public HypergraphPartitioningILPBase<index_type, workw_type, memw_type, commw_type> {
 
   protected:
-    std::vector<unsigned> readCoptAssignment(const PartitioningProblem &instance, Model& model);
+    std::vector<unsigned> readCoptAssignment(const PartitioningProblem<index_type, workw_type, memw_type, commw_type> &instance, Model& model);
 
-    void setupExtraVariablesConstraints(const PartitioningProblem &instance, Model& model);
+    void setupExtraVariablesConstraints(const PartitioningProblem<index_type, workw_type, memw_type, commw_type> &instance, Model& model);
 
-    void setInitialSolution(const Partitioning &partition, Model& model);
+    void setInitialSolution(const Partitioning<index_type, workw_type, memw_type, commw_type> &partition, Model& model);
 
   public:
 
     virtual ~HypergraphPartitioningILP() = default;
 
-    RETURN_STATUS computePartitioning(Partitioning& result);
+    RETURN_STATUS computePartitioning(Partitioning<index_type, workw_type, memw_type, commw_type>& result);
 
     virtual std::string getAlgorithmName() const override { return "HypergraphPartitioningILP"; }
 };
 
-RETURN_STATUS HypergraphPartitioningILP::computePartitioning(Partitioning& result)
+template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
+RETURN_STATUS HypergraphPartitioningILP<index_type, workw_type, memw_type, commw_type>::computePartitioning(Partitioning<index_type, workw_type, memw_type, commw_type>& result)
 {
     Envr env;
     Model model = env.CreateModel("HypergraphPart");
 
-    setupFundamentalVariablesConstraintsObjective(result.getInstance(), model);
+    this->setupFundamentalVariablesConstraintsObjective(result.getInstance(), model);
     setupExtraVariablesConstraints(result.getInstance(), model);
 
-    if(use_initial_solution)
+    if(this->use_initial_solution)
         setInitialSolution(result, model);
 
-    solveILP(model);
+    this->solveILP(model);
 
     if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_OPTIMAL) {
 
@@ -79,57 +81,60 @@ RETURN_STATUS HypergraphPartitioningILP::computePartitioning(Partitioning& resul
     }
 }
 
-void HypergraphPartitioningILP::setupExtraVariablesConstraints(const PartitioningProblem &instance, Model& model) {
+template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
+void HypergraphPartitioningILP<index_type, workw_type, memw_type, commw_type>::setupExtraVariablesConstraints(const PartitioningProblem<index_type, workw_type, memw_type, commw_type> &instance, Model& model) {
 
-    const unsigned numberOfParts = instance.getNumberOfPartitions();
-    const unsigned numberOfVertices = instance.getHypergraph().num_vertices();
+    const index_type numberOfParts = instance.getNumberOfPartitions();
+    const index_type numberOfVertices = instance.getHypergraph().num_vertices();
 
     // Constraints
 
     // each node assigned to exactly one partition
-    for (unsigned node = 0; node < numberOfVertices; node++) {
+    for (index_type node = 0; node < numberOfVertices; node++) {
 
         Expr expr;
         for (unsigned part = 0; part < numberOfParts; part++)
-            expr += node_in_partition[node][static_cast<int>(part)];
+            expr += this->node_in_partition[node][static_cast<int>(part)];
 
         model.AddConstr(expr == 1);
     }
 
     // hyperedge indicators match node variables
     for (unsigned part = 0; part < numberOfParts; part++)
-        for (unsigned node = 0; node < numberOfVertices; node++)
-            for (const unsigned& hyperedge : instance.getHypergraph().get_incident_hyperedges(node))
-                model.AddConstr(hyperedge_uses_partition[hyperedge][static_cast<int>(part)] >= node_in_partition[node][static_cast<int>(part)]);
+        for (index_type node = 0; node < numberOfVertices; node++)
+            for (const index_type& hyperedge : instance.getHypergraph().get_incident_hyperedges(node))
+                model.AddConstr(this->hyperedge_uses_partition[hyperedge][static_cast<int>(part)] >= this->node_in_partition[node][static_cast<int>(part)]);
              
 };
 
 // convert generic one-to-many assingment (of base class function) to one-to-one
-std::vector<unsigned> HypergraphPartitioningILP::readCoptAssignment(const PartitioningProblem &instance, Model& model)
+template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
+std::vector<unsigned> HypergraphPartitioningILP<index_type, workw_type, memw_type, commw_type>::readCoptAssignment(const PartitioningProblem<index_type, workw_type, memw_type, commw_type> &instance, Model& model)
 {
     std::vector<unsigned> node_to_partition(instance.getHypergraph().num_vertices(), UINT_MAX);
-    std::vector<std::vector<unsigned> > assignmentsGenericForm = readAllCoptAssignments(instance, model);
+    std::vector<std::vector<unsigned> > assignmentsGenericForm = this->readAllCoptAssignments(instance, model);
 
-    for (unsigned node = 0; node < instance.getHypergraph().num_vertices(); node++)
+    for (index_type node = 0; node < instance.getHypergraph().num_vertices(); node++)
         node_to_partition[node] = assignmentsGenericForm[node].front();
 
     return node_to_partition;
 }
 
-void HypergraphPartitioningILP::setInitialSolution(const Partitioning &partition,  Model& model)
+template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
+void HypergraphPartitioningILP<index_type, workw_type, memw_type, commw_type>::setInitialSolution(const Partitioning<index_type, workw_type, memw_type, commw_type> &partition,  Model& model)
 {
     const std::vector<unsigned>& assignment = partition.assignedPartitions();
     const unsigned& numPartitions = partition.getInstance().getNumberOfPartitions();
     if(assignment.size() != partition.getInstance().getHypergraph().num_vertices())
         return;
 
-    for(unsigned node = 0; node < assignment.size(); ++node)
+    for(index_type node = 0; node < assignment.size(); ++node)
     {
         if(assignment[node] >= numPartitions)
             continue;
         
         for(unsigned part = 0; part < numPartitions; ++part)
-            model.SetMipStart(node_in_partition[node][static_cast<int>(part)], static_cast<int>(assignment[node] == part));
+            model.SetMipStart(this->node_in_partition[node][static_cast<int>(part)], static_cast<int>(assignment[node] == part));
     }
     model.LoadMipStart();
 }

@@ -26,7 +26,7 @@ limitations under the License.
 #include "osp/partitioning/model/partitioning.hpp"
 #include "osp/partitioning/model/partitioning_replication.hpp"
 #include "osp/partitioning/partitioners/generic_FM.hpp"
-#include "osp/graph_implementations/boost_graphs/boost_graph.hpp"
+#include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 #include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 #include "osp/auxiliary/io/mtx_hypergraph_file_reader.hpp"
 #include "osp/auxiliary/io/partitioning_file_writer.hpp"
@@ -36,7 +36,7 @@ using namespace osp;
 
 BOOST_AUTO_TEST_CASE(Hypergraph_and_Partition_test) {
 
-    using graph = boost_graph_uint_t;
+    using graph = computational_dag_vector_impl_def_int_t;
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(Hypergraph_and_Partition_test) {
     // Generic FM
 
     instance.setNumberOfPartitions(2);
-    instance.setMaxWorkWeightExplicitly(/*35*/ 4000);
+    instance.setMaxWorkWeightExplicitly(35);
     for(unsigned node = 0; node < instance.getHypergraph().num_vertices(); ++node)
         instance.getHypergraph().set_vertex_work_weight(node, 1);
 

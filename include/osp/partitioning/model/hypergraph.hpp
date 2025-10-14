@@ -20,48 +20,50 @@ limitations under the License.
 #include <vector>
 #include <stdexcept>
 #include "osp/concepts/computational_dag_concept.hpp"
+#include "osp/graph_algorithms/directed_graph_edge_desc_util.hpp"
 
 namespace osp {
 
+template<typename index_type = size_t, typename workw_type = int, typename memw_type = int, typename commw_type = int>
 class Hypergraph {
 
   public:
 
     Hypergraph() = default;
 
-    Hypergraph(unsigned num_vertices_, unsigned num_hyperedges_)
+    Hypergraph(index_type num_vertices_, index_type num_hyperedges_)
         : Num_vertices(num_vertices_), Num_hyperedges(num_hyperedges_), vertex_work_weights(num_vertices_, 1),
         vertex_memory_weights(num_vertices_, 1), hyperedge_weights(num_hyperedges_, 1),
         incident_hyperedges_to_vertex(num_vertices_), vertices_in_hyperedge(num_hyperedges_){}
 
-    Hypergraph(const Hypergraph &other) = default;
-    Hypergraph &operator=(const Hypergraph &other) = default;
+    Hypergraph(const Hypergraph<index_type, workw_type, memw_type, commw_type> &other) = default;
+    Hypergraph &operator=(const Hypergraph<index_type, workw_type, memw_type, commw_type> &other) = default;
 
     virtual ~Hypergraph() = default;
 
-    inline unsigned num_vertices() const { return Num_vertices; }
-    inline unsigned num_hyperedges() const { return Num_hyperedges; }
-    inline unsigned num_pins() const { return Num_pins; }
-    inline int get_vertex_work_weight(unsigned node) const { return vertex_work_weights[node]; }
-    inline int get_vertex_memory_weight(unsigned node) const { return vertex_memory_weights[node]; }
-    inline int get_hyperedge_weight(unsigned hyperedge) const { return hyperedge_weights[hyperedge]; }
+    inline index_type num_vertices() const { return Num_vertices; }
+    inline index_type num_hyperedges() const { return Num_hyperedges; }
+    inline index_type num_pins() const { return Num_pins; }
+    inline workw_type get_vertex_work_weight(index_type node) const { return vertex_work_weights[node]; }
+    inline memw_type get_vertex_memory_weight(index_type node) const { return vertex_memory_weights[node]; }
+    inline commw_type get_hyperedge_weight(index_type hyperedge) const { return hyperedge_weights[hyperedge]; }
 
-    void add_pin(unsigned vertex_idx, unsigned hyperedge_idx);
-    void add_vertex(int work_weight = 1, int memory_weight = 1);
-    void add_empty_hyperedge(int weight = 1);
-    void add_hyperedge(const std::vector<unsigned>& pins, int weight = 1);
-    void set_vertex_work_weight(unsigned vertex_idx, int weight);
-    void set_vertex_memory_weight(unsigned vertex_idx, int weight);
-    void set_hyperedge_weight(unsigned hyperedge_idx, int weight);
+    void add_pin(index_type vertex_idx, index_type hyperedge_idx);
+    void add_vertex(workw_type work_weight = 1, memw_type memory_weight = 1);
+    void add_empty_hyperedge(commw_type weight = 1);
+    void add_hyperedge(const std::vector<index_type>& pins, commw_type weight = 1);
+    void set_vertex_work_weight(index_type vertex_idx, workw_type weight);
+    void set_vertex_memory_weight(index_type vertex_idx, memw_type weight);
+    void set_hyperedge_weight(index_type hyperedge_idx, commw_type weight);
 
-    int compute_total_vertex_work_weight() const;
-    int compute_total_vertex_memory_weight() const;
+    workw_type compute_total_vertex_work_weight() const;
+    memw_type compute_total_vertex_memory_weight() const;
 
     void clear();
-    void reset(unsigned num_vertices_, unsigned num_hyperedges_);
+    void reset(index_type num_vertices_, index_type num_hyperedges_);
 
-    inline const std::vector<unsigned> &get_incident_hyperedges(unsigned vertex) const { return incident_hyperedges_to_vertex[vertex]; }
-    inline const std::vector<unsigned> &get_vertices_in_hyperedge(unsigned hyperedge) const { return vertices_in_hyperedge[hyperedge]; }
+    inline const std::vector<index_type> &get_incident_hyperedges(index_type vertex) const { return incident_hyperedges_to_vertex[vertex]; }
+    inline const std::vector<index_type> &get_vertices_in_hyperedge(index_type hyperedge) const { return vertices_in_hyperedge[hyperedge]; }
 
     template<typename Graph_t>
     void convert_from_cdag_as_dag(const Graph_t& dag);
@@ -70,17 +72,18 @@ class Hypergraph {
     void convert_from_cdag_as_hyperdag(const Graph_t& dag);
 
   private:
-    unsigned Num_vertices = 0, Num_hyperedges = 0, Num_pins = 0;
+    index_type Num_vertices = 0, Num_hyperedges = 0, Num_pins = 0;
 
-    std::vector<int> vertex_work_weights;
-    std::vector<int> vertex_memory_weights;
-    std::vector<int> hyperedge_weights;
+    std::vector<workw_type> vertex_work_weights;
+    std::vector<memw_type> vertex_memory_weights;
+    std::vector<commw_type> hyperedge_weights;
 
-    std::vector<std::vector<unsigned>> incident_hyperedges_to_vertex;
-    std::vector<std::vector<unsigned>> vertices_in_hyperedge;
+    std::vector<std::vector<index_type>> incident_hyperedges_to_vertex;
+    std::vector<std::vector<index_type>> vertices_in_hyperedge;
 };
 
-void Hypergraph::add_pin(unsigned vertex_idx, unsigned hyperedge_idx)
+template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
+void Hypergraph<index_type, workw_type, memw_type, commw_type>::add_pin(index_type vertex_idx, index_type hyperedge_idx)
 {
     if(vertex_idx >= Num_vertices)
     {
@@ -97,7 +100,8 @@ void Hypergraph::add_pin(unsigned vertex_idx, unsigned hyperedge_idx)
     }
 }
 
-void Hypergraph::add_vertex(int work_weight, int memory_weight)
+template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
+void Hypergraph<index_type, workw_type, memw_type, commw_type>::add_vertex(workw_type work_weight, memw_type memory_weight)
 {
     vertex_work_weights.push_back(work_weight);
     vertex_memory_weights.push_back(memory_weight);
@@ -105,24 +109,27 @@ void Hypergraph::add_vertex(int work_weight, int memory_weight)
     ++Num_vertices;
 }
 
-void Hypergraph::add_empty_hyperedge(int weight)
+template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
+void Hypergraph<index_type, workw_type, memw_type, commw_type>::add_empty_hyperedge(commw_type weight)
 {
     vertices_in_hyperedge.emplace_back();
     hyperedge_weights.push_back(weight);
     ++Num_hyperedges;
 }
 
-void Hypergraph::add_hyperedge(const std::vector<unsigned>& pins, int weight)
+template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
+void Hypergraph<index_type, workw_type, memw_type, commw_type>::add_hyperedge(const std::vector<index_type>& pins, commw_type weight)
 {
     vertices_in_hyperedge.emplace_back(pins);
     hyperedge_weights.push_back(weight);
-    for(unsigned vertex : pins)
+    for(index_type vertex : pins)
         incident_hyperedges_to_vertex[vertex].push_back(Num_hyperedges);
     ++Num_hyperedges;
-    Num_pins += static_cast<unsigned>(pins.size());
+    Num_pins += static_cast<index_type>(pins.size());
 }
 
-void Hypergraph::set_vertex_work_weight(unsigned vertex_idx, int weight)
+template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
+void Hypergraph<index_type, workw_type, memw_type, commw_type>::set_vertex_work_weight(index_type vertex_idx, workw_type weight)
 {
     if(vertex_idx >= Num_vertices)
         throw std::invalid_argument("Invalid Argument while setting vertex weight: vertex index out of range.");
@@ -130,7 +137,8 @@ void Hypergraph::set_vertex_work_weight(unsigned vertex_idx, int weight)
         vertex_work_weights[vertex_idx] = weight;
 }
 
-void Hypergraph::set_vertex_memory_weight(unsigned vertex_idx, int weight)
+template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
+void Hypergraph<index_type, workw_type, memw_type, commw_type>::set_vertex_memory_weight(index_type vertex_idx, memw_type weight)
 {
     if(vertex_idx >= Num_vertices)
         throw std::invalid_argument("Invalid Argument while setting vertex weight: vertex index out of range.");
@@ -138,7 +146,8 @@ void Hypergraph::set_vertex_memory_weight(unsigned vertex_idx, int weight)
         vertex_memory_weights[vertex_idx] = weight;
 }
 
-void Hypergraph::set_hyperedge_weight(unsigned hyperedge_idx, int weight)
+template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
+void Hypergraph<index_type, workw_type, memw_type, commw_type>::set_hyperedge_weight(index_type hyperedge_idx, commw_type weight)
 {
     if(hyperedge_idx >= Num_hyperedges)
         throw std::invalid_argument("Invalid Argument while setting hyperedge weight: hyepredge index out of range.");
@@ -146,23 +155,26 @@ void Hypergraph::set_hyperedge_weight(unsigned hyperedge_idx, int weight)
         hyperedge_weights[hyperedge_idx] = weight;
 }
 
-int Hypergraph::compute_total_vertex_work_weight() const
+template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
+workw_type Hypergraph<index_type, workw_type, memw_type, commw_type>::compute_total_vertex_work_weight() const
 {
-    int total = 0;
-    for(unsigned node = 0; node < Num_vertices; ++node)
+    workw_type total = 0;
+    for(index_type node = 0; node < Num_vertices; ++node)
         total += vertex_work_weights[node];
     return total;
 }
 
-int Hypergraph::compute_total_vertex_memory_weight() const
+template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
+memw_type Hypergraph<index_type, workw_type, memw_type, commw_type>::compute_total_vertex_memory_weight() const
 {
-    int total = 0;
-    for(unsigned node = 0; node < Num_vertices; ++node)
+    memw_type total = 0;
+    for(index_type node = 0; node < Num_vertices; ++node)
         total += vertex_memory_weights[node];
     return total;
 }
 
-void Hypergraph::clear()
+template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
+void Hypergraph<index_type, workw_type, memw_type, commw_type>::clear()
 {
     Num_vertices = 0;
     Num_hyperedges = 0;
@@ -175,7 +187,8 @@ void Hypergraph::clear()
     vertices_in_hyperedge.clear();
 }
 
-void Hypergraph::reset(unsigned num_vertices_, unsigned num_hyperedges_)
+template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
+void Hypergraph<index_type, workw_type, memw_type, commw_type>::reset(index_type num_vertices_, index_type num_hyperedges_)
 {
     clear();
 
@@ -189,33 +202,48 @@ void Hypergraph::reset(unsigned num_vertices_, unsigned num_hyperedges_)
     vertices_in_hyperedge.resize(num_hyperedges_);
 }
 
+template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
 template<typename Graph_t>
-void Hypergraph::convert_from_cdag_as_dag(const Graph_t& dag)
+void Hypergraph<index_type, workw_type, memw_type, commw_type>::convert_from_cdag_as_dag(const Graph_t& dag)
 {
-    reset(static_cast<unsigned>(dag.num_vertices()), 0);
+    static_assert(std::is_same_v<vertex_idx_t<Graph_t>, index_type>, "Index type mismatch, cannot convert DAG to hypergraph.");
+    static_assert(std::is_same_v<v_workw_t<Graph_t>, workw_type>, "Work weight type mismatch, cannot convert DAG to hypergraph.");
+    static_assert(std::is_same_v<v_memw_t<Graph_t>, memw_type>, "Memory weight type mismatch, cannot convert DAG to hypergraph.");
+    static_assert(!has_edge_weights_v<Graph_t> || std::is_same_v<e_commw_t<Graph_t>, commw_type>, "Communication weight type mismatch, cannot convert DAG to hypergraph.");
+
+    reset(dag.num_vertices(), 0);
     for(const auto &node : dag.vertices())
     {
-        set_vertex_work_weight(static_cast<unsigned>(node), static_cast<int>(dag.vertex_work_weight(node)));
-        set_vertex_memory_weight(static_cast<unsigned>(node), static_cast<int>(dag.vertex_mem_weight(node)));
+        set_vertex_work_weight(node, dag.vertex_work_weight(node));
+        set_vertex_memory_weight(node, dag.vertex_mem_weight(node));
         for (const auto &child : dag.children(node))
-            add_hyperedge({static_cast<unsigned>(node), static_cast<unsigned>(child)}); // TODO add edge weights if present
+            if constexpr(has_edge_weights_v<Graph_t>)
+                add_hyperedge({node, child}, dag.edge_comm_weight(edge_desc(node, child, dag).first));
+            else 
+                add_hyperedge({node, child});
     }
 }
 
+template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
 template<typename Graph_t>
-void Hypergraph::convert_from_cdag_as_hyperdag(const Graph_t& dag)
+void Hypergraph<index_type, workw_type, memw_type, commw_type>::convert_from_cdag_as_hyperdag(const Graph_t& dag)
 {
-    reset(static_cast<unsigned>(dag.num_vertices()), 0);
+    static_assert(std::is_same_v<vertex_idx_t<Graph_t>, index_type>, "Index type mismatch, cannot convert DAG to hypergraph.");
+    static_assert(std::is_same_v<v_workw_t<Graph_t>, workw_type>, "Work weight type mismatch, cannot convert DAG to hypergraph.");
+    static_assert(std::is_same_v<v_memw_t<Graph_t>, memw_type>, "Memory weight type mismatch, cannot convert DAG to hypergraph.");
+    static_assert(std::is_same_v<v_commw_t<Graph_t>, commw_type>, "Communication weight type mismatch, cannot convert DAG to hypergraph.");
+
+    reset(dag.num_vertices(), 0);
     for(const auto &node : dag.vertices())
     {
-        set_vertex_work_weight(static_cast<unsigned>(node), static_cast<int>(dag.vertex_work_weight(node)));
-        set_vertex_memory_weight(static_cast<unsigned>(node), static_cast<int>(dag.vertex_mem_weight(node)));
+        set_vertex_work_weight(node, dag.vertex_work_weight(node));
+        set_vertex_memory_weight(node, dag.vertex_mem_weight(node));
         if(dag.out_degree(node) == 0)
             continue;
-        std::vector<unsigned> new_hyperedge({static_cast<unsigned>(node)});
+        std::vector<index_type> new_hyperedge({node});
         for (const auto &child : dag.children(node))
-            new_hyperedge.push_back(static_cast<unsigned>(child));
-        add_hyperedge(new_hyperedge, static_cast<int>(dag.vertex_comm_weight(node)));
+            new_hyperedge.push_back(child);
+        add_hyperedge(new_hyperedge, dag.vertex_comm_weight(node));
     }
 }
 

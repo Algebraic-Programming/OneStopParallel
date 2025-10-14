@@ -26,6 +26,7 @@ limitations under the License.
 
 namespace osp{
 
+template<typename index_type = size_t, typename workw_type = int, typename memw_type = int, typename commw_type = int>
 class HypergraphPartitioningILPBase {
 
   protected:
@@ -35,9 +36,9 @@ class HypergraphPartitioningILPBase {
     unsigned time_limit_seconds = 3600;
     bool use_initial_solution = false;
 
-    std::vector<std::vector<unsigned> > readAllCoptAssignments(const PartitioningProblem &instance, Model& model);
+    std::vector<std::vector<unsigned> > readAllCoptAssignments(const PartitioningProblem<index_type, workw_type, memw_type, commw_type> &instance, Model& model);
 
-    void setupFundamentalVariablesConstraintsObjective(const PartitioningProblem &instance, Model& model);
+    void setupFundamentalVariablesConstraintsObjective(const PartitioningProblem<index_type, workw_type, memw_type, commw_type> &instance, Model& model);
 
     void solveILP(Model& model);
 
@@ -50,7 +51,8 @@ class HypergraphPartitioningILPBase {
     inline void setUseInitialSolution(bool use_) { use_initial_solution = use_; }
 };
 
-void HypergraphPartitioningILPBase::solveILP(Model& model) {
+template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
+void HypergraphPartitioningILPBase<index_type, workw_type, memw_type, commw_type>::solveILP(Model& model) {
 
     model.SetIntParam(COPT_INTPARAM_LOGTOCONSOLE, 0);
 
@@ -70,42 +72,43 @@ void HypergraphPartitioningILPBase::solveILP(Model& model) {
     model.Solve();
 }
 
-void HypergraphPartitioningILPBase::setupFundamentalVariablesConstraintsObjective(const PartitioningProblem &instance, Model& model) {
+template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
+void HypergraphPartitioningILPBase<index_type, workw_type, memw_type, commw_type>::setupFundamentalVariablesConstraintsObjective(const PartitioningProblem<index_type, workw_type, memw_type, commw_type> &instance, Model& model) {
 
-    const unsigned numberOfParts = instance.getNumberOfPartitions();
-    const unsigned numberOfVertices = instance.getHypergraph().num_vertices();
-    const unsigned numberOfHyperedges = instance.getHypergraph().num_hyperedges();
+    const index_type numberOfParts = instance.getNumberOfPartitions();
+    const index_type numberOfVertices = instance.getHypergraph().num_vertices();
+    const index_type numberOfHyperedges = instance.getHypergraph().num_hyperedges();
 
     // Variables
 
     node_in_partition = std::vector<VarArray>(numberOfVertices);
 
-    for (unsigned node = 0; node < numberOfVertices; node++)
+    for (index_type node = 0; node < numberOfVertices; node++)
         node_in_partition[node] = model.AddVars(static_cast<int>(numberOfParts), COPT_BINARY, "node_in_partition");
 
     hyperedge_uses_partition = std::vector<VarArray>(numberOfHyperedges);
 
-    for (unsigned hyperedge = 0; hyperedge < numberOfHyperedges; hyperedge++)
+    for (index_type hyperedge = 0; hyperedge < numberOfHyperedges; hyperedge++)
         hyperedge_uses_partition[hyperedge] = model.AddVars(static_cast<int>(numberOfParts), COPT_BINARY, "hyperedge_uses_partition");
     
     // partition size constraints
-    if(instance.getMaxWorkWeightPerPartition() < std::numeric_limits<int>::max())
+    if(instance.getMaxWorkWeightPerPartition() < std::numeric_limits<workw_type>::max())
     {
         for (unsigned part = 0; part < numberOfParts; part++)
         {
             Expr expr;
-            for (unsigned node = 0; node < numberOfVertices; node++)
+            for (index_type node = 0; node < numberOfVertices; node++)
                 expr += instance.getHypergraph().get_vertex_work_weight(node) * node_in_partition[node][static_cast<int>(part)];
 
             model.AddConstr(expr <= instance.getMaxWorkWeightPerPartition());
         }
     }    
-    if(instance.getMaxMemoryWeightPerPartition() < std::numeric_limits<int>::max())
+    if(instance.getMaxMemoryWeightPerPartition() < std::numeric_limits<memw_type>::max())
     {
         for (unsigned part = 0; part < numberOfParts; part++)
         {
             Expr expr;
-            for (unsigned node = 0; node < numberOfVertices; node++)
+            for (index_type node = 0; node < numberOfVertices; node++)
                 expr += instance.getHypergraph().get_vertex_memory_weight(node) * node_in_partition[node][static_cast<int>(part)];
 
             model.AddConstr(expr <= instance.getMaxMemoryWeightPerPartition());
@@ -114,7 +117,7 @@ void HypergraphPartitioningILPBase::setupFundamentalVariablesConstraintsObjectiv
 
     // set objective
     Expr expr;
-    for (unsigned hyperedge = 0; hyperedge < numberOfHyperedges; hyperedge++)
+    for (index_type hyperedge = 0; hyperedge < numberOfHyperedges; hyperedge++)
     {
         expr -= instance.getHypergraph().get_hyperedge_weight(hyperedge);
         for (unsigned part = 0; part < numberOfParts; part++)
@@ -125,12 +128,13 @@ void HypergraphPartitioningILPBase::setupFundamentalVariablesConstraintsObjectiv
              
 };
 
-std::vector<std::vector<unsigned> > HypergraphPartitioningILPBase::readAllCoptAssignments(const PartitioningProblem &instance, Model& model)
+template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
+std::vector<std::vector<unsigned> > HypergraphPartitioningILPBase<index_type, workw_type, memw_type, commw_type>::readAllCoptAssignments(const PartitioningProblem<index_type, workw_type, memw_type, commw_type> &instance, Model& model)
 {
     std::vector<std::vector<unsigned> > node_to_partitions(instance.getHypergraph().num_vertices());
 
     std::set<unsigned> nonempty_partition_ids;
-    for (unsigned node = 0; node < instance.getHypergraph().num_vertices(); node++)
+    for (index_type node = 0; node < instance.getHypergraph().num_vertices(); node++)
         for(unsigned part = 0; part < instance.getNumberOfPartitions(); part++)
             if(node_in_partition[node][static_cast<int>(part)].Get(COPT_DBLINFO_VALUE) >= .99)
             {
@@ -153,7 +157,7 @@ std::vector<std::vector<unsigned> > HypergraphPartitioningILPBase::readAllCoptAs
         ++current_index;
     }
 
-    for(unsigned node = 0; node < instance.getHypergraph().num_vertices(); node++)
+    for(index_type node = 0; node < instance.getHypergraph().num_vertices(); node++)
         for(unsigned entry_idx = 0; entry_idx < node_to_partitions[node].size(); ++entry_idx)
             node_to_partitions[node][entry_idx] = new_part_index[node_to_partitions[node][entry_idx]];
 

@@ -25,24 +25,27 @@ limitations under the License.
 
 namespace osp { namespace file_writer {
 
-void write_txt(std::ostream &os, const Partitioning &partition) {
+template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
+void write_txt(std::ostream &os, const Partitioning<index_type, workw_type, memw_type, commw_type> &partition) {
 
     os << "\%\% Partitioning for " << partition.getInstance().getNumberOfPartitions() << " parts." << std::endl;
 
-    for(unsigned node = 0; node < partition.getInstance().getHypergraph().num_vertices(); ++node)
+    for(index_type node = 0; node < partition.getInstance().getHypergraph().num_vertices(); ++node)
         os << node << " " << partition.assignedPartition(node) << std::endl;
 }
 
-void write_txt(const std::string &filename, const Partitioning &partition) {
+template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
+void write_txt(const std::string &filename, const Partitioning<index_type, workw_type, memw_type, commw_type> &partition) {
     std::ofstream os(filename);
     write_txt(os, partition);
 }
 
-void write_txt(std::ostream &os, const PartitioningWithReplication &partition) {
+template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
+void write_txt(std::ostream &os, const PartitioningWithReplication<index_type, workw_type, memw_type, commw_type> &partition) {
 
     os << "\%\% Partitioning for " << partition.getInstance().getNumberOfPartitions() << " parts with replication." << std::endl;
 
-    for(unsigned node = 0; node < partition.getInstance().getHypergraph().num_vertices(); ++node)
+    for(index_type node = 0; node < partition.getInstance().getHypergraph().num_vertices(); ++node)
     {
         os << node;
         for(unsigned part : partition.assignedPartitions(node))
@@ -51,7 +54,8 @@ void write_txt(std::ostream &os, const PartitioningWithReplication &partition) {
     }
 }
 
-void write_txt(const std::string &filename, const PartitioningWithReplication &partition) {
+template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
+void write_txt(const std::string &filename, const PartitioningWithReplication<index_type, workw_type, memw_type, commw_type> &partition) {
     std::ofstream os(filename);
     write_txt(os, partition);
 }

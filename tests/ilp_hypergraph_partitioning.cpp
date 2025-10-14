@@ -22,7 +22,7 @@ limitations under the License.
 #include <filesystem>
 #include "osp/partitioning/partitioners/partitioning_ILP.hpp"
 #include "osp/partitioning/partitioners/partitioning_ILP_replication.hpp"
-#include "osp/graph_implementations/boost_graphs/boost_graph.hpp"
+#include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 #include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 
 
@@ -30,7 +30,7 @@ using namespace osp;
 
 BOOST_AUTO_TEST_CASE(test_full) {
 
-    using graph = boost_graph_uint_t;
+    using graph = computational_dag_vector_impl_def_int_t;
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(test_full) {
 
     // same tests with other replication formulation
     instance.setMaxWorkWeightExplicitly(35);
-    partitioner_rep.setReplicationModel(HypergraphPartitioningILPWithReplication::REPLICATION_MODEL_IN_ILP::GENERAL);
+    partitioner_rep.setReplicationModel(HypergraphPartitioningILPWithReplication<>::REPLICATION_MODEL_IN_ILP::GENERAL);
     partitioner_rep.setUseInitialSolution(false);
     partitioner_rep.computePartitioning(partition_rep);
 

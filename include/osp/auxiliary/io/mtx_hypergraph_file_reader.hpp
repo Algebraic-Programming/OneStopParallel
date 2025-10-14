@@ -33,7 +33,8 @@ namespace osp {
 namespace file_reader {
 
 // reads a matrix into Hypergraph format, where nonzeros are vertices, and rows/columns are hyperedges
-bool readHypergraphMartixMarketFormat(std::ifstream& infile, Hypergraph& hgraph) {
+template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
+bool readHypergraphMartixMarketFormat(std::ifstream& infile, Hypergraph<index_type, workw_type, memw_type, commw_type>& hgraph) {
 
     std::string line;
 
@@ -68,23 +69,16 @@ bool readHypergraphMartixMarketFormat(std::ifstream& infile, Hypergraph& hgraph)
         return false;
     }
 
-    const unsigned num_nodes = static_cast<unsigned>(nEntries);
-    if (num_nodes > std::numeric_limits<unsigned>::max()) {
-        std::cerr << "Error: Matrix dimension too large for vertex type.\n";
-        return false;
-    }
-
-    std::vector<int> node_work_wts(num_nodes, 0);
-    std::vector<int> node_comm_wts(num_nodes, 1);
+    const index_type num_nodes = static_cast<index_type>(nEntries);
 
     hgraph.reset(num_nodes, 0);
-    for (unsigned node = 0; node < num_nodes; ++node) {
-        hgraph.set_vertex_work_weight(node, 1);
-        hgraph.set_vertex_memory_weight(node, 1);
+    for (index_type node = 0; node < num_nodes; ++node) {
+        hgraph.set_vertex_work_weight(node, static_cast<workw_type>(1));
+        hgraph.set_vertex_memory_weight(node, static_cast<memw_type>(1));
     }
 
-    std::vector<std::vector<unsigned>> row_hyperedges(static_cast<unsigned>(M_row));
-    std::vector<std::vector<unsigned>> column_hyperedges(static_cast<unsigned>(M_col));
+    std::vector<std::vector<index_type>> row_hyperedges(static_cast<index_type>(M_row));
+    std::vector<std::vector<index_type>> column_hyperedges(static_cast<index_type>(M_col));
 
     int entries_read = 0;
     while (entries_read < nEntries && std::getline(infile, line)) {
@@ -110,13 +104,13 @@ bool readHypergraphMartixMarketFormat(std::ifstream& infile, Hypergraph& hgraph)
             return false;
         }
 
-        if (static_cast<unsigned>(row) >= num_nodes || static_cast<unsigned>(col) >= num_nodes) {
+        if (static_cast<index_type>(row) >= num_nodes || static_cast<index_type>(col) >= num_nodes) {
             std::cerr << "Error: Index exceeds vertex type limit.\n";
             return false;
         }
 
-        row_hyperedges[static_cast<unsigned>(row)].push_back(static_cast<unsigned>(entries_read));
-        column_hyperedges[static_cast<unsigned>(col)].push_back(static_cast<unsigned>(entries_read));
+        row_hyperedges[static_cast<index_type>(row)].push_back(static_cast<index_type>(entries_read));
+        column_hyperedges[static_cast<index_type>(col)].push_back(static_cast<index_type>(entries_read));
 
         ++entries_read;
     }
@@ -133,18 +127,19 @@ bool readHypergraphMartixMarketFormat(std::ifstream& infile, Hypergraph& hgraph)
         }
     }
 
-    for(unsigned row = 0; row < static_cast<unsigned>(M_row); ++row)
+    for(index_type row = 0; row < static_cast<index_type>(M_row); ++row)
         if(!row_hyperedges[row].empty())
             hgraph.add_hyperedge(row_hyperedges[row]);
 
-    for(unsigned col = 0; col < static_cast<unsigned>(M_col); ++col)
+    for(index_type col = 0; col < static_cast<index_type>(M_col); ++col)
         if(!column_hyperedges[col].empty())
             hgraph.add_hyperedge(column_hyperedges[col]);
 
     return true;
 }
 
-bool readHypergraphMartixMarketFormat(const std::string& filename, Hypergraph& hgraph) {
+template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
+bool readHypergraphMartixMarketFormat(const std::string& filename, Hypergraph<index_type, workw_type, memw_type, commw_type>& hgraph) {
     // Ensure the file is .mtx format
     if (std::filesystem::path(filename).extension() != ".mtx") {
         std::cerr << "Error: Only .mtx files are accepted.\n";
