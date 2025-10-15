@@ -26,6 +26,7 @@ limitations under the License.
 #include "osp/auxiliary/misc.hpp"
 #include "osp/graph_algorithms/directed_graph_path_util.hpp"
 #include "osp/auxiliary/io/general_file_reader.hpp"
+#include "osp/partitioning/partitioners/generic_FM.hpp"
 #include "osp/partitioning/partitioners/partitioning_ILP.hpp"
 #include "osp/partitioning/partitioners/partitioning_ILP_replication.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
@@ -101,13 +102,22 @@ int main(int argc, char *argv[]) {
     PartitioningProblem instance(hgraph, static_cast<unsigned>(nr_parts));
     instance.setMaxWorkWeightViaImbalanceFactor(imbalance);
 
+    Partitioning initial_partition(instance);
+    GenericFM fm;
+    for(size_t node = 0; node < hgraph.num_vertices(); ++node)
+        initial_partition.setAssignedPartition(node, static_cast<unsigned>(node % static_cast<size_t>(nr_parts)));
+    if(nr_parts == 2)
+        fm.ImprovePartitioning(initial_partition);
+    if(nr_parts == 4 || nr_parts == 8 || nr_parts == 16 || nr_parts == 32)
+        fm.RecursiveFM(initial_partition);
+
     if (replicate > 0) {
 
         PartitioningWithReplication partition(instance);
         HypergraphPartitioningILPWithReplication partitioner;
 
         for(size_t node = 0; node < hgraph.num_vertices(); ++node)
-            partition.setAssignedPartitions(node, {static_cast<unsigned>(node % static_cast<size_t>(nr_parts))});
+            partition.setAssignedPartitions(node, {initial_partition.assignedPartition(node)});
         if(partition.satisfiesBalanceConstraint())
             partitioner.setUseInitialSolution(true);
 
@@ -132,7 +142,7 @@ int main(int argc, char *argv[]) {
         HypergraphPartitioningILP partitioner;
 
         for(size_t node = 0; node < hgraph.num_vertices(); ++node)
-            partition.setAssignedPartition(node, static_cast<unsigned>(node % static_cast<size_t>(nr_parts)));
+            partition.setAssignedPartition(node, initial_partition.assignedPartition(node));
         if(partition.satisfiesBalanceConstraint())
             partitioner.setUseInitialSolution(true);
 
