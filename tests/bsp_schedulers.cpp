@@ -33,10 +33,12 @@ limitations under the License.
 #include "osp/bsp/scheduler/GreedySchedulers/GrowLocalAutoCoresParallel.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/RandomGreedy.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/VarianceFillup.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/GreedyVarianceSspScheduler.hpp"
 #include "osp/bsp/scheduler/LoadBalanceScheduler/LightEdgeVariancePartitioner.hpp"
 #include "osp/bsp/scheduler/LoadBalanceScheduler/VariancePartitioner.hpp"
 #include "osp/bsp/scheduler/LocalSearch/HillClimbing/hill_climbing.hpp"
 #include "osp/bsp/scheduler/Serial.hpp"
+#include "osp/bsp/scheduler/MaxBspScheduler.hpp"
 #include "osp/coarser/Sarkar/SarkarMul.hpp"
 #include "osp/coarser/SquashA/SquashAMul.hpp"
 #include "osp/graph_implementations/adj_list_impl/compact_sparse_graph.hpp"
@@ -360,4 +362,35 @@ BOOST_AUTO_TEST_CASE(SarkarMul_improver_test) {
     MultilevelCoarseAndSchedule<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t> coarsen_test(sched, improver, ml_coarsen);
     
     run_test(&coarsen_test);
+}
+
+// Tests computeSchedule(BspSchedule&) → staleness = 1
+BOOST_AUTO_TEST_CASE(GreedyVarianceSspScheduler_test_vector_impl) {
+    GreedyVarianceSspScheduler<computational_dag_vector_impl_def_t> test;
+    run_test(&test);
+}
+
+// Tests computeSchedule(BspSchedule&) → staleness = 1 (different graph impl)
+BOOST_AUTO_TEST_CASE(GreedyVarianceSspScheduler_test_edge_idx_impl) {
+    GreedyVarianceSspScheduler<computational_dag_edge_idx_vector_impl_def_t> test;
+    run_test(&test);
+}
+
+// Tests computeSchedule(MaxBspSchedule&) → staleness = 2
+BOOST_AUTO_TEST_CASE(GreedyVarianceSspScheduler_MaxBspSchedule_integration) {
+    using Graph_t = computational_dag_edge_idx_vector_impl_def_int_t;
+    BspInstance<Graph_t> instance;
+    instance.setNumberOfProcessors(2);
+    auto &dag = instance.getComputationalDag();
+    dag.add_vertex(5, 1, 0);
+    dag.add_vertex(3, 1, 0);
+    dag.add_edge(0, 1);
+
+    GreedyVarianceSspScheduler<Graph_t> scheduler;
+    MaxBspSchedule<Graph_t> schedule(instance);
+    const auto result = scheduler.computeSchedule(schedule);
+
+    BOOST_CHECK_EQUAL(result, RETURN_STATUS::OSP_SUCCESS);
+    BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+    BOOST_CHECK(schedule.numberOfSupersteps() >= 2);
 }
