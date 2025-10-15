@@ -71,6 +71,8 @@ class Hypergraph {
     template<typename Graph_t>
     void convert_from_cdag_as_hyperdag(const Graph_t& dag);
 
+    Hypergraph<index_type, workw_type, memw_type, commw_type> create_induced_hypergraph(const std::vector<bool>& include) const;
+
   private:
     index_type Num_vertices = 0, Num_hyperedges = 0, Num_pins = 0;
 
@@ -245,6 +247,43 @@ void Hypergraph<index_type, workw_type, memw_type, commw_type>::convert_from_cda
             new_hyperedge.push_back(child);
         add_hyperedge(new_hyperedge, dag.vertex_comm_weight(node));
     }
+}
+
+template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
+Hypergraph<index_type, workw_type, memw_type, commw_type> Hypergraph<index_type, workw_type, memw_type, commw_type>::create_induced_hypergraph(const std::vector<bool>& include) const
+{
+    if(include.size() != Num_vertices)
+        throw std::invalid_argument("Invalid Argument while extracting induced hypergraph: input bool array has incorrect size.");
+
+    std::vector<index_type> new_index(Num_vertices);
+    unsigned current_index = 0;
+    for(index_type node = 0; node < Num_vertices; ++node)
+        if(include[node])
+            new_index[node] = current_index++;
+    
+    Hypergraph<index_type, workw_type, memw_type, commw_type> hgraph(current_index, 0);
+    for(index_type node = 0; node < Num_vertices; ++node)
+        if(include[node])
+        {
+            hgraph.set_vertex_work_weight(new_index[node], vertex_work_weights[node]);
+            hgraph.set_vertex_memory_weight(new_index[node], vertex_memory_weights[node]);
+        }
+
+    for(index_type hyperedge = 0; hyperedge < Num_hyperedges; ++hyperedge)
+    {
+        unsigned nr_induced_pins = 0;
+        std::vector<index_type> induced_hyperedge;
+        for(index_type node : vertices_in_hyperedge[hyperedge])
+            if(include[node])
+            {
+                induced_hyperedge.push_back(new_index[node]);
+                ++nr_induced_pins;
+            }
+        
+        if(nr_induced_pins >= 2)
+            hgraph.add_hyperedge(induced_hyperedge, hyperedge_weights[hyperedge]);
+    }
+    return hgraph;
 }
 
 } // namespace osp

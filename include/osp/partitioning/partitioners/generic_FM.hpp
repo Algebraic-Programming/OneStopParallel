@@ -31,9 +31,14 @@ class GenericFM {
     unsigned max_number_of_passes = 10;
     index_type max_nodes_in_part = 0;
 
+    // auxiliary for RecursiveFM
+    std::vector<index_type> getMaxNodesOnLevel(index_type nr_nodes, unsigned nr_parts) const;
+
   public:
 
     void ImprovePartitioning(Partitioning<index_type, workw_type, memw_type, commw_type>& partition);
+
+    void RecursiveFM(Partitioning<index_type, workw_type, memw_type, commw_type>& partition);
 
     inline unsigned getMaxNumberOfPasses() const { return max_number_of_passes; }
     inline void setMaxNumberOfPasses(unsigned passes_) { max_number_of_passes = passes_; }
@@ -81,6 +86,20 @@ void GenericFM<index_type, workw_type, memw_type, commw_type>::ImprovePartitioni
             if(partition.assignedPartition(node) == 0)
                 ++left_side;
 
+        if(left_side > max_nodes_in_part || Hgraph.num_vertices() - left_side > max_nodes_in_part)
+        {
+            if(pass_idx == 0)
+            {
+                std::cout<<"Error: initial partitioning of FM is not balanced."<<std::endl;
+                return;
+            }
+            else
+            {
+                std::cout<<"Error during FM: partitionming somehow became imbalanced."<<std::endl;
+                return;
+            }
+        }
+
         // Initialize gain values
         for(index_type hyperedge = 0; hyperedge < Hgraph.num_hyperedges(); ++hyperedge)
         {
@@ -96,6 +115,11 @@ void GenericFM<index_type, workw_type, memw_type, commw_type>::ImprovePartitioni
                     for(index_type node : Hgraph.get_vertices_in_hyperedge(hyperedge))
                         if(partition.assignedPartition(node) == part)
                             ++gain[node];
+
+                if(nr_nodes_in_hyperedge_on_side[hyperedge][part] == 0)
+                    for(index_type node : Hgraph.get_vertices_in_hyperedge(hyperedge))
+                        if(partition.assignedPartition(node) != part)
+                            --gain[node];
             }
         }
 
@@ -232,10 +256,113 @@ void GenericFM<index_type, workw_type, memw_type, commw_type>::ImprovePartitioni
         if(best_index == 0)
             break;
 
-        for(index_type node_idx = 0; node_idx < best_index; ++node_idx)
+        for(index_type node_idx = 0; node_idx < best_index && node_idx < static_cast<index_type>(moved_nodes.size()); ++node_idx)
             partition.setAssignedPartition(moved_nodes[node_idx], 1U-partition.assignedPartition(moved_nodes[node_idx]));
 
     }
+}
+
+template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
+void GenericFM<index_type, workw_type, memw_type, commw_type>::RecursiveFM(Partitioning<index_type, workw_type, memw_type, commw_type>& partition)
+{
+    const unsigned& nr_parts = partition.getInstance().getNumberOfPartitions();
+    const index_type& nr_nodes = partition.getInstance().getHypergraph().num_vertices();
+
+    using Hgraph = Hypergraph<index_type, workw_type, memw_type, commw_type>;
+
+    // Note: this is just a simple recursive heuristic for the case when the partitions are a small power of 2
+    if(nr_parts != 4 && nr_parts != 8 && nr_parts != 16 && nr_parts != 32)
+    {
+        std::cout << "Error: Recursive FM can only be used for 4, 8, 16 or 32 partitions currently." << std::endl;
+        return;
+    }
+
+    for(index_type node = 0; node < nr_nodes; ++node)
+        partition.setAssignedPartition(node, static_cast<unsigned>(node % 2));
+
+    if(max_nodes_in_part == 0) // if not initialized
+        max_nodes_in_part = static_cast<index_type>(ceil(static_cast<double>(nr_nodes) * static_cast<double>(partition.getInstance().getMaxWorkWeightPerPartition())
+                                         / static_cast<double>(partition.getInstance().getHypergraph().compute_total_vertex_work_weight()) ));
+
+    const std::vector<index_type> max_nodes_on_level = getMaxNodesOnLevel(nr_nodes, nr_parts);
+    
+    unsigned parts = 1;
+    unsigned level = 0;
+    std::vector<Hgraph> sub_hgraphs({partition.getInstance().getHypergraph()});
+    unsigned start_index = 0;
+
+    std::map<index_type, std::pair<unsigned, index_type> > node_to_new_hgraph_and_id;
+    std::map<std::pair<unsigned, index_type>, index_type> hgraph_and_id_to_old_idx;
+    for(index_type node = 0; node < nr_nodes; ++node)
+    {
+        node_to_new_hgraph_and_id[node] = std::make_pair(0, node);
+        hgraph_and_id_to_old_idx[std::make_pair(0, node)] = node;
+    }
+
+    while(parts < nr_parts)
+    {
+        unsigned end_idx = static_cast<unsigned>(sub_hgraphs.size());
+        for(unsigned sub_hgraph_index = start_index; sub_hgraph_index < end_idx; ++sub_hgraph_index)
+        {
+            const Hgraph& hgraph = sub_hgraphs[sub_hgraph_index];
+            PartitioningProblem instance(hgraph, 2);
+            Partitioning sub_partition(instance);
+            for(index_type node = 0; node < hgraph.num_vertices(); ++node)
+                sub_partition.setAssignedPartition(node, node%2);
+            
+            GenericFM sub_fm;
+            sub_fm.setMaxNodesInPart(max_nodes_on_level[level]);
+            //std::cout<<"Hgraph of size "<<hgraph.num_vertices()<<" split into two parts of at most "<<max_nodes_on_level[level]<<std::endl;
+            sub_fm.ImprovePartitioning(sub_partition);
+
+            std::vector<unsigned> current_idx(2, 0);
+            std::vector<std::vector<bool> > part_indicator(2, std::vector<bool>(hgraph.num_vertices(), false));
+            for(index_type node = 0; node < hgraph.num_vertices(); ++node)
+            {
+                const unsigned part_id = sub_partition.assignedPartition(node);
+                const index_type original_id = hgraph_and_id_to_old_idx[std::make_pair(sub_hgraph_index, node)];
+                node_to_new_hgraph_and_id[original_id] = std::make_pair(sub_hgraphs.size()+part_id, current_idx[part_id]);
+                hgraph_and_id_to_old_idx[std::make_pair(sub_hgraphs.size()+part_id, current_idx[part_id])] = original_id;
+                ++current_idx[part_id];
+                part_indicator[part_id][node] = true;
+            }
+
+            for(unsigned part = 0; part < 2; ++part)
+                sub_hgraphs.push_back(sub_hgraphs[sub_hgraph_index].create_induced_hypergraph(part_indicator[part]));
+
+            ++start_index;
+        }
+
+        parts *= 2;
+        ++level;
+    }
+    
+    for(index_type node = 0; node < nr_nodes; ++node)
+        partition.setAssignedPartition(node, node_to_new_hgraph_and_id[node].first - (static_cast<unsigned>(sub_hgraphs.size())-nr_parts));    
+    
+}
+
+template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
+std::vector<index_type> GenericFM<index_type, workw_type, memw_type, commw_type>::getMaxNodesOnLevel(index_type nr_nodes, unsigned nr_parts) const
+{
+    std::vector<index_type> max_nodes_on_level;
+    std::vector<index_type> limit_per_level({static_cast<index_type>(ceil(static_cast<double>(nr_nodes) / 2.0))});
+    for(unsigned parts = nr_parts / 4; parts > 0; parts /= 2)
+        limit_per_level.push_back(static_cast<index_type>(ceil(static_cast<double>(limit_per_level.back()) / 2.0)));
+
+    max_nodes_on_level.push_back(max_nodes_in_part);
+    for(unsigned parts = 2; parts < nr_parts; parts *= 2)
+    {
+        index_type next_limit = max_nodes_on_level.back()*2;
+        if(next_limit > limit_per_level.back())
+            --next_limit;
+        
+        limit_per_level.pop_back();
+        max_nodes_on_level.push_back(next_limit);
+    }
+
+    std::reverse(max_nodes_on_level.begin(),max_nodes_on_level.end());
+    return max_nodes_on_level;
 }
 
 } // namespace osp

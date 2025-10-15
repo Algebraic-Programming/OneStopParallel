@@ -184,11 +184,30 @@ BOOST_AUTO_TEST_CASE(Hypergraph_and_Partition_test) {
 
     original_cost = partition_to_improve.computeConnectivityCost();
 
+    fm.setMaxNodesInPart(0);
     fm.ImprovePartitioning(partition_to_improve);
     new_cost = partition_to_improve.computeConnectivityCost();
 
     BOOST_CHECK(partition_to_improve.satisfiesBalanceConstraint());
     BOOST_CHECK(new_cost <= original_cost);
     std::cout<<original_cost<<" --> "<<new_cost<<std::endl;
+
+    // Recursive FM
+    instance.setNumberOfPartitions(16);
+    instance.setMaxWorkWeightViaImbalanceFactor(0.3);
+
+    for(unsigned node = 0; node < instance.getHypergraph().num_vertices(); ++node)
+        partition_to_improve.setAssignedPartition(node, node % 16);
+
+    original_cost = partition_to_improve.computeConnectivityCost();
+
+    fm.setMaxNodesInPart(0);
+    fm.RecursiveFM(partition_to_improve);
+    new_cost = partition_to_improve.computeConnectivityCost();
+
+    BOOST_CHECK(partition_to_improve.satisfiesBalanceConstraint());
+    BOOST_CHECK(new_cost <= original_cost);
+    std::cout<<original_cost<<" --> "<<new_cost<<std::endl;
+
 
 };
