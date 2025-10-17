@@ -1,4 +1,4 @@
-/*
+"""
 Copyright 2024 Huawei Technologies Co., Ltd.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 @author Christos Matzoros, Toni Boehnlein, Pal Andras Papp, Raphael S. Steiner
-*/
+"""
 
 from spack.package import *
 
