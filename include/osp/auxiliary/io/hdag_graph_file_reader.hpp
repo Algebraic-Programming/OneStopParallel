@@ -252,12 +252,17 @@ bool readComputationalDagHyperdagFormatDB(std::ifstream& infile, Graph_t& graph)
             graph.set_vertex_comm_weight(static_cast<vertex_idx_t<Graph_t>>(node), hyperedge_comm_weights[edgeIdx]);
             graph.set_vertex_mem_weight(static_cast<vertex_idx_t<Graph_t>>(node), hyperedge_mem_weights[edgeIdx]);
         } else {
-            auto edge = graph.add_edge(static_cast<vertex_idx_t<Graph_t>>(edgeSource[edgeIdx]),
+            if constexpr (is_modifiable_cdag_comm_edge_v<Graph_t>) {
+
+                auto edge = graph.add_edge(static_cast<vertex_idx_t<Graph_t>>(edgeSource[edgeIdx]),
                                     static_cast<vertex_idx_t<Graph_t>>(nodeIdx));
 
-            if constexpr (is_modifiable_cdag_comm_edge_v<Graph_t>) {
                 graph.set_edge_comm_weight(edge.first,
                     static_cast<e_commw_t<Graph_t>>(hyperedge_comm_weights[edgeIdx]));
+
+            } else {
+                graph.add_edge(static_cast<vertex_idx_t<Graph_t>>(edgeSource[edgeIdx]),
+                                    static_cast<vertex_idx_t<Graph_t>>(nodeIdx));
             }
         }
     }
