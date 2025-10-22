@@ -149,6 +149,51 @@ void run_test_2(Scheduler<Graph_t> *test_scheduler) {
     }
 };
 
+template<typename Graph_t>
+void run_test_max_bsp(Scheduler<Graph_t>* test_scheduler) {
+    std::vector<std::string> filenames_graph = tiny_spaa_graphs();
+    std::vector<std::string> filenames_architectures = test_architectures();
+
+    // Locate project root
+    std::filesystem::path cwd = std::filesystem::current_path();
+    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
+        cwd = cwd.parent_path();
+    }
+
+    for (auto& filename_graph : filenames_graph) {
+        for (auto& filename_machine : filenames_architectures) {
+            std::string name_graph = filename_graph.substr(filename_graph.find_last_of("/\\") + 1);
+            name_graph = name_graph.substr(0, name_graph.find_last_of("."));
+            std::string name_machine = filename_machine.substr(filename_machine.find_last_of("/\\") + 1);
+            name_machine = name_machine.substr(0, name_machine.rfind("."));
+
+            std::cout << std::endl
+                      << "Scheduler (MaxBsp): " << test_scheduler->getScheduleName() << std::endl
+                      << "Graph: " << name_graph << std::endl
+                      << "Architecture: " << name_machine << std::endl;
+
+            computational_dag_edge_idx_vector_impl_def_int_t graph;
+            BspArchitecture<Graph_t> arch;
+
+            bool status_graph = file_reader::readGraph((cwd / filename_graph).string(), graph);
+            bool status_architecture =
+                file_reader::readBspArchitecture((cwd / filename_machine).string(), arch);
+
+            BOOST_REQUIRE_MESSAGE(status_graph, "Failed to read graph: " << filename_graph);
+            BOOST_REQUIRE_MESSAGE(status_architecture, "Failed to read architecture: " << filename_machine);
+
+            BspInstance<Graph_t> instance(graph, arch);
+
+            MaxBspSchedule<Graph_t> schedule(instance);
+
+            const auto result = test_scheduler->computeSchedule(schedule);
+
+            BOOST_CHECK_EQUAL(result, RETURN_STATUS::OSP_SUCCESS);
+            BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+        }
+    }
+}
+
 BOOST_AUTO_TEST_CASE(GreedyBspScheduler_test) {
 
     GreedyBspScheduler<computational_dag_vector_impl_def_t> test;
@@ -377,20 +422,8 @@ BOOST_AUTO_TEST_CASE(GreedyVarianceSspScheduler_test_edge_idx_impl) {
 }
 
 // Tests computeSchedule(MaxBspSchedule&) → staleness = 2
-BOOST_AUTO_TEST_CASE(GreedyVarianceSspScheduler_MaxBspSchedule_integration) {
+BOOST_AUTO_TEST_CASE(GreedyVarianceSspScheduler_MaxBspSchedule_large_test) {
     using Graph_t = computational_dag_edge_idx_vector_impl_def_int_t;
-    BspInstance<Graph_t> instance;
-    instance.setNumberOfProcessors(2);
-    auto &dag = instance.getComputationalDag();
-    dag.add_vertex(5, 1, 0);
-    dag.add_vertex(3, 1, 0);
-    dag.add_edge(0, 1);
-
-    GreedyVarianceSspScheduler<Graph_t> scheduler;
-    MaxBspSchedule<Graph_t> schedule(instance);
-    const auto result = scheduler.computeSchedule(schedule);
-
-    BOOST_CHECK_EQUAL(result, RETURN_STATUS::OSP_SUCCESS);
-    BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
-    BOOST_CHECK(schedule.numberOfSupersteps() >= 2);
+    GreedyVarianceSspScheduler<Graph_t> test;
+    run_test_max_bsp(&test);
 }

@@ -166,8 +166,6 @@ class GreedyVarianceSspScheduler : public Scheduler<Graph_t> {
                             p = i;
                             found_allocation = true;
 
-                            procReady[i].erase(it);
-
                             if (procType < procTypesCompatibleWithNodeType_skip_proctype.size()) {
                                 const auto &compatibleTypes =
                                     procTypesCompatibleWithNodeType_skip_proctype[procType]
@@ -190,8 +188,6 @@ class GreedyVarianceSspScheduler : public Scheduler<Graph_t> {
                         node = it->first;
                         p = i;
                         found_allocation = true;
-
-                        procReady[i].erase(it);
 
                         if (procType < procTypesCompatibleWithNodeType_skip_proctype.size()) {
                             const auto &compatibleTypes =
@@ -243,8 +239,6 @@ class GreedyVarianceSspScheduler : public Scheduler<Graph_t> {
                             node = it->first;
                             p = i;
 
-                            readyList.erase(it);
-
                             const auto &compatibleTypes =
                                 procTypesCompatibleWithNodeType_skip_proctype[procType]
                                     [instance.getComputationalDag().vertex_type(node)];
@@ -260,8 +254,6 @@ class GreedyVarianceSspScheduler : public Scheduler<Graph_t> {
                         node = it->first;
                         p = i;
 
-                        readyList.erase(it);
-
                         const auto &compatibleTypes =
                             procTypesCompatibleWithNodeType_skip_proctype[procType]
                                 [instance.getComputationalDag().vertex_type(node)];
@@ -270,11 +262,10 @@ class GreedyVarianceSspScheduler : public Scheduler<Graph_t> {
                             if (otherType < allReady.size())
                                 allReady[otherType].erase(std::make_pair(node, work_variance[node]));
                         }
-
+                        
                         return;
                     }
                 }
-
                 ++it;
             }
         }
@@ -364,20 +355,26 @@ class GreedyVarianceSspScheduler : public Scheduler<Graph_t> {
         return nr_nodes;
     }
 
-
     public:
 
-    RETURN_STATUS computeSspSchedule(BspSchedule<Graph_t> &schedule, unsigned stale) {
+    /**
+    * @brief Default constructor for GreedyVarianceSspScheduler.
+    */
+    GreedyVarianceSspScheduler(float max_percent_idle_processors_ = 0.2f, bool increase_parallelism_in_new_superstep_ = true)
+        : max_percent_idle_processors(max_percent_idle_processors_),
+          increase_parallelism_in_new_superstep(increase_parallelism_in_new_superstep_) {}
 
+    /**
+    * @brief Default destructor for GreedyVarianceSspScheduler.
+    */
+    virtual ~GreedyVarianceSspScheduler() = default;
+
+    RETURN_STATUS computeSspSchedule(BspSchedule<Graph_t> &schedule, unsigned stale) {
         const auto &instance = schedule.getInstance();
         const auto &G = instance.getComputationalDag();
-        const auto &N = instance.numberOfVertices();
+        const VertexType &N = instance.numberOfVertices();
         const unsigned &P = instance.numberOfProcessors();
 
-        for (auto v : G.vertices()) {
-            schedule.setAssignedProcessor(v, std::numeric_limits<unsigned>::max());
-        }
-        
         unsigned supstepIdx = 0;
 
         if constexpr (is_memory_constraint_v<MemoryConstraint_t>) {
@@ -407,10 +404,13 @@ class GreedyVarianceSspScheduler : public Scheduler<Graph_t> {
             ++nr_procs_per_type[instance.getArchitecture().processorType(proc)];
         }
 
-        std::vector<unsigned> nrPredecRemain(N);
-        for (VertexType node = 0; node < static_cast<VertexType>(N); ++node) {
+        std::vector<VertexType> nrPredecRemain(N);
+
+        for (VertexType node = 0; node < N; ++node) {
             const auto num_parents = G.in_degree(node);
-            nrPredecRemain[node] = static_cast<unsigned>(num_parents);
+
+            nrPredecRemain[node] = num_parents;
+
             if (num_parents == 0) {
                 ready[0].insert(std::make_pair(node, work_variances[node]));
                 nr_ready_stale_nodes_per_type[0][G.vertex_type(node)]++;
@@ -425,9 +425,6 @@ class GreedyVarianceSspScheduler : public Scheduler<Graph_t> {
 
         std::vector<unsigned> number_of_allocated_allReady_tasks_in_superstep(instance.getArchitecture().getNumberOfProcessorTypes(), 0);
         std::vector<unsigned> limit_of_number_of_allocated_allReady_tasks_in_superstep(instance.getArchitecture().getNumberOfProcessorTypes(), 0);
-
-        
-
 
         bool endSupStep = true;
         bool begin_outer_while = true;
@@ -478,12 +475,11 @@ class GreedyVarianceSspScheduler : public Scheduler<Graph_t> {
                 }
 
                 for (unsigned procType = 0; procType < instance.getArchitecture().getNumberOfProcessorTypes(); procType++) {
-                    unsigned equal_split = (static_cast<unsigned int>(allReady[procType].size()) + stale - 1) / stale;
+                    unsigned equal_split = (static_cast<unsigned>(allReady[procType].size()) + stale - 1) / stale;
                     unsigned at_least_for_long_step = 3 * nr_procs_per_type[procType];
-
                     limit_of_number_of_allocated_allReady_tasks_in_superstep[procType] = std::max(at_least_for_long_step, equal_split);
                 }
-
+            
                 endSupStep = false;
                 finishTimes.emplace(0, std::numeric_limits<VertexType>::max());
             }
@@ -508,8 +504,7 @@ class GreedyVarianceSspScheduler : public Scheduler<Graph_t> {
                             unsigned earliest_add = supstepIdx;
                             for (const auto& pred : G.parents(succ)) {
                                 if (schedule.assignedProcessor(pred) != proc_of_node) {
-                                    earliest_add = std::max(earliest_add,
-                                                            stale + schedule.assignedSuperstep(pred));
+                                    earliest_add = std::max(earliest_add, stale + schedule.assignedSuperstep(pred));
                                 }
                             }
 
@@ -542,6 +537,7 @@ class GreedyVarianceSspScheduler : public Scheduler<Graph_t> {
             if (!CanChooseNode(instance, allReady, procReady[supstepIdx % stale], procFree)) {
                 endSupStep = true;
             }
+
             while (CanChooseNode(instance, allReady, procReady[supstepIdx % stale], procFree)) {
                 VertexType nextNode = std::numeric_limits<VertexType>::max();
                 unsigned nextProc = P;
@@ -567,6 +563,7 @@ class GreedyVarianceSspScheduler : public Scheduler<Graph_t> {
                     nr_old_ready_nodes_per_type[G.vertex_type(nextNode)]--;
                     const unsigned nextProcType = instance.getArchitecture().processorType(nextProc);
                     number_of_allocated_allReady_tasks_in_superstep[nextProcType]++;
+                    
                     if (number_of_allocated_allReady_tasks_in_superstep[nextProcType] >= limit_of_number_of_allocated_allReady_tasks_in_superstep[nextProcType]) {
                         allReady[nextProcType].clear();
                     }
@@ -575,6 +572,7 @@ class GreedyVarianceSspScheduler : public Scheduler<Graph_t> {
                 for (size_t i = 0; i < stale; i++) {
                     ready[i].erase(std::make_pair(nextNode, work_variances[nextNode]));
                 }
+
                 old_ready.erase(std::make_pair(nextNode, work_variances[nextNode]));
 
                 schedule.setAssignedProcessor(nextNode, nextProc);
@@ -605,7 +603,7 @@ class GreedyVarianceSspScheduler : public Scheduler<Graph_t> {
             else if (++successive_empty_supersteps > 100 + stale)
                 return RETURN_STATUS::ERROR;
 
-            if (free > static_cast<decltype(free)>(P * max_percent_idle_processors) &&
+            if (free > (P * max_percent_idle_processors) &&
                 ((!increase_parallelism_in_new_superstep) ||
                 get_nr_parallelizable_nodes(
                     instance, stale, nr_old_ready_nodes_per_type,
@@ -626,10 +624,12 @@ class GreedyVarianceSspScheduler : public Scheduler<Graph_t> {
     }
 
     RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &schedule) override {
+        std::cout<< "BspSchedule"<< std::endl;
         return computeSspSchedule(schedule, 1U);
     }
 
-    RETURN_STATUS computeSchedule(MaxBspSchedule<Graph_t> &schedule) {
+    RETURN_STATUS computeSchedule(MaxBspSchedule<Graph_t> &schedule) override {
+        std::cout<< "MaxBspSchedule"<< std::endl;
         return computeSspSchedule(schedule, 2U);
     }
 
