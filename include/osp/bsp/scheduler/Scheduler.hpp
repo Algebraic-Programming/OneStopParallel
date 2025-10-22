@@ -22,6 +22,7 @@ limitations under the License.
 #include <iostream>
 #include "osp/bsp/model/BspInstance.hpp"
 #include "osp/bsp/model/BspSchedule.hpp"
+#include "osp/bsp/model/MaxBspSchedule.hpp"
 #include "osp/bsp/model/BspScheduleCS.hpp"
 #include "osp/concepts/computational_dag_concept.hpp"
 
@@ -92,6 +93,26 @@ class Scheduler {
      * @return A pair containing the return status and the computed schedule.
      */
     virtual RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &schedule) = 0;
+
+    /**
+     * @brief Compute a Max-BSP (Stale Synchronous Parallel) schedule for the given instance.
+     *
+     * This overload allows schedulers that support the Max-BSP or SSP model
+     * to implement asynchronous-like scheduling with configurable staleness.
+     * By default, this base implementation throws an exception, since not all
+     * schedulers provide Max-BSP support. Derived schedulers such as
+     * GreedyVarianceSspScheduler should override this function to perform
+     * their custom SSP scheduling logic.
+     *
+     * @param schedule Reference to a MaxBspSchedule object representing
+     *        the schedule to be computed and populated.
+     * @return A RETURN_STATUS code indicating the success or failure of the computation.
+     * @throws std::runtime_error If the scheduler does not implement Max-BSP scheduling.
+     */
+    virtual RETURN_STATUS computeSchedule(MaxBspSchedule<Graph_t> &schedule) {
+        (void)schedule;
+        throw std::runtime_error("Not implemented for this scheduler");
+    }
 
     virtual RETURN_STATUS computeScheduleCS(BspScheduleCS<Graph_t> &schedule) {
 
