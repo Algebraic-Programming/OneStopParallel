@@ -161,12 +161,28 @@ BOOST_AUTO_TEST_CASE(test_full) {
     BOOST_CHECK(schedule_typed.satisfiesNodeTypeConstraints());
 
     CoptFullScheduler<graph> scheduler_typed;
+    BspScheduleCS<graph> schedule_typed_cs(schedule_typed);
     scheduler_typed.setTimeLimitSeconds(10);
-    scheduler_typed.setInitialSolutionFromBspSchedule(schedule_typed);
+    scheduler_typed.setInitialSolutionFromBspSchedule(schedule_typed_cs);
     const auto result_typed = scheduler_typed.computeSchedule(schedule_typed);
     BOOST_CHECK_EQUAL(RETURN_STATUS::BEST_FOUND, result_typed);
     BOOST_CHECK(schedule_typed.satisfiesPrecedenceConstraints());
     BOOST_CHECK(schedule_typed.satisfiesNodeTypeConstraints());
+
+    // with MaxBSP schedule
+    CoptFullScheduler<graph> scheduler_max;
+    MaxBspScheduleCS<graph> schedule_max(instance);
+    scheduler_max.setTimeLimitSeconds(10);
+    const auto result_max = scheduler_max.computeScheduleCS(schedule_max);
+    BOOST_CHECK_EQUAL(RETURN_STATUS::BEST_FOUND, result_max);
+    BOOST_CHECK(schedule_max.satisfiesPrecedenceConstraints());
+    BOOST_CHECK(schedule_max.hasValidCommSchedule());
+
+    scheduler_max.setInitialSolutionFromBspSchedule(schedule_max);
+    const auto result_max2 = scheduler_max.computeScheduleCS(schedule_max);
+    BOOST_CHECK_EQUAL(RETURN_STATUS::BEST_FOUND, result_max2);
+    BOOST_CHECK(schedule_max.satisfiesPrecedenceConstraints());
+    BOOST_CHECK(schedule_max.hasValidCommSchedule());
 
     // longer time
     BspScheduleCS<graph> schedule(instance);

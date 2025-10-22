@@ -472,6 +472,8 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
             }
         }
     }
+
+    virtual bool isMaxBsp() const { return false; }
 };
 
 } // namespace osp
