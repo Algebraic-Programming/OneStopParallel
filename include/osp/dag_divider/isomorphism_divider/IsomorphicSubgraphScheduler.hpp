@@ -198,15 +198,15 @@ class IsomorphicSubgraphScheduler {
             std::sort(rep_subgraph_vertices_sorted.begin(), rep_subgraph_vertices_sorted.end());
 
             BspInstance<Constr_Graph_t> representative_instance;
-            create_induced_subgraph(instance.getComputationalDag(), representative_instance.getComputationalDag(), rep_subgraph_vertices_sorted);
-            
+            auto rep_global_to_local_map = create_induced_subgraph_map(instance.getComputationalDag(), representative_instance.getComputationalDag(), rep_subgraph_vertices_sorted);
+
             representative_instance.setArchitecture(instance.getArchitecture());
-            std::vector<v_memw_t<Constr_Graph_t>> dummy_mem_weights(sub_sched.node_assigned_worker_per_type[grou_idx].size(), 0);
+            std::vector<v_memw_t<Constr_Graph_t>> mem_weights(sub_sched.node_assigned_worker_per_type[grou_idx].size(), 0);
             for (unsigned proc_type = 0; proc_type < sub_sched.node_assigned_worker_per_type[grou_idx].size(); ++proc_type) {
-                dummy_mem_weights[proc_type] = static_cast<v_memw_t<Constr_Graph_t>>(instance.getArchitecture().maxMemoryBoundProcType(proc_type));
+                mem_weights[proc_type] = static_cast<v_memw_t<Constr_Graph_t>>(instance.getArchitecture().maxMemoryBoundProcType(proc_type));
             }
             const auto& procs_for_group = sub_sched.node_assigned_worker_per_type[grou_idx];
-            representative_instance.getArchitecture().set_processors_consequ_types(procs_for_group, dummy_mem_weights);
+            representative_instance.getArchitecture().set_processors_consequ_types(procs_for_group, mem_weights);
             representative_instance.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
 
             // Schedule the representative to get the pattern
@@ -215,7 +215,20 @@ class IsomorphicSubgraphScheduler {
             if constexpr (verbose) {
                 std::cout << "--- Scheduling representative for group " << grou_idx << " ---" << std::endl;
                 std::cout << "  Number of subgraphs in group: " << group.subgraphs.size() << std::endl;
-                std::cout << "  Representative subgraph size: " << rep_subgraph_vertices_sorted.size() << " vertices" << std::endl;
+                const auto& rep_dag = representative_instance.getComputationalDag();
+                std::cout << "  Representative subgraph size: " << rep_dag.num_vertices() << " vertices" << std::endl;
+                std::vector<unsigned> node_type_counts(rep_dag.num_vertex_types(), 0);
+                for (const auto& v : rep_dag.vertices()) {
+                    node_type_counts[rep_dag.vertex_type(v)]++;
+                }
+                std::cout << "    Node type counts: ";
+                for (size_t type_idx = 0; type_idx < node_type_counts.size(); ++type_idx) {
+                    if (node_type_counts[type_idx] > 0) {
+                        std::cout << "T" << type_idx << ":" << node_type_counts[type_idx] << " ";
+                    }
+                }
+                std::cout << std::endl;
+
                 const auto& sub_arch = representative_instance.getArchitecture();
                 std::cout << "  Sub-architecture for scheduling:" << std::endl;
                 std::cout << "    Processors: " << sub_arch.numberOfProcessors() << std::endl;
@@ -226,8 +239,44 @@ class IsomorphicSubgraphScheduler {
                 }
                 std::cout << std::endl;
                 std::cout << "    Sync cost: " << sub_arch.synchronisationCosts() << ", Comm cost: " << sub_arch.communicationCosts() << std::endl;
+                std::cout << "    Sub-problem compatibility matrix:" << std::endl;
+                const auto & sub_comp_matrix = representative_instance.getNodeNodeCompatabilityMatrix();
+                for(unsigned i = 0; i < sub_comp_matrix.size(); ++i) {
+                    std::cout << "      Node Type " << i << ": [ ";
+                    for (unsigned j = 0; j < sub_comp_matrix[i].size(); ++j) {
+                        std::cout << (sub_comp_matrix[i][j] ? "1" : "0") << " ";
+                    }
+                    std::cout << "]" << std::endl;
+                }
+
             }
             bsp_scheduler_->computeSchedule(bsp_schedule);
+
+            if constexpr (verbose) {
+                std::cout << "  Schedule satisfies precedence constraints: ";  
+                std::cout << bsp_schedule.satisfiesPrecedenceConstraints() << std::endl;
+                std::cout << "  Schedule satisfies node type constraints: ";
+                std::cout << bsp_schedule.satisfiesNodeTypeConstraints() << std::endl;
+            }
+            
+
+            if (plot_dot_graphs_) {
+                const auto& rep_dag = bsp_schedule.getInstance().getComputationalDag();
+                std::vector<unsigned> colors(rep_dag.num_vertices());
+                std::map<std::pair<unsigned, unsigned>, unsigned> proc_ss_to_color;
+                unsigned next_color = 0;
+
+                for (const auto& v : rep_dag.vertices()) {
+                    const auto assignment = std::make_pair(bsp_schedule.assignedProcessor(v), bsp_schedule.assignedSuperstep(v));
+                    if (proc_ss_to_color.find(assignment) == proc_ss_to_color.end()) {
+                        proc_ss_to_color[assignment] = next_color++;
+                    }
+                    colors[v] = proc_ss_to_color[assignment];
+                }
+                DotFileWriter writer;
+                writer.write_colored_graph("iso_group_rep_" + std::to_string(grou_idx) + ".dot", rep_dag, colors);
+                writer.write_schedule("iso_group_rep_schedule_" + std::to_string(grou_idx) + ".dot", bsp_schedule);
+            }
 
             // Build data structures for applying the pattern ---
             // Map (superstep, processor) -> relative partition ID
@@ -252,13 +301,11 @@ class IsomorphicSubgraphScheduler {
                 std::unordered_map<vertex_idx_t<Graph_t>, vertex_idx_t<Constr_Graph_t>> current_vertex_to_rep_local_idx;
 
                 if (i == 0) { // The first subgraph is the representative itself
-                    for (size_t j = 0; j < rep_subgraph_vertices_sorted.size(); ++j) {
-                        current_vertex_to_rep_local_idx[rep_subgraph_vertices_sorted[j]] = static_cast<vertex_idx_t<Constr_Graph_t>>(j);
-                    }
+                    current_vertex_to_rep_local_idx = std::move(rep_global_to_local_map);
                 } else { // For other subgraphs, build the isomorphic mapping
                     Constr_Graph_t current_subgraph_graph;
                     create_induced_subgraph(instance.getComputationalDag(), current_subgraph_graph, current_subgraph_vertices_sorted);
-
+                    
                     MerkleHashComputer<Constr_Graph_t> current_hasher(current_subgraph_graph);
 
                     for(const auto& [hash, rep_orbit_nodes] : rep_hasher.get_orbits()) {

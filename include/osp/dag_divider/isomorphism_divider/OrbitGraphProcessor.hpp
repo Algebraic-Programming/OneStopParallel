@@ -145,21 +145,28 @@ private:
         bool changed = true;
         while (changed) {
 
-            const std::vector< vertex_idx_t<Constr_Graph_t> > vertexPoset =  get_top_node_distance<Constr_Graph_t, vertex_idx_t<Constr_Graph_t>>(current_coarse_graph);
+            const std::vector< vertex_idx_t<Constr_Graph_t> > vertexPoset = get_top_node_distance<Constr_Graph_t, vertex_idx_t<Constr_Graph_t>>(current_coarse_graph);
+            const std::vector< vertex_idx_t<Constr_Graph_t> > vertexBotPoset = get_bottom_node_distance<Constr_Graph_t, vertex_idx_t<Constr_Graph_t>>(current_coarse_graph);
+
 
             changed = false;
             for (const auto& edge : edges(current_coarse_graph)) {
                 VertexType u = source(edge, current_coarse_graph);
                 VertexType v = target(edge, current_coarse_graph);
 
-                if (vertexPoset[u] + 1 != vertexPoset[v]) continue;
+                if ((vertexPoset[u] + 1 != vertexPoset[v]) && (vertexBotPoset[u] != 1 + vertexBotPoset[v])) 
+                {
+                    if constexpr (verbose) { std::cout << "  - Merge of " << u << " and " << v << " not viable poset. poste v: " << vertexBotPoset[v] << " poste u: " << vertexBotPoset[u] << "\n";}
+                    continue;
+                }
 
                 std::vector<std::vector<VertexType>> new_subgraphs;
 
                 // --- Check Constraints ---
                 // Symmetry Threshold
                 const bool merge_viable = is_merge_viable(original_dag, current_groups[u], current_groups[v], new_subgraphs);
-                const bool both_below_symmetry_threshold = (current_groups[u].size() < symmetry_threshold_) && (current_groups[v].size() < symmetry_threshold_);                
+                const bool both_below_symmetry_threshold = (current_groups[u].size() < symmetry_threshold_) && (current_groups[v].size() < symmetry_threshold_);// && (not ((current_groups[u].size() == 1 && current_groups[v].size() > 1) || (current_groups[u].size() > 1 && current_groups[v].size() == 1)));
+
                 if (!merge_viable && !both_below_symmetry_threshold) {
                     if constexpr (verbose) { std::cout << "  - Merge of " << u << " and " << v << " not viable (symmetry threshold)\n"; }
                     continue;
@@ -178,12 +185,14 @@ private:
                 temp_contraction_map[v] = temp_contraction_map[u];
                 coarser_util::construct_coarse_dag(current_coarse_graph, temp_coarse_graph, temp_contraction_map);
 
-                if (!is_acyclic(temp_coarse_graph)) {
+                if (!is_acyclic(temp_coarse_graph)) { // not necessary
                     if constexpr (verbose) { std::cout << "  - Merge of " << u << " and " << v << " creates a cycle. Skipping.\n"; }
                     continue;
                 }
 
-                if (critical_path_weight(temp_coarse_graph) > critical_path_weight(current_coarse_graph)) {
+                const bool crtical_path_longer = critical_path_weight(temp_coarse_graph) > critical_path_weight(current_coarse_graph);                
+                // Check if merging increases the critical path
+                if (crtical_path_longer) {
                     if constexpr (verbose) { std::cout << "  - Merge of " << u << " and " << v << " increases critical path. Skipping.\n"; }
                     continue;
                 }
@@ -223,7 +232,7 @@ private:
                 break; // Restart scan on the new, smaller graph
             }
         }
-
+     
         // --- Finalize ---
         final_coarse_graph_ = std::move(current_coarse_graph);
         final_contraction_map_ = std::move(current_contraction_map);
