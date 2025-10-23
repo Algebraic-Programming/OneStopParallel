@@ -117,8 +117,6 @@ class MaxBspScheduleCS : public BspScheduleCS<Graph_t> {
         }
         return costs;
     }
-
-    virtual bool isMaxBsp() const override { return true; }
 };
 
 } // namespace osp

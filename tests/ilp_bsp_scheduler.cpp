@@ -173,13 +173,13 @@ BOOST_AUTO_TEST_CASE(test_full) {
     CoptFullScheduler<graph> scheduler_max;
     MaxBspScheduleCS<graph> schedule_max(instance);
     scheduler_max.setTimeLimitSeconds(10);
-    const auto result_max = scheduler_max.computeScheduleCS(schedule_max);
+    const auto result_max = scheduler_max.computeMaxBspScheduleCS(schedule_max);
     BOOST_CHECK_EQUAL(RETURN_STATUS::BEST_FOUND, result_max);
     BOOST_CHECK(schedule_max.satisfiesPrecedenceConstraints());
     BOOST_CHECK(schedule_max.hasValidCommSchedule());
 
     scheduler_max.setInitialSolutionFromBspSchedule(schedule_max);
-    const auto result_max2 = scheduler_max.computeScheduleCS(schedule_max);
+    const auto result_max2 = scheduler_max.computeMaxBspScheduleCS(schedule_max);
     BOOST_CHECK_EQUAL(RETURN_STATUS::BEST_FOUND, result_max2);
     BOOST_CHECK(schedule_max.satisfiesPrecedenceConstraints());
     BOOST_CHECK(schedule_max.hasValidCommSchedule());

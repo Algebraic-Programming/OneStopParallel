@@ -782,6 +782,41 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
         model.SetObjective(expr - instance.synchronisationCosts(), COPT_MINIMIZE);
     }
 
+    RETURN_STATUS run_scheduler(BspScheduleCS<Graph_t> &schedule) {
+        auto &instance = schedule.getInstance();
+        Envr env;
+        Model model = env.CreateModel("bsp_schedule");
+
+        setupVariablesConstraintsObjective(instance, model);
+
+        if (use_initial_schedule) {
+            loadInitialSchedule(model, instance);
+        }
+
+        computeScheduleBase(schedule, model);
+
+        if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_OPTIMAL) {
+
+            constructBspScheduleFromSolution(schedule, true);
+            return RETURN_STATUS::OSP_SUCCESS;
+
+        } else if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_INF_OR_UNB) {
+
+            return RETURN_STATUS::ERROR;
+
+        } else {
+
+            if (model.GetIntAttr(COPT_INTATTR_HASMIPSOL)) {
+
+                constructBspScheduleFromSolution(schedule, true);
+                return RETURN_STATUS::BEST_FOUND;
+
+            } else {
+                return RETURN_STATUS::TIMEOUT;
+            }
+        }
+    }
+
   public:
     CoptFullScheduler(unsigned steps = 5)
         : allow_recomputation(false), use_memory_constraint(false), use_initial_schedule(false), initial_schedule(0),
@@ -831,10 +866,10 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
             return status;
         }
     }
-    virtual RETURN_STATUS computeSchedule(MaxBspSchedule<Graph_t> &schedule) {
+    virtual RETURN_STATUS computeMaxBspSchedule(MaxBspSchedule<Graph_t> &schedule) {
 
         MaxBspScheduleCS<Graph_t> schedule_cs(schedule.getInstance());
-        RETURN_STATUS status = computeScheduleCS(schedule_cs);
+        RETURN_STATUS status = computeMaxBspScheduleCS(schedule_cs);
         if (status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND) {
             schedule = std::move(schedule_cs);
             return status;
@@ -842,51 +877,23 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
             return status;
         }
     }
-    virtual RETURN_STATUS computeScheduleCS(BspScheduleCS<Graph_t> &schedule) override {
-
-        auto &instance = schedule.getInstance();
-
+    
+    virtual RETURN_STATUS computeMaxBspScheduleCS(MaxBspScheduleCS<Graph_t> &schedule) {
         allow_recomputation = false;
+        is_max_bsp = true;
+        return run_scheduler(schedule);
+    }
 
-        is_max_bsp = schedule.isMaxBsp();
 
-        Envr env;
-        Model model = env.CreateModel("bsp_schedule_cs");
-
-        setupVariablesConstraintsObjective(instance, model);
-
-        if (use_initial_schedule) {
-            loadInitialSchedule(model, instance);
-        }
-
-        computeScheduleBase(schedule, model);
-
-        if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_OPTIMAL) {
-
-            constructBspScheduleFromSolution(schedule, true);
-            return RETURN_STATUS::OSP_SUCCESS;
-
-        } else if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_INF_OR_UNB) {
-
-            return RETURN_STATUS::ERROR;
-
-        } else {
-
-            if (model.GetIntAttr(COPT_INTATTR_HASMIPSOL)) {
-
-                constructBspScheduleFromSolution(schedule, true);
-                return RETURN_STATUS::BEST_FOUND;
-
-            } else {
-                return RETURN_STATUS::TIMEOUT;
-            }
-        }
+    virtual RETURN_STATUS computeScheduleCS(BspScheduleCS<Graph_t> &schedule) override { 
+        allow_recomputation = false;
+        is_max_bsp = false;
+        return run_scheduler(schedule);
     }
 
     virtual RETURN_STATUS computeScheduleRecomp(BspScheduleRecomp<Graph_t> &schedule) {
 
         allow_recomputation = true;
-
         is_max_bsp = false;
 
         Envr env;
