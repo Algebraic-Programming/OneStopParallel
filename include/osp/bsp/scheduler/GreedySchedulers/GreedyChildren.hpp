@@ -72,18 +72,22 @@ class GreedyChildren : public Scheduler<Graph_t> {
                     unsigned processor_to_be_allocated = 0;
 
                     for (const auto &par : graph.parents(node)) {
-                        if (processor_set &&
-                            (nodes_assigned_this_superstep.find(par) != nodes_assigned_this_superstep.cend()) &&
-                            (sched.assignedProcessor(par) != processor_to_be_allocated)) {
-                            failed_to_allocate = true;
-                            break;
-                        }
-                        if ((!processor_set) &&
-                            (nodes_assigned_this_superstep.find(par) != nodes_assigned_this_superstep.cend())) {
-                            processor_set = true;
-                            processor_to_be_allocated = sched.assignedProcessor(par);
+                        if (nodes_assigned_this_superstep.count(par)) {
+                            if (!processor_set) {
+                                const unsigned par_proc = sched.assignedProcessor(par);
+                                if(!instance.isCompatible(node, par_proc)) {
+                                    failed_to_allocate = true;
+                                    break;
+                                }
+                                processor_set = true;
+                                processor_to_be_allocated = par_proc;
+                            } else if (sched.assignedProcessor(par) != processor_to_be_allocated) {
+                                failed_to_allocate = true;
+                                break;
+                            }
                         }
                     }
+
                     if (failed_to_allocate)
                         continue;
 
@@ -91,12 +95,18 @@ class GreedyChildren : public Scheduler<Graph_t> {
                     if (processor_set) {
                         sched.setAssignedProcessor(node, processor_to_be_allocated);
                     } else {
-
-                        auto min_iter = std::min_element(processor_weights.begin(), processor_weights.end());
-                        assert(std::distance(processor_weights.begin(), min_iter) >= 0);
-                        sched.setAssignedProcessor(
-                            node, static_cast<unsigned>(std::distance(processor_weights.begin(), min_iter)));
-                    }
+                        v_workw_t<Graph_t> min_weight = std::numeric_limits<v_workw_t<Graph_t>>::max();
+                        unsigned best_proc = std::numeric_limits<unsigned>::max();
+                        for (unsigned p = 0; p < instance.numberOfProcessors(); ++p) {
+                            if (instance.isCompatible(node, p)) {
+                                if (processor_weights[p] < min_weight) {
+                                    min_weight = processor_weights[p];
+                                    best_proc = p;
+                                }
+                            }
+                        }
+                        sched.setAssignedProcessor(node, best_proc);
+                    } 
 
                     nodes_assigned_this_superstep.emplace(node);
                     processor_weights[sched.assignedProcessor(node)] += graph.vertex_work_weight(node);

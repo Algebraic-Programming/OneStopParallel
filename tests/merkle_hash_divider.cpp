@@ -28,6 +28,8 @@ limitations under the License.
 #include "osp/auxiliary/io/dot_graph_file_reader.hpp"
 #include "osp/auxiliary/io/DotFileWriter.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/BspLocking.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/GreedyChildren.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/GrowLocalAutoCores.hpp"
 #include "osp/dag_divider/IsomorphicWavefrontComponentScheduler.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin_v2/kl_include_mt.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_total_comm.hpp"
@@ -38,6 +40,25 @@ limitations under the License.
 #include "test_utils.hpp"
 
 using namespace osp;
+
+template<typename GraphT>
+void check_partition_type_homogeneity(const GraphT& dag, const std::vector<vertex_idx_t<GraphT>>& partition) {
+    // Group partitions by their ID
+    std::map<vertex_idx_t<GraphT>, std::vector<vertex_idx_t<GraphT>>> partitions;
+    for (vertex_idx_t<GraphT> i = 0; i < dag.num_vertices(); ++i) {
+        partitions[partition[i]].push_back(i);
+    }
+
+    // For each partition, check that all vertices have the same type
+    for (const auto& [part_id, vertices] : partitions) {
+        if (vertices.empty()) continue;
+        const auto first_node_type = dag.vertex_type(vertices[0]);
+        for (const auto& vertex : vertices) {
+            BOOST_CHECK_EQUAL(dag.vertex_type(vertex), first_node_type);
+        }
+    }
+}
+
 
 BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test)
 {
@@ -50,17 +71,17 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test)
 
     for (const auto& v : instance.vertices()) {
 
-        instance.getComputationalDag().set_vertex_comm_weight(v, instance.getComputationalDag().vertex_comm_weight(v) / 1064 + 1);
-        instance.getComputationalDag().set_vertex_work_weight(v, instance.getComputationalDag().vertex_work_weight(v) / 1000 + 1);
+        instance.getComputationalDag().set_vertex_comm_weight(v, instance.getComputationalDag().vertex_comm_weight(v));
+        instance.getComputationalDag().set_vertex_work_weight(v, instance.getComputationalDag().vertex_work_weight(v));
     }
 
     instance.getArchitecture().setProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1 , 1, 1, 1, 1, 1, 1, 1, 1 , 1, 1, 1, 1, 1, 1, 1, 1 , 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1});
     instance.setDiagonalCompatibilityMatrix(2);
-    instance.setSynchronisationCosts(1000);
-    instance.setCommunicationCosts(1);
+    instance.setSynchronisationCosts(20000);
+    instance.setCommunicationCosts(10);
 
-    BspLocking<graph_t> greedy;
-    kl_total_comm_improver_mt<graph_t> kl;
+    GreedyChildren<graph_t> greedy;
+    kl_total_lambda_comm_improver_mt<graph_t> kl;
     ComboScheduler<graph_t> combo(greedy, kl);
 
 
@@ -90,6 +111,8 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test)
     iso_scheduler.set_plot_dot_graphs(true);
 
     auto partition = iso_scheduler.compute_partition(instance);
+
+    check_partition_type_homogeneity(instance.getComputationalDag(), partition);
 
     graph_t corase_graph;
     coarser_util::construct_coarse_dag(instance.getComputationalDag(), corase_graph,

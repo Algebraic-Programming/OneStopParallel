@@ -102,8 +102,8 @@ class MerkleHashComputer {
     inline const std::vector<std::size_t> &get_vertex_hashes() const { return vertex_hashes; }
     inline std::size_t num_orbits() const { return orbits.size(); }
     
-    inline const std::vector<VertexType> &get_orbit(const VertexType &v) { return get_orbit_from_hash(get_vertex_hash(v)); }
-    inline const std::unordered_map<std::size_t, std::vector<VertexType>> &get_orbits() { return orbits; }
+    inline const std::vector<VertexType> &get_orbit(const VertexType &v) const { return get_orbit_from_hash(get_vertex_hash(v)); }
+    inline const std::unordered_map<std::size_t, std::vector<VertexType>> &get_orbits() const { return orbits; }
 
     inline const std::vector<VertexType>& get_orbit_from_hash(const std::size_t& hash) const {
         return orbits.at(hash);
