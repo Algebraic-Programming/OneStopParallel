@@ -71,7 +71,7 @@ void GenericFM<index_type, workw_type, memw_type, commw_type>::ImprovePartitioni
 
     if(max_nodes_in_part == 0) // if not initialized
         max_nodes_in_part = static_cast<index_type>(ceil(static_cast<double>(Hgraph.num_vertices()) * static_cast<double>(partition.getInstance().getMaxWorkWeightPerPartition())
-                                         / static_cast<double>(Hgraph.compute_total_vertex_work_weight()) ));
+                                         / static_cast<double>(compute_total_vertex_work_weight(Hgraph)) ));
 
     for(unsigned pass_idx = 0; pass_idx < max_number_of_passes; ++pass_idx)
     {
@@ -282,7 +282,7 @@ void GenericFM<index_type, workw_type, memw_type, commw_type>::RecursiveFM(Parti
 
     if(max_nodes_in_part == 0) // if not initialized
         max_nodes_in_part = static_cast<index_type>(ceil(static_cast<double>(nr_nodes) * static_cast<double>(partition.getInstance().getMaxWorkWeightPerPartition())
-                                         / static_cast<double>(partition.getInstance().getHypergraph().compute_total_vertex_work_weight()) ));
+                                         / static_cast<double>(compute_total_vertex_work_weight(partition.getInstance().getHypergraph())) ));
 
     const std::vector<index_type> max_nodes_on_level = getMaxNodesOnLevel(nr_nodes, nr_parts);
     
@@ -328,7 +328,7 @@ void GenericFM<index_type, workw_type, memw_type, commw_type>::RecursiveFM(Parti
             }
 
             for(unsigned part = 0; part < 2; ++part)
-                sub_hgraphs.push_back(sub_hgraphs[sub_hgraph_index].create_induced_hypergraph(part_indicator[part]));
+                sub_hgraphs.push_back(create_induced_hypergraph(sub_hgraphs[sub_hgraph_index], part_indicator[part]));
 
             ++start_index;
         }

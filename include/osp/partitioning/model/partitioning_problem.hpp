@@ -21,7 +21,7 @@ limitations under the License.
 #include <iostream>
 #include <cmath>
 
-#include "osp/partitioning/model/hypergraph.hpp"
+#include "osp/partitioning/model/hypergraph_utility.hpp"
 
 namespace osp {
 
@@ -80,14 +80,14 @@ class PartitioningProblem {
         if(imbalance < 0 )
             throw std::invalid_argument("Invalid Argument while setting imbalance parameter: parameter is negative.");
         else
-            max_work_weight_per_partition = static_cast<workw_type>(ceil(hgraph.compute_total_vertex_work_weight()/ static_cast<double>(nr_of_partitions) * (1.0+imbalance)));
+            max_work_weight_per_partition = static_cast<workw_type>(ceil(compute_total_vertex_work_weight(hgraph)/ static_cast<double>(nr_of_partitions) * (1.0+imbalance)));
     }
     inline void setMaxMemoryWeightExplicitly(memw_type max_weight_) { max_memory_weight_per_partition = max_weight_; }
     void setMaxMemoryWeightViaImbalanceFactor(double imbalance){
         if(imbalance < 0 )
             throw std::invalid_argument("Invalid Argument while setting imbalance parameter: parameter is negative.");
         else
-            max_memory_weight_per_partition = static_cast<memw_type>(ceil(hgraph.compute_total_vertex_memory_weight()/ static_cast<double>(nr_of_partitions) * (1.0+imbalance)));
+            max_memory_weight_per_partition = static_cast<memw_type>(ceil(compute_total_vertex_memory_weight(hgraph)/ static_cast<double>(nr_of_partitions) * (1.0+imbalance)));
     }
 };
 

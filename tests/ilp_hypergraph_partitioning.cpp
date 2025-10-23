@@ -20,6 +20,7 @@ limitations under the License.
 #include <boost/test/unit_test.hpp>
 
 #include <filesystem>
+#include "osp/partitioning/model/hypergraph_utility.hpp"
 #include "osp/partitioning/partitioners/partitioning_ILP.hpp"
 #include "osp/partitioning/partitioners/partitioning_ILP_replication.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
@@ -47,9 +48,7 @@ BOOST_AUTO_TEST_CASE(test_full) {
 
     BOOST_CHECK(status);
 
-    Hypergraph Hgraph;
-
-    Hgraph.convert_from_cdag_as_hyperdag(DAG);
+    Hypergraph Hgraph = convert_from_cdag_as_hyperdag<size_t, int, int, int, graph>(DAG);
     BOOST_CHECK_EQUAL(DAG.num_vertices(), Hgraph.num_vertices());
 
     PartitioningProblem instance(Hgraph, 3, 35);

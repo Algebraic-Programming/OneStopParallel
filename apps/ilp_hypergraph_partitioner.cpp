@@ -26,6 +26,7 @@ limitations under the License.
 #include "osp/auxiliary/misc.hpp"
 #include "osp/graph_algorithms/directed_graph_path_util.hpp"
 #include "osp/auxiliary/io/general_file_reader.hpp"
+#include "osp/partitioning/model/hypergraph_utility.hpp"
 #include "osp/partitioning/partitioners/generic_FM.hpp"
 #include "osp/partitioning/partitioners/partitioning_ILP.hpp"
 #include "osp/partitioning/partitioners/partitioning_ILP_replication.hpp"
@@ -86,7 +87,7 @@ int main(int argc, char *argv[]) {
         graph dag;
         file_status = file_reader::readComputationalDagHyperdagFormatDB(filename_hgraph, dag);
         if(file_status)
-            hgraph.convert_from_cdag_as_hyperdag(dag);
+            hgraph = convert_from_cdag_as_hyperdag<size_t, int, int, int, graph>(dag);
     } else if (file_ending == "mtx") {
         file_status = file_reader::readHypergraphMartixMarketFormat(filename_hgraph, hgraph);
     } else {
