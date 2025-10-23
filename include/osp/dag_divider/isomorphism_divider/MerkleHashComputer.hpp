@@ -161,10 +161,19 @@ struct bwd_merkle_node_hash_func {
 
     MerkleHashComputer<Graph_t, uniform_node_hash_func<vertex_idx_t<Graph_t>>, false> bw_merkle_hash;
 
-    bwd_merkle_node_hash_func(const Graph_t & graph) : bw_merkle_hash(graph) {}
+    const Graph_t & graph_;
+
+    bwd_merkle_node_hash_func(const Graph_t & graph) : bw_merkle_hash(graph), graph_(graph) {}
 
     std::size_t operator()(const vertex_idx_t<Graph_t> & v) const {
-        return bw_merkle_hash.get_vertex_hash(v);
+        std::size_t hash = bw_merkle_hash.get_vertex_hash(v);
+        hash_combine(hash, graph_.vertex_work_weight(v));
+        
+        if constexpr (has_typed_vertices_v<Graph_t>) {
+            hash_combine(hash, graph_.vertex_type(v));
+        }
+
+        return hash;
     }
 };
 

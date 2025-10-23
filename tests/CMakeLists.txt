@@ -68,8 +68,6 @@ _add_test( isomorphism_mapper )
 
 _add_test( merkle_hash_computer )
 
-#_add_test( merkle_hash_divider )
-
 _add_test( orbit_graph_processor )
 
 _add_test( eft_subgraph_scheduler )
@@ -77,6 +75,11 @@ _add_test( eft_subgraph_scheduler )
 _add_test( wavefront_component_divider )
 
 _add_test( hill_climbing )
+
+# --- Standalone Debugging Executables ---
+add_executable(debug_merkle_divider debug_merkle_divider.cpp)
+target_link_libraries(debug_merkle_divider PRIVATE OneStopParallel ProjectExecutableFlags)
+
 
 ## bsp model
 _add_test( bsp_architecture )

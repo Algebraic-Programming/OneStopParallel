@@ -148,7 +148,6 @@ private:
             const std::vector< vertex_idx_t<Constr_Graph_t> > vertexPoset = get_top_node_distance<Constr_Graph_t, vertex_idx_t<Constr_Graph_t>>(current_coarse_graph);
             const std::vector< vertex_idx_t<Constr_Graph_t> > vertexBotPoset = get_bottom_node_distance<Constr_Graph_t, vertex_idx_t<Constr_Graph_t>>(current_coarse_graph);
 
-
             changed = false;
             for (const auto& edge : edges(current_coarse_graph)) {
                 VertexType u = source(edge, current_coarse_graph);
@@ -190,7 +189,7 @@ private:
                     continue;
                 }
 
-                const bool crtical_path_longer = critical_path_weight(temp_coarse_graph) > critical_path_weight(current_coarse_graph);                
+                const bool crtical_path_longer = critical_path_weight(temp_coarse_graph) > (80 * new_subgraphs.size() + critical_path_weight(current_coarse_graph));                
                 // Check if merging increases the critical path
                 if (crtical_path_longer) {
                     if constexpr (verbose) { std::cout << "  - Merge of " << u << " and " << v << " increases critical path. Skipping.\n"; }
@@ -282,14 +281,15 @@ private:
         std::sort(all_nodes.begin(), all_nodes.end());
 
         Constr_Graph_t induced_subgraph;
-        create_induced_subgraph(original_dag, induced_subgraph, all_nodes);
+        auto map = create_induced_subgraph_map(original_dag, induced_subgraph, all_nodes);
 
         std::vector<VertexType> components; // local -> component_id
         size_t num_components = compute_weakly_connected_components(induced_subgraph, components);
 
         out_new_subgraphs.assign(num_components, std::vector<VertexType>());
-        for (VertexType i = 0; i < induced_subgraph.num_vertices(); ++i) {
-            out_new_subgraphs[components[i]].push_back(all_nodes[i]);
+
+        for (const auto & node : all_nodes) {
+            out_new_subgraphs[components[map[node]]].push_back(node);
         }
 
         if (num_components < symmetry_threshold_) {
