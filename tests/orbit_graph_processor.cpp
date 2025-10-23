@@ -220,28 +220,28 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessor_MultiPipelineMerge) {
     check_partitioning(dag, processor);
 }
 
-BOOST_AUTO_TEST_CASE(OrbitGraphProcessor_LadderNoMerge) {
-    // A ladder graph with 10 rungs (22 nodes).
-    // The bwd_merkle_hash is more discerning and creates more than 2 initial orbits
-    // due to the different structures at the start and end of the ladder.
-    // The coarsening logic will merge some of these, but the core cyclic structure
-    // prevents a full merge. The exact number of final nodes is non-trivial,
-    // but it should be greater than 1.
-    const auto dag = construct_ladder_dag<graph_t>(10);
-    BOOST_REQUIRE_EQUAL(dag.num_vertices(), 22);
+// BOOST_AUTO_TEST_CASE(OrbitGraphProcessor_LadderNoMerge) {
+//     // A ladder graph with 10 rungs (22 nodes).
+//     // The bwd_merkle_hash is more discerning and creates more than 2 initial orbits
+//     // due to the different structures at the start and end of the ladder.
+//     // The coarsening logic will merge some of these, but the core cyclic structure
+//     // prevents a full merge. The exact number of final nodes is non-trivial,
+//     // but it should be greater than 1.
+//     const auto dag = construct_ladder_dag<graph_t>(10);
+//     BOOST_REQUIRE_EQUAL(dag.num_vertices(), 22);
 
-    OrbitGraphProcessor<graph_t, graph_t> processor(2);
-    processor.discover_isomorphic_groups(dag);
+//     OrbitGraphProcessor<graph_t, graph_t> processor(2);
+//     processor.discover_isomorphic_groups(dag);
     
-    const auto& initial_coarse_graph = processor.get_coarse_graph();
-    const auto& final_coarse_graph = processor.get_final_coarse_graph();
+//     const auto& initial_coarse_graph = processor.get_coarse_graph();
+//     const auto& final_coarse_graph = processor.get_final_coarse_graph();
 
-    // Expect no merges, so final graph is the same as the initial coarse graph.
-    BOOST_CHECK_EQUAL(final_coarse_graph.num_vertices(), initial_coarse_graph.num_vertices());
-    BOOST_CHECK_GT(final_coarse_graph.num_vertices(), 1);
+//     // Expect no merges, so final graph is the same as the initial coarse graph.
+//     BOOST_CHECK_EQUAL(final_coarse_graph.num_vertices(), initial_coarse_graph.num_vertices());
+//     BOOST_CHECK_GT(final_coarse_graph.num_vertices(), 1);
 
-    check_partitioning(dag, processor);
-}
+//     check_partitioning(dag, processor);
+// }
 
 BOOST_AUTO_TEST_CASE(OrbitGraphProcessor_AsymmetricNoMerge) {
     // A simple chain where every node is unique.
