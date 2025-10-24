@@ -26,7 +26,7 @@ limitations under the License.
 
 namespace osp{
 
-template<typename index_type = size_t, typename workw_type = int, typename memw_type = int, typename commw_type = int>
+template<typename hypergraph_t>
 class HypergraphPartitioningILPBase {
 
   protected:
@@ -36,9 +36,9 @@ class HypergraphPartitioningILPBase {
     unsigned time_limit_seconds = 3600;
     bool use_initial_solution = false;
 
-    std::vector<std::vector<unsigned> > readAllCoptAssignments(const PartitioningProblem<index_type, workw_type, memw_type, commw_type> &instance, Model& model);
+    std::vector<std::vector<unsigned> > readAllCoptAssignments(const PartitioningProblem<hypergraph_t> &instance, Model& model);
 
-    void setupFundamentalVariablesConstraintsObjective(const PartitioningProblem<index_type, workw_type, memw_type, commw_type> &instance, Model& model);
+    void setupFundamentalVariablesConstraintsObjective(const PartitioningProblem<hypergraph_t> &instance, Model& model);
 
     void solveILP(Model& model);
 
@@ -51,8 +51,8 @@ class HypergraphPartitioningILPBase {
     inline void setUseInitialSolution(bool use_) { use_initial_solution = use_; }
 };
 
-template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
-void HypergraphPartitioningILPBase<index_type, workw_type, memw_type, commw_type>::solveILP(Model& model) {
+template<typename hypergraph_t>
+void HypergraphPartitioningILPBase<hypergraph_t>::solveILP(Model& model) {
 
     model.SetIntParam(COPT_INTPARAM_LOGTOCONSOLE, 0);
 
@@ -72,8 +72,12 @@ void HypergraphPartitioningILPBase<index_type, workw_type, memw_type, commw_type
     model.Solve();
 }
 
-template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
-void HypergraphPartitioningILPBase<index_type, workw_type, memw_type, commw_type>::setupFundamentalVariablesConstraintsObjective(const PartitioningProblem<index_type, workw_type, memw_type, commw_type> &instance, Model& model) {
+template<typename hypergraph_t>
+void HypergraphPartitioningILPBase<hypergraph_t>::setupFundamentalVariablesConstraintsObjective(const PartitioningProblem<hypergraph_t> &instance, Model& model) {
+
+    using index_type = typename hypergraph_t::vertex_idx;
+    using workw_type = typename hypergraph_t::vertex_work_weight_type;
+    using memw_type = typename hypergraph_t::vertex_mem_weight_type;
 
     const index_type numberOfParts = instance.getNumberOfPartitions();
     const index_type numberOfVertices = instance.getHypergraph().num_vertices();
@@ -128,9 +132,12 @@ void HypergraphPartitioningILPBase<index_type, workw_type, memw_type, commw_type
              
 };
 
-template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
-std::vector<std::vector<unsigned> > HypergraphPartitioningILPBase<index_type, workw_type, memw_type, commw_type>::readAllCoptAssignments(const PartitioningProblem<index_type, workw_type, memw_type, commw_type> &instance, Model& model)
+template<typename hypergraph_t>
+std::vector<std::vector<unsigned> > HypergraphPartitioningILPBase<hypergraph_t>::readAllCoptAssignments(const PartitioningProblem<hypergraph_t> &instance, Model& model)
 {
+    using index_type = typename hypergraph_t::vertex_idx;
+
+
     std::vector<std::vector<unsigned> > node_to_partitions(instance.getHypergraph().num_vertices());
 
     std::set<unsigned> nonempty_partition_ids;

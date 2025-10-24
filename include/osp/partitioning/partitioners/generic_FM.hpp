@@ -24,8 +24,15 @@ limitations under the License.
 
 namespace osp{
 
-template<typename index_type = size_t, typename workw_type = int, typename memw_type = int, typename commw_type = int>
+template<typename hypergraph_t>
 class GenericFM {
+
+    using index_type = typename hypergraph_t::vertex_idx;
+    using workw_type = typename hypergraph_t::vertex_work_weight_type;
+    using memw_type = typename hypergraph_t::vertex_mem_weight_type;
+    using commw_type = typename hypergraph_t::vertex_comm_weight_type;
+
+
 
   protected:
     unsigned max_number_of_passes = 10;
@@ -36,9 +43,9 @@ class GenericFM {
 
   public:
 
-    void ImprovePartitioning(Partitioning<index_type, workw_type, memw_type, commw_type>& partition);
+    void ImprovePartitioning(Partitioning<hypergraph_t>& partition);
 
-    void RecursiveFM(Partitioning<index_type, workw_type, memw_type, commw_type>& partition);
+    void RecursiveFM(Partitioning<hypergraph_t>& partition);
 
     inline unsigned getMaxNumberOfPasses() const { return max_number_of_passes; }
     inline void setMaxNumberOfPasses(unsigned passes_) { max_number_of_passes = passes_; }
@@ -46,8 +53,8 @@ class GenericFM {
     inline void setMaxNodesInPart(index_type max_nodes_) { max_nodes_in_part = max_nodes_; }
 };
 
-template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
-void GenericFM<index_type, workw_type, memw_type, commw_type>::ImprovePartitioning(Partitioning<index_type, workw_type, memw_type, commw_type>& partition)
+template<typename hypergraph_t>
+void GenericFM<hypergraph_t>::ImprovePartitioning(Partitioning<hypergraph_t>& partition)
 {
     // Note: this algorithm disregards hyperedge weights, in order to keep the size of the gain bucket array bounded!
 
@@ -262,8 +269,8 @@ void GenericFM<index_type, workw_type, memw_type, commw_type>::ImprovePartitioni
     }
 }
 
-template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
-void GenericFM<index_type, workw_type, memw_type, commw_type>::RecursiveFM(Partitioning<index_type, workw_type, memw_type, commw_type>& partition)
+template<typename hypergraph_t>
+void GenericFM<hypergraph_t>::RecursiveFM(Partitioning<hypergraph_t>& partition)
 {
     const unsigned& nr_parts = partition.getInstance().getNumberOfPartitions();
     const index_type& nr_nodes = partition.getInstance().getHypergraph().num_vertices();
@@ -342,8 +349,8 @@ void GenericFM<index_type, workw_type, memw_type, commw_type>::RecursiveFM(Parti
     
 }
 
-template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
-std::vector<index_type> GenericFM<index_type, workw_type, memw_type, commw_type>::getMaxNodesOnLevel(index_type nr_nodes, unsigned nr_parts) const
+template<typename hypergraph_t>
+std::vector<typename hypergraph_t::vertex_idx> GenericFM<hypergraph_t>::getMaxNodesOnLevel(typename hypergraph_t::vertex_idx nr_nodes, unsigned nr_parts) const
 {
     std::vector<index_type> max_nodes_on_level;
     std::vector<index_type> limit_per_level({static_cast<index_type>(ceil(static_cast<double>(nr_nodes) / 2.0))});

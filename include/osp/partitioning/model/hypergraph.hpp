@@ -27,7 +27,14 @@ namespace osp {
 template<typename index_type = size_t, typename workw_type = int, typename memw_type = int, typename commw_type = int>
 class Hypergraph {
 
+    using this_t = Hypergraph<index_type, workw_type, memw_type, commw_type>;
+
   public:
+
+    using vertex_idx = index_type;
+    using vertex_work_weight_type   = workw_type;
+    using vertex_mem_weight_type    = memw_type;
+    using vertex_comm_weight_type   = commw_type;
 
     Hypergraph() = default;
 
@@ -36,8 +43,8 @@ class Hypergraph {
         vertex_memory_weights(num_vertices_, 1), hyperedge_weights(num_hyperedges_, 1),
         incident_hyperedges_to_vertex(num_vertices_), vertices_in_hyperedge(num_hyperedges_){}
 
-    Hypergraph(const Hypergraph<index_type, workw_type, memw_type, commw_type> &other) = default;
-    Hypergraph &operator=(const Hypergraph<index_type, workw_type, memw_type, commw_type> &other) = default;
+    Hypergraph(const this_t &other) = default;
+    Hypergraph &operator=(const this_t &other) = default;
 
     virtual ~Hypergraph() = default;
 
@@ -74,6 +81,8 @@ class Hypergraph {
     std::vector<std::vector<index_type>> incident_hyperedges_to_vertex;
     std::vector<std::vector<index_type>> vertices_in_hyperedge;
 };
+
+using Hypergraph_def_t = Hypergraph<size_t, int, int, int>;
 
 template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
 void Hypergraph<index_type, workw_type, memw_type, commw_type>::add_pin(index_type vertex_idx, index_type hyperedge_idx)
@@ -177,6 +186,8 @@ void Hypergraph<index_type, workw_type, memw_type, commw_type>::reset(index_type
     incident_hyperedges_to_vertex.resize(num_vertices_);
     vertices_in_hyperedge.resize(num_hyperedges_);
 }
+
+
 
 
 } // namespace osp

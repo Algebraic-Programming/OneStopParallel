@@ -26,12 +26,18 @@ namespace osp {
 
 // Represents a partitioning where each vertex of a hypergraph can be assinged to one or more partitions
 
-template<typename index_type = size_t, typename workw_type = int, typename memw_type = int, typename commw_type = int>
+template<typename hypergraph_t>
 class PartitioningWithReplication {
 
   private:
 
-    const PartitioningProblem<index_type, workw_type, memw_type, commw_type> *instance;
+    using index_type = typename hypergraph_t::vertex_idx;
+    using workw_type = typename hypergraph_t::vertex_work_weight_type;
+    using memw_type = typename hypergraph_t::vertex_mem_weight_type;
+    using commw_type = typename hypergraph_t::vertex_comm_weight_type;
+
+
+    const PartitioningProblem<hypergraph_t> *instance;
 
     std::vector<std::vector<unsigned> > node_to_partitions_assignment;
 
@@ -39,23 +45,23 @@ class PartitioningWithReplication {
   
     PartitioningWithReplication() = delete;
 
-    PartitioningWithReplication(const PartitioningProblem<index_type, workw_type, memw_type, commw_type> &inst)
+    PartitioningWithReplication(const PartitioningProblem<hypergraph_t> &inst)
         : instance(&inst), node_to_partitions_assignment(std::vector<std::vector<unsigned>>(inst.getHypergraph().num_vertices(), {0})) {}
 
-    PartitioningWithReplication(const PartitioningProblem<index_type, workw_type, memw_type, commw_type> &inst, const std::vector<std::vector<unsigned> > &partition_assignment_)
+    PartitioningWithReplication(const PartitioningProblem<hypergraph_t> &inst, const std::vector<std::vector<unsigned> > &partition_assignment_)
         : instance(&inst), node_to_partitions_assignment(partition_assignment_) {}
 
-    PartitioningWithReplication(const PartitioningWithReplication<index_type, workw_type, memw_type, commw_type> &partitioning_) = default;
-    PartitioningWithReplication(PartitioningWithReplication<index_type, workw_type, memw_type, commw_type> &&partitioning_) = default;
+    PartitioningWithReplication(const PartitioningWithReplication<hypergraph_t> &partitioning_) = default;
+    PartitioningWithReplication(PartitioningWithReplication<hypergraph_t> &&partitioning_) = default;
 
-    PartitioningWithReplication &operator=(const PartitioningWithReplication<index_type, workw_type, memw_type, commw_type> &partitioning_) = default;
+    PartitioningWithReplication &operator=(const PartitioningWithReplication<hypergraph_t> &partitioning_) = default;
 
     virtual ~PartitioningWithReplication() = default;
 
 
     // getters and setters
 
-    inline const PartitioningProblem<index_type, workw_type, memw_type, commw_type> &getInstance() const { return *instance; }
+    inline const PartitioningProblem<hypergraph_t> &getInstance() const { return *instance; }
 
     inline std::vector<unsigned> assignedPartitions(index_type node) const { return node_to_partitions_assignment[node]; }
     inline const std::vector<std::vector<unsigned> > &assignedPartitions() const { return node_to_partitions_assignment; }
@@ -105,8 +111,8 @@ class PartitioningWithReplication {
 
 };
 
-template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
-commw_type PartitioningWithReplication<index_type, workw_type, memw_type, commw_type>::computeConnectivityCost() const {
+template<typename hypergraph_t>
+typename hypergraph_t::vertex_comm_weight_type PartitioningWithReplication<hypergraph_t>::computeConnectivityCost() const {
 
     // naive implementation. in the worst-case this is exponential in the number of parts
     if(instance->getNumberOfPartitions() > 16)
@@ -167,8 +173,8 @@ commw_type PartitioningWithReplication<index_type, workw_type, memw_type, commw_
     return total;
 }
 
-template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
-commw_type PartitioningWithReplication<index_type, workw_type, memw_type, commw_type>::computeCutNetCost() const {
+template<typename hypergraph_t>
+typename hypergraph_t::vertex_comm_weight_type PartitioningWithReplication<hypergraph_t>::computeCutNetCost() const {
 
     commw_type total = 0;
     for(index_type edge_idx = 0; edge_idx < instance->getHypergraph().num_hyperedges(); ++edge_idx)
@@ -193,8 +199,8 @@ commw_type PartitioningWithReplication<index_type, workw_type, memw_type, commw_
     return total;
 }
 
-template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
-bool PartitioningWithReplication<index_type, workw_type, memw_type, commw_type>::satisfiesBalanceConstraint() const {
+template<typename hypergraph_t>
+bool PartitioningWithReplication<hypergraph_t>::satisfiesBalanceConstraint() const {
     std::vector<workw_type> work_weight(instance->getNumberOfPartitions(), 0);
     std::vector<memw_type> memory_weight(instance->getNumberOfPartitions(), 0);
     for (index_type node = 0; node < node_to_partitions_assignment.size(); ++node)

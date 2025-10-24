@@ -26,27 +26,27 @@ limitations under the License.
 
 namespace osp{
 
-template<typename index_type = size_t, typename workw_type = int, typename memw_type = int, typename commw_type = int>
-class HypergraphPartitioningILP : public HypergraphPartitioningILPBase<index_type, workw_type, memw_type, commw_type> {
+template<typename hypergraph_t>
+class HypergraphPartitioningILP : public HypergraphPartitioningILPBase<hypergraph_t> {
 
   protected:
-    std::vector<unsigned> readCoptAssignment(const PartitioningProblem<index_type, workw_type, memw_type, commw_type> &instance, Model& model);
+    std::vector<unsigned> readCoptAssignment(const PartitioningProblem<hypergraph_t> &instance, Model& model);
 
-    void setupExtraVariablesConstraints(const PartitioningProblem<index_type, workw_type, memw_type, commw_type> &instance, Model& model);
+    void setupExtraVariablesConstraints(const PartitioningProblem<hypergraph_t> &instance, Model& model);
 
-    void setInitialSolution(const Partitioning<index_type, workw_type, memw_type, commw_type> &partition, Model& model);
+    void setInitialSolution(const Partitioning<hypergraph_t> &partition, Model& model);
 
   public:
 
     virtual ~HypergraphPartitioningILP() = default;
 
-    RETURN_STATUS computePartitioning(Partitioning<index_type, workw_type, memw_type, commw_type>& result);
+    RETURN_STATUS computePartitioning(Partitioning<hypergraph_t>& result);
 
     virtual std::string getAlgorithmName() const override { return "HypergraphPartitioningILP"; }
 };
 
-template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
-RETURN_STATUS HypergraphPartitioningILP<index_type, workw_type, memw_type, commw_type>::computePartitioning(Partitioning<index_type, workw_type, memw_type, commw_type>& result)
+template<typename hypergraph_t>
+RETURN_STATUS HypergraphPartitioningILP<hypergraph_t>::computePartitioning(Partitioning<hypergraph_t>& result)
 {
     Envr env;
     Model model = env.CreateModel("HypergraphPart");
@@ -81,8 +81,10 @@ RETURN_STATUS HypergraphPartitioningILP<index_type, workw_type, memw_type, commw
     }
 }
 
-template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
-void HypergraphPartitioningILP<index_type, workw_type, memw_type, commw_type>::setupExtraVariablesConstraints(const PartitioningProblem<index_type, workw_type, memw_type, commw_type> &instance, Model& model) {
+template<typename hypergraph_t>
+void HypergraphPartitioningILP<hypergraph_t>::setupExtraVariablesConstraints(const PartitioningProblem<hypergraph_t> &instance, Model& model) {
+
+    using index_type = typename hypergraph_t::vertex_idx;
 
     const index_type numberOfParts = instance.getNumberOfPartitions();
     const index_type numberOfVertices = instance.getHypergraph().num_vertices();
@@ -108,9 +110,11 @@ void HypergraphPartitioningILP<index_type, workw_type, memw_type, commw_type>::s
 };
 
 // convert generic one-to-many assingment (of base class function) to one-to-one
-template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
-std::vector<unsigned> HypergraphPartitioningILP<index_type, workw_type, memw_type, commw_type>::readCoptAssignment(const PartitioningProblem<index_type, workw_type, memw_type, commw_type> &instance, Model& model)
+template<typename hypergraph_t>
+std::vector<unsigned> HypergraphPartitioningILP<hypergraph_t>::readCoptAssignment(const PartitioningProblem<hypergraph_t> &instance, Model& model)
 {
+    using index_type = typename hypergraph_t::vertex_idx;
+
     std::vector<unsigned> node_to_partition(instance.getHypergraph().num_vertices(), std::numeric_limits<unsigned>::max());
     std::vector<std::vector<unsigned> > assignmentsGenericForm = this->readAllCoptAssignments(instance, model);
 
@@ -120,9 +124,11 @@ std::vector<unsigned> HypergraphPartitioningILP<index_type, workw_type, memw_typ
     return node_to_partition;
 }
 
-template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
-void HypergraphPartitioningILP<index_type, workw_type, memw_type, commw_type>::setInitialSolution(const Partitioning<index_type, workw_type, memw_type, commw_type> &partition,  Model& model)
+template<typename hypergraph_t>
+void HypergraphPartitioningILP<hypergraph_t>::setInitialSolution(const Partitioning<hypergraph_t> &partition,  Model& model)
 {
+    using index_type = typename hypergraph_t::vertex_idx;
+
     const std::vector<unsigned>& assignment = partition.assignedPartitions();
     const unsigned& numPartitions = partition.getInstance().getNumberOfPartitions();
     if(assignment.size() != partition.getInstance().getHypergraph().num_vertices())

@@ -25,8 +25,10 @@ limitations under the License.
 
 namespace osp { namespace file_writer {
 
-template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
-void write_txt(std::ostream &os, const Partitioning<index_type, workw_type, memw_type, commw_type> &partition) {
+template<typename hypergraph_t>
+void write_txt(std::ostream &os, const Partitioning<hypergraph_t> &partition) {
+
+    using index_type = typename hypergraph_t::vertex_idx;
 
     os << "\%\% Partitioning for " << partition.getInstance().getNumberOfPartitions() << " parts." << std::endl;
 
@@ -34,14 +36,16 @@ void write_txt(std::ostream &os, const Partitioning<index_type, workw_type, memw
         os << node << " " << partition.assignedPartition(node) << std::endl;
 }
 
-template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
-void write_txt(const std::string &filename, const Partitioning<index_type, workw_type, memw_type, commw_type> &partition) {
+template<typename hypergraph_t>
+void write_txt(const std::string &filename, const Partitioning<hypergraph_t> &partition) {
     std::ofstream os(filename);
     write_txt(os, partition);
 }
 
-template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
-void write_txt(std::ostream &os, const PartitioningWithReplication<index_type, workw_type, memw_type, commw_type> &partition) {
+template<typename hypergraph_t>
+void write_txt(std::ostream &os, const PartitioningWithReplication<hypergraph_t> &partition) {
+
+    using index_type = typename hypergraph_t::vertex_idx;
 
     os << "\%\% Partitioning for " << partition.getInstance().getNumberOfPartitions() << " parts with replication." << std::endl;
 
@@ -54,8 +58,8 @@ void write_txt(std::ostream &os, const PartitioningWithReplication<index_type, w
     }
 }
 
-template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
-void write_txt(const std::string &filename, const PartitioningWithReplication<index_type, workw_type, memw_type, commw_type> &partition) {
+template<typename hypergraph_t>
+void write_txt(const std::string &filename, const PartitioningWithReplication<hypergraph_t> &partition) {
     std::ofstream os(filename);
     write_txt(os, partition);
 }

@@ -32,12 +32,12 @@ limitations under the License.
 #include "osp/auxiliary/io/mtx_hypergraph_file_reader.hpp"
 #include "osp/auxiliary/io/partitioning_file_writer.hpp"
 
-
 using namespace osp;
 
 BOOST_AUTO_TEST_CASE(Hypergraph_and_Partition_test) {
 
     using graph = computational_dag_vector_impl_def_int_t;
+    using hypergraph = Hypergraph_def_t;
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(Hypergraph_and_Partition_test) {
 
     BOOST_CHECK(status);
 
-    Hypergraph Hgraph;
+    hypergraph Hgraph;
 
     // Matrix format, one hyperedge for each row/column
     status = file_reader::readHypergraphMartixMarketFormat((cwd / "data/mtx_tests/ErdosRenyi_8_19_A.mtx").string(), Hgraph);
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(Hypergraph_and_Partition_test) {
     BOOST_CHECK_EQUAL(Hgraph.num_hyperedges(), 16);
 
     // DAG format, all hyperedges have size 2
-    Hgraph = convert_from_cdag_as_dag<size_t, int, int, int, graph>(DAG);
+    Hgraph = convert_from_cdag_as_dag<hypergraph, graph>(DAG);
     BOOST_CHECK_EQUAL(DAG.num_vertices(), Hgraph.num_vertices());
     BOOST_CHECK_EQUAL(DAG.num_edges(), Hgraph.num_hyperedges());
     BOOST_CHECK_EQUAL(DAG.num_edges()*2, Hgraph.num_pins());
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(Hypergraph_and_Partition_test) {
         if(DAG.out_degree(node) > 0)
             ++ nr_of_non_sinks;
 
-    Hgraph = convert_from_cdag_as_hyperdag<size_t, int, int, int, graph>(DAG);
+    Hgraph = convert_from_cdag_as_hyperdag<hypergraph, graph>(DAG);
     BOOST_CHECK_EQUAL(DAG.num_vertices(), Hgraph.num_vertices());
     BOOST_CHECK_EQUAL(nr_of_non_sinks, Hgraph.num_hyperedges());
     BOOST_CHECK_EQUAL(DAG.num_edges() + nr_of_non_sinks, Hgraph.num_pins());
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(Hypergraph_and_Partition_test) {
 
     // Dummy partitioning with replication
 
-    instance.setHypergraph(convert_from_cdag_as_hyperdag<size_t, int, int, int, graph>(DAG));
+    instance.setHypergraph(convert_from_cdag_as_hyperdag<hypergraph, graph>(DAG));
     instance.setNumberOfPartitions(3);
     instance.setMaxWorkWeightExplicitly(30);
     PartitioningWithReplication partition_with_rep(instance);
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(Hypergraph_and_Partition_test) {
 
     int original_cost = partition_to_improve.computeConnectivityCost();
 
-    GenericFM fm;
+    GenericFM<hypergraph> fm;
     fm.ImprovePartitioning(partition_to_improve);
     int new_cost = partition_to_improve.computeConnectivityCost();
 
@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(Hypergraph_and_Partition_test) {
     graph larger_DAG;
     file_reader::readComputationalDagHyperdagFormatDB(
         (cwd / "data/spaa/large/instance_CG_N24_K22_nzP0d2.hdag").string(), larger_DAG);
-    instance.setHypergraph(convert_from_cdag_as_hyperdag<size_t, int, int, int, graph>(larger_DAG));
+    instance.setHypergraph(convert_from_cdag_as_hyperdag<hypergraph, graph>(larger_DAG));
 
     instance.setMaxWorkWeightExplicitly(4000);
     for(unsigned node = 0; node < instance.getHypergraph().num_vertices(); ++node)

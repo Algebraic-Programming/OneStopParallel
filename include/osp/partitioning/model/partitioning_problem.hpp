@@ -26,11 +26,19 @@ limitations under the License.
 namespace osp {
 
 // represents a hypergraph partitioning problem into a fixed number of parts with a balance constraint
-template<typename index_type = size_t, typename workw_type = int, typename memw_type = int, typename commw_type = int>
+template<typename hypergraph_t>
 class PartitioningProblem {
 
   private:
-    Hypergraph<index_type, workw_type, memw_type, commw_type> hgraph;
+
+    using this_t = PartitioningProblem<hypergraph_t>;
+
+    using index_type = typename hypergraph_t::vertex_idx;
+    using workw_type = typename hypergraph_t::vertex_work_weight_type;
+    using memw_type = typename hypergraph_t::vertex_mem_weight_type;
+    using commw_type = typename hypergraph_t::vertex_comm_weight_type;
+
+    hypergraph_t hgraph;
 
     unsigned nr_of_partitions;
     workw_type max_work_weight_per_partition;
@@ -42,27 +50,27 @@ class PartitioningProblem {
 
     PartitioningProblem() = default;
 
-    PartitioningProblem(const Hypergraph<index_type, workw_type, memw_type, commw_type> &hgraph_, unsigned nr_parts_ = 2,
+    PartitioningProblem(const hypergraph_t &hgraph_, unsigned nr_parts_ = 2,
                         workw_type max_work_weight_ = std::numeric_limits<workw_type>::max(),
                         memw_type max_memory_weight_ = std::numeric_limits<memw_type>::max()) :
                         hgraph(hgraph_), nr_of_partitions(nr_parts_),
                         max_work_weight_per_partition(max_work_weight_), max_memory_weight_per_partition(max_memory_weight_) {}
 
-    PartitioningProblem(const Hypergraph<index_type, workw_type, memw_type, commw_type> &&hgraph_, unsigned nr_parts_ = 2,
+    PartitioningProblem(const hypergraph_t &&hgraph_, unsigned nr_parts_ = 2,
                         workw_type max_work_weight_ = std::numeric_limits<workw_type>::max(),
                         memw_type max_memory_weight_ = std::numeric_limits<memw_type>::max()) :
                         hgraph(hgraph_), nr_of_partitions(nr_parts_),
                         max_work_weight_per_partition(max_work_weight_), max_memory_weight_per_partition(max_memory_weight_) {}
 
-    PartitioningProblem(const PartitioningProblem<index_type, workw_type, memw_type, commw_type> &other) = default;
-    PartitioningProblem(PartitioningProblem<index_type, workw_type, memw_type, commw_type> &&other) = default;
+    PartitioningProblem(const this_t &other) = default;
+    PartitioningProblem(this_t &&other) = default;
 
-    PartitioningProblem &operator=(const PartitioningProblem<index_type, workw_type, memw_type, commw_type> &other) = default;
-    PartitioningProblem &operator=(PartitioningProblem<index_type, workw_type, memw_type, commw_type> &&other) = default;
+    PartitioningProblem &operator=(const this_t &other) = default;
+    PartitioningProblem &operator=(this_t &&other) = default;
 
     // getters
-    inline const Hypergraph<index_type, workw_type, memw_type, commw_type> &getHypergraph() const { return hgraph; }
-    inline Hypergraph<index_type, workw_type, memw_type, commw_type> &getHypergraph() { return hgraph; }
+    inline const hypergraph_t &getHypergraph() const { return hgraph; }
+    inline hypergraph_t &getHypergraph() { return hgraph; }
 
     inline unsigned getNumberOfPartitions() const { return nr_of_partitions; }
     inline workw_type getMaxWorkWeightPerPartition() const { return max_work_weight_per_partition; }
@@ -70,7 +78,7 @@ class PartitioningProblem {
     inline bool getAllowsReplication() const { return allows_replication; }
 
     // setters
-    inline void setHypergraph(const Hypergraph<index_type, workw_type, memw_type, commw_type> &hgraph_) { hgraph = hgraph_; }
+    inline void setHypergraph(const hypergraph_t &hgraph_) { hgraph = hgraph_; }
     
     inline void setNumberOfPartitions(unsigned nr_parts_) { nr_of_partitions = nr_parts_; }
     inline void setAllowsReplication(bool allowed_) { allows_replication = allowed_; }

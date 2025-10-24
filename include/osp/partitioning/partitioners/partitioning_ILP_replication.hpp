@@ -26,16 +26,16 @@ limitations under the License.
 
 namespace osp{
 
-template<typename index_type = size_t, typename workw_type = int, typename memw_type = int, typename commw_type = int>
-class HypergraphPartitioningILPWithReplication : public HypergraphPartitioningILPBase<index_type, workw_type, memw_type, commw_type> {
+template<typename hypergraph_t>
+class HypergraphPartitioningILPWithReplication : public HypergraphPartitioningILPBase<hypergraph_t> {
 
   public:
     enum class REPLICATION_MODEL_IN_ILP { ONLY_TWICE, GENERAL };
 
   protected:
-    void setupExtraVariablesConstraints(const PartitioningProblem<index_type, workw_type, memw_type, commw_type> &instance, Model& model);
+    void setupExtraVariablesConstraints(const PartitioningProblem<hypergraph_t> &instance, Model& model);
 
-    void setInitialSolution(const PartitioningWithReplication<index_type, workw_type, memw_type, commw_type> &partition, Model& model);
+    void setInitialSolution(const PartitioningWithReplication<hypergraph_t> &partition, Model& model);
 
     REPLICATION_MODEL_IN_ILP replication_model = REPLICATION_MODEL_IN_ILP::ONLY_TWICE;
 
@@ -43,15 +43,15 @@ class HypergraphPartitioningILPWithReplication : public HypergraphPartitioningIL
 
     virtual ~HypergraphPartitioningILPWithReplication() = default;
 
-    RETURN_STATUS computePartitioning(PartitioningWithReplication<index_type, workw_type, memw_type, commw_type>& result);
+    RETURN_STATUS computePartitioning(PartitioningWithReplication<hypergraph_t>& result);
 
     virtual std::string getAlgorithmName() const override { return "HypergraphPartitioningILPWithReplication"; }
 
     void setReplicationModel(REPLICATION_MODEL_IN_ILP replication_model_) { replication_model = replication_model_; }
 };
 
-template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
-RETURN_STATUS HypergraphPartitioningILPWithReplication<index_type, workw_type, memw_type, commw_type>::computePartitioning(PartitioningWithReplication<index_type, workw_type, memw_type, commw_type>& result)
+template<typename hypergraph_t>
+RETURN_STATUS HypergraphPartitioningILPWithReplication<hypergraph_t>::computePartitioning(PartitioningWithReplication<hypergraph_t>& result)
 {
     Envr env;
     Model model = env.CreateModel("HypergraphPartRepl");
@@ -86,8 +86,11 @@ RETURN_STATUS HypergraphPartitioningILPWithReplication<index_type, workw_type, m
     }
 }
 
-template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
-void HypergraphPartitioningILPWithReplication<index_type, workw_type, memw_type, commw_type>::setupExtraVariablesConstraints(const PartitioningProblem<index_type, workw_type, memw_type, commw_type> &instance, Model& model) {
+template<typename hypergraph_t>
+void HypergraphPartitioningILPWithReplication<hypergraph_t>::setupExtraVariablesConstraints(const PartitioningProblem<hypergraph_t> &instance, Model& model) {
+
+    using index_type = typename hypergraph_t::vertex_idx;
+
 
     const index_type numberOfParts = instance.getNumberOfPartitions();
     const index_type numberOfVertices = instance.getHypergraph().num_vertices();
@@ -160,9 +163,11 @@ void HypergraphPartitioningILPWithReplication<index_type, workw_type, memw_type,
              
 };
 
-template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
-void HypergraphPartitioningILPWithReplication<index_type, workw_type, memw_type, commw_type>::setInitialSolution(const PartitioningWithReplication<index_type, workw_type, memw_type, commw_type> &partition,  Model& model)
+template<typename hypergraph_t>
+void HypergraphPartitioningILPWithReplication<hypergraph_t>::setInitialSolution(const PartitioningWithReplication<hypergraph_t> &partition,  Model& model)
 {
+    using index_type = typename hypergraph_t::vertex_idx;
+
     const std::vector<std::vector<unsigned> >& assignments = partition.assignedPartitions();
     const unsigned& numPartitions = partition.getInstance().getNumberOfPartitions();
     if(assignments.size() != partition.getInstance().getHypergraph().num_vertices())

@@ -26,12 +26,17 @@ namespace osp {
 
 // Represents a partitioning where each vertex of a hypergraph is assigned to a specifc partition
 
-template<typename index_type = size_t, typename workw_type = int, typename memw_type = int, typename commw_type = int>
+template<typename hypergraph_t>
 class Partitioning {
 
   private:
 
-    const PartitioningProblem<index_type, workw_type, memw_type, commw_type> *instance;
+    using index_type = typename hypergraph_t::vertex_idx;
+    using workw_type = typename hypergraph_t::vertex_work_weight_type;
+    using memw_type = typename hypergraph_t::vertex_mem_weight_type;
+    using commw_type = typename hypergraph_t::vertex_comm_weight_type;
+
+    const PartitioningProblem<hypergraph_t> *instance;
 
     std::vector<unsigned> node_to_partition_assignment;
 
@@ -39,23 +44,23 @@ class Partitioning {
   
     Partitioning() = delete;
 
-    Partitioning(const PartitioningProblem<index_type, workw_type, memw_type, commw_type> &inst)
+    Partitioning(const PartitioningProblem<hypergraph_t> &inst)
         : instance(&inst), node_to_partition_assignment(std::vector<unsigned>(inst.getHypergraph().num_vertices(), 0)) {}
 
-    Partitioning(const PartitioningProblem<index_type, workw_type, memw_type, commw_type> &inst, const std::vector<unsigned> &partition_assignment_)
+    Partitioning(const PartitioningProblem<hypergraph_t> &inst, const std::vector<unsigned> &partition_assignment_)
         : instance(&inst), node_to_partition_assignment(partition_assignment_) {}
 
-    Partitioning(const Partitioning<index_type, workw_type, memw_type, commw_type> &partitioning_) = default;
-    Partitioning(Partitioning<index_type, workw_type, memw_type, commw_type> &&partitioning_) = default;
+    Partitioning(const Partitioning<hypergraph_t> &partitioning_) = default;
+    Partitioning(Partitioning<hypergraph_t> &&partitioning_) = default;
 
-    Partitioning &operator=(const Partitioning<index_type, workw_type, memw_type, commw_type> &partitioning_) = default;
+    Partitioning &operator=(const Partitioning<hypergraph_t> &partitioning_) = default;
 
     virtual ~Partitioning() = default;
 
 
     // getters and setters
 
-    inline const PartitioningProblem<index_type, workw_type, memw_type, commw_type> &getInstance() const { return *instance; }
+    inline const PartitioningProblem<hypergraph_t> &getInstance() const { return *instance; }
 
     inline unsigned assignedPartition(index_type node) const { return node_to_partition_assignment[node]; }
     inline const std::vector<unsigned> &assignedPartitions() const { return node_to_partition_assignment; }
@@ -109,8 +114,8 @@ class Partitioning {
 
 };
 
-template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
-std::vector<unsigned> Partitioning<index_type, workw_type, memw_type, commw_type>::computeLambdaForHyperedges() const
+template<typename hypergraph_t>
+std::vector<unsigned> Partitioning<hypergraph_t>::computeLambdaForHyperedges() const
 {
     std::vector<unsigned> lambda(instance->getHypergraph().num_hyperedges(), 0);
     for(index_type edge_idx = 0; edge_idx < instance->getHypergraph().num_hyperedges(); ++edge_idx)
@@ -128,8 +133,8 @@ std::vector<unsigned> Partitioning<index_type, workw_type, memw_type, commw_type
     return lambda;
 }
 
-template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
-commw_type Partitioning<index_type, workw_type, memw_type, commw_type>::computeConnectivityCost() const {
+template<typename hypergraph_t>
+typename hypergraph_t::vertex_comm_weight_type Partitioning<hypergraph_t>::computeConnectivityCost() const {
 
     commw_type total = 0;
     std::vector<unsigned> lambda = computeLambdaForHyperedges();
@@ -141,8 +146,8 @@ commw_type Partitioning<index_type, workw_type, memw_type, commw_type>::computeC
     return total;
 }
 
-template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
-commw_type Partitioning<index_type, workw_type, memw_type, commw_type>::computeCutNetCost() const {
+template<typename hypergraph_t>
+typename hypergraph_t::vertex_comm_weight_type Partitioning<hypergraph_t>::computeCutNetCost() const {
 
     commw_type total = 0;
     std::vector<unsigned> lambda = computeLambdaForHyperedges();
@@ -153,8 +158,8 @@ commw_type Partitioning<index_type, workw_type, memw_type, commw_type>::computeC
     return total;
 }
 
-template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
-bool Partitioning<index_type, workw_type, memw_type, commw_type>::satisfiesBalanceConstraint() const {
+template<typename hypergraph_t>
+bool Partitioning<hypergraph_t>::satisfiesBalanceConstraint() const {
     std::vector<workw_type> work_weight(instance->getNumberOfPartitions(), 0);
     std::vector<memw_type> memory_weight(instance->getNumberOfPartitions(), 0);
     for (index_type node = 0; node < node_to_partition_assignment.size(); ++node) {

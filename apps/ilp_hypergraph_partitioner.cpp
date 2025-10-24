@@ -39,6 +39,7 @@ limitations under the License.
 using namespace osp;
 
 using graph = computational_dag_vector_impl_def_int_t;
+using hypergraph = Hypergraph_def_t;
 
 int main(int argc, char *argv[]) {
     if (argc < 4) {
@@ -80,16 +81,16 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    Hypergraph hgraph;
+    PartitioningProblem<hypergraph> instance;
 
     bool file_status = true;    
     if (file_ending == "hdag") {
         graph dag;
         file_status = file_reader::readComputationalDagHyperdagFormatDB(filename_hgraph, dag);
         if(file_status)
-            hgraph = convert_from_cdag_as_hyperdag<size_t, int, int, int, graph>(dag);
+            instance.getHypergraph() = convert_from_cdag_as_hyperdag<hypergraph, graph>(dag);
     } else if (file_ending == "mtx") {
-        file_status = file_reader::readHypergraphMartixMarketFormat(filename_hgraph, hgraph);
+        file_status = file_reader::readHypergraphMartixMarketFormat(filename_hgraph, instance.getHypergraph());
     } else {
         std::cout << "Unknown file extension." << std::endl;
         return 1;
@@ -100,12 +101,12 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    PartitioningProblem instance(hgraph, static_cast<unsigned>(nr_parts));
+    instance.setNumberOfPartitions(static_cast<unsigned>(nr_parts));
     instance.setMaxWorkWeightViaImbalanceFactor(imbalance);
 
-    Partitioning initial_partition(instance);
-    GenericFM fm;
-    for(size_t node = 0; node < hgraph.num_vertices(); ++node)
+    Partitioning<hypergraph> initial_partition(instance);
+    GenericFM<hypergraph> fm;
+    for(size_t node = 0; node < instance.getHypergraph().num_vertices(); ++node)
         initial_partition.setAssignedPartition(node, static_cast<unsigned>(node % static_cast<size_t>(nr_parts)));
     if(nr_parts == 2)
         fm.ImprovePartitioning(initial_partition);
@@ -114,17 +115,17 @@ int main(int argc, char *argv[]) {
 
     if (replicate > 0) {
 
-        PartitioningWithReplication partition(instance);
-        HypergraphPartitioningILPWithReplication partitioner;
+        PartitioningWithReplication<hypergraph> partition(instance);
+        HypergraphPartitioningILPWithReplication<hypergraph> partitioner;
 
-        for(size_t node = 0; node < hgraph.num_vertices(); ++node)
+        for(size_t node = 0; node < instance.getHypergraph().num_vertices(); ++node)
             partition.setAssignedPartitions(node, {initial_partition.assignedPartition(node)});
         if(partition.satisfiesBalanceConstraint())
             partitioner.setUseInitialSolution(true);
 
         partitioner.setTimeLimitSeconds(600);
         if(replicate == 2)
-            partitioner.setReplicationModel(HypergraphPartitioningILPWithReplication<>::REPLICATION_MODEL_IN_ILP::GENERAL);
+            partitioner.setReplicationModel(HypergraphPartitioningILPWithReplication<hypergraph>::REPLICATION_MODEL_IN_ILP::GENERAL);
 
         auto solve_status = partitioner.computePartitioning(partition);
 
@@ -139,10 +140,10 @@ int main(int argc, char *argv[]) {
 
     } else {
 
-        Partitioning partition(instance);
-        HypergraphPartitioningILP partitioner;
+        Partitioning<hypergraph> partition(instance);
+        HypergraphPartitioningILP<hypergraph> partitioner;
 
-        for(size_t node = 0; node < hgraph.num_vertices(); ++node)
+        for(size_t node = 0; node < instance.getHypergraph().num_vertices(); ++node)
             partition.setAssignedPartition(node, initial_partition.assignedPartition(node));
         if(partition.satisfiesBalanceConstraint())
             partitioner.setUseInitialSolution(true);
