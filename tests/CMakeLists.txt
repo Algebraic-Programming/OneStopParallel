@@ -92,6 +92,9 @@ _add_test( bsp_greedy_recomputer )
 ## pebbling model
 _add_test( pebbling_schedule_class )
 
+## partitioning model
+_add_test( hypergraph_and_partition )
+
 ## auxiliary
 _add_test( intpower )
 
@@ -119,6 +122,8 @@ _add_test( filereader DATA )
 if (COPT_FOUND)
 
 #_add_test( ilp_bsp_scheduler )
+
+#_add_test( ilp_hypergraph_partitioning )
 
 endif()
 
