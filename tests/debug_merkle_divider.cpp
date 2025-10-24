@@ -20,6 +20,7 @@ limitations under the License.
 #include "osp/auxiliary/io/dot_graph_file_reader.hpp"
 #include "osp/auxiliary/io/DotFileWriter.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/BspLocking.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/GreedyChildren.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin_v2/kl_include_mt.hpp"
 #include "osp/coarser/coarser_util.hpp"
 #include "osp/dag_divider/isomorphism_divider/IsomorphicSubgraphScheduler.hpp"
@@ -49,16 +50,17 @@ int main(int argc, char* argv[]) {
     // Set up architecture
     instance.getArchitecture().setProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1 , 1, 1, 1, 1, 1, 1, 1, 1 , 1, 1, 1, 1, 1, 1, 1, 1 , 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1});
     instance.setDiagonalCompatibilityMatrix(2);
-    instance.setSynchronisationCosts(20000);
-    instance.setCommunicationCosts(10);
+    instance.setSynchronisationCosts(2000000);
+    instance.setCommunicationCosts(100);
 
     // Set up the scheduler
-    BspLocking<graph_t> greedy;
-    kl_total_lambda_comm_improver_mt<graph_t> kl;
+    GreedyChildren<graph_t> greedy;
+    kl_total_lambda_comm_improver<graph_t> kl(42);
     ComboScheduler<graph_t> combo(greedy, kl);
 
     IsomorphicSubgraphScheduler<graph_t2, graph_t> iso_scheduler(combo);
     iso_scheduler.set_symmetry(4);
+    //iso_scheduler.enable_use_max_group_size(16);
     iso_scheduler.set_plot_dot_graphs(true); // Enable plotting for debug
 
     std::cout << "Starting partition computation..." << std::endl;
