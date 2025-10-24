@@ -163,8 +163,14 @@ private:
 
                 // --- Check Constraints ---
                 // Symmetry Threshold
-                const bool merge_viable = is_merge_viable(original_dag, current_groups[u], current_groups[v], new_subgraphs);
+                bool error = false;
+                const bool merge_viable = is_merge_viable(original_dag, current_groups[u], current_groups[v], new_subgraphs, error);
                 const bool both_below_symmetry_threshold = (current_groups[u].size() < symmetry_threshold_) && (current_groups[v].size() < symmetry_threshold_);// && (not ((current_groups[u].size() == 1 && current_groups[v].size() > 1) || (current_groups[u].size() > 1 && current_groups[v].size() == 1)));
+
+                if (error) {
+                    if constexpr (verbose) { std::cout << "  - Merge of " << u << " and " << v << " and " << v << " not viable (error in is_merge_viable)\n"; }
+                    continue;
+                }
 
                 if (!merge_viable && !both_below_symmetry_threshold) {
                     if constexpr (verbose) { std::cout << "  - Merge of " << u << " and " << v << " not viable (symmetry threshold)\n"; }
@@ -261,7 +267,7 @@ private:
      * If viable, it populates the `out_new_subgraphs` with the structure of the merged group.
      */
     bool is_merge_viable(const Graph_t& original_dag, const Group& group_u, const Group& group_v,
-                         std::vector<std::vector<VertexType>>& out_new_subgraphs) const {
+                         std::vector<std::vector<VertexType>>& out_new_subgraphs, bool & error) const {
 
         std::vector<VertexType> all_nodes;
         all_nodes.reserve(group_u.subgraphs.size() + group_v.subgraphs.size());
@@ -281,13 +287,19 @@ private:
         std::sort(all_nodes.begin(), all_nodes.end());
 
         Constr_Graph_t induced_subgraph;
-        auto map = create_induced_subgraph_map(original_dag, induced_subgraph, all_nodes);
 
+        // create_induced_subgraph(original_dag, induced_subgraph, all_nodes);
+        // std::vector<VertexType> components; // local -> component_id
+        // size_t num_components = compute_weakly_connected_components(induced_subgraph, components);
+        // out_new_subgraphs.assign(num_components, std::vector<VertexType>());
+        // for (VertexType i = 0; i < induced_subgraph.num_vertices(); ++i) {
+        //     out_new_subgraphs[components[i]].push_back(all_nodes[i]);
+        // }
+
+        auto map = create_induced_subgraph_map(original_dag, induced_subgraph, all_nodes);
         std::vector<VertexType> components; // local -> component_id
         size_t num_components = compute_weakly_connected_components(induced_subgraph, components);
-
         out_new_subgraphs.assign(num_components, std::vector<VertexType>());
-
         for (const auto & node : all_nodes) {
             out_new_subgraphs[components[map[node]]].push_back(node);
         }
@@ -303,12 +315,14 @@ private:
 
             for (size_t i = 1; i < num_components; ++i) {
                 if (out_new_subgraphs[i].size() != first_sg_size) {
+                    error = true;
                     return false;
                 }
                 
                 Constr_Graph_t current_sg;
                 create_induced_subgraph(original_dag, current_sg, out_new_subgraphs[i]);
                 if (!are_isomorphic_by_merkle_hash(rep_sg, current_sg)) {
+                    error = true;
                     return false;
                 }
             }

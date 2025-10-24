@@ -24,6 +24,7 @@ limitations under the License.
 #include <stdexcept> 
 #include "osp/concepts/computational_dag_concept.hpp"
 #include "osp/graph_algorithms/directed_graph_top_sort.hpp"
+#include "osp/graph_algorithms/directed_graph_util.hpp"
 #include "osp/auxiliary/hash_util.hpp"
 
 namespace osp {
@@ -160,19 +161,15 @@ template<typename Graph_t>
 struct bwd_merkle_node_hash_func {
 
     MerkleHashComputer<Graph_t, uniform_node_hash_func<vertex_idx_t<Graph_t>>, false> bw_merkle_hash;
+    std::vector<std::size_t> vertex_components;
 
-    const Graph_t & graph_;
-
-    bwd_merkle_node_hash_func(const Graph_t & graph) : bw_merkle_hash(graph), graph_(graph) {}
+    bwd_merkle_node_hash_func(const Graph_t & graph) : bw_merkle_hash(graph) {
+        compute_weakly_connected_components(graph, vertex_components);
+    }
 
     std::size_t operator()(const vertex_idx_t<Graph_t> & v) const {
         std::size_t hash = bw_merkle_hash.get_vertex_hash(v);
-        hash_combine(hash, graph_.vertex_work_weight(v));
-        
-        if constexpr (has_typed_vertices_v<Graph_t>) {
-            hash_combine(hash, graph_.vertex_type(v));
-        }
-
+        hash_combine(hash, static_cast<size_t>((vertex_components[v] + 3) * 7));
         return hash;
     }
 };
