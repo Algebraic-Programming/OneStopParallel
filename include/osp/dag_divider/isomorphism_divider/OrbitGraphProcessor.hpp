@@ -21,6 +21,7 @@ limitations under the License.
 #include <vector>
 
 #include "osp/coarser/coarser_util.hpp"
+#include "osp/dag_divider/isomorphism_divider/HashComputer.hpp"
 #include "osp/dag_divider/isomorphism_divider/MerkleHashComputer.hpp"
 #include "osp/graph_algorithms/directed_graph_path_util.hpp"
 #include "osp/graph_algorithms/directed_graph_util.hpp"
@@ -58,10 +59,8 @@ public:
         inline size_t size() const { return subgraphs.size(); }
         // v_workw_t<Graph_t> work_weight_per_subgraph = 0;
     };
-
+    
 private:
-    using MerkleHashComputer_t = MerkleHashComputer<Graph_t, bwd_merkle_node_hash_func<Graph_t>, true>; //MerkleHashComputer<Graph_t, node_hash_func_t, true>;
-    // using MerkleHashComputer_t = MerkleHashComputer<Graph_t, node_hash_func_t, true>;
 
     // Results from the first (orbit) coarsening step
     Constr_Graph_t coarse_graph_;
@@ -73,6 +72,8 @@ private:
     std::vector<Group> final_groups_;
 
     size_t symmetry_threshold_ = 2;
+
+
     static constexpr bool verbose = false;
 
 public:
@@ -91,7 +92,7 @@ public:
      * @brief Discovers isomorphic groups (orbits) and constructs a coarse graph.
      * @param dag The input computational DAG.
      */
-    void discover_isomorphic_groups(const Graph_t &dag) {
+    void discover_isomorphic_groups(const Graph_t &dag, const HashComputer<VertexType>& hasher) {
         coarse_graph_ = Constr_Graph_t();
         contraction_map_.clear();
         final_coarse_graph_ = Constr_Graph_t();
@@ -102,8 +103,7 @@ public:
             return;
         }
   
-        MerkleHashComputer_t hasher(dag, dag); // The second 'dag' is for the bwd_merkle_node_hash_func
-        const auto orbits = hasher.get_orbits(); 
+        const auto& orbits = hasher.get_orbits(); 
 
         contraction_map_.assign(dag.num_vertices(), 0);
         VertexType coarse_node_idx = 0;

@@ -18,6 +18,8 @@ limitations under the License.
 
 #include <iostream>
 #include "OrbitGraphProcessor.hpp"
+#include "HashComputer.hpp"
+#include "MerkleHashComputer.hpp"
 #include "EftSubgraphScheduler.hpp"
 #include "osp/auxiliary/io/DotFileWriter.hpp"
 #include "osp/bsp/scheduler/Scheduler.hpp"
@@ -37,6 +39,7 @@ class IsomorphicSubgraphScheduler {
     private:
 
     static constexpr bool verbose = false;    
+    HashComputer<vertex_idx_t<Graph_t>>* hash_computer_;
     size_t symmetry_ = 2;
     Scheduler<Constr_Graph_t> * bsp_scheduler_;
     bool use_max_group_size_ = false;
@@ -45,7 +48,16 @@ class IsomorphicSubgraphScheduler {
 
     public:
 
-    IsomorphicSubgraphScheduler(Scheduler<Constr_Graph_t> & bsp_scheduler) : symmetry_(2), bsp_scheduler_(&bsp_scheduler), plot_dot_graphs_(false) {}
+    // Constructor to use the default internal MerkleHashComputer
+    explicit IsomorphicSubgraphScheduler(Scheduler<Constr_Graph_t> & bsp_scheduler) 
+        : hash_computer_(nullptr), symmetry_(2), bsp_scheduler_(&bsp_scheduler), plot_dot_graphs_(false) 
+    {}
+
+    // Constructor to use an externally provided HashComputer
+    IsomorphicSubgraphScheduler(Scheduler<Constr_Graph_t> & bsp_scheduler, const HashComputer<vertex_idx_t<Graph_t>>& hash_computer) 
+        : hash_computer_(&hash_computer), symmetry_(2), bsp_scheduler_(&bsp_scheduler), plot_dot_graphs_(false) 
+    {}
+
     virtual ~IsomorphicSubgraphScheduler() {}
 
     void set_symmetry(size_t symmetry) { symmetry_ = symmetry; }
@@ -59,7 +71,15 @@ class IsomorphicSubgraphScheduler {
 
     std::vector<vertex_idx_t<Graph_t>> compute_partition(const BspInstance<Graph_t>& instance) {
         OrbitGraphProcessor<Graph_t, Constr_Graph_t> orbit_processor(symmetry_);
-        orbit_processor.discover_isomorphic_groups(instance.getComputationalDag());
+
+        std::unique_ptr<HashComputer<vertex_idx_t<Graph_t>>> local_hasher;      
+        if (!hash_computer_) {
+            local_hasher = std::make_unique<MerkleHashComputer<Graph_t, bwd_merkle_node_hash_func<Graph_t>, true>>(instance.getComputationalDag(), instance.getComputationalDag());
+            hash_computer_ = local_hasher.get();
+        }
+
+        orbit_processor.discover_isomorphic_groups(instance.getComputationalDag(), *hash_computer_);
+
         auto isomorphic_groups = orbit_processor.get_final_groups();
         
         if (plot_dot_graphs_) {
