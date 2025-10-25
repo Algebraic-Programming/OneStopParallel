@@ -39,7 +39,7 @@ class IsomorphicSubgraphScheduler {
     private:
 
     static constexpr bool verbose = false;    
-    HashComputer<vertex_idx_t<Graph_t>>* hash_computer_;
+    const HashComputer<vertex_idx_t<Graph_t>>* hash_computer_;
     size_t symmetry_ = 2;
     Scheduler<Constr_Graph_t> * bsp_scheduler_;
     bool use_max_group_size_ = false;
