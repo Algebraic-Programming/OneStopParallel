@@ -85,6 +85,7 @@ class IsomorphicSubgraphScheduler {
         if (plot_dot_graphs_) {
             DotFileWriter writer;
             writer.write_colored_graph("isomorphic_groups.dot", instance.getComputationalDag(), orbit_processor.get_final_contraction_map());
+            writer.write_colored_graph("orbits_colored.dot", instance.getComputationalDag(), orbit_processor.get_contraction_map());
         }
 
         const unsigned min_proc_type_count = use_max_group_size_ ? max_group_size_ : instance.getArchitecture().getMinProcessorTypeCount();
