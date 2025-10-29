@@ -472,6 +472,28 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
             }
         }
     }
+
+    virtual void shrinkSchedule() override {
+
+        std::vector<bool> comm_phase_empty(this->number_of_supersteps, true);
+        for (auto const &[key, val] : commSchedule)
+            comm_phase_empty[val] = false;
+
+        std::vector<unsigned> new_step_index(this->number_of_supersteps);
+        unsigned current_index = 0;
+        for(unsigned step = 0; step < this->number_of_supersteps; ++step)
+        {
+            new_step_index[step] = current_index;
+            if(!comm_phase_empty[step])
+                current_index++;
+        }
+        for (const auto& node : this->instance->vertices())
+            this->node_to_superstep_assignment[node] = new_step_index[this->node_to_superstep_assignment[node]];
+        for (auto &[key, val] : commSchedule)
+            val = new_step_index[val];
+
+        this->setNumberOfSupersteps(current_index);
+    }
 };
 
 } // namespace osp

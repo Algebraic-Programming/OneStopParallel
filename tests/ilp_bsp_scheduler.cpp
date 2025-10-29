@@ -31,6 +31,7 @@ limitations under the License.
 
 #include "osp/bsp/scheduler/IlpSchedulers/CoptFullScheduler.hpp"
 #include "osp/bsp/scheduler/IlpSchedulers/TotalCommunicationScheduler.hpp"
+#include "osp/bsp/scheduler/IlpSchedulers/CoptCommScheduleOptimizer.hpp"
 
 using namespace osp;
 
@@ -178,3 +179,46 @@ BOOST_AUTO_TEST_CASE(test_full) {
     BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
     BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 };
+
+BOOST_AUTO_TEST_CASE(test_cs) {
+
+    using graph = computational_dag_edge_idx_vector_impl_def_t;
+
+    BspInstance<graph> instance;
+    instance.setNumberOfProcessors(4);
+    instance.setCommunicationCosts(3);
+    instance.setSynchronisationCosts(5);
+
+    // Getting root git directory
+    std::filesystem::path cwd = std::filesystem::current_path();
+    std::cout << cwd << std::endl;
+    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
+        cwd = cwd.parent_path();
+        std::cout << cwd << std::endl;
+    }
+
+    bool status = file_reader::readComputationalDagHyperdagFormatDB(
+        (cwd / "data/spaa/tiny/instance_pregel.hdag").string(), instance.getComputationalDag());
+
+    BOOST_CHECK(status);
+
+    BspSchedule<graph> schedule(instance);
+    GreedyBspScheduler<graph> greedy;
+    greedy.computeSchedule(schedule);
+    BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+    BspScheduleCS<graph> schedule_cs(schedule);
+    BOOST_CHECK(schedule_cs.hasValidCommSchedule());
+
+    CoptCommScheduleOptimizer<graph> scheduler;
+    scheduler.setTimeLimitSeconds(10);
+    const auto before = schedule_cs.compute_cs_communication_costs();
+    const auto result = scheduler.improveSchedule(schedule_cs);
+    BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
+    const auto after = schedule_cs.compute_cs_communication_costs();
+    std::cout<<before<<" --cs--> "<<after<<std::endl;
+
+    BOOST_CHECK(schedule_cs.satisfiesPrecedenceConstraints());
+    BOOST_CHECK(schedule_cs.hasValidCommSchedule());
+    BOOST_CHECK(before >= after);
+};
+
