@@ -52,7 +52,7 @@ class IsomorphicSubgraphScheduler {
     bool plot_dot_graphs_ = false;
     v_workw_t<Constr_Graph_t> work_threshold_ = 10;
     v_workw_t<Constr_Graph_t> critical_path_threshold_ = 10;
-    double orbit_lock_ratio = 0.2;
+    double orbit_lock_ratio_ = 0.2;
     bool merge_different_node_types = true;
     bool allow_use_trimmed_scheduler = true;
 
@@ -69,7 +69,7 @@ class IsomorphicSubgraphScheduler {
     void setMergeDifferentTypes(bool flag) {merge_different_node_types = flag;}
     void setWorkThreshold(v_workw_t<Constr_Graph_t> work_threshold) {work_threshold_ = work_threshold;}
     void setCriticalPathThreshold(v_workw_t<Constr_Graph_t> critical_path_threshold) {critical_path_threshold_ = critical_path_threshold;}
-    void setOrbitLockRatio(double orbit_lock_ratio) {orbit_lock_ratio = orbit_lock_ratio;}
+    void setOrbitLockRatio(double orbit_lock_ratio) {orbit_lock_ratio_ = orbit_lock_ratio;}
     void setAllowTrimmedScheduler(bool flag) {allow_use_trimmed_scheduler = flag;}
     void set_symmetry(size_t symmetry) { symmetry_ = symmetry; }
     void setMinSymmetry(size_t min_symmetry) { min_symmetry_ = min_symmetry; }
@@ -86,7 +86,7 @@ class IsomorphicSubgraphScheduler {
         orbit_processor.set_work_threshold(work_threshold_);
         orbit_processor.setMergeDifferentNodeTypes(merge_different_node_types);
         orbit_processor.setCriticalPathThreshold(critical_path_threshold_);
-        orbit_processor.setLockRatio(orbit_lock_ratio);
+        orbit_processor.setLockRatio(orbit_lock_ratio_);
         orbit_processor.setMinSymmetry(min_symmetry_);
 
 
