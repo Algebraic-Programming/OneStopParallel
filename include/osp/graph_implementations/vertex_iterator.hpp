@@ -27,14 +27,15 @@ class vertex_range {
 
     T start;
     T finish;
-
-    class vertex_iterator {
+public:
+    class vertex_iterator { // public for std::reverse_iterator
       public:
-        using iterator_category = std::bidirectional_iterator_tag;
+        using iterator_category = std::random_access_iterator_tag;
         using difference_type = std::ptrdiff_t;
         using value_type = T;
-        using pointer = T *;
-        using reference = T &;
+        // pointer and reference are not real pointers/references to the value
+        using pointer = const T *;
+        using reference = const T;
 
       private:
         value_type current;
@@ -42,13 +43,9 @@ class vertex_range {
       public:
         vertex_iterator() : current(0) {}
         explicit vertex_iterator(value_type start) : current(start) {}
-        vertex_iterator(const vertex_iterator &other) : current(other.current) {}
-        vertex_iterator &operator=(const vertex_iterator &other) {
-            if (this != &other) {
-                current = other.current;
-            }
-            return *this;
-        }
+        vertex_iterator(const vertex_iterator &) = default;
+        vertex_iterator &operator=(const vertex_iterator &) = default;
+        ~vertex_iterator() = default;
 
         inline value_type operator*() const { return current; }
 
@@ -77,83 +74,39 @@ class vertex_range {
         inline bool operator==(const vertex_iterator &other) const { return current == other.current; }
         inline bool operator!=(const vertex_iterator &other) const { return !(*this == other); }
 
+        inline vertex_iterator &operator+=(difference_type n) { current += n; return *this; }
+        inline vertex_iterator operator+(difference_type n) const { vertex_iterator temp = *this; return temp += n; }
+        friend inline vertex_iterator operator+(difference_type n, const vertex_iterator& it) { return it + n; }
+
+        inline vertex_iterator &operator-=(difference_type n) { current -= n; return *this; }
+        inline vertex_iterator operator-(difference_type n) const { vertex_iterator temp = *this; return temp -= n; }
+        inline difference_type operator-(const vertex_iterator& other) const { return current - other.current; }
+
+        inline value_type operator[](difference_type n) const { return *(*this + n); }
+
+        inline bool operator<(const vertex_iterator &other) const { return current < other.current; }
+        inline bool operator>(const vertex_iterator &other) const { return current > other.current; }
         inline bool operator<=(const vertex_iterator &other) const { return current <= other.current; }
-        inline bool operator<(const vertex_iterator &other) const { return (*this <= other) && (*this != other); }
-        inline bool operator>=(const vertex_iterator &other) const { return (!(*this <= other)) || (*this == other); }
-        inline bool operator>(const vertex_iterator &other) const { return !(*this <= other); }
+        inline bool operator>=(const vertex_iterator &other) const { return current >= other.current; }
     };
 
-
-    class reverse_vertex_iterator {
-      public:
-        using iterator_category = std::bidirectional_iterator_tag;
-        using difference_type = std::ptrdiff_t;
-        using value_type = T;
-        using pointer = T *;
-        using reference = T &;
-
-      private:
-        value_type current;
-
-      public:
-        reverse_vertex_iterator() : current(0) {}
-        explicit reverse_vertex_iterator(value_type start) : current(start) {}
-        reverse_vertex_iterator(const reverse_vertex_iterator &other) : current(other.current) {}
-        reverse_vertex_iterator &operator=(const reverse_vertex_iterator &other) {
-            if (this != &other) {
-                current = other.current;
-            }
-            return *this;
-        }
-
-        inline value_type operator*() const { return current; }
-
-        inline reverse_vertex_iterator &operator++() {
-            --current;
-            return *this;
-        }
-
-        inline reverse_vertex_iterator operator++(int) {
-            reverse_vertex_iterator temp = *this;
-            ++(*this);
-            return temp;
-        }
-
-        inline reverse_vertex_iterator &operator--() {
-            ++current;
-            return *this;
-        }
-
-        inline reverse_vertex_iterator operator--(int) {
-            reverse_vertex_iterator temp = *this;
-            --(*this);
-            return temp;
-        }
-
-        inline bool operator==(const reverse_vertex_iterator &other) const { return current == other.current; }
-        inline bool operator!=(const reverse_vertex_iterator &other) const { return !(*this == other); }
-
-        inline bool operator<=(const reverse_vertex_iterator &other) const { return current <= other.current; }
-        inline bool operator<(const reverse_vertex_iterator &other) const { return (*this <= other) && (*this != other); }
-        inline bool operator>=(const reverse_vertex_iterator &other) const { return (!(*this <= other)) || (*this == other); }
-        inline bool operator>(const reverse_vertex_iterator &other) const { return !(*this <= other); }
-    };
+    using reverse_vertex_iterator = std::reverse_iterator<vertex_iterator>;
 
   public:
     vertex_range(T end_) : start(static_cast<T>(0)), finish(end_) {}
     vertex_range(T start_, T end_) : start(start_), finish(end_) {}
 
-    inline auto begin() const { return vertex_iterator(start); }
-    inline auto cbegin() const { return vertex_iterator(start); }
+    inline vertex_iterator begin() const { return vertex_iterator(start); }
+    inline vertex_iterator cbegin() const { return vertex_iterator(start); }
 
-    inline auto end() const { return vertex_iterator(finish); }
-    inline auto cend() const { return vertex_iterator(finish); }
+    inline vertex_iterator end() const { return vertex_iterator(finish); }
+    inline vertex_iterator cend() const { return vertex_iterator(finish); }
 
-    inline auto rbegin() const { return reverse_vertex_iterator(finish - 1); }
-    inline auto crbegin() const { return reverse_vertex_iterator(finish - 1); }
+    inline reverse_vertex_iterator rbegin() const { return reverse_vertex_iterator(end()); }
+    inline reverse_vertex_iterator crbegin() const { return reverse_vertex_iterator(cend()); }
     
-    inline auto rend() const { return reverse_vertex_iterator(start - 1); }
-    inline auto crend() const { return reverse_vertex_iterator(start - 1); }
+    inline reverse_vertex_iterator rend() const { return reverse_vertex_iterator(begin()); }
+    inline reverse_vertex_iterator crend() const { return reverse_vertex_iterator(cbegin()); }
 
     inline auto size() const { return finish - start; }
 };

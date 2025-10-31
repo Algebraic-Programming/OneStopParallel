@@ -18,10 +18,11 @@ limitations under the License.
 
 #pragma once
 
-#include <string>
-
 #include "Scheduler.hpp"
-
+#include <deque>
+#include <vector>
+#include <limits>
+#include <string>
 namespace osp {
 
 template<typename Graph_t>
@@ -45,14 +46,93 @@ class Serial : public Scheduler<Graph_t> {
     ~Serial() override = default;
 
     RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &schedule) override {
+        const auto &instance = schedule.getInstance();
+        const auto &dag = instance.getComputationalDag();
+        const auto num_vertices = dag.num_vertices();
 
-        schedule.setNumberOfSupersteps(1);
+        if (num_vertices == 0)
+            return RETURN_STATUS::OSP_SUCCESS;
 
-        for (const auto &v : schedule.getInstance().vertices()) {
-            schedule.setAssignedProcessor(v, 0);
-            schedule.setAssignedSuperstep(v, 0);
+        const auto &arch = instance.getArchitecture();
+
+        // Select one processor of each type
+        std::vector<unsigned> chosen_procs;
+        if (arch.getNumberOfProcessorTypes() > 0) {
+            std::vector<bool> type_seen(arch.getNumberOfProcessorTypes(), false);
+            for (unsigned p = 0; p < arch.numberOfProcessors(); ++p) {
+                if (!type_seen[arch.processorType(p)]) {
+                    chosen_procs.push_back(p);
+                    type_seen[arch.processorType(p)] = true;
+                }
+            }
         }
 
+        if (chosen_procs.empty()) {
+            return RETURN_STATUS::ERROR;
+        }
+
+        std::vector<vertex_idx_t<Graph_t>> in_degree(num_vertices);
+        std::deque<vertex_idx_t<Graph_t>> ready_nodes;
+        std::deque<vertex_idx_t<Graph_t>> deferred_nodes;
+
+        for (const auto &v : dag.vertices()) {
+            schedule.setAssignedProcessor(v, std::numeric_limits<unsigned>::max());
+            schedule.setAssignedSuperstep(v, std::numeric_limits<unsigned>::max());
+            in_degree[v] = dag.in_degree(v);
+            if (in_degree[v] == 0) {
+                ready_nodes.push_back(v);
+            }
+        }
+
+        size_t scheduled_nodes_count = 0;
+        unsigned current_superstep = 0;
+
+        while (scheduled_nodes_count < num_vertices) {
+            while (not ready_nodes.empty()) {
+                vertex_idx_t<Graph_t> v = ready_nodes.front();
+                ready_nodes.pop_front();
+
+                bool scheduled = false;
+                for (const auto &p : chosen_procs) {
+                    if (instance.isCompatible(v, p)) {
+                        bool parents_compatible = true;
+                        for (const auto &parent : dag.parents(v)) {
+                            if (schedule.assignedSuperstep(parent) == current_superstep &&
+                                schedule.assignedProcessor(parent) != p) {
+                                parents_compatible = false;
+                                break;
+                            }
+                        }
+
+                        if (parents_compatible) {
+                            schedule.setAssignedProcessor(v, p);
+                            schedule.setAssignedSuperstep(v, current_superstep);
+                            scheduled = true;
+                            ++scheduled_nodes_count;
+                            break;                            
+                        }
+                    }
+                }
+
+                if (not scheduled) {
+                    deferred_nodes.push_back(v);
+                } else {
+                    for (const auto &child : dag.children(v)) {
+                        if (--in_degree[child] == 0) {
+                            ready_nodes.push_back(child);
+                        }
+                    }
+                }
+            }
+
+            if (scheduled_nodes_count < num_vertices) {
+                current_superstep++;
+                ready_nodes.insert(ready_nodes.end(), deferred_nodes.begin(), deferred_nodes.end());
+                deferred_nodes.clear();
+            } 
+        }
+
+        schedule.setNumberOfSupersteps(current_superstep + 1);
         return RETURN_STATUS::OSP_SUCCESS;
     }
 

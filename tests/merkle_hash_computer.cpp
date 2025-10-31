@@ -65,6 +65,35 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test)
 
 };
 
+BOOST_AUTO_TEST_CASE(MerkleHashComputer_test_fw_bw_precomp)
+{
+    using graph_t = computational_dag_vector_impl_def_t;
+    graph_t graph;
+
+    const auto project_root = get_project_root();
+    file_reader::readComputationalDagHyperdagFormatDB((project_root / "data/spaa/tiny/instance_bicgstab.hdag").string(), graph);
+
+    std::vector<size_t> precom_node_hashes(graph.num_vertices(), 5);
+
+    MerkleHashComputer<graph_t, precom_bwd_merkle_node_hash_func<graph_t>> m_hash(graph, graph, precom_node_hashes);
+
+    BOOST_CHECK_EQUAL(m_hash.get_vertex_hashes().size(), graph.num_vertices());
+    
+    size_t num = 0;
+    for (const auto& pair : m_hash.get_orbits()) {
+
+        num += pair.second.size();
+        std::cout << "orbit " << pair.first << ": ";
+        for (const auto& v : pair.second) {
+            std::cout << v << ", ";
+        } 
+        std::cout << std::endl;
+    }
+
+    BOOST_CHECK_EQUAL(num, graph.num_vertices());
+
+};
+
 
 using graph = computational_dag_vector_impl_def_t;
 using VertexType = vertex_idx_t<graph>;

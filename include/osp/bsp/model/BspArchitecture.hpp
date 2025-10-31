@@ -651,6 +651,14 @@ class BspArchitecture {
         }
     }
 
+    std::vector<std::vector<unsigned>> getProcessorIdsByType() const {
+        std::vector<std::vector<unsigned>> processor_ids_by_type(number_of_processor_types);
+        for (unsigned i = 0; i < numberOfProcessors(); ++i) {
+            processor_ids_by_type[processorType(i)].push_back(i);
+        }
+        return processor_ids_by_type;
+    }
+
     inline unsigned getNumberOfProcessorTypes() const { return number_of_processor_types; };
 
     inline MEMORY_CONSTRAINT_TYPE getMemoryConstraintType() const { return memory_const_type; }

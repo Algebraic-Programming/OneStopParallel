@@ -35,6 +35,7 @@ namespace osp {
 struct SubgraphSchedule {
     double makespan;
     std::vector<std::vector<unsigned>> node_assigned_worker_per_type;   
+    std::vector<bool> was_trimmed;
 };
 
 template<typename Graph_t>
@@ -43,14 +44,14 @@ public:
     
     EftSubgraphScheduler() = default;
 
-    SubgraphSchedule run(const BspInstance<Graph_t>& instance, const std::vector<unsigned>& multiplicities, const std::vector<std::vector<v_workw_t<Graph_t>>> & required_proc_types) {
-        prepare_for_scheduling(instance, multiplicities, required_proc_types);
+    SubgraphSchedule run(const BspInstance<Graph_t>& instance, const std::vector<unsigned>& multiplicities, const std::vector<std::vector<v_workw_t<Graph_t>>> & required_proc_types, const std::vector<unsigned>& max_num_procs) {
+        prepare_for_scheduling(instance, multiplicities, required_proc_types, max_num_procs);
         return execute_schedule(instance);
     }
 
 private:
 
-    static constexpr bool verbose = false;
+    static constexpr bool verbose = true;
 
     using job_id_t = vertex_idx_t<Graph_t>;
 
@@ -68,6 +69,7 @@ private:
         std::vector<v_workw_t<Graph_t>> required_proc_types;
         v_workw_t<Graph_t> total_work;
         unsigned multiplicity = 1;
+        unsigned max_num_procs = 1;
 
         job_id_t in_degree_current = 0;
         
@@ -94,7 +96,7 @@ private:
     std::vector<Job> jobs_;
     std::set<const Job*, JobPtrCompare> ready_jobs_;
 
-    void prepare_for_scheduling(const BspInstance<Graph_t>& instance, const std::vector<unsigned>& multiplicities, const std::vector<std::vector<v_workw_t<Graph_t>>> & required_proc_types) {        
+    void prepare_for_scheduling(const BspInstance<Graph_t>& instance, const std::vector<unsigned>& multiplicities, const std::vector<std::vector<v_workw_t<Graph_t>>> & required_proc_types, const std::vector<unsigned>& max_num_procs) {        
         jobs_.resize(instance.numberOfVertices());
         if constexpr (verbose) {
             std::cout << "--- Preparing for Subgraph Scheduling ---" << std::endl;
@@ -116,6 +118,7 @@ private:
                 job.status = JobStatus::WAITING;
             }
             job.multiplicity = multiplicities[idx];
+            job.max_num_procs = max_num_procs[idx];
             job.required_proc_types = required_proc_types[idx];           
             job.assigned_workers.resize(num_worker_types, 0);
             job.total_work = graph.vertex_work_weight(idx);
@@ -123,7 +126,7 @@ private:
             job.finish_time = -1.0;
 
             if constexpr (verbose) {
-                std::cout << "  - Job " << idx << ": rank=" << job.upward_rank << ", mult=" << job.multiplicity 
+                std::cout << "  - Job " << idx << ": rank=" << job.upward_rank << ", mult=" << job.multiplicity << ", max_procs=" << job.max_num_procs
                           << ", work=" << job.total_work << ", status=" << (job.status == JobStatus::READY ? "READY" : "WAITING") << std::endl;
             }
             idx++;
@@ -208,11 +211,15 @@ private:
                     Job& job = *job_ptr;
                     for (size_t type_idx = 0; type_idx < num_worker_types; ++type_idx) {
                         if (job.required_proc_types[type_idx] > 0) {
+                            const unsigned current_total_assigned = std::accumulate(job.assigned_workers.begin(), job.assigned_workers.end(), 0u);
+                            const unsigned max_additional_workers = (job.max_num_procs > current_total_assigned) ? (job.max_num_procs - current_total_assigned) : 0;
+
                             const double proportion = (total_runnable_priority > 0) ? (job.upward_rank / total_runnable_priority) : (1.0 / static_cast<double>(jobs_to_start.size()));
                             const unsigned proportional_share = static_cast<unsigned>(static_cast<double>(remaining_workers_pool[type_idx]) * proportion);
-                            const unsigned num_additional_chunks = (job.multiplicity > 0) ? proportional_share / job.multiplicity : 0;
+                            const unsigned num_proportional_chunks = (job.multiplicity > 0) ? proportional_share / job.multiplicity : 0;
                             const unsigned num_available_chunks = (job.multiplicity > 0) ? available_workers[type_idx] / job.multiplicity : 0;
-                            const unsigned num_chunks_to_assign = std::min(num_additional_chunks, num_available_chunks);
+                            const unsigned num_chunks_allowed_by_max = (job.multiplicity > 0) ? max_additional_workers / job.multiplicity : 0;
+                            const unsigned num_chunks_to_assign = std::min({num_proportional_chunks, num_available_chunks, num_chunks_allowed_by_max});
                             const unsigned assigned = num_chunks_to_assign * job.multiplicity;
                             job.assigned_workers[type_idx] += assigned;
                             available_workers[type_idx] -= assigned;
@@ -225,8 +232,11 @@ private:
                     Job& job = *job_ptr;
                     for (size_t type_idx = 0; type_idx < num_worker_types; ++type_idx) {
                         if (job.required_proc_types[type_idx] > 0 && job.multiplicity > 0) {
-                            unsigned num_additional_chunks = available_workers[type_idx] / job.multiplicity;
-                            unsigned assigned = num_additional_chunks * job.multiplicity;
+                            const unsigned current_total_assigned = std::accumulate(job.assigned_workers.begin(), job.assigned_workers.end(), 0u);
+                            const unsigned max_additional_workers = (job.max_num_procs > current_total_assigned) ? (job.max_num_procs - current_total_assigned) : 0;
+                            const unsigned num_available_chunks = available_workers[type_idx] / job.multiplicity;
+                            const unsigned num_chunks_allowed_by_max = max_additional_workers / job.multiplicity;
+                            const unsigned assigned = std::min(num_available_chunks, num_chunks_allowed_by_max) * job.multiplicity;
                             job.assigned_workers[type_idx] += assigned;
                             available_workers[type_idx] -= assigned;
                         }
@@ -318,7 +328,7 @@ private:
             std::cout << "Final Makespan: " << current_time << std::endl;
             std::cout << "Job Summary:" << std::endl;
             for(const auto& job : jobs_) {
-                std::cout << "  - Job " << job.id << ": Multiplicity=" << job.multiplicity <<  ", Start=" << job.start_time << ", Finish=" << job.finish_time << ", Workers=[";
+                std::cout << "  - Job " << job.id << ": Multiplicity=" << job.multiplicity << ", Max Procs=" << job.max_num_procs << ", Start=" << job.start_time << ", Finish=" << job.finish_time << ", Workers=[";
                 for(size_t i=0; i<job.assigned_workers.size(); ++i) {
                     std::cout << "T" << i << ":" << job.assigned_workers[i] << (i == job.assigned_workers.size()-1 ? "" : ", ");
                 }
@@ -334,8 +344,7 @@ private:
             for (size_t i = 0; i < num_worker_types; ++i) {
                 result.node_assigned_worker_per_type[job.id][i] = job.assigned_workers[i] / job.multiplicity;
             }
-        }
-
+        } 
         return result;
     }
 };

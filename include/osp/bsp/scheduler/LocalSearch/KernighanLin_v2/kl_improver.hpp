@@ -1067,9 +1067,8 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
         return improveSchedule(schedule);
     }
 
-    void set_compute_with_time_limit(bool compute_with_time_limit_) {
-        compute_with_time_limit = compute_with_time_limit_;
-    }
+    virtual void setTimeQualityParameter(const double time_quality) { this->parameters.time_quality = time_quality; }
+    virtual void setSuperstepRemoveStrengthParameter(const double superstep_remove_strength) { this->parameters.superstep_remove_strength = superstep_remove_strength; }
 
     virtual std::string getScheduleName() const {
         return "kl_improver_" + comm_cost_f.name();
