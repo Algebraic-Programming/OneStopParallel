@@ -82,7 +82,7 @@ class Serial : public Scheduler<Graph_t> {
 
         for (v_type_t<Graph_t> type = 0; type < num_node_types; ++type) {
             for (const auto &p : chosen_procs) {
-                if (instance.isCompatibleType(type, p)) {
+                if (instance.isCompatibleType(type, instance.processorType(p))) {
                     node_type_compatible_processors[type].push_back(p);
                 }
             }
