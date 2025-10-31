@@ -24,17 +24,33 @@ limitations under the License.
 #include <stdexcept> 
 #include "osp/concepts/computational_dag_concept.hpp"
 #include "osp/graph_algorithms/directed_graph_top_sort.hpp"
+#include "osp/graph_algorithms/directed_graph_util.hpp"
 #include "osp/auxiliary/hash_util.hpp"
+#include "osp/dag_divider/isomorphism_divider/HashComputer.hpp" 
+
 
 namespace osp {
 
+/** 
+ * @brief Computes Merkle hashes for graph vertices to identify isomorphic orbits.
+ *
+ * The Merkle hash of a vertex is computed recursively based on its own properties
+ * and the sorted hashes of its parents (or children, depending on the `forward` template parameter).
+ * This allows for the identification of structurally isomorphic subgraphs.
+ *
+ * @tparam Graph_t The type of the graph, must satisfy the `directed_graph` concept.
+ * @tparam node_hash_func_t A functor that computes a hash for a single node.
+ *                          Defaults to `uniform_node_hash_func`.
+ * @tparam forward If true, hashes are computed based on parents (top-down).
+ *                 If false, hashes are computed based on children (bottom-up).
+ */
 template<typename Graph_t, typename node_hash_func_t = uniform_node_hash_func<vertex_idx_t<Graph_t>>, bool forward = true>
-class MerkleHashComputer {
+class MerkleHashComputer : public HashComputer<vertex_idx_t<Graph_t>> {
 
     static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
     static_assert(std::is_invocable_r<std::size_t, node_hash_func_t, vertex_idx_t<Graph_t>>::value, "node_hash_func_t must be invocable with one vertex_idx_t<Graph_t> argument and return std::size_t.");
 
-    using VertexType = vertex_idx_t<Graph_t>;
+    using VertexType = vertex_idx_t<Graph_t>; 
 
     std::vector<std::size_t> vertex_hashes;
     std::unordered_map<std::size_t, std::vector<VertexType>> orbits;
@@ -92,38 +108,25 @@ class MerkleHashComputer {
   public:   
 
     template<typename... Args>
-    MerkleHashComputer(const Graph_t &graph, Args &&...args) : node_hash_func(std::forward<Args>(args)...) {
+    MerkleHashComputer(const Graph_t &graph, Args &&...args) : HashComputer<VertexType>(), node_hash_func(std::forward<Args>(args)...) {
         compute_hashes(graph);        
     }
 
-    virtual ~MerkleHashComputer() = default;
+    virtual ~MerkleHashComputer() override = default;
 
-    inline std::size_t get_vertex_hash(const VertexType &v) const { return vertex_hashes[v]; }
-    inline const std::vector<std::size_t> &get_vertex_hashes() const { return vertex_hashes; }
-    inline std::size_t num_orbits() const { return orbits.size(); }
+    inline std::size_t get_vertex_hash(const VertexType &v) const override { return vertex_hashes[v]; }
+    inline const std::vector<std::size_t> &get_vertex_hashes() const override { return vertex_hashes; }
+    inline std::size_t num_orbits() const override { return orbits.size(); }
     
-    inline const std::vector<VertexType> &get_orbit(const VertexType &v) const { return get_orbit_from_hash(get_vertex_hash(v)); }
-    inline const std::unordered_map<std::size_t, std::vector<VertexType>> &get_orbits() const { return orbits; }
+    inline const std::vector<VertexType> &get_orbit(const VertexType &v) const override { return this->get_orbit_from_hash(this->get_vertex_hash(v)); }
+    inline const std::unordered_map<std::size_t, std::vector<VertexType>> &get_orbits() const override { return orbits; }
 
-    inline const std::vector<VertexType>& get_orbit_from_hash(const std::size_t& hash) const {
+    inline const std::vector<VertexType>& get_orbit_from_hash(const std::size_t& hash) const override {
         return orbits.at(hash);
     }
 };
 
-/**
- * @brief Tests if two graphs are isomorphic based on their Merkle hashes.
- *
- * This function provides a strong heuristic for isomorphism. It is fast but not a
- * definitive proof. The direction of the hash (forward or backward) and the 
- * node-level hash function can be customized via template parameters.
- *
- * @tparam Graph_t The graph type, which must be a directed graph.
- * @tparam node_hash_func_t The function object type to use for hashing individual nodes.
- * @tparam Forward If true, computes a forward (top-down) hash; if false, a backward (bottom-up) hash.
- * @param g1 The first graph.
- * @param g2 The second graph.
- * @return True if the graphs are likely isomorphic based on Merkle hashes, false otherwise.
- */
+
 template<typename Graph_t, typename node_hash_func_t = uniform_node_hash_func<vertex_idx_t<Graph_t>>, bool Forward = true>
 bool are_isomorphic_by_merkle_hash(const Graph_t& g1, const Graph_t& g2) {
     // Basic check: Different numbers of vertices or edges mean they can't be isomorphic.
@@ -158,10 +161,20 @@ bool are_isomorphic_by_merkle_hash(const Graph_t& g1, const Graph_t& g2) {
 
 template<typename Graph_t>
 struct bwd_merkle_node_hash_func {
-
     MerkleHashComputer<Graph_t, uniform_node_hash_func<vertex_idx_t<Graph_t>>, false> bw_merkle_hash;
+    
+    bwd_merkle_node_hash_func(const Graph_t & graph) : bw_merkle_hash(graph) { }
 
-    bwd_merkle_node_hash_func(const Graph_t & graph) : bw_merkle_hash(graph) {}
+    std::size_t operator()(const vertex_idx_t<Graph_t> & v) const {
+        return bw_merkle_hash.get_vertex_hash(v);
+    }
+};
+
+template<typename Graph_t>
+struct precom_bwd_merkle_node_hash_func {
+    MerkleHashComputer<Graph_t, vector_node_hash_func<vertex_idx_t<Graph_t>>, false> bw_merkle_hash;
+    
+    precom_bwd_merkle_node_hash_func(const Graph_t & graph, const std::vector<std::size_t>& node_hashes) : bw_merkle_hash(graph, node_hashes) { }
 
     std::size_t operator()(const vertex_idx_t<Graph_t> & v) const {
         return bw_merkle_hash.get_vertex_hash(v);

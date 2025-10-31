@@ -99,7 +99,8 @@ class kl_improver_mt : public kl_improver<Graph_t, comm_cost_function_t, MemoryC
 
   public:
   
-  kl_improver_mt() : kl_improver<Graph_t, comm_cost_function_t, MemoryConstraint_t, window_size, cost_t>() { }
+    kl_improver_mt() : kl_improver<Graph_t, comm_cost_function_t, MemoryConstraint_t, window_size, cost_t>() {}
+    explicit kl_improver_mt(unsigned seed) : kl_improver<Graph_t, comm_cost_function_t, MemoryConstraint_t, window_size, cost_t>(seed) {}
     virtual ~kl_improver_mt() = default;
 
     void set_max_num_threads(const unsigned num_threads) {

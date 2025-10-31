@@ -28,6 +28,15 @@ struct uniform_node_hash_func {
     result_type operator()(const VertexType& ) { return defautlVal; }
 };
 
+
+template<typename VertexType>
+struct vector_node_hash_func {
+    const std::vector<std::size_t>& node_hashes_;
+    vector_node_hash_func(const std::vector<std::size_t>& node_hashes) : node_hashes_(node_hashes) {}
+    using result_type = std::size_t;
+    result_type operator()(const VertexType& v) const { return node_hashes_[v]; }
+};
+
 template<class T>
 void hash_combine(std::size_t &seed, const T &v) {
     std::hash<T> hasher;
