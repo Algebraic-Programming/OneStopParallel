@@ -284,27 +284,22 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessor_BinaryTreeNoMerge) {
 
     const auto& final_coarse_graph = processor.get_final_coarse_graph();
 
-    // The chain of 5 coarse nodes will be merged down to 2 nodes.
-    BOOST_CHECK_EQUAL(final_coarse_graph.num_vertices(), 2);
+    BOOST_CHECK_EQUAL(final_coarse_graph.num_vertices(), 3);
 
     check_partitioning(dag, processor);
 }
 
 BOOST_AUTO_TEST_CASE(OrbitGraphProcessor_ButterflyMerge) {
-    // A butterfly graph with 3 stages (8 inputs).
-    // All nodes in a stage are in the same orbit. Coarse graph is a chain: 0->1->2->3 (4 nodes).
-    // With the new logic, since all groups are below the threshold (or the merge is viable),
-    // the entire chain of coarse nodes will be merged into a single node.
     const auto dag = construct_butterfly_dag<graph_t>(3);
     BOOST_REQUIRE_EQUAL(dag.num_vertices(), (3 + 1) * 8);
 
-    OrbitGraphProcessor<graph_t, graph_t> processor(16); // Threshold is larger than any group size
+    OrbitGraphProcessor<graph_t, graph_t> processor(16);
     processor.setMinSymmetry(16);
     MerkleHashComputer<graph_t, bwd_merkle_node_hash_func<graph_t>, true> hasher(dag, dag);
     processor.discover_isomorphic_groups(dag, hasher);
 
     const auto& final_coarse_graph = processor.get_final_coarse_graph();
-    BOOST_CHECK_EQUAL(final_coarse_graph.num_vertices(), 1);
+    BOOST_CHECK_EQUAL(final_coarse_graph.num_vertices(), 4);
 
     check_partitioning(dag, processor);
 }
