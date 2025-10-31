@@ -52,7 +52,7 @@ class OrbitGraphProcessor {
 
     using VertexType = vertex_idx_t<Graph_t>;
 
-    static constexpr bool verbose = true;
+    static constexpr bool verbose = false;
 
     // Represents a group of isomorphic subgraphs, corresponding to a single node in a coarse graph.
     struct Group {

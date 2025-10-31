@@ -42,7 +42,7 @@ class TrimmedGroupScheduler : public Scheduler<Constr_Graph_t> {
     Scheduler<Constr_Graph_t> *sub_scheduler;
     unsigned min_non_zero_procs_;
 
-    static constexpr bool verbose = true;
+    static constexpr bool verbose = false;
 
   public:
     TrimmedGroupScheduler(Scheduler<Constr_Graph_t> &scheduler, unsigned min_non_zero_procs)
