@@ -31,6 +31,19 @@ limitations under the License.
 
 namespace osp {
 
+/** 
+ * @brief Computes Merkle hashes for graph vertices to identify isomorphic orbits.
+ *
+ * The Merkle hash of a vertex is computed recursively based on its own properties
+ * and the sorted hashes of its parents (or children, depending on the `forward` template parameter).
+ * This allows for the identification of structurally isomorphic subgraphs.
+ *
+ * @tparam Graph_t The type of the graph, must satisfy the `directed_graph` concept.
+ * @tparam node_hash_func_t A functor that computes a hash for a single node.
+ *                          Defaults to `uniform_node_hash_func`.
+ * @tparam forward If true, hashes are computed based on parents (top-down).
+ *                 If false, hashes are computed based on children (bottom-up).
+ */
 template<typename Graph_t, typename node_hash_func_t = uniform_node_hash_func<vertex_idx_t<Graph_t>>, bool forward = true>
 class MerkleHashComputer : public HashComputer<vertex_idx_t<Graph_t>> {
 

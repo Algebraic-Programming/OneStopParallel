@@ -23,6 +23,15 @@ limitations under the License.
 
 namespace osp {
 
+/**
+* @class HashComputer
+* @brief Abstract base class for computing and managing hash values and orbits for graph vertices.
+*
+* This class provides an interface for obtaining hash values for individual vertices,
+* the full list of vertex hashes, the number of unique orbits, and the vertices belonging to specific orbits.
+*
+* @tparam index_type The type used for indexing vertices in the graph.
+*/
 template<typename index_type>
 class HashComputer {
 public:

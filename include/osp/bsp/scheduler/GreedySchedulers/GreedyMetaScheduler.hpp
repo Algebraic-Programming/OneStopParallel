@@ -26,13 +26,23 @@ limitations under the License.
 
 namespace osp {
 
+
+/**
+ * @class GreedyMetaScheduler
+ * @brief The GreedyMetaScheduler class represents a meta-scheduler that selects the best schedule produced from a list of
+ * added schedulers.
+ *
+ * This class inherits from the Scheduler class and implements the computeSchedule() and getScheduleName() methods.
+ * The computeSchedule() method iterates through a list of schedulers, computes a schedule using each one,
+ * and returns the schedule with the minimum cost.
+ */
 template<typename Graph_t>
 class GreedyMetaScheduler : public Scheduler<Graph_t> {
 
     Serial<Graph_t> serial_scheduler_;
     std::vector<Scheduler<Graph_t>*> schedulers_;
 
-    static constexpr bool verbose = true;
+    static constexpr bool verbose = false;
 
   public:
     /**

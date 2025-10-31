@@ -31,6 +31,24 @@ limitations under the License.
 
 namespace osp {
 
+/** 
+ * @brief A scheduler that leverages isomorphic subgraphs to partition a DAG.
+ *
+ * @class IsomorphicSubgraphScheduler
+ *
+ * This scheduler first identifies isomorphic subgraphs within the input DAG using a hash-based approach.
+ * It then groups these isomorphic subgraphs into "orbits". Each orbit is treated as a single node in a
+ * coarser graph. The scheduler then uses an ETF-like approach to schedule these coarse nodes (orbits)
+ * onto available processors. Finally, the schedule for each orbit is "unrolled" back to the original
+ * DAG, assigning a partition ID to each original vertex.
+ *
+ * The scheduler supports trimming of isomorphic groups to better fit processor counts, and can
+ * dynamically switch between a standard BSP scheduler and a specialized TrimmedGroupScheduler
+ * for these trimmed groups.
+ *
+ * @tparam Graph_t The type of the input computational DAG.
+ * @tparam Constr_Graph_t The type of the constructable computational DAG used for internal representations.
+ */
 template<typename Graph_t, typename Constr_Graph_t>
 class IsomorphicSubgraphScheduler {
     static_assert(is_computational_dag_v<Graph_t>, "Graph must be a computational DAG");

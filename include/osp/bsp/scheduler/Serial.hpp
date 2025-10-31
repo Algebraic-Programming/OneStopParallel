@@ -25,6 +25,12 @@ limitations under the License.
 #include <string>
 namespace osp {
 
+/**
+ * @class Serial
+ * @brief The Serial class represents a scheduler that assigns all tasks to a single processor in a serial manner. 
+ * If the architecture is heterogeneous, it assigns tasks to one processor of each type computing a schedule with the smallest number of supersteps.
+ * 
+ */
 template<typename Graph_t>
 class Serial : public Scheduler<Graph_t> {
 

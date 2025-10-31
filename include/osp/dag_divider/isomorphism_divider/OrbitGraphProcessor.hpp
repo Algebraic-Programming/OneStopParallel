@@ -304,12 +304,6 @@ class OrbitGraphProcessor {
                                 << temp_coarse_graph.num_vertices() << " nodes.\n";
                     }
 
-                    // No checks are performed in this function, so we commit directly.
-                    if constexpr (verbose) {
-                        std::cout << "  - Merging " << v << " into " << u << ". New coarse graph has "
-                                  << temp_coarse_graph.num_vertices() << " nodes.\n";
-                    }
-
                     commit_merge(u, v, std::move(temp_coarse_graph), temp_contraction_map, std::move(new_subgraphs),
                                  current_coarse_graph, current_groups, current_contraction_map);
 

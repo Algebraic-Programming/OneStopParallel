@@ -30,7 +30,6 @@ namespace osp {
  * @brief A scheduler for a single trimmed group, which consists of multiple isomorphic connected components.
  *
  * @class TrimmedGroupScheduler
- * @brief A scheduler for a single trimmed group, which consists of multiple isomorphic connected components.
  *
  * This scheduler functions similarly to the ConnectedComponentScheduler but is tailored for a single,
  * potentially disconnected, subgraph that resulted from merging smaller isomorphic subgraphs. It divides
