@@ -71,6 +71,17 @@ class Serial : public Scheduler<Graph_t> {
             return RETURN_STATUS::ERROR;
         }
 
+        const unsigned num_node_types = dag.num_vertex_types();
+        std::vector<std::vector<unsigned>> node_type_compatible_processors(num_node_types);
+
+        for (v_type_t<Graph_t> type = 0; type < num_node_types; ++type) {
+            for (const auto &p : chosen_procs) {
+                if (instance.isCompatibleType(type, p)) {
+                    node_type_compatible_processors[type].push_back(p);
+                }
+            }
+        }
+
         std::vector<vertex_idx_t<Graph_t>> in_degree(num_vertices);
         std::deque<vertex_idx_t<Graph_t>> ready_nodes;
         std::deque<vertex_idx_t<Graph_t>> deferred_nodes;
@@ -93,25 +104,29 @@ class Serial : public Scheduler<Graph_t> {
                 ready_nodes.pop_front();
 
                 bool scheduled = false;
-                for (const auto &p : chosen_procs) {
-                    if (instance.isCompatible(v, p)) {
-                        bool parents_compatible = true;
-                        for (const auto &parent : dag.parents(v)) {
-                            if (schedule.assignedSuperstep(parent) == current_superstep &&
-                                schedule.assignedProcessor(parent) != p) {
-                                parents_compatible = false;
-                                break;
-                            }
-                        }
 
-                        if (parents_compatible) {
-                            schedule.setAssignedProcessor(v, p);
-                            schedule.setAssignedSuperstep(v, current_superstep);
-                            scheduled = true;
-                            ++scheduled_nodes_count;
-                            break;                            
+                unsigned v_type = 0;
+                if constexpr (has_typed_vertices_v<Graph_t>) {
+                    v_type = dag.vertex_type(v);
+                }
+
+                for (const auto &p : node_type_compatible_processors[v_type]) {
+                    bool parents_compatible = true;
+                    for (const auto &parent : dag.parents(v)) {
+                        if (schedule.assignedSuperstep(parent) == current_superstep &&
+                            schedule.assignedProcessor(parent) != p) {
+                            parents_compatible = false;
+                            break;
                         }
                     }
+
+                    if (parents_compatible) {
+                        schedule.setAssignedProcessor(v, p);
+                        schedule.setAssignedSuperstep(v, current_superstep);
+                        scheduled = true;
+                        ++scheduled_nodes_count;
+                        break;                            
+                    }                    
                 }
 
                 if (not scheduled) {
