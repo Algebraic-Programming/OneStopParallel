@@ -52,7 +52,7 @@ class OrbitGraphProcessor {
 
     using VertexType = vertex_idx_t<Graph_t>;
 
-    static constexpr bool verbose = false;
+    static constexpr bool verbose = true;
 
     // Represents a group of isomorphic subgraphs, corresponding to a single node in a coarse graph.
     struct Group {
@@ -594,9 +594,54 @@ class OrbitGraphProcessor {
             }
             coarse_node_idx++;
         }
+    
+        std::map<size_t, size_t> orbit_size_counts;
+        std::map<size_t, v_workw_t<Graph_t>> work_per_orbit_size;
+        v_workw_t<Graph_t> total_work = 0;
+        for (const auto &[hash, vertices] : orbits) {
+            const size_t orbit_size = vertices.size();
+            orbit_size_counts[orbit_size]++;
+
+            v_workw_t<Graph_t> orbit_work = 0;
+            for (const auto v : vertices) {
+                orbit_work += dag.vertex_work_weight(v);
+            }
+            work_per_orbit_size[orbit_size] += orbit_work;
+            total_work += orbit_work;
+        }
+
+        std::vector<v_workw_t<Graph_t>> acc_work_per_orbit_size;
+        std::vector<double> rel_acc_work_per_orbit_size;
+        acc_work_per_orbit_size.reserve(orbit_size_counts.size());
+        rel_acc_work_per_orbit_size.reserve(orbit_size_counts.size());
+        v_workw_t<Graph_t> cumulative_work = 0;
+        for (auto it = work_per_orbit_size.rbegin(); it != work_per_orbit_size.rend(); ++it) {
+            cumulative_work += it->second;
+            acc_work_per_orbit_size.push_back(cumulative_work);
+            rel_acc_work_per_orbit_size.push_back(static_cast<double>(cumulative_work) / static_cast<double>(total_work));
+        }
+
+
+        if constexpr (verbose) {
+            std::cout << "\n--- 📊 Initial Orbit Analysis ---\n";
+            for (auto const& [size, count] : orbit_size_counts) {
+                std::cout << "  - Orbits of size " << size << ": " << count << " groups\n";
+            }
+            std::cout << "  Cumulative work distribution by orbit size (largest to smallest):\n";
+            size_t i = 0;
+            for (auto it = orbit_size_counts.rbegin(); it != orbit_size_counts.rend(); ++it, ++i) {
+                std::cout << "    - Orbits with size >= " << it->first << ": "
+                          << std::fixed << std::setprecision(2) << rel_acc_work_per_orbit_size[i] * 100 << "%\n";
+            }
+            std::cout << "--------------------------------\n";
+            
+        }       
+
 
         coarser_util::construct_coarse_dag(dag, coarse_graph_, contraction_map_);
         perform_coarsening_adaptive_symmetry(dag, coarse_graph_);
+
+
     }
 
   private:
