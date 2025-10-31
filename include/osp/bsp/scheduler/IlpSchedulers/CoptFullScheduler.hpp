@@ -438,17 +438,20 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
                         }
                     }
                 }
-
-                for(unsigned step = 0; step < max_number_supersteps; step++){
-                    if(step < first_at[node][p1])
-                        model.SetMipStart(comm_processor_to_processor_superstep_node_var[p1][p1][step]
-                                                                                        [static_cast<int>(node)], 1);
-                    else
-                        model.SetMipStart(comm_processor_to_processor_superstep_node_var[p1][p1][step]
-                                                                                        [static_cast<int>(node)], 0); 
-                }
             }
         }
+
+        for (const auto &node : DAG.vertices())
+            for (unsigned proc = 0; proc < num_processors; proc++)
+                for(unsigned step = 0; step < max_number_supersteps; step++)
+                {
+                    if(step >= first_at[node][proc])
+                        model.SetMipStart(comm_processor_to_processor_superstep_node_var[proc][proc][step]
+                                                                                        [static_cast<int>(node)], 1);
+                    else
+                        model.SetMipStart(comm_processor_to_processor_superstep_node_var[proc][proc][step]
+                                                                                        [static_cast<int>(node)], 0); 
+                }
 
         for (const auto &node : DAG.vertices()) {            
 
