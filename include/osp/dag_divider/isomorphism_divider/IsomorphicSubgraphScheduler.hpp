@@ -381,8 +381,7 @@ class IsomorphicSubgraphScheduler {
                 }
             }
 
-            // If min_non_zero_procs is still std::numeric_limits<unsigned>::max(), it means no processors
-            // were assigned to any type (all counts were 0). In this case, min_non_zero_procs > 1 will be false.
+
             bool use_trimmed_scheduler = sub_sched.was_trimmed[group_idx] && min_non_zero_procs > 1 && allow_use_trimmed_scheduler;
  
             Scheduler<Constr_Graph_t>* scheduler_for_group_ptr;
