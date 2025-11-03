@@ -112,7 +112,7 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
                   const std::map<KeyTriple, unsigned int> &comm_)
         : BspSchedule<Graph_t>(inst, processor_assignment_, superstep_assignment_), commSchedule(comm_) {}
 
-    BspScheduleCS(BspSchedule<Graph_t> &&schedule) : BspSchedule<Graph_t>(std::move(schedule)) {
+    explicit BspScheduleCS(BspSchedule<Graph_t> &&schedule) : BspSchedule<Graph_t>(std::move(schedule)) {
         setAutoCommunicationSchedule();
     }
 
@@ -124,7 +124,7 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
         comm_.clear();
     }
 
-    BspScheduleCS(const BspSchedule<Graph_t> &schedule) : BspSchedule<Graph_t>(schedule) {
+    explicit BspScheduleCS(const BspSchedule<Graph_t> &schedule) : BspSchedule<Graph_t>(schedule) {
         setAutoCommunicationSchedule();
     }
 
