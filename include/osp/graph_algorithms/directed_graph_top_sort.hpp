@@ -23,7 +23,7 @@ limitations under the License.
 #include <random>
 #include <vector>
 
-#include "osp/auxiliary/math_helper.hpp"
+#include "osp/auxiliary/math/math_helper.hpp"
 #include "osp/auxiliary/misc.hpp"
 #include "osp/concepts/directed_graph_concept.hpp"
 #include "directed_graph_util.hpp"

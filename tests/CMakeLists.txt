@@ -93,6 +93,8 @@ _add_test( pebbling_schedule_class )
 ## auxiliary
 _add_test( intpower )
 
+_add_test( divisors )
+
 _add_test( uf_structures )
 
 _add_test( set_operations )
