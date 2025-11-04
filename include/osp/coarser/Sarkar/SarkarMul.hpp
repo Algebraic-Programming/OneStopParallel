@@ -242,24 +242,23 @@ RETURN_STATUS SarkarMul<Graph_t, Graph_t_coarse>::run_contractions() {
         status = std::max(status, run_contractions(commCost));
     }
 
-    if constexpr (has_typed_vertices_v<Graph_t>) {
-        if (ml_params.use_buffer_merge) {
-            unsigned no_change = 0;
+    if (ml_params.use_buffer_merge) {
+        unsigned no_change = 0;
 
-            while (no_change < ml_params.max_num_iteration_without_changes) {
-                params.mode = thue_coin.get_flip()? SarkarParams::Mode::FAN_IN_BUFFER : SarkarParams::Mode::FAN_OUT_BUFFER;
-                updateParams();
+        while (no_change < ml_params.max_num_iteration_without_changes) {
+            params.mode = SarkarParams::Mode::HOMOGENEOUS_BUFFER;
+            // params.mode = thue_coin.get_flip()? SarkarParams::Mode::FAN_IN_BUFFER : SarkarParams::Mode::FAN_OUT_BUFFER;
+            updateParams();
 
-                status = std::max(status, run_single_contraction_mode(diff));
+            status = std::max(status, run_single_contraction_mode(diff));
 
-                if (diff > 0) {
-                    no_change = 0;
-                } else {
-                    no_change++;
-                }
-
-                status = std::max(status, run_contractions( ml_params.commCostVec.back() ));        
+            if (diff > 0) {
+                no_change = 0;
+            } else {
+                no_change++;
             }
+
+            status = std::max(status, run_contractions( ml_params.commCostVec.back() ));        
         }
     }
 
