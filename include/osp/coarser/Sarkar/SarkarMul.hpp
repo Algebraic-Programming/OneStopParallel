@@ -26,7 +26,7 @@ namespace osp {
 
 namespace SarkarParams {
 
-enum class BufferMergeMode { OFF, FAN_IN, FAN_OUT, HOMOGENEOUS, MIX };
+enum class BufferMergeMode { OFF, FAN_IN, FAN_OUT, HOMOGENEOUS, FULL };
 
 template<typename commCostType>
 struct MulParameters {
@@ -239,55 +239,35 @@ RETURN_STATUS SarkarMul<Graph_t, Graph_t_coarse>::run_buffer_merges() {
     RETURN_STATUS status = RETURN_STATUS::OSP_SUCCESS;
 
     unsigned no_change = 0;
-    while (no_change < ml_params.max_num_iteration_without_changes) {
-        switch (ml_params.buffer_merge_mode)
-        {
-            case SarkarParams::BufferMergeMode::FAN_IN:
-                {
-                    params.mode = SarkarParams::Mode::FAN_IN_BUFFER;
-                }
-                break;
-
-            case SarkarParams::BufferMergeMode::FAN_OUT:
-                {
-                    params.mode = SarkarParams::Mode::FAN_OUT_BUFFER;
-                }
-                break;
-
-            case SarkarParams::BufferMergeMode::HOMOGENEOUS:
-                {
-                    params.mode = SarkarParams::Mode::HOMOGENEOUS_BUFFER;
-                }
-                break;
-
-            case SarkarParams::BufferMergeMode::MIX:
-                {
-                    if (thue_coin.get_flip()) {
-                        params.mode = SarkarParams::Mode::HOMOGENEOUS_BUFFER;
-                    } else {
-                        params.mode = thue_coin.get_flip() ? SarkarParams::Mode::FAN_IN_BUFFER : SarkarParams::Mode::FAN_OUT_BUFFER;
-                    }
-                }
-                break;
-
-            default:
-                {
-                    params.mode = SarkarParams::Mode::HOMOGENEOUS_BUFFER;
-                }
-                break;
-        }
-        updateParams();
-
+    while (no_change < ml_params.max_num_iteration_without_changes) {        
         vertex_idx_t<Graph_t> diff = 0;
-        status = std::max(status, run_single_contraction_mode(diff));
+        if ((ml_params.buffer_merge_mode == SarkarParams::BufferMergeMode::HOMOGENEOUS) || (ml_params.buffer_merge_mode == SarkarParams::BufferMergeMode::FULL && diff == 0)) {
+            params.mode = SarkarParams::Mode::HOMOGENEOUS_BUFFER;
+            updateParams();
+            status = std::max(status, run_single_contraction_mode(diff));
+        }
+        if (ml_params.buffer_merge_mode == SarkarParams::BufferMergeMode::FAN_IN) {
+            params.mode = SarkarParams::Mode::FAN_IN_BUFFER;
+            updateParams();
+            status = std::max(status, run_single_contraction_mode(diff));
+        }
+        if (ml_params.buffer_merge_mode == SarkarParams::BufferMergeMode::FAN_OUT) {
+            params.mode = SarkarParams::Mode::FAN_OUT_BUFFER;
+            updateParams();
+            status = std::max(status, run_single_contraction_mode(diff));
+        }
+        if (ml_params.buffer_merge_mode == SarkarParams::BufferMergeMode::FULL && diff == 0) {
+            params.mode = thue_coin.get_flip() ? SarkarParams::Mode::FAN_IN_BUFFER : SarkarParams::Mode::FAN_OUT_BUFFER;
+            updateParams();
+            status = std::max(status, run_single_contraction_mode(diff));
+        }
 
         if (diff > 0) {
             no_change = 0;
+            status = std::max(status, run_contractions( ml_params.commCostVec.back() ));        
         } else {
             no_change++;
         }
-
-        status = std::max(status, run_contractions( ml_params.commCostVec.back() ));        
     }
 
     return status;

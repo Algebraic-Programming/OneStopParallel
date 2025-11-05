@@ -233,9 +233,9 @@ get_multilevel_coarser_by_name(const ConfigParser &, const boost::property_tree:
                 else if (mode_str == "FAN_IN") ml_params.buffer_merge_mode = SarkarParams::BufferMergeMode::FAN_IN;
                 else if (mode_str == "FAN_OUT") ml_params.buffer_merge_mode = SarkarParams::BufferMergeMode::FAN_OUT;
                 else if (mode_str == "HOMOGENEOUS") ml_params.buffer_merge_mode = SarkarParams::BufferMergeMode::HOMOGENEOUS;
-                else if (mode_str == "MIX") ml_params.buffer_merge_mode = SarkarParams::BufferMergeMode::MIX;
+                else if (mode_str == "FULL") ml_params.buffer_merge_mode = SarkarParams::BufferMergeMode::FULL;
                 else throw std::invalid_argument("Invalid Sarkar Buffer Merge mode: " + mode_str
-                    + "!\nChoose from: OFF, FAN_IN, FAN_OUT, HOMOGENEOUS, MIX.");
+                    + "!\nChoose from: OFF, FAN_IN, FAN_OUT, HOMOGENEOUS, FULL.");
             }
         }
 

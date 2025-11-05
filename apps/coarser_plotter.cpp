@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
     params.leniency = 0.005;
     params.maxWeight = 15000;
     params.smallWeightThreshold = 4000;
-    params.buffer_merge_mode = SarkarParams::BufferMergeMode::HOMOGENEOUS;
+    params.buffer_merge_mode = SarkarParams::BufferMergeMode::FULL;
 
     SarkarMul<Graph_t, Graph_t> coarser;
     coarser.setParameters(params);
