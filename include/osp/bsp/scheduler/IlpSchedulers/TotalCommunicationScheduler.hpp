@@ -76,7 +76,7 @@ class TotalCommunicationScheduler : public Scheduler<Graph_t> {
 
                         auto sched = constructBspScheduleFromCallback();
                         DotFileWriter sched_writer;
-                        sched_writer.write_dot(write_solutions_path_cb + "intmed_sol_" + solution_file_prefix_cb + "_" +
+                        sched_writer.write_schedule(write_solutions_path_cb + "intmed_sol_" + solution_file_prefix_cb + "_" +
                                                    std::to_string(counter) + "_schedule.dot",
                                                sched);
                         counter++;

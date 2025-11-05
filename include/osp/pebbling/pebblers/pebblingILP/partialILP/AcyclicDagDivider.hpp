@@ -151,7 +151,7 @@ std::vector<unsigned> AcyclicDagDivider<Graph_t>::computePartitioning(const BspI
                 partitioner.setNumberOfParts(2); // note - if set to more than 2, ILP is MUCH more inefficient
                 BspInstance partial_instance(dag, instance.getArchitecture(), instance.getNodeProcessorCompatibilityMatrix());
                 RETURN_STATUS status = partitioner.computePartitioning(partial_instance, ILP_assignment);
-                if(status == SUCCESS || status == RETURN_STATUS::BEST_FOUND)
+                if(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND)
                     ILPCost = getSplitCost(dag, ILP_assignment);
 
                 std::vector<unsigned> assignment = ILPCost < heuristicCost ? ILP_assignment : heuristic_assignment;

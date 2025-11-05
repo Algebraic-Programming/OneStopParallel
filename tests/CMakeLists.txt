@@ -60,13 +60,15 @@ _add_test( kl_util )
 
 _add_test( heaps )
 
-#_add_test( kl_mem_constr )
+_add_test( kl_mem_constr )
 
 _add_test( isomorphic_subgraph_scheduler )
 
-_add_test( merkle_hash_computer )
+_add_test( trimmed_group_scheduler )
 
-#_add_test( merkle_hash_divider )
+_add_test( isomorphism_mapper )
+
+_add_test( merkle_hash_computer )
 
 _add_test( orbit_graph_processor )
 
@@ -75,6 +77,11 @@ _add_test( eft_subgraph_scheduler )
 _add_test( wavefront_component_divider )
 
 _add_test( hill_climbing )
+
+# --- Standalone Debugging Executables ---
+add_executable(debug_merkle_divider debug_merkle_divider.cpp)
+target_link_libraries(debug_merkle_divider PRIVATE OneStopParallel ProjectExecutableFlags)
+
 
 ## bsp model
 _add_test( bsp_architecture )
@@ -89,6 +96,9 @@ _add_test( bsp_greedy_recomputer )
 
 ## pebbling model
 _add_test( pebbling_schedule_class )
+
+## partitioning model
+_add_test( hypergraph_and_partition )
 
 ## auxiliary
 _add_test( intpower )
@@ -119,6 +129,8 @@ _add_test( filereader DATA )
 if (COPT_FOUND)
 
 #_add_test( ilp_bsp_scheduler )
+
+#_add_test( ilp_hypergraph_partitioning )
 
 endif()
 

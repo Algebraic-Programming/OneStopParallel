@@ -976,7 +976,7 @@ BOOST_AUTO_TEST_CASE(kl_base_3) {
 
 
 // BOOST_AUTO_TEST_CASE(kl_total_comm_large_test_graphs) {
-//     std::vector<std::string> filenames_graph = large_test_graphs();
+//     std::vector<std::string> filenames_graph = large_spaa_graphs();
 //     using graph = computational_dag_edge_idx_vector_impl_def_int_t;
 
 //     // Getting root git directory
@@ -1057,7 +1057,7 @@ BOOST_AUTO_TEST_CASE(kl_base_3) {
 
 
 // BOOST_AUTO_TEST_CASE(kl_total_comm_large_test_graphs_mt) {
-//     std::vector<std::string> filenames_graph = large_test_graphs();
+//     std::vector<std::string> filenames_graph = large_spaa_graphs();
 //     using graph = computational_dag_edge_idx_vector_impl_def_int_t;
 
 //     // Getting root git directory

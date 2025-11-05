@@ -46,6 +46,7 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_SimpleChain)
 
     // 2. Setup Scheduler Inputs
     std::vector<unsigned> multiplicities = {1, 2, 1};
+    std::vector<unsigned> max_procs = {100, 100, 100};
     std::vector<std::vector<v_workw_t<graph_t>>> required_proc_types(3);
     
     // Node 0: work 100, mult 1. Needs type 0.
@@ -57,24 +58,17 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_SimpleChain)
 
     // 3. Run Scheduler
     EftSubgraphScheduler<graph_t> scheduler;
-    SubgraphSchedule schedule = scheduler.run(instance, multiplicities, required_proc_types);
+    SubgraphSchedule schedule = scheduler.run(instance, multiplicities, required_proc_types, max_procs);
 
     // 4. Assertions
     BOOST_CHECK_CLOSE(schedule.makespan, 250.0, 1e-9);
-
     BOOST_REQUIRE_EQUAL(schedule.node_assigned_worker_per_type.size(), 3);
-
-    // Job 0 should use 2 workers of type 0
     BOOST_REQUIRE_EQUAL(schedule.node_assigned_worker_per_type[0].size(), 2);
     BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[0][0], 2);
     BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[0][1], 0);
-
-    // Job 1 should use 2 workers of type 0 and 2 of type 1
     BOOST_REQUIRE_EQUAL(schedule.node_assigned_worker_per_type[1].size(), 2);
-    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[1][0], 2);
-    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[1][1], 2);
-
-    // Job 2 should use 2 workers of type 1
+    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[1][0], 1);
+    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[1][1], 1);
     BOOST_REQUIRE_EQUAL(schedule.node_assigned_worker_per_type[2].size(), 2);
     BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[2][0], 0);
     BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[2][1], 2);
@@ -104,6 +98,7 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ForkJoin)
 
     // 2. Setup Scheduler Inputs
     std::vector<unsigned> multiplicities = {1, 2, 1, 4};
+    std::vector<unsigned> max_procs = {100, 100, 100, 100};
     std::vector<std::vector<v_workw_t<graph_t>>> required_proc_types(4);
     
     // All nodes need type 0
@@ -114,7 +109,7 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ForkJoin)
 
     // 3. Run Scheduler
     EftSubgraphScheduler<graph_t> scheduler;
-    SubgraphSchedule schedule = scheduler.run(instance, multiplicities, required_proc_types);
+    SubgraphSchedule schedule = scheduler.run(instance, multiplicities, required_proc_types, max_procs);
 
     // 4. Assertions
     // Manual calculation:
@@ -132,22 +127,14 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ForkJoin)
     BOOST_CHECK_CLOSE(schedule.makespan, 200.0, 1e-9);
 
     BOOST_REQUIRE_EQUAL(schedule.node_assigned_worker_per_type.size(), 4);
-
-    // Job 0 should use 4 workers
     BOOST_REQUIRE_EQUAL(schedule.node_assigned_worker_per_type[0].size(), 1);
     BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[0][0], 4);
-
-    // Job 1 should use 2 workers
     BOOST_REQUIRE_EQUAL(schedule.node_assigned_worker_per_type[1].size(), 1);
-    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[1][0], 2);
-
-    // Job 2 should use 2 workers
+    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[1][0], 1);
     BOOST_REQUIRE_EQUAL(schedule.node_assigned_worker_per_type[2].size(), 1);
     BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[2][0], 2);
-
-    // Job 3 should use 4 workers
     BOOST_REQUIRE_EQUAL(schedule.node_assigned_worker_per_type[3].size(), 1);
-    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[3][0], 4);
+    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[3][0], 1);
 }
 
 BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_Deadlock)
@@ -168,12 +155,13 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_Deadlock)
     // 2. Setup Scheduler Inputs
     // Job needs 2 workers (multiplicity), but only 1 is available
     std::vector<unsigned> multiplicities = {2};
+    std::vector<unsigned> max_procs = {100};
     std::vector<std::vector<v_workw_t<graph_t>>> required_proc_types(1);
     required_proc_types[0] = {100};
 
     // 3. Run Scheduler
     EftSubgraphScheduler<graph_t> scheduler;
-    SubgraphSchedule schedule = scheduler.run(instance, multiplicities, required_proc_types);
+    SubgraphSchedule schedule = scheduler.run(instance, multiplicities, required_proc_types, max_procs);
 
     // 4. Assertions
     // Expect a deadlock, indicated by a negative makespan
@@ -208,6 +196,7 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ComplexDAG)
 
     // 2. Setup Scheduler Inputs
     std::vector<unsigned> multiplicities = {1, 2, 1, 4, 2, 1};
+    std::vector<unsigned> max_procs =      {100, 100, 100, 100, 100, 100};
     std::vector<std::vector<v_workw_t<graph_t>>> required_proc_types(6);
     required_proc_types[0] = {50, 0};   // Job 0: needs T0
     required_proc_types[1] = {100, 0};  // Job 1: needs T0
@@ -218,17 +207,17 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ComplexDAG)
 
     // 3. Run Scheduler
     EftSubgraphScheduler<graph_t> scheduler;
-    SubgraphSchedule schedule = scheduler.run(instance, multiplicities, required_proc_types);
+    SubgraphSchedule schedule = scheduler.run(instance, multiplicities, required_proc_types, max_procs);
 
     BOOST_CHECK_CLOSE(schedule.makespan, 105.0, 1e-9);
 
     BOOST_REQUIRE_EQUAL(schedule.node_assigned_worker_per_type.size(), 6);
     BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[0][0], 4);
-    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[1][0], 4);
+    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[1][0], 2);
     BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[2][1], 4);
-    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[3][0], 4);
-    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[3][1], 4);
-    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[4][1], 4);
+    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[3][0], 1);
+    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[3][1], 1);
+    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[4][1], 2);
     BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[5][0], 4);
 }
 
@@ -259,6 +248,7 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ResourceContention)
 
     // 2. Setup Scheduler Inputs
     std::vector<unsigned> multiplicities = {1, 2, 2, 2, 1};
+    std::vector<unsigned> max_procs = {100, 100, 100, 100, 100};
     std::vector<std::vector<v_workw_t<graph_t>>> required_proc_types(5);
     required_proc_types[0] = {10};
     required_proc_types[1] = {100};
@@ -268,7 +258,7 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ResourceContention)
 
     // 3. Run Scheduler
     EftSubgraphScheduler<graph_t> scheduler;
-    SubgraphSchedule schedule = scheduler.run(instance, multiplicities, required_proc_types);
+    SubgraphSchedule schedule = scheduler.run(instance, multiplicities, required_proc_types, max_procs);
 
     // 4. Assertions
     // Manual calculation:
@@ -284,15 +274,10 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ResourceContention)
     BOOST_CHECK_CLOSE(schedule.makespan, 55.0, 1e-9);
 
     BOOST_REQUIRE_EQUAL(schedule.node_assigned_worker_per_type.size(), 5);
-    // Job 0: 4 workers
     BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[0][0], 4);
-    // Job 1 (high rank): gets 2 workers
-    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[1][0], 2);
-    // Job 2 (mid rank): gets 2 workers
-    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[2][0], 2);
-    // Job 3 (low rank): has to wait, then gets 2 workers
-    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[3][0], 2);
-    // Job 4: gets 4 workers
+    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[1][0], 1);
+    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[2][0], 1);
+    BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[3][0], 1);
     BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[4][0], 4);
 }
 
@@ -317,6 +302,7 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ProportionalAllocation)
 
     // 2. Setup Scheduler Inputs
     std::vector<unsigned> multiplicities = {1, 1, 1};
+    std::vector<unsigned> max_procs = {100, 100, 100};
     std::vector<std::vector<v_workw_t<graph_t>>> required_proc_types(3);
     required_proc_types[0] = {10};
     required_proc_types[1] = {300};
@@ -324,7 +310,7 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ProportionalAllocation)
 
     // 3. Run Scheduler
     EftSubgraphScheduler<graph_t> scheduler;
-    SubgraphSchedule schedule = scheduler.run(instance, multiplicities, required_proc_types);
+    SubgraphSchedule schedule = scheduler.run(instance, multiplicities, required_proc_types, max_procs);
 
     // 4. Assertions
     // Manual calculation:
