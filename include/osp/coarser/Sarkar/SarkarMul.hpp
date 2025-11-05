@@ -26,6 +26,8 @@ namespace osp {
 
 namespace SarkarParams {
 
+enum class BufferMergeMode { OFF, FAN_IN, FAN_OUT, HOMOGENEOUS, MIX };
+
 template<typename commCostType>
 struct MulParameters {
     std::size_t seed{42U};
@@ -35,7 +37,7 @@ struct MulParameters {
     commCostType maxWeight{ std::numeric_limits<commCostType>::max() };
     commCostType smallWeightThreshold{ std::numeric_limits<commCostType>::lowest() };
     unsigned max_num_iteration_without_changes{3U};
-    bool use_buffer_merge{false};
+    BufferMergeMode buffer_merge_mode{BufferMergeMode::OFF};
 };
 } // end namespace SarkarParams
 
@@ -60,6 +62,7 @@ class SarkarMul : public MultilevelCoarser<Graph_t, Graph_t_coarse> {
         void updateParams();
         
         RETURN_STATUS run_single_contraction_mode(vertex_idx_t<Graph_t> &diff_vertices);
+        RETURN_STATUS run_buffer_merges();
         RETURN_STATUS run_contractions(v_workw_t<Graph_t> commCost);
         RETURN_STATUS run_contractions() override;
         
@@ -232,34 +235,77 @@ RETURN_STATUS SarkarMul<Graph_t, Graph_t_coarse>::run_contractions(v_workw_t<Gra
 
 
 template<typename Graph_t, typename Graph_t_coarse>
+RETURN_STATUS SarkarMul<Graph_t, Graph_t_coarse>::run_buffer_merges() {
+    RETURN_STATUS status = RETURN_STATUS::OSP_SUCCESS;
+
+    unsigned no_change = 0;
+    while (no_change < ml_params.max_num_iteration_without_changes) {
+        switch (ml_params.buffer_merge_mode)
+        {
+            case SarkarParams::BufferMergeMode::FAN_IN:
+                {
+                    params.mode = SarkarParams::Mode::FAN_IN_BUFFER;
+                }
+                break;
+
+            case SarkarParams::BufferMergeMode::FAN_OUT:
+                {
+                    params.mode = SarkarParams::Mode::FAN_OUT_BUFFER;
+                }
+                break;
+
+            case SarkarParams::BufferMergeMode::HOMOGENEOUS:
+                {
+                    params.mode = SarkarParams::Mode::HOMOGENEOUS_BUFFER;
+                }
+                break;
+
+            case SarkarParams::BufferMergeMode::MIX:
+                {
+                    if (thue_coin.get_flip()) {
+                        params.mode = SarkarParams::Mode::HOMOGENEOUS_BUFFER;
+                    } else {
+                        params.mode = thue_coin.get_flip() ? SarkarParams::Mode::FAN_IN_BUFFER : SarkarParams::Mode::FAN_OUT_BUFFER;
+                    }
+                }
+                break;
+
+            default:
+                {
+                    params.mode = SarkarParams::Mode::HOMOGENEOUS_BUFFER;
+                }
+                break;
+        }
+        updateParams();
+
+        vertex_idx_t<Graph_t> diff = 0;
+        status = std::max(status, run_single_contraction_mode(diff));
+
+        if (diff > 0) {
+            no_change = 0;
+        } else {
+            no_change++;
+        }
+
+        status = std::max(status, run_contractions( ml_params.commCostVec.back() ));        
+    }
+
+    return status;
+}
+
+
+template<typename Graph_t, typename Graph_t_coarse>
 RETURN_STATUS SarkarMul<Graph_t, Graph_t_coarse>::run_contractions() {
     initParams();
 
     RETURN_STATUS status = RETURN_STATUS::OSP_SUCCESS;
-    vertex_idx_t<Graph_t> diff = 0;
     
     for (const v_workw_t<Graph_t> commCost : ml_params.commCostVec) {
         status = std::max(status, run_contractions(commCost));
     }
 
-    if (ml_params.use_buffer_merge) {
-        unsigned no_change = 0;
-
-        while (no_change < ml_params.max_num_iteration_without_changes) {
-            params.mode = SarkarParams::Mode::HOMOGENEOUS_BUFFER;
-            // params.mode = thue_coin.get_flip()? SarkarParams::Mode::FAN_IN_BUFFER : SarkarParams::Mode::FAN_OUT_BUFFER;
-            updateParams();
-
-            status = std::max(status, run_single_contraction_mode(diff));
-
-            if (diff > 0) {
-                no_change = 0;
-            } else {
-                no_change++;
-            }
-
-            status = std::max(status, run_contractions( ml_params.commCostVec.back() ));        
-        }
+    if (ml_params.buffer_merge_mode != SarkarParams::BufferMergeMode::OFF) {
+        status = std::max(status, run_buffer_merges());
     }
 
     return status;

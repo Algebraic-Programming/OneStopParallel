@@ -148,7 +148,11 @@ get_coarser_by_name(const ConfigParser &, const boost::property_tree::ptree &coa
         if (auto params_opt = coarser_algorithm.get_child_optional("parameters")) {
             const auto &params_pt = params_opt.get();
             params.commCost = params_pt.get_optional<v_workw_t<Graph_t_in>>("commCost").value_or(params.commCost);
+            params.maxWeight = params_pt.get_optional<v_workw_t<Graph_t_in>>("maxWeight").value_or(params.maxWeight);
+            params.smallWeightThreshold = params_pt.get_optional<v_workw_t<Graph_t_in>>("smallWeightThreshold").value_or(params.smallWeightThreshold);
             params.useTopPoset = params_pt.get_optional<bool>("useTopPoset").value_or(params.useTopPoset);
+            params.geomDecay = params_pt.get_optional<double>("geomDecay").value_or(params.geomDecay);
+            params.leniency = params_pt.get_optional<double>("leniency").value_or(params.leniency);
 
             if (auto mode_str_opt = params_pt.get_optional<std::string>("mode")) {
                 const std::string &mode_str = mode_str_opt.get();
@@ -161,8 +165,9 @@ get_coarser_by_name(const ConfigParser &, const boost::property_tree::ptree &coa
                 else if (mode_str == "LEVEL_ODD") params.mode = SarkarParams::Mode::LEVEL_ODD;
                 else if (mode_str == "FAN_IN_BUFFER") params.mode = SarkarParams::Mode::FAN_IN_BUFFER;
                 else if (mode_str == "FAN_OUT_BUFFER") params.mode = SarkarParams::Mode::FAN_OUT_BUFFER;
+                else if (mode_str == "HOMOGENEOUS_BUFFER") params.mode = SarkarParams::Mode::HOMOGENEOUS_BUFFER;
                 else throw std::invalid_argument("Invalid Sarkar mode: " + mode_str
-                    + "!\nChoose from: LINES, FAN_IN_FULL, FAN_IN_PARTIAL, FAN_OUT_FULL, FAN_OUT_PARTIAL, LEVEL_EVEN, LEVEL_ODD, FAN_IN_BUFFER, FAN_OUT_BUFFER.");
+                    + "!\nChoose from: LINES, FAN_IN_FULL, FAN_IN_PARTIAL, FAN_OUT_FULL, FAN_OUT_PARTIAL, LEVEL_EVEN, LEVEL_ODD, FAN_IN_BUFFER, FAN_OUT_BUFFER, HOMOGENEOUS_BUFFER.");
             }
         }
         return std::make_unique<Sarkar<Graph_t_in, Graph_t_out>>(params);
@@ -216,11 +221,22 @@ get_multilevel_coarser_by_name(const ConfigParser &, const boost::property_tree:
             }
             ml_params.maxWeight =
                 params_pt.get_optional<v_workw_t<Graph_t_in>>("maxWeight").value_or(ml_params.maxWeight);
+            ml_params.smallWeightThreshold =
+                params_pt.get_optional<v_workw_t<Graph_t_in>>("smallWeightThreshold").value_or(ml_params.smallWeightThreshold);
             ml_params.max_num_iteration_without_changes =
                 params_pt.get_optional<unsigned>("max_num_iteration_without_changes")
                     .value_or(ml_params.max_num_iteration_without_changes);
-            ml_params.use_buffer_merge =
-                params_pt.get_optional<bool>("use_buffer_merge").value_or(ml_params.use_buffer_merge);
+
+            if (auto mode_str_opt = params_pt.get_optional<std::string>("buffer_merge_mode")) {
+                const std::string &mode_str = mode_str_opt.get();
+                if (mode_str == "OFF") ml_params.buffer_merge_mode = SarkarParams::BufferMergeMode::OFF;
+                else if (mode_str == "FAN_IN") ml_params.buffer_merge_mode = SarkarParams::BufferMergeMode::FAN_IN;
+                else if (mode_str == "FAN_OUT") ml_params.buffer_merge_mode = SarkarParams::BufferMergeMode::FAN_OUT;
+                else if (mode_str == "HOMOGENEOUS") ml_params.buffer_merge_mode = SarkarParams::BufferMergeMode::HOMOGENEOUS;
+                else if (mode_str == "MIX") ml_params.buffer_merge_mode = SarkarParams::BufferMergeMode::MIX;
+                else throw std::invalid_argument("Invalid Sarkar Buffer Merge mode: " + mode_str
+                    + "!\nChoose from: OFF, FAN_IN, FAN_OUT, HOMOGENEOUS, MIX.");
+            }
         }
 
         coarser->setParameters(ml_params);
