@@ -257,9 +257,16 @@ RETURN_STATUS SarkarMul<Graph_t, Graph_t_coarse>::run_buffer_merges() {
             status = std::max(status, run_single_contraction_mode(diff));
         }
         if (ml_params.buffer_merge_mode == SarkarParams::BufferMergeMode::FULL && diff == 0) {
-            params.mode = thue_coin.get_flip() ? SarkarParams::Mode::FAN_IN_BUFFER : SarkarParams::Mode::FAN_OUT_BUFFER;
+            const bool flip = thue_coin.get_flip();
+            params.mode = flip ? SarkarParams::Mode::FAN_IN_BUFFER : SarkarParams::Mode::FAN_OUT_BUFFER;
             updateParams();
             status = std::max(status, run_single_contraction_mode(diff));
+
+            if (diff == 0) {
+                params.mode = (!flip) ? SarkarParams::Mode::FAN_IN_BUFFER : SarkarParams::Mode::FAN_OUT_BUFFER;
+                updateParams();
+                status = std::max(status, run_single_contraction_mode(diff));
+            }
         }
 
         if (diff > 0) {
