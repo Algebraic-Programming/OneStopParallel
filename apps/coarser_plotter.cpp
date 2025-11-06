@@ -51,7 +51,9 @@ int main(int argc, char *argv[]) {
     params.commCostVec = std::vector<v_workw_t<Graph_t>>({1, 2, 5, 10, 20, 50, 100, 200, 500, 1000});
     params.max_num_iteration_without_changes = 3;
     params.leniency = 0.005;
-    // params.maxWeight = 15000;
+    params.maxWeight = 15000;
+    params.smallWeightThreshold = 4000;
+    params.buffer_merge_mode = SarkarParams::BufferMergeMode::FULL;
 
     SarkarMul<Graph_t, Graph_t> coarser;
     coarser.setParameters(params);

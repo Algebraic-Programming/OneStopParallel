@@ -25,7 +25,7 @@ limitations under the License.
 #include <type_traits>
 #include <vector>
 
-#include "osp/auxiliary/math_helper.hpp"
+#include "osp/auxiliary/math/math_helper.hpp"
 #include "osp/concepts/computational_dag_concept.hpp"
 #include "osp/concepts/directed_graph_edge_desc_concept.hpp"
 #include "osp/concepts/constructable_computational_dag_concept.hpp"

@@ -103,6 +103,8 @@ _add_test( hypergraph_and_partition )
 ## auxiliary
 _add_test( intpower )
 
+_add_test( divisors )
+
 _add_test( uf_structures )
 
 _add_test( set_operations )

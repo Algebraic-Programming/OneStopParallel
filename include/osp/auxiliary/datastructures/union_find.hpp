@@ -41,6 +41,9 @@ struct union_find_object {
         : name(name_), parent_index(parent_index_), weight(weight_), memory(memory_) {
         rank = 1;
     }
+
+    union_find_object(const union_find_object &other) = default;
+    union_find_object& operator=(const union_find_object &other) = default;
 };
 
 /// @brief Class to execute a union-find algorithm
@@ -387,6 +390,9 @@ class Union_Find_Universe {
                                  const std::vector<memw_t> &memories) {
         add_object(names, weights, memories);
     }
+
+    Union_Find_Universe(const Union_Find_Universe &other) = default;
+    Union_Find_Universe& operator=(const Union_Find_Universe &other) = default;
 };
 
 template<typename Graph_t>
