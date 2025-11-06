@@ -216,7 +216,7 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
                 return false;
 
             first_at[std::get<0>(key)][std::get<2>(key)] =
-                std::min(first_at[std::get<0>(key)][std::get<2>(key)], val + 1);
+                std::min(first_at[std::get<0>(key)][std::get<2>(key)], val + this->getStaleness());
         }
 
         for (auto const &[key, val] : cs) {

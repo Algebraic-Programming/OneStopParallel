@@ -67,38 +67,6 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
     std::vector<unsigned> node_to_processor_assignment;
     std::vector<unsigned> node_to_superstep_assignment;
 
-    template<unsigned staleness>
-    inline bool satisfies_precedence_constraints_staleness() const {
-
-        if (node_to_processor_assignment.size() != instance->numberOfVertices() ||
-            node_to_superstep_assignment.size() != instance->numberOfVertices()) {
-            return false;
-        }
-
-        for (const auto &v : instance->vertices()) {
-
-            if (node_to_superstep_assignment[v] >= number_of_supersteps) {
-                return false;
-            }
-
-            if (node_to_processor_assignment[v] >= instance->numberOfProcessors()) {
-                return false;
-            }
-
-            for (const auto &target : instance->getComputationalDag().children(v)) {
-
-                const unsigned different_processors =
-                    (node_to_processor_assignment[v] == node_to_processor_assignment[target]) ? 0u : staleness;
-
-                if (node_to_superstep_assignment[v] + different_processors > node_to_superstep_assignment[target]) {
-                    return false;
-                }
-            }
-        }
-
-        return true;
-    }
-
     void compute_lazy_communication_costs_helper(std::vector<std::vector<v_commw_t<Graph_t>>> & rec, std::vector<std::vector<v_commw_t<Graph_t>>> & send) const {
         for (const auto &node : instance->vertices()) {
 
@@ -580,9 +548,36 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
      *
      * @return True if the schedule satisfies the precedence constraints of the computational DAG, false otherwise.
      */
-    virtual bool satisfiesPrecedenceConstraints() const {
-        return satisfies_precedence_constraints_staleness<1>();
-    };
+    inline bool satisfiesPrecedenceConstraints() const {
+
+        if (node_to_processor_assignment.size() != instance->numberOfVertices() ||
+            node_to_superstep_assignment.size() != instance->numberOfVertices()) {
+            return false;
+        }
+
+        for (const auto &v : instance->vertices()) {
+
+            if (node_to_superstep_assignment[v] >= number_of_supersteps) {
+                return false;
+            }
+
+            if (node_to_processor_assignment[v] >= instance->numberOfProcessors()) {
+                return false;
+            }
+
+            for (const auto &target : instance->getComputationalDag().children(v)) {
+
+                const unsigned different_processors =
+                    (node_to_processor_assignment[v] == node_to_processor_assignment[target]) ? 0u : getStaleness();
+
+                if (node_to_superstep_assignment[v] + different_processors > node_to_superstep_assignment[target]) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
 
     bool satisfiesNodeTypeConstraints() const {
 
@@ -834,6 +829,8 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
 
         return num;
     }
+
+    unsigned virtual getStaleness() const { return 1; }
 };
 
 } // namespace osp
