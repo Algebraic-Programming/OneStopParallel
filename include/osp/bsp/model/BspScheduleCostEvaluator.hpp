@@ -86,30 +86,6 @@ class BspScheduleCostEvaluator {
         return max_comm_per_step;
     }
 
-    std::vector<v_workw_t<Graph_t>> compute_max_work_per_step_helper() const {
-        const unsigned number_of_supersteps = schedule.numberOfSupersteps();
-        std::vector<std::vector<v_workw_t<Graph_t>>> work = std::vector<std::vector<v_workw_t<Graph_t>>>(
-            number_of_supersteps, std::vector<v_workw_t<Graph_t>>(instance.numberOfProcessors(), 0));
-        for (const auto &node : instance.vertices()) {
-            work[schedule.assignedSuperstep(node)][schedule.assignedProcessor(node)] +=
-                instance.getComputationalDag().vertex_work_weight(node);
-        }
-
-        std::vector<v_workw_t<Graph_t>> max_work_per_step(number_of_supersteps, 0);
-        for (unsigned step = 0; step < number_of_supersteps; step++) {
-            v_workw_t<Graph_t> max_work = 0;
-            for (unsigned proc = 0; proc < instance.numberOfProcessors(); proc++) {
-                if (max_work < work[step][proc]) {
-                    max_work = work[step][proc];
-                }
-            }
-
-            max_work_per_step[step] = max_work;
-        }
-
-        return max_work_per_step;
-    }
-
   public:
     /**
      * @brief Construct a new Bsp Schedule Cost Evaluator object.
@@ -148,6 +124,35 @@ class BspScheduleCostEvaluator {
         }
 
         return costs;
+    }
+
+    /**
+     * @brief Computes the work costs for each superstep.
+     *
+     * @return The work cost per superstep.
+     */
+    std::vector<v_workw_t<Graph_t>> compute_max_work_per_step_helper() const {
+        const unsigned number_of_supersteps = schedule.numberOfSupersteps();
+        std::vector<std::vector<v_workw_t<Graph_t>>> work = std::vector<std::vector<v_workw_t<Graph_t>>>(
+            number_of_supersteps, std::vector<v_workw_t<Graph_t>>(instance.numberOfProcessors(), 0));
+        for (const auto &node : instance.vertices()) {
+            work[schedule.assignedSuperstep(node)][schedule.assignedProcessor(node)] +=
+                instance.getComputationalDag().vertex_work_weight(node);
+        }
+
+        std::vector<v_workw_t<Graph_t>> max_work_per_step(number_of_supersteps, 0);
+        for (unsigned step = 0; step < number_of_supersteps; step++) {
+            v_workw_t<Graph_t> max_work = 0;
+            for (unsigned proc = 0; proc < instance.numberOfProcessors(); proc++) {
+                if (max_work < work[step][proc]) {
+                    max_work = work[step][proc];
+                }
+            }
+
+            max_work_per_step[step] = max_work;
+        }
+
+        return max_work_per_step;
     }
 
     /**

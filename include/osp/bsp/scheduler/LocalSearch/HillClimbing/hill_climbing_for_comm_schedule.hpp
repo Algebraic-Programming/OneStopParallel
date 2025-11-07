@@ -19,6 +19,7 @@ limitations under the License.
 #pragma once
 
 #include "osp/bsp/model/BspScheduleCS.hpp"
+#include "osp/bsp/model/BspScheduleCostEvaluator.hpp"
 #include "osp/bsp/scheduler/Scheduler.hpp"
 #include "osp/graph_algorithms/directed_graph_top_sort.hpp"
 
@@ -50,6 +51,7 @@ class HillClimbingForCommSteps {
     std::vector<std::vector<typename std::list<std::pair<vertex_idx, unsigned>>::iterator>> commSchedSendListPointer;
     std::vector<std::vector<std::list<std::pair<vertex_idx, unsigned>>>> commSchedRecLists;
     std::vector<std::vector<typename std::list<std::pair<vertex_idx, unsigned>>::iterator>> commSchedRecListPointer;
+    std::vector<cost_type> minimum_cost_per_superstep;
     unsigned nextSupstep;
 
     // Create superstep lists (for convenience) for a BSP schedule
@@ -167,8 +169,8 @@ void HillClimbingForCommSteps<Graph_t>::Init() {
                 for (const vertex_idx &pred : G.parents(node))
                     if (schedule->assignedProcessor(pred) != schedule->assignedProcessor(node) &&
                         commSchedule[pred][schedule->assignedProcessor(node)] == UINT_MAX) {
-                            commSchedule[pred][schedule->assignedProcessor(node)] = step - 1;
-                            commBounds[pred][schedule->assignedProcessor(node)] = std::make_pair(schedule->assignedSuperstep(pred), step - 1);
+                            commSchedule[pred][schedule->assignedProcessor(node)] = step - schedule->getStaleness();
+                            commBounds[pred][schedule->assignedProcessor(node)] = std::make_pair(schedule->assignedSuperstep(pred), step - schedule->getStaleness());
                     }
 
     // overwrite with original comm schedule, wherever possible
@@ -210,6 +212,17 @@ void HillClimbingForCommSteps<Graph_t>::Init() {
             commCost[step][proc] = std::max(sent[step][proc], received[step][proc]);
             commCostPointer[step][proc] = commCostList[step].emplace(commCost[step][proc], proc).first;
         }
+
+    // set minimum cost - differs for BSP and MaxBSP
+    minimum_cost_per_superstep.clear();
+    if(schedule->getStaleness() == 1)
+        minimum_cost_per_superstep.resize(M-1, 0);
+    else
+    {
+        BspScheduleCostEvaluator<Graph_t> evaluator(*schedule);
+        minimum_cost_per_superstep = evaluator.compute_max_work_per_step_helper();
+        minimum_cost_per_superstep.erase(minimum_cost_per_superstep.begin());
+    }
 };
 
 // compute cost change incurred by a potential move
@@ -221,11 +234,12 @@ int HillClimbingForCommSteps<Graph_t>::moveCostChange(const vertex_idx node, con
 
     // Change at old place
     auto itr = commCostList[oldStep].rbegin();
-    cost_type oldMax = itr->first;
-    const cost_type maxSource =
+    cost_type oldMax = std::max(itr->first * schedule->getInstance().getArchitecture().communicationCosts()
+                                + schedule->getInstance().getArchitecture().synchronisationCosts(), minimum_cost_per_superstep[oldStep]);
+    cost_type maxSource =
         std::max(sent[oldStep][sourceProc] - schedule->getInstance().getComputationalDag().vertex_comm_weight(node) * schedule->getInstance().getArchitecture().sendCosts(sourceProc, p),
                  received[oldStep][sourceProc]);
-    const cost_type maxTarget = std::max(sent[oldStep][p],
+    cost_type maxTarget = std::max(sent[oldStep][p],
                                 received[oldStep][p] - schedule->getInstance().getComputationalDag().vertex_comm_weight(node) * schedule->getInstance().getArchitecture().sendCosts(sourceProc, p));
     cost_type maxOther = 0;
     for (; itr != commCostList[oldStep].rend(); ++itr)
@@ -234,19 +248,24 @@ int HillClimbingForCommSteps<Graph_t>::moveCostChange(const vertex_idx node, con
             break;
         }
 
-    cost_type newMax = std::max(std::max(maxSource, maxTarget), maxOther);
-    change += (static_cast<int>(newMax) - static_cast<int>(oldMax)) * static_cast<int>(schedule->getInstance().getArchitecture().communicationCosts());
-    if(newMax==0)
-        change -= static_cast<int>(schedule->getInstance().getArchitecture().synchronisationCosts());
+    cost_type newMax = std::max(std::max(maxSource, maxTarget), maxOther) * schedule->getInstance().getArchitecture().communicationCosts();
+    if(newMax > 0)
+        newMax += schedule->getInstance().getArchitecture().synchronisationCosts();
+    newMax = std::max(newMax, minimum_cost_per_superstep[oldStep]); 
+    change += static_cast<int>(newMax) - static_cast<int>(oldMax);
 
     // Change at new place
-    oldMax = commCostList[step].rbegin()->first;
-    newMax = std::max(
-        std::max(oldMax, sent[step][sourceProc] + schedule->getInstance().getComputationalDag().vertex_comm_weight(node) * schedule->getInstance().getArchitecture().sendCosts(sourceProc, p)),
-        received[step][p] + schedule->getInstance().getComputationalDag().vertex_comm_weight(node) * schedule->getInstance().getArchitecture().sendCosts(sourceProc, p));
-    change += (static_cast<int>(newMax) - static_cast<int>(oldMax)) * static_cast<int>(schedule->getInstance().getArchitecture().communicationCosts());
-    if(oldMax==0)
-        change += static_cast<int>(schedule->getInstance().getArchitecture().synchronisationCosts());
+    oldMax = commCostList[step].rbegin()->first * schedule->getInstance().getArchitecture().communicationCosts();
+    if(oldMax > 0)
+        oldMax += schedule->getInstance().getArchitecture().synchronisationCosts();
+    oldMax = std::max(oldMax, minimum_cost_per_superstep[step]);
+    maxSource = schedule->getInstance().getArchitecture().synchronisationCosts() + schedule->getInstance().getArchitecture().communicationCosts() *
+                (sent[step][sourceProc] + schedule->getInstance().getComputationalDag().vertex_comm_weight(node) * schedule->getInstance().getArchitecture().sendCosts(sourceProc, p));
+    maxTarget = schedule->getInstance().getArchitecture().synchronisationCosts() + schedule->getInstance().getArchitecture().communicationCosts() *
+                (received[step][p] + schedule->getInstance().getComputationalDag().vertex_comm_weight(node) * schedule->getInstance().getArchitecture().sendCosts(sourceProc, p));
+
+    newMax = std::max(std::max(oldMax, maxSource), maxTarget);
+    change += static_cast<int>(newMax) - static_cast<int>(oldMax);
 
     return change;
 };
