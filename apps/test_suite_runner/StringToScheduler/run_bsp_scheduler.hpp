@@ -242,6 +242,6 @@ RETURN_STATUS run_bsp_scheduler(const ConfigParser &parser, const boost::propert
         auto scheduler = get_base_bsp_scheduler_by_name<Graph_t>(parser, algorithm);
         return scheduler->computeSchedule(schedule);
     }
-};
+}
 
 } // namespace osp

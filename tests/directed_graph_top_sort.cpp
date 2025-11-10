@@ -60,14 +60,14 @@ computational_dag_vector_impl_def_t constr_graph_1() {
     graph.add_edge(v4, v8);
 
     return graph;
-};
+}
 
 BOOST_AUTO_TEST_CASE(test_util_1) {
 
     const computational_dag_vector_impl_def_t graph = constr_graph_1();
 
     // using vertex_idx = computational_dag_vector_impl_def_t::vertex_idx;
-};
+}
 
 BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 

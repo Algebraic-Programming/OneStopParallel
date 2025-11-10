@@ -66,7 +66,7 @@ bool compare_vectors(Eigen::VectorXd &v1, Eigen::VectorXd &v2) {
         }
     }
     return same;
-};
+}
 
 template<typename TargetObjectType>
 class BspSptrsvStatsModule : public IStatisticModule<TargetObjectType> {

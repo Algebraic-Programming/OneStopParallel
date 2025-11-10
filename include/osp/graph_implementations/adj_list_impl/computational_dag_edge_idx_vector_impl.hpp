@@ -123,7 +123,7 @@ class computational_dag_edge_idx_vector_impl {
         static_assert(is_computational_dag_v<Graph_t>, "Graph_t must satisfy the is_computation_dag concept");
 
         construct_computational_dag(other, *this);
-    };
+    }
 
     computational_dag_edge_idx_vector_impl &operator=(const computational_dag_edge_idx_vector_impl &other) = default;
 

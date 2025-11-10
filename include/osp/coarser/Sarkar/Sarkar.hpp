@@ -269,7 +269,7 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::singleContraction(v_wo
     }
 
     return counter;
-};
+}
 
 
 template<typename Graph_t_in, typename Graph_t_out>
@@ -397,7 +397,7 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::allChildrenContraction
     }
 
     return counter;
-};
+}
 
 
 
@@ -528,7 +528,7 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::allParentsContraction(
     }
 
     return counter;
-};
+}
 
 
 
@@ -613,7 +613,7 @@ std::vector<std::vector<vertex_idx_t<Graph_t_in>>> Sarkar<Graph_t_in, Graph_t_ou
     // std::cout << " Diff: " << diff << '\n';
 
     return expansionMap;
-};
+}
 
 
 
@@ -622,7 +622,7 @@ template<typename Graph_t_in, typename Graph_t_out>
 std::vector<std::vector<vertex_idx_t<Graph_t_in>>> Sarkar<Graph_t_in, Graph_t_out>::generate_vertex_expansion_map(const Graph_t_in &dag_in) {
     vertex_idx_t<Graph_t_in> dummy;
     return generate_vertex_expansion_map(dag_in, dummy);
-};
+}
 
 
 
@@ -791,7 +791,7 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::someChildrenContractio
     }
 
     return counter;
-};
+}
 
 
 
@@ -966,7 +966,7 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::someParentsContraction
     }
 
     return counter;
-};
+}
 
 
 
@@ -1134,7 +1134,7 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::levelContraction(v_wor
     }
 
     return counter;
-};
+}
 
 template<typename Graph_t_in, typename Graph_t_out>
 std::vector<std::size_t> Sarkar<Graph_t_in, Graph_t_out>::computeNodeHashes(const Graph_t_in &graph, const std::vector< vertex_idx_t<Graph_t_in> > &vertexPoset, const std::vector< v_workw_t<Graph_t_in> > &dist) const {
@@ -1323,7 +1323,7 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::homogeneous_buffer_mer
     }
 
     return counter;
-};
+}
 
 
 
@@ -1428,7 +1428,7 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::out_buffer_merge(v_wor
     }
 
     return counter;
-};
+}
 
 
 
@@ -1533,6 +1533,6 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::in_buffer_merge(v_work
     }
 
     return counter;
-};
+}
 
 } // end namespace osp

@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test)
     BOOST_CHECK(m_hash.get_vertex_hash(3) != m_hash.get_vertex_hash(12));
     BOOST_CHECK(m_hash.get_vertex_hash(53) != m_hash.get_vertex_hash(29));
 
-};
+}
 
 BOOST_AUTO_TEST_CASE(MerkleHashComputer_test_fw_bw_precomp)
 {
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(MerkleHashComputer_test_fw_bw_precomp)
 
     BOOST_CHECK_EQUAL(num, graph.num_vertices());
 
-};
+}
 
 
 using graph = computational_dag_vector_impl_def_t;

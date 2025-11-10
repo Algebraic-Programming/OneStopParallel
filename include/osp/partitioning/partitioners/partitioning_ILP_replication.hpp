@@ -161,7 +161,7 @@ void HypergraphPartitioningILPWithReplication<hypergraph_t>::setupExtraVariables
                                         this->node_in_partition[node][static_cast<int>(part1)] + this->node_in_partition[node][static_cast<int>(part2)] - 1);
     }
              
-};
+}
 
 template<typename hypergraph_t>
 void HypergraphPartitioningILPWithReplication<hypergraph_t>::setInitialSolution(const PartitioningWithReplication<hypergraph_t> &partition,  Model& model)

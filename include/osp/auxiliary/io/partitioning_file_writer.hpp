@@ -30,7 +30,7 @@ void write_txt(std::ostream &os, const Partitioning<hypergraph_t> &partition) {
 
     using index_type = typename hypergraph_t::vertex_idx;
 
-    os << "\%\% Partitioning for " << partition.getInstance().getNumberOfPartitions() << " parts." << std::endl;
+    os << "%% Partitioning for " << partition.getInstance().getNumberOfPartitions() << " parts." << std::endl;
 
     for(index_type node = 0; node < partition.getInstance().getHypergraph().num_vertices(); ++node)
         os << node << " " << partition.assignedPartition(node) << std::endl;
@@ -47,7 +47,7 @@ void write_txt(std::ostream &os, const PartitioningWithReplication<hypergraph_t>
 
     using index_type = typename hypergraph_t::vertex_idx;
 
-    os << "\%\% Partitioning for " << partition.getInstance().getNumberOfPartitions() << " parts with replication." << std::endl;
+    os << "%% Partitioning for " << partition.getInstance().getNumberOfPartitions() << " parts with replication." << std::endl;
 
     for(index_type node = 0; node < partition.getInstance().getHypergraph().num_vertices(); ++node)
     {

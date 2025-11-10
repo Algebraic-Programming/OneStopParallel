@@ -155,7 +155,7 @@ BspSchedule<Graph_t> MultiLevelHillClimbingScheduler<Graph_t>::Refine(const BspI
 
     std::cout << "Refined cost: " << schedule_on_full_graph.computeCosts() << std::endl;
     return schedule_on_full_graph;
-};
+}
 
 // given an original DAG G, a schedule on the coarsified G and the contraction steps, project the coarse schedule to the entire G
 template<typename Graph_t>
@@ -173,7 +173,7 @@ BspSchedule<Graph_t> MultiLevelHillClimbingScheduler<Graph_t>::ComputeUncontract
         schedule.setAssignedSuperstep(node, coarse_schedule.assignedSuperstep(new_ids[node]));
     }
     return schedule;
-};
+}
 
 template<typename Graph_t>
 void MultiLevelHillClimbingScheduler<Graph_t>::setLinearRefinementPoints(vertex_idx OriginalNrOfNodes, unsigned stepSize)

@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(hill_climbing) {
     scheduler.improveScheduleWithStepLimit(schedule4, 5);
     BOOST_CHECK_EQUAL(schedule4.satisfiesPrecedenceConstraints(), true);
 
-};
+}
 
 BOOST_AUTO_TEST_CASE(hill_climbing_for_comm_schedule) {
 
@@ -125,4 +125,4 @@ BOOST_AUTO_TEST_CASE(hill_climbing_for_comm_schedule) {
     hc_cs.improveSchedule(schedule2);
     BOOST_CHECK_EQUAL(schedule2.hasValidCommSchedule(), true);
 
-};
+}

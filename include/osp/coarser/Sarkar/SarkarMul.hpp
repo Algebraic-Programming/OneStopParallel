@@ -101,13 +101,13 @@ void SarkarMul<Graph_t, Graph_t_coarse>::initParams() {
     std::sort(ml_params.commCostVec.begin(), ml_params.commCostVec.end());
     
     updateParams();
-};
+}
 
 template<typename Graph_t, typename Graph_t_coarse>
 void SarkarMul<Graph_t, Graph_t_coarse>::updateParams() {
     coarser_initial.setParameters(params);
     coarser_secondary.setParameters(params);
-};
+}
 
 template<typename Graph_t, typename Graph_t_coarse>
 RETURN_STATUS SarkarMul<Graph_t, Graph_t_coarse>::run_single_contraction_mode(vertex_idx_t<Graph_t> &diff_vertices) {
@@ -141,7 +141,7 @@ RETURN_STATUS SarkarMul<Graph_t, Graph_t_coarse>::run_single_contraction_mode(ve
     diff_vertices = current_num_vertices - new_num_vertices;
 
     return status;
-};
+}
 
 template<typename Graph_t, typename Graph_t_coarse>
 RETURN_STATUS SarkarMul<Graph_t, Graph_t_coarse>::run_contractions(v_workw_t<Graph_t> commCost) {
@@ -231,7 +231,7 @@ RETURN_STATUS SarkarMul<Graph_t, Graph_t_coarse>::run_contractions(v_workw_t<Gra
     }
 
     return status;
-};
+}
 
 
 template<typename Graph_t, typename Graph_t_coarse>
@@ -296,7 +296,7 @@ RETURN_STATUS SarkarMul<Graph_t, Graph_t_coarse>::run_contractions() {
     }
 
     return status;
-};
+}
 
 
 

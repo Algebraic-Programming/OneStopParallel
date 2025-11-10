@@ -295,7 +295,7 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
 
     BOOST_CHECK_EQUAL(long_edges.size(), 0);
 
-};
+}
 
 BOOST_AUTO_TEST_CASE(test_constr_dag) {
 

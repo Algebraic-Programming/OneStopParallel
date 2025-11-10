@@ -132,7 +132,7 @@ void HypergraphPartitioningILPBase<hypergraph_t>::setupFundamentalVariablesConst
 
     model.SetObjective(expr, COPT_MINIMIZE);
              
-};
+}
 
 template<typename hypergraph_t>
 std::vector<std::vector<unsigned> > HypergraphPartitioningILPBase<hypergraph_t>::readAllCoptAssignments(const PartitioningProblem<hypergraph_t> &instance, Model& model)

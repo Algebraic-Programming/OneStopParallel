@@ -993,6 +993,6 @@ std::vector<vertex_idx_t<Graph_t> > StepByStepCoarser<Graph_t>::GetIntermediateI
         target[node] = top_idx[target[node]];
 
     return target;
-};
+}
 
 } // namespace osp

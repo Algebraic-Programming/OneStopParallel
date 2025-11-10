@@ -292,7 +292,7 @@ void HillClimbingScheduler<Graph_t>::Init() {
             memory_used[schedule->assignedProcessor(node)][schedule->assignedSuperstep(node)] += schedule->getInstance().getComputationalDag().vertex_mem_weight(node);
     }
 
-};
+}
 
 template<typename Graph_t>
 void HillClimbingScheduler<Graph_t>::updatePromisingMoves()
@@ -391,7 +391,7 @@ void HillClimbingScheduler<Graph_t>::updateNodeMovesEarlier(const vertex_idx nod
     else
         for (unsigned proc = 0; proc < schedule->getInstance().getArchitecture().numberOfProcessors(); ++proc)
             addMoveOption(node, proc, EARLIER);
-};
+}
 
 template<typename Graph_t>
 void HillClimbingScheduler<Graph_t>::updateNodeMovesAt(const vertex_idx node) {
@@ -406,7 +406,7 @@ void HillClimbingScheduler<Graph_t>::updateNodeMovesAt(const vertex_idx node) {
     for (unsigned proc = 0; proc < schedule->getInstance().getArchitecture().numberOfProcessors(); ++proc)
         if (proc != schedule->assignedProcessor(node))
             addMoveOption(node, proc, AT);
-};
+}
 
 template<typename Graph_t>
 void HillClimbingScheduler<Graph_t>::updateNodeMovesLater(const vertex_idx node) {
@@ -429,7 +429,7 @@ void HillClimbingScheduler<Graph_t>::updateNodeMovesLater(const vertex_idx node)
     else
         for (unsigned proc = 0; proc < schedule->getInstance().getArchitecture().numberOfProcessors(); ++proc)
             addMoveOption(node, proc, LATER);
-};
+}
 
 template<typename Graph_t>
 void HillClimbingScheduler<Graph_t>::updateNodeMoves(const vertex_idx node) {
@@ -437,7 +437,7 @@ void HillClimbingScheduler<Graph_t>::updateNodeMoves(const vertex_idx node) {
     updateNodeMovesEarlier(node);
     updateNodeMovesAt(node);
     updateNodeMovesLater(node);
-};
+}
 
 template<typename Graph_t>
 void HillClimbingScheduler<Graph_t>::updateMoveOptions(vertex_idx node, int where)
@@ -497,7 +497,7 @@ void HillClimbingScheduler<Graph_t>::addMoveOption(const vertex_idx node, const 
         moveOptions[dir].emplace_back(node, p);
         movePointer[dir][node][p] = --moveOptions[dir].end();
     }
-};
+}
 
 template<typename Graph_t>
 void HillClimbingScheduler<Graph_t>::eraseMoveOption(vertex_idx node, unsigned p, Direction dir)
@@ -707,7 +707,7 @@ int HillClimbingScheduler<Graph_t>::moveCostChange(const vertex_idx node, unsign
 
     changing.newCost = static_cast<cost_type>(static_cast<int>(cost) + change);
     return change;
-};
+}
 
 // Execute a chosen move, updating the schedule and the data structures
 template<typename Graph_t>
@@ -780,7 +780,7 @@ void HillClimbingScheduler<Graph_t>::executeMove(const vertex_idx node, const un
     supStepListPointer[node] = (--supsteplists[newStep][newProc].end());
 
     updateMoveOptions(node, where);
-};
+}
 
 // Single hill climbing step
 template<typename Graph_t>
@@ -879,7 +879,7 @@ bool HillClimbingScheduler<Graph_t>::Improve() {
         Init();
 
     return true;
-};
+}
 
 // Check if move violates mem constraints
 template<typename Graph_t>
@@ -917,7 +917,7 @@ void HillClimbingScheduler<Graph_t>::RemoveNeedlessSupSteps() {
     }
 
     schedule->updateNumberOfSupersteps();
-};
+}
 
 template<typename Graph_t>
 void HillClimbingScheduler<Graph_t>::CreateSupstepLists() {
@@ -934,6 +934,6 @@ void HillClimbingScheduler<Graph_t>::CreateSupstepLists() {
     for (vertex_idx node : top_sort_view(G))
         supsteplists[schedule->assignedSuperstep(node)][schedule->assignedProcessor(node)].push_back(node);
 
-};
+}
 
 } // namespace osp

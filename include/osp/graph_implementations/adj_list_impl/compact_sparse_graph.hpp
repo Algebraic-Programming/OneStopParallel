@@ -400,7 +400,7 @@ class Compact_Sparse_Graph {
 
             csc_out_edges = Compact_Children_Edges(std::move(csc_edge_children), std::move(csc_source_ptr));
             csr_in_edges = Compact_Parent_Edges(std::move(csr_edge_parents), std::move(csr_target_ptr));
-        };
+        }
 
         template <typename edge_list_type>
         Compact_Sparse_Graph(vertex_idx num_vertices_, const edge_list_type & edges, const std::vector<vertex_work_weight_type> &ww) : Compact_Sparse_Graph(num_vertices_, edges) {
@@ -681,38 +681,38 @@ class Compact_Sparse_Graph {
         template<typename RetT = vertex_work_weight_type>
         inline std::enable_if_t<use_work_weights, RetT> vertex_work_weight(const vertex_idx &v) const {
             return vert_work_weights[v];
-        };
+        }
         template<typename RetT = vertex_work_weight_type>
         inline std::enable_if_t<not use_work_weights, RetT> vertex_work_weight(const vertex_idx &v) const {
             return static_cast<RetT>(1) + in_degree(v);
-        };
+        }
 
         template<typename RetT = vertex_comm_weight_type>
         inline std::enable_if_t<use_comm_weights, RetT> vertex_comm_weight(const vertex_idx &v) const {
             return vert_comm_weights[v];
-        };
+        }
         template<typename RetT = vertex_comm_weight_type>
         inline std::enable_if_t<not use_comm_weights, RetT> vertex_comm_weight(const vertex_idx) const {
             return static_cast<RetT>(0);
-        };
+        }
 
         template<typename RetT = vertex_mem_weight_type>
         inline std::enable_if_t<use_mem_weights, RetT> vertex_mem_weight(const vertex_idx &v) const {
             return vert_mem_weights[v];
-        };
+        }
         template<typename RetT = vertex_mem_weight_type>
         inline std::enable_if_t<not use_mem_weights, RetT> vertex_mem_weight(const vertex_idx) const {
             return static_cast<RetT>(0);
-        };
+        }
 
         template<typename RetT = vertex_type_type>
         inline std::enable_if_t<use_vert_types, RetT> vertex_type(const vertex_idx &v) const {
             return vert_types[v];
-        };
+        }
         template<typename RetT = vertex_type_type>
         inline std::enable_if_t<not use_vert_types, RetT> vertex_type(const vertex_idx) const {
             return static_cast<RetT>(0);
-        };
+        }
 
         inline vertex_type_type num_vertex_types() const { return number_of_vertex_types; };
 
@@ -723,11 +723,11 @@ class Compact_Sparse_Graph {
             } else {
                 vert_work_weights[vertex_permutation_from_original_to_internal[v]] = work_weight;
             }
-        };
+        }
         template<typename RetT = void>
         inline std::enable_if_t<not use_work_weights, RetT> set_vertex_work_weight(const vertex_idx &v, const vertex_work_weight_type work_weight) {
             static_assert(use_work_weights, "To set work weight, graph type must allow work weights.");
-        };
+        }
 
         template<typename RetT = void>
         inline std::enable_if_t<use_comm_weights, RetT> set_vertex_comm_weight(const vertex_idx &v, const vertex_comm_weight_type comm_weight) {
@@ -736,11 +736,11 @@ class Compact_Sparse_Graph {
             } else {
                 vert_comm_weights[vertex_permutation_from_original_to_internal[v]] = comm_weight;
             }
-        };
+        }
         template<typename RetT = void>
         inline std::enable_if_t<not use_comm_weights, RetT> set_vertex_comm_weight(const vertex_idx &v, const vertex_comm_weight_type comm_weight) {
             static_assert(use_comm_weights, "To set comm weight, graph type must allow comm weights.");
-        };
+        }
         
         template<typename RetT = void>
         inline std::enable_if_t<use_mem_weights, RetT> set_vertex_mem_weight(const vertex_idx &v, const vertex_mem_weight_type mem_weight) {
@@ -749,11 +749,11 @@ class Compact_Sparse_Graph {
             } else {
                 vert_mem_weights[vertex_permutation_from_original_to_internal[v]] = mem_weight;
             }
-        };
+        }
         template<typename RetT = void>
         inline std::enable_if_t<not use_mem_weights, RetT> set_vertex_mem_weight(const vertex_idx &v, const vertex_mem_weight_type mem_weight) {
             static_assert(use_mem_weights, "To set mem weight, graph type must allow mem weights.");
-        };
+        }
         
         template<typename RetT = void>
         inline std::enable_if_t<use_vert_types, RetT> set_vertex_type(const vertex_idx &v, const vertex_type_type vertex_type_) {
@@ -763,11 +763,11 @@ class Compact_Sparse_Graph {
                 vert_types[vertex_permutation_from_original_to_internal[v]] = vertex_type_;
             }
             number_of_vertex_types = std::max(number_of_vertex_types, vertex_type_);
-        };
+        }
         template<typename RetT = void>
         inline std::enable_if_t<not use_vert_types, RetT> set_vertex_type(const vertex_idx &v, const vertex_type_type vertex_type_) {
             static_assert(use_vert_types, "To set vert type, graph type must allow vertex types.");
-        };
+        }
 
         template<typename RetT = const std::vector<vertex_idx> &>
         inline std::enable_if_t<keep_vertex_order, RetT> get_pullback_permutation() const {
