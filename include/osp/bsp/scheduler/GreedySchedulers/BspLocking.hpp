@@ -346,7 +346,7 @@ class BspLocking : public Scheduler<Graph_t> {
         std::vector<std::set<VertexType>> procReady(params_p);
         std::set<VertexType> allReady;
 
-        std::vector<unsigned> nrPredecDone(N, 0);
+        std::vector<VertexType> nrPredecDone(N, 0);
         std::vector<bool> procFree(params_p, true);
         unsigned free = params_p;
 

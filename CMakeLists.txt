@@ -39,6 +39,15 @@ set(COMMON_CXX_WARNING_FLAGS
     "-Wunused"
     "-Wunreachable-code"
     "-Wuninitialized"
+    "-Wshadow"
+    "-Wfloat-equal"
+    "-Wnon-virtual-dtor"
+    "-pedantic"
+    "-Wpedantic"
+    "-Wold-style-cast"
+    "-Wcast-align"
+    "-Wduplicated-cond"
+    "-Wduplicated-branches"
     "-Werror"
 )
 

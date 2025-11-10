@@ -117,17 +117,17 @@ class computational_dag_vector_impl {
 
     inline auto vertices() const { return vertex_range<vertex_idx>(static_cast<vertex_idx>(vertices_.size())); }
 
-    inline std::size_t num_vertices() const { return vertices_.size(); }
+    inline vertex_idx num_vertices() const { return vertices_.size(); }
 
-    inline std::size_t num_edges() const { return num_edges_; }
+    inline vertex_idx num_edges() const { return num_edges_; }
 
     inline const std::vector<vertex_idx> &parents(const vertex_idx v) const { return in_neigbors[v]; }
 
     inline const std::vector<vertex_idx> &children(const vertex_idx v) const { return out_neigbors[v]; }
 
-    inline std::size_t in_degree(const vertex_idx v) const { return in_neigbors[v].size(); }
+    inline vertex_idx in_degree(const vertex_idx v) const { return in_neigbors[v].size(); }
 
-    inline std::size_t out_degree(const vertex_idx v) const { return out_neigbors[v].size(); }
+    inline vertex_idx out_degree(const vertex_idx v) const { return out_neigbors[v].size(); }
 
     inline vertex_work_weight_type vertex_work_weight(const vertex_idx v) const { return vertices_[v].work_weight; }
 
