@@ -38,7 +38,7 @@ class HypergraphPartitioningILP : public HypergraphPartitioningILPBase<hypergrap
 
   public:
 
-    virtual ~HypergraphPartitioningILP() = default;
+    virtual ~HypergraphPartitioningILP() override = default;
 
     RETURN_STATUS computePartitioning(Partitioning<hypergraph_t>& result);
 

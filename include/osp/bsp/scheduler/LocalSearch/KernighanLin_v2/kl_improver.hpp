@@ -442,7 +442,7 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
             kl_move best_quick_move = compute_best_move<true>(next_node_to_move, thread_data.local_affinity_table, thread_data);
 
             local_lock.insert(next_node_to_move);
-            if (best_quick_move.gain == std::numeric_limits<cost_t>::lowest()) {
+            if (best_quick_move.gain <= std::numeric_limits<cost_t>::lowest()) {
                 continue;
             }
 
@@ -532,7 +532,7 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
                 }
 
                 local_lock.insert(best_move.node);
-                if (best_move.gain == std::numeric_limits<cost_t>::lowest()) continue;
+                if (best_move.gain <= std::numeric_limits<cost_t>::lowest()) continue;
 
                 apply_move(best_move, thread_data);
                 thread_data.affinity_table.insert(best_move.node);
@@ -617,7 +617,7 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
 
             while (inner_iter < thread_data.max_inner_iterations && thread_data.max_gain_heap.size() > 0) {
                 kl_move best_move = get_best_move(thread_data.affinity_table, thread_data.lock_manager, thread_data.max_gain_heap); // locks best_move.node and removes it from node_selection
-                if (best_move.gain == std::numeric_limits<cost_t>::lowest()) {
+                if (best_move.gain <= std::numeric_limits<cost_t>::lowest()) {
                     break;
                 }                
                 update_avg_gain(best_move.gain, inner_iter, thread_data.average_gain);
@@ -941,7 +941,7 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
                 compute_node_affinities(node, thread_data.local_affinity_table, thread_data);
                 kl_move best_move = compute_best_move<false>(node, thread_data.local_affinity_table, thread_data);
 
-                if (best_move.gain == std::numeric_limits<double>::lowest()) {
+                if (best_move.gain <= std::numeric_limits<double>::lowest()) {
                     abort = true;
                     break;
                 }

@@ -144,8 +144,8 @@ std::vector<vertex_idx_t<Graph_t>> GetTopOrderGorder(const Graph_t &graph) {
 
     auto v_cmp = [&priorities, &graph](const VertexType &lhs, const VertexType &rhs) {
         return (priorities[lhs] < priorities[rhs]) ||
-               ((priorities[lhs] == priorities[rhs]) && (graph.out_degree(lhs) < graph.out_degree(rhs))) ||
-               ((priorities[lhs] == priorities[rhs]) && (graph.out_degree(lhs) == graph.out_degree(rhs)) &&
+               ((priorities[lhs] <= priorities[rhs]) && (graph.out_degree(lhs) < graph.out_degree(rhs))) ||
+               ((priorities[lhs] <= priorities[rhs]) && (graph.out_degree(lhs) == graph.out_degree(rhs)) &&
                 (lhs > rhs));
     };
 

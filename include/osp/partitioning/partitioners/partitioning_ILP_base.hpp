@@ -49,6 +49,8 @@ class HypergraphPartitioningILPBase {
     inline unsigned getTimeLimitSeconds() const { return time_limit_seconds; }
     inline void setTimeLimitSeconds(unsigned limit_) { time_limit_seconds = limit_; }
     inline void setUseInitialSolution(bool use_) { use_initial_solution = use_; }
+
+    virtual ~HypergraphPartitioningILPBase() = default;
 };
 
 template<typename hypergraph_t>

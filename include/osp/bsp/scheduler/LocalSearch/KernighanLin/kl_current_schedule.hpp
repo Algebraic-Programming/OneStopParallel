@@ -49,8 +49,8 @@ struct kl_move {
           to_proc(to_proc), to_step(to_step) {}
 
     bool operator<(kl_move const &rhs) const {
-        return (gain < rhs.gain) or (gain == rhs.gain and change_in_cost < rhs.change_in_cost) or
-               (gain == rhs.gain and change_in_cost == rhs.change_in_cost and node > rhs.node);
+        return (gain < rhs.gain) or (gain <= rhs.gain and change_in_cost < rhs.change_in_cost) or
+               (gain <= rhs.gain and change_in_cost <= rhs.change_in_cost and node > rhs.node);
     }
 
     kl_move reverse_move() const {
@@ -61,6 +61,8 @@ struct kl_move {
 class Ikl_cost_function {
   public:
     virtual double compute_current_costs() = 0;
+
+    virtual ~Ikl_cost_function() = default;
 };
 
 template<typename Graph_t, typename MemoryConstraint_t>

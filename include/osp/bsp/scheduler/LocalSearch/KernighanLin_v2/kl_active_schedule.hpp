@@ -52,7 +52,7 @@ struct kl_move_struct {
     }
 
     bool operator>(kl_move_struct<cost_t, vertex_idx_t> const &rhs) const {
-        return (gain > rhs.gain) or (gain == rhs.gain and node < rhs.node);
+        return (gain > rhs.gain) or (gain >= rhs.gain and node < rhs.node);
     }
     
     kl_move_struct<cost_t, vertex_idx_t> reverse_move() const {
