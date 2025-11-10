@@ -437,7 +437,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                 node_best_proc = proc;
                 rand_count = 0;
 
-            } else if (node_max_gain == proc_max) {
+            } else if (node_max_gain <= proc_max) {
 
                 if (rand() % (2 + rand_count) == 0) {
                     node_max_gain = proc_max;
@@ -750,7 +750,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                 node_best_proc = proc;
                 rand_count = 0;
 
-            } else if (node_max_gain == proc_max) {
+            } else if (node_max_gain <= proc_max) {
 
                 if (rand() % (2 + rand_count) == 0) {
                     node_max_gain = proc_max;

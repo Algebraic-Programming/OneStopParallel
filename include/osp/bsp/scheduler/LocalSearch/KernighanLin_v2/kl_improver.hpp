@@ -94,6 +94,8 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
     constexpr static bool enable_quick_moves = true;
     constexpr static bool enable_preresolving_violations = true;
 
+    const double EPSILON = 1e-9;
+
     using memw_t = v_memw_t<Graph_t>;
     using commw_t = v_commw_t<Graph_t>;
     using work_weight_t = v_workw_t<Graph_t>;
@@ -284,10 +286,11 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
                     const bool new_is_sole_max_processor = (active_schedule.get_step_max_work_processor_count()[node_step] == 1) && (new_max_weight == new_step_proc_work);
                     const cost_t new_node_proc_affinity = new_is_sole_max_processor ? std::min(vertex_weight, new_max_weight - new_second_max_weight) : 0.0;                        
                     
-                    if (new_node_proc_affinity != prev_node_proc_affinity) {
+                    const cost_t diff = new_node_proc_affinity - prev_node_proc_affinity;
+                    if (std::abs(diff) > EPSILON) {
                         update_info.full_update = true;
-                        affinity_table_node[node_proc][window_size] += (new_node_proc_affinity - prev_node_proc_affinity);                    
-                    }     
+                        affinity_table_node[node_proc][window_size] += diff; // Use the pre-calculated diff
+                    }    
                     
                     if ((prev_max_work != new_max_weight) || update_info.full_update) {
                         update_info.update_entire_from_step = true;
@@ -1208,10 +1211,11 @@ void kl_improver<Graph_t, comm_cost_function_t, MemoryConstraint_t, window_size,
             const bool new_is_sole_max_processor = (active_schedule.get_step_max_work_processor_count()[node_step] == 1) && (new_max_weight == new_step_proc_work);
             const cost_t new_node_proc_affinity = new_is_sole_max_processor ? std::min(vertex_weight, new_max_weight - new_second_max_weight) : 0.0;
             
-            const bool update_node_proc_affinity = new_node_proc_affinity != prev_node_proc_affinity;
+            const cost_t diff = new_node_proc_affinity - prev_node_proc_affinity;
+            const bool update_node_proc_affinity = std::abs(diff) > EPSILON; 
             if (update_node_proc_affinity) {
                 full_update = true;
-                affinity_table_node[node_proc][window_size] += (new_node_proc_affinity - prev_node_proc_affinity);
+                affinity_table_node[node_proc][window_size] += diff;
             }
     
             if ((prev_move_step_max_work != new_max_weight) || update_node_proc_affinity) {
@@ -1450,7 +1454,8 @@ void kl_improver<Graph_t, comm_cost_function_t, MemoryConstraint_t, window_size,
             max_step = step; 
         } 
     
-        if ((max_gain != node_move.gain) || (max_proc != node_move.to_proc) || (max_step != node_move.to_step)) {
+        const cost_t diff = max_gain - node_move.gain;
+        if ((std::abs(diff) > EPSILON) || (max_proc != node_move.to_proc) || (max_step != node_move.to_step)) {
             node_move.gain = max_gain;
             node_move.to_proc = max_proc;
             node_move.to_step = max_step;
@@ -1503,7 +1508,8 @@ void kl_improver<Graph_t, comm_cost_function_t, MemoryConstraint_t, window_size,
             }
         }        
 
-        if ((max_gain != node_move.gain) || (max_proc != node_move.to_proc) || (max_step != node_move.to_step)) {
+        const cost_t diff = max_gain - node_move.gain;
+        if ((std::abs(diff) > EPSILON) || (max_proc != node_move.to_proc) || (max_step != node_move.to_step)) {
             node_move.gain = max_gain;
             node_move.to_proc = max_proc;
             node_move.to_step = max_step;

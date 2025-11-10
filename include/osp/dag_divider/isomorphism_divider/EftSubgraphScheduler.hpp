@@ -74,7 +74,7 @@ private:
         job_id_t in_degree_current = 0;
         
         JobStatus status = JobStatus::WAITING;
-        double upward_rank = 0.0;
+        v_workw_t<Graph_t> upward_rank = 0.0;
 
         // --- Execution Tracking Members ---
         std::vector<unsigned> assigned_workers;
@@ -137,13 +137,13 @@ private:
         const auto reverse_top_order = GetTopOrderReverse(graph);
 
         for (const auto& vertex : reverse_top_order) {
-            double max_successor_rank = 0.0;
+            v_workw_t<Graph_t> max_successor_rank = 0.0;
             for (const auto& child : graph.children(vertex)) {
                 max_successor_rank = std::max(max_successor_rank, jobs_.at(child).upward_rank);
             }
             
             Job& job = jobs_.at(vertex);
-            job.upward_rank = static_cast<double>(graph.vertex_work_weight(vertex)) + max_successor_rank;
+            job.upward_rank = graph.vertex_work_weight(vertex) + max_successor_rank;
         }
     }
 
@@ -175,7 +175,7 @@ private:
             }
 
             std::vector<Job*> jobs_to_start;
-            double total_runnable_priority = 0.0;
+            v_workw_t<Graph_t> total_runnable_priority = 0.0;
 
             // Iterate through ready jobs and assign minimum resources if available.
             for (const Job* job_ptr : ready_jobs_) {
@@ -214,7 +214,7 @@ private:
                             const unsigned current_total_assigned = std::accumulate(job.assigned_workers.begin(), job.assigned_workers.end(), 0u);
                             const unsigned max_additional_workers = (job.max_num_procs > current_total_assigned) ? (job.max_num_procs - current_total_assigned) : 0;
 
-                            const double proportion = (total_runnable_priority > 0) ? (job.upward_rank / total_runnable_priority) : (1.0 / static_cast<double>(jobs_to_start.size()));
+                            const double proportion = (total_runnable_priority > 0) ? (static_cast<double>(job.upward_rank) / static_cast<double>(total_runnable_priority)) : (1.0 / static_cast<double>(jobs_to_start.size()));
                             const unsigned proportional_share = static_cast<unsigned>(static_cast<double>(remaining_workers_pool[type_idx]) * proportion);
                             const unsigned num_proportional_chunks = (job.multiplicity > 0) ? proportional_share / job.multiplicity : 0;
                             const unsigned num_available_chunks = (job.multiplicity > 0) ? available_workers[type_idx] / job.multiplicity : 0;
