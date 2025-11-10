@@ -81,7 +81,7 @@ class VarianceFillup : public Scheduler<Graph_t> {
             }
             temp = std::log(temp) / 2 + max_priority;
 
-            double node_weight = std::log((double)std::max(graph.vertex_work_weight(*r_iter), static_cast<v_workw_t<Graph_t>>(1)));
+            double node_weight = std::log( static_cast<double>( std::max(graph.vertex_work_weight(*r_iter), static_cast<v_workw_t<Graph_t>>(1)) ) );
             double larger_val = node_weight > temp ? node_weight : temp;
 
             work_variance[*r_iter] =
@@ -475,8 +475,8 @@ class VarianceFillup : public Scheduler<Graph_t> {
             if (free > params_p * max_percent_idle_processors &&
                 ((!increase_parallelism_in_new_superstep) ||
                  get_nr_parallelizable_nodes(instance, nr_ready_nodes_per_type, nr_procs_per_type) >=
-                     std::min(std::min(params_p, (unsigned)(1.2 * (params_p - free))),
-                              params_p - free + ((unsigned)(0.5 * free)))))
+                     std::min(std::min(params_p, static_cast<unsigned>(1.2 * (params_p - free))),
+                              params_p - free + (static_cast<unsigned>(0.5 * free)))))
                 endSupStep = true;
         }
 

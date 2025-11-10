@@ -651,7 +651,7 @@ void PebblingSchedule<Graph_t>::SplitSupersteps(const BspSchedule<Graph_t> &sche
                             end_current = start_idx + 1;
                         else
                             end_current = std::min(start_idx + 2* (end_lower_bound - start_idx),
-                                                (unsigned) top_orders[proc][step].size()-1);
+                                                static_cast<unsigned>( top_orders[proc][step].size() ) - 1);
                     }
                     else
                         end_current = end_lower_bound + (end_upper_bound - end_lower_bound + 1) / 2;

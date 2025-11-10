@@ -64,8 +64,8 @@ int main(int argc, char *argv[]) {
 
         //  Generating graph name
         std::string graph_name = "RandomBand_";
-        graph_name += "p" + std::to_string((int)(100 * prob)) + "_";
-        graph_name += "b" + std::to_string((int)bandwidth) + "_";
+        graph_name += "p" + std::to_string(static_cast<int>(100 * prob)) + "_";
+        graph_name += "b" + std::to_string(static_cast<int>(bandwidth)) + "_";
         std::string graph_size_name;
         if (graph.num_vertices() < 1000) {
             graph_size_name = std::to_string(graph.num_vertices()) + "_";

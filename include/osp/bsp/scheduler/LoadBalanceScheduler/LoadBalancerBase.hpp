@@ -66,7 +66,7 @@ class LoadBalancerBase : public Scheduler<Graph_t> {
             work_till_now += part_work;
         }
 
-        float percentage_complete = (float)work_till_now / (float)total_work;
+        float percentage_complete = static_cast<float>(work_till_now) / static_cast<float>(total_work);
 
         float value = Interpolation_t()(percentage_complete, slack);
 
