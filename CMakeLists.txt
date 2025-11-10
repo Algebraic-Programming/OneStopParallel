@@ -44,7 +44,7 @@ set(COMMON_CXX_WARNING_FLAGS
     "-Wnon-virtual-dtor"
     "-pedantic"
     "-Wpedantic"
-    # "-Wold-style-cast"
+    "-Wold-style-cast"
     "-Wcast-align"
     "-Wduplicated-cond"
     "-Wduplicated-branches"

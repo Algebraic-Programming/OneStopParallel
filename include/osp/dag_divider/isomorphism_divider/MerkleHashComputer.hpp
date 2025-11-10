@@ -108,8 +108,8 @@ class MerkleHashComputer : public HashComputer<vertex_idx_t<Graph_t>> {
   public:   
 
     template<typename... Args>
-    MerkleHashComputer(const Graph_t &graph, Args &&...args) : HashComputer<VertexType>(), node_hash_func(std::forward<Args>(args)...) {
-        compute_hashes(graph);        
+    MerkleHashComputer(const Graph_t &graph_, Args &&...args) : HashComputer<VertexType>(), node_hash_func(std::forward<Args>(args)...) {
+        compute_hashes(graph_);        
     }
 
     virtual ~MerkleHashComputer() override = default;
