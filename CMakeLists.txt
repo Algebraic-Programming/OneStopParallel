@@ -42,12 +42,12 @@ set(COMMON_CXX_WARNING_FLAGS
     "-Wshadow"
     "-Wfloat-equal"
     "-Wnon-virtual-dtor"
-    # "-pedantic"
-    # "-Wpedantic"
+    "-pedantic"
+    "-Wpedantic"
     # "-Wold-style-cast"
-    # "-Wcast-align"
-    # "-Wduplicated-cond"
-    # "-Wduplicated-branches"
+    "-Wcast-align"
+    "-Wduplicated-cond"
+    "-Wduplicated-branches"
     "-Werror"
 )
 
