@@ -31,7 +31,7 @@ class ConnectedComponentScheduler : public Scheduler<Graph_t> {
     Scheduler<Constr_Graph_t> *scheduler;
 
   public:
-    ConnectedComponentScheduler(Scheduler<Constr_Graph_t> &scheduler) : scheduler(&scheduler) {}
+    ConnectedComponentScheduler(Scheduler<Constr_Graph_t> &_scheduler) : scheduler(&_scheduler) {}
 
     std::string getScheduleName() const override { return "SubDagScheduler"; }
 

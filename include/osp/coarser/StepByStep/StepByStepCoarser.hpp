@@ -387,9 +387,9 @@ std::set<vertex_idx_t<Graph_t> > StepByStepCoarser<Graph_t>::getContractableChil
     }
 
     while (!Queue.empty()) {
-        const vertex_idx node = Queue.front();
+        const vertex_idx node_local = Queue.front();
         Queue.pop_front();
-        for (vertex_idx succ : G_coarse.children(node)) {
+        for (vertex_idx succ : G_coarse.children(node_local)) {
             
             succ_contractable.erase(succ);
 
@@ -426,9 +426,9 @@ std::set<vertex_idx_t<Graph_t> > StepByStepCoarser<Graph_t>::getContractablePare
     }
 
     while (!Queue.empty()) {
-        const vertex_idx node = Queue.front();
+        const vertex_idx node_local = Queue.front();
         Queue.pop_front();
-        for (vertex_idx pred : G_coarse.parents(node)) {
+        for (vertex_idx pred : G_coarse.parents(node_local)) {
             
             pred_contractable.erase(pred);
 

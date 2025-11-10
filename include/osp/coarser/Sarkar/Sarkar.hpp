@@ -720,8 +720,8 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::someChildrenContractio
                 }
             }
 
-            for (std::size_t i = 1; i < contractionEnsemble.size(); i++) {
-                for (const VertexType &chld : graph.children(contractionEnsemble[i])) {
+            for (std::size_t j = 1; j < contractionEnsemble.size(); j++) {
+                for (const VertexType &chld : graph.children(contractionEnsemble[j])) {
                     maxChildDist = std::max(maxChildDist, botDist[chld] + commCost);
                 }
             }
@@ -895,8 +895,8 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::someParentsContraction
                 }
             }
 
-            for (std::size_t i = 1; i < contractionEnsemble.size(); i++) {
-                for (const VertexType &par : graph.parents(contractionEnsemble[i])) {
+            for (std::size_t j = 1; j < contractionEnsemble.size(); j++) {
+                for (const VertexType &par : graph.parents(contractionEnsemble[j])) {
                     maxParentDist = std::max(maxParentDist, topDist[par] + commCost);
                 }
             }

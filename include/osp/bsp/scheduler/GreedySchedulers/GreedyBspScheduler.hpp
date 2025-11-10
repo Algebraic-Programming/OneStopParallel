@@ -62,7 +62,7 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
         double score;
 
         heap_node() : node(0), score(0) {}
-        heap_node(VertexType node, double score) : node(node), score(score) {}
+        heap_node(VertexType node_arg, double score_arg) : node(node_arg), score(score_arg) {}
 
         bool operator<(heap_node const &rhs) const {
             return (score < rhs.score) || (score <= rhs.score and node < rhs.node);

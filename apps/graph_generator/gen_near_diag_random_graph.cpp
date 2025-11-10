@@ -105,12 +105,12 @@ int main(int argc, char *argv[]) {
         graph_write << header;
         graph_write << std::to_string(graph.num_vertices()) + " " + std::to_string(graph.num_vertices()) + " " +
                            std::to_string(graph.num_edges() + graph.num_vertices()) + "\n";
-        for (VertexType i = 0; i < num_vert; i++) {
+        for (VertexType j = 0; j < num_vert; j++) {
             double val = (1 - 2 * randInt(2)) * std::exp(unif_log(re));
-            graph_write << std::to_string(i + 1) + " " + std::to_string(i + 1) + " " + std::to_string(val) + "\n";
-            for (const auto &chld : graph.children(i)) {
+            graph_write << std::to_string(j + 1) + " " + std::to_string(j + 1) + " " + std::to_string(val) + "\n";
+            for (const auto &chld : graph.children(j)) {
                 val = unif(re);
-                graph_write << std::to_string(chld + 1) + " " + std::to_string(i + 1) + " " + std::to_string(val) +
+                graph_write << std::to_string(chld + 1) + " " + std::to_string(j + 1) + " " + std::to_string(val) +
                                    "\n";
             }
         }

@@ -239,12 +239,12 @@ BOOST_AUTO_TEST_CASE(Graph1_keep_order) {
     BOOST_CHECK_EQUAL(graph.num_vertices(), 11);
     BOOST_CHECK_EQUAL(graph.num_edges(), 11);
 
-    std::size_t cntr = 0;
+    std::size_t cntr_0 = 0;
     for (const auto &vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(vert, cntr);
-        ++cntr;
+        BOOST_CHECK_EQUAL(vert, cntr_0);
+        ++cntr_0;
     }
-    BOOST_CHECK_EQUAL(graph.num_vertices(), cntr);
+    BOOST_CHECK_EQUAL(graph.num_vertices(), cntr_0);
 
     std::vector<std::vector<std::size_t>> out_edges({
         {1, 2},
@@ -344,12 +344,12 @@ BOOST_AUTO_TEST_CASE(Graph1_reorder) {
     BOOST_CHECK_EQUAL(graph.num_vertices(), 11);
     BOOST_CHECK_EQUAL(graph.num_edges(), 11);
 
-    std::size_t cntr = 0;
+    std::size_t cntr_0 = 0;
     for (const auto &vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(vert, cntr);
-        ++cntr;
+        BOOST_CHECK_EQUAL(vert, cntr_0);
+        ++cntr_0;
     }
-    BOOST_CHECK_EQUAL(graph.num_vertices(), cntr);
+    BOOST_CHECK_EQUAL(graph.num_vertices(), cntr_0);
 
     std::vector<std::size_t> perm(11, 0);
     std::iota(perm.begin(), perm.end(), 0);
@@ -966,12 +966,12 @@ BOOST_AUTO_TEST_CASE(Graph1_copy_keep_order) {
     BOOST_CHECK_EQUAL(copy_graph.num_vertices(), 11);
     BOOST_CHECK_EQUAL(copy_graph.num_edges(), 11);
 
-    std::size_t cntr = 0;
+    std::size_t cntr_0 = 0;
     for (const auto &vert : copy_graph.vertices()) {
-        BOOST_CHECK_EQUAL(vert, cntr);
-        ++cntr;
+        BOOST_CHECK_EQUAL(vert, cntr_0);
+        ++cntr_0;
     }
-    BOOST_CHECK_EQUAL(copy_graph.num_vertices(), cntr);
+    BOOST_CHECK_EQUAL(copy_graph.num_vertices(), cntr_0);
 
     std::vector<std::vector<std::size_t>> out_edges({
         {1, 2},
@@ -1037,12 +1037,12 @@ BOOST_AUTO_TEST_CASE(Graph1_move_keep_order) {
     BOOST_CHECK_EQUAL(copy_graph.num_vertices(), 11);
     BOOST_CHECK_EQUAL(copy_graph.num_edges(), 11);
 
-    std::size_t cntr = 0;
+    std::size_t cntr_0 = 0;
     for (const auto &vert : copy_graph.vertices()) {
-        BOOST_CHECK_EQUAL(vert, cntr);
-        ++cntr;
+        BOOST_CHECK_EQUAL(vert, cntr_0);
+        ++cntr_0;
     }
-    BOOST_CHECK_EQUAL(copy_graph.num_vertices(), cntr);
+    BOOST_CHECK_EQUAL(copy_graph.num_vertices(), cntr_0);
 
     std::vector<std::vector<std::size_t>> out_edges({
         {1, 2},
@@ -1109,12 +1109,12 @@ BOOST_AUTO_TEST_CASE(Graph1_copy_reorder) {
     BOOST_CHECK_EQUAL(graph.num_vertices(), 11);
     BOOST_CHECK_EQUAL(graph.num_edges(), 11);
 
-    std::size_t cntr = 0;
+    std::size_t cntr_0 = 0;
     for (const auto &vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(vert, cntr);
-        ++cntr;
+        BOOST_CHECK_EQUAL(vert, cntr_0);
+        ++cntr_0;
     }
-    BOOST_CHECK_EQUAL(graph.num_vertices(), cntr);
+    BOOST_CHECK_EQUAL(graph.num_vertices(), cntr_0);
 
     std::vector<std::size_t> perm(11, 0);
     std::iota(perm.begin(), perm.end(), 0);
@@ -1204,12 +1204,12 @@ BOOST_AUTO_TEST_CASE(Graph1_move_reorder) {
     BOOST_CHECK_EQUAL(graph.num_vertices(), 11);
     BOOST_CHECK_EQUAL(graph.num_edges(), 11);
 
-    std::size_t cntr = 0;
+    std::size_t cntr_0 = 0;
     for (const auto &vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(vert, cntr);
-        ++cntr;
+        BOOST_CHECK_EQUAL(vert, cntr_0);
+        ++cntr_0;
     }
-    BOOST_CHECK_EQUAL(graph.num_vertices(), cntr);
+    BOOST_CHECK_EQUAL(graph.num_vertices(), cntr_0);
 
     std::vector<std::size_t> perm(11, 0);
     std::iota(perm.begin(), perm.end(), 0);

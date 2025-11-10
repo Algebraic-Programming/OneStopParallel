@@ -42,10 +42,10 @@ struct kl_move_struct {
     unsigned to_step;
 
     kl_move_struct() : node(0), gain(0), from_proc(0), from_step(0), to_proc(0), to_step(0) {}
-    kl_move_struct(vertex_idx_t node, cost_t gain, unsigned from_proc, unsigned from_step,
-                   unsigned to_proc, unsigned to_step)
-        : node(node), gain(gain), from_proc(from_proc), from_step(from_step),
-          to_proc(to_proc), to_step(to_step) {}
+    kl_move_struct(vertex_idx_t _node, cost_t _gain, unsigned _from_proc, unsigned _from_step,
+                   unsigned _to_proc, unsigned _to_step)
+        : node(_node), gain(_gain), from_proc(_from_proc), from_step(_from_step),
+          to_proc(_to_proc), to_step(_to_step) {}
 
     bool operator<(kl_move_struct<cost_t, vertex_idx_t> const &rhs) const {
         return (gain < rhs.gain) or (gain == rhs.gain and node > rhs.node);
@@ -95,7 +95,7 @@ struct kl_active_schedule_work_datastructures {
         unsigned proc;
 
         weight_proc() : work(0), proc(0) {}
-        weight_proc(work_weight_t work, unsigned proc) : work(work), proc(proc) {}
+        weight_proc(work_weight_t _work, unsigned _proc) : work(_work), proc(_proc) {}
     
         bool operator<(weight_proc const &rhs) const {
             return (work > rhs.work) or (work == rhs.work and proc < rhs.proc);

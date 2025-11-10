@@ -39,8 +39,8 @@ struct directed_edge_descriptor_impl {
     directed_edge_descriptor_impl(directed_edge_descriptor_impl &&other) = default;
     directed_edge_descriptor_impl &operator=(const directed_edge_descriptor_impl &other) = default;
     directed_edge_descriptor_impl &operator=(directed_edge_descriptor_impl &&other) = default;
-    directed_edge_descriptor_impl(std::size_t source, std::size_t target, std::size_t idx)
-        : idx(idx), source(source), target(target) {}
+    directed_edge_descriptor_impl(std::size_t source_arg, std::size_t target_arg, std::size_t idx_arg)
+        : idx(idx_arg), source(source_arg), target(target_arg) {}
     ~directed_edge_descriptor_impl() = default;
 
     bool operator==(const directed_edge_descriptor_impl &other) const {
@@ -55,7 +55,7 @@ struct cdag_edge_impl {
 
     using cdag_edge_comm_weight_type = edge_comm_weight_t;
 
-    cdag_edge_impl(edge_comm_weight_t comm_weight = 1) : comm_weight(comm_weight) {}
+    cdag_edge_impl(edge_comm_weight_t comm_weight_arg = 1) : comm_weight(comm_weight_arg) {}
     edge_comm_weight_t comm_weight;
 };
 
