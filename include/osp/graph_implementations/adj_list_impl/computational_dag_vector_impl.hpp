@@ -117,7 +117,7 @@ class computational_dag_vector_impl {
 
     inline auto vertices() const { return vertex_range<vertex_idx>(static_cast<vertex_idx>(vertices_.size())); }
 
-    inline vertex_idx num_vertices() const { return vertices_.size(); }
+    inline vertex_idx num_vertices() const { return static_cast<vertex_idx>(vertices_.size()); }
 
     inline vertex_idx num_edges() const { return num_edges_; }
 
@@ -194,7 +194,7 @@ class computational_dag_vector_impl {
     std::vector<std::vector<vertex_idx>> out_neigbors;
     std::vector<std::vector<vertex_idx>> in_neigbors;
 
-    std::size_t num_edges_ = 0;
+    vertex_idx num_edges_ = 0;
     unsigned num_vertex_types_ = 0;
 };
 

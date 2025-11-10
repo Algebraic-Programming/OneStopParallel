@@ -28,6 +28,8 @@ _add_test( graph_vector_edge_desc_impl )
 
 _add_test( boost_graph_adaptor )
 
+_add_test( graph_vector_adapter )
+
 _add_test ( connected_components_part )
 
 _add_test( compact_sparse_graph )

@@ -478,7 +478,7 @@ class IsomorphicSubgraphScheduler {
             // Map (superstep, processor) -> relative partition ID
             std::map<std::pair<unsigned, unsigned>, vertex_idx_t<Graph_t>> sp_proc_to_relative_partition;
             vertex_idx_t<Graph_t> num_partitions_per_subgraph = 0;
-            for (size_t j = 0; j < rep_subgraph_vertices_sorted.size(); ++j) {
+            for (vertex_idx_t<Graph_t> j = 0; j < rep_subgraph_vertices_sorted.size(); ++j) {
                 const auto sp_pair = std::make_pair(bsp_schedule.assignedSuperstep(j), bsp_schedule.assignedProcessor(j));
                 if (sp_proc_to_relative_partition.find(sp_pair) == sp_proc_to_relative_partition.end()) {
                     sp_proc_to_relative_partition[sp_pair] = num_partitions_per_subgraph++;
@@ -489,7 +489,7 @@ class IsomorphicSubgraphScheduler {
             MerkleHashComputer<Constr_Graph_t> rep_hasher(representative_instance.getComputationalDag());
 
             // Replicate the schedule pattern for ALL subgraphs in the group ---
-            for (size_t i = 0; i < group.subgraphs.size(); ++i) {
+            for (vertex_idx_t<Graph_t> i = 0; i < group.subgraphs.size(); ++i) {
                 auto current_subgraph_vertices_sorted = group.subgraphs[i];
                 std::sort(current_subgraph_vertices_sorted.begin(), current_subgraph_vertices_sorted.end());
 
