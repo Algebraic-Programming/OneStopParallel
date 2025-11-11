@@ -73,6 +73,9 @@ bool readBspArchitecture(std::ifstream &infile, BspArchitecture<Graph_t> &archit
                 architecture.setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::PERSISTENT_AND_TRANSIENT);
                 architecture.setMemoryBound(static_cast<memw_t>(M));
                 break;
+            default:
+                std::cerr << "Invalid memory type.\n";
+                return false;
         }
     } else if (mem_type == -1) {
         std::cout << "No memory type specified. Assuming \"NONE\".\n";

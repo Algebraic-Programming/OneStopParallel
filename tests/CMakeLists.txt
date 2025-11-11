@@ -11,7 +11,7 @@ macro( _add_test name )
   # Create the test
   add_executable(test_${name} ${name}.cpp)
   target_link_libraries(test_${name} PRIVATE OneStopParallel Boost::unit_test_framework ProjectExecutableFlags)
-  target_include_directories( test_${name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include )
+  target_include_directories( test_${name} PRIVATE ${PROJECT_SOURCE_DIR}/include )
 
   if(ARG_DATA)
     target_compile_definitions(test_${name} PRIVATE OSP_TEST_DATA_DIR="${OSP_DATA_DIR}")

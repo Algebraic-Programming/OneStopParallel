@@ -608,6 +608,12 @@ std::vector<std::vector<vertex_idx_t<Graph_t_in>>> Sarkar<Graph_t_in, Graph_t_ou
                 diff = homogeneous_buffer_merge(params.commCost, dag_in, expansionMap);
             }
             break;
+
+        default: // TODO check if it makes sense
+            {
+                diff = singleContraction(params.commCost, dag_in, expansionMap);
+            }
+            break;
     }
 
     // std::cout << " Diff: " << diff << '\n';
