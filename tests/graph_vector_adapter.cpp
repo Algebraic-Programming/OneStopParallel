@@ -24,6 +24,7 @@ limitations under the License.
 
 #include "osp/graph_algorithms/directed_graph_util.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
+#include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "osp/graph_implementations/adj_list_impl/dag_vector_adapter.hpp"
 #include "osp/graph_implementations/boost_graphs/boost_graph.hpp"
 #include "osp/graph_implementations/adj_list_impl/compact_sparse_graph.hpp"
@@ -50,7 +51,8 @@ BOOST_AUTO_TEST_CASE(test_dag_vector_adapter) {
 
     using v_impl = cdag_vertex_impl<unsigned, int, int, int, unsigned>;
     using graph_t = dag_vector_adapter<v_impl,int>;
-    using graph_constr_t = computational_dag_vector_impl<v_impl>;
+    //using graph_constr_t = computational_dag_vector_impl<v_impl>;
+    using graph_constr_t = computational_dag_edge_idx_vector_impl<v_impl, cdag_edge_impl_int>;
     using CoarseGraphType = Compact_Sparse_Graph<true, true, true, true, true, vertex_idx_t<graph_t>, std::size_t, v_workw_t<graph_t>, v_workw_t<graph_t>, v_workw_t<graph_t>, v_type_t<graph_t>>;
 
     graph_t graph(out_neighbors, in_neighbors);

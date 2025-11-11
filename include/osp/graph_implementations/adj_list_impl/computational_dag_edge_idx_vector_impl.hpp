@@ -27,27 +27,30 @@ limitations under the License.
 
 namespace osp {
 
+template<typename v_impl>
 struct directed_edge_descriptor_impl {
 
-    std::size_t idx;
+    using vertex_idx = typename v_impl::vertex_idx_type;
 
-    std::size_t source;
-    std::size_t target;
+    vertex_idx idx;
+
+    vertex_idx source;
+    vertex_idx target;
 
     directed_edge_descriptor_impl() : idx(0), source(0), target(0) {}
-    directed_edge_descriptor_impl(const directed_edge_descriptor_impl &other) = default;
-    directed_edge_descriptor_impl(directed_edge_descriptor_impl &&other) = default;
-    directed_edge_descriptor_impl &operator=(const directed_edge_descriptor_impl &other) = default;
-    directed_edge_descriptor_impl &operator=(directed_edge_descriptor_impl &&other) = default;
-    directed_edge_descriptor_impl(std::size_t source_arg, std::size_t target_arg, std::size_t idx_arg)
+    directed_edge_descriptor_impl(const directed_edge_descriptor_impl<v_impl> &other) = default;
+    directed_edge_descriptor_impl(directed_edge_descriptor_impl<v_impl> &&other) = default;
+    directed_edge_descriptor_impl &operator=(const directed_edge_descriptor_impl<v_impl> &other) = default;
+    directed_edge_descriptor_impl &operator=(directed_edge_descriptor_impl<v_impl> &&other) = default;
+    directed_edge_descriptor_impl(vertex_idx source_arg, vertex_idx target_arg, vertex_idx idx_arg)
         : idx(idx_arg), source(source_arg), target(target_arg) {}
     ~directed_edge_descriptor_impl() = default;
 
-    bool operator==(const directed_edge_descriptor_impl &other) const {
+    bool operator==(const directed_edge_descriptor_impl<v_impl> &other) const {
         return idx == other.idx && source == other.source && target == other.target;
     }
 
-    bool operator!=(const directed_edge_descriptor_impl &other) const { return !(*this == other); }
+    bool operator!=(const directed_edge_descriptor_impl<v_impl> &other) const { return !(*this == other); }
 };
 
 template<typename edge_comm_weight_t>
@@ -66,11 +69,11 @@ template<typename v_impl, typename e_impl>
 class computational_dag_edge_idx_vector_impl {
   public:
     // graph_traits specialization
-    using vertex_idx = std::size_t;
-    using directed_edge_descriptor = directed_edge_descriptor_impl;
+    using vertex_idx = typename v_impl::vertex_idx_type;
+    using directed_edge_descriptor = directed_edge_descriptor_impl<v_impl>;
 
-    using out_edges_iterator_t = std::vector<directed_edge_descriptor>::const_iterator;
-    using in_edges_iterator_t = std::vector<directed_edge_descriptor>::const_iterator;
+    using out_edges_iterator_t = typename std::vector<directed_edge_descriptor>::const_iterator;
+    using in_edges_iterator_t = typename std::vector<directed_edge_descriptor>::const_iterator;
 
     // cdag_traits specialization
     using vertex_work_weight_type = typename v_impl::work_weight_type;
@@ -287,10 +290,12 @@ static_assert(
 
 } // namespace osp
 
-template<>
-struct std::hash<osp::directed_edge_descriptor_impl> {
-    std::size_t operator()(const osp::directed_edge_descriptor_impl &p) const noexcept {
-        auto h1 = std::hash<std::size_t>{}(p.source);
+template<typename v_impl>
+struct std::hash<osp::directed_edge_descriptor_impl<v_impl>> {
+    using vertex_idx = typename v_impl::vertex_idx_type;
+
+    std::size_t operator()(const osp::directed_edge_descriptor_impl<v_impl> &p) const noexcept {
+        auto h1 = std::hash<vertex_idx>{}(p.source);
         osp::hash_combine(h1, p.target);
 
         return h1;
