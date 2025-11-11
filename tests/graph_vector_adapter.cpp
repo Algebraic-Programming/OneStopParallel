@@ -44,8 +44,6 @@ using namespace osp;
 
 BOOST_AUTO_TEST_CASE(test_dag_vector_adapter) {
 
-    std::vector<int> vertices{0, 1, 2, 3, 4, 5, 6, 7};
-
     std::vector<std::vector<int>> out_neighbors{{1, 2, 3}, {4, 6}, {4, 5}, {7}, {7}, {}, {}, {}};
 
     std::vector<std::vector<int>> in_neighbors{{}, {0}, {0}, {0}, {1, 2}, {2}, {1}, {4, 3}};
@@ -57,9 +55,20 @@ BOOST_AUTO_TEST_CASE(test_dag_vector_adapter) {
 
     graph_t graph(out_neighbors, in_neighbors);
     
+    for (auto v : graph.vertices()) {
+        graph.set_vertex_work_weight(v, 10);
+    }
+
     BspInstance<graph_t> instance;
     instance.getComputationalDag() = graph;
-    
+
+    instance.getArchitecture().setProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1 , 1, 1, 1, 1, 1, 1, 1, 1 , 1, 1, 1, 1, 1, 1, 1, 1 , 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1});
+    instance.setDiagonalCompatibilityMatrix(2);
+    instance.setSynchronisationCosts(1000);
+    instance.setCommunicationCosts(1);
+
+
+
     // Set up the scheduler
     GrowLocalAutoCores<graph_constr_t> growlocal;
     BspLocking<graph_constr_t> locking;
