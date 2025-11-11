@@ -381,7 +381,7 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::allChildrenContraction
         }
 
         expansionMapOutput.emplace_back( std::move(part) );
-        counter += graph.out_degree(groupHead);
+        counter += static_cast<vertex_idx_t<Graph_t_in>>( graph.out_degree(groupHead) );
         if (counter > maxCorseningNum) {
             minSave = vertSave;
         }
@@ -512,7 +512,7 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::allParentsContraction(
         }
 
         expansionMapOutput.emplace_back( std::move(part) );
-        counter += graph.in_degree(groupFoot);
+        counter += static_cast<vertex_idx_t<Graph_t_in>>( graph.in_degree(groupFoot) );
         if (counter > maxCorseningNum) {
             minSave = vertSave;
         }

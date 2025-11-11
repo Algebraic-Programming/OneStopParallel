@@ -264,7 +264,7 @@ struct top_sort_iterator {
             if (is_source(v, graph)) {
                 next.push(v);
             } else {
-                predecessors_count[v] = graph.in_degree(v);
+                predecessors_count[v] = static_cast<vertex_idx_t<Graph_t>>( graph.in_degree(v) );
             }
         }
         current_vertex = next.pop_next();

@@ -26,6 +26,7 @@ limitations under the License.
 #include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 #include "osp/graph_implementations/adj_list_impl/dag_vector_adapter.hpp"
 #include "osp/graph_implementations/boost_graphs/boost_graph.hpp"
+#include "osp/graph_implementations/adj_list_impl/compact_sparse_graph.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/BspLocking.hpp"
 #include "osp/bsp/scheduler/Serial.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/GreedyMetaScheduler.hpp"
@@ -52,6 +53,7 @@ BOOST_AUTO_TEST_CASE(test_dag_vector_adapter) {
     using v_impl = cdag_vertex_impl<unsigned, int, int, int, unsigned>;
     using graph_t = dag_vector_adapter<v_impl,int>;
     using graph_constr_t = computational_dag_vector_impl<v_impl>;
+    using CoarseGraphType = Compact_Sparse_Graph<true, true, true, true, true, vertex_idx_t<graph_t>, std::size_t, v_workw_t<graph_t>, v_workw_t<graph_t>, v_workw_t<graph_t>, v_type_t<graph_t>>;
 
     graph_t graph(out_neighbors, in_neighbors);
     
@@ -68,7 +70,7 @@ BOOST_AUTO_TEST_CASE(test_dag_vector_adapter) {
     ComboScheduler<graph_constr_t> growlocal_kl(growlocal, kl);
     ComboScheduler<graph_constr_t> locking_kl(locking, kl);
     ComboScheduler<graph_constr_t> children_kl(children, kl);
- 
+
     GreedyMetaScheduler<graph_constr_t> scheduler;
    // scheduler.addScheduler(growlocal_kl);
     scheduler.addScheduler(locking_kl);
@@ -84,9 +86,9 @@ BOOST_AUTO_TEST_CASE(test_dag_vector_adapter) {
     bool acyc = is_acyclic(corase_graph);
     BOOST_CHECK(acyc);
 
-    SarkarMul<graph_t, graph_constr_t> coarser;
+    SarkarMul<graph_t, CoarseGraphType> coarser;
 
-    graph_constr_t coarse_dag;
+    CoarseGraphType coarse_dag;
     std::vector<unsigned> reverse_vertex_map;
     coarser.coarsenDag(graph, coarse_dag, reverse_vertex_map);
 
