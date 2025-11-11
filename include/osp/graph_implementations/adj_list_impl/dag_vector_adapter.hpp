@@ -137,9 +137,9 @@ class dag_vector_adapter {
 
     inline auto children(const vertex_idx v) const { return vector_cast_view<index_t, vertex_idx>(out_neigbors->at(v)); }
 
-    inline std::size_t in_degree(const vertex_idx v) const { return in_neigbors->at(v).size(); }
+    inline vertex_idx in_degree(const vertex_idx v) const { return static_cast<vertex_idx>(in_neigbors->at(v).size()); }
 
-    inline std::size_t out_degree(const vertex_idx v) const { return out_neigbors->at(v).size(); }
+    inline vertex_idx out_degree(const vertex_idx v) const { return static_cast<vertex_idx>(out_neigbors->at(v).size()); }
 
     inline vertex_work_weight_type vertex_work_weight(const vertex_idx v) const { return vertices_[v].work_weight; }
 

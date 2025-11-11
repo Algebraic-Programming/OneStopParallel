@@ -125,9 +125,9 @@ class computational_dag_vector_impl {
 
     inline const std::vector<vertex_idx> &children(const vertex_idx v) const { return out_neigbors[v]; }
 
-    inline vertex_idx in_degree(const vertex_idx v) const { return in_neigbors[v].size(); }
+    inline vertex_idx in_degree(const vertex_idx v) const { return static_cast<vertex_idx>(in_neigbors[v].size()); }
 
-    inline vertex_idx out_degree(const vertex_idx v) const { return out_neigbors[v].size(); }
+    inline vertex_idx out_degree(const vertex_idx v) const { return static_cast<vertex_idx>(out_neigbors[v].size()); }
 
     inline vertex_work_weight_type vertex_work_weight(const vertex_idx v) const { return vertices_[v].work_weight; }
 

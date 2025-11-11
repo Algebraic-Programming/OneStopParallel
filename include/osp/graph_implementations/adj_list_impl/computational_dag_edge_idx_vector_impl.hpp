@@ -149,8 +149,8 @@ class computational_dag_edge_idx_vector_impl {
 
     virtual ~computational_dag_edge_idx_vector_impl() = default;
 
-    inline vertex_idx num_edges() const { return edges_.size(); }
-    inline vertex_idx num_vertices() const { return vertices_.size(); }
+    inline vertex_idx num_edges() const { return static_cast<vertex_idx>(edges_.size()); }
+    inline vertex_idx num_vertices() const { return static_cast<vertex_idx>(vertices_.size()); }
 
     inline auto edges() const { return edge_range_vector_impl<ThisT>(*this); }
 
@@ -162,8 +162,8 @@ class computational_dag_edge_idx_vector_impl {
     inline const std::vector<directed_edge_descriptor> &in_edges(vertex_idx v) const { return in_edges_[v]; }
     inline const std::vector<directed_edge_descriptor> &out_edges(vertex_idx v) const { return out_edges_[v]; }
 
-    inline vertex_idx in_degree(vertex_idx v) const { return in_edges_[v].size(); }
-    inline vertex_idx out_degree(vertex_idx v) const { return out_edges_[v].size(); }
+    inline vertex_idx in_degree(vertex_idx v) const { return static_cast<vertex_idx>(in_edges_[v].size()); }
+    inline vertex_idx out_degree(vertex_idx v) const { return static_cast<vertex_idx>(out_edges_[v].size()); }
 
     inline edge_comm_weight_type edge_comm_weight(directed_edge_descriptor e) const {
         return edges_[e.idx].comm_weight;

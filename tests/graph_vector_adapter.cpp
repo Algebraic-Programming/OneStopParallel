@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(test_dag_vector_adapter) {
 
     auto partition = iso_scheduler.compute_partition(instance);
 
-    graph_t corase_graph;
+    graph_constr_t corase_graph;
     coarser_util::construct_coarse_dag(instance.getComputationalDag(), corase_graph, partition);
     bool acyc = is_acyclic(corase_graph);
     BOOST_CHECK(acyc);

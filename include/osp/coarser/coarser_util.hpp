@@ -419,7 +419,7 @@ invert_vertex_expansion_map(const std::vector<std::vector<vertex_idx_t<Graph_t_i
     std::vector<vertex_idx_t<Graph_t_out>> vertex_contraction_map(num_vert);
     for (std::size_t i = 0; i < vertex_expansion_map.size(); i++) {
         for (const vertex_idx_t<Graph_t_in> &vert : vertex_expansion_map[i]) {
-            vertex_contraction_map[vert] = i;
+            vertex_contraction_map[vert] = static_cast<vertex_idx_t<Graph_t_out>>(i);
         }
     }
 
