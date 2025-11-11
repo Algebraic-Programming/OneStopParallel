@@ -93,8 +93,7 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
     constexpr static unsigned window_range = 2 * window_size + 1;
     constexpr static bool enable_quick_moves = true;
     constexpr static bool enable_preresolving_violations = true;
-
-    const double EPSILON = 1e-9;
+    constexpr static double EPSILON = 1e-9;
 
     using memw_t = v_memw_t<Graph_t>;
     using commw_t = v_commw_t<Graph_t>;
