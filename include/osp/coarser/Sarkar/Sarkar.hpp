@@ -545,7 +545,7 @@ template<typename Graph_t_in, typename Graph_t_out>
 std::vector<std::vector<vertex_idx_t<Graph_t_in>>> Sarkar<Graph_t_in, Graph_t_out>::generate_vertex_expansion_map(const Graph_t_in &dag_in, vertex_idx_t<Graph_t_in> &diff) {
     std::vector<std::vector<vertex_idx_t<Graph_t_in>>> expansionMap;
 
-    // std::cout << "Mode: " << (int) params.mode << "\n";
+    // std::cout << "Mode: " << static_cast<int>(params.mode) << "\n";
 
     switch (params.mode)
     {
