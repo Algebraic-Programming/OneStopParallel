@@ -96,7 +96,8 @@ struct kl_hyper_total_comm_cost_function {
         for(const auto vertex : graph->vertices()) {
             const unsigned vertex_proc = active_schedule->assigned_processor(vertex);
             const cost_t v_comm_cost = graph->vertex_comm_weight(vertex);
-            for (const auto [lambda_proc, mult] : node_lambda_map.iterate_proc_entries(vertex)) {
+            for (const auto lambdaproc_mult_pair : node_lambda_map.iterate_proc_entries(vertex)) {
+                const auto &lambda_proc = lambdaproc_mult_pair.first;
                 comm_costs += v_comm_cost * instance->communicationCosts(vertex_proc, lambda_proc);
             } 
         }
@@ -521,7 +522,8 @@ struct kl_hyper_total_comm_cost_function {
             if (p == node_proc)
                 continue;
 
-            for (const auto [lambda_proc, mult] : node_lambda_map.iterate_proc_entries(node)) {
+            for (const auto lambda_pair : node_lambda_map.iterate_proc_entries(node)) {
+                const auto &lambda_proc = lambda_pair.first;
                 const cost_t comm_cost = change_comm_cost(instance->communicationCosts(p, lambda_proc), instance->communicationCosts(node_proc, lambda_proc), comm_gain);
                 for (unsigned idx = node_start_idx; idx < window_bound; idx++) {
                     affinity_table_node[p][idx] += comm_cost;
