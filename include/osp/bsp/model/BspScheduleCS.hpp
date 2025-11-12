@@ -333,7 +333,7 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
 
         // The data structure stores for each processor a set of tuples representing required sends.
         // Each tuple is (communication_cost, source_node, destination_processor).
-        std::vector<std::set<std::tuple<v_commw_t<Graph_t>, vertex_idx_t<Graph_t>, unsigned>>> require_sending(BspSchedule<Graph_t>::instance->numberOfProcessors());
+        std::vector<std::set<std::tuple<v_commw_t<Graph_t>, vertex_idx_t<Graph_t>, unsigned>, std::greater<>>> require_sending(BspSchedule<Graph_t>::instance->numberOfProcessors());
 
         for (unsigned proc = 0; proc < BspSchedule<Graph_t>::instance->numberOfProcessors(); proc++) {
             for (const auto &node : step_proc_node_list[0][proc]) {
@@ -391,9 +391,9 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
                 if (require_sending[proc].empty() ||
                     std::get<0>(*require_sending[proc].rbegin()) + send_cost[proc] >
                         max_comm_cost)
-                    continue; // This check is not strictly necessary with the new loop but can be a fast exit.
-                auto iter = require_sending[proc].rbegin();
-                while (iter != require_sending[proc].rend()) {
+                    continue;
+                auto iter = require_sending[proc].begin();
+                while (iter != require_sending[proc].end()) {
                     const auto& [comm_cost, node_to_send, dest_proc] = *iter;
                     if (comm_cost + send_cost[proc] > max_comm_cost ||
                         comm_cost + receive_cost[dest_proc] > max_comm_cost) {
@@ -403,7 +403,7 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
                         node_to_proc_been_sent[node_to_send][dest_proc] = true;
                         send_cost[proc] += comm_cost;
                         receive_cost[dest_proc] += comm_cost;
-                        iter = std::make_reverse_iterator(require_sending[proc].erase(std::next(iter).base()));
+                        iter = require_sending[proc].erase(iter);
                         if (require_sending[proc].empty() ||
                             std::get<0>(*require_sending[proc].rbegin()) + send_cost[proc] >
                                 max_comm_cost)
