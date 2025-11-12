@@ -111,7 +111,7 @@ class OrbitGraphProcessor {
     simulate_merge(VertexType u, VertexType v, const Constr_Graph_t &current_coarse_graph) const {
         std::vector<VertexType> temp_contraction_map(current_coarse_graph.num_vertices());
         VertexType new_idx = 0;
-        for (VertexType i = 0; i < temp_contraction_map.size(); ++i) {
+        for (VertexType i = 0; i < static_cast<VertexType>(temp_contraction_map.size()); ++i) {
             if (i != v) {
                 temp_contraction_map[i] = new_idx++;
             }
@@ -175,7 +175,7 @@ class OrbitGraphProcessor {
         locked_orbits = std::move(next_locked_orbits);
 
         std::vector<Group> next_groups(current_coarse_graph.num_vertices());
-        for (VertexType i = 0; i < current_groups.size(); ++i) {
+        for (VertexType i = 0; i < static_cast<VertexType>(current_groups.size()); ++i) {
             if (i != u && i != v) {
                 next_groups[group_remap[i]] = std::move(current_groups[i]);
             }

@@ -107,7 +107,7 @@ std::vector<vertex_idx_t<Graph_t>> GetTopOrder(const Graph_t &graph) {
             }
         }
 
-        if (TopOrder.size() != graph.num_vertices())
+        if (static_cast<VertexType>(TopOrder.size()) != graph.num_vertices())
             throw std::runtime_error("Error during topological ordering: TopOrder.size() != graph.num_vertices() [" +
                                      std::to_string(TopOrder.size()) + " != " + std::to_string(graph.num_vertices()) +
                                      "]");
