@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(test_instance_bicgstab) {
     BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
     BOOST_CHECK_EQUAL(schedule.numberOfSupersteps(), 1);
 
-};
+}
 
 BOOST_AUTO_TEST_CASE(test_schedule_writer) {
 
@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(test_schedule_writer) {
     std::cout << "Writing schedule_t2 CS" << std::endl;
     BspScheduleCS<graph_t2> schedule_cs(schedule_t2);
     sched_writer.write_schedule_cs(std::cout, schedule_cs);
-};
+}
 
 BOOST_AUTO_TEST_CASE(test_bsp_schedule_cs) {
 
@@ -329,7 +329,7 @@ BOOST_AUTO_TEST_CASE(test_bsp_schedule_cs) {
         BOOST_CHECK_EQUAL(schedule_cs_t2.assignedSuperstep(v), schedule.assignedSuperstep(v));
         BOOST_CHECK_EQUAL(schedule_cs_t2.assignedProcessor(v), schedule.assignedProcessor(v));
     }
-};
+}
 
 BOOST_AUTO_TEST_CASE(test_max_bsp_schedule) {
 

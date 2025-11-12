@@ -78,7 +78,7 @@ class OrbitGraphProcessor {
     size_t min_symmetry_ = 2; // min symmetry threshold    
     v_workw_t<Constr_Graph_t> work_threshold_ = 0;
     v_workw_t<Constr_Graph_t> critical_path_threshold_ = 0;
-    bool merge_different_node_types = true;
+    bool merge_different_node_types_ = true;
     double lock_orbit_ratio = 0.2;
 
     struct PairHasher {
@@ -208,7 +208,7 @@ class OrbitGraphProcessor {
 
 
                     if constexpr (has_typed_vertices_v<Constr_Graph_t>) {
-                        if (not merge_different_node_types) {
+                        if (not merge_different_node_types_) {
                             if (current_coarse_graph.vertex_type(u) != current_coarse_graph.vertex_type(v)) {
                                 if constexpr (verbose) {
                                     std::cout << "  - Merge of " << u << " and " << v << " not viable (different node types)\n";
@@ -559,7 +559,7 @@ class OrbitGraphProcessor {
      * @param threshold The symmetry threshold.
      */
     void set_symmetry_threshold(size_t threshold) { symmetry_threshold_ = threshold; }
-    void setMergeDifferentNodeTypes(bool flag) { merge_different_node_types = flag; }
+    void setMergeDifferentNodeTypes(bool flag) { merge_different_node_types_ = flag; }
     void set_work_threshold(v_workw_t<Constr_Graph_t> work_threshold) { work_threshold_ = work_threshold; }
     void setCriticalPathThreshold(v_workw_t<Constr_Graph_t> critical_path_threshold) { critical_path_threshold_ = critical_path_threshold; }
     void setLockRatio(double lock_ratio) { lock_orbit_ratio = lock_ratio; }
@@ -634,8 +634,8 @@ class OrbitGraphProcessor {
         if constexpr (verbose) {
             std::cout << "Attempting to merge different node types.\n";
         }
-        contract_edges(original_dag, current_coarse_graph, current_groups, current_contraction_map, false, merge_different_node_types);
-        contract_edges(original_dag, current_coarse_graph, current_groups, current_contraction_map, true, merge_different_node_types);
+        contract_edges(original_dag, current_coarse_graph, current_groups, current_contraction_map, false, merge_different_node_types_);
+        contract_edges(original_dag, current_coarse_graph, current_groups, current_contraction_map, true, merge_different_node_types_);
     
 
         if constexpr (verbose) {
@@ -646,7 +646,7 @@ class OrbitGraphProcessor {
         non_viable_crit_path_edges_cache_.clear();
         non_viable_edges_cache_.clear();
 
-        contract_edges(original_dag, current_coarse_graph, current_groups, current_contraction_map, true, merge_different_node_types, work_threshold_);
+        contract_edges(original_dag, current_coarse_graph, current_groups, current_contraction_map, true, merge_different_node_types_, work_threshold_);
         
         // --- Finalize ---
         final_coarse_graph_ = std::move(current_coarse_graph);
@@ -694,11 +694,11 @@ class OrbitGraphProcessor {
             const bool is_last_loop = (current_symmetry / 2) < min_symmetry_;   
             contract_edges_adpative_sym(original_dag, current_coarse_graph, current_groups, current_contraction_map, false, is_last_loop);                 
             
-            if (merge_different_node_types)
-                contract_edges_adpative_sym(original_dag, current_coarse_graph, current_groups, current_contraction_map, merge_different_node_types, is_last_loop);
+            if (merge_different_node_types_)
+                contract_edges_adpative_sym(original_dag, current_coarse_graph, current_groups, current_contraction_map, merge_different_node_types_, is_last_loop);
             
             non_viable_crit_path_edges_cache_.clear();
-            contract_edges_adpative_sym(original_dag, current_coarse_graph, current_groups, current_contraction_map, merge_different_node_types, is_last_loop, critical_path_threshold_);
+            contract_edges_adpative_sym(original_dag, current_coarse_graph, current_groups, current_contraction_map, merge_different_node_types_, is_last_loop, critical_path_threshold_);
 
             for (const auto& v : current_coarse_graph.vertices()) {
                 if (current_coarse_graph.vertex_work_weight(v) > lock_threshold) {

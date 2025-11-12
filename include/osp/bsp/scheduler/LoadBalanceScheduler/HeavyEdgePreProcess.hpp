@@ -115,6 +115,6 @@ heavy_edge_preprocess(const Graph_t &graph, const double heavy_is_x_times_median
     }
 
     return uf_structure.get_connected_components();
-};
+}
 
 } // namespace osp

@@ -66,13 +66,13 @@ bool compare_vectors(Eigen::VectorXd &v1, Eigen::VectorXd &v2) {
         }
     }
     return same;
-};
+}
 
 template<typename TargetObjectType>
 class BspSptrsvStatsModule : public IStatisticModule<TargetObjectType> {
 public:
-    explicit BspSptrsvStatsModule(SCHEDULE_NODE_PERMUTATION_MODES mode = NO_PERMUTE)
-        : mode(mode) {}
+    explicit BspSptrsvStatsModule(SCHEDULE_NODE_PERMUTATION_MODES _mode = NO_PERMUTE)
+        : mode(_mode) {}
 
     
     std::vector<std::string> get_metric_headers() const override {

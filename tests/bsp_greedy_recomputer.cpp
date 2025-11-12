@@ -93,4 +93,4 @@ BOOST_AUTO_TEST_CASE(test_recomputer) {
     BOOST_CHECK(schedule.satisfiesConstraints());
     BOOST_CHECK(schedule.computeCosts() < schedule_init_cs2.computeCosts());
     std::cout<<"Cost decrease by greedy recomp: "<<schedule_init_cs2.computeCosts()<<" -> "<<schedule.computeCosts()<<std::endl;
-};
+}

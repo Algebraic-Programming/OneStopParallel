@@ -461,7 +461,7 @@ std::vector<vertex_idx_t<Graph_t>> successors(const vertex_idx_t<Graph_t> &v, co
         vec.push_back(suc);
     }
     return vec;
-};
+}
 
 /**
  * @brief Returns a collection containing the ancestors of a vertex in a directed graph.
@@ -480,7 +480,7 @@ std::vector<vertex_idx_t<Graph_t>> ancestors(const vertex_idx_t<Graph_t> &v, con
         vec.push_back(anc);
     }
     return vec;
-};
+}
 
 template<typename Graph_t>
 bool is_acyclic(const Graph_t &graph) {

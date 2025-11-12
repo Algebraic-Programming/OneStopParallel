@@ -204,4 +204,4 @@ BOOST_AUTO_TEST_CASE(Architecture) {
     BOOST_CHECK_EQUAL(test.synchronisationCosts(), 2);
     BOOST_CHECK_EQUAL(test.sendCosts(4, 3), 1);
     BOOST_CHECK_EQUAL(test.isNumaArchitecture(), false);
-};
+}

@@ -85,9 +85,9 @@ class Hypergraph {
 using Hypergraph_def_t = Hypergraph<size_t, int, int, int>;
 
 template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
-void Hypergraph<index_type, workw_type, memw_type, commw_type>::add_pin(index_type vertex_idx, index_type hyperedge_idx)
+void Hypergraph<index_type, workw_type, memw_type, commw_type>::add_pin(index_type vertex, index_type hyperedge_idx)
 {
-    if(vertex_idx >= Num_vertices)
+    if(vertex >= Num_vertices)
     {
         throw std::invalid_argument("Invalid Argument while adding pin: vertex index out of range.");
     }
@@ -96,8 +96,8 @@ void Hypergraph<index_type, workw_type, memw_type, commw_type>::add_pin(index_ty
         throw std::invalid_argument("Invalid Argument while adding pin: hyperedge index out of range.");
     }
     else{    
-        incident_hyperedges_to_vertex[vertex_idx].push_back(hyperedge_idx);
-        vertices_in_hyperedge[hyperedge_idx].push_back(vertex_idx);
+        incident_hyperedges_to_vertex[vertex].push_back(hyperedge_idx);
+        vertices_in_hyperedge[hyperedge_idx].push_back(vertex);
         ++Num_pins;
     }
 }
@@ -131,21 +131,21 @@ void Hypergraph<index_type, workw_type, memw_type, commw_type>::add_hyperedge(co
 }
 
 template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
-void Hypergraph<index_type, workw_type, memw_type, commw_type>::set_vertex_work_weight(index_type vertex_idx, workw_type weight)
+void Hypergraph<index_type, workw_type, memw_type, commw_type>::set_vertex_work_weight(index_type vertex, workw_type weight)
 {
-    if(vertex_idx >= Num_vertices)
+    if(vertex >= Num_vertices)
         throw std::invalid_argument("Invalid Argument while setting vertex weight: vertex index out of range.");
     else   
-        vertex_work_weights[vertex_idx] = weight;
+        vertex_work_weights[vertex] = weight;
 }
 
 template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
-void Hypergraph<index_type, workw_type, memw_type, commw_type>::set_vertex_memory_weight(index_type vertex_idx, memw_type weight)
+void Hypergraph<index_type, workw_type, memw_type, commw_type>::set_vertex_memory_weight(index_type vertex, memw_type weight)
 {
-    if(vertex_idx >= Num_vertices)
+    if(vertex >= Num_vertices)
         throw std::invalid_argument("Invalid Argument while setting vertex weight: vertex index out of range.");
     else   
-        vertex_memory_weights[vertex_idx] = weight;
+        vertex_memory_weights[vertex] = weight;
 }
 
 template<typename index_type, typename workw_type, typename memw_type, typename commw_type>

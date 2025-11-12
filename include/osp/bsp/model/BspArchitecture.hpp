@@ -299,7 +299,7 @@ class BspArchitecture {
         for (unsigned i = 0; i < number_processors; ++i)
             for (unsigned j = 0; j < number_processors; ++j)
                 avg += static_cast<double>(send_costs[i][j]);
-        avg = avg * (double)communication_costs / (double)number_processors / (double)number_processors;
+        avg = avg * static_cast<double>(communication_costs) / static_cast<double>(number_processors) / static_cast<double>(number_processors);
 
         if (avg > static_cast<double>(std::numeric_limits<unsigned>::max())) {
             throw std::invalid_argument("avg comm exceeds the limit (something is very wrong)");

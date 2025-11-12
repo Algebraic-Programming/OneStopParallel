@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
     BOOST_CHECK_EQUAL(has_path(7, 4, graph), false);
     BOOST_CHECK_EQUAL(has_path(7, 5, graph), false);
     BOOST_CHECK_EQUAL(has_path(7, 6, graph), false);
-};
+}
 
 BOOST_AUTO_TEST_CASE(test_constr_dag) {
 

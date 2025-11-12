@@ -101,7 +101,7 @@ class Serial : public Scheduler<Graph_t> {
             }
         }
 
-        size_t scheduled_nodes_count = 0;
+        vertex_idx_t<Graph_t> scheduled_nodes_count = 0;
         unsigned current_superstep = 0;
 
         while (scheduled_nodes_count < num_vertices) {

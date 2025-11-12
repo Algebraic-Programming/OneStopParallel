@@ -214,7 +214,7 @@ bool BspScheduleRecomp<Graph_t>::satisfiesConstraints() const {
     }
     
     return true;
-};
+}
 
 template<typename Graph_t>
 v_workw_t<Graph_t> BspScheduleRecomp<Graph_t>::computeWorkCosts() const {

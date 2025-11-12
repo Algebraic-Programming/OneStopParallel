@@ -38,7 +38,7 @@ class BspScheduleCoarser : public CoarserGenContractionMap<Graph_t_in, Graph_t_o
     const BspSchedule<Graph_t_in> *schedule;
 
   public:
-    BspScheduleCoarser(const BspSchedule<Graph_t_in> &schedule) : schedule(&schedule) {}
+    BspScheduleCoarser(const BspSchedule<Graph_t_in> &_schedule) : schedule(&_schedule) {}
 
     /**
      * @brief Destructor for the Coarser class.

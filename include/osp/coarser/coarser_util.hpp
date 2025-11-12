@@ -40,7 +40,7 @@ bool check_valid_contraction_map(const std::vector<vertex_idx_t<Graph_t_out>> &v
     return std::all_of(image.cbegin(), image.cend(), [image_size](const vertex_idx_t<Graph_t_out> &vert) {
         return (vert >= static_cast<vertex_idx_t<Graph_t_out>>(0)) && (vert < image_size);
     });
-};
+}
 
 template<typename T>
 struct acc_sum {
@@ -383,7 +383,7 @@ bool check_valid_expansion_map(const std::vector<std::vector<vertex_idx_t<Graph_
     }
 
     return (cntr == preImage.size());
-};
+}
 
 template<typename Graph_t_in, typename Graph_t_out>
 std::vector<std::vector<vertex_idx_t<Graph_t_in>>>
@@ -402,7 +402,7 @@ invert_vertex_contraction_map(const std::vector<vertex_idx_t<Graph_t_out>> &vert
     }
 
     return expansion_map;
-};
+}
 
 template<typename Graph_t_in, typename Graph_t_out>
 std::vector<vertex_idx_t<Graph_t_out>>
@@ -419,12 +419,12 @@ invert_vertex_expansion_map(const std::vector<std::vector<vertex_idx_t<Graph_t_i
     std::vector<vertex_idx_t<Graph_t_out>> vertex_contraction_map(num_vert);
     for (std::size_t i = 0; i < vertex_expansion_map.size(); i++) {
         for (const vertex_idx_t<Graph_t_in> &vert : vertex_expansion_map[i]) {
-            vertex_contraction_map[vert] = i;
+            vertex_contraction_map[vert] = static_cast<vertex_idx_t<Graph_t_out>>(i);
         }
     }
 
     return vertex_contraction_map;
-};
+}
 
 
 template<typename Graph_t_in>
@@ -485,7 +485,7 @@ void reorder_expansion_map(const Graph_t_in &graph, std::vector<std::vector<vert
     inverse_permute_inplace(vertex_expansion_map, topOrder);
 
     return;
-};
+}
 
 
 

@@ -437,7 +437,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                 node_best_proc = proc;
                 rand_count = 0;
 
-            } else if (node_max_gain == proc_max) {
+            } else if (node_max_gain <= proc_max) { // only ==
 
                 if (rand() % (2 + rand_count) == 0) {
                     node_max_gain = proc_max;
@@ -750,7 +750,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                 node_best_proc = proc;
                 rand_count = 0;
 
-            } else if (node_max_gain == proc_max) {
+            } else if (node_max_gain <= proc_max) {
 
                 if (rand() % (2 + rand_count) == 0) {
                     node_max_gain = proc_max;
@@ -998,7 +998,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
             std::sample(current_schedule.set_schedule.step_processor_vertices[step_selection_counter][max_step].begin(),
                         current_schedule.set_schedule.step_processor_vertices[step_selection_counter][max_step].end(),
                         std::inserter(node_selection, node_selection.end()),
-                        (unsigned)std::round(parameters.selection_threshold * .66), gen);
+                        static_cast<unsigned>(std::round(parameters.selection_threshold * .66)), gen);
         }
 
         if (current_schedule.set_schedule.step_processor_vertices[step_selection_counter][second_max_step].size() <
@@ -1014,7 +1014,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                 current_schedule.set_schedule.step_processor_vertices[step_selection_counter][second_max_step].begin(),
                 current_schedule.set_schedule.step_processor_vertices[step_selection_counter][second_max_step].end(),
                 std::inserter(node_selection, node_selection.end()),
-                (unsigned)std::round(parameters.selection_threshold * .33), gen);
+                static_cast<unsigned>(std::round(parameters.selection_threshold * .33)), gen);
         }
 
         if (do_not_select_super_locked_nodes) {

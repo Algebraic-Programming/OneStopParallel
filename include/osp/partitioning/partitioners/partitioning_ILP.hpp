@@ -38,7 +38,7 @@ class HypergraphPartitioningILP : public HypergraphPartitioningILPBase<hypergrap
 
   public:
 
-    virtual ~HypergraphPartitioningILP() = default;
+    virtual ~HypergraphPartitioningILP() override = default;
 
     RETURN_STATUS computePartitioning(Partitioning<hypergraph_t>& result);
 
@@ -107,7 +107,7 @@ void HypergraphPartitioningILP<hypergraph_t>::setupExtraVariablesConstraints(con
             for (const index_type& hyperedge : instance.getHypergraph().get_incident_hyperedges(node))
                 model.AddConstr(this->hyperedge_uses_partition[hyperedge][static_cast<int>(part)] >= this->node_in_partition[node][static_cast<int>(part)]);
              
-};
+}
 
 // convert generic one-to-many assingment (of base class function) to one-to-one
 template<typename hypergraph_t>

@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(StepByStepCoarser_test) {
     coarser.coarsenForPebbling(DAG, coarsened_dag2, new_vertex_id);
     old_vertex_ids = coarser_util::invert_vertex_contraction_map<graph, graph>(new_vertex_id);
 
-};
+}
 
 BOOST_AUTO_TEST_CASE(Multilevel_test) {
 
@@ -113,4 +113,4 @@ BOOST_AUTO_TEST_CASE(Multilevel_test) {
     BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
     BOOST_CHECK(schedule2.satisfiesPrecedenceConstraints());
 
-};
+}

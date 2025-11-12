@@ -84,4 +84,4 @@ BOOST_AUTO_TEST_CASE(longest_edge_triangle_parallel) {
             BOOST_CHECK(deleted_edges.find(edge) != deleted_edges.cend());
         }
     }
-};
+}

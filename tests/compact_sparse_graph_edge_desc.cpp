@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(Empty_Graph_keep_order) {
             BOOST_CHECK_EQUAL(edge, 100);
         }
     }
-};
+}
 
 BOOST_AUTO_TEST_CASE(Empty_Graph_reorder) {
     Compact_Sparse_Graph_EdgeDesc<false> graph;
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(Empty_Graph_reorder) {
             BOOST_CHECK_EQUAL(edge, 100);
         }
     }
-};
+}
 
 BOOST_AUTO_TEST_CASE(No_Edges_Graph_keep_order) {
     const std::vector<std::pair<std::size_t, std::size_t>> edges({});
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(No_Edges_Graph_keep_order) {
     }
 
     BOOST_CHECK_EQUAL(vert_counter, graph.num_vertices());
-};
+}
 
 BOOST_AUTO_TEST_CASE(No_Edges_Graph_reorder) {
     const std::vector<std::pair<std::size_t, std::size_t>> edges({});
@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(No_Edges_Graph_reorder) {
     std::iota(perm.begin(), perm.end(), 0);
     const std::vector<std::size_t> &graph_perm = graph.get_pullback_permutation();
     BOOST_CHECK(std::is_permutation(perm.cbegin(), perm.cend(), graph_perm.cbegin(), graph_perm.cend()));
-};
+}
 
 BOOST_AUTO_TEST_CASE(LineGraph_keep_order) {
     const std::vector<std::pair<std::size_t, std::size_t>> edges({{0, 1}, {1, 2}, {2, 3}, {3, 4}, {4, 5}, {5, 6}, {6, 7}});
@@ -269,7 +269,7 @@ BOOST_AUTO_TEST_CASE(LineGraph_keep_order) {
         ++vert_counter;
     }
     BOOST_CHECK_EQUAL(vert_counter, graph.num_vertices());
-};
+}
 
 
 BOOST_AUTO_TEST_CASE(LineGraph_reorder) {
@@ -385,7 +385,7 @@ BOOST_AUTO_TEST_CASE(LineGraph_reorder) {
         ++vert_counter;
     }
     BOOST_CHECK_EQUAL(vert_counter, graph.num_vertices());
-};
+}
 
 
 BOOST_AUTO_TEST_CASE(Graph1_keep_order) {
@@ -396,12 +396,12 @@ BOOST_AUTO_TEST_CASE(Graph1_keep_order) {
     BOOST_CHECK_EQUAL(graph.num_vertices(), 11);
     BOOST_CHECK_EQUAL(graph.num_edges(), 11);
 
-    std::size_t cntr = 0;
+    std::size_t cntr_0 = 0;
     for (const auto &vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(vert, cntr);
-        ++cntr;
+        BOOST_CHECK_EQUAL(vert, cntr_0);
+        ++cntr_0;
     }
-    BOOST_CHECK_EQUAL(graph.num_vertices(), cntr);
+    BOOST_CHECK_EQUAL(graph.num_vertices(), cntr_0);
 
     std::vector<std::vector<std::size_t>> out_edges({
         {1, 2},
@@ -508,7 +508,7 @@ BOOST_AUTO_TEST_CASE(Graph1_keep_order) {
     for (const auto &vert : graph.vertices()) {
         BOOST_CHECK_EQUAL(graph.vertex_type(vert), 0);
     }
-};
+}
 
 BOOST_AUTO_TEST_CASE(Graph1_reorder) {
     const std::vector<std::pair<std::size_t, std::size_t>> edges({{0, 1}, {2, 3}, {6, 10}, {7, 9}, {0, 2}, {4, 6}, {1, 6}, {6, 7}, {5, 6}, {3, 7}, {1, 2}});
@@ -518,12 +518,12 @@ BOOST_AUTO_TEST_CASE(Graph1_reorder) {
     BOOST_CHECK_EQUAL(graph.num_vertices(), 11);
     BOOST_CHECK_EQUAL(graph.num_edges(), 11);
 
-    std::size_t cntr = 0;
+    std::size_t cntr_0 = 0;
     for (const auto &vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(vert, cntr);
-        ++cntr;
+        BOOST_CHECK_EQUAL(vert, cntr_0);
+        ++cntr_0;
     }
-    BOOST_CHECK_EQUAL(graph.num_vertices(), cntr);
+    BOOST_CHECK_EQUAL(graph.num_vertices(), cntr_0);
 
     std::vector<std::size_t> perm(11, 0);
     std::iota(perm.begin(), perm.end(), 0);
@@ -662,7 +662,7 @@ BOOST_AUTO_TEST_CASE(Graph1_reorder) {
         }
     }
     BOOST_CHECK_EQUAL(edge_cntr, graph.num_edges());
-};
+}
 
 BOOST_AUTO_TEST_CASE(Graph1_e_comm_keep_order) {
     const std::vector<std::pair<std::size_t, std::size_t>> edges({{0, 1}, {2, 3}, {6, 10}, {7, 9}, {0, 2}, {4, 6}, {1, 6}, {6, 7}, {5, 6}, {3, 7}, {1, 2}});
@@ -688,7 +688,7 @@ BOOST_AUTO_TEST_CASE(Graph1_e_comm_keep_order) {
         auto ind = std::distance(edges.cbegin(), it);
         BOOST_CHECK_EQUAL(edge_weights[static_cast<std::size_t>(ind)], graph.edge_comm_weight(edge));
     }
-};
+}
 
 
 BOOST_AUTO_TEST_CASE(Graph1_e_comm_reorder) {
@@ -720,4 +720,4 @@ BOOST_AUTO_TEST_CASE(Graph1_e_comm_reorder) {
         auto ind = std::distance(edges.cbegin(), it);
         BOOST_CHECK_EQUAL(edge_weights[static_cast<std::size_t>(ind)], graph.edge_comm_weight(edge));
     }
-};
+}

@@ -34,7 +34,7 @@ bool thue_morse_gen(long unsigned int n) {
         n /= 2;
     }
     return bool(bin_sum%2);  // (bits.count()%2);
-};
+}
 
 BOOST_AUTO_TEST_CASE(Random_Biased_Coin) {
     std::cout << "True: " << true << " False: " << false << std::endl; 
@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(Random_Biased_Coin) {
         std::cout << Coin.get_flip();
     }
     std::cout << std::endl << std::endl;
-};
+}
 
 BOOST_AUTO_TEST_CASE(Thue__Morse) {
     Thue_Morse_Sequence Coin(0);
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(Thue__Morse) {
         BOOST_CHECK_EQUAL(Test_Coin_random.get_flip(), thue_morse_gen(ind));
         // std::cout << "bye " << i << std::endl;
     }
-};
+}
 
 
 BOOST_AUTO_TEST_CASE(Repeater_Coin) {
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(Repeater_Coin) {
         std::cout << Coin.get_flip();
     }
     std::cout << std::endl << std::endl;
-};
+}
 
 BOOST_AUTO_TEST_CASE(Random_Biased_Coin_with_side_bias_1_1) {
     Biased_Random_with_side_bias Coin({1,1});
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(Random_Biased_Coin_with_side_bias_1_1) {
     std::cout << std::endl;
     std::cout << "True count: " << true_count << " False count: " << false_count << std::endl;
     std::cout << std::endl;
-};
+}
 
 BOOST_AUTO_TEST_CASE(Random_Biased_Coin_with_side_bias_1_0) {
     Biased_Random_with_side_bias Coin({1,0});
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(Random_Biased_Coin_with_side_bias_1_0) {
     std::cout << std::endl;
     std::cout << "True count: " << true_count << " False count: " << false_count << std::endl;
     std::cout << std::endl;
-};
+}
 
 
 BOOST_AUTO_TEST_CASE(Random_Biased_Coin_with_side_bias_0_1) {
@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE(Random_Biased_Coin_with_side_bias_0_1) {
     std::cout << std::endl;
     std::cout << "True count: " << true_count << " False count: " << false_count << std::endl;
     std::cout << std::endl;
-};
+}
 
 
 BOOST_AUTO_TEST_CASE(Random_Biased_Coin_with_side_bias_3_2) {
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(Random_Biased_Coin_with_side_bias_3_2) {
     std::cout << std::endl;
     std::cout << "True count: " << true_count << " False count: " << false_count << std::endl;
     std::cout << std::endl;
-};
+}
 
 BOOST_AUTO_TEST_CASE(Random_Biased_Coin_with_side_bias_3_1) {
     Biased_Random_with_side_bias Coin({3,1});
@@ -185,4 +185,4 @@ BOOST_AUTO_TEST_CASE(Random_Biased_Coin_with_side_bias_3_1) {
     std::cout << std::endl;
     std::cout << "True count: " << true_count << " False count: " << false_count << std::endl;
     std::cout << std::endl;
-};
+}

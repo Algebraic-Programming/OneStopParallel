@@ -304,4 +304,4 @@ inline std::vector<vertex_idx_t<Graph_t>> GetTopOrderCuthillMcKeeUndirected(cons
 }
 
 
-}; // namespace osp
+} // namespace osp

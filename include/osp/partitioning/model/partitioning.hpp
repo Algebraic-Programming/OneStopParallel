@@ -181,6 +181,6 @@ bool Partitioning<hypergraph_t>::satisfiesBalanceConstraint() const {
     }
 
     return true;
-};
+}
 
 } // namespace osp

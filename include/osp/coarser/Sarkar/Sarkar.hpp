@@ -269,7 +269,7 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::singleContraction(v_wo
     }
 
     return counter;
-};
+}
 
 
 template<typename Graph_t_in, typename Graph_t_out>
@@ -381,7 +381,7 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::allChildrenContraction
         }
 
         expansionMapOutput.emplace_back( std::move(part) );
-        counter += graph.out_degree(groupHead);
+        counter += static_cast<vertex_idx_t<Graph_t_in>>( graph.out_degree(groupHead) );
         if (counter > maxCorseningNum) {
             minSave = vertSave;
         }
@@ -397,7 +397,7 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::allChildrenContraction
     }
 
     return counter;
-};
+}
 
 
 
@@ -512,7 +512,7 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::allParentsContraction(
         }
 
         expansionMapOutput.emplace_back( std::move(part) );
-        counter += graph.in_degree(groupFoot);
+        counter += static_cast<vertex_idx_t<Graph_t_in>>( graph.in_degree(groupFoot) );
         if (counter > maxCorseningNum) {
             minSave = vertSave;
         }
@@ -528,7 +528,7 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::allParentsContraction(
     }
 
     return counter;
-};
+}
 
 
 
@@ -545,7 +545,7 @@ template<typename Graph_t_in, typename Graph_t_out>
 std::vector<std::vector<vertex_idx_t<Graph_t_in>>> Sarkar<Graph_t_in, Graph_t_out>::generate_vertex_expansion_map(const Graph_t_in &dag_in, vertex_idx_t<Graph_t_in> &diff) {
     std::vector<std::vector<vertex_idx_t<Graph_t_in>>> expansionMap;
 
-    // std::cout << "Mode: " << (int) params.mode << "\n";
+    // std::cout << "Mode: " << static_cast<int>(params.mode) << "\n";
 
     switch (params.mode)
     {
@@ -608,12 +608,21 @@ std::vector<std::vector<vertex_idx_t<Graph_t_in>>> Sarkar<Graph_t_in, Graph_t_ou
                 diff = homogeneous_buffer_merge(params.commCost, dag_in, expansionMap);
             }
             break;
+
+        default:
+            {
+                #ifdef __cpp_lib_unreachable
+                    std::unreachable();
+                #endif
+                assert(false);
+            }
+            break;
     }
 
     // std::cout << " Diff: " << diff << '\n';
 
     return expansionMap;
-};
+}
 
 
 
@@ -622,7 +631,7 @@ template<typename Graph_t_in, typename Graph_t_out>
 std::vector<std::vector<vertex_idx_t<Graph_t_in>>> Sarkar<Graph_t_in, Graph_t_out>::generate_vertex_expansion_map(const Graph_t_in &dag_in) {
     vertex_idx_t<Graph_t_in> dummy;
     return generate_vertex_expansion_map(dag_in, dummy);
-};
+}
 
 
 
@@ -720,8 +729,8 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::someChildrenContractio
                 }
             }
 
-            for (std::size_t i = 1; i < contractionEnsemble.size(); i++) {
-                for (const VertexType &chld : graph.children(contractionEnsemble[i])) {
+            for (std::size_t j = 1; j < contractionEnsemble.size(); j++) {
+                for (const VertexType &chld : graph.children(contractionEnsemble[j])) {
                     maxChildDist = std::max(maxChildDist, botDist[chld] + commCost);
                 }
             }
@@ -791,7 +800,7 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::someChildrenContractio
     }
 
     return counter;
-};
+}
 
 
 
@@ -895,8 +904,8 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::someParentsContraction
                 }
             }
 
-            for (std::size_t i = 1; i < contractionEnsemble.size(); i++) {
-                for (const VertexType &par : graph.parents(contractionEnsemble[i])) {
+            for (std::size_t j = 1; j < contractionEnsemble.size(); j++) {
+                for (const VertexType &par : graph.parents(contractionEnsemble[j])) {
                     maxParentDist = std::max(maxParentDist, topDist[par] + commCost);
                 }
             }
@@ -966,7 +975,7 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::someParentsContraction
     }
 
     return counter;
-};
+}
 
 
 
@@ -1134,7 +1143,7 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::levelContraction(v_wor
     }
 
     return counter;
-};
+}
 
 template<typename Graph_t_in, typename Graph_t_out>
 std::vector<std::size_t> Sarkar<Graph_t_in, Graph_t_out>::computeNodeHashes(const Graph_t_in &graph, const std::vector< vertex_idx_t<Graph_t_in> > &vertexPoset, const std::vector< v_workw_t<Graph_t_in> > &dist) const {
@@ -1323,7 +1332,7 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::homogeneous_buffer_mer
     }
 
     return counter;
-};
+}
 
 
 
@@ -1428,7 +1437,7 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::out_buffer_merge(v_wor
     }
 
     return counter;
-};
+}
 
 
 
@@ -1533,6 +1542,6 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::in_buffer_merge(v_work
     }
 
     return counter;
-};
+}
 
 } // end namespace osp

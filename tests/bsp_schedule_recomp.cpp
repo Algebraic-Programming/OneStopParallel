@@ -71,4 +71,4 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test)
     BOOST_CHECK(schedule_recomp_from_cs.satisfiesConstraints());
     BOOST_CHECK_EQUAL(schedule_recomp_from_cs.computeCosts(), scheduleCS.computeCosts());
 
-};
+}

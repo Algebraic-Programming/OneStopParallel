@@ -31,7 +31,7 @@ class ConnectedComponentScheduler : public Scheduler<Graph_t> {
     Scheduler<Constr_Graph_t> *scheduler;
 
   public:
-    ConnectedComponentScheduler(Scheduler<Constr_Graph_t> &scheduler) : scheduler(&scheduler) {}
+    ConnectedComponentScheduler(Scheduler<Constr_Graph_t> &_scheduler) : scheduler(&_scheduler) {}
 
     std::string getScheduleName() const override { return "SubDagScheduler"; }
 
@@ -57,8 +57,8 @@ class ConnectedComponentScheduler : public Scheduler<Graph_t> {
             BspInstance<Constr_Graph_t> sub_instance(sub_dag, instance.getArchitecture());
             BspArchitecture<Constr_Graph_t> &sub_architecture = sub_instance.getArchitecture();
 
-            const double sub_dag_work_weight_percent = (double)sub_dag_work_weight / (double)total_work_weight;
-            const unsigned sub_dag_processors = (unsigned)(sub_dag_work_weight_percent * sub_architecture.numberOfProcessors());
+            const double sub_dag_work_weight_percent = static_cast<double>(sub_dag_work_weight) / static_cast<double>(total_work_weight);
+            const unsigned sub_dag_processors = static_cast<unsigned>(sub_dag_work_weight_percent * sub_architecture.numberOfProcessors());
 
             sub_architecture.setNumberOfProcessors(sub_dag_processors);
 

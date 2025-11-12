@@ -41,7 +41,7 @@ class HypergraphPartitioningILPWithReplication : public HypergraphPartitioningIL
 
   public:
 
-    virtual ~HypergraphPartitioningILPWithReplication() = default;
+    virtual ~HypergraphPartitioningILPWithReplication() override = default;
 
     RETURN_STATUS computePartitioning(PartitioningWithReplication<hypergraph_t>& result);
 
@@ -161,7 +161,7 @@ void HypergraphPartitioningILPWithReplication<hypergraph_t>::setupExtraVariables
                                         this->node_in_partition[node][static_cast<int>(part1)] + this->node_in_partition[node][static_cast<int>(part2)] - 1);
     }
              
-};
+}
 
 template<typename hypergraph_t>
 void HypergraphPartitioningILPWithReplication<hypergraph_t>::setInitialSolution(const PartitioningWithReplication<hypergraph_t> &partition,  Model& model)

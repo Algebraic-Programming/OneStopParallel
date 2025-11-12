@@ -96,7 +96,7 @@ void run_test(Scheduler<Graph_t> *test_scheduler) {
             BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
         }
     }
-};
+}
 
 template<typename Graph_t>
 void run_test_2(Scheduler<Graph_t> *test_scheduler) {
@@ -145,7 +145,7 @@ void run_test_2(Scheduler<Graph_t> *test_scheduler) {
             BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
         }
     }
-};
+}
 
 BOOST_AUTO_TEST_CASE(GreedyBspScheduler_test) {
 

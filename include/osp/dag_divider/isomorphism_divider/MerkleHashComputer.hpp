@@ -62,7 +62,7 @@ class MerkleHashComputer : public HashComputer<vertex_idx_t<Graph_t>> {
             std::sort(parent_child_hashes.begin(),parent_child_hashes.end());
 
             std::size_t hash = node_hash_func(v);
-            for (const VertexType& pc_hash : parent_child_hashes) {
+            for (const auto& pc_hash : parent_child_hashes) {
                 hash_combine(hash, pc_hash); 
             }
    
@@ -108,8 +108,8 @@ class MerkleHashComputer : public HashComputer<vertex_idx_t<Graph_t>> {
   public:   
 
     template<typename... Args>
-    MerkleHashComputer(const Graph_t &graph, Args &&...args) : HashComputer<VertexType>(), node_hash_func(std::forward<Args>(args)...) {
-        compute_hashes(graph);        
+    MerkleHashComputer(const Graph_t &graph_, Args &&...args) : HashComputer<VertexType>(), node_hash_func(std::forward<Args>(args)...) {
+        compute_hashes(graph_);        
     }
 
     virtual ~MerkleHashComputer() override = default;

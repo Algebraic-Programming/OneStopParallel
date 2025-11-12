@@ -144,8 +144,8 @@ std::vector<vertex_idx_t<Graph_t>> GetTopOrderGorder(const Graph_t &graph) {
 
     auto v_cmp = [&priorities, &graph](const VertexType &lhs, const VertexType &rhs) {
         return (priorities[lhs] < priorities[rhs]) ||
-               ((priorities[lhs] == priorities[rhs]) && (graph.out_degree(lhs) < graph.out_degree(rhs))) ||
-               ((priorities[lhs] == priorities[rhs]) && (graph.out_degree(lhs) == graph.out_degree(rhs)) &&
+               ((priorities[lhs] <= priorities[rhs]) && (graph.out_degree(lhs) < graph.out_degree(rhs))) ||
+               ((priorities[lhs] <= priorities[rhs]) && (graph.out_degree(lhs) == graph.out_degree(rhs)) &&
                 (lhs > rhs));
     };
 
@@ -264,7 +264,7 @@ struct top_sort_iterator {
             if (is_source(v, graph)) {
                 next.push(v);
             } else {
-                predecessors_count[v] = graph.in_degree(v);
+                predecessors_count[v] = static_cast<vertex_idx_t<Graph_t>>( graph.in_degree(v) );
             }
         }
         current_vertex = next.pop_next();

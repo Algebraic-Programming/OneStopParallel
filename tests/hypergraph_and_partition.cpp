@@ -211,4 +211,4 @@ BOOST_AUTO_TEST_CASE(Hypergraph_and_Partition_test) {
     std::cout<<original_cost<<" --> "<<new_cost<<std::endl;
 
 
-};
+}

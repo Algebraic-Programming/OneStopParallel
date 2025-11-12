@@ -28,7 +28,7 @@ namespace osp { namespace file_writer {
 template<typename Graph_t>
 void write_txt(std::ostream &os, const BspSchedule<Graph_t> &schedule) {
 
-    os << "\%\% BspSchedule for " << schedule.getInstance().numberOfProcessors() << " processors and "
+    os << "%% BspSchedule for " << schedule.getInstance().numberOfProcessors() << " processors and "
        << schedule.numberOfSupersteps() << " supersteps." << std::endl;
     os << schedule.getInstance().numberOfVertices() << " " << schedule.getInstance().numberOfProcessors() << " "
        << schedule.numberOfSupersteps() << std::endl;
@@ -48,7 +48,7 @@ void write_txt(const std::string &filename, const BspSchedule<Graph_t> &schedule
 template<typename Graph_t>
 void write_txt(std::ostream &os, const BspScheduleCS<Graph_t> &schedule) {
 
-    os << "\%\% BspSchedule for " << schedule.getInstance().numberOfProcessors() << " processors and "
+    os << "%% BspSchedule for " << schedule.getInstance().numberOfProcessors() << " processors and "
        << schedule.numberOfSupersteps() << " supersteps." << std::endl;
     os << schedule.getInstance().numberOfVertices() << " " << schedule.getInstance().numberOfProcessors() << " "
        << schedule.numberOfSupersteps() << " ";
@@ -66,10 +66,10 @@ void write_txt(std::ostream &os, const BspScheduleCS<Graph_t> &schedule) {
     }
 
     if (schedule.getCommunicationSchedule().empty()) {
-        os << "\%\% No communication schedule available." << std::endl;
+        os << "%% No communication schedule available." << std::endl;
     } else {
 
-        os << "\%\% Communication schedule available." << std::endl;
+        os << "%% Communication schedule available." << std::endl;
 
         for (const auto &[key, val] : schedule.getCommunicationSchedule()) {
             os << std::get<0>(key) << " " << std::get<1>(key) << " " << std::get<2>(key) << " " << val << std::endl;

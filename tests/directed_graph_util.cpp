@@ -60,7 +60,7 @@ computational_dag_vector_impl_def_t constr_graph_1() {
     graph.add_edge(v4, v8);
 
     return graph;
-};
+}
 
 BOOST_AUTO_TEST_CASE(test_empty_graph) {
 
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(test_empty_graph) {
 
     BOOST_CHECK_EQUAL(is_acyclic(graph), true);
     BOOST_CHECK_EQUAL(is_connected(graph), true);
-};
+}
 
 BOOST_AUTO_TEST_CASE(test_util_1) {
 
@@ -420,7 +420,7 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
 
     graph.add_vertex(1, 2, 3, 4);
     BOOST_CHECK_EQUAL(is_connected(graph), false);
-};
+}
 
 BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
