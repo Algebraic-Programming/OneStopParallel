@@ -237,7 +237,7 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
      */
     void updateNumberOfSupersteps() {
         number_of_supersteps = 0;
-        for (vertex_idx_t<Graph_t> i = 0; i < instance->numberOfVertices(); ++i) {
+        for (vertex_idx_t<Graph_t> i = 0; i < static_cast<vertex_idx_t<Graph_t>>(instance->numberOfVertices()); ++i) {
             if (node_to_superstep_assignment[i] >= number_of_supersteps) {
                 number_of_supersteps = node_to_superstep_assignment[i] + 1;
             }
