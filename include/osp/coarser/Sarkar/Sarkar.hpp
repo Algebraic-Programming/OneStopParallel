@@ -609,9 +609,12 @@ std::vector<std::vector<vertex_idx_t<Graph_t_in>>> Sarkar<Graph_t_in, Graph_t_ou
             }
             break;
 
-        default: // TODO check if it makes sense
+        default:
             {
-                diff = singleContraction(params.commCost, dag_in, expansionMap);
+                #ifdef __cpp_lib_unreachable
+                    std::unreachable();
+                #endif
+                assert(false);
             }
             break;
     }
