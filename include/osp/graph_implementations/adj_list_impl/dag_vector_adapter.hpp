@@ -131,7 +131,7 @@ class dag_vector_adapter {
 
     inline vertex_idx num_vertices() const { return static_cast<vertex_idx>(vertices_.size()); }
 
-    inline std::size_t num_edges() const { return num_edges_; }
+    inline vertex_idx num_edges() const { return static_cast<vertex_idx>(num_edges_); }
 
     inline auto parents(const vertex_idx v) const { return vector_cast_view<index_t, vertex_idx>(in_neigbors->at(v)); }
 
