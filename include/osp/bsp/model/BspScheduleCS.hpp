@@ -391,9 +391,9 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
                 if (require_sending[proc].empty() ||
                     std::get<0>(*require_sending[proc].rbegin()) + send_cost[proc] >
                         max_comm_cost)
-                    continue;
-                auto iter = require_sending[proc].begin();
-                while (iter != require_sending[proc].cend()) {
+                    continue; // This check is not strictly necessary with the new loop but can be a fast exit.
+                auto iter = require_sending[proc].rbegin();
+                while (iter != require_sending[proc].rend()) {
                     const auto& [comm_cost, node_to_send, dest_proc] = *iter;
                     if (comm_cost + send_cost[proc] > max_comm_cost ||
                         comm_cost + receive_cost[dest_proc] > max_comm_cost) {
@@ -403,11 +403,11 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
                         node_to_proc_been_sent[node_to_send][dest_proc] = true;
                         send_cost[proc] += comm_cost;
                         receive_cost[dest_proc] += comm_cost;
-                        iter = require_sending[proc].erase(iter);
+                        iter = std::make_reverse_iterator(require_sending[proc].erase(std::next(iter).base()));
                         if (require_sending[proc].empty() ||
                             std::get<0>(*require_sending[proc].rbegin()) + send_cost[proc] >
                                 max_comm_cost)
-                            break;
+                            break; // Exit if no more sends can possibly fit.
                     }
                 }
             }
