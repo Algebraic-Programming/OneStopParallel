@@ -93,6 +93,7 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
     constexpr static unsigned window_range = 2 * window_size + 1;
     constexpr static bool enable_quick_moves = true;
     constexpr static bool enable_preresolving_violations = true;
+    constexpr static double EPSILON = 1e-9;
 
     using memw_t = v_memw_t<Graph_t>;
     using commw_t = v_commw_t<Graph_t>;
@@ -200,7 +201,7 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
     
     inline void process_other_steps_best_move(const unsigned idx, const unsigned node_step, const VertexType& node, const cost_t affinity_current_proc_step, cost_t& max_gain, unsigned& max_proc, unsigned& max_step, const std::vector<std::vector<cost_t>> &affinity_table_node) const {    
         for (const unsigned p : proc_range.compatible_processors_vertex(node)) {
-            if constexpr (active_schedule.use_memory_constraint) {
+            if constexpr (active_schedule_t::use_memory_constraint) {
                 if( not active_schedule.memory_constraint.can_move(node, p, node_step + idx - window_size)) continue;                
             }
 
@@ -235,7 +236,7 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
                 if (proc == node_proc)
                     continue;
 
-                if constexpr (active_schedule.use_memory_constraint) {
+                if constexpr (active_schedule_t::use_memory_constraint) {
                     if( not active_schedule.memory_constraint.can_move(node, proc, node_step + idx - window_size)) continue;                
                 }
 
@@ -284,10 +285,11 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
                     const bool new_is_sole_max_processor = (active_schedule.get_step_max_work_processor_count()[node_step] == 1) && (new_max_weight == new_step_proc_work);
                     const cost_t new_node_proc_affinity = new_is_sole_max_processor ? std::min(vertex_weight, new_max_weight - new_second_max_weight) : 0.0;                        
                     
-                    if (new_node_proc_affinity != prev_node_proc_affinity) {
+                    const cost_t diff = new_node_proc_affinity - prev_node_proc_affinity;
+                    if (std::abs(diff) > EPSILON) {
                         update_info.full_update = true;
-                        affinity_table_node[node_proc][window_size] += (new_node_proc_affinity - prev_node_proc_affinity);                    
-                    }     
+                        affinity_table_node[node_proc][window_size] += diff; // Use the pre-calculated diff
+                    }    
                     
                     if ((prev_max_work != new_max_weight) || update_info.full_update) {
                         update_info.update_entire_from_step = true;
@@ -442,7 +444,7 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
             kl_move best_quick_move = compute_best_move<true>(next_node_to_move, thread_data.local_affinity_table, thread_data);
 
             local_lock.insert(next_node_to_move);
-            if (best_quick_move.gain == std::numeric_limits<cost_t>::lowest()) {
+            if (best_quick_move.gain <= std::numeric_limits<cost_t>::lowest()) {
                 continue;
             }
 
@@ -532,7 +534,7 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
                 }
 
                 local_lock.insert(best_move.node);
-                if (best_move.gain == std::numeric_limits<cost_t>::lowest()) continue;
+                if (best_move.gain <= std::numeric_limits<cost_t>::lowest()) continue;
 
                 apply_move(best_move, thread_data);
                 thread_data.affinity_table.insert(best_move.node);
@@ -608,7 +610,7 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
                     std::cout << "computed cost: " << comm_cost_f.compute_schedule_cost_test() << ", current cost: " << thread_data.active_schedule_data.cost << std::endl;
                     std::cout << ">>>>>>>>>>>>>>>>>>>>>> compute cost not equal to new cost <<<<<<<<<<<<<<<<<<<<" << std::endl;
                 }
-                if constexpr (active_schedule.use_memory_constraint) {
+                if constexpr (active_schedule_t::use_memory_constraint) {
                     if ( not active_schedule.memory_constraint.satisfied_memory_constraint())
                         std::cout << "memory constraint not satisfied" << std::endl;
                 }
@@ -617,7 +619,7 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
 
             while (inner_iter < thread_data.max_inner_iterations && thread_data.max_gain_heap.size() > 0) {
                 kl_move best_move = get_best_move(thread_data.affinity_table, thread_data.lock_manager, thread_data.max_gain_heap); // locks best_move.node and removes it from node_selection
-                if (best_move.gain == std::numeric_limits<cost_t>::lowest()) {
+                if (best_move.gain <= std::numeric_limits<cost_t>::lowest()) {
                     break;
                 }                
                 update_avg_gain(best_move.gain, inner_iter, thread_data.average_gain);
@@ -645,7 +647,7 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
                     std::cout << "computed cost: " << comm_cost_f.compute_schedule_cost_test() << ", current cost: " << thread_data.active_schedule_data.cost << std::endl;
                     std::cout << ">>>>>>>>>>>>>>>>>>>>>> compute cost not equal to new cost <<<<<<<<<<<<<<<<<<<<" << std::endl;
                 }
-                if constexpr (active_schedule.use_memory_constraint) {
+                if constexpr (active_schedule_t::use_memory_constraint) {
                     if ( not active_schedule.memory_constraint.satisfied_memory_constraint())
                         std::cout << "memory constraint not satisfied" << std::endl;
                 }
@@ -659,7 +661,7 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
                     std::cout << "computed cost: " << comm_cost_f.compute_schedule_cost_test() << ", current cost: " << thread_data.active_schedule_data.cost << std::endl;
                     std::cout << ">>>>>>>>>>>>>>>>>>>>>> compute cost not equal to new cost <<<<<<<<<<<<<<<<<<<<" << std::endl;
                 }
-                if constexpr (active_schedule.use_memory_constraint) {
+                if constexpr (active_schedule_t::use_memory_constraint) {
                     if ( not active_schedule.memory_constraint.satisfied_memory_constraint())
                         std::cout << "memory constraint not satisfied" << std::endl;
                 }
@@ -734,7 +736,7 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
                     std::cout << "computed cost: " << comm_cost_f.compute_schedule_cost_test() << ", current cost: " << thread_data.active_schedule_data.cost << std::endl;
                     std::cout << ">>>>>>>>>>>>>>>>>>>>>> compute cost not equal to new cost <<<<<<<<<<<<<<<<<<<<" << std::endl;
                 }
-                if constexpr (active_schedule.use_memory_constraint) {
+                if constexpr (active_schedule_t::use_memory_constraint) {
                     if ( not active_schedule.memory_constraint.satisfied_memory_constraint())
                         std::cout << "memory constraint not satisfied" << std::endl;
                 }
@@ -772,7 +774,7 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
                 std::cout << "computed cost: " << comm_cost_f.compute_schedule_cost_test() << ", current cost: " << thread_data.active_schedule_data.cost << std::endl;
                 std::cout << ">>>>>>>>>>>>>>>>>>>>>> compute cost not equal to new cost <<<<<<<<<<<<<<<<<<<<" << std::endl;
             }
-            if constexpr (active_schedule.use_memory_constraint) {
+            if constexpr (active_schedule_t::use_memory_constraint) {
                 if ( not active_schedule.memory_constraint.satisfied_memory_constraint())
                     std::cout << "memory constraint not satisfied" << std::endl;
             }
@@ -941,7 +943,7 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
                 compute_node_affinities(node, thread_data.local_affinity_table, thread_data);
                 kl_move best_move = compute_best_move<false>(node, thread_data.local_affinity_table, thread_data);
 
-                if (best_move.gain == std::numeric_limits<double>::lowest()) {
+                if (best_move.gain <= std::numeric_limits<double>::lowest()) {
                     abort = true;
                     break;
                 }
@@ -971,7 +973,7 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
                     std::cout << "computed cost: " << comm_cost_f.compute_schedule_cost_test() << ", current cost: " << thread_data.active_schedule_data.cost << std::endl;
                     std::cout << ">>>>>>>>>>>>>>>>>>>>>> compute cost not equal to new cost <<<<<<<<<<<<<<<<<<<<" << std::endl;
                 }
-                if constexpr (active_schedule.use_memory_constraint) {
+                if constexpr (active_schedule_t::use_memory_constraint) {
                     if ( not active_schedule.memory_constraint.satisfied_memory_constraint())
                      std::cout << "memory constraint not satisfied" << std::endl;
                 }
@@ -1067,9 +1069,8 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
         return improveSchedule(schedule);
     }
 
-    void set_compute_with_time_limit(bool compute_with_time_limit_) {
-        compute_with_time_limit = compute_with_time_limit_;
-    }
+    virtual void setTimeQualityParameter(const double time_quality) { this->parameters.time_quality = time_quality; }
+    virtual void setSuperstepRemoveStrengthParameter(const double superstep_remove_strength) { this->parameters.superstep_remove_strength = superstep_remove_strength; }
 
     virtual std::string getScheduleName() const {
         return "kl_improver_" + comm_cost_f.name();
@@ -1209,10 +1210,11 @@ void kl_improver<Graph_t, comm_cost_function_t, MemoryConstraint_t, window_size,
             const bool new_is_sole_max_processor = (active_schedule.get_step_max_work_processor_count()[node_step] == 1) && (new_max_weight == new_step_proc_work);
             const cost_t new_node_proc_affinity = new_is_sole_max_processor ? std::min(vertex_weight, new_max_weight - new_second_max_weight) : 0.0;
             
-            const bool update_node_proc_affinity = new_node_proc_affinity != prev_node_proc_affinity;
+            const cost_t diff = new_node_proc_affinity - prev_node_proc_affinity;
+            const bool update_node_proc_affinity = std::abs(diff) > EPSILON; 
             if (update_node_proc_affinity) {
                 full_update = true;
-                affinity_table_node[node_proc][window_size] += (new_node_proc_affinity - prev_node_proc_affinity);
+                affinity_table_node[node_proc][window_size] += diff;
             }
     
             if ((prev_move_step_max_work != new_max_weight) || update_node_proc_affinity) {
@@ -1440,7 +1442,7 @@ void kl_improver<Graph_t, comm_cost_function_t, MemoryConstraint_t, window_size,
     if ((max_step == step) && (max_proc == proc)) {
         recompute_node_max_gain(node, affinity_table, thread_data);
     } else {
-        if constexpr (active_schedule.use_memory_constraint) {
+        if constexpr (active_schedule_t::use_memory_constraint) {
             if( not active_schedule.memory_constraint.can_move(node, proc, step)) return;                
         }
         const unsigned idx = rel_step_idx(node_step, step);
@@ -1451,7 +1453,8 @@ void kl_improver<Graph_t, comm_cost_function_t, MemoryConstraint_t, window_size,
             max_step = step; 
         } 
     
-        if ((max_gain != node_move.gain) || (max_proc != node_move.to_proc) || (max_step != node_move.to_step)) {
+        const cost_t diff = max_gain - node_move.gain;
+        if ((std::abs(diff) > EPSILON) || (max_proc != node_move.to_proc) || (max_step != node_move.to_step)) {
             node_move.gain = max_gain;
             node_move.to_proc = max_proc;
             node_move.to_step = max_step;
@@ -1478,7 +1481,7 @@ void kl_improver<Graph_t, comm_cost_function_t, MemoryConstraint_t, window_size,
         if (node_step != step) {
             const unsigned idx = rel_step_idx(node_step, step);
             for (const unsigned p : proc_range.compatible_processors_vertex(node)) {   
-                if constexpr (active_schedule.use_memory_constraint) {
+                if constexpr (active_schedule_t::use_memory_constraint) {
                     if( not active_schedule.memory_constraint.can_move(node, p, step)) continue;                
                 }
                 const cost_t gain = affinity_table[node][node_proc][window_size] - affinity_table[node][p][idx];                    
@@ -1492,7 +1495,7 @@ void kl_improver<Graph_t, comm_cost_function_t, MemoryConstraint_t, window_size,
             for (const unsigned proc : proc_range.compatible_processors_vertex(node)) { 
                 if (proc == node_proc)
                     continue;
-                if constexpr (active_schedule.use_memory_constraint) {
+                if constexpr (active_schedule_t::use_memory_constraint) {
                     if( not active_schedule.memory_constraint.can_move(node, proc, step)) continue;                
                 }
                 const cost_t gain = affinity_table[node][node_proc][window_size] - affinity_table[node][proc][window_size];
@@ -1504,7 +1507,8 @@ void kl_improver<Graph_t, comm_cost_function_t, MemoryConstraint_t, window_size,
             }
         }        
 
-        if ((max_gain != node_move.gain) || (max_proc != node_move.to_proc) || (max_step != node_move.to_step)) {
+        const cost_t diff = max_gain - node_move.gain;
+        if ((std::abs(diff) > EPSILON) || (max_proc != node_move.to_proc) || (max_step != node_move.to_step)) {
             node_move.gain = max_gain;
             node_move.to_proc = max_proc;
             node_move.to_step = max_step;

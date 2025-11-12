@@ -86,19 +86,6 @@ class MaxBspSchedule : public BspSchedule<Graph_t> {
      * @brief Destructor for the BspSchedule class.
      */
     virtual ~MaxBspSchedule() = default;
-   
-    /**
-     * @brief Returns true if the schedule satisfies the precedence constraints of the computational DAG.
-     *
-     * The precedence constraints of the computational DAG are satisfied if, for each directed edge (u, v) such that u
-     * and v are assigned to different processors, the superstep assigned to node u is less than the superstep assigned
-     * to node v.
-     *
-     * @return True if the schedule satisfies the precedence constraints of the computational DAG, false otherwise.
-     */
-    virtual bool satisfiesPrecedenceConstraints() const override {
-        return this->template satisfies_precedence_constraints_staleness<2>();
-    };
 
     virtual v_workw_t<Graph_t> computeCosts() const override { 
         
@@ -123,6 +110,8 @@ class MaxBspSchedule : public BspSchedule<Graph_t> {
         }
         return costs;
     }
+
+    unsigned virtual getStaleness() const override { return 2; }
 };
 
 } // namespace osp

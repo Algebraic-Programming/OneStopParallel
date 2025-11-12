@@ -196,7 +196,7 @@ public:
             
             if (insert_location >= selected_nodes.size()) {
                 const size_t old_size = selected_nodes.size();
-                const size_t new_size = std::min(old_size * 2, graph->num_vertices());
+                const size_t new_size = std::min(old_size * 2, static_cast<size_t>(graph->num_vertices()));
                 
                 selected_nodes.resize(new_size);
                 affinity_table.resize(new_size);

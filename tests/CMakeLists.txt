@@ -11,7 +11,7 @@ macro( _add_test name )
   # Create the test
   add_executable(test_${name} ${name}.cpp)
   target_link_libraries(test_${name} PRIVATE OneStopParallel Boost::unit_test_framework ProjectExecutableFlags)
-  target_include_directories( test_${name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include )
+  target_include_directories( test_${name} PRIVATE ${PROJECT_SOURCE_DIR}/include )
 
   if(ARG_DATA)
     target_compile_definitions(test_${name} PRIVATE OSP_TEST_DATA_DIR="${OSP_DATA_DIR}")
@@ -27,6 +27,8 @@ _add_test( graph_vector_impl )
 _add_test( graph_vector_edge_desc_impl )
 
 _add_test( boost_graph_adaptor )
+
+_add_test( graph_vector_adapter )
 
 _add_test ( connected_components_part )
 
@@ -64,9 +66,11 @@ _add_test( kl_mem_constr )
 
 _add_test( isomorphic_subgraph_scheduler )
 
-_add_test( merkle_hash_computer )
+_add_test( trimmed_group_scheduler )
 
-#_add_test( merkle_hash_divider )
+_add_test( isomorphism_mapper )
+
+_add_test( merkle_hash_computer )
 
 _add_test( orbit_graph_processor )
 
@@ -75,6 +79,11 @@ _add_test( eft_subgraph_scheduler )
 _add_test( wavefront_component_divider )
 
 _add_test( hill_climbing )
+
+# --- Standalone Debugging Executables ---
+add_executable(debug_merkle_divider debug_merkle_divider.cpp)
+target_link_libraries(debug_merkle_divider PRIVATE OneStopParallel ProjectExecutableFlags)
+
 
 ## bsp model
 _add_test( bsp_architecture )
@@ -90,8 +99,13 @@ _add_test( bsp_greedy_recomputer )
 ## pebbling model
 _add_test( pebbling_schedule_class )
 
+## partitioning model
+_add_test( hypergraph_and_partition )
+
 ## auxiliary
 _add_test( intpower )
+
+_add_test( divisors )
 
 _add_test( uf_structures )
 
@@ -117,6 +131,8 @@ _add_test( filereader DATA )
 if (COPT_FOUND)
 
 #_add_test( ilp_bsp_scheduler )
+
+#_add_test( ilp_hypergraph_partitioning )
 
 endif()
 

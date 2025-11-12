@@ -61,8 +61,8 @@ class kl_total_comm : public kl_total<Graph_t, MemoryConstraint_t, use_node_comm
                                     kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.vector_schedule.assignedProcessor(target))) {
 
                         kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::node_gains[node][current_proc][0] +=
-                            (double)kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
-                                .vertex_comm_weight(node) +
+                            static_cast<double>(kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
+                                .vertex_comm_weight(node)) +
                             kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::reward;
                     }
                 }
@@ -90,8 +90,8 @@ class kl_total_comm : public kl_total<Graph_t, MemoryConstraint_t, use_node_comm
                                     kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.vector_schedule.assignedProcessor(source))) {
 
                         kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::node_gains[node][current_proc][2] +=
-                            (double)kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
-                                .vertex_comm_weight(source) +
+                            static_cast<double>(kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
+                                .vertex_comm_weight(source)) +
                             kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::reward;
                     }
                 }
@@ -107,8 +107,8 @@ class kl_total_comm : public kl_total<Graph_t, MemoryConstraint_t, use_node_comm
                     if (target_proc == current_proc) {
 
                         const double loss =
-                            (double)kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
-                                .vertex_comm_weight(node) *
+                            static_cast<double>(kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
+                                .vertex_comm_weight(node)) *
                             kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->communicationCosts(new_proc, target_proc) *
                             kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.comm_multiplier;
 
@@ -134,8 +134,8 @@ class kl_total_comm : public kl_total<Graph_t, MemoryConstraint_t, use_node_comm
 
                     } else if (target_proc == new_proc) {
 
-                        const double gain = (double)kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
-                                                .vertex_comm_weight(node) *
+                        const double gain = static_cast<double>(kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
+                                                .vertex_comm_weight(node)) *
                                             kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->communicationCosts(
                                                 current_proc, target_proc) *
                                             kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.comm_multiplier;
@@ -152,21 +152,21 @@ class kl_total_comm : public kl_total<Graph_t, MemoryConstraint_t, use_node_comm
                             current_step) {
 
                             kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::node_gains[node][new_proc][1] +=
-                                (double)kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
-                                    .vertex_comm_weight(node) +
+                                static_cast<double>(kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
+                                    .vertex_comm_weight(node)) +
                                 kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::reward;
 
                             kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::node_gains[node][new_proc][0] +=
-                                (double)kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
-                                    .vertex_comm_weight(node) +
+                                static_cast<double>(kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
+                                    .vertex_comm_weight(node)) +
                                 kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::reward;
 
                         } else if (kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.vector_schedule.assignedSuperstep(target) <
                                    current_step) {
 
                             kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::node_gains[node][new_proc][0] +=
-                                (double)kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
-                                    .vertex_comm_weight(node) +
+                                static_cast<double>(kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
+                                    .vertex_comm_weight(node)) +
                                 kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::reward;
                         }
 
@@ -175,7 +175,7 @@ class kl_total_comm : public kl_total<Graph_t, MemoryConstraint_t, use_node_comm
                         assert(target_proc != current_proc && target_proc != new_proc);
 
                         const double gain =
-                            (double)(kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->communicationCosts(new_proc,
+                            static_cast<double>(kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->communicationCosts(new_proc,
                                                                                                       target_proc) -
                                      kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->communicationCosts(current_proc,
                                                                                                       target_proc)) *
@@ -199,8 +199,8 @@ class kl_total_comm : public kl_total<Graph_t, MemoryConstraint_t, use_node_comm
                                    current_step) {
 
                             kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::node_gains[node][new_proc][0] +=
-                                (double)kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
-                                    .vertex_comm_weight(node) +
+                                static_cast<double>(kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
+                                    .vertex_comm_weight(node)) +
                                 kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::reward;
                         }
                     }
@@ -214,8 +214,8 @@ class kl_total_comm : public kl_total<Graph_t, MemoryConstraint_t, use_node_comm
                     if (source_proc == current_proc) {
 
                         const double loss =
-                            (double)kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
-                                .vertex_comm_weight(source) *
+                            static_cast<double>(kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
+                                .vertex_comm_weight(source)) *
                             kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->communicationCosts(current_proc, new_proc) *
                             kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.comm_multiplier;
 
@@ -243,8 +243,8 @@ class kl_total_comm : public kl_total<Graph_t, MemoryConstraint_t, use_node_comm
 
                         assert(source_proc != current_proc);
                         const double gain =
-                            (double)kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
-                                .vertex_comm_weight(source) *
+                            static_cast<double>(kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
+                                .vertex_comm_weight(source)) *
                             kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->communicationCosts(current_proc, new_proc) *
                             kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.comm_multiplier;
 
@@ -260,21 +260,21 @@ class kl_total_comm : public kl_total<Graph_t, MemoryConstraint_t, use_node_comm
                             current_step) {
 
                             kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::node_gains[node][new_proc][1] +=
-                                (double)kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
-                                    .vertex_comm_weight(source) +
+                                static_cast<double>(kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
+                                    .vertex_comm_weight(source)) +
                                 kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::reward;
 
                             kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::node_gains[node][new_proc][2] +=
-                                (double)kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
-                                    .vertex_comm_weight(source) +
+                                static_cast<double>(kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
+                                    .vertex_comm_weight(source)) +
                                 kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::reward;
 
                         } else if (kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.vector_schedule.assignedSuperstep(source) ==
                                    current_step + 1) {
 
                             kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::node_gains[node][new_proc][2] +=
-                                (double)kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
-                                    .vertex_comm_weight(source) +
+                                static_cast<double>(kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
+                                    .vertex_comm_weight(source)) +
                                 kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::reward;
                         }
 
@@ -282,7 +282,7 @@ class kl_total_comm : public kl_total<Graph_t, MemoryConstraint_t, use_node_comm
 
                         assert(source_proc != current_proc && source_proc != new_proc);
                         const double gain =
-                            (double)(kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->communicationCosts(new_proc,
+                            static_cast<double>(kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->communicationCosts(new_proc,
                                                                                                       source_proc) -
                                      kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->communicationCosts(current_proc,
                                                                                                       source_proc)) *
@@ -307,8 +307,8 @@ class kl_total_comm : public kl_total<Graph_t, MemoryConstraint_t, use_node_comm
                                    current_step) {
 
                             kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::node_gains[node][new_proc][2] +=
-                                (double)kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
-                                    .vertex_comm_weight(source) +
+                                static_cast<double>(kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
+                                    .vertex_comm_weight(source)) +
                                 kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::reward;
                         }
                     }
@@ -346,8 +346,8 @@ class kl_total_comm : public kl_total<Graph_t, MemoryConstraint_t, use_node_comm
                                     kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.vector_schedule.assignedProcessor(target_v))) {
 
                         kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::node_gains[node][current_proc][0] +=
-                            (double)kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
-                                .edge_comm_weight(out_edge) +
+                            static_cast<double>(kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
+                                .edge_comm_weight(out_edge)) +
                             kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::reward;
                     }
                 }
@@ -381,8 +381,8 @@ class kl_total_comm : public kl_total<Graph_t, MemoryConstraint_t, use_node_comm
                                     kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.vector_schedule.assignedProcessor(source_v))) {
 
                         kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::node_gains[node][current_proc][2] +=
-                            (double)kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
-                                .edge_comm_weight(in_edge) +
+                            static_cast<double>(kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
+                                .edge_comm_weight(in_edge)) +
                             kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::reward;
                     }
                 }
@@ -401,8 +401,8 @@ class kl_total_comm : public kl_total<Graph_t, MemoryConstraint_t, use_node_comm
                     if (target_proc == current_proc) {
 
                         const double loss =
-                            (double)kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
-                                .edge_comm_weight(out_edge) *
+                            static_cast<double>(kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
+                                .edge_comm_weight(out_edge)) *
                             kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->communicationCosts(new_proc, target_proc) *
                             kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.comm_multiplier;
 
@@ -428,8 +428,8 @@ class kl_total_comm : public kl_total<Graph_t, MemoryConstraint_t, use_node_comm
 
                     } else if (target_proc == new_proc) {
 
-                        const double gain = (double)kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
-                                                .edge_comm_weight(out_edge) *
+                        const double gain = static_cast<double>(kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
+                                                .edge_comm_weight(out_edge)) *
                                             kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->communicationCosts(
                                                 current_proc, target_proc) *
                                             kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.comm_multiplier;
@@ -446,20 +446,20 @@ class kl_total_comm : public kl_total<Graph_t, MemoryConstraint_t, use_node_comm
                             current_step) {
 
                             kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::node_gains[node][new_proc][1] +=
-                                (double)kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
-                                    .edge_comm_weight(out_edge) +
+                                static_cast<double>(kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
+                                    .edge_comm_weight(out_edge)) +
                                 kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::reward;
                             kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::node_gains[node][new_proc][0] +=
-                                (double)kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
-                                    .edge_comm_weight(out_edge) +
+                                static_cast<double>(kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
+                                    .edge_comm_weight(out_edge)) +
                                 kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::reward;
 
                         } else if (kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.vector_schedule.assignedSuperstep(target_v) ==
                                    current_step - 1) {
 
                             kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::node_gains[node][new_proc][0] +=
-                                (double)kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
-                                    .edge_comm_weight(out_edge) +
+                                static_cast<double>(kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
+                                    .edge_comm_weight(out_edge)) +
                                 kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::reward;
                         }
 
@@ -468,7 +468,7 @@ class kl_total_comm : public kl_total<Graph_t, MemoryConstraint_t, use_node_comm
                         assert(target_proc != current_proc && target_proc != new_proc);
 
                         const double gain =
-                            (double)(kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->communicationCosts(new_proc,
+                            static_cast<double>(kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->communicationCosts(new_proc,
                                                                                                       target_proc) -
                                      kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->communicationCosts(current_proc,
                                                                                                       target_proc)) *
@@ -492,8 +492,8 @@ class kl_total_comm : public kl_total<Graph_t, MemoryConstraint_t, use_node_comm
                                    current_step) {
 
                             kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::node_gains[node][new_proc][0] +=
-                                (double)kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
-                                    .edge_comm_weight(out_edge) +
+                                static_cast<double>(kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
+                                    .edge_comm_weight(out_edge)) +
                                 kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::reward;
                         }
                     }
@@ -508,8 +508,8 @@ class kl_total_comm : public kl_total<Graph_t, MemoryConstraint_t, use_node_comm
                     if (source_proc == current_proc) {
 
                         const double loss =
-                            (double)kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
-                                .edge_comm_weight(in_edge) *
+                            static_cast<double>(kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
+                                .edge_comm_weight(in_edge)) *
                             kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->communicationCosts(current_proc, new_proc) *
                             kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.comm_multiplier;
 
@@ -536,8 +536,8 @@ class kl_total_comm : public kl_total<Graph_t, MemoryConstraint_t, use_node_comm
 
                         assert(source_proc != current_proc);
                         const double gain =
-                            (double)kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
-                                .edge_comm_weight(in_edge) *
+                            static_cast<double>(kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
+                                .edge_comm_weight(in_edge)) *
                             kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->communicationCosts(current_proc, new_proc) *
                             kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.comm_multiplier;
 
@@ -553,21 +553,21 @@ class kl_total_comm : public kl_total<Graph_t, MemoryConstraint_t, use_node_comm
                             current_step) {
 
                             kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::node_gains[node][new_proc][1] +=
-                                (double)kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
-                                    .edge_comm_weight(in_edge) +
+                                static_cast<double>(kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
+                                    .edge_comm_weight(in_edge)) +
                                 kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::reward;
 
                             kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::node_gains[node][new_proc][2] +=
-                                (double)kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
-                                    .edge_comm_weight(in_edge) +
+                                static_cast<double>(kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
+                                    .edge_comm_weight(in_edge)) +
                                 kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::reward;
 
                         } else if (kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.vector_schedule.assignedSuperstep(source_v) ==
                                    current_step + 1) {
 
                             kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::node_gains[node][new_proc][2] +=
-                                (double)kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
-                                    .edge_comm_weight(in_edge) +
+                                static_cast<double>(kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
+                                    .edge_comm_weight(in_edge)) +
                                 kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::reward;
                         }
 
@@ -575,7 +575,7 @@ class kl_total_comm : public kl_total<Graph_t, MemoryConstraint_t, use_node_comm
 
                         assert(source_proc != current_proc && source_proc != new_proc);
                         const double gain =
-                            (double)(kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->communicationCosts(new_proc,
+                            static_cast<double>(kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->communicationCosts(new_proc,
                                                                                                       source_proc) -
                                      kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->communicationCosts(current_proc,
                                                                                                       source_proc)) *
@@ -600,8 +600,8 @@ class kl_total_comm : public kl_total<Graph_t, MemoryConstraint_t, use_node_comm
                                    current_step) {
 
                             kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::node_gains[node][new_proc][2] +=
-                                (double)kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
-                                    .edge_comm_weight(in_edge) +
+                                static_cast<double>(kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->getComputationalDag()
+                                    .edge_comm_weight(in_edge)) +
                                 kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::reward;
                         }
                     }
@@ -641,7 +641,7 @@ class kl_total_comm : public kl_total<Graph_t, MemoryConstraint_t, use_node_comm
 
         kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.current_cost =
             work_costs + comm_costs * kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.comm_multiplier +
-            ((double)kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.num_steps() - 1) *
+            (static_cast<double>(kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.num_steps()) - 1) *
                 kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.instance->synchronisationCosts();
 
         return kl_total<Graph_t, MemoryConstraint_t,use_node_communication_costs_arg>::current_schedule.current_cost;

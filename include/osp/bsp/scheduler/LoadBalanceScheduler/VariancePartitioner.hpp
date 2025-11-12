@@ -32,7 +32,7 @@ class VariancePartitioner : public LoadBalancerBase<Graph_t, Interpolation_t> {
     using VertexType = vertex_idx_t<Graph_t>;
     struct VarianceCompare {
         bool operator()(const std::pair<VertexType, double> &lhs, const std::pair<VertexType, double> &rhs) const {
-            return ((lhs.second > rhs.second) || ((lhs.second == rhs.second) && (lhs.first < rhs.first)));
+            return ((lhs.second > rhs.second) || ((lhs.second >= rhs.second) && (lhs.first < rhs.first)));
         }
     };
 
@@ -193,7 +193,7 @@ class VariancePartitioner : public LoadBalancerBase<Graph_t, Interpolation_t> {
             }
             if (num_unable_to_partition_node_loop == 0 &&
                 (max_priority - min_priority) >
-                    max_priority_difference_percent * (float)total_work / (float)n_processors) {
+                    max_priority_difference_percent * static_cast<float>(total_work) / static_cast<float>(n_processors)) {
                 endsuperstep = true;
                 // std::cout << "\nCall for new superstep - difference.\n";
             }

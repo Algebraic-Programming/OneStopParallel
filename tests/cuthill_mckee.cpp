@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(cuthill_mckee_1) {
     expected_cm_undirected = {0, 3, 1, 2, 7, 6, 4, 5, 8, 9, 10};
     BOOST_CHECK_EQUAL_COLLECTIONS(cm_undirected.begin(), cm_undirected.end(), expected_cm_undirected.begin(),
                                   expected_cm_undirected.end());
-};
+}
 
 bool is_permutation(const std::vector<VertexType> &vec) {
     std::vector<VertexType> sorted_vec = vec;
@@ -182,4 +182,4 @@ BOOST_AUTO_TEST_CASE(cuthill_mckee_2) {
         BOOST_CHECK(is_permutation(top_sort));
         BOOST_CHECK(is_top_sort(top_sort, graph));
     }
-};
+}

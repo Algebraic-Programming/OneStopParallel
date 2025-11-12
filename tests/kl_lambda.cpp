@@ -592,7 +592,7 @@ BOOST_AUTO_TEST_CASE(kl_lambda_improver_inner_loop_penalty_test) {
 
     BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
 
-};
+}
 
 BOOST_AUTO_TEST_CASE(kl_lambda_improver_inner_loop_lambda_map_test) {
 
@@ -695,7 +695,7 @@ BOOST_AUTO_TEST_CASE(kl_lambda_improver_inner_loop_lambda_map_test) {
 
     BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
 
-};
+}
 
 // BOOST_AUTO_TEST_CASE(kl_lambda_total_comm_large_test_graphs) {
 //     std::vector<std::string> filenames_graph = large_spaa_graphs();

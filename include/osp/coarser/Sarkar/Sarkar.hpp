@@ -20,6 +20,7 @@ limitations under the License.
 
 #include <algorithm>
 #include <limits>
+#include <map>
 #include <set>
 #include <tuple>
 #include <utility>
@@ -27,6 +28,7 @@ limitations under the License.
 
 #include "osp/auxiliary/datastructures/union_find.hpp"
 #include "osp/auxiliary/hash_util.hpp"
+#include "osp/auxiliary/math/divisors.hpp"
 #include "osp/coarser/Coarser.hpp"
 #include "osp/graph_algorithms/directed_graph_path_util.hpp"
 
@@ -35,7 +37,7 @@ namespace osp {
 
 namespace SarkarParams {
 
-enum class Mode { LINES, FAN_IN_FULL, FAN_IN_PARTIAL, FAN_OUT_FULL, FAN_OUT_PARTIAL, LEVEL_EVEN, LEVEL_ODD, FAN_IN_BUFFER, FAN_OUT_BUFFER };
+enum class Mode { LINES, FAN_IN_FULL, FAN_IN_PARTIAL, FAN_OUT_FULL, FAN_OUT_PARTIAL, LEVEL_EVEN, LEVEL_ODD, FAN_IN_BUFFER, FAN_OUT_BUFFER, HOMOGENEOUS_BUFFER };
 
 template<typename commCostType>
 struct Parameters {
@@ -65,12 +67,13 @@ class Sarkar : public CoarserGenExpansionMap<Graph_t_in, Graph_t_out> {
         vertex_idx_t<Graph_t_in> someParentsContraction(v_workw_t<Graph_t_in> commCost, const Graph_t_in &graph, std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &expansionMapOutput) const;
         vertex_idx_t<Graph_t_in> levelContraction(v_workw_t<Graph_t_in> commCost, const Graph_t_in &graph, std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &expansionMapOutput) const;
         
+        vertex_idx_t<Graph_t_in> homogeneous_buffer_merge(v_workw_t<Graph_t_in> commCost, const Graph_t_in &graph, std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &expansionMapOutput) const;
         vertex_idx_t<Graph_t_in> out_buffer_merge(v_workw_t<Graph_t_in> commCost, const Graph_t_in &graph, std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &expansionMapOutput) const;
         vertex_idx_t<Graph_t_in> in_buffer_merge(v_workw_t<Graph_t_in> commCost, const Graph_t_in &graph, std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &expansionMapOutput) const;
         
-        std::vector<std::size_t> nodeHashes;
-        void computeNodeHashes(const Graph_t_in &graph);
-        std::unordered_map<std::size_t, std::set< vertex_idx_t<Graph_t_in> >> computeHashOrbits() const;
+        std::vector<std::size_t> homogeneousMerge(const std::size_t number, const std::size_t minSize, const std::size_t maxSize) const;
+
+        std::vector<std::size_t> computeNodeHashes(const Graph_t_in &graph, const std::vector< vertex_idx_t<Graph_t_in> > &vertexPoset, const std::vector< v_workw_t<Graph_t_in> > &dist) const;
 
     public:
         virtual std::vector<std::vector<vertex_idx_t<Graph_t_in>>> generate_vertex_expansion_map(const Graph_t_in &dag_in) override;
@@ -266,7 +269,7 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::singleContraction(v_wo
     }
 
     return counter;
-};
+}
 
 
 template<typename Graph_t_in, typename Graph_t_out>
@@ -378,7 +381,7 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::allChildrenContraction
         }
 
         expansionMapOutput.emplace_back( std::move(part) );
-        counter += graph.out_degree(groupHead);
+        counter += static_cast<vertex_idx_t<Graph_t_in>>( graph.out_degree(groupHead) );
         if (counter > maxCorseningNum) {
             minSave = vertSave;
         }
@@ -394,7 +397,7 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::allChildrenContraction
     }
 
     return counter;
-};
+}
 
 
 
@@ -509,7 +512,7 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::allParentsContraction(
         }
 
         expansionMapOutput.emplace_back( std::move(part) );
-        counter += graph.in_degree(groupFoot);
+        counter += static_cast<vertex_idx_t<Graph_t_in>>( graph.in_degree(groupFoot) );
         if (counter > maxCorseningNum) {
             minSave = vertSave;
         }
@@ -525,7 +528,7 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::allParentsContraction(
     }
 
     return counter;
-};
+}
 
 
 
@@ -542,7 +545,7 @@ template<typename Graph_t_in, typename Graph_t_out>
 std::vector<std::vector<vertex_idx_t<Graph_t_in>>> Sarkar<Graph_t_in, Graph_t_out>::generate_vertex_expansion_map(const Graph_t_in &dag_in, vertex_idx_t<Graph_t_in> &diff) {
     std::vector<std::vector<vertex_idx_t<Graph_t_in>>> expansionMap;
 
-    // std::cout << "Mode: " << (int) params.mode << "\n";
+    // std::cout << "Mode: " << static_cast<int>(params.mode) << "\n";
 
     switch (params.mode)
     {
@@ -599,12 +602,27 @@ std::vector<std::vector<vertex_idx_t<Graph_t_in>>> Sarkar<Graph_t_in, Graph_t_ou
                 diff = out_buffer_merge(params.commCost, dag_in, expansionMap);
             }
             break;
+
+        case SarkarParams::Mode::HOMOGENEOUS_BUFFER:
+            {
+                diff = homogeneous_buffer_merge(params.commCost, dag_in, expansionMap);
+            }
+            break;
+
+        default:
+            {
+                #ifdef __cpp_lib_unreachable
+                    std::unreachable();
+                #endif
+                assert(false);
+            }
+            break;
     }
 
     // std::cout << " Diff: " << diff << '\n';
 
     return expansionMap;
-};
+}
 
 
 
@@ -613,7 +631,7 @@ template<typename Graph_t_in, typename Graph_t_out>
 std::vector<std::vector<vertex_idx_t<Graph_t_in>>> Sarkar<Graph_t_in, Graph_t_out>::generate_vertex_expansion_map(const Graph_t_in &dag_in) {
     vertex_idx_t<Graph_t_in> dummy;
     return generate_vertex_expansion_map(dag_in, dummy);
-};
+}
 
 
 
@@ -711,8 +729,8 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::someChildrenContractio
                 }
             }
 
-            for (std::size_t i = 1; i < contractionEnsemble.size(); i++) {
-                for (const VertexType &chld : graph.children(contractionEnsemble[i])) {
+            for (std::size_t j = 1; j < contractionEnsemble.size(); j++) {
+                for (const VertexType &chld : graph.children(contractionEnsemble[j])) {
                     maxChildDist = std::max(maxChildDist, botDist[chld] + commCost);
                 }
             }
@@ -782,7 +800,7 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::someChildrenContractio
     }
 
     return counter;
-};
+}
 
 
 
@@ -886,8 +904,8 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::someParentsContraction
                 }
             }
 
-            for (std::size_t i = 1; i < contractionEnsemble.size(); i++) {
-                for (const VertexType &par : graph.parents(contractionEnsemble[i])) {
+            for (std::size_t j = 1; j < contractionEnsemble.size(); j++) {
+                for (const VertexType &par : graph.parents(contractionEnsemble[j])) {
                     maxParentDist = std::max(maxParentDist, topDist[par] + commCost);
                 }
             }
@@ -957,7 +975,7 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::someParentsContraction
     }
 
     return counter;
-};
+}
 
 
 
@@ -1125,124 +1143,186 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::levelContraction(v_wor
     }
 
     return counter;
-};
-
+}
 
 template<typename Graph_t_in, typename Graph_t_out>
-vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::out_buffer_merge(v_workw_t<Graph_t_in> commCost, const Graph_t_in &graph, std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &expansionMapOutput) const {
+std::vector<std::size_t> Sarkar<Graph_t_in, Graph_t_out>::computeNodeHashes(const Graph_t_in &graph, const std::vector< vertex_idx_t<Graph_t_in> > &vertexPoset, const std::vector< v_workw_t<Graph_t_in> > &dist) const {
     using VertexType = vertex_idx_t<Graph_t_in>;
-    assert(expansionMapOutput.size() == 0);
 
-    const std::vector< vertex_idx_t<Graph_t_in> > vertexPoset = get_top_node_distance<Graph_t_in, vertex_idx_t<Graph_t_in>>(graph);
-    const std::vector< v_workw_t<Graph_t_in> > topDist = getTopDistance(commCost, graph);
-    const std::vector< v_workw_t<Graph_t_in> > botDist = getBotDistance(commCost, graph);
-
-    auto cmp = [](const std::pair<long, VertexType> &lhs, const std::pair<long, VertexType> &rhs) {
-        return (lhs.first > rhs.first)
-                || ((lhs.first == rhs.first) && (lhs.second < rhs.second));
-    };
-    std::set<std::pair<long, VertexType>, decltype(cmp)> vertPriority(cmp);
-
-    for (const VertexType &groupHead : graph.vertices()) {
-        if (graph.out_degree(groupHead) <= 1) continue;
-
-        bool shouldSkip = false;
+    std::vector<std::size_t> hashes(graph.num_vertices());
+    for (const VertexType &vert : graph.vertices()) {
+        std::size_t &hash = hashes[vert];
+        hash = std::hash<v_workw_t<Graph_t_in>>{}(graph.vertex_work_weight(vert));
+        hash_combine(hash, vertexPoset[vert]);
+        hash_combine(hash, dist[vert]);
         if constexpr (has_typed_vertices_v<Graph_t_in>) {
-            v_type_t<Graph_t_in> children_type = std::numeric_limits< v_type_t<Graph_t_in> >::max();
-            
-            for (const VertexType &groupFoot : graph.children(groupHead)) {
-                if (children_type == std::numeric_limits< v_type_t<Graph_t_in> >::max()) {
-                    children_type = graph.vertex_type(groupFoot);
-                }
-                if (graph.vertex_type(groupFoot) != children_type) {
-                    shouldSkip = true;
-                    break;
-                }
-            }
-        }
-        if (shouldSkip) continue;
-        for (const VertexType &groupFoot : graph.children(groupHead)) {
-            if (vertexPoset[groupFoot] != vertexPoset[groupHead] + 1) {
-                shouldSkip = true;
-                break;
-            }
-        }
-        if (shouldSkip) continue;
-        v_workw_t<Graph_t_in> combined_weight = 0;
-        for (const VertexType &groupFoot : graph.children(groupHead)) {
-            combined_weight += graph.vertex_work_weight(groupFoot);
-        }
-        if (combined_weight > params.maxWeight) continue;
-
-        v_workw_t<Graph_t_in> maxPath = topDist[groupHead] + botDist[groupHead] - graph.vertex_work_weight(groupHead);
-        v_workw_t<Graph_t_in> maxParentDist = 0;
-        v_workw_t<Graph_t_in> maxChildDist = 0;
-
-        for (const VertexType &par : graph.parents(groupHead)) {
-            maxParentDist = std::max(maxParentDist, topDist[par] + commCost);
-        }
-        for (const VertexType &groupFoot : graph.children(groupHead)) {
-            for (const VertexType &par : graph.parents(groupFoot)) {
-                if (par == groupHead) continue;
-                maxParentDist = std::max(maxParentDist, topDist[par] + commCost);
-            }
-        }
-
-        for (const VertexType &groupFoot : graph.children(groupHead)) {
-            for (const VertexType &chld : graph.children(groupFoot)) {
-                maxChildDist = std::max(maxChildDist, botDist[chld] + commCost);
-            }
-        }
-
-        v_workw_t<Graph_t_in> newMaxPath = maxParentDist + maxChildDist + graph.vertex_work_weight(groupHead);
-        for (const VertexType &groupFoot : graph.children(groupHead)) {
-            newMaxPath += graph.vertex_work_weight(groupFoot);
-        }
-
-        long savings = static_cast<long>(maxPath) - static_cast<long>(newMaxPath);
-        if (savings + static_cast<long>(params.leniency * static_cast<double>(maxPath)) >= 0) {
-            vertPriority.emplace(savings, groupHead);
+            hash_combine(hash, graph.vertex_type(vert));
         }
     }
 
-    std::vector<bool> partitionedFlag(graph.num_vertices(), false);
+    return hashes;
+}
 
-    vertex_idx_t<Graph_t_in> maxCorseningNum = graph.num_vertices() - static_cast<vertex_idx_t<Graph_t_in>>(static_cast<double>(graph.num_vertices()) * params.geomDecay);
+template<typename Graph_t_in, typename Graph_t_out>
+std::vector<std::size_t> Sarkar<Graph_t_in, Graph_t_out>::homogeneousMerge(const std::size_t number, const std::size_t minSize, const std::size_t maxSize) const {
+    assert(minSize <= maxSize);
+    assert(number > 0);
+
+    std::size_t bestDiv = 1U;
+    for (std::size_t div : divisorsList(number)) {
+        if (div > maxSize) continue;
+
+        if (div < minSize && bestDiv < div) {
+            bestDiv = div;
+        }
+        if (div >= minSize && ((bestDiv < minSize) || (div < bestDiv))) {
+            bestDiv = div;
+        }
+    }
+
+    if (bestDiv != 1U) {
+        return std::vector<std::size_t>(number / bestDiv, bestDiv);
+    }
+
+    std::size_t bestScore = 0U;
+    std::size_t bestBins = number / minSize;
+    for (std::size_t bins = std::max( number / maxSize, static_cast<std::size_t>(2U)); bins <= number / minSize; ++bins) {
+        if (number % bins == 0U && number != bins) {
+            return std::vector<std::size_t>(bins, number / bins);
+        }
+
+        std::size_t score = std::min( divisorsList(number / bins).size(), divisorsList((number / bins) + 1).size() );
+        if (score >= bestScore) {
+            bestScore = score;
+            bestBins = bins;
+        }
+    }
+
+    std::size_t remainder = number % bestBins;
+    std::size_t size = number / bestBins;
+    
+    std::vector<std::size_t> groups;
+    for (std::size_t i = 0U; i < bestBins; ++i) {
+        if (remainder != 0U) {
+            groups.emplace_back(size + 1U);
+            --remainder;
+        } else {
+            groups.emplace_back(size);
+        }
+    }
+
+    return groups;
+}
+
+template<typename Graph_t_in, typename Graph_t_out>
+vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::homogeneous_buffer_merge(v_workw_t<Graph_t_in> commCost, const Graph_t_in &graph, std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &expansionMapOutput) const {
+    using VertexType = vertex_idx_t<Graph_t_in>;
+    assert(expansionMapOutput.size() == 0);
+
+    const std::vector< vertex_idx_t<Graph_t_in> > vertexTopPoset = get_top_node_distance<Graph_t_in, vertex_idx_t<Graph_t_in>>(graph);
+    const std::vector< vertex_idx_t<Graph_t_in> > vertexBotPoset = getBotPosetMap(graph);
+    const std::vector< v_workw_t<Graph_t_in> > topDist = getTopDistance(commCost, graph);
+    const std::vector< v_workw_t<Graph_t_in> > botDist = getBotDistance(commCost, graph);
+
+    std::vector<std::size_t> hashValues = computeNodeHashes(graph, vertexTopPoset, topDist);
+    std::vector<std::size_t> hashValuesWithParents = hashValues;
+    for (const VertexType &par : graph.vertices()) {
+        for (const VertexType &chld : graph.children(par)) {
+            hash_combine(hashValuesWithParents[chld], hashValues[par]);
+        }        
+    }
+    hashValues = computeNodeHashes(graph, vertexBotPoset, botDist);
+    std::vector<std::size_t> hashValuesWithChildren = hashValues;
+    for (const VertexType &chld : graph.vertices()) {
+        for (const VertexType &par : graph.parents(chld)) {
+            hash_combine(hashValuesWithChildren[par], hashValues[chld]);
+        }        
+    }
+    for (const VertexType &vert : graph.vertices()) {
+        hash_combine(hashValuesWithParents[vert], hashValuesWithChildren[vert]);
+    }
+    const std::vector<std::size_t> &hashValuesCombined = hashValuesWithParents;
+
+    std::unordered_map<std::size_t, std::set<VertexType>> orbits;
+    for (const VertexType &vert : graph.vertices()) {
+        if (graph.vertex_work_weight(vert) > params.smallWeightThreshold) continue;
+
+        const std::size_t hash = hashValuesCombined[vert];
+        auto found_iter = orbits.find(hash); 
+        if (found_iter == orbits.end()) {
+            orbits.emplace(std::piecewise_construct, std::forward_as_tuple(hash), std::forward_as_tuple(std::initializer_list< vertex_idx_t<Graph_t_in> >{vert}));
+        } else {
+            found_iter->second.emplace(vert);
+        }
+    }
 
     vertex_idx_t<Graph_t_in> counter = 0;
-    long minSave = std::numeric_limits<long>::lowest();
-    for (auto prioIter = vertPriority.begin(); prioIter != vertPriority.end(); prioIter++) {
-        const long &vertSave = prioIter->first;
-        const VertexType &groupHead = prioIter->second;
+    std::vector<bool> partitionedFlag(graph.num_vertices(), false);
+    
+    for (const VertexType &vert : graph.vertices()) {
+        if (graph.vertex_work_weight(vert) > params.smallWeightThreshold) continue;
+        if (partitionedFlag[vert]) continue;
 
-        // Iterations halt
-        if (vertSave < minSave) break;
+        const std::set<VertexType> &orb = orbits.at(hashValuesCombined[vert]);
+        if (orb.size() <= 1U) continue;
 
-        // Check whether we can glue
-        bool shouldSkip = false;
-        for (const VertexType &groupFoot : graph.children(groupHead)) {
-            if (partitionedFlag[groupFoot]) {
-                shouldSkip = true;
-                break;
+        std::set<VertexType> parents;
+        for (const VertexType &par : graph.parents(vert)) {
+            parents.emplace(par);
+        }
+        std::set<VertexType> children;
+        for (const VertexType &chld : graph.children(vert)) {
+            children.emplace(chld);
+        }
+
+        std::set<VertexType> secureOrb;
+        for (const VertexType &vertCandidate : orb) {
+            if (vertexTopPoset[vertCandidate] != vertexTopPoset[vert]) continue;
+            if (vertexBotPoset[vertCandidate] != vertexBotPoset[vert]) continue;
+            if (graph.vertex_work_weight(vertCandidate) != graph.vertex_work_weight(vert)) continue;
+            if (topDist[vertCandidate] != topDist[vert]) continue;
+            if (botDist[vertCandidate] != botDist[vert]) continue;
+            if constexpr (has_typed_vertices_v<Graph_t_in>) {
+                if (graph.vertex_type(vertCandidate) != graph.vertex_type(vert)) continue;
             }
-        }
-        if (shouldSkip) continue;
 
-        // Adding to partition
-        std::vector<VertexType> part;
-        part.reserve(graph.out_degree(groupHead));
-        for (const VertexType &groupFoot : graph.children(groupHead)) {
-            part.emplace_back(groupFoot);
+            std::set<VertexType> candidateParents;
+            for (const VertexType &par : graph.parents(vertCandidate)) {
+                candidateParents.emplace(par);
+            }
+            if (candidateParents != parents) continue;
+
+            std::set<VertexType> candidateChildren;
+            for (const VertexType &chld : graph.children(vertCandidate)) {
+                candidateChildren.emplace(chld);
+            }
+            if (candidateChildren != children) continue;
+
+            secureOrb.emplace(vertCandidate);
+        }
+        if (secureOrb.size() <= 1U) continue;
+
+        const v_workw_t<Graph_t_in> desiredVerticesInGroup = graph.vertex_work_weight(vert) == 0 ? std::numeric_limits<v_workw_t<Graph_t_in>>::lowest() : params.smallWeightThreshold / graph.vertex_work_weight(vert);
+        const v_workw_t<Graph_t_in> maxVerticesInGroup = graph.vertex_work_weight(vert) == 0 ? std::numeric_limits<v_workw_t<Graph_t_in>>::max() : params.maxWeight / graph.vertex_work_weight(vert);
+
+        const std::size_t minDesiredSize = desiredVerticesInGroup < 2 ? 2U : static_cast<std::size_t>(desiredVerticesInGroup);
+        const std::size_t maxDesiredSize = std::max(minDesiredSize, std::min(minDesiredSize * 2U, static_cast<std::size_t>(maxVerticesInGroup)));
+
+        std::vector<std::size_t> groups = homogeneousMerge(secureOrb.size(), minDesiredSize, maxDesiredSize);
+
+        auto secureOrbIter = secureOrb.begin();
+        for (std::size_t groupSize : groups) {
+            std::vector<VertexType> cluster;
+            for (std::size_t i = 0; i < groupSize; ++i) {
+                cluster.emplace_back(*secureOrbIter);
+                ++secureOrbIter;
+            }
+            expansionMapOutput.emplace_back( std::move(cluster) );
+            counter += static_cast<VertexType>(groupSize) - 1;
         }
 
-        expansionMapOutput.emplace_back( std::move(part) );
-        counter += graph.out_degree(groupHead) - 1;
-        if (counter > maxCorseningNum) {
-            minSave = vertSave;
-        }
-        
-        for (const VertexType &groupFoot : graph.children(groupHead)) {
-            partitionedFlag[groupFoot] = true;
+        for (const VertexType &touchedVertex : secureOrb) {
+            partitionedFlag[touchedVertex] = true;
         }
     }
 
@@ -1252,7 +1332,112 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::out_buffer_merge(v_wor
     }
 
     return counter;
-};
+}
+
+
+
+
+template<typename Graph_t_in, typename Graph_t_out>
+vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::out_buffer_merge(v_workw_t<Graph_t_in> commCost, const Graph_t_in &graph, std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &expansionMapOutput) const {
+    using VertexType = vertex_idx_t<Graph_t_in>;
+    assert(expansionMapOutput.size() == 0);
+
+    const std::vector< vertex_idx_t<Graph_t_in> > vertexTopPoset = get_top_node_distance<Graph_t_in, vertex_idx_t<Graph_t_in>>(graph);
+    const std::vector< vertex_idx_t<Graph_t_in> > vertexBotPoset = getBotPosetMap(graph);
+    const std::vector< v_workw_t<Graph_t_in> > topDist = getTopDistance(commCost, graph);
+    const std::vector< v_workw_t<Graph_t_in> > botDist = getBotDistance(commCost, graph);
+
+    std::vector<std::size_t> hashValues = computeNodeHashes(graph, vertexTopPoset, topDist);
+    std::vector<std::size_t> hashValuesWithParents = hashValues;
+    for (const VertexType &par : graph.vertices()) {
+        for (const VertexType &chld : graph.children(par)) {
+            hash_combine(hashValuesWithParents[chld], hashValues[par]);
+        }        
+    }
+    
+    const std::vector<std::size_t> &hashValuesCombined = hashValuesWithParents;
+
+    std::unordered_map<std::size_t, std::set<VertexType>> orbits;
+    for (const VertexType &vert : graph.vertices()) {
+        if (graph.vertex_work_weight(vert) > params.smallWeightThreshold) continue;
+
+        const std::size_t hash = hashValuesCombined[vert];
+        auto found_iter = orbits.find(hash); 
+        if (found_iter == orbits.end()) {
+            orbits.emplace(std::piecewise_construct, std::forward_as_tuple(hash), std::forward_as_tuple(std::initializer_list< vertex_idx_t<Graph_t_in> >{vert}));
+        } else {
+            found_iter->second.emplace(vert);
+        }
+    }
+
+    vertex_idx_t<Graph_t_in> counter = 0;
+    std::vector<bool> partitionedFlag(graph.num_vertices(), false);
+    
+    for (const VertexType &vert : graph.vertices()) {
+        if (graph.vertex_work_weight(vert) > params.smallWeightThreshold) continue;
+        if (partitionedFlag[vert]) continue;
+
+        const std::set<VertexType> &orb = orbits.at(hashValuesCombined[vert]);
+        if (orb.size() <= 1U) continue;
+
+        std::set<VertexType> parents;
+        for (const VertexType &par : graph.parents(vert)) {
+            parents.emplace(par);
+        }
+
+        std::set<VertexType> secureOrb;
+        for (const VertexType &vertCandidate : orb) {
+            if (vertexTopPoset[vertCandidate] != vertexTopPoset[vert]) continue;
+            if (vertexBotPoset[vertCandidate] != vertexBotPoset[vert]) continue;
+            if (graph.vertex_work_weight(vertCandidate) != graph.vertex_work_weight(vert)) continue;
+            if (topDist[vertCandidate] != topDist[vert]) continue;
+            if (botDist[vertCandidate] != botDist[vert]) continue;
+            if constexpr (has_typed_vertices_v<Graph_t_in>) {
+                if (graph.vertex_type(vertCandidate) != graph.vertex_type(vert)) continue;
+            }
+
+            std::set<VertexType> candidateParents;
+            for (const VertexType &par : graph.parents(vertCandidate)) {
+                candidateParents.emplace(par);
+            }
+            if (candidateParents != parents) continue;
+
+            secureOrb.emplace(vertCandidate);
+        }
+        if (secureOrb.size() <= 1U) continue;
+
+        const v_workw_t<Graph_t_in> desiredVerticesInGroup = graph.vertex_work_weight(vert) == 0 ? std::numeric_limits<v_workw_t<Graph_t_in>>::lowest() : params.smallWeightThreshold / graph.vertex_work_weight(vert);
+        const v_workw_t<Graph_t_in> maxVerticesInGroup = graph.vertex_work_weight(vert) == 0 ? std::numeric_limits<v_workw_t<Graph_t_in>>::max() : params.maxWeight / graph.vertex_work_weight(vert);
+
+        const std::size_t minDesiredSize = desiredVerticesInGroup < 2 ? 2U : static_cast<std::size_t>(desiredVerticesInGroup);
+        const std::size_t maxDesiredSize = std::max(minDesiredSize, std::min(minDesiredSize * 2U, static_cast<std::size_t>(maxVerticesInGroup)));
+
+        // TODO: do this smarter depending on the connectivity of the children
+        std::vector<std::size_t> groups = homogeneousMerge(secureOrb.size(), minDesiredSize, maxDesiredSize);
+
+        auto secureOrbIter = secureOrb.begin();
+        for (std::size_t groupSize : groups) {
+            std::vector<VertexType> cluster;
+            for (std::size_t i = 0; i < groupSize; ++i) {
+                cluster.emplace_back(*secureOrbIter);
+                ++secureOrbIter;
+            }
+            expansionMapOutput.emplace_back( std::move(cluster) );
+            counter += static_cast<VertexType>(groupSize) - 1;
+        }
+
+        for (const VertexType &touchedVertex : secureOrb) {
+            partitionedFlag[touchedVertex] = true;
+        }
+    }
+
+    for (const VertexType &vert : graph.vertices()) {
+        if (partitionedFlag[vert]) continue;
+        expansionMapOutput.emplace_back(std::initializer_list<VertexType>{vert});
+    }
+
+    return counter;
+}
 
 
 
@@ -1262,117 +1447,92 @@ template<typename Graph_t_in, typename Graph_t_out>
 vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::in_buffer_merge(v_workw_t<Graph_t_in> commCost, const Graph_t_in &graph, std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &expansionMapOutput) const {
     using VertexType = vertex_idx_t<Graph_t_in>;
     assert(expansionMapOutput.size() == 0);
-
-    const std::vector< vertex_idx_t<Graph_t_in> > vertexPoset = getBotPosetMap(graph);
+    
+    const std::vector< vertex_idx_t<Graph_t_in> > vertexTopPoset = get_top_node_distance<Graph_t_in, vertex_idx_t<Graph_t_in>>(graph);
+    const std::vector< vertex_idx_t<Graph_t_in> > vertexBotPoset = getBotPosetMap(graph);
     const std::vector< v_workw_t<Graph_t_in> > topDist = getTopDistance(commCost, graph);
     const std::vector< v_workw_t<Graph_t_in> > botDist = getBotDistance(commCost, graph);
 
-    auto cmp = [](const std::pair<long, VertexType> &lhs, const std::pair<long, VertexType> &rhs) {
-        return (lhs.first > rhs.first)
-                || ((lhs.first == rhs.first) && (lhs.second < rhs.second));
-    };
-    std::set<std::pair<long, VertexType>, decltype(cmp)> vertPriority(cmp);
+    std::vector<std::size_t> hashValues = computeNodeHashes(graph, vertexBotPoset, botDist);
+    std::vector<std::size_t> hashValuesWithChildren = hashValues;
+    for (const VertexType &chld : graph.vertices()) {
+        for (const VertexType &par : graph.parents(chld)) {
+            hash_combine(hashValuesWithChildren[par], hashValues[chld]);
+        }        
+    }
+    const std::vector<std::size_t> &hashValuesCombined = hashValuesWithChildren;
 
-    for (const VertexType &groupFoot : graph.vertices()) {
-        if (graph.in_degree(groupFoot) <= 1) continue;
+    std::unordered_map<std::size_t, std::set<VertexType>> orbits;
+    for (const VertexType &vert : graph.vertices()) {
+        if (graph.vertex_work_weight(vert) > params.smallWeightThreshold) continue;
 
-        bool shouldSkip = false;
-        if constexpr (has_typed_vertices_v<Graph_t_in>) {
-            v_type_t<Graph_t_in> parents_type = std::numeric_limits< v_type_t<Graph_t_in> >::max();
-
-            for (const VertexType &groupHead : graph.parents(groupFoot)) {
-                if (parents_type == std::numeric_limits< v_type_t<Graph_t_in> >::max()) {
-                    parents_type = graph.vertex_type(groupHead);
-                }
-                if (graph.vertex_type(groupHead) != parents_type) {
-                    shouldSkip = true;
-                    break;
-                }
-            }
-        }
-        if (shouldSkip) continue;
-        for (const VertexType &groupHead : graph.parents(groupFoot)) {
-            if (vertexPoset[groupFoot] != vertexPoset[groupHead] + 1) {
-                shouldSkip = true;
-                break;
-            }
-        }
-        if (shouldSkip) continue;
-        v_workw_t<Graph_t_in> combined_weight = 0;
-        for (const VertexType &groupHead : graph.parents(groupFoot)) {
-            combined_weight += graph.vertex_work_weight(groupHead);
-        }
-        if (combined_weight > params.maxWeight) continue;
-
-        v_workw_t<Graph_t_in> maxPath = topDist[groupFoot] + botDist[groupFoot] - graph.vertex_work_weight(groupFoot);
-        v_workw_t<Graph_t_in> maxParentDist = 0;
-        v_workw_t<Graph_t_in> maxChildDist = 0;
-
-        for (const VertexType &child : graph.children(groupFoot)) {
-            maxChildDist = std::max(maxChildDist, botDist[child] + commCost);
-        }
-        for (const VertexType &groupHead : graph.parents(groupFoot)) {
-            for (const VertexType &chld : graph.children(groupHead)) {
-                if (chld == groupFoot) continue;
-                maxChildDist = std::max(maxChildDist, botDist[chld] + commCost);
-            }
-        }
-
-        for (const VertexType &groupHead : graph.parents(groupFoot)) {
-            for (const VertexType &par : graph.parents(groupHead)) {
-                maxParentDist = std::max(maxParentDist, topDist[par] + commCost);
-            }
-        }
-
-        v_workw_t<Graph_t_in> newMaxPath = maxParentDist + maxChildDist + graph.vertex_work_weight(groupFoot);
-        for (const VertexType &groupHead : graph.parents(groupFoot)) {
-            newMaxPath += graph.vertex_work_weight(groupHead);
-        }
-
-        long savings = maxPath - newMaxPath;
-        if (savings + static_cast<long>(params.leniency * static_cast<double>(maxPath)) >= 0) {
-            vertPriority.emplace(savings, groupFoot);
+        const std::size_t hash = hashValuesCombined[vert];
+        auto found_iter = orbits.find(hash); 
+        if (found_iter == orbits.end()) {
+            orbits.emplace(std::piecewise_construct, std::forward_as_tuple(hash), std::forward_as_tuple(std::initializer_list< vertex_idx_t<Graph_t_in> >{vert}));
+        } else {
+            found_iter->second.emplace(vert);
         }
     }
 
-    std::vector<bool> partitionedFlag(graph.num_vertices(), false);
-
-    vertex_idx_t<Graph_t_in> maxCorseningNum = graph.num_vertices() - static_cast<vertex_idx_t<Graph_t_in>>(static_cast<double>(graph.num_vertices()) * params.geomDecay);
-
     vertex_idx_t<Graph_t_in> counter = 0;
-    long minSave = std::numeric_limits<long>::lowest();
-    for (auto prioIter = vertPriority.begin(); prioIter != vertPriority.end(); prioIter++) {
-        const long &vertSave = prioIter->first;
-        const VertexType &groupFoot = prioIter->second;
+    std::vector<bool> partitionedFlag(graph.num_vertices(), false);
+    
+    for (const VertexType &vert : graph.vertices()) {
+        if (graph.vertex_work_weight(vert) > params.smallWeightThreshold) continue;
+        if (partitionedFlag[vert]) continue;
 
-        // Iterations halt
-        if (vertSave < minSave) break;
+        const std::set<VertexType> &orb = orbits.at(hashValuesCombined[vert]);
+        if (orb.size() <= 1U) continue;
 
-        // Check whether we can glue
-        bool shouldSkip = false;
-        for (const VertexType &groupHead : graph.parents(groupFoot)) {
-            if (partitionedFlag[groupHead]) {
-                shouldSkip = true;
-                break;
+        std::set<VertexType> children;
+        for (const VertexType &chld : graph.children(vert)) {
+            children.emplace(chld);
+        }
+
+        std::set<VertexType> secureOrb;
+        for (const VertexType &vertCandidate : orb) {
+            if (vertexTopPoset[vertCandidate] != vertexTopPoset[vert]) continue;
+            if (vertexBotPoset[vertCandidate] != vertexBotPoset[vert]) continue;
+            if (graph.vertex_work_weight(vertCandidate) != graph.vertex_work_weight(vert)) continue;
+            if (topDist[vertCandidate] != topDist[vert]) continue;
+            if (botDist[vertCandidate] != botDist[vert]) continue;
+            if constexpr (has_typed_vertices_v<Graph_t_in>) {
+                if (graph.vertex_type(vertCandidate) != graph.vertex_type(vert)) continue;
             }
-        }
-        if (shouldSkip) continue;
 
-        // Adding to partition
-        std::vector<VertexType> part;
-        part.reserve(graph.in_degree(groupFoot));
-        for (const VertexType &groupHead : graph.parents(groupFoot)) {
-            part.emplace_back(groupHead);
+            std::set<VertexType> candidateChildren;
+            for (const VertexType &chld : graph.children(vertCandidate)) {
+                candidateChildren.emplace(chld);
+            }
+            if (candidateChildren != children) continue;
+
+            secureOrb.emplace(vertCandidate);
+        }
+        if (secureOrb.size() <= 1U) continue;
+
+        const v_workw_t<Graph_t_in> desiredVerticesInGroup = graph.vertex_work_weight(vert) == 0 ? std::numeric_limits<v_workw_t<Graph_t_in>>::lowest() : params.smallWeightThreshold / graph.vertex_work_weight(vert);
+        const v_workw_t<Graph_t_in> maxVerticesInGroup = graph.vertex_work_weight(vert) == 0 ? std::numeric_limits<v_workw_t<Graph_t_in>>::max() : params.maxWeight / graph.vertex_work_weight(vert);
+
+        const std::size_t minDesiredSize = desiredVerticesInGroup < 2 ? 2U : static_cast<std::size_t>(desiredVerticesInGroup);
+        const std::size_t maxDesiredSize = std::max(minDesiredSize, std::min(minDesiredSize * 2U, static_cast<std::size_t>(maxVerticesInGroup)));
+
+        // TODO: do this smarter depending on the connectivity of the parents
+        std::vector<std::size_t> groups = homogeneousMerge(secureOrb.size(), minDesiredSize, maxDesiredSize);
+
+        auto secureOrbIter = secureOrb.begin();
+        for (std::size_t groupSize : groups) {
+            std::vector<VertexType> cluster;
+            for (std::size_t i = 0; i < groupSize; ++i) {
+                cluster.emplace_back(*secureOrbIter);
+                ++secureOrbIter;
+            }
+            expansionMapOutput.emplace_back( std::move(cluster) );
+            counter += static_cast<VertexType>(groupSize) - 1;
         }
 
-        expansionMapOutput.emplace_back( std::move(part) );
-        counter += graph.in_degree(groupFoot) - 1;
-        if (counter > maxCorseningNum) {
-            minSave = vertSave;
-        }
-        
-        for (const VertexType &groupHead : graph.parents(groupFoot)) {
-            partitionedFlag[groupHead] = true;
+        for (const VertexType &touchedVertex : secureOrb) {
+            partitionedFlag[touchedVertex] = true;
         }
     }
 
@@ -1382,6 +1542,6 @@ vertex_idx_t<Graph_t_in> Sarkar<Graph_t_in, Graph_t_out>::in_buffer_merge(v_work
     }
 
     return counter;
-};
+}
 
 } // end namespace osp

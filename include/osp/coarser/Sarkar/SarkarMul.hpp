@@ -26,6 +26,8 @@ namespace osp {
 
 namespace SarkarParams {
 
+enum class BufferMergeMode { OFF, FAN_IN, FAN_OUT, HOMOGENEOUS, FULL };
+
 template<typename commCostType>
 struct MulParameters {
     std::size_t seed{42U};
@@ -35,7 +37,7 @@ struct MulParameters {
     commCostType maxWeight{ std::numeric_limits<commCostType>::max() };
     commCostType smallWeightThreshold{ std::numeric_limits<commCostType>::lowest() };
     unsigned max_num_iteration_without_changes{3U};
-    bool use_buffer_merge{false};
+    BufferMergeMode buffer_merge_mode{BufferMergeMode::OFF};
 };
 } // end namespace SarkarParams
 
@@ -60,6 +62,7 @@ class SarkarMul : public MultilevelCoarser<Graph_t, Graph_t_coarse> {
         void updateParams();
         
         RETURN_STATUS run_single_contraction_mode(vertex_idx_t<Graph_t> &diff_vertices);
+        RETURN_STATUS run_buffer_merges();
         RETURN_STATUS run_contractions(v_workw_t<Graph_t> commCost);
         RETURN_STATUS run_contractions() override;
         
@@ -98,13 +101,13 @@ void SarkarMul<Graph_t, Graph_t_coarse>::initParams() {
     std::sort(ml_params.commCostVec.begin(), ml_params.commCostVec.end());
     
     updateParams();
-};
+}
 
 template<typename Graph_t, typename Graph_t_coarse>
 void SarkarMul<Graph_t, Graph_t_coarse>::updateParams() {
     coarser_initial.setParameters(params);
     coarser_secondary.setParameters(params);
-};
+}
 
 template<typename Graph_t, typename Graph_t_coarse>
 RETURN_STATUS SarkarMul<Graph_t, Graph_t_coarse>::run_single_contraction_mode(vertex_idx_t<Graph_t> &diff_vertices) {
@@ -138,7 +141,7 @@ RETURN_STATUS SarkarMul<Graph_t, Graph_t_coarse>::run_single_contraction_mode(ve
     diff_vertices = current_num_vertices - new_num_vertices;
 
     return status;
-};
+}
 
 template<typename Graph_t, typename Graph_t_coarse>
 RETURN_STATUS SarkarMul<Graph_t, Graph_t_coarse>::run_contractions(v_workw_t<Graph_t> commCost) {
@@ -228,7 +231,54 @@ RETURN_STATUS SarkarMul<Graph_t, Graph_t_coarse>::run_contractions(v_workw_t<Gra
     }
 
     return status;
-};
+}
+
+
+template<typename Graph_t, typename Graph_t_coarse>
+RETURN_STATUS SarkarMul<Graph_t, Graph_t_coarse>::run_buffer_merges() {
+    RETURN_STATUS status = RETURN_STATUS::OSP_SUCCESS;
+
+    unsigned no_change = 0;
+    while (no_change < ml_params.max_num_iteration_without_changes) {        
+        vertex_idx_t<Graph_t> diff = 0;
+        if ((ml_params.buffer_merge_mode == SarkarParams::BufferMergeMode::HOMOGENEOUS) || (ml_params.buffer_merge_mode == SarkarParams::BufferMergeMode::FULL && diff == 0)) {
+            params.mode = SarkarParams::Mode::HOMOGENEOUS_BUFFER;
+            updateParams();
+            status = std::max(status, run_single_contraction_mode(diff));
+        }
+        if (ml_params.buffer_merge_mode == SarkarParams::BufferMergeMode::FAN_IN) {
+            params.mode = SarkarParams::Mode::FAN_IN_BUFFER;
+            updateParams();
+            status = std::max(status, run_single_contraction_mode(diff));
+        }
+        if (ml_params.buffer_merge_mode == SarkarParams::BufferMergeMode::FAN_OUT) {
+            params.mode = SarkarParams::Mode::FAN_OUT_BUFFER;
+            updateParams();
+            status = std::max(status, run_single_contraction_mode(diff));
+        }
+        if (ml_params.buffer_merge_mode == SarkarParams::BufferMergeMode::FULL && diff == 0) {
+            const bool flip = thue_coin.get_flip();
+            params.mode = flip ? SarkarParams::Mode::FAN_IN_BUFFER : SarkarParams::Mode::FAN_OUT_BUFFER;
+            updateParams();
+            status = std::max(status, run_single_contraction_mode(diff));
+
+            if (diff == 0) {
+                params.mode = (!flip) ? SarkarParams::Mode::FAN_IN_BUFFER : SarkarParams::Mode::FAN_OUT_BUFFER;
+                updateParams();
+                status = std::max(status, run_single_contraction_mode(diff));
+            }
+        }
+
+        if (diff > 0) {
+            no_change = 0;
+            status = std::max(status, run_contractions( ml_params.commCostVec.back() ));        
+        } else {
+            no_change++;
+        }
+    }
+
+    return status;
+}
 
 
 template<typename Graph_t, typename Graph_t_coarse>
@@ -236,35 +286,17 @@ RETURN_STATUS SarkarMul<Graph_t, Graph_t_coarse>::run_contractions() {
     initParams();
 
     RETURN_STATUS status = RETURN_STATUS::OSP_SUCCESS;
-    vertex_idx_t<Graph_t> diff = 0;
     
     for (const v_workw_t<Graph_t> commCost : ml_params.commCostVec) {
         status = std::max(status, run_contractions(commCost));
     }
 
-    if constexpr (has_typed_vertices_v<Graph_t>) {
-        if (ml_params.use_buffer_merge) {
-            unsigned no_change = 0;
-
-            while (no_change < ml_params.max_num_iteration_without_changes) {
-                params.mode = thue_coin.get_flip()? SarkarParams::Mode::FAN_IN_BUFFER : SarkarParams::Mode::FAN_OUT_BUFFER;
-                updateParams();
-
-                status = std::max(status, run_single_contraction_mode(diff));
-
-                if (diff > 0) {
-                    no_change = 0;
-                } else {
-                    no_change++;
-                }
-
-                status = std::max(status, run_contractions( ml_params.commCostVec.back() ));        
-            }
-        }
+    if (ml_params.buffer_merge_mode != SarkarParams::BufferMergeMode::OFF) {
+        status = std::max(status, run_buffer_merges());
     }
 
     return status;
-};
+}
 
 
 

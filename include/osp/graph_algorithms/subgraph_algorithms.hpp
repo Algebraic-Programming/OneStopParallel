@@ -218,4 +218,58 @@ std::vector<Graph_t_out> create_induced_subgraphs(const Graph_t_in &dag_in,
     return split_dags;
 }
 
-}; // namespace osp
+template<typename Graph_t_in, typename Graph_t_out>
+std::unordered_map<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_in>> create_induced_subgraph_map(const Graph_t_in &dag, Graph_t_out &dag_out,
+                             const std::vector<vertex_idx_t<Graph_t_in>> &selected_nodes) {
+
+    static_assert(std::is_same_v<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_out>>,
+                  "Graph_t_in and out must have the same vertex_idx types");
+
+    static_assert(is_constructable_cdag_vertex_v<Graph_t_out>,
+                  "Graph_t_out must satisfy the constructable_cdag_vertex concept");
+
+    static_assert(is_constructable_cdag_edge_v<Graph_t_out>,
+                  "Graph_t_out must satisfy the constructable_cdag_edge concept");
+
+    assert(dag_out.num_vertices() == 0);
+
+    std::unordered_map<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_in>> local_idx;
+    local_idx.reserve(selected_nodes.size());
+
+    for (const auto &node : selected_nodes) {
+        local_idx[node] = dag_out.num_vertices();
+
+        if constexpr (is_constructable_cdag_typed_vertex_v<Graph_t_out> and has_typed_vertices_v<Graph_t_in>) {
+            // add vertex with type
+            dag_out.add_vertex(dag.vertex_work_weight(node), dag.vertex_comm_weight(node), dag.vertex_mem_weight(node),
+                               dag.vertex_type(node));
+        } else {
+            // add vertex without type
+            dag_out.add_vertex(dag.vertex_work_weight(node), dag.vertex_comm_weight(node), dag.vertex_mem_weight(node));
+        }
+    }
+
+    if constexpr (has_edge_weights_v<Graph_t_in> and has_edge_weights_v<Graph_t_out>) {
+
+        // add edges with edge comm weights
+        for (const auto &node : selected_nodes)
+            for (const auto &in_edge : in_edges(node, dag)) {
+                const auto &pred = source(in_edge, dag);
+                if (local_idx.count(pred))
+                    dag_out.add_edge(local_idx[pred], local_idx[node], dag.edge_comm_weight(in_edge));
+            }
+
+    } else {
+
+        // add edges without edge comm weights
+        for (const auto &node : selected_nodes)
+            for (const auto &pred : dag.parents(node)) {
+                if (local_idx.count(pred))
+                    dag_out.add_edge(local_idx[pred], local_idx[node]);
+            }
+    }
+
+    return local_idx;
+}
+
+} // end namespace osp

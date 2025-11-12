@@ -23,7 +23,7 @@ limitations under the License.
 #include <random>
 #include <vector>
 
-#include "osp/auxiliary/math_helper.hpp"
+#include "osp/auxiliary/math/math_helper.hpp"
 #include "osp/auxiliary/misc.hpp"
 #include "osp/concepts/directed_graph_concept.hpp"
 #include "directed_graph_util.hpp"
@@ -107,7 +107,7 @@ std::vector<vertex_idx_t<Graph_t>> GetTopOrder(const Graph_t &graph) {
             }
         }
 
-        if (TopOrder.size() != graph.num_vertices())
+        if (static_cast<VertexType>(TopOrder.size()) != graph.num_vertices())
             throw std::runtime_error("Error during topological ordering: TopOrder.size() != graph.num_vertices() [" +
                                      std::to_string(TopOrder.size()) + " != " + std::to_string(graph.num_vertices()) +
                                      "]");
@@ -144,8 +144,8 @@ std::vector<vertex_idx_t<Graph_t>> GetTopOrderGorder(const Graph_t &graph) {
 
     auto v_cmp = [&priorities, &graph](const VertexType &lhs, const VertexType &rhs) {
         return (priorities[lhs] < priorities[rhs]) ||
-               ((priorities[lhs] == priorities[rhs]) && (graph.out_degree(lhs) < graph.out_degree(rhs))) ||
-               ((priorities[lhs] == priorities[rhs]) && (graph.out_degree(lhs) == graph.out_degree(rhs)) &&
+               ((priorities[lhs] <= priorities[rhs]) && (graph.out_degree(lhs) < graph.out_degree(rhs))) ||
+               ((priorities[lhs] <= priorities[rhs]) && (graph.out_degree(lhs) == graph.out_degree(rhs)) &&
                 (lhs > rhs));
     };
 
@@ -264,7 +264,7 @@ struct top_sort_iterator {
             if (is_source(v, graph)) {
                 next.push(v);
             } else {
-                predecessors_count[v] = graph.in_degree(v);
+                predecessors_count[v] = static_cast<vertex_idx_t<Graph_t>>( graph.in_degree(v) );
             }
         }
         current_vertex = next.pop_next();

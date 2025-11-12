@@ -43,14 +43,14 @@ struct kl_move {
     unsigned to_step;
 
     kl_move() : node(0), gain(0), change_in_cost(0), from_proc(0), from_step(0), to_proc(0), to_step(0) {}
-    kl_move(vertex_idx_t<Graph_t> node, double gain, double change_cost, unsigned from_proc, unsigned from_step,
-            unsigned to_proc, unsigned to_step)
-        : node(node), gain(gain), change_in_cost(change_cost), from_proc(from_proc), from_step(from_step),
-          to_proc(to_proc), to_step(to_step) {}
+    kl_move(vertex_idx_t<Graph_t> _node, double _gain, double _change_cost, unsigned _from_proc, unsigned _from_step,
+            unsigned _to_proc, unsigned _to_step)
+        : node(_node), gain(_gain), change_in_cost(_change_cost), from_proc(_from_proc), from_step(_from_step),
+          to_proc(_to_proc), to_step(_to_step) {}
 
     bool operator<(kl_move const &rhs) const {
-        return (gain < rhs.gain) or (gain == rhs.gain and change_in_cost < rhs.change_in_cost) or
-               (gain == rhs.gain and change_in_cost == rhs.change_in_cost and node > rhs.node);
+        return (gain < rhs.gain) or (gain <= rhs.gain and change_in_cost < rhs.change_in_cost) or
+               (gain <= rhs.gain and change_in_cost <= rhs.change_in_cost and node > rhs.node);
     }
 
     kl_move reverse_move() const {
@@ -61,6 +61,8 @@ struct kl_move {
 class Ikl_cost_function {
   public:
     virtual double compute_current_costs() = 0;
+
+    virtual ~Ikl_cost_function() = default;
 };
 
 template<typename Graph_t, typename MemoryConstraint_t>

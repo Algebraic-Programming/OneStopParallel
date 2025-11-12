@@ -122,7 +122,7 @@ RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::improve_acti
 
 template<typename Graph_t, typename Graph_t_coarse>
 RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::expand_active_schedule() {
-    assert((active_graph > 0L) && ( (long unsigned) active_graph < ml_coarser->dag_history.size()));
+    assert((active_graph > 0L) && ( static_cast<long unsigned>(active_graph) < ml_coarser->dag_history.size()));
 
     std::unique_ptr< BspInstance<Graph_t_coarse> > expanded_instance = std::make_unique< BspInstance<Graph_t_coarse> >( *(ml_coarser->dag_history.at( static_cast<std::size_t>(active_graph) - 1 )), original_inst->getArchitecture());
     std::unique_ptr< BspSchedule<Graph_t_coarse> > expanded_schedule = std::make_unique< BspSchedule<Graph_t_coarse> >( *expanded_instance );
@@ -175,7 +175,7 @@ RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::expand_activ
 
 template<typename Graph_t, typename Graph_t_coarse>
 RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::run_expansions(BspSchedule<Graph_t>& schedule) {
-    assert(active_graph >= 0L && (long unsigned) active_graph == ml_coarser->dag_history.size() - 1);
+    assert(active_graph >= 0L && static_cast<long unsigned>(active_graph) == ml_coarser->dag_history.size() - 1);
 
     RETURN_STATUS status = RETURN_STATUS::OSP_SUCCESS;
     

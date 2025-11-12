@@ -121,7 +121,7 @@ void run_test(Scheduler<Graph_t> *test_scheduler) {
             BOOST_CHECK(memSchedule6.isValid());
         }
     }
-};
+}
 
 
 BOOST_AUTO_TEST_CASE(GreedyBspScheduler_test) {
@@ -168,4 +168,4 @@ BOOST_AUTO_TEST_CASE(test_pebbling_schedule_writer) {
 
     std::cout << "Writing pebbling schedule" << std::endl;
     file_writer::write_txt(std::cout, memSchedule);
-};
+}

@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(Erdos_Renyi_graph_test) {
         BOOST_CHECK_EQUAL(graph.num_vertices(), graph_sizes[i]);
         BOOST_CHECK_EQUAL(is_acyclic(graph), true);
     }
-};
+}
 
 BOOST_AUTO_TEST_CASE(near_diag_random_graph_test) {
 
@@ -60,4 +60,4 @@ BOOST_AUTO_TEST_CASE(near_diag_random_graph_test) {
         BOOST_CHECK_EQUAL(graph.num_vertices(), graph_sizes[i]);
         BOOST_CHECK_EQUAL(is_acyclic(graph), true);
     }
-};
+}

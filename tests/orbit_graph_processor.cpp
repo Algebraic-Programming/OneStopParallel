@@ -23,6 +23,7 @@ limitations under the License.
 #include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 
 #include "osp/auxiliary/io/dot_graph_file_reader.hpp"
+#include "osp/dag_divider/isomorphism_divider/MerkleHashComputer.hpp"
 #include "osp/auxiliary/io/DotFileWriter.hpp"
 #include "osp/dag_divider/isomorphism_divider/OrbitGraphProcessor.hpp"
 #include "osp/graph_algorithms/directed_graph_util.hpp"
@@ -67,7 +68,8 @@ void check_partitioning(const Graph_t& dag, const OrbitGraphProcessor<Graph_t, G
 //     file_reader::readComputationalDagDotFormat("", dag);
 
 //     OrbitGraphProcessor<graph_t, graph_t> processor(2); // Using a symmetry threshold of 2
-//     processor.discover_isomorphic_groups(dag);
+//     MerkleHashComputer<graph_t, bwd_merkle_node_hash_func<graph_t>, true> hasher(dag, dag);
+//     processor.discover_isomorphic_groups(dag, hasher);
 
 //     const auto& coarse_graph = processor.get_coarse_graph();
 //     const auto& final_coarse_graph = processor.get_final_coarse_graph();
@@ -110,16 +112,17 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessor_SimpleMerge) {
     // 0 -> 1
     // 2 -> 3
     dag.add_vertex(10, 1, 1); // 0
-    dag.add_vertex(20, 1, 1); // 1
+    dag.add_vertex(10, 1, 1); // 1
     dag.add_vertex(10, 1, 1); // 2
-    dag.add_vertex(20, 1, 1); // 3
+    dag.add_vertex(10, 1, 1); // 3
     dag.add_edge(0, 1);
     dag.add_edge(2, 3);
 
     // Initial orbits: {0, 2} and {1, 3}. Coarse graph: 0 -> 1
     // With threshold 2, these should be merged.
     OrbitGraphProcessor<graph_t, graph_t> processor(2);
-    processor.discover_isomorphic_groups(dag);
+    MerkleHashComputer<graph_t, bwd_merkle_node_hash_func<graph_t>, true> hasher(dag, dag);
+    processor.discover_isomorphic_groups(dag, hasher);
 
     const auto& final_coarse_graph = processor.get_final_coarse_graph();
     const auto& final_groups = processor.get_final_groups();
@@ -156,7 +159,8 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessor_ForkJoinNoMerge) {
     // Merging 0 and 1 would result in a group of size 1 ({0,1,2}), which is not viable (threshold 2).
     // Merging 1 and 2 would also result in a group of size 1 ({1,2,3}), not viable.
     OrbitGraphProcessor<graph_t, graph_t> processor(2);
-    processor.discover_isomorphic_groups(dag);
+    MerkleHashComputer<graph_t, bwd_merkle_node_hash_func<graph_t>, true> hasher(dag, dag);
+    processor.discover_isomorphic_groups(dag, hasher);
 
     const auto& final_coarse_graph = processor.get_final_coarse_graph();
     const auto& final_groups = processor.get_final_groups();
@@ -190,7 +194,8 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessor_PartitionCheck_MediumGraph) {
 
     // Use a higher threshold to encourage more merging on this larger graph
     OrbitGraphProcessor<graph_t, graph_t> processor(4);
-    processor.discover_isomorphic_groups(dag);
+    MerkleHashComputer<graph_t, bwd_merkle_node_hash_func<graph_t>, true> hasher(dag, dag);
+    processor.discover_isomorphic_groups(dag, hasher);
 
     // The main purpose of this test is to ensure the output is a valid partition.
     check_partitioning(dag, processor);
@@ -204,7 +209,8 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessor_MultiPipelineMerge) {
     BOOST_REQUIRE_EQUAL(dag.num_vertices(), 20);
 
     OrbitGraphProcessor<graph_t, graph_t> processor(5); // Set threshold to match pipeline count
-    processor.discover_isomorphic_groups(dag);
+    MerkleHashComputer<graph_t, bwd_merkle_node_hash_func<graph_t>, true> hasher(dag, dag);
+    processor.discover_isomorphic_groups(dag, hasher);
 
     const auto& final_coarse_graph = processor.get_final_coarse_graph();
     const auto& final_groups = processor.get_final_groups();
@@ -231,7 +237,8 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessor_LadderNoMerge) {
     BOOST_REQUIRE_EQUAL(dag.num_vertices(), 22);
 
     OrbitGraphProcessor<graph_t, graph_t> processor(2);
-    processor.discover_isomorphic_groups(dag);
+    MerkleHashComputer<graph_t, bwd_merkle_node_hash_func<graph_t>, true> hasher(dag, dag);
+    processor.discover_isomorphic_groups(dag, hasher);
     
     const auto& initial_coarse_graph = processor.get_coarse_graph();
     const auto& final_coarse_graph = processor.get_final_coarse_graph();
@@ -250,7 +257,8 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessor_AsymmetricNoMerge) {
     BOOST_REQUIRE_EQUAL(dag.num_vertices(), 30);
 
     OrbitGraphProcessor<graph_t, graph_t> processor(2);
-    processor.discover_isomorphic_groups(dag);
+    MerkleHashComputer<graph_t, bwd_merkle_node_hash_func<graph_t>, true> hasher(dag, dag);
+    processor.discover_isomorphic_groups(dag, hasher);
 
     const auto& final_coarse_graph = processor.get_final_coarse_graph();
 
@@ -271,7 +279,8 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessor_BinaryTreeNoMerge) {
     BOOST_REQUIRE_EQUAL(dag.num_vertices(), (1 << 5) - 1);
 
     OrbitGraphProcessor<graph_t, graph_t> processor(2);
-    processor.discover_isomorphic_groups(dag);
+    MerkleHashComputer<graph_t, bwd_merkle_node_hash_func<graph_t>, true> hasher(dag, dag);
+    processor.discover_isomorphic_groups(dag, hasher);
 
     const auto& final_coarse_graph = processor.get_final_coarse_graph();
 
@@ -290,7 +299,9 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessor_ButterflyMerge) {
     BOOST_REQUIRE_EQUAL(dag.num_vertices(), (3 + 1) * 8);
 
     OrbitGraphProcessor<graph_t, graph_t> processor(16); // Threshold is larger than any group size
-    processor.discover_isomorphic_groups(dag);
+    processor.setMinSymmetry(16);
+    MerkleHashComputer<graph_t, bwd_merkle_node_hash_func<graph_t>, true> hasher(dag, dag);
+    processor.discover_isomorphic_groups(dag, hasher);
 
     const auto& final_coarse_graph = processor.get_final_coarse_graph();
     BOOST_CHECK_EQUAL(final_coarse_graph.num_vertices(), 1);

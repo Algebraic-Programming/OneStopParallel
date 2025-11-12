@@ -100,7 +100,7 @@ class dag_vector_adapter {
         : vertices_(out_neigbors_.size()), out_neigbors(&out_neigbors_), in_neigbors(&in_neigbors_), num_edges_(0),
           num_vertex_types_(1) {
 
-        for (vertex_idx i = 0; i < out_neigbors_.size(); ++i) {
+        for (vertex_idx i = 0; i < static_cast<vertex_idx>(out_neigbors_.size()); ++i) {
             vertices_[i].id = i;
             num_edges_ += out_neigbors_[i].size();
         }
@@ -131,15 +131,15 @@ class dag_vector_adapter {
 
     inline vertex_idx num_vertices() const { return static_cast<vertex_idx>(vertices_.size()); }
 
-    inline std::size_t num_edges() const { return num_edges_; }
+    inline vertex_idx num_edges() const { return static_cast<vertex_idx>(num_edges_); }
 
     inline auto parents(const vertex_idx v) const { return vector_cast_view<index_t, vertex_idx>(in_neigbors->at(v)); }
 
     inline auto children(const vertex_idx v) const { return vector_cast_view<index_t, vertex_idx>(out_neigbors->at(v)); }
 
-    inline std::size_t in_degree(const vertex_idx v) const { return in_neigbors->at(v).size(); }
+    inline vertex_idx in_degree(const vertex_idx v) const { return static_cast<vertex_idx>(in_neigbors->at(v).size()); }
 
-    inline std::size_t out_degree(const vertex_idx v) const { return out_neigbors->at(v).size(); }
+    inline vertex_idx out_degree(const vertex_idx v) const { return static_cast<vertex_idx>(out_neigbors->at(v).size()); }
 
     inline vertex_work_weight_type vertex_work_weight(const vertex_idx v) const { return vertices_[v].work_weight; }
 

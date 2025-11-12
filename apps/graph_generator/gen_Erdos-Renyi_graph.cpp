@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
     std::uniform_real_distribution<double> unif_log(-std::log(upper_bound), std::log(upper_bound));
     std::default_random_engine re;
 
-    for (size_t i = 0; i < num_graphs; i++) {
+    for (size_t j = 0; j < num_graphs; j++) {
         // Generating the graph
         ComputationalDag graph;
         erdos_renyi_graph_gen(graph, num_vert, chance);
@@ -78,7 +78,7 @@ int main(int argc, char *argv[]) {
         }
         graph_name += graph_edge_size;
 
-        graph_name += std::to_string(i);
+        graph_name += std::to_string(j);
 
         graph_name += ".mtx";
 

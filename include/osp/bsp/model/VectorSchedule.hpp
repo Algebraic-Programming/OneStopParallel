@@ -58,7 +58,7 @@ class VectorSchedule : public IBspSchedule<Graph_t> {
         node_to_superstep_assignment =
             std::vector<unsigned>(schedule.getInstance().numberOfVertices(), schedule.numberOfSupersteps());
 
-        for (unsigned i = 0; i < schedule.getInstance().numberOfVertices(); i++) {
+        for (vertex_idx_t<Graph_t> i = 0; i < schedule.getInstance().numberOfVertices(); i++) {
 
             node_to_processor_assignment[i] = schedule.assignedProcessor(i);
             node_to_superstep_assignment[i] = schedule.assignedSuperstep(i);
@@ -78,7 +78,7 @@ class VectorSchedule : public IBspSchedule<Graph_t> {
                 std::vector<unsigned>(instance->numberOfVertices(), instance->numberOfProcessors());
             node_to_superstep_assignment = std::vector<unsigned>(instance->numberOfVertices(), number_of_supersteps);
 
-            for (unsigned i = 0; i < instance->numberOfVertices(); i++) {
+            for (vertex_idx_t<Graph_t> i = 0; i < instance->numberOfVertices(); i++) {
                 node_to_processor_assignment[i] = other.assignedProcessor(i);
                 node_to_superstep_assignment[i] = other.assignedSuperstep(i);
             }

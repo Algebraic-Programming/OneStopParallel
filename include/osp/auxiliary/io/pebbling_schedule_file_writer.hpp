@@ -29,7 +29,7 @@ void write_txt(std::ostream &os, const PebblingSchedule<Graph_t> &schedule) {
 
     using vertex_idx = vertex_idx_t<Graph_t>;
 
-    os << "\%\% PebblingSchedule for " << schedule.getInstance().numberOfProcessors() << " processors and "
+    os << "%% PebblingSchedule for " << schedule.getInstance().numberOfProcessors() << " processors and "
        << schedule.numberOfSupersteps() << " supersteps." << std::endl;
 
     for(unsigned step = 0; step < schedule.numberOfSupersteps(); ++step)

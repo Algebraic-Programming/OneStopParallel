@@ -41,8 +41,9 @@ class IsomorphicSubgraphSchedulerTester : public IsomorphicSubgraphScheduler<Gra
     using IsomorphicSubgraphScheduler<Graph_t, Constr_Graph_t>::IsomorphicSubgraphScheduler;
 
     void test_trim_subgraph_groups(std::vector<group_t>& isomorphic_groups,
-                                   const unsigned min_proc_type_count) {
-        this->trim_subgraph_groups(isomorphic_groups, min_proc_type_count);
+                                   const BspInstance<Graph_t>& instance,
+                                   std::vector<bool>& was_trimmed) {
+        this->trim_subgraph_groups(isomorphic_groups, instance, was_trimmed);
     }
 
     void test_schedule_isomorphic_group(const BspInstance<Graph_t> &instance,
@@ -71,12 +72,24 @@ BOOST_AUTO_TEST_CASE(TrimSubgraphGroupsTest_NoTrim) {
     GreedyBspScheduler<constr_graph_t> greedy_scheduler;
     IsomorphicSubgraphSchedulerTester<graph_t, constr_graph_t> tester(greedy_scheduler);
 
+    BspInstance<graph_t> instance;
+    auto& dag = instance.getComputationalDag();
+    dag.add_vertex(1, 1, 1, 0); // 0
+    dag.add_vertex(1, 1, 1, 0); // 1
+    dag.add_vertex(1, 1, 1, 0); // 2
+    dag.add_vertex(1, 1, 1, 0); // 3
+    instance.getArchitecture().setProcessorsWithTypes({0,0,0,0,0,0,0,0}); // 8 processors of type 0
+    instance.setDiagonalCompatibilityMatrix(1);
+
     // A single group with 4 subgraphs, each with 1 node.
     std::vector<group_t> iso_groups = { group_t{ { {0}, {1}, {2}, {3} } } };
 
-    // Group size (4) is a divisor of min_proc_type_count (8), so no trim.
-    tester.test_trim_subgraph_groups(iso_groups, 8);
+    std::vector<bool> was_trimmed(iso_groups.size());
+    // Group size (4) is a divisor of processor count for type 0 (8), so no trim.
+    tester.test_trim_subgraph_groups(iso_groups, instance, was_trimmed);
 
+    BOOST_REQUIRE_EQUAL(was_trimmed.size(), 1);
+    BOOST_CHECK(!was_trimmed[0]);
     BOOST_CHECK_EQUAL(iso_groups.size(), 1);
     BOOST_CHECK_EQUAL(iso_groups[0].subgraphs.size(), 4); // Still 4 subgraphs in the group
 }
@@ -84,16 +97,33 @@ BOOST_AUTO_TEST_CASE(TrimSubgraphGroupsTest_NoTrim) {
 BOOST_AUTO_TEST_CASE(TrimSubgraphGroupsTest_WithTrim) {
     GreedyBspScheduler<constr_graph_t> greedy_scheduler;
     IsomorphicSubgraphSchedulerTester<graph_t, constr_graph_t> tester(greedy_scheduler);
+    tester.setAllowTrimmedScheduler(false);
+    tester.set_symmetry(4);
+    tester.setMinSymmetry(4);
+
+    BspInstance<graph_t> instance;
+    auto& dag = instance.getComputationalDag();
+    dag.add_vertex(10, 1, 1, 0); // 0
+    dag.add_vertex(10, 1, 1, 0); // 1
+    dag.add_vertex(10, 1, 1, 0); // 2
+    dag.add_vertex(10, 1, 1, 0); // 3
+    dag.add_vertex(10, 1, 1, 0); // 4
+    dag.add_vertex(10, 1, 1, 0); // 5
+    instance.getArchitecture().setProcessorsWithTypes({0,0,0,0,0,0,0,0}); // 8 processors of type 0
+    instance.setDiagonalCompatibilityMatrix(1);
 
     // 6 subgraphs, each with 1 node and work weight 10.
     std::vector<group_t> iso_groups = { group_t{ { {0}, {1}, {2}, {3}, {4}, {5} } } };
 
-    // Group size (6) is not a divisor of min_proc_type_count (8).
+    std::vector<bool> was_trimmed(iso_groups.size());
+    // Group size (6) is not a divisor of processor count for type 0 (8).
     // gcd(6, 8) = 2.
     // merge_size = 6 / 2 = 3.
     // The 6 subgraphs should be merged into 2 new subgraphs, each containing 3 old ones.
-    tester.test_trim_subgraph_groups(iso_groups, 8);
+    tester.test_trim_subgraph_groups(iso_groups, instance, was_trimmed);
 
+    BOOST_REQUIRE_EQUAL(was_trimmed.size(), 1);
+    BOOST_CHECK(was_trimmed[0]);
     BOOST_CHECK_EQUAL(iso_groups.size(), 1);
     BOOST_REQUIRE_EQUAL(iso_groups[0].subgraphs.size(), 2); // Group now contains 2 merged subgraphs
 
@@ -113,6 +143,22 @@ BOOST_AUTO_TEST_CASE(TrimSubgraphGroupsTest_WithTrim) {
 BOOST_AUTO_TEST_CASE(TrimSubgraphGroupsTest_MultipleGroups) {
     GreedyBspScheduler<constr_graph_t> greedy_scheduler;
     IsomorphicSubgraphSchedulerTester<graph_t, constr_graph_t> tester(greedy_scheduler);
+    tester.setAllowTrimmedScheduler(false);
+
+
+    BspInstance<graph_t> instance;
+    auto& dag = instance.getComputationalDag();
+    for (int i = 0; i < 6; ++i) dag.add_vertex(1,1,1,0); // 0-5
+    for (int i = 0; i < 3; ++i) dag.add_vertex(1,1,1,0); // 6-8, but we will use 10-12 in test
+    for (int i = 0; i < 2; ++i) dag.add_vertex(1,1,1,0); // 9-10
+    for (int i = 0; i < 2; ++i) dag.add_vertex(1,1,1,0); // 11-12
+    for (int i = 0; i < 8; ++i) dag.add_vertex(1,1,1,0); // 13-20
+    for (int i = 0; i < 5; ++i) dag.add_vertex(1,1,1,0); // 21-25
+    // Make sure all vertices used in iso_groups exist.
+    // All are type 0.
+
+    instance.getArchitecture().setProcessorsWithTypes({0,0,0,0,0,0,0,0,0}); // 9 processors of type 0
+    instance.setDiagonalCompatibilityMatrix(1);
 
     // Group 1: size 6. gcd(6, 9) = 3. merge_size = 6/3 = 2. -> 3 subgraphs of size 2.
     // Group 2: size 3. gcd(3, 9) = 3. merge_size = 3/3 = 1. -> no trim.
@@ -123,10 +169,15 @@ BOOST_AUTO_TEST_CASE(TrimSubgraphGroupsTest_MultipleGroups) {
         group_t{ { {20}, {21}, {22}, {23}, {24} } }  // Group 3
     };
 
-    tester.test_trim_subgraph_groups(iso_groups, 9);
+    std::vector<bool> was_trimmed(iso_groups.size());
+    tester.test_trim_subgraph_groups(iso_groups, instance, was_trimmed);
 
     BOOST_REQUIRE_EQUAL(iso_groups.size(), 3);
+    BOOST_REQUIRE_EQUAL(was_trimmed.size(), 3);
 
+    BOOST_CHECK(was_trimmed[0]);  // Group 1 should be trimmed
+    BOOST_CHECK(!was_trimmed[1]); // Group 2 should not be trimmed
+    BOOST_CHECK(was_trimmed[2]);  // Group 3 should be trimmed
     // Check Group 1
     BOOST_REQUIRE_EQUAL(iso_groups[0].subgraphs.size(), 3);
     BOOST_CHECK_EQUAL(iso_groups[0].subgraphs[0].size(), 2);
@@ -172,6 +223,7 @@ BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroup_HeterogeneousArch) {
     sub_sched.node_assigned_worker_per_type.resize(2);
     sub_sched.node_assigned_worker_per_type[0] = {2, 0}; // 2xT0 for group 0
     sub_sched.node_assigned_worker_per_type[1] = {0, 2}; // 2xT1 for group 1
+    sub_sched.was_trimmed = {false, false}; // No trimming occurred
 
     std::vector<vertex_idx_t<graph_t>> partition(dag.num_vertices());
 
@@ -237,6 +289,7 @@ BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroup_ShuffledIDs) {
     SubgraphSchedule sub_sched;
     sub_sched.node_assigned_worker_per_type.resize(1);
     sub_sched.node_assigned_worker_per_type[0] = {2};
+    sub_sched.was_trimmed = {false}; // No trimming occurred
 
     std::vector<vertex_idx_t<graph_t>> partition(dag.num_vertices());
 

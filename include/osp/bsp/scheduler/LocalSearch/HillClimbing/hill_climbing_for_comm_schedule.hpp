@@ -210,7 +210,7 @@ void HillClimbingForCommSteps<Graph_t>::Init() {
             commCost[step][proc] = std::max(sent[step][proc], received[step][proc]);
             commCostPointer[step][proc] = commCostList[step].emplace(commCost[step][proc], proc).first;
         }
-};
+}
 
 // compute cost change incurred by a potential move
 template<typename Graph_t>
@@ -249,7 +249,7 @@ int HillClimbingForCommSteps<Graph_t>::moveCostChange(const vertex_idx node, con
         change += static_cast<int>(schedule->getInstance().getArchitecture().synchronisationCosts());
 
     return change;
-};
+}
 
 // execute a move, updating the comm. schedule and the data structures
 template<typename Graph_t>
@@ -303,7 +303,7 @@ void HillClimbingForCommSteps<Graph_t>::executeMove(vertex_idx node, unsigned p,
     commSchedRecLists[oldStep][p].erase(commSchedRecListPointer[node][p]);
     commSchedRecLists[step][p].emplace_front(node, p);
     commSchedRecListPointer[node][p] = commSchedRecLists[step][p].begin();
-};
+}
 
 // Single comm. schedule hill climbing step
 template<typename Graph_t>
@@ -396,7 +396,7 @@ bool HillClimbingForCommSteps<Graph_t>::Improve() {
     executeMove(bestNode, bestProc, bestStep, bestDiff);
 
     return true;
-};
+}
 
 template<typename Graph_t>
 void HillClimbingForCommSteps<Graph_t>::CreateSupstepLists() {
@@ -414,7 +414,7 @@ void HillClimbingForCommSteps<Graph_t>::CreateSupstepLists() {
     for (vertex_idx node : topOrder)
         supsteplists[schedule->assignedSuperstep(node)][schedule->assignedProcessor(node)].push_back(node);
 
-};
+}
 
 template<typename Graph_t>
 void HillClimbingForCommSteps<Graph_t>::ConvertCommSchedule()

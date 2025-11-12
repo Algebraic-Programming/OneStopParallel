@@ -27,8 +27,8 @@ namespace osp {
 template<typename Graph_t, typename constr_graph_t>
 class WavefrontComponentScheduler : public AbstractWavefrontScheduler<Graph_t, constr_graph_t> {
 public:
-    WavefrontComponentScheduler(IDagDivider<Graph_t> &div, Scheduler<constr_graph_t> &scheduler)
-        : AbstractWavefrontScheduler<Graph_t, constr_graph_t>(div, scheduler) {}
+    WavefrontComponentScheduler(IDagDivider<Graph_t> &div, Scheduler<constr_graph_t> &scheduler_)
+        : AbstractWavefrontScheduler<Graph_t, constr_graph_t>(div, scheduler_) {}
 
     std::string getScheduleName() const override { return "WavefrontComponentScheduler"; }
 

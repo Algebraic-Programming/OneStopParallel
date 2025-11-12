@@ -150,7 +150,7 @@ class BspInstance {
      */
     inline Graph_t &getComputationalDag() { return cdag; }
 
-    inline std::size_t numberOfVertices() const { return cdag.num_vertices(); }
+    inline vertex_idx_t<Graph_t> numberOfVertices() const { return cdag.num_vertices(); }
 
     inline auto vertices() const { return cdag.vertices(); }
 

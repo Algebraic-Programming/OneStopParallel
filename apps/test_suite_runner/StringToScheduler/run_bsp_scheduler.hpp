@@ -198,7 +198,8 @@ RETURN_STATUS run_bsp_scheduler(const ConfigParser &parser, const boost::propert
             if (status != RETURN_STATUS::OSP_SUCCESS && status != RETURN_STATUS::BEST_FOUND) {
                 throw std::invalid_argument("Error while computing initial solution.\n");
             }
-            scheduler.setInitialSolutionFromBspSchedule(initial_schedule);
+            BspScheduleCS<Graph_t> initial_schedule_cs(initial_schedule);
+            scheduler.setInitialSolutionFromBspSchedule(initial_schedule_cs);
         }
 
         // intermediate solutions
@@ -241,6 +242,6 @@ RETURN_STATUS run_bsp_scheduler(const ConfigParser &parser, const boost::propert
         auto scheduler = get_base_bsp_scheduler_by_name<Graph_t>(parser, algorithm);
         return scheduler->computeSchedule(schedule);
     }
-};
+}
 
 } // namespace osp

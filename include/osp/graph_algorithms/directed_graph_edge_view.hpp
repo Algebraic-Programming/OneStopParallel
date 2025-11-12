@@ -42,7 +42,7 @@ class edge_view {
         const Graph_t *graph;                 // Pointer to the graph
         vertex_idx_t<Graph_t> current_vertex; // Current source vertex
         child_iterator_t current_child; // Iterator to the current target vertex in current_vertex's adjacency list
-        std::size_t current_edge_idx;   // Global index of the current edge in the traversal order
+        vertex_idx_t<Graph_t> current_edge_idx;   // Global index of the current edge in the traversal order
 
       public:
         directed_edge_iterator() : graph(nullptr), current_vertex(0), current_edge_idx(0) {}
@@ -69,12 +69,12 @@ class edge_view {
             }
         }
 
-        directed_edge_iterator(const std::size_t edge_idx, const Graph_t &graph_)
+        directed_edge_iterator(const vertex_idx_t<Graph_t> edge_idx, const Graph_t &graph_)
             : graph(&graph_), current_vertex(0), current_edge_idx(edge_idx) {
 
             if (current_edge_idx < graph->num_edges()) {
 
-                std::size_t tmp = 0u;
+                vertex_idx_t<Graph_t> tmp = 0u;
 
                 if (tmp < current_edge_idx) {
 
