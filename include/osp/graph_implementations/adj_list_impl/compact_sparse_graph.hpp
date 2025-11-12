@@ -277,8 +277,9 @@ class Compact_Sparse_Graph {
                 csc_source_ptr[num_vertices()] = static_cast<edge_t>( csc_edge_children.size() );
 
                 csr_target_ptr = std::vector<edge_t>(num_vertices() + 1, 0);
-                std::exclusive_scan(num_parents_tmp.cbegin(), num_parents_tmp.cend(), csr_target_ptr.begin(), 0);
-                csr_target_ptr[num_vertices()] = num_edges();
+                for (std::size_t i = 0U; i < num_parents_tmp.size(); ++i) {
+                    csr_target_ptr[i + 1] = csr_target_ptr[i] + num_parents_tmp[i];
+                }
 
                 std::vector<edge_t> offset = csr_target_ptr;
                 for (vertex_idx vert = 0; vert < num_vertices(); ++vert) {
