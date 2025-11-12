@@ -100,7 +100,7 @@ class dag_vector_adapter {
         : vertices_(out_neigbors_.size()), out_neigbors(&out_neigbors_), in_neigbors(&in_neigbors_), num_edges_(0),
           num_vertex_types_(1) {
 
-        for (vertex_idx i = 0; i < out_neigbors_.size(); ++i) {
+        for (vertex_idx i = 0; i < static_cast<vertex_idx>(out_neigbors_.size()); ++i) {
             vertices_[i].id = i;
             num_edges_ += out_neigbors_[i].size();
         }
