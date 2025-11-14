@@ -324,8 +324,10 @@ void BspScheduleRecomp<Graph_t>::mergeSupersteps()
             new_assignment.emplace_back(entry.first, new_step_idx[entry.second]);
         node_to_processor_and_supertep_assignment[node] = new_assignment; 
     }
-    for (auto &[key, step] : commSchedule)
+    for (auto &key_step_pair : commSchedule) {
+        auto &step = key_step_pair.second;
         step = new_step_idx[step];
+    }
 
     number_of_supersteps = current_step_idx;
 }

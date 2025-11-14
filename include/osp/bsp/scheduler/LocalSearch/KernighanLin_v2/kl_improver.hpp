@@ -430,7 +430,8 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
         std::vector<VertexType> quick_moves_stack;
         quick_moves_stack.reserve(10 + thread_data.active_schedule_data.new_violations.size() * 2);
 
-        for (const auto& [key, value] : thread_data.active_schedule_data.new_violations) {
+        for (const auto& key_value_pair : thread_data.active_schedule_data.new_violations) {
+            const auto &key = key_value_pair.first;
             quick_moves_stack.push_back(key);
         }
 
@@ -458,7 +459,8 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
             if (thread_data.active_schedule_data.new_violations.size() > 0) {
                 bool abort = false;
 
-                for (const auto& [key, value] : thread_data.active_schedule_data.new_violations) {
+                for (const auto& key_value_pair : thread_data.active_schedule_data.new_violations) {
+                    const auto &key = key_value_pair.first;
                     if(local_lock.find(key) != local_lock.end()) {
                         abort = true;
                         break;
@@ -545,7 +547,8 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
                 if (new_num_violations == 0) break;
 
                 if (thread_data.active_schedule_data.new_violations.size() > 0) {                
-                    for (const auto & [vertex, edge] : thread_data.active_schedule_data.new_violations) {
+                    for (const auto & vertex_edge_pair : thread_data.active_schedule_data.new_violations) {
+                        const auto &vertex = vertex_edge_pair.first;
                         thread_data.affinity_table.insert(vertex);
                     }
                 }
@@ -720,7 +723,8 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
 
 #ifdef KL_DEBUG
                 std::cout << "recmopute max gain: {";
-                for (const auto [key, value] : recompute_max_gain) {
+                for (const auto map_pair : recompute_max_gain) {
+                    const auto &key = map_pair.first;
                     std::cout << key << ", ";
                 }
                 std::cout << "}" << std::endl;
@@ -833,7 +837,8 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
 
     inline bool blocked_edge_strategy(VertexType node, std::vector<VertexType> & unlock_nodes, ThreadSearchContext & thread_data) {
         if (thread_data.unlock_edge_backtrack_counter > 1) {
-            for (const auto [v,e] : thread_data.active_schedule_data.new_violations) {
+            for (const auto vertex_edge_pair : thread_data.active_schedule_data.new_violations) {
+                const auto &e = vertex_edge_pair.second;
                 const auto source_v = source(e, *graph);
                 const auto target_v = target(e, *graph);
 
@@ -958,7 +963,8 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
                 //thread_data.selection_strategy.add_neighbours_to_selection(node, thread_data.affinity_table, thread_data.start_step, thread_data.end_step);
                 if (thread_data.active_schedule_data.new_violations.size() > 0) {
                 
-                    for (const auto & [vertex, edge] : thread_data.active_schedule_data.new_violations) {
+                    for (const auto & vertex_edge_pair : thread_data.active_schedule_data.new_violations) {
+                        const auto &vertex = vertex_edge_pair.first;
                         thread_data.affinity_table.insert(vertex);
                     }
                 }

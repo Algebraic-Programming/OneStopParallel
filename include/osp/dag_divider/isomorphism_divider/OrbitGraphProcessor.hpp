@@ -552,7 +552,8 @@ class OrbitGraphProcessor {
         contraction_map_.assign(dag.num_vertices(), 0);
         VertexType coarse_node_idx = 0;
 
-        for (const auto &[hash, vertices] : orbits) {
+        for (const auto &hash_vertices_pair : orbits) {
+            const auto &vertices = hash_vertices_pair.second;
             for (const auto v : vertices) {
                 contraction_map_[v] = coarse_node_idx;
             }
