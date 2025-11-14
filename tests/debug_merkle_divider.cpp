@@ -78,9 +78,9 @@ int main(int argc, char* argv[]) {
 
 
     // Set up architecture
-    instance.getArchitecture().setProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1 , 1, 1, 1, 1, 1, 1, 1, 1 , 1, 1, 1, 1, 1, 1, 1, 1 , 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1});
+    instance.getArchitecture().set_processors_consequ_types({24,48},{100,100});
     instance.setDiagonalCompatibilityMatrix(2);
-    instance.setSynchronisationCosts(1000);
+    instance.setSynchronisationCosts(2000);
     instance.setCommunicationCosts(1);
 
     
@@ -90,26 +90,24 @@ int main(int argc, char* argv[]) {
     BspLocking<graph_t> locking;
     GreedyChildren<graph_t> children;
     kl_total_lambda_comm_improver<graph_t> kl(42);
-    kl.setSuperstepRemoveStrengthParameter(2.0);
-    kl.setTimeQualityParameter(5.0);
+    kl.setSuperstepRemoveStrengthParameter(1.0);
+    kl.setTimeQualityParameter(1.0);
     ComboScheduler<graph_t> growlocal_kl(growlocal, kl);
     ComboScheduler<graph_t> locking_kl(locking, kl);
     ComboScheduler<graph_t> children_kl(children, kl);
  
     GreedyMetaScheduler<graph_t> scheduler;
-   // scheduler.addScheduler(growlocal_kl);
+    //scheduler.addScheduler(growlocal_kl);
     scheduler.addScheduler(locking_kl);
     scheduler.addScheduler(children_kl);
     scheduler.addSerialScheduler();
 
     IsomorphicSubgraphScheduler<graph_t2, graph_t> iso_scheduler(scheduler);
-    iso_scheduler.set_symmetry(8);
-    iso_scheduler.setMergeDifferentTypes(true);
-    iso_scheduler.setWorkThreshold(600);
-    iso_scheduler.setCriticalPathThreshold(1200);
-    iso_scheduler.setOrbitLockRatio(0.2);
-    iso_scheduler.setAllowTrimmedScheduler(true);
-    //iso_scheduler.enable_use_max_group_size(16);
+    iso_scheduler.setMergeDifferentTypes(false);
+    iso_scheduler.setWorkThreshold(100);
+    iso_scheduler.setCriticalPathThreshold(500);
+    iso_scheduler.setOrbitLockRatio(0.5);
+    iso_scheduler.setAllowTrimmedScheduler(false);
     iso_scheduler.set_plot_dot_graphs(true); // Enable plotting for debug
 
     std::cout << "Starting partition computation..." << std::endl;

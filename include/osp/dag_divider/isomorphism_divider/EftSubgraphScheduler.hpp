@@ -49,11 +49,17 @@ public:
         return execute_schedule(instance);
     }
 
+    void setMinWorkPerProcessor(const v_workw_t<Graph_t> min_work_per_processor) {
+        min_work_per_processor_ = min_work_per_processor;
+    }
+
 private:
 
     static constexpr bool verbose = false;
 
     using job_id_t = vertex_idx_t<Graph_t>;
+
+    v_workw_t<Graph_t> min_work_per_processor_ = 2000;
 
     enum class JobStatus {
         WAITING,
@@ -117,11 +123,11 @@ private:
             } else {
                 job.status = JobStatus::WAITING;
             }
-            job.multiplicity = multiplicities[idx];
-            job.max_num_procs = max_num_procs[idx];
+            job.total_work = graph.vertex_work_weight(idx);
+            job.max_num_procs = std::min(max_num_procs[idx], static_cast<unsigned>((job.total_work + min_work_per_processor_ - 1) / min_work_per_processor_));
+            job.multiplicity = std::min(multiplicities[idx], job.max_num_procs);
             job.required_proc_types = required_proc_types[idx];           
             job.assigned_workers.resize(num_worker_types, 0);
-            job.total_work = graph.vertex_work_weight(idx);
             job.start_time = -1.0;
             job.finish_time = -1.0;
 
@@ -328,7 +334,7 @@ private:
             std::cout << "Final Makespan: " << current_time << std::endl;
             std::cout << "Job Summary:" << std::endl;
             for(const auto& job : jobs_) {
-                std::cout << "  - Job " << job.id << ": Multiplicity=" << job.multiplicity << ", Max Procs=" << job.max_num_procs << ", Start=" << job.start_time << ", Finish=" << job.finish_time << ", Workers=[";
+                std::cout << "  - Job " << job.id << ": Multiplicity=" << job.multiplicity << ", Max Procs=" << job.max_num_procs << ", Work=" << job.total_work << ", Start=" << job.start_time << ", Finish=" << job.finish_time << ", Workers=[";
                 for(size_t i=0; i<job.assigned_workers.size(); ++i) {
                     std::cout << "T" << i << ":" << job.assigned_workers[i] << (i == job.assigned_workers.size()-1 ? "" : ", ");
                 }
@@ -342,7 +348,7 @@ private:
         for(const auto& job : jobs_) {
             result.node_assigned_worker_per_type[job.id].resize(num_worker_types);
             for (size_t i = 0; i < num_worker_types; ++i) {
-                result.node_assigned_worker_per_type[job.id][i] = job.assigned_workers[i] / job.multiplicity;
+                result.node_assigned_worker_per_type[job.id][i] = (job.assigned_workers[i] + job.multiplicity - 1) / job.multiplicity;
             }
         } 
         return result;
