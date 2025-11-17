@@ -31,9 +31,7 @@ limitations under the License.
 
 #include "MemoryConstraintModules.hpp"
 #include "osp/auxiliary/misc.hpp"
-#include "osp/bsp/model/BspSchedule.hpp"
-#include "osp/bsp/model/MaxBspSchedule.hpp"
-#include "osp/bsp/scheduler/Scheduler.hpp"
+#include "osp/bsp/scheduler/MaxBspScheduler.hpp"
 #include "osp/graph_algorithms/directed_graph_top_sort.hpp"
 
 namespace osp {
@@ -45,7 +43,7 @@ namespace osp {
  * It computes schedules for BspInstance using variance-based priorities.
  */
 template<typename Graph_t, typename MemoryConstraint_t = no_memory_constraint>
-class GreedyVarianceSspScheduler : public Scheduler<Graph_t> {
+class GreedyVarianceSspScheduler : public MaxBspScheduler<Graph_t> {
 
     static_assert(is_computational_dag_v<Graph_t>, "GreedyVarianceSspScheduler can only be used with computational DAGs.");
 
@@ -111,7 +109,7 @@ class GreedyVarianceSspScheduler : public Scheduler<Graph_t> {
 
     struct VarianceCompare {
         bool operator()(const std::pair<VertexType, double> &lhs, const std::pair<VertexType, double> &rhs) const {
-            return ((lhs.second > rhs.second) || ((lhs.second == rhs.second) && (lhs.first < rhs.first)));
+            return ((lhs.second > rhs.second) || ((lhs.second >= rhs.second) && (lhs.first < rhs.first)));
         }
     };
 
@@ -624,12 +622,10 @@ class GreedyVarianceSspScheduler : public Scheduler<Graph_t> {
     }
 
     RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &schedule) override {
-        std::cout<< "BspSchedule"<< std::endl;
         return computeSspSchedule(schedule, 1U);
     }
 
     RETURN_STATUS computeSchedule(MaxBspSchedule<Graph_t> &schedule) override {
-        std::cout<< "MaxBspSchedule"<< std::endl;
         return computeSspSchedule(schedule, 2U);
     }
 

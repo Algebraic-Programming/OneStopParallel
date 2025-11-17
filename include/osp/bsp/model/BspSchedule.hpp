@@ -65,7 +65,7 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
     unsigned number_of_supersteps;
 
     std::vector<unsigned> node_to_processor_assignment;
-    std::vector<unsigned> node_to_superstep_assignment; 
+    std::vector<unsigned> node_to_superstep_assignment;
 
     template<unsigned staleness>
     inline bool satisfies_precedence_constraints_staleness() const {

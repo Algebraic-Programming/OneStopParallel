@@ -33,6 +33,7 @@ namespace osp {
  */
 template<typename Graph_t>
 class MaxBspScheduler : public Scheduler<Graph_t> {
+    public:
 
     static_assert(is_computational_dag_v<Graph_t>, "BspSchedule can only be used with computational DAGs.");
 
@@ -54,10 +55,11 @@ class MaxBspScheduler : public Scheduler<Graph_t> {
         return status;
     }
 
-    virtual RETURN_STATUS computeScheduleCS(BspScheduleCS<Graph_t> &schedule) {
-
-        auto result = computeSchedule(schedule);
+    virtual RETURN_STATUS computeScheduleCS(BspScheduleCS<Graph_t> &schedule) override {
+        MaxBspScheduleCS<Graph_t> tmpSchedule(schedule.getInstance());
+        auto result = computeScheduleCS(tmpSchedule);
         if (result == RETURN_STATUS::OSP_SUCCESS || result == RETURN_STATUS::BEST_FOUND) {
+            schedule = tmpSchedule;
             schedule.setAutoCommunicationSchedule();
             return result;
         } else {
@@ -73,7 +75,6 @@ class MaxBspScheduler : public Scheduler<Graph_t> {
     virtual RETURN_STATUS computeSchedule(MaxBspSchedule<Graph_t> &schedule) = 0;
 
     virtual RETURN_STATUS computeScheduleCS(MaxBspScheduleCS<Graph_t> &schedule) {
-// Fix me todo
         auto result = computeSchedule(schedule);
         if (result == RETURN_STATUS::OSP_SUCCESS || result == RETURN_STATUS::BEST_FOUND) {
             // schedule.setAutoCommunicationSchedule();
@@ -81,7 +82,7 @@ class MaxBspScheduler : public Scheduler<Graph_t> {
         } else {
             return RETURN_STATUS::ERROR;
         }
-    }
+    };
 };
 
 } // namespace osp
