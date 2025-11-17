@@ -148,6 +148,8 @@ _add_test( wavefront_scheduler )
 
 _add_test( cuthill_mckee )
 
+_add_test( maxbsp_schedulers )
+
 ## pebbling ILPs
 
 if (COPT_FOUND)
