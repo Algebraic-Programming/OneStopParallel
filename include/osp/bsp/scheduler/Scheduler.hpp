@@ -22,7 +22,6 @@ limitations under the License.
 #include <iostream>
 #include "osp/bsp/model/BspInstance.hpp"
 #include "osp/bsp/model/BspSchedule.hpp"
-#include "osp/bsp/model/MaxBspSchedule.hpp"
 #include "osp/bsp/model/BspScheduleCS.hpp"
 #include "osp/concepts/computational_dag_concept.hpp"
 

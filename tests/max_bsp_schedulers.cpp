@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
+@author Toni Boehnlein, Christos Matzoros, Pal Andras Papp, Raphael S. Steiner
 */
 
 #define BOOST_TEST_MODULE BSP_SCHEDULERS
@@ -26,9 +26,7 @@ limitations under the License.
 
 #include "osp/bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/GreedyVarianceSspScheduler.hpp"
-#include "osp/bsp/scheduler/Serial.hpp"
 #include "osp/bsp/scheduler/MaxBspScheduler.hpp"
-#include "osp/graph_implementations/adj_list_impl/compact_sparse_graph.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 #include "osp/auxiliary/io/arch_file_reader.hpp"
