@@ -83,7 +83,7 @@ void run_test(Scheduler<Graph_t> *test_scheduler) {
             BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
         }
     }
-};
+}
 
 template<typename Graph_t>
 void run_test_max_bsp(MaxBspScheduler<Graph_t>* test_scheduler) {
