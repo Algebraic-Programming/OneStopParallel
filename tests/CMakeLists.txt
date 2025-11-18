@@ -138,6 +138,8 @@ endif()
 
 _add_test( bsp_schedulers )
 
+_add_test( max_bsp_schedulers )
+
 _add_test( bsp_schedulers_mem_const )
 
 _add_test( bsp_improvementschedulers )
