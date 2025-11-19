@@ -32,7 +32,8 @@ struct kl_hyper_total_comm_cost_function {
     using kl_gain_update_info = kl_update_info<VertexType>;
    
     constexpr static unsigned window_range = 2 * window_size + 1;
-  
+    constexpr static bool is_max_comm_cost_function = false;
+
     kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t> *active_schedule;
 
     compatible_processor_range<Graph_t> *proc_range;
@@ -43,7 +44,7 @@ struct kl_hyper_total_comm_cost_function {
     cost_t comm_multiplier = 1; 
     cost_t max_comm_weight = 0;
 
-    lambda_vector_container node_lambda_map;
+    lambda_vector_container<VertexType> node_lambda_map;
 
     inline cost_t get_comm_multiplier() { return comm_multiplier; }
     inline cost_t get_max_comm_weight() { return max_comm_weight; }
@@ -59,6 +60,12 @@ struct kl_hyper_total_comm_cost_function {
         comm_multiplier = 1.0 / instance->numberOfProcessors();  
         node_lambda_map.initialize(graph->num_vertices(), instance->numberOfProcessors());      
     }
+
+    struct empty_struct {};
+
+    using pre_move_comm_data_t = empty_struct;
+
+    inline empty_struct get_pre_move_comm_data(const kl_move& ) { return empty_struct(); }
 
     cost_t compute_schedule_cost() {
         cost_t work_costs = 0;

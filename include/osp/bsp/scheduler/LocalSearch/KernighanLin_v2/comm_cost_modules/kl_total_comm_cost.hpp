@@ -29,6 +29,8 @@ struct kl_total_comm_cost_function {
     using kl_move = kl_move_struct<cost_t, VertexType>;
     using kl_gain_update_info = kl_update_info<VertexType>;
     
+    constexpr static bool is_max_comm_cost_function = false;
+
     constexpr static unsigned window_range = 2 * window_size + 1;
     constexpr static bool use_node_communication_costs = use_node_communication_costs_arg || not has_edge_weights_v<Graph_t>;
      
@@ -57,6 +59,10 @@ struct kl_total_comm_cost_function {
         graph = &instance->getComputationalDag();
         comm_multiplier = 1.0 / instance->numberOfProcessors();        
     }
+
+    struct empty_struct {};
+    using pre_move_comm_data_t = empty_struct;
+    inline empty_struct get_pre_move_comm_data(const kl_move& ) { return empty_struct(); }
 
     cost_t compute_schedule_cost_test() {
         return compute_schedule_cost();
