@@ -359,7 +359,7 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
                     for (const auto &source : BspSchedule<Graph_t>::instance->getComputationalDag().parents(node)) {
 
                         if (!node_to_proc_been_sent[source][proc]) {
-                            assert(BspSchedule<Graph_t>::node_to_superstep_assignment[source] < step + 1 - getStaleness());
+                            assert(BspSchedule<Graph_t>::node_to_superstep_assignment[source] < step + 1 - this->getStaleness());
                             commSchedule.emplace(
                                 std::make_tuple(source, BspSchedule<Graph_t>::node_to_processor_assignment[source],
                                                 proc),
