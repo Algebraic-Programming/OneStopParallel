@@ -364,11 +364,11 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
                     for (const auto &source : BspSchedule<Graph_t>::instance->getComputationalDag().parents(node)) {
 
                         if (!node_to_proc_been_sent[source][proc]) {
-                            assert(BspSchedule<Graph_t>::node_to_superstep_assignment[source] < step);
+                            assert(BspSchedule<Graph_t>::node_to_superstep_assignment[source] < step + 1 - getStaleness());
                             commSchedule.emplace(
                                 std::make_tuple(source, BspSchedule<Graph_t>::node_to_processor_assignment[source],
                                                 proc),
-                                step - 1);
+                                step - this->getStaleness());
                             node_to_proc_been_sent[source][proc] = true;
                             v_commw_t<Graph_t> comm_cost =
                                 BspSchedule<Graph_t>::instance->getComputationalDag().vertex_comm_weight(source) *
@@ -403,7 +403,7 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
                         static_cast<v_commw_t<Graph_t>>((*iter)[0]) + receive_cost[(*iter)[2]] > max_comm_cost) {
                         iter++;
                     } else {
-                        commSchedule.emplace(std::make_tuple((*iter)[1], proc, (*iter)[2]), step - 1);
+                        commSchedule.emplace(std::make_tuple((*iter)[1], proc, (*iter)[2]), step - this->getStaleness());
                         node_to_proc_been_sent[(*iter)[1]][(*iter)[2]] = true;
                         send_cost[proc] += static_cast<v_commw_t<Graph_t>>((*iter)[0]);
                         receive_cost[(*iter)[2]] += static_cast<v_commw_t<Graph_t>>((*iter)[0]);
@@ -446,11 +446,11 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
                     const auto tmp = std::make_tuple(source, BspSchedule<Graph_t>::node_to_processor_assignment[source],
                                                      BspSchedule<Graph_t>::node_to_processor_assignment[target]);
                     if (commSchedule.find(tmp) == commSchedule.end()) {
-                        commSchedule[tmp] = BspSchedule<Graph_t>::node_to_superstep_assignment[target] - 1;
+                        commSchedule[tmp] = BspSchedule<Graph_t>::node_to_superstep_assignment[target] - this->getStaleness();
 
                     } else {
                         commSchedule[tmp] =
-                            std::min(BspSchedule<Graph_t>::node_to_superstep_assignment[target] - 1, commSchedule[tmp]);
+                            std::min(BspSchedule<Graph_t>::node_to_superstep_assignment[target] - this->getStaleness(), commSchedule[tmp]);
                     }
                 }
             }

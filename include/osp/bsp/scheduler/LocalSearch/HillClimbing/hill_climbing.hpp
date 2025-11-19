@@ -142,8 +142,6 @@ RETURN_STATUS HillClimbingScheduler<Graph_t>::improveScheduleWithTimeLimit(BspSc
 
     schedule = &input_schedule;
 
-    std::cout<<schedule->computeCosts()<<" "<<schedule->computeWorkCosts()<<std::endl;
-
     CreateSupstepLists();
     Init();
     const std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
@@ -180,7 +178,7 @@ RETURN_STATUS HillClimbingScheduler<Graph_t>::improveScheduleWithStepLimit(BspSc
 
 template<typename Graph_t>
 void HillClimbingScheduler<Graph_t>::Init() {
-    if(shrink)
+    if(shrink) // NOTE: shrinking a MaxBspSchedule (without CS) might increase cost
     {
         RemoveNeedlessSupSteps();
         CreateSupstepLists();
@@ -261,9 +259,9 @@ void HillClimbingScheduler<Graph_t>::Init() {
 
     cost = work_cost[0];
     std::vector<std::vector<bool>> present(N, std::vector<bool>(P, false));
-    for (unsigned step = 0; step < M - 1; ++step) {
+    for (unsigned step = 0; step < M - schedule->getStaleness(); ++step) {
         for (unsigned proc = 0; proc < P; ++proc)
-            for (const vertex_idx node : supsteplists[step + 1][proc])
+            for (const vertex_idx node : supsteplists[step + schedule->getStaleness()][proc])
                 for (const vertex_idx &pred : G.parents(node))
                     if (schedule->assignedProcessor(node) != schedule->assignedProcessor(pred) && !present[pred][schedule->assignedProcessor(node)]) {
                         present[pred][schedule->assignedProcessor(node)] = true;
@@ -272,7 +270,9 @@ void HillClimbingScheduler<Graph_t>::Init() {
                         received[step][schedule->assignedProcessor(node)] +=
                             schedule->getInstance().getComputationalDag().vertex_comm_weight(pred) * schedule->getInstance().getArchitecture().sendCosts(schedule->assignedProcessor(pred), schedule->assignedProcessor(node));
                     }
+    }
 
+    for (unsigned step = 0; step < M - 1; ++step) {
         for (unsigned proc = 0; proc < P; ++proc) {
             commCost[step][proc] = std::max(sent[step][proc], received[step][proc]);
             std::pair<cost_type, unsigned> entry(commCost[step][proc], proc);
@@ -386,8 +386,14 @@ void HillClimbingScheduler<Graph_t>::updateNodeMovesEarlier(const vertex_idx nod
     for (const vertex_idx &pred : schedule->getInstance().getComputationalDag().parents(node)) {
         if (schedule->assignedSuperstep(pred) == schedule->assignedSuperstep(node))
             return;
-        if (schedule->assignedSuperstep(pred) >= schedule->assignedSuperstep(node) - schedule->getStaleness())
+        if (static_cast<int>(schedule->assignedSuperstep(pred)) >= static_cast<int>(schedule->assignedSuperstep(node)) - static_cast<int>(schedule->getStaleness()))
             predProc.insert(schedule->assignedProcessor(pred));
+    }
+    if(schedule->getStaleness() == 2)
+    {
+        for (const vertex_idx &succ : schedule->getInstance().getComputationalDag().children(node))
+            if (schedule->assignedSuperstep(succ) == schedule->assignedSuperstep(node))
+                predProc.insert(schedule->assignedProcessor(succ));
     }
 
     if (predProc.size() > 1)
@@ -403,7 +409,7 @@ void HillClimbingScheduler<Graph_t>::updateNodeMovesEarlier(const vertex_idx nod
 template<typename Graph_t>
 void HillClimbingScheduler<Graph_t>::updateNodeMovesAt(const vertex_idx node) {
     for (const vertex_idx &pred : schedule->getInstance().getComputationalDag().parents(node))
-        if (schedule->assignedSuperstep(pred) >= schedule->assignedSuperstep(node) - schedule->getStaleness() + 1)
+        if (static_cast<int>(schedule->assignedSuperstep(pred)) >= static_cast<int>(schedule->assignedSuperstep(node)) - static_cast<int>(schedule->getStaleness()) + 1)
             return;
 
     for (const vertex_idx &succ : schedule->getInstance().getComputationalDag().children(node))
@@ -426,6 +432,12 @@ void HillClimbingScheduler<Graph_t>::updateNodeMovesLater(const vertex_idx node)
             return;
         if (schedule->assignedSuperstep(succ) <= schedule->assignedSuperstep(node) + schedule->getStaleness())
             succProc.insert(schedule->assignedProcessor(succ));
+    }
+    if(schedule->getStaleness() == 2)
+    {
+        for (const vertex_idx &pred : schedule->getInstance().getComputationalDag().parents(node))
+            if (schedule->assignedSuperstep(pred) == schedule->assignedSuperstep(node))
+                succProc.insert(schedule->assignedProcessor(pred));
     }
 
     if (succProc.size() > 1)
@@ -961,25 +973,29 @@ bool HillClimbingScheduler<Graph_t>::violatesMemConstraint(vertex_idx node, unsi
 
 template<typename Graph_t>
 void HillClimbingScheduler<Graph_t>::RemoveNeedlessSupSteps() {
-
-    const unsigned P = schedule->getInstance().getArchitecture().numberOfProcessors();
-    const unsigned M = schedule->numberOfSupersteps();
-    const Graph_t &G = schedule->getInstance().getComputationalDag();
     
     unsigned current_step = 0;
 
-    auto nextBreak = schedule->numberOfSupersteps();
-    for (unsigned step = 0; step < M; ++step) {
+    unsigned nextBreak = schedule->numberOfSupersteps(), breakAfterNext = schedule->numberOfSupersteps();
+    for (unsigned step = 0; step < schedule->numberOfSupersteps(); ++step) {
         if (nextBreak == step) {
             ++current_step;
-            nextBreak = M;
+            nextBreak = breakAfterNext;
+            if (schedule->getStaleness() == 2)
+                breakAfterNext = schedule->numberOfSupersteps();
         }
-        for (unsigned proc = 0; proc < P; ++proc)
+        for (unsigned proc = 0; proc < schedule->getInstance().getArchitecture().numberOfProcessors(); ++proc)
             for (const vertex_idx node : supsteplists[step][proc]) {
                 schedule->setAssignedSuperstep(node, current_step);
-                for (const vertex_idx &succ : G.children(node))
+                for (const vertex_idx &succ : schedule->getInstance().getComputationalDag().children(node))
+                {
                     if (schedule->assignedProcessor(node) != schedule->assignedProcessor(succ))
+                    {
                         nextBreak = std::min(nextBreak, schedule->assignedSuperstep(succ) + 1 - schedule->getStaleness());
+                        if (schedule->getStaleness() == 2)
+                            breakAfterNext = std::min(breakAfterNext, schedule->assignedSuperstep(succ));
+                    }
+                }
             }
     }
 
