@@ -48,7 +48,7 @@ class CoptCommScheduleOptimizer {
     VarArray max_comm_superstep_var;
     std::vector<std::vector<std::vector<VarArray>>> comm_processor_to_processor_superstep_node_var;
 
-    void setupVariablesConstraintsObjective(const BspScheduleCS<Graph_t>& schedule, Model& model, bool num_supersteps_can_change);
+    void setupVariablesConstraintsObjective(const BspScheduleCS<Graph_t>& schedule, Model& model);
 
     void setInitialSolution(BspScheduleCS<Graph_t>& schedule, Model &model);
 
@@ -59,6 +59,7 @@ class CoptCommScheduleOptimizer {
   public:
 
     using KeyTriple = std::tuple<vertex_idx_t<Graph_t>, unsigned int, unsigned int>;
+    virtual ~CoptCommScheduleOptimizer() = default;
 
     virtual RETURN_STATUS improveSchedule(BspScheduleCS<Graph_t> &schedule);
 
@@ -76,7 +77,7 @@ RETURN_STATUS CoptCommScheduleOptimizer<Graph_t>::improveSchedule(BspScheduleCS<
     Envr env;
     Model model = env.CreateModel("bsp_schedule_cs");
 
-    setupVariablesConstraintsObjective(schedule, model, true);
+    setupVariablesConstraintsObjective(schedule, model);
 
     setInitialSolution(schedule, model);
 
@@ -89,7 +90,7 @@ RETURN_STATUS CoptCommScheduleOptimizer<Graph_t>::improveSchedule(BspScheduleCS<
     {
         updateCommSchedule(schedule);
         if (canShrinkResultingSchedule(schedule.numberOfSupersteps()))
-           schedule.shrinkSchedule();
+           schedule.shrinkByMergingSupersteps();
     }
 
     if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_OPTIMAL) {
@@ -219,7 +220,7 @@ void CoptCommScheduleOptimizer<Graph_t>::setInitialSolution(BspScheduleCS<Graph_
 }
 
 template<typename Graph_t>
-void CoptCommScheduleOptimizer<Graph_t>::setupVariablesConstraintsObjective(const BspScheduleCS<Graph_t>& schedule, Model& model, bool num_supersteps_can_change) {
+void CoptCommScheduleOptimizer<Graph_t>::setupVariablesConstraintsObjective(const BspScheduleCS<Graph_t>& schedule, Model& model) {
 
     const unsigned &max_number_supersteps = schedule.numberOfSupersteps();
     const unsigned &num_processors = schedule.getInstance().numberOfProcessors();

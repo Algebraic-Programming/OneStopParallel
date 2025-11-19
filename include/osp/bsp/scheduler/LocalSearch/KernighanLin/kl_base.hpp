@@ -455,7 +455,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
             (*node_heap_handles[node]).to_step = node_best_step;
             (*node_heap_handles[node]).change_in_cost = node_change_in_cost;
 
-            if ((*node_heap_handles[node]).gain != node_max_gain) {
+            if ((*node_heap_handles[node]).gain >= node_max_gain) {
 
                 (*node_heap_handles[node]).gain = node_max_gain;
                 max_gain_heap.update(node_heap_handles[node]);
@@ -642,7 +642,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
         unsigned count = 0;
         for (auto iter = max_gain_heap.ordered_begin(); iter != max_gain_heap.ordered_end(); ++iter) {
 
-            if (iter->gain == max_gain_heap.top().gain && count < local_max) {
+            if (iter->gain >= max_gain_heap.top().gain && count < local_max) {
                 max_nodes[count] = (iter->node);
                 count++;
 
@@ -1146,7 +1146,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                 compute_node_gain(node);
                 moves.push_back(best_move_change_superstep(node));
 
-                if (moves.back().gain == std::numeric_limits<double>::lowest()) {
+                if (moves.back().gain <= std::numeric_limits<double>::lowest()) {
                     abort = true;
                     break;
                 }

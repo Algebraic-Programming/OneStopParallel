@@ -830,7 +830,7 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
         return num;
     }
 
-    virtual void shrinkSchedule() {
+    virtual void shrinkByMergingSupersteps() {
 
         std::vector<bool> comm_phase_empty(number_of_supersteps, true);
         for (const auto& node : instance->vertices())

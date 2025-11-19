@@ -81,6 +81,8 @@ class CoptPartialScheduler {
     virtual void setTimeLimitSeconds(unsigned int limit) { timeLimitSeconds = limit; }
     inline unsigned int getTimeLimitSeconds() const { return timeLimitSeconds; }
     virtual void setStartAndEndSuperstep(unsigned start_, unsigned end_) { start_superstep = start_; end_superstep = end_; }
+
+    virtual ~CoptPartialScheduler() = default;
 };
 
 template<typename Graph_t>
@@ -277,7 +279,7 @@ void CoptPartialScheduler<Graph_t>::updateSchedule(BspScheduleCS<Graph_t>& sched
     }
 
     schedule.cleanCommSchedule();
-    schedule.shrinkSchedule();
+    schedule.shrinkByMergingSupersteps();
 
 };
 
@@ -466,7 +468,7 @@ void CoptPartialScheduler<Graph_t>::setupVariablesConstraintsObjective(const Bsp
     }
 
     // boundary conditions at the end
-    for(const std::pair<vertex_idx_t<Graph_t>, unsigned>&  node_and_proc : node_needed_after_on_proc)
+    for(const std::pair<vertex_idx_t<Graph_t>, unsigned> node_and_proc : node_needed_after_on_proc)
     {
         Expr expr;
         for (unsigned int p_from = 0; p_from < num_processors; p_from++)
@@ -475,7 +477,7 @@ void CoptPartialScheduler<Graph_t>::setupVariablesConstraintsObjective(const Bsp
         model.AddConstr(expr >= 1);
     }
 
-    for(const std::pair<vertex_idx_t<Graph_t>, unsigned>&  source_and_proc : source_needed_after_on_proc)
+    for(const std::pair<vertex_idx_t<Graph_t>, unsigned> source_and_proc : source_needed_after_on_proc)
     {
         Expr expr = present_on_processor_superstep_source_var[source_and_proc.second][max_number_supersteps - 1][static_cast<int>(source_and_proc.first)];
         expr += comm_to_processor_superstep_source_var[source_and_proc.second][max_number_supersteps][static_cast<int>(source_and_proc.first)];

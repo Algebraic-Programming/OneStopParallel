@@ -468,7 +468,7 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
         }
     }
 
-    virtual void shrinkSchedule() override {
+    virtual void shrinkByMergingSupersteps() override {
 
         std::vector<unsigned> comm_phase_latest_dependency(this->number_of_supersteps, 0);
         std::vector<std::vector<unsigned> > first_at = getFirstPresence();
@@ -515,6 +515,7 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
         this->setNumberOfSupersteps(current_index+1);
     }
 
+    // for each vertex v and processor p, find the first superstep where v is present on p by the end of the compute phase
     std::vector<std::vector<unsigned> > getFirstPresence() const {
 
         std::vector<std::vector<unsigned> > first_at(BspSchedule<Graph_t>::instance->numberOfVertices(),

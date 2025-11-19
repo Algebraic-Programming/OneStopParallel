@@ -183,7 +183,7 @@ RETURN_STATUS SubproblemMultiScheduling<Graph_t>::computeMultiSchedule(const Bsp
                 
                 ++itr_latest;
             }
-            std::vector<std::pair<vertex_idx, unsigned> > new_assingments = makeAssignment(instance, possible_nodes, free_procs);
+            new_assingments = makeAssignment(instance, possible_nodes, free_procs);
             for(auto entry : new_assingments)
             {
                 vertex_idx node = entry.first;

@@ -95,7 +95,7 @@ class TotalCommunicationScheduler : public Scheduler<Graph_t> {
 
                 for (unsigned processor = 0; processor < instance_ptr->numberOfProcessors(); processor++) {
 
-                    for (unsigned step = 0; step < (unsigned)(*node_to_processor_superstep_var_ptr)[0][0].Size();
+                    for (unsigned step = 0; step < static_cast<unsigned>((*node_to_processor_superstep_var_ptr)[0][0].Size());
                          step++) {
 
                         assert(size < std::numeric_limits<int>::max());
@@ -170,7 +170,7 @@ class TotalCommunicationScheduler : public Scheduler<Graph_t> {
 
                 for (unsigned processor = 0; processor < instance_ptr->numberOfProcessors(); processor++) {
 
-                    for (unsigned step = 0; step < (unsigned)(*node_to_processor_superstep_var_ptr)[0][0].Size();
+                    for (unsigned step = 0; step < static_cast<unsigned>((*node_to_processor_superstep_var_ptr)[0][0].Size());
                          step++) {
                         assert(step <= std::numeric_limits<int>::max());
                         if (GetSolution(
@@ -203,7 +203,7 @@ class TotalCommunicationScheduler : public Scheduler<Graph_t> {
 
                 for (unsigned processor = 0; processor < instance_ptr->numberOfProcessors(); processor++) {
 
-                    for (unsigned step = 0; step < (unsigned)(*node_to_processor_superstep_var_ptr)[0][0].Size();
+                    for (unsigned step = 0; step < static_cast<unsigned>((*node_to_processor_superstep_var_ptr)[0][0].Size());
                          step++) {
 
                         if (schedule.assignedProcessor(node) == processor && schedule.assignedSuperstep(node) == step) {
@@ -438,7 +438,7 @@ class TotalCommunicationScheduler : public Scheduler<Graph_t> {
                     expr += node_to_processor_superstep_var[node][processor][static_cast<int>(step)];
                 }
             }
-            model.AddConstr(expr <= (double)(instance.numberOfVertices() * instance.numberOfProcessors()) *
+            model.AddConstr(expr <= static_cast<double>(instance.numberOfVertices() * instance.numberOfProcessors()) *
                                         superstep_used_var.GetVar(static_cast<int>(step)));
         }
 
@@ -576,13 +576,13 @@ class TotalCommunicationScheduler : public Scheduler<Graph_t> {
                 assert(step <= std::numeric_limits<int>::max());
                 for (unsigned int processor = 0; processor < instance.numberOfProcessors(); processor++) {
 
-                    Expr expr;
+                    Expr expr_work;
                     for (const auto &node : instance.vertices()) {
-                        expr += instance.getComputationalDag().vertex_work_weight(node) *
+                        expr_work += instance.getComputationalDag().vertex_work_weight(node) *
                                 node_to_processor_superstep_var[node][processor][static_cast<int>(step)];
                     }
 
-                    model.AddConstr(max_work_superstep_var[static_cast<int>(step)] >= expr);
+                    model.AddConstr(max_work_superstep_var[static_cast<int>(step)] >= expr_work);
                 }
             }
 
@@ -597,7 +597,7 @@ class TotalCommunicationScheduler : public Scheduler<Graph_t> {
         Objective function
           */
 
-        double comm_cost = (double)instance.communicationCosts() / instance.numberOfProcessors();
+        double comm_cost = static_cast<double>(instance.communicationCosts()) / instance.numberOfProcessors();
         model.SetObjective(comm_cost * total_edges_cut + expr - instance.synchronisationCosts(), COPT_MINIMIZE);
     }
 
