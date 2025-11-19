@@ -56,7 +56,7 @@ computational_dag_vector_impl_def_t constr_graph_1() {
     graph.add_edge(v4, v8);
 
     return graph;
-};
+}
 
 BOOST_AUTO_TEST_CASE(test_empty_dag) {
 
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(test_empty_dag) {
         idx++;
     }
     BOOST_CHECK_EQUAL(idx, 0);
-};
+}
 
 BOOST_AUTO_TEST_CASE(test_dag) {
 
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(test_dag) {
     }
     BOOST_CHECK_EQUAL(count, 9);
 
-};
+}
 
 BOOST_AUTO_TEST_CASE(test_constr_dag) {
 
@@ -257,4 +257,4 @@ BOOST_AUTO_TEST_CASE(test_dag_vector_adapter) {
         count++;
     }
     BOOST_CHECK_EQUAL(count, 9);
-};
+}

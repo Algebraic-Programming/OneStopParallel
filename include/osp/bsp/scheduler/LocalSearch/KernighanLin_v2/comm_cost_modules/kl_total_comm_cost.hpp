@@ -301,7 +301,6 @@ struct kl_total_comm_cost_function {
                 const cost_t comm_gain = graph->vertex_comm_weight(source) * comm_multiplier;
 
                 unsigned idx = start_idx(source_step, start_step);
-                const unsigned window_bound = end_idx(source_step, end_step);
                 for (; idx < window_bound; idx++) {
                     for (const unsigned p : proc_range->compatible_processors_vertex(source)) { 
                         const cost_t x = change_comm_cost(instance->communicationCosts(p, move.to_proc), to_proc_source_comm_cost, comm_gain); 

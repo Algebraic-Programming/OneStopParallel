@@ -149,63 +149,63 @@ class Compact_Sparse_Graph_EdgeDesc : public Compact_Sparse_Graph<keep_vertex_or
             if constexpr (use_edge_comm_weights) {
                 edge_comm_weights = std::vector<edge_comm_weight_type>(BaseT::num_edges(), static_cast<edge_comm_weight_type>(0));
             }
-        };
+        }
 
         template <typename edge_list_type>
         Compact_Sparse_Graph_EdgeDesc(vertex_idx num_vertices_, const edge_list_type & edges, const std::vector<vertex_work_weight_type> &ww) : BaseT(num_vertices_, edges, ww) {
             if constexpr (use_edge_comm_weights) {
                 edge_comm_weights = std::vector<edge_comm_weight_type>(BaseT::num_edges(), static_cast<edge_comm_weight_type>(0));
             }
-        };
+        }
 
         template <typename edge_list_type>
         Compact_Sparse_Graph_EdgeDesc(vertex_idx num_vertices_, const edge_list_type & edges, const std::vector<vertex_work_weight_type> &&ww) : BaseT(num_vertices_, edges, std::move(ww)) {
             if constexpr (use_edge_comm_weights) {
                 edge_comm_weights = std::vector<edge_comm_weight_type>(BaseT::num_edges(), static_cast<edge_comm_weight_type>(0));
             }
-        };
+        }
 
         template <typename edge_list_type>
         Compact_Sparse_Graph_EdgeDesc(vertex_idx num_vertices_, const edge_list_type & edges, std::vector<vertex_work_weight_type> &ww, std::vector<vertex_comm_weight_type> &cw) : BaseT(num_vertices_, edges, ww, cw) {
             if constexpr (use_edge_comm_weights) {
                 edge_comm_weights = std::vector<edge_comm_weight_type>(BaseT::num_edges(), static_cast<edge_comm_weight_type>(0));
             }
-        };
+        }
         
         template <typename edge_list_type>
         Compact_Sparse_Graph_EdgeDesc(vertex_idx num_vertices_, const edge_list_type & edges, std::vector<vertex_work_weight_type> &&ww, std::vector<vertex_comm_weight_type> &&cw) : BaseT(num_vertices_, edges, std::move(ww), std::move(cw)) {
             if constexpr (use_edge_comm_weights) {
                 edge_comm_weights = std::vector<edge_comm_weight_type>(BaseT::num_edges(), static_cast<edge_comm_weight_type>(0));
             }
-        };
+        }
 
         template <typename edge_list_type>
         Compact_Sparse_Graph_EdgeDesc(vertex_idx num_vertices_, const edge_list_type & edges, const std::vector<vertex_work_weight_type> &ww, const std::vector<vertex_comm_weight_type> &cw, const std::vector<vertex_mem_weight_type> &mw) : BaseT(num_vertices_, edges, ww, cw, mw) {
             if constexpr (use_edge_comm_weights) {
                 edge_comm_weights = std::vector<edge_comm_weight_type>(BaseT::num_edges(), static_cast<edge_comm_weight_type>(0));
             }
-        };
+        }
         
         template <typename edge_list_type>
         Compact_Sparse_Graph_EdgeDesc(vertex_idx num_vertices_, const edge_list_type & edges, const std::vector<vertex_work_weight_type> &&ww, const std::vector<vertex_comm_weight_type> &&cw, const std::vector<vertex_mem_weight_type> &&mw) : BaseT(num_vertices_, edges, std::move(ww), std::move(cw), std::move(mw)) {
             if constexpr (use_edge_comm_weights) {
                 edge_comm_weights = std::vector<edge_comm_weight_type>(BaseT::num_edges(), static_cast<edge_comm_weight_type>(0));
             }
-        };
+        }
 
         template <typename edge_list_type>
         Compact_Sparse_Graph_EdgeDesc(vertex_idx num_vertices_, const edge_list_type & edges, const std::vector<vertex_work_weight_type> &ww, const std::vector<vertex_comm_weight_type> &cw, const std::vector<vertex_mem_weight_type> &mw, const std::vector<vertex_type_type> &vt) : BaseT(num_vertices_, edges, ww, cw, mw, vt) {
             if constexpr (use_edge_comm_weights) {
                 edge_comm_weights = std::vector<edge_comm_weight_type>(BaseT::num_edges(), static_cast<edge_comm_weight_type>(0));
             }
-        };
+        }
         
         template <typename edge_list_type>
         Compact_Sparse_Graph_EdgeDesc(vertex_idx num_vertices_, const edge_list_type & edges, const std::vector<vertex_work_weight_type> &&ww, const std::vector<vertex_comm_weight_type> &&cw, const std::vector<vertex_mem_weight_type> &&mw, const std::vector<vertex_type_type> &&vt) : BaseT(num_vertices_, edges, std::move(ww), std::move(cw), std::move(mw), std::move(vt)) {
             if constexpr (use_edge_comm_weights) {
                 edge_comm_weights = std::vector<edge_comm_weight_type>(BaseT::num_edges(), static_cast<edge_comm_weight_type>(0));
             }
-        };
+        }
 
         template <typename Graph_type>
         Compact_Sparse_Graph_EdgeDesc(const Graph_type  & graph) : BaseT(graph) {
@@ -220,7 +220,7 @@ class Compact_Sparse_Graph_EdgeDesc : public Compact_Sparse_Graph<keep_vertex_or
                     set_edge_comm_weight(src, tgt, graph.edge_comm_weight(edge));
                 }
             }
-        };
+        }
 
 
 
@@ -246,11 +246,11 @@ class Compact_Sparse_Graph_EdgeDesc : public Compact_Sparse_Graph<keep_vertex_or
         template<typename RetT = edge_comm_weight_type>
         inline std::enable_if_t<use_edge_comm_weights, RetT> edge_comm_weight(const directed_edge_descriptor &edge) const {
             return edge_comm_weights[edge];
-        };
+        }
         template<typename RetT = edge_comm_weight_type>
         inline std::enable_if_t<not use_edge_comm_weights, RetT> edge_comm_weight(const directed_edge_descriptor &edge) const {
             return static_cast<RetT>(1);
-        };
+        }
 
         template<typename RetT = void>
         inline std::enable_if_t<use_edge_comm_weights, RetT> set_edge_comm_weight(const vertex_idx &src, const vertex_idx &tgt, const edge_comm_weight_type e_comm_weight) {
@@ -261,11 +261,11 @@ class Compact_Sparse_Graph_EdgeDesc : public Compact_Sparse_Graph<keep_vertex_or
                 const vertex_idx internal_tgt = BaseT::vertex_permutation_from_original_to_internal[tgt];
                 edge_comm_weights[edge(internal_src, internal_tgt)] = e_comm_weight;
             }
-        };
+        }
         template<typename RetT = void>
         inline std::enable_if_t<not use_edge_comm_weights, RetT> set_edge_comm_weight(const vertex_idx &src, const vertex_idx &tgt, const edge_comm_weight_type e_comm_weight) {
             static_assert(use_edge_comm_weights, "To set edge communication weight, graph type must allow edge communication weights.");
-        };
+        }
 };
 
 

@@ -272,4 +272,4 @@ std::unordered_map<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_in>> create_in
     return local_idx;
 }
 
-}; // namespace osp
+} // end namespace osp

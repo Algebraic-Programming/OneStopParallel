@@ -127,4 +127,4 @@ protected:
     }
 };
 
-};
+} // end namespace osp

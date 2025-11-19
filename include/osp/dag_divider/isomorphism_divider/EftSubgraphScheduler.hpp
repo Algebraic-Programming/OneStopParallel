@@ -49,11 +49,17 @@ public:
         return execute_schedule(instance);
     }
 
+    void setMinWorkPerProcessor(const v_workw_t<Graph_t> min_work_per_processor) {
+        min_work_per_processor_ = min_work_per_processor;
+    }
+
 private:
 
     static constexpr bool verbose = false;
 
     using job_id_t = vertex_idx_t<Graph_t>;
+
+    v_workw_t<Graph_t> min_work_per_processor_ = 2000;
 
     enum class JobStatus {
         WAITING,
@@ -74,7 +80,7 @@ private:
         job_id_t in_degree_current = 0;
         
         JobStatus status = JobStatus::WAITING;
-        double upward_rank = 0.0;
+        v_workw_t<Graph_t> upward_rank = 0.0;
 
         // --- Execution Tracking Members ---
         std::vector<unsigned> assigned_workers;
@@ -117,11 +123,11 @@ private:
             } else {
                 job.status = JobStatus::WAITING;
             }
-            job.multiplicity = multiplicities[idx];
-            job.max_num_procs = max_num_procs[idx];
+            job.total_work = graph.vertex_work_weight(idx);
+            job.max_num_procs = std::min(max_num_procs[idx], static_cast<unsigned>((job.total_work + min_work_per_processor_ - 1) / min_work_per_processor_));
+            job.multiplicity = std::min(multiplicities[idx], job.max_num_procs);
             job.required_proc_types = required_proc_types[idx];           
             job.assigned_workers.resize(num_worker_types, 0);
-            job.total_work = graph.vertex_work_weight(idx);
             job.start_time = -1.0;
             job.finish_time = -1.0;
 
@@ -137,13 +143,13 @@ private:
         const auto reverse_top_order = GetTopOrderReverse(graph);
 
         for (const auto& vertex : reverse_top_order) {
-            double max_successor_rank = 0.0;
+            v_workw_t<Graph_t> max_successor_rank = 0.0;
             for (const auto& child : graph.children(vertex)) {
                 max_successor_rank = std::max(max_successor_rank, jobs_.at(child).upward_rank);
             }
             
             Job& job = jobs_.at(vertex);
-            job.upward_rank = static_cast<double>(graph.vertex_work_weight(vertex)) + max_successor_rank;
+            job.upward_rank = graph.vertex_work_weight(vertex) + max_successor_rank;
         }
     }
 
@@ -175,7 +181,7 @@ private:
             }
 
             std::vector<Job*> jobs_to_start;
-            double total_runnable_priority = 0.0;
+            v_workw_t<Graph_t> total_runnable_priority = 0.0;
 
             // Iterate through ready jobs and assign minimum resources if available.
             for (const Job* job_ptr : ready_jobs_) {
@@ -214,7 +220,7 @@ private:
                             const unsigned current_total_assigned = std::accumulate(job.assigned_workers.begin(), job.assigned_workers.end(), 0u);
                             const unsigned max_additional_workers = (job.max_num_procs > current_total_assigned) ? (job.max_num_procs - current_total_assigned) : 0;
 
-                            const double proportion = (total_runnable_priority > 0) ? (job.upward_rank / total_runnable_priority) : (1.0 / static_cast<double>(jobs_to_start.size()));
+                            const double proportion = (total_runnable_priority > 0) ? (static_cast<double>(job.upward_rank) / static_cast<double>(total_runnable_priority)) : (1.0 / static_cast<double>(jobs_to_start.size()));
                             const unsigned proportional_share = static_cast<unsigned>(static_cast<double>(remaining_workers_pool[type_idx]) * proportion);
                             const unsigned num_proportional_chunks = (job.multiplicity > 0) ? proportional_share / job.multiplicity : 0;
                             const unsigned num_available_chunks = (job.multiplicity > 0) ? available_workers[type_idx] / job.multiplicity : 0;
@@ -328,7 +334,7 @@ private:
             std::cout << "Final Makespan: " << current_time << std::endl;
             std::cout << "Job Summary:" << std::endl;
             for(const auto& job : jobs_) {
-                std::cout << "  - Job " << job.id << ": Multiplicity=" << job.multiplicity << ", Max Procs=" << job.max_num_procs << ", Start=" << job.start_time << ", Finish=" << job.finish_time << ", Workers=[";
+                std::cout << "  - Job " << job.id << ": Multiplicity=" << job.multiplicity << ", Max Procs=" << job.max_num_procs << ", Work=" << job.total_work << ", Start=" << job.start_time << ", Finish=" << job.finish_time << ", Workers=[";
                 for(size_t i=0; i<job.assigned_workers.size(); ++i) {
                     std::cout << "T" << i << ":" << job.assigned_workers[i] << (i == job.assigned_workers.size()-1 ? "" : ", ");
                 }
@@ -342,7 +348,7 @@ private:
         for(const auto& job : jobs_) {
             result.node_assigned_worker_per_type[job.id].resize(num_worker_types);
             for (size_t i = 0; i < num_worker_types; ++i) {
-                result.node_assigned_worker_per_type[job.id][i] = job.assigned_workers[i] / job.multiplicity;
+                result.node_assigned_worker_per_type[job.id][i] = (job.assigned_workers[i] + job.multiplicity - 1) / job.multiplicity;
             }
         } 
         return result;

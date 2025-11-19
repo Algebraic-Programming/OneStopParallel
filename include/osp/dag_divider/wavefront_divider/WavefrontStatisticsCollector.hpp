@@ -119,4 +119,4 @@ private:
     const std::vector<std::vector<VertexType>> &level_sets_;
 };
 
-};
+} // end namespace osp

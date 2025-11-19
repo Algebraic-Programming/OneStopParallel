@@ -33,6 +33,8 @@ class BalancedCoinFlips {
     /// @brief Returns true/false in a pseudo-random balanced manner
     /// @return true/false
     virtual bool get_flip() = 0;
+
+    virtual ~BalancedCoinFlips() = default;
 };
 
 class Biased_Random : public BalancedCoinFlips {

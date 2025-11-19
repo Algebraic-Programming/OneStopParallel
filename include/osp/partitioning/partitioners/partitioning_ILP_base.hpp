@@ -49,6 +49,8 @@ class HypergraphPartitioningILPBase {
     inline unsigned getTimeLimitSeconds() const { return time_limit_seconds; }
     inline void setTimeLimitSeconds(unsigned limit_) { time_limit_seconds = limit_; }
     inline void setUseInitialSolution(bool use_) { use_initial_solution = use_; }
+
+    virtual ~HypergraphPartitioningILPBase() = default;
 };
 
 template<typename hypergraph_t>
@@ -130,7 +132,7 @@ void HypergraphPartitioningILPBase<hypergraph_t>::setupFundamentalVariablesConst
 
     model.SetObjective(expr, COPT_MINIMIZE);
              
-};
+}
 
 template<typename hypergraph_t>
 std::vector<std::vector<unsigned> > HypergraphPartitioningILPBase<hypergraph_t>::readAllCoptAssignments(const PartitioningProblem<hypergraph_t> &instance, Model& model)

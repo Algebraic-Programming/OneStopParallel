@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(kl_improver_smoke_test) {
     BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
     BOOST_CHECK_EQUAL(schedule.satisfiesPrecedenceConstraints(), true);
 
-};
+}
 
 BOOST_AUTO_TEST_CASE(kl_improver_on_test_graphs) {
 
@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(kl_improver_superstep_removal_test) {
     BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
     BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
     BOOST_CHECK_LT(schedule.numberOfSupersteps(), original_steps);
-};
+}
 
 BOOST_AUTO_TEST_CASE(kl_improver_inner_loop_test) {
 
@@ -325,7 +325,7 @@ BOOST_AUTO_TEST_CASE(kl_improver_inner_loop_test) {
 
     BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
 
-};
+}
 
 BOOST_AUTO_TEST_CASE(kl_improver_inner_loop_penalty_test) {
 
@@ -412,7 +412,7 @@ BOOST_AUTO_TEST_CASE(kl_improver_inner_loop_penalty_test) {
 
     BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
 
-};
+}
 
 BOOST_AUTO_TEST_CASE(kl_improver_violation_handling_test) {
 
@@ -464,7 +464,7 @@ BOOST_AUTO_TEST_CASE(kl_improver_violation_handling_test) {
     kl_improver.improveSchedule(schedule);
 
     BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
-};
+}
 
 BOOST_AUTO_TEST_CASE(kl_base_1) {
 
@@ -560,7 +560,7 @@ BOOST_AUTO_TEST_CASE(kl_base_1) {
     kl_move move_5(v1, 7.0, 1, 0, 0, 0);
     kl.apply_move_test(move_5);
     BOOST_CHECK_EQUAL(kl.is_feasible(), true);
-};
+}
 
 BOOST_AUTO_TEST_CASE(kl_base_2) {
 
@@ -725,7 +725,7 @@ BOOST_AUTO_TEST_CASE(kl_base_2) {
 
     BOOST_CHECK_CLOSE(affinity[v8][1][0], 8.0, 0.00001);
     BOOST_CHECK_CLOSE(affinity[v8][1][1], 1.0, 0.00001);
-};
+}
 
 BOOST_AUTO_TEST_CASE(kl_base_3) {
 
@@ -842,7 +842,7 @@ BOOST_AUTO_TEST_CASE(kl_base_3) {
     BOOST_CHECK_CLOSE(affinity[v8][1][0], 8.0, 0.00001);
     BOOST_CHECK_CLOSE(affinity[v8][1][1], 1.0, 0.00001);
 
-};
+}
 
 
 // BOOST_AUTO_TEST_CASE(kl_improver_incremental_update_test) {

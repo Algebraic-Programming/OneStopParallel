@@ -223,6 +223,6 @@ bool PartitioningWithReplication<hypergraph_t>::satisfiesBalanceConstraint() con
     }
 
     return true;
-};
+}
 
 } // namespace osp

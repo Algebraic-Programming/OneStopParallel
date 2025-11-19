@@ -65,6 +65,6 @@ RETURN_STATUS run_bsp_recomp_scheduler(const ConfigParser &parser, const boost::
 
         throw std::invalid_argument("Parameter error: Unknown algorithm.\n");
     }
-};
+}
 
 } // namespace osp

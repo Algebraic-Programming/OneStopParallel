@@ -73,6 +73,7 @@ class IsomorphicSubgraphScheduler {
     double orbit_lock_ratio_ = 0.2;
     bool merge_different_node_types = true;
     bool allow_use_trimmed_scheduler = true;
+    bool use_max_bsp = false;
 
     public:
 
@@ -93,6 +94,7 @@ class IsomorphicSubgraphScheduler {
     void setMinSymmetry(size_t min_symmetry) { min_symmetry_ = min_symmetry; }
     void set_plot_dot_graphs(bool plot) { plot_dot_graphs_ = plot; }
     void disable_use_max_group_size() { use_max_group_size_ = false; }
+    void setUseMaxBsp(bool flag) { use_max_bsp = flag; }
     void enable_use_max_group_size(const unsigned max_group_size) {
         use_max_group_size_ = true;
         max_group_size_ = max_group_size;
@@ -381,8 +383,7 @@ class IsomorphicSubgraphScheduler {
                 }
             }
 
-            // If min_non_zero_procs is still std::numeric_limits<unsigned>::max(), it means no processors
-            // were assigned to any type (all counts were 0). In this case, min_non_zero_procs > 1 will be false.
+
             bool use_trimmed_scheduler = sub_sched.was_trimmed[group_idx] && min_non_zero_procs > 1 && allow_use_trimmed_scheduler;
  
             Scheduler<Constr_Graph_t>* scheduler_for_group_ptr;
@@ -474,12 +475,20 @@ class IsomorphicSubgraphScheduler {
                 writer.write_colored_graph(timestamp + "iso_group_rep_" + std::to_string(group_idx) + ".dot", rep_dag, colors);
             }
 
+
+            const bool max_bsp = use_max_bsp && (representative_instance.getComputationalDag().num_edges() == 0) && (representative_instance.getComputationalDag().vertex_type(0) == 0);
+
             // Build data structures for applying the pattern ---
             // Map (superstep, processor) -> relative partition ID
             std::map<std::pair<unsigned, unsigned>, vertex_idx_t<Graph_t>> sp_proc_to_relative_partition;
             vertex_idx_t<Graph_t> num_partitions_per_subgraph = 0;
-            for (size_t j = 0; j < rep_subgraph_vertices_sorted.size(); ++j) {
-                const auto sp_pair = std::make_pair(bsp_schedule.assignedSuperstep(j), bsp_schedule.assignedProcessor(j));
+            for (vertex_idx_t<Graph_t> j = 0; j < static_cast<vertex_idx_t<Graph_t>>(rep_subgraph_vertices_sorted.size()); ++j) {
+                auto sp_pair = std::make_pair(bsp_schedule.assignedSuperstep(j), bsp_schedule.assignedProcessor(j));
+
+                if (max_bsp) 
+                    sp_pair = std::make_pair(j, 0);
+
+
                 if (sp_proc_to_relative_partition.find(sp_pair) == sp_proc_to_relative_partition.end()) {
                     sp_proc_to_relative_partition[sp_pair] = num_partitions_per_subgraph++;
                 }
@@ -489,7 +498,7 @@ class IsomorphicSubgraphScheduler {
             MerkleHashComputer<Constr_Graph_t> rep_hasher(representative_instance.getComputationalDag());
 
             // Replicate the schedule pattern for ALL subgraphs in the group ---
-            for (size_t i = 0; i < group.subgraphs.size(); ++i) {
+            for (vertex_idx_t<Graph_t> i = 0; i < static_cast<vertex_idx_t<Graph_t>>(group.subgraphs.size()); ++i) {
                 auto current_subgraph_vertices_sorted = group.subgraphs[i];
                 std::sort(current_subgraph_vertices_sorted.begin(), current_subgraph_vertices_sorted.end());
 
@@ -516,7 +525,11 @@ class IsomorphicSubgraphScheduler {
                 // Apply the partition pattern
                 for (const auto& current_vertex : current_subgraph_vertices_sorted) {
                     const auto rep_local_idx = current_vertex_to_rep_local_idx.at(current_vertex);
-                    const auto sp_pair = std::make_pair(bsp_schedule.assignedSuperstep(rep_local_idx), bsp_schedule.assignedProcessor(rep_local_idx));
+                    auto sp_pair = std::make_pair(bsp_schedule.assignedSuperstep(rep_local_idx), bsp_schedule.assignedProcessor(rep_local_idx));
+
+                    if (max_bsp) 
+                        sp_pair = std::make_pair(rep_local_idx, 0);
+
                     partition[current_vertex] = current_partition_idx + sp_proc_to_relative_partition.at(sp_pair);
                 }
                 current_partition_idx += num_partitions_per_subgraph;

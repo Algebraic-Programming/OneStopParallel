@@ -58,7 +58,7 @@ void add_graph_stats(const ComputationalDag &graph, std::ofstream &outfile) {
     Get_Median(edge_lengths);
 
     if (graph.num_edges() != 0) {
-        avg_edge_length = (float)sum_edge_length / (float)graph.num_edges();
+        avg_edge_length = static_cast<float>(sum_edge_length) / static_cast<float>(graph.num_edges());
     }
 
     // Longest Path
@@ -72,7 +72,7 @@ void add_graph_stats(const ComputationalDag &graph, std::ofstream &outfile) {
         //     wavefront[top_level[i]] = 1;
         // }
     }
-    float avg_wavefront = (float)graph.num_vertices() / (float)longest_path;
+    float avg_wavefront = static_cast<float>(graph.num_vertices()) / static_cast<float>(longest_path);
 
     // Average bottom distance
     std::vector<unsigned> bot_level = get_bottom_node_distance(graph);
@@ -80,7 +80,7 @@ void add_graph_stats(const ComputationalDag &graph, std::ofstream &outfile) {
     for (size_t i = 0; i < bot_level.size(); i++) {
         bot_level_sum += bot_level[i];
     }
-    float avg_bot_level = (float)bot_level_sum / (float)bot_level.size();
+    float avg_bot_level = static_cast<float>(bot_level_sum) / static_cast<float>(bot_level.size());
 
     // // Number of Triangles
     // size_t number_triangles = 0;

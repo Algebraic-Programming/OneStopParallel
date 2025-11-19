@@ -114,7 +114,7 @@ If no build type is given, CMake applies default optimizations and warnings.
   cmake -DBUILD_TESTS=OFF ..
   ```
 
-## Dependencies
+## Optional Functionality
 Some algorithms and executables are only enabled with following optional dependencies:
   - [Boost (≥ 1.71)]
   - [Eigen3 (≥ 3.4)](https://eigen.tuxfamily.org/)

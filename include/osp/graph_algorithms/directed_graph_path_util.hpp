@@ -335,7 +335,7 @@ std::vector<int> get_strict_poset_integer_map(unsigned const noise, double const
 
             int temp = new_top[source(edge, graph)];
             if (up_or_down.at(edge)) {
-                if (poisson_param == 0.0) {
+                if (poisson_param <= 0.0) {
                     temp += 1;
                 } else {
                     temp += 1 + poisson_gen(gen);

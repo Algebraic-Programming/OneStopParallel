@@ -59,7 +59,7 @@ bool compare_vectors(Eigen::VectorXd &v1, Eigen::VectorXd &v2) {
         }
     }
     return same;
-};
+}
 
 BOOST_AUTO_TEST_CASE(test_eigen_sptrsv) {
     using SM_csr = Eigen::SparseMatrix<double, Eigen::RowMajor, int32_t>;
@@ -253,7 +253,7 @@ BOOST_AUTO_TEST_CASE(test_eigen_sptrsv) {
     sim.permute_x_vector(perm);
     BOOST_CHECK(compare_vectors(L_x_ref,L_x_osp));
 
-};
+}
 
 
 

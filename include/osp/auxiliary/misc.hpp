@@ -41,7 +41,7 @@ inline int randInt(int lim) {
         rnd = std::rand();
 
     return rnd % lim;
-};
+}
 
 // pair of integers
 template<typename T1, typename T2>
@@ -84,7 +84,7 @@ inline bool isDisjoint(std::vector<intPair> &intervals) {
             return false;
 
     return true;
-};
+}
 
 // computes power of an integer
 template<typename T>
@@ -103,7 +103,7 @@ T intpow(T base, unsigned exp) {
         return tmp * tmp;
     }
     return base * tmp * tmp;
-};
+}
 
 template<typename T>
 unsigned uintpow(T base, unsigned exp) {
@@ -121,7 +121,7 @@ unsigned uintpow(T base, unsigned exp) {
         return tmp * tmp;
     }
     return base * tmp * tmp;
-};
+}
 
 struct contractionEdge {
     intPair edge;
@@ -166,7 +166,7 @@ std::unordered_set<T> get_intersection(const std::unordered_set<T> &a, const std
         }
     }
     return {result.begin(), result.end()};
-};
+}
 
 // unordered set union
 template<typename T>
@@ -177,7 +177,7 @@ std::unordered_set<T> get_union(const std::unordered_set<T> &a, const std::unord
         larger.emplace(elem);
     }
     return larger;
-};
+}
 
 // zip two vectors of equal length
 template<typename S, typename T>
@@ -307,7 +307,7 @@ T Get_Median(SetType ordered_set) {
         T val2 = *(++it);
         return val1 + (val2 - val1) / 2;
     }
-};
+}
 
 /**
  * @brief Get lower_median of a sorted set or multiset
@@ -324,7 +324,7 @@ T Get_Lower_Median(SetType ordered_set) {
 
     std::advance(it, (ordered_set.size() - 1) / 2);
     return *it;
-};
+}
 
 /**
  * @brief Get top third percentile of a sorted set or multiset
@@ -341,7 +341,7 @@ T Get_upper_third_percentile(SetType ordered_set) {
 
     std::advance(it, (ordered_set.size() / 3) + ((ordered_set.size() + 1) / 3));
     return *it;
-};
+}
 
 /**
  * @brief Get lower third percentile of a sorted set or multiset
@@ -358,6 +358,6 @@ T Get_lower_third_percentile(SetType ordered_set) {
 
     std::advance(it, (ordered_set.size() / 3));
     return *it;
-};
+}
 
 } // namespace osp

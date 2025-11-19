@@ -268,4 +268,4 @@ private:
     size_t min_subseq_len_;
 };
 
-}; // namespace osp
+} // namespace osp

@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(coarser_hdagg_test) {
         BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
         BOOST_CHECK(schedule2.satisfiesPrecedenceConstraints());
     }
-};
+}
 
 BOOST_AUTO_TEST_CASE(coarser_hdagg_test_diff_graph_impl) {
     // static_assert(std::is_base_of<Scheduler, T>::value, "Class is not a scheduler!");
@@ -245,7 +245,7 @@ BOOST_AUTO_TEST_CASE(coarser_hdagg_test_diff_graph_impl) {
         BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
         BOOST_CHECK(schedule2.satisfiesPrecedenceConstraints());
     }
-};
+}
 
 BOOST_AUTO_TEST_CASE(coarser_bspschedule_test) {
     // static_assert(std::is_base_of<Scheduler, T>::value, "Class is not a scheduler!");
@@ -322,7 +322,7 @@ BOOST_AUTO_TEST_CASE(coarser_bspschedule_test) {
         BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
         BOOST_CHECK(schedule2.satisfiesPrecedenceConstraints());
     }
-};
+}
 
 template<typename graph_t>
 void test_coarser_same_graph(Coarser<graph_t, graph_t> &coarser) {
@@ -395,7 +395,7 @@ void test_coarser_same_graph(Coarser<graph_t, graph_t> &coarser) {
         BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
         BOOST_CHECK(schedule2.satisfiesPrecedenceConstraints());
     }
-};
+}
 
 BOOST_AUTO_TEST_CASE(coarser_funndel_bfs_test) {
 
@@ -540,7 +540,7 @@ BOOST_AUTO_TEST_CASE(coarser_SquashA_test_diff_graph_impl_CSG) {
         BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
         BOOST_CHECK(schedule2.satisfiesPrecedenceConstraints());
     }
-};
+}
 
 BOOST_AUTO_TEST_CASE(coarser_SquashA_test_diff_graph_impl_CSGE) {
     // static_assert(std::is_base_of<Scheduler, T>::value, "Class is not a scheduler!");
@@ -616,7 +616,7 @@ BOOST_AUTO_TEST_CASE(coarser_SquashA_test_diff_graph_impl_CSGE) {
         BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
         BOOST_CHECK(schedule2.satisfiesPrecedenceConstraints());
     }
-};
+}
 
 
 

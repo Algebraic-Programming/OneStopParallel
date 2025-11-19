@@ -651,7 +651,7 @@ void PebblingSchedule<Graph_t>::SplitSupersteps(const BspSchedule<Graph_t> &sche
                             end_current = start_idx + 1;
                         else
                             end_current = std::min(start_idx + 2* (end_lower_bound - start_idx),
-                                                (unsigned) top_orders[proc][step].size()-1);
+                                                static_cast<unsigned>( top_orders[proc][step].size() ) - 1);
                     }
                     else
                         end_current = end_lower_bound + (end_upper_bound - end_lower_bound + 1) / 2;
@@ -1490,7 +1490,7 @@ void PebblingSchedule<Graph_t>::removeEvictStepsFromEnd()
                 --stepIndex;
                 auto &computeStep = compute_steps_for_proc_superstep[proc][step][stepIndex];
 
-                std::vector<vertex_idx> remaining;
+                std::vector<vertex_idx> remaining_2;
                 for(vertex_idx to_remove : computeStep.nodes_evicted_after)
                 {
                     mem_used[proc] += instance->getComputationalDag().vertex_mem_weight(to_remove);
@@ -1501,9 +1501,9 @@ void PebblingSchedule<Graph_t>::removeEvictStepsFromEnd()
                         bottleneck[proc] -= instance->getComputationalDag().vertex_mem_weight(to_remove);
                     }
                     else
-                        remaining.push_back(to_remove);
+                        remaining_2.push_back(to_remove);
                 }
-                computeStep.nodes_evicted_after = remaining;
+                computeStep.nodes_evicted_after = remaining_2;
                 bottleneck[proc] = std::min(bottleneck[proc], instance->getArchitecture().memoryBound(proc) - mem_used[proc]);
                 
                 mem_used[proc] -= instance->getComputationalDag().vertex_mem_weight(computeStep.node);

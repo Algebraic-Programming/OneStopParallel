@@ -115,7 +115,7 @@ void MultilevelCoarser<Graph_t, Graph_t_coarse>::compactify_dag_history() {
     size_t dag_indx_second = dag_history.size() - 1;
     size_t map_indx_second = contraction_maps.size() - 1;
 
-    if ( ((double) dag_history[dag_indx_first-1]->num_vertices() / (double) dag_history[dag_indx_second-1]->num_vertices()) > 1.25 ) return;
+    if ( (static_cast<double>( dag_history[dag_indx_first-1]->num_vertices() ) / static_cast<double>( dag_history[dag_indx_second-1]->num_vertices() )) > 1.25 ) return;
     
 
     // Compute combined contraction_map

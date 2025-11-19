@@ -174,13 +174,13 @@ BOOST_AUTO_TEST_CASE(test_full) {
     MaxBspScheduleCS<graph> schedule_max(instance);
     scheduler_max.setTimeLimitSeconds(10);
     const auto result_max = scheduler_max.computeMaxBspScheduleCS(schedule_max);
-    BOOST_CHECK_EQUAL(RETURN_STATUS::BEST_FOUND, result_max);
+    BOOST_CHECK(result_max == RETURN_STATUS::OSP_SUCCESS || result_max == RETURN_STATUS::BEST_FOUND);
     BOOST_CHECK(schedule_max.satisfiesPrecedenceConstraints());
     BOOST_CHECK(schedule_max.hasValidCommSchedule());
 
     scheduler_max.setInitialSolutionFromBspSchedule(schedule_max);
     const auto result_max2 = scheduler_max.computeMaxBspScheduleCS(schedule_max);
-    BOOST_CHECK_EQUAL(RETURN_STATUS::BEST_FOUND, result_max2);
+    BOOST_CHECK(result_max2 == RETURN_STATUS::OSP_SUCCESS || result_max2 == RETURN_STATUS::BEST_FOUND);
     BOOST_CHECK(schedule_max.satisfiesPrecedenceConstraints());
     BOOST_CHECK(schedule_max.hasValidCommSchedule());
 

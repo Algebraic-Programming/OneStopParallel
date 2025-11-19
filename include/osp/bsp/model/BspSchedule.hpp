@@ -237,7 +237,7 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
      */
     void updateNumberOfSupersteps() {
         number_of_supersteps = 0;
-        for (unsigned i = 0; i < instance->numberOfVertices(); ++i) {
+        for (vertex_idx_t<Graph_t> i = 0; i < static_cast<vertex_idx_t<Graph_t>>(instance->numberOfVertices()); ++i) {
             if (node_to_superstep_assignment[i] >= number_of_supersteps) {
                 number_of_supersteps = node_to_superstep_assignment[i] + 1;
             }
@@ -327,7 +327,7 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
 
             number_of_supersteps = 0;
 
-            for (unsigned i = 0; i < instance->numberOfVertices(); ++i) {
+            for (vertex_idx_t<Graph_t> i = 0; i < instance->numberOfVertices(); ++i) {
 
                 if (vec[i] >= number_of_supersteps) {
                     number_of_supersteps = vec[i] + 1;
@@ -550,8 +550,8 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
      */
     inline bool satisfiesPrecedenceConstraints() const {
 
-        if (node_to_processor_assignment.size() != instance->numberOfVertices() ||
-            node_to_superstep_assignment.size() != instance->numberOfVertices()) {
+        if (static_cast<vertex_idx_t<Graph_t>>(node_to_processor_assignment.size()) != instance->numberOfVertices() ||
+            static_cast<vertex_idx_t<Graph_t>>(node_to_superstep_assignment.size()) != instance->numberOfVertices()) {
             return false;
         }
 

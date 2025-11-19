@@ -58,6 +58,7 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_SimpleChain)
 
     // 3. Run Scheduler
     EftSubgraphScheduler<graph_t> scheduler;
+    scheduler.setMinWorkPerProcessor(1);
     SubgraphSchedule schedule = scheduler.run(instance, multiplicities, required_proc_types, max_procs);
 
     // 4. Assertions
@@ -109,6 +110,7 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ForkJoin)
 
     // 3. Run Scheduler
     EftSubgraphScheduler<graph_t> scheduler;
+    scheduler.setMinWorkPerProcessor(1);
     SubgraphSchedule schedule = scheduler.run(instance, multiplicities, required_proc_types, max_procs);
 
     // 4. Assertions
@@ -161,6 +163,7 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_Deadlock)
 
     // 3. Run Scheduler
     EftSubgraphScheduler<graph_t> scheduler;
+    scheduler.setMinWorkPerProcessor(1);
     SubgraphSchedule schedule = scheduler.run(instance, multiplicities, required_proc_types, max_procs);
 
     // 4. Assertions
@@ -207,6 +210,7 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ComplexDAG)
 
     // 3. Run Scheduler
     EftSubgraphScheduler<graph_t> scheduler;
+    scheduler.setMinWorkPerProcessor(1);
     SubgraphSchedule schedule = scheduler.run(instance, multiplicities, required_proc_types, max_procs);
 
     BOOST_CHECK_CLOSE(schedule.makespan, 105.0, 1e-9);
@@ -258,6 +262,7 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ResourceContention)
 
     // 3. Run Scheduler
     EftSubgraphScheduler<graph_t> scheduler;
+    scheduler.setMinWorkPerProcessor(1);
     SubgraphSchedule schedule = scheduler.run(instance, multiplicities, required_proc_types, max_procs);
 
     // 4. Assertions
@@ -310,6 +315,7 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ProportionalAllocation)
 
     // 3. Run Scheduler
     EftSubgraphScheduler<graph_t> scheduler;
+    scheduler.setMinWorkPerProcessor(1);
     SubgraphSchedule schedule = scheduler.run(instance, multiplicities, required_proc_types, max_procs);
 
     // 4. Assertions

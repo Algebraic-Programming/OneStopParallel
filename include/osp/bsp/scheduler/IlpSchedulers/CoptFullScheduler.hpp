@@ -595,7 +595,7 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
                     expr += node_to_processor_superstep_var[node][processor][static_cast<int>(step)];
                 }
             }
-            model.AddConstr(expr <= (double)(instance.numberOfVertices() * instance.numberOfProcessors()) *
+            model.AddConstr(expr <= static_cast<double>(instance.numberOfVertices() * instance.numberOfProcessors()) *
                                         superstep_used_var.GetVar(static_cast<int>(step)));
         }
 
@@ -646,7 +646,7 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
                         }
 
                         model.AddConstr(expr >=
-                                        (double)instance.getComputationalDag().in_degree(node) *
+                                        static_cast<double>(instance.getComputationalDag().in_degree(node)) *
                                             node_to_processor_superstep_var[node][processor][static_cast<int>(step)]);
                     }
                 }

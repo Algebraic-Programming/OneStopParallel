@@ -178,4 +178,4 @@ BOOST_AUTO_TEST_CASE(test_instance_bicgstab) {
                       instance.getArchitecture().communicationCosts());
     BOOST_CHECK_EQUAL(instance_t5.getArchitecture().synchronisationCosts(),
                       instance.getArchitecture().synchronisationCosts());
-};
+}

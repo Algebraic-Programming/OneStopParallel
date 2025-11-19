@@ -113,7 +113,7 @@ void run_test_local_memory(Scheduler<Graph_t> *test_scheduler) {
             }
         }
     }
-};
+}
 
 template<typename Graph_t>
 void run_test_persistent_transient_memory(Scheduler<Graph_t> *test_scheduler) {
@@ -172,7 +172,7 @@ void run_test_persistent_transient_memory(Scheduler<Graph_t> *test_scheduler) {
             }
         }
     }
-};
+}
 
 template<typename Graph_t>
 void run_test_local_in_out_memory(Scheduler<Graph_t> *test_scheduler) {
@@ -231,7 +231,7 @@ void run_test_local_in_out_memory(Scheduler<Graph_t> *test_scheduler) {
             }
         }
     }
-};
+}
 
 template<typename Graph_t>
 void run_test_local_inc_edges_memory(Scheduler<Graph_t> *test_scheduler) {
@@ -290,7 +290,7 @@ void run_test_local_inc_edges_memory(Scheduler<Graph_t> *test_scheduler) {
             }
         }
     }
-};
+}
 
 template<typename Graph_t>
 void run_test_local_inc_edges_2_memory(Scheduler<Graph_t> *test_scheduler) {
@@ -349,7 +349,7 @@ void run_test_local_inc_edges_2_memory(Scheduler<Graph_t> *test_scheduler) {
             }
         }
     }
-};
+}
 
 BOOST_AUTO_TEST_CASE(GreedyBspScheduler_local_test) {
 
@@ -366,7 +366,7 @@ BOOST_AUTO_TEST_CASE(GreedyBspScheduler_local_test) {
 
     GreedyBspScheduler<graph_impl_t, local_sources_inc_edges_memory_constraint<graph_impl_t>> test_4;
     run_test_local_inc_edges_2_memory(&test_4);
-};
+}
 
 BOOST_AUTO_TEST_CASE(GrowLocalAutoCores_local_test) {
 
@@ -383,7 +383,7 @@ BOOST_AUTO_TEST_CASE(GrowLocalAutoCores_local_test) {
 
     GrowLocalAutoCores<graph_impl_t, local_sources_inc_edges_memory_constraint<graph_impl_t>> test_4;
     run_test_local_inc_edges_2_memory(&test_4);
-};
+}
 
 BOOST_AUTO_TEST_CASE(BspLocking_local_test) {
 
@@ -400,7 +400,7 @@ BOOST_AUTO_TEST_CASE(BspLocking_local_test) {
 
     BspLocking<graph_impl_t, local_sources_inc_edges_memory_constraint<graph_impl_t>> test_4;
     run_test_local_inc_edges_2_memory(&test_4);
-};
+}
 
 BOOST_AUTO_TEST_CASE(variance_local_test) {
 
@@ -408,7 +408,7 @@ BOOST_AUTO_TEST_CASE(variance_local_test) {
                    local_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>>
         test;
     run_test_local_memory(&test);
-};
+}
 
 // BOOST_AUTO_TEST_CASE(kl_local_test) {
 
@@ -430,7 +430,7 @@ BOOST_AUTO_TEST_CASE(GreedyBspScheduler_persistent_transient_test) {
                        persistent_transient_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>>
         test;
     run_test_persistent_transient_memory(&test);
-};
+}
 
 BOOST_AUTO_TEST_CASE(EtfScheduler_persistent_transient_test) {
 
@@ -438,7 +438,7 @@ BOOST_AUTO_TEST_CASE(EtfScheduler_persistent_transient_test) {
                  persistent_transient_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>>
         test;
     run_test_persistent_transient_memory(&test);
-};
+}
 
 
 BOOST_AUTO_TEST_CASE(VariancePartitioner_test) {

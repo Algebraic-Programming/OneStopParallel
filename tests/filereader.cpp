@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(test_mtx_computational_dag_vector_impl) {
     BOOST_CHECK_EQUAL_COLLECTIONS(graph.parents(7).begin(), graph.parents(7).end(), p7.begin(), p7.end());
     BOOST_CHECK_EQUAL_COLLECTIONS(graph.children(7).begin(), graph.children(7).end(), c7.begin(), c7.end());
 
-};
+}
 
 
 BOOST_AUTO_TEST_CASE(test_mtx_boost_graph) {
@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(test_mtx_boost_graph) {
     BOOST_CHECK_EQUAL_COLLECTIONS(graph.parents(7).begin(), graph.parents(7).end(), p7.begin(), p7.end());
     BOOST_CHECK_EQUAL_COLLECTIONS(graph.children(7).begin(), graph.children(7).end(), c7.begin(), c7.end());
 
-};
+}
 
 
 
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(test_bicgstab) {
 
     BOOST_CHECK(status);
     BOOST_CHECK_EQUAL(graph.num_vertices(), 54);
-};
+}
 
 BOOST_AUTO_TEST_CASE(test_hdag_boost) {
 
@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE(test_hdag_boost) {
 
     BOOST_CHECK(status);
     BOOST_CHECK_EQUAL(graph.num_vertices(), 54);
-};
+}
 
 BOOST_AUTO_TEST_CASE(test_arch_smpl) {
 
@@ -296,7 +296,7 @@ BOOST_AUTO_TEST_CASE(test_k_means) {
         BOOST_CHECK_EQUAL(graph2.vertex_work_weight(v), work[v]);
         BOOST_CHECK_EQUAL(graph2.vertex_comm_weight(v), comm[v]);
     }
-};
+}
 
 BOOST_AUTO_TEST_CASE(test_dot_graph) {
 
@@ -330,7 +330,7 @@ BOOST_AUTO_TEST_CASE(test_dot_graph) {
     }
 
 
-};
+}
 
 BOOST_AUTO_TEST_CASE(test_dot_graph_boost) {
 
@@ -364,4 +364,4 @@ BOOST_AUTO_TEST_CASE(test_dot_graph_boost) {
     }
 
 
-};
+}

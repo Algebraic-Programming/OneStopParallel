@@ -246,7 +246,7 @@ class DotFileWriter {
 
         void operator()(std::ostream &out, const vertex_idx_t<Graph_t> &i) const {
 
-            if (i >= colors.size()) {
+            if (i >= static_cast<vertex_idx_t<Graph_t>>(colors.size())) {
                  // Fallback for safety: print without color if colors vector is mismatched or palette is empty.
                  out << i << " [";
             } else {

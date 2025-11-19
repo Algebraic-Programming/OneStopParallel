@@ -202,7 +202,8 @@ template <typename Key, typename Value, typename Compare> class PairingHeap {
     void push(const Key &key, const Value &value) {
         Node *new_node = new Node{key, value};
         // emplace and check for success to avoid a separate lookup with contains()
-        auto [it, success] = node_map.emplace(key, new_node);
+        const auto pair = node_map.emplace(key, new_node);
+        const bool &success = pair.second;
         if (!success) {
             delete new_node; // Avoid memory leak if key already exists
             throw std::invalid_argument("Key already exists in the heap.");
