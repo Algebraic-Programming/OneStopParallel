@@ -39,10 +39,10 @@ jobs:
         run: cmake --build . -j$(nproc)
 
   # -------------------------------------------------
-  # 2. FULL BUILD + TEST + SIMPLE DAG RUN + DOCS (RelWithDebInfo + Eigen)
+  # 2. FULL BUILD + TEST + COVERAGE + DOCS (RelWithDebInfo + Eigen)
   # -------------------------------------------------
   test_and_run:
-    name: Build & Test (RelWithDebInfo + Eigen)
+    name: Build, Test & Coverage (RelWithDebInfo + Eigen)
     runs-on: ubuntu-latest
     needs: build_matrix
     if: github.event_name == 'pull_request' || github.ref == 'refs/heads/master'
@@ -55,21 +55,38 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             make gcc g++ git libboost-all-dev \
-            doxygen graphviz python3-pip libeigen3-dev
+            doxygen graphviz python3-pip libeigen3-dev lcov
           pip3 install --upgrade pip
           pip3 install cmake==3.21.3
 
       - name: Configure
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_TESTS=ON
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON
 
       - name: Build all targets
         working-directory: ${{ github.workspace }}/build
         run: cmake --build . -j$(nproc)
 
-      - name: Run tests
+      - name: Run tests with coverage
         working-directory: ${{ github.workspace }}/build
-        run: ctest --output-on-failure --output-junit test_results.xml
-        continue-on-error: true
+        run: |
+          # Run tests while collecting coverage
+          ctest --output-on-failure --output-junit test_results.xml
+
+          # Generate lcov report
+          sudo apt-get install -y lcov
+          lcov --capture --directory . --output-file coverage.info
+
+          # Remove system and test files from report
+          lcov --remove coverage.info '/usr/*' '*/tests/*' '*/third_party/*' --output-file coverage.info
+
+          # Generate HTML report
+          genhtml coverage.info --output-directory coverage_html
+
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: build/coverage_html
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
