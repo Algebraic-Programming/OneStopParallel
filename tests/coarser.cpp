@@ -703,6 +703,20 @@ BOOST_AUTO_TEST_CASE(SarkarML_test) {
     test_coarser_same_graph<graph_t>(coarser);
 }
 
+BOOST_AUTO_TEST_CASE(SarkarMLBufferMerge_test) {
+    using graph_t = computational_dag_edge_idx_vector_impl_def_t;
+    // using graph_t = computational_dag_vector_impl_def_t;
+
+    SarkarParams::MulParameters<v_workw_t<graph_t>> params;
+    params.commCostVec = {1, 2, 10, 50, 100};
+    params.buffer_merge_mode = SarkarParams::BufferMergeMode::FULL;
+
+    SarkarMul<graph_t, graph_t> coarser;
+    coarser.setParameters(params);
+
+    test_coarser_same_graph<graph_t>(coarser);
+}
+
 BOOST_AUTO_TEST_CASE(SquashAML_test) {
     using graph_t = computational_dag_edge_idx_vector_impl_def_t;
     // using graph_t = computational_dag_vector_impl_def_t;
