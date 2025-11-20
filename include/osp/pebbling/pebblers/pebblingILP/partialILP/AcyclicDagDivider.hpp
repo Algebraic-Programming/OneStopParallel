@@ -34,8 +34,6 @@ class AcyclicDagDivider {
   protected:
     using vertex_idx = vertex_idx_t<Graph_t>;
 
-    std::vector<unsigned> node_to_part;
-
     unsigned minPartitionSize = 40, maxPartitionSize = 80;
     bool ignore_sources_in_size = true;
 

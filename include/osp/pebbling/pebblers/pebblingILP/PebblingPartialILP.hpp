@@ -113,7 +113,7 @@ RETURN_STATUS PebblingPartialILP<Graph_t>::computePebbling(PebblingSchedule<Grap
     // AUX: check for isomorphism
 
     // create set of nodes & external sources for all parts, and the nodes that need to have blue pebble at the end
-    std::vector<std::set<vertex_idx> > nodes_in_part(nr_parts), extra_sources(nr_parts), needs_blue_at_end(nr_parts);
+    std::vector<std::set<vertex_idx> > nodes_in_part(nr_parts), extra_sources(nr_parts);
     std::vector<std::map<vertex_idx, vertex_idx> > original_node_id(nr_parts);
     std::vector<std::map<unsigned, unsigned> > original_proc_id(nr_parts);
     for(vertex_idx node = 0; node < instance.numberOfVertices(); ++node)
@@ -125,13 +125,6 @@ RETURN_STATUS PebblingPartialILP<Graph_t>::computePebbling(PebblingSchedule<Grap
         for (const vertex_idx &pred : instance.getComputationalDag().parents(node))
             if(assignment_to_parts[node] != assignment_to_parts[pred])
                 extra_sources[assignment_to_parts[node]].insert(pred);
-
-        for (const vertex_idx &succ : instance.getComputationalDag().children(node))
-            if(assignment_to_parts[node] != assignment_to_parts[succ])
-                needs_blue_at_end[assignment_to_parts[node]].insert(node);
-        
-        if(instance.getComputationalDag().out_degree(node) == 0)
-            needs_blue_at_end[assignment_to_parts[node]].insert(node);
     }
 
     std::vector<Graph_t> subDags;

@@ -31,6 +31,8 @@ limitations under the License.
 
 #include "osp/bsp/scheduler/IlpSchedulers/CoptFullScheduler.hpp"
 #include "osp/bsp/scheduler/IlpSchedulers/TotalCommunicationScheduler.hpp"
+#include "osp/bsp/scheduler/IlpSchedulers/CoptCommScheduleOptimizer.hpp"
+#include "osp/bsp/scheduler/IlpSchedulers/CoptPartialScheduler.hpp"
 
 using namespace osp;
 
@@ -194,3 +196,95 @@ BOOST_AUTO_TEST_CASE(test_full) {
     BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
     BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 };
+
+BOOST_AUTO_TEST_CASE(test_cs) {
+
+    using graph = computational_dag_edge_idx_vector_impl_def_t;
+
+    BspInstance<graph> instance;
+    instance.setNumberOfProcessors(4);
+    instance.setCommunicationCosts(3);
+    instance.setSynchronisationCosts(5);
+
+    // Getting root git directory
+    std::filesystem::path cwd = std::filesystem::current_path();
+    std::cout << cwd << std::endl;
+    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
+        cwd = cwd.parent_path();
+        std::cout << cwd << std::endl;
+    }
+
+    bool status = file_reader::readComputationalDagHyperdagFormatDB(
+        (cwd / "data/spaa/tiny/instance_pregel.hdag").string(), instance.getComputationalDag());
+
+    BOOST_CHECK(status);
+
+    BspSchedule<graph> schedule(instance);
+    GreedyBspScheduler<graph> greedy;
+    greedy.computeSchedule(schedule);
+    BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+    BspScheduleCS<graph> schedule_cs(schedule);
+    BOOST_CHECK(schedule_cs.hasValidCommSchedule());
+
+    CoptCommScheduleOptimizer<graph> scheduler;
+    scheduler.setTimeLimitSeconds(10);
+    const auto before = schedule_cs.compute_cs_communication_costs();
+    const auto result = scheduler.improveSchedule(schedule_cs);
+    BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
+    const auto after = schedule_cs.compute_cs_communication_costs();
+    std::cout<<before<<" --cs--> "<<after<<std::endl;
+
+    BOOST_CHECK(schedule_cs.satisfiesPrecedenceConstraints());
+    BOOST_CHECK(schedule_cs.hasValidCommSchedule());
+    BOOST_CHECK(before >= after);
+};
+
+BOOST_AUTO_TEST_CASE(test_partial) {
+
+    using graph = computational_dag_edge_idx_vector_impl_def_t;
+
+    BspInstance<graph> instance;
+    instance.setNumberOfProcessors(3);
+    instance.setCommunicationCosts(3);
+    instance.setSynchronisationCosts(5);
+
+    // Getting root git directory
+    std::filesystem::path cwd = std::filesystem::current_path();
+    std::cout << cwd << std::endl;
+    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
+        cwd = cwd.parent_path();
+        std::cout << cwd << std::endl;
+    }
+
+    bool status = file_reader::readComputationalDagHyperdagFormatDB(
+        (cwd / "data/spaa/tiny/instance_pregel.hdag").string(), instance.getComputationalDag());
+
+    BOOST_CHECK(status);
+
+    BspSchedule<graph> schedule_init(instance);
+    GreedyBspScheduler<graph> greedy;
+    greedy.computeSchedule(schedule_init);
+    BOOST_CHECK(schedule_init.satisfiesPrecedenceConstraints());
+    BspScheduleCS<graph> schedule(schedule_init);
+    BOOST_CHECK(schedule.hasValidCommSchedule());
+
+    CoptPartialScheduler<graph> scheduler;
+    scheduler.setTimeLimitSeconds(10);
+    scheduler.setStartAndEndSuperstep(0, 2);
+    auto cost_before = schedule.computeCosts();
+    auto result = scheduler.improveSchedule(schedule);
+    BOOST_CHECK(result == RETURN_STATUS::OSP_SUCCESS || result == RETURN_STATUS::BEST_FOUND);
+    BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+    BOOST_CHECK(schedule.hasValidCommSchedule());
+    auto cost_mid = schedule.computeCosts();
+    BOOST_CHECK(cost_mid <= cost_before);
+    scheduler.setStartAndEndSuperstep(2, 5);
+    result = scheduler.improveSchedule(schedule);
+    BOOST_CHECK(result == RETURN_STATUS::OSP_SUCCESS || result == RETURN_STATUS::BEST_FOUND);
+    BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+    BOOST_CHECK(schedule.hasValidCommSchedule());
+    auto cost_after = schedule.computeCosts();
+    BOOST_CHECK(cost_after <= cost_mid);
+
+};
+

@@ -830,6 +830,28 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
         return num;
     }
 
+    virtual void shrinkByMergingSupersteps() {
+
+        std::vector<bool> comm_phase_empty(number_of_supersteps, true);
+        for (const auto& node : instance->vertices())
+            for (const auto &child : instance->getComputationalDag().children(node))
+                if(node_to_processor_assignment[node] != node_to_processor_assignment[child])
+                    comm_phase_empty[node_to_superstep_assignment[child]-1] = false;
+
+        std::vector<unsigned> new_step_index(number_of_supersteps);
+        unsigned current_index = 0;
+        for(unsigned step = 0; step < number_of_supersteps; ++step)
+        {
+            new_step_index[step] = current_index;
+            if(!comm_phase_empty[step])
+                current_index++;
+        }
+        for (const auto& node : instance->vertices())
+            node_to_superstep_assignment[node] = new_step_index[node_to_superstep_assignment[node]];
+
+        setNumberOfSupersteps(current_index);
+    }
+    
     unsigned virtual getStaleness() const { return 1; }
 };
 
