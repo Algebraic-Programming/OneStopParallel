@@ -30,7 +30,7 @@ option(ENABLE_COVERAGE "Enable code coverage flags" OFF)
 
 if(ENABLE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     message(STATUS "Code coverage enabled")
-    add_compile_options(--coverage -O0 -g)
+    add_compile_options(--coverage -g)
     add_link_options(--coverage)
 endif()
 
