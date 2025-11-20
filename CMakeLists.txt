@@ -25,6 +25,15 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF) # Ensure C++17 standard is strictly enforced
 
+# --- Code Coverage (optional) ---
+option(ENABLE_COVERAGE "Enable code coverage flags" OFF)
+
+if(ENABLE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    message(STATUS "Code coverage enabled")
+    add_compile_options(--coverage -g)
+    add_link_options(--coverage)
+endif()
+
 # Configure git hooks
 add_subdirectory(.githooks)
 
@@ -102,7 +111,7 @@ target_compile_options(ProjectExecutableFlags INTERFACE
         # Else (not Debug)
         $<IF:$<CONFIG:RelWithDebInfo>,
             # RelWithDebInfo flags
-            -O3;-g,
+            -O3;-g;-DNDEBUG,
             # Release and other/custom flags
             -O3;-DNDEBUG
         >
