@@ -74,7 +74,7 @@ jobs:
 
           # Generate lcov report
           sudo apt-get install -y lcov
-          lcov --capture --directory . --output-file coverage.info
+          lcov --capture --directory . --output-file coverage.info --ignore-errors empty
 
           # Remove system and test files from report
           lcov --remove coverage.info '/usr/*' '*/tests/*' '*/third_party/*' --output-file coverage.info
