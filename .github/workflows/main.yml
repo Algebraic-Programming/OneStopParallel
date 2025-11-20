@@ -39,7 +39,7 @@ jobs:
         run: cmake --build . -j$(nproc)
 
   # -------------------------------------------------
-  # 2. FULL BUILD + TEST + COVERAGE + DOCS (RelWithDebInfo + Eigen)
+  # 2. FULL BUILD + TEST + SIMPLE DAG RUN + COVERAGE + DOCS (RelWithDebInfo + Eigen)
   # -------------------------------------------------
   test_and_run:
     name: Build, Test & Coverage (RelWithDebInfo + Eigen)
