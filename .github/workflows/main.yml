@@ -69,6 +69,7 @@ jobs:
       - name: Run tests with coverage
         working-directory: ${{ github.workspace }}/build
         run: |
+          # Run tests
           ctest --output-on-failure --output-junit test_results.xml
 
           # Capture coverage ONLY from include/
@@ -77,11 +78,10 @@ jobs:
                --ignore-errors empty,mismatch \
                --include '*/OneStopParallel/include/*'
 
-          # Remove unused warnings: this is the KEY fix
-          lcov --ignore-errors unused,empty,mismatch --remove coverage.info '*/tests/*' '*/apps/*' --output-file coverage.info
-
-          # Optional: silence header template warnings
-          geninfo --rc geninfo_unexecuted_blocks=1 coverage.info
+          # Remove unused warnings + ignore tests/apps
+          lcov --remove coverage.info '*/tests/*' '*/apps/*' \
+               --ignore-errors unused,empty,mismatch \
+               --output-file coverage.info
 
           # Generate HTML report
           genhtml coverage.info --output-directory coverage_html
