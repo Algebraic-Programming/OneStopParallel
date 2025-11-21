@@ -71,6 +71,8 @@ class MaxBspSchedule : public BspSchedule<Graph_t> {
 
     MaxBspSchedule(const IBspSchedule<Graph_t> &schedule) : BspSchedule<Graph_t>(schedule) {}
 
+    MaxBspSchedule(IBspSchedule<Graph_t> &&schedule) : BspSchedule<Graph_t>(std::move(schedule)) {}
+
     MaxBspSchedule(const MaxBspSchedule<Graph_t> &schedule) = default;
 
     MaxBspSchedule<Graph_t> &operator=(const MaxBspSchedule<Graph_t> &schedule) = default;

@@ -367,12 +367,12 @@ BOOST_AUTO_TEST_CASE(test_max_bsp_schedule) {
 
         // Manual cost calculation:
         // Superstep 0: work = {10, 0} -> max_work = 10. comm = 0. Cost = max(10, 0) = 10.
-        // Superstep 1: work = {5, 0} -> max_work = 5. comm from SS0: 0->2 (P0->P1) needed at SS2, comm sent in SS1. comm=1*10=10. Cost = max(5,0) = 5.
-        // Superstep 2: work = {0, 5} -> max_work = 5. comm from SS1: 10. Cost = max(5, 10) + l = 10 + 100 = 110.
-        // Superstep 3: work = {0, 0} -> max_work = 0. comm from SS2: 2->3 (P1->P0) needed at SS4, comm sent in SS3. comm=3*10=30. Cost = max(0,0) = 0.
-        // Superstep 4: work = {10, 0} -> max_work = 10. comm from SS3: 30. Cost = max(10, 30) + l = 30 + 100 = 130.
-        // Total cost = 10 + 5 + 110 + 0 + 130 = 255
-        BOOST_CHECK_EQUAL(schedule.computeCosts(), 255);
+        // Superstep 1: work = {5, 0} -> max_work = 5. comm from SS0: 0->2 (P0->P1) needed at SS2, comm sent in SS0. comm=1*10=10. Cost = max(5,l+10) = 110.
+        // Superstep 2: work = {0, 5} -> max_work = 5. comm = 0. Cost = max(5, 0) = 5.
+        // Superstep 3: work = {0, 0} -> max_work = 0. comm from SS2: 2->3 (P1->P0) needed at SS4, comm sent in SS2. comm=3*10=30. Cost = max(0,l+30) = 130.
+        // Superstep 4: work = {10, 0} -> max_work = 10. comm = 0. Cost = max(10, 0) = 10.
+        // Total cost = 10 + 110 + 5 + 130 + 10 = 265
+        BOOST_CHECK_EQUAL(schedule.computeCosts(), 265);
     }
 
     // Test another valid schedule
@@ -392,12 +392,12 @@ BOOST_AUTO_TEST_CASE(test_max_bsp_schedule) {
 
         // Manual cost calculation:
         // Superstep 0: work = {10, 0} -> max_work = 10. comm = 0. Cost = max(10, 0) = 10.
-        // Superstep 1: work = {0, 0} -> max_work = 0. comm from SS0: 0->1, 0->2 (P0->P1) needed at SS2, comm sent in SS1. comm=1*10=10. Cost = max(0,0)=0.
-        // Superstep 2: work = {0, 10} -> max_work = 10. comm from SS1: 10. Cost = max(10, 10) + l = 10 + 100 = 110.
-        // Superstep 3: work = {0, 0} -> max_work = 0. comm from SS2: 1->3, 2->3 (P1->P0) needed at SS4, comm sent in SS3. comm=(2+3)*10=50. Cost = max(0,0)=0.
-        // Superstep 4: work = {10, 0} -> max_work = 10. comm from SS3: 50. Cost = max(10, 50) + l = 50 + 100 = 150.
-        // Total cost = 10 + 0 + 110 + 0 + 150 = 270
-        BOOST_CHECK_EQUAL(schedule.computeCosts(), 270);
+        // Superstep 1: work = {0, 0} -> max_work = 0. comm from SS0: 0->1, 0->2 (P0->P1) needed at SS2, comm sent in SS0. comm=1*10=10. Cost = max(0,l+10)=110.
+        // Superstep 2: work = {0, 10} -> max_work = 10. comm = 0. Cost = max(10, 0) = 10.
+        // Superstep 3: work = {0, 0} -> max_work = 0. comm from SS2: 1->3, 2->3 (P1->P0) needed at SS4, comm sent in SS2. comm=(2+3)*10=50. Cost = max(0,l+50)=150.
+        // Superstep 4: work = {10, 0} -> max_work = 10. Cost = max(10, 0) = 10.
+        // Total cost = 10 + 110 + 10 + 150 + 10 = 290
+        BOOST_CHECK_EQUAL(schedule.computeCosts(), 290);
     }
 
     // Test an invalid schedule (violates staleness=2)

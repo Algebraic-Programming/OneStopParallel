@@ -83,11 +83,11 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
 
                 if (step_needed[proc] < number_of_supersteps) {
 
-                    send[node_to_processor_assignment[node]][step_needed[proc] - 1] +=
+                    send[node_to_processor_assignment[node]][step_needed[proc] - getStaleness()] +=
                         instance->sendCosts(node_to_processor_assignment[node], proc) *
                         instance->getComputationalDag().vertex_comm_weight(node);
 
-                    rec[proc][step_needed[proc] - 1] += instance->sendCosts(node_to_processor_assignment[node], proc) *
+                    rec[proc][step_needed[proc] - getStaleness()] += instance->sendCosts(node_to_processor_assignment[node], proc) *
                                                         instance->getComputationalDag().vertex_comm_weight(node);
                 }
             }
