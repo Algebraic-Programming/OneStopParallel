@@ -470,29 +470,29 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
 
     virtual void shrinkByMergingSupersteps() override {
 
-        std::vector<unsigned> comm_phase_latest_dependency(this->number_of_supersteps, 0);
+        std::vector<unsigned> superstep_latest_dependency(this->number_of_supersteps, 0);
         std::vector<std::vector<unsigned> > first_at = getFirstPresence();
 
         for (auto const &[key, val] : commSchedule)
             if(this->assignedProcessor(std::get<0>(key)) != std::get<1>(key))
-                comm_phase_latest_dependency[val] = std::max(comm_phase_latest_dependency[val], first_at[std::get<0>(key)][std::get<1>(key)]);
+                superstep_latest_dependency[val] = std::max(superstep_latest_dependency[val], first_at[std::get<0>(key)][std::get<1>(key)]);
         
 
         for (const auto &node : BspSchedule<Graph_t>::instance->getComputationalDag().vertices())
             for (const auto &child : BspSchedule<Graph_t>::instance->getComputationalDag().children(node))
                 if(this->assignedProcessor(node) != this->assignedProcessor(child))
-                    comm_phase_latest_dependency[this->assignedSuperstep(child)] = std::max(comm_phase_latest_dependency[this->assignedSuperstep(child)], first_at[node][this->assignedProcessor(child)]);
+                    superstep_latest_dependency[this->assignedSuperstep(child)] = std::max(superstep_latest_dependency[this->assignedSuperstep(child)], first_at[node][this->assignedProcessor(child)]);
 
-        std::vector<bool> comm_phase_deleted(this->number_of_supersteps, false);
+        std::vector<bool> merge_with_previous(this->number_of_supersteps, false);
         for(unsigned step = this->number_of_supersteps-1; step < this->number_of_supersteps; --step)
         {
             unsigned limit = 0;
             while(step > limit)
             {
-                limit = std::max(limit, comm_phase_latest_dependency[step]);
+                limit = std::max(limit, superstep_latest_dependency[step]);
                 if(step > limit)
                 {
-                    comm_phase_deleted[step] = true;
+                    merge_with_previous[step] = true;
                     --step;
                 }
             }
@@ -502,7 +502,7 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
         unsigned current_index = std::numeric_limits<unsigned>::max();
         for(unsigned step = 0; step < this->number_of_supersteps; ++step)
         {
-            if(!comm_phase_deleted[step])
+            if(!merge_with_previous[step])
                 current_index++;
 
             new_step_index[step] = current_index;

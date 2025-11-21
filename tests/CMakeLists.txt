@@ -152,7 +152,7 @@ _add_test( wavefront_scheduler )
 
 _add_test( cuthill_mckee )
 
-_add_test( maxbsp_schedulers )
+_add_test( maxbsp_converter_and_hc )
 
 ## pebbling ILPs
 

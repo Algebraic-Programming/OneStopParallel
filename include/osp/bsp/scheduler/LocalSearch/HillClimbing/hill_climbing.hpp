@@ -94,9 +94,6 @@ class HillClimbingScheduler : public ImprovementScheduler<Graph_t> {
     // Create superstep lists (for convenience) for a BSP schedule
     void CreateSupstepLists();
 
-    // Combine subsequent supersteps whenever there is no communication inbetween
-    void RemoveNeedlessSupSteps();
-
     // For memory constraints
     bool use_memory_constraint = false;
     std::vector<std::vector<v_memw_t<Graph_t>>> memory_used;
@@ -178,9 +175,9 @@ RETURN_STATUS HillClimbingScheduler<Graph_t>::improveScheduleWithStepLimit(BspSc
 
 template<typename Graph_t>
 void HillClimbingScheduler<Graph_t>::Init() {
-    if(shrink) // NOTE: shrinking a MaxBspSchedule (without CS) might increase cost
+    if(shrink)
     {
-        RemoveNeedlessSupSteps();
+        schedule->shrinkByMergingSupersteps();
         CreateSupstepLists();
     }
 
@@ -969,37 +966,6 @@ bool HillClimbingScheduler<Graph_t>::violatesMemConstraint(vertex_idx node, unsi
         return true;
     
     return false;
-}
-
-template<typename Graph_t>
-void HillClimbingScheduler<Graph_t>::RemoveNeedlessSupSteps() {
-    
-    unsigned current_step = 0;
-
-    unsigned nextBreak = schedule->numberOfSupersteps(), breakAfterNext = schedule->numberOfSupersteps();
-    for (unsigned step = 0; step < schedule->numberOfSupersteps(); ++step) {
-        if (nextBreak == step) {
-            ++current_step;
-            nextBreak = breakAfterNext;
-            if (schedule->getStaleness() == 2)
-                breakAfterNext = schedule->numberOfSupersteps();
-        }
-        for (unsigned proc = 0; proc < schedule->getInstance().getArchitecture().numberOfProcessors(); ++proc)
-            for (const vertex_idx node : supsteplists[step][proc]) {
-                schedule->setAssignedSuperstep(node, current_step);
-                for (const vertex_idx &succ : schedule->getInstance().getComputationalDag().children(node))
-                {
-                    if (schedule->assignedProcessor(node) != schedule->assignedProcessor(succ))
-                    {
-                        nextBreak = std::min(nextBreak, schedule->assignedSuperstep(succ) + 1 - schedule->getStaleness());
-                        if (schedule->getStaleness() == 2)
-                            breakAfterNext = std::min(breakAfterNext, schedule->assignedSuperstep(succ));
-                    }
-                }
-            }
-    }
-
-    schedule->updateNumberOfSupersteps();
 }
 
 template<typename Graph_t>
