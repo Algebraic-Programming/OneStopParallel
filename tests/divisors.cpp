@@ -16,7 +16,7 @@ limitations under the License.
 @author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 
-#define BOOST_TEST_MODULE IntPower
+#define BOOST_TEST_MODULE Divisor
 #include <boost/test/unit_test.hpp>
 
 #include "osp/auxiliary/math/divisors.hpp"
