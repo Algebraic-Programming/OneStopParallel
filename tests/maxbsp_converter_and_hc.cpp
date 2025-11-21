@@ -70,7 +70,6 @@ BOOST_AUTO_TEST_CASE(maxbsp_scheduling) {
     // hill climbing
 
     HillClimbingScheduler<graph> HC;
-    HC.setShrink(false);
     HC.improveSchedule(maxbsp);
     BOOST_CHECK(maxbsp.satisfiesPrecedenceConstraints());
     auto cost_hc = maxbsp.computeCosts();

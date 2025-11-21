@@ -836,7 +836,8 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
         for (const auto& node : instance->vertices())
             for (const auto &child : instance->getComputationalDag().children(node))
                 if(node_to_processor_assignment[node] != node_to_processor_assignment[child])
-                    comm_phase_empty[node_to_superstep_assignment[child]-1] = false;
+                    for(unsigned offset = 1; offset <= getStaleness(); ++offset)
+                        comm_phase_empty[node_to_superstep_assignment[child] - offset] = false;
 
         std::vector<unsigned> new_step_index(number_of_supersteps);
         unsigned current_index = 0;
