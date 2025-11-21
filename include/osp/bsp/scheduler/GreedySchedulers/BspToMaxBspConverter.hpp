@@ -52,14 +52,7 @@ template<typename Graph_t>
 MaxBspSchedule<Graph_t> GreedyBspToMaxBspConverter<Graph_t>::Convert(const BspSchedule<Graph_t>& schedule) const
 {
     BspScheduleCS<Graph_t> schedule_cs(schedule);
-    MaxBspScheduleCS<Graph_t> schedule_max = Convert(schedule_cs);
-    MaxBspSchedule<Graph_t> final_schedule(schedule.getInstance());
-    for (vertex_idx node = 0; node < schedule.getInstance().numberOfVertices(); node++)
-    {
-        final_schedule.setAssignedProcessor(node, schedule_max.assignedProcessor(node));
-        final_schedule.setAssignedSuperstep(node, schedule_max.assignedSuperstep(node));
-    }
-    return final_schedule;
+    return Convert(schedule_cs);
 }
 
 template<typename Graph_t>
