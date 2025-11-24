@@ -9,6 +9,33 @@ on:
 
 jobs:
   # -------------------------------------------------
+  # 0. BUILD ON UBUNTU 20.04 (Legacy Compatibility)
+  # -------------------------------------------------
+  build_ubuntu_2004:
+    name: Build (Ubuntu 20.04 - Debug)
+    runs-on: ubuntu-20.04
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/master'
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            make gcc g++ git libboost-all-dev \
+            doxygen graphviz python3-pip libeigen3-dev
+          pip3 install --upgrade pip
+          pip3 install cmake==3.21.3
+
+      - name: Configure (Debug)
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+
+      - name: Build (Debug)
+        working-directory: ${{ github.workspace }}/build
+        run: cmake --build . -j$(nproc)
+
+  # -------------------------------------------------
   # 1. QUICK BUILD TESTS (Debug + Release)
   # -------------------------------------------------
   build_matrix:
