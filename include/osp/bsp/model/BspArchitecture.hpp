@@ -265,13 +265,13 @@ class BspArchitecture {
      *
      * @param base The base value used to calculate the send cost.
      */
-    void SetExpSendCost(unsigned int base) {
+    void SetExpSendCost(v_commw_t<Graph_t> base) {
 
         isNuma = true;
 
         unsigned maxPos = 1;
-        const unsigned two = 2;
-        for (; uintpow(two, maxPos + 1) <= number_processors - 1; ++maxPos) {
+        constexpr unsigned two = 2;
+        for (; intpow(two, maxPos + 1) <= number_processors - 1; ++maxPos) {
         }
         for (unsigned i = 0; i < number_processors; ++i)
             for (unsigned j = i + 1; j < number_processors; ++j)

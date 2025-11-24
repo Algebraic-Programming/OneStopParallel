@@ -88,36 +88,18 @@ inline bool isDisjoint(std::vector<intPair> &intervals) {
 
 // computes power of an integer
 template<typename T>
-T intpow(T base, unsigned exp) {
+constexpr T intpow(T base, unsigned exp) {
     static_assert(std::is_integral<T>::value);
 
-    if (exp == 0) {
+    if (exp == 0U) {
         return 1;
     }
-    if (exp == 1) {
+    if (exp == 1U) {
         return base;
     }
 
-    T tmp = intpow(base, exp / 2);
-    if (exp % 2 == 0) {
-        return tmp * tmp;
-    }
-    return base * tmp * tmp;
-}
-
-template<typename T>
-unsigned uintpow(T base, unsigned exp) {
-    static_assert(std::is_integral<T>::value);
-
-    if (exp == 0) {
-        return 1;
-    }
-    if (exp == 1) {
-        return base;
-    }
-
-    T tmp = intpow(base, exp / 2);
-    if (exp % 2 == 0) {
+    T tmp = intpow(base, exp / 2U);
+    if (exp % 2U == 0U) {
         return tmp * tmp;
     }
     return base * tmp * tmp;
