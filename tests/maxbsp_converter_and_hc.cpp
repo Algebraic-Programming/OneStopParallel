@@ -127,4 +127,4 @@ BOOST_AUTO_TEST_CASE(maxbsp_scheduling) {
     auto cost_hccs_large = maxbsp_cs_large.computeCosts();
     std::cout<<"Cost after comm. sched. hill climbing on large DAG: "<<cost_hccs_large<<std::endl;
     BOOST_CHECK(cost_hccs_large <= cost_maxbsp_cs_large);
-};
+}
