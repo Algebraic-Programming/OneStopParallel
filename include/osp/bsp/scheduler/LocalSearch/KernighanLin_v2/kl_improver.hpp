@@ -1024,6 +1024,45 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
                 thread_data.reward_penalty_strat.reward, recompute_max_gain,
                 new_nodes); // this only updated reward/penalty, collects new_nodes, and fills recompute_max_gain
 
+            // Add nodes from affected steps to new_nodes
+            // {
+            //     std::unordered_set<unsigned> steps_to_check;
+            //     const unsigned num_steps = active_schedule.num_steps();
+
+            //     auto add_steps_range = [&](unsigned center_step) {
+            //         unsigned start = (center_step > window_size) ? center_step - window_size : 0;
+            //         unsigned end = std::min(center_step + window_size, num_steps - 1);
+
+            //         // Constrain to thread range
+            //         if (start < thread_data.start_step)
+            //             start = thread_data.start_step;
+            //         if (end > thread_data.end_step)
+            //             end = thread_data.end_step;
+
+            //         for (unsigned s = start; s <= end; ++s) {
+            //             steps_to_check.insert(s);
+            //         }
+            //     };
+
+            //     add_steps_range(best_move.from_step);
+            //     add_steps_range(best_move.to_step);
+
+            //     for (unsigned step : steps_to_check) {
+            //         for (unsigned proc = 0; proc < instance->numberOfProcessors(); ++proc) {
+            //             const auto &nodes_in_step = active_schedule.getSetSchedule().step_processor_vertices[step][proc];
+            //             for (const auto &node : nodes_in_step) {
+            //                 if (!thread_data.affinity_table.is_selected(node) && !thread_data.lock_manager.is_locked(node)) {
+            //                     new_nodes.push_back(node);
+            //                 }
+            //             }
+            //         }
+            //     }
+
+            //     // Deduplicate new_nodes
+            //     std::sort(new_nodes.begin(), new_nodes.end());
+            //     new_nodes.erase(std::unique(new_nodes.begin(), new_nodes.end()), new_nodes.end());
+            // }
+
             // Determine the steps where max/second_max/max_count for work/comm changed
             std::unordered_set<unsigned> changed_steps;
 
@@ -1150,7 +1189,8 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
                                                ThreadSearchContext &thread_data) {
         if (no_imp_counter >= thread_data.no_improvement_iterations_reduce_penalty &&
             thread_data.reward_penalty_strat.initial_penalty > 1.0) {
-            thread_data.reward_penalty_strat.initial_penalty = static_cast<cost_t>(std::floor(std::sqrt(thread_data.reward_penalty_strat.initial_penalty)));
+            thread_data.reward_penalty_strat.initial_penalty =
+                static_cast<cost_t>(std::floor(std::sqrt(thread_data.reward_penalty_strat.initial_penalty)));
             thread_data.unlock_edge_backtrack_counter_reset += 1;
             thread_data.no_improvement_iterations_reduce_penalty += 15;
 #ifdef KL_DEBUG_1
@@ -1204,7 +1244,8 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
         if (select_nodes_check_remove_superstep(thread_data.step_to_remove, thread_data)) {
             active_schedule.swap_empty_step_fwd(thread_data.step_to_remove, thread_data.end_step);
             thread_data.end_step--;
-            thread_data.local_search_start_step = static_cast<unsigned>(thread_data.active_schedule_data.applied_moves.size());
+            thread_data.local_search_start_step =
+                static_cast<unsigned>(thread_data.active_schedule_data.applied_moves.size());
             thread_data.active_schedule_data.update_cost(static_cast<cost_t>(-1.0 * instance->synchronisationCosts()));
 
             if constexpr (enable_preresolving_violations) {

@@ -19,7 +19,6 @@ limitations under the License.
 #define BOOST_TEST_MODULE kl_bsp_cost
 #include <boost/test/unit_test.hpp>
 
-#include "test_graphs.hpp"
 #include "osp/bsp/model/BspSchedule.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin_v2/comm_cost_modules/kl_bsp_comm_cost.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin_v2/comm_cost_modules/max_comm_datastructure.hpp"
@@ -27,6 +26,7 @@ limitations under the License.
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin_v2/kl_util.hpp"
 #include "osp/concepts/graph_traits.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
+#include "test_graphs.hpp"
 
 using namespace osp;
 using graph = computational_dag_edge_idx_vector_impl_def_int_t;
@@ -319,7 +319,7 @@ bool validate_comm_datastructures(
             }
         }
     }
-    
+
     return all_match;
 }
 
@@ -1083,4 +1083,192 @@ BOOST_AUTO_TEST_CASE(test_ladder_graph_moves) {
     kl_sched.apply_move(move4, active_schedule_data);
     comm_ds.update_datastructure_after_move(move4, 0, 5);
     BOOST_CHECK(validate_comm_datastructures(comm_ds, kl_sched, instance, "ladder_move4"));
+}
+
+BOOST_AUTO_TEST_CASE(test_lazy_and_buffered_modes) {
+    std::cout << "Setup Graph" << std::endl;
+    graph instance;
+    instance.add_vertex(1, 10, 1);
+    instance.add_vertex(1, 10, 1);
+    instance.add_vertex(1, 10, 1);
+
+    instance.add_edge(0, 1, 1);
+    instance.add_edge(0, 2, 1);
+
+    std::cout << "Setup Arch" << std::endl;
+    osp::BspArchitecture<graph> arch;
+    arch.setNumberOfProcessors(2);
+    arch.setCommunicationCosts(1);
+    arch.setSynchronisationCosts(0);
+
+    std::cout << "Setup BspInstance" << std::endl;
+    osp::BspInstance<graph> bsp_instance(instance, arch);
+
+    std::cout << "Setup Schedule" << std::endl;
+    osp::BspSchedule<graph> schedule(bsp_instance);
+    schedule.setAssignedProcessor(0, 0);
+    schedule.setAssignedProcessor(1, 1);
+    schedule.setAssignedProcessor(2, 1);
+
+    schedule.setAssignedSuperstep(0, 0);
+    schedule.setAssignedSuperstep(1, 2);
+    schedule.setAssignedSuperstep(2, 4);
+
+    schedule.updateNumberOfSupersteps();
+
+    std::cout << "Setup KL Sched" << std::endl;
+    kl_active_schedule_t kl_sched;
+    kl_sched.initialize(schedule);
+
+    thread_local_active_schedule_data<graph, double> active_schedule_data;
+    active_schedule_data.initialize_cost(0.0);
+
+    std::cout << "Setup Complete" << std::endl;
+    std::cout << "Num Vertices: " << instance.num_vertices() << std::endl;
+    std::cout << "Num Procs: " << arch.numberOfProcessors() << std::endl;
+
+    std::cout << "Start Eager Test" << std::endl;
+    {
+        using CommPolicy = osp::EagerCommCostPolicy;
+        osp::max_comm_datastructure<graph, double, kl_active_schedule_t, CommPolicy> comm_ds;
+        std::cout << "Initialize Eager Comm DS" << std::endl;
+        comm_ds.initialize(kl_sched);
+
+        std::cout << "Checking node_lambda_map" << std::endl;
+        std::cout << "node_lambda_vec size: " << comm_ds.node_lambda_map.node_lambda_vec.size() << std::endl;
+        if (comm_ds.node_lambda_map.node_lambda_vec.size() > 0) {
+            std::cout << "node_lambda_vec[0] size: " << comm_ds.node_lambda_map.node_lambda_vec[0].size() << std::endl;
+        }
+
+        std::cout << "Compute Eager Comm DS" << std::endl;
+        comm_ds.compute_comm_datastructures(0, 4);
+        std::cout << "Eager Done" << std::endl;
+    }
+
+    std::cout << "Start Lazy Test" << std::endl;
+    // --- Test Lazy Policy ---
+    {
+        using CommPolicy = osp::LazyCommCostPolicy;
+        osp::max_comm_datastructure<graph, double, kl_active_schedule_t, CommPolicy> comm_ds;
+        std::cout << "Initialize Comm DS" << std::endl;
+        comm_ds.initialize(kl_sched);
+        std::cout << "Compute Comm DS" << std::endl;
+        comm_ds.compute_comm_datastructures(0, 4);
+
+        // Expected Behavior for Lazy:
+        // Node 0 (P0) sends to P1.
+        // Children on P1 are at Step 2 and Step 4.
+        // Lazy policy should attribute cost to min(2, 4) - 1 = Step 1.
+        // Cost = 10 * 1.0 = 10.
+
+        // Lazy: Send and Recv at min(2, 4) - 1 = Step 1.
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_send(0, 0), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_send(1, 0), 10);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_send(2, 0), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_send(3, 0), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_send(4, 0), 0);
+
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_send(0, 1), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_send(1, 1), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_send(2, 1), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_send(3, 1), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_send(4, 1), 0);
+
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(0, 0), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(1, 0), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(2, 0), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(3, 0), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(4, 0), 0);
+
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(0, 1), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(1, 1), 10);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(2, 1), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(3, 1), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(4, 1), 0);
+
+        using kl_move = osp::kl_move_struct<double, graph::vertex_idx>;
+        kl_move move(1, 0.0, 1, 2, 1, 3); // Node 1, Step 2->3, Proc 1->1
+        kl_sched.apply_move(move, active_schedule_data);
+        comm_ds.update_datastructure_after_move(move, 0, 4);
+
+        // After move: Children at {3, 4}. Min = 3. Send/Recv at Step 2.
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_send(0, 0), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_send(1, 0), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_send(2, 0), 10);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_send(3, 0), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_send(4, 0), 0);
+
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_send(0, 1), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_send(1, 1), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_send(2, 1), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_send(3, 1), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_send(4, 1), 0);
+
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(0, 0), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(1, 0), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(2, 0), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(3, 0), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(4, 0), 0);
+
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(0, 1), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(1, 1), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(2, 1), 10);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(3, 1), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(4, 1), 0);
+
+        // Reset Node 1 to Step 2 for next test
+        kl_move move_back(1, 0.0, 1, 3, 1, 2);
+        kl_sched.apply_move(move_back, active_schedule_data);
+    }
+
+    // --- Test Buffered Policy ---
+    {
+        using CommPolicy = osp::BufferedCommCostPolicy;
+        osp::max_comm_datastructure<graph, double, kl_active_schedule_t, CommPolicy> comm_ds;
+        comm_ds.initialize(kl_sched);
+        comm_ds.compute_comm_datastructures(0, 4);
+
+        // Buffered: Send at Step 0. Recv at min(2, 4) - 1 = Step 1.
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_send(0, 0), 10);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_send(1, 0), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_send(2, 0), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_send(3, 0), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_send(4, 0), 0);
+
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_send(0, 1), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_send(1, 1), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_send(2, 1), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_send(3, 1), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_send(4, 1), 0);
+
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(0, 0), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(1, 0), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(2, 0), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(3, 0), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(4, 0), 0);
+
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(0, 1), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(1, 1), 10);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(2, 1), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(3, 1), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(4, 1), 0);
+
+        using kl_move = osp::kl_move_struct<double, graph::vertex_idx>;
+        kl_move move(1, 0.0, 1, 2, 1, 3); // Node 1, Step 2->3, Proc 1->1
+        kl_sched.apply_move(move, active_schedule_data);
+        comm_ds.update_datastructure_after_move(move, 0, 4);
+
+        // After move: Children at {3, 4}. Min = 3. Recv at Step 2. Send still at Step 0.
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_send(0, 0), 10);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_send(1, 0), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_send(2, 0), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_send(3, 0), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_send(4, 0), 0);
+
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(0, 1), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(1, 1), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(2, 1), 10);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(3, 1), 0);
+        BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(4, 1), 0);
+    }
 }

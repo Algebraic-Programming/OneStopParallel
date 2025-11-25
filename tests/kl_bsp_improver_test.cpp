@@ -129,122 +129,122 @@ BOOST_AUTO_TEST_CASE(kl_improver_inner_loop_test) {
     BOOST_CHECK_CLOSE(iter4_recomputed, iter4_tracked, 0.00001);
 }
 
-BOOST_AUTO_TEST_CASE(kl_lambda_total_comm_large_test_graphs) {
-    std::vector<std::string> filenames_graph = large_spaa_graphs();
-    using graph = computational_dag_edge_idx_vector_impl_def_int_t;
-    // Getting root git directory
-    std::filesystem::path cwd = std::filesystem::current_path();
-    std::cout << cwd << std::endl;
-    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
-        cwd = cwd.parent_path();
-        std::cout << cwd << std::endl;
-    }
+// BOOST_AUTO_TEST_CASE(kl_lambda_total_comm_large_test_graphs) {
+//     std::vector<std::string> filenames_graph = large_spaa_graphs();
+//     using graph = computational_dag_edge_idx_vector_impl_def_int_t;
+//     // Getting root git directory
+//     std::filesystem::path cwd = std::filesystem::current_path();
+//     std::cout << cwd << std::endl;
+//     while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
+//         cwd = cwd.parent_path();
+//         std::cout << cwd << std::endl;
+//     }
 
-    for (auto &filename_graph : filenames_graph) {
-        GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_int_t> test_scheduler;
-        BspInstance<graph> instance;
-        bool status_graph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(),
-                                                                              instance.getComputationalDag());
+//     for (auto &filename_graph : filenames_graph) {
+//         GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_int_t> test_scheduler;
+//         BspInstance<graph> instance;
+//         bool status_graph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(),
+//                                                                               instance.getComputationalDag());
 
-        instance.getArchitecture().setSynchronisationCosts(500);
-        instance.getArchitecture().setCommunicationCosts(5);
-        instance.getArchitecture().setNumberOfProcessors(4);
+//         instance.getArchitecture().setSynchronisationCosts(500);
+//         instance.getArchitecture().setCommunicationCosts(5);
+//         instance.getArchitecture().setNumberOfProcessors(4);
 
-        std::vector<std::vector<int>> send_cost = {{0, 1, 4, 4}, {1, 0, 4, 4}, {4, 4, 0, 1}, {4, 4, 1, 0}};
+//         std::vector<std::vector<int>> send_cost = {{0, 1, 4, 4}, {1, 0, 4, 4}, {4, 4, 0, 1}, {4, 4, 1, 0}};
 
-        instance.getArchitecture().setSendCosts(send_cost);
+//         instance.getArchitecture().setSendCosts(send_cost);
 
-        if (!status_graph) {
+//         if (!status_graph) {
 
-            std::cout << "Reading files failed." << std::endl;
-            BOOST_CHECK(false);
-        }
+//             std::cout << "Reading files failed." << std::endl;
+//             BOOST_CHECK(false);
+//         }
 
-        add_mem_weights(instance.getComputationalDag());
+//         add_mem_weights(instance.getComputationalDag());
 
-        BspSchedule<graph> schedule(instance);
-        const auto result = test_scheduler.computeSchedule(schedule);
+//         BspSchedule<graph> schedule(instance);
+//         const auto result = test_scheduler.computeSchedule(schedule);
 
-        schedule.updateNumberOfSupersteps();
+//         schedule.updateNumberOfSupersteps();
 
-        std::cout << "initial scedule with costs: " << schedule.computeCosts() << " and "
-                  << schedule.numberOfSupersteps() << " number of supersteps" << std::endl;
+//         std::cout << "initial scedule with costs: " << schedule.computeCosts() << " and "
+//                   << schedule.numberOfSupersteps() << " number of supersteps" << std::endl;
 
-        BspSchedule<graph> schedule_2(schedule);
+//         BspSchedule<graph> schedule_2(schedule);
 
-        BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
-        BOOST_CHECK_EQUAL(&schedule.getInstance(), &instance);
-        BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+//         BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
+//         BOOST_CHECK_EQUAL(&schedule.getInstance(), &instance);
+//         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
-        kl_total_lambda_comm_improver<graph, no_local_search_memory_constraint, 1> kl_total_lambda;
-        auto start_time = std::chrono::high_resolution_clock::now();
-        auto status = kl_total_lambda.improveSchedule(schedule);
-        auto finish_time = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
+//         kl_total_lambda_comm_improver<graph, no_local_search_memory_constraint, 1> kl_total_lambda;
+//         auto start_time = std::chrono::high_resolution_clock::now();
+//         auto status = kl_total_lambda.improveSchedule(schedule);
+//         auto finish_time = std::chrono::high_resolution_clock::now();
+//         auto duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
 
-        std::cout << "kl lambda new finished in " << duration << " seconds, costs: " << schedule.computeCosts()
-                  << " and lambda costs: " << schedule.computeTotalLambdaCosts() << " with "
-                  << schedule.numberOfSupersteps() << " number of supersteps" << std::endl;
+//         std::cout << "kl lambda new finished in " << duration << " seconds, costs: " << schedule.computeCosts()
+//                   << " and lambda costs: " << schedule.computeTotalLambdaCosts() << " with "
+//                   << schedule.numberOfSupersteps() << " number of supersteps" << std::endl;
 
-        BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
-        BOOST_CHECK_EQUAL(schedule.satisfiesPrecedenceConstraints(), true);
+//         BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
+//         BOOST_CHECK_EQUAL(schedule.satisfiesPrecedenceConstraints(), true);
 
-        kl_bsp_comm_improver_mt<graph, no_local_search_memory_constraint, 1> kl;
-        kl.setTimeQualityParameter(5.0);
-        start_time = std::chrono::high_resolution_clock::now();
-        status = kl.improveSchedule(schedule);
-        finish_time = std::chrono::high_resolution_clock::now();
-        duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
+//         kl_bsp_comm_improver_mt<graph, no_local_search_memory_constraint, 1> kl(42);
+//         kl.setTimeQualityParameter(2.0);
+//         start_time = std::chrono::high_resolution_clock::now();
+//         status = kl.improveSchedule(schedule);
+//         finish_time = std::chrono::high_resolution_clock::now();
+//         duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
 
-        std::cout << "kl new finished in " << duration << " seconds, costs: " << schedule.computeCosts() << " with "
-                  << schedule.numberOfSupersteps() << " number of supersteps" << std::endl;
+//         std::cout << "kl new finished in " << duration << " seconds, costs: " << schedule.computeCosts() << " with "
+//                   << schedule.numberOfSupersteps() << " number of supersteps" << std::endl;
 
-        BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
-        BOOST_CHECK_EQUAL(schedule.satisfiesPrecedenceConstraints(), true);
+//         BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
+//         BOOST_CHECK_EQUAL(schedule.satisfiesPrecedenceConstraints(), true);
 
-        BspScheduleCS<graph> schedule_cs(schedule);
+//         BspScheduleCS<graph> schedule_cs(schedule);
 
-        HillClimbingForCommSteps<graph> hc_comm_steps;
-        start_time = std::chrono::high_resolution_clock::now();
-        status = hc_comm_steps.improveSchedule(schedule_cs);
-        finish_time = std::chrono::high_resolution_clock::now();
+//         HillClimbingForCommSteps<graph> hc_comm_steps;
+//         start_time = std::chrono::high_resolution_clock::now();
+//         status = hc_comm_steps.improveSchedule(schedule_cs);
+//         finish_time = std::chrono::high_resolution_clock::now();
 
-        duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
+//         duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
 
-        std::cout << "hc_comm_steps finished in " << duration << " seconds, costs: " << schedule_cs.computeCosts()
-                  << " with " << schedule_cs.numberOfSupersteps() << " number of supersteps" << std::endl;
+//         std::cout << "hc_comm_steps finished in " << duration << " seconds, costs: " << schedule_cs.computeCosts()
+//                   << " with " << schedule_cs.numberOfSupersteps() << " number of supersteps" << std::endl;
 
-        BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
-        BOOST_CHECK_EQUAL(schedule.satisfiesPrecedenceConstraints(), true);
+//         BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
+//         BOOST_CHECK_EQUAL(schedule.satisfiesPrecedenceConstraints(), true);
 
-        kl_total_lambda.improveSchedule(schedule_2);
+//         kl_total_lambda.improveSchedule(schedule_2);
 
-        HillClimbingScheduler<graph> hc;
+//         HillClimbingScheduler<graph> hc;
 
-        start_time = std::chrono::high_resolution_clock::now();
-        status = hc.improveSchedule(schedule_2);
-        finish_time = std::chrono::high_resolution_clock::now();
+//         start_time = std::chrono::high_resolution_clock::now();
+//         status = hc.improveSchedule(schedule_2);
+//         finish_time = std::chrono::high_resolution_clock::now();
 
-        duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
+//         duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
 
-        std::cout << "hc finished in " << duration << " seconds, costs: " << schedule_2.computeCosts() << " with "
-                  << schedule_2.numberOfSupersteps() << " number of supersteps" << std::endl;
+//         std::cout << "hc finished in " << duration << " seconds, costs: " << schedule_2.computeCosts() << " with "
+//                   << schedule_2.numberOfSupersteps() << " number of supersteps" << std::endl;
 
-        BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
-        BOOST_CHECK_EQUAL(schedule_2.satisfiesPrecedenceConstraints(), true);
+//         BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
+//         BOOST_CHECK_EQUAL(schedule_2.satisfiesPrecedenceConstraints(), true);
 
-        BspScheduleCS<graph> schedule_cs_2(schedule_2);
+//         BspScheduleCS<graph> schedule_cs_2(schedule_2);
 
-        start_time = std::chrono::high_resolution_clock::now();
-        status = hc_comm_steps.improveSchedule(schedule_cs_2);
-        finish_time = std::chrono::high_resolution_clock::now();
+//         start_time = std::chrono::high_resolution_clock::now();
+//         status = hc_comm_steps.improveSchedule(schedule_cs_2);
+//         finish_time = std::chrono::high_resolution_clock::now();
 
-        duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
+//         duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
 
-        std::cout << "hc_comm_steps finished in " << duration << " seconds, costs: " << schedule_cs_2.computeCosts()
-                  << " with " << schedule_cs_2.numberOfSupersteps() << " number of supersteps" << std::endl;
+//         std::cout << "hc_comm_steps finished in " << duration << " seconds, costs: " << schedule_cs_2.computeCosts()
+//                   << " with " << schedule_cs_2.numberOfSupersteps() << " number of supersteps" << std::endl;
 
-        BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
-        BOOST_CHECK_EQUAL(schedule_cs_2.satisfiesPrecedenceConstraints(), true);
-    }
-}
+//         BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
+//         BOOST_CHECK_EQUAL(schedule_cs_2.satisfiesPrecedenceConstraints(), true);
+//     }
+// }

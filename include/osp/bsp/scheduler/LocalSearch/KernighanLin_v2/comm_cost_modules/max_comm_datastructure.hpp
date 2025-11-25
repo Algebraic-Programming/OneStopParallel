@@ -18,9 +18,12 @@ limitations under the License.
 
 #pragma once
 
+#include "comm_cost_policies.hpp"
+#include "generic_lambda_container.hpp"
 #include "lambda_container.hpp"
 #include "osp/bsp/model/BspInstance.hpp"
 #include <algorithm>
+#include <type_traits>
 #include <unordered_map>
 #include <vector>
 
@@ -53,7 +56,7 @@ struct pre_move_comm_data {
     }
 };
 
-template<typename Graph_t, typename cost_t, typename kl_active_schedule_t>
+template<typename Graph_t, typename cost_t, typename kl_active_schedule_t, typename CommPolicy = EagerCommCostPolicy>
 struct max_comm_datastructure {
 
     using comm_weight_t = v_commw_t<Graph_t>;
@@ -73,7 +76,13 @@ struct max_comm_datastructure {
 
     comm_weight_t max_comm_weight = 0;
 
-    lambda_vector_container<VertexType> node_lambda_map;
+    // Select the appropriate container type based on the policy's ValueType
+    using ContainerType =
+        typename std::conditional<std::is_same<typename CommPolicy::ValueType, unsigned>::value,
+                                  lambda_vector_container<VertexType>,
+                                  generic_lambda_vector_container<VertexType, typename CommPolicy::ValueType>>::type;
+
+    ContainerType node_lambda_map;
 
     // Optimization: Scratchpad for update_datastructure_after_move to avoid allocations
     std::vector<unsigned> affected_steps_list;
@@ -123,9 +132,6 @@ struct max_comm_datastructure {
     }
 
     inline void arrange_superstep_comm_data(const unsigned step) {
-        // Linear scan O(P) to find max, second_max and count
-        
-        // 1. Analyze Sends
         comm_weight_t max_send = 0;
         comm_weight_t second_max_send = 0;
         unsigned max_send_count = 0;
@@ -143,7 +149,6 @@ struct max_comm_datastructure {
             }
         }
 
-        // 2. Analyze Receives
         comm_weight_t max_receive = 0;
         comm_weight_t second_max_receive = 0;
         unsigned max_receive_count = 0;
@@ -161,7 +166,6 @@ struct max_comm_datastructure {
             }
         }
 
-        // 3. Aggregate Global Stats
         const comm_weight_t global_max = std::max(max_send, max_receive);
         step_max_comm_cache[step] = global_max;
 
@@ -172,7 +176,6 @@ struct max_comm_datastructure {
             global_count += max_receive_count;
         step_max_comm_count_cache[step] = global_count;
 
-        // Determine second max
         comm_weight_t cand_send = (max_send == global_max) ? second_max_send : max_send;
         comm_weight_t cand_recv = (max_receive == global_max) ? second_max_receive : max_receive;
 
@@ -204,7 +207,7 @@ struct max_comm_datastructure {
     void update_datastructure_after_move(const kl_move &move, unsigned, unsigned) {
         const auto &graph = instance->getComputationalDag();
 
-        // --- 0. Prepare Scratchpad (Avoids Allocations) ---
+        // Prepare Scratchpad (Avoids Allocations) ---
         for (unsigned step : affected_steps_list) {
             if (step < step_is_affected.size())
                 step_is_affected[step] = false;
@@ -225,20 +228,16 @@ struct max_comm_datastructure {
         const unsigned to_proc = move.to_proc;
         const comm_weight_t comm_w_node = graph.vertex_comm_weight(node);
 
-        // --- 1. Handle Node Movement (Outgoing Edges: Node -> Children) ---
+        // Handle Node Movement (Outgoing Edges: Node -> Children)
 
         if (from_step != to_step) {
             // Case 1: Node changes Step
-            // Optimization: Fuse the loop to iterate lambda map only once.
-            
-            for (const auto [proc, count] : node_lambda_map.iterate_proc_entries(node)) {
+            for (const auto [proc, val] : node_lambda_map.iterate_proc_entries(node)) {
                 // A. Remove Old (Sender: from_proc, Receiver: proc)
                 if (proc != from_proc) {
                     const comm_weight_t cost = comm_w_node * instance->sendCosts(from_proc, proc);
-                    // Optimization: check cost > 0 to avoid dirtying cache lines with +0 ops
-                    if (cost > 0) { 
-                        step_proc_receive_[from_step][proc] -= cost;
-                        step_proc_send_[from_step][from_proc] -= cost;
+                    if (cost > 0) {
+                        CommPolicy::unattribute_communication(*this, cost, from_step, from_proc, proc, 0, val);
                     }
                 }
 
@@ -246,8 +245,7 @@ struct max_comm_datastructure {
                 if (proc != to_proc) {
                     const comm_weight_t cost = comm_w_node * instance->sendCosts(to_proc, proc);
                     if (cost > 0) {
-                        step_proc_receive_[to_step][proc] += cost;
-                        step_proc_send_[to_step][to_proc] += cost;
+                        CommPolicy::attribute_communication(*this, cost, to_step, to_proc, proc, 0, val);
                     }
                 }
             }
@@ -257,13 +255,12 @@ struct max_comm_datastructure {
         } else if (from_proc != to_proc) {
             // Case 2: Node stays in same Step, but changes Processor
 
-            for (const auto [proc, count] : node_lambda_map.iterate_proc_entries(node)) {
+            for (const auto [proc, val] : node_lambda_map.iterate_proc_entries(node)) {
                 // Remove Old (Sender: from_proc, Receiver: proc)
                 if (proc != from_proc) {
                     const comm_weight_t cost = comm_w_node * instance->sendCosts(from_proc, proc);
                     if (cost > 0) {
-                        step_proc_receive_[from_step][proc] -= cost;
-                        step_proc_send_[from_step][from_proc] -= cost;
+                        CommPolicy::unattribute_communication(*this, cost, from_step, from_proc, proc, 0, val);
                     }
                 }
 
@@ -271,17 +268,16 @@ struct max_comm_datastructure {
                 if (proc != to_proc) {
                     const comm_weight_t cost = comm_w_node * instance->sendCosts(to_proc, proc);
                     if (cost > 0) {
-                        step_proc_receive_[from_step][proc] += cost;
-                        step_proc_send_[from_step][to_proc] += cost;
+                        CommPolicy::attribute_communication(*this, cost, from_step, to_proc, proc, 0, val);
                     }
                 }
             }
             mark_step(from_step);
         }
 
-        // --- 2. Update Parents' Outgoing Communication (Parents → Node) ---
+        // Update Parents' Outgoing Communication (Parents → Node)
 
-        if (from_proc != to_proc) {
+        if (from_proc != to_proc || from_step != to_step) {
             for (const auto &parent : graph.parents(node)) {
                 const unsigned parent_step = active_schedule->assigned_superstep(parent);
                 // Fast boundary check
@@ -291,27 +287,30 @@ struct max_comm_datastructure {
                 const unsigned parent_proc = active_schedule->assigned_processor(parent);
                 const comm_weight_t comm_w_parent = graph.vertex_comm_weight(parent);
 
-                const bool removed_from_proc = node_lambda_map.decrease_proc_count(parent, from_proc);
-                const bool added_to_proc = node_lambda_map.increase_proc_count(parent, to_proc);
+                auto &val = node_lambda_map.get_proc_entry(parent, from_proc);
+                const bool removed_from_proc = CommPolicy::remove_child(val, from_step);
 
                 // 1. Handle Removal from from_proc
                 if (removed_from_proc) {
                     if (from_proc != parent_proc) {
                         const comm_weight_t cost = comm_w_parent * instance->sendCosts(parent_proc, from_proc);
                         if (cost > 0) {
-                            step_proc_send_[parent_step][parent_proc] -= cost;
-                            step_proc_receive_[parent_step][from_proc] -= cost;
+                            CommPolicy::unattribute_communication(*this, cost, parent_step, parent_proc, from_proc,
+                                                                  from_step, val);
                         }
                     }
                 }
+
+                auto &val_to = node_lambda_map.get_proc_entry(parent, to_proc);
+                const bool added_to_proc = CommPolicy::add_child(val_to, to_step);
 
                 // 2. Handle Addition to to_proc
                 if (added_to_proc) {
                     if (to_proc != parent_proc) {
                         const comm_weight_t cost = comm_w_parent * instance->sendCosts(parent_proc, to_proc);
                         if (cost > 0) {
-                            step_proc_send_[parent_step][parent_proc] += cost;
-                            step_proc_receive_[parent_step][to_proc] += cost;
+                            CommPolicy::attribute_communication(*this, cost, parent_step, parent_proc, to_proc, to_step,
+                                                                val_to);
                         }
                     }
                 }
@@ -320,7 +319,7 @@ struct max_comm_datastructure {
             }
         }
 
-        // --- 3. Re-arrange Affected Steps ---
+        // Re-arrange Affected Steps
         for (unsigned step : affected_steps_list) {
             arrange_superstep_comm_data(step);
         }
@@ -358,26 +357,27 @@ struct max_comm_datastructure {
 
             for (const auto &v : graph.children(u)) {
                 const unsigned v_proc = vec_sched.assignedProcessor(v);
-                const unsigned v_step = vec_sched.assignedSuperstep(v);                
-                const comm_weight_t comm_w_send_cost = (u_proc != v_proc) ? comm_w * instance->sendCosts(u_proc, v_proc) : 0;
-                
-                if (node_lambda_map.increase_proc_count(u, v_proc)) {
+                const unsigned v_step = vec_sched.assignedSuperstep(v);
+
+                const comm_weight_t comm_w_send_cost =
+                    (u_proc != v_proc) ? comm_w * instance->sendCosts(u_proc, v_proc) : 0;
+
+                auto &val = node_lambda_map.get_proc_entry(u, v_proc);
+                if (CommPolicy::add_child(val, v_step)) {
                     if (u_proc != v_proc && comm_w_send_cost > 0) {
-                        attribute_communication(comm_w_send_cost, u_step, u_proc, v_proc, v_step);
+                        CommPolicy::attribute_communication(*this, comm_w_send_cost, u_step, u_proc, v_proc, v_step,
+                                                            val);
                     }
                 }
             }
         }
 
         for (unsigned step = start_step; step <= end_step; step++) {
+            if (step >= step_proc_send_.size()) {
+                continue;
+            }
             arrange_superstep_comm_data(step);
         }
-    }
-
-    inline void attribute_communication(const comm_weight_t &comm_w_send_cost, const unsigned u_step, const unsigned u_proc, const unsigned v_proc,
-                                        const unsigned) {
-        step_proc_receive_[u_step][v_proc] += comm_w_send_cost;
-        step_proc_send_[u_step][u_proc] += comm_w_send_cost;
     }
 };
 
