@@ -21,10 +21,10 @@ limitations under the License.
 #include <callbackbase.h>
 #include <coptcpp_pch.h>
 
+#include "osp/auxiliary/io/DotFileWriter.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_total_comm.hpp"
 #include "osp/bsp/scheduler/Scheduler.hpp"
 #include "osp/graph_algorithms/directed_graph_edge_view.hpp"
-#include "osp/auxiliary/io/DotFileWriter.hpp"
 
 namespace osp {
 
@@ -76,9 +76,9 @@ class TotalCommunicationScheduler : public Scheduler<Graph_t> {
 
                         auto sched = constructBspScheduleFromCallback();
                         DotFileWriter sched_writer;
-                        sched_writer.write_schedule(write_solutions_path_cb + "intmed_sol_" + solution_file_prefix_cb + "_" +
-                                                   std::to_string(counter) + "_schedule.dot",
-                                               sched);
+                        sched_writer.write_schedule(write_solutions_path_cb + "intmed_sol_" + solution_file_prefix_cb +
+                                                        "_" + std::to_string(counter) + "_schedule.dot",
+                                                    sched);
                         counter++;
                     }
 
@@ -95,8 +95,8 @@ class TotalCommunicationScheduler : public Scheduler<Graph_t> {
 
                 for (unsigned processor = 0; processor < instance_ptr->numberOfProcessors(); processor++) {
 
-                    for (unsigned step = 0; step < static_cast<unsigned>((*node_to_processor_superstep_var_ptr)[0][0].Size());
-                         step++) {
+                    for (unsigned step = 0;
+                         step < static_cast<unsigned>((*node_to_processor_superstep_var_ptr)[0][0].Size()); step++) {
 
                         assert(size < std::numeric_limits<int>::max());
                         if (GetSolution(
@@ -170,8 +170,8 @@ class TotalCommunicationScheduler : public Scheduler<Graph_t> {
 
                 for (unsigned processor = 0; processor < instance_ptr->numberOfProcessors(); processor++) {
 
-                    for (unsigned step = 0; step < static_cast<unsigned>((*node_to_processor_superstep_var_ptr)[0][0].Size());
-                         step++) {
+                    for (unsigned step = 0;
+                         step < static_cast<unsigned>((*node_to_processor_superstep_var_ptr)[0][0].Size()); step++) {
                         assert(step <= std::numeric_limits<int>::max());
                         if (GetSolution(
                                 (*node_to_processor_superstep_var_ptr)[node][processor][static_cast<int>(step)]) >=
@@ -203,8 +203,8 @@ class TotalCommunicationScheduler : public Scheduler<Graph_t> {
 
                 for (unsigned processor = 0; processor < instance_ptr->numberOfProcessors(); processor++) {
 
-                    for (unsigned step = 0; step < static_cast<unsigned>((*node_to_processor_superstep_var_ptr)[0][0].Size());
-                         step++) {
+                    for (unsigned step = 0;
+                         step < static_cast<unsigned>((*node_to_processor_superstep_var_ptr)[0][0].Size()); step++) {
 
                         if (schedule.assignedProcessor(node) == processor && schedule.assignedSuperstep(node) == step) {
                             assert(step <= std::numeric_limits<int>::max());
@@ -425,7 +425,8 @@ class TotalCommunicationScheduler : public Scheduler<Graph_t> {
         model.AddConstr(superstep_used_var[0] == 1);
 
         for (unsigned int step = 0; step < max_number_supersteps - 1; step++) {
-            model.AddConstr(superstep_used_var[static_cast<int>(step)] >= superstep_used_var[static_cast<int>(step + 1)]);
+            model.AddConstr(superstep_used_var[static_cast<int>(step)] >=
+                            superstep_used_var[static_cast<int>(step + 1)]);
         }
 
         // superstep is used at all
@@ -579,7 +580,7 @@ class TotalCommunicationScheduler : public Scheduler<Graph_t> {
                     Expr expr_work;
                     for (const auto &node : instance.vertices()) {
                         expr_work += instance.getComputationalDag().vertex_work_weight(node) *
-                                node_to_processor_superstep_var[node][processor][static_cast<int>(step)];
+                                     node_to_processor_superstep_var[node][processor][static_cast<int>(step)];
                     }
 
                     model.AddConstr(max_work_superstep_var[static_cast<int>(step)] >= expr_work);
@@ -632,6 +633,11 @@ class TotalCommunicationScheduler : public Scheduler<Graph_t> {
 
     virtual ~TotalCommunicationScheduler() = default;
 
+    virtual RETURN_STATUS computeScheduleWithTimeLimit(BspSchedule<Graph_t> &schedule, unsigned timeout) override {
+        model.SetDblParam(COPT_DBLPARAM_TIMELIMIT, timeout);
+        return computeSchedule(schedule);
+    }
+
     /**
      * @brief Compute the schedule for the given BspInstance using the COPT solver.
      *
@@ -662,13 +668,11 @@ class TotalCommunicationScheduler : public Scheduler<Graph_t> {
             loadInitialSchedule();
         }
 
-        model.SetDblParam(COPT_DBLPARAM_TIMELIMIT, Scheduler<Graph_t>::timeLimitSeconds);
+        
         model.SetIntParam(COPT_INTPARAM_THREADS, 128);
-
         model.SetIntParam(COPT_INTPARAM_STRONGBRANCHING, 1);
         model.SetIntParam(COPT_INTPARAM_LPMETHOD, 1);
         model.SetIntParam(COPT_INTPARAM_ROUNDINGHEURLEVEL, 1);
-
         model.SetIntParam(COPT_INTPARAM_SUBMIPHEURLEVEL, 1);
         // model.SetIntParam(COPT_INTPARAM_PRESOLVE, 1);
         // model.SetIntParam(COPT_INTPARAM_CUTLEVEL, 0);

@@ -70,6 +70,8 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
     bool use_initial_schedule_recomp = false;
     const BspScheduleRecomp<Graph_t> *initial_schedule_recomp;
 
+    unsigned timeLimitSeconds = 0;
+
     bool write_solutions_found;
     std::string write_solutions_path;
     std::string solution_file_prefix;
@@ -869,6 +871,13 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
             return status;
         }
     }
+
+    virtual RETURN_STATUS computeScheduleWithTimeLimit(BspSchedule<Graph_t> &schedule, unsigned timeLimit) {
+
+        timeLimitSeconds = timeLimit;
+        return computeSchedule(schedule);
+    }
+
     virtual RETURN_STATUS computeMaxBspSchedule(MaxBspSchedule<Graph_t> &schedule) {
 
         MaxBspScheduleCS<Graph_t> schedule_cs(schedule.getInstance());
@@ -934,7 +943,9 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
 
     virtual void computeScheduleBase(const BspScheduleRecomp<Graph_t> &schedule, Model &model) {
     
-        model.SetDblParam(COPT_DBLPARAM_TIMELIMIT, Scheduler<Graph_t>::timeLimitSeconds);
+        if (timeLimitSeconds > 0) {
+            model.SetDblParam(COPT_DBLPARAM_TIMELIMIT, timeLimitSeconds);
+        }
         model.SetIntParam(COPT_INTPARAM_THREADS, 128);
 
         model.SetIntParam(COPT_INTPARAM_STRONGBRANCHING, 1);

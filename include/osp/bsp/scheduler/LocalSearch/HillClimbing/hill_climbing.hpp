@@ -22,6 +22,8 @@ limitations under the License.
 #include "osp/bsp/scheduler/ImprovementScheduler.hpp"
 #include "osp/graph_algorithms/directed_graph_top_sort.hpp"
 
+#include <chrono>
+
 namespace osp{
 
 template<typename Graph_t>

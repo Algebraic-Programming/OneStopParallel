@@ -18,67 +18,37 @@ limitations under the License.
 
 #pragma once
 
-#include <chrono>
-#include <iostream>
 #include "osp/bsp/model/BspInstance.hpp"
 #include "osp/bsp/model/BspSchedule.hpp"
 #include "osp/bsp/model/BspScheduleCS.hpp"
 #include "osp/concepts/computational_dag_concept.hpp"
+#include <string>
 
 namespace osp {
 
-
-
 /**
  * @class Scheduler
- * @brief Abstract base class for scheduling scheduler.
+ * @brief Interface for BSP schedulers.
  *
- * The Scheduler class provides a common interface for scheduling scheduler in the BSP scheduling system.
- * It defines methods for setting and getting the time limit, as well as computing schedules.
+ * The Scheduler class defines the common interface for all scheduling algorithms computing BSP schedules.
+ * It specifies the contract for computing standard BSP schedules (BspSchedule) and communication-aware schedules
+ * (BspScheduleCS).
  */
 template<typename Graph_t>
 class Scheduler {
 
-    static_assert(is_computational_dag_v<Graph_t>, "BspSchedule can only be used with computational DAGs.");
-
-  protected:
-    unsigned int timeLimitSeconds; /**< The time limit in seconds for computing a schedule. */
+    static_assert(is_computational_dag_v<Graph_t>, "Scheduler can only be used with computational DAGs.");
 
   public:
     /**
      * @brief Constructor for the Scheduler class.
-     * @param timelimit The time limit in seconds for computing a schedule. Default is 3600 seconds (1 hour).
      */
-    Scheduler(unsigned timelimit = 3600) : timeLimitSeconds(timelimit) {}
+    Scheduler() = default;
 
     /**
      * @brief Destructor for the Scheduler class.
      */
     virtual ~Scheduler() = default;
-
-    /**
-     * @brief Set the time limit in seconds for computing a schedule.
-     * @param limit The time limit in seconds.
-     */
-    virtual void setTimeLimitSeconds(unsigned int limit) { timeLimitSeconds = limit; }
-
-    /**
-     * @brief Set the time limit in hours for computing a schedule.
-     * @param limit The time limit in hours.
-     */
-    virtual void setTimeLimitHours(unsigned int limit) { timeLimitSeconds = limit * 3600; }
-
-    /**
-     * @brief Get the time limit in seconds for computing a schedule.
-     * @return The time limit in seconds.
-     */
-    inline unsigned int getTimeLimitSeconds() const { return timeLimitSeconds; }
-
-    /**
-     * @brief Get the time limit in hours for computing a schedule.
-     * @return The time limit in hours.
-     */
-    inline unsigned int getTimeLimitHours() const { return timeLimitSeconds / 3600; }
 
     /**
      * @brief Get the name of the scheduling algorithm.
@@ -87,12 +57,27 @@ class Scheduler {
     virtual std::string getScheduleName() const = 0;
 
     /**
-     * @brief Compute a BSP schedule for the given BSP instance.
-     * @param instance The BSP instance for which to compute the schedule.
-     * @return A pair containing the return status and the computed schedule.
+     * @brief Computes a BSP schedule for the given BSP instance.
+     *
+     * This pure virtual function must be implemented by derived classes to provide
+     * the specific scheduling logic. It modifies the passed BspSchedule object.
+     *
+     * @param schedule The BspSchedule object to be computed. It contains the BspInstance.
+     * @return RETURN_STATUS::OSP_SUCCESS if a schedule was successfully computed,
+     *         RETURN_STATUS::ERROR if an error occurred, or other status codes as appropriate.
      */
     virtual RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &schedule) = 0;
 
+    /**
+     * @brief Computes a BSP schedule with communication schedule (CS).
+     *
+     * This method provides a default implementation that first computes the basic BSP schedule using computeSchedule().
+     * If successful, it then calls setAutoCommunicationSchedule() on the schedule to set a communication schedule.
+     *
+     * @param schedule The BspScheduleCS object to be computed. It contains the BspInstance.
+     * @return RETURN_STATUS::OSP_SUCCESS or RETURN_STATUS::BEST_FOUND if a schedule was successfully computed,
+     *         RETURN_STATUS::ERROR if an error occurred, or other status codes as appropriate.
+     */
     virtual RETURN_STATUS computeScheduleCS(BspScheduleCS<Graph_t> &schedule) {
 
         auto result = computeSchedule(schedule);
@@ -103,35 +88,6 @@ class Scheduler {
             return RETURN_STATUS::ERROR;
         }
     }
-
-    // /**
-    //  * @brief Compute a schedule for the given BSP instance within the time limit.
-    //  * @param instance The BSP instance for which to compute the schedule.
-    //  * @return A pair containing the return status and the computed schedule.
-    //  */
-    // virtual std::pair<RETURN_STATUS, BspSchedule<Graph_t>>
-    // computeScheduleWithTimeLimit(const BspInstance<Graph_t> &instance) {
-
-    //     std::packaged_task<std::pair<RETURN_STATUS, BspSchedule<Graph_t>>(const BspInstance<Graph_t> &)> task(
-    //         [this](const BspInstance<Graph_t> &instance) -> std::pair<RETURN_STATUS, BspSchedule<Graph_t>> {
-    //             return computeSchedule(instance);
-    //         });
-    //     auto future = task.get_future();
-    //     std::thread thr(std::move(task), std::ref(instance));
-    //     if (future.wait_for(std::chrono::seconds(getTimeLimitSeconds())) == std::future_status::timeout) {
-    //         thr.detach(); // we leave the thread still running
-    //         std::cerr << "Timeout reached, execution of computeSchedule() aborted" << std::endl;
-    //         return std::make_pair(TIMEOUT, BspSchedule<Graph_t>());
-    //     }
-    //     thr.join();
-    //     try {
-    //         const auto result = future.get();
-    //         return result;
-    //     } catch (const std::exception &e) {
-    //         std::cerr << "Exception caught in computeScheduleWithTimeLimit(): " << e.what() << std::endl;
-    //         return std::make_pair(ERROR, BspSchedule<Graph_t>());
-    //     }
-    // }
 };
 
 } // namespace osp
