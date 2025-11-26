@@ -102,20 +102,6 @@ class ComboScheduler : public Scheduler<Graph_t> {
     ComboScheduler(Scheduler<Graph_t> &base, ImprovementScheduler<Graph_t> &improvement)
         : Scheduler<Graph_t>(), base_scheduler(base), improvement_scheduler(improvement) {}
 
-    virtual void setTimeLimitSeconds(unsigned int limit) override {
-
-        Scheduler<Graph_t>::timeLimitSeconds = limit;
-        base_scheduler.setTimeLimitSeconds(limit);
-        improvement_scheduler.setTimeLimitSeconds(limit);
-    }
-
-    virtual void setTimeLimitHours(unsigned int limit) override {
-
-        Scheduler<Graph_t>::timeLimitSeconds = limit * 3600;
-        base_scheduler.setTimeLimitHours(limit);
-        improvement_scheduler.setTimeLimitHours(limit);
-    }
-
     virtual ~ComboScheduler() = default;
 
     virtual std::string getScheduleName() const override {

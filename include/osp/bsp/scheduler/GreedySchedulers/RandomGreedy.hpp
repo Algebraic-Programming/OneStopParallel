@@ -37,9 +37,8 @@ class RandomGreedy : public Scheduler<Graph_t> {
     bool ensure_enough_sources;
 
   public:
-    RandomGreedy(bool ensure_enough_sources_ = true) : ensure_enough_sources(ensure_enough_sources_) {};
-    RandomGreedy(unsigned time_limit, bool ensure_enough_sources_)
-        : Scheduler<Graph_t>(time_limit), ensure_enough_sources(ensure_enough_sources_) {};
+
+    RandomGreedy(bool ensure_enough_sources_ = true) : Scheduler<Graph_t>(), ensure_enough_sources(ensure_enough_sources_) {};
 
     RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &sched) override {
 

@@ -34,9 +34,8 @@ class GreedyChildren : public Scheduler<Graph_t> {
     bool ensure_enough_sources;
 
   public:
-    GreedyChildren(bool ensure_enough_sources_ = true) : ensure_enough_sources(ensure_enough_sources_) {};
-    GreedyChildren(unsigned time_limit, bool ensure_enough_sources_ = true)
-        : Scheduler<Graph_t>(time_limit), ensure_enough_sources(ensure_enough_sources_) {};
+
+    GreedyChildren(bool ensure_enough_sources_ = true) : Scheduler<Graph_t>(), ensure_enough_sources(ensure_enough_sources_) {};
 
     RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &sched) override {
 
@@ -75,7 +74,7 @@ class GreedyChildren : public Scheduler<Graph_t> {
                         if (nodes_assigned_this_superstep.count(par)) {
                             if (!processor_set) {
                                 const unsigned par_proc = sched.assignedProcessor(par);
-                                if(!instance.isCompatible(node, par_proc)) {
+                                if (!instance.isCompatible(node, par_proc)) {
                                     failed_to_allocate = true;
                                     break;
                                 }
@@ -106,7 +105,7 @@ class GreedyChildren : public Scheduler<Graph_t> {
                             }
                         }
                         sched.setAssignedProcessor(node, best_proc);
-                    } 
+                    }
 
                     nodes_assigned_this_superstep.emplace(node);
                     processor_weights[sched.assignedProcessor(node)] += graph.vertex_work_weight(node);

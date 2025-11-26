@@ -20,16 +20,17 @@ limitations under the License.
 
 #include "Scheduler.hpp"
 #include <deque>
-#include <vector>
 #include <limits>
 #include <string>
+#include <vector>
 namespace osp {
 
 /**
  * @class Serial
- * @brief The Serial class represents a scheduler that assigns all tasks to a single processor in a serial manner. 
- * If the architecture is heterogeneous, it assigns tasks to one processor of each type computing a schedule with the smallest number of supersteps.
- * 
+ * @brief The Serial class represents a scheduler that assigns all tasks to a single processor in a serial manner.
+ * If the architecture is heterogeneous, it assigns tasks to one processor of each type computing a schedule with the
+ * smallest number of supersteps.
+ *
  */
 template<typename Graph_t>
 class Serial : public Scheduler<Graph_t> {
@@ -39,12 +40,6 @@ class Serial : public Scheduler<Graph_t> {
      * @brief Default constructor for Serial.
      */
     Serial() : Scheduler<Graph_t>() {}
-
-    /**
-     * @brief Constructor for Serial with a time limit.
-     * @param timelimit The time limit in seconds for computing a schedule. Default is 3600 seconds (1 hour).
-     */
-    Serial(unsigned timelimit) : Scheduler<Graph_t>(timelimit) {}
 
     /**
      * @brief Default destructor for Serial.
@@ -131,8 +126,8 @@ class Serial : public Scheduler<Graph_t> {
                         schedule.setAssignedSuperstep(v, current_superstep);
                         scheduled = true;
                         ++scheduled_nodes_count;
-                        break;                            
-                    }                    
+                        break;
+                    }
                 }
 
                 if (not scheduled) {
@@ -150,7 +145,7 @@ class Serial : public Scheduler<Graph_t> {
                 current_superstep++;
                 ready_nodes.insert(ready_nodes.end(), deferred_nodes.begin(), deferred_nodes.end());
                 deferred_nodes.clear();
-            } 
+            }
         }
 
         schedule.setNumberOfSupersteps(current_superstep + 1);

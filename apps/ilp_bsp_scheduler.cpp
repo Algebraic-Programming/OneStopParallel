@@ -90,8 +90,7 @@ int main(int argc, char *argv[]) {
 
     CoptFullScheduler<ComputationalDag> scheduler;
     scheduler.setMaxNumberOfSupersteps(steps);
-    scheduler.setTimeLimitHours(48);
-
+    
     if (recomp) {
 
         BspScheduleRecomp<ComputationalDag> schedule(instance);
