@@ -59,7 +59,6 @@ namespace osp {
 const std::set<std::string> get_available_bsp_scheduler_names() {
     return {"Serial",         "GreedyBsp", "GrowLocal", "BspLocking",  "Cilk",    "Etf",     "GreedyRandom",
             "GreedyChildren", "Variance",  "MultiHC",   "LocalSearch", "Coarser", "FullILP", "MultiLevel"};
-    ;
 }
 
 template<typename Graph_t>
