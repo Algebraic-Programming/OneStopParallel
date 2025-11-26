@@ -65,14 +65,14 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
     bool is_max_bsp = false;
     bool use_memory_constraint;
     bool use_initial_schedule = false;
-    const BspScheduleCS<Graph_t> *initial_schedule;
-
+    bool write_solutions_found;
     bool use_initial_schedule_recomp = false;
-    const BspScheduleRecomp<Graph_t> *initial_schedule_recomp;
 
     unsigned timeLimitSeconds = 0;
 
-    bool write_solutions_found;
+    const BspScheduleCS<Graph_t> *initial_schedule;
+    const BspScheduleRecomp<Graph_t> *initial_schedule_recomp;
+    
     std::string write_solutions_path;
     std::string solution_file_prefix;
 
@@ -824,8 +824,8 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
 
   public:
     CoptFullScheduler(unsigned steps = 5)
-        : allow_recomputation(false), use_memory_constraint(false), use_initial_schedule(false), initial_schedule(0),
-          write_solutions_found(false), max_number_supersteps(steps) {
+        : allow_recomputation(false), use_memory_constraint(false), use_initial_schedule(false), 
+          write_solutions_found(false), initial_schedule(0), max_number_supersteps(steps) {
 
         // solution_callback.comm_processor_to_processor_superstep_node_var_ptr =
         //     &comm_processor_to_processor_superstep_node_var;
@@ -834,7 +834,7 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
 
     CoptFullScheduler(const BspScheduleCS<Graph_t> &schedule)
         : allow_recomputation(false), use_memory_constraint(false), use_initial_schedule(true),
-          initial_schedule(&schedule), write_solutions_found(false),
+          write_solutions_found(false), initial_schedule(&schedule),
           max_number_supersteps(schedule.numberOfSupersteps()) {
 
         // solution_callback.comm_processor_to_processor_superstep_node_var_ptr =
@@ -844,7 +844,7 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
 
         CoptFullScheduler(const BspScheduleRecomp<Graph_t> &schedule)
         : allow_recomputation(true), use_memory_constraint(false), use_initial_schedule_recomp(true),
-          initial_schedule_recomp(&schedule), write_solutions_found(false),
+          write_solutions_found(false), initial_schedule_recomp(&schedule),
           max_number_supersteps(schedule.numberOfSupersteps()) {
     }
 
