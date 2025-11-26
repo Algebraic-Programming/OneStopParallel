@@ -156,7 +156,6 @@ std::unique_ptr<Scheduler<Graph_t>> get_base_bsp_scheduler_by_name(const ConfigP
         if (id == "MultiHC") {
             auto scheduler = std::make_unique<MultiLevelHillClimbingScheduler<Graph_t>>();
             const unsigned timeLimit = parser.global_params.get_child("timeLimit").get_value<unsigned>();
-            // scheduler->setTimeLimitSeconds(timeLimit);
 
             unsigned step = algorithm.get_child("parameters").get_child("hill_climbing_steps").get_value<unsigned>();
             scheduler->setNumberOfHcSteps(step);
