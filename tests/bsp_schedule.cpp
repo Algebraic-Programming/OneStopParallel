@@ -19,21 +19,25 @@ limitations under the License.
 #define BOOST_TEST_MODULE Bsp_Architecture
 #include <boost/test/unit_test.hpp>
 
+#include "osp/auxiliary/io/DotFileWriter.hpp"
+#include "osp/auxiliary/io/arch_file_reader.hpp"
+#include "osp/auxiliary/io/general_file_reader.hpp"
+#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 #include "osp/bsp/model/BspInstance.hpp"
 #include "osp/bsp/model/BspSchedule.hpp"
 #include "osp/bsp/model/BspScheduleCS.hpp"
+#include "osp/bsp/model/BspScheduleRecomp.hpp"
 #include "osp/bsp/model/MaxBspSchedule.hpp"
 #include "osp/bsp/model/MaxBspScheduleCS.hpp"
-#include "osp/bsp/model/BspScheduleRecomp.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
-#include "osp/auxiliary/io/DotFileWriter.hpp"
-#include "osp/auxiliary/io/arch_file_reader.hpp"
-#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
-#include "osp/auxiliary/io/general_file_reader.hpp"
 #include <filesystem>
 #include <iostream>
 
+#include "osp/bsp/model/cost/BufferedSendingCost.hpp"
+#include "osp/bsp/model/cost/LazyCommunicationCost.hpp"
+#include "osp/bsp/model/cost/TotalCommunicationCost.hpp"
+#include "osp/bsp/model/cost/TotalLambdaCommunicationCost.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/BspLocking.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/CilkScheduler.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/EtfScheduler.hpp"
@@ -70,7 +74,7 @@ BOOST_AUTO_TEST_CASE(test_instance_bicgstab) {
     BOOST_CHECK_EQUAL(instance.getComputationalDag().num_vertices(), 54);
     BOOST_CHECK_EQUAL(instance.getComputationalDag().num_vertex_types(), 1);
 
-    std::vector<Scheduler<graph> *> schedulers = {new BspLocking<graph>(),         new EtfScheduler<graph>(),
+    std::vector<Scheduler<graph> *> schedulers = {new BspLocking<graph>(), new EtfScheduler<graph>(),
                                                   new GreedyBspScheduler<graph>(), new GreedyChildren<graph>(),
                                                   new GrowLocalAutoCores<graph>(), new VarianceFillup<graph>()};
 
@@ -93,8 +97,8 @@ BOOST_AUTO_TEST_CASE(test_instance_bicgstab) {
         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
         BOOST_CHECK_EQUAL(schedule.computeCosts(), expected_bsp_costs[i]);
-        BOOST_CHECK_EQUAL(schedule.computeTotalCosts(), expected_total_costs[i]);
-        BOOST_CHECK_EQUAL(schedule.computeBufferedSendingCosts(), expected_buffered_sending_costs[i]);
+        BOOST_CHECK_EQUAL(TotalCommunicationCost<graph>()(schedule), expected_total_costs[i]);
+        BOOST_CHECK_EQUAL(BufferedSendingCost<graph>()(schedule), expected_buffered_sending_costs[i]);
         BOOST_CHECK_EQUAL(schedule.numberOfSupersteps(), expected_supersteps[i]);
 
         BspScheduleCS<graph> schedule_cs(instance);
@@ -118,7 +122,6 @@ BOOST_AUTO_TEST_CASE(test_instance_bicgstab) {
     BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
     BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
     BOOST_CHECK_EQUAL(schedule.numberOfSupersteps(), 1);
-
 }
 
 BOOST_AUTO_TEST_CASE(test_schedule_writer) {
@@ -230,7 +233,7 @@ BOOST_AUTO_TEST_CASE(test_bsp_schedule_cs) {
     }
 
     file_reader::readGraph((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(),
-                                                    instance.getComputationalDag());
+                           instance.getComputationalDag());
 
     BspSchedule<graph> schedule(instance);
     BspLocking<graph> scheduler;
@@ -337,7 +340,7 @@ BOOST_AUTO_TEST_CASE(test_max_bsp_schedule) {
 
     BspInstance<graph> instance;
     instance.setNumberOfProcessors(2);
-    instance.setCommunicationCosts(10); // g=10
+    instance.setCommunicationCosts(10);    // g=10
     instance.setSynchronisationCosts(100); // l=100 (not used in MaxBspSchedule cost model)
 
     auto &dag = instance.getComputationalDag();
@@ -419,7 +422,7 @@ BOOST_AUTO_TEST_CASE(test_max_bsp_schedule_cs) {
 
     BspInstance<graph> instance;
     instance.setNumberOfProcessors(2);
-    instance.setCommunicationCosts(10); // g=10
+    instance.setCommunicationCosts(10);    // g=10
     instance.setSynchronisationCosts(100); // l=100
 
     auto &dag = instance.getComputationalDag();

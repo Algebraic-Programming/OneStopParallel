@@ -27,6 +27,7 @@ limitations under the License.
 #include <vector>
 
 #include "BspSchedule.hpp"
+#include "osp/bsp/model/cost/CostModelHelpers.hpp"
 #include "osp/concepts/computational_dag_concept.hpp"
 
 namespace osp {
@@ -41,14 +42,12 @@ template<typename Graph_t>
 class MaxBspSchedule : public BspSchedule<Graph_t> {
 
     static_assert(is_computational_dag_v<Graph_t>, "BspSchedule can only be used with computational DAGs.");
-    static_assert(std::is_same_v<v_workw_t<Graph_t>, v_commw_t<Graph_t> >, "BspSchedule requires work and comm. weights to have the same type.");
+    static_assert(std::is_same_v<v_workw_t<Graph_t>, v_commw_t<Graph_t>>, "BspSchedule requires work and comm. weights to have the same type.");
 
   protected:
     using vertex_idx = vertex_idx_t<Graph_t>;
-   
 
   public:
-  
     MaxBspSchedule() = delete;
 
     /**
@@ -67,7 +66,7 @@ class MaxBspSchedule : public BspSchedule<Graph_t> {
      * @param superstep_assignment_ The superstep assignment for the nodes.
      */
     MaxBspSchedule(const BspInstance<Graph_t> &inst, const std::vector<unsigned> &processor_assignment_,
-                const std::vector<unsigned> &superstep_assignment_) : BspSchedule<Graph_t>(inst, processor_assignment_, superstep_assignment_) {}
+                   const std::vector<unsigned> &superstep_assignment_) : BspSchedule<Graph_t>(inst, processor_assignment_, superstep_assignment_) {}
 
     MaxBspSchedule(const IBspSchedule<Graph_t> &schedule) : BspSchedule<Graph_t>(schedule) {}
 
@@ -89,26 +88,23 @@ class MaxBspSchedule : public BspSchedule<Graph_t> {
      */
     virtual ~MaxBspSchedule() = default;
 
-    virtual v_workw_t<Graph_t> computeCosts() const override { 
-        
-        std::vector<std::vector<v_commw_t<Graph_t>>> rec(this->instance->numberOfProcessors(),
-                                                         std::vector<v_commw_t<Graph_t>>(this->number_of_supersteps, 0));
+    virtual v_workw_t<Graph_t> computeCosts() const override {
 
-        std::vector<std::vector<v_commw_t<Graph_t>>> send(this->instance->numberOfProcessors(),
-                                                          std::vector<v_commw_t<Graph_t>>(this->number_of_supersteps, 0));
+        std::vector<std::vector<v_commw_t<Graph_t>>> rec(this->instance->numberOfProcessors(), std::vector<v_commw_t<Graph_t>>(this->number_of_supersteps, 0));
+        std::vector<std::vector<v_commw_t<Graph_t>>> send(this->instance->numberOfProcessors(), std::vector<v_commw_t<Graph_t>>(this->number_of_supersteps, 0));
 
-        this->compute_lazy_communication_costs_helper(rec, send);
-        const std::vector<v_commw_t<Graph_t>> max_comm_per_step = this->compute_max_comm_per_step_helper(rec, send);
-        const std::vector<v_workw_t<Graph_t>> max_work_per_step = this->compute_max_work_per_step_helper();
+        cost_helpers::compute_lazy_communication_costs(*this, rec, send);
+        const std::vector<v_commw_t<Graph_t>> max_comm_per_step = cost_helpers::compute_max_comm_per_step(*this, rec, send);
+        const std::vector<v_workw_t<Graph_t>> max_work_per_step = cost_helpers::compute_max_work_per_step(*this);
 
         v_workw_t<Graph_t> costs = 0U;
         for (unsigned step = 0U; step < this->number_of_supersteps; step++) {
-            v_commw_t<Graph_t> step_comm_cost = (step == 0U) ? static_cast<v_commw_t<Graph_t>>(0) : max_comm_per_step[step - 1U];
-            if (step_comm_cost > static_cast<v_commw_t<Graph_t>>(0)) {
-                step_comm_cost += this->instance->synchronisationCosts();
-            }
+            const v_commw_t<Graph_t> step_comm_cost = (step == 0U) ? static_cast<v_commw_t<Graph_t>>(0) : max_comm_per_step[step - 1U];
             costs += std::max(step_comm_cost, max_work_per_step[step]);
-            
+
+            if (step_comm_cost > static_cast<v_commw_t<Graph_t>>(0)) {
+                costs += this->instance->synchronisationCosts();
+            }
         }
         return costs;
     }

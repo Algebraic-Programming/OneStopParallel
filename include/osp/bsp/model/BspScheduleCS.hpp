@@ -25,9 +25,8 @@ limitations under the License.
 #include <stdexcept>
 #include <vector>
 
-
-#include "IBspScheduleEval.hpp"
 #include "BspSchedule.hpp"
+#include "IBspScheduleEval.hpp"
 
 namespace osp {
 
@@ -64,8 +63,7 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
     std::map<KeyTriple, unsigned> commSchedule;
 
   protected:
-
-    void compute_cs_communication_costs_helper(std::vector<std::vector<v_commw_t<Graph_t>>> & rec, std::vector<std::vector<v_commw_t<Graph_t>>> & send) const {        
+    void compute_cs_communication_costs_helper(std::vector<std::vector<v_commw_t<Graph_t>>> &rec, std::vector<std::vector<v_commw_t<Graph_t>>> &send) const {
         for (auto const &[key, val] : commSchedule) {
             send[std::get<1>(key)][val] +=
                 BspSchedule<Graph_t>::instance->sendCosts(std::get<1>(key), std::get<2>(key)) *
@@ -73,7 +71,7 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
             rec[std::get<2>(key)][val] +=
                 BspSchedule<Graph_t>::instance->sendCosts(std::get<1>(key), std::get<2>(key)) *
                 BspSchedule<Graph_t>::instance->getComputationalDag().vertex_comm_weight(std::get<0>(key));
-        }       
+        }
     }
 
   public:
@@ -244,15 +242,11 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
 
     v_commw_t<Graph_t> compute_cs_communication_costs() const {
 
-        std::vector<std::vector<v_commw_t<Graph_t>>> rec(
-            BspSchedule<Graph_t>::instance->numberOfProcessors(),
-            std::vector<v_commw_t<Graph_t>>(BspSchedule<Graph_t>::number_of_supersteps, 0));
-        std::vector<std::vector<v_commw_t<Graph_t>>> send(
-            BspSchedule<Graph_t>::instance->numberOfProcessors(),
-            std::vector<v_commw_t<Graph_t>>(BspSchedule<Graph_t>::number_of_supersteps, 0));
+        std::vector<std::vector<v_commw_t<Graph_t>>> rec(this->instance->numberOfProcessors(), std::vector<v_commw_t<Graph_t>>(this->number_of_supersteps, 0));
+        std::vector<std::vector<v_commw_t<Graph_t>>> send(this->instance->numberOfProcessors(), std::vector<v_commw_t<Graph_t>>(this->number_of_supersteps, 0));
 
         compute_cs_communication_costs_helper(rec, send);
-        const std::vector<v_commw_t<Graph_t>> max_comm_per_step = this->compute_max_comm_per_step_helper(rec, send);
+        const std::vector<v_commw_t<Graph_t>> max_comm_per_step = cost_helpers::compute_max_comm_per_step(*this, rec, send);
 
         v_commw_t<Graph_t> costs = 0;
         for (unsigned step = 0; step < this->number_of_supersteps; step++) {
@@ -342,7 +336,7 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
                     if (proc != BspSchedule<Graph_t>::assignedProcessor(target)) {
                         require_sending[proc].insert(
                             {BspSchedule<Graph_t>::instance->getComputationalDag().vertex_comm_weight(node) * BspSchedule<Graph_t>::instance->getArchitecture().sendCosts(proc, BspSchedule<Graph_t>::node_to_processor_assignment[target]),
-                             node, 
+                             node,
                              BspSchedule<Graph_t>::node_to_processor_assignment[target]});
                     }
                 }
@@ -394,7 +388,7 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
                     continue;
                 auto iter = require_sending[proc].begin();
                 while (iter != require_sending[proc].end()) {
-                    const auto& [comm_cost, node_to_send, dest_proc] = *iter;
+                    const auto &[comm_cost, node_to_send, dest_proc] = *iter;
                     if (comm_cost + send_cost[proc] > max_comm_cost ||
                         comm_cost + receive_cost[dest_proc] > max_comm_cost) {
                         iter++;
@@ -471,27 +465,23 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
     virtual void shrinkByMergingSupersteps() override {
 
         std::vector<unsigned> superstep_latest_dependency(this->number_of_supersteps, 0);
-        std::vector<std::vector<unsigned> > first_at = getFirstPresence();
+        std::vector<std::vector<unsigned>> first_at = getFirstPresence();
 
         for (auto const &[key, val] : commSchedule)
-            if(this->assignedProcessor(std::get<0>(key)) != std::get<1>(key))
+            if (this->assignedProcessor(std::get<0>(key)) != std::get<1>(key))
                 superstep_latest_dependency[val] = std::max(superstep_latest_dependency[val], first_at[std::get<0>(key)][std::get<1>(key)]);
-        
 
         for (const auto &node : BspSchedule<Graph_t>::instance->getComputationalDag().vertices())
             for (const auto &child : BspSchedule<Graph_t>::instance->getComputationalDag().children(node))
-                if(this->assignedProcessor(node) != this->assignedProcessor(child))
+                if (this->assignedProcessor(node) != this->assignedProcessor(child))
                     superstep_latest_dependency[this->assignedSuperstep(child)] = std::max(superstep_latest_dependency[this->assignedSuperstep(child)], first_at[node][this->assignedProcessor(child)]);
 
         std::vector<bool> merge_with_previous(this->number_of_supersteps, false);
-        for(unsigned step = this->number_of_supersteps-1; step < this->number_of_supersteps; --step)
-        {
+        for (unsigned step = this->number_of_supersteps - 1; step < this->number_of_supersteps; --step) {
             unsigned limit = 0;
-            while(step > limit)
-            {
+            while (step > limit) {
                 limit = std::max(limit, superstep_latest_dependency[step]);
-                if(step > limit)
-                {
+                if (step > limit) {
                     merge_with_previous[step] = true;
                     --step;
                 }
@@ -500,26 +490,25 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
 
         std::vector<unsigned> new_step_index(this->number_of_supersteps);
         unsigned current_index = std::numeric_limits<unsigned>::max();
-        for(unsigned step = 0; step < this->number_of_supersteps; ++step)
-        {
-            if(!merge_with_previous[step])
+        for (unsigned step = 0; step < this->number_of_supersteps; ++step) {
+            if (!merge_with_previous[step])
                 current_index++;
 
             new_step_index[step] = current_index;
         }
-        for (const auto& node : this->instance->vertices())
+        for (const auto &node : this->instance->vertices())
             this->node_to_superstep_assignment[node] = new_step_index[this->node_to_superstep_assignment[node]];
         for (auto &[key, val] : commSchedule)
             val = new_step_index[val];
 
-        this->setNumberOfSupersteps(current_index+1);
+        this->setNumberOfSupersteps(current_index + 1);
     }
 
     // for each vertex v and processor p, find the first superstep where v is present on p by the end of the compute phase
-    std::vector<std::vector<unsigned> > getFirstPresence() const {
+    std::vector<std::vector<unsigned>> getFirstPresence() const {
 
-        std::vector<std::vector<unsigned> > first_at(BspSchedule<Graph_t>::instance->numberOfVertices(),
-            std::vector<unsigned>(BspSchedule<Graph_t>::instance->numberOfProcessors(), std::numeric_limits<unsigned>::max()));
+        std::vector<std::vector<unsigned>> first_at(BspSchedule<Graph_t>::instance->numberOfVertices(),
+                                                    std::vector<unsigned>(BspSchedule<Graph_t>::instance->numberOfProcessors(), std::numeric_limits<unsigned>::max()));
 
         for (const auto &node : BspSchedule<Graph_t>::instance->getComputationalDag().vertices())
             first_at[node][this->assignedProcessor(node)] = this->assignedSuperstep(node);
@@ -532,11 +521,11 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
     }
 
     // remove unneeded comm. schedule entries - these can happen in ILPs, partial ILPs, etc.
-    void cleanCommSchedule(){
+    void cleanCommSchedule() {
 
         // data that is already present before it arrives
-        std::vector<std::vector<std::multiset<unsigned> > > arrives_at(BspSchedule<Graph_t>::instance->numberOfVertices(),
-            std::vector<std::multiset<unsigned> >(BspSchedule<Graph_t>::instance->numberOfProcessors()));
+        std::vector<std::vector<std::multiset<unsigned>>> arrives_at(BspSchedule<Graph_t>::instance->numberOfVertices(),
+                                                                     std::vector<std::multiset<unsigned>>(BspSchedule<Graph_t>::instance->numberOfProcessors()));
         for (const auto &node : BspSchedule<Graph_t>::instance->getComputationalDag().vertices())
             arrives_at[node][this->assignedProcessor(node)].insert(this->assignedSuperstep(node));
 
@@ -544,48 +533,45 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
             arrives_at[std::get<0>(key)][std::get<2>(key)].insert(val);
 
         std::vector<KeyTriple> toErase;
-        for (auto const &[key, val] : commSchedule)
-        {
+        for (auto const &[key, val] : commSchedule) {
             auto itr = arrives_at[std::get<0>(key)][std::get<2>(key)].begin();
-            if(*itr < val)
+            if (*itr < val)
                 toErase.push_back(key);
-            else if(*itr == val && ++itr != arrives_at[std::get<0>(key)][std::get<2>(key)].end() && *itr == val)
-            {
+            else if (*itr == val && ++itr != arrives_at[std::get<0>(key)][std::get<2>(key)].end() && *itr == val) {
                 toErase.push_back(key);
                 arrives_at[std::get<0>(key)][std::get<2>(key)].erase(itr);
             }
         }
 
-        for(const KeyTriple& key : toErase)
+        for (const KeyTriple &key : toErase)
             commSchedule.erase(key);
 
         // data that is not used after being sent
-        std::vector<std::vector<std::multiset<unsigned> > > used_at(BspSchedule<Graph_t>::instance->numberOfVertices(),
-            std::vector<std::multiset<unsigned> >(BspSchedule<Graph_t>::instance->numberOfProcessors()));
+        std::vector<std::vector<std::multiset<unsigned>>> used_at(BspSchedule<Graph_t>::instance->numberOfVertices(),
+                                                                  std::vector<std::multiset<unsigned>>(BspSchedule<Graph_t>::instance->numberOfProcessors()));
         for (const auto &node : BspSchedule<Graph_t>::instance->getComputationalDag().vertices())
             for (const auto &child : BspSchedule<Graph_t>::instance->getComputationalDag().children(node))
                 used_at[node][this->assignedProcessor(child)].insert(this->assignedSuperstep(child));
 
         for (auto const &[key, val] : commSchedule)
             used_at[std::get<0>(key)][std::get<1>(key)].insert(val);
-        
+
         // (need to visit cs entries in reverse superstep order here)
-        std::vector<std::vector<KeyTriple> > entries(this->number_of_supersteps);
+        std::vector<std::vector<KeyTriple>> entries(this->number_of_supersteps);
         for (auto const &[key, val] : commSchedule)
             entries[val].push_back(key);
 
         toErase.clear();
-        for(unsigned step = this->number_of_supersteps-1; step < this->number_of_supersteps; --step)
-            for(const KeyTriple& key : entries[step])
-                if(used_at[std::get<0>(key)][std::get<2>(key)].empty() ||
-                    *used_at[std::get<0>(key)][std::get<2>(key)].rbegin() <= step)
-                {
+        for (unsigned step = this->number_of_supersteps - 1; step < this->number_of_supersteps; --step)
+            for (const KeyTriple &key : entries[step])
+                if (used_at[std::get<0>(key)][std::get<2>(key)].empty() ||
+                    *used_at[std::get<0>(key)][std::get<2>(key)].rbegin() <= step) {
                     toErase.push_back(key);
-                    auto itr =  used_at[std::get<0>(key)][std::get<1>(key)].find(step);
+                    auto itr = used_at[std::get<0>(key)][std::get<1>(key)].find(step);
                     used_at[std::get<0>(key)][std::get<1>(key)].erase(itr);
                 }
-        
-        for(const KeyTriple& key : toErase)
+
+        for (const KeyTriple &key : toErase)
             commSchedule.erase(key);
     }
 };
