@@ -277,47 +277,46 @@ struct max_comm_datastructure {
 
         // Update Parents' Outgoing Communication (Parents → Node)
 
-        if (from_proc != to_proc || from_step != to_step) {
-            for (const auto &parent : graph.parents(node)) {
-                const unsigned parent_step = active_schedule->assigned_superstep(parent);
-                // Fast boundary check
-                if (parent_step >= step_proc_send_.size())
-                    continue;
+        for (const auto &parent : graph.parents(node)) {
+            const unsigned parent_step = active_schedule->assigned_superstep(parent);
+            // Fast boundary check
+            if (parent_step >= step_proc_send_.size())
+                continue;
 
-                const unsigned parent_proc = active_schedule->assigned_processor(parent);
-                const comm_weight_t comm_w_parent = graph.vertex_comm_weight(parent);
+            const unsigned parent_proc = active_schedule->assigned_processor(parent);
+            const comm_weight_t comm_w_parent = graph.vertex_comm_weight(parent);
 
-                auto &val = node_lambda_map.get_proc_entry(parent, from_proc);
-                const bool removed_from_proc = CommPolicy::remove_child(val, from_step);
+            auto &val = node_lambda_map.get_proc_entry(parent, from_proc);
+            const bool removed_from_proc = CommPolicy::remove_child(val, from_step);
 
-                // 1. Handle Removal from from_proc
-                if (removed_from_proc) {
-                    if (from_proc != parent_proc) {
-                        const comm_weight_t cost = comm_w_parent * instance->sendCosts(parent_proc, from_proc);
-                        if (cost > 0) {
-                            CommPolicy::unattribute_communication(*this, cost, parent_step, parent_proc, from_proc,
-                                                                  from_step, val);
-                        }
+            // 1. Handle Removal from from_proc
+            if (removed_from_proc) {
+                if (from_proc != parent_proc) {
+                    const comm_weight_t cost = comm_w_parent * instance->sendCosts(parent_proc, from_proc);
+                    if (cost > 0) {
+                        CommPolicy::unattribute_communication(*this, cost, parent_step, parent_proc, from_proc,
+                                                                from_step, val);
                     }
                 }
-
-                auto &val_to = node_lambda_map.get_proc_entry(parent, to_proc);
-                const bool added_to_proc = CommPolicy::add_child(val_to, to_step);
-
-                // 2. Handle Addition to to_proc
-                if (added_to_proc) {
-                    if (to_proc != parent_proc) {
-                        const comm_weight_t cost = comm_w_parent * instance->sendCosts(parent_proc, to_proc);
-                        if (cost > 0) {
-                            CommPolicy::attribute_communication(*this, cost, parent_step, parent_proc, to_proc, to_step,
-                                                                val_to);
-                        }
-                    }
-                }
-
-                mark_step(parent_step);
             }
+
+            auto &val_to = node_lambda_map.get_proc_entry(parent, to_proc);
+            const bool added_to_proc = CommPolicy::add_child(val_to, to_step);
+
+            // 2. Handle Addition to to_proc
+            if (added_to_proc) {
+                if (to_proc != parent_proc) {
+                    const comm_weight_t cost = comm_w_parent * instance->sendCosts(parent_proc, to_proc);
+                    if (cost > 0) {
+                        CommPolicy::attribute_communication(*this, cost, parent_step, parent_proc, to_proc, to_step,
+                                                            val_to);
+                    }
+                }
+            }
+
+            mark_step(parent_step);
         }
+        
 
         // Re-arrange Affected Steps
         for (unsigned step : affected_steps_list) {
