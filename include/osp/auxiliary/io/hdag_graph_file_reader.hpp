@@ -29,6 +29,7 @@ limitations under the License.
 #include "osp/concepts/computational_dag_concept.hpp"
 #include "osp/graph_algorithms/directed_graph_util.hpp"
 #include "osp/auxiliary/io/filepath_checker.hpp"
+#include "osp/concepts/constructable_computational_dag_concept.hpp"
 
 namespace osp {
 namespace file_reader {

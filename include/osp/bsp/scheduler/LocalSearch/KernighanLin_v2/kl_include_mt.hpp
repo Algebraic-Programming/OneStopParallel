@@ -23,6 +23,7 @@ limitations under the License.
 #include "kl_improver_mt.hpp"
 #include "comm_cost_modules/kl_total_comm_cost.hpp"
 #include "comm_cost_modules/kl_hyper_total_comm_cost.hpp"
+#include "comm_cost_modules/kl_bsp_comm_cost.hpp"
 
 namespace osp {
 
@@ -31,6 +32,10 @@ using kl_total_comm_improver_mt = kl_improver_mt<Graph_t, kl_total_comm_cost_fun
 
 template<typename Graph_t, typename MemoryConstraint_t = no_local_search_memory_constraint, unsigned window_size = 1> 
 using kl_total_lambda_comm_improver_mt = kl_improver_mt<Graph_t, kl_hyper_total_comm_cost_function<Graph_t, double, MemoryConstraint_t, window_size>, MemoryConstraint_t, window_size, double>; 
+
+template<typename Graph_t, typename MemoryConstraint_t = no_local_search_memory_constraint, unsigned window_size = 1> 
+using kl_bsp_comm_improver_mt = kl_improver_mt<Graph_t, kl_bsp_comm_cost_function<Graph_t, double, MemoryConstraint_t, window_size>, MemoryConstraint_t, window_size, double>; 
+
 
 } // namespace osp
 
