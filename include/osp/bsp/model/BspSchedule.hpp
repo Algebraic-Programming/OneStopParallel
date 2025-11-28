@@ -277,7 +277,7 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
      * @param node The node for which to set the assigned superstep.
      * @param superstep The superstep to assign to the node.
      */
-    void setAssignedSuperstep_noUpdateNumSuperstep(vertex_idx node, unsigned superstep) {
+    void setAssignedSuperstepNoUpdateNumSuperstep(vertex_idx node, unsigned superstep) {
         node_to_superstep_assignment.at(node) = superstep;
     }
 
@@ -527,7 +527,7 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
      * @param processor The processor index.
      * @return The number of nodes assigned to the specified processor.
      */
-    [[nodiscard]] unsigned num_assigned_nodes(unsigned processor) const {
+    [[nodiscard]] unsigned numAssignedNodes(unsigned processor) const {
         unsigned num = 0;
 
         for (const auto &node : instance->vertices()) {
@@ -544,7 +544,7 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
      *
      * @return A vector containing the number of nodes assigned to each processor.
      */
-    [[nodiscard]] std::vector<unsigned> num_assigned_nodes_per_processor() const {
+    [[nodiscard]] std::vector<unsigned> numAssignedNodesPerProcessor() const {
         std::vector<unsigned> num(instance->numberOfProcessors(), 0);
 
         for (const auto &node : instance->vertices()) {
@@ -559,7 +559,7 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
      *
      * @return A 2D vector containing the number of nodes assigned to each processor in each superstep.
      */
-    [[nodiscard]] std::vector<std::vector<unsigned>> num_assigned_nodes_per_superstep_processor() const {
+    [[nodiscard]] std::vector<std::vector<unsigned>> numAssignedNodesPerSuperstepProcessor() const {
         std::vector<std::vector<unsigned>> num(number_of_supersteps, std::vector<unsigned>(instance->numberOfProcessors(), 0));
 
         for (const auto &v : instance->vertices()) {
