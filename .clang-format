@@ -88,7 +88,7 @@ AlwaysBreakBeforeMultilineStrings: false
 AttributeMacros:
   - __capability
 BinPackArguments: false
-# BinPackLongBracedList: true
+BinPackLongBracedList: true
 BinPackParameters: OnePerLine
 BitFieldColonSpacing: Both
 BraceWrapping:
@@ -113,23 +113,23 @@ BraceWrapping:
 BreakAdjacentStringLiterals: true
 BreakAfterAttributes: Leave
 BreakAfterJavaFieldAnnotations: false
-# BreakAfterOpenBracketBracedList: true
-# BreakAfterOpenBracketFunction: true
-# BreakAfterOpenBracketIf: true
-# BreakAfterOpenBracketLoop: true
-# BreakAfterOpenBracketSwitch: true
+BreakAfterOpenBracketBracedList: true
+BreakAfterOpenBracketFunction: true
+BreakAfterOpenBracketIf: true
+BreakAfterOpenBracketLoop: true
+BreakAfterOpenBracketSwitch: true
 BreakAfterReturnType: ExceptShortType
 BreakArrays:     false
 BreakBeforeBinaryOperators: All
 BreakBeforeBraces: Custom
-# BreakBeforeCloseBracketBracedList: true
-# BreakBeforeCloseBracketFunction: true
-# BreakBeforeCloseBracketIf: true
-# BreakBeforeCloseBracketLoop: true
-# BreakBeforeCloseBracketSwitch: true
+BreakBeforeCloseBracketBracedList: true
+BreakBeforeCloseBracketFunction: true
+BreakBeforeCloseBracketIf: true
+BreakBeforeCloseBracketLoop: true
+BreakBeforeCloseBracketSwitch: true
 BreakBeforeConceptDeclarations: Always
 BreakBeforeInlineASMColon: OnlyMultiline
-# BreakBeforeTemplateCloser: true
+BreakBeforeTemplateCloser: true
 BreakBeforeTernaryOperators: false
 BreakBinaryOperations: RespectPrecedence
 BreakConstructorInitializers: AfterColon
@@ -137,7 +137,7 @@ BreakFunctionDefinitionParameters: false
 BreakInheritanceList: AfterColon
 BreakStringLiterals: true
 BreakTemplateDeclarations: Yes
-ColumnLimit:     120
+ColumnLimit:     130
 CommentPragmas:  '^ IWYU pragma:'
 CompactNamespaces: false
 ConstructorInitializerIndentWidth: 4
@@ -224,7 +224,7 @@ PenaltyBreakOpenParenthesis: 0
 PenaltyBreakScopeResolution: 500
 PenaltyBreakString: 400
 PenaltyBreakTemplateDeclaration: 5
-PenaltyExcessCharacter: 10
+PenaltyExcessCharacter: 15
 PenaltyIndentedWhitespace: 0
 PenaltyReturnTypeOnItsOwnLine: 400
 PointerAlignment: Right
@@ -276,7 +276,7 @@ SortJavaStaticImport: Before
 SortUsingDeclarations: Lexicographic
 SpaceAfterCStyleCast: true
 SpaceAfterLogicalNot: false
-# SpaceAfterOperatorKeyword: false
+SpaceAfterOperatorKeyword: false
 SpaceAfterTemplateKeyword: true
 SpaceAroundPointerQualifiers: Default
 SpaceBeforeAssignmentOperators: true
@@ -292,7 +292,7 @@ SpaceBeforeParensOptions:
   AfterFunctionDefinitionName: false
   AfterFunctionDeclarationName: false
   AfterIfMacros:   true
-  # AfterNot: true
+  AfterNot: true
   AfterOverloadedOperator: false
   AfterPlacementOperator: true
   AfterRequiresInClause: true
@@ -301,7 +301,7 @@ SpaceBeforeParensOptions:
 SpaceBeforeRangeBasedForLoopColon: true
 SpaceBeforeSquareBrackets: false
 SpaceInEmptyBlock: true
-# SpaceInEmptyBraces: Block
+SpaceInEmptyBraces: Block
 SpacesBeforeTrailingComments: 4
 SpacesInAngles:  Never
 SpacesInContainerLiterals: true
