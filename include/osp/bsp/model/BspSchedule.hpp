@@ -19,9 +19,6 @@ limitations under the License.
 #pragma once
 
 #include <algorithm>
-#include <iostream>
-#include <list>
-#include <map>
 #include <stdexcept>
 #include <unordered_set>
 #include <vector>
@@ -31,7 +28,6 @@ limitations under the License.
 #include "SetSchedule.hpp"
 #include "osp/bsp/model/cost/LazyCommunicationCost.hpp"
 #include "osp/concepts/computational_dag_concept.hpp"
-#include <numeric>
 
 namespace osp {
 
@@ -39,15 +35,17 @@ namespace osp {
  * @class BspSchedule
  * @brief Represents a schedule for the Bulk Synchronous Parallel (BSP) model.
  *
- * The `BspSchedule` class manages the assignment of nodes to processors and supersteps within the BSP
- * model. It serves as a core component for scheduling algorithms, providing mechanisms to:
+ * The `BspSchedule` class manages the assignment of nodes to processors and supersteps within the BSP model.
+ * It serves as a core component for scheduling algorithms, providing mechanisms to:
  * - Store and retrieve node-to-processor and node-to-superstep assignments.
  * - Validate schedules against precedence, memory, and node type constraints.
- * - Compute costs associated with the schedule, such as work and communication costs.
+ * - Compute costs associated with the schedule.
  * - Manipulate the schedule, including updating assignments and merging supersteps.
  *
- * This class is templated on `Graph_t`, which must satisfy the `computational_dag_concept`. It interacts closely with
- * `BspInstance` to access problem-specific data and constraints.
+ * This class is templated on `Graph_t`, which must satisfy the `computational_dag_concept`.
+ * Moreover, the work and communication weights of the nodes must be of the same type in order to properly compute the cost.
+ *
+ * It interacts closely with `BspInstance` to access problem-specific data and constraints. In fact, a `BspSchedule` object is tied to a `BspInstance` object.
  *
  * @tparam Graph_t The type of the computational DAG, which must satisfy `is_computational_dag_v`.
  * @see BspInstance
