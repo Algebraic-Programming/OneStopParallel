@@ -113,42 +113,5 @@ v_workw_t<Graph_t> compute_work_costs(
     return compute_work_costs(schedule.getInstance(), schedule.numberOfSupersteps(), schedule.assignedProcessors(), schedule.assignedSupersteps());
 }
 
-template<typename Graph_t>
-void compute_lazy_communication_costs(
-    const BspInstance<Graph_t> &instance,
-    unsigned number_of_supersteps,
-    const std::vector<unsigned> &node_to_processor_assignment,
-    const std::vector<unsigned> &node_to_superstep_assignment,
-    const unsigned staleness,
-    std::vector<std::vector<v_commw_t<Graph_t>>> &rec,
-    std::vector<std::vector<v_commw_t<Graph_t>>> &send) {
-    for (const auto &node : instance.vertices()) {
-
-        std::vector<unsigned> step_needed(instance.numberOfProcessors(), number_of_supersteps);
-        for (const auto &target : instance.getComputationalDag().children(node)) {
-
-            if (node_to_processor_assignment[node] != node_to_processor_assignment[target]) {
-                step_needed[node_to_processor_assignment[target]] = std::min(step_needed[node_to_processor_assignment[target]], node_to_superstep_assignment[target]);
-            }
-        }
-
-        for (unsigned proc = 0; proc < instance.numberOfProcessors(); proc++) {
-
-            if (step_needed[proc] < number_of_supersteps) {
-                send[node_to_processor_assignment[node]][step_needed[proc] - staleness] += instance.sendCosts(node_to_processor_assignment[node], proc) * instance.getComputationalDag().vertex_comm_weight(node);
-                rec[proc][step_needed[proc] - staleness] += instance.sendCosts(node_to_processor_assignment[node], proc) * instance.getComputationalDag().vertex_comm_weight(node);
-            }
-        }
-    }
-}
-
-template<typename Graph_t>
-void compute_lazy_communication_costs(
-    const BspSchedule<Graph_t> &schedule,
-    std::vector<std::vector<v_commw_t<Graph_t>>> &rec,
-    std::vector<std::vector<v_commw_t<Graph_t>>> &send) {
-    compute_lazy_communication_costs(schedule.getInstance(), schedule.numberOfSupersteps(), schedule.assignedProcessors(), schedule.assignedSupersteps(), schedule.getStaleness(), rec, send);
-}
-
 } // namespace cost_helpers
 } // namespace osp

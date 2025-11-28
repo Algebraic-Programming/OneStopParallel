@@ -27,7 +27,7 @@ limitations under the License.
 #include <vector>
 
 #include "BspSchedule.hpp"
-#include "osp/bsp/model/cost/CostModelHelpers.hpp"
+#include "osp/bsp/model/cost/LazyCommunicationCost.hpp"
 #include "osp/concepts/computational_dag_concept.hpp"
 
 namespace osp {
@@ -93,7 +93,7 @@ class MaxBspSchedule : public BspSchedule<Graph_t> {
         std::vector<std::vector<v_commw_t<Graph_t>>> rec(this->instance->numberOfProcessors(), std::vector<v_commw_t<Graph_t>>(this->number_of_supersteps, 0));
         std::vector<std::vector<v_commw_t<Graph_t>>> send(this->instance->numberOfProcessors(), std::vector<v_commw_t<Graph_t>>(this->number_of_supersteps, 0));
 
-        cost_helpers::compute_lazy_communication_costs(*this, rec, send);
+        compute_lazy_communication_costs(*this, rec, send);
         const std::vector<v_commw_t<Graph_t>> max_comm_per_step = cost_helpers::compute_max_comm_per_step(*this, rec, send);
         const std::vector<v_workw_t<Graph_t>> max_work_per_step = cost_helpers::compute_max_work_per_step(*this);
 
