@@ -17,47 +17,47 @@ limitations under the License.
 */
 #pragma once
 
+#include "cdag_vertex_impl.hpp"
 #include "osp/concepts/computational_dag_concept.hpp"
 #include "osp/concepts/directed_graph_edge_desc_concept.hpp"
 #include "osp/graph_algorithms/computational_dag_construction_util.hpp"
 #include "osp/graph_implementations/integral_range.hpp"
 #include <vector>
 
+#include <algorithm>
+
 namespace osp {
 
-template<typename vertex_idx_t, typename workw_t, typename commw_t, typename memw_t, typename vertex_type_t>
-struct cdag_vertex_impl {
-
-    using vertex_idx_type = vertex_idx_t;
-    using work_weight_type = workw_t;
-    using comm_weight_type = commw_t;
-    using mem_weight_type = memw_t;
-    using cdag_vertex_type_type = vertex_type_t;
-
-    cdag_vertex_impl() : id(0), work_weight(0), comm_weight(0), mem_weight(0), vertex_type(0) {}
-
-    cdag_vertex_impl(const cdag_vertex_impl &other) = default;
-    cdag_vertex_impl(cdag_vertex_impl &&other) = default;
-    cdag_vertex_impl &operator=(const cdag_vertex_impl &other) = default;
-    cdag_vertex_impl &operator=(cdag_vertex_impl &&other) = default;
-
-    cdag_vertex_impl(vertex_idx_t vertex_idx_, workw_t work_w, commw_t comm_w, memw_t mem_w,
-                     vertex_type_t vertex_t)
-        : id(vertex_idx_), work_weight(work_w), comm_weight(comm_w), mem_weight(mem_w),
-          vertex_type(vertex_t) {}
-
-    vertex_idx_t id;
-
-    workw_t work_weight;
-    commw_t comm_weight;
-    memw_t mem_weight;
-
-    vertex_type_t vertex_type;
-};
-
-using cdag_vertex_impl_int = cdag_vertex_impl<size_t, int, int, int, unsigned>;
-using cdag_vertex_impl_unsigned = cdag_vertex_impl<size_t, unsigned, unsigned, unsigned, unsigned>;
-
+/**
+ * @brief A vector-based implementation of a computational DAG.
+ *
+ * This class implements a computational DAG using adjacency lists stored in two std::vectors.
+ * It manages the storage of vertices and edges, and provides an interface to query and modify the graph. 
+ * 
+ * This class satisfies the following concepts:
+ * - `is_computational_dag_typed_vertices`
+ * - `is_directed_graph`
+ * - `has_vertex_weights`
+ * - `is_directed_graph_edge_desc`
+ *
+ * @tparam v_impl The vertex implementation type. This type must satisfy the following requirements:
+ * - It must define the following member types:
+ *   - `vertex_idx_type`: The type used for vertex indices (e.g., `size_t`).
+ *   - `work_weight_type`: The type used for computational work weights.
+ *   - `comm_weight_type`: The type used for communication weights.
+ *   - `mem_weight_type`: The type used for memory weights.
+ *   - `cdag_vertex_type_type`: The type used for vertex types.
+ * - It must have the following public data members:
+ *   - `id`: Of type `vertex_idx_type`.
+ *   - `work_weight`: Of type `work_weight_type`.
+ *   - `comm_weight`: Of type `comm_weight_type`.
+ *   - `mem_weight`: Of type `mem_weight_type`.
+ *   - `vertex_type`: Of type `cdag_vertex_type_type`.
+ * - It must be constructible with the signature:
+ *   `v_impl(vertex_idx_type id, work_weight_type work_weight, comm_weight_type comm_weight, mem_weight_type mem_weight, cdag_vertex_type_type vertex_type)`
+ *
+ * @see cdag_vertex_impl for a reference implementation of the vertex type.
+ */
 template<typename v_impl>
 class computational_dag_vector_impl {
   public:
@@ -70,27 +70,41 @@ class computational_dag_vector_impl {
 
     computational_dag_vector_impl() = default;
 
-    computational_dag_vector_impl(vertex_idx num_vertices)
+    /**
+     * @brief Constructs a graph with a specified number of vertices.
+     *
+     * @param num_vertices The number of vertices to initialize.
+     */
+    explicit computational_dag_vector_impl(const vertex_idx num_vertices)
         : vertices_(num_vertices), out_neigbors(num_vertices), in_neigbors(num_vertices), num_edges_(0),
           num_vertex_types_(0) {
 
         for (vertex_idx i = 0; i < num_vertices; ++i) {
-            vertices_[i].id = i;
+            vertices_.at(i).id = i;
         }
     }
 
     computational_dag_vector_impl(const computational_dag_vector_impl &other) = default;
     computational_dag_vector_impl &operator=(const computational_dag_vector_impl &other) = default;
 
+    /**
+     * @brief Constructs a graph from another graph type.
+     *
+     * This constructor initializes the graph by copying the structure and properties from another graph `other`.
+     * The source graph `Graph_t` must satisfy the `is_computational_dag` concept.
+     *
+     * @tparam Graph_t The type of the source graph. Must satisfy `is_computational_dag_v`.
+     * @param other The source graph to copy from.
+     */
     template<typename Graph_t>
-    computational_dag_vector_impl(const Graph_t &other) {
+    explicit computational_dag_vector_impl(const Graph_t &other) {
 
         static_assert(is_computational_dag_v<Graph_t>, "Graph_t must satisfy the is_computation_dag concept");
 
         construct_computational_dag(other, *this);
     }
 
-    computational_dag_vector_impl(computational_dag_vector_impl &&other)
+    computational_dag_vector_impl(computational_dag_vector_impl &&other) noexcept
         : vertices_(std::move(other.vertices_)), out_neigbors(std::move(other.out_neigbors)),
           in_neigbors(std::move(other.in_neigbors)), num_edges_(other.num_edges_),
           num_vertex_types_(other.num_vertex_types_) {
@@ -99,7 +113,7 @@ class computational_dag_vector_impl {
         other.num_vertex_types_ = 0;
     };
 
-    computational_dag_vector_impl &operator=(computational_dag_vector_impl &&other) {
+    computational_dag_vector_impl &operator=(computational_dag_vector_impl &&other) noexcept {
         if (this != &other) {
             vertices_ = std::move(other.vertices_);
             out_neigbors = std::move(other.out_neigbors);
@@ -115,34 +129,73 @@ class computational_dag_vector_impl {
 
     virtual ~computational_dag_vector_impl() = default;
 
-    inline auto vertices() const { return integral_range<vertex_idx>(static_cast<vertex_idx>(vertices_.size())); }
+    /**
+     * @brief Returns a range of all vertex indices.
+     */
+    [[nodiscard]] auto vertices() const { return integral_range<vertex_idx>(static_cast<vertex_idx>(vertices_.size())); }
 
-    inline vertex_idx num_vertices() const { return static_cast<vertex_idx>(vertices_.size()); }
+    /**
+     * @brief Returns the total number of vertices.
+     */
+    [[nodiscard]] vertex_idx num_vertices() const { return static_cast<vertex_idx>(vertices_.size()); }
 
-    inline vertex_idx num_edges() const { return num_edges_; }
+    /**
+     * @brief Checks if the graph is empty (no vertices).
+     */
+    [[nodiscard]] bool empty() const { return vertices_.empty(); }
 
-    inline const std::vector<vertex_idx> &parents(const vertex_idx v) const { return in_neigbors[v]; }
+    /**
+     * @brief Returns the total number of edges.
+     */
+    [[nodiscard]] vertex_idx num_edges() const { return num_edges_; }
 
-    inline const std::vector<vertex_idx> &children(const vertex_idx v) const { return out_neigbors[v]; }
+    /**
+     * @brief Returns the parents (in-neighbors) of a vertex.
+     * @param v The vertex index.
+     */
+    [[nodiscard]] const std::vector<vertex_idx> &parents(const vertex_idx v) const { return in_neigbors.at(v); }
 
-    inline vertex_idx in_degree(const vertex_idx v) const { return static_cast<vertex_idx>(in_neigbors[v].size()); }
+    /**
+     * @brief Returns the children (out-neighbors) of a vertex.
+     * @param v The vertex index.
+     */
+    [[nodiscard]] const std::vector<vertex_idx> &children(const vertex_idx v) const { return out_neigbors.at(v); }
 
-    inline vertex_idx out_degree(const vertex_idx v) const { return static_cast<vertex_idx>(out_neigbors[v].size()); }
+    /**
+     * @brief Returns the in-degree of a vertex.
+     * @param v The vertex index.
+     */
+    [[nodiscard]] vertex_idx in_degree(const vertex_idx v) const { return static_cast<vertex_idx>(in_neigbors.at(v).size()); }
 
-    inline vertex_work_weight_type vertex_work_weight(const vertex_idx v) const { return vertices_[v].work_weight; }
+    /**
+     * @brief Returns the out-degree of a vertex.
+     * @param v The vertex index.
+     */
+    [[nodiscard]] vertex_idx out_degree(const vertex_idx v) const { return static_cast<vertex_idx>(out_neigbors.at(v).size()); }
 
-    inline vertex_comm_weight_type vertex_comm_weight(const vertex_idx v) const { return vertices_[v].comm_weight; }
+    [[nodiscard]] vertex_work_weight_type vertex_work_weight(const vertex_idx v) const { return vertices_.at(v).work_weight; }
 
-    inline vertex_mem_weight_type vertex_mem_weight(const vertex_idx v) const { return vertices_[v].mem_weight; }
+    [[nodiscard]] vertex_comm_weight_type vertex_comm_weight(const vertex_idx v) const { return vertices_.at(v).comm_weight; }
 
-    inline vertex_type_type vertex_type(const vertex_idx v) const { return vertices_[v].vertex_type; }
+    [[nodiscard]] vertex_mem_weight_type vertex_mem_weight(const vertex_idx v) const { return vertices_.at(v).mem_weight; }
 
-    inline vertex_type_type num_vertex_types() const { return num_vertex_types_; }
+    [[nodiscard]] vertex_type_type vertex_type(const vertex_idx v) const { return vertices_.at(v).vertex_type; }
 
-    inline const v_impl &get_vertex_impl(const vertex_idx v) const { return vertices_[v]; }
+    [[nodiscard]] vertex_type_type num_vertex_types() const { return num_vertex_types_; }
 
-    vertex_idx add_vertex(vertex_work_weight_type work_weight, vertex_comm_weight_type comm_weight,
-                          vertex_mem_weight_type mem_weight, vertex_type_type vertex_type = 0) {
+    [[nodiscard]] const v_impl &get_vertex_impl(const vertex_idx v) const { return vertices_.at(v); }
+
+    /**
+     * @brief Adds a new isolated vertex to the graph.
+     *
+     * @param work_weight Computational work weight.
+     * @param comm_weight Communication weight.
+     * @param mem_weight Memory weight.
+     * @param vertex_type Type of the vertex.
+     * @return The index of the newly added vertex.
+     */
+    vertex_idx add_vertex(const vertex_work_weight_type work_weight, const vertex_comm_weight_type comm_weight,
+                          const vertex_mem_weight_type mem_weight, const vertex_type_type vertex_type = 0) {
 
         vertices_.emplace_back(vertices_.size(), work_weight, comm_weight, mem_weight, vertex_type);
         out_neigbors.push_back({});
@@ -153,36 +206,42 @@ class computational_dag_vector_impl {
         return vertices_.back().id;
     }
 
-    inline void set_vertex_work_weight(vertex_idx v, vertex_work_weight_type work_weight) {
-        vertices_[v].work_weight = work_weight;
+    void set_vertex_work_weight(const vertex_idx v, const vertex_work_weight_type work_weight) {
+        vertices_.at(v).work_weight = work_weight;
     }
 
-    inline void set_vertex_comm_weight(vertex_idx v, vertex_comm_weight_type comm_weight) {
-        vertices_[v].comm_weight = comm_weight;
+    void set_vertex_comm_weight(const vertex_idx v, const vertex_comm_weight_type comm_weight) {
+        vertices_.at(v).comm_weight = comm_weight;
     }
 
-    inline void set_vertex_mem_weight(vertex_idx v, vertex_mem_weight_type mem_weight) {
-        vertices_[v].mem_weight = mem_weight;
+    void set_vertex_mem_weight(const vertex_idx v, const vertex_mem_weight_type mem_weight) {
+        vertices_.at(v).mem_weight = mem_weight;
     }
 
-    inline void set_vertex_type(vertex_idx v, vertex_type_type vertex_type) {
-        vertices_[v].vertex_type = vertex_type;
+    void set_vertex_type(const vertex_idx v, const vertex_type_type vertex_type) {
+        vertices_.at(v).vertex_type = vertex_type;
         num_vertex_types_ = std::max(num_vertex_types_, vertex_type + 1);
     }
 
-    bool add_edge(vertex_idx source, vertex_idx target) {
+    /**
+     * @brief Adds a directed edge between two vertices.
+     *
+     * @param source The source vertex index.
+     * @param target The target vertex index.
+     * @return True if the edge was added, false if it already exists or vertices are invalid.
+     */
+    bool add_edge(const vertex_idx source, const vertex_idx target) {
 
         if (source >= static_cast<vertex_idx>(vertices_.size()) || target >= static_cast<vertex_idx>(vertices_.size()) || source == target)
             return false;
 
-        for (const vertex_idx v_idx : out_neigbors[source]) {
-            if (v_idx == target) {
-                return false;
-            }
+        const auto &out = out_neigbors.at(source);
+        if (std::find(out.begin(), out.end(), target) != out.end()) {
+            return false;
         }
 
-        out_neigbors[source].push_back(target);
-        in_neigbors[target].push_back(source);
+        out_neigbors.at(source).push_back(target);
+        in_neigbors.at(target).push_back(source);
         num_edges_++;
 
         return true;
@@ -198,8 +257,14 @@ class computational_dag_vector_impl {
     unsigned num_vertex_types_ = 0;
 };
 
-// default template parameters
+/**
+ * @brief Default implementation of a computational DAG using unsigned integer weights.
+ */
 using computational_dag_vector_impl_def_t = computational_dag_vector_impl<cdag_vertex_impl_unsigned>;
+
+/**
+ * @brief Default implementation of a computational DAG using signed integer weights.
+ */
 using computational_dag_vector_impl_def_int_t = computational_dag_vector_impl<cdag_vertex_impl_int>;
 
 

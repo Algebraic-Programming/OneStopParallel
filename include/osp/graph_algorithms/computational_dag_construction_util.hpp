@@ -30,8 +30,7 @@ template<typename Graph_from, typename Graph_to>
 bool construct_computational_dag(const Graph_from &from, Graph_to &to) {
 
     static_assert(is_computational_dag_v<Graph_from>, "Graph_from must satisfy the computational_dag concept");
-    static_assert(is_constructable_cdag_vertex_v<Graph_to>,
-                  "Graph_to must satisfy the constructable_cdag_vertex concept");
+    static_assert(is_constructable_cdag_vertex_v<Graph_to>, "Graph_to must satisfy the constructable_cdag_vertex concept");
 
     for (const auto &v_idx : from.vertices()) {
 

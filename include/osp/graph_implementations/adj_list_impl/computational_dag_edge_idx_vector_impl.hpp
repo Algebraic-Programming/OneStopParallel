@@ -18,8 +18,9 @@ limitations under the License.
 #pragma once
 
 #include "osp/auxiliary/hash_util.hpp"
-#include "computational_dag_vector_impl.hpp"
+#include "cdag_vertex_impl.hpp"
 #include "edge_iterator.hpp"
+#include "osp/graph_implementations/integral_range.hpp"
 #include "osp/graph_algorithms/computational_dag_construction_util.hpp"
 #include <vector>
 

@@ -17,70 +17,45 @@ limitations under the License.
 */
 #pragma once
 
-#include "computational_dag_vector_impl.hpp"
+#include "cdag_vertex_impl.hpp"
 #include "osp/concepts/computational_dag_concept.hpp"
-#include "osp/graph_algorithms/computational_dag_construction_util.hpp"
 #include "osp/graph_implementations/integral_range.hpp"
+#include "vector_cast_view.hpp"
 #include <vector>
 
 namespace osp {
 
-template<typename from_t, typename to_t>
-class vector_cast_view {
-
-    using iter = typename std::vector<from_t>::const_iterator;
-    const std::vector<from_t> &vec;
-    struct cast_iterator {
-        iter current_edge;
-
-      public:
-        using iterator_category = std::forward_iterator_tag;
-        using value_type = to_t;
-        using difference_type = std::ptrdiff_t;
-        using pointer = const value_type *;
-        using reference = const value_type &;
-
-        cast_iterator() = default;
-        cast_iterator(const cast_iterator &other) : current_edge(other.current_edge) {}
-
-        cast_iterator &operator=(const cast_iterator &other) {
-            if (this != &other) {
-                current_edge = other.current_edge;
-            }
-            return *this;
-        }
-
-        cast_iterator(iter current_edge_) : current_edge(current_edge_) {}
-
-        value_type operator*() const { return static_cast<to_t>(*current_edge); }
-
-        // Prefix increment
-        cast_iterator &operator++() {
-            current_edge++;
-            return *this;
-        }
-
-        // Postfix increment
-        cast_iterator operator++(int) {
-            cast_iterator tmp = *this;
-            ++(*this);
-            return tmp;
-        }
-
-        inline bool operator==(const cast_iterator &other) const { return current_edge == other.current_edge; }
-        inline bool operator!=(const cast_iterator &other) const { return current_edge != other.current_edge; }
-    };
-
-  public:
-    vector_cast_view(const std::vector<from_t> &vec_) : vec(vec_) {}
-
-    auto begin() const { return cast_iterator(vec.begin()); }
-
-    auto end() const { return cast_iterator(vec.end()); }
-
-    auto size() const { return vec.size(); }
-};
-
+/**
+ * @brief Adapter to view a pair of adjacency lists (out-neighbors and in-neighbors) as a computational DAG.
+ *
+ * This class adapts raw adjacency lists (vectors of vectors) into a graph interface compatible with
+ * the OSP computational DAG concepts. It stores pointers to the external adjacency lists, so the
+ * lifetime of these lists must exceed the lifetime of this adapter.
+ *
+ * This class satisfies the following concepts:
+ * - `is_computational_dag_typed_vertices`
+ * - `is_directed_graph`
+ * - `has_vertex_weights`
+ * - `is_directed_graph_edge_desc`
+ *
+ * @tparam v_impl The vertex implementation type. This type must satisfy the following requirements:
+ * - It must define the following member types:
+ *   - `vertex_idx_type`: The type used for vertex indices (e.g., `size_t`).
+ *   - `work_weight_type`: The type used for computational work weights.
+ *   - `comm_weight_type`: The type used for communication weights.
+ *   - `mem_weight_type`: The type used for memory weights.
+ *   - `cdag_vertex_type_type`: The type used for vertex types.
+ * - It must have the following public data members:
+ *   - `id`: Of type `vertex_idx_type`.
+ *   - `work_weight`: Of type `work_weight_type`.
+ *   - `comm_weight`: Of type `comm_weight_type`.
+ *   - `mem_weight`: Of type `mem_weight_type`.
+ *   - `vertex_type`: Of type `cdag_vertex_type_type`.
+ * - It must be constructible with the signature:
+ *   `v_impl(vertex_idx_type id, work_weight_type work_weight, comm_weight_type comm_weight, mem_weight_type mem_weight, cdag_vertex_type_type vertex_type)`
+ *
+ * @tparam index_t The type used for vertex indices in the adjacency lists.
+ */
 template<typename v_impl, typename index_t>
 class dag_vector_adapter {
 
@@ -94,86 +69,124 @@ class dag_vector_adapter {
 
     dag_vector_adapter() = default;
 
-    dag_vector_adapter(std::vector<std::vector<index_t>> &out_neigbors_,
-                       std::vector<std::vector<index_t>> &in_neigbors_)
-        : vertices_(out_neigbors_.size()), out_neigbors(&out_neigbors_), in_neigbors(&in_neigbors_), num_edges_(0),
-          num_vertex_types_(1) {
-
+    /**
+     * @brief Constructs a dag_vector_adapter from adjacency lists.
+     *
+     * @param out_neigbors_ Vector of vectors representing out-neighbors for each vertex.
+     * @param in_neigbors_ Vector of vectors representing in-neighbors for each vertex.
+     *
+     * @warning The adapter stores pointers to these vectors. They must remain valid for the lifetime of the adapter.
+     */
+    dag_vector_adapter(const std::vector<std::vector<index_t>> &out_neigbors_,
+                       const std::vector<std::vector<index_t>> &in_neigbors_) : vertices_(out_neigbors_.size()), out_neigbors(&out_neigbors_), in_neigbors(&in_neigbors_), num_edges_(0), num_vertex_types_(1) {
         for (vertex_idx i = 0; i < static_cast<vertex_idx>(out_neigbors_.size()); ++i) {
-            vertices_[i].id = i;
-            num_edges_ += out_neigbors_[i].size();
+            vertices_.at(i).id = i;
+            num_edges_ += out_neigbors_.at(i).size();
         }
     }
 
     dag_vector_adapter(const dag_vector_adapter &other) = default;
     dag_vector_adapter &operator=(const dag_vector_adapter &other) = default;
 
+    dag_vector_adapter(dag_vector_adapter &&other) noexcept = default;
+    dag_vector_adapter &operator=(dag_vector_adapter &&other) noexcept = default;
+
     virtual ~dag_vector_adapter() = default;
 
-    inline void set_in_out_neighbors(std::vector<std::vector<index_t>> &in_neigbors_, std::vector<std::vector<index_t>> &out_neigbors_) {
-
+    /**
+     * @brief Re-initializes the adapter with new adjacency lists.
+     *
+     * @param in_neigbors_ New in-neighbors adjacency list.
+     * @param out_neigbors_ New out-neighbors adjacency list.
+     */
+    void set_in_out_neighbors(const std::vector<std::vector<index_t>> &in_neigbors_, const std::vector<std::vector<index_t>> &out_neigbors_) {
         out_neigbors = &out_neigbors_;
         in_neigbors = &in_neigbors_;
 
         vertices_.resize(out_neigbors->size());
 
         num_edges_ = 0;
-        for (vertex_idx i = 0; i < out_neigbors_.size(); ++i) {
-            vertices_[i].id = i;
-            num_edges_ += out_neigbors_[i].size();
+        for (vertex_idx i = 0; i < static_cast<vertex_idx>(out_neigbors->size()); ++i) {
+            vertices_.at(i).id = i;
+            num_edges_ += out_neigbors->at(i).size();
         }
 
         num_vertex_types_ = 1;
     }
 
-    inline auto vertices() const { return integral_range<vertex_idx>(static_cast<vertex_idx>(vertices_.size())); }
+    /**
+     * @brief Returns a range of all vertex indices.
+     */
+    [[nodiscard]] auto vertices() const { return integral_range<vertex_idx>(static_cast<vertex_idx>(vertices_.size())); }
 
-    inline vertex_idx num_vertices() const { return static_cast<vertex_idx>(vertices_.size()); }
+    /**
+     * @brief Returns the total number of vertices.
+     */
+    [[nodiscard]] vertex_idx num_vertices() const { return static_cast<vertex_idx>(vertices_.size()); }
 
-    inline vertex_idx num_edges() const { return static_cast<vertex_idx>(num_edges_); }
+    /**
+     * @brief Returns the total number of edges.
+     */
+    [[nodiscard]] vertex_idx num_edges() const { return static_cast<vertex_idx>(num_edges_); }
 
-    inline auto parents(const vertex_idx v) const { return vector_cast_view<index_t, vertex_idx>(in_neigbors->at(v)); }
+    /**
+     * @brief Returns a view of the parents (in-neighbors) of a vertex.
+     * @param v The vertex index.
+     */
+    [[nodiscard]] auto parents(const vertex_idx v) const { return vector_cast_view<index_t, vertex_idx>(in_neigbors->at(v)); }
 
-    inline auto children(const vertex_idx v) const { return vector_cast_view<index_t, vertex_idx>(out_neigbors->at(v)); }
+    /**
+     * @brief Returns a view of the children (out-neighbors) of a vertex.
+     * @param v The vertex index.
+     */
+    [[nodiscard]] auto children(const vertex_idx v) const { return vector_cast_view<index_t, vertex_idx>(out_neigbors->at(v)); }
 
-    inline vertex_idx in_degree(const vertex_idx v) const { return static_cast<vertex_idx>(in_neigbors->at(v).size()); }
+    /**
+     * @brief Returns the in-degree of a vertex.
+     * @param v The vertex index.
+     */
+    [[nodiscard]] vertex_idx in_degree(const vertex_idx v) const { return static_cast<vertex_idx>(in_neigbors->at(v).size()); }
 
-    inline vertex_idx out_degree(const vertex_idx v) const { return static_cast<vertex_idx>(out_neigbors->at(v).size()); }
+    /**
+     * @brief Returns the out-degree of a vertex.
+     * @param v The vertex index.
+     */
+    [[nodiscard]] vertex_idx out_degree(const vertex_idx v) const { return static_cast<vertex_idx>(out_neigbors->at(v).size()); }
 
-    inline vertex_work_weight_type vertex_work_weight(const vertex_idx v) const { return vertices_[v].work_weight; }
+    [[nodiscard]] vertex_work_weight_type vertex_work_weight(const vertex_idx v) const { return vertices_.at(v).work_weight; }
 
-    inline vertex_comm_weight_type vertex_comm_weight(const vertex_idx v) const { return vertices_[v].comm_weight; }
+    [[nodiscard]] vertex_comm_weight_type vertex_comm_weight(const vertex_idx v) const { return vertices_.at(v).comm_weight; }
 
-    inline vertex_mem_weight_type vertex_mem_weight(const vertex_idx v) const { return vertices_[v].mem_weight; }
+    [[nodiscard]] vertex_mem_weight_type vertex_mem_weight(const vertex_idx v) const { return vertices_.at(v).mem_weight; }
 
-    inline vertex_type_type vertex_type(const vertex_idx v) const { return vertices_[v].vertex_type; }
+    [[nodiscard]] vertex_type_type vertex_type(const vertex_idx v) const { return vertices_.at(v).vertex_type; }
 
-    inline vertex_type_type num_vertex_types() const { return num_vertex_types_; }
+    [[nodiscard]] vertex_type_type num_vertex_types() const { return num_vertex_types_; }
 
-    inline const v_impl &get_vertex_impl(const vertex_idx v) const { return vertices_[v]; }
+    [[nodiscard]] const v_impl &get_vertex_impl(const vertex_idx v) const { return vertices_.at(v); }
 
-    inline void set_vertex_work_weight(vertex_idx v, vertex_work_weight_type work_weight) {
-        vertices_[v].work_weight = work_weight;
+    void set_vertex_work_weight(const vertex_idx v, const vertex_work_weight_type work_weight) {
+        vertices_.at(v).work_weight = work_weight;
     }
 
-    inline void set_vertex_comm_weight(vertex_idx v, vertex_comm_weight_type comm_weight) {
-        vertices_[v].comm_weight = comm_weight;
+    void set_vertex_comm_weight(const vertex_idx v, const vertex_comm_weight_type comm_weight) {
+        vertices_.at(v).comm_weight = comm_weight;
     }
 
-    inline void set_vertex_mem_weight(vertex_idx v, vertex_mem_weight_type mem_weight) {
-        vertices_[v].mem_weight = mem_weight;
+    void set_vertex_mem_weight(const vertex_idx v, const vertex_mem_weight_type mem_weight) {
+        vertices_.at(v).mem_weight = mem_weight;
     }
 
-    inline void set_vertex_type(vertex_idx v, vertex_type_type vertex_type) {
-        vertices_[v].vertex_type = vertex_type;
+    void set_vertex_type(const vertex_idx v, const vertex_type_type vertex_type) {
+        vertices_.at(v).vertex_type = vertex_type;
         num_vertex_types_ = std::max(num_vertex_types_, vertex_type + 1);
     }
 
   private:
     std::vector<v_impl> vertices_;
 
-    std::vector<std::vector<index_t>> *out_neigbors;
-    std::vector<std::vector<index_t>> *in_neigbors;
+    const std::vector<std::vector<index_t>> *out_neigbors;
+    const std::vector<std::vector<index_t>> *in_neigbors;
 
     std::size_t num_edges_ = 0;
     unsigned num_vertex_types_ = 0;
@@ -181,15 +194,15 @@ class dag_vector_adapter {
 
 
 static_assert(is_directed_graph_edge_desc_v<dag_vector_adapter<cdag_vertex_impl_unsigned, int>>,
-              "computational_dag_edge_idx_vector_impl must satisfy the directed_graph_edge_desc concept");
+              "dag_vector_adapter must satisfy the directed_graph_edge_desc concept");
 
 static_assert(has_vertex_weights_v<dag_vector_adapter<cdag_vertex_impl_unsigned, int>>,
-              "computational_dag_vector_impl must satisfy the has_vertex_weights concept");
+              "dag_vector_adapter must satisfy the has_vertex_weights concept");
 
 static_assert(is_directed_graph_v<dag_vector_adapter<cdag_vertex_impl_unsigned, int>>,
-              "computational_dag_vector_impl must satisfy the directed_graph concept");
+              "dag_vector_adapter must satisfy the directed_graph concept");
 
 static_assert(is_computational_dag_typed_vertices_v<dag_vector_adapter<cdag_vertex_impl_unsigned, int>>,
-              "computational_dag_vector_impl must satisfy the is_computation_dag concept");
+              "dag_vector_adapter must satisfy the is_computation_dag concept");
 
 } // namespace osp
