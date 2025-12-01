@@ -98,8 +98,7 @@ BOOST_AUTO_TEST_CASE(TrimSubgraphGroupsTest_WithTrim) {
     GreedyBspScheduler<constr_graph_t> greedy_scheduler;
     IsomorphicSubgraphSchedulerTester<graph_t, constr_graph_t> tester(greedy_scheduler);
     tester.setAllowTrimmedScheduler(false);
-    tester.set_symmetry(4);
-    tester.setMinSymmetry(4);
+    
 
     BspInstance<graph_t> instance;
     auto& dag = instance.getComputationalDag();

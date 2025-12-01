@@ -94,7 +94,6 @@ class OrbitGraphProcessor {
     std::vector<Group> final_groups_;
     size_t current_symmetry;    
 
-    size_t symmetry_threshold_ = 8; // max symmetry threshold
     size_t min_symmetry_ = 2; // min symmetry threshold    
     v_workw_t<Constr_Graph_t> work_threshold_ = 0;
     v_workw_t<Constr_Graph_t> critical_path_threshold_ = 0;
@@ -104,6 +103,8 @@ class OrbitGraphProcessor {
     SymmetryLevelHeuristic symmetry_level_heuristic_ = SymmetryLevelHeuristic::NATURAL_BREAKS;
     std::vector<double> work_percentiles_ = {0.50, 0.75};
     double natural_breaks_count_percentage_ = 0.2; 
+
+    bool use_adaptive_symmetry_threshold_ = true;
 
     struct PairHasher {
         template<class T1, class T2>
@@ -514,18 +515,23 @@ class OrbitGraphProcessor {
 
   public:
 
-    explicit OrbitGraphProcessor(size_t symmetry_threshold = 2) : symmetry_threshold_(symmetry_threshold) {}
+    explicit OrbitGraphProcessor() {}
 
-    void set_symmetry_threshold(size_t threshold) { symmetry_threshold_ = threshold; }
     void setMergeDifferentNodeTypes(bool flag) { merge_different_node_types_ = flag; }
     void set_work_threshold(v_workw_t<Constr_Graph_t> work_threshold) { work_threshold_ = work_threshold; }
     void setCriticalPathThreshold(v_workw_t<Constr_Graph_t> critical_path_threshold) { critical_path_threshold_ = critical_path_threshold; }
     void setLockRatio(double lock_ratio) { lock_orbit_ratio = lock_ratio; }
-    void setMinSymmetry(size_t min_symmetry) { min_symmetry_ = min_symmetry; }
+    
     void setSymmetryLevelHeuristic(SymmetryLevelHeuristic heuristic) { symmetry_level_heuristic_ = heuristic; }
     void setWorkPercentiles(const std::vector<double>& percentiles) {
         work_percentiles_ = percentiles;
         std::sort(work_percentiles_.begin(), work_percentiles_.end());
+    }
+
+    void setUseStaticSymmetryLevel(size_t static_symmetry_level) { 
+        symmetry_level_heuristic_ = SymmetryLevelHeuristic::NATURAL_BREAKS;
+        use_adaptive_symmetry_threshold_ = false; 
+        current_symmetry = static_symmetry_level; 
     }
 
     void setNaturalBreaksCountPercentage(double percentage) { natural_breaks_count_percentage_ = percentage; }
@@ -568,13 +574,16 @@ class OrbitGraphProcessor {
         v_workw_t<Graph_t> total_work = 0;
         for (const auto &[hash, vertices] : orbits) {
             const size_t orbit_size = vertices.size();
+            
+            if (orbit_size == 1U) continue; // exclude single node orbits from total work
+
             orbit_size_counts[orbit_size]++;
 
             v_workw_t<Graph_t> orbit_work = 0;
             for (const auto v : vertices) {
                 orbit_work += dag.vertex_work_weight(v);
             }
-
+            
             if (not merge_different_node_types_ && has_typed_vertices_v<Graph_t>) {
                 work_per_vertex_type[dag.vertex_type(vertices[0])] += orbit_work;
             } else {
@@ -582,7 +591,7 @@ class OrbitGraphProcessor {
             }
 
             work_per_orbit_size[orbit_size] += orbit_work;
-            total_work += orbit_work;
+            total_work += orbit_work;            
         }
 
         std::vector<v_workw_t<Graph_t>> lock_threshold_per_type(work_per_vertex_type.size());
@@ -624,7 +633,28 @@ class OrbitGraphProcessor {
         }       
 
         coarser_util::construct_coarse_dag(dag, coarse_graph_, contraction_map_);
-        perform_coarsening_adaptive_symmetry(dag, coarse_graph_, lock_threshold_per_type, symmetry_levels_to_test);
+
+        if (use_adaptive_symmetry_threshold_) {
+            perform_coarsening_adaptive_symmetry(dag, coarse_graph_, lock_threshold_per_type, symmetry_levels_to_test);
+        } else {
+            size_t total_size_count = 0U;
+            for (const auto& [size, count] : orbit_size_counts) {
+                total_size_count += count;
+            }  
+
+            for (const auto& [size, count] : orbit_size_counts) {
+                if (size == 1U || size > current_symmetry) continue;
+                
+                if (count > total_size_count / 2) {
+                     if constexpr (verbose) {
+                        std::cout << "Setting current_symmetry to " << size << " because " << count << " orbits of size " << size << " are more than half of the total number of orbits.\n";
+                     }
+                    current_symmetry = size;
+                }
+            }
+
+            perform_coarsening(dag, coarse_graph_);
+        }
     }
 
   private:
@@ -640,9 +670,7 @@ class OrbitGraphProcessor {
                 if constexpr (verbose) { std::cout << "Using PERCENTILE_BASED heuristic for symmetry levels.\n"; }
                 size_t percentile_idx = 0;
                 v_workw_t<Graph_t> cumulative_work = 0;
-                for (auto it = work_per_orbit_size.rbegin(); 
-                     it != work_per_orbit_size.rend(); 
-                     ++it) 
+                for (auto it = work_per_orbit_size.rbegin(); it != work_per_orbit_size.rend(); ++it) 
                 {
                     cumulative_work += it->second;
                     if (total_work == 0) continue; // Avoid division by zero

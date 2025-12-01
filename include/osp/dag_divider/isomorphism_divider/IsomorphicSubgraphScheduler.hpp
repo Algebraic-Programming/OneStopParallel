@@ -63,25 +63,26 @@ class IsomorphicSubgraphScheduler {
     static constexpr bool verbose = false;    
     const HashComputer<vertex_idx_t<Graph_t>>* hash_computer_;
     size_t symmetry_ = 4;
-    size_t min_symmetry_ = 2;
     Scheduler<Constr_Graph_t> * bsp_scheduler_;
     bool use_max_group_size_ = false;
     unsigned max_group_size_ = 0;
     bool plot_dot_graphs_ = false;
     v_workw_t<Constr_Graph_t> work_threshold_ = 10;
     v_workw_t<Constr_Graph_t> critical_path_threshold_ = 10;
-    double orbit_lock_ratio_ = 0.2;
+    double orbit_lock_ratio_ = 0.4;
+    double natural_breaks_count_percentage_ = 0.1;
     bool merge_different_node_types = true;
     bool allow_use_trimmed_scheduler = true;
     bool use_max_bsp = false;
+    bool use_adaptive_symmetry_threshold = true;
 
     public:
 
     explicit IsomorphicSubgraphScheduler(Scheduler<Constr_Graph_t> & bsp_scheduler) 
-        : hash_computer_(nullptr), symmetry_(4), bsp_scheduler_(&bsp_scheduler), plot_dot_graphs_(false) {}
+        : hash_computer_(nullptr), bsp_scheduler_(&bsp_scheduler), plot_dot_graphs_(false) {}
 
     IsomorphicSubgraphScheduler(Scheduler<Constr_Graph_t> & bsp_scheduler, const HashComputer<vertex_idx_t<Graph_t>>& hash_computer) 
-        : hash_computer_(&hash_computer), symmetry_(4), bsp_scheduler_(&bsp_scheduler), plot_dot_graphs_(false) {}
+        : hash_computer_(&hash_computer), bsp_scheduler_(&bsp_scheduler), plot_dot_graphs_(false) {}
 
     virtual ~IsomorphicSubgraphScheduler() {}
 
@@ -89,9 +90,8 @@ class IsomorphicSubgraphScheduler {
     void setWorkThreshold(v_workw_t<Constr_Graph_t> work_threshold) {work_threshold_ = work_threshold;}
     void setCriticalPathThreshold(v_workw_t<Constr_Graph_t> critical_path_threshold) {critical_path_threshold_ = critical_path_threshold;}
     void setOrbitLockRatio(double orbit_lock_ratio) {orbit_lock_ratio_ = orbit_lock_ratio;}
+    void setNaturalBreaksCountPercentage(double natural_breaks_count_percentage) {natural_breaks_count_percentage_ = natural_breaks_count_percentage;}
     void setAllowTrimmedScheduler(bool flag) {allow_use_trimmed_scheduler = flag;}
-    void set_symmetry(size_t symmetry) { symmetry_ = symmetry; }
-    void setMinSymmetry(size_t min_symmetry) { min_symmetry_ = min_symmetry; }
     void set_plot_dot_graphs(bool plot) { plot_dot_graphs_ = plot; }
     void disable_use_max_group_size() { use_max_group_size_ = false; }
     void setUseMaxBsp(bool flag) { use_max_bsp = flag; }
@@ -99,16 +99,22 @@ class IsomorphicSubgraphScheduler {
         use_max_group_size_ = true;
         max_group_size_ = max_group_size;
     }
-
+    void setEnableAdaptiveSymmetryThreshold() { use_adaptive_symmetry_threshold = true; }
+    void setUseStaticSymmetryLevel(size_t static_symmetry_level) { 
+        use_adaptive_symmetry_threshold = false; 
+        symmetry_ = static_symmetry_level; 
+    }
 
     std::vector<vertex_idx_t<Graph_t>> compute_partition(const BspInstance<Graph_t>& instance) {
-        OrbitGraphProcessor<Graph_t, Constr_Graph_t> orbit_processor(symmetry_);
+        OrbitGraphProcessor<Graph_t, Constr_Graph_t> orbit_processor;
         orbit_processor.set_work_threshold(work_threshold_);
         orbit_processor.setMergeDifferentNodeTypes(merge_different_node_types);
         orbit_processor.setCriticalPathThreshold(critical_path_threshold_);
         orbit_processor.setLockRatio(orbit_lock_ratio_);
-        orbit_processor.setMinSymmetry(min_symmetry_);
-
+        orbit_processor.setNaturalBreaksCountPercentage(natural_breaks_count_percentage_);
+        if (not use_adaptive_symmetry_threshold) {
+            orbit_processor.setUseStaticSymmetryLevel(symmetry_);
+        }
 
         std::unique_ptr<HashComputer<vertex_idx_t<Graph_t>>> local_hasher;      
         if (!hash_computer_) {
