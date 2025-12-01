@@ -30,7 +30,7 @@ limitations under the License.
 #include "osp/auxiliary/misc.hpp"
 #include "osp/concepts/computational_dag_concept.hpp"
 #include "osp/concepts/graph_traits.hpp"
-#include "osp/graph_implementations/vertex_iterator.hpp"
+#include "osp/graph_implementations/integral_range.hpp"
 
 namespace osp {
 
@@ -282,7 +282,7 @@ class BspArchitecture {
                     }
     }
 
-    inline auto processors() const { return vertex_range<unsigned>(number_processors); }    
+    inline auto processors() const { return integral_range<unsigned>(number_processors); }    
 
     /**
      * @brief Computes the average communication cost of the BspArchitecture.

@@ -20,8 +20,7 @@ limitations under the License.
 #include "computational_dag_vector_impl.hpp"
 #include "osp/concepts/computational_dag_concept.hpp"
 #include "osp/graph_algorithms/computational_dag_construction_util.hpp"
-#include "osp/graph_implementations/container_iterator_adaptor.hpp"
-#include "osp/graph_implementations/vertex_iterator.hpp"
+#include "osp/graph_implementations/integral_range.hpp"
 #include <vector>
 
 namespace osp {
@@ -127,7 +126,7 @@ class dag_vector_adapter {
         num_vertex_types_ = 1;
     }
 
-    inline auto vertices() const { return vertex_range<vertex_idx>(static_cast<vertex_idx>(vertices_.size())); }
+    inline auto vertices() const { return integral_range<vertex_idx>(static_cast<vertex_idx>(vertices_.size())); }
 
     inline vertex_idx num_vertices() const { return static_cast<vertex_idx>(vertices_.size()); }
 

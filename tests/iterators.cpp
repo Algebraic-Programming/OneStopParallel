@@ -19,13 +19,13 @@ limitations under the License.
 #define BOOST_TEST_MODULE Bsp_Architecture
 #include <boost/test/unit_test.hpp>
 
-#include "osp/graph_implementations/vertex_iterator.hpp"
+#include "osp/graph_implementations/integral_range.hpp"
 
 using namespace osp;
 
-BOOST_AUTO_TEST_CASE(vertex_iterator_test) {
+BOOST_AUTO_TEST_CASE(integral_range_test) {
 
-    vertex_range<unsigned> range(0, 10);
+    integral_range<unsigned> range(0, 10);
     BOOST_CHECK_EQUAL(range.size(), 10);
     
     int count = 0;
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(vertex_iterator_test) {
     BOOST_CHECK_EQUAL(count, -1);
     
     count = 0;
-    vertex_range<unsigned> range2(10);
+    integral_range<unsigned> range2(10);
     BOOST_CHECK_EQUAL(range2.size(), 10);
 
     for (auto v : range2) {
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(vertex_iterator_test) {
 
 
     count = 5;
-    vertex_range<unsigned> range3(5, 15);
+    integral_range<unsigned> range3(5, 15);
     BOOST_CHECK_EQUAL(range3.size(), 10);
 
     for (auto v : range3) {

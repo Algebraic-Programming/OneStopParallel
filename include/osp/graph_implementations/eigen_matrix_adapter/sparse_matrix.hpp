@@ -24,7 +24,7 @@ limitations under the License.
 #include "osp/concepts/directed_graph_concept.hpp"
 #include "osp/concepts/directed_graph_edge_desc_concept.hpp"
 #include "osp/concepts/computational_dag_concept.hpp"
-#include "osp/graph_implementations/vertex_iterator.hpp"
+#include "osp/graph_implementations/integral_range.hpp"
 #include "eigen_sparse_iterator.hpp"
 
 namespace osp {
@@ -72,7 +72,7 @@ public:
 
     /// @brief Return a range over all vertices [0, num_vertices)
     auto vertices() const {
-        return osp::vertex_range<size_t>(num_vertices());
+        return osp::integral_range<size_t>(num_vertices());
     }
 
     /// @brief Number of edges = total non-zeros minus diagonal elements

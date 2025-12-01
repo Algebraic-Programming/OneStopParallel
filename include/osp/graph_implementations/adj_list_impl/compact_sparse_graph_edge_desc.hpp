@@ -224,7 +224,7 @@ class Compact_Sparse_Graph_EdgeDesc : public Compact_Sparse_Graph<keep_vertex_or
 
 
 
-        inline auto edges() const { return vertex_range<directed_edge_descriptor>(BaseT::number_of_edges); };
+        inline auto edges() const { return integral_range<directed_edge_descriptor>(BaseT::number_of_edges); };
         inline directed_edge_descriptor edge(const vertex_idx &src, const vertex_idx &tgt) const {
             typename BaseT::Compact_Children_Edges::Children_range range = BaseT::csc_out_edges.children(src);
 
@@ -240,7 +240,7 @@ class Compact_Sparse_Graph_EdgeDesc : public Compact_Sparse_Graph<keep_vertex_or
         inline vertex_idx source(const directed_edge_descriptor &edge) const { return BaseT::csc_out_edges.source(edge); };
         inline vertex_idx target(const directed_edge_descriptor &edge) const { return BaseT::csc_out_edges.target(edge); };
         
-        inline auto out_edges(const vertex_idx &vert) const { return vertex_range<directed_edge_descriptor>(BaseT::csc_out_edges.children_indx_begin(vert), BaseT::csc_out_edges.children_indx_begin(vert + 1)); };
+        inline auto out_edges(const vertex_idx &vert) const { return integral_range<directed_edge_descriptor>(BaseT::csc_out_edges.children_indx_begin(vert), BaseT::csc_out_edges.children_indx_begin(vert + 1)); };
         inline auto in_edges(const vertex_idx &vert) const { return In_Edges_range(vert, *this, BaseT::csc_out_edges); };
 
         template<typename RetT = edge_comm_weight_type>

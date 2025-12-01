@@ -31,7 +31,7 @@ limitations under the License.
 #include "osp/concepts/constructable_computational_dag_concept.hpp"
 #include "osp/concepts/specific_graph_impl.hpp"
 #include "osp/graph_algorithms/directed_graph_edge_view.hpp"
-#include "osp/graph_implementations/vertex_iterator.hpp"
+#include "osp/graph_implementations/integral_range.hpp"
 
 namespace osp {
 
@@ -664,7 +664,7 @@ class Compact_Sparse_Graph {
             }
         }
 
-        inline auto vertices() const { return vertex_range<vertex_idx>(number_of_vertices); };
+        inline auto vertices() const { return integral_range<vertex_idx>(number_of_vertices); };
 
         inline vert_t num_vertices() const { return number_of_vertices; };
         inline edge_t num_edges() const { return number_of_edges; }
