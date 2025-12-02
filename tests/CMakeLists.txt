@@ -39,6 +39,7 @@ _add_test( compact_sparse_graph_edge_desc )
 IF(Eigen3_FOUND)
 _add_test ( sparse_matrix_impl )
 _add_test( sptrsv )
+_add_test( sptrsv_ssp )
 ENDIF()
 
 

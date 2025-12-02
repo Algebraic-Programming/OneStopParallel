@@ -20,6 +20,19 @@ limitations under the License.
 
 #ifdef EIGEN_FOUND
 
+// Architecture-aware CPU relax helper
+#if defined(__x86_64__) || defined(__i386__)
+    #include <immintrin.h>
+    static inline void cpu_relax() noexcept {
+        _mm_pause();        // FASTEST on Intel / AMD
+    }
+#else
+    #include <thread>
+    static inline void cpu_relax() noexcept {
+        std::this_thread::yield(); // SAFE fallback
+    }
+#endif
+
 #include <algorithm>
 #include <iostream>
 #include <list>
@@ -37,6 +50,26 @@ limitations under the License.
 
 namespace osp {
 
+class SSPBarrierRaph {
+private:
+    alignas(64) std::atomic<std::size_t> threadCounter{0U};
+
+    void barrier_sleep() const {
+        // can add nanosleep or _mm_pause here????
+    }
+
+public:
+    void arrive() {
+        threadCounter.fetch_add(1U, std::memory_order_release);
+    }
+
+    void wait(std::size_t arr_token) {
+        while ((threadCounter.load(std::memory_order_relaxed) < arr_token) ||
+               (threadCounter.load(std::memory_order_acquire) < arr_token)) {
+            cpu_relax();
+        }
+    }
+};
 
 template<typename eigen_idx_type>
 class Sptrsv {
@@ -427,6 +460,54 @@ class Sptrsv {
                 }
 
     #pragma omp barrier
+            }
+        }
+    }
+
+    void simulate_ssp_sptrsv_no_permutation() {
+        const unsigned nthreads  = instance->numberOfProcessors();
+        constexpr unsigned staleness = 2;
+        std::array<SSPBarrierRaph, staleness> barriers;
+
+        #pragma omp parallel num_threads(nthreads)
+        {
+            const size_t proc = static_cast<size_t>(omp_get_thread_num());
+
+            for (size_t step = 0; step < std::min(staleness, num_supersteps); ++step) {
+                for (const eigen_idx_type node : vector_step_processor_vertices[step][proc]) {
+                    const size_t start = row_ptr[node];
+                    const size_t end   = row_ptr[node + 1] - 1;
+
+                    double sum = b[node];
+
+                    for (size_t i = start; i < end; ++i) {
+                        sum -= val[i] * x[col_idx[i]];
+                    }
+                    x[node] = sum / val[end];
+                }
+                barriers[step % staleness].arrive();
+            }
+
+            // REMAINING STEPS
+            for (size_t step = staleness; step < num_supersteps; ++step) {
+                const size_t which    = step % staleness;
+                const size_t expected = (step / staleness) * nthreads;
+
+                barriers[which].wait(expected);
+
+                for (const eigen_idx_type node : vector_step_processor_vertices[step][proc]) {
+                    const size_t start = row_ptr[node];
+                    const size_t end   = row_ptr[node + 1] - 1;
+
+                    double sum = b[node];
+
+                    for (size_t i = start; i < end; ++i) {
+                        sum -= val[i] * x[col_idx[i]];
+                    }
+                    x[node] = sum / val[end];
+                }
+
+                barriers[which].arrive();
             }
         }
     }
