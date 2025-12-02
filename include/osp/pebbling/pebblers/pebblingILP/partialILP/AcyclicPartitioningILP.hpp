@@ -25,7 +25,7 @@ limitations under the License.
 namespace osp{
 
 template<typename Graph_t>
-class AcyclicPartitioningILP : public Scheduler<Graph_t> {
+class AcyclicPartitioningILP {
 
     static_assert(is_computational_dag_v<Graph_t>, "PebblingSchedule can only be used with computational DAGs."); 
 
@@ -64,6 +64,8 @@ class AcyclicPartitioningILP : public Scheduler<Graph_t> {
 
     std::vector<bool> is_original_source;
 
+    unsigned time_limit_seconds;
+
   protected:
     std::vector<VarArray> node_in_partition;
     std::vector<VarArray> hyperedge_intersects_partition;
@@ -83,9 +85,6 @@ class AcyclicPartitioningILP : public Scheduler<Graph_t> {
     virtual ~AcyclicPartitioningILP() = default;
 
     RETURN_STATUS computePartitioning(const BspInstance<Graph_t> &instance, std::vector<unsigned>& partitioning);
-
-    // not used, only here for using scheduler class base functionality (status enums, timelimits, etc)
-    virtual RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &schedule) override;
 
     /**
      * @brief Enables writing intermediate solutions.
@@ -139,7 +138,7 @@ class AcyclicPartitioningILP : public Scheduler<Graph_t> {
      *
      * @return The name of the schedule.
      */
-    virtual std::string getScheduleName() const override { return "AcyclicPartitioningILP"; }
+    virtual std::string getScheduleName() const { return "AcyclicPartitioningILP"; }
 
     // getters and setters for problem parameters
     inline std::pair<unsigned, unsigned> getMinAndMaxSize() const { return std::make_pair(minPartitionSize, maxPartitionSize); }
@@ -149,6 +148,7 @@ class AcyclicPartitioningILP : public Scheduler<Graph_t> {
     inline void setNumberOfParts(const unsigned number_of_parts) {numberOfParts = number_of_parts; }
     inline void setIgnoreSourceForConstraint(const bool ignore_) {ignore_sources_for_constraint = ignore_; }
     inline void setIsOriginalSource(const std::vector<bool>& is_original_source_) {is_original_source = is_original_source_; }
+    void setTimeLimitSeconds(unsigned time_limit_seconds_) { time_limit_seconds = time_limit_seconds_; }
 };
 
 template<typename Graph_t>
@@ -156,7 +156,7 @@ void AcyclicPartitioningILP<Graph_t>::solveILP() {
 
     model.SetIntParam(COPT_INTPARAM_LOGTOCONSOLE, 0);
 
-    model.SetDblParam(COPT_DBLPARAM_TIMELIMIT, Scheduler<Graph_t>::timeLimitSeconds);
+    model.SetDblParam(COPT_DBLPARAM_TIMELIMIT, time_limit_seconds);
     model.SetIntParam(COPT_INTPARAM_THREADS, 128);
 
     model.SetIntParam(COPT_INTPARAM_STRONGBRANCHING, 1);
@@ -345,11 +345,6 @@ std::vector<unsigned> AcyclicPartitioningILP<Graph_t>::returnAssignment(const Bs
     std::cout<<"Acyclic partitioning ILP best solution value: "<<model.GetDblAttr(COPT_DBLATTR_BESTOBJ)<<", best lower bound: "<<model.GetDblAttr(COPT_DBLATTR_BESTBND)<<std::endl;
 
     return node_to_partition;
-}
-
-template<typename Graph_t>
-RETURN_STATUS AcyclicPartitioningILP<Graph_t>::computeSchedule(BspSchedule<Graph_t> &) {
-    return RETURN_STATUS::ERROR;
 }
 
 }

@@ -86,6 +86,7 @@ class MultiProcessorPebbling : public Scheduler<Graph_t> {
     VarArray comp_phase_ends;
 
     unsigned max_time = 0;
+    unsigned time_limit_seconds;
 
     // problem settings
     bool slidingPebbles = false;
@@ -211,6 +212,7 @@ class MultiProcessorPebbling : public Scheduler<Graph_t> {
     inline void setNeedsBlueAtEnd (const std::set<vertex_idx>& needs_blue_) {needs_blue_at_end = needs_blue_; }
     inline void setHasRedInBeginning (const std::vector<std::set<vertex_idx> >& has_red_) {has_red_in_beginning = has_red_; }
     inline void setVerbose (const bool verbose_) {verbose = verbose_; }
+    inline void setTimeLimitSeconds(unsigned time_limit_seconds_) { time_limit_seconds = time_limit_seconds_; }
 
     bool hasEmptyStep(const BspInstance<Graph_t> &instance);
 };
@@ -223,7 +225,7 @@ void MultiProcessorPebbling<Graph_t>::solveILP() {
     if(!verbose)
         model.SetIntParam(COPT_INTPARAM_LOGTOCONSOLE, 0);
 
-    model.SetDblParam(COPT_DBLPARAM_TIMELIMIT, Scheduler<Graph_t>::timeLimitSeconds);
+    model.SetDblParam(COPT_DBLPARAM_TIMELIMIT, time_limit_seconds);
     model.SetIntParam(COPT_INTPARAM_THREADS, 128);
 
     model.SetIntParam(COPT_INTPARAM_STRONGBRANCHING, 1);
