@@ -35,14 +35,12 @@ template<typename Graph_t>
 class MaxBspScheduleCS : public BspScheduleCS<Graph_t> {
 
     static_assert(is_computational_dag_v<Graph_t>, "BspSchedule can only be used with computational DAGs.");
-    static_assert(std::is_same_v<v_workw_t<Graph_t>, v_commw_t<Graph_t> >, "BspSchedule requires work and comm. weights to have the same type.");
+    static_assert(std::is_same_v<v_workw_t<Graph_t>, v_commw_t<Graph_t>>, "BspSchedule requires work and comm. weights to have the same type.");
 
   protected:
     using vertex_idx = vertex_idx_t<Graph_t>;
-   
 
   public:
-  
     MaxBspScheduleCS() = delete;
 
     /**
@@ -89,8 +87,8 @@ class MaxBspScheduleCS : public BspScheduleCS<Graph_t> {
      */
     virtual ~MaxBspScheduleCS() = default;
 
-    virtual v_workw_t<Graph_t> computeCosts() const override { 
-        
+    virtual v_workw_t<Graph_t> computeCosts() const override {
+
         std::vector<std::vector<v_commw_t<Graph_t>>> rec(this->getInstance().numberOfProcessors(),
                                                          std::vector<v_commw_t<Graph_t>>(this->number_of_supersteps, 0));
 
@@ -98,22 +96,21 @@ class MaxBspScheduleCS : public BspScheduleCS<Graph_t> {
                                                           std::vector<v_commw_t<Graph_t>>(this->number_of_supersteps, 0));
 
         this->compute_cs_communication_costs_helper(rec, send);
-        const std::vector<v_commw_t<Graph_t>> max_comm_per_step = this->compute_max_comm_per_step_helper(rec, send);
-        const std::vector<v_workw_t<Graph_t>> max_work_per_step = this->compute_max_work_per_step_helper();
+        const std::vector<v_commw_t<Graph_t>> max_comm_per_step = cost_helpers::compute_max_comm_per_step(*this, rec, send);
+        const std::vector<v_workw_t<Graph_t>> max_work_per_step = cost_helpers::compute_max_work_per_step(*this);
 
         v_workw_t<Graph_t> costs = 0U;
         for (unsigned step = 0U; step < this->number_of_supersteps; step++) {
-            v_commw_t<Graph_t> step_comm_cost = (step == 0U) ? static_cast<v_commw_t<Graph_t>>(0) : max_comm_per_step[step - 1U];
-            if (step_comm_cost > static_cast<v_commw_t<Graph_t>>(0)) {
-                step_comm_cost += this->instance->synchronisationCosts();
-            }
+            const auto step_comm_cost = (step == 0U) ? static_cast<v_commw_t<Graph_t>>(0) : max_comm_per_step[step - 1U];
             costs += std::max(step_comm_cost, max_work_per_step[step]);
 
+            if (step_comm_cost > static_cast<v_commw_t<Graph_t>>(0)) {
+                costs += this->instance->synchronisationCosts();
+            }
         }
         return costs;
     }
 
     unsigned virtual getStaleness() const override { return 2; }
 };
-
 } // namespace osp

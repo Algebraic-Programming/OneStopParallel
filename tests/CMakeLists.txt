@@ -133,7 +133,7 @@ _add_test( bit_mask )
 _add_test( filereader DATA )
 
 
-## scheduler 
+## scheduler
 if (COPT_FOUND)
 
 #_add_test( ilp_bsp_scheduler )
@@ -159,6 +159,8 @@ _add_test( wavefront_scheduler )
 _add_test( cuthill_mckee )
 
 _add_test( maxbsp_converter_and_hc )
+
+_add_test( cost_evaluation )
 
 ## pebbling ILPs
 

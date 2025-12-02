@@ -64,6 +64,8 @@ class CoptPartialScheduler {
     std::vector<std::vector<std::vector<VarArray>>> comm_processor_to_processor_superstep_node_var;
     std::vector<std::vector<VarArray>> comm_to_processor_superstep_source_var;
 
+    bool has_fixed_comm_in_preceding_step;
+
     void setupVariablesConstraintsObjective(const BspScheduleCS<Graph_t>& schedule, Model& model);
 
     void setInitialSolution(const BspScheduleCS<Graph_t>& schedule, Model &model);
@@ -156,9 +158,9 @@ void CoptPartialScheduler<Graph_t>::setInitialSolution(const BspScheduleCS<Graph
                 for (unsigned step = 0; step < max_number_supersteps && step <= end_superstep - start_superstep; step++) {
 
                     const auto &key = std::make_tuple(node, p1, p2);
-                    if (cs.find(key) != cs.end() && cs.at(key) == start_superstep + step) 
+                    if (cs.find(key) != cs.end() && cs.at(key) == start_superstep + step)
                         model.SetMipStart(comm_processor_to_processor_superstep_node_var[p1][p2][step][static_cast<int>(node_local_ID[node])], 1);
-                    else 
+                    else
                         model.SetMipStart(comm_processor_to_processor_superstep_node_var[p1][p2][step][static_cast<int>(node_local_ID[node])], 0);
                 }
             }
@@ -178,7 +180,7 @@ void CoptPartialScheduler<Graph_t>::setInitialSolution(const BspScheduleCS<Graph
             for (unsigned step = 0; step < max_number_supersteps + 1 && step <= end_superstep - start_superstep + 1; step++) {
 
                 const auto &key = std::make_tuple(source, schedule.assignedProcessor(source), proc);
-                if (cs.find(key) != cs.end() && cs.at(key) == start_superstep + step - 1) 
+                if (cs.find(key) != cs.end() && cs.at(key) == start_superstep + step - 1)
                     model.SetMipStart(comm_to_processor_superstep_source_var[proc][step][static_cast<int>(source_local_ID[source])], 1);
                 else if(step > 0)
                     model.SetMipStart(comm_to_processor_superstep_source_var[proc][step][static_cast<int>(source_local_ID[source])], 0);
@@ -296,6 +298,8 @@ void CoptPartialScheduler<Graph_t>::setupVariablesConstraintsObjective(const Bsp
     */
     // variables indicating if superstep is used at all
     superstep_used_var = model.AddVars(static_cast<int>(max_number_supersteps), COPT_BINARY, "superstep_used");
+    VarArray superstep_has_comm = model.AddVars(static_cast<int>(max_number_supersteps+1), COPT_BINARY, "superstep_has_comm");
+    VarArray has_comm_at_end = model.AddVars(1, COPT_BINARY, "has_comm_at_end");
 
     // variables for assigments of nodes to processor and superstep
     node_to_processor_superstep_var = std::vector<std::vector<VarArray>>(num_vertices, std::vector<VarArray>(num_processors));
@@ -333,7 +337,7 @@ void CoptPartialScheduler<Graph_t>::setupVariablesConstraintsObjective(const Bsp
 
             comm_to_processor_superstep_source_var[proc][step] =
                 model.AddVars(static_cast<int>(num_sources), COPT_BINARY, "comm_to_processor_superstep_source");
-            
+
             if(step < max_number_supersteps)
                 present_on_processor_superstep_source_var[proc][step] =
                     model.AddVars(static_cast<int>(num_sources), COPT_BINARY, "present_on_processor_superstep_source");
@@ -357,28 +361,58 @@ void CoptPartialScheduler<Graph_t>::setupVariablesConstraintsObjective(const Bsp
         model.AddConstr(superstep_used_var[static_cast<int>(step)] >= superstep_used_var[static_cast<int>(step + 1)]);
     }
 
-    // superstep is used at all
-    unsigned large_constant = static_cast<unsigned>(num_vertices+num_sources) * num_processors * num_processors * 2;
+    // check whether superstep is used at all (work or comm), and whether superstep has any communication at all
+    unsigned large_constant_work = static_cast<unsigned>(num_vertices) * num_processors;
+    unsigned large_constant_comm = static_cast<unsigned>(num_vertices+num_sources) * num_processors * num_processors + static_cast<unsigned>(fixed_comm_steps.size());
     for (unsigned int step = 0; step < max_number_supersteps; step++) {
 
-        Expr expr;
+        Expr expr_work, expr_comm;
         for (vertex_idx_t<Graph_t> node = 0; node < num_vertices; node++) {
 
             for (unsigned int processor = 0; processor < num_processors; processor++) {
-                expr += node_to_processor_superstep_var[node][processor][static_cast<int>(step)];
-                
+                expr_work += node_to_processor_superstep_var[node][processor][static_cast<int>(step)];
+
                 for (unsigned int p_other = 0; p_other < num_processors; p_other++)
                     if(processor != p_other)
-                        expr += comm_processor_to_processor_superstep_node_var[processor][p_other][step][static_cast<int>(node)];
+                        expr_comm += comm_processor_to_processor_superstep_node_var[processor][p_other][step][static_cast<int>(node)];
             }
         }
         for (vertex_idx_t<Graph_t> source = 0; source < num_sources; source++)
             for (unsigned int processor = 0; processor < num_processors; processor++)
                 if(source_present_before.find(std::make_pair(source, processor)) == source_present_before.end())
-                    expr += comm_to_processor_superstep_source_var[processor][step+1][static_cast<int>(source)]; 
+                    expr_comm += comm_to_processor_superstep_source_var[processor][step+1][static_cast<int>(source)];
 
-        model.AddConstr(expr <= large_constant * superstep_used_var[static_cast<int>(step)]);
+        for (unsigned index = 0; index < fixed_comm_steps.size(); ++index)
+            if(std::get<3>(fixed_comm_steps[index]) == start_superstep + step)
+                expr_comm += keep_fixed_comm_step[static_cast<int>(index)];
+
+        model.AddConstr(expr_comm <= large_constant_comm * superstep_has_comm[static_cast<int>(step+1)]);
+        model.AddConstr(expr_work <= large_constant_work * superstep_used_var[static_cast<int>(step)]);
+        model.AddConstr(superstep_has_comm[static_cast<int>(step+1)] <= superstep_used_var[static_cast<int>(step)]);
     }
+
+    // check communication usage in edge case: comm phase before the segment
+    if(has_fixed_comm_in_preceding_step)
+        model.AddConstr(superstep_has_comm[0] == 1);
+    else {
+        Expr expr_comm_0;
+        for (vertex_idx_t<Graph_t> source = 0; source < num_sources; source++)
+            for (unsigned int processor = 0; processor < num_processors; processor++)
+                if(source_present_before.find(std::make_pair(source, processor)) == source_present_before.end())
+                    expr_comm_0 += comm_to_processor_superstep_source_var[processor][0][static_cast<int>(source)];
+        for (unsigned index = 0; index < fixed_comm_steps.size(); ++index)
+            expr_comm_0 += 1 - keep_fixed_comm_step[static_cast<int>(index)];
+        model.AddConstr(expr_comm_0 <= (static_cast<unsigned>(num_sources) * num_processors + static_cast<unsigned>(fixed_comm_steps.size())) * superstep_has_comm[0]);
+    }
+
+    // check if there is any communication at the end of the subschedule
+    for (unsigned int step = 0; step < max_number_supersteps - 1; step++)
+    {
+        model.AddConstr(superstep_used_var[static_cast<int>(step)] - superstep_used_var[static_cast<int>(step + 1)] +
+                        superstep_has_comm[static_cast<int>(step+1)] - 1 <= has_comm_at_end[0]);
+    }
+    model.AddConstr(superstep_used_var[static_cast<int>(max_number_supersteps - 1)] +
+                        superstep_has_comm[static_cast<int>(max_number_supersteps)] - 1 <= has_comm_at_end[0]);
 
     // nodes are assigend
     for (vertex_idx_t<Graph_t> node = 0; node < num_vertices; node++) {
@@ -421,7 +455,7 @@ void CoptPartialScheduler<Graph_t>::setupVariablesConstraintsObjective(const Bsp
             }
         }
     }
-    
+
     // combines two constraints: node can only be communicated if it is present; and node is present if it was computed
     // or communicated
     for (unsigned int step = 0; step < max_number_supersteps; step++) {
@@ -602,8 +636,10 @@ void CoptPartialScheduler<Graph_t>::setupVariablesConstraintsObjective(const Bsp
     }
 
     expr += schedule.getInstance().communicationCosts() * max_comm_superstep_var[0];
+    expr += schedule.getInstance().synchronisationCosts() * superstep_has_comm[0];
+    expr += schedule.getInstance().synchronisationCosts() * has_comm_at_end[0];
 
-    model.SetObjective(expr, COPT_MINIMIZE);
+    model.SetObjective(expr - schedule.getInstance().synchronisationCosts(), COPT_MINIMIZE);
 };
 
 template<typename Graph_t>
@@ -671,12 +707,12 @@ void CoptPartialScheduler<Graph_t>::setupVertexMaps(const BspScheduleCS<Graph_t>
             for(unsigned proc2 = 0; proc2 < schedule.getInstance().numberOfProcessors(); ++proc2)
             {
                 if(proc1 == proc2)
-                    continue;          
+                    continue;
                 auto itr = schedule.getCommunicationSchedule().find(std::make_tuple(source, proc1, proc2));
                 if (itr != schedule.getCommunicationSchedule().end() && itr->second > end_superstep)
                     procs_needing_this.insert(schedule.assignedProcessor(proc1));
             }
-        
+
         for(unsigned proc : procs_needing_this)
             if(first_at[source][proc] >= start_superstep && first_at[source][proc] <= end_superstep + 1)
                 source_needed_after_on_proc.emplace_back(source_and_ID.second, proc);
@@ -692,12 +728,12 @@ void CoptPartialScheduler<Graph_t>::setupVertexMaps(const BspScheduleCS<Graph_t>
 
         for(unsigned proc1 = 0; proc1 < schedule.getInstance().numberOfProcessors(); ++proc1)
             for(unsigned proc2 = 0; proc2 < schedule.getInstance().numberOfProcessors(); ++proc2)
-            {                
+            {
                 auto itr = schedule.getCommunicationSchedule().find(std::make_tuple(node, proc1, proc2));
                 if (itr != schedule.getCommunicationSchedule().end() && proc1 != proc2 && itr->second > end_superstep)
                     procs_needing_this.insert(schedule.assignedProcessor(proc1));
             }
-        
+
         for(unsigned proc : procs_needing_this)
             if(first_at[node][proc] <= end_superstep + 1)
                 node_needed_after_on_proc.emplace_back(node_and_ID.second, proc);
@@ -705,13 +741,18 @@ void CoptPartialScheduler<Graph_t>::setupVertexMaps(const BspScheduleCS<Graph_t>
 
 
     // comm steps that just happen to be in this interval, but not connected to the nodes within
+    has_fixed_comm_in_preceding_step = false;
     for (const auto &[key, val] : schedule.getCommunicationSchedule())
     {
         vertex_idx_t<Graph_t> source = std::get<0>(key);
-        if(source_local_ID.find(source) == source_local_ID.end() && 
+        if(source_local_ID.find(source) == source_local_ID.end() &&
             schedule.assignedSuperstep(source) < start_superstep &&
             val >= start_superstep - 1 && val <= end_superstep)
+            {
                 fixed_comm_steps.emplace_back(std::get<0>(key), std::get<1>(key), std::get<2>(key), val);
+                if(val == start_superstep - 1)
+                    has_fixed_comm_in_preceding_step = true;
+            }
     }
 
 };

@@ -18,36 +18,36 @@ limitations under the License.
 
 #pragma once
 
-#include <string>
-#include <vector>
-#include <map>
 #include "IStatsModule.hpp"
 #include "osp/bsp/model/BspSchedule.hpp" // Still needed
+#include "osp/bsp/model/cost/BufferedSendingCost.hpp"
+#include "osp/bsp/model/cost/TotalCommunicationCost.hpp"
+#include "osp/bsp/model/cost/TotalLambdaCommunicationCost.hpp"
+#include <map>
+#include <string>
+#include <vector>
 
 namespace osp {
 
 template<typename Graph_t>
-class BspCommStatsModule : public IStatisticModule<BspSchedule<Graph_t>> { 
-public:
-
-private:
+class BspCommStatsModule : public IStatisticModule<BspSchedule<Graph_t>> {
+  public:
+  private:
     const std::vector<std::string> metric_headers = {
-        "TotalCommCost", "TotalLambdaCommCost", "BufferedSendingCosts" 
-    };
+        "TotalCommCost", "TotalLambdaCommCost", "BufferedSendingCosts"};
 
-public:
-
+  public:
     std::vector<std::string> get_metric_headers() const override {
         return metric_headers;
     }
 
     std::map<std::string, std::string> record_statistics(
-                            const BspSchedule<Graph_t>& schedule, 
-                            std::ofstream& /*log_stream*/) const override {
+        const BspSchedule<Graph_t> &schedule,
+        std::ofstream & /*log_stream*/) const override {
         std::map<std::string, std::string> stats;
-        stats["TotalCommCost"] = std::to_string(schedule.computeTotalCosts());
-        stats["TotalLambdaCommCost"] = std::to_string(schedule.computeTotalLambdaCosts());
-        stats["BufferedSendingCosts"] = std::to_string(schedule.computeBufferedSendingCosts());
+        stats["TotalCommCost"] = std::to_string(TotalCommunicationCost<Graph_t>()(schedule));
+        stats["TotalLambdaCommCost"] = std::to_string(TotalLambdaCommunicationCost<Graph_t>()(schedule));
+        stats["BufferedSendingCosts"] = std::to_string(BufferedSendingCost<Graph_t>()(schedule));
         return stats;
     }
 };

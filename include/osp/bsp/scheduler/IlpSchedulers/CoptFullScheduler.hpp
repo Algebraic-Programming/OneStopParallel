@@ -62,17 +62,17 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
 
   private:
     bool allow_recomputation;
-    bool is_max_bsp = false;
     bool use_memory_constraint;
+    bool use_initial_schedule_recomp = false;
     bool use_initial_schedule = false;
     bool write_solutions_found;
-    bool use_initial_schedule_recomp = false;
+    bool is_max_bsp = false;
 
     unsigned timeLimitSeconds = 0;
 
     const BspScheduleCS<Graph_t> *initial_schedule;
     const BspScheduleRecomp<Graph_t> *initial_schedule_recomp;
-    
+
     std::string write_solutions_path;
     std::string solution_file_prefix;
 
@@ -172,7 +172,7 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
 
             return schedule;
         }
-        
+
         BspScheduleRecomp<Graph_t> constructBspScheduleRecompFromCallback() {
 
             unsigned number_of_supersteps = 0;
@@ -262,6 +262,7 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
         if(is_max_bsp && number_of_supersteps>0) // can ignore last 2 comm phases in this case
             --number_of_supersteps;
 
+        schedule.getCommunicationSchedule().clear();
         for (const auto &node : instance.vertices()) {
 
             for (unsigned int p_from = 0; p_from < instance.numberOfProcessors(); p_from++) {
@@ -310,6 +311,7 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
             }
         }
 
+        schedule.getCommunicationSchedule().clear();
         for (unsigned int node = 0; node < schedule.getInstance().numberOfVertices(); node++) {
 
             for (unsigned int p_from = 0; p_from < schedule.getInstance().numberOfProcessors(); p_from++) {
@@ -405,11 +407,11 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
             }
             else
             {
-                first_at[node][initial_schedule->assignedProcessor(node)] = std::min(first_at[node][initial_schedule->assignedProcessor(node)], 
+                first_at[node][initial_schedule->assignedProcessor(node)] = std::min(first_at[node][initial_schedule->assignedProcessor(node)],
                                                                                     initial_schedule->assignedSuperstep(node) );
             }
         }
-    
+
         unsigned staleness = is_max_bsp ? 2 : 1;
         for (const auto &node : DAG.vertices()) {
 
@@ -452,10 +454,10 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
                                                                                         [static_cast<int>(node)], 1);
                     else
                         model.SetMipStart(comm_processor_to_processor_superstep_node_var[proc][proc][step]
-                                                                                        [static_cast<int>(node)], 0); 
+                                                                                        [static_cast<int>(node)], 0);
                 }
 
-        for (const auto &node : DAG.vertices()) {            
+        for (const auto &node : DAG.vertices()) {
 
             for (unsigned proc = 0; proc < num_processors; proc++) {
 
@@ -548,10 +550,19 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
         // variables indicating if superstep is used at all
         superstep_used_var = model.AddVars(static_cast<int>(max_number_supersteps), COPT_BINARY, "superstep_used");
 
+        VarArray superstep_has_comm, mergeable_superstep_penalty;
+        if(is_max_bsp)
+        {
+            // variables indicating if there is any communication in superstep
+            superstep_has_comm = model.AddVars(static_cast<int>(max_number_supersteps), COPT_BINARY, "superstep_has_comm");
+            // variables that incentivize the schedule to be continuous - needs to be done differently for maxBsp
+            mergeable_superstep_penalty = model.AddVars(static_cast<int>(max_number_supersteps), COPT_BINARY, "mergeable_superstep_penalty");
+        }
+
+        // variables for assigments of nodes to processor and superstep
         node_to_processor_superstep_var = std::vector<std::vector<VarArray>>(
             instance.numberOfVertices(), std::vector<VarArray>(instance.numberOfProcessors()));
 
-        // variables for assigments of nodes to processor and superstep
         for (const auto &node : instance.vertices()) {
 
             for (unsigned int processor = 0; processor < instance.numberOfProcessors(); processor++) {
@@ -598,7 +609,7 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
                 }
             }
             model.AddConstr(expr <= static_cast<double>(instance.numberOfVertices() * instance.numberOfProcessors()) *
-                                        superstep_used_var.GetVar(static_cast<int>(step)));
+                                        superstep_used_var[static_cast<int>(step)]);
         }
 
         // nodes are assigend depending on whether recomputation is allowed or not
@@ -688,6 +699,29 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
             }
         }
 
+        // synchronization cost calculation & forcing continuous schedule in maxBsp
+        if(is_max_bsp)
+        {
+            for (unsigned int step = 0; step < max_number_supersteps; step++) {
+                Expr expr;
+                for (const auto &node : instance.vertices()) {
+                    for (unsigned int p_from = 0; p_from < instance.numberOfProcessors(); p_from++) {
+                        for (unsigned int p_to = 0; p_to < instance.numberOfProcessors(); p_to++) {
+                            if(p_from != p_to)
+                                expr += comm_processor_to_processor_superstep_node_var[p_from][p_to][step][static_cast<int>(node)];
+                        }
+                    }
+                }
+                model.AddConstr(static_cast<unsigned>(instance.numberOfProcessors() * instance.numberOfProcessors() * instance.numberOfVertices()) *
+                                superstep_has_comm[static_cast<int>(step)] >= expr);
+            }
+
+            // if step i and (i+1) has no comm, and (i+2) has work, then (i+1) and (i+2) are mergeable -> penalize
+            for (unsigned int step = 0; step < max_number_supersteps - 2; step++)
+                model.AddConstr(superstep_used_var[static_cast<int>(step + 2)] - superstep_has_comm[static_cast<int>(step)]
+                                - superstep_has_comm[static_cast<int>(step + 1)] <= mergeable_superstep_penalty[static_cast<int>(step)]);
+        }
+
         max_comm_superstep_var =
             model.AddVars(static_cast<int>(max_number_supersteps), COPT_INTEGER, "max_comm_superstep");
         // coptModel.AddVars(max_number_supersteps, 0, COPT_INFINITY, 0, COPT_INTEGER, "max_comm_superstep");
@@ -770,10 +804,10 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
                 model.AddConstr(max_superstep_var[static_cast<int>(step)] >= max_work_superstep_var[static_cast<int>(step)]);
                 if(step > 0)
                     model.AddConstr(max_superstep_var[static_cast<int>(step)] >= instance.communicationCosts() * max_comm_superstep_var[static_cast<int>(step-1)]);
-                expr += max_superstep_var[static_cast<int>(step)]; +
-                        instance.synchronisationCosts() * superstep_used_var[static_cast<int>(step)];
+                expr += max_superstep_var[static_cast<int>(step)];
+                expr += instance.synchronisationCosts() * superstep_has_comm[static_cast<int>(step)];
+                expr += instance.synchronisationCosts() * mergeable_superstep_penalty[static_cast<int>(step)];
             }
-
         }
         else
         {
@@ -782,9 +816,10 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
                         instance.communicationCosts() * max_comm_superstep_var[static_cast<int>(step)] +
                         instance.synchronisationCosts() * superstep_used_var[static_cast<int>(step)];
             }
+            expr -= instance.synchronisationCosts();
         }
 
-        model.SetObjective(expr - instance.synchronisationCosts(), COPT_MINIMIZE);
+        model.SetObjective(expr, COPT_MINIMIZE);
     }
 
     RETURN_STATUS run_scheduler(BspScheduleCS<Graph_t> &schedule) {
@@ -824,7 +859,7 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
 
   public:
     CoptFullScheduler(unsigned steps = 5)
-        : allow_recomputation(false), use_memory_constraint(false), use_initial_schedule(false), 
+        : allow_recomputation(false), use_memory_constraint(false), use_initial_schedule(false),
           write_solutions_found(false), initial_schedule(0), max_number_supersteps(steps) {
 
         // solution_callback.comm_processor_to_processor_superstep_node_var_ptr =
@@ -889,7 +924,7 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
             return status;
         }
     }
-    
+
     virtual RETURN_STATUS computeMaxBspScheduleCS(MaxBspScheduleCS<Graph_t> &schedule) {
         allow_recomputation = false;
         is_max_bsp = true;
@@ -897,7 +932,7 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
     }
 
 
-    virtual RETURN_STATUS computeScheduleCS(BspScheduleCS<Graph_t> &schedule) override { 
+    virtual RETURN_STATUS computeScheduleCS(BspScheduleCS<Graph_t> &schedule) override {
         allow_recomputation = false;
         is_max_bsp = false;
         return run_scheduler(schedule);
@@ -942,7 +977,7 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
     };
 
     virtual void computeScheduleBase(const BspScheduleRecomp<Graph_t> &schedule, Model &model) {
-    
+
         if (timeLimitSeconds > 0) {
             model.SetDblParam(COPT_DBLPARAM_TIMELIMIT, timeLimitSeconds);
         }
@@ -1063,6 +1098,13 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
      * @return The maximum number of supersteps.
      */
     inline unsigned getMaxNumberOfSupersteps() const { return max_number_supersteps; }
+
+    /**
+     * @brief Sets the time limit for the ILP solving.
+     *
+     * @param time_limit_seconds_ The time limit in seconds.
+     */
+    inline void setTimeLimitSeconds(unsigned time_limit_seconds_) { timeLimitSeconds = time_limit_seconds_; }
 
     /**
      * @brief Get the name of the schedule.

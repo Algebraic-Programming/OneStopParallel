@@ -47,28 +47,24 @@ fi
 
 
 # Format all .cpp and .hpp files
-for file in $(git diff --cached --name-only | grep -E '\.cpp$|\.hpp$'); do
-	# Check if the file exists
-	if [ ! -f $file ]; then
-		continue
+# We use 'git diff-index' to avoid issues with spaces in filenames
+git diff --cached --name-only --diff-filter=ACM $against | grep -E '\.(cpp|hpp)$' | while read -r file; do
+	if [ -f "$file" ]; then
+        # Apply clang-format in-place
+        clang-format -i "$file"
+        # Re-add the file to the commit to include the formatting changes
+        git add "$file"
 	fi
-	git add $file
 done
 
-# Remove trailing whitespace from all files (except .so)
-for file in $(git diff --cached --name-only | grep -vE '\.so$'); do
-	# Check if the file exists
-	if [ ! -f $file ]; then
-		continue
+# Remove trailing whitespace from all files (except .so and binary files)
+# Using sed to remove trailing whitespace
+git diff --cached --name-only --diff-filter=ACM $against | grep -vE '\.so$' | while read -r file; do
+	if [ -f "$file" ]; then
+        # Check if file is text to avoid corrupting binaries
+        if file "$file" | grep -q "text"; then
+            sed -i 's/[[:space:]]*$//' "$file"
+            git add "$file"
+        fi
 	fi
-	git add $file
 done
-
-for file in $(git diff --cached --name-only); do
-	# Check if the file exists
-	if [ ! -f $file ]; then
-		continue
-	fi
-	git add $file
-done
-

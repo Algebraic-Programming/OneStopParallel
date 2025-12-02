@@ -38,13 +38,13 @@ class CoptCommScheduleOptimizer {
 
     static_assert(is_computational_dag_v<Graph_t>, "CoptFullScheduler can only be used with computational DAGs.");
 
-    bool num_supersteps_can_change = true;
+    bool ignore_latency = false;
 
     unsigned int timeLimitSeconds = 600;
 
   protected:
 
-    VarArray superstep_used_var;
+    VarArray superstep_has_comm;
     VarArray max_comm_superstep_var;
     std::vector<std::vector<std::vector<VarArray>>> comm_processor_to_processor_superstep_node_var;
 
@@ -67,7 +67,7 @@ class CoptCommScheduleOptimizer {
 
     virtual void setTimeLimitSeconds(unsigned int limit) { timeLimitSeconds = limit; }
     inline unsigned int getTimeLimitSeconds() const { return timeLimitSeconds; }
-    virtual void setNumSuperstepsCanChange(bool can_change_) { num_supersteps_can_change = can_change_; }
+    virtual void setIgnoreLatency(bool ignore_latency_) { ignore_latency = ignore_latency_; }
 };
 
 
@@ -110,7 +110,7 @@ bool CoptCommScheduleOptimizer<Graph_t>::canShrinkResultingSchedule(unsigned num
 
     for (unsigned step = 0; step < number_of_supersteps - 1; step++) {
 
-        if (superstep_used_var[static_cast<int>(step)].Get(COPT_DBLINFO_VALUE) <= 0.01)
+        if (superstep_has_comm[static_cast<int>(step)].Get(COPT_DBLINFO_VALUE) <= 0.01)
             return true;
     }
     return false;
@@ -187,13 +187,13 @@ void CoptCommScheduleOptimizer<Graph_t>::setInitialSolution(BspScheduleCS<Graph_
                                                                                         [static_cast<int>(node)], 0);
                 }
 
-    if(num_supersteps_can_change)
+    if(!ignore_latency)
     {
         std::vector<unsigned> comm_phase_used(num_supersteps, 0);
         for (auto const &[key, val] : cs)
             comm_phase_used[val] = 1;
         for (unsigned step = 0; step < num_supersteps; step++)
-            model.SetMipStart(superstep_used_var[static_cast<int>(step)], comm_phase_used[step]);
+            model.SetMipStart(superstep_has_comm[static_cast<int>(step)], comm_phase_used[step]);
     }
 
     std::vector<std::vector<v_commw_t<Graph_t>>> send(num_supersteps, std::vector<v_commw_t<Graph_t>>(num_processors, 0));
@@ -227,8 +227,8 @@ void CoptCommScheduleOptimizer<Graph_t>::setupVariablesConstraintsObjective(cons
     const unsigned num_vertices = static_cast<unsigned>(schedule.getInstance().numberOfVertices());
 
     // variables indicating if superstep is used at all
-    if (num_supersteps_can_change) {
-        superstep_used_var = model.AddVars(static_cast<int>(max_number_supersteps), COPT_BINARY, "superstep_used");
+    if (!ignore_latency) {
+        superstep_has_comm = model.AddVars(static_cast<int>(max_number_supersteps), COPT_BINARY, "superstep_has_comm");
     }
 
     max_comm_superstep_var = model.AddVars(static_cast<int>(max_number_supersteps), COPT_INTEGER, "max_comm_superstep");
@@ -250,7 +250,7 @@ void CoptCommScheduleOptimizer<Graph_t>::setupVariablesConstraintsObjective(cons
         }
     }
 
-    if (num_supersteps_can_change) {
+    if (!ignore_latency) {
         unsigned M = num_processors * num_processors * num_vertices;
         for (unsigned int step = 0; step < schedule.numberOfSupersteps(); step++) {
 
@@ -269,7 +269,7 @@ void CoptCommScheduleOptimizer<Graph_t>::setupVariablesConstraintsObjective(cons
                 }
             }
 
-            model.AddConstr(expr <= M * superstep_used_var[static_cast<int>(step)]);
+            model.AddConstr(expr <= M * superstep_has_comm[static_cast<int>(step)]);
         }
     }
     // precedence constraint: if task is computed then all of its predecessors must have been present
@@ -356,11 +356,11 @@ void CoptCommScheduleOptimizer<Graph_t>::setupVariablesConstraintsObjective(cons
       */
     Expr expr;
 
-    if (num_supersteps_can_change) {
+    if (!ignore_latency) {
 
         for (unsigned int step = 0; step < max_number_supersteps; step++) {
             expr += schedule.getInstance().communicationCosts() * max_comm_superstep_var[static_cast<int>(step)] +
-                    schedule.getInstance().synchronisationCosts() * superstep_used_var[static_cast<int>(step)];
+                    schedule.getInstance().synchronisationCosts() * superstep_has_comm[static_cast<int>(step)];
         }
     } else {
 

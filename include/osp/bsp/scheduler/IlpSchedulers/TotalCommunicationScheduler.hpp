@@ -289,6 +289,8 @@ class TotalCommunicationScheduler : public Scheduler<Graph_t> {
   protected:
     unsigned int max_number_supersteps;
 
+    unsigned time_limit_seconds;
+
     VarArray superstep_used_var;
     std::vector<std::vector<VarArray>> node_to_processor_superstep_var;
     std::vector<std::vector<VarArray>> edge_vars;
@@ -633,7 +635,7 @@ class TotalCommunicationScheduler : public Scheduler<Graph_t> {
 
     virtual ~TotalCommunicationScheduler() = default;
 
-    virtual RETURN_STATUS computeScheduleWithTimeLimit(BspSchedule<Graph_t> &schedule, unsigned timeout) override {
+    virtual RETURN_STATUS computeScheduleWithTimeLimit(BspSchedule<Graph_t> &schedule, unsigned timeout) {
         model.SetDblParam(COPT_DBLPARAM_TIMELIMIT, timeout);
         return computeSchedule(schedule);
     }
@@ -668,7 +670,7 @@ class TotalCommunicationScheduler : public Scheduler<Graph_t> {
             loadInitialSchedule();
         }
 
-        
+
         model.SetIntParam(COPT_INTPARAM_THREADS, 128);
         model.SetIntParam(COPT_INTPARAM_STRONGBRANCHING, 1);
         model.SetIntParam(COPT_INTPARAM_LPMETHOD, 1);
@@ -845,6 +847,13 @@ class TotalCommunicationScheduler : public Scheduler<Graph_t> {
      * @return The best bound found by the solver.
      */
     inline double bestBound() { return model.GetDblAttr(COPT_DBLATTR_BESTBND); }
+
+    /**
+     * @brief Sets the time limit for the ILP solving.
+     *
+     * @param time_limit_seconds_ The time limit in seconds.
+     */
+    inline void setTimeLimitSeconds(unsigned time_limit_seconds_) { time_limit_seconds = time_limit_seconds_; }
 
     /**
      * @brief Get the name of the schedule.
