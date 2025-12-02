@@ -156,7 +156,7 @@ std::vector<vertex_idx_t<Graph_t>> StepByStepCoarser<Graph_t>::generate_vertex_c
         G_coarse.remove_vertex(node);
     }
 
-    construct_computational_dag(G_full, G_coarse);
+    constructComputationalDag(G_full, G_coarse);
 
     contractionHistory.clear();
 

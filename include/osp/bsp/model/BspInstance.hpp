@@ -106,7 +106,7 @@ class BspInstance {
     explicit BspInstance(const BspInstance<Graph_t_other> &other)
         : architecture(other.getArchitecture()),
           nodeProcessorCompatibility(other.getNodeProcessorCompatibilityMatrix()) {
-        construct_computational_dag(other.getComputationalDag(), cdag);
+        constructComputationalDag(other.getComputationalDag(), cdag);
     }
 
     BspInstance(const BspInstance<Graph_t> &other) = default;

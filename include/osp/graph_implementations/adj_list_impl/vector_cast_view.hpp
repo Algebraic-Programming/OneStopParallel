@@ -141,7 +141,7 @@ class vector_cast_view {
      * @param i The index of the element to access.
      * @return The element at index i, cast to to_t.
      */
-    [[nodiscard]] auto operator[](std::size_t i) const { return static_cast<to_t>(vec[i]); }
+    [[nodiscard]] auto operator[](std::size_t i) const { return static_cast<to_t>(vec.at(i)); }
 };
 
 } // namespace osp

@@ -101,7 +101,7 @@ class computational_dag_vector_impl {
 
         static_assert(is_computational_dag_v<Graph_t>, "Graph_t must satisfy the is_computation_dag concept");
 
-        construct_computational_dag(other, *this);
+        constructComputationalDag(other, *this);
     }
 
     computational_dag_vector_impl(computational_dag_vector_impl &&other) noexcept
