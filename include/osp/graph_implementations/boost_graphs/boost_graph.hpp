@@ -208,7 +208,7 @@ class boost_graph {
 
         graph.m_vertices.reserve(other.num_vertices());
 
-        osp::construct_computational_dag(other, *this);
+        osp::constructComputationalDag(other, *this);
     }
 
     inline const boost_graph_impl_t &get_boost_graph() const { return graph; }

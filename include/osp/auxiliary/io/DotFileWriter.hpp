@@ -463,7 +463,7 @@ class DotFileWriter {
         }
 
         write_graph_structure(
-            os, g2, VertexWriterDuplicateRecompSchedule_DOT<Graph_t>(g2, names, node_to_proc, node_to_superstep));
+            os, g2, VertexWriterDuplicateRecompSchedule_DOT<graph_t>(g2, names, node_to_proc, node_to_superstep));
     }
 
     template<typename Graph_t>

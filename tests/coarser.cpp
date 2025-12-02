@@ -35,6 +35,7 @@ limitations under the License.
 #include "osp/coarser/SquashA/SquashAMul.hpp"
 #include "osp/coarser/top_order/top_order_coarser.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
+#include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 #include "osp/graph_implementations/adj_list_impl/compact_sparse_graph.hpp"
 #include "osp/graph_implementations/adj_list_impl/compact_sparse_graph_edge_desc.hpp"
 #include "osp/auxiliary/io/arch_file_reader.hpp"
