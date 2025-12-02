@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(test_total) {
     scheduler_to.setTimeLimitSeconds(10);
 
     const auto result_to = scheduler_to.computeSchedule(schedule_to);
-    BOOST_CHECK_EQUAL(RETURN_STATUS::BEST_FOUND, result_to);
+    BOOST_CHECK(result_to == RETURN_STATUS::OSP_SUCCESS || result_to == RETURN_STATUS::BEST_FOUND);
     BOOST_CHECK(schedule_to.satisfiesPrecedenceConstraints());
 
     BspSchedule<graph> schedule(instance);

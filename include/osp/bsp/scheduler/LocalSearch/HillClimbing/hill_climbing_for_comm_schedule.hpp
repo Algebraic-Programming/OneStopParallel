@@ -133,7 +133,7 @@ void HillClimbingForCommSteps<Graph_t>::Init() {
     const Graph_t &G = schedule->getInstance().getComputationalDag();
 
     CreateSupstepLists();
-    cost = schedule->computeCosts() - schedule->computeWorkCosts();
+    cost = schedule->computeCosts();
 
     nextSupstep = 0;
     commSchedule.clear();
@@ -224,7 +224,7 @@ int HillClimbingForCommSteps<Graph_t>::moveCostChange(const vertex_idx node, con
 
     // Change at old place
     auto itr = commCostList[oldStep].rbegin();
-    cost_type oldMax = std::max(itr->first * schedule->getInstance().getArchitecture().communicationCosts() + schedule->getInstance().getArchitecture().synchronisationCosts(), minimum_cost_per_superstep[oldStep]);
+    cost_type oldMax = std::max(itr->first * schedule->getInstance().getArchitecture().communicationCosts(), minimum_cost_per_superstep[oldStep]) + schedule->getInstance().getArchitecture().synchronisationCosts();
     cost_type maxSource =
         std::max(sent[oldStep][sourceProc] - schedule->getInstance().getComputationalDag().vertex_comm_weight(node) * schedule->getInstance().getArchitecture().sendCosts(sourceProc, p),
                  received[oldStep][sourceProc]);
@@ -238,23 +238,21 @@ int HillClimbingForCommSteps<Graph_t>::moveCostChange(const vertex_idx node, con
         }
 
     cost_type newMax = std::max(std::max(maxSource, maxTarget), maxOther) * schedule->getInstance().getArchitecture().communicationCosts();
-    if (newMax > 0)
-        newMax += schedule->getInstance().getArchitecture().synchronisationCosts();
-    newMax = std::max(newMax, minimum_cost_per_superstep[oldStep]);
+    cost_type newSync = (newMax > 0) ? schedule->getInstance().getArchitecture().synchronisationCosts() : 0;
+    newMax = std::max(newMax, minimum_cost_per_superstep[oldStep]) + newSync;
     change += static_cast<int>(newMax) - static_cast<int>(oldMax);
 
     // Change at new place
     oldMax = commCostList[step].rbegin()->first * schedule->getInstance().getArchitecture().communicationCosts();
-    if (oldMax > 0)
-        oldMax += schedule->getInstance().getArchitecture().synchronisationCosts();
+    cost_type oldSync = (oldMax > 0) ? schedule->getInstance().getArchitecture().synchronisationCosts() : 0;
     oldMax = std::max(oldMax, minimum_cost_per_superstep[step]);
-    maxSource = schedule->getInstance().getArchitecture().synchronisationCosts() + schedule->getInstance().getArchitecture().communicationCosts() *
-                                                                                       (sent[step][sourceProc] + schedule->getInstance().getComputationalDag().vertex_comm_weight(node) * schedule->getInstance().getArchitecture().sendCosts(sourceProc, p));
-    maxTarget = schedule->getInstance().getArchitecture().synchronisationCosts() + schedule->getInstance().getArchitecture().communicationCosts() *
-                                                                                       (received[step][p] + schedule->getInstance().getComputationalDag().vertex_comm_weight(node) * schedule->getInstance().getArchitecture().sendCosts(sourceProc, p));
+    maxSource = schedule->getInstance().getArchitecture().communicationCosts() *
+                    (sent[step][sourceProc] + schedule->getInstance().getComputationalDag().vertex_comm_weight(node) * schedule->getInstance().getArchitecture().sendCosts(sourceProc, p));
+    maxTarget = schedule->getInstance().getArchitecture().communicationCosts() *
+                    (received[step][p] + schedule->getInstance().getComputationalDag().vertex_comm_weight(node) * schedule->getInstance().getArchitecture().sendCosts(sourceProc, p));
 
     newMax = std::max(std::max(oldMax, maxSource), maxTarget);
-    change += static_cast<int>(newMax) - static_cast<int>(oldMax);
+    change += static_cast<int>(newMax + schedule->getInstance().getArchitecture().synchronisationCosts()) - static_cast<int>(oldMax + oldSync);
 
     return change;
 }
