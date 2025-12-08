@@ -113,10 +113,10 @@ class BspInstance {
     }
 
     BspInstance(const BspInstance<Graph_t> &other) = default;
-    BspInstance(BspInstance<Graph_t> &&other) = default;
+    BspInstance(BspInstance<Graph_t> &&other) noexcept = default;
 
     BspInstance<Graph_t> &operator=(const BspInstance<Graph_t> &other) = default;
-    BspInstance<Graph_t> &operator=(BspInstance<Graph_t> &&other) = default;
+    BspInstance<Graph_t> &operator=(BspInstance<Graph_t> &&other) noexcept = default;
 
     /**
      * @brief Returns a reference to the BSP architecture for the instance.
