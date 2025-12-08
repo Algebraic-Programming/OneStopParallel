@@ -151,12 +151,12 @@ class BspArchitecture {
         if (numberOfProcessors_ == 1U)
             return false;
 
-        const v_commw_t<Graph_t> val = sendCosts_.at(1U);
+        const v_commw_t<Graph_t> val = sendCosts_[1U];
         for (unsigned p1 = 0U; p1 < numberOfProcessors_; p1++) {
             for (unsigned p2 = 0U; p2 < numberOfProcessors_; p2++) {
                 if (p1 == p2)
                     continue;
-                if (sendCosts_.at(FlatIndex(p1, p2)) != val)
+                if (sendCosts_[FlatIndex(p1, p2)] != val)
                     return true;
             }
         }
@@ -323,9 +323,9 @@ class BspArchitecture {
         for (unsigned i = 0U; i < numberOfProcessors_; i++) {
             for (unsigned j = 0U; j < numberOfProcessors_; j++) {
                 if (i == j) {
-                    sendCosts_.at(FlatIndex(i, j)) = 0U;
+                    sendCosts_[FlatIndex(i, j)] = 0U;
                 } else {
-                    sendCosts_.at(FlatIndex(i, j)) = 1U;
+                    sendCosts_[FlatIndex(i, j)] = 1U;
                 }
             }
         }
@@ -353,7 +353,7 @@ class BspArchitecture {
                 // Corrected loop to avoid underflow issues with unsigned
                 for (int pos = static_cast<int>(maxPos); pos >= 0; --pos) {
                     if (((1U << pos) & i) != ((1U << pos) & j)) {
-                        sendCosts_.at(FlatIndex(i, j)) = sendCosts_.at(FlatIndex(j, i)) = intpow(base, static_cast<unsigned>(pos));
+                        sendCosts_[FlatIndex(i, j)] = sendCosts_[FlatIndex(j, i)] = intpow(base, static_cast<unsigned>(pos));
                         break;
                     }
                 }
@@ -441,12 +441,8 @@ class BspArchitecture {
      * @brief Sets the memory bound for a specific processor.
      * @param MemoryBound The new memory bound for the processor.
      * @param processorIndex The processor index. Must be less than numberOfProcessors_.
-     * @throws std::invalid_argument if the processor index is out of bounds.
      */
     void setMemoryBound(const v_memw_t<Graph_t> MemoryBound, const unsigned processorIndex) {
-        if (processorIndex >= numberOfProcessors_) {
-            throw std::invalid_argument("Invalid Argument: Processor index out of bounds in setMemoryBound.");
-        }
         memoryBound_.at(processorIndex) = MemoryBound;
     }
 
@@ -558,7 +554,7 @@ class BspArchitecture {
      * @param proc The processor index.
      * @return The memory bound.
      */
-    [[nodiscard]] v_memw_t<Graph_t> memoryBound(const unsigned proc) const { return memoryBound_.at(proc); }
+    [[nodiscard]] v_memw_t<Graph_t> memoryBound(const unsigned proc) const { return memoryBound_[proc]; }
 
     /**
      * @brief Returns the maximum memory bound over all processors.
@@ -575,8 +571,8 @@ class BspArchitecture {
     [[nodiscard]] v_memw_t<Graph_t> maxMemoryBoundProcType(const v_type_t<Graph_t> procType) const {
         v_memw_t<Graph_t> max_mem = 0U;
         for (unsigned proc = 0U; proc < numberOfProcessors_; proc++) {
-            if (processorTypes_.at(proc) == procType) {
-                max_mem = std::max(max_mem, memoryBound_.at(proc));
+            if (processorTypes_[proc] == procType) {
+                max_mem = std::max(max_mem, memoryBound_[proc]);
             }
         }
         return max_mem;
@@ -608,7 +604,7 @@ class BspArchitecture {
         std::vector<std::vector<v_commw_t<Graph_t>>> matrix(numberOfProcessors_, std::vector<v_commw_t<Graph_t>>(numberOfProcessors_));
         for (unsigned i = 0; i < numberOfProcessors_; ++i) {
             for (unsigned j = 0; j < numberOfProcessors_; ++j) {
-                matrix[i][j] = sendCosts_.at(FlatIndex(i, j));
+                matrix[i][j] = sendCosts_[FlatIndex(i, j)];
             }
         }
         return matrix;
@@ -627,7 +623,7 @@ class BspArchitecture {
     [[nodiscard]] const std::vector<unsigned> &processorTypes() const { return processorTypes_; }
 
     /**
-     * @brief Returns the communication costs between two processors.
+     * @brief Returns the communication costs between two processors. Does not perform bounds checking.
      * The communication costs are the send costs multiplied by the communication costs factor.
      *
      * @param p1 The index of the first processor.
@@ -635,34 +631,31 @@ class BspArchitecture {
      * @return The communication costs between the two processors.
      */
     [[nodiscard]] v_commw_t<Graph_t> communicationCosts(const unsigned p1, const unsigned p2) const {
-        return communicationCosts_ * sendCosts_.at(FlatIndex(p1, p2));
+        return communicationCosts_ * sendCosts_[FlatIndex(p1, p2)];
     }
 
     /**
-     * @brief Returns the send costs between two processors.
+     * @brief Returns the send costs between two processors. Does not perform bounds checking.
      *
      * @param p1 The index of the first processor.
      * @param p2 The index of the second processor.
      * @return The send costs between the two processors.
      */
-    [[nodiscard]] v_commw_t<Graph_t> sendCosts(const unsigned p1, const unsigned p2) const { return sendCosts_.at(FlatIndex(p1, p2)); }
+    [[nodiscard]] v_commw_t<Graph_t> sendCosts(const unsigned p1, const unsigned p2) const { return sendCosts_[FlatIndex(p1, p2)]; }
 
     /**
-     * @brief Returns the type of a specific processor.
+     * @brief Returns the type of a specific processor. Does not perform bounds checking.
      * @param p1 The processor index.
      * @return The processor type.
      */
-    [[nodiscard]] v_type_t<Graph_t> processorType(const unsigned p1) const { return processorTypes_.at(p1); }
+    [[nodiscard]] v_type_t<Graph_t> processorType(const unsigned p1) const { return processorTypes_[p1]; }
 
     /**
-     * @brief Sets the type of a specific processor.
+     * @brief Sets the type of a specific processor. Performs bounds checking.
      * @param p1 The processor index.
      * @param type The new processor type.
      */
     void setProcessorType(const unsigned p1, const v_type_t<Graph_t> type) {
-        if (p1 >= numberOfProcessors_)
-            throw std::invalid_argument("Invalid Argument: Processor index out of bounds.");
-
         processorTypes_.at(p1) = type;
         numberOfProcessorTypes_ = std::max(numberOfProcessorTypes_, type + 1U);
     }
@@ -674,7 +667,7 @@ class BspArchitecture {
     [[nodiscard]] std::vector<unsigned> getProcessorTypeCount() const {
         std::vector<unsigned> type_count(numberOfProcessorTypes_, 0U);
         for (unsigned p = 0U; p < numberOfProcessors_; p++) {
-            type_count[processorTypes_.at(p)]++;
+            type_count[processorTypes_[p]]++;
         }
         return type_count;
     }
