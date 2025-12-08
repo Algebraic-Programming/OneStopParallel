@@ -30,6 +30,7 @@ limitations under the License.
 
 #include "osp/auxiliary/datastructures/heaps/PairingHeap.hpp"
 #include "osp/auxiliary/misc.hpp"
+#include "osp/bsp/model/util/CompatibleProcessorRange.hpp"
 #include "osp/bsp/scheduler/ImprovementScheduler.hpp"
 #include "osp/bsp/scheduler/LocalSearch/LocalSearchMemoryConstraintModules.hpp"
 #include "osp/graph_algorithms/directed_graph_edge_desc_util.hpp"
