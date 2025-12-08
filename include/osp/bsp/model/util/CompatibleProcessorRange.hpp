@@ -18,6 +18,7 @@ limitations under the License.
 
 #pragma once
 
+#include "osp/bsp/model/BspInstance.hpp"
 #include <vector>
 
 namespace osp {
@@ -33,7 +34,7 @@ namespace osp {
 template<typename Graph_t>
 class CompatibleProcessorRange {
 
-    std::vector<std::vector<unsigned>> type_processor_idx;
+    std::vector<std::vector<unsigned>> typeProcessorIdx;
     const BspInstance<Graph_t> *instance = nullptr;
 
   public:
@@ -60,13 +61,12 @@ class CompatibleProcessorRange {
         instance = &inst;
 
         if constexpr (has_typed_vertices_v<Graph_t>) {
-
-            type_processor_idx = std::vector<std::vector<unsigned>>(inst.getComputationalDag().num_vertex_types());
+            typeProcessorIdx.resize(inst.getComputationalDag().num_vertex_types());
 
             for (v_type_t<Graph_t> v_type = 0; v_type < inst.getComputationalDag().num_vertex_types(); v_type++) {
                 for (unsigned proc = 0; proc < inst.numberOfProcessors(); proc++)
                     if (inst.isCompatibleType(v_type, inst.processorType(proc)))
-                        type_processor_idx[v_type].push_back(proc);
+                        typeProcessorIdx[v_type].push_back(proc);
             }
         }
     }
@@ -77,11 +77,10 @@ class CompatibleProcessorRange {
      * @param type The node type.
      * @return A const reference to a vector of compatible processor indices.
      */
-    [[nodiscard]] const auto &compatible_processors_type(v_type_t<Graph_t> type) const {
+    [[nodiscard]] const auto &compatible_processors_type(const v_type_t<Graph_t> type) const {
         assert(instance != nullptr);
-
         if constexpr (has_typed_vertices_v<Graph_t>) {
-            return type_processor_idx[type];
+            return typeProcessorIdx[type];
         } else {
             return instance->processors();
         }
@@ -93,7 +92,8 @@ class CompatibleProcessorRange {
      * @param vertex The vertex index.
      * @return A const reference to a vector of compatible processor indices.
      */
-    [[nodiscard]] const auto &compatible_processors_vertex(vertex_idx_t<Graph_t> vertex) const {
+    [[nodiscard]] const auto &compatible_processors_vertex(const vertex_idx_t<Graph_t> vertex) const {
+        assert(instance != nullptr);
         return compatible_processors_type(instance->getComputationalDag().vertex_type(vertex));
     }
 };

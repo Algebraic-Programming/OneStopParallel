@@ -240,7 +240,7 @@ class TotalCommunicationScheduler : public Scheduler<Graph_t> {
                 SetSolution((*max_work_superstep_var_ptr)[static_cast<int>(step)], max_work);
             }
 
-            if (instance_ptr->isNumaInstance()) {
+            if (instance_ptr->getArchitecture().isNumaArchitecture()) {
 
                 for (unsigned p1 = 0; p1 < instance_ptr->numberOfProcessors(); p1++) {
                     for (unsigned p2 = 0; p2 < instance_ptr->numberOfProcessors(); p2++) {
@@ -669,7 +669,6 @@ class TotalCommunicationScheduler : public Scheduler<Graph_t> {
         if (use_initial_schedule) {
             loadInitialSchedule();
         }
-
 
         model.SetIntParam(COPT_INTPARAM_THREADS, 128);
         model.SetIntParam(COPT_INTPARAM_STRONGBRANCHING, 1);
