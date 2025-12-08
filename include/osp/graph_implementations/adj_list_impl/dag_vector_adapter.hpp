@@ -133,25 +133,25 @@ class dag_vector_adapter {
      * @brief Returns a view of the parents (in-neighbors) of a vertex. Does not perform bounds checking.
      * @param v The vertex index.
      */
-    [[nodiscard]] auto parents(const vertex_idx v) const { return vector_cast_view<index_t, vertex_idx>(in_neigbors_[v]); }
+    [[nodiscard]] auto parents(const vertex_idx v) const { return vector_cast_view<index_t, vertex_idx>((*in_neigbors)[v]); }
 
     /**
      * @brief Returns a view of the children (out-neighbors) of a vertex. Does not perform bounds checking.
      * @param v The vertex index.
      */
-    [[nodiscard]] auto children(const vertex_idx v) const { return vector_cast_view<index_t, vertex_idx>(out_neigbors_[v]); }
+    [[nodiscard]] auto children(const vertex_idx v) const { return vector_cast_view<index_t, vertex_idx>((*out_neigbors)[v]); }
 
     /**
      * @brief Returns the in-degree of a vertex. Does not perform bounds checking.
      * @param v The vertex index.
      */
-    [[nodiscard]] vertex_idx in_degree(const vertex_idx v) const { return static_cast<vertex_idx>(in_neigbors_[v].size()); }
+    [[nodiscard]] vertex_idx in_degree(const vertex_idx v) const { return static_cast<vertex_idx>((*in_neigbors)[v].size()); }
 
     /**
      * @brief Returns the out-degree of a vertex. Does not perform bounds checking.
      * @param v The vertex index.
      */
-    [[nodiscard]] vertex_idx out_degree(const vertex_idx v) const { return static_cast<vertex_idx>(out_neigbors_[v].size()); }
+    [[nodiscard]] vertex_idx out_degree(const vertex_idx v) const { return static_cast<vertex_idx>((*out_neigbors)[v].size()); }
 
     [[nodiscard]] vertex_work_weight_type vertex_work_weight(const vertex_idx v) const { return vertices_[v].work_weight; }
 
