@@ -197,7 +197,7 @@ class BspArchitecture {
     }
 
     void InitializeUniformSendCosts() {
-        sendCosts_.resize(numberOfProcessors_ * numberOfProcessors_, 1U);
+        sendCosts_.assign(numberOfProcessors_ * numberOfProcessors_, 1U);
         SetSendCostDiagonalToZero();
         isNuma_ = false;
     }
