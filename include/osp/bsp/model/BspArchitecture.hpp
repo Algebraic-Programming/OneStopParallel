@@ -49,34 +49,36 @@ enum class MEMORY_CONSTRAINT_TYPE {
     LOCAL_SOURCES_INC_EDGES   /** Memory constraints are local source incident edges. Experimental. */
 };
 
-inline std::ostream &operator<<(std::ostream &os, MEMORY_CONSTRAINT_TYPE type) {
+/**
+ * @brief Converts the enum to a string literal.
+ * Returns const char* to avoid std::string allocation overhead.
+ */
+inline const char *to_string(MEMORY_CONSTRAINT_TYPE type) {
     switch (type) {
     case MEMORY_CONSTRAINT_TYPE::NONE:
-        os << "NONE";
-        break;
+        return "NONE";
     case MEMORY_CONSTRAINT_TYPE::LOCAL:
-        os << "LOCAL";
-        break;
+        return "LOCAL";
     case MEMORY_CONSTRAINT_TYPE::GLOBAL:
-        os << "GLOBAL";
-        break;
+        return "GLOBAL";
     case MEMORY_CONSTRAINT_TYPE::PERSISTENT_AND_TRANSIENT:
-        os << "PERSISTENT_AND_TRANSIENT";
-        break;
+        return "PERSISTENT_AND_TRANSIENT";
     case MEMORY_CONSTRAINT_TYPE::LOCAL_IN_OUT:
-        os << "LOCAL_IN_OUT";
-        break;
+        return "LOCAL_IN_OUT";
     case MEMORY_CONSTRAINT_TYPE::LOCAL_INC_EDGES:
-        os << "LOCAL_INC_EDGES";
-        break;
+        return "LOCAL_INC_EDGES";
     case MEMORY_CONSTRAINT_TYPE::LOCAL_SOURCES_INC_EDGES:
-        os << "LOCAL_SOURCES_INC_EDGES";
-        break;
+        return "LOCAL_SOURCES_INC_EDGES";
     default:
-        os << "UNKNOWN";
-        break;
+        return "UNKNOWN";
     }
-    return os;
+}
+
+/**
+ * @brief Stream operator overload using the helper function.
+ */
+inline std::ostream &operator<<(std::ostream &os, MEMORY_CONSTRAINT_TYPE type) {
+    return os << to_string(type);
 }
 
 /**
@@ -113,54 +115,34 @@ class BspArchitecture {
     static_assert(is_computational_dag_v<Graph_t>, "BspSchedule can only be used with computational DAGs.");
 
   private:
-    /**
-     * @brief The number of processors in the architecture. Must be at least 1.
-     *
-     */
+    /** @brief The number of processors in the architecture. Must be at least 1. */
     unsigned numberOfProcessors_;
 
-    /**
-     * @brief The number of processor types in the architecture. See processorTypes_ for more details.
-     *
-     */
+    /** @brief The number of processor types in the architecture. See processorTypes_ for more details. */
     unsigned numberOfProcessorTypes_;
 
-    /**
-     * @brief The communication costs, typically denoted 'g' for the BSP model.
-     */
+    /** @brief The communication costs, typically denoted 'g' for the BSP model. */
     v_commw_t<Graph_t> communicationCosts_;
 
-    /**
-     * @brief The synchronisation costs, typically denoted 'L' for the BSP model.
-     */
+    /** @brief The synchronisation costs, typically denoted 'L' for the BSP model. */
     v_commw_t<Graph_t> synchronisationCosts_;
 
-    /**
-     * @brief The architecture allows to specify memory bounds per processor.
-     */
+    /** @brief The architecture allows to specify memory bounds per processor. */
     std::vector<v_memw_t<Graph_t>> memoryBound_;
 
-    /**
-     * @brief Flag to indicate whether the architecture is NUMA , i.e., whether the send costs are different for different pairs of processors.
-     */
+    /** @brief Flag to indicate whether the architecture is NUMA , i.e., whether the send costs are different for different pairs of processors. */
     bool isNuma_;
 
-    /**
-     * @brief The architecture allows to specify processor types. Processor types are used to express compatabilities, which can be specified in the BspInstance, regarding node types.
-     */
+    /** @brief The architecture allows to specify processor types. Processor types are used to express compatabilities, which can be specified in the BspInstance, regarding node types. */
     std::vector<unsigned> processorTypes_;
 
-    /**
-     * @brief A flattened p x p matrix of send costs.
-     * Access via index [i * numberOfProcessors_ + j].
-     */
+    /** @brief A flattened p x p matrix of send costs. Access via index [i * numberOfProcessors_ + j]. */
     std::vector<v_commw_t<Graph_t>> sendCosts_;
 
-    /**
-     * @brief The memory constraint type.
-     */
+    /** @brief The memory constraint type. */
     MEMORY_CONSTRAINT_TYPE memoryConstraintType_ = MEMORY_CONSTRAINT_TYPE::NONE;
 
+    /** @brief Helper function to calculate the index of a flattened p x p matrix. */
     std::size_t FlatIndex(const unsigned row, const unsigned col) const {
         return static_cast<std::size_t>(row) * numberOfProcessors_ + col;
     }
@@ -184,15 +166,15 @@ class BspArchitecture {
     void UpdateNumberOfProcessorTypes() {
         numberOfProcessorTypes_ = 0U;
         for (unsigned p = 0U; p < numberOfProcessors_; p++) {
-            if (processorTypes_.at(p) >= numberOfProcessorTypes_) {
-                numberOfProcessorTypes_ = processorTypes_.at(p) + 1U;
+            if (processorTypes_[p] >= numberOfProcessorTypes_) {
+                numberOfProcessorTypes_ = processorTypes_[p] + 1U;
             }
         }
     }
 
     void SetSendCostDiagonalToZero() {
         for (unsigned i = 0U; i < numberOfProcessors_; i++) {
-            sendCosts_.at(FlatIndex(i, i)) = 0U;
+            sendCosts_[FlatIndex(i, i)] = 0U;
         }
     }
 

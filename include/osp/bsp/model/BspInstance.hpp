@@ -205,12 +205,6 @@ class BspInstance {
 
     /**
      * @brief Returns a copy of the send costs matrix.
-     *
-     * @return A copy of the send costs matrix.
-     */
-    /**
-     * @brief Returns a copy of the send costs matrix.
-     *
      * @return A copy of the send costs matrix.
      */
     inline std::vector<std::vector<v_commw_t<Graph_t>>> sendCostMatrix() const {
