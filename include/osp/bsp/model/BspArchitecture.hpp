@@ -604,7 +604,7 @@ class BspArchitecture {
         std::vector<std::vector<v_commw_t<Graph_t>>> matrix(numberOfProcessors_, std::vector<v_commw_t<Graph_t>>(numberOfProcessors_));
         for (unsigned i = 0; i < numberOfProcessors_; ++i) {
             for (unsigned j = 0; j < numberOfProcessors_; ++j) {
-                matrix[i][j] = sendCosts_[FlatIndex(i, j)];
+                matrix[i][j] = sendCosts_.at(FlatIndex(i, j));
             }
         }
         return matrix;
