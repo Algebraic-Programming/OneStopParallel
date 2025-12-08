@@ -19,8 +19,8 @@ limitations under the License.
 #define BOOST_TEST_MODULE Bsp_Architecture
 #include <boost/test/unit_test.hpp>
 
-#include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 #include "osp/bsp/model/BspArchitecture.hpp"
+#include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 
 using namespace osp;
 
@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(ParameterizedConstructorTest) {
 
     std::vector<std::vector<int>> expectedSendCosts = {{0, 2, 2, 2}, {2, 0, 2, 2}, {2, 2, 0, 2}, {2, 2, 2, 0}};
 
-    architecture.setSendCosts(expectedSendCosts);
+    architecture.SetSendCosts(expectedSendCosts);
     BOOST_TEST(architecture.sendCostMatrix() == expectedSendCosts);
 
     BOOST_CHECK_EQUAL(architecture.communicationCosts(0, 1), 4);
@@ -141,8 +141,7 @@ BOOST_AUTO_TEST_CASE(Architecture) {
     }
 
     // constructor
-    std::vector<std::vector<int>> send_costs = {{0, 1, 1, 1, 1, 1}, {1, 0, 1, 1, 1, 1}, {1, 1, 0, 1, 1, 1},
-                                                {1, 1, 1, 0, 1, 1}, {1, 1, 1, 1, 0, 1}, {1, 1, 1, 1, 1, 0}};
+    std::vector<std::vector<int>> send_costs = {{0, 1, 1, 1, 1, 1}, {1, 0, 1, 1, 1, 1}, {1, 1, 0, 1, 1, 1}, {1, 1, 1, 0, 1, 1}, {1, 1, 1, 1, 0, 1}, {1, 1, 1, 1, 1, 0}};
 
     BOOST_CHECK_THROW(BspArchitecture<computational_dag_vector_impl_def_int_t> test31(7, 42942, 0, send_costs),
                       std::invalid_argument);
@@ -169,10 +168,8 @@ BOOST_AUTO_TEST_CASE(Architecture) {
     }
 
     // constructor
-    std::vector<std::vector<int>> send_costs2 = {{0, 1, 2, 1, 1, 1}, {1, 0, 1, 1, 1, 1}, {1, 1, 0, 1, 1, 1},
-                                                 {1, 1, 1, 0, 1, 1}, {1, 1, 1, 1, 0, 1}, {1, 1, 1, 1, 1, 0}};
-    std::vector<std::vector<int>> send_costs3 = {{0, 1, 1, 1, 1, 1}, {1, 0, 1, 1, 1, 1}, {1, 1, 0, 1, 1, 1},
-                                                 {3, 1, 1, 0, 1, 1}, {1, 1, 1, 1, 0, 1}, {1, 1, 1, 1, 1, 0}};
+    std::vector<std::vector<int>> send_costs2 = {{0, 1, 2, 1, 1, 1}, {1, 0, 1, 1, 1, 1}, {1, 1, 0, 1, 1, 1}, {1, 1, 1, 0, 1, 1}, {1, 1, 1, 1, 0, 1}, {1, 1, 1, 1, 1, 0}};
+    std::vector<std::vector<int>> send_costs3 = {{0, 1, 1, 1, 1, 1}, {1, 0, 1, 1, 1, 1}, {1, 1, 0, 1, 1, 1}, {3, 1, 1, 0, 1, 1}, {1, 1, 1, 1, 0, 1}, {1, 1, 1, 1, 1, 0}};
 
     BspArchitecture<computational_dag_vector_impl_def_int_t> test4(6, 0, 4294965, send_costs2);
     BOOST_CHECK_EQUAL(test4.numberOfProcessors(), 6);

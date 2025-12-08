@@ -16,24 +16,23 @@ limitations under the License.
 @author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 
-#include <iostream>
-#include "osp/auxiliary/io/dot_graph_file_reader.hpp"
 #include "osp/auxiliary/io/DotFileWriter.hpp"
+#include "osp/auxiliary/io/dot_graph_file_reader.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/BspLocking.hpp"
-#include "osp/bsp/scheduler/Serial.hpp"
-#include "osp/bsp/scheduler/GreedySchedulers/GreedyMetaScheduler.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/GreedyChildren.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/GreedyMetaScheduler.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/GrowLocalAutoCores.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin_v2/kl_include_mt.hpp"
+#include "osp/bsp/scheduler/Serial.hpp"
 #include "osp/coarser/coarser_util.hpp"
 #include "osp/dag_divider/isomorphism_divider/IsomorphicSubgraphScheduler.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
+#include <iostream>
 
 using namespace osp;
 
-
 template<typename GraphT>
-void check_partition_type_homogeneity(const GraphT& dag, const std::vector<vertex_idx_t<GraphT>>& partition) {
+void check_partition_type_homogeneity(const GraphT &dag, const std::vector<vertex_idx_t<GraphT>> &partition) {
     // Group partitions by their ID
     std::map<vertex_idx_t<GraphT>, std::vector<vertex_idx_t<GraphT>>> partitions;
     for (vertex_idx_t<GraphT> i = 0; i < dag.num_vertices(); ++i) {
@@ -41,19 +40,20 @@ void check_partition_type_homogeneity(const GraphT& dag, const std::vector<verte
     }
 
     // For each partition, check that all vertices have the same type
-    for (const auto& [part_id, vertices] : partitions) {
-        if (vertices.empty()) continue;
+    for (const auto &[part_id, vertices] : partitions) {
+        if (vertices.empty())
+            continue;
         const auto first_node_type = dag.vertex_type(vertices[0]);
-        for (const auto& vertex : vertices) {
+        for (const auto &vertex : vertices) {
             if (dag.vertex_type(vertex) != first_node_type) {
                 std::cerr << "Partition " << part_id << " contains vertices with different types." << std::endl;
                 return;
-            } 
+            }
         }
     }
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
     if (argc < 2) {
         std::cerr << "Usage: " << argv[0] << " <path_to_dot_file>" << std::endl;
         return 1;
@@ -76,14 +76,11 @@ int main(int argc, char* argv[]) {
         instance.getComputationalDag().set_vertex_comm_weight(v, static_cast<v_commw_t<graph_t2>>(instance.getComputationalDag().vertex_comm_weight(v) * 0.01));
     }
 
-
     // Set up architecture
-    instance.getArchitecture().set_processors_consequ_types({24,48},{100,100});
+    instance.getArchitecture().SetProcessorsConsequTypes({24, 48}, {100, 100});
     instance.setDiagonalCompatibilityMatrix(2);
     instance.setSynchronisationCosts(2000);
     instance.setCommunicationCosts(1);
-
-    
 
     // Set up the scheduler
     GrowLocalAutoCores<graph_t> growlocal;
@@ -95,9 +92,9 @@ int main(int argc, char* argv[]) {
     ComboScheduler<graph_t> growlocal_kl(growlocal, kl);
     ComboScheduler<graph_t> locking_kl(locking, kl);
     ComboScheduler<graph_t> children_kl(children, kl);
- 
+
     GreedyMetaScheduler<graph_t> scheduler;
-    //scheduler.addScheduler(growlocal_kl);
+    // scheduler.addScheduler(growlocal_kl);
     scheduler.addScheduler(locking_kl);
     scheduler.addScheduler(children_kl);
     scheduler.addSerialScheduler();
@@ -120,7 +117,7 @@ int main(int argc, char* argv[]) {
     graph_t corase_graph;
     coarser_util::construct_coarse_dag(instance.getComputationalDag(), corase_graph, partition);
     bool acyc = is_acyclic(corase_graph);
-    std::cout << "Partition is " << (acyc ? "acyclic." : "not acyclic."); 
+    std::cout << "Partition is " << (acyc ? "acyclic." : "not acyclic.");
 
     std::cout << "Partition computation finished." << std::endl;
     std::cout << "Generated " << std::set<vertex_idx_t<graph_t>>(partition.begin(), partition.end()).size() << " partitions." << std::endl;

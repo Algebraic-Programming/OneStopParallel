@@ -152,7 +152,7 @@ class kl_improver : public ImprovementScheduler<Graph_t> {
     const Graph_t *graph;
     const BspInstance<Graph_t> *instance;
 
-    compatible_processor_range<Graph_t> proc_range;
+    CompatibleProcessorRange<Graph_t> proc_range;
 
     kl_parameter parameters;
     std::mt19937 gen;

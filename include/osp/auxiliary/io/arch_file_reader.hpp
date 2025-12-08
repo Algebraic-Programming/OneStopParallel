@@ -18,10 +18,10 @@ limitations under the License.
 
 #pragma once
 
+#include "osp/bsp/model/BspArchitecture.hpp"
 #include <fstream>
 #include <iostream>
 #include <sstream>
-#include "osp/bsp/model/BspArchitecture.hpp"
 
 namespace osp { namespace file_reader {
 
@@ -31,7 +31,8 @@ bool readBspArchitecture(std::ifstream &infile, BspArchitecture<Graph_t> &archit
 
     // Skip comment lines
     while (std::getline(infile, line)) {
-        if (!line.empty() && line[0] != '%') break;
+        if (!line.empty() && line[0] != '%')
+            break;
     }
 
     // Parse architecture parameters
@@ -58,24 +59,24 @@ bool readBspArchitecture(std::ifstream &infile, BspArchitecture<Graph_t> &archit
     if (0 <= mem_type && mem_type <= 3) {
         using memw_t = v_memw_t<Graph_t>;
         switch (mem_type) {
-            case 0:
-                architecture.setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::NONE);
-                break;
-            case 1:
-                architecture.setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::LOCAL);
-                architecture.setMemoryBound(static_cast<memw_t>(M));
-                break;
-            case 2:
-                architecture.setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::GLOBAL);
-                architecture.setMemoryBound(static_cast<memw_t>(M));
-                break;
-            case 3:
-                architecture.setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::PERSISTENT_AND_TRANSIENT);
-                architecture.setMemoryBound(static_cast<memw_t>(M));
-                break;
-            default:
-                std::cerr << "Invalid memory type.\n";
-                return false;
+        case 0:
+            architecture.setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::NONE);
+            break;
+        case 1:
+            architecture.setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::LOCAL);
+            architecture.setMemoryBound(static_cast<memw_t>(M));
+            break;
+        case 2:
+            architecture.setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::GLOBAL);
+            architecture.setMemoryBound(static_cast<memw_t>(M));
+            break;
+        case 3:
+            architecture.setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::PERSISTENT_AND_TRANSIENT);
+            architecture.setMemoryBound(static_cast<memw_t>(M));
+            break;
+        default:
+            std::cerr << "Invalid memory type.\n";
+            return false;
         }
     } else if (mem_type == -1) {
         std::cout << "No memory type specified. Assuming \"NONE\".\n";
@@ -116,7 +117,7 @@ bool readBspArchitecture(std::ifstream &infile, BspArchitecture<Graph_t> &archit
             return false;
         }
 
-        architecture.setSendCosts(fromProc, toProc, static_cast<v_commw_t<Graph_t>>(value));
+        architecture.SetSendCosts(fromProc, toProc, static_cast<v_commw_t<Graph_t>>(value));
     }
 
     // Ensure there are no remaining non-comment lines
@@ -127,7 +128,6 @@ bool readBspArchitecture(std::ifstream &infile, BspArchitecture<Graph_t> &archit
         }
     }
 
-    architecture.computeCommAverage();
     return true;
 }
 

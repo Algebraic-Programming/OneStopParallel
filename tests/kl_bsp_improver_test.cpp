@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE(kl_improver_inner_loop_test) {
 
 //         std::vector<std::vector<int>> send_cost = {{0, 1, 4, 4}, {1, 0, 4, 4}, {4, 4, 0, 1}, {4, 4, 1, 0}};
 
-//         instance.getArchitecture().setSendCosts(send_cost);
+//         instance.getArchitecture().SetSendCosts(send_cost);
 
 //         if (!status_graph) {
 

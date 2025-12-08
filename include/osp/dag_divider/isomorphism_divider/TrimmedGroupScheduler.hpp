@@ -19,8 +19,8 @@ limitations under the License.
 #pragma once
 
 #include "osp/bsp/scheduler/Scheduler.hpp"
-#include "osp/graph_algorithms/subgraph_algorithms.hpp"
 #include "osp/graph_algorithms/computational_dag_util.hpp"
+#include "osp/graph_algorithms/subgraph_algorithms.hpp"
 #include <iostream>
 #include <numeric>
 
@@ -35,7 +35,7 @@ namespace osp {
  * potentially disconnected, subgraph that resulted from merging smaller isomorphic subgraphs. It divides
  * the input graph into its weakly connected components and schedules them on proportionally allocated processors.
  */
-template <typename Constr_Graph_t>
+template<typename Constr_Graph_t>
 class TrimmedGroupScheduler : public Scheduler<Constr_Graph_t> {
 
     Scheduler<Constr_Graph_t> *sub_scheduler;
@@ -94,7 +94,7 @@ class TrimmedGroupScheduler : public Scheduler<Constr_Graph_t> {
         // Determine the processor allocation for a single sub-problem.
         // Calculate offsets for processor types within the main 'arch' (passed to TrimmedGroupScheduler)
         std::vector<unsigned> arch_proc_type_offsets(arch.getNumberOfProcessorTypes(), 0);
-        const auto& arch_proc_type_counts = arch.getProcessorTypeCount();
+        const auto &arch_proc_type_counts = arch.getProcessorTypeCount();
         for (unsigned type_idx = 1; type_idx < arch.getNumberOfProcessorTypes(); ++type_idx) {
             arch_proc_type_offsets[type_idx] = arch_proc_type_offsets[type_idx - 1] + arch_proc_type_counts[type_idx - 1];
         }
@@ -115,12 +115,12 @@ class TrimmedGroupScheduler : public Scheduler<Constr_Graph_t> {
         }
 
         // Create the sub-architecture for one sub-problem.
-        BspArchitecture<Constr_Graph_t> sub_arch(arch);  
-        sub_arch.set_processors_consequ_types(sub_proc_counts, mem_weights);
+        BspArchitecture<Constr_Graph_t> sub_arch(arch);
+        sub_arch.SetProcessorsConsequTypes(sub_proc_counts, mem_weights);
 
         // Calculate offsets for processor types within the 'sub_arch'
         std::vector<unsigned> sub_arch_proc_type_offsets(sub_arch.getNumberOfProcessorTypes(), 0);
-        const auto& sub_arch_proc_type_counts = sub_arch.getProcessorTypeCount();
+        const auto &sub_arch_proc_type_counts = sub_arch.getProcessorTypeCount();
         for (unsigned type_idx = 1; type_idx < sub_arch.getNumberOfProcessorTypes(); ++type_idx) {
             sub_arch_proc_type_offsets[type_idx] = sub_arch_proc_type_offsets[type_idx - 1] + sub_arch_proc_type_counts[type_idx - 1];
         }
@@ -135,8 +135,8 @@ class TrimmedGroupScheduler : public Scheduler<Constr_Graph_t> {
             std::sort(group_vertices.begin(), group_vertices.end());
 
             BspInstance<Constr_Graph_t> sub_instanc;
-            sub_instanc.setArchitecture(sub_arch); // Set the sub-architecture
-            sub_instanc.setNodeProcessorCompatibility(instance.getNodeProcessorCompatibilityMatrix()); // Inherit compatibility
+            sub_instanc.setArchitecture(sub_arch);                                                                          // Set the sub-architecture
+            sub_instanc.setNodeProcessorCompatibility(instance.getNodeProcessorCompatibilityMatrix());                      // Inherit compatibility
             auto global_to_local_map = create_induced_subgraph_map(dag, sub_instanc.getComputationalDag(), group_vertices); // Create induced subgraph
 
             // Create a schedule object for the sub-problem
@@ -144,10 +144,11 @@ class TrimmedGroupScheduler : public Scheduler<Constr_Graph_t> {
 
             // Call the sub-scheduler to compute the schedule for this group of components
             auto status = sub_scheduler->computeSchedule(sub_schedule);
-            if (status != RETURN_STATUS::OSP_SUCCESS && status != RETURN_STATUS::BEST_FOUND) return status;
+            if (status != RETURN_STATUS::OSP_SUCCESS && status != RETURN_STATUS::BEST_FOUND)
+                return status;
 
             // Map the sub-schedule back to the main schedule.
-            for (const auto& v_global : group_vertices) {
+            for (const auto &v_global : group_vertices) {
                 const auto v_local = global_to_local_map.at(v_global);
                 const unsigned sub_proc = sub_schedule.assignedProcessor(v_local);
                 const unsigned sub_superstep = sub_schedule.assignedSuperstep(v_local);

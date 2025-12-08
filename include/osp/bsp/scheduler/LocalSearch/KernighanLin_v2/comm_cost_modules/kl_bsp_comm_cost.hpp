@@ -97,7 +97,7 @@ struct kl_bsp_comm_cost_function {
     constexpr static bool is_max_comm_cost_function = true;
 
     kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t> *active_schedule;
-    compatible_processor_range<Graph_t> *proc_range;
+    CompatibleProcessorRange<Graph_t> *proc_range;
     const Graph_t *graph;
     const BspInstance<Graph_t> *instance;
 
@@ -119,7 +119,7 @@ struct kl_bsp_comm_cost_function {
     }
 
     void initialize(kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t> &sched,
-                    compatible_processor_range<Graph_t> &p_range) {
+                    CompatibleProcessorRange<Graph_t> &p_range) {
         active_schedule = &sched;
         proc_range = &p_range;
         instance = &sched.getInstance();
