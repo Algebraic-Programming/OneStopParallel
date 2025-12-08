@@ -84,8 +84,28 @@ inline std::ostream &operator<<(std::ostream &os, MEMORY_CONSTRAINT_TYPE type) {
  * @brief Represents the architecture of a BSP (Bulk Synchronous Parallel) system.
  *
  * The BspArchitecture class stores information about the number of processors, communication costs,
- * synchronization costs, and send costs between processors in a BSP system. It provides methods to
- * set and retrieve these values.
+ * synchronization costs, the send costs between processors, the types of processors, and the memory
+ * bounds. It provides methods to set and retrieve these values.
+ *
+ * **Processors:**
+ * The architecture consists of p processors, indexed from 0 to p-1.
+ *
+ * **Processor Types:**
+ * Processors can have different types, which are represented by non-negative integers.
+ * Processor types are assumed to be consecutive integers starting from 0.
+ *
+ * **Communication and Synchronization Costs:**
+ * - Communication Cost (g): The cost of communicating a unit of data between processors, i.e., the bandwidth.
+ * - Synchronization Cost (L): The cost of synchronizing all processors at the end of a superstep.
+ *
+ * **Send Costs (NUMA):**
+ * The architecture supports Non-Uniform Memory Access (NUMA) effects via a send cost matrix.
+ * The cost to send data from processor i to processor j is given by g * sendCosts[i][j].
+ * By default, send costs are uniform (1 for distinct processors, 0 for self).
+ *
+ * **Memory Constraints:**
+ * Each processor has a memory bound. The `MEMORY_CONSTRAINT_TYPE` determines how these bounds are applied
+ * (e.g., local per superstep, global per processor).
  */
 template<typename Graph_t>
 class BspArchitecture {
