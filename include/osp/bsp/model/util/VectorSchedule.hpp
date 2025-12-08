@@ -18,7 +18,7 @@ limitations under the License.
 
 #pragma once
 
-#include "IBspSchedule.hpp"
+#include "osp/bsp/model/IBspSchedule.hpp"
 #include "osp/concepts/computational_dag_concept.hpp"
 #include <vector>
 

@@ -435,15 +435,6 @@ class IsomorphicSubgraphScheduler {
                 }
                 std::cout << std::endl;
                 std::cout << "    Sync cost: " << sub_arch.synchronisationCosts() << ", Comm cost: " << sub_arch.communicationCosts() << std::endl;
-                std::cout << "    Sub-problem compatibility matrix:" << std::endl;
-                const auto &sub_comp_matrix = representative_instance.getNodeNodeCompatabilityMatrix();
-                for (unsigned i = 0; i < sub_comp_matrix.size(); ++i) {
-                    std::cout << "      Node Type " << i << ": [ ";
-                    for (unsigned j = 0; j < sub_comp_matrix[i].size(); ++j) {
-                        std::cout << (sub_comp_matrix[i][j] ? "1" : "0") << " ";
-                    }
-                    std::cout << "]" << std::endl;
-                }
             }
 
             scheduler_for_group_ptr->computeSchedule(bsp_schedule);

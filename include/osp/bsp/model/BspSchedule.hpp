@@ -25,8 +25,8 @@ limitations under the License.
 
 #include "IBspSchedule.hpp"
 #include "IBspScheduleEval.hpp"
-#include "SetSchedule.hpp"
 #include "osp/bsp/model/cost/LazyCommunicationCost.hpp"
+#include "osp/bsp/model/util/SetSchedule.hpp"
 #include "osp/concepts/computational_dag_concept.hpp"
 
 namespace osp {
@@ -213,7 +213,7 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
      * @param node The node for which to return the assigned superstep.
      * @return The superstep assigned to the specified node.
      */
-    [[nodiscard]] unsigned assignedSuperstep(vertex_idx node) const override { return node_to_superstep_assignment[node]; }
+    [[nodiscard]] unsigned assignedSuperstep(const vertex_idx node) const override { return node_to_superstep_assignment[node]; }
 
     /**
      * @brief Returns the processor assigned to the specified node.
@@ -221,7 +221,7 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
      * @param node The node for which to return the assigned processor.
      * @return The processor assigned to the specified node.
      */
-    [[nodiscard]] unsigned assignedProcessor(vertex_idx node) const override { return node_to_processor_assignment[node]; }
+    [[nodiscard]] unsigned assignedProcessor(const vertex_idx node) const override { return node_to_processor_assignment[node]; }
 
     /**
      * @brief Returns the superstep assignment for the schedule.
@@ -254,7 +254,7 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
      * @param node The node for which to set the assigned superstep.
      * @param superstep The superstep to assign to the node.
      */
-    void setAssignedSuperstep(vertex_idx node, unsigned superstep) {
+    void setAssignedSuperstep(const vertex_idx node, const unsigned superstep) {
         if (node < instance->numberOfVertices()) {
             node_to_superstep_assignment[node] = superstep;
 
@@ -273,7 +273,7 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
      * @param node The node for which to set the assigned superstep.
      * @param superstep The superstep to assign to the node.
      */
-    void setAssignedSuperstepNoUpdateNumSuperstep(vertex_idx node, unsigned superstep) {
+    void setAssignedSuperstepNoUpdateNumSuperstep(const vertex_idx node, const unsigned superstep) {
         node_to_superstep_assignment.at(node) = superstep;
     }
 
@@ -283,7 +283,7 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
      * @param node The node for which to set the assigned processor.
      * @param processor The processor to assign to the node.
      */
-    void setAssignedProcessor(vertex_idx node, unsigned processor) {
+    void setAssignedProcessor(const vertex_idx node, const unsigned processor) {
         node_to_processor_assignment.at(node) = processor;
     }
 
@@ -477,7 +477,7 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
      * @param processor The processor index.
      * @return A vector of nodes assigned to the specified processor.
      */
-    [[nodiscard]] std::vector<vertex_idx_t<Graph_t>> getAssignedNodeVector(unsigned int processor) const {
+    [[nodiscard]] std::vector<vertex_idx_t<Graph_t>> getAssignedNodeVector(const unsigned processor) const {
         std::vector<vertex_idx_t<Graph_t>> vec;
 
         for (const auto &node : instance->vertices()) {
@@ -496,7 +496,7 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
      * @param superstep The superstep index.
      * @return A vector of nodes assigned to the specified processor and superstep.
      */
-    [[nodiscard]] std::vector<vertex_idx_t<Graph_t>> getAssignedNodeVector(unsigned int processor, unsigned int superstep) const {
+    [[nodiscard]] std::vector<vertex_idx_t<Graph_t>> getAssignedNodeVector(const unsigned processor, const unsigned superstep) const {
         std::vector<vertex_idx_t<Graph_t>> vec;
 
         for (const auto &node : instance->vertices()) {
@@ -513,7 +513,7 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
      *
      * @param number_of_supersteps_ The number of supersteps.
      */
-    void setNumberOfSupersteps(unsigned int number_of_supersteps_) {
+    void setNumberOfSupersteps(const unsigned number_of_supersteps_) {
         number_of_supersteps = number_of_supersteps_;
     }
 
@@ -523,7 +523,7 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
      * @param processor The processor index.
      * @return The number of nodes assigned to the specified processor.
      */
-    [[nodiscard]] unsigned numAssignedNodes(unsigned processor) const {
+    [[nodiscard]] unsigned numAssignedNodes(const unsigned processor) const {
         unsigned num = 0;
 
         for (const auto &node : instance->vertices()) {

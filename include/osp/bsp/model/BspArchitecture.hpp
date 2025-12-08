@@ -636,6 +636,7 @@ class BspArchitecture {
 
     /**
      * @brief Returns the send costs between two processors. Does not perform bounds checking.
+     * Does not the communication costs into account.
      *
      * @param p1 The index of the first processor.
      * @param p2 The index of the second processor.

@@ -16,13 +16,12 @@ limitations under the License.
 @author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 
-
 #pragma once
 
 #include "osp/bsp/model/BspSchedule.hpp"
 #include "osp/bsp/model/IBspSchedule.hpp"
-#include "osp/bsp/model/SetSchedule.hpp"
-#include "osp/bsp/model/VectorSchedule.hpp"
+#include "osp/bsp/model/util/SetSchedule.hpp"
+#include "osp/bsp/model/util/VectorSchedule.hpp"
 #include "osp/bsp/scheduler/ImprovementScheduler.hpp"
 #include "osp/bsp/scheduler/LocalSearch/LocalSearchMemoryConstraintModules.hpp"
 #include "osp/graph_algorithms/directed_graph_util.hpp"
@@ -54,7 +53,7 @@ struct kl_move_struct {
     bool operator>(kl_move_struct<cost_t, vertex_idx_t> const &rhs) const {
         return (gain > rhs.gain) or (gain >= rhs.gain and node < rhs.node);
     }
-    
+
     kl_move_struct<cost_t, vertex_idx_t> reverse_move() const {
         return kl_move_struct(node, -gain, to_proc, to_step, from_proc, from_step);
     }
@@ -73,13 +72,12 @@ struct pre_move_work_data {
 
     pre_move_work_data() {}
     pre_move_work_data(work_weight_t from_step_max_work_, work_weight_t from_step_second_max_work_, unsigned from_step_max_work_processor_count_,
-                 work_weight_t to_step_max_work_, work_weight_t to_step_second_max_work_,
-                 unsigned to_step_max_work_processor_count_)
+                       work_weight_t to_step_max_work_, work_weight_t to_step_second_max_work_,
+                       unsigned to_step_max_work_processor_count_)
         : from_step_max_work(from_step_max_work_), from_step_second_max_work(from_step_second_max_work_),
           from_step_max_work_processor_count(from_step_max_work_processor_count_),
           to_step_max_work(to_step_max_work_), to_step_second_max_work(to_step_second_max_work_),
-          to_step_max_work_processor_count(to_step_max_work_processor_count_) {}          
-
+          to_step_max_work_processor_count(to_step_max_work_processor_count_) {}
 };
 
 template<typename Graph_t>
@@ -87,16 +85,16 @@ struct kl_active_schedule_work_datastructures {
 
     using work_weight_t = v_workw_t<Graph_t>;
 
-    const BspInstance<Graph_t> *instance;   
+    const BspInstance<Graph_t> *instance;
     const SetSchedule<Graph_t> *set_schedule;
-   
+
     struct weight_proc {
         work_weight_t work;
         unsigned proc;
 
         weight_proc() : work(0), proc(0) {}
         weight_proc(work_weight_t _work, unsigned _proc) : work(_work), proc(_proc) {}
-    
+
         bool operator<(weight_proc const &rhs) const {
             return (work > rhs.work) or (work == rhs.work and proc < rhs.proc);
         }
@@ -106,17 +104,17 @@ struct kl_active_schedule_work_datastructures {
     std::vector<std::vector<unsigned>> step_processor_position;
     std::vector<unsigned> step_max_work_processor_count;
     work_weight_t max_work_weight;
-    work_weight_t total_work_weight;     
+    work_weight_t total_work_weight;
 
     inline work_weight_t step_max_work(unsigned step) const { return step_processor_work_[step][0].work; }
     inline work_weight_t step_second_max_work(unsigned step) const { return step_processor_work_[step][step_max_work_processor_count[step]].work; }
     inline work_weight_t step_proc_work(unsigned step, unsigned proc) const { return step_processor_work_[step][step_processor_position[step][proc]].work; }
-    inline work_weight_t & step_proc_work(unsigned step, unsigned proc) { return step_processor_work_[step][step_processor_position[step][proc]].work; }
+    inline work_weight_t &step_proc_work(unsigned step, unsigned proc) { return step_processor_work_[step][step_processor_position[step][proc]].work; }
 
     template<typename cost_t, typename vertex_idx_t>
-    inline pre_move_work_data<work_weight_t> get_pre_move_work_data(kl_move_struct<cost_t, vertex_idx_t> move) { 
+    inline pre_move_work_data<work_weight_t> get_pre_move_work_data(kl_move_struct<cost_t, vertex_idx_t> move) {
         return pre_move_work_data<work_weight_t>(step_max_work(move.from_step), step_second_max_work(move.from_step), step_max_work_processor_count[move.from_step],
-                                                        step_max_work(move.to_step), step_second_max_work(move.to_step), step_max_work_processor_count[move.to_step]); 
+                                                 step_max_work(move.to_step), step_second_max_work(move.to_step), step_max_work_processor_count[move.to_step]);
     }
 
     inline void initialize(const SetSchedule<Graph_t> &sched, const BspInstance<Graph_t> &inst, unsigned num_steps) {
@@ -140,20 +138,20 @@ struct kl_active_schedule_work_datastructures {
         unsigned pos = 0;
         const work_weight_t max_work_to = step_processor_work_[step][0].work;
 
-        for (const auto & wp : step_processor_work_[step]) {
+        for (const auto &wp : step_processor_work_[step]) {
             step_processor_position[step][wp.proc] = pos++;
 
             if (wp.work == max_work_to && pos < instance->numberOfProcessors())
-                step_max_work_processor_count[step] = pos; 
+                step_max_work_processor_count[step] = pos;
         }
     }
 
     template<typename cost_t, typename vertex_idx_t>
-    void apply_move(kl_move_struct<cost_t, vertex_idx_t> move, work_weight_t work_weight) {      
+    void apply_move(kl_move_struct<cost_t, vertex_idx_t> move, work_weight_t work_weight) {
 
-        if (work_weight == 0) 
+        if (work_weight == 0)
             return;
-        
+
         if (move.to_step != move.from_step) {
             step_proc_work(move.to_step, move.to_proc) += work_weight;
             step_proc_work(move.from_step, move.from_proc) -= work_weight;
@@ -171,7 +169,7 @@ struct kl_active_schedule_work_datastructures {
             // }
 
             // unsigned to_proc_pos = step_processor_position[move.to_step][move.to_proc];
-            
+
             // while (to_proc_pos > 0 && step_processor_work_[move.to_step][to_proc_pos - 1].work < new_weight_to) {
             //     std::swap(step_processor_work_[move.to_step][to_proc_pos], step_processor_work_[move.to_step][to_proc_pos - 1]);
             //     std::swap(step_processor_position[move.to_step][step_processor_work_[move.to_step][to_proc_pos].proc], step_processor_position[move.to_step][step_processor_work_[move.to_step][to_proc_pos - 1].proc]);
@@ -189,15 +187,15 @@ struct kl_active_schedule_work_datastructures {
             //     std::swap(step_processor_position[move.from_step][step_processor_work_[move.from_step][from_proc_pos].proc], step_processor_position[move.from_step][step_processor_work_[move.from_step][from_proc_pos + 1].proc]);
             //     from_proc_pos++;
             // }
-                
-            // if (prev_max_work_from == prev_weight_from) {
-            //     step_max_work_processor_count[move.from_step]--;        
-            //     if (step_max_work_processor_count[move.from_step] == 0) {  
-            //         step_max_work_processor_count[move.from_step] = from_proc_pos; 
-            //     }
-            // }    
 
-        } else {            
+            // if (prev_max_work_from == prev_weight_from) {
+            //     step_max_work_processor_count[move.from_step]--;
+            //     if (step_max_work_processor_count[move.from_step] == 0) {
+            //         step_max_work_processor_count[move.from_step] = from_proc_pos;
+            //     }
+            // }
+
+        } else {
             step_proc_work(move.to_step, move.to_proc) += work_weight;
             step_proc_work(move.from_step, move.from_proc) -= work_weight;
             arrange_superstep_data(move.to_step);
@@ -209,21 +207,21 @@ struct kl_active_schedule_work_datastructures {
         std::swap(step_processor_position[step1], step_processor_position[step2]);
         std::swap(step_max_work_processor_count[step1], step_max_work_processor_count[step2]);
     }
-    
+
     void override_next_superstep(unsigned step) {
 
         const unsigned next_step = step + 1;
         for (unsigned i = 0; i < instance->numberOfProcessors(); i++) {
-            step_processor_work_[next_step][i] = step_processor_work_[step][i]; 
-            step_processor_position[next_step][i] = step_processor_position[step][i];            
+            step_processor_work_[next_step][i] = step_processor_work_[step][i];
+            step_processor_position[next_step][i] = step_processor_position[step][i];
         }
         step_max_work_processor_count[next_step] = step_max_work_processor_count[step];
     }
 
     void reset_superstep(unsigned step) {
         for (unsigned i = 0; i < instance->numberOfProcessors(); i++) {
-            step_processor_work_[step][i] = {0,i}; 
-            step_processor_position[step][i] = i;            
+            step_processor_work_[step][i] = {0, i};
+            step_processor_position[step][i] = i;
         }
         step_max_work_processor_count[step] = instance->numberOfProcessors() - 1;
     }
@@ -249,12 +247,12 @@ struct kl_active_schedule_work_datastructures {
                     step_max_work_processor_count[step] = 1;
                 } else if (step_processor_work_[step][proc].work == max_work && step_max_work_processor_count[step] < (instance->numberOfProcessors() - 1)) {
                     step_max_work_processor_count[step]++;
-                } 
+                }
             }
 
             std::sort(step_processor_work_[step].begin(), step_processor_work_[step].end());
             unsigned pos = 0;
-            for (const auto & wp : step_processor_work_[step]) {
+            for (const auto &wp : step_processor_work_[step]) {
                 step_processor_position[step][wp.proc] = pos++;
             }
         }
@@ -287,15 +285,15 @@ struct thread_local_active_schedule_data {
         cost = cost_;
         best_cost = cost_;
         feasible = true;
-    }  
-   
+    }
+
     inline void update_cost(cost_t change_in_cost) {
-        cost += change_in_cost;        
+        cost += change_in_cost;
 
         if (cost <= best_cost && feasible) {
             best_cost = cost;
             best_schedule_idx = static_cast<unsigned>(applied_moves.size());
-        }    
+        }
     }
 };
 
@@ -319,23 +317,23 @@ class kl_active_schedule {
   public:
     virtual ~kl_active_schedule() = default;
 
-    inline const BspInstance<Graph_t> & getInstance() const { return *instance; }
-    inline const VectorSchedule<Graph_t> & getVectorSchedule() const { return vector_schedule; }
-    inline VectorSchedule<Graph_t> & getVectorSchedule() { return vector_schedule; }
-    inline const SetSchedule<Graph_t> & getSetSchedule() const { return set_schedule; }
+    inline const BspInstance<Graph_t> &getInstance() const { return *instance; }
+    inline const VectorSchedule<Graph_t> &getVectorSchedule() const { return vector_schedule; }
+    inline VectorSchedule<Graph_t> &getVectorSchedule() { return vector_schedule; }
+    inline const SetSchedule<Graph_t> &getSetSchedule() const { return set_schedule; }
     inline cost_t get_cost() { return cost; }
     inline bool is_feasible() { return feasible; }
     inline unsigned num_steps() const { return vector_schedule.numberOfSupersteps(); }
     inline unsigned assigned_processor(VertexType node) const { return vector_schedule.assignedProcessor(node); }
     inline unsigned assigned_superstep(VertexType node) const { return vector_schedule.assignedSuperstep(node); }
-    inline v_workw_t<Graph_t> get_step_max_work(unsigned step) const {return work_datastructures.step_max_work(step); }
-    inline v_workw_t<Graph_t> get_step_second_max_work(unsigned step) const {return work_datastructures.step_second_max_work(step); }
-    inline std::vector<unsigned> & get_step_max_work_processor_count() {return work_datastructures.step_max_work_processor_count; }    
-    inline v_workw_t<Graph_t> get_step_processor_work(unsigned step, unsigned proc) const {return work_datastructures.step_proc_work(step, proc); }
+    inline v_workw_t<Graph_t> get_step_max_work(unsigned step) const { return work_datastructures.step_max_work(step); }
+    inline v_workw_t<Graph_t> get_step_second_max_work(unsigned step) const { return work_datastructures.step_second_max_work(step); }
+    inline std::vector<unsigned> &get_step_max_work_processor_count() { return work_datastructures.step_max_work_processor_count; }
+    inline v_workw_t<Graph_t> get_step_processor_work(unsigned step, unsigned proc) const { return work_datastructures.step_proc_work(step, proc); }
     inline pre_move_work_data<v_workw_t<Graph_t>> get_pre_move_work_data(kl_move move) { return work_datastructures.get_pre_move_work_data(move); }
     inline v_workw_t<Graph_t> get_max_work_weight() { return work_datastructures.max_work_weight; }
     inline v_workw_t<Graph_t> get_total_work_weight() { return work_datastructures.total_work_weight; }
-    inline void set_cost(cost_t cost_) { cost = cost_; }  
+    inline void set_cost(cost_t cost_) { cost = cost_; }
 
     constexpr static bool use_memory_constraint = is_local_search_memory_constraint_v<MemoryConstraint_t>;
 
@@ -343,11 +341,11 @@ class kl_active_schedule {
 
     kl_active_schedule_work_datastructures<Graph_t> work_datastructures;
 
-    inline v_workw_t<Graph_t> get_step_total_work(unsigned step) const {        
-        v_workw_t<Graph_t> total_work = 0;        
+    inline v_workw_t<Graph_t> get_step_total_work(unsigned step) const {
+        v_workw_t<Graph_t> total_work = 0;
         for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
             total_work += get_step_processor_work(step, proc);
-        }       
+        }
         return total_work;
     }
 
@@ -357,18 +355,18 @@ class kl_active_schedule {
 
         set_schedule.step_processor_vertices[move.from_step][move.from_proc].erase(move.node);
         set_schedule.step_processor_vertices[move.to_step][move.to_proc].insert(move.node);
-       
+
         update_violations(move.node, thread_data);
         thread_data.applied_moves.push_back(move);
 
         work_datastructures.apply_move(move, instance->getComputationalDag().vertex_work_weight(move.node));
         if constexpr (use_memory_constraint) {
             memory_constraint.apply_move(move.node, move.from_proc, move.from_step, move.to_proc, move.to_step);
-        }       
+        }
     }
 
     template<typename comm_datastructures_t>
-    void revert_to_best_schedule(unsigned start_move, unsigned insert_step, comm_datastructures_t & comm_datastructures, thread_data_t & thread_data, unsigned start_step, unsigned & end_step) {
+    void revert_to_best_schedule(unsigned start_move, unsigned insert_step, comm_datastructures_t &comm_datastructures, thread_data_t &thread_data, unsigned start_step, unsigned &end_step) {
         const unsigned bound = std::max(start_move, thread_data.best_schedule_idx);
         revert_moves(bound, comm_datastructures, thread_data, start_step, end_step);
 
@@ -391,7 +389,7 @@ class kl_active_schedule {
     }
 
     template<typename comm_datastructures_t>
-    void revert_schedule_to_bound(const size_t bound, const cost_t new_cost, const bool is_feasible, comm_datastructures_t & comm_datastructures, thread_data_t & thread_data, unsigned start_step, unsigned end_step) {
+    void revert_schedule_to_bound(const size_t bound, const cost_t new_cost, const bool is_feasible, comm_datastructures_t &comm_datastructures, thread_data_t &thread_data, unsigned start_step, unsigned end_step) {
         revert_moves(bound, comm_datastructures, thread_data, start_step, end_step);
 
         thread_data.current_violations.clear();
@@ -399,10 +397,9 @@ class kl_active_schedule {
         thread_data.cost = new_cost;
     }
 
-
-    void compute_violations(thread_data_t & thread_data);
+    void compute_violations(thread_data_t &thread_data);
     void compute_work_memory_datastructures(unsigned start_step, unsigned end_step);
-    void write_schedule (BspSchedule<Graph_t> &schedule);
+    void write_schedule(BspSchedule<Graph_t> &schedule);
     inline void initialize(const IBspSchedule<Graph_t> &schedule);
     inline void clear();
     void remove_empty_step(unsigned step);
@@ -412,15 +409,14 @@ class kl_active_schedule {
     void swap_steps(const unsigned step1, const unsigned step2);
 
   private:
-
     template<typename comm_datastructures_t>
-    void revert_moves(const size_t bound, comm_datastructures_t & comm_datastructures, thread_data_t & thread_data, unsigned start_step, unsigned end_step) {
+    void revert_moves(const size_t bound, comm_datastructures_t &comm_datastructures, thread_data_t &thread_data, unsigned start_step, unsigned end_step) {
         while (thread_data.applied_moves.size() > bound) {
             const auto move = thread_data.applied_moves.back().reverse_move();
             thread_data.applied_moves.pop_back();
 
             vector_schedule.setAssignedProcessor(move.node, move.to_proc);
-            vector_schedule.setAssignedSuperstep(move.node, move.to_step);  
+            vector_schedule.setAssignedSuperstep(move.node, move.to_step);
 
             set_schedule.step_processor_vertices[move.from_step][move.from_proc].erase(move.node);
             set_schedule.step_processor_vertices[move.to_step][move.to_proc].insert(move.node);
@@ -443,16 +439,16 @@ class kl_active_schedule {
             const auto &child = target(edge, instance->getComputationalDag());
 
             if (thread_data.current_violations.find(edge) == thread_data.current_violations.end()) {
-                if ((node_step > vector_schedule.assignedSuperstep(child)) || 
+                if ((node_step > vector_schedule.assignedSuperstep(child)) ||
                     (node_step == vector_schedule.assignedSuperstep(child) && node_proc != vector_schedule.assignedProcessor(child))) {
-                        thread_data.current_violations.insert(edge);
-                        thread_data.new_violations[child] = edge;                    
+                    thread_data.current_violations.insert(edge);
+                    thread_data.new_violations[child] = edge;
                 }
             } else {
-                if ((node_step < vector_schedule.assignedSuperstep(child)) || 
+                if ((node_step < vector_schedule.assignedSuperstep(child)) ||
                     (node_step == vector_schedule.assignedSuperstep(child) && node_proc == vector_schedule.assignedProcessor(child))) {
-                        thread_data.current_violations.erase(edge);
-                        thread_data.resolved_violations.insert(edge);                    
+                    thread_data.current_violations.erase(edge);
+                    thread_data.resolved_violations.insert(edge);
                 }
             }
         }
@@ -460,17 +456,17 @@ class kl_active_schedule {
         for (const auto &edge : in_edges(node, instance->getComputationalDag())) {
             const auto &parent = source(edge, instance->getComputationalDag());
 
-            if (thread_data.current_violations.find(edge) == thread_data.current_violations.end()) {   
-                if ((node_step < vector_schedule.assignedSuperstep(parent)) || 
+            if (thread_data.current_violations.find(edge) == thread_data.current_violations.end()) {
+                if ((node_step < vector_schedule.assignedSuperstep(parent)) ||
                     (node_step == vector_schedule.assignedSuperstep(parent) && node_proc != vector_schedule.assignedProcessor(parent))) {
-                        thread_data.current_violations.insert(edge);
-                        thread_data.new_violations[parent] = edge;                    
+                    thread_data.current_violations.insert(edge);
+                    thread_data.new_violations[parent] = edge;
                 }
             } else {
-                if ((node_step > vector_schedule.assignedSuperstep(parent)) || 
+                if ((node_step > vector_schedule.assignedSuperstep(parent)) ||
                     (node_step == vector_schedule.assignedSuperstep(parent) && node_proc == vector_schedule.assignedProcessor(parent))) {
-                        thread_data.current_violations.erase(edge);
-                        thread_data.resolved_violations.insert(edge);
+                    thread_data.current_violations.erase(edge);
+                    thread_data.resolved_violations.insert(edge);
                 }
             }
         }
@@ -501,7 +497,6 @@ class kl_active_schedule {
             thread_data.feasible = true;
         }
     }
-
 };
 
 template<typename Graph_t, typename cost_t, typename MemoryConstraint_t>
@@ -515,7 +510,7 @@ void kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t>::clear() {
 }
 
 template<typename Graph_t, typename cost_t, typename MemoryConstraint_t>
-void kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t>::compute_violations(thread_data_t & thread_data) {
+void kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t>::compute_violations(thread_data_t &thread_data) {
 
     thread_data.current_violations.clear();
     thread_data.feasible = true;
@@ -529,12 +524,12 @@ void kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t>::compute_violations
         const unsigned target_proc = assigned_processor(target_v);
         const unsigned source_step = assigned_superstep(source_v);
         const unsigned target_step = assigned_superstep(target_v);
-    
+
         if (source_step > target_step || (source_step == target_step && source_proc != target_proc)) {
             thread_data.current_violations.insert(edge);
             thread_data.feasible = false;
-        } 
-    }    
+        }
+    }
 }
 
 template<typename Graph_t, typename cost_t, typename MemoryConstraint_t>
@@ -563,7 +558,7 @@ void kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t>::compute_work_memor
 }
 
 template<typename Graph_t, typename cost_t, typename MemoryConstraint_t>
-void kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t>::write_schedule (BspSchedule<Graph_t> &schedule) {
+void kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t>::write_schedule(BspSchedule<Graph_t> &schedule) {
     for (const auto v : instance->vertices()) {
         schedule.setAssignedProcessor(v, vector_schedule.assignedProcessor(v));
         schedule.setAssignedSuperstep(v, vector_schedule.assignedSuperstep(v));
@@ -572,91 +567,92 @@ void kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t>::write_schedule (Bs
 }
 
 template<typename Graph_t, typename cost_t, typename MemoryConstraint_t>
-void kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t>::remove_empty_step(unsigned step) {    
+void kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t>::remove_empty_step(unsigned step) {
     for (unsigned i = step; i < num_steps() - 1; i++) {
-        for(unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
-            for (const auto node : set_schedule.step_processor_vertices[i + 1][proc]){
-                vector_schedule.setAssignedSuperstep(node, i);
-            }
-        }
-        std::swap(set_schedule.step_processor_vertices[i], set_schedule.step_processor_vertices[i + 1]);
-        work_datastructures.swap_steps(i, i+1);
-        if constexpr (use_memory_constraint) {
-           memory_constraint.swap_steps(i, i+1);
-        }
-    }
-    vector_schedule.number_of_supersteps--;
-}
-
-template<typename Graph_t, typename cost_t, typename MemoryConstraint_t>
-void kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t>::swap_empty_step_fwd(const unsigned step, const unsigned to_step) {    
-    for (unsigned i = step; i < to_step; i++) {
-        for(unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
-            for (const auto node : set_schedule.step_processor_vertices[i + 1][proc]){
+        for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
+            for (const auto node : set_schedule.step_processor_vertices[i + 1][proc]) {
                 vector_schedule.setAssignedSuperstep(node, i);
             }
         }
         std::swap(set_schedule.step_processor_vertices[i], set_schedule.step_processor_vertices[i + 1]);
         work_datastructures.swap_steps(i, i + 1);
         if constexpr (use_memory_constraint) {
-           memory_constraint.swap_steps(i, i+1);
+            memory_constraint.swap_steps(i, i + 1);
+        }
+    }
+    vector_schedule.number_of_supersteps--;
+}
+
+template<typename Graph_t, typename cost_t, typename MemoryConstraint_t>
+void kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t>::swap_empty_step_fwd(const unsigned step, const unsigned to_step) {
+    for (unsigned i = step; i < to_step; i++) {
+        for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
+            for (const auto node : set_schedule.step_processor_vertices[i + 1][proc]) {
+                vector_schedule.setAssignedSuperstep(node, i);
+            }
+        }
+        std::swap(set_schedule.step_processor_vertices[i], set_schedule.step_processor_vertices[i + 1]);
+        work_datastructures.swap_steps(i, i + 1);
+        if constexpr (use_memory_constraint) {
+            memory_constraint.swap_steps(i, i + 1);
         }
     }
 }
 
 template<typename Graph_t, typename cost_t, typename MemoryConstraint_t>
 void kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t>::insert_empty_step(unsigned step) {
-    unsigned i = vector_schedule.number_of_supersteps++;  
- 
+    unsigned i = vector_schedule.number_of_supersteps++;
+
     for (; i > step; i--) {
-        for(unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
-            for (const auto node : set_schedule.step_processor_vertices[i-1][proc]){
+        for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
+            for (const auto node : set_schedule.step_processor_vertices[i - 1][proc]) {
                 vector_schedule.setAssignedSuperstep(node, i);
             }
         }
         std::swap(set_schedule.step_processor_vertices[i], set_schedule.step_processor_vertices[i - 1]);
-        work_datastructures.swap_steps(i-1, i);
+        work_datastructures.swap_steps(i - 1, i);
         if constexpr (use_memory_constraint) {
-           memory_constraint.swap_steps(i - 1, i);
+            memory_constraint.swap_steps(i - 1, i);
         }
-    } 
+    }
 }
 
 template<typename Graph_t, typename cost_t, typename MemoryConstraint_t>
 void kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t>::swap_empty_step_bwd(const unsigned to_step, const unsigned empty_step) {
-    unsigned i = to_step;  
- 
+    unsigned i = to_step;
+
     for (; i > empty_step; i--) {
-        for(unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
-            for (const auto node : set_schedule.step_processor_vertices[i-1][proc]){
+        for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
+            for (const auto node : set_schedule.step_processor_vertices[i - 1][proc]) {
                 vector_schedule.setAssignedSuperstep(node, i);
             }
         }
         std::swap(set_schedule.step_processor_vertices[i], set_schedule.step_processor_vertices[i - 1]);
-        work_datastructures.swap_steps(i-1, i);
+        work_datastructures.swap_steps(i - 1, i);
         if constexpr (use_memory_constraint) {
-           memory_constraint.swap_steps(i - 1, i);
+            memory_constraint.swap_steps(i - 1, i);
         }
-    }     
+    }
 }
 
 template<typename Graph_t, typename cost_t, typename MemoryConstraint_t>
 void kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t>::swap_steps(const unsigned step1, const unsigned step2) {
-    if (step1 == step2) return;
+    if (step1 == step2)
+        return;
 
-    for(unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
-        for (const auto node : set_schedule.step_processor_vertices[step1][proc]){
+    for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
+        for (const auto node : set_schedule.step_processor_vertices[step1][proc]) {
             vector_schedule.setAssignedSuperstep(node, step2);
         }
-        for (const auto node : set_schedule.step_processor_vertices[step2][proc]){
+        for (const auto node : set_schedule.step_processor_vertices[step2][proc]) {
             vector_schedule.setAssignedSuperstep(node, step1);
         }
     }
     std::swap(set_schedule.step_processor_vertices[step1], set_schedule.step_processor_vertices[step2]);
-    work_datastructures.swap_steps(step1, step2);  
+    work_datastructures.swap_steps(step1, step2);
     if constexpr (use_memory_constraint) {
         memory_constraint.swap_steps(step1, step2);
-    }   
+    }
 }
 
 } // namespace osp

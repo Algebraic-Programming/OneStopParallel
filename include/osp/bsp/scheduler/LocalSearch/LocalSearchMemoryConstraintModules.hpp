@@ -19,8 +19,8 @@ limitations under the License.
 #pragma once
 
 #include "osp/bsp/model/BspSchedule.hpp"
-#include "osp/bsp/model/SetSchedule.hpp"
-#include "osp/bsp/model/VectorSchedule.hpp"
+#include "osp/bsp/model/util/SetSchedule.hpp"
+#include "osp/bsp/model/util/VectorSchedule.hpp"
 #include "osp/graph_algorithms/directed_graph_util.hpp"
 
 namespace osp {
@@ -42,7 +42,7 @@ struct is_local_search_memory_constraint<
                                                          std::declval<unsigned>(), std::declval<unsigned>(),
                                                          std::declval<unsigned>(), std::declval<unsigned>())),
                    decltype(std::declval<T>().compute_memory_datastructure(std::declval<unsigned>(),
-                                                                             std::declval<unsigned>())),
+                                                                           std::declval<unsigned>())),
                    decltype(std::declval<T>().swap_steps(std::declval<unsigned>(), std::declval<unsigned>())),
                    decltype(std::declval<T>().reset_superstep(std::declval<unsigned>())),
                    decltype(std::declval<T>().override_superstep(std::declval<unsigned>(), std::declval<unsigned>(),
@@ -105,7 +105,7 @@ struct ls_local_memory_constraint {
 
     void swap_steps(const unsigned step1, const unsigned step2) {
         std::swap(step_processor_memory[step1], step_processor_memory[step2]);
-    } 
+    }
 
     void compute_memory_datastructure(unsigned start_step, unsigned end_step) {
 
@@ -150,7 +150,7 @@ struct ls_local_memory_constraint {
             }
         }
         return true;
-    }  
+    }
 };
 
 template<typename Graph_t>
@@ -378,7 +378,7 @@ struct ls_local_sources_inc_edges_memory_constraint {
     inline void swap_steps(const unsigned step1, const unsigned step2) {
         std::swap(step_processor_memory[step1], step_processor_memory[step2]);
         std::swap(step_processor_pred[step1], step_processor_pred[step2]);
-    }    
+    }
 
     inline void initialize(const SetSchedule<Graph_t> &set_schedule_, const VectorSchedule<Graph_t> &vec_schedule_) {
 
@@ -587,7 +587,6 @@ struct ls_local_sources_inc_edges_memory_constraint {
         }
 
         return true;
-    
     }
 };
 

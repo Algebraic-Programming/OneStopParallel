@@ -18,10 +18,10 @@ limitations under the License.
 
 #pragma once
 
-#include "osp/coarser/Coarser.hpp"
 #include "osp/bsp/model/BspSchedule.hpp"
-#include "osp/bsp/model/SetSchedule.hpp"
+#include "osp/bsp/model/util/SetSchedule.hpp"
 #include "osp/bsp/scheduler/Scheduler.hpp"
+#include "osp/coarser/Coarser.hpp"
 #include "osp/graph_algorithms/directed_graph_edge_desc_util.hpp"
 
 namespace osp {
@@ -62,7 +62,6 @@ class BspScheduleCoarser : public CoarserGenContractionMap<Graph_t_in, Graph_t_o
 
         assert(&dag_in == &schedule->getInstance().getComputationalDag());
         assert(schedule->satisfiesPrecedenceConstraints());
-
 
         SetSchedule<Graph_t_in> set_schedule(*schedule);
         std::vector<VertexType_out> reverse_vertex_map(dag_in.num_vertices(), 0);
