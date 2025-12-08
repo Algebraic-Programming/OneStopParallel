@@ -32,8 +32,8 @@ namespace osp {
  * @brief A vector-based implementation of a computational DAG.
  *
  * This class implements a computational DAG using adjacency lists stored in two std::vectors.
- * It manages the storage of vertices and edges, and provides an interface to query and modify the graph. 
- * 
+ * It manages the storage of vertices and edges, and provides an interface to query and modify the graph.
+ *
  * This class satisfies the following concepts:
  * - `is_computational_dag_typed_vertices`
  * - `is_directed_graph`
@@ -80,7 +80,7 @@ class computational_dag_vector_impl {
           num_vertex_types_(0) {
 
         for (vertex_idx i = 0; i < num_vertices; ++i) {
-            vertices_.at(i).id = i;
+            vertices_[i].id = i;
         }
     }
 
@@ -150,40 +150,40 @@ class computational_dag_vector_impl {
     [[nodiscard]] vertex_idx num_edges() const { return num_edges_; }
 
     /**
-     * @brief Returns the parents (in-neighbors) of a vertex.
+     * @brief Returns the parents (in-neighbors) of a vertex. Does not perform bounds checking.
      * @param v The vertex index.
      */
-    [[nodiscard]] const std::vector<vertex_idx> &parents(const vertex_idx v) const { return in_neigbors.at(v); }
+    [[nodiscard]] const std::vector<vertex_idx> &parents(const vertex_idx v) const { return in_neigbors[v]; }
 
     /**
-     * @brief Returns the children (out-neighbors) of a vertex.
+     * @brief Returns the children (out-neighbors) of a vertex. Does not perform bounds checking.
      * @param v The vertex index.
      */
-    [[nodiscard]] const std::vector<vertex_idx> &children(const vertex_idx v) const { return out_neigbors.at(v); }
+    [[nodiscard]] const std::vector<vertex_idx> &children(const vertex_idx v) const { return out_neigbors[v]; }
 
     /**
-     * @brief Returns the in-degree of a vertex.
+     * @brief Returns the in-degree of a vertex. Does not perform bounds checking.
      * @param v The vertex index.
      */
-    [[nodiscard]] vertex_idx in_degree(const vertex_idx v) const { return static_cast<vertex_idx>(in_neigbors.at(v).size()); }
+    [[nodiscard]] vertex_idx in_degree(const vertex_idx v) const { return static_cast<vertex_idx>(in_neigbors[v].size()); }
 
     /**
-     * @brief Returns the out-degree of a vertex.
+     * @brief Returns the out-degree of a vertex. Does not perform bounds checking.
      * @param v The vertex index.
      */
-    [[nodiscard]] vertex_idx out_degree(const vertex_idx v) const { return static_cast<vertex_idx>(out_neigbors.at(v).size()); }
+    [[nodiscard]] vertex_idx out_degree(const vertex_idx v) const { return static_cast<vertex_idx>(out_neigbors[v].size()); }
 
-    [[nodiscard]] vertex_work_weight_type vertex_work_weight(const vertex_idx v) const { return vertices_.at(v).work_weight; }
+    [[nodiscard]] vertex_work_weight_type vertex_work_weight(const vertex_idx v) const { return vertices_[v].work_weight; }
 
-    [[nodiscard]] vertex_comm_weight_type vertex_comm_weight(const vertex_idx v) const { return vertices_.at(v).comm_weight; }
+    [[nodiscard]] vertex_comm_weight_type vertex_comm_weight(const vertex_idx v) const { return vertices_[v].comm_weight; }
 
-    [[nodiscard]] vertex_mem_weight_type vertex_mem_weight(const vertex_idx v) const { return vertices_.at(v).mem_weight; }
+    [[nodiscard]] vertex_mem_weight_type vertex_mem_weight(const vertex_idx v) const { return vertices_[v].mem_weight; }
 
-    [[nodiscard]] vertex_type_type vertex_type(const vertex_idx v) const { return vertices_.at(v).vertex_type; }
+    [[nodiscard]] vertex_type_type vertex_type(const vertex_idx v) const { return vertices_[v].vertex_type; }
 
     [[nodiscard]] vertex_type_type num_vertex_types() const { return num_vertex_types_; }
 
-    [[nodiscard]] const v_impl &get_vertex_impl(const vertex_idx v) const { return vertices_.at(v); }
+    [[nodiscard]] const v_impl &get_vertex_impl(const vertex_idx v) const { return vertices_[v]; }
 
     /**
      * @brief Adds a new isolated vertex to the graph.
@@ -240,7 +240,7 @@ class computational_dag_vector_impl {
             return false;
         }
 
-        out_neigbors.at(source).push_back(target);
+        out_neigbors[source].push_back(target);
         in_neigbors.at(target).push_back(source);
         num_edges_++;
 
@@ -266,7 +266,6 @@ using computational_dag_vector_impl_def_t = computational_dag_vector_impl<cdag_v
  * @brief Default implementation of a computational DAG using signed integer weights.
  */
 using computational_dag_vector_impl_def_int_t = computational_dag_vector_impl<cdag_vertex_impl_int>;
-
 
 static_assert(is_directed_graph_edge_desc_v<computational_dag_vector_impl<cdag_vertex_impl_unsigned>>,
               "computational_dag_vector_impl must satisfy the directed_graph_edge_desc concept");

@@ -80,8 +80,8 @@ class dag_vector_adapter {
     dag_vector_adapter(const std::vector<std::vector<index_t>> &out_neigbors_,
                        const std::vector<std::vector<index_t>> &in_neigbors_) : vertices_(out_neigbors_.size()), out_neigbors(&out_neigbors_), in_neigbors(&in_neigbors_), num_edges_(0), num_vertex_types_(1) {
         for (vertex_idx i = 0; i < static_cast<vertex_idx>(out_neigbors_.size()); ++i) {
-            vertices_.at(i).id = i;
-            num_edges_ += out_neigbors_.at(i).size();
+            vertices_[i].id = i;
+            num_edges_ += out_neigbors_[i].size();
         }
     }
 
@@ -107,8 +107,8 @@ class dag_vector_adapter {
 
         num_edges_ = 0;
         for (vertex_idx i = 0; i < static_cast<vertex_idx>(out_neigbors->size()); ++i) {
-            vertices_.at(i).id = i;
-            num_edges_ += out_neigbors->at(i).size();
+            vertices_[i].id = i;
+            num_edges_ += out_neigbors_[i].size();
         }
 
         num_vertex_types_ = 1;
@@ -130,40 +130,40 @@ class dag_vector_adapter {
     [[nodiscard]] vertex_idx num_edges() const { return static_cast<vertex_idx>(num_edges_); }
 
     /**
-     * @brief Returns a view of the parents (in-neighbors) of a vertex.
+     * @brief Returns a view of the parents (in-neighbors) of a vertex. Does not perform bounds checking.
      * @param v The vertex index.
      */
-    [[nodiscard]] auto parents(const vertex_idx v) const { return vector_cast_view<index_t, vertex_idx>(in_neigbors->at(v)); }
+    [[nodiscard]] auto parents(const vertex_idx v) const { return vector_cast_view<index_t, vertex_idx>(in_neigbors_[v]); }
 
     /**
-     * @brief Returns a view of the children (out-neighbors) of a vertex.
+     * @brief Returns a view of the children (out-neighbors) of a vertex. Does not perform bounds checking.
      * @param v The vertex index.
      */
-    [[nodiscard]] auto children(const vertex_idx v) const { return vector_cast_view<index_t, vertex_idx>(out_neigbors->at(v)); }
+    [[nodiscard]] auto children(const vertex_idx v) const { return vector_cast_view<index_t, vertex_idx>(out_neigbors_[v]); }
 
     /**
-     * @brief Returns the in-degree of a vertex.
+     * @brief Returns the in-degree of a vertex. Does not perform bounds checking.
      * @param v The vertex index.
      */
-    [[nodiscard]] vertex_idx in_degree(const vertex_idx v) const { return static_cast<vertex_idx>(in_neigbors->at(v).size()); }
+    [[nodiscard]] vertex_idx in_degree(const vertex_idx v) const { return static_cast<vertex_idx>(in_neigbors_[v].size()); }
 
     /**
-     * @brief Returns the out-degree of a vertex.
+     * @brief Returns the out-degree of a vertex. Does not perform bounds checking.
      * @param v The vertex index.
      */
-    [[nodiscard]] vertex_idx out_degree(const vertex_idx v) const { return static_cast<vertex_idx>(out_neigbors->at(v).size()); }
+    [[nodiscard]] vertex_idx out_degree(const vertex_idx v) const { return static_cast<vertex_idx>(out_neigbors_[v].size()); }
 
-    [[nodiscard]] vertex_work_weight_type vertex_work_weight(const vertex_idx v) const { return vertices_.at(v).work_weight; }
+    [[nodiscard]] vertex_work_weight_type vertex_work_weight(const vertex_idx v) const { return vertices_[v].work_weight; }
 
-    [[nodiscard]] vertex_comm_weight_type vertex_comm_weight(const vertex_idx v) const { return vertices_.at(v).comm_weight; }
+    [[nodiscard]] vertex_comm_weight_type vertex_comm_weight(const vertex_idx v) const { return vertices_[v].comm_weight; }
 
-    [[nodiscard]] vertex_mem_weight_type vertex_mem_weight(const vertex_idx v) const { return vertices_.at(v).mem_weight; }
+    [[nodiscard]] vertex_mem_weight_type vertex_mem_weight(const vertex_idx v) const { return vertices_[v].mem_weight; }
 
-    [[nodiscard]] vertex_type_type vertex_type(const vertex_idx v) const { return vertices_.at(v).vertex_type; }
+    [[nodiscard]] vertex_type_type vertex_type(const vertex_idx v) const { return vertices_[v].vertex_type; }
 
     [[nodiscard]] vertex_type_type num_vertex_types() const { return num_vertex_types_; }
 
-    [[nodiscard]] const v_impl &get_vertex_impl(const vertex_idx v) const { return vertices_.at(v); }
+    [[nodiscard]] const v_impl &get_vertex_impl(const vertex_idx v) const { return vertices_[v]; }
 
     void set_vertex_work_weight(const vertex_idx v, const vertex_work_weight_type work_weight) {
         vertices_.at(v).work_weight = work_weight;
@@ -191,7 +191,6 @@ class dag_vector_adapter {
     std::size_t num_edges_ = 0;
     unsigned num_vertex_types_ = 0;
 };
-
 
 static_assert(is_directed_graph_edge_desc_v<dag_vector_adapter<cdag_vertex_impl_unsigned, int>>,
               "dag_vector_adapter must satisfy the directed_graph_edge_desc concept");
