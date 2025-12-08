@@ -78,7 +78,6 @@ class computational_dag_vector_impl {
     explicit computational_dag_vector_impl(const vertex_idx num_vertices)
         : vertices_(num_vertices), out_neigbors(num_vertices), in_neigbors(num_vertices), num_edges_(0),
           num_vertex_types_(0) {
-
         for (vertex_idx i = 0; i < num_vertices; ++i) {
             vertices_[i].id = i;
         }
@@ -98,9 +97,7 @@ class computational_dag_vector_impl {
      */
     template<typename Graph_t>
     explicit computational_dag_vector_impl(const Graph_t &other) {
-
         static_assert(is_computational_dag_v<Graph_t>, "Graph_t must satisfy the is_computation_dag concept");
-
         constructComputationalDag(other, *this);
     }
 
@@ -196,7 +193,6 @@ class computational_dag_vector_impl {
      */
     vertex_idx add_vertex(const vertex_work_weight_type work_weight, const vertex_comm_weight_type comm_weight,
                           const vertex_mem_weight_type mem_weight, const vertex_type_type vertex_type = 0) {
-
         vertices_.emplace_back(vertices_.size(), work_weight, comm_weight, mem_weight, vertex_type);
         out_neigbors.push_back({});
         in_neigbors.push_back({});
@@ -231,7 +227,6 @@ class computational_dag_vector_impl {
      * @return True if the edge was added, false if it already exists or vertices are invalid.
      */
     bool add_edge(const vertex_idx source, const vertex_idx target) {
-
         if (source >= static_cast<vertex_idx>(vertices_.size()) || target >= static_cast<vertex_idx>(vertices_.size()) || source == target)
             return false;
 
