@@ -131,25 +131,30 @@ class BspArchitecture {
     std::vector<unsigned> processorTypes_;
 
     /**
-     * @brief A  p x p matrix of send costs. Diagonal entries should be zero.
+     * @brief A flattened p x p matrix of send costs.
+     * Access via index [i * numberOfProcessors_ + j].
      */
-    std::vector<std::vector<v_commw_t<Graph_t>>> sendCosts_;
+    std::vector<v_commw_t<Graph_t>> sendCosts_;
 
     /**
      * @brief The memory constraint type.
      */
     MEMORY_CONSTRAINT_TYPE memoryConstraintType_ = MEMORY_CONSTRAINT_TYPE::NONE;
 
+    std::size_t FlatIndex(const unsigned row, const unsigned col) const {
+        return static_cast<std::size_t>(row) * numberOfProcessors_ + col;
+    }
+
     bool AreSendCostsNuma() {
         if (numberOfProcessors_ == 1U)
             return false;
 
-        const v_commw_t<Graph_t> val = sendCosts_.at(0U).at(1U);
+        const v_commw_t<Graph_t> val = sendCosts_.at(1U);
         for (unsigned p1 = 0U; p1 < numberOfProcessors_; p1++) {
             for (unsigned p2 = 0U; p2 < numberOfProcessors_; p2++) {
                 if (p1 == p2)
                     continue;
-                if (sendCosts_.at(p1).at(p2) != val)
+                if (sendCosts_.at(FlatIndex(p1, p2)) != val)
                     return true;
             }
         }
@@ -167,12 +172,12 @@ class BspArchitecture {
 
     void SetSendCostDiagonalToZero() {
         for (unsigned i = 0U; i < numberOfProcessors_; i++) {
-            sendCosts_.at(i).at(i) = 0U;
+            sendCosts_.at(FlatIndex(i, i)) = 0U;
         }
     }
 
     void InitializeUniformSendCosts() {
-        sendCosts_ = std::vector<std::vector<v_commw_t<Graph_t>>>(numberOfProcessors_, std::vector<v_commw_t<Graph_t>>(numberOfProcessors_, 1U));
+        sendCosts_.resize(numberOfProcessors_ * numberOfProcessors_, 1U);
         SetSendCostDiagonalToZero();
         isNuma_ = false;
     }
@@ -187,15 +192,15 @@ class BspArchitecture {
     BspArchitecture()
         : numberOfProcessors_(2U), numberOfProcessorTypes_(1U), communicationCosts_(1U), synchronisationCosts_(2U),
           memoryBound_(std::vector<v_memw_t<Graph_t>>(numberOfProcessors_, 100U)), isNuma_(false),
-          processorTypes_(std::vector<unsigned>(numberOfProcessors_, 0U)), sendCosts_(std::vector<std::vector<v_commw_t<Graph_t>>>(numberOfProcessors_, std::vector<v_commw_t<Graph_t>>(numberOfProcessors_, 1U))) {
+          processorTypes_(std::vector<unsigned>(numberOfProcessors_, 0U)), sendCosts_(numberOfProcessors_ * numberOfProcessors_, 1U) {
         SetSendCostDiagonalToZero();
     }
 
     BspArchitecture(const BspArchitecture &other) = default;
-    BspArchitecture(BspArchitecture &&other) = default;
+    BspArchitecture(BspArchitecture &&other) noexcept = default;
     BspArchitecture &operator=(const BspArchitecture &other) = default;
-    BspArchitecture &operator=(BspArchitecture &&other) = default;
-    ~BspArchitecture() = default;
+    BspArchitecture &operator=(BspArchitecture &&other) noexcept = default;
+    virtual ~BspArchitecture() = default;
 
     /**
      * @brief Constructs a BspArchitecture object with the specified number of processors, communication cost, and
@@ -211,9 +216,7 @@ class BspArchitecture {
         : numberOfProcessors_(NumberOfProcessors), numberOfProcessorTypes_(1U), communicationCosts_(CommunicationCost),
           synchronisationCosts_(SynchronisationCost),
           memoryBound_(std::vector<v_memw_t<Graph_t>>(NumberOfProcessors, MemoryBound)), isNuma_(false),
-          processorTypes_(std::vector<unsigned>(NumberOfProcessors, 0U)),
-          sendCosts_(std::vector<std::vector<v_commw_t<Graph_t>>>(
-              numberOfProcessors_, std::vector<v_commw_t<Graph_t>>(numberOfProcessors_, 1U))) {
+          processorTypes_(std::vector<unsigned>(NumberOfProcessors, 0U)), sendCosts_(numberOfProcessors_ * numberOfProcessors_, 1U) {
         if (NumberOfProcessors == 0U) {
             throw std::runtime_error("BspArchitecture: Number of processors must be greater than 0.");
         }
@@ -231,7 +234,7 @@ class BspArchitecture {
         : numberOfProcessors_(other.numberOfProcessors()), numberOfProcessorTypes_(other.getNumberOfProcessorTypes()),
           communicationCosts_(other.communicationCosts()), synchronisationCosts_(other.synchronisationCosts()),
           memoryBound_(other.memoryBound()), isNuma_(other.isNumaArchitecture()), processorTypes_(other.processorTypes()),
-          sendCosts_(other.sendCosts()) {
+          sendCosts_(other.sendCostsVector()) {
 
         static_assert(std::is_same_v<v_memw_t<Graph_t>, v_memw_t<Graph_t_other>>,
                       "BspArchitecture: Graph_t and Graph_t_other have the same memory weight type.");
@@ -255,16 +258,21 @@ class BspArchitecture {
                     const std::vector<std::vector<v_commw_t<Graph_t>>> &SendCosts)
         : numberOfProcessors_(NumberOfProcessors), numberOfProcessorTypes_(1U), communicationCosts_(CommunicationCost),
           synchronisationCosts_(SynchronisationCost), memoryBound_(std::vector<v_memw_t<Graph_t>>(NumberOfProcessors, 100U)),
-          processorTypes_(std::vector<unsigned>(NumberOfProcessors, 0U)), sendCosts_(SendCosts) {
+          processorTypes_(std::vector<unsigned>(NumberOfProcessors, 0U)) {
         if (NumberOfProcessors == 0U) {
             throw std::runtime_error("BspArchitecture: Number of processors must be greater than 0.");
         }
-        if (numberOfProcessors_ != sendCosts_.size()) {
+        if (NumberOfProcessors != SendCosts.size()) {
             throw std::invalid_argument("sendCosts_ needs to be a processors x processors matrix.\n");
         }
-        if (std::any_of(sendCosts_.begin(), sendCosts_.end(),
+        if (std::any_of(SendCosts.begin(), SendCosts.end(),
                         [NumberOfProcessors](const auto &thing) { return thing.size() != NumberOfProcessors; })) {
             throw std::invalid_argument("sendCosts_ needs to be a processors x processors matrix.\n");
+        }
+
+        sendCosts_.reserve(NumberOfProcessors * NumberOfProcessors);
+        for (const auto &row : SendCosts) {
+            sendCosts_.insert(sendCosts_.end(), row.begin(), row.end());
         }
 
         SetSendCostDiagonalToZero();
@@ -285,16 +293,21 @@ class BspArchitecture {
         : numberOfProcessors_(NumberOfProcessors), numberOfProcessorTypes_(1U), communicationCosts_(CommunicationCost),
           synchronisationCosts_(SynchronisationCost),
           memoryBound_(std::vector<v_memw_t<Graph_t>>(NumberOfProcessors, MemoryBound)),
-          processorTypes_(std::vector<unsigned>(NumberOfProcessors, 0U)), sendCosts_(SendCosts) {
+          processorTypes_(std::vector<unsigned>(NumberOfProcessors, 0U)) {
         if (NumberOfProcessors == 0U) {
             throw std::runtime_error("BspArchitecture: Number of processors must be greater than 0.");
         }
-        if (numberOfProcessors_ != sendCosts_.size()) {
+        if (NumberOfProcessors != SendCosts.size()) {
             throw std::invalid_argument("sendCosts_ needs to be a processors x processors matrix.\n");
         }
-        if (std::any_of(sendCosts_.begin(), sendCosts_.end(),
+        if (std::any_of(SendCosts.begin(), SendCosts.end(),
                         [NumberOfProcessors](const auto &thing) { return thing.size() != NumberOfProcessors; })) {
             throw std::invalid_argument("sendCosts_ needs to be a processors x processors matrix.\n");
+        }
+
+        sendCosts_.reserve(NumberOfProcessors * NumberOfProcessors);
+        for (const auto &row : SendCosts) {
+            sendCosts_.insert(sendCosts_.end(), row.begin(), row.end());
         }
 
         SetSendCostDiagonalToZero();
@@ -309,9 +322,9 @@ class BspArchitecture {
         for (unsigned i = 0U; i < numberOfProcessors_; i++) {
             for (unsigned j = 0U; j < numberOfProcessors_; j++) {
                 if (i == j) {
-                    sendCosts_.at(i).at(j) = 0U;
+                    sendCosts_.at(FlatIndex(i, j)) = 0U;
                 } else {
-                    sendCosts_.at(i).at(j) = 1U;
+                    sendCosts_.at(FlatIndex(i, j)) = 1U;
                 }
             }
         }
@@ -339,7 +352,7 @@ class BspArchitecture {
                 // Corrected loop to avoid underflow issues with unsigned
                 for (int pos = static_cast<int>(maxPos); pos >= 0; --pos) {
                     if (((1U << pos) & i) != ((1U << pos) & j)) {
-                        sendCosts_.at(i).at(j) = sendCosts_.at(j).at(i) = intpow(base, static_cast<unsigned>(pos));
+                        sendCosts_.at(FlatIndex(i, j)) = sendCosts_.at(FlatIndex(j, i)) = intpow(base, static_cast<unsigned>(pos));
                         break;
                     }
                 }
@@ -351,7 +364,7 @@ class BspArchitecture {
      * @brief Returns a view of processor indices from 0 to numberOfProcessors_ - 1.
      * @return An integral view of processor indices.
      */
-    auto processors() const { return integral_range<unsigned>(numberOfProcessors_); }
+    [[nodiscard]] auto processors() const { return integral_range<unsigned>(numberOfProcessors_); }
 
     /**
      * @brief Sets the send costs for the BspArchitecture.
@@ -375,7 +388,7 @@ class BspArchitecture {
                     if (vec.at(i).at(j) != 0U)
                         throw std::invalid_argument("Invalid Argument: Diagonal elements should be 0.");
                 } else {
-                    sendCosts_.at(i).at(j) = vec.at(i).at(j);
+                    sendCosts_.at(FlatIndex(i, j)) = vec.at(i).at(j);
 
                     if (numberOfProcessors_ > 1U && vec.at(i).at(j) != vec.at(0U).at(1U)) {
                         isNuma_ = true;
@@ -398,7 +411,7 @@ class BspArchitecture {
             throw std::invalid_argument("Invalid Argument: Processor index out of bounds.");
 
         if (p1 != p2) {
-            sendCosts_.at(p1).at(p2) = cost;
+            sendCosts_.at(FlatIndex(p1, p2)) = cost;
             isNuma_ = AreSendCostsNuma();
         }
     }
@@ -587,10 +600,24 @@ class BspArchitecture {
     [[nodiscard]] v_commw_t<Graph_t> synchronisationCosts() const { return synchronisationCosts_; }
 
     /**
-     * @brief Returns a reference to the send costs matrix.
-     * @return A reference to the send costs matrix.
+     * @brief Returns the send costs matrix.
+     * @return The send costs matrix.
      */
-    [[nodiscard]] const std::vector<std::vector<v_commw_t<Graph_t>>> &sendCostMatrix() const { return sendCosts_; }
+    [[nodiscard]] std::vector<std::vector<v_commw_t<Graph_t>>> sendCostMatrix() const {
+        std::vector<std::vector<v_commw_t<Graph_t>>> matrix(numberOfProcessors_, std::vector<v_commw_t<Graph_t>>(numberOfProcessors_));
+        for (unsigned i = 0; i < numberOfProcessors_; ++i) {
+            for (unsigned j = 0; j < numberOfProcessors_; ++j) {
+                matrix[i][j] = sendCosts_[FlatIndex(i, j)];
+            }
+        }
+        return matrix;
+    }
+
+    /**
+     * @brief Returns the flattened send costs vector.
+     * @return The send costs vector.
+     */
+    [[nodiscard]] const std::vector<v_commw_t<Graph_t>> &sendCostsVector() const { return sendCosts_; }
 
     /**
      * @brief Returns the processor types.
@@ -607,7 +634,7 @@ class BspArchitecture {
      * @return The communication costs between the two processors.
      */
     [[nodiscard]] v_commw_t<Graph_t> communicationCosts(const unsigned p1, const unsigned p2) const {
-        return communicationCosts_ * sendCosts_.at(p1).at(p2);
+        return communicationCosts_ * sendCosts_.at(FlatIndex(p1, p2));
     }
 
     /**
@@ -617,13 +644,13 @@ class BspArchitecture {
      * @param p2 The index of the second processor.
      * @return The send costs between the two processors.
      */
-    [[nodiscard]] v_commw_t<Graph_t> sendCosts(const unsigned p1, const unsigned p2) const { return sendCosts_.at(p1).at(p2); }
+    [[nodiscard]] v_commw_t<Graph_t> sendCosts(const unsigned p1, const unsigned p2) const { return sendCosts_.at(FlatIndex(p1, p2)); }
 
     /**
      * @brief Returns the send costs matrix.
      * @return The send costs matrix.
      */
-    [[nodiscard]] const std::vector<std::vector<v_commw_t<Graph_t>>> &sendCosts() const { return sendCosts_; }
+    [[nodiscard]] std::vector<std::vector<v_commw_t<Graph_t>>> sendCosts() const { return sendCostMatrix(); }
 
     /**
      * @brief Returns the type of a specific processor.
