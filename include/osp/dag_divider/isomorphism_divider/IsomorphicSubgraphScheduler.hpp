@@ -233,7 +233,11 @@ class IsomorphicSubgraphScheduler {
                     }
                 } else {
                     // Fallback to a default min_proc_type_count if not a single-type group or no typed vertices.
-                    effective_min_proc_type_count = instance.getArchitecture().getMinProcessorTypeCount();
+                    const auto &type_count = instance.getArchitecture().getProcessorTypeCount();
+                    if (type_count.empty()) {
+                        effective_min_proc_type_count = 0;
+                    }
+                    effective_min_proc_type_count = *std::min_element(type_count.begin(), type_count.end());
                     if constexpr (verbose) {
                         std::cout << "Group " << group_idx << " (size " << group_size << "): Multi-type or untyped group. Using default min_proc_type_count: " << effective_min_proc_type_count << "." << std::endl;
                     }

@@ -17,6 +17,8 @@ limitations under the License.
 */
 #pragma once
 
+#include <cstddef> // for std::size_t
+
 namespace osp {
 
 /**
@@ -71,17 +73,17 @@ struct cdag_vertex_impl {
 };
 
 /**
- * @brief A vertex implementation with integer weights. Indexed by size_t. Node types are unsigned.
+ * @brief A vertex implementation with integer weights. Indexed by std::size_t. Node types are unsigned.
  *
  * This struct implements a vertex with integer weights for work, communication, and memory.
  */
-using cdag_vertex_impl_int = cdag_vertex_impl<size_t, int, int, int, unsigned>;
+using cdag_vertex_impl_int = cdag_vertex_impl<std::size_t, int, int, int, unsigned>;
 
 /**
- * @brief A vertex implementation with unsigned weights. Indexed by size_t. Node types are unsigned.
+ * @brief A vertex implementation with unsigned weights. Indexed by std::size_t. Node types are unsigned.
  *
  * This struct implements a vertex with unsigned weights for work, communication, and memory.
  */
-using cdag_vertex_impl_unsigned = cdag_vertex_impl<size_t, unsigned, unsigned, unsigned, unsigned>;
+using cdag_vertex_impl_unsigned = cdag_vertex_impl<std::size_t, unsigned, unsigned, unsigned, unsigned>;
 
 } // namespace osp
