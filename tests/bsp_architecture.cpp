@@ -61,18 +61,18 @@ BOOST_AUTO_TEST_CASE(ParameterizedConstructorTest) {
 
     BOOST_CHECK_EQUAL(architecture.maxMemoryBoundProcType(0), 100);
 
-    BOOST_TEST(architecture.sendCostMatrix() == uniform_sent_costs);
+    BOOST_TEST(architecture.sendCost() == uniform_sent_costs);
 
     std::vector<std::vector<int>> expectedSendCosts = {{0, 2, 2, 2}, {2, 0, 2, 2}, {2, 2, 0, 2}, {2, 2, 2, 0}};
 
     architecture.SetSendCosts(expectedSendCosts);
-    BOOST_TEST(architecture.sendCostMatrix() == expectedSendCosts);
+    BOOST_TEST(architecture.sendCost() == expectedSendCosts);
 
     BOOST_CHECK_EQUAL(architecture.communicationCosts(0, 1), 4);
     BOOST_CHECK_EQUAL(architecture.communicationCosts(0, 0), 0);
 
     architecture.SetUniformSendCost();
-    BOOST_TEST(architecture.sendCostMatrix() == uniform_sent_costs);
+    BOOST_TEST(architecture.sendCost() == uniform_sent_costs);
 
     BOOST_CHECK_EQUAL(architecture.communicationCosts(0, 1), 2);
     BOOST_CHECK_EQUAL(architecture.communicationCosts(0, 0), 0);
