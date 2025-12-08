@@ -741,7 +741,6 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
                     }
 
                     for (const auto &parent : instance->getComputationalDag().parents(node)) {
-
                         if (node_to_superstep_assignment[parent] != step) {
                             nodes_with_incoming_edges.insert(parent);
                         }
