@@ -271,14 +271,10 @@ class BspInstance {
     }
 
     /**
-     * @brief Sets the node-processor compatibility matrix. The matrix is copied.
+     * @brief Sets the node-processor compatibility matrix. The matrix is copied. Dimensions are not checked.
      * @param compatibility_ The compatibility matrix.
-     * @throw std::runtime_error if the compatibility matrix size does not match the number of node types and processor types.
      */
     void setNodeProcessorCompatibility(const std::vector<std::vector<bool>> &compatibility_) {
-        if (compatibility_.size() < cdag.num_vertex_types() || compatibility_[0].size() < architecture.getNumberOfProcessorTypes()) {
-            throw std::runtime_error("Compatibility matrix size does not match the number of node types and processor types.");
-        }
         nodeProcessorCompatibility = compatibility_;
     }
 

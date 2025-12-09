@@ -194,17 +194,37 @@ class BspArchitecture {
      * @param CommunicationCost The communication cost between processors. Default: 1.
      * @param SynchronisationCost The synchronization cost between processors. Default: 2.
      * @param MemoryBound The memory bound for each processor (default: 100).
+     * @param SendCosts The matrix of send costs between processors. Needs to be a processors x processors matrix. Diagonal entries are forced to zero. Default: empty (uniform costs).
      */
     BspArchitecture(const unsigned NumberOfProcessors = 2U, const v_commw_t<Graph_t> CommunicationCost = 1U, const v_commw_t<Graph_t> SynchronisationCost = 2U,
-                    const v_memw_t<Graph_t> MemoryBound = 100U)
+                    const v_memw_t<Graph_t> MemoryBound = 100U, const std::vector<std::vector<v_commw_t<Graph_t>>> &SendCosts = {})
         : numberOfProcessors_(NumberOfProcessors), numberOfProcessorTypes_(1U), communicationCosts_(CommunicationCost),
           synchronisationCosts_(SynchronisationCost),
           memoryBound_(NumberOfProcessors, MemoryBound), isNuma_(false),
-          processorTypes_(NumberOfProcessors, 0U), sendCosts_(NumberOfProcessors * NumberOfProcessors, 1U) {
+          processorTypes_(NumberOfProcessors, 0U) {
         if (NumberOfProcessors == 0U) {
             throw std::runtime_error("BspArchitecture: Number of processors must be greater than 0.");
         }
-        SetSendCostDiagonalToZero();
+
+        if (SendCosts.empty()) {
+            InitializeUniformSendCosts();
+        } else {
+            if (NumberOfProcessors != SendCosts.size()) {
+                throw std::invalid_argument("sendCosts_ needs to be a processors x processors matrix.\n");
+            }
+            if (std::any_of(SendCosts.begin(), SendCosts.end(),
+                            [NumberOfProcessors](const auto &thing) { return thing.size() != NumberOfProcessors; })) {
+                throw std::invalid_argument("sendCosts_ needs to be a processors x processors matrix.\n");
+            }
+
+            sendCosts_.reserve(NumberOfProcessors * NumberOfProcessors);
+            for (const auto &row : SendCosts) {
+                sendCosts_.insert(sendCosts_.end(), row.begin(), row.end());
+            }
+
+            SetSendCostDiagonalToZero();
+            isNuma_ = AreSendCostsNuma();
+        }
     }
 
     BspArchitecture(const BspArchitecture &other) = default;
@@ -246,62 +266,7 @@ class BspArchitecture {
      */
     BspArchitecture(const unsigned NumberOfProcessors, const v_commw_t<Graph_t> CommunicationCost, const v_commw_t<Graph_t> SynchronisationCost,
                     const std::vector<std::vector<v_commw_t<Graph_t>>> &SendCosts)
-        : numberOfProcessors_(NumberOfProcessors), numberOfProcessorTypes_(1U), communicationCosts_(CommunicationCost),
-          synchronisationCosts_(SynchronisationCost), memoryBound_(NumberOfProcessors, 100U),
-          processorTypes_(NumberOfProcessors, 0U) {
-        if (NumberOfProcessors == 0U) {
-            throw std::runtime_error("BspArchitecture: Number of processors must be greater than 0.");
-        }
-        if (NumberOfProcessors != SendCosts.size()) {
-            throw std::invalid_argument("sendCosts_ needs to be a processors x processors matrix.\n");
-        }
-        if (std::any_of(SendCosts.begin(), SendCosts.end(),
-                        [NumberOfProcessors](const auto &thing) { return thing.size() != NumberOfProcessors; })) {
-            throw std::invalid_argument("sendCosts_ needs to be a processors x processors matrix.\n");
-        }
-
-        sendCosts_.reserve(NumberOfProcessors * NumberOfProcessors);
-        for (const auto &row : SendCosts) {
-            sendCosts_.insert(sendCosts_.end(), row.begin(), row.end());
-        }
-
-        SetSendCostDiagonalToZero();
-        isNuma_ = AreSendCostsNuma();
-    }
-
-    /**
-     * @brief Constructs a BspArchitecture object with custom send costs and memory bound.
-     *
-     * @param NumberOfProcessors The number of processors. Must be greater than 0.
-     * @param CommunicationCost The communication cost.
-     * @param SynchronisationCost The synchronization cost.
-     * @param MemoryBound The memory bound for each processor.
-     * @param SendCosts The matrix of send costs between processors. Needs to be a processors x processors matrix. Diagonal entries are forced to zero.
-     */
-    BspArchitecture(const unsigned NumberOfProcessors, const v_commw_t<Graph_t> CommunicationCost, const v_commw_t<Graph_t> SynchronisationCost,
-                    const v_memw_t<Graph_t> MemoryBound, const std::vector<std::vector<v_commw_t<Graph_t>>> &SendCosts)
-        : numberOfProcessors_(NumberOfProcessors), numberOfProcessorTypes_(1U), communicationCosts_(CommunicationCost),
-          synchronisationCosts_(SynchronisationCost), memoryBound_(NumberOfProcessors, MemoryBound),
-          processorTypes_(NumberOfProcessors, 0U) {
-        if (NumberOfProcessors == 0U) {
-            throw std::runtime_error("BspArchitecture: Number of processors must be greater than 0.");
-        }
-        if (NumberOfProcessors != SendCosts.size()) {
-            throw std::invalid_argument("sendCosts_ needs to be a processors x processors matrix.\n");
-        }
-        if (std::any_of(SendCosts.begin(), SendCosts.end(),
-                        [NumberOfProcessors](const auto &thing) { return thing.size() != NumberOfProcessors; })) {
-            throw std::invalid_argument("sendCosts_ needs to be a processors x processors matrix.\n");
-        }
-
-        sendCosts_.reserve(NumberOfProcessors * NumberOfProcessors);
-        for (const auto &row : SendCosts) {
-            sendCosts_.insert(sendCosts_.end(), row.begin(), row.end());
-        }
-
-        SetSendCostDiagonalToZero();
-        isNuma_ = AreSendCostsNuma();
-    }
+        : BspArchitecture(NumberOfProcessors, CommunicationCost, SynchronisationCost, 100U, SendCosts) {}
 
     /**
      * @brief Sets the uniform send cost for each pair of processors.
