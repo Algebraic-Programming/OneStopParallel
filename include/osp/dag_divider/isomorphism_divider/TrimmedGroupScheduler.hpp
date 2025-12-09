@@ -135,7 +135,7 @@ class TrimmedGroupScheduler : public Scheduler<Constr_Graph_t> {
             std::sort(group_vertices.begin(), group_vertices.end());
 
             BspInstance<Constr_Graph_t> sub_instanc;
-            sub_instanc.setArchitecture(sub_arch);                                                                          // Set the sub-architecture
+            sub_instanc.getArchitecture() = sub_arch;
             sub_instanc.setNodeProcessorCompatibility(instance.getNodeProcessorCompatibilityMatrix());                      // Inherit compatibility
             auto global_to_local_map = create_induced_subgraph_map(dag, sub_instanc.getComputationalDag(), group_vertices); // Create induced subgraph
 

@@ -19,10 +19,10 @@ limitations under the License.
 #define BOOST_TEST_MODULE TrimmedGroupSchedulerTest
 #include <boost/test/unit_test.hpp>
 
-#include "osp/dag_divider/isomorphism_divider/TrimmedGroupScheduler.hpp"
 #include "osp/bsp/model/BspInstance.hpp"
 #include "osp/bsp/model/BspSchedule.hpp"
 #include "osp/bsp/scheduler/Scheduler.hpp"
+#include "osp/dag_divider/isomorphism_divider/TrimmedGroupScheduler.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 
 using namespace osp;
@@ -30,9 +30,9 @@ using namespace osp;
 using graph_t = computational_dag_vector_impl_def_t;
 
 // Mock SubScheduler for TrimmedGroupScheduler tests
-template <typename Constr_Graph_t>
+template<typename Constr_Graph_t>
 class MockSubScheduler : public Scheduler<Constr_Graph_t> {
-public:
+  public:
     // This mock scheduler assigns all nodes to local processor 0 and superstep 0.
     // This simplifies verification of the TrimmedGroupScheduler's mapping logic.
     RETURN_STATUS computeSchedule(BspSchedule<Constr_Graph_t> &schedule) override {
@@ -66,7 +66,7 @@ BOOST_FIXTURE_TEST_SUITE(TrimmedGroupSchedulerTestSuite, TrimmedGroupSchedulerFi
 BOOST_AUTO_TEST_CASE(EmptyGraphTest) {
     // Graph is empty by default
     arch.setNumberOfProcessors(4);
-    instance.setArchitecture(arch);
+    instance.getArchitecture() = arch;
 
     TrimmedGroupScheduler<graph_t> scheduler(mock_sub_scheduler, 1);
     BspSchedule<graph_t> schedule(instance);
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(SingleComponentSingleProcessorTypeTest) {
 
     // Architecture: 4 processors of type 0
     arch.setProcessorsWithTypes({0, 0, 0, 0});
-    instance.setArchitecture(arch);
+    instance.getArchitecture() = arch;
 
     // min_non_zero_procs_ = 1 (all 4 processors assigned to this single component group)
     TrimmedGroupScheduler<graph_t> scheduler(mock_sub_scheduler, 1);
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(MultipleComponentsSingleProcessorTypeEvenDistributionTest) 
 
     // Architecture: 4 processors of type 0
     arch.setProcessorsWithTypes({0, 0, 0, 0});
-    instance.setArchitecture(arch);
+    instance.getArchitecture() = arch;
 
     // min_non_zero_procs_ = 2 (2 component groups, each gets 2 processors)
     TrimmedGroupScheduler<graph_t> scheduler(mock_sub_scheduler, 2);
@@ -154,7 +154,7 @@ BOOST_AUTO_TEST_CASE(MultipleComponentsSingleProcessorTypeUnevenDistributionTest
 
     // Architecture: 6 processors of type 0
     arch.setProcessorsWithTypes({0, 0, 0, 0, 0, 0});
-    instance.setArchitecture(arch);
+    instance.getArchitecture() = arch;
 
     // min_non_zero_procs_ = 2 (3 components, 2 groups)
     // base_count = 3 / 2 = 1, remainder = 3 % 2 = 1
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(MultipleComponentsHeterogeneousArchitectureTest) {
 
     // Architecture: 2 processors of type 0 (global 0,1), 2 processors of type 1 (global 2,3)
     arch.setProcessorsWithTypes({0, 0, 1, 1});
-    instance.setArchitecture(arch);
+    instance.getArchitecture() = arch;
     instance.setDiagonalCompatibilityMatrix(2); // Node type 0 compatible with proc type 0, etc.
 
     // min_non_zero_procs_ = 2 (2 components, 2 groups)

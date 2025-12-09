@@ -57,8 +57,8 @@ limitations under the License.
 namespace osp {
 
 const std::set<std::string> get_available_bsp_scheduler_names() {
-    return {"Serial",         "GreedyBsp", "GrowLocal", "BspLocking",  "Cilk",    "Etf",     "GreedyRandom",
-            "GreedyChildren", "Variance",  "MultiHC",   "LocalSearch", "Coarser", "FullILP", "MultiLevel"};
+    return {"Serial", "GreedyBsp", "GrowLocal", "BspLocking", "Cilk", "Etf", "GreedyRandom",
+            "GreedyChildren", "Variance", "MultiHC", "LocalSearch", "Coarser", "FullILP", "MultiLevel"};
 }
 
 template<typename Graph_t>
@@ -247,7 +247,7 @@ RETURN_STATUS run_bsp_scheduler(const ConfigParser &parser, const boost::propert
         if (!status)
             return RETURN_STATUS::ERROR;
 
-        instance_coarse.setArchitecture(instance.getArchitecture());
+        instance_coarse.getArchitecture() = instance.getArchitecture();
         instance_coarse.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
         BspSchedule<boost_graph_t> schedule_coarse(instance_coarse);
 
