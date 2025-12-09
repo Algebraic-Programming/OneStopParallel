@@ -251,7 +251,7 @@ class AbstractTestSuiteRunner {
                 log_stream << "Start Graph: " + filename_graph + "\n";
 
                 BspInstance<GraphType> bsp_instance;
-                bsp_instance.setArchitecture(arch);
+                bsp_instance.getArchitecture() = arch;
                 bool graph_status = false;
                 std::string ext;
                 if (filename_graph.rfind('.') != std::string::npos)

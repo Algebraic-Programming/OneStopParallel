@@ -302,7 +302,7 @@ class IsomorphicSubgraphScheduler {
         const std::vector<bool> &was_trimmed) {
 
         subgraph_scheduler_input<Graph_t, Constr_Graph_t> result;
-        result.instance.setArchitecture(original_instance.getArchitecture());
+        result.instance.getArchitecture() = original_instance.getArchitecture();
         const unsigned num_proc_types = original_instance.getArchitecture().getNumberOfProcessorTypes();
 
         result.multiplicities.resize(isomorphic_groups.size());
@@ -373,7 +373,7 @@ class IsomorphicSubgraphScheduler {
             BspInstance<Constr_Graph_t> representative_instance;
             auto rep_global_to_local_map = create_induced_subgraph_map(instance.getComputationalDag(), representative_instance.getComputationalDag(), rep_subgraph_vertices_sorted);
 
-            representative_instance.setArchitecture(instance.getArchitecture());
+            representative_instance.getArchitecture() = instance.getArchitecture();
             const auto &procs_for_group = sub_sched.node_assigned_worker_per_type[group_idx];
             std::vector<v_memw_t<Constr_Graph_t>> mem_weights(procs_for_group.size(), 0);
             for (unsigned proc_type = 0; proc_type < procs_for_group.size(); ++proc_type) {

@@ -90,11 +90,12 @@ inline std::ostream &operator<<(std::ostream &os, MEMORY_CONSTRAINT_TYPE type) {
  * bounds. It provides methods to set and retrieve these values.
  *
  * **Processors:**
- * The architecture consists of p processors, indexed from 0 to p-1.
+ * The architecture consists of p processors, indexed from 0 to p-1. Note that processor indices are represented using `unsigned`.
  *
  * **Processor Types:**
  * Processors can have different types, which are represented by non-negative integers.
- * Processor types are assumed to be consecutive integers starting from 0.
+ * Processor types are assumed to be consecutive integers starting from 0. Note that processor types are represented using `unsigned`.
+ * Processor types are used to express compatabilities, which can be specified in the BspInstance, regarding node types.
  *
  * **Communication and Synchronization Costs:**
  * - Communication Cost (g): The cost of communicating a unit of data between processors, i.e., the bandwidth.
@@ -186,34 +187,15 @@ class BspArchitecture {
 
   public:
     /**
-     * @brief Default constructor.
-     * Initializes a BSP architecture with 2 processors, 1 processor type,
-     * communication costs of 1, synchronisation costs of 2, memory bounds of 100,
-     * and send costs of 1 between all processors.
-     */
-    BspArchitecture()
-        : numberOfProcessors_(2U), numberOfProcessorTypes_(1U), communicationCosts_(1U), synchronisationCosts_(2U),
-          memoryBound_(numberOfProcessors_, 100U), isNuma_(false),
-          processorTypes_(numberOfProcessors_, 0U), sendCosts_(numberOfProcessors_ * numberOfProcessors_, 1U) {
-        SetSendCostDiagonalToZero();
-    }
-
-    BspArchitecture(const BspArchitecture &other) = default;
-    BspArchitecture(BspArchitecture &&other) noexcept = default;
-    BspArchitecture &operator=(const BspArchitecture &other) = default;
-    BspArchitecture &operator=(BspArchitecture &&other) noexcept = default;
-    virtual ~BspArchitecture() = default;
-
-    /**
      * @brief Constructs a BspArchitecture object with the specified number of processors, communication cost, and
      * synchronization cost.
      *
-     * @param NumberOfProcessors The number of processors in the architecture. Must be greater than 0.
-     * @param CommunicationCost The communication cost between processors.
-     * @param SynchronisationCost The synchronization cost between processors.
+     * @param NumberOfProcessors The number of processors in the architecture. Must be greater than 0. Default: 2.
+     * @param CommunicationCost The communication cost between processors. Default: 1.
+     * @param SynchronisationCost The synchronization cost between processors. Default: 2.
      * @param MemoryBound The memory bound for each processor (default: 100).
      */
-    BspArchitecture(const unsigned NumberOfProcessors, const v_commw_t<Graph_t> CommunicationCost, const v_commw_t<Graph_t> SynchronisationCost,
+    BspArchitecture(const unsigned NumberOfProcessors = 2U, const v_commw_t<Graph_t> CommunicationCost = 1U, const v_commw_t<Graph_t> SynchronisationCost = 2U,
                     const v_memw_t<Graph_t> MemoryBound = 100U)
         : numberOfProcessors_(NumberOfProcessors), numberOfProcessorTypes_(1U), communicationCosts_(CommunicationCost),
           synchronisationCosts_(SynchronisationCost),
@@ -224,6 +206,12 @@ class BspArchitecture {
         }
         SetSendCostDiagonalToZero();
     }
+
+    BspArchitecture(const BspArchitecture &other) = default;
+    BspArchitecture(BspArchitecture &&other) noexcept = default;
+    BspArchitecture &operator=(const BspArchitecture &other) = default;
+    BspArchitecture &operator=(BspArchitecture &&other) noexcept = default;
+    virtual ~BspArchitecture() = default;
 
     /**
      * @brief Copy constructor from a BspArchitecture with a different graph type.

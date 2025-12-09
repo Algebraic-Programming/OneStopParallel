@@ -23,24 +23,24 @@ limitations under the License.
 #include <filesystem>
 #include <iostream>
 
+#include "osp/auxiliary/io/arch_file_reader.hpp"
+#include "osp/auxiliary/io/general_file_reader.hpp"
+#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 #include "osp/bsp/scheduler/CoarseAndSchedule.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
 #include "osp/coarser/BspScheduleCoarser.hpp"
-#include "osp/coarser/coarser_util.hpp"
-#include "osp/coarser/funnel/FunnelBfs.hpp"
-#include "osp/coarser/hdagg/hdagg_coarser.hpp"
 #include "osp/coarser/Sarkar/Sarkar.hpp"
 #include "osp/coarser/Sarkar/SarkarMul.hpp"
 #include "osp/coarser/SquashA/SquashA.hpp"
 #include "osp/coarser/SquashA/SquashAMul.hpp"
+#include "osp/coarser/coarser_util.hpp"
+#include "osp/coarser/funnel/FunnelBfs.hpp"
+#include "osp/coarser/hdagg/hdagg_coarser.hpp"
 #include "osp/coarser/top_order/top_order_coarser.hpp"
-#include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
-#include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 #include "osp/graph_implementations/adj_list_impl/compact_sparse_graph.hpp"
 #include "osp/graph_implementations/adj_list_impl/compact_sparse_graph_edge_desc.hpp"
-#include "osp/auxiliary/io/arch_file_reader.hpp"
-#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
-#include "osp/auxiliary/io/general_file_reader.hpp"
+#include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
+#include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 #include "test_graphs.hpp"
 
 using namespace osp;
@@ -121,14 +121,15 @@ BOOST_AUTO_TEST_CASE(coarser_hdagg_test) {
         std::string name_graph = filename_graph.substr(filename_graph.find_last_of("/\\") + 1);
         name_graph = name_graph.substr(0, name_graph.find_last_of("."));
 
-        std::cout << std::endl << "Graph: " << name_graph << std::endl;
+        std::cout << std::endl
+                  << "Graph: " << name_graph << std::endl;
 
         using graph_t = computational_dag_edge_idx_vector_impl_def_t;
 
         BspInstance<graph_t> instance;
 
         bool status_graph = file_reader::readGraph((cwd / filename_graph).string(),
-                                                                            instance.getComputationalDag());
+                                                   instance.getComputationalDag());
 
         bool status_architecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(),
                                                                     instance.getArchitecture());
@@ -140,7 +141,7 @@ BOOST_AUTO_TEST_CASE(coarser_hdagg_test) {
         }
 
         BspInstance<graph_t> coarse_instance;
-        coarse_instance.setArchitecture(instance.getArchitecture());
+        coarse_instance.getArchitecture() = instance.getArchitecture();
         std::vector<std::vector<VertexType>> vertex_map;
         std::vector<VertexType> reverse_vertex_map;
 
@@ -193,7 +194,8 @@ BOOST_AUTO_TEST_CASE(coarser_hdagg_test_diff_graph_impl) {
         std::string name_graph = filename_graph.substr(filename_graph.find_last_of("/\\") + 1);
         name_graph = name_graph.substr(0, name_graph.find_last_of("."));
 
-        std::cout << std::endl << "Graph: " << name_graph << std::endl;
+        std::cout << std::endl
+                  << "Graph: " << name_graph << std::endl;
 
         using graph_t1 = computational_dag_edge_idx_vector_impl_def_t;
         using graph_t2 = computational_dag_vector_impl_def_t;
@@ -201,7 +203,7 @@ BOOST_AUTO_TEST_CASE(coarser_hdagg_test_diff_graph_impl) {
         BspInstance<graph_t1> instance;
 
         bool status_graph = file_reader::readGraph((cwd / filename_graph).string(),
-                                                                            instance.getComputationalDag());
+                                                   instance.getComputationalDag());
 
         bool status_architecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(),
                                                                     instance.getArchitecture());
@@ -214,7 +216,7 @@ BOOST_AUTO_TEST_CASE(coarser_hdagg_test_diff_graph_impl) {
 
         BspInstance<graph_t2> coarse_instance;
         BspArchitecture<graph_t2> architecture_t2(instance.getArchitecture());
-        coarse_instance.setArchitecture(architecture_t2);
+        coarse_instance.getArchitecture() = architecture_t2;
         std::vector<std::vector<VertexType>> vertex_map;
         std::vector<VertexType> reverse_vertex_map;
 
@@ -265,14 +267,15 @@ BOOST_AUTO_TEST_CASE(coarser_bspschedule_test) {
         std::string name_graph = filename_graph.substr(filename_graph.find_last_of("/\\") + 1);
         name_graph = name_graph.substr(0, name_graph.find_last_of("."));
 
-        std::cout << std::endl << "Graph: " << name_graph << std::endl;
+        std::cout << std::endl
+                  << "Graph: " << name_graph << std::endl;
 
         using graph_t = computational_dag_edge_idx_vector_impl_def_t;
 
         BspInstance<graph_t> instance;
 
         bool status_graph = file_reader::readGraph((cwd / filename_graph).string(),
-                                                                            instance.getComputationalDag());
+                                                   instance.getComputationalDag());
 
         bool status_architecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(),
                                                                     instance.getArchitecture());
@@ -284,7 +287,7 @@ BOOST_AUTO_TEST_CASE(coarser_bspschedule_test) {
         }
 
         BspInstance<graph_t> coarse_instance;
-        coarse_instance.setArchitecture(instance.getArchitecture());
+        coarse_instance.getArchitecture() = instance.getArchitecture();
         std::vector<std::vector<VertexType>> vertex_map;
         std::vector<VertexType> reverse_vertex_map;
 
@@ -345,12 +348,13 @@ void test_coarser_same_graph(Coarser<graph_t, graph_t> &coarser) {
         std::string name_graph = filename_graph.substr(filename_graph.find_last_of("/\\") + 1);
         name_graph = name_graph.substr(0, name_graph.find_last_of("."));
 
-        std::cout << std::endl << "Graph: " << name_graph << std::endl;
+        std::cout << std::endl
+                  << "Graph: " << name_graph << std::endl;
 
         BspInstance<graph_t> instance;
 
         bool status_graph = file_reader::readGraph((cwd / filename_graph).string(),
-                                                                            instance.getComputationalDag());
+                                                   instance.getComputationalDag());
 
         bool status_architecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(),
                                                                     instance.getArchitecture());
@@ -362,16 +366,14 @@ void test_coarser_same_graph(Coarser<graph_t, graph_t> &coarser) {
         }
 
         BspInstance<graph_t> coarse_instance;
-        coarse_instance.setArchitecture(instance.getArchitecture());
+        coarse_instance.getArchitecture() = instance.getArchitecture();
         std::vector<std::vector<VertexType>> vertex_map;
         std::vector<VertexType> reverse_vertex_map;
 
         GreedyBspScheduler<graph_t> scheduler;
 
-
         bool coarse_success = coarser.coarsenDag(instance.getComputationalDag(), coarse_instance.getComputationalDag(), reverse_vertex_map);
         BOOST_CHECK(coarse_success);
-
 
         vertex_map = coarser_util::invert_vertex_contraction_map<graph_t, graph_t>(reverse_vertex_map);
 
@@ -446,26 +448,19 @@ BOOST_AUTO_TEST_CASE(squashA_test) {
     SquashA<graph_t, graph_t> coarser(params);
 
     test_coarser_same_graph<graph_t>(coarser);
-    
-    
+
     params.mode = SquashAParams::Mode::TRIANGLES;
     params.use_structured_poset = true;
     params.use_top_poset = true;
     coarser.setParams(params);
-    
+
     test_coarser_same_graph<graph_t>(coarser);
 
     params.use_top_poset = false;
     coarser.setParams(params);
-    
+
     test_coarser_same_graph<graph_t>(coarser);
 }
-
-
-
-
-
-
 
 BOOST_AUTO_TEST_CASE(coarser_SquashA_test_diff_graph_impl_CSG) {
     // static_assert(std::is_base_of<Scheduler, T>::value, "Class is not a scheduler!");
@@ -484,7 +479,8 @@ BOOST_AUTO_TEST_CASE(coarser_SquashA_test_diff_graph_impl_CSG) {
         std::string name_graph = filename_graph.substr(filename_graph.find_last_of("/\\") + 1);
         name_graph = name_graph.substr(0, name_graph.find_last_of("."));
 
-        std::cout << std::endl << "Graph: " << name_graph << std::endl;
+        std::cout << std::endl
+                  << "Graph: " << name_graph << std::endl;
 
         using graph_t1 = computational_dag_edge_idx_vector_impl_def_t;
         using graph_t2 = CSG;
@@ -492,7 +488,7 @@ BOOST_AUTO_TEST_CASE(coarser_SquashA_test_diff_graph_impl_CSG) {
         BspInstance<graph_t1> instance;
 
         bool status_graph = file_reader::readGraph((cwd / filename_graph).string(),
-                                                                            instance.getComputationalDag());
+                                                   instance.getComputationalDag());
 
         bool status_architecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(),
                                                                     instance.getArchitecture());
@@ -505,7 +501,7 @@ BOOST_AUTO_TEST_CASE(coarser_SquashA_test_diff_graph_impl_CSG) {
 
         BspInstance<graph_t2> coarse_instance;
         BspArchitecture<graph_t2> architecture_t2(instance.getArchitecture());
-        coarse_instance.setArchitecture(architecture_t2);
+        coarse_instance.getArchitecture() = architecture_t2;
         std::vector<std::vector<VertexType>> vertex_map;
         std::vector<VertexType> reverse_vertex_map;
 
@@ -560,7 +556,8 @@ BOOST_AUTO_TEST_CASE(coarser_SquashA_test_diff_graph_impl_CSGE) {
         std::string name_graph = filename_graph.substr(filename_graph.find_last_of("/\\") + 1);
         name_graph = name_graph.substr(0, name_graph.find_last_of("."));
 
-        std::cout << std::endl << "Graph: " << name_graph << std::endl;
+        std::cout << std::endl
+                  << "Graph: " << name_graph << std::endl;
 
         using graph_t1 = computational_dag_edge_idx_vector_impl_def_t;
         using graph_t2 = CSGE;
@@ -568,7 +565,7 @@ BOOST_AUTO_TEST_CASE(coarser_SquashA_test_diff_graph_impl_CSGE) {
         BspInstance<graph_t1> instance;
 
         bool status_graph = file_reader::readGraph((cwd / filename_graph).string(),
-                                                                            instance.getComputationalDag());
+                                                   instance.getComputationalDag());
 
         bool status_architecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(),
                                                                     instance.getArchitecture());
@@ -581,7 +578,7 @@ BOOST_AUTO_TEST_CASE(coarser_SquashA_test_diff_graph_impl_CSGE) {
 
         BspInstance<graph_t2> coarse_instance;
         BspArchitecture<graph_t2> architecture_t2(instance.getArchitecture());
-        coarse_instance.setArchitecture(architecture_t2);
+        coarse_instance.getArchitecture() = architecture_t2;
         std::vector<std::vector<VertexType>> vertex_map;
         std::vector<VertexType> reverse_vertex_map;
 
@@ -619,13 +616,6 @@ BOOST_AUTO_TEST_CASE(coarser_SquashA_test_diff_graph_impl_CSGE) {
     }
 }
 
-
-
-
-
-
-
-
 BOOST_AUTO_TEST_CASE(Sarkar_test) {
     using graph_t = computational_dag_edge_idx_vector_impl_def_t;
     // using graph_t = computational_dag_vector_impl_def_t;
@@ -639,57 +629,46 @@ BOOST_AUTO_TEST_CASE(Sarkar_test) {
 
     test_coarser_same_graph<graph_t>(coarser);
 
-    
     params.useTopPoset = false;
     coarser.setParameters(params);
     test_coarser_same_graph<graph_t>(coarser);
-    
-    
+
     params.mode = SarkarParams::Mode::FAN_IN_FULL;
     coarser.setParameters(params);
     test_coarser_same_graph<graph_t>(coarser);
 
-    
     params.mode = SarkarParams::Mode::FAN_IN_PARTIAL;
     coarser.setParameters(params);
     test_coarser_same_graph<graph_t>(coarser);
 
-    
     params.mode = SarkarParams::Mode::FAN_OUT_FULL;
     coarser.setParameters(params);
     test_coarser_same_graph<graph_t>(coarser);
-
 
     params.mode = SarkarParams::Mode::FAN_OUT_PARTIAL;
     coarser.setParameters(params);
     test_coarser_same_graph<graph_t>(coarser);
 
-
     params.mode = SarkarParams::Mode::LEVEL_EVEN;
     coarser.setParameters(params);
     test_coarser_same_graph<graph_t>(coarser);
-    
-    
+
     params.mode = SarkarParams::Mode::LEVEL_ODD;
     coarser.setParameters(params);
     test_coarser_same_graph<graph_t>(coarser);
-
 
     params.mode = SarkarParams::Mode::FAN_IN_BUFFER;
     coarser.setParameters(params);
     test_coarser_same_graph<graph_t>(coarser);
 
-
     params.mode = SarkarParams::Mode::FAN_OUT_BUFFER;
     coarser.setParameters(params);
     test_coarser_same_graph<graph_t>(coarser);
-
 
     params.mode = SarkarParams::Mode::HOMOGENEOUS_BUFFER;
     coarser.setParameters(params);
     test_coarser_same_graph<graph_t>(coarser);
 }
-
 
 BOOST_AUTO_TEST_CASE(SarkarML_test) {
     using graph_t = computational_dag_edge_idx_vector_impl_def_t;
@@ -723,6 +702,6 @@ BOOST_AUTO_TEST_CASE(SquashAML_test) {
     // using graph_t = computational_dag_vector_impl_def_t;
 
     SquashAMul<graph_t, graph_t> coarser;
-    
+
     test_coarser_same_graph<graph_t>(coarser);
 }
