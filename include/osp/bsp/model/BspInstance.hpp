@@ -185,7 +185,7 @@ class BspInstance {
 
     /**
      * @brief Returns the send costs between two processors. Does not perform bounds checking.
-     * Does not the communication costs into account.
+     * Does not take the communication costs into account.
      *
      * @param p_send The index of the sending processor.
      * @param p_receive The index of the receiving processor.

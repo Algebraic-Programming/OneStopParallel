@@ -33,24 +33,45 @@ limitations under the License.
 namespace osp {
 
 /**
- * @brief Macro to define a trait that checks for the existence of a specific type member.
+ * @brief Traits to check for the existence of specific type members.
  *
- * Creates a struct `test_name<T>` inheriting from `std::true_type` if `T::member_name` exists,
- * otherwise inherits from `std::false_type`.
+ * These structs inherit from `std::true_type` if the specified member type exists in `T`,
+ * otherwise they inherit from `std::false_type`.
  */
-#define DEFINE_TYPE_MEMBER_TEST(test_name, member_name) \
-    template<typename T, typename = void>               \
-    struct test_name : std::false_type {};              \
-    template<typename T>                                \
-    struct test_name<T, std::void_t<typename T::member_name>> : std::true_type {};
+template<typename T, typename = void>
+struct has_vertex_idx_tmember : std::false_type {};
+template<typename T>
+struct has_vertex_idx_tmember<T, std::void_t<typename T::vertex_idx>> : std::true_type {};
 
-DEFINE_TYPE_MEMBER_TEST(has_vertex_idx_tmember, vertex_idx)
-DEFINE_TYPE_MEMBER_TEST(has_edge_desc_tmember, directed_edge_descriptor)
-DEFINE_TYPE_MEMBER_TEST(has_vertex_work_weight_tmember, vertex_work_weight_type)
-DEFINE_TYPE_MEMBER_TEST(has_vertex_comm_weight_tmember, vertex_comm_weight_type)
-DEFINE_TYPE_MEMBER_TEST(has_vertex_mem_weight_tmember, vertex_mem_weight_type)
-DEFINE_TYPE_MEMBER_TEST(has_vertex_type_tmember, vertex_type_type)
-DEFINE_TYPE_MEMBER_TEST(has_edge_comm_weight_tmember, edge_comm_weight_type)
+template<typename T, typename = void>
+struct has_edge_desc_tmember : std::false_type {};
+template<typename T>
+struct has_edge_desc_tmember<T, std::void_t<typename T::directed_edge_descriptor>> : std::true_type {};
+
+template<typename T, typename = void>
+struct has_vertex_work_weight_tmember : std::false_type {};
+template<typename T>
+struct has_vertex_work_weight_tmember<T, std::void_t<typename T::vertex_work_weight_type>> : std::true_type {};
+
+template<typename T, typename = void>
+struct has_vertex_comm_weight_tmember : std::false_type {};
+template<typename T>
+struct has_vertex_comm_weight_tmember<T, std::void_t<typename T::vertex_comm_weight_type>> : std::true_type {};
+
+template<typename T, typename = void>
+struct has_vertex_mem_weight_tmember : std::false_type {};
+template<typename T>
+struct has_vertex_mem_weight_tmember<T, std::void_t<typename T::vertex_mem_weight_type>> : std::true_type {};
+
+template<typename T, typename = void>
+struct has_vertex_type_tmember : std::false_type {};
+template<typename T>
+struct has_vertex_type_tmember<T, std::void_t<typename T::vertex_type_type>> : std::true_type {};
+
+template<typename T, typename = void>
+struct has_edge_comm_weight_tmember : std::false_type {};
+template<typename T>
+struct has_edge_comm_weight_tmember<T, std::void_t<typename T::edge_comm_weight_type>> : std::true_type {};
 
 /**
  * @brief Core traits for any directed graph type.
@@ -81,7 +102,6 @@ using vertex_idx_t = typename directed_graph_traits<T>::vertex_idx;
  */
 template<typename Graph_t>
 struct directed_edge {
-
     vertex_idx_t<Graph_t> source;
     vertex_idx_t<Graph_t> target;
 

@@ -112,7 +112,6 @@ inline std::ostream &operator<<(std::ostream &os, MEMORY_CONSTRAINT_TYPE type) {
  */
 template<typename Graph_t>
 class BspArchitecture {
-
     static_assert(is_computational_dag_v<Graph_t>, "BspSchedule can only be used with computational DAGs.");
 
   private:
@@ -245,7 +244,6 @@ class BspArchitecture {
           communicationCosts_(other.communicationCosts()), synchronisationCosts_(other.synchronisationCosts()),
           memoryBound_(other.memoryBound()), isNuma_(other.isNumaArchitecture()), processorTypes_(other.processorTypes()),
           sendCosts_(other.sendCostsVector()) {
-
         static_assert(std::is_same_v<v_memw_t<Graph_t>, v_memw_t<Graph_t_other>>,
                       "BspArchitecture: Graph_t and Graph_t_other have the same memory weight type.");
 
@@ -338,15 +336,13 @@ class BspArchitecture {
             }
 
             for (unsigned j = 0U; j < numberOfProcessors_; j++) {
-                if (i == j) {
-                    if (vec.at(i).at(j) != 0U)
-                        throw std::invalid_argument("Invalid Argument: Diagonal elements should be 0.");
-                } else {
-                    sendCosts_.at(FlatIndex(i, j)) = vec.at(i).at(j);
+                if (i == j && vec.at(i).at(j) != 0U) {
+                    throw std::invalid_argument("Invalid Argument: Diagonal elements should be 0.");
+                }
 
-                    if (numberOfProcessors_ > 1U && vec.at(i).at(j) != vec.at(0U).at(1U)) {
-                        isNuma_ = true;
-                    }
+                sendCosts_.at(FlatIndex(i, j)) = vec.at(i).at(j);
+                if (numberOfProcessors_ > 1U && vec.at(i).at(j) != vec.at(0U).at(1U)) {
+                    isNuma_ = true;
                 }
             }
         }
@@ -589,7 +585,7 @@ class BspArchitecture {
 
     /**
      * @brief Returns the send costs between two processors. Does not perform bounds checking.
-     * Does not the communication costs into account.
+     * Does not take the communication costs into account.
      *
      * @param p1 The index of the first processor.
      * @param p2 The index of the second processor.
