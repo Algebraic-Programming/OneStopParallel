@@ -266,11 +266,11 @@ class in_edge_view {
   private:
     static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
 
-    const Graph_t &graph;
-    vertex_idx_t<Graph_t> target_vertex;
+    const Graph_t &graph_;
+    vertex_idx_t<Graph_t> targetVertex_;
 
     template<typename parent_iterator_t>
-    class in_edge_iterator {
+    class InEdgeIterator {
       public:
         using iterator_category = typename std::iterator_traits<parent_iterator_t>::iterator_category;
         using difference_type = std::ptrdiff_t;
@@ -284,60 +284,59 @@ class in_edge_view {
         };
 
       private:
-        vertex_idx_t<Graph_t> target_vertex;
-        parent_iterator_t current_parent_it;
+        vertex_idx_t<Graph_t> targetVertex_;
+        parent_iterator_t currentParentIt_;
 
       public:
-        in_edge_iterator() = default;
-        in_edge_iterator(vertex_idx_t<Graph_t> v, parent_iterator_t it) : target_vertex(v), current_parent_it(it) {}
+        InEdgeIterator() = default;
+        InEdgeIterator(vertex_idx_t<Graph_t> v, parent_iterator_t it) : targetVertex_(v), currentParentIt_(it) {}
 
-        [[nodiscard]] value_type operator*() const { return {*current_parent_it, target_vertex}; }
+        [[nodiscard]] value_type operator*() const { return {*currentParentIt_, targetVertex_}; }
         [[nodiscard]] arrow_proxy operator->() const { return {operator*()}; }
 
-        in_edge_iterator &operator++() {
-            ++current_parent_it;
+        InEdgeIterator &operator++() {
+            ++currentParentIt_;
             return *this;
         }
 
-        in_edge_iterator operator++(int) {
-            in_edge_iterator temp = *this;
+        InEdgeIterator operator++(int) {
+            InEdgeIterator temp = *this;
             ++(*this);
             return temp;
         }
 
-        in_edge_iterator &operator--() {
-            --current_parent_it;
+        InEdgeIterator &operator--() {
+            --currentParentIt_;
             return *this;
         }
 
-        in_edge_iterator operator--(int) {
-            in_edge_iterator temp = *this;
+        InEdgeIterator operator--(int) {
+            InEdgeIterator temp = *this;
             --(*this);
             return temp;
         }
 
-        [[nodiscard]] bool operator==(const in_edge_iterator &other) const noexcept {
-            return current_parent_it == other.current_parent_it;
+        [[nodiscard]] bool operator==(const InEdgeIterator &other) const noexcept {
+            return currentParentIt_ == other.currentParentIt_;
         }
 
-        [[nodiscard]] bool operator!=(const in_edge_iterator &other) const noexcept { return !(*this == other); }
+        [[nodiscard]] bool operator!=(const InEdgeIterator &other) const noexcept { return !(*this == other); }
     };
 
   public:
-    using iterator =
-        in_edge_iterator<decltype(std::declval<Graph_t>().parents(std::declval<vertex_idx_t<Graph_t>>()).begin())>;
-    using const_iterator = iterator;
+    using iterator = InEdgeIterator<decltype(std::declval<Graph_t>().parents(std::declval<vertex_idx_t<Graph_t>>()).begin())>;
+    using constIterator = iterator;
 
-    in_edge_view(const Graph_t &graph_, vertex_idx_t<Graph_t> v) : graph(graph_), target_vertex(v) {}
+    in_edge_view(const Graph_t &graph, vertex_idx_t<Graph_t> v) : graph_(graph), targetVertex_(v) {}
 
-    [[nodiscard]] auto begin() const { return iterator(target_vertex, graph.parents(target_vertex).begin()); }
+    [[nodiscard]] auto begin() const { return iterator(targetVertex_, graph_.parents(targetVertex_).begin()); }
     [[nodiscard]] auto cbegin() const { return begin(); }
 
-    [[nodiscard]] auto end() const { return iterator(target_vertex, graph.parents(target_vertex).end()); }
+    [[nodiscard]] auto end() const { return iterator(targetVertex_, graph_.parents(targetVertex_).end()); }
     [[nodiscard]] auto cend() const { return end(); }
 
-    [[nodiscard]] auto size() const { return graph.in_degree(target_vertex); }
-    [[nodiscard]] bool empty() const { return graph.in_degree(target_vertex) == 0; }
+    [[nodiscard]] auto size() const { return graph_.in_degree(targetVertex_); }
+    [[nodiscard]] bool empty() const { return graph_.in_degree(targetVertex_) == 0; }
 };
 
 } // namespace osp
