@@ -22,137 +22,149 @@ limitations under the License.
 
 namespace osp {
 
+/**
+ * @brief A view over all edges in a directed graph.
+ *
+ * This class provides an iterator-based view to iterate over all edges in a directed graph.
+ * The iteration order is lexicographical with respect to (source, target) pairs, determined by
+ * the order of vertices and their adjacency lists.
+ *
+ * @tparam Graph_t The type of the graph, which must satisfy the `is_directed_graph_v` concept.
+ */
 template<typename Graph_t>
 class edge_view {
   private:
     static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
 
-    const Graph_t &graph;
+    const Graph_t &graph_;
 
     template<typename child_iterator_t>
-    class directed_edge_iterator {
+    class DirectedEdgeIterator {
       public:
-        using iterator_category = std::bidirectional_iterator_tag;
+        using iterator_category = std::forward_iterator_tag;
         using difference_type = std::ptrdiff_t;
         using value_type = directed_edge<Graph_t>;
         using pointer = value_type *;
         using reference = value_type &;
 
+        struct arrow_proxy {
+            value_type value;
+            const value_type *operator->() const noexcept { return &value; }
+        };
+
       private:
-        const Graph_t *graph;                 // Pointer to the graph
-        vertex_idx_t<Graph_t> current_vertex; // Current source vertex
-        child_iterator_t current_child; // Iterator to the current target vertex in current_vertex's adjacency list
-        vertex_idx_t<Graph_t> current_edge_idx;   // Global index of the current edge in the traversal order
+        const Graph_t *graph_;                 // Pointer to the graph
+        vertex_idx_t<Graph_t> currentVertex_;  // Current source vertex
+        child_iterator_t currentChild_;        // Iterator to the current target vertex in current_vertex's adjacency list
+        vertex_idx_t<Graph_t> currentEdgeIdx_; // Global index of the current edge in the traversal order
 
-      public:
-        directed_edge_iterator() : graph(nullptr), current_vertex(0), current_edge_idx(0) {}
-        directed_edge_iterator(const directed_edge_iterator &other)
-            : graph(other.graph), current_vertex(other.current_vertex), current_child(other.current_child),
-              current_edge_idx(other.current_edge_idx) {}
-
-        directed_edge_iterator operator=(const directed_edge_iterator &other) {
-            graph = other.graph;
-            current_vertex = other.current_vertex;
-            current_child = other.current_child;
-            current_edge_idx = other.current_edge_idx;
-            return *this;
-        }
-
-        directed_edge_iterator(const Graph_t &graph_) : graph(&graph_), current_vertex(0), current_edge_idx(0) {
-
-            while (current_vertex != graph->num_vertices()) {
-                if (graph->children(current_vertex).begin() != graph->children(current_vertex).end()) {
-                    current_child = graph->children(current_vertex).begin();
+        void advanceToValid() {
+            while (currentVertex_ != graph_->num_vertices()) {
+                if (graph_->children(currentVertex_).begin() != graph_->children(currentVertex_).end()) {
+                    currentChild_ = graph_->children(currentVertex_).begin();
                     break;
                 }
-                current_vertex++;
+                currentVertex_++;
             }
         }
 
-        directed_edge_iterator(const vertex_idx_t<Graph_t> edge_idx, const Graph_t &graph_)
-            : graph(&graph_), current_vertex(0), current_edge_idx(edge_idx) {
+      public:
+        DirectedEdgeIterator() noexcept : graph_(nullptr), currentVertex_(0), currentEdgeIdx_(0) {}
 
-            if (current_edge_idx < graph->num_edges()) {
+        DirectedEdgeIterator(const DirectedEdgeIterator &other) = default;
+        DirectedEdgeIterator(DirectedEdgeIterator &&other) noexcept = default;
 
+        DirectedEdgeIterator &operator=(const DirectedEdgeIterator &other) = default;
+        DirectedEdgeIterator &operator=(DirectedEdgeIterator &&other) noexcept = default;
+
+        explicit DirectedEdgeIterator(const Graph_t &graph) : graph_(&graph), currentVertex_(0), currentEdgeIdx_(0) {
+            advanceToValid();
+        }
+
+        DirectedEdgeIterator(const vertex_idx_t<Graph_t> edge_idx, const Graph_t &graph)
+            : graph_(&graph), currentVertex_(0), currentEdgeIdx_(edge_idx) {
+            if (currentEdgeIdx_ < graph_->num_edges()) {
                 vertex_idx_t<Graph_t> tmp = 0u;
+                advanceToValid();
 
-                if (tmp < current_edge_idx) {
-
-                    while (current_vertex != graph->num_vertices()) {
-
-                        current_child = graph->children(current_vertex).begin();
-
-                        while (current_child != graph->children(current_vertex).end()) {
-
-                            if (tmp == current_edge_idx) {
-                                break;
-                            }
-
-                            current_child++;
-                            tmp++;
+                while (currentVertex_ != graph_->num_vertices() && tmp < currentEdgeIdx_) {
+                    while (currentChild_ != graph_->children(currentVertex_).end()) {
+                        if (tmp == currentEdgeIdx_) {
+                            return;
                         }
-
-                        current_vertex++;
+                        currentChild_++;
+                        tmp++;
+                    }
+                    // Move to next vertex
+                    currentVertex_++;
+                    if (currentVertex_ != graph_->num_vertices()) {
+                        currentChild_ = graph_->children(currentVertex_).begin();
+                        // Skip empty adjacency lists
+                        while (currentVertex_ != graph_->num_vertices() &&
+                               graph_->children(currentVertex_).begin() == graph_->children(currentVertex_).end()) {
+                            currentVertex_++;
+                            if (currentVertex_ != graph_->num_vertices()) {
+                                currentChild_ = graph_->children(currentVertex_).begin();
+                            }
+                        }
                     }
                 }
-
             } else {
-                current_edge_idx = graph->num_edges();
-                current_vertex = graph->num_vertices();
+                currentEdgeIdx_ = graph_->num_edges();
+                currentVertex_ = graph_->num_vertices();
             }
         }
 
-        inline value_type operator*() const { return {current_vertex, *current_child}; }
+        [[nodiscard]] value_type operator*() const { return {currentVertex_, *currentChild_}; }
+        [[nodiscard]] arrow_proxy operator->() const { return {operator*()}; }
 
-        inline directed_edge_iterator &operator++() {
+        DirectedEdgeIterator &operator++() {
+            currentChild_++;
+            currentEdgeIdx_++;
 
-            current_child++;
-            current_edge_idx++;
-
-            if (current_child == graph->children(current_vertex).end()) {
-
-                current_vertex++;
-
-                while (current_vertex != graph->num_vertices()) {
-
-                    if (graph->children(current_vertex).begin() != graph->children(current_vertex).end()) {
-                        current_child = graph->children(current_vertex).begin();
+            if (currentChild_ == graph_->children(currentVertex_).end()) {
+                currentVertex_++;
+                // Skip empty vertices
+                while (currentVertex_ != graph_->num_vertices()) {
+                    if (graph_->children(currentVertex_).begin() != graph_->children(currentVertex_).end()) {
+                        currentChild_ = graph_->children(currentVertex_).begin();
                         break;
                     }
-
-                    current_vertex++;
+                    currentVertex_++;
                 }
             }
-
             return *this;
         }
 
-        inline directed_edge_iterator operator++(int) {
-            directed_edge_iterator temp = *this;
+        [[nodiscard]] DirectedEdgeIterator operator++(int) {
+            DirectedEdgeIterator temp = *this;
             ++(*this);
             return temp;
         }
 
-        inline bool operator==(const directed_edge_iterator &other) const {
-            return current_edge_idx == other.current_edge_idx;
+        [[nodiscard]] bool operator==(const DirectedEdgeIterator &other) const noexcept {
+            return currentEdgeIdx_ == other.currentEdgeIdx_;
         }
 
-        inline bool operator!=(const directed_edge_iterator &other) const { return !(*this == other); }
+        [[nodiscard]] bool operator!=(const DirectedEdgeIterator &other) const noexcept { return !(*this == other); }
     };
 
   public:
-    using dir_edge_iterator = directed_edge_iterator<
-        decltype(std::declval<Graph_t>().children(std::declval<vertex_idx_t<Graph_t>>()).begin())>;
+    using DirEdgeIterator = DirectedEdgeIterator<decltype(std::declval<Graph_t>().children(std::declval<vertex_idx_t<Graph_t>>()).begin())>;
+    using iterator = DirEdgeIterator;
+    using constIterator = DirEdgeIterator;
 
-    edge_view(const Graph_t &graph_) : graph(graph_) {}
+    explicit edge_view(const Graph_t &graph) : graph_(graph) {}
 
-    inline auto begin() const { return dir_edge_iterator(graph); }
-    inline auto cbegin() const { return dir_edge_iterator(graph); }
+    [[nodiscard]] auto begin() const { return DirEdgeIterator(graph_); }
+    [[nodiscard]] auto cbegin() const { return DirEdgeIterator(graph_); }
 
-    inline auto end() const { return dir_edge_iterator(graph.num_edges(), graph); }
-    inline auto cend() const { return dir_edge_iterator(graph.num_edges(), graph); }
+    [[nodiscard]] auto end() const { return DirEdgeIterator(graph_.num_edges(), graph_); }
+    [[nodiscard]] auto cend() const { return DirEdgeIterator(graph_.num_edges(), graph_); }
 
-    inline auto size() const { return graph.num_edges(); }
+    [[nodiscard]] auto size() const { return graph_.num_edges(); }
+
+    [[nodiscard]] bool empty() const { return graph_.num_edges() == 0; }
 };
 
 /**
@@ -180,6 +192,11 @@ class out_edge_view {
         using pointer = value_type *;
         using reference = value_type &;
 
+        struct arrow_proxy {
+            value_type value;
+            const value_type *operator->() const noexcept { return &value; }
+        };
+
       private:
         vertex_idx_t<Graph_t> source_vertex;
         child_iterator_t current_child_it;
@@ -188,35 +205,36 @@ class out_edge_view {
         out_edge_iterator() = default;
         out_edge_iterator(vertex_idx_t<Graph_t> u, child_iterator_t it) : source_vertex(u), current_child_it(it) {}
 
-        inline value_type operator*() const { return {source_vertex, *current_child_it}; }
+        [[nodiscard]] value_type operator*() const { return {source_vertex, *current_child_it}; }
+        [[nodiscard]] arrow_proxy operator->() const { return {operator*()}; }
 
-        inline out_edge_iterator &operator++() {
+        out_edge_iterator &operator++() {
             ++current_child_it;
             return *this;
         }
 
-        inline out_edge_iterator operator++(int) {
+        out_edge_iterator operator++(int) {
             out_edge_iterator temp = *this;
             ++(*this);
             return temp;
         }
 
-        inline out_edge_iterator &operator--() {
+        out_edge_iterator &operator--() {
             --current_child_it;
             return *this;
         }
 
-        inline out_edge_iterator operator--(int) {
+        out_edge_iterator operator--(int) {
             out_edge_iterator temp = *this;
             --(*this);
             return temp;
         }
 
-        inline bool operator==(const out_edge_iterator &other) const {
+        [[nodiscard]] bool operator==(const out_edge_iterator &other) const noexcept {
             return current_child_it == other.current_child_it;
         }
 
-        inline bool operator!=(const out_edge_iterator &other) const { return !(*this == other); }
+        [[nodiscard]] bool operator!=(const out_edge_iterator &other) const noexcept { return !(*this == other); }
     };
 
   public:
@@ -226,13 +244,14 @@ class out_edge_view {
 
     out_edge_view(const Graph_t &graph_, vertex_idx_t<Graph_t> u) : graph(graph_), source_vertex(u) {}
 
-    inline auto begin() const { return iterator(source_vertex, graph.children(source_vertex).begin()); }
-    inline auto cbegin() const { return begin(); }
+    [[nodiscard]] auto begin() const { return iterator(source_vertex, graph.children(source_vertex).begin()); }
+    [[nodiscard]] auto cbegin() const { return begin(); }
 
-    inline auto end() const { return iterator(source_vertex, graph.children(source_vertex).end()); }
-    inline auto cend() const { return end(); }
+    [[nodiscard]] auto end() const { return iterator(source_vertex, graph.children(source_vertex).end()); }
+    [[nodiscard]] auto cend() const { return end(); }
 
-    inline auto size() const { return graph.out_degree(source_vertex); }
+    [[nodiscard]] auto size() const { return graph.out_degree(source_vertex); }
+    [[nodiscard]] bool empty() const { return graph.out_degree(source_vertex) == 0; }
 };
 
 /**
@@ -260,6 +279,11 @@ class in_edge_view {
         using pointer = value_type *;
         using reference = value_type &;
 
+        struct arrow_proxy {
+            value_type value;
+            const value_type *operator->() const noexcept { return &value; }
+        };
+
       private:
         vertex_idx_t<Graph_t> target_vertex;
         parent_iterator_t current_parent_it;
@@ -268,35 +292,36 @@ class in_edge_view {
         in_edge_iterator() = default;
         in_edge_iterator(vertex_idx_t<Graph_t> v, parent_iterator_t it) : target_vertex(v), current_parent_it(it) {}
 
-        inline value_type operator*() const { return {*current_parent_it, target_vertex}; }
+        [[nodiscard]] value_type operator*() const { return {*current_parent_it, target_vertex}; }
+        [[nodiscard]] arrow_proxy operator->() const { return {operator*()}; }
 
-        inline in_edge_iterator &operator++() {
+        in_edge_iterator &operator++() {
             ++current_parent_it;
             return *this;
         }
 
-        inline in_edge_iterator operator++(int) {
+        in_edge_iterator operator++(int) {
             in_edge_iterator temp = *this;
             ++(*this);
             return temp;
         }
 
-        inline in_edge_iterator &operator--() {
+        in_edge_iterator &operator--() {
             --current_parent_it;
             return *this;
         }
 
-        inline in_edge_iterator operator--(int) {
+        in_edge_iterator operator--(int) {
             in_edge_iterator temp = *this;
             --(*this);
             return temp;
         }
 
-        inline bool operator==(const in_edge_iterator &other) const {
+        [[nodiscard]] bool operator==(const in_edge_iterator &other) const noexcept {
             return current_parent_it == other.current_parent_it;
         }
 
-        inline bool operator!=(const in_edge_iterator &other) const { return !(*this == other); }
+        [[nodiscard]] bool operator!=(const in_edge_iterator &other) const noexcept { return !(*this == other); }
     };
 
   public:
@@ -306,13 +331,14 @@ class in_edge_view {
 
     in_edge_view(const Graph_t &graph_, vertex_idx_t<Graph_t> v) : graph(graph_), target_vertex(v) {}
 
-    inline auto begin() const { return iterator(target_vertex, graph.parents(target_vertex).begin()); }
-    inline auto cbegin() const { return begin(); }
+    [[nodiscard]] auto begin() const { return iterator(target_vertex, graph.parents(target_vertex).begin()); }
+    [[nodiscard]] auto cbegin() const { return begin(); }
 
-    inline auto end() const { return iterator(target_vertex, graph.parents(target_vertex).end()); }
-    inline auto cend() const { return end(); }
+    [[nodiscard]] auto end() const { return iterator(target_vertex, graph.parents(target_vertex).end()); }
+    [[nodiscard]] auto cend() const { return end(); }
 
-    inline auto size() const { return graph.in_degree(target_vertex); }
+    [[nodiscard]] auto size() const { return graph.in_degree(target_vertex); }
+    [[nodiscard]] bool empty() const { return graph.in_degree(target_vertex) == 0; }
 };
 
 } // namespace osp
