@@ -13,9 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner   
+@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
-
 
 #pragma once
 
@@ -23,8 +22,26 @@ limitations under the License.
 #include <type_traits>
 
 namespace osp {
+/**
+ * @file iterator_concepts.hpp
+ * @brief C++17 compatible concept checks (type traits) for iterators and ranges.
+ *
+ * This file provides type traits that emulate C++20 concepts for iterators and ranges.
+ * These are used to ensure type safety and correct usage of templates within the library
+ * while maintaining compatibility with C++17.
+ */
 
-// Concept for const_iterator with forward iterator category
+/**
+ * @brief Checks if a type is a forward iterator.
+ *
+ * This type trait checks if `T` satisfies the requirements of a forward iterator.
+ * It verifies the existence of standard iterator typedefs and checks if the iterator category
+ * is derived from `std::forward_iterator_tag`.
+ *
+ * @note Equivalent to C++20 `std::forward_iterator`.
+ *
+ * @tparam T The type to check.
+ */
 template<typename T, typename = void>
 struct is_forward_iterator : std::false_type {};
 
@@ -41,14 +58,24 @@ struct is_forward_iterator<
 template<typename T>
 inline constexpr bool is_forward_iterator_v = is_forward_iterator<T>::value;
 
-// Concept for ranges with const forward iterators supporting begin or cbegin
+/**
+ * @brief Checks if a type is a range of forward iterators with a specific value type.
+ *
+ * This type trait checks if `T` is a range (provides `begin()` and `end()`) whose iterator
+ * satisfies `is_forward_iterator` and whose value type matches `ValueType`.
+ *
+ * @note Equivalent to C++20 `std::ranges::forward_range` combined with a value type check.
+ *
+ * @tparam T The range type to check.
+ * @tparam ValueType The expected value type of the range.
+ */
 template<typename T, typename ValueType, typename = void>
 struct is_forward_range_of : std::false_type {};
 
 template<typename T, typename ValueType>
 struct is_forward_range_of<
     T, ValueType,
-    std::void_t<decltype(std::begin(std::declval<T>())), 
+    std::void_t<decltype(std::begin(std::declval<T>())),
                 decltype(std::end(std::declval<T>()))>>
     : std::conjunction<
           is_forward_iterator<decltype(std::begin(std::declval<T>()))>,
@@ -57,7 +84,17 @@ struct is_forward_range_of<
 template<typename T, typename ValueType>
 inline constexpr bool is_forward_range_of_v = is_forward_range_of<T, ValueType>::value;
 
-// Concept for containers
+/**
+ * @brief Checks if a type is a container (sized forward range).
+ *
+ * This type trait checks if `T` satisfies `is_forward_range_of` and additionally provides
+ * a `size()` member function.
+ *
+ * @note Equivalent to C++20 `std::ranges::sized_range` combined with `std::ranges::forward_range`.
+ *
+ * @tparam T The container type to check.
+ * @tparam ValueType The expected value type of the container.
+ */
 template<typename T, typename ValueType, typename = void>
 struct is_container_of : std::false_type {};
 
@@ -71,9 +108,17 @@ struct is_container_of<
 template<typename T, typename ValueType>
 inline constexpr bool is_container_of_v = is_container_of<T, ValueType>::value;
 
-
-
-// Concept for const_iterator with forward iterator category
+/**
+ * @brief Checks if a type is an input iterator.
+ *
+ * This type trait checks if `T` satisfies the requirements of an input iterator.
+ * It verifies the existence of standard iterator typedefs and checks if the iterator category
+ * is derived from `std::input_iterator_tag`.
+ *
+ * @note Equivalent to C++20 `std::input_iterator`.
+ *
+ * @tparam T The type to check.
+ */
 template<typename T, typename = void>
 struct is_input_iterator : std::false_type {};
 
@@ -90,14 +135,24 @@ struct is_input_iterator<
 template<typename T>
 inline constexpr bool is_input_iterator_v = is_input_iterator<T>::value;
 
-// Concept for ranges with const input iterators supporting begin or cbegin
+/**
+ * @brief Checks if a type is a range of input iterators with a specific value type.
+ *
+ * This type trait checks if `T` is a range (provides `begin()` and `end()`) whose iterator
+ * satisfies `is_input_iterator` and whose value type matches `ValueType`.
+ *
+ * @note Equivalent to C++20 `std::ranges::input_range` combined with a value type check.
+ *
+ * @tparam T The range type to check.
+ * @tparam ValueType The expected value type of the range.
+ */
 template<typename T, typename ValueType, typename = void>
 struct is_input_range_of : std::false_type {};
 
 template<typename T, typename ValueType>
 struct is_input_range_of<
     T, ValueType,
-    std::void_t<decltype(std::begin(std::declval<T>())), 
+    std::void_t<decltype(std::begin(std::declval<T>())),
                 decltype(std::end(std::declval<T>()))>>
     : std::conjunction<
           is_input_iterator<decltype(std::begin(std::declval<T>()))>,
@@ -105,6 +160,5 @@ struct is_input_range_of<
 
 template<typename T, typename ValueType>
 inline constexpr bool is_input_range_of_v = is_input_range_of<T, ValueType>::value;
-
 
 } // namespace osp
