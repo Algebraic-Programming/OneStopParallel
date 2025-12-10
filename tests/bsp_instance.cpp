@@ -19,12 +19,12 @@ limitations under the License.
 #define BOOST_TEST_MODULE Bsp_Architecture
 #include <boost/test/unit_test.hpp>
 
+#include "osp/auxiliary/io/arch_file_reader.hpp"
+#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 #include "osp/bsp/model/BspInstance.hpp"
 #include "osp/bsp/model/BspSchedule.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
-#include "osp/auxiliary/io/arch_file_reader.hpp"
-#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 #include <filesystem>
 #include <iostream>
 
@@ -84,8 +84,7 @@ BOOST_AUTO_TEST_CASE(test_instance_bicgstab) {
     BOOST_CHECK_EQUAL(instance.isCompatible(0, 0), true);
     BOOST_CHECK_EQUAL(instance.isCompatible(1, 0), false);
 
-
-    compatible_processor_range range(instance);
+    CompatibleProcessorRange range(instance);
 
     BOOST_CHECK_EQUAL(range.compatible_processors_type(0).size(), 3);
     BOOST_CHECK_EQUAL(range.compatible_processors_type(1).size(), 1);
@@ -97,14 +96,12 @@ BOOST_AUTO_TEST_CASE(test_instance_bicgstab) {
     }
     std::cout << std::endl;
 
-
     std::cout << "Compatible processors type 1: " << std::endl;
 
     for (const auto &p : range.compatible_processors_type(1)) {
         std::cout << p;
     }
     std::cout << std::endl;
-
 
     BOOST_CHECK_EQUAL(range.compatible_processors_vertex(0).size(), 1);
     BOOST_CHECK_EQUAL(range.compatible_processors_vertex(1).size(), 3);

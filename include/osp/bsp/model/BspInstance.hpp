@@ -27,7 +27,10 @@ limitations under the License.
 
 namespace osp {
 
-enum class RETURN_STATUS { OSP_SUCCESS, BEST_FOUND, TIMEOUT, ERROR };
+enum class RETURN_STATUS { OSP_SUCCESS,
+                           BEST_FOUND,
+                           TIMEOUT,
+                           ERROR };
 
 inline std::string to_string(const RETURN_STATUS status) {
     switch (status) {
@@ -44,13 +47,23 @@ inline std::string to_string(const RETURN_STATUS status) {
     }
 }
 
-inline std::ostream& operator<<(std::ostream& os, RETURN_STATUS status) {
+inline std::ostream &operator<<(std::ostream &os, RETURN_STATUS status) {
     switch (status) {
-        case RETURN_STATUS::OSP_SUCCESS:        os << "SUCCESS";        break;
-        case RETURN_STATUS::BEST_FOUND:     os << "BEST_FOUND";     break;
-        case RETURN_STATUS::TIMEOUT:        os << "TIMEOUT";        break;
-        case RETURN_STATUS::ERROR:          os << "ERROR";          break;
-        default:                            os << "UNKNOWN";        break; 
+    case RETURN_STATUS::OSP_SUCCESS:
+        os << "SUCCESS";
+        break;
+    case RETURN_STATUS::BEST_FOUND:
+        os << "BEST_FOUND";
+        break;
+    case RETURN_STATUS::TIMEOUT:
+        os << "TIMEOUT";
+        break;
+    case RETURN_STATUS::ERROR:
+        os << "ERROR";
+        break;
+    default:
+        os << "UNKNOWN";
+        break;
     }
     return os;
 }
@@ -192,11 +205,19 @@ class BspInstance {
 
     /**
      * @brief Returns a copy of the send costs matrix.
-     *
      * @return A copy of the send costs matrix.
      */
-    inline const std::vector<std::vector<v_commw_t<Graph_t>>> &sendCostMatrix() const {
+    inline std::vector<std::vector<v_commw_t<Graph_t>>> sendCostMatrix() const {
         return architecture.sendCostMatrix();
+    }
+
+    /**
+     * @brief Returns the flattened send costs vector.
+     *
+     * @return The flattened send costs vector.
+     */
+    inline const std::vector<v_commw_t<Graph_t>> &sendCostsVector() const {
+        return architecture.sendCostsVector();
     }
 
     /**
@@ -389,53 +410,48 @@ class BspInstance {
 };
 
 template<typename Graph_t>
-class compatible_processor_range {
+class CompatibleProcessorRange {
 
     std::vector<std::vector<unsigned>> type_processor_idx;
     const BspInstance<Graph_t> *instance = nullptr;
 
-    public:
+  public:
+    CompatibleProcessorRange() = default;
 
-    compatible_processor_range() = default;
-    
-    compatible_processor_range(const BspInstance<Graph_t> &inst) {
+    CompatibleProcessorRange(const BspInstance<Graph_t> &inst) {
         initialize(inst);
     }
-    
+
     inline void initialize(const BspInstance<Graph_t> &inst) {
 
         instance = &inst;
 
-        if constexpr (has_typed_vertices_v<Graph_t>) {                
-         
+        if constexpr (has_typed_vertices_v<Graph_t>) {
+
             type_processor_idx = std::vector<std::vector<unsigned>>(inst.getComputationalDag().num_vertex_types());
 
             for (v_type_t<Graph_t> v_type = 0; v_type < inst.getComputationalDag().num_vertex_types(); v_type++) {
-                for (unsigned proc = 0; proc < inst.numberOfProcessors(); proc++) 
-                    if (inst.isCompatibleType(v_type, inst.processorType(proc))) 
-                        type_processor_idx[v_type].push_back(proc);                     
-                
+                for (unsigned proc = 0; proc < inst.numberOfProcessors(); proc++)
+                    if (inst.isCompatibleType(v_type, inst.processorType(proc)))
+                        type_processor_idx[v_type].push_back(proc);
             }
-        } 
+        }
     }
 
-    inline const auto & compatible_processors_type(v_type_t<Graph_t> type) const {
+    inline const auto &compatible_processors_type(v_type_t<Graph_t> type) const {
 
         assert(instance != nullptr);
 
         if constexpr (has_typed_vertices_v<Graph_t>) {
-            return type_processor_idx[type];                       
+            return type_processor_idx[type];
         } else {
             return instance->processors();
         }
     }
 
-    inline const auto & compatible_processors_vertex(vertex_idx_t<Graph_t> vertex) const {
+    inline const auto &compatible_processors_vertex(vertex_idx_t<Graph_t> vertex) const {
         return compatible_processors_type(instance->getComputationalDag().vertex_type(vertex));
     }
-
-
 };
-
 
 } // namespace osp

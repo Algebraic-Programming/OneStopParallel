@@ -34,7 +34,7 @@ namespace osp {
  * @tparam Graph_to The type of the target graph. Must satisfy `is_constructable_cdag_vertex`.
  * @param from The source graph.
  * @param to The target graph.
- */    
+ */
 template<typename Graph_from, typename Graph_to>
 void constructComputationalDag(const Graph_from &from, Graph_to &to) {
     static_assert(is_computational_dag_v<Graph_from>, "Graph_from must satisfy the computational_dag concept");
@@ -46,21 +46,21 @@ void constructComputationalDag(const Graph_from &from, Graph_to &to) {
     for (const auto &v_idx : from.vertices()) {
         if constexpr (has_typed_vertices_v<Graph_from> and has_typed_vertices_v<Graph_to>) {
             vertex_map.push_back(to.add_vertex(from.vertex_work_weight(v_idx), from.vertex_comm_weight(v_idx),
-                          from.vertex_mem_weight(v_idx), from.vertex_type(v_idx)));
+                                               from.vertex_mem_weight(v_idx), from.vertex_type(v_idx)));
         } else {
             vertex_map.push_back(to.add_vertex(from.vertex_work_weight(v_idx), from.vertex_comm_weight(v_idx),
-                          from.vertex_mem_weight(v_idx)));
+                                               from.vertex_mem_weight(v_idx)));
         }
     }
 
     if constexpr (has_edge_weights_v<Graph_from> and has_edge_weights_v<Graph_to>) {
         for (const auto &e : edges(from)) {
-            to.add_edge(vertex_map.at(source(e, from)), vertex_map.at(target(e, from)), from.edge_comm_weight(e));
+            to.add_edge(vertex_map[source(e, from)], vertex_map[target(e, from)], from.edge_comm_weight(e));
         }
     } else {
         for (const auto &v : from.vertices()) {
             for (const auto &child : from.children(v)) {
-                to.add_edge(vertex_map.at(v), vertex_map.at(child));
+                to.add_edge(vertex_map[v], vertex_map[child]);
             }
         }
     }

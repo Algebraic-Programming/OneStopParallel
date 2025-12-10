@@ -39,6 +39,8 @@ limitations under the License.
 
 namespace osp {
 
+static constexpr unsigned CacheLineSize = 64;
+
 template<typename vert_t, typename weight_t>
 struct GrowLocalAutoCoresParallel_Params {
     vert_t minSuperstepSize = 20;
