@@ -136,7 +136,7 @@ class edge_view {
             return *this;
         }
 
-        [[nodiscard]] DirectedEdgeIterator operator++(int) {
+        DirectedEdgeIterator operator++(int) {
             DirectedEdgeIterator temp = *this;
             ++(*this);
             return temp;
@@ -180,11 +180,11 @@ class out_edge_view {
   private:
     static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
 
-    const Graph_t &graph;
-    vertex_idx_t<Graph_t> source_vertex;
+    const Graph_t &graph_;
+    vertex_idx_t<Graph_t> sourceVertex_;
 
     template<typename child_iterator_t>
-    class out_edge_iterator {
+    class OutEdgeIterator {
       public:
         using iterator_category = typename std::iterator_traits<child_iterator_t>::iterator_category;
         using difference_type = std::ptrdiff_t;
@@ -198,60 +198,59 @@ class out_edge_view {
         };
 
       private:
-        vertex_idx_t<Graph_t> source_vertex;
-        child_iterator_t current_child_it;
+        vertex_idx_t<Graph_t> sourceVertex_;
+        child_iterator_t currentChildIt_;
 
       public:
-        out_edge_iterator() = default;
-        out_edge_iterator(vertex_idx_t<Graph_t> u, child_iterator_t it) : source_vertex(u), current_child_it(it) {}
+        OutEdgeIterator() = default;
+        OutEdgeIterator(vertex_idx_t<Graph_t> u, child_iterator_t it) : sourceVertex_(u), currentChildIt_(it) {}
 
-        [[nodiscard]] value_type operator*() const { return {source_vertex, *current_child_it}; }
+        [[nodiscard]] value_type operator*() const { return {sourceVertex_, *currentChildIt_}; }
         [[nodiscard]] arrow_proxy operator->() const { return {operator*()}; }
 
-        out_edge_iterator &operator++() {
-            ++current_child_it;
+        OutEdgeIterator &operator++() {
+            ++currentChildIt_;
             return *this;
         }
 
-        out_edge_iterator operator++(int) {
-            out_edge_iterator temp = *this;
+        OutEdgeIterator operator++(int) {
+            OutEdgeIterator temp = *this;
             ++(*this);
             return temp;
         }
 
-        out_edge_iterator &operator--() {
-            --current_child_it;
+        OutEdgeIterator &operator--() {
+            --currentChildIt_;
             return *this;
         }
 
-        out_edge_iterator operator--(int) {
-            out_edge_iterator temp = *this;
+        OutEdgeIterator operator--(int) {
+            OutEdgeIterator temp = *this;
             --(*this);
             return temp;
         }
 
-        [[nodiscard]] bool operator==(const out_edge_iterator &other) const noexcept {
-            return current_child_it == other.current_child_it;
+        [[nodiscard]] bool operator==(const OutEdgeIterator &other) const noexcept {
+            return currentChildIt_ == other.currentChildIt_;
         }
 
-        [[nodiscard]] bool operator!=(const out_edge_iterator &other) const noexcept { return !(*this == other); }
+        [[nodiscard]] bool operator!=(const OutEdgeIterator &other) const noexcept { return !(*this == other); }
     };
 
   public:
-    using iterator =
-        out_edge_iterator<decltype(std::declval<Graph_t>().children(std::declval<vertex_idx_t<Graph_t>>()).begin())>;
-    using const_iterator = iterator;
+    using iterator = OutEdgeIterator<decltype(std::declval<Graph_t>().children(std::declval<vertex_idx_t<Graph_t>>()).begin())>;
+    using constIterator = iterator;
 
-    out_edge_view(const Graph_t &graph_, vertex_idx_t<Graph_t> u) : graph(graph_), source_vertex(u) {}
+    out_edge_view(const Graph_t &graph, vertex_idx_t<Graph_t> u) : graph_(graph), sourceVertex_(u) {}
 
-    [[nodiscard]] auto begin() const { return iterator(source_vertex, graph.children(source_vertex).begin()); }
+    [[nodiscard]] auto begin() const { return iterator(sourceVertex_, graph_.children(sourceVertex_).begin()); }
     [[nodiscard]] auto cbegin() const { return begin(); }
 
-    [[nodiscard]] auto end() const { return iterator(source_vertex, graph.children(source_vertex).end()); }
+    [[nodiscard]] auto end() const { return iterator(sourceVertex_, graph_.children(sourceVertex_).end()); }
     [[nodiscard]] auto cend() const { return end(); }
 
-    [[nodiscard]] auto size() const { return graph.out_degree(source_vertex); }
-    [[nodiscard]] bool empty() const { return graph.out_degree(source_vertex) == 0; }
+    [[nodiscard]] auto size() const { return graph_.out_degree(sourceVertex_); }
+    [[nodiscard]] bool empty() const { return graph_.out_degree(sourceVertex_) == 0; }
 };
 
 /**
