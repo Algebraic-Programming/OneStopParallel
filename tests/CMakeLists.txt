@@ -172,6 +172,8 @@ endif()
 
 ## coarsening
 
+_add_test( coarser_util )
+
 _add_test( stepbystep_coarsen_and_multilevel )
 
 _add_test (heavy_edge_preprocessing)
