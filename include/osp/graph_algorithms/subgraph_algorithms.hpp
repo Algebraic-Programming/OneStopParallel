@@ -22,6 +22,7 @@ limitations under the License.
 #include "osp/concepts/directed_graph_concept.hpp"
 #include <map>
 #include <set>
+#include <unordered_map>
 #include <vector>
 
 namespace osp {
@@ -91,13 +92,11 @@ void create_induced_subgraph(const Graph_t_in &dag, Graph_t_out &dag_out,
     }
 }
 
-
 template<typename Graph_t_in, typename Graph_t_out>
 void create_induced_subgraph(const Graph_t_in &dag, Graph_t_out &dag_out,
                              const std::vector<vertex_idx_t<Graph_t_in>> &selected_nodes) {
     return create_induced_subgraph(dag, dag_out, std::set<vertex_idx_t<Graph_t_in>>(selected_nodes.begin(), selected_nodes.end()));
 }
-
 
 template<typename Graph_t>
 bool checkOrderedIsomorphism(const Graph_t &first, const Graph_t &second) {
@@ -170,8 +169,6 @@ std::vector<Graph_t_out> create_induced_subgraphs(const Graph_t_in &dag_in,
     static_assert(is_constructable_cdag_edge_v<Graph_t_out>,
                   "Graph_t_out must satisfy the constructable_cdag_edge concept");
 
-
-
     unsigned number_of_parts = 0;
     for (const auto id : partition_IDs)
         number_of_parts = std::max(number_of_parts, id + 1);
@@ -202,7 +199,7 @@ std::vector<Graph_t_out> create_induced_subgraphs(const Graph_t_in &dag_in,
 
                 if (partition_IDs[node] == partition_IDs[succ])
                     split_dags[partition_IDs[node]].add_edge(local_idx[node], local_idx[succ],
-                                                            dag_in.edge_comm_weight(out_edge));
+                                                             dag_in.edge_comm_weight(out_edge));
             }
         }
     } else {
@@ -220,7 +217,7 @@ std::vector<Graph_t_out> create_induced_subgraphs(const Graph_t_in &dag_in,
 
 template<typename Graph_t_in, typename Graph_t_out>
 std::unordered_map<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_in>> create_induced_subgraph_map(const Graph_t_in &dag, Graph_t_out &dag_out,
-                             const std::vector<vertex_idx_t<Graph_t_in>> &selected_nodes) {
+                                                                                                   const std::vector<vertex_idx_t<Graph_t_in>> &selected_nodes) {
 
     static_assert(std::is_same_v<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_out>>,
                   "Graph_t_in and out must have the same vertex_idx types");
