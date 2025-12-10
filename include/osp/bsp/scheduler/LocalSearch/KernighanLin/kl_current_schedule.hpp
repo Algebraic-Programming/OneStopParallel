@@ -16,12 +16,12 @@ limitations under the License.
 @author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 
-//#define KL_DEBUG
+// #define KL_DEBUG
 
 #include "osp/bsp/model/BspSchedule.hpp"
 #include "osp/bsp/model/IBspSchedule.hpp"
-#include "osp/bsp/model/SetSchedule.hpp"
-#include "osp/bsp/model/VectorSchedule.hpp"
+#include "osp/bsp/model/util/SetSchedule.hpp"
+#include "osp/bsp/model/util/VectorSchedule.hpp"
 #include "osp/bsp/scheduler/ImprovementScheduler.hpp"
 #include "osp/bsp/scheduler/LocalSearch/LocalSearchMemoryConstraintModules.hpp"
 #include "osp/graph_algorithms/directed_graph_util.hpp"
@@ -73,17 +73,15 @@ class kl_current_schedule {
     using EdgeType = edge_desc_t<Graph_t>;
 
   public:
-
     kl_current_schedule(Ikl_cost_function *cost_f_) : cost_f(cost_f_) {
 
-#ifdef KL_DEBUG        
+#ifdef KL_DEBUG
         if constexpr (use_memory_constraint) {
             std::cout << "KLCurrentSchedule constructor with memory constraint" << std::endl;
         } else {
             std::cout << "KLCurrentSchedule constructor without memory constraint" << std::endl;
         }
 #endif
-
     }
 
     virtual ~kl_current_schedule() = default;
@@ -358,7 +356,7 @@ class kl_current_schedule {
         if constexpr (use_memory_constraint) {
 
             memory_constraint.apply_move(move.node, move.from_proc, move.from_step, move.to_proc, move.to_step);
-        }  
+        }
     }
 
     virtual void initialize_current_schedule(const IBspSchedule<Graph_t> &schedule) {

@@ -23,6 +23,7 @@ limitations under the License.
 #include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 #include "osp/bsp/model/BspInstance.hpp"
 #include "osp/bsp/model/BspSchedule.hpp"
+#include "osp/bsp/model/util/CompatibleProcessorRange.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 #include <filesystem>
@@ -43,7 +44,7 @@ BOOST_AUTO_TEST_CASE(test_1) {
 
     BspArchitecture<computational_dag_vector_impl_def_t> architecture_2(6, 3, 1);
 
-    instance.setArchitecture(architecture_2);
+    instance.getArchitecture() = architecture_2;
 
     BOOST_CHECK_EQUAL(instance.numberOfProcessors(), 6);
     BOOST_CHECK_EQUAL(instance.synchronisationCosts(), 1);

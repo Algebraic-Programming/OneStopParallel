@@ -18,6 +18,7 @@ limitations under the License.
 
 #pragma once
 
+#include "osp/auxiliary/return_status.hpp"
 #include "osp/bsp/model/BspInstance.hpp"
 #include "osp/bsp/model/BspSchedule.hpp"
 #include "osp/bsp/model/BspScheduleCS.hpp"

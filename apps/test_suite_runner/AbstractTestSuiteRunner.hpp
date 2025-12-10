@@ -28,15 +28,16 @@ limitations under the License.
 #include <string>
 #include <vector>
 
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/property_tree/ptree.hpp>
 #include "ConfigParser.hpp"
 #include "StatsModules/IStatsModule.hpp"
-#include "osp/bsp/model/BspInstance.hpp"
 #include "osp/auxiliary/io/arch_file_reader.hpp"
 #include "osp/auxiliary/io/general_file_reader.hpp"
+#include "osp/auxiliary/return_status.hpp"
+#include "osp/bsp/model/BspInstance.hpp"
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
 
-//#define EIGEN_FOUND 1
+// #define EIGEN_FOUND 1
 
 #ifdef EIGEN_FOUND
 #include <Eigen/Sparse>
@@ -83,7 +84,7 @@ class AbstractTestSuiteRunner {
 
             if (write_target_object_to_file) {
                 output_target_object_dir_path = parser.global_params.get_child("scheduleDirectory")
-                                                    .get_value<std::string>(); 
+                                                    .get_value<std::string>();
                 if (output_target_object_dir_path.substr(0, 1) != "/")
                     output_target_object_dir_path = executable_dir + output_target_object_dir_path;
                 if (!output_target_object_dir_path.empty() && !std::filesystem::exists(output_target_object_dir_path)) {
@@ -167,13 +168,13 @@ class AbstractTestSuiteRunner {
         }
     }
 
-    virtual RETURN_STATUS compute_target_object_impl(const BspInstance<GraphType> &instance, std::unique_ptr<TargetObjectType>& target_object,
-                                                        const pt::ptree &algo_config,  
-                                                        long long &computation_time_ms) = 0;
+    virtual RETURN_STATUS compute_target_object_impl(const BspInstance<GraphType> &instance, std::unique_ptr<TargetObjectType> &target_object,
+                                                     const pt::ptree &algo_config,
+                                                     long long &computation_time_ms) = 0;
 
     virtual void create_and_register_statistic_modules(const std::string &module_name) = 0;
 
-    virtual void write_target_object_hook(const TargetObjectType&, const std::string &, const std::string &,
+    virtual void write_target_object_hook(const TargetObjectType &, const std::string &, const std::string &,
                                           const std::string &) {
     } // default in case TargetObjectType cannot be written to file
 
@@ -250,7 +251,7 @@ class AbstractTestSuiteRunner {
                 log_stream << "Start Graph: " + filename_graph + "\n";
 
                 BspInstance<GraphType> bsp_instance;
-                bsp_instance.setArchitecture(arch);
+                bsp_instance.getArchitecture() = arch;
                 bool graph_status = false;
                 std::string ext;
                 if (filename_graph.rfind('.') != std::string::npos)
@@ -268,12 +269,12 @@ class AbstractTestSuiteRunner {
                 SM_csc_int64 L_csc_int64{};
 
                 if constexpr (std::is_same_v<GraphType, sparse_matrix_graph_int32_t> || std::is_same_v<GraphType, sparse_matrix_graph_int64_t>) {
-                    if (ext != "mtx"){
+                    if (ext != "mtx") {
                         log_stream << "Error: Only .mtx file is accepted for SpTRSV" << std::endl;
                         return 0;
                     }
-                    
-                    if constexpr (std::is_same_v<GraphType, sparse_matrix_graph_int32_t>){
+
+                    if constexpr (std::is_same_v<GraphType, sparse_matrix_graph_int32_t>) {
                         graph_status = Eigen::loadMarket(L_csr_int32, filename_graph);
                         if (!graph_status) {
                             std::cerr << "Failed to read matrix from " << filename_graph << std::endl;
@@ -297,7 +298,7 @@ class AbstractTestSuiteRunner {
                     }
                 } else {
 #endif
-                graph_status = file_reader::readGraph(filename_graph, bsp_instance.getComputationalDag());
+                    graph_status = file_reader::readGraph(filename_graph, bsp_instance.getComputationalDag());
 
 #ifdef EIGEN_FOUND
                 }
@@ -309,22 +310,20 @@ class AbstractTestSuiteRunner {
 
                 for (auto &algorithm_config_pair : parser.scheduler) {
                     const pt::ptree &algo_config = algorithm_config_pair.second;
-                    
-        
 
                     std::string current_algo_name = algo_config.get_child("name").get_value<std::string>();
                     log_stream << "Start Algorithm " + current_algo_name + "\n";
 
                     long long computation_time_ms;
-                    std::unique_ptr<TargetObjectType> target_object; 
-                    
+                    std::unique_ptr<TargetObjectType> target_object;
+
                     RETURN_STATUS exec_status = compute_target_object_impl(bsp_instance, target_object, algo_config, computation_time_ms);
 
                     if (exec_status != RETURN_STATUS::OSP_SUCCESS && exec_status != RETURN_STATUS::BEST_FOUND) {
                         if (exec_status == RETURN_STATUS::ERROR)
                             log_stream << "Error computing with " << current_algo_name << "." << std::endl;
                         else if (exec_status == RETURN_STATUS::TIMEOUT)
-                            log_stream << "Scheduler " << current_algo_name << " timed out." << std::endl;                           
+                            log_stream << "Scheduler " << current_algo_name << " timed out." << std::endl;
                         continue;
                     }
 
