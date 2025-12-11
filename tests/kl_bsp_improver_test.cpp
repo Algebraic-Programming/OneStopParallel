@@ -17,14 +17,12 @@
 
 using namespace osp;
 
-template<typename Graph_t>
+template <typename Graph_t>
 void add_mem_weights(Graph_t &dag) {
-
     int mem_weight = 1;
     int comm_weight = 7;
 
     for (const auto &v : dag.vertices()) {
-
         dag.set_vertex_work_weight(v, static_cast<v_memw_t<Graph_t>>(mem_weight++ % 10 + 2));
         dag.set_vertex_mem_weight(v, static_cast<v_memw_t<Graph_t>>(mem_weight++ % 10 + 2));
         dag.set_vertex_comm_weight(v, static_cast<v_commw_t<Graph_t>>(comm_weight++ % 10 + 2));
@@ -32,7 +30,6 @@ void add_mem_weights(Graph_t &dag) {
 }
 
 BOOST_AUTO_TEST_CASE(kl_improver_inner_loop_test) {
-
     using graph = computational_dag_edge_idx_vector_impl_def_int_t;
     using VertexType = graph::vertex_idx;
 

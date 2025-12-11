@@ -60,14 +60,18 @@ void writeComputationalDagHyperdagFormatDB(std::ostream &os, const Graph_t &grap
     os << num_hyperedges << " " << num_vertices << " " << num_pins << "\n";
 
     // Hyperedges
-    if (write_comment_lines) os << "%% Hyperedges: ID comm_weight mem_weight\n";
+    if (write_comment_lines) {
+        os << "%% Hyperedges: ID comm_weight mem_weight\n";
+    }
     for (unsigned i = 0; i < num_hyperedges; ++i) {
         const auto u = hyperedge_idx_to_node[i];
         os << i << " " << graph.vertex_comm_weight(u) << " " << graph.vertex_mem_weight(u) << "\n";
     }
 
     // Vertices
-    if (write_comment_lines) os << "%% Vertices: ID work_weight type\n";
+    if (write_comment_lines) {
+        os << "%% Vertices: ID work_weight type\n";
+    }
     for (const auto &u : graph.vertices()) {
         os << u << " " << graph.vertex_work_weight(u);
         if constexpr (has_typed_vertices_v<Graph_t>) {
@@ -79,12 +83,14 @@ void writeComputationalDagHyperdagFormatDB(std::ostream &os, const Graph_t &grap
     }
 
     // Pins
-    if (write_comment_lines) os << "%% Pins: HyperedgeID NodeID\n";
+    if (write_comment_lines) {
+        os << "%% Pins: HyperedgeID NodeID\n";
+    }
     for (unsigned i = 0; i < num_hyperedges; ++i) {
         const auto u = hyperedge_idx_to_node[i];
-        os << i << " " << u << "\n"; // Source pin
+        os << i << " " << u << "\n";    // Source pin
         for (const auto &v : graph.children(u)) {
-            os << i << " " << v << "\n"; // Target pins
+            os << i << " " << v << "\n";    // Target pins
         }
     }
 }
@@ -98,7 +104,9 @@ void writeComputationalDagHyperdagFormatDB(std::ostream &os, const Graph_t &grap
  * @return true if writing was successful, false otherwise.
  */
 template <typename Graph_t>
-bool writeComputationalDagHyperdagFormatDB(const std::string &filename, const Graph_t &graph, const bool write_comment_lines = false) {
+bool writeComputationalDagHyperdagFormatDB(const std::string &filename,
+                                           const Graph_t &graph,
+                                           const bool write_comment_lines = false) {
     std::ofstream os(filename);
     if (!os.is_open()) {
         std::cerr << "Error: Failed to open file for writing: " << filename << "\n";
@@ -108,5 +116,5 @@ bool writeComputationalDagHyperdagFormatDB(const std::string &filename, const Gr
     return true;
 }
 
-} // namespace file_writer
-} // namespace osp
+}    // namespace file_writer
+}    // namespace osp

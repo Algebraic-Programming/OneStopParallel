@@ -13,21 +13,20 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner   
+@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 
 #pragma once
 
-#include "osp/pebbling/pebblers/pebblingILP/COPTEnv.hpp"
-#include "osp/bsp/scheduler/Scheduler.hpp"
 #include "osp/bsp/model/BspInstance.hpp"
+#include "osp/bsp/scheduler/Scheduler.hpp"
+#include "osp/pebbling/pebblers/pebblingILP/COPTEnv.hpp"
 
-namespace osp{
+namespace osp {
 
-template<typename Graph_t>
+template <typename Graph_t>
 class AcyclicPartitioningILP {
-
-    static_assert(is_computational_dag_v<Graph_t>, "PebblingSchedule can only be used with computational DAGs."); 
+    static_assert(is_computational_dag_v<Graph_t>, "PebblingSchedule can only be used with computational DAGs.");
 
   private:
     using vertex_idx = vertex_idx_t<Graph_t>;
@@ -39,7 +38,6 @@ class AcyclicPartitioningILP {
     bool ignore_sources_for_constraint = true;
 
     class WriteSolutionCallback : public CallbackBase {
-
       private:
         unsigned counter;
         unsigned max_number_solution;
@@ -48,14 +46,16 @@ class AcyclicPartitioningILP {
 
       public:
         WriteSolutionCallback()
-            : counter(0), max_number_solution(500), best_obj(COPT_INFINITY), write_solutions_path_cb(""),
+            : counter(0),
+              max_number_solution(500),
+              best_obj(COPT_INFINITY),
+              write_solutions_path_cb(""),
               solution_file_prefix_cb("") {}
 
         std::string write_solutions_path_cb;
         std::string solution_file_prefix_cb;
 
         void callback() override;
-
     };
 
     WriteSolutionCallback solution_callback;
@@ -79,12 +79,11 @@ class AcyclicPartitioningILP {
     void solveILP();
 
   public:
-    AcyclicPartitioningILP()
-        : model(COPTEnv::getInstance().CreateModel("AsyncPart")), write_solutions_found(false) {}
+    AcyclicPartitioningILP() : model(COPTEnv::getInstance().CreateModel("AsyncPart")), write_solutions_found(false) {}
 
     virtual ~AcyclicPartitioningILP() = default;
 
-    RETURN_STATUS computePartitioning(const BspInstance<Graph_t> &instance, std::vector<unsigned>& partitioning);
+    RETURN_STATUS computePartitioning(const BspInstance<Graph_t> &instance, std::vector<unsigned> &partitioning);
 
     /**
      * @brief Enables writing intermediate solutions.
@@ -132,7 +131,7 @@ class AcyclicPartitioningILP {
      * @return The best bound found by the solver.
      */
     inline double bestBound() { return model.GetDblAttr(COPT_DBLATTR_BESTBND); }
-  
+
     /**
      * @brief Get the name of the schedule.
      *
@@ -142,18 +141,25 @@ class AcyclicPartitioningILP {
 
     // getters and setters for problem parameters
     inline std::pair<unsigned, unsigned> getMinAndMaxSize() const { return std::make_pair(minPartitionSize, maxPartitionSize); }
-    inline void setMinAndMaxSize(const std::pair<unsigned, unsigned> min_and_max) {minPartitionSize = min_and_max.first; maxPartitionSize = min_and_max.second; }
+
+    inline void setMinAndMaxSize(const std::pair<unsigned, unsigned> min_and_max) {
+        minPartitionSize = min_and_max.first;
+        maxPartitionSize = min_and_max.second;
+    }
 
     inline unsigned getNumberOfParts() const { return numberOfParts; }
-    inline void setNumberOfParts(const unsigned number_of_parts) {numberOfParts = number_of_parts; }
-    inline void setIgnoreSourceForConstraint(const bool ignore_) {ignore_sources_for_constraint = ignore_; }
-    inline void setIsOriginalSource(const std::vector<bool>& is_original_source_) {is_original_source = is_original_source_; }
+
+    inline void setNumberOfParts(const unsigned number_of_parts) { numberOfParts = number_of_parts; }
+
+    inline void setIgnoreSourceForConstraint(const bool ignore_) { ignore_sources_for_constraint = ignore_; }
+
+    inline void setIsOriginalSource(const std::vector<bool> &is_original_source_) { is_original_source = is_original_source_; }
+
     void setTimeLimitSeconds(unsigned time_limit_seconds_) { time_limit_seconds = time_limit_seconds_; }
 };
 
-template<typename Graph_t>
+template <typename Graph_t>
 void AcyclicPartitioningILP<Graph_t>::solveILP() {
-
     model.SetIntParam(COPT_INTPARAM_LOGTOCONSOLE, 0);
 
     model.SetDblParam(COPT_DBLPARAM_TIMELIMIT, time_limit_seconds);
@@ -172,15 +178,15 @@ void AcyclicPartitioningILP<Graph_t>::solveILP() {
     model.Solve();
 }
 
-template<typename Graph_t>
-RETURN_STATUS AcyclicPartitioningILP<Graph_t>::computePartitioning(const BspInstance<Graph_t> &instance, std::vector<unsigned>& partitioning)
-{
+template <typename Graph_t>
+RETURN_STATUS AcyclicPartitioningILP<Graph_t>::computePartitioning(const BspInstance<Graph_t> &instance,
+                                                                   std::vector<unsigned> &partitioning) {
     partitioning.clear();
 
-    if(numberOfParts == 0)
-    {
-        numberOfParts = static_cast<unsigned>(std::floor(static_cast<double>(instance.numberOfVertices())  / static_cast<double>(minPartitionSize)));
-        std::cout<<"ILP nr parts: "<<numberOfParts<<std::endl;
+    if (numberOfParts == 0) {
+        numberOfParts = static_cast<unsigned>(
+            std::floor(static_cast<double>(instance.numberOfVertices()) / static_cast<double>(minPartitionSize)));
+        std::cout << "ILP nr parts: " << numberOfParts << std::endl;
     }
 
     setupVariablesConstraintsObjective(instance);
@@ -188,19 +194,15 @@ RETURN_STATUS AcyclicPartitioningILP<Graph_t>::computePartitioning(const BspInst
     solveILP();
 
     if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_OPTIMAL) {
-
         partitioning = returnAssignment(instance);
         return RETURN_STATUS::OSP_SUCCESS;
 
     } else if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_INF_OR_UNB) {
-
         partitioning.resize(instance.numberOfVertices(), UINT_MAX);
         return RETURN_STATUS::ERROR;
 
     } else {
-
         if (model.GetIntAttr(COPT_INTATTR_HASMIPSOL)) {
-
             partitioning = returnAssignment(instance);
             return RETURN_STATUS::OSP_SUCCESS;
 
@@ -211,140 +213,148 @@ RETURN_STATUS AcyclicPartitioningILP<Graph_t>::computePartitioning(const BspInst
     }
 }
 
-template<typename Graph_t>
+template <typename Graph_t>
 void AcyclicPartitioningILP<Graph_t>::setupVariablesConstraintsObjective(const BspInstance<Graph_t> &instance) {
-
     // Variables
 
     node_in_partition = std::vector<VarArray>(instance.numberOfVertices());
 
-    for (vertex_idx node = 0; node < instance.numberOfVertices(); node++)
+    for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
         node_in_partition[node] = model.AddVars(static_cast<int>(numberOfParts), COPT_BINARY, "node_in_partition");
+    }
 
-    
     std::map<vertex_idx, unsigned> node_to_hyperedge_index;
     unsigned numberOfHyperedges = 0;
-    for (vertex_idx node = 0; node < instance.numberOfVertices(); node++)
-        if(instance.getComputationalDag().out_degree(node) > 0)
-        {
+    for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
+        if (instance.getComputationalDag().out_degree(node) > 0) {
             node_to_hyperedge_index[node] = numberOfHyperedges;
             ++numberOfHyperedges;
         }
+    }
 
     hyperedge_intersects_partition = std::vector<VarArray>(numberOfHyperedges);
 
-    for (unsigned hyperedge = 0; hyperedge < numberOfHyperedges; hyperedge++)
-        hyperedge_intersects_partition[hyperedge] = model.AddVars(static_cast<int>(numberOfParts), COPT_BINARY, "hyperedge_intersects_partition");
+    for (unsigned hyperedge = 0; hyperedge < numberOfHyperedges; hyperedge++) {
+        hyperedge_intersects_partition[hyperedge]
+            = model.AddVars(static_cast<int>(numberOfParts), COPT_BINARY, "hyperedge_intersects_partition");
+    }
 
     // Constraints
 
     // each node assigned to exactly one partition
     for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
-
         Expr expr;
         for (unsigned part = 0; part < numberOfParts; part++) {
-
             expr += node_in_partition[node][static_cast<int>(part)];
         }
         model.AddConstr(expr == 1);
     }
 
     // hyperedge indicators match node variables
-    for (unsigned part = 0; part < numberOfParts; part++)
-        for (vertex_idx node = 0; node < instance.numberOfVertices(); node++)
-        {
-            if(instance.getComputationalDag().out_degree(node) == 0)
+    for (unsigned part = 0; part < numberOfParts; part++) {
+        for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
+            if (instance.getComputationalDag().out_degree(node) == 0) {
                 continue;
+            }
 
-            model.AddConstr(hyperedge_intersects_partition[node_to_hyperedge_index[node]][static_cast<int>(part)] >= node_in_partition[node][static_cast<int>(part)]);
-            for (const auto &succ : instance.getComputationalDag().children(node))
-                model.AddConstr(hyperedge_intersects_partition[node_to_hyperedge_index[node]][static_cast<int>(part)] >= node_in_partition[succ][static_cast<int>(part)]);
+            model.AddConstr(hyperedge_intersects_partition[node_to_hyperedge_index[node]][static_cast<int>(part)]
+                            >= node_in_partition[node][static_cast<int>(part)]);
+            for (const auto &succ : instance.getComputationalDag().children(node)) {
+                model.AddConstr(hyperedge_intersects_partition[node_to_hyperedge_index[node]][static_cast<int>(part)]
+                                >= node_in_partition[succ][static_cast<int>(part)]);
+            }
         }
-    
+    }
+
     // partition size constraints
-    for (unsigned part = 0; part < numberOfParts; part++)
-    {
+    for (unsigned part = 0; part < numberOfParts; part++) {
         Expr expr;
-        for (vertex_idx node = 0; node < instance.numberOfVertices(); node++)
-            if(!ignore_sources_for_constraint || is_original_source.empty() || !is_original_source[node])
+        for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
+            if (!ignore_sources_for_constraint || is_original_source.empty() || !is_original_source[node]) {
                 expr += node_in_partition[node][static_cast<int>(part)];
+            }
+        }
 
         model.AddConstr(expr <= maxPartitionSize);
         model.AddConstr(expr >= minPartitionSize);
     }
 
     // acyclicity constraints
-    for (unsigned from_part = 0; from_part < numberOfParts; from_part++)
-        for (unsigned to_part = 0; to_part < from_part; to_part++)
-            for (vertex_idx node = 0; node < instance.numberOfVertices(); node++)
-                for (const auto &succ : instance.getComputationalDag().children(node))
-                    model.AddConstr(node_in_partition[node][static_cast<int>(from_part)] + node_in_partition[succ][static_cast<int>(to_part)] <= 1);
-    
+    for (unsigned from_part = 0; from_part < numberOfParts; from_part++) {
+        for (unsigned to_part = 0; to_part < from_part; to_part++) {
+            for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
+                for (const auto &succ : instance.getComputationalDag().children(node)) {
+                    model.AddConstr(node_in_partition[node][static_cast<int>(from_part)]
+                                        + node_in_partition[succ][static_cast<int>(to_part)]
+                                    <= 1);
+                }
+            }
+        }
+    }
 
     // set objective
     Expr expr;
-    for (vertex_idx node = 0; node < instance.numberOfVertices(); node++)
-        if(instance.getComputationalDag().out_degree(node) > 0)
-        {
+    for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
+        if (instance.getComputationalDag().out_degree(node) > 0) {
             expr -= instance.getComputationalDag().vertex_comm_weight(node);
-            for (unsigned part = 0; part < numberOfParts; part++)
-                expr += instance.getComputationalDag().vertex_comm_weight(node) * hyperedge_intersects_partition[node_to_hyperedge_index[node]][static_cast<int>(part)];
+            for (unsigned part = 0; part < numberOfParts; part++) {
+                expr += instance.getComputationalDag().vertex_comm_weight(node)
+                        * hyperedge_intersects_partition[node_to_hyperedge_index[node]][static_cast<int>(part)];
+            }
         }
+    }
 
     model.SetObjective(expr, COPT_MINIMIZE);
-             
 };
 
-template<typename Graph_t>
+template <typename Graph_t>
 void AcyclicPartitioningILP<Graph_t>::WriteSolutionCallback::callback() {
-
     if (Where() == COPT_CBCONTEXT_MIPSOL && counter < max_number_solution && GetIntInfo(COPT_CBINFO_HASINCUMBENT)) {
-
         try {
-
             if (GetDblInfo(COPT_CBINFO_BESTOBJ) < best_obj && 0.0 < GetDblInfo(COPT_CBINFO_BESTBND)) {
-
                 best_obj = GetDblInfo(COPT_CBINFO_BESTOBJ);
                 counter++;
             }
 
-        } catch (const std::exception &e) {
-        }
+        } catch (const std::exception &e) {}
     }
 };
 
-template<typename Graph_t>
-std::vector<unsigned> AcyclicPartitioningILP<Graph_t>::returnAssignment(const BspInstance<Graph_t> &instance)
-{
+template <typename Graph_t>
+std::vector<unsigned> AcyclicPartitioningILP<Graph_t>::returnAssignment(const BspInstance<Graph_t> &instance) {
     std::vector<unsigned> node_to_partition(instance.numberOfVertices(), UINT_MAX);
 
     std::set<unsigned> nonempty_partition_ids;
-    for (unsigned node = 0; node < instance.numberOfVertices(); node++)
-        for(unsigned part = 0; part < numberOfParts; part++)
-            if(node_in_partition[node][static_cast<int>(part)].Get(COPT_DBLINFO_VALUE) >= .99)
-            {
+    for (unsigned node = 0; node < instance.numberOfVertices(); node++) {
+        for (unsigned part = 0; part < numberOfParts; part++) {
+            if (node_in_partition[node][static_cast<int>(part)].Get(COPT_DBLINFO_VALUE) >= .99) {
                 node_to_partition[node] = part;
                 nonempty_partition_ids.insert(part);
             }
+        }
+    }
 
-    for(unsigned chosen_partition : node_to_partition)
-        if(chosen_partition == UINT_MAX)
-            std::cout<<"Error: partitioning returned by ILP seems incomplete!"<<std::endl;
-    
+    for (unsigned chosen_partition : node_to_partition) {
+        if (chosen_partition == UINT_MAX) {
+            std::cout << "Error: partitioning returned by ILP seems incomplete!" << std::endl;
+        }
+    }
+
     unsigned current_index = 0;
     std::map<unsigned, unsigned> new_index;
-    for(unsigned part_index : nonempty_partition_ids)
-    {
+    for (unsigned part_index : nonempty_partition_ids) {
         new_index[part_index] = current_index;
         ++current_index;
     }
 
-    for(vertex_idx node = 0; node < instance.numberOfVertices(); node++)
+    for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
         node_to_partition[node] = new_index[node_to_partition[node]];
+    }
 
-    std::cout<<"Acyclic partitioning ILP best solution value: "<<model.GetDblAttr(COPT_DBLATTR_BESTOBJ)<<", best lower bound: "<<model.GetDblAttr(COPT_DBLATTR_BESTBND)<<std::endl;
+    std::cout << "Acyclic partitioning ILP best solution value: " << model.GetDblAttr(COPT_DBLATTR_BESTOBJ)
+              << ", best lower bound: " << model.GetDblAttr(COPT_DBLATTR_BESTBND) << std::endl;
 
     return node_to_partition;
 }
 
-}
+}    // namespace osp

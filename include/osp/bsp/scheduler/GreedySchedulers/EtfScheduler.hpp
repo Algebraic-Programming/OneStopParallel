@@ -47,28 +47,25 @@ enum EtfMode { ETF, BL_EST };
  * each processor. The algorithm selects the task with the earliest EST and assigns it to the processor with the
  * earliest available start time. The process is repeated until all tasks are scheduled.
  */
-template<typename Graph_t, typename MemoryConstraint_t = no_memory_constraint>
+template <typename Graph_t, typename MemoryConstraint_t = no_memory_constraint>
 class EtfScheduler : public Scheduler<Graph_t> {
-
     static_assert(is_computational_dag_v<Graph_t>, "EtfScheduler can only be used with computational DAGs.");
 
     static_assert(std::is_convertible_v<v_commw_t<Graph_t>, v_workw_t<Graph_t>>,
                   "EtfScheduler requires that work and communication weights are convertible.");
 
-    static_assert(not has_edge_weights_v<Graph_t> ||
-                      std::is_convertible_v<e_commw_t<Graph_t>, v_workw_t<Graph_t>>,
+    static_assert(not has_edge_weights_v<Graph_t> || std::is_convertible_v<e_commw_t<Graph_t>, v_workw_t<Graph_t>>,
                   "EtfScheduler requires that work and communication weights are convertible.");
 
   private:
     using tv_pair = std::pair<v_workw_t<Graph_t>, vertex_idx_t<Graph_t>>;
 
-    EtfMode mode;  // The mode of the scheduler (ETF or BL_EST)
-    bool use_numa; // Flag indicating whether to use NUMA-aware scheduling
+    EtfMode mode;     // The mode of the scheduler (ETF or BL_EST)
+    bool use_numa;    // Flag indicating whether to use NUMA-aware scheduling
 
     constexpr static bool use_memory_constraint = is_memory_constraint_v<MemoryConstraint_t>;
 
-    static_assert(not use_memory_constraint ||
-                      std::is_same_v<MemoryConstraint_t, persistent_transient_memory_constraint<Graph_t>>,
+    static_assert(not use_memory_constraint || std::is_same_v<MemoryConstraint_t, persistent_transient_memory_constraint<Graph_t>>,
                   "EtfScheduler implements only persistent_transient_memory_constraint.");
 
     MemoryConstraint_t memory_constraint;
@@ -81,7 +78,6 @@ class EtfScheduler : public Scheduler<Graph_t> {
      * @return A vector containing the bottom level of each task.
      */
     std::vector<v_workw_t<Graph_t>> ComputeBottomLevel(const BspInstance<Graph_t> &instance) const {
-
         std::vector<v_workw_t<Graph_t>> BL(instance.numberOfVertices(), 0);
 
         const std::vector<vertex_idx_t<Graph_t>> topOrder = GetTopOrder(instance.getComputationalDag());
@@ -93,11 +89,9 @@ class EtfScheduler : public Scheduler<Graph_t> {
             v_workw_t<Graph_t> maxval = 0;
 
             if constexpr (has_edge_weights_v<Graph_t>) {
-
                 for (const auto &out_edge : out_edges(node, instance.getComputationalDag())) {
-
-                    const v_workw_t<Graph_t> tmp_val = BL[target(out_edge, instance.getComputationalDag())] +
-                                                       instance.getComputationalDag().edge_comm_weight(out_edge);
+                    const v_workw_t<Graph_t> tmp_val = BL[target(out_edge, instance.getComputationalDag())]
+                                                       + instance.getComputationalDag().edge_comm_weight(out_edge);
 
                     if (tmp_val > maxval) {
                         maxval = tmp_val;
@@ -105,11 +99,8 @@ class EtfScheduler : public Scheduler<Graph_t> {
                 }
 
             } else {
-
                 for (const auto &child : instance.getComputationalDag().children(node)) {
-
-                    const v_workw_t<Graph_t> tmp_val =
-                        BL[child] + instance.getComputationalDag().vertex_comm_weight(child);
+                    const v_workw_t<Graph_t> tmp_val = BL[child] + instance.getComputationalDag().vertex_comm_weight(child);
 
                     if (tmp_val > maxval) {
                         maxval = tmp_val;
@@ -123,20 +114,16 @@ class EtfScheduler : public Scheduler<Graph_t> {
     }
 
     bool check_mem_feasibility(const BspInstance<Graph_t> &instance, const std::set<tv_pair> &ready) const {
-
         if (instance.getArchitecture().getMemoryConstraintType() == MEMORY_CONSTRAINT_TYPE::PERSISTENT_AND_TRANSIENT) {
-
             if (ready.empty()) {
                 return true;
             }
 
             for (const auto &node_pair : ready) {
                 for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
-
                     const auto node = node_pair.second;
 
                     if constexpr (use_memory_constraint) {
-
                         if (memory_constraint.can_add(node, i)) {
                             return true;
                         }
@@ -163,11 +150,13 @@ class EtfScheduler : public Scheduler<Graph_t> {
      * @param avg_ The average execution time of the tasks.
      * @return The earliest start time (EST) for the task on the processor.
      */
-    v_workw_t<Graph_t> GetESTforProc(const BspInstance<Graph_t> &instance, CSchedule<Graph_t> &schedule,
-                                     vertex_idx_t<Graph_t> node, unsigned proc,
-                                     const v_workw_t<Graph_t> procAvailableFrom, std::vector<v_workw_t<Graph_t>> &send,
+    v_workw_t<Graph_t> GetESTforProc(const BspInstance<Graph_t> &instance,
+                                     CSchedule<Graph_t> &schedule,
+                                     vertex_idx_t<Graph_t> node,
+                                     unsigned proc,
+                                     const v_workw_t<Graph_t> procAvailableFrom,
+                                     std::vector<v_workw_t<Graph_t>> &send,
                                      std::vector<v_workw_t<Graph_t>> &rec) const {
-
         std::vector<tv_pair> predec;
         for (const auto &pred : instance.getComputationalDag().parents(node)) {
             predec.emplace_back(schedule.time[pred] + instance.getComputationalDag().vertex_work_weight(pred), pred);
@@ -177,22 +166,19 @@ class EtfScheduler : public Scheduler<Graph_t> {
 
         v_workw_t<Graph_t> EST = procAvailableFrom;
         for (const auto &next : predec) {
-            v_workw_t<Graph_t> t =
-                schedule.time[next.second] + instance.getComputationalDag().vertex_work_weight(next.second);
+            v_workw_t<Graph_t> t = schedule.time[next.second] + instance.getComputationalDag().vertex_work_weight(next.second);
             if (schedule.proc[next.second] != proc) {
                 t = std::max(t, send[schedule.proc[next.second]]);
                 t = std::max(t, rec[proc]);
 
                 if constexpr (has_edge_weights_v<Graph_t>) {
-
                     t += instance.getComputationalDag().edge_comm_weight(
-                             edge_desc(next.second, node, instance.getComputationalDag()).first) *
-                         instance.sendCosts(schedule.proc[next.second], proc);
+                             edge_desc(next.second, node, instance.getComputationalDag()).first)
+                         * instance.sendCosts(schedule.proc[next.second], proc);
 
                 } else {
-
-                    t += instance.getComputationalDag().vertex_comm_weight(next.second) *
-                         instance.sendCosts(schedule.proc[next.second], proc);
+                    t += instance.getComputationalDag().vertex_comm_weight(next.second)
+                         * instance.sendCosts(schedule.proc[next.second], proc);
                 }
 
                 send[schedule.proc[next.second]] = t;
@@ -215,20 +201,19 @@ class EtfScheduler : public Scheduler<Graph_t> {
      * @param avg_ The average execution time of the tasks.
      * @return A triple containing the best EST, the node index, and the processor index.
      */
-    tv_pair GetBestESTforNodes(const BspInstance<Graph_t> &instance, CSchedule<Graph_t> &schedule,
+    tv_pair GetBestESTforNodes(const BspInstance<Graph_t> &instance,
+                               CSchedule<Graph_t> &schedule,
                                const std::vector<vertex_idx_t<Graph_t>> &nodeList,
                                const std::vector<v_workw_t<Graph_t>> &procAvailableFrom,
-                               std::vector<v_workw_t<Graph_t>> &send, std::vector<v_workw_t<Graph_t>> &rec,
+                               std::vector<v_workw_t<Graph_t>> &send,
+                               std::vector<v_workw_t<Graph_t>> &rec,
                                unsigned &bestProc) const {
-
         v_workw_t<Graph_t> bestEST = std::numeric_limits<v_workw_t<Graph_t>>::max();
         vertex_idx_t<Graph_t> bestNode = 0;
         std::vector<v_workw_t<Graph_t>> bestSend, bestRec;
-        for (const auto &node : nodeList)
+        for (const auto &node : nodeList) {
             for (unsigned j = 0; j < instance.numberOfProcessors(); ++j) {
-
                 if constexpr (use_memory_constraint) {
-
                     if (not memory_constraint.can_add(node, j)) {
                         continue;
                     }
@@ -236,8 +221,7 @@ class EtfScheduler : public Scheduler<Graph_t> {
 
                 std::vector<v_workw_t<Graph_t>> newSend = send;
                 std::vector<v_workw_t<Graph_t>> newRec = rec;
-                v_workw_t<Graph_t> EST =
-                    GetESTforProc(instance, schedule, node, j, procAvailableFrom[j], newSend, newRec);
+                v_workw_t<Graph_t> EST = GetESTforProc(instance, schedule, node, j, procAvailableFrom[j], newSend, newRec);
                 if (EST < bestEST) {
                     bestEST = EST;
                     bestProc = j;
@@ -246,6 +230,7 @@ class EtfScheduler : public Scheduler<Graph_t> {
                     bestRec = newRec;
                 }
             }
+        }
 
         send = bestSend;
         rec = bestRec;
@@ -273,7 +258,6 @@ class EtfScheduler : public Scheduler<Graph_t> {
      * @return A pair containing the return status and the computed BspSchedule object.
      */
     virtual RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &bsp_schedule) override {
-
         const auto &instance = bsp_schedule.getInstance();
 
         if constexpr (use_memory_constraint) {
@@ -286,14 +270,15 @@ class EtfScheduler : public Scheduler<Graph_t> {
 
         std::vector<vertex_idx_t<Graph_t>> predecProcessed(instance.numberOfVertices(), 0);
 
-        std::vector<v_workw_t<Graph_t>> finishTimes(instance.numberOfProcessors(), 0),
-            send(instance.numberOfProcessors(), 0), rec(instance.numberOfProcessors(), 0);
+        std::vector<v_workw_t<Graph_t>> finishTimes(instance.numberOfProcessors(), 0), send(instance.numberOfProcessors(), 0),
+            rec(instance.numberOfProcessors(), 0);
 
         std::vector<v_workw_t<Graph_t>> BL;
-        if (mode == BL_EST)
+        if (mode == BL_EST) {
             BL = ComputeBottomLevel(instance);
-        else
+        } else {
             BL = std::vector<v_workw_t<Graph_t>>(instance.numberOfVertices(), 0);
+        }
 
         std::set<tv_pair> ready;
 
@@ -302,12 +287,10 @@ class EtfScheduler : public Scheduler<Graph_t> {
         }
 
         while (!ready.empty()) {
-
             tv_pair best_tv(0, 0);
             unsigned best_proc = 0;
 
             if (mode == BL_EST) {
-
                 std::vector<vertex_idx_t<Graph_t>> nodeList{ready.begin()->second};
                 ready.erase(ready.begin());
                 best_tv = GetBestESTforNodes(instance, schedule, nodeList, finishTimes, send, rec, best_proc);
@@ -315,8 +298,9 @@ class EtfScheduler : public Scheduler<Graph_t> {
 
             if (mode == ETF) {
                 std::vector<vertex_idx_t<Graph_t>> nodeList;
-                for (const auto &next : ready)
+                for (const auto &next : ready) {
                     nodeList.push_back(next.second);
+                }
                 best_tv = GetBestESTforNodes(instance, schedule, nodeList, finishTimes, send, rec, best_proc);
                 ready.erase(tv_pair({0, best_tv.second}));
             }
@@ -334,12 +318,12 @@ class EtfScheduler : public Scheduler<Graph_t> {
 
             for (const auto &succ : instance.getComputationalDag().children(node)) {
                 ++predecProcessed[succ];
-                if (predecProcessed[succ] == instance.getComputationalDag().in_degree(succ))
+                if (predecProcessed[succ] == instance.getComputationalDag().in_degree(succ)) {
                     ready.insert({BL[succ], succ});
+                }
             }
 
             if constexpr (use_memory_constraint) {
-
                 if (not check_mem_feasibility(instance, ready)) {
                     return RETURN_STATUS::ERROR;
                 }
@@ -386,16 +370,16 @@ class EtfScheduler : public Scheduler<Graph_t> {
      */
     virtual std::string getScheduleName() const override {
         switch (mode) {
-        case ETF:
-            return "ETFGreedy";
+            case ETF:
+                return "ETFGreedy";
 
-        case BL_EST:
-            return "BL-ESTGreedy";
+            case BL_EST:
+                return "BL-ESTGreedy";
 
-        default:
-            return "UnknownModeGreedy";
+            default:
+                return "UnknownModeGreedy";
         }
     }
 };
 
-} // namespace osp
+}    // namespace osp

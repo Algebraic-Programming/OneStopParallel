@@ -25,7 +25,7 @@ limitations under the License.
 
 namespace osp {
 
-template<typename integral_type>
+template <typename integral_type>
 integral_type intSqrtFloor(integral_type num) {
     static_assert(std::is_integral_v<integral_type>);
     assert(num > 0);
@@ -48,8 +48,7 @@ integral_type intSqrtFloor(integral_type num) {
     return sqrt;
 }
 
-
-template<typename integral_type>
+template <typename integral_type>
 std::vector<integral_type> divisorsList(integral_type num) {
     static_assert(std::is_integral_v<integral_type>);
     assert(num > 0);
@@ -62,11 +61,13 @@ std::vector<integral_type> divisorsList(integral_type num) {
             divs.emplace_back(div);
         }
     }
-    for (std::size_t indx = divs.back() * divs.back() == num ? divs.size() - 2U : divs.size() - 1U; indx != std::numeric_limits<std::size_t>::max(); --indx) {
+    for (std::size_t indx = divs.back() * divs.back() == num ? divs.size() - 2U : divs.size() - 1U;
+         indx != std::numeric_limits<std::size_t>::max();
+         --indx) {
         divs.emplace_back(num / divs[indx]);
     }
 
     return divs;
 }
 
-} // end namespace osp
+}    // end namespace osp

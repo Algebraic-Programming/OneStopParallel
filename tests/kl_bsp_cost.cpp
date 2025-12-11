@@ -75,12 +75,12 @@ BOOST_AUTO_TEST_CASE(test_arrange_superstep_comm_data) {
     comm_ds.arrange_superstep_comm_data(step);
 
     BOOST_CHECK_EQUAL(comm_ds.step_max_comm(step), 10);
-    BOOST_CHECK_EQUAL(comm_ds.step_max_comm_count(step), 1);  // Only proc 0 has 10
-    BOOST_CHECK_EQUAL(comm_ds.step_second_max_comm(step), 8); // Next highest is 8 (from recv)
+    BOOST_CHECK_EQUAL(comm_ds.step_max_comm_count(step), 1);     // Only proc 0 has 10
+    BOOST_CHECK_EQUAL(comm_ds.step_second_max_comm(step), 8);    // Next highest is 8 (from recv)
 
     // Case 2: Shared Max
     comm_ds.reset_superstep(step);
-    comm_ds.step_proc_send(step, 0) = 10; // Need to re-set this as reset clears it
+    comm_ds.step_proc_send(step, 0) = 10;    // Need to re-set this as reset clears it
     comm_ds.step_proc_send(step, 1) = 10;
     comm_ds.step_proc_send(step, 2) = 2;
     comm_ds.step_proc_send(step, 3) = 1;
@@ -92,8 +92,8 @@ BOOST_AUTO_TEST_CASE(test_arrange_superstep_comm_data) {
     comm_ds.arrange_superstep_comm_data(step);
 
     BOOST_CHECK_EQUAL(comm_ds.step_max_comm(step), 10);
-    BOOST_CHECK_EQUAL(comm_ds.step_max_comm_count(step), 2);  // Proc 0 and 1
-    BOOST_CHECK_EQUAL(comm_ds.step_second_max_comm(step), 5); // Next highest is 5 (from recv)
+    BOOST_CHECK_EQUAL(comm_ds.step_max_comm_count(step), 2);     // Proc 0 and 1
+    BOOST_CHECK_EQUAL(comm_ds.step_second_max_comm(step), 5);    // Next highest is 5 (from recv)
 
     // Case 3: Max in Recv
     comm_ds.reset_superstep(step);
@@ -124,8 +124,8 @@ BOOST_AUTO_TEST_CASE(test_arrange_superstep_comm_data) {
     comm_ds.arrange_superstep_comm_data(step);
 
     BOOST_CHECK_EQUAL(comm_ds.step_max_comm(step), 10);
-    BOOST_CHECK_EQUAL(comm_ds.step_max_comm_count(step), 8);  // 4 sends + 4 recvs
-    BOOST_CHECK_EQUAL(comm_ds.step_second_max_comm(step), 0); // If all removed, 0.
+    BOOST_CHECK_EQUAL(comm_ds.step_max_comm_count(step), 8);     // 4 sends + 4 recvs
+    BOOST_CHECK_EQUAL(comm_ds.step_second_max_comm(step), 0);    // If all removed, 0.
 
     // Case 5: Max removed, second max is from same type (Send)
     comm_ds.reset_superstep(step);
@@ -134,8 +134,9 @@ BOOST_AUTO_TEST_CASE(test_arrange_superstep_comm_data) {
     comm_ds.step_proc_send(step, 2) = 2;
     comm_ds.step_proc_send(step, 3) = 1;
 
-    for (unsigned i = 0; i < 4; ++i)
+    for (unsigned i = 0; i < 4; ++i) {
         comm_ds.step_proc_receive(step, i) = 5;
+    }
 
     comm_ds.arrange_superstep_comm_data(step);
 
@@ -182,7 +183,7 @@ BOOST_AUTO_TEST_CASE(test_compute_comm_datastructures) {
 
     // Add edges
     // 0 -> 1
-    dag.add_edge(0, 1, 1); // Edge weight ignored by max_comm_datastructure
+    dag.add_edge(0, 1, 1);    // Edge weight ignored by max_comm_datastructure
     // 2 -> 3
     dag.add_edge(2, 3, 1);
     // 4 -> 5
@@ -258,11 +259,11 @@ BOOST_AUTO_TEST_CASE(test_compute_comm_datastructures) {
 /**
  * Helper to validate comm datastructures by comparing with freshly computed ones
  */
-template<typename Graph>
-bool validate_comm_datastructures(
-    const max_comm_datastructure<Graph, double, kl_active_schedule_t> &comm_ds_incremental,
-    kl_active_schedule_t &active_sched, const BspInstance<Graph> &instance, const std::string &context) {
-
+template <typename Graph>
+bool validate_comm_datastructures(const max_comm_datastructure<Graph, double, kl_active_schedule_t> &comm_ds_incremental,
+                                  kl_active_schedule_t &active_sched,
+                                  const BspInstance<Graph> &instance,
+                                  const std::string &context) {
     // 1. Clone Schedule
     BspSchedule<Graph> current_schedule(instance);
     active_sched.write_schedule(current_schedule);
@@ -327,12 +328,12 @@ BOOST_AUTO_TEST_CASE(test_update_datastructure_after_move) {
     graph dag;
 
     // Create 6 vertices with specific comm weights
-    dag.add_vertex(1, 10, 1); // 0
-    dag.add_vertex(1, 1, 1);  // 1
-    dag.add_vertex(1, 5, 1);  // 2
-    dag.add_vertex(1, 1, 1);  // 3
-    dag.add_vertex(1, 2, 1);  // 4
-    dag.add_vertex(1, 1, 1);  // 5
+    dag.add_vertex(1, 10, 1);    // 0
+    dag.add_vertex(1, 1, 1);     // 1
+    dag.add_vertex(1, 5, 1);     // 2
+    dag.add_vertex(1, 1, 1);     // 3
+    dag.add_vertex(1, 2, 1);     // 4
+    dag.add_vertex(1, 1, 1);     // 5
 
     // Add edges
     dag.add_edge(0, 1, 1);
@@ -413,10 +414,10 @@ BOOST_AUTO_TEST_CASE(test_multiple_sequential_moves) {
     graph dag;
 
     // Create a linear chain: 0 -> 1 -> 2 -> 3
-    dag.add_vertex(1, 10, 1); // 0
-    dag.add_vertex(1, 8, 1);  // 1
-    dag.add_vertex(1, 6, 1);  // 2
-    dag.add_vertex(1, 4, 1);  // 3
+    dag.add_vertex(1, 10, 1);    // 0
+    dag.add_vertex(1, 8, 1);     // 1
+    dag.add_vertex(1, 6, 1);     // 2
+    dag.add_vertex(1, 4, 1);     // 3
 
     dag.add_edge(0, 1, 1);
     dag.add_edge(1, 2, 1);
@@ -460,9 +461,9 @@ BOOST_AUTO_TEST_CASE(test_multiple_sequential_moves) {
     comm_ds.update_datastructure_after_move(move1, 0, 0);
     BOOST_CHECK(validate_comm_datastructures(comm_ds, kl_sched, instance, "test_multiple_sequential_moves_1"));
 
-    BOOST_CHECK_EQUAL(comm_ds.step_proc_send(0, 0), 8);    // Node 1 sends
-    BOOST_CHECK_EQUAL(comm_ds.step_proc_send(0, 1), 0);    // Node was moved away
-    BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(0, 0), 0); // No receives at P0
+    BOOST_CHECK_EQUAL(comm_ds.step_proc_send(0, 0), 8);       // Node 1 sends
+    BOOST_CHECK_EQUAL(comm_ds.step_proc_send(0, 1), 0);       // Node was moved away
+    BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(0, 0), 0);    // No receives at P0
 
     // Move 2: Move node 2 from P2 to P0 (chain more local)
     kl_move move2(2, 0.0, 2, 0, 0, 0);
@@ -471,9 +472,9 @@ BOOST_AUTO_TEST_CASE(test_multiple_sequential_moves) {
     BOOST_CHECK(validate_comm_datastructures(comm_ds, kl_sched, instance, "test_multiple_sequential_moves_2"));
 
     // After move2: Nodes 0,1,2 all at P0, only 3 at P3
-    BOOST_CHECK_EQUAL(comm_ds.step_proc_send(0, 0), 6);    // Only node 2 sends off-proc
-    BOOST_CHECK_EQUAL(comm_ds.step_proc_send(0, 2), 0);    // Node moved away
-    BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(0, 3), 6); // P3 receives from node 2
+    BOOST_CHECK_EQUAL(comm_ds.step_proc_send(0, 0), 6);       // Only node 2 sends off-proc
+    BOOST_CHECK_EQUAL(comm_ds.step_proc_send(0, 2), 0);       // Node moved away
+    BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(0, 3), 6);    // P3 receives from node 2
 
     // Move 3: Move node 3 to P0 (everything local)
     kl_move move3(3, 0.0, 3, 0, 0, 0);
@@ -482,18 +483,18 @@ BOOST_AUTO_TEST_CASE(test_multiple_sequential_moves) {
     BOOST_CHECK(validate_comm_datastructures(comm_ds, kl_sched, instance, "test_multiple_sequential_moves_3"));
 
     // After move3: All nodes at P0, all communication is local
-    BOOST_CHECK_EQUAL(comm_ds.step_proc_send(0, 0), 0); // All local
-    BOOST_CHECK_EQUAL(comm_ds.step_max_comm(0), 0);     // No communication cost
+    BOOST_CHECK_EQUAL(comm_ds.step_proc_send(0, 0), 0);    // All local
+    BOOST_CHECK_EQUAL(comm_ds.step_max_comm(0), 0);        // No communication cost
 }
 
 BOOST_AUTO_TEST_CASE(test_node_with_multiple_children) {
     graph dag;
 
     // Tree structure: Node 0 has three children (1, 2, 3)
-    dag.add_vertex(1, 10, 1); // 0
-    dag.add_vertex(1, 1, 1);  // 1
-    dag.add_vertex(1, 1, 1);  // 2
-    dag.add_vertex(1, 1, 1);  // 3
+    dag.add_vertex(1, 10, 1);    // 0
+    dag.add_vertex(1, 1, 1);     // 1
+    dag.add_vertex(1, 1, 1);     // 2
+    dag.add_vertex(1, 1, 1);     // 3
 
     dag.add_edge(0, 1, 1);
     dag.add_edge(0, 2, 1);
@@ -538,7 +539,7 @@ BOOST_AUTO_TEST_CASE(test_node_with_multiple_children) {
     // After: Node 0 has 1 local child, 2 off-proc (P2, P3)
     // Send cost = 10 * 2 = 20
     BOOST_CHECK_EQUAL(comm_ds.step_proc_send(0, 0), 20);
-    BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(0, 1), 0); // No longer receives
+    BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(0, 1), 0);    // No longer receives
     BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(0, 2), 10);
     BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(0, 3), 10);
 
@@ -550,7 +551,7 @@ BOOST_AUTO_TEST_CASE(test_node_with_multiple_children) {
     // After: Node 0 has 2 local children, 1 off-proc (P3)
     // Send cost = 10 * 1 = 10
     BOOST_CHECK_EQUAL(comm_ds.step_proc_send(0, 0), 10);
-    BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(0, 2), 0); // No longer receives
+    BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(0, 2), 0);    // No longer receives
     BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(0, 3), 10);
 
     // Move child 3 to P0 (all local)
@@ -562,16 +563,16 @@ BOOST_AUTO_TEST_CASE(test_node_with_multiple_children) {
     // After: Node 0 has 3 local children
     // Send cost = 10 * 0 = 0 (all local)
     BOOST_CHECK_EQUAL(comm_ds.step_proc_send(0, 0), 0);
-    BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(0, 3), 0); // No longer receives
+    BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(0, 3), 0);    // No longer receives
 }
 
 BOOST_AUTO_TEST_CASE(test_cross_step_moves) {
     graph dag;
 
     // 0 -> 1 -> 2
-    dag.add_vertex(1, 10, 1); // 0
-    dag.add_vertex(1, 8, 1);  // 1
-    dag.add_vertex(1, 6, 1);  // 2
+    dag.add_vertex(1, 10, 1);    // 0
+    dag.add_vertex(1, 8, 1);     // 1
+    dag.add_vertex(1, 6, 1);     // 2
 
     dag.add_edge(0, 1, 1);
     dag.add_edge(1, 2, 1);
@@ -610,17 +611,17 @@ BOOST_AUTO_TEST_CASE(test_cross_step_moves) {
     kl_sched.apply_move(move1, active_schedule_data);
     comm_ds.update_datastructure_after_move(move1, 0, 2);
 
-    BOOST_CHECK_EQUAL(comm_ds.step_proc_send(0, 0), 0);    // Local (same processor)
-    BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(0, 0), 0); // No receive needed
+    BOOST_CHECK_EQUAL(comm_ds.step_proc_send(0, 0), 0);       // Local (same processor)
+    BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(0, 0), 0);    // No receive needed
 
-    BOOST_CHECK_EQUAL(comm_ds.step_proc_send(1, 0), 0); // Local (same processor)
-    BOOST_CHECK_EQUAL(comm_ds.step_proc_send(1, 1), 0); // Node moved away
+    BOOST_CHECK_EQUAL(comm_ds.step_proc_send(1, 0), 0);    // Local (same processor)
+    BOOST_CHECK_EQUAL(comm_ds.step_proc_send(1, 1), 0);    // Node moved away
 
     kl_move move2(1, 0.0, 0, 1, 0, 0);
     kl_sched.apply_move(move2, active_schedule_data);
     comm_ds.update_datastructure_after_move(move2, 0, 2);
 
-    BOOST_CHECK_EQUAL(comm_ds.step_proc_send(0, 0), 0); // All local at P0
+    BOOST_CHECK_EQUAL(comm_ds.step_proc_send(0, 0), 0);    // All local at P0
 }
 
 BOOST_AUTO_TEST_CASE(test_complex_scenario_user_provided) {
@@ -634,8 +635,8 @@ BOOST_AUTO_TEST_CASE(test_complex_scenario_user_provided) {
     const auto v4 = dag.add_vertex(5, 6, 2);
     const auto v5 = dag.add_vertex(6, 5, 6);
     const auto v6 = dag.add_vertex(7, 4, 2);
-    dag.add_vertex(8, 3, 4);                 // v7 (index 6)
-    const auto v8 = dag.add_vertex(9, 2, 1); // v8 (index 7)
+    dag.add_vertex(8, 3, 4);                    // v7 (index 6)
+    const auto v8 = dag.add_vertex(9, 2, 1);    // v8 (index 7)
 
     // Edges
     dag.add_edge(v1, v2, 2);
@@ -648,7 +649,7 @@ BOOST_AUTO_TEST_CASE(test_complex_scenario_user_provided) {
     dag.add_edge(v4, v8, 9);
 
     BspArchitecture<graph> arch;
-    arch.setNumberOfProcessors(2); // P0, P1
+    arch.setNumberOfProcessors(2);    // P0, P1
     arch.setCommunicationCosts(1);
     arch.setSynchronisationCosts(1);
 
@@ -756,7 +757,7 @@ BOOST_AUTO_TEST_CASE(test_grid_graph_complex_moves) {
     graph dag = osp::construct_grid_dag<graph>(5, 5);
 
     BspArchitecture<graph> arch;
-    arch.setNumberOfProcessors(4); // P0..P3
+    arch.setNumberOfProcessors(4);    // P0..P3
     arch.setCommunicationCosts(1);
     arch.setSynchronisationCosts(1);
 
@@ -1187,7 +1188,7 @@ BOOST_AUTO_TEST_CASE(test_lazy_and_buffered_modes) {
         BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(4, 1), 0);
 
         using kl_move = osp::kl_move_struct<double, graph::vertex_idx>;
-        kl_move move(1, 0.0, 1, 2, 1, 3); // Node 1, Step 2->3, Proc 1->1
+        kl_move move(1, 0.0, 1, 2, 1, 3);    // Node 1, Step 2->3, Proc 1->1
         kl_sched.apply_move(move, active_schedule_data);
         comm_ds.update_datastructure_after_move(move, 0, 4);
 
@@ -1254,7 +1255,7 @@ BOOST_AUTO_TEST_CASE(test_lazy_and_buffered_modes) {
         BOOST_CHECK_EQUAL(comm_ds.step_proc_receive(4, 1), 0);
 
         using kl_move = osp::kl_move_struct<double, graph::vertex_idx>;
-        kl_move move(1, 0.0, 1, 2, 1, 3); // Node 1, Step 2->3, Proc 1->1
+        kl_move move(1, 0.0, 1, 2, 1, 3);    // Node 1, Step 2->3, Proc 1->1
         kl_sched.apply_move(move, active_schedule_data);
         comm_ds.update_datastructure_after_move(move, 0, 4);
 

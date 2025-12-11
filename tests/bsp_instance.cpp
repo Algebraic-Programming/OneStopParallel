@@ -18,6 +18,8 @@ limitations under the License.
 
 #define BOOST_TEST_MODULE Bsp_Architecture
 #include <boost/test/unit_test.hpp>
+#include <filesystem>
+#include <iostream>
 
 #include "osp/auxiliary/io/arch_file_reader.hpp"
 #include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
@@ -26,8 +28,6 @@ limitations under the License.
 #include "osp/bsp/model/util/CompatibleProcessorRange.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
-#include <filesystem>
-#include <iostream>
 
 using namespace osp;
 
@@ -53,7 +53,6 @@ BOOST_AUTO_TEST_CASE(test_1) {
 }
 
 BOOST_AUTO_TEST_CASE(test_instance_bicgstab) {
-
     BspInstance<computational_dag_edge_idx_vector_impl_def_t> instance;
     instance.setNumberOfProcessors(4);
     instance.setCommunicationCosts(2);
@@ -67,8 +66,8 @@ BOOST_AUTO_TEST_CASE(test_instance_bicgstab) {
         std::cout << cwd << std::endl;
     }
 
-    bool status = file_reader::readComputationalDagHyperdagFormatDB(
-        (cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(), instance.getComputationalDag());
+    bool status = file_reader::readComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(),
+                                                                    instance.getComputationalDag());
 
     BOOST_CHECK(status);
     BOOST_CHECK_EQUAL(instance.getComputationalDag().num_vertices(), 54);
@@ -117,63 +116,47 @@ BOOST_AUTO_TEST_CASE(test_instance_bicgstab) {
     BspInstance<computational_dag_vector_impl_def_t> instance_t2(instance);
 
     BOOST_CHECK_EQUAL(instance_t2.getComputationalDag().num_vertices(), instance.getComputationalDag().num_vertices());
-    BOOST_CHECK_EQUAL(instance_t2.getComputationalDag().num_vertex_types(),
-                      instance.getComputationalDag().num_vertex_types());
+    BOOST_CHECK_EQUAL(instance_t2.getComputationalDag().num_vertex_types(), instance.getComputationalDag().num_vertex_types());
     BOOST_CHECK_EQUAL(instance_t2.getComputationalDag().num_edges(), instance.getComputationalDag().num_edges());
-    BOOST_CHECK_EQUAL(instance_t2.getArchitecture().numberOfProcessors(),
-                      instance.getArchitecture().numberOfProcessors());
+    BOOST_CHECK_EQUAL(instance_t2.getArchitecture().numberOfProcessors(), instance.getArchitecture().numberOfProcessors());
     BOOST_CHECK_EQUAL(instance_t2.getArchitecture().getNumberOfProcessorTypes(),
                       instance.getArchitecture().getNumberOfProcessorTypes());
-    BOOST_CHECK_EQUAL(instance_t2.getArchitecture().communicationCosts(),
-                      instance.getArchitecture().communicationCosts());
-    BOOST_CHECK_EQUAL(instance_t2.getArchitecture().synchronisationCosts(),
-                      instance.getArchitecture().synchronisationCosts());
+    BOOST_CHECK_EQUAL(instance_t2.getArchitecture().communicationCosts(), instance.getArchitecture().communicationCosts());
+    BOOST_CHECK_EQUAL(instance_t2.getArchitecture().synchronisationCosts(), instance.getArchitecture().synchronisationCosts());
 
     BspInstance<computational_dag_edge_idx_vector_impl_def_t> instance_t3;
 
     instance_t3 = instance;
 
     BOOST_CHECK_EQUAL(instance_t3.getComputationalDag().num_vertices(), instance.getComputationalDag().num_vertices());
-    BOOST_CHECK_EQUAL(instance_t3.getComputationalDag().num_vertex_types(),
-                      instance.getComputationalDag().num_vertex_types());
+    BOOST_CHECK_EQUAL(instance_t3.getComputationalDag().num_vertex_types(), instance.getComputationalDag().num_vertex_types());
     BOOST_CHECK_EQUAL(instance_t3.getComputationalDag().num_edges(), instance.getComputationalDag().num_edges());
-    BOOST_CHECK_EQUAL(instance_t3.getArchitecture().numberOfProcessors(),
-                      instance.getArchitecture().numberOfProcessors());
+    BOOST_CHECK_EQUAL(instance_t3.getArchitecture().numberOfProcessors(), instance.getArchitecture().numberOfProcessors());
     BOOST_CHECK_EQUAL(instance_t3.getArchitecture().getNumberOfProcessorTypes(),
                       instance.getArchitecture().getNumberOfProcessorTypes());
-    BOOST_CHECK_EQUAL(instance_t3.getArchitecture().communicationCosts(),
-                      instance.getArchitecture().communicationCosts());
-    BOOST_CHECK_EQUAL(instance_t3.getArchitecture().synchronisationCosts(),
-                      instance.getArchitecture().synchronisationCosts());
+    BOOST_CHECK_EQUAL(instance_t3.getArchitecture().communicationCosts(), instance.getArchitecture().communicationCosts());
+    BOOST_CHECK_EQUAL(instance_t3.getArchitecture().synchronisationCosts(), instance.getArchitecture().synchronisationCosts());
 
     BspInstance<computational_dag_edge_idx_vector_impl_def_t> instance_t4(std::move(instance_t3));
 
     BOOST_CHECK_EQUAL(instance_t4.getComputationalDag().num_vertices(), instance.getComputationalDag().num_vertices());
-    BOOST_CHECK_EQUAL(instance_t4.getComputationalDag().num_vertex_types(),
-                      instance.getComputationalDag().num_vertex_types());
+    BOOST_CHECK_EQUAL(instance_t4.getComputationalDag().num_vertex_types(), instance.getComputationalDag().num_vertex_types());
     BOOST_CHECK_EQUAL(instance_t4.getComputationalDag().num_edges(), instance.getComputationalDag().num_edges());
-    BOOST_CHECK_EQUAL(instance_t4.getArchitecture().numberOfProcessors(),
-                      instance.getArchitecture().numberOfProcessors());
+    BOOST_CHECK_EQUAL(instance_t4.getArchitecture().numberOfProcessors(), instance.getArchitecture().numberOfProcessors());
     BOOST_CHECK_EQUAL(instance_t4.getArchitecture().getNumberOfProcessorTypes(),
                       instance.getArchitecture().getNumberOfProcessorTypes());
-    BOOST_CHECK_EQUAL(instance_t4.getArchitecture().communicationCosts(),
-                      instance.getArchitecture().communicationCosts());
-    BOOST_CHECK_EQUAL(instance_t4.getArchitecture().synchronisationCosts(),
-                      instance.getArchitecture().synchronisationCosts());
+    BOOST_CHECK_EQUAL(instance_t4.getArchitecture().communicationCosts(), instance.getArchitecture().communicationCosts());
+    BOOST_CHECK_EQUAL(instance_t4.getArchitecture().synchronisationCosts(), instance.getArchitecture().synchronisationCosts());
 
     BspInstance<computational_dag_edge_idx_vector_impl_def_t> instance_t5;
 
     instance_t5 = std::move(instance_t4);
     BOOST_CHECK_EQUAL(instance_t5.getComputationalDag().num_vertices(), instance.getComputationalDag().num_vertices());
-    BOOST_CHECK_EQUAL(instance_t5.getComputationalDag().num_vertex_types(),
-                      instance.getComputationalDag().num_vertex_types());
+    BOOST_CHECK_EQUAL(instance_t5.getComputationalDag().num_vertex_types(), instance.getComputationalDag().num_vertex_types());
     BOOST_CHECK_EQUAL(instance_t5.getComputationalDag().num_edges(), instance.getComputationalDag().num_edges());
-    BOOST_CHECK_EQUAL(instance_t5.getArchitecture().numberOfProcessors(),
-                      instance.getArchitecture().numberOfProcessors());
+    BOOST_CHECK_EQUAL(instance_t5.getArchitecture().numberOfProcessors(), instance.getArchitecture().numberOfProcessors());
     BOOST_CHECK_EQUAL(instance_t5.getArchitecture().getNumberOfProcessorTypes(),
                       instance.getArchitecture().getNumberOfProcessorTypes());
-    BOOST_CHECK_EQUAL(instance_t5.getArchitecture().communicationCosts(),
-                      instance.getArchitecture().communicationCosts());
-    BOOST_CHECK_EQUAL(instance_t5.getArchitecture().synchronisationCosts(),
-                      instance.getArchitecture().synchronisationCosts());
+    BOOST_CHECK_EQUAL(instance_t5.getArchitecture().communicationCosts(), instance.getArchitecture().communicationCosts());
+    BOOST_CHECK_EQUAL(instance_t5.getArchitecture().synchronisationCosts(), instance.getArchitecture().synchronisationCosts());
 }

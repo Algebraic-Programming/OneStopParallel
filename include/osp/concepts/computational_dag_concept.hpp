@@ -52,20 +52,19 @@ namespace osp {
  *
  * @tparam T The graph type.
  */
-template<typename T, typename = void>
+template <typename T, typename = void>
 struct has_vertex_weights : std::false_type {};
 
-template<typename T>
+template <typename T>
 struct has_vertex_weights<T,
                           std::void_t<decltype(std::declval<T>().vertex_work_weight(std::declval<vertex_idx_t<T>>())),
                                       decltype(std::declval<T>().vertex_comm_weight(std::declval<vertex_idx_t<T>>())),
                                       decltype(std::declval<T>().vertex_mem_weight(std::declval<vertex_idx_t<T>>()))>>
-    : std::conjunction<
-          std::is_arithmetic<decltype(std::declval<T>().vertex_work_weight(std::declval<vertex_idx_t<T>>()))>,
-          std::is_arithmetic<decltype(std::declval<T>().vertex_comm_weight(std::declval<vertex_idx_t<T>>()))>,
-          std::is_arithmetic<decltype(std::declval<T>().vertex_mem_weight(std::declval<vertex_idx_t<T>>()))>> {};
+    : std::conjunction<std::is_arithmetic<decltype(std::declval<T>().vertex_work_weight(std::declval<vertex_idx_t<T>>()))>,
+                       std::is_arithmetic<decltype(std::declval<T>().vertex_comm_weight(std::declval<vertex_idx_t<T>>()))>,
+                       std::is_arithmetic<decltype(std::declval<T>().vertex_mem_weight(std::declval<vertex_idx_t<T>>()))>> {};
 
-template<typename T>
+template <typename T>
 inline constexpr bool has_vertex_weights_v = has_vertex_weights<T>::value;
 
 /**
@@ -80,16 +79,17 @@ inline constexpr bool has_vertex_weights_v = has_vertex_weights<T>::value;
  *
  * @tparam T The graph type.
  */
-template<typename T, typename = void>
+template <typename T, typename = void>
 struct has_typed_vertices : std::false_type {};
 
-template<typename T>
-struct has_typed_vertices<T, std::void_t<decltype(std::declval<T>().vertex_type(std::declval<vertex_idx_t<T>>())),
-                                         decltype(std::declval<T>().num_vertex_types())>>
+template <typename T>
+struct has_typed_vertices<T,
+                          std::void_t<decltype(std::declval<T>().vertex_type(std::declval<vertex_idx_t<T>>())),
+                                      decltype(std::declval<T>().num_vertex_types())>>
     : std::conjunction<std::is_integral<decltype(std::declval<T>().vertex_type(std::declval<vertex_idx_t<T>>()))>,
                        std::is_integral<decltype(std::declval<T>().num_vertex_types())>> {};
 
-template<typename T>
+template <typename T>
 inline constexpr bool has_typed_vertices_v = has_typed_vertices<T>::value;
 
 /**
@@ -101,18 +101,17 @@ inline constexpr bool has_typed_vertices_v = has_typed_vertices<T>::value;
  *
  * @tparam T The graph type.
  */
-template<typename T, typename = void>
+template <typename T, typename = void>
 struct has_edge_weights : std::false_type {};
 
-template<typename T>
+template <typename T>
 struct has_edge_weights<T,
                         std::void_t<typename directed_graph_edge_desc_traits<T>::directed_edge_descriptor,
                                     decltype(std::declval<T>().edge_comm_weight(std::declval<edge_desc_t<T>>()))>>
-    : std::conjunction<
-          std::is_arithmetic<decltype(std::declval<T>().edge_comm_weight(std::declval<edge_desc_t<T>>()))>,
-          is_directed_graph_edge_desc<T>> {};
+    : std::conjunction<std::is_arithmetic<decltype(std::declval<T>().edge_comm_weight(std::declval<edge_desc_t<T>>()))>,
+                       is_directed_graph_edge_desc<T>> {};
 
-template<typename T>
+template <typename T>
 inline constexpr bool has_edge_weights_v = has_edge_weights<T>::value;
 
 /**
@@ -124,13 +123,13 @@ inline constexpr bool has_edge_weights_v = has_edge_weights<T>::value;
  *
  * @tparam T The graph type.
  */
-template<typename T, typename = void>
+template <typename T, typename = void>
 struct is_computational_dag : std::false_type {};
 
-template<typename T>
+template <typename T>
 struct is_computational_dag<T, std::void_t<>> : std::conjunction<is_directed_graph<T>, has_vertex_weights<T>> {};
 
-template<typename T>
+template <typename T>
 inline constexpr bool is_computational_dag_v = is_computational_dag<T>::value;
 
 /**
@@ -140,14 +139,13 @@ inline constexpr bool is_computational_dag_v = is_computational_dag<T>::value;
  *
  * @tparam T The graph type.
  */
-template<typename T, typename = void>
+template <typename T, typename = void>
 struct is_computational_dag_typed_vertices : std::false_type {};
 
-template<typename T>
-struct is_computational_dag_typed_vertices<T, std::void_t<>>
-    : std::conjunction<is_computational_dag<T>, has_typed_vertices<T>> {};
+template <typename T>
+struct is_computational_dag_typed_vertices<T, std::void_t<>> : std::conjunction<is_computational_dag<T>, has_typed_vertices<T>> {};
 
-template<typename T>
+template <typename T>
 inline constexpr bool is_computational_dag_typed_vertices_v = is_computational_dag_typed_vertices<T>::value;
 
 /**
@@ -158,14 +156,14 @@ inline constexpr bool is_computational_dag_typed_vertices_v = is_computational_d
  *
  * @tparam T The graph type.
  */
-template<typename T, typename = void>
+template <typename T, typename = void>
 struct is_computational_dag_edge_desc : std::false_type {};
 
-template<typename T>
+template <typename T>
 struct is_computational_dag_edge_desc<T, std::void_t<>>
     : std::conjunction<is_directed_graph_edge_desc<T>, is_computational_dag<T>> {};
 
-template<typename T>
+template <typename T>
 inline constexpr bool is_computational_dag_edge_desc_v = is_computational_dag_edge_desc<T>::value;
 
 /**
@@ -175,15 +173,14 @@ inline constexpr bool is_computational_dag_edge_desc_v = is_computational_dag_ed
  *
  * @tparam T The graph type.
  */
-template<typename T, typename = void>
+template <typename T, typename = void>
 struct is_computational_dag_typed_vertices_edge_desc : std::false_type {};
 
-template<typename T>
+template <typename T>
 struct is_computational_dag_typed_vertices_edge_desc<T, std::void_t<>>
     : std::conjunction<is_directed_graph_edge_desc<T>, is_computational_dag_typed_vertices<T>> {};
 
-template<typename T>
-inline constexpr bool is_computational_dag_typed_vertices_edge_desc_v =
-    is_computational_dag_typed_vertices_edge_desc<T>::value;
+template <typename T>
+inline constexpr bool is_computational_dag_typed_vertices_edge_desc_v = is_computational_dag_typed_vertices_edge_desc<T>::value;
 
-} // namespace osp
+}    // namespace osp

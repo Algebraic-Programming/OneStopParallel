@@ -16,15 +16,16 @@ limitations under the License.
 @author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 #pragma once
+#include <algorithm>
+#include <cassert>
+#include <iostream>
+#include <numeric>
+
 #include "DagDivider.hpp"
 #include "osp/bsp/scheduler/Scheduler.hpp"
 #include "osp/graph_algorithms/computational_dag_util.hpp"
 #include "osp/graph_algorithms/subgraph_algorithms.hpp"
 #include "osp/graph_implementations/boost_graphs/boost_graph.hpp"
-#include <algorithm>
-#include <cassert>
-#include <iostream>
-#include <numeric>
 
 namespace osp {
 
@@ -32,7 +33,7 @@ namespace osp {
  * @class AbstractWavefrontScheduler
  * @brief Base class for schedulers that operate on wavefronts of a DAG.
  */
-template<typename Graph_t, typename constr_graph_t>
+template <typename Graph_t, typename constr_graph_t>
 class AbstractWavefrontScheduler : public Scheduler<Graph_t> {
   protected:
     IDagDivider<Graph_t> *divider;
@@ -44,11 +45,9 @@ class AbstractWavefrontScheduler : public Scheduler<Graph_t> {
      * @param allocation A reference to the vector that will be filled with the processor allocation.
      * @return True if the scarcity case was hit (fewer processors than active components), false otherwise.
      */
-    bool distributeProcessors(
-        unsigned total_processors_of_type,
-        const std::vector<double> &work_weights,
-        std::vector<unsigned> &allocation) const {
-
+    bool distributeProcessors(unsigned total_processors_of_type,
+                              const std::vector<double> &work_weights,
+                              std::vector<unsigned> &allocation) const {
         allocation.assign(work_weights.size(), 0);
         double total_work = std::accumulate(work_weights.begin(), work_weights.end(), 0.0);
         if (total_work <= 1e-9 || total_processors_of_type == 0) {
@@ -86,7 +85,7 @@ class AbstractWavefrontScheduler : public Scheduler<Graph_t> {
             for (unsigned i = 0; i < remaining_procs; ++i) {
                 allocation[sorted_work[i].second]++;
             }
-            return true; // Scarcity case was hit.
+            return true;    // Scarcity case was hit.
         }
 
         // --- Stage 2: Proportional Distribution of Remaining Processors ---
@@ -109,7 +108,7 @@ class AbstractWavefrontScheduler : public Scheduler<Graph_t> {
                 for (size_t i = 0; i < active_indices.size(); ++i) {
                     double exact_share = (adjusted_work_weights[i] / adjusted_total_work) * remaining_procs;
                     unsigned additional_alloc = static_cast<unsigned>(std::floor(exact_share));
-                    allocation[active_indices[i]] += additional_alloc; // Add to the base allocation of 1
+                    allocation[active_indices[i]] += additional_alloc;    // Add to the base allocation of 1
                     remainders.push_back({exact_share - additional_alloc, active_indices[i]});
                     allocated_count += additional_alloc;
                 }
@@ -124,22 +123,21 @@ class AbstractWavefrontScheduler : public Scheduler<Graph_t> {
                 }
             }
         }
-        return false; // Scarcity case was not hit.
+        return false;    // Scarcity case was not hit.
     }
 
-    BspArchitecture<constr_graph_t> createSubArchitecture(
-        const BspArchitecture<Graph_t> &original_arch,
-        const std::vector<unsigned> &sub_dag_proc_types) const {
-
+    BspArchitecture<constr_graph_t> createSubArchitecture(const BspArchitecture<Graph_t> &original_arch,
+                                                          const std::vector<unsigned> &sub_dag_proc_types) const {
         // The calculation is now inside the assert, so it only happens in debug builds.
-        assert(std::accumulate(sub_dag_proc_types.begin(), sub_dag_proc_types.end(), 0u) > 0 && "Attempted to create a sub-architecture with zero processors.");
+        assert(std::accumulate(sub_dag_proc_types.begin(), sub_dag_proc_types.end(), 0u) > 0
+               && "Attempted to create a sub-architecture with zero processors.");
 
         BspArchitecture<constr_graph_t> sub_architecture(original_arch);
         std::vector<v_memw_t<Graph_t>> sub_dag_processor_memory(original_arch.getProcessorTypeCount().size(),
                                                                 std::numeric_limits<v_memw_t<Graph_t>>::max());
         for (unsigned i = 0; i < original_arch.numberOfProcessors(); ++i) {
-            sub_dag_processor_memory[original_arch.processorType(i)] =
-                std::min(original_arch.memoryBound(i), sub_dag_processor_memory[original_arch.processorType(i)]);
+            sub_dag_processor_memory[original_arch.processorType(i)]
+                = std::min(original_arch.memoryBound(i), sub_dag_processor_memory[original_arch.processorType(i)]);
         }
         sub_architecture.SetProcessorsConsequTypes(sub_dag_proc_types, sub_dag_processor_memory);
         return sub_architecture;
@@ -156,10 +154,10 @@ class AbstractWavefrontScheduler : public Scheduler<Graph_t> {
             }
 
             if (sum_of_compatible_works_for_rep > total_rep_work + 1e-9) {
-                if constexpr (enable_debug_prints)
-                    std::cerr << "ERROR: Sum of compatible work (" << sum_of_compatible_works_for_rep
-                              << ") exceeds total work (" << total_rep_work
-                              << ") for a sub-dag. Aborting." << std::endl;
+                if constexpr (enable_debug_prints) {
+                    std::cerr << "ERROR: Sum of compatible work (" << sum_of_compatible_works_for_rep << ") exceeds total work ("
+                              << total_rep_work << ") for a sub-dag. Aborting." << std::endl;
+                }
                 return false;
             }
         }
@@ -167,8 +165,7 @@ class AbstractWavefrontScheduler : public Scheduler<Graph_t> {
     }
 
   public:
-    AbstractWavefrontScheduler(IDagDivider<Graph_t> &div, Scheduler<constr_graph_t> &sched)
-        : divider(&div), scheduler(&sched) {}
+    AbstractWavefrontScheduler(IDagDivider<Graph_t> &div, Scheduler<constr_graph_t> &sched) : divider(&div), scheduler(&sched) {}
 };
 
-} // namespace osp
+}    // namespace osp

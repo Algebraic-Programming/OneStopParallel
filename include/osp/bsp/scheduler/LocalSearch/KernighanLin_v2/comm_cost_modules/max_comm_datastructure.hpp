@@ -18,20 +18,20 @@ limitations under the License.
 
 #pragma once
 
-#include "comm_cost_policies.hpp"
-#include "generic_lambda_container.hpp"
-#include "lambda_container.hpp"
-#include "osp/bsp/model/BspInstance.hpp"
 #include <algorithm>
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
 
+#include "comm_cost_policies.hpp"
+#include "generic_lambda_container.hpp"
+#include "lambda_container.hpp"
+#include "osp/bsp/model/BspInstance.hpp"
+
 namespace osp {
 
-template<typename comm_weight_t>
+template <typename comm_weight_t>
 struct pre_move_comm_data {
-
     struct step_info {
         comm_weight_t max_comm;
         comm_weight_t second_max_comm;
@@ -56,9 +56,8 @@ struct pre_move_comm_data {
     }
 };
 
-template<typename Graph_t, typename cost_t, typename kl_active_schedule_t, typename CommPolicy = EagerCommCostPolicy>
+template <typename Graph_t, typename cost_t, typename kl_active_schedule_t, typename CommPolicy = EagerCommCostPolicy>
 struct max_comm_datastructure {
-
     using comm_weight_t = v_commw_t<Graph_t>;
     using VertexType = vertex_idx_t<Graph_t>;
     using kl_move = kl_move_struct<cost_t, VertexType>;
@@ -89,14 +88,17 @@ struct max_comm_datastructure {
     std::vector<bool> step_is_affected;
 
     inline comm_weight_t step_proc_send(unsigned step, unsigned proc) const { return step_proc_send_[step][proc]; }
+
     inline comm_weight_t &step_proc_send(unsigned step, unsigned proc) { return step_proc_send_[step][proc]; }
-    inline comm_weight_t step_proc_receive(unsigned step, unsigned proc) const {
-        return step_proc_receive_[step][proc];
-    }
+
+    inline comm_weight_t step_proc_receive(unsigned step, unsigned proc) const { return step_proc_receive_[step][proc]; }
+
     inline comm_weight_t &step_proc_receive(unsigned step, unsigned proc) { return step_proc_receive_[step][proc]; }
 
     inline comm_weight_t step_max_comm(unsigned step) const { return step_max_comm_cache[step]; }
+
     inline comm_weight_t step_second_max_comm(unsigned step) const { return step_second_max_comm_cache[step]; }
+
     inline unsigned step_max_comm_count(unsigned step) const { return step_max_comm_count_cache[step]; }
 
     inline void initialize(kl_active_schedule_t &kl_sched) {
@@ -170,10 +172,12 @@ struct max_comm_datastructure {
         step_max_comm_cache[step] = global_max;
 
         unsigned global_count = 0;
-        if (max_send == global_max)
+        if (max_send == global_max) {
             global_count += max_send_count;
-        if (max_receive == global_max)
+        }
+        if (max_receive == global_max) {
             global_count += max_receive_count;
+        }
         step_max_comm_count_cache[step] = global_count;
 
         comm_weight_t cand_send = (max_send == global_max) ? second_max_send : max_send;
@@ -209,8 +213,9 @@ struct max_comm_datastructure {
 
         // Prepare Scratchpad (Avoids Allocations) ---
         for (unsigned step : affected_steps_list) {
-            if (step < step_is_affected.size())
+            if (step < step_is_affected.size()) {
                 step_is_affected[step] = false;
+            }
         }
         affected_steps_list.clear();
 
@@ -280,8 +285,9 @@ struct max_comm_datastructure {
         for (const auto &parent : graph.parents(node)) {
             const unsigned parent_step = active_schedule->assigned_superstep(parent);
             // Fast boundary check
-            if (parent_step >= step_proc_send_.size())
+            if (parent_step >= step_proc_send_.size()) {
                 continue;
+            }
 
             const unsigned parent_proc = active_schedule->assigned_processor(parent);
             const comm_weight_t comm_w_parent = graph.vertex_comm_weight(parent);
@@ -294,8 +300,7 @@ struct max_comm_datastructure {
                 if (from_proc != parent_proc) {
                     const comm_weight_t cost = comm_w_parent * instance->sendCosts(parent_proc, from_proc);
                     if (cost > 0) {
-                        CommPolicy::unattribute_communication(*this, cost, parent_step, parent_proc, from_proc,
-                                                                from_step, val);
+                        CommPolicy::unattribute_communication(*this, cost, parent_step, parent_proc, from_proc, from_step, val);
                     }
                 }
             }
@@ -308,15 +313,13 @@ struct max_comm_datastructure {
                 if (to_proc != parent_proc) {
                     const comm_weight_t cost = comm_w_parent * instance->sendCosts(parent_proc, to_proc);
                     if (cost > 0) {
-                        CommPolicy::attribute_communication(*this, cost, parent_step, parent_proc, to_proc, to_step,
-                                                            val_to);
+                        CommPolicy::attribute_communication(*this, cost, parent_step, parent_proc, to_proc, to_step, val_to);
                     }
                 }
             }
 
             mark_step(parent_step);
         }
-        
 
         // Re-arrange Affected Steps
         for (unsigned step : affected_steps_list) {
@@ -358,14 +361,12 @@ struct max_comm_datastructure {
                 const unsigned v_proc = vec_sched.assignedProcessor(v);
                 const unsigned v_step = vec_sched.assignedSuperstep(v);
 
-                const comm_weight_t comm_w_send_cost =
-                    (u_proc != v_proc) ? comm_w * instance->sendCosts(u_proc, v_proc) : 0;
+                const comm_weight_t comm_w_send_cost = (u_proc != v_proc) ? comm_w * instance->sendCosts(u_proc, v_proc) : 0;
 
                 auto &val = node_lambda_map.get_proc_entry(u, v_proc);
                 if (CommPolicy::add_child(val, v_step)) {
                     if (u_proc != v_proc && comm_w_send_cost > 0) {
-                        CommPolicy::attribute_communication(*this, comm_w_send_cost, u_step, u_proc, v_proc, v_step,
-                                                            val);
+                        CommPolicy::attribute_communication(*this, comm_w_send_cost, u_step, u_proc, v_proc, v_step, val);
                     }
                 }
             }
@@ -380,4 +381,4 @@ struct max_comm_datastructure {
     }
 };
 
-} // namespace osp
+}    // namespace osp

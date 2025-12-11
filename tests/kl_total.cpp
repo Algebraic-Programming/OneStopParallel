@@ -20,8 +20,6 @@ limitations under the License.
 #include <boost/test/unit_test.hpp>
 #include <filesystem>
 
-#include "osp/bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
-
 #include "osp/auxiliary/io/arch_file_reader.hpp"
 #include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
@@ -33,21 +31,19 @@ limitations under the License.
 
 using namespace osp;
 
-template<typename Graph_t>
+template <typename Graph_t>
 void add_mem_weights(Graph_t &dag) {
-
     int mem_weight = 1;
     int comm_weight = 7;
 
     for (const auto &v : dag.vertices()) {
-
         dag.set_vertex_work_weight(v, static_cast<v_memw_t<Graph_t>>(mem_weight++ % 10 + 2));
         dag.set_vertex_mem_weight(v, static_cast<v_memw_t<Graph_t>>(mem_weight++ % 10 + 2));
         dag.set_vertex_comm_weight(v, static_cast<v_commw_t<Graph_t>>(comm_weight++ % 10 + 2));
     }
 }
 
-template<typename table_t>
+template <typename table_t>
 void check_equal_affinity_table(table_t &table_1, table_t &table_2, const std::set<size_t> &nodes) {
     BOOST_CHECK_EQUAL(table_1.size(), table_2.size());
 
@@ -57,7 +53,8 @@ void check_equal_affinity_table(table_t &table_1, table_t &table_2, const std::s
                 BOOST_CHECK(std::abs(table_1[i][j][k] - table_2[i][j][k]) < 0.000001);
 
                 if (std::abs(table_1[i][j][k] - table_2[i][j][k]) > 0.000001) {
-                    std::cout << "Mismatch at [" << i << "][" << j << "][" << k << "]: table_1=" << table_1[i][j][k] << ", table_2=" << table_2[i][j][k] << std::endl;
+                    std::cout << "Mismatch at [" << i << "][" << j << "][" << k << "]: table_1=" << table_1[i][j][k]
+                              << ", table_2=" << table_2[i][j][k] << std::endl;
                 }
             }
         }
@@ -65,7 +62,6 @@ void check_equal_affinity_table(table_t &table_1, table_t &table_2, const std::s
 }
 
 BOOST_AUTO_TEST_CASE(kl_improver_smoke_test) {
-
     using graph = computational_dag_edge_idx_vector_impl_def_int_t;
     using VertexType = graph::vertex_idx;
 
@@ -110,7 +106,6 @@ BOOST_AUTO_TEST_CASE(kl_improver_smoke_test) {
 }
 
 BOOST_AUTO_TEST_CASE(kl_improver_on_test_graphs) {
-
     std::vector<std::string> filenames_graph = test_graphs();
 
     using graph = computational_dag_edge_idx_vector_impl_def_int_t;
@@ -126,18 +121,16 @@ BOOST_AUTO_TEST_CASE(kl_improver_on_test_graphs) {
     GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_int_t> test_scheduler;
 
     for (auto &filename_graph : filenames_graph) {
-
         BspInstance<graph> instance;
 
-        bool status_graph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(),
-                                                                              instance.getComputationalDag());
+        bool status_graph
+            = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(), instance.getComputationalDag());
 
         instance.getArchitecture().setSynchronisationCosts(5);
         instance.getArchitecture().setCommunicationCosts(5);
         instance.getArchitecture().setNumberOfProcessors(4);
 
         if (!status_graph) {
-
             std::cout << "Reading files failed." << std::endl;
             BOOST_CHECK(false);
         }
@@ -161,7 +154,6 @@ BOOST_AUTO_TEST_CASE(kl_improver_on_test_graphs) {
 }
 
 BOOST_AUTO_TEST_CASE(kl_improver_superstep_removal_test) {
-
     using graph = computational_dag_edge_idx_vector_impl_def_int_t;
     using VertexType = graph::vertex_idx;
 
@@ -209,7 +201,6 @@ BOOST_AUTO_TEST_CASE(kl_improver_superstep_removal_test) {
 }
 
 BOOST_AUTO_TEST_CASE(kl_improver_inner_loop_test) {
-
     using graph = computational_dag_edge_idx_vector_impl_def_int_t;
     using VertexType = graph::vertex_idx;
 
@@ -320,7 +311,6 @@ BOOST_AUTO_TEST_CASE(kl_improver_inner_loop_test) {
 }
 
 BOOST_AUTO_TEST_CASE(kl_improver_inner_loop_penalty_test) {
-
     using graph = computational_dag_edge_idx_vector_impl_def_int_t;
     using VertexType = graph::vertex_idx;
 
@@ -405,7 +395,6 @@ BOOST_AUTO_TEST_CASE(kl_improver_inner_loop_penalty_test) {
 }
 
 BOOST_AUTO_TEST_CASE(kl_improver_violation_handling_test) {
-
     using graph = computational_dag_edge_idx_vector_impl_def_int_t;
     using VertexType = graph::vertex_idx;
 
@@ -435,7 +424,7 @@ BOOST_AUTO_TEST_CASE(kl_improver_violation_handling_test) {
 
     BspSchedule schedule(instance);
 
-    schedule.setAssignedProcessors({0, 1, 0, 0, 1, 0, 0, 1}); // v1->v2 is on same step, different procs
+    schedule.setAssignedProcessors({0, 1, 0, 0, 1, 0, 0, 1});    // v1->v2 is on same step, different procs
     schedule.setAssignedSupersteps({0, 0, 2, 1, 2, 2, 3, 3});
 
     schedule.updateNumberOfSupersteps();
@@ -456,7 +445,6 @@ BOOST_AUTO_TEST_CASE(kl_improver_violation_handling_test) {
 }
 
 BOOST_AUTO_TEST_CASE(kl_base_1) {
-
     using graph = computational_dag_edge_idx_vector_impl_def_int_t;
     using VertexType = graph::vertex_idx;
 
@@ -521,8 +509,8 @@ BOOST_AUTO_TEST_CASE(kl_base_1) {
 
     kl.apply_move_test(move_2);
 
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_max_work(0), 39.0);       // 42-3
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_second_max_work(0), 5.0); // 2+3
+    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_max_work(0), 39.0);          // 42-3
+    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_second_max_work(0), 5.0);    // 2+3
     BOOST_CHECK_EQUAL(kl_active_schedule.num_steps(), 1);
     BOOST_CHECK_EQUAL(kl.is_feasible(), false);
     BOOST_CHECK_CLOSE(kl.get_current_cost(), kl.get_comm_cost_f().compute_schedule_cost(), 0.00001);
@@ -551,7 +539,6 @@ BOOST_AUTO_TEST_CASE(kl_base_1) {
 }
 
 BOOST_AUTO_TEST_CASE(kl_base_2) {
-
     using graph = computational_dag_edge_idx_vector_impl_def_int_t;
     using VertexType = graph::vertex_idx;
 
@@ -713,7 +700,6 @@ BOOST_AUTO_TEST_CASE(kl_base_2) {
 }
 
 BOOST_AUTO_TEST_CASE(kl_base_3) {
-
     using graph = computational_dag_edge_idx_vector_impl_def_int_t;
     using VertexType = graph::vertex_idx;
 
@@ -994,7 +980,8 @@ BOOST_AUTO_TEST_CASE(kl_base_3) {
 
 //         schedule.updateNumberOfSupersteps();
 
-//         std::cout << "initial scedule with costs: " << schedule.computeTotalCosts() << " and " << schedule.numberOfSupersteps() << " number of supersteps"<< std::endl;
+//         std::cout << "initial scedule with costs: " << schedule.computeTotalCosts() << " and " << schedule.numberOfSupersteps()
+//         << " number of supersteps"<< std::endl;
 
 //         BspSchedule<graph> schedule_2(schedule);
 
@@ -1010,7 +997,8 @@ BOOST_AUTO_TEST_CASE(kl_base_3) {
 
 //         auto duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
 
-//         std::cout << "kl new finished in " << duration << " seconds, costs: " << schedule.computeTotalCosts() << " with " << schedule.numberOfSupersteps() << " number of supersteps"<< std::endl;
+//         std::cout << "kl new finished in " << duration << " seconds, costs: " << schedule.computeTotalCosts() << " with " <<
+//         schedule.numberOfSupersteps() << " number of supersteps"<< std::endl;
 
 //         BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
 //         BOOST_CHECK_EQUAL(schedule.satisfiesPrecedenceConstraints(), true);
@@ -1023,7 +1011,8 @@ BOOST_AUTO_TEST_CASE(kl_base_3) {
 
 //         // duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
 
-//         // std::cout << "kl old finished in " << duration << " seconds, costs: " << schedule_2.computeTotalCosts() << " with " << schedule_2.numberOfSupersteps() << " number of supersteps"<< std::endl;
+//         // std::cout << "kl old finished in " << duration << " seconds, costs: " << schedule_2.computeTotalCosts() << " with "
+//         << schedule_2.numberOfSupersteps() << " number of supersteps"<< std::endl;
 
 //         // BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
 //         // BOOST_CHECK_EQUAL(schedule_2.satisfiesPrecedenceConstraints(), true);
@@ -1073,7 +1062,8 @@ BOOST_AUTO_TEST_CASE(kl_base_3) {
 
 //         schedule.updateNumberOfSupersteps();
 
-//         std::cout << "initial scedule with costs: " << schedule.computeTotalCosts() << " and " << schedule.numberOfSupersteps() << " number of supersteps"<< std::endl;
+//         std::cout << "initial scedule with costs: " << schedule.computeTotalCosts() << " and " << schedule.numberOfSupersteps()
+//         << " number of supersteps"<< std::endl;
 
 //         BspSchedule<graph> schedule_2(schedule);
 
@@ -1089,7 +1079,8 @@ BOOST_AUTO_TEST_CASE(kl_base_3) {
 
 //         auto duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
 
-//         std::cout << "kl new finished in " << duration << " seconds, costs: " << schedule.computeTotalCosts() << " with " << schedule.numberOfSupersteps() << " number of supersteps"<< std::endl;
+//         std::cout << "kl new finished in " << duration << " seconds, costs: " << schedule.computeTotalCosts() << " with " <<
+//         schedule.numberOfSupersteps() << " number of supersteps"<< std::endl;
 
 //         BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
 //         BOOST_CHECK_EQUAL(schedule.satisfiesPrecedenceConstraints(), true);
@@ -1102,7 +1093,8 @@ BOOST_AUTO_TEST_CASE(kl_base_3) {
 
 //         // duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
 
-//         // std::cout << "kl old finished in " << duration << " seconds, costs: " << schedule_2.computeTotalCosts() << " with " << schedule_2.numberOfSupersteps() << " number of supersteps"<< std::endl;
+//         // std::cout << "kl old finished in " << duration << " seconds, costs: " << schedule_2.computeTotalCosts() << " with "
+//         << schedule_2.numberOfSupersteps() << " number of supersteps"<< std::endl;
 
 //         // BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
 //         // BOOST_CHECK_EQUAL(schedule_2.satisfiesPrecedenceConstraints(), true);

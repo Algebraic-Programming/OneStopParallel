@@ -25,9 +25,9 @@ namespace osp {
 struct BitMask {
     std::vector<bool> mask;
 
-    BitMask(std::size_t n) : mask(std::vector<bool>(n, false)) { };
+    BitMask(std::size_t n) : mask(std::vector<bool>(n, false)) {};
 
-    BitMask& operator++() {
+    BitMask &operator++() {
         for (std::size_t i = 0; i < mask.size(); ++i) {
             if (mask[i]) {
                 mask[i] = false;
@@ -46,4 +46,4 @@ struct BitMask {
     };
 };
 
-} // end namespace osp
+}    // end namespace osp

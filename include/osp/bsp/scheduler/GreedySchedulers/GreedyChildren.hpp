@@ -28,17 +28,15 @@ limitations under the License.
 
 namespace osp {
 
-template<typename Graph_t>
+template <typename Graph_t>
 class GreedyChildren : public Scheduler<Graph_t> {
   private:
     bool ensure_enough_sources;
 
   public:
-
     GreedyChildren(bool ensure_enough_sources_ = true) : Scheduler<Graph_t>(), ensure_enough_sources(ensure_enough_sources_) {};
 
     RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &sched) override {
-
         using VertexType = vertex_idx_t<Graph_t>;
         const auto &instance = sched.getInstance();
 
@@ -87,8 +85,9 @@ class GreedyChildren : public Scheduler<Graph_t> {
                         }
                     }
 
-                    if (failed_to_allocate)
+                    if (failed_to_allocate) {
                         continue;
+                    }
 
                     sched.setAssignedSuperstep(node, superstep_counter);
                     if (processor_set) {
@@ -123,8 +122,9 @@ class GreedyChildren : public Scheduler<Graph_t> {
                     node_added = true;
                     break;
                 }
-                if (ensure_enough_sources && few_sources && next.size() >= instance.numberOfProcessors())
+                if (ensure_enough_sources && few_sources && next.size() >= instance.numberOfProcessors()) {
                     break;
+                }
             }
 
             superstep_counter++;
@@ -133,9 +133,7 @@ class GreedyChildren : public Scheduler<Graph_t> {
         return RETURN_STATUS::OSP_SUCCESS;
     }
 
-    std::string getScheduleName() const override {
-        return ensure_enough_sources ? "GreedyChildrenS" : "GreedyChildren";
-    }
+    std::string getScheduleName() const override { return ensure_enough_sources ? "GreedyChildrenS" : "GreedyChildren"; }
 };
 
-} // namespace osp
+}    // namespace osp

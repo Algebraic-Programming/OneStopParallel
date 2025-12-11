@@ -22,16 +22,15 @@ limitations under the License.
 #include <iostream>
 #include <vector>
 
-#include "osp/graph_algorithms/directed_graph_util.hpp"
-#include "osp/graph_algorithms/directed_graph_path_util.hpp"
 #include "osp/graph_algorithms/directed_graph_edge_desc_util.hpp"
+#include "osp/graph_algorithms/directed_graph_path_util.hpp"
+#include "osp/graph_algorithms/directed_graph_util.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "osp/graph_implementations/boost_graphs/boost_graph.hpp"
 
 using namespace osp;
 
 computational_dag_edge_idx_vector_impl_def_t constr_graph_1() {
-
     computational_dag_edge_idx_vector_impl_def_t graph;
 
     using vertex_idx = computational_dag_edge_idx_vector_impl_def_t::vertex_idx;
@@ -79,14 +78,12 @@ computational_dag_edge_idx_vector_impl_def_t constr_graph_1() {
 }
 
 BOOST_AUTO_TEST_CASE(test_empty_dag_edge_idx) {
-
     computational_dag_edge_idx_vector_impl_def_t graph;
     BOOST_CHECK_EQUAL(graph.num_edges(), 0);
     BOOST_CHECK_EQUAL(graph.num_vertices(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(test_dag_edge_idx) {
-
     computational_dag_edge_idx_vector_impl_def_t graph = constr_graph_1();
 
     using vertex_idx = computational_dag_edge_idx_vector_impl_def_t::vertex_idx;
@@ -96,7 +93,6 @@ BOOST_AUTO_TEST_CASE(test_dag_edge_idx) {
 
     size_t edge_idx = 0;
     for (const auto &edge : graph.edges()) {
-
         BOOST_CHECK_EQUAL(edge.source, edge_sources[edge_idx]);
         BOOST_CHECK_EQUAL(edge.target, edge_targets[edge_idx]);
         edge_idx++;
@@ -104,7 +100,6 @@ BOOST_AUTO_TEST_CASE(test_dag_edge_idx) {
 
     edge_idx = 0;
     for (const auto &edge : edges(graph)) {
-
         BOOST_CHECK_EQUAL(edge.source, edge_sources[edge_idx]);
         BOOST_CHECK_EQUAL(edge.target, edge_targets[edge_idx]);
         edge_idx++;
@@ -112,16 +107,13 @@ BOOST_AUTO_TEST_CASE(test_dag_edge_idx) {
 
     edge_idx = 0;
     for (auto &edge : edges(graph)) {
-
         BOOST_CHECK_EQUAL(edge.source, edge_sources[edge_idx]);
         BOOST_CHECK_EQUAL(edge.target, edge_targets[edge_idx]);
         edge_idx++;
     }
 
-
     edge_idx = 0;
     for (const auto edge : edges(graph)) {
-
         BOOST_CHECK_EQUAL(edge.source, edge_sources[edge_idx]);
         BOOST_CHECK_EQUAL(edge.target, edge_targets[edge_idx]);
         edge_idx++;
@@ -129,7 +121,6 @@ BOOST_AUTO_TEST_CASE(test_dag_edge_idx) {
 
     edge_idx = 0;
     for (auto edge : edges(graph)) {
-
         BOOST_CHECK_EQUAL(edge.source, edge_sources[edge_idx]);
         BOOST_CHECK_EQUAL(edge.target, edge_targets[edge_idx]);
         edge_idx++;
@@ -137,14 +128,31 @@ BOOST_AUTO_TEST_CASE(test_dag_edge_idx) {
 
     std::vector<vertex_idx> vertices{0, 1, 2, 3, 4, 5, 6, 7};
 
-    std::vector<std::vector<vertex_idx>> out_neighbors{{1, 2, 3}, {4, 6}, {4, 5}, {7}, {7}, {}, {}, {}};
+    std::vector<std::vector<vertex_idx>> out_neighbors{
+        {1, 2, 3},
+        {4, 6},
+        {4, 5},
+        {7},
+        {7},
+        {},
+        {},
+        {}
+    };
 
-    std::vector<std::vector<vertex_idx>> in_neighbors{{}, {0}, {0}, {0}, {1, 2}, {2}, {1}, {3, 4}};
+    std::vector<std::vector<vertex_idx>> in_neighbors{
+        {},
+        {0},
+        {0},
+        {0},
+        {1, 2},
+        {2},
+        {1},
+        {3, 4}
+    };
 
     size_t idx = 0;
 
     for (const auto &v : graph.vertices()) {
-
         BOOST_CHECK_EQUAL(v, vertices[idx++]);
 
         size_t i = 0;
@@ -203,7 +211,6 @@ BOOST_AUTO_TEST_CASE(test_dag_edge_idx) {
 }
 
 BOOST_AUTO_TEST_CASE(test_util_1) {
-
     const computational_dag_edge_idx_vector_impl_def_t graph = constr_graph_1();
 
     BOOST_CHECK_EQUAL(graph.num_edges(), 9);
@@ -221,18 +228,18 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
 
     const auto pair = edge_desc(0, 1, graph);
     BOOST_CHECK_EQUAL(pair.second, true);
-    BOOST_CHECK_EQUAL(source(pair.first,graph), 0);
-    BOOST_CHECK_EQUAL(target(pair.first,graph), 1);
+    BOOST_CHECK_EQUAL(source(pair.first, graph), 0);
+    BOOST_CHECK_EQUAL(target(pair.first, graph), 1);
     BOOST_CHECK_EQUAL(edge(0, 1, graph), true);
-    
+
     const auto pair2 = edge_desc(0, 4, graph);
     BOOST_CHECK_EQUAL(pair2.second, false);
     BOOST_CHECK_EQUAL(edge(0, 4, graph), false);
 
     const auto pair3 = edge_desc(1, 4, graph);
     BOOST_CHECK_EQUAL(pair3.second, true);
-    BOOST_CHECK_EQUAL(source(pair3.first,graph), 1);
-    BOOST_CHECK_EQUAL(target(pair3.first,graph), 4);
+    BOOST_CHECK_EQUAL(source(pair3.first, graph), 1);
+    BOOST_CHECK_EQUAL(target(pair3.first, graph), 4);
     BOOST_CHECK_EQUAL(edge(1, 4, graph), true);
 
     BOOST_CHECK_EQUAL(has_path(0, 1, graph), true);
@@ -294,11 +301,9 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
     const auto long_edges = long_edges_in_triangles(graph);
 
     BOOST_CHECK_EQUAL(long_edges.size(), 0);
-
 }
 
 BOOST_AUTO_TEST_CASE(test_constr_dag) {
-
     computational_dag_edge_idx_vector_impl_def_int_t graph;
 
     graph.add_vertex(1, 2, 3);

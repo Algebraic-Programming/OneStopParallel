@@ -30,7 +30,6 @@ limitations under the License.
 using namespace osp;
 
 boost_graph_int_t constr_graph_1() {
-
     boost_graph_int_t graph;
 
     using vertex_idx = boost_graph_int_t::vertex_idx;
@@ -78,14 +77,12 @@ boost_graph_int_t constr_graph_1() {
 }
 
 BOOST_AUTO_TEST_CASE(test_empty_dag_boost_graph_adapter) {
-
     boost_graph_int_t graph;
     BOOST_CHECK_EQUAL(graph.num_edges(), 0);
     BOOST_CHECK_EQUAL(graph.num_vertices(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(test_boost_graph_adapter_1) {
-
     boost_graph_int_t graph = constr_graph_1();
 
     using vertex_idx = boost_graph_int_t::vertex_idx;
@@ -95,7 +92,6 @@ BOOST_AUTO_TEST_CASE(test_boost_graph_adapter_1) {
 
     size_t edge_idx = 0;
     for (const auto &edge : graph.edges()) {
-
         BOOST_CHECK_EQUAL(source(edge, graph), edge_sources[edge_idx]);
         BOOST_CHECK_EQUAL(target(edge, graph), edge_targets[edge_idx]);
         edge_idx++;
@@ -103,23 +99,38 @@ BOOST_AUTO_TEST_CASE(test_boost_graph_adapter_1) {
 
     edge_idx = 0;
     for (const auto &edge : edges(graph)) {
-
         BOOST_CHECK_EQUAL(source(edge, graph), edge_sources[edge_idx]);
         BOOST_CHECK_EQUAL(target(edge, graph), edge_targets[edge_idx]);
         edge_idx++;
     }
 
-
     std::vector<vertex_idx> vertices{0, 1, 2, 3, 4, 5, 6, 7};
 
-    std::vector<std::vector<vertex_idx>> out_neighbors{{1, 2, 3}, {4, 6}, {4, 5}, {7}, {7}, {}, {}, {}};
+    std::vector<std::vector<vertex_idx>> out_neighbors{
+        {1, 2, 3},
+        {4, 6},
+        {4, 5},
+        {7},
+        {7},
+        {},
+        {},
+        {}
+    };
 
-    std::vector<std::vector<vertex_idx>> in_neighbors{{}, {0}, {0}, {0}, {1, 2}, {2}, {1}, {3, 4}};
+    std::vector<std::vector<vertex_idx>> in_neighbors{
+        {},
+        {0},
+        {0},
+        {0},
+        {1, 2},
+        {2},
+        {1},
+        {3, 4}
+    };
 
     size_t idx = 0;
 
     for (const auto &v : graph.vertices()) {
-
         BOOST_CHECK_EQUAL(v, vertices[idx++]);
 
         size_t i = 0;
@@ -168,7 +179,6 @@ BOOST_AUTO_TEST_CASE(test_boost_graph_adapter_1) {
 }
 
 BOOST_AUTO_TEST_CASE(test_util_1) {
-
     const boost_graph_int_t graph = constr_graph_1();
 
     BOOST_CHECK_EQUAL(graph.num_edges(), 9);
@@ -242,7 +252,6 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
 }
 
 BOOST_AUTO_TEST_CASE(test_constr_dag) {
-
     boost_graph_int_t graph;
 
     graph.add_vertex(1, 2, 3);
@@ -289,14 +298,12 @@ BOOST_AUTO_TEST_CASE(test_constr_dag) {
 }
 
 BOOST_AUTO_TEST_CASE(test_boost_graph_const_1) {
-
     boost_graph_int_t graph(10u);
     BOOST_CHECK_EQUAL(graph.num_edges(), 0);
     BOOST_CHECK_EQUAL(graph.num_vertices(), 10);
 }
 
 BOOST_AUTO_TEST_CASE(test_boost_graph_const_2) {
-
     boost_graph_int_t graph_1 = constr_graph_1();
 
     boost_graph_int_t graph_copy(graph_1);

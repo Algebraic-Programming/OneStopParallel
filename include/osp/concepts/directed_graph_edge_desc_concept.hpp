@@ -45,7 +45,7 @@ namespace osp {
  * @param edge The edge descriptor.
  * @return The source vertex index.
  */
-template<typename Graph_t>
+template <typename Graph_t>
 inline vertex_idx_t<Graph_t> source(const directed_edge<Graph_t> &edge, const Graph_t &) {
     return edge.source;
 }
@@ -57,7 +57,7 @@ inline vertex_idx_t<Graph_t> source(const directed_edge<Graph_t> &edge, const Gr
  * @param edge The edge descriptor.
  * @return The target vertex index.
  */
-template<typename Graph_t>
+template <typename Graph_t>
 inline vertex_idx_t<Graph_t> target(const directed_edge<Graph_t> &edge, const Graph_t &) {
     return edge.target;
 }
@@ -69,7 +69,7 @@ inline vertex_idx_t<Graph_t> target(const directed_edge<Graph_t> &edge, const Gr
  * @param graph The graph instance.
  * @return An `edge_view` allowing iteration over all edges.
  */
-template<typename Graph_t>
+template <typename Graph_t>
 inline edge_view<Graph_t> edges(const Graph_t &graph) {
     return edge_view(graph);
 }
@@ -82,7 +82,7 @@ inline edge_view<Graph_t> edges(const Graph_t &graph) {
  * @param graph The graph instance.
  * @return An `out_edge_view` allowing iteration over outgoing edges from `u`.
  */
-template<typename Graph_t>
+template <typename Graph_t>
 inline OutEdgeView<Graph_t> out_edges(vertex_idx_t<Graph_t> u, const Graph_t &graph) {
     return OutEdgeView<Graph_t>(graph, u);
 }
@@ -95,7 +95,7 @@ inline OutEdgeView<Graph_t> out_edges(vertex_idx_t<Graph_t> u, const Graph_t &gr
  * @param graph The graph instance.
  * @return An `in_edge_view` allowing iteration over incoming edges to `v`.
  */
-template<typename Graph_t>
+template <typename Graph_t>
 inline InEdgeView<Graph_t> in_edges(vertex_idx_t<Graph_t> v, const Graph_t &graph) {
     return InEdgeView<Graph_t>(graph, v);
 }
@@ -112,10 +112,10 @@ inline InEdgeView<Graph_t> in_edges(vertex_idx_t<Graph_t> v, const Graph_t &grap
  *
  * @tparam T The graph type to check.
  */
-template<typename T, typename = void>
+template <typename T, typename = void>
 struct is_directed_graph_edge_desc : std::false_type {};
 
-template<typename T>
+template <typename T>
 struct is_directed_graph_edge_desc<T,
                                    std::void_t<typename directed_graph_edge_desc_traits<T>::directed_edge_descriptor,
                                                decltype(edges(std::declval<T>())),
@@ -123,16 +123,16 @@ struct is_directed_graph_edge_desc<T,
                                                decltype(in_edges(std::declval<vertex_idx_t<T>>(), std::declval<T>())),
                                                decltype(source(std::declval<edge_desc_t<T>>(), std::declval<T>())),
                                                decltype(target(std::declval<edge_desc_t<T>>(), std::declval<T>()))>>
-    : std::conjunction<
-          is_directed_graph<T>, std::is_default_constructible<edge_desc_t<T>>,
-          std::is_copy_constructible<edge_desc_t<T>>,
-          is_input_range_of<decltype(edges(std::declval<T>())), edge_desc_t<T>>,
-          is_input_range_of<decltype(out_edges(std::declval<vertex_idx_t<T>>(), std::declval<T>())), edge_desc_t<T>>,
-          is_input_range_of<decltype(in_edges(std::declval<vertex_idx_t<T>>(), std::declval<T>())), edge_desc_t<T>>,
-          std::is_same<decltype(source(std::declval<edge_desc_t<T>>(), std::declval<T>())), vertex_idx_t<T>>,
-          std::is_same<decltype(target(std::declval<edge_desc_t<T>>(), std::declval<T>())), vertex_idx_t<T>>> {};
+    : std::conjunction<is_directed_graph<T>,
+                       std::is_default_constructible<edge_desc_t<T>>,
+                       std::is_copy_constructible<edge_desc_t<T>>,
+                       is_input_range_of<decltype(edges(std::declval<T>())), edge_desc_t<T>>,
+                       is_input_range_of<decltype(out_edges(std::declval<vertex_idx_t<T>>(), std::declval<T>())), edge_desc_t<T>>,
+                       is_input_range_of<decltype(in_edges(std::declval<vertex_idx_t<T>>(), std::declval<T>())), edge_desc_t<T>>,
+                       std::is_same<decltype(source(std::declval<edge_desc_t<T>>(), std::declval<T>())), vertex_idx_t<T>>,
+                       std::is_same<decltype(target(std::declval<edge_desc_t<T>>(), std::declval<T>())), vertex_idx_t<T>>> {};
 
-template<typename T>
+template <typename T>
 inline constexpr bool is_directed_graph_edge_desc_v = is_directed_graph_edge_desc<T>::value;
 
 /**
@@ -142,18 +142,19 @@ inline constexpr bool is_directed_graph_edge_desc_v = is_directed_graph_edge_des
  *
  * @tparam T The graph type.
  */
-template<typename T, typename = void>
+template <typename T, typename = void>
 struct has_hashable_edge_desc : std::false_type {};
 
-template<typename T>
+template <typename T>
 struct has_hashable_edge_desc<T,
                               std::void_t<decltype(std::hash<edge_desc_t<T>>{}(std::declval<edge_desc_t<T>>())),
                                           decltype(std::declval<edge_desc_t<T>>() == std::declval<edge_desc_t<T>>()),
                                           decltype(std::declval<edge_desc_t<T>>() != std::declval<edge_desc_t<T>>())>>
-    : std::conjunction<is_directed_graph_edge_desc<T>, std::is_default_constructible<edge_desc_t<T>>,
+    : std::conjunction<is_directed_graph_edge_desc<T>,
+                       std::is_default_constructible<edge_desc_t<T>>,
                        std::is_copy_constructible<edge_desc_t<T>>> {};
 
-template<typename T>
+template <typename T>
 inline constexpr bool has_hashable_edge_desc_v = has_hashable_edge_desc<T>::value;
 
-} // namespace osp
+}    // namespace osp

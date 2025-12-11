@@ -18,13 +18,11 @@ limitations under the License.
 
 #define BOOST_TEST_MODULE BSP_IMPROVEMENTSCHEDULERS
 #include <boost/test/unit_test.hpp>
-
 #include <filesystem>
 #include <string>
 #include <vector>
 
 #include "osp/bsp/scheduler/ImprovementScheduler.hpp"
-
 
 // std::vector<std::string> test_graphs() {
 //     return {"data/spaa/small/instance_exp_N20_K4_nzP0d2.txt", "data/spaa/small/instance_kNN_N20_K5_nzP0d2.txt",
@@ -94,7 +92,6 @@ limitations under the License.
 
 //             BspInstance instance(graph, architecture);
 
-
 //             RandomBadGreedy test0;
 
 //             std::pair<RETURN_STATUS, BspSchedule> result0 = test0.computeSchedule(instance);
@@ -107,7 +104,6 @@ limitations under the License.
 //             BOOST_CHECK(result0.second.satisfiesPrecedenceConstraints());
 //             BOOST_CHECK(result0.second.hasValidCommSchedule());
 
-
 //             BalDMixR test1;
 
 //             std::pair<RETURN_STATUS, BspSchedule> result1 = test1.computeSchedule(instance);
@@ -119,7 +115,6 @@ limitations under the License.
 
 //             BOOST_CHECK(result1.second.satisfiesPrecedenceConstraints());
 //             BOOST_CHECK(result1.second.hasValidCommSchedule());
-
 
 //             HDagg_simple test2;
 
@@ -137,8 +132,6 @@ limitations under the License.
 //     }
 // };
 
-
-
 BOOST_AUTO_TEST_CASE(Hungarian_alg_process_permuter_test) {
     // Hungarian_alg_process_permuter test;
     // run_test(&test);
@@ -151,12 +144,8 @@ BOOST_AUTO_TEST_CASE(Hungarian_alg_process_permuter_test) {
 
 // BOOST_AUTO_TEST_CASE(LKTotalCommScheduler_test) {
 //     kl_total_comm test;
-    
+
 //     test.setTimeLimitSeconds(10);
 //     test.set_compute_with_time_limit(true);
 //     run_test(&test);
 // }
-
-
-
-

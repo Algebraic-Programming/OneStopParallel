@@ -16,14 +16,13 @@ limitations under the License.
 @author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 
-
 #define BOOST_TEST_MODULE Union_Find
 #include <boost/test/unit_test.hpp>
-
-#include "osp/auxiliary/datastructures/union_find.hpp"
 #include <iostream>
 #include <string>
 #include <vector>
+
+#include "osp/auxiliary/datastructures/union_find.hpp"
 
 using namespace osp;
 
@@ -175,21 +174,20 @@ BOOST_AUTO_TEST_CASE(Union_find_weight_structure) {
     BOOST_CHECK_EQUAL(test_universe.get_memory_of_component_by_name("e"), 2);
     BOOST_CHECK_EQUAL(test_universe.get_memory_of_component_by_name("b"), 7);
 
-    std::vector<std::pair<std::vector<std::string>, unsigned>> components_n_weights =
-        test_universe.get_connected_components_and_weights();
+    std::vector<std::pair<std::vector<std::string>, unsigned>> components_n_weights
+        = test_universe.get_connected_components_and_weights();
     unsigned total_comp_weights = 0;
     unsigned total_elements = 0;
     for (auto &[comp, wt] : components_n_weights) {
         total_comp_weights += wt;
         total_elements += static_cast<unsigned>(comp.size());
         for (auto &name : comp) {
-            BOOST_CHECK(std::any_of(names.cbegin(), names.cend(),
-                                    [name](std::string other_name) { return name == other_name; }));
+            BOOST_CHECK(std::any_of(names.cbegin(), names.cend(), [name](std::string other_name) { return name == other_name; }));
         }
     }
 
-    std::vector<std::tuple<std::vector<std::string>, unsigned, unsigned>> components_n_weights_n_memory =
-        test_universe.get_connected_components_weights_and_memories();
+    std::vector<std::tuple<std::vector<std::string>, unsigned, unsigned>> components_n_weights_n_memory
+        = test_universe.get_connected_components_weights_and_memories();
     unsigned total_comp_weights_2 = 0;
     unsigned total_comp_memory = 0;
     unsigned total_elements_2 = 0;
@@ -198,8 +196,7 @@ BOOST_AUTO_TEST_CASE(Union_find_weight_structure) {
         total_comp_memory += mem;
         total_elements_2 += static_cast<unsigned>(comp.size());
         for (auto &name : comp) {
-            BOOST_CHECK(std::any_of(names.cbegin(), names.cend(),
-                                    [name](std::string other_name) { return name == other_name; }));
+            BOOST_CHECK(std::any_of(names.cbegin(), names.cend(), [name](std::string other_name) { return name == other_name; }));
         }
     }
 
@@ -215,9 +212,11 @@ BOOST_AUTO_TEST_CASE(Union_find_weight_structure) {
     BOOST_CHECK_EQUAL(total_weight, total_comp_memory);
 
     for (auto &name : names) {
-        BOOST_CHECK(std::any_of(components_n_weights.cbegin(), components_n_weights.cend(),
+        BOOST_CHECK(std::any_of(components_n_weights.cbegin(),
+                                components_n_weights.cend(),
                                 [name](std::pair<std::vector<std::string>, unsigned> comp_pair) {
-                                    return std::any_of(comp_pair.first.cbegin(), comp_pair.first.cend(),
+                                    return std::any_of(comp_pair.first.cbegin(),
+                                                       comp_pair.first.cend(),
                                                        [name](std::string other_name) { return name == other_name; });
                                 }));
     }
@@ -263,36 +262,35 @@ BOOST_AUTO_TEST_CASE(Union_find_structure_weight_comp_count) {
     BOOST_CHECK_NE(test_universe.find_origin_by_name("a"), test_universe.find_origin_by_name("e"));
     BOOST_CHECK_NE(test_universe.find_origin_by_name("b"), test_universe.find_origin_by_name("d"));
 
-    std::vector<std::pair<std::vector<std::string>, unsigned>> comp_n_weights =
-        test_universe.get_connected_components_and_weights();
+    std::vector<std::pair<std::vector<std::string>, unsigned>> comp_n_weights
+        = test_universe.get_connected_components_and_weights();
     BOOST_CHECK(comp_n_weights.size() == 2);
     BOOST_CHECK(comp_n_weights.size() == test_universe.get_number_of_connected_components());
     BOOST_CHECK(comp_n_weights[0].first.size() == 3);
     BOOST_CHECK(comp_n_weights[1].first.size() == 3);
-    BOOST_CHECK((comp_n_weights[0].second == 4 && comp_n_weights[1].second == 5) ||
-                (comp_n_weights[0].second == 5 && comp_n_weights[1].second == 4));
+    BOOST_CHECK((comp_n_weights[0].second == 4 && comp_n_weights[1].second == 5)
+                || (comp_n_weights[0].second == 5 && comp_n_weights[1].second == 4));
 
-    std::vector<std::tuple<std::vector<std::string>, unsigned, unsigned>> comp_n_weight_n_memory =
-        test_universe.get_connected_components_weights_and_memories();
+    std::vector<std::tuple<std::vector<std::string>, unsigned, unsigned>> comp_n_weight_n_memory
+        = test_universe.get_connected_components_weights_and_memories();
     BOOST_CHECK(comp_n_weight_n_memory.size() == 2);
     BOOST_CHECK(comp_n_weight_n_memory.size() == test_universe.get_number_of_connected_components());
     BOOST_CHECK(std::get<0>(comp_n_weight_n_memory[0]).size() == 3);
     BOOST_CHECK(std::get<0>(comp_n_weight_n_memory[1]).size() == 3);
-    BOOST_CHECK((std::get<1>(comp_n_weight_n_memory[0]) == 4 && std::get<1>(comp_n_weight_n_memory[1]) == 5) ||
-                (std::get<1>(comp_n_weight_n_memory[0]) == 5 && std::get<1>(comp_n_weight_n_memory[1]) == 4));
-    BOOST_CHECK((std::get<2>(comp_n_weight_n_memory[0]) == 4 && std::get<2>(comp_n_weight_n_memory[1]) == 5) ||
-                (std::get<2>(comp_n_weight_n_memory[0]) == 5 && std::get<2>(comp_n_weight_n_memory[1]) == 4));
+    BOOST_CHECK((std::get<1>(comp_n_weight_n_memory[0]) == 4 && std::get<1>(comp_n_weight_n_memory[1]) == 5)
+                || (std::get<1>(comp_n_weight_n_memory[0]) == 5 && std::get<1>(comp_n_weight_n_memory[1]) == 4));
+    BOOST_CHECK((std::get<2>(comp_n_weight_n_memory[0]) == 4 && std::get<2>(comp_n_weight_n_memory[1]) == 5)
+                || (std::get<2>(comp_n_weight_n_memory[0]) == 5 && std::get<2>(comp_n_weight_n_memory[1]) == 4));
 
-    std::vector<std::pair<std::vector<std::string>, unsigned>> components_n_weights =
-        test_universe.get_connected_components_and_weights();
+    std::vector<std::pair<std::vector<std::string>, unsigned>> components_n_weights
+        = test_universe.get_connected_components_and_weights();
     unsigned total_comp_weights = 0;
     unsigned total_elements = 0;
     for (auto &[comp, wt] : components_n_weights) {
         total_comp_weights += wt;
         total_elements += static_cast<unsigned>(comp.size());
         for (auto &name : comp) {
-            BOOST_CHECK(std::any_of(names.cbegin(), names.cend(),
-                                    [name](std::string other_name) { return name == other_name; }));
+            BOOST_CHECK(std::any_of(names.cbegin(), names.cend(), [name](std::string other_name) { return name == other_name; }));
         }
     }
 
@@ -304,9 +302,11 @@ BOOST_AUTO_TEST_CASE(Union_find_structure_weight_comp_count) {
     BOOST_CHECK_EQUAL(total_elements, names.size());
     BOOST_CHECK_EQUAL(total_weight, total_comp_weights);
     for (auto &name : names) {
-        BOOST_CHECK(std::any_of(components_n_weights.cbegin(), components_n_weights.cend(),
+        BOOST_CHECK(std::any_of(components_n_weights.cbegin(),
+                                components_n_weights.cend(),
                                 [name](std::pair<std::vector<std::string>, unsigned> comp_pair) {
-                                    return std::any_of(comp_pair.first.cbegin(), comp_pair.first.cend(),
+                                    return std::any_of(comp_pair.first.cbegin(),
+                                                       comp_pair.first.cend(),
                                                        [name](std::string other_name) { return name == other_name; });
                                 }));
     }
@@ -366,16 +366,15 @@ BOOST_AUTO_TEST_CASE(Union_find_structure_weight_chains_comp_count) {
     BOOST_CHECK_EQUAL(test_universe.find_origin_by_name("e"), test_universe.find_origin_by_name("h"));
     BOOST_CHECK_EQUAL(test_universe.find_origin_by_name("b"), test_universe.find_origin_by_name("i"));
 
-    std::vector<std::pair<std::vector<std::string>, unsigned>> components_n_weights =
-        test_universe.get_connected_components_and_weights();
+    std::vector<std::pair<std::vector<std::string>, unsigned>> components_n_weights
+        = test_universe.get_connected_components_and_weights();
     unsigned total_comp_weights = 0;
     unsigned total_elements = 0;
     for (auto &[comp, wt] : components_n_weights) {
         total_comp_weights += wt;
         total_elements += static_cast<unsigned>(comp.size());
         for (auto &name : comp) {
-            BOOST_CHECK(std::any_of(names.cbegin(), names.cend(),
-                                    [name](std::string other_name) { return name == other_name; }));
+            BOOST_CHECK(std::any_of(names.cbegin(), names.cend(), [name](std::string other_name) { return name == other_name; }));
         }
     }
 
@@ -387,9 +386,11 @@ BOOST_AUTO_TEST_CASE(Union_find_structure_weight_chains_comp_count) {
     BOOST_CHECK_EQUAL(total_elements, names.size());
     BOOST_CHECK_EQUAL(total_weight, total_comp_weights);
     for (auto &name : names) {
-        BOOST_CHECK(std::any_of(components_n_weights.cbegin(), components_n_weights.cend(),
+        BOOST_CHECK(std::any_of(components_n_weights.cbegin(),
+                                components_n_weights.cend(),
                                 [name](std::pair<std::vector<std::string>, unsigned> comp_pair) {
-                                    return std::any_of(comp_pair.first.cbegin(), comp_pair.first.cend(),
+                                    return std::any_of(comp_pair.first.cbegin(),
+                                                       comp_pair.first.cend(),
                                                        [name](std::string other_name) { return name == other_name; });
                                 }));
     }

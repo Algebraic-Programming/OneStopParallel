@@ -18,6 +18,8 @@ limitations under the License.
 
 #pragma once
 
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
 #include <chrono>
 #include <filesystem>
 #include <fstream>
@@ -34,23 +36,21 @@ limitations under the License.
 #include "osp/auxiliary/io/general_file_reader.hpp"
 #include "osp/auxiliary/return_status.hpp"
 #include "osp/bsp/model/BspInstance.hpp"
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/property_tree/ptree.hpp>
 
 // #define EIGEN_FOUND 1
 
 #ifdef EIGEN_FOUND
-#include <Eigen/Sparse>
-#include <unsupported/Eigen/SparseExtra>
+#    include <Eigen/Sparse>
+#    include <unsupported/Eigen/SparseExtra>
 
-#include "osp/graph_implementations/eigen_matrix_adapter/sparse_matrix.hpp"
+#    include "osp/graph_implementations/eigen_matrix_adapter/sparse_matrix.hpp"
 #endif
 
 namespace osp {
 
 namespace pt = boost::property_tree;
 
-template<typename TargetObjectType, typename GraphType>
+template <typename TargetObjectType, typename GraphType>
 class AbstractTestSuiteRunner {
   protected:
     std::string executable_dir;
@@ -60,8 +60,7 @@ class AbstractTestSuiteRunner {
     std::vector<std::string> all_csv_headers;
     std::vector<std::unique_ptr<IStatisticModule<TargetObjectType>>> active_stats_modules;
 
-    std::string graph_dir_path, machine_dir_path, output_target_object_dir_path, log_file_path,
-        statistics_output_file_path;
+    std::string graph_dir_path, machine_dir_path, output_target_object_dir_path, log_file_path, statistics_output_file_path;
     bool write_target_object_to_file = false;
     unsigned time_limit_seconds = 0;
 
@@ -71,35 +70,38 @@ class AbstractTestSuiteRunner {
         try {
             executable_dir = getExecutablePath().remove_filename().string();
             time_limit_seconds = parser.global_params.get_child("timeLimit").get_value<unsigned>();
-            write_target_object_to_file =
-                parser.global_params.get_child("outputSchedule").get_value_optional<bool>().value_or(false);
+            write_target_object_to_file
+                = parser.global_params.get_child("outputSchedule").get_value_optional<bool>().value_or(false);
 
             graph_dir_path = parser.global_params.get_child("graphDirectory").get_value<std::string>();
-            if (graph_dir_path.substr(0, 1) != "/")
+            if (graph_dir_path.substr(0, 1) != "/") {
                 graph_dir_path = executable_dir + graph_dir_path;
+            }
 
             machine_dir_path = parser.global_params.get_child("archDirectory").get_value<std::string>();
-            if (machine_dir_path.substr(0, 1) != "/")
+            if (machine_dir_path.substr(0, 1) != "/") {
                 machine_dir_path = executable_dir + machine_dir_path;
+            }
 
             if (write_target_object_to_file) {
-                output_target_object_dir_path = parser.global_params.get_child("scheduleDirectory")
-                                                    .get_value<std::string>();
-                if (output_target_object_dir_path.substr(0, 1) != "/")
+                output_target_object_dir_path = parser.global_params.get_child("scheduleDirectory").get_value<std::string>();
+                if (output_target_object_dir_path.substr(0, 1) != "/") {
                     output_target_object_dir_path = executable_dir + output_target_object_dir_path;
+                }
                 if (!output_target_object_dir_path.empty() && !std::filesystem::exists(output_target_object_dir_path)) {
                     std::filesystem::create_directories(output_target_object_dir_path);
                 }
             }
 
             log_file_path = parser.global_params.get_child("outputLogFile").get_value<std::string>();
-            if (log_file_path.substr(0, 1) != "/")
+            if (log_file_path.substr(0, 1) != "/") {
                 log_file_path = executable_dir + log_file_path;
+            }
 
-            statistics_output_file_path =
-                parser.global_params.get_child("outputStatsFile").get_value<std::string>();
-            if (statistics_output_file_path.substr(0, 1) != "/")
+            statistics_output_file_path = parser.global_params.get_child("outputStatsFile").get_value<std::string>();
+            if (statistics_output_file_path.substr(0, 1) != "/") {
                 statistics_output_file_path = executable_dir + statistics_output_file_path;
+            }
 
             return true;
         } catch (const std::exception &e) {
@@ -130,8 +132,7 @@ class AbstractTestSuiteRunner {
             }
         }
 
-        all_csv_headers.insert(all_csv_headers.end(), unique_module_metric_headers.begin(),
-                               unique_module_metric_headers.end());
+        all_csv_headers.insert(all_csv_headers.end(), unique_module_metric_headers.begin(), unique_module_metric_headers.end());
 
         std::filesystem::path stats_p(statistics_output_file_path);
         if (stats_p.has_parent_path() && !std::filesystem::exists(stats_p.parent_path())) {
@@ -155,10 +156,8 @@ class AbstractTestSuiteRunner {
 
         stats_out_stream.open(statistics_output_file_path, std::ios_base::app);
         if (!stats_out_stream.is_open()) {
-            log_stream << "CRITICAL ERROR: Could not open statistics output file: " << statistics_output_file_path
-                       << std::endl;
-            std::cerr << "CRITICAL ERROR: Could not open statistics output file: " << statistics_output_file_path
-                      << std::endl;
+            log_stream << "CRITICAL ERROR: Could not open statistics output file: " << statistics_output_file_path << std::endl;
+            std::cerr << "CRITICAL ERROR: Could not open statistics output file: " << statistics_output_file_path << std::endl;
         } else if (!file_exists_and_has_header) {
             for (size_t i = 0; i < all_csv_headers.size(); ++i) {
                 stats_out_stream << all_csv_headers[i] << (i == all_csv_headers.size() - 1 ? "" : ",");
@@ -168,28 +167,30 @@ class AbstractTestSuiteRunner {
         }
     }
 
-    virtual RETURN_STATUS compute_target_object_impl(const BspInstance<GraphType> &instance, std::unique_ptr<TargetObjectType> &target_object,
+    virtual RETURN_STATUS compute_target_object_impl(const BspInstance<GraphType> &instance,
+                                                     std::unique_ptr<TargetObjectType> &target_object,
                                                      const pt::ptree &algo_config,
-                                                     long long &computation_time_ms) = 0;
+                                                     long long &computation_time_ms)
+        = 0;
 
     virtual void create_and_register_statistic_modules(const std::string &module_name) = 0;
 
-    virtual void write_target_object_hook(const TargetObjectType &, const std::string &, const std::string &,
-                                          const std::string &) {
-    } // default in case TargetObjectType cannot be written to file
+    virtual void write_target_object_hook(const TargetObjectType &, const std::string &, const std::string &, const std::string &) {
+    }    // default in case TargetObjectType cannot be written to file
 
   public:
     AbstractTestSuiteRunner() {}
 
     virtual ~AbstractTestSuiteRunner() {
-        if (log_stream.is_open())
+        if (log_stream.is_open()) {
             log_stream.close();
-        if (stats_out_stream.is_open())
+        }
+        if (stats_out_stream.is_open()) {
             stats_out_stream.close();
+        }
     }
 
     int run(int argc, char *argv[]) {
-
         try {
             parser.parse_args(argc, argv);
         } catch (const std::exception &e) {
@@ -197,8 +198,9 @@ class AbstractTestSuiteRunner {
             return 1;
         }
 
-        if (!parse_common_config())
+        if (!parse_common_config()) {
             return 1;
+        }
 
         setup_log_file();
 
@@ -229,8 +231,9 @@ class AbstractTestSuiteRunner {
             }
             std::string filename_machine = machine_entry.path().string();
             std::string name_machine = filename_machine.substr(filename_machine.rfind('/') + 1);
-            if (name_machine.rfind('.') != std::string::npos)
+            if (name_machine.rfind('.') != std::string::npos) {
                 name_machine = name_machine.substr(0, name_machine.rfind('.'));
+            }
 
             BspArchitecture<GraphType> arch;
             if (!file_reader::readBspArchitecture(filename_machine, arch)) {
@@ -246,16 +249,18 @@ class AbstractTestSuiteRunner {
                 }
                 std::string filename_graph = graph_entry.path().string();
                 std::string name_graph = filename_graph.substr(filename_graph.rfind('/') + 1);
-                if (name_graph.rfind('.') != std::string::npos)
+                if (name_graph.rfind('.') != std::string::npos) {
                     name_graph = name_graph.substr(0, name_graph.rfind('.'));
+                }
                 log_stream << "Start Graph: " + filename_graph + "\n";
 
                 BspInstance<GraphType> bsp_instance;
                 bsp_instance.getArchitecture() = arch;
                 bool graph_status = false;
                 std::string ext;
-                if (filename_graph.rfind('.') != std::string::npos)
+                if (filename_graph.rfind('.') != std::string::npos) {
                     ext = filename_graph.substr(filename_graph.rfind('.') + 1);
+                }
 
 #ifdef EIGEN_FOUND
 
@@ -268,7 +273,8 @@ class AbstractTestSuiteRunner {
                 SM_csc_int32 L_csc_int32{};
                 SM_csc_int64 L_csc_int64{};
 
-                if constexpr (std::is_same_v<GraphType, sparse_matrix_graph_int32_t> || std::is_same_v<GraphType, sparse_matrix_graph_int64_t>) {
+                if constexpr (std::is_same_v<GraphType, sparse_matrix_graph_int32_t>
+                              || std::is_same_v<GraphType, sparse_matrix_graph_int64_t>) {
                     if (ext != "mtx") {
                         log_stream << "Error: Only .mtx file is accepted for SpTRSV" << std::endl;
                         return 0;
@@ -285,7 +291,6 @@ class AbstractTestSuiteRunner {
                         L_csc_int32 = L_csr_int32;
                         bsp_instance.getComputationalDag().setCSC(&L_csc_int32);
                     } else {
-
                         graph_status = Eigen::loadMarket(L_csr_int64, filename_graph);
                         if (!graph_status) {
                             std::cerr << "Failed to read matrix from " << filename_graph << std::endl;
@@ -317,13 +322,15 @@ class AbstractTestSuiteRunner {
                     long long computation_time_ms;
                     std::unique_ptr<TargetObjectType> target_object;
 
-                    RETURN_STATUS exec_status = compute_target_object_impl(bsp_instance, target_object, algo_config, computation_time_ms);
+                    RETURN_STATUS exec_status
+                        = compute_target_object_impl(bsp_instance, target_object, algo_config, computation_time_ms);
 
                     if (exec_status != RETURN_STATUS::OSP_SUCCESS && exec_status != RETURN_STATUS::BEST_FOUND) {
-                        if (exec_status == RETURN_STATUS::ERROR)
+                        if (exec_status == RETURN_STATUS::ERROR) {
                             log_stream << "Error computing with " << current_algo_name << "." << std::endl;
-                        else if (exec_status == RETURN_STATUS::TIMEOUT)
+                        } else if (exec_status == RETURN_STATUS::TIMEOUT) {
                             log_stream << "Scheduler " << current_algo_name << " timed out." << std::endl;
+                        }
                         continue;
                     }
 
@@ -331,8 +338,8 @@ class AbstractTestSuiteRunner {
                         try {
                             write_target_object_hook(*target_object, name_graph, name_machine, current_algo_name);
                         } catch (const std::exception &e) {
-                            log_stream << "Writing target object file for " << name_graph << ", " << name_machine
-                                       << ", " << current_algo_name << " has failed: " << e.what() << std::endl;
+                            log_stream << "Writing target object file for " << name_graph << ", " << name_machine << ", "
+                                       << current_algo_name << " has failed: " << e.what() << std::endl;
                         }
                     }
 
@@ -361,4 +368,4 @@ class AbstractTestSuiteRunner {
     }
 };
 
-} // namespace osp
+}    // namespace osp

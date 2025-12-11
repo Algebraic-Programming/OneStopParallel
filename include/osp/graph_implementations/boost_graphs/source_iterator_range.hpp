@@ -22,37 +22,38 @@ limitations under the License.
 
 namespace boost::extensions {
 
-template<typename IteratorType>
+template <typename IteratorType>
 struct source_iterator_range {
   public:
-
     IteratorType begin() { return _begin; }
+
     IteratorType begin() const { return _begin; }
+
     IteratorType cbegin() const { return _begin; }
 
     IteratorType end() { return _end; }
+
     IteratorType end() const { return _end; }
+
     IteratorType cend() const { return _end; }
 
     std::size_t size() const { return std::distance(cbegin(), cend()); }
 
-    template<class RangeType>
+    template <class RangeType>
     explicit source_iterator_range(RangeType &r) : _begin(boost::begin(r)), _end(boost::end(r)) {}
 
   private:
     IteratorType _begin, _end;
 };
 
-template<class ForwardRange>
-source_iterator_range<decltype(boost::begin(std::declval<ForwardRange &>()))>
-make_source_iterator_range(const ForwardRange &r) {
+template <class ForwardRange>
+source_iterator_range<decltype(boost::begin(std::declval<ForwardRange &>()))> make_source_iterator_range(const ForwardRange &r) {
     return source_iterator_range<decltype(boost::begin(std::declval<ForwardRange &>()))>(r);
 }
 
-template<class ForwardRange>
-source_iterator_range<decltype(boost::begin(std::declval<ForwardRange &>()))>
-make_source_iterator_range(ForwardRange &r) {
+template <class ForwardRange>
+source_iterator_range<decltype(boost::begin(std::declval<ForwardRange &>()))> make_source_iterator_range(ForwardRange &r) {
     return source_iterator_range<decltype(boost::begin(std::declval<ForwardRange &>()))>(r);
 }
 
-} // namespace boost::extensions
+}    // namespace boost::extensions

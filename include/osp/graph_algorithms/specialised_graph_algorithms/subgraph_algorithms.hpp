@@ -25,11 +25,20 @@ limitations under the License.
 
 namespace osp {
 
-template<typename Graph_t_in, typename vert_t, typename edge_t, typename work_weight_type, typename comm_weight_type, typename mem_weight_type, typename vertex_type_template_type>
-std::unordered_map<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_in>> create_induced_subgraph_map(const Graph_t_in &dag, Compact_Sparse_Graph<true, true, true, true, true, vert_t, edge_t, work_weight_type, comm_weight_type, mem_weight_type, vertex_type_template_type> &dag_out,
-                                                                                                   const std::vector<vertex_idx_t<Graph_t_in>> &selected_nodes) {
-
-    using Graph_t_out = Compact_Sparse_Graph<true, true, true, true, true, vert_t, edge_t, work_weight_type, comm_weight_type, mem_weight_type, vertex_type_template_type>;
+template <typename Graph_t_in,
+          typename vert_t,
+          typename edge_t,
+          typename work_weight_type,
+          typename comm_weight_type,
+          typename mem_weight_type,
+          typename vertex_type_template_type>
+std::unordered_map<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_in>> create_induced_subgraph_map(
+    const Graph_t_in &dag,
+    Compact_Sparse_Graph<true, true, true, true, true, vert_t, edge_t, work_weight_type, comm_weight_type, mem_weight_type, vertex_type_template_type>
+        &dag_out,
+    const std::vector<vertex_idx_t<Graph_t_in>> &selected_nodes) {
+    using Graph_t_out
+        = Compact_Sparse_Graph<true, true, true, true, true, vert_t, edge_t, work_weight_type, comm_weight_type, mem_weight_type, vertex_type_template_type>;
 
     static_assert(std::is_same_v<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_out>>,
                   "Graph_t_in and out must have the same vertex_idx types");
@@ -40,9 +49,12 @@ std::unordered_map<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_in>> create_in
         topOrderPosition[topOrder[pos]] = pos;
     }
 
-    auto topCmp = [&topOrderPosition](const vertex_idx_t<Graph_t_in> &lhs, const vertex_idx_t<Graph_t_in> &rhs) { return topOrderPosition[lhs] < topOrderPosition[rhs]; };
+    auto topCmp = [&topOrderPosition](const vertex_idx_t<Graph_t_in> &lhs, const vertex_idx_t<Graph_t_in> &rhs) {
+        return topOrderPosition[lhs] < topOrderPosition[rhs];
+    };
 
-    std::set<vertex_idx_t<Graph_t_in>, decltype(topCmp)> selectedVerticesOrdered(selected_nodes.begin(), selected_nodes.end(), topCmp);
+    std::set<vertex_idx_t<Graph_t_in>, decltype(topCmp)> selectedVerticesOrdered(
+        selected_nodes.begin(), selected_nodes.end(), topCmp);
 
     std::unordered_map<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_in>> local_idx;
     local_idx.reserve(selected_nodes.size());
@@ -73,4 +85,4 @@ std::unordered_map<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_in>> create_in
     return local_idx;
 }
 
-} // end namespace osp
+}    // end namespace osp

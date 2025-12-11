@@ -19,16 +19,15 @@ limitations under the License.
 #define BOOST_TEST_MODULE BSP_SCHEDULE_RECOMP
 #include <boost/test/unit_test.hpp>
 
+#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 #include "osp/dag_divider/isomorphism_divider/MerkleHashComputer.hpp"
 #include "osp/graph_algorithms/directed_graph_util.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
-#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 #include "test_utils.hpp"
 
 using namespace osp;
 
-BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test)
-{
+BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test) {
     using graph_t = computational_dag_vector_impl_def_t;
     graph_t graph;
 
@@ -38,19 +37,18 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test)
     MerkleHashComputer<graph_t, uniform_node_hash_func<vertex_idx_t<graph_t>>> m_hash(graph);
 
     BOOST_CHECK_EQUAL(m_hash.get_vertex_hashes().size(), graph.num_vertices());
-    
-    for (const auto& v : source_vertices_view(graph)) {
+
+    for (const auto &v : source_vertices_view(graph)) {
         BOOST_CHECK_EQUAL(m_hash.get_vertex_hash(v), 11);
     }
 
     size_t num = 0;
-    for (const auto& pair : m_hash.get_orbits()) {
-
+    for (const auto &pair : m_hash.get_orbits()) {
         num += pair.second.size();
         std::cout << "orbit " << pair.first << ": ";
-        for (const auto& v : pair.second) {
+        for (const auto &v : pair.second) {
             std::cout << v << ", ";
-        } 
+        }
         std::cout << std::endl;
     }
 
@@ -62,42 +60,37 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test)
     BOOST_CHECK_EQUAL(m_hash.get_vertex_hash(29), m_hash.get_vertex_hash(22));
     BOOST_CHECK(m_hash.get_vertex_hash(3) != m_hash.get_vertex_hash(12));
     BOOST_CHECK(m_hash.get_vertex_hash(53) != m_hash.get_vertex_hash(29));
-
 }
 
-BOOST_AUTO_TEST_CASE(MerkleHashComputer_test_fw_bw_precomp)
-{
+BOOST_AUTO_TEST_CASE(MerkleHashComputer_test_fw_bw_precomp) {
     using graph_t = computational_dag_vector_impl_def_t;
     graph_t graph_test;
 
     const auto project_root = get_project_root();
-    file_reader::readComputationalDagHyperdagFormatDB((project_root / "data/spaa/tiny/instance_bicgstab.hdag").string(), graph_test);
+    file_reader::readComputationalDagHyperdagFormatDB((project_root / "data/spaa/tiny/instance_bicgstab.hdag").string(),
+                                                      graph_test);
 
     std::vector<size_t> precom_node_hashes(graph_test.num_vertices(), 5);
 
     MerkleHashComputer<graph_t, precom_bwd_merkle_node_hash_func<graph_t>> m_hash(graph_test, graph_test, precom_node_hashes);
 
     BOOST_CHECK_EQUAL(m_hash.get_vertex_hashes().size(), graph_test.num_vertices());
-    
-    size_t num = 0;
-    for (const auto& pair : m_hash.get_orbits()) {
 
+    size_t num = 0;
+    for (const auto &pair : m_hash.get_orbits()) {
         num += pair.second.size();
         std::cout << "orbit " << pair.first << ": ";
-        for (const auto& v : pair.second) {
+        for (const auto &v : pair.second) {
             std::cout << v << ", ";
-        } 
+        }
         std::cout << std::endl;
     }
 
     BOOST_CHECK_EQUAL(num, graph_test.num_vertices());
-
 }
-
 
 using graphType = computational_dag_vector_impl_def_t;
 using VertexType = vertex_idx_t<graphType>;
-
 
 BOOST_AUTO_TEST_CASE(MerkleIsomorphismTest_IdenticalGraphsAreIsomorphic) {
     graphType dag1;
@@ -134,14 +127,14 @@ BOOST_AUTO_TEST_CASE(MerkleIsomorphismTest_DifferentVertexCount) {
 
 // Test case 3: Graphs with the same size but different structures should not be isomorphic.
 BOOST_AUTO_TEST_CASE(MerkleIsomorphismTest_SameSizeDifferentStructure) {
-    graphType dag1; // A -> B -> C
+    graphType dag1;    // A -> B -> C
     const auto v1_1 = dag1.add_vertex(0, 1, 1);
     const auto v1_2 = dag1.add_vertex(0, 1, 1);
     const auto v1_3 = dag1.add_vertex(0, 1, 1);
     dag1.add_edge(v1_1, v1_2);
     dag1.add_edge(v1_2, v1_3);
 
-    graphType dag2; // A -> B, A -> C
+    graphType dag2;    // A -> B, A -> C
     const auto v2_1 = dag2.add_vertex(0, 1, 1);
     const auto v2_2 = dag2.add_vertex(0, 1, 1);
     const auto v2_3 = dag2.add_vertex(0, 1, 1);
@@ -154,16 +147,16 @@ BOOST_AUTO_TEST_CASE(MerkleIsomorphismTest_SameSizeDifferentStructure) {
 // Test case 4: Structurally identical graphs with different vertex labeling should be isomorphic.
 BOOST_AUTO_TEST_CASE(MerkleIsomorphismTest_IsomorphicWithDifferentLabels) {
     graphType dag1;
-    const auto v1_1 = dag1.add_vertex(0, 1, 1); // Source
+    const auto v1_1 = dag1.add_vertex(0, 1, 1);    // Source
     const auto v1_2 = dag1.add_vertex(0, 1, 1);
-    const auto v1_3 = dag1.add_vertex(0, 1, 1); // Sink
+    const auto v1_3 = dag1.add_vertex(0, 1, 1);    // Sink
     dag1.add_edge(v1_1, v1_2);
     dag1.add_edge(v1_2, v1_3);
 
     graphType dag2;
     // Same structure as dag1, but vertices are added in a different order.
-    const auto v2_3 = dag2.add_vertex(0, 1, 1); // Sink
-    const auto v2_1 = dag2.add_vertex(0, 1, 1); // Source
+    const auto v2_3 = dag2.add_vertex(0, 1, 1);    // Sink
+    const auto v2_1 = dag2.add_vertex(0, 1, 1);    // Source
     const auto v2_2 = dag2.add_vertex(0, 1, 1);
     dag2.add_edge(v2_1, v2_2);
     dag2.add_edge(v2_2, v2_3);
@@ -175,14 +168,26 @@ BOOST_AUTO_TEST_CASE(MerkleIsomorphismTest_IsomorphicWithDifferentLabels) {
 BOOST_AUTO_TEST_CASE(MerkleIsomorphismTest_ComplexIsomorphicGraphs) {
     graphType dag1;
     {
-        const auto v1 = dag1.add_vertex(2, 9, 2); const auto v2 = dag1.add_vertex(3, 8, 4);
-        const auto v3 = dag1.add_vertex(4, 7, 3); const auto v4 = dag1.add_vertex(5, 6, 2);
-        const auto v5 = dag1.add_vertex(6, 5, 6); const auto v6 = dag1.add_vertex(7, 4, 2);
-        dag1.add_vertex(8, 3, 4); const auto v8 = dag1.add_vertex(9, 2, 1);
-        dag1.add_edge(v1, v2); dag1.add_edge(v1, v3); dag1.add_edge(v1, v4);
-        dag1.add_edge(v1, v5); dag1.add_edge(v1, v8); dag1.add_edge(v2, v5);
-        dag1.add_edge(v2, v6); dag1.add_edge(v2, v8); dag1.add_edge(v3, v5);
-        dag1.add_edge(v3, v6); dag1.add_edge(v5, v8); dag1.add_edge(v4, v8);
+        const auto v1 = dag1.add_vertex(2, 9, 2);
+        const auto v2 = dag1.add_vertex(3, 8, 4);
+        const auto v3 = dag1.add_vertex(4, 7, 3);
+        const auto v4 = dag1.add_vertex(5, 6, 2);
+        const auto v5 = dag1.add_vertex(6, 5, 6);
+        const auto v6 = dag1.add_vertex(7, 4, 2);
+        dag1.add_vertex(8, 3, 4);
+        const auto v8 = dag1.add_vertex(9, 2, 1);
+        dag1.add_edge(v1, v2);
+        dag1.add_edge(v1, v3);
+        dag1.add_edge(v1, v4);
+        dag1.add_edge(v1, v5);
+        dag1.add_edge(v1, v8);
+        dag1.add_edge(v2, v5);
+        dag1.add_edge(v2, v6);
+        dag1.add_edge(v2, v8);
+        dag1.add_edge(v3, v5);
+        dag1.add_edge(v3, v6);
+        dag1.add_edge(v5, v8);
+        dag1.add_edge(v4, v8);
     }
 
     graphType dag2;
@@ -190,14 +195,25 @@ BOOST_AUTO_TEST_CASE(MerkleIsomorphismTest_ComplexIsomorphicGraphs) {
         // Same structure, different vertex variable names and creation order.
         const auto n8 = dag2.add_vertex(9, 2, 1);
         dag2.add_vertex(8, 3, 4);
-        const auto n6 = dag2.add_vertex(7, 4, 2); const auto n5 = dag2.add_vertex(6, 5, 6);
-        const auto n4 = dag2.add_vertex(5, 6, 2); const auto n3 = dag2.add_vertex(4, 7, 3);
-        const auto n2 = dag2.add_vertex(3, 8, 4); const auto n1 = dag2.add_vertex(2, 9, 2);
-        dag2.add_edge(n1, n2); dag2.add_edge(n1, n3); dag2.add_edge(n1, n4);
-        dag2.add_edge(n1, n5); dag2.add_edge(n1, n8); dag2.add_edge(n2, n5);
-        dag2.add_edge(n2, n6); dag2.add_edge(n2, n8); dag2.add_edge(n3, n5);
-        dag2.add_edge(n3, n6); dag2.add_edge(n5, n8); dag2.add_edge(n4, n8);
+        const auto n6 = dag2.add_vertex(7, 4, 2);
+        const auto n5 = dag2.add_vertex(6, 5, 6);
+        const auto n4 = dag2.add_vertex(5, 6, 2);
+        const auto n3 = dag2.add_vertex(4, 7, 3);
+        const auto n2 = dag2.add_vertex(3, 8, 4);
+        const auto n1 = dag2.add_vertex(2, 9, 2);
+        dag2.add_edge(n1, n2);
+        dag2.add_edge(n1, n3);
+        dag2.add_edge(n1, n4);
+        dag2.add_edge(n1, n5);
+        dag2.add_edge(n1, n8);
+        dag2.add_edge(n2, n5);
+        dag2.add_edge(n2, n6);
+        dag2.add_edge(n2, n8);
+        dag2.add_edge(n3, n5);
+        dag2.add_edge(n3, n6);
+        dag2.add_edge(n5, n8);
+        dag2.add_edge(n4, n8);
     }
-    
+
     BOOST_CHECK(are_isomorphic_by_merkle_hash(dag1, dag2));
 }

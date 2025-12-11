@@ -20,18 +20,19 @@ limitations under the License.
 
 #include <boost/property_tree/ptree.hpp>
 #include <fstream>
+#include <map>
 #include <string>
 #include <vector>
- #include <map>
+
 // #include "osp/bsp/model/BspSchedule.hpp" // TargetObject will be passed, no specific include here
 
 // Forward declarations to avoid circular dependencies
-namespace osp { // Ensure this is within the osp namespace
+namespace osp {    // Ensure this is within the osp namespace
 
 namespace pt = boost::property_tree;
 
-template<typename TargetObjectType>
-class IStatisticModule { // Changed from Graph_t_ to TargetObjectType
+template <typename TargetObjectType>
+class IStatisticModule {    // Changed from Graph_t_ to TargetObjectType
   public:
     virtual ~IStatisticModule() = default;
 
@@ -40,9 +41,9 @@ class IStatisticModule { // Changed from Graph_t_ to TargetObjectType
 
     // Called for each generated target_object.
     // Returns a map of {header_name: value_string}.
-    virtual std::map<std::string, std::string> record_statistics( 
-                                   const TargetObjectType &target_object, // Changed parameter
-                                   std::ofstream &log_stream) const = 0;
+    virtual std::map<std::string, std::string> record_statistics(const TargetObjectType &target_object,    // Changed parameter
+                                                                 std::ofstream &log_stream) const
+        = 0;
 };
 
-} // namespace osp
+}    // namespace osp

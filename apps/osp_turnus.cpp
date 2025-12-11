@@ -20,12 +20,12 @@ limitations under the License.
 #include <iostream>
 #include <string>
 
-#include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
-#include "osp/auxiliary/io/general_file_reader.hpp"
 #include "osp/auxiliary/io/bsp_schedule_file_writer.hpp"
+#include "osp/auxiliary/io/general_file_reader.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/EtfScheduler.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
 #include "osp/bsp/scheduler/LoadBalanceScheduler/LightEdgeVariancePartitioner.hpp"
+#include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 
 using namespace osp;
 
@@ -34,7 +34,6 @@ using mem_constr = persistent_transient_memory_constraint<graph_t>;
 
 // invoked upon program call
 int main(int argc, char *argv[]) {
-
     if (argc != 5) {
         std::cout << "Usage: " << argv[0] << " <input_file_dag> <num_proc> <memory_bound> <algorithm>" << std::endl;
         std::cout << "Available algorithms: bsp, etf, variance" << std::endl;
@@ -63,25 +62,21 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    boost::algorithm::to_lower(algorithm_name); // modifies str
+    boost::algorithm::to_lower(algorithm_name);    // modifies str
 
     BspSchedule<graph_t> bsp_schedule(bsp_instance);
     Scheduler<graph_t> *scheduler = nullptr;
 
     if (algorithm_name == "bsp") {
-
         float max_percent_idle_processors = 0.2f;
         bool increase_parallelism_in_new_superstep = true;
 
-        scheduler = new GreedyBspScheduler<graph_t, mem_constr>(
-            max_percent_idle_processors, increase_parallelism_in_new_superstep);
+        scheduler = new GreedyBspScheduler<graph_t, mem_constr>(max_percent_idle_processors, increase_parallelism_in_new_superstep);
 
     } else if (algorithm_name == "etf") {
-
         scheduler = new EtfScheduler<graph_t, mem_constr>(BL_EST);
 
     } else if (algorithm_name == "variance") {
-
         const double max_percent_idle_processors = 0.0;
         const bool increase_parallelism_in_new_superstep = true;
         const double variance_power = 6.0;
@@ -91,10 +86,15 @@ int main(int argc, char *argv[]) {
         const float bound_component_weight_percent = 4.0f;
         const float slack = 0.0f;
 
-        scheduler = new LightEdgeVariancePartitioner<graph_t, flat_spline_interpolation,mem_constr>(
-            max_percent_idle_processors, variance_power, heavy_is_x_times_median, min_percent_components_retained,
-            bound_component_weight_percent, increase_parallelism_in_new_superstep, 
-            max_priority_difference_percent, slack);
+        scheduler = new LightEdgeVariancePartitioner<graph_t, flat_spline_interpolation, mem_constr>(
+            max_percent_idle_processors,
+            variance_power,
+            heavy_is_x_times_median,
+            min_percent_components_retained,
+            bound_component_weight_percent,
+            increase_parallelism_in_new_superstep,
+            max_priority_difference_percent,
+            slack);
 
     } else {
         std::cout << "Unknown algorithm: " << algorithm_name << std::endl;

@@ -31,6 +31,7 @@ limitations under the License.
 #include "osp/graph_algorithms/directed_graph_util.hpp"
 
 namespace osp {
+
 /**
  * @brief The GreedyBspScheduler class represents a scheduler that uses a greedy algorithm to compute schedules for
  * BspInstance.
@@ -39,16 +40,15 @@ namespace osp {
  * The computeSchedule() method computes a schedule for a given BspInstance using a greedy algorithm.
  * The getScheduleName() method returns the name of the schedule, which is "BspGreedy" in this case.
  */
-template<typename Graph_t, typename MemoryConstraint_t = no_memory_constraint>
+template <typename Graph_t, typename MemoryConstraint_t = no_memory_constraint>
 class GreedyBspScheduler : public Scheduler<Graph_t> {
-
     static_assert(is_computational_dag_v<Graph_t>, "GreedyBspScheduler can only be used with computational DAGs.");
 
   private:
     using VertexType = vertex_idx_t<Graph_t>;
 
-    constexpr static bool use_memory_constraint =
-        is_memory_constraint_v<MemoryConstraint_t> or is_memory_constraint_schedule_v<MemoryConstraint_t>;
+    constexpr static bool use_memory_constraint = is_memory_constraint_v<MemoryConstraint_t>
+                                                  or is_memory_constraint_schedule_v<MemoryConstraint_t>;
 
     static_assert(not use_memory_constraint or std::is_same_v<Graph_t, typename MemoryConstraint_t::Graph_impl_t>,
                   "Graph_t must be the same as MemoryConstraint_t::Graph_impl_t.");
@@ -56,17 +56,15 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
     MemoryConstraint_t memory_constraint;
 
     struct heap_node {
-
         VertexType node;
 
         double score;
 
         heap_node() : node(0), score(0) {}
+
         heap_node(VertexType node_arg, double score_arg) : node(node_arg), score(score_arg) {}
 
-        bool operator<(heap_node const &rhs) const {
-            return (score < rhs.score) || (score <= rhs.score and node < rhs.node);
-        }
+        bool operator<(heap_node const &rhs) const { return (score < rhs.score) || (score <= rhs.score and node < rhs.node); }
     };
 
     std::vector<boost::heap::fibonacci_heap<heap_node>> max_proc_score_heap;
@@ -80,29 +78,29 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
     float max_percent_idle_processors;
     bool increase_parallelism_in_new_superstep;
 
-    double computeScore(VertexType node, unsigned proc, const std::vector<std::vector<bool>> &procInHyperedge,
+    double computeScore(VertexType node,
+                        unsigned proc,
+                        const std::vector<std::vector<bool>> &procInHyperedge,
                         const BspInstance<Graph_t> &instance) const {
-
         double score = 0;
         for (const auto &pred : instance.getComputationalDag().parents(node)) {
-
             if (procInHyperedge[pred][proc]) {
-                score += static_cast<double>(instance.getComputationalDag().vertex_comm_weight(pred)) /
-                         static_cast<double>(instance.getComputationalDag().out_degree(pred));
+                score += static_cast<double>(instance.getComputationalDag().vertex_comm_weight(pred))
+                         / static_cast<double>(instance.getComputationalDag().out_degree(pred));
             }
         }
         return score;
     }
 
-    void Choose(const BspInstance<Graph_t> &instance, const std::vector<std::set<VertexType>> &procReady,
-                const std::vector<bool> &procFree, VertexType &node, unsigned &p) const {
-
+    void Choose(const BspInstance<Graph_t> &instance,
+                const std::vector<std::set<VertexType>> &procReady,
+                const std::vector<bool> &procFree,
+                VertexType &node,
+                unsigned &p) const {
         double max_score = -1.0;
 
         for (unsigned proc = 0; proc < instance.numberOfProcessors(); ++proc) {
-
             if (procFree[proc] && !procReady[proc].empty()) {
-
                 // select node
                 heap_node top_node = max_proc_score_heap[proc].top();
 
@@ -116,24 +114,21 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
         }
 
         for (unsigned proc = 0; proc < instance.numberOfProcessors(); ++proc) {
-            if (!procFree[proc] or max_all_proc_score_heap[proc].empty())
+            if (!procFree[proc] or max_all_proc_score_heap[proc].empty()) {
                 continue;
+            }
 
             heap_node top_node = max_all_proc_score_heap[proc].top();
 
             if (top_node.score > max_score) {
-
                 if constexpr (use_memory_constraint) {
-
                     if (memory_constraint.can_add(top_node.node, proc)) {
-
                         max_score = top_node.score;
                         node = top_node.node;
                         p = proc;
                     }
 
                 } else {
-
                     max_score = top_node.score;
                     node = top_node.node;
                     p = proc;
@@ -142,32 +137,36 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
         }
     };
 
-    bool CanChooseNode(const BspInstance<Graph_t> &instance, const std::set<VertexType> &allReady,
-                       const std::vector<std::set<VertexType>> &procReady, const std::vector<bool> &procFree) const {
-        for (unsigned i = 0; i < instance.numberOfProcessors(); ++i)
-            if (procFree[i] && !procReady[i].empty())
+    bool CanChooseNode(const BspInstance<Graph_t> &instance,
+                       const std::set<VertexType> &allReady,
+                       const std::vector<std::set<VertexType>> &procReady,
+                       const std::vector<bool> &procFree) const {
+        for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
+            if (procFree[i] && !procReady[i].empty()) {
                 return true;
+            }
+        }
 
-        if (!allReady.empty())
-            for (unsigned i = 0; i < instance.numberOfProcessors(); ++i)
-                if (procFree[i])
+        if (!allReady.empty()) {
+            for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
+                if (procFree[i]) {
                     return true;
+                }
+            }
+        }
 
         return false;
     };
 
-    bool check_mem_feasibility(const BspInstance<Graph_t> &instance, const std::set<VertexType> &allReady,
+    bool check_mem_feasibility(const BspInstance<Graph_t> &instance,
+                               const std::set<VertexType> &allReady,
                                const std::vector<std::set<VertexType>> &procReady) const {
-
         if constexpr (use_memory_constraint) {
-
             if (instance.getArchitecture().getMemoryConstraintType() == MEMORY_CONSTRAINT_TYPE::PERSISTENT_AND_TRANSIENT) {
-
                 unsigned num_empty_proc = 0;
 
                 for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
                     if (!procReady[i].empty()) {
-
                         const heap_node &top_node = max_proc_score_heap[i].top();
 
                         // todo check if this is correct
@@ -183,9 +182,8 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
                     return true;
                 }
 
-                if (!allReady.empty())
+                if (!allReady.empty()) {
                     for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
-
                         const heap_node &top_node = max_all_proc_score_heap[i].top();
 
                         // todo check if this is correct
@@ -193,6 +191,7 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
                             return true;
                         }
                     }
+                }
 
                 return false;
             }
@@ -207,14 +206,16 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
 
         std::vector<unsigned> ready_nodes_per_type = nr_ready_nodes_per_type;
         std::vector<unsigned> procs_per_type = nr_procs_per_type;
-        for (unsigned proc_type = 0; proc_type < instance.getArchitecture().getNumberOfProcessorTypes(); ++proc_type)
-            for (unsigned node_type = 0; node_type < instance.getComputationalDag().num_vertex_types(); ++node_type)
+        for (unsigned proc_type = 0; proc_type < instance.getArchitecture().getNumberOfProcessorTypes(); ++proc_type) {
+            for (unsigned node_type = 0; node_type < instance.getComputationalDag().num_vertex_types(); ++node_type) {
                 if (instance.isCompatibleType(node_type, proc_type)) {
                     unsigned matched = std::min(ready_nodes_per_type[node_type], procs_per_type[proc_type]);
                     nr_nodes += matched;
                     ready_nodes_per_type[node_type] -= matched;
                     procs_per_type[proc_type] -= matched;
                 }
+            }
+        }
 
         return nr_nodes;
     }
@@ -241,7 +242,6 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
      * @return A pair containing the return status and the computed BspSchedule.
      */
     RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &schedule) override {
-
         const auto &instance = schedule.getInstance();
 
         for (const auto &v : instance.getComputationalDag().vertices()) {
@@ -268,8 +268,7 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
 
         std::set<VertexType> ready;
 
-        std::vector<std::vector<bool>> procInHyperedge =
-            std::vector<std::vector<bool>>(N, std::vector<bool>(params_p, false));
+        std::vector<std::vector<bool>> procInHyperedge = std::vector<std::vector<bool>>(N, std::vector<bool>(params_p, false));
 
         std::vector<std::set<VertexType>> procReady(params_p);
         std::set<VertexType> allReady;
@@ -280,8 +279,9 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
 
         std::vector<unsigned> nr_ready_nodes_per_type(G.num_vertex_types(), 0);
         std::vector<unsigned> nr_procs_per_type(instance.getArchitecture().getNumberOfProcessorTypes(), 0);
-        for (unsigned proc = 0; proc < params_p; ++proc)
+        for (unsigned proc = 0; proc < params_p; ++proc) {
             ++nr_procs_per_type[instance.getArchitecture().processorType(proc)];
+        }
 
         std::set<std::pair<v_workw_t<Graph_t>, VertexType>> finishTimes;
         finishTimes.emplace(0, std::numeric_limits<VertexType>::max());
@@ -301,7 +301,6 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
 
         bool endSupStep = false;
         while (!ready.empty() || !finishTimes.empty()) {
-
             if (finishTimes.empty() && endSupStep) {
                 for (unsigned proc = 0; proc < params_p; ++proc) {
                     procReady[proc].clear();
@@ -322,9 +321,9 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
 
                 for (const auto &v : ready) {
                     for (unsigned proc = 0; proc < params_p; ++proc) {
-
-                        if (!instance.isCompatible(v, proc))
+                        if (!instance.isCompatible(v, proc)) {
                             continue;
+                        }
 
                         double score = computeScore(v, proc, procInHyperedge, instance);
                         heap_node new_node(v, score);
@@ -343,13 +342,11 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
 
             // Find new ready jobs
             while (!finishTimes.empty() && finishTimes.begin()->first == time) {
-
                 const VertexType node = finishTimes.begin()->second;
                 finishTimes.erase(finishTimes.begin());
 
                 if (node != std::numeric_limits<VertexType>::max()) {
                     for (const auto &succ : G.children(node)) {
-
                         ++nrPredecDone[succ];
                         if (nrPredecDone[succ] == G.in_degree(succ)) {
                             ready.insert(succ);
@@ -357,34 +354,33 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
 
                             bool canAdd = true;
                             for (const auto &pred : G.parents(succ)) {
-
-                                if (schedule.assignedProcessor(pred) != schedule.assignedProcessor(node) &&
-                                    schedule.assignedSuperstep(pred) == supstepIdx) {
+                                if (schedule.assignedProcessor(pred) != schedule.assignedProcessor(node)
+                                    && schedule.assignedSuperstep(pred) == supstepIdx) {
                                     canAdd = false;
                                     break;
                                 }
                             }
 
                             if constexpr (use_memory_constraint) {
-
                                 if (canAdd) {
-                                    if (not memory_constraint.can_add(succ, schedule.assignedProcessor(node)))
+                                    if (not memory_constraint.can_add(succ, schedule.assignedProcessor(node))) {
                                         canAdd = false;
+                                    }
                                 }
                             }
 
-                            if (!instance.isCompatible(succ, schedule.assignedProcessor(node)))
+                            if (!instance.isCompatible(succ, schedule.assignedProcessor(node))) {
                                 canAdd = false;
+                            }
 
                             if (canAdd) {
                                 procReady[schedule.assignedProcessor(node)].insert(succ);
 
-                                double score =
-                                    computeScore(succ, schedule.assignedProcessor(node), procInHyperedge, instance);
+                                double score = computeScore(succ, schedule.assignedProcessor(node), procInHyperedge, instance);
 
                                 heap_node new_node(succ, score);
-                                node_proc_heap_handles[schedule.assignedProcessor(node)][succ] =
-                                    max_proc_score_heap[schedule.assignedProcessor(node)].push(new_node);
+                                node_proc_heap_handles[schedule.assignedProcessor(node)][succ]
+                                    = max_proc_score_heap[schedule.assignedProcessor(node)].push(new_node);
                             }
                         }
                     }
@@ -393,8 +389,9 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
                 }
             }
 
-            if (endSupStep)
+            if (endSupStep) {
                 continue;
+            }
 
             // Assign new jobs to processors
             if (!CanChooseNode(instance, allReady, procReady, procFree)) {
@@ -402,7 +399,6 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
             }
 
             while (CanChooseNode(instance, allReady, procReady, procFree)) {
-
                 VertexType nextNode = std::numeric_limits<VertexType>::max();
                 unsigned nextProc = instance.numberOfProcessors();
                 Choose(instance, procReady, procFree, nextNode, nextProc);
@@ -413,14 +409,12 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
                 }
 
                 if (procReady[nextProc].find(nextNode) != procReady[nextProc].end()) {
-
                     procReady[nextProc].erase(nextNode);
 
                     max_proc_score_heap[nextProc].erase(node_proc_heap_handles[nextProc][nextNode]);
                     node_proc_heap_handles[nextProc].erase(nextNode);
 
                 } else {
-
                     allReady.erase(nextNode);
 
                     for (unsigned proc = 0; proc < instance.numberOfProcessors(); ++proc) {
@@ -461,7 +455,6 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
                 procInHyperedge[nextNode][nextProc] = true;
 
                 for (const auto &pred : G.parents(nextNode)) {
-
                     if (procInHyperedge[pred][nextProc]) {
                         continue;
                     }
@@ -469,21 +462,17 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
                     procInHyperedge[pred][nextProc] = true;
 
                     for (const auto &child : G.children(pred)) {
-
                         if (child != nextNode && procReady[nextProc].find(child) != procReady[nextProc].end()) {
-
-                            (*node_proc_heap_handles[nextProc][child]).score +=
-                                static_cast<double>(instance.getComputationalDag().vertex_comm_weight(pred)) /
-                                static_cast<double>(instance.getComputationalDag().out_degree(pred));
+                            (*node_proc_heap_handles[nextProc][child]).score
+                                += static_cast<double>(instance.getComputationalDag().vertex_comm_weight(pred))
+                                   / static_cast<double>(instance.getComputationalDag().out_degree(pred));
                             max_proc_score_heap[nextProc].update(node_proc_heap_handles[nextProc][child]);
                         }
 
-                        if (child != nextNode && allReady.find(child) != allReady.end() &&
-                            instance.isCompatible(child, nextProc)) {
-
-                            (*node_all_proc_heap_handles[nextProc][child]).score +=
-                                static_cast<double>(instance.getComputationalDag().vertex_comm_weight(pred)) /
-                                static_cast<double>(instance.getComputationalDag().out_degree(pred));
+                        if (child != nextNode && allReady.find(child) != allReady.end() && instance.isCompatible(child, nextProc)) {
+                            (*node_all_proc_heap_handles[nextProc][child]).score
+                                += static_cast<double>(instance.getComputationalDag().vertex_comm_weight(pred))
+                                   / static_cast<double>(instance.getComputationalDag().out_degree(pred));
                             max_all_proc_score_heap[nextProc].update(node_all_proc_heap_handles[nextProc][child]);
                         }
                     }
@@ -491,18 +480,16 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
             }
 
             if constexpr (use_memory_constraint) {
-
                 if (not check_mem_feasibility(instance, allReady, procReady)) {
-
                     return RETURN_STATUS::ERROR;
                 }
             }
 
-            if (free > static_cast<unsigned>(static_cast<float>(params_p) * max_percent_idle_processors) &&
-                ((!increase_parallelism_in_new_superstep) ||
-                 get_nr_parallelizable_nodes(instance, nr_ready_nodes_per_type, nr_procs_per_type) >=
-                     std::min(std::min(params_p, static_cast<unsigned>(1.2 * (params_p - free))),
-                              params_p - free + (static_cast<unsigned>(0.5 * free))))) {
+            if (free > static_cast<unsigned>(static_cast<float>(params_p) * max_percent_idle_processors)
+                && ((!increase_parallelism_in_new_superstep)
+                    || get_nr_parallelizable_nodes(instance, nr_ready_nodes_per_type, nr_procs_per_type)
+                           >= std::min(std::min(params_p, static_cast<unsigned>(1.2 * (params_p - free))),
+                                       params_p - free + (static_cast<unsigned>(0.5 * free))))) {
                 endSupStep = true;
             }
         }
@@ -522,4 +509,4 @@ class GreedyBspScheduler : public Scheduler<Graph_t> {
     std::string getScheduleName() const override { return "BspGreedy"; }
 };
 
-} // namespace osp
+}    // namespace osp

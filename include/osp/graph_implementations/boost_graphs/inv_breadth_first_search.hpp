@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner   
+@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 
 #pragma once
@@ -28,14 +28,15 @@ limitations under the License.
 #include <vector>
 
 namespace boost::extensions {
-template<class IncidenceGraph, class Buffer, class BFSVisitor, class ColorMap, class SourceIterator>
-void inv_breadth_first_visit(const IncidenceGraph &g, SourceIterator sources_begin, SourceIterator sources_end,
-                             Buffer &Q, BFSVisitor vis, ColorMap color) {
-    BOOST_CONCEPT_ASSERT((IncidenceGraphConcept<IncidenceGraph>));
+
+template <class IncidenceGraph, class Buffer, class BFSVisitor, class ColorMap, class SourceIterator>
+void inv_breadth_first_visit(
+    const IncidenceGraph &g, SourceIterator sources_begin, SourceIterator sources_end, Buffer &Q, BFSVisitor vis, ColorMap color) {
+    BOOST_CONCEPT_ASSERT((IncidenceGraphConcept<IncidenceGraph>) );
     typedef graph_traits<IncidenceGraph> GTraits;
     typedef typename graph_traits<IncidenceGraph>::vertex_descriptor Vertex;
-    BOOST_CONCEPT_ASSERT((BFSVisitorConcept<BFSVisitor, IncidenceGraph>));
-    BOOST_CONCEPT_ASSERT((ReadWritePropertyMapConcept<ColorMap, Vertex>));
+    BOOST_CONCEPT_ASSERT((BFSVisitorConcept<BFSVisitor, IncidenceGraph>) );
+    BOOST_CONCEPT_ASSERT((ReadWritePropertyMapConcept<ColorMap, Vertex>) );
     typedef typename property_traits<ColorMap>::value_type ColorValue;
     typedef color_traits<ColorValue> Color;
     typename GTraits::in_edge_iterator ei, ei_end;
@@ -61,19 +62,19 @@ void inv_breadth_first_visit(const IncidenceGraph &g, SourceIterator sources_beg
                 Q.push(v);
             } else {
                 vis.non_tree_edge(*ei, g);
-                if (v_color == Color::gray())
+                if (v_color == Color::gray()) {
                     vis.gray_target(*ei, g);
-                else
+                } else {
                     vis.black_target(*ei, g);
+                }
             }
-        } // end for
+        }    // end for
         put(color, u, Color::black());
         vis.finish_vertex(u, g);
-    } // end while
+    }    // end while
 }
 
-
-template<typename IncidenceGraph, class SourceVertex, class BFSVisitor>
+template <typename IncidenceGraph, class SourceVertex, class BFSVisitor>
 void inv_breadth_first_search(const IncidenceGraph &graph, SourceVertex source, BFSVisitor vis) {
     const std::array sources = {source};
     typedef typename graph_traits<IncidenceGraph>::vertex_descriptor VertexT;
@@ -82,4 +83,4 @@ void inv_breadth_first_search(const IncidenceGraph &graph, SourceVertex source, 
     inv_breadth_first_visit(graph, sources.begin(), sources.end(), q, vis, boost::associative_property_map(color_map));
 }
 
-}
+}    // namespace boost::extensions

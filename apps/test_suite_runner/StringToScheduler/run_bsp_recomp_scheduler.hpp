@@ -25,46 +25,44 @@ limitations under the License.
 #include <string>
 #include <tuple>
 
-#include "osp/bsp/scheduler/GreedySchedulers/GreedyRecomputer.hpp"
-#include "osp/bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
 #include "../ConfigParser.hpp"
 #include "osp/bsp/model/BspScheduleRecomp.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/GreedyRecomputer.hpp"
 #include "osp/bsp/scheduler/Scheduler.hpp"
 #include "run_bsp_scheduler.hpp"
-
 
 namespace osp {
 
 const std::set<std::string> get_available_bsp_recomp_scheduler_names() { return {"GreedyRecomputer"}; }
 
-template<typename Graph_t>
-RETURN_STATUS run_bsp_recomp_scheduler(const ConfigParser &parser, const boost::property_tree::ptree &algorithm,
-                                BspScheduleRecomp<Graph_t> &schedule) {
-
-    //const unsigned timeLimit = parser.global_params.get_child("timeLimit").get_value<unsigned>();
-    // const bool use_memory_constraint = parser.global_params.get_child("use_memory_constraints").get_value<bool>();
+template <typename Graph_t>
+RETURN_STATUS run_bsp_recomp_scheduler(const ConfigParser &parser,
+                                       const boost::property_tree::ptree &algorithm,
+                                       BspScheduleRecomp<Graph_t> &schedule) {
+    // const unsigned timeLimit = parser.global_params.get_child("timeLimit").get_value<unsigned>();
+    //  const bool use_memory_constraint = parser.global_params.get_child("use_memory_constraints").get_value<bool>();
 
     std::cout << "Running algorithm: " << algorithm.get_child("name").get_value<std::string>() << std::endl;
 
     if (algorithm.get_child("name").get_value<std::string>() == "GreedyRecomputer") {
-
         BspSchedule<Graph_t> bsp_schedule(schedule.getInstance());
 
         RETURN_STATUS status = run_bsp_scheduler(parser, algorithm.get_child("parameters").get_child("scheduler"), bsp_schedule);
 
         BspScheduleCS<Graph_t> initial_schedule(std::move(bsp_schedule));
 
-        if (status == RETURN_STATUS::ERROR)    
+        if (status == RETURN_STATUS::ERROR) {
             return RETURN_STATUS::ERROR;
+        }
 
         GreedyRecomputer<Graph_t> scheduler;
 
         return scheduler.computeRecompSchedule(initial_schedule, schedule);
 
     } else {
-
         throw std::invalid_argument("Parameter error: Unknown algorithm.\n");
     }
 }
 
-} // namespace osp
+}    // namespace osp

@@ -18,6 +18,8 @@ limitations under the License.
 
 #pragma once
 
+#include <omp.h>
+
 #include <climits>
 #include <list>
 #include <map>
@@ -25,12 +27,10 @@ limitations under the License.
 #include <string>
 #include <vector>
 
-#include <omp.h>
-
 // #define TIME_THREADS_GROW_LOCAL_PARALLEL
 #ifdef TIME_THREADS_GROW_LOCAL_PARALLEL
-#include <chrono>
-#include <iostream>
+#    include <chrono>
+#    include <iostream>
 #endif
 
 #include "osp/auxiliary/misc.hpp"
@@ -41,14 +41,14 @@ namespace osp {
 
 static constexpr unsigned CacheLineSize = 64;
 
-template<typename vert_t, typename weight_t>
+template <typename vert_t, typename weight_t>
 struct GrowLocalAutoCoresParallel_Params {
     vert_t minSuperstepSize = 20;
     weight_t syncCostMultiplierMinSuperstepWeight = 1;
     weight_t syncCostMultiplierParallelCheck = 4;
 
-    unsigned numThreads = 0;           // 0 for auto
-    unsigned maxNumThreads = UINT_MAX; // used when auto num threads
+    unsigned numThreads = 0;              // 0 for auto
+    unsigned maxNumThreads = UINT_MAX;    // used when auto num threads
 };
 
 /**
@@ -60,7 +60,7 @@ struct GrowLocalAutoCoresParallel_Params {
  * The getScheduleName() method returns the name of the schedule, which is "GrowLocalAutoCoresParallel" in this
  * case.
  */
-template<typename Graph_t>
+template <typename Graph_t>
 class GrowLocalAutoCoresParallel : public Scheduler<Graph_t> {
     static_assert(is_directed_graph_v<Graph_t>);
     static_assert(has_vertex_weights_v<Graph_t>);
@@ -74,8 +74,8 @@ class GrowLocalAutoCoresParallel : public Scheduler<Graph_t> {
     /**
      * @brief Default constructor for GrowLocalAutoCoresParallel.
      */
-    GrowLocalAutoCoresParallel(
-        GrowLocalAutoCoresParallel_Params<vertex_idx_t<Graph_t>, v_workw_t<Graph_t>> params_ = GrowLocalAutoCoresParallel_Params<vertex_idx_t<Graph_t>, v_workw_t<Graph_t>>())
+    GrowLocalAutoCoresParallel(GrowLocalAutoCoresParallel_Params<vertex_idx_t<Graph_t>, v_workw_t<Graph_t>> params_
+                               = GrowLocalAutoCoresParallel_Params<vertex_idx_t<Graph_t>, v_workw_t<Graph_t>>())
         : params(params_) {}
 
     /**
@@ -83,8 +83,12 @@ class GrowLocalAutoCoresParallel : public Scheduler<Graph_t> {
      */
     virtual ~GrowLocalAutoCoresParallel() = default;
 
-    void computePartialSchedule(BspSchedule<Graph_t> &schedule, const std::vector<VertexType> &topOrder, const std::vector<VertexType> &posInTopOrder, const VertexType startNode, const VertexType endNode, unsigned &supstep) const {
-
+    void computePartialSchedule(BspSchedule<Graph_t> &schedule,
+                                const std::vector<VertexType> &topOrder,
+                                const std::vector<VertexType> &posInTopOrder,
+                                const VertexType startNode,
+                                const VertexType endNode,
+                                unsigned &supstep) const {
 #ifdef TIME_THREADS_GROW_LOCAL_PARALLEL
         double startTime = omp_get_wtime();
 #endif
@@ -255,8 +259,9 @@ class GrowLocalAutoCoresParallel : public Scheduler<Graph_t> {
                         } else if (readyIter != ready.end()) {
                             chosen_node = *readyIter;
                             readyIter++;
-                        } else
+                        } else {
                             break;
+                        }
 
                         new_assignments[proc].push_back(chosen_node);
                         schedule.setAssignedProcessor(chosen_node, proc);
@@ -310,13 +315,15 @@ class GrowLocalAutoCoresParallel : public Scheduler<Graph_t> {
 
                 bool accept_step = false;
 
-                double score = static_cast<double>(total_weight_assigned) / static_cast<double>(weight_limit + instance.synchronisationCosts());
+                double score = static_cast<double>(total_weight_assigned)
+                               / static_cast<double>(weight_limit + instance.synchronisationCosts());
                 double parallelism = 0;
                 if (weight_limit > 0) {
                     parallelism = static_cast<double>(total_weight_assigned) / static_cast<double>(weight_limit);
                 }
 
-                if (score > 0.97 * best_score) { // It is possible to make this less strict, i.e. score > 0.98 * best_score. The purpose of this would be to encourage larger supersteps.
+                if (score > 0.97 * best_score) {    // It is possible to make this less strict, i.e. score > 0.98 * best_score.
+                                                    // The purpose of this would be to encourage larger supersteps.
                     best_score = std::max(best_score, score);
                     best_parallelism = parallelism;
                     accept_step = true;
@@ -457,7 +464,8 @@ class GrowLocalAutoCoresParallel : public Scheduler<Graph_t> {
                 }
             }
 
-            desiredParallelism = (0.3 * desiredParallelism) + (0.6 * best_parallelism) + (0.1 * static_cast<double>(P)); // weights should sum up to one
+            desiredParallelism = (0.3 * desiredParallelism) + (0.6 * best_parallelism)
+                                 + (0.1 * static_cast<double>(P));    // weights should sum up to one
 
             ++supstep;
         }
@@ -468,17 +476,26 @@ class GrowLocalAutoCoresParallel : public Scheduler<Graph_t> {
         if (omp_get_thread_num() < 10) {
             padd = " ";
         }
-        std::string outputString = "Thread: " + padd + std::to_string(omp_get_thread_num()) + "\t Time: " + std::to_string(endTime - startTime) + "\n";
+        std::string outputString
+            = "Thread: " + padd + std::to_string(omp_get_thread_num()) + "\t Time: " + std::to_string(endTime - startTime) + "\n";
         std::cout << outputString;
 #endif
     }
 
-    void incrementScheduleSupersteps(BspSchedule<Graph_t> &schedule, const VertexType startNode, const VertexType endNode, const unsigned incr) const {
+    void incrementScheduleSupersteps(BspSchedule<Graph_t> &schedule,
+                                     const VertexType startNode,
+                                     const VertexType endNode,
+                                     const unsigned incr) const {
         for (VertexType node = startNode; node < endNode; node++) {
             schedule.setAssignedSuperstepNoUpdateNumSuperstep(node, schedule.assignedSuperstep(node) + incr);
         }
     }
-    void incrementScheduleSupersteps_TopOrder(BspSchedule<Graph_t> &schedule, const std::vector<VertexType> &topOrder, const VertexType startIndex, const VertexType endIndex, const unsigned incr) const {
+
+    void incrementScheduleSupersteps_TopOrder(BspSchedule<Graph_t> &schedule,
+                                              const std::vector<VertexType> &topOrder,
+                                              const VertexType startIndex,
+                                              const VertexType endIndex,
+                                              const unsigned incr) const {
         for (VertexType index = startIndex; index < endIndex; index++) {
             const VertexType node = topOrder[index];
             schedule.setAssignedSuperstepNoUpdateNumSuperstep(node, schedule.assignedSuperstep(node) + incr);
@@ -486,7 +503,6 @@ class GrowLocalAutoCoresParallel : public Scheduler<Graph_t> {
     }
 
     RETURN_STATUS computeScheduleParallel(BspSchedule<Graph_t> &schedule, unsigned int numThreads) const {
-
         const BspInstance<Graph_t> &instance = schedule.getInstance();
         const Graph_t &graph = instance.getComputationalDag();
 
@@ -524,11 +540,13 @@ class GrowLocalAutoCoresParallel : public Scheduler<Graph_t> {
             }
         }
 
-#pragma omp parallel num_threads(numThreads) default(none) shared(schedule, topOrder, posInTopOrder, superstepsThread, supstepIncr, numThreads, startNodes, incr)
+#pragma omp parallel num_threads(numThreads) default(none)                                                 \
+    shared(schedule, topOrder, posInTopOrder, superstepsThread, supstepIncr, numThreads, startNodes, incr)
         {
 #pragma omp for schedule(static, 1)
             for (unsigned thr = 0; thr < numThreads; thr++) {
-                computePartialSchedule(schedule, topOrder, posInTopOrder, startNodes[thr], startNodes[thr + 1], superstepsThread[thr * UnsignedPadding]);
+                computePartialSchedule(
+                    schedule, topOrder, posInTopOrder, startNodes[thr], startNodes[thr + 1], superstepsThread[thr * UnsignedPadding]);
             }
 
 #pragma omp master
@@ -547,7 +565,8 @@ class GrowLocalAutoCoresParallel : public Scheduler<Graph_t> {
                 if constexpr (has_vertices_in_top_order_v<Graph_t>) {
                     incrementScheduleSupersteps(schedule, startNodes[thr], startNodes[thr + 1], supstepIncr[thr]);
                 } else {
-                    incrementScheduleSupersteps_TopOrder(schedule, topOrder, startNodes[thr], startNodes[thr + 1], supstepIncr[thr]);
+                    incrementScheduleSupersteps_TopOrder(
+                        schedule, topOrder, startNodes[thr], startNodes[thr + 1], supstepIncr[thr]);
                 }
             }
         }
@@ -566,11 +585,11 @@ class GrowLocalAutoCoresParallel : public Scheduler<Graph_t> {
      * @return A pair containing the return status and the computed BspSchedule.
      */
     virtual RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &schedule) override {
-
         unsigned numThreads = params.numThreads;
         if (numThreads == 0) {
             // numThreads = static_cast<unsigned>(std::sqrt( static_cast<double>((schedule.getInstance().numberOfVertices() / 1000000)))) + 1;
-            numThreads = static_cast<unsigned>(std::log2(static_cast<double>((schedule.getInstance().numberOfVertices() / 1000)))) + 1;
+            numThreads
+                = static_cast<unsigned>(std::log2(static_cast<double>((schedule.getInstance().numberOfVertices() / 1000)))) + 1;
         }
         numThreads = std::min(numThreads, params.maxNumThreads);
         if (numThreads == 0) {
@@ -590,4 +609,4 @@ class GrowLocalAutoCoresParallel : public Scheduler<Graph_t> {
     virtual std::string getScheduleName() const override { return "GrowLocalAutoCoresParallel"; }
 };
 
-} // namespace osp
+}    // namespace osp

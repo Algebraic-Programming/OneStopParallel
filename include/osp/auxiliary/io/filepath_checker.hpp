@@ -18,30 +18,37 @@ limitations under the License.
 
 #pragma once
 
+#include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <sstream>
 #include <string>
 #include <vector>
-#include <limits>
-#include <filesystem>
 
 namespace osp {
 namespace file_reader {
-    
-constexpr std::size_t MAX_LINE_LENGTH = 1 << 14; // 16 KB
+
+constexpr std::size_t MAX_LINE_LENGTH = 1 << 14;    // 16 KB
 
 // Path safety to avoid symlink, traversal or malicious file types
-inline bool isPathSafe(const std::string& path) {
+inline bool isPathSafe(const std::string &path) {
     try {
         std::filesystem::path resolved = std::filesystem::weakly_canonical(path);
-        if (std::filesystem::is_symlink(resolved)) return false;
-        if (!std::filesystem::is_regular_file(resolved)) return false;
-        if (resolved.string().find('\0') != std::string::npos) return false;
+        if (std::filesystem::is_symlink(resolved)) {
+            return false;
+        }
+        if (!std::filesystem::is_regular_file(resolved)) {
+            return false;
+        }
+        if (resolved.string().find('\0') != std::string::npos) {
+            return false;
+        }
         return true;
     } catch (...) {
         return false;
     }
 }
 
-}} // namespace osp::file_reader
+}    // namespace file_reader
+}    // namespace osp

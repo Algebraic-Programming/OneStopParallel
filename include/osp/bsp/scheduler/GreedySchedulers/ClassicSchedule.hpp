@@ -32,7 +32,7 @@ namespace osp {
  *
  * This class stores the processor and time information for a schedule.
  */
-template<typename Graph_t>
+template <typename Graph_t>
 class CSchedule {
   private:
     using vertex_idx = vertex_idx_t<Graph_t>;
@@ -47,8 +47,7 @@ class CSchedule {
      * @param size The size of the schedule.
      */
     CSchedule(std::size_t size)
-        : proc(std::vector<unsigned>(size, std::numeric_limits<unsigned>::max())), time(std::vector<workw_t>(size, 0)) {
-    }
+        : proc(std::vector<unsigned>(size, std::numeric_limits<unsigned>::max())), time(std::vector<workw_t>(size, 0)) {}
 
     /**
      * @brief Converts the CSchedule object to a BspSchedule object.
@@ -60,9 +59,9 @@ class CSchedule {
     void convertToBspSchedule(const BspInstance<Graph_t> &instance,
                               const std::vector<std::deque<vertex_idx>> &procAssignmentLists,
                               BspSchedule<Graph_t> &bsp_schedule) {
-
-        for (const auto &v : instance.vertices())
+        for (const auto &v : instance.vertices()) {
             bsp_schedule.setAssignedProcessor(v, proc[v]);
+        }
 
         const vertex_idx N = instance.numberOfVertices();
         const unsigned P = instance.numberOfProcessors();
@@ -72,8 +71,9 @@ class CSchedule {
 
         std::vector<decltype(procAssignmentLists[0].cbegin())> done(P), limit(P);
 
-        for (unsigned j = 0; j < P; ++j)
+        for (unsigned j = 0; j < P; ++j) {
             done[j] = procAssignmentLists[j].cbegin();
+        }
 
         while (totalNodesDone < N) {
             // create next superstep
@@ -84,31 +84,34 @@ class CSchedule {
                     bool cut = false;
 
                     for (const auto &source : instance.getComputationalDag().parents(node)) {
-                        if (!processed[source] && proc[source] != proc[node])
+                        if (!processed[source] && proc[source] != proc[node]) {
                             cut = true;
+                        }
                     }
 
-                    if (cut)
+                    if (cut) {
                         break;
+                    }
                 }
-                if (limit[j] != procAssignmentLists[j].end() && time[*limit[j]] < timeLimit)
+                if (limit[j] != procAssignmentLists[j].end() && time[*limit[j]] < timeLimit) {
                     timeLimit = time[*limit[j]];
+                }
             }
 
-            for (unsigned j = 0; j < P; ++j)
-                for (; done[j] != limit[j] && (time[*done[j]] < timeLimit ||
-                                               (time[*done[j]] == timeLimit &&
-                                                instance.getComputationalDag().vertex_work_weight(*done[j]) == 0));
+            for (unsigned j = 0; j < P; ++j) {
+                for (; done[j] != limit[j]
+                       && (time[*done[j]] < timeLimit
+                           || (time[*done[j]] == timeLimit && instance.getComputationalDag().vertex_work_weight(*done[j]) == 0));
                      ++done[j]) {
                     processed[*done[j]] = true;
                     bsp_schedule.setAssignedSuperstep(*done[j], superStepIdx);
                     ++totalNodesDone;
                 }
+            }
 
             ++superStepIdx;
         }
-       
     }
 };
 
-} // namespace osp
+}    // namespace osp

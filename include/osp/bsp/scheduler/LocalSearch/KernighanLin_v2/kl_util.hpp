@@ -18,14 +18,14 @@ limitations under the License.
 
 #pragma once
 
-#include "kl_active_schedule.hpp"
 #include <unordered_set>
+
+#include "kl_active_schedule.hpp"
 
 namespace osp {
 
-template<typename cost_t, typename comm_cost_function_t, typename kl_active_schedule_t>
+template <typename cost_t, typename comm_cost_function_t, typename kl_active_schedule_t>
 struct reward_penalty_strategy {
-
     kl_active_schedule_t *active_schedule;
     cost_t max_weight;
 
@@ -47,9 +47,8 @@ struct reward_penalty_strategy {
     }
 };
 
-template<typename VertexType>
+template <typename VertexType>
 struct set_vertex_lock_manger {
-
     std::unordered_set<VertexType> locked_nodes;
 
     void initialize(size_t) {}
@@ -63,9 +62,8 @@ struct set_vertex_lock_manger {
     void clear() { locked_nodes.clear(); }
 };
 
-template<typename VertexType>
+template <typename VertexType>
 struct vector_vertex_lock_manger {
-
     std::vector<bool> locked_nodes;
 
     void initialize(size_t num_nodes) { locked_nodes.resize(num_nodes); }
@@ -79,7 +77,7 @@ struct vector_vertex_lock_manger {
     void clear() { locked_nodes.assign(locked_nodes.size(), false); }
 };
 
-template<typename Graph_t, typename cost_t, typename kl_active_schedule_t, unsigned window_size>
+template <typename Graph_t, typename cost_t, typename kl_active_schedule_t, unsigned window_size>
 struct adaptive_affinity_table {
     constexpr static unsigned window_range = 2 * window_size + 1;
     using VertexType = vertex_idx_t<Graph_t>;
@@ -153,8 +151,9 @@ struct adaptive_affinity_table {
     }
 
     bool insert(VertexType node) {
-        if (node_is_selected[node])
-            return false; // Node is already in the table.
+        if (node_is_selected[node]) {
+            return false;    // Node is already in the table.
+        }
 
         size_t insert_location;
         if (!gaps.empty()) {
@@ -241,7 +240,7 @@ struct adaptive_affinity_table {
     }
 };
 
-template<typename Graph_t, typename cost_t, typename kl_active_schedule_t, unsigned window_size>
+template <typename Graph_t, typename cost_t, typename kl_active_schedule_t, unsigned window_size>
 struct static_affinity_table {
     constexpr static unsigned window_range = 2 * window_size + 1;
     using VertexType = vertex_idx_t<Graph_t>;
@@ -300,9 +299,8 @@ struct static_affinity_table {
     void trim() {}
 };
 
-template<typename Graph_t, typename container_t, typename kl_active_schedule_t>
+template <typename Graph_t, typename container_t, typename kl_active_schedule_t>
 struct vertex_selection_strategy {
-
     using EdgeType = edge_desc_t<Graph_t>;
 
     const kl_active_schedule_t *active_schedule;
@@ -316,7 +314,9 @@ struct vertex_selection_strategy {
 
     unsigned max_work_counter = 0;
 
-    inline void initialize(const kl_active_schedule_t &sche_, std::mt19937 &gen_, const unsigned start_step,
+    inline void initialize(const kl_active_schedule_t &sche_,
+                           std::mt19937 &gen_,
+                           const unsigned start_step,
                            const unsigned end_step) {
         active_schedule = &sche_;
         graph = &(sche_.getInstance().getComputationalDag());
@@ -344,18 +344,22 @@ struct vertex_selection_strategy {
         std::shuffle(permutation.begin(), permutation.end(), *gen);
     }
 
-    void add_neighbours_to_selection(vertex_idx_t<Graph_t> node, container_t &nodes, const unsigned start_step,
+    void add_neighbours_to_selection(vertex_idx_t<Graph_t> node,
+                                     container_t &nodes,
+                                     const unsigned start_step,
                                      const unsigned end_step) {
         for (const auto parent : graph->parents(node)) {
             const unsigned parent_step = active_schedule->assigned_superstep(parent);
-            if (parent_step >= start_step && parent_step <= end_step)
+            if (parent_step >= start_step && parent_step <= end_step) {
                 nodes.insert(parent);
+            }
         }
 
         for (const auto child : graph->children(node)) {
             const unsigned child_step = active_schedule->assigned_superstep(child);
-            if (child_step >= start_step && child_step <= end_step)
+            if (child_step >= start_step && child_step <= end_step) {
                 nodes.insert(child);
+            }
         }
     }
 
@@ -370,24 +374,27 @@ struct vertex_selection_strategy {
         strategy_counter %= 5;
     }
 
-    void select_nodes_violations(container_t &node_selection, std::unordered_set<EdgeType> &current_violations,
-                                 const unsigned start_step, const unsigned end_step) {
+    void select_nodes_violations(container_t &node_selection,
+                                 std::unordered_set<EdgeType> &current_violations,
+                                 const unsigned start_step,
+                                 const unsigned end_step) {
         for (const auto &edge : current_violations) {
             const auto source_v = source(edge, *graph);
             const auto target_v = target(edge, *graph);
 
             const unsigned source_step = active_schedule->assigned_superstep(source_v);
-            if (source_step >= start_step && source_step <= end_step)
+            if (source_step >= start_step && source_step <= end_step) {
                 node_selection.insert(source_v);
+            }
 
             const unsigned target_step = active_schedule->assigned_superstep(target_v);
-            if (target_step >= start_step && target_step <= end_step)
+            if (target_step >= start_step && target_step <= end_step) {
                 node_selection.insert(target_v);
+            }
         }
     }
 
     void select_nodes_permutation_threshold(const std::size_t &threshold, container_t &node_selection) {
-
         const size_t bound = std::min(threshold + permutation_idx, permutation.size());
         for (std::size_t i = permutation_idx; i < bound; i++) {
             node_selection.insert(permutation[i]);
@@ -400,12 +407,14 @@ struct vertex_selection_strategy {
         }
     }
 
-    void select_nodes_max_work_proc(const std::size_t &threshold, container_t &node_selection,
-                                    const unsigned start_step, const unsigned end_step) {
+    void select_nodes_max_work_proc(const std::size_t &threshold,
+                                    container_t &node_selection,
+                                    const unsigned start_step,
+                                    const unsigned end_step) {
         while (node_selection.size() < threshold) {
             if (max_work_counter > end_step) {
-                max_work_counter = start_step; // wrap around
-                break;                         // stop after one full pass
+                max_work_counter = start_step;    // wrap around
+                break;                            // stop after one full pass
             }
 
             select_nodes_max_work_proc_helper(threshold - node_selection.size(), max_work_counter, node_selection);
@@ -417,8 +426,8 @@ struct vertex_selection_strategy {
         const unsigned num_max_work_proc = active_schedule->work_datastructures.step_max_work_processor_count[step];
         for (unsigned idx = 0; idx < num_max_work_proc; idx++) {
             const unsigned proc = active_schedule->work_datastructures.step_processor_work_[step][idx].proc;
-            const std::unordered_set<vertex_idx_t<Graph_t>> step_proc_vert =
-                active_schedule->getSetSchedule().step_processor_vertices[step][proc];
+            const std::unordered_set<vertex_idx_t<Graph_t>> step_proc_vert
+                = active_schedule->getSetSchedule().step_processor_vertices[step][proc];
             const size_t num_insert = std::min(threshold - node_selection.size(), step_proc_vert.size());
             auto end_it = step_proc_vert.begin();
             std::advance(end_it, num_insert);
@@ -427,4 +436,4 @@ struct vertex_selection_strategy {
     }
 };
 
-} // namespace osp
+}    // namespace osp

@@ -18,33 +18,33 @@ limitations under the License.
 
 #pragma once
 
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
 namespace osp {
 
 /**
-* @class HashComputer
-* @brief Abstract base class for computing and managing hash values and orbits for graph vertices.
-*
-* This class provides an interface for obtaining hash values for individual vertices,
-* the full list of vertex hashes, the number of unique orbits, and the vertices belonging to specific orbits.
-*
-* @tparam index_type The type used for indexing vertices in the graph.
-*/
-template<typename index_type>
+ * @class HashComputer
+ * @brief Abstract base class for computing and managing hash values and orbits for graph vertices.
+ *
+ * This class provides an interface for obtaining hash values for individual vertices,
+ * the full list of vertex hashes, the number of unique orbits, and the vertices belonging to specific orbits.
+ *
+ * @tparam index_type The type used for indexing vertices in the graph.
+ */
+template <typename index_type>
 class HashComputer {
-public:
+  public:
     virtual ~HashComputer() = default;
 
     virtual std::size_t get_vertex_hash(const index_type &v) const = 0;
     virtual const std::vector<std::size_t> &get_vertex_hashes() const = 0;
     virtual std::size_t num_orbits() const = 0;
-    
+
     virtual const std::vector<index_type> &get_orbit(const index_type &v) const = 0;
     virtual const std::unordered_map<std::size_t, std::vector<index_type>> &get_orbits() const = 0;
 
-    virtual const std::vector<index_type>& get_orbit_from_hash(const std::size_t& hash) const = 0;
+    virtual const std::vector<index_type> &get_orbit_from_hash(const std::size_t &hash) const = 0;
 };
 
-} // namespace osp
+}    // namespace osp

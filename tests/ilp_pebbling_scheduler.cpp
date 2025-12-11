@@ -18,22 +18,20 @@ limitations under the License.
 
 #define BOOST_TEST_MODULE PEBBLING_ILP
 #include <boost/test/unit_test.hpp>
-
-#include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
-#include "osp/graph_implementations/boost_graphs/boost_graph.hpp"
-#include "osp/auxiliary/io/arch_file_reader.hpp"
-#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 #include <filesystem>
 #include <iostream>
 
+#include "osp/auxiliary/io/arch_file_reader.hpp"
+#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
+#include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
+#include "osp/graph_implementations/boost_graphs/boost_graph.hpp"
 #include "osp/pebbling/pebblers/pebblingILP/MultiProcessorPebbling.hpp"
 #include "osp/pebbling/pebblers/pebblingILP/PebblingPartialILP.hpp"
-#include "osp/bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
 
 using namespace osp;
 
 BOOST_AUTO_TEST_CASE(test_full) {
-
     using graph = computational_dag_vector_impl_def_t;
 
     BspInstance<graph> instance;
@@ -58,7 +56,8 @@ BOOST_AUTO_TEST_CASE(test_full) {
     BspSchedule<graph> bsp_initial(instance);
     BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, greedy.computeSchedule(bsp_initial));
 
-    std::vector<v_memw_t<graph> > minimum_memory_required_vector = PebblingSchedule<graph>::minimumMemoryRequiredPerNodeType(instance);
+    std::vector<v_memw_t<graph> > minimum_memory_required_vector
+        = PebblingSchedule<graph>::minimumMemoryRequiredPerNodeType(instance);
     v_memw_t<graph> max_required = *std::max_element(minimum_memory_required_vector.begin(), minimum_memory_required_vector.end());
     instance.getArchitecture().setMemoryBound(max_required);
 
@@ -71,11 +70,9 @@ BOOST_AUTO_TEST_CASE(test_full) {
     mpp.computePebblingWithInitialSolution(initial_sol, schedule);
     schedule.cleanSchedule();
     BOOST_CHECK(schedule.isValid());
-
 };
 
 BOOST_AUTO_TEST_CASE(test_partial) {
-
     using graph = computational_dag_vector_impl_def_t;
 
     BspInstance<graph> instance;
@@ -96,7 +93,8 @@ BOOST_AUTO_TEST_CASE(test_partial) {
 
     BOOST_CHECK(status);
 
-    std::vector<v_memw_t<graph> > minimum_memory_required_vector = PebblingSchedule<graph>::minimumMemoryRequiredPerNodeType(instance);
+    std::vector<v_memw_t<graph> > minimum_memory_required_vector
+        = PebblingSchedule<graph>::minimumMemoryRequiredPerNodeType(instance);
     v_memw_t<graph> max_required = *std::max_element(minimum_memory_required_vector.begin(), minimum_memory_required_vector.end());
     instance.getArchitecture().setMemoryBound(max_required);
 
@@ -106,5 +104,4 @@ BOOST_AUTO_TEST_CASE(test_partial) {
     PebblingSchedule<graph> schedule(instance);
     mpp.computePebbling(schedule);
     BOOST_CHECK(schedule.isValid());
-
 };

@@ -17,11 +17,12 @@ limitations under the License.
 */
 #pragma once
 
+#include <vector>
+
 #include "cdag_vertex_impl.hpp"
 #include "osp/concepts/computational_dag_concept.hpp"
 #include "osp/graph_implementations/integral_range.hpp"
 #include "vector_cast_view.hpp"
-#include <vector>
 
 namespace osp {
 
@@ -52,13 +53,13 @@ namespace osp {
  *   - `mem_weight`: Of type `mem_weight_type`.
  *   - `vertex_type`: Of type `cdag_vertex_type_type`.
  * - It must be constructible with the signature:
- *   `v_impl(vertex_idx_type id, work_weight_type work_weight, comm_weight_type comm_weight, mem_weight_type mem_weight, cdag_vertex_type_type vertex_type)`
+ *   `v_impl(vertex_idx_type id, work_weight_type work_weight, comm_weight_type comm_weight, mem_weight_type mem_weight,
+ * cdag_vertex_type_type vertex_type)`
  *
  * @tparam index_t The type used for vertex indices in the adjacency lists.
  */
-template<typename v_impl, typename index_t>
+template <typename v_impl, typename index_t>
 class dag_vector_adapter {
-
   public:
     using vertex_idx = typename v_impl::vertex_idx_type;
 
@@ -78,7 +79,12 @@ class dag_vector_adapter {
      * @warning The adapter stores pointers to these vectors. They must remain valid for the lifetime of the adapter.
      */
     dag_vector_adapter(const std::vector<std::vector<index_t>> &out_neigbors_,
-                       const std::vector<std::vector<index_t>> &in_neigbors_) : vertices_(out_neigbors_.size()), out_neigbors(&out_neigbors_), in_neigbors(&in_neigbors_), num_edges_(0), num_vertex_types_(1) {
+                       const std::vector<std::vector<index_t>> &in_neigbors_)
+        : vertices_(out_neigbors_.size()),
+          out_neigbors(&out_neigbors_),
+          in_neigbors(&in_neigbors_),
+          num_edges_(0),
+          num_vertex_types_(1) {
         for (vertex_idx i = 0; i < static_cast<vertex_idx>(out_neigbors_.size()); ++i) {
             vertices_[i].id = i;
             num_edges_ += out_neigbors_[i].size();
@@ -99,7 +105,8 @@ class dag_vector_adapter {
      * @param in_neigbors_ New in-neighbors adjacency list.
      * @param out_neigbors_ New out-neighbors adjacency list.
      */
-    void set_in_out_neighbors(const std::vector<std::vector<index_t>> &in_neigbors_, const std::vector<std::vector<index_t>> &out_neigbors_) {
+    void set_in_out_neighbors(const std::vector<std::vector<index_t>> &in_neigbors_,
+                              const std::vector<std::vector<index_t>> &out_neigbors_) {
         out_neigbors = &out_neigbors_;
         in_neigbors = &in_neigbors_;
 
@@ -204,4 +211,4 @@ static_assert(is_directed_graph_v<dag_vector_adapter<cdag_vertex_impl_unsigned, 
 static_assert(is_computational_dag_typed_vertices_v<dag_vector_adapter<cdag_vertex_impl_unsigned, int>>,
               "dag_vector_adapter must satisfy the is_computation_dag concept");
 
-} // namespace osp
+}    // namespace osp

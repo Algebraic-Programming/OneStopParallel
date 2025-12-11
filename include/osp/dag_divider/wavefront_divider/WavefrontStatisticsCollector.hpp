@@ -16,8 +16,9 @@ limitations under the License.
 @author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 #pragma once
+#include <algorithm>    // for std::reverse
 #include <vector>
-#include <algorithm> // for std::reverse
+
 #include "osp/auxiliary/datastructures/union_find.hpp"
 
 namespace osp {
@@ -26,7 +27,7 @@ namespace osp {
  * @struct WavefrontStatistics
  * @brief Holds statistical data for a single wavefront.
  */
-template<typename Graph_t>
+template <typename Graph_t>
 struct WavefrontStatistics {
     using VertexType = vertex_idx_t<Graph_t>;
 
@@ -39,12 +40,12 @@ struct WavefrontStatistics {
  * @class WavefrontStatisticsCollector
  * @brief Computes forward and backward wavefront statistics for a given DAG.
  */
-template<typename Graph_t>
+template <typename Graph_t>
 class WavefrontStatisticsCollector {
     using VertexType = vertex_idx_t<Graph_t>;
     using UnionFind = union_find_universe_t<Graph_t>;
 
-public:
+  public:
     WavefrontStatisticsCollector(const Graph_t &dag, const std::vector<std::vector<VertexType>> &level_sets)
         : dag_(dag), level_sets_(level_sets) {}
 
@@ -79,9 +80,8 @@ public:
         return stats;
     }
 
-
-private:
-    void update_union_find(UnionFind& uf, size_t level_idx) const {
+  private:
+    void update_union_find(UnionFind &uf, size_t level_idx) const {
         // Add all vertices from the current level to the universe
         for (const auto vertex : level_sets_[level_idx]) {
             uf.add_object(vertex, dag_.vertex_work_weight(vertex), dag_.vertex_mem_weight(vertex));
@@ -101,14 +101,14 @@ private:
         }
     }
 
-    void collect_stats_for_level(WavefrontStatistics<Graph_t>& stats, UnionFind& uf) const {
+    void collect_stats_for_level(WavefrontStatistics<Graph_t> &stats, UnionFind &uf) const {
         const auto components = uf.get_connected_components_weights_and_memories();
         stats.connected_components_vertices.reserve(components.size());
         stats.connected_components_weights.reserve(components.size());
         stats.connected_components_memories.reserve(components.size());
 
-        for (const auto& comp : components) {
-            auto& [vertices, weight, memory] = comp;
+        for (const auto &comp : components) {
+            auto &[vertices, weight, memory] = comp;
             stats.connected_components_vertices.emplace_back(vertices);
             stats.connected_components_weights.emplace_back(weight);
             stats.connected_components_memories.emplace_back(memory);
@@ -119,4 +119,4 @@ private:
     const std::vector<std::vector<VertexType>> &level_sets_;
 };
 
-} // end namespace osp
+}    // end namespace osp

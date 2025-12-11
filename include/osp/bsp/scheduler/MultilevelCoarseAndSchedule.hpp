@@ -32,7 +32,7 @@ limitations under the License.
 
 namespace osp {
 
-template<typename Graph_t, typename Graph_t_coarse>
+template <typename Graph_t, typename Graph_t_coarse>
 class MultilevelCoarseAndSchedule : public Scheduler<Graph_t> {
   private:
     const BspInstance<Graph_t> *original_inst;
@@ -58,23 +58,31 @@ class MultilevelCoarseAndSchedule : public Scheduler<Graph_t> {
 
   public:
     MultilevelCoarseAndSchedule()
-        : Scheduler<Graph_t>(), original_inst(nullptr), sched(nullptr), improver(nullptr), ml_coarser(nullptr),
+        : Scheduler<Graph_t>(), original_inst(nullptr), sched(nullptr), improver(nullptr), ml_coarser(nullptr), active_graph(-1L) {
+          };
+    MultilevelCoarseAndSchedule(Scheduler<Graph_t_coarse> &sched_, MultilevelCoarser<Graph_t, Graph_t_coarse> &ml_coarser_)
+        : Scheduler<Graph_t>(),
+          original_inst(nullptr),
+          sched(&sched_),
+          improver(nullptr),
+          ml_coarser(&ml_coarser_),
           active_graph(-1L) {};
     MultilevelCoarseAndSchedule(Scheduler<Graph_t_coarse> &sched_,
+                                ImprovementScheduler<Graph_t_coarse> &improver_,
                                 MultilevelCoarser<Graph_t, Graph_t_coarse> &ml_coarser_)
-        : Scheduler<Graph_t>(), original_inst(nullptr), sched(&sched_), improver(nullptr), ml_coarser(&ml_coarser_),
-          active_graph(-1L) {};
-    MultilevelCoarseAndSchedule(Scheduler<Graph_t_coarse> &sched_, ImprovementScheduler<Graph_t_coarse> &improver_,
-                                MultilevelCoarser<Graph_t, Graph_t_coarse> &ml_coarser_)
-        : Scheduler<Graph_t>(), original_inst(nullptr), sched(&sched_), improver(&improver_), ml_coarser(&ml_coarser_),
+        : Scheduler<Graph_t>(),
+          original_inst(nullptr),
+          sched(&sched_),
+          improver(&improver_),
+          ml_coarser(&ml_coarser_),
           active_graph(-1L) {};
     virtual ~MultilevelCoarseAndSchedule() = default;
 
     inline void setInitialScheduler(Scheduler<Graph_t_coarse> &sched_) { sched = &sched_; };
+
     inline void setImprovementScheduler(ImprovementScheduler<Graph_t_coarse> &improver_) { improver = &improver_; };
-    inline void setMultilevelCoarser(MultilevelCoarser<Graph_t, Graph_t_coarse> &ml_coarser_) {
-        ml_coarser = &ml_coarser_;
-    };
+
+    inline void setMultilevelCoarser(MultilevelCoarser<Graph_t, Graph_t_coarse> &ml_coarser_) { ml_coarser = &ml_coarser_; };
 
     RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &schedule) override;
 
@@ -82,13 +90,12 @@ class MultilevelCoarseAndSchedule : public Scheduler<Graph_t> {
         if (improver == nullptr) {
             return "C:" + ml_coarser->getCoarserName() + "-S:" + sched->getScheduleName();
         } else {
-            return "C:" + ml_coarser->getCoarserName() + "-S:" + sched->getScheduleName() +
-                   "-I:" + improver->getScheduleName();
+            return "C:" + ml_coarser->getCoarserName() + "-S:" + sched->getScheduleName() + "-I:" + improver->getScheduleName();
         }
     };
 };
 
-template<typename Graph_t, typename Graph_t_coarse>
+template <typename Graph_t, typename Graph_t_coarse>
 RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::compute_initial_schedule() {
     active_graph = static_cast<long int>(ml_coarser->dag_history.size());
     active_graph--;
@@ -109,32 +116,33 @@ RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::compute_init
     return status;
 }
 
-template<typename Graph_t, typename Graph_t_coarse>
+template <typename Graph_t, typename Graph_t_coarse>
 RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::improve_active_schedule() {
     if (improver) {
-        if (active_instance->getComputationalDag().num_vertices() == 0)
+        if (active_instance->getComputationalDag().num_vertices() == 0) {
             return RETURN_STATUS::OSP_SUCCESS;
+        }
         return improver->improveSchedule(*active_schedule);
     }
     return RETURN_STATUS::OSP_SUCCESS;
 }
 
-template<typename Graph_t, typename Graph_t_coarse>
+template <typename Graph_t, typename Graph_t_coarse>
 RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::expand_active_schedule() {
     assert((active_graph > 0L) && (static_cast<long unsigned>(active_graph) < ml_coarser->dag_history.size()));
 
     std::unique_ptr<BspInstance<Graph_t_coarse>> expanded_instance = std::make_unique<BspInstance<Graph_t_coarse>>(
         *(ml_coarser->dag_history.at(static_cast<std::size_t>(active_graph) - 1)), original_inst->getArchitecture());
-    std::unique_ptr<BspSchedule<Graph_t_coarse>> expanded_schedule =
-        std::make_unique<BspSchedule<Graph_t_coarse>>(*expanded_instance);
+    std::unique_ptr<BspSchedule<Graph_t_coarse>> expanded_schedule
+        = std::make_unique<BspSchedule<Graph_t_coarse>>(*expanded_instance);
 
     for (const auto &node : expanded_instance->getComputationalDag().vertices()) {
         expanded_schedule->setAssignedProcessor(
-            node, active_schedule->assignedProcessor(
-                      ml_coarser->contraction_maps.at(static_cast<std::size_t>(active_graph))->at(node)));
+            node,
+            active_schedule->assignedProcessor(ml_coarser->contraction_maps.at(static_cast<std::size_t>(active_graph))->at(node)));
         expanded_schedule->setAssignedSuperstep(
-            node, active_schedule->assignedSuperstep(
-                      ml_coarser->contraction_maps.at(static_cast<std::size_t>(active_graph))->at(node)));
+            node,
+            active_schedule->assignedSuperstep(ml_coarser->contraction_maps.at(static_cast<std::size_t>(active_graph))->at(node)));
     }
 
     assert(expanded_schedule->satisfiesPrecedenceConstraints());
@@ -157,18 +165,18 @@ RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::expand_activ
     return RETURN_STATUS::OSP_SUCCESS;
 }
 
-template<typename Graph_t, typename Graph_t_coarse>
+template <typename Graph_t, typename Graph_t_coarse>
 RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::expand_active_schedule_to_original_schedule(
     BspSchedule<Graph_t> &schedule) {
     assert(active_graph == 0L);
 
     for (const auto &node : getOriginalInstance()->getComputationalDag().vertices()) {
         schedule.setAssignedProcessor(
-            node, active_schedule->assignedProcessor(
-                      ml_coarser->contraction_maps.at(static_cast<std::size_t>(active_graph))->at(node)));
+            node,
+            active_schedule->assignedProcessor(ml_coarser->contraction_maps.at(static_cast<std::size_t>(active_graph))->at(node)));
         schedule.setAssignedSuperstep(
-            node, active_schedule->assignedSuperstep(
-                      ml_coarser->contraction_maps.at(static_cast<std::size_t>(active_graph))->at(node)));
+            node,
+            active_schedule->assignedSuperstep(ml_coarser->contraction_maps.at(static_cast<std::size_t>(active_graph))->at(node)));
     }
 
     active_graph--;
@@ -180,7 +188,7 @@ RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::expand_activ
     return RETURN_STATUS::OSP_SUCCESS;
 }
 
-template<typename Graph_t, typename Graph_t_coarse>
+template <typename Graph_t, typename Graph_t_coarse>
 RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::run_expansions(BspSchedule<Graph_t> &schedule) {
     assert(active_graph >= 0L && static_cast<long unsigned>(active_graph) == ml_coarser->dag_history.size() - 1);
 
@@ -196,14 +204,14 @@ RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::run_expansio
     return status;
 }
 
-template<typename Graph_t, typename Graph_t_coarse>
+template <typename Graph_t, typename Graph_t_coarse>
 void MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::clear_computation_data() {
     active_graph = -1L;
     active_instance = std::unique_ptr<BspInstance<Graph_t_coarse>>();
     active_schedule = std::unique_ptr<BspSchedule<Graph_t_coarse>>();
 }
 
-template<typename Graph_t, typename Graph_t_coarse>
+template <typename Graph_t, typename Graph_t_coarse>
 RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::computeSchedule(BspSchedule<Graph_t> &schedule) {
     clear_computation_data();
 
@@ -234,4 +242,4 @@ RETURN_STATUS MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>::computeSched
     return status;
 }
 
-} // end namespace osp
+}    // end namespace osp

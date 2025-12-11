@@ -24,16 +24,14 @@ limitations under the License.
 
 namespace osp {
 
-template<typename Graph_t>
+template <typename Graph_t>
 class edge_range_vector_impl {
-
     using directed_edge_descriptor = typename directed_graph_edge_desc_traits<Graph_t>::directed_edge_descriptor;
     using vertex_idx = typename directed_graph_traits<Graph_t>::vertex_idx;
     using iter = typename Graph_t::out_edges_iterator_t;
     const Graph_t &graph;
 
     struct edge_iterator {
-
         vertex_idx current_vertex;
         std::size_t current_edge_idx;
         iter current_edge;
@@ -48,6 +46,7 @@ class edge_range_vector_impl {
         using reference = const value_type &;
 
         edge_iterator() : current_vertex(0u), current_edge_idx(0u), graph(nullptr) {}
+
         edge_iterator(const edge_iterator &other)
             : current_vertex(other.current_vertex), current_edge_idx(other.current_edge_idx), graph(other.graph) {}
 
@@ -61,7 +60,6 @@ class edge_range_vector_impl {
         }
 
         edge_iterator(const Graph_t &graph_) : current_vertex(0u), current_edge_idx(0u), graph(&graph_) {
-
             while (current_vertex != graph->num_vertices()) {
                 if (graph->out_edges(current_vertex).begin() != graph->out_edges(current_vertex).end()) {
                     current_edge = graph->out_edges(current_vertex).begin();
@@ -73,19 +71,14 @@ class edge_range_vector_impl {
 
         edge_iterator(std::size_t current_edge_idx_, const Graph_t &graph_)
             : current_vertex(0u), current_edge_idx(current_edge_idx_), graph(&graph_) {
-
             if (current_edge_idx < graph->num_edges()) {
-
                 std::size_t tmp = 0u;
 
                 if (tmp < current_edge_idx) {
-
                     while (current_vertex != graph->num_vertices()) {
-
                         current_edge = graph->out_edges(current_vertex).begin();
 
                         while (current_edge != graph->out_edges(current_vertex).end()) {
-
                             if (tmp == current_edge_idx) {
                                 break;
                             }
@@ -105,20 +98,18 @@ class edge_range_vector_impl {
         }
 
         const value_type &operator*() const { return *current_edge; }
+
         const value_type *operator->() const { return &(*current_edge); }
 
         // Prefix increment
         edge_iterator &operator++() {
-
             current_edge++;
             current_edge_idx++;
 
             if (current_edge == graph->out_edges(current_vertex).end()) {
-
                 current_vertex++;
 
                 while (current_vertex != graph->num_vertices()) {
-
                     if (graph->out_edges(current_vertex).begin() != graph->out_edges(current_vertex).end()) {
                         current_edge = graph->out_edges(current_vertex).begin();
                         break;
@@ -139,6 +130,7 @@ class edge_range_vector_impl {
         }
 
         inline bool operator==(const edge_iterator &other) const { return current_edge_idx == other.current_edge_idx; }
+
         inline bool operator!=(const edge_iterator &other) const { return current_edge_idx != other.current_edge_idx; }
     };
 
@@ -152,9 +144,8 @@ class edge_range_vector_impl {
     auto size() const { return graph.num_edges(); }
 };
 
-template<typename Graph_t>
+template <typename Graph_t>
 class edge_source_range {
-
     using directed_edge_descriptor = typename directed_graph_edge_desc_traits<Graph_t>::directed_edge_descriptor;
     using vertex_idx = typename directed_graph_traits<Graph_t>::vertex_idx;
     using iter = typename Graph_t::in_edges_iterator_t;
@@ -163,7 +154,6 @@ class edge_source_range {
     const std::vector<directed_edge_descriptor> &edges;
 
     struct source_iterator {
-
         const Graph_t *graph;
         iter current_edge;
 
@@ -204,6 +194,7 @@ class edge_source_range {
         }
 
         inline bool operator==(const source_iterator &other) const { return current_edge == other.current_edge; }
+
         inline bool operator!=(const source_iterator &other) const { return current_edge != other.current_edge; }
     };
 
@@ -218,9 +209,8 @@ class edge_source_range {
     auto size() const { return edges.size(); }
 };
 
-template<typename Graph_t>
+template <typename Graph_t>
 class edge_target_range {
-
     using directed_edge_descriptor = typename directed_graph_edge_desc_traits<Graph_t>::directed_edge_descriptor;
     using vertex_idx = typename directed_graph_traits<Graph_t>::vertex_idx;
     using iter = typename Graph_t::out_edges_iterator_t;
@@ -228,7 +218,6 @@ class edge_target_range {
     const std::vector<directed_edge_descriptor> &edges;
 
     struct target_iterator {
-
         const Graph_t *graph;
         iter current_edge;
 
@@ -240,6 +229,7 @@ class edge_target_range {
         using reference = const value_type &;
 
         target_iterator() : graph(nullptr) {}
+
         target_iterator(const target_iterator &other) : graph(other.graph), current_edge(other.current_edge) {}
 
         target_iterator &operator=(const target_iterator &other) {
@@ -268,6 +258,7 @@ class edge_target_range {
         }
 
         inline bool operator==(const target_iterator &other) const { return current_edge == other.current_edge; }
+
         inline bool operator!=(const target_iterator &other) const { return current_edge != other.current_edge; }
     };
 
@@ -282,4 +273,4 @@ class edge_target_range {
     auto size() const { return edges.size(); }
 };
 
-} // namespace osp
+}    // namespace osp

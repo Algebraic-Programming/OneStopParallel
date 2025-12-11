@@ -18,29 +18,31 @@ limitations under the License.
 
 #pragma once
 
+#include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <sstream>
 #include <string>
 #include <vector>
-#include <limits>
-#include <filesystem>
 
-#include "osp/concepts/computational_dag_concept.hpp"
 #include "osp/auxiliary/io/filepath_checker.hpp"
+#include "osp/concepts/computational_dag_concept.hpp"
 
 namespace osp {
 namespace file_reader {
 
-template<typename Graph_t>
-bool readComputationalDagMartixMarketFormat(std::ifstream& infile, Graph_t& graph) {
+template <typename Graph_t>
+bool readComputationalDagMartixMarketFormat(std::ifstream &infile, Graph_t &graph) {
     using vertex_t = vertex_idx_t<Graph_t>;
 
     std::string line;
 
     // Skip comments or empty lines (robustly)
     while (std::getline(infile, line)) {
-        if (line.empty() || line[0] == '%') continue;
+        if (line.empty() || line[0] == '%') {
+            continue;
+        }
 
         // Null byte check
         if (line.find('\0') != std::string::npos) {
@@ -52,7 +54,7 @@ bool readComputationalDagMartixMarketFormat(std::ifstream& infile, Graph_t& grap
             std::cerr << "Error: Line too long, possible malformed or malicious file.\n";
             return false;
         }
-        break; // We found the actual header line
+        break;    // We found the actual header line
     }
 
     if (infile.eof()) {
@@ -63,8 +65,7 @@ bool readComputationalDagMartixMarketFormat(std::ifstream& infile, Graph_t& grap
     int M_row = 0, M_col = 0, nEntries = 0;
 
     std::istringstream header_stream(line);
-    if (!(header_stream >> M_row >> M_col >> nEntries) ||
-        M_row <= 0 || M_col <= 0 || M_row != M_col) {
+    if (!(header_stream >> M_row >> M_col >> nEntries) || M_row <= 0 || M_col <= 0 || M_row != M_col) {
         std::cerr << "Error: Invalid header or non-square matrix.\n";
         return false;
     }
@@ -84,7 +85,9 @@ bool readComputationalDagMartixMarketFormat(std::ifstream& infile, Graph_t& grap
 
     int entries_read = 0;
     while (entries_read < nEntries && std::getline(infile, line)) {
-        if (line.empty() || line[0] == '%') continue;
+        if (line.empty() || line[0] == '%') {
+            continue;
+        }
         if (line.size() > MAX_LINE_LENGTH) {
             std::cerr << "Error: Line too long.\n";
             return false;
@@ -99,7 +102,8 @@ bool readComputationalDagMartixMarketFormat(std::ifstream& infile, Graph_t& grap
             return false;
         }
 
-        row -= 1; col -= 1; // Convert to 0-based
+        row -= 1;
+        col -= 1;    // Convert to 0-based
 
         if (row < 0 || col < 0 || row >= M_row || col >= M_col) {
             std::cerr << "Error: Matrix entry out of bounds.\n";
@@ -145,8 +149,8 @@ bool readComputationalDagMartixMarketFormat(std::ifstream& infile, Graph_t& grap
     return true;
 }
 
-template<typename Graph_t>
-bool readComputationalDagMartixMarketFormat(const std::string& filename, Graph_t& graph) {
+template <typename Graph_t>
+bool readComputationalDagMartixMarketFormat(const std::string &filename, Graph_t &graph) {
     // Ensure the file is .mtx format
     if (std::filesystem::path(filename).extension() != ".mtx") {
         std::cerr << "Error: Only .mtx files are accepted.\n";
@@ -177,12 +181,9 @@ bool readComputationalDagMartixMarketFormat(const std::string& filename, Graph_t
     return readComputationalDagMartixMarketFormat(infile, graph);
 }
 
-
 // bool readProblem(const std::string &filename, DAG &G, BSPproblem &params, bool NoNUMA = true);
 
 // std::pair<bool, BspInstance> readBspInstance(const std::string &filename);
-
-
 
 // std::pair<bool, ComputationalDag>
 // readComputationalDagMartixMarketFormat(const std::string &filename,
@@ -205,7 +206,6 @@ bool readComputationalDagMartixMarketFormat(const std::string& filename, Graph_t
 // std::pair<bool, BspArchitecture> readBspArchitecture(const std::string &filename);
 
 // std::pair<bool, BspArchitecture> readBspArchitecture(std::ifstream &infile);
-
 
 // std::pair<bool, BspSchedule> readBspSchdeuleTxtFormat(const BspInstance &instance, const std::string &filename);
 
@@ -243,6 +243,6 @@ bool readComputationalDagMartixMarketFormat(const std::string& filename, Graph_t
 //  */
 // std::pair<bool, BspScheduleRecomp> extractBspScheduleRecomp(std::ifstream &infile, const BspInstance &instance);
 
-} // namespace FileReader
+}    // namespace file_reader
 
-} // namespace osp
+}    // namespace osp

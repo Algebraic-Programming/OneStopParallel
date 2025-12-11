@@ -18,29 +18,36 @@ limitations under the License.
 
 #pragma once
 
+#include <cassert>
 #include <type_traits>
 #include <utility>
 #include <vector>
 
 namespace osp {
 
-template<typename T, typename Ind>
+template <typename T, typename Ind>
 void permute_inplace(std::vector<T> &vec, std::vector<Ind> &perm) {
     static_assert(std::is_integral_v<Ind>);
     static_assert(std::is_unsigned_v<Ind>);
 
     assert(vec.size() == perm.size());
-    assert([&]() -> bool{
+    assert([&]() -> bool {
         std::vector<bool> found(perm.size(), false);
         for (const Ind &val : perm) {
-            if (val < 0) return false;
-            if (val >= perm.size()) return false;
-            if (found[val]) return false;
+            if (val < 0) {
+                return false;
+            }
+            if (val >= perm.size()) {
+                return false;
+            }
+            if (found[val]) {
+                return false;
+            }
             found[val] = true;
         }
         return true;
     }());
-    assert(reinterpret_cast<void*>(&vec) != reinterpret_cast<void*>(&perm));
+    assert(reinterpret_cast<void *>(&vec) != reinterpret_cast<void *>(&perm));
 
     for (Ind i = 0; i < perm.size(); ++i) {
         while (perm[i] != i) {
@@ -50,26 +57,31 @@ void permute_inplace(std::vector<T> &vec, std::vector<Ind> &perm) {
     }
 }
 
-template<typename T, typename Ind>
+template <typename T, typename Ind>
 void inverse_permute_inplace(std::vector<T> &vec, std::vector<Ind> &perm) {
     static_assert(std::is_integral_v<Ind>);
     static_assert(std::is_unsigned_v<Ind>);
 
     assert(vec.size() == perm.size());
-    assert([&]() -> bool{
+    assert([&]() -> bool {
         std::vector<bool> found(perm.size(), false);
         for (const Ind &val : perm) {
-            if (val < 0) return false;
-            if (val >= perm.size()) return false;
-            if (found[val]) return false;
+            if (val < 0) {
+                return false;
+            }
+            if (val >= perm.size()) {
+                return false;
+            }
+            if (found[val]) {
+                return false;
+            }
             found[val] = true;
         }
         return true;
     }());
-    assert(reinterpret_cast<void*>(&vec) != reinterpret_cast<void*>(&perm));
+    assert(reinterpret_cast<void *>(&vec) != reinterpret_cast<void *>(&perm));
 
     for (Ind i = 0; i < perm.size(); ++i) {
-
         Ind j = i;
         while (i != perm[i]) {
             std::swap(vec[j], vec[perm[i]]);
@@ -79,4 +91,4 @@ void inverse_permute_inplace(std::vector<T> &vec, std::vector<Ind> &perm) {
     }
 }
 
-} // namespace osp
+}    // namespace osp

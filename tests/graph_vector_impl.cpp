@@ -30,7 +30,6 @@ limitations under the License.
 using namespace osp;
 
 computational_dag_vector_impl_def_t constr_graph_1() {
-
     computational_dag_vector_impl_def_t graph;
 
     using vertex_idx = computational_dag_vector_impl_def_t::vertex_idx;
@@ -59,7 +58,6 @@ computational_dag_vector_impl_def_t constr_graph_1() {
 }
 
 BOOST_AUTO_TEST_CASE(test_empty_dag) {
-
     computational_dag_vector_impl_def_t graph;
     BOOST_CHECK_EQUAL(graph.num_edges(), 0);
     BOOST_CHECK_EQUAL(graph.num_vertices(), 0);
@@ -73,7 +71,6 @@ BOOST_AUTO_TEST_CASE(test_empty_dag) {
 }
 
 BOOST_AUTO_TEST_CASE(test_dag) {
-
     const computational_dag_vector_impl_def_t graph = constr_graph_1();
 
     using vertex_idx = computational_dag_vector_impl_def_t::vertex_idx;
@@ -83,14 +80,31 @@ BOOST_AUTO_TEST_CASE(test_dag) {
 
     std::vector<vertex_idx> vertices{0, 1, 2, 3, 4, 5, 6, 7};
 
-    std::vector<std::vector<vertex_idx>> out_neighbors{{1, 2, 3}, {4, 6}, {4, 5}, {7}, {7}, {}, {}, {}};
+    std::vector<std::vector<vertex_idx>> out_neighbors{
+        {1, 2, 3},
+        {4, 6},
+        {4, 5},
+        {7},
+        {7},
+        {},
+        {},
+        {}
+    };
 
-    std::vector<std::vector<vertex_idx>> in_neighbors{{}, {0}, {0}, {0}, {1, 2}, {2}, {1}, {4, 3}};
+    std::vector<std::vector<vertex_idx>> in_neighbors{
+        {},
+        {0},
+        {0},
+        {0},
+        {1, 2},
+        {2},
+        {1},
+        {4, 3}
+    };
 
     size_t idx = 0;
 
     for (const auto &v : graph.vertices()) {
-
         BOOST_CHECK_EQUAL(v, vertices[idx++]);
 
         size_t i = 0;
@@ -105,35 +119,27 @@ BOOST_AUTO_TEST_CASE(test_dag) {
 
         i = 0;
         for (const auto &e : out_edges(v, graph)) {
-
             BOOST_CHECK_EQUAL(target(e, graph), out_neighbors[v][i++]);
-
         }
 
         i = 0;
         for (const auto &e : in_edges(v, graph)) {
-
             BOOST_CHECK_EQUAL(source(e, graph), in_neighbors[v][i++]);
-
         }
 
         BOOST_CHECK_EQUAL(graph.in_degree(v), in_neighbors[v].size());
         BOOST_CHECK_EQUAL(graph.out_degree(v), out_neighbors[v].size());
     }
 
-
     unsigned count = 0;
-    for (const auto & e: edges(graph)) {
-        
+    for (const auto &e : edges(graph)) {
         std::cout << e.source << " -> " << e.target << std::endl;
         count++;
     }
     BOOST_CHECK_EQUAL(count, 9);
-
 }
 
 BOOST_AUTO_TEST_CASE(test_constr_dag) {
-
     computational_dag_vector_impl_def_int_t graph;
 
     graph.add_vertex(1, 2, 3);
@@ -206,22 +212,38 @@ BOOST_AUTO_TEST_CASE(test_constr_dag) {
 }
 
 BOOST_AUTO_TEST_CASE(test_dag_vector_adapter) {
-
     std::vector<int> vertices{0, 1, 2, 3, 4, 5, 6, 7};
 
-    std::vector<std::vector<int>> out_neighbors{{1, 2, 3}, {4, 6}, {4, 5}, {7}, {7}, {}, {}, {}};
+    std::vector<std::vector<int>> out_neighbors{
+        {1, 2, 3},
+        {4, 6},
+        {4, 5},
+        {7},
+        {7},
+        {},
+        {},
+        {}
+    };
 
-    std::vector<std::vector<int>> in_neighbors{{}, {0}, {0}, {0}, {1, 2}, {2}, {1}, {4, 3}};
+    std::vector<std::vector<int>> in_neighbors{
+        {},
+        {0},
+        {0},
+        {0},
+        {1, 2},
+        {2},
+        {1},
+        {4, 3}
+    };
 
     using v_impl = cdag_vertex_impl<unsigned, int, int, int, unsigned>;
-    using graph_t = dag_vector_adapter<v_impl,int>;
+    using graph_t = dag_vector_adapter<v_impl, int>;
 
     graph_t graph(out_neighbors, in_neighbors);
 
     size_t idx = 0;
 
     for (const auto &v : graph.vertices()) {
-
         BOOST_CHECK_EQUAL(v, vertices[idx++]);
 
         unsigned vv = static_cast<unsigned>(v);
@@ -238,12 +260,12 @@ BOOST_AUTO_TEST_CASE(test_dag_vector_adapter) {
 
         i = 0;
         for (const auto &e : out_edges(v, graph)) {
-            BOOST_CHECK_EQUAL(target(e,graph), out_neighbors[vv][i++]);
+            BOOST_CHECK_EQUAL(target(e, graph), out_neighbors[vv][i++]);
         }
 
         i = 0;
         for (const auto &e : in_edges(v, graph)) {
-            BOOST_CHECK_EQUAL(source(e,graph), in_neighbors[vv][i++]);
+            BOOST_CHECK_EQUAL(source(e, graph), in_neighbors[vv][i++]);
         }
 
         BOOST_CHECK_EQUAL(graph.in_degree(v), in_neighbors[vv].size());
@@ -251,8 +273,7 @@ BOOST_AUTO_TEST_CASE(test_dag_vector_adapter) {
     }
 
     unsigned count = 0;
-    for (const auto & e: edges(graph)) {
-        
+    for (const auto &e : edges(graph)) {
         std::cout << e.source << " -> " << e.target << std::endl;
         count++;
     }

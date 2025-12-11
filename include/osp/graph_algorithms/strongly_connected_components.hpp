@@ -18,11 +18,12 @@ limitations under the License.
 
 #pragma once
 
-#include "osp/concepts/directed_graph_concept.hpp"
 #include <algorithm>
 #include <limits>
 #include <stack>
 #include <vector>
+
+#include "osp/concepts/directed_graph_concept.hpp"
 
 namespace osp {
 
@@ -76,8 +77,7 @@ std::vector<std::vector<vertex_idx_t<Graph_t>>> strongly_connected_components(co
                     ++child_iter;
 
                     if (ids[to] == unvisited) {
-                        dfs_stack.emplace_back(
-                            to, std::make_pair(graph.children(to).begin(), graph.children(to).end()));
+                        dfs_stack.emplace_back(to, std::make_pair(graph.children(to).begin(), graph.children(to).end()));
                         s.push(to);
                         on_stack[to] = true;
                         ids[to] = low[to] = id_counter++;
@@ -92,8 +92,9 @@ std::vector<std::vector<vertex_idx_t<Graph_t>>> strongly_connected_components(co
                             s.pop();
                             on_stack[node] = false;
                             scc.push_back(node);
-                            if (node == at)
+                            if (node == at) {
                                 break;
+                            }
                         }
                         sccs.emplace_back(std::move(scc));
                     }
@@ -112,4 +113,4 @@ std::vector<std::vector<vertex_idx_t<Graph_t>>> strongly_connected_components(co
     return sccs;
 }
 
-} // namespace osp
+}    // namespace osp

@@ -26,7 +26,6 @@ limitations under the License.
 using graph_t = osp::computational_dag_edge_idx_vector_impl_def_int_t;
 
 int main(int argc, char *argv[]) {
-
     osp::BspScheduleRecompTestSuiteRunner<graph_t> runner;
     return runner.run(argc, argv);
 
