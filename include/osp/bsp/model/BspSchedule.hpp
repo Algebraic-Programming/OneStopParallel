@@ -192,14 +192,14 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
      *
      * @return A reference to the BspInstance for the schedule.
      */
-    [[nodiscard]] const BspInstance<GraphT> &getInstance() const override { return *instance_; }
+    [[nodiscard]] const BspInstance<GraphT> &GetInstance() const override { return *instance_; }
 
     /**
      * @brief Returns the number of supersteps in the schedule.
      *
      * @return The number of supersteps in the schedule.
      */
-    [[nodiscard]] unsigned numberOfSupersteps() const override { return numberOfSupersteps_; }
+    [[nodiscard]] unsigned NumberOfSupersteps() const override { return numberOfSupersteps_; }
 
     /**
      * @brief Updates the number of supersteps based on the current assignment.

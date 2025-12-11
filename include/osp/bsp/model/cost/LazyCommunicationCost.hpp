@@ -59,8 +59,8 @@ template <typename GraphT>
 void ComputeLazyCommunicationCosts(const BspSchedule<GraphT> &schedule,
                                    std::vector<std::vector<VCommwT<GraphT>>> &rec,
                                    std::vector<std::vector<VCommwT<GraphT>>> &send) {
-    ComputeLazyCommunicationCosts(schedule.getInstance(),
-                                  schedule.numberOfSupersteps(),
+    ComputeLazyCommunicationCosts(schedule.GetInstance(),
+                                  schedule.NumberOfSupersteps(),
                                   schedule.AssignedProcessors(),
                                   schedule.AssignedSupersteps(),
                                   schedule.GetStaleness(),
@@ -77,8 +77,8 @@ struct LazyCommunicationCost {
     using CostType = VWorkwT<GraphT>;
 
     CostType operator()(const BspSchedule<GraphT> &schedule) const {
-        const auto &numberOfProcessors = schedule.getInstance().NumberOfProcessors();
-        const auto &numberOfSupersteps = schedule.numberOfSupersteps();
+        const auto &numberOfProcessors = schedule.GetInstance().NumberOfProcessors();
+        const auto &numberOfSupersteps = schedule.NumberOfSupersteps();
 
         std::vector<std::vector<VCommwT<GraphT>>> rec(numberOfProcessors, std::vector<VCommwT<GraphT>>(numberOfSupersteps, 0));
         std::vector<std::vector<VCommwT<GraphT>>> send(numberOfProcessors, std::vector<VCommwT<GraphT>>(numberOfSupersteps, 0));
@@ -92,7 +92,7 @@ struct LazyCommunicationCost {
             commCosts += stepCommCost;
 
             if (stepCommCost > 0) {
-                commCosts += schedule.getInstance().SynchronisationCosts();
+                commCosts += schedule.GetInstance().SynchronisationCosts();
             }
         }
 

@@ -65,7 +65,7 @@ class SarkarMul : public MultilevelCoarser<GraphT, GraphTCoarse> {
     RETURN_STATUS RunSingleContractionMode(VertexIdxT<GraphT> &diff_vertices);
     RETURN_STATUS RunBufferMerges();
     RETURN_STATUS RunContractions(VWorkwT<GraphT> commCost);
-    RETURN_STATUS run_contractions() override;
+    RETURN_STATUS RunContractions() override;
 
   public:
     void SetParameters(SarkarParams::MulParameters<VWorkwT<GraphT>> mlParams) {
@@ -277,7 +277,7 @@ RETURN_STATUS SarkarMul<GraphT, GraphTCoarse>::RunBufferMerges() {
 
         if (diff > 0) {
             noChange = 0;
-            status = std::max(status, run_contractions(mlParams_.commCostVec.back()));
+            status = std::max(status, RunContractions(mlParams_.commCostVec.back()));
         } else {
             noChange++;
         }
@@ -293,7 +293,7 @@ RETURN_STATUS SarkarMul<GraphT, GraphTCoarse>::RunContractions() {
     RETURN_STATUS status = RETURN_STATUS::OSP_SUCCESS;
 
     for (const VWorkwT<GraphT> commCost : mlParams_.commCostVec) {
-        status = std::max(status, run_contractions(commCost));
+        status = std::max(status, RunContractions(commCost));
     }
 
     if (mlParams_.bufferMergeMode != SarkarParams::BufferMergeMode::OFF) {

@@ -56,7 +56,7 @@ struct IsDirectedGraph : std::false_type {};
 
 template <typename T>
 struct IsDirectedGraph<T,
-                       std::void_t<typename DirectedGraphTraits<T>::vertex_idx,
+                       std::void_t<typename DirectedGraphTraits<T>::VertexIdx,
                                    decltype(std::declval<T>().Vertices()),
                                    decltype(std::declval<T>().NumVertices()),
                                    decltype(std::declval<T>().NumEdges()),

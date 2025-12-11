@@ -40,7 +40,7 @@ class SquashAMul : public MultilevelCoarser<GraphT, GraphTCoarse> {
 
     void UpdateParams();
 
-    RETURN_STATUS run_contractions() override;
+    RETURN_STATUS RunContractions() override;
 
   public:
     void SetParams(SquashAParams::Parameters params) { params_ = params; };

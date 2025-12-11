@@ -44,7 +44,7 @@ class GreedyRecomputer {
      */
     virtual ~GreedyRecomputer() = default;
 
-    RETURN_STATUS computeRecompSchedule(BspScheduleCS<GraphT> &initial_schedule, BspScheduleRecomp<GraphT> &out_schedule) const;
+    RETURN_STATUS ComputeRecompSchedule(BspScheduleCS<GraphT> &initial_schedule, BspScheduleRecomp<GraphT> &out_schedule) const;
 };
 
 template <typename GraphT>

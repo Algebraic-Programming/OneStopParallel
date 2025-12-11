@@ -242,7 +242,7 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
      * @return A pair containing the return status and the computed BspSchedule.
      */
     RETURN_STATUS ComputeSchedule(BspSchedule<GraphT> &schedule) override {
-        const auto &instance = schedule.getInstance();
+        const auto &instance = schedule.GetInstance();
 
         for (const auto &v : instance.GetComputationalDag().Vertices()) {
             schedule.SetAssignedProcessor(v, std::numeric_limits<unsigned>::max());
@@ -286,7 +286,7 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
         std::set<std::pair<VWorkwT<GraphT>, VertexType>> finishTimes;
         finishTimes.emplace(0, std::numeric_limits<VertexType>::max());
 
-        for (const auto &v : source_vertices_view(g)) {
+        for (const auto &v : SourceVerticesView(g)) {
             ready.insert(v);
             allReady.insert(v);
             ++nrReadyNodesPerType[g.VertexType(v)];

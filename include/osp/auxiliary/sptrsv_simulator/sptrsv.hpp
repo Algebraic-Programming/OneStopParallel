@@ -416,7 +416,7 @@ class Sptrsv {
             for (unsigned step = 0; step < numSupersteps; step++) {
                 const size_t proc = static_cast<size_t>(omp_get_thread_num());
                 const UVertType upperLimit = stepProcPtr[step][proc] + stepProcNum[step][proc];
-                for (UVertType rowIdx = stepProcPtr[step][proc]; rowIdx < upperLimit; rowIdx++) {
+                for (UVertType rowIdx_ = stepProcPtr[step][proc]; rowIdx_ < upperLimit; rowIdx_++) {
                     for (UVertType i = rowPtr[rowIdx]; i < rowPtr[rowIdx + 1] - 1; i++) {
                         x[rowIdx] -= val[i] * x[colIdx[i]];
                     }
@@ -435,7 +435,7 @@ class Sptrsv {
             for (unsigned step = 0; step < numSupersteps; step++) {
                 const size_t proc = static_cast<size_t>(omp_get_thread_num());
                 const UVertType upperLimit = stepProcPtr[step][proc] + stepProcNum[step][proc];
-                for (UVertType rowIdx = stepProcPtr[step][proc]; rowIdx < upperLimit; rowIdx++) {
+                for (UVertType rowIdx_ = stepProcPtr[step][proc]; rowIdx_ < upperLimit; rowIdx_++) {
                     x[rowIdx] = b[rowIdx];
                     for (UVertType i = rowPtr[rowIdx]; i < rowPtr[rowIdx + 1] - 1; i++) {
                         x[rowIdx] -= val[i] * x[colIdx[i]];

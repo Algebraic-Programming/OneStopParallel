@@ -813,7 +813,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
      *         agree with those of the initial schedule's instance
      */
     virtual RETURN_STATUS ComputeSchedule(BspSchedule<GraphT> &schedule) override {
-        BspScheduleCS<GraphT> scheduleCs(schedule.getInstance());
+        BspScheduleCS<GraphT> scheduleCs(schedule.GetInstance());
         RETURN_STATUS status = ComputeScheduleCs(scheduleCs);
         if (status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND) {
             schedule = std::move(scheduleCs);
@@ -948,7 +948,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
      *         the initial solution.
      */
     void SetMaxNumberOfSupersteps(unsigned max) {
-        if (useInitialSchedule_ && max < initialSchedule_->numberOfSupersteps()) {
+        if (useInitialSchedule_ && max < initialSchedule_->NumberOfSupersteps()) {
             throw std::invalid_argument("Invalid Argument while setting "
                                         "max number of supersteps to a value "
                                         "which is less than the number of "

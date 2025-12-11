@@ -209,7 +209,7 @@ class SquashA : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
     }
 
   public:
-    virtual std::vector<std::vector<VertexIdxT<GraphTIn>>> generate_vertex_expansion_map(const GraphTIn &dag_in) override;
+    virtual std::vector<std::vector<VertexIdxT<GraphTIn>>> GenerateVertexExpansionMap(const GraphTIn &dag_in) override;
 
     SquashA(SquashAParams::Parameters params = SquashAParams::Parameters()) : params_(params) {};
 

@@ -146,13 +146,13 @@ class EdgeView {
 
     explicit EdgeView(const GraphT &graph) : graph_(graph) {}
 
-    [[nodiscard]] auto Begin() const { return DirEdgeIterator(graph_); }
+    [[nodiscard]] auto begin() const { return DirEdgeIterator(graph_); }
 
-    [[nodiscard]] auto Cbegin() const { return DirEdgeIterator(graph_); }
+    [[nodiscard]] auto cbegin() const { return DirEdgeIterator(graph_); }
 
-    [[nodiscard]] auto End() const { return DirEdgeIterator(graph_.NumEdges(), graph_); }
+    [[nodiscard]] auto end() const { return DirEdgeIterator(graph_.NumEdges(), graph_); }
 
-    [[nodiscard]] auto Cend() const { return DirEdgeIterator(graph_.NumEdges(), graph_); }
+    [[nodiscard]] auto cend() const { return DirEdgeIterator(graph_.NumEdges(), graph_); }
 
     [[nodiscard]] auto Size() const { return graph_.NumEdges(); }
 
@@ -249,7 +249,7 @@ class IncidentEdgeView {
 
     IncidentEdgeView(const GraphT &graph, VertexIdxT<GraphT> u) : graph_(graph), anchorVertex_(u) {}
 
-    [[nodiscard]] auto Begin() const {
+    [[nodiscard]] auto begin() const {
         if constexpr (IsOutgoing) {
             return Iterator(anchorVertex_, graph_.Children(anchorVertex_).begin());
         } else {
@@ -257,9 +257,9 @@ class IncidentEdgeView {
         }
     }
 
-    [[nodiscard]] auto Cbegin() const { return Begin(); }
+    [[nodiscard]] auto cbegin() const { return begin(); }
 
-    [[nodiscard]] auto End() const {
+    [[nodiscard]] auto end() const {
         if constexpr (IsOutgoing) {
             return Iterator(anchorVertex_, graph_.Children(anchorVertex_).end());
         } else {
@@ -267,7 +267,7 @@ class IncidentEdgeView {
         }
     }
 
-    [[nodiscard]] auto Cend() const { return End(); }
+    [[nodiscard]] auto cend() const { return end(); }
 
     [[nodiscard]] auto Size() const {
         if constexpr (IsOutgoing) {

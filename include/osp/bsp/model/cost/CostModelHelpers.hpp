@@ -57,7 +57,7 @@ template <typename GraphT>
 std::vector<VCommwT<GraphT>> ComputeMaxCommPerStep(const BspSchedule<GraphT> &schedule,
                                                    const std::vector<std::vector<VCommwT<GraphT>>> &rec,
                                                    const std::vector<std::vector<VCommwT<GraphT>>> &send) {
-    return ComputeMaxCommPerStep(schedule.getInstance(), schedule.numberOfSupersteps(), rec, send);
+    return ComputeMaxCommPerStep(schedule.GetInstance(), schedule.NumberOfSupersteps(), rec, send);
 }
 
 template <typename GraphT>
@@ -107,7 +107,7 @@ VWorkwT<GraphT> ComputeWorkCosts(const BspInstance<GraphT> &instance,
 template <typename GraphT>
 VWorkwT<GraphT> ComputeWorkCosts(const BspSchedule<GraphT> &schedule) {
     return ComputeWorkCosts(
-        schedule.getInstance(), schedule.numberOfSupersteps(), schedule.AssignedProcessors(), schedule.AssignedSupersteps());
+        schedule.GetInstance(), schedule.NumberOfSupersteps(), schedule.AssignedProcessors(), schedule.AssignedSupersteps());
 }
 
 }    // namespace cost_helpers

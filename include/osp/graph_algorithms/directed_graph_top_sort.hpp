@@ -399,9 +399,9 @@ class BfsTopSortView {
   public:
     BfsTopSortView(const GraphT &graph) : graph_(graph) {}
 
-    auto Begin() { return TsIterator(graph_, vertexContainer_, 0); }
+    auto begin() { return TsIterator(graph_, vertexContainer_, 0); }
 
-    auto End() { return TsIterator(graph_, vertexContainer_, graph_.NumVertices()); }
+    auto end() { return TsIterator(graph_, vertexContainer_, graph_.NumVertices()); }
 };
 
 template <typename GraphT>

@@ -179,21 +179,21 @@ class IntegralRange {
      */
     constexpr IntegralRange(T start, T end) noexcept : start_(start), finish_(end) {}
 
-    [[nodiscard]] constexpr IntegralIterator Begin() const noexcept { return IntegralIterator(start_); }
+    [[nodiscard]] constexpr IntegralIterator begin() const noexcept { return IntegralIterator(start_); }
 
-    [[nodiscard]] constexpr IntegralIterator Cbegin() const noexcept { return IntegralIterator(start_); }
+    [[nodiscard]] constexpr IntegralIterator cbegin() const noexcept { return IntegralIterator(start_); }
 
-    [[nodiscard]] constexpr IntegralIterator End() const noexcept { return IntegralIterator(finish_); }
+    [[nodiscard]] constexpr IntegralIterator end() const noexcept { return IntegralIterator(finish_); }
 
-    [[nodiscard]] constexpr IntegralIterator Cend() const noexcept { return IntegralIterator(finish_); }
+    [[nodiscard]] constexpr IntegralIterator cend() const noexcept { return IntegralIterator(finish_); }
 
-    [[nodiscard]] constexpr ReverseIntegralIterator Rbegin() const noexcept { return ReverseIntegralIterator(End()); }
+    [[nodiscard]] constexpr ReverseIntegralIterator rbegin() const noexcept { return ReverseIntegralIterator(end()); }
 
-    [[nodiscard]] constexpr ReverseIntegralIterator Crbegin() const noexcept { return ReverseIntegralIterator(Cend()); }
+    [[nodiscard]] constexpr ReverseIntegralIterator crbegin() const noexcept { return ReverseIntegralIterator(cend()); }
 
-    [[nodiscard]] constexpr ReverseIntegralIterator Rend() const noexcept { return ReverseIntegralIterator(Begin()); }
+    [[nodiscard]] constexpr ReverseIntegralIterator rend() const noexcept { return ReverseIntegralIterator(begin()); }
 
-    [[nodiscard]] constexpr ReverseIntegralIterator Crend() const noexcept { return ReverseIntegralIterator(Cbegin()); }
+    [[nodiscard]] constexpr ReverseIntegralIterator crend() const noexcept { return ReverseIntegralIterator(cbegin()); }
 
     /**
      * @brief Returns the number of elements in the range.

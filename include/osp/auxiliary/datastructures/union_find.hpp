@@ -37,8 +37,8 @@ struct UnionFindObject {
     WorkwT weight;
     MemwT memory;
 
-    explicit UnionFindObject(const T &name, IndexT parentIndex, WorkwT weight_ = 0, MemwT memory_ = 0)
-        : name(name), parentIndex(parentIndex), weight(weight_), memory(memory_) {
+    explicit UnionFindObject(const T &name_, IndexT parentIndex_, WorkwT weight_ = 0, MemwT memory_ = 0)
+        : name(name_), parentIndex(parentIndex_), weight(weight_), memory(memory_) {
         rank = 1;
     }
 

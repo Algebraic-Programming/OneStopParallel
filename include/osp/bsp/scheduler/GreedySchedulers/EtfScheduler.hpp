@@ -258,7 +258,7 @@ class EtfScheduler : public Scheduler<GraphT> {
      * @return A pair containing the return status and the computed BspSchedule object.
      */
     virtual RETURN_STATUS ComputeSchedule(BspSchedule<GraphT> &bspSchedule) override {
-        const auto &instance = bspSchedule.getInstance();
+        const auto &instance = bspSchedule.GetInstance();
 
         if constexpr (useMemoryConstraint) {
             memoryConstraint_.Initialize(instance);
@@ -282,7 +282,7 @@ class EtfScheduler : public Scheduler<GraphT> {
 
         std::set<TvPair> ready;
 
-        for (const auto &v : source_vertices_view(instance.GetComputationalDag())) {
+        for (const auto &v : SourceVerticesView(instance.GetComputationalDag())) {
             ready.insert({bl[v], v});
         }
 

@@ -168,9 +168,9 @@ class SourceVerticesView {
   public:
     SourceVerticesView(const GraphT &graph) : graph_(graph) {}
 
-    auto Begin() const { return SourceIterator(graph_, graph_.Vertices().begin()); }
+    auto begin() const { return SourceIterator(graph_, graph_.Vertices().begin()); }
 
-    auto End() const { return SourceIterator(graph_, graph_.Vertices().end()); }
+    auto end() const { return SourceIterator(graph_, graph_.Vertices().end()); }
 
     auto Size() const { return graph_.NumVertices(); }
 };
@@ -197,9 +197,9 @@ class SinkVerticesView {
   public:
     SinkVerticesView(const GraphT &graph) : graph_(graph) {}
 
-    auto Begin() const { return SinkIterator(graph_, graph_.Vertices().begin()); }
+    auto begin() const { return SinkIterator(graph_, graph_.Vertices().begin()); }
 
-    auto End() const { return SinkIterator(graph_, graph_.Vertices().end()); }
+    auto end() const { return SinkIterator(graph_, graph_.Vertices().end()); }
 
     auto Size() const { return graph_.NumVertices(); }
 };
@@ -355,9 +355,9 @@ class BfsView {
   public:
     BfsView(const GraphT &graph, const VertexIdxT<GraphT> &start) : graph_(graph), startVertex_(start) {}
 
-    auto Begin() const { return BfsIterator(graph_, startVertex_); }
+    auto begin() const { return BfsIterator(graph_, startVertex_); }
 
-    auto End() const { return BfsIterator(graph_, graph_.NumVertices()); }
+    auto end() const { return BfsIterator(graph_, graph_.NumVertices()); }
 
     auto Size() const { return graph_.NumVertices(); }
 };
@@ -395,9 +395,9 @@ class DfsView {
   public:
     DfsView(const GraphT &graph, const VertexIdxT<GraphT> &start) : graph_(graph), startVertex_(start) {}
 
-    auto Begin() const { return DfsIterator(graph_, startVertex_); }
+    auto begin() const { return DfsIterator(graph_, startVertex_); }
 
-    auto End() const { return DfsIterator(graph_, graph_.NumVertices()); }
+    auto end() const { return DfsIterator(graph_, graph_.NumVertices()); }
 
     auto Size() const { return graph_.NumVertices(); }
 };
@@ -429,9 +429,9 @@ class BfsReverseView {
   public:
     BfsReverseView(const GraphT &graph, const VertexIdxT<GraphT> &start) : graph_(graph), startVertex_(start) {}
 
-    auto Begin() const { return BfsIterator(graph_, startVertex_); }
+    auto begin() const { return BfsIterator(graph_, startVertex_); }
 
-    auto End() const { return BfsIterator(graph_, graph_.NumVertices()); }
+    auto end() const { return BfsIterator(graph_, graph_.NumVertices()); }
 
     auto Size() const { return graph_.NumVertices(); }
 };

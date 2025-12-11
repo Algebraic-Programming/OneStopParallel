@@ -33,8 +33,8 @@ template <typename VertexWorkwT, typename VertexCommwT, typename VertexMemwT, ty
 struct BoostVertex {
     BoostVertex() : workWeight(0), communicationWeight(0), memoryWeight(0), nodeType(0) {}
 
-    BoostVertex(VertexWorkwT workWeight, VertexCommwT communicationWeight, VertexMemwT memoryWeight, VertexTypeT nodeType = 0)
-        : workWeight(workWeight), communicationWeight(communicationWeight), memoryWeight(memoryWeight), nodeType(nodeType) {}
+    BoostVertex(VertexWorkwT workWeight_, VertexCommwT communicationWeight_, VertexMemwT memoryWeight_, VertexTypeT nodeType_ = 0)
+        : workWeight(workWeight_), communicationWeight(communicationWeight_), memoryWeight(memoryWeight_), nodeType(nodeType_) {}
 
     VertexWorkwT workWeight;
     VertexCommwT communicationWeight;
@@ -49,7 +49,7 @@ template <typename EdgeCommwT>
 struct BoostEdge {
     BoostEdge() : communicationWeight(0) {}
 
-    BoostEdge(EdgeCommwT communicationWeight) : communicationWeight(communicationWeight) {}
+    BoostEdge(EdgeCommwT communicationWeight_) : communicationWeight(communicationWeight_) {}
 
     EdgeCommwT communicationWeight;
 };
@@ -305,7 +305,7 @@ class BoostGraph {
                         const VertexMemWeightType memoryWeight = 0,
                         const VertexTypeType nodeType = 0) {
         numberOfVertexTypes_ = std::max(numberOfVertexTypes_, nodeType + 1);
-        return boost::add_vertex(boost_vertex{workWeight, commWeight, memoryWeight, nodeType}, graph_);
+        return boost::add_vertex(BoostVertex{workWeight, commWeight, memoryWeight, nodeType}, graph_);
     }
 
     std::pair<boost::detail::edge_desc_impl<boost::bidirectional_tag, std::size_t>, bool> AddEdge(

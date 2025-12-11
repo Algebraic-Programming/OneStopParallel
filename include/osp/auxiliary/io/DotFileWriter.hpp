@@ -35,7 +35,7 @@ class DotFileWriter {
     struct EdgeWriterDot {
         const GraphT &graph;
 
-        EdgeWriterDot(const GraphT &graph) : graph(graph) {}
+        EdgeWriterDot(const GraphT &graph_) : graph(graph_) {}
 
         void operator()(std::ostream &out, const EdgeDescT<GraphT> &i) const {
             out << Source(i, graph) << "->" << Target(i, graph) << " ["
@@ -48,7 +48,7 @@ class DotFileWriter {
     struct VertexWriterScheduleDot {
         const BspSchedule<GraphT> &schedule;
 
-        VertexWriterScheduleDot(const BspSchedule<GraphT> &schedule) : schedule(schedule) {}
+        VertexWriterScheduleDot(const BspSchedule<GraphT> &schedule_) : schedule(schedule_) {}
 
         void operator()(std::ostream &out, const VertexIdxT<GraphT> &i) const {
             out << i << " ["
@@ -70,7 +70,7 @@ class DotFileWriter {
     struct VertexWriterScheduleRecompDot {
         const BspScheduleRecomp<GraphT> &schedule;
 
-        VertexWriterScheduleRecompDot(const BspScheduleRecomp<GraphT> &schedule) : schedule(schedule) {}
+        VertexWriterScheduleRecompDot(const BspScheduleRecomp<GraphT> &schedule_) : schedule(schedule_) {}
 
         void operator()(std::ostream &out, const VertexIdxT<GraphT> &i) const {
             out << i << " ["
@@ -123,11 +123,11 @@ class DotFileWriter {
         const std::vector<unsigned> nodeToProc;
         const std::vector<unsigned> nodeToSuperstep;
 
-        VertexWriterDuplicateRecompScheduleDot(const GraphT &graph,
-                                               const std::vector<std::string> &name,
-                                               std::vector<unsigned> &nodeToProc,
-                                               std::vector<unsigned> &nodeToSuperstep)
-            : graph(graph), name(name), nodeToProc(nodeToProc), nodeToSuperstep(nodeToSuperstep) {}
+        VertexWriterDuplicateRecompScheduleDot(const GraphT &graph_,
+                                               const std::vector<std::string> &name_,
+                                               std::vector<unsigned> &nodeToProc_,
+                                               std::vector<unsigned> &nodeToSuperstep_)
+            : graph(graph_), name(name_), nodeToProc(nodeToProc_), nodeToSuperstep(nodeToSuperstep_) {}
 
         template <class VertexOrEdge>
         void operator()(std::ostream &out, const VertexOrEdge &i) const {
@@ -143,7 +143,7 @@ class DotFileWriter {
     struct VertexWriterScheduleCsDot {
         const BspScheduleCS<GraphT> &schedule;
 
-        VertexWriterScheduleCsDot(const BspScheduleCS<GraphT> &schedule) : schedule(schedule) {}
+        VertexWriterScheduleCsDot(const BspScheduleCS<GraphT> &schedule_) : schedule(schedule_) {}
 
         void operator()(std::ostream &out, const VertexIdxT<GraphT> &i) const {
             out << i << " ["
@@ -184,7 +184,7 @@ class DotFileWriter {
     struct VertexWriterGraphDot {
         const GraphT &graph;
 
-        VertexWriterGraphDot(const GraphT &graph) : graph(graph) {}
+        VertexWriterGraphDot(const GraphT &graph_) : graph(graph_) {}
 
         void operator()(std::ostream &out, const VertexIdxT<GraphT> &i) const {
             out << i << " ["
@@ -207,7 +207,7 @@ class DotFileWriter {
         std::vector<std::string> colorStrings;
         std::vector<std::string> shapeStrings;
 
-        ColoredVertexWriterGraphDot(const GraphT &graph, const ColorContainerT &colors) : graph(graph), colors(colors) {
+        ColoredVertexWriterGraphDot(const GraphT &graph_, const ColorContainerT &colors_) : graph(graph_), colors(colors_) {
             colorStrings = {"lightcoral",      "palegreen",   "lightblue",     "gold",
                             "orchid",          "sandybrown",  "aquamarine",    "burlywood",
                             "hotpink",         "yellowgreen", "skyblue",       "khaki",
@@ -364,9 +364,9 @@ class DotFileWriter {
             = CdagVertexImpl<VertexIdxT<GraphT>, VWorkwT<GraphT>, VCommwT<GraphT>, VMemwT<GraphT>, VertexTypeTOrDefault>;
         using CdagEdgeImplT = CdagEdgeImpl<EdgeCommwTOrDefault>;
 
-        using GraphT = ComputationalDagEdgeIdxVectorImpl<CdagVertexImplT, CdagEdgeImplT>;
+        using InnerGraphT = ComputationalDagEdgeIdxVectorImpl<CdagVertexImplT, CdagEdgeImplT>;
 
-        GraphT g2;
+        InnerGraphT g2;
 
         size_t idxNew = 0;
 
@@ -424,7 +424,7 @@ class DotFileWriter {
             }
         }
 
-        WriteGraphStructure(os, g2, VertexWriterDuplicateRecompScheduleDot<GraphT>(g2, names, nodeToProc, nodeToSuperstep));
+        WriteGraphStructure(os, g2, VertexWriterDuplicateRecompScheduleDot<InnerGraphT>(g2, names, nodeToProc, nodeToSuperstep));
     }
 
     template <typename GraphT>

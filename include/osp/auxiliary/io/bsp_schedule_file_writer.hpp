@@ -29,12 +29,12 @@ namespace file_writer {
 
 template <typename GraphT>
 void WriteTxt(std::ostream &os, const BspSchedule<GraphT> &schedule) {
-    os << "%% BspSchedule for " << schedule.getInstance().NumberOfProcessors() << " processors and "
-       << schedule.numberOfSupersteps() << " supersteps." << std::endl;
-    os << schedule.getInstance().NumberOfVertices() << " " << schedule.getInstance().NumberOfProcessors() << " "
-       << schedule.numberOfSupersteps() << std::endl;
+    os << "%% BspSchedule for " << schedule.GetInstance().NumberOfProcessors() << " processors and "
+       << schedule.NumberOfSupersteps() << " supersteps." << std::endl;
+    os << schedule.GetInstance().NumberOfVertices() << " " << schedule.GetInstance().NumberOfProcessors() << " "
+       << schedule.NumberOfSupersteps() << std::endl;
 
-    for (const auto &vertex : schedule.getInstance().GetComputationalDag().Vertices()) {
+    for (const auto &vertex : schedule.GetInstance().GetComputationalDag().Vertices()) {
         os << vertex << " " << schedule.AssignedProcessor(vertex) << " " << schedule.AssignedSuperstep(vertex) << std::endl;
     }
 }

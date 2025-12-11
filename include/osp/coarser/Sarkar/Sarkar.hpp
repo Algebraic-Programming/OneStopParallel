@@ -100,7 +100,7 @@ class Sarkar : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
                                                const std::vector<VWorkwT<GraphTIn>> &dist) const;
 
   public:
-    virtual std::vector<std::vector<VertexIdxT<GraphTIn>>> generate_vertex_expansion_map(const GraphTIn &dag_in) override;
+    virtual std::vector<std::vector<VertexIdxT<GraphTIn>>> GenerateVertexExpansionMap(const GraphTIn &dag_in) override;
     std::vector<std::vector<VertexIdxT<GraphTIn>>> GenerateVertexExpansionMap(const GraphTIn &dag_in, VertexIdxT<GraphTIn> &diff);
 
     inline void SetParameters(const SarkarParams::Parameters<VWorkwT<GraphTIn>> &params) { params_ = params; };
@@ -676,7 +676,7 @@ std::vector<std::vector<VertexIdxT<GraphTIn>>> Sarkar<GraphTIn, GraphTOut>::Gene
 template <typename GraphTIn, typename GraphTOut>
 std::vector<std::vector<VertexIdxT<GraphTIn>>> Sarkar<GraphTIn, GraphTOut>::GenerateVertexExpansionMap(const GraphTIn &dag_in) {
     VertexIdxT<GraphTIn> dummy;
-    return generate_vertex_expansion_map(dag_in, dummy);
+    return GenerateVertexExpansionMap(dag_in, dummy);
 }
 
 template <typename GraphTIn, typename GraphTOut>

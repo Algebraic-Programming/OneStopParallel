@@ -97,7 +97,7 @@ struct DirectedGraphTraits {
  * @brief Alias to easily access the vertex index type of a graph.
  */
 template <typename T>
-using VertexIdxT = typename DirectedGraphTraits<T>::vertex_idx;
+using VertexIdxT = typename DirectedGraphTraits<T>::VertexIdx;
 
 /**
  * @brief A default edge descriptor for directed graphs.
@@ -149,7 +149,7 @@ struct DirectedGraphEdgeDescTraits {
 };
 
 template <typename T>
-using EdgeDescT = typename DirectedGraphEdgeDescTraits<T>::directed_edge_descriptor;
+using EdgeDescT = typename DirectedGraphEdgeDescTraits<T>::DirectedEdgeDescriptor;
 
 /**
  * @brief Traits for computational Directed Acyclic Graphs (DAGs).
@@ -173,13 +173,13 @@ struct ComputationalDagTraits {
 };
 
 template <typename T>
-using VWorkwT = typename ComputationalDagTraits<T>::vertex_work_weight_type;
+using VWorkwT = typename ComputationalDagTraits<T>::VertexWorkWeightType;
 
 template <typename T>
-using VCommwT = typename ComputationalDagTraits<T>::vertex_comm_weight_type;
+using VCommwT = typename ComputationalDagTraits<T>::VertexCommWeightType;
 
 template <typename T>
-using VMemwT = typename ComputationalDagTraits<T>::vertex_mem_weight_type;
+using VMemwT = typename ComputationalDagTraits<T>::VertexMemWeightType;
 
 /**
  * @brief Traits to extract the vertex type of a computational DAG, if defined.
@@ -197,7 +197,7 @@ struct ComputationalDagTypedVerticesTraits<T, std::void_t<typename T::VertexType
 };
 
 template <typename T>
-using VTypeT = typename ComputationalDagTypedVerticesTraits<T>::vertex_type_type;
+using VTypeT = typename ComputationalDagTypedVerticesTraits<T>::VertexTypeType;
 
 /**
  * @brief Traits to extract the edge communication weight type of a computational DAG, if defined.
@@ -215,7 +215,7 @@ struct ComputationalDagEdgeDescTraits<T, std::void_t<typename T::EdgeCommWeightT
 };
 
 template <typename T>
-using ECommwT = typename ComputationalDagEdgeDescTraits<T>::edge_comm_weight_type;
+using ECommwT = typename ComputationalDagEdgeDescTraits<T>::EdgeCommWeightType;
 
 // -----------------------------------------------------------------------------
 // Property Traits

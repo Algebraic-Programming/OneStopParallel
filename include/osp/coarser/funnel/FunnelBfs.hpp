@@ -50,7 +50,7 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
                             VMemwT<GraphTIn> maxMemoryWeight = std::numeric_limits<VMemwT<GraphTIn>>::max(),
                             unsigned maxDepth = std::numeric_limits<unsigned>::max(),
                             bool funnelIncoming = true,
-                            bool useApproxTransitiveReduction = true)
+                            bool useApproxTransitiveReduction_ = true)
             : funnelIncoming(funnelIncoming),
               useApproxTransitiveReduction(useApproxTransitiveReduction),
               maxWorkWeight(maxWorkWeight),

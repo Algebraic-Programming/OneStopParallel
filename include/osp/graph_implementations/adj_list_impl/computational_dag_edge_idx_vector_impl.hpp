@@ -160,9 +160,9 @@ class ComputationalDagEdgeIdxVectorImpl {
 
     inline auto Edges() const { return EdgeRangeVectorImpl<ThisT>(*this); }
 
-    inline auto Parents(VertexIdx v) const { return edge_source_range(inEdges_[v], *this); }
+    inline auto Parents(VertexIdx v) const { return EdgeSourceRange(inEdges_[v], *this); }
 
-    inline auto Children(VertexIdx v) const { return edge_target_range(outEdges_[v], *this); }
+    inline auto Children(VertexIdx v) const { return EdgeTargetRange(outEdges_[v], *this); }
 
     inline auto Vertices() const { return IntegralRange<VertexIdx>(static_cast<VertexIdx>(vertices_.size())); }
 

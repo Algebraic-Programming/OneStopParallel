@@ -104,7 +104,7 @@ class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
     virtual ~VariancePartitioner() = default;
 
     virtual RETURN_STATUS ComputeSchedule(BspSchedule<GraphT> &schedule) override {
-        const auto &instance = schedule.getInstance();
+        const auto &instance = schedule.GetInstance();
         const auto &nVert = instance.NumberOfVertices();
         const unsigned &nProcessors = instance.NumberOfProcessors();
         const auto &graph = instance.GetComputationalDag();
