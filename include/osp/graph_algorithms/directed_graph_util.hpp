@@ -18,6 +18,7 @@ limitations under the License.
 
 #pragma once
 
+#include <limits>
 #include <queue>
 #include <unordered_set>
 #include <vector>

@@ -18,6 +18,7 @@ limitations under the License.
 #pragma once
 
 #include <algorithm>
+#include <cassert>
 #include <iterator>
 #include <limits>
 #include <numeric>

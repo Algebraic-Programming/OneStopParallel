@@ -22,7 +22,7 @@ limitations under the License.
 #include <unordered_set>
 #include <vector>
 
-#include "osp/concepts/directed_graph_concept.hpp"
+#include "osp/concepts/directed_graph_edge_desc_concept.hpp"
 
 namespace osp {
 
