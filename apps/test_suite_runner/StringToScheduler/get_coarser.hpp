@@ -82,15 +82,14 @@ std::unique_ptr<Coarser<GraphTIn, GraphTOut>> GetCoarserByName(const ConfigParse
         auto setParams = [&](auto &coarserPtr) {
             if (auto paramsOpt = coarserAlgorithm.get_child_optional("parameters")) {
                 const auto &paramsPt = paramsOpt.get();
-                coarserPtr->set_work_threshold(paramsPt.get_optional<VWorkwT<GraphTIn>>("work_threshold")
-                                                   .value_or(std::numeric_limits<VWorkwT<GraphTIn>>::max()));
-                coarserPtr->set_memory_threshold(paramsPt.get_optional<VMemwT<GraphTIn>>("memory_threshold")
-                                                     .value_or(std::numeric_limits<VMemwT<GraphTIn>>::max()));
-                coarserPtr->set_communication_threshold(paramsPt.get_optional<VCommwT<GraphTIn>>("communication_threshold")
-                                                            .value_or(std::numeric_limits<VCommwT<GraphTIn>>::max()));
-                coarserPtr->set_super_node_size_threshold(
-                    paramsPt.get_optional<std::size_t>("super_node_size_threshold").value_or(10));
-                coarserPtr->set_node_dist_threshold(paramsPt.get_optional<unsigned>("node_dist_threshold").value_or(10));
+                coarserPtr->SetWorkThreshold(paramsPt.get_optional<VWorkwT<GraphTIn>>("work_threshold")
+                                                 .value_or(std::numeric_limits<VWorkwT<GraphTIn>>::max()));
+                coarserPtr->SetMemoryThreshold(paramsPt.get_optional<VMemwT<GraphTIn>>("memory_threshold")
+                                                   .value_or(std::numeric_limits<VMemwT<GraphTIn>>::max()));
+                coarserPtr->SetCommunicationThreshold(paramsPt.get_optional<VCommwT<GraphTIn>>("communication_threshold")
+                                                          .value_or(std::numeric_limits<VCommwT<GraphTIn>>::max()));
+                coarserPtr->SetSuperNodeSizeThreshold(paramsPt.get_optional<std::size_t>("super_node_size_threshold").value_or(10));
+                coarserPtr->SetNodeDistThreshold(paramsPt.get_optional<unsigned>("node_dist_threshold").value_or(10));
             }
         };
 

@@ -49,9 +49,9 @@ class StepByStepCoarser : public CoarserGenContractionMap<GraphT, GraphT> {
 
         EdgeToContract(const VertexIdx source,
                        const VertexIdx target,
-                       const VWorkwT<GraphT> workWeight,
-                       const VCommwT<GraphT> commWeight)
-            : edge(source, target), workWeight(workWeight), commWeight(commWeight) {}
+                       const VWorkwT<GraphT> workWeight_,
+                       const VCommwT<GraphT> commWeight_)
+            : edge(source, target), workWeight(workWeight_), commWeight(commWeight_) {}
 
         bool operator<(const EdgeToContract &other) const {
             return (workWeight < other.workWeight || (workWeight == other.workWeight && commWeight < other.commWeight));
@@ -109,7 +109,7 @@ class StepByStepCoarser : public CoarserGenContractionMap<GraphT, GraphT> {
     virtual std::string GetCoarserName() const override { return "StepByStepCoarsening"; }
 
     // DAG coarsening
-    virtual std::vector<VertexIdxT<GraphT>> generate_vertex_contraction_map(const GraphT &dagIn) override;
+    virtual std::vector<VertexIdxT<GraphT>> GenerateVertexContractionMap(const GraphT &dagIn) override;
 
     // Coarsening for pebbling problems - leaves source nodes intact, considers memory bound
     void CoarsenForPebbling(const GraphT &dagIn, GraphT &coarsenedDag, std::vector<VertexIdxT<GraphT>> &newVertexId);
@@ -716,7 +716,7 @@ std::vector<std::pair<VertexIdxT<GraphT>, VertexIdxT<GraphT>>> StepByStepCoarser
 template <typename GraphT>
 std::vector<unsigned> StepByStepCoarser<GraphT>::ComputeFilteredTopLevel() const {
     std::vector<unsigned> topLevel(gFull_.NumVertices());
-    for (const VertexIdx node : top_sort_view(gCoarse_)) {
+    for (const VertexIdx node : TopSortView(gCoarse_)) {
         if (!nodeValid_[node]) {
             continue;
         }

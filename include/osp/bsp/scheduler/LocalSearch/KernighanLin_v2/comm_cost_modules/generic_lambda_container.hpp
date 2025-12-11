@@ -98,9 +98,9 @@ struct GenericLambdaVectorContainer {
     /// Number of processors in the system
     unsigned numProcs = 0;
 
-    inline void Initialize(const VertexIdxT numVertices, const unsigned numProcs) {
-        nodeLambdaVec.assign(numVertices, std::vector<ValueType>(numProcs));
-        numProcs = numProcs;
+    inline void Initialize(const VertexIdxT numVertices, const unsigned numProcs_) {
+        nodeLambdaVec.assign(numVertices, std::vector<ValueType>(numProcs_));
+        numProcs = numProcs_;
     }
 
     inline void ResetNode(const VertexIdxT node) { nodeLambdaVec[node].assign(numProcs, ValueType()); }

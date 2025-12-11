@@ -115,10 +115,10 @@ class HillClimbingScheduler : public ImprovementScheduler<GraphT> {
 
     virtual ~HillClimbingScheduler() = default;
 
-    virtual RETURN_STATUS improveSchedule(BspSchedule<GraphT> &inputSchedule) override;
+    virtual RETURN_STATUS ImproveSchedule(BspSchedule<GraphT> &inputSchedule) override;
 
     // call with time/step limits
-    virtual RETURN_STATUS improveScheduleWithTimeLimit(BspSchedule<GraphT> &inputSchedule) override;
+    virtual RETURN_STATUS ImproveScheduleWithTimeLimit(BspSchedule<GraphT> &inputSchedule) override;
     virtual RETURN_STATUS ImproveScheduleWithStepLimit(BspSchedule<GraphT> &inputSchedule, const unsigned stepLimit = 10);
 
     // setting parameters

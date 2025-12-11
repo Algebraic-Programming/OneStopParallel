@@ -349,8 +349,8 @@ void GenericFM<HypergraphT>::RecursiveFM(Partitioning<HypergraphT> &partition) {
 }
 
 template <typename HypergraphT>
-std::vector<typename HypergraphT::vertex_idx> GenericFM<HypergraphT>::GetMaxNodesOnLevel(typename HypergraphT::vertex_idx nrNodes,
-                                                                                         unsigned nrParts) const {
+std::vector<typename HypergraphT::VertexIdx> GenericFM<HypergraphT>::GetMaxNodesOnLevel(typename HypergraphT::VertexIdx nrNodes,
+                                                                                        unsigned nrParts) const {
     std::vector<IndexType> maxNodesOnLevel;
     std::vector<IndexType> limitPerLevel({static_cast<IndexType>(ceil(static_cast<double>(nrNodes) / 2.0))});
     for (unsigned parts = nrParts / 4; parts > 0; parts /= 2) {

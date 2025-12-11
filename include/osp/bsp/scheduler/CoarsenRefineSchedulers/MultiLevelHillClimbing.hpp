@@ -72,7 +72,7 @@ class MultiLevelHillClimbingScheduler : public Scheduler<GraphT> {
   public:
     virtual ~MultiLevelHillClimbingScheduler() = default;
 
-    virtual RETURN_STATUS computeSchedule(BspSchedule<GraphT> &schedule) override;
+    virtual RETURN_STATUS ComputeSchedule(BspSchedule<GraphT> &schedule) override;
 
     virtual std::string GetScheduleName() const override { return "MultiLevelHillClimbing"; }
 

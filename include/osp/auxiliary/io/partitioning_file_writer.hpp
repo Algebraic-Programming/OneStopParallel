@@ -41,7 +41,7 @@ void WriteTxt(std::ostream &os, const Partitioning<HypergraphT> &partition) {
 template <typename HypergraphT>
 void WriteTxt(const std::string &filename, const Partitioning<HypergraphT> &partition) {
     std::ofstream os(filename);
-    write_txt(os, partition);
+    WriteTxt(os, partition);
 }
 
 template <typename HypergraphT>
@@ -62,7 +62,7 @@ void WriteTxt(std::ostream &os, const PartitioningWithReplication<HypergraphT> &
 template <typename HypergraphT>
 void WriteTxt(const std::string &filename, const PartitioningWithReplication<HypergraphT> &partition) {
     std::ofstream os(filename);
-    write_txt(os, partition);
+    WriteTxt(os, partition);
 }
 
 }    // namespace file_writer

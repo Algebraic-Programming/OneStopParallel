@@ -41,8 +41,8 @@ struct KlMoveStruct {
 
     KlMoveStruct() : node(0), gain(0), fromProc(0), fromStep(0), toProc(0), toStep(0) {}
 
-    KlMoveStruct(VertexIdxT node, CostT gain, unsigned fromProc, unsigned fromStep, unsigned toProc, unsigned toStep)
-        : node(node), gain(gain), fromProc(fromProc), fromStep(fromStep), toProc(toProc), toStep(toStep) {}
+    KlMoveStruct(VertexIdxT node_, CostT gain_, unsigned fromProc_, unsigned fromStep_, unsigned toProc_, unsigned toStep_)
+        : node(node_), gain(gain_), fromProc(fromProc_), fromStep(fromStep_), toProc(toProc_), toStep(toStep_) {}
 
     bool operator<(KlMoveStruct<CostT, VertexIdxT> const &rhs) const {
         return (gain < rhs.gain) or (gain == rhs.gain and node > rhs.node);
@@ -67,18 +67,18 @@ struct PreMoveWorkData {
 
     PreMoveWorkData() {}
 
-    PreMoveWorkData(WorkWeightT fromStepMaxWork,
-                    WorkWeightT fromStepSecondMaxWork,
-                    unsigned fromStepMaxWorkProcessorCount,
-                    WorkWeightT toStepMaxWork,
-                    WorkWeightT toStepSecondMaxWork,
-                    unsigned toStepMaxWorkProcessorCount)
-        : fromStepMaxWork(fromStepMaxWork),
-          fromStepSecondMaxWork(fromStepSecondMaxWork),
-          fromStepMaxWorkProcessorCount(fromStepMaxWorkProcessorCount),
-          toStepMaxWork(toStepMaxWork),
-          toStepSecondMaxWork(toStepSecondMaxWork),
-          toStepMaxWorkProcessorCount(toStepMaxWorkProcessorCount) {}
+    PreMoveWorkData(WorkWeightT fromStepMaxWork_,
+                    WorkWeightT fromStepSecondMaxWork_,
+                    unsigned fromStepMaxWorkProcessorCount_,
+                    WorkWeightT toStepMaxWork_,
+                    WorkWeightT toStepSecondMaxWork_,
+                    unsigned toStepMaxWorkProcessorCount_)
+        : fromStepMaxWork(fromStepMaxWork_),
+          fromStepSecondMaxWork(fromStepSecondMaxWork_),
+          fromStepMaxWorkProcessorCount(fromStepMaxWorkProcessorCount_),
+          toStepMaxWork(toStepMaxWork_),
+          toStepSecondMaxWork(toStepSecondMaxWork_),
+          toStepMaxWorkProcessorCount(toStepMaxWorkProcessorCount_) {}
 };
 
 template <typename GraphT>
@@ -94,7 +94,7 @@ struct KlActiveScheduleWorkDatastructures {
 
         WeightProc() : work(0), proc(0) {}
 
-        WeightProc(WorkWeightT work, unsigned proc) : work(work), proc(proc) {}
+        WeightProc(WorkWeightT work_, unsigned proc_) : work(work_), proc(proc_) {}
 
         bool operator<(WeightProc const &rhs) const { return (work > rhs.work) or (work == rhs.work and proc < rhs.proc); }
     };
@@ -297,10 +297,10 @@ struct ThreadLocalActiveScheduleData {
     std::unordered_map<VertexType, EdgeType> newViolations;
     std::unordered_set<EdgeType> resolvedViolations;
 
-    inline void InitializeCost(CostT cost) {
-        initialCost = cost;
-        cost = cost;
-        bestCost = cost;
+    inline void InitializeCost(CostT cost_) {
+        initialCost = cost_;
+        cost = cost_;
+        bestCost = cost_;
         feasible = true;
     }
 
@@ -449,7 +449,7 @@ class KlActiveSchedule {
     void ComputeViolations(ThreadDataT &threadData);
     void ComputeWorkMemoryDatastructures(unsigned start_step, unsigned end_step);
     void WriteSchedule(BspSchedule<GraphT> &schedule);
-    inline void initialize(const IBspSchedule<GraphT> &schedule);
+    inline void Initialize(const IBspSchedule<GraphT> &schedule);
     inline void Clear();
     void RemoveEmptyStep(unsigned step);
     void InsertEmptyStep(unsigned step);

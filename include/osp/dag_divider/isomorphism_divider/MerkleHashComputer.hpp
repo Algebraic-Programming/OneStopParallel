@@ -78,7 +78,7 @@ class MerkleHashComputer : public HashComputer<VertexIdxT<GraphT>> {
     std::enable_if_t<Forward, RetT> ComputeHashes(const GraphT &graph) {
         vertexHashes_.resize(graph.NumVertices());
 
-        for (const VertexType &v : top_sort_view(graph)) {
+        for (const VertexType &v : TopSortView(graph)) {
             std::vector<std::size_t> parentHashes;
             for (const VertexType &parent : graph.Parents(v)) {
                 parentHashes.push_back(vertexHashes_[parent]);

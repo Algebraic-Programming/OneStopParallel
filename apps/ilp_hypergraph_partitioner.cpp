@@ -38,7 +38,7 @@ limitations under the License.
 using namespace osp;
 
 using Graph = ComputationalDagVectorImplDefIntT;
-using Hypergraph = HypergraphDefT;
+using ConcreteHypergraph = HypergraphDefT;
 
 int main(int argc, char *argv[]) {
     if (argc < 4) {
@@ -79,17 +79,17 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    PartitioningProblem<Hypergraph> instance;
+    PartitioningProblem<ConcreteHypergraph> instance;
 
     bool fileStatus = true;
     if (fileEnding == "hdag") {
         Graph dag;
-        fileStatus = file_reader::readComputationalDagHyperdagFormatDB(filenameHgraph, dag);
+        fileStatus = file_reader::ReadComputationalDagHyperdagFormatDb(filenameHgraph, dag);
         if (fileStatus) {
-            instance.getHypergraph() = convert_from_cdag_as_hyperdag<Hypergraph, Graph>(dag);
+            instance.GetHypergraph() = ConvertFromCdagAsHyperdag<ConcreteHypergraph, Graph>(dag);
         }
     } else if (fileEnding == "mtx") {
-        fileStatus = file_reader::readHypergraphMartixMarketFormat(filenameHgraph, instance.getHypergraph());
+        fileStatus = file_reader::ReadHypergraphMartixMarketFormat(filenameHgraph, instance.GetHypergraph());
     } else {
         std::cout << "Unknown file extension." << std::endl;
         return 1;
@@ -99,13 +99,13 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    instance.setNumberOfPartitions(static_cast<unsigned>(nrParts));
-    instance.setMaxWorkWeightViaImbalanceFactor(imbalance);
+    instance.SetNumberOfPartitions(static_cast<unsigned>(nrParts));
+    instance.SetMaxWorkWeightViaImbalanceFactor(imbalance);
 
-    Partitioning<Hypergraph> initialPartition(instance);
-    GenericFM<Hypergraph> fm;
-    for (size_t node = 0; node < instance.getHypergraph().num_vertices(); ++node) {
-        initialPartition.setAssignedPartition(node, static_cast<unsigned>(node % static_cast<size_t>(nrParts)));
+    Partitioning<ConcreteHypergraph> initialPartition(instance);
+    GenericFM<ConcreteHypergraph> fm;
+    for (size_t node = 0; node < instance.GetHypergraph().NumVertices(); ++node) {
+        initialPartition.SetAssignedPartition(node, static_cast<unsigned>(node % static_cast<size_t>(nrParts)));
     }
     if (nrParts == 2) {
         fm.ImprovePartitioning(initialPartition);
@@ -115,29 +115,29 @@ int main(int argc, char *argv[]) {
     }
 
     if (replicate > 0) {
-        PartitioningWithReplication<Hypergraph> partition(instance);
-        HypergraphPartitioningILPWithReplication<Hypergraph> partitioner;
+        PartitioningWithReplication<ConcreteHypergraph> partition(instance);
+        HypergraphPartitioningILPWithReplication<ConcreteHypergraph> partitioner;
 
-        for (size_t node = 0; node < instance.getHypergraph().num_vertices(); ++node) {
-            partition.setAssignedPartitions(node, {initialPartition.assignedPartition(node)});
+        for (size_t node = 0; node < instance.GetHypergraph().NumVertices(); ++node) {
+            partition.SetAssignedPartitions(node, {initialPartition.AssignedPartition(node)});
         }
-        if (partition.satisfiesBalanceConstraint()) {
-            partitioner.setUseInitialSolution(true);
+        if (partition.SatisfiesBalanceConstraint()) {
+            partitioner.SetUseInitialSolution(true);
         }
 
-        partitioner.setTimeLimitSeconds(600);
+        partitioner.SetTimeLimitSeconds(600);
         if (replicate == 2) {
-            partitioner.setReplicationModel(
-                HypergraphPartitioningILPWithReplication<Hypergraph>::REPLICATION_MODEL_IN_ILP::GENERAL);
+            partitioner.SetReplicationModel(
+                HypergraphPartitioningILPWithReplication<ConcreteHypergraph>::REPLICATION_MODEL_IN_ILP::GENERAL);
         }
 
-        auto solveStatus = partitioner.computePartitioning(partition);
+        auto solveStatus = partitioner.ComputePartitioning(partition);
 
         if (solveStatus == RETURN_STATUS::OSP_SUCCESS || solveStatus == RETURN_STATUS::BEST_FOUND) {
-            file_writer::write_txt(nameHgraph + "_" + std::to_string(nrParts) + "_" + std::to_string(imbalance) + "_ILP_rep"
-                                       + std::to_string(replicate) + ".txt",
-                                   partition);
-            std::cout << "Partitioning (with replicaiton) computed with costs: " << partition.computeConnectivityCost()
+            file_writer::WriteTxt(nameHgraph + "_" + std::to_string(nrParts) + "_" + std::to_string(imbalance) + "_ILP_rep"
+                                      + std::to_string(replicate) + ".txt",
+                                  partition);
+            std::cout << "Partitioning (with replicaiton) computed with costs: " << partition.ComputeConnectivityCost()
                       << std::endl;
         } else {
             std::cout << "Computing partition failed." << std::endl;
@@ -145,25 +145,25 @@ int main(int argc, char *argv[]) {
         }
 
     } else {
-        Partitioning<Hypergraph> partition(instance);
-        HypergraphPartitioningILP<Hypergraph> partitioner;
+        Partitioning<ConcreteHypergraph> partition(instance);
+        HypergraphPartitioningILP<ConcreteHypergraph> partitioner;
 
-        for (size_t node = 0; node < instance.getHypergraph().num_vertices(); ++node) {
-            partition.setAssignedPartition(node, initialPartition.assignedPartition(node));
+        for (size_t node = 0; node < instance.GetHypergraph().NumVertices(); ++node) {
+            partition.SetAssignedPartition(node, initialPartition.AssignedPartition(node));
         }
-        if (partition.satisfiesBalanceConstraint()) {
-            partitioner.setUseInitialSolution(true);
+        if (partition.SatisfiesBalanceConstraint()) {
+            partitioner.SetUseInitialSolution(true);
         }
 
-        partitioner.setTimeLimitSeconds(600);
+        partitioner.SetTimeLimitSeconds(600);
 
-        auto solveStatus = partitioner.computePartitioning(partition);
+        auto solveStatus = partitioner.ComputePartitioning(partition);
 
         if (solveStatus == RETURN_STATUS::OSP_SUCCESS || solveStatus == RETURN_STATUS::BEST_FOUND) {
             file_writer::write_txt(nameHgraph + "_" + std::to_string(nrParts) + "_" + std::to_string(imbalance) + "_ILP_rep"
                                        + std::to_string(replicate) + ".txt",
                                    partition);
-            std::cout << "Partitioning computed with costs: " << partition.computeConnectivityCost() << std::endl;
+            std::cout << "Partitioning computed with costs: " << partition.ComputeConnectivityCost() << std::endl;
         } else {
             std::cout << "Computing partition failed." << std::endl;
             return 1;

@@ -129,10 +129,10 @@ class BspScheduleRecomp : public IBspScheduleEval<GraphT> {
 };
 
 template <typename GraphT>
-BspScheduleRecomp<GraphT>::BspScheduleRecomp(const BspScheduleCS<GraphT> &schedule) : instance_(&schedule.getInstance()) {
+BspScheduleRecomp<GraphT>::BspScheduleRecomp(const BspScheduleCS<GraphT> &schedule) : instance_(&schedule.GetInstance()) {
     nodeToProcessorAndSupertepAssignment_.clear();
     nodeToProcessorAndSupertepAssignment_.resize(instance_->NumberOfVertices());
-    numberOfSupersteps_ = schedule.numberOfSupersteps();
+    numberOfSupersteps_ = schedule.NumberOfSupersteps();
 
     for (VertexIdx node = 0; node < instance_->NumberOfVertices(); ++node) {
         nodeToProcessorAndSupertepAssignment_[node].emplace_back(schedule.AssignedProcessor(node),

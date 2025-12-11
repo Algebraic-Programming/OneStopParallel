@@ -148,9 +148,9 @@ class GrowLocalAutoCores : public Scheduler<GraphT> {
             bool continueSuperstepAttempts = true;
 
             while (continueSuperstepAttempts) {
-                for (unsigned p = 0; p < p; p++) {
-                    newAssignments[p].clear();
-                    procReady[p].clear();
+                for (unsigned proc = 0; proc < p; proc++) {
+                    newAssignments[proc].clear();
+                    procReady[proc].clear();
                 }
 
                 newReady.clear();

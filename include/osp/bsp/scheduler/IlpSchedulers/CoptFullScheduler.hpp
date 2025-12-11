@@ -216,7 +216,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
     VarArray maxWorkSuperstepVar_;
 
     void ConstructBspScheduleFromSolution(BspScheduleCS<GraphT> &schedule, bool cleanup = false) {
-        const auto &instance = schedule.getInstance();
+        const auto &instance = schedule.GetInstance();
 
         unsigned numberOfSupersteps = 0;
 
@@ -318,24 +318,24 @@ class CoptFullScheduler : public Scheduler<GraphT> {
         }
 
         if (!useInitialScheduleRecomp_ & useInitialSchedule_
-            && (maxNumberSupersteps_ < initialSchedule_->numberOfSupersteps()
-                || instance.NumberOfProcessors() != initialSchedule_->getInstance().NumberOfProcessors()
-                || instance.NumberOfVertices() != initialSchedule_->getInstance().NumberOfVertices())) {
+            && (maxNumberSupersteps_ < initialSchedule_->NumberOfSupersteps()
+                || instance.NumberOfProcessors() != initialSchedule_->GetInstance().NumberOfProcessors()
+                || instance.NumberOfVertices() != initialSchedule_->GetInstance().NumberOfVertices())) {
             throw std::invalid_argument("Invalid Argument while computeScheduleRecomp[Recomp]: instance parameters do not "
                                         "agree with those of the initial schedule's instance!");
         }
 
         const auto &dag = useInitialScheduleRecomp_ ? initialScheduleRecomp_->GetInstance().GetComputationalDag()
-                                                    : initialSchedule_->getInstance().GetComputationalDag();
+                                                    : initialSchedule_->GetInstance().GetComputationalDag();
 
         const auto &arch = useInitialScheduleRecomp_ ? initialScheduleRecomp_->GetInstance().GetArchitecture()
-                                                     : initialSchedule_->getInstance().GetArchitecture();
+                                                     : initialSchedule_->GetInstance().GetArchitecture();
 
         const unsigned &numProcessors = useInitialScheduleRecomp_ ? initialScheduleRecomp_->GetInstance().NumberOfProcessors()
-                                                                  : initialSchedule_->getInstance().NumberOfProcessors();
+                                                                  : initialSchedule_->GetInstance().NumberOfProcessors();
 
         const unsigned &numSupersteps = useInitialScheduleRecomp_ ? initialScheduleRecomp_->NumberOfSupersteps()
-                                                                  : initialSchedule_->numberOfSupersteps();
+                                                                  : initialSchedule_->NumberOfSupersteps();
 
         const auto &cs = useInitialScheduleRecomp_ ? initialScheduleRecomp_->GetCommunicationSchedule()
                                                    : initialSchedule_->GetCommunicationSchedule();
@@ -434,7 +434,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
                 }
             }
         } else {
-            for (const auto &node : initialSchedule_->getInstance().Vertices()) {
+            for (const auto &node : initialSchedule_->GetInstance().Vertices()) {
                 work[initialSchedule_->AssignedSuperstep(node)][initialSchedule_->AssignedProcessor(node)]
                     += dag.VertexWorkWeight(node);
             }
@@ -737,7 +737,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
     }
 
     RETURN_STATUS RunScheduler(BspScheduleCS<GraphT> &schedule) {
-        auto &instance = schedule.getInstance();
+        auto &instance = schedule.GetInstance();
         Envr env;
         Model model = env.CreateModel("bsp_schedule");
 
@@ -829,7 +829,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
     }
 
     virtual RETURN_STATUS ComputeMaxBspSchedule(MaxBspSchedule<GraphT> &schedule) {
-        MaxBspScheduleCS<GraphT> scheduleCs(schedule.getInstance());
+        MaxBspScheduleCS<GraphT> scheduleCs(schedule.GetInstance());
         RETURN_STATUS status = ComputeMaxBspScheduleCs(scheduleCs);
         if (status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND) {
             schedule = std::move(scheduleCs);
@@ -927,7 +927,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
     inline void SetInitialSolutionFromBspSchedule(const BspScheduleCS<GraphT> &schedule) {
         initialSchedule_ = &schedule;
 
-        maxNumberSupersteps_ = schedule.numberOfSupersteps();
+        maxNumberSupersteps_ = schedule.NumberOfSupersteps();
 
         useInitialSchedule_ = true;
     }

@@ -314,10 +314,10 @@ struct VertexSelectionStrategy {
 
     unsigned maxWorkCounter = 0;
 
-    inline void Initialize(const KlActiveScheduleT &sche, std::mt19937 &gen, const unsigned startStep, const unsigned endStep) {
+    inline void Initialize(const KlActiveScheduleT &sche, std::mt19937 &gen_, const unsigned startStep, const unsigned endStep) {
         activeSchedule = &sche;
         graph = &(sche.GetInstance().GetComputationalDag());
-        gen = &gen;
+        gen = &gen_;
 
         permutation.reserve(graph->NumVertices() / activeSchedule->NumSteps() * (endStep - startStep));
     }

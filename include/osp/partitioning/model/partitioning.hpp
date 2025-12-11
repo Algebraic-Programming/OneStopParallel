@@ -129,7 +129,7 @@ std::vector<unsigned> Partitioning<HypergraphT>::ComputeLambdaForHyperedges() co
 }
 
 template <typename HypergraphT>
-typename HypergraphT::vertex_comm_weight_type Partitioning<HypergraphT>::ComputeConnectivityCost() const {
+typename HypergraphT::VertexCommWeightType Partitioning<HypergraphT>::ComputeConnectivityCost() const {
     CommwType total = 0;
     std::vector<unsigned> lambda = ComputeLambdaForHyperedges();
 
@@ -143,7 +143,7 @@ typename HypergraphT::vertex_comm_weight_type Partitioning<HypergraphT>::Compute
 }
 
 template <typename HypergraphT>
-typename HypergraphT::vertex_comm_weight_type Partitioning<HypergraphT>::ComputeCutNetCost() const {
+typename HypergraphT::VertexCommWeightType Partitioning<HypergraphT>::ComputeCutNetCost() const {
     CommwType total = 0;
     std::vector<unsigned> lambda = ComputeLambdaForHyperedges();
     for (IndexType edgeIdx = 0; edgeIdx < instance_->GetHypergraph().NumHyperedges(); ++edgeIdx) {

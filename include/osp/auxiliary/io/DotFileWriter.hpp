@@ -52,12 +52,12 @@ class DotFileWriter {
 
         void operator()(std::ostream &out, const VertexIdxT<GraphT> &i) const {
             out << i << " ["
-                << "work_weight=\"" << schedule.getInstance().GetComputationalDag().VertexWorkWeight(i) << "\";"
-                << "comm_weight=\"" << schedule.getInstance().GetComputationalDag().VertexCommWeight(i) << "\";"
-                << "mem_weight=\"" << schedule.getInstance().GetComputationalDag().VertexMemWeight(i) << "\";";
+                << "work_weight=\"" << schedule.GetInstance().GetComputationalDag().VertexWorkWeight(i) << "\";"
+                << "comm_weight=\"" << schedule.GetInstance().GetComputationalDag().VertexCommWeight(i) << "\";"
+                << "mem_weight=\"" << schedule.GetInstance().GetComputationalDag().VertexMemWeight(i) << "\";";
 
             if constexpr (hasTypedVerticesV<GraphT>) {
-                out << "type=\"" << schedule.getInstance().GetComputationalDag().VertexType(i) << "\";";
+                out << "type=\"" << schedule.GetInstance().GetComputationalDag().VertexType(i) << "\";";
             }
 
             out << "proc=\"" << schedule.AssignedProcessor(i) << "\";" << "superstep=\"" << schedule.AssignedSuperstep(i) << "\";";
@@ -147,12 +147,12 @@ class DotFileWriter {
 
         void operator()(std::ostream &out, const VertexIdxT<GraphT> &i) const {
             out << i << " ["
-                << "work_weight=\"" << schedule.getInstance().GetComputationalDag().VertexWorkWeight(i) << "\";"
-                << "comm_weight=\"" << schedule.getInstance().GetComputationalDag().VertexCommWeight(i) << "\";"
-                << "mem_weight=\"" << schedule.getInstance().GetComputationalDag().VertexMemWeight(i) << "\";";
+                << "work_weight=\"" << schedule.GetInstance().GetComputationalDag().VertexWorkWeight(i) << "\";"
+                << "comm_weight=\"" << schedule.GetInstance().GetComputationalDag().VertexCommWeight(i) << "\";"
+                << "mem_weight=\"" << schedule.GetInstance().GetComputationalDag().VertexMemWeight(i) << "\";";
 
             if constexpr (hasTypedVerticesV<GraphT>) {
-                out << "type=\"" << schedule.getInstance().GetComputationalDag().VertexType(i) << "\";";
+                out << "type=\"" << schedule.GetInstance().GetComputationalDag().VertexType(i) << "\";";
             }
 
             out << "proc=\"" << schedule.AssignedProcessor(i) << "\";" << "superstep=\"" << schedule.AssignedSuperstep(i) << "\";";
@@ -300,7 +300,7 @@ class DotFileWriter {
      */
     template <typename GraphT>
     void WriteSchedule(std::ostream &os, const BspSchedule<GraphT> &schedule) const {
-        WriteGraphStructure(os, schedule.getInstance().GetComputationalDag(), VertexWriterScheduleDot<GraphT>(schedule));
+        WriteGraphStructure(os, schedule.GetInstance().GetComputationalDag(), VertexWriterScheduleDot<GraphT>(schedule));
     }
 
     /**
@@ -325,7 +325,7 @@ class DotFileWriter {
 
     template <typename GraphT>
     void WriteScheduleCs(std::ostream &os, const BspScheduleCS<GraphT> &schedule) const {
-        WriteGraphStructure(os, schedule.getInstance().GetComputationalDag(), VertexWriterScheduleCsDot<GraphT>(schedule));
+        WriteGraphStructure(os, schedule.GetInstance().GetComputationalDag(), VertexWriterScheduleCsDot<GraphT>(schedule));
     }
 
     template <typename GraphT>

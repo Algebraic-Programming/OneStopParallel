@@ -46,16 +46,16 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
 
         unsigned maxDepth;
 
-        FunnelBfsParameters(VWorkwT<GraphTIn> maxWorkWeight = std::numeric_limits<VWorkwT<GraphTIn>>::max(),
-                            VMemwT<GraphTIn> maxMemoryWeight = std::numeric_limits<VMemwT<GraphTIn>>::max(),
-                            unsigned maxDepth = std::numeric_limits<unsigned>::max(),
-                            bool funnelIncoming = true,
+        FunnelBfsParameters(VWorkwT<GraphTIn> maxWorkWeight_ = std::numeric_limits<VWorkwT<GraphTIn>>::max(),
+                            VMemwT<GraphTIn> maxMemoryWeight_ = std::numeric_limits<VMemwT<GraphTIn>>::max(),
+                            unsigned maxDepth_ = std::numeric_limits<unsigned>::max(),
+                            bool funnelIncoming_ = true,
                             bool useApproxTransitiveReduction_ = true)
-            : funnelIncoming(funnelIncoming),
-              useApproxTransitiveReduction(useApproxTransitiveReduction),
-              maxWorkWeight(maxWorkWeight),
-              maxMemoryWeight(maxMemoryWeight),
-              maxDepth(maxDepth) {};
+            : funnelIncoming(funnelIncoming_),
+              useApproxTransitiveReduction(useApproxTransitiveReduction_),
+              maxWorkWeight(maxWorkWeight_),
+              maxMemoryWeight(maxMemoryWeight_),
+              maxDepth(maxDepth_) {};
 
         ~FunnelBfsParameters() = default;
     };
@@ -212,7 +212,7 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
 
         std::vector<bool> visited(graph.NumVertices(), false);
 
-        for (const auto &topNode : top_sort_view(graph)) {
+        for (const auto &topNode : TopSortView(graph)) {
             if (visited[topNode]) {
                 continue;
             }

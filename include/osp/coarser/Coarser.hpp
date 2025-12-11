@@ -68,6 +68,10 @@ class Coarser {
      */
     virtual std::string GetCoarserName() const = 0;
 
+    virtual void SetWorkThreshold(typename ComputationalDagTraits<GraphTIn>::VertexWorkWeightType threshold) {}
+
+    virtual void SetCommThreshold(typename ComputationalDagTraits<GraphTIn>::VertexCommWeightType threshold) {}
+
     /**
      * @brief Destructor for the Coarser class.
      */

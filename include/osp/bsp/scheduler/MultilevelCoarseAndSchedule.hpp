@@ -84,7 +84,7 @@ class MultilevelCoarseAndSchedule : public Scheduler<GraphT> {
 
     inline void SetMultilevelCoarser(MultilevelCoarser<GraphT, GraphTCoarse> &mlCoarser) { mlCoarser_ = &mlCoarser; };
 
-    RETURN_STATUS computeSchedule(BspSchedule<GraphT> &schedule) override;
+    RETURN_STATUS ComputeSchedule(BspSchedule<GraphT> &schedule) override;
 
     std::string GetScheduleName() const override {
         if (improver_ == nullptr) {
@@ -214,11 +214,11 @@ template <typename GraphT, typename GraphTCoarse>
 RETURN_STATUS MultilevelCoarseAndSchedule<GraphT, GraphTCoarse>::ComputeSchedule(BspSchedule<GraphT> &schedule) {
     ClearComputationData();
 
-    originalInst_ = &schedule.getInstance();
+    originalInst_ = &schedule.GetInstance();
 
     RETURN_STATUS status = RETURN_STATUS::OSP_SUCCESS;
 
-    status = std::max(status, mlCoarser_->run(*originalInst_));
+    status = std::max(status, mlCoarser_->Run(*originalInst_));
 
     if constexpr (std::is_same_v<GraphT, GraphTCoarse>) {
         if (mlCoarser_->dagHistory_.size() == 0) {

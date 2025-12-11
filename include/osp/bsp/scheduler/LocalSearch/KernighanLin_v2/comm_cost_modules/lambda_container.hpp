@@ -261,9 +261,9 @@ struct LambdaVectorContainer {
      * @param num_vertices Number of nodes in the schedule
      * @param num_procs Number of processors in the system
      */
-    inline void Initialize(const VertexIdxT numVertices, const unsigned numProcs) {
-        nodeLambdaVec.assign(numVertices, std::vector<unsigned>(numProcs, 0));
-        numProcs = numProcs;
+    inline void Initialize(const VertexIdxT numVertices, const unsigned numProcs_) {
+        nodeLambdaVec.assign(numVertices, std::vector<unsigned>(numProcs_, 0));
+        numProcs = numProcs_;
     }
 
     /**

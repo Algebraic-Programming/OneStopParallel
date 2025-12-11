@@ -333,7 +333,7 @@ class TopSortView {
   public:
     TopSortView(const GraphT &graph) : graph_(graph) {}
 
-    auto Begin() {
+    auto begin() {
         if constexpr (hasVerticesInTopOrderV<GraphT>) {
             return graph_.Vertices().begin();
         } else {
@@ -341,7 +341,7 @@ class TopSortView {
         }
     }
 
-    auto End() {
+    auto end() {
         if constexpr (hasVerticesInTopOrderV<GraphT>) {
             return graph_.Vertices().end();
         } else {
@@ -372,9 +372,9 @@ class DfsTopSortView {
   public:
     DfsTopSortView(const GraphT &graph) : graph_(graph) {}
 
-    auto Begin() { return TsIterator(graph_, vertexContainer_, 0); }
+    auto begin() { return TsIterator(graph_, vertexContainer_, 0); }
 
-    auto End() { return TsIterator(graph_, vertexContainer_, graph_.NumVertices()); }
+    auto end() { return TsIterator(graph_, vertexContainer_, graph_.NumVertices()); }
 };
 
 /**
@@ -479,9 +479,9 @@ class PriorityTopSortView {
     template <typename... Args>
     PriorityTopSortView(const GraphT &graph, Args &&...args) : graph_(graph), vertexContainer_(std::forward<Args>(args)...) {}
 
-    auto Begin() const { return TsIterator(graph_, vertexContainer_, 0); }
+    auto begin() const { return TsIterator(graph_, vertexContainer_, 0); }
 
-    auto End() const { return TsIterator(graph_, vertexContainer_, graph_.NumVertices()); }
+    auto end() const { return TsIterator(graph_, vertexContainer_, graph_.NumVertices()); }
 };
 
 template <typename GraphT>
@@ -501,9 +501,9 @@ class LocalityTopSortView {
   public:
     LocalityTopSortView(const GraphT &graph) : graph_(graph), vertexContainer_() {}
 
-    auto Begin() { return TsIterator(graph_, vertexContainer_, 0); }
+    auto begin() { return TsIterator(graph_, vertexContainer_, 0); }
 
-    auto End() { return TsIterator(graph_, vertexContainer_, graph_.NumVertices()); }
+    auto end() { return TsIterator(graph_, vertexContainer_, graph_.NumVertices()); }
 };
 
 template <typename GraphT>
@@ -548,9 +548,9 @@ class MaxChildrenTopSortView {
   public:
     MaxChildrenTopSortView(const GraphT &graph) : graph_(graph), vertexContainer_(graph) {}
 
-    auto Begin() { return TsIterator(graph_, vertexContainer_, 0); }
+    auto begin() { return TsIterator(graph_, vertexContainer_, 0); }
 
-    auto End() { return TsIterator(graph_, vertexContainer_, graph_.NumVertices()); }
+    auto end() { return TsIterator(graph_, vertexContainer_, graph_.NumVertices()); }
 };
 
 template <typename GraphT>
@@ -600,9 +600,9 @@ class RandomTopSortView {
   public:
     RandomTopSortView(const GraphT &graph) : graph_(graph), vertexContainer_(graph_.NumVertices()) {}
 
-    auto Begin() { return TsIterator(graph_, vertexContainer_, 0); }
+    auto begin() { return TsIterator(graph_, vertexContainer_, 0); }
 
-    auto End() { return TsIterator(graph_, vertexContainer_, graph_.NumVertices()); }
+    auto end() { return TsIterator(graph_, vertexContainer_, graph_.NumVertices()); }
 };
 
 template <typename GraphT>
@@ -648,9 +648,9 @@ class PriorityVecTopSortView {
     PriorityVecTopSortView(const GraphT &graph, const std::vector<PrioT> &prioritiesVec)
         : graph_(graph), vertexContainer_(prioritiesVec) {}
 
-    auto Begin() { return TsIterator(graph_, vertexContainer_, 0); }
+    auto begin() { return TsIterator(graph_, vertexContainer_, 0); }
 
-    auto End() { return TsIterator(graph_, vertexContainer_, graph_.NumVertices()); }
+    auto end() { return TsIterator(graph_, vertexContainer_, graph_.NumVertices()); }
 };
 
 }    // namespace osp

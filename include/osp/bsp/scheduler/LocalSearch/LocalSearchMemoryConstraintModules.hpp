@@ -35,7 +35,7 @@ template <typename T, typename = void>
 struct IsLocalSearchMemoryConstraint : std::false_type {};
 
 template <typename T>
-struct is_local_search_memory_constraint<
+struct IsLocalSearchMemoryConstraint<
     T,
     std::void_t<decltype(std::declval<T>().initialize(std::declval<SetSchedule<typename T::Graph_impl_t>>(),
                                                       std::declval<VectorSchedule<typename T::Graph_impl_t>>())),
@@ -81,12 +81,12 @@ struct LsLocalMemoryConstraint {
 
     LsLocalMemoryConstraint() : setSchedule(nullptr), graph(nullptr) {}
 
-    inline void Initialize(const SetSchedule<GraphT> &setSchedule, const VectorSchedule<GraphT> &) {
-        if (setSchedule.GetInstance().GetArchitecture().GetMemoryConstraintType() != MEMORY_CONSTRAINT_TYPE::LOCAL) {
+    inline void Initialize(const SetSchedule<GraphT> &setSched, const VectorSchedule<GraphT> &) {
+        if (setSched.GetInstance().GetArchitecture().GetMemoryConstraintType() != MEMORY_CONSTRAINT_TYPE::LOCAL) {
             throw std::invalid_argument("Memory constraint type is not LOCAL");
         }
 
-        setSchedule = &setSchedule;
+        setSchedule = &setSched;
         graph = &setSchedule->GetInstance().GetComputationalDag();
         stepProcessorMemory = std::vector<std::vector<VMemwT<GraphT>>>(
             setSchedule->NumberOfSupersteps(), std::vector<VMemwT<GraphT>>(setSchedule->GetInstance().NumberOfProcessors(), 0));
@@ -160,12 +160,12 @@ struct LsLocalIncEdgesMemoryConstraint {
 
     LsLocalIncEdgesMemoryConstraint() : setSchedule(nullptr), vectorSchedule(nullptr), graph(nullptr) {}
 
-    inline void Initialize(const SetSchedule<GraphT> &setSchedule, const VectorSchedule<GraphT> &vecSchedule) {
-        if (setSchedule.getInstance().getArchitecture().getMemoryConstraintType() != MEMORY_CONSTRAINT_TYPE::LOCAL_INC_EDGES) {
+    inline void Initialize(const SetSchedule<GraphT> &setSched, const VectorSchedule<GraphT> &vecSchedule) {
+        if (setSched.getInstance().getArchitecture().getMemoryConstraintType() != MEMORY_CONSTRAINT_TYPE::LOCAL_INC_EDGES) {
             throw std::invalid_argument("Memory constraint type is not LOCAL_INC_EDGES");
         }
 
-        setSchedule = &setSchedule;
+        setSchedule = &setSched;
         vectorSchedule = &vecSchedule;
         graph = &setSchedule->getInstance().getComputationalDag();
         stepProcessorMemory = std::vector<std::vector<VMemwT<GraphT>>>(
@@ -336,13 +336,12 @@ struct LsLocalSourcesIncEdgesMemoryConstraint {
         std::swap(stepProcessorPred[step1], stepProcessorPred[step2]);
     }
 
-    inline void Initialize(const SetSchedule<GraphT> &setSchedule, const VectorSchedule<GraphT> &vecSchedule) {
-        if (setSchedule.getInstance().getArchitecture().getMemoryConstraintType()
-            != MEMORY_CONSTRAINT_TYPE::LOCAL_SOURCES_INC_EDGES) {
+    inline void Initialize(const SetSchedule<GraphT> &setSched, const VectorSchedule<GraphT> &vecSchedule) {
+        if (setSched.getInstance().getArchitecture().getMemoryConstraintType() != MEMORY_CONSTRAINT_TYPE::LOCAL_SOURCES_INC_EDGES) {
             throw std::invalid_argument("Memory constraint type is not LOCAL_SOURCES_INC_EDGES");
         }
 
-        setSchedule = &setSchedule;
+        setSchedule = &setSched;
         vectorSchedule = &vecSchedule;
         graph = &setSchedule->getInstance().getComputationalDag();
         stepProcessorMemory = std::vector<std::vector<VMemwT<GraphT>>>(

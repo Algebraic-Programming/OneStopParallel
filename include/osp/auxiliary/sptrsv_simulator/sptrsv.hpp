@@ -417,11 +417,11 @@ class Sptrsv {
                 const size_t proc = static_cast<size_t>(omp_get_thread_num());
                 const UVertType upperLimit = stepProcPtr[step][proc] + stepProcNum[step][proc];
                 for (UVertType rowIdx_ = stepProcPtr[step][proc]; rowIdx_ < upperLimit; rowIdx_++) {
-                    for (UVertType i = rowPtr[rowIdx]; i < rowPtr[rowIdx + 1] - 1; i++) {
-                        x[rowIdx] -= val[i] * x[colIdx[i]];
+                    for (UVertType i = rowPtr[rowIdx_]; i < rowPtr[rowIdx_ + 1] - 1; i++) {
+                        x[rowIdx_] -= val[i] * x[colIdx[i]];
                     }
 
-                    x[rowIdx] /= val[rowPtr[rowIdx + 1] - 1];
+                    x[rowIdx_] /= val[rowPtr[rowIdx_ + 1] - 1];
                 }
 
 #    pragma omp barrier
@@ -436,12 +436,12 @@ class Sptrsv {
                 const size_t proc = static_cast<size_t>(omp_get_thread_num());
                 const UVertType upperLimit = stepProcPtr[step][proc] + stepProcNum[step][proc];
                 for (UVertType rowIdx_ = stepProcPtr[step][proc]; rowIdx_ < upperLimit; rowIdx_++) {
-                    x[rowIdx] = b[rowIdx];
-                    for (UVertType i = rowPtr[rowIdx]; i < rowPtr[rowIdx + 1] - 1; i++) {
-                        x[rowIdx] -= val[i] * x[colIdx[i]];
+                    x[rowIdx_] = b[rowIdx_];
+                    for (UVertType i = rowPtr[rowIdx_]; i < rowPtr[rowIdx_ + 1] - 1; i++) {
+                        x[rowIdx_] -= val[i] * x[colIdx[i]];
                     }
 
-                    x[rowIdx] /= val[rowPtr[rowIdx + 1] - 1];
+                    x[rowIdx_] /= val[rowPtr[rowIdx_ + 1] - 1];
                 }
 
 #    pragma omp barrier

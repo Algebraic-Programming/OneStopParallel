@@ -90,7 +90,7 @@ std::vector<VWorkwT<GraphT>> ComputeMaxWorkPerStep(const BspInstance<GraphT> &in
 template <typename GraphT>
 std::vector<VWorkwT<GraphT>> ComputeMaxWorkPerStep(const BspSchedule<GraphT> &schedule) {
     return ComputeMaxWorkPerStep(
-        schedule.getInstance(), schedule.numberOfSupersteps(), schedule.AssignedProcessors(), schedule.AssignedSupersteps());
+        schedule.GetInstance(), schedule.NumberOfSupersteps(), schedule.AssignedProcessors(), schedule.AssignedSupersteps());
 }
 
 template <typename GraphT>

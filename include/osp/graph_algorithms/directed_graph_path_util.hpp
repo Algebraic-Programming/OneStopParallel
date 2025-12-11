@@ -49,7 +49,7 @@ template <typename GraphT>
 bool HasPath(const VertexIdxT<GraphT> src, const VertexIdxT<GraphT> dest, const GraphT &graph) {
     static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
-    for (const auto &child : bfs_view(graph, src)) {
+    for (const auto &child : BfsView(graph, src)) {
         if (child == dest) {
             return true;
         }
@@ -118,7 +118,7 @@ std::size_t LongestPath(const GraphT &graph) {
     std::vector<VertexType> distances(graph.NumVertices(), 0), visitCounter(graph.NumVertices(), 0);
 
     // Find source nodes
-    for (const auto &node : source_vertices_view(graph)) {
+    for (const auto &node : SourceVerticesView(graph)) {
         bfsQueue.push(node);
     }
 
@@ -158,7 +158,7 @@ std::vector<VertexIdxT<GraphT>> LongestChain(const GraphT &graph) {
     VertexType endLongestChain = 0;
 
     // calculating lenght of longest path
-    for (const VertexType &node : top_sort_view(graph)) {
+    for (const VertexType &node : TopSortView(graph)) {
         unsigned maxTemp = 0;
         for (const auto &parent : graph.Parents(node)) {
             maxTemp = std::max(maxTemp, topLength[parent]);
@@ -297,14 +297,14 @@ std::vector<int> GetStrictPosetIntegerMap(unsigned const noise, double const poi
         maxPath = std::max(maxPath, topDistance[vertex]);
     }
 
-    for (const auto &source : source_vertices_view(graph)) {
+    for (const auto &source : SourceVerticesView(graph)) {
         if (maxPath - botDistance[source] + 1U + 2U * noise > static_cast<unsigned>(std::numeric_limits<int>::max())) {
             throw std::overflow_error("Overflow in get_strict_poset_integer_map");
         }
         newTop[source] = RandInt(static_cast<int>(maxPath - botDistance[source] + 1 + 2 * noise)) - static_cast<int>(noise);
     }
 
-    for (const auto &sink : sink_vertices_view(graph)) {
+    for (const auto &sink : SinkVerticesView(graph)) {
         if (maxPath - topDistance[sink] + 1U + 2U * noise > static_cast<unsigned>(std::numeric_limits<int>::max())) {
             throw std::overflow_error("Overflow in get_strict_poset_integer_map");
         }

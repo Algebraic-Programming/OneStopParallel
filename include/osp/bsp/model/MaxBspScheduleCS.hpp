@@ -91,10 +91,10 @@ class MaxBspScheduleCS : public BspScheduleCS<GraphT> {
     virtual ~MaxBspScheduleCS() = default;
 
     virtual VWorkwT<GraphT> ComputeCosts() const override {
-        std::vector<std::vector<VCommwT<GraphT>>> rec(this->getInstance().NumberOfProcessors(),
+        std::vector<std::vector<VCommwT<GraphT>>> rec(this->GetInstance().NumberOfProcessors(),
                                                       std::vector<VCommwT<GraphT>>(this->numberOfSupersteps_, 0));
 
-        std::vector<std::vector<VCommwT<GraphT>>> send(this->getInstance().NumberOfProcessors(),
+        std::vector<std::vector<VCommwT<GraphT>>> send(this->GetInstance().NumberOfProcessors(),
                                                        std::vector<VCommwT<GraphT>>(this->numberOfSupersteps_, 0));
 
         this->ComputeCsCommunicationCostsHelper(rec, send);

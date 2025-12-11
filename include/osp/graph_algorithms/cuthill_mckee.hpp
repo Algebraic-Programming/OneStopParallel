@@ -40,8 +40,8 @@ struct CmVertex {
 
     CmVertex() : vertex(0), parentPosition(0), degree(0) {}
 
-    CmVertex(VertexType vertex, VertexType degree, VertexType parentPosition)
-        : vertex(vertex), parentPosition(parentPosition), degree(degree) {}
+    CmVertex(VertexType vertex_, VertexType degree_, VertexType parentPosition_)
+        : vertex(vertex_), parentPosition(parentPosition_), degree(degree_) {}
 
     bool operator<(CmVertex const &rhs) const {
         return (parentPosition < rhs.parentPosition) || (parentPosition == rhs.parentPosition and degree < rhs.degree)
@@ -59,7 +59,7 @@ std::vector<VertexIdxT<GraphT>> CuthillMckeeWavefront(const GraphT &dag, bool pe
     std::vector<VertexType> predecessorsPosition(dag.NumVertices(), dag.NumVertices());
 
     std::vector<CmVertex> currentWavefront;
-    for (const auto &source : source_vertices_view(dag)) {
+    for (const auto &source : SourceVerticesView(dag)) {
         currentWavefront.push_back(CmVertex(source, dag.OutDegree(source), 0));
     }
 
@@ -260,7 +260,7 @@ inline std::vector<VertexIdxT<GraphT>> GetTopOrderCuthillMcKeeWavefront(const Gr
     if (dag.NumVertices() > 0) {
         std::vector<VertexIdxT<GraphT>> priority = CuthillMckeeWavefront(dag);
         order.reserve(dag.NumVertices());
-        for (const auto &v : priority_vec_top_sort_view(dag, priority)) {
+        for (const auto &v : PriorityVecTopSortView(dag, priority)) {
             order.push_back(v);
         }
     }
@@ -274,7 +274,7 @@ inline std::vector<VertexIdxT<GraphT>> GetTopOrderCuthillMcKeeUndirected(const G
     if (dag.NumVertices() > 0) {
         std::vector<VertexIdxT<GraphT>> priority = CuthillMckeeUndirected(dag, true, true);
         order.reserve(dag.NumVertices());
-        for (const auto &v : priority_vec_top_sort_view(dag, priority)) {
+        for (const auto &v : PriorityVecTopSortView(dag, priority)) {
             order.push_back(v);
         }
     }
