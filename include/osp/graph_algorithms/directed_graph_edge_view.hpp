@@ -77,12 +77,12 @@ class edge_view {
         DirectedEdgeIterator &operator=(const DirectedEdgeIterator &other) = default;
         DirectedEdgeIterator &operator=(DirectedEdgeIterator &&other) noexcept = default;
 
-        explicit DirectedEdgeIterator(const Graph_t &graph) : graph_(&graph), currentVertex_(0), currentEdgeIdx_(0) {
+        explicit DirectedEdgeIterator(const Graph_t &graph1) : graph_(&graph1), currentVertex_(0), currentEdgeIdx_(0) {
             advanceToValid();
         }
 
-        DirectedEdgeIterator(const vertex_idx_t<Graph_t> edge_idx, const Graph_t &graph)
-            : graph_(&graph), currentVertex_(0), currentEdgeIdx_(edge_idx) {
+        DirectedEdgeIterator(const vertex_idx_t<Graph_t> edge_idx, const Graph_t &graph1)
+            : graph_(&graph1), currentVertex_(0), currentEdgeIdx_(edge_idx) {
 
             if (currentEdgeIdx_ >= graph_->num_edges()) {
                 currentEdgeIdx_ = graph_->num_edges();
