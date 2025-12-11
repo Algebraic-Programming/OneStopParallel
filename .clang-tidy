@@ -1,24 +1,71 @@
 Checks: '-*,readability-identifier-naming'
 
 CheckOptions:
-  # 1. Member Variables: camelBack with a trailing underscore (e.g., memberVariableTest_)
-  - key:             readability-identifier-naming.MemberCase
-    value:           camelBack
-  - key:             readability-identifier-naming.MemberSuffix
-    value:           _
+  # 1. Namespaces: snake_case (e.g., osp)
+  - key:             readability-identifier-naming.NamespaceCase
+    value:           lower_case
 
-  # 2. Functions: CamelCase (e.g., CalculateTotal)
-  - key:             readability-identifier-naming.FunctionCase
-    value:           CamelCase
-
-  # 3. Local Variables/Parameters: camelBack (e.g., totalValue)
-  - key:             readability-identifier-naming.VariableCase
-    value:           camelBack
-  - key:             readability-identifier-naming.ParameterCase
-    value:           camelBack
-
-  # 4. Classes/Structs: CamelCase (e.g., MyClass)
+  # 2. Classes and Structs: CamelCase (e.g., MyClass)
   - key:             readability-identifier-naming.ClassCase
     value:           CamelCase
   - key:             readability-identifier-naming.StructCase
     value:           CamelCase
+
+  # 3. Type Aliases: CamelCase (e.g., MyTypeAlias)
+  - key:             readability-identifier-naming.TypeAliasCase
+    value:           CamelCase
+  - key:             readability-identifier-naming.TypeAliasIgnoredRegexp
+    value:           "^(iterator_category|difference_type|value_type|pointer|reference|const_pointer|const_reference)$"
+
+  # 4. Template Parameters
+  # Types: CamelCase (e.g., GraphT, T)
+  - key:             readability-identifier-naming.TemplateParameterCase
+    value:           CamelCase
+  # Template Template Parameters: CamelCase
+  - key:             readability-identifier-naming.TemplateTemplateParameterCase
+    value:           CamelCase
+  # Non-type Template Parameters: CamelCase
+  - key:             readability-identifier-naming.TemplateNonTypeParameterCase
+    value:           CamelCase
+
+  # 5. Functions and Methods: CamelCase
+  - key:             readability-identifier-naming.FunctionCase
+    value:           CamelCase
+  - key:             readability-identifier-naming.MethodCase
+    value:           CamelCase
+
+  # 6. Variables
+  # Local Variables: camelBack
+  - key:             readability-identifier-naming.VariableCase
+    value:           camelBack
+  # Parameters: camelBack
+  - key:             readability-identifier-naming.ParameterCase
+    value:           camelBack
+
+  # 7. Member Variables
+  # Private/Protected Members: camelBack with '_' suffix
+  - key:             readability-identifier-naming.PrivateMemberCase
+    value:           camelBack
+  - key:             readability-identifier-naming.PrivateMemberSuffix
+    value:           _
+  - key:             readability-identifier-naming.ProtectedMemberCase
+    value:           camelBack
+  - key:             readability-identifier-naming.ProtectedMemberSuffix
+    value:           _
+  # Public Members: camelBack with '_' suffix
+  - key:             readability-identifier-naming.PublicMemberCase
+    value:           camelBack
+  - key:             readability-identifier-naming.PublicMemberSuffix
+    value:           _
+
+  # 8. Constants
+  # Static Constant Members: camelBack (no suffix)
+  - key:             readability-identifier-naming.StaticConstantMemberCase
+    value:           camelBack
+  - key:             readability-identifier-naming.StaticConstantMemberSuffix
+    value:           _
+  # Global Constants / Constexpr Variables
+  - key:             readability-identifier-naming.GlobalConstantCase
+    value:           camelBack
+  - key:             readability-identifier-naming.ConstexprVariableCase
+    value:           camelBack
