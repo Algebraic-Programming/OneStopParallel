@@ -282,7 +282,7 @@ class OrbitGraphProcessor {
 
                     if constexpr (verbose) {
                         std::cout << "  - Merging " << v << " into " << u << ". New coarse graph has "
-                                  << temp_coarse_graph.num_vertices() << " nodes.\n";
+                                  << temp_coarse_graph.NumVertices() << " nodes.\n";
                     }
 
                     CommitMerge(u,
@@ -522,7 +522,7 @@ class OrbitGraphProcessor {
                 // Commit Merge
                 if constexpr (verbose) {
                     std::cout << "  - Merging " << v << " into " << u << ". New coarse graph has "
-                              << temp_coarse_graph.num_vertices() << " nodes.\n";
+                              << temp_coarse_graph.NumVertices() << " nodes.\n";
                 }
 
                 CommitMerge(u,

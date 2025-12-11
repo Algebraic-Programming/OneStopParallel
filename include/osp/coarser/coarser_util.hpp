@@ -132,9 +132,9 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
             for (const VertexIdxT<GraphTIn> &vert : dagIn.Vertices()) {
                 coarsenedDag.SetVertexType(vertexContractionMap[vert], dagIn.VertexType(vert));
             }
-            // assert(std::all_of(dag_in.vertices().begin(), dag_in.vertices().end(),
+            // assert(std::all_of(dag_in.Vertices().begin(), dag_in.Vertices().end(),
             //         [&dag_in, &vertex_contraction_map, &coarsened_dag](const auto &vert){ return
-            //         dag_in.vertex_type(vert) ==  coarsened_dag.vertex_type(vertex_contraction_map[vert]); })
+            //         dag_in.VertexType(vert) ==  coarsened_dag.VertexType(vertex_contraction_map[vert]); })
             //                 && "Contracted vertices must be of the same type");
         }
 
@@ -143,7 +143,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
                           "Edge weight type of in graph and out graph must be the same!");
 
             for (const auto &edge : edges(coarsenedDag)) {
-                coarsenedDag.set_edge_comm_weight(edge, 0);
+                coarsenedDag.SetEdgeCommWeight(edge, 0);
             }
 
             for (const auto &oriEdge : edges(dagIn)) {
@@ -156,8 +156,8 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
 
                 const auto [cont_edge, found] = edge_desc(src, tgt, coarsenedDag);
                 assert(found && "The edge should already exist");
-                coarsenedDag.set_edge_comm_weight(
-                    cont_edge, ECommAccMethod()(coarsenedDag.edge_comm_weight(cont_edge), dagIn.edge_comm_weight(oriEdge)));
+                coarsenedDag.SetEdgeCommWeight(
+                    cont_edge, ECommAccMethod()(coarsenedDag.EdgeCommWeight(cont_edge), dagIn.EdgeCommWeight(oriEdge)));
             }
         }
         return true;
@@ -194,9 +194,9 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
             for (const VertexIdxT<GraphTIn> &vert : dagIn.Vertices()) {
                 coarsenedDag.SetVertexType(vertexContractionMap[vert], dagIn.VertexType(vert));
             }
-            // assert(std::all_of(dag_in.vertices().begin(), dag_in.vertices().end(),
+            // assert(std::all_of(dag_in.Vertices().begin(), dag_in.Vertices().end(),
             //         [&dag_in, &vertex_contraction_map, &coarsened_dag](const auto &vert){ return
-            //         dag_in.vertex_type(vert) ==  coarsened_dag.vertex_type(vertex_contraction_map[vert]); })
+            //         dag_in.VertexType(vert) ==  coarsened_dag.VertexType(vertex_contraction_map[vert]); })
             //                 && "Contracted vertices must be of the same type");
         }
 
@@ -280,7 +280,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn, GraphTOut &coarsenedDag, std::vec
             static_assert(std::is_same_v<VMemwT<GraphTIn>, VMemwT<GraphTOut>>,
                           "Memory weight types of in-graph and out-graph must be the same.");
 
-            for (const VertexIdxT<GraphTIn> &vert : coarsenedDag.vertices()) {
+            for (const VertexIdxT<GraphTIn> &vert : coarsenedDag.Vertices()) {
                 coarsenedDag.SetVertexWorkWeight(vert, 0);
                 coarsenedDag.SetVertexCommWeight(vert, 0);
                 coarsenedDag.SetVertexMemWeight(vert, 0);
@@ -289,15 +289,15 @@ bool ConstructCoarseDag(const GraphTIn &dagIn, GraphTOut &coarsenedDag, std::vec
             for (const VertexIdxT<GraphTIn> &vert : dagIn.Vertices()) {
                 coarsenedDag.SetVertexWorkWeight(
                     vertexContractionMap[vert],
-                    VWorkAccMethod()(coarsenedDag.vertex_work_weight(combinedExpansionMap[vert]), dagIn.VertexWorkWeight(vert)));
+                    VWorkAccMethod()(coarsenedDag.VertexWorkWeight(combinedExpansionMap[vert]), dagIn.VertexWorkWeight(vert)));
 
                 coarsenedDag.SetVertexCommWeight(
                     vertexContractionMap[vert],
-                    VCommAccMethod()(coarsenedDag.vertex_comm_weight(combinedExpansionMap[vert]), dagIn.VertexCommWeight(vert)));
+                    VCommAccMethod()(coarsenedDag.VertexCommWeight(combinedExpansionMap[vert]), dagIn.VertexCommWeight(vert)));
 
                 coarsenedDag.SetVertexMemWeight(
                     vertexContractionMap[vert],
-                    VMemAccMethod()(coarsenedDag.vertex_mem_weight(combinedExpansionMap[vert]), dagIn.VertexMemWeight(vert)));
+                    VMemAccMethod()(coarsenedDag.VertexMemWeight(combinedExpansionMap[vert]), dagIn.VertexMemWeight(vert)));
             }
         }
 
@@ -308,9 +308,9 @@ bool ConstructCoarseDag(const GraphTIn &dagIn, GraphTOut &coarsenedDag, std::vec
             for (const VertexIdxT<GraphTIn> &vert : dagIn.Vertices()) {
                 coarsenedDag.SetVertexType(vertexContractionMap[vert], dagIn.VertexType(vert));
             }
-            // assert(std::all_of(dag_in.vertices().begin(), dag_in.vertices().end(),
+            // assert(std::all_of(dag_in.Vertices().begin(), dag_in.Vertices().end(),
             //         [&dag_in, &vertex_contraction_map, &coarsened_dag](const auto &vert){ return
-            //         dag_in.vertex_type(vert) ==  coarsened_dag.vertex_type(vertex_contraction_map[vert]); })
+            //         dag_in.VertexType(vert) ==  coarsened_dag.VertexType(vertex_contraction_map[vert]); })
             //                 && "Contracted vertices must be of the same type");
         }
 
@@ -341,7 +341,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn, GraphTOut &coarsenedDag, std::vec
                 assert(source(contEdge, coarsenedDag) == pushforwardMap[src]
                        && target(contEdge, coarsenedDag) == pushforwardMap[tgt]);
                 coarsenedDag.SetEdgeCommWeight(
-                    src, tgt, ECommAccMethod()(coarsenedDag.edge_comm_weight(contEdge), dagIn.EdgeCommWeight(oriEdge)));
+                    src, tgt, ECommAccMethod()(coarsenedDag.EdgeCommWeight(contEdge), dagIn.EdgeCommWeight(oriEdge)));
             }
         }
 

@@ -47,7 +47,7 @@ std::vector<std::vector<VertexIdxT<GraphT>>> HeavyEdgePreprocess(const GraphT &g
         if constexpr (hasEdgeWeightsV<GraphT>) {
             edgeCommunications.emplace_back(graph.EdgeCommWeight(edge));
         } else {
-            edgeCommunications.emplace_back(graph.vertex_comm_weight(source(edge, graph)));
+            edgeCommunications.emplace_back(graph.VertexCommWeight(source(edge, graph)));
         }
     }
 
@@ -70,7 +70,7 @@ std::vector<std::vector<VertexIdxT<GraphT>>> HeavyEdgePreprocess(const GraphT &g
                 edgeList.emplace_back(edge);
             }
         } else {
-            if (graph.vertex_comm_weight(source(edge, graph)) > minimalEdgeWeight) {
+            if (graph.VertexCommWeight(source(edge, graph)) > minimalEdgeWeight) {
                 edgeList.emplace_back(edge);
             }
         }
@@ -83,7 +83,7 @@ std::vector<std::vector<VertexIdxT<GraphT>>> HeavyEdgePreprocess(const GraphT &g
         });
     } else {
         std::sort(edgeList.begin(), edgeList.end(), [graph](const EdgeType &left, const EdgeType &right) {
-            return graph.vertex_comm_weight(source(left, graph)) > graph.vertex_comm_weight(source(right, graph));
+            return graph.VertexCommWeight(source(left, graph)) > graph.VertexCommWeight(source(right, graph));
         });
     }
 

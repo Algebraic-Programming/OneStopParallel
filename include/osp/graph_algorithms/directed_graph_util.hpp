@@ -108,7 +108,7 @@ struct VertexCondIterator {
     using pointer = const value_type *;
     using reference = const value_type &;
 
-    VertexCondIterator(const GraphT &graph, const IteratorT &start) : graph(graph), currentVertex(start) {
+    VertexCondIterator(const GraphT &graph_, const IteratorT &start) : graph(graph_), currentVertex(start) {
         while (currentVertex != graph.Vertices().end()) {
             // if (cond.eval(graph, *current_vertex)) {
             if (cond(graph, *currentVertex)) {
@@ -159,7 +159,7 @@ class SourceVerticesView {
     const GraphT &graph_;
 
     struct SourceEval {
-        // static bool eval(const Graph_t &graph, const vertex_idx_t<Graph_t> &v) { return graph.in_degree(v) == 0; }
+        // static bool eval(const Graph_t &graph, const vertex_idx_t<Graph_t> &v) { return graph.InDegree(v) == 0; }
         bool operator()(const GraphT &graph, const VertexIdxT<GraphT> &v) const { return graph.InDegree(v) == 0; }
     };
 
@@ -172,7 +172,7 @@ class SourceVerticesView {
 
     auto End() const { return SourceIterator(graph_, graph_.Vertices().end()); }
 
-    auto Size() const { return graph_.num_vertices(); }
+    auto Size() const { return graph_.NumVertices(); }
 };
 
 /**
@@ -188,7 +188,7 @@ class SinkVerticesView {
     const GraphT &graph_;
 
     struct SinkEval {
-        // static bool eval(const Graph_t &graph, const vertex_idx_t<Graph_t> &v) { return graph.out_degree(v) == 0; }
+        // static bool eval(const Graph_t &graph, const vertex_idx_t<Graph_t> &v) { return graph.OutDegree(v) == 0; }
         bool operator()(const GraphT &graph, const VertexIdxT<GraphT> &v) { return graph.OutDegree(v) == 0; }
     };
 
@@ -201,7 +201,7 @@ class SinkVerticesView {
 
     auto End() const { return SinkIterator(graph_, graph_.Vertices().end()); }
 
-    auto Size() const { return graph_.num_vertices(); }
+    auto Size() const { return graph_.NumVertices(); }
 };
 
 /**
@@ -215,7 +215,7 @@ template <typename GraphT>
 std::vector<VertexIdxT<GraphT>> SourceVertices(const GraphT &graph) {
     static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
     std::vector<VertexIdxT<GraphT>> vec;
-    for (const auto &source : source_vertices_view(graph)) {
+    for (const auto &source : SourceVerticesView(graph)) {
         vec.push_back(source);
     }
     return vec;
@@ -233,7 +233,7 @@ std::vector<VertexIdxT<GraphT>> SinkVertices(const GraphT &graph) {
     static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
     std::vector<VertexIdxT<GraphT>> vec;
 
-    for (const auto &sink : sink_vertices_view(graph)) {
+    for (const auto &sink : SinkVerticesView(graph)) {
         vec.push_back(sink);
     }
     return vec;
@@ -266,7 +266,8 @@ struct TraversalIterator {
     using pointer = const value_type *;
     using reference = const value_type &;
 
-    TraversalIterator(const GraphT &graph, const VertexIdxT<GraphT> &start) : graph(graph), adjIter(graph), currentVertex(start) {
+    TraversalIterator(const GraphT &graph_, const VertexIdxT<GraphT> &start)
+        : graph(graph_), adjIter(graph_), currentVertex(start) {
         if (graph.NumVertices() == start) {
             return;
         }
@@ -316,7 +317,7 @@ template <typename GraphT>
 struct ChildIterator {
     const GraphT &graph;
 
-    ChildIterator(const GraphT &graph) : graph(graph) {}
+    ChildIterator(const GraphT &graph_) : graph(graph_) {}
 
     inline auto Iterate(const VertexIdxT<GraphT> &v) const { return graph.Children(v); }
 };
@@ -358,7 +359,7 @@ class BfsView {
 
     auto End() const { return BfsIterator(graph_, graph_.NumVertices()); }
 
-    auto Size() const { return graph_.num_vertices(); }
+    auto Size() const { return graph_.NumVertices(); }
 };
 
 template <typename GraphT>
@@ -396,18 +397,18 @@ class DfsView {
 
     auto Begin() const { return DfsIterator(graph_, startVertex_); }
 
-    auto End() const { return DfsIterator(graph_, graph_.num_vertices()); }
+    auto End() const { return DfsIterator(graph_, graph_.NumVertices()); }
 
-    auto Size() const { return graph_.num_vertices(); }
+    auto Size() const { return graph_.NumVertices(); }
 };
 
 template <typename GraphT>
 struct ParentsIterator {
     const GraphT &graph;
 
-    ParentsIterator(const GraphT &graph) : graph(graph) {}
+    ParentsIterator(const GraphT &graph_) : graph(graph_) {}
 
-    inline auto Iterate(const VertexIdxT<GraphT> &v) const { return graph.parents(v); }
+    inline auto Iterate(const VertexIdxT<GraphT> &v) const { return graph.Parents(v); }
 };
 
 /**
@@ -430,9 +431,9 @@ class BfsReverseView {
 
     auto Begin() const { return BfsIterator(graph_, startVertex_); }
 
-    auto End() const { return BfsIterator(graph_, graph_.num_vertices()); }
+    auto End() const { return BfsIterator(graph_, graph_.NumVertices()); }
 
-    auto Size() const { return graph_.num_vertices(); }
+    auto Size() const { return graph_.NumVertices(); }
 };
 
 /**
@@ -445,9 +446,9 @@ class BfsReverseView {
  */
 template <typename GraphT>
 std::vector<VertexIdxT<GraphT>> Successors(const VertexIdxT<GraphT> &v, const GraphT &graph) {
-    static_assert(is_directed_graph_v<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
     std::vector<VertexIdxT<GraphT>> vec;
-    for (const auto &suc : bfs_view(graph, v)) {
+    for (const auto &suc : BfsView(graph, v)) {
         vec.push_back(suc);
     }
     return vec;
@@ -463,9 +464,9 @@ std::vector<VertexIdxT<GraphT>> Successors(const VertexIdxT<GraphT> &v, const Gr
  */
 template <typename GraphT>
 std::vector<VertexIdxT<GraphT>> Ancestors(const VertexIdxT<GraphT> &v, const GraphT &graph) {
-    static_assert(is_directed_graph_v<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
     std::vector<VertexIdxT<GraphT>> vec;
-    for (const auto &anc : bfs_reverse_view(graph, v)) {
+    for (const auto &anc : BfsReverseView(graph, v)) {
         vec.push_back(anc);
     }
     return vec;
@@ -486,7 +487,7 @@ bool IsAcyclic(const GraphT &graph) {
     std::queue<VertexType> next;
 
     // Find source nodes
-    for (const VertexType &v : source_vertices_view(graph)) {
+    for (const VertexType &v : SourceVerticesView(graph)) {
         next.push(v);
     }
 
@@ -509,11 +510,11 @@ bool IsAcyclic(const GraphT &graph) {
 
 template <typename GraphT>
 bool IsConnected(const GraphT &graph) {
-    static_assert(is_directed_graph_v<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
     using VertexType = VertexIdxT<GraphT>;
 
-    if (graph.num_vertices() < 2) {
+    if (graph.NumVertices() < 2) {
         return true;
     }
 
@@ -529,7 +530,7 @@ bool IsConnected(const GraphT &graph) {
         next.pop();
         ++nodeCount;
 
-        for (const VertexType &current : graph.children(node)) {
+        for (const VertexType &current : graph.Children(node)) {
             if (visited.find(current) == visited.end()) {
                 next.push(current);
                 visited.insert(current);
@@ -537,7 +538,7 @@ bool IsConnected(const GraphT &graph) {
         }
     }
 
-    return nodeCount == graph.num_vertices();
+    return nodeCount == graph.NumVertices();
 }
 
 template <typename GraphT>
@@ -641,7 +642,7 @@ std::size_t ComputeWeaklyConnectedComponents(const GraphT &graph, std::vector<Ve
 template <typename GraphT>
 std::size_t CountWeaklyConnectedComponents(const GraphT &graph) {
     std::vector<VertexIdxT<GraphT>> components;
-    return compute_weakly_connected_components(graph, components);
+    return ComputeWeaklyConnectedComponents(graph, components);
 }
 
 }    // namespace osp

@@ -55,15 +55,15 @@ template <typename T, typename = void>
 struct IsDirectedGraph : std::false_type {};
 
 template <typename T>
-struct is_directed_graph<T,
-                         std::void_t<typename DirectedGraphTraits<T>::vertex_idx,
-                                     decltype(std::declval<T>().vertices()),
-                                     decltype(std::declval<T>().num_vertices()),
-                                     decltype(std::declval<T>().num_edges()),
-                                     decltype(std::declval<T>().parents(std::declval<VertexIdxT<T>>())),
-                                     decltype(std::declval<T>().children(std::declval<VertexIdxT<T>>())),
-                                     decltype(std::declval<T>().in_degree(std::declval<VertexIdxT<T>>())),
-                                     decltype(std::declval<T>().out_degree(std::declval<VertexIdxT<T>>()))>>
+struct IsDirectedGraph<T,
+                       std::void_t<typename DirectedGraphTraits<T>::vertex_idx,
+                                   decltype(std::declval<T>().Vertices()),
+                                   decltype(std::declval<T>().NumVertices()),
+                                   decltype(std::declval<T>().NumEdges()),
+                                   decltype(std::declval<T>().Parents(std::declval<VertexIdxT<T>>())),
+                                   decltype(std::declval<T>().Children(std::declval<VertexIdxT<T>>())),
+                                   decltype(std::declval<T>().InDegree(std::declval<VertexIdxT<T>>())),
+                                   decltype(std::declval<T>().OutDegree(std::declval<VertexIdxT<T>>()))>>
     : std::conjunction<IsForwardRangeOf<decltype(std::declval<T>().Vertices()), VertexIdxT<T>>,
                        std::is_integral<decltype(std::declval<T>().NumVertices())>,
                        std::is_integral<decltype(std::declval<T>().NumEdges())>,
@@ -90,7 +90,7 @@ template <typename T, typename VType, typename EType, typename = void>
 struct IsEdgeListType : std::false_type {};
 
 template <typename T, typename VType, typename EType>
-struct is_edge_list_type<
+struct IsEdgeListType<
     T,
     VType,
     EType,

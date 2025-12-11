@@ -48,7 +48,7 @@ namespace osp {
  * It interacts closely with `BspInstance` to access problem-specific data and constraints. In fact, a `BspSchedule` object is
  * tied to a `BspInstance` object.
  *
- * @tparam Graph_t The type of the computational DAG, which must satisfy `is_computational_dag_v`.
+ * @tparam Graph_t The type of the computational DAG, which must satisfy `isComputationalDagV`.
  * @see BspInstance
  * @see IBspSchedule
  * @see IBspScheduleEval

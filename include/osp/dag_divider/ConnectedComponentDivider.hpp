@@ -102,10 +102,10 @@ class ConnectedComponentDivider : public IDagDivider<GraphT> {
 
         vertexMaps[0].resize(subDags_.size());
         for (unsigned i = 0; i < subDags_.size(); ++i) {
-            vertexMaps[0][i].resize(subDags_[i].num_vertices());
+            vertexMaps[0][i].resize(subDags_[i].NumVertices());
         }
 
-        for (const auto &v : dag.vertices()) {
+        for (const auto &v : dag.Vertices()) {
             vertexMaps[0][component_[v]][vertexMap_[v]] = v;
         }
 

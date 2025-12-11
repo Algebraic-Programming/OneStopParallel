@@ -124,7 +124,7 @@ class VectorSchedule : public IBspSchedule<GraphT> {
     void MergeSupersteps(unsigned startStep, unsigned endStep) {
         numberOfSupersteps = 0;
 
-        for (const auto &vertex : getInstance().vertices()) {
+        for (const auto &vertex : getInstance().Vertices()) {
             if (nodeToSuperstepAssignment[vertex] > startStep && nodeToSuperstepAssignment[vertex] <= endStep) {
                 nodeToSuperstepAssignment[vertex] = startStep;
             } else if (nodeToSuperstepAssignment[vertex] > endStep) {
@@ -140,7 +140,7 @@ class VectorSchedule : public IBspSchedule<GraphT> {
     void InsertSupersteps(const unsigned stepBefore, const unsigned numNewSteps) {
         numberOfSupersteps += numNewSteps;
 
-        for (const auto &vertex : getInstance().vertices()) {
+        for (const auto &vertex : getInstance().Vertices()) {
             if (nodeToSuperstepAssignment[vertex] > stepBefore) {
                 nodeToSuperstepAssignment[vertex] += numNewSteps;
             }

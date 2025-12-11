@@ -48,24 +48,23 @@ namespace osp {
  */
 template <typename GraphTIn, typename GraphTOut>
 void TransitiveReductionSparse(const GraphTIn &graphIn, GraphTOut &graphOut) {
-    static_assert(is_directed_graph_v<GraphTIn>, "Input graph must be a directed graph.");
+    static_assert(isDirectedGraphV<GraphTIn>, "Input graph must be a directed graph.");
     static_assert(is_constructable_cdag_v<GraphTOut>, "Output graph must be a constructable computational DAG.");
-    assert(graphOut.num_vertices() == 0 && "Output graph must be empty.");
+    assert(graphOut.NumVertices() == 0 && "Output graph must be empty.");
 
-    if (graphIn.num_vertices() == 0) {
+    if (graphIn.NumVertices() == 0) {
         return;
     }
 
     // 1. Copy vertices and their properties from graph_in to graph_out.
-    for (const auto &vIdx : graphIn.vertices()) {
-        if constexpr (has_typed_vertices_v<GraphTIn> && is_constructable_cdag_typed_vertex_v<GraphTOut>) {
-            graphOut.add_vertex(graphIn.vertex_work_weight(vIdx),
-                                graphIn.vertex_comm_weight(vIdx),
-                                graphIn.vertex_mem_weight(vIdx),
-                                graphIn.vertex_type(vIdx));
+    for (const auto &vIdx : graphIn.Vertices()) {
+        if constexpr (hasTypedVerticesV<GraphTIn> && is_constructable_cdag_typed_vertex_v<GraphTOut>) {
+            graphOut.AddVertex(graphIn.VertexWorkWeight(vIdx),
+                               graphIn.VertexCommWeight(vIdx),
+                               graphIn.VertexMemWeight(vIdx),
+                               graphIn.VertexType(vIdx));
         } else {
-            graphOut.add_vertex(
-                graphIn.vertex_work_weight(vIdx), graphIn.vertex_comm_weight(vIdx), graphIn.vertex_mem_weight(vIdx));
+            graphOut.AddVertex(graphIn.VertexWorkWeight(vIdx), graphIn.VertexCommWeight(vIdx), graphIn.VertexMemWeight(vIdx));
         }
     }
 
@@ -75,17 +74,17 @@ void TransitiveReductionSparse(const GraphTIn &graphIn, GraphTOut &graphOut) {
         const auto u = source(edge, graphIn);
         const auto v = target(edge, graphIn);
         bool isTransitive = false;
-        for (const auto &w : graphIn.children(u)) {
+        for (const auto &w : graphIn.Children(u)) {
             if (w != v && has_path(w, v, graphIn)) {
                 isTransitive = true;
                 break;
             }
         }
         if (!isTransitive) {
-            if constexpr (has_edge_weights_v<GraphTIn> && is_constructable_cdag_comm_edge_v<GraphTOut>) {
-                graphOut.add_edge(u, v, graphIn.edge_comm_weight(edge));
+            if constexpr (hasEdgeWeightsV<GraphTIn> && is_constructable_cdag_comm_edge_v<GraphTOut>) {
+                graphOut.AddEdge(u, v, graphIn.EdgeCommWeight(edge));
             } else {
-                graphOut.add_edge(u, v);
+                graphOut.AddEdge(u, v);
             }
         }
     }
@@ -112,25 +111,24 @@ void TransitiveReductionSparse(const GraphTIn &graphIn, GraphTOut &graphOut) {
  */
 template <typename GraphTIn, typename GraphTOut>
 void TransitiveReductionDense(const GraphTIn &graphIn, GraphTOut &graphOut) {
-    static_assert(is_directed_graph_edge_desc_v<GraphTIn>, "Input graph must be a directed graph with edge descriptors.");
+    static_assert(isDirectedGraphEdgeDescV<GraphTIn>, "Input graph must be a directed graph with edge descriptors.");
     static_assert(is_constructable_cdag_v<GraphTOut>, "Output graph must be a constructable computational DAG.");
-    assert(graphOut.num_vertices() == 0 && "Output graph must be empty.");
+    assert(graphOut.NumVertices() == 0 && "Output graph must be empty.");
 
-    const auto numV = graphIn.num_vertices();
+    const auto numV = graphIn.NumVertices();
     if (numV == 0) {
         return;
     }
 
     // 1. Copy vertices and their properties from graph_in to graph_out.
-    for (const auto &vIdx : graphIn.vertices()) {
-        if constexpr (has_typed_vertices_v<GraphTIn> && is_constructable_cdag_typed_vertex_v<GraphTOut>) {
-            graphOut.add_vertex(graphIn.vertex_work_weight(vIdx),
-                                graphIn.vertex_comm_weight(vIdx),
-                                graphIn.vertex_mem_weight(vIdx),
-                                graphIn.vertex_type(vIdx));
+    for (const auto &vIdx : graphIn.Vertices()) {
+        if constexpr (hasTypedVerticesV<GraphTIn> && is_constructable_cdag_typed_vertex_v<GraphTOut>) {
+            graphOut.AddVertex(graphIn.VertexWorkWeight(vIdx),
+                               graphIn.VertexCommWeight(vIdx),
+                               graphIn.VertexMemWeight(vIdx),
+                               graphIn.VertexType(vIdx));
         } else {
-            graphOut.add_vertex(
-                graphIn.vertex_work_weight(vIdx), graphIn.vertex_comm_weight(vIdx), graphIn.vertex_mem_weight(vIdx));
+            graphOut.AddVertex(graphIn.VertexWorkWeight(vIdx), graphIn.VertexCommWeight(vIdx), graphIn.VertexMemWeight(vIdx));
         }
     }
 
@@ -158,17 +156,17 @@ void TransitiveReductionDense(const GraphTIn &graphIn, GraphTOut &graphOut) {
         const auto u = source(edge, graphIn);
         const auto v = target(edge, graphIn);
         bool isTransitive = false;
-        for (const auto &w : graphIn.children(u)) {
+        for (const auto &w : graphIn.Children(u)) {
             if (w != v && reachable[w][v]) {
                 isTransitive = true;
                 break;
             }
         }
         if (!isTransitive) {
-            if constexpr (has_edge_weights_v<GraphTIn> && is_constructable_cdag_comm_edge_v<GraphTOut>) {
-                graphOut.add_edge(u, v, graphIn.edge_comm_weight(edge));
+            if constexpr (hasEdgeWeightsV<GraphTIn> && is_constructable_cdag_comm_edge_v<GraphTOut>) {
+                graphOut.AddEdge(u, v, graphIn.EdgeCommWeight(edge));
             } else {
-                graphOut.add_edge(u, v);
+                graphOut.AddEdge(u, v);
             }
         }
     }

@@ -34,7 +34,7 @@ class KlCurrentScheduleTotal : public KlCurrentSchedule<GraphT, MemoryConstraint
     KlCurrentScheduleTotal(IklCostFunction *costF) : KlCurrentSchedule<GraphT, MemoryConstraintT>(costF) {}
 
     double commMultiplier = 1.0;
-    constexpr static bool useNodeCommunicationCosts = UseNodeCommunicationCostsArg || not has_edge_weights_v<GraphT>;
+    constexpr static bool useNodeCommunicationCosts = UseNodeCommunicationCostsArg || not hasEdgeWeightsV<GraphT>;
 };
 
 template <typename GraphT, typename MemoryConstraintT, bool UseNodeCommunicationCostsArg>
@@ -55,21 +55,21 @@ class KlTotal : public KlBase<GraphT, MemoryConstraintT> {
         VCommwT<GraphT> maxEdgeWeight = 0;
         VWorkwT<GraphT> maxNodeWeight = 0;
 
-        for (const auto vertex : currentSchedule_.instance->getComputationalDag().vertices()) {
+        for (const auto vertex : currentSchedule_.instance->getComputationalDag().Vertices()) {
             if (is_sink(vertex, currentSchedule_.instance->getComputationalDag())) {
                 continue;
             }
 
-            maxEdgeWeight = std::max(maxEdgeWeight, currentSchedule_.instance->getComputationalDag().vertex_comm_weight(vertex));
+            maxEdgeWeight = std::max(maxEdgeWeight, currentSchedule_.instance->getComputationalDag().VertexCommWeight(vertex));
 
-            maxNodeWeight = std::max(maxNodeWeight, currentSchedule_.instance->getComputationalDag().vertex_work_weight(vertex));
+            maxNodeWeight = std::max(maxNodeWeight, currentSchedule_.instance->getComputationalDag().VertexWorkWeight(vertex));
         }
 
         if constexpr (not currentSchedule_.use_node_communication_costs) {
             maxEdgeWeight = 0;
 
             for (const auto &edge : edges(currentSchedule_.instance->getComputationalDag())) {
-                maxEdgeWeight = std::max(maxEdgeWeight, currentSchedule_.instance->getComputationalDag().edge_comm_weight(edge));
+                maxEdgeWeight = std::max(maxEdgeWeight, currentSchedule_.instance->getComputationalDag().EdgeCommWeight(edge));
             }
         }
 
@@ -108,23 +108,21 @@ class KlTotal : public KlBase<GraphT, MemoryConstraintT> {
 
     virtual void select_nodes_comm() override {
         if constexpr (currentSchedule_.use_node_communication_costs) {
-            for (const auto &node : currentSchedule_.instance->getComputationalDag().vertices()) {
-                for (const auto &source : currentSchedule_.instance->getComputationalDag().parents(node)) {
+            for (const auto &node : currentSchedule_.instance->getComputationalDag().Vertices()) {
+                for (const auto &source : currentSchedule_.instance->getComputationalDag().Parents(node)) {
                     if (currentSchedule_.vector_schedule.assignedProcessor(node)
                         != currentSchedule_.vector_schedule.assignedProcessor(source)) {
-                        if (currentSchedule_.instance->getComputationalDag().vertex_comm_weight(node)
-                            > nodeCommSelectionThreshold_) {
+                        if (currentSchedule_.instance->getComputationalDag().VertexCommWeight(node) > nodeCommSelectionThreshold_) {
                             KlBase<GraphT, MemoryConstraintT>::node_selection.insert(node);
                             break;
                         }
                     }
                 }
 
-                for (const auto &target : currentSchedule_.instance->getComputationalDag().children(node)) {
+                for (const auto &target : currentSchedule_.instance->getComputationalDag().Children(node)) {
                     if (currentSchedule_.vector_schedule.assignedProcessor(node)
                         != currentSchedule_.vector_schedule.assignedProcessor(target)) {
-                        if (currentSchedule_.instance->getComputationalDag().vertex_comm_weight(node)
-                            > nodeCommSelectionThreshold_) {
+                        if (currentSchedule_.instance->getComputationalDag().VertexCommWeight(node) > nodeCommSelectionThreshold_) {
                             KlBase<GraphT, MemoryConstraintT>::node_selection.insert(node);
                             break;
                         }
@@ -133,13 +131,12 @@ class KlTotal : public KlBase<GraphT, MemoryConstraintT> {
             }
 
         } else {
-            for (const auto &node : currentSchedule_.instance->getComputationalDag().vertices()) {
+            for (const auto &node : currentSchedule_.instance->getComputationalDag().Vertices()) {
                 for (const auto &inEdge : in_edges(node, currentSchedule_.instance->getComputationalDag())) {
                     const auto &sourceV = source(inEdge, currentSchedule_.instance->getComputationalDag());
                     if (currentSchedule_.vector_schedule.assignedProcessor(node)
                         != currentSchedule_.vector_schedule.assignedProcessor(sourceV)) {
-                        if (currentSchedule_.instance->getComputationalDag().edge_comm_weight(inEdge)
-                            > nodeCommSelectionThreshold_) {
+                        if (currentSchedule_.instance->getComputationalDag().EdgeCommWeight(inEdge) > nodeCommSelectionThreshold_) {
                             KlBase<GraphT, MemoryConstraintT>::node_selection.insert(node);
                             break;
                         }
@@ -150,8 +147,7 @@ class KlTotal : public KlBase<GraphT, MemoryConstraintT> {
                     const auto &targetV = target(outEdge, currentSchedule_.instance->getComputationalDag());
                     if (currentSchedule_.vector_schedule.assignedProcessor(node)
                         != currentSchedule_.vector_schedule.assignedProcessor(targetV)) {
-                        if (currentSchedule_.instance->getComputationalDag().edge_comm_weight(outEdge)
-                            > nodeCommSelectionThreshold_) {
+                        if (currentSchedule_.instance->getComputationalDag().EdgeCommWeight(outEdge) > nodeCommSelectionThreshold_) {
                             KlBase<GraphT, MemoryConstraintT>::node_selection.insert(node);
                             break;
                         }

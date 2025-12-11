@@ -51,7 +51,7 @@ void CreateInducedSubgraph(const GraphTIn &dag,
             dagOut.AddVertex(0, dag.VertexCommWeight(node), dag.VertexMemWeight(node), dag.VertexType(node));
         } else {
             // add extra source without type
-            dagOut.add_vertex(0, dag.vertex_comm_weight(node), dag.vertex_mem_weight(node));
+            dagOut.AddVertex(0, dag.VertexCommWeight(node), dag.VertexMemWeight(node));
         }
     }
 
@@ -64,7 +64,7 @@ void CreateInducedSubgraph(const GraphTIn &dag,
                 dag.VertexWorkWeight(node), dag.VertexCommWeight(node), dag.VertexMemWeight(node), dag.VertexType(node));
         } else {
             // add vertex without type
-            dagOut.add_vertex(dag.vertex_work_weight(node), dag.vertex_comm_weight(node), dag.vertex_mem_weight(node));
+            dagOut.AddVertex(dag.VertexWorkWeight(node), dag.VertexCommWeight(node), dag.VertexMemWeight(node));
         }
     }
 
@@ -74,7 +74,7 @@ void CreateInducedSubgraph(const GraphTIn &dag,
             for (const auto &inEdge : in_edges(node, dag)) {
                 const auto &pred = source(inEdge, dag);
                 if (selectedNodes.find(pred) != selectedNodes.end() || extraSources.find(pred) != extraSources.end()) {
-                    dagOut.add_edge(localIdx[pred], localIdx[node], dag.edge_comm_weight(inEdge));
+                    dagOut.AddEdge(localIdx[pred], localIdx[node], dag.EdgeCommWeight(inEdge));
                 }
             }
         }
@@ -98,33 +98,32 @@ void CreateInducedSubgraph(const GraphTIn &dag, GraphTOut &dagOut, const std::ve
 
 template <typename GraphT>
 bool CheckOrderedIsomorphism(const GraphT &first, const GraphT &second) {
-    static_assert(is_directed_graph_v<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
-    if (first.num_vertices() != second.num_vertices() || first.num_edges() != second.num_edges()) {
+    if (first.NumVertices() != second.NumVertices() || first.NumEdges() != second.NumEdges()) {
         return false;
     }
 
-    for (const auto &node : first.vertices()) {
-        if (first.vertex_work_weight(node) != second.vertex_work_weight(node)
-            || first.vertex_mem_weight(node) != second.vertex_mem_weight(node)
-            || first.vertex_comm_weight(node) != second.vertex_comm_weight(node)
-            || first.vertex_type(node) != second.vertex_type(node)) {
+    for (const auto &node : first.Vertices()) {
+        if (first.VertexWorkWeight(node) != second.VertexWorkWeight(node)
+            || first.VertexMemWeight(node) != second.VertexMemWeight(node)
+            || first.VertexCommWeight(node) != second.VertexCommWeight(node) || first.VertexType(node) != second.VertexType(node)) {
             return false;
         }
 
-        if (first.in_degree(node) != second.in_degree(node) || first.out_degree(node) != second.out_degree(node)) {
+        if (first.InDegree(node) != second.InDegree(node) || first.OutDegree(node) != second.OutDegree(node)) {
             return false;
         }
 
-        if constexpr (has_edge_weights_v<GraphT>) {
+        if constexpr (hasEdgeWeightsV<GraphT>) {
             std::set<std::pair<VertexIdxT<GraphT>, ECommwT<GraphT>>> firstChildren, secondChildren;
 
             for (const auto &outEdge : out_edges(node, first)) {
-                firstChildren.emplace(target(outEdge, first), first.edge_comm_weight(outEdge));
+                firstChildren.emplace(target(outEdge, first), first.EdgeCommWeight(outEdge));
             }
 
             for (const auto &outEdge : out_edges(node, second)) {
-                secondChildren.emplace(target(outEdge, second), second.edge_comm_weight(outEdge));
+                secondChildren.emplace(target(outEdge, second), second.EdgeCommWeight(outEdge));
             }
 
             auto itr = firstChildren.begin(), secondItr = secondChildren.begin();
@@ -138,11 +137,11 @@ bool CheckOrderedIsomorphism(const GraphT &first, const GraphT &second) {
         } else {
             std::set<VertexIdxT<GraphT>> firstChildren, secondChildren;
 
-            for (const auto &child : first.children(node)) {
+            for (const auto &child : first.Children(node)) {
                 firstChildren.emplace(child);
             }
 
-            for (const auto &child : second.children(node)) {
+            for (const auto &child : second.Children(node)) {
                 secondChildren.emplace(child);
             }
 
@@ -184,20 +183,20 @@ std::vector<GraphTOut> CreateInducedSubgraphs(const GraphTIn &dagIn, const std::
 
         if constexpr (isConstructableCdagTypedVertexV<GraphTOut> and hasTypedVerticesV<GraphTIn>) {
             splitDags[partitionIDs[node]].AddVertex(
-                dagIn.VertexWorkWeight(node), dagIn.vertex_comm_weight(node), dagIn.VertexMemWeight(node), dagIn.vertex_type(node));
+                dagIn.VertexWorkWeight(node), dagIn.VertexCommWeight(node), dagIn.VertexMemWeight(node), dagIn.VertexType(node));
         } else {
-            splitDags[partitionIDs[node]].add_vertex(
-                dagIn.vertex_work_weight(node), dagIn.vertex_comm_weight(node), dagIn.vertex_mem_weight(node));
+            splitDags[partitionIDs[node]].AddVertex(
+                dagIn.VertexWorkWeight(node), dagIn.VertexCommWeight(node), dagIn.VertexMemWeight(node));
         }
     }
 
     if constexpr (hasEdgeWeightsV<GraphTIn> and hasEdgeWeightsV<GraphTOut>) {
-        for (const auto node : dagIn.vertices()) {
+        for (const auto node : dagIn.Vertices()) {
             for (const auto &outEdge : out_edges(node, dagIn)) {
                 auto succ = target(outEdge, dagIn);
 
                 if (partitionIDs[node] == partitionIDs[succ]) {
-                    splitDags[partitionIDs[node]].add_edge(localIdx[node], localIdx[succ], dagIn.edge_comm_weight(outEdge));
+                    splitDags[partitionIDs[node]].AddEdge(localIdx[node], localIdx[succ], dagIn.EdgeCommWeight(outEdge));
                 }
             }
         }
@@ -238,7 +237,7 @@ std::unordered_map<VertexIdxT<GraphTIn>, VertexIdxT<GraphTIn>> CreateInducedSubg
                 dag.VertexWorkWeight(node), dag.VertexCommWeight(node), dag.VertexMemWeight(node), dag.VertexType(node));
         } else {
             // add vertex without type
-            dagOut.add_vertex(dag.vertex_work_weight(node), dag.vertex_comm_weight(node), dag.vertex_mem_weight(node));
+            dagOut.AddVertex(dag.VertexWorkWeight(node), dag.VertexCommWeight(node), dag.VertexMemWeight(node));
         }
     }
 

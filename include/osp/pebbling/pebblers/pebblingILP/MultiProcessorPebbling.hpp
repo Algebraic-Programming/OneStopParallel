@@ -30,7 +30,7 @@ namespace osp {
 
 template <typename Graph_t>
 class MultiProcessorPebbling : public Scheduler<Graph_t> {
-    static_assert(is_computational_dag_v<Graph_t>, "PebblingSchedule can only be used with computational DAGs.");
+    static_assert(isComputationalDagV<Graph_t>, "PebblingSchedule can only be used with computational DAGs.");
 
   private:
     using vertex_idx = vertex_idx_t<Graph_t>;
@@ -494,7 +494,7 @@ void MultiProcessorPebbling<Graph_t>::setupBaseVariablesConstraints(const BspIns
     // restrict source nodes if they need to be loaded
     if (need_to_load_inputs) {
         for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
-            if (instance.getComputationalDag().in_degree(node) == 0) {
+            if (instance.getComputationalDag().InDegree(node) == 0) {
                 for (unsigned t = 0; t < max_time; t++) {
                     for (unsigned processor = 0; processor < instance.numberOfProcessors(); processor++) {
                         compute_exists[node][processor][t] = false;
@@ -634,7 +634,7 @@ void MultiProcessorPebbling<Graph_t>::setupBaseVariablesConstraints(const BspIns
                     continue;
                 }
 
-                for (const auto &source : instance.getComputationalDag().parents(node)) {
+                for (const auto &source : instance.getComputationalDag().Parents(node)) {
                     if (!mergeSteps || !compute_exists[source][processor][t]) {
                         model.AddConstr(compute[node][processor][static_cast<int>(t)]
                                         <= has_red[source][processor][static_cast<int>(t)]);
@@ -672,9 +672,9 @@ void MultiProcessorPebbling<Graph_t>::setupBaseVariablesConstraints(const BspIns
         for (unsigned t = 0; t < max_time; t++) {
             Expr expr;
             for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
-                expr += has_red[node][processor][static_cast<int>(t)] * instance.getComputationalDag().vertex_mem_weight(node);
+                expr += has_red[node][processor][static_cast<int>(t)] * instance.getComputationalDag().VertexMemWeight(node);
                 if (!slidingPebbles && compute_exists[node][processor][t]) {
-                    expr += compute[node][processor][static_cast<int>(t)] * instance.getComputationalDag().vertex_mem_weight(node);
+                    expr += compute[node][processor][static_cast<int>(t)] * instance.getComputationalDag().VertexMemWeight(node);
                 }
             }
 
@@ -694,7 +694,7 @@ void MultiProcessorPebbling<Graph_t>::setupBaseVariablesConstraints(const BspIns
     }
 
     for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
-        if (!need_to_load_inputs || instance.getComputationalDag().in_degree(node) > 0) {
+        if (!need_to_load_inputs || instance.getComputationalDag().InDegree(node) > 0) {
             model.AddConstr(has_blue[node][0] == 0);
         }
     }
@@ -702,7 +702,7 @@ void MultiProcessorPebbling<Graph_t>::setupBaseVariablesConstraints(const BspIns
     if (needs_blue_at_end.empty())    // default case: blue pebbles required on sinks at the end
     {
         for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
-            if (instance.getComputationalDag().out_degree(node) == 0 && has_blue_exists[node][max_time - 1]) {
+            if (instance.getComputationalDag().OutDegree(node) == 0 && has_blue_exists[node][max_time - 1]) {
                 model.AddConstr(has_blue[node][static_cast<int>(max_time) - 1] == 1);
             }
         }
@@ -853,15 +853,15 @@ void MultiProcessorPebbling<Graph_t>::setupBspVariablesConstraintsObjective(cons
             Expr expr_send_down;
             for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
                 if (compute_exists[node][processor][t]) {
-                    expr_work += instance.getComputationalDag().vertex_work_weight(node)
-                                 * compute[node][processor][static_cast<int>(t)];
+                    expr_work
+                        += instance.getComputationalDag().VertexWorkWeight(node) * compute[node][processor][static_cast<int>(t)];
                 }
                 if (send_up_exists[node][processor][t]) {
-                    expr_send_up += instance.getComputationalDag().vertex_comm_weight(node)
-                                    * send_up[node][processor][static_cast<int>(t)];
+                    expr_send_up
+                        += instance.getComputationalDag().VertexCommWeight(node) * send_up[node][processor][static_cast<int>(t)];
                 }
                 if (send_down_exists[node][processor][t]) {
-                    expr_send_down += instance.getComputationalDag().vertex_comm_weight(node)
+                    expr_send_down += instance.getComputationalDag().VertexCommWeight(node)
                                       * send_down[node][processor][static_cast<int>(t)];
                 }
             }
@@ -900,13 +900,13 @@ void MultiProcessorPebbling<Graph_t>::setupBspVariablesConstraintsObjective(cons
         Expr expr_send_down;
         for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
             if (compute_exists[node][processor][0]) {
-                expr_work += instance.getComputationalDag().vertex_work_weight(node) * compute[node][processor][0];
+                expr_work += instance.getComputationalDag().VertexWorkWeight(node) * compute[node][processor][0];
             }
             if (send_up_exists[node][processor][0]) {
-                expr_send_up += instance.getComputationalDag().vertex_comm_weight(node) * send_up[node][processor][0];
+                expr_send_up += instance.getComputationalDag().VertexCommWeight(node) * send_up[node][processor][0];
             }
             if (send_down_exists[node][processor][0]) {
-                expr_send_down += instance.getComputationalDag().vertex_comm_weight(node) * send_down[node][processor][0];
+                expr_send_down += instance.getComputationalDag().VertexCommWeight(node) * send_down[node][processor][0];
             }
         }
 
@@ -977,8 +977,7 @@ void MultiProcessorPebbling<Graph_t>::setupAsyncVariablesConstraintsObjective(co
             Expr send_down_step_length;
             for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
                 if (send_down_exists[node][processor][t]) {
-                    send_down_step_length += instance.communicationCosts()
-                                             * instance.getComputationalDag().vertex_comm_weight(node)
+                    send_down_step_length += instance.communicationCosts() * instance.getComputationalDag().VertexCommWeight(node)
                                              * send_down[node][processor][static_cast<int>(t)];
                 }
             }
@@ -1010,16 +1009,16 @@ void MultiProcessorPebbling<Graph_t>::setupAsyncVariablesConstraintsObjective(co
         Expr expr;
         for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
             if (compute_exists[node][processor][0]) {
-                expr += instance.getComputationalDag().vertex_work_weight(node) * compute[node][processor][0];
+                expr += instance.getComputationalDag().VertexWorkWeight(node) * compute[node][processor][0];
             }
 
             if (send_up_exists[node][processor][0]) {
-                expr += instance.communicationCosts() * instance.getComputationalDag().vertex_comm_weight(node)
+                expr += instance.communicationCosts() * instance.getComputationalDag().VertexCommWeight(node)
                         * send_up[node][processor][0];
             }
 
             if (send_down_exists[node][processor][0]) {
-                expr += instance.communicationCosts() * instance.getComputationalDag().vertex_comm_weight(node)
+                expr += instance.communicationCosts() * instance.getComputationalDag().VertexCommWeight(node)
                         * send_down[node][processor][0];
             }
         }
@@ -1032,16 +1031,16 @@ void MultiProcessorPebbling<Graph_t>::setupAsyncVariablesConstraintsObjective(co
             Expr expr;
             for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
                 if (compute_exists[node][processor][t]) {
-                    expr += instance.getComputationalDag().vertex_work_weight(node) * compute[node][processor][static_cast<int>(t)];
+                    expr += instance.getComputationalDag().VertexWorkWeight(node) * compute[node][processor][static_cast<int>(t)];
                 }
 
                 if (send_up_exists[node][processor][t]) {
-                    expr += instance.communicationCosts() * instance.getComputationalDag().vertex_comm_weight(node)
+                    expr += instance.communicationCosts() * instance.getComputationalDag().VertexCommWeight(node)
                             * send_up[node][processor][static_cast<int>(t)];
                 }
 
                 if (send_down_exists[node][processor][t]) {
-                    expr += instance.communicationCosts() * instance.getComputationalDag().vertex_comm_weight(node)
+                    expr += instance.communicationCosts() * instance.getComputationalDag().VertexCommWeight(node)
                             * send_down[node][processor][static_cast<int>(t)];
                 }
             }
@@ -1310,7 +1309,7 @@ void MultiProcessorPebbling<Graph_t>::constructPebblingScheduleFromSolution(Pebb
         std::vector<bool> already_has_blue(instance.numberOfVertices(), false);
         if (need_to_load_inputs) {
             for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
-                if (instance.getComputationalDag().in_degree(node) == 0) {
+                if (instance.getComputationalDag().InDegree(node) == 0) {
                     already_has_blue[node] = true;
                 }
             }
@@ -1434,7 +1433,7 @@ void MultiProcessorPebbling<Graph_t>::setInitialSolution(
     std::vector<bool> in_slow_mem(N, false);
     if (need_to_load_inputs) {
         for (vertex_idx node = 0; node < N; ++node) {
-            if (instance.getComputationalDag().in_degree(node) == 0) {
+            if (instance.getComputationalDag().InDegree(node) == 0) {
                 in_slow_mem[node] = true;
             }
         }

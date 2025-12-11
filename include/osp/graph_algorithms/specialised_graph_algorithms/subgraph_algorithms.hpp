@@ -69,10 +69,10 @@ std::unordered_map<VertexIdxT<GraphTIn>, VertexIdxT<GraphTIn>> CreateInducedSubg
     dagOut = GraphTOut(nodeCntr, edges);
 
     for (const auto &[oriVert, outVert] : localIdx) {
-        dagOut.SetVertexWorkWeight(outVert, dag.vertex_work_weight(oriVert));
-        dagOut.SetVertexCommWeight(outVert, dag.vertex_comm_weight(oriVert));
-        dagOut.SetVertexMemWeight(outVert, dag.vertex_mem_weight(oriVert));
-        dagOut.SetVertexType(outVert, dag.vertex_type(oriVert));
+        dagOut.SetVertexWorkWeight(outVert, dag.VertexWorkWeight(oriVert));
+        dagOut.SetVertexCommWeight(outVert, dag.VertexCommWeight(oriVert));
+        dagOut.SetVertexMemWeight(outVert, dag.VertexMemWeight(oriVert));
+        dagOut.SetVertexType(outVert, dag.VertexType(oriVert));
     }
 
     return localIdx;

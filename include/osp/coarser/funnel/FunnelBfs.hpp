@@ -66,7 +66,7 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
 
     virtual std::vector<std::vector<VertexIdxT<GraphTIn>>> GenerateVertexExpansionMap(const GraphTIn &graph) override {
         if constexpr (UseArchitectureMemoryContraints) {
-            if (maxMemoryPerVertexType_.size() < graph.num_vertex_types()) {
+            if (maxMemoryPerVertexType_.size() < graph.NumVertexTypes()) {
                 throw std::runtime_error("FunnelBfs: max_memory_per_vertex_type has insufficient size.");
             }
         }
@@ -146,8 +146,8 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
                 }
 
                 if constexpr (UseArchitectureMemoryContraints) {
-                    if (memoryWeightOfGroup + graph.vertex_mem_weight(activeNode)
-                        > maxMemoryPerVertexType_[graph.vertex_type(bottomNode)]) {
+                    if (memoryWeightOfGroup + graph.VertexMemWeight(activeNode)
+                        > maxMemoryPerVertexType_[graph.VertexType(bottomNode)]) {
                         continue;
                     }
                 }
@@ -254,8 +254,8 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
                 }
 
                 if constexpr (UseArchitectureMemoryContraints) {
-                    if (memoryWeightOfGroup + graph.vertex_mem_weight(activeNode)
-                        > maxMemoryPerVertexType_[graph.vertex_type(topNode)]) {
+                    if (memoryWeightOfGroup + graph.VertexMemWeight(activeNode)
+                        > maxMemoryPerVertexType_[graph.VertexType(topNode)]) {
                         continue;
                     }
                 }

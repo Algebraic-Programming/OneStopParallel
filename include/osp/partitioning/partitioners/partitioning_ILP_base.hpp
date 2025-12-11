@@ -81,7 +81,7 @@ void HypergraphPartitioningILPBase<HypergraphT>::SetupFundamentalVariablesConstr
     using MemwType = typename HypergraphT::vertex_mem_weight_type;
 
     const IndexType numberOfParts = instance.getNumberOfPartitions();
-    const IndexType numberOfVertices = instance.getHypergraph().num_vertices();
+    const IndexType numberOfVertices = instance.getHypergraph().NumVertices();
     const IndexType numberOfHyperedges = instance.getHypergraph().num_hyperedges();
 
     // Variables
@@ -139,10 +139,10 @@ std::vector<std::vector<unsigned> > HypergraphPartitioningILPBase<HypergraphT>::
     const PartitioningProblem<HypergraphT> &instance, Model &model) {
     using IndexType = typename HypergraphT::vertex_idx;
 
-    std::vector<std::vector<unsigned> > nodeToPartitions(instance.getHypergraph().num_vertices());
+    std::vector<std::vector<unsigned> > nodeToPartitions(instance.getHypergraph().NumVertices());
 
     std::set<unsigned> nonemptyPartitionIds;
-    for (IndexType node = 0; node < instance.getHypergraph().num_vertices(); node++) {
+    for (IndexType node = 0; node < instance.getHypergraph().NumVertices(); node++) {
         for (unsigned part = 0; part < instance.getNumberOfPartitions(); part++) {
             if (nodeInPartition_[node][static_cast<int>(part)].Get(COPT_DBLINFO_VALUE) >= .99) {
                 nodeToPartitions[node].push_back(part);
@@ -165,7 +165,7 @@ std::vector<std::vector<unsigned> > HypergraphPartitioningILPBase<HypergraphT>::
         ++currentIndex;
     }
 
-    for (IndexType node = 0; node < instance.getHypergraph().num_vertices(); node++) {
+    for (IndexType node = 0; node < instance.getHypergraph().NumVertices(); node++) {
         for (unsigned entryIdx = 0; entryIdx < nodeToPartitions[node].size(); ++entryIdx) {
             nodeToPartitions[node][entryIdx] = newPartIndex[nodeToPartitions[node][entryIdx]];
         }

@@ -43,7 +43,7 @@ std::unordered_set<EdgeDescT<GraphT>> LongEdgesInTrianglesParallel(const GraphT 
 
 #pragma omp parallel for schedule(dynamic, 4)
     for (VertexIdxT<GraphT> vertex = 0; vertex < graph.NumVertices(); ++vertex) {
-        // for (const auto &vertex : graph.vertices()) {
+        // for (const auto &vertex : graph.Vertices()) {
 
         const unsigned int proc = static_cast<unsigned>(omp_get_thread_num());
 

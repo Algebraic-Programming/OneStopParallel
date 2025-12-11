@@ -31,7 +31,7 @@ namespace osp {
 
 template <typename Graph_t>
 class PebblingPartialILP : public Scheduler<Graph_t> {
-    static_assert(is_computational_dag_v<Graph_t>, "PebblingSchedule can only be used with computational DAGs.");
+    static_assert(isComputationalDagV<Graph_t>, "PebblingSchedule can only be used with computational DAGs.");
     static_assert(std::is_same_v<v_workw_t<Graph_t>, v_commw_t<Graph_t>>,
                   "PebblingSchedule requires work and comm. weights to have the same type.");
 
@@ -114,7 +114,7 @@ RETURN_STATUS PebblingPartialILP<Graph_t>::computePebbling(PebblingSchedule<Grap
 
     std::vector<std::set<unsigned>> processors_to_parts(nr_parts);
     for (unsigned part = 0; part < nr_parts; ++part) {
-        for (unsigned type = 0; type < instance.getComputationalDag().num_vertex_types(); ++type) {
+        for (unsigned type = 0; type < instance.getComputationalDag().NumVertexTypes(); ++type) {
             if (part_and_nodetype_to_new_index.find({part, type}) != part_and_nodetype_to_new_index.end()) {
                 unsigned new_index = part_and_nodetype_to_new_index[{part, type}];
                 for (unsigned proc : processors_to_parts_and_types[new_index]) {
@@ -131,12 +131,12 @@ RETURN_STATUS PebblingPartialILP<Graph_t>::computePebbling(PebblingSchedule<Grap
     std::vector<std::map<vertex_idx, vertex_idx>> original_node_id(nr_parts);
     std::vector<std::map<unsigned, unsigned>> original_proc_id(nr_parts);
     for (vertex_idx node = 0; node < instance.numberOfVertices(); ++node) {
-        if (instance.getComputationalDag().in_degree(node) > 0) {
+        if (instance.getComputationalDag().InDegree(node) > 0) {
             nodes_in_part[assignment_to_parts[node]].insert(node);
         } else {
             extra_sources[assignment_to_parts[node]].insert(node);
         }
-        for (const vertex_idx &pred : instance.getComputationalDag().parents(node)) {
+        for (const vertex_idx &pred : instance.getComputationalDag().Parents(node)) {
             if (assignment_to_parts[node] != assignment_to_parts[pred]) {
                 extra_sources[assignment_to_parts[node]].insert(pred);
             }
@@ -150,9 +150,9 @@ RETURN_STATUS PebblingPartialILP<Graph_t>::computePebbling(PebblingSchedule<Grap
         subDags.push_back(dag);
 
         // set source nodes to a new type, so that they are compatible with any processor
-        unsigned artificial_type_for_sources = subDags.back().num_vertex_types();
+        unsigned artificial_type_for_sources = subDags.back().NumVertexTypes();
         for (vertex_idx node_idx = 0; node_idx < extra_sources[part].size(); ++node_idx) {
-            subDags.back().set_vertex_type(node_idx, artificial_type_for_sources);
+            subDags.back().SetVertexType(node_idx, artificial_type_for_sources);
         }
     }
 
@@ -225,13 +225,13 @@ RETURN_STATUS PebblingPartialILP<Graph_t>::computePebbling(PebblingSchedule<Grap
 
         std::set<vertex_idx> needs_blue_at_end;
         for (vertex_idx node : nodes_in_part[part]) {
-            for (const vertex_idx &succ : instance.getComputationalDag().children(node)) {
+            for (const vertex_idx &succ : instance.getComputationalDag().Children(node)) {
                 if (assignment_to_parts[node] != assignment_to_parts[succ]) {
                     needs_blue_at_end.insert(local_id[node]);
                 }
             }
 
-            if (instance.getComputationalDag().out_degree(node) == 0) {
+            if (instance.getComputationalDag().OutDegree(node) == 0) {
                 needs_blue_at_end.insert(local_id[node]);
             }
         }
@@ -357,41 +357,39 @@ Graph_t PebblingPartialILP<Graph_t>::contractByPartition(const BspInstance<Graph
 
     unsigned nr_new_nodes = 0;
     for (vertex_idx node = 0; node < instance.numberOfVertices(); ++node) {
-        if (part_and_nodetype_to_new_index.find({node_to_part_assignment[node], G.vertex_type(node)})
+        if (part_and_nodetype_to_new_index.find({node_to_part_assignment[node], G.VertexType(node)})
             == part_and_nodetype_to_new_index.end()) {
-            part_and_nodetype_to_new_index[{node_to_part_assignment[node], G.vertex_type(node)}] = nr_new_nodes;
+            part_and_nodetype_to_new_index[{node_to_part_assignment[node], G.VertexType(node)}] = nr_new_nodes;
             ++nr_new_nodes;
         }
     }
 
     Graph_t contracted;
     for (vertex_idx node = 0; node < nr_new_nodes; ++node) {
-        contracted.add_vertex(0, 0, 0);
+        contracted.AddVertex(0, 0, 0);
     }
 
     std::set<std::pair<vertex_idx, vertex_idx>> edges;
 
     for (vertex_idx node = 0; node < instance.numberOfVertices(); ++node) {
-        vertex_idx node_new_index = part_and_nodetype_to_new_index[{node_to_part_assignment[node], G.vertex_type(node)}];
-        for (const vertex_idx &succ : instance.getComputationalDag().children(node)) {
+        vertex_idx node_new_index = part_and_nodetype_to_new_index[{node_to_part_assignment[node], G.VertexType(node)}];
+        for (const vertex_idx &succ : instance.getComputationalDag().Children(node)) {
             if (node_to_part_assignment[node] != node_to_part_assignment[succ]) {
-                edges.emplace(node_new_index, part_and_nodetype_to_new_index[{node_to_part_assignment[succ], G.vertex_type(succ)}]);
+                edges.emplace(node_new_index, part_and_nodetype_to_new_index[{node_to_part_assignment[succ], G.VertexType(succ)}]);
             }
         }
 
-        contracted.set_vertex_work_weight(node_new_index,
-                                          contracted.vertex_work_weight(node_new_index) + G.vertex_work_weight(node));
-        contracted.set_vertex_comm_weight(node_new_index,
-                                          contracted.vertex_comm_weight(node_new_index) + G.vertex_comm_weight(node));
-        contracted.set_vertex_mem_weight(node_new_index, contracted.vertex_mem_weight(node_new_index) + G.vertex_mem_weight(node));
-        contracted.set_vertex_type(node_new_index, G.vertex_type(node));
+        contracted.SetVertexWorkWeight(node_new_index, contracted.VertexWorkWeight(node_new_index) + G.VertexWorkWeight(node));
+        contracted.SetVertexCommWeight(node_new_index, contracted.VertexCommWeight(node_new_index) + G.VertexCommWeight(node));
+        contracted.SetVertexMemWeight(node_new_index, contracted.VertexMemWeight(node_new_index) + G.VertexMemWeight(node));
+        contracted.SetVertexType(node_new_index, G.VertexType(node));
     }
 
     for (auto edge : edges) {
-        if constexpr (has_edge_weights_v<Graph_t>) {
-            contracted.add_edge(edge.first, edge.second, 1);
+        if constexpr (hasEdgeWeightsV<Graph_t>) {
+            contracted.AddEdge(edge.first, edge.second, 1);
         } else {
-            contracted.add_edge(edge.first, edge.second);
+            contracted.AddEdge(edge.first, edge.second);
         }
     }
 

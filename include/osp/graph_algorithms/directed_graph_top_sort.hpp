@@ -57,10 +57,10 @@ namespace osp {
  */
 template <typename GraphT>
 bool CheckNodesInTopologicalOrder(const GraphT &graph) {
-    static_assert(is_directed_graph_v<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
-    for (const auto &node : graph.vertices()) {
-        for (const auto &child : graph.children(node)) {
+    for (const auto &node : graph.Vertices()) {
+        for (const auto &child : graph.Children(node)) {
             if (child < node) {
                 return false;
             }
@@ -87,7 +87,7 @@ std::vector<VertexIdxT<GraphT>> GetTopOrder(const GraphT &graph) {
         std::queue<VertexType> next;
 
         // Find source nodes
-        for (const VertexType &v : source_vertices_view(graph)) {
+        for (const VertexType &v : SourceVerticesView(graph)) {
             next.push(v);
         }
 
@@ -106,7 +106,7 @@ std::vector<VertexIdxT<GraphT>> GetTopOrder(const GraphT &graph) {
         }
 
         if (static_cast<VertexType>(topOrder.size()) != graph.NumVertices()) {
-            throw std::runtime_error("Error during topological ordering: TopOrder.size() != graph.num_vertices() ["
+            throw std::runtime_error("Error during topological ordering: TopOrder.size() != graph.NumVertices() ["
                                      + std::to_string(topOrder.size()) + " != " + std::to_string(graph.NumVertices()) + "]");
         }
 
@@ -145,7 +145,7 @@ std::vector<VertexIdxT<GraphT>> GetTopOrderGorder(const GraphT &graph) {
     };
 
     std::priority_queue<VertexType, std::vector<VertexType>, decltype(vCmp)> readyQ(vCmp);
-    for (const VertexType &vert : source_vertices_view(graph)) {
+    for (const VertexType &vert : SourceVerticesView(graph)) {
         readyQ.push(vert);
     }
 
@@ -183,7 +183,7 @@ std::vector<VertexIdxT<GraphT>> GetTopOrderGorder(const GraphT &graph) {
     }
 
     if (topOrder.size() != graph.NumVertices()) {
-        throw std::runtime_error("Error during topological ordering: TopOrder.size() != graph.num_vertices() ["
+        throw std::runtime_error("Error during topological ordering: TopOrder.size() != graph.NumVertices() ["
                                  + std::to_string(topOrder.size()) + " != " + std::to_string(graph.NumVertices()) + "]");
     }
 
@@ -250,8 +250,8 @@ struct TopSortIterator {
     using pointer = const value_type *;
     using reference = const value_type &;
 
-    TopSortIterator(const GraphT &graph, ContainerWrapper &next, VertexIdxT<GraphT> start)
-        : graph(graph), next(next), currentVertex(start), predecessorsCount(graph.NumVertices(), 0) {
+    TopSortIterator(const GraphT &graph_, ContainerWrapper &next_, VertexIdxT<GraphT> start)
+        : graph(graph_), next(next_), currentVertex(start), predecessorsCount(graph.NumVertices(), 0) {
         if (currentVertex == graph.NumVertices()) {
             return;
         }
@@ -362,7 +362,7 @@ class TopSortView {
  */
 template <typename GraphT>
 class DfsTopSortView {
-    static_assert(is_directed_graph_v<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
     const GraphT &graph_;
     DfsStackWrapper<GraphT> vertexContainer_;
@@ -374,7 +374,7 @@ class DfsTopSortView {
 
     auto Begin() { return TsIterator(graph_, vertexContainer_, 0); }
 
-    auto End() { return TsIterator(graph_, vertexContainer_, graph_.num_vertices()); }
+    auto End() { return TsIterator(graph_, vertexContainer_, graph_.NumVertices()); }
 };
 
 /**
@@ -406,10 +406,10 @@ class BfsTopSortView {
 
 template <typename GraphT>
 std::vector<VertexIdxT<GraphT>> BfsTopSort(const GraphT &graph) {
-    static_assert(is_directed_graph_v<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
     std::vector<VertexIdxT<GraphT>> topSort;
 
-    for (const auto &node : bfs_top_sort_view(graph)) {
+    for (const auto &node : BfsTopSortView(graph)) {
         topSort.push_back(node);
     }
     return topSort;
@@ -420,7 +420,7 @@ std::vector<VertexIdxT<GraphT>> DfsTopSort(const GraphT &graph) {
     static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
     std::vector<VertexIdxT<GraphT>> topSort;
 
-    for (const auto &node : top_sort_view(graph)) {
+    for (const auto &node : TopSortView(graph)) {
         topSort.push_back(node);
     }
     return topSort;
@@ -467,7 +467,7 @@ struct PriorityQueueWrapper {
 
 template <typename GraphT, typename PriorityEvalF, typename T>
 class PriorityTopSortView {
-    static_assert(is_directed_graph_v<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
     const GraphT &graph_;
     using Container = PriorityQueueWrapper<GraphT, PriorityEvalF, T>;
@@ -481,7 +481,7 @@ class PriorityTopSortView {
 
     auto Begin() const { return TsIterator(graph_, vertexContainer_, 0); }
 
-    auto End() const { return TsIterator(graph_, vertexContainer_, graph_.num_vertices()); }
+    auto End() const { return TsIterator(graph_, vertexContainer_, graph_.NumVertices()); }
 };
 
 template <typename GraphT>
@@ -515,12 +515,12 @@ std::vector<VertexIdxT<GraphT>> GetTopOrderMinIndex(const GraphT &graph) {
     std::vector<VertexType> topOrder;
     topOrder.reserve(graph.NumVertices());
 
-    for (const auto &vert : locality_top_sort_view(graph)) {
+    for (const auto &vert : LocalityTopSortView(graph)) {
         topOrder.push_back(vert);
     }
 
     if (topOrder.size() != graph.NumVertices()) {
-        throw std::runtime_error("Error during topological ordering: TopOrder.size() != graph.num_vertices() ["
+        throw std::runtime_error("Error during topological ordering: TopOrder.size() != graph.NumVertices() ["
                                  + std::to_string(topOrder.size()) + " != " + std::to_string(graph.NumVertices()) + "]");
     }
 
@@ -562,12 +562,12 @@ std::vector<VertexIdxT<GraphT>> GetTopOrderMaxChildren(const GraphT &graph) {
     std::vector<VertexType> topOrder;
     topOrder.reserve(graph.NumVertices());
 
-    for (const auto &vert : max_children_top_sort_view(graph)) {
+    for (const auto &vert : MaxChildrenTopSortView(graph)) {
         topOrder.push_back(vert);
     }
 
     if (topOrder.size() != graph.NumVertices()) {
-        throw std::runtime_error("Error during topological ordering: TopOrder.size() != graph.num_vertices() ["
+        throw std::runtime_error("Error during topological ordering: TopOrder.size() != graph.NumVertices() ["
                                  + std::to_string(topOrder.size()) + " != " + std::to_string(graph.NumVertices()) + "]");
     }
 
@@ -614,12 +614,12 @@ std::vector<VertexIdxT<GraphT>> GetTopOrderRandom(const GraphT &graph) {
     std::vector<VertexType> topOrder;
     topOrder.reserve(graph.NumVertices());
 
-    for (const auto &vert : random_top_sort_view(graph)) {
+    for (const auto &vert : RandomTopSortView(graph)) {
         topOrder.push_back(vert);
     }
 
     if (topOrder.size() != graph.NumVertices()) {
-        throw std::runtime_error("Error during topological ordering: TopOrder.size() != graph.num_vertices() ["
+        throw std::runtime_error("Error during topological ordering: TopOrder.size() != graph.NumVertices() ["
                                  + std::to_string(topOrder.size()) + " != " + std::to_string(graph.NumVertices()) + "]");
     }
 

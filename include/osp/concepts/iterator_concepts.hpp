@@ -47,12 +47,12 @@ template <typename T, typename = void>
 struct IsForwardIterator : std::false_type {};
 
 template <typename T>
-struct is_forward_iterator<T,
-                           std::void_t<typename std::iterator_traits<T>::difference_type,
-                                       typename std::iterator_traits<T>::value_type,
-                                       typename std::iterator_traits<T>::pointer,
-                                       typename std::iterator_traits<T>::reference,
-                                       typename std::iterator_traits<T>::iterator_category>>
+struct IsForwardIterator<T,
+                         std::void_t<typename std::iterator_traits<T>::difference_type,
+                                     typename std::iterator_traits<T>::value_type,
+                                     typename std::iterator_traits<T>::pointer,
+                                     typename std::iterator_traits<T>::reference,
+                                     typename std::iterator_traits<T>::iterator_category>>
     : std::conjunction<std::is_base_of<std::forward_iterator_tag, typename std::iterator_traits<T>::iterator_category>> {};
 
 template <typename T>
@@ -73,7 +73,7 @@ template <typename T, typename ValueType, typename = void>
 struct IsForwardRangeOf : std::false_type {};
 
 template <typename T, typename ValueType>
-struct is_forward_range_of<T, ValueType, std::void_t<decltype(std::begin(std::declval<T>())), decltype(std::end(std::declval<T>()))>>
+struct IsForwardRangeOf<T, ValueType, std::void_t<decltype(std::begin(std::declval<T>())), decltype(std::end(std::declval<T>()))>>
     : std::conjunction<IsForwardIterator<decltype(std::begin(std::declval<T>()))>,
                        std::is_same<ValueType, typename std::iterator_traits<decltype(std::begin(std::declval<T>()))>::value_type>> {
 };
@@ -96,7 +96,7 @@ template <typename T, typename ValueType, typename = void>
 struct IsContainerOf : std::false_type {};
 
 template <typename T, typename ValueType>
-struct is_container_of<T, ValueType, std::void_t<decltype(std::size(std::declval<T>()))>>
+struct IsContainerOf<T, ValueType, std::void_t<decltype(std::size(std::declval<T>()))>>
     : std::conjunction<IsForwardRangeOf<T, ValueType>> {};
 
 template <typename T, typename ValueType>
@@ -117,12 +117,12 @@ template <typename T, typename = void>
 struct IsInputIterator : std::false_type {};
 
 template <typename T>
-struct is_input_iterator<T,
-                         std::void_t<typename std::iterator_traits<T>::difference_type,
-                                     typename std::iterator_traits<T>::value_type,
-                                     typename std::iterator_traits<T>::pointer,
-                                     typename std::iterator_traits<T>::reference,
-                                     typename std::iterator_traits<T>::iterator_category>>
+struct IsInputIterator<T,
+                       std::void_t<typename std::iterator_traits<T>::difference_type,
+                                   typename std::iterator_traits<T>::value_type,
+                                   typename std::iterator_traits<T>::pointer,
+                                   typename std::iterator_traits<T>::reference,
+                                   typename std::iterator_traits<T>::iterator_category>>
     : std::conjunction<std::is_base_of<std::input_iterator_tag, typename std::iterator_traits<T>::iterator_category>> {};
 
 template <typename T>
@@ -143,7 +143,7 @@ template <typename T, typename ValueType, typename = void>
 struct IsInputRangeOf : std::false_type {};
 
 template <typename T, typename ValueType>
-struct is_input_range_of<T, ValueType, std::void_t<decltype(std::begin(std::declval<T>())), decltype(std::end(std::declval<T>()))>>
+struct IsInputRangeOf<T, ValueType, std::void_t<decltype(std::begin(std::declval<T>())), decltype(std::end(std::declval<T>()))>>
     : std::conjunction<IsInputIterator<decltype(std::begin(std::declval<T>()))>,
                        std::is_same<ValueType, typename std::iterator_traits<decltype(std::begin(std::declval<T>()))>::value_type>> {
 };

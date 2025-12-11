@@ -26,7 +26,7 @@ namespace osp {
 
 template <typename Graph_t>
 class AcyclicPartitioningILP {
-    static_assert(is_computational_dag_v<Graph_t>, "PebblingSchedule can only be used with computational DAGs.");
+    static_assert(isComputationalDagV<Graph_t>, "PebblingSchedule can only be used with computational DAGs.");
 
   private:
     using vertex_idx = vertex_idx_t<Graph_t>;
@@ -226,7 +226,7 @@ void AcyclicPartitioningILP<Graph_t>::setupVariablesConstraintsObjective(const B
     std::map<vertex_idx, unsigned> node_to_hyperedge_index;
     unsigned numberOfHyperedges = 0;
     for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
-        if (instance.getComputationalDag().out_degree(node) > 0) {
+        if (instance.getComputationalDag().OutDegree(node) > 0) {
             node_to_hyperedge_index[node] = numberOfHyperedges;
             ++numberOfHyperedges;
         }
@@ -253,13 +253,13 @@ void AcyclicPartitioningILP<Graph_t>::setupVariablesConstraintsObjective(const B
     // hyperedge indicators match node variables
     for (unsigned part = 0; part < numberOfParts; part++) {
         for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
-            if (instance.getComputationalDag().out_degree(node) == 0) {
+            if (instance.getComputationalDag().OutDegree(node) == 0) {
                 continue;
             }
 
             model.AddConstr(hyperedge_intersects_partition[node_to_hyperedge_index[node]][static_cast<int>(part)]
                             >= node_in_partition[node][static_cast<int>(part)]);
-            for (const auto &succ : instance.getComputationalDag().children(node)) {
+            for (const auto &succ : instance.getComputationalDag().Children(node)) {
                 model.AddConstr(hyperedge_intersects_partition[node_to_hyperedge_index[node]][static_cast<int>(part)]
                                 >= node_in_partition[succ][static_cast<int>(part)]);
             }
@@ -283,7 +283,7 @@ void AcyclicPartitioningILP<Graph_t>::setupVariablesConstraintsObjective(const B
     for (unsigned from_part = 0; from_part < numberOfParts; from_part++) {
         for (unsigned to_part = 0; to_part < from_part; to_part++) {
             for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
-                for (const auto &succ : instance.getComputationalDag().children(node)) {
+                for (const auto &succ : instance.getComputationalDag().Children(node)) {
                     model.AddConstr(node_in_partition[node][static_cast<int>(from_part)]
                                         + node_in_partition[succ][static_cast<int>(to_part)]
                                     <= 1);
@@ -295,10 +295,10 @@ void AcyclicPartitioningILP<Graph_t>::setupVariablesConstraintsObjective(const B
     // set objective
     Expr expr;
     for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
-        if (instance.getComputationalDag().out_degree(node) > 0) {
-            expr -= instance.getComputationalDag().vertex_comm_weight(node);
+        if (instance.getComputationalDag().OutDegree(node) > 0) {
+            expr -= instance.getComputationalDag().VertexCommWeight(node);
             for (unsigned part = 0; part < numberOfParts; part++) {
-                expr += instance.getComputationalDag().vertex_comm_weight(node)
+                expr += instance.getComputationalDag().VertexCommWeight(node)
                         * hyperedge_intersects_partition[node_to_hyperedge_index[node]][static_cast<int>(part)];
             }
         }

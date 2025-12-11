@@ -92,7 +92,7 @@ class ComputationalDagVectorImpl {
      * This constructor initializes the graph by copying the structure and properties from another graph `other`.
      * The source graph `Graph_t` must satisfy the `is_computational_dag` concept.
      *
-     * @tparam Graph_t The type of the source graph. Must satisfy `is_computational_dag_v`.
+     * @tparam Graph_t The type of the source graph. Must satisfy `isComputationalDagV`.
      * @param other The source graph to copy from.
      */
     template <typename GraphT>

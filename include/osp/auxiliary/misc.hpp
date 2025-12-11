@@ -49,10 +49,10 @@ template <typename T1, typename T2>
 struct Pair {
     int a, b;
 
-    explicit Pair(const T1 a = T1(), const T2 b = T2()) : a(a), b(b) {}
+    explicit Pair(const T1 a_ = T1(), const T2 b_ = T2()) : a(a_), b(b_) {}
 
-    template <typename T1, typename T2>
-    bool operator<(const Pair<T1, T2> &other) const {
+    template <typename U1, typename U2>
+    bool operator<(const Pair<U1, U2> &other) const {
         return (a < other.a || (a == other.a && b < other.b));
     }
 
@@ -68,7 +68,7 @@ struct Triple {
     T2 b;
     T3 c;
 
-    explicit Triple(const T1 a = T1(), const int b = T2(), const int c = T3()) : a(a), b(b), c(c) {}
+    explicit Triple(const T1 a_ = T1(), const int b_ = T2(), const int c_ = T3()) : a(a_), b(b_), c(c_) {}
 
     std::ostream &operator<<(std::ostream &os) const {
         return os << "(" << std::to_string(a) << ", " << std::to_string(b) << ", " << std::to_string(c) << ")";

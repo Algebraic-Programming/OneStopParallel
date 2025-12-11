@@ -197,7 +197,7 @@ class KlCurrentSchedule {
                 }
             }
 
-            for (const auto &node : instance->getComputationalDag().vertices()) {
+            for (const auto &node : instance->getComputationalDag().Vertices()) {
                 vectorSchedule.setAssignedProcessor(node, schedule.assignedProcessor(node));
                 vectorSchedule.setAssignedSuperstep(node, schedule.assignedSuperstep(node));
 
@@ -266,7 +266,7 @@ class KlCurrentSchedule {
                 stepProcessorWork[step][proc] = 0;
 
                 for (const auto &node : setSchedule.step_processor_vertices[step][proc]) {
-                    stepProcessorWork[step][proc] += instance->getComputationalDag().vertex_work_weight(node);
+                    stepProcessorWork[step][proc] += instance->getComputationalDag().VertexWorkWeight(node);
                 }
 
                 if (stepProcessorWork[step][proc] > stepMaxWork[step]) {
@@ -323,8 +323,8 @@ class KlCurrentSchedule {
 
         currentCost += move.change_in_cost;
 
-        stepProcessorWork[move.to_step][move.to_proc] += instance->getComputationalDag().vertex_work_weight(move.node);
-        stepProcessorWork[move.from_step][move.from_proc] -= instance->getComputationalDag().vertex_work_weight(move.node);
+        stepProcessorWork[move.to_step][move.to_proc] += instance->getComputationalDag().VertexWorkWeight(move.node);
+        stepProcessorWork[move.from_step][move.from_proc] -= instance->getComputationalDag().VertexWorkWeight(move.node);
 
         UpdateMaxWorkDatastructures(move);
         UpdateViolations(move.node);

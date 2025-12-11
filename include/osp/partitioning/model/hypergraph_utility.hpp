@@ -53,7 +53,7 @@ typename HypergraphT::vertex_mem_weight_type ComputeTotalVertexMemoryWeight(cons
     using MemwType = typename HypergraphT::vertex_mem_weight_type;
 
     MemwType total = 0;
-    for (IndexType node = 0; node < hgraph.num_vertices(); ++node) {
+    for (IndexType node = 0; node < hgraph.NumVertices(); ++node) {
         total += hgraph.get_vertex_memory_weight(node);
     }
     return total;
@@ -123,7 +123,7 @@ HypergraphT ConvertFromCdagAsDag(const GraphT &dag) {
         hgraph.SetVertexMemoryWeight(node, dag.VertexMemWeight(node));
         for (const auto &child : dag.Children(node)) {
             if constexpr (hasEdgeWeightsV<GraphT>) {
-                hgraph.add_hyperedge({node, child}, dag.edge_comm_weight(edge_desc(node, child, dag).first));
+                hgraph.add_hyperedge({node, child}, dag.EdgeCommWeight(edge_desc(node, child, dag).first));
             } else {
                 hgraph.AddHyperedge({node, child});
             }

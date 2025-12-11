@@ -249,7 +249,7 @@ template <typename GraphTIn, typename GraphTOut>
 std::vector<std::vector<VertexIdxT<GraphTIn>>> SquashA<GraphTIn, GraphTOut>::GenerateVertexExpansionMap(const GraphTIn &dagIn) {
     static_assert(isDirectedGraphEdgeDescV<GraphTIn>, "Graph_t_in must satisfy the directed_graph_edge_desc concept");
     static_assert(isComputationalDagEdgeDescV<GraphTIn>, "Graph_t_in must satisfy the is_computational_dag_edge_desc concept");
-    // static_assert(has_hashable_edge_desc_v<Graph_t_in>, "Graph_t_in must have hashable edge descriptors");
+    // static_assert(hasHashableEdgeDescV<Graph_t_in>, "Graph_t_in must have hashable edge descriptors");
 
     std::vector<int> posetIntMapping = GeneratePosetInMap(dagIn);
 
@@ -265,7 +265,7 @@ std::vector<std::vector<VertexIdxT<GraphTIn>>> SquashA<GraphTIn, GraphTOut>::Gen
                     if constexpr (hasEdgeWeightsV<GraphTIn>) {
                         edgeWeights.emplace(edge, dagIn.EdgeCommWeight(edge));
                     } else {
-                        edgeWeights.emplace(edge, dagIn.vertex_comm_weight(source(edge, dagIn)));
+                        edgeWeights.emplace(edge, dagIn.VertexCommWeight(source(edge, dagIn)));
                     }
                 }
             }

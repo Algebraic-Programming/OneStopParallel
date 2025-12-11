@@ -203,7 +203,7 @@ class TotalCommunicationScheduler : public Scheduler<Graph_t> {
 
             for (const auto &node : instance_ptr->vertices()) {
                 work[schedule.assignedSuperstep(node)][schedule.assignedProcessor(node)]
-                    += instance_ptr->getComputationalDag().vertex_work_weight(node);
+                    += instance_ptr->getComputationalDag().VertexWorkWeight(node);
             }
 
             for (unsigned step = 0; step < num_step; step++) {
@@ -269,7 +269,7 @@ class TotalCommunicationScheduler : public Scheduler<Graph_t> {
     void constructBspScheduleFromSolution(BspSchedule<Graph_t> &schedule, bool cleanup_ = false) {
         const auto &instance = schedule.getInstance();
 
-        for (const auto &node : instance.vertices()) {
+        for (const auto &node : instance.Vertices()) {
             for (unsigned processor = 0; processor < instance.numberOfProcessors(); processor++) {
                 for (unsigned step = 0; step < max_number_supersteps; step++) {
                     if (node_to_processor_superstep_var[node][processor][step].Get(COPT_DBLINFO_VALUE) >= .99) {
@@ -297,7 +297,7 @@ class TotalCommunicationScheduler : public Scheduler<Graph_t> {
             }
         }
 
-        for (const auto &node : initial_schedule->getInstance().vertices()) {
+        for (const auto &node : initial_schedule->getInstance().Vertices()) {
             for (unsigned proc = 0; proc < initial_schedule->getInstance().numberOfProcessors(); proc++) {
                 for (unsigned step = 0; step < max_number_supersteps; step++) {
                     if (proc == initial_schedule->assignedProcessor(node) && step == initial_schedule->assignedSuperstep(node)) {
@@ -315,9 +315,9 @@ class TotalCommunicationScheduler : public Scheduler<Graph_t> {
         std::vector<std::vector<v_workw_t<Graph_t>>> work(
             max_number_supersteps, std::vector<v_workw_t<Graph_t>>(initial_schedule->getInstance().numberOfProcessors(), 0));
 
-        for (const auto &node : initial_schedule->getInstance().vertices()) {
+        for (const auto &node : initial_schedule->getInstance().Vertices()) {
             work[initial_schedule->assignedSuperstep(node)][initial_schedule->assignedProcessor(node)]
-                += initial_schedule->getInstance().getComputationalDag().vertex_work_weight(node);
+                += initial_schedule->getInstance().getComputationalDag().VertexWorkWeight(node);
         }
 
         for (unsigned step = 0; step < max_number_supersteps; step++) {
@@ -348,7 +348,7 @@ class TotalCommunicationScheduler : public Scheduler<Graph_t> {
             instance.numberOfVertices(), std::vector<VarArray>(instance.numberOfProcessors()));
         assert(max_number_supersteps <= std::numeric_limits<int>::max());
         // variables for assigments of nodes to processor and superstep
-        for (const auto &node : instance.vertices()) {
+        for (const auto &node : instance.Vertices()) {
             for (unsigned int processor = 0; processor < instance.numberOfProcessors(); processor++) {
                 node_to_processor_superstep_var[node][processor]
                     = model.AddVars(static_cast<int>(max_number_supersteps), COPT_BINARY, "node_to_processor_superstep");
@@ -368,7 +368,7 @@ class TotalCommunicationScheduler : public Scheduler<Graph_t> {
                     Expr expr;
                     for (unsigned int node = 0; node < instance.numberOfVertices(); node++) {
                         expr += node_to_processor_superstep_var[node][processor][static_cast<int>(step)]
-                                * instance.getComputationalDag().vertex_mem_weight(node);
+                                * instance.getComputationalDag().VertexMemWeight(node);
                     }
                     model.AddConstr(expr <= instance.getArchitecture().memoryBound(processor));
                 }
@@ -385,7 +385,7 @@ class TotalCommunicationScheduler : public Scheduler<Graph_t> {
         // superstep is used at all
         for (unsigned int step = 0; step < max_number_supersteps; step++) {
             Expr expr;
-            for (const auto &node : instance.vertices()) {
+            for (const auto &node : instance.Vertices()) {
                 for (unsigned int processor = 0; processor < instance.numberOfProcessors(); processor++) {
                     expr += node_to_processor_superstep_var[node][processor][static_cast<int>(step)];
                 }
@@ -395,7 +395,7 @@ class TotalCommunicationScheduler : public Scheduler<Graph_t> {
         }
 
         // nodes are assigend depending on whether recomputation is allowed or not
-        for (const auto &node : instance.vertices()) {
+        for (const auto &node : instance.Vertices()) {
             Expr expr;
             for (unsigned int processor = 0; processor < instance.numberOfProcessors(); processor++) {
                 assert(max_number_supersteps <= std::numeric_limits<int>::max());
@@ -408,11 +408,11 @@ class TotalCommunicationScheduler : public Scheduler<Graph_t> {
             // model.AddConstr(instance.allowRecomputation() ? expr >= .99 : expr == 1);
         }
 
-        for (const auto &node : instance.vertices()) {
+        for (const auto &node : instance.Vertices()) {
             for (unsigned processor = 0; processor < instance.numberOfProcessors(); processor++) {
                 assert(max_number_supersteps <= std::numeric_limits<int>::max());
                 for (unsigned step = 0; step < max_number_supersteps; step++) {
-                    for (const auto &source : instance.getComputationalDag().parents(node)) {
+                    for (const auto &source : instance.getComputationalDag().Parents(node)) {
                         Expr expr1;
 
                         for (unsigned p2 = 0; p2 < instance.numberOfProcessors(); p2++) {
@@ -438,9 +438,9 @@ class TotalCommunicationScheduler : public Scheduler<Graph_t> {
             for (unsigned int p1 = 0; p1 < instance.numberOfProcessors(); p1++) {
                 for (unsigned int p2 = 0; p2 < instance.numberOfProcessors(); p2++) {
                     if (p1 != p2) {
-                        assert(instance.getComputationalDag().num_edges() <= std::numeric_limits<int>::max());
+                        assert(instance.getComputationalDag().NumEdges() <= std::numeric_limits<int>::max());
                         edge_vars[p1][p2]
-                            = model.AddVars(static_cast<int>(instance.getComputationalDag().num_edges()), COPT_BINARY, "edge");
+                            = model.AddVars(static_cast<int>(instance.getComputationalDag().NumEdges()), COPT_BINARY, "edge");
 
                         int edge_id = 0;
                         for (const auto &ep : edge_view(instance.getComputationalDag())) {
@@ -453,7 +453,7 @@ class TotalCommunicationScheduler : public Scheduler<Graph_t> {
                             model.AddConstr(edge_vars[p1][p2][edge_id] >= expr1 + expr2 - 1.001);
 
                             total_edges_cut += edge_vars[p1][p2][edge_id]
-                                               * instance.getComputationalDag().vertex_comm_weight(ep.source)
+                                               * instance.getComputationalDag().VertexCommWeight(ep.source)
                                                * instance.sendCosts(p1, p2);
 
                             edge_id++;
@@ -464,8 +464,8 @@ class TotalCommunicationScheduler : public Scheduler<Graph_t> {
 
         } else {
             edge_vars = std::vector<std::vector<VarArray>>(1, std::vector<VarArray>(1));
-            assert(instance.getComputationalDag().num_edges() <= std::numeric_limits<int>::max());
-            edge_vars[0][0] = model.AddVars(static_cast<int>(instance.getComputationalDag().num_edges()), COPT_BINARY, "edge");
+            assert(instance.getComputationalDag().NumEdges() <= std::numeric_limits<int>::max());
+            edge_vars[0][0] = model.AddVars(static_cast<int>(instance.getComputationalDag().NumEdges()), COPT_BINARY, "edge");
 
             int edge_id = 0;
             for (const auto &ep : edge_view(instance.getComputationalDag())) {
@@ -485,7 +485,7 @@ class TotalCommunicationScheduler : public Scheduler<Graph_t> {
                     model.AddConstr(edge_vars[0][0][edge_id] >= expr1 + expr2 - 1.001);
                 }
 
-                total_edges_cut += instance.getComputationalDag().vertex_comm_weight(ep.source) * edge_vars[0][0][edge_id];
+                total_edges_cut += instance.getComputationalDag().VertexCommWeight(ep.source) * edge_vars[0][0][edge_id];
 
                 edge_id++;
             }
@@ -508,8 +508,8 @@ class TotalCommunicationScheduler : public Scheduler<Graph_t> {
                 assert(step <= std::numeric_limits<int>::max());
                 for (unsigned int processor = 0; processor < instance.numberOfProcessors(); processor++) {
                     Expr expr_work;
-                    for (const auto &node : instance.vertices()) {
-                        expr_work += instance.getComputationalDag().vertex_work_weight(node)
+                    for (const auto &node : instance.Vertices()) {
+                        expr_work += instance.getComputationalDag().VertexWorkWeight(node)
                                      * node_to_processor_superstep_var[node][processor][static_cast<int>(step)];
                     }
 

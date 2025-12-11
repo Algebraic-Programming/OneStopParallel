@@ -332,7 +332,7 @@ template <typename GraphT>
 bool StepByStepCoarser<GraphT>::IsContractable(std::pair<VertexIdx, VertexIdx> edge) const {
     std::deque<VertexIdx> queue;
     std::set<VertexIdx> visited;
-    for (VertexIdx succ : gCoarse_.children(edge.first)) {
+    for (VertexIdx succ : gCoarse_.Children(edge.first)) {
         if (nodeValid_[succ] && topOrderIdx_[succ] < topOrderIdx_[edge.second]) {
             queue.push_back(succ);
             visited.insert(succ);
@@ -342,7 +342,7 @@ bool StepByStepCoarser<GraphT>::IsContractable(std::pair<VertexIdx, VertexIdx> e
     while (!queue.empty()) {
         const VertexIdx node = queue.front();
         queue.pop_front();
-        for (VertexIdx succ : gCoarse_.children(node)) {
+        for (VertexIdx succ : gCoarse_.Children(node)) {
             if (succ == edge.second) {
                 return false;
             }
@@ -557,7 +557,7 @@ std::vector<std::pair<VertexIdxT<GraphT>, VertexIdxT<GraphT>>> StepByStepCoarser
     for (VertexIdx node = 0; node < gFull_.NumVertices(); ++node) {
         if (nodeValid_[node]) {
             leader[node] = node;
-            weight[node] = 1 /*G_coarse.vertex_work_weight(node)*/;
+            weight[node] = 1 /*G_coarse.VertexWorkWeight(node)*/;
             nrBadNeighbors[node] = 0;
             leaderBadNeighbors[node] = UINT_MAX;
             clusterNewID[node] = node;
@@ -953,7 +953,7 @@ GraphT StepByStepCoarser<GraphT>::Contract(const std::vector<VertexIdxT<GraphT>>
 
             } else {
                 if (not edge(newVertexId[node], newVertexId[succ], gContracted)) {
-                    gContracted.add_edge(newVertexId[node], newVertexId[succ]);
+                    gContracted.AddEdge(newVertexId[node], newVertexId[succ]);
                 }
             }
         }

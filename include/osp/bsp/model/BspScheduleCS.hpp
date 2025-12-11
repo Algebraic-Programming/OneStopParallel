@@ -532,7 +532,7 @@ class BspScheduleCS : public BspSchedule<GraphT> {
         std::vector<std::vector<std::multiset<unsigned>>> arrivesAt(
             BspSchedule<GraphT>::instance->numberOfVertices(),
             std::vector<std::multiset<unsigned>>(BspSchedule<GraphT>::instance->numberOfProcessors()));
-        for (const auto &node : BspSchedule<GraphT>::instance->getComputationalDag().vertices()) {
+        for (const auto &node : BspSchedule<GraphT>::instance->getComputationalDag().Vertices()) {
             arrivesAt[node][this->assignedProcessor(node)].insert(this->assignedSuperstep(node));
         }
 
@@ -559,8 +559,8 @@ class BspScheduleCS : public BspSchedule<GraphT> {
         std::vector<std::vector<std::multiset<unsigned>>> usedAt(
             BspSchedule<GraphT>::instance->numberOfVertices(),
             std::vector<std::multiset<unsigned>>(BspSchedule<GraphT>::instance->numberOfProcessors()));
-        for (const auto &node : BspSchedule<GraphT>::instance->getComputationalDag().vertices()) {
-            for (const auto &child : BspSchedule<GraphT>::instance->getComputationalDag().children(node)) {
+        for (const auto &node : BspSchedule<GraphT>::instance->getComputationalDag().Vertices()) {
+            for (const auto &child : BspSchedule<GraphT>::instance->getComputationalDag().Children(node)) {
                 usedAt[node][this->assignedProcessor(child)].insert(this->assignedSuperstep(child));
             }
         }

@@ -100,7 +100,7 @@ class EtfScheduler : public Scheduler<GraphT> {
 
             } else {
                 for (const auto &child : instance.GetComputationalDag().Children(node)) {
-                    const VWorkwT<GraphT> tmpVal = bl[child] + instance.GetComputationalDag().vertex_comm_weight(child);
+                    const VWorkwT<GraphT> tmpVal = bl[child] + instance.GetComputationalDag().VertexCommWeight(child);
 
                     if (tmpVal > maxval) {
                         maxval = tmpVal;
@@ -177,7 +177,7 @@ class EtfScheduler : public Scheduler<GraphT> {
                          * instance.SendCosts(schedule.proc[next.second], proc);
 
                 } else {
-                    t += instance.GetComputationalDag().vertex_comm_weight(next.second)
+                    t += instance.GetComputationalDag().VertexCommWeight(next.second)
                          * instance.SendCosts(schedule.proc[next.second], proc);
                 }
 

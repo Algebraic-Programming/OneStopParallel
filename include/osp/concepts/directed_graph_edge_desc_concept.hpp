@@ -116,13 +116,13 @@ template <typename T, typename = void>
 struct IsDirectedGraphEdgeDesc : std::false_type {};
 
 template <typename T>
-struct is_directed_graph_edge_desc<T,
-                                   std::void_t<typename DirectedGraphEdgeDescTraits<T>::directed_edge_descriptor,
-                                               decltype(edges(std::declval<T>())),
-                                               decltype(out_edges(std::declval<VertexIdxT<T>>(), std::declval<T>())),
-                                               decltype(in_edges(std::declval<VertexIdxT<T>>(), std::declval<T>())),
-                                               decltype(source(std::declval<EdgeDescT<T>>(), std::declval<T>())),
-                                               decltype(target(std::declval<EdgeDescT<T>>(), std::declval<T>()))>>
+struct IsDirectedGraphEdgeDesc<T,
+                               std::void_t<typename DirectedGraphEdgeDescTraits<T>::DirectedEdgeDescriptor,
+                                           decltype(Edges(std::declval<T>())),
+                                           decltype(OutEdges(std::declval<VertexIdxT<T>>(), std::declval<T>())),
+                                           decltype(InEdges(std::declval<VertexIdxT<T>>(), std::declval<T>())),
+                                           decltype(Source(std::declval<EdgeDescT<T>>(), std::declval<T>())),
+                                           decltype(Target(std::declval<EdgeDescT<T>>(), std::declval<T>()))>>
     : std::conjunction<IsDirectedGraph<T>,
                        std::is_default_constructible<EdgeDescT<T>>,
                        std::is_copy_constructible<EdgeDescT<T>>,
@@ -146,10 +146,10 @@ template <typename T, typename = void>
 struct HasHashableEdgeDesc : std::false_type {};
 
 template <typename T>
-struct has_hashable_edge_desc<T,
-                              std::void_t<decltype(std::hash<EdgeDescT<T>>{}(std::declval<EdgeDescT<T>>())),
-                                          decltype(std::declval<EdgeDescT<T>>() == std::declval<EdgeDescT<T>>()),
-                                          decltype(std::declval<EdgeDescT<T>>() != std::declval<EdgeDescT<T>>())>>
+struct HasHashableEdgeDesc<T,
+                           std::void_t<decltype(std::hash<EdgeDescT<T>>{}(std::declval<EdgeDescT<T>>())),
+                                       decltype(std::declval<EdgeDescT<T>>() == std::declval<EdgeDescT<T>>()),
+                                       decltype(std::declval<EdgeDescT<T>>() != std::declval<EdgeDescT<T>>())>>
     : std::conjunction<IsDirectedGraphEdgeDesc<T>,
                        std::is_default_constructible<EdgeDescT<T>>,
                        std::is_copy_constructible<EdgeDescT<T>>> {};

@@ -177,12 +177,12 @@ struct GlobalMemoryConstraint {
     }
 
     inline bool CanAdd(const VertexIdxT<GraphT> &v, const unsigned proc) const {
-        return currentProcMemory[proc] + instance->getComputationalDag().vertex_mem_weight(v)
+        return currentProcMemory[proc] + instance->getComputationalDag().VertexMemWeight(v)
                <= instance->getArchitecture().memoryBound(proc);
     }
 
     inline void Add(const VertexIdxT<GraphT> &v, const unsigned proc) {
-        currentProcMemory[proc] += instance->getComputationalDag().vertex_mem_weight(v);
+        currentProcMemory[proc] += instance->getComputationalDag().VertexMemWeight(v);
     }
 
     inline bool CanAdd(const unsigned proc, const VMemwT<GraphT> &customMemWeight, const VCommwT<GraphT> &) const {

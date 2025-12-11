@@ -176,8 +176,8 @@ static void PrintSetScheduleWorkMemNodesGrid(std::ostream &os,
             // for all s, p combinations if it's dynamically sized.
             if (s < setSchedule.step_processor_vertices.size() && p < setSchedule.step_processor_vertices[s].size()) {
                 for (const auto &nodeIdx : setSchedule.step_processor_vertices[s][p]) {
-                    totalWorkPerCell[p][s] += instance.getComputationalDag().vertex_work_weight(nodeIdx);
-                    totalMemoryPerCell[p][s] += instance.getComputationalDag().vertex_mem_weight(nodeIdx);
+                    totalWorkPerCell[p][s] += instance.getComputationalDag().VertexWorkWeight(nodeIdx);
+                    totalMemoryPerCell[p][s] += instance.getComputationalDag().VertexMemWeight(nodeIdx);
                     nodesPerCell[p][s].push_back(nodeIdx);
                 }
             }

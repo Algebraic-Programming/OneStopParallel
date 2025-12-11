@@ -75,7 +75,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
             temp = std::log(temp) / 2 + maxPriority;
 
             double nodeWeight
-                = std::log(static_cast<double>(std::max(graph.vertex_work_weight(*rIter), static_cast<VWorkwT<GraphT>>(1))));
+                = std::log(static_cast<double>(std::max(graph.VertexWorkWeight(*rIter), static_cast<VWorkwT<GraphT>>(1))));
             double largerVal = nodeWeight > temp ? nodeWeight : temp;
 
             workVariance[*rIter] = std::log(std::exp(nodeWeight - largerVal) + std::exp(temp - largerVal)) + largerVal;
@@ -90,9 +90,9 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
 
         std::vector<std::vector<std::vector<unsigned>>> procTypesCompatibleWithNodeTypeSkip(
             instance.GetArchitecture().GetNumberOfProcessorTypes(),
-            std::vector<std::vector<unsigned>>(instance.GetComputationalDag().num_vertex_types()));
+            std::vector<std::vector<unsigned>>(instance.GetComputationalDag().NumVertexTypes()));
         for (unsigned procType = 0; procType < instance.GetArchitecture().GetNumberOfProcessorTypes(); procType++) {
-            for (unsigned nodeType = 0; nodeType < instance.GetComputationalDag().num_vertex_types(); nodeType++) {
+            for (unsigned nodeType = 0; nodeType < instance.GetComputationalDag().NumVertexTypes(); nodeType++) {
                 for (unsigned otherProcType : procTypesCompatibleWithNodeType[nodeType]) {
                     if (procType == otherProcType) {
                         continue;
@@ -150,7 +150,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
 
             auto it = procReady[i].begin();
             while (it != procReady[i].end()) {
-                if (endSupStep && (remainingTime < instance.GetComputationalDag().vertex_work_weight(it->first))) {
+                if (endSupStep && (remainingTime < instance.GetComputationalDag().VertexWorkWeight(it->first))) {
                     it = procReady[i].erase(it);
                     continue;
                 }
@@ -169,7 +169,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
                             if (procType < procTypesCompatibleWithNodeTypeSkipProctype.size()) {
                                 const auto &compatibleTypes
                                     = procTypesCompatibleWithNodeTypeSkipProctype[procType]
-                                                                                 [instance.getComputationalDag().vertex_type(node)];
+                                                                                 [instance.getComputationalDag().VertexType(node)];
 
                                 for (unsigned otherType : compatibleTypes) {
                                     for (unsigned j = 0; j < instance.numberOfProcessors(); ++j) {
@@ -191,7 +191,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
                         if (procType < procTypesCompatibleWithNodeTypeSkipProctype.size()) {
                             const auto &compatibleTypes
                                 = procTypesCompatibleWithNodeTypeSkipProctype[procType]
-                                                                             [instance.GetComputationalDag().vertex_type(node)];
+                                                                             [instance.GetComputationalDag().VertexType(node)];
 
                             for (unsigned otherType : compatibleTypes) {
                                 for (unsigned j = 0; j < instance.NumberOfProcessors(); ++j) {
@@ -224,7 +224,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
             auto it = readyList.begin();
 
             while (it != readyList.end()) {
-                if (endSupStep && (remainingTime < instance.GetComputationalDag().vertex_work_weight(it->first))) {
+                if (endSupStep && (remainingTime < instance.GetComputationalDag().VertexWorkWeight(it->first))) {
                     it = readyList.erase(it);
                     continue;
                 }
@@ -239,7 +239,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
 
                             const auto &compatibleTypes
                                 = procTypesCompatibleWithNodeTypeSkipProctype[procType]
-                                                                             [instance.getComputationalDag().vertex_type(node)];
+                                                                             [instance.getComputationalDag().VertexType(node)];
 
                             for (unsigned otherType : compatibleTypes) {
                                 if (otherType < allReady.size()) {
@@ -254,7 +254,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
                         p = i;
 
                         const auto &compatibleTypes
-                            = procTypesCompatibleWithNodeTypeSkipProctype[procType][instance.GetComputationalDag().vertex_type(node)];
+                            = procTypesCompatibleWithNodeTypeSkipProctype[procType][instance.GetComputationalDag().VertexType(node)];
 
                         for (unsigned otherType : compatibleTypes) {
                             if (otherType < allReady.size()) {
@@ -332,7 +332,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
         }
 
         for (unsigned procType = 0; procType < numProcTypes; ++procType) {
-            for (unsigned nodeType = 0; nodeType < instance.GetComputationalDag().num_vertex_types(); ++nodeType) {
+            for (unsigned nodeType = 0; nodeType < instance.GetComputationalDag().NumVertexTypes(); ++nodeType) {
                 if (instance.IsCompatibleType(nodeType, procType)) {
                     unsigned matched = std::min(readyNodesPerType[nodeType], procsPerType[procType]);
                     nrNodes += matched;
@@ -385,8 +385,8 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
         const std::vector<std::vector<std::vector<unsigned>>> procTypesCompatibleWithNodeTypeSkipProctype
             = ProcTypesCompatibleWithNodeTypeOmitProcType(instance);
 
-        std::vector<unsigned> nrOldReadyNodesPerType(g.num_vertex_types(), 0);
-        std::vector<std::vector<unsigned>> nrReadyStaleNodesPerType(stale, std::vector<unsigned>(g.num_vertex_types(), 0));
+        std::vector<unsigned> nrOldReadyNodesPerType(g.NumVertexTypes(), 0);
+        std::vector<std::vector<unsigned>> nrReadyStaleNodesPerType(stale, std::vector<unsigned>(g.NumVertexTypes(), 0));
         std::vector<unsigned> nrProcsPerType(instance.GetArchitecture().GetNumberOfProcessorTypes(), 0);
         for (auto proc = 0u; proc < p; ++proc) {
             ++nrProcsPerType[instance.GetArchitecture().ProcessorType(proc)];
@@ -395,13 +395,13 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
         std::vector<VertexType> nrPredecRemain(n);
 
         for (VertexType node = 0; node < n; ++node) {
-            const auto numParents = g.in_degree(node);
+            const auto numParents = g.InDegree(node);
 
             nrPredecRemain[node] = numParents;
 
             if (numParents == 0) {
                 ready[0].insert(std::make_pair(node, workVariances[node]));
-                nrReadyStaleNodesPerType[0][g.vertex_type(node)]++;
+                nrReadyStaleNodesPerType[0][g.VertexType(node)]++;
             }
         }
 
@@ -449,14 +449,14 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
 
                 oldReady.insert(ready[supstepIdx % stale].begin(), ready[supstepIdx % stale].end());
                 ready[supstepIdx % stale].clear();
-                for (unsigned nodeType = 0; nodeType < g.num_vertex_types(); ++nodeType) {
+                for (unsigned nodeType = 0; nodeType < g.NumVertexTypes(); ++nodeType) {
                     nrOldReadyNodesPerType[nodeType] += nrReadyStaleNodesPerType[supstepIdx % stale][nodeType];
                     nrReadyStaleNodesPerType[supstepIdx % stale][nodeType] = 0;
                 }
 
                 for (const auto &nodeAndValuePair : oldReady) {
                     VertexType node = nodeAndValuePair.first;
-                    for (unsigned procType : procTypesCompatibleWithNodeType[g.vertex_type(node)]) {
+                    for (unsigned procType : procTypesCompatibleWithNodeType[g.VertexType(node)]) {
                         allReady[procType].insert(allReady[procType].end(), nodeAndValuePair);
                     }
                 }
@@ -494,7 +494,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
                         nrPredecRemain[succ]--;
                         if (nrPredecRemain[succ] == 0) {
                             ready[supstepIdx % stale].emplace(succ, workVariances[succ]);
-                            nrReadyStaleNodesPerType[supstepIdx % stale][g.vertex_type(succ)]++;
+                            nrReadyStaleNodesPerType[supstepIdx % stale][g.VertexType(succ)]++;
 
                             unsigned earliestAdd = supstepIdx;
                             for (const auto &pred : g.Parents(succ)) {
@@ -557,10 +557,10 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
                         procReady[i][nextProc].erase(std::make_pair(nextNode, workVariances[nextNode]));
                     }
                 } else {
-                    for (unsigned procType : procTypesCompatibleWithNodeType[g.vertex_type(nextNode)]) {
+                    for (unsigned procType : procTypesCompatibleWithNodeType[g.VertexType(nextNode)]) {
                         allReady[procType].erase(std::make_pair(nextNode, workVariances[nextNode]));
                     }
-                    nrOldReadyNodesPerType[g.vertex_type(nextNode)]--;
+                    nrOldReadyNodesPerType[g.VertexType(nextNode)]--;
                     const unsigned nextProcType = instance.GetArchitecture().ProcessorType(nextProc);
                     numberOfAllocatedAllReadyTasksInSuperstep[nextProcType]++;
 
@@ -594,7 +594,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
                     }
                 }
 
-                finishTimes.emplace(time + g.vertex_work_weight(nextNode), nextNode);
+                finishTimes.emplace(time + g.VertexWorkWeight(nextNode), nextNode);
                 procFree[nextProc] = false;
                 --free;
             }

@@ -782,20 +782,20 @@ class CompactSparseGraph {
         }
 
         if constexpr (isComputationalDagV<GraphType> && UseCommWeights) {
-            for (const auto &vert : graph.vertices()) {
-                SetVertexCommWeight(vert, graph.vertex_comm_weight(vert));
+            for (const auto &vert : graph.Vertices()) {
+                SetVertexCommWeight(vert, graph.VertexCommWeight(vert));
             }
         }
 
         if constexpr (isComputationalDagV<GraphType> && UseMemWeights) {
-            for (const auto &vert : graph.vertices()) {
-                SetVertexMemWeight(vert, graph.vertex_mem_weight(vert));
+            for (const auto &vert : graph.Vertices()) {
+                SetVertexMemWeight(vert, graph.VertexMemWeight(vert));
             }
         }
 
         if constexpr (isComputationalDagTypedVerticesV<GraphType> && UseVertTypes) {
-            for (const auto &vert : graph.vertices()) {
-                SetVertexType(vert, graph.vertex_type(vert));
+            for (const auto &vert : graph.Vertices()) {
+                SetVertexType(vert, graph.VertexType(vert));
             }
         }
     }
@@ -1028,8 +1028,8 @@ static_assert(isDirectedGraphEdgeDescV<CSG>, "CSG must satisfy the directed_grap
 //     using Graph_out_type = Compact_Sparse_Graph<false, use_work_weights, use_comm_weights, use_mem_weights, use_vert_types,
 //     vert_t, edge_t, work_weight_type, comm_weight_type, mem_weight_type, vertex_type_template_type>;
 
-//     static_assert(is_directed_graph_v<Graph_t_in> && is_directed_graph_v<Graph_out_type>, "Graph types need to satisfy the
-//     is_directed_graph concept."); static_assert(is_computational_dag_v<Graph_t_in>, "Graph_t_in must be a computational DAG");
+//     static_assert(isDirectedGraphV<Graph_t_in> && isDirectedGraphV<Graph_out_type>, "Graph types need to satisfy the
+//     is_directed_graph concept."); static_assert(isComputationalDagV<Graph_t_in>, "Graph_t_in must be a computational DAG");
 //     static_assert(is_constructable_cdag_v<Graph_out_type> || is_direct_constructable_cdag_v<Graph_out_type>, "Graph_out_type
 //     must be a (direct) constructable computational DAG");
 
@@ -1040,8 +1040,8 @@ static_assert(isDirectedGraphEdgeDescV<CSG>, "CSG must satisfy the directed_grap
 
 //     std::set<std::pair<vertex_idx_t<Graph_out_type>, vertex_idx_t<Graph_out_type>>> quotient_edges;
 
-//     for (const vertex_idx_t<Graph_t_in> &vert : dag_in.vertices()) {
-//         for (const vertex_idx_t<Graph_t_in> &chld : dag_in.children(vert)) {
+//     for (const vertex_idx_t<Graph_t_in> &vert : dag_in.Vertices()) {
+//         for (const vertex_idx_t<Graph_t_in> &chld : dag_in.Children(vert)) {
 //             if (vertex_contraction_map[vert] == vertex_contraction_map[chld]) {
 //                 continue;
 //             }
@@ -1052,51 +1052,51 @@ static_assert(isDirectedGraphEdgeDescV<CSG>, "CSG must satisfy the directed_grap
 //     coarsened_dag = Graph_out_type(num_vert_quotient, quotient_edges);
 
 //     const auto& pushforward_map = coarsened_dag.get_pushforward_permutation();
-//     std::vector<vertex_idx_t<Graph_out_type>> combined_expansion_map(dag_in.num_vertices());
-//     for (const auto &vert : dag_in.vertices()) {
+//     std::vector<vertex_idx_t<Graph_out_type>> combined_expansion_map(dag_in.NumVertices());
+//     for (const auto &vert : dag_in.Vertices()) {
 //         combined_expansion_map[vert] = pushforward_map[vertex_contraction_map[vert]];
 //     }
 
-//     if constexpr (has_vertex_weights_v<Graph_t_in> && is_modifiable_cdag_vertex_v<Graph_out_type>) {
+//     if constexpr (hasVertexWeightsV<Graph_t_in> && is_modifiable_cdag_vertex_v<Graph_out_type>) {
 //         static_assert(std::is_same_v<v_workw_t<Graph_t_in>, v_workw_t<Graph_out_type>>, "Work weight types of in-graph and
 //         out-graph must be the same."); static_assert(std::is_same_v<v_commw_t<Graph_t_in>, v_commw_t<Graph_out_type>>, "Vertex
 //         communication types of in-graph and out-graph must be the same."); static_assert(std::is_same_v<v_memw_t<Graph_t_in>,
 //         v_memw_t<Graph_out_type>>, "Memory weight types of in-graph and out-graph must be the same.");
 
-//         for (const vertex_idx_t<Graph_t_in> &vert : coarsened_dag.vertices()) {
-//             coarsened_dag.set_vertex_work_weight(vert, 0);
-//             coarsened_dag.set_vertex_comm_weight(vert, 0);
-//             coarsened_dag.set_vertex_mem_weight(vert, 0);
+//         for (const vertex_idx_t<Graph_t_in> &vert : coarsened_dag.Vertices()) {
+//             coarsened_dag.SetVertexWorkWeight(vert, 0);
+//             coarsened_dag.SetVertexCommWeight(vert, 0);
+//             coarsened_dag.SetVertexMemWeight(vert, 0);
 //         }
 
-//         for (const vertex_idx_t<Graph_t_in> &vert : dag_in.vertices()) {
-//             coarsened_dag.set_vertex_work_weight(
+//         for (const vertex_idx_t<Graph_t_in> &vert : dag_in.Vertices()) {
+//             coarsened_dag.SetVertexWorkWeight(
 //                 vertex_contraction_map[vert],
-//                 v_work_acc_method()(coarsened_dag.vertex_work_weight(combined_expansion_map[vert]),
-//                                 dag_in.vertex_work_weight(vert)));
+//                 v_work_acc_method()(coarsened_dag.VertexWorkWeight(combined_expansion_map[vert]),
+//                                 dag_in.VertexWorkWeight(vert)));
 
-//             coarsened_dag.set_vertex_comm_weight(
+//             coarsened_dag.SetVertexCommWeight(
 //                 vertex_contraction_map[vert],
-//                 v_comm_acc_method()(coarsened_dag.vertex_comm_weight(combined_expansion_map[vert]),
-//                                 dag_in.vertex_comm_weight(vert)));
+//                 v_comm_acc_method()(coarsened_dag.VertexCommWeight(combined_expansion_map[vert]),
+//                                 dag_in.VertexCommWeight(vert)));
 
-//             coarsened_dag.set_vertex_mem_weight(
+//             coarsened_dag.SetVertexMemWeight(
 //                 vertex_contraction_map[vert],
-//                 v_mem_acc_method()(coarsened_dag.vertex_mem_weight(combined_expansion_map[vert]),
-//                                 dag_in.vertex_mem_weight(vert)));
+//                 v_mem_acc_method()(coarsened_dag.VertexMemWeight(combined_expansion_map[vert]),
+//                                 dag_in.VertexMemWeight(vert)));
 //         }
 //     }
 
-//     if constexpr (has_typed_vertices_v<Graph_t_in> && is_modifiable_cdag_typed_vertex_v<Graph_out_type>) {
+//     if constexpr (hasTypedVerticesV<Graph_t_in> && is_modifiable_cdag_typed_vertex_v<Graph_out_type>) {
 //         static_assert(std::is_same_v<v_type_t<Graph_t_in>, v_type_t<Graph_out_type>>,
 //                         "Vertex type types of in graph and out graph must be the same!");
 
-//         for (const vertex_idx_t<Graph_t_in> &vert : dag_in.vertices()) {
-//             coarsened_dag.set_vertex_type(vertex_contraction_map[vert], dag_in.vertex_type(vert));
+//         for (const vertex_idx_t<Graph_t_in> &vert : dag_in.Vertices()) {
+//             coarsened_dag.SetVertexType(vertex_contraction_map[vert], dag_in.VertexType(vert));
 //         }
-//         // assert(std::all_of(dag_in.vertices().begin(), dag_in.vertices().end(),
+//         // assert(std::all_of(dag_in.Vertices().begin(), dag_in.Vertices().end(),
 //         //         [&dag_in, &vertex_contraction_map, &coarsened_dag](const auto &vert){ return
-//         //         dag_in.vertex_type(vert) ==  coarsened_dag.vertex_type(vertex_contraction_map[vert]); })
+//         //         dag_in.VertexType(vert) ==  coarsened_dag.VertexType(vertex_contraction_map[vert]); })
 //         //                 && "Contracted vertices must be of the same type");
 //     }
 

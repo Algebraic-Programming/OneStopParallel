@@ -42,43 +42,43 @@ template <typename T, typename = void>
 struct HasVertexIdxTmember : std::false_type {};
 
 template <typename T>
-struct has_vertex_idx_tmember<T, std::void_t<typename T::vertex_idx>> : std::true_type {};
+struct HasVertexIdxTmember<T, std::void_t<typename T::VertexIdx>> : std::true_type {};
 
 template <typename T, typename = void>
 struct HasEdgeDescTmember : std::false_type {};
 
 template <typename T>
-struct has_edge_desc_tmember<T, std::void_t<typename T::directed_edge_descriptor>> : std::true_type {};
+struct HasEdgeDescTmember<T, std::void_t<typename T::DirectedEdgeDescriptor>> : std::true_type {};
 
 template <typename T, typename = void>
 struct HasVertexWorkWeightTmember : std::false_type {};
 
 template <typename T>
-struct has_vertex_work_weight_tmember<T, std::void_t<typename T::vertex_work_weight_type>> : std::true_type {};
+struct HasVertexWorkWeightTmember<T, std::void_t<typename T::VertexWorkWeightType>> : std::true_type {};
 
 template <typename T, typename = void>
 struct HasVertexCommWeightTmember : std::false_type {};
 
 template <typename T>
-struct has_vertex_comm_weight_tmember<T, std::void_t<typename T::vertex_comm_weight_type>> : std::true_type {};
+struct HasVertexCommWeightTmember<T, std::void_t<typename T::VertexCommWeightType>> : std::true_type {};
 
 template <typename T, typename = void>
 struct HasVertexMemWeightTmember : std::false_type {};
 
 template <typename T>
-struct has_vertex_mem_weight_tmember<T, std::void_t<typename T::vertex_mem_weight_type>> : std::true_type {};
+struct HasVertexMemWeightTmember<T, std::void_t<typename T::VertexMemWeightType>> : std::true_type {};
 
 template <typename T, typename = void>
 struct HasVertexTypeTmember : std::false_type {};
 
 template <typename T>
-struct has_vertex_type_tmember<T, std::void_t<typename T::vertex_type_type>> : std::true_type {};
+struct HasVertexTypeTmember<T, std::void_t<typename T::VertexTypeType>> : std::true_type {};
 
 template <typename T, typename = void>
 struct HasEdgeCommWeightTmember : std::false_type {};
 
 template <typename T>
-struct has_edge_comm_weight_tmember<T, std::void_t<typename T::edge_comm_weight_type>> : std::true_type {};
+struct HasEdgeCommWeightTmember<T, std::void_t<typename T::EdgeCommWeightType>> : std::true_type {};
 
 /**
  * @brief Core traits for any directed graph type.
@@ -138,7 +138,7 @@ struct DirectedGraphEdgeDescTraitsHelper {
 };
 
 template <typename T>
-struct directed_graph_edge_desc_traits_helper<T, true> {
+struct DirectedGraphEdgeDescTraitsHelper<T, true> {
     using DirectedEdgeDescriptor = typename T::DirectedEdgeDescriptor;
 };
 
@@ -192,7 +192,7 @@ struct ComputationalDagTypedVerticesTraits {
 };
 
 template <typename T>
-struct computational_dag_typed_vertices_traits<T, std::void_t<typename T::vertex_type_type>> {
+struct ComputationalDagTypedVerticesTraits<T, std::void_t<typename T::VertexTypeType>> {
     using VertexTypeType = typename T::VertexTypeType;
 };
 
@@ -210,7 +210,7 @@ struct ComputationalDagEdgeDescTraits {
 };
 
 template <typename T>
-struct computational_dag_edge_desc_traits<T, std::void_t<typename T::edge_comm_weight_type>> {
+struct ComputationalDagEdgeDescTraits<T, std::void_t<typename T::EdgeCommWeightType>> {
     using EdgeCommWeightType = typename T::EdgeCommWeightType;
 };
 
@@ -230,7 +230,7 @@ template <typename T, typename = void>
 struct HasVerticesInTopOrderTrait : std::false_type {};
 
 template <typename T>
-struct has_vertices_in_top_order_trait<T, std::void_t<decltype(T::vertices_in_top_order)>>
+struct HasVerticesInTopOrderTrait<T, std::void_t<decltype(T::verticesInTopOrder)>>
     : std::bool_constant<std::is_same_v<decltype(T::verticesInTopOrder), const bool> && T::verticesInTopOrder> {};
 
 template <typename T>
@@ -243,7 +243,7 @@ template <typename T, typename = void>
 struct HasChildrenInVertexOrderTrait : std::false_type {};
 
 template <typename T>
-struct has_children_in_vertex_order_trait<T, std::void_t<decltype(T::children_in_vertex_order)>>
+struct HasChildrenInVertexOrderTrait<T, std::void_t<decltype(T::childrenInVertexOrder)>>
     : std::bool_constant<std::is_same_v<decltype(T::childrenInVertexOrder), const bool> && T::childrenInVertexOrder> {};
 
 template <typename T>
@@ -256,8 +256,8 @@ template <typename T, typename = void>
 struct HasParentsInVertexOrderTrait : std::false_type {};
 
 template <typename T>
-struct has_parents_in_vertex_order_trait<T, std::void_t<decltype(T::parents_in_vertex_order)>>
-    : std::bool_constant<std::is_same_v<decltype(T::parents_in_vertex_order), const bool> && T::parents_in_vertex_order> {};
+struct HasParentsInVertexOrderTrait<T, std::void_t<decltype(T::parentsInVertexOrder)>>
+    : std::bool_constant<std::is_same_v<decltype(T::parentsInVertexOrder), const bool> && T::parentsInVertexOrder> {};
 
 template <typename T>
 inline constexpr bool hasParentsInVertexOrderV = HasParentsInVertexOrderTrait<T>::value;

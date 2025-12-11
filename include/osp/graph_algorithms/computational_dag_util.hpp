@@ -27,28 +27,28 @@ namespace osp {
 
 template <typename GraphT>
 VMemwT<GraphT> MaxMemoryWeight(const GraphT &graph) {
-    static_assert(is_directed_graph_v<GraphT>, "Graph_t must satisfy the directed_graph concept");
-    static_assert(has_vertex_weights_v<GraphT>, "Graph_t must have vertex weights");
+    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(hasVertexWeightsV<GraphT>, "Graph_t must have vertex weights");
 
     VMemwT<GraphT> maxMemoryWeight = 0;
 
-    for (const auto &v : graph.vertices()) {
-        maxMemoryWeight = std::max(maxMemoryWeight, graph.vertex_memory_weight(v));
+    for (const auto &v : graph.Vertices()) {
+        maxMemoryWeight = std::max(maxMemoryWeight, graph.VertexMemWeight(v));
     }
     return maxMemoryWeight;
 }
 
 template <typename GraphT>
 VMemwT<GraphT> MaxMemoryWeight(const VTypeT<GraphT> &nodeType, const GraphT &graph) {
-    static_assert(is_directed_graph_v<GraphT>, "Graph_t must satisfy the directed_graph concept");
-    static_assert(has_vertex_weights_v<GraphT>, "Graph_t must have vertex weights");
-    static_assert(has_typed_vertices_v<GraphT>, "Graph_t must have typed vertices");
+    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(hasVertexWeightsV<GraphT>, "Graph_t must have vertex weights");
+    static_assert(hasTypedVerticesV<GraphT>, "Graph_t must have typed vertices");
 
     VMemwT<GraphT> maxMemoryWeight = 0;
 
-    for (const auto &node : graph.vertices()) {
-        if (graph.node_type(node) == nodeType) {
-            maxMemoryWeight = std::max(maxMemoryWeight, graph.vertex_memory_weight(node));
+    for (const auto &node : graph.Vertices()) {
+        if (graph.VertexType(node) == nodeType) {
+            maxMemoryWeight = std::max(maxMemoryWeight, graph.VertexMemWeight(node));
         }
     }
     return maxMemoryWeight;
@@ -56,10 +56,10 @@ VMemwT<GraphT> MaxMemoryWeight(const VTypeT<GraphT> &nodeType, const GraphT &gra
 
 template <typename GraphT, typename VertexIterator>
 VWorkwT<GraphT> SumOfVerticesWorkWeights(VertexIterator begin, VertexIterator end, const GraphT &graph) {
-    static_assert(has_vertex_weights_v<GraphT>, "Graph_t must have vertex weights");
+    static_assert(hasVertexWeightsV<GraphT>, "Graph_t must have vertex weights");
 
     return std::accumulate(
-        begin, end, 0, [&](const auto sum, const VertexIdxT<GraphT> &v) { return sum + graph.vertex_work_weight(v); });
+        begin, end, 0, [&](const auto sum, const VertexIdxT<GraphT> &v) { return sum + graph.VertexWorkWeight(v); });
 }
 
 template <typename GraphT>
@@ -74,14 +74,14 @@ VWorkwT<GraphT> SumOfVerticesWorkWeights(const GraphT &graph) {
 
 template <typename GraphT>
 VWorkwT<GraphT> SumOfVerticesWorkWeights(const std::initializer_list<VertexIdxT<GraphT>> vertices, const GraphT &graph) {
-    return sumOfVerticesWorkWeights(vertices.begin(), vertices.end(), graph);
+    return SumOfVerticesWorkWeights(vertices.begin(), vertices.end(), graph);
 }
 
 template <typename VertexIterator, typename GraphT>
 VCommwT<GraphT> SumOfVerticesCommunicationWeights(VertexIterator begin, VertexIterator end, const GraphT &graph) {
-    static_assert(has_vertex_weights_v<GraphT>, "Graph_t must have vertex weights");
+    static_assert(hasVertexWeightsV<GraphT>, "Graph_t must have vertex weights");
     return std::accumulate(
-        begin, end, 0, [&](const auto sum, const VertexIdxT<GraphT> &v) { return sum + graph.vertex_comm_weight(v); });
+        begin, end, 0, [&](const auto sum, const VertexIdxT<GraphT> &v) { return sum + graph.VertexCommWeight(v); });
 }
 
 /**
@@ -93,11 +93,11 @@ VCommwT<GraphT> SumOfVerticesCommunicationWeights(VertexIterator begin, VertexIt
 template <typename SubGraphT, typename InstanceT, typename VertexIterator>
 VWorkwT<SubGraphT> SumOfCompatibleWorkWeights(
     VertexIterator begin, VertexIterator end, const SubGraphT &graph, const InstanceT &mainInstance, unsigned processorType) {
-    static_assert(has_vertex_weights_v<SubGraphT>, "SubGraph_t must have vertex weights");
+    static_assert(hasVertexWeightsV<SubGraphT>, "SubGraph_t must have vertex weights");
     return std::accumulate(
         begin, end, static_cast<VWorkwT<SubGraphT>>(0), [&](const VWorkwT<SubGraphT> sum, const VertexIdxT<SubGraphT> &v) {
-            if (mainInstance.isCompatibleType(graph.vertex_type(v), processorType)) {
-                return sum + graph.vertex_work_weight(v);
+            if (mainInstance.isCompatibleType(graph.VertexType(v), processorType)) {
+                return sum + graph.VertexWorkWeight(v);
             }
             return sum;
         });
@@ -108,35 +108,34 @@ VWorkwT<SubGraphT> SumOfCompatibleWorkWeights(
  */
 template <typename SubGraphT, typename InstanceT>
 VWorkwT<SubGraphT> SumOfCompatibleWorkWeights(const SubGraphT &graph, const InstanceT &mainInstance, unsigned processorType) {
-    return sumOfCompatibleWorkWeights(graph.vertices().begin(), graph.vertices().end(), graph, mainInstance, processorType);
+    return SumOfCompatibleWorkWeights(graph.Vertices().begin(), graph.Vertices().end(), graph, mainInstance, processorType);
 }
 
 template <typename GraphT>
 VCommwT<GraphT> SumOfVerticesCommunicationWeights(const GraphT &graph) {
-    static_assert(has_vertex_weights_v<GraphT>, "Graph_t must have vertex weights");
+    static_assert(hasVertexWeightsV<GraphT>, "Graph_t must have vertex weights");
 
-    return std::accumulate(
-        graph.vertices().begin(),
-        graph.vertices().end(),
-        static_cast<VCommwT<GraphT>>(0),
-        [&](const VCommwT<GraphT> sum, const VertexIdxT<GraphT> &v) { return sum + graph.vertex_comm_weight(v); });
+    return std::accumulate(graph.Vertices().begin(),
+                           graph.Vertices().end(),
+                           static_cast<VCommwT<GraphT>>(0),
+                           [&](const VCommwT<GraphT> sum, const VertexIdxT<GraphT> &v) { return sum + graph.VertexCommWeight(v); });
 }
 
 template <typename GraphT>
 VCommwT<GraphT> SumOfVerticesCommunicationWeights(const std::initializer_list<VertexIdxT<GraphT>> &vertices, const GraphT &graph) {
-    return sumOfVerticesCommunicationWeights(vertices.begin(), vertices.end(), graph);
+    return SumOfVerticesCommunicationWeights(vertices.begin(), vertices.end(), graph);
 }
 
 template <typename EdgeIterator, typename GraphT>
 ECommwT<GraphT> SumOfEdgesCommunicationWeights(EdgeIterator begin, EdgeIterator end, const GraphT &graph) {
-    static_assert(has_edge_weights_v<GraphT>, "Graph_t must have edge weights");
+    static_assert(hasEdgeWeightsV<GraphT>, "Graph_t must have edge weights");
     return std::accumulate(
-        begin, end, 0, [&](const auto sum, const EdgeDescT<GraphT> &e) { return sum + graph.edge_comm_weight(e); });
+        begin, end, 0, [&](const auto sum, const EdgeDescT<GraphT> &e) { return sum + graph.EdgeCommWeight(e); });
 }
 
 template <typename GraphT>
 ECommwT<GraphT> SumOfEdgesCommunicationWeights(const std::initializer_list<EdgeDescT<GraphT>> &edges, const GraphT &graph) {
-    return sumOfEdgesCommunicationWeights(edges.begin(), edges.end(), graph);
+    return SumOfEdgesCommunicationWeights(edges.begin(), edges.end(), graph);
 }
 
 template <typename GraphT>

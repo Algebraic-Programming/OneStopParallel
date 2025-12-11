@@ -363,9 +363,9 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
                         if constexpr (Base::useMemoryConstraint) {
                             Base::memoryConstraint_.Add(nextNode, proc);
                         }
-                        // total_partition_memory[proc] += graph.vertex_mem_weight(next_node);
+                        // total_partition_memory[proc] += graph.VertexMemWeight(next_node);
                         // transient_partition_memory[proc] =
-                        //     std::max(transient_partition_memory[proc], graph.vertex_comm_weight(next_node));
+                        //     std::max(transient_partition_memory[proc], graph.VertexCommWeight(next_node));
 
                         // Deletion from Queues
                         std::pair<VertexType, double> pair = std::make_pair(nextNode, variancePriorities[nextNode]);
@@ -417,9 +417,9 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
                                 Base::memoryConstraint_.Add(nodeInSamePartition, proc);
                             }
 
-                            // total_partition_memory[proc] += graph.vertex_mem_weight(node_in_same_partition);
+                            // total_partition_memory[proc] += graph.VertexMemWeight(node_in_same_partition);
                             // transient_partition_memory[proc] = std::max(
-                            //     transient_partition_memory[proc], graph.vertex_comm_weight(node_in_same_partition));
+                            //     transient_partition_memory[proc], graph.VertexCommWeight(node_in_same_partition));
                         }
                     }
 

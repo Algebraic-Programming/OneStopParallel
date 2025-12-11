@@ -49,8 +49,7 @@ void ConstructComputationalDag(const GraphFrom &from, GraphTo &to) {
             vertexMap.push_back(to.AddVertex(
                 from.VertexWorkWeight(vIdx), from.VertexCommWeight(vIdx), from.VertexMemWeight(vIdx), from.VertexType(vIdx)));
         } else {
-            vertexMap.push_back(
-                to.add_vertex(from.vertex_work_weight(vIdx), from.vertex_comm_weight(vIdx), from.vertex_mem_weight(vIdx)));
+            vertexMap.push_back(to.AddVertex(from.VertexWorkWeight(vIdx), from.VertexCommWeight(vIdx), from.VertexMemWeight(vIdx)));
         }
     }
 

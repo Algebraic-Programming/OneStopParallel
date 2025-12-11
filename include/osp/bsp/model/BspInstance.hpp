@@ -324,7 +324,7 @@ class BspInstance {
                 = std::max(maxMemoryPerProcType[architecture_.processorType(proc)], architecture_.memoryBound(proc));
         }
 
-        for (VertexTypeTOrDefault vertType = 0U; vertType < cdag_.num_vertex_types(); vertType++) {
+        for (VertexTypeTOrDefault vertType = 0U; vertType < cdag_.NumVertexTypes(); vertType++) {
             VMemwT<GraphT> maxMemoryOfType = max_memory_weight(vertType, cdag_);
             bool fits = false;
 

@@ -141,7 +141,7 @@ class EdgeRangeVectorImpl {
 
     auto end() const { return EdgeIterator(graph_.NumEdges(), graph_); }
 
-    auto Size() const { return graph_.num_edges(); }
+    auto Size() const { return graph_.NumEdges(); }
 };
 
 template <typename GraphT>

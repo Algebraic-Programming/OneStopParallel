@@ -365,7 +365,7 @@ class IsomorphicSubgraphScheduler {
                 std::cout << "  - Coarse Node " << j << " (from " << isomorphicGroups[j].subgraphs.size()
                           << " isomorphic subgraphs):\n";
                 std::cout << "    - Multiplicity for scheduling: " << result.multiplicities[j] << "\n";
-                std::cout << "    - Total Work (in coarse graph): " << result.instance.getComputationalDag().vertex_work_weight(j)
+                std::cout << "    - Total Work (in coarse graph): " << result.instance.getComputationalDag().VertexWorkWeight(j)
                           << "\n";
                 std::cout << "    - Required Processor Types: ";
                 for (unsigned k = 0; k < numProcTypes; ++k) {
@@ -440,10 +440,10 @@ class IsomorphicSubgraphScheduler {
                 std::cout << "--- Scheduling representative for group " << groupIdx << " ---" << std::endl;
                 std::cout << "  Number of subgraphs in group: " << group.subgraphs.size() << std::endl;
                 const auto &repDag = representativeInstance.getComputationalDag();
-                std::cout << "  Representative subgraph size: " << repDag.num_vertices() << " vertices" << std::endl;
-                std::vector<unsigned> nodeTypeCounts(repDag.num_vertex_types(), 0);
-                for (const auto &v : repDag.vertices()) {
-                    nodeTypeCounts[repDag.vertex_type(v)]++;
+                std::cout << "  Representative subgraph size: " << repDag.NumVertices() << " vertices" << std::endl;
+                std::vector<unsigned> nodeTypeCounts(repDag.NumVertexTypes(), 0);
+                for (const auto &v : repDag.Vertices()) {
+                    nodeTypeCounts[repDag.VertexType(v)]++;
                 }
                 std::cout << "    Node type counts: ";
                 for (size_t typeIdx = 0; typeIdx < nodeTypeCounts.size(); ++typeIdx) {

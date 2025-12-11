@@ -60,7 +60,7 @@ bool HasPath(const VertexIdxT<GraphT> src, const VertexIdxT<GraphT> dest, const 
 
 template <typename GraphT>
 std::size_t LongestPath(const std::set<VertexIdxT<GraphT>> &vertices, const GraphT &graph) {
-    static_assert(is_directed_graph_v<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
     using VertexType = VertexIdxT<GraphT>;
 
@@ -70,7 +70,7 @@ std::size_t LongestPath(const std::set<VertexIdxT<GraphT>> &vertices, const Grap
     // Find source nodes
     for (const VertexType &node : vertices) {
         unsigned indeg = 0;
-        for (const VertexType &parent : graph.parents(node)) {
+        for (const VertexType &parent : graph.Parents(node)) {
             if (vertices.count(parent) == 1) {
                 ++indeg;
             }
@@ -89,7 +89,7 @@ std::size_t LongestPath(const std::set<VertexIdxT<GraphT>> &vertices, const Grap
         const VertexType current = bfsQueue.front();
         bfsQueue.pop();
 
-        for (const VertexType &child : graph.children(current)) {
+        for (const VertexType &child : graph.Children(current)) {
             if (vertices.count(child) == 0) {
                 continue;
             }
@@ -115,7 +115,7 @@ std::size_t LongestPath(const GraphT &graph) {
 
     std::size_t maxEdgecount = 0;
     std::queue<VertexType> bfsQueue;
-    std::vector<VertexType> distances(graph.num_vertices(), 0), visitCounter(graph.num_vertices(), 0);
+    std::vector<VertexType> distances(graph.NumVertices(), 0), visitCounter(graph.NumVertices(), 0);
 
     // Find source nodes
     for (const auto &node : source_vertices_view(graph)) {
@@ -129,7 +129,7 @@ std::size_t LongestPath(const GraphT &graph) {
 
         for (const VertexType &child : graph.Children(current)) {
             ++visitCounter[child];
-            if (visitCounter[child] == graph.in_degree(child)) {
+            if (visitCounter[child] == graph.InDegree(child)) {
                 bfsQueue.push(child);
                 distances[child] = distances[current] + 1;
                 maxEdgecount = std::max(maxEdgecount, distances[child]);
@@ -142,17 +142,17 @@ std::size_t LongestPath(const GraphT &graph) {
 
 template <typename GraphT>
 std::vector<VertexIdxT<GraphT>> LongestChain(const GraphT &graph) {
-    static_assert(is_directed_graph_v<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
     using VertexType = VertexIdxT<GraphT>;
 
     std::vector<VertexType> chain;
 
-    if (graph.num_vertices() == 0) {
+    if (graph.NumVertices() == 0) {
         return chain;
     }
 
-    std::vector<unsigned> topLength(graph.num_vertices(), 0);
+    std::vector<unsigned> topLength(graph.NumVertices(), 0);
     unsigned runningLongestChain = 0;
 
     VertexType endLongestChain = 0;
@@ -160,7 +160,7 @@ std::vector<VertexIdxT<GraphT>> LongestChain(const GraphT &graph) {
     // calculating lenght of longest path
     for (const VertexType &node : top_sort_view(graph)) {
         unsigned maxTemp = 0;
-        for (const auto &parent : graph.parents(node)) {
+        for (const auto &parent : graph.Parents(node)) {
             maxTemp = std::max(maxTemp, topLength[parent]);
         }
 
@@ -173,8 +173,8 @@ std::vector<VertexIdxT<GraphT>> LongestChain(const GraphT &graph) {
 
     // reconstructing longest path
     chain.push_back(endLongestChain);
-    while (graph.in_degree(endLongestChain) != 0) {
-        for (const VertexType &inNode : graph.parents(endLongestChain)) {
+    while (graph.InDegree(endLongestChain) != 0) {
+        for (const VertexType &inNode : graph.Parents(endLongestChain)) {
             if (topLength[inNode] != topLength[endLongestChain] - 1) {
                 continue;
             }
@@ -228,26 +228,26 @@ std::vector<T> GetTopNodeDistance(const GraphT &graph) {
 
 template <typename GraphT>
 std::vector<std::vector<VertexIdxT<GraphT>>> ComputeWavefronts(const GraphT &graph) {
-    static_assert(is_directed_graph_v<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
     std::vector<std::vector<VertexIdxT<GraphT>>> wavefronts;
-    std::vector<VertexIdxT<GraphT>> parentsVisited(graph.num_vertices(), 0);
+    std::vector<VertexIdxT<GraphT>> parentsVisited(graph.NumVertices(), 0);
 
     wavefronts.push_back(std::vector<VertexIdxT<GraphT>>());
-    for (const auto &vertex : graph.vertices()) {
-        if (graph.in_degree(vertex) == 0) {
+    for (const auto &vertex : graph.Vertices()) {
+        if (graph.InDegree(vertex) == 0) {
             wavefronts.back().push_back(vertex);
         } else {
-            parentsVisited[vertex] = static_cast<VertexIdxT<GraphT>>(graph.in_degree(vertex));
+            parentsVisited[vertex] = static_cast<VertexIdxT<GraphT>>(graph.InDegree(vertex));
         }
     }
 
     VertexIdxT<GraphT> counter = static_cast<VertexIdxT<GraphT>>(wavefronts.back().size());
 
-    while (counter < graph.num_vertices()) {
+    while (counter < graph.NumVertices()) {
         std::vector<VertexIdxT<GraphT>> nextWavefront;
         for (const auto &vPrevWavefront : wavefronts.back()) {
-            for (const auto &child : graph.children(vPrevWavefront)) {
+            for (const auto &child : graph.Children(vPrevWavefront)) {
                 parentsVisited[child]--;
                 if (parentsVisited[child] == 0) {
                     nextWavefront.push_back(child);

@@ -30,7 +30,7 @@ namespace osp {
  * The iteration order is lexicographical with respect to (source, target) pairs, determined by
  * the order of vertices and their adjacency lists.
  *
- * @tparam Graph_t The type of the graph, which must satisfy the `is_directed_graph_v` concept.
+ * @tparam Graph_t The type of the graph, which must satisfy the `isDirectedGraphV` concept.
  */
 template <typename GraphT>
 class EdgeView {
@@ -152,11 +152,11 @@ class EdgeView {
 
     [[nodiscard]] auto End() const { return DirEdgeIterator(graph_.NumEdges(), graph_); }
 
-    [[nodiscard]] auto Cend() const { return DirEdgeIterator(graph_.num_edges(), graph_); }
+    [[nodiscard]] auto Cend() const { return DirEdgeIterator(graph_.NumEdges(), graph_); }
 
     [[nodiscard]] auto Size() const { return graph_.NumEdges(); }
 
-    [[nodiscard]] bool Empty() const { return graph_.num_edges() == 0; }
+    [[nodiscard]] bool Empty() const { return graph_.NumEdges() == 0; }
 };
 
 /**
@@ -165,7 +165,7 @@ class EdgeView {
  * This class provides an iterator-based view to iterate over either outgoing or incoming edges
  * of a given vertex. It is a lightweight, non-owning view.
  *
- * @tparam Graph_t The type of the graph, which must satisfy the `is_directed_graph_v` concept.
+ * @tparam Graph_t The type of the graph, which must satisfy the `isDirectedGraphV` concept.
  * @tparam IsOutgoing If true, iterates over outgoing edges; otherwise, incoming edges.
  */
 template <typename GraphT, bool IsOutgoing>
@@ -271,17 +271,17 @@ class IncidentEdgeView {
 
     [[nodiscard]] auto Size() const {
         if constexpr (IsOutgoing) {
-            return graph_.out_degree(anchorVertex_);
+            return graph_.OutDegree(anchorVertex_);
         } else {
-            return graph_.in_degree(anchorVertex_);
+            return graph_.InDegree(anchorVertex_);
         }
     }
 
     [[nodiscard]] bool Empty() const {
         if constexpr (IsOutgoing) {
-            return graph_.out_degree(anchorVertex_) == 0;
+            return graph_.OutDegree(anchorVertex_) == 0;
         } else {
-            return graph_.in_degree(anchorVertex_) == 0;
+            return graph_.InDegree(anchorVertex_) == 0;
         }
     }
 };
