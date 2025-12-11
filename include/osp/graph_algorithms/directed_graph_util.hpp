@@ -18,6 +18,7 @@ limitations under the License.
 
 #pragma once
 
+#include <limits>
 #include <queue>
 #include <unordered_set>
 #include <vector>
@@ -49,7 +50,9 @@ template <typename Graph_t>
 bool edge(const vertex_idx_t<Graph_t> &src, const vertex_idx_t<Graph_t> &dest, const Graph_t &graph) {
     static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
     for (const auto &child : graph.children(src)) {
-        if (child == dest) { return true; }
+        if (child == dest) {
+            return true;
+        }
     }
     return false;
 }
@@ -108,7 +111,9 @@ struct vertex_cond_iterator {
     vertex_cond_iterator(const Graph_t &graph_, const iterator_t &start) : graph(graph_), current_vertex(start) {
         while (current_vertex != graph.vertices().end()) {
             // if (cond.eval(graph, *current_vertex)) {
-            if (cond(graph, *current_vertex)) { break; }
+            if (cond(graph, *current_vertex)) {
+                break;
+            }
             current_vertex++;
         }
     }
@@ -120,7 +125,9 @@ struct vertex_cond_iterator {
         current_vertex++;
 
         while (current_vertex != graph.vertices().end()) {
-            if (cond(graph, *current_vertex)) { break; }
+            if (cond(graph, *current_vertex)) {
+                break;
+            }
             current_vertex++;
         }
 
@@ -208,7 +215,9 @@ template <typename Graph_t>
 std::vector<vertex_idx_t<Graph_t>> source_vertices(const Graph_t &graph) {
     static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
     std::vector<vertex_idx_t<Graph_t>> vec;
-    for (const auto &source : source_vertices_view(graph)) { vec.push_back(source); }
+    for (const auto &source : source_vertices_view(graph)) {
+        vec.push_back(source);
+    }
     return vec;
 }
 
@@ -224,7 +233,9 @@ std::vector<vertex_idx_t<Graph_t>> sink_vertices(const Graph_t &graph) {
     static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
     std::vector<vertex_idx_t<Graph_t>> vec;
 
-    for (const auto &sink : sink_vertices_view(graph)) { vec.push_back(sink); }
+    for (const auto &sink : sink_vertices_view(graph)) {
+        vec.push_back(sink);
+    }
     return vec;
 }
 
@@ -257,7 +268,9 @@ struct traversal_iterator {
 
     traversal_iterator(const Graph_t &graph_, const vertex_idx_t<Graph_t> &start)
         : graph(graph_), adj_iter(graph_), current_vertex(start) {
-        if (graph.num_vertices() == start) { return; }
+        if (graph.num_vertices() == start) {
+            return;
+        }
 
         visited.insert(start);
 
@@ -435,7 +448,9 @@ template <typename Graph_t>
 std::vector<vertex_idx_t<Graph_t>> successors(const vertex_idx_t<Graph_t> &v, const Graph_t &graph) {
     static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
     std::vector<vertex_idx_t<Graph_t>> vec;
-    for (const auto &suc : bfs_view(graph, v)) { vec.push_back(suc); }
+    for (const auto &suc : bfs_view(graph, v)) {
+        vec.push_back(suc);
+    }
     return vec;
 }
 
@@ -451,7 +466,9 @@ template <typename Graph_t>
 std::vector<vertex_idx_t<Graph_t>> ancestors(const vertex_idx_t<Graph_t> &v, const Graph_t &graph) {
     static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
     std::vector<vertex_idx_t<Graph_t>> vec;
-    for (const auto &anc : bfs_reverse_view(graph, v)) { vec.push_back(anc); }
+    for (const auto &anc : bfs_reverse_view(graph, v)) {
+        vec.push_back(anc);
+    }
     return vec;
 }
 
@@ -461,14 +478,18 @@ bool is_acyclic(const Graph_t &graph) {
 
     using VertexType = vertex_idx_t<Graph_t>;
 
-    if (graph.num_vertices() < 2) { return true; }
+    if (graph.num_vertices() < 2) {
+        return true;
+    }
 
     std::vector<VertexType> predecessors_count(graph.num_vertices(), 0);
 
     std::queue<VertexType> next;
 
     // Find source nodes
-    for (const VertexType &v : source_vertices_view(graph)) { next.push(v); }
+    for (const VertexType &v : source_vertices_view(graph)) {
+        next.push(v);
+    }
 
     VertexType node_count = 0;
     while (!next.empty()) {
@@ -478,7 +499,9 @@ bool is_acyclic(const Graph_t &graph) {
 
         for (const VertexType &current : graph.children(node)) {
             ++predecessors_count[current];
-            if (predecessors_count[current] == graph.in_degree(current)) { next.push(current); }
+            if (predecessors_count[current] == graph.in_degree(current)) {
+                next.push(current);
+            }
         }
     }
 
@@ -491,7 +514,9 @@ bool is_connected(const Graph_t &graph) {
 
     using VertexType = vertex_idx_t<Graph_t>;
 
-    if (graph.num_vertices() < 2) { return true; }
+    if (graph.num_vertices() < 2) {
+        return true;
+    }
 
     std::unordered_set<VertexType> visited;
 
@@ -522,11 +547,15 @@ std::size_t num_common_parents(const Graph_t &graph, vertex_idx_t<Graph_t> v1, v
 
     std::unordered_set<vertex_idx_t<Graph_t>> parents;
     parents.reserve(graph.in_degree(v1));
-    for (const auto &par : graph.parents(v1)) { parents.emplace(par); }
+    for (const auto &par : graph.parents(v1)) {
+        parents.emplace(par);
+    }
 
     std::size_t num = 0;
     for (const auto &par : graph.parents(v2)) {
-        if (parents.find(par) != parents.end()) { ++num; }
+        if (parents.find(par) != parents.end()) {
+            ++num;
+        }
     }
 
     return num;
@@ -538,11 +567,15 @@ std::size_t num_common_children(const Graph_t &graph, vertex_idx_t<Graph_t> v1, 
 
     std::unordered_set<vertex_idx_t<Graph_t>> childrn;
     childrn.reserve(graph.out_degree(v1));
-    for (const auto &chld : graph.children(v1)) { childrn.emplace(chld); }
+    for (const auto &chld : graph.children(v1)) {
+        childrn.emplace(chld);
+    }
 
     std::size_t num = 0;
     for (const auto &chld : graph.children(v2)) {
-        if (childrn.find(chld) != childrn.end()) { ++num; }
+        if (childrn.find(chld) != childrn.end()) {
+            ++num;
+        }
     }
 
     return num;

@@ -18,6 +18,7 @@ limitations under the License.
 
 #pragma once
 
+#include <cassert>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -33,9 +34,15 @@ void permute_inplace(std::vector<T> &vec, std::vector<Ind> &perm) {
     assert([&]() -> bool {
         std::vector<bool> found(perm.size(), false);
         for (const Ind &val : perm) {
-            if (val < 0) { return false; }
-            if (val >= perm.size()) { return false; }
-            if (found[val]) { return false; }
+            if (val < 0) {
+                return false;
+            }
+            if (val >= perm.size()) {
+                return false;
+            }
+            if (found[val]) {
+                return false;
+            }
             found[val] = true;
         }
         return true;
@@ -59,9 +66,15 @@ void inverse_permute_inplace(std::vector<T> &vec, std::vector<Ind> &perm) {
     assert([&]() -> bool {
         std::vector<bool> found(perm.size(), false);
         for (const Ind &val : perm) {
-            if (val < 0) { return false; }
-            if (val >= perm.size()) { return false; }
-            if (found[val]) { return false; }
+            if (val < 0) {
+                return false;
+            }
+            if (val >= perm.size()) {
+                return false;
+            }
+            if (found[val]) {
+                return false;
+            }
             found[val] = true;
         }
         return true;

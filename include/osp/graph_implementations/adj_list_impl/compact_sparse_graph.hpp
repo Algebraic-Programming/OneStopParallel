@@ -18,6 +18,7 @@ limitations under the License.
 #pragma once
 
 #include <algorithm>
+#include <cassert>
 #include <iterator>
 #include <limits>
 #include <numeric>
@@ -256,7 +257,9 @@ class Compact_Sparse_Graph {
     template <typename RetT = void>
     std::enable_if_t<use_vert_types, RetT> _update_num_vertex_types() {
         number_of_vertex_types = static_cast<vertex_type_type>(1);
-        for (const auto vt : vert_types) { number_of_vertex_types = std::max(number_of_vertex_types, vt); }
+        for (const auto vt : vert_types) {
+            number_of_vertex_types = std::max(number_of_vertex_types, vt);
+        }
     }
 
   public:
@@ -308,9 +311,15 @@ class Compact_Sparse_Graph {
             }
         }
 
-        if constexpr (use_work_weights) { vert_work_weights = std::vector<vertex_work_weight_type>(num_vertices(), 1); }
-        if constexpr (use_comm_weights) { vert_comm_weights = std::vector<vertex_comm_weight_type>(num_vertices(), 0); }
-        if constexpr (use_mem_weights) { vert_mem_weights = std::vector<vertex_mem_weight_type>(num_vertices(), 0); }
+        if constexpr (use_work_weights) {
+            vert_work_weights = std::vector<vertex_work_weight_type>(num_vertices(), 1);
+        }
+        if constexpr (use_comm_weights) {
+            vert_comm_weights = std::vector<vertex_comm_weight_type>(num_vertices(), 0);
+        }
+        if constexpr (use_mem_weights) {
+            vert_mem_weights = std::vector<vertex_mem_weight_type>(num_vertices(), 0);
+        }
         if constexpr (use_vert_types) {
             number_of_vertex_types = 1;
             vert_types = std::vector<vertex_type_type>(num_vertices(), 0);
@@ -349,7 +358,9 @@ class Compact_Sparse_Graph {
                 csc_source_ptr[vert] = static_cast<edge_t>(csc_edge_children.size());
 
                 std::sort(children_tmp[vert].begin(), children_tmp[vert].end());
-                for (const auto &chld : children_tmp[vert]) { csc_edge_children.emplace_back(chld); }
+                for (const auto &chld : children_tmp[vert]) {
+                    csc_edge_children.emplace_back(chld);
+                }
             }
             csc_source_ptr[num_vertices()] = static_cast<edge_t>(csc_edge_children.size());
 
@@ -360,17 +371,23 @@ class Compact_Sparse_Graph {
 
             std::vector<edge_t> offset = csr_target_ptr;
             for (vertex_idx vert = 0; vert < num_vertices(); ++vert) {
-                for (const auto &chld : children_tmp[vert]) { csr_edge_parents[offset[chld]++] = vert; }
+                for (const auto &chld : children_tmp[vert]) {
+                    csr_edge_parents[offset[chld]++] = vert;
+                }
             }
 
         } else {
             std::vector<std::vector<vertex_idx>> parents_tmp(num_vertices());
 
             if constexpr (is_container_of<edge_list_type, std::pair<vertex_idx, vertex_idx>>::value) {
-                for (const auto &edge : edges) { parents_tmp[edge.second].push_back(edge.first); }
+                for (const auto &edge : edges) {
+                    parents_tmp[edge.second].push_back(edge.first);
+                }
             }
             if constexpr (is_edge_list_type_v<edge_list_type, vertex_idx, edge_t>) {
-                for (const auto &edge : edges) { parents_tmp[edge.target].push_back(edge.source); }
+                for (const auto &edge : edges) {
+                    parents_tmp[edge.target].push_back(edge.source);
+                }
             }
 
             // Generating modified Gorder topological order cf. "Speedup Graph Processing by Graph Ordering" by Hao Wei, Jeffrey
@@ -389,7 +406,9 @@ class Compact_Sparse_Graph {
 
             std::priority_queue<vertex_idx, std::vector<vertex_idx>, decltype(v_cmp)> ready_q(v_cmp);
             for (vertex_idx vert = 0; vert < num_vertices(); ++vert) {
-                if (prec_remaining[vert] == 0) { ready_q.push(vert); }
+                if (prec_remaining[vert] == 0) {
+                    ready_q.push(vert);
+                }
             }
 
             while (!ready_q.empty()) {
@@ -402,18 +421,26 @@ class Compact_Sparse_Graph {
                 vertex_permutation_from_internal_to_original.push_back(vert);
 
                 // update priorities
-                for (vertex_idx chld : children_tmp[vert]) { priorities[chld] = log_sum_exp(priorities[chld], pos); }
+                for (vertex_idx chld : children_tmp[vert]) {
+                    priorities[chld] = log_sum_exp(priorities[chld], pos);
+                }
                 for (vertex_idx par : parents_tmp[vert]) {
-                    for (vertex_idx sibling : children_tmp[par]) { priorities[sibling] = log_sum_exp(priorities[sibling], pos); }
+                    for (vertex_idx sibling : children_tmp[par]) {
+                        priorities[sibling] = log_sum_exp(priorities[sibling], pos);
+                    }
                 }
                 for (vertex_idx chld : children_tmp[vert]) {
-                    for (vertex_idx couple : parents_tmp[chld]) { priorities[couple] = log_sum_exp(priorities[couple], pos); }
+                    for (vertex_idx couple : parents_tmp[chld]) {
+                        priorities[couple] = log_sum_exp(priorities[couple], pos);
+                    }
                 }
 
                 // update constraints and push to queue
                 for (vertex_idx chld : children_tmp[vert]) {
                     --prec_remaining[chld];
-                    if (prec_remaining[chld] == 0) { ready_q.push(chld); }
+                    if (prec_remaining[chld] == 0) {
+                        ready_q.push(chld);
+                    }
                 }
             }
 
@@ -438,7 +465,9 @@ class Compact_Sparse_Graph {
                 }
 
                 std::sort(children_new_name.begin(), children_new_name.end());
-                for (const auto &chld : children_new_name) { csc_edge_children.emplace_back(chld); }
+                for (const auto &chld : children_new_name) {
+                    csc_edge_children.emplace_back(chld);
+                }
             }
             csc_source_ptr[num_vertices()] = static_cast<edge_t>(csc_edge_children.size());
 
@@ -472,7 +501,9 @@ class Compact_Sparse_Graph {
         if constexpr (keep_vertex_order) {
             vert_work_weights = ww;
         } else {
-            for (auto vert : vertices()) { vert_work_weights[vert] = ww[vertex_permutation_from_internal_to_original[vert]]; }
+            for (auto vert : vertices()) {
+                vert_work_weights[vert] = ww[vertex_permutation_from_internal_to_original[vert]];
+            }
         }
     }
 
@@ -486,7 +517,9 @@ class Compact_Sparse_Graph {
         if constexpr (keep_vertex_order) {
             vert_work_weights = std::move(ww);
         } else {
-            for (auto vert : vertices()) { vert_work_weights[vert] = ww[vertex_permutation_from_internal_to_original[vert]]; }
+            for (auto vert : vertices()) {
+                vert_work_weights[vert] = ww[vertex_permutation_from_internal_to_original[vert]];
+            }
         }
     }
 
@@ -506,13 +539,17 @@ class Compact_Sparse_Graph {
         if constexpr (keep_vertex_order) {
             vert_work_weights = ww;
         } else {
-            for (auto vert : vertices()) { vert_work_weights[vert] = ww[vertex_permutation_from_internal_to_original[vert]]; }
+            for (auto vert : vertices()) {
+                vert_work_weights[vert] = ww[vertex_permutation_from_internal_to_original[vert]];
+            }
         }
 
         if constexpr (keep_vertex_order) {
             vert_comm_weights = cw;
         } else {
-            for (auto vert : vertices()) { vert_comm_weights[vert] = cw[vertex_permutation_from_internal_to_original[vert]]; }
+            for (auto vert : vertices()) {
+                vert_comm_weights[vert] = cw[vertex_permutation_from_internal_to_original[vert]];
+            }
         }
     }
 
@@ -532,13 +569,17 @@ class Compact_Sparse_Graph {
         if constexpr (keep_vertex_order) {
             vert_work_weights = std::move(ww);
         } else {
-            for (auto vert : vertices()) { vert_work_weights[vert] = ww[vertex_permutation_from_internal_to_original[vert]]; }
+            for (auto vert : vertices()) {
+                vert_work_weights[vert] = ww[vertex_permutation_from_internal_to_original[vert]];
+            }
         }
 
         if constexpr (keep_vertex_order) {
             vert_comm_weights = std::move(cw);
         } else {
-            for (auto vert : vertices()) { vert_comm_weights[vert] = cw[vertex_permutation_from_internal_to_original[vert]]; }
+            for (auto vert : vertices()) {
+                vert_comm_weights[vert] = cw[vertex_permutation_from_internal_to_original[vert]];
+            }
         }
     }
 
@@ -562,19 +603,25 @@ class Compact_Sparse_Graph {
         if constexpr (keep_vertex_order) {
             vert_work_weights = ww;
         } else {
-            for (auto vert : vertices()) { vert_work_weights[vert] = ww[vertex_permutation_from_internal_to_original[vert]]; }
+            for (auto vert : vertices()) {
+                vert_work_weights[vert] = ww[vertex_permutation_from_internal_to_original[vert]];
+            }
         }
 
         if constexpr (keep_vertex_order) {
             vert_comm_weights = cw;
         } else {
-            for (auto vert : vertices()) { vert_comm_weights[vert] = cw[vertex_permutation_from_internal_to_original[vert]]; }
+            for (auto vert : vertices()) {
+                vert_comm_weights[vert] = cw[vertex_permutation_from_internal_to_original[vert]];
+            }
         }
 
         if constexpr (keep_vertex_order) {
             vert_mem_weights = mw;
         } else {
-            for (auto vert : vertices()) { vert_mem_weights[vert] = mw[vertex_permutation_from_internal_to_original[vert]]; }
+            for (auto vert : vertices()) {
+                vert_mem_weights[vert] = mw[vertex_permutation_from_internal_to_original[vert]];
+            }
         }
     }
 
@@ -598,19 +645,25 @@ class Compact_Sparse_Graph {
         if constexpr (keep_vertex_order) {
             vert_work_weights = std::move(ww);
         } else {
-            for (auto vert : vertices()) { vert_work_weights[vert] = ww[vertex_permutation_from_internal_to_original[vert]]; }
+            for (auto vert : vertices()) {
+                vert_work_weights[vert] = ww[vertex_permutation_from_internal_to_original[vert]];
+            }
         }
 
         if constexpr (keep_vertex_order) {
             vert_comm_weights = std::move(cw);
         } else {
-            for (auto vert : vertices()) { vert_comm_weights[vert] = cw[vertex_permutation_from_internal_to_original[vert]]; }
+            for (auto vert : vertices()) {
+                vert_comm_weights[vert] = cw[vertex_permutation_from_internal_to_original[vert]];
+            }
         }
 
         if constexpr (keep_vertex_order) {
             vert_mem_weights = std::move(mw);
         } else {
-            for (auto vert : vertices()) { vert_mem_weights[vert] = mw[vertex_permutation_from_internal_to_original[vert]]; }
+            for (auto vert : vertices()) {
+                vert_mem_weights[vert] = mw[vertex_permutation_from_internal_to_original[vert]];
+            }
         }
     }
 
@@ -638,25 +691,33 @@ class Compact_Sparse_Graph {
         if constexpr (keep_vertex_order) {
             vert_work_weights = ww;
         } else {
-            for (auto vert : vertices()) { vert_work_weights[vert] = ww[vertex_permutation_from_internal_to_original[vert]]; }
+            for (auto vert : vertices()) {
+                vert_work_weights[vert] = ww[vertex_permutation_from_internal_to_original[vert]];
+            }
         }
 
         if constexpr (keep_vertex_order) {
             vert_comm_weights = cw;
         } else {
-            for (auto vert : vertices()) { vert_comm_weights[vert] = cw[vertex_permutation_from_internal_to_original[vert]]; }
+            for (auto vert : vertices()) {
+                vert_comm_weights[vert] = cw[vertex_permutation_from_internal_to_original[vert]];
+            }
         }
 
         if constexpr (keep_vertex_order) {
             vert_mem_weights = mw;
         } else {
-            for (auto vert : vertices()) { vert_mem_weights[vert] = mw[vertex_permutation_from_internal_to_original[vert]]; }
+            for (auto vert : vertices()) {
+                vert_mem_weights[vert] = mw[vertex_permutation_from_internal_to_original[vert]];
+            }
         }
 
         if constexpr (keep_vertex_order) {
             vert_types = vt;
         } else {
-            for (auto vert : vertices()) { vert_types[vert] = vt[vertex_permutation_from_internal_to_original[vert]]; }
+            for (auto vert : vertices()) {
+                vert_types[vert] = vt[vertex_permutation_from_internal_to_original[vert]];
+            }
         }
     }
 
@@ -684,25 +745,33 @@ class Compact_Sparse_Graph {
         if constexpr (keep_vertex_order) {
             vert_work_weights = std::move(ww);
         } else {
-            for (auto vert : vertices()) { vert_work_weights[vert] = ww[vertex_permutation_from_internal_to_original[vert]]; }
+            for (auto vert : vertices()) {
+                vert_work_weights[vert] = ww[vertex_permutation_from_internal_to_original[vert]];
+            }
         }
 
         if constexpr (keep_vertex_order) {
             vert_comm_weights = std::move(cw);
         } else {
-            for (auto vert : vertices()) { vert_comm_weights[vert] = cw[vertex_permutation_from_internal_to_original[vert]]; }
+            for (auto vert : vertices()) {
+                vert_comm_weights[vert] = cw[vertex_permutation_from_internal_to_original[vert]];
+            }
         }
 
         if constexpr (keep_vertex_order) {
             vert_mem_weights = std::move(mw);
         } else {
-            for (auto vert : vertices()) { vert_mem_weights[vert] = mw[vertex_permutation_from_internal_to_original[vert]]; }
+            for (auto vert : vertices()) {
+                vert_mem_weights[vert] = mw[vertex_permutation_from_internal_to_original[vert]];
+            }
         }
 
         if constexpr (keep_vertex_order) {
             vert_types = std::move(vt);
         } else {
-            for (auto vert : vertices()) { vert_types[vert] = vt[vertex_permutation_from_internal_to_original[vert]]; }
+            for (auto vert : vertices()) {
+                vert_types[vert] = vt[vertex_permutation_from_internal_to_original[vert]];
+            }
         }
     }
 
@@ -711,19 +780,27 @@ class Compact_Sparse_Graph {
         static_assert(is_directed_graph_v<Graph_type>);
 
         if constexpr (is_computational_dag_v<Graph_type> && use_work_weights) {
-            for (const auto &vert : graph.vertices()) { set_vertex_work_weight(vert, graph.vertex_work_weight(vert)); }
+            for (const auto &vert : graph.vertices()) {
+                set_vertex_work_weight(vert, graph.vertex_work_weight(vert));
+            }
         }
 
         if constexpr (is_computational_dag_v<Graph_type> && use_comm_weights) {
-            for (const auto &vert : graph.vertices()) { set_vertex_comm_weight(vert, graph.vertex_comm_weight(vert)); }
+            for (const auto &vert : graph.vertices()) {
+                set_vertex_comm_weight(vert, graph.vertex_comm_weight(vert));
+            }
         }
 
         if constexpr (is_computational_dag_v<Graph_type> && use_mem_weights) {
-            for (const auto &vert : graph.vertices()) { set_vertex_mem_weight(vert, graph.vertex_mem_weight(vert)); }
+            for (const auto &vert : graph.vertices()) {
+                set_vertex_mem_weight(vert, graph.vertex_mem_weight(vert));
+            }
         }
 
         if constexpr (is_computational_dag_typed_vertices_v<Graph_type> && use_vert_types) {
-            for (const auto &vert : graph.vertices()) { set_vertex_type(vert, graph.vertex_type(vert)); }
+            for (const auto &vert : graph.vertices()) {
+                set_vertex_type(vert, graph.vertex_type(vert));
+            }
         }
     }
 
