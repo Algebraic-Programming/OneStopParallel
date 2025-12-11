@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(TestBoostGraphAdapter1) {
     }
 
     edgeIdx = 0;
-    for (const auto &edge : edges(graph)) {
+    for (const auto &edge : Edges(graph)) {
         BOOST_CHECK_EQUAL(Source(edge, graph), edgeSources[edgeIdx]);
         BOOST_CHECK_EQUAL(Target(edge, graph), edgeTargets[edgeIdx]);
         edgeIdx++;
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(TestBoostGraphAdapter1) {
 
     size_t idx = 0;
 
-    for (const auto &v : graph.vertices()) {
+    for (const auto &v : graph.Vertices()) {
         BOOST_CHECK_EQUAL(v, vertices[idx++]);
 
         size_t i = 0;

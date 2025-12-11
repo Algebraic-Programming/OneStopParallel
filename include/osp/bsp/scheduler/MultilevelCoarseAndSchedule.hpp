@@ -146,7 +146,7 @@ RETURN_STATUS MultilevelCoarseAndSchedule<GraphT, GraphTCoarse>::ExpandActiveSch
 
     assert(expandedSchedule->SatisfiesPrecedenceConstraints());
 
-    // std::cout << "exp_inst:  " << expanded_instance.get() << " n: " << expanded_instance->numberOfVertices() << " m:
+    // std::cout << "exp_inst:  " << expanded_instance.get() << " n: " << expanded_instance->NumberOfVertices() << " m:
     // " << expanded_instance->getComputationalDag().NumEdges() << std::endl; std::cout << "exp_sched: " <<
     // &expanded_schedule->GetInstance() << " n: " << expanded_schedule->GetInstance().NumVertices() << " m: " <<
     // expanded_schedule->GetInstance().GetComputationalDag().NumEdges() << std::endl;
@@ -155,7 +155,7 @@ RETURN_STATUS MultilevelCoarseAndSchedule<GraphT, GraphTCoarse>::ExpandActiveSch
     std::swap(expandedInstance, activeInstance_);
     std::swap(expandedSchedule, activeSchedule_);
 
-    // std::cout << "act_inst:  " << active_instance.get() << " n: " << active_instance->numberOfVertices() << " m: " <<
+    // std::cout << "act_inst:  " << active_instance.get() << " n: " << active_instance->NumberOfVertices() << " m: " <<
     // active_instance->getComputationalDag().NumEdges() << std::endl; std::cout << "act_sched: " <<
     // &active_schedule->GetInstance() << " n: " << active_schedule->GetInstance().NumVertices() << " m: " <<
     // active_schedule->GetInstance().GetComputationalDag().NumEdges() << std::endl;

@@ -172,7 +172,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
                                                                                  [instance.getComputationalDag().VertexType(node)];
 
                                 for (unsigned otherType : compatibleTypes) {
-                                    for (unsigned j = 0; j < instance.numberOfProcessors(); ++j) {
+                                    for (unsigned j = 0; j < instance.NumberOfProcessors(); ++j) {
                                         if (j != i && instance.getArchitecture().processorType(j) == otherType
                                             && j < procReady.size()) {
                                             procReady[j].erase(std::make_pair(node, workVariance[node]));
@@ -275,7 +275,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
                              const std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> &procReady) const {
         if constexpr (useMemoryConstraint) {
             if (instance.getArchitecture().getMemoryConstraintType() == MEMORY_CONSTRAINT_TYPE::PERSISTENT_AND_TRANSIENT) {
-                for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
+                for (unsigned i = 0; i < instance.NumberOfProcessors(); ++i) {
                     if (!procReady[i].empty()) {
                         const std::pair<VertexType, double> &nodePair = *procReady[i].begin();
                         VertexType topNode = nodePair.first;
@@ -286,7 +286,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
                     }
                 }
 
-                for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
+                for (unsigned i = 0; i < instance.NumberOfProcessors(); ++i) {
                     if (allReady[instance.getArchitecture().processorType(i)].empty()) {
                         continue;
                     }
@@ -359,7 +359,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
     virtual ~GreedyVarianceSspScheduler() = default;
 
     RETURN_STATUS ComputeSspSchedule(BspSchedule<GraphT> &schedule, unsigned stale) {
-        const auto &instance = schedule.getInstance();
+        const auto &instance = schedule.GetInstance();
         const auto &g = instance.GetComputationalDag();
         const VertexType &n = instance.NumberOfVertices();
         const unsigned &p = instance.NumberOfProcessors();

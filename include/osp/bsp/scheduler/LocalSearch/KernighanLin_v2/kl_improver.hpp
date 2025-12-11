@@ -1051,7 +1051,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
             //     add_steps_range(best_move.to_step);
 
             //     for (unsigned step : steps_to_check) {
-            //         for (unsigned proc = 0; proc < instance->numberOfProcessors(); ++proc) {
+            //         for (unsigned proc = 0; proc < instance->NumberOfProcessors(); ++proc) {
             //             const auto &nodes_in_step = active_schedule.getSetSchedule().step_processor_vertices[step][proc];
             //             for (const auto &node : nodes_in_step) {
             //                 if (!thread_data.affinity_table.is_selected(node) && !thread_data.lock_manager.is_locked(node)) {
@@ -1353,7 +1353,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
     void SynchronizeActiveSchedule(const unsigned numThreads) {
         if (numThreads == 1) {    // single thread case
             activeSchedule_.SetCost(threadDataVec_[0].activeScheduleData.cost);
-            activeSchedule_.GetVectorSchedule().numberOfSupersteps = threadDataVec_[0].NumSteps();
+            activeSchedule_.GetVectorSchedule().NumberOfSupersteps = threadDataVec_[0].NumSteps();
             return;
         }
 
@@ -1369,7 +1369,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                 }
             }
         }
-        activeSchedule_.GetVectorSchedule().numberOfSupersteps = writeCursor;
+        activeSchedule_.GetVectorSchedule().NumberOfSupersteps = writeCursor;
         const CostT newCost = commCostF_.ComputeScheduleCost();
         activeSchedule_.SetCost(newCost);
     }
@@ -1397,7 +1397,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
         SetParameters(schedule.GetInstance().NumberOfVertices());
         InitializeDatastructures(schedule);
         const CostT initialCost = activeSchedule_.GetCost();
-        const unsigned numSteps = schedule.numberOfSupersteps();
+        const unsigned numSteps = schedule.NumberOfSupersteps();
 
         SetStartStep(0, threadDataVec_[0]);
         threadDataVec_[0].endStep = (numSteps > 0) ? numSteps - 1 : 0;

@@ -92,7 +92,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
 #ifdef TIME_THREADS_GROW_LOCAL_PARALLEL
         double startTime = omp_get_wtime();
 #endif
-        const BspInstance<GraphT> &instance = schedule.getInstance();
+        const BspInstance<GraphT> &instance = schedule.GetInstance();
         const GraphT &graph = instance.GetComputationalDag();
 
         const VertexType n = endNode - startNode;
@@ -503,7 +503,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
     }
 
     RETURN_STATUS ComputeScheduleParallel(BspSchedule<GraphT> &schedule, unsigned int numThreads) const {
-        const BspInstance<GraphT> &instance = schedule.getInstance();
+        const BspInstance<GraphT> &instance = schedule.GetInstance();
         const GraphT &graph = instance.GetComputationalDag();
 
         const VertexType n = instance.NumberOfVertices();
@@ -586,9 +586,9 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
     virtual RETURN_STATUS ComputeSchedule(BspSchedule<GraphT> &schedule) override {
         unsigned numThreads = params_.numThreads;
         if (numThreads == 0) {
-            // numThreads = static_cast<unsigned>(std::sqrt( static_cast<double>((schedule.getInstance().numberOfVertices() / 1000000)))) + 1;
+            // numThreads = static_cast<unsigned>(std::sqrt( static_cast<double>((schedule.GetInstance().NumberOfVertices() / 1000000)))) + 1;
             numThreads
-                = static_cast<unsigned>(std::log2(static_cast<double>((schedule.getInstance().NumberOfVertices() / 1000)))) + 1;
+                = static_cast<unsigned>(std::log2(static_cast<double>((schedule.GetInstance().NumberOfVertices() / 1000)))) + 1;
         }
         numThreads = std::min(numThreads, params_.maxNumThreads);
         if (numThreads == 0) {

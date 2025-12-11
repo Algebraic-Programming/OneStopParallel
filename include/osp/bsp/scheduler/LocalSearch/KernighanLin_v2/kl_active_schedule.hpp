@@ -197,7 +197,7 @@ struct KlActiveScheduleWorkDatastructures {
 
             // unsigned from_proc_pos = step_processor_position[move.from_step][move.from_proc];
 
-            // while (from_proc_pos < instance->numberOfProcessors() - 1 && step_processor_work_[move.from_step][from_proc_pos +
+            // while (from_proc_pos < instance->NumberOfProcessors() - 1 && step_processor_work_[move.from_step][from_proc_pos +
             // 1].work > new_weight_from) {
             //     std::swap(step_processor_work_[move.from_step][from_proc_pos],
             //     step_processor_work_[move.from_step][from_proc_pos + 1]);
@@ -228,7 +228,7 @@ struct KlActiveScheduleWorkDatastructures {
 
     void OverrideNextSuperstep(unsigned step) {
         const unsigned nextStep = step + 1;
-        for (unsigned i = 0; i < instance->numberOfProcessors(); i++) {
+        for (unsigned i = 0; i < instance->NumberOfProcessors(); i++) {
             stepProcessorWork[nextStep][i] = stepProcessorWork[step][i];
             stepProcessorPosition[nextStep][i] = stepProcessorPosition[step][i];
         }
@@ -236,11 +236,11 @@ struct KlActiveScheduleWorkDatastructures {
     }
 
     void ResetSuperstep(unsigned step) {
-        for (unsigned i = 0; i < instance->numberOfProcessors(); i++) {
+        for (unsigned i = 0; i < instance->NumberOfProcessors(); i++) {
             stepProcessorWork[step][i] = {0, i};
             stepProcessorPosition[step][i] = i;
         }
-        stepMaxWorkProcessorCount[step] = instance->numberOfProcessors() - 1;
+        stepMaxWorkProcessorCount[step] = instance->NumberOfProcessors() - 1;
     }
 
     void ComputeWorkDatastructures(unsigned startStep, unsigned endStep) {
@@ -635,7 +635,7 @@ void KlActiveSchedule<GraphT, CostT, MemoryConstraintT>::RemoveEmptyStep(unsigne
             memoryConstraint.swap_steps(i, i + 1);
         }
     }
-    vectorSchedule_.numberOfSupersteps--;
+    vectorSchedule_.NumberOfSupersteps--;
 }
 
 template <typename GraphT, typename CostT, typename MemoryConstraintT>
@@ -659,7 +659,7 @@ void KlActiveSchedule<GraphT, CostT, MemoryConstraintT>::InsertEmptyStep(unsigne
     unsigned i = vectorSchedule_.number_of_supersteps++;
 
     for (; i > step; i--) {
-        for (unsigned proc = 0; proc < instance_->numberOfProcessors(); proc++) {
+        for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); proc++) {
             for (const auto node : setSchedule_.step_processor_vertices[i - 1][proc]) {
                 vectorSchedule_.setAssignedSuperstep(node, i);
             }

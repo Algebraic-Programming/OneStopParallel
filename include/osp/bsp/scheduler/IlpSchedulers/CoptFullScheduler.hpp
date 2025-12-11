@@ -163,7 +163,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
         }
 
         BspScheduleRecomp<GraphT> ConstructBspScheduleRecompFromCallback() {
-            unsigned numberOfSupersteps = 0;
+            unsigned NumberOfSupersteps = 0;
             BspScheduleRecomp<GraphT> schedule(*instancePtr);
 
             for (unsigned int node = 0; node < instancePtr->NumberOfVertices(); node++) {
@@ -172,15 +172,15 @@ class CoptFullScheduler : public Scheduler<GraphT> {
                         if (GetSolution((*nodeToProcessorSuperstepVarPtr)[node][processor][static_cast<int>(step)]) >= .99) {
                             schedule.Assignments(node).emplace_back(processor, step);
 
-                            if (step >= numberOfSupersteps) {
-                                numberOfSupersteps = step + 1;
+                            if (step >= NumberOfSupersteps) {
+                                NumberOfSupersteps = step + 1;
                             }
                         }
                     }
                 }
             }
 
-            schedule.SetNumberOfSupersteps(numberOfSupersteps);
+            schedule.SetNumberOfSupersteps(NumberOfSupersteps);
 
             for (unsigned int node = 0; node < instancePtr->NumberOfVertices(); node++) {
                 for (unsigned int pFrom = 0; pFrom < instancePtr->NumberOfProcessors(); pFrom++) {
@@ -218,11 +218,11 @@ class CoptFullScheduler : public Scheduler<GraphT> {
     void ConstructBspScheduleFromSolution(BspScheduleCS<GraphT> &schedule, bool cleanup = false) {
         const auto &instance = schedule.GetInstance();
 
-        unsigned numberOfSupersteps = 0;
+        unsigned NumberOfSupersteps = 0;
 
         for (unsigned step = 0; step < maxNumberSupersteps_; step++) {
             if (superstepUsedVar_[static_cast<int>(step)].Get(COPT_DBLINFO_VALUE) >= .99) {
-                numberOfSupersteps++;
+                NumberOfSupersteps++;
             }
         }
 
@@ -237,8 +237,8 @@ class CoptFullScheduler : public Scheduler<GraphT> {
             }
         }
 
-        if (isMaxBsp_ && numberOfSupersteps > 0) {    // can ignore last 2 comm phases in this case
-            --numberOfSupersteps;
+        if (isMaxBsp_ && NumberOfSupersteps > 0) {    // can ignore last 2 comm phases in this case
+            --NumberOfSupersteps;
         }
 
         schedule.GetCommunicationSchedule().clear();
@@ -246,7 +246,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
             for (unsigned int pFrom = 0; pFrom < instance.NumberOfProcessors(); pFrom++) {
                 for (unsigned int pTo = 0; pTo < instance.NumberOfProcessors(); pTo++) {
                     if (pFrom != pTo) {
-                        for (unsigned int step = 0; step < numberOfSupersteps - 1; step++) {
+                        for (unsigned int step = 0; step < NumberOfSupersteps - 1; step++) {
                             if (commProcessorToProcessorSuperstepNodeVar_[pFrom][pTo][step][static_cast<int>(node)].Get(
                                     COPT_DBLINFO_VALUE)
                                 >= .99) {
@@ -265,19 +265,19 @@ class CoptFullScheduler : public Scheduler<GraphT> {
     }
 
     void ConstructBspScheduleRecompFromSolution(BspScheduleRecomp<GraphT> &schedule, bool cleanup) {
-        unsigned numberOfSupersteps = 0;
+        unsigned NumberOfSupersteps = 0;
 
         for (unsigned step = 0; step < maxNumberSupersteps_; step++) {
             if (superstepUsedVar_[static_cast<int>(step)].Get(COPT_DBLINFO_VALUE) >= .99) {
-                numberOfSupersteps++;
+                NumberOfSupersteps++;
             }
         }
 
-        schedule.SetNumberOfSupersteps(numberOfSupersteps);
+        schedule.SetNumberOfSupersteps(NumberOfSupersteps);
 
         for (unsigned node = 0; node < schedule.GetInstance().NumberOfVertices(); node++) {
             for (unsigned processor = 0; processor < schedule.GetInstance().NumberOfProcessors(); processor++) {
-                for (unsigned step = 0; step < numberOfSupersteps - 1; step++) {
+                for (unsigned step = 0; step < NumberOfSupersteps - 1; step++) {
                     if (nodeToProcessorSuperstepVar_[node][processor][static_cast<int>(step)].Get(COPT_DBLINFO_VALUE) >= .99) {
                         schedule.Assignments(node).emplace_back(processor, step);
                     }
@@ -786,7 +786,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
           useInitialSchedule_(true),
           writeSolutionsFound_(false),
           initialSchedule_(&schedule),
-          maxNumberSupersteps_(schedule.numberOfSupersteps()) {
+          maxNumberSupersteps_(schedule.NumberOfSupersteps()) {
         // solution_callback.comm_processor_to_processor_superstep_node_var_ptr =
         //     &comm_processor_to_processor_superstep_node_var;
         // solution_callback.node_to_processor_superstep_var_ptr = &node_to_processor_superstep_var;
@@ -798,7 +798,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
           useInitialScheduleRecomp_(true),
           writeSolutionsFound_(false),
           initialScheduleRecomp_(&schedule),
-          maxNumberSupersteps_(schedule.numberOfSupersteps()) {}
+          maxNumberSupersteps_(schedule.NumberOfSupersteps()) {}
 
     virtual ~CoptFullScheduler() = default;
 

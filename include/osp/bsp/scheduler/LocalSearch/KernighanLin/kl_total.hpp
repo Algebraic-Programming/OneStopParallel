@@ -45,12 +45,12 @@ class KlTotal : public KlBase<GraphT, MemoryConstraintT> {
     VCommwT<GraphT> nodeCommSelectionThreshold_ = 0;
     double maxEdgeWeight_ = 0.0;
 
-    virtual void initialize_datastructures() override {
+    virtual void InitializeDatastructures() override {
 #ifdef KL_DEBUG
         std::cout << "KLTotal initialize datastructures" << std::endl;
 #endif
 
-        KlBase<GraphT, MemoryConstraintT>::initialize_datastructures();
+        KlBase<GraphT, MemoryConstraintT>::InitializeDatastructures();
 
         VCommwT<GraphT> maxEdgeWeight = 0;
         VWorkwT<GraphT> maxNodeWeight = 0;

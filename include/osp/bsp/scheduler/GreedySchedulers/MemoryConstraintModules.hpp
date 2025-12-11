@@ -169,7 +169,7 @@ struct GlobalMemoryConstraint {
 
     inline void Initialize(const BspInstance<GraphT> &instance_) {
         instance = &instance_;
-        currentProcMemory = std::vector<VMemwT<GraphT>>(instance->numberOfProcessors(), 0);
+        currentProcMemory = std::vector<VMemwT<GraphT>>(instance->NumberOfProcessors(), 0);
 
         if (instance->getArchitecture().getMemoryConstraintType() != MEMORY_CONSTRAINT_TYPE::GLOBAL) {
             throw std::invalid_argument("Memory constraint type is not GLOBAL");

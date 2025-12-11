@@ -310,7 +310,7 @@ struct TopSortIterator {
 };
 
 /**
- * @class top_sort_view
+ * @class TopSortView
  * @brief Provides a view for iterating over the vertices of a directed graph in topological order.
  *
  * This class supports two modes of iteration:
@@ -351,7 +351,7 @@ class TopSortView {
 };
 
 /**
- * @class dfs_top_sort_view
+ * @class DfsTopSortView
  * @brief Provides a view for performing a topological sort on a directed graph using depth-first search (DFS).
  *
  * This class is designed to work with graphs that satisfy the `directed_graph` concept. It uses a DFS-based
@@ -378,7 +378,7 @@ class DfsTopSortView {
 };
 
 /**
- * @class bfs_top_sort_view
+ * @class BfsTopSortView
  * @brief Provides a view for performing a topological sort on a directed graph using breadth-first search (BFS).
  *
  * This class is designed to work with graphs that satisfy the `directed_graph` concept. It uses a BFS-based

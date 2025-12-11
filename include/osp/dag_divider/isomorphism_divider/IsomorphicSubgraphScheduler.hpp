@@ -476,7 +476,7 @@ class IsomorphicSubgraphScheduler {
             }
 
             if (plotDotGraphs_) {
-                const auto &repDag = bspSchedule.getInstance().GetComputationalDag();
+                const auto &repDag = bspSchedule.GetInstance().GetComputationalDag();
                 std::vector<unsigned> colors(repDag.NumVertices());
                 std::map<std::pair<unsigned, unsigned>, unsigned> procSsToColor;
                 unsigned nextColor = 0;

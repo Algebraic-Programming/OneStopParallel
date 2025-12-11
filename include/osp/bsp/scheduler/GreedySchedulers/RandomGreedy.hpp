@@ -41,7 +41,7 @@ class RandomGreedy : public Scheduler<GraphT> {
     RETURN_STATUS ComputeSchedule(BspSchedule<GraphT> &sched) override {
         using VertexType = VertexIdxT<GraphT>;
 
-        const auto &instance = sched.getInstance();
+        const auto &instance = sched.GetInstance();
 
         for (const auto &v : instance.GetComputationalDag().Vertices()) {
             sched.SetAssignedProcessor(v, std::numeric_limits<unsigned>::max());
@@ -54,7 +54,7 @@ class RandomGreedy : public Scheduler<GraphT> {
 
         std::vector<VertexType> predecessorsCount(instance.NumberOfVertices(), 0);
         std::vector<VertexType> next;
-        for (const auto &i : source_vertices_view(graph)) {
+        for (const auto &i : SourceVerticesView(graph)) {
             next.push_back(i);
         }
 

@@ -50,7 +50,7 @@ class GreedyChildren : public Scheduler<GraphT> {
 
         std::vector<VertexType> predecessorsCount(instance.NumberOfVertices(), 0);
         std::multiset<std::pair<unsigned, VertexType>, std::greater<>> next;
-        for (const VertexType &i : source_vertices_view(graph)) {
+        for (const VertexType &i : SourceVerticesView(graph)) {
             next.emplace(graph.OutDegree(i), i);
         }
 

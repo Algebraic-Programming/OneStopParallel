@@ -49,7 +49,7 @@ namespace osp {
 template <typename GraphTIn, typename GraphTOut>
 void TransitiveReductionSparse(const GraphTIn &graphIn, GraphTOut &graphOut) {
     static_assert(isDirectedGraphV<GraphTIn>, "Input graph must be a directed graph.");
-    static_assert(is_constructable_cdag_v<GraphTOut>, "Output graph must be a constructable computational DAG.");
+    static_assert(isConstructableCdagV<GraphTOut>, "Output graph must be a constructable computational DAG.");
     assert(graphOut.NumVertices() == 0 && "Output graph must be empty.");
 
     if (graphIn.NumVertices() == 0) {
@@ -58,7 +58,7 @@ void TransitiveReductionSparse(const GraphTIn &graphIn, GraphTOut &graphOut) {
 
     // 1. Copy vertices and their properties from graph_in to graph_out.
     for (const auto &vIdx : graphIn.Vertices()) {
-        if constexpr (hasTypedVerticesV<GraphTIn> && is_constructable_cdag_typed_vertex_v<GraphTOut>) {
+        if constexpr (hasTypedVerticesV<GraphTIn> && isConstructableCdagTypedVertexV<GraphTOut>) {
             graphOut.AddVertex(graphIn.VertexWorkWeight(vIdx),
                                graphIn.VertexCommWeight(vIdx),
                                graphIn.VertexMemWeight(vIdx),
@@ -70,18 +70,18 @@ void TransitiveReductionSparse(const GraphTIn &graphIn, GraphTOut &graphOut) {
 
     // 2. Add an edge (u, v) to the reduction if it's not transitive.
     // An edge (u, v) is transitive if there exists a child w of u (w != v) that can reach v.
-    for (const auto &edge : edges(graphIn)) {
-        const auto u = source(edge, graphIn);
-        const auto v = target(edge, graphIn);
+    for (const auto &edge : Edges(graphIn)) {
+        const auto u = Source(edge, graphIn);
+        const auto v = Target(edge, graphIn);
         bool isTransitive = false;
         for (const auto &w : graphIn.Children(u)) {
-            if (w != v && has_path(w, v, graphIn)) {
+            if (w != v && HasPath(w, v, graphIn)) {
                 isTransitive = true;
                 break;
             }
         }
         if (!isTransitive) {
-            if constexpr (hasEdgeWeightsV<GraphTIn> && is_constructable_cdag_comm_edge_v<GraphTOut>) {
+            if constexpr (hasEdgeWeightsV<GraphTIn> && isConstructableCdagCommEdgeV<GraphTOut>) {
                 graphOut.AddEdge(u, v, graphIn.EdgeCommWeight(edge));
             } else {
                 graphOut.AddEdge(u, v);
@@ -112,7 +112,7 @@ void TransitiveReductionSparse(const GraphTIn &graphIn, GraphTOut &graphOut) {
 template <typename GraphTIn, typename GraphTOut>
 void TransitiveReductionDense(const GraphTIn &graphIn, GraphTOut &graphOut) {
     static_assert(isDirectedGraphEdgeDescV<GraphTIn>, "Input graph must be a directed graph with edge descriptors.");
-    static_assert(is_constructable_cdag_v<GraphTOut>, "Output graph must be a constructable computational DAG.");
+    static_assert(isConstructableCdagV<GraphTOut>, "Output graph must be a constructable computational DAG.");
     assert(graphOut.NumVertices() == 0 && "Output graph must be empty.");
 
     const auto numV = graphIn.NumVertices();
@@ -122,7 +122,7 @@ void TransitiveReductionDense(const GraphTIn &graphIn, GraphTOut &graphOut) {
 
     // 1. Copy vertices and their properties from graph_in to graph_out.
     for (const auto &vIdx : graphIn.Vertices()) {
-        if constexpr (hasTypedVerticesV<GraphTIn> && is_constructable_cdag_typed_vertex_v<GraphTOut>) {
+        if constexpr (hasTypedVerticesV<GraphTIn> && isConstructableCdagTypedVertexV<GraphTOut>) {
             graphOut.AddVertex(graphIn.VertexWorkWeight(vIdx),
                                graphIn.VertexCommWeight(vIdx),
                                graphIn.VertexMemWeight(vIdx),
@@ -134,8 +134,8 @@ void TransitiveReductionDense(const GraphTIn &graphIn, GraphTOut &graphOut) {
 
     // 2. Compute transitive closure (reachability matrix).
     std::vector<std::vector<bool>> reachable(numV, std::vector<bool>(numV, false));
-    for (const auto &edge : edges(graphIn)) {
-        reachable[source(edge, graphIn)][target(edge, graphIn)] = true;
+    for (const auto &edge : Edges(graphIn)) {
+        reachable[Source(edge, graphIn)][Target(edge, graphIn)] = true;
     }
 
     const auto topOrder = GetTopOrder(graphIn);
@@ -152,9 +152,9 @@ void TransitiveReductionDense(const GraphTIn &graphIn, GraphTOut &graphOut) {
     }
 
     // 3. Add an edge (u, v) to the reduction if it's not transitive.
-    for (const auto &edge : edges(graphIn)) {
-        const auto u = source(edge, graphIn);
-        const auto v = target(edge, graphIn);
+    for (const auto &edge : Edges(graphIn)) {
+        const auto u = Source(edge, graphIn);
+        const auto v = Target(edge, graphIn);
         bool isTransitive = false;
         for (const auto &w : graphIn.Children(u)) {
             if (w != v && reachable[w][v]) {
@@ -163,7 +163,7 @@ void TransitiveReductionDense(const GraphTIn &graphIn, GraphTOut &graphOut) {
             }
         }
         if (!isTransitive) {
-            if constexpr (hasEdgeWeightsV<GraphTIn> && is_constructable_cdag_comm_edge_v<GraphTOut>) {
+            if constexpr (hasEdgeWeightsV<GraphTIn> && isConstructableCdagCommEdgeV<GraphTOut>) {
                 graphOut.AddEdge(u, v, graphIn.EdgeCommWeight(edge));
             } else {
                 graphOut.AddEdge(u, v);

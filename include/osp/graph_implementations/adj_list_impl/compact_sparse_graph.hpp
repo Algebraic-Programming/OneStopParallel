@@ -830,7 +830,7 @@ class CompactSparseGraph {
     }
 
     template <typename RetT = VertexCommWeightType>
-    inline std::enable_if_t<not UseCommWeights, RetT> vertex_comm_weight(const VertexIdx) const {
+    inline std::enable_if_t<not UseCommWeights, RetT> VertexCommWeight(const VertexIdx) const {
         return static_cast<RetT>(0);
     }
 
@@ -840,7 +840,7 @@ class CompactSparseGraph {
     }
 
     template <typename RetT = VertexMemWeightType>
-    inline std::enable_if_t<not UseMemWeights, RetT> vertex_mem_weight(const VertexIdx) const {
+    inline std::enable_if_t<not UseMemWeights, RetT> VertexMemWeight(const VertexIdx) const {
         return static_cast<RetT>(0);
     }
 
@@ -949,7 +949,7 @@ template <bool KeepVertexOrder,
           typename CommWeightType,
           typename MemWeightType,
           typename VertexTypeTemplateType>
-struct is_Compact_Sparse_Graph<
+struct IsCompactSparseGraph<
     CompactSparseGraph<KeepVertexOrder, UseWorkWeights, UseCommWeights, UseMemWeights, UseVertTypes, VertT, EdgeT, WorkWeightType, CommWeightType, MemWeightType, VertexTypeTemplateType>,
     void> : std::true_type {};
 
@@ -963,7 +963,7 @@ template <bool UseWorkWeights,
           typename CommWeightType,
           typename MemWeightType,
           typename VertexTypeTemplateType>
-struct is_Compact_Sparse_Graph_reorder<
+struct IsCompactSparseGraphReorder<
     CompactSparseGraph<false, UseWorkWeights, UseCommWeights, UseMemWeights, UseVertTypes, VertT, EdgeT, WorkWeightType, CommWeightType, MemWeightType, VertexTypeTemplateType>,
     void> : std::true_type {};
 

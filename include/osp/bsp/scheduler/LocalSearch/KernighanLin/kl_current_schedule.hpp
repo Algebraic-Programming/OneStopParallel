@@ -128,7 +128,7 @@ class KlCurrentSchedule {
             stepMaxWork[i] = stepMaxWork[i + 1];
             stepSecondMaxWork[i] = stepSecondMaxWork[i + 1];
 
-            for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
+            for (unsigned proc = 0; proc < instance->NumberOfProcessors(); proc++) {
                 stepProcessorWork[i][proc] = stepProcessorWork[i + 1][proc];
 
                 if constexpr (useMemoryConstraint) {
@@ -183,16 +183,16 @@ class KlCurrentSchedule {
         }
     }
 
-    inline unsigned NumSteps() const { return vectorSchedule.numberOfSupersteps(); }
+    inline unsigned NumSteps() const { return vectorSchedule.NumberOfSupersteps(); }
 
     virtual void SetCurrentSchedule(const IBspSchedule<GraphT> &schedule) {
-        if (NumSteps() == schedule.numberOfSupersteps()) {
+        if (NumSteps() == schedule.NumberOfSupersteps()) {
 #ifdef KL_DEBUG
             std::cout << "KLCurrentSchedule set current schedule, same nr supersteps" << std::endl;
 #endif
 
             for (unsigned step = 0; step < NumSteps(); step++) {
-                for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
+                for (unsigned proc = 0; proc < instance->NumberOfProcessors(); proc++) {
                     setSchedule.step_processor_vertices[step][proc].clear();
                 }
             }
@@ -232,7 +232,7 @@ class KlCurrentSchedule {
         std::cout << "KLCurrentSchedule initialize datastructures" << std::endl;
 #endif
 
-        const unsigned numProcs = instance->numberOfProcessors();
+        const unsigned numProcs = instance->NumberOfProcessors();
 
         if constexpr (useMemoryConstraint) {
             memoryConstraint.initialize(setSchedule, vectorSchedule);
@@ -262,7 +262,7 @@ class KlCurrentSchedule {
             stepMaxWork[step] = 0;
             stepSecondMaxWork[step] = 0;
 
-            for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
+            for (unsigned proc = 0; proc < instance->NumberOfProcessors(); proc++) {
                 stepProcessorWork[step][proc] = 0;
 
                 for (const auto &node : setSchedule.step_processor_vertices[step][proc]) {
@@ -440,7 +440,7 @@ class KlCurrentSchedule {
         stepMaxWork[step] = 0;
         stepSecondMaxWork[step] = 0;
 
-        for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
+        for (unsigned proc = 0; proc < instance->NumberOfProcessors(); proc++) {
             if (stepProcessorWork[step][proc] > stepMaxWork[step]) {
                 stepSecondMaxWork[step] = stepMaxWork[step];
                 stepMaxWork[step] = stepProcessorWork[step][proc];

@@ -59,7 +59,7 @@ class kl_hyper_total_cut : public kl_total<Graph_t, MemoryConstraint_t> {
 
                 if (current_schedule.vector_schedule.assignedProcessor(node) != target_proc
                     || current_schedule.vector_schedule.assignedSuperstep(node) != target_step) {
-                    intersects.insert(current_schedule.instance->numberOfProcessors() * target_step + target_proc);
+                    intersects.insert(current_schedule.instance->NumberOfProcessors() * target_step + target_proc);
                 }
             }
 

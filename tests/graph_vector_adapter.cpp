@@ -33,6 +33,7 @@ limitations under the License.
 #include "osp/coarser/coarser_util.hpp"
 #include "osp/dag_divider/isomorphism_divider/IsomorphicSubgraphScheduler.hpp"
 #include "osp/graph_algorithms/directed_graph_util.hpp"
+#include "osp/graph_implementations/adj_list_impl/cdag_vertex_impl.hpp"
 #include "osp/graph_implementations/adj_list_impl/compact_sparse_graph.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
@@ -81,7 +82,7 @@ BOOST_AUTO_TEST_CASE(TestDagVectorAdapterEdge) {
 
     GraphT graph(outNeighbors, inNeighbors);
 
-    for (auto v : graph.vertices()) {
+    for (auto v : graph.Vertices()) {
         graph.SetVertexWorkWeight(v, 10);
     }
 
@@ -170,7 +171,7 @@ BOOST_AUTO_TEST_CASE(TestDagVectorAdapter) {
 
     GraphT graph(outNeighbors, inNeighbors);
 
-    for (auto v : graph.vertices()) {
+    for (auto v : graph.Vertices()) {
         graph.SetVertexWorkWeight(v, 10);
     }
 

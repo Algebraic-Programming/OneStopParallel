@@ -105,12 +105,12 @@ RETURN_STATUS MultiLevelHillClimbingScheduler<GraphT>::ComputeSchedule(BspSchedu
     GraphT coarseDAG;
     std::vector<VertexIdx> newVertexId;
 
-    const auto numVerices = schedule.getInstance().NumberOfVertices();
+    const auto numVerices = schedule.GetInstance().NumberOfVertices();
     SetParameter(numVerices);
 
-    coarser.CoarsenDag(schedule.getInstance().GetComputationalDag(), coarseDAG, newVertexId);
+    coarser.CoarsenDag(schedule.GetInstance().GetComputationalDag(), coarseDAG, newVertexId);
 
-    BspInstance<GraphT> coarseInstance(coarseDAG, schedule.getInstance().GetArchitecture());
+    BspInstance<GraphT> coarseInstance(coarseDAG, schedule.GetInstance().GetArchitecture());
 
     GreedyBspScheduler<GraphT> greedy;
     BspSchedule<GraphT> coarseSchedule(coarseInstance);
@@ -126,7 +126,7 @@ RETURN_STATUS MultiLevelHillClimbingScheduler<GraphT>::ComputeSchedule(BspSchedu
         refinementPoints_.pop_front();
     }
 
-    schedule = Refine(schedule.getInstance(), coarser, coarseSchedule);
+    schedule = Refine(schedule.GetInstance(), coarser, coarseSchedule);
 
     return RETURN_STATUS::OSP_SUCCESS;
 }
@@ -154,7 +154,7 @@ BspSchedule<GraphT> MultiLevelHillClimbingScheduler<GraphT>::Refine(const BspIns
         }
 
         HillClimbingScheduler<GraphT> hc;
-        hc.improveScheduleWithStepLimit(schedule, numberHcSteps_);
+        hc.ImproveScheduleWithStepLimit(schedule, numberHcSteps_);
 
         scheduleOnFullGraph = ComputeUncontractedSchedule(coarser, fullInstance, schedule, contractSteps);
     }

@@ -111,22 +111,22 @@ class KlImproverMt : public KlImprover<GraphT, CommCostFunctionT, MemoryConstrai
         }
 
         unsigned numThreads = std::min(maxNumThreads_, static_cast<unsigned>(omp_get_max_threads()));
-        SetNumThreads(numThreads, schedule.numberOfSupersteps());
+        SetNumThreads(numThreads, schedule.NumberOfSupersteps());
 
         this->threadDataVec_.resize(numThreads);
         this->threadFinishedVec_.assign(numThreads, true);
 
         if (numThreads == 1) {
             this->parameters_.numParallelLoops
-                = 1;    // no parallelization with one thread. Affects parameters.max_out_iteration calculation in set_parameters()
+                = 1;    // no parallelization with one thread. Affects parameters.max_out_iteration calculation in SetParameters()
         }
 
-        this->set_parameters(schedule.GetInstance().NumberOfVertices());
-        this->initialize_datastructures(schedule);
+        this->SetParameters(schedule.GetInstance().NumberOfVertices());
+        this->InitializeDatastructures(schedule);
         const CostT initialCost = this->activeSchedule_.GetCost();
 
         for (size_t i = 0; i < this->parameters_.numParallelLoops; ++i) {
-            SetThreadBoundaries(numThreads, schedule.numberOfSupersteps(), i % 2 == 0);
+            SetThreadBoundaries(numThreads, schedule.NumberOfSupersteps(), i % 2 == 0);
 
 #pragma omp parallel num_threads(numThreads)
             {
@@ -140,7 +140,7 @@ class KlImproverMt : public KlImprover<GraphT, CommCostFunctionT, MemoryConstrai
             this->SynchronizeActiveSchedule(numThreads);
             if (numThreads > 1) {
                 this->activeSchedule_.SetCost(this->commCostF_.ComputeScheduleCost());
-                SetNumThreads(numThreads, schedule.numberOfSupersteps());
+                SetNumThreads(numThreads, schedule.NumberOfSupersteps());
                 this->threadFinishedVec_.resize(numThreads);
             }
         }

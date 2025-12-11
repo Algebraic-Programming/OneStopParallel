@@ -151,7 +151,7 @@ class CilkScheduler : public Scheduler<GraphT> {
         //     memory_constraint.initialize(instance);
         // }
 
-        const auto &instance = bspSchedule.getInstance();
+        const auto &instance = bspSchedule.GetInstance();
 
         CSchedule<GraphT> schedule(instance.NumberOfVertices());
 
@@ -171,7 +171,7 @@ class CilkScheduler : public Scheduler<GraphT> {
 
         finishTimes.insert(start);
 
-        for (const auto &v : source_vertices_view(instance.GetComputationalDag())) {
+        for (const auto &v : SourceVerticesView(instance.GetComputationalDag())) {
             ready.insert(v);
             if (mode_ == CILK) {
                 procQueue[0].push_front(v);

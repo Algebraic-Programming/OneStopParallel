@@ -91,7 +91,7 @@ class GrowLocalAutoCores : public Scheduler<GraphT> {
      */
     virtual RETURN_STATUS ComputeSchedule(BspSchedule<GraphT> &schedule) override {
         using VertexIdx = typename GraphT::VertexIdx;
-        const auto &instance = schedule.getInstance();
+        const auto &instance = schedule.GetInstance();
 
         for (const auto &v : instance.GetComputationalDag().Vertices()) {
             schedule.SetAssignedProcessor(v, std::numeric_limits<unsigned>::max());

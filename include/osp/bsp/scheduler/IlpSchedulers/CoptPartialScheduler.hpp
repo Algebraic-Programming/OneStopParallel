@@ -124,8 +124,8 @@ RETURN_STATUS CoptPartialScheduler<Graph_t>::improveSchedule(BspScheduleCS<Graph
 
 template <typename Graph_t>
 void CoptPartialScheduler<Graph_t>::setInitialSolution(const BspScheduleCS<Graph_t> &schedule, Model &model) {
-    const Graph_t &DAG = schedule.getInstance().getComputationalDag();
-    const unsigned &num_processors = schedule.getInstance().numberOfProcessors();
+    const Graph_t &DAG = schedule.GetInstance().getComputationalDag();
+    const unsigned &num_processors = schedule.GetInstance().NumberOfProcessors();
     const auto &cs = schedule.getCommunicationSchedule();
 
     for (const vertex_idx_t<Graph_t> &node : DAG.Vertices()) {
@@ -210,18 +210,18 @@ void CoptPartialScheduler<Graph_t>::updateSchedule(BspScheduleCS<Graph_t> &sched
 
     const int offset = static_cast<int>(number_of_supersteps) - static_cast<int>(end_superstep - start_superstep + 1);
 
-    for (vertex_idx_t<Graph_t> node = 0; node < schedule.getInstance().numberOfVertices(); node++) {
+    for (vertex_idx_t<Graph_t> node = 0; node < schedule.GetInstance().NumberOfVertices(); node++) {
         if (schedule.assignedSuperstep(node) > end_superstep) {
             schedule.setAssignedSuperstep(node, static_cast<unsigned>(static_cast<int>(schedule.assignedSuperstep(node)) + offset));
         }
     }
 
-    for (vertex_idx_t<Graph_t> node = 0; node < schedule.getInstance().numberOfVertices(); node++) {
+    for (vertex_idx_t<Graph_t> node = 0; node < schedule.GetInstance().NumberOfVertices(); node++) {
         if (node_local_ID.find(node) == node_local_ID.end()) {
             continue;
         }
 
-        for (unsigned processor = 0; processor < schedule.getInstance().numberOfProcessors(); processor++) {
+        for (unsigned processor = 0; processor < schedule.GetInstance().NumberOfProcessors(); processor++) {
             for (unsigned step = 0; step < max_number_supersteps; step++) {
                 if (node_to_processor_superstep_var[node_local_ID.at(node)][processor][static_cast<int>(step)].Get(
                         COPT_DBLINFO_VALUE)
@@ -258,8 +258,8 @@ void CoptPartialScheduler<Graph_t>::updateSchedule(BspScheduleCS<Graph_t> &sched
     }
 
     for (vertex_idx_t<Graph_t> node = 0; node < node_global_ID.size(); node++) {
-        for (unsigned int p_from = 0; p_from < schedule.getInstance().numberOfProcessors(); p_from++) {
-            for (unsigned int p_to = 0; p_to < schedule.getInstance().numberOfProcessors(); p_to++) {
+        for (unsigned int p_from = 0; p_from < schedule.GetInstance().NumberOfProcessors(); p_from++) {
+            for (unsigned int p_to = 0; p_to < schedule.GetInstance().NumberOfProcessors(); p_to++) {
                 if (p_from != p_to) {
                     for (unsigned int step = 0; step < max_number_supersteps; step++) {
                         if (comm_processor_to_processor_superstep_node_var[p_from][p_to][step][static_cast<int>(node)].Get(
@@ -275,7 +275,7 @@ void CoptPartialScheduler<Graph_t>::updateSchedule(BspScheduleCS<Graph_t> &sched
     }
 
     for (vertex_idx_t<Graph_t> source = 0; source < source_global_ID.size(); source++) {
-        for (unsigned int p_to = 0; p_to < schedule.getInstance().numberOfProcessors(); p_to++) {
+        for (unsigned int p_to = 0; p_to < schedule.GetInstance().NumberOfProcessors(); p_to++) {
             if (source_present_before.find(std::make_pair(source, p_to)) == source_present_before.end()) {
                 for (unsigned int step = 0; step < max_number_supersteps + 1; step++) {
                     if (comm_to_processor_superstep_source_var[p_to][step][static_cast<int>(source)].Get(COPT_DBLINFO_VALUE)
@@ -298,7 +298,7 @@ template <typename Graph_t>
 void CoptPartialScheduler<Graph_t>::setupVariablesConstraintsObjective(const BspScheduleCS<Graph_t> &schedule, Model &model) {
     const vertex_idx_t<Graph_t> num_vertices = static_cast<vertex_idx_t<Graph_t>>(node_global_ID.size());
     const vertex_idx_t<Graph_t> num_sources = static_cast<vertex_idx_t<Graph_t>>(source_global_ID.size());
-    const unsigned num_processors = schedule.getInstance().numberOfProcessors();
+    const unsigned num_processors = schedule.GetInstance().NumberOfProcessors();
 
     /*
     Variables
@@ -453,7 +453,7 @@ void CoptPartialScheduler<Graph_t>::setupVariablesConstraintsObjective(const Bsp
             for (unsigned int processor = 0; processor < num_processors; processor++) {
                 Expr expr;
                 unsigned num_terms = 0;
-                for (const auto &pred : schedule.getInstance().getComputationalDag().Parents(node_global_ID[node])) {
+                for (const auto &pred : schedule.GetInstance().getComputationalDag().Parents(node_global_ID[node])) {
                     if (node_local_ID.find(pred) != node_local_ID.end()) {
                         ++num_terms;
                         expr += comm_processor_to_processor_superstep_node_var[processor][processor][step]
@@ -542,7 +542,7 @@ void CoptPartialScheduler<Graph_t>::setupVariablesConstraintsObjective(const Bsp
         for (unsigned int processor = 0; processor < num_processors; processor++) {
             Expr expr;
             for (unsigned int node = 0; node < num_vertices; node++) {
-                expr += schedule.getInstance().getComputationalDag().VertexWorkWeight(node_global_ID[node])
+                expr += schedule.GetInstance().getComputationalDag().VertexWorkWeight(node_global_ID[node])
                         * node_to_processor_superstep_var[node][processor][static_cast<int>(step)];
             }
 
@@ -557,11 +557,11 @@ void CoptPartialScheduler<Graph_t>::setupVariablesConstraintsObjective(const Bsp
             for (vertex_idx_t<Graph_t> node = 0; node < num_vertices; node++) {
                 for (unsigned int p_other = 0; p_other < num_processors; p_other++) {
                     if (processor != p_other) {
-                        expr1 += schedule.getInstance().getComputationalDag().VertexCommWeight(node_global_ID[node])
-                                 * schedule.getInstance().sendCosts(processor, p_other)
+                        expr1 += schedule.GetInstance().getComputationalDag().VertexCommWeight(node_global_ID[node])
+                                 * schedule.GetInstance().sendCosts(processor, p_other)
                                  * comm_processor_to_processor_superstep_node_var[processor][p_other][step][static_cast<int>(node)];
-                        expr2 += schedule.getInstance().getComputationalDag().VertexCommWeight(node_global_ID[node])
-                                 * schedule.getInstance().sendCosts(p_other, processor)
+                        expr2 += schedule.GetInstance().getComputationalDag().VertexCommWeight(node_global_ID[node])
+                                 * schedule.GetInstance().sendCosts(p_other, processor)
                                  * comm_processor_to_processor_superstep_node_var[p_other][processor][step][static_cast<int>(node)];
                     }
                 }
@@ -571,13 +571,13 @@ void CoptPartialScheduler<Graph_t>::setupVariablesConstraintsObjective(const Bsp
                 const unsigned origin_proc = schedule.assignedProcessor(source_global_ID[source]);
                 if (origin_proc == processor) {
                     for (unsigned int p_other = 0; p_other < num_processors; p_other++) {
-                        expr1 += schedule.getInstance().getComputationalDag().VertexCommWeight(source_global_ID[source])
-                                 * schedule.getInstance().sendCosts(processor, p_other)
+                        expr1 += schedule.GetInstance().getComputationalDag().VertexCommWeight(source_global_ID[source])
+                                 * schedule.GetInstance().sendCosts(processor, p_other)
                                  * comm_to_processor_superstep_source_var[p_other][step + 1][static_cast<int>(source)];
                     }
                 }
-                expr2 += schedule.getInstance().getComputationalDag().VertexCommWeight(source_global_ID[source])
-                         * schedule.getInstance().sendCosts(origin_proc, processor)
+                expr2 += schedule.GetInstance().getComputationalDag().VertexCommWeight(source_global_ID[source])
+                         * schedule.GetInstance().sendCosts(origin_proc, processor)
                          * comm_to_processor_superstep_source_var[processor][step + 1][static_cast<int>(source)];
             }
 
@@ -587,13 +587,13 @@ void CoptPartialScheduler<Graph_t>::setupVariablesConstraintsObjective(const Bsp
                     continue;
                 }
                 if (std::get<1>(entry) == processor) {
-                    expr1 += schedule.getInstance().getComputationalDag().VertexCommWeight(std::get<0>(entry))
-                             * schedule.getInstance().sendCosts(processor, std::get<2>(entry))
+                    expr1 += schedule.GetInstance().getComputationalDag().VertexCommWeight(std::get<0>(entry))
+                             * schedule.GetInstance().sendCosts(processor, std::get<2>(entry))
                              * keep_fixed_comm_step[static_cast<int>(index)];
                 }
                 if (std::get<2>(entry) == processor) {
-                    expr2 += schedule.getInstance().getComputationalDag().VertexCommWeight(std::get<0>(entry))
-                             * schedule.getInstance().sendCosts(std::get<1>(entry), processor)
+                    expr2 += schedule.GetInstance().getComputationalDag().VertexCommWeight(std::get<0>(entry))
+                             * schedule.GetInstance().sendCosts(std::get<1>(entry), processor)
                              * keep_fixed_comm_step[static_cast<int>(index)];
                 }
             }
@@ -610,26 +610,26 @@ void CoptPartialScheduler<Graph_t>::setupVariablesConstraintsObjective(const Bsp
             const unsigned origin_proc = schedule.assignedProcessor(source_global_ID[source]);
             if (origin_proc == processor) {
                 for (unsigned int p_other = 0; p_other < num_processors; p_other++) {
-                    expr1 += schedule.getInstance().getComputationalDag().VertexCommWeight(source_global_ID[source])
-                             * schedule.getInstance().sendCosts(processor, p_other)
+                    expr1 += schedule.GetInstance().getComputationalDag().VertexCommWeight(source_global_ID[source])
+                             * schedule.GetInstance().sendCosts(processor, p_other)
                              * comm_to_processor_superstep_source_var[p_other][0][static_cast<int>(source)];
                 }
             }
-            expr2 += schedule.getInstance().getComputationalDag().VertexCommWeight(source_global_ID[source])
-                     * schedule.getInstance().sendCosts(origin_proc, processor)
+            expr2 += schedule.GetInstance().getComputationalDag().VertexCommWeight(source_global_ID[source])
+                     * schedule.GetInstance().sendCosts(origin_proc, processor)
                      * comm_to_processor_superstep_source_var[processor][0][static_cast<int>(source)];
         }
 
         for (unsigned index = 0; index < fixed_comm_steps.size(); ++index) {
             const auto &entry = fixed_comm_steps[index];
             if (std::get<1>(entry) == processor) {
-                expr1 += schedule.getInstance().getComputationalDag().VertexCommWeight(std::get<0>(entry))
-                         * schedule.getInstance().sendCosts(processor, std::get<2>(entry))
+                expr1 += schedule.GetInstance().getComputationalDag().VertexCommWeight(std::get<0>(entry))
+                         * schedule.GetInstance().sendCosts(processor, std::get<2>(entry))
                          * (1 - keep_fixed_comm_step[static_cast<int>(index)]);
             }
             if (std::get<2>(entry) == processor) {
-                expr2 += schedule.getInstance().getComputationalDag().VertexCommWeight(std::get<0>(entry))
-                         * schedule.getInstance().sendCosts(std::get<1>(entry), processor)
+                expr2 += schedule.GetInstance().getComputationalDag().VertexCommWeight(std::get<0>(entry))
+                         * schedule.GetInstance().sendCosts(std::get<1>(entry), processor)
                          * (1 - keep_fixed_comm_step[static_cast<int>(index)]);
             }
         }
@@ -645,15 +645,15 @@ void CoptPartialScheduler<Graph_t>::setupVariablesConstraintsObjective(const Bsp
 
     for (unsigned int step = 0; step < max_number_supersteps; step++) {
         expr += max_work_superstep_var[static_cast<int>(step)]
-                + schedule.getInstance().communicationCosts() * max_comm_superstep_var[static_cast<int>(step + 1)]
-                + schedule.getInstance().synchronisationCosts() * superstep_used_var[static_cast<int>(step)];
+                + schedule.GetInstance().communicationCosts() * max_comm_superstep_var[static_cast<int>(step + 1)]
+                + schedule.GetInstance().synchronisationCosts() * superstep_used_var[static_cast<int>(step)];
     }
 
-    expr += schedule.getInstance().communicationCosts() * max_comm_superstep_var[0];
-    expr += schedule.getInstance().synchronisationCosts() * superstep_has_comm[0];
-    expr += schedule.getInstance().synchronisationCosts() * has_comm_at_end[0];
+    expr += schedule.GetInstance().communicationCosts() * max_comm_superstep_var[0];
+    expr += schedule.GetInstance().synchronisationCosts() * superstep_has_comm[0];
+    expr += schedule.GetInstance().synchronisationCosts() * has_comm_at_end[0];
 
-    model.SetObjective(expr - schedule.getInstance().synchronisationCosts(), COPT_MINIMIZE);
+    model.SetObjective(expr - schedule.GetInstance().synchronisationCosts(), COPT_MINIMIZE);
 };
 
 template <typename Graph_t>
@@ -672,12 +672,12 @@ void CoptPartialScheduler<Graph_t>::setupVertexMaps(const BspScheduleCS<Graph_t>
 
     max_number_supersteps = end_superstep - start_superstep + 3;
 
-    for (unsigned node = 0; node < schedule.getInstance().numberOfVertices(); node++) {
+    for (unsigned node = 0; node < schedule.GetInstance().NumberOfVertices(); node++) {
         if (schedule.assignedSuperstep(node) >= start_superstep && schedule.assignedSuperstep(node) <= end_superstep) {
             node_local_ID[node] = static_cast<vertex_idx_t<Graph_t>>(node_global_ID.size());
             node_global_ID.push_back(node);
 
-            for (const auto &pred : schedule.getInstance().getComputationalDag().Parents(node)) {
+            for (const auto &pred : schedule.GetInstance().getComputationalDag().Parents(node)) {
                 if (schedule.assignedSuperstep(pred) < start_superstep) {
                     if (source_local_ID.find(pred) == source_local_ID.end()) {
                         source_local_ID[pred] = static_cast<vertex_idx_t<Graph_t>>(source_global_ID.size());
@@ -694,7 +694,7 @@ void CoptPartialScheduler<Graph_t>::setupVertexMaps(const BspScheduleCS<Graph_t>
     // find where the sources are already present before the segment
     for (const auto &source_and_ID : source_local_ID) {
         vertex_idx_t<Graph_t> source = source_and_ID.first;
-        for (unsigned proc = 0; proc < schedule.getInstance().numberOfProcessors(); ++proc) {
+        for (unsigned proc = 0; proc < schedule.GetInstance().NumberOfProcessors(); ++proc) {
             if (first_at[source][proc] < start_superstep) {
                 source_present_before.emplace(std::make_pair(source_and_ID.second, proc));
             }
@@ -706,15 +706,15 @@ void CoptPartialScheduler<Graph_t>::setupVertexMaps(const BspScheduleCS<Graph_t>
         vertex_idx_t<Graph_t> source = source_and_ID.first;
 
         std::set<unsigned> procs_needing_this;
-        for (const auto &succ : schedule.getInstance().getComputationalDag().Children(source)) {
+        for (const auto &succ : schedule.GetInstance().getComputationalDag().Children(source)) {
             if (schedule.assignedProcessor(succ) != schedule.assignedProcessor(source)
                 && schedule.assignedSuperstep(succ) > end_superstep) {
                 procs_needing_this.insert(schedule.assignedProcessor(succ));
             }
         }
 
-        for (unsigned proc1 = 0; proc1 < schedule.getInstance().numberOfProcessors(); ++proc1) {
-            for (unsigned proc2 = 0; proc2 < schedule.getInstance().numberOfProcessors(); ++proc2) {
+        for (unsigned proc1 = 0; proc1 < schedule.GetInstance().NumberOfProcessors(); ++proc1) {
+            for (unsigned proc2 = 0; proc2 < schedule.GetInstance().NumberOfProcessors(); ++proc2) {
                 if (proc1 == proc2) {
                     continue;
                 }
@@ -735,14 +735,14 @@ void CoptPartialScheduler<Graph_t>::setupVertexMaps(const BspScheduleCS<Graph_t>
         vertex_idx_t<Graph_t> node = node_and_ID.first;
 
         std::set<unsigned> procs_needing_this;
-        for (const auto &succ : schedule.getInstance().getComputationalDag().Children(node)) {
+        for (const auto &succ : schedule.GetInstance().getComputationalDag().Children(node)) {
             if (schedule.assignedSuperstep(succ) > end_superstep) {
                 procs_needing_this.insert(schedule.assignedProcessor(succ));
             }
         }
 
-        for (unsigned proc1 = 0; proc1 < schedule.getInstance().numberOfProcessors(); ++proc1) {
-            for (unsigned proc2 = 0; proc2 < schedule.getInstance().numberOfProcessors(); ++proc2) {
+        for (unsigned proc1 = 0; proc1 < schedule.GetInstance().NumberOfProcessors(); ++proc1) {
+            for (unsigned proc2 = 0; proc2 < schedule.GetInstance().NumberOfProcessors(); ++proc2) {
                 auto itr = schedule.getCommunicationSchedule().find(std::make_tuple(node, proc1, proc2));
                 if (itr != schedule.getCommunicationSchedule().end() && proc1 != proc2 && itr->second > end_superstep) {
                     procs_needing_this.insert(schedule.assignedProcessor(proc1));

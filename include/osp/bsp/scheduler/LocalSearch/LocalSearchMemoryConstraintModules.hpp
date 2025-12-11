@@ -126,7 +126,7 @@ struct LsLocalMemoryConstraint {
     }
 
     inline void ResetSuperstep(unsigned step) {
-        for (unsigned proc = 0; proc < setSchedule->GetInstance().getArchitecture().numberOfProcessors(); proc++) {
+        for (unsigned proc = 0; proc < setSchedule->GetInstance().getArchitecture().NumberOfProcessors(); proc++) {
             stepProcessorMemory[step][proc] = 0;
         }
     }
@@ -136,8 +136,8 @@ struct LsLocalMemoryConstraint {
     }
 
     bool SatisfiedMemoryConstraint() const {
-        for (unsigned step = 0; step < setSchedule->numberOfSupersteps(); step++) {
-            for (unsigned proc = 0; proc < setSchedule->GetInstance().numberOfProcessors(); proc++) {
+        for (unsigned step = 0; step < setSchedule->NumberOfSupersteps(); step++) {
+            for (unsigned proc = 0; proc < setSchedule->GetInstance().NumberOfProcessors(); proc++) {
                 if (stepProcessorMemory[step][proc] > setSchedule->GetInstance().getArchitecture().memoryBound(proc)) {
                     return false;
                 }
@@ -169,10 +169,10 @@ struct LsLocalIncEdgesMemoryConstraint {
         vectorSchedule = &vecSchedule;
         graph = &setSchedule->GetInstance().getComputationalDag();
         stepProcessorMemory = std::vector<std::vector<VMemwT<GraphT>>>(
-            setSchedule->numberOfSupersteps(), std::vector<VMemwT<GraphT>>(setSchedule->GetInstance().numberOfProcessors(), 0));
+            setSchedule->NumberOfSupersteps(), std::vector<VMemwT<GraphT>>(setSchedule->GetInstance().NumberOfProcessors(), 0));
         stepProcessorPred = std::vector<std::vector<std::unordered_set<VertexIdxT<GraphT>>>>(
-            setSchedule->numberOfSupersteps(),
-            std::vector<std::unordered_set<VertexIdxT<GraphT>>>(setSchedule->GetInstance().numberOfProcessors()));
+            setSchedule->NumberOfSupersteps(),
+            std::vector<std::unordered_set<VertexIdxT<GraphT>>>(setSchedule->GetInstance().NumberOfProcessors()));
     }
 
     inline void ApplyMove(VertexIdxT<GraphT> vertex, unsigned fromProc, unsigned fromStep, unsigned toProc, unsigned toStep) {
@@ -241,7 +241,7 @@ struct LsLocalIncEdgesMemoryConstraint {
 
     void ComputeMemoryDatastructure(unsigned startStep, unsigned endStep) {
         for (unsigned step = startStep; step <= endStep; step++) {
-            for (unsigned proc = 0; proc < setSchedule->GetInstance().numberOfProcessors(); proc++) {
+            for (unsigned proc = 0; proc < setSchedule->GetInstance().NumberOfProcessors(); proc++) {
                 stepProcessorMemory[step][proc] = 0;
                 stepProcessorPred[step][proc].clear();
 
@@ -267,7 +267,7 @@ struct LsLocalIncEdgesMemoryConstraint {
     }
 
     inline void ResetSuperstep(unsigned step) {
-        for (unsigned proc = 0; proc < setSchedule->GetInstance().getArchitecture().numberOfProcessors(); proc++) {
+        for (unsigned proc = 0; proc < setSchedule->GetInstance().getArchitecture().NumberOfProcessors(); proc++) {
             stepProcessorMemory[step][proc] = 0;
             stepProcessorPred[step][proc].clear();
         }
@@ -345,10 +345,10 @@ struct LsLocalSourcesIncEdgesMemoryConstraint {
         vectorSchedule = &vecSchedule;
         graph = &setSchedule->GetInstance().getComputationalDag();
         stepProcessorMemory = std::vector<std::vector<VMemwT<GraphT>>>(
-            setSchedule->numberOfSupersteps(), std::vector<VMemwT<GraphT>>(setSchedule->GetInstance().numberOfProcessors(), 0));
+            setSchedule->NumberOfSupersteps(), std::vector<VMemwT<GraphT>>(setSchedule->GetInstance().NumberOfProcessors(), 0));
         stepProcessorPred = std::vector<std::vector<std::unordered_set<VertexIdxT<GraphT>>>>(
-            setSchedule->numberOfSupersteps(),
-            std::vector<std::unordered_set<VertexIdxT<GraphT>>>(setSchedule->GetInstance().numberOfProcessors()));
+            setSchedule->NumberOfSupersteps(),
+            std::vector<std::unordered_set<VertexIdxT<GraphT>>>(setSchedule->GetInstance().NumberOfProcessors()));
     }
 
     inline void ApplyMove(VertexIdxT<GraphT> vertex, unsigned fromProc, unsigned fromStep, unsigned toProc, unsigned toStep) {
@@ -414,7 +414,7 @@ struct LsLocalSourcesIncEdgesMemoryConstraint {
 
     void ComputeMemoryDatastructure(unsigned startStep, unsigned endStep) {
         for (unsigned step = startStep; step <= endStep; step++) {
-            for (unsigned proc = 0; proc < setSchedule->GetInstance().numberOfProcessors(); proc++) {
+            for (unsigned proc = 0; proc < setSchedule->GetInstance().NumberOfProcessors(); proc++) {
                 stepProcessorMemory[step][proc] = 0;
                 stepProcessorPred[step][proc].clear();
 
@@ -442,7 +442,7 @@ struct LsLocalSourcesIncEdgesMemoryConstraint {
     }
 
     inline void ResetSuperstep(unsigned step) {
-        for (unsigned proc = 0; proc < setSchedule->GetInstance().getArchitecture().numberOfProcessors(); proc++) {
+        for (unsigned proc = 0; proc < setSchedule->GetInstance().getArchitecture().NumberOfProcessors(); proc++) {
             stepProcessorMemory[step][proc] = 0;
             stepProcessorPred[step][proc].clear();
         }
