@@ -318,17 +318,17 @@ class BspInstance {
      * @return True if the memory constraints are feasible, false otherwise.
      */
     [[nodiscard]] bool CheckMemoryConstraintsFeasibility() const {
-        std::vector<VMemwT<GraphT>> maxMemoryPerProcType(architecture_.getNumberOfProcessorTypes(), 0);
-        for (unsigned proc = 0U; proc < architecture_.numberOfProcessors(); proc++) {
-            maxMemoryPerProcType[architecture_.processorType(proc)]
-                = std::max(maxMemoryPerProcType[architecture_.processorType(proc)], architecture_.memoryBound(proc));
+        std::vector<VMemwT<GraphT>> maxMemoryPerProcType(architecture_.GetNumberOfProcessorTypes(), 0);
+        for (unsigned proc = 0U; proc < architecture_.NumberOfProcessors(); proc++) {
+            maxMemoryPerProcType[architecture_.ProcessorType(proc)]
+                = std::max(maxMemoryPerProcType[architecture_.ProcessorType(proc)], architecture_.MemoryBound(proc));
         }
 
         for (VertexTypeTOrDefault vertType = 0U; vertType < cdag_.NumVertexTypes(); vertType++) {
-            VMemwT<GraphT> maxMemoryOfType = max_memory_weight(vertType, cdag_);
+            VMemwT<GraphT> maxMemoryOfType = MaxMemoryWeight(vertType, cdag_);
             bool fits = false;
 
-            for (ProcessorTypeT procType = 0U; procType < architecture_.getNumberOfProcessorTypes(); procType++) {
+            for (ProcessorTypeT procType = 0U; procType < architecture_.GetNumberOfProcessorTypes(); procType++) {
                 if (IsCompatibleType(vertType, procType)) {
                     fits = fits | (maxMemoryOfType <= maxMemoryPerProcType[procType]);
                     if (fits) {

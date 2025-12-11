@@ -33,12 +33,12 @@ template <typename T, typename = void>
 struct IsMemoryConstraint : std::false_type {};
 
 template <typename T>
-struct is_memory_constraint<
+struct IsMemoryConstraint<
     T,
-    std::void_t<decltype(std::declval<T>().initialize(std::declval<BspInstance<typename T::Graph_impl_t>>())),
-                decltype(std::declval<T>().can_add(std::declval<VertexIdxT<typename T::Graph_impl_t>>(), std::declval<unsigned>())),
-                decltype(std::declval<T>().add(std::declval<VertexIdxT<typename T::Graph_impl_t>>(), std::declval<unsigned>())),
-                decltype(std::declval<T>().reset(std::declval<unsigned>())),
+    std::void_t<decltype(std::declval<T>().Initialize(std::declval<BspInstance<typename T::GraphImplT>>())),
+                decltype(std::declval<T>().CanAdd(std::declval<VertexIdxT<typename T::GraphImplT>>(), std::declval<unsigned>())),
+                decltype(std::declval<T>().Add(std::declval<VertexIdxT<typename T::GraphImplT>>(), std::declval<unsigned>())),
+                decltype(std::declval<T>().Reset(std::declval<unsigned>())),
                 decltype(T())>> : std::true_type {};
 
 template <typename T>
@@ -67,8 +67,8 @@ struct LocalMemoryConstraint {
 
     LocalMemoryConstraint() : instance(nullptr) {}
 
-    inline void Initialize(const BspInstance<GraphT> &instance) {
-        instance = &instance;
+    inline void Initialize(const BspInstance<GraphT> &instance_) {
+        instance = &instance_;
         currentProcMemory = std::vector<VMemwT<GraphT>>(instance->NumberOfProcessors(), 0);
 
         if (instance->GetArchitecture().GetMemoryConstraintType() != MEMORY_CONSTRAINT_TYPE::LOCAL) {
@@ -121,8 +121,8 @@ struct PersistentTransientMemoryConstraint {
 
     PersistentTransientMemoryConstraint() : instance(nullptr) {}
 
-    inline void Initialize(const BspInstance<GraphT> &instance) {
-        instance = &instance;
+    inline void Initialize(const BspInstance<GraphT> &instance_) {
+        instance = &instance_;
 
         currentProcPersistentMemory = std::vector<VMemwT<GraphT>>(instance->NumberOfProcessors(), 0);
         currentProcTransientMemory = std::vector<VCommwT<GraphT>>(instance->NumberOfProcessors(), 0);
@@ -167,8 +167,8 @@ struct GlobalMemoryConstraint {
 
     GlobalMemoryConstraint() : instance(nullptr) {}
 
-    inline void Initialize(const BspInstance<GraphT> &instance) {
-        instance = &instance;
+    inline void Initialize(const BspInstance<GraphT> &instance_) {
+        instance = &instance_;
         currentProcMemory = std::vector<VMemwT<GraphT>>(instance->numberOfProcessors(), 0);
 
         if (instance->getArchitecture().getMemoryConstraintType() != MEMORY_CONSTRAINT_TYPE::GLOBAL) {
@@ -200,12 +200,12 @@ template <typename T, typename = void>
 struct IsMemoryConstraintSchedule : std::false_type {};
 
 template <typename T>
-struct is_memory_constraint_schedule<
+struct IsMemoryConstraintSchedule<
     T,
-    std::void_t<decltype(std::declval<T>().initialize(std::declval<BspSchedule<typename T::Graph_impl_t>>(), std::declval<unsigned>())),
-                decltype(std::declval<T>().can_add(std::declval<VertexIdxT<typename T::Graph_impl_t>>(), std::declval<unsigned>())),
-                decltype(std::declval<T>().add(std::declval<VertexIdxT<typename T::Graph_impl_t>>(), std::declval<unsigned>())),
-                decltype(std::declval<T>().reset(std::declval<unsigned>())),
+    std::void_t<decltype(std::declval<T>().Initialize(std::declval<BspSchedule<typename T::GraphImplT>>(), std::declval<unsigned>())),
+                decltype(std::declval<T>().CanAdd(std::declval<VertexIdxT<typename T::GraphImplT>>(), std::declval<unsigned>())),
+                decltype(std::declval<T>().Add(std::declval<VertexIdxT<typename T::GraphImplT>>(), std::declval<unsigned>())),
+                decltype(std::declval<T>().Reset(std::declval<unsigned>())),
                 decltype(T())>> : std::true_type {};
 
 template <typename T>
@@ -227,10 +227,10 @@ struct LocalInOutMemoryConstraint {
 
     LocalInOutMemoryConstraint() : instance(nullptr), schedule(nullptr) {}
 
-    inline void Initialize(const BspSchedule<GraphT> &schedule, const unsigned &supstepIdx) {
+    inline void Initialize(const BspSchedule<GraphT> &schedule_, const unsigned &supstepIdx) {
         currentSuperstep = &supstepIdx;
-        schedule = &schedule;
-        instance = &schedule->getInstance();
+        schedule = &schedule_;
+        instance = &schedule->GetInstance();
         currentProcMemory = std::vector<VMemwT<GraphT>>(instance->NumberOfProcessors(), 0);
 
         if (instance->GetArchitecture().GetMemoryConstraintType() != MEMORY_CONSTRAINT_TYPE::LOCAL_IN_OUT) {
@@ -281,10 +281,10 @@ struct LocalIncEdgesMemoryConstraint {
 
     LocalIncEdgesMemoryConstraint() : instance(nullptr), schedule(nullptr) {}
 
-    inline void Initialize(const BspSchedule<GraphT> &schedule, const unsigned &supstepIdx) {
+    inline void Initialize(const BspSchedule<GraphT> &schedule_, const unsigned &supstepIdx) {
         currentSuperstep = &supstepIdx;
-        schedule = &schedule;
-        instance = &schedule->getInstance();
+        schedule = &schedule_;
+        instance = &schedule->GetInstance();
 
         currentProcMemory = std::vector<VCommwT<GraphT>>(instance->NumberOfProcessors(), 0);
         currentProcPredec = std::vector<std::unordered_set<VertexIdxT<GraphT>>>(instance->NumberOfProcessors());
@@ -343,10 +343,10 @@ struct LocalSourcesIncEdgesMemoryConstraint {
 
     LocalSourcesIncEdgesMemoryConstraint() : instance(nullptr), schedule(nullptr) {}
 
-    inline void Initialize(const BspSchedule<GraphT> &schedule, const unsigned &supstepIdx) {
+    inline void Initialize(const BspSchedule<GraphT> &schedule_, const unsigned &supstepIdx) {
         currentSuperstep = &supstepIdx;
-        schedule = &schedule;
-        instance = &schedule->getInstance();
+        schedule = &schedule_;
+        instance = &schedule->GetInstance();
 
         currentProcMemory = std::vector<VMemwT<GraphT>>(instance->NumberOfProcessors(), 0);
         currentProcPredec = std::vector<std::unordered_set<VertexIdxT<GraphT>>>(instance->NumberOfProcessors());

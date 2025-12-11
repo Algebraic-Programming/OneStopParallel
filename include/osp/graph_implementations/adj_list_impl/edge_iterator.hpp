@@ -59,7 +59,7 @@ class EdgeRangeVectorImpl {
             return *this;
         }
 
-        EdgeIterator(const GraphT &graph) : currentVertex(0u), currentEdgeIdx(0u), graph(&graph) {
+        EdgeIterator(const GraphT &graph_) : currentVertex(0u), currentEdgeIdx(0u), graph(&graph_) {
             while (currentVertex != graph->NumVertices()) {
                 if (graph->OutEdges(currentVertex).begin() != graph->OutEdges(currentVertex).end()) {
                     currentEdge = graph->OutEdges(currentVertex).begin();
@@ -69,17 +69,17 @@ class EdgeRangeVectorImpl {
             }
         }
 
-        EdgeIterator(std::size_t currentEdgeIdx, const GraphT &graph)
-            : currentVertex(0u), currentEdgeIdx(currentEdgeIdx), graph(&graph) {
+        EdgeIterator(std::size_t currentEdgeIdx_, const GraphT &graph_)
+            : currentVertex(0u), currentEdgeIdx(currentEdgeIdx_), graph(&graph_) {
             if (currentEdgeIdx < graph->NumEdges()) {
                 std::size_t tmp = 0u;
 
-                if (tmp < currentEdgeIdx) {
+                if (tmp < currentEdgeIdx_) {
                     while (currentVertex != graph->NumVertices()) {
                         currentEdge = graph->OutEdges(currentVertex).begin();
 
                         while (currentEdge != graph->OutEdges(currentVertex).end()) {
-                            if (tmp == currentEdgeIdx) {
+                            if (tmp == currentEdgeIdx_) {
                                 break;
                             }
 
@@ -176,7 +176,7 @@ class EdgeSourceRange {
             return *this;
         }
 
-        SourceIterator(Iter currentEdge, const GraphT &graph) : graph(&graph), currentEdge(currentEdge) {}
+        SourceIterator(Iter currentEdge_, const GraphT &graph_) : graph(&graph_), currentEdge(currentEdge_) {}
 
         value_type operator*() const { return Source(*currentEdge, *graph); }
 
@@ -239,7 +239,7 @@ class EdgeTargetRange {
             return *this;
         }
 
-        TargetIterator(Iter currentEdge, const GraphT &graph) : graph(&graph), currentEdge(currentEdge) {}
+        TargetIterator(Iter currentEdge_, const GraphT &graph_) : graph(&graph_), currentEdge(currentEdge_) {}
 
         value_type operator*() const { return Target(*currentEdge, *graph); }
 

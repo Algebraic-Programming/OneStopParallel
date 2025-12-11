@@ -33,7 +33,7 @@ template <typename VertexType>
 struct VectorNodeHashFunc {
     const std::vector<std::size_t> &nodeHashes;
 
-    VectorNodeHashFunc(const std::vector<std::size_t> &nodeHashes) : nodeHashes(nodeHashes) {}
+    VectorNodeHashFunc(const std::vector<std::size_t> &nodeHashes_) : nodeHashes(nodeHashes_) {}
 
     using ResultType = std::size_t;
 

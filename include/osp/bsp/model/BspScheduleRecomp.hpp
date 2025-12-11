@@ -111,9 +111,9 @@ class BspScheduleRecomp : public IBspScheduleEval<GraphT> {
 
     std::map<KeyTriple, unsigned int> &GetCommunicationSchedule() { return commSchedule_; }
 
-    virtual CostType computeWorkCosts() const override;
+    virtual CostType ComputeWorkCosts() const override;
 
-    virtual CostType computeCosts() const override;
+    virtual CostType ComputeCosts() const override;
 
     /**
      * @brief Returns true if the schedule is valid, i.e. if every time we compute a node, all its parents are already available
@@ -144,7 +144,7 @@ BspScheduleRecomp<GraphT>::BspScheduleRecomp(const BspScheduleCS<GraphT> &schedu
 
 template <typename GraphT>
 void BspScheduleRecomp<GraphT>::AddCommunicationScheduleEntry(unsigned node, unsigned fromProc, unsigned toProc, unsigned step) {
-    addCommunicationScheduleEntry(std::make_tuple(node, fromProc, toProc), step);
+    AddCommunicationScheduleEntry(std::make_tuple(node, fromProc, toProc), step);
 }
 
 template <typename GraphT>

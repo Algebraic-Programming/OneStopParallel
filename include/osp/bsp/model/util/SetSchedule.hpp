@@ -140,13 +140,13 @@ class SetSchedule : public IBspSchedule<GraphT> {
     void MergeSupersteps(unsigned startStep, unsigned endStep) {
         unsigned step = startStep + 1;
         for (; step <= endStep; step++) {
-            for (unsigned proc = 0; proc < getInstance().numberOfProcessors(); proc++) {
+            for (unsigned proc = 0; proc < this->GetInstance().NumberOfProcessors(); proc++) {
                 stepProcessorVertices[startStep][proc].merge(stepProcessorVertices[step][proc]);
             }
         }
 
         for (; step < numberOfSupersteps; step++) {
-            for (unsigned proc = 0; proc < getInstance().numberOfProcessors(); proc++) {
+            for (unsigned proc = 0; proc < this->GetInstance().NumberOfProcessors(); proc++) {
                 stepProcessorVertices[step - (endStep - startStep)][proc] = std::move(stepProcessorVertices[step][proc]);
             }
         }
@@ -157,9 +157,9 @@ template <typename GraphT>
 static void PrintSetScheduleWorkMemNodesGrid(std::ostream &os,
                                              const SetSchedule<GraphT> &setSchedule,
                                              bool printDetailedNodeAssignment = false) {
-    const auto &instance = setSchedule.getInstance();
-    const unsigned numProcessors = instance.numberOfProcessors();
-    const unsigned numSupersteps = setSchedule.numberOfSupersteps();
+    const auto &instance = setSchedule.GetInstance();
+    const unsigned numProcessors = instance.NumberOfProcessors();
+    const unsigned numSupersteps = setSchedule.NumberOfSupersteps();
 
     // Data structures to store aggregated work, memory, and nodes
     std::vector<std::vector<VWorkwT<GraphT>>> totalWorkPerCell(numProcessors, std::vector<VWorkwT<GraphT>>(numSupersteps, 0.0));
@@ -174,10 +174,10 @@ static void PrintSetScheduleWorkMemNodesGrid(std::ostream &os,
             // Access set_schedule.step_processor_vertices[s][p] as per the provided snippet.
             // Add checks for bounds as set_schedule.step_processor_vertices might not be fully initialized
             // for all s, p combinations if it's dynamically sized.
-            if (s < setSchedule.step_processor_vertices.size() && p < setSchedule.step_processor_vertices[s].size()) {
-                for (const auto &nodeIdx : setSchedule.step_processor_vertices[s][p]) {
-                    totalWorkPerCell[p][s] += instance.getComputationalDag().VertexWorkWeight(nodeIdx);
-                    totalMemoryPerCell[p][s] += instance.getComputationalDag().VertexMemWeight(nodeIdx);
+            if (s < setSchedule.stepProcessorVertices.size() && p < setSchedule.stepProcessorVertices[s].size()) {
+                for (const auto &nodeIdx : setSchedule.stepProcessorVertices[s][p]) {
+                    totalWorkPerCell[p][s] += instance.GetComputationalDag().VertexWorkWeight(nodeIdx);
+                    totalMemoryPerCell[p][s] += instance.GetComputationalDag().VertexMemWeight(nodeIdx);
                     nodesPerCell[p][s].push_back(nodeIdx);
                 }
             }
