@@ -18,7 +18,6 @@ limitations under the License.
 
 #define BOOST_TEST_MODULE Sorts_and_Arrangements
 #include <boost/test/unit_test.hpp>
-
 #include <iostream>
 #include <string>
 #include <vector>
@@ -46,31 +45,23 @@ BOOST_AUTO_TEST_CASE(Sorts_and_Arrangements1) {
     BOOST_CHECK(!check_vector_is_rearrangement_of_0_to_N(neg_test2));
 
     std::cout << "b: ";
-    for (auto &i : b) {
-        std::cout << i << ", ";
-    }
+    for (auto &i : b) { std::cout << i << ", "; }
     std::cout << std::endl;
 
     sort_like_arrangement(b, re);
 
     std::cout << "re: ";
-    for (auto &i : re) {
-        std::cout << i << ", ";
-    }
+    for (auto &i : re) { std::cout << i << ", "; }
     std::cout << std::endl;
 
     std::cout << "b: ";
-    for (auto &i : b) {
-        std::cout << i << ", ";
-    }
+    for (auto &i : b) { std::cout << i << ", "; }
     std::cout << std::endl;
 
     BOOST_CHECK(a == b);
 
     std::cout << "a: ";
-    for (auto &i : a) {
-        std::cout << i << ", ";
-    }
+    for (auto &i : a) { std::cout << i << ", "; }
     std::cout << std::endl;
 }
 

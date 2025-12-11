@@ -18,20 +18,17 @@ limitations under the License.
 
 #define BOOST_TEST_MODULE BSP_SCHEDULE_RECOMP
 #include <boost/test/unit_test.hpp>
-
-#include "osp/bsp/model/BspScheduleRecomp.hpp"
-#include "osp/bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
-
-#include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
-#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 #include <filesystem>
 #include <iostream>
 
+#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
+#include "osp/bsp/model/BspScheduleRecomp.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
+#include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
+
 using namespace osp;
 
-BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test)
-{
-
+BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test) {
     using graph = computational_dag_vector_impl_def_t;
 
     BspInstance<graph> instance;
@@ -48,7 +45,7 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test)
     }
 
     file_reader::readComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(),
-                                                    instance.getComputationalDag());
+                                                      instance.getComputationalDag());
 
     BspSchedule<graph> schedule(instance);
     GreedyBspScheduler<graph> scheduler;
@@ -70,5 +67,4 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test)
     BspScheduleRecomp<graph> schedule_recomp_from_cs(scheduleCS);
     BOOST_CHECK(schedule_recomp_from_cs.satisfiesConstraints());
     BOOST_CHECK_EQUAL(schedule_recomp_from_cs.computeCosts(), scheduleCS.computeCosts());
-
 }

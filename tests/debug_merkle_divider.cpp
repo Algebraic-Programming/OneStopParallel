@@ -16,6 +16,8 @@ limitations under the License.
 @author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 
+#include <iostream>
+
 #include "osp/auxiliary/io/DotFileWriter.hpp"
 #include "osp/auxiliary/io/dot_graph_file_reader.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/BspLocking.hpp"
@@ -27,22 +29,18 @@ limitations under the License.
 #include "osp/coarser/coarser_util.hpp"
 #include "osp/dag_divider/isomorphism_divider/IsomorphicSubgraphScheduler.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
-#include <iostream>
 
 using namespace osp;
 
-template<typename GraphT>
+template <typename GraphT>
 void check_partition_type_homogeneity(const GraphT &dag, const std::vector<vertex_idx_t<GraphT>> &partition) {
     // Group partitions by their ID
     std::map<vertex_idx_t<GraphT>, std::vector<vertex_idx_t<GraphT>>> partitions;
-    for (vertex_idx_t<GraphT> i = 0; i < dag.num_vertices(); ++i) {
-        partitions[partition[i]].push_back(i);
-    }
+    for (vertex_idx_t<GraphT> i = 0; i < dag.num_vertices(); ++i) { partitions[partition[i]].push_back(i); }
 
     // For each partition, check that all vertices have the same type
     for (const auto &[part_id, vertices] : partitions) {
-        if (vertices.empty())
-            continue;
+        if (vertices.empty()) { continue; }
         const auto first_node_type = dag.vertex_type(vertices[0]);
         for (const auto &vertex : vertices) {
             if (dag.vertex_type(vertex) != first_node_type) {
@@ -73,7 +71,8 @@ int main(int argc, char *argv[]) {
     std::cout << "Graph loaded successfully. " << instance.numberOfVertices() << " vertices." << std::endl;
 
     for (auto v : instance.getComputationalDag().vertices()) {
-        instance.getComputationalDag().set_vertex_comm_weight(v, static_cast<v_commw_t<graph_t2>>(instance.getComputationalDag().vertex_comm_weight(v) * 0.01));
+        instance.getComputationalDag().set_vertex_comm_weight(
+            v, static_cast<v_commw_t<graph_t2>>(instance.getComputationalDag().vertex_comm_weight(v) * 0.01));
     }
 
     // Set up architecture
@@ -105,7 +104,7 @@ int main(int argc, char *argv[]) {
     iso_scheduler.setCriticalPathThreshold(500);
     iso_scheduler.setOrbitLockRatio(0.5);
     iso_scheduler.setAllowTrimmedScheduler(false);
-    iso_scheduler.set_plot_dot_graphs(true); // Enable plotting for debug
+    iso_scheduler.set_plot_dot_graphs(true);    // Enable plotting for debug
 
     std::cout << "Starting partition computation..." << std::endl;
 
@@ -120,7 +119,8 @@ int main(int argc, char *argv[]) {
     std::cout << "Partition is " << (acyc ? "acyclic." : "not acyclic.");
 
     std::cout << "Partition computation finished." << std::endl;
-    std::cout << "Generated " << std::set<vertex_idx_t<graph_t>>(partition.begin(), partition.end()).size() << " partitions." << std::endl;
+    std::cout << "Generated " << std::set<vertex_idx_t<graph_t>>(partition.begin(), partition.end()).size() << " partitions."
+              << std::endl;
 
     return 0;
 }

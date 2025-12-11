@@ -18,42 +18,37 @@ limitations under the License.
 
 #pragma once
 
-#include "IStatsModule.hpp"
-#include "osp/bsp/model/IBspScheduleEval.hpp"
-#include "osp/graph_implementations/boost_graphs/boost_graph.hpp" // For graph_t
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
+
+#include "IStatsModule.hpp"
+#include "osp/bsp/model/IBspScheduleEval.hpp"
+#include "osp/graph_implementations/boost_graphs/boost_graph.hpp"    // For graph_t
 
 namespace osp {
 
-template<typename TargetObjectType>
-class GraphStatsModule : public IStatisticModule<TargetObjectType> { 
-public:
+template <typename TargetObjectType>
+class GraphStatsModule : public IStatisticModule<TargetObjectType> {
+  public:
+  private:
+    const std::vector<std::string> metric_headers = {"num_vertices", "num_edges", "avg_wavefront_size"};
 
-private:
-    const std::vector<std::string> metric_headers = {
-        "num_vertices", "num_edges", "avg_wavefront_size"
-    };
+  public:
+    std::vector<std::string> get_metric_headers() const override { return metric_headers; }
 
-public:
-
-    std::vector<std::string> get_metric_headers() const override {
-        return metric_headers;
-    }
-
-    std::map<std::string, std::string> record_statistics(
-                            const TargetObjectType& schedule, 
-                            std::ofstream& /*log_stream*/) const override { 
+    std::map<std::string, std::string> record_statistics(const TargetObjectType &schedule,
+                                                         std::ofstream & /*log_stream*/) const override {
         std::map<std::string, std::string> stats;
 
         const auto &graph = schedule.getInstance().getComputationalDag();
 
         stats["num_vertices"] = std::to_string(graph.num_vertices());
         stats["num_edges"] = std::to_string(graph.num_edges());
-        stats["avg_wavefront_size"] = std::to_string(static_cast<double>(graph.num_vertices()) / static_cast<double>(longestPath(graph)));                            
+        stats["avg_wavefront_size"]
+            = std::to_string(static_cast<double>(graph.num_vertices()) / static_cast<double>(longestPath(graph)));
         return stats;
     }
 };
 
-} // namespace osp
+}    // namespace osp

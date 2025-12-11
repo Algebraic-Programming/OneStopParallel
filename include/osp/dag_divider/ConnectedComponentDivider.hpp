@@ -27,13 +27,11 @@ limitations under the License.
 
 namespace osp {
 
-template<typename Graph_t, typename Constr_Graph_t>
+template <typename Graph_t, typename Constr_Graph_t>
 class ConnectedComponentDivider : public IDagDivider<Graph_t> {
-
     static_assert(is_computational_dag_v<Graph_t>, "Graph must be a computational DAG");
     static_assert(is_computational_dag_v<Constr_Graph_t>, "Constr_Graph_t must be a computational DAG");
-    static_assert(is_constructable_cdag_v<Constr_Graph_t>,
-                  "Constr_Graph_t must satisfy the constructable_cdag_vertex concept");
+    static_assert(is_constructable_cdag_v<Constr_Graph_t>, "Constr_Graph_t must satisfy the constructable_cdag_vertex concept");
     static_assert(std::is_same_v<vertex_idx_t<Graph_t>, vertex_idx_t<Constr_Graph_t>>,
                   "Graph_t and Constr_Graph_t must have the same vertex_idx types");
 
@@ -53,14 +51,17 @@ class ConnectedComponentDivider : public IDagDivider<Graph_t> {
 
   public:
     inline std::vector<Constr_Graph_t> &get_sub_dags() { return sub_dags; }
+
     inline const std::vector<Constr_Graph_t> &get_sub_dags() const { return sub_dags; }
+
     inline const std::vector<std::vector<vertex_idx>> &get_vertex_mapping() const { return vertex_mapping; }
+
     inline const std::vector<unsigned> &get_component() const { return component; }
+
     inline const std::vector<vertex_idx> &get_vertex_map() const { return vertex_map; }
 
     virtual std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> divide(const Graph_t &dag) override {
-        if (dag.num_vertices() == 0)
-            return {};
+        if (dag.num_vertices() == 0) { return {}; }
 
         bool has_more_than_one_connected_component = compute_connected_components(dag);
 
@@ -68,12 +69,9 @@ class ConnectedComponentDivider : public IDagDivider<Graph_t> {
 
         if (has_more_than_one_connected_component) {
             vertex_maps[0].resize(sub_dags.size());
-            for (unsigned i = 0; i < sub_dags.size(); ++i)
-                vertex_maps[0][i].resize(sub_dags[i].num_vertices());
+            for (unsigned i = 0; i < sub_dags.size(); ++i) { vertex_maps[0][i].resize(sub_dags[i].num_vertices()); }
 
-            for (const auto &v : dag.vertices()) {
-                vertex_maps[0][component[v]][vertex_map[v]] = v;
-            }
+            for (const auto &v : dag.vertices()) { vertex_maps[0][component[v]][vertex_map[v]] = v; }
         } else {
             sub_dags.resize(1);
             sub_dags[0] = dag;
@@ -93,17 +91,13 @@ class ConnectedComponentDivider : public IDagDivider<Graph_t> {
         return vertex_maps;
     }
 
-
     std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> compute_vertex_maps(const Graph_t &dag) {
         std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> vertex_maps(1);
 
         vertex_maps[0].resize(sub_dags.size());
-        for (unsigned i = 0; i < sub_dags.size(); ++i)
-            vertex_maps[0][i].resize(sub_dags[i].num_vertices());
+        for (unsigned i = 0; i < sub_dags.size(); ++i) { vertex_maps[0][i].resize(sub_dags[i].num_vertices()); }
 
-        for (const auto &v : dag.vertices()) {
-            vertex_maps[0][component[v]][vertex_map[v]] = v;
-        }
+        for (const auto &v : dag.vertices()) { vertex_maps[0][component[v]][vertex_map[v]] = v; }
 
         return vertex_maps;
     }
@@ -115,9 +109,7 @@ class ConnectedComponentDivider : public IDagDivider<Graph_t> {
         vertex_map.clear();
         component.assign(dag.num_vertices(), std::numeric_limits<unsigned>::max());
 
-        if (dag.num_vertices() == 0) {
-            return false;
-        }
+        if (dag.num_vertices() == 0) { return false; }
 
         unsigned component_id = 0;
         for (const auto &v : dag.vertices()) {
@@ -168,8 +160,7 @@ class ConnectedComponentDivider : public IDagDivider<Graph_t> {
             vertex_idx local_idx = current_index_in_subdag[comp_id]++;
             vertex_map[v] = local_idx;
 
-            if (vertex_mapping[comp_id].empty())
-                vertex_mapping[comp_id].resize(sub_dags[comp_id].num_vertices());
+            if (vertex_mapping[comp_id].empty()) { vertex_mapping[comp_id].resize(sub_dags[comp_id].num_vertices()); }
 
             vertex_mapping[comp_id][local_idx] = v;
         }
@@ -178,4 +169,4 @@ class ConnectedComponentDivider : public IDagDivider<Graph_t> {
     }
 };
 
-} // namespace osp
+}    // namespace osp

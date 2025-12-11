@@ -18,19 +18,17 @@ limitations under the License.
 
 #define BOOST_TEST_MODULE HYPERGRAPH_PARTITIONING_ILP
 #include <boost/test/unit_test.hpp>
-
 #include <filesystem>
+
+#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
+#include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 #include "osp/partitioning/model/hypergraph_utility.hpp"
 #include "osp/partitioning/partitioners/partitioning_ILP.hpp"
 #include "osp/partitioning/partitioners/partitioning_ILP_replication.hpp"
-#include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
-#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
-
 
 using namespace osp;
 
 BOOST_AUTO_TEST_CASE(test_full) {
-
     using graph = computational_dag_vector_impl_def_int_t;
     using Hypergraph = Hypergraph_def_t;
 
@@ -40,12 +38,11 @@ BOOST_AUTO_TEST_CASE(test_full) {
     while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
         cwd = cwd.parent_path();
         std::cout << cwd << std::endl;
-    } 
+    }
 
     graph DAG;
 
-    bool status = file_reader::readComputationalDagHyperdagFormatDB(
-        (cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(), DAG);
+    bool status = file_reader::readComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(), DAG);
 
     BOOST_CHECK(status);
 
@@ -55,9 +52,8 @@ BOOST_AUTO_TEST_CASE(test_full) {
     PartitioningProblem instance(Hgraph, 3, 35);
     Partitioning partition(instance);
 
-
     // ILP without replication
-    
+
     HypergraphPartitioningILP<Hypergraph> partitioner;
     partitioner.setTimeLimitSeconds(60);
     partitioner.computePartitioning(partition);
@@ -65,8 +61,7 @@ BOOST_AUTO_TEST_CASE(test_full) {
     BOOST_CHECK(partition.satisfiesBalanceConstraint());
     BOOST_CHECK(partition.computeConnectivityCost() >= partition.computeCutNetCost());
 
-    for(unsigned node = 0; node < Hgraph.num_vertices(); ++node)
-        partition.setAssignedPartition(node, node % 3);
+    for (unsigned node = 0; node < Hgraph.num_vertices(); ++node) { partition.setAssignedPartition(node, node % 3); }
 
     partitioner.setUseInitialSolution(true);
     partitioner.computePartitioning(partition);
@@ -94,16 +89,16 @@ BOOST_AUTO_TEST_CASE(test_full) {
     BOOST_CHECK(partition_rep.computeConnectivityCost() == 0);
 
     partitioner_rep.setUseInitialSolution(true);
-    for(unsigned node = 0; node < Hgraph.num_vertices(); ++node)
-        partition_rep.setAssignedPartitions(node, {node % 3});
+    for (unsigned node = 0; node < Hgraph.num_vertices(); ++node) { partition_rep.setAssignedPartitions(node, {node % 3}); }
 
     partitioner_rep.computePartitioning(partition_rep);
     BOOST_CHECK(partition_rep.satisfiesBalanceConstraint());
     BOOST_CHECK(partition_rep.computeConnectivityCost() == 0);
 
     instance.setMaxWorkWeightExplicitly(60);
-    for(unsigned node = 0; node < Hgraph.num_vertices(); ++node)
-        partition_rep.setAssignedPartitions(node, {node % 3, (node+1)%3});
+    for (unsigned node = 0; node < Hgraph.num_vertices(); ++node) {
+        partition_rep.setAssignedPartitions(node, {node % 3, (node + 1) % 3});
+    }
 
     partitioner_rep.computePartitioning(partition_rep);
     BOOST_CHECK(partition_rep.satisfiesBalanceConstraint());
@@ -119,19 +114,18 @@ BOOST_AUTO_TEST_CASE(test_full) {
     BOOST_CHECK(partition_rep.computeConnectivityCost() == 0);
 
     partitioner_rep.setUseInitialSolution(true);
-    for(unsigned node = 0; node < Hgraph.num_vertices(); ++node)
-        partition_rep.setAssignedPartitions(node, {node % 3});
+    for (unsigned node = 0; node < Hgraph.num_vertices(); ++node) { partition_rep.setAssignedPartitions(node, {node % 3}); }
 
     partitioner_rep.computePartitioning(partition_rep);
     BOOST_CHECK(partition_rep.satisfiesBalanceConstraint());
     BOOST_CHECK(partition_rep.computeConnectivityCost() == 0);
 
     instance.setMaxWorkWeightExplicitly(60);
-    for(unsigned node = 0; node < Hgraph.num_vertices(); ++node)
-        partition_rep.setAssignedPartitions(node, {node % 3, (node+1)%3});
+    for (unsigned node = 0; node < Hgraph.num_vertices(); ++node) {
+        partition_rep.setAssignedPartitions(node, {node % 3, (node + 1) % 3});
+    }
 
     partitioner_rep.computePartitioning(partition_rep);
     BOOST_CHECK(partition_rep.satisfiesBalanceConstraint());
     BOOST_CHECK(partition_rep.computeConnectivityCost() == 0);
-
 };

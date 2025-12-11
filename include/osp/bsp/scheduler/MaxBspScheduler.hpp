@@ -31,10 +31,9 @@ namespace osp {
  * The Scheduler class provides a common interface for scheduling scheduler in the BSP scheduling system.
  * It defines methods for setting and getting the time limit, as well as computing schedules.
  */
-template<typename Graph_t>
+template <typename Graph_t>
 class MaxBspScheduler : public Scheduler<Graph_t> {
-    public:
-
+  public:
     static_assert(is_computational_dag_v<Graph_t>, "BspSchedule can only be used with computational DAGs.");
 
     /**
@@ -85,4 +84,4 @@ class MaxBspScheduler : public Scheduler<Graph_t> {
     };
 };
 
-} // namespace osp
+}    // namespace osp

@@ -44,20 +44,21 @@ class integral_range {
      *
      * This iterator satisfies the RandomAccessIterator concept.
      */
-    class integral_iterator { // public for std::reverse_iterator
+    class integral_iterator {    // public for std::reverse_iterator
       public:
         using iterator_category = std::random_access_iterator_tag;
         using difference_type = std::ptrdiff_t;
         using value_type = T;
-        using pointer = void; // Not a real pointer
-        using reference = T;  // Not a real reference
+        using pointer = void;    // Not a real pointer
+        using reference = T;     // Not a real reference
 
         /**
          * @brief Proxy object to support operator-> for integral types.
          */
         struct arrow_proxy {
             T value;
-            constexpr const T* operator->() const noexcept { return &value; }
+
+            constexpr const T *operator->() const noexcept { return &value; }
         };
 
       private:
@@ -113,17 +114,22 @@ class integral_range {
             return temp;
         }
 
-        [[nodiscard]] constexpr bool operator==(const integral_iterator &other) const noexcept { return current == other.current; }
+        [[nodiscard]] constexpr bool operator==(const integral_iterator &other) const noexcept {
+            return current == other.current;
+        }
+
         [[nodiscard]] constexpr bool operator!=(const integral_iterator &other) const noexcept { return !(*this == other); }
 
         constexpr integral_iterator &operator+=(difference_type n) noexcept {
             current = static_cast<value_type>(current + n);
             return *this;
         }
+
         [[nodiscard]] constexpr integral_iterator operator+(difference_type n) const noexcept {
             integral_iterator temp = *this;
             return temp += n;
         }
+
         [[nodiscard]] friend constexpr integral_iterator operator+(difference_type n, const integral_iterator &it) noexcept {
             return it + n;
         }
@@ -132,10 +138,12 @@ class integral_range {
             current = static_cast<value_type>(current - n);
             return *this;
         }
+
         [[nodiscard]] constexpr integral_iterator operator-(difference_type n) const noexcept {
             integral_iterator temp = *this;
             return temp -= n;
         }
+
         [[nodiscard]] constexpr difference_type operator-(const integral_iterator &other) const noexcept {
             return static_cast<difference_type>(current) - static_cast<difference_type>(other.current);
         }
@@ -143,9 +151,16 @@ class integral_range {
         [[nodiscard]] constexpr value_type operator[](difference_type n) const noexcept { return *(*this + n); }
 
         [[nodiscard]] constexpr bool operator<(const integral_iterator &other) const noexcept { return current < other.current; }
+
         [[nodiscard]] constexpr bool operator>(const integral_iterator &other) const noexcept { return current > other.current; }
-        [[nodiscard]] constexpr bool operator<=(const integral_iterator &other) const noexcept { return current <= other.current; }
-        [[nodiscard]] constexpr bool operator>=(const integral_iterator &other) const noexcept { return current >= other.current; }
+
+        [[nodiscard]] constexpr bool operator<=(const integral_iterator &other) const noexcept {
+            return current <= other.current;
+        }
+
+        [[nodiscard]] constexpr bool operator>=(const integral_iterator &other) const noexcept {
+            return current >= other.current;
+        }
     };
 
     using reverse_integral_iterator = std::reverse_iterator<integral_iterator>;
@@ -165,15 +180,19 @@ class integral_range {
     constexpr integral_range(T start_, T end_) noexcept : start(start_), finish(end_) {}
 
     [[nodiscard]] constexpr integral_iterator begin() const noexcept { return integral_iterator(start); }
+
     [[nodiscard]] constexpr integral_iterator cbegin() const noexcept { return integral_iterator(start); }
 
     [[nodiscard]] constexpr integral_iterator end() const noexcept { return integral_iterator(finish); }
+
     [[nodiscard]] constexpr integral_iterator cend() const noexcept { return integral_iterator(finish); }
 
     [[nodiscard]] constexpr reverse_integral_iterator rbegin() const noexcept { return reverse_integral_iterator(end()); }
+
     [[nodiscard]] constexpr reverse_integral_iterator crbegin() const noexcept { return reverse_integral_iterator(cend()); }
 
     [[nodiscard]] constexpr reverse_integral_iterator rend() const noexcept { return reverse_integral_iterator(begin()); }
+
     [[nodiscard]] constexpr reverse_integral_iterator crend() const noexcept { return reverse_integral_iterator(cbegin()); }
 
     /**
@@ -189,4 +208,4 @@ class integral_range {
     [[nodiscard]] constexpr bool empty() const noexcept { return start == finish; }
 };
 
-} // namespace osp
+}    // namespace osp

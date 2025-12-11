@@ -22,13 +22,12 @@ limitations under the License.
 #include "osp/bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
 #include "osp/dag_divider/ConnectedComponentDivider.hpp"
 #include "osp/dag_divider/ConnectedComponentScheduler.hpp"
-#include "osp/graph_implementations/boost_graphs/boost_graph.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
+#include "osp/graph_implementations/boost_graphs/boost_graph.hpp"
 
 using namespace osp;
 
 BOOST_AUTO_TEST_CASE(ConnectedComponentPart_test) {
-
     BspInstance<computational_dag_vector_impl_def_int_t> instance;
     computational_dag_vector_impl_def_int_t &dag = instance.getComputationalDag();
     using VertexType = vertex_idx_t<computational_dag_vector_impl_def_int_t>;

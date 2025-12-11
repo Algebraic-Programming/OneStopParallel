@@ -19,24 +19,21 @@ limitations under the License.
 
 #define BOOST_TEST_MODULE STEPBYSTEP_AND_MULTILEVEL
 #include <boost/test/unit_test.hpp>
-
 #include <filesystem>
 #include <string>
 #include <vector>
 
-#include "osp/coarser/StepByStep/StepByStepCoarser.hpp"
-#include "osp/bsp/scheduler/Scheduler.hpp"
-#include "osp/bsp/scheduler/CoarsenRefineSchedulers/MultiLevelHillClimbing.hpp"
-#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 #include "osp/auxiliary/io/arch_file_reader.hpp"
+#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
+#include "osp/bsp/scheduler/CoarsenRefineSchedulers/MultiLevelHillClimbing.hpp"
+#include "osp/bsp/scheduler/Scheduler.hpp"
+#include "osp/coarser/StepByStep/StepByStepCoarser.hpp"
 #include "osp/coarser/coarser_util.hpp"
-
 #include "osp/graph_implementations/boost_graphs/boost_graph.hpp"
 
 using namespace osp;
 
 BOOST_AUTO_TEST_CASE(StepByStepCoarser_test) {
-
     using graph = boost_graph_uint_t;
     StepByStepCoarser<graph> test;
 
@@ -57,7 +54,7 @@ BOOST_AUTO_TEST_CASE(StepByStepCoarser_test) {
 
     StepByStepCoarser<graph> coarser;
 
-    coarser.setTargetNumberOfNodes(static_cast<unsigned>(DAG.num_vertices())/2);
+    coarser.setTargetNumberOfNodes(static_cast<unsigned>(DAG.num_vertices()) / 2);
 
     graph coarsened_dag1, coarsened_dag2;
     std::vector<std::vector<vertex_idx_t<graph>>> old_vertex_ids;
@@ -66,14 +63,12 @@ BOOST_AUTO_TEST_CASE(StepByStepCoarser_test) {
     coarser.coarsenDag(DAG, coarsened_dag1, new_vertex_id);
     old_vertex_ids = coarser_util::invert_vertex_contraction_map<graph, graph>(new_vertex_id);
 
-    coarser.setTargetNumberOfNodes(static_cast<unsigned>(DAG.num_vertices())*2/3);
+    coarser.setTargetNumberOfNodes(static_cast<unsigned>(DAG.num_vertices()) * 2 / 3);
     coarser.coarsenForPebbling(DAG, coarsened_dag2, new_vertex_id);
     old_vertex_ids = coarser_util::invert_vertex_contraction_map<graph, graph>(new_vertex_id);
-
 }
 
 BOOST_AUTO_TEST_CASE(Multilevel_test) {
-
     using graph = boost_graph_uint_t;
     StepByStepCoarser<graph> test;
 
@@ -90,27 +85,25 @@ BOOST_AUTO_TEST_CASE(Multilevel_test) {
         std::cout << cwd << std::endl;
     }
 
-    bool status = file_reader::readComputationalDagHyperdagFormatDB(
-        (cwd / "data/spaa/tiny/instance_pregel.hdag").string(), instance.getComputationalDag());
+    bool status = file_reader::readComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_pregel.hdag").string(),
+                                                                    instance.getComputationalDag());
 
     BOOST_CHECK(status);
-
 
     MultiLevelHillClimbingScheduler<graph> multi1, multi2;
     BspSchedule<graph> schedule1(instance), schedule2(instance);
 
-    multi1.setContractionRate(0.3); 
+    multi1.setContractionRate(0.3);
     multi1.useLinearRefinementSteps(5);
 
     auto result = multi1.computeSchedule(schedule1);
     BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
     BOOST_CHECK(schedule1.satisfiesPrecedenceConstraints());
 
-    multi2.setContractionRate(0.3); 
+    multi2.setContractionRate(0.3);
     multi2.useExponentialRefinementPoints(1.2);
 
     result = multi2.computeSchedule(schedule2);
     BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
     BOOST_CHECK(schedule2.satisfiesPrecedenceConstraints());
-
 }

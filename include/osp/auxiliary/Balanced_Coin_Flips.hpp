@@ -104,9 +104,7 @@ class Thue_Morse_Sequence : public BalancedCoinFlips {
 class Repeat_Chance : public BalancedCoinFlips {
   public:
     bool get_flip() override {
-        if (randInt(3) > 0) {
-            previous = (randInt(2) == 0);
-        }
+        if (randInt(3) > 0) { previous = (randInt(2) == 0); }
         return previous;
     }
 
@@ -122,12 +120,9 @@ class Biased_Random_with_side_bias : public BalancedCoinFlips {
         unsigned genuine_random_size = 3;
 
         const long long abs_true_bias = std::abs(true_bias);
-        if (abs_true_bias > std::numeric_limits<unsigned>::max()) {
-            throw std::runtime_error("true_bias is too large!");
-        }
+        if (abs_true_bias > std::numeric_limits<unsigned>::max()) { throw std::runtime_error("true_bias is too large!"); }
 
-        unsigned die_size =
-            (side_ratio.first + side_ratio.second) * genuine_random_size + static_cast<unsigned>(abs_true_bias);
+        unsigned die_size = (side_ratio.first + side_ratio.second) * genuine_random_size + static_cast<unsigned>(abs_true_bias);
 
         if (die_size > static_cast<unsigned>(std::numeric_limits<int>::max())) {
             throw std::runtime_error("die_size is too large!");
@@ -164,4 +159,4 @@ class Biased_Random_with_side_bias : public BalancedCoinFlips {
     const std::pair<unsigned, unsigned> side_ratio;
 };
 
-} // namespace osp
+}    // namespace osp

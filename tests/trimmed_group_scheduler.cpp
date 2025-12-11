@@ -30,7 +30,7 @@ using namespace osp;
 using graph_t = computational_dag_vector_impl_def_t;
 
 // Mock SubScheduler for TrimmedGroupScheduler tests
-template<typename Constr_Graph_t>
+template <typename Constr_Graph_t>
 class MockSubScheduler : public Scheduler<Constr_Graph_t> {
   public:
     // This mock scheduler assigns all nodes to local processor 0 and superstep 0.
@@ -57,7 +57,7 @@ struct TrimmedGroupSchedulerFixture {
         // Default architecture: 1 processor type, 100 memory bound
         arch.setCommunicationCosts(1);
         arch.setSynchronisationCosts(1);
-        instance.setAllOnesCompatibilityMatrix(); // All node types compatible with all processor types
+        instance.setAllOnesCompatibilityMatrix();    // All node types compatible with all processor types
     }
 };
 
@@ -78,9 +78,9 @@ BOOST_AUTO_TEST_CASE(EmptyGraphTest) {
 
 BOOST_AUTO_TEST_CASE(SingleComponentSingleProcessorTypeTest) {
     // Graph: 0-1-2 (single component)
-    dag.add_vertex(1, 1, 1, 0); // 0
-    dag.add_vertex(1, 1, 1, 0); // 1
-    dag.add_vertex(1, 1, 1, 0); // 2
+    dag.add_vertex(1, 1, 1, 0);    // 0
+    dag.add_vertex(1, 1, 1, 0);    // 1
+    dag.add_vertex(1, 1, 1, 0);    // 2
     dag.add_edge(0, 1);
     dag.add_edge(1, 2);
     instance.getComputationalDag() = dag;
@@ -109,10 +109,10 @@ BOOST_AUTO_TEST_CASE(SingleComponentSingleProcessorTypeTest) {
 
 BOOST_AUTO_TEST_CASE(MultipleComponentsSingleProcessorTypeEvenDistributionTest) {
     // Graph: 0-1 (component 0), 2-3 (component 1)
-    dag.add_vertex(1, 1, 1, 0); // 0
-    dag.add_vertex(1, 1, 1, 0); // 1
-    dag.add_vertex(1, 1, 1, 0); // 2
-    dag.add_vertex(1, 1, 1, 0); // 3
+    dag.add_vertex(1, 1, 1, 0);    // 0
+    dag.add_vertex(1, 1, 1, 0);    // 1
+    dag.add_vertex(1, 1, 1, 0);    // 2
+    dag.add_vertex(1, 1, 1, 0);    // 3
     dag.add_edge(0, 1);
     dag.add_edge(2, 3);
     instance.getComputationalDag() = dag;
@@ -147,9 +147,9 @@ BOOST_AUTO_TEST_CASE(MultipleComponentsSingleProcessorTypeEvenDistributionTest) 
 
 BOOST_AUTO_TEST_CASE(MultipleComponentsSingleProcessorTypeUnevenDistributionTest) {
     // Graph: 0 (component 0), 1 (component 1), 2 (component 2) - all isolated
-    dag.add_vertex(1, 1, 1, 0); // 0
-    dag.add_vertex(1, 1, 1, 0); // 1
-    dag.add_vertex(1, 1, 1, 0); // 2
+    dag.add_vertex(1, 1, 1, 0);    // 0
+    dag.add_vertex(1, 1, 1, 0);    // 1
+    dag.add_vertex(1, 1, 1, 0);    // 2
     instance.getComputationalDag() = dag;
 
     // Architecture: 6 processors of type 0
@@ -184,14 +184,14 @@ BOOST_AUTO_TEST_CASE(MultipleComponentsSingleProcessorTypeUnevenDistributionTest
 
 BOOST_AUTO_TEST_CASE(MultipleComponentsHeterogeneousArchitectureTest) {
     // Graph: 0 (type 0), 1 (type 1) - isolated nodes
-    dag.add_vertex(1, 1, 1, 0); // 0 (component 0, type 0)
-    dag.add_vertex(1, 1, 1, 1); // 1 (component 1, type 1)
+    dag.add_vertex(1, 1, 1, 0);    // 0 (component 0, type 0)
+    dag.add_vertex(1, 1, 1, 1);    // 1 (component 1, type 1)
     instance.getComputationalDag() = dag;
 
     // Architecture: 2 processors of type 0 (global 0,1), 2 processors of type 1 (global 2,3)
     arch.setProcessorsWithTypes({0, 0, 1, 1});
     instance.getArchitecture() = arch;
-    instance.setDiagonalCompatibilityMatrix(2); // Node type 0 compatible with proc type 0, etc.
+    instance.setDiagonalCompatibilityMatrix(2);    // Node type 0 compatible with proc type 0, etc.
 
     // min_non_zero_procs_ = 2 (2 components, 2 groups)
     // sub_proc_counts for type 0: 2 / 2 = 1

@@ -57,7 +57,7 @@ namespace osp {
  *
  * @tparam Graph_t The type of the computational DAG, which must satisfy the `is_computational_dag` concept.
  */
-template<typename Graph_t>
+template <typename Graph_t>
 class BspInstance {
     static_assert(is_computational_dag_v<Graph_t>, "BspInstance can only be used with computational DAGs.");
 
@@ -91,7 +91,8 @@ class BspInstance {
      * @brief The type of the vectex types in the computational DAG.
      * If the DAG does not support vertex types, this is `unsigned`.
      */
-    using vertex_type_t_or_default = std::conditional_t<is_computational_dag_typed_vertices_v<Graph_t>, v_type_t<Graph_t>, unsigned>;
+    using vertex_type_t_or_default
+        = std::conditional_t<is_computational_dag_typed_vertices_v<Graph_t>, v_type_t<Graph_t>, unsigned>;
     using processor_type_t = unsigned;
 
   public:
@@ -107,7 +108,8 @@ class BspInstance {
      * @param cdag The computational DAG for the instance.
      * @param architecture The BSP architecture for the instance.
      */
-    BspInstance(const Graph_t &cdag_, const BspArchitecture<Graph_t> &architecture_,
+    BspInstance(const Graph_t &cdag_,
+                const BspArchitecture<Graph_t> &architecture_,
                 std::vector<std::vector<bool>> nodeProcessorCompatibility_ = std::vector<std::vector<bool>>({{true}}))
         : cdag(cdag_), architecture(architecture_), nodeProcessorCompatibility(nodeProcessorCompatibility_) {}
 
@@ -118,15 +120,16 @@ class BspInstance {
      * @param cdag The computational DAG for the instance.
      * @param architecture The BSP architecture for the instance.
      */
-    BspInstance(Graph_t &&cdag_, BspArchitecture<Graph_t> &&architecture_,
+    BspInstance(Graph_t &&cdag_,
+                BspArchitecture<Graph_t> &&architecture_,
                 std::vector<std::vector<bool>> nodeProcessorCompatibility_ = std::vector<std::vector<bool>>({{true}}))
-        : cdag(std::move(cdag_)), architecture(std::move(architecture_)), nodeProcessorCompatibility(nodeProcessorCompatibility_) {
-    }
+        : cdag(std::move(cdag_)),
+          architecture(std::move(architecture_)),
+          nodeProcessorCompatibility(nodeProcessorCompatibility_) {}
 
-    template<typename Graph_t_other>
+    template <typename Graph_t_other>
     explicit BspInstance(const BspInstance<Graph_t_other> &other)
-        : architecture(other.getArchitecture()),
-          nodeProcessorCompatibility(other.getNodeProcessorCompatibilityMatrix()) {
+        : architecture(other.getArchitecture()), nodeProcessorCompatibility(other.getNodeProcessorCompatibilityMatrix()) {
         constructComputationalDag(other.getComputationalDag(), cdag);
     }
 
@@ -142,6 +145,7 @@ class BspInstance {
      * The move operator may be used to transfer ownership of the architecture.
      */
     [[nodiscard]] const BspArchitecture<Graph_t> &getArchitecture() const { return architecture; }
+
     [[nodiscard]] BspArchitecture<Graph_t> &getArchitecture() { return architecture; }
 
     /**
@@ -150,6 +154,7 @@ class BspInstance {
      * The move operator may be used to transfer ownership of the DAG.
      */
     [[nodiscard]] const Graph_t &getComputationalDag() const { return cdag; }
+
     [[nodiscard]] Graph_t &getComputationalDag() { return cdag; }
 
     /**
@@ -202,9 +207,7 @@ class BspInstance {
     /**
      * @brief Returns the flattened send costs vector.
      */
-    [[nodiscard]] const std::vector<v_commw_t<Graph_t>> &sendCostsVector() const {
-        return architecture.sendCostsVector();
-    }
+    [[nodiscard]] const std::vector<v_commw_t<Graph_t>> &sendCostsVector() const { return architecture.sendCostsVector(); }
 
     /**
      * @brief Returns the communication costs of the BSP architecture.
@@ -288,7 +291,9 @@ class BspInstance {
     /**
      * @brief Returns the node type - processor type compatibility matrix.
      */
-    [[nodiscard]] const std::vector<std::vector<bool>> &getProcessorCompatibilityMatrix() const { return nodeProcessorCompatibility; }
+    [[nodiscard]] const std::vector<std::vector<bool>> &getProcessorCompatibilityMatrix() const {
+        return nodeProcessorCompatibility;
+    }
 
     /**
      * @brief Sets the compatibility matrix to be diagonal. This implies that node type `i` is only compatible with processor type `i`.
@@ -296,15 +301,15 @@ class BspInstance {
      */
     void setDiagonalCompatibilityMatrix(const vertex_type_t_or_default number_of_types) {
         nodeProcessorCompatibility.assign(number_of_types, std::vector<bool>(number_of_types, false));
-        for (vertex_type_t_or_default i = 0; i < number_of_types; ++i)
-            nodeProcessorCompatibility[i][i] = true;
+        for (vertex_type_t_or_default i = 0; i < number_of_types; ++i) { nodeProcessorCompatibility[i][i] = true; }
     }
 
     /**
      * @brief Sets the compatibility matrix to all ones. This implies that all node types are compatible with all processor types.
      */
     void setAllOnesCompatibilityMatrix() {
-        nodeProcessorCompatibility.assign(cdag.num_vertex_types(), std::vector<bool>(architecture.getNumberOfProcessorTypes(), true));
+        nodeProcessorCompatibility.assign(cdag.num_vertex_types(),
+                                          std::vector<bool>(architecture.getNumberOfProcessorTypes(), true));
     }
 
     /**
@@ -314,8 +319,8 @@ class BspInstance {
     [[nodiscard]] bool CheckMemoryConstraintsFeasibility() const {
         std::vector<v_memw_t<Graph_t>> max_memory_per_proc_type(architecture.getNumberOfProcessorTypes(), 0);
         for (unsigned proc = 0U; proc < architecture.numberOfProcessors(); proc++) {
-            max_memory_per_proc_type[architecture.processorType(proc)] =
-                std::max(max_memory_per_proc_type[architecture.processorType(proc)], architecture.memoryBound(proc));
+            max_memory_per_proc_type[architecture.processorType(proc)]
+                = std::max(max_memory_per_proc_type[architecture.processorType(proc)], architecture.memoryBound(proc));
         }
 
         for (vertex_type_t_or_default vertType = 0U; vertType < cdag.num_vertex_types(); vertType++) {
@@ -325,13 +330,11 @@ class BspInstance {
             for (processor_type_t proc_type = 0U; proc_type < architecture.getNumberOfProcessorTypes(); proc_type++) {
                 if (isCompatibleType(vertType, proc_type)) {
                     fits = fits | (max_memory_of_type <= max_memory_per_proc_type[proc_type]);
-                    if (fits)
-                        break;
+                    if (fits) { break; }
                 }
             }
 
-            if (!fits)
-                return false;
+            if (!fits) { return false; }
         }
 
         return true;
@@ -346,13 +349,14 @@ class BspInstance {
         processor_type_t numberOfProcTypes = architecture.getNumberOfProcessorTypes();
         std::vector<std::vector<processor_type_t>> compatibleProcTypes(numberOfNodeTypes);
 
-        for (vertex_type_t_or_default nodeType = 0U; nodeType < numberOfNodeTypes; ++nodeType)
-            for (processor_type_t processorType = 0U; processorType < numberOfProcTypes; ++processorType)
-                if (isCompatibleType(nodeType, processorType))
-                    compatibleProcTypes[nodeType].push_back(processorType);
+        for (vertex_type_t_or_default nodeType = 0U; nodeType < numberOfNodeTypes; ++nodeType) {
+            for (processor_type_t processorType = 0U; processorType < numberOfProcTypes; ++processorType) {
+                if (isCompatibleType(nodeType, processorType)) { compatibleProcTypes[nodeType].push_back(processorType); }
+            }
+        }
 
         return compatibleProcTypes;
     }
 };
 
-} // namespace osp
+}    // namespace osp

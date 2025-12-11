@@ -18,26 +18,24 @@ limitations under the License.
 
 #define BOOST_TEST_MODULE COPT_ILP_SCHEDULING
 #include <boost/test/unit_test.hpp>
-
-#include "osp/bsp/model/BspInstance.hpp"
-#include "osp/bsp/model/BspSchedule.hpp"
-#include "osp/bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
-#include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
-#include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
-#include "osp/auxiliary/io/arch_file_reader.hpp"
-#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 #include <filesystem>
 #include <iostream>
 
-#include "osp/bsp/scheduler/IlpSchedulers/CoptFullScheduler.hpp"
-#include "osp/bsp/scheduler/IlpSchedulers/TotalCommunicationScheduler.hpp"
+#include "osp/auxiliary/io/arch_file_reader.hpp"
+#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
+#include "osp/bsp/model/BspInstance.hpp"
+#include "osp/bsp/model/BspSchedule.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
 #include "osp/bsp/scheduler/IlpSchedulers/CoptCommScheduleOptimizer.hpp"
+#include "osp/bsp/scheduler/IlpSchedulers/CoptFullScheduler.hpp"
 #include "osp/bsp/scheduler/IlpSchedulers/CoptPartialScheduler.hpp"
+#include "osp/bsp/scheduler/IlpSchedulers/TotalCommunicationScheduler.hpp"
+#include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
+#include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 
 using namespace osp;
 
 BOOST_AUTO_TEST_CASE(test_total) {
-
     using graph = computational_dag_edge_idx_vector_impl_def_t;
 
     BspInstance<graph> instance;
@@ -78,7 +76,6 @@ BOOST_AUTO_TEST_CASE(test_total) {
 };
 
 BOOST_AUTO_TEST_CASE(test_full) {
-
     using graph = computational_dag_edge_idx_vector_impl_def_t;
 
     BspInstance<graph> instance;
@@ -142,7 +139,7 @@ BOOST_AUTO_TEST_CASE(test_full) {
     BOOST_CHECK(schedule_improved2.satisfiesConstraints());
 
     // initialize with recomputing schedule, return recomputing schedule
-    BspScheduleRecomp<graph> schedule_improved3(instance),schedule_init3(schedule_init_cs);
+    BspScheduleRecomp<graph> schedule_improved3(instance), schedule_init3(schedule_init_cs);
     CoptFullScheduler<graph> scheduler_init3(schedule_init3);
     scheduler_init3.setTimeLimitSeconds(10);
     const auto result_init3 = scheduler_init3.computeScheduleRecomp(schedule_improved3);
@@ -153,8 +150,9 @@ BOOST_AUTO_TEST_CASE(test_full) {
     BspInstance<graph> instance_typed = instance;
     instance_typed.getArchitecture().setProcessorType(0, 1);
     instance_typed.getArchitecture().setProcessorType(1, 1);
-    for(vertex_idx_t<graph> node = 0; node < static_cast<vertex_idx_t<graph> >(instance_typed.numberOfVertices()); ++node)
-        instance_typed.getComputationalDag().set_vertex_type(node, node%2);
+    for (vertex_idx_t<graph> node = 0; node < static_cast<vertex_idx_t<graph> >(instance_typed.numberOfVertices()); ++node) {
+        instance_typed.getComputationalDag().set_vertex_type(node, node % 2);
+    }
     instance_typed.setDiagonalCompatibilityMatrix(2);
 
     BspSchedule<graph> schedule_typed(instance_typed);
@@ -198,7 +196,6 @@ BOOST_AUTO_TEST_CASE(test_full) {
 };
 
 BOOST_AUTO_TEST_CASE(test_cs) {
-
     using graph = computational_dag_edge_idx_vector_impl_def_t;
 
     BspInstance<graph> instance;
@@ -214,8 +211,8 @@ BOOST_AUTO_TEST_CASE(test_cs) {
         std::cout << cwd << std::endl;
     }
 
-    bool status = file_reader::readComputationalDagHyperdagFormatDB(
-        (cwd / "data/spaa/tiny/instance_pregel.hdag").string(), instance.getComputationalDag());
+    bool status = file_reader::readComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_pregel.hdag").string(),
+                                                                    instance.getComputationalDag());
 
     BOOST_CHECK(status);
 
@@ -232,7 +229,7 @@ BOOST_AUTO_TEST_CASE(test_cs) {
     const auto result = scheduler.improveSchedule(schedule_cs);
     BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
     const auto after = schedule_cs.compute_cs_communication_costs();
-    std::cout<<before<<" --cs--> "<<after<<std::endl;
+    std::cout << before << " --cs--> " << after << std::endl;
 
     BOOST_CHECK(schedule_cs.satisfiesPrecedenceConstraints());
     BOOST_CHECK(schedule_cs.hasValidCommSchedule());
@@ -240,7 +237,6 @@ BOOST_AUTO_TEST_CASE(test_cs) {
 };
 
 BOOST_AUTO_TEST_CASE(test_partial) {
-
     using graph = computational_dag_edge_idx_vector_impl_def_t;
 
     BspInstance<graph> instance;
@@ -256,8 +252,8 @@ BOOST_AUTO_TEST_CASE(test_partial) {
         std::cout << cwd << std::endl;
     }
 
-    bool status = file_reader::readComputationalDagHyperdagFormatDB(
-        (cwd / "data/spaa/tiny/instance_pregel.hdag").string(), instance.getComputationalDag());
+    bool status = file_reader::readComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_pregel.hdag").string(),
+                                                                    instance.getComputationalDag());
 
     BOOST_CHECK(status);
 
@@ -285,6 +281,4 @@ BOOST_AUTO_TEST_CASE(test_partial) {
     BOOST_CHECK(schedule.hasValidCommSchedule());
     auto cost_after = schedule.computeCosts();
     BOOST_CHECK(cost_after <= cost_mid);
-
 };
-

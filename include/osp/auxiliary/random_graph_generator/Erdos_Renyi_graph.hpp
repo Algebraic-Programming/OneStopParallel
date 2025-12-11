@@ -18,10 +18,10 @@ limitations under the License.
 
 #pragma once
 
-#include <random>
-#include <vector>
-#include <unordered_set>
 #include <numeric>
+#include <random>
+#include <unordered_set>
+#include <vector>
 
 #include "osp/concepts/constructable_computational_dag_concept.hpp"
 
@@ -34,9 +34,8 @@ namespace osp {
  * @param chance chance/num_vertices is the probability of edge inclusion
  * @return DAG
  */
-template<typename Graph_t>
-void erdos_renyi_graph_gen(Graph_t& dag_out, vertex_idx_t<Graph_t> num_vertices, double chance) {
-
+template <typename Graph_t>
+void erdos_renyi_graph_gen(Graph_t &dag_out, vertex_idx_t<Graph_t> num_vertices, double chance) {
     static_assert(is_constructable_cdag_v<Graph_t>, "Graph_t must be a constructable computational DAG type");
 
     dag_out = Graph_t(num_vertices);
@@ -45,10 +44,8 @@ void erdos_renyi_graph_gen(Graph_t& dag_out, vertex_idx_t<Graph_t> num_vertices,
     std::mt19937 gen(rd());
 
     for (const auto &v : dag_out.vertices()) {
-
         const auto one = static_cast<vertex_idx_t<Graph_t>>(1);
-        std::binomial_distribution<vertex_idx_t<Graph_t>> bino_dist(num_vertices - one - v,
-                                                                    chance / double(num_vertices));
+        std::binomial_distribution<vertex_idx_t<Graph_t>> bino_dist(num_vertices - one - v, chance / double(num_vertices));
         auto out_edges_num = bino_dist(gen);
 
         std::unordered_set<vertex_idx_t<Graph_t>> out_edges;
@@ -56,16 +53,13 @@ void erdos_renyi_graph_gen(Graph_t& dag_out, vertex_idx_t<Graph_t> num_vertices,
             std::uniform_int_distribution<vertex_idx_t<Graph_t>> dist(0, num_vertices - one - v);
             vertex_idx_t<Graph_t> edge = v + one + dist(gen);
 
-            if (out_edges.find(edge) != out_edges.cend())
-                continue;
+            if (out_edges.find(edge) != out_edges.cend()) { continue; }
 
             out_edges.emplace(edge);
         }
 
-        for (auto &j : out_edges) {
-            dag_out.add_edge(v, j);
-        }
+        for (auto &j : out_edges) { dag_out.add_edge(v, j); }
     }
 }
 
-} // namespace osp
+}    // namespace osp

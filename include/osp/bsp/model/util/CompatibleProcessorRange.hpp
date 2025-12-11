@@ -18,8 +18,9 @@ limitations under the License.
 
 #pragma once
 
-#include "osp/bsp/model/BspInstance.hpp"
 #include <vector>
+
+#include "osp/bsp/model/BspInstance.hpp"
 
 namespace osp {
 
@@ -31,9 +32,8 @@ namespace osp {
  *
  * @tparam Graph_t The type of the computational DAG.
  */
-template<typename Graph_t>
+template <typename Graph_t>
 class CompatibleProcessorRange {
-
     std::vector<std::vector<unsigned>> typeProcessorIdx;
     const BspInstance<Graph_t> *instance = nullptr;
 
@@ -48,9 +48,7 @@ class CompatibleProcessorRange {
      *
      * @param inst The BspInstance.
      */
-    CompatibleProcessorRange(const BspInstance<Graph_t> &inst) {
-        initialize(inst);
-    }
+    CompatibleProcessorRange(const BspInstance<Graph_t> &inst) { initialize(inst); }
 
     /**
      * @brief Initializes the CompatibleProcessorRange with a BspInstance.
@@ -64,9 +62,9 @@ class CompatibleProcessorRange {
             typeProcessorIdx.resize(inst.getComputationalDag().num_vertex_types());
 
             for (v_type_t<Graph_t> v_type = 0; v_type < inst.getComputationalDag().num_vertex_types(); v_type++) {
-                for (unsigned proc = 0; proc < inst.numberOfProcessors(); proc++)
-                    if (inst.isCompatibleType(v_type, inst.processorType(proc)))
-                        typeProcessorIdx[v_type].push_back(proc);
+                for (unsigned proc = 0; proc < inst.numberOfProcessors(); proc++) {
+                    if (inst.isCompatibleType(v_type, inst.processorType(proc))) { typeProcessorIdx[v_type].push_back(proc); }
+                }
             }
         }
     }
@@ -98,4 +96,4 @@ class CompatibleProcessorRange {
     }
 };
 
-} // namespace osp
+}    // namespace osp

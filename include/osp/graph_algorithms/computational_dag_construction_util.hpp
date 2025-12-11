@@ -27,15 +27,16 @@ namespace osp {
  * @brief Constructs a computational DAG from another graph.
  *
  * This function copies the structure and properties of a source graph into a target graph structure.
- * Assumes that the vertices of the source graph are indexed from 0 to N-1. If the target graph is empty, indices are sequentially assigned starting from 0.
- * If the target graph is not empty, new vertices will be added to the target graph and their indices will be sequentially assigned starting from the index N.
+ * Assumes that the vertices of the source graph are indexed from 0 to N-1. If the target graph is empty, indices are sequentially
+ * assigned starting from 0. If the target graph is not empty, new vertices will be added to the target graph and their indices
+ * will be sequentially assigned starting from the index N.
  *
  * @tparam Graph_from The type of the source graph. Must satisfy `is_computational_dag`.
  * @tparam Graph_to The type of the target graph. Must satisfy `is_constructable_cdag_vertex`.
  * @param from The source graph.
  * @param to The target graph.
  */
-template<typename Graph_from, typename Graph_to>
+template <typename Graph_from, typename Graph_to>
 void constructComputationalDag(const Graph_from &from, Graph_to &to) {
     static_assert(is_computational_dag_v<Graph_from>, "Graph_from must satisfy the computational_dag concept");
     static_assert(is_constructable_cdag_vertex_v<Graph_to>, "Graph_to must satisfy the constructable_cdag_vertex concept");
@@ -45,11 +46,13 @@ void constructComputationalDag(const Graph_from &from, Graph_to &to) {
 
     for (const auto &v_idx : from.vertices()) {
         if constexpr (has_typed_vertices_v<Graph_from> and has_typed_vertices_v<Graph_to>) {
-            vertex_map.push_back(to.add_vertex(from.vertex_work_weight(v_idx), from.vertex_comm_weight(v_idx),
-                                               from.vertex_mem_weight(v_idx), from.vertex_type(v_idx)));
+            vertex_map.push_back(to.add_vertex(from.vertex_work_weight(v_idx),
+                                               from.vertex_comm_weight(v_idx),
+                                               from.vertex_mem_weight(v_idx),
+                                               from.vertex_type(v_idx)));
         } else {
-            vertex_map.push_back(to.add_vertex(from.vertex_work_weight(v_idx), from.vertex_comm_weight(v_idx),
-                                               from.vertex_mem_weight(v_idx)));
+            vertex_map.push_back(
+                to.add_vertex(from.vertex_work_weight(v_idx), from.vertex_comm_weight(v_idx), from.vertex_mem_weight(v_idx)));
         }
     }
 
@@ -59,11 +62,9 @@ void constructComputationalDag(const Graph_from &from, Graph_to &to) {
         }
     } else {
         for (const auto &v : from.vertices()) {
-            for (const auto &child : from.children(v)) {
-                to.add_edge(vertex_map[v], vertex_map[child]);
-            }
+            for (const auto &child : from.children(v)) { to.add_edge(vertex_map[v], vertex_map[child]); }
         }
     }
 }
 
-} // namespace osp
+}    // namespace osp

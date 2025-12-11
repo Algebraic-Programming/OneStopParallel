@@ -30,10 +30,10 @@ limitations under the License.
 
 namespace osp {
 
-template<typename Graph_t, typename Graph_t_coarse>
+template <typename Graph_t, typename Graph_t_coarse>
 class MultilevelCoarseAndSchedule;
 
-template<typename Graph_t, typename Graph_t_coarse>
+template <typename Graph_t, typename Graph_t_coarse>
 class MultilevelCoarser : public Coarser<Graph_t, Graph_t_coarse> {
     friend class MultilevelCoarseAndSchedule<Graph_t, Graph_t_coarse>;
 
@@ -48,7 +48,8 @@ class MultilevelCoarser : public Coarser<Graph_t, Graph_t_coarse> {
 
     RETURN_STATUS add_contraction(const std::vector<vertex_idx_t<Graph_t_coarse>> &contraction_map);
     RETURN_STATUS add_contraction(std::vector<vertex_idx_t<Graph_t_coarse>> &&contraction_map);
-    RETURN_STATUS add_contraction(const std::vector<vertex_idx_t<Graph_t_coarse>> &contraction_map, const Graph_t_coarse &contracted_graph);
+    RETURN_STATUS add_contraction(const std::vector<vertex_idx_t<Graph_t_coarse>> &contraction_map,
+                                  const Graph_t_coarse &contracted_graph);
     RETURN_STATUS add_contraction(std::vector<vertex_idx_t<Graph_t_coarse>> &&contraction_map, Graph_t_coarse &&contracted_graph);
     void add_identity_contraction();
 
@@ -64,7 +65,8 @@ class MultilevelCoarser : public Coarser<Graph_t, Graph_t_coarse> {
     MultilevelCoarser(const Graph_t &graph) : original_graph(&graph) {};
     virtual ~MultilevelCoarser() = default;
 
-    bool coarsenDag(const Graph_t &dag_in, Graph_t_coarse &coarsened_dag,
+    bool coarsenDag(const Graph_t &dag_in,
+                    Graph_t_coarse &coarsened_dag,
                     std::vector<vertex_idx_t<Graph_t_coarse>> &vertex_contraction_map) override;
 
     RETURN_STATUS run(const Graph_t &graph);
@@ -73,7 +75,7 @@ class MultilevelCoarser : public Coarser<Graph_t, Graph_t_coarse> {
     virtual std::string getCoarserName() const override = 0;
 };
 
-template<typename Graph_t, typename Graph_t_coarse>
+template <typename Graph_t, typename Graph_t_coarse>
 RETURN_STATUS MultilevelCoarser<Graph_t, Graph_t_coarse>::run(const Graph_t &graph) {
     clear_computation_data();
     original_graph = &graph;
@@ -81,19 +83,17 @@ RETURN_STATUS MultilevelCoarser<Graph_t, Graph_t_coarse>::run(const Graph_t &gra
     RETURN_STATUS status = RETURN_STATUS::OSP_SUCCESS;
     status = std::max(status, run_contractions());
 
-    if (dag_history.size() == 0) {
-        add_identity_contraction();
-    }
+    if (dag_history.size() == 0) { add_identity_contraction(); }
 
     return status;
 }
 
-template<typename Graph_t, typename Graph_t_coarse>
+template <typename Graph_t, typename Graph_t_coarse>
 RETURN_STATUS MultilevelCoarser<Graph_t, Graph_t_coarse>::run(const BspInstance<Graph_t> &inst) {
     return run(inst.getComputationalDag());
 }
 
-template<typename Graph_t, typename Graph_t_coarse>
+template <typename Graph_t, typename Graph_t_coarse>
 void MultilevelCoarser<Graph_t, Graph_t_coarse>::clear_computation_data() {
     dag_history.clear();
     dag_history.shrink_to_fit();
@@ -102,10 +102,9 @@ void MultilevelCoarser<Graph_t, Graph_t_coarse>::clear_computation_data() {
     contraction_maps.shrink_to_fit();
 }
 
-template<typename Graph_t, typename Graph_t_coarse>
+template <typename Graph_t, typename Graph_t_coarse>
 void MultilevelCoarser<Graph_t, Graph_t_coarse>::compactify_dag_history() {
-    if (dag_history.size() < 3)
-        return;
+    if (dag_history.size() < 3) { return; }
 
     size_t dag_indx_first = dag_history.size() - 2;
     size_t map_indx_first = contraction_maps.size() - 2;
@@ -113,11 +112,15 @@ void MultilevelCoarser<Graph_t, Graph_t_coarse>::compactify_dag_history() {
     size_t dag_indx_second = dag_history.size() - 1;
     size_t map_indx_second = contraction_maps.size() - 1;
 
-    if ((static_cast<double>(dag_history[dag_indx_first - 1]->num_vertices()) / static_cast<double>(dag_history[dag_indx_second - 1]->num_vertices())) > 1.25)
+    if ((static_cast<double>(dag_history[dag_indx_first - 1]->num_vertices())
+         / static_cast<double>(dag_history[dag_indx_second - 1]->num_vertices()))
+        > 1.25) {
         return;
+    }
 
     // Compute combined contraction_map
-    std::unique_ptr<std::vector<vertex_idx_t<Graph_t_coarse>>> combi_contraction_map = std::make_unique<std::vector<vertex_idx_t<Graph_t_coarse>>>(contraction_maps[map_indx_first]->size());
+    std::unique_ptr<std::vector<vertex_idx_t<Graph_t_coarse>>> combi_contraction_map
+        = std::make_unique<std::vector<vertex_idx_t<Graph_t_coarse>>>(contraction_maps[map_indx_first]->size());
     for (std::size_t vert = 0; vert < contraction_maps[map_indx_first]->size(); ++vert) {
         combi_contraction_map->at(vert) = contraction_maps[map_indx_second]->at(contraction_maps[map_indx_first]->at(vert));
     }
@@ -136,8 +139,9 @@ void MultilevelCoarser<Graph_t, Graph_t_coarse>::compactify_dag_history() {
     contraction_maps[map_indx_first] = std::move(combi_contraction_map);
 }
 
-template<typename Graph_t, typename Graph_t_coarse>
-RETURN_STATUS MultilevelCoarser<Graph_t, Graph_t_coarse>::add_contraction(const std::vector<vertex_idx_t<Graph_t_coarse>> &contraction_map) {
+template <typename Graph_t, typename Graph_t_coarse>
+RETURN_STATUS MultilevelCoarser<Graph_t, Graph_t_coarse>::add_contraction(
+    const std::vector<vertex_idx_t<Graph_t_coarse>> &contraction_map) {
     std::unique_ptr<Graph_t_coarse> new_graph = std::make_unique<Graph_t_coarse>();
 
     contraction_maps.emplace_back(contraction_map);
@@ -145,9 +149,11 @@ RETURN_STATUS MultilevelCoarser<Graph_t, Graph_t_coarse>::add_contraction(const 
     bool success = false;
 
     if (dag_history.size() == 0) {
-        success = coarser_util::construct_coarse_dag<Graph_t, Graph_t_coarse>(*(getOriginalGraph()), *new_graph, *(contraction_maps.back()));
+        success = coarser_util::construct_coarse_dag<Graph_t, Graph_t_coarse>(
+            *(getOriginalGraph()), *new_graph, *(contraction_maps.back()));
     } else {
-        success = coarser_util::construct_coarse_dag<Graph_t_coarse, Graph_t_coarse>(*(dag_history.back()), *new_graph, *(contraction_maps.back()));
+        success = coarser_util::construct_coarse_dag<Graph_t_coarse, Graph_t_coarse>(
+            *(dag_history.back()), *new_graph, *(contraction_maps.back()));
     }
 
     dag_history.emplace_back(std::move(new_graph));
@@ -160,19 +166,23 @@ RETURN_STATUS MultilevelCoarser<Graph_t, Graph_t_coarse>::add_contraction(const 
     }
 }
 
-template<typename Graph_t, typename Graph_t_coarse>
-RETURN_STATUS MultilevelCoarser<Graph_t, Graph_t_coarse>::add_contraction(std::vector<vertex_idx_t<Graph_t_coarse>> &&contraction_map) {
+template <typename Graph_t, typename Graph_t_coarse>
+RETURN_STATUS MultilevelCoarser<Graph_t, Graph_t_coarse>::add_contraction(
+    std::vector<vertex_idx_t<Graph_t_coarse>> &&contraction_map) {
     std::unique_ptr<Graph_t_coarse> new_graph = std::make_unique<Graph_t_coarse>();
 
-    std::unique_ptr<std::vector<vertex_idx_t<Graph_t_coarse>>> contr_map_ptr(new std::vector<vertex_idx_t<Graph_t_coarse>>(std::move(contraction_map)));
+    std::unique_ptr<std::vector<vertex_idx_t<Graph_t_coarse>>> contr_map_ptr(
+        new std::vector<vertex_idx_t<Graph_t_coarse>>(std::move(contraction_map)));
     contraction_maps.emplace_back(std::move(contr_map_ptr));
 
     bool success = false;
 
     if (dag_history.size() == 0) {
-        success = coarser_util::construct_coarse_dag<Graph_t, Graph_t_coarse>(*(getOriginalGraph()), *new_graph, *(contraction_maps.back()));
+        success = coarser_util::construct_coarse_dag<Graph_t, Graph_t_coarse>(
+            *(getOriginalGraph()), *new_graph, *(contraction_maps.back()));
     } else {
-        success = coarser_util::construct_coarse_dag<Graph_t_coarse, Graph_t_coarse>(*(dag_history.back()), *new_graph, *(contraction_maps.back()));
+        success = coarser_util::construct_coarse_dag<Graph_t_coarse, Graph_t_coarse>(
+            *(dag_history.back()), *new_graph, *(contraction_maps.back()));
     }
 
     dag_history.emplace_back(std::move(new_graph));
@@ -185,31 +195,35 @@ RETURN_STATUS MultilevelCoarser<Graph_t, Graph_t_coarse>::add_contraction(std::v
     }
 }
 
-template<typename Graph_t, typename Graph_t_coarse>
-RETURN_STATUS MultilevelCoarser<Graph_t, Graph_t_coarse>::add_contraction(const std::vector<vertex_idx_t<Graph_t_coarse>> &contraction_map, const Graph_t_coarse &contracted_graph) {
+template <typename Graph_t, typename Graph_t_coarse>
+RETURN_STATUS MultilevelCoarser<Graph_t, Graph_t_coarse>::add_contraction(
+    const std::vector<vertex_idx_t<Graph_t_coarse>> &contraction_map, const Graph_t_coarse &contracted_graph) {
     std::unique_ptr<Graph_t_coarse> graph_ptr(new Graph_t_coarse(contracted_graph));
     dag_history.emplace_back(std::move(graph_ptr));
 
-    std::unique_ptr<std::vector<vertex_idx_t<Graph_t_coarse>>> contr_map_ptr(new std::vector<vertex_idx_t<Graph_t_coarse>>(contraction_map));
+    std::unique_ptr<std::vector<vertex_idx_t<Graph_t_coarse>>> contr_map_ptr(
+        new std::vector<vertex_idx_t<Graph_t_coarse>>(contraction_map));
     contraction_maps.emplace_back(std::move(contr_map_ptr));
 
     compactify_dag_history();
     return RETURN_STATUS::OSP_SUCCESS;
 }
 
-template<typename Graph_t, typename Graph_t_coarse>
-RETURN_STATUS MultilevelCoarser<Graph_t, Graph_t_coarse>::add_contraction(std::vector<vertex_idx_t<Graph_t_coarse>> &&contraction_map, Graph_t_coarse &&contracted_graph) {
+template <typename Graph_t, typename Graph_t_coarse>
+RETURN_STATUS MultilevelCoarser<Graph_t, Graph_t_coarse>::add_contraction(
+    std::vector<vertex_idx_t<Graph_t_coarse>> &&contraction_map, Graph_t_coarse &&contracted_graph) {
     std::unique_ptr<Graph_t_coarse> graph_ptr(new Graph_t_coarse(std::move(contracted_graph)));
     dag_history.emplace_back(std::move(graph_ptr));
 
-    std::unique_ptr<std::vector<vertex_idx_t<Graph_t_coarse>>> contr_map_ptr(new std::vector<vertex_idx_t<Graph_t_coarse>>(std::move(contraction_map)));
+    std::unique_ptr<std::vector<vertex_idx_t<Graph_t_coarse>>> contr_map_ptr(
+        new std::vector<vertex_idx_t<Graph_t_coarse>>(std::move(contraction_map)));
     contraction_maps.emplace_back(std::move(contr_map_ptr));
 
     compactify_dag_history();
     return RETURN_STATUS::OSP_SUCCESS;
 }
 
-template<typename Graph_t, typename Graph_t_coarse>
+template <typename Graph_t, typename Graph_t_coarse>
 std::vector<vertex_idx_t<Graph_t_coarse>> MultilevelCoarser<Graph_t, Graph_t_coarse>::getCombinedContractionMap() const {
     std::vector<vertex_idx_t<Graph_t_coarse>> combinedContractionMap(original_graph->num_vertices());
     std::iota(combinedContractionMap.begin(), combinedContractionMap.end(), 0);
@@ -223,15 +237,15 @@ std::vector<vertex_idx_t<Graph_t_coarse>> MultilevelCoarser<Graph_t, Graph_t_coa
     return combinedContractionMap;
 }
 
-template<typename Graph_t, typename Graph_t_coarse>
-bool MultilevelCoarser<Graph_t, Graph_t_coarse>::coarsenDag(const Graph_t &dag_in, Graph_t_coarse &coarsened_dag,
+template <typename Graph_t, typename Graph_t_coarse>
+bool MultilevelCoarser<Graph_t, Graph_t_coarse>::coarsenDag(const Graph_t &dag_in,
+                                                            Graph_t_coarse &coarsened_dag,
                                                             std::vector<vertex_idx_t<Graph_t_coarse>> &vertex_contraction_map) {
     clear_computation_data();
 
     RETURN_STATUS status = run(dag_in);
 
-    if (status != RETURN_STATUS::OSP_SUCCESS && status != RETURN_STATUS::BEST_FOUND)
-        return false;
+    if (status != RETURN_STATUS::OSP_SUCCESS && status != RETURN_STATUS::BEST_FOUND) { return false; }
 
     assert(dag_history.size() != 0);
     coarsened_dag = *(dag_history.back());
@@ -241,7 +255,7 @@ bool MultilevelCoarser<Graph_t, Graph_t_coarse>::coarsenDag(const Graph_t &dag_i
     return true;
 }
 
-template<typename Graph_t, typename Graph_t_coarse>
+template <typename Graph_t, typename Graph_t_coarse>
 void MultilevelCoarser<Graph_t, Graph_t_coarse>::add_identity_contraction() {
     std::size_t n_vert;
     if (dag_history.size() == 0) {
@@ -257,4 +271,4 @@ void MultilevelCoarser<Graph_t, Graph_t_coarse>::add_identity_contraction() {
     compactify_dag_history();
 }
 
-} // end namespace osp
+}    // end namespace osp

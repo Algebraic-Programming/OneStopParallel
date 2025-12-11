@@ -16,20 +16,20 @@ BOOST_AUTO_TEST_CASE(simple_parent_child_test) {
     using VertexType = graph::vertex_idx;
 
     graph dag;
-    const VertexType v0 = dag.add_vertex(10, 5, 2); // work=10, mem=5, comm=2
-    const VertexType v1 = dag.add_vertex(8, 4, 1);  // work=8, mem=4, comm=1
-    dag.add_edge(v0, v1, 3);                        // edge weight=3
+    const VertexType v0 = dag.add_vertex(10, 5, 2);    // work=10, mem=5, comm=2
+    const VertexType v1 = dag.add_vertex(8, 4, 1);     // work=8, mem=4, comm=1
+    dag.add_edge(v0, v1, 3);                           // edge weight=3
 
     BspArchitecture<graph> arch;
     arch.setNumberOfProcessors(2);
 
     BspInstance<graph> instance(dag, arch);
-    instance.setCommunicationCosts(10); // comm multiplier
+    instance.setCommunicationCosts(10);    // comm multiplier
     instance.setSynchronisationCosts(5);
 
     BspSchedule schedule(instance);
-    schedule.setAssignedProcessors({0, 1}); // v0 on p0, v1 on p1
-    schedule.setAssignedSupersteps({0, 1}); // v0 in step 0, v1 in step 1
+    schedule.setAssignedProcessors({0, 1});    // v0 on p0, v1 on p1
+    schedule.setAssignedSupersteps({0, 1});    // v0 in step 0, v1 in step 1
     schedule.updateNumberOfSupersteps();
 
     using comm_cost_t = kl_bsp_comm_cost_function<graph, double, no_local_search_memory_constraint>;
@@ -54,11 +54,11 @@ BOOST_AUTO_TEST_CASE(simple_parent_child_test) {
 /**
  * Helper to validate comm datastructures by comparing with freshly computed ones
  */
-template<typename Graph>
-bool validate_comm_datastructures(
-    const max_comm_datastructure<Graph, double, kl_active_schedule_t> &comm_ds_incremental,
-    kl_active_schedule_t &active_sched, const BspInstance<Graph> &instance, const std::string &context) {
-
+template <typename Graph>
+bool validate_comm_datastructures(const max_comm_datastructure<Graph, double, kl_active_schedule_t> &comm_ds_incremental,
+                                  kl_active_schedule_t &active_sched,
+                                  const BspInstance<Graph> &instance,
+                                  const std::string &context) {
     // 1. Clone Schedule
     BspSchedule<Graph> current_schedule(instance);
     active_sched.write_schedule(current_schedule);
@@ -122,12 +122,10 @@ bool validate_comm_datastructures(
 /**
  * Helper to validate affinity tables by comparing with freshly computed ones
  */
-template<typename Graph_t, typename comm_cost_function_t, typename MemoryConstraint_t, unsigned window_size,
-         typename cost_t>
-bool validate_affinity_tables(
-    kl_improver_test<Graph_t, comm_cost_function_t, MemoryConstraint_t, window_size, cost_t> &kl_incremental,
-    const BspInstance<Graph_t> &instance, const std::string &context) {
-
+template <typename Graph_t, typename comm_cost_function_t, typename MemoryConstraint_t, unsigned window_size, typename cost_t>
+bool validate_affinity_tables(kl_improver_test<Graph_t, comm_cost_function_t, MemoryConstraint_t, window_size, cost_t> &kl_incremental,
+                              const BspInstance<Graph_t> &instance,
+                              const std::string &context) {
     // 1. Get current schedule from incremental
     BspSchedule<Graph_t> current_schedule(instance);
     kl_incremental.get_active_schedule_test(current_schedule);
@@ -138,17 +136,14 @@ bool validate_affinity_tables(
 
     // Get selected nodes from incremental
     std::vector<vertex_idx_t<Graph_t>> selected_nodes;
-    
+
     const size_t active_count = kl_incremental.get_affinity_table().size();
     for (size_t i = 0; i < active_count; ++i) {
         selected_nodes.push_back(kl_incremental.get_affinity_table().get_selected_nodes()[i]);
     }
-    
 
     std::cout << "\n  [" << context << "] Validating " << selected_nodes.size() << " selected nodes: { ";
-    for (const auto n : selected_nodes) {
-        std::cout << n << " ";
-    }
+    for (const auto n : selected_nodes) { std::cout << n << " "; }
     std::cout << "}" << std::endl;
 
     // Compute affinities for all selected nodes
@@ -159,26 +154,22 @@ bool validate_affinity_tables(
     const unsigned num_steps = kl_incremental.get_active_schedule().num_steps();
 
     // 3. Compare affinity tables for each selected node
-   
-    for (const auto & node : selected_nodes) {    
-    
+
+    for (const auto &node : selected_nodes) {
         const auto &affinity_inc = kl_incremental.get_affinity_table().get_affinity_table(node);
         const auto &affinity_fresh = kl_fresh.get_affinity_table().get_affinity_table(node);
 
         unsigned node_step = kl_incremental.get_active_schedule().assigned_superstep(node);
 
         for (unsigned p = 0; p < num_procs; ++p) {
-            if (p >= affinity_inc.size() || p >= affinity_fresh.size())
-                continue;
+            if (p >= affinity_inc.size() || p >= affinity_fresh.size()) { continue; }
 
             for (unsigned idx = 0; idx < affinity_inc[p].size() && idx < affinity_fresh[p].size(); ++idx) {
                 int step_offset = static_cast<int>(idx) - static_cast<int>(window_size);
                 int target_step_signed = static_cast<int>(node_step) + step_offset;
 
                 // Skip affinities for supersteps that don't exist
-                if (target_step_signed < 0 || target_step_signed >= static_cast<int>(num_steps)) {
-                    continue;
-                }
+                if (target_step_signed < 0 || target_step_signed >= static_cast<int>(num_steps)) { continue; }
 
                 double val_inc = affinity_inc[p][idx];
                 double val_fresh = affinity_fresh[p][idx];
@@ -203,12 +194,12 @@ BOOST_AUTO_TEST_CASE(test_update_datastructure_after_move) {
     graph dag;
 
     // Create 6 vertices with specific comm weights
-    dag.add_vertex(1, 10, 1); // 0
-    dag.add_vertex(1, 1, 1);  // 1
-    dag.add_vertex(1, 5, 1);  // 2
-    dag.add_vertex(1, 1, 1);  // 3
-    dag.add_vertex(1, 2, 1);  // 4
-    dag.add_vertex(1, 1, 1);  // 5
+    dag.add_vertex(1, 10, 1);    // 0
+    dag.add_vertex(1, 1, 1);     // 1
+    dag.add_vertex(1, 5, 1);     // 2
+    dag.add_vertex(1, 1, 1);     // 3
+    dag.add_vertex(1, 2, 1);     // 4
+    dag.add_vertex(1, 1, 1);     // 5
 
     // Add edges
     dag.add_edge(0, 1, 1);
@@ -244,8 +235,8 @@ BOOST_AUTO_TEST_CASE(test_update_datastructure_after_move) {
     double after_recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
     double after_tracked = kl.get_current_cost();
 
-    BOOST_CHECK(validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance,
-                                             "test_update_datastructure_after_move"));
+    BOOST_CHECK(validate_comm_datastructures(
+        kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "test_update_datastructure_after_move"));
     BOOST_CHECK_CLOSE(after_recomputed, after_tracked, 0.00001);
 }
 
@@ -253,10 +244,10 @@ BOOST_AUTO_TEST_CASE(test_multiple_sequential_moves) {
     graph dag;
 
     // Create a linear chain: 0 -> 1 -> 2 -> 3
-    dag.add_vertex(1, 10, 1); // 0
-    dag.add_vertex(1, 8, 1);  // 1
-    dag.add_vertex(1, 6, 1);  // 2
-    dag.add_vertex(1, 4, 1);  // 3
+    dag.add_vertex(1, 10, 1);    // 0
+    dag.add_vertex(1, 8, 1);     // 1
+    dag.add_vertex(1, 6, 1);     // 2
+    dag.add_vertex(1, 4, 1);     // 3
 
     dag.add_edge(0, 1, 1);
     dag.add_edge(1, 2, 1);
@@ -285,24 +276,24 @@ BOOST_AUTO_TEST_CASE(test_multiple_sequential_moves) {
 
     double after_move1_recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
     double after_move1_tracked = kl.get_current_cost();
-    BOOST_CHECK(validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance,
-                                             "test_multiple_sequential_moves_1"));
+    BOOST_CHECK(validate_comm_datastructures(
+        kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "test_multiple_sequential_moves_1"));
     BOOST_CHECK_CLOSE(after_move1_recomputed, after_move1_tracked, 0.00001);
 
     kl.run_inner_iteration_test();
 
     double after_move2_recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
     double after_move2_tracked = kl.get_current_cost();
-    BOOST_CHECK(validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance,
-                                             "test_multiple_sequential_moves_2"));
+    BOOST_CHECK(validate_comm_datastructures(
+        kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "test_multiple_sequential_moves_2"));
     BOOST_CHECK_CLOSE(after_move2_recomputed, after_move2_tracked, 0.00001);
 
     kl.run_inner_iteration_test();
 
     double after_move3_recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
     double after_move3_tracked = kl.get_current_cost();
-    BOOST_CHECK(validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance,
-                                             "test_multiple_sequential_moves_3"));
+    BOOST_CHECK(validate_comm_datastructures(
+        kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "test_multiple_sequential_moves_3"));
     BOOST_CHECK_CLOSE(after_move3_recomputed, after_move3_tracked, 0.00001);
 
     // After: Node 0 has 3 local children
@@ -315,10 +306,10 @@ BOOST_AUTO_TEST_CASE(test_node_with_multiple_children) {
     graph dag;
 
     // Tree structure: Node 0 has three children (1, 2, 3)
-    dag.add_vertex(1, 1, 1); // 0
-    dag.add_vertex(1, 1, 1); // 1
-    dag.add_vertex(1, 1, 1); // 2
-    dag.add_vertex(1, 1, 1); // 3
+    dag.add_vertex(1, 1, 1);    // 0
+    dag.add_vertex(1, 1, 1);    // 1
+    dag.add_vertex(1, 1, 1);    // 2
+    dag.add_vertex(1, 1, 1);    // 3
 
     dag.add_edge(0, 1, 1);
     dag.add_edge(0, 2, 1);
@@ -348,24 +339,24 @@ BOOST_AUTO_TEST_CASE(test_node_with_multiple_children) {
 
     double after_move1_recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
     double after_move1_tracked = kl.get_current_cost();
-    BOOST_CHECK(validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance,
-                                             "test_node_with_multiple_children"));
+    BOOST_CHECK(validate_comm_datastructures(
+        kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "test_node_with_multiple_children"));
     BOOST_CHECK_CLOSE(after_move1_recomputed, after_move1_tracked, 0.00001);
 
     kl.run_inner_iteration_test();
 
     double after_move2_recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
     double after_move2_tracked = kl.get_current_cost();
-    BOOST_CHECK(validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance,
-                                             "test_node_with_multiple_children_2"));
+    BOOST_CHECK(validate_comm_datastructures(
+        kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "test_node_with_multiple_children_2"));
     BOOST_CHECK_CLOSE(after_move2_recomputed, after_move2_tracked, 0.00001);
 
     kl.run_inner_iteration_test();
 
     double after_move3_recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
     double after_move3_tracked = kl.get_current_cost();
-    BOOST_CHECK(validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance,
-                                             "test_node_with_multiple_children_3"));
+    BOOST_CHECK(validate_comm_datastructures(
+        kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "test_node_with_multiple_children_3"));
     BOOST_CHECK_CLOSE(after_move3_recomputed, after_move3_tracked, 0.00001);
 
     // After: Node 0 has 3 local children
@@ -378,9 +369,9 @@ BOOST_AUTO_TEST_CASE(test_cross_step_moves) {
     graph dag;
 
     // 0 -> 1 -> 2
-    dag.add_vertex(1, 10, 1); // 0
-    dag.add_vertex(1, 8, 1);  // 1
-    dag.add_vertex(1, 6, 1);  // 2
+    dag.add_vertex(1, 10, 1);    // 0
+    dag.add_vertex(1, 8, 1);     // 1
+    dag.add_vertex(1, 6, 1);     // 2
 
     dag.add_edge(0, 1, 1);
     dag.add_edge(1, 2, 1);
@@ -408,8 +399,8 @@ BOOST_AUTO_TEST_CASE(test_cross_step_moves) {
 
     double after_move1_recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
     double after_move1_tracked = kl.get_current_cost();
-    BOOST_CHECK(validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance,
-                                             "test_cross_step_moves_1"));
+    BOOST_CHECK(validate_comm_datastructures(
+        kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "test_cross_step_moves_1"));
     BOOST_CHECK_CLOSE(after_move1_recomputed, after_move1_tracked, 0.00001);
 }
 
@@ -423,8 +414,8 @@ BOOST_AUTO_TEST_CASE(test_complex_scenario) {
     const auto v4 = dag.add_vertex(5, 6, 2);
     const auto v5 = dag.add_vertex(6, 5, 6);
     const auto v6 = dag.add_vertex(7, 4, 2);
-    dag.add_vertex(8, 3, 4);                 // v7 (index 6)
-    const auto v8 = dag.add_vertex(9, 2, 1); // v8 (index 7)
+    dag.add_vertex(8, 3, 4);                    // v7 (index 6)
+    const auto v8 = dag.add_vertex(9, 2, 1);    // v8 (index 7)
 
     dag.add_edge(v1, v2, 2);
     dag.add_edge(v1, v3, 2);
@@ -436,7 +427,7 @@ BOOST_AUTO_TEST_CASE(test_complex_scenario) {
     dag.add_edge(v4, v8, 9);
 
     BspArchitecture<graph> arch;
-    arch.setNumberOfProcessors(2); // P0, P1
+    arch.setNumberOfProcessors(2);    // P0, P1
     arch.setCommunicationCosts(1);
     arch.setSynchronisationCosts(1);
 
@@ -458,16 +449,14 @@ BOOST_AUTO_TEST_CASE(test_complex_scenario) {
 
     double after_move1_recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
     double after_move1_tracked = kl.get_current_cost();
-    BOOST_CHECK(validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance,
-                                             "complex_move1"));
+    BOOST_CHECK(validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "complex_move1"));
     BOOST_CHECK_CLOSE(after_move1_recomputed, after_move1_tracked, 0.00001);
 
     kl.run_inner_iteration_test();
 
     double after_move2_recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
     double after_move2_tracked = kl.get_current_cost();
-    BOOST_CHECK(validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance,
-                                             "complex_move2"));
+    BOOST_CHECK(validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "complex_move2"));
     BOOST_CHECK(validate_affinity_tables(kl, instance, "complex_move2"));
     BOOST_CHECK_CLOSE(after_move2_recomputed, after_move2_tracked, 0.00001);
 
@@ -475,24 +464,21 @@ BOOST_AUTO_TEST_CASE(test_complex_scenario) {
 
     double after_move3_recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
     double after_move3_tracked = kl.get_current_cost();
-    BOOST_CHECK(validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance,
-                                             "complex_move3"));
+    BOOST_CHECK(validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "complex_move3"));
     BOOST_CHECK_CLOSE(after_move3_recomputed, after_move3_tracked, 0.00001);
 
     kl.run_inner_iteration_test();
 
     double after_move4_recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
     double after_move4_tracked = kl.get_current_cost();
-    BOOST_CHECK(validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance,
-                                             "complex_move4"));
+    BOOST_CHECK(validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "complex_move4"));
     BOOST_CHECK_CLOSE(after_move4_recomputed, after_move4_tracked, 0.00001);
 
     kl.run_inner_iteration_test();
 
     double after_move5_recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
     double after_move5_tracked = kl.get_current_cost();
-    BOOST_CHECK(validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance,
-                                             "complex_move5"));
+    BOOST_CHECK(validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "complex_move5"));
     BOOST_CHECK_CLOSE(after_move5_recomputed, after_move5_tracked, 0.00001);
 }
 
@@ -505,8 +491,8 @@ BOOST_AUTO_TEST_CASE(test_complex_scenario_only_compute) {
     const auto v4 = dag.add_vertex(5, 6, 2);
     const auto v5 = dag.add_vertex(6, 5, 6);
     const auto v6 = dag.add_vertex(7, 4, 2);
-    const auto v7 = dag.add_vertex(8, 3, 4); // v7 (index 6)
-    const auto v8 = dag.add_vertex(9, 2, 1); // v8 (index 7)
+    const auto v7 = dag.add_vertex(8, 3, 4);    // v7 (index 6)
+    const auto v8 = dag.add_vertex(9, 2, 1);    // v8 (index 7)
 
     dag.add_edge(v1, v2, 2);
     dag.add_edge(v1, v3, 2);
@@ -518,7 +504,7 @@ BOOST_AUTO_TEST_CASE(test_complex_scenario_only_compute) {
     dag.add_edge(v4, v8, 9);
 
     BspArchitecture<graph> arch;
-    arch.setNumberOfProcessors(2); // P0, P1
+    arch.setNumberOfProcessors(2);    // P0, P1
     arch.setCommunicationCosts(1);
     arch.setSynchronisationCosts(1);
 
@@ -538,8 +524,7 @@ BOOST_AUTO_TEST_CASE(test_complex_scenario_only_compute) {
     kl.insert_gain_heap_test({v1});
     kl.run_inner_iteration_test();
 
-    BOOST_CHECK(validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance,
-                                             "complex_move1"));
+    BOOST_CHECK(validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "complex_move1"));
     BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
 
     kl_improver_test kl2;
@@ -548,8 +533,7 @@ BOOST_AUTO_TEST_CASE(test_complex_scenario_only_compute) {
     kl2.insert_gain_heap_test({v2});
     kl2.run_inner_iteration_test();
 
-    BOOST_CHECK(validate_comm_datastructures(kl2.get_comm_cost_f().comm_ds, kl2.get_active_schedule(), instance,
-                                             "complex_move2"));
+    BOOST_CHECK(validate_comm_datastructures(kl2.get_comm_cost_f().comm_ds, kl2.get_active_schedule(), instance, "complex_move2"));
     BOOST_CHECK_CLOSE(kl2.get_comm_cost_f().compute_schedule_cost_test(), kl2.get_current_cost(), 0.00001);
 
     kl_improver_test kl3;
@@ -558,8 +542,7 @@ BOOST_AUTO_TEST_CASE(test_complex_scenario_only_compute) {
     kl3.insert_gain_heap_test({v3});
     kl3.run_inner_iteration_test();
 
-    BOOST_CHECK(validate_comm_datastructures(kl3.get_comm_cost_f().comm_ds, kl3.get_active_schedule(), instance,
-                                             "complex_move3"));
+    BOOST_CHECK(validate_comm_datastructures(kl3.get_comm_cost_f().comm_ds, kl3.get_active_schedule(), instance, "complex_move3"));
     BOOST_CHECK_CLOSE(kl3.get_comm_cost_f().compute_schedule_cost_test(), kl3.get_current_cost(), 0.00001);
 
     kl_improver_test kl4;
@@ -568,8 +551,7 @@ BOOST_AUTO_TEST_CASE(test_complex_scenario_only_compute) {
     kl4.insert_gain_heap_test({v4});
     kl4.run_inner_iteration_test();
 
-    BOOST_CHECK(validate_comm_datastructures(kl4.get_comm_cost_f().comm_ds, kl4.get_active_schedule(), instance,
-                                             "complex_move4"));
+    BOOST_CHECK(validate_comm_datastructures(kl4.get_comm_cost_f().comm_ds, kl4.get_active_schedule(), instance, "complex_move4"));
     BOOST_CHECK_CLOSE(kl4.get_comm_cost_f().compute_schedule_cost_test(), kl4.get_current_cost(), 0.00001);
 
     kl_improver_test kl5;
@@ -578,8 +560,7 @@ BOOST_AUTO_TEST_CASE(test_complex_scenario_only_compute) {
     kl5.insert_gain_heap_test({v5});
     kl5.run_inner_iteration_test();
 
-    BOOST_CHECK(validate_comm_datastructures(kl5.get_comm_cost_f().comm_ds, kl5.get_active_schedule(), instance,
-                                             "complex_move5"));
+    BOOST_CHECK(validate_comm_datastructures(kl5.get_comm_cost_f().comm_ds, kl5.get_active_schedule(), instance, "complex_move5"));
     BOOST_CHECK_CLOSE(kl5.get_comm_cost_f().compute_schedule_cost_test(), kl5.get_current_cost(), 0.00001);
 
     kl_improver_test kl6;
@@ -588,8 +569,7 @@ BOOST_AUTO_TEST_CASE(test_complex_scenario_only_compute) {
     kl6.insert_gain_heap_test({v6});
     kl6.run_inner_iteration_test();
 
-    BOOST_CHECK(validate_comm_datastructures(kl6.get_comm_cost_f().comm_ds, kl6.get_active_schedule(), instance,
-                                             "complex_move6"));
+    BOOST_CHECK(validate_comm_datastructures(kl6.get_comm_cost_f().comm_ds, kl6.get_active_schedule(), instance, "complex_move6"));
     BOOST_CHECK_CLOSE(kl6.get_comm_cost_f().compute_schedule_cost_test(), kl6.get_current_cost(), 0.00001);
 
     kl_improver_test kl7;
@@ -598,8 +578,7 @@ BOOST_AUTO_TEST_CASE(test_complex_scenario_only_compute) {
     kl7.insert_gain_heap_test({v7});
     kl7.run_inner_iteration_test();
 
-    BOOST_CHECK(validate_comm_datastructures(kl7.get_comm_cost_f().comm_ds, kl7.get_active_schedule(), instance,
-                                             "complex_move7"));
+    BOOST_CHECK(validate_comm_datastructures(kl7.get_comm_cost_f().comm_ds, kl7.get_active_schedule(), instance, "complex_move7"));
     BOOST_CHECK_CLOSE(kl7.get_comm_cost_f().compute_schedule_cost_test(), kl7.get_current_cost(), 0.00001);
 
     kl_improver_test kl8;
@@ -608,8 +587,7 @@ BOOST_AUTO_TEST_CASE(test_complex_scenario_only_compute) {
     kl8.insert_gain_heap_test({v8});
     kl8.run_inner_iteration_test();
 
-    BOOST_CHECK(validate_comm_datastructures(kl8.get_comm_cost_f().comm_ds, kl8.get_active_schedule(), instance,
-                                             "complex_move8"));
+    BOOST_CHECK(validate_comm_datastructures(kl8.get_comm_cost_f().comm_ds, kl8.get_active_schedule(), instance, "complex_move8"));
     BOOST_CHECK_CLOSE(kl8.get_comm_cost_f().compute_schedule_cost_test(), kl8.get_current_cost(), 0.00001);
 }
 
@@ -622,8 +600,8 @@ BOOST_AUTO_TEST_CASE(test_complex_scenario_only_compute_2) {
     const auto v4 = dag.add_vertex(5, 6, 2);
     const auto v5 = dag.add_vertex(6, 5, 6);
     const auto v6 = dag.add_vertex(7, 4, 2);
-    const auto v7 = dag.add_vertex(8, 3, 4); // v7 (index 6)
-    const auto v8 = dag.add_vertex(9, 2, 1); // v8 (index 7)
+    const auto v7 = dag.add_vertex(8, 3, 4);    // v7 (index 6)
+    const auto v8 = dag.add_vertex(9, 2, 1);    // v8 (index 7)
 
     dag.add_edge(v1, v2, 2);
     dag.add_edge(v1, v5, 2);
@@ -645,7 +623,7 @@ BOOST_AUTO_TEST_CASE(test_complex_scenario_only_compute_2) {
     dag.add_edge(v7, v8, 2);
 
     BspArchitecture<graph> arch;
-    arch.setNumberOfProcessors(2); // P0, P1
+    arch.setNumberOfProcessors(2);    // P0, P1
     arch.setCommunicationCosts(1);
     arch.setSynchronisationCosts(1);
 
@@ -665,8 +643,7 @@ BOOST_AUTO_TEST_CASE(test_complex_scenario_only_compute_2) {
     kl.insert_gain_heap_test({v1});
     kl.run_inner_iteration_test();
 
-    BOOST_CHECK(validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance,
-                                             "complex_move1"));
+    BOOST_CHECK(validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "complex_move1"));
     BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
 
     kl_improver_test kl2;
@@ -675,8 +652,7 @@ BOOST_AUTO_TEST_CASE(test_complex_scenario_only_compute_2) {
     kl2.insert_gain_heap_test({v2});
     kl2.run_inner_iteration_test();
 
-    BOOST_CHECK(validate_comm_datastructures(kl2.get_comm_cost_f().comm_ds, kl2.get_active_schedule(), instance,
-                                             "complex_move2"));
+    BOOST_CHECK(validate_comm_datastructures(kl2.get_comm_cost_f().comm_ds, kl2.get_active_schedule(), instance, "complex_move2"));
     BOOST_CHECK_CLOSE(kl2.get_comm_cost_f().compute_schedule_cost_test(), kl2.get_current_cost(), 0.00001);
 
     kl_improver_test kl3;
@@ -685,8 +661,7 @@ BOOST_AUTO_TEST_CASE(test_complex_scenario_only_compute_2) {
     kl3.insert_gain_heap_test({v3});
     kl3.run_inner_iteration_test();
 
-    BOOST_CHECK(validate_comm_datastructures(kl3.get_comm_cost_f().comm_ds, kl3.get_active_schedule(), instance,
-                                             "complex_move3"));
+    BOOST_CHECK(validate_comm_datastructures(kl3.get_comm_cost_f().comm_ds, kl3.get_active_schedule(), instance, "complex_move3"));
     BOOST_CHECK_CLOSE(kl3.get_comm_cost_f().compute_schedule_cost_test(), kl3.get_current_cost(), 0.00001);
 
     kl_improver_test kl4;
@@ -695,8 +670,7 @@ BOOST_AUTO_TEST_CASE(test_complex_scenario_only_compute_2) {
     kl4.insert_gain_heap_test({v4});
     kl4.run_inner_iteration_test();
 
-    BOOST_CHECK(validate_comm_datastructures(kl4.get_comm_cost_f().comm_ds, kl4.get_active_schedule(), instance,
-                                             "complex_move4"));
+    BOOST_CHECK(validate_comm_datastructures(kl4.get_comm_cost_f().comm_ds, kl4.get_active_schedule(), instance, "complex_move4"));
     BOOST_CHECK_CLOSE(kl4.get_comm_cost_f().compute_schedule_cost_test(), kl4.get_current_cost(), 0.00001);
 
     kl_improver_test kl5;
@@ -705,8 +679,7 @@ BOOST_AUTO_TEST_CASE(test_complex_scenario_only_compute_2) {
     kl5.insert_gain_heap_test({v5});
     kl5.run_inner_iteration_test();
 
-    BOOST_CHECK(validate_comm_datastructures(kl5.get_comm_cost_f().comm_ds, kl5.get_active_schedule(), instance,
-                                             "complex_move5"));
+    BOOST_CHECK(validate_comm_datastructures(kl5.get_comm_cost_f().comm_ds, kl5.get_active_schedule(), instance, "complex_move5"));
     BOOST_CHECK_CLOSE(kl5.get_comm_cost_f().compute_schedule_cost_test(), kl5.get_current_cost(), 0.00001);
 
     kl_improver_test kl6;
@@ -715,8 +688,7 @@ BOOST_AUTO_TEST_CASE(test_complex_scenario_only_compute_2) {
     kl6.insert_gain_heap_test({v6});
     kl6.run_inner_iteration_test();
 
-    BOOST_CHECK(validate_comm_datastructures(kl6.get_comm_cost_f().comm_ds, kl6.get_active_schedule(), instance,
-                                             "complex_move6"));
+    BOOST_CHECK(validate_comm_datastructures(kl6.get_comm_cost_f().comm_ds, kl6.get_active_schedule(), instance, "complex_move6"));
     BOOST_CHECK_CLOSE(kl6.get_comm_cost_f().compute_schedule_cost_test(), kl6.get_current_cost(), 0.00001);
 
     kl_improver_test kl7;
@@ -725,8 +697,7 @@ BOOST_AUTO_TEST_CASE(test_complex_scenario_only_compute_2) {
     kl7.insert_gain_heap_test({v7});
     kl7.run_inner_iteration_test();
 
-    BOOST_CHECK(validate_comm_datastructures(kl7.get_comm_cost_f().comm_ds, kl7.get_active_schedule(), instance,
-                                             "complex_move7"));
+    BOOST_CHECK(validate_comm_datastructures(kl7.get_comm_cost_f().comm_ds, kl7.get_active_schedule(), instance, "complex_move7"));
     BOOST_CHECK_CLOSE(kl7.get_comm_cost_f().compute_schedule_cost_test(), kl7.get_current_cost(), 0.00001);
 
     kl_improver_test kl8;
@@ -735,8 +706,7 @@ BOOST_AUTO_TEST_CASE(test_complex_scenario_only_compute_2) {
     kl8.insert_gain_heap_test({v8});
     kl8.run_inner_iteration_test();
 
-    BOOST_CHECK(validate_comm_datastructures(kl8.get_comm_cost_f().comm_ds, kl8.get_active_schedule(), instance,
-                                             "complex_move8"));
+    BOOST_CHECK(validate_comm_datastructures(kl8.get_comm_cost_f().comm_ds, kl8.get_active_schedule(), instance, "complex_move8"));
     BOOST_CHECK_CLOSE(kl8.get_comm_cost_f().compute_schedule_cost_test(), kl8.get_current_cost(), 0.00001);
 }
 
@@ -745,7 +715,7 @@ BOOST_AUTO_TEST_CASE(test_grid_graph_complex_moves) {
     graph dag = osp::construct_grid_dag<graph>(5, 5);
 
     BspArchitecture<graph> arch;
-    arch.setNumberOfProcessors(4); // P0..P3
+    arch.setNumberOfProcessors(4);    // P0..P3
     arch.setCommunicationCosts(1);
     arch.setSynchronisationCosts(1);
 
@@ -791,32 +761,28 @@ BOOST_AUTO_TEST_CASE(test_grid_graph_complex_moves) {
 
     double after_move1_recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
     double after_move1_tracked = kl.get_current_cost();
-    BOOST_CHECK(
-        validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "grid_move1"));
+    BOOST_CHECK(validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "grid_move1"));
     BOOST_CHECK_CLOSE(after_move1_recomputed, after_move1_tracked, 0.00001);
 
     kl.run_inner_iteration_test();
 
     double after_move2_recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
     double after_move2_tracked = kl.get_current_cost();
-    BOOST_CHECK(
-        validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "grid_move2"));
+    BOOST_CHECK(validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "grid_move2"));
     BOOST_CHECK_CLOSE(after_move2_recomputed, after_move2_tracked, 0.00001);
 
     kl.run_inner_iteration_test();
 
     double after_move3_recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
     double after_move3_tracked = kl.get_current_cost();
-    BOOST_CHECK(
-        validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "grid_move3"));
+    BOOST_CHECK(validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "grid_move3"));
     BOOST_CHECK_CLOSE(after_move3_recomputed, after_move3_tracked, 0.00001);
 
     kl.run_inner_iteration_test();
 
     double after_move4_recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
     double after_move4_tracked = kl.get_current_cost();
-    BOOST_CHECK(
-        validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "grid_move4"));
+    BOOST_CHECK(validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "grid_move4"));
     BOOST_CHECK_CLOSE(after_move4_recomputed, after_move4_tracked, 0.00001);
 }
 
@@ -867,32 +833,28 @@ BOOST_AUTO_TEST_CASE(test_butterfly_graph_moves) {
 
     double after_move1_recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
     double after_move1_tracked = kl.get_current_cost();
-    BOOST_CHECK(validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance,
-                                             "butterfly_move1"));
+    BOOST_CHECK(validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "butterfly_move1"));
     BOOST_CHECK_CLOSE(after_move1_recomputed, after_move1_tracked, 0.00001);
 
     kl.run_inner_iteration_test();
 
     double after_move2_recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
     double after_move2_tracked = kl.get_current_cost();
-    BOOST_CHECK(validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance,
-                                             "butterfly_move2"));
+    BOOST_CHECK(validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "butterfly_move2"));
     BOOST_CHECK_CLOSE(after_move2_recomputed, after_move2_tracked, 0.00001);
 
     kl.run_inner_iteration_test();
 
     double after_move3_recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
     double after_move3_tracked = kl.get_current_cost();
-    BOOST_CHECK(validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance,
-                                             "butterfly_move3"));
+    BOOST_CHECK(validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "butterfly_move3"));
     BOOST_CHECK_CLOSE(after_move3_recomputed, after_move3_tracked, 0.00001);
 
     kl.run_inner_iteration_test();
 
     double after_move4_recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
     double after_move4_tracked = kl.get_current_cost();
-    BOOST_CHECK(validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance,
-                                             "butterfly_move4"));
+    BOOST_CHECK(validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "butterfly_move4"));
     BOOST_CHECK_CLOSE(after_move4_recomputed, after_move4_tracked, 0.00001);
 }
 
@@ -937,31 +899,27 @@ BOOST_AUTO_TEST_CASE(test_ladder_graph_moves) {
 
     double after_move1_recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
     double after_move1_tracked = kl.get_current_cost();
-    BOOST_CHECK(
-        validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "ladder_move1"));
+    BOOST_CHECK(validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "ladder_move1"));
     BOOST_CHECK_CLOSE(after_move1_recomputed, after_move1_tracked, 0.00001);
 
     kl.run_inner_iteration_test();
 
     double after_move2_recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
     double after_move2_tracked = kl.get_current_cost();
-    BOOST_CHECK(
-        validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "ladder_move2"));
+    BOOST_CHECK(validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "ladder_move2"));
     BOOST_CHECK_CLOSE(after_move2_recomputed, after_move2_tracked, 0.00001);
 
     kl.run_inner_iteration_test();
 
     double after_move3_recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
     double after_move3_tracked = kl.get_current_cost();
-    BOOST_CHECK(
-        validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "ladder_move3"));
+    BOOST_CHECK(validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "ladder_move3"));
     BOOST_CHECK_CLOSE(after_move3_recomputed, after_move3_tracked, 0.00001);
 
     kl.run_inner_iteration_test();
 
     double after_move4_recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
     double after_move4_tracked = kl.get_current_cost();
-    BOOST_CHECK(
-        validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "ladder_move4"));
+    BOOST_CHECK(validate_comm_datastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "ladder_move4"));
     BOOST_CHECK_CLOSE(after_move4_recomputed, after_move4_tracked, 0.00001);
 }

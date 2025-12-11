@@ -18,24 +18,24 @@ limitations under the License.
 
 #pragma once
 
+#include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <sstream>
 #include <string>
 #include <vector>
-#include <limits>
-#include <filesystem>
 
-#include "osp/concepts/computational_dag_concept.hpp"
-#include "osp/graph_algorithms/directed_graph_util.hpp"
 #include "osp/auxiliary/io/filepath_checker.hpp"
+#include "osp/concepts/computational_dag_concept.hpp"
 #include "osp/concepts/constructable_computational_dag_concept.hpp"
+#include "osp/graph_algorithms/directed_graph_util.hpp"
 
 namespace osp {
 namespace file_reader {
 
-template<typename Graph_t>
-bool readComputationalDagHyperdagFormat(std::ifstream& infile, Graph_t& graph) {
+template <typename Graph_t>
+bool readComputationalDagHyperdagFormat(std::ifstream &infile, Graph_t &graph) {
     std::string line;
 
     // Skip comment lines starting with '%'
@@ -54,9 +54,7 @@ bool readComputationalDagHyperdagFormat(std::ifstream& infile, Graph_t& graph) {
     }
 
     const vertex_idx_t<Graph_t> num_nodes = static_cast<vertex_idx_t<Graph_t>>(N);
-    for (vertex_idx_t<Graph_t> i = 0; i < num_nodes; i++) {
-        graph.add_vertex(1, 1, 1);
-    }
+    for (vertex_idx_t<Graph_t> i = 0; i < num_nodes; i++) { graph.add_vertex(1, 1, 1); }
 
     std::vector<int> edgeSource(static_cast<std::size_t>(hEdges), -1);
 
@@ -84,8 +82,7 @@ bool readComputationalDagHyperdagFormat(std::ifstream& infile, Graph_t& graph) {
         if (edgeSource[edgeIdx] == -1) {
             edgeSource[edgeIdx] = node;
         } else {
-            graph.add_edge(static_cast<vertex_idx_t<Graph_t>>(edgeSource[edgeIdx]),
-                        static_cast<vertex_idx_t<Graph_t>>(node));
+            graph.add_edge(static_cast<vertex_idx_t<Graph_t>>(edgeSource[edgeIdx]), static_cast<vertex_idx_t<Graph_t>>(node));
         }
     }
 
@@ -120,7 +117,7 @@ bool readComputationalDagHyperdagFormat(std::ifstream& infile, Graph_t& graph) {
         }
     }
     */
-    
+
     if (!is_acyclic(graph)) {
         std::cerr << "Error: DAG is not acyclic.\n";
         return false;
@@ -129,8 +126,8 @@ bool readComputationalDagHyperdagFormat(std::ifstream& infile, Graph_t& graph) {
     return true;
 }
 
-template<typename Graph_t>
-bool readComputationalDagHyperdagFormat(const std::string& filename, Graph_t& graph) {
+template <typename Graph_t>
+bool readComputationalDagHyperdagFormat(const std::string &filename, Graph_t &graph) {
     if (!isPathSafe(filename)) {
         std::cerr << "Error: Unsafe file path (possible traversal or invalid type).\n";
         return false;
@@ -145,9 +142,8 @@ bool readComputationalDagHyperdagFormat(const std::string& filename, Graph_t& gr
     return readComputationalDagHyperdagFormat(infile, graph);
 }
 
-
-template<typename Graph_t>
-bool readComputationalDagHyperdagFormatDB(std::ifstream& infile, Graph_t& graph) {
+template <typename Graph_t>
+bool readComputationalDagHyperdagFormatDB(std::ifstream &infile, Graph_t &graph) {
     std::string line;
 
     // Skip comment lines
@@ -182,7 +178,7 @@ bool readComputationalDagHyperdagFormatDB(std::ifstream& infile, Graph_t& graph)
             std::cerr << "Warning: Could not read hyperedge ID for hyperedge " << i << ".\n";
             continue;
         }
-        edgeStream >> comm_weight >> mem_weight; // optional
+        edgeStream >> comm_weight >> mem_weight;    // optional
 
         if (hEdge < 0 || hEdge >= hEdges) {
             std::cerr << "Error: Hyperedge ID " << hEdge << " is out of range (0 to " << hEdges - 1 << ").\n";
@@ -219,7 +215,7 @@ bool readComputationalDagHyperdagFormatDB(std::ifstream& infile, Graph_t& graph)
 
         if constexpr (has_typed_vertices_v<Graph_t>) {
             graph.set_vertex_type(static_cast<vertex_idx_t<Graph_t>>(node), static_cast<v_type_t<Graph_t>>(type));
-        }  
+        }
     }
 
     // Resize(N);
@@ -254,16 +250,14 @@ bool readComputationalDagHyperdagFormatDB(std::ifstream& infile, Graph_t& graph)
             graph.set_vertex_mem_weight(static_cast<vertex_idx_t<Graph_t>>(node), hyperedge_mem_weights[edgeIdx]);
         } else {
             if constexpr (is_modifiable_cdag_comm_edge_v<Graph_t>) {
-
                 auto edge = graph.add_edge(static_cast<vertex_idx_t<Graph_t>>(edgeSource[edgeIdx]),
-                                    static_cast<vertex_idx_t<Graph_t>>(nodeIdx));
+                                           static_cast<vertex_idx_t<Graph_t>>(nodeIdx));
 
-                graph.set_edge_comm_weight(edge.first,
-                    static_cast<e_commw_t<Graph_t>>(hyperedge_comm_weights[edgeIdx]));
+                graph.set_edge_comm_weight(edge.first, static_cast<e_commw_t<Graph_t>>(hyperedge_comm_weights[edgeIdx]));
 
             } else {
                 graph.add_edge(static_cast<vertex_idx_t<Graph_t>>(edgeSource[edgeIdx]),
-                                    static_cast<vertex_idx_t<Graph_t>>(nodeIdx));
+                               static_cast<vertex_idx_t<Graph_t>>(nodeIdx));
             }
         }
     }
@@ -276,8 +270,8 @@ bool readComputationalDagHyperdagFormatDB(std::ifstream& infile, Graph_t& graph)
     return true;
 }
 
-template<typename Graph_t>
-bool readComputationalDagHyperdagFormatDB(const std::string& filename, Graph_t& graph) {
+template <typename Graph_t>
+bool readComputationalDagHyperdagFormatDB(const std::string &filename, Graph_t &graph) {
     // Optional: limit file extension for safety
     if (std::filesystem::path(filename).extension() != ".hdag") {
         std::cerr << "Error: Only .hdag files are accepted.\n";
@@ -298,4 +292,5 @@ bool readComputationalDagHyperdagFormatDB(const std::string& filename, Graph_t& 
     return readComputationalDagHyperdagFormatDB(infile, graph);
 }
 
-}} // namespace osp::file_reader
+}    // namespace file_reader
+}    // namespace osp

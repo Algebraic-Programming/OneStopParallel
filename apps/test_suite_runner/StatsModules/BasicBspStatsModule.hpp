@@ -18,43 +18,36 @@ limitations under the License.
 
 #pragma once
 
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
 
 #include "IStatsModule.hpp"
 #include "osp/bsp/model/IBspScheduleEval.hpp"
-#include "osp/graph_implementations/boost_graphs/boost_graph.hpp" // For graph_t
+#include "osp/graph_implementations/boost_graphs/boost_graph.hpp"    // For graph_t
 
 namespace osp {
 
-template<typename TargetObjectType>
-class BasicBspStatsModule : public IStatisticModule<TargetObjectType> { 
-public:
+template <typename TargetObjectType>
+class BasicBspStatsModule : public IStatisticModule<TargetObjectType> {
+  public:
+  private:
+    const std::vector<std::string> metric_headers = {"BspCost", "WorkCost", "CommCost", "Supersteps"};
 
-private:
-    const std::vector<std::string> metric_headers = {
-        "BspCost", "WorkCost", "CommCost", "Supersteps"
-    };
+  public:
+    std::vector<std::string> get_metric_headers() const override { return metric_headers; }
 
-public:
-
-    std::vector<std::string> get_metric_headers() const override {
-        return metric_headers;
-    }
-
-    std::map<std::string, std::string> record_statistics(
-                            const TargetObjectType& schedule, 
-                            std::ofstream& /*log_stream*/) const override { 
+    std::map<std::string, std::string> record_statistics(const TargetObjectType &schedule,
+                                                         std::ofstream & /*log_stream*/) const override {
         std::map<std::string, std::string> stats;
         const auto bsp_cost = schedule.computeCosts();
         const auto work_cost = schedule.computeWorkCosts();
         stats["BspCost"] = std::to_string(bsp_cost);
         stats["WorkCost"] = std::to_string(work_cost);
-        stats["CommCost"] = std::to_string(bsp_cost - work_cost); 
+        stats["CommCost"] = std::to_string(bsp_cost - work_cost);
         stats["Supersteps"] = std::to_string(schedule.numberOfSupersteps());
         return stats;
     }
 };
 
-} // namespace osp
+}    // namespace osp

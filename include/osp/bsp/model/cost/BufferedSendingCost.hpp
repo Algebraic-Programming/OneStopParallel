@@ -18,10 +18,11 @@ limitations under the License.
 
 #pragma once
 
-#include "osp/bsp/model/cost/CostModelHelpers.hpp"
-#include "osp/concepts/computational_dag_concept.hpp"
 #include <algorithm>
 #include <vector>
+
+#include "osp/bsp/model/cost/CostModelHelpers.hpp"
+#include "osp/concepts/computational_dag_concept.hpp"
 
 namespace osp {
 
@@ -29,9 +30,8 @@ namespace osp {
  * @struct BufferedSendingCost
  * @brief Implements the buffered sending cost model.
  */
-template<typename Graph_t>
+template <typename Graph_t>
 struct BufferedSendingCost {
-
     using cost_type = v_commw_t<Graph_t>;
 
     cost_type operator()(const BspSchedule<Graph_t> &schedule) const {
@@ -41,26 +41,29 @@ struct BufferedSendingCost {
         const auto &node_to_superstep_assignment = schedule.assignedSupersteps();
         const auto staleness = schedule.getStaleness();
 
-        std::vector<std::vector<v_commw_t<Graph_t>>> rec(instance.numberOfProcessors(), std::vector<v_commw_t<Graph_t>>(number_of_supersteps, 0));
-        std::vector<std::vector<v_commw_t<Graph_t>>> send(instance.numberOfProcessors(), std::vector<v_commw_t<Graph_t>>(number_of_supersteps, 0));
+        std::vector<std::vector<v_commw_t<Graph_t>>> rec(instance.numberOfProcessors(),
+                                                         std::vector<v_commw_t<Graph_t>>(number_of_supersteps, 0));
+        std::vector<std::vector<v_commw_t<Graph_t>>> send(instance.numberOfProcessors(),
+                                                          std::vector<v_commw_t<Graph_t>>(number_of_supersteps, 0));
 
         for (vertex_idx_t<Graph_t> node = 0; node < instance.numberOfVertices(); node++) {
-
             std::vector<unsigned> step_needed(instance.numberOfProcessors(), number_of_supersteps);
             for (const auto &target : instance.getComputationalDag().children(node)) {
-
                 if (node_to_processor_assignment[node] != node_to_processor_assignment[target]) {
-                    step_needed[node_to_processor_assignment[target]] = std::min(step_needed[node_to_processor_assignment[target]], node_to_superstep_assignment[target]);
+                    step_needed[node_to_processor_assignment[target]]
+                        = std::min(step_needed[node_to_processor_assignment[target]], node_to_superstep_assignment[target]);
                 }
             }
 
             for (unsigned proc = 0; proc < instance.numberOfProcessors(); proc++) {
-
                 if (step_needed[proc] < number_of_supersteps) {
-                    send[node_to_processor_assignment[node]][node_to_superstep_assignment[node]] += instance.sendCosts(node_to_processor_assignment[node], proc) * instance.getComputationalDag().vertex_comm_weight(node);
+                    send[node_to_processor_assignment[node]][node_to_superstep_assignment[node]]
+                        += instance.sendCosts(node_to_processor_assignment[node], proc)
+                           * instance.getComputationalDag().vertex_comm_weight(node);
 
                     if (step_needed[proc] >= staleness) {
-                        rec[proc][step_needed[proc] - staleness] += instance.sendCosts(node_to_processor_assignment[node], proc) * instance.getComputationalDag().vertex_comm_weight(node);
+                        rec[proc][step_needed[proc] - staleness] += instance.sendCosts(node_to_processor_assignment[node], proc)
+                                                                    * instance.getComputationalDag().vertex_comm_weight(node);
                     }
                 }
             }
@@ -72,13 +75,11 @@ struct BufferedSendingCost {
             const auto step_comm_cost = max_comm_per_step[step];
             comm_costs += step_comm_cost;
 
-            if (step_comm_cost > 0) {
-                comm_costs += instance.synchronisationCosts();
-            }
+            if (step_comm_cost > 0) { comm_costs += instance.synchronisationCosts(); }
         }
 
         return comm_costs + cost_helpers::compute_work_costs(schedule);
     }
 };
 
-} // namespace osp
+}    // namespace osp

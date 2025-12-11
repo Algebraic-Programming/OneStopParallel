@@ -30,7 +30,6 @@ limitations under the License.
 using namespace osp;
 
 BOOST_AUTO_TEST_CASE(test_cost_models_simple_dag) {
-
     using graph = computational_dag_edge_idx_vector_impl_def_int_t;
 
     BspInstance<graph> instance;

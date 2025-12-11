@@ -18,29 +18,28 @@ limitations under the License.
 
 #pragma once
 
+#include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <sstream>
 #include <string>
 #include <vector>
-#include <limits>
-#include <filesystem>
 
-#include "osp/partitioning/model/hypergraph.hpp"
 #include "osp/auxiliary/io/filepath_checker.hpp"
+#include "osp/partitioning/model/hypergraph.hpp"
 
 namespace osp {
 namespace file_reader {
 
 // reads a matrix into Hypergraph format, where nonzeros are vertices, and rows/columns are hyperedges
-template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
-bool readHypergraphMartixMarketFormat(std::ifstream& infile, Hypergraph<index_type, workw_type, memw_type, commw_type>& hgraph) {
-
+template <typename index_type, typename workw_type, typename memw_type, typename commw_type>
+bool readHypergraphMartixMarketFormat(std::ifstream &infile, Hypergraph<index_type, workw_type, memw_type, commw_type> &hgraph) {
     std::string line;
 
     // Skip comments or empty lines (robustly)
     while (std::getline(infile, line)) {
-        if (line.empty() || line[0] == '%') continue;
+        if (line.empty() || line[0] == '%') { continue; }
 
         // Null byte check
         if (line.find('\0') != std::string::npos) {
@@ -52,7 +51,7 @@ bool readHypergraphMartixMarketFormat(std::ifstream& infile, Hypergraph<index_ty
             std::cerr << "Error: Line too long, possible malformed or malicious file.\n";
             return false;
         }
-        break; // We found the actual header line
+        break;    // We found the actual header line
     }
 
     if (infile.eof()) {
@@ -63,8 +62,7 @@ bool readHypergraphMartixMarketFormat(std::ifstream& infile, Hypergraph<index_ty
     int M_row = 0, M_col = 0, nEntries = 0;
 
     std::istringstream header_stream(line);
-    if (!(header_stream >> M_row >> M_col >> nEntries) ||
-        M_row <= 0 || M_col <= 0) {
+    if (!(header_stream >> M_row >> M_col >> nEntries) || M_row <= 0 || M_col <= 0) {
         std::cerr << "Error: Invalid header.\n";
         return false;
     }
@@ -82,7 +80,7 @@ bool readHypergraphMartixMarketFormat(std::ifstream& infile, Hypergraph<index_ty
 
     int entries_read = 0;
     while (entries_read < nEntries && std::getline(infile, line)) {
-        if (line.empty() || line[0] == '%') continue;
+        if (line.empty() || line[0] == '%') { continue; }
         if (line.size() > MAX_LINE_LENGTH) {
             std::cerr << "Error: Line too long.\n";
             return false;
@@ -97,7 +95,8 @@ bool readHypergraphMartixMarketFormat(std::ifstream& infile, Hypergraph<index_ty
             return false;
         }
 
-        row -= 1; col -= 1; // Convert to 0-based
+        row -= 1;
+        col -= 1;    // Convert to 0-based
 
         if (row < 0 || col < 0 || row >= M_row || col >= M_col) {
             std::cerr << "Error: Matrix entry out of bounds.\n";
@@ -127,19 +126,20 @@ bool readHypergraphMartixMarketFormat(std::ifstream& infile, Hypergraph<index_ty
         }
     }
 
-    for(index_type row = 0; row < static_cast<index_type>(M_row); ++row)
-        if(!row_hyperedges[row].empty())
-            hgraph.add_hyperedge(row_hyperedges[row]);
+    for (index_type row = 0; row < static_cast<index_type>(M_row); ++row) {
+        if (!row_hyperedges[row].empty()) { hgraph.add_hyperedge(row_hyperedges[row]); }
+    }
 
-    for(index_type col = 0; col < static_cast<index_type>(M_col); ++col)
-        if(!column_hyperedges[col].empty())
-            hgraph.add_hyperedge(column_hyperedges[col]);
+    for (index_type col = 0; col < static_cast<index_type>(M_col); ++col) {
+        if (!column_hyperedges[col].empty()) { hgraph.add_hyperedge(column_hyperedges[col]); }
+    }
 
     return true;
 }
 
-template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
-bool readHypergraphMartixMarketFormat(const std::string& filename, Hypergraph<index_type, workw_type, memw_type, commw_type>& hgraph) {
+template <typename index_type, typename workw_type, typename memw_type, typename commw_type>
+bool readHypergraphMartixMarketFormat(const std::string &filename,
+                                      Hypergraph<index_type, workw_type, memw_type, commw_type> &hgraph) {
     // Ensure the file is .mtx format
     if (std::filesystem::path(filename).extension() != ".mtx") {
         std::cerr << "Error: Only .mtx files are accepted.\n";
@@ -170,6 +170,6 @@ bool readHypergraphMartixMarketFormat(const std::string& filename, Hypergraph<in
     return readHypergraphMartixMarketFormat(infile, hgraph);
 }
 
-} // namespace FileReader
+}    // namespace file_reader
 
-} // namespace osp
+}    // namespace osp

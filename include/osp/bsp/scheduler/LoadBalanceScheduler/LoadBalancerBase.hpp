@@ -18,9 +18,10 @@ limitations under the License.
 
 #pragma once
 
-#include "osp/bsp/scheduler/Scheduler.hpp"
 #include <cmath>
 #include <functional>
+
+#include "osp/bsp/scheduler/Scheduler.hpp"
 
 namespace osp {
 
@@ -42,9 +43,8 @@ struct global_only_interpolation {
     float operator()(float, const float) { return 1.0f; };
 };
 
-template<typename Graph_t, typename Interpolation_t = flat_spline_interpolation>
+template <typename Graph_t, typename Interpolation_t = flat_spline_interpolation>
 class LoadBalancerBase : public Scheduler<Graph_t> {
-
     static_assert(std::is_invocable_r<float, Interpolation_t, float, float>::value,
                   "Interpolation_t must be invocable with two float arguments and return a float.");
 
@@ -56,15 +56,13 @@ class LoadBalancerBase : public Scheduler<Graph_t> {
     /// @param instance bsp instance
     /// @param slack how much to ignore global balance
     /// @return vector with the interpolated priorities
-    std::vector<float>
-    computeProcessorPrioritiesInterpolation(const std::vector<v_workw_t<Graph_t>> &superstep_partition_work,
-                                            const std::vector<v_workw_t<Graph_t>> &total_partition_work,
-                                            const v_workw_t<Graph_t> &total_work, const BspInstance<Graph_t> &instance,
-                                            const float slack = 0.0) {
+    std::vector<float> computeProcessorPrioritiesInterpolation(const std::vector<v_workw_t<Graph_t>> &superstep_partition_work,
+                                                               const std::vector<v_workw_t<Graph_t>> &total_partition_work,
+                                                               const v_workw_t<Graph_t> &total_work,
+                                                               const BspInstance<Graph_t> &instance,
+                                                               const float slack = 0.0) {
         v_workw_t<Graph_t> work_till_now = 0;
-        for (const auto &part_work : total_partition_work) {
-            work_till_now += part_work;
-        }
+        for (const auto &part_work : total_partition_work) { work_till_now += part_work; }
 
         float percentage_complete = static_cast<float>(work_till_now) / static_cast<float>(total_work);
 
@@ -72,8 +70,10 @@ class LoadBalancerBase : public Scheduler<Graph_t> {
 
         std::vector<float> proc_prio(instance.numberOfProcessors());
         for (size_t i = 0; i < proc_prio.size(); i++) {
-            assert(static_cast<double>(total_partition_work[i]) < std::numeric_limits<float>::max() && static_cast<double>(superstep_partition_work[i]) < std::numeric_limits<float>::max()); 
-            proc_prio[i] = ((1 - value) * static_cast<float>(superstep_partition_work[i])) + (value * static_cast<float>(total_partition_work[i]));
+            assert(static_cast<double>(total_partition_work[i]) < std::numeric_limits<float>::max()
+                   && static_cast<double>(superstep_partition_work[i]) < std::numeric_limits<float>::max());
+            proc_prio[i] = ((1 - value) * static_cast<float>(superstep_partition_work[i]))
+                           + (value * static_cast<float>(total_partition_work[i]));
         }
 
         return proc_prio;
@@ -89,9 +89,10 @@ class LoadBalancerBase : public Scheduler<Graph_t> {
     std::vector<unsigned> computeProcessorPriority(const std::vector<v_workw_t<Graph_t>> &superstep_partition_work,
                                                    const std::vector<v_workw_t<Graph_t>> &total_partition_work,
                                                    const v_workw_t<Graph_t> &total_work,
-                                                   const BspInstance<Graph_t> &instance, const float slack = 0.0) {
-        return sorting_arrangement<float, unsigned>(computeProcessorPrioritiesInterpolation(
-            superstep_partition_work, total_partition_work, total_work, instance, slack));
+                                                   const BspInstance<Graph_t> &instance,
+                                                   const float slack = 0.0) {
+        return sorting_arrangement<float, unsigned>(
+            computeProcessorPrioritiesInterpolation(superstep_partition_work, total_partition_work, total_work, instance, slack));
     }
 
   public:
@@ -99,4 +100,4 @@ class LoadBalancerBase : public Scheduler<Graph_t> {
     virtual ~LoadBalancerBase() = default;
 };
 
-} // namespace osp
+}    // namespace osp

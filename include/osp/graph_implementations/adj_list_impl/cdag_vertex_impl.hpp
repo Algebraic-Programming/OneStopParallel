@@ -17,7 +17,7 @@ limitations under the License.
 */
 #pragma once
 
-#include <cstddef> // for std::size_t
+#include <cstddef>    // for std::size_t
 
 namespace osp {
 
@@ -33,9 +33,8 @@ namespace osp {
  * @tparam memw_t Type for memory weights.
  * @tparam vertex_type_t Type for vertex types.
  */
-template<typename vertex_idx_t, typename workw_t, typename commw_t, typename memw_t, typename vertex_type_t>
+template <typename vertex_idx_t, typename workw_t, typename commw_t, typename memw_t, typename vertex_type_t>
 struct cdag_vertex_impl {
-
     using vertex_idx_type = vertex_idx_t;
     using work_weight_type = workw_t;
     using comm_weight_type = commw_t;
@@ -58,10 +57,8 @@ struct cdag_vertex_impl {
      * @param mem_w The memory weight.
      * @param vertex_t The type of the vertex.
      */
-    cdag_vertex_impl(vertex_idx_t vertex_idx_, workw_t work_w, commw_t comm_w, memw_t mem_w,
-                     vertex_type_t vertex_t)
-        : id(vertex_idx_), work_weight(work_w), comm_weight(comm_w), mem_weight(mem_w),
-          vertex_type(vertex_t) {}
+    cdag_vertex_impl(vertex_idx_t vertex_idx_, workw_t work_w, commw_t comm_w, memw_t mem_w, vertex_type_t vertex_t)
+        : id(vertex_idx_), work_weight(work_w), comm_weight(comm_w), mem_weight(mem_w), vertex_type(vertex_t) {}
 
     vertex_idx_t id = 0;
 
@@ -86,4 +83,4 @@ using cdag_vertex_impl_int = cdag_vertex_impl<std::size_t, int, int, int, unsign
  */
 using cdag_vertex_impl_unsigned = cdag_vertex_impl<std::size_t, unsigned, unsigned, unsigned, unsigned>;
 
-} // namespace osp
+}    // namespace osp

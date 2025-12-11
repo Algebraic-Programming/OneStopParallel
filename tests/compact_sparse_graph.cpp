@@ -17,9 +17,10 @@ limitations under the License.
 */
 
 #define BOOST_TEST_MODULE Sparse_Compact_Graph
+#include "osp/graph_implementations/adj_list_impl/compact_sparse_graph.hpp"
+
 #include <boost/test/unit_test.hpp>
 
-#include "osp/graph_implementations/adj_list_impl/compact_sparse_graph.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 
 using namespace osp;
@@ -62,7 +63,15 @@ BOOST_AUTO_TEST_CASE(No_Edges_Graph_reorder) {
 }
 
 BOOST_AUTO_TEST_CASE(LineGraph_keep_order) {
-    const std::set<std::pair<std::size_t, std::size_t>> edges({{0, 1}, {1, 2}, {2, 3}, {3, 4}, {4, 5}, {5, 6}, {6, 7}});
+    const std::set<std::pair<std::size_t, std::size_t>> edges({
+        {0, 1},
+        {1, 2},
+        {2, 3},
+        {3, 4},
+        {4, 5},
+        {5, 6},
+        {6, 7}
+    });
 
     Compact_Sparse_Graph<true> graph(8, edges);
 
@@ -79,14 +88,10 @@ BOOST_AUTO_TEST_CASE(LineGraph_keep_order) {
     for (const auto &vert : graph.vertices()) {
         if (vert != 7) {
             BOOST_CHECK_EQUAL(graph.out_degree(vert), 1);
-            for (const std::size_t &chld : graph.children(vert)) {
-                BOOST_CHECK_EQUAL(chld, vert + 1);
-            }
+            for (const std::size_t &chld : graph.children(vert)) { BOOST_CHECK_EQUAL(chld, vert + 1); }
             auto chldren = graph.children(vert);
             BOOST_CHECK_EQUAL(chldren.crend() - chldren.crbegin(), graph.out_degree(vert));
-            for (auto it = chldren.crbegin(); it != chldren.crend(); ++it) {
-                BOOST_CHECK_EQUAL(*it, vert + 1);
-            }
+            for (auto it = chldren.crbegin(); it != chldren.crend(); ++it) { BOOST_CHECK_EQUAL(*it, vert + 1); }
 
         } else {
             BOOST_CHECK_EQUAL(graph.out_degree(vert), 0);
@@ -105,14 +110,10 @@ BOOST_AUTO_TEST_CASE(LineGraph_keep_order) {
     for (const auto &vert : graph.vertices()) {
         if (vert != 0) {
             BOOST_CHECK_EQUAL(graph.in_degree(vert), 1);
-            for (const std::size_t &par : graph.parents(vert)) {
-                BOOST_CHECK_EQUAL(par, vert - 1);
-            }
+            for (const std::size_t &par : graph.parents(vert)) { BOOST_CHECK_EQUAL(par, vert - 1); }
             auto prnts = graph.parents(vert);
             BOOST_CHECK_EQUAL(prnts.crend() - prnts.crbegin(), graph.in_degree(vert));
-            for (auto it = prnts.crbegin(); it != prnts.crend(); ++it) {
-                BOOST_CHECK_EQUAL(*it, vert - 1);
-            }
+            for (auto it = prnts.crbegin(); it != prnts.crend(); ++it) { BOOST_CHECK_EQUAL(*it, vert - 1); }
         } else {
             BOOST_CHECK_EQUAL(graph.in_degree(vert), 0);
             for (const std::size_t &par : graph.parents(vert)) {
@@ -136,14 +137,19 @@ BOOST_AUTO_TEST_CASE(LineGraph_keep_order) {
         }
     }
 
-    for (const auto &vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.vertex_type(vert), 0);
-    }
+    for (const auto &vert : graph.vertices()) { BOOST_CHECK_EQUAL(graph.vertex_type(vert), 0); }
 }
 
-
 BOOST_AUTO_TEST_CASE(LineGraph_reorder) {
-    const std::vector<std::pair<std::size_t, std::size_t>> edges({{0, 1}, {1, 2}, {2, 3}, {3, 4}, {4, 5}, {5, 6}, {6, 7}});
+    const std::vector<std::pair<std::size_t, std::size_t>> edges({
+        {0, 1},
+        {1, 2},
+        {2, 3},
+        {3, 4},
+        {4, 5},
+        {5, 6},
+        {6, 7}
+    });
 
     Compact_Sparse_Graph<false> graph(8, edges);
 
@@ -160,14 +166,10 @@ BOOST_AUTO_TEST_CASE(LineGraph_reorder) {
     for (const auto &vert : graph.vertices()) {
         if (vert != 7) {
             BOOST_CHECK_EQUAL(graph.out_degree(vert), 1);
-            for (const std::size_t &chld : graph.children(vert)) {
-                BOOST_CHECK_EQUAL(chld, vert + 1);
-            }
+            for (const std::size_t &chld : graph.children(vert)) { BOOST_CHECK_EQUAL(chld, vert + 1); }
             auto chldren = graph.children(vert);
             BOOST_CHECK_EQUAL(chldren.crend() - chldren.crbegin(), graph.out_degree(vert));
-            for (auto it = chldren.crbegin(); it != chldren.crend(); ++it) {
-                BOOST_CHECK_EQUAL(*it, vert + 1);
-            }
+            for (auto it = chldren.crbegin(); it != chldren.crend(); ++it) { BOOST_CHECK_EQUAL(*it, vert + 1); }
         } else {
             BOOST_CHECK_EQUAL(graph.out_degree(vert), 0);
             for (const std::size_t &chld : graph.children(vert)) {
@@ -185,14 +187,10 @@ BOOST_AUTO_TEST_CASE(LineGraph_reorder) {
     for (const auto &vert : graph.vertices()) {
         if (vert != 0) {
             BOOST_CHECK_EQUAL(graph.in_degree(vert), 1);
-            for (const std::size_t &par : graph.parents(vert)) {
-                BOOST_CHECK_EQUAL(par, vert - 1);
-            }
+            for (const std::size_t &par : graph.parents(vert)) { BOOST_CHECK_EQUAL(par, vert - 1); }
             auto prnts = graph.parents(vert);
             BOOST_CHECK_EQUAL(prnts.crend() - prnts.crbegin(), graph.in_degree(vert));
-            for (auto it = prnts.crbegin(); it != prnts.crend(); ++it) {
-                BOOST_CHECK_EQUAL(*it, vert - 1);
-            }
+            for (auto it = prnts.crbegin(); it != prnts.crend(); ++it) { BOOST_CHECK_EQUAL(*it, vert - 1); }
         } else {
             BOOST_CHECK_EQUAL(graph.in_degree(vert), 0);
             for (const std::size_t &par : graph.parents(vert)) {
@@ -216,23 +214,30 @@ BOOST_AUTO_TEST_CASE(LineGraph_reorder) {
         }
     }
 
-    for (const auto &vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.vertex_type(vert), 0);
-    }
+    for (const auto &vert : graph.vertices()) { BOOST_CHECK_EQUAL(graph.vertex_type(vert), 0); }
 
     std::vector<std::size_t> perm(8, 0);
     std::iota(perm.begin(), perm.end(), 0);
     const std::vector<std::size_t> &graph_perm = graph.get_pullback_permutation();
     BOOST_CHECK(std::is_permutation(perm.cbegin(), perm.cend(), graph_perm.cbegin(), graph_perm.cend()));
 
-    for (const auto &vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(perm[vert], graph_perm[vert]);
-    }
+    for (const auto &vert : graph.vertices()) { BOOST_CHECK_EQUAL(perm[vert], graph_perm[vert]); }
 }
 
-
 BOOST_AUTO_TEST_CASE(Graph1_keep_order) {
-    const std::vector<std::pair<std::size_t, std::size_t>> edges({{0, 1}, {2, 3}, {6, 10}, {7, 9}, {0, 2}, {4, 6}, {1, 6}, {6, 7}, {5, 6}, {3, 7}, {1, 2}});
+    const std::vector<std::pair<std::size_t, std::size_t>> edges({
+        {0,  1},
+        {2,  3},
+        {6, 10},
+        {7,  9},
+        {0,  2},
+        {4,  6},
+        {1,  6},
+        {6,  7},
+        {5,  6},
+        {3,  7},
+        {1,  2}
+    });
 
     Compact_Sparse_Graph<true> graph(11, edges);
 
@@ -275,11 +280,7 @@ BOOST_AUTO_TEST_CASE(Graph1_keep_order) {
         }
 
         cntr = 0;
-        for (const auto &e : osp::out_edges(vert, graph)) {
-
-            BOOST_CHECK_EQUAL(target(e, graph), out_edges[vert][cntr++]);
-
-        }
+        for (const auto &e : osp::out_edges(vert, graph)) { BOOST_CHECK_EQUAL(target(e, graph), out_edges[vert][cntr++]); }
     }
 
     std::vector<std::vector<std::size_t>> in_edges({
@@ -311,33 +312,36 @@ BOOST_AUTO_TEST_CASE(Graph1_keep_order) {
         }
 
         cntr = 0;
-        for (const auto &e : osp::in_edges(vert, graph)) {
-
-            BOOST_CHECK_EQUAL(source(e, graph), in_edges[vert][cntr++]);
-
-        }
+        for (const auto &e : osp::in_edges(vert, graph)) { BOOST_CHECK_EQUAL(source(e, graph), in_edges[vert][cntr++]); }
     }
-    
+
     unsigned count = 0;
-    for (const auto & e: osp::edges(graph)) {
-        
+    for (const auto &e : osp::edges(graph)) {
         std::cout << e.source << " -> " << e.target << std::endl;
         count++;
     }
 
     BOOST_CHECK_EQUAL(count, 11);
 
-    for (const auto &vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), 1 + in_edges[vert].size());
-    }
+    for (const auto &vert : graph.vertices()) { BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), 1 + in_edges[vert].size()); }
 
-    for (const auto &vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.vertex_type(vert), 0);
-    }
+    for (const auto &vert : graph.vertices()) { BOOST_CHECK_EQUAL(graph.vertex_type(vert), 0); }
 }
 
 BOOST_AUTO_TEST_CASE(Graph1_reorder) {
-    const std::vector<std::pair<std::size_t, std::size_t>> edges({{0, 1}, {2, 3}, {6, 10}, {7, 9}, {0, 2}, {4, 6}, {1, 6}, {6, 7}, {5, 6}, {3, 7}, {1, 2}});
+    const std::vector<std::pair<std::size_t, std::size_t>> edges({
+        {0,  1},
+        {2,  3},
+        {6, 10},
+        {7,  9},
+        {0,  2},
+        {4,  6},
+        {1,  6},
+        {6,  7},
+        {5,  6},
+        {3,  7},
+        {1,  2}
+    });
 
     Compact_Sparse_Graph<false> graph(11, edges);
 
@@ -371,17 +375,16 @@ BOOST_AUTO_TEST_CASE(Graph1_reorder) {
     });
 
     for (const auto &vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.out_degree(vert), out_edges[ graph_perm[vert] ].size());
+        BOOST_CHECK_EQUAL(graph.out_degree(vert), out_edges[graph_perm[vert]].size());
         std::size_t ori_vert = graph_perm[vert];
-        
+
         std::size_t previous_chld = 0;
         std::size_t cntr = 0;
         for (const auto &chld : graph.children(vert)) {
-            if (cntr > 0) {
-                BOOST_CHECK_LE(previous_chld, chld);
-            }
+            if (cntr > 0) { BOOST_CHECK_LE(previous_chld, chld); }
 
-            BOOST_CHECK(std::find(out_edges[ori_vert].cbegin(), out_edges[ori_vert].cend(), graph_perm[chld]) != out_edges[ori_vert].cend());
+            BOOST_CHECK(std::find(out_edges[ori_vert].cbegin(), out_edges[ori_vert].cend(), graph_perm[chld])
+                        != out_edges[ori_vert].cend());
 
             previous_chld = chld;
             ++cntr;
@@ -389,12 +392,11 @@ BOOST_AUTO_TEST_CASE(Graph1_reorder) {
         auto chldrn = graph.children(vert);
         BOOST_CHECK_EQUAL(chldrn.crend() - chldrn.crbegin(), graph.out_degree(vert));
         for (auto it = chldrn.crbegin(); it != chldrn.crend(); ++it) {
-            if (cntr < graph.out_degree(vert)) {
-                BOOST_CHECK_GE(previous_chld, *it);
-            }
+            if (cntr < graph.out_degree(vert)) { BOOST_CHECK_GE(previous_chld, *it); }
 
             --cntr;
-            BOOST_CHECK(std::find(out_edges[ori_vert].cbegin(), out_edges[ori_vert].cend(), graph_perm[*it]) != out_edges[ori_vert].cend());
+            BOOST_CHECK(std::find(out_edges[ori_vert].cbegin(), out_edges[ori_vert].cend(), graph_perm[*it])
+                        != out_edges[ori_vert].cend());
 
             previous_chld = *it;
         }
@@ -415,17 +417,16 @@ BOOST_AUTO_TEST_CASE(Graph1_reorder) {
     });
 
     for (const auto &vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.in_degree(vert), in_edges[ graph_perm[vert] ].size());
+        BOOST_CHECK_EQUAL(graph.in_degree(vert), in_edges[graph_perm[vert]].size());
         std::size_t ori_vert = graph_perm[vert];
-        
+
         std::size_t previous_par = 0;
         std::size_t cntr = 0;
         for (const auto &par : graph.parents(vert)) {
-            if (cntr > 0) {
-                BOOST_CHECK_LE(previous_par, par);
-            }
+            if (cntr > 0) { BOOST_CHECK_LE(previous_par, par); }
 
-            BOOST_CHECK(std::find(in_edges[ori_vert].cbegin(), in_edges[ori_vert].cend(), graph_perm[par]) != in_edges[ori_vert].cend());
+            BOOST_CHECK(std::find(in_edges[ori_vert].cbegin(), in_edges[ori_vert].cend(), graph_perm[par])
+                        != in_edges[ori_vert].cend());
 
             previous_par = par;
             ++cntr;
@@ -433,28 +434,24 @@ BOOST_AUTO_TEST_CASE(Graph1_reorder) {
         auto prnts = graph.parents(vert);
         BOOST_CHECK_EQUAL(prnts.crend() - prnts.crbegin(), graph.in_degree(vert));
         for (auto it = prnts.crbegin(); it != prnts.crend(); ++it) {
-            if (cntr < graph.out_degree(vert)) {
-                BOOST_CHECK_GE(previous_par, *it);
-            }
+            if (cntr < graph.out_degree(vert)) { BOOST_CHECK_GE(previous_par, *it); }
 
             --cntr;
-            BOOST_CHECK(std::find(in_edges[ori_vert].cbegin(), in_edges[ori_vert].cend(), graph_perm[*it]) != in_edges[ori_vert].cend());
+            BOOST_CHECK(std::find(in_edges[ori_vert].cbegin(), in_edges[ori_vert].cend(), graph_perm[*it])
+                        != in_edges[ori_vert].cend());
 
             previous_par = *it;
         }
     }
-    
+
     for (const auto &vert : graph.vertices()) {
         BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), 1 + in_edges[graph_perm[vert]].size());
     }
 
-    for (const auto &vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.vertex_type(vert), 0);
-    }
+    for (const auto &vert : graph.vertices()) { BOOST_CHECK_EQUAL(graph.vertex_type(vert), 0); }
 }
 
 BOOST_AUTO_TEST_CASE(Graph_edge_contruction) {
-
     computational_dag_edge_idx_vector_impl_def_t graph;
 
     using vertex_idx = computational_dag_edge_idx_vector_impl_def_t::vertex_idx;
@@ -498,11 +495,9 @@ BOOST_AUTO_TEST_CASE(Graph_edge_contruction) {
     BOOST_CHECK_EQUAL(graph.num_edges(), 9);
     BOOST_CHECK_EQUAL(graph.num_vertices(), 8);
 
-
     Compact_Sparse_Graph<true, false, false, false, false, vertex_idx> copy_graph(graph.num_vertices(), edge_view(graph));
     BOOST_CHECK_EQUAL(copy_graph.num_vertices(), 8);
     BOOST_CHECK_EQUAL(copy_graph.num_edges(), 9);
-
 
     std::vector<std::vector<std::size_t>> out_edges({
         {1, 2, 3},
@@ -554,17 +549,16 @@ BOOST_AUTO_TEST_CASE(Graph_edge_contruction) {
     BOOST_CHECK(std::is_permutation(perm.cbegin(), perm.cend(), graph_perm.cbegin(), graph_perm.cend()));
 
     for (const auto &vert : reorder_graph.vertices()) {
-        BOOST_CHECK_EQUAL(reorder_graph.out_degree(vert), out_edges[ graph_perm[vert] ].size());
+        BOOST_CHECK_EQUAL(reorder_graph.out_degree(vert), out_edges[graph_perm[vert]].size());
         std::size_t ori_vert = graph_perm[vert];
-        
+
         std::size_t previous_chld = 0;
         std::size_t cntr = 0;
         for (const auto &chld : reorder_graph.children(vert)) {
-            if (cntr > 0) {
-                BOOST_CHECK_LE(previous_chld, chld);
-            }
+            if (cntr > 0) { BOOST_CHECK_LE(previous_chld, chld); }
 
-            BOOST_CHECK(std::find(out_edges[ori_vert].cbegin(), out_edges[ori_vert].cend(), graph_perm[chld]) != out_edges[ori_vert].cend());
+            BOOST_CHECK(std::find(out_edges[ori_vert].cbegin(), out_edges[ori_vert].cend(), graph_perm[chld])
+                        != out_edges[ori_vert].cend());
 
             previous_chld = chld;
             ++cntr;
@@ -572,17 +566,16 @@ BOOST_AUTO_TEST_CASE(Graph_edge_contruction) {
     }
 
     for (const auto &vert : reorder_graph.vertices()) {
-        BOOST_CHECK_EQUAL(reorder_graph.in_degree(vert), in_edges[ graph_perm[vert] ].size());
+        BOOST_CHECK_EQUAL(reorder_graph.in_degree(vert), in_edges[graph_perm[vert]].size());
         std::size_t ori_vert = graph_perm[vert];
-        
+
         std::size_t previous_par = 0;
         std::size_t cntr = 0;
         for (const auto &par : reorder_graph.parents(vert)) {
-            if (cntr > 0) {
-                BOOST_CHECK_LE(previous_par, par);
-            }
+            if (cntr > 0) { BOOST_CHECK_LE(previous_par, par); }
 
-            BOOST_CHECK(std::find(in_edges[ori_vert].cbegin(), in_edges[ori_vert].cend(), graph_perm[par]) != in_edges[ori_vert].cend());
+            BOOST_CHECK(std::find(in_edges[ori_vert].cbegin(), in_edges[ori_vert].cend(), graph_perm[par])
+                        != in_edges[ori_vert].cend());
 
             previous_par = par;
             ++cntr;
@@ -591,7 +584,19 @@ BOOST_AUTO_TEST_CASE(Graph_edge_contruction) {
 }
 
 BOOST_AUTO_TEST_CASE(Graph_work_weights_keep_order) {
-    const std::vector<std::pair<std::size_t, std::size_t>> edges({{0, 1}, {2, 3}, {6, 10}, {7, 9}, {0, 2}, {4, 6}, {1, 6}, {6, 7}, {5, 6}, {3, 7}, {1, 2}});
+    const std::vector<std::pair<std::size_t, std::size_t>> edges({
+        {0,  1},
+        {2,  3},
+        {6, 10},
+        {7,  9},
+        {0,  2},
+        {4,  6},
+        {1,  6},
+        {6,  7},
+        {5,  6},
+        {3,  7},
+        {1,  2}
+    });
 
     std::vector<unsigned> ww(11);
     std::iota(ww.begin(), ww.end(), 0);
@@ -599,16 +604,28 @@ BOOST_AUTO_TEST_CASE(Graph_work_weights_keep_order) {
     Compact_Sparse_Graph<true, true> graph(11, edges, ww);
 
     for (auto vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL( graph.vertex_work_weight(vert), ww[vert]);
+        BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), ww[vert]);
 
         const unsigned wt = static_cast<unsigned>(rand());
         graph.set_vertex_work_weight(vert, wt);
-        BOOST_CHECK_EQUAL( graph.vertex_work_weight(vert), wt);
+        BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), wt);
     }
 }
 
 BOOST_AUTO_TEST_CASE(Graph_work_weights_reorder) {
-    const std::vector<std::pair<std::size_t, std::size_t>> edges({{0, 1}, {2, 3}, {6, 10}, {7, 9}, {0, 2}, {4, 6}, {1, 6}, {6, 7}, {5, 6}, {3, 7}, {1, 2}});
+    const std::vector<std::pair<std::size_t, std::size_t>> edges({
+        {0,  1},
+        {2,  3},
+        {6, 10},
+        {7,  9},
+        {0,  2},
+        {4,  6},
+        {1,  6},
+        {6,  7},
+        {5,  6},
+        {3,  7},
+        {1,  2}
+    });
 
     std::vector<unsigned> ww(11);
     std::iota(ww.begin(), ww.end(), 0);
@@ -618,16 +635,28 @@ BOOST_AUTO_TEST_CASE(Graph_work_weights_reorder) {
     const std::vector<std::size_t> &graph_perm = graph.get_pullback_permutation();
 
     for (auto vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL( graph.vertex_work_weight(vert), ww[graph_perm[vert]]);
+        BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), ww[graph_perm[vert]]);
 
         const unsigned wt = static_cast<unsigned>(rand());
         graph.set_vertex_work_weight(graph_perm[vert], wt);
-        BOOST_CHECK_EQUAL( graph.vertex_work_weight(vert), wt);
+        BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), wt);
     }
 }
 
 BOOST_AUTO_TEST_CASE(Graph_comm_weights_keep_order) {
-    const std::vector<std::pair<std::size_t, std::size_t>> edges({{0, 1}, {2, 3}, {6, 10}, {7, 9}, {0, 2}, {4, 6}, {1, 6}, {6, 7}, {5, 6}, {3, 7}, {1, 2}});
+    const std::vector<std::pair<std::size_t, std::size_t>> edges({
+        {0,  1},
+        {2,  3},
+        {6, 10},
+        {7,  9},
+        {0,  2},
+        {4,  6},
+        {1,  6},
+        {6,  7},
+        {5,  6},
+        {3,  7},
+        {1,  2}
+    });
 
     std::vector<unsigned> ww(11);
     std::iota(ww.begin(), ww.end(), 0);
@@ -637,21 +666,31 @@ BOOST_AUTO_TEST_CASE(Graph_comm_weights_keep_order) {
 
     Compact_Sparse_Graph<true, true, true> graph(11, edges, ww, cw);
 
-    for (auto vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL( graph.vertex_work_weight(vert), ww[vert]);
-    }
+    for (auto vert : graph.vertices()) { BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), ww[vert]); }
 
     for (auto vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL( graph.vertex_comm_weight(vert), cw[vert]);
-        
+        BOOST_CHECK_EQUAL(graph.vertex_comm_weight(vert), cw[vert]);
+
         const unsigned wt = static_cast<unsigned>(rand());
         graph.set_vertex_comm_weight(vert, wt);
-        BOOST_CHECK_EQUAL( graph.vertex_comm_weight(vert), wt);
+        BOOST_CHECK_EQUAL(graph.vertex_comm_weight(vert), wt);
     }
 }
 
 BOOST_AUTO_TEST_CASE(Graph_comm_weights_reorder) {
-    const std::vector<std::pair<std::size_t, std::size_t>> edges({{0, 1}, {2, 3}, {6, 10}, {7, 9}, {0, 2}, {4, 6}, {1, 6}, {6, 7}, {5, 6}, {3, 7}, {1, 2}});
+    const std::vector<std::pair<std::size_t, std::size_t>> edges({
+        {0,  1},
+        {2,  3},
+        {6, 10},
+        {7,  9},
+        {0,  2},
+        {4,  6},
+        {1,  6},
+        {6,  7},
+        {5,  6},
+        {3,  7},
+        {1,  2}
+    });
 
     std::vector<unsigned> ww(11);
     std::iota(ww.begin(), ww.end(), 0);
@@ -663,21 +702,31 @@ BOOST_AUTO_TEST_CASE(Graph_comm_weights_reorder) {
 
     const std::vector<std::size_t> &graph_perm = graph.get_pullback_permutation();
 
-    for (auto vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL( graph.vertex_work_weight(vert), ww[graph_perm[vert]]);
-    }
+    for (auto vert : graph.vertices()) { BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), ww[graph_perm[vert]]); }
 
     for (auto vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL( graph.vertex_comm_weight(vert), cw[graph_perm[vert]]);
+        BOOST_CHECK_EQUAL(graph.vertex_comm_weight(vert), cw[graph_perm[vert]]);
 
         const unsigned wt = static_cast<unsigned>(rand());
         graph.set_vertex_comm_weight(graph_perm[vert], wt);
-        BOOST_CHECK_EQUAL( graph.vertex_comm_weight(vert), wt);
+        BOOST_CHECK_EQUAL(graph.vertex_comm_weight(vert), wt);
     }
 }
 
 BOOST_AUTO_TEST_CASE(Graph_mem_weights_keep_order) {
-    const std::vector<std::pair<std::size_t, std::size_t>> edges({{0, 1}, {2, 3}, {6, 10}, {7, 9}, {0, 2}, {4, 6}, {1, 6}, {6, 7}, {5, 6}, {3, 7}, {1, 2}});
+    const std::vector<std::pair<std::size_t, std::size_t>> edges({
+        {0,  1},
+        {2,  3},
+        {6, 10},
+        {7,  9},
+        {0,  2},
+        {4,  6},
+        {1,  6},
+        {6,  7},
+        {5,  6},
+        {3,  7},
+        {1,  2}
+    });
 
     std::vector<unsigned> ww(11);
     std::iota(ww.begin(), ww.end(), 0);
@@ -691,21 +740,33 @@ BOOST_AUTO_TEST_CASE(Graph_mem_weights_keep_order) {
     Compact_Sparse_Graph<true, true, true, true> graph(11, edges, ww, cw, mw);
 
     for (auto vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL( graph.vertex_work_weight(vert), ww[vert]);
-        BOOST_CHECK_EQUAL( graph.vertex_comm_weight(vert), cw[vert]);
+        BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), ww[vert]);
+        BOOST_CHECK_EQUAL(graph.vertex_comm_weight(vert), cw[vert]);
     }
 
     for (auto vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL( graph.vertex_mem_weight(vert), mw[vert]);
-        
+        BOOST_CHECK_EQUAL(graph.vertex_mem_weight(vert), mw[vert]);
+
         const unsigned wt = static_cast<unsigned>(rand());
         graph.set_vertex_mem_weight(vert, wt);
-        BOOST_CHECK_EQUAL( graph.vertex_mem_weight(vert), wt);
+        BOOST_CHECK_EQUAL(graph.vertex_mem_weight(vert), wt);
     }
 }
 
 BOOST_AUTO_TEST_CASE(Graph_mem_weights_reorder) {
-    const std::vector<std::pair<std::size_t, std::size_t>> edges({{0, 1}, {2, 3}, {6, 10}, {7, 9}, {0, 2}, {4, 6}, {1, 6}, {6, 7}, {5, 6}, {3, 7}, {1, 2}});
+    const std::vector<std::pair<std::size_t, std::size_t>> edges({
+        {0,  1},
+        {2,  3},
+        {6, 10},
+        {7,  9},
+        {0,  2},
+        {4,  6},
+        {1,  6},
+        {6,  7},
+        {5,  6},
+        {3,  7},
+        {1,  2}
+    });
 
     std::vector<unsigned> ww(11);
     std::iota(ww.begin(), ww.end(), 0);
@@ -721,21 +782,33 @@ BOOST_AUTO_TEST_CASE(Graph_mem_weights_reorder) {
     const std::vector<std::size_t> &graph_perm = graph.get_pullback_permutation();
 
     for (auto vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL( graph.vertex_work_weight(vert), ww[graph_perm[vert]]);
-        BOOST_CHECK_EQUAL( graph.vertex_comm_weight(vert), cw[graph_perm[vert]]);
+        BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), ww[graph_perm[vert]]);
+        BOOST_CHECK_EQUAL(graph.vertex_comm_weight(vert), cw[graph_perm[vert]]);
     }
 
     for (auto vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL( graph.vertex_mem_weight(vert), mw[graph_perm[vert]]);
+        BOOST_CHECK_EQUAL(graph.vertex_mem_weight(vert), mw[graph_perm[vert]]);
 
         const unsigned wt = static_cast<unsigned>(rand());
         graph.set_vertex_mem_weight(graph_perm[vert], wt);
-        BOOST_CHECK_EQUAL( graph.vertex_mem_weight(vert), wt);
+        BOOST_CHECK_EQUAL(graph.vertex_mem_weight(vert), wt);
     }
 }
 
 BOOST_AUTO_TEST_CASE(Graph_vtype_keep_order) {
-    const std::vector<std::pair<std::size_t, std::size_t>> edges({{0, 1}, {2, 3}, {6, 10}, {7, 9}, {0, 2}, {4, 6}, {1, 6}, {6, 7}, {5, 6}, {3, 7}, {1, 2}});
+    const std::vector<std::pair<std::size_t, std::size_t>> edges({
+        {0,  1},
+        {2,  3},
+        {6, 10},
+        {7,  9},
+        {0,  2},
+        {4,  6},
+        {1,  6},
+        {6,  7},
+        {5,  6},
+        {3,  7},
+        {1,  2}
+    });
 
     std::vector<unsigned> ww(11);
     std::iota(ww.begin(), ww.end(), 0);
@@ -752,22 +825,34 @@ BOOST_AUTO_TEST_CASE(Graph_vtype_keep_order) {
     Compact_Sparse_Graph<true, true, true, true, true> graph(11, edges, ww, cw, mw, vt);
 
     for (auto vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL( graph.vertex_work_weight(vert), ww[vert]);
-        BOOST_CHECK_EQUAL( graph.vertex_comm_weight(vert), cw[vert]);
-        BOOST_CHECK_EQUAL( graph.vertex_mem_weight(vert), mw[vert]);
+        BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), ww[vert]);
+        BOOST_CHECK_EQUAL(graph.vertex_comm_weight(vert), cw[vert]);
+        BOOST_CHECK_EQUAL(graph.vertex_mem_weight(vert), mw[vert]);
     }
 
     for (auto vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL( graph.vertex_type(vert), vt[vert]);
-        
+        BOOST_CHECK_EQUAL(graph.vertex_type(vert), vt[vert]);
+
         const unsigned wt = static_cast<unsigned>(rand());
         graph.set_vertex_type(vert, wt);
-        BOOST_CHECK_EQUAL( graph.vertex_type(vert), wt);
+        BOOST_CHECK_EQUAL(graph.vertex_type(vert), wt);
     }
 }
 
 BOOST_AUTO_TEST_CASE(Graph_vtype_reorder) {
-    const std::vector<std::pair<std::size_t, std::size_t>> edges({{0, 1}, {2, 3}, {6, 10}, {7, 9}, {0, 2}, {4, 6}, {1, 6}, {6, 7}, {5, 6}, {3, 7}, {1, 2}});
+    const std::vector<std::pair<std::size_t, std::size_t>> edges({
+        {0,  1},
+        {2,  3},
+        {6, 10},
+        {7,  9},
+        {0,  2},
+        {4,  6},
+        {1,  6},
+        {6,  7},
+        {5,  6},
+        {3,  7},
+        {1,  2}
+    });
 
     std::vector<unsigned> ww(11);
     std::iota(ww.begin(), ww.end(), 0);
@@ -786,26 +871,21 @@ BOOST_AUTO_TEST_CASE(Graph_vtype_reorder) {
     const std::vector<std::size_t> &graph_perm = graph.get_pullback_permutation();
 
     for (auto vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL( graph.vertex_work_weight(vert), ww[graph_perm[vert]]);
-        BOOST_CHECK_EQUAL( graph.vertex_comm_weight(vert), cw[graph_perm[vert]]);
-        BOOST_CHECK_EQUAL( graph.vertex_mem_weight(vert), mw[graph_perm[vert]]);
+        BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), ww[graph_perm[vert]]);
+        BOOST_CHECK_EQUAL(graph.vertex_comm_weight(vert), cw[graph_perm[vert]]);
+        BOOST_CHECK_EQUAL(graph.vertex_mem_weight(vert), mw[graph_perm[vert]]);
     }
 
     for (auto vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL( graph.vertex_type(vert), vt[graph_perm[vert]]);
+        BOOST_CHECK_EQUAL(graph.vertex_type(vert), vt[graph_perm[vert]]);
 
         const unsigned wt = static_cast<unsigned>(rand());
         graph.set_vertex_type(graph_perm[vert], wt);
-        BOOST_CHECK_EQUAL( graph.vertex_type(vert), wt);
+        BOOST_CHECK_EQUAL(graph.vertex_type(vert), wt);
     }
 }
 
-
-
-
-
 BOOST_AUTO_TEST_CASE(Graph_type_copy_contruction) {
-
     computational_dag_edge_idx_vector_impl_def_t graph;
 
     using vertex_idx = computational_dag_edge_idx_vector_impl_def_t::vertex_idx;
@@ -849,11 +929,20 @@ BOOST_AUTO_TEST_CASE(Graph_type_copy_contruction) {
     BOOST_CHECK_EQUAL(graph.num_edges(), 9);
     BOOST_CHECK_EQUAL(graph.num_vertices(), 8);
 
-
-    Compact_Sparse_Graph<true, true, true, true, true, vertex_idx, std::size_t, computational_dag_edge_idx_vector_impl_def_t::vertex_work_weight_type, computational_dag_edge_idx_vector_impl_def_t::vertex_comm_weight_type, computational_dag_edge_idx_vector_impl_def_t::vertex_mem_weight_type, computational_dag_edge_idx_vector_impl_def_t::vertex_type_type > copy_graph(graph);
+    Compact_Sparse_Graph<true,
+                         true,
+                         true,
+                         true,
+                         true,
+                         vertex_idx,
+                         std::size_t,
+                         computational_dag_edge_idx_vector_impl_def_t::vertex_work_weight_type,
+                         computational_dag_edge_idx_vector_impl_def_t::vertex_comm_weight_type,
+                         computational_dag_edge_idx_vector_impl_def_t::vertex_mem_weight_type,
+                         computational_dag_edge_idx_vector_impl_def_t::vertex_type_type>
+        copy_graph(graph);
     BOOST_CHECK_EQUAL(copy_graph.num_vertices(), 8);
     BOOST_CHECK_EQUAL(copy_graph.num_edges(), 9);
-
 
     std::vector<std::vector<std::size_t>> out_edges({
         {1, 2, 3},
@@ -902,7 +991,18 @@ BOOST_AUTO_TEST_CASE(Graph_type_copy_contruction) {
         }
     }
 
-    Compact_Sparse_Graph<false, true, true, true, true, vertex_idx, std::size_t, computational_dag_edge_idx_vector_impl_def_t::vertex_work_weight_type, computational_dag_edge_idx_vector_impl_def_t::vertex_comm_weight_type, computational_dag_edge_idx_vector_impl_def_t::vertex_mem_weight_type, computational_dag_edge_idx_vector_impl_def_t::vertex_type_type> reorder_graph(graph);
+    Compact_Sparse_Graph<false,
+                         true,
+                         true,
+                         true,
+                         true,
+                         vertex_idx,
+                         std::size_t,
+                         computational_dag_edge_idx_vector_impl_def_t::vertex_work_weight_type,
+                         computational_dag_edge_idx_vector_impl_def_t::vertex_comm_weight_type,
+                         computational_dag_edge_idx_vector_impl_def_t::vertex_mem_weight_type,
+                         computational_dag_edge_idx_vector_impl_def_t::vertex_type_type>
+        reorder_graph(graph);
     BOOST_CHECK_EQUAL(reorder_graph.num_vertices(), 8);
     BOOST_CHECK_EQUAL(reorder_graph.num_edges(), 9);
 
@@ -919,17 +1019,16 @@ BOOST_AUTO_TEST_CASE(Graph_type_copy_contruction) {
     }
 
     for (const auto &vert : reorder_graph.vertices()) {
-        BOOST_CHECK_EQUAL(reorder_graph.out_degree(vert), out_edges[ graph_perm[vert] ].size());
+        BOOST_CHECK_EQUAL(reorder_graph.out_degree(vert), out_edges[graph_perm[vert]].size());
         std::size_t ori_vert = graph_perm[vert];
-        
+
         std::size_t previous_chld = 0;
         std::size_t cntr = 0;
         for (const auto &chld : reorder_graph.children(vert)) {
-            if (cntr > 0) {
-                BOOST_CHECK_LE(previous_chld, chld);
-            }
+            if (cntr > 0) { BOOST_CHECK_LE(previous_chld, chld); }
 
-            BOOST_CHECK(std::find(out_edges[ori_vert].cbegin(), out_edges[ori_vert].cend(), graph_perm[chld]) != out_edges[ori_vert].cend());
+            BOOST_CHECK(std::find(out_edges[ori_vert].cbegin(), out_edges[ori_vert].cend(), graph_perm[chld])
+                        != out_edges[ori_vert].cend());
 
             previous_chld = chld;
             ++cntr;
@@ -937,17 +1036,16 @@ BOOST_AUTO_TEST_CASE(Graph_type_copy_contruction) {
     }
 
     for (const auto &vert : reorder_graph.vertices()) {
-        BOOST_CHECK_EQUAL(reorder_graph.in_degree(vert), in_edges[ graph_perm[vert] ].size());
+        BOOST_CHECK_EQUAL(reorder_graph.in_degree(vert), in_edges[graph_perm[vert]].size());
         std::size_t ori_vert = graph_perm[vert];
-        
+
         std::size_t previous_par = 0;
         std::size_t cntr = 0;
         for (const auto &par : reorder_graph.parents(vert)) {
-            if (cntr > 0) {
-                BOOST_CHECK_LE(previous_par, par);
-            }
+            if (cntr > 0) { BOOST_CHECK_LE(previous_par, par); }
 
-            BOOST_CHECK(std::find(in_edges[ori_vert].cbegin(), in_edges[ori_vert].cend(), graph_perm[par]) != in_edges[ori_vert].cend());
+            BOOST_CHECK(std::find(in_edges[ori_vert].cbegin(), in_edges[ori_vert].cend(), graph_perm[par])
+                        != in_edges[ori_vert].cend());
 
             previous_par = par;
             ++cntr;
@@ -955,10 +1053,20 @@ BOOST_AUTO_TEST_CASE(Graph_type_copy_contruction) {
     }
 }
 
-
-
 BOOST_AUTO_TEST_CASE(Graph1_copy_keep_order) {
-    const std::vector<std::pair<std::size_t, std::size_t>> edges({{0, 1}, {2, 3}, {6, 10}, {7, 9}, {0, 2}, {4, 6}, {1, 6}, {6, 7}, {5, 6}, {3, 7}, {1, 2}});
+    const std::vector<std::pair<std::size_t, std::size_t>> edges({
+        {0,  1},
+        {2,  3},
+        {6, 10},
+        {7,  9},
+        {0,  2},
+        {4,  6},
+        {1,  6},
+        {6,  7},
+        {5,  6},
+        {3,  7},
+        {1,  2}
+    });
 
     Compact_Sparse_Graph<true> graph(11, edges);
     Compact_Sparse_Graph<true> copy_graph(graph);
@@ -1018,18 +1126,28 @@ BOOST_AUTO_TEST_CASE(Graph1_copy_keep_order) {
             ++cntr;
         }
     }
-    
+
     for (const auto &vert : copy_graph.vertices()) {
         BOOST_CHECK_EQUAL(copy_graph.vertex_work_weight(vert), 1 + in_edges[vert].size());
     }
 
-    for (const auto &vert : copy_graph.vertices()) {
-        BOOST_CHECK_EQUAL(copy_graph.vertex_type(vert), 0);
-    }
+    for (const auto &vert : copy_graph.vertices()) { BOOST_CHECK_EQUAL(copy_graph.vertex_type(vert), 0); }
 }
 
 BOOST_AUTO_TEST_CASE(Graph1_move_keep_order) {
-    const std::vector<std::pair<std::size_t, std::size_t>> edges({{0, 1}, {2, 3}, {6, 10}, {7, 9}, {0, 2}, {4, 6}, {1, 6}, {6, 7}, {5, 6}, {3, 7}, {1, 2}});
+    const std::vector<std::pair<std::size_t, std::size_t>> edges({
+        {0,  1},
+        {2,  3},
+        {6, 10},
+        {7,  9},
+        {0,  2},
+        {4,  6},
+        {1,  6},
+        {6,  7},
+        {5,  6},
+        {3,  7},
+        {1,  2}
+    });
 
     Compact_Sparse_Graph<true> graph(11, edges);
     Compact_Sparse_Graph<true> copy_graph(std::move(graph));
@@ -1089,19 +1207,28 @@ BOOST_AUTO_TEST_CASE(Graph1_move_keep_order) {
             ++cntr;
         }
     }
-    
+
     for (const auto &vert : copy_graph.vertices()) {
         BOOST_CHECK_EQUAL(copy_graph.vertex_work_weight(vert), 1 + in_edges[vert].size());
     }
 
-    for (const auto &vert : copy_graph.vertices()) {
-        BOOST_CHECK_EQUAL(copy_graph.vertex_type(vert), 0);
-    }
+    for (const auto &vert : copy_graph.vertices()) { BOOST_CHECK_EQUAL(copy_graph.vertex_type(vert), 0); }
 }
 
-
 BOOST_AUTO_TEST_CASE(Graph1_copy_reorder) {
-    const std::vector<std::pair<std::size_t, std::size_t>> edges({{0, 1}, {2, 3}, {6, 10}, {7, 9}, {0, 2}, {4, 6}, {1, 6}, {6, 7}, {5, 6}, {3, 7}, {1, 2}});
+    const std::vector<std::pair<std::size_t, std::size_t>> edges({
+        {0,  1},
+        {2,  3},
+        {6, 10},
+        {7,  9},
+        {0,  2},
+        {4,  6},
+        {1,  6},
+        {6,  7},
+        {5,  6},
+        {3,  7},
+        {1,  2}
+    });
 
     Compact_Sparse_Graph<false> ori_graph(11, edges);
     Compact_Sparse_Graph<false> graph(ori_graph);
@@ -1136,17 +1263,16 @@ BOOST_AUTO_TEST_CASE(Graph1_copy_reorder) {
     });
 
     for (const auto &vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.out_degree(vert), out_edges[ graph_perm[vert] ].size());
+        BOOST_CHECK_EQUAL(graph.out_degree(vert), out_edges[graph_perm[vert]].size());
         std::size_t ori_vert = graph_perm[vert];
-        
+
         std::size_t previous_chld = 0;
         std::size_t cntr = 0;
         for (const auto &chld : graph.children(vert)) {
-            if (cntr > 0) {
-                BOOST_CHECK_LE(previous_chld, chld);
-            }
+            if (cntr > 0) { BOOST_CHECK_LE(previous_chld, chld); }
 
-            BOOST_CHECK(std::find(out_edges[ori_vert].cbegin(), out_edges[ori_vert].cend(), graph_perm[chld]) != out_edges[ori_vert].cend());
+            BOOST_CHECK(std::find(out_edges[ori_vert].cbegin(), out_edges[ori_vert].cend(), graph_perm[chld])
+                        != out_edges[ori_vert].cend());
 
             previous_chld = chld;
             ++cntr;
@@ -1168,35 +1294,43 @@ BOOST_AUTO_TEST_CASE(Graph1_copy_reorder) {
     });
 
     for (const auto &vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.in_degree(vert), in_edges[ graph_perm[vert] ].size());
+        BOOST_CHECK_EQUAL(graph.in_degree(vert), in_edges[graph_perm[vert]].size());
         std::size_t ori_vert = graph_perm[vert];
-        
+
         std::size_t previous_par = 0;
         std::size_t cntr = 0;
         for (const auto &par : graph.parents(vert)) {
-            if (cntr > 0) {
-                BOOST_CHECK_LE(previous_par, par);
-            }
+            if (cntr > 0) { BOOST_CHECK_LE(previous_par, par); }
 
-            BOOST_CHECK(std::find(in_edges[ori_vert].cbegin(), in_edges[ori_vert].cend(), graph_perm[par]) != in_edges[ori_vert].cend());
+            BOOST_CHECK(std::find(in_edges[ori_vert].cbegin(), in_edges[ori_vert].cend(), graph_perm[par])
+                        != in_edges[ori_vert].cend());
 
             previous_par = par;
             ++cntr;
         }
     }
-    
+
     for (const auto &vert : graph.vertices()) {
         BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), 1 + in_edges[graph_perm[vert]].size());
     }
 
-    for (const auto &vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.vertex_type(vert), 0);
-    }
+    for (const auto &vert : graph.vertices()) { BOOST_CHECK_EQUAL(graph.vertex_type(vert), 0); }
 }
 
-
 BOOST_AUTO_TEST_CASE(Graph1_move_reorder) {
-    const std::vector<std::pair<std::size_t, std::size_t>> edges({{0, 1}, {2, 3}, {6, 10}, {7, 9}, {0, 2}, {4, 6}, {1, 6}, {6, 7}, {5, 6}, {3, 7}, {1, 2}});
+    const std::vector<std::pair<std::size_t, std::size_t>> edges({
+        {0,  1},
+        {2,  3},
+        {6, 10},
+        {7,  9},
+        {0,  2},
+        {4,  6},
+        {1,  6},
+        {6,  7},
+        {5,  6},
+        {3,  7},
+        {1,  2}
+    });
 
     Compact_Sparse_Graph<false> ori_graph(11, edges);
     Compact_Sparse_Graph<false> graph(std::move(ori_graph));
@@ -1231,17 +1365,16 @@ BOOST_AUTO_TEST_CASE(Graph1_move_reorder) {
     });
 
     for (const auto &vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.out_degree(vert), out_edges[ graph_perm[vert] ].size());
+        BOOST_CHECK_EQUAL(graph.out_degree(vert), out_edges[graph_perm[vert]].size());
         std::size_t ori_vert = graph_perm[vert];
-        
+
         std::size_t previous_chld = 0;
         std::size_t cntr = 0;
         for (const auto &chld : graph.children(vert)) {
-            if (cntr > 0) {
-                BOOST_CHECK_LE(previous_chld, chld);
-            }
+            if (cntr > 0) { BOOST_CHECK_LE(previous_chld, chld); }
 
-            BOOST_CHECK(std::find(out_edges[ori_vert].cbegin(), out_edges[ori_vert].cend(), graph_perm[chld]) != out_edges[ori_vert].cend());
+            BOOST_CHECK(std::find(out_edges[ori_vert].cbegin(), out_edges[ori_vert].cend(), graph_perm[chld])
+                        != out_edges[ori_vert].cend());
 
             previous_chld = chld;
             ++cntr;
@@ -1263,28 +1396,25 @@ BOOST_AUTO_TEST_CASE(Graph1_move_reorder) {
     });
 
     for (const auto &vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.in_degree(vert), in_edges[ graph_perm[vert] ].size());
+        BOOST_CHECK_EQUAL(graph.in_degree(vert), in_edges[graph_perm[vert]].size());
         std::size_t ori_vert = graph_perm[vert];
-        
+
         std::size_t previous_par = 0;
         std::size_t cntr = 0;
         for (const auto &par : graph.parents(vert)) {
-            if (cntr > 0) {
-                BOOST_CHECK_LE(previous_par, par);
-            }
+            if (cntr > 0) { BOOST_CHECK_LE(previous_par, par); }
 
-            BOOST_CHECK(std::find(in_edges[ori_vert].cbegin(), in_edges[ori_vert].cend(), graph_perm[par]) != in_edges[ori_vert].cend());
+            BOOST_CHECK(std::find(in_edges[ori_vert].cbegin(), in_edges[ori_vert].cend(), graph_perm[par])
+                        != in_edges[ori_vert].cend());
 
             previous_par = par;
             ++cntr;
         }
     }
-    
+
     for (const auto &vert : graph.vertices()) {
         BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), 1 + in_edges[graph_perm[vert]].size());
     }
 
-    for (const auto &vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.vertex_type(vert), 0);
-    }
+    for (const auto &vert : graph.vertices()) { BOOST_CHECK_EQUAL(graph.vertex_type(vert), 0); }
 }

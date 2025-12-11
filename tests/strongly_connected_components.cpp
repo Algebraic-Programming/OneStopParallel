@@ -17,19 +17,18 @@ limitations under the License.
 */
 
 #define BOOST_TEST_MODULE StronglyConnectedComponentsTest
-#include <boost/test/unit_test.hpp>
-
 #include "osp/graph_algorithms/strongly_connected_components.hpp"
-#include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 
 #include <algorithm>
+#include <boost/test/unit_test.hpp>
 #include <set>
 #include <vector>
 
+#include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
+
 // Helper function to compare SCC results.
 template <typename VertexType>
-void check_sccs_equal(const std::vector<std::vector<VertexType>> &result,
-                      const std::vector<std::vector<VertexType>> &expected) {
+void check_sccs_equal(const std::vector<std::vector<VertexType>> &result, const std::vector<std::vector<VertexType>> &expected) {
     auto to_set_of_sets = [](const std::vector<std::vector<VertexType>> &vec_of_vecs) {
         std::set<std::set<VertexType>> set_of_sets;
         for (const auto &inner_vec : vec_of_vecs) {
@@ -57,9 +56,9 @@ BOOST_AUTO_TEST_CASE(EmptyGraphTest) {
 
 BOOST_AUTO_TEST_CASE(NoEdgesTest) {
     graph g;
-    g.add_vertex(1,1,1);
-    g.add_vertex(1,1,1);
-    g.add_vertex(1,1,1);
+    g.add_vertex(1, 1, 1);
+    g.add_vertex(1, 1, 1);
+    g.add_vertex(1, 1, 1);
 
     auto sccs = osp::strongly_connected_components(g);
     std::vector<std::vector<VertexType>> expected = {{0}, {1}, {2}};
@@ -68,10 +67,10 @@ BOOST_AUTO_TEST_CASE(NoEdgesTest) {
 
 BOOST_AUTO_TEST_CASE(LineGraphTest) {
     graph g;
-    g.add_vertex(1,1,1); 
-    g.add_vertex(1,1,1); 
-    g.add_vertex(1,1,1); 
-    g.add_vertex(1,1,1); 
+    g.add_vertex(1, 1, 1);
+    g.add_vertex(1, 1, 1);
+    g.add_vertex(1, 1, 1);
+    g.add_vertex(1, 1, 1);
     g.add_edge(0, 1);
     g.add_edge(1, 2);
     g.add_edge(2, 3);
@@ -83,23 +82,25 @@ BOOST_AUTO_TEST_CASE(LineGraphTest) {
 
 BOOST_AUTO_TEST_CASE(SimpleCycleTest) {
     graph g;
-    g.add_vertex(1,1,1);
-    g.add_vertex(1,1,1);
-    g.add_vertex(1,1,1);
+    g.add_vertex(1, 1, 1);
+    g.add_vertex(1, 1, 1);
+    g.add_vertex(1, 1, 1);
     g.add_edge(0, 1);
     g.add_edge(1, 2);
     g.add_edge(2, 0);
 
     auto sccs = osp::strongly_connected_components(g);
-    std::vector<std::vector<VertexType>> expected = {{0, 1, 2}};
+    std::vector<std::vector<VertexType>> expected = {
+        {0, 1, 2}
+    };
     check_sccs_equal(sccs, expected);
 }
 
 BOOST_AUTO_TEST_CASE(FullGraphIsSCCTest) {
     graph g;
-    g.add_vertex(1,1,1);
-    g.add_vertex(1,1,1);
-    g.add_vertex(1,1,1);
+    g.add_vertex(1, 1, 1);
+    g.add_vertex(1, 1, 1);
+    g.add_vertex(1, 1, 1);
     g.add_edge(0, 1);
     g.add_edge(1, 0);
     g.add_edge(1, 2);
@@ -108,39 +109,64 @@ BOOST_AUTO_TEST_CASE(FullGraphIsSCCTest) {
     g.add_edge(2, 0);
 
     auto sccs = osp::strongly_connected_components(g);
-    std::vector<std::vector<VertexType>> expected = {{0, 1, 2}};
+    std::vector<std::vector<VertexType>> expected = {
+        {0, 1, 2}
+    };
     check_sccs_equal(sccs, expected);
 }
 
 BOOST_AUTO_TEST_CASE(MultipleSCCsTest) {
- 
     graph g;
-    for (int i = 0; i < 8; ++i)
-        g.add_vertex(1,1,1); 
+    for (int i = 0; i < 8; ++i) { g.add_vertex(1, 1, 1); }
 
-    g.add_edge(0, 1); g.add_edge(1, 2); g.add_edge(2, 0); // SCC {0,1,2}
-    g.add_edge(3, 4); g.add_edge(4, 3); // SCC {3,4}
-    g.add_edge(5, 6); g.add_edge(6, 5); // SCC {5,6}
+    g.add_edge(0, 1);
+    g.add_edge(1, 2);
+    g.add_edge(2, 0);    // SCC {0,1,2}
+    g.add_edge(3, 4);
+    g.add_edge(4, 3);    // SCC {3,4}
+    g.add_edge(5, 6);
+    g.add_edge(6, 5);    // SCC {5,6}
     // SCC {7}
 
-    g.add_edge(2, 3); g.add_edge(3, 5); g.add_edge(4, 6); g.add_edge(5, 7);
+    g.add_edge(2, 3);
+    g.add_edge(3, 5);
+    g.add_edge(4, 6);
+    g.add_edge(5, 7);
 
     auto sccs = osp::strongly_connected_components(g);
-    std::vector<std::vector<VertexType>> expected = {{0, 1, 2}, {3, 4}, {5, 6}, {7}};
+    std::vector<std::vector<VertexType>> expected = {
+        {0, 1, 2},
+        {3, 4},
+        {5, 6},
+        {7}
+    };
     check_sccs_equal(sccs, expected);
 }
 
 BOOST_AUTO_TEST_CASE(ComplexGraphFromPaperTest) {
-
     graph g;
-    for (int i = 0; i < 8; ++i) g.add_vertex(1,1,1); 
-    g.add_edge(0, 1); g.add_edge(1, 2); g.add_edge(1, 4); g.add_edge(1, 5);
-    g.add_edge(2, 3); g.add_edge(2, 6); g.add_edge(3, 2); g.add_edge(3, 7);
-    g.add_edge(4, 0); g.add_edge(4, 5); g.add_edge(5, 6); g.add_edge(6, 5);
-    g.add_edge(7, 3); g.add_edge(7, 6);
+    for (int i = 0; i < 8; ++i) { g.add_vertex(1, 1, 1); }
+    g.add_edge(0, 1);
+    g.add_edge(1, 2);
+    g.add_edge(1, 4);
+    g.add_edge(1, 5);
+    g.add_edge(2, 3);
+    g.add_edge(2, 6);
+    g.add_edge(3, 2);
+    g.add_edge(3, 7);
+    g.add_edge(4, 0);
+    g.add_edge(4, 5);
+    g.add_edge(5, 6);
+    g.add_edge(6, 5);
+    g.add_edge(7, 3);
+    g.add_edge(7, 6);
 
     auto sccs = osp::strongly_connected_components(g);
-    std::vector<std::vector<VertexType>> expected = {{0, 1, 4}, {2, 3, 7}, {5, 6}};
+    std::vector<std::vector<VertexType>> expected = {
+        {0, 1, 4},
+        {2, 3, 7},
+        {5, 6}
+    };
     check_sccs_equal(sccs, expected);
 }
 

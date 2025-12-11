@@ -27,13 +27,11 @@ namespace osp {
  * @struct TotalCommunicationCost
  * @brief Implements the total communication cost model.
  */
-template<typename Graph_t>
+template <typename Graph_t>
 struct TotalCommunicationCost {
-
     using cost_type = double;
 
     cost_type operator()(const BspSchedule<Graph_t> &schedule) const {
-
         const auto &instance = schedule.getInstance();
         const auto &node_to_processor_assignment = schedule.assignedProcessors();
 
@@ -41,22 +39,24 @@ struct TotalCommunicationCost {
 
         for (const auto &v : instance.vertices()) {
             for (const auto &target : instance.getComputationalDag().children(v)) {
-
                 if (node_to_processor_assignment[v] != node_to_processor_assignment[target]) {
-                    total_communication += instance.sendCosts(node_to_processor_assignment[v], node_to_processor_assignment[target]) * instance.getComputationalDag().vertex_comm_weight(v);
+                    total_communication += instance.sendCosts(node_to_processor_assignment[v], node_to_processor_assignment[target])
+                                           * instance.getComputationalDag().vertex_comm_weight(v);
                 }
             }
         }
 
-        auto comm_cost = total_communication * static_cast<double>(instance.communicationCosts()) / static_cast<double>(instance.numberOfProcessors());
+        auto comm_cost = total_communication * static_cast<double>(instance.communicationCosts())
+                         / static_cast<double>(instance.numberOfProcessors());
 
         const unsigned number_of_supersteps = schedule.numberOfSupersteps();
 
         auto work_cost = cost_helpers::compute_work_costs(schedule);
-        auto sync_cost = static_cast<v_commw_t<Graph_t>>(number_of_supersteps > 1 ? number_of_supersteps - 1 : 0) * instance.synchronisationCosts();
+        auto sync_cost = static_cast<v_commw_t<Graph_t>>(number_of_supersteps > 1 ? number_of_supersteps - 1 : 0)
+                         * instance.synchronisationCosts();
 
         return comm_cost + work_cost + sync_cost;
     }
 };
 
-} // namespace osp
+}    // namespace osp

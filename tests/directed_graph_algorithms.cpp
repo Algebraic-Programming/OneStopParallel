@@ -22,6 +22,7 @@ limitations under the License.
 #include <iostream>
 #include <vector>
 
+#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 #include "osp/graph_algorithms/computational_dag_util.hpp"
 #include "osp/graph_algorithms/directed_graph_edge_desc_util.hpp"
 #include "osp/graph_algorithms/directed_graph_edge_desc_util_parallel.hpp"
@@ -31,15 +32,12 @@ limitations under the License.
 #include "osp/graph_algorithms/directed_graph_util.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 #include "osp/graph_implementations/boost_graphs/boost_graph.hpp"
-#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
-#include "test_utils.hpp"
 #include "test_graphs.hpp"
+#include "test_utils.hpp"
 
 using namespace osp;
 
 BOOST_AUTO_TEST_CASE(longest_edge_triangle_parallel) {
-
-
     using graph_t = boost_graph_int_t;
 
     // static_assert(std::is_base_of<Scheduler, T>::value, "Class is not a scheduler!");
@@ -50,9 +48,7 @@ BOOST_AUTO_TEST_CASE(longest_edge_triangle_parallel) {
     for (auto &filename_graph : filenames_graph) {
         graph_t graph;
 
-
-        bool status_graph = file_reader::readComputationalDagHyperdagFormatDB((project_root / filename_graph).string(),
-                                                                                graph);
+        bool status_graph = file_reader::readComputationalDagHyperdagFormatDB((project_root / filename_graph).string(), graph);
 
         BOOST_CHECK(status_graph);
 
@@ -63,16 +59,14 @@ BOOST_AUTO_TEST_CASE(longest_edge_triangle_parallel) {
         std::cout << "\n" << filename_graph << std::endl;
 
         std::cout << "Time for long_edges_in_triangles: "
-                  << std::chrono::duration_cast<std::chrono::milliseconds>(finish_time - start_time).count() << "ms"
-                  << std::endl;
+                  << std::chrono::duration_cast<std::chrono::milliseconds>(finish_time - start_time).count() << "ms" << std::endl;
 
         start_time = std::chrono::high_resolution_clock::now();
         auto deleted_edges_parallel = long_edges_in_triangles_parallel(graph);
         finish_time = std::chrono::high_resolution_clock::now();
 
         std::cout << "Time for long_edges_in_triangles_parallel: "
-                  << std::chrono::duration_cast<std::chrono::milliseconds>(finish_time - start_time).count() << "ms"
-                  << std::endl;
+                  << std::chrono::duration_cast<std::chrono::milliseconds>(finish_time - start_time).count() << "ms" << std::endl;
 
         BOOST_CHECK_EQUAL(deleted_edges.size(), deleted_edges_parallel.size());
 
@@ -80,8 +74,6 @@ BOOST_AUTO_TEST_CASE(longest_edge_triangle_parallel) {
             BOOST_CHECK(deleted_edges_parallel.find(edge) != deleted_edges_parallel.cend());
         }
 
-        for (const auto &edge : deleted_edges_parallel) {
-            BOOST_CHECK(deleted_edges.find(edge) != deleted_edges.cend());
-        }
+        for (const auto &edge : deleted_edges_parallel) { BOOST_CHECK(deleted_edges.find(edge) != deleted_edges.cend()); }
     }
 }

@@ -66,16 +66,12 @@ struct ConfigParser {
     }
 
     void add_algorithm(std::string name) {
-
         bool algorithm_found = false;
         std::string algorithm_identifier = name;
 
-        while (algorithm_identifier.find("-") == 0) {
-            algorithm_identifier = algorithm_identifier.substr(1);
-        }
+        while (algorithm_identifier.find("-") == 0) { algorithm_identifier = algorithm_identifier.substr(1); }
 
         for (auto &algorithm : scheduler_config) {
-
             std::string alg_name = algorithm.second.get_child("name").get_value<std::string>();
 
             if (alg_name == algorithm_identifier) {
@@ -90,40 +86,32 @@ struct ConfigParser {
     }
 
     void parse_config_file(std::string filename) {
-
         pt::ptree loadPtreeRoot;
         pt::read_json(filename, loadPtreeRoot);
 
         global_params = loadPtreeRoot.get_child("globalParameters");
-        
+
         try {
             instances = loadPtreeRoot.get_child("inputInstances");
-        } catch (const pt::ptree_bad_path &e) {
-            
-        }      
+        } catch (const pt::ptree_bad_path &e) {}
 
         pt::ptree scheduler_config_parse = loadPtreeRoot.get_child("algorithms");
         for (auto &algorithm : scheduler_config_parse) {
-
-            if (algorithm.second.get_child("run").get_value<bool>()) {
-                scheduler.push_back(algorithm);
-            }
+            if (algorithm.second.get_child("run").get_value<bool>()) { scheduler.push_back(algorithm); }
         }
     }
 
   public:
     ConfigParser() = default;
+
     ConfigParser(std::string main_config_file_) : main_config_file(main_config_file_), has_config_file(true) {}
 
     void parse_args(const int argc, const char *const argv[]) {
-
         if (has_config_file) {
-
             if (argc < 3) {
                 usage();
                 throw std::invalid_argument("Parameter error: not enough parameters specified.\n");
             } else if (std::string(argv[1]) == "--config") {
-
                 std::string config_file = argv[2];
                 if (config_file.empty() || config_file.substr(config_file.size() - 5) != ".json") {
                     throw std::invalid_argument("Parameter error: config file ending is not \".json\".\n");
@@ -140,10 +128,19 @@ struct ConfigParser {
                     throw std::invalid_argument("Parameter error: config file does not specify global parameters!\n");
                 }
             } else {
-
-                const std::set<std::string> parameters_requiring_value(
-                    {"--config", "--inputDag", "--g", "-inputDag", "-g", "--timeLimit", "--t", "-timeLimit", "-t",
-                     "--inputMachine", "--m", "-inputMachine", "-m"});
+                const std::set<std::string> parameters_requiring_value({"--config",
+                                                                        "--inputDag",
+                                                                        "--g",
+                                                                        "-inputDag",
+                                                                        "-g",
+                                                                        "--timeLimit",
+                                                                        "--t",
+                                                                        "-timeLimit",
+                                                                        "-t",
+                                                                        "--inputMachine",
+                                                                        "--m",
+                                                                        "-inputMachine",
+                                                                        "-m"});
 
                 pt::ptree loadPtreeRoot;
                 pt::read_json(main_config_file, loadPtreeRoot);
@@ -159,8 +156,8 @@ struct ConfigParser {
                 for (int i = 1; i < argc; ++i) {
                     // Check parameters that require an argument afterwards
                     if (parameters_requiring_value.count(argv[i]) == 1 && i + 1 >= argc) {
-                        throw std::invalid_argument("Parameter error: no parameter value after the \"" +
-                                                    std::string(argv[i]) + "\" option.\n");
+                        throw std::invalid_argument("Parameter error: no parameter value after the \"" + std::string(argv[i])
+                                                    + "\" option.\n");
                     }
 
                     std::string flag = argv[i];
@@ -169,30 +166,30 @@ struct ConfigParser {
                         usage();
                         throw std::invalid_argument("Parameter error: usage \"" + std::string(argv[i]) + "\".\n");
 
-                    } else if (std::string(flag) == "--timelimit" || std::string(flag) == "--t" ||
-                               std::string(flag) == "-t" || std::string(flag) == "-timelimit") {
+                    } else if (std::string(flag) == "--timelimit" || std::string(flag) == "--t" || std::string(flag) == "-t"
+                               || std::string(flag) == "-timelimit") {
                         global_params.put("timeLimit", std::stoi(argv[++i]));
 
-                    } else if (std::string(flag) == "--sankey" || std::string(flag) == "--s" ||
-                               std::string(flag) == "-s" || std::string(flag) == "-sankey") {
+                    } else if (std::string(flag) == "--sankey" || std::string(flag) == "--s" || std::string(flag) == "-s"
+                               || std::string(flag) == "-sankey") {
                         global_params.put("outputSankeySchedule", true);
 
-                    } else if (std::string(flag) == "--dot" || std::string(flag) == "--d" ||
-                               std::string(flag) == "-d" || std::string(flag) == "-dot") {
+                    } else if (std::string(flag) == "--dot" || std::string(flag) == "--d" || std::string(flag) == "-d"
+                               || std::string(flag) == "-dot") {
                         global_params.put("outputDotSchedule", true);
 
-                    } else if (std::string(flag) == "--inputDag" || std::string(flag) == "--g" ||
-                               std::string(flag) == "-inputDag" || std::string(flag) == "-g") {
+                    } else if (std::string(flag) == "--inputDag" || std::string(flag) == "--g" || std::string(flag) == "-inputDag"
+                               || std::string(flag) == "-g") {
                         instance.put("graphFile", argv[++i]);
                         graph_specified = true;
 
-                    } else if (std::string(flag) == "--inputMachine" || std::string(flag) == "--m" ||
-                               std::string(flag) == "-inputMachine" || std::string(flag) == "-m") {
+                    } else if (std::string(flag) == "--inputMachine" || std::string(flag) == "--m"
+                               || std::string(flag) == "-inputMachine" || std::string(flag) == "-m") {
                         instance.put("machineParamsFile", argv[++i]);
                         machine_specified = true;
 
-                    } else if (std::string(flag) == "--output" || std::string(flag) == "--o" ||
-                               std::string(flag) == "-output" || std::string(flag) == "-o") {
+                    } else if (std::string(flag) == "--output" || std::string(flag) == "--o" || std::string(flag) == "-output"
+                               || std::string(flag) == "-o") {
                         global_params.put("outputSchedule", true);
                     } else {
                         add_algorithm(flag);
@@ -210,16 +207,13 @@ struct ConfigParser {
                 instances.push_back(std::make_pair("", instance));
             }
         } else {
-
             if (argc < 3 || std::string(argv[1]) != "--config") {
-
                 std::cout << "Usage: read config file: \n"
                           << "     --config *.json          \t\tSpecify config .json file.\n";
 
                 throw std::invalid_argument("Parameter error: not enough parameters specified.\n");
 
             } else {
-
                 std::string config_file = argv[2];
                 if (config_file.empty() || config_file.substr(config_file.size() - 5) != ".json") {
                     throw std::invalid_argument("Parameter error: config file ending is not \".json\".\n");

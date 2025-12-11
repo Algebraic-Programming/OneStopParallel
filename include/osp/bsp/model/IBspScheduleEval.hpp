@@ -24,9 +24,8 @@ namespace osp {
 
 /// @class IBspSchedule
 /// @brief Interface for a BSP (Bulk Synchronous Parallel) schedule.
-template<typename Graph_t>
+template <typename Graph_t>
 class IBspScheduleEval {
-
     using vertex_idx = vertex_idx_t<Graph_t>;
 
   public:
@@ -37,7 +36,6 @@ class IBspScheduleEval {
     virtual v_workw_t<Graph_t> computeWorkCosts() const = 0;
     virtual unsigned numberOfSupersteps() const = 0;
     virtual const BspInstance<Graph_t> &getInstance() const = 0;
-
 };
 
-} // namespace  osp
+}    // namespace  osp

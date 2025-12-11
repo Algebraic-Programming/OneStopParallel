@@ -25,7 +25,7 @@ limitations under the License.
 
 namespace osp {
 
-template<typename integral_type>
+template <typename integral_type>
 integral_type intSqrtFloor(integral_type num) {
     static_assert(std::is_integral_v<integral_type>);
     assert(num > 0);
@@ -39,17 +39,14 @@ integral_type intSqrtFloor(integral_type num) {
     integral_type power2 = sqrt / 2;
     while (power2 > 0) {
         integral_type sum = sqrt + power2;
-        if (sum * sum <= num) {
-            sqrt = sum;
-        }
+        if (sum * sum <= num) { sqrt = sum; }
         power2 /= 2;
     }
 
     return sqrt;
 }
 
-
-template<typename integral_type>
+template <typename integral_type>
 std::vector<integral_type> divisorsList(integral_type num) {
     static_assert(std::is_integral_v<integral_type>);
     assert(num > 0);
@@ -58,15 +55,15 @@ std::vector<integral_type> divisorsList(integral_type num) {
 
     integral_type ub = intSqrtFloor<integral_type>(num);
     for (integral_type div = 1; div <= ub; ++div) {
-        if (num % div == 0) {
-            divs.emplace_back(div);
-        }
+        if (num % div == 0) { divs.emplace_back(div); }
     }
-    for (std::size_t indx = divs.back() * divs.back() == num ? divs.size() - 2U : divs.size() - 1U; indx != std::numeric_limits<std::size_t>::max(); --indx) {
+    for (std::size_t indx = divs.back() * divs.back() == num ? divs.size() - 2U : divs.size() - 1U;
+         indx != std::numeric_limits<std::size_t>::max();
+         --indx) {
         divs.emplace_back(num / divs[indx]);
     }
 
     return divs;
 }
 
-} // end namespace osp
+}    // end namespace osp

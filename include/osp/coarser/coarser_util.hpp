@@ -31,9 +31,10 @@ limitations under the License.
 #include "osp/concepts/specific_graph_impl.hpp"
 #include "osp/graph_algorithms/directed_graph_edge_desc_util.hpp"
 
-namespace osp { namespace coarser_util {
+namespace osp {
+namespace coarser_util {
 
-template<typename Graph_t_out>
+template <typename Graph_t_out>
 bool check_valid_contraction_map(const std::vector<vertex_idx_t<Graph_t_out>> &vertex_contraction_map) {
     std::set<vertex_idx_t<Graph_t_out>> image(vertex_contraction_map.cbegin(), vertex_contraction_map.cend());
     const vertex_idx_t<Graph_t_out> image_size = static_cast<vertex_idx_t<Graph_t_out>>(image.size());
@@ -42,15 +43,13 @@ bool check_valid_contraction_map(const std::vector<vertex_idx_t<Graph_t_out>> &v
     });
 }
 
-template<typename T>
+template <typename T>
 struct acc_sum {
-
     T operator()(const T &a, const T &b) { return a + b; }
 };
 
-template<typename T>
+template <typename T>
 struct acc_max {
-
     T operator()(const T &a, const T &b) { return std::max(a, b); }
 };
 
@@ -63,13 +62,15 @@ struct acc_max {
  * @return A status code indicating the success or failure of the coarsening operation.
  */
 
-template <typename Graph_t_in, class Graph_t_out, typename v_work_acc_method, typename v_comm_acc_method,
-          typename v_mem_acc_method, typename e_comm_acc_method>
-bool construct_coarse_dag(const Graph_t_in &dag_in, Graph_t_out &coarsened_dag,
+template <typename Graph_t_in, class Graph_t_out, typename v_work_acc_method, typename v_comm_acc_method, typename v_mem_acc_method, typename e_comm_acc_method>
+bool construct_coarse_dag(const Graph_t_in &dag_in,
+                          Graph_t_out &coarsened_dag,
                           const std::vector<vertex_idx_t<Graph_t_out>> &vertex_contraction_map) {
-    static_assert(is_directed_graph_v<Graph_t_in> && is_directed_graph_v<Graph_t_out>, "Graph types need to satisfy the is_directed_graph concept.");
+    static_assert(is_directed_graph_v<Graph_t_in> && is_directed_graph_v<Graph_t_out>,
+                  "Graph types need to satisfy the is_directed_graph concept.");
     static_assert(is_computational_dag_v<Graph_t_in>, "Graph_t_in must be a computational DAG");
-    static_assert(is_constructable_cdag_v<Graph_t_out> || is_direct_constructable_cdag_v<Graph_t_out>, "Graph_t_out must be a (direct) constructable computational DAG");
+    static_assert(is_constructable_cdag_v<Graph_t_out> || is_direct_constructable_cdag_v<Graph_t_out>,
+                  "Graph_t_out must be a (direct) constructable computational DAG");
 
     assert(check_valid_contraction_map<Graph_t_out>(vertex_contraction_map));
 
@@ -79,16 +80,14 @@ bool construct_coarse_dag(const Graph_t_in &dag_in, Graph_t_out &coarsened_dag,
     }
 
     if constexpr (is_direct_constructable_cdag_v<Graph_t_out>) {
-        const vertex_idx_t<Graph_t_out> num_vert_quotient =
-            (*std::max_element(vertex_contraction_map.cbegin(), vertex_contraction_map.cend())) + 1;
+        const vertex_idx_t<Graph_t_out> num_vert_quotient
+            = (*std::max_element(vertex_contraction_map.cbegin(), vertex_contraction_map.cend())) + 1;
 
         std::set<std::pair<vertex_idx_t<Graph_t_out>, vertex_idx_t<Graph_t_out>>> quotient_edges;
 
         for (const vertex_idx_t<Graph_t_in> &vert : dag_in.vertices()) {
             for (const vertex_idx_t<Graph_t_in> &chld : dag_in.children(vert)) {
-                if (vertex_contraction_map[vert] == vertex_contraction_map[chld]) {
-                    continue;
-                }
+                if (vertex_contraction_map[vert] == vertex_contraction_map[chld]) { continue; }
                 quotient_edges.emplace(vertex_contraction_map[vert], vertex_contraction_map[chld]);
             }
         }
@@ -96,9 +95,12 @@ bool construct_coarse_dag(const Graph_t_in &dag_in, Graph_t_out &coarsened_dag,
         coarsened_dag = Graph_t_out(num_vert_quotient, quotient_edges);
 
         if constexpr (has_vertex_weights_v<Graph_t_in> && is_modifiable_cdag_vertex_v<Graph_t_out>) {
-            static_assert(std::is_same_v<v_workw_t<Graph_t_in>, v_workw_t<Graph_t_out>>, "Work weight types of in-graph and out-graph must be the same.");
-            static_assert(std::is_same_v<v_commw_t<Graph_t_in>, v_commw_t<Graph_t_out>>, "Vertex communication types of in-graph and out-graph must be the same.");
-            static_assert(std::is_same_v<v_memw_t<Graph_t_in>, v_memw_t<Graph_t_out>>, "Memory weight types of in-graph and out-graph must be the same.");
+            static_assert(std::is_same_v<v_workw_t<Graph_t_in>, v_workw_t<Graph_t_out>>,
+                          "Work weight types of in-graph and out-graph must be the same.");
+            static_assert(std::is_same_v<v_commw_t<Graph_t_in>, v_commw_t<Graph_t_out>>,
+                          "Vertex communication types of in-graph and out-graph must be the same.");
+            static_assert(std::is_same_v<v_memw_t<Graph_t_in>, v_memw_t<Graph_t_out>>,
+                          "Memory weight types of in-graph and out-graph must be the same.");
 
             for (const vertex_idx_t<Graph_t_in> &vert : coarsened_dag.vertices()) {
                 coarsened_dag.set_vertex_work_weight(vert, 0);
@@ -110,17 +112,17 @@ bool construct_coarse_dag(const Graph_t_in &dag_in, Graph_t_out &coarsened_dag,
                 coarsened_dag.set_vertex_work_weight(
                     vertex_contraction_map[vert],
                     v_work_acc_method()(coarsened_dag.vertex_work_weight(vertex_contraction_map[vert]),
-                                    dag_in.vertex_work_weight(vert)));
+                                        dag_in.vertex_work_weight(vert)));
 
                 coarsened_dag.set_vertex_comm_weight(
                     vertex_contraction_map[vert],
                     v_comm_acc_method()(coarsened_dag.vertex_comm_weight(vertex_contraction_map[vert]),
-                                    dag_in.vertex_comm_weight(vert)));
+                                        dag_in.vertex_comm_weight(vert)));
 
                 coarsened_dag.set_vertex_mem_weight(
                     vertex_contraction_map[vert],
                     v_mem_acc_method()(coarsened_dag.vertex_mem_weight(vertex_contraction_map[vert]),
-                                    dag_in.vertex_mem_weight(vert)));
+                                       dag_in.vertex_mem_weight(vert)));
             }
         }
 
@@ -139,52 +141,45 @@ bool construct_coarse_dag(const Graph_t_in &dag_in, Graph_t_out &coarsened_dag,
 
         if constexpr (has_edge_weights_v<Graph_t_in> && is_modifiable_cdag_comm_edge_v<Graph_t_out>) {
             static_assert(std::is_same_v<e_commw_t<Graph_t_in>, e_commw_t<Graph_t_out>>,
-                        "Edge weight type of in graph and out graph must be the same!");
+                          "Edge weight type of in graph and out graph must be the same!");
 
-            for (const auto &edge : edges(coarsened_dag)) {
-                coarsened_dag.set_edge_comm_weight(edge, 0);
-            }
+            for (const auto &edge : edges(coarsened_dag)) { coarsened_dag.set_edge_comm_weight(edge, 0); }
 
             for (const auto &ori_edge : edges(dag_in)) {
                 vertex_idx_t<Graph_t_out> src = vertex_contraction_map[source(ori_edge, dag_in)];
                 vertex_idx_t<Graph_t_out> tgt = vertex_contraction_map[target(ori_edge, dag_in)];
-                
-                if (src == tgt) continue;
+
+                if (src == tgt) { continue; }
 
                 const auto [cont_edge, found] = edge_desc(src, tgt, coarsened_dag);
                 assert(found && "The edge should already exist");
-                coarsened_dag.set_edge_comm_weight(cont_edge, e_comm_acc_method()(coarsened_dag.edge_comm_weight(cont_edge), dag_in.edge_comm_weight(ori_edge)));
+                coarsened_dag.set_edge_comm_weight(
+                    cont_edge, e_comm_acc_method()(coarsened_dag.edge_comm_weight(cont_edge), dag_in.edge_comm_weight(ori_edge)));
             }
-        }        
+        }
         return true;
     }
 
     if constexpr (is_constructable_cdag_v<Graph_t_out>) {
         coarsened_dag = Graph_t_out();
 
-        const vertex_idx_t<Graph_t_out> num_vert_quotient =
-            (*std::max_element(vertex_contraction_map.cbegin(), vertex_contraction_map.cend())) + 1;
+        const vertex_idx_t<Graph_t_out> num_vert_quotient
+            = (*std::max_element(vertex_contraction_map.cbegin(), vertex_contraction_map.cend())) + 1;
 
-        for (vertex_idx_t<Graph_t_out> vert = 0; vert < num_vert_quotient; ++vert) {
-            coarsened_dag.add_vertex(0, 0, 0);
-        }
+        for (vertex_idx_t<Graph_t_out> vert = 0; vert < num_vert_quotient; ++vert) { coarsened_dag.add_vertex(0, 0, 0); }
 
         for (const vertex_idx_t<Graph_t_in> &vert : dag_in.vertices()) {
+            coarsened_dag.set_vertex_work_weight(vertex_contraction_map[vert],
+                                                 v_work_acc_method()(coarsened_dag.vertex_work_weight(vertex_contraction_map[vert]),
+                                                                     dag_in.vertex_work_weight(vert)));
 
-            coarsened_dag.set_vertex_work_weight(
-                vertex_contraction_map[vert],
-                v_work_acc_method()(coarsened_dag.vertex_work_weight(vertex_contraction_map[vert]),
-                                  dag_in.vertex_work_weight(vert)));
-
-            coarsened_dag.set_vertex_comm_weight(
-                vertex_contraction_map[vert],
-                v_comm_acc_method()(coarsened_dag.vertex_comm_weight(vertex_contraction_map[vert]),
-                                  dag_in.vertex_comm_weight(vert)));
+            coarsened_dag.set_vertex_comm_weight(vertex_contraction_map[vert],
+                                                 v_comm_acc_method()(coarsened_dag.vertex_comm_weight(vertex_contraction_map[vert]),
+                                                                     dag_in.vertex_comm_weight(vert)));
 
             coarsened_dag.set_vertex_mem_weight(
                 vertex_contraction_map[vert],
-                v_mem_acc_method()(coarsened_dag.vertex_mem_weight(vertex_contraction_map[vert]),
-                                 dag_in.vertex_mem_weight(vert)));
+                v_mem_acc_method()(coarsened_dag.vertex_mem_weight(vertex_contraction_map[vert]), dag_in.vertex_mem_weight(vert)));
         }
 
         if constexpr (has_typed_vertices_v<Graph_t_in> && is_constructable_cdag_typed_vertex_v<Graph_t_out>) {
@@ -202,24 +197,21 @@ bool construct_coarse_dag(const Graph_t_in &dag_in, Graph_t_out &coarsened_dag,
 
         for (const vertex_idx_t<Graph_t_in> &vert : dag_in.vertices()) {
             for (const vertex_idx_t<Graph_t_in> &chld : dag_in.children(vert)) {
-                if (vertex_contraction_map[vert] == vertex_contraction_map[chld]) {
-                    continue;
-                }
+                if (vertex_contraction_map[vert] == vertex_contraction_map[chld]) { continue; }
 
                 if constexpr (has_edge_weights_v<Graph_t_in> && is_constructable_cdag_comm_edge_v<Graph_t_out>) {
                     static_assert(std::is_same_v<e_commw_t<Graph_t_in>, e_commw_t<Graph_t_out>>,
                                   "Edge weight type of in graph and out graph must be the same!");
 
                     edge_desc_t<Graph_t_in> ori_edge = edge_desc(vert, chld, dag_in).first;
-                    const auto pair =
-                        edge_desc(vertex_contraction_map[vert], vertex_contraction_map[chld], coarsened_dag);
+                    const auto pair = edge_desc(vertex_contraction_map[vert], vertex_contraction_map[chld], coarsened_dag);
                     if (pair.second) {
-                        coarsened_dag.set_edge_comm_weight(pair.first,
-                                                           e_comm_acc_method()(coarsened_dag.edge_comm_weight(pair.first),
-                                                                             dag_in.edge_comm_weight(ori_edge)));
+                        coarsened_dag.set_edge_comm_weight(
+                            pair.first,
+                            e_comm_acc_method()(coarsened_dag.edge_comm_weight(pair.first), dag_in.edge_comm_weight(ori_edge)));
                     } else {
-                        coarsened_dag.add_edge(vertex_contraction_map[vert], vertex_contraction_map[chld],
-                                               dag_in.edge_comm_weight(ori_edge));
+                        coarsened_dag.add_edge(
+                            vertex_contraction_map[vert], vertex_contraction_map[chld], dag_in.edge_comm_weight(ori_edge));
                     }
                 } else {
                     if (not edge(vertex_contraction_map[vert], vertex_contraction_map[chld], coarsened_dag)) {
@@ -233,13 +225,15 @@ bool construct_coarse_dag(const Graph_t_in &dag_in, Graph_t_out &coarsened_dag,
     return false;
 }
 
-template<typename Graph_t_in, class Graph_t_out, typename v_work_acc_method = acc_sum<v_workw_t<Graph_t_in>>,
-         typename v_comm_acc_method = acc_sum<v_commw_t<Graph_t_in>>,
-         typename v_mem_acc_method = acc_sum<v_memw_t<Graph_t_in>>,
-         typename e_comm_acc_method = acc_sum<e_commw_t<Graph_t_in>>>
-bool construct_coarse_dag(const Graph_t_in &dag_in, Graph_t_out &coarsened_dag,
+template <typename Graph_t_in,
+          class Graph_t_out,
+          typename v_work_acc_method = acc_sum<v_workw_t<Graph_t_in>>,
+          typename v_comm_acc_method = acc_sum<v_commw_t<Graph_t_in>>,
+          typename v_mem_acc_method = acc_sum<v_memw_t<Graph_t_in>>,
+          typename e_comm_acc_method = acc_sum<e_commw_t<Graph_t_in>>>
+bool construct_coarse_dag(const Graph_t_in &dag_in,
+                          Graph_t_out &coarsened_dag,
                           std::vector<vertex_idx_t<Graph_t_out>> &vertex_contraction_map) {
-
     if constexpr (is_Compact_Sparse_Graph_reorder_v<Graph_t_out>) {
         static_assert(is_directed_graph_v<Graph_t_in> && is_directed_graph_v<Graph_t_out>,
                       "Graph types need to satisfy the is_directed_graph concept.");
@@ -253,32 +247,33 @@ bool construct_coarse_dag(const Graph_t_in &dag_in, Graph_t_out &coarsened_dag,
             coarsened_dag = Graph_t_out();
             return true;
         }
-        const vertex_idx_t<Graph_t_out> num_vert_quotient =
-            (*std::max_element(vertex_contraction_map.cbegin(), vertex_contraction_map.cend())) + 1;
+        const vertex_idx_t<Graph_t_out> num_vert_quotient
+            = (*std::max_element(vertex_contraction_map.cbegin(), vertex_contraction_map.cend())) + 1;
 
         std::set<std::pair<vertex_idx_t<Graph_t_out>, vertex_idx_t<Graph_t_out>>> quotient_edges;
 
         for (const vertex_idx_t<Graph_t_in> &vert : dag_in.vertices()) {
             for (const vertex_idx_t<Graph_t_in> &chld : dag_in.children(vert)) {
-                if (vertex_contraction_map[vert] == vertex_contraction_map[chld]) {
-                    continue;
-                }
+                if (vertex_contraction_map[vert] == vertex_contraction_map[chld]) { continue; }
                 quotient_edges.emplace(vertex_contraction_map[vert], vertex_contraction_map[chld]);
             }
         }
 
         coarsened_dag = Graph_t_out(num_vert_quotient, quotient_edges);
 
-        const auto& pushforward_map = coarsened_dag.get_pushforward_permutation();
+        const auto &pushforward_map = coarsened_dag.get_pushforward_permutation();
         std::vector<vertex_idx_t<Graph_t_out>> combined_expansion_map(dag_in.num_vertices());
         for (const auto &vert : dag_in.vertices()) {
             combined_expansion_map[vert] = pushforward_map[vertex_contraction_map[vert]];
         }
 
         if constexpr (has_vertex_weights_v<Graph_t_in> && is_modifiable_cdag_vertex_v<Graph_t_out>) {
-            static_assert(std::is_same_v<v_workw_t<Graph_t_in>, v_workw_t<Graph_t_out>>, "Work weight types of in-graph and out-graph must be the same.");
-            static_assert(std::is_same_v<v_commw_t<Graph_t_in>, v_commw_t<Graph_t_out>>, "Vertex communication types of in-graph and out-graph must be the same.");
-            static_assert(std::is_same_v<v_memw_t<Graph_t_in>, v_memw_t<Graph_t_out>>, "Memory weight types of in-graph and out-graph must be the same.");
+            static_assert(std::is_same_v<v_workw_t<Graph_t_in>, v_workw_t<Graph_t_out>>,
+                          "Work weight types of in-graph and out-graph must be the same.");
+            static_assert(std::is_same_v<v_commw_t<Graph_t_in>, v_commw_t<Graph_t_out>>,
+                          "Vertex communication types of in-graph and out-graph must be the same.");
+            static_assert(std::is_same_v<v_memw_t<Graph_t_in>, v_memw_t<Graph_t_out>>,
+                          "Memory weight types of in-graph and out-graph must be the same.");
 
             for (const vertex_idx_t<Graph_t_in> &vert : coarsened_dag.vertices()) {
                 coarsened_dag.set_vertex_work_weight(vert, 0);
@@ -290,23 +285,23 @@ bool construct_coarse_dag(const Graph_t_in &dag_in, Graph_t_out &coarsened_dag,
                 coarsened_dag.set_vertex_work_weight(
                     vertex_contraction_map[vert],
                     v_work_acc_method()(coarsened_dag.vertex_work_weight(combined_expansion_map[vert]),
-                                    dag_in.vertex_work_weight(vert)));
+                                        dag_in.vertex_work_weight(vert)));
 
                 coarsened_dag.set_vertex_comm_weight(
                     vertex_contraction_map[vert],
                     v_comm_acc_method()(coarsened_dag.vertex_comm_weight(combined_expansion_map[vert]),
-                                    dag_in.vertex_comm_weight(vert)));
+                                        dag_in.vertex_comm_weight(vert)));
 
                 coarsened_dag.set_vertex_mem_weight(
                     vertex_contraction_map[vert],
                     v_mem_acc_method()(coarsened_dag.vertex_mem_weight(combined_expansion_map[vert]),
-                                    dag_in.vertex_mem_weight(vert)));
+                                       dag_in.vertex_mem_weight(vert)));
             }
         }
 
         if constexpr (has_typed_vertices_v<Graph_t_in> && is_modifiable_cdag_typed_vertex_v<Graph_t_out>) {
             static_assert(std::is_same_v<v_type_t<Graph_t_in>, v_type_t<Graph_t_out>>,
-                            "Vertex type types of in graph and out graph must be the same!");
+                          "Vertex type types of in graph and out graph must be the same!");
 
             for (const vertex_idx_t<Graph_t_in> &vert : dag_in.vertices()) {
                 coarsened_dag.set_vertex_type(vertex_contraction_map[vert], dag_in.vertex_type(vert));
@@ -317,16 +312,15 @@ bool construct_coarse_dag(const Graph_t_in &dag_in, Graph_t_out &coarsened_dag,
             //                 && "Contracted vertices must be of the same type");
         }
 
-
         if constexpr (has_edge_weights_v<Graph_t_in> && has_edge_weights_v<Graph_t_out>) {
             static_assert(std::is_same_v<e_commw_t<Graph_t_in>, e_commw_t<Graph_t_out>>,
-                        "Edge weight type of in graph and out graph must be the same!");
-            
+                          "Edge weight type of in graph and out graph must be the same!");
+
             for (const auto &ori_edge : edges(dag_in)) {
                 vertex_idx_t<Graph_t_out> src = vertex_contraction_map[source(ori_edge, dag_in)];
                 vertex_idx_t<Graph_t_out> tgt = vertex_contraction_map[target(ori_edge, dag_in)];
-                
-                if (src == tgt) continue;
+
+                if (src == tgt) { continue; }
 
                 coarsened_dag.set_edge_comm_weight(src, tgt, 0);
             }
@@ -334,48 +328,39 @@ bool construct_coarse_dag(const Graph_t_in &dag_in, Graph_t_out &coarsened_dag,
             for (const auto &ori_edge : edges(dag_in)) {
                 vertex_idx_t<Graph_t_out> src = vertex_contraction_map[source(ori_edge, dag_in)];
                 vertex_idx_t<Graph_t_out> tgt = vertex_contraction_map[target(ori_edge, dag_in)];
-                
-                if (src == tgt) continue;
+
+                if (src == tgt) { continue; }
 
                 const auto cont_edge = coarsened_dag.edge(pushforward_map[src], pushforward_map[tgt]);
-                assert(source(cont_edge, coarsened_dag) == pushforward_map[src] && target(cont_edge, coarsened_dag) == pushforward_map[tgt]);
-                coarsened_dag.set_edge_comm_weight(src, tgt, e_comm_acc_method()(coarsened_dag.edge_comm_weight(cont_edge), dag_in.edge_comm_weight(ori_edge)));
+                assert(source(cont_edge, coarsened_dag) == pushforward_map[src]
+                       && target(cont_edge, coarsened_dag) == pushforward_map[tgt]);
+                coarsened_dag.set_edge_comm_weight(
+                    src, tgt, e_comm_acc_method()(coarsened_dag.edge_comm_weight(cont_edge), dag_in.edge_comm_weight(ori_edge)));
             }
         }
 
         std::swap(vertex_contraction_map, combined_expansion_map);
         return true;
     } else {
-        return construct_coarse_dag<Graph_t_in, Graph_t_out, v_work_acc_method, v_comm_acc_method, v_mem_acc_method,
-                                    e_comm_acc_method>(dag_in, coarsened_dag,
-                                                       static_cast<const std::vector<vertex_idx_t<Graph_t_out>> &>(
-                                                           vertex_contraction_map));
+        return construct_coarse_dag<Graph_t_in, Graph_t_out, v_work_acc_method, v_comm_acc_method, v_mem_acc_method, e_comm_acc_method>(
+            dag_in, coarsened_dag, static_cast<const std::vector<vertex_idx_t<Graph_t_out>> &>(vertex_contraction_map));
     }
 }
 
-
-template<typename Graph_t_in>
+template <typename Graph_t_in>
 bool check_valid_expansion_map(const std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &vertex_expansion_map) {
     std::size_t cntr = 0;
 
     std::vector<bool> preImage;
     for (const std::vector<vertex_idx_t<Graph_t_in>> &group : vertex_expansion_map) {
-        if (group.size() == 0) {
-            return false;
-        }
+        if (group.size() == 0) { return false; }
 
         for (const vertex_idx_t<Graph_t_in> vert : group) {
-            if (vert < static_cast<vertex_idx_t<Graph_t_in>>(0)) {
-                return false;
-            }
+            if (vert < static_cast<vertex_idx_t<Graph_t_in>>(0)) { return false; }
 
-            if (static_cast<std::size_t>(vert) >= preImage.size()) {
-                preImage.resize(vert + 1, false);
-            }
+            if (static_cast<std::size_t>(vert) >= preImage.size()) { preImage.resize(vert + 1, false); }
 
-            if (preImage[vert]) {
-                return false;
-            }
+            if (preImage[vert]) { return false; }
 
             preImage[vert] = true;
             cntr++;
@@ -385,35 +370,31 @@ bool check_valid_expansion_map(const std::vector<std::vector<vertex_idx_t<Graph_
     return (cntr == preImage.size());
 }
 
-template<typename Graph_t_in, typename Graph_t_out>
-std::vector<std::vector<vertex_idx_t<Graph_t_in>>>
-invert_vertex_contraction_map(const std::vector<vertex_idx_t<Graph_t_out>> &vertex_contraction_map) {
+template <typename Graph_t_in, typename Graph_t_out>
+std::vector<std::vector<vertex_idx_t<Graph_t_in>>> invert_vertex_contraction_map(
+    const std::vector<vertex_idx_t<Graph_t_out>> &vertex_contraction_map) {
     assert(check_valid_contraction_map<Graph_t_out>(vertex_contraction_map));
 
-
-
-    vertex_idx_t<Graph_t_out> num_vert = vertex_contraction_map.size() == 0? 0 :
-        *std::max_element(vertex_contraction_map.cbegin(), vertex_contraction_map.cend()) + 1;
+    vertex_idx_t<Graph_t_out> num_vert
+        = vertex_contraction_map.size() == 0
+              ? 0
+              : *std::max_element(vertex_contraction_map.cbegin(), vertex_contraction_map.cend()) + 1;
 
     std::vector<std::vector<vertex_idx_t<Graph_t_in>>> expansion_map(num_vert);
 
-    for (std::size_t i = 0; i < vertex_contraction_map.size(); ++i) {
-        expansion_map[vertex_contraction_map[i]].push_back(i);
-    }
+    for (std::size_t i = 0; i < vertex_contraction_map.size(); ++i) { expansion_map[vertex_contraction_map[i]].push_back(i); }
 
     return expansion_map;
 }
 
-template<typename Graph_t_in, typename Graph_t_out>
-std::vector<vertex_idx_t<Graph_t_out>>
-invert_vertex_expansion_map(const std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &vertex_expansion_map) {
+template <typename Graph_t_in, typename Graph_t_out>
+std::vector<vertex_idx_t<Graph_t_out>> invert_vertex_expansion_map(
+    const std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &vertex_expansion_map) {
     assert(check_valid_expansion_map<Graph_t_in>(vertex_expansion_map));
 
     vertex_idx_t<Graph_t_in> num_vert = 0;
     for (const auto &group : vertex_expansion_map) {
-        for (const vertex_idx_t<Graph_t_in> &vert : group) {
-            num_vert = std::max(num_vert, vert + 1);
-        }
+        for (const vertex_idx_t<Graph_t_in> &vert : group) { num_vert = std::max(num_vert, vert + 1); }
     }
 
     std::vector<vertex_idx_t<Graph_t_out>> vertex_contraction_map(num_vert);
@@ -426,42 +407,33 @@ invert_vertex_expansion_map(const std::vector<std::vector<vertex_idx_t<Graph_t_i
     return vertex_contraction_map;
 }
 
-
-template<typename Graph_t_in>
+template <typename Graph_t_in>
 void reorder_expansion_map(const Graph_t_in &graph, std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &vertex_expansion_map) {
     assert(check_valid_expansion_map<Graph_t_in>(vertex_expansion_map));
 
     std::vector<std::size_t> vertex_contraction_map(graph.num_vertices());
     for (std::size_t i = 0; i < vertex_expansion_map.size(); i++) {
-        for (const vertex_idx_t<Graph_t_in> &vert : vertex_expansion_map[i]) {
-            vertex_contraction_map[vert] = i;
-        }
+        for (const vertex_idx_t<Graph_t_in> &vert : vertex_expansion_map[i]) { vertex_contraction_map[vert] = i; }
     }
 
     std::vector<std::size_t> prec(vertex_expansion_map.size(), 0);
     for (const auto &vert : graph.vertices()) {
         for (const auto &par : graph.parents(vert)) {
-            if (vertex_contraction_map.at(par) != vertex_contraction_map.at(vert)) {
-                prec[vertex_contraction_map.at(vert)] += 1;
-            }
+            if (vertex_contraction_map.at(par) != vertex_contraction_map.at(vert)) { prec[vertex_contraction_map.at(vert)] += 1; }
         }
     }
 
-    for (auto &comp : vertex_expansion_map) {
-        std::nth_element(comp.begin(), comp.begin(), comp.end());
-    }
+    for (auto &comp : vertex_expansion_map) { std::nth_element(comp.begin(), comp.begin(), comp.end()); }
 
     auto cmp = [&vertex_expansion_map](const std::size_t &lhs, const std::size_t &rhs) {
-        return vertex_expansion_map[lhs] > vertex_expansion_map[rhs];                       // because priority queue is a max_priority queue
+        return vertex_expansion_map[lhs] > vertex_expansion_map[rhs];    // because priority queue is a max_priority queue
     };
 
     std::priority_queue<std::size_t, std::vector<std::size_t>, decltype(cmp)> ready(cmp);
     std::vector<std::size_t> topOrder;
     topOrder.reserve(vertex_expansion_map.size());
     for (std::size_t i = 0; i < vertex_expansion_map.size(); ++i) {
-        if (prec[i] == 0) {
-            ready.emplace(i);
-        }
+        if (prec[i] == 0) { ready.emplace(i); }
     }
 
     while (!ready.empty()) {
@@ -473,11 +445,9 @@ void reorder_expansion_map(const Graph_t_in &graph, std::vector<std::vector<vert
             for (const auto &chld : graph.children(vert)) {
                 if (vertex_contraction_map.at(vert) != vertex_contraction_map.at(chld)) {
                     prec[vertex_contraction_map.at(chld)] -= 1;
-                    if (prec[vertex_contraction_map.at(chld)] == 0) {
-                        ready.emplace(vertex_contraction_map.at(chld));
-                    }
+                    if (prec[vertex_contraction_map.at(chld)] == 0) { ready.emplace(vertex_contraction_map.at(chld)); }
                 }
-            } 
+            }
         }
     }
     assert(topOrder.size() == vertex_expansion_map.size());
@@ -487,17 +457,11 @@ void reorder_expansion_map(const Graph_t_in &graph, std::vector<std::vector<vert
     return;
 }
 
-
-
-
-
-template<typename Graph_t_in, typename Graph_t_out>
+template <typename Graph_t_in, typename Graph_t_out>
 bool pull_back_schedule(const BspSchedule<Graph_t_in> &schedule_in,
                         const std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &vertex_map,
                         BspSchedule<Graph_t_out> &schedule_out) {
-
     for (unsigned v = 0; v < vertex_map.size(); ++v) {
-
         const auto proc = schedule_in.assignedProcessor(v);
         const auto step = schedule_in.assignedSuperstep(v);
 
@@ -510,11 +474,10 @@ bool pull_back_schedule(const BspSchedule<Graph_t_in> &schedule_in,
     return true;
 }
 
-template<typename Graph_t_in, typename Graph_t_out>
+template <typename Graph_t_in, typename Graph_t_out>
 bool pull_back_schedule(const BspSchedule<Graph_t_in> &schedule_in,
                         const std::vector<vertex_idx_t<Graph_t_out>> &reverse_vertex_map,
                         BspSchedule<Graph_t_out> &schedule_out) {
-
     for (unsigned idx = 0; idx < reverse_vertex_map.size(); ++idx) {
         const auto &v = reverse_vertex_map[idx];
 
@@ -525,17 +488,16 @@ bool pull_back_schedule(const BspSchedule<Graph_t_in> &schedule_in,
     return true;
 }
 
-template<typename IntegralType>
-std::vector<IntegralType> compose_vertex_contraction_map(const std::vector<IntegralType> &firstMap, const std::vector<IntegralType> &secondMap) {
+template <typename IntegralType>
+std::vector<IntegralType> compose_vertex_contraction_map(const std::vector<IntegralType> &firstMap,
+                                                         const std::vector<IntegralType> &secondMap) {
     static_assert(std::is_integral_v<IntegralType>);
     std::vector<IntegralType> composedMap(firstMap.size());
 
-    for (std::size_t i = 0; i < composedMap.size(); ++i) {
-        composedMap[i] = secondMap[ firstMap[i] ];
-    }
+    for (std::size_t i = 0; i < composedMap.size(); ++i) { composedMap[i] = secondMap[firstMap[i]]; }
 
     return composedMap;
 }
 
-} // end namespace coarser_util
-} // end namespace osp
+}    // end namespace coarser_util
+}    // end namespace osp

@@ -16,14 +16,14 @@ limitations under the License.
 @author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 
-#include "osp/auxiliary/misc.hpp"
-#include "osp/auxiliary/random_graph_generator/near_diagonal_random_graph.hpp"
-#include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
-
 #include <fstream>
 #include <iostream>
 #include <random>
 #include <string>
+
+#include "osp/auxiliary/misc.hpp"
+#include "osp/auxiliary/random_graph_generator/near_diagonal_random_graph.hpp"
+#include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 
 using namespace osp;
 
@@ -32,8 +32,7 @@ using VertexType = vertex_idx_t<ComputationalDag>;
 
 int main(int argc, char *argv[]) {
     if (argc < 4) {
-        std::cerr << "Usage: " << argv[0]
-                  << " <number of vertices> <probability> <bandwidth> (optional:) <number of graphs>\n"
+        std::cerr << "Usage: " << argv[0] << " <number of vertices> <probability> <bandwidth> (optional:) <number of graphs>\n"
                   << std::endl;
         return 1;
     }
@@ -42,9 +41,7 @@ int main(int argc, char *argv[]) {
     double prob = std::atof(argv[2]);
     double bandwidth = std::atof(argv[3]);
     unsigned num_graphs = 1;
-    if (argc > 4) {
-        num_graphs = static_cast<unsigned>(std::stoul(argv[3]));
-    }
+    if (argc > 4) { num_graphs = static_cast<unsigned>(std::stoul(argv[3])); }
 
     // std::cout << "Vert: " << num_vert << " prob: " << prob << " bandwidth: " << bandwidth << " graphs: " <<
     // num_graphs << std::endl;
@@ -103,15 +100,14 @@ int main(int argc, char *argv[]) {
         std::ofstream graph_write;
         graph_write.open(graph_name);
         graph_write << header;
-        graph_write << std::to_string(graph.num_vertices()) + " " + std::to_string(graph.num_vertices()) + " " +
-                           std::to_string(graph.num_edges() + graph.num_vertices()) + "\n";
+        graph_write << std::to_string(graph.num_vertices()) + " " + std::to_string(graph.num_vertices()) + " "
+                           + std::to_string(graph.num_edges() + graph.num_vertices()) + "\n";
         for (VertexType j = 0; j < num_vert; j++) {
             double val = (1 - 2 * randInt(2)) * std::exp(unif_log(re));
             graph_write << std::to_string(j + 1) + " " + std::to_string(j + 1) + " " + std::to_string(val) + "\n";
             for (const auto &chld : graph.children(j)) {
                 val = unif(re);
-                graph_write << std::to_string(chld + 1) + " " + std::to_string(j + 1) + " " + std::to_string(val) +
-                                   "\n";
+                graph_write << std::to_string(chld + 1) + " " + std::to_string(j + 1) + " " + std::to_string(val) + "\n";
             }
         }
         graph_write.close();

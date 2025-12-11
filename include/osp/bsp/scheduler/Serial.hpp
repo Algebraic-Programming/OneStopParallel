@@ -18,11 +18,13 @@ limitations under the License.
 
 #pragma once
 
-#include "Scheduler.hpp"
 #include <deque>
 #include <limits>
 #include <string>
 #include <vector>
+
+#include "Scheduler.hpp"
+
 namespace osp {
 
 /**
@@ -32,9 +34,8 @@ namespace osp {
  * smallest number of supersteps.
  *
  */
-template<typename Graph_t>
+template <typename Graph_t>
 class Serial : public Scheduler<Graph_t> {
-
   public:
     /**
      * @brief Default constructor for Serial.
@@ -51,8 +52,7 @@ class Serial : public Scheduler<Graph_t> {
         const auto &dag = instance.getComputationalDag();
         const auto num_vertices = dag.num_vertices();
 
-        if (num_vertices == 0)
-            return RETURN_STATUS::OSP_SUCCESS;
+        if (num_vertices == 0) { return RETURN_STATUS::OSP_SUCCESS; }
 
         const auto &arch = instance.getArchitecture();
 
@@ -68,9 +68,7 @@ class Serial : public Scheduler<Graph_t> {
             }
         }
 
-        if (chosen_procs.empty()) {
-            return RETURN_STATUS::ERROR;
-        }
+        if (chosen_procs.empty()) { return RETURN_STATUS::ERROR; }
 
         const unsigned num_node_types = dag.num_vertex_types();
         std::vector<std::vector<unsigned>> node_type_compatible_processors(num_node_types);
@@ -91,9 +89,7 @@ class Serial : public Scheduler<Graph_t> {
             schedule.setAssignedProcessor(v, std::numeric_limits<unsigned>::max());
             schedule.setAssignedSuperstep(v, std::numeric_limits<unsigned>::max());
             in_degree[v] = dag.in_degree(v);
-            if (in_degree[v] == 0) {
-                ready_nodes.push_back(v);
-            }
+            if (in_degree[v] == 0) { ready_nodes.push_back(v); }
         }
 
         vertex_idx_t<Graph_t> scheduled_nodes_count = 0;
@@ -107,15 +103,12 @@ class Serial : public Scheduler<Graph_t> {
                 bool scheduled = false;
 
                 unsigned v_type = 0;
-                if constexpr (has_typed_vertices_v<Graph_t>) {
-                    v_type = dag.vertex_type(v);
-                }
+                if constexpr (has_typed_vertices_v<Graph_t>) { v_type = dag.vertex_type(v); }
 
                 for (const auto &p : node_type_compatible_processors[v_type]) {
                     bool parents_compatible = true;
                     for (const auto &parent : dag.parents(v)) {
-                        if (schedule.assignedSuperstep(parent) == current_superstep &&
-                            schedule.assignedProcessor(parent) != p) {
+                        if (schedule.assignedSuperstep(parent) == current_superstep && schedule.assignedProcessor(parent) != p) {
                             parents_compatible = false;
                             break;
                         }
@@ -134,9 +127,7 @@ class Serial : public Scheduler<Graph_t> {
                     deferred_nodes.push_back(v);
                 } else {
                     for (const auto &child : dag.children(v)) {
-                        if (--in_degree[child] == 0) {
-                            ready_nodes.push_back(child);
-                        }
+                        if (--in_degree[child] == 0) { ready_nodes.push_back(child); }
                     }
                 }
             }
@@ -155,4 +146,4 @@ class Serial : public Scheduler<Graph_t> {
     std::string getScheduleName() const override { return "Serial"; }
 };
 
-} // namespace osp
+}    // namespace osp

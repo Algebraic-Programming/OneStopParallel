@@ -17,8 +17,9 @@ limitations under the License.
 */
 #pragma once
 
-#include <vector>
 #include <numeric>
+#include <vector>
+
 #include "WavefrontStatisticsCollector.hpp"
 
 namespace osp {
@@ -29,12 +30,12 @@ enum class SequenceMetric { COMPONENT_COUNT, AVAILABLE_PARALLELISM };
  * @class SequenceGenerator
  * @brief Helper to generate a numerical sequence based on a chosen metric.
  */
-template<typename Graph_t>
+template <typename Graph_t>
 class SequenceGenerator {
     using VertexType = vertex_idx_t<Graph_t>;
 
-public:
-    SequenceGenerator(const Graph_t& dag, const std::vector<std::vector<VertexType>>& level_sets)
+  public:
+    SequenceGenerator(const Graph_t &dag, const std::vector<std::vector<VertexType>> &level_sets)
         : dag_(dag), level_sets_(level_sets) {}
 
     std::vector<double> generate(SequenceMetric metric) const {
@@ -47,15 +48,13 @@ public:
         }
     }
 
-private:
+  private:
     std::vector<double> generate_component_count() const {
         WavefrontStatisticsCollector<Graph_t> collector(dag_, level_sets_);
         auto fwd_stats = collector.compute_forward();
         std::vector<double> seq;
         seq.reserve(fwd_stats.size());
-        for (const auto& stat : fwd_stats) {
-            seq.push_back(static_cast<double>(stat.connected_components_vertices.size()));
-        }
+        for (const auto &stat : fwd_stats) { seq.push_back(static_cast<double>(stat.connected_components_vertices.size())); }
         return seq;
     }
 
@@ -65,17 +64,15 @@ private:
         double cumulative_work = 0.0;
         for (size_t i = 0; i < level_sets_.size(); ++i) {
             double level_work = 0.0;
-            for (const auto& vertex : level_sets_[i]) {
-                level_work += dag_.vertex_work_weight(vertex);
-            }
+            for (const auto &vertex : level_sets_[i]) { level_work += dag_.vertex_work_weight(vertex); }
             cumulative_work += level_work;
             seq.push_back(cumulative_work / (static_cast<double>(i) + 1.0));
         }
         return seq;
     }
 
-    const Graph_t& dag_;
-    const std::vector<std::vector<VertexType>>& level_sets_;
+    const Graph_t &dag_;
+    const std::vector<std::vector<VertexType>> &level_sets_;
 };
 
-} // end namespace osp
+}    // end namespace osp

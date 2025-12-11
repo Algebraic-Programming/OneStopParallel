@@ -26,8 +26,8 @@ limitations under the License.
 namespace osp {
 namespace file_reader {
 
-template<typename Graph_t>
-bool readGraph(const std::string& filename, Graph_t& graph) {
+template <typename Graph_t>
+bool readGraph(const std::string &filename, Graph_t &graph) {
     if (!isPathSafe(filename)) {
         std::cerr << "Error: Unsafe file path (possible traversal or invalid type).\n";
         return false;
@@ -50,12 +50,12 @@ bool readGraph(const std::string& filename, Graph_t& graph) {
     } else if (file_ending == "dot") {
         status = file_reader::readComputationalDagDotFormat(infile, graph);
     } else {
-        std::cout << "Unknown file ending: ." << file_ending
-                    << " ...assuming hyperDag format." << std::endl;
+        std::cout << "Unknown file ending: ." << file_ending << " ...assuming hyperDag format." << std::endl;
         status = file_reader::readComputationalDagHyperdagFormatDB(infile, graph);
     }
 
     return status;
 }
 
-}} // namespace osp::file_reader
+}    // namespace file_reader
+}    // namespace osp

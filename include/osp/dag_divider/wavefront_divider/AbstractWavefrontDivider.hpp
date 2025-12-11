@@ -17,15 +17,16 @@ limitations under the License.
 */
 #pragma once
 
-#include "osp/concepts/computational_dag_concept.hpp"
-#include <vector>
 #include <numeric>
 #include <queue>
 #include <unordered_map>
 #include <unordered_set>
-#include "osp/auxiliary/datastructures/union_find.hpp"
-#include "SequenceSplitter.hpp"
+#include <vector>
+
 #include "SequenceGenerator.hpp"
+#include "SequenceSplitter.hpp"
+#include "osp/auxiliary/datastructures/union_find.hpp"
+#include "osp/concepts/computational_dag_concept.hpp"
 #include "osp/dag_divider/DagDivider.hpp"
 
 namespace osp {
@@ -34,35 +35,33 @@ namespace osp {
  * @class AbstractWavefrontDivider
  * @brief Base class for wavefront-based DAG dividers.
  */
-template<typename Graph_t>
+template <typename Graph_t>
 class AbstractWavefrontDivider : public IDagDivider<Graph_t> {
-    static_assert(is_computational_dag_v<Graph_t>,
-                  "AbstractWavefrontDivider can only be used with computational DAGs.");
+    static_assert(is_computational_dag_v<Graph_t>, "AbstractWavefrontDivider can only be used with computational DAGs.");
 
-protected:
+  protected:
     using VertexType = vertex_idx_t<Graph_t>;
 
-    const Graph_t* dag_ptr_ = nullptr;
+    const Graph_t *dag_ptr_ = nullptr;
 
     /**
      * @brief Helper to get connected components for a specific range of levels.
      * This method is now const-correct.
      */
-    std::vector<std::vector<VertexType>> get_components_for_range(
-        size_t start_level, size_t end_level,
-        const std::vector<std::vector<VertexType>>& level_sets) const {
-        
+    std::vector<std::vector<VertexType>> get_components_for_range(size_t start_level,
+                                                                  size_t end_level,
+                                                                  const std::vector<std::vector<VertexType>> &level_sets) const {
         union_find_universe_t<Graph_t> uf;
         for (size_t i = start_level; i < end_level; ++i) {
             for (const auto vertex : level_sets[i]) {
                 uf.add_object(vertex, dag_ptr_->vertex_work_weight(vertex), dag_ptr_->vertex_mem_weight(vertex));
             }
-            for (const auto& node : level_sets[i]) {
-                for (const auto& child : dag_ptr_->children(node)) {
-                    if (uf.is_in_universe(child)) uf.join_by_name(node, child);
+            for (const auto &node : level_sets[i]) {
+                for (const auto &child : dag_ptr_->children(node)) {
+                    if (uf.is_in_universe(child)) { uf.join_by_name(node, child); }
                 }
-                for (const auto& parent : dag_ptr_->parents(node)) {
-                    if (uf.is_in_universe(parent)) uf.join_by_name(parent, node);
+                for (const auto &parent : dag_ptr_->parents(node)) {
+                    if (uf.is_in_universe(parent)) { uf.join_by_name(parent, node); }
                 }
             }
         }
@@ -83,26 +82,20 @@ protected:
      * @brief Computes wavefronts for a specific subset of vertices.
      * This method is now const.
      */
-    std::vector<std::vector<VertexType>> compute_wavefronts_for_subgraph(
-        const std::vector<VertexType>& vertices) const {
-        
-        if (vertices.empty()) return {};
+    std::vector<std::vector<VertexType>> compute_wavefronts_for_subgraph(const std::vector<VertexType> &vertices) const {
+        if (vertices.empty()) { return {}; }
 
         std::vector<std::vector<VertexType>> level_sets;
         std::unordered_set<VertexType> vertex_set(vertices.begin(), vertices.end());
         std::unordered_map<VertexType, int> in_degree;
         std::queue<VertexType> q;
 
-        for (const auto& v : vertices) {
+        for (const auto &v : vertices) {
             in_degree[v] = 0;
-            for (const auto& p : dag_ptr_->parents(v)) {
-                if (vertex_set.count(p)) {
-                    in_degree[v]++;
-                }
+            for (const auto &p : dag_ptr_->parents(v)) {
+                if (vertex_set.count(p)) { in_degree[v]++; }
             }
-            if (in_degree[v] == 0) {
-                q.push(v);
-            }
+            if (in_degree[v] == 0) { q.push(v); }
         }
 
         while (!q.empty()) {
@@ -112,12 +105,10 @@ protected:
                 VertexType u = q.front();
                 q.pop();
                 current_level.push_back(u);
-                for (const auto& v : dag_ptr_->children(u)) {
+                for (const auto &v : dag_ptr_->children(u)) {
                     if (vertex_set.count(v)) {
                         in_degree[v]--;
-                        if (in_degree[v] == 0) {
-                            q.push(v);
-                        }
+                        if (in_degree[v] == 0) { q.push(v); }
                     }
                 }
             }
@@ -127,4 +118,4 @@ protected:
     }
 };
 
-} // end namespace osp
+}    // end namespace osp

@@ -18,9 +18,10 @@ limitations under the License.
 
 #pragma once
 
+#include <unordered_set>
+
 #include "osp/bsp/model/cost/CostModelHelpers.hpp"
 #include "osp/concepts/computational_dag_concept.hpp"
-#include <unordered_set>
 
 namespace osp {
 
@@ -28,9 +29,8 @@ namespace osp {
  * @struct TotalLambdaCommunicationCost
  * @brief Implements the total lambda communication cost model.
  */
-template<typename Graph_t>
+template <typename Graph_t>
 struct TotalLambdaCommunicationCost {
-
     using cost_type = double;
 
     cost_type operator()(const BspSchedule<Graph_t> &schedule) const {
@@ -41,8 +41,7 @@ struct TotalLambdaCommunicationCost {
         const double comm_multiplier = 1.0 / instance.numberOfProcessors();
 
         for (const auto &v : instance.vertices()) {
-            if (instance.getComputationalDag().out_degree(v) == 0)
-                continue;
+            if (instance.getComputationalDag().out_degree(v) == 0) { continue; }
 
             std::unordered_set<unsigned> target_procs;
             for (const auto &target : instance.getComputationalDag().children(v)) {
@@ -61,10 +60,11 @@ struct TotalLambdaCommunicationCost {
 
         auto comm_cost = comm_costs * comm_multiplier * static_cast<double>(instance.communicationCosts());
         auto work_cost = cost_helpers::compute_work_costs(schedule);
-        auto sync_cost = static_cast<v_commw_t<Graph_t>>(number_of_supersteps > 1 ? number_of_supersteps - 1 : 0) * instance.synchronisationCosts();
+        auto sync_cost = static_cast<v_commw_t<Graph_t>>(number_of_supersteps > 1 ? number_of_supersteps - 1 : 0)
+                         * instance.synchronisationCosts();
 
         return comm_cost + static_cast<double>(work_cost) + static_cast<double>(sync_cost);
     }
 };
 
-} // namespace osp
+}    // namespace osp

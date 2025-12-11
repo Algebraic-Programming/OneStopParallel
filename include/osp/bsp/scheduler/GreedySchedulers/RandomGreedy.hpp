@@ -28,20 +28,17 @@ limitations under the License.
 
 namespace osp {
 
-template<typename Graph_t>
+template <typename Graph_t>
 class RandomGreedy : public Scheduler<Graph_t> {
-
     static_assert(is_computational_dag_v<Graph_t>, "RandomGreedy can only be used with computational DAGs.");
 
   private:
     bool ensure_enough_sources;
 
   public:
-
     RandomGreedy(bool ensure_enough_sources_ = true) : Scheduler<Graph_t>(), ensure_enough_sources(ensure_enough_sources_) {};
 
     RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &sched) override {
-
         using VertexType = vertex_idx_t<Graph_t>;
 
         const auto &instance = sched.getInstance();
@@ -57,9 +54,7 @@ class RandomGreedy : public Scheduler<Graph_t> {
 
         std::vector<VertexType> predecessors_count(instance.numberOfVertices(), 0);
         std::vector<VertexType> next;
-        for (const auto &i : source_vertices_view(graph)) {
-            next.push_back(i);
-        }
+        for (const auto &i : source_vertices_view(graph)) { next.push_back(i); }
 
         std::random_device rd;
         std::mt19937 g(rd());
@@ -72,7 +67,6 @@ class RandomGreedy : public Scheduler<Graph_t> {
             bool few_sources = next.size() < instance.numberOfProcessors() ? true : false;
             unsigned fail_counter = 0;
             while (!next.empty() && fail_counter < 20) {
-
                 std::uniform_int_distribution<VertexType> rand_node_idx(0, next.size() - 1);
                 VertexType node_ind = rand_node_idx(g);
                 const auto &node = next[node_ind];
@@ -81,14 +75,12 @@ class RandomGreedy : public Scheduler<Graph_t> {
                 unsigned processor_to_be_allocated = 0;
 
                 for (const auto &par : graph.parents(node)) {
-                    if (processor_set &&
-                        (nodes_assigned_this_superstep.find(par) != nodes_assigned_this_superstep.cend()) &&
-                        (sched.assignedProcessor(par) != processor_to_be_allocated)) {
+                    if (processor_set && (nodes_assigned_this_superstep.find(par) != nodes_assigned_this_superstep.cend())
+                        && (sched.assignedProcessor(par) != processor_to_be_allocated)) {
                         failed_to_allocate = true;
                         break;
                     }
-                    if ((!processor_set) &&
-                        (nodes_assigned_this_superstep.find(par) != nodes_assigned_this_superstep.cend())) {
+                    if ((!processor_set) && (nodes_assigned_this_superstep.find(par) != nodes_assigned_this_superstep.cend())) {
                         processor_set = true;
                         processor_to_be_allocated = sched.assignedProcessor(par);
                     }
@@ -108,8 +100,7 @@ class RandomGreedy : public Scheduler<Graph_t> {
 
                     assert(std::distance(processor_weights.begin(), min_iter) >= 0);
 
-                    sched.setAssignedProcessor(
-                        node, static_cast<unsigned>(std::distance(processor_weights.begin(), min_iter)));
+                    sched.setAssignedProcessor(node, static_cast<unsigned>(std::distance(processor_weights.begin(), min_iter)));
                 }
 
                 nodes_assigned_this_superstep.emplace(node);
@@ -117,9 +108,7 @@ class RandomGreedy : public Scheduler<Graph_t> {
                 std::vector<VertexType> new_nodes;
                 for (const auto &chld : graph.children(node)) {
                     predecessors_count[chld]++;
-                    if (predecessors_count[chld] == graph.in_degree(chld)) {
-                        new_nodes.emplace_back(chld);
-                    }
+                    if (predecessors_count[chld] == graph.in_degree(chld)) { new_nodes.emplace_back(chld); }
                 }
 
                 auto it = next.begin();
@@ -127,8 +116,7 @@ class RandomGreedy : public Scheduler<Graph_t> {
                 next.erase(it);
                 next.insert(next.end(), new_nodes.cbegin(), new_nodes.cend());
 
-                if (ensure_enough_sources && few_sources && next.size() >= instance.numberOfProcessors())
-                    break;
+                if (ensure_enough_sources && few_sources && next.size() >= instance.numberOfProcessors()) { break; }
             }
 
             superstep_counter++;
@@ -140,4 +128,4 @@ class RandomGreedy : public Scheduler<Graph_t> {
     std::string getScheduleName() const override { return ensure_enough_sources ? "RandomGreedyS" : "RandomGreedy"; }
 };
 
-} // namespace osp
+}    // namespace osp

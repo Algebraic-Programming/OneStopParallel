@@ -17,9 +17,9 @@ limitations under the License.
 */
 
 #define BOOST_TEST_MODULE Divisor
-#include <boost/test/unit_test.hpp>
-
 #include "osp/auxiliary/math/divisors.hpp"
+
+#include <boost/test/unit_test.hpp>
 
 using namespace osp;
 
@@ -31,9 +31,7 @@ BOOST_AUTO_TEST_CASE(IntegerSqrt) {
     }
 
     for (int root = 1; root < 300; ++root) {
-        for (int num = root * root; num < (root + 1) * (root + 1); ++num) {
-            BOOST_CHECK_EQUAL(intSqrtFloor(num), root);
-        }
+        for (int num = root * root; num < (root + 1) * (root + 1); ++num) { BOOST_CHECK_EQUAL(intSqrtFloor(num), root); }
     }
 }
 
@@ -45,7 +43,7 @@ BOOST_AUTO_TEST_CASE(Divisors) {
             BOOST_CHECK_EQUAL(num % div, 0U);
         }
         std::cout << "\n";
-        
+
         auto it = divs.begin();
         for (std::size_t i = 1U; i <= num; ++i) {
             if (num % i == 0) {

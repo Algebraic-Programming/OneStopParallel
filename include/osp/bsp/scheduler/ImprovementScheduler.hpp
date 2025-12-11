@@ -28,9 +28,8 @@ namespace osp {
  * The ImprovementScheduler class provides a common interface for improvement scheduling scheduler.
  * Subclasses of this class can implement specific improvement scheduler by overriding the virtual methods.
  */
-template<typename Graph_t>
+template <typename Graph_t>
 class ImprovementScheduler {
-
   protected:
     unsigned timeLimitSeconds; /**< The time limit in seconds for the improvement algorithm. */
 
@@ -91,9 +90,8 @@ class ImprovementScheduler {
     virtual RETURN_STATUS improveScheduleWithTimeLimit(BspSchedule<Graph_t> &schedule) = 0;
 };
 
-template<typename Graph_t>
+template <typename Graph_t>
 class ComboScheduler : public Scheduler<Graph_t> {
-
   private:
     Scheduler<Graph_t> &base_scheduler;
     ImprovementScheduler<Graph_t> &improvement_scheduler;
@@ -109,14 +107,11 @@ class ComboScheduler : public Scheduler<Graph_t> {
     }
 
     virtual RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &schedule) override {
-
         RETURN_STATUS status = base_scheduler.computeSchedule(schedule);
-        if (status != RETURN_STATUS::OSP_SUCCESS and status != RETURN_STATUS::BEST_FOUND) {
-            return status;
-        }
+        if (status != RETURN_STATUS::OSP_SUCCESS and status != RETURN_STATUS::BEST_FOUND) { return status; }
 
         return improvement_scheduler.improveSchedule(schedule);
     }
 };
 
-} // namespace osp
+}    // namespace osp

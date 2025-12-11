@@ -19,24 +19,23 @@ limitations under the License.
 #define BOOST_TEST_MODULE EftSubgraphScheduler
 #include <boost/test/unit_test.hpp>
 
+#include "osp/bsp/model/BspInstance.hpp"
 #include "osp/dag_divider/isomorphism_divider/EftSubgraphScheduler.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
-#include "osp/bsp/model/BspInstance.hpp"
 
 using namespace osp;
 
-BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_SimpleChain)
-{
+BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_SimpleChain) {
     using graph_t = computational_dag_vector_impl_def_t;
 
     // 1. Setup Instance
     BspInstance<graph_t> instance;
-    auto& dag = instance.getComputationalDag();
+    auto &dag = instance.getComputationalDag();
 
     // Create a simple coarse-grained DAG: 0 -> 1 -> 2
-    dag.add_vertex(100, 1, 0); // node 0
-    dag.add_vertex(200, 1, 0); // node 1
-    dag.add_vertex(300, 1, 0); // node 2
+    dag.add_vertex(100, 1, 0);    // node 0
+    dag.add_vertex(200, 1, 0);    // node 1
+    dag.add_vertex(300, 1, 0);    // node 2
     dag.add_edge(0, 1);
     dag.add_edge(1, 2);
 
@@ -48,7 +47,7 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_SimpleChain)
     std::vector<unsigned> multiplicities = {1, 2, 1};
     std::vector<unsigned> max_procs = {100, 100, 100};
     std::vector<std::vector<v_workw_t<graph_t>>> required_proc_types(3);
-    
+
     // Node 0: work 100, mult 1. Needs type 0.
     required_proc_types[0] = {100, 0};
     // Node 1: work 200, mult 2. Needs type 0 and 1.
@@ -75,19 +74,18 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_SimpleChain)
     BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[2][1], 2);
 }
 
-BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ForkJoin)
-{
+BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ForkJoin) {
     using graph_t = computational_dag_vector_impl_def_t;
 
     // 1. Setup Instance
     BspInstance<graph_t> instance;
-    auto& dag = instance.getComputationalDag();
+    auto &dag = instance.getComputationalDag();
 
     // Create a fork-join DAG: 0 -> {1,2} -> 3
-    dag.add_vertex(100, 1, 0); // node 0
-    dag.add_vertex(200, 1, 0); // node 1
-    dag.add_vertex(300, 1, 0); // node 2
-    dag.add_vertex(100, 1, 0); // node 3
+    dag.add_vertex(100, 1, 0);    // node 0
+    dag.add_vertex(200, 1, 0);    // node 1
+    dag.add_vertex(300, 1, 0);    // node 2
+    dag.add_vertex(100, 1, 0);    // node 3
     dag.add_edge(0, 1);
     dag.add_edge(0, 2);
     dag.add_edge(1, 3);
@@ -101,7 +99,7 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ForkJoin)
     std::vector<unsigned> multiplicities = {1, 2, 1, 4};
     std::vector<unsigned> max_procs = {100, 100, 100, 100};
     std::vector<std::vector<v_workw_t<graph_t>>> required_proc_types(4);
-    
+
     // All nodes need type 0
     required_proc_types[0] = {100};
     required_proc_types[1] = {200};
@@ -139,16 +137,15 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ForkJoin)
     BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[3][0], 1);
 }
 
-BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_Deadlock)
-{
+BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_Deadlock) {
     using graph_t = computational_dag_vector_impl_def_t;
 
     // 1. Setup Instance
     BspInstance<graph_t> instance;
-    auto& dag = instance.getComputationalDag();
+    auto &dag = instance.getComputationalDag();
 
     // Create a single-node DAG
-    dag.add_vertex(100, 1, 0); // node 0
+    dag.add_vertex(100, 1, 0);    // node 0
 
     // Setup Architecture: 1 processor of type 0
     instance.getArchitecture().setProcessorsWithTypes({0});
@@ -171,20 +168,19 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_Deadlock)
     BOOST_CHECK_LT(schedule.makespan, 0.0);
 }
 
-BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ComplexDAG)
-{
+BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ComplexDAG) {
     using graph_t = computational_dag_vector_impl_def_t;
 
     // 1. Setup Instance
     BspInstance<graph_t> instance;
-    auto& dag = instance.getComputationalDag();
+    auto &dag = instance.getComputationalDag();
 
-    dag.add_vertex(50, 1, 0);  // 0
-    dag.add_vertex(100, 1, 0); // 1
-    dag.add_vertex(150, 1, 0); // 2
-    dag.add_vertex(80, 1, 0);  // 3
-    dag.add_vertex(120, 1, 0); // 4
-    dag.add_vertex(60, 1, 0);  // 5
+    dag.add_vertex(50, 1, 0);     // 0
+    dag.add_vertex(100, 1, 0);    // 1
+    dag.add_vertex(150, 1, 0);    // 2
+    dag.add_vertex(80, 1, 0);     // 3
+    dag.add_vertex(120, 1, 0);    // 4
+    dag.add_vertex(60, 1, 0);     // 5
     dag.add_edge(0, 1);
     dag.add_edge(0, 2);
     dag.add_edge(1, 3);
@@ -199,14 +195,14 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ComplexDAG)
 
     // 2. Setup Scheduler Inputs
     std::vector<unsigned> multiplicities = {1, 2, 1, 4, 2, 1};
-    std::vector<unsigned> max_procs =      {100, 100, 100, 100, 100, 100};
+    std::vector<unsigned> max_procs = {100, 100, 100, 100, 100, 100};
     std::vector<std::vector<v_workw_t<graph_t>>> required_proc_types(6);
-    required_proc_types[0] = {50, 0};   // Job 0: needs T0
-    required_proc_types[1] = {100, 0};  // Job 1: needs T0
-    required_proc_types[2] = {0, 150};  // Job 2: needs T1
-    required_proc_types[3] = {40, 40};  // Job 3: needs T0 & T1
-    required_proc_types[4] = {0, 120};  // Job 4: needs T1
-    required_proc_types[5] = {60, 0};   // Job 5: needs T0
+    required_proc_types[0] = {50, 0};     // Job 0: needs T0
+    required_proc_types[1] = {100, 0};    // Job 1: needs T0
+    required_proc_types[2] = {0, 150};    // Job 2: needs T1
+    required_proc_types[3] = {40, 40};    // Job 3: needs T0 & T1
+    required_proc_types[4] = {0, 120};    // Job 4: needs T1
+    required_proc_types[5] = {60, 0};     // Job 5: needs T0
 
     // 3. Run Scheduler
     EftSubgraphScheduler<graph_t> scheduler;
@@ -225,20 +221,19 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ComplexDAG)
     BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[5][0], 4);
 }
 
-BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ResourceContention)
-{
+BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ResourceContention) {
     using graph_t = computational_dag_vector_impl_def_t;
 
     // 1. Setup Instance
     BspInstance<graph_t> instance;
-    auto& dag = instance.getComputationalDag();
+    auto &dag = instance.getComputationalDag();
 
     // Create a fork-join DAG: 0 -> {1,2,3} -> 4
-    dag.add_vertex(10, 1, 0);  // 0
-    dag.add_vertex(100, 1, 0); // 1 (high rank)
-    dag.add_vertex(50, 1, 0);  // 2 (mid rank)
-    dag.add_vertex(20, 1, 0);  // 3 (low rank)
-    dag.add_vertex(10, 1, 0);  // 4
+    dag.add_vertex(10, 1, 0);     // 0
+    dag.add_vertex(100, 1, 0);    // 1 (high rank)
+    dag.add_vertex(50, 1, 0);     // 2 (mid rank)
+    dag.add_vertex(20, 1, 0);     // 3 (low rank)
+    dag.add_vertex(10, 1, 0);     // 4
     dag.add_edge(0, 1);
     dag.add_edge(0, 2);
     dag.add_edge(0, 3);
@@ -286,18 +281,17 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ResourceContention)
     BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[4][0], 4);
 }
 
-BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ProportionalAllocation)
-{
+BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ProportionalAllocation) {
     using graph_t = computational_dag_vector_impl_def_t;
 
     // 1. Setup Instance
     BspInstance<graph_t> instance;
-    auto& dag = instance.getComputationalDag();
+    auto &dag = instance.getComputationalDag();
 
     // Create a fork DAG: 0 -> {1,2}
-    dag.add_vertex(10, 1, 0);  // 0
-    dag.add_vertex(300, 1, 0); // 1 (high rank)
-    dag.add_vertex(100, 1, 0); // 2 (low rank)
+    dag.add_vertex(10, 1, 0);     // 0
+    dag.add_vertex(300, 1, 0);    // 1 (high rank)
+    dag.add_vertex(100, 1, 0);    // 2 (low rank)
     dag.add_edge(0, 1);
     dag.add_edge(0, 2);
 
@@ -330,7 +324,7 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ProportionalAllocation)
     //        Job 1 finishes at 1 + 300/7 = 1 + 42.857... = 43.857...
     //        Job 2 finishes at 1 + 100/3 = 1 + 33.333... = 34.333...
     //        Makespan is 43.857...
-    BOOST_CHECK_CLOSE(schedule.makespan, 1.0 + 300.0/7.0, 1e-9);
+    BOOST_CHECK_CLOSE(schedule.makespan, 1.0 + 300.0 / 7.0, 1e-9);
 
     BOOST_REQUIRE_EQUAL(schedule.node_assigned_worker_per_type.size(), 3);
     // Job 0: 10 workers

@@ -18,13 +18,11 @@ limitations under the License.
 
 #define BOOST_TEST_MODULE Sets
 #include <boost/test/unit_test.hpp>
-
-#include "osp/auxiliary/misc.hpp"
-
 #include <numeric>
 #include <unordered_set>
 #include <vector>
 
+#include "osp/auxiliary/misc.hpp"
 
 using namespace osp;
 
@@ -60,16 +58,16 @@ BOOST_AUTO_TEST_CASE(SetIntersectionLarge) {
 
     std::unordered_set<int> iota_0_to_10k_set(iota_0_to_10k.begin(), iota_0_to_10k.end());
 
-    { // Intersection of [0,10k] and [10k,20k]  -->  []
+    {    // Intersection of [0,10k] and [10k,20k]  -->  []
         std::unordered_set<int> iota_10k_to_20k_set(iota_10k_to_20k.begin(), iota_10k_to_20k.end());
         BOOST_CHECK(get_intersection(iota_0_to_10k_set, iota_10k_to_20k_set).empty());
     }
 
-    { // Intersection of [0,10k] and [0k,10k]  -->  [0k,10k]
+    {    // Intersection of [0,10k] and [0k,10k]  -->  [0k,10k]
         BOOST_CHECK(get_intersection(iota_0_to_10k_set, iota_0_to_10k_set) == iota_0_to_10k_set);
     }
 
-    { // Intersection of [0,10k] and [5k,10k]  -->  [5k,10k]
+    {    // Intersection of [0,10k] and [5k,10k]  -->  [5k,10k]
         std::vector<int> iota_5k_to_10k(5'000);
         std::iota(iota_5k_to_10k.begin(), iota_5k_to_10k.end(), 5'000);
         std::unordered_set<int> iota_5k_to_10k_set(iota_5k_to_10k.begin(), iota_5k_to_10k.end());
@@ -112,18 +110,18 @@ BOOST_AUTO_TEST_CASE(SetUnionLarge) {
 
     std::unordered_set<int> iota_0_to_10k_set(iota_0_to_10k.begin(), iota_0_to_10k.end());
 
-    { // Union of [0,10k] and [10k,20k]  -->  [0k,20k]
+    {    // Union of [0,10k] and [10k,20k]  -->  [0k,20k]
         std::unordered_set<int> iota_10k_to_20k_set(iota_10k_to_20k.begin(), iota_10k_to_20k.end());
         std::unordered_set<int> expected_union(iota_0_to_10k.begin(), iota_0_to_10k.end());
         expected_union.insert(iota_10k_to_20k.begin(), iota_10k_to_20k.end());
         BOOST_CHECK(get_union(iota_0_to_10k_set, iota_10k_to_20k_set) == expected_union);
     }
 
-    { // Union of [0,10k] and [0k,10k]  -->  [0k,10k]
+    {    // Union of [0,10k] and [0k,10k]  -->  [0k,10k]
         BOOST_CHECK(get_union(iota_0_to_10k_set, iota_0_to_10k_set) == iota_0_to_10k_set);
     }
 
-    { // Union of [0,10k] and [5k,15k]  -->  [0k,15k]
+    {    // Union of [0,10k] and [5k,15k]  -->  [0k,15k]
         std::vector<int> iota_5k_to_15k(10'000);
         std::iota(iota_5k_to_15k.begin(), iota_5k_to_15k.end(), 5'000);
         std::unordered_set<int> iota_5k_to_15k_set(iota_5k_to_15k.begin(), iota_5k_to_15k.end());

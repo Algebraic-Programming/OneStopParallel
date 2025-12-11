@@ -18,6 +18,8 @@ limitations under the License.
 
 #define BOOST_TEST_MODULE ApproxEdgeReduction
 
+#include "osp/graph_algorithms/directed_graph_util.hpp"
+
 #include <boost/test/unit_test.hpp>
 #include <iostream>
 #include <vector>
@@ -27,14 +29,12 @@ limitations under the License.
 #include "osp/graph_algorithms/directed_graph_edge_view.hpp"
 #include "osp/graph_algorithms/directed_graph_path_util.hpp"
 #include "osp/graph_algorithms/directed_graph_top_sort.hpp"
-#include "osp/graph_algorithms/directed_graph_util.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 #include "osp/graph_implementations/boost_graphs/boost_graph.hpp"
 
 using namespace osp;
 
 computational_dag_vector_impl_def_t constr_graph_1() {
-
     computational_dag_vector_impl_def_t graph;
 
     using vertex_idx = computational_dag_vector_impl_def_t::vertex_idx;
@@ -63,7 +63,6 @@ computational_dag_vector_impl_def_t constr_graph_1() {
 }
 
 BOOST_AUTO_TEST_CASE(test_empty_graph) {
-
     computational_dag_vector_impl_def_t graph;
 
     using vertex_idx = computational_dag_vector_impl_def_t::vertex_idx;
@@ -82,7 +81,6 @@ BOOST_AUTO_TEST_CASE(test_empty_graph) {
 }
 
 BOOST_AUTO_TEST_CASE(test_util_1) {
-
     computational_dag_vector_impl_def_t graph = constr_graph_1();
 
     using vertex_idx = computational_dag_vector_impl_def_t::vertex_idx;
@@ -95,9 +93,7 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
     BOOST_CHECK_EQUAL(sources[0], 0);
 
     std::vector<vertex_idx> sources_s;
-    for (const auto &v : source_vertices_view(graph)) {
-        sources_s.push_back(v);
-    }
+    for (const auto &v : source_vertices_view(graph)) { sources_s.push_back(v); }
     BOOST_CHECK_EQUAL(sources_s.size(), 1);
     BOOST_CHECK_EQUAL(sources_s[0], 0);
 
@@ -108,9 +104,7 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
     BOOST_CHECK_EQUAL(sinks[2], 7);
 
     std::vector<vertex_idx> sinks_s;
-    for (const auto &v : sink_vertices_view(graph)) {
-        sinks_s.push_back(v);
-    }
+    for (const auto &v : sink_vertices_view(graph)) { sinks_s.push_back(v); }
 
     BOOST_CHECK_EQUAL(sinks_s.size(), 3);
     BOOST_CHECK_EQUAL(sinks_s[0], 5);
@@ -119,9 +113,7 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
 
     std::vector<vertex_idx> bfs;
 
-    for (const auto &v : bfs_view(graph, 1)) {
-        bfs.push_back(v);
-    }
+    for (const auto &v : bfs_view(graph, 1)) { bfs.push_back(v); }
 
     BOOST_CHECK_EQUAL(bfs.size(), 4);
     BOOST_CHECK_EQUAL(bfs[0], 1);
@@ -134,9 +126,7 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
 
     bfs.clear();
 
-    for (const auto &v : bfs_view(graph, 5)) {
-        bfs.push_back(v);
-    }
+    for (const auto &v : bfs_view(graph, 5)) { bfs.push_back(v); }
 
     BOOST_CHECK_EQUAL(bfs.size(), 1);
     BOOST_CHECK_EQUAL(bfs[0], 5);
@@ -146,9 +136,7 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
 
     bfs.clear();
 
-    for (const auto &v : bfs_view(graph, 0)) {
-        bfs.push_back(v);
-    }
+    for (const auto &v : bfs_view(graph, 0)) { bfs.push_back(v); }
 
     BOOST_CHECK_EQUAL(bfs.size(), 8);
     BOOST_CHECK_EQUAL(bfs[0], 0);
@@ -165,9 +153,7 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
 
     std::vector<vertex_idx> dfs;
 
-    for (const auto &v : dfs_view(graph, 1)) {
-        dfs.push_back(v);
-    }
+    for (const auto &v : dfs_view(graph, 1)) { dfs.push_back(v); }
 
     BOOST_CHECK_EQUAL(dfs.size(), 4);
     BOOST_CHECK_EQUAL(dfs[0], 1);
@@ -176,18 +162,14 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
     BOOST_CHECK_EQUAL(dfs[3], 7);
 
     dfs.clear();
-    for (const auto &v : dfs_view(graph, 5)) {
-        dfs.push_back(v);
-    }
+    for (const auto &v : dfs_view(graph, 5)) { dfs.push_back(v); }
 
     BOOST_CHECK_EQUAL(dfs.size(), 1);
     BOOST_CHECK_EQUAL(dfs[0], 5);
 
     dfs.clear();
 
-    for (const auto &v : dfs_view(graph, 0)) {
-        dfs.push_back(v);
-    }
+    for (const auto &v : dfs_view(graph, 0)) { dfs.push_back(v); }
 
     BOOST_CHECK_EQUAL(dfs.size(), 8);
     BOOST_CHECK_EQUAL(dfs[0], 0);
@@ -201,9 +183,7 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
 
     std::vector<vertex_idx> bfs_reverse;
 
-    for (const auto &v : bfs_reverse_view(graph, 1)) {
-        bfs_reverse.push_back(v);
-    }
+    for (const auto &v : bfs_reverse_view(graph, 1)) { bfs_reverse.push_back(v); }
     BOOST_CHECK_EQUAL(bfs_reverse.size(), 2);
     BOOST_CHECK_EQUAL(bfs_reverse[0], 1);
     BOOST_CHECK_EQUAL(bfs_reverse[1], 0);
@@ -213,9 +193,7 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
 
     bfs_reverse.clear();
 
-    for (const auto &v : bfs_reverse_view(graph, 5)) {
-        bfs_reverse.push_back(v);
-    }
+    for (const auto &v : bfs_reverse_view(graph, 5)) { bfs_reverse.push_back(v); }
 
     BOOST_CHECK_EQUAL(bfs_reverse.size(), 3);
     BOOST_CHECK_EQUAL(bfs_reverse[0], 5);
@@ -227,9 +205,7 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
 
     bfs_reverse.clear();
 
-    for (const auto &v : bfs_reverse_view(graph, 0)) {
-        bfs_reverse.push_back(v);
-    }
+    for (const auto &v : bfs_reverse_view(graph, 0)) { bfs_reverse.push_back(v); }
 
     BOOST_CHECK_EQUAL(bfs_reverse.size(), 1);
     BOOST_CHECK_EQUAL(bfs_reverse[0], 0);
@@ -239,9 +215,7 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
 
     bfs_reverse.clear();
 
-    for (const auto &v : bfs_reverse_view(graph, 7)) {
-        bfs_reverse.push_back(v);
-    }
+    for (const auto &v : bfs_reverse_view(graph, 7)) { bfs_reverse.push_back(v); }
 
     BOOST_CHECK_EQUAL(bfs_reverse.size(), 6);
     BOOST_CHECK_EQUAL(bfs_reverse[0], 7);
@@ -403,7 +377,6 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
 
     size_t i = 0;
     for (const auto &e : edge_view(graph)) {
-
         BOOST_CHECK_EQUAL(e.source, edge_source[i]);
         BOOST_CHECK_EQUAL(e.target, edge_target[i]);
 
@@ -423,14 +396,20 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
 }
 
 BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
-
     using VertexType = vertex_idx_t<boost_graph_int_t>;
 
-    const std::vector<std::vector<VertexType>> out(
-
-        {{7}, {}, {0}, {2}, {}, {2, 0}, {1, 2, 0}, {}, {4}, {6, 1, 5}}
-
-    );
+    const std::vector<std::vector<VertexType>> out({
+        {7},
+        {},
+        {0},
+        {2},
+        {},
+        {2, 0},
+        {1, 2, 0},
+        {},
+        {4},
+        {6, 1, 5}
+    });
     const std::vector<int> workW({1, 1, 1, 1, 2, 3, 2, 1, 1, 1});
     const std::vector<int> commW({1, 1, 1, 1, 2, 3, 2, 1, 1, 1});
 
@@ -480,16 +459,15 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     for (const auto &vertex : graph.vertices()) {
         num_edges += graph.out_degree(vertex);
         for (const auto &parent : graph.parents(vertex)) {
-            BOOST_CHECK(std::any_of(graph.children(parent).cbegin(), graph.children(parent).cend(),
-                                    [vertex](VertexType k) { return k == vertex; }));
+            BOOST_CHECK(std::any_of(
+                graph.children(parent).cbegin(), graph.children(parent).cend(), [vertex](VertexType k) { return k == vertex; }));
         }
     }
 
     for (const auto &vertex : graph.vertices()) {
         for (const auto &child : graph.children(vertex)) {
-
-            BOOST_CHECK(std::any_of(graph.parents(child).cbegin(), graph.parents(child).cend(),
-                                    [vertex](VertexType k) { return k == vertex; }));
+            BOOST_CHECK(std::any_of(
+                graph.parents(child).cbegin(), graph.parents(child).cend(), [vertex](VertexType k) { return k == vertex; }));
         }
     }
 
@@ -500,9 +478,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     std::vector<size_t> index_in_top_order = sorting_arrangement(top_order);
 
     for (const auto &i : top_order) {
-        for (const auto &j : graph.children(i)) {
-            BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]);
-        }
+        for (const auto &j : graph.children(i)) { BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]); }
     }
 
     top_order = GetTopOrderMaxChildren(graph);
@@ -512,9 +488,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     index_in_top_order = sorting_arrangement(top_order);
 
     for (const auto &i : top_order) {
-        for (const auto &j : graph.children(i)) {
-            BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]);
-        }
+        for (const auto &j : graph.children(i)) { BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]); }
     }
 
     top_order = GetTopOrderRandom(graph);
@@ -524,9 +498,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     index_in_top_order = sorting_arrangement(top_order);
 
     for (const auto &i : top_order) {
-        for (const auto &j : graph.children(i)) {
-            BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]);
-        }
+        for (const auto &j : graph.children(i)) { BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]); }
     }
 
     top_order = GetTopOrderMinIndex(graph);
@@ -536,15 +508,11 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     index_in_top_order = sorting_arrangement(top_order);
 
     for (const auto &i : top_order) {
-        for (const auto &j : graph.children(i)) {
-            BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]);
-        }
+        for (const auto &j : graph.children(i)) { BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]); }
     }
 
     std::set<VertexType> all_nodes;
-    for (const auto &vertex : graph.vertices()) {
-        all_nodes.emplace(vertex);
-    }
+    for (const auto &vertex : graph.vertices()) { all_nodes.emplace(vertex); }
     std::set<VertexType> nodes_a({8, 0});
     std::set<VertexType> nodes_b({6, 2, 5, 3});
     std::set<VertexType> nodes_c({6, 9, 1});
@@ -553,18 +521,12 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     std::vector<bool> bool_b(graph.num_vertices(), false);
     std::vector<bool> bool_c(graph.num_vertices(), false);
 
-    for (auto &i : nodes_a) {
-        bool_a[i] = true;
-    }
-    for (auto &i : nodes_b) {
-        bool_b[i] = true;
-    }
-    for (auto &i : nodes_c) {
-        bool_c[i] = true;
-    }
+    for (auto &i : nodes_a) { bool_a[i] = true; }
+    for (auto &i : nodes_b) { bool_b[i] = true; }
+    for (auto &i : nodes_c) { bool_c[i] = true; }
 
-    BOOST_CHECK(GetFilteredTopOrder(bool_a, graph) == std::vector<VertexType>({0, 8}) ||
-                GetFilteredTopOrder(bool_a, graph) == std::vector<VertexType>({8, 0}));
+    BOOST_CHECK(GetFilteredTopOrder(bool_a, graph) == std::vector<VertexType>({0, 8})
+                || GetFilteredTopOrder(bool_a, graph) == std::vector<VertexType>({8, 0}));
     BOOST_CHECK(GetFilteredTopOrder(bool_b, graph)[3] == 2);
     BOOST_CHECK(GetFilteredTopOrder(bool_c, graph) == std::vector<VertexType>({9, 6, 1}));
 
@@ -626,7 +588,6 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     for (unsigned loops = 0; loops < 10; loops++) {
         for (unsigned noise = 0; noise < 6; noise++) {
             for (auto &pois_para : poisson_params) {
-
                 std::vector<int> poset_int_map = get_strict_poset_integer_map(noise, pois_para, graph);
 
                 for (const auto &vertex : graph.vertices()) {
@@ -642,7 +603,13 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
     auto wavefronts = compute_wavefronts(graph);
 
-    std::vector<std::vector<VertexType>> expected_wavefronts = {{3, 8, 9}, {4, 6, 5}, {1, 2}, {0}, {7}};
+    std::vector<std::vector<VertexType>> expected_wavefronts = {
+        {3, 8, 9},
+        {4, 6, 5},
+        {1, 2},
+        {0},
+        {7}
+    };
 
     size_t size = 0;
     size_t counter = 0;
@@ -650,8 +617,8 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
         size += wavefront.size();
         BOOST_CHECK(!wavefront.empty());
 
-        BOOST_CHECK_EQUAL_COLLECTIONS(wavefront.begin(), wavefront.end(), expected_wavefronts[counter].begin(),
-                                      expected_wavefronts[counter].end());
+        BOOST_CHECK_EQUAL_COLLECTIONS(
+            wavefront.begin(), wavefront.end(), expected_wavefronts[counter].begin(), expected_wavefronts[counter].end());
 
         counter++;
     }

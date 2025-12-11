@@ -15,16 +15,15 @@ limitations under the License.
 
 @author Christos Matzoros, Toni Boehnlein, Pal Andras Papp, Raphael S. Steiner
 */
+#include <Eigen/Core>
+#include <Eigen/Dense>
+#include <Eigen/IterativeLinearSolvers>
+#include <Eigen/OrderingMethods>
+#include <Eigen/SparseCore>
 #include <filesystem>
 #include <string>
-#include <vector>
-
-#include <Eigen/SparseCore>
-#include <Eigen/IterativeLinearSolvers>
 #include <unsupported/Eigen/SparseExtra>
-#include <Eigen/Dense>
-#include <Eigen/Core>
-#include <Eigen/OrderingMethods>
+#include <vector>
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {
@@ -38,21 +37,22 @@ int main(int argc, char *argv[]) {
     name_graph = name_graph.substr(0, name_graph.find_last_of("."));
 
     std::cout << "Graph: " << name_graph << std::endl;
-    
-    using SM_csc = Eigen::SparseMatrix<double, Eigen::ColMajor, int32_t>; // Compressed Sparse Column format
-    using SM_csr = Eigen::SparseMatrix<double, Eigen::RowMajor, int32_t>; // Compressed Sparse Row format
 
-    SM_csc L_csc; // Initialize a sparse matrix in CSC format
+    using SM_csc = Eigen::SparseMatrix<double, Eigen::ColMajor, int32_t>;    // Compressed Sparse Column format
+    using SM_csr = Eigen::SparseMatrix<double, Eigen::RowMajor, int32_t>;    // Compressed Sparse Row format
+
+    SM_csc L_csc;    // Initialize a sparse matrix in CSC format
 
     Eigen::loadMarket(L_csc, filename_graph);
 
-    SM_csr L_csr = L_csc;   // Reformat the sparse matrix from CSC to CSR format
+    SM_csr L_csr = L_csc;    // Reformat the sparse matrix from CSC to CSR format
 
     Eigen::IncompleteCholesky<double, Eigen::Lower, Eigen::AMDOrdering<int>> ichol(L_csc);
 
     SM_csc LChol_csc = ichol.matrixL();
 
-    Eigen::saveMarket(LChol_csc, filename_graph.substr(0, filename_graph.find_last_of(".")) + "_postChol.mtx", Eigen::UpLoType::Symmetric);
+    Eigen::saveMarket(
+        LChol_csc, filename_graph.substr(0, filename_graph.find_last_of(".")) + "_postChol.mtx", Eigen::UpLoType::Symmetric);
 
     return 0;
 }

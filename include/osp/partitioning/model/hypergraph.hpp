@@ -17,31 +17,34 @@ limitations under the License.
 */
 #pragma once
 
-#include <vector>
 #include <stdexcept>
+#include <vector>
+
 #include "osp/concepts/computational_dag_concept.hpp"
 #include "osp/graph_algorithms/directed_graph_edge_desc_util.hpp"
 
 namespace osp {
 
-template<typename index_type = size_t, typename workw_type = int, typename memw_type = int, typename commw_type = int>
+template <typename index_type = size_t, typename workw_type = int, typename memw_type = int, typename commw_type = int>
 class Hypergraph {
-
     using this_t = Hypergraph<index_type, workw_type, memw_type, commw_type>;
 
   public:
-
     using vertex_idx = index_type;
-    using vertex_work_weight_type   = workw_type;
-    using vertex_mem_weight_type    = memw_type;
-    using vertex_comm_weight_type   = commw_type;
+    using vertex_work_weight_type = workw_type;
+    using vertex_mem_weight_type = memw_type;
+    using vertex_comm_weight_type = commw_type;
 
     Hypergraph() = default;
 
     Hypergraph(index_type num_vertices_, index_type num_hyperedges_)
-        : Num_vertices(num_vertices_), Num_hyperedges(num_hyperedges_), vertex_work_weights(num_vertices_, 1),
-        vertex_memory_weights(num_vertices_, 1), hyperedge_weights(num_hyperedges_, 1),
-        incident_hyperedges_to_vertex(num_vertices_), vertices_in_hyperedge(num_hyperedges_){}
+        : Num_vertices(num_vertices_),
+          Num_hyperedges(num_hyperedges_),
+          vertex_work_weights(num_vertices_, 1),
+          vertex_memory_weights(num_vertices_, 1),
+          hyperedge_weights(num_hyperedges_, 1),
+          incident_hyperedges_to_vertex(num_vertices_),
+          vertices_in_hyperedge(num_hyperedges_) {}
 
     Hypergraph(const this_t &other) = default;
     Hypergraph &operator=(const this_t &other) = default;
@@ -49,27 +52,35 @@ class Hypergraph {
     virtual ~Hypergraph() = default;
 
     inline index_type num_vertices() const { return Num_vertices; }
+
     inline index_type num_hyperedges() const { return Num_hyperedges; }
+
     inline index_type num_pins() const { return Num_pins; }
+
     inline workw_type get_vertex_work_weight(index_type node) const { return vertex_work_weights[node]; }
+
     inline memw_type get_vertex_memory_weight(index_type node) const { return vertex_memory_weights[node]; }
+
     inline commw_type get_hyperedge_weight(index_type hyperedge) const { return hyperedge_weights[hyperedge]; }
 
     void add_pin(index_type vertex_idx, index_type hyperedge_idx);
     void add_vertex(workw_type work_weight = 1, memw_type memory_weight = 1);
     void add_empty_hyperedge(commw_type weight = 1);
-    void add_hyperedge(const std::vector<index_type>& pins, commw_type weight = 1);
+    void add_hyperedge(const std::vector<index_type> &pins, commw_type weight = 1);
     void set_vertex_work_weight(index_type vertex_idx, workw_type weight);
     void set_vertex_memory_weight(index_type vertex_idx, memw_type weight);
     void set_hyperedge_weight(index_type hyperedge_idx, commw_type weight);
 
-
     void clear();
     void reset(index_type num_vertices_, index_type num_hyperedges_);
 
-    inline const std::vector<index_type> &get_incident_hyperedges(index_type vertex) const { return incident_hyperedges_to_vertex[vertex]; }
-    inline const std::vector<index_type> &get_vertices_in_hyperedge(index_type hyperedge) const { return vertices_in_hyperedge[hyperedge]; }
+    inline const std::vector<index_type> &get_incident_hyperedges(index_type vertex) const {
+        return incident_hyperedges_to_vertex[vertex];
+    }
 
+    inline const std::vector<index_type> &get_vertices_in_hyperedge(index_type hyperedge) const {
+        return vertices_in_hyperedge[hyperedge];
+    }
 
   private:
     index_type Num_vertices = 0, Num_hyperedges = 0, Num_pins = 0;
@@ -84,83 +95,73 @@ class Hypergraph {
 
 using Hypergraph_def_t = Hypergraph<size_t, int, int, int>;
 
-template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
-void Hypergraph<index_type, workw_type, memw_type, commw_type>::add_pin(index_type vertex, index_type hyperedge_idx)
-{
-    if(vertex >= Num_vertices)
-    {
+template <typename index_type, typename workw_type, typename memw_type, typename commw_type>
+void Hypergraph<index_type, workw_type, memw_type, commw_type>::add_pin(index_type vertex, index_type hyperedge_idx) {
+    if (vertex >= Num_vertices) {
         throw std::invalid_argument("Invalid Argument while adding pin: vertex index out of range.");
-    }
-    else if(hyperedge_idx >= Num_hyperedges)
-    {
+    } else if (hyperedge_idx >= Num_hyperedges) {
         throw std::invalid_argument("Invalid Argument while adding pin: hyperedge index out of range.");
-    }
-    else{    
+    } else {
         incident_hyperedges_to_vertex[vertex].push_back(hyperedge_idx);
         vertices_in_hyperedge[hyperedge_idx].push_back(vertex);
         ++Num_pins;
     }
 }
 
-template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
-void Hypergraph<index_type, workw_type, memw_type, commw_type>::add_vertex(workw_type work_weight, memw_type memory_weight)
-{
+template <typename index_type, typename workw_type, typename memw_type, typename commw_type>
+void Hypergraph<index_type, workw_type, memw_type, commw_type>::add_vertex(workw_type work_weight, memw_type memory_weight) {
     vertex_work_weights.push_back(work_weight);
     vertex_memory_weights.push_back(memory_weight);
     incident_hyperedges_to_vertex.emplace_back();
     ++Num_vertices;
 }
 
-template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
-void Hypergraph<index_type, workw_type, memw_type, commw_type>::add_empty_hyperedge(commw_type weight)
-{
+template <typename index_type, typename workw_type, typename memw_type, typename commw_type>
+void Hypergraph<index_type, workw_type, memw_type, commw_type>::add_empty_hyperedge(commw_type weight) {
     vertices_in_hyperedge.emplace_back();
     hyperedge_weights.push_back(weight);
     ++Num_hyperedges;
 }
 
-template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
-void Hypergraph<index_type, workw_type, memw_type, commw_type>::add_hyperedge(const std::vector<index_type>& pins, commw_type weight)
-{
+template <typename index_type, typename workw_type, typename memw_type, typename commw_type>
+void Hypergraph<index_type, workw_type, memw_type, commw_type>::add_hyperedge(const std::vector<index_type> &pins,
+                                                                              commw_type weight) {
     vertices_in_hyperedge.emplace_back(pins);
     hyperedge_weights.push_back(weight);
-    for(index_type vertex : pins)
-        incident_hyperedges_to_vertex[vertex].push_back(Num_hyperedges);
+    for (index_type vertex : pins) { incident_hyperedges_to_vertex[vertex].push_back(Num_hyperedges); }
     ++Num_hyperedges;
     Num_pins += static_cast<index_type>(pins.size());
 }
 
-template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
-void Hypergraph<index_type, workw_type, memw_type, commw_type>::set_vertex_work_weight(index_type vertex, workw_type weight)
-{
-    if(vertex >= Num_vertices)
+template <typename index_type, typename workw_type, typename memw_type, typename commw_type>
+void Hypergraph<index_type, workw_type, memw_type, commw_type>::set_vertex_work_weight(index_type vertex, workw_type weight) {
+    if (vertex >= Num_vertices) {
         throw std::invalid_argument("Invalid Argument while setting vertex weight: vertex index out of range.");
-    else   
+    } else {
         vertex_work_weights[vertex] = weight;
+    }
 }
 
-template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
-void Hypergraph<index_type, workw_type, memw_type, commw_type>::set_vertex_memory_weight(index_type vertex, memw_type weight)
-{
-    if(vertex >= Num_vertices)
+template <typename index_type, typename workw_type, typename memw_type, typename commw_type>
+void Hypergraph<index_type, workw_type, memw_type, commw_type>::set_vertex_memory_weight(index_type vertex, memw_type weight) {
+    if (vertex >= Num_vertices) {
         throw std::invalid_argument("Invalid Argument while setting vertex weight: vertex index out of range.");
-    else   
+    } else {
         vertex_memory_weights[vertex] = weight;
+    }
 }
 
-template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
-void Hypergraph<index_type, workw_type, memw_type, commw_type>::set_hyperedge_weight(index_type hyperedge_idx, commw_type weight)
-{
-    if(hyperedge_idx >= Num_hyperedges)
+template <typename index_type, typename workw_type, typename memw_type, typename commw_type>
+void Hypergraph<index_type, workw_type, memw_type, commw_type>::set_hyperedge_weight(index_type hyperedge_idx, commw_type weight) {
+    if (hyperedge_idx >= Num_hyperedges) {
         throw std::invalid_argument("Invalid Argument while setting hyperedge weight: hyepredge index out of range.");
-    else   
+    } else {
         hyperedge_weights[hyperedge_idx] = weight;
+    }
 }
 
-
-template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
-void Hypergraph<index_type, workw_type, memw_type, commw_type>::clear()
-{
+template <typename index_type, typename workw_type, typename memw_type, typename commw_type>
+void Hypergraph<index_type, workw_type, memw_type, commw_type>::clear() {
     Num_vertices = 0;
     Num_hyperedges = 0;
     Num_pins = 0;
@@ -172,9 +173,8 @@ void Hypergraph<index_type, workw_type, memw_type, commw_type>::clear()
     vertices_in_hyperedge.clear();
 }
 
-template<typename index_type, typename workw_type, typename memw_type, typename commw_type>
-void Hypergraph<index_type, workw_type, memw_type, commw_type>::reset(index_type num_vertices_, index_type num_hyperedges_)
-{
+template <typename index_type, typename workw_type, typename memw_type, typename commw_type>
+void Hypergraph<index_type, workw_type, memw_type, commw_type>::reset(index_type num_vertices_, index_type num_hyperedges_) {
     clear();
 
     Num_vertices = num_vertices_;
@@ -187,7 +187,4 @@ void Hypergraph<index_type, workw_type, memw_type, commw_type>::reset(index_type
     vertices_in_hyperedge.resize(num_hyperedges_);
 }
 
-
-
-
-} // namespace osp
+}    // namespace osp

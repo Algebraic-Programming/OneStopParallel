@@ -24,12 +24,12 @@ limitations under the License.
 
 namespace osp {
 
-template<typename T>
+template <typename T>
 struct DefaultHasEntry {
     static inline bool has_entry(const T &val) { return val != 0; }
 };
 
-template<typename T>
+template <typename T>
 struct DefaultHasEntry<std::vector<T>> {
     static inline bool has_entry(const std::vector<T> &val) { return !val.empty(); }
 };
@@ -40,9 +40,8 @@ struct DefaultHasEntry<std::vector<T>> {
  * This structure tracks information about children assigned to each processor.
  * It uses a 2D vector for dense data.
  */
-template<typename vertex_idx_t, typename ValueType = unsigned, typename HasEntry = DefaultHasEntry<ValueType>>
+template <typename vertex_idx_t, typename ValueType = unsigned, typename HasEntry = DefaultHasEntry<ValueType>>
 struct generic_lambda_vector_container {
-
     /**
      * @brief Range adapter for iterating over non-zero/non-empty processor entries.
      */
@@ -64,30 +63,28 @@ struct generic_lambda_vector_container {
 
           public:
             lambda_vector_iterator(const std::vector<ValueType> &vec) : vec_(vec), index_(0) {
-                while (index_ < vec_.size() && !HasEntry::has_entry(vec_[index_])) {
-                    ++index_;
-                }
+                while (index_ < vec_.size() && !HasEntry::has_entry(vec_[index_])) { ++index_; }
             }
 
             lambda_vector_iterator(const std::vector<ValueType> &vec, unsigned index) : vec_(vec), index_(index) {}
 
             lambda_vector_iterator &operator++() {
                 ++index_;
-                while (index_ < vec_.size() && !HasEntry::has_entry(vec_[index_])) {
-                    ++index_;
-                }
+                while (index_ < vec_.size() && !HasEntry::has_entry(vec_[index_])) { ++index_; }
                 return *this;
             }
 
             value_type operator*() const { return std::make_pair(index_, vec_[index_]); }
 
             bool operator==(const lambda_vector_iterator &other) const { return index_ == other.index_; }
+
             bool operator!=(const lambda_vector_iterator &other) const { return !(*this == other); }
         };
 
         lambda_vector_range(const std::vector<ValueType> &vec) : vec_(vec) {}
 
         lambda_vector_iterator begin() { return lambda_vector_iterator(vec_); }
+
         lambda_vector_iterator end() { return lambda_vector_iterator(vec_, static_cast<unsigned>(vec_.size())); }
     };
 
@@ -110,15 +107,11 @@ struct generic_lambda_vector_container {
         return HasEntry::has_entry(node_lambda_vec[node][proc]);
     }
 
-    inline ValueType &get_proc_entry(const vertex_idx_t node, const unsigned proc) {
-        return node_lambda_vec[node][proc];
-    }
+    inline ValueType &get_proc_entry(const vertex_idx_t node, const unsigned proc) { return node_lambda_vec[node][proc]; }
 
-    inline ValueType get_proc_entry(const vertex_idx_t node, const unsigned proc) const {
-        return node_lambda_vec[node][proc];
-    }
+    inline ValueType get_proc_entry(const vertex_idx_t node, const unsigned proc) const { return node_lambda_vec[node][proc]; }
 
     inline auto iterate_proc_entries(const vertex_idx_t node) { return lambda_vector_range(node_lambda_vec[node]); }
 };
 
-} // namespace osp
+}    // namespace osp

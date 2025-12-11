@@ -39,7 +39,8 @@ namespace osp {
  * @tparam D The number of children for each node (the 'd' in d-ary). Must be >= 2.
  * @tparam Compare The comparison function object type.
  */
-template <typename Key, typename Value, unsigned int D, typename Compare> class DaryHeap {
+template <typename Key, typename Value, unsigned int D, typename Compare>
+class DaryHeap {
     static_assert(D >= 2, "D-ary heap must have at least 2 children per node.");
 
   private:
@@ -58,25 +59,19 @@ template <typename Key, typename Value, unsigned int D, typename Compare> class 
     void push(const Key &key, const Value &value) {
         // emplace and check for success to avoid a separate lookup with contains()
         auto [it, success] = node_info.emplace(key, NodeInfo{value, heap.size()});
-        if (!success) {
-            throw std::invalid_argument("Key already exists in the heap.");
-        }
+        if (!success) { throw std::invalid_argument("Key already exists in the heap."); }
 
         heap.push_back(key);
         sift_up(it->second.position);
     }
 
     const Key &top() const {
-        if (is_empty()) {
-            throw std::out_of_range("Heap is empty.");
-        }
+        if (is_empty()) { throw std::out_of_range("Heap is empty."); }
         return heap.front();
     }
 
     Key pop() {
-        if (is_empty()) {
-            throw std::out_of_range("Heap is empty.");
-        }
+        if (is_empty()) { throw std::out_of_range("Heap is empty."); }
 
         Key top_key = std::move(heap.front());
 
@@ -96,9 +91,7 @@ template <typename Key, typename Value, unsigned int D, typename Compare> class 
 
     void update(const Key &key, const Value &new_value) {
         auto it = node_info.find(key);
-        if (it == node_info.end()) {
-            throw std::invalid_argument("Key does not exist in the heap.");
-        }
+        if (it == node_info.end()) { throw std::invalid_argument("Key does not exist in the heap."); }
         auto &info = it->second;
         const Value old_value = info.value;
 
@@ -113,9 +106,7 @@ template <typename Key, typename Value, unsigned int D, typename Compare> class 
 
     void erase(const Key &key) {
         auto it = node_info.find(key);
-        if (it == node_info.end()) {
-            throw std::invalid_argument("Key does not exist in the heap.");
-        }
+        if (it == node_info.end()) { throw std::invalid_argument("Key does not exist in the heap."); }
 
         size_t index = it->second.position;
         size_t last_index = heap.size() - 1;
@@ -139,9 +130,7 @@ template <typename Key, typename Value, unsigned int D, typename Compare> class 
 
     const Value &get_value(const Key &key) const {
         auto it = node_info.find(key);
-        if (it == node_info.end()) {
-            throw std::out_of_range("Key does not exist in the heap.");
-        }
+        if (it == node_info.end()) { throw std::out_of_range("Key does not exist in the heap."); }
         return it->second.value;
     }
 
@@ -169,8 +158,7 @@ template <typename Key, typename Value, unsigned int D, typename Compare> class 
     }
 
     void sift_up(size_t index) {
-        if (index == 0)
-            return;
+        if (index == 0) { return; }
 
         Key key_to_sift = std::move(heap[index]);
         const Value &value_to_sift = node_info.at(key_to_sift).value;
@@ -209,9 +197,7 @@ template <typename Key, typename Value, unsigned int D, typename Compare> class 
             }
 
             // After finding the best child, compare with the sifting element
-            if (comp(value_to_sift, *best_child_value)) {
-                break;
-            }
+            if (comp(value_to_sift, *best_child_value)) { break; }
 
             // Move hole down
             heap[index] = std::move(heap[best_child_idx]);
@@ -238,4 +224,4 @@ using MaxIndexedHeap = IndexedHeap<Key, Value, std::greater<Value>>;
 template <typename Key, typename Value>
 using MinIndexedHeap = IndexedHeap<Key, Value, std::less<Value>>;
 
-} // namespace osp
+}    // namespace osp

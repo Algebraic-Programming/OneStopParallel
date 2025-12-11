@@ -18,6 +18,8 @@ limitations under the License.
 
 #define BOOST_TEST_MODULE ApproxEdgeReduction
 
+#include "osp/graph_algorithms/directed_graph_top_sort.hpp"
+
 #include <boost/test/unit_test.hpp>
 #include <iostream>
 #include <vector>
@@ -25,7 +27,6 @@ limitations under the License.
 #include "osp/graph_algorithms/computational_dag_util.hpp"
 #include "osp/graph_algorithms/directed_graph_edge_desc_util.hpp"
 #include "osp/graph_algorithms/directed_graph_path_util.hpp"
-#include "osp/graph_algorithms/directed_graph_top_sort.hpp"
 #include "osp/graph_algorithms/directed_graph_util.hpp"
 #include "osp/graph_implementations/adj_list_impl/compact_sparse_graph.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
@@ -34,7 +35,6 @@ limitations under the License.
 using namespace osp;
 
 computational_dag_vector_impl_def_t constr_graph_1() {
-
     computational_dag_vector_impl_def_t graph;
 
     using vertex_idx = computational_dag_vector_impl_def_t::vertex_idx;
@@ -63,21 +63,26 @@ computational_dag_vector_impl_def_t constr_graph_1() {
 }
 
 BOOST_AUTO_TEST_CASE(test_util_1) {
-
     const computational_dag_vector_impl_def_t graph = constr_graph_1();
 
     // using vertex_idx = computational_dag_vector_impl_def_t::vertex_idx;
 }
 
 BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
-
     using VertexType = vertex_idx_t<boost_graph_int_t>;
 
-    const std::vector<std::vector<VertexType>> out(
-
-        {{7}, {}, {0}, {2}, {}, {2, 0}, {1, 2, 0}, {}, {4}, {6, 1, 5}}
-
-    );
+    const std::vector<std::vector<VertexType>> out({
+        {7},
+        {},
+        {0},
+        {2},
+        {},
+        {2, 0},
+        {1, 2, 0},
+        {},
+        {4},
+        {6, 1, 5}
+    });
     const std::vector<int> workW({1, 1, 1, 1, 2, 3, 2, 1, 1, 1});
     const std::vector<int> commW({1, 1, 1, 1, 2, 3, 2, 1, 1, 1});
 
@@ -94,9 +99,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     index_in_top_order = sorting_arrangement(top_order);
 
     for (const auto &i : top_order) {
-        for (const auto &j : graph.children(i)) {
-            BOOST_CHECK_GT(index_in_top_order[i], index_in_top_order[j]);
-        }
+        for (const auto &j : graph.children(i)) { BOOST_CHECK_GT(index_in_top_order[i], index_in_top_order[j]); }
     }
 
     top_order = GetTopOrderMaxChildren(graph);
@@ -106,9 +109,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     index_in_top_order = sorting_arrangement(top_order);
 
     for (const auto &i : top_order) {
-        for (const auto &j : graph.children(i)) {
-            BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]);
-        }
+        for (const auto &j : graph.children(i)) { BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]); }
     }
 
     top_order = GetTopOrderRandom(graph);
@@ -118,9 +119,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     index_in_top_order = sorting_arrangement(top_order);
 
     for (const auto &i : top_order) {
-        for (const auto &j : graph.children(i)) {
-            BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]);
-        }
+        for (const auto &j : graph.children(i)) { BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]); }
     }
 
     top_order = GetTopOrderMinIndex(graph);
@@ -130,9 +129,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     index_in_top_order = sorting_arrangement(top_order);
 
     for (const auto &i : top_order) {
-        for (const auto &j : graph.children(i)) {
-            BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]);
-        }
+        for (const auto &j : graph.children(i)) { BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]); }
     }
 
     top_order = GetTopOrderGorder(graph);
@@ -142,9 +139,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     index_in_top_order = sorting_arrangement(top_order);
 
     for (const auto &i : top_order) {
-        for (const auto &j : graph.children(i)) {
-            BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]);
-        }
+        for (const auto &j : graph.children(i)) { BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]); }
     }
 
     top_order = GetTopOrder(graph);
@@ -155,9 +150,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     index_in_top_order = sorting_arrangement(top_order);
 
     for (const auto &i : top_order) {
-        for (const auto &j : graph.children(i)) {
-            BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]);
-        }
+        for (const auto &j : graph.children(i)) { BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]); }
     }
 
     size_t idx = 0;
@@ -172,23 +165,17 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
     index_in_top_order = sorting_arrangement(bfs_view_top_sort);
     for (const auto &i : bfs_view_top_sort) {
-        for (const auto &j : graph.children(i)) {
-            BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]);
-        }
+        for (const auto &j : graph.children(i)) { BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]); }
     }
 
     std::vector<VertexType> dfs_view_top_sort;
-    for (const auto &v : top_sort_view(graph)) {
-        dfs_view_top_sort.push_back(v);
-    }
+    for (const auto &v : top_sort_view(graph)) { dfs_view_top_sort.push_back(v); }
 
     BOOST_CHECK_EQUAL(dfs_view_top_sort.size(), graph.num_vertices());
 
     index_in_top_order = sorting_arrangement(dfs_view_top_sort);
     for (const auto &i : dfs_view_top_sort) {
-        for (const auto &j : graph.children(i)) {
-            BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]);
-        }
+        for (const auto &j : graph.children(i)) { BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]); }
     }
 
     BOOST_CHECK_EQUAL(dfs_view_top_sort[0], 9);
@@ -204,18 +191,13 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
     std::vector<VertexType> loc_view_top_sort;
 
-    for (const auto &v : locality_top_sort_view(graph)) {
-
-        loc_view_top_sort.push_back(v);
-    }
+    for (const auto &v : locality_top_sort_view(graph)) { loc_view_top_sort.push_back(v); }
 
     BOOST_CHECK_EQUAL(loc_view_top_sort.size(), graph.num_vertices());
 
     index_in_top_order = sorting_arrangement(loc_view_top_sort);
     for (const auto &i : loc_view_top_sort) {
-        for (const auto &j : graph.children(i)) {
-            BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]);
-        }
+        for (const auto &j : graph.children(i)) { BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]); }
     }
 
     BOOST_CHECK_EQUAL(loc_view_top_sort[0], 3);
@@ -230,17 +212,13 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     BOOST_CHECK_EQUAL(loc_view_top_sort[9], 7);
 
     std::vector<VertexType> max_children_view_top_sort;
-    for (const auto &v : max_children_top_sort_view(graph)) {
-        max_children_view_top_sort.push_back(v);
-    }
+    for (const auto &v : max_children_top_sort_view(graph)) { max_children_view_top_sort.push_back(v); }
 
     BOOST_CHECK_EQUAL(max_children_view_top_sort.size(), graph.num_vertices());
 
     index_in_top_order = sorting_arrangement(max_children_view_top_sort);
     for (const auto &i : max_children_view_top_sort) {
-        for (const auto &j : graph.children(i)) {
-            BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]);
-        }
+        for (const auto &j : graph.children(i)) { BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]); }
     }
 
     BOOST_CHECK_EQUAL(max_children_view_top_sort[0], 9);
@@ -255,29 +233,31 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     BOOST_CHECK_EQUAL(max_children_view_top_sort[9], 7);
 
     std::vector<VertexType> random_view_top_sort;
-    for (const auto &v : random_top_sort_view(graph)) {
-        random_view_top_sort.push_back(v);
-    }
+    for (const auto &v : random_top_sort_view(graph)) { random_view_top_sort.push_back(v); }
     BOOST_CHECK_EQUAL(random_view_top_sort.size(), graph.num_vertices());
 
     index_in_top_order = sorting_arrangement(random_view_top_sort);
 
     for (const auto &i : random_view_top_sort) {
-        for (const auto &j : graph.children(i)) {
-            BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]);
-        }
+        for (const auto &j : graph.children(i)) { BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]); }
     }
 }
 
 BOOST_AUTO_TEST_CASE(top_sort_template_overload_csr) {
-
     using VertexType = vertex_idx_t<boost_graph_int_t>;
 
-    const std::vector<std::vector<VertexType>> out(
-
-        {{7}, {}, {0}, {2}, {}, {2, 0}, {1, 2, 0}, {}, {4}, {6, 1, 5}}
-
-    );
+    const std::vector<std::vector<VertexType>> out({
+        {7},
+        {},
+        {0},
+        {2},
+        {},
+        {2, 0},
+        {1, 2, 0},
+        {},
+        {4},
+        {6, 1, 5}
+    });
     const std::vector<int> workW({1, 1, 1, 1, 2, 3, 2, 1, 1, 1});
     const std::vector<int> commW({1, 1, 1, 1, 2, 3, 2, 1, 1, 1});
 

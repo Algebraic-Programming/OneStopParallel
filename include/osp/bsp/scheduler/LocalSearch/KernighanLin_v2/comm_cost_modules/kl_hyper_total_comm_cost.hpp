@@ -24,9 +24,8 @@ limitations under the License.
 
 namespace osp {
 
-template<typename Graph_t, typename cost_t, typename MemoryConstraint_t, unsigned window_size = 1>
+template <typename Graph_t, typename cost_t, typename MemoryConstraint_t, unsigned window_size = 1>
 struct kl_hyper_total_comm_cost_function {
-
     using VertexType = vertex_idx_t<Graph_t>;
     using kl_move = kl_move_struct<cost_t, VertexType>;
     using kl_gain_update_info = kl_update_info<VertexType>;
@@ -47,9 +46,13 @@ struct kl_hyper_total_comm_cost_function {
     lambda_vector_container<VertexType> node_lambda_map;
 
     inline cost_t get_comm_multiplier() { return comm_multiplier; }
+
     inline cost_t get_max_comm_weight() { return max_comm_weight; }
+
     inline cost_t get_max_comm_weight_multiplied() { return max_comm_weight * comm_multiplier; }
+
     const std::string name() const { return "toal_comm_cost"; }
+
     inline bool is_compatible(VertexType node, unsigned proc) { return active_schedule->getInstance().isCompatible(node, proc); }
 
     void initialize(kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t> &sched, CompatibleProcessorRange<Graph_t> &p_range) {
@@ -85,12 +88,15 @@ struct kl_hyper_total_comm_cost_function {
                 const unsigned target_proc = active_schedule->assigned_processor(target);
 
                 if (node_lambda_map.increase_proc_count(vertex, target_proc)) {
-                    comm_costs += v_comm_cost * instance->communicationCosts(vertex_proc, target_proc); // is 0 if target_proc == vertex_proc
+                    comm_costs
+                        += v_comm_cost
+                           * instance->communicationCosts(vertex_proc, target_proc);    // is 0 if target_proc == vertex_proc
                 }
             }
         }
 
-        return work_costs + comm_costs * comm_multiplier + static_cast<v_commw_t<Graph_t>>(active_schedule->num_steps() - 1) * instance->synchronisationCosts();
+        return work_costs + comm_costs * comm_multiplier
+               + static_cast<v_commw_t<Graph_t>>(active_schedule->num_steps() - 1) * instance->synchronisationCosts();
     }
 
     cost_t compute_schedule_cost_test() {
@@ -109,15 +115,15 @@ struct kl_hyper_total_comm_cost_function {
             }
         }
 
-        return work_costs + comm_costs * comm_multiplier + static_cast<v_commw_t<Graph_t>>(active_schedule->num_steps() - 1) * instance->synchronisationCosts();
+        return work_costs + comm_costs * comm_multiplier
+               + static_cast<v_commw_t<Graph_t>>(active_schedule->num_steps() - 1) * instance->synchronisationCosts();
     }
 
     inline void update_datastructure_after_move(const kl_move &move, const unsigned start_step, const unsigned end_step) {
         if (move.to_proc != move.from_proc) {
             for (const auto &source : instance->getComputationalDag().parents(move.node)) {
                 const unsigned source_step = active_schedule->assigned_superstep(source);
-                if (source_step < start_step || source_step > end_step)
-                    continue;
+                if (source_step < start_step || source_step > end_step) { continue; }
                 update_source_after_move(move, source);
             }
         }
@@ -128,19 +134,21 @@ struct kl_hyper_total_comm_cost_function {
         node_lambda_map.increase_proc_count(source, move.to_proc);
     }
 
-    template<typename thread_data_t>
-    void update_node_comm_affinity(const kl_move &move, thread_data_t &thread_data, const cost_t &penalty, const cost_t &reward, std::map<VertexType, kl_gain_update_info> &max_gain_recompute, std::vector<VertexType> &new_nodes) {
-
+    template <typename thread_data_t>
+    void update_node_comm_affinity(const kl_move &move,
+                                   thread_data_t &thread_data,
+                                   const cost_t &penalty,
+                                   const cost_t &reward,
+                                   std::map<VertexType, kl_gain_update_info> &max_gain_recompute,
+                                   std::vector<VertexType> &new_nodes) {
         const unsigned start_step = thread_data.start_step;
         const unsigned end_step = thread_data.end_step;
 
         for (const auto &target : instance->getComputationalDag().children(move.node)) {
             const unsigned target_step = active_schedule->assigned_superstep(target);
-            if (target_step < start_step || target_step > end_step)
-                continue;
+            if (target_step < start_step || target_step > end_step) { continue; }
 
-            if (thread_data.lock_manager.is_locked(target))
-                continue;
+            if (thread_data.lock_manager.is_locked(target)) { continue; }
 
             if (not thread_data.affinity_table.is_selected(target)) {
                 new_nodes.push_back(target);
@@ -199,18 +207,14 @@ struct kl_hyper_total_comm_cost_function {
                     }
                 }
 
-                if (idx - 1 < bound && is_compatible(target, move.to_proc)) {
-                    affinity_table[move.to_proc][idx - 1] -= penalty;
-                }
+                if (idx - 1 < bound && is_compatible(target, move.to_proc)) { affinity_table[move.to_proc][idx - 1] -= penalty; }
 
             } else {
                 const unsigned diff = move.to_step - target_step;
                 const unsigned window_bound = end_idx(target_step, end_step);
                 unsigned idx = std::min(window_size + diff, window_bound);
 
-                if (idx < window_bound && is_compatible(target, move.to_proc)) {
-                    affinity_table[move.to_proc][idx] -= reward;
-                }
+                if (idx < window_bound && is_compatible(target, move.to_proc)) { affinity_table[move.to_proc][idx] -= reward; }
 
                 idx++;
 
@@ -226,8 +230,7 @@ struct kl_hyper_total_comm_cost_function {
 
                 const unsigned window_bound = end_idx(target_step, end_step);
                 for (const unsigned p : proc_range->compatible_processors_vertex(target)) {
-                    if (p == target_proc)
-                        continue;
+                    if (p == target_proc) { continue; }
                     if (node_lambda_map.get_proc_entry(move.node, target_proc) == 1) {
                         for (unsigned idx = target_start_idx; idx < window_bound; idx++) {
                             const cost_t x = instance->communicationCosts(move.from_proc, target_proc) * comm_gain;
@@ -248,7 +251,6 @@ struct kl_hyper_total_comm_cost_function {
         }
 
         for (const auto &source : instance->getComputationalDag().parents(move.node)) {
-
             if (move.to_proc != move.from_proc) {
                 const unsigned source_proc = active_schedule->assigned_processor(source);
                 if (node_lambda_map.has_no_proc_entry(source, move.from_proc)) {
@@ -256,11 +258,13 @@ struct kl_hyper_total_comm_cost_function {
 
                     for (const auto &target : instance->getComputationalDag().children(source)) {
                         const unsigned target_step = active_schedule->assigned_superstep(target);
-                        if ((target_step < start_step || target_step > end_step) || (target == move.node) || (not thread_data.affinity_table.is_selected(target)) || thread_data.lock_manager.is_locked(target))
+                        if ((target_step < start_step || target_step > end_step) || (target == move.node)
+                            || (not thread_data.affinity_table.is_selected(target)) || thread_data.lock_manager.is_locked(target)) {
                             continue;
+                        }
 
                         if (source_proc != move.from_proc && is_compatible(target, move.from_proc)) {
-                            if (max_gain_recompute.find(target) != max_gain_recompute.end()) { // todo more specialized update
+                            if (max_gain_recompute.find(target) != max_gain_recompute.end()) {    // todo more specialized update
                                 max_gain_recompute[target].full_update = true;
                             } else {
                                 max_gain_recompute[target] = kl_gain_update_info(target, true);
@@ -279,12 +283,14 @@ struct kl_hyper_total_comm_cost_function {
 
                     for (const auto &target : instance->getComputationalDag().children(source)) {
                         const unsigned target_step = active_schedule->assigned_superstep(target);
-                        if ((target_step < start_step || target_step > end_step) || (target == move.node) || thread_data.lock_manager.is_locked(target) || (not thread_data.affinity_table.is_selected(target)))
+                        if ((target_step < start_step || target_step > end_step) || (target == move.node)
+                            || thread_data.lock_manager.is_locked(target) || (not thread_data.affinity_table.is_selected(target))) {
                             continue;
+                        }
 
                         const unsigned target_proc = active_schedule->assigned_processor(target);
                         if (target_proc == move.from_proc) {
-                            if (max_gain_recompute.find(target) != max_gain_recompute.end()) { // todo more specialized update
+                            if (max_gain_recompute.find(target) != max_gain_recompute.end()) {    // todo more specialized update
                                 max_gain_recompute[target].full_update = true;
                             } else {
                                 max_gain_recompute[target] = kl_gain_update_info(target, true);
@@ -295,14 +301,13 @@ struct kl_hyper_total_comm_cost_function {
                             auto &affinity_table_target = thread_data.affinity_table.at(target);
                             const cost_t comm_aff = instance->communicationCosts(source_proc, target_proc) * comm_gain;
                             for (const unsigned p : proc_range->compatible_processors_vertex(target)) {
-                                if (p == target_proc)
-                                    continue;
+                                if (p == target_proc) { continue; }
 
                                 for (unsigned idx = target_start_idx; idx < target_window_bound; idx++) {
                                     affinity_table_target[p][idx] -= comm_aff;
                                 }
                             }
-                            break; // since node_lambda_map[source][move.from_proc] == 1
+                            break;    // since node_lambda_map[source][move.from_proc] == 1
                         }
                     }
                 }
@@ -312,8 +317,10 @@ struct kl_hyper_total_comm_cost_function {
 
                     for (const auto &target : instance->getComputationalDag().children(source)) {
                         const unsigned target_step = active_schedule->assigned_superstep(target);
-                        if ((target_step < start_step || target_step > end_step) || (target == move.node) || (not thread_data.affinity_table.is_selected(target)) || thread_data.lock_manager.is_locked(target))
+                        if ((target_step < start_step || target_step > end_step) || (target == move.node)
+                            || (not thread_data.affinity_table.is_selected(target)) || thread_data.lock_manager.is_locked(target)) {
                             continue;
+                        }
 
                         if (source_proc != move.to_proc && is_compatible(target, move.to_proc)) {
                             if (max_gain_recompute.find(target) != max_gain_recompute.end()) {
@@ -333,8 +340,10 @@ struct kl_hyper_total_comm_cost_function {
                 } else if (node_lambda_map.get_proc_entry(source, move.to_proc) == 2) {
                     for (const auto &target : instance->getComputationalDag().children(source)) {
                         const unsigned target_step = active_schedule->assigned_superstep(target);
-                        if ((target_step < start_step || target_step > end_step) || (target == move.node) || (not thread_data.affinity_table.is_selected(target)) || thread_data.lock_manager.is_locked(target))
+                        if ((target_step < start_step || target_step > end_step) || (target == move.node)
+                            || (not thread_data.affinity_table.is_selected(target)) || thread_data.lock_manager.is_locked(target)) {
                             continue;
+                        }
 
                         const unsigned target_proc = active_schedule->assigned_processor(target);
                         if (target_proc == move.to_proc) {
@@ -348,10 +357,10 @@ struct kl_hyper_total_comm_cost_function {
                                 const unsigned target_start_idx = start_idx(target_step, start_step);
                                 const unsigned target_window_bound = end_idx(target_step, end_step);
                                 auto &affinity_table_target = thread_data.affinity_table.at(target);
-                                const cost_t comm_aff = instance->communicationCosts(source_proc, target_proc) * graph->vertex_comm_weight(source) * comm_multiplier;
+                                const cost_t comm_aff = instance->communicationCosts(source_proc, target_proc)
+                                                        * graph->vertex_comm_weight(source) * comm_multiplier;
                                 for (const unsigned p : proc_range->compatible_processors_vertex(target)) {
-                                    if (p == target_proc)
-                                        continue;
+                                    if (p == target_proc) { continue; }
 
                                     for (unsigned idx = target_start_idx; idx < target_window_bound; idx++) {
                                         affinity_table_target[p][idx] += comm_aff;
@@ -365,11 +374,9 @@ struct kl_hyper_total_comm_cost_function {
             }
 
             const unsigned source_step = active_schedule->assigned_superstep(source);
-            if (source_step < start_step || source_step > end_step)
-                continue;
+            if (source_step < start_step || source_step > end_step) { continue; }
 
-            if (thread_data.lock_manager.is_locked(source))
-                continue;
+            if (thread_data.lock_manager.is_locked(source)) { continue; }
 
             if (not thread_data.affinity_table.is_selected(source)) {
                 new_nodes.push_back(source);
@@ -449,10 +456,11 @@ struct kl_hyper_total_comm_cost_function {
                     const cost_t comm_gain = graph->vertex_comm_weight(source) * comm_multiplier;
 
                     for (const unsigned p : proc_range->compatible_processors_vertex(source)) {
-                        if (p == source_proc)
-                            continue;
+                        if (p == source_proc) { continue; }
 
-                        const cost_t comm_cost = change_comm_cost(instance->communicationCosts(p, move.from_proc), instance->communicationCosts(source_proc, move.from_proc), comm_gain);
+                        const cost_t comm_cost = change_comm_cost(instance->communicationCosts(p, move.from_proc),
+                                                                  instance->communicationCosts(source_proc, move.from_proc),
+                                                                  comm_gain);
                         for (unsigned idx = source_start_idx; idx < window_bound; idx++) {
                             affinity_table_source[p][idx] -= comm_cost;
                         }
@@ -463,10 +471,11 @@ struct kl_hyper_total_comm_cost_function {
                     const cost_t comm_gain = graph->vertex_comm_weight(source) * comm_multiplier;
 
                     for (const unsigned p : proc_range->compatible_processors_vertex(source)) {
-                        if (p == source_proc)
-                            continue;
+                        if (p == source_proc) { continue; }
 
-                        const cost_t comm_cost = change_comm_cost(instance->communicationCosts(p, move.to_proc), instance->communicationCosts(source_proc, move.to_proc), comm_gain);
+                        const cost_t comm_cost = change_comm_cost(instance->communicationCosts(p, move.to_proc),
+                                                                  instance->communicationCosts(source_proc, move.to_proc),
+                                                                  comm_gain);
                         for (unsigned idx = source_start_idx; idx < window_bound; idx++) {
                             affinity_table_source[p][idx] += comm_cost;
                         }
@@ -476,12 +485,28 @@ struct kl_hyper_total_comm_cost_function {
         }
     }
 
-    inline unsigned start_idx(const unsigned node_step, const unsigned start_step) { return node_step < window_size + start_step ? window_size - (node_step - start_step) : 0; }
-    inline unsigned end_idx(const unsigned node_step, const unsigned end_step) { return node_step + window_size <= end_step ? window_range : window_range - (node_step + window_size - end_step); }
-    inline cost_t change_comm_cost(const v_commw_t<Graph_t> &p_target_comm_cost, const v_commw_t<Graph_t> &node_target_comm_cost, const cost_t &comm_gain) { return p_target_comm_cost > node_target_comm_cost ? (p_target_comm_cost - node_target_comm_cost) * comm_gain : (node_target_comm_cost - p_target_comm_cost) * comm_gain * -1.0; }
+    inline unsigned start_idx(const unsigned node_step, const unsigned start_step) {
+        return node_step < window_size + start_step ? window_size - (node_step - start_step) : 0;
+    }
 
-    template<typename affinity_table_t>
-    void compute_comm_affinity(VertexType node, affinity_table_t &affinity_table_node, const cost_t &penalty, const cost_t &reward, const unsigned start_step, const unsigned end_step) {
+    inline unsigned end_idx(const unsigned node_step, const unsigned end_step) {
+        return node_step + window_size <= end_step ? window_range : window_range - (node_step + window_size - end_step);
+    }
+
+    inline cost_t change_comm_cost(const v_commw_t<Graph_t> &p_target_comm_cost,
+                                   const v_commw_t<Graph_t> &node_target_comm_cost,
+                                   const cost_t &comm_gain) {
+        return p_target_comm_cost > node_target_comm_cost ? (p_target_comm_cost - node_target_comm_cost) * comm_gain
+                                                          : (node_target_comm_cost - p_target_comm_cost) * comm_gain * -1.0;
+    }
+
+    template <typename affinity_table_t>
+    void compute_comm_affinity(VertexType node,
+                               affinity_table_t &affinity_table_node,
+                               const cost_t &penalty,
+                               const cost_t &reward,
+                               const unsigned start_step,
+                               const unsigned end_step) {
         const unsigned node_step = active_schedule->assigned_superstep(node);
         const unsigned node_proc = active_schedule->assigned_processor(node);
         const unsigned window_bound = end_idx(node_step, end_step);
@@ -502,17 +527,13 @@ struct kl_hyper_total_comm_cost_function {
                     }
                 }
 
-                if (window_size >= diff && is_compatible(node, target_proc)) {
-                    affinity_table_node[target_proc][idx] -= reward;
-                }
+                if (window_size >= diff && is_compatible(node, target_proc)) { affinity_table_node[target_proc][idx] -= reward; }
 
             } else {
                 const unsigned diff = target_step - node_step;
                 unsigned idx = window_size + diff;
 
-                if (idx < window_bound && is_compatible(node, target_proc)) {
-                    affinity_table_node[target_proc][idx] -= penalty;
-                }
+                if (idx < window_bound && is_compatible(node, target_proc)) { affinity_table_node[target_proc][idx] -= penalty; }
 
                 for (; idx < window_bound; idx++) {
                     for (const unsigned p : proc_range->compatible_processors_vertex(node)) {
@@ -520,20 +541,18 @@ struct kl_hyper_total_comm_cost_function {
                     }
                 }
             }
-        } // traget
+        }    // traget
 
         const cost_t comm_gain = graph->vertex_comm_weight(node) * comm_multiplier;
 
         for (const unsigned p : proc_range->compatible_processors_vertex(node)) {
-            if (p == node_proc)
-                continue;
+            if (p == node_proc) { continue; }
 
             for (const auto lambda_pair : node_lambda_map.iterate_proc_entries(node)) {
                 const auto &lambda_proc = lambda_pair.first;
-                const cost_t comm_cost = change_comm_cost(instance->communicationCosts(p, lambda_proc), instance->communicationCosts(node_proc, lambda_proc), comm_gain);
-                for (unsigned idx = node_start_idx; idx < window_bound; idx++) {
-                    affinity_table_node[p][idx] += comm_cost;
-                }
+                const cost_t comm_cost = change_comm_cost(
+                    instance->communicationCosts(p, lambda_proc), instance->communicationCosts(node_proc, lambda_proc), comm_gain);
+                for (unsigned idx = node_start_idx; idx < window_bound; idx++) { affinity_table_node[p][idx] += comm_cost; }
             }
         }
 
@@ -552,17 +571,13 @@ struct kl_hyper_total_comm_cost_function {
                     }
                 }
 
-                if (idx - 1 < bound && is_compatible(node, source_proc)) {
-                    affinity_table_node[source_proc][idx - 1] -= penalty;
-                }
+                if (idx - 1 < bound && is_compatible(node, source_proc)) { affinity_table_node[source_proc][idx - 1] -= penalty; }
 
             } else {
                 const unsigned diff = source_step - node_step;
                 unsigned idx = std::min(window_size + diff, window_bound);
 
-                if (idx < window_bound && is_compatible(node, source_proc)) {
-                    affinity_table_node[source_proc][idx] -= reward;
-                }
+                if (idx < window_bound && is_compatible(node, source_proc)) { affinity_table_node[source_proc][idx] -= reward; }
 
                 idx++;
 
@@ -575,8 +590,7 @@ struct kl_hyper_total_comm_cost_function {
 
             const cost_t source_comm_gain = graph->vertex_comm_weight(source) * comm_multiplier;
             for (const unsigned p : proc_range->compatible_processors_vertex(node)) {
-                if (p == node_proc)
-                    continue;
+                if (p == node_proc) { continue; }
 
                 if (source_proc != node_proc && node_lambda_map.get_proc_entry(source, node_proc) == 1) {
                     for (unsigned idx = node_start_idx; idx < window_bound; idx++) {
@@ -590,8 +604,8 @@ struct kl_hyper_total_comm_cost_function {
                     }
                 }
             }
-        } // source
+        }    // source
     }
 };
 
-} // namespace osp
+}    // namespace osp

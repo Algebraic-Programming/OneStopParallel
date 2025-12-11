@@ -21,10 +21,10 @@ limitations under the License.
 #include <chrono>
 #include <climits>
 #include <list>
-#include <queue>
 #include <map>
-#include <unordered_set>
+#include <queue>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 #include "MemoryConstraintModules.hpp"
@@ -34,7 +34,7 @@ limitations under the License.
 
 namespace osp {
 
-template<typename weight_t>
+template <typename weight_t>
 struct GrowLocalAutoCores_Params {
     unsigned minSuperstepSize = 20;
     weight_t syncCostMultiplierMinSuperstepWeight = 1;
@@ -50,31 +50,30 @@ struct GrowLocalAutoCores_Params {
  * The getScheduleName() method returns the name of the schedule, which is "GreedyBspGrowLocalAutoCores" in this
  * case.
  */
-template<typename Graph_t, typename MemoryConstraint_t = no_memory_constraint>
+template <typename Graph_t, typename MemoryConstraint_t = no_memory_constraint>
 class GrowLocalAutoCores : public Scheduler<Graph_t> {
-
   private:
     GrowLocalAutoCores_Params<v_workw_t<Graph_t>> params;
 
-    constexpr static bool use_memory_constraint =
-        is_memory_constraint_v<MemoryConstraint_t> or is_memory_constraint_schedule_v<MemoryConstraint_t>;
+    constexpr static bool use_memory_constraint = is_memory_constraint_v<MemoryConstraint_t>
+                                                  or is_memory_constraint_schedule_v<MemoryConstraint_t>;
 
     static_assert(not use_memory_constraint or std::is_same_v<Graph_t, typename MemoryConstraint_t::Graph_impl_t>,
                   "Graph_t must be the same as MemoryConstraint_t::Graph_impl_t.");
 
-    static_assert(not use_memory_constraint or not (std::is_same_v<MemoryConstraint_t, persistent_transient_memory_constraint<Graph_t>> or std::is_same_v<MemoryConstraint_t, global_memory_constraint<Graph_t>>), 
-                  "MemoryConstraint_t must not be persistent_transient_memory_constraint or global_memory_constraint. Not supported in GrowLocalAutoCores.");
-               
+    static_assert(not use_memory_constraint
+                      or not(std::is_same_v<MemoryConstraint_t, persistent_transient_memory_constraint<Graph_t>>
+                             or std::is_same_v<MemoryConstraint_t, global_memory_constraint<Graph_t>>),
+                  "MemoryConstraint_t must not be persistent_transient_memory_constraint or global_memory_constraint. Not "
+                  "supported in GrowLocalAutoCores.");
 
     MemoryConstraint_t local_memory_constraint;
- 
 
   public:
     /**
      * @brief Default constructor for GreedyBspGrowLocalAutoCores.
      */
-    GrowLocalAutoCores(
-        GrowLocalAutoCores_Params<v_workw_t<Graph_t>> params_ = GrowLocalAutoCores_Params<v_workw_t<Graph_t>>())
+    GrowLocalAutoCores(GrowLocalAutoCores_Params<v_workw_t<Graph_t>> params_ = GrowLocalAutoCores_Params<v_workw_t<Graph_t>>())
         : params(params_) {}
 
     /**
@@ -91,7 +90,6 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
      * @return A pair containing the return status and the computed BspSchedule.
      */
     virtual RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &schedule) override {
-
         using vertex_idx = typename Graph_t::vertex_idx;
         const auto &instance = schedule.getInstance();
 
@@ -115,7 +113,7 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
         const unsigned P = instance.numberOfProcessors();
         const auto &G = instance.getComputationalDag();
 
-        std::unordered_set<vertex_idx> ready;  
+        std::unordered_set<vertex_idx> ready;
 
         std::vector<vertex_idx> allReady;
         std::vector<std::vector<vertex_idx>> procReady(P);
@@ -125,9 +123,7 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
         for (const auto &node : G.vertices()) {
             predec[node] = G.in_degree(node);
 
-            if (predec[node] == 0) {
-                ready.insert(node);
-            }
+            if (predec[node] == 0) { ready.insert(node); }
         }
 
         std::vector<std::vector<vertex_idx>> new_assignments(P);
@@ -136,16 +132,13 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
         std::vector<vertex_idx> new_ready;
         std::vector<vertex_idx> best_new_ready;
 
-        const v_workw_t<Graph_t> minWeightParallelCheck =
-            params.syncCostMultiplierParallelCheck * instance.synchronisationCosts();
-        const v_workw_t<Graph_t> minSuperstepWeight =
-            params.syncCostMultiplierMinSuperstepWeight * instance.synchronisationCosts();
+        const v_workw_t<Graph_t> minWeightParallelCheck = params.syncCostMultiplierParallelCheck * instance.synchronisationCosts();
+        const v_workw_t<Graph_t> minSuperstepWeight = params.syncCostMultiplierMinSuperstepWeight * instance.synchronisationCosts();
 
         double desiredParallelism = static_cast<double>(P);
 
         vertex_idx total_assigned = 0;
         while (total_assigned < N) {
-
             unsigned limit = params.minSuperstepSize;
             double best_score = 0;
             double best_parallelism = 0;
@@ -153,7 +146,6 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
             bool continueSuperstepAttempts = true;
 
             while (continueSuperstepAttempts) {
-
                 for (unsigned p = 0; p < P; p++) {
                     new_assignments[p].clear();
                     procReady[p].clear();
@@ -204,9 +196,7 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
                     new_total_assigned++;
                     weight_limit += G.vertex_work_weight(chosen_node);
 
-                    if constexpr (use_memory_constraint) {
-                        local_memory_constraint.add(chosen_node, 0);
-                    }
+                    if constexpr (use_memory_constraint) { local_memory_constraint.add(chosen_node, 0); }
 
                     for (const auto &succ : G.children(chosen_node)) {
                         if (node_to_proc[succ] == std::numeric_limits<unsigned>::max()) {
@@ -267,9 +257,7 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
                         new_total_assigned++;
                         current_weight_assigned += G.vertex_work_weight(chosen_node);
 
-                        if constexpr (use_memory_constraint) {
-                            local_memory_constraint.add(chosen_node, proc);
-                        }
+                        if constexpr (use_memory_constraint) { local_memory_constraint.add(chosen_node, proc); }
 
                         for (const auto &succ : G.children(chosen_node)) {
                             if (node_to_proc[succ] == std::numeric_limits<unsigned>::max()) {
@@ -295,8 +283,8 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
 
                 bool accept_step = false;
 
-                double score = static_cast<double>(total_weight_assigned) /
-                               static_cast<double>(weight_limit + instance.synchronisationCosts());
+                double score = static_cast<double>(total_weight_assigned)
+                               / static_cast<double>(weight_limit + instance.synchronisationCosts());
                 double parallelism = 0;
                 if (weight_limit > 0) {
                     parallelism = static_cast<double>(total_weight_assigned) / static_cast<double>(weight_limit);
@@ -311,9 +299,7 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
                 }
 
                 if (weight_limit >= minWeightParallelCheck) {
-                    if (parallelism < std::max(2.0, 0.8 * desiredParallelism)) {
-                        continueSuperstepAttempts = false;
-                    }
+                    if (parallelism < std::max(2.0, 0.8 * desiredParallelism)) { continueSuperstepAttempts = false; }
                 }
 
                 if (weight_limit <= minSuperstepWeight) {
@@ -324,14 +310,10 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
                     }
                 }
 
-                if (total_assigned + new_total_assigned == N) {
-                    continueSuperstepAttempts = false;
-                }
+                if (total_assigned + new_total_assigned == N) { continueSuperstepAttempts = false; }
 
                 if constexpr (use_memory_constraint) {
-                    if (early_memory_break) {
-                        continueSuperstepAttempts = false;
-                    }
+                    if (early_memory_break) { continueSuperstepAttempts = false; }
                 }
 
                 // undo proc assingments and predec decreases in any case
@@ -345,9 +327,7 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
                         }
                     }
 
-                    if constexpr (use_memory_constraint) {
-                        local_memory_constraint.reset(proc);
-                    }
+                    if constexpr (use_memory_constraint) { local_memory_constraint.reset(proc); }
                 }
 
                 if (accept_step) {
@@ -360,9 +340,7 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
             }
 
             // apply best iteration
-            for (const auto &node : best_new_ready) {
-                ready.insert(node);
-            }
+            for (const auto &node : best_new_ready) { ready.insert(node); }
 
             for (unsigned proc = 0; proc < P; ++proc) {
                 for (const auto &node : best_new_assignments[proc]) {
@@ -371,14 +349,12 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
                     ready.erase(node);
                     ++total_assigned;
 
-                    for (const auto &succ : G.children(node)) {
-                        predec[succ]--;
-                    }
+                    for (const auto &succ : G.children(node)) { predec[succ]--; }
                 }
             }
 
-            desiredParallelism = (0.3 * desiredParallelism) + (0.6 * best_parallelism) +
-                                 (0.1 * static_cast<double>(P)); // weights should sum up to one
+            desiredParallelism = (0.3 * desiredParallelism) + (0.6 * best_parallelism)
+                                 + (0.1 * static_cast<double>(P));    // weights should sum up to one
 
             ++supstep;
         }
@@ -398,4 +374,4 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
     virtual std::string getScheduleName() const override { return "GrowLocalAutoCores"; }
 };
 
-} // namespace osp
+}    // namespace osp

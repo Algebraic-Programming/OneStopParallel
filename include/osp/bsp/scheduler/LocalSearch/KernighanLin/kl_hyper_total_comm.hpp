@@ -28,18 +28,17 @@ limitations under the License.
 
 namespace osp {
 
-template<typename Graph_t, typename MemoryConstraint_t>
+template <typename Graph_t, typename MemoryConstraint_t>
 class kl_hyper_total_comm : public kl_total<Graph_t, MemoryConstraint_t> {
-
   protected:
-    
-    virtual void compute_comm_gain(vertex_idx_t<Graph_t> node, unsigned current_step, unsigned current_proc,
+    virtual void compute_comm_gain(vertex_idx_t<Graph_t> node,
+                                   unsigned current_step,
+                                   unsigned current_proc,
                                    unsigned new_proc) override {
         throw std::runtime_error("Not implemented yet");
     }
 
     virtual double compute_current_costs() override {
-
         double work_costs = 0;
         for (unsigned step = 0; step < current_schedule.num_steps(); step++) {
             work_costs += current_schedule.step_max_work[step];
@@ -48,28 +47,21 @@ class kl_hyper_total_comm : public kl_total<Graph_t, MemoryConstraint_t> {
         double comm_costs = 0;
 
         for (const auto &node : current_schedule.instance->getComputationalDag().vertices()) {
-
-            if (is_sink(node, current_schedule.instance->getComputationalDag()))
-                continue;
+            if (is_sink(node, current_schedule.instance->getComputationalDag())) { continue; }
 
             std::unordered_set<unsigned> intersects;
 
             for (const auto &target : current_schedule.instance->getComputationalDag().children(node)) {
-
                 const unsigned &target_proc = current_schedule.vector_schedule.assignedProcessor(target);
 
-                if (current_schedule.vector_schedule.assignedProcessor(node) != target_proc) {
-                    intersects.insert(target_proc);
-                }
+                if (current_schedule.vector_schedule.assignedProcessor(node) != target_proc) { intersects.insert(target_proc); }
             }
 
-            comm_costs +=
-                intersects.size() * current_schedule.instance->getComputationalDag().vertex_comm_weight(node);
+            comm_costs += intersects.size() * current_schedule.instance->getComputationalDag().vertex_comm_weight(node);
         }
 
-        current_schedule.current_cost =
-            work_costs + comm_costs * current_schedule.comm_multiplier +
-            (current_schedule.num_steps() - 1) * current_schedule.instance->synchronisationCosts();
+        current_schedule.current_cost = work_costs + comm_costs * current_schedule.comm_multiplier
+                                        + (current_schedule.num_steps() - 1) * current_schedule.instance->synchronisationCosts();
 
         return current_schedule.current_cost;
     }
@@ -82,4 +74,4 @@ class kl_hyper_total_comm : public kl_total<Graph_t, MemoryConstraint_t> {
     virtual std::string getScheduleName() const override { return "KLHyperTotalComm"; }
 };
 
-} // namespace osp
+}    // namespace osp

@@ -18,58 +18,57 @@ limitations under the License.
 
 #pragma once
 
-#include "osp/pebbling/PebblingSchedule.hpp"
 #include <fstream>
 #include <iostream>
 
-namespace osp { namespace file_writer {
+#include "osp/pebbling/PebblingSchedule.hpp"
 
-template<typename Graph_t>
+namespace osp {
+namespace file_writer {
+
+template <typename Graph_t>
 void write_txt(std::ostream &os, const PebblingSchedule<Graph_t> &schedule) {
-
     using vertex_idx = vertex_idx_t<Graph_t>;
 
     os << "%% PebblingSchedule for " << schedule.getInstance().numberOfProcessors() << " processors and "
        << schedule.numberOfSupersteps() << " supersteps." << std::endl;
 
-    for(unsigned step = 0; step < schedule.numberOfSupersteps(); ++step)
-    {
-        for(unsigned proc = 0; proc < schedule.getInstance().numberOfProcessors(); ++proc)
-        {
-            const auto& computeSteps = schedule.GetComputeStepsForProcSuperstep(proc, step);
-            for(const auto& computeStep : computeSteps)
-            {
+    for (unsigned step = 0; step < schedule.numberOfSupersteps(); ++step) {
+        for (unsigned proc = 0; proc < schedule.getInstance().numberOfProcessors(); ++proc) {
+            const auto &computeSteps = schedule.GetComputeStepsForProcSuperstep(proc, step);
+            for (const auto &computeStep : computeSteps) {
                 os << "Compute " << computeStep.node << " on proc " << proc << " in superstep " << step << std::endl;
-                for(vertex_idx to_evict : computeStep.nodes_evicted_after)
+                for (vertex_idx to_evict : computeStep.nodes_evicted_after) {
                     os << "Evict " << to_evict << " from proc " << proc << " in superstep " << step << std::endl;
+                }
             }
         }
-        for(unsigned proc = 0; proc < schedule.getInstance().numberOfProcessors(); ++proc)
-        {
-            const std::vector<vertex_idx>& nodesSentUp = schedule.GetNodesSentUp(proc, step);
-            for(vertex_idx node : nodesSentUp)
+        for (unsigned proc = 0; proc < schedule.getInstance().numberOfProcessors(); ++proc) {
+            const std::vector<vertex_idx> &nodesSentUp = schedule.GetNodesSentUp(proc, step);
+            for (vertex_idx node : nodesSentUp) {
                 os << "Send up " << node << " from proc " << proc << " in superstep " << step << std::endl;
+            }
         }
-        for(unsigned proc = 0; proc < schedule.getInstance().numberOfProcessors(); ++proc)
-        {
-            const std::vector<vertex_idx>& nodesEvictedInComm = schedule.GetNodesEvictedInComm(proc, step);
-            for(vertex_idx node : nodesEvictedInComm)
+        for (unsigned proc = 0; proc < schedule.getInstance().numberOfProcessors(); ++proc) {
+            const std::vector<vertex_idx> &nodesEvictedInComm = schedule.GetNodesEvictedInComm(proc, step);
+            for (vertex_idx node : nodesEvictedInComm) {
                 os << "Evict " << node << " from proc " << proc << " in superstep " << step << std::endl;
+            }
         }
-        for(unsigned proc = 0; proc < schedule.getInstance().numberOfProcessors(); ++proc)
-        {
-            const std::vector<vertex_idx>& nodesSentDown = schedule.GetNodesSentDown(proc, step);
-            for(vertex_idx node : nodesSentDown)
+        for (unsigned proc = 0; proc < schedule.getInstance().numberOfProcessors(); ++proc) {
+            const std::vector<vertex_idx> &nodesSentDown = schedule.GetNodesSentDown(proc, step);
+            for (vertex_idx node : nodesSentDown) {
                 os << "Send down " << node << " to proc " << proc << " in superstep " << step << std::endl;
+            }
         }
     }
-
 }
 
-template<typename Graph_t>
+template <typename Graph_t>
 void write_txt(const std::string &filename, const PebblingSchedule<Graph_t> &schedule) {
     std::ofstream os(filename);
     write_txt(os, schedule);
 }
 
-}} // namespace osp::file_writer
+}    // namespace file_writer
+}    // namespace osp

@@ -28,35 +28,33 @@ limitations under the License.
 #include "../ConfigParser.hpp"
 #include "osp/bsp/model/BspSchedule.hpp"
 #include "osp/bsp/scheduler/Scheduler.hpp"
-#include "osp/coarser/Coarser.hpp"
-#include "osp/coarser/funnel/FunnelBfs.hpp"
 #include "osp/coarser/BspScheduleCoarser.hpp"
-#include "osp/coarser/hdagg/hdagg_coarser.hpp"
+#include "osp/coarser/Coarser.hpp"
 #include "osp/coarser/MultilevelCoarser.hpp"
 #include "osp/coarser/Sarkar/Sarkar.hpp"
 #include "osp/coarser/Sarkar/SarkarMul.hpp"
-#include "osp/coarser/top_order/top_order_coarser.hpp"
-#include "osp/graph_algorithms/cuthill_mckee.hpp"
 #include "osp/coarser/SquashA/SquashA.hpp"
 #include "osp/coarser/SquashA/SquashAMul.hpp"
+#include "osp/coarser/funnel/FunnelBfs.hpp"
+#include "osp/coarser/hdagg/hdagg_coarser.hpp"
+#include "osp/coarser/top_order/top_order_coarser.hpp"
+#include "osp/graph_algorithms/cuthill_mckee.hpp"
 
 namespace osp {
 
-template<typename Graph_t_in, typename Graph_t_out>
-std::unique_ptr<Coarser<Graph_t_in, Graph_t_out>>
-get_coarser_by_name(const ConfigParser &, const boost::property_tree::ptree &coarser_algorithm) {
-
+template <typename Graph_t_in, typename Graph_t_out>
+std::unique_ptr<Coarser<Graph_t_in, Graph_t_out>> get_coarser_by_name(const ConfigParser &,
+                                                                      const boost::property_tree::ptree &coarser_algorithm) {
     const std::string coarser_name = coarser_algorithm.get_child("name").get_value<std::string>();
 
     if (coarser_name == "funnel") {
         typename FunnelBfs<Graph_t_in, Graph_t_out>::FunnelBfs_parameters funnel_parameters;
         if (auto params_opt = coarser_algorithm.get_child_optional("parameters")) {
             const auto &params_pt = params_opt.get();
-            funnel_parameters.funnel_incoming =
-                params_pt.get_optional<bool>("funnel_incoming").value_or(funnel_parameters.funnel_incoming);
-            funnel_parameters.use_approx_transitive_reduction =
-                params_pt.get_optional<bool>("use_approx_transitive_reduction")
-                    .value_or(funnel_parameters.use_approx_transitive_reduction);
+            funnel_parameters.funnel_incoming
+                = params_pt.get_optional<bool>("funnel_incoming").value_or(funnel_parameters.funnel_incoming);
+            funnel_parameters.use_approx_transitive_reduction = params_pt.get_optional<bool>("use_approx_transitive_reduction")
+                                                                    .value_or(funnel_parameters.use_approx_transitive_reduction);
         }
         return std::make_unique<FunnelBfs<Graph_t_in, Graph_t_out>>(funnel_parameters);
 
@@ -68,11 +66,10 @@ get_coarser_by_name(const ConfigParser &, const boost::property_tree::ptree &coa
                                             .value_or(std::numeric_limits<v_workw_t<Graph_t_in>>::max()));
             coarser->set_memory_threshold(params_pt.get_optional<v_memw_t<Graph_t_in>>("max_memory_weight")
                                               .value_or(std::numeric_limits<v_memw_t<Graph_t_in>>::max()));
-            coarser->set_communication_threshold(
-                params_pt.get_optional<v_commw_t<Graph_t_in>>("max_communication_weight")
-                    .value_or(std::numeric_limits<v_commw_t<Graph_t_in>>::max()));
-            coarser->set_super_node_size_threshold(params_pt.get_optional<std::size_t>("max_super_node_size")
-                                                       .value_or(std::numeric_limits<std::size_t>::max()));
+            coarser->set_communication_threshold(params_pt.get_optional<v_commw_t<Graph_t_in>>("max_communication_weight")
+                                                     .value_or(std::numeric_limits<v_commw_t<Graph_t_in>>::max()));
+            coarser->set_super_node_size_threshold(
+                params_pt.get_optional<std::size_t>("max_super_node_size").value_or(std::numeric_limits<std::size_t>::max()));
         }
         return coarser;
 
@@ -89,15 +86,11 @@ get_coarser_by_name(const ConfigParser &, const boost::property_tree::ptree &coa
                                                     .value_or(std::numeric_limits<v_workw_t<Graph_t_in>>::max()));
                 coarser_ptr->set_memory_threshold(params_pt.get_optional<v_memw_t<Graph_t_in>>("memory_threshold")
                                                       .value_or(std::numeric_limits<v_memw_t<Graph_t_in>>::max()));
-                coarser_ptr->set_communication_threshold(
-                    params_pt.get_optional<v_commw_t<Graph_t_in>>("communication_threshold")
-                        .value_or(std::numeric_limits<v_commw_t<Graph_t_in>>::max()));
+                coarser_ptr->set_communication_threshold(params_pt.get_optional<v_commw_t<Graph_t_in>>("communication_threshold")
+                                                             .value_or(std::numeric_limits<v_commw_t<Graph_t_in>>::max()));
                 coarser_ptr->set_super_node_size_threshold(
-                    params_pt.get_optional<std::size_t>("super_node_size_threshold")
-                        .value_or(10));
-                coarser_ptr->set_node_dist_threshold(
-                    params_pt.get_optional<unsigned>("node_dist_threshold").value_or(10));
-                
+                    params_pt.get_optional<std::size_t>("super_node_size_threshold").value_or(10));
+                coarser_ptr->set_node_dist_threshold(params_pt.get_optional<unsigned>("node_dist_threshold").value_or(10));
             }
         };
 
@@ -126,18 +119,16 @@ get_coarser_by_name(const ConfigParser &, const boost::property_tree::ptree &coa
             set_params(coarser);
             return coarser;
         } else if (top_order_strategy == "cuthill_mckee_wavefront") {
-            auto coarser =
-                std::make_unique<top_order_coarser<Graph_t_in, Graph_t_out, GetTopOrderCuthillMcKeeWavefront>>();
+            auto coarser = std::make_unique<top_order_coarser<Graph_t_in, Graph_t_out, GetTopOrderCuthillMcKeeWavefront>>();
             set_params(coarser);
             return coarser;
         } else if (top_order_strategy == "cuthill_mckee_undirected") {
-            auto coarser =
-                std::make_unique<top_order_coarser<Graph_t_in, Graph_t_out, GetTopOrderCuthillMcKeeUndirected>>();
+            auto coarser = std::make_unique<top_order_coarser<Graph_t_in, Graph_t_out, GetTopOrderCuthillMcKeeUndirected>>();
             set_params(coarser);
             return coarser;
         } else {
-            std::cerr << "Warning: Unknown top_order strategy '" << top_order_strategy
-                      << "'. Falling back to default (bfs)." << std::endl;
+            std::cerr << "Warning: Unknown top_order strategy '" << top_order_strategy << "'. Falling back to default (bfs)."
+                      << std::endl;
             auto coarser = std::make_unique<top_order_coarser<Graph_t_in, Graph_t_out, GetTopOrder>>();
             set_params(coarser);
             return coarser;
@@ -149,25 +140,40 @@ get_coarser_by_name(const ConfigParser &, const boost::property_tree::ptree &coa
             const auto &params_pt = params_opt.get();
             params.commCost = params_pt.get_optional<v_workw_t<Graph_t_in>>("commCost").value_or(params.commCost);
             params.maxWeight = params_pt.get_optional<v_workw_t<Graph_t_in>>("maxWeight").value_or(params.maxWeight);
-            params.smallWeightThreshold = params_pt.get_optional<v_workw_t<Graph_t_in>>("smallWeightThreshold").value_or(params.smallWeightThreshold);
+            params.smallWeightThreshold
+                = params_pt.get_optional<v_workw_t<Graph_t_in>>("smallWeightThreshold").value_or(params.smallWeightThreshold);
             params.useTopPoset = params_pt.get_optional<bool>("useTopPoset").value_or(params.useTopPoset);
             params.geomDecay = params_pt.get_optional<double>("geomDecay").value_or(params.geomDecay);
             params.leniency = params_pt.get_optional<double>("leniency").value_or(params.leniency);
 
             if (auto mode_str_opt = params_pt.get_optional<std::string>("mode")) {
                 const std::string &mode_str = mode_str_opt.get();
-                if (mode_str == "LINES") params.mode = SarkarParams::Mode::LINES;
-                else if (mode_str == "FAN_IN_FULL") params.mode = SarkarParams::Mode::FAN_IN_FULL;
-                else if (mode_str == "FAN_IN_PARTIAL") params.mode = SarkarParams::Mode::FAN_IN_PARTIAL;
-                else if (mode_str == "FAN_OUT_FULL") params.mode = SarkarParams::Mode::FAN_OUT_FULL;
-                else if (mode_str == "FAN_OUT_PARTIAL") params.mode = SarkarParams::Mode::FAN_OUT_PARTIAL;
-                else if (mode_str == "LEVEL_EVEN") params.mode = SarkarParams::Mode::LEVEL_EVEN;
-                else if (mode_str == "LEVEL_ODD") params.mode = SarkarParams::Mode::LEVEL_ODD;
-                else if (mode_str == "FAN_IN_BUFFER") params.mode = SarkarParams::Mode::FAN_IN_BUFFER;
-                else if (mode_str == "FAN_OUT_BUFFER") params.mode = SarkarParams::Mode::FAN_OUT_BUFFER;
-                else if (mode_str == "HOMOGENEOUS_BUFFER") params.mode = SarkarParams::Mode::HOMOGENEOUS_BUFFER;
-                else throw std::invalid_argument("Invalid Sarkar mode: " + mode_str
-                    + "!\nChoose from: LINES, FAN_IN_FULL, FAN_IN_PARTIAL, FAN_OUT_FULL, FAN_OUT_PARTIAL, LEVEL_EVEN, LEVEL_ODD, FAN_IN_BUFFER, FAN_OUT_BUFFER, HOMOGENEOUS_BUFFER.");
+                if (mode_str == "LINES") {
+                    params.mode = SarkarParams::Mode::LINES;
+                } else if (mode_str == "FAN_IN_FULL") {
+                    params.mode = SarkarParams::Mode::FAN_IN_FULL;
+                } else if (mode_str == "FAN_IN_PARTIAL") {
+                    params.mode = SarkarParams::Mode::FAN_IN_PARTIAL;
+                } else if (mode_str == "FAN_OUT_FULL") {
+                    params.mode = SarkarParams::Mode::FAN_OUT_FULL;
+                } else if (mode_str == "FAN_OUT_PARTIAL") {
+                    params.mode = SarkarParams::Mode::FAN_OUT_PARTIAL;
+                } else if (mode_str == "LEVEL_EVEN") {
+                    params.mode = SarkarParams::Mode::LEVEL_EVEN;
+                } else if (mode_str == "LEVEL_ODD") {
+                    params.mode = SarkarParams::Mode::LEVEL_ODD;
+                } else if (mode_str == "FAN_IN_BUFFER") {
+                    params.mode = SarkarParams::Mode::FAN_IN_BUFFER;
+                } else if (mode_str == "FAN_OUT_BUFFER") {
+                    params.mode = SarkarParams::Mode::FAN_OUT_BUFFER;
+                } else if (mode_str == "HOMOGENEOUS_BUFFER") {
+                    params.mode = SarkarParams::Mode::HOMOGENEOUS_BUFFER;
+                } else {
+                    throw std::invalid_argument(
+                        "Invalid Sarkar mode: " + mode_str
+                        + "!\nChoose from: LINES, FAN_IN_FULL, FAN_IN_PARTIAL, FAN_OUT_FULL, FAN_OUT_PARTIAL, LEVEL_EVEN, "
+                          "LEVEL_ODD, FAN_IN_BUFFER, FAN_OUT_BUFFER, HOMOGENEOUS_BUFFER.");
+                }
             }
         }
         return std::make_unique<Sarkar<Graph_t_in, Graph_t_out>>(params);
@@ -177,14 +183,18 @@ get_coarser_by_name(const ConfigParser &, const boost::property_tree::ptree &coa
         auto coarser = std::make_unique<SquashA<Graph_t_in, Graph_t_out>>(params);
         if (auto params_opt = coarser_algorithm.get_child_optional("parameters")) {
             const auto &params_pt = params_opt.get();
-            params.use_structured_poset =
-                params_pt.get_optional<bool>("use_structured_poset").value_or(params.use_structured_poset);
+            params.use_structured_poset
+                = params_pt.get_optional<bool>("use_structured_poset").value_or(params.use_structured_poset);
             params.use_top_poset = params_pt.get_optional<bool>("use_top_poset").value_or(params.use_top_poset);
             if (auto mode_str_opt = params_pt.get_optional<std::string>("mode")) {
-                if (mode_str_opt.get() == "EDGE_WEIGHT") params.mode = SquashAParams::Mode::EDGE_WEIGHT;
-                else if (mode_str_opt.get() == "TRIANGLES") params.mode = SquashAParams::Mode::TRIANGLES;
-                else throw std::invalid_argument("Invalid Squash mode: " + mode_str_opt.get()
-                    + "!\nChoose from: EDGE_WEIGHT, TRIANGLES.");
+                if (mode_str_opt.get() == "EDGE_WEIGHT") {
+                    params.mode = SquashAParams::Mode::EDGE_WEIGHT;
+                } else if (mode_str_opt.get() == "TRIANGLES") {
+                    params.mode = SquashAParams::Mode::TRIANGLES;
+                } else {
+                    throw std::invalid_argument("Invalid Squash mode: " + mode_str_opt.get()
+                                                + "!\nChoose from: EDGE_WEIGHT, TRIANGLES.");
+                }
             }
         }
         coarser->setParams(params);
@@ -198,9 +208,9 @@ get_coarser_by_name(const ConfigParser &, const boost::property_tree::ptree &coa
     throw std::invalid_argument("Invalid coarser name: " + coarser_name);
 }
 
-template<typename Graph_t_in, typename Graph_t_out>
-std::unique_ptr<MultilevelCoarser<Graph_t_in, Graph_t_out>>
-get_multilevel_coarser_by_name(const ConfigParser &, const boost::property_tree::ptree &coarser_algorithm) {
+template <typename Graph_t_in, typename Graph_t_out>
+std::unique_ptr<MultilevelCoarser<Graph_t_in, Graph_t_out>> get_multilevel_coarser_by_name(
+    const ConfigParser &, const boost::property_tree::ptree &coarser_algorithm) {
     const std::string coarser_name = coarser_algorithm.get_child("name").get_value<std::string>();
 
     if (coarser_name == "Sarkar") {
@@ -219,23 +229,28 @@ get_multilevel_coarser_by_name(const ConfigParser &, const boost::property_tree:
                 }
                 std::sort(ml_params.commCostVec.begin(), ml_params.commCostVec.end());
             }
-            ml_params.maxWeight =
-                params_pt.get_optional<v_workw_t<Graph_t_in>>("maxWeight").value_or(ml_params.maxWeight);
-            ml_params.smallWeightThreshold =
-                params_pt.get_optional<v_workw_t<Graph_t_in>>("smallWeightThreshold").value_or(ml_params.smallWeightThreshold);
-            ml_params.max_num_iteration_without_changes =
-                params_pt.get_optional<unsigned>("max_num_iteration_without_changes")
-                    .value_or(ml_params.max_num_iteration_without_changes);
+            ml_params.maxWeight = params_pt.get_optional<v_workw_t<Graph_t_in>>("maxWeight").value_or(ml_params.maxWeight);
+            ml_params.smallWeightThreshold
+                = params_pt.get_optional<v_workw_t<Graph_t_in>>("smallWeightThreshold").value_or(ml_params.smallWeightThreshold);
+            ml_params.max_num_iteration_without_changes = params_pt.get_optional<unsigned>("max_num_iteration_without_changes")
+                                                              .value_or(ml_params.max_num_iteration_without_changes);
 
             if (auto mode_str_opt = params_pt.get_optional<std::string>("buffer_merge_mode")) {
                 const std::string &mode_str = mode_str_opt.get();
-                if (mode_str == "OFF") ml_params.buffer_merge_mode = SarkarParams::BufferMergeMode::OFF;
-                else if (mode_str == "FAN_IN") ml_params.buffer_merge_mode = SarkarParams::BufferMergeMode::FAN_IN;
-                else if (mode_str == "FAN_OUT") ml_params.buffer_merge_mode = SarkarParams::BufferMergeMode::FAN_OUT;
-                else if (mode_str == "HOMOGENEOUS") ml_params.buffer_merge_mode = SarkarParams::BufferMergeMode::HOMOGENEOUS;
-                else if (mode_str == "FULL") ml_params.buffer_merge_mode = SarkarParams::BufferMergeMode::FULL;
-                else throw std::invalid_argument("Invalid Sarkar Buffer Merge mode: " + mode_str
-                    + "!\nChoose from: OFF, FAN_IN, FAN_OUT, HOMOGENEOUS, FULL.");
+                if (mode_str == "OFF") {
+                    ml_params.buffer_merge_mode = SarkarParams::BufferMergeMode::OFF;
+                } else if (mode_str == "FAN_IN") {
+                    ml_params.buffer_merge_mode = SarkarParams::BufferMergeMode::FAN_IN;
+                } else if (mode_str == "FAN_OUT") {
+                    ml_params.buffer_merge_mode = SarkarParams::BufferMergeMode::FAN_OUT;
+                } else if (mode_str == "HOMOGENEOUS") {
+                    ml_params.buffer_merge_mode = SarkarParams::BufferMergeMode::HOMOGENEOUS;
+                } else if (mode_str == "FULL") {
+                    ml_params.buffer_merge_mode = SarkarParams::BufferMergeMode::FULL;
+                } else {
+                    throw std::invalid_argument("Invalid Sarkar Buffer Merge mode: " + mode_str
+                                                + "!\nChoose from: OFF, FAN_IN, FAN_OUT, HOMOGENEOUS, FULL.");
+                }
             }
         }
 
@@ -248,18 +263,16 @@ get_multilevel_coarser_by_name(const ConfigParser &, const boost::property_tree:
 
         if (auto params_opt = coarser_algorithm.get_child_optional("parameters")) {
             const auto &params_pt = params_opt.get();
-            params.geom_decay_num_nodes =
-                params_pt.get_optional<double>("geom_decay_num_nodes").value_or(params.geom_decay_num_nodes);
+            params.geom_decay_num_nodes
+                = params_pt.get_optional<double>("geom_decay_num_nodes").value_or(params.geom_decay_num_nodes);
             params.poisson_par = params_pt.get_optional<double>("poisson_par").value_or(params.poisson_par);
             params.noise = params_pt.get_optional<unsigned>("noise").value_or(params.noise);
-            params.num_rep_without_node_decrease =
-                params_pt.get_optional<unsigned>("num_rep_without_node_decrease")
-                    .value_or(params.num_rep_without_node_decrease);
-            params.temperature_multiplier =
-                params_pt.get_optional<double>("temperature_multiplier").value_or(params.temperature_multiplier);
-            params.number_of_temperature_increases =
-                params_pt.get_optional<unsigned>("number_of_temperature_increases")
-                    .value_or(params.number_of_temperature_increases);
+            params.num_rep_without_node_decrease
+                = params_pt.get_optional<unsigned>("num_rep_without_node_decrease").value_or(params.num_rep_without_node_decrease);
+            params.temperature_multiplier
+                = params_pt.get_optional<double>("temperature_multiplier").value_or(params.temperature_multiplier);
+            params.number_of_temperature_increases = params_pt.get_optional<unsigned>("number_of_temperature_increases")
+                                                         .value_or(params.number_of_temperature_increases);
 
             if (auto mode_str_opt = params_pt.get_optional<std::string>("mode")) {
                 if (mode_str_opt.get() == "EDGE_WEIGHT") {
@@ -268,7 +281,7 @@ get_multilevel_coarser_by_name(const ConfigParser &, const boost::property_tree:
                     params.mode = SquashAParams::Mode::TRIANGLES;
                 } else {
                     throw std::invalid_argument("Invalid Squash mode: " + mode_str_opt.get()
-                    + "!\nChoose from: EDGE_WEIGHT, TRIANGLES.");
+                                                + "!\nChoose from: EDGE_WEIGHT, TRIANGLES.");
                 }
             }
 
@@ -282,4 +295,4 @@ get_multilevel_coarser_by_name(const ConfigParser &, const boost::property_tree:
     throw std::invalid_argument("Invalid multilevel coarser name: " + coarser_name);
 }
 
-} // namespace osp
+}    // namespace osp

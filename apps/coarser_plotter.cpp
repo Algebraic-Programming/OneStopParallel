@@ -35,9 +35,7 @@ int main(int argc, char *argv[]) {
     }
 
     std::string graph_file = argv[1];
-    std::string graph_name = graph_file.substr(graph_file.rfind("/") + 1,
-                                                       graph_file.rfind(".") - graph_file.rfind("/") - 1);
-
+    std::string graph_name = graph_file.substr(graph_file.rfind("/") + 1, graph_file.rfind(".") - graph_file.rfind("/") - 1);
 
     Graph_t graph;
     bool status = file_reader::readGraph(graph_file, graph);
@@ -46,8 +44,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-
-    SarkarParams::MulParameters< v_workw_t<Graph_t> > params;
+    SarkarParams::MulParameters<v_workw_t<Graph_t>> params;
     params.commCostVec = std::vector<v_workw_t<Graph_t>>({1, 2, 5, 10, 20, 50, 100, 200, 500, 1000});
     params.max_num_iteration_without_changes = 3;
     params.leniency = 0.005;
@@ -63,19 +60,15 @@ int main(int argc, char *argv[]) {
 
     Graph_t graph_copy = graph;
     bool ignore_vertex_types = false;
-    
+
     if (ignore_vertex_types) {
-        for (const auto &vert : graph_copy.vertices()) {
-            graph_copy.set_vertex_type(vert, 0);
-        }
+        for (const auto &vert : graph_copy.vertices()) { graph_copy.set_vertex_type(vert, 0); }
     }
 
     coarser.coarsenDag(graph_copy, coarse_graph, contraction_map);
 
     std::vector<unsigned> colours(contraction_map.size());
-    for (std::size_t i = 0; i < contraction_map.size(); ++i) {
-        colours[i] = static_cast<unsigned>( contraction_map[i] );
-    }
+    for (std::size_t i = 0; i < contraction_map.size(); ++i) { colours[i] = static_cast<unsigned>(contraction_map[i]); }
 
     std::ofstream out_dot(argv[2]);
     if (!out_dot.is_open()) {
@@ -86,7 +79,7 @@ int main(int argc, char *argv[]) {
     DotFileWriter writer;
     writer.write_colored_graph(out_dot, graph, colours);
 
-    if (argc >=4 ) {
+    if (argc >= 4) {
         std::ofstream coarse_out_dot(argv[3]);
         if (!coarse_out_dot.is_open()) {
             std::cout << "Unable to write/open output file.\n";

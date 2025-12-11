@@ -16,14 +16,14 @@ limitations under the License.
 @author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 
-#include "osp/auxiliary/misc.hpp"
-#include "osp/auxiliary/random_graph_generator/Erdos_Renyi_graph.hpp"
-#include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
-
 #include <fstream>
 #include <iostream>
 #include <random>
 #include <string>
+
+#include "osp/auxiliary/misc.hpp"
+#include "osp/auxiliary/random_graph_generator/Erdos_Renyi_graph.hpp"
+#include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 
 using namespace osp;
 
@@ -32,8 +32,7 @@ using VertexType = vertex_idx_t<ComputationalDag>;
 
 int main(int argc, char *argv[]) {
     if (argc < 3) {
-        std::cerr << "Usage: " << argv[0]
-                  << " <number of vertices> <expected outdegree> (optional:) <number of graphs>\n"
+        std::cerr << "Usage: " << argv[0] << " <number of vertices> <expected outdegree> (optional:) <number of graphs>\n"
                   << std::endl;
         return 1;
     }
@@ -41,9 +40,7 @@ int main(int argc, char *argv[]) {
     size_t num_vert = static_cast<size_t>(std::stoul(argv[1]));
     double chance = 2 * std::atof(argv[2]);
     unsigned num_graphs = 1;
-    if (argc > 3) {
-        num_graphs = static_cast<unsigned>(std::stoul(argv[3]));
-    }
+    if (argc > 3) { num_graphs = static_cast<unsigned>(std::stoul(argv[3])); }
 
     //  Initiating random values
     double lower_bound = -2;
@@ -97,15 +94,14 @@ int main(int argc, char *argv[]) {
         std::ofstream graph_write;
         graph_write.open(graph_name);
         graph_write << header;
-        graph_write << std::to_string(graph.num_vertices()) + " " + std::to_string(graph.num_vertices()) + " " +
-                           std::to_string(graph.num_edges() + graph.num_vertices()) + "\n";
+        graph_write << std::to_string(graph.num_vertices()) + " " + std::to_string(graph.num_vertices()) + " "
+                           + std::to_string(graph.num_edges() + graph.num_vertices()) + "\n";
         for (VertexType i = 0; i < num_vert; i++) {
             double val = (1 - 2 * randInt(2)) * std::exp(unif_log(re));
             graph_write << std::to_string(i + 1) + " " + std::to_string(i + 1) + " " + std::to_string(val) + "\n";
             for (const auto &chld : graph.children(i)) {
                 val = unif(re);
-                graph_write << std::to_string(chld + 1) + " " + std::to_string(i + 1) + " " + std::to_string(val) +
-                                   "\n";
+                graph_write << std::to_string(chld + 1) + " " + std::to_string(i + 1) + " " + std::to_string(val) + "\n";
             }
         }
         graph_write.close();

@@ -41,9 +41,8 @@ enum CilkMode { CILK, SJF };
  * a greedy scheduling algorithm for Cilk-based BSP (Bulk Synchronous Parallel) systems. The scheduler
  * selects the next node and processor to execute a task based on a greedy strategy.
  */
-template<typename Graph_t>
+template <typename Graph_t>
 class CilkScheduler : public Scheduler<Graph_t> {
-
     static_assert(is_computational_dag_v<Graph_t>, "CilkScheduler can only be used with computational DAGs.");
 
   private:
@@ -61,42 +60,47 @@ class CilkScheduler : public Scheduler<Graph_t> {
 
     std::mt19937 gen;
 
-    void Choose(const BspInstance<Graph_t> &instance, std::vector<std::deque<vertex_idx_t<Graph_t>>> &procQueue,
-                const std::set<vertex_idx_t<Graph_t>> &readyNodes, const std::vector<bool> &procFree,
-                vertex_idx_t<Graph_t> &node, unsigned &p) {
+    void Choose(const BspInstance<Graph_t> &instance,
+                std::vector<std::deque<vertex_idx_t<Graph_t>>> &procQueue,
+                const std::set<vertex_idx_t<Graph_t>> &readyNodes,
+                const std::vector<bool> &procFree,
+                vertex_idx_t<Graph_t> &node,
+                unsigned &p) {
         if (mode == SJF) {
-
             node = *readyNodes.begin();
-            for (auto &r : readyNodes)
-                if (instance.getComputationalDag().vertex_work_weight(r) <
-                    instance.getComputationalDag().vertex_work_weight(node))
+            for (auto &r : readyNodes) {
+                if (instance.getComputationalDag().vertex_work_weight(r) < instance.getComputationalDag().vertex_work_weight(node)) {
                     node = r;
+                }
+            }
 
             p = 0;
-            for (; p < instance.numberOfProcessors(); ++p)
-                if (procFree[p])
-                    break;
+            for (; p < instance.numberOfProcessors(); ++p) {
+                if (procFree[p]) { break; }
+            }
 
         } else if (mode == CILK) {
-            for (unsigned i = 0; i < instance.numberOfProcessors(); ++i)
+            for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
                 if (procFree[i] && !procQueue[i].empty()) {
                     p = i;
                     node = procQueue[i].back();
                     procQueue[i].pop_back();
                     return;
                 }
+            }
 
             // Time to steal
-            for (unsigned i = 0; i < instance.numberOfProcessors(); ++i)
+            for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
                 if (procFree[i]) {
                     p = i;
                     break;
                 }
+            }
 
             std::vector<unsigned> canStealFrom;
-            for (unsigned i = 0; i < instance.numberOfProcessors(); ++i)
-                if (!procQueue[i].empty())
-                    canStealFrom.push_back(i);
+            for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
+                if (!procQueue[i].empty()) { canStealFrom.push_back(i); }
+            }
 
             if (canStealFrom.empty()) {
                 node = std::numeric_limits<vertex_idx_t<Graph_t>>::max();
@@ -139,7 +143,6 @@ class CilkScheduler : public Scheduler<Graph_t> {
      * @return A pair containing the return status and the computed BSP schedule.
      */
     virtual RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &bsp_schedule) override {
-
         // if constexpr (use_memory_constraint) {
         //     memory_constraint.initialize(instance);
         // }
@@ -166,8 +169,7 @@ class CilkScheduler : public Scheduler<Graph_t> {
 
         for (const auto &v : source_vertices_view(instance.getComputationalDag())) {
             ready.insert(v);
-            if (mode == CILK)
-                procQueue[0].push_front(v);
+            if (mode == CILK) { procQueue[0].push_front(v); }
         }
 
         while (!finishTimes.empty()) {
@@ -179,15 +181,11 @@ class CilkScheduler : public Scheduler<Graph_t> {
                 finishTimes.erase(finishTimes.begin());
                 const vertex_idx_t<Graph_t> &node = currentPair.second;
                 if (node != std::numeric_limits<vertex_idx_t<Graph_t>>::max()) {
-
                     for (const auto &succ : instance.getComputationalDag().children(node)) {
-
                         ++nrPredecDone[succ];
                         if (nrPredecDone[succ] == instance.getComputationalDag().in_degree(succ)) {
-
                             ready.insert(succ);
-                            if (mode == CILK)
-                                procQueue[schedule.proc[node]].push_back(succ);
+                            if (mode == CILK) { procQueue[schedule.proc[node]].push_back(succ); }
                         }
                     }
                     procFree[schedule.proc[node]] = true;
@@ -197,7 +195,6 @@ class CilkScheduler : public Scheduler<Graph_t> {
 
             // Assign new jobs to processors
             while (nrProcFree > 0 && !ready.empty()) {
-
                 unsigned nextProc = instance.numberOfProcessors();
                 vertex_idx_t<Graph_t> nextNode = std::numeric_limits<vertex_idx_t<Graph_t>>::max();
 
@@ -214,8 +211,7 @@ class CilkScheduler : public Scheduler<Graph_t> {
                 finishTimes.insert({time + instance.getComputationalDag().vertex_work_weight(nextNode), nextNode});
                 procFree[nextProc] = false;
 
-                if (nrProcFree > 0)
-                    --nrProcFree;
+                if (nrProcFree > 0) { --nrProcFree; }
 
                 greedyProcLists[nextProc].push_back(nextNode);
             }
@@ -252,19 +248,18 @@ class CilkScheduler : public Scheduler<Graph_t> {
      * @return The name of the schedule.
      */
     virtual std::string getScheduleName() const override {
-
         switch (mode) {
-        case CILK:
-            return "CilkGreedy";
-            break;
+            case CILK:
+                return "CilkGreedy";
+                break;
 
-        case SJF:
-            return "SJFGreedy";
+            case SJF:
+                return "SJFGreedy";
 
-        default:
-            return "UnknownModeGreedy";
+            default:
+                return "UnknownModeGreedy";
         }
     }
 };
 
-} // namespace osp
+}    // namespace osp

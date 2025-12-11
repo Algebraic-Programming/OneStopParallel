@@ -18,18 +18,17 @@ limitations under the License.
 
 #define BOOST_TEST_MODULE BSP_GREEDY_RECOMPUTER
 #include <boost/test/unit_test.hpp>
+#include <filesystem>
+#include <iostream>
 
+#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/BspLocking.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/GreedyRecomputer.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
-#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
-#include <filesystem>
-#include <iostream>
 
 using namespace osp;
 
 BOOST_AUTO_TEST_CASE(test_recomputer) {
-
     using graph = computational_dag_vector_impl_def_t;
 
     BspInstance<graph> instance1;
@@ -59,8 +58,8 @@ BOOST_AUTO_TEST_CASE(test_recomputer) {
     scheduler.computeRecompSchedule(schedule_init_cs1, schedule);
     BOOST_CHECK(schedule.satisfiesConstraints());
     BOOST_CHECK(schedule.computeCosts() < schedule_init_cs1.computeCosts());
-    std::cout<<"Cost decrease by greedy recomp: "<<schedule_init_cs1.computeCosts()<<" -> "<<schedule.computeCosts()<<std::endl;
-
+    std::cout << "Cost decrease by greedy recomp: " << schedule_init_cs1.computeCosts() << " -> " << schedule.computeCosts()
+              << std::endl;
 
     // non-toy instance
 
@@ -77,8 +76,8 @@ BOOST_AUTO_TEST_CASE(test_recomputer) {
         std::cout << cwd << std::endl;
     }
 
-    bool status = file_reader::readComputationalDagHyperdagFormatDB(
-        (cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(), instance2.getComputationalDag());
+    bool status = file_reader::readComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(),
+                                                                    instance2.getComputationalDag());
 
     BOOST_CHECK(status);
 
@@ -92,5 +91,6 @@ BOOST_AUTO_TEST_CASE(test_recomputer) {
     scheduler.computeRecompSchedule(schedule_init_cs2, schedule);
     BOOST_CHECK(schedule.satisfiesConstraints());
     BOOST_CHECK(schedule.computeCosts() < schedule_init_cs2.computeCosts());
-    std::cout<<"Cost decrease by greedy recomp: "<<schedule_init_cs2.computeCosts()<<" -> "<<schedule.computeCosts()<<std::endl;
+    std::cout << "Cost decrease by greedy recomp: " << schedule_init_cs2.computeCosts() << " -> " << schedule.computeCosts()
+              << std::endl;
 }

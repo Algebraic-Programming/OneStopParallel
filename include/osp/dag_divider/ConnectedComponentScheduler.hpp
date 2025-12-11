@@ -22,12 +22,10 @@ limitations under the License.
 #include "osp/bsp/scheduler/Scheduler.hpp"
 #include "osp/graph_algorithms/computational_dag_util.hpp"
 
-
 namespace osp {
 
-template<typename Graph_t, typename Constr_Graph_t>
+template <typename Graph_t, typename Constr_Graph_t>
 class ConnectedComponentScheduler : public Scheduler<Graph_t> {
-
     Scheduler<Constr_Graph_t> *scheduler;
 
   public:
@@ -36,7 +34,6 @@ class ConnectedComponentScheduler : public Scheduler<Graph_t> {
     std::string getScheduleName() const override { return "SubDagScheduler"; }
 
     RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &schedule) override {
-
         const auto &instance = schedule.getInstance();
 
         const Graph_t &dag = instance.getComputationalDag();
@@ -57,17 +54,17 @@ class ConnectedComponentScheduler : public Scheduler<Graph_t> {
             BspInstance<Constr_Graph_t> sub_instance(sub_dag, instance.getArchitecture());
             BspArchitecture<Constr_Graph_t> &sub_architecture = sub_instance.getArchitecture();
 
-            const double sub_dag_work_weight_percent = static_cast<double>(sub_dag_work_weight) / static_cast<double>(total_work_weight);
-            const unsigned sub_dag_processors = static_cast<unsigned>(sub_dag_work_weight_percent * sub_architecture.numberOfProcessors());
+            const double sub_dag_work_weight_percent
+                = static_cast<double>(sub_dag_work_weight) / static_cast<double>(total_work_weight);
+            const unsigned sub_dag_processors
+                = static_cast<unsigned>(sub_dag_work_weight_percent * sub_architecture.numberOfProcessors());
 
             sub_architecture.setNumberOfProcessors(sub_dag_processors);
 
             BspSchedule<Constr_Graph_t> sub_schedule(sub_instance);
             auto status = scheduler->computeSchedule(sub_schedule);
 
-            if (status != RETURN_STATUS::OSP_SUCCESS && status != RETURN_STATUS::BEST_FOUND) {
-                return status;
-            }
+            if (status != RETURN_STATUS::OSP_SUCCESS && status != RETURN_STATUS::BEST_FOUND) { return status; }
 
             for (const auto &v : sub_instance.vertices()) {
                 schedule.setAssignedProcessor(mapping.at(v), sub_schedule.assignedProcessor(v) + num_processors_offset);
@@ -81,4 +78,4 @@ class ConnectedComponentScheduler : public Scheduler<Graph_t> {
     }
 };
 
-} // namespace osp
+}    // namespace osp

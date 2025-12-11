@@ -16,7 +16,6 @@ limitations under the License.
 @author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 
-#include "boost/log/utility/setup.hpp"
 #include <boost/graph/graphviz.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -26,13 +25,14 @@ limitations under the License.
 #include <string>
 #include <tuple>
 
+#include "boost/log/utility/setup.hpp"
+#include "osp/auxiliary/io/DotFileWriter.hpp"
+#include "osp/auxiliary/io/arch_file_reader.hpp"
+#include "osp/auxiliary/io/bsp_schedule_file_writer.hpp"
+#include "osp/auxiliary/io/general_file_reader.hpp"
 #include "osp/auxiliary/misc.hpp"
 #include "osp/bsp/model/BspSchedule.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
-#include "osp/auxiliary/io/DotFileWriter.hpp"
-#include "osp/auxiliary/io/arch_file_reader.hpp"
-#include "osp/auxiliary/io/general_file_reader.hpp"
-#include "osp/auxiliary/io/bsp_schedule_file_writer.hpp"
 #include "test_suite_runner/ConfigParser.hpp"
 #include "test_suite_runner/StringToScheduler/run_bsp_scheduler.hpp"
 
@@ -45,7 +45,6 @@ std::filesystem::path getExecutablePath() { return std::filesystem::canonical("/
 
 // invoked upon program call
 int main(int argc, char *argv[]) {
-
     ConfigParser parser(getExecutablePath().remove_filename().string() += "osp_config.json");
 
     try {
@@ -56,17 +55,16 @@ int main(int argc, char *argv[]) {
     }
 
     for (auto &instance : parser.instances) {
-
         BspInstance<graph_t> bsp_instance;
 
         std::string filename_graph = instance.second.get_child("graphFile").get_value<std::string>();
-        std::string name_graph = filename_graph.substr(filename_graph.rfind("/") + 1,
-                                                       filename_graph.rfind(".") - filename_graph.rfind("/") - 1);
+        std::string name_graph
+            = filename_graph.substr(filename_graph.rfind("/") + 1, filename_graph.rfind(".") - filename_graph.rfind("/") - 1);
 
         std::string filename_machine = instance.second.get_child("machineParamsFile").get_value<std::string>();
 
-        std::string name_machine = filename_machine.substr(
-            filename_machine.rfind("/") + 1, filename_machine.rfind(".") - filename_machine.rfind("/") - 1);
+        std::string name_machine = filename_machine.substr(filename_machine.rfind("/") + 1,
+                                                           filename_machine.rfind(".") - filename_machine.rfind("/") - 1);
 
         bool status_architecture = file_reader::readBspArchitecture(filename_machine, bsp_instance.getArchitecture());
 
@@ -75,7 +73,7 @@ int main(int argc, char *argv[]) {
             continue;
         }
 
-        bool status_graph = file_reader::readGraph(filename_graph, bsp_instance.getComputationalDag()); 
+        bool status_graph = file_reader::readGraph(filename_graph, bsp_instance.getComputationalDag());
         if (!status_graph) {
             std::cerr << "Reading graph files " + filename_graph << " failed." << std::endl;
             continue;
@@ -93,7 +91,6 @@ int main(int argc, char *argv[]) {
 
         size_t algorithm_counter = 0;
         for (auto &algorithm : parser.scheduler) {
-
             schedulers_name[algorithm_counter] = algorithm.second.get_child("name").get_value<std::string>();
 
             const auto start_time = std::chrono::high_resolution_clock::now();
@@ -105,48 +102,45 @@ int main(int argc, char *argv[]) {
                 return_status = run_bsp_scheduler(parser, algorithm.second, schedule);
             } catch (...) {
                 schedulers_failed[algorithm_counter] = true;
-                std::cerr << "Error during execution of Scheduler " +
-                                 algorithm.second.get_child("name").get_value<std::string>() + "."
+                std::cerr << "Error during execution of Scheduler " + algorithm.second.get_child("name").get_value<std::string>()
+                                 + "."
                           << std::endl;
                 continue;
             }
 
             const auto finish_time = std::chrono::high_resolution_clock::now();
 
-            schedulers_compute_time[algorithm_counter] =
-                std::chrono::duration_cast<std::chrono::milliseconds>(finish_time - start_time).count();
+            schedulers_compute_time[algorithm_counter]
+                = std::chrono::duration_cast<std::chrono::milliseconds>(finish_time - start_time).count();
 
             if (return_status != RETURN_STATUS::OSP_SUCCESS && return_status != RETURN_STATUS::BEST_FOUND) {
-
                 schedulers_failed[algorithm_counter] = true;
                 if (return_status == RETURN_STATUS::ERROR) {
-                    std::cerr << "Error while computing schedule " +
-                                     algorithm.second.get_child("name").get_value<std::string>() + "."
+                    std::cerr << "Error while computing schedule " + algorithm.second.get_child("name").get_value<std::string>()
+                                     + "."
                               << std::endl;
                 } else if (return_status == RETURN_STATUS::TIMEOUT) {
-                    std::cerr << "Timeout while computing schedule " +
-                                     algorithm.second.get_child("name").get_value<std::string>() + "."
+                    std::cerr << "Timeout while computing schedule " + algorithm.second.get_child("name").get_value<std::string>()
+                                     + "."
                               << std::endl;
                 } else {
-                    std::cerr << "Unknown return status while computing schedule " +
-                                     algorithm.second.get_child("name").get_value<std::string>() + "."
+                    std::cerr << "Unknown return status while computing schedule "
+                                     + algorithm.second.get_child("name").get_value<std::string>() + "."
                               << std::endl;
                 }
             } else {
-
                 schedulers_costs[algorithm_counter] = BspScheduleCS<graph_t>(schedule).computeCosts();
                 schedulers_work_costs[algorithm_counter] = schedule.computeWorkCosts();
                 schedulers_supersteps[algorithm_counter] = schedule.numberOfSupersteps();
 
                 if (parser.global_params.get_child("outputSchedule").get_value<bool>()) {
                     try {
-
-                        file_writer::write_txt(name_graph + "_" + name_machine + "_" +
-                                               algorithm.second.get_child("name").get_value<std::string>() +
-                                               "_schedule.txt", schedule);
+                        file_writer::write_txt(name_graph + "_" + name_machine + "_"
+                                                   + algorithm.second.get_child("name").get_value<std::string>() + "_schedule.txt",
+                                               schedule);
                     } catch (std::exception &e) {
-                        std::cerr << "Writing schedule file for " + name_graph + ", " + name_machine + ", " +
-                                         schedulers_name[algorithm_counter] + " has failed."
+                        std::cerr << "Writing schedule file for " + name_graph + ", " + name_machine + ", "
+                                         + schedulers_name[algorithm_counter] + " has failed."
                                   << std::endl;
                         std::cerr << e.what() << std::endl;
                     }
@@ -154,12 +148,13 @@ int main(int argc, char *argv[]) {
 
                 if (parser.global_params.get_child("outputSankeySchedule").get_value<bool>()) {
                     try {
-                       file_writer::write_sankey(name_graph + "_" + name_machine + "_" +
-                                                  algorithm.second.get_child("name").get_value<std::string>() +
-                                                  "_sankey.sankey", BspScheduleCS<graph_t>(schedule));
+                        file_writer::write_sankey(name_graph + "_" + name_machine + "_"
+                                                      + algorithm.second.get_child("name").get_value<std::string>()
+                                                      + "_sankey.sankey",
+                                                  BspScheduleCS<graph_t>(schedule));
                     } catch (std::exception &e) {
-                        std::cerr << "Writing sankey file for " + name_graph + ", " + name_machine + ", " +
-                                         schedulers_name[algorithm_counter] + " has failed."
+                        std::cerr << "Writing sankey file for " + name_graph + ", " + name_machine + ", "
+                                         + schedulers_name[algorithm_counter] + " has failed."
                                   << std::endl;
                         std::cerr << e.what() << std::endl;
                     }
@@ -167,16 +162,15 @@ int main(int argc, char *argv[]) {
 
                 if (parser.global_params.get_child("outputDotSchedule").get_value<bool>()) {
                     try {
-
                         DotFileWriter sched_writer;
-                        sched_writer.write_schedule(name_graph + "_" + name_machine + "_" +
-                                                        algorithm.second.get_child("name").get_value<std::string>() +
-                                                        "_schedule.dot",
+                        sched_writer.write_schedule(name_graph + "_" + name_machine + "_"
+                                                        + algorithm.second.get_child("name").get_value<std::string>()
+                                                        + "_schedule.dot",
                                                     schedule);
 
                     } catch (std::exception &e) {
-                        std::cerr << "Writing dot file for " + name_graph + ", " + name_machine + ", " +
-                                         schedulers_name[algorithm_counter] + " has failed."
+                        std::cerr << "Writing dot file for " + name_graph + ", " + name_machine + ", "
+                                         + schedulers_name[algorithm_counter] + " has failed."
                                   << std::endl;
                         std::cerr << e.what() << std::endl;
                     }
@@ -188,8 +182,7 @@ int main(int argc, char *argv[]) {
 
         int tw = 1, ww = 1, cw = 1, nsw = 1, ct = 1;
         for (size_t i = 0; i < parser.scheduler.size(); i++) {
-            if (schedulers_failed[i])
-                continue;
+            if (schedulers_failed[i]) { continue; }
             tw = std::max(tw, 1 + int(std::log10(schedulers_costs[i])));
             ww = std::max(ww, 1 + int(std::log10(schedulers_work_costs[i])));
             cw = std::max(cw, 1 + int(std::log10(schedulers_costs[i] - schedulers_work_costs[i])));
@@ -200,8 +193,8 @@ int main(int argc, char *argv[]) {
         std::vector<size_t> ordering = sorting_arrangement(schedulers_costs);
 
         std::cout << std::endl << name_graph << " - " << name_machine << std::endl;
-        std::cout << "Number of Vertices: " + std::to_string(bsp_instance.getComputationalDag().num_vertices()) +
-                         "  Number of Edges: " + std::to_string(bsp_instance.getComputationalDag().num_edges())
+        std::cout << "Number of Vertices: " + std::to_string(bsp_instance.getComputationalDag().num_vertices())
+                         + "  Number of Edges: " + std::to_string(bsp_instance.getComputationalDag().num_edges())
                   << std::endl;
         for (size_t j = 0; j < parser.scheduler.size(); j++) {
             size_t i = j;
@@ -213,8 +206,7 @@ int main(int argc, char *argv[]) {
             } else {
                 std::cout << "total costs:  " << std::right << std::setw(tw) << schedulers_costs[i]
                           << "     work costs:  " << std::right << std::setw(ww) << schedulers_work_costs[i]
-                          << "     comm costs:  " << std::right << std::setw(cw)
-                          << schedulers_costs[i] - schedulers_work_costs[i]
+                          << "     comm costs:  " << std::right << std::setw(cw) << schedulers_costs[i] - schedulers_work_costs[i]
                           << "     number of supersteps:  " << std::right << std::setw(nsw) << schedulers_supersteps[i]
                           << "     compute time:  " << std::right << std::setw(ct) << schedulers_compute_time[i] << "ms"
                           << "     scheduler:  " << schedulers_name[i] << std::endl;
