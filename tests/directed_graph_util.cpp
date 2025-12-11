@@ -602,7 +602,13 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     BOOST_CHECK(get_bottom_node_distance(graph) == bottom_dist);
 
     const std::vector<std::vector<VertexType>> graph_second_Out = {
-        {1, 2}, {3, 4}, {4, 5}, {6}, {}, {6}, {},
+        {1, 2},
+        {3, 4},
+        {4, 5},
+        {6},
+        {},
+        {6},
+        {},
     };
     const std::vector<int> graph_second_workW = {1, 1, 1, 1, 1, 1, 3};
     const std::vector<int> graph_second_commW = graph_second_workW;
@@ -675,4 +681,30 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     //         rev_edge_in_rev_graph);
     //     }
     // }
+}
+
+BOOST_AUTO_TEST_CASE(test_edge_view_indexed_access) {
+    computational_dag_vector_impl_def_t graph = constr_graph_1();
+    auto all_edges = edge_view(graph);
+
+    // Check initial iterator
+    auto it = all_edges.begin();
+
+    // Check each edge by index
+    for (size_t i = 0; i < graph.num_edges(); ++i) {
+        // Construct iterator directly to index i
+        auto indexed_it = decltype(all_edges)::iterator(i, graph);
+        BOOST_CHECK(indexed_it == it);
+        BOOST_CHECK(*indexed_it == *it);
+
+        ++it;
+    }
+
+    // Check end condition
+    auto end_it = decltype(all_edges)::iterator(graph.num_edges(), graph);
+    BOOST_CHECK(end_it == all_edges.end());
+
+    // Check out of bounds
+    auto oob_it = decltype(all_edges)::iterator(graph.num_edges() + 5, graph);
+    BOOST_CHECK(oob_it == all_edges.end());
 }

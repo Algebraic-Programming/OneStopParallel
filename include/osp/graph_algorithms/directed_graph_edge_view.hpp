@@ -83,35 +83,29 @@ class edge_view {
 
         DirectedEdgeIterator(const vertex_idx_t<Graph_t> edge_idx, const Graph_t &graph)
             : graph_(&graph), currentVertex_(0), currentEdgeIdx_(edge_idx) {
-            if (currentEdgeIdx_ < graph_->num_edges()) {
-                vertex_idx_t<Graph_t> tmp = 0u;
-                advanceToValid();
 
-                while (currentVertex_ != graph_->num_vertices() && tmp < currentEdgeIdx_) {
-                    while (currentChild_ != graph_->children(currentVertex_).end()) {
-                        if (tmp == currentEdgeIdx_) {
-                            return;
-                        }
-                        currentChild_++;
-                        tmp++;
-                    }
-                    // Move to next vertex
-                    currentVertex_++;
-                    if (currentVertex_ != graph_->num_vertices()) {
-                        currentChild_ = graph_->children(currentVertex_).begin();
-                        // Skip empty adjacency lists
-                        while (currentVertex_ != graph_->num_vertices() &&
-                               graph_->children(currentVertex_).begin() == graph_->children(currentVertex_).end()) {
-                            currentVertex_++;
-                            if (currentVertex_ != graph_->num_vertices()) {
-                                currentChild_ = graph_->children(currentVertex_).begin();
-                            }
-                        }
-                    }
-                }
-            } else {
+            if (currentEdgeIdx_ >= graph_->num_edges()) {
                 currentEdgeIdx_ = graph_->num_edges();
                 currentVertex_ = graph_->num_vertices();
+                return;
+            }
+
+            vertex_idx_t<Graph_t> currentAccumulatedEdges = 0;
+
+            // Optimization: Skip vertices entirely if their degree is small enough
+            while (currentVertex_ < graph_->num_vertices()) {
+                const auto degree = graph_->out_degree(currentVertex_);
+                if (currentAccumulatedEdges + degree > currentEdgeIdx_) {
+                    break;
+                }
+                currentAccumulatedEdges += degree;
+                currentVertex_++;
+            }
+
+            // Initialize child iterator and advance within the specific vertex
+            if (currentVertex_ < graph_->num_vertices()) {
+                currentChild_ = graph_->children(currentVertex_).begin();
+                std::advance(currentChild_, currentEdgeIdx_ - currentAccumulatedEdges);
             }
         }
 
@@ -124,14 +118,7 @@ class edge_view {
 
             if (currentChild_ == graph_->children(currentVertex_).end()) {
                 currentVertex_++;
-                // Skip empty vertices
-                while (currentVertex_ != graph_->num_vertices()) {
-                    if (graph_->children(currentVertex_).begin() != graph_->children(currentVertex_).end()) {
-                        currentChild_ = graph_->children(currentVertex_).begin();
-                        break;
-                    }
-                    currentVertex_++;
-                }
+                advanceToValid();
             }
             return *this;
         }
