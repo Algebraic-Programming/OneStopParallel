@@ -18,6 +18,8 @@ limitations under the License.
 
 #pragma once
 
+#include "osp/concepts/graph_traits.hpp"
+#include "osp/graph_algorithms/directed_graph_top_sort.hpp"
 #include "osp/graph_algorithms/subgraph_algorithms.hpp"
 #include "osp/graph_implementations/adj_list_impl/compact_sparse_graph.hpp"
 
@@ -32,13 +34,13 @@ std::unordered_map<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_in>> create_in
     static_assert(std::is_same_v<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_out>>,
                   "Graph_t_in and out must have the same vertex_idx types");
 
-    const std::vector<vertex_idx_t<Graph_t_in>> topOrder = GetTopOrder(instance.getComputationalDag());
+    const std::vector<vertex_idx_t<Graph_t_in>> topOrder = GetTopOrder(dag);
     std::vector<vertex_idx_t<Graph_t_in>> topOrderPosition(topOrder.size());
-    for (vertex_idx_t<Graph_t_in> pos = 0; pos < dag.numbernum_vertices(); ++pos) {
+    for (vertex_idx_t<Graph_t_in> pos = 0; pos < dag.num_vertices(); ++pos) {
         topOrderPosition[topOrder[pos]] = pos;
     }
 
-    auto topCmp = [&topOrderPosition](const &vertex_idx_t<Graph_t_in> lhs, const &vertex_idx_t<Graph_t_in> rhs) { return topOrderPosition[lhs] < topOrderPosition[rhs]; };
+    auto topCmp = [&topOrderPosition](const vertex_idx_t<Graph_t_in> &lhs, const vertex_idx_t<Graph_t_in> &rhs) { return topOrderPosition[lhs] < topOrderPosition[rhs]; };
 
     std::set<vertex_idx_t<Graph_t_in>, decltype(topCmp)> selectedVerticesOrdered(selected_nodes.begin(), selected_nodes.end(), topCmp);
 
@@ -54,7 +56,7 @@ std::unordered_map<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_in>> create_in
     for (const auto &node : selectedVerticesOrdered) {
         for (const auto &chld : dag.children(node)) {
             if (selectedVerticesOrdered.find(chld) != selectedVerticesOrdered.end()) {
-                edges.emplace(node, chld);
+                edges.emplace_back(local_idx.at(node), local_idx.at(chld));
             }
         }
     }

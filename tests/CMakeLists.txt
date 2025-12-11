@@ -162,6 +162,8 @@ _add_test( maxbsp_converter_and_hc )
 
 _add_test( cost_evaluation )
 
+_add_test( subgraph )
+
 ## pebbling ILPs
 
 if (COPT_FOUND)
