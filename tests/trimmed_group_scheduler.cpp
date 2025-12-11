@@ -27,16 +27,16 @@ limitations under the License.
 
 using namespace osp;
 
-using graph_t = computational_dag_vector_impl_def_t;
+using GraphT = computational_dag_vector_impl_def_t;
 
 // Mock SubScheduler for TrimmedGroupScheduler tests
-template <typename Constr_Graph_t>
-class MockSubScheduler : public Scheduler<Constr_Graph_t> {
+template <typename ConstrGraphT>
+class MockSubScheduler : public Scheduler<ConstrGraphT> {
   public:
     // This mock scheduler assigns all nodes to local processor 0 and superstep 0.
     // This simplifies verification of the TrimmedGroupScheduler's mapping logic.
-    RETURN_STATUS computeSchedule(BspSchedule<Constr_Graph_t> &schedule) override {
-        for (vertex_idx_t<Constr_Graph_t> v = 0; v < schedule.getInstance().getComputationalDag().num_vertices(); ++v) {
+    RETURN_STATUS computeSchedule(BspSchedule<ConstrGraphT> &schedule) override {
+        for (vertex_idx_t<ConstrGraphT> v = 0; v < schedule.getInstance().getComputationalDag().num_vertices(); ++v) {
             schedule.setAssignedProcessor(v, 0);
             schedule.setAssignedSuperstep(v, 0);
         }
@@ -48,10 +48,10 @@ class MockSubScheduler : public Scheduler<Constr_Graph_t> {
 };
 
 struct TrimmedGroupSchedulerFixture {
-    graph_t dag;
-    BspArchitecture<graph_t> arch;
-    BspInstance<graph_t> instance;
-    MockSubScheduler<graph_t> mock_sub_scheduler;
+    GraphT dag;
+    BspArchitecture<GraphT> arch;
+    BspInstance<GraphT> instance;
+    MockSubScheduler<GraphT> mockSubScheduler;
 
     TrimmedGroupSchedulerFixture() : instance(dag, arch) {
         // Default architecture: 1 processor type, 100 memory bound
@@ -68,8 +68,8 @@ BOOST_AUTO_TEST_CASE(EmptyGraphTest) {
     arch.setNumberOfProcessors(4);
     instance.getArchitecture() = arch;
 
-    TrimmedGroupScheduler<graph_t> scheduler(mock_sub_scheduler, 1);
-    BspSchedule<graph_t> schedule(instance);
+    TrimmedGroupScheduler<GraphT> scheduler(mockSubScheduler, 1);
+    BspSchedule<GraphT> schedule(instance);
 
     auto status = scheduler.computeSchedule(schedule);
     BOOST_CHECK_EQUAL(status, RETURN_STATUS::OSP_SUCCESS);
@@ -90,8 +90,8 @@ BOOST_AUTO_TEST_CASE(SingleComponentSingleProcessorTypeTest) {
     instance.getArchitecture() = arch;
 
     // min_non_zero_procs_ = 1 (all 4 processors assigned to this single component group)
-    TrimmedGroupScheduler<graph_t> scheduler(mock_sub_scheduler, 1);
-    BspSchedule<graph_t> schedule(instance);
+    TrimmedGroupScheduler<GraphT> scheduler(mockSubScheduler, 1);
+    BspSchedule<GraphT> schedule(instance);
 
     auto status = scheduler.computeSchedule(schedule);
     BOOST_CHECK_EQUAL(status, RETURN_STATUS::OSP_SUCCESS);
@@ -122,8 +122,8 @@ BOOST_AUTO_TEST_CASE(MultipleComponentsSingleProcessorTypeEvenDistributionTest) 
     instance.getArchitecture() = arch;
 
     // min_non_zero_procs_ = 2 (2 component groups, each gets 2 processors)
-    TrimmedGroupScheduler<graph_t> scheduler(mock_sub_scheduler, 2);
-    BspSchedule<graph_t> schedule(instance);
+    TrimmedGroupScheduler<GraphT> scheduler(mockSubScheduler, 2);
+    BspSchedule<GraphT> schedule(instance);
 
     auto status = scheduler.computeSchedule(schedule);
     BOOST_CHECK_EQUAL(status, RETURN_STATUS::OSP_SUCCESS);
@@ -161,8 +161,8 @@ BOOST_AUTO_TEST_CASE(MultipleComponentsSingleProcessorTypeUnevenDistributionTest
     // Group 0 gets 2 components (0, 1)
     // Group 1 gets 1 component (2)
     // sub_proc_counts for type 0: 6 / 2 = 3
-    TrimmedGroupScheduler<graph_t> scheduler(mock_sub_scheduler, 2);
-    BspSchedule<graph_t> schedule(instance);
+    TrimmedGroupScheduler<GraphT> scheduler(mockSubScheduler, 2);
+    BspSchedule<GraphT> schedule(instance);
 
     auto status = scheduler.computeSchedule(schedule);
     BOOST_CHECK_EQUAL(status, RETURN_STATUS::OSP_SUCCESS);
@@ -196,8 +196,8 @@ BOOST_AUTO_TEST_CASE(MultipleComponentsHeterogeneousArchitectureTest) {
     // min_non_zero_procs_ = 2 (2 components, 2 groups)
     // sub_proc_counts for type 0: 2 / 2 = 1
     // sub_proc_counts for type 1: 2 / 2 = 1
-    TrimmedGroupScheduler<graph_t> scheduler(mock_sub_scheduler, 2);
-    BspSchedule<graph_t> schedule(instance);
+    TrimmedGroupScheduler<GraphT> scheduler(mockSubScheduler, 2);
+    BspSchedule<GraphT> schedule(instance);
 
     auto status = scheduler.computeSchedule(schedule);
     BOOST_CHECK_EQUAL(status, RETURN_STATUS::OSP_SUCCESS);

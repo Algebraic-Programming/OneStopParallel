@@ -1,10 +1,6 @@
 Checks: '-*,readability-identifier-naming'
 
 CheckOptions:
-  # 1. Namespaces: snake_case (e.g., osp)
-  - key:             readability-identifier-naming.NamespaceCase
-    value:           lower_case
-
   # 2. Classes and Structs: CamelCase (e.g., MyClass)
   - key:             readability-identifier-naming.ClassCase
     value:           CamelCase
@@ -12,6 +8,7 @@ CheckOptions:
     value:           CamelCase
 
   # 3. Type Aliases: CamelCase (e.g., MyTypeAlias)
+  # Includes the fix for std::iterator_traits compatibility
   - key:             readability-identifier-naming.TypeAliasCase
     value:           CamelCase
   - key:             readability-identifier-naming.TypeAliasIgnoredRegexp
@@ -52,20 +49,8 @@ CheckOptions:
     value:           camelBack
   - key:             readability-identifier-naming.ProtectedMemberSuffix
     value:           _
-  # Public Members: camelBack with '_' suffix
-  - key:             readability-identifier-naming.PublicMemberCase
-    value:           camelBack
-  - key:             readability-identifier-naming.PublicMemberSuffix
-    value:           _
 
-  # 8. Constants
-  # Static Constant Members: camelBack (no suffix)
-  - key:             readability-identifier-naming.StaticConstantMemberCase
-    value:           camelBack
-  - key:             readability-identifier-naming.StaticConstantMemberSuffix
-    value:           _
-  # Global Constants / Constexpr Variables
-  - key:             readability-identifier-naming.GlobalConstantCase
-    value:           camelBack
-  - key:             readability-identifier-naming.ConstexprVariableCase
+  # Public Members: camelBack WITHOUT suffix
+  # This fixes the issue with POD structs in headers (e.g., struct Point { int x; })
+  - key:             readability-identifier-naming.PublicMemberCase
     value:           camelBack

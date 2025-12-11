@@ -50,29 +50,29 @@ BOOST_AUTO_TEST_CASE(SetIntersection) {
 }
 
 BOOST_AUTO_TEST_CASE(SetIntersectionLarge) {
-    std::vector<int> iota_0_to_10k(10'000);
-    std::iota(iota_0_to_10k.begin(), iota_0_to_10k.end(), 0);
+    std::vector<int> iota0To10k(10'000);
+    std::iota(iota0To10k.begin(), iota0To10k.end(), 0);
 
-    std::vector<int> iota_10k_to_20k(10'000);
-    std::iota(iota_10k_to_20k.begin(), iota_10k_to_20k.end(), 10'000);
+    std::vector<int> iota10kTo20k(10'000);
+    std::iota(iota10kTo20k.begin(), iota10kTo20k.end(), 10'000);
 
-    std::unordered_set<int> iota_0_to_10k_set(iota_0_to_10k.begin(), iota_0_to_10k.end());
+    std::unordered_set<int> iota0To10kSet(iota0To10k.begin(), iota0To10k.end());
 
     {    // Intersection of [0,10k] and [10k,20k]  -->  []
-        std::unordered_set<int> iota_10k_to_20k_set(iota_10k_to_20k.begin(), iota_10k_to_20k.end());
-        BOOST_CHECK(get_intersection(iota_0_to_10k_set, iota_10k_to_20k_set).empty());
+        std::unordered_set<int> iota10kTo20kSet(iota10kTo20k.begin(), iota10kTo20k.end());
+        BOOST_CHECK(get_intersection(iota0To10kSet, iota10kTo20kSet).empty());
     }
 
     {    // Intersection of [0,10k] and [0k,10k]  -->  [0k,10k]
-        BOOST_CHECK(get_intersection(iota_0_to_10k_set, iota_0_to_10k_set) == iota_0_to_10k_set);
+        BOOST_CHECK(get_intersection(iota0To10kSet, iota0To10kSet) == iota0To10kSet);
     }
 
     {    // Intersection of [0,10k] and [5k,10k]  -->  [5k,10k]
-        std::vector<int> iota_5k_to_10k(5'000);
-        std::iota(iota_5k_to_10k.begin(), iota_5k_to_10k.end(), 5'000);
-        std::unordered_set<int> iota_5k_to_10k_set(iota_5k_to_10k.begin(), iota_5k_to_10k.end());
+        std::vector<int> iota5kTo10k(5'000);
+        std::iota(iota5kTo10k.begin(), iota5kTo10k.end(), 5'000);
+        std::unordered_set<int> iota5kTo10kSet(iota5kTo10k.begin(), iota5kTo10k.end());
 
-        BOOST_CHECK(get_intersection(iota_0_to_10k_set, iota_5k_to_10k_set) == iota_5k_to_10k_set);
+        BOOST_CHECK(get_intersection(iota0To10kSet, iota5kTo10kSet) == iota5kTo10kSet);
     }
 }
 
@@ -102,31 +102,31 @@ BOOST_AUTO_TEST_CASE(SetUnions) {
 }
 
 BOOST_AUTO_TEST_CASE(SetUnionLarge) {
-    std::vector<int> iota_0_to_10k(10'000);
-    std::iota(iota_0_to_10k.begin(), iota_0_to_10k.end(), 0);
+    std::vector<int> iota0To10k(10'000);
+    std::iota(iota0To10k.begin(), iota0To10k.end(), 0);
 
-    std::vector<int> iota_10k_to_20k(10'000);
-    std::iota(iota_10k_to_20k.begin(), iota_10k_to_20k.end(), 10'000);
+    std::vector<int> iota10kTo20k(10'000);
+    std::iota(iota10kTo20k.begin(), iota10kTo20k.end(), 10'000);
 
-    std::unordered_set<int> iota_0_to_10k_set(iota_0_to_10k.begin(), iota_0_to_10k.end());
+    std::unordered_set<int> iota0To10kSet(iota0To10k.begin(), iota0To10k.end());
 
     {    // Union of [0,10k] and [10k,20k]  -->  [0k,20k]
-        std::unordered_set<int> iota_10k_to_20k_set(iota_10k_to_20k.begin(), iota_10k_to_20k.end());
-        std::unordered_set<int> expected_union(iota_0_to_10k.begin(), iota_0_to_10k.end());
-        expected_union.insert(iota_10k_to_20k.begin(), iota_10k_to_20k.end());
-        BOOST_CHECK(get_union(iota_0_to_10k_set, iota_10k_to_20k_set) == expected_union);
+        std::unordered_set<int> iota10kTo20kSet(iota10kTo20k.begin(), iota10kTo20k.end());
+        std::unordered_set<int> expectedUnion(iota0To10k.begin(), iota0To10k.end());
+        expectedUnion.insert(iota10kTo20k.begin(), iota10kTo20k.end());
+        BOOST_CHECK(get_union(iota0To10kSet, iota10kTo20kSet) == expectedUnion);
     }
 
     {    // Union of [0,10k] and [0k,10k]  -->  [0k,10k]
-        BOOST_CHECK(get_union(iota_0_to_10k_set, iota_0_to_10k_set) == iota_0_to_10k_set);
+        BOOST_CHECK(get_union(iota0To10kSet, iota0To10kSet) == iota0To10kSet);
     }
 
     {    // Union of [0,10k] and [5k,15k]  -->  [0k,15k]
-        std::vector<int> iota_5k_to_15k(10'000);
-        std::iota(iota_5k_to_15k.begin(), iota_5k_to_15k.end(), 5'000);
-        std::unordered_set<int> iota_5k_to_15k_set(iota_5k_to_15k.begin(), iota_5k_to_15k.end());
-        std::unordered_set<int> expected_union(iota_0_to_10k.begin(), iota_0_to_10k.end());
-        expected_union.insert(iota_5k_to_15k.begin(), iota_5k_to_15k.end());
-        BOOST_CHECK(get_union(iota_0_to_10k_set, iota_5k_to_15k_set) == expected_union);
+        std::vector<int> iota5kTo15k(10'000);
+        std::iota(iota5kTo15k.begin(), iota5kTo15k.end(), 5'000);
+        std::unordered_set<int> iota5kTo15kSet(iota5kTo15k.begin(), iota5kTo15k.end());
+        std::unordered_set<int> expectedUnion(iota0To10k.begin(), iota0To10k.end());
+        expectedUnion.insert(iota5kTo15k.begin(), iota5kTo15k.end());
+        BOOST_CHECK(get_union(iota0To10kSet, iota5kTo15kSet) == expectedUnion);
     }
 }

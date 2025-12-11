@@ -29,10 +29,10 @@ limitations under the License.
 
 using namespace osp;
 
-BOOST_AUTO_TEST_CASE(test_cost_models_simple_dag) {
-    using graph = computational_dag_edge_idx_vector_impl_def_int_t;
+BOOST_AUTO_TEST_CASE(TestCostModelsSimpleDag) {
+    using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
 
-    BspInstance<graph> instance;
+    BspInstance<Graph> instance;
     instance.setNumberOfProcessors(2);
     instance.setCommunicationCosts(10);
     instance.setSynchronisationCosts(5);
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(test_cost_models_simple_dag) {
     dag.add_edge(2, 3);
     dag.add_edge(3, 4);
 
-    BspSchedule<graph> schedule(instance);
+    BspSchedule<Graph> schedule(instance);
 
     schedule.setAssignedProcessor(0, 0);
     schedule.setAssignedSuperstep(0, 0);
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(test_cost_models_simple_dag) {
     // Comm = 10 + 20 = 30
     // Syncs = 2 * L = 2 * 5 = 10 (only steps with comm)
     // Total = 30 + 10 + 130 = 170
-    BOOST_CHECK_EQUAL(LazyCommunicationCost<graph>()(schedule), 170);
+    BOOST_CHECK_EQUAL(LazyCommunicationCost<Graph>()(schedule), 170);
 
     // BufferedSendingCost
     // Send at producer step, receive at step_needed - staleness
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(test_cost_models_simple_dag) {
     // Comm = 10 + 20 + 20 = 50
     // Syncs = 3 * L = 3 * 5 = 15 (all steps with comm)
     // Total = 50 + 15 + 130 = 195
-    BOOST_CHECK_EQUAL(BufferedSendingCost<graph>()(schedule), 195);
+    BOOST_CHECK_EQUAL(BufferedSendingCost<Graph>()(schedule), 195);
 
     // TotalCommunicationCost
     // Sum of cross-processor edge comm weights * g / P
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(test_cost_models_simple_dag) {
     // Work = 130
     // Sync = 3 * 5 = 15 (number_of_supersteps - 1)
     // Total = 15 + 130 + 15 = 160
-    BOOST_CHECK_EQUAL(TotalCommunicationCost<graph>()(schedule), 160);
+    BOOST_CHECK_EQUAL(TotalCommunicationCost<Graph>()(schedule), 160);
 
     // TotalLambdaCommunicationCost
     // For each node, sum comm_weight * sendCosts over unique target processors
@@ -116,5 +116,5 @@ BOOST_AUTO_TEST_CASE(test_cost_models_simple_dag) {
     // comm_costs = 1+2+0+0 = 3, comm_cost = 3 * (1/2) * 10 = 15
     // Work = 130, Sync = 3 * 5 = 15
     // Total = 15 + 130 + 15 = 160
-    BOOST_CHECK_EQUAL(TotalLambdaCommunicationCost<graph>()(schedule), 160);
+    BOOST_CHECK_EQUAL(TotalLambdaCommunicationCost<Graph>()(schedule), 160);
 }

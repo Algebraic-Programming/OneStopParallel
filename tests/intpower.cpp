@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE(IntegerPowers) {
     BOOST_CHECK_EQUAL(intpow(4, 3), 64);
 }
 
-BOOST_AUTO_TEST_CASE(Median_set) {
+BOOST_AUTO_TEST_CASE(MedianSet) {
     std::set<int> a({0, 10, 20});
     std::set<int> b({-5, 8, 10, 732});
     std::set<int> c({-5, 10, 9, 732});
@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(Median_set) {
     BOOST_CHECK_EQUAL(Get_Median(c), 9);
 }
 
-BOOST_AUTO_TEST_CASE(Median_multiset) {
+BOOST_AUTO_TEST_CASE(MedianMultiset) {
     std::multiset<int> a({0, 10, 20, 10});
     std::multiset<int> b({0, 0, 1});
     std::multiset<int> c({2, 4, 7, 233});

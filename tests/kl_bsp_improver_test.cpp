@@ -17,23 +17,23 @@
 
 using namespace osp;
 
-template <typename Graph_t>
-void add_mem_weights(Graph_t &dag) {
-    int mem_weight = 1;
-    int comm_weight = 7;
+template <typename GraphT>
+void AddMemWeights(GraphT &dag) {
+    int memWeight = 1;
+    int commWeight = 7;
 
     for (const auto &v : dag.vertices()) {
-        dag.set_vertex_work_weight(v, static_cast<v_memw_t<Graph_t>>(mem_weight++ % 10 + 2));
-        dag.set_vertex_mem_weight(v, static_cast<v_memw_t<Graph_t>>(mem_weight++ % 10 + 2));
-        dag.set_vertex_comm_weight(v, static_cast<v_commw_t<Graph_t>>(comm_weight++ % 10 + 2));
+        dag.set_vertex_work_weight(v, static_cast<v_memw_t<GraphT>>(memWeight++ % 10 + 2));
+        dag.set_vertex_mem_weight(v, static_cast<v_memw_t<GraphT>>(memWeight++ % 10 + 2));
+        dag.set_vertex_comm_weight(v, static_cast<v_commw_t<GraphT>>(commWeight++ % 10 + 2));
     }
 }
 
-BOOST_AUTO_TEST_CASE(kl_improver_inner_loop_test) {
-    using graph = computational_dag_edge_idx_vector_impl_def_int_t;
-    using VertexType = graph::vertex_idx;
+BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
+    using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
+    using VertexType = Graph::vertex_idx;
 
-    graph dag;
+    Graph dag;
 
     const VertexType v1 = dag.add_vertex(2, 9, 2);
     const VertexType v2 = dag.add_vertex(3, 8, 4);
@@ -53,9 +53,9 @@ BOOST_AUTO_TEST_CASE(kl_improver_inner_loop_test) {
     dag.add_edge(v5, v8, 9);
     dag.add_edge(v4, v8, 9);
 
-    BspArchitecture<graph> arch;
+    BspArchitecture<Graph> arch;
 
-    BspInstance<graph> instance(dag, arch);
+    BspInstance<Graph> instance(dag, arch);
 
     BspSchedule schedule(instance);
 
@@ -64,66 +64,66 @@ BOOST_AUTO_TEST_CASE(kl_improver_inner_loop_test) {
 
     schedule.updateNumberOfSupersteps();
 
-    using comm_cost_t = kl_bsp_comm_cost_function<graph, double, no_local_search_memory_constraint>;
-    using kl_improver_test = kl_improver_test<graph, comm_cost_t>;
+    using CommCostT = kl_bsp_comm_cost_function<Graph, double, no_local_search_memory_constraint>;
+    using KlImproverTest = kl_improver_test<Graph, CommCostT>;
 
-    kl_improver_test kl;
+    KlImproverTest kl;
 
     kl.setup_schedule(schedule);
 
-    auto &kl_active_schedule = kl.get_active_schedule();
+    auto &klActiveSchedule = kl.get_active_schedule();
 
     // Verify work datastructures are set up correctly
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_max_work(0), 5.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_second_max_work(0), 0.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_max_work(1), 9.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_second_max_work(1), 0.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_max_work(2), 7.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_second_max_work(2), 6.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_max_work(3), 9.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_second_max_work(3), 8.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(0), 5.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(0), 0.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(1), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(1), 0.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(2), 7.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(2), 6.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(3), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(3), 8.0);
 
-    BOOST_CHECK_EQUAL(kl_active_schedule.num_steps(), 4);
-    BOOST_CHECK_EQUAL(kl_active_schedule.is_feasible(), true);
+    BOOST_CHECK_EQUAL(klActiveSchedule.num_steps(), 4);
+    BOOST_CHECK_EQUAL(klActiveSchedule.is_feasible(), true);
 
     // Check initial cost consistency
-    double initial_recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
-    double initial_tracked = kl.get_current_cost();
-    BOOST_CHECK_CLOSE(initial_recomputed, initial_tracked, 0.00001);
+    double initialRecomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
+    double initialTracked = kl.get_current_cost();
+    BOOST_CHECK_CLOSE(initialRecomputed, initialTracked, 0.00001);
 
     // Insert nodes into gain heap
-    auto node_selection = kl.insert_gain_heap_test_penalty({2, 3});
+    auto nodeSelection = kl.insert_gain_heap_test_penalty({2, 3});
 
     // Run first iteration and check cost consistency
-    auto recompute_max_gain = kl.run_inner_iteration_test();
+    auto recomputeMaxGain = kl.run_inner_iteration_test();
 
-    double iter1_recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
-    double iter1_tracked = kl.get_current_cost();
-    BOOST_CHECK_CLOSE(iter1_recomputed, iter1_tracked, 0.00001);
+    double iter1Recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
+    double iter1Tracked = kl.get_current_cost();
+    BOOST_CHECK_CLOSE(iter1Recomputed, iter1Tracked, 0.00001);
 
     // Run second iteration
-    auto &node3_affinity = kl.get_affinity_table()[3];
+    auto &node3Affinity = kl.get_affinity_table()[3];
 
-    recompute_max_gain = kl.run_inner_iteration_test();
+    recomputeMaxGain = kl.run_inner_iteration_test();
 
-    double iter2_recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
-    double iter2_tracked = kl.get_current_cost();
+    double iter2Recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
+    double iter2Tracked = kl.get_current_cost();
 
-    BOOST_CHECK_CLOSE(iter2_recomputed, iter2_tracked, 0.00001);
+    BOOST_CHECK_CLOSE(iter2Recomputed, iter2Tracked, 0.00001);
 
     // Run third iteration
-    recompute_max_gain = kl.run_inner_iteration_test();
+    recomputeMaxGain = kl.run_inner_iteration_test();
 
-    double iter3_recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
-    double iter3_tracked = kl.get_current_cost();
-    BOOST_CHECK_CLOSE(iter3_recomputed, iter3_tracked, 0.00001);
+    double iter3Recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
+    double iter3Tracked = kl.get_current_cost();
+    BOOST_CHECK_CLOSE(iter3Recomputed, iter3Tracked, 0.00001);
 
     // Run fourth iteration
-    recompute_max_gain = kl.run_inner_iteration_test();
+    recomputeMaxGain = kl.run_inner_iteration_test();
 
-    double iter4_recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
-    double iter4_tracked = kl.get_current_cost();
-    BOOST_CHECK_CLOSE(iter4_recomputed, iter4_tracked, 0.00001);
+    double iter4Recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
+    double iter4Tracked = kl.get_current_cost();
+    BOOST_CHECK_CLOSE(iter4Recomputed, iter4Tracked, 0.00001);
 }
 
 // BOOST_AUTO_TEST_CASE(kl_lambda_total_comm_large_test_graphs) {

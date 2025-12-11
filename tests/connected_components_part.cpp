@@ -27,7 +27,7 @@ limitations under the License.
 
 using namespace osp;
 
-BOOST_AUTO_TEST_CASE(ConnectedComponentPart_test) {
+BOOST_AUTO_TEST_CASE(ConnectedComponentPartTest) {
     BspInstance<computational_dag_vector_impl_def_int_t> instance;
     computational_dag_vector_impl_def_int_t &dag = instance.getComputationalDag();
     using VertexType = vertex_idx_t<computational_dag_vector_impl_def_int_t>;
@@ -61,8 +61,8 @@ BOOST_AUTO_TEST_CASE(ConnectedComponentPart_test) {
 
     partitioner.divide(dag);
 
-    GreedyBspScheduler<boost_graph_int_t> bsp_scheduler;
-    ConnectedComponentScheduler<computational_dag_vector_impl_def_int_t, boost_graph_int_t> scheduler(bsp_scheduler);
+    GreedyBspScheduler<boost_graph_int_t> bspScheduler;
+    ConnectedComponentScheduler<computational_dag_vector_impl_def_int_t, boost_graph_int_t> scheduler(bspScheduler);
 
     BspArchitecture<computational_dag_vector_impl_def_int_t> arch = instance.getArchitecture();
     arch.setNumberOfProcessors(6);
@@ -113,11 +113,11 @@ BOOST_AUTO_TEST_CASE(ConnectedComponentPart_test) {
         BOOST_CHECK(partitioner.get_vertex_mapping()[1].at(i - 8) <= 1 + i);
     }
 
-    BspInstance<computational_dag_vector_impl_def_int_t> instance_new(dag, arch);
-    BspSchedule<computational_dag_vector_impl_def_int_t> schedule_new(instance_new);
+    BspInstance<computational_dag_vector_impl_def_int_t> instanceNew(dag, arch);
+    BspSchedule<computational_dag_vector_impl_def_int_t> scheduleNew(instanceNew);
 
-    auto status_new = scheduler.computeSchedule(schedule_new);
+    auto statusNew = scheduler.computeSchedule(scheduleNew);
 
-    BOOST_CHECK_EQUAL(status_new, RETURN_STATUS::OSP_SUCCESS);
-    BOOST_CHECK(schedule_new.satisfiesPrecedenceConstraints());
+    BOOST_CHECK_EQUAL(statusNew, RETURN_STATUS::OSP_SUCCESS);
+    BOOST_CHECK(scheduleNew.satisfiesPrecedenceConstraints());
 }

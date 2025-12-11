@@ -25,7 +25,7 @@ limitations under the License.
 using namespace osp;
 
 BOOST_AUTO_TEST_CASE(ParameterizedConstructorTest) {
-    std::vector<std::vector<int>> uniform_sent_costs = {
+    std::vector<std::vector<int>> uniformSentCosts = {
         {0, 1, 1, 1},
         {1, 0, 1, 1},
         {1, 1, 0, 1},
@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(ParameterizedConstructorTest) {
 
     BOOST_CHECK_EQUAL(architecture.maxMemoryBoundProcType(0), 100);
 
-    BOOST_TEST(architecture.sendCost() == uniform_sent_costs);
+    BOOST_TEST(architecture.sendCost() == uniformSentCosts);
 
     std::vector<std::vector<int>> expectedSendCosts = {
         {0, 2, 2, 2},
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(ParameterizedConstructorTest) {
     BOOST_CHECK_EQUAL(architecture.communicationCosts(0, 0), 0);
 
     architecture.SetUniformSendCost();
-    BOOST_TEST(architecture.sendCost() == uniform_sent_costs);
+    BOOST_TEST(architecture.sendCost() == uniformSentCosts);
 
     BOOST_CHECK_EQUAL(architecture.communicationCosts(0, 1), 2);
     BOOST_CHECK_EQUAL(architecture.communicationCosts(0, 0), 0);
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(Architecture) {
     }
 
     // constructor
-    std::vector<std::vector<int>> send_costs = {
+    std::vector<std::vector<int>> sendCosts = {
         {0, 1, 1, 1, 1, 1},
         {1, 0, 1, 1, 1, 1},
         {1, 1, 0, 1, 1, 1},
@@ -158,12 +158,12 @@ BOOST_AUTO_TEST_CASE(Architecture) {
         {1, 1, 1, 1, 1, 0}
     };
 
-    BOOST_CHECK_THROW(BspArchitecture<computational_dag_vector_impl_def_int_t> test31(7, 42942, 0, send_costs),
+    BOOST_CHECK_THROW(BspArchitecture<computational_dag_vector_impl_def_int_t> test31(7, 42942, 0, sendCosts),
                       std::invalid_argument);
-    BOOST_CHECK_THROW(BspArchitecture<computational_dag_vector_impl_def_int_t> test32(5, 42942, 0, send_costs),
+    BOOST_CHECK_THROW(BspArchitecture<computational_dag_vector_impl_def_int_t> test32(5, 42942, 0, sendCosts),
                       std::invalid_argument);
 
-    BspArchitecture<computational_dag_vector_impl_def_int_t> test3(6, 47295, 0, send_costs);
+    BspArchitecture<computational_dag_vector_impl_def_int_t> test3(6, 47295, 0, sendCosts);
     BOOST_CHECK_EQUAL(test3.numberOfProcessors(), 6);
     BOOST_CHECK_EQUAL(test3.communicationCosts(), 47295);
     BOOST_CHECK_EQUAL(test3.synchronisationCosts(), 0);
@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE(Architecture) {
     }
 
     // constructor
-    std::vector<std::vector<int>> send_costs2 = {
+    std::vector<std::vector<int>> sendCosts2 = {
         {0, 1, 2, 1, 1, 1},
         {1, 0, 1, 1, 1, 1},
         {1, 1, 0, 1, 1, 1},
@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE(Architecture) {
         {1, 1, 1, 1, 0, 1},
         {1, 1, 1, 1, 1, 0}
     };
-    std::vector<std::vector<int>> send_costs3 = {
+    std::vector<std::vector<int>> sendCosts3 = {
         {0, 1, 1, 1, 1, 1},
         {1, 0, 1, 1, 1, 1},
         {1, 1, 0, 1, 1, 1},
@@ -200,14 +200,14 @@ BOOST_AUTO_TEST_CASE(Architecture) {
         {1, 1, 1, 1, 1, 0}
     };
 
-    BspArchitecture<computational_dag_vector_impl_def_int_t> test4(6, 0, 4294965, send_costs2);
+    BspArchitecture<computational_dag_vector_impl_def_int_t> test4(6, 0, 4294965, sendCosts2);
     BOOST_CHECK_EQUAL(test4.numberOfProcessors(), 6);
     BOOST_CHECK_EQUAL(test4.communicationCosts(), 0);
     BOOST_CHECK_EQUAL(test4.synchronisationCosts(), 4294965);
     BOOST_CHECK_EQUAL(test4.isNumaArchitecture(), true);
     BOOST_CHECK_EQUAL(test4.sendCosts(0, 2), 2);
 
-    BspArchitecture<computational_dag_vector_impl_def_int_t> test5(6, 0, 4294965, send_costs3);
+    BspArchitecture<computational_dag_vector_impl_def_int_t> test5(6, 0, 4294965, sendCosts3);
     BOOST_CHECK_EQUAL(test5.numberOfProcessors(), 6);
     BOOST_CHECK_EQUAL(test5.communicationCosts(), 0);
     BOOST_CHECK_EQUAL(test5.synchronisationCosts(), 4294965);

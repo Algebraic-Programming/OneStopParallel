@@ -30,10 +30,10 @@ limitations under the License.
 
 using namespace osp;
 
-BOOST_AUTO_TEST_CASE(hill_climbing) {
-    using graph = computational_dag_vector_impl_def_t;
+BOOST_AUTO_TEST_CASE(HillClimbing) {
+    using Graph = computational_dag_vector_impl_def_t;
 
-    BspInstance<graph> instance;
+    BspInstance<Graph> instance;
     instance.setNumberOfProcessors(4);
     instance.setCommunicationCosts(3);
     instance.setSynchronisationCosts(5);
@@ -51,35 +51,35 @@ BOOST_AUTO_TEST_CASE(hill_climbing) {
 
     BOOST_CHECK(status);
 
-    GreedyBspScheduler<graph> greedy;
-    BspSchedule<graph> bsp_initial(instance);
-    BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, greedy.computeSchedule(bsp_initial));
-    BOOST_CHECK_EQUAL(bsp_initial.satisfiesPrecedenceConstraints(), true);
+    GreedyBspScheduler<Graph> greedy;
+    BspSchedule<Graph> bspInitial(instance);
+    BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, greedy.computeSchedule(bspInitial));
+    BOOST_CHECK_EQUAL(bspInitial.satisfiesPrecedenceConstraints(), true);
 
-    HillClimbingScheduler<graph> scheduler;
-    BspSchedule<graph> schedule1 = bsp_initial;
+    HillClimbingScheduler<Graph> scheduler;
+    BspSchedule<Graph> schedule1 = bspInitial;
     scheduler.improveSchedule(schedule1);
     BOOST_CHECK_EQUAL(schedule1.satisfiesPrecedenceConstraints(), true);
 
     scheduler.setSteepestAscend(true);
-    BspSchedule<graph> schedule2 = bsp_initial;
+    BspSchedule<Graph> schedule2 = bspInitial;
     scheduler.improveSchedule(schedule2);
     BOOST_CHECK_EQUAL(schedule2.satisfiesPrecedenceConstraints(), true);
 
-    BspSchedule<graph> schedule3 = bsp_initial;
+    BspSchedule<Graph> schedule3 = bspInitial;
     scheduler.setTimeLimitSeconds(1U);
     scheduler.improveScheduleWithTimeLimit(schedule3);
     BOOST_CHECK_EQUAL(schedule3.satisfiesPrecedenceConstraints(), true);
 
-    BspSchedule<graph> schedule4 = bsp_initial;
+    BspSchedule<Graph> schedule4 = bspInitial;
     scheduler.improveScheduleWithStepLimit(schedule4, 5);
     BOOST_CHECK_EQUAL(schedule4.satisfiesPrecedenceConstraints(), true);
 }
 
-BOOST_AUTO_TEST_CASE(hill_climbing_for_comm_schedule) {
-    using graph = computational_dag_vector_impl_def_t;
+BOOST_AUTO_TEST_CASE(HillClimbingForCommSchedule) {
+    using Graph = computational_dag_vector_impl_def_t;
 
-    BspInstance<graph> instance;
+    BspInstance<Graph> instance;
     instance.setNumberOfProcessors(2);
     instance.setCommunicationCosts(3);
     instance.setSynchronisationCosts(5);
@@ -97,28 +97,28 @@ BOOST_AUTO_TEST_CASE(hill_climbing_for_comm_schedule) {
 
     BOOST_CHECK(status);
 
-    GreedyBspScheduler<graph> greedy;
-    BspSchedule<graph> initial(instance);
+    GreedyBspScheduler<Graph> greedy;
+    BspSchedule<Graph> initial(instance);
     BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, greedy.computeSchedule(initial));
     BOOST_CHECK_EQUAL(initial.satisfiesPrecedenceConstraints(), true);
 
-    HillClimbingScheduler<graph> hc;
+    HillClimbingScheduler<Graph> hc;
     hc.improveSchedule(initial);
     BOOST_CHECK_EQUAL(initial.satisfiesPrecedenceConstraints(), true);
 
-    BspSchedule<graph> schedule = initial;
-    BspScheduleCS<graph> initial_cs(std::move(initial));
+    BspSchedule<Graph> schedule = initial;
+    BspScheduleCS<Graph> initialCs(std::move(initial));
     // initial_cs.setAutoCommunicationSchedule();
-    initial_cs.setEagerCommunicationSchedule();
-    BOOST_CHECK_EQUAL(initial_cs.hasValidCommSchedule(), true);
+    initialCs.setEagerCommunicationSchedule();
+    BOOST_CHECK_EQUAL(initialCs.hasValidCommSchedule(), true);
 
-    HillClimbingForCommSteps<graph> hc_cs;
-    BspScheduleCS<graph> schedule1 = initial_cs;
-    hc_cs.improveSchedule(schedule1);
+    HillClimbingForCommSteps<Graph> hcCs;
+    BspScheduleCS<Graph> schedule1 = initialCs;
+    hcCs.improveSchedule(schedule1);
     BOOST_CHECK_EQUAL(schedule1.hasValidCommSchedule(), true);
 
-    BspScheduleCS<graph> schedule2 = initial_cs;
-    hc_cs.setSteepestAscend(true);
-    hc_cs.improveSchedule(schedule2);
+    BspScheduleCS<Graph> schedule2 = initialCs;
+    hcCs.setSteepestAscend(true);
+    hcCs.improveSchedule(schedule2);
     BOOST_CHECK_EQUAL(schedule2.hasValidCommSchedule(), true);
 }

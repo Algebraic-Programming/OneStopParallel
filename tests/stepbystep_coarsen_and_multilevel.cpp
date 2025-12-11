@@ -33,9 +33,9 @@ limitations under the License.
 
 using namespace osp;
 
-BOOST_AUTO_TEST_CASE(StepByStepCoarser_test) {
-    using graph = boost_graph_uint_t;
-    StepByStepCoarser<graph> test;
+BOOST_AUTO_TEST_CASE(StepByStepCoarserTest) {
+    using Graph = boost_graph_uint_t;
+    StepByStepCoarser<Graph> test;
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -45,34 +45,34 @@ BOOST_AUTO_TEST_CASE(StepByStepCoarser_test) {
         std::cout << cwd << std::endl;
     }
 
-    graph DAG;
+    Graph dag;
 
     bool status = file_reader::readComputationalDagHyperdagFormatDB(
-        (cwd / "data/spaa/tiny/instance_spmv_N10_nzP0d25.hdag").string(), DAG);
+        (cwd / "data/spaa/tiny/instance_spmv_N10_nzP0d25.hdag").string(), dag);
 
     BOOST_CHECK(status);
 
-    StepByStepCoarser<graph> coarser;
+    StepByStepCoarser<Graph> coarser;
 
-    coarser.setTargetNumberOfNodes(static_cast<unsigned>(DAG.num_vertices()) / 2);
+    coarser.setTargetNumberOfNodes(static_cast<unsigned>(dag.num_vertices()) / 2);
 
-    graph coarsened_dag1, coarsened_dag2;
-    std::vector<std::vector<vertex_idx_t<graph>>> old_vertex_ids;
-    std::vector<vertex_idx_t<graph>> new_vertex_id;
+    Graph coarsenedDag1, coarsenedDag2;
+    std::vector<std::vector<vertex_idx_t<Graph>>> oldVertexIds;
+    std::vector<vertex_idx_t<Graph>> newVertexId;
 
-    coarser.coarsenDag(DAG, coarsened_dag1, new_vertex_id);
-    old_vertex_ids = coarser_util::invert_vertex_contraction_map<graph, graph>(new_vertex_id);
+    coarser.coarsenDag(dag, coarsenedDag1, newVertexId);
+    oldVertexIds = coarser_util::invert_vertex_contraction_map<Graph, Graph>(newVertexId);
 
-    coarser.setTargetNumberOfNodes(static_cast<unsigned>(DAG.num_vertices()) * 2 / 3);
-    coarser.coarsenForPebbling(DAG, coarsened_dag2, new_vertex_id);
-    old_vertex_ids = coarser_util::invert_vertex_contraction_map<graph, graph>(new_vertex_id);
+    coarser.setTargetNumberOfNodes(static_cast<unsigned>(dag.num_vertices()) * 2 / 3);
+    coarser.coarsenForPebbling(dag, coarsenedDag2, newVertexId);
+    oldVertexIds = coarser_util::invert_vertex_contraction_map<Graph, Graph>(newVertexId);
 }
 
-BOOST_AUTO_TEST_CASE(Multilevel_test) {
-    using graph = boost_graph_uint_t;
-    StepByStepCoarser<graph> test;
+BOOST_AUTO_TEST_CASE(MultilevelTest) {
+    using Graph = boost_graph_uint_t;
+    StepByStepCoarser<Graph> test;
 
-    BspInstance<graph> instance;
+    BspInstance<Graph> instance;
     instance.setNumberOfProcessors(2);
     instance.setCommunicationCosts(3);
     instance.setSynchronisationCosts(5);
@@ -90,8 +90,8 @@ BOOST_AUTO_TEST_CASE(Multilevel_test) {
 
     BOOST_CHECK(status);
 
-    MultiLevelHillClimbingScheduler<graph> multi1, multi2;
-    BspSchedule<graph> schedule1(instance), schedule2(instance);
+    MultiLevelHillClimbingScheduler<Graph> multi1, multi2;
+    BspSchedule<Graph> schedule1(instance), schedule2(instance);
 
     multi1.setContractionRate(0.3);
     multi1.useLinearRefinementSteps(5);

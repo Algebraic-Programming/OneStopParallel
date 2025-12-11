@@ -132,7 +132,7 @@ limitations under the License.
 //     }
 // };
 
-BOOST_AUTO_TEST_CASE(Hungarian_alg_process_permuter_test) {
+BOOST_AUTO_TEST_CASE(HungarianAlgProcessPermuterTest) {
     // Hungarian_alg_process_permuter test;
     // run_test(&test);
 }

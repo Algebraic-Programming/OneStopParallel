@@ -28,10 +28,10 @@ limitations under the License.
 
 using namespace osp;
 
-BOOST_AUTO_TEST_CASE(test_recomputer) {
-    using graph = computational_dag_vector_impl_def_t;
+BOOST_AUTO_TEST_CASE(TestRecomputer) {
+    using Graph = computational_dag_vector_impl_def_t;
 
-    BspInstance<graph> instance1;
+    BspInstance<Graph> instance1;
     instance1.setNumberOfProcessors(2);
     instance1.setCommunicationCosts(1);
     instance1.setSynchronisationCosts(1);
@@ -42,28 +42,28 @@ BOOST_AUTO_TEST_CASE(test_recomputer) {
     instance1.getComputationalDag().add_edge(0, 1);
     instance1.getComputationalDag().add_edge(0, 2);
 
-    BspSchedule<graph> schedule_init1(instance1);
-    schedule_init1.setAssignedProcessor(0, 0);
-    schedule_init1.setAssignedSuperstep(0, 0);
-    schedule_init1.setAssignedProcessor(1, 0);
-    schedule_init1.setAssignedSuperstep(1, 1);
-    schedule_init1.setAssignedProcessor(2, 1);
-    schedule_init1.setAssignedSuperstep(2, 1);
-    BOOST_CHECK(schedule_init1.satisfiesPrecedenceConstraints());
-    BspScheduleCS<graph> schedule_init_cs1(schedule_init1);
-    BOOST_CHECK(schedule_init_cs1.hasValidCommSchedule());
+    BspSchedule<Graph> scheduleInit1(instance1);
+    scheduleInit1.setAssignedProcessor(0, 0);
+    scheduleInit1.setAssignedSuperstep(0, 0);
+    scheduleInit1.setAssignedProcessor(1, 0);
+    scheduleInit1.setAssignedSuperstep(1, 1);
+    scheduleInit1.setAssignedProcessor(2, 1);
+    scheduleInit1.setAssignedSuperstep(2, 1);
+    BOOST_CHECK(scheduleInit1.satisfiesPrecedenceConstraints());
+    BspScheduleCS<Graph> scheduleInitCs1(scheduleInit1);
+    BOOST_CHECK(scheduleInitCs1.hasValidCommSchedule());
 
-    BspScheduleRecomp<graph> schedule(instance1);
-    GreedyRecomputer<graph> scheduler;
-    scheduler.computeRecompSchedule(schedule_init_cs1, schedule);
+    BspScheduleRecomp<Graph> schedule(instance1);
+    GreedyRecomputer<Graph> scheduler;
+    scheduler.computeRecompSchedule(scheduleInitCs1, schedule);
     BOOST_CHECK(schedule.satisfiesConstraints());
-    BOOST_CHECK(schedule.computeCosts() < schedule_init_cs1.computeCosts());
-    std::cout << "Cost decrease by greedy recomp: " << schedule_init_cs1.computeCosts() << " -> " << schedule.computeCosts()
+    BOOST_CHECK(schedule.computeCosts() < scheduleInitCs1.computeCosts());
+    std::cout << "Cost decrease by greedy recomp: " << scheduleInitCs1.computeCosts() << " -> " << schedule.computeCosts()
               << std::endl;
 
     // non-toy instance
 
-    BspInstance<graph> instance2;
+    BspInstance<Graph> instance2;
     instance2.setNumberOfProcessors(4);
     instance2.setCommunicationCosts(5);
     instance2.setSynchronisationCosts(20);
@@ -81,16 +81,16 @@ BOOST_AUTO_TEST_CASE(test_recomputer) {
 
     BOOST_CHECK(status);
 
-    BspSchedule<graph> schedule_init2(instance2);
-    BspLocking<graph> greedy;
-    greedy.computeSchedule(schedule_init2);
-    BOOST_CHECK(schedule_init2.satisfiesPrecedenceConstraints());
-    BspScheduleCS<graph> schedule_init_cs2(schedule_init2);
-    BOOST_CHECK(schedule_init_cs2.hasValidCommSchedule());
+    BspSchedule<Graph> scheduleInit2(instance2);
+    BspLocking<Graph> greedy;
+    greedy.computeSchedule(scheduleInit2);
+    BOOST_CHECK(scheduleInit2.satisfiesPrecedenceConstraints());
+    BspScheduleCS<Graph> scheduleInitCs2(scheduleInit2);
+    BOOST_CHECK(scheduleInitCs2.hasValidCommSchedule());
 
-    scheduler.computeRecompSchedule(schedule_init_cs2, schedule);
+    scheduler.computeRecompSchedule(scheduleInitCs2, schedule);
     BOOST_CHECK(schedule.satisfiesConstraints());
-    BOOST_CHECK(schedule.computeCosts() < schedule_init_cs2.computeCosts());
-    std::cout << "Cost decrease by greedy recomp: " << schedule_init_cs2.computeCosts() << " -> " << schedule.computeCosts()
+    BOOST_CHECK(schedule.computeCosts() < scheduleInitCs2.computeCosts());
+    std::cout << "Cost decrease by greedy recomp: " << scheduleInitCs2.computeCosts() << " -> " << schedule.computeCosts()
               << std::endl;
 }

@@ -25,11 +25,11 @@ limitations under the License.
 
 using namespace osp;
 
-BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_SimpleChain) {
-    using graph_t = computational_dag_vector_impl_def_t;
+BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerSimpleChain) {
+    using GraphT = computational_dag_vector_impl_def_t;
 
     // 1. Setup Instance
-    BspInstance<graph_t> instance;
+    BspInstance<GraphT> instance;
     auto &dag = instance.getComputationalDag();
 
     // Create a simple coarse-grained DAG: 0 -> 1 -> 2
@@ -45,20 +45,20 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_SimpleChain) {
 
     // 2. Setup Scheduler Inputs
     std::vector<unsigned> multiplicities = {1, 2, 1};
-    std::vector<unsigned> max_procs = {100, 100, 100};
-    std::vector<std::vector<v_workw_t<graph_t>>> required_proc_types(3);
+    std::vector<unsigned> maxProcs = {100, 100, 100};
+    std::vector<std::vector<v_workw_t<GraphT>>> requiredProcTypes(3);
 
     // Node 0: work 100, mult 1. Needs type 0.
-    required_proc_types[0] = {100, 0};
+    requiredProcTypes[0] = {100, 0};
     // Node 1: work 200, mult 2. Needs type 0 and 1.
-    required_proc_types[1] = {100, 100};
+    requiredProcTypes[1] = {100, 100};
     // Node 2: work 300, mult 1. Needs type 1.
-    required_proc_types[2] = {0, 300};
+    requiredProcTypes[2] = {0, 300};
 
     // 3. Run Scheduler
-    EftSubgraphScheduler<graph_t> scheduler;
+    EftSubgraphScheduler<GraphT> scheduler;
     scheduler.setMinWorkPerProcessor(1);
-    SubgraphSchedule schedule = scheduler.run(instance, multiplicities, required_proc_types, max_procs);
+    SubgraphSchedule schedule = scheduler.run(instance, multiplicities, requiredProcTypes, maxProcs);
 
     // 4. Assertions
     BOOST_CHECK_CLOSE(schedule.makespan, 250.0, 1e-9);
@@ -74,11 +74,11 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_SimpleChain) {
     BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[2][1], 2);
 }
 
-BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ForkJoin) {
-    using graph_t = computational_dag_vector_impl_def_t;
+BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerForkJoin) {
+    using GraphT = computational_dag_vector_impl_def_t;
 
     // 1. Setup Instance
-    BspInstance<graph_t> instance;
+    BspInstance<GraphT> instance;
     auto &dag = instance.getComputationalDag();
 
     // Create a fork-join DAG: 0 -> {1,2} -> 3
@@ -97,19 +97,19 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ForkJoin) {
 
     // 2. Setup Scheduler Inputs
     std::vector<unsigned> multiplicities = {1, 2, 1, 4};
-    std::vector<unsigned> max_procs = {100, 100, 100, 100};
-    std::vector<std::vector<v_workw_t<graph_t>>> required_proc_types(4);
+    std::vector<unsigned> maxProcs = {100, 100, 100, 100};
+    std::vector<std::vector<v_workw_t<GraphT>>> requiredProcTypes(4);
 
     // All nodes need type 0
-    required_proc_types[0] = {100};
-    required_proc_types[1] = {200};
-    required_proc_types[2] = {300};
-    required_proc_types[3] = {100};
+    requiredProcTypes[0] = {100};
+    requiredProcTypes[1] = {200};
+    requiredProcTypes[2] = {300};
+    requiredProcTypes[3] = {100};
 
     // 3. Run Scheduler
-    EftSubgraphScheduler<graph_t> scheduler;
+    EftSubgraphScheduler<GraphT> scheduler;
     scheduler.setMinWorkPerProcessor(1);
-    SubgraphSchedule schedule = scheduler.run(instance, multiplicities, required_proc_types, max_procs);
+    SubgraphSchedule schedule = scheduler.run(instance, multiplicities, requiredProcTypes, maxProcs);
 
     // 4. Assertions
     // Manual calculation:
@@ -137,11 +137,11 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ForkJoin) {
     BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[3][0], 1);
 }
 
-BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_Deadlock) {
-    using graph_t = computational_dag_vector_impl_def_t;
+BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerDeadlock) {
+    using GraphT = computational_dag_vector_impl_def_t;
 
     // 1. Setup Instance
-    BspInstance<graph_t> instance;
+    BspInstance<GraphT> instance;
     auto &dag = instance.getComputationalDag();
 
     // Create a single-node DAG
@@ -154,25 +154,25 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_Deadlock) {
     // 2. Setup Scheduler Inputs
     // Job needs 2 workers (multiplicity), but only 1 is available
     std::vector<unsigned> multiplicities = {2};
-    std::vector<unsigned> max_procs = {100};
-    std::vector<std::vector<v_workw_t<graph_t>>> required_proc_types(1);
-    required_proc_types[0] = {100};
+    std::vector<unsigned> maxProcs = {100};
+    std::vector<std::vector<v_workw_t<GraphT>>> requiredProcTypes(1);
+    requiredProcTypes[0] = {100};
 
     // 3. Run Scheduler
-    EftSubgraphScheduler<graph_t> scheduler;
+    EftSubgraphScheduler<GraphT> scheduler;
     scheduler.setMinWorkPerProcessor(1);
-    SubgraphSchedule schedule = scheduler.run(instance, multiplicities, required_proc_types, max_procs);
+    SubgraphSchedule schedule = scheduler.run(instance, multiplicities, requiredProcTypes, maxProcs);
 
     // 4. Assertions
     // Expect a deadlock, indicated by a negative makespan
     BOOST_CHECK_LT(schedule.makespan, 0.0);
 }
 
-BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ComplexDAG) {
-    using graph_t = computational_dag_vector_impl_def_t;
+BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerComplexDag) {
+    using GraphT = computational_dag_vector_impl_def_t;
 
     // 1. Setup Instance
-    BspInstance<graph_t> instance;
+    BspInstance<GraphT> instance;
     auto &dag = instance.getComputationalDag();
 
     dag.add_vertex(50, 1, 0);     // 0
@@ -195,19 +195,19 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ComplexDAG) {
 
     // 2. Setup Scheduler Inputs
     std::vector<unsigned> multiplicities = {1, 2, 1, 4, 2, 1};
-    std::vector<unsigned> max_procs = {100, 100, 100, 100, 100, 100};
-    std::vector<std::vector<v_workw_t<graph_t>>> required_proc_types(6);
-    required_proc_types[0] = {50, 0};     // Job 0: needs T0
-    required_proc_types[1] = {100, 0};    // Job 1: needs T0
-    required_proc_types[2] = {0, 150};    // Job 2: needs T1
-    required_proc_types[3] = {40, 40};    // Job 3: needs T0 & T1
-    required_proc_types[4] = {0, 120};    // Job 4: needs T1
-    required_proc_types[5] = {60, 0};     // Job 5: needs T0
+    std::vector<unsigned> maxProcs = {100, 100, 100, 100, 100, 100};
+    std::vector<std::vector<v_workw_t<GraphT>>> requiredProcTypes(6);
+    requiredProcTypes[0] = {50, 0};     // Job 0: needs T0
+    requiredProcTypes[1] = {100, 0};    // Job 1: needs T0
+    requiredProcTypes[2] = {0, 150};    // Job 2: needs T1
+    requiredProcTypes[3] = {40, 40};    // Job 3: needs T0 & T1
+    requiredProcTypes[4] = {0, 120};    // Job 4: needs T1
+    requiredProcTypes[5] = {60, 0};     // Job 5: needs T0
 
     // 3. Run Scheduler
-    EftSubgraphScheduler<graph_t> scheduler;
+    EftSubgraphScheduler<GraphT> scheduler;
     scheduler.setMinWorkPerProcessor(1);
-    SubgraphSchedule schedule = scheduler.run(instance, multiplicities, required_proc_types, max_procs);
+    SubgraphSchedule schedule = scheduler.run(instance, multiplicities, requiredProcTypes, maxProcs);
 
     BOOST_CHECK_CLOSE(schedule.makespan, 105.0, 1e-9);
 
@@ -221,11 +221,11 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ComplexDAG) {
     BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[5][0], 4);
 }
 
-BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ResourceContention) {
-    using graph_t = computational_dag_vector_impl_def_t;
+BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerResourceContention) {
+    using GraphT = computational_dag_vector_impl_def_t;
 
     // 1. Setup Instance
-    BspInstance<graph_t> instance;
+    BspInstance<GraphT> instance;
     auto &dag = instance.getComputationalDag();
 
     // Create a fork-join DAG: 0 -> {1,2,3} -> 4
@@ -247,18 +247,18 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ResourceContention) {
 
     // 2. Setup Scheduler Inputs
     std::vector<unsigned> multiplicities = {1, 2, 2, 2, 1};
-    std::vector<unsigned> max_procs = {100, 100, 100, 100, 100};
-    std::vector<std::vector<v_workw_t<graph_t>>> required_proc_types(5);
-    required_proc_types[0] = {10};
-    required_proc_types[1] = {100};
-    required_proc_types[2] = {50};
-    required_proc_types[3] = {20};
-    required_proc_types[4] = {10};
+    std::vector<unsigned> maxProcs = {100, 100, 100, 100, 100};
+    std::vector<std::vector<v_workw_t<GraphT>>> requiredProcTypes(5);
+    requiredProcTypes[0] = {10};
+    requiredProcTypes[1] = {100};
+    requiredProcTypes[2] = {50};
+    requiredProcTypes[3] = {20};
+    requiredProcTypes[4] = {10};
 
     // 3. Run Scheduler
-    EftSubgraphScheduler<graph_t> scheduler;
+    EftSubgraphScheduler<GraphT> scheduler;
     scheduler.setMinWorkPerProcessor(1);
-    SubgraphSchedule schedule = scheduler.run(instance, multiplicities, required_proc_types, max_procs);
+    SubgraphSchedule schedule = scheduler.run(instance, multiplicities, requiredProcTypes, maxProcs);
 
     // 4. Assertions
     // Manual calculation:
@@ -281,11 +281,11 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ResourceContention) {
     BOOST_CHECK_EQUAL(schedule.node_assigned_worker_per_type[4][0], 4);
 }
 
-BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ProportionalAllocation) {
-    using graph_t = computational_dag_vector_impl_def_t;
+BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerProportionalAllocation) {
+    using GraphT = computational_dag_vector_impl_def_t;
 
     // 1. Setup Instance
-    BspInstance<graph_t> instance;
+    BspInstance<GraphT> instance;
     auto &dag = instance.getComputationalDag();
 
     // Create a fork DAG: 0 -> {1,2}
@@ -301,16 +301,16 @@ BOOST_AUTO_TEST_CASE(EftSubgraphScheduler_ProportionalAllocation) {
 
     // 2. Setup Scheduler Inputs
     std::vector<unsigned> multiplicities = {1, 1, 1};
-    std::vector<unsigned> max_procs = {100, 100, 100};
-    std::vector<std::vector<v_workw_t<graph_t>>> required_proc_types(3);
-    required_proc_types[0] = {10};
-    required_proc_types[1] = {300};
-    required_proc_types[2] = {100};
+    std::vector<unsigned> maxProcs = {100, 100, 100};
+    std::vector<std::vector<v_workw_t<GraphT>>> requiredProcTypes(3);
+    requiredProcTypes[0] = {10};
+    requiredProcTypes[1] = {300};
+    requiredProcTypes[2] = {100};
 
     // 3. Run Scheduler
-    EftSubgraphScheduler<graph_t> scheduler;
+    EftSubgraphScheduler<GraphT> scheduler;
     scheduler.setMinWorkPerProcessor(1);
-    SubgraphSchedule schedule = scheduler.run(instance, multiplicities, required_proc_types, max_procs);
+    SubgraphSchedule schedule = scheduler.run(instance, multiplicities, requiredProcTypes, maxProcs);
 
     // 4. Assertions
     // Manual calculation:

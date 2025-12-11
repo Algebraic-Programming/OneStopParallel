@@ -26,7 +26,7 @@ limitations under the License.
 #include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 
 using namespace osp;
-using Graph_t = computational_dag_edge_idx_vector_impl_def_int_t;
+using GraphT = computational_dag_edge_idx_vector_impl_def_int_t;
 
 int main(int argc, char *argv[]) {
     if (argc < 3) {
@@ -34,66 +34,66 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    std::string graph_file = argv[1];
-    std::string graph_name = graph_file.substr(graph_file.rfind("/") + 1, graph_file.rfind(".") - graph_file.rfind("/") - 1);
+    std::string graphFile = argv[1];
+    std::string graphName = graphFile.substr(graphFile.rfind("/") + 1, graphFile.rfind(".") - graphFile.rfind("/") - 1);
 
-    Graph_t graph;
-    bool status = file_reader::readGraph(graph_file, graph);
+    GraphT graph;
+    bool status = file_reader::readGraph(graphFile, graph);
     if (!status) {
         std::cout << "Failed to read graph\n";
         return 1;
     }
 
-    SarkarParams::MulParameters<v_workw_t<Graph_t>> params;
-    params.commCostVec = std::vector<v_workw_t<Graph_t>>({1, 2, 5, 10, 20, 50, 100, 200, 500, 1000});
+    SarkarParams::MulParameters<v_workw_t<GraphT>> params;
+    params.commCostVec = std::vector<v_workw_t<GraphT>>({1, 2, 5, 10, 20, 50, 100, 200, 500, 1000});
     params.max_num_iteration_without_changes = 3;
     params.leniency = 0.005;
     params.maxWeight = 15000;
     params.smallWeightThreshold = 4000;
     params.buffer_merge_mode = SarkarParams::BufferMergeMode::FULL;
 
-    SarkarMul<Graph_t, Graph_t> coarser;
+    SarkarMul<GraphT, GraphT> coarser;
     coarser.setParameters(params);
 
-    Graph_t coarse_graph;
-    std::vector<vertex_idx_t<Graph_t>> contraction_map;
+    GraphT coarseGraph;
+    std::vector<vertex_idx_t<GraphT>> contractionMap;
 
-    Graph_t graph_copy = graph;
-    bool ignore_vertex_types = false;
+    GraphT graphCopy = graph;
+    bool ignoreVertexTypes = false;
 
-    if (ignore_vertex_types) {
-        for (const auto &vert : graph_copy.vertices()) {
-            graph_copy.set_vertex_type(vert, 0);
+    if (ignoreVertexTypes) {
+        for (const auto &vert : graphCopy.vertices()) {
+            graphCopy.set_vertex_type(vert, 0);
         }
     }
 
-    coarser.coarsenDag(graph_copy, coarse_graph, contraction_map);
+    coarser.coarsenDag(graphCopy, coarseGraph, contractionMap);
 
-    std::vector<unsigned> colours(contraction_map.size());
-    for (std::size_t i = 0; i < contraction_map.size(); ++i) {
-        colours[i] = static_cast<unsigned>(contraction_map[i]);
+    std::vector<unsigned> colours(contractionMap.size());
+    for (std::size_t i = 0; i < contractionMap.size(); ++i) {
+        colours[i] = static_cast<unsigned>(contractionMap[i]);
     }
 
-    std::ofstream out_dot(argv[2]);
-    if (!out_dot.is_open()) {
+    std::ofstream outDot(argv[2]);
+    if (!outDot.is_open()) {
         std::cout << "Unable to write/open output file.\n";
         return 1;
     }
 
     DotFileWriter writer;
-    writer.write_colored_graph(out_dot, graph, colours);
+    writer.write_colored_graph(outDot, graph, colours);
 
     if (argc >= 4) {
-        std::ofstream coarse_out_dot(argv[3]);
-        if (!coarse_out_dot.is_open()) {
+        std::ofstream coarseOutDot(argv[3]);
+        if (!coarseOutDot.is_open()) {
             std::cout << "Unable to write/open output file.\n";
             return 1;
         }
 
-        std::vector<unsigned> coarse_colours(coarse_graph.num_vertices());
-        std::iota(coarse_colours.begin(), coarse_colours.end(), 0);
+        std::vector<unsigned> coarseColours(coarseGraph.num_vertices());
+        std::iota(coarseColours.begin(), coarseColours.end(), 0);
 
-        writer.write_colored_graph(coarse_out_dot, coarse_graph, coarse_colours);
+        writer.write_colored_graph(coarseOutDot, coarseGraph, coarseColours);
     }
 
     return 0;

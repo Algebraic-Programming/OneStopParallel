@@ -28,10 +28,10 @@ limitations under the License.
 
 using namespace osp;
 
-BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test) {
-    using graph = computational_dag_vector_impl_def_t;
+BOOST_AUTO_TEST_CASE(BspScheduleRecompTest) {
+    using Graph = computational_dag_vector_impl_def_t;
 
-    BspInstance<graph> instance;
+    BspInstance<Graph> instance;
     instance.setNumberOfProcessors(3);
     instance.setCommunicationCosts(3);
     instance.setSynchronisationCosts(5);
@@ -47,8 +47,8 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test) {
     file_reader::readComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(),
                                                       instance.getComputationalDag());
 
-    BspSchedule<graph> schedule(instance);
-    GreedyBspScheduler<graph> scheduler;
+    BspSchedule<Graph> schedule(instance);
+    GreedyBspScheduler<Graph> scheduler;
     const auto result = scheduler.computeSchedule(schedule);
 
     BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
@@ -57,14 +57,14 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test) {
 
     BspScheduleCS scheduleCS(schedule);
 
-    BspScheduleRecomp<graph> schedule_recomp(schedule);
+    BspScheduleRecomp<Graph> scheduleRecomp(schedule);
 
-    BOOST_CHECK(schedule_recomp.satisfiesConstraints());
-    BOOST_CHECK_EQUAL(schedule_recomp.getTotalAssignments(), instance.numberOfVertices());
-    BOOST_CHECK_EQUAL(schedule_recomp.computeWorkCosts(), schedule.computeWorkCosts());
-    BOOST_CHECK_EQUAL(schedule_recomp.computeCosts(), scheduleCS.computeCosts());
+    BOOST_CHECK(scheduleRecomp.satisfiesConstraints());
+    BOOST_CHECK_EQUAL(scheduleRecomp.getTotalAssignments(), instance.numberOfVertices());
+    BOOST_CHECK_EQUAL(scheduleRecomp.computeWorkCosts(), schedule.computeWorkCosts());
+    BOOST_CHECK_EQUAL(scheduleRecomp.computeCosts(), scheduleCS.computeCosts());
 
-    BspScheduleRecomp<graph> schedule_recomp_from_cs(scheduleCS);
-    BOOST_CHECK(schedule_recomp_from_cs.satisfiesConstraints());
-    BOOST_CHECK_EQUAL(schedule_recomp_from_cs.computeCosts(), scheduleCS.computeCosts());
+    BspScheduleRecomp<Graph> scheduleRecompFromCs(scheduleCS);
+    BOOST_CHECK(scheduleRecompFromCs.satisfiesConstraints());
+    BOOST_CHECK_EQUAL(scheduleRecompFromCs.computeCosts(), scheduleCS.computeCosts());
 }
