@@ -83,8 +83,8 @@ inline edge_view<Graph_t> edges(const Graph_t &graph) {
  * @return An `out_edge_view` allowing iteration over outgoing edges from `u`.
  */
 template<typename Graph_t>
-inline out_edge_view<Graph_t> out_edges(vertex_idx_t<Graph_t> u, const Graph_t &graph) {
-    return out_edge_view(graph, u);
+inline OutEdgeView<Graph_t> out_edges(vertex_idx_t<Graph_t> u, const Graph_t &graph) {
+    return OutEdgeView<Graph_t>(graph, u);
 }
 
 /**
@@ -96,8 +96,8 @@ inline out_edge_view<Graph_t> out_edges(vertex_idx_t<Graph_t> u, const Graph_t &
  * @return An `in_edge_view` allowing iteration over incoming edges to `v`.
  */
 template<typename Graph_t>
-inline in_edge_view<Graph_t> in_edges(vertex_idx_t<Graph_t> v, const Graph_t &graph) {
-    return in_edge_view(graph, v);
+inline InEdgeView<Graph_t> in_edges(vertex_idx_t<Graph_t> v, const Graph_t &graph) {
+    return InEdgeView<Graph_t>(graph, v);
 }
 
 /**

@@ -168,23 +168,24 @@ class edge_view {
 };
 
 /**
- * @brief A view over the outgoing edges of a specific vertex in a directed graph.
+ * @brief A view over the incident edges of a specific vertex in a directed graph.
  *
- * This class provides an iterator-based view to iterate over the outgoing edges
- * of a given vertex `u`. It is a lightweight, non-owning view.
+ * This class provides an iterator-based view to iterate over either outgoing or incoming edges
+ * of a given vertex. It is a lightweight, non-owning view.
  *
  * @tparam Graph_t The type of the graph, which must satisfy the `is_directed_graph_v` concept.
+ * @tparam IsOutgoing If true, iterates over outgoing edges; otherwise, incoming edges.
  */
-template<typename Graph_t>
-class out_edge_view {
+template<typename Graph_t, bool IsOutgoing>
+class IncidentEdgeView {
   private:
     static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
 
     const Graph_t &graph_;
-    vertex_idx_t<Graph_t> sourceVertex_;
+    vertex_idx_t<Graph_t> anchorVertex_;
 
     template<typename child_iterator_t>
-    class OutEdgeIterator {
+    class IncidentEdgeIterator {
       public:
         using iterator_category = typename std::iterator_traits<child_iterator_t>::iterator_category;
         using difference_type = std::ptrdiff_t;
@@ -198,145 +199,106 @@ class out_edge_view {
         };
 
       private:
-        vertex_idx_t<Graph_t> sourceVertex_;
-        child_iterator_t currentChildIt_;
+        vertex_idx_t<Graph_t> anchorVertex_;
+        child_iterator_t currentIt_;
 
       public:
-        OutEdgeIterator() = default;
-        OutEdgeIterator(vertex_idx_t<Graph_t> u, child_iterator_t it) : sourceVertex_(u), currentChildIt_(it) {}
+        IncidentEdgeIterator() = default;
+        IncidentEdgeIterator(vertex_idx_t<Graph_t> u, child_iterator_t it) : anchorVertex_(u), currentIt_(it) {}
 
-        [[nodiscard]] value_type operator*() const { return {sourceVertex_, *currentChildIt_}; }
+        [[nodiscard]] value_type operator*() const {
+            if constexpr (IsOutgoing) {
+                return {anchorVertex_, *currentIt_};
+            } else {
+                return {*currentIt_, anchorVertex_};
+            }
+        }
         [[nodiscard]] arrow_proxy operator->() const { return {operator*()}; }
 
-        OutEdgeIterator &operator++() {
-            ++currentChildIt_;
+        IncidentEdgeIterator &operator++() {
+            ++currentIt_;
             return *this;
         }
 
-        OutEdgeIterator operator++(int) {
-            OutEdgeIterator temp = *this;
+        IncidentEdgeIterator operator++(int) {
+            IncidentEdgeIterator temp = *this;
             ++(*this);
             return temp;
         }
 
-        OutEdgeIterator &operator--() {
-            --currentChildIt_;
+        IncidentEdgeIterator &operator--() {
+            --currentIt_;
             return *this;
         }
 
-        OutEdgeIterator operator--(int) {
-            OutEdgeIterator temp = *this;
+        IncidentEdgeIterator operator--(int) {
+            IncidentEdgeIterator temp = *this;
             --(*this);
             return temp;
         }
 
-        [[nodiscard]] bool operator==(const OutEdgeIterator &other) const noexcept {
-            return currentChildIt_ == other.currentChildIt_;
+        [[nodiscard]] bool operator==(const IncidentEdgeIterator &other) const noexcept {
+            return currentIt_ == other.currentIt_;
         }
 
-        [[nodiscard]] bool operator!=(const OutEdgeIterator &other) const noexcept { return !(*this == other); }
+        [[nodiscard]] bool operator!=(const IncidentEdgeIterator &other) const noexcept { return !(*this == other); }
     };
 
+    // Helper to deduce iterator type based on direction
+    using base_iterator_type =
+        std::conditional_t<IsOutgoing, decltype(std::declval<Graph_t>().children(std::declval<vertex_idx_t<Graph_t>>()).begin()),
+                           decltype(std::declval<Graph_t>().parents(std::declval<vertex_idx_t<Graph_t>>()).begin())>;
+
   public:
-    using iterator = OutEdgeIterator<decltype(std::declval<Graph_t>().children(std::declval<vertex_idx_t<Graph_t>>()).begin())>;
+    using iterator = IncidentEdgeIterator<base_iterator_type>;
     using constIterator = iterator;
 
-    out_edge_view(const Graph_t &graph, vertex_idx_t<Graph_t> u) : graph_(graph), sourceVertex_(u) {}
+    IncidentEdgeView(const Graph_t &graph, vertex_idx_t<Graph_t> u) : graph_(graph), anchorVertex_(u) {}
 
-    [[nodiscard]] auto begin() const { return iterator(sourceVertex_, graph_.children(sourceVertex_).begin()); }
+    [[nodiscard]] auto begin() const {
+        if constexpr (IsOutgoing) {
+            return iterator(anchorVertex_, graph_.children(anchorVertex_).begin());
+        } else {
+            return iterator(anchorVertex_, graph_.parents(anchorVertex_).begin());
+        }
+    }
     [[nodiscard]] auto cbegin() const { return begin(); }
 
-    [[nodiscard]] auto end() const { return iterator(sourceVertex_, graph_.children(sourceVertex_).end()); }
+    [[nodiscard]] auto end() const {
+        if constexpr (IsOutgoing) {
+            return iterator(anchorVertex_, graph_.children(anchorVertex_).end());
+        } else {
+            return iterator(anchorVertex_, graph_.parents(anchorVertex_).end());
+        }
+    }
     [[nodiscard]] auto cend() const { return end(); }
 
-    [[nodiscard]] auto size() const { return graph_.out_degree(sourceVertex_); }
-    [[nodiscard]] bool empty() const { return graph_.out_degree(sourceVertex_) == 0; }
+    [[nodiscard]] auto size() const {
+        if constexpr (IsOutgoing) {
+            return graph_.out_degree(anchorVertex_);
+        } else {
+            return graph_.in_degree(anchorVertex_);
+        }
+    }
+    [[nodiscard]] bool empty() const {
+        if constexpr (IsOutgoing) {
+            return graph_.out_degree(anchorVertex_) == 0;
+        } else {
+            return graph_.in_degree(anchorVertex_) == 0;
+        }
+    }
 };
 
 /**
- * @brief A view over the incoming edges of a specific vertex in a directed graph.
- *
- * This class provides an iterator-based view to iterate over the incoming edges
- * of a given vertex `v`. It is a lightweight, non-owning view.
- *
- * @tparam Graph_t The type of the graph, which must satisfy the `is_directed_graph_v` concept.
+ * @brief A view over the outgoing edges of a specific vertex in a directed graph.
  */
 template<typename Graph_t>
-class in_edge_view {
-  private:
-    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+using OutEdgeView = IncidentEdgeView<Graph_t, true>;
 
-    const Graph_t &graph_;
-    vertex_idx_t<Graph_t> targetVertex_;
-
-    template<typename parent_iterator_t>
-    class InEdgeIterator {
-      public:
-        using iterator_category = typename std::iterator_traits<parent_iterator_t>::iterator_category;
-        using difference_type = std::ptrdiff_t;
-        using value_type = directed_edge<Graph_t>;
-        using pointer = value_type *;
-        using reference = value_type &;
-
-        struct arrow_proxy {
-            value_type value;
-            const value_type *operator->() const noexcept { return &value; }
-        };
-
-      private:
-        vertex_idx_t<Graph_t> targetVertex_;
-        parent_iterator_t currentParentIt_;
-
-      public:
-        InEdgeIterator() = default;
-        InEdgeIterator(vertex_idx_t<Graph_t> v, parent_iterator_t it) : targetVertex_(v), currentParentIt_(it) {}
-
-        [[nodiscard]] value_type operator*() const { return {*currentParentIt_, targetVertex_}; }
-        [[nodiscard]] arrow_proxy operator->() const { return {operator*()}; }
-
-        InEdgeIterator &operator++() {
-            ++currentParentIt_;
-            return *this;
-        }
-
-        InEdgeIterator operator++(int) {
-            InEdgeIterator temp = *this;
-            ++(*this);
-            return temp;
-        }
-
-        InEdgeIterator &operator--() {
-            --currentParentIt_;
-            return *this;
-        }
-
-        InEdgeIterator operator--(int) {
-            InEdgeIterator temp = *this;
-            --(*this);
-            return temp;
-        }
-
-        [[nodiscard]] bool operator==(const InEdgeIterator &other) const noexcept {
-            return currentParentIt_ == other.currentParentIt_;
-        }
-
-        [[nodiscard]] bool operator!=(const InEdgeIterator &other) const noexcept { return !(*this == other); }
-    };
-
-  public:
-    using iterator = InEdgeIterator<decltype(std::declval<Graph_t>().parents(std::declval<vertex_idx_t<Graph_t>>()).begin())>;
-    using constIterator = iterator;
-
-    in_edge_view(const Graph_t &graph, vertex_idx_t<Graph_t> v) : graph_(graph), targetVertex_(v) {}
-
-    [[nodiscard]] auto begin() const { return iterator(targetVertex_, graph_.parents(targetVertex_).begin()); }
-    [[nodiscard]] auto cbegin() const { return begin(); }
-
-    [[nodiscard]] auto end() const { return iterator(targetVertex_, graph_.parents(targetVertex_).end()); }
-    [[nodiscard]] auto cend() const { return end(); }
-
-    [[nodiscard]] auto size() const { return graph_.in_degree(targetVertex_); }
-    [[nodiscard]] bool empty() const { return graph_.in_degree(targetVertex_) == 0; }
-};
+/**
+ * @brief A view over the incoming edges of a specific vertex in a directed graph.
+ */
+template<typename Graph_t>
+using InEdgeView = IncidentEdgeView<Graph_t, false>;
 
 } // namespace osp
