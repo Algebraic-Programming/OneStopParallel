@@ -784,7 +784,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                 }
 
 #ifdef KL_DEBUG
-                if (not active_schedule.getInstance().isCompatible(best_move.node, best_move.to_proc)) {
+                if (not active_schedule.GetInstance().isCompatible(best_move.node, best_move.to_proc)) {
                     std::cout << "move to incompatibe node" << std::endl;
                 }
 #endif
@@ -1385,7 +1385,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
     virtual ~KlImprover() = default;
 
     virtual RETURN_STATUS ImproveSchedule(BspSchedule<GraphT> &schedule) override {
-        if (schedule.getInstance().NumberOfProcessors() < 2) {
+        if (schedule.GetInstance().NumberOfProcessors() < 2) {
             return RETURN_STATUS::BEST_FOUND;
         }
 
@@ -1394,7 +1394,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
         threadDataVec_.resize(numThreads);
         threadFinishedVec_.assign(numThreads, true);
 
-        SetParameters(schedule.getInstance().NumberOfVertices());
+        SetParameters(schedule.GetInstance().NumberOfVertices());
         InitializeDatastructures(schedule);
         const CostT initialCost = activeSchedule_.GetCost();
         const unsigned numSteps = schedule.numberOfSupersteps();
@@ -1755,7 +1755,7 @@ template <typename GraphT, typename CommCostFunctionT, typename MemoryConstraint
 void KlImprover<GraphT, CommCostFunctionT, MemoryConstraintT, WindowSize, CostT>::InitializeDatastructures(
     BspSchedule<GraphT> &schedule) {
     inputSchedule_ = &schedule;
-    instance_ = &schedule.getInstance();
+    instance_ = &schedule.GetInstance();
     graph_ = &instance_->GetComputationalDag();
 
     activeSchedule_.Initialize(schedule);

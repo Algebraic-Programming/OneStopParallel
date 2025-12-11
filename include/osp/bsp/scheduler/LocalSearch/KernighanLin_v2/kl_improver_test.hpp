@@ -51,7 +51,7 @@ class KlImproverTest : public KlImprover<GraphT, CommCostFunctionT, MemoryConstr
 
     void SetupSchedule(BspSchedule<GraphT> &schedule) {
         this->threadDataVec_.resize(1);
-        this->set_parameters(schedule.getInstance().GetComputationalDag().NumVertices());
+        this->set_parameters(schedule.GetInstance().GetComputationalDag().NumVertices());
         this->threadDataVec_[0].endStep = schedule.numberOfSupersteps() > 0 ? schedule.numberOfSupersteps() - 1 : 0;
         this->initialize_datastructures(schedule);
         this->threadDataVec_[0].activeScheduleData.InitializeCost(this->activeSchedule_.GetCost());

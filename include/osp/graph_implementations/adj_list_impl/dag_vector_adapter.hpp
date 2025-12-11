@@ -61,7 +61,7 @@ namespace osp {
 template <typename VImpl, typename IndexT>
 class DagVectorAdapter {
   public:
-    using vertex_idx = typename VImpl::VertexIdxType;
+    using VertexIdx = typename VImpl::VertexIdxType;
 
     using VertexWorkWeightType = typename VImpl::WorkWeightType;
     using VertexCommWeightType = typename VImpl::CommWeightType;
@@ -80,7 +80,7 @@ class DagVectorAdapter {
      */
     DagVectorAdapter(const std::vector<std::vector<IndexT>> &outNeigbors, const std::vector<std::vector<IndexT>> &inNeigbors)
         : vertices_(outNeigbors.size()), outNeigbors_(&outNeigbors), inNeigbors_(&inNeigbors), numEdges_(0), numVertexTypes_(1) {
-        for (vertex_idx i = 0; i < static_cast<vertex_idx>(outNeigbors.size()); ++i) {
+        for (VertexIdx i = 0; i < static_cast<VertexIdx>(outNeigbors.size()); ++i) {
             vertices_[i].id = i;
             numEdges_ += outNeigbors[i].size();
         }
@@ -108,7 +108,7 @@ class DagVectorAdapter {
         vertices_.resize(outNeigbors_->size());
 
         numEdges_ = 0;
-        for (vertex_idx i = 0; i < static_cast<vertex_idx>(outNeigbors_->size()); ++i) {
+        for (VertexIdx i = 0; i < static_cast<VertexIdx>(outNeigbors_->size()); ++i) {
             vertices_[i].id = i;
             numEdges_ += outNeigbors[i].size();
         }
@@ -119,65 +119,65 @@ class DagVectorAdapter {
     /**
      * @brief Returns a range of all vertex indices.
      */
-    [[nodiscard]] auto vertices() const { return IntegralRange<vertex_idx>(static_cast<vertex_idx>(vertices_.size())); }
+    [[nodiscard]] auto Vertices() const { return IntegralRange<VertexIdx>(static_cast<VertexIdx>(vertices_.size())); }
 
     /**
      * @brief Returns the total number of vertices.
      */
-    [[nodiscard]] vertex_idx num_vertices() const { return static_cast<vertex_idx>(vertices_.size()); }
+    [[nodiscard]] VertexIdx NumVertices() const { return static_cast<VertexIdx>(vertices_.size()); }
 
     /**
      * @brief Returns the total number of edges.
      */
-    [[nodiscard]] vertex_idx num_edges() const { return static_cast<vertex_idx>(numEdges_); }
+    [[nodiscard]] VertexIdx NumEdges() const { return static_cast<VertexIdx>(numEdges_); }
 
     /**
      * @brief Returns a view of the parents (in-neighbors) of a vertex. Does not perform bounds checking.
      * @param v The vertex index.
      */
-    [[nodiscard]] auto Parents(const vertex_idx v) const { return VectorCastView<IndexT, vertex_idx>((*inNeigbors_)[v]); }
+    [[nodiscard]] auto Parents(const VertexIdx v) const { return VectorCastView<IndexT, VertexIdx>((*inNeigbors_)[v]); }
 
     /**
      * @brief Returns a view of the children (out-neighbors) of a vertex. Does not perform bounds checking.
      * @param v The vertex index.
      */
-    [[nodiscard]] auto children(const vertex_idx v) const { return VectorCastView<IndexT, vertex_idx>((*outNeigbors_)[v]); }
+    [[nodiscard]] auto Children(const VertexIdx v) const { return VectorCastView<IndexT, VertexIdx>((*outNeigbors_)[v]); }
 
     /**
      * @brief Returns the in-degree of a vertex. Does not perform bounds checking.
      * @param v The vertex index.
      */
-    [[nodiscard]] vertex_idx in_degree(const vertex_idx v) const { return static_cast<vertex_idx>((*inNeigbors_)[v].size()); }
+    [[nodiscard]] VertexIdx InDegree(const VertexIdx v) const { return static_cast<VertexIdx>((*inNeigbors_)[v].size()); }
 
     /**
      * @brief Returns the out-degree of a vertex. Does not perform bounds checking.
      * @param v The vertex index.
      */
-    [[nodiscard]] vertex_idx out_degree(const vertex_idx v) const { return static_cast<vertex_idx>((*outNeigbors_)[v].size()); }
+    [[nodiscard]] VertexIdx OutDegree(const VertexIdx v) const { return static_cast<VertexIdx>((*outNeigbors_)[v].size()); }
 
-    [[nodiscard]] VertexWorkWeightType VertexWorkWeight(const vertex_idx v) const { return vertices_[v].workWeight; }
+    [[nodiscard]] VertexWorkWeightType VertexWorkWeight(const VertexIdx v) const { return vertices_[v].workWeight; }
 
-    [[nodiscard]] VertexCommWeightType vertex_comm_weight(const vertex_idx v) const { return vertices_[v].commWeight; }
+    [[nodiscard]] VertexCommWeightType VertexCommWeight(const VertexIdx v) const { return vertices_[v].commWeight; }
 
-    [[nodiscard]] VertexMemWeightType VertexMemWeight(const vertex_idx v) const { return vertices_[v].memWeight; }
+    [[nodiscard]] VertexMemWeightType VertexMemWeight(const VertexIdx v) const { return vertices_[v].memWeight; }
 
-    [[nodiscard]] VertexTypeType VertexType(const vertex_idx v) const { return vertices_[v].vertexType; }
+    [[nodiscard]] VertexTypeType VertexType(const VertexIdx v) const { return vertices_[v].vertexType; }
 
-    [[nodiscard]] VertexTypeType num_vertex_types() const { return numVertexTypes_; }
+    [[nodiscard]] VertexTypeType NumVertexTypes() const { return numVertexTypes_; }
 
-    [[nodiscard]] const VImpl &GetVertexImpl(const vertex_idx v) const { return vertices_[v]; }
+    [[nodiscard]] const VImpl &GetVertexImpl(const VertexIdx v) const { return vertices_[v]; }
 
-    void SetVertexWorkWeight(const vertex_idx v, const VertexWorkWeightType workWeight) {
+    void SetVertexWorkWeight(const VertexIdx v, const VertexWorkWeightType workWeight) {
         vertices_.at(v).workWeight = workWeight;
     }
 
-    void SetVertexCommWeight(const vertex_idx v, const VertexCommWeightType commWeight) {
+    void SetVertexCommWeight(const VertexIdx v, const VertexCommWeightType commWeight) {
         vertices_.at(v).comm_weight = commWeight;
     }
 
-    void SetVertexMemWeight(const vertex_idx v, const VertexMemWeightType memWeight) { vertices_.at(v).mem_weight = memWeight; }
+    void SetVertexMemWeight(const VertexIdx v, const VertexMemWeightType memWeight) { vertices_.at(v).mem_weight = memWeight; }
 
-    void SetVertexType(const vertex_idx v, const VertexTypeType vertexType) {
+    void SetVertexType(const VertexIdx v, const VertexTypeType vertexType) {
         vertices_.at(v).vertex_type = vertexType;
         numVertexTypes_ = std::max(numVertexTypes_, vertexType + 1);
     }

@@ -108,12 +108,12 @@ BOOST_AUTO_TEST_CASE(TestDag) {
         BOOST_CHECK_EQUAL(v, vertices[idx++]);
 
         size_t i = 0;
-        for (const auto &e : graph.children(v)) {
+        for (const auto &e : graph.Children(v)) {
             BOOST_CHECK_EQUAL(e, outNeighbors[v][i++]);
         }
 
         i = 0;
-        for (const auto &e : graph.parents(v)) {
+        for (const auto &e : graph.Parents(v)) {
             BOOST_CHECK_EQUAL(e, inNeighbors[v][i++]);
         }
 
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(TestDag) {
         }
 
         BOOST_CHECK_EQUAL(graph.InDegree(v), inNeighbors[v].size());
-        BOOST_CHECK_EQUAL(graph.out_degree(v), outNeighbors[v].size());
+        BOOST_CHECK_EQUAL(graph.OutDegree(v), outNeighbors[v].size());
     }
 
     unsigned count = 0;
@@ -243,18 +243,18 @@ BOOST_AUTO_TEST_CASE(TestDagVectorAdapter) {
 
     size_t idx = 0;
 
-    for (const auto &v : graph.vertices()) {
+    for (const auto &v : graph.Vertices()) {
         BOOST_CHECK_EQUAL(v, vertices[idx++]);
 
         unsigned vv = static_cast<unsigned>(v);
 
         size_t i = 0;
-        for (const auto &e : graph.children(v)) {
+        for (const auto &e : graph.Children(v)) {
             BOOST_CHECK_EQUAL(e, outNeighbors[vv][i++]);
         }
 
         i = 0;
-        for (const auto &e : graph.parents(v)) {
+        for (const auto &e : graph.Parents(v)) {
             BOOST_CHECK_EQUAL(e, inNeighbors[vv][i++]);
         }
 
@@ -268,8 +268,8 @@ BOOST_AUTO_TEST_CASE(TestDagVectorAdapter) {
             BOOST_CHECK_EQUAL(Source(e, graph), inNeighbors[vv][i++]);
         }
 
-        BOOST_CHECK_EQUAL(graph.in_degree(v), inNeighbors[vv].size());
-        BOOST_CHECK_EQUAL(graph.out_degree(v), outNeighbors[vv].size());
+        BOOST_CHECK_EQUAL(graph.InDegree(v), inNeighbors[vv].size());
+        BOOST_CHECK_EQUAL(graph.OutDegree(v), outNeighbors[vv].size());
     }
 
     unsigned count = 0;

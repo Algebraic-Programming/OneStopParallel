@@ -71,7 +71,7 @@ class PartitioningWithReplication {
     }
 
     void SetAssignedPartitionVectors(const std::vector<std::vector<unsigned>> &vec) {
-        if (vec.size() == static_cast<std::size_t>(instance_->getHypergraph().NumVertices())) {
+        if (vec.size() == static_cast<std::size_t>(instance_->GetHypergraph().NumVertices())) {
             nodeToPartitionsAssignment_ = vec;
         } else {
             throw std::invalid_argument("Invalid Argument while assigning processors: size does not match number of nodes.");
@@ -79,7 +79,7 @@ class PartitioningWithReplication {
     }
 
     void SetAssignedPartitionVectors(std::vector<std::vector<unsigned>> &&vec) {
-        if (vec.size() == static_cast<std::size_t>(instance_->getHypergraph().NumVertices())) {
+        if (vec.size() == static_cast<std::size_t>(instance_->GetHypergraph().NumVertices())) {
             nodeToPartitionsAssignment_ = vec;
         } else {
             throw std::invalid_argument("Invalid Argument while assigning processors: size does not match number of nodes.");
@@ -87,7 +87,7 @@ class PartitioningWithReplication {
     }
 
     std::vector<std::vector<IndexType>> GetPartitionContents() const {
-        std::vector<std::vector<IndexType>> content(instance_->getNumberOfPartitions());
+        std::vector<std::vector<IndexType>> content(instance_->GetNumberOfPartitions());
         for (IndexType node = 0; node < nodeToPartitionsAssignment_.size(); ++node) {
             for (unsigned part : nodeToPartitionsAssignment_[node]) {
                 content[part].push_back(node);
@@ -99,7 +99,7 @@ class PartitioningWithReplication {
 
     void ResetPartition() {
         nodeToPartitionsAssignment_.clear();
-        nodeToPartitionsAssignment_.resize(instance_->getHypergraph().NumVertices(), {0});
+        nodeToPartitionsAssignment_.resize(instance_->GetHypergraph().NumVertices(), {0});
     }
 
     // costs and validity

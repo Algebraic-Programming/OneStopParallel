@@ -294,7 +294,7 @@ class VarianceFillup : public Scheduler<GraphT> {
      * @return A pair containing the return status and the computed BspSchedule.
      */
     virtual RETURN_STATUS ComputeSchedule(BspSchedule<GraphT> &schedule) override {
-        const auto &instance = schedule.getInstance();
+        const auto &instance = schedule.GetInstance();
 
         for (const auto &v : instance.GetComputationalDag().Vertices()) {
             schedule.SetAssignedProcessor(v, std::numeric_limits<unsigned>::max());

@@ -43,7 +43,7 @@ class HypergraphPartitioningILPWithReplication : public HypergraphPartitioningIL
 
     RETURN_STATUS ComputePartitioning(PartitioningWithReplication<HypergraphT> &result);
 
-    virtual std::string getAlgorithmName() const override { return "HypergraphPartitioningILPWithReplication"; }
+    virtual std::string GetAlgorithmName() const override { return "HypergraphPartitioningILPWithReplication"; }
 
     void SetReplicationModel(REPLICATION_MODEL_IN_ILP replicationModel) { replicationModel_ = replicationModel; }
 };
@@ -54,17 +54,17 @@ RETURN_STATUS HypergraphPartitioningILPWithReplication<HypergraphT>::ComputePart
     Envr env;
     Model model = env.CreateModel("HypergraphPartRepl");
 
-    this->setupFundamentalVariablesConstraintsObjective(result.getInstance(), model);
-    SetupExtraVariablesConstraints(result.getInstance(), model);
+    this->SetupFundamentalVariablesConstraintsObjective(result.GetInstance(), model);
+    SetupExtraVariablesConstraints(result.GetInstance(), model);
 
-    if (this->use_initial_solution) {
+    if (this->useInitialSolution_) {
         SetInitialSolution(result, model);
     }
 
-    this->solveILP(model);
+    this->SolveIlp(model);
 
     if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_OPTIMAL) {
-        result.setAssignedPartitionVectors(this->readAllCoptAssignments(result.getInstance(), model));
+        result.SetAssignedPartitionVectors(this->ReadAllCoptAssignments(result.GetInstance(), model));
         return RETURN_STATUS::OSP_SUCCESS;
 
     } else if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_INF_OR_UNB) {
@@ -72,7 +72,7 @@ RETURN_STATUS HypergraphPartitioningILPWithReplication<HypergraphT>::ComputePart
 
     } else {
         if (model.GetIntAttr(COPT_INTATTR_HASMIPSOL)) {
-            result.setAssignedPartitionVectors(this->readAllCoptAssignments(result.getInstance(), model));
+            result.SetAssignedPartitionVectors(this->ReadAllCoptAssignments(result.GetInstance(), model));
             return RETURN_STATUS::OSP_SUCCESS;
 
         } else {
@@ -84,17 +84,17 @@ RETURN_STATUS HypergraphPartitioningILPWithReplication<HypergraphT>::ComputePart
 template <typename HypergraphT>
 void HypergraphPartitioningILPWithReplication<HypergraphT>::SetupExtraVariablesConstraints(
     const PartitioningProblem<HypergraphT> &instance, Model &model) {
-    using IndexType = typename HypergraphT::vertex_idx;
+    using IndexType = typename HypergraphT::VertexIdx;
 
-    const IndexType numberOfParts = instance.getNumberOfPartitions();
-    const IndexType numberOfVertices = instance.getHypergraph().NumVertices();
+    const IndexType numberOfParts = instance.GetNumberOfPartitions();
+    const IndexType numberOfVertices = instance.GetHypergraph().NumVertices();
 
     if (replicationModel_ == REPLICATION_MODEL_IN_ILP::GENERAL) {
         // create variables for each pin+partition combination
         std::map<std::pair<IndexType, unsigned>, IndexType> pinIdMap;
         IndexType nrOfPins = 0;
         for (IndexType node = 0; node < numberOfVertices; node++) {
-            for (const IndexType &hyperedge : instance.getHypergraph().get_incident_hyperedges(node)) {
+            for (const IndexType &hyperedge : instance.GetHypergraph().GetIncidentHyperedges(node)) {
                 pinIdMap[std::make_pair(node, hyperedge)] = nrOfPins++;
             }
         }
@@ -118,8 +118,8 @@ void HypergraphPartitioningILPWithReplication<HypergraphT>::SetupExtraVariablesC
         // pin covering requires node assignment
         for (unsigned part = 0; part < numberOfParts; part++) {
             for (IndexType node = 0; node < numberOfVertices; node++) {
-                for (const IndexType &hyperedge : instance.getHypergraph().get_incident_hyperedges(node)) {
-                    model.AddConstr(this->node_in_partition[node][static_cast<int>(part)]
+                for (const IndexType &hyperedge : instance.GetHypergraph().GetIncidentHyperedges(node)) {
+                    model.AddConstr(this->nodeInPartition_[node][static_cast<int>(part)]
                                     >= pinCoveredByPartition[pinIdMap[std::make_pair(node, hyperedge)]][static_cast<int>(part)]);
                 }
             }
@@ -128,8 +128,8 @@ void HypergraphPartitioningILPWithReplication<HypergraphT>::SetupExtraVariablesC
         // pin covering requires hyperedge use
         for (unsigned part = 0; part < numberOfParts; part++) {
             for (IndexType node = 0; node < numberOfVertices; node++) {
-                for (const IndexType &hyperedge : instance.getHypergraph().get_incident_hyperedges(node)) {
-                    model.AddConstr(this->hyperedge_uses_partition[hyperedge][static_cast<int>(part)]
+                for (const IndexType &hyperedge : instance.GetHypergraph().GetIncidentHyperedges(node)) {
+                    model.AddConstr(this->hyperedgeUsesPartition_[hyperedge][static_cast<int>(part)]
                                     >= pinCoveredByPartition[pinIdMap[std::make_pair(node, hyperedge)]][static_cast<int>(part)]);
                 }
             }
@@ -142,7 +142,7 @@ void HypergraphPartitioningILPWithReplication<HypergraphT>::SetupExtraVariablesC
         for (IndexType node = 0; node < numberOfVertices; node++) {
             Expr expr = -1;
             for (unsigned part = 0; part < numberOfParts; part++) {
-                expr += this->node_in_partition[node][static_cast<int>(part)];
+                expr += this->nodeInPartition_[node][static_cast<int>(part)];
             }
 
             model.AddConstr(expr == nodeReplicated[static_cast<int>(node)]);
@@ -151,9 +151,9 @@ void HypergraphPartitioningILPWithReplication<HypergraphT>::SetupExtraVariablesC
         // hyperedge indicators if node is not replicated
         for (unsigned part = 0; part < numberOfParts; part++) {
             for (IndexType node = 0; node < numberOfVertices; node++) {
-                for (const IndexType &hyperedge : instance.getHypergraph().get_incident_hyperedges(node)) {
-                    model.AddConstr(this->hyperedge_uses_partition[hyperedge][static_cast<int>(part)]
-                                    >= this->node_in_partition[node][static_cast<int>(part)]
+                for (const IndexType &hyperedge : instance.GetHypergraph().GetIncidentHyperedges(node)) {
+                    model.AddConstr(this->hyperedgeUsesPartition_[hyperedge][static_cast<int>(part)]
+                                    >= this->nodeInPartition_[node][static_cast<int>(part)]
                                            - nodeReplicated[static_cast<int>(node)]);
                 }
             }
@@ -161,13 +161,13 @@ void HypergraphPartitioningILPWithReplication<HypergraphT>::SetupExtraVariablesC
 
         // hyperedge indicators if node is replicated
         for (IndexType node = 0; node < numberOfVertices; node++) {
-            for (const IndexType &hyperedge : instance.getHypergraph().get_incident_hyperedges(node)) {
+            for (const IndexType &hyperedge : instance.GetHypergraph().GetIncidentHyperedges(node)) {
                 for (unsigned part1 = 0; part1 < numberOfParts; part1++) {
                     for (unsigned part2 = part1 + 1; part2 < numberOfParts; part2++) {
-                        model.AddConstr(this->hyperedge_uses_partition[hyperedge][static_cast<int>(part1)]
-                                            + this->hyperedge_uses_partition[hyperedge][static_cast<int>(part2)]
-                                        >= this->node_in_partition[node][static_cast<int>(part1)]
-                                               + this->node_in_partition[node][static_cast<int>(part2)] - 1);
+                        model.AddConstr(this->hyperedgeUsesPartition_[hyperedge][static_cast<int>(part1)]
+                                            + this->hyperedgeUsesPartition_[hyperedge][static_cast<int>(part2)]
+                                        >= this->nodeInPartition_[node][static_cast<int>(part1)]
+                                               + this->nodeInPartition_[node][static_cast<int>(part2)] - 1);
                     }
                 }
             }
@@ -178,11 +178,11 @@ void HypergraphPartitioningILPWithReplication<HypergraphT>::SetupExtraVariablesC
 template <typename HypergraphT>
 void HypergraphPartitioningILPWithReplication<HypergraphT>::SetInitialSolution(
     const PartitioningWithReplication<HypergraphT> &partition, Model &model) {
-    using IndexType = typename HypergraphT::vertex_idx;
+    using IndexType = typename HypergraphT::VertexIdx;
 
-    const std::vector<std::vector<unsigned> > &assignments = partition.assignedPartitions();
-    const unsigned &numPartitions = partition.getInstance().getNumberOfPartitions();
-    if (assignments.size() != partition.getInstance().getHypergraph().NumVertices()) {
+    const std::vector<std::vector<unsigned> > &assignments = partition.AssignedPartitions();
+    const unsigned &numPartitions = partition.GetInstance().GetNumberOfPartitions();
+    if (assignments.size() != partition.GetInstance().GetHypergraph().NumVertices()) {
         return;
     }
 
@@ -195,7 +195,7 @@ void HypergraphPartitioningILPWithReplication<HypergraphT>::SetInitialSolution(
         }
 
         for (unsigned part = 0; part < numPartitions; ++part) {
-            model.SetMipStart(this->node_in_partition[node][static_cast<int>(part)], static_cast<int>(assingedToPart[part]));
+            model.SetMipStart(this->nodeInPartition_[node][static_cast<int>(part)], static_cast<int>(assingedToPart[part]));
         }
     }
     model.LoadMipStart();

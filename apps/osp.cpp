@@ -130,8 +130,8 @@ int main(int argc, char *argv[]) {
                 }
             } else {
                 schedulersCosts[algorithmCounter] = BspScheduleCS<GraphT>(schedule).ComputeCosts();
-                schedulersWorkCosts[algorithmCounter] = schedule.ComputeWorkCosts();
-                schedulersSupersteps[algorithmCounter] = schedule.numberOfSupersteps();
+                schedulersWorkCosts[algorithmCounter] = schedule.ComputeWorkCost();
+                schedulersSupersteps[algorithmCounter] = schedule.NumberOfSupersteps();
 
                 if (parser.globalParams.get_child("outputSchedule").get_value<bool>()) {
                     try {
@@ -195,7 +195,7 @@ int main(int argc, char *argv[]) {
         std::vector<size_t> ordering = SortingArrangement(schedulersCosts);
 
         std::cout << std::endl << nameGraph << " - " << nameMachine << std::endl;
-        std::cout << "Number of Vertices: " + std::to_string(bspInstance.GetComputationalDag().num_vertices())
+        std::cout << "Number of Vertices: " + std::to_string(bspInstance.GetComputationalDag().NumVertices())
                          + "  Number of Edges: " + std::to_string(bspInstance.GetComputationalDag().NumEdges())
                   << std::endl;
         for (size_t j = 0; j < parser.scheduler.size(); j++) {

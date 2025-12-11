@@ -71,7 +71,7 @@ inline VertexIdxT<GraphT> Target(const DirectedEdge<GraphT> &edge, const GraphT 
  */
 template <typename GraphT>
 inline EdgeView<GraphT> Edges(const GraphT &graph) {
-    return edge_view(graph);
+    return EdgeView(graph);
 }
 
 /**

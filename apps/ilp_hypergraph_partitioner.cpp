@@ -160,9 +160,9 @@ int main(int argc, char *argv[]) {
         auto solveStatus = partitioner.ComputePartitioning(partition);
 
         if (solveStatus == RETURN_STATUS::OSP_SUCCESS || solveStatus == RETURN_STATUS::BEST_FOUND) {
-            file_writer::write_txt(nameHgraph + "_" + std::to_string(nrParts) + "_" + std::to_string(imbalance) + "_ILP_rep"
-                                       + std::to_string(replicate) + ".txt",
-                                   partition);
+            file_writer::WriteTxt(nameHgraph + "_" + std::to_string(nrParts) + "_" + std::to_string(imbalance) + "_ILP_rep"
+                                      + std::to_string(replicate) + ".txt",
+                                  partition);
             std::cout << "Partitioning computed with costs: " << partition.ComputeConnectivityCost() << std::endl;
         } else {
             std::cout << "Computing partition failed." << std::endl;

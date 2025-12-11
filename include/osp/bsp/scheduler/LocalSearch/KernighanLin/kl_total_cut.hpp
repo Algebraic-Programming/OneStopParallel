@@ -1044,7 +1044,7 @@ class KlTotalCutTest : public KlTotalCut<GraphT, MemoryConstraintT, true> {
     }
 
     void TestSetupSchedule(BspSchedule<GraphT> &schedule) {
-        KlTotal<GraphT, MemoryConstraintT, true>::current_schedule.instance = &schedule.getInstance();
+        KlTotal<GraphT, MemoryConstraintT, true>::current_schedule.instance = &schedule.GetInstance();
 
         KlTotal<GraphT, MemoryConstraintT, true>::best_schedule = &schedule;
 
@@ -1058,7 +1058,7 @@ class KlTotalCutTest : public KlTotalCut<GraphT, MemoryConstraintT, true> {
     }
 
     RETURN_STATUS ImproveScheduleTest1(BspSchedule<GraphT> &schedule) {
-        KlTotal<GraphT, MemoryConstraintT, true>::current_schedule.instance = &schedule.getInstance();
+        KlTotal<GraphT, MemoryConstraintT, true>::current_schedule.instance = &schedule.GetInstance();
 
         KlTotal<GraphT, MemoryConstraintT, true>::best_schedule = &schedule;
         KlTotal<GraphT, MemoryConstraintT, true>::num_nodes
@@ -1079,7 +1079,7 @@ class KlTotalCutTest : public KlTotalCut<GraphT, MemoryConstraintT, true> {
     }
 
     RETURN_STATUS ImproveScheduleTest2(BspSchedule<GraphT> &schedule) {
-        KlTotal<GraphT, MemoryConstraintT, true>::current_schedule.instance = &schedule.getInstance();
+        KlTotal<GraphT, MemoryConstraintT, true>::current_schedule.instance = &schedule.GetInstance();
 
         KlTotal<GraphT, MemoryConstraintT, true>::best_schedule = &schedule;
         KlTotal<GraphT, MemoryConstraintT, true>::num_nodes

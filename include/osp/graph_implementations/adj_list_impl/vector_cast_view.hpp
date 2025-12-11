@@ -53,7 +53,7 @@ class VectorCastView {
 
         CastIterator() = default;
 
-        explicit CastIterator(Iter currentEdge) : currentEdge(currentEdge) {}
+        explicit CastIterator(Iter iter) : currentEdge(iter) {}
 
         value_type operator*() const { return static_cast<ToT>(*currentEdge); }
 

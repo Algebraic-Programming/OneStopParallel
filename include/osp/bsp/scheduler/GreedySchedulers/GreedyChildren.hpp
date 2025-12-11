@@ -38,7 +38,7 @@ class GreedyChildren : public Scheduler<GraphT> {
 
     RETURN_STATUS ComputeSchedule(BspSchedule<GraphT> &sched) override {
         using VertexType = VertexIdxT<GraphT>;
-        const auto &instance = sched.getInstance();
+        const auto &instance = sched.GetInstance();
 
         for (const auto &v : instance.GetComputationalDag().Vertices()) {
             sched.SetAssignedProcessor(v, std::numeric_limits<unsigned>::max());

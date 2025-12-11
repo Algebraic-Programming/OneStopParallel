@@ -77,7 +77,7 @@ class HdaggCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> {
         auto edgeMask = LongEdgesInTriangles(dagIn);
         const auto edgeMastEnd = edgeMask.cend();
 
-        for (const auto &sink : sink_vertices_view(dagIn)) {
+        for (const auto &sink : SinkVerticesView(dagIn)) {
             vertexMap.push_back(std::vector<VertexTypeIn>({sink}));
         }
 

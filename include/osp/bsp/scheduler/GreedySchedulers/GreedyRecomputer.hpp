@@ -50,13 +50,13 @@ class GreedyRecomputer {
 template <typename GraphT>
 RETURN_STATUS GreedyRecomputer<GraphT>::ComputeRecompSchedule(BspScheduleCS<GraphT> &initial_schedule,
                                                               BspScheduleRecomp<GraphT> &out_schedule) const {
-    const VertexIdx &n = initial_schedule.getInstance().NumberOfVertices();
-    const unsigned &p = initial_schedule.getInstance().NumberOfProcessors();
-    const unsigned &s = initial_schedule.numberOfSupersteps();
-    const GraphT &g = initial_schedule.getInstance().GetComputationalDag();
+    const VertexIdx &n = initial_schedule.GetInstance().NumberOfVertices();
+    const unsigned &p = initial_schedule.GetInstance().NumberOfProcessors();
+    const unsigned &s = initial_schedule.NumberOfSupersteps();
+    const GraphT &g = initial_schedule.GetInstance().GetComputationalDag();
 
-    out_schedule = BspScheduleRecomp<GraphT>(initial_schedule.getInstance());
-    out_schedule.SetNumberOfSupersteps(initial_schedule.numberOfSupersteps());
+    out_schedule = BspScheduleRecomp<GraphT>(initial_schedule.GetInstance());
+    out_schedule.SetNumberOfSupersteps(initial_schedule.NumberOfSupersteps());
 
     // Initialize required data structures
     std::vector<std::vector<CostType>> workCost(p, std::vector<CostType>(s, 0)), sendCost(p, std::vector<CostType>(s, 0)),
@@ -89,9 +89,9 @@ RETURN_STATUS GreedyRecomputer<GraphT>::ComputeRecompSchedule(BspScheduleCS<Grap
         const unsigned &toProc = std::get<2>(item.first);
         const unsigned &step = item.second;
         sendCost[fromProc][step]
-            += g.VertexCommWeight(node) * initial_schedule.getInstance().GetArchitecture().CommunicationCosts(fromProc, toProc);
+            += g.VertexCommWeight(node) * initial_schedule.GetInstance().GetArchitecture().CommunicationCosts(fromProc, toProc);
         recCost[toProc][step]
-            += g.VertexCommWeight(node) * initial_schedule.getInstance().GetArchitecture().CommunicationCosts(fromProc, toProc);
+            += g.VertexCommWeight(node) * initial_schedule.GetInstance().GetArchitecture().CommunicationCosts(fromProc, toProc);
 
         commSteps[step].emplace(item.first);
         neededOnProc[node][fromProc].insert(step);
@@ -127,7 +127,7 @@ RETURN_STATUS GreedyRecomputer<GraphT>::ComputeRecompSchedule(BspScheduleCS<Grap
 
                 // check how much comm cost we save by removing comm schedule entry
                 CostType commInduced = g.VertexCommWeight(node)
-                                       * initial_schedule.getInstance().GetArchitecture().CommunicationCosts(fromProc, toProc);
+                                       * initial_schedule.GetInstance().GetArchitecture().CommunicationCosts(fromProc, toProc);
 
                 CostType newMaxComm = 0;
                 for (unsigned proc = 0; proc < p; ++proc) {
@@ -146,13 +146,13 @@ RETURN_STATUS GreedyRecomputer<GraphT>::ComputeRecompSchedule(BspScheduleCS<Grap
                     continue;
                 }
 
-                if (!initial_schedule.getInstance().IsCompatible(node, toProc)) {
+                if (!initial_schedule.GetInstance().IsCompatible(node, toProc)) {
                     continue;
                 }
 
                 CostType decrease = maxComm[step] - newMaxComm;
                 if (maxComm[step] > 0 && newMaxComm == 0) {
-                    decrease += initial_schedule.getInstance().GetArchitecture().SynchronisationCosts();
+                    decrease += initial_schedule.GetInstance().GetArchitecture().SynchronisationCosts();
                 }
 
                 // check how much it would increase the work cost instead

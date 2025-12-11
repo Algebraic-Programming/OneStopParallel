@@ -847,7 +847,7 @@ class KlTotalCommTest : public KlTotalComm<GraphT, MemoryConstraintT, UseNodeCom
     }
 
     void TestSetupSchedule(BspSchedule<GraphT> &schedule) {
-        KlTotal<GraphT, MemoryConstraintT, UseNodeCommunicationCostsArg>::current_schedule.instance = &schedule.getInstance();
+        KlTotal<GraphT, MemoryConstraintT, UseNodeCommunicationCostsArg>::current_schedule.instance = &schedule.GetInstance();
 
         KlTotal<GraphT, MemoryConstraintT, UseNodeCommunicationCostsArg>::best_schedule = &schedule;
 
@@ -861,7 +861,7 @@ class KlTotalCommTest : public KlTotalComm<GraphT, MemoryConstraintT, UseNodeCom
     }
 
     RETURN_STATUS ImproveScheduleTest1(BspSchedule<GraphT> &schedule) {
-        KlTotal<GraphT, MemoryConstraintT, UseNodeCommunicationCostsArg>::current_schedule.instance = &schedule.getInstance();
+        KlTotal<GraphT, MemoryConstraintT, UseNodeCommunicationCostsArg>::current_schedule.instance = &schedule.GetInstance();
 
         KlTotal<GraphT, MemoryConstraintT, UseNodeCommunicationCostsArg>::best_schedule = &schedule;
         KlTotal<GraphT, MemoryConstraintT, UseNodeCommunicationCostsArg>::num_nodes
@@ -882,7 +882,7 @@ class KlTotalCommTest : public KlTotalComm<GraphT, MemoryConstraintT, UseNodeCom
     }
 
     RETURN_STATUS ImproveScheduleTest2(BspSchedule<GraphT> &schedule) {
-        KlTotal<GraphT, MemoryConstraintT, true>::current_schedule.instance = &schedule.getInstance();
+        KlTotal<GraphT, MemoryConstraintT, true>::current_schedule.instance = &schedule.GetInstance();
 
         KlTotal<GraphT, MemoryConstraintT, true>::best_schedule = &schedule;
         KlTotal<GraphT, MemoryConstraintT, true>::num_nodes

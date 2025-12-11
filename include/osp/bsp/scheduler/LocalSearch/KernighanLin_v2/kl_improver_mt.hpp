@@ -106,7 +106,7 @@ class KlImproverMt : public KlImprover<GraphT, CommCostFunctionT, MemoryConstrai
     void SetMaxNumThreads(const unsigned numThreads) { maxNumThreads_ = numThreads; }
 
     virtual RETURN_STATUS ImproveSchedule(BspSchedule<GraphT> &schedule) override {
-        if (schedule.getInstance().NumberOfProcessors() < 2) {
+        if (schedule.GetInstance().NumberOfProcessors() < 2) {
             return RETURN_STATUS::BEST_FOUND;
         }
 
@@ -121,7 +121,7 @@ class KlImproverMt : public KlImprover<GraphT, CommCostFunctionT, MemoryConstrai
                 = 1;    // no parallelization with one thread. Affects parameters.max_out_iteration calculation in set_parameters()
         }
 
-        this->set_parameters(schedule.getInstance().NumberOfVertices());
+        this->set_parameters(schedule.GetInstance().NumberOfVertices());
         this->initialize_datastructures(schedule);
         const CostT initialCost = this->activeSchedule_.GetCost();
 
