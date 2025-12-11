@@ -27,8 +27,8 @@ limitations under the License.
 
 using namespace osp;
 
-using ComputationalDag = computational_dag_vector_impl_def_int_t;
-using VertexType = vertex_idx_t<ComputationalDag>;
+using ComputationalDag = ComputationalDagVectorImplDefIntT;
+using VertexType = VertexIdxT<ComputationalDag>;
 
 int main(int argc, char *argv[]) {
     if (argc < 4) {
@@ -59,27 +59,27 @@ int main(int argc, char *argv[]) {
     for (size_t i = 0; i < numGraphs; i++) {
         // Generating the graph
         ComputationalDag graph;
-        near_diag_random_graph(graph, numVert, bandwidth, prob);
+        NearDiagRandomGraph(graph, numVert, bandwidth, prob);
 
         //  Generating graph name
         std::string graphName = "RandomBand_";
         graphName += "p" + std::to_string(static_cast<int>(100 * prob)) + "_";
         graphName += "b" + std::to_string(static_cast<int>(bandwidth)) + "_";
         std::string graphSizeName;
-        if (graph.num_vertices() < 1000) {
-            graphSizeName = std::to_string(graph.num_vertices()) + "_";
+        if (graph.NumVertices() < 1000) {
+            graphSizeName = std::to_string(graph.NumVertices()) + "_";
         } else {
-            graphSizeName = std::to_string(graph.num_vertices() / 1000) + "k_";
+            graphSizeName = std::to_string(graph.NumVertices() / 1000) + "k_";
         }
         graphName += graphSizeName;
 
         std::string graphEdgeSize;
-        if (graph.num_edges() < 1000) {
-            graphEdgeSize = std::to_string(graph.num_edges()) + "_";
-        } else if (graph.num_edges() < 1000000) {
-            graphEdgeSize = std::to_string(graph.num_edges() / 1000) + "k_";
+        if (graph.NumEdges() < 1000) {
+            graphEdgeSize = std::to_string(graph.NumEdges()) + "_";
+        } else if (graph.NumEdges() < 1000000) {
+            graphEdgeSize = std::to_string(graph.NumEdges() / 1000) + "k_";
         } else {
-            graphEdgeSize = std::to_string(graph.num_edges() / 1000000) + "m_";
+            graphEdgeSize = std::to_string(graph.NumEdges() / 1000000) + "m_";
         }
         graphName += graphEdgeSize;
 
@@ -102,12 +102,12 @@ int main(int argc, char *argv[]) {
         std::ofstream graphWrite;
         graphWrite.open(graphName);
         graphWrite << header;
-        graphWrite << std::to_string(graph.num_vertices()) + " " + std::to_string(graph.num_vertices()) + " "
-                          + std::to_string(graph.num_edges() + graph.num_vertices()) + "\n";
+        graphWrite << std::to_string(graph.NumVertices()) + " " + std::to_string(graph.NumVertices()) + " "
+                          + std::to_string(graph.NumEdges() + graph.NumVertices()) + "\n";
         for (VertexType j = 0; j < numVert; j++) {
-            double val = (1 - 2 * randInt(2)) * std::exp(unifLog(re));
+            double val = (1 - 2 * RandInt(2)) * std::exp(unifLog(re));
             graphWrite << std::to_string(j + 1) + " " + std::to_string(j + 1) + " " + std::to_string(val) + "\n";
-            for (const auto &chld : graph.children(j)) {
+            for (const auto &chld : graph.Children(j)) {
                 val = unif(re);
                 graphWrite << std::to_string(chld + 1) + " " + std::to_string(j + 1) + " " + std::to_string(val) + "\n";
             }

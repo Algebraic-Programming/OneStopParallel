@@ -30,40 +30,40 @@ limitations under the License.
 using namespace osp;
 
 BOOST_AUTO_TEST_CASE(TestCostModelsSimpleDag) {
-    using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
+    using Graph = ComputationalDagEdgeIdxVectorImplDefIntT;
 
     BspInstance<Graph> instance;
-    instance.setNumberOfProcessors(2);
-    instance.setCommunicationCosts(10);
-    instance.setSynchronisationCosts(5);
+    instance.SetNumberOfProcessors(2);
+    instance.SetCommunicationCosts(10);
+    instance.SetSynchronisationCosts(5);
 
-    auto &dag = instance.getComputationalDag();
-    dag.add_vertex(10, 1, 0);
-    dag.add_vertex(20, 2, 0);
-    dag.add_vertex(30, 3, 0);
-    dag.add_vertex(40, 4, 0);
-    dag.add_vertex(50, 5, 0);
-    dag.add_edge(0, 1);
-    dag.add_edge(0, 2);
-    dag.add_edge(1, 4);
-    dag.add_edge(2, 3);
-    dag.add_edge(3, 4);
+    auto &dag = instance.GetComputationalDag();
+    dag.AddVertex(10, 1, 0);
+    dag.AddVertex(20, 2, 0);
+    dag.AddVertex(30, 3, 0);
+    dag.AddVertex(40, 4, 0);
+    dag.AddVertex(50, 5, 0);
+    dag.AddEdge(0, 1);
+    dag.AddEdge(0, 2);
+    dag.AddEdge(1, 4);
+    dag.AddEdge(2, 3);
+    dag.AddEdge(3, 4);
 
     BspSchedule<Graph> schedule(instance);
 
-    schedule.setAssignedProcessor(0, 0);
-    schedule.setAssignedSuperstep(0, 0);
-    schedule.setAssignedProcessor(1, 0);
-    schedule.setAssignedSuperstep(1, 1);
-    schedule.setAssignedProcessor(2, 1);
-    schedule.setAssignedSuperstep(2, 1);
-    schedule.setAssignedProcessor(3, 1);
-    schedule.setAssignedSuperstep(3, 2);
-    schedule.setAssignedProcessor(4, 1);
-    schedule.setAssignedSuperstep(4, 3);
-    schedule.updateNumberOfSupersteps();
+    schedule.SetAssignedProcessor(0, 0);
+    schedule.SetAssignedSuperstep(0, 0);
+    schedule.SetAssignedProcessor(1, 0);
+    schedule.SetAssignedSuperstep(1, 1);
+    schedule.SetAssignedProcessor(2, 1);
+    schedule.SetAssignedSuperstep(2, 1);
+    schedule.SetAssignedProcessor(3, 1);
+    schedule.SetAssignedSuperstep(3, 2);
+    schedule.SetAssignedProcessor(4, 1);
+    schedule.SetAssignedSuperstep(4, 3);
+    schedule.UpdateNumberOfSupersteps();
 
-    BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+    BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
     BOOST_CHECK_EQUAL(schedule.numberOfSupersteps(), 4);
 
     // Work cost (BSP model) = sum of max work per superstep across processors
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(TestCostModelsSimpleDag) {
     // SS2: max(P0=0, P1=40) = 40
     // SS3: max(P0=0, P1=50) = 50
     // Total work = 10 + 30 + 40 + 50 = 130
-    BOOST_CHECK_EQUAL(schedule.computeWorkCosts(), 130);
+    BOOST_CHECK_EQUAL(schedule.ComputeWorkCosts(), 130);
 
     // LazyCommunicationCost
     // Sends/receives at step_needed - staleness (staleness=1)

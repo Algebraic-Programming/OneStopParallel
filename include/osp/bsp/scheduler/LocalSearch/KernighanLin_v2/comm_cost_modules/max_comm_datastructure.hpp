@@ -30,25 +30,23 @@ limitations under the License.
 
 namespace osp {
 
-template <typename comm_weight_t>
-struct pre_move_comm_data {
-    struct step_info {
-        comm_weight_t max_comm;
-        comm_weight_t second_max_comm;
-        unsigned max_comm_count;
+template <typename CommWeightT>
+struct PreMoveCommData {
+    struct StepInfo {
+        CommWeightT maxComm;
+        CommWeightT secondMaxComm;
+        unsigned maxCommCount;
     };
 
-    std::unordered_map<unsigned, step_info> step_data;
+    std::unordered_map<unsigned, StepInfo> stepData;
 
-    pre_move_comm_data() = default;
+    PreMoveCommData() = default;
 
-    void add_step(unsigned step, comm_weight_t max, comm_weight_t second, unsigned count) {
-        step_data[step] = {max, second, count};
-    }
+    void AddStep(unsigned step, CommWeightT max, CommWeightT second, unsigned count) { stepData[step] = {max, second, count}; }
 
-    bool get_step(unsigned step, step_info &info) const {
-        auto it = step_data.find(step);
-        if (it != step_data.end()) {
+    bool GetStep(unsigned step, StepInfo &info) const {
+        auto it = stepData.find(step);
+        if (it != stepData.end()) {
             info = it->second;
             return true;
         }
@@ -56,327 +54,326 @@ struct pre_move_comm_data {
     }
 };
 
-template <typename Graph_t, typename cost_t, typename kl_active_schedule_t, typename CommPolicy = EagerCommCostPolicy>
-struct max_comm_datastructure {
-    using comm_weight_t = v_commw_t<Graph_t>;
-    using VertexType = vertex_idx_t<Graph_t>;
-    using kl_move = kl_move_struct<cost_t, VertexType>;
+template <typename GraphT, typename CostT, typename KlActiveScheduleT, typename CommPolicy = EagerCommCostPolicy>
+struct MaxCommDatastructure {
+    using CommWeightT = VCommwT<GraphT>;
+    using VertexType = VertexIdxT<GraphT>;
+    using KlMove = KlMoveStruct<CostT, VertexType>;
 
-    const BspInstance<Graph_t> *instance;
-    const kl_active_schedule_t *active_schedule;
+    const BspInstance<GraphT> *instance;
+    const KlActiveScheduleT *activeSchedule;
 
-    std::vector<std::vector<comm_weight_t>> step_proc_send_;
-    std::vector<std::vector<comm_weight_t>> step_proc_receive_;
+    std::vector<std::vector<CommWeightT>> stepProcSend;
+    std::vector<std::vector<CommWeightT>> stepProcReceive;
 
     // Caches for fast cost calculation (Global Max/Second Max per step)
-    std::vector<comm_weight_t> step_max_comm_cache;
-    std::vector<comm_weight_t> step_second_max_comm_cache;
-    std::vector<unsigned> step_max_comm_count_cache;
+    std::vector<CommWeightT> stepMaxCommCache;
+    std::vector<CommWeightT> stepSecondMaxCommCache;
+    std::vector<unsigned> stepMaxCommCountCache;
 
-    comm_weight_t max_comm_weight = 0;
+    CommWeightT maxCommWeight = 0;
 
     // Select the appropriate container type based on the policy's ValueType
-    using ContainerType =
-        typename std::conditional<std::is_same<typename CommPolicy::ValueType, unsigned>::value,
-                                  lambda_vector_container<VertexType>,
-                                  generic_lambda_vector_container<VertexType, typename CommPolicy::ValueType>>::type;
+    using ContainerType = typename std::conditional<std::is_same<typename CommPolicy::ValueType, unsigned>::value,
+                                                    LambdaVectorContainer<VertexType>,
+                                                    GenericLambdaVectorContainer<VertexType, typename CommPolicy::ValueType>>::type;
 
-    ContainerType node_lambda_map;
+    ContainerType nodeLambdaMap;
 
     // Optimization: Scratchpad for update_datastructure_after_move to avoid allocations
-    std::vector<unsigned> affected_steps_list;
-    std::vector<bool> step_is_affected;
+    std::vector<unsigned> affectedStepsList;
+    std::vector<bool> stepIsAffected;
 
-    inline comm_weight_t step_proc_send(unsigned step, unsigned proc) const { return step_proc_send_[step][proc]; }
+    inline CommWeightT StepProcSend(unsigned step, unsigned proc) const { return stepProcSend[step][proc]; }
 
-    inline comm_weight_t &step_proc_send(unsigned step, unsigned proc) { return step_proc_send_[step][proc]; }
+    inline CommWeightT &StepProcSend(unsigned step, unsigned proc) { return stepProcSend[step][proc]; }
 
-    inline comm_weight_t step_proc_receive(unsigned step, unsigned proc) const { return step_proc_receive_[step][proc]; }
+    inline CommWeightT StepProcReceive(unsigned step, unsigned proc) const { return stepProcReceive[step][proc]; }
 
-    inline comm_weight_t &step_proc_receive(unsigned step, unsigned proc) { return step_proc_receive_[step][proc]; }
+    inline CommWeightT &StepProcReceive(unsigned step, unsigned proc) { return stepProcReceive[step][proc]; }
 
-    inline comm_weight_t step_max_comm(unsigned step) const { return step_max_comm_cache[step]; }
+    inline CommWeightT StepMaxComm(unsigned step) const { return stepMaxCommCache[step]; }
 
-    inline comm_weight_t step_second_max_comm(unsigned step) const { return step_second_max_comm_cache[step]; }
+    inline CommWeightT StepSecondMaxComm(unsigned step) const { return stepSecondMaxCommCache[step]; }
 
-    inline unsigned step_max_comm_count(unsigned step) const { return step_max_comm_count_cache[step]; }
+    inline unsigned StepMaxCommCount(unsigned step) const { return stepMaxCommCountCache[step]; }
 
-    inline void initialize(kl_active_schedule_t &kl_sched) {
-        active_schedule = &kl_sched;
-        instance = &active_schedule->getInstance();
-        const unsigned num_steps = active_schedule->num_steps();
-        const unsigned num_procs = instance->numberOfProcessors();
-        max_comm_weight = 0;
+    inline void Initialize(KlActiveScheduleT &klSched) {
+        activeSchedule = &klSched;
+        instance = &activeSchedule->GetInstance();
+        const unsigned numSteps = activeSchedule->NumSteps();
+        const unsigned numProcs = instance->NumberOfProcessors();
+        maxCommWeight = 0;
 
-        step_proc_send_.assign(num_steps, std::vector<comm_weight_t>(num_procs, 0));
-        step_proc_receive_.assign(num_steps, std::vector<comm_weight_t>(num_procs, 0));
+        stepProcSend.assign(numSteps, std::vector<CommWeightT>(numProcs, 0));
+        stepProcReceive.assign(numSteps, std::vector<CommWeightT>(numProcs, 0));
 
-        step_max_comm_cache.assign(num_steps, 0);
-        step_second_max_comm_cache.assign(num_steps, 0);
-        step_max_comm_count_cache.assign(num_steps, 0);
+        stepMaxCommCache.assign(numSteps, 0);
+        stepSecondMaxCommCache.assign(numSteps, 0);
+        stepMaxCommCountCache.assign(numSteps, 0);
 
-        node_lambda_map.initialize(instance->getComputationalDag().num_vertices(), num_procs);
+        nodeLambdaMap.Initialize(instance->GetComputationalDag().NumVertices(), numProcs);
 
         // Initialize scratchpad
-        step_is_affected.assign(num_steps, false);
-        affected_steps_list.reserve(num_steps);
+        stepIsAffected.assign(numSteps, false);
+        affectedStepsList.reserve(numSteps);
     }
 
-    inline void clear() {
-        step_proc_send_.clear();
-        step_proc_receive_.clear();
-        step_max_comm_cache.clear();
-        step_second_max_comm_cache.clear();
-        step_max_comm_count_cache.clear();
-        node_lambda_map.clear();
-        affected_steps_list.clear();
-        step_is_affected.clear();
+    inline void Clear() {
+        stepProcSend.clear();
+        stepProcReceive.clear();
+        stepMaxCommCache.clear();
+        stepSecondMaxCommCache.clear();
+        stepMaxCommCountCache.clear();
+        nodeLambdaMap.clear();
+        affectedStepsList.clear();
+        stepIsAffected.clear();
     }
 
-    inline void arrange_superstep_comm_data(const unsigned step) {
-        comm_weight_t max_send = 0;
-        comm_weight_t second_max_send = 0;
-        unsigned max_send_count = 0;
+    inline void ArrangeSuperstepCommData(const unsigned step) {
+        CommWeightT maxSend = 0;
+        CommWeightT secondMaxSend = 0;
+        unsigned maxSendCount = 0;
 
-        const auto &sends = step_proc_send_[step];
+        const auto &sends = stepProcSend[step];
         for (const auto val : sends) {
-            if (val > max_send) {
-                second_max_send = max_send;
-                max_send = val;
-                max_send_count = 1;
-            } else if (val == max_send) {
-                max_send_count++;
-            } else if (val > second_max_send) {
-                second_max_send = val;
+            if (val > maxSend) {
+                secondMaxSend = maxSend;
+                maxSend = val;
+                maxSendCount = 1;
+            } else if (val == maxSend) {
+                maxSendCount++;
+            } else if (val > secondMaxSend) {
+                secondMaxSend = val;
             }
         }
 
-        comm_weight_t max_receive = 0;
-        comm_weight_t second_max_receive = 0;
-        unsigned max_receive_count = 0;
+        CommWeightT maxReceive = 0;
+        CommWeightT secondMaxReceive = 0;
+        unsigned maxReceiveCount = 0;
 
-        const auto &receives = step_proc_receive_[step];
+        const auto &receives = stepProcReceive[step];
         for (const auto val : receives) {
-            if (val > max_receive) {
-                second_max_receive = max_receive;
-                max_receive = val;
-                max_receive_count = 1;
-            } else if (val == max_receive) {
-                max_receive_count++;
-            } else if (val > second_max_receive) {
-                second_max_receive = val;
+            if (val > maxReceive) {
+                secondMaxReceive = maxReceive;
+                maxReceive = val;
+                maxReceiveCount = 1;
+            } else if (val == maxReceive) {
+                maxReceiveCount++;
+            } else if (val > secondMaxReceive) {
+                secondMaxReceive = val;
             }
         }
 
-        const comm_weight_t global_max = std::max(max_send, max_receive);
-        step_max_comm_cache[step] = global_max;
+        const CommWeightT globalMax = std::max(maxSend, maxReceive);
+        stepMaxCommCache[step] = globalMax;
 
-        unsigned global_count = 0;
-        if (max_send == global_max) {
-            global_count += max_send_count;
+        unsigned globalCount = 0;
+        if (maxSend == globalMax) {
+            globalCount += maxSendCount;
         }
-        if (max_receive == global_max) {
-            global_count += max_receive_count;
+        if (maxReceive == globalMax) {
+            globalCount += maxReceiveCount;
         }
-        step_max_comm_count_cache[step] = global_count;
+        stepMaxCommCountCache[step] = globalCount;
 
-        comm_weight_t cand_send = (max_send == global_max) ? second_max_send : max_send;
-        comm_weight_t cand_recv = (max_receive == global_max) ? second_max_receive : max_receive;
+        CommWeightT candSend = (maxSend == globalMax) ? secondMaxSend : maxSend;
+        CommWeightT candRecv = (maxReceive == globalMax) ? secondMaxReceive : maxReceive;
 
-        step_second_max_comm_cache[step] = std::max(cand_send, cand_recv);
+        stepSecondMaxCommCache[step] = std::max(candSend, candRecv);
     }
 
-    void recompute_max_send_receive(unsigned step) { arrange_superstep_comm_data(step); }
+    void RecomputeMaxSendReceive(unsigned step) { ArrangeSuperstepCommData(step); }
 
-    inline pre_move_comm_data<comm_weight_t> get_pre_move_comm_data(const kl_move &move) {
-        pre_move_comm_data<comm_weight_t> data;
-        std::unordered_set<unsigned> affected_steps;
+    inline PreMoveCommData<CommWeightT> GetPreMoveCommData(const KlMove &move) {
+        PreMoveCommData<CommWeightT> data;
+        std::unordered_set<unsigned> affectedSteps;
 
-        affected_steps.insert(move.from_step);
-        affected_steps.insert(move.to_step);
+        affectedSteps.insert(move.fromStep);
+        affectedSteps.insert(move.toStep);
 
-        const auto &graph = instance->getComputationalDag();
+        const auto &graph = instance->GetComputationalDag();
 
-        for (const auto &parent : graph.parents(move.node)) {
-            affected_steps.insert(active_schedule->assigned_superstep(parent));
+        for (const auto &parent : graph.Parents(move.node)) {
+            affectedSteps.insert(activeSchedule->AssignedSuperstep(parent));
         }
 
-        for (unsigned step : affected_steps) {
-            data.add_step(step, step_max_comm(step), step_second_max_comm(step), step_max_comm_count(step));
+        for (unsigned step : affectedSteps) {
+            data.AddStep(step, StepMaxComm(step), StepSecondMaxComm(step), StepMaxCommCount(step));
         }
 
         return data;
     }
 
-    void update_datastructure_after_move(const kl_move &move, unsigned, unsigned) {
-        const auto &graph = instance->getComputationalDag();
+    void UpdateDatastructureAfterMove(const KlMove &move, unsigned, unsigned) {
+        const auto &graph = instance->GetComputationalDag();
 
         // Prepare Scratchpad (Avoids Allocations) ---
-        for (unsigned step : affected_steps_list) {
-            if (step < step_is_affected.size()) {
-                step_is_affected[step] = false;
+        for (unsigned step : affectedStepsList) {
+            if (step < stepIsAffected.size()) {
+                stepIsAffected[step] = false;
             }
         }
-        affected_steps_list.clear();
+        affectedStepsList.clear();
 
-        auto mark_step = [&](unsigned step) {
-            if (step < step_is_affected.size() && !step_is_affected[step]) {
-                step_is_affected[step] = true;
-                affected_steps_list.push_back(step);
+        auto markStep = [&](unsigned step) {
+            if (step < stepIsAffected.size() && !stepIsAffected[step]) {
+                stepIsAffected[step] = true;
+                affectedStepsList.push_back(step);
             }
         };
 
         const VertexType node = move.node;
-        const unsigned from_step = move.from_step;
-        const unsigned to_step = move.to_step;
-        const unsigned from_proc = move.from_proc;
-        const unsigned to_proc = move.to_proc;
-        const comm_weight_t comm_w_node = graph.vertex_comm_weight(node);
+        const unsigned fromStep = move.fromStep;
+        const unsigned toStep = move.toStep;
+        const unsigned fromProc = move.fromProc;
+        const unsigned toProc = move.toProc;
+        const CommWeightT commWNode = graph.VertexCommWeight(node);
 
         // Handle Node Movement (Outgoing Edges: Node -> Children)
 
-        if (from_step != to_step) {
+        if (fromStep != toStep) {
             // Case 1: Node changes Step
-            for (const auto [proc, val] : node_lambda_map.iterate_proc_entries(node)) {
+            for (const auto [proc, val] : nodeLambdaMap.IterateProcEntries(node)) {
                 // A. Remove Old (Sender: from_proc, Receiver: proc)
-                if (proc != from_proc) {
-                    const comm_weight_t cost = comm_w_node * instance->sendCosts(from_proc, proc);
+                if (proc != fromProc) {
+                    const CommWeightT cost = commWNode * instance->SendCosts(fromProc, proc);
                     if (cost > 0) {
-                        CommPolicy::unattribute_communication(*this, cost, from_step, from_proc, proc, 0, val);
+                        CommPolicy::UnattributeCommunication(*this, cost, fromStep, fromProc, proc, 0, val);
                     }
                 }
 
                 // B. Add New (Sender: to_proc, Receiver: proc)
-                if (proc != to_proc) {
-                    const comm_weight_t cost = comm_w_node * instance->sendCosts(to_proc, proc);
+                if (proc != toProc) {
+                    const CommWeightT cost = commWNode * instance->SendCosts(toProc, proc);
                     if (cost > 0) {
-                        CommPolicy::attribute_communication(*this, cost, to_step, to_proc, proc, 0, val);
+                        CommPolicy::AttributeCommunication(*this, cost, toStep, toProc, proc, 0, val);
                     }
                 }
             }
-            mark_step(from_step);
-            mark_step(to_step);
+            markStep(fromStep);
+            markStep(toStep);
 
-        } else if (from_proc != to_proc) {
+        } else if (fromProc != toProc) {
             // Case 2: Node stays in same Step, but changes Processor
 
-            for (const auto [proc, val] : node_lambda_map.iterate_proc_entries(node)) {
+            for (const auto [proc, val] : nodeLambdaMap.IterateProcEntries(node)) {
                 // Remove Old (Sender: from_proc, Receiver: proc)
-                if (proc != from_proc) {
-                    const comm_weight_t cost = comm_w_node * instance->sendCosts(from_proc, proc);
+                if (proc != fromProc) {
+                    const CommWeightT cost = commWNode * instance->SendCosts(fromProc, proc);
                     if (cost > 0) {
-                        CommPolicy::unattribute_communication(*this, cost, from_step, from_proc, proc, 0, val);
+                        CommPolicy::UnattributeCommunication(*this, cost, fromStep, fromProc, proc, 0, val);
                     }
                 }
 
                 // Add New (Sender: to_proc, Receiver: proc)
-                if (proc != to_proc) {
-                    const comm_weight_t cost = comm_w_node * instance->sendCosts(to_proc, proc);
+                if (proc != toProc) {
+                    const CommWeightT cost = commWNode * instance->SendCosts(toProc, proc);
                     if (cost > 0) {
-                        CommPolicy::attribute_communication(*this, cost, from_step, to_proc, proc, 0, val);
+                        CommPolicy::AttributeCommunication(*this, cost, fromStep, toProc, proc, 0, val);
                     }
                 }
             }
-            mark_step(from_step);
+            markStep(fromStep);
         }
 
         // Update Parents' Outgoing Communication (Parents → Node)
 
-        for (const auto &parent : graph.parents(node)) {
-            const unsigned parent_step = active_schedule->assigned_superstep(parent);
+        for (const auto &parent : graph.Parents(node)) {
+            const unsigned parentStep = activeSchedule->AssignedSuperstep(parent);
             // Fast boundary check
-            if (parent_step >= step_proc_send_.size()) {
+            if (parentStep >= stepProcSend.size()) {
                 continue;
             }
 
-            const unsigned parent_proc = active_schedule->assigned_processor(parent);
-            const comm_weight_t comm_w_parent = graph.vertex_comm_weight(parent);
+            const unsigned parentProc = activeSchedule->AssignedProcessor(parent);
+            const CommWeightT commWParent = graph.VertexCommWeight(parent);
 
-            auto &val = node_lambda_map.get_proc_entry(parent, from_proc);
-            const bool removed_from_proc = CommPolicy::remove_child(val, from_step);
+            auto &val = nodeLambdaMap.GetProcEntry(parent, fromProc);
+            const bool removedFromProc = CommPolicy::RemoveChild(val, fromStep);
 
             // 1. Handle Removal from from_proc
-            if (removed_from_proc) {
-                if (from_proc != parent_proc) {
-                    const comm_weight_t cost = comm_w_parent * instance->sendCosts(parent_proc, from_proc);
+            if (removedFromProc) {
+                if (fromProc != parentProc) {
+                    const CommWeightT cost = commWParent * instance->SendCosts(parentProc, fromProc);
                     if (cost > 0) {
-                        CommPolicy::unattribute_communication(*this, cost, parent_step, parent_proc, from_proc, from_step, val);
+                        CommPolicy::UnattributeCommunication(*this, cost, parentStep, parentProc, fromProc, fromStep, val);
                     }
                 }
             }
 
-            auto &val_to = node_lambda_map.get_proc_entry(parent, to_proc);
-            const bool added_to_proc = CommPolicy::add_child(val_to, to_step);
+            auto &valTo = nodeLambdaMap.GetProcEntry(parent, toProc);
+            const bool addedToProc = CommPolicy::AddChild(valTo, toStep);
 
             // 2. Handle Addition to to_proc
-            if (added_to_proc) {
-                if (to_proc != parent_proc) {
-                    const comm_weight_t cost = comm_w_parent * instance->sendCosts(parent_proc, to_proc);
+            if (addedToProc) {
+                if (toProc != parentProc) {
+                    const CommWeightT cost = commWParent * instance->SendCosts(parentProc, toProc);
                     if (cost > 0) {
-                        CommPolicy::attribute_communication(*this, cost, parent_step, parent_proc, to_proc, to_step, val_to);
+                        CommPolicy::AttributeCommunication(*this, cost, parentStep, parentProc, toProc, toStep, valTo);
                     }
                 }
             }
 
-            mark_step(parent_step);
+            markStep(parentStep);
         }
 
         // Re-arrange Affected Steps
-        for (unsigned step : affected_steps_list) {
-            arrange_superstep_comm_data(step);
+        for (unsigned step : affectedStepsList) {
+            ArrangeSuperstepCommData(step);
         }
     }
 
-    void swap_steps(const unsigned step1, const unsigned step2) {
-        std::swap(step_proc_send_[step1], step_proc_send_[step2]);
-        std::swap(step_proc_receive_[step1], step_proc_receive_[step2]);
-        std::swap(step_max_comm_cache[step1], step_max_comm_cache[step2]);
-        std::swap(step_second_max_comm_cache[step1], step_second_max_comm_cache[step2]);
-        std::swap(step_max_comm_count_cache[step1], step_max_comm_count_cache[step2]);
+    void SwapSteps(const unsigned step1, const unsigned step2) {
+        std::swap(stepProcSend[step1], stepProcSend[step2]);
+        std::swap(stepProcReceive[step1], stepProcReceive[step2]);
+        std::swap(stepMaxCommCache[step1], stepMaxCommCache[step2]);
+        std::swap(stepSecondMaxCommCache[step1], stepSecondMaxCommCache[step2]);
+        std::swap(stepMaxCommCountCache[step1], stepMaxCommCountCache[step2]);
     }
 
-    void reset_superstep(unsigned step) {
-        std::fill(step_proc_send_[step].begin(), step_proc_send_[step].end(), 0);
-        std::fill(step_proc_receive_[step].begin(), step_proc_receive_[step].end(), 0);
-        arrange_superstep_comm_data(step);
+    void ResetSuperstep(unsigned step) {
+        std::fill(stepProcSend[step].begin(), stepProcSend[step].end(), 0);
+        std::fill(stepProcReceive[step].begin(), stepProcReceive[step].end(), 0);
+        ArrangeSuperstepCommData(step);
     }
 
-    void compute_comm_datastructures(unsigned start_step, unsigned end_step) {
-        for (unsigned step = start_step; step <= end_step; step++) {
-            std::fill(step_proc_send_[step].begin(), step_proc_send_[step].end(), 0);
-            std::fill(step_proc_receive_[step].begin(), step_proc_receive_[step].end(), 0);
+    void ComputeCommDatastructures(unsigned startStep, unsigned endStep) {
+        for (unsigned step = startStep; step <= endStep; step++) {
+            std::fill(stepProcSend[step].begin(), stepProcSend[step].end(), 0);
+            std::fill(stepProcReceive[step].begin(), stepProcReceive[step].end(), 0);
         }
 
-        const auto &vec_sched = active_schedule->getVectorSchedule();
-        const auto &graph = instance->getComputationalDag();
+        const auto &vecSched = activeSchedule->GetVectorSchedule();
+        const auto &graph = instance->GetComputationalDag();
 
-        for (const auto &u : graph.vertices()) {
-            node_lambda_map.reset_node(u);
-            const unsigned u_proc = vec_sched.assignedProcessor(u);
-            const unsigned u_step = vec_sched.assignedSuperstep(u);
-            const comm_weight_t comm_w = graph.vertex_comm_weight(u);
-            max_comm_weight = std::max(max_comm_weight, comm_w);
+        for (const auto &u : graph.Vertices()) {
+            nodeLambdaMap.ResetNode(u);
+            const unsigned uProc = vecSched.AssignedProcessor(u);
+            const unsigned uStep = vecSched.AssignedSuperstep(u);
+            const CommWeightT commW = graph.VertexCommWeight(u);
+            maxCommWeight = std::max(maxCommWeight, commW);
 
-            for (const auto &v : graph.children(u)) {
-                const unsigned v_proc = vec_sched.assignedProcessor(v);
-                const unsigned v_step = vec_sched.assignedSuperstep(v);
+            for (const auto &v : graph.Children(u)) {
+                const unsigned vProc = vecSched.AssignedProcessor(v);
+                const unsigned vStep = vecSched.AssignedSuperstep(v);
 
-                const comm_weight_t comm_w_send_cost = (u_proc != v_proc) ? comm_w * instance->sendCosts(u_proc, v_proc) : 0;
+                const CommWeightT commWSendCost = (uProc != vProc) ? commW * instance->SendCosts(uProc, vProc) : 0;
 
-                auto &val = node_lambda_map.get_proc_entry(u, v_proc);
-                if (CommPolicy::add_child(val, v_step)) {
-                    if (u_proc != v_proc && comm_w_send_cost > 0) {
-                        CommPolicy::attribute_communication(*this, comm_w_send_cost, u_step, u_proc, v_proc, v_step, val);
+                auto &val = nodeLambdaMap.GetProcEntry(u, vProc);
+                if (CommPolicy::AddChild(val, vStep)) {
+                    if (uProc != vProc && commWSendCost > 0) {
+                        CommPolicy::AttributeCommunication(*this, commWSendCost, uStep, uProc, vProc, vStep, val);
                     }
                 }
             }
         }
 
-        for (unsigned step = start_step; step <= end_step; step++) {
-            if (step >= step_proc_send_.size()) {
+        for (unsigned step = startStep; step <= endStep; step++) {
+            if (step >= stepProcSend.size()) {
                 continue;
             }
-            arrange_superstep_comm_data(step);
+            ArrangeSuperstepCommData(step);
         }
     }
 };

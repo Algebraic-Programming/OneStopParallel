@@ -31,28 +31,28 @@ BOOST_AUTO_TEST_CASE(VarianceSplitterTest) {
 
     // Test case 1: Clear split point
     std::vector<double> seq1 = {1, 1, 1, 1, 10, 10, 10, 10};
-    std::vector<size_t> splits1 = splitter.split(seq1);
+    std::vector<size_t> splits1 = splitter.Split(seq1);
     std::vector<size_t> expected1 = {4};
     BOOST_CHECK_EQUAL_COLLECTIONS(splits1.begin(), splits1.end(), expected1.begin(), expected1.end());
 
     // Test case 2: No split needed (low variance)
     std::vector<double> seq2 = {1, 1.1, 1.2, 1.1, 1.3};
-    std::vector<size_t> splits2 = splitter.split(seq2);
+    std::vector<size_t> splits2 = splitter.Split(seq2);
     BOOST_CHECK(splits2.empty());
 
     // Test case 3: Empty sequence
     std::vector<double> seq3 = {};
-    std::vector<size_t> splits3 = splitter.split(seq3);
+    std::vector<size_t> splits3 = splitter.Split(seq3);
     BOOST_CHECK(splits3.empty());
 
     // Test case 4: Single element sequence
     std::vector<double> seq4 = {100.0};
-    std::vector<size_t> splits4 = splitter.split(seq4);
+    std::vector<size_t> splits4 = splitter.Split(seq4);
     BOOST_CHECK(splits4.empty());
 
     // Test case 5: Multiple splits
     std::vector<double> seq5 = {1, 1, 1, 20, 20, 20, 1, 1, 1};
-    std::vector<size_t> splits5 = splitter.split(seq5);
+    std::vector<size_t> splits5 = splitter.Split(seq5);
     std::vector<size_t> expected5 = {3, 6};
     BOOST_CHECK_EQUAL_COLLECTIONS(splits5.begin(), splits5.end(), expected5.begin(), expected5.end());
 }
@@ -62,29 +62,29 @@ BOOST_AUTO_TEST_CASE(LargestStepSplitterTest) {
 
     // Test case 1: Clear step
     std::vector<double> seq1 = {1, 2, 3, 10, 11, 12};
-    std::vector<size_t> splits1 = splitter.split(seq1);
+    std::vector<size_t> splits1 = splitter.Split(seq1);
     std::vector<size_t> expected1 = {3};
     BOOST_CHECK_EQUAL_COLLECTIONS(splits1.begin(), splits1.end(), expected1.begin(), expected1.end());
 
     // Test case 2: No significant step
     std::vector<double> seq2 = {1, 2, 3, 4, 5, 6};
-    std::vector<size_t> splits2 = splitter.split(seq2);
+    std::vector<size_t> splits2 = splitter.Split(seq2);
     BOOST_CHECK(splits2.empty());
 
     // Test case 3: Decreasing sequence
     std::vector<double> seq3 = {12, 11, 10, 3, 2, 1};
-    std::vector<size_t> splits3 = splitter.split(seq3);
+    std::vector<size_t> splits3 = splitter.Split(seq3);
     std::vector<size_t> expected3 = {3};
     BOOST_CHECK_EQUAL_COLLECTIONS(splits3.begin(), splits3.end(), expected3.begin(), expected3.end());
 
     // Test case 4: Sequence too short
     std::vector<double> seq4 = {1, 10};
-    std::vector<size_t> splits4 = splitter.split(seq4);
+    std::vector<size_t> splits4 = splitter.Split(seq4);
     BOOST_CHECK(splits4.empty());
 
     // Test case 5: Multiple large steps
     std::vector<double> seq5 = {0, 1, 10, 11, 20, 21};
-    std::vector<size_t> splits5 = splitter.split(seq5);
+    std::vector<size_t> splits5 = splitter.Split(seq5);
     std::vector<size_t> expected5 = {2, 4};
     BOOST_CHECK_EQUAL_COLLECTIONS(splits5.begin(), splits5.end(), expected5.begin(), expected5.end());
 }
@@ -94,56 +94,56 @@ BOOST_AUTO_TEST_CASE(ThresholdScanSplitterTest) {
 
     // Test case 1: Significant drop
     std::vector<double> seq1 = {20, 18, 16, 9, 8, 7};
-    std::vector<size_t> splits1 = splitter.split(seq1);
+    std::vector<size_t> splits1 = splitter.Split(seq1);
     std::vector<size_t> expected1 = {3};
     BOOST_CHECK_EQUAL_COLLECTIONS(splits1.begin(), splits1.end(), expected1.begin(), expected1.end());
 
     // Test case 2: Crossing absolute threshold (rising)
     std::vector<double> seq2 = {5, 7, 9, 11, 13};
-    std::vector<size_t> splits2 = splitter.split(seq2);
+    std::vector<size_t> splits2 = splitter.Split(seq2);
     std::vector<size_t> expected2 = {3};
     BOOST_CHECK_EQUAL_COLLECTIONS(splits2.begin(), splits2.end(), expected2.begin(), expected2.end());
 
     // Test case 3: Crossing absolute threshold (dropping)
     std::vector<double> seq3 = {15, 12, 11, 9, 8};
-    std::vector<size_t> splits3 = splitter.split(seq3);
+    std::vector<size_t> splits3 = splitter.Split(seq3);
     std::vector<size_t> expected3 = {3};
     BOOST_CHECK_EQUAL_COLLECTIONS(splits3.begin(), splits3.end(), expected3.begin(), expected3.end());
 
     // Test case 4: No splits
     std::vector<double> seq4 = {1, 2, 3, 4, 5};
-    std::vector<size_t> splits4 = splitter.split(seq4);
+    std::vector<size_t> splits4 = splitter.Split(seq4);
     BOOST_CHECK(splits4.empty());
 
     // Test case 5: Empty sequence
     std::vector<double> seq5 = {};
-    std::vector<size_t> splits5 = splitter.split(seq5);
+    std::vector<size_t> splits5 = splitter.Split(seq5);
     BOOST_CHECK(splits5.empty());
 }
 
-using Graph = osp::computational_dag_edge_idx_vector_impl_def_int_t;
-using VertexType = Graph::vertex_idx;
+using Graph = osp::ComputationalDagEdgeIdxVectorImplDefIntT;
+using VertexType = Graph::VertexIdx;
 
 BOOST_AUTO_TEST_CASE(ForwardAndBackwardPassTest) {
     Graph dag;
-    const auto v1 = dag.add_vertex(2, 1, 9);
-    const auto v2 = dag.add_vertex(3, 1, 8);
-    const auto v3 = dag.add_vertex(4, 1, 7);
-    const auto v4 = dag.add_vertex(5, 1, 6);
-    const auto v5 = dag.add_vertex(6, 1, 5);
-    const auto v6 = dag.add_vertex(7, 1, 4);
-    const auto v7 = dag.add_vertex(8, 1, 3);    // Note: v7 is not connected in the example
-    const auto v8 = dag.add_vertex(9, 1, 2);
+    const auto v1 = dag.AddVertex(2, 1, 9);
+    const auto v2 = dag.AddVertex(3, 1, 8);
+    const auto v3 = dag.AddVertex(4, 1, 7);
+    const auto v4 = dag.AddVertex(5, 1, 6);
+    const auto v5 = dag.AddVertex(6, 1, 5);
+    const auto v6 = dag.AddVertex(7, 1, 4);
+    const auto v7 = dag.AddVertex(8, 1, 3);    // Note: v7 is not connected in the example
+    const auto v8 = dag.AddVertex(9, 1, 2);
 
-    dag.add_edge(v1, v2);
-    dag.add_edge(v1, v3);
-    dag.add_edge(v1, v4);
-    dag.add_edge(v2, v5);
-    dag.add_edge(v2, v6);
-    dag.add_edge(v3, v5);
-    dag.add_edge(v3, v6);
-    dag.add_edge(v5, v8);
-    dag.add_edge(v4, v8);
+    dag.AddEdge(v1, v2);
+    dag.AddEdge(v1, v3);
+    dag.AddEdge(v1, v4);
+    dag.AddEdge(v2, v5);
+    dag.AddEdge(v2, v6);
+    dag.AddEdge(v3, v5);
+    dag.AddEdge(v3, v6);
+    dag.AddEdge(v5, v8);
+    dag.AddEdge(v4, v8);
 
     // Manually defined level sets for this DAG
     const std::vector<std::vector<VertexType>> levelSets = {
@@ -157,75 +157,75 @@ BOOST_AUTO_TEST_CASE(ForwardAndBackwardPassTest) {
     osp::WavefrontStatisticsCollector<Graph> collector(dag, levelSets);
 
     // --- Test Forward Pass ---
-    auto forwardStats = collector.compute_forward();
+    auto forwardStats = collector.ComputeForward();
     BOOST_REQUIRE_EQUAL(forwardStats.size(), 5);
 
     // Level 0
-    BOOST_CHECK_EQUAL(forwardStats[0].connected_components_vertices.size(), 1);
-    BOOST_CHECK_EQUAL(forwardStats[0].connected_components_weights[0], 2);
-    BOOST_CHECK_EQUAL(forwardStats[0].connected_components_memories[0], 9);
+    BOOST_CHECK_EQUAL(forwardStats[0].connectedComponentsVertices.size(), 1);
+    BOOST_CHECK_EQUAL(forwardStats[0].connectedComponentsWeights[0], 2);
+    BOOST_CHECK_EQUAL(forwardStats[0].connectedComponentsMemories[0], 9);
 
     // Level 1
-    BOOST_CHECK_EQUAL(forwardStats[1].connected_components_vertices.size(), 1);
-    BOOST_CHECK_EQUAL(forwardStats[1].connected_components_weights[0], 2 + 3 + 4 + 5);    // v1,v2,v3,v4
-    BOOST_CHECK_EQUAL(forwardStats[1].connected_components_memories[0], 9 + 8 + 7 + 6);
+    BOOST_CHECK_EQUAL(forwardStats[1].connectedComponentsVertices.size(), 1);
+    BOOST_CHECK_EQUAL(forwardStats[1].connectedComponentsWeights[0], 2 + 3 + 4 + 5);    // v1,v2,v3,v4
+    BOOST_CHECK_EQUAL(forwardStats[1].connectedComponentsMemories[0], 9 + 8 + 7 + 6);
 
     // Level 2
-    BOOST_CHECK_EQUAL(forwardStats[2].connected_components_vertices.size(), 1);
-    BOOST_CHECK_EQUAL(forwardStats[2].connected_components_weights[0], 14 + 6 + 7);    // v1-v6
-    BOOST_CHECK_EQUAL(forwardStats[2].connected_components_memories[0], 30 + 5 + 4);
+    BOOST_CHECK_EQUAL(forwardStats[2].connectedComponentsVertices.size(), 1);
+    BOOST_CHECK_EQUAL(forwardStats[2].connectedComponentsWeights[0], 14 + 6 + 7);    // v1-v6
+    BOOST_CHECK_EQUAL(forwardStats[2].connectedComponentsMemories[0], 30 + 5 + 4);
 
     // Level 3
-    BOOST_CHECK_EQUAL(forwardStats[3].connected_components_vertices.size(), 1);
-    BOOST_CHECK_EQUAL(forwardStats[3].connected_components_weights[0], 27 + 9);    // v1-v6, v8
-    BOOST_CHECK_EQUAL(forwardStats[3].connected_components_memories[0], 39 + 2);
+    BOOST_CHECK_EQUAL(forwardStats[3].connectedComponentsVertices.size(), 1);
+    BOOST_CHECK_EQUAL(forwardStats[3].connectedComponentsWeights[0], 27 + 9);    // v1-v6, v8
+    BOOST_CHECK_EQUAL(forwardStats[3].connectedComponentsMemories[0], 39 + 2);
 
     // Level 4 (isolated vertex shows up as a new component)
-    BOOST_CHECK_EQUAL(forwardStats[4].connected_components_vertices.size(), 2);
+    BOOST_CHECK_EQUAL(forwardStats[4].connectedComponentsVertices.size(), 2);
 
     // --- Test Backward Pass ---
-    auto backwardStats = collector.compute_backward();
+    auto backwardStats = collector.ComputeBackward();
     BOOST_REQUIRE_EQUAL(backwardStats.size(), 5);
 
     // Level 4
-    BOOST_CHECK_EQUAL(backwardStats[4].connected_components_vertices.size(), 1);
-    BOOST_CHECK_EQUAL(backwardStats[4].connected_components_weights[0], 8);    // v7
-    BOOST_CHECK_EQUAL(backwardStats[4].connected_components_memories[0], 3);
+    BOOST_CHECK_EQUAL(backwardStats[4].connectedComponentsVertices.size(), 1);
+    BOOST_CHECK_EQUAL(backwardStats[4].connectedComponentsWeights[0], 8);    // v7
+    BOOST_CHECK_EQUAL(backwardStats[4].connectedComponentsMemories[0], 3);
 
     // Level 3
-    BOOST_CHECK_EQUAL(backwardStats[3].connected_components_vertices.size(), 2);    // {v8}, {v7}
+    BOOST_CHECK_EQUAL(backwardStats[3].connectedComponentsVertices.size(), 2);    // {v8}, {v7}
 
     // Level 2
-    BOOST_CHECK_EQUAL(backwardStats[2].connected_components_vertices.size(), 3);    // {v5,v8}, {v6}, {v7}
+    BOOST_CHECK_EQUAL(backwardStats[2].connectedComponentsVertices.size(), 3);    // {v5,v8}, {v6}, {v7}
 
     // Level 1
-    BOOST_CHECK_EQUAL(backwardStats[1].connected_components_vertices.size(), 2);    // {v2,v3,v4,v5,v6,v8}, {v7}
+    BOOST_CHECK_EQUAL(backwardStats[1].connectedComponentsVertices.size(), 2);    // {v2,v3,v4,v5,v6,v8}, {v7}
 
     // Level 0
-    BOOST_CHECK_EQUAL(backwardStats[0].connected_components_vertices.size(), 2);    // {v1-v6,v8}, {v7}
+    BOOST_CHECK_EQUAL(backwardStats[0].connectedComponentsVertices.size(), 2);    // {v1-v6,v8}, {v7}
 }
 
 BOOST_AUTO_TEST_CASE(SequenceGenerationTest) {
     // --- Test Setup ---
     Graph dag;
-    const auto v1 = dag.add_vertex(2, 1, 9);
-    const auto v2 = dag.add_vertex(3, 1, 8);
-    const auto v3 = dag.add_vertex(4, 1, 7);
-    const auto v4 = dag.add_vertex(5, 1, 6);
-    const auto v5 = dag.add_vertex(6, 1, 5);
-    const auto v6 = dag.add_vertex(7, 1, 4);
-    const auto v7 = dag.add_vertex(8, 1, 3);    // Isolated vertex
-    const auto v8 = dag.add_vertex(9, 1, 2);
+    const auto v1 = dag.AddVertex(2, 1, 9);
+    const auto v2 = dag.AddVertex(3, 1, 8);
+    const auto v3 = dag.AddVertex(4, 1, 7);
+    const auto v4 = dag.AddVertex(5, 1, 6);
+    const auto v5 = dag.AddVertex(6, 1, 5);
+    const auto v6 = dag.AddVertex(7, 1, 4);
+    const auto v7 = dag.AddVertex(8, 1, 3);    // Isolated vertex
+    const auto v8 = dag.AddVertex(9, 1, 2);
 
-    dag.add_edge(v1, v2);
-    dag.add_edge(v1, v3);
-    dag.add_edge(v1, v4);
-    dag.add_edge(v2, v5);
-    dag.add_edge(v2, v6);
-    dag.add_edge(v3, v5);
-    dag.add_edge(v3, v6);
-    dag.add_edge(v5, v8);
-    dag.add_edge(v4, v8);
+    dag.AddEdge(v1, v2);
+    dag.AddEdge(v1, v3);
+    dag.AddEdge(v1, v4);
+    dag.AddEdge(v2, v5);
+    dag.AddEdge(v2, v6);
+    dag.AddEdge(v3, v5);
+    dag.AddEdge(v3, v6);
+    dag.AddEdge(v5, v8);
+    dag.AddEdge(v4, v8);
 
     const std::vector<std::vector<VertexType>> levelSets = {
         {v1},
@@ -238,12 +238,12 @@ BOOST_AUTO_TEST_CASE(SequenceGenerationTest) {
     osp::SequenceGenerator<Graph> generator(dag, levelSets);
 
     // --- Test Component Count ---
-    auto componentSeq = generator.generate(osp::SequenceMetric::COMPONENT_COUNT);
+    auto componentSeq = generator.Generate(osp::SequenceMetric::COMPONENT_COUNT);
     std::vector<double> expectedComponents = {1.0, 1.0, 1.0, 1.0, 2.0};
     BOOST_CHECK_EQUAL_COLLECTIONS(componentSeq.begin(), componentSeq.end(), expectedComponents.begin(), expectedComponents.end());
 
     // --- Test Available Parallelism ---
-    auto parallelismSeq = generator.generate(osp::SequenceMetric::AVAILABLE_PARALLELISM);
+    auto parallelismSeq = generator.Generate(osp::SequenceMetric::AVAILABLE_PARALLELISM);
 
     // Manual calculation for expected values:
     // L0: 2 / 1 = 2
@@ -271,26 +271,26 @@ struct TestFixture {
         // Level 1: {v2, v3, v4}
         // Level 2: {v5, v6}
         // Level 3: {v8}
-        const auto v1 = dag.add_vertex(2, 1, 9);
-        const auto v2 = dag.add_vertex(3, 1, 8);
-        const auto v3 = dag.add_vertex(4, 1, 7);
-        const auto v4 = dag.add_vertex(5, 1, 6);
-        const auto v5 = dag.add_vertex(6, 1, 5);
-        const auto v6 = dag.add_vertex(7, 1, 4);
-        const auto v7 = dag.add_vertex(8, 1, 3);    // Isolated vertex
-        const auto v8 = dag.add_vertex(9, 1, 2);
+        const auto v1 = dag.AddVertex(2, 1, 9);
+        const auto v2 = dag.AddVertex(3, 1, 8);
+        const auto v3 = dag.AddVertex(4, 1, 7);
+        const auto v4 = dag.AddVertex(5, 1, 6);
+        const auto v5 = dag.AddVertex(6, 1, 5);
+        const auto v6 = dag.AddVertex(7, 1, 4);
+        const auto v7 = dag.AddVertex(8, 1, 3);    // Isolated vertex
+        const auto v8 = dag.AddVertex(9, 1, 2);
 
         vertices = {v1, v2, v3, v4, v5, v6, v7, v8};
 
-        dag.add_edge(v1, v2);
-        dag.add_edge(v1, v3);
-        dag.add_edge(v1, v4);
-        dag.add_edge(v2, v5);
-        dag.add_edge(v2, v6);
-        dag.add_edge(v3, v5);
-        dag.add_edge(v3, v6);
-        dag.add_edge(v5, v8);
-        dag.add_edge(v4, v8);
+        dag.AddEdge(v1, v2);
+        dag.AddEdge(v1, v3);
+        dag.AddEdge(v1, v4);
+        dag.AddEdge(v2, v5);
+        dag.AddEdge(v2, v6);
+        dag.AddEdge(v3, v5);
+        dag.AddEdge(v3, v6);
+        dag.AddEdge(v5, v8);
+        dag.AddEdge(v4, v8);
     }
 };
 
@@ -298,10 +298,10 @@ BOOST_FIXTURE_TEST_SUITE(ScanWavefrontDividerTestSuite, TestFixture)
 
 BOOST_AUTO_TEST_CASE(LargestStepDivisionTest) {
     osp::ScanWavefrontDivider<Graph> divider;
-    divider.set_metric(osp::SequenceMetric::AVAILABLE_PARALLELISM);
-    divider.use_largest_step_splitter(0.9, 1);
+    divider.SetMetric(osp::SequenceMetric::AVAILABLE_PARALLELISM);
+    divider.UseLargestStepSplitter(0.9, 1);
 
-    auto sections = divider.divide(dag);
+    auto sections = divider.Divide(dag);
 
     // Expecting a cut after level 0. This results in 2 sections.
     BOOST_REQUIRE_EQUAL(sections.size(), 2);
@@ -316,10 +316,10 @@ BOOST_AUTO_TEST_CASE(LargestStepDivisionTest) {
 
 BOOST_AUTO_TEST_CASE(ThresholdScanDivisionTest) {
     osp::ScanWavefrontDivider<Graph> divider;
-    divider.set_metric(osp::SequenceMetric::AVAILABLE_PARALLELISM);
-    divider.use_threshold_scan_splitter(2.0, 11.5);
+    divider.SetMetric(osp::SequenceMetric::AVAILABLE_PARALLELISM);
+    divider.UseThresholdScanSplitter(2.0, 11.5);
 
-    auto sections = divider.divide(dag);
+    auto sections = divider.Divide(dag);
 
     // A cut is expected when the sequence crosses 11.5 (at level 2) and crosses back (at level 3)
     // The splitter should return cuts at levels 2 and 3.
@@ -336,10 +336,10 @@ BOOST_AUTO_TEST_CASE(ThresholdScanDivisionTest) {
 
 BOOST_AUTO_TEST_CASE(NoCutDivisionTest) {
     osp::ScanWavefrontDivider<Graph> divider;
-    divider.set_metric(osp::SequenceMetric::COMPONENT_COUNT);
-    divider.use_largest_step_splitter(2.0, 2);
+    divider.SetMetric(osp::SequenceMetric::COMPONENT_COUNT);
+    divider.UseLargestStepSplitter(2.0, 2);
 
-    auto sections = divider.divide(dag);
+    auto sections = divider.Divide(dag);
 
     // Expecting a single section containing all components
     BOOST_REQUIRE_EQUAL(sections.size(), 1);
@@ -349,7 +349,7 @@ BOOST_AUTO_TEST_CASE(NoCutDivisionTest) {
 BOOST_AUTO_TEST_CASE(EmptyGraphTest) {
     osp::ScanWavefrontDivider<Graph> divider;
     Graph emptyDag;
-    auto sections = divider.divide(emptyDag);
+    auto sections = divider.Divide(emptyDag);
     BOOST_CHECK(sections.empty());
 }
 
@@ -364,22 +364,22 @@ struct TestFixture2 {
         // This graph is designed to have a component count sequence of {2, 2, 2, 1}
         // to properly test the recursive divider's splitting logic.
         // Levels: {v1,v2}, {v3,v4}, {v5,v6}, {v7}
-        const auto v1 = dag.add_vertex(1, 1, 1);
-        const auto v2 = dag.add_vertex(1, 1, 1);
-        const auto v3 = dag.add_vertex(1, 1, 1);
-        const auto v4 = dag.add_vertex(1, 1, 1);
-        const auto v5 = dag.add_vertex(1, 1, 1);
-        const auto v6 = dag.add_vertex(1, 1, 1);
-        const auto v7 = dag.add_vertex(1, 1, 1);
+        const auto v1 = dag.AddVertex(1, 1, 1);
+        const auto v2 = dag.AddVertex(1, 1, 1);
+        const auto v3 = dag.AddVertex(1, 1, 1);
+        const auto v4 = dag.AddVertex(1, 1, 1);
+        const auto v5 = dag.AddVertex(1, 1, 1);
+        const auto v6 = dag.AddVertex(1, 1, 1);
+        const auto v7 = dag.AddVertex(1, 1, 1);
 
         vertices = {v1, v2, v3, v4, v5, v6, v7};
 
-        dag.add_edge(v1, v3);
-        dag.add_edge(v2, v4);
-        dag.add_edge(v3, v5);
-        dag.add_edge(v4, v6);
-        dag.add_edge(v5, v7);
-        dag.add_edge(v6, v7);
+        dag.AddEdge(v1, v3);
+        dag.AddEdge(v2, v4);
+        dag.AddEdge(v3, v5);
+        dag.AddEdge(v4, v6);
+        dag.AddEdge(v5, v7);
+        dag.AddEdge(v6, v7);
     }
 };
 
@@ -392,20 +392,20 @@ struct TestFixtureSimpleMerge {
     TestFixtureSimpleMerge() {
         // This graph is designed to have a component count sequence of {2, 2, 2, 1}
         // Levels: {v0,v1}, {v2,v3}, {v4,v5}, {v6}
-        const auto v0 = dag.add_vertex(1, 1, 1);
-        const auto v1 = dag.add_vertex(1, 1, 1);
-        const auto v2 = dag.add_vertex(1, 1, 1);
-        const auto v3 = dag.add_vertex(1, 1, 1);
-        const auto v4 = dag.add_vertex(1, 1, 1);
-        const auto v5 = dag.add_vertex(1, 1, 1);
-        const auto v6 = dag.add_vertex(1, 1, 1);
+        const auto v0 = dag.AddVertex(1, 1, 1);
+        const auto v1 = dag.AddVertex(1, 1, 1);
+        const auto v2 = dag.AddVertex(1, 1, 1);
+        const auto v3 = dag.AddVertex(1, 1, 1);
+        const auto v4 = dag.AddVertex(1, 1, 1);
+        const auto v5 = dag.AddVertex(1, 1, 1);
+        const auto v6 = dag.AddVertex(1, 1, 1);
 
-        dag.add_edge(v0, v2);
-        dag.add_edge(v1, v3);
-        dag.add_edge(v2, v4);
-        dag.add_edge(v3, v5);
-        dag.add_edge(v4, v6);
-        dag.add_edge(v5, v6);
+        dag.AddEdge(v0, v2);
+        dag.AddEdge(v1, v3);
+        dag.AddEdge(v2, v4);
+        dag.AddEdge(v3, v5);
+        dag.AddEdge(v4, v6);
+        dag.AddEdge(v5, v6);
     }
 };
 
@@ -413,8 +413,8 @@ BOOST_FIXTURE_TEST_SUITE(SimpleMergeTests, TestFixtureSimpleMerge)
 
 BOOST_AUTO_TEST_CASE(BasicRecursionTest) {
     osp::RecursiveWavefrontDivider<Graph> divider;
-    divider.use_largest_step_splitter(0.5, 1);
-    auto sections = divider.divide(dag);
+    divider.UseLargestStepSplitter(0.5, 1);
+    auto sections = divider.Divide(dag);
 
     // Expecting a cut after level 2, where component count drops from 2 to 1.
     // This results in 2 sections: {levels 0,1,2} and {level 3}.
@@ -431,8 +431,8 @@ BOOST_AUTO_TEST_CASE(BasicRecursionTest) {
 BOOST_AUTO_TEST_CASE(NoCutHighThresholdTest) {
     // A high threshold should prevent any cuts.
     osp::RecursiveWavefrontDivider<Graph> divider;
-    divider.use_largest_step_splitter(2.0, 2);
-    auto sections = divider.divide(dag);
+    divider.UseLargestStepSplitter(2.0, 2);
+    auto sections = divider.Divide(dag);
 
     // Expecting a single section containing all components, which merge into one.
     BOOST_REQUIRE_EQUAL(sections.size(), 1);
@@ -442,8 +442,8 @@ BOOST_AUTO_TEST_CASE(NoCutHighThresholdTest) {
 BOOST_AUTO_TEST_CASE(MinSubsequenceLengthTest) {
     // The graph has 4 wavefronts. A min_subseq_len of 5 should prevent division.
     osp::RecursiveWavefrontDivider<Graph> divider;
-    divider.use_largest_step_splitter(0.5, 5);
-    auto sections = divider.divide(dag);
+    divider.UseLargestStepSplitter(0.5, 5);
+    auto sections = divider.Divide(dag);
 
     BOOST_REQUIRE_EQUAL(sections.size(), 1);
     BOOST_REQUIRE_EQUAL(sections[0].size(), 1);
@@ -452,8 +452,8 @@ BOOST_AUTO_TEST_CASE(MinSubsequenceLengthTest) {
 BOOST_AUTO_TEST_CASE(MaxDepthTest) {
     // Setting max_depth to 0 should prevent any recursion.
     osp::RecursiveWavefrontDivider<Graph> divider;
-    divider.use_largest_step_splitter(0.5, 2).set_max_depth(0);
-    auto sections = divider.divide(dag);
+    divider.UseLargestStepSplitter(0.5, 2).SetMaxDepth(0);
+    auto sections = divider.Divide(dag);
 
     BOOST_REQUIRE_EQUAL(sections.size(), 1);
     BOOST_REQUIRE_EQUAL(sections[0].size(), 1);
@@ -462,7 +462,7 @@ BOOST_AUTO_TEST_CASE(MaxDepthTest) {
 BOOST_AUTO_TEST_CASE(EmptyGraphTest) {
     osp::RecursiveWavefrontDivider<Graph> divider;
     Graph emptyDag;
-    auto sections = divider.divide(emptyDag);
+    auto sections = divider.Divide(emptyDag);
     BOOST_CHECK(sections.empty());
 }
 
@@ -476,28 +476,28 @@ struct TestFixtureMultiMerge {
         // Sequence: {4, 4, 2, 2, 1, 1}. Two significant drops.
         // L0: 4 comp -> L2: 2 comp (drop of 2)
         // L2: 2 comp -> L4: 1 comp (drop of 1)
-        const auto vL01 = dag.add_vertex(1, 1, 1), vL02 = dag.add_vertex(1, 1, 1), vL03 = dag.add_vertex(1, 1, 1),
-                   vL04 = dag.add_vertex(1, 1, 1);
-        const auto vL11 = dag.add_vertex(1, 1, 1), vL12 = dag.add_vertex(1, 1, 1), vL13 = dag.add_vertex(1, 1, 1),
-                   vL14 = dag.add_vertex(1, 1, 1);
-        const auto vL21 = dag.add_vertex(1, 1, 1), vL22 = dag.add_vertex(1, 1, 1);
-        const auto vL31 = dag.add_vertex(1, 1, 1), vL32 = dag.add_vertex(1, 1, 1);
-        const auto vL41 = dag.add_vertex(1, 1, 1);
-        const auto vL51 = dag.add_vertex(1, 1, 1);
+        const auto vL01 = dag.AddVertex(1, 1, 1), vL02 = dag.AddVertex(1, 1, 1), vL03 = dag.AddVertex(1, 1, 1),
+                   vL04 = dag.AddVertex(1, 1, 1);
+        const auto vL11 = dag.AddVertex(1, 1, 1), vL12 = dag.AddVertex(1, 1, 1), vL13 = dag.AddVertex(1, 1, 1),
+                   vL14 = dag.AddVertex(1, 1, 1);
+        const auto vL21 = dag.AddVertex(1, 1, 1), vL22 = dag.AddVertex(1, 1, 1);
+        const auto vL31 = dag.AddVertex(1, 1, 1), vL32 = dag.AddVertex(1, 1, 1);
+        const auto vL41 = dag.AddVertex(1, 1, 1);
+        const auto vL51 = dag.AddVertex(1, 1, 1);
 
-        dag.add_edge(vL01, vL11);
-        dag.add_edge(vL02, vL12);
-        dag.add_edge(vL03, vL13);
-        dag.add_edge(vL04, vL14);
-        dag.add_edge(vL11, vL21);
-        dag.add_edge(vL12, vL21);
-        dag.add_edge(vL13, vL22);
-        dag.add_edge(vL14, vL22);
-        dag.add_edge(vL21, vL31);
-        dag.add_edge(vL22, vL32);
-        dag.add_edge(vL31, vL41);
-        dag.add_edge(vL32, vL41);
-        dag.add_edge(vL41, vL51);
+        dag.AddEdge(vL01, vL11);
+        dag.AddEdge(vL02, vL12);
+        dag.AddEdge(vL03, vL13);
+        dag.AddEdge(vL04, vL14);
+        dag.AddEdge(vL11, vL21);
+        dag.AddEdge(vL12, vL21);
+        dag.AddEdge(vL13, vL22);
+        dag.AddEdge(vL14, vL22);
+        dag.AddEdge(vL21, vL31);
+        dag.AddEdge(vL22, vL32);
+        dag.AddEdge(vL31, vL41);
+        dag.AddEdge(vL32, vL41);
+        dag.AddEdge(vL41, vL51);
     }
 };
 
@@ -506,8 +506,8 @@ BOOST_FIXTURE_TEST_SUITE(MultiMergeTests, TestFixtureMultiMerge)
 BOOST_AUTO_TEST_CASE(MultipleRecursionTest) {
     osp::RecursiveWavefrontDivider<Graph> divider;
     // Threshold is 0.5. First cut is for drop of 2.0 (4->2). Second is for drop of 1.0 (2->1).
-    divider.use_largest_step_splitter(0.5, 2);
-    auto sections = divider.divide(dag);
+    divider.UseLargestStepSplitter(0.5, 2);
+    auto sections = divider.Divide(dag);
 
     // Expect 3 sections:
     // 1. Levels 0-1 (before first major cut)
@@ -529,8 +529,8 @@ BOOST_AUTO_TEST_CASE(VarianceSplitterTest) {
     osp::RecursiveWavefrontDivider<Graph> divider;
     // var_mult of 0.99 ensures any reduction is accepted.
     // var_threshold of 0.1 ensures we start splitting.
-    divider.use_variance_splitter(0.99, 0.1, 2);
-    auto sections = divider.divide(dag);
+    divider.UseVarianceSplitter(0.99, 0.1, 2);
+    auto sections = divider.Divide(dag);
 
     // The variance splitter should also identify the two main merge points.
     BOOST_REQUIRE_EQUAL(sections.size(), 3);

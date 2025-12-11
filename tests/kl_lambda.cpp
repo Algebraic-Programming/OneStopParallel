@@ -39,10 +39,10 @@ void AddMemWeights(GraphT &dag) {
     int memWeight = 1;
     int commWeight = 7;
 
-    for (const auto &v : dag.vertices()) {
-        dag.set_vertex_work_weight(v, static_cast<v_memw_t<GraphT>>(memWeight++ % 10 + 2));
-        dag.set_vertex_mem_weight(v, static_cast<v_memw_t<GraphT>>(memWeight++ % 10 + 2));
-        dag.set_vertex_comm_weight(v, static_cast<v_commw_t<GraphT>>(commWeight++ % 10 + 2));
+    for (const auto &v : dag.Vertices()) {
+        dag.SetVertexWorkWeight(v, static_cast<VMemwT<GraphT>>(memWeight++ % 10 + 2));
+        dag.SetVertexMemWeight(v, static_cast<VMemwT<GraphT>>(memWeight++ % 10 + 2));
+        dag.SetVertexCommWeight(v, static_cast<VCommwT<GraphT>>(commWeight++ % 10 + 2));
     }
 }
 
@@ -50,8 +50,8 @@ template <typename GraphT>
 void AddNodeTypes(GraphT &dag) {
     unsigned nodeType = 0;
 
-    for (const auto &v : dag.vertices()) {
-        dag.set_vertex_type(v, nodeType++ % 2);
+    for (const auto &v : dag.Vertices()) {
+        dag.SetVertexType(v, nodeType++ % 2);
     }
 }
 
@@ -99,9 +99,9 @@ void CheckEqualLambdaMap(const std::vector<std::map<unsigned, unsigned>> &map1,
 }
 
 BOOST_AUTO_TEST_CASE(KlLambdaImproverWithNodeTypesTest) {
-    std::vector<std::string> filenamesGraph = test_graphs();
+    std::vector<std::string> filenamesGraph = TestGraphs();
 
-    using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
+    using Graph = ComputationalDagEdgeIdxVectorImplDefIntT;
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -111,17 +111,17 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverWithNodeTypesTest) {
         std::cout << cwd << std::endl;
     }
 
-    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_int_t> testScheduler;
+    GreedyBspScheduler<ComputationalDagEdgeIdxVectorImplDefIntT> testScheduler;
 
     for (auto &filenameGraph : filenamesGraph) {
         BspInstance<Graph> instance;
 
         bool statusGraph
-            = file_reader::readComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(), instance.getComputationalDag());
+            = file_reader::ReadComputationalDagHyperdagFormatDb((cwd / filenameGraph).string(), instance.GetComputationalDag());
 
-        instance.getArchitecture().setSynchronisationCosts(5);
-        instance.getArchitecture().setCommunicationCosts(5);
-        instance.getArchitecture().setNumberOfProcessors(4);
+        instance.GetArchitecture().SetSynchronisationCosts(5);
+        instance.GetArchitecture().SetCommunicationCosts(5);
+        instance.GetArchitecture().SetNumberOfProcessors(4);
 
         if (!statusGraph) {
             std::cout << "Reading files failed." << std::endl;
@@ -130,35 +130,35 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverWithNodeTypesTest) {
 
         std::cout << "Instance: " << filenameGraph << std::endl;
 
-        AddMemWeights(instance.getComputationalDag());
-        AddNodeTypes(instance.getComputationalDag());
+        AddMemWeights(instance.GetComputationalDag());
+        AddNodeTypes(instance.GetComputationalDag());
 
-        instance.getArchitecture().setProcessorsWithTypes({0, 0, 1, 1});
+        instance.GetArchitecture().SetProcessorsWithTypes({0, 0, 1, 1});
 
-        instance.setDiagonalCompatibilityMatrix(2);
+        instance.SetDiagonalCompatibilityMatrix(2);
 
         BspSchedule<Graph> schedule(instance);
-        const auto result = testScheduler.computeSchedule(schedule);
+        const auto result = testScheduler.ComputeSchedule(schedule);
 
         BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
         BOOST_CHECK_EQUAL(&schedule.getInstance(), &instance);
-        BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
-        BOOST_CHECK(schedule.satisfiesNodeTypeConstraints());
+        BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
+        BOOST_CHECK(schedule.SatisfiesNodeTypeConstraints());
 
-        kl_total_lambda_comm_improver<Graph, no_local_search_memory_constraint, 1> kl;
+        KlTotalLambdaCommImprover<Graph, NoLocalSearchMemoryConstraint, 1> kl;
 
-        auto status = kl.improveSchedule(schedule);
+        auto status = kl.ImproveSchedule(schedule);
 
         BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
-        BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
-        BOOST_CHECK(schedule.satisfiesNodeTypeConstraints());
+        BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
+        BOOST_CHECK(schedule.SatisfiesNodeTypeConstraints());
     }
 }
 
 BOOST_AUTO_TEST_CASE(KlLambdaImproverOnTestGraphs) {
-    std::vector<std::string> filenamesGraph = test_graphs();
+    std::vector<std::string> filenamesGraph = TestGraphs();
 
-    using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
+    using Graph = ComputationalDagEdgeIdxVectorImplDefIntT;
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -168,17 +168,17 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverOnTestGraphs) {
         std::cout << cwd << std::endl;
     }
 
-    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_int_t> testScheduler;
+    GreedyBspScheduler<ComputationalDagEdgeIdxVectorImplDefIntT> testScheduler;
 
     for (auto &filenameGraph : filenamesGraph) {
         BspInstance<Graph> instance;
 
         bool statusGraph
-            = file_reader::readComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(), instance.getComputationalDag());
+            = file_reader::ReadComputationalDagHyperdagFormatDb((cwd / filenameGraph).string(), instance.GetComputationalDag());
 
-        instance.getArchitecture().setSynchronisationCosts(5);
-        instance.getArchitecture().setCommunicationCosts(5);
-        instance.getArchitecture().setNumberOfProcessors(4);
+        instance.GetArchitecture().SetSynchronisationCosts(5);
+        instance.GetArchitecture().SetCommunicationCosts(5);
+        instance.GetArchitecture().SetNumberOfProcessors(4);
 
         if (!statusGraph) {
             std::cout << "Reading files failed." << std::endl;
@@ -187,21 +187,21 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverOnTestGraphs) {
 
         std::cout << "Instance: " << filenameGraph << std::endl;
 
-        AddMemWeights(instance.getComputationalDag());
+        AddMemWeights(instance.GetComputationalDag());
 
         BspSchedule<Graph> schedule(instance);
-        const auto result = testScheduler.computeSchedule(schedule);
+        const auto result = testScheduler.ComputeSchedule(schedule);
 
         BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
         BOOST_CHECK_EQUAL(&schedule.getInstance(), &instance);
-        BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+        BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
 
-        kl_total_lambda_comm_improver<Graph, no_local_search_memory_constraint, 1> kl;
+        KlTotalLambdaCommImprover<Graph, NoLocalSearchMemoryConstraint, 1> kl;
 
-        auto status = kl.improveSchedule(schedule);
+        auto status = kl.ImproveSchedule(schedule);
 
         BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
-        BOOST_CHECK_EQUAL(schedule.satisfiesPrecedenceConstraints(), true);
+        BOOST_CHECK_EQUAL(schedule.SatisfiesPrecedenceConstraints(), true);
     }
 }
 
@@ -490,28 +490,28 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverOnTestGraphs) {
 // };
 
 BOOST_AUTO_TEST_CASE(KlLambdaImproverInnerLoopPenaltyTest) {
-    using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
-    using VertexType = Graph::vertex_idx;
+    using Graph = ComputationalDagEdgeIdxVectorImplDefIntT;
+    using VertexType = Graph::VertexIdx;
 
     Graph dag;
 
-    const VertexType v1 = dag.add_vertex(2, 9, 2);
-    const VertexType v2 = dag.add_vertex(3, 8, 4);
-    const VertexType v3 = dag.add_vertex(4, 7, 3);
-    const VertexType v4 = dag.add_vertex(5, 6, 2);
-    const VertexType v5 = dag.add_vertex(6, 5, 6);
-    const VertexType v6 = dag.add_vertex(7, 4, 2);
-    dag.add_vertex(8, 3, 4);
-    const VertexType v8 = dag.add_vertex(9, 2, 1);
+    const VertexType v1 = dag.AddVertex(2, 9, 2);
+    const VertexType v2 = dag.AddVertex(3, 8, 4);
+    const VertexType v3 = dag.AddVertex(4, 7, 3);
+    const VertexType v4 = dag.AddVertex(5, 6, 2);
+    const VertexType v5 = dag.AddVertex(6, 5, 6);
+    const VertexType v6 = dag.AddVertex(7, 4, 2);
+    dag.AddVertex(8, 3, 4);
+    const VertexType v8 = dag.AddVertex(9, 2, 1);
 
-    dag.add_edge(v1, v2, 2);
-    dag.add_edge(v1, v3, 2);
-    dag.add_edge(v1, v4, 2);
-    dag.add_edge(v2, v5, 12);
-    dag.add_edge(v3, v5, 6);
-    dag.add_edge(v3, v6, 7);
-    dag.add_edge(v5, v8, 9);
-    dag.add_edge(v4, v8, 9);
+    dag.AddEdge(v1, v2, 2);
+    dag.AddEdge(v1, v3, 2);
+    dag.AddEdge(v1, v4, 2);
+    dag.AddEdge(v2, v5, 12);
+    dag.AddEdge(v3, v5, 6);
+    dag.AddEdge(v3, v6, 7);
+    dag.AddEdge(v5, v8, 9);
+    dag.AddEdge(v4, v8, 9);
 
     BspArchitecture<Graph> arch;
 
@@ -519,93 +519,93 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverInnerLoopPenaltyTest) {
 
     BspSchedule schedule(instance);
 
-    schedule.setAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
-    schedule.setAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
+    schedule.SetAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
+    schedule.SetAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
 
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
 
-    using CostF = kl_hyper_total_comm_cost_function<Graph, double, no_local_search_memory_constraint, 1>;
-    using KlImproverTest = kl_improver_test<Graph, CostF, no_local_search_memory_constraint, 1, double>;
+    using CostF = KlHyperTotalCommCostFunction<Graph, double, NoLocalSearchMemoryConstraint, 1>;
+    using KlImproverTest = KlImproverTest<Graph, CostF, NoLocalSearchMemoryConstraint, 1, double>;
     KlImproverTest kl;
 
-    kl.setup_schedule(schedule);
+    kl.SetupSchedule(schedule);
 
-    auto &klActiveSchedule = kl.get_active_schedule();
+    auto &klActiveSchedule = kl.GetActiveSchedule();
 
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(0), 5.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(0), 0.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(1), 9.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(1), 0.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(2), 7.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(2), 6.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(3), 9.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(3), 8.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepMaxWork(0), 5.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepSecondMaxWork(0), 0.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepMaxWork(1), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepSecondMaxWork(1), 0.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepMaxWork(2), 7.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepSecondMaxWork(2), 6.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepMaxWork(3), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepSecondMaxWork(3), 8.0);
 
-    BOOST_CHECK_EQUAL(klActiveSchedule.num_steps(), 4);
-    BOOST_CHECK_EQUAL(klActiveSchedule.is_feasible(), true);
+    BOOST_CHECK_EQUAL(klActiveSchedule.NumSteps(), 4);
+    BOOST_CHECK_EQUAL(klActiveSchedule.IsFeasible(), true);
 
-    auto nodeSelection = kl.insert_gain_heap_test_penalty({2, 3});
+    auto nodeSelection = kl.InsertGainHeapTestPenalty({2, 3});
 
-    auto recomputeMaxGain = kl.run_inner_iteration_test();    // best move 3
+    auto recomputeMaxGain = kl.RunInnerIterationTest();    // best move 3
     std::cout << "------------------------recompute max_gain: { ";
     for (const auto &[key, value] : recomputeMaxGain) {
         std::cout << key << " ";
     }
     std::cout << "}" << std::endl;
 
-    BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 
-    recomputeMaxGain = kl.run_inner_iteration_test();    // best move 0
+    recomputeMaxGain = kl.RunInnerIterationTest();    // best move 0
     std::cout << "recompute max_gain: { ";
     for (const auto &[key, value] : recomputeMaxGain) {
         std::cout << key << " ";
     }
     std::cout << "}" << std::endl;
 
-    BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 
-    recomputeMaxGain = kl.run_inner_iteration_test();    // best move 1
+    recomputeMaxGain = kl.RunInnerIterationTest();    // best move 1
     std::cout << "recompute max_gain: { ";
     for (const auto &[key, value] : recomputeMaxGain) {
         std::cout << key << " ";
     }
     std::cout << "}" << std::endl;
 
-    BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 
-    recomputeMaxGain = kl.run_inner_iteration_test();
+    recomputeMaxGain = kl.RunInnerIterationTest();
     std::cout << "recompute max_gain: { ";
     for (const auto &[key, value] : recomputeMaxGain) {
         std::cout << key << " ";
     }
     std::cout << "}" << std::endl;
 
-    BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 }
 
 BOOST_AUTO_TEST_CASE(KlLambdaImproverInnerLoopLambdaMapTest) {
-    using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
-    using VertexType = Graph::vertex_idx;
+    using Graph = ComputationalDagEdgeIdxVectorImplDefIntT;
+    using VertexType = Graph::VertexIdx;
 
     Graph dag;
 
-    const VertexType v1 = dag.add_vertex(2, 9, 2);
-    const VertexType v2 = dag.add_vertex(3, 8, 4);
-    const VertexType v3 = dag.add_vertex(4, 7, 3);
-    const VertexType v4 = dag.add_vertex(5, 6, 2);
-    const VertexType v5 = dag.add_vertex(6, 5, 6);
-    const VertexType v6 = dag.add_vertex(7, 4, 2);
-    const VertexType v7 = dag.add_vertex(8, 3, 4);
-    const VertexType v8 = dag.add_vertex(9, 2, 1);
+    const VertexType v1 = dag.AddVertex(2, 9, 2);
+    const VertexType v2 = dag.AddVertex(3, 8, 4);
+    const VertexType v3 = dag.AddVertex(4, 7, 3);
+    const VertexType v4 = dag.AddVertex(5, 6, 2);
+    const VertexType v5 = dag.AddVertex(6, 5, 6);
+    const VertexType v6 = dag.AddVertex(7, 4, 2);
+    const VertexType v7 = dag.AddVertex(8, 3, 4);
+    const VertexType v8 = dag.AddVertex(9, 2, 1);
 
-    dag.add_edge(v1, v2, 2);
-    dag.add_edge(v1, v3, 2);
-    dag.add_edge(v1, v4, 2);
-    dag.add_edge(v2, v5, 12);
-    dag.add_edge(v3, v5, 6);
-    dag.add_edge(v3, v6, 7);
-    dag.add_edge(v5, v8, 9);
-    dag.add_edge(v4, v8, 9);
+    dag.AddEdge(v1, v2, 2);
+    dag.AddEdge(v1, v3, 2);
+    dag.AddEdge(v1, v4, 2);
+    dag.AddEdge(v2, v5, 12);
+    dag.AddEdge(v3, v5, 6);
+    dag.AddEdge(v3, v6, 7);
+    dag.AddEdge(v5, v8, 9);
+    dag.AddEdge(v4, v8, 9);
 
     BspArchitecture<Graph> arch;
 
@@ -613,75 +613,75 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverInnerLoopLambdaMapTest) {
 
     BspSchedule schedule(instance);
 
-    schedule.setAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
-    schedule.setAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
+    schedule.SetAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
+    schedule.SetAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
 
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
 
-    using CostF = kl_hyper_total_comm_cost_function<Graph, double, no_local_search_memory_constraint, 1>;
-    using KlImproverTest = kl_improver_test<Graph, CostF, no_local_search_memory_constraint, 1, double>;
+    using CostF = KlHyperTotalCommCostFunction<Graph, double, NoLocalSearchMemoryConstraint, 1>;
+    using KlImproverTest = KlImproverTest<Graph, CostF, NoLocalSearchMemoryConstraint, 1, double>;
     KlImproverTest kl;
 
-    kl.setup_schedule(schedule);
+    kl.SetupSchedule(schedule);
 
-    BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 
-    auto nodeSelection = kl.insert_gain_heap_test_penalty({7});
+    auto nodeSelection = kl.InsertGainHeapTestPenalty({7});
 
-    auto recomputeMaxGain = kl.run_inner_iteration_test();
+    auto recomputeMaxGain = kl.RunInnerIterationTest();
     std::cout << "-----------recompute max_gain: { ";
     for (const auto &[key, value] : recomputeMaxGain) {
         std::cout << key << " ";
     }
     std::cout << "}" << std::endl;
 
-    BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 
-    auto &lambdaMap = kl.get_comm_cost_f().node_lambda_map;
+    auto &lambdaMap = kl.GetCommCostF().nodeLambdaMap;
 
-    BOOST_CHECK(lambdaMap.get_proc_entry(v1, 0) == 2);
-    BOOST_CHECK(lambdaMap.get_proc_entry(v1, 1) == 1);
-    BOOST_CHECK(lambdaMap.has_no_proc_entry(v2, 0));
-    BOOST_CHECK(lambdaMap.get_proc_entry(v2, 1) == 1);
-    BOOST_CHECK(lambdaMap.get_proc_entry(v3, 0) == 1);
-    BOOST_CHECK(lambdaMap.get_proc_entry(v3, 1) == 1);
-    BOOST_CHECK(lambdaMap.has_no_proc_entry(v4, 0));
-    BOOST_CHECK(lambdaMap.get_proc_entry(v4, 1) == 1);
-    BOOST_CHECK(lambdaMap.has_no_proc_entry(v5, 0));
-    BOOST_CHECK(lambdaMap.get_proc_entry(v5, 1) == 1);
-    BOOST_CHECK(lambdaMap.has_no_proc_entry(v6, 0));
-    BOOST_CHECK(lambdaMap.has_no_proc_entry(v6, 0));
-    BOOST_CHECK(lambdaMap.has_no_proc_entry(v7, 0));
-    BOOST_CHECK(lambdaMap.has_no_proc_entry(v7, 0));
-    BOOST_CHECK(lambdaMap.has_no_proc_entry(v8, 0));
-    BOOST_CHECK(lambdaMap.has_no_proc_entry(v8, 0));
+    BOOST_CHECK(lambdaMap.GetProcEntry(v1, 0) == 2);
+    BOOST_CHECK(lambdaMap.GetProcEntry(v1, 1) == 1);
+    BOOST_CHECK(lambdaMap.HasNoProcEntry(v2, 0));
+    BOOST_CHECK(lambdaMap.GetProcEntry(v2, 1) == 1);
+    BOOST_CHECK(lambdaMap.GetProcEntry(v3, 0) == 1);
+    BOOST_CHECK(lambdaMap.GetProcEntry(v3, 1) == 1);
+    BOOST_CHECK(lambdaMap.HasNoProcEntry(v4, 0));
+    BOOST_CHECK(lambdaMap.GetProcEntry(v4, 1) == 1);
+    BOOST_CHECK(lambdaMap.HasNoProcEntry(v5, 0));
+    BOOST_CHECK(lambdaMap.GetProcEntry(v5, 1) == 1);
+    BOOST_CHECK(lambdaMap.HasNoProcEntry(v6, 0));
+    BOOST_CHECK(lambdaMap.HasNoProcEntry(v6, 0));
+    BOOST_CHECK(lambdaMap.HasNoProcEntry(v7, 0));
+    BOOST_CHECK(lambdaMap.HasNoProcEntry(v7, 0));
+    BOOST_CHECK(lambdaMap.HasNoProcEntry(v8, 0));
+    BOOST_CHECK(lambdaMap.HasNoProcEntry(v8, 0));
 
-    recomputeMaxGain = kl.run_inner_iteration_test();
+    recomputeMaxGain = kl.RunInnerIterationTest();
     std::cout << "recompute max_gain: { ";
     for (const auto &[key, value] : recomputeMaxGain) {
         std::cout << key << " ";
     }
     std::cout << "}" << std::endl;
 
-    BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 
-    recomputeMaxGain = kl.run_inner_iteration_test();
+    recomputeMaxGain = kl.RunInnerIterationTest();
     std::cout << "recompute max_gain: { ";
     for (const auto &[key, value] : recomputeMaxGain) {
         std::cout << key << " ";
     }
     std::cout << "}" << std::endl;
 
-    BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 
-    recomputeMaxGain = kl.run_inner_iteration_test();
+    recomputeMaxGain = kl.RunInnerIterationTest();
     std::cout << "recompute max_gain: { ";
     for (const auto &[key, value] : recomputeMaxGain) {
         std::cout << key << " ";
     }
     std::cout << "}" << std::endl;
 
-    BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 }
 
 // BOOST_AUTO_TEST_CASE(kl_lambda_total_comm_large_test_graphs) {

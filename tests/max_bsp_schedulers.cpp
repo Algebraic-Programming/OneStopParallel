@@ -39,7 +39,7 @@ std::vector<std::string> TestArchitectures() { return {"data/machine_params/p3.a
 template <typename GraphT>
 void RunTest(Scheduler<GraphT> *testScheduler) {
     // static_assert(std::is_base_of<Scheduler, T>::value, "Class is not a scheduler!");
-    std::vector<std::string> filenamesGraph = tiny_spaa_graphs();
+    std::vector<std::string> filenamesGraph = TinySpaaGraphs();
     std::vector<std::string> filenamesArchitectures = TestArchitectures();
 
     // Getting root git directory
@@ -57,15 +57,15 @@ void RunTest(Scheduler<GraphT> *testScheduler) {
             std::string nameMachine = filenameMachine.substr(filenameMachine.find_last_of("/\\") + 1);
             nameMachine = nameMachine.substr(0, nameMachine.rfind("."));
 
-            std::cout << std::endl << "Scheduler: " << testScheduler->getScheduleName() << std::endl;
+            std::cout << std::endl << "Scheduler: " << testScheduler->GetScheduleName() << std::endl;
             std::cout << "Graph: " << nameGraph << std::endl;
             std::cout << "Architecture: " << nameMachine << std::endl;
 
             BspInstance<GraphT> instance;
 
-            bool statusGraph = file_reader::readGraph((cwd / filenameGraph).string(), instance.getComputationalDag());
+            bool statusGraph = file_reader::ReadGraph((cwd / filenameGraph).string(), instance.GetComputationalDag());
             bool statusArchitecture
-                = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.getArchitecture());
+                = file_reader::ReadBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
 
             if (!statusGraph || !statusArchitecture) {
                 std::cout << "Reading files failed." << std::endl;
@@ -73,17 +73,17 @@ void RunTest(Scheduler<GraphT> *testScheduler) {
             }
 
             BspSchedule<GraphT> schedule(instance);
-            const auto result = testScheduler->computeSchedule(schedule);
+            const auto result = testScheduler->ComputeSchedule(schedule);
 
             BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
-            BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+            BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
         }
     }
 }
 
 template <typename GraphT>
 void RunTestMaxBsp(MaxBspScheduler<GraphT> *testScheduler) {
-    std::vector<std::string> filenamesGraph = tiny_spaa_graphs();
+    std::vector<std::string> filenamesGraph = TinySpaaGraphs();
     std::vector<std::string> filenamesArchitectures = TestArchitectures();
 
     // Locate project root
@@ -100,15 +100,15 @@ void RunTestMaxBsp(MaxBspScheduler<GraphT> *testScheduler) {
             nameMachine = nameMachine.substr(0, nameMachine.rfind("."));
 
             std::cout << std::endl
-                      << "Scheduler (MaxBsp): " << testScheduler->getScheduleName() << std::endl
+                      << "Scheduler (MaxBsp): " << testScheduler->GetScheduleName() << std::endl
                       << "Graph: " << nameGraph << std::endl
                       << "Architecture: " << nameMachine << std::endl;
 
-            computational_dag_edge_idx_vector_impl_def_int_t graph;
+            ComputationalDagEdgeIdxVectorImplDefIntT graph;
             BspArchitecture<GraphT> arch;
 
-            bool statusGraph = file_reader::readGraph((cwd / filenameGraph).string(), graph);
-            bool statusArchitecture = file_reader::readBspArchitecture((cwd / filenameMachine).string(), arch);
+            bool statusGraph = file_reader::ReadGraph((cwd / filenameGraph).string(), graph);
+            bool statusArchitecture = file_reader::ReadBspArchitecture((cwd / filenameMachine).string(), arch);
 
             BOOST_REQUIRE_MESSAGE(statusGraph, "Failed to read graph: " << filenameGraph);
             BOOST_REQUIRE_MESSAGE(statusArchitecture, "Failed to read architecture: " << filenameMachine);
@@ -120,25 +120,25 @@ void RunTestMaxBsp(MaxBspScheduler<GraphT> *testScheduler) {
             const auto result = testScheduler->computeSchedule(schedule);
 
             BOOST_CHECK_EQUAL(result, RETURN_STATUS::OSP_SUCCESS);
-            BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+            BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
         }
     }
 }
 
 // Tests computeSchedule(BspSchedule&) → staleness = 1
 BOOST_AUTO_TEST_CASE(GreedyVarianceSspSchedulerTestVectorImpl) {
-    GreedyVarianceSspScheduler<computational_dag_vector_impl_def_t> test;
+    GreedyVarianceSspScheduler<ComputationalDagVectorImplDefT> test;
     RunTest(&test);
 }
 
 // Tests computeSchedule(BspSchedule&) → staleness = 1 (different graph impl)
 BOOST_AUTO_TEST_CASE(GreedyVarianceSspSchedulerTestEdgeIdxImpl) {
-    GreedyVarianceSspScheduler<computational_dag_edge_idx_vector_impl_def_t> test;
+    GreedyVarianceSspScheduler<ComputationalDagEdgeIdxVectorImplDefT> test;
     RunTest(&test);
 }
 
 // Tests computeSchedule(MaxBspSchedule&) → staleness = 2
 BOOST_AUTO_TEST_CASE(GreedyVarianceSspSchedulerMaxBspScheduleLargeTest) {
-    GreedyVarianceSspScheduler<computational_dag_edge_idx_vector_impl_def_int_t> test;
+    GreedyVarianceSspScheduler<ComputationalDagEdgeIdxVectorImplDefIntT> test;
     RunTestMaxBsp(&test);
 }

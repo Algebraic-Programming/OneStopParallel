@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(InPlacePermutationRandom) {
         std::shuffle(vec.begin(), vec.end(), gen);
         std::vector<unsigned> perm(vec);
 
-        permute_inplace(vec, perm);
+        PermuteInplace(vec, perm);
         for (std::size_t j = 0; j < sol.size(); ++j) {
             BOOST_CHECK_EQUAL(vec[j], sol[j]);
             BOOST_CHECK_EQUAL(perm[j], sol[j]);
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(InPlacePermutationChar) {
     std::vector<std::size_t> permSol(perm.size());
     std::iota(permSol.begin(), permSol.end(), 0);
 
-    permute_inplace(vec, perm);
+    PermuteInplace(vec, perm);
     for (std::size_t j = 0; j < sol.size(); ++j) {
         BOOST_CHECK_EQUAL(vec[j], sol[j]);
         BOOST_CHECK_EQUAL(perm[j], permSol[j]);
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(InPlaceInversePermutationRandom) {
             invPerm[vec[j]] = j;
         }
 
-        inverse_permute_inplace(vec, invPerm);
+        InversePermuteInplace(vec, invPerm);
         for (std::size_t j = 0; j < sol.size(); ++j) {
             BOOST_CHECK_EQUAL(vec[j], sol[j]);
             BOOST_CHECK_EQUAL(invPerm[j], sol[j]);
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(InPlaceInversePermutationChar) {
     std::vector<std::size_t> permSol(perm.size());
     std::iota(permSol.begin(), permSol.end(), 0);
 
-    inverse_permute_inplace(vec, perm);
+    InversePermuteInplace(vec, perm);
     for (std::size_t j = 0; j < sol.size(); ++j) {
         BOOST_CHECK_EQUAL(vec[j], sol[j]);
         BOOST_CHECK_EQUAL(perm[j], permSol[j]);

@@ -35,14 +35,14 @@ BOOST_AUTO_TEST_CASE(SortsAndArrangements1) {
     std::vector<size_t> aRe1({3, 2, 0, 4, 1});
     std::vector<size_t> aRe2({3, 2, 4, 0, 1});
 
-    std::vector<size_t> re = sort_and_sorting_arrangement(a);
+    std::vector<size_t> re = SortAndSortingArrangement(a);
     BOOST_CHECK(re == aRe1 || re == aRe2);
     BOOST_CHECK(a == aSort);
 
-    BOOST_CHECK(check_vector_is_rearrangement_of_0_to_N(re));
-    BOOST_CHECK(check_vector_is_rearrangement_of_0_to_N(aRe1));
-    BOOST_CHECK(!check_vector_is_rearrangement_of_0_to_N(negTest1));
-    BOOST_CHECK(!check_vector_is_rearrangement_of_0_to_N(negTest2));
+    BOOST_CHECK(CheckVectorIsRearrangementOf0ToN(re));
+    BOOST_CHECK(CheckVectorIsRearrangementOf0ToN(aRe1));
+    BOOST_CHECK(!CheckVectorIsRearrangementOf0ToN(negTest1));
+    BOOST_CHECK(!CheckVectorIsRearrangementOf0ToN(negTest2));
 
     std::cout << "b: ";
     for (auto &i : b) {
@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(SortsAndArrangements1) {
     }
     std::cout << std::endl;
 
-    sort_like_arrangement(b, re);
+    SortLikeArrangement(b, re);
 
     std::cout << "re: ";
     for (auto &i : re) {
@@ -80,13 +80,13 @@ BOOST_AUTO_TEST_CASE(SortsAndArrangements2) {
     std::vector<std::string> aSort({"b", "trace", "aa", "racket", "z"});
     std::vector<size_t> cRe({2, 3, 0, 4, 1});
 
-    BOOST_CHECK(check_vector_is_rearrangement_of_0_to_N(cRe));
-    BOOST_CHECK(!check_vector_is_rearrangement_of_0_to_N(c));
+    BOOST_CHECK(CheckVectorIsRearrangementOf0ToN(cRe));
+    BOOST_CHECK(!CheckVectorIsRearrangementOf0ToN(c));
 
-    BOOST_CHECK(sorting_arrangement(c) == cRe);
+    BOOST_CHECK(SortingArrangement(c) == cRe);
     BOOST_CHECK(c == b);
 
-    sort_like(a, c);
+    SortLike(a, c);
 
     BOOST_CHECK(a == aSort);
     BOOST_CHECK(c == b);
@@ -99,26 +99,26 @@ BOOST_AUTO_TEST_CASE(SortsAndArrangements3) {
     std::vector<int> permB({0, 2, 1, 4, 5, 6, 3});
     std::vector<int> permC({1, 2, 0, 3, 4, 5, 6});
 
-    sort_like(v, id);
+    SortLike(v, id);
     BOOST_CHECK(v == id);
-    sort_like(v, permA);
+    SortLike(v, permA);
     BOOST_CHECK(v == permA);
-    sort_like(v, permA);
+    SortLike(v, permA);
     BOOST_CHECK(v == id);
 
-    sort_like(v, permB);
+    SortLike(v, permB);
     BOOST_CHECK(v != permB);
-    sort_like(v, permB);
+    SortLike(v, permB);
     BOOST_CHECK(v != id);
-    sort_like(v, permB);
+    SortLike(v, permB);
     BOOST_CHECK(v == permB);
-    sort_like(v, permB);
+    SortLike(v, permB);
     BOOST_CHECK(v == id);
 
-    sort_like(v, permC);
+    SortLike(v, permC);
     BOOST_CHECK(v != permC);
-    sort_like(v, permC);
+    SortLike(v, permC);
     BOOST_CHECK(v == permC);
-    sort_like(v, permC);
+    SortLike(v, permC);
     BOOST_CHECK(v == id);
 }

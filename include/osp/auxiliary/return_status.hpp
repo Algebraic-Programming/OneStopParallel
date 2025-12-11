@@ -28,7 +28,7 @@ enum class RETURN_STATUS { OSP_SUCCESS, BEST_FOUND, TIMEOUT, ERROR };
  * @brief Converts the enum to a string literal.
  * Returns const char* to avoid std::string allocation overhead.
  */
-inline const char *to_string(const RETURN_STATUS status) {
+inline const char *ToString(const RETURN_STATUS status) {
     switch (status) {
         case RETURN_STATUS::OSP_SUCCESS:
             return "SUCCESS";
@@ -46,6 +46,6 @@ inline const char *to_string(const RETURN_STATUS status) {
 /**
  * @brief Stream operator overload using the helper function.
  */
-inline std::ostream &operator<<(std::ostream &os, RETURN_STATUS status) { return os << to_string(status); }
+inline std::ostream &operator<<(std::ostream &os, RETURN_STATUS status) { return os << ToString(status); }
 
 }    // namespace osp

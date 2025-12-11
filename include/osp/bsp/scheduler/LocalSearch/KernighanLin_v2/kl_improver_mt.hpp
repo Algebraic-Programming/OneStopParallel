@@ -24,42 +24,42 @@ limitations under the License.
 
 namespace osp {
 
-template <typename Graph_t,
-          typename comm_cost_function_t,
-          typename MemoryConstraint_t = no_local_search_memory_constraint,
-          unsigned window_size = 1,
-          typename cost_t = double>
-class kl_improver_mt : public kl_improver<Graph_t, comm_cost_function_t, MemoryConstraint_t, window_size, cost_t> {
+template <typename GraphT,
+          typename CommCostFunctionT,
+          typename MemoryConstraintT = NoLocalSearchMemoryConstraint,
+          unsigned WindowSize = 1,
+          typename CostT = double>
+class KlImproverMt : public KlImprover<GraphT, CommCostFunctionT, MemoryConstraintT, WindowSize, CostT> {
   protected:
-    unsigned max_num_threads = std::numeric_limits<unsigned>::max();
+    unsigned maxNumThreads_ = std::numeric_limits<unsigned>::max();
 
-    void set_thread_boundaries(const unsigned num_threads, const unsigned num_steps, bool last_thread_large_range) {
-        if (num_threads == 1) {
-            this->set_start_step(0, this->thread_data_vec[0]);
-            this->thread_data_vec[0].end_step = (num_steps > 0) ? num_steps - 1 : 0;
-            this->thread_data_vec[0].original_end_step = this->thread_data_vec[0].end_step;
+    void SetThreadBoundaries(const unsigned numThreads, const unsigned numSteps, bool lastThreadLargeRange) {
+        if (numThreads == 1) {
+            this->SetStartStep(0, this->threadDataVec_[0]);
+            this->threadDataVec_[0].endStep = (numSteps > 0) ? numSteps - 1 : 0;
+            this->threadDataVec_[0].originalEndStep = this->threadDataVec_[0].endStep;
             return;
         } else {
-            const unsigned total_gap_size = (num_threads - 1) * this->parameters.thread_range_gap;
-            const unsigned bonus = this->parameters.thread_min_range;
-            const unsigned steps_to_distribute = num_steps - total_gap_size - bonus;
-            const unsigned base_range = steps_to_distribute / num_threads;
-            const unsigned remainder = steps_to_distribute % num_threads;
-            const unsigned large_range_thread_idx = last_thread_large_range ? num_threads - 1 : 0;
+            const unsigned totalGapSize = (numThreads - 1) * this->parameters_.threadRangeGap;
+            const unsigned bonus = this->parameters_.threadMinRange;
+            const unsigned stepsToDistribute = numSteps - totalGapSize - bonus;
+            const unsigned baseRange = stepsToDistribute / numThreads;
+            const unsigned remainder = stepsToDistribute % numThreads;
+            const unsigned largeRangeThreadIdx = lastThreadLargeRange ? numThreads - 1 : 0;
 
-            unsigned current_start_step = 0;
-            for (unsigned i = 0; i < num_threads; ++i) {
-                this->thread_finished_vec[i] = false;
-                this->set_start_step(current_start_step, this->thread_data_vec[i]);
-                unsigned current_range = base_range + (i < remainder ? 1 : 0);
-                if (i == large_range_thread_idx) {
-                    current_range += bonus;
+            unsigned currentStartStep = 0;
+            for (unsigned i = 0; i < numThreads; ++i) {
+                this->threadFinishedVec_[i] = false;
+                this->SetStartStep(currentStartStep, this->threadDataVec_[i]);
+                unsigned currentRange = baseRange + (i < remainder ? 1 : 0);
+                if (i == largeRangeThreadIdx) {
+                    currentRange += bonus;
                 }
 
-                const unsigned end_step = current_start_step + current_range - 1;
-                this->thread_data_vec[i].end_step = end_step;
-                this->thread_data_vec[i].original_end_step = this->thread_data_vec[i].end_step;
-                current_start_step = end_step + 1 + this->parameters.thread_range_gap;
+                const unsigned endStep = currentStartStep + currentRange - 1;
+                this->threadDataVec_[i].endStep = endStep;
+                this->threadDataVec_[i].originalEndStep = this->threadDataVec_[i].endStep;
+                currentStartStep = endStep + 1 + this->parameters_.threadRangeGap;
 #ifdef KL_DEBUG_1
                 std::cout << "thread " << i << ": start_step=" << this->thread_data_vec[i].start_step
                           << ", end_step=" << this->thread_data_vec[i].end_step << std::endl;
@@ -68,27 +68,27 @@ class kl_improver_mt : public kl_improver<Graph_t, comm_cost_function_t, MemoryC
         }
     }
 
-    void set_num_threads(unsigned &num_threads, const unsigned num_steps) {
-        unsigned max_allowed_threads = 0;
-        if (num_steps >= this->parameters.thread_min_range + this->parameters.thread_range_gap) {
-            const unsigned divisor = this->parameters.thread_min_range + this->parameters.thread_range_gap;
+    void SetNumThreads(unsigned &numThreads, const unsigned numSteps) {
+        unsigned maxAllowedThreads = 0;
+        if (numSteps >= this->parameters_.threadMinRange + this->parameters_.threadRangeGap) {
+            const unsigned divisor = this->parameters_.threadMinRange + this->parameters_.threadRangeGap;
             if (divisor > 0) {
                 // This calculation is based on the constraint that one thread's range is
                 // 'min_range' larger than the others, and all ranges are at least 'min_range'.
-                max_allowed_threads = (num_steps + this->parameters.thread_range_gap - this->parameters.thread_min_range) / divisor;
+                maxAllowedThreads = (numSteps + this->parameters_.threadRangeGap - this->parameters_.threadMinRange) / divisor;
             } else {
-                max_allowed_threads = num_steps;
+                maxAllowedThreads = numSteps;
             }
-        } else if (num_steps >= this->parameters.thread_min_range) {
-            max_allowed_threads = 1;
+        } else if (numSteps >= this->parameters_.threadMinRange) {
+            maxAllowedThreads = 1;
         }
 
-        if (num_threads > max_allowed_threads) {
-            num_threads = max_allowed_threads;
+        if (numThreads > maxAllowedThreads) {
+            numThreads = maxAllowedThreads;
         }
 
-        if (num_threads == 0) {
-            num_threads = 1;
+        if (numThreads == 0) {
+            numThreads = 1;
         }
 #ifdef KL_DEBUG_1
         std::cout << "num threads: " << num_threads << " number of supersteps: " << num_steps
@@ -97,61 +97,60 @@ class kl_improver_mt : public kl_improver<Graph_t, comm_cost_function_t, MemoryC
     }
 
   public:
-    kl_improver_mt() : kl_improver<Graph_t, comm_cost_function_t, MemoryConstraint_t, window_size, cost_t>() {}
+    KlImproverMt() : KlImprover<GraphT, CommCostFunctionT, MemoryConstraintT, WindowSize, CostT>() {}
 
-    explicit kl_improver_mt(unsigned seed)
-        : kl_improver<Graph_t, comm_cost_function_t, MemoryConstraint_t, window_size, cost_t>(seed) {}
+    explicit KlImproverMt(unsigned seed) : KlImprover<GraphT, CommCostFunctionT, MemoryConstraintT, WindowSize, CostT>(seed) {}
 
-    virtual ~kl_improver_mt() = default;
+    virtual ~KlImproverMt() = default;
 
-    void set_max_num_threads(const unsigned num_threads) { max_num_threads = num_threads; }
+    void SetMaxNumThreads(const unsigned numThreads) { maxNumThreads_ = numThreads; }
 
-    virtual RETURN_STATUS improveSchedule(BspSchedule<Graph_t> &schedule) override {
-        if (schedule.getInstance().numberOfProcessors() < 2) {
+    virtual RETURN_STATUS ImproveSchedule(BspSchedule<GraphT> &schedule) override {
+        if (schedule.getInstance().NumberOfProcessors() < 2) {
             return RETURN_STATUS::BEST_FOUND;
         }
 
-        unsigned num_threads = std::min(max_num_threads, static_cast<unsigned>(omp_get_max_threads()));
-        set_num_threads(num_threads, schedule.numberOfSupersteps());
+        unsigned numThreads = std::min(maxNumThreads_, static_cast<unsigned>(omp_get_max_threads()));
+        SetNumThreads(numThreads, schedule.numberOfSupersteps());
 
-        this->thread_data_vec.resize(num_threads);
-        this->thread_finished_vec.assign(num_threads, true);
+        this->threadDataVec_.resize(numThreads);
+        this->threadFinishedVec_.assign(numThreads, true);
 
-        if (num_threads == 1) {
-            this->parameters.num_parallel_loops
+        if (numThreads == 1) {
+            this->parameters_.numParallelLoops
                 = 1;    // no parallelization with one thread. Affects parameters.max_out_iteration calculation in set_parameters()
         }
 
-        this->set_parameters(schedule.getInstance().numberOfVertices());
+        this->set_parameters(schedule.getInstance().NumberOfVertices());
         this->initialize_datastructures(schedule);
-        const cost_t initial_cost = this->active_schedule.get_cost();
+        const CostT initialCost = this->activeSchedule_.GetCost();
 
-        for (size_t i = 0; i < this->parameters.num_parallel_loops; ++i) {
-            set_thread_boundaries(num_threads, schedule.numberOfSupersteps(), i % 2 == 0);
+        for (size_t i = 0; i < this->parameters_.numParallelLoops; ++i) {
+            SetThreadBoundaries(numThreads, schedule.numberOfSupersteps(), i % 2 == 0);
 
-#pragma omp parallel num_threads(num_threads)
+#pragma omp parallel num_threads(numThreads)
             {
-                const size_t thread_id = static_cast<size_t>(omp_get_thread_num());
-                auto &thread_data = this->thread_data_vec[thread_id];
-                thread_data.active_schedule_data.initialize_cost(this->active_schedule.get_cost());
-                thread_data.selection_strategy.setup(thread_data.start_step, thread_data.end_step);
-                this->run_local_search(thread_data);
+                const size_t threadId = static_cast<size_t>(omp_get_thread_num());
+                auto &threadData = this->threadDataVec_[threadId];
+                threadData.activeScheduleData.InitializeCost(this->activeSchedule_.GetCost());
+                threadData.selectionStrategy.Setup(threadData.startStep, threadData.endStep);
+                this->RunLocalSearch(threadData);
             }
 
-            this->synchronize_active_schedule(num_threads);
-            if (num_threads > 1) {
-                this->active_schedule.set_cost(this->comm_cost_f.compute_schedule_cost());
-                set_num_threads(num_threads, schedule.numberOfSupersteps());
-                this->thread_finished_vec.resize(num_threads);
+            this->SynchronizeActiveSchedule(numThreads);
+            if (numThreads > 1) {
+                this->activeSchedule_.SetCost(this->commCostF_.ComputeScheduleCost());
+                SetNumThreads(numThreads, schedule.numberOfSupersteps());
+                this->threadFinishedVec_.resize(numThreads);
             }
         }
 
-        if (initial_cost > this->active_schedule.get_cost()) {
-            this->active_schedule.write_schedule(schedule);
-            this->cleanup_datastructures();
+        if (initialCost > this->activeSchedule_.GetCost()) {
+            this->activeSchedule_.WriteSchedule(schedule);
+            this->CleanupDatastructures();
             return RETURN_STATUS::OSP_SUCCESS;
         } else {
-            this->cleanup_datastructures();
+            this->CleanupDatastructures();
             return RETURN_STATUS::BEST_FOUND;
         }
     }

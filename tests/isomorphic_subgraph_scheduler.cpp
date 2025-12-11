@@ -28,8 +28,8 @@ limitations under the License.
 
 using namespace osp;
 
-using GraphT = computational_dag_vector_impl_def_t;
-using ConstrGraphT = computational_dag_vector_impl_def_t;
+using GraphT = ComputationalDagVectorImplDefT;
+using ConstrGraphT = ComputationalDagVectorImplDefT;
 
 using GroupT = typename OrbitGraphProcessor<GraphT, ConstrGraphT>::Group;
 
@@ -42,14 +42,14 @@ class IsomorphicSubgraphSchedulerTester : public IsomorphicSubgraphScheduler<Gra
     void TestTrimSubgraphGroups(std::vector<GroupT> &isomorphicGroups,
                                 const BspInstance<Graph_t> &instance,
                                 std::vector<bool> &wasTrimmed) {
-        this->trim_subgraph_groups(isomorphicGroups, instance, wasTrimmed);
+        this->TrimSubgraphGroups(isomorphicGroups, instance, wasTrimmed);
     }
 
     void TestScheduleIsomorphicGroup(const BspInstance<Graph_t> &instance,
                                      const std::vector<GroupT> &isomorphicGroups,
                                      const SubgraphSchedule &subSched,
-                                     std::vector<vertex_idx_t<Graph_t>> &partition) {
-        this->schedule_isomorphic_group(instance, isomorphicGroups, subSched, partition);
+                                     std::vector<VertexIdxT<Graph_t>> &partition) {
+        this->ScheduleIsomorphicGroup(instance, isomorphicGroups, subSched, partition);
     }
 };
 
@@ -57,12 +57,12 @@ BOOST_AUTO_TEST_SUITE(IsomorphicSubgraphSchedulerTestSuite)
 
 BOOST_AUTO_TEST_CASE(EmptyGraphTest) {
     BspInstance<GraphT> instance;
-    instance.getArchitecture().setNumberOfProcessors(4);
+    instance.GetArchitecture().SetNumberOfProcessors(4);
 
     GreedyBspScheduler<ConstrGraphT> greedyScheduler;
     IsomorphicSubgraphScheduler<GraphT, ConstrGraphT> isoScheduler(greedyScheduler);
 
-    auto partition = isoScheduler.compute_partition(instance);
+    auto partition = isoScheduler.ComputePartition(instance);
     BOOST_CHECK(partition.empty());
 }
 
@@ -71,13 +71,13 @@ BOOST_AUTO_TEST_CASE(TrimSubgraphGroupsTestNoTrim) {
     IsomorphicSubgraphSchedulerTester<GraphT, ConstrGraphT> tester(greedyScheduler);
 
     BspInstance<GraphT> instance;
-    auto &dag = instance.getComputationalDag();
-    dag.add_vertex(1, 1, 1, 0);                                                     // 0
-    dag.add_vertex(1, 1, 1, 0);                                                     // 1
-    dag.add_vertex(1, 1, 1, 0);                                                     // 2
-    dag.add_vertex(1, 1, 1, 0);                                                     // 3
-    instance.getArchitecture().setProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0});    // 8 processors of type 0
-    instance.setDiagonalCompatibilityMatrix(1);
+    auto &dag = instance.GetComputationalDag();
+    dag.AddVertex(1, 1, 1, 0);                                                      // 0
+    dag.AddVertex(1, 1, 1, 0);                                                      // 1
+    dag.AddVertex(1, 1, 1, 0);                                                      // 2
+    dag.AddVertex(1, 1, 1, 0);                                                      // 3
+    instance.GetArchitecture().SetProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0});    // 8 processors of type 0
+    instance.SetDiagonalCompatibilityMatrix(1);
 
     // A single group with 4 subgraphs, each with 1 node.
     std::vector<GroupT> isoGroups = {GroupT{{{0}, {1}, {2}, {3}}}};
@@ -95,18 +95,18 @@ BOOST_AUTO_TEST_CASE(TrimSubgraphGroupsTestNoTrim) {
 BOOST_AUTO_TEST_CASE(TrimSubgraphGroupsTestWithTrim) {
     GreedyBspScheduler<ConstrGraphT> greedyScheduler;
     IsomorphicSubgraphSchedulerTester<GraphT, ConstrGraphT> tester(greedyScheduler);
-    tester.setAllowTrimmedScheduler(false);
+    tester.SetAllowTrimmedScheduler(false);
 
     BspInstance<GraphT> instance;
-    auto &dag = instance.getComputationalDag();
-    dag.add_vertex(10, 1, 1, 0);                                                    // 0
-    dag.add_vertex(10, 1, 1, 0);                                                    // 1
-    dag.add_vertex(10, 1, 1, 0);                                                    // 2
-    dag.add_vertex(10, 1, 1, 0);                                                    // 3
-    dag.add_vertex(10, 1, 1, 0);                                                    // 4
-    dag.add_vertex(10, 1, 1, 0);                                                    // 5
-    instance.getArchitecture().setProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0});    // 8 processors of type 0
-    instance.setDiagonalCompatibilityMatrix(1);
+    auto &dag = instance.GetComputationalDag();
+    dag.AddVertex(10, 1, 1, 0);                                                     // 0
+    dag.AddVertex(10, 1, 1, 0);                                                     // 1
+    dag.AddVertex(10, 1, 1, 0);                                                     // 2
+    dag.AddVertex(10, 1, 1, 0);                                                     // 3
+    dag.AddVertex(10, 1, 1, 0);                                                     // 4
+    dag.AddVertex(10, 1, 1, 0);                                                     // 5
+    instance.GetArchitecture().SetProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0});    // 8 processors of type 0
+    instance.SetDiagonalCompatibilityMatrix(1);
 
     // 6 subgraphs, each with 1 node and work weight 10.
     std::vector<GroupT> isoGroups = {GroupT{{{0}, {1}, {2}, {3}, {4}, {5}}}};
@@ -139,33 +139,33 @@ BOOST_AUTO_TEST_CASE(TrimSubgraphGroupsTestWithTrim) {
 BOOST_AUTO_TEST_CASE(TrimSubgraphGroupsTestMultipleGroups) {
     GreedyBspScheduler<ConstrGraphT> greedyScheduler;
     IsomorphicSubgraphSchedulerTester<GraphT, ConstrGraphT> tester(greedyScheduler);
-    tester.setAllowTrimmedScheduler(false);
+    tester.SetAllowTrimmedScheduler(false);
 
     BspInstance<GraphT> instance;
-    auto &dag = instance.getComputationalDag();
+    auto &dag = instance.GetComputationalDag();
     for (int i = 0; i < 6; ++i) {
-        dag.add_vertex(1, 1, 1, 0);    // 0-5
+        dag.AddVertex(1, 1, 1, 0);    // 0-5
     }
     for (int i = 0; i < 3; ++i) {
-        dag.add_vertex(1, 1, 1, 0);    // 6-8, but we will use 10-12 in test
+        dag.AddVertex(1, 1, 1, 0);    // 6-8, but we will use 10-12 in test
     }
     for (int i = 0; i < 2; ++i) {
-        dag.add_vertex(1, 1, 1, 0);    // 9-10
+        dag.AddVertex(1, 1, 1, 0);    // 9-10
     }
     for (int i = 0; i < 2; ++i) {
-        dag.add_vertex(1, 1, 1, 0);    // 11-12
+        dag.AddVertex(1, 1, 1, 0);    // 11-12
     }
     for (int i = 0; i < 8; ++i) {
-        dag.add_vertex(1, 1, 1, 0);    // 13-20
+        dag.AddVertex(1, 1, 1, 0);    // 13-20
     }
     for (int i = 0; i < 5; ++i) {
-        dag.add_vertex(1, 1, 1, 0);    // 21-25
+        dag.AddVertex(1, 1, 1, 0);    // 21-25
     }
     // Make sure all vertices used in iso_groups exist.
     // All are type 0.
 
-    instance.getArchitecture().setProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0, 0});    // 9 processors of type 0
-    instance.setDiagonalCompatibilityMatrix(1);
+    instance.GetArchitecture().SetProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0, 0});    // 9 processors of type 0
+    instance.SetDiagonalCompatibilityMatrix(1);
 
     // Group 1: size 6. gcd(6, 9) = 3. merge_size = 6/3 = 2. -> 3 subgraphs of size 2.
     // Group 2: size 3. gcd(3, 9) = 3. merge_size = 3/3 = 1. -> no trim.
@@ -203,24 +203,24 @@ BOOST_AUTO_TEST_CASE(TrimSubgraphGroupsTestMultipleGroups) {
 BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroupHeterogeneousArch) {
     // --- Setup ---
     BspInstance<GraphT> instance;
-    auto &dag = instance.getComputationalDag();
+    auto &dag = instance.GetComputationalDag();
     // Two isomorphic groups:
     // Group 0: {0,1}, {2,3} (type 0)
     // Group 1: {4}, {5} (type 1)
-    dag.add_vertex(10, 1, 1, 0);
-    dag.add_vertex(10, 1, 1, 0);    // 0, 1
-    dag.add_vertex(10, 1, 1, 0);
-    dag.add_vertex(10, 1, 1, 0);    // 2, 3
-    dag.add_vertex(20, 1, 1, 1);    // 4
-    dag.add_vertex(20, 1, 1, 1);    // 5
-    dag.add_edge(0, 1);
-    dag.add_edge(2, 3);
-    dag.add_edge(1, 4);
-    dag.add_edge(3, 5);
+    dag.AddVertex(10, 1, 1, 0);
+    dag.AddVertex(10, 1, 1, 0);    // 0, 1
+    dag.AddVertex(10, 1, 1, 0);
+    dag.AddVertex(10, 1, 1, 0);    // 2, 3
+    dag.AddVertex(20, 1, 1, 1);    // 4
+    dag.AddVertex(20, 1, 1, 1);    // 5
+    dag.AddEdge(0, 1);
+    dag.AddEdge(2, 3);
+    dag.AddEdge(1, 4);
+    dag.AddEdge(3, 5);
 
     // 2 procs of type 0, 2 procs of type 1
-    instance.getArchitecture().setProcessorsWithTypes({0, 0, 1, 1});
-    instance.setDiagonalCompatibilityMatrix(2);
+    instance.GetArchitecture().SetProcessorsWithTypes({0, 0, 1, 1});
+    instance.SetDiagonalCompatibilityMatrix(2);
 
     std::vector<GroupT> isoGroups = {GroupT{{{0, 1}, {2, 3}}}, GroupT{{{4}, {5}}}};
 
@@ -228,12 +228,12 @@ BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroupHeterogeneousArch) {
     // Group 0 (2 subgraphs) gets 2 workers of type 0
     // Group 1 (2 subgraphs) gets 2 workers of type 1
     SubgraphSchedule subSched;
-    subSched.node_assigned_worker_per_type.resize(2);
-    subSched.node_assigned_worker_per_type[0] = {2, 0};    // 2xT0 for group 0
-    subSched.node_assigned_worker_per_type[1] = {0, 2};    // 2xT1 for group 1
-    subSched.was_trimmed = {false, false};                 // No trimming occurred
+    subSched.nodeAssignedWorkerPerType.resize(2);
+    subSched.nodeAssignedWorkerPerType[0] = {2, 0};    // 2xT0 for group 0
+    subSched.nodeAssignedWorkerPerType[1] = {0, 2};    // 2xT1 for group 1
+    subSched.wasTrimmed = {false, false};              // No trimming occurred
 
-    std::vector<vertex_idx_t<GraphT>> partition(dag.num_vertices());
+    std::vector<VertexIdxT<GraphT>> partition(dag.NumVertices());
 
     GreedyBspScheduler<ConstrGraphT> greedyScheduler;
     IsomorphicSubgraphSchedulerTester<GraphT, ConstrGraphT> tester(greedyScheduler);
@@ -260,7 +260,7 @@ BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroupHeterogeneousArch) {
     BOOST_CHECK_NE(partition[2], partition[5]);
 
     // Verify all partitions are unique as expected
-    std::set<vertex_idx_t<GraphT>> partitionIds;
+    std::set<VertexIdxT<GraphT>> partitionIds;
     for (const auto &pId : partition) {
         partitionIds.insert(pId);
     }
@@ -272,21 +272,21 @@ BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroupShuffledIDs) {
     // This test ensures that the isomorphism mapping works correctly even if
     // the vertex IDs of isomorphic subgraphs are not in the same relative order.
     BspInstance<GraphT> instance;
-    auto &dag = instance.getComputationalDag();
+    auto &dag = instance.GetComputationalDag();
 
     // Group 0, Subgraph 1: 0 -> 1
-    dag.add_vertex(10, 1, 1, 0);    // 0
-    dag.add_vertex(20, 1, 1, 0);    // 1
-    dag.add_edge(0, 1);
+    dag.AddVertex(10, 1, 1, 0);    // 0
+    dag.AddVertex(20, 1, 1, 0);    // 1
+    dag.AddEdge(0, 1);
 
     // Group 0, Subgraph 2 (isomorphic to 1, but with shuffled IDs): 3 -> 2
-    dag.add_vertex(20, 1, 1, 0);    // 2 (work 20, corresponds to node 1)
-    dag.add_vertex(10, 1, 1, 0);    // 3 (work 10, corresponds to node 0)
-    dag.add_edge(3, 2);
+    dag.AddVertex(20, 1, 1, 0);    // 2 (work 20, corresponds to node 1)
+    dag.AddVertex(10, 1, 1, 0);    // 3 (work 10, corresponds to node 0)
+    dag.AddEdge(3, 2);
 
     // Architecture: 2 processors, so each subgraph gets its own partition space.
-    instance.getArchitecture().setProcessorsWithTypes({0, 0});
-    instance.setDiagonalCompatibilityMatrix(1);
+    instance.GetArchitecture().SetProcessorsWithTypes({0, 0});
+    instance.SetDiagonalCompatibilityMatrix(1);
 
     // Manually define the isomorphic groups.
     // Subgraph 1 vertices: {0, 1}
@@ -295,11 +295,11 @@ BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroupShuffledIDs) {
 
     // Mock SubgraphSchedule: The single group gets all 2 processors.
     SubgraphSchedule subSched;
-    subSched.node_assigned_worker_per_type.resize(1);
-    subSched.node_assigned_worker_per_type[0] = {2};
-    subSched.was_trimmed = {false};    // No trimming occurred
+    subSched.nodeAssignedWorkerPerType.resize(1);
+    subSched.nodeAssignedWorkerPerType[0] = {2};
+    subSched.wasTrimmed = {false};    // No trimming occurred
 
-    std::vector<vertex_idx_t<GraphT>> partition(dag.num_vertices());
+    std::vector<VertexIdxT<GraphT>> partition(dag.NumVertices());
 
     // Use a simple greedy scheduler for the sub-problems.
     GreedyBspScheduler<ConstrGraphT> greedyScheduler;

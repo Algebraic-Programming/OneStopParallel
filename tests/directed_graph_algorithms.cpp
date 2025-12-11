@@ -38,22 +38,22 @@ limitations under the License.
 using namespace osp;
 
 BOOST_AUTO_TEST_CASE(LongestEdgeTriangleParallel) {
-    using GraphT = boost_graph_int_t;
+    using GraphT = BoostGraphIntT;
 
     // static_assert(std::is_base_of<Scheduler, T>::value, "Class is not a scheduler!");
-    std::vector<std::string> filenamesGraph = large_spaa_graphs();
+    std::vector<std::string> filenamesGraph = LargeSpaaGraphs();
 
-    const auto projectRoot = get_project_root();
+    const auto projectRoot = GetProjectRoot();
 
     for (auto &filenameGraph : filenamesGraph) {
         GraphT graph;
 
-        bool statusGraph = file_reader::readComputationalDagHyperdagFormatDB((projectRoot / filenameGraph).string(), graph);
+        bool statusGraph = file_reader::ReadComputationalDagHyperdagFormatDb((projectRoot / filenameGraph).string(), graph);
 
         BOOST_CHECK(statusGraph);
 
         auto startTime = std::chrono::high_resolution_clock::now();
-        auto deletedEdges = long_edges_in_triangles(graph);
+        auto deletedEdges = LongEdgesInTriangles(graph);
         auto finishTime = std::chrono::high_resolution_clock::now();
 
         std::cout << "\n" << filenameGraph << std::endl;
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(LongestEdgeTriangleParallel) {
                   << std::chrono::duration_cast<std::chrono::milliseconds>(finishTime - startTime).count() << "ms" << std::endl;
 
         startTime = std::chrono::high_resolution_clock::now();
-        auto deletedEdgesParallel = long_edges_in_triangles_parallel(graph);
+        auto deletedEdgesParallel = LongEdgesInTrianglesParallel(graph);
         finishTime = std::chrono::high_resolution_clock::now();
 
         std::cout << "Time for long_edges_in_triangles_parallel: "

@@ -84,23 +84,23 @@ BOOST_AUTO_TEST_CASE(TestEigenSptrsv) {
 
     std::cout << "Loaded matrix of size " << lCsr.rows() << " x " << lCsr.cols() << " with " << lCsr.nonZeros() << " non-zeros.\n";
 
-    graph.setCSR(&lCsr);
+    graph.SetCsr(&lCsr);
     SmCsc lCsc{};
     lCsc = lCsr;
-    graph.setCSC(&lCsc);
+    graph.SetCsc(&lCsc);
 
     BspArchitecture<SparseMatrixImp<int32_t>> architecture(16, 1, 500);
     BspInstance<SparseMatrixImp<int32_t>> instance(graph, architecture);
     GrowLocalAutoCores<SparseMatrixImp<int32_t>> scheduler;
     BspSchedule<SparseMatrixImp<int32_t>> schedule(instance);
-    auto result = scheduler.computeSchedule(schedule);
+    auto result = scheduler.ComputeSchedule(schedule);
 
     BOOST_CHECK_EQUAL(result, RETURN_STATUS::OSP_SUCCESS);
     BOOST_CHECK_EQUAL(&schedule.getInstance(), &instance);
-    BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+    BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
 
     BspScheduleCS<SparseMatrixImp<int32_t>> scheduleCs(instance);
-    auto resultCs = scheduler.computeScheduleCS(scheduleCs);
+    auto resultCs = scheduler.ComputeScheduleCs(scheduleCs);
 
     /*
     for (const auto &node : instance.vertices()) {
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(TestEigenSptrsv) {
     */
 
     BOOST_CHECK_EQUAL(resultCs, RETURN_STATUS::OSP_SUCCESS);
-    BOOST_CHECK(scheduleCs.hasValidCommSchedule());
+    BOOST_CHECK(scheduleCs.HasValidCommSchedule());
 
     // std::cout << "Scheduling Costs:" << schedule_cs.computeCosts() << std::endl;
     // std::cout << "lazy com Costs:" <<schedule_cs.compute_lazy_communication_costs() << std::endl;
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(TestEigenSptrsv) {
 
     // OSP no permutation setup
     Sptrsv<int32_t> sim{instance};
-    sim.setup_csr_no_permutation(scheduleCs);
+    sim.SetupCsrNoPermutation(scheduleCs);
 
     // osp no permutation L_solve
     auto lXOsp = lXRef;
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(TestEigenSptrsv) {
     // L_x_osp.setZero();
     sim.x = &lXOsp[0];
     sim.b = &lBOsp[0];
-    sim.lsolve_no_permutation();
+    sim.LsolveNoPermutation();
     BOOST_CHECK(CompareVectors(lXRef, lXOsp));
 
     // Comparisson with osp serial L solve
@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(TestEigenSptrsv) {
     // OSP
     lBOsp.setOnes();
     // L_x_osp.setZero();
-    sim.lsolve_serial();
+    sim.LsolveSerial();
     BOOST_CHECK(CompareVectors(lXRef, lXOsp));
 
     // INPLACE case eigen L solve vs osp L solve
@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(TestEigenSptrsv) {
     // OSP
     lXOsp.setConstant(0.1);
     lBOsp.setZero();    // this will not be used as x will take the values that already has instead of the b values
-    sim.lsolve_no_permutation_in_place();
+    sim.LsolveNoPermutationInPlace();
     BOOST_CHECK(CompareVectors(lXRef, lXOsp));
 
     // Comparisson with osp serial in place L solve
@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(TestEigenSptrsv) {
     // OSP
     lXOsp.setConstant(0.1);
     lBOsp.setZero();    // this will not be used as x will take the values that already has instead of the b values
-    sim.lsolve_serial_in_place();
+    sim.LsolveSerialInPlace();
     BOOST_CHECK(CompareVectors(lXRef, lXOsp));
 
     // Upper Solve
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(TestEigenSptrsv) {
     uXOsp.setZero();
     sim.x = &uXOsp[0];
     sim.b = &uBOsp[0];
-    sim.usolve_no_permutation();
+    sim.UsolveNoPermutation();
     BOOST_CHECK(CompareVectors(uXRef, uXOsp));
 
     // Comparisson with osp serial U solve
@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(TestEigenSptrsv) {
     // OSP
     uBOsp.setOnes();
     uXOsp.setZero();
-    sim.usolve_serial();
+    sim.UsolveSerial();
     BOOST_CHECK(CompareVectors(uXRef, uXOsp));
 
     // INPLACE case eigen U solve vs osp U solve
@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(TestEigenSptrsv) {
     // OSP
     uXOsp.setConstant(0.1);
     uBOsp.setZero();    // this will not be used as x will take the values that already has instead of the b values
-    sim.usolve_no_permutation_in_place();
+    sim.UsolveNoPermutationInPlace();
     BOOST_CHECK(CompareVectors(uXRef, uXOsp));
 
     // Comparisson with osp serial in place U solve
@@ -223,12 +223,12 @@ BOOST_AUTO_TEST_CASE(TestEigenSptrsv) {
     // OSP
     uXOsp.setConstant(0.1);
     uBOsp.setZero();    // this will not be used as x will take the values that already has instead of the b values
-    sim.usolve_serial_in_place();
+    sim.UsolveSerialInPlace();
     BOOST_CHECK(CompareVectors(uXRef, uXOsp));
 
     // Lsolve in-place With PERMUTATION
-    std::vector<size_t> perm = schedule_node_permuter_basic(scheduleCs, LOOP_PROCESSORS);
-    sim.setup_csr_with_permutation(scheduleCs, perm);
+    std::vector<size_t> perm = ScheduleNodePermuterBasic(scheduleCs, LOOP_PROCESSORS);
+    sim.SetupCsrWithPermutation(scheduleCs, perm);
 
     // Comparisson with osp serial in place L solve
     // Eigen
@@ -241,9 +241,9 @@ BOOST_AUTO_TEST_CASE(TestEigenSptrsv) {
     sim.x = &lXOsp[0];
     sim.b = &lBOsp[0];
     // sim.permute_x_vector(perm);
-    sim.lsolve_with_permutation_in_place();
+    sim.LsolveWithPermutationInPlace();
 
-    sim.permute_x_vector(perm);
+    sim.PermuteXVector(perm);
     BOOST_CHECK(CompareVectors(lXRef, lXOsp));
 }
 

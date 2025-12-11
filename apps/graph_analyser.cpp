@@ -31,7 +31,7 @@ limitations under the License.
 
 using namespace osp;
 
-using ComputationalDag = computational_dag_edge_idx_vector_impl_def_int_t;
+using ComputationalDag = ComputationalDagEdgeIdxVectorImplDefIntT;
 
 void AddGraphStats(const ComputationalDag &graph, std::ofstream &outfile) {
     // Short and Average Edges
@@ -39,10 +39,10 @@ void AddGraphStats(const ComputationalDag &graph, std::ofstream &outfile) {
     float avgEdgeLength = 0;
     size_t sumEdgeLength = 0;
 
-    std::vector<unsigned> topLevel = get_top_node_distance(graph);
+    std::vector<unsigned> topLevel = GetTopNodeDistance(graph);
     std::multiset<unsigned> edgeLengths;
-    for (const auto &edge : edges(graph)) {
-        unsigned diff = topLevel[target(edge, graph)] - topLevel[source(edge, graph)];
+    for (const auto &edge : Edges(graph)) {
+        unsigned diff = topLevel[Target(edge, graph)] - topLevel[Source(edge, graph)];
 
         edgeLengths.emplace(diff);
         sumEdgeLength += diff;
@@ -52,13 +52,13 @@ void AddGraphStats(const ComputationalDag &graph, std::ofstream &outfile) {
     }
     unsigned medianEdgeLength = 0;
     if (!edgeLengths.empty()) {
-        medianEdgeLength = Get_Median(edgeLengths);
+        medianEdgeLength = GetMedian(edgeLengths);
     }
 
-    Get_Median(edgeLengths);
+    GetMedian(edgeLengths);
 
-    if (graph.num_edges() != 0) {
-        avgEdgeLength = static_cast<float>(sumEdgeLength) / static_cast<float>(graph.num_edges());
+    if (graph.NumEdges() != 0) {
+        avgEdgeLength = static_cast<float>(sumEdgeLength) / static_cast<float>(graph.NumEdges());
     }
 
     // Longest Path
@@ -72,10 +72,10 @@ void AddGraphStats(const ComputationalDag &graph, std::ofstream &outfile) {
         //     wavefront[top_level[i]] = 1;
         // }
     }
-    float avgWavefront = static_cast<float>(graph.num_vertices()) / static_cast<float>(longestPath);
+    float avgWavefront = static_cast<float>(graph.NumVertices()) / static_cast<float>(longestPath);
 
     // Average bottom distance
-    std::vector<unsigned> botLevel = get_bottom_node_distance(graph);
+    std::vector<unsigned> botLevel = GetBottomNodeDistance(graph);
     size_t botLevelSum = 0;
     for (size_t i = 0; i < botLevel.size(); i++) {
         botLevelSum += botLevel[i];
@@ -121,8 +121,8 @@ void AddGraphStats(const ComputationalDag &graph, std::ofstream &outfile) {
     // number_triangles /= 3;
 
     // Adding statistics
-    outfile << graph.num_vertices() << ",";
-    outfile << graph.num_edges() << ",";
+    outfile << graph.NumVertices() << ",";
+    outfile << graph.NumEdges() << ",";
     outfile << longestPath << ",";
     outfile << avgWavefront << ",";
     outfile << shortEdges << ",";
@@ -160,7 +160,7 @@ int main(int argc, char *argv[]) {
         std::string pathStr = dirEntry.path();
 
         ComputationalDag graph;
-        bool status = file_reader::readGraph(dirEntry.path(), graph);
+        bool status = file_reader::ReadGraph(dirEntry.path(), graph);
         if (!status) {
             std::cout << "Failed to read graph\n";
             return 1;

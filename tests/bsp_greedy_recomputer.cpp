@@ -29,44 +29,44 @@ limitations under the License.
 using namespace osp;
 
 BOOST_AUTO_TEST_CASE(TestRecomputer) {
-    using Graph = computational_dag_vector_impl_def_t;
+    using Graph = ComputationalDagVectorImplDefT;
 
     BspInstance<Graph> instance1;
-    instance1.setNumberOfProcessors(2);
-    instance1.setCommunicationCosts(1);
-    instance1.setSynchronisationCosts(1);
+    instance1.SetNumberOfProcessors(2);
+    instance1.SetCommunicationCosts(1);
+    instance1.SetSynchronisationCosts(1);
 
-    instance1.getComputationalDag().add_vertex(10, 1, 0);
-    instance1.getComputationalDag().add_vertex(10, 1, 0);
-    instance1.getComputationalDag().add_vertex(10, 1, 0);
-    instance1.getComputationalDag().add_edge(0, 1);
-    instance1.getComputationalDag().add_edge(0, 2);
+    instance1.GetComputationalDag().AddVertex(10, 1, 0);
+    instance1.GetComputationalDag().AddVertex(10, 1, 0);
+    instance1.GetComputationalDag().AddVertex(10, 1, 0);
+    instance1.GetComputationalDag().AddEdge(0, 1);
+    instance1.GetComputationalDag().AddEdge(0, 2);
 
     BspSchedule<Graph> scheduleInit1(instance1);
-    scheduleInit1.setAssignedProcessor(0, 0);
-    scheduleInit1.setAssignedSuperstep(0, 0);
-    scheduleInit1.setAssignedProcessor(1, 0);
-    scheduleInit1.setAssignedSuperstep(1, 1);
-    scheduleInit1.setAssignedProcessor(2, 1);
-    scheduleInit1.setAssignedSuperstep(2, 1);
-    BOOST_CHECK(scheduleInit1.satisfiesPrecedenceConstraints());
+    scheduleInit1.SetAssignedProcessor(0, 0);
+    scheduleInit1.SetAssignedSuperstep(0, 0);
+    scheduleInit1.SetAssignedProcessor(1, 0);
+    scheduleInit1.SetAssignedSuperstep(1, 1);
+    scheduleInit1.SetAssignedProcessor(2, 1);
+    scheduleInit1.SetAssignedSuperstep(2, 1);
+    BOOST_CHECK(scheduleInit1.SatisfiesPrecedenceConstraints());
     BspScheduleCS<Graph> scheduleInitCs1(scheduleInit1);
-    BOOST_CHECK(scheduleInitCs1.hasValidCommSchedule());
+    BOOST_CHECK(scheduleInitCs1.HasValidCommSchedule());
 
     BspScheduleRecomp<Graph> schedule(instance1);
     GreedyRecomputer<Graph> scheduler;
-    scheduler.computeRecompSchedule(scheduleInitCs1, schedule);
-    BOOST_CHECK(schedule.satisfiesConstraints());
-    BOOST_CHECK(schedule.computeCosts() < scheduleInitCs1.computeCosts());
-    std::cout << "Cost decrease by greedy recomp: " << scheduleInitCs1.computeCosts() << " -> " << schedule.computeCosts()
+    scheduler.ComputeRecompSchedule(scheduleInitCs1, schedule);
+    BOOST_CHECK(schedule.SatisfiesConstraints());
+    BOOST_CHECK(schedule.ComputeCosts() < scheduleInitCs1.ComputeCosts());
+    std::cout << "Cost decrease by greedy recomp: " << scheduleInitCs1.ComputeCosts() << " -> " << schedule.ComputeCosts()
               << std::endl;
 
     // non-toy instance
 
     BspInstance<Graph> instance2;
-    instance2.setNumberOfProcessors(4);
-    instance2.setCommunicationCosts(5);
-    instance2.setSynchronisationCosts(20);
+    instance2.SetNumberOfProcessors(4);
+    instance2.SetCommunicationCosts(5);
+    instance2.SetSynchronisationCosts(20);
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -76,21 +76,21 @@ BOOST_AUTO_TEST_CASE(TestRecomputer) {
         std::cout << cwd << std::endl;
     }
 
-    bool status = file_reader::readComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(),
-                                                                    instance2.getComputationalDag());
+    bool status = file_reader::ReadComputationalDagHyperdagFormatDb((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(),
+                                                                    instance2.GetComputationalDag());
 
     BOOST_CHECK(status);
 
     BspSchedule<Graph> scheduleInit2(instance2);
     BspLocking<Graph> greedy;
-    greedy.computeSchedule(scheduleInit2);
-    BOOST_CHECK(scheduleInit2.satisfiesPrecedenceConstraints());
+    greedy.ComputeSchedule(scheduleInit2);
+    BOOST_CHECK(scheduleInit2.SatisfiesPrecedenceConstraints());
     BspScheduleCS<Graph> scheduleInitCs2(scheduleInit2);
-    BOOST_CHECK(scheduleInitCs2.hasValidCommSchedule());
+    BOOST_CHECK(scheduleInitCs2.HasValidCommSchedule());
 
-    scheduler.computeRecompSchedule(scheduleInitCs2, schedule);
-    BOOST_CHECK(schedule.satisfiesConstraints());
-    BOOST_CHECK(schedule.computeCosts() < scheduleInitCs2.computeCosts());
-    std::cout << "Cost decrease by greedy recomp: " << scheduleInitCs2.computeCosts() << " -> " << schedule.computeCosts()
+    scheduler.ComputeRecompSchedule(scheduleInitCs2, schedule);
+    BOOST_CHECK(schedule.SatisfiesConstraints());
+    BOOST_CHECK(schedule.ComputeCosts() < scheduleInitCs2.ComputeCosts());
+    std::cout << "Cost decrease by greedy recomp: " << scheduleInitCs2.ComputeCosts() << " -> " << schedule.ComputeCosts()
               << std::endl;
 }

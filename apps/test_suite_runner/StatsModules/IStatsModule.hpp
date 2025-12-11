@@ -37,12 +37,12 @@ class IStatisticModule {    // Changed from Graph_t_ to TargetObjectType
     virtual ~IStatisticModule() = default;
 
     // Returns a list of column headers this module provides.
-    virtual std::vector<std::string> get_metric_headers() const = 0;
+    virtual std::vector<std::string> GetMetricHeaders() const = 0;
 
     // Called for each generated target_object.
     // Returns a map of {header_name: value_string}.
-    virtual std::map<std::string, std::string> record_statistics(const TargetObjectType &target_object,    // Changed parameter
-                                                                 std::ofstream &log_stream) const
+    virtual std::map<std::string, std::string> RecordStatistics(const TargetObjectType &targetObject,    // Changed parameter
+                                                                std::ofstream &logStream) const
         = 0;
 };
 

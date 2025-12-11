@@ -29,8 +29,8 @@ limitations under the License.
 
 using namespace osp;
 
-using GraphT = computational_dag_edge_idx_vector_impl_def_int_t;
-using MemConstr = persistent_transient_memory_constraint<GraphT>;
+using GraphT = ComputationalDagEdgeIdxVectorImplDefIntT;
+using MemConstr = PersistentTransientMemoryConstraint<GraphT>;
 
 // invoked upon program call
 int main(int argc, char *argv[]) {
@@ -42,22 +42,22 @@ int main(int argc, char *argv[]) {
 
     BspInstance<GraphT> bspInstance;
 
-    bspInstance.getArchitecture().setNumberOfProcessors(static_cast<unsigned>(std::stoul(argv[2])));
-    bspInstance.getArchitecture().setMemoryBound(std::atoi(argv[3]));
-    bspInstance.getArchitecture().setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::PERSISTENT_AND_TRANSIENT);
+    bspInstance.GetArchitecture().SetNumberOfProcessors(static_cast<unsigned>(std::stoul(argv[2])));
+    bspInstance.GetArchitecture().SetMemoryBound(std::atoi(argv[3]));
+    bspInstance.GetArchitecture().SetMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::PERSISTENT_AND_TRANSIENT);
 
     std::string algorithmName = argv[4];
 
     std::string filenameGraph = argv[1];
 
-    bool statusGraph = file_reader::readGraph(filenameGraph, bspInstance.getComputationalDag());
+    bool statusGraph = file_reader::ReadGraph(filenameGraph, bspInstance.GetComputationalDag());
 
     if (!statusGraph) {
         std::cout << "Error while reading the graph from file: " << filenameGraph << std::endl;
         return 1;
     }
 
-    if (bspInstance.getComputationalDag().num_vertex_types() > 1) {
+    if (bspInstance.GetComputationalDag().NumVertexTypes() > 1) {
         std::cout << "The graph has more than one vertex type, which is not supported by this scheduler." << std::endl;
         return 1;
     }
@@ -86,22 +86,21 @@ int main(int argc, char *argv[]) {
         const float boundComponentWeightPercent = 4.0f;
         const float slack = 0.0f;
 
-        scheduler
-            = new LightEdgeVariancePartitioner<GraphT, flat_spline_interpolation, MemConstr>(maxPercentIdleProcessors,
-                                                                                             variancePower,
-                                                                                             heavyIsXTimesMedian,
-                                                                                             minPercentComponentsRetained,
-                                                                                             boundComponentWeightPercent,
-                                                                                             increaseParallelismInNewSuperstep,
-                                                                                             maxPriorityDifferencePercent,
-                                                                                             slack);
+        scheduler = new LightEdgeVariancePartitioner<GraphT, FlatSplineInterpolation, MemConstr>(maxPercentIdleProcessors,
+                                                                                                 variancePower,
+                                                                                                 heavyIsXTimesMedian,
+                                                                                                 minPercentComponentsRetained,
+                                                                                                 boundComponentWeightPercent,
+                                                                                                 increaseParallelismInNewSuperstep,
+                                                                                                 maxPriorityDifferencePercent,
+                                                                                                 slack);
 
     } else {
         std::cout << "Unknown algorithm: " << algorithmName << std::endl;
         return 1;
     }
 
-    auto schedulerStatus = scheduler->computeSchedule(bspSchedule);
+    auto schedulerStatus = scheduler->ComputeSchedule(bspSchedule);
 
     if (schedulerStatus == RETURN_STATUS::ERROR) {
         std::cout << "Error while scheduling!" << std::endl;
@@ -111,7 +110,7 @@ int main(int argc, char *argv[]) {
 
     delete scheduler;
 
-    file_writer::write_txt(filenameGraph + "_" + algorithmName + "_schedule.shed", bspSchedule);
+    file_writer::WriteTxt(filenameGraph + "_" + algorithmName + "_schedule.shed", bspSchedule);
 
     std::cout << "OSP Success" << std::endl;
     return 0;

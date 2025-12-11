@@ -33,10 +33,10 @@ limitations under the License.
 using namespace osp;
 
 template <typename GraphT>
-void CheckPartitionTypeHomogeneity(const GraphT &dag, const std::vector<vertex_idx_t<GraphT>> &partition) {
+void CheckPartitionTypeHomogeneity(const GraphT &dag, const std::vector<VertexIdxT<GraphT>> &partition) {
     // Group partitions by their ID
-    std::map<vertex_idx_t<GraphT>, std::vector<vertex_idx_t<GraphT>>> partitions;
-    for (vertex_idx_t<GraphT> i = 0; i < dag.num_vertices(); ++i) {
+    std::map<VertexIdxT<GraphT>, std::vector<VertexIdxT<GraphT>>> partitions;
+    for (VertexIdxT<GraphT> i = 0; i < dag.NumVertices(); ++i) {
         partitions[partition[i]].push_back(i);
     }
 
@@ -45,9 +45,9 @@ void CheckPartitionTypeHomogeneity(const GraphT &dag, const std::vector<vertex_i
         if (vertices.empty()) {
             continue;
         }
-        const auto firstNodeType = dag.vertex_type(vertices[0]);
+        const auto firstNodeType = dag.VertexType(vertices[0]);
         for (const auto &vertex : vertices) {
-            if (dag.vertex_type(vertex) != firstNodeType) {
+            if (dag.VertexType(vertex) != firstNodeType) {
                 std::cerr << "Partition " << part_id << " contains vertices with different types." << std::endl;
                 return;
             }
@@ -63,67 +63,67 @@ int main(int argc, char *argv[]) {
 
     std::string dotFilePath = argv[1];
 
-    using GraphT = computational_dag_vector_impl_def_t;
+    using GraphT = ComputationalDagVectorImplDefT;
     using GraphT2 = GraphT;
 
     BspInstance<GraphT2> instance;
-    if (!file_reader::readComputationalDagDotFormat(dotFilePath, instance.getComputationalDag())) {
+    if (!file_reader::ReadComputationalDagDotFormat(dotFilePath, instance.GetComputationalDag())) {
         std::cerr << "Failed to read graph from " << dotFilePath << std::endl;
         return 1;
     }
 
-    std::cout << "Graph loaded successfully. " << instance.numberOfVertices() << " vertices." << std::endl;
+    std::cout << "Graph loaded successfully. " << instance.NumberOfVertices() << " vertices." << std::endl;
 
-    for (auto v : instance.getComputationalDag().vertices()) {
-        instance.getComputationalDag().set_vertex_comm_weight(
-            v, static_cast<v_commw_t<GraphT2>>(instance.getComputationalDag().vertex_comm_weight(v) * 0.01));
+    for (auto v : instance.GetComputationalDag().Vertices()) {
+        instance.GetComputationalDag().SetVertexCommWeight(
+            v, static_cast<VCommwT<GraphT2>>(instance.GetComputationalDag().VertexCommWeight(v) * 0.01));
     }
 
     // Set up architecture
-    instance.getArchitecture().SetProcessorsConsequTypes({24, 48}, {100, 100});
-    instance.setDiagonalCompatibilityMatrix(2);
-    instance.setSynchronisationCosts(2000);
-    instance.setCommunicationCosts(1);
+    instance.GetArchitecture().SetProcessorsConsequTypes({24, 48}, {100, 100});
+    instance.SetDiagonalCompatibilityMatrix(2);
+    instance.SetSynchronisationCosts(2000);
+    instance.SetCommunicationCosts(1);
 
     // Set up the scheduler
     GrowLocalAutoCores<GraphT> growlocal;
     BspLocking<GraphT> locking;
     GreedyChildren<GraphT> children;
-    kl_total_lambda_comm_improver<GraphT> kl(42);
-    kl.setSuperstepRemoveStrengthParameter(1.0);
-    kl.setTimeQualityParameter(1.0);
+    KlTotalLambdaCommImprover<GraphT> kl(42);
+    kl.SetSuperstepRemoveStrengthParameter(1.0);
+    kl.SetTimeQualityParameter(1.0);
     ComboScheduler<GraphT> growlocalKl(growlocal, kl);
     ComboScheduler<GraphT> lockingKl(locking, kl);
     ComboScheduler<GraphT> childrenKl(children, kl);
 
     GreedyMetaScheduler<GraphT> scheduler;
     // scheduler.addScheduler(growlocal_kl);
-    scheduler.addScheduler(lockingKl);
-    scheduler.addScheduler(childrenKl);
-    scheduler.addSerialScheduler();
+    scheduler.AddScheduler(lockingKl);
+    scheduler.AddScheduler(childrenKl);
+    scheduler.AddSerialScheduler();
 
     IsomorphicSubgraphScheduler<GraphT2, GraphT> isoScheduler(scheduler);
-    isoScheduler.setMergeDifferentTypes(false);
-    isoScheduler.setWorkThreshold(100);
-    isoScheduler.setCriticalPathThreshold(500);
-    isoScheduler.setOrbitLockRatio(0.5);
-    isoScheduler.setAllowTrimmedScheduler(false);
-    isoScheduler.set_plot_dot_graphs(true);    // Enable plotting for debug
+    isoScheduler.SetMergeDifferentTypes(false);
+    isoScheduler.SetWorkThreshold(100);
+    isoScheduler.SetCriticalPathThreshold(500);
+    isoScheduler.SetOrbitLockRatio(0.5);
+    isoScheduler.SetAllowTrimmedScheduler(false);
+    isoScheduler.SetPlotDotGraphs(true);    // Enable plotting for debug
 
     std::cout << "Starting partition computation..." << std::endl;
 
     // This is the call that is expected to throw the exception
-    auto partition = isoScheduler.compute_partition(instance);
+    auto partition = isoScheduler.ComputePartition(instance);
 
-    CheckPartitionTypeHomogeneity(instance.getComputationalDag(), partition);
+    CheckPartitionTypeHomogeneity(instance.GetComputationalDag(), partition);
 
     GraphT coraseGraph;
-    coarser_util::construct_coarse_dag(instance.getComputationalDag(), coraseGraph, partition);
-    bool acyc = is_acyclic(coraseGraph);
+    coarser_util::ConstructCoarseDag(instance.GetComputationalDag(), coraseGraph, partition);
+    bool acyc = IsAcyclic(coraseGraph);
     std::cout << "Partition is " << (acyc ? "acyclic." : "not acyclic.");
 
     std::cout << "Partition computation finished." << std::endl;
-    std::cout << "Generated " << std::set<vertex_idx_t<GraphT>>(partition.begin(), partition.end()).size() << " partitions."
+    std::cout << "Generated " << std::set<VertexIdxT<GraphT>>(partition.begin(), partition.end()).size() << " partitions."
               << std::endl;
 
     return 0;

@@ -36,10 +36,10 @@ void AddMemWeights(GraphT &dag) {
     int memWeight = 1;
     int commWeight = 7;
 
-    for (const auto &v : dag.vertices()) {
-        dag.set_vertex_work_weight(v, static_cast<v_memw_t<GraphT>>(memWeight++ % 10 + 2));
-        dag.set_vertex_mem_weight(v, static_cast<v_memw_t<GraphT>>(memWeight++ % 10 + 2));
-        dag.set_vertex_comm_weight(v, static_cast<v_commw_t<GraphT>>(commWeight++ % 10 + 2));
+    for (const auto &v : dag.Vertices()) {
+        dag.SetVertexWorkWeight(v, static_cast<VMemwT<GraphT>>(memWeight++ % 10 + 2));
+        dag.SetVertexMemWeight(v, static_cast<VMemwT<GraphT>>(memWeight++ % 10 + 2));
+        dag.SetVertexCommWeight(v, static_cast<VCommwT<GraphT>>(commWeight++ % 10 + 2));
     }
 }
 
@@ -62,28 +62,28 @@ void CheckEqualAffinityTable(TableT &table1, TableT &table2, const std::set<size
 }
 
 BOOST_AUTO_TEST_CASE(KlImproverSmokeTest) {
-    using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
-    using VertexType = Graph::vertex_idx;
+    using Graph = ComputationalDagEdgeIdxVectorImplDefIntT;
+    using VertexType = Graph::VertexIdx;
 
     Graph dag;
 
-    const VertexType v1 = dag.add_vertex(2, 9, 2);
-    const VertexType v2 = dag.add_vertex(3, 8, 4);
-    const VertexType v3 = dag.add_vertex(4, 7, 3);
-    const VertexType v4 = dag.add_vertex(5, 6, 2);
-    const VertexType v5 = dag.add_vertex(6, 5, 6);
-    const VertexType v6 = dag.add_vertex(7, 4, 2);
-    dag.add_vertex(8, 3, 4);
-    const VertexType v8 = dag.add_vertex(9, 2, 1);
+    const VertexType v1 = dag.AddVertex(2, 9, 2);
+    const VertexType v2 = dag.AddVertex(3, 8, 4);
+    const VertexType v3 = dag.AddVertex(4, 7, 3);
+    const VertexType v4 = dag.AddVertex(5, 6, 2);
+    const VertexType v5 = dag.AddVertex(6, 5, 6);
+    const VertexType v6 = dag.AddVertex(7, 4, 2);
+    dag.AddVertex(8, 3, 4);
+    const VertexType v8 = dag.AddVertex(9, 2, 1);
 
-    dag.add_edge(v1, v2, 2);
-    dag.add_edge(v1, v3, 2);
-    dag.add_edge(v1, v4, 2);
-    dag.add_edge(v2, v5, 12);
-    dag.add_edge(v3, v5, 6);
-    dag.add_edge(v3, v6, 7);
-    dag.add_edge(v5, v8, 9);
-    dag.add_edge(v4, v8, 9);
+    dag.AddEdge(v1, v2, 2);
+    dag.AddEdge(v1, v3, 2);
+    dag.AddEdge(v1, v4, 2);
+    dag.AddEdge(v2, v5, 12);
+    dag.AddEdge(v3, v5, 6);
+    dag.AddEdge(v3, v6, 7);
+    dag.AddEdge(v5, v8, 9);
+    dag.AddEdge(v4, v8, 9);
 
     BspArchitecture<Graph> arch;
 
@@ -91,24 +91,24 @@ BOOST_AUTO_TEST_CASE(KlImproverSmokeTest) {
 
     BspSchedule schedule(instance);
 
-    schedule.setAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
-    schedule.setAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
+    schedule.SetAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
+    schedule.SetAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
 
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
 
-    using KlImproverT = kl_total_comm_improver<Graph, no_local_search_memory_constraint, 1, true>;
+    using KlImproverT = KlTotalCommImprover<Graph, NoLocalSearchMemoryConstraint, 1, true>;
     KlImproverT kl;
 
-    auto status = kl.improveSchedule(schedule);
+    auto status = kl.ImproveSchedule(schedule);
 
     BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
-    BOOST_CHECK_EQUAL(schedule.satisfiesPrecedenceConstraints(), true);
+    BOOST_CHECK_EQUAL(schedule.SatisfiesPrecedenceConstraints(), true);
 }
 
 BOOST_AUTO_TEST_CASE(KlImproverOnTestGraphs) {
-    std::vector<std::string> filenamesGraph = test_graphs();
+    std::vector<std::string> filenamesGraph = TestGraphs();
 
-    using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
+    using Graph = ComputationalDagEdgeIdxVectorImplDefIntT;
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -118,111 +118,111 @@ BOOST_AUTO_TEST_CASE(KlImproverOnTestGraphs) {
         std::cout << cwd << std::endl;
     }
 
-    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_int_t> testScheduler;
+    GreedyBspScheduler<ComputationalDagEdgeIdxVectorImplDefIntT> testScheduler;
 
     for (auto &filenameGraph : filenamesGraph) {
         BspInstance<Graph> instance;
 
         bool statusGraph
-            = file_reader::readComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(), instance.getComputationalDag());
+            = file_reader::ReadComputationalDagHyperdagFormatDb((cwd / filenameGraph).string(), instance.GetComputationalDag());
 
-        instance.getArchitecture().setSynchronisationCosts(5);
-        instance.getArchitecture().setCommunicationCosts(5);
-        instance.getArchitecture().setNumberOfProcessors(4);
+        instance.GetArchitecture().SetSynchronisationCosts(5);
+        instance.GetArchitecture().SetCommunicationCosts(5);
+        instance.GetArchitecture().SetNumberOfProcessors(4);
 
         if (!statusGraph) {
             std::cout << "Reading files failed." << std::endl;
             BOOST_CHECK(false);
         }
 
-        AddMemWeights(instance.getComputationalDag());
+        AddMemWeights(instance.GetComputationalDag());
 
         BspSchedule<Graph> schedule(instance);
-        const auto result = testScheduler.computeSchedule(schedule);
+        const auto result = testScheduler.ComputeSchedule(schedule);
 
         BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
         BOOST_CHECK_EQUAL(&schedule.getInstance(), &instance);
-        BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+        BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
 
-        kl_total_comm_improver<Graph> kl;
+        KlTotalCommImprover<Graph> kl;
 
-        auto status = kl.improveSchedule(schedule);
+        auto status = kl.ImproveSchedule(schedule);
 
         BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
-        BOOST_CHECK_EQUAL(schedule.satisfiesPrecedenceConstraints(), true);
+        BOOST_CHECK_EQUAL(schedule.SatisfiesPrecedenceConstraints(), true);
     }
 }
 
 BOOST_AUTO_TEST_CASE(KlImproverSuperstepRemovalTest) {
-    using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
-    using VertexType = Graph::vertex_idx;
+    using Graph = ComputationalDagEdgeIdxVectorImplDefIntT;
+    using VertexType = Graph::VertexIdx;
 
     Graph dag;
 
-    const VertexType v1 = dag.add_vertex(2, 9, 2);
-    const VertexType v2 = dag.add_vertex(3, 8, 4);
-    const VertexType v3 = dag.add_vertex(4, 7, 3);
-    const VertexType v4 = dag.add_vertex(1, 6, 2);
-    const VertexType v5 = dag.add_vertex(6, 5, 6);
-    const VertexType v6 = dag.add_vertex(7, 4, 2);
-    dag.add_vertex(8, 3, 4);
-    const VertexType v8 = dag.add_vertex(9, 2, 1);
+    const VertexType v1 = dag.AddVertex(2, 9, 2);
+    const VertexType v2 = dag.AddVertex(3, 8, 4);
+    const VertexType v3 = dag.AddVertex(4, 7, 3);
+    const VertexType v4 = dag.AddVertex(1, 6, 2);
+    const VertexType v5 = dag.AddVertex(6, 5, 6);
+    const VertexType v6 = dag.AddVertex(7, 4, 2);
+    dag.AddVertex(8, 3, 4);
+    const VertexType v8 = dag.AddVertex(9, 2, 1);
 
-    dag.add_edge(v1, v2, 2);
-    dag.add_edge(v2, v3, 2);
-    dag.add_edge(v1, v4, 2);
-    dag.add_edge(v2, v5, 12);
-    dag.add_edge(v3, v5, 6);
-    dag.add_edge(v3, v6, 7);
-    dag.add_edge(v5, v8, 9);
-    dag.add_edge(v4, v8, 9);
+    dag.AddEdge(v1, v2, 2);
+    dag.AddEdge(v2, v3, 2);
+    dag.AddEdge(v1, v4, 2);
+    dag.AddEdge(v2, v5, 12);
+    dag.AddEdge(v3, v5, 6);
+    dag.AddEdge(v3, v6, 7);
+    dag.AddEdge(v5, v8, 9);
+    dag.AddEdge(v4, v8, 9);
 
     BspArchitecture<Graph> arch;
 
     BspInstance<Graph> instance(dag, arch);
 
     BspSchedule schedule(instance);
-    instance.getArchitecture().setSynchronisationCosts(50);
+    instance.GetArchitecture().SetSynchronisationCosts(50);
     // Create a schedule with an almost empty superstep (step 1)
-    schedule.setAssignedProcessors({0, 0, 0, 0, 1, 1, 1, 1});
-    schedule.setAssignedSupersteps({0, 0, 0, 0, 1, 2, 2, 2});
+    schedule.SetAssignedProcessors({0, 0, 0, 0, 1, 1, 1, 1});
+    schedule.SetAssignedSupersteps({0, 0, 0, 0, 1, 2, 2, 2});
 
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
     unsigned originalSteps = schedule.numberOfSupersteps();
 
-    using CostF = kl_total_comm_cost_function<Graph, double, no_local_search_memory_constraint, 1, true>;
-    kl_improver<Graph, CostF, no_local_search_memory_constraint, 1, double> kl;
+    using CostF = KlTotalCommCostFunction<Graph, double, NoLocalSearchMemoryConstraint, 1, true>;
+    KlImprover<Graph, CostF, NoLocalSearchMemoryConstraint, 1, double> kl;
 
-    auto status = kl.improveSchedule(schedule);
+    auto status = kl.ImproveSchedule(schedule);
 
     BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
-    BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+    BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
     BOOST_CHECK_LT(schedule.numberOfSupersteps(), originalSteps);
 }
 
 BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
-    using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
-    using VertexType = Graph::vertex_idx;
+    using Graph = ComputationalDagEdgeIdxVectorImplDefIntT;
+    using VertexType = Graph::VertexIdx;
 
     Graph dag;
 
-    const VertexType v1 = dag.add_vertex(2, 9, 2);
-    const VertexType v2 = dag.add_vertex(3, 8, 4);
-    const VertexType v3 = dag.add_vertex(4, 7, 3);
-    const VertexType v4 = dag.add_vertex(5, 6, 2);
-    const VertexType v5 = dag.add_vertex(6, 5, 6);
-    const VertexType v6 = dag.add_vertex(7, 4, 2);
-    dag.add_vertex(8, 3, 4);
-    const VertexType v8 = dag.add_vertex(9, 2, 1);
+    const VertexType v1 = dag.AddVertex(2, 9, 2);
+    const VertexType v2 = dag.AddVertex(3, 8, 4);
+    const VertexType v3 = dag.AddVertex(4, 7, 3);
+    const VertexType v4 = dag.AddVertex(5, 6, 2);
+    const VertexType v5 = dag.AddVertex(6, 5, 6);
+    const VertexType v6 = dag.AddVertex(7, 4, 2);
+    dag.AddVertex(8, 3, 4);
+    const VertexType v8 = dag.AddVertex(9, 2, 1);
 
-    dag.add_edge(v1, v2, 2);
-    dag.add_edge(v1, v3, 2);
-    dag.add_edge(v1, v4, 2);
-    dag.add_edge(v2, v5, 12);
-    dag.add_edge(v3, v5, 6);
-    dag.add_edge(v3, v6, 7);
-    dag.add_edge(v5, v8, 9);
-    dag.add_edge(v4, v8, 9);
+    dag.AddEdge(v1, v2, 2);
+    dag.AddEdge(v1, v3, 2);
+    dag.AddEdge(v1, v4, 2);
+    dag.AddEdge(v2, v5, 12);
+    dag.AddEdge(v3, v5, 6);
+    dag.AddEdge(v3, v6, 7);
+    dag.AddEdge(v5, v8, 9);
+    dag.AddEdge(v4, v8, 9);
 
     BspArchitecture<Graph> arch;
 
@@ -230,34 +230,34 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
 
     BspSchedule schedule(instance);
 
-    schedule.setAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
-    schedule.setAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
+    schedule.SetAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
+    schedule.SetAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
 
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
 
-    using CostF = kl_total_comm_cost_function<Graph, double, no_local_search_memory_constraint, 1, true>;
-    using KlImproverTest = kl_improver_test<Graph, CostF, no_local_search_memory_constraint, 1, double>;
+    using CostF = KlTotalCommCostFunction<Graph, double, NoLocalSearchMemoryConstraint, 1, true>;
+    using KlImproverTest = KlImproverTest<Graph, CostF, NoLocalSearchMemoryConstraint, 1, double>;
     KlImproverTest kl;
 
-    kl.setup_schedule(schedule);
+    kl.SetupSchedule(schedule);
 
-    auto &klActiveSchedule = kl.get_active_schedule();
+    auto &klActiveSchedule = kl.GetActiveSchedule();
 
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(0), 5.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(0), 0.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(1), 9.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(1), 0.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(2), 7.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(2), 6.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(3), 9.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(3), 8.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepMaxWork(0), 5.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepSecondMaxWork(0), 0.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepMaxWork(1), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepSecondMaxWork(1), 0.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepMaxWork(2), 7.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepSecondMaxWork(2), 6.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepMaxWork(3), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepSecondMaxWork(3), 8.0);
 
-    BOOST_CHECK_EQUAL(klActiveSchedule.num_steps(), 4);
-    BOOST_CHECK_EQUAL(klActiveSchedule.is_feasible(), true);
+    BOOST_CHECK_EQUAL(klActiveSchedule.NumSteps(), 4);
+    BOOST_CHECK_EQUAL(klActiveSchedule.IsFeasible(), true);
 
-    auto nodeSelection = kl.insert_gain_heap_test_penalty({2, 3});
+    auto nodeSelection = kl.InsertGainHeapTestPenalty({2, 3});
 
-    auto &affinity = kl.get_affinity_table();
+    auto &affinity = kl.GetAffinityTable();
 
     BOOST_CHECK_CLOSE(affinity[v3][0][0], 5.5, 0.00001);
     BOOST_CHECK_CLOSE(affinity[v3][0][1], 4.0, 0.00001);
@@ -273,66 +273,66 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
     BOOST_CHECK_CLOSE(affinity[v4][1][1], -6.5, 0.00001);
     BOOST_CHECK_CLOSE(affinity[v4][1][2], -3.5, 0.00001);
 
-    auto recomputeMaxGain = kl.run_inner_iteration_test();
+    auto recomputeMaxGain = kl.RunInnerIterationTest();
     std::cout << "------------------------recompute max_gain: { ";
     for (const auto &[key, value] : recomputeMaxGain) {
         std::cout << key << " ";
     }
     std::cout << "}" << std::endl;
 
-    BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 
-    recomputeMaxGain = kl.run_inner_iteration_test();
+    recomputeMaxGain = kl.RunInnerIterationTest();
     std::cout << "recompute max_gain: { ";
     for (const auto &[key, value] : recomputeMaxGain) {
         std::cout << key << " ";
     }
     std::cout << "}" << std::endl;
 
-    BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 
-    recomputeMaxGain = kl.run_inner_iteration_test();
+    recomputeMaxGain = kl.RunInnerIterationTest();
     std::cout << "recompute max_gain: { ";
     for (const auto &[key, value] : recomputeMaxGain) {
         std::cout << key << " ";
     }
     std::cout << "}" << std::endl;
 
-    BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 
-    recomputeMaxGain = kl.run_inner_iteration_test();
+    recomputeMaxGain = kl.RunInnerIterationTest();
     std::cout << "recompute max_gain: { ";
     for (const auto &[key, value] : recomputeMaxGain) {
         std::cout << key << " ";
     }
     std::cout << "}" << std::endl;
 
-    BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 }
 
 BOOST_AUTO_TEST_CASE(KlImproverInnerLoopPenaltyTest) {
-    using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
-    using VertexType = Graph::vertex_idx;
+    using Graph = ComputationalDagEdgeIdxVectorImplDefIntT;
+    using VertexType = Graph::VertexIdx;
 
     Graph dag;
 
-    const VertexType v1 = dag.add_vertex(2, 9, 2);
-    const VertexType v2 = dag.add_vertex(3, 8, 4);
-    const VertexType v3 = dag.add_vertex(4, 7, 3);
-    const VertexType v4 = dag.add_vertex(5, 6, 2);
-    const VertexType v5 = dag.add_vertex(6, 5, 6);
-    const VertexType v6 = dag.add_vertex(7, 4, 2);
-    dag.add_vertex(8, 3, 4);
-    const VertexType v8 = dag.add_vertex(9, 2, 1);
+    const VertexType v1 = dag.AddVertex(2, 9, 2);
+    const VertexType v2 = dag.AddVertex(3, 8, 4);
+    const VertexType v3 = dag.AddVertex(4, 7, 3);
+    const VertexType v4 = dag.AddVertex(5, 6, 2);
+    const VertexType v5 = dag.AddVertex(6, 5, 6);
+    const VertexType v6 = dag.AddVertex(7, 4, 2);
+    dag.AddVertex(8, 3, 4);
+    const VertexType v8 = dag.AddVertex(9, 2, 1);
 
-    dag.add_edge(v1, v2, 2);
-    dag.add_edge(v1, v3, 2);
-    dag.add_edge(v1, v4, 2);
-    dag.add_edge(v2, v5, 12);
-    dag.add_edge(v3, v5, 6);
-    dag.add_edge(v3, v6, 7);
-    dag.add_edge(v5, v8, 9);
-    dag.add_edge(v4, v8, 9);
+    dag.AddEdge(v1, v2, 2);
+    dag.AddEdge(v1, v3, 2);
+    dag.AddEdge(v1, v4, 2);
+    dag.AddEdge(v2, v5, 12);
+    dag.AddEdge(v3, v5, 6);
+    dag.AddEdge(v3, v6, 7);
+    dag.AddEdge(v5, v8, 9);
+    dag.AddEdge(v4, v8, 9);
 
     BspArchitecture<Graph> arch;
 
@@ -340,83 +340,83 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopPenaltyTest) {
 
     BspSchedule schedule(instance);
 
-    schedule.setAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
-    schedule.setAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
+    schedule.SetAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
+    schedule.SetAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
 
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
 
-    using CostF = kl_total_comm_cost_function<Graph, double, no_local_search_memory_constraint, 1, true>;
-    using KlImproverTest = kl_improver_test<Graph, CostF, no_local_search_memory_constraint, 1, double>;
+    using CostF = KlTotalCommCostFunction<Graph, double, NoLocalSearchMemoryConstraint, 1, true>;
+    using KlImproverTest = KlImproverTest<Graph, CostF, NoLocalSearchMemoryConstraint, 1, double>;
     KlImproverTest kl;
 
-    kl.setup_schedule(schedule);
+    kl.SetupSchedule(schedule);
 
     // auto &kl_active_schedule = kl.get_active_schedule();
 
-    BOOST_CHECK_CLOSE(51.5, kl.get_current_cost(), 0.00001);
+    BOOST_CHECK_CLOSE(51.5, kl.GetCurrentCost(), 0.00001);
 
-    auto nodeSelection = kl.insert_gain_heap_test_penalty({7});
+    auto nodeSelection = kl.InsertGainHeapTestPenalty({7});
 
-    auto recomputeMaxGain = kl.run_inner_iteration_test();
+    auto recomputeMaxGain = kl.RunInnerIterationTest();
     std::cout << "-----------recompute max_gain: { ";
     for (const auto &[key, value] : recomputeMaxGain) {
         std::cout << key << " ";
     }
     std::cout << "}" << std::endl;
 
-    BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 
-    recomputeMaxGain = kl.run_inner_iteration_test();
+    recomputeMaxGain = kl.RunInnerIterationTest();
     std::cout << "recompute max_gain: { ";
     for (const auto &[key, value] : recomputeMaxGain) {
         std::cout << key << " ";
     }
     std::cout << "}" << std::endl;
 
-    BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 
-    recomputeMaxGain = kl.run_inner_iteration_test();
+    recomputeMaxGain = kl.RunInnerIterationTest();
     std::cout << "recompute max_gain: { ";
     for (const auto &[key, value] : recomputeMaxGain) {
         std::cout << key << " ";
     }
     std::cout << "}" << std::endl;
 
-    BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 
-    recomputeMaxGain = kl.run_inner_iteration_test();
+    recomputeMaxGain = kl.RunInnerIterationTest();
     std::cout << "recompute max_gain: { ";
     for (const auto &[key, value] : recomputeMaxGain) {
         std::cout << key << " ";
     }
     std::cout << "}" << std::endl;
 
-    BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 }
 
 BOOST_AUTO_TEST_CASE(KlImproverViolationHandlingTest) {
-    using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
-    using VertexType = Graph::vertex_idx;
+    using Graph = ComputationalDagEdgeIdxVectorImplDefIntT;
+    using VertexType = Graph::VertexIdx;
 
     Graph dag;
 
-    const VertexType v1 = dag.add_vertex(2, 9, 2);
-    const VertexType v2 = dag.add_vertex(3, 8, 4);
-    const VertexType v3 = dag.add_vertex(4, 7, 3);
-    const VertexType v4 = dag.add_vertex(5, 6, 2);
-    const VertexType v5 = dag.add_vertex(6, 5, 6);
-    const VertexType v6 = dag.add_vertex(7, 4, 2);
-    dag.add_vertex(8, 3, 4);
-    const VertexType v8 = dag.add_vertex(9, 2, 1);
+    const VertexType v1 = dag.AddVertex(2, 9, 2);
+    const VertexType v2 = dag.AddVertex(3, 8, 4);
+    const VertexType v3 = dag.AddVertex(4, 7, 3);
+    const VertexType v4 = dag.AddVertex(5, 6, 2);
+    const VertexType v5 = dag.AddVertex(6, 5, 6);
+    const VertexType v6 = dag.AddVertex(7, 4, 2);
+    dag.AddVertex(8, 3, 4);
+    const VertexType v8 = dag.AddVertex(9, 2, 1);
 
-    dag.add_edge(v1, v2, 2);
-    dag.add_edge(v1, v3, 2);
-    dag.add_edge(v1, v4, 2);
-    dag.add_edge(v2, v5, 12);
-    dag.add_edge(v3, v5, 6);
-    dag.add_edge(v3, v6, 7);
-    dag.add_edge(v5, v8, 9);
-    dag.add_edge(v4, v8, 9);
+    dag.AddEdge(v1, v2, 2);
+    dag.AddEdge(v1, v3, 2);
+    dag.AddEdge(v1, v4, 2);
+    dag.AddEdge(v2, v5, 12);
+    dag.AddEdge(v3, v5, 6);
+    dag.AddEdge(v3, v6, 7);
+    dag.AddEdge(v5, v8, 9);
+    dag.AddEdge(v4, v8, 9);
 
     BspArchitecture<Graph> arch;
 
@@ -424,49 +424,49 @@ BOOST_AUTO_TEST_CASE(KlImproverViolationHandlingTest) {
 
     BspSchedule schedule(instance);
 
-    schedule.setAssignedProcessors({0, 1, 0, 0, 1, 0, 0, 1});    // v1->v2 is on same step, different procs
-    schedule.setAssignedSupersteps({0, 0, 2, 1, 2, 2, 3, 3});
+    schedule.SetAssignedProcessors({0, 1, 0, 0, 1, 0, 0, 1});    // v1->v2 is on same step, different procs
+    schedule.SetAssignedSupersteps({0, 0, 2, 1, 2, 2, 3, 3});
 
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
 
-    using CostF = kl_total_comm_cost_function<Graph, double, no_local_search_memory_constraint, 1, true>;
-    kl_improver_test<Graph, CostF, no_local_search_memory_constraint, 1, double> kl;
+    using CostF = KlTotalCommCostFunction<Graph, double, NoLocalSearchMemoryConstraint, 1, true>;
+    KlImproverTest<Graph, CostF, NoLocalSearchMemoryConstraint, 1, double> kl;
 
-    kl.setup_schedule(schedule);
+    kl.SetupSchedule(schedule);
 
-    kl.compute_violations_test();
+    kl.ComputeViolationsTest();
 
-    BOOST_CHECK_EQUAL(kl.is_feasible(), false);
+    BOOST_CHECK_EQUAL(kl.IsFeasible(), false);
 
-    kl_improver<Graph, CostF, no_local_search_memory_constraint, 1, double> klImprover;
-    klImprover.improveSchedule(schedule);
+    KlImprover<Graph, CostF, NoLocalSearchMemoryConstraint, 1, double> klImprover;
+    klImprover.ImproveSchedule(schedule);
 
-    BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+    BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
 }
 
 BOOST_AUTO_TEST_CASE(KlBase1) {
-    using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
-    using VertexType = Graph::vertex_idx;
+    using Graph = ComputationalDagEdgeIdxVectorImplDefIntT;
+    using VertexType = Graph::VertexIdx;
 
     Graph dag;
 
-    const VertexType v1 = dag.add_vertex(2, 9, 2);
-    const VertexType v2 = dag.add_vertex(3, 8, 4);
-    const VertexType v3 = dag.add_vertex(4, 7, 3);
-    const VertexType v4 = dag.add_vertex(5, 6, 2);
-    const VertexType v5 = dag.add_vertex(6, 5, 6);
-    const VertexType v6 = dag.add_vertex(7, 4, 2);
-    const VertexType v7 = dag.add_vertex(8, 3, 4);
-    const VertexType v8 = dag.add_vertex(9, 2, 1);
+    const VertexType v1 = dag.AddVertex(2, 9, 2);
+    const VertexType v2 = dag.AddVertex(3, 8, 4);
+    const VertexType v3 = dag.AddVertex(4, 7, 3);
+    const VertexType v4 = dag.AddVertex(5, 6, 2);
+    const VertexType v5 = dag.AddVertex(6, 5, 6);
+    const VertexType v6 = dag.AddVertex(7, 4, 2);
+    const VertexType v7 = dag.AddVertex(8, 3, 4);
+    const VertexType v8 = dag.AddVertex(9, 2, 1);
 
-    dag.add_edge(v1, v2, 2);
-    dag.add_edge(v1, v3, 2);
-    dag.add_edge(v1, v4, 2);
-    dag.add_edge(v2, v5, 12);
-    dag.add_edge(v3, v5, 6);
-    dag.add_edge(v3, v6, 7);
-    dag.add_edge(v5, v8, 9);
-    dag.add_edge(v4, v8, 9);
+    dag.AddEdge(v1, v2, 2);
+    dag.AddEdge(v1, v3, 2);
+    dag.AddEdge(v1, v4, 2);
+    dag.AddEdge(v2, v5, 12);
+    dag.AddEdge(v3, v5, 6);
+    dag.AddEdge(v3, v6, 7);
+    dag.AddEdge(v5, v8, 9);
+    dag.AddEdge(v4, v8, 9);
 
     BspArchitecture<Graph> arch;
 
@@ -474,50 +474,50 @@ BOOST_AUTO_TEST_CASE(KlBase1) {
 
     BspSchedule schedule(instance);
 
-    schedule.setAssignedProcessors({0, 0, 0, 0, 0, 0, 0, 0});
-    schedule.setAssignedSupersteps({0, 0, 0, 0, 0, 0, 0, 0});
+    schedule.SetAssignedProcessors({0, 0, 0, 0, 0, 0, 0, 0});
+    schedule.SetAssignedSupersteps({0, 0, 0, 0, 0, 0, 0, 0});
 
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
 
-    using CostF = kl_total_comm_cost_function<Graph, double, no_local_search_memory_constraint, 1, true>;
-    kl_improver_test<Graph, CostF, no_local_search_memory_constraint, 1, double> kl;
+    using CostF = KlTotalCommCostFunction<Graph, double, NoLocalSearchMemoryConstraint, 1, true>;
+    KlImproverTest<Graph, CostF, NoLocalSearchMemoryConstraint, 1, double> kl;
 
-    kl.setup_schedule(schedule);
+    kl.SetupSchedule(schedule);
 
-    auto &klActiveSchedule = kl.get_active_schedule();
+    auto &klActiveSchedule = kl.GetActiveSchedule();
 
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(0), 44.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(0), 0.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.num_steps(), 1);
-    BOOST_CHECK_CLOSE(kl.get_current_cost(), 44.0, 0.00001);
-    BOOST_CHECK_EQUAL(kl.is_feasible(), true);
-    BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost(), 44.0, 0.00001);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepMaxWork(0), 44.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepSecondMaxWork(0), 0.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.NumSteps(), 1);
+    BOOST_CHECK_CLOSE(kl.GetCurrentCost(), 44.0, 0.00001);
+    BOOST_CHECK_EQUAL(kl.IsFeasible(), true);
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCost(), 44.0, 0.00001);
 
-    using KlMove = kl_move_struct<double, VertexType>;
+    using KlMove = KlMoveStruct<double, VertexType>;
 
     KlMove move1(v1, 2.0 - 13.5, 0, 0, 1, 0);
 
-    kl.apply_move_test(move1);
+    kl.ApplyMoveTest(move1);
 
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(0), 42.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(0), 2.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.num_steps(), 1);
-    BOOST_CHECK_EQUAL(kl.is_feasible(), false);
-    BOOST_CHECK_CLOSE(kl.get_current_cost(), kl.get_comm_cost_f().compute_schedule_cost(), 0.00001);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepMaxWork(0), 42.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepSecondMaxWork(0), 2.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.NumSteps(), 1);
+    BOOST_CHECK_EQUAL(kl.IsFeasible(), false);
+    BOOST_CHECK_CLOSE(kl.GetCurrentCost(), kl.GetCommCostF().ComputeScheduleCost(), 0.00001);
 
     KlMove move2(v2, 3.0 + 4.5 - 4.0, 0, 0, 1, 0);
 
-    kl.apply_move_test(move2);
+    kl.ApplyMoveTest(move2);
 
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(0), 39.0);          // 42-3
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(0), 5.0);    // 2+3
-    BOOST_CHECK_EQUAL(klActiveSchedule.num_steps(), 1);
-    BOOST_CHECK_EQUAL(kl.is_feasible(), false);
-    BOOST_CHECK_CLOSE(kl.get_current_cost(), kl.get_comm_cost_f().compute_schedule_cost(), 0.00001);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepMaxWork(0), 39.0);         // 42-3
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepSecondMaxWork(0), 5.0);    // 2+3
+    BOOST_CHECK_EQUAL(klActiveSchedule.NumSteps(), 1);
+    BOOST_CHECK_EQUAL(kl.IsFeasible(), false);
+    BOOST_CHECK_CLOSE(kl.GetCurrentCost(), kl.GetCommCostF().ComputeScheduleCost(), 0.00001);
 
-    kl.insert_gain_heap_test({0, 1, 2, 3, 4, 5, 6, 7});
+    kl.InsertGainHeapTest({0, 1, 2, 3, 4, 5, 6, 7});
 
-    auto &affinity = kl.get_affinity_table();
+    auto &affinity = kl.GetAffinityTable();
 
     BOOST_CHECK_CLOSE(affinity[v1][0][1], 2.0 - 4.5, 0.00001);
     BOOST_CHECK_CLOSE(affinity[v1][1][1], 0.0, 0.00001);
@@ -526,41 +526,41 @@ BOOST_AUTO_TEST_CASE(KlBase1) {
     BOOST_CHECK_CLOSE(affinity[v3][0][1], 4.0, 0.00001);
 
     KlMove move3(v7, 7.0, 0, 0, 1, 0);
-    kl.apply_move_test(move3);
-    BOOST_CHECK_EQUAL(kl.is_feasible(), false);
+    kl.ApplyMoveTest(move3);
+    BOOST_CHECK_EQUAL(kl.IsFeasible(), false);
 
     KlMove move4(v2, 7.0, 1, 0, 0, 0);
-    kl.apply_move_test(move4);
-    BOOST_CHECK_EQUAL(kl.is_feasible(), false);
+    kl.ApplyMoveTest(move4);
+    BOOST_CHECK_EQUAL(kl.IsFeasible(), false);
 
     KlMove move5(v1, 7.0, 1, 0, 0, 0);
-    kl.apply_move_test(move5);
-    BOOST_CHECK_EQUAL(kl.is_feasible(), true);
+    kl.ApplyMoveTest(move5);
+    BOOST_CHECK_EQUAL(kl.IsFeasible(), true);
 }
 
 BOOST_AUTO_TEST_CASE(KlBase2) {
-    using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
-    using VertexType = Graph::vertex_idx;
+    using Graph = ComputationalDagEdgeIdxVectorImplDefIntT;
+    using VertexType = Graph::VertexIdx;
 
     Graph dag;
 
-    const VertexType v1 = dag.add_vertex(2, 9, 2);
-    const VertexType v2 = dag.add_vertex(3, 8, 4);
-    const VertexType v3 = dag.add_vertex(4, 7, 3);
-    const VertexType v4 = dag.add_vertex(5, 6, 2);
-    const VertexType v5 = dag.add_vertex(6, 5, 6);
-    const VertexType v6 = dag.add_vertex(7, 4, 2);
-    const VertexType v7 = dag.add_vertex(8, 3, 4);
-    const VertexType v8 = dag.add_vertex(9, 2, 1);
+    const VertexType v1 = dag.AddVertex(2, 9, 2);
+    const VertexType v2 = dag.AddVertex(3, 8, 4);
+    const VertexType v3 = dag.AddVertex(4, 7, 3);
+    const VertexType v4 = dag.AddVertex(5, 6, 2);
+    const VertexType v5 = dag.AddVertex(6, 5, 6);
+    const VertexType v6 = dag.AddVertex(7, 4, 2);
+    const VertexType v7 = dag.AddVertex(8, 3, 4);
+    const VertexType v8 = dag.AddVertex(9, 2, 1);
 
-    dag.add_edge(v1, v2, 2);
-    dag.add_edge(v1, v3, 2);
-    dag.add_edge(v1, v4, 2);
-    dag.add_edge(v2, v5, 12);
-    dag.add_edge(v3, v5, 6);
-    dag.add_edge(v3, v6, 7);
-    dag.add_edge(v5, v8, 9);
-    dag.add_edge(v4, v8, 9);
+    dag.AddEdge(v1, v2, 2);
+    dag.AddEdge(v1, v3, 2);
+    dag.AddEdge(v1, v4, 2);
+    dag.AddEdge(v2, v5, 12);
+    dag.AddEdge(v3, v5, 6);
+    dag.AddEdge(v3, v6, 7);
+    dag.AddEdge(v5, v8, 9);
+    dag.AddEdge(v4, v8, 9);
 
     BspArchitecture<Graph> arch;
 
@@ -568,83 +568,83 @@ BOOST_AUTO_TEST_CASE(KlBase2) {
 
     BspSchedule schedule(instance);
 
-    schedule.setAssignedProcessors({0, 1, 0, 0, 1, 0, 0, 1});
-    schedule.setAssignedSupersteps({0, 1, 1, 1, 2, 2, 3, 3});
+    schedule.SetAssignedProcessors({0, 1, 0, 0, 1, 0, 0, 1});
+    schedule.SetAssignedSupersteps({0, 1, 1, 1, 2, 2, 3, 3});
 
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
 
-    using CostF = kl_total_comm_cost_function<Graph, double, no_local_search_memory_constraint, 1, true>;
-    kl_improver_test<Graph, CostF, no_local_search_memory_constraint, 1, double> kl;
+    using CostF = KlTotalCommCostFunction<Graph, double, NoLocalSearchMemoryConstraint, 1, true>;
+    KlImproverTest<Graph, CostF, NoLocalSearchMemoryConstraint, 1, double> kl;
 
-    kl.setup_schedule(schedule);
+    kl.SetupSchedule(schedule);
 
-    auto &klActiveSchedule = kl.get_active_schedule();
+    auto &klActiveSchedule = kl.GetActiveSchedule();
 
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(0), 2.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(0), 0.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(1), 9.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(1), 3.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(2), 7.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(2), 6.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(3), 9.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(3), 8.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepMaxWork(0), 2.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepSecondMaxWork(0), 0.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepMaxWork(1), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepSecondMaxWork(1), 3.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepMaxWork(2), 7.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepSecondMaxWork(2), 6.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepMaxWork(3), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepSecondMaxWork(3), 8.0);
 
-    BOOST_CHECK_EQUAL(klActiveSchedule.num_steps(), 4);
-    BOOST_CHECK_CLOSE(kl.get_current_cost(), kl.get_comm_cost_f().compute_schedule_cost(), 0.00001);
-    BOOST_CHECK_EQUAL(kl.is_feasible(), true);
+    BOOST_CHECK_EQUAL(klActiveSchedule.NumSteps(), 4);
+    BOOST_CHECK_CLOSE(kl.GetCurrentCost(), kl.GetCommCostF().ComputeScheduleCost(), 0.00001);
+    BOOST_CHECK_EQUAL(kl.IsFeasible(), true);
 
-    using KlMove = kl_move_struct<double, VertexType>;
+    using KlMove = KlMoveStruct<double, VertexType>;
 
     KlMove move1(v1, 0.0 - 4.5, 0, 0, 1, 0);
 
-    kl.apply_move_test(move1);
+    kl.ApplyMoveTest(move1);
 
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(0), 2.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(0), 0.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(1), 9.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(1), 3.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(2), 7.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(2), 6.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(3), 9.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(3), 8.0);
-    BOOST_CHECK_EQUAL(kl.is_feasible(), true);
-    BOOST_CHECK_CLOSE(kl.get_current_cost(), kl.get_comm_cost_f().compute_schedule_cost(), 0.00001);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepMaxWork(0), 2.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepSecondMaxWork(0), 0.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepMaxWork(1), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepSecondMaxWork(1), 3.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepMaxWork(2), 7.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepSecondMaxWork(2), 6.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepMaxWork(3), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepSecondMaxWork(3), 8.0);
+    BOOST_CHECK_EQUAL(kl.IsFeasible(), true);
+    BOOST_CHECK_CLOSE(kl.GetCurrentCost(), kl.GetCommCostF().ComputeScheduleCost(), 0.00001);
 
     KlMove move2(v2, -1.0 - 8.5, 1, 1, 0, 0);
 
-    kl.apply_move_test(move2);
+    kl.ApplyMoveTest(move2);
 
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(0), 3.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(0), 2.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(1), 9.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(1), 0.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(2), 7.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(2), 6.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(3), 9.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(3), 8.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.num_steps(), 4);
-    BOOST_CHECK_EQUAL(kl.is_feasible(), false);
-    BOOST_CHECK_CLOSE(kl.get_current_cost(), kl.get_comm_cost_f().compute_schedule_cost(), 0.00001);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepMaxWork(0), 3.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepSecondMaxWork(0), 2.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepMaxWork(1), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepSecondMaxWork(1), 0.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepMaxWork(2), 7.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepSecondMaxWork(2), 6.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepMaxWork(3), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepSecondMaxWork(3), 8.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.NumSteps(), 4);
+    BOOST_CHECK_EQUAL(kl.IsFeasible(), false);
+    BOOST_CHECK_CLOSE(kl.GetCurrentCost(), kl.GetCommCostF().ComputeScheduleCost(), 0.00001);
 
     KlMove moveX(v2, -2.0 + 8.5, 0, 0, 1, 0);
 
-    kl.apply_move_test(moveX);
+    kl.ApplyMoveTest(moveX);
 
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(0), 5.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(0), 0.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(1), 9.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(1), 0.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(2), 7.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(2), 6.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(3), 9.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(3), 8.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.num_steps(), 4);
-    BOOST_CHECK_EQUAL(kl.is_feasible(), true);
-    BOOST_CHECK_CLOSE(kl.get_current_cost(), kl.get_comm_cost_f().compute_schedule_cost(), 0.00001);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepMaxWork(0), 5.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepSecondMaxWork(0), 0.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepMaxWork(1), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepSecondMaxWork(1), 0.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepMaxWork(2), 7.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepSecondMaxWork(2), 6.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepMaxWork(3), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepSecondMaxWork(3), 8.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.NumSteps(), 4);
+    BOOST_CHECK_EQUAL(kl.IsFeasible(), true);
+    BOOST_CHECK_CLOSE(kl.GetCurrentCost(), kl.GetCommCostF().ComputeScheduleCost(), 0.00001);
 
-    kl.insert_gain_heap_test({0, 1, 2, 3, 4, 5, 6, 7});
+    kl.InsertGainHeapTest({0, 1, 2, 3, 4, 5, 6, 7});
 
-    auto &affinity = kl.get_affinity_table();
+    auto &affinity = kl.GetAffinityTable();
 
     BOOST_CHECK_CLOSE(affinity[v1][0][1], -4.5, 0.00001);
     BOOST_CHECK_CLOSE(affinity[v1][0][2], -2.5, 0.00001);
@@ -700,28 +700,28 @@ BOOST_AUTO_TEST_CASE(KlBase2) {
 }
 
 BOOST_AUTO_TEST_CASE(KlBase3) {
-    using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
-    using VertexType = Graph::vertex_idx;
+    using Graph = ComputationalDagEdgeIdxVectorImplDefIntT;
+    using VertexType = Graph::VertexIdx;
 
     Graph dag;
 
-    const VertexType v1 = dag.add_vertex(2, 9, 2);
-    const VertexType v2 = dag.add_vertex(3, 8, 4);
-    const VertexType v3 = dag.add_vertex(4, 7, 3);
-    const VertexType v4 = dag.add_vertex(5, 6, 2);
-    const VertexType v5 = dag.add_vertex(6, 5, 6);
-    const VertexType v6 = dag.add_vertex(7, 4, 2);
-    const VertexType v7 = dag.add_vertex(8, 3, 4);
-    const VertexType v8 = dag.add_vertex(9, 2, 1);
+    const VertexType v1 = dag.AddVertex(2, 9, 2);
+    const VertexType v2 = dag.AddVertex(3, 8, 4);
+    const VertexType v3 = dag.AddVertex(4, 7, 3);
+    const VertexType v4 = dag.AddVertex(5, 6, 2);
+    const VertexType v5 = dag.AddVertex(6, 5, 6);
+    const VertexType v6 = dag.AddVertex(7, 4, 2);
+    const VertexType v7 = dag.AddVertex(8, 3, 4);
+    const VertexType v8 = dag.AddVertex(9, 2, 1);
 
-    dag.add_edge(v1, v2, 2);
-    dag.add_edge(v1, v3, 2);
-    dag.add_edge(v1, v4, 2);
-    dag.add_edge(v2, v5, 12);
-    dag.add_edge(v3, v5, 6);
-    dag.add_edge(v3, v6, 7);
-    dag.add_edge(v5, v8, 9);
-    dag.add_edge(v4, v8, 9);
+    dag.AddEdge(v1, v2, 2);
+    dag.AddEdge(v1, v3, 2);
+    dag.AddEdge(v1, v4, 2);
+    dag.AddEdge(v2, v5, 12);
+    dag.AddEdge(v3, v5, 6);
+    dag.AddEdge(v3, v6, 7);
+    dag.AddEdge(v5, v8, 9);
+    dag.AddEdge(v4, v8, 9);
 
     BspArchitecture<Graph> arch;
 
@@ -729,33 +729,33 @@ BOOST_AUTO_TEST_CASE(KlBase3) {
 
     BspSchedule schedule(instance);
 
-    schedule.setAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
-    schedule.setAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
+    schedule.SetAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
+    schedule.SetAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
 
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
 
-    using CostF = kl_total_comm_cost_function<Graph, double, no_local_search_memory_constraint, 1, true>;
-    kl_improver_test<Graph, CostF, no_local_search_memory_constraint, 1, double> kl;
+    using CostF = KlTotalCommCostFunction<Graph, double, NoLocalSearchMemoryConstraint, 1, true>;
+    KlImproverTest<Graph, CostF, NoLocalSearchMemoryConstraint, 1, double> kl;
 
-    kl.setup_schedule(schedule);
+    kl.SetupSchedule(schedule);
 
-    auto &klActiveSchedule = kl.get_active_schedule();
+    auto &klActiveSchedule = kl.GetActiveSchedule();
 
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(0), 5.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(0), 0.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(1), 9.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(1), 0.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(2), 7.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(2), 6.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(3), 9.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(3), 8.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepMaxWork(0), 5.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepSecondMaxWork(0), 0.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepMaxWork(1), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepSecondMaxWork(1), 0.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepMaxWork(2), 7.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepSecondMaxWork(2), 6.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepMaxWork(3), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures.StepSecondMaxWork(3), 8.0);
 
-    BOOST_CHECK_EQUAL(klActiveSchedule.num_steps(), 4);
-    BOOST_CHECK_EQUAL(klActiveSchedule.is_feasible(), true);
+    BOOST_CHECK_EQUAL(klActiveSchedule.NumSteps(), 4);
+    BOOST_CHECK_EQUAL(klActiveSchedule.IsFeasible(), true);
 
-    kl.insert_gain_heap_test_penalty({0, 1, 2, 3, 4, 5, 6, 7});
+    kl.InsertGainHeapTestPenalty({0, 1, 2, 3, 4, 5, 6, 7});
 
-    auto &affinity = kl.get_affinity_table();
+    auto &affinity = kl.GetAffinityTable();
 
     BOOST_CHECK_CLOSE(affinity[v1][0][1], 1.0, 0.00001);
     BOOST_CHECK_CLOSE(affinity[v1][0][2], 3.0, 0.00001);

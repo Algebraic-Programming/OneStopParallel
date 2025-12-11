@@ -12,9 +12,9 @@
 using namespace osp;
 
 BOOST_AUTO_TEST_CASE(HeavyEdgePartitioning) {
-    using GraphT = boost_graph_int_t;
+    using GraphT = BoostGraphIntT;
 
-    std::vector<std::string> filenamesGraph = test_graphs();
+    std::vector<std::string> filenamesGraph = TestGraphs();
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE(HeavyEdgePartitioning) {
 
         GraphT graph;
 
-        bool statusGraph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(), graph);
+        bool statusGraph = file_reader::ReadComputationalDagHyperdagFormatDb((cwd / filenameGraph).string(), graph);
 
         if (!statusGraph) {
             std::cout << "Reading files failed." << std::endl;
@@ -39,12 +39,12 @@ BOOST_AUTO_TEST_CASE(HeavyEdgePartitioning) {
         }
 
         int weight = 0;
-        for (const auto &e : edges(graph)) {
-            graph.set_edge_comm_weight(e, 1 + (weight + 100 % 500));
+        for (const auto &e : Edges(graph)) {
+            graph.SetEdgeCommWeight(e, 1 + (weight + 100 % 500));
         }
 
-        auto partition = heavy_edge_preprocess(graph, 5.0, 0.7f, 0.34f);
-        std::vector<bool> vertexInPartition(graph.num_vertices(), false);
+        auto partition = HeavyEdgePreprocess(graph, 5.0, 0.7f, 0.34f);
+        std::vector<bool> vertexInPartition(graph.NumVertices(), false);
         for (const auto &part : partition) {
             for (const auto &vert : part) {
                 BOOST_CHECK(!vertexInPartition[vert]);

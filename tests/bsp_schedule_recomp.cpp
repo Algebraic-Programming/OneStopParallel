@@ -29,12 +29,12 @@ limitations under the License.
 using namespace osp;
 
 BOOST_AUTO_TEST_CASE(BspScheduleRecompTest) {
-    using Graph = computational_dag_vector_impl_def_t;
+    using Graph = ComputationalDagVectorImplDefT;
 
     BspInstance<Graph> instance;
-    instance.setNumberOfProcessors(3);
-    instance.setCommunicationCosts(3);
-    instance.setSynchronisationCosts(5);
+    instance.SetNumberOfProcessors(3);
+    instance.SetCommunicationCosts(3);
+    instance.SetSynchronisationCosts(5);
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -44,27 +44,27 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecompTest) {
         std::cout << cwd << std::endl;
     }
 
-    file_reader::readComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(),
-                                                      instance.getComputationalDag());
+    file_reader::ReadComputationalDagHyperdagFormatDb((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(),
+                                                      instance.GetComputationalDag());
 
     BspSchedule<Graph> schedule(instance);
     GreedyBspScheduler<Graph> scheduler;
-    const auto result = scheduler.computeSchedule(schedule);
+    const auto result = scheduler.ComputeSchedule(schedule);
 
     BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
     BOOST_CHECK_EQUAL(&schedule.getInstance(), &instance);
-    BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+    BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
 
     BspScheduleCS scheduleCS(schedule);
 
     BspScheduleRecomp<Graph> scheduleRecomp(schedule);
 
-    BOOST_CHECK(scheduleRecomp.satisfiesConstraints());
-    BOOST_CHECK_EQUAL(scheduleRecomp.getTotalAssignments(), instance.numberOfVertices());
-    BOOST_CHECK_EQUAL(scheduleRecomp.computeWorkCosts(), schedule.computeWorkCosts());
-    BOOST_CHECK_EQUAL(scheduleRecomp.computeCosts(), scheduleCS.computeCosts());
+    BOOST_CHECK(scheduleRecomp.SatisfiesConstraints());
+    BOOST_CHECK_EQUAL(scheduleRecomp.getTotalAssignments(), instance.NumberOfVertices());
+    BOOST_CHECK_EQUAL(scheduleRecomp.ComputeWorkCosts(), schedule.ComputeWorkCosts());
+    BOOST_CHECK_EQUAL(scheduleRecomp.ComputeCosts(), scheduleCS.ComputeCosts());
 
     BspScheduleRecomp<Graph> scheduleRecompFromCs(scheduleCS);
-    BOOST_CHECK(scheduleRecompFromCs.satisfiesConstraints());
-    BOOST_CHECK_EQUAL(scheduleRecompFromCs.computeCosts(), scheduleCS.computeCosts());
+    BOOST_CHECK(scheduleRecompFromCs.SatisfiesConstraints());
+    BOOST_CHECK_EQUAL(scheduleRecompFromCs.ComputeCosts(), scheduleCS.ComputeCosts());
 }

@@ -25,78 +25,77 @@ limitations under the License.
 
 namespace osp {
 
-template <typename hypergraph_t>
+template <typename HypergraphT>
 class GenericFM {
-    using index_type = typename hypergraph_t::vertex_idx;
-    using workw_type = typename hypergraph_t::vertex_work_weight_type;
-    using memw_type = typename hypergraph_t::vertex_mem_weight_type;
-    using commw_type = typename hypergraph_t::vertex_comm_weight_type;
+    using IndexType = typename HypergraphT::VertexIdx;
+    using WorkwType = typename HypergraphT::VertexWorkWeightType;
+    using MemwType = typename HypergraphT::VertexMemWeightType;
+    using CommwType = typename HypergraphT::VertexCommWeightType;
 
   protected:
-    unsigned max_number_of_passes = 10;
-    index_type max_nodes_in_part = 0;
+    unsigned maxNumberOfPasses_ = 10;
+    IndexType maxNodesInPart_ = 0;
 
     // auxiliary for RecursiveFM
-    std::vector<index_type> getMaxNodesOnLevel(index_type nr_nodes, unsigned nr_parts) const;
+    std::vector<IndexType> GetMaxNodesOnLevel(IndexType nrNodes, unsigned nrParts) const;
 
   public:
-    void ImprovePartitioning(Partitioning<hypergraph_t> &partition);
+    void ImprovePartitioning(Partitioning<HypergraphT> &partition);
 
-    void RecursiveFM(Partitioning<hypergraph_t> &partition);
+    void RecursiveFM(Partitioning<HypergraphT> &partition);
 
-    inline unsigned getMaxNumberOfPasses() const { return max_number_of_passes; }
+    inline unsigned GetMaxNumberOfPasses() const { return maxNumberOfPasses_; }
 
-    inline void setMaxNumberOfPasses(unsigned passes_) { max_number_of_passes = passes_; }
+    inline void SetMaxNumberOfPasses(unsigned passes) { maxNumberOfPasses_ = passes; }
 
-    inline index_type getMaxNodesInPart() const { return max_nodes_in_part; }
+    inline IndexType GetMaxNodesInPart() const { return maxNodesInPart_; }
 
-    inline void setMaxNodesInPart(index_type max_nodes_) { max_nodes_in_part = max_nodes_; }
+    inline void SetMaxNodesInPart(IndexType maxNodes) { maxNodesInPart_ = maxNodes; }
 };
 
-template <typename hypergraph_t>
-void GenericFM<hypergraph_t>::ImprovePartitioning(Partitioning<hypergraph_t> &partition) {
+template <typename HypergraphT>
+void GenericFM<HypergraphT>::ImprovePartitioning(Partitioning<HypergraphT> &partition) {
     // Note: this algorithm disregards hyperedge weights, in order to keep the size of the gain bucket array bounded!
 
-    if (partition.getInstance().getNumberOfPartitions() != 2) {
+    if (partition.GetInstance().GetNumberOfPartitions() != 2) {
         std::cout << "Error: FM can only be used for 2 partitions." << std::endl;
         return;
     }
 
-    if (!partition.satisfiesBalanceConstraint()) {
+    if (!partition.SatisfiesBalanceConstraint()) {
         std::cout << "Error: initial partition to FM does not satisfy balance constraint." << std::endl;
         return;
     }
 
-    const Hypergraph<index_type, workw_type, memw_type, commw_type> &Hgraph = partition.getInstance().getHypergraph();
+    const Hypergraph<IndexType, WorkwType, MemwType, CommwType> &hgraph = partition.GetInstance().GetHypergraph();
 
-    index_type max_degree = 0;
-    for (index_type node = 0; node < Hgraph.num_vertices(); ++node) {
-        max_degree = std::max(max_degree, static_cast<index_type>(Hgraph.get_incident_hyperedges(node).size()));
+    IndexType maxDegree = 0;
+    for (IndexType node = 0; node < hgraph.NumVertices(); ++node) {
+        maxDegree = std::max(maxDegree, static_cast<IndexType>(hgraph.GetIncidentHyperedges(node).size()));
     }
 
-    if (max_nodes_in_part == 0) {    // if not initialized
-        max_nodes_in_part
-            = static_cast<index_type>(ceil(static_cast<double>(Hgraph.num_vertices())
-                                           * static_cast<double>(partition.getInstance().getMaxWorkWeightPerPartition())
-                                           / static_cast<double>(compute_total_vertex_work_weight(Hgraph))));
+    if (maxNodesInPart_ == 0) {    // if not initialized
+        maxNodesInPart_ = static_cast<IndexType>(ceil(static_cast<double>(hgraph.NumVertices())
+                                                      * static_cast<double>(partition.GetInstance().GetMaxWorkWeightPerPartition())
+                                                      / static_cast<double>(ComputeTotalVertexWorkWeight(hgraph))));
     }
 
-    for (unsigned pass_idx = 0; pass_idx < max_number_of_passes; ++pass_idx) {
-        std::vector<unsigned> node_to_new_part = partition.assignedPartitions();
-        std::vector<bool> locked(Hgraph.num_vertices(), false);
-        std::vector<int> gain(Hgraph.num_vertices(), 0);
-        std::vector<std::vector<index_type> > nr_nodes_in_hyperedge_on_side(Hgraph.num_hyperedges(), std::vector<index_type>(2, 0));
+    for (unsigned passIdx = 0; passIdx < maxNumberOfPasses_; ++passIdx) {
+        std::vector<unsigned> nodeToNewPart = partition.AssignedPartitions();
+        std::vector<bool> locked(hgraph.NumVertices(), false);
+        std::vector<int> gain(hgraph.NumVertices(), 0);
+        std::vector<std::vector<IndexType> > nrNodesInHyperedgeOnSide(hgraph.NumHyperedges(), std::vector<IndexType>(2, 0));
         int cost = 0;
 
-        index_type left_side = 0;
-        for (index_type node = 0; node < Hgraph.num_vertices(); ++node) {
-            if (partition.assignedPartition(node) == 0) {
-                ++left_side;
+        IndexType leftSide = 0;
+        for (IndexType node = 0; node < hgraph.NumVertices(); ++node) {
+            if (partition.AssignedPartition(node) == 0) {
+                ++leftSide;
             }
         }
 
-        if (left_side > max_nodes_in_part || Hgraph.num_vertices() - left_side > max_nodes_in_part) {
-            if (pass_idx == 0) {
+        if (leftSide > maxNodesInPart_ || hgraph.NumVertices() - leftSide > maxNodesInPart_) {
+            if (passIdx == 0) {
                 std::cout << "Error: initial partitioning of FM is not balanced." << std::endl;
                 return;
             } else {
@@ -106,27 +105,27 @@ void GenericFM<hypergraph_t>::ImprovePartitioning(Partitioning<hypergraph_t> &pa
         }
 
         // Initialize gain values
-        for (index_type hyperedge = 0; hyperedge < Hgraph.num_hyperedges(); ++hyperedge) {
-            for (index_type node : Hgraph.get_vertices_in_hyperedge(hyperedge)) {
-                ++nr_nodes_in_hyperedge_on_side[hyperedge][partition.assignedPartition(node)];
+        for (IndexType hyperedge = 0; hyperedge < hgraph.NumHyperedges(); ++hyperedge) {
+            for (IndexType node : hgraph.GetVerticesInHyperedge(hyperedge)) {
+                ++nrNodesInHyperedgeOnSide[hyperedge][partition.AssignedPartition(node)];
             }
 
-            if (Hgraph.get_vertices_in_hyperedge(hyperedge).size() < 2) {
+            if (hgraph.GetVerticesInHyperedge(hyperedge).size() < 2) {
                 continue;
             }
 
             for (unsigned part = 0; part < 2; ++part) {
-                if (nr_nodes_in_hyperedge_on_side[hyperedge][part] == 1) {
-                    for (index_type node : Hgraph.get_vertices_in_hyperedge(hyperedge)) {
-                        if (partition.assignedPartition(node) == part) {
+                if (nrNodesInHyperedgeOnSide[hyperedge][part] == 1) {
+                    for (IndexType node : hgraph.GetVerticesInHyperedge(hyperedge)) {
+                        if (partition.AssignedPartition(node) == part) {
                             ++gain[node];
                         }
                     }
                 }
 
-                if (nr_nodes_in_hyperedge_on_side[hyperedge][part] == 0) {
-                    for (index_type node : Hgraph.get_vertices_in_hyperedge(hyperedge)) {
-                        if (partition.assignedPartition(node) != part) {
+                if (nrNodesInHyperedgeOnSide[hyperedge][part] == 0) {
+                    for (IndexType node : hgraph.GetVerticesInHyperedge(hyperedge)) {
+                        if (partition.AssignedPartition(node) != part) {
                             --gain[node];
                         }
                     }
@@ -135,244 +134,242 @@ void GenericFM<hypergraph_t>::ImprovePartitioning(Partitioning<hypergraph_t> &pa
         }
 
         // build gain bucket array
-        std::vector<int> max_gain(2, -static_cast<int>(max_degree) - 1);
-        std::vector<std::vector<std::vector<index_type> > > gain_bucket_array(
-            2, std::vector<std::vector<index_type> >(2 * max_degree + 1));
-        for (index_type node = 0; node < Hgraph.num_vertices(); ++node) {
-            const unsigned &part = partition.assignedPartition(node);
-            gain_bucket_array[part][static_cast<unsigned>(gain[node] + static_cast<int>(max_degree))].push_back(node);
-            max_gain[part] = std::max(max_gain[part], gain[node]);
+        std::vector<int> maxGain(2, -static_cast<int>(maxDegree) - 1);
+        std::vector<std::vector<std::vector<IndexType> > > gainBucketArray(
+            2, std::vector<std::vector<IndexType> >(2 * maxDegree + 1));
+        for (IndexType node = 0; node < hgraph.NumVertices(); ++node) {
+            const unsigned &part = partition.AssignedPartition(node);
+            gainBucketArray[part][static_cast<unsigned>(gain[node] + static_cast<int>(maxDegree))].push_back(node);
+            maxGain[part] = std::max(maxGain[part], gain[node]);
         }
 
-        index_type best_index = 0;
-        int best_cost = 0;
-        std::vector<index_type> moved_nodes;
+        IndexType bestIndex = 0;
+        int bestCost = 0;
+        std::vector<IndexType> movedNodes;
 
         // the pass itself: make moves
-        while (moved_nodes.size() < Hgraph.num_vertices()) {
+        while (movedNodes.size() < hgraph.NumVertices()) {
             // select move
-            index_type to_move = std::numeric_limits<index_type>::max();
-            unsigned chosen_part = std::numeric_limits<unsigned>::max();
+            IndexType toMove = std::numeric_limits<IndexType>::max();
+            unsigned chosenPart = std::numeric_limits<unsigned>::max();
 
-            unsigned gain_index = static_cast<unsigned>(std::max(max_gain[0], max_gain[1]) + static_cast<int>(max_degree));
-            while (gain_index < std::numeric_limits<unsigned>::max()) {
-                bool can_choose_left = (Hgraph.num_vertices() - left_side < max_nodes_in_part)
-                                       && !gain_bucket_array[0][gain_index].empty();
-                bool can_choose_right = (left_side < max_nodes_in_part) && !gain_bucket_array[1][gain_index].empty();
+            unsigned gainIndex = static_cast<unsigned>(std::max(maxGain[0], maxGain[1]) + static_cast<int>(maxDegree));
+            while (gainIndex < std::numeric_limits<unsigned>::max()) {
+                bool canChooseLeft = (hgraph.NumVertices() - leftSide < maxNodesInPart_) && !gainBucketArray[0][gainIndex].empty();
+                bool canChooseRight = (leftSide < maxNodesInPart_) && !gainBucketArray[1][gainIndex].empty();
 
-                if (can_choose_left && can_choose_right) {
-                    chosen_part = (left_side >= Hgraph.num_vertices() / 2) ? 1 : 0;
-                } else if (can_choose_left) {
-                    chosen_part = 0;
-                } else if (can_choose_right) {
-                    chosen_part = 1;
+                if (canChooseLeft && canChooseRight) {
+                    chosenPart = (leftSide >= hgraph.NumVertices() / 2) ? 1 : 0;
+                } else if (canChooseLeft) {
+                    chosenPart = 0;
+                } else if (canChooseRight) {
+                    chosenPart = 1;
                 }
 
-                if (chosen_part < 2) {
-                    to_move = gain_bucket_array[chosen_part][gain_index].back();
-                    gain_bucket_array[chosen_part][gain_index].pop_back();
+                if (chosenPart < 2) {
+                    toMove = gainBucketArray[chosenPart][gainIndex].back();
+                    gainBucketArray[chosenPart][gainIndex].pop_back();
                     break;
                 }
-                --gain_index;
+                --gainIndex;
             }
 
-            if (to_move == std::numeric_limits<index_type>::max()) {
+            if (toMove == std::numeric_limits<IndexType>::max()) {
                 break;
             }
 
             // make move
 
-            moved_nodes.push_back(to_move);
-            cost -= gain[to_move];
-            if (cost < best_cost) {
-                best_cost = cost;
-                best_index = static_cast<index_type>(moved_nodes.size()) + 1;
+            movedNodes.push_back(toMove);
+            cost -= gain[toMove];
+            if (cost < bestCost) {
+                bestCost = cost;
+                bestIndex = static_cast<IndexType>(movedNodes.size()) + 1;
             }
-            locked[to_move] = true;
-            node_to_new_part[to_move] = 1 - node_to_new_part[to_move];
+            locked[toMove] = true;
+            nodeToNewPart[toMove] = 1 - nodeToNewPart[toMove];
 
-            if (chosen_part == 0) {
-                --left_side;
+            if (chosenPart == 0) {
+                --leftSide;
             } else {
-                ++left_side;
+                ++leftSide;
             }
 
-            unsigned other_part = 1 - chosen_part;
+            unsigned otherPart = 1 - chosenPart;
 
             // update gain values
-            for (index_type hyperedge : Hgraph.get_incident_hyperedges(to_move)) {
-                if (nr_nodes_in_hyperedge_on_side[hyperedge][chosen_part] == 1) {
-                    for (index_type node : Hgraph.get_vertices_in_hyperedge(hyperedge)) {
+            for (IndexType hyperedge : hgraph.GetIncidentHyperedges(toMove)) {
+                if (nrNodesInHyperedgeOnSide[hyperedge][chosenPart] == 1) {
+                    for (IndexType node : hgraph.GetVerticesInHyperedge(hyperedge)) {
                         if (locked[node]) {
                             continue;
                         }
 
-                        std::vector<index_type> &vec
-                            = gain_bucket_array[other_part][static_cast<unsigned>(gain[node] + static_cast<int>(max_degree))];
+                        std::vector<IndexType> &vec
+                            = gainBucketArray[otherPart][static_cast<unsigned>(gain[node] + static_cast<int>(maxDegree))];
                         vec.erase(std::remove(vec.begin(), vec.end(), node), vec.end());
                         --gain[node];
-                        gain_bucket_array[other_part][static_cast<unsigned>(gain[node] + static_cast<int>(max_degree))].push_back(
-                            node);
+                        gainBucketArray[otherPart][static_cast<unsigned>(gain[node] + static_cast<int>(maxDegree))].push_back(node);
                     }
-                } else if (nr_nodes_in_hyperedge_on_side[hyperedge][chosen_part] == 2) {
-                    for (index_type node : Hgraph.get_vertices_in_hyperedge(hyperedge)) {
-                        if (node_to_new_part[node] == chosen_part && !locked[node]) {
-                            std::vector<index_type> &vec
-                                = gain_bucket_array[chosen_part][static_cast<unsigned>(gain[node] + static_cast<int>(max_degree))];
+                } else if (nrNodesInHyperedgeOnSide[hyperedge][chosenPart] == 2) {
+                    for (IndexType node : hgraph.GetVerticesInHyperedge(hyperedge)) {
+                        if (nodeToNewPart[node] == chosenPart && !locked[node]) {
+                            std::vector<IndexType> &vec
+                                = gainBucketArray[chosenPart][static_cast<unsigned>(gain[node] + static_cast<int>(maxDegree))];
                             vec.erase(std::remove(vec.begin(), vec.end(), node), vec.end());
                             ++gain[node];
-                            gain_bucket_array[chosen_part][static_cast<unsigned>(gain[node] + static_cast<int>(max_degree))]
-                                .push_back(node);
-                            max_gain[chosen_part] = std::max(max_gain[chosen_part], gain[node]);
+                            gainBucketArray[chosenPart][static_cast<unsigned>(gain[node] + static_cast<int>(maxDegree))].push_back(
+                                node);
+                            maxGain[chosenPart] = std::max(maxGain[chosenPart], gain[node]);
                             break;
                         }
                     }
                 }
-                if (nr_nodes_in_hyperedge_on_side[hyperedge][other_part] == 1) {
-                    for (index_type node : Hgraph.get_vertices_in_hyperedge(hyperedge)) {
-                        if (node_to_new_part[node] == other_part && !locked[node]) {
-                            std::vector<index_type> &vec
-                                = gain_bucket_array[other_part][static_cast<unsigned>(gain[node] + static_cast<int>(max_degree))];
+                if (nrNodesInHyperedgeOnSide[hyperedge][otherPart] == 1) {
+                    for (IndexType node : hgraph.GetVerticesInHyperedge(hyperedge)) {
+                        if (nodeToNewPart[node] == otherPart && !locked[node]) {
+                            std::vector<IndexType> &vec
+                                = gainBucketArray[otherPart][static_cast<unsigned>(gain[node] + static_cast<int>(maxDegree))];
                             vec.erase(std::remove(vec.begin(), vec.end(), node), vec.end());
                             --gain[node];
-                            gain_bucket_array[other_part][static_cast<unsigned>(gain[node] + static_cast<int>(max_degree))].push_back(
+                            gainBucketArray[otherPart][static_cast<unsigned>(gain[node] + static_cast<int>(maxDegree))].push_back(
                                 node);
                             break;
                         }
                     }
-                } else if (nr_nodes_in_hyperedge_on_side[hyperedge][other_part] == 0) {
-                    for (index_type node : Hgraph.get_vertices_in_hyperedge(hyperedge)) {
+                } else if (nrNodesInHyperedgeOnSide[hyperedge][otherPart] == 0) {
+                    for (IndexType node : hgraph.GetVerticesInHyperedge(hyperedge)) {
                         if (locked[node]) {
                             continue;
                         }
 
-                        std::vector<index_type> &vec
-                            = gain_bucket_array[chosen_part][static_cast<unsigned>(gain[node] + static_cast<int>(max_degree))];
+                        std::vector<IndexType> &vec
+                            = gainBucketArray[chosenPart][static_cast<unsigned>(gain[node] + static_cast<int>(maxDegree))];
                         vec.erase(std::remove(vec.begin(), vec.end(), node), vec.end());
                         ++gain[node];
-                        gain_bucket_array[chosen_part][static_cast<unsigned>(gain[node] + static_cast<int>(max_degree))].push_back(
+                        gainBucketArray[chosenPart][static_cast<unsigned>(gain[node] + static_cast<int>(maxDegree))].push_back(
                             node);
-                        max_gain[chosen_part] = std::max(max_gain[chosen_part], gain[node]);
+                        maxGain[chosenPart] = std::max(maxGain[chosenPart], gain[node]);
                     }
                 }
-                --nr_nodes_in_hyperedge_on_side[hyperedge][chosen_part];
-                ++nr_nodes_in_hyperedge_on_side[hyperedge][other_part];
+                --nrNodesInHyperedgeOnSide[hyperedge][chosenPart];
+                ++nrNodesInHyperedgeOnSide[hyperedge][otherPart];
             }
         }
 
         // apply best configuration seen
-        if (best_index == 0) {
+        if (bestIndex == 0) {
             break;
         }
 
-        for (index_type node_idx = 0; node_idx < best_index && node_idx < static_cast<index_type>(moved_nodes.size()); ++node_idx) {
-            partition.setAssignedPartition(moved_nodes[node_idx], 1U - partition.assignedPartition(moved_nodes[node_idx]));
+        for (IndexType nodeIdx = 0; nodeIdx < bestIndex && nodeIdx < static_cast<IndexType>(movedNodes.size()); ++nodeIdx) {
+            partition.SetAssignedPartition(movedNodes[nodeIdx], 1U - partition.AssignedPartition(movedNodes[nodeIdx]));
         }
     }
 }
 
-template <typename hypergraph_t>
-void GenericFM<hypergraph_t>::RecursiveFM(Partitioning<hypergraph_t> &partition) {
-    const unsigned &nr_parts = partition.getInstance().getNumberOfPartitions();
-    const index_type &nr_nodes = partition.getInstance().getHypergraph().num_vertices();
+template <typename HypergraphT>
+void GenericFM<HypergraphT>::RecursiveFM(Partitioning<HypergraphT> &partition) {
+    const unsigned &nrParts = partition.GetInstance().GetNumberOfPartitions();
+    const IndexType &nrNodes = partition.GetInstance().GetHypergraph().NumVertices();
 
-    using Hgraph = Hypergraph<index_type, workw_type, memw_type, commw_type>;
+    using Hgraph = Hypergraph<IndexType, WorkwType, MemwType, CommwType>;
 
     // Note: this is just a simple recursive heuristic for the case when the partitions are a small power of 2
-    if (nr_parts != 4 && nr_parts != 8 && nr_parts != 16 && nr_parts != 32) {
+    if (nrParts != 4 && nrParts != 8 && nrParts != 16 && nrParts != 32) {
         std::cout << "Error: Recursive FM can only be used for 4, 8, 16 or 32 partitions currently." << std::endl;
         return;
     }
 
-    for (index_type node = 0; node < nr_nodes; ++node) {
-        partition.setAssignedPartition(node, static_cast<unsigned>(node % 2));
+    for (IndexType node = 0; node < nrNodes; ++node) {
+        partition.SetAssignedPartition(node, static_cast<unsigned>(node % 2));
     }
 
-    if (max_nodes_in_part == 0) {    // if not initialized
-        max_nodes_in_part = static_cast<index_type>(
-            ceil(static_cast<double>(nr_nodes) * static_cast<double>(partition.getInstance().getMaxWorkWeightPerPartition())
-                 / static_cast<double>(compute_total_vertex_work_weight(partition.getInstance().getHypergraph()))));
+    if (maxNodesInPart_ == 0) {    // if not initialized
+        maxNodesInPart_ = static_cast<IndexType>(
+            ceil(static_cast<double>(nrNodes) * static_cast<double>(partition.GetInstance().GetMaxWorkWeightPerPartition())
+                 / static_cast<double>(ComputeTotalVertexWorkWeight(partition.GetInstance().GetHypergraph()))));
     }
 
-    const std::vector<index_type> max_nodes_on_level = getMaxNodesOnLevel(nr_nodes, nr_parts);
+    const std::vector<IndexType> maxNodesOnLevel = GetMaxNodesOnLevel(nrNodes, nrParts);
 
     unsigned parts = 1;
     unsigned level = 0;
-    std::vector<Hgraph> sub_hgraphs({partition.getInstance().getHypergraph()});
-    unsigned start_index = 0;
+    std::vector<Hgraph> subHgraphs({partition.GetInstance().GetHypergraph()});
+    unsigned startIndex = 0;
 
-    std::map<index_type, std::pair<unsigned, index_type> > node_to_new_hgraph_and_id;
-    std::map<std::pair<unsigned, index_type>, index_type> hgraph_and_id_to_old_idx;
-    for (index_type node = 0; node < nr_nodes; ++node) {
-        node_to_new_hgraph_and_id[node] = std::make_pair(0, node);
-        hgraph_and_id_to_old_idx[std::make_pair(0, node)] = node;
+    std::map<IndexType, std::pair<unsigned, IndexType> > nodeToNewHgraphAndId;
+    std::map<std::pair<unsigned, IndexType>, IndexType> hgraphAndIdToOldIdx;
+    for (IndexType node = 0; node < nrNodes; ++node) {
+        nodeToNewHgraphAndId[node] = std::make_pair(0, node);
+        hgraphAndIdToOldIdx[std::make_pair(0, node)] = node;
     }
 
-    while (parts < nr_parts) {
-        unsigned end_idx = static_cast<unsigned>(sub_hgraphs.size());
-        for (unsigned sub_hgraph_index = start_index; sub_hgraph_index < end_idx; ++sub_hgraph_index) {
-            const Hgraph &hgraph = sub_hgraphs[sub_hgraph_index];
+    while (parts < nrParts) {
+        unsigned endIdx = static_cast<unsigned>(subHgraphs.size());
+        for (unsigned subHgraphIndex = startIndex; subHgraphIndex < endIdx; ++subHgraphIndex) {
+            const Hgraph &hgraph = subHgraphs[subHgraphIndex];
             PartitioningProblem instance(hgraph, 2);
-            Partitioning sub_partition(instance);
-            for (index_type node = 0; node < hgraph.num_vertices(); ++node) {
-                sub_partition.setAssignedPartition(node, node % 2);
+            Partitioning subPartition(instance);
+            for (IndexType node = 0; node < hgraph.NumVertices(); ++node) {
+                subPartition.SetAssignedPartition(node, node % 2);
             }
 
-            GenericFM sub_fm;
-            sub_fm.setMaxNodesInPart(max_nodes_on_level[level]);
+            GenericFM subFm;
+            subFm.SetMaxNodesInPart(maxNodesOnLevel[level]);
             // std::cout<<"Hgraph of size "<<hgraph.num_vertices()<<" split into two parts of at most "<<max_nodes_on_level[level]<<std::endl;
-            sub_fm.ImprovePartitioning(sub_partition);
+            subFm.ImprovePartitioning(subPartition);
 
-            std::vector<unsigned> current_idx(2, 0);
-            std::vector<std::vector<bool> > part_indicator(2, std::vector<bool>(hgraph.num_vertices(), false));
-            for (index_type node = 0; node < hgraph.num_vertices(); ++node) {
-                const unsigned part_id = sub_partition.assignedPartition(node);
-                const index_type original_id = hgraph_and_id_to_old_idx[std::make_pair(sub_hgraph_index, node)];
-                node_to_new_hgraph_and_id[original_id] = std::make_pair(sub_hgraphs.size() + part_id, current_idx[part_id]);
-                hgraph_and_id_to_old_idx[std::make_pair(sub_hgraphs.size() + part_id, current_idx[part_id])] = original_id;
-                ++current_idx[part_id];
-                part_indicator[part_id][node] = true;
+            std::vector<unsigned> currentIdx(2, 0);
+            std::vector<std::vector<bool> > partIndicator(2, std::vector<bool>(hgraph.NumVertices(), false));
+            for (IndexType node = 0; node < hgraph.NumVertices(); ++node) {
+                const unsigned partId = subPartition.AssignedPartition(node);
+                const IndexType originalId = hgraphAndIdToOldIdx[std::make_pair(subHgraphIndex, node)];
+                nodeToNewHgraphAndId[originalId] = std::make_pair(subHgraphs.size() + partId, currentIdx[partId]);
+                hgraphAndIdToOldIdx[std::make_pair(subHgraphs.size() + partId, currentIdx[partId])] = originalId;
+                ++currentIdx[partId];
+                partIndicator[partId][node] = true;
             }
 
             for (unsigned part = 0; part < 2; ++part) {
-                sub_hgraphs.push_back(create_induced_hypergraph(sub_hgraphs[sub_hgraph_index], part_indicator[part]));
+                subHgraphs.push_back(CreateInducedHypergraph(subHgraphs[subHgraphIndex], partIndicator[part]));
             }
 
-            ++start_index;
+            ++startIndex;
         }
 
         parts *= 2;
         ++level;
     }
 
-    for (index_type node = 0; node < nr_nodes; ++node) {
-        partition.setAssignedPartition(
-            node, node_to_new_hgraph_and_id[node].first - (static_cast<unsigned>(sub_hgraphs.size()) - nr_parts));
+    for (IndexType node = 0; node < nrNodes; ++node) {
+        partition.SetAssignedPartition(node,
+                                       nodeToNewHgraphAndId[node].first - (static_cast<unsigned>(subHgraphs.size()) - nrParts));
     }
 }
 
-template <typename hypergraph_t>
-std::vector<typename hypergraph_t::vertex_idx> GenericFM<hypergraph_t>::getMaxNodesOnLevel(
-    typename hypergraph_t::vertex_idx nr_nodes, unsigned nr_parts) const {
-    std::vector<index_type> max_nodes_on_level;
-    std::vector<index_type> limit_per_level({static_cast<index_type>(ceil(static_cast<double>(nr_nodes) / 2.0))});
-    for (unsigned parts = nr_parts / 4; parts > 0; parts /= 2) {
-        limit_per_level.push_back(static_cast<index_type>(ceil(static_cast<double>(limit_per_level.back()) / 2.0)));
+template <typename HypergraphT>
+std::vector<typename HypergraphT::vertex_idx> GenericFM<HypergraphT>::GetMaxNodesOnLevel(typename HypergraphT::vertex_idx nrNodes,
+                                                                                         unsigned nrParts) const {
+    std::vector<IndexType> maxNodesOnLevel;
+    std::vector<IndexType> limitPerLevel({static_cast<IndexType>(ceil(static_cast<double>(nrNodes) / 2.0))});
+    for (unsigned parts = nrParts / 4; parts > 0; parts /= 2) {
+        limitPerLevel.push_back(static_cast<IndexType>(ceil(static_cast<double>(limitPerLevel.back()) / 2.0)));
     }
 
-    max_nodes_on_level.push_back(max_nodes_in_part);
-    for (unsigned parts = 2; parts < nr_parts; parts *= 2) {
-        index_type next_limit = max_nodes_on_level.back() * 2;
-        if (next_limit > limit_per_level.back()) {
-            --next_limit;
+    maxNodesOnLevel.push_back(maxNodesInPart_);
+    for (unsigned parts = 2; parts < nrParts; parts *= 2) {
+        IndexType nextLimit = maxNodesOnLevel.back() * 2;
+        if (nextLimit > limitPerLevel.back()) {
+            --nextLimit;
         }
 
-        limit_per_level.pop_back();
-        max_nodes_on_level.push_back(next_limit);
+        limitPerLevel.pop_back();
+        maxNodesOnLevel.push_back(nextLimit);
     }
 
-    std::reverse(max_nodes_on_level.begin(), max_nodes_on_level.end());
-    return max_nodes_on_level;
+    std::reverse(maxNodesOnLevel.begin(), maxNodesOnLevel.end());
+    return maxNodesOnLevel;
 }
 
 }    // namespace osp

@@ -53,7 +53,7 @@ std::vector<std::string> TestArchitectures() { return {"data/machine_params/p3.a
 template <typename GraphT>
 void RunTest(Scheduler<GraphT> *testScheduler) {
     // static_assert(std::is_base_of<Scheduler, T>::value, "Class is not a scheduler!");
-    std::vector<std::string> filenamesGraph = tiny_spaa_graphs();
+    std::vector<std::string> filenamesGraph = TinySpaaGraphs();
     std::vector<std::string> filenamesArchitectures = TestArchitectures();
 
     // Getting root git directory
@@ -71,15 +71,15 @@ void RunTest(Scheduler<GraphT> *testScheduler) {
             std::string nameMachine = filenameMachine.substr(filenameMachine.find_last_of("/\\") + 1);
             nameMachine = nameMachine.substr(0, nameMachine.rfind("."));
 
-            std::cout << std::endl << "Scheduler: " << testScheduler->getScheduleName() << std::endl;
+            std::cout << std::endl << "Scheduler: " << testScheduler->GetScheduleName() << std::endl;
             std::cout << "Graph: " << nameGraph << std::endl;
             std::cout << "Architecture: " << nameMachine << std::endl;
 
             BspInstance<GraphT> instance;
 
-            bool statusGraph = file_reader::readGraph((cwd / filenameGraph).string(), instance.getComputationalDag());
+            bool statusGraph = file_reader::ReadGraph((cwd / filenameGraph).string(), instance.GetComputationalDag());
             bool statusArchitecture
-                = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.getArchitecture());
+                = file_reader::ReadBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
 
             if (!statusGraph || !statusArchitecture) {
                 std::cout << "Reading files failed." << std::endl;
@@ -87,10 +87,10 @@ void RunTest(Scheduler<GraphT> *testScheduler) {
             }
 
             BspSchedule<GraphT> schedule(instance);
-            const auto result = testScheduler->computeSchedule(schedule);
+            const auto result = testScheduler->ComputeSchedule(schedule);
 
             BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
-            BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+            BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
         }
     }
 }
@@ -98,7 +98,7 @@ void RunTest(Scheduler<GraphT> *testScheduler) {
 template <typename GraphT>
 void RunTest2(Scheduler<GraphT> *testScheduler) {
     // static_assert(std::is_base_of<Scheduler, T>::value, "Class is not a scheduler!");
-    std::vector<std::string> filenamesGraph = tiny_spaa_graphs();
+    std::vector<std::string> filenamesGraph = TinySpaaGraphs();
     std::vector<std::string> filenamesArchitectures = TestArchitectures();
 
     // Getting root git directory
@@ -116,15 +116,15 @@ void RunTest2(Scheduler<GraphT> *testScheduler) {
             std::string nameMachine = filenameMachine.substr(filenameMachine.find_last_of("/\\") + 1);
             nameMachine = nameMachine.substr(0, nameMachine.rfind("."));
 
-            std::cout << std::endl << "Scheduler: " << testScheduler->getScheduleName() << std::endl;
+            std::cout << std::endl << "Scheduler: " << testScheduler->GetScheduleName() << std::endl;
             std::cout << "Graph: " << nameGraph << std::endl;
             std::cout << "Architecture: " << nameMachine << std::endl;
 
-            computational_dag_edge_idx_vector_impl_def_t graph;
+            ComputationalDagEdgeIdxVectorImplDefT graph;
             BspArchitecture<GraphT> arch;
 
-            bool statusGraph = file_reader::readGraph((cwd / filenameGraph).string(), graph);
-            bool statusArchitecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), arch);
+            bool statusGraph = file_reader::ReadGraph((cwd / filenameGraph).string(), graph);
+            bool statusArchitecture = file_reader::ReadBspArchitecture((cwd / "data/machine_params/p3.arch").string(), arch);
 
             if (!statusGraph || !statusArchitecture) {
                 std::cout << "Reading files failed." << std::endl;
@@ -134,80 +134,80 @@ void RunTest2(Scheduler<GraphT> *testScheduler) {
             BspInstance<GraphT> instance(graph, arch);
 
             BspSchedule<GraphT> schedule(instance);
-            const auto result = testScheduler->computeSchedule(schedule);
+            const auto result = testScheduler->ComputeSchedule(schedule);
 
             BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
-            BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+            BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
         }
     }
 }
 
 BOOST_AUTO_TEST_CASE(GreedyBspSchedulerTest) {
-    GreedyBspScheduler<computational_dag_vector_impl_def_t> test;
+    GreedyBspScheduler<ComputationalDagVectorImplDefT> test;
     RunTest(&test);
 }
 
 BOOST_AUTO_TEST_CASE(GreedyBspSchedulerTest2) {
-    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_t> test;
+    GreedyBspScheduler<ComputationalDagEdgeIdxVectorImplDefT> test;
     RunTest(&test);
 }
 
 BOOST_AUTO_TEST_CASE(SerialTest) {
-    Serial<computational_dag_vector_impl_def_t> test;
+    Serial<ComputationalDagVectorImplDefT> test;
     RunTest(&test);
 }
 
 BOOST_AUTO_TEST_CASE(CilkTest1) {
-    CilkScheduler<computational_dag_vector_impl_def_t> test;
-    test.setMode(CILK);
+    CilkScheduler<ComputationalDagVectorImplDefT> test;
+    test.SetMode(CILK);
     RunTest(&test);
 }
 
 BOOST_AUTO_TEST_CASE(CilkTest2) {
-    CilkScheduler<computational_dag_vector_impl_def_t> test;
-    test.setMode(SJF);
+    CilkScheduler<ComputationalDagVectorImplDefT> test;
+    test.SetMode(SJF);
     RunTest(&test);
 }
 
 BOOST_AUTO_TEST_CASE(EtfTest) {
-    EtfScheduler<computational_dag_vector_impl_def_t> test;
+    EtfScheduler<ComputationalDagVectorImplDefT> test;
     RunTest(&test);
 }
 
 BOOST_AUTO_TEST_CASE(RandomTest) {
-    RandomGreedy<computational_dag_vector_impl_def_t> test;
+    RandomGreedy<ComputationalDagVectorImplDefT> test;
     RunTest(&test);
 }
 
 BOOST_AUTO_TEST_CASE(ChildrenTest) {
-    GreedyChildren<computational_dag_vector_impl_def_t> test;
+    GreedyChildren<ComputationalDagVectorImplDefT> test;
     RunTest(&test);
 }
 
 BOOST_AUTO_TEST_CASE(LockingTest) {
-    BspLocking<computational_dag_vector_impl_def_int_t> test;
+    BspLocking<ComputationalDagVectorImplDefIntT> test;
     RunTest(&test);
 }
 
 BOOST_AUTO_TEST_CASE(VariancefillupTest) {
-    VarianceFillup<computational_dag_vector_impl_def_t> test;
+    VarianceFillup<ComputationalDagVectorImplDefT> test;
     RunTest(&test);
 }
 
 BOOST_AUTO_TEST_CASE(EtfTestEdgeDescImpl) {
-    EtfScheduler<computational_dag_edge_idx_vector_impl_def_t> test;
+    EtfScheduler<ComputationalDagEdgeIdxVectorImplDefT> test;
     RunTest(&test);
 }
 
 BOOST_AUTO_TEST_CASE(GrowLocalAutoTestEdgeDescImpl) {
-    GrowLocalAutoCores<computational_dag_edge_idx_vector_impl_def_t> test;
+    GrowLocalAutoCores<ComputationalDagEdgeIdxVectorImplDefT> test;
     RunTest(&test);
 }
 
 BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTopTest1) {
     {
-        using GraphT = computational_dag_vector_impl_def_t;
-        GrowLocalAutoCoresParallel_Params<vertex_idx_t<GraphT>, v_workw_t<GraphT>> params;
+        using GraphT = ComputationalDagVectorImplDefT;
+        GrowLocalAutoCoresParallelParams<VertexIdxT<GraphT>, VWorkwT<GraphT>> params;
 
         params.numThreads = 1;
 
@@ -218,8 +218,8 @@ BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTopTest1) {
 
 BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTopTest2) {
     {
-        using GraphT = computational_dag_vector_impl_def_t;
-        GrowLocalAutoCoresParallel_Params<vertex_idx_t<GraphT>, v_workw_t<GraphT>> params;
+        using GraphT = ComputationalDagVectorImplDefT;
+        GrowLocalAutoCoresParallelParams<VertexIdxT<GraphT>, VWorkwT<GraphT>> params;
 
         params.numThreads = 2;
 
@@ -230,8 +230,8 @@ BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTopTest2) {
 
 BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTopTest5) {
     {
-        using GraphT = computational_dag_vector_impl_def_t;
-        GrowLocalAutoCoresParallel_Params<vertex_idx_t<GraphT>, v_workw_t<GraphT>> params;
+        using GraphT = ComputationalDagVectorImplDefT;
+        GrowLocalAutoCoresParallelParams<VertexIdxT<GraphT>, VWorkwT<GraphT>> params;
 
         params.numThreads = 5;
 
@@ -242,8 +242,8 @@ BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTopTest5) {
 
 BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTest1) {
     {
-        using GraphT = Compact_Sparse_Graph<true, true>;
-        GrowLocalAutoCoresParallel_Params<vertex_idx_t<GraphT>, v_workw_t<GraphT>> params;
+        using GraphT = CompactSparseGraph<true, true>;
+        GrowLocalAutoCoresParallelParams<VertexIdxT<GraphT>, VWorkwT<GraphT>> params;
 
         params.numThreads = 1;
 
@@ -254,8 +254,8 @@ BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTest1) {
 
 BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTest2) {
     {
-        using GraphT = Compact_Sparse_Graph<true, true>;
-        GrowLocalAutoCoresParallel_Params<vertex_idx_t<GraphT>, v_workw_t<GraphT>> params;
+        using GraphT = CompactSparseGraph<true, true>;
+        GrowLocalAutoCoresParallelParams<VertexIdxT<GraphT>, VWorkwT<GraphT>> params;
 
         params.numThreads = 2;
 
@@ -266,8 +266,8 @@ BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTest2) {
 
 BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTest5) {
     {
-        using GraphT = Compact_Sparse_Graph<true, true>;
-        GrowLocalAutoCoresParallel_Params<vertex_idx_t<GraphT>, v_workw_t<GraphT>> params;
+        using GraphT = CompactSparseGraph<true, true>;
+        GrowLocalAutoCoresParallelParams<VertexIdxT<GraphT>, VWorkwT<GraphT>> params;
 
         params.numThreads = 5;
 
@@ -277,70 +277,70 @@ BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTest5) {
 }
 
 BOOST_AUTO_TEST_CASE(VariancePartitionerTest) {
-    VariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, linear_interpolation> testLinear;
+    VariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT, LinearInterpolation> testLinear;
     RunTest(&testLinear);
 
-    VariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, flat_spline_interpolation> testFlat;
+    VariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT, FlatSplineInterpolation> testFlat;
     RunTest(&testFlat);
 
-    VariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, superstep_only_interpolation> testSuperstep;
+    VariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT, SuperstepOnlyInterpolation> testSuperstep;
     RunTest(&testSuperstep);
 
-    VariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, global_only_interpolation> testGlobal;
+    VariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT, GlobalOnlyInterpolation> testGlobal;
     RunTest(&testGlobal);
 }
 
 BOOST_AUTO_TEST_CASE(LightEdgeVariancePartitionerTest) {
-    LightEdgeVariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, linear_interpolation> testLinear;
+    LightEdgeVariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT, LinearInterpolation> testLinear;
     RunTest(&testLinear);
 
-    LightEdgeVariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, flat_spline_interpolation> testFlat;
+    LightEdgeVariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT, FlatSplineInterpolation> testFlat;
     RunTest(&testFlat);
 
-    LightEdgeVariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, superstep_only_interpolation> testSuperstep;
+    LightEdgeVariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT, SuperstepOnlyInterpolation> testSuperstep;
     RunTest(&testSuperstep);
 
-    LightEdgeVariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, global_only_interpolation> testGlobal;
+    LightEdgeVariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT, GlobalOnlyInterpolation> testGlobal;
     RunTest(&testGlobal);
 }
 
 BOOST_AUTO_TEST_CASE(SquashAMulTest) {
-    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_t> sched;
+    GreedyBspScheduler<ComputationalDagEdgeIdxVectorImplDefT> sched;
 
-    SquashAMul<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t> mlCoarsen;
-    MultilevelCoarseAndSchedule<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t> coarsenTest(
+    SquashAMul<ComputationalDagEdgeIdxVectorImplDefT, ComputationalDagEdgeIdxVectorImplDefT> mlCoarsen;
+    MultilevelCoarseAndSchedule<ComputationalDagEdgeIdxVectorImplDefT, ComputationalDagEdgeIdxVectorImplDefT> coarsenTest(
         sched, mlCoarsen);
 
     RunTest(&coarsenTest);
 }
 
 BOOST_AUTO_TEST_CASE(SquashAMulImproverTest) {
-    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_t> sched;
-    HillClimbingScheduler<computational_dag_edge_idx_vector_impl_def_t> improver;
+    GreedyBspScheduler<ComputationalDagEdgeIdxVectorImplDefT> sched;
+    HillClimbingScheduler<ComputationalDagEdgeIdxVectorImplDefT> improver;
 
-    SquashAMul<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t> mlCoarsen;
-    MultilevelCoarseAndSchedule<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t> coarsenTest(
+    SquashAMul<ComputationalDagEdgeIdxVectorImplDefT, ComputationalDagEdgeIdxVectorImplDefT> mlCoarsen;
+    MultilevelCoarseAndSchedule<ComputationalDagEdgeIdxVectorImplDefT, ComputationalDagEdgeIdxVectorImplDefT> coarsenTest(
         sched, improver, mlCoarsen);
 
     RunTest(&coarsenTest);
 }
 
 BOOST_AUTO_TEST_CASE(SarkarMulTest) {
-    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_t> sched;
+    GreedyBspScheduler<ComputationalDagEdgeIdxVectorImplDefT> sched;
 
-    SarkarMul<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t> mlCoarsen;
-    MultilevelCoarseAndSchedule<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t> coarsenTest(
+    SarkarMul<ComputationalDagEdgeIdxVectorImplDefT, ComputationalDagEdgeIdxVectorImplDefT> mlCoarsen;
+    MultilevelCoarseAndSchedule<ComputationalDagEdgeIdxVectorImplDefT, ComputationalDagEdgeIdxVectorImplDefT> coarsenTest(
         sched, mlCoarsen);
 
     RunTest(&coarsenTest);
 }
 
 BOOST_AUTO_TEST_CASE(SarkarMulImproverTest) {
-    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_t> sched;
-    HillClimbingScheduler<computational_dag_edge_idx_vector_impl_def_t> improver;
+    GreedyBspScheduler<ComputationalDagEdgeIdxVectorImplDefT> sched;
+    HillClimbingScheduler<ComputationalDagEdgeIdxVectorImplDefT> improver;
 
-    SarkarMul<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t> mlCoarsen;
-    MultilevelCoarseAndSchedule<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t> coarsenTest(
+    SarkarMul<ComputationalDagEdgeIdxVectorImplDefT, ComputationalDagEdgeIdxVectorImplDefT> mlCoarsen;
+    MultilevelCoarseAndSchedule<ComputationalDagEdgeIdxVectorImplDefT, ComputationalDagEdgeIdxVectorImplDefT> coarsenTest(
         sched, improver, mlCoarsen);
 
     RunTest(&coarsenTest);

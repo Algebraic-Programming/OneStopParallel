@@ -27,7 +27,7 @@ limitations under the License.
 
 using namespace osp;
 
-using ComputationalDag = computational_dag_edge_idx_vector_impl_def_int_t;
+using ComputationalDag = ComputationalDagEdgeIdxVectorImplDefIntT;
 
 void PrintUsage(const char *progName) {
     std::cerr << "Graph Format Converter" << std::endl;
@@ -88,13 +88,13 @@ int main(int argc, char *argv[]) {
 
     ComputationalDag graph;
     std::cout << "Attempting to read graph from " << inputFilename << "..." << std::endl;
-    bool status = file_reader::readGraph(inputFilename, graph);
+    bool status = file_reader::ReadGraph(inputFilename, graph);
     if (!status) {
         std::cout << "Failed to read graph\n";
         return 1;
     }
 
-    std::cout << "Successfully read graph with " << graph.num_vertices() << " vertices and " << graph.num_edges() << " edges."
+    std::cout << "Successfully read graph with " << graph.NumVertices() << " vertices and " << graph.NumEdges() << " edges."
               << std::endl;
 
     std::filesystem::path outputPath(outputFilename);
@@ -102,9 +102,9 @@ int main(int argc, char *argv[]) {
 
     if (outputExt == ".dot") {
         DotFileWriter writer;
-        writer.write_graph(outputFilename, graph);
+        writer.WriteGraph(outputFilename, graph);
     } else if (outputExt == ".hdag") {
-        file_writer::writeComputationalDagHyperdagFormatDB(outputFilename, graph);
+        file_writer::WriteComputationalDagHyperdagFormatDb(outputFilename, graph);
     } else {
         std::cerr << "Error: Unsupported output file format: " << outputExt << std::endl;
         PrintUsage(argv[0]);

@@ -30,12 +30,12 @@ limitations under the License.
 using namespace osp;
 
 BOOST_AUTO_TEST_CASE(MaxbspScheduling) {
-    using Graph = computational_dag_vector_impl_def_t;
+    using Graph = ComputationalDagVectorImplDefT;
 
     BspInstance<Graph> instance;
-    instance.setNumberOfProcessors(4);
-    instance.setCommunicationCosts(3);
-    instance.setSynchronisationCosts(3);
+    instance.SetNumberOfProcessors(4);
+    instance.SetCommunicationCosts(3);
+    instance.SetSynchronisationCosts(3);
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -45,81 +45,81 @@ BOOST_AUTO_TEST_CASE(MaxbspScheduling) {
         std::cout << cwd << std::endl;
     }
 
-    bool status = file_reader::readComputationalDagHyperdagFormatDB(
-        (cwd / "data/spaa/tiny/instance_CG_N4_K1_nzP0d35.hdag").string(), instance.getComputationalDag());
+    bool status = file_reader::ReadComputationalDagHyperdagFormatDb(
+        (cwd / "data/spaa/tiny/instance_CG_N4_K1_nzP0d35.hdag").string(), instance.GetComputationalDag());
 
     BOOST_CHECK(status);
 
     GreedyBspScheduler<Graph> greedy;
     BspSchedule<Graph> bspInitial(instance);
-    BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, greedy.computeSchedule(bspInitial));
-    BOOST_CHECK(bspInitial.satisfiesPrecedenceConstraints());
+    BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, greedy.ComputeSchedule(bspInitial));
+    BOOST_CHECK(bspInitial.SatisfiesPrecedenceConstraints());
 
     // PART I: from BspSchedule to MaxBspSchedule conversion
 
-    std::cout << "Original Bsp Cost: " << bspInitial.computeCosts() << std::endl;
+    std::cout << "Original Bsp Cost: " << bspInitial.ComputeCosts() << std::endl;
     GreedyBspToMaxBspConverter<Graph> converter;
     MaxBspSchedule<Graph> maxbsp = converter.Convert(bspInitial);
-    BOOST_CHECK(maxbsp.satisfiesPrecedenceConstraints());
-    auto costConversion = maxbsp.computeCosts();
+    BOOST_CHECK(maxbsp.SatisfiesPrecedenceConstraints());
+    auto costConversion = maxbsp.ComputeCosts();
     std::cout << "Cost after maxBsp conversion: " << costConversion << std::endl;
 
     // hill climbing
 
     HillClimbingScheduler<Graph> hc;
-    hc.improveSchedule(maxbsp);
-    BOOST_CHECK(maxbsp.satisfiesPrecedenceConstraints());
-    auto costHc = maxbsp.computeCosts();
+    hc.ImproveSchedule(maxbsp);
+    BOOST_CHECK(maxbsp.SatisfiesPrecedenceConstraints());
+    auto costHc = maxbsp.ComputeCosts();
     std::cout << "Cost after Hill Climbing: " << costHc << std::endl;
     BOOST_CHECK(costHc <= costConversion);
 
     // PART II: from BspScheduleCS to MaxBspScheduleCS conversion
 
     BspScheduleCS<Graph> bspInitialCs(bspInitial);
-    BOOST_CHECK(bspInitialCs.hasValidCommSchedule());
-    std::cout << "Original BspCS Cost: " << bspInitialCs.computeCosts() << std::endl;
+    BOOST_CHECK(bspInitialCs.HasValidCommSchedule());
+    std::cout << "Original BspCS Cost: " << bspInitialCs.ComputeCosts() << std::endl;
 
     MaxBspScheduleCS<Graph> maxbspCs = converter.Convert(bspInitialCs);
-    BOOST_CHECK(maxbspCs.satisfiesPrecedenceConstraints());
-    BOOST_CHECK(maxbspCs.hasValidCommSchedule());
-    auto costConversionCs = maxbspCs.computeCosts();
+    BOOST_CHECK(maxbspCs.SatisfiesPrecedenceConstraints());
+    BOOST_CHECK(maxbspCs.HasValidCommSchedule());
+    auto costConversionCs = maxbspCs.ComputeCosts();
     std::cout << "Cost after maxBsp(CS) conversion: " << costConversionCs << std::endl;
 
     // hill climbing for comm. schedule
 
     HillClimbingForCommSteps<Graph> hCcs;
-    hCcs.improveSchedule(maxbspCs);
-    BOOST_CHECK(maxbspCs.satisfiesPrecedenceConstraints());
-    BOOST_CHECK(maxbspCs.hasValidCommSchedule());
-    auto costHccs = maxbspCs.computeCosts();
+    hCcs.ImproveSchedule(maxbspCs);
+    BOOST_CHECK(maxbspCs.SatisfiesPrecedenceConstraints());
+    BOOST_CHECK(maxbspCs.HasValidCommSchedule());
+    auto costHccs = maxbspCs.ComputeCosts();
     std::cout << "Cost after comm. sched. hill climbing: " << costHccs << std::endl;
     BOOST_CHECK(costHccs <= costConversionCs);
 
     // PART III: same for larger DAG
 
-    status = file_reader::readComputationalDagHyperdagFormatDB((cwd / "data/spaa/large/instance_CG_N24_K22_nzP0d2.hdag").string(),
-                                                               instance.getComputationalDag());
+    status = file_reader::ReadComputationalDagHyperdagFormatDb((cwd / "data/spaa/large/instance_CG_N24_K22_nzP0d2.hdag").string(),
+                                                               instance.GetComputationalDag());
 
     BOOST_CHECK(status);
-    instance.setSynchronisationCosts(7);
+    instance.SetSynchronisationCosts(7);
 
     BspSchedule<Graph> bspInitialLarge(instance);
-    BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, greedy.computeSchedule(bspInitialLarge));
+    BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, greedy.ComputeSchedule(bspInitialLarge));
 
     BspScheduleCS<Graph> bspInitialLargeCs(bspInitialLarge);
-    BOOST_CHECK(bspInitialLargeCs.hasValidCommSchedule());
-    std::cout << "Original Bsp Cost on large DAG: " << bspInitialLargeCs.computeCosts() << std::endl;
+    BOOST_CHECK(bspInitialLargeCs.HasValidCommSchedule());
+    std::cout << "Original Bsp Cost on large DAG: " << bspInitialLargeCs.ComputeCosts() << std::endl;
 
     MaxBspScheduleCS<Graph> maxbspCsLarge = converter.Convert(bspInitialLargeCs);
-    BOOST_CHECK(maxbspCsLarge.satisfiesPrecedenceConstraints());
-    BOOST_CHECK(maxbspCsLarge.hasValidCommSchedule());
-    auto costMaxbspCsLarge = maxbspCsLarge.computeCosts();
+    BOOST_CHECK(maxbspCsLarge.SatisfiesPrecedenceConstraints());
+    BOOST_CHECK(maxbspCsLarge.HasValidCommSchedule());
+    auto costMaxbspCsLarge = maxbspCsLarge.ComputeCosts();
     std::cout << "Cost after maxBsp conversion on large DAG: " << costMaxbspCsLarge << std::endl;
 
-    hCcs.improveSchedule(maxbspCsLarge);
-    BOOST_CHECK(maxbspCsLarge.satisfiesPrecedenceConstraints());
-    BOOST_CHECK(maxbspCsLarge.hasValidCommSchedule());
-    auto costHccsLarge = maxbspCsLarge.computeCosts();
+    hCcs.ImproveSchedule(maxbspCsLarge);
+    BOOST_CHECK(maxbspCsLarge.SatisfiesPrecedenceConstraints());
+    BOOST_CHECK(maxbspCsLarge.HasValidCommSchedule());
+    auto costHccsLarge = maxbspCsLarge.ComputeCosts();
     std::cout << "Cost after comm. sched. hill climbing on large DAG: " << costHccsLarge << std::endl;
     BOOST_CHECK(costHccsLarge <= costMaxbspCsLarge);
 }

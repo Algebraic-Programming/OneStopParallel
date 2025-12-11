@@ -37,11 +37,11 @@ BOOST_AUTO_TEST_CASE(ErdosRenyiGraphTest) {
     std::vector<double> graphChances({10, 8, 20});
 
     for (size_t i = 0; i < graphSizes.size(); i++) {
-        computational_dag_vector_impl_def_int_t graph;
-        erdos_renyi_graph_gen(graph, graphSizes[i], graphChances[i]);
+        ComputationalDagVectorImplDefIntT graph;
+        ErdosRenyiGraphGen(graph, graphSizes[i], graphChances[i]);
 
-        BOOST_CHECK_EQUAL(graph.num_vertices(), graphSizes[i]);
-        BOOST_CHECK_EQUAL(is_acyclic(graph), true);
+        BOOST_CHECK_EQUAL(graph.NumVertices(), graphSizes[i]);
+        BOOST_CHECK_EQUAL(IsAcyclic(graph), true);
     }
 }
 
@@ -51,10 +51,10 @@ BOOST_AUTO_TEST_CASE(NearDiagRandomGraphTest) {
     std::vector<double> graphProb({0.14, 0.02, 0.07});
 
     for (size_t i = 0; i < graphSizes.size(); i++) {
-        computational_dag_vector_impl_def_int_t graph;
-        near_diag_random_graph(graph, graphSizes[i], graphBw[i], graphProb[i]);
+        ComputationalDagVectorImplDefIntT graph;
+        NearDiagRandomGraph(graph, graphSizes[i], graphBw[i], graphProb[i]);
 
-        BOOST_CHECK_EQUAL(graph.num_vertices(), graphSizes[i]);
-        BOOST_CHECK_EQUAL(is_acyclic(graph), true);
+        BOOST_CHECK_EQUAL(graph.NumVertices(), graphSizes[i]);
+        BOOST_CHECK_EQUAL(IsAcyclic(graph), true);
     }
 }

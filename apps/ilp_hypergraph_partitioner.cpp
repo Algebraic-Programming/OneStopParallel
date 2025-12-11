@@ -37,8 +37,8 @@ limitations under the License.
 
 using namespace osp;
 
-using Graph = computational_dag_vector_impl_def_int_t;
-using Hypergraph = Hypergraph_def_t;
+using Graph = ComputationalDagVectorImplDefIntT;
+using Hypergraph = HypergraphDefT;
 
 int main(int argc, char *argv[]) {
     if (argc < 4) {
@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
     std::string filenameHgraph = argv[1];
     std::string nameHgraph = filenameHgraph.substr(0, filenameHgraph.rfind("."));
     std::string fileEnding = filenameHgraph.substr(filenameHgraph.rfind(".") + 1);
-    if (!file_reader::isPathSafe(filenameHgraph)) {
+    if (!file_reader::IsPathSafe(filenameHgraph)) {
         std::cerr << "Error: Unsafe file path (possible traversal or invalid type).\n";
         return 1;
     }

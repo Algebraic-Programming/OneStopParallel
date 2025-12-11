@@ -26,70 +26,70 @@ namespace osp {
 
 // Represents a partitioning where each vertex of a hypergraph can be assinged to one or more partitions
 
-template <typename hypergraph_t>
+template <typename HypergraphT>
 class PartitioningWithReplication {
   private:
-    using index_type = typename hypergraph_t::vertex_idx;
-    using workw_type = typename hypergraph_t::vertex_work_weight_type;
-    using memw_type = typename hypergraph_t::vertex_mem_weight_type;
-    using commw_type = typename hypergraph_t::vertex_comm_weight_type;
+    using IndexType = typename HypergraphT::VertexIdx;
+    using WorkwType = typename HypergraphT::VertexWorkWeightType;
+    using MemwType = typename HypergraphT::VertexMemWeightType;
+    using CommwType = typename HypergraphT::VertexCommWeightType;
 
-    const PartitioningProblem<hypergraph_t> *instance;
+    const PartitioningProblem<HypergraphT> *instance_;
 
-    std::vector<std::vector<unsigned>> node_to_partitions_assignment;
+    std::vector<std::vector<unsigned>> nodeToPartitionsAssignment_;
 
   public:
     PartitioningWithReplication() = delete;
 
-    PartitioningWithReplication(const PartitioningProblem<hypergraph_t> &inst)
-        : instance(&inst),
-          node_to_partitions_assignment(std::vector<std::vector<unsigned>>(inst.getHypergraph().num_vertices(), {0})) {}
+    PartitioningWithReplication(const PartitioningProblem<HypergraphT> &inst)
+        : instance_(&inst),
+          nodeToPartitionsAssignment_(std::vector<std::vector<unsigned>>(inst.GetHypergraph().NumVertices(), {0})) {}
 
-    PartitioningWithReplication(const PartitioningProblem<hypergraph_t> &inst,
-                                const std::vector<std::vector<unsigned>> &partition_assignment_)
-        : instance(&inst), node_to_partitions_assignment(partition_assignment_) {}
+    PartitioningWithReplication(const PartitioningProblem<HypergraphT> &inst,
+                                const std::vector<std::vector<unsigned>> &partitionAssignment)
+        : instance_(&inst), nodeToPartitionsAssignment_(partitionAssignment) {}
 
-    PartitioningWithReplication(const PartitioningWithReplication<hypergraph_t> &partitioning_) = default;
-    PartitioningWithReplication(PartitioningWithReplication<hypergraph_t> &&partitioning_) = default;
+    PartitioningWithReplication(const PartitioningWithReplication<HypergraphT> &partitioning) = default;
+    PartitioningWithReplication(PartitioningWithReplication<HypergraphT> &&partitioning) = default;
 
-    PartitioningWithReplication &operator=(const PartitioningWithReplication<hypergraph_t> &partitioning_) = default;
+    PartitioningWithReplication &operator=(const PartitioningWithReplication<HypergraphT> &partitioning) = default;
 
     virtual ~PartitioningWithReplication() = default;
 
     // getters and setters
 
-    inline const PartitioningProblem<hypergraph_t> &getInstance() const { return *instance; }
+    inline const PartitioningProblem<HypergraphT> &GetInstance() const { return *instance_; }
 
-    inline std::vector<unsigned> assignedPartitions(index_type node) const { return node_to_partitions_assignment[node]; }
+    inline std::vector<unsigned> AssignedPartitions(IndexType node) const { return nodeToPartitionsAssignment_[node]; }
 
-    inline const std::vector<std::vector<unsigned>> &assignedPartitions() const { return node_to_partitions_assignment; }
+    inline const std::vector<std::vector<unsigned>> &AssignedPartitions() const { return nodeToPartitionsAssignment_; }
 
-    inline std::vector<std::vector<unsigned>> &assignedPartitions() { return node_to_partitions_assignment; }
+    inline std::vector<std::vector<unsigned>> &AssignedPartitions() { return nodeToPartitionsAssignment_; }
 
-    inline void setAssignedPartitions(index_type node, const std::vector<unsigned> &parts) {
-        node_to_partitions_assignment.at(node) = parts;
+    inline void SetAssignedPartitions(IndexType node, const std::vector<unsigned> &parts) {
+        nodeToPartitionsAssignment_.at(node) = parts;
     }
 
-    void setAssignedPartitionVectors(const std::vector<std::vector<unsigned>> &vec) {
-        if (vec.size() == static_cast<std::size_t>(instance->getHypergraph().num_vertices())) {
-            node_to_partitions_assignment = vec;
+    void SetAssignedPartitionVectors(const std::vector<std::vector<unsigned>> &vec) {
+        if (vec.size() == static_cast<std::size_t>(instance_->getHypergraph().num_vertices())) {
+            nodeToPartitionsAssignment_ = vec;
         } else {
             throw std::invalid_argument("Invalid Argument while assigning processors: size does not match number of nodes.");
         }
     }
 
-    void setAssignedPartitionVectors(std::vector<std::vector<unsigned>> &&vec) {
-        if (vec.size() == static_cast<std::size_t>(instance->getHypergraph().num_vertices())) {
-            node_to_partitions_assignment = vec;
+    void SetAssignedPartitionVectors(std::vector<std::vector<unsigned>> &&vec) {
+        if (vec.size() == static_cast<std::size_t>(instance_->getHypergraph().num_vertices())) {
+            nodeToPartitionsAssignment_ = vec;
         } else {
             throw std::invalid_argument("Invalid Argument while assigning processors: size does not match number of nodes.");
         }
     }
 
-    std::vector<std::vector<index_type>> getPartitionContents() const {
-        std::vector<std::vector<index_type>> content(instance->getNumberOfPartitions());
-        for (index_type node = 0; node < node_to_partitions_assignment.size(); ++node) {
-            for (unsigned part : node_to_partitions_assignment[node]) {
+    std::vector<std::vector<IndexType>> GetPartitionContents() const {
+        std::vector<std::vector<IndexType>> content(instance_->getNumberOfPartitions());
+        for (IndexType node = 0; node < nodeToPartitionsAssignment_.size(); ++node) {
+            for (unsigned part : nodeToPartitionsAssignment_[node]) {
                 content[part].push_back(node);
             }
         }
@@ -97,131 +97,131 @@ class PartitioningWithReplication {
         return content;
     }
 
-    void resetPartition() {
-        node_to_partitions_assignment.clear();
-        node_to_partitions_assignment.resize(instance->getHypergraph().num_vertices(), {0});
+    void ResetPartition() {
+        nodeToPartitionsAssignment_.clear();
+        nodeToPartitionsAssignment_.resize(instance_->getHypergraph().num_vertices(), {0});
     }
 
     // costs and validity
 
-    commw_type computeConnectivityCost() const;
-    commw_type computeCutNetCost() const;
+    CommwType ComputeConnectivityCost() const;
+    CommwType ComputeCutNetCost() const;
 
-    bool satisfiesBalanceConstraint() const;
+    bool SatisfiesBalanceConstraint() const;
 };
 
-template <typename hypergraph_t>
-typename hypergraph_t::vertex_comm_weight_type PartitioningWithReplication<hypergraph_t>::computeConnectivityCost() const {
+template <typename HypergraphT>
+typename HypergraphT::vertex_comm_weight_type PartitioningWithReplication<HypergraphT>::ComputeConnectivityCost() const {
     // naive implementation. in the worst-case this is exponential in the number of parts
-    if (instance->getNumberOfPartitions() > 16) {
+    if (instance_->GetNumberOfPartitions() > 16) {
         throw std::invalid_argument("Computing connectivity cost is not supported for more than 16 partitions.");
     }
 
-    commw_type total = 0;
-    std::vector<bool> part_used(instance->getNumberOfPartitions(), false);
-    for (index_type edge_idx = 0; edge_idx < instance->getHypergraph().num_hyperedges(); ++edge_idx) {
-        const std::vector<index_type> &hyperedge = instance->getHypergraph().get_vertices_in_hyperedge(edge_idx);
+    CommwType total = 0;
+    std::vector<bool> partUsed(instance_->GetNumberOfPartitions(), false);
+    for (IndexType edgeIdx = 0; edgeIdx < instance_->GetHypergraph().NumHyperedges(); ++edgeIdx) {
+        const std::vector<IndexType> &hyperedge = instance_->GetHypergraph().GetVerticesInHyperedge(edgeIdx);
         if (hyperedge.empty()) {
             continue;
         }
 
         unsigned long mask = 0UL;
 
-        std::vector<index_type> nr_nodes_covered_by_part(instance->getNumberOfPartitions(), 0);
-        for (const index_type &node : hyperedge) {
-            if (node_to_partitions_assignment[node].size() == 1) {
-                mask = mask | (1UL << node_to_partitions_assignment[node].front());
+        std::vector<IndexType> nrNodesCoveredByPart(instance_->GetNumberOfPartitions(), 0);
+        for (const IndexType &node : hyperedge) {
+            if (nodeToPartitionsAssignment_[node].size() == 1) {
+                mask = mask | (1UL << nodeToPartitionsAssignment_[node].front());
             }
         }
 
-        unsigned min_parts_to_cover = instance->getNumberOfPartitions();
-        unsigned long mask_limit = 1UL << instance->getNumberOfPartitions();
-        for (unsigned long subset_mask = 1UL; subset_mask < mask_limit; ++subset_mask) {
-            if ((subset_mask & mask) != mask) {
+        unsigned minPartsToCover = instance_->GetNumberOfPartitions();
+        unsigned long maskLimit = 1UL << instance_->GetNumberOfPartitions();
+        for (unsigned long subsetMask = 1UL; subsetMask < maskLimit; ++subsetMask) {
+            if ((subsetMask & mask) != mask) {
                 continue;
             }
 
-            unsigned nr_parts_used = 0;
-            for (unsigned part = 0; part < instance->getNumberOfPartitions(); ++part) {
-                part_used[part] = (((1UL << part) & subset_mask) > 0);
-                nr_parts_used += static_cast<unsigned>(part_used[part]);
+            unsigned nrPartsUsed = 0;
+            for (unsigned part = 0; part < instance_->GetNumberOfPartitions(); ++part) {
+                partUsed[part] = (((1UL << part) & subsetMask) > 0);
+                nrPartsUsed += static_cast<unsigned>(partUsed[part]);
             }
 
-            bool all_nodes_covered = true;
-            for (const index_type &node : hyperedge) {
-                bool node_covered = false;
-                for (unsigned part : node_to_partitions_assignment[node]) {
-                    if (part_used[part]) {
-                        node_covered = true;
+            bool allNodesCovered = true;
+            for (const IndexType &node : hyperedge) {
+                bool nodeCovered = false;
+                for (unsigned part : nodeToPartitionsAssignment_[node]) {
+                    if (partUsed[part]) {
+                        nodeCovered = true;
                         break;
                     }
                 }
-                if (!node_covered) {
-                    all_nodes_covered = false;
+                if (!nodeCovered) {
+                    allNodesCovered = false;
                     break;
                 }
             }
-            if (all_nodes_covered) {
-                min_parts_to_cover = std::min(min_parts_to_cover, nr_parts_used);
+            if (allNodesCovered) {
+                minPartsToCover = std::min(minPartsToCover, nrPartsUsed);
             }
         }
 
-        total += static_cast<commw_type>(min_parts_to_cover - 1) * instance->getHypergraph().get_hyperedge_weight(edge_idx);
+        total += static_cast<CommwType>(minPartsToCover - 1) * instance_->GetHypergraph().GetHyperedgeWeight(edgeIdx);
     }
 
     return total;
 }
 
-template <typename hypergraph_t>
-typename hypergraph_t::vertex_comm_weight_type PartitioningWithReplication<hypergraph_t>::computeCutNetCost() const {
-    commw_type total = 0;
-    for (index_type edge_idx = 0; edge_idx < instance->getHypergraph().num_hyperedges(); ++edge_idx) {
-        const std::vector<index_type> &hyperedge = instance->getHypergraph().get_vertices_in_hyperedge(edge_idx);
+template <typename HypergraphT>
+typename HypergraphT::vertex_comm_weight_type PartitioningWithReplication<HypergraphT>::ComputeCutNetCost() const {
+    CommwType total = 0;
+    for (IndexType edgeIdx = 0; edgeIdx < instance_->GetHypergraph().NumHyperedges(); ++edgeIdx) {
+        const std::vector<IndexType> &hyperedge = instance_->GetHypergraph().GetVerticesInHyperedge(edgeIdx);
         if (hyperedge.empty()) {
             continue;
         }
-        std::vector<index_type> nr_nodes_covered_by_part(instance->getNumberOfPartitions(), 0);
-        for (const index_type &node : hyperedge) {
-            for (unsigned part : node_to_partitions_assignment[node]) {
-                ++nr_nodes_covered_by_part[part];
+        std::vector<IndexType> nrNodesCoveredByPart(instance_->GetNumberOfPartitions(), 0);
+        for (const IndexType &node : hyperedge) {
+            for (unsigned part : nodeToPartitionsAssignment_[node]) {
+                ++nrNodesCoveredByPart[part];
             }
         }
 
-        bool covers_all = false;
-        for (unsigned part = 0; part < instance->getNumberOfPartitions(); ++part) {
-            if (nr_nodes_covered_by_part[part] == hyperedge.size()) {
-                covers_all = true;
+        bool coversAll = false;
+        for (unsigned part = 0; part < instance_->GetNumberOfPartitions(); ++part) {
+            if (nrNodesCoveredByPart[part] == hyperedge.size()) {
+                coversAll = true;
             }
         }
 
-        if (!covers_all) {
-            total += instance->getHypergraph().get_hyperedge_weight(edge_idx);
+        if (!coversAll) {
+            total += instance_->GetHypergraph().GetHyperedgeWeight(edgeIdx);
         }
     }
 
     return total;
 }
 
-template <typename hypergraph_t>
-bool PartitioningWithReplication<hypergraph_t>::satisfiesBalanceConstraint() const {
-    std::vector<workw_type> work_weight(instance->getNumberOfPartitions(), 0);
-    std::vector<memw_type> memory_weight(instance->getNumberOfPartitions(), 0);
-    for (index_type node = 0; node < node_to_partitions_assignment.size(); ++node) {
-        for (unsigned part : node_to_partitions_assignment[node]) {
-            if (part > instance->getNumberOfPartitions()) {
+template <typename HypergraphT>
+bool PartitioningWithReplication<HypergraphT>::SatisfiesBalanceConstraint() const {
+    std::vector<WorkwType> workWeight(instance_->GetNumberOfPartitions(), 0);
+    std::vector<MemwType> memoryWeight(instance_->GetNumberOfPartitions(), 0);
+    for (IndexType node = 0; node < nodeToPartitionsAssignment_.size(); ++node) {
+        for (unsigned part : nodeToPartitionsAssignment_[node]) {
+            if (part > instance_->GetNumberOfPartitions()) {
                 throw std::invalid_argument("Invalid Argument while checking balance constraint: partition ID out of range.");
             } else {
-                work_weight[part] += instance->getHypergraph().get_vertex_work_weight(node);
-                memory_weight[part] += instance->getHypergraph().get_vertex_memory_weight(node);
+                workWeight[part] += instance_->GetHypergraph().GetVertexWorkWeight(node);
+                memoryWeight[part] += instance_->GetHypergraph().GetVertexMemoryWeight(node);
             }
         }
     }
 
-    for (unsigned part = 0; part < instance->getNumberOfPartitions(); ++part) {
-        if (work_weight[part] > instance->getMaxWorkWeightPerPartition()) {
+    for (unsigned part = 0; part < instance_->GetNumberOfPartitions(); ++part) {
+        if (workWeight[part] > instance_->GetMaxWorkWeightPerPartition()) {
             return false;
         }
-        if (memory_weight[part] > instance->getMaxMemoryWeightPerPartition()) {
+        if (memoryWeight[part] > instance_->GetMaxMemoryWeightPerPartition()) {
             return false;
         }
     }

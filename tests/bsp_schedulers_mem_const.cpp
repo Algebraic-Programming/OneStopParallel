@@ -47,16 +47,16 @@ void AddMemWeights(GraphT &dag) {
     int memWeight = 1;
     int commWeight = 1;
 
-    for (const auto &v : dag.vertices()) {
-        dag.set_vertex_mem_weight(v, static_cast<v_memw_t<GraphT>>(memWeight++ % 3 + 1));
-        dag.set_vertex_comm_weight(v, static_cast<v_commw_t<GraphT>>(commWeight++ % 3 + 1));
+    for (const auto &v : dag.Vertices()) {
+        dag.SetVertexMemWeight(v, static_cast<VMemwT<GraphT>>(memWeight++ % 3 + 1));
+        dag.SetVertexCommWeight(v, static_cast<VCommwT<GraphT>>(commWeight++ % 3 + 1));
     }
 }
 
 template <typename GraphT>
 void RunTestLocalMemory(Scheduler<GraphT> *testScheduler) {
     // static_assert(std::is_base_of<Scheduler, T>::value, "Class is not a scheduler!");
-    std::vector<std::string> filenamesGraph = test_graphs();
+    std::vector<std::string> filenamesGraph = TestGraphs();
     std::vector<std::string> filenamesArchitectures = TestArchitectures();
 
     // Getting root git directory
@@ -74,19 +74,19 @@ void RunTestLocalMemory(Scheduler<GraphT> *testScheduler) {
             std::string nameMachine = filenameMachine.substr(filenameMachine.find_last_of("/\\") + 1);
             nameMachine = nameMachine.substr(0, nameMachine.rfind("."));
 
-            std::cout << std::endl << "Scheduler: " << testScheduler->getScheduleName() << std::endl;
+            std::cout << std::endl << "Scheduler: " << testScheduler->GetScheduleName() << std::endl;
             std::cout << "Graph: " << nameGraph << std::endl;
             std::cout << "Architecture: " << nameMachine << std::endl;
 
             BspInstance<GraphT> instance;
 
-            bool statusGraph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(),
-                                                                                 instance.getComputationalDag());
+            bool statusGraph = file_reader::ReadComputationalDagHyperdagFormatDb((cwd / filenameGraph).string(),
+                                                                                 instance.GetComputationalDag());
             bool statusArchitecture
-                = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.getArchitecture());
+                = file_reader::ReadBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
 
-            AddMemWeights(instance.getComputationalDag());
-            instance.getArchitecture().setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::LOCAL);
+            AddMemWeights(instance.GetComputationalDag());
+            instance.GetArchitecture().SetMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::LOCAL);
             std::cout << "Memory constraint type: LOCAL" << std::endl;
 
             if (!statusGraph || !statusArchitecture) {
@@ -94,17 +94,17 @@ void RunTestLocalMemory(Scheduler<GraphT> *testScheduler) {
                 BOOST_CHECK(false);
             }
 
-            const std::vector<v_memw_t<GraphT>> boundsToTest = {10, 20, 50, 100};
+            const std::vector<VMemwT<GraphT>> boundsToTest = {10, 20, 50, 100};
 
             for (const auto &bound : boundsToTest) {
-                instance.getArchitecture().setMemoryBound(bound);
+                instance.GetArchitecture().SetMemoryBound(bound);
 
                 BspSchedule<GraphT> schedule(instance);
-                const auto result = testScheduler->computeSchedule(schedule);
+                const auto result = testScheduler->ComputeSchedule(schedule);
 
                 BOOST_CHECK(RETURN_STATUS::OSP_SUCCESS == result || RETURN_STATUS::BEST_FOUND == result);
-                BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
-                BOOST_CHECK(schedule.satisfiesMemoryConstraints());
+                BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
+                BOOST_CHECK(schedule.SatisfiesMemoryConstraints());
             }
         }
     }
@@ -113,7 +113,7 @@ void RunTestLocalMemory(Scheduler<GraphT> *testScheduler) {
 template <typename GraphT>
 void RunTestPersistentTransientMemory(Scheduler<GraphT> *testScheduler) {
     // static_assert(std::is_base_of<Scheduler, T>::value, "Class is not a scheduler!");
-    std::vector<std::string> filenamesGraph = test_graphs();
+    std::vector<std::string> filenamesGraph = TestGraphs();
     std::vector<std::string> filenamesArchitectures = TestArchitectures();
 
     // Getting root git directory
@@ -131,19 +131,19 @@ void RunTestPersistentTransientMemory(Scheduler<GraphT> *testScheduler) {
             std::string nameMachine = filenameMachine.substr(filenameMachine.find_last_of("/\\") + 1);
             nameMachine = nameMachine.substr(0, nameMachine.rfind("."));
 
-            std::cout << std::endl << "Scheduler: " << testScheduler->getScheduleName() << std::endl;
+            std::cout << std::endl << "Scheduler: " << testScheduler->GetScheduleName() << std::endl;
             std::cout << "Graph: " << nameGraph << std::endl;
             std::cout << "Architecture: " << nameMachine << std::endl;
 
             BspInstance<GraphT> instance;
 
-            bool statusGraph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(),
-                                                                                 instance.getComputationalDag());
+            bool statusGraph = file_reader::ReadComputationalDagHyperdagFormatDb((cwd / filenameGraph).string(),
+                                                                                 instance.GetComputationalDag());
             bool statusArchitecture
-                = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.getArchitecture());
+                = file_reader::ReadBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
 
-            AddMemWeights(instance.getComputationalDag());
-            instance.getArchitecture().setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::PERSISTENT_AND_TRANSIENT);
+            AddMemWeights(instance.GetComputationalDag());
+            instance.GetArchitecture().SetMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::PERSISTENT_AND_TRANSIENT);
             std::cout << "Memory constraint type: PERSISTENT_AND_TRANSIENT" << std::endl;
 
             if (!statusGraph || !statusArchitecture) {
@@ -151,17 +151,17 @@ void RunTestPersistentTransientMemory(Scheduler<GraphT> *testScheduler) {
                 BOOST_CHECK(false);
             }
 
-            const std::vector<v_memw_t<GraphT>> boundsToTest = {50, 100};
+            const std::vector<VMemwT<GraphT>> boundsToTest = {50, 100};
 
             for (const auto &bound : boundsToTest) {
-                instance.getArchitecture().setMemoryBound(bound);
+                instance.GetArchitecture().SetMemoryBound(bound);
 
                 BspSchedule<GraphT> schedule(instance);
-                const auto result = testScheduler->computeSchedule(schedule);
+                const auto result = testScheduler->ComputeSchedule(schedule);
 
                 BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
-                BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
-                BOOST_CHECK(schedule.satisfiesMemoryConstraints());
+                BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
+                BOOST_CHECK(schedule.SatisfiesMemoryConstraints());
             }
         }
     }
@@ -170,7 +170,7 @@ void RunTestPersistentTransientMemory(Scheduler<GraphT> *testScheduler) {
 template <typename GraphT>
 void RunTestLocalInOutMemory(Scheduler<GraphT> *testScheduler) {
     // static_assert(std::is_base_of<Scheduler, T>::value, "Class is not a scheduler!");
-    std::vector<std::string> filenamesGraph = test_graphs();
+    std::vector<std::string> filenamesGraph = TestGraphs();
     std::vector<std::string> filenamesArchitectures = TestArchitectures();
 
     // Getting root git directory
@@ -188,19 +188,19 @@ void RunTestLocalInOutMemory(Scheduler<GraphT> *testScheduler) {
             std::string nameMachine = filenameMachine.substr(filenameMachine.find_last_of("/\\") + 1);
             nameMachine = nameMachine.substr(0, nameMachine.rfind("."));
 
-            std::cout << std::endl << "Scheduler: " << testScheduler->getScheduleName() << std::endl;
+            std::cout << std::endl << "Scheduler: " << testScheduler->GetScheduleName() << std::endl;
             std::cout << "Graph: " << nameGraph << std::endl;
             std::cout << "Architecture: " << nameMachine << std::endl;
 
             BspInstance<GraphT> instance;
 
-            bool statusGraph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(),
-                                                                                 instance.getComputationalDag());
+            bool statusGraph = file_reader::ReadComputationalDagHyperdagFormatDb((cwd / filenameGraph).string(),
+                                                                                 instance.GetComputationalDag());
             bool statusArchitecture
-                = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.getArchitecture());
+                = file_reader::ReadBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
 
-            AddMemWeights(instance.getComputationalDag());
-            instance.getArchitecture().setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::LOCAL_IN_OUT);
+            AddMemWeights(instance.GetComputationalDag());
+            instance.GetArchitecture().SetMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::LOCAL_IN_OUT);
             std::cout << "Memory constraint type: LOCAL_IN_OUT" << std::endl;
 
             if (!statusGraph || !statusArchitecture) {
@@ -208,17 +208,17 @@ void RunTestLocalInOutMemory(Scheduler<GraphT> *testScheduler) {
                 BOOST_CHECK(false);
             }
 
-            const std::vector<v_memw_t<GraphT>> boundsToTest = {10, 20, 50, 100};
+            const std::vector<VMemwT<GraphT>> boundsToTest = {10, 20, 50, 100};
 
             for (const auto &bound : boundsToTest) {
-                instance.getArchitecture().setMemoryBound(bound);
+                instance.GetArchitecture().SetMemoryBound(bound);
 
                 BspSchedule<GraphT> schedule(instance);
-                const auto result = testScheduler->computeSchedule(schedule);
+                const auto result = testScheduler->ComputeSchedule(schedule);
 
                 BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
-                BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
-                BOOST_CHECK(schedule.satisfiesMemoryConstraints());
+                BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
+                BOOST_CHECK(schedule.SatisfiesMemoryConstraints());
             }
         }
     }
@@ -227,7 +227,7 @@ void RunTestLocalInOutMemory(Scheduler<GraphT> *testScheduler) {
 template <typename GraphT>
 void RunTestLocalIncEdgesMemory(Scheduler<GraphT> *testScheduler) {
     // static_assert(std::is_base_of<Scheduler, T>::value, "Class is not a scheduler!");
-    std::vector<std::string> filenamesGraph = test_graphs();
+    std::vector<std::string> filenamesGraph = TestGraphs();
     std::vector<std::string> filenamesArchitectures = TestArchitectures();
 
     // Getting root git directory
@@ -245,19 +245,19 @@ void RunTestLocalIncEdgesMemory(Scheduler<GraphT> *testScheduler) {
             std::string nameMachine = filenameMachine.substr(filenameMachine.find_last_of("/\\") + 1);
             nameMachine = nameMachine.substr(0, nameMachine.rfind("."));
 
-            std::cout << std::endl << "Scheduler: " << testScheduler->getScheduleName() << std::endl;
+            std::cout << std::endl << "Scheduler: " << testScheduler->GetScheduleName() << std::endl;
             std::cout << "Graph: " << nameGraph << std::endl;
             std::cout << "Architecture: " << nameMachine << std::endl;
 
             BspInstance<GraphT> instance;
 
-            bool statusGraph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(),
-                                                                                 instance.getComputationalDag());
+            bool statusGraph = file_reader::ReadComputationalDagHyperdagFormatDb((cwd / filenameGraph).string(),
+                                                                                 instance.GetComputationalDag());
             bool statusArchitecture
-                = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.getArchitecture());
+                = file_reader::ReadBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
 
-            AddMemWeights(instance.getComputationalDag());
-            instance.getArchitecture().setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::LOCAL_INC_EDGES);
+            AddMemWeights(instance.GetComputationalDag());
+            instance.GetArchitecture().SetMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::LOCAL_INC_EDGES);
             std::cout << "Memory constraint type: LOCAL_INC_EDGES" << std::endl;
 
             if (!statusGraph || !statusArchitecture) {
@@ -265,17 +265,17 @@ void RunTestLocalIncEdgesMemory(Scheduler<GraphT> *testScheduler) {
                 BOOST_CHECK(false);
             }
 
-            const std::vector<v_memw_t<GraphT>> boundsToTest = {50, 100};
+            const std::vector<VMemwT<GraphT>> boundsToTest = {50, 100};
 
             for (const auto &bound : boundsToTest) {
-                instance.getArchitecture().setMemoryBound(bound);
+                instance.GetArchitecture().SetMemoryBound(bound);
 
                 BspSchedule<GraphT> schedule(instance);
-                const auto result = testScheduler->computeSchedule(schedule);
+                const auto result = testScheduler->ComputeSchedule(schedule);
 
                 BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
-                BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
-                BOOST_CHECK(schedule.satisfiesMemoryConstraints());
+                BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
+                BOOST_CHECK(schedule.SatisfiesMemoryConstraints());
             }
         }
     }
@@ -284,7 +284,7 @@ void RunTestLocalIncEdgesMemory(Scheduler<GraphT> *testScheduler) {
 template <typename GraphT>
 void RunTestLocalIncEdges2Memory(Scheduler<GraphT> *testScheduler) {
     // static_assert(std::is_base_of<Scheduler, T>::value, "Class is not a scheduler!");
-    std::vector<std::string> filenamesGraph = test_graphs();
+    std::vector<std::string> filenamesGraph = TestGraphs();
     std::vector<std::string> filenamesArchitectures = TestArchitectures();
 
     // Getting root git directory
@@ -302,19 +302,19 @@ void RunTestLocalIncEdges2Memory(Scheduler<GraphT> *testScheduler) {
             std::string nameMachine = filenameMachine.substr(filenameMachine.find_last_of("/\\") + 1);
             nameMachine = nameMachine.substr(0, nameMachine.rfind("."));
 
-            std::cout << std::endl << "Scheduler: " << testScheduler->getScheduleName() << std::endl;
+            std::cout << std::endl << "Scheduler: " << testScheduler->GetScheduleName() << std::endl;
             std::cout << "Graph: " << nameGraph << std::endl;
             std::cout << "Architecture: " << nameMachine << std::endl;
 
             BspInstance<GraphT> instance;
 
-            bool statusGraph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(),
-                                                                                 instance.getComputationalDag());
+            bool statusGraph = file_reader::ReadComputationalDagHyperdagFormatDb((cwd / filenameGraph).string(),
+                                                                                 instance.GetComputationalDag());
             bool statusArchitecture
-                = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.getArchitecture());
+                = file_reader::ReadBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
 
-            AddMemWeights(instance.getComputationalDag());
-            instance.getArchitecture().setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::LOCAL_SOURCES_INC_EDGES);
+            AddMemWeights(instance.GetComputationalDag());
+            instance.GetArchitecture().SetMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::LOCAL_SOURCES_INC_EDGES);
             std::cout << "Memory constraint type: LOCAL_SOURCES_INC_EDGES" << std::endl;
 
             if (!statusGraph || !statusArchitecture) {
@@ -322,73 +322,72 @@ void RunTestLocalIncEdges2Memory(Scheduler<GraphT> *testScheduler) {
                 BOOST_CHECK(false);
             }
 
-            const std::vector<v_memw_t<GraphT>> boundsToTest = {20, 50, 100};
+            const std::vector<VMemwT<GraphT>> boundsToTest = {20, 50, 100};
 
             for (const auto &bound : boundsToTest) {
-                instance.getArchitecture().setMemoryBound(bound);
+                instance.GetArchitecture().SetMemoryBound(bound);
 
                 BspSchedule<GraphT> schedule(instance);
-                const auto result = testScheduler->computeSchedule(schedule);
+                const auto result = testScheduler->ComputeSchedule(schedule);
 
                 BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
-                BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
-                BOOST_CHECK(schedule.satisfiesMemoryConstraints());
+                BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
+                BOOST_CHECK(schedule.SatisfiesMemoryConstraints());
             }
         }
     }
 }
 
 BOOST_AUTO_TEST_CASE(GreedyBspSchedulerLocalTest) {
-    using GraphImplT = computational_dag_edge_idx_vector_impl_def_int_t;
+    using GraphImplT = ComputationalDagEdgeIdxVectorImplDefIntT;
 
-    GreedyBspScheduler<GraphImplT, local_memory_constraint<GraphImplT>> test1;
+    GreedyBspScheduler<GraphImplT, LocalMemoryConstraint<GraphImplT>> test1;
     RunTestLocalMemory(&test1);
 
-    GreedyBspScheduler<GraphImplT, local_in_out_memory_constraint<GraphImplT>> test2;
+    GreedyBspScheduler<GraphImplT, LocalInOutMemoryConstraint<GraphImplT>> test2;
     RunTestLocalInOutMemory(&test2);
 
-    GreedyBspScheduler<GraphImplT, local_inc_edges_memory_constraint<GraphImplT>> test3;
+    GreedyBspScheduler<GraphImplT, LocalIncEdgesMemoryConstraint<GraphImplT>> test3;
     RunTestLocalIncEdgesMemory(&test3);
 
-    GreedyBspScheduler<GraphImplT, local_sources_inc_edges_memory_constraint<GraphImplT>> test4;
+    GreedyBspScheduler<GraphImplT, LocalSourcesIncEdgesMemoryConstraint<GraphImplT>> test4;
     RunTestLocalIncEdges2Memory(&test4);
 }
 
 BOOST_AUTO_TEST_CASE(GrowLocalAutoCoresLocalTest) {
-    using GraphImplT = computational_dag_edge_idx_vector_impl_def_int_t;
+    using GraphImplT = ComputationalDagEdgeIdxVectorImplDefIntT;
 
-    GrowLocalAutoCores<GraphImplT, local_memory_constraint<GraphImplT>> test1;
+    GrowLocalAutoCores<GraphImplT, LocalMemoryConstraint<GraphImplT>> test1;
     RunTestLocalMemory(&test1);
 
-    GrowLocalAutoCores<GraphImplT, local_in_out_memory_constraint<GraphImplT>> test2;
+    GrowLocalAutoCores<GraphImplT, LocalInOutMemoryConstraint<GraphImplT>> test2;
     RunTestLocalInOutMemory(&test2);
 
-    GrowLocalAutoCores<GraphImplT, local_inc_edges_memory_constraint<GraphImplT>> test3;
+    GrowLocalAutoCores<GraphImplT, LocalIncEdgesMemoryConstraint<GraphImplT>> test3;
     RunTestLocalIncEdgesMemory(&test3);
 
-    GrowLocalAutoCores<GraphImplT, local_sources_inc_edges_memory_constraint<GraphImplT>> test4;
+    GrowLocalAutoCores<GraphImplT, LocalSourcesIncEdgesMemoryConstraint<GraphImplT>> test4;
     RunTestLocalIncEdges2Memory(&test4);
 }
 
 BOOST_AUTO_TEST_CASE(BspLockingLocalTest) {
-    using GraphImplT = computational_dag_edge_idx_vector_impl_def_t;
+    using GraphImplT = ComputationalDagEdgeIdxVectorImplDefT;
 
-    BspLocking<GraphImplT, local_memory_constraint<GraphImplT>> test1;
+    BspLocking<GraphImplT, LocalMemoryConstraint<GraphImplT>> test1;
     RunTestLocalMemory(&test1);
 
-    BspLocking<GraphImplT, local_in_out_memory_constraint<GraphImplT>> test2;
+    BspLocking<GraphImplT, LocalInOutMemoryConstraint<GraphImplT>> test2;
     RunTestLocalInOutMemory(&test2);
 
-    BspLocking<GraphImplT, local_inc_edges_memory_constraint<GraphImplT>> test3;
+    BspLocking<GraphImplT, LocalIncEdgesMemoryConstraint<GraphImplT>> test3;
     RunTestLocalIncEdgesMemory(&test3);
 
-    BspLocking<GraphImplT, local_sources_inc_edges_memory_constraint<GraphImplT>> test4;
+    BspLocking<GraphImplT, LocalSourcesIncEdgesMemoryConstraint<GraphImplT>> test4;
     RunTestLocalIncEdges2Memory(&test4);
 }
 
 BOOST_AUTO_TEST_CASE(VarianceLocalTest) {
-    VarianceFillup<computational_dag_edge_idx_vector_impl_def_t, local_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>>
-        test;
+    VarianceFillup<ComputationalDagEdgeIdxVectorImplDefT, LocalMemoryConstraint<ComputationalDagEdgeIdxVectorImplDefT>> test;
     RunTestLocalMemory(&test);
 }
 
@@ -407,115 +406,112 @@ BOOST_AUTO_TEST_CASE(VarianceLocalTest) {
 // };
 
 BOOST_AUTO_TEST_CASE(GreedyBspSchedulerPersistentTransientTest) {
-    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_t,
-                       persistent_transient_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>>
+    GreedyBspScheduler<ComputationalDagEdgeIdxVectorImplDefT, PersistentTransientMemoryConstraint<ComputationalDagEdgeIdxVectorImplDefT>>
         test;
     RunTestPersistentTransientMemory(&test);
 }
 
 BOOST_AUTO_TEST_CASE(EtfSchedulerPersistentTransientTest) {
-    EtfScheduler<computational_dag_edge_idx_vector_impl_def_t,
-                 persistent_transient_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>>
-        test;
+    EtfScheduler<ComputationalDagEdgeIdxVectorImplDefT, PersistentTransientMemoryConstraint<ComputationalDagEdgeIdxVectorImplDefT>> test;
     RunTestPersistentTransientMemory(&test);
 }
 
 BOOST_AUTO_TEST_CASE(VariancePartitionerTest) {
-    VariancePartitioner<computational_dag_edge_idx_vector_impl_def_t,
-                        linear_interpolation,
-                        local_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>>
+    VariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT,
+                        LinearInterpolation,
+                        LocalMemoryConstraint<ComputationalDagEdgeIdxVectorImplDefT>>
         testLinear;
     RunTestLocalMemory(&testLinear);
 
-    VariancePartitioner<computational_dag_edge_idx_vector_impl_def_t,
-                        flat_spline_interpolation,
-                        local_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>>
+    VariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT,
+                        FlatSplineInterpolation,
+                        LocalMemoryConstraint<ComputationalDagEdgeIdxVectorImplDefT>>
         testFlat;
     RunTestLocalMemory(&testFlat);
 
-    VariancePartitioner<computational_dag_edge_idx_vector_impl_def_t,
-                        superstep_only_interpolation,
-                        local_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>>
+    VariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT,
+                        SuperstepOnlyInterpolation,
+                        LocalMemoryConstraint<ComputationalDagEdgeIdxVectorImplDefT>>
         testSuperstep;
     RunTestLocalMemory(&testSuperstep);
 
-    VariancePartitioner<computational_dag_edge_idx_vector_impl_def_t,
-                        global_only_interpolation,
-                        local_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>>
+    VariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT,
+                        GlobalOnlyInterpolation,
+                        LocalMemoryConstraint<ComputationalDagEdgeIdxVectorImplDefT>>
         testGlobal;
     RunTestLocalMemory(&testGlobal);
 
-    VariancePartitioner<computational_dag_edge_idx_vector_impl_def_t,
-                        linear_interpolation,
-                        persistent_transient_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>>
+    VariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT,
+                        LinearInterpolation,
+                        PersistentTransientMemoryConstraint<ComputationalDagEdgeIdxVectorImplDefT>>
         testLinearTp;
     RunTestPersistentTransientMemory(&testLinearTp);
 
-    VariancePartitioner<computational_dag_edge_idx_vector_impl_def_t,
-                        flat_spline_interpolation,
-                        persistent_transient_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>>
+    VariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT,
+                        FlatSplineInterpolation,
+                        PersistentTransientMemoryConstraint<ComputationalDagEdgeIdxVectorImplDefT>>
         testFlatTp;
     RunTestPersistentTransientMemory(&testFlatTp);
 
-    VariancePartitioner<computational_dag_edge_idx_vector_impl_def_t,
-                        superstep_only_interpolation,
-                        persistent_transient_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>>
+    VariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT,
+                        SuperstepOnlyInterpolation,
+                        PersistentTransientMemoryConstraint<ComputationalDagEdgeIdxVectorImplDefT>>
         testSuperstepTp;
     RunTestPersistentTransientMemory(&testSuperstepTp);
 
-    VariancePartitioner<computational_dag_edge_idx_vector_impl_def_t,
-                        global_only_interpolation,
-                        persistent_transient_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>>
+    VariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT,
+                        GlobalOnlyInterpolation,
+                        PersistentTransientMemoryConstraint<ComputationalDagEdgeIdxVectorImplDefT>>
         testGlobalTp;
     RunTestPersistentTransientMemory(&testGlobalTp);
 }
 
 BOOST_AUTO_TEST_CASE(LightEdgeVariancePartitionerTest) {
-    LightEdgeVariancePartitioner<computational_dag_edge_idx_vector_impl_def_t,
-                                 linear_interpolation,
-                                 local_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>>
+    LightEdgeVariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT,
+                                 LinearInterpolation,
+                                 LocalMemoryConstraint<ComputationalDagEdgeIdxVectorImplDefT>>
         testLinear;
     RunTestLocalMemory(&testLinear);
 
-    LightEdgeVariancePartitioner<computational_dag_edge_idx_vector_impl_def_t,
-                                 flat_spline_interpolation,
-                                 local_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>>
+    LightEdgeVariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT,
+                                 FlatSplineInterpolation,
+                                 LocalMemoryConstraint<ComputationalDagEdgeIdxVectorImplDefT>>
         testFlat;
     RunTestLocalMemory(&testFlat);
 
-    LightEdgeVariancePartitioner<computational_dag_edge_idx_vector_impl_def_t,
-                                 superstep_only_interpolation,
-                                 local_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>>
+    LightEdgeVariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT,
+                                 SuperstepOnlyInterpolation,
+                                 LocalMemoryConstraint<ComputationalDagEdgeIdxVectorImplDefT>>
         testSuperstep;
     RunTestLocalMemory(&testSuperstep);
 
-    LightEdgeVariancePartitioner<computational_dag_edge_idx_vector_impl_def_t,
-                                 global_only_interpolation,
-                                 local_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>>
+    LightEdgeVariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT,
+                                 GlobalOnlyInterpolation,
+                                 LocalMemoryConstraint<ComputationalDagEdgeIdxVectorImplDefT>>
         testGlobal;
     RunTestLocalMemory(&testGlobal);
 
-    LightEdgeVariancePartitioner<computational_dag_edge_idx_vector_impl_def_t,
-                                 linear_interpolation,
-                                 persistent_transient_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>>
+    LightEdgeVariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT,
+                                 LinearInterpolation,
+                                 PersistentTransientMemoryConstraint<ComputationalDagEdgeIdxVectorImplDefT>>
         testLinearTp;
     RunTestPersistentTransientMemory(&testLinearTp);
 
-    LightEdgeVariancePartitioner<computational_dag_edge_idx_vector_impl_def_t,
-                                 flat_spline_interpolation,
-                                 persistent_transient_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>>
+    LightEdgeVariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT,
+                                 FlatSplineInterpolation,
+                                 PersistentTransientMemoryConstraint<ComputationalDagEdgeIdxVectorImplDefT>>
         testFlatTp;
     RunTestPersistentTransientMemory(&testFlatTp);
 
-    LightEdgeVariancePartitioner<computational_dag_edge_idx_vector_impl_def_t,
-                                 superstep_only_interpolation,
-                                 persistent_transient_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>>
+    LightEdgeVariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT,
+                                 SuperstepOnlyInterpolation,
+                                 PersistentTransientMemoryConstraint<ComputationalDagEdgeIdxVectorImplDefT>>
         testSuperstepTp;
     RunTestPersistentTransientMemory(&testSuperstepTp);
 
-    LightEdgeVariancePartitioner<computational_dag_edge_idx_vector_impl_def_t,
-                                 global_only_interpolation,
-                                 persistent_transient_memory_constraint<computational_dag_edge_idx_vector_impl_def_t>>
+    LightEdgeVariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT,
+                                 GlobalOnlyInterpolation,
+                                 PersistentTransientMemoryConstraint<ComputationalDagEdgeIdxVectorImplDefT>>
         testGlobalTp;
     RunTestPersistentTransientMemory(&testGlobalTp);
 }

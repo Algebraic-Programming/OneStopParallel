@@ -29,54 +29,54 @@ limitations under the License.
 
 using namespace osp;
 
-computational_dag_vector_impl_def_t ConstrGraph1() {
-    computational_dag_vector_impl_def_t graph;
+ComputationalDagVectorImplDefT ConstrGraph1() {
+    ComputationalDagVectorImplDefT graph;
 
-    using VertexIdx = computational_dag_vector_impl_def_t::vertex_idx;
+    using VertexIdx = ComputationalDagVectorImplDefT::VertexIdx;
 
-    VertexIdx v1 = graph.add_vertex(1, 2, 3, 4);
-    VertexIdx v2 = graph.add_vertex(5, 6, 7, 8);
-    VertexIdx v3 = graph.add_vertex(9, 10, 11, 12);
-    VertexIdx v4 = graph.add_vertex(13, 14, 15, 16);
-    VertexIdx v5 = graph.add_vertex(17, 18, 19, 20);
-    VertexIdx v6 = graph.add_vertex(21, 22, 23, 24);
-    VertexIdx v7 = graph.add_vertex(25, 26, 27, 28);
-    VertexIdx v8 = graph.add_vertex(29, 30, 31, 32);
+    VertexIdx v1 = graph.AddVertex(1, 2, 3, 4);
+    VertexIdx v2 = graph.AddVertex(5, 6, 7, 8);
+    VertexIdx v3 = graph.AddVertex(9, 10, 11, 12);
+    VertexIdx v4 = graph.AddVertex(13, 14, 15, 16);
+    VertexIdx v5 = graph.AddVertex(17, 18, 19, 20);
+    VertexIdx v6 = graph.AddVertex(21, 22, 23, 24);
+    VertexIdx v7 = graph.AddVertex(25, 26, 27, 28);
+    VertexIdx v8 = graph.AddVertex(29, 30, 31, 32);
 
-    graph.add_edge(v1, v2);
-    graph.add_edge(v1, v3);
-    graph.add_edge(v1, v4);
-    graph.add_edge(v2, v5);
+    graph.AddEdge(v1, v2);
+    graph.AddEdge(v1, v3);
+    graph.AddEdge(v1, v4);
+    graph.AddEdge(v2, v5);
 
-    graph.add_edge(v3, v5);
-    graph.add_edge(v3, v6);
-    graph.add_edge(v2, v7);
-    graph.add_edge(v5, v8);
-    graph.add_edge(v4, v8);
+    graph.AddEdge(v3, v5);
+    graph.AddEdge(v3, v6);
+    graph.AddEdge(v2, v7);
+    graph.AddEdge(v5, v8);
+    graph.AddEdge(v4, v8);
 
     return graph;
 }
 
 BOOST_AUTO_TEST_CASE(TestEmptyDag) {
-    computational_dag_vector_impl_def_t graph;
-    BOOST_CHECK_EQUAL(graph.num_edges(), 0);
-    BOOST_CHECK_EQUAL(graph.num_vertices(), 0);
+    ComputationalDagVectorImplDefT graph;
+    BOOST_CHECK_EQUAL(graph.NumEdges(), 0);
+    BOOST_CHECK_EQUAL(graph.NumVertices(), 0);
 
     size_t idx = 0;
-    for (const auto &v : graph.vertices()) {
-        graph.in_degree(v);
+    for (const auto &v : graph.Vertices()) {
+        graph.InDegree(v);
         idx++;
     }
     BOOST_CHECK_EQUAL(idx, 0);
 }
 
 BOOST_AUTO_TEST_CASE(TestDag) {
-    const computational_dag_vector_impl_def_t graph = ConstrGraph1();
+    const ComputationalDagVectorImplDefT graph = ConstrGraph1();
 
-    using VertexIdx = computational_dag_vector_impl_def_t::vertex_idx;
+    using VertexIdx = ComputationalDagVectorImplDefT::VertexIdx;
 
-    BOOST_CHECK_EQUAL(graph.num_edges(), 9);
-    BOOST_CHECK_EQUAL(graph.num_vertices(), 8);
+    BOOST_CHECK_EQUAL(graph.NumEdges(), 9);
+    BOOST_CHECK_EQUAL(graph.NumVertices(), 8);
 
     std::vector<VertexIdx> vertices{0, 1, 2, 3, 4, 5, 6, 7};
 
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(TestDag) {
 
     size_t idx = 0;
 
-    for (const auto &v : graph.vertices()) {
+    for (const auto &v : graph.Vertices()) {
         BOOST_CHECK_EQUAL(v, vertices[idx++]);
 
         size_t i = 0;
@@ -118,21 +118,21 @@ BOOST_AUTO_TEST_CASE(TestDag) {
         }
 
         i = 0;
-        for (const auto &e : out_edges(v, graph)) {
-            BOOST_CHECK_EQUAL(target(e, graph), outNeighbors[v][i++]);
+        for (const auto &e : OutEdges(v, graph)) {
+            BOOST_CHECK_EQUAL(Target(e, graph), outNeighbors[v][i++]);
         }
 
         i = 0;
-        for (const auto &e : in_edges(v, graph)) {
-            BOOST_CHECK_EQUAL(source(e, graph), inNeighbors[v][i++]);
+        for (const auto &e : InEdges(v, graph)) {
+            BOOST_CHECK_EQUAL(Source(e, graph), inNeighbors[v][i++]);
         }
 
-        BOOST_CHECK_EQUAL(graph.in_degree(v), inNeighbors[v].size());
+        BOOST_CHECK_EQUAL(graph.InDegree(v), inNeighbors[v].size());
         BOOST_CHECK_EQUAL(graph.out_degree(v), outNeighbors[v].size());
     }
 
     unsigned count = 0;
-    for (const auto &e : edges(graph)) {
+    for (const auto &e : Edges(graph)) {
         std::cout << e.source << " -> " << e.target << std::endl;
         count++;
     }
@@ -140,75 +140,75 @@ BOOST_AUTO_TEST_CASE(TestDag) {
 }
 
 BOOST_AUTO_TEST_CASE(TestConstrDag) {
-    computational_dag_vector_impl_def_int_t graph;
+    ComputationalDagVectorImplDefIntT graph;
 
-    graph.add_vertex(1, 2, 3);
-    graph.add_vertex(5, 6, 7);
-    graph.add_vertex(9, 10, 11);
-    graph.add_vertex(13, 14, 15);
+    graph.AddVertex(1, 2, 3);
+    graph.AddVertex(5, 6, 7);
+    graph.AddVertex(9, 10, 11);
+    graph.AddVertex(13, 14, 15);
 
-    graph.add_edge(0, 1);
-    graph.add_edge(0, 2);
-    graph.add_edge(0, 3);
+    graph.AddEdge(0, 1);
+    graph.AddEdge(0, 2);
+    graph.AddEdge(0, 3);
 
-    computational_dag_vector_impl_def_int_t graph2(graph);
+    ComputationalDagVectorImplDefIntT graph2(graph);
 
-    BOOST_CHECK_EQUAL(graph2.num_edges(), 3);
-    BOOST_CHECK_EQUAL(graph2.num_vertices(), 4);
-    BOOST_CHECK_EQUAL(graph2.vertex_work_weight(0), 1);
-    BOOST_CHECK_EQUAL(graph2.vertex_comm_weight(0), 2);
-    BOOST_CHECK_EQUAL(graph2.vertex_mem_weight(0), 3);
-    BOOST_CHECK_EQUAL(graph2.vertex_work_weight(1), 5);
-    BOOST_CHECK_EQUAL(graph2.vertex_comm_weight(1), 6);
-    BOOST_CHECK_EQUAL(graph2.vertex_mem_weight(1), 7);
-    BOOST_CHECK_EQUAL(graph2.vertex_work_weight(2), 9);
-    BOOST_CHECK_EQUAL(graph2.vertex_comm_weight(2), 10);
-    BOOST_CHECK_EQUAL(graph2.vertex_mem_weight(2), 11);
-    BOOST_CHECK_EQUAL(graph2.vertex_work_weight(3), 13);
-    BOOST_CHECK_EQUAL(graph2.vertex_comm_weight(3), 14);
+    BOOST_CHECK_EQUAL(graph2.NumEdges(), 3);
+    BOOST_CHECK_EQUAL(graph2.NumVertices(), 4);
+    BOOST_CHECK_EQUAL(graph2.VertexWorkWeight(0), 1);
+    BOOST_CHECK_EQUAL(graph2.VertexCommWeight(0), 2);
+    BOOST_CHECK_EQUAL(graph2.VertexMemWeight(0), 3);
+    BOOST_CHECK_EQUAL(graph2.VertexWorkWeight(1), 5);
+    BOOST_CHECK_EQUAL(graph2.VertexCommWeight(1), 6);
+    BOOST_CHECK_EQUAL(graph2.VertexMemWeight(1), 7);
+    BOOST_CHECK_EQUAL(graph2.VertexWorkWeight(2), 9);
+    BOOST_CHECK_EQUAL(graph2.VertexCommWeight(2), 10);
+    BOOST_CHECK_EQUAL(graph2.VertexMemWeight(2), 11);
+    BOOST_CHECK_EQUAL(graph2.VertexWorkWeight(3), 13);
+    BOOST_CHECK_EQUAL(graph2.VertexCommWeight(3), 14);
 
-    boost_graph_int_t bG1;
+    BoostGraphIntT bG1;
 
-    bG1.add_vertex(1, 2, 3, 4);
-    bG1.add_vertex(5, 6, 7, 8);
+    bG1.AddVertex(1, 2, 3, 4);
+    bG1.AddVertex(5, 6, 7, 8);
 
-    bG1.add_edge(0, 1, 9);
+    bG1.AddEdge(0, 1, 9);
 
-    computational_dag_vector_impl_def_int_t graph3(bG1);
+    ComputationalDagVectorImplDefIntT graph3(bG1);
 
-    BOOST_CHECK_EQUAL(graph3.num_edges(), 1);
-    BOOST_CHECK_EQUAL(graph3.num_vertices(), 2);
-    BOOST_CHECK_EQUAL(graph3.vertex_work_weight(0), 1);
-    BOOST_CHECK_EQUAL(graph3.vertex_comm_weight(0), 2);
-    BOOST_CHECK_EQUAL(graph3.vertex_mem_weight(0), 3);
-    BOOST_CHECK_EQUAL(graph3.vertex_work_weight(1), 5);
-    BOOST_CHECK_EQUAL(graph3.vertex_comm_weight(1), 6);
-    BOOST_CHECK_EQUAL(graph3.vertex_mem_weight(1), 7);
+    BOOST_CHECK_EQUAL(graph3.NumEdges(), 1);
+    BOOST_CHECK_EQUAL(graph3.NumVertices(), 2);
+    BOOST_CHECK_EQUAL(graph3.VertexWorkWeight(0), 1);
+    BOOST_CHECK_EQUAL(graph3.VertexCommWeight(0), 2);
+    BOOST_CHECK_EQUAL(graph3.VertexMemWeight(0), 3);
+    BOOST_CHECK_EQUAL(graph3.VertexWorkWeight(1), 5);
+    BOOST_CHECK_EQUAL(graph3.VertexCommWeight(1), 6);
+    BOOST_CHECK_EQUAL(graph3.VertexMemWeight(1), 7);
 
-    computational_dag_vector_impl_def_int_t graph4(graph3);
+    ComputationalDagVectorImplDefIntT graph4(graph3);
 
-    BOOST_CHECK_EQUAL(graph4.num_edges(), 1);
-    BOOST_CHECK_EQUAL(graph4.num_vertices(), 2);
-    BOOST_CHECK_EQUAL(graph4.vertex_work_weight(0), 1);
-    BOOST_CHECK_EQUAL(graph4.vertex_comm_weight(0), 2);
-    BOOST_CHECK_EQUAL(graph4.vertex_mem_weight(0), 3);
-    BOOST_CHECK_EQUAL(graph4.vertex_work_weight(1), 5);
-    BOOST_CHECK_EQUAL(graph4.vertex_comm_weight(1), 6);
-    BOOST_CHECK_EQUAL(graph4.vertex_mem_weight(1), 7);
+    BOOST_CHECK_EQUAL(graph4.NumEdges(), 1);
+    BOOST_CHECK_EQUAL(graph4.NumVertices(), 2);
+    BOOST_CHECK_EQUAL(graph4.VertexWorkWeight(0), 1);
+    BOOST_CHECK_EQUAL(graph4.VertexCommWeight(0), 2);
+    BOOST_CHECK_EQUAL(graph4.VertexMemWeight(0), 3);
+    BOOST_CHECK_EQUAL(graph4.VertexWorkWeight(1), 5);
+    BOOST_CHECK_EQUAL(graph4.VertexCommWeight(1), 6);
+    BOOST_CHECK_EQUAL(graph4.VertexMemWeight(1), 7);
 
-    computational_dag_vector_impl_def_int_t graphMove1(std::move(graph4));
+    ComputationalDagVectorImplDefIntT graphMove1(std::move(graph4));
 
-    BOOST_CHECK_EQUAL(graph4.num_edges(), 0);
-    BOOST_CHECK_EQUAL(graph4.num_vertices(), 0);
+    BOOST_CHECK_EQUAL(graph4.NumEdges(), 0);
+    BOOST_CHECK_EQUAL(graph4.NumVertices(), 0);
 
-    BOOST_CHECK_EQUAL(graphMove1.num_edges(), 1);
-    BOOST_CHECK_EQUAL(graphMove1.num_vertices(), 2);
-    BOOST_CHECK_EQUAL(graphMove1.vertex_work_weight(0), 1);
-    BOOST_CHECK_EQUAL(graphMove1.vertex_comm_weight(0), 2);
-    BOOST_CHECK_EQUAL(graphMove1.vertex_mem_weight(0), 3);
-    BOOST_CHECK_EQUAL(graphMove1.vertex_work_weight(1), 5);
-    BOOST_CHECK_EQUAL(graphMove1.vertex_comm_weight(1), 6);
-    BOOST_CHECK_EQUAL(graphMove1.vertex_mem_weight(1), 7);
+    BOOST_CHECK_EQUAL(graphMove1.NumEdges(), 1);
+    BOOST_CHECK_EQUAL(graphMove1.NumVertices(), 2);
+    BOOST_CHECK_EQUAL(graphMove1.VertexWorkWeight(0), 1);
+    BOOST_CHECK_EQUAL(graphMove1.VertexCommWeight(0), 2);
+    BOOST_CHECK_EQUAL(graphMove1.VertexMemWeight(0), 3);
+    BOOST_CHECK_EQUAL(graphMove1.VertexWorkWeight(1), 5);
+    BOOST_CHECK_EQUAL(graphMove1.VertexCommWeight(1), 6);
+    BOOST_CHECK_EQUAL(graphMove1.VertexMemWeight(1), 7);
 }
 
 BOOST_AUTO_TEST_CASE(TestDagVectorAdapter) {
@@ -236,8 +236,8 @@ BOOST_AUTO_TEST_CASE(TestDagVectorAdapter) {
         {4, 3}
     };
 
-    using VImpl = cdag_vertex_impl<unsigned, int, int, int, unsigned>;
-    using GraphT = dag_vector_adapter<VImpl, int>;
+    using VImpl = CdagVertexImpl<unsigned, int, int, int, unsigned>;
+    using GraphT = DagVectorAdapter<VImpl, int>;
 
     GraphT graph(outNeighbors, inNeighbors);
 
@@ -259,13 +259,13 @@ BOOST_AUTO_TEST_CASE(TestDagVectorAdapter) {
         }
 
         i = 0;
-        for (const auto &e : out_edges(v, graph)) {
-            BOOST_CHECK_EQUAL(target(e, graph), outNeighbors[vv][i++]);
+        for (const auto &e : OutEdges(v, graph)) {
+            BOOST_CHECK_EQUAL(Target(e, graph), outNeighbors[vv][i++]);
         }
 
         i = 0;
-        for (const auto &e : in_edges(v, graph)) {
-            BOOST_CHECK_EQUAL(source(e, graph), inNeighbors[vv][i++]);
+        for (const auto &e : InEdges(v, graph)) {
+            BOOST_CHECK_EQUAL(Source(e, graph), inNeighbors[vv][i++]);
         }
 
         BOOST_CHECK_EQUAL(graph.in_degree(v), inNeighbors[vv].size());
@@ -273,7 +273,7 @@ BOOST_AUTO_TEST_CASE(TestDagVectorAdapter) {
     }
 
     unsigned count = 0;
-    for (const auto &e : edges(graph)) {
+    for (const auto &e : Edges(graph)) {
         std::cout << e.source << " -> " << e.target << std::endl;
         count++;
     }

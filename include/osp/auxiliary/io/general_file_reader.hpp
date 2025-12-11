@@ -26,9 +26,9 @@ limitations under the License.
 namespace osp {
 namespace file_reader {
 
-template <typename Graph_t>
-bool readGraph(const std::string &filename, Graph_t &graph) {
-    if (!isPathSafe(filename)) {
+template <typename GraphT>
+bool ReadGraph(const std::string &filename, GraphT &graph) {
+    if (!IsPathSafe(filename)) {
         std::cerr << "Error: Unsafe file path (possible traversal or invalid type).\n";
         return false;
     }
@@ -40,18 +40,18 @@ bool readGraph(const std::string &filename, Graph_t &graph) {
     }
 
     bool status;
-    std::string file_ending = filename.substr(filename.rfind(".") + 1);
-    if (file_ending == "lhdag") {
-        status = file_reader::readComputationalDagHyperdagFormat(infile, graph);
-    } else if (file_ending == "hdag") {
-        status = file_reader::readComputationalDagHyperdagFormatDB(infile, graph);
-    } else if (file_ending == "mtx") {
-        status = file_reader::readComputationalDagMartixMarketFormat(infile, graph);
-    } else if (file_ending == "dot") {
-        status = file_reader::readComputationalDagDotFormat(infile, graph);
+    std::string fileEnding = filename.substr(filename.rfind(".") + 1);
+    if (fileEnding == "lhdag") {
+        status = file_reader::ReadComputationalDagHyperdagFormat(infile, graph);
+    } else if (fileEnding == "hdag") {
+        status = file_reader::ReadComputationalDagHyperdagFormatDb(infile, graph);
+    } else if (fileEnding == "mtx") {
+        status = file_reader::ReadComputationalDagMartixMarketFormat(infile, graph);
+    } else if (fileEnding == "dot") {
+        status = file_reader::ReadComputationalDagDotFormat(infile, graph);
     } else {
-        std::cout << "Unknown file ending: ." << file_ending << " ...assuming hyperDag format." << std::endl;
-        status = file_reader::readComputationalDagHyperdagFormatDB(infile, graph);
+        std::cout << "Unknown file ending: ." << fileEnding << " ...assuming hyperDag format." << std::endl;
+        status = file_reader::ReadComputationalDagHyperdagFormatDb(infile, graph);
     }
 
     return status;

@@ -42,8 +42,8 @@ std::vector<std::string> TinySpaaGraphs() {
 }
 
 template <typename GraphT>
-bool CheckVertexMaps(const std::vector<std::vector<std::vector<vertex_idx_t<GraphT>>>> &maps, const GraphT &dag) {
-    std::unordered_set<vertex_idx_t<GraphT>> allVertices;
+bool CheckVertexMaps(const std::vector<std::vector<std::vector<VertexIdxT<GraphT>>>> &maps, const GraphT &dag) {
+    std::unordered_set<VertexIdxT<GraphT>> allVertices;
     for (const auto &step : maps) {
         for (const auto &subgraph : step) {
             for (const auto &vertex : subgraph) {
@@ -52,21 +52,21 @@ bool CheckVertexMaps(const std::vector<std::vector<std::vector<vertex_idx_t<Grap
         }
     }
 
-    return allVertices.size() == dag.num_vertices();
+    return allVertices.size() == dag.NumVertices();
 }
 
 BOOST_AUTO_TEST_CASE(WavefrontComponentDivider) {
     std::vector<std::string> filenamesGraph = TestGraphsDot();
 
-    const auto projectRoot = get_project_root();
+    const auto projectRoot = GetProjectRoot();
 
-    using GraphT = computational_dag_edge_idx_vector_impl_def_t;
+    using GraphT = ComputationalDagEdgeIdxVectorImplDefT;
 
     for (auto &filenameGraph : filenamesGraph) {
         BspInstance<GraphT> instance;
-        auto &graph = instance.getComputationalDag();
+        auto &graph = instance.GetComputationalDag();
 
-        auto statusGraph = file_reader::readComputationalDagDotFormat((projectRoot / filenameGraph).string(), graph);
+        auto statusGraph = file_reader::ReadComputationalDagDotFormat((projectRoot / filenameGraph).string(), graph);
 
         if (!statusGraph) {
             std::cout << "Reading files failed." << std::endl;
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(WavefrontComponentDivider) {
         }
 
         ScanWavefrontDivider<GraphT> wavefront;
-        auto maps = wavefront.divide(graph);
+        auto maps = wavefront.Divide(graph);
 
         if (!maps.empty()) {
             BOOST_CHECK(CheckVertexMaps(maps, graph));
@@ -87,15 +87,15 @@ BOOST_AUTO_TEST_CASE(WavefrontComponentDivider) {
 BOOST_AUTO_TEST_CASE(WavefrontComponentParallelismDivider) {
     std::vector<std::string> filenamesGraph = TinySpaaGraphs();
 
-    const auto projectRoot = get_project_root();
+    const auto projectRoot = GetProjectRoot();
 
-    using GraphT = computational_dag_edge_idx_vector_impl_def_t;
+    using GraphT = ComputationalDagEdgeIdxVectorImplDefT;
 
     for (auto &filenameGraph : filenamesGraph) {
         BspInstance<GraphT> instance;
-        auto &graph = instance.getComputationalDag();
+        auto &graph = instance.GetComputationalDag();
 
-        auto statusGraph = file_reader::readComputationalDagHyperdagFormatDB((projectRoot / filenameGraph).string(), graph);
+        auto statusGraph = file_reader::ReadComputationalDagHyperdagFormatDb((projectRoot / filenameGraph).string(), graph);
 
         if (!statusGraph) {
             std::cout << "Reading files failed." << std::endl;
@@ -105,10 +105,10 @@ BOOST_AUTO_TEST_CASE(WavefrontComponentParallelismDivider) {
         }
 
         ScanWavefrontDivider<GraphT> wavefront;
-        wavefront.set_metric(SequenceMetric::AVAILABLE_PARALLELISM);
-        wavefront.use_variance_splitter(1.0, 1.0, 1);
+        wavefront.SetMetric(SequenceMetric::AVAILABLE_PARALLELISM);
+        wavefront.UseVarianceSplitter(1.0, 1.0, 1);
 
-        auto maps = wavefront.divide(graph);
+        auto maps = wavefront.Divide(graph);
 
         if (!maps.empty()) {
             BOOST_CHECK(CheckVertexMaps(maps, graph));

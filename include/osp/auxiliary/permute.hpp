@@ -26,7 +26,7 @@ limitations under the License.
 namespace osp {
 
 template <typename T, typename Ind>
-void permute_inplace(std::vector<T> &vec, std::vector<Ind> &perm) {
+void PermuteInplace(std::vector<T> &vec, std::vector<Ind> &perm) {
     static_assert(std::is_integral_v<Ind>);
     static_assert(std::is_unsigned_v<Ind>);
 
@@ -58,7 +58,7 @@ void permute_inplace(std::vector<T> &vec, std::vector<Ind> &perm) {
 }
 
 template <typename T, typename Ind>
-void inverse_permute_inplace(std::vector<T> &vec, std::vector<Ind> &perm) {
+void InversePermuteInplace(std::vector<T> &vec, std::vector<Ind> &perm) {
     static_assert(std::is_integral_v<Ind>);
     static_assert(std::is_unsigned_v<Ind>);
 

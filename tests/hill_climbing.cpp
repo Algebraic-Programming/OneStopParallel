@@ -31,12 +31,12 @@ limitations under the License.
 using namespace osp;
 
 BOOST_AUTO_TEST_CASE(HillClimbing) {
-    using Graph = computational_dag_vector_impl_def_t;
+    using Graph = ComputationalDagVectorImplDefT;
 
     BspInstance<Graph> instance;
-    instance.setNumberOfProcessors(4);
-    instance.setCommunicationCosts(3);
-    instance.setSynchronisationCosts(5);
+    instance.SetNumberOfProcessors(4);
+    instance.SetCommunicationCosts(3);
+    instance.SetSynchronisationCosts(5);
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -46,43 +46,43 @@ BOOST_AUTO_TEST_CASE(HillClimbing) {
         std::cout << cwd << std::endl;
     }
 
-    bool status = file_reader::readComputationalDagHyperdagFormatDB(
-        (cwd / "data/spaa/tiny/instance_CG_N4_K1_nzP0d35.hdag").string(), instance.getComputationalDag());
+    bool status = file_reader::ReadComputationalDagHyperdagFormatDb(
+        (cwd / "data/spaa/tiny/instance_CG_N4_K1_nzP0d35.hdag").string(), instance.GetComputationalDag());
 
     BOOST_CHECK(status);
 
     GreedyBspScheduler<Graph> greedy;
     BspSchedule<Graph> bspInitial(instance);
-    BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, greedy.computeSchedule(bspInitial));
-    BOOST_CHECK_EQUAL(bspInitial.satisfiesPrecedenceConstraints(), true);
+    BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, greedy.ComputeSchedule(bspInitial));
+    BOOST_CHECK_EQUAL(bspInitial.SatisfiesPrecedenceConstraints(), true);
 
     HillClimbingScheduler<Graph> scheduler;
     BspSchedule<Graph> schedule1 = bspInitial;
-    scheduler.improveSchedule(schedule1);
-    BOOST_CHECK_EQUAL(schedule1.satisfiesPrecedenceConstraints(), true);
+    scheduler.ImproveSchedule(schedule1);
+    BOOST_CHECK_EQUAL(schedule1.SatisfiesPrecedenceConstraints(), true);
 
-    scheduler.setSteepestAscend(true);
+    scheduler.SetSteepestAscend(true);
     BspSchedule<Graph> schedule2 = bspInitial;
-    scheduler.improveSchedule(schedule2);
-    BOOST_CHECK_EQUAL(schedule2.satisfiesPrecedenceConstraints(), true);
+    scheduler.ImproveSchedule(schedule2);
+    BOOST_CHECK_EQUAL(schedule2.SatisfiesPrecedenceConstraints(), true);
 
     BspSchedule<Graph> schedule3 = bspInitial;
-    scheduler.setTimeLimitSeconds(1U);
-    scheduler.improveScheduleWithTimeLimit(schedule3);
-    BOOST_CHECK_EQUAL(schedule3.satisfiesPrecedenceConstraints(), true);
+    scheduler.SetTimeLimitSeconds(1U);
+    scheduler.ImproveScheduleWithTimeLimit(schedule3);
+    BOOST_CHECK_EQUAL(schedule3.SatisfiesPrecedenceConstraints(), true);
 
     BspSchedule<Graph> schedule4 = bspInitial;
     scheduler.improveScheduleWithStepLimit(schedule4, 5);
-    BOOST_CHECK_EQUAL(schedule4.satisfiesPrecedenceConstraints(), true);
+    BOOST_CHECK_EQUAL(schedule4.SatisfiesPrecedenceConstraints(), true);
 }
 
 BOOST_AUTO_TEST_CASE(HillClimbingForCommSchedule) {
-    using Graph = computational_dag_vector_impl_def_t;
+    using Graph = ComputationalDagVectorImplDefT;
 
     BspInstance<Graph> instance;
-    instance.setNumberOfProcessors(2);
-    instance.setCommunicationCosts(3);
-    instance.setSynchronisationCosts(5);
+    instance.SetNumberOfProcessors(2);
+    instance.SetCommunicationCosts(3);
+    instance.SetSynchronisationCosts(5);
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -92,33 +92,33 @@ BOOST_AUTO_TEST_CASE(HillClimbingForCommSchedule) {
         std::cout << cwd << std::endl;
     }
 
-    bool status = file_reader::readComputationalDagHyperdagFormatDB(
-        (cwd / "data/spaa/tiny/instance_CG_N4_K1_nzP0d35.hdag").string(), instance.getComputationalDag());
+    bool status = file_reader::ReadComputationalDagHyperdagFormatDb(
+        (cwd / "data/spaa/tiny/instance_CG_N4_K1_nzP0d35.hdag").string(), instance.GetComputationalDag());
 
     BOOST_CHECK(status);
 
     GreedyBspScheduler<Graph> greedy;
     BspSchedule<Graph> initial(instance);
-    BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, greedy.computeSchedule(initial));
-    BOOST_CHECK_EQUAL(initial.satisfiesPrecedenceConstraints(), true);
+    BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, greedy.ComputeSchedule(initial));
+    BOOST_CHECK_EQUAL(initial.SatisfiesPrecedenceConstraints(), true);
 
     HillClimbingScheduler<Graph> hc;
-    hc.improveSchedule(initial);
-    BOOST_CHECK_EQUAL(initial.satisfiesPrecedenceConstraints(), true);
+    hc.ImproveSchedule(initial);
+    BOOST_CHECK_EQUAL(initial.SatisfiesPrecedenceConstraints(), true);
 
     BspSchedule<Graph> schedule = initial;
     BspScheduleCS<Graph> initialCs(std::move(initial));
     // initial_cs.setAutoCommunicationSchedule();
-    initialCs.setEagerCommunicationSchedule();
-    BOOST_CHECK_EQUAL(initialCs.hasValidCommSchedule(), true);
+    initialCs.SetEagerCommunicationSchedule();
+    BOOST_CHECK_EQUAL(initialCs.HasValidCommSchedule(), true);
 
     HillClimbingForCommSteps<Graph> hcCs;
     BspScheduleCS<Graph> schedule1 = initialCs;
-    hcCs.improveSchedule(schedule1);
-    BOOST_CHECK_EQUAL(schedule1.hasValidCommSchedule(), true);
+    hcCs.ImproveSchedule(schedule1);
+    BOOST_CHECK_EQUAL(schedule1.HasValidCommSchedule(), true);
 
     BspScheduleCS<Graph> schedule2 = initialCs;
-    hcCs.setSteepestAscend(true);
-    hcCs.improveSchedule(schedule2);
-    BOOST_CHECK_EQUAL(schedule2.hasValidCommSchedule(), true);
+    hcCs.SetSteepestAscend(true);
+    hcCs.ImproveSchedule(schedule2);
+    BOOST_CHECK_EQUAL(schedule2.HasValidCommSchedule(), true);
 }

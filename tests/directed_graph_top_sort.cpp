@@ -34,42 +34,42 @@ limitations under the License.
 
 using namespace osp;
 
-computational_dag_vector_impl_def_t ConstrGraph1() {
-    computational_dag_vector_impl_def_t graph;
+ComputationalDagVectorImplDefT ConstrGraph1() {
+    ComputationalDagVectorImplDefT graph;
 
-    using VertexIdx = computational_dag_vector_impl_def_t::vertex_idx;
+    using VertexIdx = ComputationalDagVectorImplDefT::vertex_idx;
 
-    VertexIdx v1 = graph.add_vertex(1, 2, 3, 4);
-    VertexIdx v2 = graph.add_vertex(5, 6, 7, 8);
-    VertexIdx v3 = graph.add_vertex(9, 10, 11, 12);
-    VertexIdx v4 = graph.add_vertex(13, 14, 15, 16);
-    VertexIdx v5 = graph.add_vertex(17, 18, 19, 20);
-    VertexIdx v6 = graph.add_vertex(21, 22, 23, 24);
-    VertexIdx v7 = graph.add_vertex(25, 26, 27, 28);
-    VertexIdx v8 = graph.add_vertex(29, 30, 31, 32);
+    VertexIdx v1 = graph.AddVertex(1, 2, 3, 4);
+    VertexIdx v2 = graph.AddVertex(5, 6, 7, 8);
+    VertexIdx v3 = graph.AddVertex(9, 10, 11, 12);
+    VertexIdx v4 = graph.AddVertex(13, 14, 15, 16);
+    VertexIdx v5 = graph.AddVertex(17, 18, 19, 20);
+    VertexIdx v6 = graph.AddVertex(21, 22, 23, 24);
+    VertexIdx v7 = graph.AddVertex(25, 26, 27, 28);
+    VertexIdx v8 = graph.AddVertex(29, 30, 31, 32);
 
-    graph.add_edge(v1, v2);
-    graph.add_edge(v1, v3);
-    graph.add_edge(v1, v4);
-    graph.add_edge(v2, v5);
+    graph.AddEdge(v1, v2);
+    graph.AddEdge(v1, v3);
+    graph.AddEdge(v1, v4);
+    graph.AddEdge(v2, v5);
 
-    graph.add_edge(v3, v5);
-    graph.add_edge(v3, v6);
-    graph.add_edge(v2, v7);
-    graph.add_edge(v5, v8);
-    graph.add_edge(v4, v8);
+    graph.AddEdge(v3, v5);
+    graph.AddEdge(v3, v6);
+    graph.AddEdge(v2, v7);
+    graph.AddEdge(v5, v8);
+    graph.AddEdge(v4, v8);
 
     return graph;
 }
 
 BOOST_AUTO_TEST_CASE(TestUtil1) {
-    const computational_dag_vector_impl_def_t graph = ConstrGraph1();
+    const ComputationalDagVectorImplDefT graph = ConstrGraph1();
 
     // using vertex_idx = computational_dag_vector_impl_def_t::vertex_idx;
 }
 
 BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
-    using VertexType = vertex_idx_t<boost_graph_int_t>;
+    using VertexType = VertexIdxT<BoostGraphIntT>;
 
     const std::vector<std::vector<VertexType>> out({
         {7},
@@ -86,8 +86,8 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     const std::vector<int> workW({1, 1, 1, 1, 2, 3, 2, 1, 1, 1});
     const std::vector<int> commW({1, 1, 1, 1, 2, 3, 2, 1, 1, 1});
 
-    const boost_graph_int_t graph(out, workW, commW);
-    const boost_graph_int_t graphEmpty;
+    const BoostGraphIntT graph(out, workW, commW);
+    const BoostGraphIntT graphEmpty;
 
     std::vector<VertexType> topOrder;
     std::vector<size_t> indexInTopOrder;
@@ -96,10 +96,10 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
     BOOST_CHECK(topOrder.size() == graph.num_vertices());
 
-    indexInTopOrder = sorting_arrangement(topOrder);
+    indexInTopOrder = SortingArrangement(topOrder);
 
     for (const auto &i : topOrder) {
-        for (const auto &j : graph.children(i)) {
+        for (const auto &j : graph.Children(i)) {
             BOOST_CHECK_GT(indexInTopOrder[i], indexInTopOrder[j]);
         }
     }
@@ -108,10 +108,10 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
     BOOST_CHECK(topOrder.size() == graph.num_vertices());
 
-    indexInTopOrder = sorting_arrangement(topOrder);
+    indexInTopOrder = SortingArrangement(topOrder);
 
     for (const auto &i : topOrder) {
-        for (const auto &j : graph.children(i)) {
+        for (const auto &j : graph.Children(i)) {
             BOOST_CHECK_LT(indexInTopOrder[i], indexInTopOrder[j]);
         }
     }
@@ -120,10 +120,10 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
     BOOST_CHECK(topOrder.size() == graph.num_vertices());
 
-    indexInTopOrder = sorting_arrangement(topOrder);
+    indexInTopOrder = SortingArrangement(topOrder);
 
     for (const auto &i : topOrder) {
-        for (const auto &j : graph.children(i)) {
+        for (const auto &j : graph.Children(i)) {
             BOOST_CHECK_LT(indexInTopOrder[i], indexInTopOrder[j]);
         }
     }
@@ -132,10 +132,10 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
     BOOST_CHECK(topOrder.size() == graph.num_vertices());
 
-    indexInTopOrder = sorting_arrangement(topOrder);
+    indexInTopOrder = SortingArrangement(topOrder);
 
     for (const auto &i : topOrder) {
-        for (const auto &j : graph.children(i)) {
+        for (const auto &j : graph.Children(i)) {
             BOOST_CHECK_LT(indexInTopOrder[i], indexInTopOrder[j]);
         }
     }
@@ -144,10 +144,10 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
     BOOST_CHECK(topOrder.size() == graph.num_vertices());
 
-    indexInTopOrder = sorting_arrangement(topOrder);
+    indexInTopOrder = SortingArrangement(topOrder);
 
     for (const auto &i : topOrder) {
-        for (const auto &j : graph.children(i)) {
+        for (const auto &j : graph.Children(i)) {
             BOOST_CHECK_LT(indexInTopOrder[i], indexInTopOrder[j]);
         }
     }
@@ -157,10 +157,10 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     BOOST_CHECK(topOrder.size() == graph.num_vertices());
     BOOST_CHECK(GetTopOrder(graphEmpty).size() == graphEmpty.num_vertices());
 
-    indexInTopOrder = sorting_arrangement(topOrder);
+    indexInTopOrder = SortingArrangement(topOrder);
 
     for (const auto &i : topOrder) {
-        for (const auto &j : graph.children(i)) {
+        for (const auto &j : graph.Children(i)) {
             BOOST_CHECK_LT(indexInTopOrder[i], indexInTopOrder[j]);
         }
     }
@@ -175,9 +175,9 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
     BOOST_CHECK_EQUAL(bfsViewTopSort.size(), graph.num_vertices());
 
-    indexInTopOrder = sorting_arrangement(bfsViewTopSort);
+    indexInTopOrder = SortingArrangement(bfsViewTopSort);
     for (const auto &i : bfsViewTopSort) {
-        for (const auto &j : graph.children(i)) {
+        for (const auto &j : graph.Children(i)) {
             BOOST_CHECK_LT(indexInTopOrder[i], indexInTopOrder[j]);
         }
     }
@@ -189,9 +189,9 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
     BOOST_CHECK_EQUAL(dfsViewTopSort.size(), graph.num_vertices());
 
-    indexInTopOrder = sorting_arrangement(dfsViewTopSort);
+    indexInTopOrder = SortingArrangement(dfsViewTopSort);
     for (const auto &i : dfsViewTopSort) {
-        for (const auto &j : graph.children(i)) {
+        for (const auto &j : graph.Children(i)) {
             BOOST_CHECK_LT(indexInTopOrder[i], indexInTopOrder[j]);
         }
     }
@@ -215,9 +215,9 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
     BOOST_CHECK_EQUAL(locViewTopSort.size(), graph.num_vertices());
 
-    indexInTopOrder = sorting_arrangement(locViewTopSort);
+    indexInTopOrder = SortingArrangement(locViewTopSort);
     for (const auto &i : locViewTopSort) {
-        for (const auto &j : graph.children(i)) {
+        for (const auto &j : graph.Children(i)) {
             BOOST_CHECK_LT(indexInTopOrder[i], indexInTopOrder[j]);
         }
     }
@@ -240,9 +240,9 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
     BOOST_CHECK_EQUAL(maxChildrenViewTopSort.size(), graph.num_vertices());
 
-    indexInTopOrder = sorting_arrangement(maxChildrenViewTopSort);
+    indexInTopOrder = SortingArrangement(maxChildrenViewTopSort);
     for (const auto &i : maxChildrenViewTopSort) {
-        for (const auto &j : graph.children(i)) {
+        for (const auto &j : graph.Children(i)) {
             BOOST_CHECK_LT(indexInTopOrder[i], indexInTopOrder[j]);
         }
     }
@@ -264,17 +264,17 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     }
     BOOST_CHECK_EQUAL(randomViewTopSort.size(), graph.num_vertices());
 
-    indexInTopOrder = sorting_arrangement(randomViewTopSort);
+    indexInTopOrder = SortingArrangement(randomViewTopSort);
 
     for (const auto &i : randomViewTopSort) {
-        for (const auto &j : graph.children(i)) {
+        for (const auto &j : graph.Children(i)) {
             BOOST_CHECK_LT(indexInTopOrder[i], indexInTopOrder[j]);
         }
     }
 }
 
 BOOST_AUTO_TEST_CASE(TopSortTemplateOverloadCsr) {
-    using VertexType = vertex_idx_t<boost_graph_int_t>;
+    using VertexType = VertexIdxT<BoostGraphIntT>;
 
     const std::vector<std::vector<VertexType>> out({
         {7},
@@ -291,15 +291,15 @@ BOOST_AUTO_TEST_CASE(TopSortTemplateOverloadCsr) {
     const std::vector<int> workW({1, 1, 1, 1, 2, 3, 2, 1, 1, 1});
     const std::vector<int> commW({1, 1, 1, 1, 2, 3, 2, 1, 1, 1});
 
-    const boost_graph_int_t graph(out, workW, commW);
+    const BoostGraphIntT graph(out, workW, commW);
 
-    Compact_Sparse_Graph<false> graphCsr(graph);
+    CompactSparseGraph<false> graphCsr(graph);
 
-    BOOST_CHECK_EQUAL(graphCsr.num_vertices(), 10);
-    BOOST_CHECK_EQUAL(graphCsr.num_edges(), 12);
+    BOOST_CHECK_EQUAL(graphCsr.NumVertices(), 10);
+    BOOST_CHECK_EQUAL(graphCsr.NumEdges(), 12);
 
     auto topOrder = GetTopOrder(graphCsr);
-    BOOST_CHECK_EQUAL(topOrder.size(), graphCsr.num_vertices());
+    BOOST_CHECK_EQUAL(topOrder.size(), graphCsr.NumVertices());
 
     std::vector<size_t> expectedTopOrder{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
 

@@ -22,79 +22,79 @@ limitations under the License.
 
 namespace osp {
 
-template <typename Graph_t,
-          typename comm_cost_function_t,
-          typename MemoryConstraint_t = no_local_search_memory_constraint,
-          unsigned window_size = 1,
-          typename cost_t = double>
-class kl_improver_test : public kl_improver<Graph_t, comm_cost_function_t, MemoryConstraint_t, window_size, cost_t> {
-    using VertexType = vertex_idx_t<Graph_t>;
-    using kl_move = kl_move_struct<cost_t, VertexType>;
-    using heap_datastructure = MaxPairingHeap<VertexType, kl_move>;
-    using active_schedule_t = kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t>;
-    using kl_gain_update_info = kl_update_info<VertexType>;
-    using node_selection_container_t = adaptive_affinity_table<Graph_t, cost_t, active_schedule_t, window_size>;
+template <typename GraphT,
+          typename CommCostFunctionT,
+          typename MemoryConstraintT = NoLocalSearchMemoryConstraint,
+          unsigned WindowSize = 1,
+          typename CostT = double>
+class KlImproverTest : public KlImprover<GraphT, CommCostFunctionT, MemoryConstraintT, WindowSize, CostT> {
+    using VertexType = VertexIdxT<GraphT>;
+    using KlMove = KlMoveStruct<CostT, VertexType>;
+    using HeapDatastructure = MaxPairingHeap<VertexType, KlMove>;
+    using ActiveScheduleT = KlActiveSchedule<GraphT, CostT, MemoryConstraintT>;
+    using KlGainUpdateInfo = KlUpdateInfo<VertexType>;
+    using NodeSelectionContainerT = AdaptiveAffinityTable<GraphT, CostT, ActiveScheduleT, WindowSize>;
 
   public:
-    kl_improver_test() : kl_improver<Graph_t, comm_cost_function_t, MemoryConstraint_t, window_size, cost_t>() {
-        this->thread_data_vec.resize(1);
-        this->thread_finished_vec.assign(1, true);
+    KlImproverTest() : KlImprover<GraphT, CommCostFunctionT, MemoryConstraintT, WindowSize, CostT>() {
+        this->threadDataVec_.resize(1);
+        this->threadFinishedVec_.assign(1, true);
     }
 
-    virtual ~kl_improver_test() = default;
+    virtual ~KlImproverTest() = default;
 
-    active_schedule_t &get_active_schedule() { return this->active_schedule; }
+    ActiveScheduleT &GetActiveSchedule() { return this->activeSchedule_; }
 
-    auto &get_affinity_table() { return this->thread_data_vec[0].affinity_table; }
+    auto &GetAffinityTable() { return this->threadDataVec_[0].affinityTable; }
 
-    auto &get_comm_cost_f() { return this->comm_cost_f; }
+    auto &GetCommCostF() { return this->commCostF_; }
 
-    void setup_schedule(BspSchedule<Graph_t> &schedule) {
-        this->thread_data_vec.resize(1);
-        this->set_parameters(schedule.getInstance().getComputationalDag().num_vertices());
-        this->thread_data_vec[0].end_step = schedule.numberOfSupersteps() > 0 ? schedule.numberOfSupersteps() - 1 : 0;
+    void SetupSchedule(BspSchedule<GraphT> &schedule) {
+        this->threadDataVec_.resize(1);
+        this->set_parameters(schedule.getInstance().GetComputationalDag().NumVertices());
+        this->threadDataVec_[0].endStep = schedule.numberOfSupersteps() > 0 ? schedule.numberOfSupersteps() - 1 : 0;
         this->initialize_datastructures(schedule);
-        this->thread_data_vec[0].active_schedule_data.initialize_cost(this->active_schedule.get_cost());
+        this->threadDataVec_[0].activeScheduleData.InitializeCost(this->activeSchedule_.GetCost());
     }
 
-    void apply_move_test(kl_move move) { this->apply_move(move, this->thread_data_vec[0]); }
+    void ApplyMoveTest(KlMove move) { this->ApplyMove(move, this->threadDataVec_[0]); }
 
-    auto &get_max_gain_heap() { return this->thread_data_vec[0].max_gain_heap; }
+    auto &GetMaxGainHeap() { return this->thread_data_vec[0].max_gain_heap; }
 
-    auto get_current_cost() { return this->thread_data_vec[0].active_schedule_data.cost; }
+    auto GetCurrentCost() { return this->threadDataVec_[0].activeScheduleData.cost; }
 
-    bool is_feasible() { return this->thread_data_vec[0].active_schedule_data.feasible; }
+    bool IsFeasible() { return this->threadDataVec_[0].activeScheduleData.feasible; }
 
-    void compute_violations_test() { this->active_schedule.compute_violations(this->thread_data_vec[0].active_schedule_data); }
+    void ComputeViolationsTest() { this->activeSchedule_.compute_violations(this->threadDataVec_[0].activeScheduleData); }
 
-    node_selection_container_t &insert_gain_heap_test(const std::vector<VertexType> &n) {
-        this->thread_data_vec[0].reward_penalty_strat.penalty = 0.0;
-        this->thread_data_vec[0].reward_penalty_strat.reward = 0.0;
+    NodeSelectionContainerT &InsertGainHeapTest(const std::vector<VertexType> &n) {
+        this->threadDataVec_[0].rewardPenaltyStrat.penalty = 0.0;
+        this->threadDataVec_[0].rewardPenaltyStrat.reward = 0.0;
 
-        this->thread_data_vec[0].affinity_table.initialize(this->active_schedule, n.size());
+        this->threadDataVec_[0].affinityTable.Initialize(this->activeSchedule_, n.size());
         for (const auto &node : n) {
-            this->thread_data_vec[0].affinity_table.insert(node);
+            this->threadDataVec_[0].affinityTable.Insert(node);
         }
 
-        this->insert_gain_heap(this->thread_data_vec[0]);
+        this->InsertGainHeap(this->threadDataVec_[0]);
 
-        return this->thread_data_vec[0].affinity_table;
+        return this->threadDataVec_[0].affinityTable;
     }
 
-    node_selection_container_t &insert_gain_heap_test_penalty(const std::vector<VertexType> &n) {
-        this->thread_data_vec[0].affinity_table.initialize(this->active_schedule, n.size());
+    NodeSelectionContainerT &InsertGainHeapTestPenalty(const std::vector<VertexType> &n) {
+        this->threadDataVec_[0].affinityTable.Initialize(this->activeSchedule_, n.size());
         for (const auto &node : n) {
-            this->thread_data_vec[0].affinity_table.insert(node);
+            this->threadDataVec_[0].affinityTable.Insert(node);
         }
-        this->thread_data_vec[0].reward_penalty_strat.penalty = 5.5;
-        this->thread_data_vec[0].reward_penalty_strat.reward = 0.0;
+        this->threadDataVec_[0].rewardPenaltyStrat.penalty = 5.5;
+        this->threadDataVec_[0].rewardPenaltyStrat.reward = 0.0;
 
-        this->insert_gain_heap(this->thread_data_vec[0]);
+        this->InsertGainHeap(this->threadDataVec_[0]);
 
-        return this->thread_data_vec[0].affinity_table;
+        return this->threadDataVec_[0].affinityTable;
     }
 
-    node_selection_container_t &insert_gain_heap_test_penalty_reward(const std::vector<VertexType> &n) {
+    NodeSelectionContainerT &InsertGainHeapTestPenaltyReward(const std::vector<VertexType> &n) {
         this->thread_data_vec[0].affinity_table.initialize(this->active_schedule, n.size());
         for (const auto &node : n) {
             this->thread_data_vec[0].affinity_table.insert(node);
@@ -108,40 +108,40 @@ class kl_improver_test : public kl_improver<Graph_t, comm_cost_function_t, Memor
         return this->thread_data_vec[0].affinity_table;
     }
 
-    void update_affinity_table_test(kl_move best_move, node_selection_container_t &node_selection) {
-        std::map<VertexType, kl_gain_update_info> recompute_max_gain;
-        std::vector<VertexType> new_nodes;
+    void UpdateAffinityTableTest(KlMove bestMove, NodeSelectionContainerT &nodeSelection) {
+        std::map<VertexType, KlGainUpdateInfo> recomputeMaxGain;
+        std::vector<VertexType> newNodes;
 
-        const auto prev_work_data = this->active_schedule.get_pre_move_work_data(best_move);
-        const auto prev_comm_data = this->comm_cost_f.get_pre_move_comm_data(best_move);
-        this->apply_move(best_move, this->thread_data_vec[0]);
+        const auto prevWorkData = this->active_schedule.get_pre_move_work_data(bestMove);
+        const auto prevCommData = this->comm_cost_f.get_pre_move_comm_data(bestMove);
+        this->apply_move(bestMove, this->thread_data_vec[0]);
 
         this->thread_data_vec[0].affinity_table.trim();
-        this->update_affinities(best_move, this->thread_data_vec[0], recompute_max_gain, new_nodes, prev_work_data, prev_comm_data);
+        this->update_affinities(bestMove, this->thread_data_vec[0], recomputeMaxGain, newNodes, prevWorkData, prevCommData);
     }
 
-    auto run_inner_iteration_test() {
-        std::map<VertexType, kl_gain_update_info> recompute_max_gain;
-        std::vector<VertexType> new_nodes;
+    auto RunInnerIterationTest() {
+        std::map<VertexType, KlGainUpdateInfo> recomputeMaxGain;
+        std::vector<VertexType> newNodes;
 
-        this->print_heap(this->thread_data_vec[0].max_gain_heap);
+        this->print_heap(this->threadDataVec_[0].maxGainHeap);
 
-        kl_move best_move = this->get_best_move(
-            this->thread_data_vec[0].affinity_table,
-            this->thread_data_vec[0].lock_manager,
-            this->thread_data_vec[0].max_gain_heap);    // locks best_move.node and removes it from node_selection
+        KlMove bestMove = this->GetBestMove(
+            this->threadDataVec_[0].affinityTable,
+            this->threadDataVec_[0].lockManager,
+            this->threadDataVec_[0].maxGainHeap);    // locks best_move.node and removes it from node_selection
 
 #ifdef KL_DEBUG
         std::cout << "Best move: " << best_move.node << " gain: " << best_move.gain << ", from: " << best_move.from_step << "|"
                   << best_move.from_proc << " to: " << best_move.to_step << "|" << best_move.to_proc << std::endl;
 #endif
 
-        const auto prev_work_data = this->active_schedule.get_pre_move_work_data(best_move);
-        const auto prev_comm_data = this->comm_cost_f.get_pre_move_comm_data(best_move);
-        this->apply_move(best_move, this->thread_data_vec[0]);
+        const auto prevWorkData = this->activeSchedule_.GetPreMoveWorkData(bestMove);
+        const auto prevCommData = this->commCostF_.GetPreMoveCommData(bestMove);
+        this->ApplyMove(bestMove, this->threadDataVec_[0]);
 
-        this->thread_data_vec[0].affinity_table.trim();
-        this->update_affinities(best_move, this->thread_data_vec[0], recompute_max_gain, new_nodes, prev_work_data, prev_comm_data);
+        this->threadDataVec_[0].affinityTable.Trim();
+        this->UpdateAffinities(bestMove, this->threadDataVec_[0], recomputeMaxGain, newNodes, prevWorkData, prevCommData);
 
 #ifdef KL_DEBUG
         std::cout << "New nodes: { ";
@@ -151,15 +151,15 @@ class kl_improver_test : public kl_improver<Graph_t, comm_cost_function_t, Memor
         std::cout << "}" << std::endl;
 #endif
 
-        this->update_max_gain(best_move, recompute_max_gain, this->thread_data_vec[0]);
-        this->insert_new_nodes_gain_heap(new_nodes, this->thread_data_vec[0].affinity_table, this->thread_data_vec[0]);
+        this->update_max_gain(bestMove, recomputeMaxGain, this->threadDataVec_[0]);
+        this->insert_new_nodes_gain_heap(newNodes, this->threadDataVec_[0].affinityTable, this->threadDataVec_[0]);
 
-        return recompute_max_gain;
+        return recomputeMaxGain;
     }
 
-    bool is_node_locked(VertexType node) const { return this->thread_data_vec[0].lock_manager.is_locked(node); }
+    bool IsNodeLocked(VertexType node) const { return this->thread_data_vec[0].lock_manager.is_locked(node); }
 
-    void get_active_schedule_test(BspSchedule<Graph_t> &schedule) { this->active_schedule.write_schedule(schedule); }
+    void GetActiveScheduleTest(BspSchedule<GraphT> &schedule) { this->activeSchedule_.WriteSchedule(schedule); }
 };
 
 }    // namespace osp

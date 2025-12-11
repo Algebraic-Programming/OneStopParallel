@@ -24,37 +24,37 @@ limitations under the License.
 using namespace osp;
 
 BOOST_AUTO_TEST_CASE(IntegralRangeTest) {
-    integral_range<unsigned> range(0, 10);
-    BOOST_CHECK_EQUAL(range.size(), 10);
+    IntegralRange<unsigned> range(0, 10);
+    BOOST_CHECK_EQUAL(range.Size(), 10);
 
     int count = 0;
-    for (auto it = range.begin(); it != range.end(); ++it) {
+    for (auto it = range.Begin(); it != range.End(); ++it) {
         BOOST_CHECK_EQUAL(*it, count);
         ++count;
     }
     BOOST_CHECK_EQUAL(count, 10);
     count = 9;
-    for (auto it = range.rbegin(); it != range.rend(); ++it) {
+    for (auto it = range.Rbegin(); it != range.Rend(); ++it) {
         BOOST_CHECK_EQUAL(*it, count);
         --count;
     }
     BOOST_CHECK_EQUAL(count, -1);
     count = 0;
-    for (auto it = range.cbegin(); it != range.cend(); ++it) {
+    for (auto it = range.Cbegin(); it != range.Cend(); ++it) {
         BOOST_CHECK_EQUAL(*it, count);
         ++count;
     }
     BOOST_CHECK_EQUAL(count, 10);
     count = 9;
-    for (auto it = range.crbegin(); it != range.crend(); ++it) {
+    for (auto it = range.Crbegin(); it != range.Crend(); ++it) {
         BOOST_CHECK_EQUAL(*it, count);
         --count;
     }
     BOOST_CHECK_EQUAL(count, -1);
 
     count = 0;
-    integral_range<unsigned> range2(10);
-    BOOST_CHECK_EQUAL(range2.size(), 10);
+    IntegralRange<unsigned> range2(10);
+    BOOST_CHECK_EQUAL(range2.Size(), 10);
 
     for (auto v : range2) {
         BOOST_CHECK_EQUAL(v, count);
@@ -63,15 +63,15 @@ BOOST_AUTO_TEST_CASE(IntegralRangeTest) {
 
     BOOST_CHECK_EQUAL(count, 10);
     count = 9;
-    for (auto it = range2.rbegin(); it != range2.rend(); ++it) {
+    for (auto it = range2.Rbegin(); it != range2.Rend(); ++it) {
         BOOST_CHECK_EQUAL(*it, count);
         --count;
     }
     BOOST_CHECK_EQUAL(count, -1);
 
     count = 5;
-    integral_range<unsigned> range3(5, 15);
-    BOOST_CHECK_EQUAL(range3.size(), 10);
+    IntegralRange<unsigned> range3(5, 15);
+    BOOST_CHECK_EQUAL(range3.Size(), 10);
 
     for (auto v : range3) {
         BOOST_CHECK_EQUAL(v, count);
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(IntegralRangeTest) {
     }
     BOOST_CHECK_EQUAL(count, 15);
     count = 14;
-    for (auto it = range3.rbegin(); it != range3.rend(); ++it) {
+    for (auto it = range3.Rbegin(); it != range3.Rend(); ++it) {
         BOOST_CHECK_EQUAL(*it, count);
         --count;
     }

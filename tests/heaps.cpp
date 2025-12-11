@@ -230,18 +230,18 @@ void TestMinHeapFunctionality() {
     HeapType heap;
 
     // Basic properties of an empty heap
-    BOOST_CHECK(heap.is_empty());
+    BOOST_CHECK(heap.IsEmpty());
     BOOST_CHECK_EQUAL(heap.size(), 0);
     BOOST_CHECK(!heap.contains("A"));
     BOOST_CHECK_THROW(heap.top(), std::out_of_range);
-    BOOST_CHECK_THROW(heap.pop(), std::out_of_range);
+    BOOST_CHECK_THROW(heap.Pop(), std::out_of_range);
 
     // Push elements
     heap.push("A", 10);
     heap.push("B", 5);
     heap.push("C", 15);
 
-    BOOST_CHECK(!heap.is_empty());
+    BOOST_CHECK(!heap.IsEmpty());
     BOOST_CHECK_EQUAL(heap.size(), 3);
     BOOST_CHECK(heap.contains("A"));
     BOOST_CHECK(heap.contains("B"));
@@ -253,16 +253,16 @@ void TestMinHeapFunctionality() {
 
     // Test top() and pop() for min-heap
     BOOST_CHECK_EQUAL(heap.top(), "B");
-    BOOST_CHECK_EQUAL(heap.pop(), "B");
+    BOOST_CHECK_EQUAL(heap.Pop(), "B");
     BOOST_CHECK_EQUAL(heap.size(), 2);
     BOOST_CHECK(!heap.contains("B"));
 
     BOOST_CHECK_EQUAL(heap.top(), "A");
-    BOOST_CHECK_EQUAL(heap.pop(), "A");
+    BOOST_CHECK_EQUAL(heap.Pop(), "A");
 
     BOOST_CHECK_EQUAL(heap.top(), "C");
-    BOOST_CHECK_EQUAL(heap.pop(), "C");
-    BOOST_CHECK(heap.is_empty());
+    BOOST_CHECK_EQUAL(heap.Pop(), "C");
+    BOOST_CHECK(heap.IsEmpty());
 
     // Repopulate for update/erase tests
     heap.push("A", 10);
@@ -302,8 +302,8 @@ void TestMinHeapFunctionality() {
     BOOST_CHECK_THROW(heap.erase("Z"), std::invalid_argument);
 
     // Test clear
-    heap.clear();
-    BOOST_CHECK(heap.is_empty());
+    heap.Clear();
+    BOOST_CHECK(heap.IsEmpty());
     BOOST_CHECK_EQUAL(heap.size(), 0);
 }
 
@@ -316,9 +316,9 @@ void TestMaxHeapFunctionality() {
 
     // Test pop order for max-heap
     BOOST_CHECK_EQUAL(heap.top(), "C");
-    heap.pop();
+    heap.Pop();
     BOOST_CHECK_EQUAL(heap.top(), "A");
-    heap.pop();
+    heap.Pop();
     BOOST_CHECK_EQUAL(heap.top(), "B");
 }
 
@@ -336,9 +336,9 @@ void StressTestHeap() {
     }
 
     std::vector<int> poppedValues;
-    while (!heap.is_empty()) {
+    while (!heap.IsEmpty()) {
         poppedValues.push_back(heap.get_value(heap.top()));
-        heap.pop();
+        heap.Pop();
     }
 
     BOOST_CHECK_EQUAL(poppedValues.size(), numItems);
@@ -387,17 +387,17 @@ void RunPerformanceTest(const std::string &heapName, size_t numItems, size_t num
 
     // Scenario 3: Bulk Pop
     start = std::chrono::high_resolution_clock::now();
-    while (!heap.is_empty()) {
-        heap.pop();
+    while (!heap.IsEmpty()) {
+        heap.Pop();
     }
     end = std::chrono::high_resolution_clock::now();
     duration = end - start;
     std::cout << "Bulk Pop (" << numItems << " items): " << duration.count() << " ms" << std::endl;
 
-    BOOST_CHECK(heap.is_empty());
+    BOOST_CHECK(heap.IsEmpty());
 
     // Scenario 4: Random Operations (Push, Erase, Update)
-    heap.clear();
+    heap.Clear();
     std::vector<std::string> presentKeys;
     presentKeys.reserve(numItems);
     std::vector<bool> keyInHeap(numItems, false);
@@ -454,7 +454,7 @@ void RunPerformanceTest(const std::string &heapName, size_t numItems, size_t num
     start = std::chrono::high_resolution_clock::now();
 
     for (size_t outerI = 0; outerI < numOuterLoopsS5; ++outerI) {
-        heap.clear();
+        heap.Clear();
         std::vector<std::string> presentKeysS5;
         presentKeysS5.reserve(numInitialPushesS5 + numInnerLoopsS5 * (numPushesPerIterS5 - 1));
 
@@ -468,8 +468,8 @@ void RunPerformanceTest(const std::string &heapName, size_t numItems, size_t num
 
         for (size_t innerI = 0; innerI < numInnerLoopsS5; ++innerI) {
             // 1. Pop once
-            if (!heap.is_empty()) {
-                std::string poppedKey = heap.pop();
+            if (!heap.IsEmpty()) {
+                std::string poppedKey = heap.Pop();
                 // Remove from present_keys_s5 efficiently
                 auto it = std::find(presentKeysS5.begin(), presentKeysS5.end(), poppedKey);
                 if (it != presentKeysS5.end()) {
