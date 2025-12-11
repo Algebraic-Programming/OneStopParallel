@@ -31,9 +31,8 @@ namespace osp {
  * @brief Abstract base class for coarsening ComputationalDags.
  *
  */
-template<typename Graph_t_in, typename Graph_t_out>
+template <typename Graph_t_in, typename Graph_t_out>
 class BspScheduleCoarser : public CoarserGenContractionMap<Graph_t_in, Graph_t_out> {
-
   private:
     const BspSchedule<Graph_t_in> *schedule;
 
@@ -56,7 +55,6 @@ class BspScheduleCoarser : public CoarserGenContractionMap<Graph_t_in, Graph_t_o
     //                        std::vector<vertex_idx_t<Graph_t_out>> &reverse_vertex_map) override {
 
     virtual std::vector<vertex_idx_t<Graph_t_out>> generate_vertex_contraction_map(const Graph_t_in &dag_in) override {
-
         using VertexType_in = vertex_idx_t<Graph_t_in>;
         using VertexType_out = vertex_idx_t<Graph_t_out>;
 
@@ -70,23 +68,18 @@ class BspScheduleCoarser : public CoarserGenContractionMap<Graph_t_in, Graph_t_o
         bool schedule_respects_types = true;
 
         for (unsigned step = 0; step < schedule->numberOfSupersteps(); step++) {
-
             for (unsigned proc = 0; proc < schedule->getInstance().numberOfProcessors(); proc++) {
-
                 if (set_schedule.step_processor_vertices[step][proc].size() > 0) {
-
                     v_workw_t<Graph_t_in> total_work = 0;
                     v_memw_t<Graph_t_in> total_memory = 0;
                     v_commw_t<Graph_t_in> total_communication = 0;
 
                     vertex_map.push_back(std::vector<VertexType_in>());
 
-                    v_type_t<Graph_t_in> type =
-                        dag_in.vertex_type(*(set_schedule.step_processor_vertices[step][proc].begin()));
+                    v_type_t<Graph_t_in> type = dag_in.vertex_type(*(set_schedule.step_processor_vertices[step][proc].begin()));
                     bool homogeneous_types = true;
 
                     for (const auto &vertex : set_schedule.step_processor_vertices[step][proc]) {
-
                         if (dag_in.vertex_type(vertex) != type) {
                             homogeneous_types = false;
                         }
@@ -99,8 +92,9 @@ class BspScheduleCoarser : public CoarserGenContractionMap<Graph_t_in, Graph_t_o
                         total_memory += dag_in.vertex_mem_weight(vertex);
                     }
 
-                    if (schedule_respects_types)
+                    if (schedule_respects_types) {
                         schedule_respects_types = homogeneous_types;
+                    }
                 }
             }
         }
@@ -109,4 +103,4 @@ class BspScheduleCoarser : public CoarserGenContractionMap<Graph_t_in, Graph_t_o
     }
 };
 
-} // namespace osp
+}    // namespace osp

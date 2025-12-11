@@ -32,21 +32,19 @@ namespace osp {
 
 const std::set<std::string> get_available_pebbler_names() { return {"Pebbler"}; }
 
-template<typename Graph_t>
-RETURN_STATUS run_pebbler(const ConfigParser &parser, const boost::property_tree::ptree &algorithm,
+template <typename Graph_t>
+RETURN_STATUS run_pebbler(const ConfigParser &parser,
+                          const boost::property_tree::ptree &algorithm,
                           PebblingSchedule<Graph_t> &schedule) {
-
     // const unsigned timeLimit = parser.global_params.get_child("timeLimit").get_value<unsigned>();
     //  const bool use_memory_constraint = parser.global_params.get_child("use_memory_constraints").get_value<bool>();
 
     std::cout << "Running algorithm: " << algorithm.get_child("name").get_value<std::string>() << std::endl;
 
     if (algorithm.get_child("name").get_value<std::string>() == "Pebbler") {
-
     } else {
-
         throw std::invalid_argument("Parameter error: Unknown algorithm.\n");
     }
 };
 
-} // namespace osp
+}    // namespace osp

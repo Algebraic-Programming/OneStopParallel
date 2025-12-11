@@ -18,7 +18,6 @@ limitations under the License.
 
 #define BOOST_TEST_MODULE Sorts_and_Arrangements
 #include <boost/test/unit_test.hpp>
-
 #include <iostream>
 #include <string>
 #include <vector>

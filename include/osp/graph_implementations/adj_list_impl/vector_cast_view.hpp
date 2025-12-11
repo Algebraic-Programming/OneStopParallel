@@ -31,9 +31,8 @@ namespace osp {
  * @tparam from_t The original type of elements in the vector.
  * @tparam to_t The target type to cast elements to.
  */
-template<typename from_t, typename to_t>
+template <typename from_t, typename to_t>
 class vector_cast_view {
-
     using iter = typename std::vector<from_t>::const_iterator;
     const std::vector<from_t> &vec;
 
@@ -53,6 +52,7 @@ class vector_cast_view {
         iter current_edge;
 
         cast_iterator() = default;
+
         explicit cast_iterator(iter current_edge_) : current_edge(current_edge_) {}
 
         value_type operator*() const { return static_cast<to_t>(*current_edge); }
@@ -96,10 +96,15 @@ class vector_cast_view {
         difference_type operator-(const cast_iterator &other) const { return current_edge - other.current_edge; }
 
         bool operator==(const cast_iterator &other) const { return current_edge == other.current_edge; }
+
         bool operator!=(const cast_iterator &other) const { return current_edge != other.current_edge; }
+
         bool operator<(const cast_iterator &other) const { return current_edge < other.current_edge; }
+
         bool operator>(const cast_iterator &other) const { return current_edge > other.current_edge; }
+
         bool operator<=(const cast_iterator &other) const { return current_edge <= other.current_edge; }
+
         bool operator>=(const cast_iterator &other) const { return current_edge >= other.current_edge; }
     };
 
@@ -144,4 +149,4 @@ class vector_cast_view {
     [[nodiscard]] auto operator[](std::size_t i) const { return static_cast<to_t>(vec[i]); }
 };
 
-} // namespace osp
+}    // namespace osp

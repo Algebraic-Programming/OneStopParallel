@@ -22,40 +22,65 @@ limitations under the License.
 #include <iostream>
 #include <vector>
 
-#include "osp/graph_algorithms/directed_graph_util.hpp"
-#include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
-#include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
-#include "osp/graph_implementations/adj_list_impl/dag_vector_adapter.hpp"
-#include "osp/graph_implementations/boost_graphs/boost_graph.hpp"
-#include "osp/graph_implementations/adj_list_impl/compact_sparse_graph.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/BspLocking.hpp"
-#include "osp/bsp/scheduler/Serial.hpp"
-#include "osp/bsp/scheduler/GreedySchedulers/GreedyMetaScheduler.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/GreedyChildren.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/GreedyMetaScheduler.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/GrowLocalAutoCores.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin_v2/kl_include_mt.hpp"
-#include "osp/coarser/coarser_util.hpp"
-#include "osp/dag_divider/isomorphism_divider/IsomorphicSubgraphScheduler.hpp"
-#include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
+#include "osp/bsp/scheduler/Serial.hpp"
 #include "osp/coarser/Sarkar/Sarkar.hpp"
 #include "osp/coarser/Sarkar/SarkarMul.hpp"
+#include "osp/coarser/coarser_util.hpp"
+#include "osp/dag_divider/isomorphism_divider/IsomorphicSubgraphScheduler.hpp"
+#include "osp/graph_algorithms/directed_graph_util.hpp"
+#include "osp/graph_implementations/adj_list_impl/compact_sparse_graph.hpp"
+#include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
+#include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
+#include "osp/graph_implementations/adj_list_impl/dag_vector_adapter.hpp"
+#include "osp/graph_implementations/boost_graphs/boost_graph.hpp"
 
 using namespace osp;
 
-
 BOOST_AUTO_TEST_CASE(test_dag_vector_adapter_edge) {
+    std::vector<std::vector<int>> out_neighbors{
+        {1, 2, 3},
+        {4, 6},
+        {4, 5},
+        {7},
+        {7},
+        {},
+        {},
+        {}
+    };
 
-    std::vector<std::vector<int>> out_neighbors{{1, 2, 3}, {4, 6}, {4, 5}, {7}, {7}, {}, {}, {}};
-
-    std::vector<std::vector<int>> in_neighbors{{}, {0}, {0}, {0}, {1, 2}, {2}, {1}, {4, 3}};
+    std::vector<std::vector<int>> in_neighbors{
+        {},
+        {0},
+        {0},
+        {0},
+        {1, 2},
+        {2},
+        {1},
+        {4, 3}
+    };
 
     using v_impl = cdag_vertex_impl<unsigned, int, int, int, unsigned>;
-    using graph_t = dag_vector_adapter<v_impl,int>;
+    using graph_t = dag_vector_adapter<v_impl, int>;
     using graph_constr_t = computational_dag_edge_idx_vector_impl<v_impl, cdag_edge_impl_int>;
-    using CoarseGraphType = Compact_Sparse_Graph<true, true, true, true, true, vertex_idx_t<graph_t>, std::size_t, v_workw_t<graph_t>, v_workw_t<graph_t>, v_workw_t<graph_t>, v_type_t<graph_t>>;
+    using CoarseGraphType = Compact_Sparse_Graph<true,
+                                                 true,
+                                                 true,
+                                                 true,
+                                                 true,
+                                                 vertex_idx_t<graph_t>,
+                                                 std::size_t,
+                                                 v_workw_t<graph_t>,
+                                                 v_workw_t<graph_t>,
+                                                 v_workw_t<graph_t>,
+                                                 v_type_t<graph_t>>;
 
     graph_t graph(out_neighbors, in_neighbors);
-    
+
     for (auto v : graph.vertices()) {
         graph.set_vertex_work_weight(v, 10);
     }
@@ -63,12 +88,12 @@ BOOST_AUTO_TEST_CASE(test_dag_vector_adapter_edge) {
     BspInstance<graph_t> instance;
     instance.getComputationalDag() = graph;
 
-    instance.getArchitecture().setProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1 , 1, 1, 1, 1, 1, 1, 1, 1 , 1, 1, 1, 1, 1, 1, 1, 1 , 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1});
+    instance.getArchitecture().setProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                                       1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                                                       1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1});
     instance.setDiagonalCompatibilityMatrix(2);
     instance.setSynchronisationCosts(1000);
     instance.setCommunicationCosts(1);
-
-
 
     // Set up the scheduler
     GrowLocalAutoCores<graph_constr_t> growlocal;
@@ -105,20 +130,46 @@ BOOST_AUTO_TEST_CASE(test_dag_vector_adapter_edge) {
     BOOST_CHECK(acyc);
 }
 
-
 BOOST_AUTO_TEST_CASE(test_dag_vector_adapter) {
+    std::vector<std::vector<int>> out_neighbors{
+        {1, 2, 3},
+        {4, 6},
+        {4, 5},
+        {7},
+        {7},
+        {},
+        {},
+        {}
+    };
 
-    std::vector<std::vector<int>> out_neighbors{{1, 2, 3}, {4, 6}, {4, 5}, {7}, {7}, {}, {}, {}};
-
-    std::vector<std::vector<int>> in_neighbors{{}, {0}, {0}, {0}, {1, 2}, {2}, {1}, {4, 3}};
+    std::vector<std::vector<int>> in_neighbors{
+        {},
+        {0},
+        {0},
+        {0},
+        {1, 2},
+        {2},
+        {1},
+        {4, 3}
+    };
 
     using v_impl = cdag_vertex_impl<unsigned, int, int, int, unsigned>;
-    using graph_t = dag_vector_adapter<v_impl,int>;
+    using graph_t = dag_vector_adapter<v_impl, int>;
     using graph_constr_t = computational_dag_vector_impl<v_impl>;
-    using CoarseGraphType = Compact_Sparse_Graph<true, true, true, true, true, vertex_idx_t<graph_t>, std::size_t, v_workw_t<graph_t>, v_workw_t<graph_t>, v_workw_t<graph_t>, v_type_t<graph_t>>;
+    using CoarseGraphType = Compact_Sparse_Graph<true,
+                                                 true,
+                                                 true,
+                                                 true,
+                                                 true,
+                                                 vertex_idx_t<graph_t>,
+                                                 std::size_t,
+                                                 v_workw_t<graph_t>,
+                                                 v_workw_t<graph_t>,
+                                                 v_workw_t<graph_t>,
+                                                 v_type_t<graph_t>>;
 
     graph_t graph(out_neighbors, in_neighbors);
-    
+
     for (auto v : graph.vertices()) {
         graph.set_vertex_work_weight(v, 10);
     }
@@ -126,12 +177,12 @@ BOOST_AUTO_TEST_CASE(test_dag_vector_adapter) {
     BspInstance<graph_t> instance;
     instance.getComputationalDag() = graph;
 
-    instance.getArchitecture().setProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1 , 1, 1, 1, 1, 1, 1, 1, 1 , 1, 1, 1, 1, 1, 1, 1, 1 , 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1});
+    instance.getArchitecture().setProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                                       1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                                                       1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1});
     instance.setDiagonalCompatibilityMatrix(2);
     instance.setSynchronisationCosts(1000);
     instance.setCommunicationCosts(1);
-
-
 
     // Set up the scheduler
     GrowLocalAutoCores<graph_constr_t> growlocal;

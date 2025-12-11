@@ -17,18 +17,18 @@ limitations under the License.
 */
 #pragma once
 
-#include "osp/auxiliary/hash_util.hpp"
+#include <vector>
+
 #include "cdag_vertex_impl.hpp"
 #include "edge_iterator.hpp"
-#include "osp/graph_implementations/integral_range.hpp"
+#include "osp/auxiliary/hash_util.hpp"
 #include "osp/graph_algorithms/computational_dag_construction_util.hpp"
-#include <vector>
+#include "osp/graph_implementations/integral_range.hpp"
 
 namespace osp {
 
-template<typename v_impl>
+template <typename v_impl>
 struct directed_edge_descriptor_impl {
-
     using vertex_idx = typename v_impl::vertex_idx_type;
 
     vertex_idx idx;
@@ -37,12 +37,15 @@ struct directed_edge_descriptor_impl {
     vertex_idx target;
 
     directed_edge_descriptor_impl() : idx(0), source(0), target(0) {}
+
     directed_edge_descriptor_impl(const directed_edge_descriptor_impl<v_impl> &other) = default;
     directed_edge_descriptor_impl(directed_edge_descriptor_impl<v_impl> &&other) = default;
     directed_edge_descriptor_impl &operator=(const directed_edge_descriptor_impl<v_impl> &other) = default;
     directed_edge_descriptor_impl &operator=(directed_edge_descriptor_impl<v_impl> &&other) = default;
+
     directed_edge_descriptor_impl(vertex_idx source_arg, vertex_idx target_arg, vertex_idx idx_arg)
         : idx(idx_arg), source(source_arg), target(target_arg) {}
+
     ~directed_edge_descriptor_impl() = default;
 
     bool operator==(const directed_edge_descriptor_impl<v_impl> &other) const {
@@ -52,19 +55,19 @@ struct directed_edge_descriptor_impl {
     bool operator!=(const directed_edge_descriptor_impl<v_impl> &other) const { return !(*this == other); }
 };
 
-template<typename edge_comm_weight_t>
+template <typename edge_comm_weight_t>
 struct cdag_edge_impl {
-
     using cdag_edge_comm_weight_type = edge_comm_weight_t;
 
     cdag_edge_impl(edge_comm_weight_t comm_weight_arg = 1) : comm_weight(comm_weight_arg) {}
+
     edge_comm_weight_t comm_weight;
 };
 
 using cdag_edge_impl_int = cdag_edge_impl<int>;
 using cdag_edge_impl_unsigned = cdag_edge_impl<unsigned>;
 
-template<typename v_impl, typename e_impl>
+template <typename v_impl, typename e_impl>
 class computational_dag_edge_idx_vector_impl {
   public:
     // graph_traits specialization
@@ -119,9 +122,8 @@ class computational_dag_edge_idx_vector_impl {
 
     computational_dag_edge_idx_vector_impl(const computational_dag_edge_idx_vector_impl &other) = default;
 
-    template<typename Graph_t>
+    template <typename Graph_t>
     computational_dag_edge_idx_vector_impl(const Graph_t &other) {
-
         static_assert(is_computational_dag_v<Graph_t>, "Graph_t must satisfy the is_computation_dag concept");
 
         constructComputationalDag(other, *this);
@@ -130,10 +132,11 @@ class computational_dag_edge_idx_vector_impl {
     computational_dag_edge_idx_vector_impl &operator=(const computational_dag_edge_idx_vector_impl &other) = default;
 
     computational_dag_edge_idx_vector_impl(computational_dag_edge_idx_vector_impl &&other)
-        : vertices_(std::move(other.vertices_)), edges_(std::move(other.edges_)),
-          num_vertex_types_(other.num_vertex_types_), out_edges_(std::move(other.out_edges_)),
+        : vertices_(std::move(other.vertices_)),
+          edges_(std::move(other.edges_)),
+          num_vertex_types_(other.num_vertex_types_),
+          out_edges_(std::move(other.out_edges_)),
           in_edges_(std::move(other.in_edges_)) {
-
         other.num_vertex_types_ = 0;
     }
 
@@ -152,38 +155,45 @@ class computational_dag_edge_idx_vector_impl {
     virtual ~computational_dag_edge_idx_vector_impl() = default;
 
     inline vertex_idx num_edges() const { return static_cast<vertex_idx>(edges_.size()); }
+
     inline vertex_idx num_vertices() const { return static_cast<vertex_idx>(vertices_.size()); }
 
     inline auto edges() const { return edge_range_vector_impl<ThisT>(*this); }
 
     inline auto parents(vertex_idx v) const { return edge_source_range(in_edges_[v], *this); }
+
     inline auto children(vertex_idx v) const { return edge_target_range(out_edges_[v], *this); }
 
     inline auto vertices() const { return integral_range<vertex_idx>(static_cast<vertex_idx>(vertices_.size())); }
 
     inline const std::vector<directed_edge_descriptor> &in_edges(vertex_idx v) const { return in_edges_[v]; }
+
     inline const std::vector<directed_edge_descriptor> &out_edges(vertex_idx v) const { return out_edges_[v]; }
 
     inline vertex_idx in_degree(vertex_idx v) const { return static_cast<vertex_idx>(in_edges_[v].size()); }
+
     inline vertex_idx out_degree(vertex_idx v) const { return static_cast<vertex_idx>(out_edges_[v].size()); }
 
-    inline edge_comm_weight_type edge_comm_weight(directed_edge_descriptor e) const {
-        return edges_[e.idx].comm_weight;
-    }
+    inline edge_comm_weight_type edge_comm_weight(directed_edge_descriptor e) const { return edges_[e.idx].comm_weight; }
 
     inline vertex_work_weight_type vertex_work_weight(vertex_idx v) const { return vertices_[v].work_weight; }
+
     inline vertex_comm_weight_type vertex_comm_weight(vertex_idx v) const { return vertices_[v].comm_weight; }
+
     inline vertex_mem_weight_type vertex_mem_weight(vertex_idx v) const { return vertices_[v].mem_weight; }
 
     inline unsigned num_vertex_types() const { return num_vertex_types_; }
+
     inline vertex_type_type vertex_type(vertex_idx v) const { return vertices_[v].vertex_type; }
 
     inline vertex_idx source(const directed_edge_descriptor &e) const { return e.source; }
+
     inline vertex_idx target(const directed_edge_descriptor &e) const { return e.target; }
 
-    vertex_idx add_vertex(vertex_work_weight_type work_weight, vertex_comm_weight_type comm_weight,
-                          vertex_mem_weight_type mem_weight, vertex_type_type vertex_type = 0) {
-
+    vertex_idx add_vertex(vertex_work_weight_type work_weight,
+                          vertex_comm_weight_type comm_weight,
+                          vertex_mem_weight_type mem_weight,
+                          vertex_type_type vertex_type = 0) {
         vertices_.emplace_back(vertices_.size(), work_weight, comm_weight, mem_weight, vertex_type);
 
         out_edges_.push_back({});
@@ -194,9 +204,7 @@ class computational_dag_edge_idx_vector_impl {
         return vertices_.back().id;
     }
 
-    std::pair<directed_edge_descriptor, bool> add_edge(vertex_idx source, vertex_idx target,
-                                                       edge_comm_weight_type comm_weight = 1) {
-
+    std::pair<directed_edge_descriptor, bool> add_edge(vertex_idx source, vertex_idx target, edge_comm_weight_type comm_weight = 1) {
         if (source == target) {
             return {directed_edge_descriptor{}, false};
         }
@@ -222,12 +230,13 @@ class computational_dag_edge_idx_vector_impl {
     inline void set_vertex_work_weight(vertex_idx v, vertex_work_weight_type work_weight) {
         vertices_[v].work_weight = work_weight;
     }
+
     inline void set_vertex_comm_weight(vertex_idx v, vertex_comm_weight_type comm_weight) {
         vertices_[v].comm_weight = comm_weight;
     }
-    inline void set_vertex_mem_weight(vertex_idx v, vertex_mem_weight_type mem_weight) {
-        vertices_[v].mem_weight = mem_weight;
-    }
+
+    inline void set_vertex_mem_weight(vertex_idx v, vertex_mem_weight_type mem_weight) { vertices_[v].mem_weight = mem_weight; }
+
     inline void set_vertex_type(vertex_idx v, vertex_type_type vertex_type) {
         vertices_[v].vertex_type = vertex_type;
         num_vertex_types_ = std::max(num_vertex_types_, vertex_type + 1);
@@ -238,58 +247,59 @@ class computational_dag_edge_idx_vector_impl {
     }
 
     inline const v_impl &get_vertex_impl(vertex_idx v) const { return vertices_[v]; }
+
     inline const e_impl &get_edge_impl(directed_edge_descriptor e) const { return edges_[e.idx]; }
 };
 
-template<typename v_impl, typename e_impl>
+template <typename v_impl, typename e_impl>
 inline auto edges(const computational_dag_edge_idx_vector_impl<v_impl, e_impl> &graph) {
     return graph.edges();
 }
 
-template<typename v_impl, typename e_impl>
+template <typename v_impl, typename e_impl>
 inline auto out_edges(vertex_idx_t<computational_dag_edge_idx_vector_impl<v_impl, e_impl>> v,
                       const computational_dag_edge_idx_vector_impl<v_impl, e_impl> &graph) {
     return graph.out_edges(v);
 }
 
-template<typename v_impl, typename e_impl>
+template <typename v_impl, typename e_impl>
 inline auto in_edges(vertex_idx_t<computational_dag_edge_idx_vector_impl<v_impl, e_impl>> v,
                      const computational_dag_edge_idx_vector_impl<v_impl, e_impl> &graph) {
     return graph.in_edges(v);
 }
 
-
 // default implementation to get the source of an edge
-template<typename v_impl, typename e_impl>
-inline vertex_idx_t<computational_dag_edge_idx_vector_impl<v_impl, e_impl>> source(const edge_desc_t<computational_dag_edge_idx_vector_impl<v_impl, e_impl>> &edge, const computational_dag_edge_idx_vector_impl<v_impl, e_impl> &graph) {
+template <typename v_impl, typename e_impl>
+inline vertex_idx_t<computational_dag_edge_idx_vector_impl<v_impl, e_impl>> source(
+    const edge_desc_t<computational_dag_edge_idx_vector_impl<v_impl, e_impl>> &edge,
+    const computational_dag_edge_idx_vector_impl<v_impl, e_impl> &graph) {
     return graph.source(edge);
 }
 
 // default implementation to get the target of an edge
-template<typename v_impl, typename e_impl>
-inline vertex_idx_t<computational_dag_edge_idx_vector_impl<v_impl, e_impl>> target(const edge_desc_t<computational_dag_edge_idx_vector_impl<v_impl, e_impl>> &edge, const computational_dag_edge_idx_vector_impl<v_impl, e_impl> &graph) {
+template <typename v_impl, typename e_impl>
+inline vertex_idx_t<computational_dag_edge_idx_vector_impl<v_impl, e_impl>> target(
+    const edge_desc_t<computational_dag_edge_idx_vector_impl<v_impl, e_impl>> &edge,
+    const computational_dag_edge_idx_vector_impl<v_impl, e_impl> &graph) {
     return graph.target(edge);
 }
 
-
 // default template specialization
-using computational_dag_edge_idx_vector_impl_def_t =
-    computational_dag_edge_idx_vector_impl<cdag_vertex_impl_unsigned, cdag_edge_impl_unsigned>;
+using computational_dag_edge_idx_vector_impl_def_t
+    = computational_dag_edge_idx_vector_impl<cdag_vertex_impl_unsigned, cdag_edge_impl_unsigned>;
 
-using computational_dag_edge_idx_vector_impl_def_int_t =
-    computational_dag_edge_idx_vector_impl<cdag_vertex_impl_int, cdag_edge_impl_int>;
-
+using computational_dag_edge_idx_vector_impl_def_int_t
+    = computational_dag_edge_idx_vector_impl<cdag_vertex_impl_int, cdag_edge_impl_int>;
 
 static_assert(is_directed_graph_edge_desc_v<computational_dag_edge_idx_vector_impl_def_t>,
               "computational_dag_edge_idx_vector_impl must satisfy the directed_graph_edge_desc concept");
 
-static_assert(
-    is_computational_dag_typed_vertices_edge_desc_v<computational_dag_edge_idx_vector_impl_def_t>,
-    "computational_dag_edge_idx_vector_impl must satisfy the computation_dag_typed_vertices_edge_desc concept");
+static_assert(is_computational_dag_typed_vertices_edge_desc_v<computational_dag_edge_idx_vector_impl_def_t>,
+              "computational_dag_edge_idx_vector_impl must satisfy the computation_dag_typed_vertices_edge_desc concept");
 
-} // namespace osp
+}    // namespace osp
 
-template<typename v_impl>
+template <typename v_impl>
 struct std::hash<osp::directed_edge_descriptor_impl<v_impl>> {
     using vertex_idx = typename v_impl::vertex_idx_type;
 

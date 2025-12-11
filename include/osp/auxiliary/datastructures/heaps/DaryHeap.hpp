@@ -39,7 +39,8 @@ namespace osp {
  * @tparam D The number of children for each node (the 'd' in d-ary). Must be >= 2.
  * @tparam Compare The comparison function object type.
  */
-template <typename Key, typename Value, unsigned int D, typename Compare> class DaryHeap {
+template <typename Key, typename Value, unsigned int D, typename Compare>
+class DaryHeap {
     static_assert(D >= 2, "D-ary heap must have at least 2 children per node.");
 
   private:
@@ -169,8 +170,9 @@ template <typename Key, typename Value, unsigned int D, typename Compare> class 
     }
 
     void sift_up(size_t index) {
-        if (index == 0)
+        if (index == 0) {
             return;
+        }
 
         Key key_to_sift = std::move(heap[index]);
         const Value &value_to_sift = node_info.at(key_to_sift).value;
@@ -238,4 +240,4 @@ using MaxIndexedHeap = IndexedHeap<Key, Value, std::greater<Value>>;
 template <typename Key, typename Value>
 using MinIndexedHeap = IndexedHeap<Key, Value, std::less<Value>>;
 
-} // namespace osp
+}    // namespace osp

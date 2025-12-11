@@ -17,11 +17,11 @@ limitations under the License.
 */
 
 #define BOOST_TEST_MODULE COARSER_UTIL_TEST
-#include <boost/test/unit_test.hpp>
+#include "osp/coarser/coarser_util.hpp"
 
+#include <boost/test/unit_test.hpp>
 #include <set>
 
-#include "osp/coarser/coarser_util.hpp"
 #include "osp/graph_implementations/adj_list_impl/compact_sparse_graph.hpp"
 
 using namespace osp;
@@ -53,10 +53,16 @@ BOOST_AUTO_TEST_CASE(ExpansionMapValidity) {
     const std::vector<std::vector<vertex_idx_t<GraphType>>> expansionmap2 = {{0}, {2}, {3}};
     BOOST_CHECK(not check_valid_expansion_map<GraphType>(expansionmap2));
 
-    const std::vector<std::vector<vertex_idx_t<GraphType>>> expansionmap3 = {{0, 3}};
+    const std::vector<std::vector<vertex_idx_t<GraphType>>> expansionmap3 = {
+        {0, 3}
+    };
     BOOST_CHECK(not check_valid_expansion_map<GraphType>(expansionmap3));
 
-    const std::vector<std::vector<vertex_idx_t<GraphType>>> expansionmap4 = {{0, 3}, {2, 1, 4}, {5}};
+    const std::vector<std::vector<vertex_idx_t<GraphType>>> expansionmap4 = {
+        {0, 3},
+        {2, 1, 4},
+        {5}
+    };
     BOOST_CHECK(check_valid_expansion_map<GraphType>(expansionmap4));
 
     const std::vector<std::vector<vertex_idx_t<GraphType>>> expansionmap5 = {{0}, {}, {2}, {3}, {1}};
@@ -64,7 +70,10 @@ BOOST_AUTO_TEST_CASE(ExpansionMapValidity) {
 }
 
 BOOST_AUTO_TEST_CASE(ContractionMapCoarsening) {
-    std::set<std::pair<vertex_idx_t<GraphType>, vertex_idx_t<GraphType>>> edges({{0, 1}, {1, 2}});
+    std::set<std::pair<vertex_idx_t<GraphType>, vertex_idx_t<GraphType>>> edges({
+        {0, 1},
+        {1, 2}
+    });
     GraphType graph(6, edges);
 
     GraphType coarseGraph1;

@@ -126,8 +126,7 @@ class Biased_Random_with_side_bias : public BalancedCoinFlips {
             throw std::runtime_error("true_bias is too large!");
         }
 
-        unsigned die_size =
-            (side_ratio.first + side_ratio.second) * genuine_random_size + static_cast<unsigned>(abs_true_bias);
+        unsigned die_size = (side_ratio.first + side_ratio.second) * genuine_random_size + static_cast<unsigned>(abs_true_bias);
 
         if (die_size > static_cast<unsigned>(std::numeric_limits<int>::max())) {
             throw std::runtime_error("die_size is too large!");
@@ -164,4 +163,4 @@ class Biased_Random_with_side_bias : public BalancedCoinFlips {
     const std::pair<unsigned, unsigned> side_ratio;
 };
 
-} // namespace osp
+}    // namespace osp

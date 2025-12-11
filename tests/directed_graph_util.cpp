@@ -18,6 +18,8 @@ limitations under the License.
 
 #define BOOST_TEST_MODULE ApproxEdgeReduction
 
+#include "osp/graph_algorithms/directed_graph_util.hpp"
+
 #include <boost/test/unit_test.hpp>
 #include <iostream>
 #include <vector>
@@ -27,14 +29,12 @@ limitations under the License.
 #include "osp/graph_algorithms/directed_graph_edge_view.hpp"
 #include "osp/graph_algorithms/directed_graph_path_util.hpp"
 #include "osp/graph_algorithms/directed_graph_top_sort.hpp"
-#include "osp/graph_algorithms/directed_graph_util.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 #include "osp/graph_implementations/boost_graphs/boost_graph.hpp"
 
 using namespace osp;
 
 computational_dag_vector_impl_def_t constr_graph_1() {
-
     computational_dag_vector_impl_def_t graph;
 
     using vertex_idx = computational_dag_vector_impl_def_t::vertex_idx;
@@ -63,7 +63,6 @@ computational_dag_vector_impl_def_t constr_graph_1() {
 }
 
 BOOST_AUTO_TEST_CASE(test_empty_graph) {
-
     computational_dag_vector_impl_def_t graph;
 
     using vertex_idx = computational_dag_vector_impl_def_t::vertex_idx;
@@ -82,7 +81,6 @@ BOOST_AUTO_TEST_CASE(test_empty_graph) {
 }
 
 BOOST_AUTO_TEST_CASE(test_util_1) {
-
     computational_dag_vector_impl_def_t graph = constr_graph_1();
 
     using vertex_idx = computational_dag_vector_impl_def_t::vertex_idx;
@@ -403,7 +401,6 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
 
     size_t i = 0;
     for (const auto &e : edge_view(graph)) {
-
         BOOST_CHECK_EQUAL(e.source, edge_source[i]);
         BOOST_CHECK_EQUAL(e.target, edge_target[i]);
 
@@ -423,14 +420,20 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
 }
 
 BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
-
     using VertexType = vertex_idx_t<boost_graph_int_t>;
 
-    const std::vector<std::vector<VertexType>> out(
-
-        {{7}, {}, {0}, {2}, {}, {2, 0}, {1, 2, 0}, {}, {4}, {6, 1, 5}}
-
-    );
+    const std::vector<std::vector<VertexType>> out({
+        {7},
+        {},
+        {0},
+        {2},
+        {},
+        {2, 0},
+        {1, 2, 0},
+        {},
+        {4},
+        {6, 1, 5}
+    });
     const std::vector<int> workW({1, 1, 1, 1, 2, 3, 2, 1, 1, 1});
     const std::vector<int> commW({1, 1, 1, 1, 2, 3, 2, 1, 1, 1});
 
@@ -480,16 +483,15 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     for (const auto &vertex : graph.vertices()) {
         num_edges += graph.out_degree(vertex);
         for (const auto &parent : graph.parents(vertex)) {
-            BOOST_CHECK(std::any_of(graph.children(parent).cbegin(), graph.children(parent).cend(),
-                                    [vertex](VertexType k) { return k == vertex; }));
+            BOOST_CHECK(std::any_of(
+                graph.children(parent).cbegin(), graph.children(parent).cend(), [vertex](VertexType k) { return k == vertex; }));
         }
     }
 
     for (const auto &vertex : graph.vertices()) {
         for (const auto &child : graph.children(vertex)) {
-
-            BOOST_CHECK(std::any_of(graph.parents(child).cbegin(), graph.parents(child).cend(),
-                                    [vertex](VertexType k) { return k == vertex; }));
+            BOOST_CHECK(std::any_of(
+                graph.parents(child).cbegin(), graph.parents(child).cend(), [vertex](VertexType k) { return k == vertex; }));
         }
     }
 
@@ -563,8 +565,8 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
         bool_c[i] = true;
     }
 
-    BOOST_CHECK(GetFilteredTopOrder(bool_a, graph) == std::vector<VertexType>({0, 8}) ||
-                GetFilteredTopOrder(bool_a, graph) == std::vector<VertexType>({8, 0}));
+    BOOST_CHECK(GetFilteredTopOrder(bool_a, graph) == std::vector<VertexType>({0, 8})
+                || GetFilteredTopOrder(bool_a, graph) == std::vector<VertexType>({8, 0}));
     BOOST_CHECK(GetFilteredTopOrder(bool_b, graph)[3] == 2);
     BOOST_CHECK(GetFilteredTopOrder(bool_c, graph) == std::vector<VertexType>({9, 6, 1}));
 
@@ -626,7 +628,6 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     for (unsigned loops = 0; loops < 10; loops++) {
         for (unsigned noise = 0; noise < 6; noise++) {
             for (auto &pois_para : poisson_params) {
-
                 std::vector<int> poset_int_map = get_strict_poset_integer_map(noise, pois_para, graph);
 
                 for (const auto &vertex : graph.vertices()) {
@@ -642,7 +643,13 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
     auto wavefronts = compute_wavefronts(graph);
 
-    std::vector<std::vector<VertexType>> expected_wavefronts = {{3, 8, 9}, {4, 6, 5}, {1, 2}, {0}, {7}};
+    std::vector<std::vector<VertexType>> expected_wavefronts = {
+        {3, 8, 9},
+        {4, 6, 5},
+        {1, 2},
+        {0},
+        {7}
+    };
 
     size_t size = 0;
     size_t counter = 0;
@@ -650,8 +657,8 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
         size += wavefront.size();
         BOOST_CHECK(!wavefront.empty());
 
-        BOOST_CHECK_EQUAL_COLLECTIONS(wavefront.begin(), wavefront.end(), expected_wavefronts[counter].begin(),
-                                      expected_wavefronts[counter].end());
+        BOOST_CHECK_EQUAL_COLLECTIONS(
+            wavefront.begin(), wavefront.end(), expected_wavefronts[counter].begin(), expected_wavefronts[counter].end());
 
         counter++;
     }

@@ -18,12 +18,13 @@ limitations under the License.
 
 #pragma once
 
+#include <string>
+
 #include "osp/auxiliary/return_status.hpp"
 #include "osp/bsp/model/BspInstance.hpp"
 #include "osp/bsp/model/BspSchedule.hpp"
 #include "osp/bsp/model/BspScheduleCS.hpp"
 #include "osp/concepts/computational_dag_concept.hpp"
-#include <string>
 
 namespace osp {
 
@@ -35,9 +36,8 @@ namespace osp {
  * It specifies the contract for computing standard BSP schedules (BspSchedule) and communication-aware schedules
  * (BspScheduleCS).
  */
-template<typename Graph_t>
+template <typename Graph_t>
 class Scheduler {
-
     static_assert(is_computational_dag_v<Graph_t>, "Scheduler can only be used with computational DAGs.");
 
   public:
@@ -80,7 +80,6 @@ class Scheduler {
      *         RETURN_STATUS::ERROR if an error occurred, or other status codes as appropriate.
      */
     virtual RETURN_STATUS computeScheduleCS(BspScheduleCS<Graph_t> &schedule) {
-
         auto result = computeSchedule(schedule);
         if (result == RETURN_STATUS::OSP_SUCCESS || result == RETURN_STATUS::BEST_FOUND) {
             schedule.setAutoCommunicationSchedule();
@@ -91,4 +90,4 @@ class Scheduler {
     }
 };
 
-} // namespace osp
+}    // namespace osp

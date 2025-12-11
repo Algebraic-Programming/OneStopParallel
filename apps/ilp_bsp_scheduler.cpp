@@ -23,14 +23,14 @@ limitations under the License.
 #include <string>
 #include <vector>
 
-#include "osp/auxiliary/misc.hpp"
-#include "osp/bsp/scheduler/IlpSchedulers/CoptFullScheduler.hpp"
-#include "osp/graph_algorithms/directed_graph_path_util.hpp"
-#include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "osp/auxiliary/io/DotFileWriter.hpp"
 #include "osp/auxiliary/io/arch_file_reader.hpp"
 #include "osp/auxiliary/io/bsp_schedule_file_writer.hpp"
 #include "osp/auxiliary/io/general_file_reader.hpp"
+#include "osp/auxiliary/misc.hpp"
+#include "osp/bsp/scheduler/IlpSchedulers/CoptFullScheduler.hpp"
+#include "osp/graph_algorithms/directed_graph_path_util.hpp"
+#include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 
 using namespace osp;
 
@@ -38,8 +38,7 @@ using ComputationalDag = computational_dag_edge_idx_vector_impl_def_int_t;
 
 int main(int argc, char *argv[]) {
     if (argc < 4) {
-        std::cerr << "Usage: " << argv[0] << " <input_file> <machine_file> <max_number_step> <optional:recomp>"
-                  << std::endl;
+        std::cerr << "Usage: " << argv[0] << " <input_file> <machine_file> <max_number_step> <optional:recomp>" << std::endl;
         return 1;
     }
 
@@ -78,7 +77,6 @@ int main(int argc, char *argv[]) {
     // instance.getArchitecture().setProcessorsWithTypes({0,0,1,1,1,1});
 
     if (!status_graph || !status_arch) {
-
         std::cout << "Reading files failed." << std::endl;
         return 1;
     }
@@ -90,23 +88,20 @@ int main(int argc, char *argv[]) {
 
     CoptFullScheduler<ComputationalDag> scheduler;
     scheduler.setMaxNumberOfSupersteps(steps);
-    
-    if (recomp) {
 
+    if (recomp) {
         BspScheduleRecomp<ComputationalDag> schedule(instance);
 
         auto status_schedule = scheduler.computeScheduleRecomp(schedule);
 
         if (status_schedule == RETURN_STATUS::OSP_SUCCESS || status_schedule == RETURN_STATUS::BEST_FOUND) {
-
             DotFileWriter dot_writer;
-            dot_writer.write_schedule_recomp(name_graph + "_" + name_machine + "_maxS_" + std::to_string(steps) + "_" +
-                                                 scheduler.getScheduleName() + "_recomp_schedule.dot",
+            dot_writer.write_schedule_recomp(name_graph + "_" + name_machine + "_maxS_" + std::to_string(steps) + "_"
+                                                 + scheduler.getScheduleName() + "_recomp_schedule.dot",
                                              schedule);
 
-            dot_writer.write_schedule_recomp_duplicate(name_graph + "_" + name_machine + "_maxS_" +
-                                                           std::to_string(steps) + "_" + scheduler.getScheduleName() +
-                                                           "_duplicate_recomp_schedule.dot",
+            dot_writer.write_schedule_recomp_duplicate(name_graph + "_" + name_machine + "_maxS_" + std::to_string(steps) + "_"
+                                                           + scheduler.getScheduleName() + "_duplicate_recomp_schedule.dot",
                                                        schedule);
 
             std::cout << "Recomp Schedule computed with costs: " << schedule.computeCosts() << std::endl;
@@ -117,16 +112,14 @@ int main(int argc, char *argv[]) {
         }
 
     } else {
-
         BspSchedule<ComputationalDag> schedule(instance);
 
         auto status_schedule = scheduler.computeSchedule(schedule);
 
         if (status_schedule == RETURN_STATUS::OSP_SUCCESS || status_schedule == RETURN_STATUS::BEST_FOUND) {
-
             DotFileWriter dot_writer;
-            dot_writer.write_schedule(name_graph + "_" + name_machine + "_maxS_" + std::to_string(steps) + "_" +
-                                          scheduler.getScheduleName() + "_schedule.dot",
+            dot_writer.write_schedule(name_graph + "_" + name_machine + "_maxS_" + std::to_string(steps) + "_"
+                                          + scheduler.getScheduleName() + "_schedule.dot",
                                       schedule);
 
             std::cout << "Schedule computed with costs: " << schedule.computeCosts() << std::endl;

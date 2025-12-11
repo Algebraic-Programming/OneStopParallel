@@ -33,23 +33,19 @@ void print_usage(const char *prog_name) {
     std::cerr << "Graph Format Converter" << std::endl;
     std::cerr << "----------------------" << std::endl;
     std::cerr << "This tool converts a directed graph from one file format to another. The desired output" << std::endl;
-    std::cerr << "format is determined by the file extension of the output file." << std::endl
-              << std::endl;
+    std::cerr << "format is determined by the file extension of the output file." << std::endl << std::endl;
     std::cerr << "Usage: " << prog_name << " <input_file> <output_file>" << std::endl << std::endl;
     std::cerr << "Arguments:" << std::endl;
-    std::cerr << "  <input_file>   Path to the input graph file." << std::endl
-              << std::endl;
+    std::cerr << "  <input_file>   Path to the input graph file." << std::endl << std::endl;
     std::cerr << "  <output_file>  Path for the output graph file. Special values of '.dot' or '.hdag' can be" << std::endl;
     std::cerr << "                 used to automatically generate the output filename by replacing the input" << std::endl;
     std::cerr << "                 file's extension with the specified one." << std::endl;
     std::cerr << std::endl;
     std::cerr << "Supported Formats:" << std::endl;
     std::cerr << "  Input (by extension):  .hdag, .mtx, .dot" << std::endl;
-    std::cerr << "  Output (by extension): .hdag, .dot" << std::endl
-              << std::endl;
+    std::cerr << "  Output (by extension): .hdag, .dot" << std::endl << std::endl;
     std::cerr << "The .hdag format is the HyperdagDB format. A detailed description can be found at:" << std::endl;
-    std::cerr << "https://github.com/Algebraic-Programming/HyperDAG_DB" << std::endl
-              << std::endl;
+    std::cerr << "https://github.com/Algebraic-Programming/HyperDAG_DB" << std::endl << std::endl;
     std::cerr << "Examples:" << std::endl;
     std::cerr << "  " << prog_name << " my_graph.mtx my_graph.hdag" << std::endl;
     std::cerr << "  " << prog_name << " my_graph.hdag my_graph.dot" << std::endl;
@@ -98,8 +94,8 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    std::cout << "Successfully read graph with " << graph.num_vertices() << " vertices and " << graph.num_edges()
-              << " edges." << std::endl;
+    std::cout << "Successfully read graph with " << graph.num_vertices() << " vertices and " << graph.num_edges() << " edges."
+              << std::endl;
 
     std::filesystem::path output_path(output_filename);
     std::string output_ext = output_path.extension().string();

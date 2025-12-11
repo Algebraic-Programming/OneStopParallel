@@ -33,9 +33,8 @@ namespace osp {
  * For each node, the map stores the count of children assigned to each processor, which is
  * important for computing communication costs in BSP scheduling.
  */
-template<typename vertex_idx_t>
+template <typename vertex_idx_t>
 struct lambda_map_container {
-
     /// Vector of maps: for each node, maps processor ID to assignment count
     std::vector<std::unordered_map<unsigned, unsigned>> node_lambda_map;
 
@@ -102,9 +101,7 @@ struct lambda_map_container {
      * @param node Node index
      * @return The count of different processors the node is sending to
      */
-    inline unsigned get_proc_count(const vertex_idx_t node) const {
-        return static_cast<unsigned>(node_lambda_map[node].size());
-    }
+    inline unsigned get_proc_count(const vertex_idx_t node) const { return static_cast<unsigned>(node_lambda_map[node].size()); }
 
     /**
      * @brief Increase the processor count for a given node.
@@ -158,9 +155,8 @@ struct lambda_map_container {
  * For each node, the vector stores the count of children assigned to each processor, which is
  * important for computing communication costs in BSP scheduling.
  */
-template<typename vertex_idx_t>
+template <typename vertex_idx_t>
 struct lambda_vector_container {
-
     /**
      * @brief Range adapter for iterating over non-zero processor entries.
      *
@@ -179,7 +175,6 @@ struct lambda_vector_container {
          * for all processors with non-zero assignment counts.
          */
         class lambda_vector_iterator {
-
             using iterator_category = std::input_iterator_tag;
             using value_type = std::pair<unsigned, unsigned>;
             using difference_type = std::ptrdiff_t;
@@ -296,9 +291,7 @@ struct lambda_vector_container {
      * @param proc Processor ID
      * @return true if the processor has no assignments to the node
      */
-    inline bool has_no_proc_entry(const vertex_idx_t node, const unsigned proc) const {
-        return node_lambda_vec[node][proc] == 0;
-    }
+    inline bool has_no_proc_entry(const vertex_idx_t node, const unsigned proc) const { return node_lambda_vec[node][proc] == 0; }
 
     /**
      * @brief Get a reference to the processor count for a given node.
@@ -369,4 +362,4 @@ struct lambda_vector_container {
     inline auto iterate_proc_entries(const vertex_idx_t node) { return lambda_vector_range(node_lambda_vec[node]); }
 };
 
-} // namespace osp
+}    // namespace osp

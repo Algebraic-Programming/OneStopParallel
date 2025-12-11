@@ -26,7 +26,19 @@ limitations under the License.
 using namespace osp;
 
 BOOST_AUTO_TEST_CASE(SubGraphCompactSparseGraph) {
-    const std::vector<std::pair<std::size_t, std::size_t>> edges({{0, 1}, {2, 3}, {6, 10}, {7, 9}, {0, 2}, {4, 6}, {1, 6}, {6, 7}, {5, 6}, {3, 7}, {1, 2}});
+    const std::vector<std::pair<std::size_t, std::size_t>> edges({
+        {0,  1},
+        {2,  3},
+        {6, 10},
+        {7,  9},
+        {0,  2},
+        {4,  6},
+        {1,  6},
+        {6,  7},
+        {5,  6},
+        {3,  7},
+        {1,  2}
+    });
     Compact_Sparse_Graph<true, true, true, true, true> graph(11, edges);
     Compact_Sparse_Graph<true, true, true, true, true> subGraph;
 
@@ -68,7 +80,19 @@ BOOST_AUTO_TEST_CASE(SubGraphDagVectorImpl) {
     computational_dag_vector_impl<v_impl> subGraph;
 
     const std::size_t numVert = 11;
-    const std::vector<std::pair<std::size_t, std::size_t>> edges({{0, 1}, {2, 3}, {6, 10}, {7, 9}, {0, 2}, {4, 6}, {1, 6}, {6, 7}, {5, 6}, {3, 7}, {1, 2}});
+    const std::vector<std::pair<std::size_t, std::size_t>> edges({
+        {0,  1},
+        {2,  3},
+        {6, 10},
+        {7,  9},
+        {0,  2},
+        {4,  6},
+        {1,  6},
+        {6,  7},
+        {5,  6},
+        {3,  7},
+        {1,  2}
+    });
 
     unsigned cntr = 0;
     for (std::size_t i = 0U; i < numVert; ++i) {

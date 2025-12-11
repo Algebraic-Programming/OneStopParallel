@@ -18,17 +18,16 @@ limitations under the License.
 
 #pragma once
 
+#include <vector>
+
 #include "osp/bsp/model/IBspSchedule.hpp"
 #include "osp/concepts/computational_dag_concept.hpp"
-#include <vector>
 
 namespace osp {
 
-template<typename Graph_t>
+template <typename Graph_t>
 class VectorSchedule : public IBspSchedule<Graph_t> {
-
-    static_assert(is_computational_dag_v<Graph_t>,
-        "BspSchedule can only be used with computational DAGs.");
+    static_assert(is_computational_dag_v<Graph_t>, "BspSchedule can only be used with computational DAGs.");
 
   private:
     const BspInstance<Graph_t> *instance;
@@ -38,7 +37,6 @@ class VectorSchedule : public IBspSchedule<Graph_t> {
 
     std::vector<unsigned> node_to_processor_assignment;
     std::vector<unsigned> node_to_superstep_assignment;
-
 
     /**
      * @brief Default constructor for VectorSchedule.
@@ -52,21 +50,20 @@ class VectorSchedule : public IBspSchedule<Graph_t> {
 
     VectorSchedule(const IBspSchedule<Graph_t> &schedule)
         : instance(&schedule.getInstance()), number_of_supersteps(schedule.numberOfSupersteps()) {
-
-        node_to_processor_assignment =
-            std::vector<unsigned>(schedule.getInstance().numberOfVertices(), instance->numberOfProcessors());
-        node_to_superstep_assignment =
-            std::vector<unsigned>(schedule.getInstance().numberOfVertices(), schedule.numberOfSupersteps());
+        node_to_processor_assignment
+            = std::vector<unsigned>(schedule.getInstance().numberOfVertices(), instance->numberOfProcessors());
+        node_to_superstep_assignment
+            = std::vector<unsigned>(schedule.getInstance().numberOfVertices(), schedule.numberOfSupersteps());
 
         for (vertex_idx_t<Graph_t> i = 0; i < schedule.getInstance().numberOfVertices(); i++) {
-
             node_to_processor_assignment[i] = schedule.assignedProcessor(i);
             node_to_superstep_assignment[i] = schedule.assignedSuperstep(i);
         }
     }
 
     VectorSchedule(const VectorSchedule &other)
-        : instance(other.instance), number_of_supersteps(other.number_of_supersteps),
+        : instance(other.instance),
+          number_of_supersteps(other.number_of_supersteps),
           node_to_processor_assignment(other.node_to_processor_assignment),
           node_to_superstep_assignment(other.node_to_superstep_assignment) {}
 
@@ -74,8 +71,7 @@ class VectorSchedule : public IBspSchedule<Graph_t> {
         if (this != &other) {
             instance = &other.getInstance();
             number_of_supersteps = other.numberOfSupersteps();
-            node_to_processor_assignment =
-                std::vector<unsigned>(instance->numberOfVertices(), instance->numberOfProcessors());
+            node_to_processor_assignment = std::vector<unsigned>(instance->numberOfVertices(), instance->numberOfProcessors());
             node_to_superstep_assignment = std::vector<unsigned>(instance->numberOfVertices(), number_of_supersteps);
 
             for (vertex_idx_t<Graph_t> i = 0; i < instance->numberOfVertices(); i++) {
@@ -97,7 +93,8 @@ class VectorSchedule : public IBspSchedule<Graph_t> {
     }
 
     VectorSchedule(VectorSchedule &&other) noexcept
-        : instance(other.instance), number_of_supersteps(other.number_of_supersteps),
+        : instance(other.instance),
+          number_of_supersteps(other.number_of_supersteps),
           node_to_processor_assignment(std::move(other.node_to_processor_assignment)),
           node_to_superstep_assignment(std::move(other.node_to_superstep_assignment)) {}
 
@@ -114,27 +111,22 @@ class VectorSchedule : public IBspSchedule<Graph_t> {
     void setAssignedSuperstep(vertex_idx_t<Graph_t> vertex, unsigned superstep) override {
         node_to_superstep_assignment[vertex] = superstep;
     };
+
     void setAssignedProcessor(vertex_idx_t<Graph_t> vertex, unsigned processor) override {
         node_to_processor_assignment[vertex] = processor;
     };
 
     unsigned numberOfSupersteps() const override { return number_of_supersteps; }
 
-    unsigned assignedSuperstep(vertex_idx_t<Graph_t> vertex) const override {
-        return node_to_superstep_assignment[vertex];
-    }
-    unsigned assignedProcessor(vertex_idx_t<Graph_t> vertex) const override {
-        return node_to_processor_assignment[vertex];
-    }
+    unsigned assignedSuperstep(vertex_idx_t<Graph_t> vertex) const override { return node_to_superstep_assignment[vertex]; }
+
+    unsigned assignedProcessor(vertex_idx_t<Graph_t> vertex) const override { return node_to_processor_assignment[vertex]; }
 
     void mergeSupersteps(unsigned start_step, unsigned end_step) {
-
         number_of_supersteps = 0;
 
         for (const auto &vertex : getInstance().vertices()) {
-
             if (node_to_superstep_assignment[vertex] > start_step && node_to_superstep_assignment[vertex] <= end_step) {
-
                 node_to_superstep_assignment[vertex] = start_step;
             } else if (node_to_superstep_assignment[vertex] > end_step) {
                 node_to_superstep_assignment[vertex] -= end_step - start_step;
@@ -147,11 +139,9 @@ class VectorSchedule : public IBspSchedule<Graph_t> {
     }
 
     void insertSupersteps(const unsigned step_before, const unsigned num_new_steps) {
-
         number_of_supersteps += num_new_steps;
 
         for (const auto &vertex : getInstance().vertices()) {
-
             if (node_to_superstep_assignment[vertex] > step_before) {
                 node_to_superstep_assignment[vertex] += num_new_steps;
             }
@@ -159,4 +149,4 @@ class VectorSchedule : public IBspSchedule<Graph_t> {
     }
 };
 
-} // namespace osp
+}    // namespace osp

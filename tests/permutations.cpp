@@ -17,12 +17,10 @@ limitations under the License.
 */
 
 #define BOOST_TEST_MODULE permutations
-#include <boost/test/unit_test.hpp>
-
 #include <algorithm>
+#include <boost/test/unit_test.hpp>
 #include <numeric>
 #include <random>
-
 
 #include "osp/auxiliary/permute.hpp"
 
@@ -50,7 +48,7 @@ BOOST_AUTO_TEST_CASE(In_Place_Permutation_random) {
 
 BOOST_AUTO_TEST_CASE(In_Place_Permutation_char) {
     std::vector<char> vec({'a', 'b', 'c', 'd', 'e', 'f', 'g'});
-    std::vector<std::size_t> perm({4,0,1,2,3,6,5});
+    std::vector<std::size_t> perm({4, 0, 1, 2, 3, 6, 5});
     std::vector<char> sol({'b', 'c', 'd', 'e', 'a', 'g', 'f'});
     std::vector<std::size_t> perm_sol(perm.size());
     std::iota(perm_sol.begin(), perm_sol.end(), 0);
@@ -61,7 +59,6 @@ BOOST_AUTO_TEST_CASE(In_Place_Permutation_char) {
         BOOST_CHECK_EQUAL(perm[j], perm_sol[j]);
     }
 }
-
 
 BOOST_AUTO_TEST_CASE(In_Place_Inverse_Permutation_random) {
     std::vector<unsigned> vec(20);
@@ -89,7 +86,7 @@ BOOST_AUTO_TEST_CASE(In_Place_Inverse_Permutation_random) {
 
 BOOST_AUTO_TEST_CASE(In_Place_Inverse_Permutation_char) {
     std::vector<char> vec({'a', 'b', 'c', 'd', 'e', 'f', 'g'});
-    std::vector<std::size_t> perm({4,0,1,2,3,6,5});
+    std::vector<std::size_t> perm({4, 0, 1, 2, 3, 6, 5});
     std::vector<char> sol({'e', 'a', 'b', 'c', 'd', 'g', 'f'});
     std::vector<std::size_t> perm_sol(perm.size());
     std::iota(perm_sol.begin(), perm_sol.end(), 0);
@@ -101,7 +98,4 @@ BOOST_AUTO_TEST_CASE(In_Place_Inverse_Permutation_char) {
     }
 }
 
-
-
-
-} // namespace osp
+}    // namespace osp

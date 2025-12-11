@@ -24,9 +24,8 @@ limitations under the License.
 
 namespace osp {
 
-template<typename Graph_t, typename Graph_t_coarse>
+template <typename Graph_t, typename Graph_t_coarse>
 class CoarseAndSchedule : public Scheduler<Graph_t> {
-
   private:
     Coarser<Graph_t, Graph_t_coarse> &coarser;
     Scheduler<Graph_t_coarse> &scheduler;
@@ -35,18 +34,18 @@ class CoarseAndSchedule : public Scheduler<Graph_t> {
     CoarseAndSchedule(Coarser<Graph_t, Graph_t_coarse> &coarser_, Scheduler<Graph_t_coarse> &scheduler_)
         : coarser(coarser_), scheduler(scheduler_) {}
 
-    std::string getScheduleName() const override { return "Coarse(" + coarser.getCoarserName() + ")AndSchedule(" + scheduler.getScheduleName() + ")"; }
+    std::string getScheduleName() const override {
+        return "Coarse(" + coarser.getCoarserName() + ")AndSchedule(" + scheduler.getScheduleName() + ")";
+    }
 
     RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &schedule) override {
-
         const auto &instance = schedule.getInstance();
 
         BspInstance<Graph_t_coarse> instance_coarse;
 
         std::vector<vertex_idx_t<Graph_t_coarse>> reverse_vertex_map;
 
-        bool status = coarser.coarsenDag(instance.getComputationalDag(), instance_coarse.getComputationalDag(),
-                                         reverse_vertex_map);
+        bool status = coarser.coarsenDag(instance.getComputationalDag(), instance_coarse.getComputationalDag(), reverse_vertex_map);
 
         if (!status) {
             return RETURN_STATUS::ERROR;
@@ -69,4 +68,4 @@ class CoarseAndSchedule : public Scheduler<Graph_t> {
     }
 };
 
-} // namespace osp
+}    // namespace osp

@@ -18,27 +18,25 @@ limitations under the License.
 
 #define BOOST_TEST_MODULE BSP_SCHEDULERS
 #include <boost/test/unit_test.hpp>
-
 #include <filesystem>
 #include <string>
 #include <vector>
 
-
+#include "osp/auxiliary/io/arch_file_reader.hpp"
+#include "osp/auxiliary/io/general_file_reader.hpp"
+#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/GreedyVarianceSspScheduler.hpp"
 #include "osp/bsp/scheduler/MaxBspScheduler.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
-#include "osp/auxiliary/io/arch_file_reader.hpp"
-#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
-#include "osp/auxiliary/io/general_file_reader.hpp"
 #include "test_graphs.hpp"
 
 using namespace osp;
 
 std::vector<std::string> test_architectures() { return {"data/machine_params/p3.arch"}; }
 
-template<typename Graph_t>
+template <typename Graph_t>
 void run_test(Scheduler<Graph_t> *test_scheduler) {
     // static_assert(std::is_base_of<Scheduler, T>::value, "Class is not a scheduler!");
     std::vector<std::string> filenames_graph = tiny_spaa_graphs();
@@ -65,13 +63,11 @@ void run_test(Scheduler<Graph_t> *test_scheduler) {
 
             BspInstance<Graph_t> instance;
 
-            bool status_graph = file_reader::readGraph((cwd / filename_graph).string(),
-                                                                                instance.getComputationalDag());
-            bool status_architecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(),
-                                                                        instance.getArchitecture());
+            bool status_graph = file_reader::readGraph((cwd / filename_graph).string(), instance.getComputationalDag());
+            bool status_architecture
+                = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.getArchitecture());
 
             if (!status_graph || !status_architecture) {
-
                 std::cout << "Reading files failed." << std::endl;
                 BOOST_CHECK(false);
             }
@@ -85,8 +81,8 @@ void run_test(Scheduler<Graph_t> *test_scheduler) {
     }
 }
 
-template<typename Graph_t>
-void run_test_max_bsp(MaxBspScheduler<Graph_t>* test_scheduler) {
+template <typename Graph_t>
+void run_test_max_bsp(MaxBspScheduler<Graph_t> *test_scheduler) {
     std::vector<std::string> filenames_graph = tiny_spaa_graphs();
     std::vector<std::string> filenames_architectures = test_architectures();
 
@@ -96,8 +92,8 @@ void run_test_max_bsp(MaxBspScheduler<Graph_t>* test_scheduler) {
         cwd = cwd.parent_path();
     }
 
-    for (auto& filename_graph : filenames_graph) {
-        for (auto& filename_machine : filenames_architectures) {
+    for (auto &filename_graph : filenames_graph) {
+        for (auto &filename_machine : filenames_architectures) {
             std::string name_graph = filename_graph.substr(filename_graph.find_last_of("/\\") + 1);
             name_graph = name_graph.substr(0, name_graph.find_last_of("."));
             std::string name_machine = filename_machine.substr(filename_machine.find_last_of("/\\") + 1);
@@ -112,8 +108,7 @@ void run_test_max_bsp(MaxBspScheduler<Graph_t>* test_scheduler) {
             BspArchitecture<Graph_t> arch;
 
             bool status_graph = file_reader::readGraph((cwd / filename_graph).string(), graph);
-            bool status_architecture =
-                file_reader::readBspArchitecture((cwd / filename_machine).string(), arch);
+            bool status_architecture = file_reader::readBspArchitecture((cwd / filename_machine).string(), arch);
 
             BOOST_REQUIRE_MESSAGE(status_graph, "Failed to read graph: " << filename_graph);
             BOOST_REQUIRE_MESSAGE(status_architecture, "Failed to read architecture: " << filename_machine);

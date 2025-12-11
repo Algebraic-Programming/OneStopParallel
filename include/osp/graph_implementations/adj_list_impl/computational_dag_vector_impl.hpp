@@ -17,14 +17,14 @@ limitations under the License.
 */
 #pragma once
 
+#include <algorithm>
+#include <vector>
+
 #include "cdag_vertex_impl.hpp"
 #include "osp/concepts/computational_dag_concept.hpp"
 #include "osp/concepts/directed_graph_edge_desc_concept.hpp"
 #include "osp/graph_algorithms/computational_dag_construction_util.hpp"
 #include "osp/graph_implementations/integral_range.hpp"
-#include <vector>
-
-#include <algorithm>
 
 namespace osp {
 
@@ -54,11 +54,12 @@ namespace osp {
  *   - `mem_weight`: Of type `mem_weight_type`.
  *   - `vertex_type`: Of type `cdag_vertex_type_type`.
  * - It must be constructible with the signature:
- *   `v_impl(vertex_idx_type id, work_weight_type work_weight, comm_weight_type comm_weight, mem_weight_type mem_weight, cdag_vertex_type_type vertex_type)`
+ *   `v_impl(vertex_idx_type id, work_weight_type work_weight, comm_weight_type comm_weight, mem_weight_type mem_weight,
+ * cdag_vertex_type_type vertex_type)`
  *
  * @see cdag_vertex_impl for a reference implementation of the vertex type.
  */
-template<typename v_impl>
+template <typename v_impl>
 class computational_dag_vector_impl {
   public:
     using vertex_idx = typename v_impl::vertex_idx_type;
@@ -76,8 +77,7 @@ class computational_dag_vector_impl {
      * @param num_vertices The number of vertices to initialize.
      */
     explicit computational_dag_vector_impl(const vertex_idx num_vertices)
-        : vertices_(num_vertices), out_neigbors(num_vertices), in_neigbors(num_vertices), num_edges_(0),
-          num_vertex_types_(0) {
+        : vertices_(num_vertices), out_neigbors(num_vertices), in_neigbors(num_vertices), num_edges_(0), num_vertex_types_(0) {
         for (vertex_idx i = 0; i < num_vertices; ++i) {
             vertices_[i].id = i;
         }
@@ -95,17 +95,18 @@ class computational_dag_vector_impl {
      * @tparam Graph_t The type of the source graph. Must satisfy `is_computational_dag_v`.
      * @param other The source graph to copy from.
      */
-    template<typename Graph_t>
+    template <typename Graph_t>
     explicit computational_dag_vector_impl(const Graph_t &other) {
         static_assert(is_computational_dag_v<Graph_t>, "Graph_t must satisfy the is_computation_dag concept");
         constructComputationalDag(other, *this);
     }
 
     computational_dag_vector_impl(computational_dag_vector_impl &&other) noexcept
-        : vertices_(std::move(other.vertices_)), out_neigbors(std::move(other.out_neigbors)),
-          in_neigbors(std::move(other.in_neigbors)), num_edges_(other.num_edges_),
+        : vertices_(std::move(other.vertices_)),
+          out_neigbors(std::move(other.out_neigbors)),
+          in_neigbors(std::move(other.in_neigbors)),
+          num_edges_(other.num_edges_),
           num_vertex_types_(other.num_vertex_types_) {
-
         other.num_edges_ = 0;
         other.num_vertex_types_ = 0;
     };
@@ -191,8 +192,10 @@ class computational_dag_vector_impl {
      * @param vertex_type Type of the vertex.
      * @return The index of the newly added vertex.
      */
-    vertex_idx add_vertex(const vertex_work_weight_type work_weight, const vertex_comm_weight_type comm_weight,
-                          const vertex_mem_weight_type mem_weight, const vertex_type_type vertex_type = 0) {
+    vertex_idx add_vertex(const vertex_work_weight_type work_weight,
+                          const vertex_comm_weight_type comm_weight,
+                          const vertex_mem_weight_type mem_weight,
+                          const vertex_type_type vertex_type = 0) {
         vertices_.emplace_back(vertices_.size(), work_weight, comm_weight, mem_weight, vertex_type);
         out_neigbors.push_back({});
         in_neigbors.push_back({});
@@ -227,8 +230,10 @@ class computational_dag_vector_impl {
      * @return True if the edge was added, false if it already exists or vertices are invalid.
      */
     bool add_edge(const vertex_idx source, const vertex_idx target) {
-        if (source >= static_cast<vertex_idx>(vertices_.size()) || target >= static_cast<vertex_idx>(vertices_.size()) || source == target)
+        if (source >= static_cast<vertex_idx>(vertices_.size()) || target >= static_cast<vertex_idx>(vertices_.size())
+            || source == target) {
             return false;
+        }
 
         const auto &out = out_neigbors.at(source);
         if (std::find(out.begin(), out.end(), target) != out.end()) {
@@ -274,4 +279,4 @@ static_assert(is_directed_graph_v<computational_dag_vector_impl<cdag_vertex_impl
 static_assert(is_computational_dag_typed_vertices_v<computational_dag_vector_impl<cdag_vertex_impl_unsigned>>,
               "computational_dag_vector_impl must satisfy the is_computation_dag concept");
 
-} // namespace osp
+}    // namespace osp

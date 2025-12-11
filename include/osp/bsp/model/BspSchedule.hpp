@@ -45,18 +45,19 @@ namespace osp {
  * This class is templated on `Graph_t`, which must satisfy the `computational_dag_concept`.
  * Moreover, the work and communication weights of the nodes must be of the same type in order to properly compute the cost.
  *
- * It interacts closely with `BspInstance` to access problem-specific data and constraints. In fact, a `BspSchedule` object is tied to a `BspInstance` object.
+ * It interacts closely with `BspInstance` to access problem-specific data and constraints. In fact, a `BspSchedule` object is
+ * tied to a `BspInstance` object.
  *
  * @tparam Graph_t The type of the computational DAG, which must satisfy `is_computational_dag_v`.
  * @see BspInstance
  * @see IBspSchedule
  * @see IBspScheduleEval
  */
-template<typename Graph_t>
+template <typename Graph_t>
 class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_t> {
-
     static_assert(is_computational_dag_v<Graph_t>, "BspSchedule can only be used with computational DAGs.");
-    static_assert(std::is_same_v<v_workw_t<Graph_t>, v_commw_t<Graph_t>>, "BspSchedule requires work and comm. weights to have the same type.");
+    static_assert(std::is_same_v<v_workw_t<Graph_t>, v_commw_t<Graph_t>>,
+                  "BspSchedule requires work and comm. weights to have the same type.");
 
   protected:
     using vertex_idx = vertex_idx_t<Graph_t>;
@@ -77,7 +78,8 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
      * @param inst The BspInstance for the schedule.
      */
     explicit BspSchedule(const BspInstance<Graph_t> &inst)
-        : instance(&inst), number_of_supersteps(1),
+        : instance(&inst),
+          number_of_supersteps(1),
           node_to_processor_assignment(std::vector<unsigned>(inst.numberOfVertices(), 0)),
           node_to_superstep_assignment(std::vector<unsigned>(inst.numberOfVertices(), 0)) {}
 
@@ -89,9 +91,11 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
      * @param processor_assignment_ The processor assignment for the nodes.
      * @param superstep_assignment_ The superstep assignment for the nodes.
      */
-    BspSchedule(const BspInstance<Graph_t> &inst, const std::vector<unsigned> &processor_assignment_,
+    BspSchedule(const BspInstance<Graph_t> &inst,
+                const std::vector<unsigned> &processor_assignment_,
                 const std::vector<unsigned> &superstep_assignment_)
-        : instance(&inst), node_to_processor_assignment(processor_assignment_),
+        : instance(&inst),
+          node_to_processor_assignment(processor_assignment_),
           node_to_superstep_assignment(superstep_assignment_) {
         updateNumberOfSupersteps();
     }
@@ -102,7 +106,8 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
      * @param schedule The schedule to copy.
      */
     explicit BspSchedule(const IBspSchedule<Graph_t> &schedule)
-        : instance(&schedule.getInstance()), number_of_supersteps(schedule.numberOfSupersteps()),
+        : instance(&schedule.getInstance()),
+          number_of_supersteps(schedule.numberOfSupersteps()),
           node_to_processor_assignment(schedule.getInstance().numberOfVertices()),
           node_to_superstep_assignment(schedule.getInstance().numberOfVertices()) {
         for (const auto &v : schedule.getInstance().getComputationalDag().vertices()) {
@@ -117,7 +122,8 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
      * @param schedule The schedule to copy.
      */
     BspSchedule(const BspSchedule<Graph_t> &schedule)
-        : instance(schedule.instance), number_of_supersteps(schedule.number_of_supersteps),
+        : instance(schedule.instance),
+          number_of_supersteps(schedule.number_of_supersteps),
           node_to_processor_assignment(schedule.node_to_processor_assignment),
           node_to_superstep_assignment(schedule.node_to_superstep_assignment) {}
 
@@ -143,7 +149,8 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
      * @param schedule The schedule to move.
      */
     BspSchedule(BspSchedule<Graph_t> &&schedule) noexcept
-        : instance(schedule.instance), number_of_supersteps(schedule.number_of_supersteps),
+        : instance(schedule.instance),
+          number_of_supersteps(schedule.number_of_supersteps),
           node_to_processor_assignment(std::move(schedule.node_to_processor_assignment)),
           node_to_superstep_assignment(std::move(schedule.node_to_superstep_assignment)) {}
 
@@ -170,9 +177,10 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
      * @param instance_ The BspInstance for the new schedule.
      * @param schedule The other schedule to copy from.
      */
-    template<typename Graph_t_other>
+    template <typename Graph_t_other>
     BspSchedule(const BspInstance<Graph_t> &instance_, const BspSchedule<Graph_t_other> &schedule)
-        : instance(&instance_), number_of_supersteps(schedule.numberOfSupersteps()),
+        : instance(&instance_),
+          number_of_supersteps(schedule.numberOfSupersteps()),
           node_to_processor_assignment(schedule.assignedProcessors()),
           node_to_superstep_assignment(schedule.assignedSupersteps()) {}
 
@@ -229,6 +237,7 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
      * @return The superstep assignment for the schedule.
      */
     [[nodiscard]] const std::vector<unsigned> &assignedSupersteps() const { return node_to_superstep_assignment; }
+
     [[nodiscard]] std::vector<unsigned> &assignedSupersteps() { return node_to_superstep_assignment; }
 
     /**
@@ -237,12 +246,13 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
      * @return The processor assignment for the schedule.
      */
     [[nodiscard]] const std::vector<unsigned> &assignedProcessors() const { return node_to_processor_assignment; }
+
     [[nodiscard]] std::vector<unsigned> &assignedProcessors() { return node_to_processor_assignment; }
 
     /**
      * @brief Returns the staleness of the schedule.
-     * The staleness determines the minimum number of supersteps that must elapse between the assignment of a node to a processor and the assignment of one of its neighbors to a different processor.
-     * The staleness for the BspSchedule is always 1.
+     * The staleness determines the minimum number of supersteps that must elapse between the assignment of a node to a processor
+     * and the assignment of one of its neighbors to a different processor. The staleness for the BspSchedule is always 1.
      *
      * @return The staleness of the schedule.
      */
@@ -304,8 +314,7 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
                 node_to_superstep_assignment[i] = vec[i];
             }
         } else {
-            throw std::invalid_argument(
-                "Invalid Argument while assigning supersteps: size does not match number of nodes.");
+            throw std::invalid_argument("Invalid Argument while assigning supersteps: size does not match number of nodes.");
         }
     }
 
@@ -318,8 +327,7 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
         if (vec.size() == static_cast<std::size_t>(instance->numberOfVertices())) {
             node_to_superstep_assignment = std::move(vec);
         } else {
-            throw std::invalid_argument(
-                "Invalid Argument while assigning supersteps: size does not match number of nodes.");
+            throw std::invalid_argument("Invalid Argument while assigning supersteps: size does not match number of nodes.");
         }
 
         updateNumberOfSupersteps();
@@ -334,8 +342,7 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
         if (vec.size() == static_cast<std::size_t>(instance->numberOfVertices())) {
             node_to_processor_assignment = vec;
         } else {
-            throw std::invalid_argument(
-                "Invalid Argument while assigning processors: size does not match number of nodes.");
+            throw std::invalid_argument("Invalid Argument while assigning processors: size does not match number of nodes.");
         }
     }
 
@@ -348,8 +355,7 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
         if (vec.size() == static_cast<std::size_t>(instance->numberOfVertices())) {
             node_to_processor_assignment = std::move(vec);
         } else {
-            throw std::invalid_argument(
-                "Invalid Argument while assigning processors: size does not match number of nodes.");
+            throw std::invalid_argument("Invalid Argument while assigning processors: size does not match number of nodes.");
         }
     }
 
@@ -377,7 +383,9 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
      *
      * @return True if the schedule is valid, false otherwise.
      */
-    [[nodiscard]] bool isValid() const { return satisfiesPrecedenceConstraints() && satisfiesMemoryConstraints() && satisfiesNodeTypeConstraints(); }
+    [[nodiscard]] bool isValid() const {
+        return satisfiesPrecedenceConstraints() && satisfiesMemoryConstraints() && satisfiesNodeTypeConstraints();
+    }
 
     /**
      * @brief Returns true if the schedule satisfies the precedence constraints of the computational DAG.
@@ -389,8 +397,8 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
      * @return True if the schedule satisfies the precedence constraints of the computational DAG, false otherwise.
      */
     [[nodiscard]] bool satisfiesPrecedenceConstraints() const {
-        if (static_cast<vertex_idx_t<Graph_t>>(node_to_processor_assignment.size()) != instance->numberOfVertices() ||
-            static_cast<vertex_idx_t<Graph_t>>(node_to_superstep_assignment.size()) != instance->numberOfVertices()) {
+        if (static_cast<vertex_idx_t<Graph_t>>(node_to_processor_assignment.size()) != instance->numberOfVertices()
+            || static_cast<vertex_idx_t<Graph_t>>(node_to_superstep_assignment.size()) != instance->numberOfVertices()) {
             return false;
         }
 
@@ -403,7 +411,8 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
             }
 
             for (const auto &target : instance->getComputationalDag().children(v)) {
-                const unsigned different_processors = (node_to_processor_assignment[v] == node_to_processor_assignment[target]) ? 0u : getStaleness();
+                const unsigned different_processors
+                    = (node_to_processor_assignment[v] == node_to_processor_assignment[target]) ? 0u : getStaleness();
                 if (node_to_superstep_assignment[v] + different_processors > node_to_superstep_assignment[target]) {
                     return false;
                 }
@@ -442,32 +451,30 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
      * @return True if memory constraints are satisfied, false otherwise.
      */
     [[nodiscard]] bool satisfiesMemoryConstraints() const {
-
         switch (instance->getArchitecture().getMemoryConstraintType()) {
+            case MEMORY_CONSTRAINT_TYPE::LOCAL:
+                return satisfiesLocalMemoryConstraints();
 
-        case MEMORY_CONSTRAINT_TYPE::LOCAL:
-            return satisfiesLocalMemoryConstraints();
+            case MEMORY_CONSTRAINT_TYPE::PERSISTENT_AND_TRANSIENT:
+                return satisfiesPersistentAndTransientMemoryConstraints();
 
-        case MEMORY_CONSTRAINT_TYPE::PERSISTENT_AND_TRANSIENT:
-            return satisfiesPersistentAndTransientMemoryConstraints();
+            case MEMORY_CONSTRAINT_TYPE::GLOBAL:
+                return satisfiesGlobalMemoryConstraints();
 
-        case MEMORY_CONSTRAINT_TYPE::GLOBAL:
-            return satisfiesGlobalMemoryConstraints();
+            case MEMORY_CONSTRAINT_TYPE::LOCAL_IN_OUT:
+                return satisfiesLocalInOutMemoryConstraints();
 
-        case MEMORY_CONSTRAINT_TYPE::LOCAL_IN_OUT:
-            return satisfiesLocalInOutMemoryConstraints();
+            case MEMORY_CONSTRAINT_TYPE::LOCAL_INC_EDGES:
+                return satisfiesLocalIncEdgesMemoryConstraints();
 
-        case MEMORY_CONSTRAINT_TYPE::LOCAL_INC_EDGES:
-            return satisfiesLocalIncEdgesMemoryConstraints();
+            case MEMORY_CONSTRAINT_TYPE::LOCAL_SOURCES_INC_EDGES:
+                return satisfiesLocalSourcesIncEdgesMemoryConstraints();
 
-        case MEMORY_CONSTRAINT_TYPE::LOCAL_SOURCES_INC_EDGES:
-            return satisfiesLocalSourcesIncEdgesMemoryConstraints();
+            case MEMORY_CONSTRAINT_TYPE::NONE:
+                return true;
 
-        case MEMORY_CONSTRAINT_TYPE::NONE:
-            return true;
-
-        default:
-            throw std::invalid_argument("Unknown memory constraint type.");
+            default:
+                throw std::invalid_argument("Unknown memory constraint type.");
         }
     }
 
@@ -496,7 +503,8 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
      * @param superstep The superstep index.
      * @return A vector of nodes assigned to the specified processor and superstep.
      */
-    [[nodiscard]] std::vector<vertex_idx_t<Graph_t>> getAssignedNodeVector(const unsigned processor, const unsigned superstep) const {
+    [[nodiscard]] std::vector<vertex_idx_t<Graph_t>> getAssignedNodeVector(const unsigned processor,
+                                                                           const unsigned superstep) const {
         std::vector<vertex_idx_t<Graph_t>> vec;
 
         for (const auto &node : instance->vertices()) {
@@ -513,9 +521,7 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
      *
      * @param number_of_supersteps_ The number of supersteps.
      */
-    void setNumberOfSupersteps(const unsigned number_of_supersteps_) {
-        number_of_supersteps = number_of_supersteps_;
-    }
+    void setNumberOfSupersteps(const unsigned number_of_supersteps_) { number_of_supersteps = number_of_supersteps_; }
 
     /**
      * @brief Returns the number of nodes assigned to the specified processor.
@@ -573,8 +579,9 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
         for (const auto &node : instance->vertices()) {
             for (const auto &child : instance->getComputationalDag().children(node)) {
                 if (node_to_processor_assignment[node] != node_to_processor_assignment[child]) {
-                    for (unsigned offset = 1; offset <= getStaleness(); ++offset)
+                    for (unsigned offset = 1; offset <= getStaleness(); ++offset) {
                         comm_phase_empty[node_to_superstep_assignment[child] - offset] = false;
+                    }
                 }
             }
         }
@@ -583,8 +590,9 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
         unsigned current_index = 0;
         for (unsigned step = 0; step < number_of_supersteps; ++step) {
             new_step_index[step] = current_index;
-            if (!comm_phase_empty[step])
+            if (!comm_phase_empty[step]) {
                 current_index++;
+            }
         }
         for (const auto &node : instance->vertices()) {
             node_to_superstep_assignment[node] = new_step_index[node_to_superstep_assignment[node]];
@@ -606,7 +614,6 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
 
         for (unsigned step = 0; step < number_of_supersteps; step++) {
             for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
-
                 v_memw_t<Graph_t> memory = 0;
                 for (const auto &node : set_schedule.step_processor_vertices[step][proc]) {
                     memory += instance->getComputationalDag().vertex_mem_weight(node);
@@ -636,11 +643,11 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
         for (const auto &node : instance->vertices()) {
             const unsigned proc = node_to_processor_assignment[node];
             current_proc_persistent_memory[proc] += instance->getComputationalDag().vertex_mem_weight(node);
-            current_proc_transient_memory[proc] = std::max(
-                current_proc_transient_memory[proc], instance->getComputationalDag().vertex_comm_weight(node));
+            current_proc_transient_memory[proc]
+                = std::max(current_proc_transient_memory[proc], instance->getComputationalDag().vertex_comm_weight(node));
 
-            if (current_proc_persistent_memory[proc] + current_proc_transient_memory[proc] >
-                instance->getArchitecture().memoryBound(proc)) {
+            if (current_proc_persistent_memory[proc] + current_proc_transient_memory[proc]
+                > instance->getArchitecture().memoryBound(proc)) {
                 return false;
             }
         }
@@ -676,13 +683,11 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
             for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
                 v_memw_t<Graph_t> memory = 0;
                 for (const auto &node : set_schedule.step_processor_vertices[step][proc]) {
-                    memory += instance->getComputationalDag().vertex_mem_weight(node) +
-                              instance->getComputationalDag().vertex_comm_weight(node);
+                    memory += instance->getComputationalDag().vertex_mem_weight(node)
+                              + instance->getComputationalDag().vertex_comm_weight(node);
 
                     for (const auto &parent : instance->getComputationalDag().parents(node)) {
-
-                        if (node_to_processor_assignment[parent] == proc &&
-                            node_to_superstep_assignment[parent] == step) {
+                        if (node_to_processor_assignment[parent] == proc && node_to_superstep_assignment[parent] == step) {
                             memory -= instance->getComputationalDag().vertex_comm_weight(parent);
                         }
                     }
@@ -760,4 +765,4 @@ class BspSchedule : public IBspSchedule<Graph_t>, public IBspScheduleEval<Graph_
     }
 };
 
-} // namespace osp
+}    // namespace osp

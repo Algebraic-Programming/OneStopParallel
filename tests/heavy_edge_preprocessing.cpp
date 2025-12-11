@@ -1,19 +1,17 @@
 #define BOOST_TEST_MODULE heavy_edge_partitioning
 #include <boost/test/unit_test.hpp>
-
 #include <filesystem>
 #include <string>
 #include <vector>
 
+#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 #include "osp/bsp/scheduler/LoadBalanceScheduler/HeavyEdgePreProcess.hpp"
 #include "osp/graph_implementations/boost_graphs/boost_graph.hpp"
-#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 #include "test_graphs.hpp"
 
 using namespace osp;
 
 BOOST_AUTO_TEST_CASE(HeavyEdgePartitioning) {
-
     using Graph_t = boost_graph_int_t;
 
     std::vector<std::string> filenames_graph = test_graphs();
@@ -27,8 +25,7 @@ BOOST_AUTO_TEST_CASE(HeavyEdgePartitioning) {
     }
 
     for (auto &filename_graph : filenames_graph) {
-        std::string name_graph =
-            filename_graph.substr(filename_graph.find_last_of("/\\") + 1, filename_graph.find_last_of("."));
+        std::string name_graph = filename_graph.substr(filename_graph.find_last_of("/\\") + 1, filename_graph.find_last_of("."));
 
         std::cout << std::endl << "Graph: " << name_graph << std::endl;
 
@@ -37,7 +34,6 @@ BOOST_AUTO_TEST_CASE(HeavyEdgePartitioning) {
         bool status_graph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(), graph);
 
         if (!status_graph) {
-
             std::cout << "Reading files failed." << std::endl;
             BOOST_CHECK(false);
         }

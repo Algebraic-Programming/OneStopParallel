@@ -17,21 +17,20 @@ limitations under the License.
 */
 
 #define BOOST_TEST_MODULE HILL_CLIMBING
-#include <boost/test/unit_test.hpp>
-
-#include "osp/bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
 #include "osp/bsp/scheduler/LocalSearch/HillClimbing/hill_climbing.hpp"
-#include "osp/bsp/scheduler/LocalSearch/HillClimbing/hill_climbing_for_comm_schedule.hpp"
-#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
+
+#include <boost/test/unit_test.hpp>
 #include <filesystem>
-#include "test_graphs.hpp"
+
+#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
+#include "osp/bsp/scheduler/LocalSearch/HillClimbing/hill_climbing_for_comm_schedule.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
+#include "test_graphs.hpp"
 
 using namespace osp;
 
-
 BOOST_AUTO_TEST_CASE(hill_climbing) {
-
     using graph = computational_dag_vector_impl_def_t;
 
     BspInstance<graph> instance;
@@ -75,11 +74,9 @@ BOOST_AUTO_TEST_CASE(hill_climbing) {
     BspSchedule<graph> schedule4 = bsp_initial;
     scheduler.improveScheduleWithStepLimit(schedule4, 5);
     BOOST_CHECK_EQUAL(schedule4.satisfiesPrecedenceConstraints(), true);
-
 }
 
 BOOST_AUTO_TEST_CASE(hill_climbing_for_comm_schedule) {
-
     using graph = computational_dag_vector_impl_def_t;
 
     BspInstance<graph> instance;
@@ -111,7 +108,7 @@ BOOST_AUTO_TEST_CASE(hill_climbing_for_comm_schedule) {
 
     BspSchedule<graph> schedule = initial;
     BspScheduleCS<graph> initial_cs(std::move(initial));
-    //initial_cs.setAutoCommunicationSchedule();
+    // initial_cs.setAutoCommunicationSchedule();
     initial_cs.setEagerCommunicationSchedule();
     BOOST_CHECK_EQUAL(initial_cs.hasValidCommSchedule(), true);
 
@@ -124,5 +121,4 @@ BOOST_AUTO_TEST_CASE(hill_climbing_for_comm_schedule) {
     hc_cs.setSteepestAscend(true);
     hc_cs.improveSchedule(schedule2);
     BOOST_CHECK_EQUAL(schedule2.hasValidCommSchedule(), true);
-
 }

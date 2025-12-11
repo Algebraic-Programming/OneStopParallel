@@ -20,33 +20,30 @@ limitations under the License.
 #include <boost/test/unit_test.hpp>
 #include <filesystem>
 
+#include "osp/auxiliary/io/arch_file_reader.hpp"
+#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
-#include "osp/bsp/scheduler/LocalSearch/KernighanLin_v2/kl_include.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_base.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_total_comm.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_total_cut.hpp"
-#include "osp/auxiliary/io/arch_file_reader.hpp"
-#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
-#include "test_graphs.hpp"
+#include "osp/bsp/scheduler/LocalSearch/KernighanLin_v2/kl_include.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
+#include "test_graphs.hpp"
 
 using namespace osp;
 
-template<typename Graph_t>
+template <typename Graph_t>
 void add_mem_weights(Graph_t &dag) {
-
     int mem_weight = 1;
     int comm_weight = 1;
 
     for (const auto &v : dag.vertices()) {
-
         dag.set_vertex_mem_weight(v, static_cast<v_memw_t<Graph_t>>(mem_weight++ % 3 + 1));
         dag.set_vertex_comm_weight(v, static_cast<v_commw_t<Graph_t>>(comm_weight++ % 3 + 1));
     }
 }
 
 BOOST_AUTO_TEST_CASE(kl_local_memconst) {
-
     std::vector<std::string> filenames_graph = test_graphs();
 
     using graph = computational_dag_edge_idx_vector_impl_def_int_t;
@@ -62,12 +59,11 @@ BOOST_AUTO_TEST_CASE(kl_local_memconst) {
     GreedyBspScheduler<graph, local_memory_constraint<graph>> test_scheduler;
 
     for (auto &filename_graph : filenames_graph) {
-
         std::cout << filename_graph << std::endl;
         BspInstance<graph> instance;
 
-        bool status_graph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(),
-                                                                            instance.getComputationalDag());
+        bool status_graph
+            = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(), instance.getComputationalDag());
         instance.getArchitecture().setSynchronisationCosts(10);
         instance.getArchitecture().setCommunicationCosts(5);
         instance.getArchitecture().setNumberOfProcessors(4);
@@ -79,13 +75,11 @@ BOOST_AUTO_TEST_CASE(kl_local_memconst) {
         add_mem_weights(instance.getComputationalDag());
 
         if (!status_graph) {
-
             std::cout << "Reading files failed." << std::endl;
             BOOST_CHECK(false);
         }
 
         for (const auto &bound : bounds_to_test) {
-
             instance.getArchitecture().setMemoryBound(bound);
 
             BspSchedule<graph> schedule(instance);

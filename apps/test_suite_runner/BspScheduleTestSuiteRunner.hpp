@@ -19,25 +19,24 @@ limitations under the License.
 #pragma once
 
 #include "AbstractTestSuiteRunner.hpp"
-#include "osp/bsp/model/BspSchedule.hpp"
-#include "osp/auxiliary/io/bsp_schedule_file_writer.hpp"
-#include "StringToScheduler/run_bsp_scheduler.hpp"
 #include "StatsModules/BasicBspStatsModule.hpp"
 #include "StatsModules/BspCommStatsModule.hpp"
 #include "StatsModules/BspSptrsvStatsModule.hpp"
 #include "StatsModules/GraphStatsModule.hpp"
+#include "StringToScheduler/run_bsp_scheduler.hpp"
+#include "osp/auxiliary/io/bsp_schedule_file_writer.hpp"
+#include "osp/bsp/model/BspSchedule.hpp"
 
 namespace osp {
 
-template<typename concrete_graph_t>
+template <typename concrete_graph_t>
 class BspScheduleTestSuiteRunner : public AbstractTestSuiteRunner<BspSchedule<concrete_graph_t>, concrete_graph_t> {
   private:
-  
   protected:
-    RETURN_STATUS compute_target_object_impl(const BspInstance<concrete_graph_t> &instance, std::unique_ptr<BspSchedule<concrete_graph_t>>& schedule,
-                                                             const pt::ptree &algo_config,  
-                                                             long long &computation_time_ms) override {
-        
+    RETURN_STATUS compute_target_object_impl(const BspInstance<concrete_graph_t> &instance,
+                                             std::unique_ptr<BspSchedule<concrete_graph_t>> &schedule,
+                                             const pt::ptree &algo_config,
+                                             long long &computation_time_ms) override {
         schedule = std::make_unique<BspSchedule<concrete_graph_t>>(instance);
 
         const auto start_time = std::chrono::high_resolution_clock::now();
@@ -59,13 +58,14 @@ class BspScheduleTestSuiteRunner : public AbstractTestSuiteRunner<BspSchedule<co
         } else if (module_name == "BspSptrsvStats") {
             this->active_stats_modules.push_back(std::make_unique<BspSptrsvStatsModule<BspSchedule<concrete_graph_t>>>(NO_PERMUTE));
         } else if (module_name == "BspSptrsvPermLoopProcessorsStats") {
-            this->active_stats_modules.push_back(std::make_unique<BspSptrsvStatsModule<BspSchedule<concrete_graph_t>>>(LOOP_PROCESSORS));
+            this->active_stats_modules.push_back(
+                std::make_unique<BspSptrsvStatsModule<BspSchedule<concrete_graph_t>>>(LOOP_PROCESSORS));
         } else if (module_name == "BspSptrsvPermSnakeProcessorsStats") {
-            this->active_stats_modules.push_back(std::make_unique<BspSptrsvStatsModule<BspSchedule<concrete_graph_t>>>(SNAKE_PROCESSORS));
+            this->active_stats_modules.push_back(
+                std::make_unique<BspSptrsvStatsModule<BspSchedule<concrete_graph_t>>>(SNAKE_PROCESSORS));
 #endif
         } else if (module_name == "GraphStats") {
-            this->active_stats_modules.push_back(
-                std::make_unique<GraphStatsModule<BspSchedule<concrete_graph_t>>>());
+            this->active_stats_modules.push_back(std::make_unique<GraphStatsModule<BspSchedule<concrete_graph_t>>>());
         }
     }
 
@@ -78,8 +78,7 @@ class BspScheduleTestSuiteRunner : public AbstractTestSuiteRunner<BspSchedule<co
     // }
 
   public:
-    BspScheduleTestSuiteRunner()
-        : AbstractTestSuiteRunner<BspSchedule<concrete_graph_t>, concrete_graph_t>() {}
+    BspScheduleTestSuiteRunner() : AbstractTestSuiteRunner<BspSchedule<concrete_graph_t>, concrete_graph_t>() {}
 };
 
-} // namespace osp
+}    // namespace osp

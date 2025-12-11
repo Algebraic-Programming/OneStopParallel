@@ -18,22 +18,23 @@ limitations under the License.
 
 #pragma once
 
-#include <functional>
 #include <algorithm>
+#include <functional>
 #include <stdexcept>
 #include <unordered_map>
 #include <vector>
 
 namespace osp {
 
-template <typename Key, typename Value, typename Compare> class PairingHeap {
+template <typename Key, typename Value, typename Compare>
+class PairingHeap {
   private:
     struct Node {
         Key key;
         Value value;
-        Node *child = nullptr;          // Leftmost child
-        Node *next_sibling = nullptr;   // Sibling to the right
-        Node *prev_or_parent = nullptr; // If leftmost child, parent; otherwise, left sibling.
+        Node *child = nullptr;             // Leftmost child
+        Node *next_sibling = nullptr;      // Sibling to the right
+        Node *prev_or_parent = nullptr;    // If leftmost child, parent; otherwise, left sibling.
     };
 
     Node *root = nullptr;
@@ -43,10 +44,12 @@ template <typename Key, typename Value, typename Compare> class PairingHeap {
 
     // Melds two heaps together.
     Node *meld(Node *heap1, Node *heap2) {
-        if (!heap1)
+        if (!heap1) {
             return heap2;
-        if (!heap2)
+        }
+        if (!heap2) {
             return heap1;
+        }
 
         if (comp(heap2->value, heap1->value)) {
             std::swap(heap1, heap2);
@@ -108,9 +111,9 @@ template <typename Key, typename Value, typename Compare> class PairingHeap {
             return;
         }
 
-        if (node->prev_or_parent->child == node) { // is leftmost child
+        if (node->prev_or_parent->child == node) {    // is leftmost child
             node->prev_or_parent->child = node->next_sibling;
-        } else { // is not leftmost child
+        } else {    // is not leftmost child
             node->prev_or_parent->next_sibling = node->next_sibling;
         }
         if (node->next_sibling) {
@@ -122,18 +125,19 @@ template <typename Key, typename Value, typename Compare> class PairingHeap {
 
   public:
     PairingHeap() = default;
+
     ~PairingHeap() { clear(); }
-    
-    PairingHeap(const PairingHeap& other) : num_elements(other.num_elements), comp(other.comp) {
+
+    PairingHeap(const PairingHeap &other) : num_elements(other.num_elements), comp(other.comp) {
         root = nullptr;
         if (!other.root) {
             return;
         }
 
-        std::unordered_map<const Node*, Node*> old_to_new;
-        std::vector<const Node*> q;
+        std::unordered_map<const Node *, Node *> old_to_new;
+        std::vector<const Node *> q;
         q.reserve(other.num_elements);
-        
+
         // Create root
         root = new Node{other.root->key, other.root->value};
         node_map[root->key] = root;
@@ -141,15 +145,15 @@ template <typename Key, typename Value, typename Compare> class PairingHeap {
         q.push_back(other.root);
 
         size_t head = 0;
-        while(head < q.size()) {
-            const Node* old_parent = q[head++];
-            Node* new_parent = old_to_new[old_parent];
+        while (head < q.size()) {
+            const Node *old_parent = q[head++];
+            Node *new_parent = old_to_new[old_parent];
 
             if (old_parent->child) {
-                const Node* old_child = old_parent->child;
-                
+                const Node *old_child = old_parent->child;
+
                 // First child
-                Node* new_child = new Node{old_child->key, old_child->value};
+                Node *new_child = new Node{old_child->key, old_child->value};
                 new_parent->child = new_child;
                 new_child->prev_or_parent = new_parent;
                 node_map[new_child->key] = new_child;
@@ -157,11 +161,11 @@ template <typename Key, typename Value, typename Compare> class PairingHeap {
                 q.push_back(old_child);
 
                 // Siblings
-                Node* prev_new_sibling = new_child;
-                while(old_child->next_sibling) {
+                Node *prev_new_sibling = new_child;
+                while (old_child->next_sibling) {
                     old_child = old_child->next_sibling;
                     new_child = new Node{old_child->key, old_child->value};
-                    
+
                     prev_new_sibling->next_sibling = new_child;
                     new_child->prev_or_parent = prev_new_sibling;
 
@@ -175,7 +179,7 @@ template <typename Key, typename Value, typename Compare> class PairingHeap {
         }
     }
 
-    PairingHeap& operator=(const PairingHeap& other) {
+    PairingHeap &operator=(const PairingHeap &other) {
         if (this != &other) {
             PairingHeap temp(other);
             std::swap(root, temp.root);
@@ -205,7 +209,7 @@ template <typename Key, typename Value, typename Compare> class PairingHeap {
         const auto pair = node_map.emplace(key, new_node);
         const bool &success = pair.second;
         if (!success) {
-            delete new_node; // Avoid memory leak if key already exists
+            delete new_node;    // Avoid memory leak if key already exists
             throw std::invalid_argument("Key already exists in the heap.");
         }
         root = meld(root, new_node);
@@ -248,13 +252,13 @@ template <typename Key, typename Value, typename Compare> class PairingHeap {
         Node *node = it->second;
         const Value old_value = node->value;
 
-        if (comp(new_value, old_value)) { // Decrease key
+        if (comp(new_value, old_value)) {    // Decrease key
             node->value = new_value;
             if (node != root) {
                 cut(node);
                 root = meld(root, node);
             }
-        } else if (comp(old_value, new_value)) { // Increase key
+        } else if (comp(old_value, new_value)) {    // Increase key
             node->value = new_value;
             if (node != root) {
                 cut(node);
@@ -354,13 +358,13 @@ template <typename Key, typename Value, typename Compare> class PairingHeap {
             top_keys.reserve(limit);
         }
 
-        const Value& top_value = root->value;
-        std::vector<const Node*> q;
+        const Value &top_value = root->value;
+        std::vector<const Node *> q;
         q.push_back(root);
         size_t head = 0;
 
         while (head < q.size()) {
-            const Node* current = q[head++];
+            const Node *current = q[head++];
 
             if (comp(top_value, current->value)) {
                 continue;
@@ -371,7 +375,7 @@ template <typename Key, typename Value, typename Compare> class PairingHeap {
                 return top_keys;
             }
 
-            Node* child = current->child;
+            Node *child = current->child;
             while (child) {
                 q.push_back(child);
                 child = child->next_sibling;
@@ -387,4 +391,4 @@ using MaxPairingHeap = PairingHeap<Key, Value, std::greater<Value>>;
 template <typename Key, typename Value>
 using MinPairingHeap = PairingHeap<Key, Value, std::less<Value>>;
 
-} // namespace osp
+}    // namespace osp

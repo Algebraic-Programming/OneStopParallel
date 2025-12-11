@@ -18,19 +18,17 @@ limitations under the License.
 
 #pragma once
 
-#include "osp/coarser/Coarser.hpp"
+#include <limits>
 
+#include "osp/coarser/Coarser.hpp"
 #include "osp/graph_algorithms/directed_graph_edge_desc_util.hpp"
 #include "osp/graph_algorithms/directed_graph_util.hpp"
-#include <limits>
 
 namespace osp {
 
-template<typename Graph_t_in, typename Graph_t_out>
+template <typename Graph_t_in, typename Graph_t_out>
 class hdagg_coarser : public CoarserGenContractionMap<Graph_t_in, Graph_t_out> {
-
-    static_assert(is_directed_graph_edge_desc_v<Graph_t_in>,
-                  "Graph_t_in must satisfy the directed_graph edge desc concept");
+    static_assert(is_directed_graph_edge_desc_v<Graph_t_in>, "Graph_t_in must satisfy the directed_graph edge desc concept");
     static_assert(has_hashable_edge_desc_v<Graph_t_in>, "Graph_t_in must satisfy the has_hashable_edge_desc concept");
     static_assert(has_typed_vertices_v<Graph_t_in>, "Graph_t_in must have typed vertices");
 
@@ -55,7 +53,6 @@ class hdagg_coarser : public CoarserGenContractionMap<Graph_t_in, Graph_t_out> {
     v_type_t<Graph_t_in> current_v_type = 0;
 
     void add_new_super_node(const Graph_t_in &dag_in, VertexType_in node) {
-
         v_memw_t<Graph_t_in> node_mem = dag_in.vertex_mem_weight(node);
 
         current_memory = node_mem;
@@ -72,7 +69,6 @@ class hdagg_coarser : public CoarserGenContractionMap<Graph_t_in, Graph_t_out> {
     virtual std::string getCoarserName() const override { return "hdagg_coarser"; };
 
     virtual std::vector<vertex_idx_t<Graph_t_out>> generate_vertex_contraction_map(const Graph_t_in &dag_in) override {
-
         std::vector<bool> visited(dag_in.num_vertices(), false);
         std::vector<VertexType_out> reverse_vertex_map(dag_in.num_vertices());
 
@@ -94,21 +90,20 @@ class hdagg_coarser : public CoarserGenContractionMap<Graph_t_in, Graph_t_out> {
             add_new_super_node(dag_in, vertex_map[part_ind][vert_ind]);
 
             while (vert_ind < part_size) {
-
                 const VertexType_in vert = vertex_map[part_ind][vert_ind];
                 reverse_vertex_map[vert] = current_super_node_idx;
                 bool indegree_one = true;
 
                 for (const auto &in_edge : in_edges(vert, dag_in)) {
-
-                    if (edge_mask.find(in_edge) != edge_mast_end)
+                    if (edge_mask.find(in_edge) != edge_mast_end) {
                         continue;
+                    }
 
                     unsigned count = 0;
                     for (const auto &out_edge : out_edges(source(in_edge, dag_in), dag_in)) {
-
-                        if (edge_mask.find(out_edge) != edge_mast_end)
+                        if (edge_mask.find(out_edge) != edge_mast_end) {
                             continue;
+                        }
 
                         count++;
                         if (count > 1) {
@@ -124,22 +119,21 @@ class hdagg_coarser : public CoarserGenContractionMap<Graph_t_in, Graph_t_out> {
 
                 if (indegree_one) {
                     for (const auto &in_edge : in_edges(vert, dag_in)) {
-
-                        if (edge_mask.find(in_edge) != edge_mast_end)
+                        if (edge_mask.find(in_edge) != edge_mast_end) {
                             continue;
+                        }
 
                         const auto &edge_source = source(in_edge, dag_in);
 
                         v_memw_t<Graph_t_in> node_mem = dag_in.vertex_mem_weight(edge_source);
 
-                        if (((current_memory + node_mem > memory_threshold) ||
-                             (current_work + dag_in.vertex_work_weight(edge_source) > work_threshold) ||
-                             (vertex_map[part_ind].size() >= super_node_size_threshold) ||
-                             (current_communication + dag_in.vertex_comm_weight(edge_source) >
-                              communication_threshold)) ||
+                        if (((current_memory + node_mem > memory_threshold)
+                             || (current_work + dag_in.vertex_work_weight(edge_source) > work_threshold)
+                             || (vertex_map[part_ind].size() >= super_node_size_threshold)
+                             || (current_communication + dag_in.vertex_comm_weight(edge_source) > communication_threshold))
+                            ||
                             // or node type changes
                             (current_v_type != dag_in.vertex_type(edge_source))) {
-
                             if (!visited[edge_source]) {
                                 vertex_map.push_back(std::vector<VertexType_in>({edge_source}));
                                 partition_size++;
@@ -147,7 +141,6 @@ class hdagg_coarser : public CoarserGenContractionMap<Graph_t_in, Graph_t_out> {
                             }
 
                         } else {
-
                             current_memory += node_mem;
                             current_work += dag_in.vertex_work_weight(edge_source);
                             current_communication += dag_in.vertex_comm_weight(edge_source);
@@ -158,9 +151,9 @@ class hdagg_coarser : public CoarserGenContractionMap<Graph_t_in, Graph_t_out> {
                     }
                 } else {
                     for (const auto &in_edge : in_edges(vert, dag_in)) {
-
-                        if (edge_mask.find(in_edge) != edge_mast_end)
+                        if (edge_mask.find(in_edge) != edge_mast_end) {
                             continue;
+                        }
 
                         const auto &edge_source = source(in_edge, dag_in);
 
@@ -181,13 +174,16 @@ class hdagg_coarser : public CoarserGenContractionMap<Graph_t_in, Graph_t_out> {
     }
 
     inline void set_work_threshold(v_workw_t<Graph_t_in> work_threshold_) { work_threshold = work_threshold_; }
+
     inline void set_memory_threshold(v_memw_t<Graph_t_in> memory_threshold_) { memory_threshold = memory_threshold_; }
+
     inline void set_communication_threshold(v_commw_t<Graph_t_in> communication_threshold_) {
         communication_threshold = communication_threshold_;
     }
+
     inline void set_super_node_size_threshold(std::size_t super_node_size_threshold_) {
         super_node_size_threshold = super_node_size_threshold_;
     }
 };
 
-} // namespace osp
+}    // namespace osp

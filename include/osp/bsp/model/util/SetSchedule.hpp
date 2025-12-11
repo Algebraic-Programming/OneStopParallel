@@ -37,9 +37,8 @@ namespace osp {
  *
  * @note This class assumes that the `BspInstance` and `ICommunicationScheduler` classes are defined and accessible.
  */
-template<typename Graph_t>
+template <typename Graph_t>
 class SetSchedule : public IBspSchedule<Graph_t> {
-
     static_assert(is_computational_dag_v<Graph_t>, "BspSchedule can only be used with computational DAGs.");
 
   private:
@@ -56,14 +55,12 @@ class SetSchedule : public IBspSchedule<Graph_t> {
 
     SetSchedule(const BspInstance<Graph_t> &inst, unsigned num_supersteps)
         : instance(&inst), number_of_supersteps(num_supersteps) {
-
         step_processor_vertices = std::vector<std::vector<std::unordered_set<vertex_idx>>>(
             num_supersteps, std::vector<std::unordered_set<vertex_idx>>(inst.numberOfProcessors()));
     }
 
     SetSchedule(const IBspSchedule<Graph_t> &schedule)
         : instance(&schedule.getInstance()), number_of_supersteps(schedule.numberOfSupersteps()) {
-
         step_processor_vertices = std::vector<std::vector<std::unordered_set<vertex_idx>>>(
             schedule.numberOfSupersteps(),
             std::vector<std::unordered_set<vertex_idx>>(schedule.getInstance().numberOfProcessors()));
@@ -85,12 +82,9 @@ class SetSchedule : public IBspSchedule<Graph_t> {
     unsigned numberOfSupersteps() const override { return number_of_supersteps; }
 
     void setAssignedSuperstep(vertex_idx node, unsigned superstep) override {
-
         unsigned assigned_processor = 0;
         for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
-
             for (unsigned step = 0; step < number_of_supersteps; step++) {
-
                 if (step_processor_vertices[step][proc].find(node) != step_processor_vertices[step][proc].end()) {
                     assigned_processor = proc;
                     step_processor_vertices[step][proc].erase(node);
@@ -102,12 +96,9 @@ class SetSchedule : public IBspSchedule<Graph_t> {
     }
 
     void setAssignedProcessor(vertex_idx node, unsigned processor) override {
-
         unsigned assigned_step = 0;
         for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
-
             for (unsigned step = 0; step < number_of_supersteps; step++) {
-
                 if (step_processor_vertices[step][proc].find(node) != step_processor_vertices[step][proc].end()) {
                     assigned_step = step;
                     step_processor_vertices[step][proc].erase(node);
@@ -122,13 +113,11 @@ class SetSchedule : public IBspSchedule<Graph_t> {
     /// @param node
     /// @return the assigned superstep
     unsigned assignedSuperstep(vertex_idx node) const override {
-
         for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
-
             for (unsigned step = 0; step < number_of_supersteps; step++) {
-
-                if (step_processor_vertices[step][proc].find(node) != step_processor_vertices[step][proc].end())
+                if (step_processor_vertices[step][proc].find(node) != step_processor_vertices[step][proc].end()) {
                     return step;
+                }
             }
         }
 
@@ -139,13 +128,11 @@ class SetSchedule : public IBspSchedule<Graph_t> {
     /// @param node
     /// @return the assigned processor
     unsigned assignedProcessor(vertex_idx node) const override {
-
         for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
-
             for (unsigned step = 0; step < number_of_supersteps; step++) {
-
-                if (step_processor_vertices[step][proc].find(node) != step_processor_vertices[step][proc].end())
+                if (step_processor_vertices[step][proc].find(node) != step_processor_vertices[step][proc].end()) {
                     return proc;
+                }
             }
         }
 
@@ -153,39 +140,34 @@ class SetSchedule : public IBspSchedule<Graph_t> {
     }
 
     void mergeSupersteps(unsigned start_step, unsigned end_step) {
-
         unsigned step = start_step + 1;
         for (; step <= end_step; step++) {
-
             for (unsigned proc = 0; proc < getInstance().numberOfProcessors(); proc++) {
-
                 step_processor_vertices[start_step][proc].merge(step_processor_vertices[step][proc]);
             }
         }
 
         for (; step < number_of_supersteps; step++) {
-
             for (unsigned proc = 0; proc < getInstance().numberOfProcessors(); proc++) {
-
-                step_processor_vertices[step - (end_step - start_step)][proc] =
-                    std::move(step_processor_vertices[step][proc]);
+                step_processor_vertices[step - (end_step - start_step)][proc] = std::move(step_processor_vertices[step][proc]);
             }
         }
     }
 };
 
-
-template<typename Graph_t>
-static void printSetScheduleWorkMemNodesGrid(std::ostream &os, const SetSchedule<Graph_t> &set_schedule, bool print_detailed_node_assignment = false) {
+template <typename Graph_t>
+static void printSetScheduleWorkMemNodesGrid(std::ostream &os,
+                                             const SetSchedule<Graph_t> &set_schedule,
+                                             bool print_detailed_node_assignment = false) {
     const auto &instance = set_schedule.getInstance();
     const unsigned num_processors = instance.numberOfProcessors();
     const unsigned num_supersteps = set_schedule.numberOfSupersteps();
 
     // Data structures to store aggregated work, memory, and nodes
-    std::vector<std::vector<v_workw_t<Graph_t>>> total_work_per_cell(
-        num_processors, std::vector<v_workw_t<Graph_t>>(num_supersteps, 0.0));
-    std::vector<std::vector<v_memw_t<Graph_t>>> total_memory_per_cell(
-        num_processors, std::vector<v_memw_t<Graph_t>>(num_supersteps, 0.0));
+    std::vector<std::vector<v_workw_t<Graph_t>>> total_work_per_cell(num_processors,
+                                                                     std::vector<v_workw_t<Graph_t>>(num_supersteps, 0.0));
+    std::vector<std::vector<v_memw_t<Graph_t>>> total_memory_per_cell(num_processors,
+                                                                      std::vector<v_memw_t<Graph_t>>(num_supersteps, 0.0));
     std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> nodes_per_cell(
         num_processors, std::vector<std::vector<vertex_idx_t<Graph_t>>>(num_supersteps));
 
@@ -225,21 +207,20 @@ static void printSetScheduleWorkMemNodesGrid(std::ostream &os, const SetSchedule
         os << std::left << std::setw(cell_width) << ("P " + std::to_string(p));
         for (unsigned s = 0; s < num_supersteps; ++s) {
             std::stringstream cell_content;
-            cell_content << "W:" << std::fixed << std::setprecision(0) << total_work_per_cell[p][s]
-                         << " M:" << std::fixed << std::setprecision(0) << total_memory_per_cell[p][s]
-                         << " N:" << nodes_per_cell[p][s].size(); // Add node count
+            cell_content << "W:" << std::fixed << std::setprecision(0) << total_work_per_cell[p][s] << " M:" << std::fixed
+                         << std::setprecision(0) << total_memory_per_cell[p][s]
+                         << " N:" << nodes_per_cell[p][s].size();    // Add node count
             os << std::left << std::setw(cell_width) << cell_content.str();
         }
         os << "\n";
     }
-    
-    if (print_detailed_node_assignment) {
-        os << "\n"; // Add a newline for separation between grid and detailed list
 
+    if (print_detailed_node_assignment) {
+        os << "\n";    // Add a newline for separation between grid and detailed list
 
         // Print detailed node lists below the grid
         os << "Detailed Node Assignments:\n";
-        os << std::string(30, '=') << "\n"; // Separator
+        os << std::string(30, '=') << "\n";    // Separator
         for (unsigned p = 0; p < num_processors; ++p) {
             for (unsigned s = 0; s < num_supersteps; ++s) {
                 if (!nodes_per_cell[p][s].empty()) {
@@ -254,8 +235,8 @@ static void printSetScheduleWorkMemNodesGrid(std::ostream &os, const SetSchedule
                 }
             }
         }
-        os << std::string(30, '=') << "\n"; // Separator
+        os << std::string(30, '=') << "\n";    // Separator
     }
 }
 
-} // namespace osp
+}    // namespace osp

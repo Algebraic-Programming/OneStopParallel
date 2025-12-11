@@ -22,11 +22,12 @@ limitations under the License.
 
 namespace osp {
 
-template<typename Graph_t, typename comm_cost_function_t,
-         typename MemoryConstraint_t = no_local_search_memory_constraint, unsigned window_size = 1,
-         typename cost_t = double>
+template <typename Graph_t,
+          typename comm_cost_function_t,
+          typename MemoryConstraint_t = no_local_search_memory_constraint,
+          unsigned window_size = 1,
+          typename cost_t = double>
 class kl_improver_test : public kl_improver<Graph_t, comm_cost_function_t, MemoryConstraint_t, window_size, cost_t> {
-
     using VertexType = vertex_idx_t<Graph_t>;
     using kl_move = kl_move_struct<cost_t, VertexType>;
     using heap_datastructure = MaxPairingHeap<VertexType, kl_move>;
@@ -64,9 +65,7 @@ class kl_improver_test : public kl_improver<Graph_t, comm_cost_function_t, Memor
 
     bool is_feasible() { return this->thread_data_vec[0].active_schedule_data.feasible; }
 
-    void compute_violations_test() {
-        this->active_schedule.compute_violations(this->thread_data_vec[0].active_schedule_data);
-    }
+    void compute_violations_test() { this->active_schedule.compute_violations(this->thread_data_vec[0].active_schedule_data); }
 
     node_selection_container_t &insert_gain_heap_test(const std::vector<VertexType> &n) {
         this->thread_data_vec[0].reward_penalty_strat.penalty = 0.0;
@@ -118,25 +117,23 @@ class kl_improver_test : public kl_improver<Graph_t, comm_cost_function_t, Memor
         this->apply_move(best_move, this->thread_data_vec[0]);
 
         this->thread_data_vec[0].affinity_table.trim();
-        this->update_affinities(best_move, this->thread_data_vec[0], recompute_max_gain, new_nodes, prev_work_data,
-                                prev_comm_data);
+        this->update_affinities(best_move, this->thread_data_vec[0], recompute_max_gain, new_nodes, prev_work_data, prev_comm_data);
     }
 
     auto run_inner_iteration_test() {
-
         std::map<VertexType, kl_gain_update_info> recompute_max_gain;
         std::vector<VertexType> new_nodes;
 
         this->print_heap(this->thread_data_vec[0].max_gain_heap);
 
         kl_move best_move = this->get_best_move(
-            this->thread_data_vec[0].affinity_table, this->thread_data_vec[0].lock_manager,
-            this->thread_data_vec[0].max_gain_heap); // locks best_move.node and removes it from node_selection
+            this->thread_data_vec[0].affinity_table,
+            this->thread_data_vec[0].lock_manager,
+            this->thread_data_vec[0].max_gain_heap);    // locks best_move.node and removes it from node_selection
 
 #ifdef KL_DEBUG
-        std::cout << "Best move: " << best_move.node << " gain: " << best_move.gain << ", from: " << best_move.from_step
-                  << "|" << best_move.from_proc << " to: " << best_move.to_step << "|" << best_move.to_proc
-                  << std::endl;
+        std::cout << "Best move: " << best_move.node << " gain: " << best_move.gain << ", from: " << best_move.from_step << "|"
+                  << best_move.from_proc << " to: " << best_move.to_step << "|" << best_move.to_proc << std::endl;
 #endif
 
         const auto prev_work_data = this->active_schedule.get_pre_move_work_data(best_move);
@@ -144,8 +141,7 @@ class kl_improver_test : public kl_improver<Graph_t, comm_cost_function_t, Memor
         this->apply_move(best_move, this->thread_data_vec[0]);
 
         this->thread_data_vec[0].affinity_table.trim();
-        this->update_affinities(best_move, this->thread_data_vec[0], recompute_max_gain, new_nodes, prev_work_data,
-                                prev_comm_data);
+        this->update_affinities(best_move, this->thread_data_vec[0], recompute_max_gain, new_nodes, prev_work_data, prev_comm_data);
 
 #ifdef KL_DEBUG
         std::cout << "New nodes: { ";
@@ -166,4 +162,4 @@ class kl_improver_test : public kl_improver<Graph_t, comm_cost_function_t, Memor
     void get_active_schedule_test(BspSchedule<Graph_t> &schedule) { this->active_schedule.write_schedule(schedule); }
 };
 
-} // namespace osp
+}    // namespace osp

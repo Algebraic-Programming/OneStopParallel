@@ -18,6 +18,8 @@ limitations under the License.
 
 #define BOOST_TEST_MODULE ApproxEdgeReduction
 
+#include "osp/graph_algorithms/directed_graph_top_sort.hpp"
+
 #include <boost/test/unit_test.hpp>
 #include <iostream>
 #include <vector>
@@ -25,7 +27,6 @@ limitations under the License.
 #include "osp/graph_algorithms/computational_dag_util.hpp"
 #include "osp/graph_algorithms/directed_graph_edge_desc_util.hpp"
 #include "osp/graph_algorithms/directed_graph_path_util.hpp"
-#include "osp/graph_algorithms/directed_graph_top_sort.hpp"
 #include "osp/graph_algorithms/directed_graph_util.hpp"
 #include "osp/graph_implementations/adj_list_impl/compact_sparse_graph.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
@@ -34,7 +35,6 @@ limitations under the License.
 using namespace osp;
 
 computational_dag_vector_impl_def_t constr_graph_1() {
-
     computational_dag_vector_impl_def_t graph;
 
     using vertex_idx = computational_dag_vector_impl_def_t::vertex_idx;
@@ -63,21 +63,26 @@ computational_dag_vector_impl_def_t constr_graph_1() {
 }
 
 BOOST_AUTO_TEST_CASE(test_util_1) {
-
     const computational_dag_vector_impl_def_t graph = constr_graph_1();
 
     // using vertex_idx = computational_dag_vector_impl_def_t::vertex_idx;
 }
 
 BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
-
     using VertexType = vertex_idx_t<boost_graph_int_t>;
 
-    const std::vector<std::vector<VertexType>> out(
-
-        {{7}, {}, {0}, {2}, {}, {2, 0}, {1, 2, 0}, {}, {4}, {6, 1, 5}}
-
-    );
+    const std::vector<std::vector<VertexType>> out({
+        {7},
+        {},
+        {0},
+        {2},
+        {},
+        {2, 0},
+        {1, 2, 0},
+        {},
+        {4},
+        {6, 1, 5}
+    });
     const std::vector<int> workW({1, 1, 1, 1, 2, 3, 2, 1, 1, 1});
     const std::vector<int> commW({1, 1, 1, 1, 2, 3, 2, 1, 1, 1});
 
@@ -205,7 +210,6 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     std::vector<VertexType> loc_view_top_sort;
 
     for (const auto &v : locality_top_sort_view(graph)) {
-
         loc_view_top_sort.push_back(v);
     }
 
@@ -270,14 +274,20 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 }
 
 BOOST_AUTO_TEST_CASE(top_sort_template_overload_csr) {
-
     using VertexType = vertex_idx_t<boost_graph_int_t>;
 
-    const std::vector<std::vector<VertexType>> out(
-
-        {{7}, {}, {0}, {2}, {}, {2, 0}, {1, 2, 0}, {}, {4}, {6, 1, 5}}
-
-    );
+    const std::vector<std::vector<VertexType>> out({
+        {7},
+        {},
+        {0},
+        {2},
+        {},
+        {2, 0},
+        {1, 2, 0},
+        {},
+        {4},
+        {6, 1, 5}
+    });
     const std::vector<int> workW({1, 1, 1, 1, 2, 3, 2, 1, 1, 1});
     const std::vector<int> commW({1, 1, 1, 1, 2, 3, 2, 1, 1, 1});
 

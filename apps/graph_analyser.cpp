@@ -23,11 +23,11 @@ limitations under the License.
 #include <string>
 #include <vector>
 
+#include "osp/auxiliary/io/bsp_schedule_file_writer.hpp"
+#include "osp/auxiliary/io/general_file_reader.hpp"
 #include "osp/auxiliary/misc.hpp"
 #include "osp/graph_algorithms/directed_graph_path_util.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
-#include "osp/auxiliary/io/bsp_schedule_file_writer.hpp"
-#include "osp/auxiliary/io/general_file_reader.hpp"
 
 using namespace osp;
 
@@ -151,22 +151,24 @@ int main(int argc, char *argv[]) {
                        << std::endl;
 
     for (const auto &dirEntry : std::filesystem::recursive_directory_iterator(graph_dir)) {
-        if (std::filesystem::is_directory(dirEntry))
+        if (std::filesystem::is_directory(dirEntry)) {
             continue;
+        }
 
         std::cout << "Processing: " << dirEntry << std::endl;
 
         std::string path_str = dirEntry.path();
-        
+
         ComputationalDag graph;
         bool status = file_reader::readGraph(dirEntry.path(), graph);
         if (!status) {
             std::cout << "Failed to read graph\n";
             return 1;
-        }     
+        }
 
-        if (!status)
+        if (!status) {
             continue;
+        }
 
         std::string graph_name = path_str.substr(path_str.rfind("/") + 1);
         graph_name = graph_name.substr(0, graph_name.rfind("."));

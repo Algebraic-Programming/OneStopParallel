@@ -21,7 +21,6 @@ limitations under the License.
 
 #include "osp/auxiliary/misc.hpp"
 
-
 using namespace osp;
 
 BOOST_AUTO_TEST_CASE(IntegerPowers) {

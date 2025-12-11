@@ -19,6 +19,7 @@ limitations under the License.
 #include <filesystem>
 #include <iostream>
 #include <string>
+
 #include "osp/graph_implementations/eigen_matrix_adapter/sparse_matrix.hpp"
 #include "test_suite_runner/BspScheduleTestSuiteRunner.hpp"
 
@@ -27,7 +28,6 @@ limitations under the License.
 using graph_t = osp::sparse_matrix_graph_int32_t;
 
 int main(int argc, char *argv[]) {
-
     osp::BspScheduleTestSuiteRunner<graph_t> runner;
     return runner.run(argc, argv);
 

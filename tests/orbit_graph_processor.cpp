@@ -18,28 +18,27 @@ limitations under the License.
 
 #define BOOST_TEST_MODULE OrbitGraphProcessor
 #include <boost/test/unit_test.hpp>
-#include "test_utils.hpp"
-#include "test_graphs.hpp"
-#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
-
-#include "osp/auxiliary/io/dot_graph_file_reader.hpp"
-#include "osp/dag_divider/isomorphism_divider/MerkleHashComputer.hpp"
-#include "osp/auxiliary/io/DotFileWriter.hpp"
-#include "osp/dag_divider/isomorphism_divider/OrbitGraphProcessor.hpp"
-#include "osp/graph_algorithms/directed_graph_util.hpp"
-#include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
-
 #include <filesystem>
 #include <iostream>
 #include <set>
+
+#include "osp/auxiliary/io/DotFileWriter.hpp"
+#include "osp/auxiliary/io/dot_graph_file_reader.hpp"
+#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
+#include "osp/dag_divider/isomorphism_divider/MerkleHashComputer.hpp"
+#include "osp/dag_divider/isomorphism_divider/OrbitGraphProcessor.hpp"
+#include "osp/graph_algorithms/directed_graph_util.hpp"
+#include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
+#include "test_graphs.hpp"
+#include "test_utils.hpp"
 
 using namespace osp;
 using graph_t = computational_dag_vector_impl_def_t;
 
 template <typename Graph_t>
-void check_partitioning(const Graph_t& dag, const OrbitGraphProcessor<Graph_t, Graph_t>& processor) {
-    const auto& final_coarse_graph = processor.get_final_coarse_graph();
-    const auto& final_groups = processor.get_final_groups();
+void check_partitioning(const Graph_t &dag, const OrbitGraphProcessor<Graph_t, Graph_t> &processor) {
+    const auto &final_coarse_graph = processor.get_final_coarse_graph();
+    const auto &final_groups = processor.get_final_groups();
 
     // Check that the final coarse graph is acyclic
     BOOST_CHECK(is_acyclic(final_coarse_graph));
@@ -47,10 +46,10 @@ void check_partitioning(const Graph_t& dag, const OrbitGraphProcessor<Graph_t, G
     // Check that the final groups form a valid partition of the original DAG's vertices
     std::vector<int> vertex_counts(dag.num_vertices(), 0);
     size_t total_vertices_in_groups = 0;
-    for (const auto& group : final_groups) {
-        for (const auto& subgraph : group.subgraphs) {
+    for (const auto &group : final_groups) {
+        for (const auto &subgraph : group.subgraphs) {
             total_vertices_in_groups += subgraph.size();
-            for (const auto& vertex : subgraph) {
+            for (const auto &vertex : subgraph) {
                 BOOST_REQUIRE_LT(vertex, dag.num_vertices());
                 vertex_counts[vertex]++;
             }
@@ -111,10 +110,10 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessor_SimpleMerge) {
     // Two parallel pipelines that are structurally identical
     // 0 -> 1
     // 2 -> 3
-    dag.add_vertex(10, 1, 1); // 0
-    dag.add_vertex(10, 1, 1); // 1
-    dag.add_vertex(10, 1, 1); // 2
-    dag.add_vertex(10, 1, 1); // 3
+    dag.add_vertex(10, 1, 1);    // 0
+    dag.add_vertex(10, 1, 1);    // 1
+    dag.add_vertex(10, 1, 1);    // 2
+    dag.add_vertex(10, 1, 1);    // 3
     dag.add_edge(0, 1);
     dag.add_edge(2, 3);
 
@@ -124,8 +123,8 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessor_SimpleMerge) {
     MerkleHashComputer<graph_t, bwd_merkle_node_hash_func<graph_t>, true> hasher(dag, dag);
     processor.discover_isomorphic_groups(dag, hasher);
 
-    const auto& final_coarse_graph = processor.get_final_coarse_graph();
-    const auto& final_groups = processor.get_final_groups();
+    const auto &final_coarse_graph = processor.get_final_coarse_graph();
+    const auto &final_groups = processor.get_final_groups();
 
     // Expect a single node in the final coarse graph
     BOOST_CHECK_EQUAL(final_coarse_graph.num_vertices(), 1);
@@ -146,10 +145,10 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessor_SimpleMerge) {
 BOOST_AUTO_TEST_CASE(OrbitGraphProcessor_ForkJoinNoMerge) {
     graph_t dag;
     // 0 -> {1, 2} -> 3. Nodes 1 and 2 are in the same orbit.
-    dag.add_vertex(10, 1, 1); // 0
-    dag.add_vertex(20, 1, 1); // 1
-    dag.add_vertex(20, 1, 1); // 2
-    dag.add_vertex(30, 1, 1); // 3
+    dag.add_vertex(10, 1, 1);    // 0
+    dag.add_vertex(20, 1, 1);    // 1
+    dag.add_vertex(20, 1, 1);    // 2
+    dag.add_vertex(30, 1, 1);    // 3
     dag.add_edge(0, 1);
     dag.add_edge(0, 2);
     dag.add_edge(1, 3);
@@ -162,8 +161,8 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessor_ForkJoinNoMerge) {
     MerkleHashComputer<graph_t, bwd_merkle_node_hash_func<graph_t>, true> hasher(dag, dag);
     processor.discover_isomorphic_groups(dag, hasher);
 
-    const auto& final_coarse_graph = processor.get_final_coarse_graph();
-    const auto& final_groups = processor.get_final_groups();
+    const auto &final_coarse_graph = processor.get_final_coarse_graph();
+    const auto &final_groups = processor.get_final_groups();
 
     // Expect no merges, so final graph is same as initial coarse graph.
     BOOST_CHECK_EQUAL(final_coarse_graph.num_vertices(), 3);
@@ -175,9 +174,13 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessor_ForkJoinNoMerge) {
     // Group 2: {{3}}
     size_t group_of_1_count = 0;
     size_t group_of_2_count = 0;
-    for(const auto& group : final_groups) {
-        if (group.subgraphs.size() == 1) group_of_1_count++;
-        if (group.subgraphs.size() == 2) group_of_2_count++;
+    for (const auto &group : final_groups) {
+        if (group.subgraphs.size() == 1) {
+            group_of_1_count++;
+        }
+        if (group.subgraphs.size() == 2) {
+            group_of_2_count++;
+        }
     }
     BOOST_CHECK_EQUAL(group_of_1_count, 2);
     BOOST_CHECK_EQUAL(group_of_2_count, 1);
@@ -208,12 +211,12 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessor_MultiPipelineMerge) {
     const auto dag = construct_multi_pipeline_dag<graph_t>(5, 4);
     BOOST_REQUIRE_EQUAL(dag.num_vertices(), 20);
 
-    OrbitGraphProcessor<graph_t, graph_t> processor; // Set threshold to match pipeline count
+    OrbitGraphProcessor<graph_t, graph_t> processor;    // Set threshold to match pipeline count
     MerkleHashComputer<graph_t, bwd_merkle_node_hash_func<graph_t>, true> hasher(dag, dag);
     processor.discover_isomorphic_groups(dag, hasher);
 
-    const auto& final_coarse_graph = processor.get_final_coarse_graph();
-    const auto& final_groups = processor.get_final_groups();
+    const auto &final_coarse_graph = processor.get_final_coarse_graph();
+    const auto &final_groups = processor.get_final_groups();
 
     // Expect a single node in the final coarse graph
     BOOST_CHECK_EQUAL(final_coarse_graph.num_vertices(), 1);
@@ -239,9 +242,9 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessor_LadderNoMerge) {
     OrbitGraphProcessor<graph_t, graph_t> processor;
     MerkleHashComputer<graph_t, bwd_merkle_node_hash_func<graph_t>, true> hasher(dag, dag);
     processor.discover_isomorphic_groups(dag, hasher);
-    
-    const auto& initial_coarse_graph = processor.get_coarse_graph();
-    const auto& final_coarse_graph = processor.get_final_coarse_graph();
+
+    const auto &initial_coarse_graph = processor.get_coarse_graph();
+    const auto &final_coarse_graph = processor.get_final_coarse_graph();
 
     // Expect no merges, so final graph is the same as the initial coarse graph.
     BOOST_CHECK_EQUAL(final_coarse_graph.num_vertices(), initial_coarse_graph.num_vertices());
@@ -260,7 +263,7 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessor_AsymmetricNoMerge) {
     MerkleHashComputer<graph_t, bwd_merkle_node_hash_func<graph_t>, true> hasher(dag, dag);
     processor.discover_isomorphic_groups(dag, hasher);
 
-    const auto& final_coarse_graph = processor.get_final_coarse_graph();
+    const auto &final_coarse_graph = processor.get_final_coarse_graph();
 
     // Expect all nodes to be merged into a single coarse node.
     BOOST_CHECK_EQUAL(final_coarse_graph.num_vertices(), 1);
@@ -282,7 +285,7 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessor_BinaryTreeNoMerge) {
     MerkleHashComputer<graph_t, bwd_merkle_node_hash_func<graph_t>, true> hasher(dag, dag);
     processor.discover_isomorphic_groups(dag, hasher);
 
-    const auto& final_coarse_graph = processor.get_final_coarse_graph();
+    const auto &final_coarse_graph = processor.get_final_coarse_graph();
 
     BOOST_CHECK_EQUAL(final_coarse_graph.num_vertices(), 3);
 
@@ -297,7 +300,7 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessor_ButterflyMerge) {
     MerkleHashComputer<graph_t, bwd_merkle_node_hash_func<graph_t>, true> hasher(dag, dag);
     processor.discover_isomorphic_groups(dag, hasher);
 
-    const auto& final_coarse_graph = processor.get_final_coarse_graph();
+    const auto &final_coarse_graph = processor.get_final_coarse_graph();
     BOOST_CHECK_EQUAL(final_coarse_graph.num_vertices(), 4);
 
     check_partitioning(dag, processor);

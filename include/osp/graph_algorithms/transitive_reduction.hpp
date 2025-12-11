@@ -18,12 +18,13 @@ limitations under the License.
 
 #pragma once
 
+#include <vector>
+
 #include "osp/concepts/constructable_computational_dag_concept.hpp"
 #include "osp/concepts/directed_graph_edge_desc_concept.hpp"
 #include "osp/graph_algorithms/directed_graph_path_util.hpp"
 #include "osp/graph_algorithms/directed_graph_top_sort.hpp"
 
-#include <vector>
 namespace osp {
 
 /**
@@ -58,11 +59,13 @@ void transitive_reduction_sparse(const Graph_t_in &graph_in, Graph_t_out &graph_
     // 1. Copy vertices and their properties from graph_in to graph_out.
     for (const auto &v_idx : graph_in.vertices()) {
         if constexpr (has_typed_vertices_v<Graph_t_in> && is_constructable_cdag_typed_vertex_v<Graph_t_out>) {
-            graph_out.add_vertex(graph_in.vertex_work_weight(v_idx), graph_in.vertex_comm_weight(v_idx),
-                                 graph_in.vertex_mem_weight(v_idx), graph_in.vertex_type(v_idx));
+            graph_out.add_vertex(graph_in.vertex_work_weight(v_idx),
+                                 graph_in.vertex_comm_weight(v_idx),
+                                 graph_in.vertex_mem_weight(v_idx),
+                                 graph_in.vertex_type(v_idx));
         } else {
-            graph_out.add_vertex(graph_in.vertex_work_weight(v_idx), graph_in.vertex_comm_weight(v_idx),
-                                 graph_in.vertex_mem_weight(v_idx));
+            graph_out.add_vertex(
+                graph_in.vertex_work_weight(v_idx), graph_in.vertex_comm_weight(v_idx), graph_in.vertex_mem_weight(v_idx));
         }
     }
 
@@ -121,11 +124,13 @@ void transitive_reduction_dense(const Graph_t_in &graph_in, Graph_t_out &graph_o
     // 1. Copy vertices and their properties from graph_in to graph_out.
     for (const auto &v_idx : graph_in.vertices()) {
         if constexpr (has_typed_vertices_v<Graph_t_in> && is_constructable_cdag_typed_vertex_v<Graph_t_out>) {
-            graph_out.add_vertex(graph_in.vertex_work_weight(v_idx), graph_in.vertex_comm_weight(v_idx),
-                                 graph_in.vertex_mem_weight(v_idx), graph_in.vertex_type(v_idx));
+            graph_out.add_vertex(graph_in.vertex_work_weight(v_idx),
+                                 graph_in.vertex_comm_weight(v_idx),
+                                 graph_in.vertex_mem_weight(v_idx),
+                                 graph_in.vertex_type(v_idx));
         } else {
-            graph_out.add_vertex(graph_in.vertex_work_weight(v_idx), graph_in.vertex_comm_weight(v_idx),
-                                 graph_in.vertex_mem_weight(v_idx));
+            graph_out.add_vertex(
+                graph_in.vertex_work_weight(v_idx), graph_in.vertex_comm_weight(v_idx), graph_in.vertex_mem_weight(v_idx));
         }
     }
 
@@ -169,4 +174,4 @@ void transitive_reduction_dense(const Graph_t_in &graph_in, Graph_t_out &graph_o
     }
 }
 
-} // namespace osp
+}    // namespace osp

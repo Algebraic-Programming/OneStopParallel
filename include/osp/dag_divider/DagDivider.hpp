@@ -17,9 +17,10 @@ limitations under the License.
 */
 
 #pragma once
+#include <vector>
+
 #include "osp/concepts/directed_graph_concept.hpp"
 #include "osp/concepts/graph_traits.hpp"
-#include <vector>
 
 namespace osp {
 
@@ -28,10 +29,9 @@ namespace osp {
  * @brief Divides the wavefronts of a computational DAG into consecutive groups or sections.
  *
  */
-template<typename Graph_t>
+template <typename Graph_t>
 class IDagDivider {
-
-  static_assert(is_directed_graph_v<Graph_t>, "Graph must be directed");
+    static_assert(is_directed_graph_v<Graph_t>, "Graph must be directed");
 
   public:
     virtual ~IDagDivider() = default;
@@ -50,4 +50,4 @@ class IDagDivider {
     virtual std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> divide(const Graph_t &dag) = 0;
 };
 
-} // namespace osp
+}    // namespace osp

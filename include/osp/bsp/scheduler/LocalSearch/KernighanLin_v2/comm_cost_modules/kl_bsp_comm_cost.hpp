@@ -18,20 +18,21 @@ limitations under the License.
 
 #pragma once
 
+#include <array>
+
 #include "../kl_active_schedule.hpp"
 #include "../kl_improver.hpp"
 #include "max_comm_datastructure.hpp"
-#include <array>
 
 namespace osp {
 
 // A lightweight helper to track deltas without hash maps or repeated allocations.
 // Uses a dense vector for O(1) lookups and a sparse list for fast iteration/clearing.
-template<typename comm_weight_t>
+template <typename comm_weight_t>
 struct FastDeltaTracker {
-    std::vector<comm_weight_t> dense_vals;  // Size: num_procs
-    std::vector<unsigned> dirty_procs;      // List of modified indices
-    std::vector<unsigned> proc_dirty_index; // Map proc -> index in dirty_procs (num_procs if not dirty)
+    std::vector<comm_weight_t> dense_vals;     // Size: num_procs
+    std::vector<unsigned> dirty_procs;         // List of modified indices
+    std::vector<unsigned> proc_dirty_index;    // Map proc -> index in dirty_procs (num_procs if not dirty)
     unsigned num_procs = 0;
 
     void initialize(unsigned n_procs) {
@@ -44,8 +45,9 @@ struct FastDeltaTracker {
     }
 
     inline void add(unsigned proc, comm_weight_t val) {
-        if (val == 0)
+        if (val == 0) {
             return;
+        }
 
         // If currently 0, it is becoming dirty
         if (dense_vals[proc] == 0) {
@@ -71,8 +73,9 @@ struct FastDeltaTracker {
     }
 
     inline comm_weight_t get(unsigned proc) const {
-        if (proc < dense_vals.size())
+        if (proc < dense_vals.size()) {
             return dense_vals[proc];
+        }
         return 0;
     }
 
@@ -85,9 +88,8 @@ struct FastDeltaTracker {
     }
 };
 
-template<typename Graph_t, typename cost_t, typename MemoryConstraint_t, unsigned window_size = 1>
+template <typename Graph_t, typename cost_t, typename MemoryConstraint_t, unsigned window_size = 1>
 struct kl_bsp_comm_cost_function {
-
     using VertexType = vertex_idx_t<Graph_t>;
     using kl_move = kl_move_struct<cost_t, VertexType>;
     using kl_gain_update_info = kl_update_info<VertexType>;
@@ -104,22 +106,24 @@ struct kl_bsp_comm_cost_function {
     max_comm_datastructure<Graph_t, cost_t, kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t>> comm_ds;
 
     inline cost_t get_comm_multiplier() { return 1; }
+
     inline cost_t get_max_comm_weight() { return comm_ds.max_comm_weight; }
+
     inline cost_t get_max_comm_weight_multiplied() { return comm_ds.max_comm_weight; }
+
     inline const std::string name() const { return "bsp_comm"; }
-    inline bool is_compatible(VertexType node, unsigned proc) {
-        return active_schedule->getInstance().isCompatible(node, proc);
-    }
+
+    inline bool is_compatible(VertexType node, unsigned proc) { return active_schedule->getInstance().isCompatible(node, proc); }
+
     inline unsigned start_idx(const unsigned node_step, const unsigned start_step) {
         return (node_step < window_size + start_step) ? window_size - (node_step - start_step) : 0;
     }
+
     inline unsigned end_idx(const unsigned node_step, const unsigned end_step) {
-        return (node_step + window_size <= end_step) ? window_range
-                                                     : window_range - (node_step + window_size - end_step);
+        return (node_step + window_size <= end_step) ? window_range : window_range - (node_step + window_size - end_step);
     }
 
-    void initialize(kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t> &sched,
-                    CompatibleProcessorRange<Graph_t> &p_range) {
+    void initialize(kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t> &sched, CompatibleProcessorRange<Graph_t> &p_range) {
         active_schedule = &sched;
         proc_range = &p_range;
         instance = &sched.getInstance();
@@ -135,14 +139,13 @@ struct kl_bsp_comm_cost_function {
         return comm_ds.get_pre_move_comm_data(move);
     }
 
-    void compute_send_receive_datastructures() {
-        comm_ds.compute_comm_datastructures(0, active_schedule->num_steps() - 1);
-    }
+    void compute_send_receive_datastructures() { comm_ds.compute_comm_datastructures(0, active_schedule->num_steps() - 1); }
 
-    template<bool compute_datastructures = true>
+    template <bool compute_datastructures = true>
     cost_t compute_schedule_cost() {
-        if constexpr (compute_datastructures)
+        if constexpr (compute_datastructures) {
             compute_send_receive_datastructures();
+        }
 
         cost_t total_cost = 0;
         for (unsigned step = 0; step < active_schedule->num_steps(); step++) {
@@ -165,11 +168,11 @@ struct kl_bsp_comm_cost_function {
 
     // Structure to hold thread-local scratchpads to avoid re-allocation.
     struct ScratchData {
-        std::vector<FastDeltaTracker<comm_weight_t>> send_deltas; // Size: num_steps
-        std::vector<FastDeltaTracker<comm_weight_t>> recv_deltas; // Size: num_steps
+        std::vector<FastDeltaTracker<comm_weight_t>> send_deltas;    // Size: num_steps
+        std::vector<FastDeltaTracker<comm_weight_t>> recv_deltas;    // Size: num_steps
 
-        std::vector<unsigned> active_steps; // List of steps touched in current operation
-        std::vector<bool> step_is_active;   // Fast lookup for active steps
+        std::vector<unsigned> active_steps;    // List of steps touched in current operation
+        std::vector<bool> step_is_active;      // Fast lookup for active steps
 
         std::vector<std::pair<unsigned, comm_weight_t>> child_cost_buffer;
 
@@ -181,10 +184,12 @@ struct kl_bsp_comm_cost_function {
                 active_steps.reserve(n_steps);
             }
 
-            for (auto &tracker : send_deltas)
+            for (auto &tracker : send_deltas) {
                 tracker.initialize(n_procs);
-            for (auto &tracker : recv_deltas)
+            }
+            for (auto &tracker : recv_deltas) {
                 tracker.initialize(n_procs);
+            }
 
             child_cost_buffer.reserve(n_procs);
         }
@@ -207,10 +212,13 @@ struct kl_bsp_comm_cost_function {
         }
     };
 
-    template<typename affinity_table_t>
-    void compute_comm_affinity(VertexType node, affinity_table_t &affinity_table_node, const cost_t &penalty,
-                               const cost_t &reward, const unsigned start_step, const unsigned end_step) {
-
+    template <typename affinity_table_t>
+    void compute_comm_affinity(VertexType node,
+                               affinity_table_t &affinity_table_node,
+                               const cost_t &penalty,
+                               const cost_t &reward,
+                               const unsigned start_step,
+                               const unsigned end_step) {
         // Use static thread_local scratchpad to avoid allocation in hot loop
         static thread_local ScratchData scratch;
         scratch.init(active_schedule->num_steps(), instance->numberOfProcessors());
@@ -286,14 +294,16 @@ struct kl_bsp_comm_cost_function {
         const auto &current_vec_schedule = active_schedule->getVectorSchedule();
 
         auto add_delta = [&](bool is_recv, unsigned step, unsigned proc, comm_weight_t val) {
-            if (val == 0)
+            if (val == 0) {
                 return;
+            }
             if (step < active_schedule->num_steps()) {
                 scratch.mark_active(step);
-                if (is_recv)
+                if (is_recv) {
                     scratch.recv_deltas[step].add(proc, val);
-                else
+                } else {
                     scratch.send_deltas[step].add(proc, val);
+                }
             }
         };
 
@@ -337,7 +347,6 @@ struct kl_bsp_comm_cost_function {
         // 2. Add Node to Target (Iterate candidates)
 
         for (const unsigned p_to : proc_range->compatible_processors_vertex(node)) {
-
             // --- Part A: Incoming Edges (Parents -> p_to) ---
             // These updates are specific to p_to but independent of s_to.
             // We apply them, run the s_to loop, then revert them.
@@ -352,8 +361,9 @@ struct kl_bsp_comm_cost_function {
                     unsigned count_on_p_to = comm_ds.node_lambda_map.get_proc_entry(u, p_to);
 
                     if (p_to == node_proc) {
-                        if (count_on_p_to > 0)
+                        if (count_on_p_to > 0) {
                             count_on_p_to--;
+                        }
                     }
 
                     if (count_on_p_to > 0) {
@@ -404,11 +414,8 @@ struct kl_bsp_comm_cost_function {
                 for (unsigned step : scratch.active_steps) {
                     // Check if dirty_procs is empty implies no change for this step
                     // FastDeltaTracker ensures dirty_procs is empty if all deltas summed to 0
-                    if (!scratch.send_deltas[step].dirty_procs.empty() ||
-                        !scratch.recv_deltas[step].dirty_procs.empty()) {
-
-                        total_change +=
-                            calculate_step_cost_change(step, scratch.send_deltas[step], scratch.recv_deltas[step]);
+                    if (!scratch.send_deltas[step].dirty_procs.empty() || !scratch.recv_deltas[step].dirty_procs.empty()) {
+                        total_change += calculate_step_cost_change(step, scratch.send_deltas[step], scratch.recv_deltas[step]);
                     }
                 }
 
@@ -433,11 +440,13 @@ struct kl_bsp_comm_cost_function {
                     bool already_sending_to_p_to = false;
                     unsigned count_on_p_to = comm_ds.node_lambda_map.get_proc_entry(u, p_to);
                     if (p_to == node_proc) {
-                        if (count_on_p_to > 0)
+                        if (count_on_p_to > 0) {
                             count_on_p_to--;
+                        }
                     }
-                    if (count_on_p_to > 0)
+                    if (count_on_p_to > 0) {
                         already_sending_to_p_to = true;
+                    }
 
                     if (!already_sending_to_p_to) {
                         const comm_weight_t cost = comm_w_u * instance->sendCosts(u_proc, p_to);
@@ -451,9 +460,9 @@ struct kl_bsp_comm_cost_function {
         }
     }
 
-    comm_weight_t calculate_step_cost_change(unsigned step, const FastDeltaTracker<comm_weight_t> &delta_send,
+    comm_weight_t calculate_step_cost_change(unsigned step,
+                                             const FastDeltaTracker<comm_weight_t> &delta_send,
                                              const FastDeltaTracker<comm_weight_t> &delta_recv) {
-
         comm_weight_t old_max = comm_ds.step_max_comm(step);
         comm_weight_t second_max = comm_ds.step_second_max_comm(step);
         unsigned old_max_count = comm_ds.step_max_comm_count(step);
@@ -469,10 +478,12 @@ struct kl_bsp_comm_cost_function {
             comm_weight_t current_val = comm_ds.step_proc_send(step, proc);
             comm_weight_t new_val = current_val + delta;
 
-            if (new_val > new_global_max)
+            if (new_val > new_global_max) {
                 new_global_max = new_val;
-            if (delta < 0 && current_val == old_max)
+            }
+            if (delta < 0 && current_val == old_max) {
                 reduced_max_instances++;
+            }
         }
 
         // 2. Check modified receives (Iterate sparse dirty list)
@@ -482,10 +493,12 @@ struct kl_bsp_comm_cost_function {
             comm_weight_t current_val = comm_ds.step_proc_receive(step, proc);
             comm_weight_t new_val = current_val + delta;
 
-            if (new_val > new_global_max)
+            if (new_val > new_global_max) {
                 new_global_max = new_val;
-            if (delta < 0 && current_val == old_max)
+            }
+            if (delta < 0 && current_val == old_max) {
                 reduced_max_instances++;
+            }
         }
 
         // 3. Determine result
@@ -498,21 +511,25 @@ struct kl_bsp_comm_cost_function {
         return std::max(new_global_max, second_max) - old_max;
     }
 
-    template<typename thread_data_t>
-    void update_node_comm_affinity(const kl_move &move, thread_data_t &thread_data, const cost_t &penalty,
-                                   const cost_t &reward, std::map<VertexType, kl_gain_update_info> &,
+    template <typename thread_data_t>
+    void update_node_comm_affinity(const kl_move &move,
+                                   thread_data_t &thread_data,
+                                   const cost_t &penalty,
+                                   const cost_t &reward,
+                                   std::map<VertexType, kl_gain_update_info> &,
                                    std::vector<VertexType> &new_nodes) {
-
         const unsigned start_step = thread_data.start_step;
         const unsigned end_step = thread_data.end_step;
 
         for (const auto &target : instance->getComputationalDag().children(move.node)) {
             const unsigned target_step = active_schedule->assigned_superstep(target);
-            if (target_step < start_step || target_step > end_step)
+            if (target_step < start_step || target_step > end_step) {
                 continue;
+            }
 
-            if (thread_data.lock_manager.is_locked(target))
+            if (thread_data.lock_manager.is_locked(target)) {
                 continue;
+            }
 
             if (not thread_data.affinity_table.is_selected(target)) {
                 new_nodes.push_back(target);
@@ -590,11 +607,13 @@ struct kl_bsp_comm_cost_function {
 
         for (const auto &source : instance->getComputationalDag().parents(move.node)) {
             const unsigned source_step = active_schedule->assigned_superstep(source);
-            if (source_step < start_step || source_step > end_step)
+            if (source_step < start_step || source_step > end_step) {
                 continue;
+            }
 
-            if (thread_data.lock_manager.is_locked(source))
+            if (thread_data.lock_manager.is_locked(source)) {
                 continue;
+            }
 
             if (not thread_data.affinity_table.is_selected(source)) {
                 new_nodes.push_back(source);
@@ -666,4 +685,4 @@ struct kl_bsp_comm_cost_function {
     }
 };
 
-} // namespace osp
+}    // namespace osp

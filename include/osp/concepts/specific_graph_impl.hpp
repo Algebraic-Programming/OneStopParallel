@@ -34,10 +34,10 @@ namespace osp {
  *
  * @tparam T The graph type.
  */
-template<typename T, typename = void>
+template <typename T, typename = void>
 struct is_Compact_Sparse_Graph : std::false_type {};
 
-template<typename T>
+template <typename T>
 inline constexpr bool is_Compact_Sparse_Graph_v = is_Compact_Sparse_Graph<T>::value;
 
 /**
@@ -45,10 +45,10 @@ inline constexpr bool is_Compact_Sparse_Graph_v = is_Compact_Sparse_Graph<T>::va
  *
  * @tparam T The graph type.
  */
-template<typename T, typename = void>
+template <typename T, typename = void>
 struct is_Compact_Sparse_Graph_reorder : std::false_type {};
 
-template<typename T>
+template <typename T>
 inline constexpr bool is_Compact_Sparse_Graph_reorder_v = is_Compact_Sparse_Graph_reorder<T>::value;
 
-} // namespace osp
+}    // namespace osp

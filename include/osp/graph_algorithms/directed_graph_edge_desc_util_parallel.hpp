@@ -19,18 +19,18 @@ limitations under the License.
 #pragma once
 
 #include <omp.h>
+
 #include <queue>
 #include <unordered_set>
 #include <vector>
 
-#include "osp/concepts/directed_graph_concept.hpp"
 #include "directed_graph_edge_desc_util.hpp"
+#include "osp/concepts/directed_graph_concept.hpp"
 
 namespace osp {
 
-template<typename Graph_t>
+template <typename Graph_t>
 std::unordered_set<edge_desc_t<Graph_t>> long_edges_in_triangles_parallel(const Graph_t &graph) {
-
     static_assert(is_directed_graph_edge_desc_v<Graph_t>, "Graph_t must satisfy the directed_graph edge desc concept");
     static_assert(has_hashable_edge_desc_v<Graph_t>, "Graph_t must satisfy the has_hashable_edge_desc concept");
 
@@ -43,7 +43,7 @@ std::unordered_set<edge_desc_t<Graph_t>> long_edges_in_triangles_parallel(const 
 
 #pragma omp parallel for schedule(dynamic, 4)
     for (vertex_idx_t<Graph_t> vertex = 0; vertex < graph.num_vertices(); ++vertex) {
-    // for (const auto &vertex : graph.vertices()) {
+        // for (const auto &vertex : graph.vertices()) {
 
         const unsigned int proc = static_cast<unsigned>(omp_get_thread_num());
 
@@ -53,11 +53,9 @@ std::unordered_set<edge_desc_t<Graph_t>> long_edges_in_triangles_parallel(const 
         }
 
         for (const auto &edge : out_edges(vertex, graph)) {
-
             const auto &child = target(edge, graph);
 
             for (const auto &parent : graph.parents(child)) {
-
                 if (children_set.find(parent) != children_set.cend()) {
                     deleted_edges_thread[proc].emplace_back(edge);
                     break;
@@ -75,4 +73,4 @@ std::unordered_set<edge_desc_t<Graph_t>> long_edges_in_triangles_parallel(const 
     return long_edges;
 }
 
-} // namespace osp
+}    // namespace osp

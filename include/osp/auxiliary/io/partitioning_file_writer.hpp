@@ -18,50 +18,52 @@ limitations under the License.
 
 #pragma once
 
-#include "osp/partitioning/model/partitioning.hpp"
-#include "osp/partitioning/model/partitioning_replication.hpp"
 #include <fstream>
 #include <iostream>
 
-namespace osp { namespace file_writer {
+#include "osp/partitioning/model/partitioning.hpp"
+#include "osp/partitioning/model/partitioning_replication.hpp"
 
-template<typename hypergraph_t>
+namespace osp {
+namespace file_writer {
+
+template <typename hypergraph_t>
 void write_txt(std::ostream &os, const Partitioning<hypergraph_t> &partition) {
-
     using index_type = typename hypergraph_t::vertex_idx;
 
     os << "%% Partitioning for " << partition.getInstance().getNumberOfPartitions() << " parts." << std::endl;
 
-    for(index_type node = 0; node < partition.getInstance().getHypergraph().num_vertices(); ++node)
+    for (index_type node = 0; node < partition.getInstance().getHypergraph().num_vertices(); ++node) {
         os << node << " " << partition.assignedPartition(node) << std::endl;
+    }
 }
 
-template<typename hypergraph_t>
+template <typename hypergraph_t>
 void write_txt(const std::string &filename, const Partitioning<hypergraph_t> &partition) {
     std::ofstream os(filename);
     write_txt(os, partition);
 }
 
-template<typename hypergraph_t>
+template <typename hypergraph_t>
 void write_txt(std::ostream &os, const PartitioningWithReplication<hypergraph_t> &partition) {
-
     using index_type = typename hypergraph_t::vertex_idx;
 
     os << "%% Partitioning for " << partition.getInstance().getNumberOfPartitions() << " parts with replication." << std::endl;
 
-    for(index_type node = 0; node < partition.getInstance().getHypergraph().num_vertices(); ++node)
-    {
+    for (index_type node = 0; node < partition.getInstance().getHypergraph().num_vertices(); ++node) {
         os << node;
-        for(unsigned part : partition.assignedPartitions(node))
+        for (unsigned part : partition.assignedPartitions(node)) {
             os << " " << part;
+        }
         os << std::endl;
     }
 }
 
-template<typename hypergraph_t>
+template <typename hypergraph_t>
 void write_txt(const std::string &filename, const PartitioningWithReplication<hypergraph_t> &partition) {
     std::ofstream os(filename);
     write_txt(os, partition);
 }
 
-}} // namespace osp::file_writer
+}    // namespace file_writer
+}    // namespace osp

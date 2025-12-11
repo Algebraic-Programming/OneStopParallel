@@ -19,13 +19,13 @@ limitations under the License.
 #pragma once
 
 #include "AbstractTestSuiteRunner.hpp"
-#include "osp/pebbling/PebblingSchedule.hpp"
-#include "StringToScheduler/run_pebbler.hpp" 
 #include "StatsModules/IStatsModule.hpp"
+#include "StringToScheduler/run_pebbler.hpp"
+#include "osp/pebbling/PebblingSchedule.hpp"
 
 namespace osp {
 
-template<typename Graph_t>
+template <typename Graph_t>
 class BasicPebblingStatsModule : public IStatisticModule<PebblingSchedule<Graph_t>> {
   public:
   private:
@@ -44,17 +44,18 @@ class BasicPebblingStatsModule : public IStatisticModule<PebblingSchedule<Graph_
     }
 };
 
-template<typename concrete_graph_t>
+template <typename concrete_graph_t>
 class PebblingTestSuiteRunner : public AbstractTestSuiteRunner<PebblingSchedule<concrete_graph_t>, concrete_graph_t> {
   private:
     bool use_memory_constraint;
 
   protected:
-        RETURN_STATUS compute_target_object_impl(const BspInstance<concrete_graph_t> &instance, std::unique_ptr<PebblingSchedule<concrete_graph_t>>& schedule, const pt::ptree &algo_config,
+    RETURN_STATUS compute_target_object_impl(const BspInstance<concrete_graph_t> &instance,
+                                             std::unique_ptr<PebblingSchedule<concrete_graph_t>> &schedule,
+                                             const pt::ptree &algo_config,
                                              long long &computation_time_ms) override {
-        
         schedule = std::make_unique<PebblingSchedule<concrete_graph_t>>(instance);
-        
+
         const auto start_time = std::chrono::high_resolution_clock::now();
 
         RETURN_STATUS status = run_pebbler(this->parser, algo_config, *schedule);
@@ -84,4 +85,4 @@ class PebblingTestSuiteRunner : public AbstractTestSuiteRunner<PebblingSchedule<
     PebblingTestSuiteRunner() : AbstractTestSuiteRunner<PebblingSchedule<concrete_graph_t>, concrete_graph_t>() {}
 };
 
-} // namespace osp
+}    // namespace osp
