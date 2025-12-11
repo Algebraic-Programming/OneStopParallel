@@ -59,7 +59,9 @@ class CSchedule {
     void convertToBspSchedule(const BspInstance<Graph_t> &instance,
                               const std::vector<std::deque<vertex_idx>> &procAssignmentLists,
                               BspSchedule<Graph_t> &bsp_schedule) {
-        for (const auto &v : instance.vertices()) { bsp_schedule.setAssignedProcessor(v, proc[v]); }
+        for (const auto &v : instance.vertices()) {
+            bsp_schedule.setAssignedProcessor(v, proc[v]);
+        }
 
         const vertex_idx N = instance.numberOfVertices();
         const unsigned P = instance.numberOfProcessors();
@@ -69,7 +71,9 @@ class CSchedule {
 
         std::vector<decltype(procAssignmentLists[0].cbegin())> done(P), limit(P);
 
-        for (unsigned j = 0; j < P; ++j) { done[j] = procAssignmentLists[j].cbegin(); }
+        for (unsigned j = 0; j < P; ++j) {
+            done[j] = procAssignmentLists[j].cbegin();
+        }
 
         while (totalNodesDone < N) {
             // create next superstep
@@ -80,12 +84,18 @@ class CSchedule {
                     bool cut = false;
 
                     for (const auto &source : instance.getComputationalDag().parents(node)) {
-                        if (!processed[source] && proc[source] != proc[node]) { cut = true; }
+                        if (!processed[source] && proc[source] != proc[node]) {
+                            cut = true;
+                        }
                     }
 
-                    if (cut) { break; }
+                    if (cut) {
+                        break;
+                    }
                 }
-                if (limit[j] != procAssignmentLists[j].end() && time[*limit[j]] < timeLimit) { timeLimit = time[*limit[j]]; }
+                if (limit[j] != procAssignmentLists[j].end() && time[*limit[j]] < timeLimit) {
+                    timeLimit = time[*limit[j]];
+                }
             }
 
             for (unsigned j = 0; j < P; ++j) {

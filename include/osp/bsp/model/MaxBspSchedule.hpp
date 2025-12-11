@@ -107,7 +107,9 @@ class MaxBspSchedule : public BspSchedule<Graph_t> {
                                                                    : max_comm_per_step[step - 1U];
             costs += std::max(step_comm_cost, max_work_per_step[step]);
 
-            if (step_comm_cost > static_cast<v_commw_t<Graph_t>>(0)) { costs += this->instance->synchronisationCosts(); }
+            if (step_comm_cost > static_cast<v_commw_t<Graph_t>>(0)) {
+                costs += this->instance->synchronisationCosts();
+            }
         }
         return costs;
     }

@@ -91,12 +91,16 @@ BOOST_AUTO_TEST_CASE(test_instance_bicgstab) {
 
     std::cout << "Compatible processors type 0: " << std::endl;
 
-    for (const auto &p : range.compatible_processors_type(0)) { std::cout << p; }
+    for (const auto &p : range.compatible_processors_type(0)) {
+        std::cout << p;
+    }
     std::cout << std::endl;
 
     std::cout << "Compatible processors type 1: " << std::endl;
 
-    for (const auto &p : range.compatible_processors_type(1)) { std::cout << p; }
+    for (const auto &p : range.compatible_processors_type(1)) {
+        std::cout << p;
+    }
     std::cout << std::endl;
 
     BOOST_CHECK_EQUAL(range.compatible_processors_vertex(0).size(), 1);

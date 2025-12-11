@@ -116,7 +116,9 @@ class boost_graph {
         assert(out_.size() == workW_.size());
         assert(out_.size() == commW_.size());
 
-        for (size_t i = 0; i < out_.size(); ++i) { add_vertex(workW_[i], commW_[i]); }
+        for (size_t i = 0; i < out_.size(); ++i) {
+            add_vertex(workW_[i], commW_[i]);
+        }
         for (size_t i = 0; i < out_.size(); ++i) {
             for (const auto &j : out_[i]) {
                 assert(comm_edge_W.find(std::make_pair(i, j)) != comm_edge_W.cend());
@@ -135,9 +137,13 @@ class boost_graph {
         assert(out_.size() == workW_.size());
         assert(out_.size() == commW_.size());
 
-        for (size_t i = 0; i < out_.size(); ++i) { add_vertex(workW_[i], commW_[i]); }
         for (size_t i = 0; i < out_.size(); ++i) {
-            for (const auto &j : out_[i]) { add_edge(i, j); }
+            add_vertex(workW_[i], commW_[i]);
+        }
+        for (size_t i = 0; i < out_.size(); ++i) {
+            for (const auto &j : out_[i]) {
+                add_edge(i, j);
+            }
         }
         updateNumberOfVertexTypes();
     }
@@ -153,9 +159,13 @@ class boost_graph {
         assert(out_.size() == commW_.size());
         assert(out_.size() == nodeType_.size());
 
-        for (size_t i = 0; i < out_.size(); ++i) { add_vertex(workW_[i], commW_[i], 0, nodeType_[i]); }
         for (size_t i = 0; i < out_.size(); ++i) {
-            for (const auto &j : out_[i]) { add_edge(i, j); }
+            add_vertex(workW_[i], commW_[i], 0, nodeType_[i]);
+        }
+        for (size_t i = 0; i < out_.size(); ++i) {
+            for (const auto &j : out_[i]) {
+                add_edge(i, j);
+            }
         }
         updateNumberOfVertexTypes();
     }
@@ -210,7 +220,9 @@ class boost_graph {
     void updateNumberOfVertexTypes() {
         number_of_vertex_types = 0;
         for (const auto &v : vertices()) {
-            if (vertex_type(v) >= number_of_vertex_types) { number_of_vertex_types = vertex_type(v) + 1; }
+            if (vertex_type(v) >= number_of_vertex_types) {
+                number_of_vertex_types = vertex_type(v) + 1;
+            }
         }
     }
 

@@ -72,8 +72,12 @@ class VariancePartitioner : public LoadBalancerBase<Graph_t, Interpolation_t> {
         for (auto r_iter = top_order.rbegin(); r_iter != top_order.crend(); r_iter++) {
             double temp = 0;
             double max_priority = 0;
-            for (const auto &child : graph.children(*r_iter)) { max_priority = std::max(work_variance[child], max_priority); }
-            for (const auto &child : graph.children(*r_iter)) { temp += std::exp(power * (work_variance[child] - max_priority)); }
+            for (const auto &child : graph.children(*r_iter)) {
+                max_priority = std::max(work_variance[child], max_priority);
+            }
+            for (const auto &child : graph.children(*r_iter)) {
+                temp += std::exp(power * (work_variance[child] - max_priority));
+            }
             temp = std::log(temp) / power + max_priority;
 
             double node_weight = std::log(graph.vertex_work_weight(*r_iter));
@@ -155,7 +159,9 @@ class VariancePartitioner : public LoadBalancerBase<Graph_t, Interpolation_t> {
                 // std::cout << "\nCall for new superstep - unable to schedule.\n";
             } else {
                 if constexpr (use_memory_constraint) {
-                    if (num_unable_to_partition_node_loop >= 2) { return RETURN_STATUS::ERROR; }
+                    if (num_unable_to_partition_node_loop >= 2) {
+                        return RETURN_STATUS::ERROR;
+                    }
                 }
             }
 
@@ -204,7 +210,9 @@ class VariancePartitioner : public LoadBalancerBase<Graph_t, Interpolation_t> {
                 free_processors.clear();
 
                 if constexpr (use_memory_constraint) {
-                    for (unsigned proc = 0; proc < n_processors; proc++) { memory_constraint.reset(proc); }
+                    for (unsigned proc = 0; proc < n_processors; proc++) {
+                        memory_constraint.reset(proc);
+                    }
                 }
 
                 superstep += 1;
@@ -217,7 +225,9 @@ class VariancePartitioner : public LoadBalancerBase<Graph_t, Interpolation_t> {
             std::vector<unsigned> processors_in_order = LoadBalancerBase<Graph_t, Interpolation_t>::computeProcessorPriority(
                 superstep_partition_work, total_partition_work, total_work, instance, slack);
             for (unsigned &proc : processors_in_order) {
-                if ((free_processors.find(proc)) != free_processors.cend()) { continue; }
+                if ((free_processors.find(proc)) != free_processors.cend()) {
+                    continue;
+                }
 
                 // Check for too many free processors - needed here because free processors may not have been detected
                 // yet
@@ -238,7 +248,9 @@ class VariancePartitioner : public LoadBalancerBase<Graph_t, Interpolation_t> {
                 VertexType next_node;
                 for (auto vertex_prior_pair_iter = procReady[proc].begin(); vertex_prior_pair_iter != procReady[proc].cend();
                      vertex_prior_pair_iter++) {
-                    if (assigned_a_node) { break; }
+                    if (assigned_a_node) {
+                        break;
+                    }
 
                     if constexpr (use_memory_constraint) {
                         if (memory_constraint.can_add(vertex_prior_pair_iter->first, proc)) {
@@ -254,7 +266,9 @@ class VariancePartitioner : public LoadBalancerBase<Graph_t, Interpolation_t> {
                 for (auto vertex_prior_pair_iter = procReadyPrior[proc].begin();
                      vertex_prior_pair_iter != procReadyPrior[proc].cend();
                      vertex_prior_pair_iter++) {
-                    if (assigned_a_node) { break; }
+                    if (assigned_a_node) {
+                        break;
+                    }
 
                     if constexpr (use_memory_constraint) {
                         if (memory_constraint.can_add(vertex_prior_pair_iter->first, proc)) {
@@ -269,7 +283,9 @@ class VariancePartitioner : public LoadBalancerBase<Graph_t, Interpolation_t> {
 
                 for (auto vertex_prior_pair_iter = allReady.begin(); vertex_prior_pair_iter != allReady.cend();
                      vertex_prior_pair_iter++) {
-                    if (assigned_a_node) { break; }
+                    if (assigned_a_node) {
+                        break;
+                    }
 
                     if constexpr (use_memory_constraint) {
                         if (memory_constraint.can_add(vertex_prior_pair_iter->first, proc)) {
@@ -295,7 +311,9 @@ class VariancePartitioner : public LoadBalancerBase<Graph_t, Interpolation_t> {
                     total_partition_work[proc] += graph.vertex_work_weight(next_node);
                     superstep_partition_work[proc] += graph.vertex_work_weight(next_node);
 
-                    if constexpr (use_memory_constraint) { memory_constraint.add(next_node, proc); }
+                    if constexpr (use_memory_constraint) {
+                        memory_constraint.add(next_node, proc);
+                    }
 
                     // Deletion from Queues
                     std::pair<VertexType, double> pair = std::make_pair(next_node, variance_priorities[next_node]);
@@ -332,7 +350,9 @@ class VariancePartitioner : public LoadBalancerBase<Graph_t, Interpolation_t> {
                     break;
                 }
             }
-            if (!assigned_a_node) { num_unable_to_partition_node_loop += 1; }
+            if (!assigned_a_node) {
+                num_unable_to_partition_node_loop += 1;
+            }
         }
 
         return RETURN_STATUS::OSP_SUCCESS;

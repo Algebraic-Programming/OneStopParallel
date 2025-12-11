@@ -50,7 +50,9 @@ class GreedyChildren : public Scheduler<Graph_t> {
 
         std::vector<VertexType> predecessors_count(instance.numberOfVertices(), 0);
         std::multiset<std::pair<unsigned, VertexType>, std::greater<>> next;
-        for (const VertexType &i : source_vertices_view(graph)) { next.emplace(graph.out_degree(i), i); }
+        for (const VertexType &i : source_vertices_view(graph)) {
+            next.emplace(graph.out_degree(i), i);
+        }
 
         while (!next.empty()) {
             std::unordered_set<VertexType> nodes_assigned_this_superstep;
@@ -83,7 +85,9 @@ class GreedyChildren : public Scheduler<Graph_t> {
                         }
                     }
 
-                    if (failed_to_allocate) { continue; }
+                    if (failed_to_allocate) {
+                        continue;
+                    }
 
                     sched.setAssignedSuperstep(node, superstep_counter);
                     if (processor_set) {
@@ -107,14 +111,20 @@ class GreedyChildren : public Scheduler<Graph_t> {
                     std::vector<VertexType> new_nodes;
                     for (const auto &chld : graph.children(node)) {
                         predecessors_count[chld]++;
-                        if (predecessors_count[chld] == graph.in_degree(chld)) { new_nodes.emplace_back(chld); }
+                        if (predecessors_count[chld] == graph.in_degree(chld)) {
+                            new_nodes.emplace_back(chld);
+                        }
                     }
                     next.erase(iter);
-                    for (const auto &vrt : new_nodes) { next.emplace(graph.out_degree(vrt), vrt); }
+                    for (const auto &vrt : new_nodes) {
+                        next.emplace(graph.out_degree(vrt), vrt);
+                    }
                     node_added = true;
                     break;
                 }
-                if (ensure_enough_sources && few_sources && next.size() >= instance.numberOfProcessors()) { break; }
+                if (ensure_enough_sources && few_sources && next.size() >= instance.numberOfProcessors()) {
+                    break;
+                }
             }
 
             superstep_counter++;

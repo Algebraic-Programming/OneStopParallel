@@ -117,7 +117,9 @@ BOOST_AUTO_TEST_CASE(FullGraphIsSCCTest) {
 
 BOOST_AUTO_TEST_CASE(MultipleSCCsTest) {
     graph g;
-    for (int i = 0; i < 8; ++i) { g.add_vertex(1, 1, 1); }
+    for (int i = 0; i < 8; ++i) {
+        g.add_vertex(1, 1, 1);
+    }
 
     g.add_edge(0, 1);
     g.add_edge(1, 2);
@@ -145,7 +147,9 @@ BOOST_AUTO_TEST_CASE(MultipleSCCsTest) {
 
 BOOST_AUTO_TEST_CASE(ComplexGraphFromPaperTest) {
     graph g;
-    for (int i = 0; i < 8; ++i) { g.add_vertex(1, 1, 1); }
+    for (int i = 0; i < 8; ++i) {
+        g.add_vertex(1, 1, 1);
+    }
     g.add_edge(0, 1);
     g.add_edge(1, 2);
     g.add_edge(1, 4);

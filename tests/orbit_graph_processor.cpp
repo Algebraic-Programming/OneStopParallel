@@ -56,7 +56,9 @@ void check_partitioning(const Graph_t &dag, const OrbitGraphProcessor<Graph_t, G
         }
     }
     BOOST_CHECK_EQUAL(total_vertices_in_groups, dag.num_vertices());
-    for (size_t i = 0; i < dag.num_vertices(); ++i) { BOOST_CHECK_EQUAL(vertex_counts[i], 1); }
+    for (size_t i = 0; i < dag.num_vertices(); ++i) {
+        BOOST_CHECK_EQUAL(vertex_counts[i], 1);
+    }
 }
 
 // BOOST_AUTO_TEST_CASE(OrbitGraphProcessor_SmokeTest) {
@@ -173,8 +175,12 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessor_ForkJoinNoMerge) {
     size_t group_of_1_count = 0;
     size_t group_of_2_count = 0;
     for (const auto &group : final_groups) {
-        if (group.subgraphs.size() == 1) { group_of_1_count++; }
-        if (group.subgraphs.size() == 2) { group_of_2_count++; }
+        if (group.subgraphs.size() == 1) {
+            group_of_1_count++;
+        }
+        if (group.subgraphs.size() == 2) {
+            group_of_2_count++;
+        }
     }
     BOOST_CHECK_EQUAL(group_of_1_count, 2);
     BOOST_CHECK_EQUAL(group_of_2_count, 1);

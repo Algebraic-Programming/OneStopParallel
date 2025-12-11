@@ -61,7 +61,9 @@ class MerkleHashComputer : public HashComputer<vertex_idx_t<Graph_t>> {
         std::sort(parent_child_hashes.begin(), parent_child_hashes.end());
 
         std::size_t hash = node_hash_func(v);
-        for (const auto &pc_hash : parent_child_hashes) { hash_combine(hash, pc_hash); }
+        for (const auto &pc_hash : parent_child_hashes) {
+            hash_combine(hash, pc_hash);
+        }
 
         vertex_hashes[v] = hash;
 
@@ -78,7 +80,9 @@ class MerkleHashComputer : public HashComputer<vertex_idx_t<Graph_t>> {
 
         for (const VertexType &v : top_sort_view(graph)) {
             std::vector<std::size_t> parent_hashes;
-            for (const VertexType &parent : graph.parents(v)) { parent_hashes.push_back(vertex_hashes[parent]); }
+            for (const VertexType &parent : graph.parents(v)) {
+                parent_hashes.push_back(vertex_hashes[parent]);
+            }
             compute_hashes_helper(v, parent_hashes);
         }
     }
@@ -91,7 +95,9 @@ class MerkleHashComputer : public HashComputer<vertex_idx_t<Graph_t>> {
         for (auto it = top_sort.cbegin(); it != top_sort.cend(); ++it) {
             const VertexType &v = *it;
             std::vector<std::size_t> child_hashes;
-            for (const VertexType &child : graph.children(v)) { child_hashes.push_back(vertex_hashes[child]); }
+            for (const VertexType &child : graph.children(v)) {
+                child_hashes.push_back(vertex_hashes[child]);
+            }
             compute_hashes_helper(v, child_hashes);
         }
     }
@@ -123,7 +129,9 @@ class MerkleHashComputer : public HashComputer<vertex_idx_t<Graph_t>> {
 template <typename Graph_t, typename node_hash_func_t = uniform_node_hash_func<vertex_idx_t<Graph_t>>, bool Forward = true>
 bool are_isomorphic_by_merkle_hash(const Graph_t &g1, const Graph_t &g2) {
     // Basic check: Different numbers of vertices or edges mean they can't be isomorphic.
-    if (g1.num_vertices() != g2.num_vertices() || g1.num_edges() != g2.num_edges()) { return false; }
+    if (g1.num_vertices() != g2.num_vertices() || g1.num_edges() != g2.num_edges()) {
+        return false;
+    }
 
     // --- Compute Hashes in the Specified Direction ---
     MerkleHashComputer<Graph_t, node_hash_func_t, Forward> hash1(g1);
@@ -132,14 +140,18 @@ bool are_isomorphic_by_merkle_hash(const Graph_t &g1, const Graph_t &g2) {
     const auto &orbits1 = hash1.get_orbits();
     const auto &orbits2 = hash2.get_orbits();
 
-    if (orbits1.size() != orbits2.size()) { return false; }
+    if (orbits1.size() != orbits2.size()) {
+        return false;
+    }
 
     for (const auto &pair : orbits1) {
         const std::size_t hash = pair.first;
         const auto &orbit_vec = pair.second;
 
         auto it = orbits2.find(hash);
-        if (it == orbits2.end() || it->second.size() != orbit_vec.size()) { return false; }
+        if (it == orbits2.end() || it->second.size() != orbit_vec.size()) {
+            return false;
+        }
     }
 
     return true;

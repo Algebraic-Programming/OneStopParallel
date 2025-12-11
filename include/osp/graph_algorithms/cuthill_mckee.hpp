@@ -74,10 +74,14 @@ std::vector<vertex_idx_t<Graph_t>> cuthill_mckee_wavefront(const Graph_t &dag, b
                 result[current_wavefront[i].vertex] = node_counter + i;
             }
         } else {
-            for (size_t i = 0; i < current_wavefront.size(); i++) { result[node_counter + i] = current_wavefront[i].vertex; }
+            for (size_t i = 0; i < current_wavefront.size(); i++) {
+                result[node_counter + i] = current_wavefront[i].vertex;
+            }
         }
 
-        if (node_counter + static_cast<VertexType>(current_wavefront.size()) == dag.num_vertices()) { break; }
+        if (node_counter + static_cast<VertexType>(current_wavefront.size()) == dag.num_vertices()) {
+            break;
+        }
 
         for (VertexType i = 0; i < static_cast<VertexType>(current_wavefront.size()); i++) {
             for (const auto &child : dag.children(current_wavefront[i].vertex)) {
@@ -164,12 +168,18 @@ std::vector<vertex_idx_t<Graph_t>> cuthill_mckee_undirected(const Graph_t &dag, 
         std::sort(current_level.begin(), current_level.end());
 
         if (perm) {
-            for (VertexType i = 0; i < current_level.size(); i++) { cm_order[current_level[i].vertex] = node_counter + i; }
+            for (VertexType i = 0; i < current_level.size(); i++) {
+                cm_order[current_level[i].vertex] = node_counter + i;
+            }
         } else {
-            for (VertexType i = 0; i < current_level.size(); i++) { cm_order[node_counter + i] = current_level[i].vertex; }
+            for (VertexType i = 0; i < current_level.size(); i++) {
+                cm_order[node_counter + i] = current_level[i].vertex;
+            }
         }
 
-        if (node_counter + current_level.size() == dag.num_vertices()) { break; }
+        if (node_counter + current_level.size() == dag.num_vertices()) {
+            break;
+        }
 
         std::unordered_map<VertexType, VertexType> node_priority;
 
@@ -250,7 +260,9 @@ inline std::vector<vertex_idx_t<Graph_t>> GetTopOrderCuthillMcKeeWavefront(const
     if (dag.num_vertices() > 0) {
         std::vector<vertex_idx_t<Graph_t>> priority = cuthill_mckee_wavefront(dag);
         order.reserve(dag.num_vertices());
-        for (const auto &v : priority_vec_top_sort_view(dag, priority)) { order.push_back(v); }
+        for (const auto &v : priority_vec_top_sort_view(dag, priority)) {
+            order.push_back(v);
+        }
     }
     return order;
 }
@@ -262,7 +274,9 @@ inline std::vector<vertex_idx_t<Graph_t>> GetTopOrderCuthillMcKeeUndirected(cons
     if (dag.num_vertices() > 0) {
         std::vector<vertex_idx_t<Graph_t>> priority = cuthill_mckee_undirected(dag, true, true);
         order.reserve(dag.num_vertices());
-        for (const auto &v : priority_vec_top_sort_view(dag, priority)) { order.push_back(v); }
+        for (const auto &v : priority_vec_top_sort_view(dag, priority)) {
+            order.push_back(v);
+        }
     }
     return order;
 }

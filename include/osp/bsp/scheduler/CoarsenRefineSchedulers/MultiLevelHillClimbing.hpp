@@ -121,8 +121,12 @@ RETURN_STATUS MultiLevelHillClimbingScheduler<Graph_t>::computeSchedule(BspSched
     HillClimbingScheduler<Graph_t> coarse_hc;
     coarse_hc.improveSchedule(coarse_schedule);
 
-    if (refinement_points.empty()) { setExponentialRefinementPoints(num_verices, 1.1); }
-    while (!refinement_points.empty() && refinement_points.front() <= coarseDAG.num_vertices()) { refinement_points.pop_front(); }
+    if (refinement_points.empty()) {
+        setExponentialRefinementPoints(num_verices, 1.1);
+    }
+    while (!refinement_points.empty() && refinement_points.front() <= coarseDAG.num_vertices()) {
+        refinement_points.pop_front();
+    }
 
     schedule = Refine(schedule.getInstance(), coarser, coarse_schedule);
 
@@ -182,20 +186,26 @@ BspSchedule<Graph_t> MultiLevelHillClimbingScheduler<Graph_t>::ComputeUncontract
 template <typename Graph_t>
 void MultiLevelHillClimbingScheduler<Graph_t>::setLinearRefinementPoints(vertex_idx OriginalNrOfNodes, unsigned stepSize) {
     refinement_points.clear();
-    if (stepSize < 5) { stepSize = 5; }
+    if (stepSize < 5) {
+        stepSize = 5;
+    }
 
     for (vertex_idx nextN = target_nr_of_nodes + stepSize; nextN < OriginalNrOfNodes; nextN += stepSize) {
         refinement_points.push_back(nextN);
     }
 
-    if (!refinement_points.empty()) { refinement_points.pop_back(); }
+    if (!refinement_points.empty()) {
+        refinement_points.pop_back();
+    }
     refinement_points.push_back(OriginalNrOfNodes);
 }
 
 template <typename Graph_t>
 void MultiLevelHillClimbingScheduler<Graph_t>::setExponentialRefinementPoints(vertex_idx OriginalNrOfNodes, double stepRatio) {
     refinement_points.clear();
-    if (stepRatio < 1.01) { stepRatio = 1.01; }
+    if (stepRatio < 1.01) {
+        stepRatio = 1.01;
+    }
 
     for (vertex_idx nextN = std::max(static_cast<unsigned>(std::round(target_nr_of_nodes * stepRatio)), target_nr_of_nodes + 5);
          nextN < OriginalNrOfNodes;

@@ -54,7 +54,9 @@ class SequenceGenerator {
         auto fwd_stats = collector.compute_forward();
         std::vector<double> seq;
         seq.reserve(fwd_stats.size());
-        for (const auto &stat : fwd_stats) { seq.push_back(static_cast<double>(stat.connected_components_vertices.size())); }
+        for (const auto &stat : fwd_stats) {
+            seq.push_back(static_cast<double>(stat.connected_components_vertices.size()));
+        }
         return seq;
     }
 
@@ -64,7 +66,9 @@ class SequenceGenerator {
         double cumulative_work = 0.0;
         for (size_t i = 0; i < level_sets_.size(); ++i) {
             double level_work = 0.0;
-            for (const auto &vertex : level_sets_[i]) { level_work += dag_.vertex_work_weight(vertex); }
+            for (const auto &vertex : level_sets_[i]) {
+                level_work += dag_.vertex_work_weight(vertex);
+            }
             cumulative_work += level_work;
             seq.push_back(cumulative_work / (static_cast<double>(i) + 1.0));
         }

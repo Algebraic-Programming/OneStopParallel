@@ -108,7 +108,9 @@ class ComboScheduler : public Scheduler<Graph_t> {
 
     virtual RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &schedule) override {
         RETURN_STATUS status = base_scheduler.computeSchedule(schedule);
-        if (status != RETURN_STATUS::OSP_SUCCESS and status != RETURN_STATUS::BEST_FOUND) { return status; }
+        if (status != RETURN_STATUS::OSP_SUCCESS and status != RETURN_STATUS::BEST_FOUND) {
+            return status;
+        }
 
         return improvement_scheduler.improveSchedule(schedule);
     }

@@ -275,28 +275,36 @@ BOOST_AUTO_TEST_CASE(kl_improver_inner_loop_test) {
 
     auto recompute_max_gain = kl.run_inner_iteration_test();
     std::cout << "------------------------recompute max_gain: { ";
-    for (const auto &[key, value] : recompute_max_gain) { std::cout << key << " "; }
+    for (const auto &[key, value] : recompute_max_gain) {
+        std::cout << key << " ";
+    }
     std::cout << "}" << std::endl;
 
     BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
 
     recompute_max_gain = kl.run_inner_iteration_test();
     std::cout << "recompute max_gain: { ";
-    for (const auto &[key, value] : recompute_max_gain) { std::cout << key << " "; }
+    for (const auto &[key, value] : recompute_max_gain) {
+        std::cout << key << " ";
+    }
     std::cout << "}" << std::endl;
 
     BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
 
     recompute_max_gain = kl.run_inner_iteration_test();
     std::cout << "recompute max_gain: { ";
-    for (const auto &[key, value] : recompute_max_gain) { std::cout << key << " "; }
+    for (const auto &[key, value] : recompute_max_gain) {
+        std::cout << key << " ";
+    }
     std::cout << "}" << std::endl;
 
     BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
 
     recompute_max_gain = kl.run_inner_iteration_test();
     std::cout << "recompute max_gain: { ";
-    for (const auto &[key, value] : recompute_max_gain) { std::cout << key << " "; }
+    for (const auto &[key, value] : recompute_max_gain) {
+        std::cout << key << " ";
+    }
     std::cout << "}" << std::endl;
 
     BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
@@ -351,28 +359,36 @@ BOOST_AUTO_TEST_CASE(kl_improver_inner_loop_penalty_test) {
 
     auto recompute_max_gain = kl.run_inner_iteration_test();
     std::cout << "-----------recompute max_gain: { ";
-    for (const auto &[key, value] : recompute_max_gain) { std::cout << key << " "; }
+    for (const auto &[key, value] : recompute_max_gain) {
+        std::cout << key << " ";
+    }
     std::cout << "}" << std::endl;
 
     BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
 
     recompute_max_gain = kl.run_inner_iteration_test();
     std::cout << "recompute max_gain: { ";
-    for (const auto &[key, value] : recompute_max_gain) { std::cout << key << " "; }
+    for (const auto &[key, value] : recompute_max_gain) {
+        std::cout << key << " ";
+    }
     std::cout << "}" << std::endl;
 
     BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
 
     recompute_max_gain = kl.run_inner_iteration_test();
     std::cout << "recompute max_gain: { ";
-    for (const auto &[key, value] : recompute_max_gain) { std::cout << key << " "; }
+    for (const auto &[key, value] : recompute_max_gain) {
+        std::cout << key << " ";
+    }
     std::cout << "}" << std::endl;
 
     BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
 
     recompute_max_gain = kl.run_inner_iteration_test();
     std::cout << "recompute max_gain: { ";
-    for (const auto &[key, value] : recompute_max_gain) { std::cout << key << " "; }
+    for (const auto &[key, value] : recompute_max_gain) {
+        std::cout << key << " ";
+    }
     std::cout << "}" << std::endl;
 
     BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);

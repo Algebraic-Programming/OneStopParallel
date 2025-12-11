@@ -45,7 +45,9 @@ struct FastDeltaTracker {
     }
 
     inline void add(unsigned proc, comm_weight_t val) {
-        if (val == 0) { return; }
+        if (val == 0) {
+            return;
+        }
 
         // If currently 0, it is becoming dirty
         if (dense_vals[proc] == 0) {
@@ -71,7 +73,9 @@ struct FastDeltaTracker {
     }
 
     inline comm_weight_t get(unsigned proc) const {
-        if (proc < dense_vals.size()) { return dense_vals[proc]; }
+        if (proc < dense_vals.size()) {
+            return dense_vals[proc];
+        }
         return 0;
     }
 
@@ -139,7 +143,9 @@ struct kl_bsp_comm_cost_function {
 
     template <bool compute_datastructures = true>
     cost_t compute_schedule_cost() {
-        if constexpr (compute_datastructures) { compute_send_receive_datastructures(); }
+        if constexpr (compute_datastructures) {
+            compute_send_receive_datastructures();
+        }
 
         cost_t total_cost = 0;
         for (unsigned step = 0; step < active_schedule->num_steps(); step++) {
@@ -178,8 +184,12 @@ struct kl_bsp_comm_cost_function {
                 active_steps.reserve(n_steps);
             }
 
-            for (auto &tracker : send_deltas) { tracker.initialize(n_procs); }
-            for (auto &tracker : recv_deltas) { tracker.initialize(n_procs); }
+            for (auto &tracker : send_deltas) {
+                tracker.initialize(n_procs);
+            }
+            for (auto &tracker : recv_deltas) {
+                tracker.initialize(n_procs);
+            }
 
             child_cost_buffer.reserve(n_procs);
         }
@@ -232,11 +242,15 @@ struct kl_bsp_comm_cost_function {
                         affinity_table_node[p][idx] -= reward;
                     }
                 }
-                if (window_size >= diff && is_compatible(node, target_proc)) { affinity_table_node[target_proc][idx] -= reward; }
+                if (window_size >= diff && is_compatible(node, target_proc)) {
+                    affinity_table_node[target_proc][idx] -= reward;
+                }
             } else {
                 const unsigned diff = target_step - node_step;
                 unsigned idx = window_size + diff;
-                if (idx < window_bound && is_compatible(node, target_proc)) { affinity_table_node[target_proc][idx] -= penalty; }
+                if (idx < window_bound && is_compatible(node, target_proc)) {
+                    affinity_table_node[target_proc][idx] -= penalty;
+                }
                 for (; idx < window_bound; idx++) {
                     for (const unsigned p : proc_range->compatible_processors_vertex(node)) {
                         affinity_table_node[p][idx] += penalty;
@@ -258,11 +272,15 @@ struct kl_bsp_comm_cost_function {
                         affinity_table_node[p][idx] += penalty;
                     }
                 }
-                if (idx - 1 < bound && is_compatible(node, source_proc)) { affinity_table_node[source_proc][idx - 1] -= penalty; }
+                if (idx - 1 < bound && is_compatible(node, source_proc)) {
+                    affinity_table_node[source_proc][idx - 1] -= penalty;
+                }
             } else {
                 const unsigned diff = source_step - node_step;
                 unsigned idx = std::min(window_size + diff, window_bound);
-                if (idx < window_bound && is_compatible(node, source_proc)) { affinity_table_node[source_proc][idx] -= reward; }
+                if (idx < window_bound && is_compatible(node, source_proc)) {
+                    affinity_table_node[source_proc][idx] -= reward;
+                }
                 idx++;
                 for (; idx < window_bound; idx++) {
                     for (const unsigned p : proc_range->compatible_processors_vertex(node)) {
@@ -276,7 +294,9 @@ struct kl_bsp_comm_cost_function {
         const auto &current_vec_schedule = active_schedule->getVectorSchedule();
 
         auto add_delta = [&](bool is_recv, unsigned step, unsigned proc, comm_weight_t val) {
-            if (val == 0) { return; }
+            if (val == 0) {
+                return;
+            }
             if (step < active_schedule->num_steps()) {
                 scratch.mark_active(step);
                 if (is_recv) {
@@ -303,7 +323,9 @@ struct kl_bsp_comm_cost_function {
                 }
             }
         }
-        if (total_send_cost_removed > 0) { add_delta(false, node_step, node_proc, -total_send_cost_removed); }
+        if (total_send_cost_removed > 0) {
+            add_delta(false, node_step, node_proc, -total_send_cost_removed);
+        }
 
         // Incoming (Parents)
         for (const auto &u : graph->parents(node)) {
@@ -339,10 +361,14 @@ struct kl_bsp_comm_cost_function {
                     unsigned count_on_p_to = comm_ds.node_lambda_map.get_proc_entry(u, p_to);
 
                     if (p_to == node_proc) {
-                        if (count_on_p_to > 0) { count_on_p_to--; }
+                        if (count_on_p_to > 0) {
+                            count_on_p_to--;
+                        }
                     }
 
-                    if (count_on_p_to > 0) { already_sending_to_p_to = true; }
+                    if (count_on_p_to > 0) {
+                        already_sending_to_p_to = true;
+                    }
 
                     if (!already_sending_to_p_to) {
                         const comm_weight_t cost = comm_w_u * instance->sendCosts(u_proc, p_to);
@@ -374,9 +400,13 @@ struct kl_bsp_comm_cost_function {
                 unsigned s_to = node_step + s_to_idx - window_size;
 
                 // Apply Outgoing Deltas for this specific step s_to
-                for (const auto &[v_proc, cost] : scratch.child_cost_buffer) { add_delta(true, s_to, v_proc, cost); }
+                for (const auto &[v_proc, cost] : scratch.child_cost_buffer) {
+                    add_delta(true, s_to, v_proc, cost);
+                }
 
-                if (total_send_cost_added > 0) { add_delta(false, s_to, p_to, total_send_cost_added); }
+                if (total_send_cost_added > 0) {
+                    add_delta(false, s_to, p_to, total_send_cost_added);
+                }
 
                 cost_t total_change = 0;
 
@@ -392,8 +422,12 @@ struct kl_bsp_comm_cost_function {
                 affinity_table_node[p_to][s_to_idx] += total_change * instance->communicationCosts();
 
                 // Revert Outgoing Deltas for s_to (Inverse of Apply)
-                for (const auto &[v_proc, cost] : scratch.child_cost_buffer) { add_delta(true, s_to, v_proc, -cost); }
-                if (total_send_cost_added > 0) { add_delta(false, s_to, p_to, -total_send_cost_added); }
+                for (const auto &[v_proc, cost] : scratch.child_cost_buffer) {
+                    add_delta(true, s_to, v_proc, -cost);
+                }
+                if (total_send_cost_added > 0) {
+                    add_delta(false, s_to, p_to, -total_send_cost_added);
+                }
             }
 
             // Revert Incoming Deltas (Inverse of Part A)
@@ -406,9 +440,13 @@ struct kl_bsp_comm_cost_function {
                     bool already_sending_to_p_to = false;
                     unsigned count_on_p_to = comm_ds.node_lambda_map.get_proc_entry(u, p_to);
                     if (p_to == node_proc) {
-                        if (count_on_p_to > 0) { count_on_p_to--; }
+                        if (count_on_p_to > 0) {
+                            count_on_p_to--;
+                        }
                     }
-                    if (count_on_p_to > 0) { already_sending_to_p_to = true; }
+                    if (count_on_p_to > 0) {
+                        already_sending_to_p_to = true;
+                    }
 
                     if (!already_sending_to_p_to) {
                         const comm_weight_t cost = comm_w_u * instance->sendCosts(u_proc, p_to);
@@ -440,8 +478,12 @@ struct kl_bsp_comm_cost_function {
             comm_weight_t current_val = comm_ds.step_proc_send(step, proc);
             comm_weight_t new_val = current_val + delta;
 
-            if (new_val > new_global_max) { new_global_max = new_val; }
-            if (delta < 0 && current_val == old_max) { reduced_max_instances++; }
+            if (new_val > new_global_max) {
+                new_global_max = new_val;
+            }
+            if (delta < 0 && current_val == old_max) {
+                reduced_max_instances++;
+            }
         }
 
         // 2. Check modified receives (Iterate sparse dirty list)
@@ -451,13 +493,21 @@ struct kl_bsp_comm_cost_function {
             comm_weight_t current_val = comm_ds.step_proc_receive(step, proc);
             comm_weight_t new_val = current_val + delta;
 
-            if (new_val > new_global_max) { new_global_max = new_val; }
-            if (delta < 0 && current_val == old_max) { reduced_max_instances++; }
+            if (new_val > new_global_max) {
+                new_global_max = new_val;
+            }
+            if (delta < 0 && current_val == old_max) {
+                reduced_max_instances++;
+            }
         }
 
         // 3. Determine result
-        if (new_global_max > old_max) { return new_global_max - old_max; }
-        if (reduced_max_instances < old_max_count) { return 0; }
+        if (new_global_max > old_max) {
+            return new_global_max - old_max;
+        }
+        if (reduced_max_instances < old_max_count) {
+            return 0;
+        }
         return std::max(new_global_max, second_max) - old_max;
     }
 
@@ -473,9 +523,13 @@ struct kl_bsp_comm_cost_function {
 
         for (const auto &target : instance->getComputationalDag().children(move.node)) {
             const unsigned target_step = active_schedule->assigned_superstep(target);
-            if (target_step < start_step || target_step > end_step) { continue; }
+            if (target_step < start_step || target_step > end_step) {
+                continue;
+            }
 
-            if (thread_data.lock_manager.is_locked(target)) { continue; }
+            if (thread_data.lock_manager.is_locked(target)) {
+                continue;
+            }
 
             if (not thread_data.affinity_table.is_selected(target)) {
                 new_nodes.push_back(target);
@@ -528,14 +582,18 @@ struct kl_bsp_comm_cost_function {
                     }
                 }
 
-                if (idx - 1 < bound && is_compatible(target, move.to_proc)) { affinity_table[move.to_proc][idx - 1] -= penalty; }
+                if (idx - 1 < bound && is_compatible(target, move.to_proc)) {
+                    affinity_table[move.to_proc][idx - 1] -= penalty;
+                }
 
             } else {
                 const unsigned diff = move.to_step - target_step;
                 const unsigned window_bound = end_idx(target_step, end_step);
                 unsigned idx = std::min(window_size + diff, window_bound);
 
-                if (idx < window_bound && is_compatible(target, move.to_proc)) { affinity_table[move.to_proc][idx] -= reward; }
+                if (idx < window_bound && is_compatible(target, move.to_proc)) {
+                    affinity_table[move.to_proc][idx] -= reward;
+                }
 
                 idx++;
 
@@ -549,9 +607,13 @@ struct kl_bsp_comm_cost_function {
 
         for (const auto &source : instance->getComputationalDag().parents(move.node)) {
             const unsigned source_step = active_schedule->assigned_superstep(source);
-            if (source_step < start_step || source_step > end_step) { continue; }
+            if (source_step < start_step || source_step > end_step) {
+                continue;
+            }
 
-            if (thread_data.lock_manager.is_locked(source)) { continue; }
+            if (thread_data.lock_manager.is_locked(source)) {
+                continue;
+            }
 
             if (not thread_data.affinity_table.is_selected(source)) {
                 new_nodes.push_back(source);

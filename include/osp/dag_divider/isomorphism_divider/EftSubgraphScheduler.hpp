@@ -86,7 +86,9 @@ class EftSubgraphScheduler {
     // Custom comparator for storing Job pointers in the ready set, sorted by rank.
     struct JobPtrCompare {
         bool operator()(const Job *lhs, const Job *rhs) const {
-            if (lhs->upward_rank != rhs->upward_rank) { return lhs->upward_rank > rhs->upward_rank; }
+            if (lhs->upward_rank != rhs->upward_rank) {
+                return lhs->upward_rank > rhs->upward_rank;
+            }
             return lhs->id > rhs->id;    // Tie-breaking
         }
     };
@@ -99,13 +101,17 @@ class EftSubgraphScheduler {
                                 const std::vector<std::vector<v_workw_t<Graph_t>>> &required_proc_types,
                                 const std::vector<unsigned> &max_num_procs) {
         jobs_.resize(instance.numberOfVertices());
-        if constexpr (verbose) { std::cout << "--- Preparing for Subgraph Scheduling ---" << std::endl; }
+        if constexpr (verbose) {
+            std::cout << "--- Preparing for Subgraph Scheduling ---" << std::endl;
+        }
         const auto &graph = instance.getComputationalDag();
         const size_t num_worker_types = instance.getArchitecture().getProcessorTypeCount().size();
 
         calculate_upward_ranks(graph);
 
-        if constexpr (verbose) { std::cout << "Initializing jobs..." << std::endl; }
+        if constexpr (verbose) {
+            std::cout << "Initializing jobs..." << std::endl;
+        }
         job_id_t idx = 0;
         for (auto &job : jobs_) {
             job.id = idx;
@@ -161,7 +167,9 @@ class EftSubgraphScheduler {
             std::cout << "\n--- Subgraph Scheduling Execution Started ---" << std::endl;
             std::cout << "Total jobs: " << jobs_.size() << std::endl;
             std::cout << "Initial available workers: ";
-            for (size_t i = 0; i < num_worker_types; ++i) { std::cout << "T" << i << ":" << available_workers[i] << " "; }
+            for (size_t i = 0; i < num_worker_types; ++i) {
+                std::cout << "T" << i << ":" << available_workers[i] << " ";
+            }
             std::cout << std::endl;
         }
 
@@ -170,7 +178,9 @@ class EftSubgraphScheduler {
                 std::cout << "\n[T=" << current_time << "] --- New Scheduling Step ---" << std::endl;
                 std::cout << "Completed jobs: " << completed_count << "/" << jobs_.size() << std::endl;
                 std::cout << "Available workers: ";
-                for (size_t i = 0; i < num_worker_types; ++i) { std::cout << "T" << i << ":" << available_workers[i] << " "; }
+                for (size_t i = 0; i < num_worker_types; ++i) {
+                    std::cout << "T" << i << ":" << available_workers[i] << " ";
+                }
                 std::cout << std::endl;
                 std::cout << "Ready queue size: " << ready_jobs_.size() << ". Running jobs: " << running_jobs.size() << std::endl;
             }
@@ -291,7 +301,9 @@ class EftSubgraphScheduler {
                         std::cout << std::endl;
                     }
                     std::cout << "Available workers: ";
-                    for (size_t i = 0; i < num_worker_types; ++i) { std::cout << "T" << i << ":" << available_workers[i] << " "; }
+                    for (size_t i = 0; i < num_worker_types; ++i) {
+                        std::cout << "T" << i << ":" << available_workers[i] << " ";
+                    }
                     std::cout << std::endl;
                 }
                 SubgraphSchedule result;
@@ -303,7 +315,9 @@ class EftSubgraphScheduler {
             }
 
             double next_event_time = std::numeric_limits<double>::max();
-            for (job_id_t id : running_jobs) { next_event_time = std::min(next_event_time, jobs_.at(id).finish_time); }
+            for (job_id_t id : running_jobs) {
+                next_event_time = std::min(next_event_time, jobs_.at(id).finish_time);
+            }
             if constexpr (verbose) {
                 std::cout << "Advancing time from " << current_time << " to " << next_event_time << std::endl;
             }
@@ -315,7 +329,9 @@ class EftSubgraphScheduler {
                 Job &job = jobs_.at(*it);
                 if (job.finish_time <= current_time) {
                     job.status = JobStatus::COMPLETED;
-                    if constexpr (verbose) { std::cout << "Job " << job.id << " finished at T=" << current_time << std::endl; }
+                    if constexpr (verbose) {
+                        std::cout << "Job " << job.id << " finished at T=" << current_time << std::endl;
+                    }
                     // Release workers
                     for (size_t type_idx = 0; type_idx < num_worker_types; ++type_idx) {
                         available_workers[type_idx] += job.assigned_workers[type_idx];
@@ -323,7 +339,9 @@ class EftSubgraphScheduler {
                     completed_count++;
 
                     // Update successors
-                    if constexpr (verbose) { std::cout << "  - Updating successors..." << std::endl; }
+                    if constexpr (verbose) {
+                        std::cout << "  - Updating successors..." << std::endl;
+                    }
                     for (const auto &successor_id : graph.children(job.id)) {
                         Job &successor_job = jobs_.at(successor_id);
                         successor_job.in_degree_current--;

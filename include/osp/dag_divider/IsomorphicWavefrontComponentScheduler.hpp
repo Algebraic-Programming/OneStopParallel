@@ -49,7 +49,9 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
 
         unsigned superstep_offset = 0;
         for (std::size_t i = 0; i < vertex_maps.size(); ++i) {
-            if (this->enable_debug_prints) { std::cout << "\n--- Processing Wavefront Set " << i << " ---" << std::endl; }
+            if (this->enable_debug_prints) {
+                std::cout << "\n--- Processing Wavefront Set " << i << " ---" << std::endl;
+            }
 
             unsigned supersteps_in_set = 0;
             auto status = process_wavefront_set(schedule,
@@ -59,7 +61,9 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
                                                 global_ids_by_type,
                                                 superstep_offset,
                                                 supersteps_in_set);
-            if (status != RETURN_STATUS::OSP_SUCCESS) { return status; }
+            if (status != RETURN_STATUS::OSP_SUCCESS) {
+                return status;
+            }
             superstep_offset += supersteps_in_set;
         }
         return RETURN_STATUS::OSP_SUCCESS;
@@ -139,7 +143,9 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
                                                      proc_type_offsets,
                                                      superstep_offset,
                                                      supersteps_for_group);
-            if (status != RETURN_STATUS::OSP_SUCCESS) { return status; }
+            if (status != RETURN_STATUS::OSP_SUCCESS) {
+                return status;
+            }
             num_supersteps_per_iso_group[j] = supersteps_for_group;
             max_supersteps = std::max(max_supersteps, supersteps_for_group);
 
@@ -214,7 +220,9 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
             for (const auto &group_member_idx : group_members) {
                 BspSchedule<constr_graph_t> sub_schedule(sub_instance);
                 auto status = this->scheduler->computeSchedule(sub_schedule);
-                if (status != RETURN_STATUS::OSP_SUCCESS && status != RETURN_STATUS::BEST_FOUND) { return status; }
+                if (status != RETURN_STATUS::OSP_SUCCESS && status != RETURN_STATUS::BEST_FOUND) {
+                    return status;
+                }
 
                 const auto sub_proc_type_count = sub_architecture.getProcessorTypeCount();
                 std::vector<unsigned> sub_proc_type_corrections(sub_architecture.getNumberOfProcessorTypes(), 0);
@@ -252,7 +260,9 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
 
             std::vector<unsigned> single_sub_dag_proc_types = procs_for_group;
             if (num_members > 0) {
-                for (auto &count : single_sub_dag_proc_types) { count /= static_cast<unsigned>(num_members); }
+                for (auto &count : single_sub_dag_proc_types) {
+                    count /= static_cast<unsigned>(num_members);
+                }
             }
 
             BspInstance<constr_graph_t> sub_instance(rep_sub_dag,
@@ -270,7 +280,9 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
 
             BspSchedule<constr_graph_t> sub_schedule(sub_instance);
             auto status = this->scheduler->computeSchedule(sub_schedule);
-            if (status != RETURN_STATUS::OSP_SUCCESS && status != RETURN_STATUS::BEST_FOUND) { return status; }
+            if (status != RETURN_STATUS::OSP_SUCCESS && status != RETURN_STATUS::BEST_FOUND) {
+                return status;
+            }
 
             const auto sub_proc_type_count = sub_schedule.getInstance().getArchitecture().getProcessorTypeCount();
             std::vector<unsigned> sub_proc_type_corrections(sub_proc_type_count.size(), 0);

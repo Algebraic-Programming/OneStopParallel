@@ -39,7 +39,9 @@ bool readHypergraphMartixMarketFormat(std::ifstream &infile, Hypergraph<index_ty
 
     // Skip comments or empty lines (robustly)
     while (std::getline(infile, line)) {
-        if (line.empty() || line[0] == '%') { continue; }
+        if (line.empty() || line[0] == '%') {
+            continue;
+        }
 
         // Null byte check
         if (line.find('\0') != std::string::npos) {
@@ -80,7 +82,9 @@ bool readHypergraphMartixMarketFormat(std::ifstream &infile, Hypergraph<index_ty
 
     int entries_read = 0;
     while (entries_read < nEntries && std::getline(infile, line)) {
-        if (line.empty() || line[0] == '%') { continue; }
+        if (line.empty() || line[0] == '%') {
+            continue;
+        }
         if (line.size() > MAX_LINE_LENGTH) {
             std::cerr << "Error: Line too long.\n";
             return false;
@@ -127,11 +131,15 @@ bool readHypergraphMartixMarketFormat(std::ifstream &infile, Hypergraph<index_ty
     }
 
     for (index_type row = 0; row < static_cast<index_type>(M_row); ++row) {
-        if (!row_hyperedges[row].empty()) { hgraph.add_hyperedge(row_hyperedges[row]); }
+        if (!row_hyperedges[row].empty()) {
+            hgraph.add_hyperedge(row_hyperedges[row]);
+        }
     }
 
     for (index_type col = 0; col < static_cast<index_type>(M_col); ++col) {
-        if (!column_hyperedges[col].empty()) { hgraph.add_hyperedge(column_hyperedges[col]); }
+        if (!column_hyperedges[col].empty()) {
+            hgraph.add_hyperedge(column_hyperedges[col]);
+        }
     }
 
     return true;

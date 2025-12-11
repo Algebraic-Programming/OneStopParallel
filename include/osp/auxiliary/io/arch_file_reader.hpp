@@ -33,7 +33,9 @@ bool readBspArchitecture(std::ifstream &infile, BspArchitecture<Graph_t> &archit
 
     // Skip comment lines
     while (std::getline(infile, line)) {
-        if (!line.empty() && line[0] != '%') { break; }
+        if (!line.empty() && line[0] != '%') {
+            break;
+        }
     }
 
     // Parse architecture parameters

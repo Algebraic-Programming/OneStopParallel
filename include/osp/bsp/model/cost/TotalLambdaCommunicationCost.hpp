@@ -41,7 +41,9 @@ struct TotalLambdaCommunicationCost {
         const double comm_multiplier = 1.0 / instance.numberOfProcessors();
 
         for (const auto &v : instance.vertices()) {
-            if (instance.getComputationalDag().out_degree(v) == 0) { continue; }
+            if (instance.getComputationalDag().out_degree(v) == 0) {
+                continue;
+            }
 
             std::unordered_set<unsigned> target_procs;
             for (const auto &target : instance.getComputationalDag().children(v)) {

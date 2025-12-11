@@ -85,7 +85,9 @@ RETURN_STATUS CoptCommScheduleOptimizer<Graph_t>::improveSchedule(BspScheduleCS<
 
     if (model.GetIntAttr(COPT_INTATTR_HASMIPSOL)) {
         updateCommSchedule(schedule);
-        if (canShrinkResultingSchedule(schedule.numberOfSupersteps())) { schedule.shrinkByMergingSupersteps(); }
+        if (canShrinkResultingSchedule(schedule.numberOfSupersteps())) {
+            schedule.shrinkByMergingSupersteps();
+        }
     }
 
     if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_OPTIMAL) {
@@ -104,7 +106,9 @@ RETURN_STATUS CoptCommScheduleOptimizer<Graph_t>::improveSchedule(BspScheduleCS<
 template <typename Graph_t>
 bool CoptCommScheduleOptimizer<Graph_t>::canShrinkResultingSchedule(unsigned number_of_supersteps) const {
     for (unsigned step = 0; step < number_of_supersteps - 1; step++) {
-        if (superstep_has_comm[static_cast<int>(step)].Get(COPT_DBLINFO_VALUE) <= 0.01) { return true; }
+        if (superstep_has_comm[static_cast<int>(step)].Get(COPT_DBLINFO_VALUE) <= 0.01) {
+            return true;
+        }
     }
     return false;
 }
@@ -148,7 +152,9 @@ void CoptCommScheduleOptimizer<Graph_t>::setInitialSolution(BspScheduleCS<Graph_
     for (const auto &node : DAG.vertices()) {
         for (unsigned p1 = 0; p1 < num_processors; p1++) {
             for (unsigned p2 = 0; p2 < num_processors; p2++) {
-                if (p1 == p2) { continue; }
+                if (p1 == p2) {
+                    continue;
+                }
 
                 for (unsigned step = 0; step < num_supersteps; step++) {
                     const auto &key = std::make_tuple(node, p1, p2);
@@ -177,7 +183,9 @@ void CoptCommScheduleOptimizer<Graph_t>::setInitialSolution(BspScheduleCS<Graph_
 
     if (!ignore_latency) {
         std::vector<unsigned> comm_phase_used(num_supersteps, 0);
-        for (auto const &[key, val] : cs) { comm_phase_used[val] = 1; }
+        for (auto const &[key, val] : cs) {
+            comm_phase_used[val] = 1;
+        }
         for (unsigned step = 0; step < num_supersteps; step++) {
             model.SetMipStart(superstep_has_comm[static_cast<int>(step)], comm_phase_used[step]);
         }
@@ -270,7 +278,9 @@ void CoptCommScheduleOptimizer<Graph_t>::setupVariablesConstraintsObjective(cons
             }
         }
 
-        if (num_com_edges > 0) { model.AddConstr(expr >= num_com_edges); }
+        if (num_com_edges > 0) {
+            model.AddConstr(expr >= num_com_edges);
+        }
     }
 
     // combines two constraints: node can only be communicated if it is present; and node is present if it was computed
@@ -278,7 +288,9 @@ void CoptCommScheduleOptimizer<Graph_t>::setupVariablesConstraintsObjective(cons
     for (unsigned int step = 0; step < max_number_supersteps; step++) {
         for (unsigned int processor = 0; processor < num_processors; processor++) {
             for (unsigned int node = 0; node < num_vertices; node++) {
-                if (processor == schedule.assignedProcessor(node) && step >= schedule.assignedSuperstep(node)) { continue; }
+                if (processor == schedule.assignedProcessor(node) && step >= schedule.assignedSuperstep(node)) {
+                    continue;
+                }
 
                 Expr expr1, expr2;
                 if (step > 0) {

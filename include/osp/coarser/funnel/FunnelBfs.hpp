@@ -105,7 +105,9 @@ class FunnelBfs : public CoarserGenExpansionMap<Graph_t_in, Graph_t_out> {
         for (auto rev_top_it = top_order.rbegin(); rev_top_it != top_order.crend(); rev_top_it++) {
             const vertex_idx_t &bottom_node = *rev_top_it;
 
-            if (visited[bottom_node]) { continue; }
+            if (visited[bottom_node]) {
+                continue;
+            }
 
             v_workw_t<Graph_t_in> work_weight_of_group = 0;
             v_memw_t<Graph_t_in> memory_weight_of_group = 0;
@@ -123,17 +125,25 @@ class FunnelBfs : public CoarserGenExpansionMap<Graph_t_in, Graph_t_out> {
                     vertex_processing_fifo = next_vertex_processing_fifo;
                     next_vertex_processing_fifo.clear();
                     depth_counter++;
-                    if (depth_counter > parameters.max_depth) { break; }
+                    if (depth_counter > parameters.max_depth) {
+                        break;
+                    }
                 }
 
                 vertex_idx_t active_node = vertex_processing_fifo.front();
                 vertex_processing_fifo.pop_front();
 
-                if (graph.vertex_type(active_node) != graph.vertex_type(bottom_node)) { continue; }
+                if (graph.vertex_type(active_node) != graph.vertex_type(bottom_node)) {
+                    continue;
+                }
 
-                if (work_weight_of_group + graph.vertex_work_weight(active_node) > parameters.max_work_weight) { continue; }
+                if (work_weight_of_group + graph.vertex_work_weight(active_node) > parameters.max_work_weight) {
+                    continue;
+                }
 
-                if (memory_weight_of_group + graph.vertex_mem_weight(active_node) > parameters.max_memory_weight) { continue; }
+                if (memory_weight_of_group + graph.vertex_mem_weight(active_node) > parameters.max_memory_weight) {
+                    continue;
+                }
 
                 if constexpr (use_architecture_memory_contraints) {
                     if (memory_weight_of_group + graph.vertex_mem_weight(active_node)
@@ -147,7 +157,9 @@ class FunnelBfs : public CoarserGenExpansionMap<Graph_t_in, Graph_t_out> {
                 memory_weight_of_group += graph.vertex_mem_weight(active_node);
 
                 for (const auto &in_edge : in_edges(active_node, graph)) {
-                    if (parameters.use_approx_transitive_reduction && (edge_mask.find(in_edge) != edge_mask.cend())) { continue; }
+                    if (parameters.use_approx_transitive_reduction && (edge_mask.find(in_edge) != edge_mask.cend())) {
+                        continue;
+                    }
 
                     const vertex_idx_t &par = source(in_edge, graph);
 
@@ -159,7 +171,9 @@ class FunnelBfs : public CoarserGenExpansionMap<Graph_t_in, Graph_t_out> {
                             children_not_in_group[par] = 0;
 
                             for (const auto out_edge : out_edges(par, graph)) {
-                                if (edge_mask.find(out_edge) != edge_mask.cend()) { continue; }
+                                if (edge_mask.find(out_edge) != edge_mask.cend()) {
+                                    continue;
+                                }
                                 children_not_in_group[par] += 1;
                             }
 
@@ -170,16 +184,22 @@ class FunnelBfs : public CoarserGenExpansionMap<Graph_t_in, Graph_t_out> {
                     }
                 }
                 for (const auto &in_edge : in_edges(active_node, graph)) {
-                    if (parameters.use_approx_transitive_reduction && (edge_mask.find(in_edge) != edge_mask.cend())) { continue; }
+                    if (parameters.use_approx_transitive_reduction && (edge_mask.find(in_edge) != edge_mask.cend())) {
+                        continue;
+                    }
 
                     const vertex_idx_t &par = source(in_edge, graph);
-                    if (children_not_in_group[par] == 0) { next_vertex_processing_fifo.emplace_back(par); }
+                    if (children_not_in_group[par] == 0) {
+                        next_vertex_processing_fifo.emplace_back(par);
+                    }
                 }
             }
 
             partition.push_back(group);
 
-            for (const auto &node : group) { visited[node] = true; }
+            for (const auto &node : group) {
+                visited[node] = true;
+            }
         }
     }
 
@@ -193,7 +213,9 @@ class FunnelBfs : public CoarserGenExpansionMap<Graph_t_in, Graph_t_out> {
         std::vector<bool> visited(graph.num_vertices(), false);
 
         for (const auto &top_node : top_sort_view(graph)) {
-            if (visited[top_node]) { continue; }
+            if (visited[top_node]) {
+                continue;
+            }
 
             v_workw_t<Graph_t_in> work_weight_of_group = 0;
             v_memw_t<Graph_t_in> memory_weight_of_group = 0;
@@ -211,17 +233,25 @@ class FunnelBfs : public CoarserGenExpansionMap<Graph_t_in, Graph_t_out> {
                     vertex_processing_fifo = next_vertex_processing_fifo;
                     next_vertex_processing_fifo.clear();
                     depth_counter++;
-                    if (depth_counter > parameters.max_depth) { break; }
+                    if (depth_counter > parameters.max_depth) {
+                        break;
+                    }
                 }
 
                 vertex_idx_t active_node = vertex_processing_fifo.front();
                 vertex_processing_fifo.pop_front();
 
-                if (graph.vertex_type(active_node) != graph.vertex_type(top_node)) { continue; }
+                if (graph.vertex_type(active_node) != graph.vertex_type(top_node)) {
+                    continue;
+                }
 
-                if (work_weight_of_group + graph.vertex_work_weight(active_node) > parameters.max_work_weight) { continue; }
+                if (work_weight_of_group + graph.vertex_work_weight(active_node) > parameters.max_work_weight) {
+                    continue;
+                }
 
-                if (memory_weight_of_group + graph.vertex_mem_weight(active_node) > parameters.max_memory_weight) { continue; }
+                if (memory_weight_of_group + graph.vertex_mem_weight(active_node) > parameters.max_memory_weight) {
+                    continue;
+                }
 
                 if constexpr (use_architecture_memory_contraints) {
                     if (memory_weight_of_group + graph.vertex_mem_weight(active_node)
@@ -249,7 +279,9 @@ class FunnelBfs : public CoarserGenExpansionMap<Graph_t_in, Graph_t_out> {
                             parents_not_in_group[child] = 0;
 
                             for (const auto in_edge : in_edges(child, graph)) {
-                                if (edge_mask.find(in_edge) != edge_mask.cend()) { continue; }
+                                if (edge_mask.find(in_edge) != edge_mask.cend()) {
+                                    continue;
+                                }
                                 parents_not_in_group[child] += 1;
                             }
 
@@ -265,13 +297,17 @@ class FunnelBfs : public CoarserGenExpansionMap<Graph_t_in, Graph_t_out> {
                     }
 
                     const vertex_idx_t &child = target(out_edge, graph);
-                    if (parents_not_in_group[child] == 0) { next_vertex_processing_fifo.emplace_back(child); }
+                    if (parents_not_in_group[child] == 0) {
+                        next_vertex_processing_fifo.emplace_back(child);
+                    }
                 }
             }
 
             partition.push_back(group);
 
-            for (const auto &node : group) { visited[node] = true; }
+            for (const auto &node : group) {
+                visited[node] = true;
+            }
         }
     }
 };

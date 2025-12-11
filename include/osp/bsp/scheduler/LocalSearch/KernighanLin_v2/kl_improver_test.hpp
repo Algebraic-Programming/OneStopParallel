@@ -72,7 +72,9 @@ class kl_improver_test : public kl_improver<Graph_t, comm_cost_function_t, Memor
         this->thread_data_vec[0].reward_penalty_strat.reward = 0.0;
 
         this->thread_data_vec[0].affinity_table.initialize(this->active_schedule, n.size());
-        for (const auto &node : n) { this->thread_data_vec[0].affinity_table.insert(node); }
+        for (const auto &node : n) {
+            this->thread_data_vec[0].affinity_table.insert(node);
+        }
 
         this->insert_gain_heap(this->thread_data_vec[0]);
 
@@ -81,7 +83,9 @@ class kl_improver_test : public kl_improver<Graph_t, comm_cost_function_t, Memor
 
     node_selection_container_t &insert_gain_heap_test_penalty(const std::vector<VertexType> &n) {
         this->thread_data_vec[0].affinity_table.initialize(this->active_schedule, n.size());
-        for (const auto &node : n) { this->thread_data_vec[0].affinity_table.insert(node); }
+        for (const auto &node : n) {
+            this->thread_data_vec[0].affinity_table.insert(node);
+        }
         this->thread_data_vec[0].reward_penalty_strat.penalty = 5.5;
         this->thread_data_vec[0].reward_penalty_strat.reward = 0.0;
 
@@ -92,7 +96,9 @@ class kl_improver_test : public kl_improver<Graph_t, comm_cost_function_t, Memor
 
     node_selection_container_t &insert_gain_heap_test_penalty_reward(const std::vector<VertexType> &n) {
         this->thread_data_vec[0].affinity_table.initialize(this->active_schedule, n.size());
-        for (const auto &node : n) { this->thread_data_vec[0].affinity_table.insert(node); }
+        for (const auto &node : n) {
+            this->thread_data_vec[0].affinity_table.insert(node);
+        }
 
         this->thread_data_vec[0].reward_penalty_strat.init_reward_penalty();
         this->thread_data_vec[0].reward_penalty_strat.reward = 15.0;
@@ -139,7 +145,9 @@ class kl_improver_test : public kl_improver<Graph_t, comm_cost_function_t, Memor
 
 #ifdef KL_DEBUG
         std::cout << "New nodes: { ";
-        for (const auto v : new_nodes) { std::cout << v << " "; }
+        for (const auto v : new_nodes) {
+            std::cout << v << " ";
+        }
         std::cout << "}" << std::endl;
 #endif
 

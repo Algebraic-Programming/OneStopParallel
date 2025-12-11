@@ -31,7 +31,9 @@ BOOST_AUTO_TEST_CASE(IntegerSqrt) {
     }
 
     for (int root = 1; root < 300; ++root) {
-        for (int num = root * root; num < (root + 1) * (root + 1); ++num) { BOOST_CHECK_EQUAL(intSqrtFloor(num), root); }
+        for (int num = root * root; num < (root + 1) * (root + 1); ++num) {
+            BOOST_CHECK_EQUAL(intSqrtFloor(num), root);
+        }
     }
 }
 

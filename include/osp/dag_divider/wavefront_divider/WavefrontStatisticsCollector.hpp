@@ -89,10 +89,14 @@ class WavefrontStatisticsCollector {
         // Join components based on edges connecting to vertices already in the universe
         for (const auto &node : level_sets_[level_idx]) {
             for (const auto &child : dag_.children(node)) {
-                if (uf.is_in_universe(child)) { uf.join_by_name(node, child); }
+                if (uf.is_in_universe(child)) {
+                    uf.join_by_name(node, child);
+                }
             }
             for (const auto &parent : dag_.parents(node)) {
-                if (uf.is_in_universe(parent)) { uf.join_by_name(parent, node); }
+                if (uf.is_in_universe(parent)) {
+                    uf.join_by_name(parent, node);
+                }
             }
         }
     }

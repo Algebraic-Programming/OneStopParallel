@@ -52,7 +52,9 @@ class kl_improver_mt : public kl_improver<Graph_t, comm_cost_function_t, MemoryC
                 this->thread_finished_vec[i] = false;
                 this->set_start_step(current_start_step, this->thread_data_vec[i]);
                 unsigned current_range = base_range + (i < remainder ? 1 : 0);
-                if (i == large_range_thread_idx) { current_range += bonus; }
+                if (i == large_range_thread_idx) {
+                    current_range += bonus;
+                }
 
                 const unsigned end_step = current_start_step + current_range - 1;
                 this->thread_data_vec[i].end_step = end_step;
@@ -81,9 +83,13 @@ class kl_improver_mt : public kl_improver<Graph_t, comm_cost_function_t, MemoryC
             max_allowed_threads = 1;
         }
 
-        if (num_threads > max_allowed_threads) { num_threads = max_allowed_threads; }
+        if (num_threads > max_allowed_threads) {
+            num_threads = max_allowed_threads;
+        }
 
-        if (num_threads == 0) { num_threads = 1; }
+        if (num_threads == 0) {
+            num_threads = 1;
+        }
 #ifdef KL_DEBUG_1
         std::cout << "num threads: " << num_threads << " number of supersteps: " << num_steps
                   << ", max allowed threads: " << max_allowed_threads << std::endl;
@@ -101,7 +107,9 @@ class kl_improver_mt : public kl_improver<Graph_t, comm_cost_function_t, MemoryC
     void set_max_num_threads(const unsigned num_threads) { max_num_threads = num_threads; }
 
     virtual RETURN_STATUS improveSchedule(BspSchedule<Graph_t> &schedule) override {
-        if (schedule.getInstance().numberOfProcessors() < 2) { return RETURN_STATUS::BEST_FOUND; }
+        if (schedule.getInstance().numberOfProcessors() < 2) {
+            return RETURN_STATUS::BEST_FOUND;
+        }
 
         unsigned num_threads = std::min(max_num_threads, static_cast<unsigned>(omp_get_max_threads()));
         set_num_threads(num_threads, schedule.numberOfSupersteps());

@@ -301,7 +301,9 @@ class BspInstance {
      */
     void setDiagonalCompatibilityMatrix(const vertex_type_t_or_default number_of_types) {
         nodeProcessorCompatibility.assign(number_of_types, std::vector<bool>(number_of_types, false));
-        for (vertex_type_t_or_default i = 0; i < number_of_types; ++i) { nodeProcessorCompatibility[i][i] = true; }
+        for (vertex_type_t_or_default i = 0; i < number_of_types; ++i) {
+            nodeProcessorCompatibility[i][i] = true;
+        }
     }
 
     /**
@@ -330,11 +332,15 @@ class BspInstance {
             for (processor_type_t proc_type = 0U; proc_type < architecture.getNumberOfProcessorTypes(); proc_type++) {
                 if (isCompatibleType(vertType, proc_type)) {
                     fits = fits | (max_memory_of_type <= max_memory_per_proc_type[proc_type]);
-                    if (fits) { break; }
+                    if (fits) {
+                        break;
+                    }
                 }
             }
 
-            if (!fits) { return false; }
+            if (!fits) {
+                return false;
+            }
         }
 
         return true;
@@ -351,7 +357,9 @@ class BspInstance {
 
         for (vertex_type_t_or_default nodeType = 0U; nodeType < numberOfNodeTypes; ++nodeType) {
             for (processor_type_t processorType = 0U; processorType < numberOfProcTypes; ++processorType) {
-                if (isCompatibleType(nodeType, processorType)) { compatibleProcTypes[nodeType].push_back(processorType); }
+                if (isCompatibleType(nodeType, processorType)) {
+                    compatibleProcTypes[nodeType].push_back(processorType);
+                }
             }
         }
 

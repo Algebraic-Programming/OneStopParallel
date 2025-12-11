@@ -123,7 +123,9 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
         for (const auto &node : G.vertices()) {
             predec[node] = G.in_degree(node);
 
-            if (predec[node] == 0) { ready.insert(node); }
+            if (predec[node] == 0) {
+                ready.insert(node);
+            }
         }
 
         std::vector<std::vector<vertex_idx>> new_assignments(P);
@@ -196,7 +198,9 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
                     new_total_assigned++;
                     weight_limit += G.vertex_work_weight(chosen_node);
 
-                    if constexpr (use_memory_constraint) { local_memory_constraint.add(chosen_node, 0); }
+                    if constexpr (use_memory_constraint) {
+                        local_memory_constraint.add(chosen_node, 0);
+                    }
 
                     for (const auto &succ : G.children(chosen_node)) {
                         if (node_to_proc[succ] == std::numeric_limits<unsigned>::max()) {
@@ -257,7 +261,9 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
                         new_total_assigned++;
                         current_weight_assigned += G.vertex_work_weight(chosen_node);
 
-                        if constexpr (use_memory_constraint) { local_memory_constraint.add(chosen_node, proc); }
+                        if constexpr (use_memory_constraint) {
+                            local_memory_constraint.add(chosen_node, proc);
+                        }
 
                         for (const auto &succ : G.children(chosen_node)) {
                             if (node_to_proc[succ] == std::numeric_limits<unsigned>::max()) {
@@ -299,7 +305,9 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
                 }
 
                 if (weight_limit >= minWeightParallelCheck) {
-                    if (parallelism < std::max(2.0, 0.8 * desiredParallelism)) { continueSuperstepAttempts = false; }
+                    if (parallelism < std::max(2.0, 0.8 * desiredParallelism)) {
+                        continueSuperstepAttempts = false;
+                    }
                 }
 
                 if (weight_limit <= minSuperstepWeight) {
@@ -310,10 +318,14 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
                     }
                 }
 
-                if (total_assigned + new_total_assigned == N) { continueSuperstepAttempts = false; }
+                if (total_assigned + new_total_assigned == N) {
+                    continueSuperstepAttempts = false;
+                }
 
                 if constexpr (use_memory_constraint) {
-                    if (early_memory_break) { continueSuperstepAttempts = false; }
+                    if (early_memory_break) {
+                        continueSuperstepAttempts = false;
+                    }
                 }
 
                 // undo proc assingments and predec decreases in any case
@@ -327,7 +339,9 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
                         }
                     }
 
-                    if constexpr (use_memory_constraint) { local_memory_constraint.reset(proc); }
+                    if constexpr (use_memory_constraint) {
+                        local_memory_constraint.reset(proc);
+                    }
                 }
 
                 if (accept_step) {
@@ -340,7 +354,9 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
             }
 
             // apply best iteration
-            for (const auto &node : best_new_ready) { ready.insert(node); }
+            for (const auto &node : best_new_ready) {
+                ready.insert(node);
+            }
 
             for (unsigned proc = 0; proc < P; ++proc) {
                 for (const auto &node : best_new_assignments[proc]) {
@@ -349,7 +365,9 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
                     ready.erase(node);
                     ++total_assigned;
 
-                    for (const auto &succ : G.children(node)) { predec[succ]--; }
+                    for (const auto &succ : G.children(node)) {
+                        predec[succ]--;
+                    }
                 }
             }
 

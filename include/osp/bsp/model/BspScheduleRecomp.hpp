@@ -236,7 +236,9 @@ v_workw_t<Graph_t> BspScheduleRecomp<Graph_t>::computeWorkCosts() const {
         cost_type max_work = 0;
 
         for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
-            if (max_work < step_proc_work[step][proc]) { max_work = step_proc_work[step][proc]; }
+            if (max_work < step_proc_work[step][proc]) {
+                max_work = step_proc_work[step][proc];
+            }
         }
 
         total_costs += max_work;
@@ -264,11 +266,17 @@ v_workw_t<Graph_t> BspScheduleRecomp<Graph_t>::computeCosts() const {
         cost_type max_comm = 0;
 
         for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
-            if (max_comm < send[step][proc]) { max_comm = send[step][proc]; }
-            if (max_comm < rec[step][proc]) { max_comm = rec[step][proc]; }
+            if (max_comm < send[step][proc]) {
+                max_comm = send[step][proc];
+            }
+            if (max_comm < rec[step][proc]) {
+                max_comm = rec[step][proc];
+            }
         }
 
-        if (max_comm > 0) { total_costs += instance->synchronisationCosts() + max_comm * instance->communicationCosts(); }
+        if (max_comm > 0) {
+            total_costs += instance->synchronisationCosts() + max_comm * instance->communicationCosts();
+        }
     }
 
     total_costs += computeWorkCosts();
@@ -290,12 +298,16 @@ void BspScheduleRecomp<Graph_t>::mergeSupersteps() {
     std::vector<unsigned> new_step_idx(number_of_supersteps);
     std::vector<bool> comm_phase_empty(number_of_supersteps, true);
 
-    for (auto const &[key, val] : commSchedule) { comm_phase_empty[val] = false; }
+    for (auto const &[key, val] : commSchedule) {
+        comm_phase_empty[val] = false;
+    }
 
     unsigned current_step_idx = 0;
     for (unsigned step = 0; step < number_of_supersteps; ++step) {
         new_step_idx[step] = current_step_idx;
-        if (!comm_phase_empty[step] || step == number_of_supersteps - 1) { ++current_step_idx; }
+        if (!comm_phase_empty[step] || step == number_of_supersteps - 1) {
+            ++current_step_idx;
+        }
     }
     for (vertex_idx node = 0; node < instance->numberOfVertices(); ++node) {
         std::vector<std::pair<unsigned, unsigned>> new_assignment;

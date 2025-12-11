@@ -93,7 +93,11 @@ BOOST_AUTO_TEST_CASE(ContractionMapCoarsening) {
     BOOST_CHECK_EQUAL(coarseGraph1.in_degree(1), 1);
     BOOST_CHECK_EQUAL(coarseGraph1.in_degree(2), 0);
 
-    for (const auto &vert : coarseGraph1.children(0)) { BOOST_CHECK_EQUAL(vert, 1); }
+    for (const auto &vert : coarseGraph1.children(0)) {
+        BOOST_CHECK_EQUAL(vert, 1);
+    }
 
-    for (const auto &vert : coarseGraph1.parents(1)) { BOOST_CHECK_EQUAL(vert, 0); }
+    for (const auto &vert : coarseGraph1.parents(1)) {
+        BOOST_CHECK_EQUAL(vert, 0);
+    }
 }

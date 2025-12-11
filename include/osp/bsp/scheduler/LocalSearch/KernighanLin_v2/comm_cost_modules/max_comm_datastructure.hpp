@@ -172,8 +172,12 @@ struct max_comm_datastructure {
         step_max_comm_cache[step] = global_max;
 
         unsigned global_count = 0;
-        if (max_send == global_max) { global_count += max_send_count; }
-        if (max_receive == global_max) { global_count += max_receive_count; }
+        if (max_send == global_max) {
+            global_count += max_send_count;
+        }
+        if (max_receive == global_max) {
+            global_count += max_receive_count;
+        }
         step_max_comm_count_cache[step] = global_count;
 
         comm_weight_t cand_send = (max_send == global_max) ? second_max_send : max_send;
@@ -209,7 +213,9 @@ struct max_comm_datastructure {
 
         // Prepare Scratchpad (Avoids Allocations) ---
         for (unsigned step : affected_steps_list) {
-            if (step < step_is_affected.size()) { step_is_affected[step] = false; }
+            if (step < step_is_affected.size()) {
+                step_is_affected[step] = false;
+            }
         }
         affected_steps_list.clear();
 
@@ -235,13 +241,17 @@ struct max_comm_datastructure {
                 // A. Remove Old (Sender: from_proc, Receiver: proc)
                 if (proc != from_proc) {
                     const comm_weight_t cost = comm_w_node * instance->sendCosts(from_proc, proc);
-                    if (cost > 0) { CommPolicy::unattribute_communication(*this, cost, from_step, from_proc, proc, 0, val); }
+                    if (cost > 0) {
+                        CommPolicy::unattribute_communication(*this, cost, from_step, from_proc, proc, 0, val);
+                    }
                 }
 
                 // B. Add New (Sender: to_proc, Receiver: proc)
                 if (proc != to_proc) {
                     const comm_weight_t cost = comm_w_node * instance->sendCosts(to_proc, proc);
-                    if (cost > 0) { CommPolicy::attribute_communication(*this, cost, to_step, to_proc, proc, 0, val); }
+                    if (cost > 0) {
+                        CommPolicy::attribute_communication(*this, cost, to_step, to_proc, proc, 0, val);
+                    }
                 }
             }
             mark_step(from_step);
@@ -254,13 +264,17 @@ struct max_comm_datastructure {
                 // Remove Old (Sender: from_proc, Receiver: proc)
                 if (proc != from_proc) {
                     const comm_weight_t cost = comm_w_node * instance->sendCosts(from_proc, proc);
-                    if (cost > 0) { CommPolicy::unattribute_communication(*this, cost, from_step, from_proc, proc, 0, val); }
+                    if (cost > 0) {
+                        CommPolicy::unattribute_communication(*this, cost, from_step, from_proc, proc, 0, val);
+                    }
                 }
 
                 // Add New (Sender: to_proc, Receiver: proc)
                 if (proc != to_proc) {
                     const comm_weight_t cost = comm_w_node * instance->sendCosts(to_proc, proc);
-                    if (cost > 0) { CommPolicy::attribute_communication(*this, cost, from_step, to_proc, proc, 0, val); }
+                    if (cost > 0) {
+                        CommPolicy::attribute_communication(*this, cost, from_step, to_proc, proc, 0, val);
+                    }
                 }
             }
             mark_step(from_step);
@@ -271,7 +285,9 @@ struct max_comm_datastructure {
         for (const auto &parent : graph.parents(node)) {
             const unsigned parent_step = active_schedule->assigned_superstep(parent);
             // Fast boundary check
-            if (parent_step >= step_proc_send_.size()) { continue; }
+            if (parent_step >= step_proc_send_.size()) {
+                continue;
+            }
 
             const unsigned parent_proc = active_schedule->assigned_processor(parent);
             const comm_weight_t comm_w_parent = graph.vertex_comm_weight(parent);
@@ -306,7 +322,9 @@ struct max_comm_datastructure {
         }
 
         // Re-arrange Affected Steps
-        for (unsigned step : affected_steps_list) { arrange_superstep_comm_data(step); }
+        for (unsigned step : affected_steps_list) {
+            arrange_superstep_comm_data(step);
+        }
     }
 
     void swap_steps(const unsigned step1, const unsigned step2) {
@@ -355,7 +373,9 @@ struct max_comm_datastructure {
         }
 
         for (unsigned step = start_step; step <= end_step; step++) {
-            if (step >= step_proc_send_.size()) { continue; }
+            if (step >= step_proc_send_.size()) {
+                continue;
+            }
             arrange_superstep_comm_data(step);
         }
     }

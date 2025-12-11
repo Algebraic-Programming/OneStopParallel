@@ -40,7 +40,9 @@ int main(int argc, char *argv[]) {
     size_t num_vert = static_cast<size_t>(std::stoul(argv[1]));
     double chance = 2 * std::atof(argv[2]);
     unsigned num_graphs = 1;
-    if (argc > 3) { num_graphs = static_cast<unsigned>(std::stoul(argv[3])); }
+    if (argc > 3) {
+        num_graphs = static_cast<unsigned>(std::stoul(argv[3]));
+    }
 
     //  Initiating random values
     double lower_bound = -2;

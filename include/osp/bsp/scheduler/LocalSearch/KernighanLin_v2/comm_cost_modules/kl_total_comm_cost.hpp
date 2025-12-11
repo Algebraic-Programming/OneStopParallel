@@ -115,9 +115,13 @@ struct kl_total_comm_cost_function {
 
         for (const auto &target : instance->getComputationalDag().children(move.node)) {
             const unsigned target_step = active_schedule->assigned_superstep(target);
-            if (target_step < start_step || target_step > end_step) { continue; }
+            if (target_step < start_step || target_step > end_step) {
+                continue;
+            }
 
-            if (thread_data.lock_manager.is_locked(target)) { continue; }
+            if (thread_data.lock_manager.is_locked(target)) {
+                continue;
+            }
 
             if (not thread_data.affinity_table.is_selected(target)) {
                 new_nodes.push_back(target);
@@ -220,9 +224,13 @@ struct kl_total_comm_cost_function {
 
         for (const auto &source : instance->getComputationalDag().parents(move.node)) {
             const unsigned source_step = active_schedule->assigned_superstep(source);
-            if (source_step < start_step || source_step > end_step) { continue; }
+            if (source_step < start_step || source_step > end_step) {
+                continue;
+            }
 
-            if (thread_data.lock_manager.is_locked(source)) { continue; }
+            if (thread_data.lock_manager.is_locked(source)) {
+                continue;
+            }
 
             if (not thread_data.affinity_table.is_selected(source)) {
                 new_nodes.push_back(source);
@@ -358,13 +366,17 @@ struct kl_total_comm_cost_function {
                     }
                 }
 
-                if (window_size >= diff && is_compatible(node, target_proc)) { affinity_table_node[target_proc][idx] -= reward; }
+                if (window_size >= diff && is_compatible(node, target_proc)) {
+                    affinity_table_node[target_proc][idx] -= reward;
+                }
 
             } else {
                 const unsigned diff = target_step - node_step;
                 unsigned idx = window_size + diff;
 
-                if (idx < window_bound && is_compatible(node, target_proc)) { affinity_table_node[target_proc][idx] -= penalty; }
+                if (idx < window_bound && is_compatible(node, target_proc)) {
+                    affinity_table_node[target_proc][idx] -= penalty;
+                }
 
                 for (; idx < window_bound; idx++) {
                     for (const unsigned p : proc_range->compatible_processors_vertex(node)) {
@@ -379,7 +391,9 @@ struct kl_total_comm_cost_function {
             for (const unsigned p : proc_range->compatible_processors_vertex(node)) {
                 const cost_t comm_cost
                     = change_comm_cost(instance->communicationCosts(p, target_proc), node_target_comm_cost, comm_gain);
-                for (unsigned idx = node_start_idx; idx < window_bound; idx++) { affinity_table_node[p][idx] += comm_cost; }
+                for (unsigned idx = node_start_idx; idx < window_bound; idx++) {
+                    affinity_table_node[p][idx] += comm_cost;
+                }
             }
 
         }    // traget
@@ -399,13 +413,17 @@ struct kl_total_comm_cost_function {
                     }
                 }
 
-                if (idx - 1 < bound && is_compatible(node, source_proc)) { affinity_table_node[source_proc][idx - 1] -= penalty; }
+                if (idx - 1 < bound && is_compatible(node, source_proc)) {
+                    affinity_table_node[source_proc][idx - 1] -= penalty;
+                }
 
             } else {
                 const unsigned diff = source_step - node_step;
                 unsigned idx = std::min(window_size + diff, window_bound);
 
-                if (idx < window_bound && is_compatible(node, source_proc)) { affinity_table_node[source_proc][idx] -= reward; }
+                if (idx < window_bound && is_compatible(node, source_proc)) {
+                    affinity_table_node[source_proc][idx] -= reward;
+                }
 
                 idx++;
 
@@ -422,7 +440,9 @@ struct kl_total_comm_cost_function {
             for (const unsigned p : proc_range->compatible_processors_vertex(node)) {
                 const cost_t comm_cost
                     = change_comm_cost(instance->communicationCosts(p, source_proc), source_node_comm_cost, comm_gain);
-                for (unsigned idx = node_start_idx; idx < window_bound; idx++) { affinity_table_node[p][idx] += comm_cost; }
+                for (unsigned idx = node_start_idx; idx < window_bound; idx++) {
+                    affinity_table_node[p][idx] += comm_cost;
+                }
             }
         }    // source
     }

@@ -28,7 +28,9 @@ BOOST_AUTO_TEST_CASE(BitMaskTest_1) {
     BitMask mask(num_flags);
 
     for (unsigned i = 0; i < 25U; ++i) {
-        for (std::size_t j = 0; j < num_flags; ++j) { BOOST_CHECK_EQUAL(mask.mask[j], bool(i & (1U << j))); }
+        for (std::size_t j = 0; j < num_flags; ++j) {
+            BOOST_CHECK_EQUAL(mask.mask[j], bool(i & (1U << j)));
+        }
         ++mask;
     }
 }
@@ -40,7 +42,9 @@ BOOST_AUTO_TEST_CASE(BitMaskTest_2) {
     for (unsigned i = 0; i < 256U; ++i) {
         BitMask tmp = mask;
         BitMask post = mask++;
-        for (std::size_t j = 0; j < num_flags; ++j) { BOOST_CHECK_EQUAL(tmp.mask[j], post.mask[j]); }
+        for (std::size_t j = 0; j < num_flags; ++j) {
+            BOOST_CHECK_EQUAL(tmp.mask[j], post.mask[j]);
+        }
     }
 }
 
@@ -51,6 +55,8 @@ BOOST_AUTO_TEST_CASE(BitMaskTest_3) {
     for (unsigned i = 0; i < 256U; ++i) {
         BitMask tmp = mask++;
         ++tmp;
-        for (std::size_t j = 0; j < num_flags; ++j) { BOOST_CHECK_EQUAL(tmp.mask[j], mask.mask[j]); }
+        for (std::size_t j = 0; j < num_flags; ++j) {
+            BOOST_CHECK_EQUAL(tmp.mask[j], mask.mask[j]);
+        }
     }
 }

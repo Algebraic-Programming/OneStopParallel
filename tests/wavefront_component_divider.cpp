@@ -255,7 +255,9 @@ BOOST_AUTO_TEST_CASE(SequenceGenerationTest) {
     std::vector<double> expected_parallelism = {2.0, 7.0, 9.0, 9.0, 8.8};
 
     BOOST_REQUIRE_EQUAL(parallelism_seq.size(), expected_parallelism.size());
-    for (size_t i = 0; i < parallelism_seq.size(); ++i) { BOOST_CHECK_CLOSE(parallelism_seq[i], expected_parallelism[i], 1e-9); }
+    for (size_t i = 0; i < parallelism_seq.size(); ++i) {
+        BOOST_CHECK_CLOSE(parallelism_seq[i], expected_parallelism[i], 1e-9);
+    }
 }
 
 struct TestFixture {

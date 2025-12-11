@@ -50,7 +50,9 @@ bool has_path(const vertex_idx_t<Graph_t> src, const vertex_idx_t<Graph_t> dest,
     static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
 
     for (const auto &child : bfs_view(graph, src)) {
-        if (child == dest) { return true; }
+        if (child == dest) {
+            return true;
+        }
     }
 
     return false;
@@ -69,7 +71,9 @@ std::size_t longestPath(const std::set<vertex_idx_t<Graph_t>> &vertices, const G
     for (const VertexType &node : vertices) {
         unsigned indeg = 0;
         for (const VertexType &parent : graph.parents(node)) {
-            if (vertices.count(parent) == 1) { ++indeg; }
+            if (vertices.count(parent) == 1) {
+                ++indeg;
+            }
         }
 
         if (indeg == 0) {
@@ -86,7 +90,9 @@ std::size_t longestPath(const std::set<vertex_idx_t<Graph_t>> &vertices, const G
         bfs_queue.pop();
 
         for (const VertexType &child : graph.children(current)) {
-            if (vertices.count(child) == 0) { continue; }
+            if (vertices.count(child) == 0) {
+                continue;
+            }
 
             ++visit_counter[child];
             if (visit_counter[child] == in_degrees[child]) {
@@ -112,7 +118,9 @@ std::size_t longestPath(const Graph_t &graph) {
     std::vector<VertexType> distances(graph.num_vertices(), 0), visit_counter(graph.num_vertices(), 0);
 
     // Find source nodes
-    for (const auto &node : source_vertices_view(graph)) { bfs_queue.push(node); }
+    for (const auto &node : source_vertices_view(graph)) {
+        bfs_queue.push(node);
+    }
 
     // Execute BFS
     while (!bfs_queue.empty()) {
@@ -140,7 +148,9 @@ std::vector<vertex_idx_t<Graph_t>> longestChain(const Graph_t &graph) {
 
     std::vector<VertexType> chain;
 
-    if (graph.num_vertices() == 0) { return chain; }
+    if (graph.num_vertices() == 0) {
+        return chain;
+    }
 
     std::vector<unsigned> top_length(graph.num_vertices(), 0);
     unsigned running_longest_chain = 0;
@@ -150,7 +160,9 @@ std::vector<vertex_idx_t<Graph_t>> longestChain(const Graph_t &graph) {
     // calculating lenght of longest path
     for (const VertexType &node : top_sort_view(graph)) {
         unsigned max_temp = 0;
-        for (const auto &parent : graph.parents(node)) { max_temp = std::max(max_temp, top_length[parent]); }
+        for (const auto &parent : graph.parents(node)) {
+            max_temp = std::max(max_temp, top_length[parent]);
+        }
 
         top_length[node] = max_temp + 1;
         if (top_length[node] > running_longest_chain) {
@@ -163,7 +175,9 @@ std::vector<vertex_idx_t<Graph_t>> longestChain(const Graph_t &graph) {
     chain.push_back(end_longest_chain);
     while (graph.in_degree(end_longest_chain) != 0) {
         for (const VertexType &in_node : graph.parents(end_longest_chain)) {
-            if (top_length[in_node] != top_length[end_longest_chain] - 1) { continue; }
+            if (top_length[in_node] != top_length[end_longest_chain] - 1) {
+                continue;
+            }
 
             end_longest_chain = in_node;
             chain.push_back(end_longest_chain);
@@ -186,7 +200,9 @@ std::vector<T> get_bottom_node_distance(const Graph_t &graph) {
     const auto top_order = GetTopOrder(graph);
     for (std::size_t i = top_order.size() - 1; i < top_order.size(); i--) {
         T max_temp = 0;
-        for (const auto &j : graph.children(top_order[i])) { max_temp = std::max(max_temp, bottom_distance[j]); }
+        for (const auto &j : graph.children(top_order[i])) {
+            max_temp = std::max(max_temp, bottom_distance[j]);
+        }
         bottom_distance[top_order[i]] = ++max_temp;
     }
     return bottom_distance;
@@ -202,7 +218,9 @@ std::vector<T> get_top_node_distance(const Graph_t &graph) {
 
     for (const auto &vertex : bfs_top_sort_view(graph)) {
         T max_temp = 0;
-        for (const auto &j : graph.parents(vertex)) { max_temp = std::max(max_temp, top_distance[j]); }
+        for (const auto &j : graph.parents(vertex)) {
+            max_temp = std::max(max_temp, top_distance[j]);
+        }
         top_distance[vertex] = ++max_temp;
     }
     return top_distance;
@@ -261,7 +279,9 @@ std::vector<int> get_strict_poset_integer_map(unsigned const noise, double const
 
     std::unordered_map<EdgeType, bool> up_or_down;
 
-    for (const auto &edge : edges(graph)) { up_or_down.emplace(edge, repeater_coin.get_flip()); }
+    for (const auto &edge : edges(graph)) {
+        up_or_down.emplace(edge, repeater_coin.get_flip());
+    }
 
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -273,7 +293,9 @@ std::vector<int> get_strict_poset_integer_map(unsigned const noise, double const
     std::vector<int> new_bot(graph.num_vertices(), 0);
 
     unsigned max_path = 0;
-    for (const auto &vertex : graph.vertices()) { max_path = std::max(max_path, top_distance[vertex]); }
+    for (const auto &vertex : graph.vertices()) {
+        max_path = std::max(max_path, top_distance[vertex]);
+    }
 
     for (const auto &source : source_vertices_view(graph)) {
         if (max_path - bot_distance[source] + 1U + 2U * noise > static_cast<unsigned>(std::numeric_limits<int>::max())) {
@@ -290,7 +312,9 @@ std::vector<int> get_strict_poset_integer_map(unsigned const noise, double const
     }
 
     for (const auto &vertex : top_order) {
-        if (is_source(vertex, graph)) { continue; }
+        if (is_source(vertex, graph)) {
+            continue;
+        }
 
         int max_temp = std::numeric_limits<int>::min();
 
@@ -309,20 +333,26 @@ std::vector<int> get_strict_poset_integer_map(unsigned const noise, double const
     }
 
     for (std::reverse_iterator iter = top_order.crbegin(); iter != top_order.crend(); ++iter) {
-        if (is_sink(*iter, graph)) { continue; }
+        if (is_sink(*iter, graph)) {
+            continue;
+        }
 
         int max_temp = std::numeric_limits<int>::min();
 
         for (const auto &edge : out_edges(*iter, graph)) {
             int temp = new_bot[target(edge, graph)];
-            if (!up_or_down.at(edge)) { temp += 1 + poisson_gen(gen); }
+            if (!up_or_down.at(edge)) {
+                temp += 1 + poisson_gen(gen);
+            }
             max_temp = std::max(max_temp, temp);
         }
         new_bot[*iter] = max_temp;
     }
 
     std::vector<int> output(graph.num_vertices());
-    for (unsigned i = 0; i < graph.num_vertices(); i++) { output[i] = new_top[i] - new_bot[i]; }
+    for (unsigned i = 0; i < graph.num_vertices(); i++) {
+        output[i] = new_top[i] - new_bot[i];
+    }
     return output;
 }
 

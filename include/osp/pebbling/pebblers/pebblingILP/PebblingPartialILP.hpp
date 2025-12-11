@@ -89,7 +89,9 @@ template <typename Graph_t>
 RETURN_STATUS PebblingPartialILP<Graph_t>::computePebbling(PebblingSchedule<Graph_t> &schedule) {
     const BspInstance<Graph_t> &instance = schedule.getInstance();
 
-    if (!PebblingSchedule<Graph_t>::hasValidSolution(instance)) { return RETURN_STATUS::ERROR; }
+    if (!PebblingSchedule<Graph_t>::hasValidSolution(instance)) {
+        return RETURN_STATUS::ERROR;
+    }
 
     // STEP 1: divide DAG acyclicly with partitioning ILP
 
@@ -115,7 +117,9 @@ RETURN_STATUS PebblingPartialILP<Graph_t>::computePebbling(PebblingSchedule<Grap
         for (unsigned type = 0; type < instance.getComputationalDag().num_vertex_types(); ++type) {
             if (part_and_nodetype_to_new_index.find({part, type}) != part_and_nodetype_to_new_index.end()) {
                 unsigned new_index = part_and_nodetype_to_new_index[{part, type}];
-                for (unsigned proc : processors_to_parts_and_types[new_index]) { processors_to_parts[part].insert(proc); }
+                for (unsigned proc : processors_to_parts_and_types[new_index]) {
+                    processors_to_parts[part].insert(proc);
+                }
             }
         }
     }
@@ -133,7 +137,9 @@ RETURN_STATUS PebblingPartialILP<Graph_t>::computePebbling(PebblingSchedule<Grap
             extra_sources[assignment_to_parts[node]].insert(node);
         }
         for (const vertex_idx &pred : instance.getComputationalDag().parents(node)) {
-            if (assignment_to_parts[node] != assignment_to_parts[pred]) { extra_sources[assignment_to_parts[node]].insert(pred); }
+            if (assignment_to_parts[node] != assignment_to_parts[pred]) {
+                extra_sources[assignment_to_parts[node]].insert(pred);
+            }
         }
     }
 
@@ -156,10 +162,14 @@ RETURN_STATUS PebblingPartialILP<Graph_t>::computePebbling(PebblingSchedule<Grap
 
     for (unsigned part = 0; part < nr_parts; ++part) {
         for (unsigned other_part = part + 1; other_part < nr_parts; ++other_part) {
-            if (isomorphicTo[other_part] < UINT_MAX) { continue; }
+            if (isomorphicTo[other_part] < UINT_MAX) {
+                continue;
+            }
 
             bool isomorphic = true;
-            if (!checkOrderedIsomorphism(subDags[part], subDags[other_part])) { continue; }
+            if (!checkOrderedIsomorphism(subDags[part], subDags[other_part])) {
+                continue;
+            }
 
             std::vector<unsigned> proc_assigned_per_type(instance.getArchitecture().getNumberOfProcessorTypes(), 0);
             std::vector<unsigned> other_proc_assigned_per_type(instance.getArchitecture().getNumberOfProcessorTypes(), 0);
@@ -171,10 +181,14 @@ RETURN_STATUS PebblingPartialILP<Graph_t>::computePebbling(PebblingSchedule<Grap
             }
 
             for (unsigned proc_type = 0; proc_type < instance.getArchitecture().getNumberOfProcessorTypes(); ++proc_type) {
-                if (proc_assigned_per_type[proc_type] != other_proc_assigned_per_type[proc_type]) { isomorphic = false; }
+                if (proc_assigned_per_type[proc_type] != other_proc_assigned_per_type[proc_type]) {
+                    isomorphic = false;
+                }
             }
 
-            if (!isomorphic) { continue; }
+            if (!isomorphic) {
+                continue;
+            }
 
             isomorphicTo[other_part] = part;
             std::cout << "Part " << other_part << " is isomorphic to " << part << std::endl;
@@ -212,10 +226,14 @@ RETURN_STATUS PebblingPartialILP<Graph_t>::computePebbling(PebblingSchedule<Grap
         std::set<vertex_idx> needs_blue_at_end;
         for (vertex_idx node : nodes_in_part[part]) {
             for (const vertex_idx &succ : instance.getComputationalDag().children(node)) {
-                if (assignment_to_parts[node] != assignment_to_parts[succ]) { needs_blue_at_end.insert(local_id[node]); }
+                if (assignment_to_parts[node] != assignment_to_parts[succ]) {
+                    needs_blue_at_end.insert(local_id[node]);
+                }
             }
 
-            if (instance.getComputationalDag().out_degree(node) == 0) { needs_blue_at_end.insert(local_id[node]); }
+            if (instance.getComputationalDag().out_degree(node) == 0) {
+                needs_blue_at_end.insert(local_id[node]);
+            }
         }
 
         // set up sub-architecture
@@ -267,7 +285,9 @@ RETURN_STATUS PebblingPartialILP<Graph_t>::computePebbling(PebblingSchedule<Grap
         greedy_scheduler.computeSchedule(bsp_heuristic);
 
         std::set<vertex_idx> extra_source_ids;
-        for (vertex_idx idx = 0; idx < extra_sources[part].size(); ++idx) { extra_source_ids.insert(idx); }
+        for (vertex_idx idx = 0; idx < extra_sources[part].size(); ++idx) {
+            extra_source_ids.insert(idx);
+        }
 
         heuristic_pebbling.setNeedToLoadInputs(true);
         heuristic_pebbling.SetExternalSources(extra_source_ids);
@@ -279,7 +299,9 @@ RETURN_STATUS PebblingPartialILP<Graph_t>::computePebbling(PebblingSchedule<Grap
         pebbling[part] = heuristic_pebbling;
         cost_type heuristicCost = asynchronous ? heuristic_pebbling.computeAsynchronousCost() : heuristic_pebbling.computeCost();
 
-        if (!heuristic_pebbling.isValid()) { std::cout << "ERROR: Pebbling heuristic INVALID!" << std::endl; }
+        if (!heuristic_pebbling.isValid()) {
+            std::cout << "ERROR: Pebbling heuristic INVALID!" << std::endl;
+        }
 
         // solution with subILP
         MultiProcessorPebbling<Graph_t> mpp;
@@ -293,7 +315,9 @@ RETURN_STATUS PebblingPartialILP<Graph_t>::computePebbling(PebblingSchedule<Grap
         PebblingSchedule<Graph_t> pebblingILP(subInstance[part]);
         RETURN_STATUS status = mpp.computePebblingWithInitialSolution(heuristic_pebbling, pebblingILP, asynchronous);
         if (status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND) {
-            if (!pebblingILP.isValid()) { std::cout << "ERROR: Pebbling ILP INVALID!" << std::endl; }
+            if (!pebblingILP.isValid()) {
+                std::cout << "ERROR: Pebbling ILP INVALID!" << std::endl;
+            }
 
             pebblingILP.removeEvictStepsFromEnd();
             cost_type ILP_cost = asynchronous ? pebblingILP.computeAsynchronousCost() : pebblingILP.computeCost();
@@ -341,7 +365,9 @@ Graph_t PebblingPartialILP<Graph_t>::contractByPartition(const BspInstance<Graph
     }
 
     Graph_t contracted;
-    for (vertex_idx node = 0; node < nr_new_nodes; ++node) { contracted.add_vertex(0, 0, 0); }
+    for (vertex_idx node = 0; node < nr_new_nodes; ++node) {
+        contracted.add_vertex(0, 0, 0);
+    }
 
     std::set<std::pair<vertex_idx, vertex_idx>> edges;
 

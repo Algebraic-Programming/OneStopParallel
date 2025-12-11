@@ -81,7 +81,9 @@ BOOST_AUTO_TEST_CASE(test_dag_vector_adapter_edge) {
 
     graph_t graph(out_neighbors, in_neighbors);
 
-    for (auto v : graph.vertices()) { graph.set_vertex_work_weight(v, 10); }
+    for (auto v : graph.vertices()) {
+        graph.set_vertex_work_weight(v, 10);
+    }
 
     BspInstance<graph_t> instance;
     instance.getComputationalDag() = graph;
@@ -168,7 +170,9 @@ BOOST_AUTO_TEST_CASE(test_dag_vector_adapter) {
 
     graph_t graph(out_neighbors, in_neighbors);
 
-    for (auto v : graph.vertices()) { graph.set_vertex_work_weight(v, 10); }
+    for (auto v : graph.vertices()) {
+        graph.set_vertex_work_weight(v, 10);
+    }
 
     BspInstance<graph_t> instance;
     instance.getComputationalDag() = graph;

@@ -39,7 +39,9 @@ integral_type intSqrtFloor(integral_type num) {
     integral_type power2 = sqrt / 2;
     while (power2 > 0) {
         integral_type sum = sqrt + power2;
-        if (sum * sum <= num) { sqrt = sum; }
+        if (sum * sum <= num) {
+            sqrt = sum;
+        }
         power2 /= 2;
     }
 
@@ -55,7 +57,9 @@ std::vector<integral_type> divisorsList(integral_type num) {
 
     integral_type ub = intSqrtFloor<integral_type>(num);
     for (integral_type div = 1; div <= ub; ++div) {
-        if (num % div == 0) { divs.emplace_back(div); }
+        if (num % div == 0) {
+            divs.emplace_back(div);
+        }
     }
     for (std::size_t indx = divs.back() * divs.back() == num ? divs.size() - 2U : divs.size() - 1U;
          indx != std::numeric_limits<std::size_t>::max();

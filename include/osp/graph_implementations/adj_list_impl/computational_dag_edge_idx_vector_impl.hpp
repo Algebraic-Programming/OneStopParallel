@@ -115,7 +115,9 @@ class computational_dag_edge_idx_vector_impl {
 
     computational_dag_edge_idx_vector_impl(vertex_idx num_vertices)
         : vertices_(num_vertices), out_edges_(num_vertices), in_edges_(num_vertices) {
-        for (vertex_idx i = 0; i < num_vertices; ++i) { vertices_[i].id = i; }
+        for (vertex_idx i = 0; i < num_vertices; ++i) {
+            vertices_[i].id = i;
+        }
     }
 
     computational_dag_edge_idx_vector_impl(const computational_dag_edge_idx_vector_impl &other) = default;
@@ -203,12 +205,18 @@ class computational_dag_edge_idx_vector_impl {
     }
 
     std::pair<directed_edge_descriptor, bool> add_edge(vertex_idx source, vertex_idx target, edge_comm_weight_type comm_weight = 1) {
-        if (source == target) { return {directed_edge_descriptor{}, false}; }
+        if (source == target) {
+            return {directed_edge_descriptor{}, false};
+        }
 
-        if (source >= vertices_.size() || target >= vertices_.size()) { return {directed_edge_descriptor{}, false}; }
+        if (source >= vertices_.size() || target >= vertices_.size()) {
+            return {directed_edge_descriptor{}, false};
+        }
 
         for (const auto edge : out_edges_[source]) {
-            if (edge.target == target) { return {directed_edge_descriptor{}, false}; }
+            if (edge.target == target) {
+                return {directed_edge_descriptor{}, false};
+            }
         }
 
         out_edges_[source].emplace_back(source, target, edges_.size());

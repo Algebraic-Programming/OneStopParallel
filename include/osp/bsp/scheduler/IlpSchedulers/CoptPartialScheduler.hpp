@@ -105,7 +105,9 @@ RETURN_STATUS CoptPartialScheduler<Graph_t>::improveSchedule(BspScheduleCS<Graph
 
     model.Solve();
 
-    if (model.GetIntAttr(COPT_INTATTR_HASMIPSOL)) { updateSchedule(schedule); }
+    if (model.GetIntAttr(COPT_INTATTR_HASMIPSOL)) {
+        updateSchedule(schedule);
+    }
 
     if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_OPTIMAL) {
         return RETURN_STATUS::OSP_SUCCESS;
@@ -127,7 +129,9 @@ void CoptPartialScheduler<Graph_t>::setInitialSolution(const BspScheduleCS<Graph
     const auto &cs = schedule.getCommunicationSchedule();
 
     for (const vertex_idx_t<Graph_t> &node : DAG.vertices()) {
-        if (node_local_ID.find(node) == node_local_ID.end()) { continue; }
+        if (node_local_ID.find(node) == node_local_ID.end()) {
+            continue;
+        }
         for (unsigned proc = 0; proc < num_processors; proc++) {
             for (unsigned step = 0; step < max_number_supersteps; ++step) {
                 if (schedule.assignedProcessor(node) == proc && schedule.assignedSuperstep(node) == start_superstep + step) {
@@ -144,11 +148,15 @@ void CoptPartialScheduler<Graph_t>::setInitialSolution(const BspScheduleCS<Graph
     }
 
     for (const auto &node : DAG.vertices()) {
-        if (node_local_ID.find(node) == node_local_ID.end()) { continue; }
+        if (node_local_ID.find(node) == node_local_ID.end()) {
+            continue;
+        }
 
         for (unsigned p1 = 0; p1 < num_processors; p1++) {
             for (unsigned p2 = 0; p2 < num_processors; p2++) {
-                if (p1 == p2) { continue; }
+                if (p1 == p2) {
+                    continue;
+                }
 
                 for (unsigned step = 0; step < max_number_supersteps && step <= end_superstep - start_superstep; step++) {
                     const auto &key = std::make_tuple(node, p1, p2);
@@ -165,10 +173,14 @@ void CoptPartialScheduler<Graph_t>::setInitialSolution(const BspScheduleCS<Graph
     }
 
     for (const auto &source : DAG.vertices()) {
-        if (source_local_ID.find(source) == source_local_ID.end()) { continue; }
+        if (source_local_ID.find(source) == source_local_ID.end()) {
+            continue;
+        }
 
         for (unsigned proc = 0; proc < num_processors; proc++) {
-            if (proc == schedule.assignedProcessor(source)) { continue; }
+            if (proc == schedule.assignedProcessor(source)) {
+                continue;
+            }
 
             for (unsigned step = 0; step < max_number_supersteps + 1 && step <= end_superstep - start_superstep + 1; step++) {
                 const auto &key = std::make_tuple(source, schedule.assignedProcessor(source), proc);
@@ -205,7 +217,9 @@ void CoptPartialScheduler<Graph_t>::updateSchedule(BspScheduleCS<Graph_t> &sched
     }
 
     for (vertex_idx_t<Graph_t> node = 0; node < schedule.getInstance().numberOfVertices(); node++) {
-        if (node_local_ID.find(node) == node_local_ID.end()) { continue; }
+        if (node_local_ID.find(node) == node_local_ID.end()) {
+            continue;
+        }
 
         for (unsigned processor = 0; processor < schedule.getInstance().numberOfProcessors(); processor++) {
             for (unsigned step = 0; step < max_number_supersteps; step++) {
@@ -229,7 +243,9 @@ void CoptPartialScheduler<Graph_t>::updateSchedule(BspScheduleCS<Graph_t> &sched
             toErase.push_back(key);
         }
     }
-    for (const KeyTriple &key : toErase) { commSchedule.erase(key); }
+    for (const KeyTriple &key : toErase) {
+        commSchedule.erase(key);
+    }
 
     for (unsigned index = 0; index < fixed_comm_steps.size(); ++index) {
         const auto &entry = fixed_comm_steps[index];
@@ -567,7 +583,9 @@ void CoptPartialScheduler<Graph_t>::setupVariablesConstraintsObjective(const Bsp
 
             for (unsigned index = 0; index < fixed_comm_steps.size(); ++index) {
                 const auto &entry = fixed_comm_steps[index];
-                if (std::get<3>(entry) != start_superstep + step) { continue; }
+                if (std::get<3>(entry) != start_superstep + step) {
+                    continue;
+                }
                 if (std::get<1>(entry) == processor) {
                     expr1 += schedule.getInstance().getComputationalDag().vertex_comm_weight(std::get<0>(entry))
                              * schedule.getInstance().sendCosts(processor, std::get<2>(entry))
@@ -697,7 +715,9 @@ void CoptPartialScheduler<Graph_t>::setupVertexMaps(const BspScheduleCS<Graph_t>
 
         for (unsigned proc1 = 0; proc1 < schedule.getInstance().numberOfProcessors(); ++proc1) {
             for (unsigned proc2 = 0; proc2 < schedule.getInstance().numberOfProcessors(); ++proc2) {
-                if (proc1 == proc2) { continue; }
+                if (proc1 == proc2) {
+                    continue;
+                }
                 auto itr = schedule.getCommunicationSchedule().find(std::make_tuple(source, proc1, proc2));
                 if (itr != schedule.getCommunicationSchedule().end() && itr->second > end_superstep) {
                     procs_needing_this.insert(schedule.assignedProcessor(proc1));
@@ -716,7 +736,9 @@ void CoptPartialScheduler<Graph_t>::setupVertexMaps(const BspScheduleCS<Graph_t>
 
         std::set<unsigned> procs_needing_this;
         for (const auto &succ : schedule.getInstance().getComputationalDag().children(node)) {
-            if (schedule.assignedSuperstep(succ) > end_superstep) { procs_needing_this.insert(schedule.assignedProcessor(succ)); }
+            if (schedule.assignedSuperstep(succ) > end_superstep) {
+                procs_needing_this.insert(schedule.assignedProcessor(succ));
+            }
         }
 
         for (unsigned proc1 = 0; proc1 < schedule.getInstance().numberOfProcessors(); ++proc1) {
@@ -729,7 +751,9 @@ void CoptPartialScheduler<Graph_t>::setupVertexMaps(const BspScheduleCS<Graph_t>
         }
 
         for (unsigned proc : procs_needing_this) {
-            if (first_at[node][proc] <= end_superstep + 1) { node_needed_after_on_proc.emplace_back(node_and_ID.second, proc); }
+            if (first_at[node][proc] <= end_superstep + 1) {
+                node_needed_after_on_proc.emplace_back(node_and_ID.second, proc);
+            }
         }
     }
 
@@ -740,7 +764,9 @@ void CoptPartialScheduler<Graph_t>::setupVertexMaps(const BspScheduleCS<Graph_t>
         if (source_local_ID.find(source) == source_local_ID.end() && schedule.assignedSuperstep(source) < start_superstep
             && val >= start_superstep - 1 && val <= end_superstep) {
             fixed_comm_steps.emplace_back(std::get<0>(key), std::get<1>(key), std::get<2>(key), val);
-            if (val == start_superstep - 1) { has_fixed_comm_in_preceding_step = true; }
+            if (val == start_superstep - 1) {
+                has_fixed_comm_in_preceding_step = true;
+            }
         }
     }
 };

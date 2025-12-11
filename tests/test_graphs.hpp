@@ -75,7 +75,9 @@ template <typename Graph_t>
 inline Graph_t construct_multi_pipeline_dag(unsigned num_pipelines, unsigned pipeline_len) {
     static_assert(is_constructable_cdag_v<Graph_t>, "Graph_t must be a constructable computational DAG");
     Graph_t dag;
-    if (num_pipelines == 0 || pipeline_len == 0) { return dag; }
+    if (num_pipelines == 0 || pipeline_len == 0) {
+        return dag;
+    }
 
     for (unsigned i = 0; i < num_pipelines; ++i) {
         for (unsigned j = 0; j < pipeline_len; ++j) {
@@ -85,7 +87,9 @@ inline Graph_t construct_multi_pipeline_dag(unsigned num_pipelines, unsigned pip
     }
 
     for (unsigned i = 0; i < num_pipelines; ++i) {
-        for (unsigned j = 0; j < pipeline_len - 1; ++j) { dag.add_edge(i * pipeline_len + j, i * pipeline_len + j + 1); }
+        for (unsigned j = 0; j < pipeline_len - 1; ++j) {
+            dag.add_edge(i * pipeline_len + j, i * pipeline_len + j + 1);
+        }
     }
     return dag;
 }
@@ -104,7 +108,9 @@ template <typename Graph_t>
 inline Graph_t construct_ladder_dag(unsigned num_rungs) {
     static_assert(is_constructable_cdag_v<Graph_t>, "Graph_t must be a constructable computational DAG");
     Graph_t dag;
-    if (num_rungs == 0) { return dag; }
+    if (num_rungs == 0) {
+        return dag;
+    }
 
     for (unsigned i = 0; i < num_rungs + 1; ++i) {
         dag.add_vertex(10, 1, 1);    // Left side node
@@ -140,7 +146,9 @@ inline Graph_t construct_asymmetric_dag(unsigned num_nodes) {
     Graph_t dag;
     for (unsigned i = 0; i < num_nodes; ++i) {
         dag.add_vertex(10 * (i + 1), 1, 1);
-        if (i > 0) { dag.add_edge(i - 1, i); }
+        if (i > 0) {
+            dag.add_edge(i - 1, i);
+        }
     }
     return dag;
 }
@@ -156,9 +164,13 @@ inline Graph_t construct_binary_out_tree(unsigned height) {
     static_assert(is_constructable_cdag_v<Graph_t>, "Graph_t must be a constructable computational DAG");
     Graph_t dag;
     unsigned num_nodes = (1U << (height + 1)) - 1;
-    if (num_nodes == 0) { return dag; }
+    if (num_nodes == 0) {
+        return dag;
+    }
 
-    for (unsigned i = 0; i < num_nodes; ++i) { dag.add_vertex(10, 1, 1); }
+    for (unsigned i = 0; i < num_nodes; ++i) {
+        dag.add_vertex(10, 1, 1);
+    }
 
     for (unsigned i = 0; i < num_nodes / 2; ++i) {
         dag.add_edge(i, 2 * i + 1);
@@ -178,9 +190,13 @@ inline Graph_t construct_binary_in_tree(unsigned height) {
     static_assert(is_constructable_cdag_v<Graph_t>, "Graph_t must be a constructable computational DAG");
     Graph_t dag;
     unsigned num_nodes = (1U << (height + 1)) - 1;
-    if (num_nodes == 0) { return dag; }
+    if (num_nodes == 0) {
+        return dag;
+    }
 
-    for (unsigned i = 0; i < num_nodes; ++i) { dag.add_vertex(10, 1, 1); }
+    for (unsigned i = 0; i < num_nodes; ++i) {
+        dag.add_vertex(10, 1, 1);
+    }
 
     for (unsigned i = 0; i < num_nodes / 2; ++i) {
         dag.add_edge(2 * i + 1, i);
@@ -200,14 +216,22 @@ template <typename Graph_t>
 inline Graph_t construct_grid_dag(unsigned rows, unsigned cols) {
     static_assert(is_constructable_cdag_v<Graph_t>, "Graph_t must be a constructable computational DAG");
     Graph_t dag;
-    if (rows == 0 || cols == 0) { return dag; }
+    if (rows == 0 || cols == 0) {
+        return dag;
+    }
 
-    for (unsigned i = 0; i < rows * cols; ++i) { dag.add_vertex(10, 1, 1); }
+    for (unsigned i = 0; i < rows * cols; ++i) {
+        dag.add_vertex(10, 1, 1);
+    }
 
     for (unsigned r = 0; r < rows; ++r) {
         for (unsigned c = 0; c < cols; ++c) {
-            if (r + 1 < rows) { dag.add_edge(r * cols + c, (r + 1) * cols + c); }
-            if (c + 1 < cols) { dag.add_edge(r * cols + c, r * cols + (c + 1)); }
+            if (r + 1 < rows) {
+                dag.add_edge(r * cols + c, (r + 1) * cols + c);
+            }
+            if (c + 1 < cols) {
+                dag.add_edge(r * cols + c, r * cols + (c + 1));
+            }
         }
     }
     return dag;
@@ -223,10 +247,14 @@ template <typename Graph_t>
 inline Graph_t construct_butterfly_dag(unsigned stages) {
     static_assert(is_constructable_cdag_v<Graph_t>, "Graph_t must be a constructable computational DAG");
     Graph_t dag;
-    if (stages == 0) { return dag; }
+    if (stages == 0) {
+        return dag;
+    }
 
     unsigned N = 1U << stages;
-    for (unsigned i = 0; i < (stages + 1) * N; ++i) { dag.add_vertex(10, 1, 1); }
+    for (unsigned i = 0; i < (stages + 1) * N; ++i) {
+        dag.add_vertex(10, 1, 1);
+    }
 
     for (unsigned s = 0; s < stages; ++s) {
         for (unsigned i = 0; i < N; ++i) {

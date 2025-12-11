@@ -112,7 +112,9 @@ struct adaptive_affinity_table {
         const unsigned num_procs = sche_.getInstance().numberOfProcessors();
         for (auto &table : affinity_table) {
             table.resize(num_procs);
-            for (auto &row : table) { row.resize(window_range); }
+            for (auto &row : table) {
+                row.resize(window_range);
+            }
         }
     }
 
@@ -170,7 +172,9 @@ struct adaptive_affinity_table {
                 const unsigned num_procs = active_schedule->getInstance().numberOfProcessors();
                 for (size_t i = old_size; i < new_size; ++i) {
                     affinity_table[i].resize(num_procs);
-                    for (auto &row : affinity_table[i]) { row.resize(window_range); }
+                    for (auto &row : affinity_table[i]) {
+                        row.resize(window_range);
+                    }
                 }
             }
             last_idx++;
@@ -220,7 +224,9 @@ struct adaptive_affinity_table {
             gaps.pop_back();
 
             // If the gap we picked is now at or after the end, we can ignore it.
-            if (gap_idx >= last_idx) { continue; }
+            if (gap_idx >= last_idx) {
+                continue;
+            }
 
             VertexType node_to_move = selected_nodes[last_element_idx];
 
@@ -256,7 +262,9 @@ struct static_affinity_table {
         const unsigned num_procs = sche_.getInstance().numberOfProcessors();
         for (auto &table : affinity_table) {
             table.resize(num_procs);
-            for (auto &row : table) { row.resize(window_range); }
+            for (auto &row : table) {
+                row.resize(window_range);
+            }
         }
     }
 
@@ -326,7 +334,9 @@ struct vertex_selection_strategy {
         for (unsigned step = start_step; step <= end_step; ++step) {
             const auto &processor_vertices = active_schedule->getSetSchedule().step_processor_vertices[step];
             for (unsigned proc = 0; proc < num_procs; ++proc) {
-                for (const auto node : processor_vertices[proc]) { permutation.push_back(node); }
+                for (const auto node : processor_vertices[proc]) {
+                    permutation.push_back(node);
+                }
             }
         }
 
@@ -340,12 +350,16 @@ struct vertex_selection_strategy {
                                      const unsigned end_step) {
         for (const auto parent : graph->parents(node)) {
             const unsigned parent_step = active_schedule->assigned_superstep(parent);
-            if (parent_step >= start_step && parent_step <= end_step) { nodes.insert(parent); }
+            if (parent_step >= start_step && parent_step <= end_step) {
+                nodes.insert(parent);
+            }
         }
 
         for (const auto child : graph->children(node)) {
             const unsigned child_step = active_schedule->assigned_superstep(child);
-            if (child_step >= start_step && child_step <= end_step) { nodes.insert(child); }
+            if (child_step >= start_step && child_step <= end_step) {
+                nodes.insert(child);
+            }
         }
     }
 
@@ -369,16 +383,22 @@ struct vertex_selection_strategy {
             const auto target_v = target(edge, *graph);
 
             const unsigned source_step = active_schedule->assigned_superstep(source_v);
-            if (source_step >= start_step && source_step <= end_step) { node_selection.insert(source_v); }
+            if (source_step >= start_step && source_step <= end_step) {
+                node_selection.insert(source_v);
+            }
 
             const unsigned target_step = active_schedule->assigned_superstep(target_v);
-            if (target_step >= start_step && target_step <= end_step) { node_selection.insert(target_v); }
+            if (target_step >= start_step && target_step <= end_step) {
+                node_selection.insert(target_v);
+            }
         }
     }
 
     void select_nodes_permutation_threshold(const std::size_t &threshold, container_t &node_selection) {
         const size_t bound = std::min(threshold + permutation_idx, permutation.size());
-        for (std::size_t i = permutation_idx; i < bound; i++) { node_selection.insert(permutation[i]); }
+        for (std::size_t i = permutation_idx; i < bound; i++) {
+            node_selection.insert(permutation[i]);
+        }
 
         permutation_idx = bound;
         if (permutation_idx + threshold >= permutation.size()) {

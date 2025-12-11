@@ -79,7 +79,9 @@ class edge_range_vector_impl {
                         current_edge = graph->out_edges(current_vertex).begin();
 
                         while (current_edge != graph->out_edges(current_vertex).end()) {
-                            if (tmp == current_edge_idx) { break; }
+                            if (tmp == current_edge_idx) {
+                                break;
+                            }
 
                             current_edge++;
                             tmp++;

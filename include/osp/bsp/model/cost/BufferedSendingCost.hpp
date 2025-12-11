@@ -75,7 +75,9 @@ struct BufferedSendingCost {
             const auto step_comm_cost = max_comm_per_step[step];
             comm_costs += step_comm_cost;
 
-            if (step_comm_cost > 0) { comm_costs += instance.synchronisationCosts(); }
+            if (step_comm_cost > 0) {
+                comm_costs += instance.synchronisationCosts();
+            }
         }
 
         return comm_costs + cost_helpers::compute_work_costs(schedule);

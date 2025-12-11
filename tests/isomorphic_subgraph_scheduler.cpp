@@ -261,7 +261,9 @@ BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroup_HeterogeneousArch) {
 
     // Verify all partitions are unique as expected
     std::set<vertex_idx_t<graph_t>> partition_ids;
-    for (const auto &p_id : partition) { partition_ids.insert(p_id); }
+    for (const auto &p_id : partition) {
+        partition_ids.insert(p_id);
+    }
     BOOST_CHECK_EQUAL(partition_ids.size(), 4);
 }
 

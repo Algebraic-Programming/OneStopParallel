@@ -89,7 +89,9 @@ class PartitioningWithReplication {
     std::vector<std::vector<index_type>> getPartitionContents() const {
         std::vector<std::vector<index_type>> content(instance->getNumberOfPartitions());
         for (index_type node = 0; node < node_to_partitions_assignment.size(); ++node) {
-            for (unsigned part : node_to_partitions_assignment[node]) { content[part].push_back(node); }
+            for (unsigned part : node_to_partitions_assignment[node]) {
+                content[part].push_back(node);
+            }
         }
 
         return content;
@@ -119,7 +121,9 @@ typename hypergraph_t::vertex_comm_weight_type PartitioningWithReplication<hyper
     std::vector<bool> part_used(instance->getNumberOfPartitions(), false);
     for (index_type edge_idx = 0; edge_idx < instance->getHypergraph().num_hyperedges(); ++edge_idx) {
         const std::vector<index_type> &hyperedge = instance->getHypergraph().get_vertices_in_hyperedge(edge_idx);
-        if (hyperedge.empty()) { continue; }
+        if (hyperedge.empty()) {
+            continue;
+        }
 
         unsigned long mask = 0UL;
 
@@ -133,7 +137,9 @@ typename hypergraph_t::vertex_comm_weight_type PartitioningWithReplication<hyper
         unsigned min_parts_to_cover = instance->getNumberOfPartitions();
         unsigned long mask_limit = 1UL << instance->getNumberOfPartitions();
         for (unsigned long subset_mask = 1UL; subset_mask < mask_limit; ++subset_mask) {
-            if ((subset_mask & mask) != mask) { continue; }
+            if ((subset_mask & mask) != mask) {
+                continue;
+            }
 
             unsigned nr_parts_used = 0;
             for (unsigned part = 0; part < instance->getNumberOfPartitions(); ++part) {
@@ -155,7 +161,9 @@ typename hypergraph_t::vertex_comm_weight_type PartitioningWithReplication<hyper
                     break;
                 }
             }
-            if (all_nodes_covered) { min_parts_to_cover = std::min(min_parts_to_cover, nr_parts_used); }
+            if (all_nodes_covered) {
+                min_parts_to_cover = std::min(min_parts_to_cover, nr_parts_used);
+            }
         }
 
         total += static_cast<commw_type>(min_parts_to_cover - 1) * instance->getHypergraph().get_hyperedge_weight(edge_idx);
@@ -169,18 +177,26 @@ typename hypergraph_t::vertex_comm_weight_type PartitioningWithReplication<hyper
     commw_type total = 0;
     for (index_type edge_idx = 0; edge_idx < instance->getHypergraph().num_hyperedges(); ++edge_idx) {
         const std::vector<index_type> &hyperedge = instance->getHypergraph().get_vertices_in_hyperedge(edge_idx);
-        if (hyperedge.empty()) { continue; }
+        if (hyperedge.empty()) {
+            continue;
+        }
         std::vector<index_type> nr_nodes_covered_by_part(instance->getNumberOfPartitions(), 0);
         for (const index_type &node : hyperedge) {
-            for (unsigned part : node_to_partitions_assignment[node]) { ++nr_nodes_covered_by_part[part]; }
+            for (unsigned part : node_to_partitions_assignment[node]) {
+                ++nr_nodes_covered_by_part[part];
+            }
         }
 
         bool covers_all = false;
         for (unsigned part = 0; part < instance->getNumberOfPartitions(); ++part) {
-            if (nr_nodes_covered_by_part[part] == hyperedge.size()) { covers_all = true; }
+            if (nr_nodes_covered_by_part[part] == hyperedge.size()) {
+                covers_all = true;
+            }
         }
 
-        if (!covers_all) { total += instance->getHypergraph().get_hyperedge_weight(edge_idx); }
+        if (!covers_all) {
+            total += instance->getHypergraph().get_hyperedge_weight(edge_idx);
+        }
     }
 
     return total;
@@ -202,8 +218,12 @@ bool PartitioningWithReplication<hypergraph_t>::satisfiesBalanceConstraint() con
     }
 
     for (unsigned part = 0; part < instance->getNumberOfPartitions(); ++part) {
-        if (work_weight[part] > instance->getMaxWorkWeightPerPartition()) { return false; }
-        if (memory_weight[part] > instance->getMaxMemoryWeightPerPartition()) { return false; }
+        if (work_weight[part] > instance->getMaxWorkWeightPerPartition()) {
+            return false;
+        }
+        if (memory_weight[part] > instance->getMaxMemoryWeightPerPartition()) {
+            return false;
+        }
     }
 
     return true;

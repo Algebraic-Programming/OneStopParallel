@@ -88,7 +88,9 @@ void run_test_max_bsp(MaxBspScheduler<Graph_t> *test_scheduler) {
 
     // Locate project root
     std::filesystem::path cwd = std::filesystem::current_path();
-    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) { cwd = cwd.parent_path(); }
+    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
+        cwd = cwd.parent_path();
+    }
 
     for (auto &filename_graph : filenames_graph) {
         for (auto &filename_machine : filenames_architectures) {

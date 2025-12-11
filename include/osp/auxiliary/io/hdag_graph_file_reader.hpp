@@ -54,7 +54,9 @@ bool readComputationalDagHyperdagFormat(std::ifstream &infile, Graph_t &graph) {
     }
 
     const vertex_idx_t<Graph_t> num_nodes = static_cast<vertex_idx_t<Graph_t>>(N);
-    for (vertex_idx_t<Graph_t> i = 0; i < num_nodes; i++) { graph.add_vertex(1, 1, 1); }
+    for (vertex_idx_t<Graph_t> i = 0; i < num_nodes; i++) {
+        graph.add_vertex(1, 1, 1);
+    }
 
     std::vector<int> edgeSource(static_cast<std::size_t>(hEdges), -1);
 

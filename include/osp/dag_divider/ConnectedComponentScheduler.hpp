@@ -64,7 +64,9 @@ class ConnectedComponentScheduler : public Scheduler<Graph_t> {
             BspSchedule<Constr_Graph_t> sub_schedule(sub_instance);
             auto status = scheduler->computeSchedule(sub_schedule);
 
-            if (status != RETURN_STATUS::OSP_SUCCESS && status != RETURN_STATUS::BEST_FOUND) { return status; }
+            if (status != RETURN_STATUS::OSP_SUCCESS && status != RETURN_STATUS::BEST_FOUND) {
+                return status;
+            }
 
             for (const auto &v : sub_instance.vertices()) {
                 schedule.setAssignedProcessor(mapping.at(v), sub_schedule.assignedProcessor(v) + num_processors_offset);

@@ -54,7 +54,9 @@ class RandomGreedy : public Scheduler<Graph_t> {
 
         std::vector<VertexType> predecessors_count(instance.numberOfVertices(), 0);
         std::vector<VertexType> next;
-        for (const auto &i : source_vertices_view(graph)) { next.push_back(i); }
+        for (const auto &i : source_vertices_view(graph)) {
+            next.push_back(i);
+        }
 
         std::random_device rd;
         std::mt19937 g(rd());
@@ -108,7 +110,9 @@ class RandomGreedy : public Scheduler<Graph_t> {
                 std::vector<VertexType> new_nodes;
                 for (const auto &chld : graph.children(node)) {
                     predecessors_count[chld]++;
-                    if (predecessors_count[chld] == graph.in_degree(chld)) { new_nodes.emplace_back(chld); }
+                    if (predecessors_count[chld] == graph.in_degree(chld)) {
+                        new_nodes.emplace_back(chld);
+                    }
                 }
 
                 auto it = next.begin();
@@ -116,7 +120,9 @@ class RandomGreedy : public Scheduler<Graph_t> {
                 next.erase(it);
                 next.insert(next.end(), new_nodes.cbegin(), new_nodes.cend());
 
-                if (ensure_enough_sources && few_sources && next.size() >= instance.numberOfProcessors()) { break; }
+                if (ensure_enough_sources && few_sources && next.size() >= instance.numberOfProcessors()) {
+                    break;
+                }
             }
 
             superstep_counter++;

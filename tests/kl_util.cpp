@@ -40,8 +40,12 @@ struct ScheduleFixture {
     ScheduleFixture() : schedule(instance) {
         // Setup a simple graph and schedule
         auto &dag = instance.getComputationalDag();
-        for (int i = 0; i < 20; ++i) { dag.add_vertex(i + 1, i + 1, i + 1); }
-        for (unsigned i = 0; i < 19; ++i) { dag.add_edge(i, i + 1, 1); }
+        for (int i = 0; i < 20; ++i) {
+            dag.add_vertex(i + 1, i + 1, i + 1);
+        }
+        for (unsigned i = 0; i < 19; ++i) {
+            dag.add_edge(i, i + 1, 1);
+        }
 
         instance.getArchitecture().setNumberOfProcessors(4);
         instance.getArchitecture().setCommunicationCosts(1);
@@ -127,9 +131,13 @@ BOOST_AUTO_TEST_CASE(adaptive_affinity_table_test) {
     BOOST_CHECK(!table.is_selected(0));
 
     // Insert more to test resizing
-    for (unsigned i = 0; i < 10; ++i) { BOOST_CHECK(table.insert(i)); }
+    for (unsigned i = 0; i < 10; ++i) {
+        BOOST_CHECK(table.insert(i));
+    }
     BOOST_CHECK_EQUAL(table.size(), 10);
-    for (unsigned i = 0; i < 10; ++i) { BOOST_CHECK(table.is_selected(i)); }
+    for (unsigned i = 0; i < 10; ++i) {
+        BOOST_CHECK(table.is_selected(i));
+    }
 
     // Test trim
     table.remove(3);
@@ -144,7 +152,9 @@ BOOST_AUTO_TEST_CASE(adaptive_affinity_table_test) {
     std::set<unsigned> expected_selected = {0, 1, 2, 4, 6, 8, 9};
     std::set<unsigned> actual_selected;
     const auto &selected_nodes_vec = table.get_selected_nodes();
-    for (size_t i = 0; i < table.size(); ++i) { actual_selected.insert(static_cast<unsigned>(selected_nodes_vec[i])); }
+    for (size_t i = 0; i < table.size(); ++i) {
+        actual_selected.insert(static_cast<unsigned>(selected_nodes_vec[i]));
+    }
     BOOST_CHECK(expected_selected == actual_selected);
 
     for (unsigned i = 0; i < 20; ++i) {
@@ -156,7 +166,9 @@ BOOST_AUTO_TEST_CASE(adaptive_affinity_table_test) {
     }
 
     // Check that indices are correct
-    for (size_t i = 0; i < table.size(); ++i) { BOOST_CHECK_EQUAL(table.get_selected_nodes_idx(selected_nodes_vec[i]), i); }
+    for (size_t i = 0; i < table.size(); ++i) {
+        BOOST_CHECK_EQUAL(table.get_selected_nodes_idx(selected_nodes_vec[i]), i);
+    }
 
     // Test reset
     table.reset_node_selection();
@@ -187,7 +199,9 @@ BOOST_AUTO_TEST_CASE(static_affinity_table_test) {
     BOOST_CHECK(!table.is_selected(0));
 
     // Insert multiple
-    for (unsigned i = 0; i < 10; ++i) { table.insert(i); }
+    for (unsigned i = 0; i < 10; ++i) {
+        table.insert(i);
+    }
     BOOST_CHECK_EQUAL(table.size(), 10);
 
     // Test reset

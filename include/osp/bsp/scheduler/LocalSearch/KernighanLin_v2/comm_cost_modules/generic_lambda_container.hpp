@@ -63,14 +63,18 @@ struct generic_lambda_vector_container {
 
           public:
             lambda_vector_iterator(const std::vector<ValueType> &vec) : vec_(vec), index_(0) {
-                while (index_ < vec_.size() && !HasEntry::has_entry(vec_[index_])) { ++index_; }
+                while (index_ < vec_.size() && !HasEntry::has_entry(vec_[index_])) {
+                    ++index_;
+                }
             }
 
             lambda_vector_iterator(const std::vector<ValueType> &vec, unsigned index) : vec_(vec), index_(index) {}
 
             lambda_vector_iterator &operator++() {
                 ++index_;
-                while (index_ < vec_.size() && !HasEntry::has_entry(vec_[index_])) { ++index_; }
+                while (index_ < vec_.size() && !HasEntry::has_entry(vec_[index_])) {
+                    ++index_;
+                }
                 return *this;
             }
 

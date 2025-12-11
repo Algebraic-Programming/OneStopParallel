@@ -134,7 +134,9 @@ BOOST_AUTO_TEST_CASE(test_arrange_superstep_comm_data) {
     comm_ds.step_proc_send(step, 2) = 2;
     comm_ds.step_proc_send(step, 3) = 1;
 
-    for (unsigned i = 0; i < 4; ++i) { comm_ds.step_proc_receive(step, i) = 5; }
+    for (unsigned i = 0; i < 4; ++i) {
+        comm_ds.step_proc_receive(step, i) = 5;
+    }
 
     comm_ds.arrange_superstep_comm_data(step);
 

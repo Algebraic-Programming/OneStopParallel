@@ -35,11 +35,19 @@ constexpr std::size_t MAX_LINE_LENGTH = 1 << 14;    // 16 KB
 inline bool isPathSafe(const std::string &path) {
     try {
         std::filesystem::path resolved = std::filesystem::weakly_canonical(path);
-        if (std::filesystem::is_symlink(resolved)) { return false; }
-        if (!std::filesystem::is_regular_file(resolved)) { return false; }
-        if (resolved.string().find('\0') != std::string::npos) { return false; }
+        if (std::filesystem::is_symlink(resolved)) {
+            return false;
+        }
+        if (!std::filesystem::is_regular_file(resolved)) {
+            return false;
+        }
+        if (resolved.string().find('\0') != std::string::npos) {
+            return false;
+        }
         return true;
-    } catch (...) { return false; }
+    } catch (...) {
+        return false;
+    }
 }
 
 }    // namespace file_reader

@@ -50,17 +50,23 @@ template <typename Graph_t>
 void add_node_types(Graph_t &dag) {
     unsigned node_type = 0;
 
-    for (const auto &v : dag.vertices()) { dag.set_vertex_type(v, node_type++ % 2); }
+    for (const auto &v : dag.vertices()) {
+        dag.set_vertex_type(v, node_type++ % 2);
+    }
 }
 
 template <typename table_t>
 void check_equal_affinity_table(table_t &table_1, table_t &table_2, const std::set<size_t> &nodes) {
     for (auto i : nodes) {
         BOOST_CHECK_EQUAL(table_1[i].size(), table_2[i].size());
-        if (table_1[i].size() != table_2[i].size()) { continue; }
+        if (table_1[i].size() != table_2[i].size()) {
+            continue;
+        }
         for (size_t j = 0; j < table_1[i].size(); ++j) {
             BOOST_CHECK_EQUAL(table_1[i][j].size(), table_2[i][j].size());
-            if (table_1[i][j].size() != table_2[i][j].size()) { continue; }
+            if (table_1[i][j].size() != table_2[i][j].size()) {
+                continue;
+            }
             for (size_t k = 0; k < table_1[i][j].size(); ++k) {
                 BOOST_CHECK(std::abs(table_1[i][j][k] - table_2[i][j][k]) < 0.000001);
 
@@ -76,7 +82,9 @@ void check_equal_affinity_table(table_t &table_1, table_t &table_2, const std::s
 void check_equal_lambda_map(const std::vector<std::map<unsigned, unsigned>> &map_1,
                             const std::vector<std::map<unsigned, unsigned>> &map_2) {
     BOOST_CHECK_EQUAL(map_1.size(), map_2.size());
-    if (map_1.size() != map_2.size()) { return; }
+    if (map_1.size() != map_2.size()) {
+        return;
+    }
 
     for (size_t i = 0; i < map_1.size(); ++i) {
         for (const auto &[key, value] : map_1[i]) {
@@ -540,28 +548,36 @@ BOOST_AUTO_TEST_CASE(kl_lambda_improver_inner_loop_penalty_test) {
 
     auto recompute_max_gain = kl.run_inner_iteration_test();    // best move 3
     std::cout << "------------------------recompute max_gain: { ";
-    for (const auto &[key, value] : recompute_max_gain) { std::cout << key << " "; }
+    for (const auto &[key, value] : recompute_max_gain) {
+        std::cout << key << " ";
+    }
     std::cout << "}" << std::endl;
 
     BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
 
     recompute_max_gain = kl.run_inner_iteration_test();    // best move 0
     std::cout << "recompute max_gain: { ";
-    for (const auto &[key, value] : recompute_max_gain) { std::cout << key << " "; }
+    for (const auto &[key, value] : recompute_max_gain) {
+        std::cout << key << " ";
+    }
     std::cout << "}" << std::endl;
 
     BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
 
     recompute_max_gain = kl.run_inner_iteration_test();    // best move 1
     std::cout << "recompute max_gain: { ";
-    for (const auto &[key, value] : recompute_max_gain) { std::cout << key << " "; }
+    for (const auto &[key, value] : recompute_max_gain) {
+        std::cout << key << " ";
+    }
     std::cout << "}" << std::endl;
 
     BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
 
     recompute_max_gain = kl.run_inner_iteration_test();
     std::cout << "recompute max_gain: { ";
-    for (const auto &[key, value] : recompute_max_gain) { std::cout << key << " "; }
+    for (const auto &[key, value] : recompute_max_gain) {
+        std::cout << key << " ";
+    }
     std::cout << "}" << std::endl;
 
     BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
@@ -614,7 +630,9 @@ BOOST_AUTO_TEST_CASE(kl_lambda_improver_inner_loop_lambda_map_test) {
 
     auto recompute_max_gain = kl.run_inner_iteration_test();
     std::cout << "-----------recompute max_gain: { ";
-    for (const auto &[key, value] : recompute_max_gain) { std::cout << key << " "; }
+    for (const auto &[key, value] : recompute_max_gain) {
+        std::cout << key << " ";
+    }
     std::cout << "}" << std::endl;
 
     BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
@@ -640,21 +658,27 @@ BOOST_AUTO_TEST_CASE(kl_lambda_improver_inner_loop_lambda_map_test) {
 
     recompute_max_gain = kl.run_inner_iteration_test();
     std::cout << "recompute max_gain: { ";
-    for (const auto &[key, value] : recompute_max_gain) { std::cout << key << " "; }
+    for (const auto &[key, value] : recompute_max_gain) {
+        std::cout << key << " ";
+    }
     std::cout << "}" << std::endl;
 
     BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
 
     recompute_max_gain = kl.run_inner_iteration_test();
     std::cout << "recompute max_gain: { ";
-    for (const auto &[key, value] : recompute_max_gain) { std::cout << key << " "; }
+    for (const auto &[key, value] : recompute_max_gain) {
+        std::cout << key << " ";
+    }
     std::cout << "}" << std::endl;
 
     BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
 
     recompute_max_gain = kl.run_inner_iteration_test();
     std::cout << "recompute max_gain: { ";
-    for (const auto &[key, value] : recompute_max_gain) { std::cout << key << " "; }
+    for (const auto &[key, value] : recompute_max_gain) {
+        std::cout << key << " ";
+    }
     std::cout << "}" << std::endl;
 
     BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);

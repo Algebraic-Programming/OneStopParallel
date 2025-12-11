@@ -65,7 +65,9 @@ class GreedyMetaScheduler : public Scheduler<Graph_t> {
 
     RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &schedule) override {
         if (schedule.getInstance().getArchitecture().numberOfProcessors() == 1) {
-            if constexpr (verbose) { std::cout << "Using serial scheduler for P=1." << std::endl; }
+            if constexpr (verbose) {
+                std::cout << "Using serial scheduler for P=1." << std::endl;
+            }
             serial_scheduler_.computeSchedule(schedule);
             return RETURN_STATUS::OSP_SUCCESS;
         }
@@ -85,7 +87,9 @@ class GreedyMetaScheduler : public Scheduler<Graph_t> {
             if (schedule_cost < best_schedule_cost) {
                 best_schedule_cost = schedule_cost;
                 schedule = current_schedule;
-                if constexpr (verbose) { std::cout << "New best schedule!" << std::endl; }
+                if constexpr (verbose) {
+                    std::cout << "New best schedule!" << std::endl;
+                }
             }
         }
 

@@ -201,20 +201,30 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
         }
 
         for (auto const &[key, val] : cs) {
-            if (val >= BspSchedule<Graph_t>::number_of_supersteps) { return false; }
+            if (val >= BspSchedule<Graph_t>::number_of_supersteps) {
+                return false;
+            }
 
-            if (std::get<0>(key) >= BspSchedule<Graph_t>::instance->numberOfVertices()) { return false; }
+            if (std::get<0>(key) >= BspSchedule<Graph_t>::instance->numberOfVertices()) {
+                return false;
+            }
 
-            if (std::get<1>(key) >= BspSchedule<Graph_t>::instance->numberOfProcessors()) { return false; }
+            if (std::get<1>(key) >= BspSchedule<Graph_t>::instance->numberOfProcessors()) {
+                return false;
+            }
 
-            if (std::get<2>(key) >= BspSchedule<Graph_t>::instance->numberOfProcessors()) { return false; }
+            if (std::get<2>(key) >= BspSchedule<Graph_t>::instance->numberOfProcessors()) {
+                return false;
+            }
 
             first_at[std::get<0>(key)][std::get<2>(key)]
                 = std::min(first_at[std::get<0>(key)][std::get<2>(key)], val + this->getStaleness());
         }
 
         for (auto const &[key, val] : cs) {
-            if (val < first_at[std::get<0>(key)][std::get<1>(key)]) { return false; }
+            if (val < first_at[std::get<0>(key)][std::get<1>(key)]) {
+                return false;
+            }
         }
 
         for (const auto &v : BspSchedule<Graph_t>::instance->getComputationalDag().vertices()) {
@@ -246,7 +256,9 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
             const auto step_comm_cost = max_comm_per_step[step];
             costs += step_comm_cost;
 
-            if (step_comm_cost > 0) { costs += this->instance->synchronisationCosts(); }
+            if (step_comm_cost > 0) {
+                costs += this->instance->synchronisationCosts();
+            }
         }
         return costs;
     }
@@ -488,14 +500,18 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
         std::vector<unsigned> new_step_index(this->number_of_supersteps);
         unsigned current_index = std::numeric_limits<unsigned>::max();
         for (unsigned step = 0; step < this->number_of_supersteps; ++step) {
-            if (!merge_with_previous[step]) { current_index++; }
+            if (!merge_with_previous[step]) {
+                current_index++;
+            }
 
             new_step_index[step] = current_index;
         }
         for (const auto &node : this->instance->vertices()) {
             this->node_to_superstep_assignment[node] = new_step_index[this->node_to_superstep_assignment[node]];
         }
-        for (auto &[key, val] : commSchedule) { val = new_step_index[val]; }
+        for (auto &[key, val] : commSchedule) {
+            val = new_step_index[val];
+        }
 
         this->setNumberOfSupersteps(current_index + 1);
     }
@@ -528,7 +544,9 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
             arrives_at[node][this->assignedProcessor(node)].insert(this->assignedSuperstep(node));
         }
 
-        for (auto const &[key, val] : commSchedule) { arrives_at[std::get<0>(key)][std::get<2>(key)].insert(val); }
+        for (auto const &[key, val] : commSchedule) {
+            arrives_at[std::get<0>(key)][std::get<2>(key)].insert(val);
+        }
 
         std::vector<KeyTriple> toErase;
         for (auto const &[key, val] : commSchedule) {
@@ -541,7 +559,9 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
             }
         }
 
-        for (const KeyTriple &key : toErase) { commSchedule.erase(key); }
+        for (const KeyTriple &key : toErase) {
+            commSchedule.erase(key);
+        }
 
         // data that is not used after being sent
         std::vector<std::vector<std::multiset<unsigned>>> used_at(
@@ -553,11 +573,15 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
             }
         }
 
-        for (auto const &[key, val] : commSchedule) { used_at[std::get<0>(key)][std::get<1>(key)].insert(val); }
+        for (auto const &[key, val] : commSchedule) {
+            used_at[std::get<0>(key)][std::get<1>(key)].insert(val);
+        }
 
         // (need to visit cs entries in reverse superstep order here)
         std::vector<std::vector<KeyTriple>> entries(this->number_of_supersteps);
-        for (auto const &[key, val] : commSchedule) { entries[val].push_back(key); }
+        for (auto const &[key, val] : commSchedule) {
+            entries[val].push_back(key);
+        }
 
         toErase.clear();
         for (unsigned step = this->number_of_supersteps - 1; step < this->number_of_supersteps; --step) {
@@ -571,7 +595,9 @@ class BspScheduleCS : public BspSchedule<Graph_t> {
             }
         }
 
-        for (const KeyTriple &key : toErase) { commSchedule.erase(key); }
+        for (const KeyTriple &key : toErase) {
+            commSchedule.erase(key);
+        }
     }
 };
 

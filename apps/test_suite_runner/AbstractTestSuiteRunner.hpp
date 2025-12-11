@@ -74,10 +74,14 @@ class AbstractTestSuiteRunner {
                 = parser.global_params.get_child("outputSchedule").get_value_optional<bool>().value_or(false);
 
             graph_dir_path = parser.global_params.get_child("graphDirectory").get_value<std::string>();
-            if (graph_dir_path.substr(0, 1) != "/") { graph_dir_path = executable_dir + graph_dir_path; }
+            if (graph_dir_path.substr(0, 1) != "/") {
+                graph_dir_path = executable_dir + graph_dir_path;
+            }
 
             machine_dir_path = parser.global_params.get_child("archDirectory").get_value<std::string>();
-            if (machine_dir_path.substr(0, 1) != "/") { machine_dir_path = executable_dir + machine_dir_path; }
+            if (machine_dir_path.substr(0, 1) != "/") {
+                machine_dir_path = executable_dir + machine_dir_path;
+            }
 
             if (write_target_object_to_file) {
                 output_target_object_dir_path = parser.global_params.get_child("scheduleDirectory").get_value<std::string>();
@@ -90,7 +94,9 @@ class AbstractTestSuiteRunner {
             }
 
             log_file_path = parser.global_params.get_child("outputLogFile").get_value<std::string>();
-            if (log_file_path.substr(0, 1) != "/") { log_file_path = executable_dir + log_file_path; }
+            if (log_file_path.substr(0, 1) != "/") {
+                log_file_path = executable_dir + log_file_path;
+            }
 
             statistics_output_file_path = parser.global_params.get_child("outputStatsFile").get_value<std::string>();
             if (statistics_output_file_path.substr(0, 1) != "/") {
@@ -106,7 +112,9 @@ class AbstractTestSuiteRunner {
 
     virtual void setup_log_file() {
         log_stream.open(log_file_path, std::ios_base::app);
-        if (!log_stream.is_open()) { std::cerr << "Error: Could not open log file: " << log_file_path << std::endl; }
+        if (!log_stream.is_open()) {
+            std::cerr << "Error: Could not open log file: " << log_file_path << std::endl;
+        }
     }
 
     virtual void setup_statistics_file() {
@@ -140,7 +148,9 @@ class AbstractTestSuiteRunner {
             for (size_t i = 0; i < all_csv_headers.size(); ++i) {
                 expected_header_line += all_csv_headers[i] + (i == all_csv_headers.size() - 1 ? "" : ",");
             }
-            if (first_line_in_file == expected_header_line) { file_exists_and_has_header = true; }
+            if (first_line_in_file == expected_header_line) {
+                file_exists_and_has_header = true;
+            }
             stats_file_check.close();
         }
 
@@ -172,8 +182,12 @@ class AbstractTestSuiteRunner {
     AbstractTestSuiteRunner() {}
 
     virtual ~AbstractTestSuiteRunner() {
-        if (log_stream.is_open()) { log_stream.close(); }
-        if (stats_out_stream.is_open()) { stats_out_stream.close(); }
+        if (log_stream.is_open()) {
+            log_stream.close();
+        }
+        if (stats_out_stream.is_open()) {
+            stats_out_stream.close();
+        }
     }
 
     int run(int argc, char *argv[]) {
@@ -184,7 +198,9 @@ class AbstractTestSuiteRunner {
             return 1;
         }
 
-        if (!parse_common_config()) { return 1; }
+        if (!parse_common_config()) {
+            return 1;
+        }
 
         setup_log_file();
 
@@ -202,7 +218,9 @@ class AbstractTestSuiteRunner {
             create_and_register_statistic_modules(module_name);
         }
 
-        if (active_stats_modules.empty()) { log_stream << "No active statistic modules configured or loaded." << std::endl; }
+        if (active_stats_modules.empty()) {
+            log_stream << "No active statistic modules configured or loaded." << std::endl;
+        }
 
         setup_statistics_file();
 
@@ -213,7 +231,9 @@ class AbstractTestSuiteRunner {
             }
             std::string filename_machine = machine_entry.path().string();
             std::string name_machine = filename_machine.substr(filename_machine.rfind('/') + 1);
-            if (name_machine.rfind('.') != std::string::npos) { name_machine = name_machine.substr(0, name_machine.rfind('.')); }
+            if (name_machine.rfind('.') != std::string::npos) {
+                name_machine = name_machine.substr(0, name_machine.rfind('.'));
+            }
 
             BspArchitecture<GraphType> arch;
             if (!file_reader::readBspArchitecture(filename_machine, arch)) {
@@ -229,7 +249,9 @@ class AbstractTestSuiteRunner {
                 }
                 std::string filename_graph = graph_entry.path().string();
                 std::string name_graph = filename_graph.substr(filename_graph.rfind('/') + 1);
-                if (name_graph.rfind('.') != std::string::npos) { name_graph = name_graph.substr(0, name_graph.rfind('.')); }
+                if (name_graph.rfind('.') != std::string::npos) {
+                    name_graph = name_graph.substr(0, name_graph.rfind('.'));
+                }
                 log_stream << "Start Graph: " + filename_graph + "\n";
 
                 BspInstance<GraphType> bsp_instance;

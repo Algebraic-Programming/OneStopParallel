@@ -50,14 +50,20 @@ class AbstractWavefrontScheduler : public Scheduler<Graph_t> {
                               std::vector<unsigned> &allocation) const {
         allocation.assign(work_weights.size(), 0);
         double total_work = std::accumulate(work_weights.begin(), work_weights.end(), 0.0);
-        if (total_work <= 1e-9 || total_processors_of_type == 0) { return false; }
+        if (total_work <= 1e-9 || total_processors_of_type == 0) {
+            return false;
+        }
 
         std::vector<size_t> active_indices;
         for (size_t i = 0; i < work_weights.size(); ++i) {
-            if (work_weights[i] > 1e-9) { active_indices.push_back(i); }
+            if (work_weights[i] > 1e-9) {
+                active_indices.push_back(i);
+            }
         }
 
-        if (active_indices.empty()) { return false; }
+        if (active_indices.empty()) {
+            return false;
+        }
 
         size_t num_active_components = active_indices.size();
         unsigned remaining_procs = total_processors_of_type;
@@ -65,14 +71,20 @@ class AbstractWavefrontScheduler : public Scheduler<Graph_t> {
         // --- Stage 1: Guarantee at least one processor if possible (anti-starvation) ---
         if (total_processors_of_type >= num_active_components) {
             // Abundance case: Give one processor to each active component first.
-            for (size_t idx : active_indices) { allocation[idx] = 1; }
+            for (size_t idx : active_indices) {
+                allocation[idx] = 1;
+            }
             remaining_procs -= static_cast<unsigned>(num_active_components);
         } else {
             // Scarcity case: Not enough processors for each active component.
             std::vector<std::pair<double, size_t>> sorted_work;
-            for (size_t idx : active_indices) { sorted_work.push_back({work_weights[idx], idx}); }
+            for (size_t idx : active_indices) {
+                sorted_work.push_back({work_weights[idx], idx});
+            }
             std::sort(sorted_work.rbegin(), sorted_work.rend());
-            for (unsigned i = 0; i < remaining_procs; ++i) { allocation[sorted_work[i].second]++; }
+            for (unsigned i = 0; i < remaining_procs; ++i) {
+                allocation[sorted_work[i].second]++;
+            }
             return true;    // Scarcity case was hit.
         }
 
@@ -105,7 +117,9 @@ class AbstractWavefrontScheduler : public Scheduler<Graph_t> {
 
                 unsigned remainder_processors = remaining_procs - allocated_count;
                 for (unsigned i = 0; i < remainder_processors; ++i) {
-                    if (i < remainders.size()) { allocation[remainders[i].second]++; }
+                    if (i < remainders.size()) {
+                        allocation[remainders[i].second]++;
+                    }
                 }
             }
         }

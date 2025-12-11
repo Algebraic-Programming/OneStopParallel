@@ -83,10 +83,14 @@ class DotFileWriter {
             }
 
             out << "proc=\"(";
-            for (size_t j = 0; j < schedule.assignments(i).size() - 1; ++j) { out << schedule.assignments(i)[j].first << ","; }
+            for (size_t j = 0; j < schedule.assignments(i).size() - 1; ++j) {
+                out << schedule.assignments(i)[j].first << ",";
+            }
             out << schedule.assignments(i)[schedule.assignments(i).size() - 1].first << ")\";"
                 << "superstep=\"(";
-            for (size_t j = 0; j < schedule.assignments(i).size() - 1; ++j) { out << schedule.assignments(i)[j].second << ","; }
+            for (size_t j = 0; j < schedule.assignments(i).size() - 1; ++j) {
+                out << schedule.assignments(i)[j].second << ",";
+            }
             out << schedule.assignments(i)[schedule.assignments(i).size() - 1].second << ")\";";
 
             bool found = false;
@@ -104,7 +108,9 @@ class DotFileWriter {
                 }
             }
 
-            if (found) { out << "]\";"; }
+            if (found) {
+                out << "]\";";
+            }
 
             out << "]";
         }
@@ -166,7 +172,9 @@ class DotFileWriter {
                 }
             }
 
-            if (found) { out << "]\";"; }
+            if (found) {
+                out << "]\";";
+            }
 
             out << "]";
         }
@@ -184,7 +192,9 @@ class DotFileWriter {
                 << "comm_weight=\"" << graph.vertex_comm_weight(i) << "\";"
                 << "mem_weight=\"" << graph.vertex_mem_weight(i) << "\";";
 
-            if constexpr (has_typed_vertices_v<Graph_t>) { out << "type=\"" << graph.vertex_type(i) << "\";"; }
+            if constexpr (has_typed_vertices_v<Graph_t>) {
+                out << "type=\"" << graph.vertex_type(i) << "\";";
+            }
 
             out << "]";
         }
@@ -262,7 +272,9 @@ class DotFileWriter {
 
         } else {
             for (const auto &v : graph.vertices()) {
-                for (const auto &child : graph.children(v)) { os << v << "->" << child << "\n"; }
+                for (const auto &child : graph.children(v)) {
+                    os << v << "->" << child << "\n";
+                }
             }
         }
         os << "}\n";
@@ -390,13 +402,17 @@ class DotFileWriter {
         for (const auto &[key, val] : vertex_to_idx) {
             if (val.size() == 1) {
                 for (const auto &target : g.children(key)) {
-                    for (const auto &new_node_target : vertex_to_idx[target]) { g2.add_edge(val[0], new_node_target); }
+                    for (const auto &new_node_target : vertex_to_idx[target]) {
+                        g2.add_edge(val[0], new_node_target);
+                    }
                 }
 
             } else {
                 std::unordered_set<unsigned> assigned_processors;
 
-                for (const auto &assignment : schedule.assignments(key)) { assigned_processors.insert(assignment.first); }
+                for (const auto &assignment : schedule.assignments(key)) {
+                    assigned_processors.insert(assignment.first);
+                }
 
                 for (unsigned i = 0; i < val.size(); i++) {
                     for (const auto &target : g.children(key)) {

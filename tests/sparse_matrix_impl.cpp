@@ -64,7 +64,9 @@ BOOST_AUTO_TEST_CASE(test_sparse_matrix_adapter_1) {
     std::vector<Triplet> triplets;
 
     // Diagonal entries
-    for (int i = 0; i < size; ++i) { triplets.emplace_back(i, i, 1.0); }
+    for (int i = 0; i < size; ++i) {
+        triplets.emplace_back(i, i, 1.0);
+    }
 
     // Dependencies (i depends on j if L(i,j) ≠ 0, j < i)
     triplets.emplace_back(1, 0, 2.0);     // x1 ← x0
@@ -132,16 +134,24 @@ BOOST_AUTO_TEST_CASE(test_sparse_matrix_adapter_1) {
         size_t i = 0;
         const size_t vi = static_cast<size_t>(v);
 
-        for (const auto &e : graph.children(v)) { BOOST_CHECK_EQUAL(e, out_neighbors[vi][i++]); }
+        for (const auto &e : graph.children(v)) {
+            BOOST_CHECK_EQUAL(e, out_neighbors[vi][i++]);
+        }
 
         i = 0;
-        for (const auto &e : graph.parents(v)) { BOOST_CHECK_EQUAL(e, in_neighbors[vi][i++]); }
+        for (const auto &e : graph.parents(v)) {
+            BOOST_CHECK_EQUAL(e, in_neighbors[vi][i++]);
+        }
 
         i = 0;
-        for (const auto &e : out_edges(v, graph)) { BOOST_CHECK_EQUAL(target(e, graph), out_neighbors[vi][i++]); }
+        for (const auto &e : out_edges(v, graph)) {
+            BOOST_CHECK_EQUAL(target(e, graph), out_neighbors[vi][i++]);
+        }
 
         i = 0;
-        for (const auto &e : in_edges(v, graph)) { BOOST_CHECK_EQUAL(source(e, graph), in_neighbors[vi][i++]); }
+        for (const auto &e : in_edges(v, graph)) {
+            BOOST_CHECK_EQUAL(source(e, graph), in_neighbors[vi][i++]);
+        }
 
         BOOST_CHECK_EQUAL(graph.in_degree(v), in_neighbors[vi].size());
         BOOST_CHECK_EQUAL(graph.out_degree(v), out_neighbors[vi].size());

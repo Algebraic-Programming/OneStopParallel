@@ -58,7 +58,9 @@ class VarianceSplitter : public SequenceSplitter {
         : var_mult_(var_mult), var_threshold_(var_threshold), min_subseq_len_(min_subseq_len), max_depth_(max_depth) {}
 
     std::vector<size_t> split(const std::vector<double> &seq) override {
-        if (seq.empty()) { return {}; }
+        if (seq.empty()) {
+            return {};
+        }
 
         // Precompute prefix sums for the entire sequence
         prefix_sum_.assign(seq.size() + 1, 0.0);
@@ -91,7 +93,9 @@ class VarianceSplitter : public SequenceSplitter {
     }
 
     void split_recursive(size_t l, size_t r, std::vector<size_t> &splits, size_t depth) {
-        if (depth >= max_depth_ || r - l < 2 * min_subseq_len_) { return; }
+        if (depth >= max_depth_ || r - l < 2 * min_subseq_len_) {
+            return;
+        }
 
         double mean, variance;
         compute_variance(l, r, mean, variance);
@@ -111,7 +115,9 @@ class VarianceSplitter : public SequenceSplitter {
 
     bool compute_best_split(size_t l, size_t r, size_t &best_split, double original_variance) const {
         size_t n = r - l;
-        if (n < 2) { return false; }
+        if (n < 2) {
+            return false;
+        }
 
         double min_weighted_variance_sum = std::numeric_limits<double>::max();
         best_split = 0;
@@ -165,10 +171,14 @@ class LargestStepSplitter : public SequenceSplitter {
 
   private:
     void split_recursive(ConstIterator begin, ConstIterator end, std::vector<size_t> &splits, size_t offset, size_t current_depth) {
-        if (current_depth >= max_depth_) { return; }
+        if (current_depth >= max_depth_) {
+            return;
+        }
 
         const difference_type size = std::distance(begin, end);
-        if (static_cast<size_t>(size) < 2 * min_subseq_len_) { return; }
+        if (static_cast<size_t>(size) < 2 * min_subseq_len_) {
+            return;
+        }
 
         double max_diff = 0.0;
         difference_type split_point_local = 0;
@@ -214,7 +224,9 @@ class ThresholdScanSplitter : public SequenceSplitter {
 
     std::vector<size_t> split(const std::vector<double> &seq) override {
         std::vector<size_t> splits;
-        if (seq.size() < 2) { return splits; }
+        if (seq.size() < 2) {
+            return splits;
+        }
 
         size_t last_cut = 0;
         for (size_t i = 0; i < seq.size() - 1; ++i) {

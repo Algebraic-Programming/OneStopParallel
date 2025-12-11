@@ -138,7 +138,9 @@ RETURN_STATUS SarkarMul<Graph_t, Graph_t_coarse>::run_single_contraction_mode(ve
             *(MultilevelCoarser<Graph_t, Graph_t_coarse>::dag_history.back()), coarsened_dag, contraction_map);
     }
 
-    if (!coarsen_success) { status = RETURN_STATUS::ERROR; }
+    if (!coarsen_success) {
+        status = RETURN_STATUS::ERROR;
+    }
 
     status = std::max(
         status, MultilevelCoarser<Graph_t, Graph_t_coarse>::add_contraction(std::move(contraction_map), std::move(coarsened_dag)));
@@ -290,9 +292,13 @@ RETURN_STATUS SarkarMul<Graph_t, Graph_t_coarse>::run_contractions() {
 
     RETURN_STATUS status = RETURN_STATUS::OSP_SUCCESS;
 
-    for (const v_workw_t<Graph_t> commCost : ml_params.commCostVec) { status = std::max(status, run_contractions(commCost)); }
+    for (const v_workw_t<Graph_t> commCost : ml_params.commCostVec) {
+        status = std::max(status, run_contractions(commCost));
+    }
 
-    if (ml_params.buffer_merge_mode != SarkarParams::BufferMergeMode::OFF) { status = std::max(status, run_buffer_merges()); }
+    if (ml_params.buffer_merge_mode != SarkarParams::BufferMergeMode::OFF) {
+        status = std::max(status, run_buffer_merges());
+    }
 
     return status;
 }

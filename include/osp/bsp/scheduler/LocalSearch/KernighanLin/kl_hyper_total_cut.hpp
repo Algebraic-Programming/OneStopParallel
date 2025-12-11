@@ -47,7 +47,9 @@ class kl_hyper_total_cut : public kl_total<Graph_t, MemoryConstraint_t> {
         double comm_costs = 0;
 
         for (const auto &node : current_schedule.instance->getComputationalDag().vertices()) {
-            if (is_sink(node, current_schedule.instance->getComputationalDag())) { continue; }
+            if (is_sink(node, current_schedule.instance->getComputationalDag())) {
+                continue;
+            }
 
             std::unordered_set<unsigned> intersects;
 

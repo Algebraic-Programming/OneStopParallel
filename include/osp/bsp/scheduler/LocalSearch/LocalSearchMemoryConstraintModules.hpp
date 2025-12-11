@@ -184,13 +184,17 @@ struct ls_local_inc_edges_memory_constraint {
         for (const auto &pred : graph->parents(vertex)) {
             if (vector_schedule->assignedSuperstep(pred) < to_step) {
                 auto pair = step_processor_pred[to_step][to_proc].insert(pred);
-                if (pair.second) { step_processor_memory[to_step][to_proc] += graph->vertex_comm_weight(pred); }
+                if (pair.second) {
+                    step_processor_memory[to_step][to_proc] += graph->vertex_comm_weight(pred);
+                }
             }
 
             if (vector_schedule->assignedSuperstep(pred) < from_step) {
                 bool remove = true;
                 for (const auto &succ : graph->children(pred)) {
-                    if (succ == vertex) { continue; }
+                    if (succ == vertex) {
+                        continue;
+                    }
 
                     if (vector_schedule->assignedProcessor(succ) == from_proc
                         && vector_schedule->assignedSuperstep(succ) == from_step) {
@@ -251,7 +255,9 @@ struct ls_local_inc_edges_memory_constraint {
                     for (const auto &pred : graph->parents(node)) {
                         if (vector_schedule->assignedSuperstep(pred) < step) {
                             auto pair = step_processor_pred[step][proc].insert(pred);
-                            if (pair.second) { step_processor_memory[step][proc] += graph->vertex_comm_weight(pred); }
+                            if (pair.second) {
+                                step_processor_memory[step][proc] += graph->vertex_comm_weight(pred);
+                            }
                         }
                     }
                 }
@@ -362,13 +368,17 @@ struct ls_local_sources_inc_edges_memory_constraint {
         for (const auto &pred : graph->parents(vertex)) {
             if (vector_schedule->assignedSuperstep(pred) < to_step) {
                 auto pair = step_processor_pred[to_step][to_proc].insert(pred);
-                if (pair.second) { step_processor_memory[to_step][to_proc] += graph->vertex_comm_weight(pred); }
+                if (pair.second) {
+                    step_processor_memory[to_step][to_proc] += graph->vertex_comm_weight(pred);
+                }
             }
 
             if (vector_schedule->assignedSuperstep(pred) < from_step) {
                 bool remove = true;
                 for (const auto &succ : graph->children(pred)) {
-                    if (succ == vertex) { continue; }
+                    if (succ == vertex) {
+                        continue;
+                    }
 
                     if (vector_schedule->assignedProcessor(succ) == from_proc
                         && vector_schedule->assignedSuperstep(succ) == from_step) {
@@ -419,12 +429,16 @@ struct ls_local_sources_inc_edges_memory_constraint {
                 step_processor_pred[step][proc].clear();
 
                 for (const auto &node : set_schedule->step_processor_vertices[step][proc]) {
-                    if (is_source(node, *graph)) { step_processor_memory[step][proc] += graph->vertex_mem_weight(node); }
+                    if (is_source(node, *graph)) {
+                        step_processor_memory[step][proc] += graph->vertex_mem_weight(node);
+                    }
 
                     for (const auto &pred : graph->parents(node)) {
                         if (vector_schedule->assignedSuperstep(pred) < step) {
                             auto pair = step_processor_pred[step][proc].insert(pred);
-                            if (pair.second) { step_processor_memory[step][proc] += graph->vertex_comm_weight(pred); }
+                            if (pair.second) {
+                                step_processor_memory[step][proc] += graph->vertex_comm_weight(pred);
+                            }
                         }
                     }
                 }
@@ -452,7 +466,9 @@ struct ls_local_sources_inc_edges_memory_constraint {
     inline bool can_move(vertex_idx_t<Graph_t> vertex, const unsigned proc, unsigned step) const {
         v_memw_t<Graph_t> inc_memory = 0;
 
-        if (is_source(vertex, *graph)) { inc_memory += graph->vertex_mem_weight(vertex); }
+        if (is_source(vertex, *graph)) {
+            inc_memory += graph->vertex_mem_weight(vertex);
+        }
 
         for (const auto &pred : graph->parents(vertex)) {
             if (vector_schedule->assignedSuperstep(pred) < step) {

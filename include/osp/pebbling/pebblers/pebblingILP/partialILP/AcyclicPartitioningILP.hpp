@@ -244,14 +244,18 @@ void AcyclicPartitioningILP<Graph_t>::setupVariablesConstraintsObjective(const B
     // each node assigned to exactly one partition
     for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
         Expr expr;
-        for (unsigned part = 0; part < numberOfParts; part++) { expr += node_in_partition[node][static_cast<int>(part)]; }
+        for (unsigned part = 0; part < numberOfParts; part++) {
+            expr += node_in_partition[node][static_cast<int>(part)];
+        }
         model.AddConstr(expr == 1);
     }
 
     // hyperedge indicators match node variables
     for (unsigned part = 0; part < numberOfParts; part++) {
         for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
-            if (instance.getComputationalDag().out_degree(node) == 0) { continue; }
+            if (instance.getComputationalDag().out_degree(node) == 0) {
+                continue;
+            }
 
             model.AddConstr(hyperedge_intersects_partition[node_to_hyperedge_index[node]][static_cast<int>(part)]
                             >= node_in_partition[node][static_cast<int>(part)]);
@@ -331,7 +335,9 @@ std::vector<unsigned> AcyclicPartitioningILP<Graph_t>::returnAssignment(const Bs
     }
 
     for (unsigned chosen_partition : node_to_partition) {
-        if (chosen_partition == UINT_MAX) { std::cout << "Error: partitioning returned by ILP seems incomplete!" << std::endl; }
+        if (chosen_partition == UINT_MAX) {
+            std::cout << "Error: partitioning returned by ILP seems incomplete!" << std::endl;
+        }
     }
 
     unsigned current_index = 0;

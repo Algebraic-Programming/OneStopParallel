@@ -85,7 +85,9 @@ RETURN_STATUS SquashAMul<Graph_t, Graph_t_coarse>::run_contractions() {
                 *(MultilevelCoarser<Graph_t, Graph_t_coarse>::dag_history.back()), coarsened_dag, contraction_map);
         }
 
-        if (!coarsen_success) { status = RETURN_STATUS::ERROR; }
+        if (!coarsen_success) {
+            status = RETURN_STATUS::ERROR;
+        }
 
         status = std::max(
             status,

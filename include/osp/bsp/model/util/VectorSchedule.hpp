@@ -142,7 +142,9 @@ class VectorSchedule : public IBspSchedule<Graph_t> {
         number_of_supersteps += num_new_steps;
 
         for (const auto &vertex : getInstance().vertices()) {
-            if (node_to_superstep_assignment[vertex] > step_before) { node_to_superstep_assignment[vertex] += num_new_steps; }
+            if (node_to_superstep_assignment[vertex] > step_before) {
+                node_to_superstep_assignment[vertex] += num_new_steps;
+            }
         }
     }
 };

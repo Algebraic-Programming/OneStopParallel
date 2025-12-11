@@ -38,13 +38,17 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecomp_test) {
 
     BOOST_CHECK_EQUAL(m_hash.get_vertex_hashes().size(), graph.num_vertices());
 
-    for (const auto &v : source_vertices_view(graph)) { BOOST_CHECK_EQUAL(m_hash.get_vertex_hash(v), 11); }
+    for (const auto &v : source_vertices_view(graph)) {
+        BOOST_CHECK_EQUAL(m_hash.get_vertex_hash(v), 11);
+    }
 
     size_t num = 0;
     for (const auto &pair : m_hash.get_orbits()) {
         num += pair.second.size();
         std::cout << "orbit " << pair.first << ": ";
-        for (const auto &v : pair.second) { std::cout << v << ", "; }
+        for (const auto &v : pair.second) {
+            std::cout << v << ", ";
+        }
         std::cout << std::endl;
     }
 
@@ -76,7 +80,9 @@ BOOST_AUTO_TEST_CASE(MerkleHashComputer_test_fw_bw_precomp) {
     for (const auto &pair : m_hash.get_orbits()) {
         num += pair.second.size();
         std::cout << "orbit " << pair.first << ": ";
-        for (const auto &v : pair.second) { std::cout << v << ", "; }
+        for (const auto &v : pair.second) {
+            std::cout << v << ", ";
+        }
         std::cout << std::endl;
     }
 

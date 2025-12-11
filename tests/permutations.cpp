@@ -72,7 +72,9 @@ BOOST_AUTO_TEST_CASE(In_Place_Inverse_Permutation_random) {
         std::shuffle(vec.begin(), vec.end(), gen);
 
         std::vector<unsigned> inv_perm(vec.size());
-        for (unsigned j = 0; j < vec.size(); ++j) { inv_perm[vec[j]] = j; }
+        for (unsigned j = 0; j < vec.size(); ++j) {
+            inv_perm[vec[j]] = j;
+        }
 
         inverse_permute_inplace(vec, inv_perm);
         for (std::size_t j = 0; j < sol.size(); ++j) {

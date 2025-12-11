@@ -137,14 +137,18 @@ class kl_current_schedule {
             for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
                 step_processor_work[i][proc] = step_processor_work[i + 1][proc];
 
-                if constexpr (use_memory_constraint) { memory_constraint.override_superstep(i, proc, i + 1, proc); }
+                if constexpr (use_memory_constraint) {
+                    memory_constraint.override_superstep(i, proc, i + 1, proc);
+                }
             }
         }
 
         step_second_max_work[num_steps()] = 0;
         step_max_work[num_steps()] = 0;
 
-        if constexpr (use_memory_constraint) { memory_constraint.reset_superstep(num_steps()); }
+        if constexpr (use_memory_constraint) {
+            memory_constraint.reset_superstep(num_steps());
+        }
 
         recompute_current_violations();
         cost_f->compute_current_costs();
@@ -153,7 +157,9 @@ class kl_current_schedule {
     void reset_superstep(unsigned step) {
         if (step > 0) {
             compute_work_memory_datastructures(step - 1, step - 1);
-            if (step < num_steps() - 1) { compute_work_memory_datastructures(step + 1, step + 1); }
+            if (step < num_steps() - 1) {
+                compute_work_memory_datastructures(step + 1, step + 1);
+            }
         } else {
             compute_work_memory_datastructures(1, 1);
         }
@@ -161,7 +167,9 @@ class kl_current_schedule {
         step_second_max_work[step] = 0;
         step_max_work[step] = 0;
 
-        if constexpr (use_memory_constraint) { memory_constraint.reset_superstep(step); }
+        if constexpr (use_memory_constraint) {
+            memory_constraint.reset_superstep(step);
+        }
 
         recompute_current_violations();
         cost_f->compute_current_costs();
@@ -170,10 +178,14 @@ class kl_current_schedule {
     void recompute_neighboring_supersteps(unsigned step) {
         if (step > 0) {
             compute_work_memory_datastructures(step - 1, step);
-            if (step < num_steps() - 1) { compute_work_memory_datastructures(step + 1, step + 1); }
+            if (step < num_steps() - 1) {
+                compute_work_memory_datastructures(step + 1, step + 1);
+            }
         } else {
             compute_work_memory_datastructures(0, 0);
-            if (num_steps() > 1) { compute_work_memory_datastructures(1, 1); }
+            if (num_steps() > 1) {
+                compute_work_memory_datastructures(1, 1);
+            }
         }
     }
 
@@ -228,7 +240,9 @@ class kl_current_schedule {
 
         const unsigned num_procs = instance->numberOfProcessors();
 
-        if constexpr (use_memory_constraint) { memory_constraint.initialize(set_schedule, vector_schedule); }
+        if constexpr (use_memory_constraint) {
+            memory_constraint.initialize(set_schedule, vector_schedule);
+        }
 
         step_processor_work
             = std::vector<std::vector<v_workw_t<Graph_t>>>(num_steps(), std::vector<v_workw_t<Graph_t>>(num_procs, 0));
@@ -241,11 +255,15 @@ class kl_current_schedule {
         step_max_work.clear();
         step_second_max_work.clear();
 
-        if constexpr (use_memory_constraint) { memory_constraint.clear(); }
+        if constexpr (use_memory_constraint) {
+            memory_constraint.clear();
+        }
     }
 
     virtual void compute_work_memory_datastructures(unsigned start_step, unsigned end_step) {
-        if constexpr (use_memory_constraint) { memory_constraint.compute_memory_datastructure(start_step, end_step); }
+        if constexpr (use_memory_constraint) {
+            memory_constraint.compute_memory_datastructure(start_step, end_step);
+        }
 
         for (unsigned step = start_step; step <= end_step; step++) {
             step_max_work[step] = 0;

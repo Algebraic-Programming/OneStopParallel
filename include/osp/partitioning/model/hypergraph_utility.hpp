@@ -41,7 +41,9 @@ typename hypergraph_t::vertex_work_weight_type compute_total_vertex_work_weight(
     using workw_type = typename hypergraph_t::vertex_work_weight_type;
 
     workw_type total = 0;
-    for (index_type node = 0; node < hgraph.num_vertices(); ++node) { total += hgraph.get_vertex_work_weight(node); }
+    for (index_type node = 0; node < hgraph.num_vertices(); ++node) {
+        total += hgraph.get_vertex_work_weight(node);
+    }
     return total;
 }
 
@@ -51,7 +53,9 @@ typename hypergraph_t::vertex_mem_weight_type compute_total_vertex_memory_weight
     using memw_type = typename hypergraph_t::vertex_mem_weight_type;
 
     memw_type total = 0;
-    for (index_type node = 0; node < hgraph.num_vertices(); ++node) { total += hgraph.get_vertex_memory_weight(node); }
+    for (index_type node = 0; node < hgraph.num_vertices(); ++node) {
+        total += hgraph.get_vertex_memory_weight(node);
+    }
     return total;
 }
 
@@ -68,7 +72,9 @@ hypergraph_t create_induced_hypergraph(const hypergraph_t &hgraph, const std::ve
     std::vector<index_type> new_index(hgraph.num_vertices());
     unsigned current_index = 0;
     for (index_type node = 0; node < hgraph.num_vertices(); ++node) {
-        if (include[node]) { new_index[node] = current_index++; }
+        if (include[node]) {
+            new_index[node] = current_index++;
+        }
     }
 
     hypergraph_t new_hgraph(current_index, 0);
@@ -89,7 +95,9 @@ hypergraph_t create_induced_hypergraph(const hypergraph_t &hgraph, const std::ve
             }
         }
 
-        if (nr_induced_pins >= 2) { new_hgraph.add_hyperedge(induced_hyperedge, hgraph.get_hyperedge_weight(hyperedge)); }
+        if (nr_induced_pins >= 2) {
+            new_hgraph.add_hyperedge(induced_hyperedge, hgraph.get_hyperedge_weight(hyperedge));
+        }
     }
     return new_hgraph;
 }
@@ -141,9 +149,13 @@ hypergraph_t convert_from_cdag_as_hyperdag(const Graph_t &dag) {
     for (const auto &node : dag.vertices()) {
         hgraph.set_vertex_work_weight(node, dag.vertex_work_weight(node));
         hgraph.set_vertex_memory_weight(node, dag.vertex_mem_weight(node));
-        if (dag.out_degree(node) == 0) { continue; }
+        if (dag.out_degree(node) == 0) {
+            continue;
+        }
         std::vector<index_type> new_hyperedge({node});
-        for (const auto &child : dag.children(node)) { new_hyperedge.push_back(child); }
+        for (const auto &child : dag.children(node)) {
+            new_hyperedge.push_back(child);
+        }
         hgraph.add_hyperedge(new_hyperedge, dag.vertex_comm_weight(node));
     }
     return hgraph;

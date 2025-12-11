@@ -208,7 +208,9 @@ BOOST_AUTO_TEST_CASE(test_hdag_boost) {
 BOOST_AUTO_TEST_CASE(test_arch_smpl) {
     std::filesystem::path cwd = std::filesystem::current_path();
 
-    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) { cwd = cwd.parent_path(); }
+    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
+        cwd = cwd.parent_path();
+    }
 
     BspArchitecture<computational_dag_vector_impl_def_t> arch;
 
@@ -224,7 +226,9 @@ BOOST_AUTO_TEST_CASE(test_arch_smpl) {
 BOOST_AUTO_TEST_CASE(test_arch_smpl_signed) {
     std::filesystem::path cwd = std::filesystem::current_path();
 
-    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) { cwd = cwd.parent_path(); }
+    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
+        cwd = cwd.parent_path();
+    }
 
     BspArchitecture<computational_dag_vector_impl_def_int_t> arch;
 
@@ -240,7 +244,9 @@ BOOST_AUTO_TEST_CASE(test_arch_smpl_signed) {
 BOOST_AUTO_TEST_CASE(test_k_means) {
     std::filesystem::path cwd = std::filesystem::current_path();
 
-    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) { cwd = cwd.parent_path(); }
+    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
+        cwd = cwd.parent_path();
+    }
 
     std::vector<int> work{1, 1, 1, 2, 1, 2, 1, 2, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 3,
                           3, 3, 2, 1, 1, 1, 1, 1, 3, 3, 3, 2, 1, 1, 1, 1, 1, 2, 1, 1};
@@ -277,7 +283,9 @@ BOOST_AUTO_TEST_CASE(test_k_means) {
 BOOST_AUTO_TEST_CASE(test_dot_graph) {
     std::filesystem::path cwd = std::filesystem::current_path();
 
-    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) { cwd = cwd.parent_path(); }
+    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
+        cwd = cwd.parent_path();
+    }
 
     std::vector<unsigned> work{5, 2, 4, 5, 1, 8, 12, 8, 2, 9, 3};
     std::vector<unsigned> comm{4, 3, 2, 4, 3, 2, 4, 3, 2, 2, 2};
@@ -304,7 +312,9 @@ BOOST_AUTO_TEST_CASE(test_dot_graph) {
 BOOST_AUTO_TEST_CASE(test_dot_graph_boost) {
     std::filesystem::path cwd = std::filesystem::current_path();
 
-    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) { cwd = cwd.parent_path(); }
+    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
+        cwd = cwd.parent_path();
+    }
 
     std::vector<unsigned> work{5, 2, 4, 5, 1, 8, 12, 8, 2, 9, 3};
     std::vector<unsigned> comm{4, 3, 2, 4, 3, 2, 4, 3, 2, 2, 2};

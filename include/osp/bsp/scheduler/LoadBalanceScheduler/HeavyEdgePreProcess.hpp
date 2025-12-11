@@ -36,7 +36,9 @@ std::vector<std::vector<vertex_idx_t<Graph_t>>> heavy_edge_preprocess(const Grap
 
     // Initialising the union find structure
     union_find_universe_t<Graph_t> uf_structure;
-    for (const VertexType &vert : graph.vertices()) { uf_structure.add_object(vert, graph.vertex_work_weight(vert)); }
+    for (const VertexType &vert : graph.vertices()) {
+        uf_structure.add_object(vert, graph.vertex_work_weight(vert));
+    }
 
     // Making edge comunications list
     std::vector<e_commw_t<Graph_t>> edge_communications;
@@ -64,9 +66,13 @@ std::vector<std::vector<vertex_idx_t<Graph_t>>> heavy_edge_preprocess(const Grap
     edge_list.reserve(graph.num_edges());
     for (const auto &edge : edges(graph)) {
         if constexpr (has_edge_weights_v<Graph_t>) {
-            if (graph.edge_comm_weight(edge) > minimal_edge_weight) { edge_list.emplace_back(edge); }
+            if (graph.edge_comm_weight(edge) > minimal_edge_weight) {
+                edge_list.emplace_back(edge);
+            }
         } else {
-            if (graph.vertex_comm_weight(source(edge, graph)) > minimal_edge_weight) { edge_list.emplace_back(edge); }
+            if (graph.vertex_comm_weight(source(edge, graph)) > minimal_edge_weight) {
+                edge_list.emplace_back(edge);
+            }
         }
     }
 
@@ -83,7 +89,9 @@ std::vector<std::vector<vertex_idx_t<Graph_t>>> heavy_edge_preprocess(const Grap
 
     // Computing max component size
     v_workw_t<Graph_t> max_component_size = 0;
-    for (const VertexType &vert : graph.vertices()) { max_component_size += graph.vertex_work_weight(vert); }
+    for (const VertexType &vert : graph.vertices()) {
+        max_component_size += graph.vertex_work_weight(vert);
+    }
 
     max_component_size = static_cast<v_workw_t<Graph_t>>(max_component_size * bound_component_weight_percent);
 
@@ -96,7 +104,9 @@ std::vector<std::vector<vertex_idx_t<Graph_t>>> heavy_edge_preprocess(const Grap
 
         v_workw_t<Graph_t> weight_comp_a = uf_structure.get_weight_of_component_by_name(source(edge, graph));
         v_workw_t<Graph_t> weight_comp_b = uf_structure.get_weight_of_component_by_name(target(edge, graph));
-        if (weight_comp_a + weight_comp_b > max_component_size) { continue; }
+        if (weight_comp_a + weight_comp_b > max_component_size) {
+            continue;
+        }
 
         uf_structure.join_by_name(source(edge, graph), target(edge, graph));
     }

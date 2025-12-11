@@ -96,7 +96,9 @@ class edge_view {
             // Optimization: Skip vertices entirely if their degree is small enough
             while (currentVertex_ < graph_->num_vertices()) {
                 const auto degree = graph_->out_degree(currentVertex_);
-                if (currentAccumulatedEdges + degree > currentEdgeIdx_) { break; }
+                if (currentAccumulatedEdges + degree > currentEdgeIdx_) {
+                    break;
+                }
                 currentAccumulatedEdges += degree;
                 currentVertex_++;
             }

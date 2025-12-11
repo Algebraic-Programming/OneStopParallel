@@ -53,12 +53,16 @@ void erdos_renyi_graph_gen(Graph_t &dag_out, vertex_idx_t<Graph_t> num_vertices,
             std::uniform_int_distribution<vertex_idx_t<Graph_t>> dist(0, num_vertices - one - v);
             vertex_idx_t<Graph_t> edge = v + one + dist(gen);
 
-            if (out_edges.find(edge) != out_edges.cend()) { continue; }
+            if (out_edges.find(edge) != out_edges.cend()) {
+                continue;
+            }
 
             out_edges.emplace(edge);
         }
 
-        for (auto &j : out_edges) { dag_out.add_edge(v, j); }
+        for (auto &j : out_edges) {
+            dag_out.add_edge(v, j);
+        }
     }
 }
 

@@ -20,6 +20,8 @@ limitations under the License.
 
 inline std::filesystem::path get_project_root() {
     std::filesystem::path cwd = std::filesystem::current_path();
-    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) { cwd = cwd.parent_path(); }
+    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
+        cwd = cwd.parent_path();
+    }
     return cwd;
 }

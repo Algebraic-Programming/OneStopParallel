@@ -75,7 +75,9 @@ std::vector<v_workw_t<Graph_t>> SubproblemMultiScheduling<Graph_t>::get_longest_
         if (graph.out_degree(*r_iter) > 0) {
             workweight_type max = 0;
             for (const auto &child : graph.children(*r_iter)) {
-                if (max <= longest_path[child]) { max = longest_path[child]; }
+                if (max <= longest_path[child]) {
+                    max = longest_path[child];
+                }
             }
             longest_path[*r_iter] += max;
         }
@@ -107,11 +109,15 @@ RETURN_STATUS SubproblemMultiScheduling<Graph_t>::computeMultiSchedule(const Bsp
     std::vector<unsigned> nrPredecRemain(N);
     for (vertex_idx node = 0; node < N; node++) {
         nrPredecRemain[node] = static_cast<unsigned>(G.in_degree(node));
-        if (G.in_degree(node) == 0) { readySet.emplace(-longest_outgoing_path[node], node); }
+        if (G.in_degree(node) == 0) {
+            readySet.emplace(-longest_outgoing_path[node], node);
+        }
     }
 
     std::set<unsigned> free_procs;
-    for (unsigned proc = 0; proc < P; ++proc) { free_procs.insert(proc); }
+    for (unsigned proc = 0; proc < P; ++proc) {
+        free_procs.insert(proc);
+    }
 
     std::vector<double> node_finish_time(N, 0);
 
@@ -129,9 +135,13 @@ RETURN_STATUS SubproblemMultiScheduling<Graph_t>::computeMultiSchedule(const Bsp
             if (node != std::numeric_limits<unsigned>::max()) {
                 for (const vertex_idx &succ : G.children(node)) {
                     nrPredecRemain[succ]--;
-                    if (nrPredecRemain[succ] == 0) { readySet.emplace(-longest_outgoing_path[succ], succ); }
+                    if (nrPredecRemain[succ] == 0) {
+                        readySet.emplace(-longest_outgoing_path[succ], succ);
+                    }
                 }
-                for (unsigned proc : processors_to_node[node]) { free_procs.insert(proc); }
+                for (unsigned proc : processors_to_node[node]) {
+                    free_procs.insert(proc);
+                }
             }
         }
 
@@ -165,7 +175,9 @@ RETURN_STATUS SubproblemMultiScheduling<Graph_t>::computeMultiSchedule(const Bsp
                 double new_finish_time = time
                                          + static_cast<double>(G.vertex_work_weight(node))
                                                / (static_cast<double>(processors_to_node[node].size()) + 1);
-                if (new_finish_time + 0.0001 < itr_latest->first) { possible_nodes.emplace(-longest_outgoing_path[node], node); }
+                if (new_finish_time + 0.0001 < itr_latest->first) {
+                    possible_nodes.emplace(-longest_outgoing_path[node], node);
+                }
 
                 ++itr_latest;
             }
@@ -185,7 +197,9 @@ RETURN_STATUS SubproblemMultiScheduling<Graph_t>::computeMultiSchedule(const Bsp
                 last_node_on_proc[proc] = node;
                 free_procs.erase(proc);
             }
-            if (new_assingments.empty()) { itr = itr_latest; }
+            if (new_assingments.empty()) {
+                itr = itr_latest;
+            }
         }
     }
 
@@ -198,13 +212,17 @@ std::vector<std::pair<vertex_idx_t<Graph_t>, unsigned>> SubproblemMultiSchedulin
     const std::set<std::pair<unsigned, vertex_idx>> &nodes_available,
     const std::set<unsigned> &procs_available) const {
     std::vector<std::pair<vertex_idx, unsigned>> assignments;
-    if (nodes_available.empty() || procs_available.empty()) { return assignments; }
+    if (nodes_available.empty() || procs_available.empty()) {
+        return assignments;
+    }
 
     std::set<vertex_idx> assigned_nodes;
     std::vector<bool> assigned_procs(instance.numberOfProcessors(), false);
 
     for (unsigned proc : procs_available) {
-        if (last_node_on_proc[proc] == UINT_MAX) { continue; }
+        if (last_node_on_proc[proc] == UINT_MAX) {
+            continue;
+        }
 
         for (const auto &succ : instance.getComputationalDag().children(last_node_on_proc[proc])) {
             if (nodes_available.find({-longest_outgoing_path[succ], succ}) != nodes_available.end()

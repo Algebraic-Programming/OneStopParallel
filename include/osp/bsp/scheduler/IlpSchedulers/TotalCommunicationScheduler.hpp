@@ -143,7 +143,9 @@ class TotalCommunicationScheduler : public Scheduler<Graph_t> {
                         if (sched.numberOfSupersteps() > 2) {
                             auto status = lk_heuristic.improveSchedule(sched);
 
-                            if (status == RETURN_STATUS::OSP_SUCCESS) { feedImprovedSchedule(sched); }
+                            if (status == RETURN_STATUS::OSP_SUCCESS) {
+                                feedImprovedSchedule(sched);
+                            }
                         }
                     }
 
@@ -207,7 +209,9 @@ class TotalCommunicationScheduler : public Scheduler<Graph_t> {
             for (unsigned step = 0; step < num_step; step++) {
                 v_workw_t<Graph_t> max_work = 0;
                 for (unsigned proc = 0; proc < instance_ptr->numberOfProcessors(); proc++) {
-                    if (max_work < work[step][proc]) { max_work = work[step][proc]; }
+                    if (max_work < work[step][proc]) {
+                        max_work = work[step][proc];
+                    }
                 }
 
                 assert(step <= std::numeric_limits<int>::max());
@@ -276,7 +280,9 @@ class TotalCommunicationScheduler : public Scheduler<Graph_t> {
             }
         }
 
-        if (cleanup_) { node_to_processor_superstep_var.clear(); }
+        if (cleanup_) {
+            node_to_processor_superstep_var.clear();
+        }
     }
 
     void loadInitialSchedule() {
@@ -317,7 +323,9 @@ class TotalCommunicationScheduler : public Scheduler<Graph_t> {
         for (unsigned step = 0; step < max_number_supersteps; step++) {
             v_workw_t<Graph_t> max_work = 0;
             for (unsigned i = 0; i < initial_schedule->getInstance().numberOfProcessors(); i++) {
-                if (max_work < work[step][i]) { max_work = work[step][i]; }
+                if (max_work < work[step][i]) {
+                    max_work = work[step][i];
+                }
             }
 
             assert(step <= std::numeric_limits<int>::max());
@@ -599,7 +607,9 @@ class TotalCommunicationScheduler : public Scheduler<Graph_t> {
 
         setupVariablesConstraintsObjective(instance);
 
-        if (use_initial_schedule) { loadInitialSchedule(); }
+        if (use_initial_schedule) {
+            loadInitialSchedule();
+        }
 
         model.SetIntParam(COPT_INTPARAM_THREADS, 128);
         model.SetIntParam(COPT_INTPARAM_STRONGBRANCHING, 1);

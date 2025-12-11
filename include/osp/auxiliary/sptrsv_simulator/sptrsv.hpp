@@ -163,7 +163,9 @@ class Sptrsv {
 
     void setup_csr_with_permutation(const BspSchedule<SparseMatrixImp<eigen_idx_type>> &schedule, std::vector<size_t> &perm) {
         std::vector<size_t> perm_inv(perm.size());
-        for (size_t i = 0; i < perm.size(); i++) { perm_inv[perm[i]] = i; }
+        for (size_t i = 0; i < perm.size(); i++) {
+            perm_inv[perm[i]] = i;
+        }
 
         num_supersteps = schedule.numberOfSupersteps();
 
@@ -204,7 +206,9 @@ class Sptrsv {
 
             std::set<uVertType> parents;
 
-            for (uVertType par : instance->getComputationalDag().parents(node)) { parents.insert(perm[par]); }
+            for (uVertType par : instance->getComputationalDag().parents(node)) {
+                parents.insert(perm[par]);
+            }
 
             for (const uVertType &par : parents) {
                 col_idx.push_back(par);
@@ -451,19 +455,29 @@ class Sptrsv {
 
     void reset_x() {
         eigen_idx_type number_of_vertices = static_cast<eigen_idx_type>(instance->numberOfVertices());
-        for (eigen_idx_type i = 0; i < number_of_vertices; i++) { x[i] = 1.0; }
+        for (eigen_idx_type i = 0; i < number_of_vertices; i++) {
+            x[i] = 1.0;
+        }
     }
 
     void permute_x_vector(const std::vector<size_t> &perm) {
         std::vector<double> vec_perm(perm.size());
-        for (size_t i = 0; i < perm.size(); i++) { vec_perm[i] = x[perm[i]]; }
-        for (size_t i = 0; i < perm.size(); i++) { x[i] = vec_perm[i]; }
+        for (size_t i = 0; i < perm.size(); i++) {
+            vec_perm[i] = x[perm[i]];
+        }
+        for (size_t i = 0; i < perm.size(); i++) {
+            x[i] = vec_perm[i];
+        }
     }
 
     void permute_x_vector_inverse(const std::vector<size_t> &perm) {
         std::vector<double> vec_unperm(perm.size());
-        for (size_t i = 0; i < perm.size(); i++) { vec_unperm[perm[i]] = x[i]; }
-        for (size_t i = 0; i < perm.size(); i++) { x[i] = vec_unperm[i]; }
+        for (size_t i = 0; i < perm.size(); i++) {
+            vec_unperm[perm[i]] = x[i];
+        }
+        for (size_t i = 0; i < perm.size(); i++) {
+            x[i] = vec_unperm[i];
+        }
     }
 
     std::size_t get_number_of_vertices() { return instance->numberOfVertices(); }

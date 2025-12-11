@@ -63,7 +63,9 @@ class CompatibleProcessorRange {
 
             for (v_type_t<Graph_t> v_type = 0; v_type < inst.getComputationalDag().num_vertex_types(); v_type++) {
                 for (unsigned proc = 0; proc < inst.numberOfProcessors(); proc++) {
-                    if (inst.isCompatibleType(v_type, inst.processorType(proc))) { typeProcessorIdx[v_type].push_back(proc); }
+                    if (inst.isCompatibleType(v_type, inst.processorType(proc))) {
+                        typeProcessorIdx[v_type].push_back(proc);
+                    }
                 }
             }
         }

@@ -90,7 +90,9 @@ void GenericFM<hypergraph_t>::ImprovePartitioning(Partitioning<hypergraph_t> &pa
 
         index_type left_side = 0;
         for (index_type node = 0; node < Hgraph.num_vertices(); ++node) {
-            if (partition.assignedPartition(node) == 0) { ++left_side; }
+            if (partition.assignedPartition(node) == 0) {
+                ++left_side;
+            }
         }
 
         if (left_side > max_nodes_in_part || Hgraph.num_vertices() - left_side > max_nodes_in_part) {
@@ -109,18 +111,24 @@ void GenericFM<hypergraph_t>::ImprovePartitioning(Partitioning<hypergraph_t> &pa
                 ++nr_nodes_in_hyperedge_on_side[hyperedge][partition.assignedPartition(node)];
             }
 
-            if (Hgraph.get_vertices_in_hyperedge(hyperedge).size() < 2) { continue; }
+            if (Hgraph.get_vertices_in_hyperedge(hyperedge).size() < 2) {
+                continue;
+            }
 
             for (unsigned part = 0; part < 2; ++part) {
                 if (nr_nodes_in_hyperedge_on_side[hyperedge][part] == 1) {
                     for (index_type node : Hgraph.get_vertices_in_hyperedge(hyperedge)) {
-                        if (partition.assignedPartition(node) == part) { ++gain[node]; }
+                        if (partition.assignedPartition(node) == part) {
+                            ++gain[node];
+                        }
                     }
                 }
 
                 if (nr_nodes_in_hyperedge_on_side[hyperedge][part] == 0) {
                     for (index_type node : Hgraph.get_vertices_in_hyperedge(hyperedge)) {
-                        if (partition.assignedPartition(node) != part) { --gain[node]; }
+                        if (partition.assignedPartition(node) != part) {
+                            --gain[node];
+                        }
                     }
                 }
             }
@@ -168,7 +176,9 @@ void GenericFM<hypergraph_t>::ImprovePartitioning(Partitioning<hypergraph_t> &pa
                 --gain_index;
             }
 
-            if (to_move == std::numeric_limits<index_type>::max()) { break; }
+            if (to_move == std::numeric_limits<index_type>::max()) {
+                break;
+            }
 
             // make move
 
@@ -193,7 +203,9 @@ void GenericFM<hypergraph_t>::ImprovePartitioning(Partitioning<hypergraph_t> &pa
             for (index_type hyperedge : Hgraph.get_incident_hyperedges(to_move)) {
                 if (nr_nodes_in_hyperedge_on_side[hyperedge][chosen_part] == 1) {
                     for (index_type node : Hgraph.get_vertices_in_hyperedge(hyperedge)) {
-                        if (locked[node]) { continue; }
+                        if (locked[node]) {
+                            continue;
+                        }
 
                         std::vector<index_type> &vec
                             = gain_bucket_array[other_part][static_cast<unsigned>(gain[node] + static_cast<int>(max_degree))];
@@ -230,7 +242,9 @@ void GenericFM<hypergraph_t>::ImprovePartitioning(Partitioning<hypergraph_t> &pa
                     }
                 } else if (nr_nodes_in_hyperedge_on_side[hyperedge][other_part] == 0) {
                     for (index_type node : Hgraph.get_vertices_in_hyperedge(hyperedge)) {
-                        if (locked[node]) { continue; }
+                        if (locked[node]) {
+                            continue;
+                        }
 
                         std::vector<index_type> &vec
                             = gain_bucket_array[chosen_part][static_cast<unsigned>(gain[node] + static_cast<int>(max_degree))];
@@ -247,7 +261,9 @@ void GenericFM<hypergraph_t>::ImprovePartitioning(Partitioning<hypergraph_t> &pa
         }
 
         // apply best configuration seen
-        if (best_index == 0) { break; }
+        if (best_index == 0) {
+            break;
+        }
 
         for (index_type node_idx = 0; node_idx < best_index && node_idx < static_cast<index_type>(moved_nodes.size()); ++node_idx) {
             partition.setAssignedPartition(moved_nodes[node_idx], 1U - partition.assignedPartition(moved_nodes[node_idx]));
@@ -268,7 +284,9 @@ void GenericFM<hypergraph_t>::RecursiveFM(Partitioning<hypergraph_t> &partition)
         return;
     }
 
-    for (index_type node = 0; node < nr_nodes; ++node) { partition.setAssignedPartition(node, static_cast<unsigned>(node % 2)); }
+    for (index_type node = 0; node < nr_nodes; ++node) {
+        partition.setAssignedPartition(node, static_cast<unsigned>(node % 2));
+    }
 
     if (max_nodes_in_part == 0) {    // if not initialized
         max_nodes_in_part = static_cast<index_type>(
@@ -345,7 +363,9 @@ std::vector<typename hypergraph_t::vertex_idx> GenericFM<hypergraph_t>::getMaxNo
     max_nodes_on_level.push_back(max_nodes_in_part);
     for (unsigned parts = 2; parts < nr_parts; parts *= 2) {
         index_type next_limit = max_nodes_on_level.back() * 2;
-        if (next_limit > limit_per_level.back()) { --next_limit; }
+        if (next_limit > limit_per_level.back()) {
+            --next_limit;
+        }
 
         limit_per_level.pop_back();
         max_nodes_on_level.push_back(next_limit);

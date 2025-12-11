@@ -98,7 +98,9 @@ RETURN_STATUS HillClimbingForCommSteps<Graph_t>::improveScheduleWithTimeLimit(Bs
                                                                               const unsigned timeLimit) {
     schedule = &input_schedule;
 
-    if (schedule->numberOfSupersteps() <= 2) { return RETURN_STATUS::OSP_SUCCESS; }
+    if (schedule->numberOfSupersteps() <= 2) {
+        return RETURN_STATUS::OSP_SUCCESS;
+    }
 
     Init();
     // ConvertCommSchedule();
@@ -178,7 +180,9 @@ void HillClimbingForCommSteps<Graph_t>::Init() {
         = schedule->getCommunicationSchedule();
     for (vertex_idx node = 0; node < N; ++node) {
         for (unsigned proc = 0; proc < P; ++proc) {
-            if (commSchedule[node][proc] == UINT_MAX) { continue; }
+            if (commSchedule[node][proc] == UINT_MAX) {
+                continue;
+            }
 
             const auto comm_schedule_key = std::make_tuple(node, schedule->assignedProcessor(node), proc);
             auto mapIterator = originalCommSchedule.find(comm_schedule_key);
@@ -347,7 +351,9 @@ bool HillClimbingForCommSteps<Graph_t>::Improve() {
     while (true) {
         auto itr = commCostList[nextSupstep].rbegin();
 
-        if (itr == commCostList[nextSupstep].crend()) { break; }
+        if (itr == commCostList[nextSupstep].crend()) {
+            break;
+        }
 
         // find maximal comm cost that dominates the h-relation
         const cost_type commMax = itr->first;
@@ -370,7 +376,9 @@ bool HillClimbingForCommSteps<Graph_t>::Improve() {
                     const unsigned p = entry.second;
                     // iterate over alternative supsteps to place this communication step
                     for (unsigned step = commBounds[node][p].first; step < commBounds[node][p].second; ++step) {
-                        if (step == commSchedule[node][p]) { continue; }
+                        if (step == commSchedule[node][p]) {
+                            continue;
+                        }
 
                         const int costDiff = moveCostChange(node, p, step);
 
@@ -393,7 +401,9 @@ bool HillClimbingForCommSteps<Graph_t>::Improve() {
                     const unsigned p = entry.second;
                     // iterate over alternative supsteps to place this communication step
                     for (unsigned step = commBounds[node][p].first; step < commBounds[node][p].second; ++step) {
-                        if (step == commSchedule[node][p]) { continue; }
+                        if (step == commSchedule[node][p]) {
+                            continue;
+                        }
 
                         const int costDiff = moveCostChange(node, p, step);
 
@@ -413,10 +423,14 @@ bool HillClimbingForCommSteps<Graph_t>::Improve() {
         }
 
         nextSupstep = (nextSupstep + 1) % (M - 1);
-        if (nextSupstep == startingSupstep) { break; }
+        if (nextSupstep == startingSupstep) {
+            break;
+        }
     }
 
-    if (bestDiff == 0) { return false; }
+    if (bestDiff == 0) {
+        return false;
+    }
 
     executeMove(bestNode, bestProc, bestStep, bestDiff);
 

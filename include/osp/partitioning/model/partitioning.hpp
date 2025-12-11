@@ -85,7 +85,9 @@ class Partitioning {
     std::vector<index_type> getPartitionContent(unsigned part) const {
         std::vector<index_type> content;
         for (index_type node = 0; node < node_to_partition_assignment.size(); ++node) {
-            if (node_to_partition_assignment[node] == part) { content.push_back(node); }
+            if (node_to_partition_assignment[node] == part) {
+                content.push_back(node);
+            }
         }
 
         return content;
@@ -110,11 +112,17 @@ std::vector<unsigned> Partitioning<hypergraph_t>::computeLambdaForHyperedges() c
     std::vector<unsigned> lambda(instance->getHypergraph().num_hyperedges(), 0);
     for (index_type edge_idx = 0; edge_idx < instance->getHypergraph().num_hyperedges(); ++edge_idx) {
         const std::vector<index_type> &hyperedge = instance->getHypergraph().get_vertices_in_hyperedge(edge_idx);
-        if (hyperedge.empty()) { continue; }
+        if (hyperedge.empty()) {
+            continue;
+        }
         std::vector<bool> intersects_part(instance->getNumberOfPartitions(), false);
-        for (const index_type &node : hyperedge) { intersects_part[node_to_partition_assignment[node]] = true; }
+        for (const index_type &node : hyperedge) {
+            intersects_part[node_to_partition_assignment[node]] = true;
+        }
         for (unsigned part = 0; part < instance->getNumberOfPartitions(); ++part) {
-            if (intersects_part[part]) { ++lambda[edge_idx]; }
+            if (intersects_part[part]) {
+                ++lambda[edge_idx];
+            }
         }
     }
     return lambda;
@@ -139,7 +147,9 @@ typename hypergraph_t::vertex_comm_weight_type Partitioning<hypergraph_t>::compu
     commw_type total = 0;
     std::vector<unsigned> lambda = computeLambdaForHyperedges();
     for (index_type edge_idx = 0; edge_idx < instance->getHypergraph().num_hyperedges(); ++edge_idx) {
-        if (lambda[edge_idx] > 1) { total += instance->getHypergraph().get_hyperedge_weight(edge_idx); }
+        if (lambda[edge_idx] > 1) {
+            total += instance->getHypergraph().get_hyperedge_weight(edge_idx);
+        }
     }
 
     return total;
@@ -159,8 +169,12 @@ bool Partitioning<hypergraph_t>::satisfiesBalanceConstraint() const {
     }
 
     for (unsigned part = 0; part < instance->getNumberOfPartitions(); ++part) {
-        if (work_weight[part] > instance->getMaxWorkWeightPerPartition()) { return false; }
-        if (memory_weight[part] > instance->getMaxMemoryWeightPerPartition()) { return false; }
+        if (work_weight[part] > instance->getMaxWorkWeightPerPartition()) {
+            return false;
+        }
+        if (memory_weight[part] > instance->getMaxMemoryWeightPerPartition()) {
+            return false;
+        }
     }
 
     return true;

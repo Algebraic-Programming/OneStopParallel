@@ -128,7 +128,9 @@ void Hypergraph<index_type, workw_type, memw_type, commw_type>::add_hyperedge(co
                                                                               commw_type weight) {
     vertices_in_hyperedge.emplace_back(pins);
     hyperedge_weights.push_back(weight);
-    for (index_type vertex : pins) { incident_hyperedges_to_vertex[vertex].push_back(Num_hyperedges); }
+    for (index_type vertex : pins) {
+        incident_hyperedges_to_vertex[vertex].push_back(Num_hyperedges);
+    }
     ++Num_hyperedges;
     Num_pins += static_cast<index_type>(pins.size());
 }

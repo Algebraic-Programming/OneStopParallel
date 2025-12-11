@@ -77,7 +77,9 @@ RETURN_STATUS GreedyRecomputer<Graph_t>::computeRecompSchedule(BspScheduleCS<Gra
 
         work_cost[proc][step] += G.vertex_work_weight(node);
         first_present[node][proc] = std::min(first_present[node][proc], step);
-        for (vertex_idx pred : G.parents(node)) { needed_on_proc[pred][proc].insert(step); }
+        for (vertex_idx pred : G.parents(node)) {
+            needed_on_proc[pred][proc].insert(step);
+        }
 
         out_schedule.assignments(node).emplace_back(proc, step);
     }
@@ -140,9 +142,13 @@ RETURN_STATUS GreedyRecomputer<Graph_t>::computeRecompSchedule(BspScheduleCS<Gra
                         new_max_comm = std::max(new_max_comm, rec_cost[proc][step]);
                     }
                 }
-                if (new_max_comm == max_comm[step]) { continue; }
+                if (new_max_comm == max_comm[step]) {
+                    continue;
+                }
 
-                if (!initial_schedule.getInstance().isCompatible(node, to_proc)) { continue; }
+                if (!initial_schedule.getInstance().isCompatible(node, to_proc)) {
+                    continue;
+                }
 
                 cost_type decrease = max_comm[step] - new_max_comm;
                 if (max_comm[step] > 0 && new_max_comm == 0) {
@@ -165,7 +171,9 @@ RETURN_STATUS GreedyRecomputer<Graph_t>::computeRecompSchedule(BspScheduleCS<Gra
                 }
 
                 // check if this modification is beneficial
-                if (best_step == S || smallest_increase > decrease) { continue; }
+                if (best_step == S || smallest_increase > decrease) {
+                    continue;
+                }
 
                 // execute the modification
                 to_erase.emplace_back(entry);
@@ -179,7 +187,9 @@ RETURN_STATUS GreedyRecomputer<Graph_t>::computeRecompSchedule(BspScheduleCS<Gra
                 max_work[best_step] += smallest_increase;
 
                 // update movability bounds
-                for (const vertex_idx &pred : G.parents(node)) { needed_on_proc[pred][to_proc].insert(best_step); }
+                for (const vertex_idx &pred : G.parents(node)) {
+                    needed_on_proc[pred][to_proc].insert(best_step);
+                }
 
                 needed_on_proc[node][from_proc].erase(needed_on_proc[node][from_proc].lower_bound(step));
 
@@ -192,12 +202,16 @@ RETURN_STATUS GreedyRecomputer<Graph_t>::computeRecompSchedule(BspScheduleCS<Gra
 
                 still_improved = true;
             }
-            for (const KeyTriple &entry : to_erase) { comm_steps[step].erase(entry); }
+            for (const KeyTriple &entry : to_erase) {
+                comm_steps[step].erase(entry);
+            }
         }
     }
 
     for (unsigned step = 0; step < S; ++step) {
-        for (const KeyTriple &entry : comm_steps[step]) { out_schedule.getCommunicationSchedule().emplace(entry, step); }
+        for (const KeyTriple &entry : comm_steps[step]) {
+            out_schedule.getCommunicationSchedule().emplace(entry, step);
+        }
     }
 
     out_schedule.mergeSupersteps();

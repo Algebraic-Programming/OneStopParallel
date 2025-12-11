@@ -52,7 +52,9 @@ RETURN_STATUS HypergraphPartitioningILP<hypergraph_t>::computePartitioning(Parti
     this->setupFundamentalVariablesConstraintsObjective(result.getInstance(), model);
     setupExtraVariablesConstraints(result.getInstance(), model);
 
-    if (this->use_initial_solution) { setInitialSolution(result, model); }
+    if (this->use_initial_solution) {
+        setInitialSolution(result, model);
+    }
 
     this->solveILP(model);
 
@@ -87,7 +89,9 @@ void HypergraphPartitioningILP<hypergraph_t>::setupExtraVariablesConstraints(con
     // each node assigned to exactly one partition
     for (index_type node = 0; node < numberOfVertices; node++) {
         Expr expr;
-        for (unsigned part = 0; part < numberOfParts; part++) { expr += this->node_in_partition[node][static_cast<int>(part)]; }
+        for (unsigned part = 0; part < numberOfParts; part++) {
+            expr += this->node_in_partition[node][static_cast<int>(part)];
+        }
 
         model.AddConstr(expr == 1);
     }
@@ -125,10 +129,14 @@ void HypergraphPartitioningILP<hypergraph_t>::setInitialSolution(const Partition
 
     const std::vector<unsigned> &assignment = partition.assignedPartitions();
     const unsigned &numPartitions = partition.getInstance().getNumberOfPartitions();
-    if (assignment.size() != partition.getInstance().getHypergraph().num_vertices()) { return; }
+    if (assignment.size() != partition.getInstance().getHypergraph().num_vertices()) {
+        return;
+    }
 
     for (index_type node = 0; node < assignment.size(); ++node) {
-        if (assignment[node] >= numPartitions) { continue; }
+        if (assignment[node] >= numPartitions) {
+            continue;
+        }
 
         for (unsigned part = 0; part < numPartitions; ++part) {
             model.SetMipStart(this->node_in_partition[node][static_cast<int>(part)], static_cast<int>(assignment[node] == part));

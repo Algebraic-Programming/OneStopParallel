@@ -41,8 +41,12 @@ std::vector<v_commw_t<Graph_t>> compute_max_comm_per_step(const BspInstance<Grap
         v_commw_t<Graph_t> max_rec = 0;
 
         for (unsigned proc = 0; proc < instance.numberOfProcessors(); proc++) {
-            if (max_send < send[proc][step]) { max_send = send[proc][step]; }
-            if (max_rec < rec[proc][step]) { max_rec = rec[proc][step]; }
+            if (max_send < send[proc][step]) {
+                max_send = send[proc][step];
+            }
+            if (max_rec < rec[proc][step]) {
+                max_rec = rec[proc][step];
+            }
         }
         max_comm_per_step[step] = std::max(max_send, max_rec) * instance.communicationCosts();
     }
@@ -72,7 +76,9 @@ std::vector<v_workw_t<Graph_t>> compute_max_work_per_step(const BspInstance<Grap
     for (unsigned step = 0; step < number_of_supersteps; step++) {
         v_workw_t<Graph_t> max_work = 0;
         for (unsigned proc = 0; proc < instance.numberOfProcessors(); proc++) {
-            if (max_work < work[step][proc]) { max_work = work[step][proc]; }
+            if (max_work < work[step][proc]) {
+                max_work = work[step][proc];
+            }
         }
 
         max_work_per_step[step] = max_work;

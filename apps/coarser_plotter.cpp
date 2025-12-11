@@ -62,13 +62,17 @@ int main(int argc, char *argv[]) {
     bool ignore_vertex_types = false;
 
     if (ignore_vertex_types) {
-        for (const auto &vert : graph_copy.vertices()) { graph_copy.set_vertex_type(vert, 0); }
+        for (const auto &vert : graph_copy.vertices()) {
+            graph_copy.set_vertex_type(vert, 0);
+        }
     }
 
     coarser.coarsenDag(graph_copy, coarse_graph, contraction_map);
 
     std::vector<unsigned> colours(contraction_map.size());
-    for (std::size_t i = 0; i < contraction_map.size(); ++i) { colours[i] = static_cast<unsigned>(contraction_map[i]); }
+    for (std::size_t i = 0; i < contraction_map.size(); ++i) {
+        colours[i] = static_cast<unsigned>(contraction_map[i]);
+    }
 
     std::ofstream out_dot(argv[2]);
     if (!out_dot.is_open()) {

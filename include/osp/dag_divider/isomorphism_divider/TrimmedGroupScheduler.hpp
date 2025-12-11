@@ -85,7 +85,9 @@ class TrimmedGroupScheduler : public Scheduler<Constr_Graph_t> {
         for (unsigned i = 0; i < min_non_zero_procs_; ++i) {
             unsigned num_to_assign = base_count + (i < remainder ? 1 : 0);
             for (unsigned j = 0; j < num_to_assign; ++j) {
-                if (component_cursor < num_components) { component_indices_per_group[i].push_back(component_cursor++); }
+                if (component_cursor < num_components) {
+                    component_indices_per_group[i].push_back(component_cursor++);
+                }
             }
         }
 
@@ -144,7 +146,9 @@ class TrimmedGroupScheduler : public Scheduler<Constr_Graph_t> {
 
             // Call the sub-scheduler to compute the schedule for this group of components
             auto status = sub_scheduler->computeSchedule(sub_schedule);
-            if (status != RETURN_STATUS::OSP_SUCCESS && status != RETURN_STATUS::BEST_FOUND) { return status; }
+            if (status != RETURN_STATUS::OSP_SUCCESS && status != RETURN_STATUS::BEST_FOUND) {
+                return status;
+            }
 
             // Map the sub-schedule back to the main schedule.
             for (const auto &v_global : group_vertices) {

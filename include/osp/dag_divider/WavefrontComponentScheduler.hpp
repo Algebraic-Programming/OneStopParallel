@@ -109,7 +109,9 @@ class WavefrontComponentScheduler : public AbstractWavefrontScheduler<Graph_t, c
 
                 BspSchedule<constr_graph_t> sub_schedule(sub_instance);
                 const auto status = this->scheduler->computeSchedule(sub_schedule);
-                if (status != RETURN_STATUS::OSP_SUCCESS && status != RETURN_STATUS::BEST_FOUND) { return status; }
+                if (status != RETURN_STATUS::OSP_SUCCESS && status != RETURN_STATUS::BEST_FOUND) {
+                    return status;
+                }
 
                 const auto sub_proc_type_count = sub_architecture.getProcessorTypeCount();
                 std::vector<unsigned> sub_proc_type_corrections(sub_architecture.getNumberOfProcessorTypes(), 0);
@@ -133,7 +135,9 @@ class WavefrontComponentScheduler : public AbstractWavefrontScheduler<Graph_t, c
                     subdag_vertex++;
                 }
 
-                for (size_t k = 0; k < sub_proc_type_count.size(); ++k) { proc_type_offsets[k] += sub_proc_type_count[k]; }
+                for (size_t k = 0; k < sub_proc_type_count.size(); ++k) {
+                    proc_type_offsets[k] += sub_proc_type_count[k];
+                }
                 max_number_supersteps = std::max(max_number_supersteps, sub_schedule.numberOfSupersteps());
             }
             superstep_offset += max_number_supersteps;

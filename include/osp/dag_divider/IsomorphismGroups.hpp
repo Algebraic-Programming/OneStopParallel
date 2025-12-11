@@ -44,7 +44,9 @@ class IsomorphismGroups {
                 // ComputationalDagWriter writer(isomorphism_groups_subgraphs[i][j]);
                 // writer.write_dot("isomorphism_group_" + std::to_string(i) + "_" + std::to_string(j) + ".dot");
 
-                for (const auto &vertex : isomorphism_groups[i][j]) { std::cout << vertex << " "; }
+                for (const auto &vertex : isomorphism_groups[i][j]) {
+                    std::cout << vertex << " ";
+                }
                 std::cout << std::endl;
             }
         }

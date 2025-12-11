@@ -30,7 +30,9 @@ BOOST_AUTO_TEST_CASE(Union_find_structure1) {
     std::vector<std::string> names({"a", "b", "c", "d", "e", "f"});
     Union_Find_Universe<std::string, unsigned, int, int> test_universe(names);
 
-    for (auto &name : names) { BOOST_CHECK_EQUAL(test_universe.find_origin_by_name(name), name); }
+    for (auto &name : names) {
+        BOOST_CHECK_EQUAL(test_universe.find_origin_by_name(name), name);
+    }
 
     BOOST_CHECK_EQUAL(test_universe.get_number_of_connected_components(), 6);
 
@@ -82,14 +84,20 @@ BOOST_AUTO_TEST_CASE(Union_find_structure2) {
     std::vector<std::string> names({"a", "b", "c", "d", "e", "f", "g", "h", "i"});
     Union_Find_Universe<std::string, unsigned, int, int> test_universe;
 
-    for (auto &name : names) { test_universe.add_object(name); }
+    for (auto &name : names) {
+        test_universe.add_object(name);
+    }
 
-    for (auto &name : names) { BOOST_CHECK_EQUAL(test_universe.find_origin_by_name(name), name); }
+    for (auto &name : names) {
+        BOOST_CHECK_EQUAL(test_universe.find_origin_by_name(name), name);
+    }
 
     BOOST_CHECK_THROW(test_universe.add_object("c"), std::runtime_error);
     BOOST_CHECK_THROW(test_universe.add_object("i"), std::runtime_error);
 
-    for (auto &name : names) { BOOST_CHECK_EQUAL(test_universe.find_origin_by_name(name), name); }
+    for (auto &name : names) {
+        BOOST_CHECK_EQUAL(test_universe.find_origin_by_name(name), name);
+    }
 
     BOOST_CHECK_EQUAL(test_universe.get_number_of_connected_components(), 9);
 
@@ -193,7 +201,9 @@ BOOST_AUTO_TEST_CASE(Union_find_weight_structure) {
     }
 
     unsigned total_weight = 0;
-    for (auto &wt : weights) { total_weight += wt; }
+    for (auto &wt : weights) {
+        total_weight += wt;
+    }
 
     BOOST_CHECK_EQUAL(total_elements, names.size());
     BOOST_CHECK_EQUAL(total_elements_2, names.size());
@@ -217,7 +227,9 @@ BOOST_AUTO_TEST_CASE(Union_find_structure_weight_comp_count) {
     std::vector<unsigned> weights({1, 2, 1, 3, 1, 1});
     Union_Find_Universe<std::string, unsigned, unsigned, unsigned> test_universe;
 
-    for (size_t i = 0; i < names.size(); i++) { test_universe.add_object(names[i], weights[i], weights[i]); }
+    for (size_t i = 0; i < names.size(); i++) {
+        test_universe.add_object(names[i], weights[i], weights[i]);
+    }
 
     for (size_t i = 0; i < names.size(); i++) {
         BOOST_CHECK_EQUAL(test_universe.find_origin_by_name(names[i]), names[i]);
@@ -283,7 +295,9 @@ BOOST_AUTO_TEST_CASE(Union_find_structure_weight_comp_count) {
     }
 
     unsigned total_weight = 0;
-    for (auto &wt : weights) { total_weight += wt; }
+    for (auto &wt : weights) {
+        total_weight += wt;
+    }
 
     BOOST_CHECK_EQUAL(total_elements, names.size());
     BOOST_CHECK_EQUAL(total_weight, total_comp_weights);
@@ -365,7 +379,9 @@ BOOST_AUTO_TEST_CASE(Union_find_structure_weight_chains_comp_count) {
     }
 
     unsigned total_weight = 0;
-    for (auto &wt : weights) { total_weight += wt; }
+    for (auto &wt : weights) {
+        total_weight += wt;
+    }
 
     BOOST_CHECK_EQUAL(total_elements, names.size());
     BOOST_CHECK_EQUAL(total_weight, total_comp_weights);

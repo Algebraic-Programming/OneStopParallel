@@ -43,7 +43,9 @@ std::vector<edge_desc_t<Graph_t>> get_contractable_edges_from_poset_int_map(cons
         vertex_idx_t<Graph_t> src = source(edge, graph);
         vertex_idx_t<Graph_t> tgt = target(edge, graph);
 
-        if (poset_int_map[tgt] == poset_int_map[src] + 1) { output.emplace_back(edge); }
+        if (poset_int_map[tgt] == poset_int_map[src] + 1) {
+            output.emplace_back(edge);
+        }
     }
 
     return output;

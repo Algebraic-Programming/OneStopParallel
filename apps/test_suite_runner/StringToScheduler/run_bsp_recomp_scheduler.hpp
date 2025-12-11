@@ -52,7 +52,9 @@ RETURN_STATUS run_bsp_recomp_scheduler(const ConfigParser &parser,
 
         BspScheduleCS<Graph_t> initial_schedule(std::move(bsp_schedule));
 
-        if (status == RETURN_STATUS::ERROR) { return RETURN_STATUS::ERROR; }
+        if (status == RETURN_STATUS::ERROR) {
+            return RETURN_STATUS::ERROR;
+        }
 
         GreedyRecomputer<Graph_t> scheduler;
 

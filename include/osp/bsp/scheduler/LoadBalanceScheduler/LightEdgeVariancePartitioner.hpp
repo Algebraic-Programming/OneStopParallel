@@ -118,7 +118,9 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<Graph_t, Interpo
 
         std::vector<size_t> which_preprocess_partition(graph.num_vertices());
         for (size_t i = 0; i < preprocessed_partition.size(); i++) {
-            for (const VertexType &vert : preprocessed_partition[i]) { which_preprocess_partition[vert] = i; }
+            for (const VertexType &vert : preprocessed_partition[i]) {
+                which_preprocess_partition[vert] = i;
+            }
         }
 
         std::vector<v_memw_t<Graph_t>> memory_cost_of_preprocessed_partition(preprocessed_partition.size(), 0);
@@ -148,7 +150,9 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<Graph_t, Interpo
                 // std::cout << "\nCall for new superstep - unable to schedule.\n";
             } else {
                 if constexpr (base::use_memory_constraint) {
-                    if (num_unable_to_partition_node_loop >= 2) { return RETURN_STATUS::ERROR; }
+                    if (num_unable_to_partition_node_loop >= 2) {
+                        return RETURN_STATUS::ERROR;
+                    }
                 }
             }
 
@@ -198,7 +202,9 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<Graph_t, Interpo
                 free_processors.clear();
 
                 if constexpr (base::use_memory_constraint) {
-                    for (unsigned proc = 0; proc < n_processors; proc++) { base::memory_constraint.reset(proc); }
+                    for (unsigned proc = 0; proc < n_processors; proc++) {
+                        base::memory_constraint.reset(proc);
+                    }
                 }
 
                 superstep += 1;
@@ -212,7 +218,9 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<Graph_t, Interpo
                 superstep_partition_work, total_partition_work, total_work, instance, base::slack);
 
             for (unsigned &proc : processors_in_order) {
-                if ((free_processors.find(proc)) != free_processors.cend()) { continue; }
+                if ((free_processors.find(proc)) != free_processors.cend()) {
+                    continue;
+                }
 
                 // Check for too many free processors - needed here because free processors may not have been detected
                 // yet
@@ -233,7 +241,9 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<Graph_t, Interpo
                 VertexType next_node;
                 for (auto vertex_prior_pair_iter = procReady[proc].begin(); vertex_prior_pair_iter != procReady[proc].end();
                      vertex_prior_pair_iter++) {
-                    if (assigned_a_node) { break; }
+                    if (assigned_a_node) {
+                        break;
+                    }
 
                     const VertexType &vert = vertex_prior_pair_iter->first;
                     if constexpr (base::use_memory_constraint) {
@@ -254,7 +264,9 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<Graph_t, Interpo
                 for (auto vertex_prior_pair_iter = procReadyPrior[proc].begin();
                      vertex_prior_pair_iter != procReadyPrior[proc].end();
                      vertex_prior_pair_iter++) {
-                    if (assigned_a_node) { break; }
+                    if (assigned_a_node) {
+                        break;
+                    }
 
                     const VertexType &vert = vertex_prior_pair_iter->first;
                     if constexpr (base::use_memory_constraint) {
@@ -273,7 +285,9 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<Graph_t, Interpo
                 }
                 for (auto vertex_prior_pair_iter = allReady.begin(); vertex_prior_pair_iter != allReady.cend();
                      vertex_prior_pair_iter++) {
-                    if (assigned_a_node) { break; }
+                    if (assigned_a_node) {
+                        break;
+                    }
 
                     const VertexType &vert = vertex_prior_pair_iter->first;
                     if constexpr (base::use_memory_constraint) {
@@ -351,7 +365,9 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<Graph_t, Interpo
                         total_partition_work[proc] += graph.vertex_work_weight(next_node);
                         superstep_partition_work[proc] += graph.vertex_work_weight(next_node);
 
-                        if constexpr (base::use_memory_constraint) { base::memory_constraint.add(next_node, proc); }
+                        if constexpr (base::use_memory_constraint) {
+                            base::memory_constraint.add(next_node, proc);
+                        }
                         // total_partition_memory[proc] += graph.vertex_mem_weight(next_node);
                         // transient_partition_memory[proc] =
                         //     std::max(transient_partition_memory[proc], graph.vertex_comm_weight(next_node));
@@ -390,7 +406,9 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<Graph_t, Interpo
 
                         // Allocating all nodes in the same partition
                         for (VertexType node_in_same_partition : preprocessed_partition[which_preprocess_partition[next_node]]) {
-                            if (node_in_same_partition == next_node) { continue; }
+                            if (node_in_same_partition == next_node) {
+                                continue;
+                            }
 
                             // Allocation
                             schedule.setAssignedProcessor(node_in_same_partition, proc);
@@ -413,7 +431,9 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<Graph_t, Interpo
                     break;
                 }
             }
-            if (!assigned_a_node) { num_unable_to_partition_node_loop += 1; }
+            if (!assigned_a_node) {
+                num_unable_to_partition_node_loop += 1;
+            }
         }
 
         return RETURN_STATUS::OSP_SUCCESS;

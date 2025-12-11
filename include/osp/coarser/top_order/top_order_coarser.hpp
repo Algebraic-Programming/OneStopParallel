@@ -203,7 +203,9 @@ class top_order_coarser : public Coarser<Graph_t_in, Graph_t_out> {
             reverse_vertex_map[v] = current_super_node_idx;
         }
 
-        if (!vertex_map.back().empty()) { finish_super_node_add_edges(dag_in, dag_out, vertex_map.back(), reverse_vertex_map); }
+        if (!vertex_map.back().empty()) {
+            finish_super_node_add_edges(dag_in, dag_out, vertex_map.back(), reverse_vertex_map);
+        }
 
         return true;
     }

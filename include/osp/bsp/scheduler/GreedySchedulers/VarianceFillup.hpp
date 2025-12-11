@@ -71,8 +71,12 @@ class VarianceFillup : public Scheduler<Graph_t> {
         for (auto r_iter = top_order.rbegin(); r_iter != top_order.crend(); r_iter++) {
             double temp = 0;
             double max_priority = 0;
-            for (const auto &child : graph.children(*r_iter)) { max_priority = std::max(work_variance[child], max_priority); }
-            for (const auto &child : graph.children(*r_iter)) { temp += std::exp(2 * (work_variance[child] - max_priority)); }
+            for (const auto &child : graph.children(*r_iter)) {
+                max_priority = std::max(work_variance[child], max_priority);
+            }
+            for (const auto &child : graph.children(*r_iter)) {
+                temp += std::exp(2 * (work_variance[child] - max_priority));
+            }
             temp = std::log(temp) / 2 + max_priority;
 
             double node_weight
@@ -95,7 +99,9 @@ class VarianceFillup : public Scheduler<Graph_t> {
         for (unsigned procType = 0; procType < instance.getArchitecture().getNumberOfProcessorTypes(); procType++) {
             for (unsigned nodeType = 0; nodeType < instance.getComputationalDag().num_vertex_types(); nodeType++) {
                 for (unsigned otherProcType : procTypesCompatibleWithNodeType[nodeType]) {
-                    if (procType == otherProcType) { continue; }
+                    if (procType == otherProcType) {
+                        continue;
+                    }
                     procTypesCompatibleWithNodeType_skip[procType][nodeType].emplace_back(otherProcType);
                 }
             }
@@ -120,17 +126,23 @@ class VarianceFillup : public Scheduler<Graph_t> {
                         const std::pair<VertexType, double> &node_pair = *procReady[i].begin();
                         VertexType top_node = node_pair.first;
 
-                        if (memory_constraint.can_add(top_node, i)) { return true; }
+                        if (memory_constraint.can_add(top_node, i)) {
+                            return true;
+                        }
                     }
                 }
 
                 for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
-                    if (allReady[instance.getArchitecture().processorType(i)].empty()) { continue; }
+                    if (allReady[instance.getArchitecture().processorType(i)].empty()) {
+                        continue;
+                    }
 
                     const std::pair<VertexType, double> &node_pair = *allReady[instance.getArchitecture().processorType(i)].begin();
                     VertexType top_node = node_pair.first;
 
-                    if (memory_constraint.can_add(top_node, i)) { return true; }
+                    if (memory_constraint.can_add(top_node, i)) {
+                        return true;
+                    }
                 }
 
                 return false;
@@ -225,11 +237,15 @@ class VarianceFillup : public Scheduler<Graph_t> {
                        const std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> &procReady,
                        const std::vector<bool> &procFree) const {
         for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
-            if (procFree[i] && !procReady[i].empty()) { return true; }
+            if (procFree[i] && !procReady[i].empty()) {
+                return true;
+            }
         }
 
         for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
-            if (procFree[i] && !allReady[instance.getArchitecture().processorType(i)].empty()) { return true; }
+            if (procFree[i] && !allReady[instance.getArchitecture().processorType(i)].empty()) {
+                return true;
+            }
         }
 
         return false;
@@ -309,7 +325,9 @@ class VarianceFillup : public Scheduler<Graph_t> {
 
         std::vector<unsigned> nr_ready_nodes_per_type(G.num_vertex_types(), 0);
         std::vector<unsigned> nr_procs_per_type(instance.getArchitecture().getNumberOfProcessorTypes(), 0);
-        for (unsigned proc = 0; proc < params_p; ++proc) { ++nr_procs_per_type[instance.getArchitecture().processorType(proc)]; }
+        for (unsigned proc = 0; proc < params_p; ++proc) {
+            ++nr_procs_per_type[instance.getArchitecture().processorType(proc)];
+        }
 
         std::vector<VertexType> nrPredecRemain(N);
         for (VertexType node = 0; node < N; node++) {
@@ -336,7 +354,9 @@ class VarianceFillup : public Scheduler<Graph_t> {
                 for (unsigned i = 0; i < params_p; ++i) {
                     procReady[i].clear();
 
-                    if constexpr (use_memory_constraint) { memory_constraint.reset(i); }
+                    if constexpr (use_memory_constraint) {
+                        memory_constraint.reset(i);
+                    }
                 }
 
                 for (unsigned procType = 0; procType < instance.getArchitecture().getNumberOfProcessorTypes(); ++procType) {
@@ -380,13 +400,19 @@ class VarianceFillup : public Scheduler<Graph_t> {
 
                             if constexpr (use_memory_constraint) {
                                 if (canAdd) {
-                                    if (not memory_constraint.can_add(succ, schedule.assignedProcessor(node))) { canAdd = false; }
+                                    if (not memory_constraint.can_add(succ, schedule.assignedProcessor(node))) {
+                                        canAdd = false;
+                                    }
                                 }
                             }
 
-                            if (!instance.isCompatible(succ, schedule.assignedProcessor(node))) { canAdd = false; }
+                            if (!instance.isCompatible(succ, schedule.assignedProcessor(node))) {
+                                canAdd = false;
+                            }
 
-                            if (canAdd) { procReady[schedule.assignedProcessor(node)].emplace(succ, work_variances[succ]); }
+                            if (canAdd) {
+                                procReady[schedule.assignedProcessor(node)].emplace(succ, work_variances[succ]);
+                            }
                         }
                     }
                     procFree[schedule.assignedProcessor(node)] = true;
@@ -395,7 +421,9 @@ class VarianceFillup : public Scheduler<Graph_t> {
             }
 
             // Assign new jobs to processors
-            if (!CanChooseNode(instance, allReady, procReady, procFree)) { endSupStep = true; }
+            if (!CanChooseNode(instance, allReady, procReady, procFree)) {
+                endSupStep = true;
+            }
             while (CanChooseNode(instance, allReady, procReady, procFree)) {
                 VertexType nextNode = std::numeric_limits<VertexType>::max();
                 unsigned nextProc = params_p;
@@ -426,10 +454,14 @@ class VarianceFillup : public Scheduler<Graph_t> {
                     std::vector<std::pair<VertexType, double>> toErase;
 
                     for (const auto &node_pair : procReady[nextProc]) {
-                        if (not memory_constraint.can_add(node_pair.first, nextProc)) { toErase.push_back(node_pair); }
+                        if (not memory_constraint.can_add(node_pair.first, nextProc)) {
+                            toErase.push_back(node_pair);
+                        }
                     }
 
-                    for (const auto &node : toErase) { procReady[nextProc].erase(node); }
+                    for (const auto &node : toErase) {
+                        procReady[nextProc].erase(node);
+                    }
                 }
 
                 finishTimes.emplace(time + G.vertex_work_weight(nextNode), nextNode);
@@ -438,7 +470,9 @@ class VarianceFillup : public Scheduler<Graph_t> {
             }
 
             if constexpr (use_memory_constraint) {
-                if (not check_mem_feasibility(instance, allReady, procReady)) { return RETURN_STATUS::ERROR; }
+                if (not check_mem_feasibility(instance, allReady, procReady)) {
+                    return RETURN_STATUS::ERROR;
+                }
             }
 
             if (free > params_p * max_percent_idle_processors

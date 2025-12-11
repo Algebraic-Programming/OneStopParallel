@@ -84,7 +84,9 @@ BOOST_AUTO_TEST_CASE(cuthill_mckee_1) {
         cm_undirected.begin(), cm_undirected.end(), expected_cm_undirected.begin(), expected_cm_undirected.end());
 
     std::vector<VertexType> top_sort;
-    for (const auto &vertex : priority_vec_top_sort_view(dag, cm_undirected)) { top_sort.push_back(vertex); }
+    for (const auto &vertex : priority_vec_top_sort_view(dag, cm_undirected)) {
+        top_sort.push_back(vertex);
+    }
     std::vector<unsigned> expected_top_sort = {0, 2, 5, 1, 6, 4, 3, 7};
 
     BOOST_CHECK_EQUAL_COLLECTIONS(top_sort.begin(), top_sort.end(), expected_top_sort.begin(), expected_top_sort.end());
@@ -112,18 +114,24 @@ bool is_permutation(const std::vector<VertexType> &vec) {
     std::vector<VertexType> sorted_vec = vec;
     std::sort(sorted_vec.begin(), sorted_vec.end());
     for (unsigned i = 0; i < sorted_vec.size(); ++i) {
-        if (sorted_vec[i] != i) { return false; }
+        if (sorted_vec[i] != i) {
+            return false;
+        }
     }
     return true;
 }
 
 bool is_top_sort(const std::vector<VertexType> &vec, const ComputationalDag &dag) {
     std::unordered_map<VertexType, VertexType> position;
-    for (VertexType i = 0; i < vec.size(); ++i) { position[vec[i]] = i; }
+    for (VertexType i = 0; i < vec.size(); ++i) {
+        position[vec[i]] = i;
+    }
 
     for (const auto &vertex : dag.vertices()) {
         for (const auto &child : dag.children(vertex)) {
-            if (position[vertex] > position[child]) { return false; }
+            if (position[vertex] > position[child]) {
+                return false;
+            }
         }
     }
 
@@ -163,7 +171,9 @@ BOOST_AUTO_TEST_CASE(cuthill_mckee_2) {
 
         std::vector<VertexType> top_sort;
 
-        for (const auto &vertex : priority_vec_top_sort_view(graph, cm_undirected)) { top_sort.push_back(vertex); }
+        for (const auto &vertex : priority_vec_top_sort_view(graph, cm_undirected)) {
+            top_sort.push_back(vertex);
+        }
 
         BOOST_CHECK(is_permutation(top_sort));
         BOOST_CHECK(is_top_sort(top_sort, graph));

@@ -120,12 +120,16 @@ struct LazyCommCostPolicy {
         // val contains v_step (already added).
         // Check if v_step is the new minimum.
         unsigned min_step = std::numeric_limits<unsigned>::max();
-        for (unsigned s : val) { min_step = std::min(min_step, s); }
+        for (unsigned s : val) {
+            min_step = std::min(min_step, s);
+        }
 
         if (min_step == v_step) {
             // Check if it was strictly smaller than previous min.
             unsigned prev_min = std::numeric_limits<unsigned>::max();
-            for (size_t i = 0; i < val.size() - 1; ++i) { prev_min = std::min(prev_min, val[i]); }
+            for (size_t i = 0; i < val.size() - 1; ++i) {
+                prev_min = std::min(prev_min, val[i]);
+            }
 
             if (v_step < prev_min) {
                 if (prev_min != std::numeric_limits<unsigned>::max() && prev_min > 0) {
@@ -159,7 +163,9 @@ struct LazyCommCostPolicy {
         } else {
             // Check if v_step was the unique minimum.
             unsigned new_min = val[0];
-            for (unsigned s : val) { new_min = std::min(new_min, s); }
+            for (unsigned s : val) {
+                new_min = std::min(new_min, s);
+            }
 
             if (v_step < new_min) {
                 // v_step was the unique minimum.
@@ -177,9 +183,13 @@ struct LazyCommCostPolicy {
 
     static inline bool add_child(ValueType &val, unsigned step) {
         val.push_back(step);
-        if (val.size() == 1) { return true; }
+        if (val.size() == 1) {
+            return true;
+        }
         unsigned min_s = val[0];
-        for (unsigned s : val) { min_s = std::min(min_s, s); }
+        for (unsigned s : val) {
+            min_s = std::min(min_s, s);
+        }
         return step == min_s;
     }
 
@@ -187,9 +197,13 @@ struct LazyCommCostPolicy {
         auto it = std::find(val.begin(), val.end(), step);
         if (it != val.end()) {
             val.erase(it);
-            if (val.empty()) { return true; }
+            if (val.empty()) {
+                return true;
+            }
             unsigned new_min = val[0];
-            for (unsigned s : val) { new_min = std::min(new_min, s); }
+            for (unsigned s : val) {
+                new_min = std::min(new_min, s);
+            }
             bool res = step < new_min;
             return res;
         }
@@ -210,14 +224,20 @@ struct LazyCommCostPolicy {
                                               unsigned child_proc,
                                               comm_weight_t cost,
                                               DeltaTracker &dt) {
-        if (val.empty()) { return; }
+        if (val.empty()) {
+            return;
+        }
         unsigned min_s = val[0];
-        for (unsigned s : val) { min_s = std::min(min_s, s); }
+        for (unsigned s : val) {
+            min_s = std::min(min_s, s);
+        }
 
         if (child_step == min_s) {
             int count = 0;
             for (unsigned s : val) {
-                if (s == min_s) { count++; }
+                if (s == min_s) {
+                    count++;
+                }
             }
 
             if (count == 1) {
@@ -228,7 +248,9 @@ struct LazyCommCostPolicy {
                 if (val.size() > 1) {
                     unsigned next_min = std::numeric_limits<unsigned>::max();
                     for (unsigned s : val) {
-                        if (s != min_s) { next_min = std::min(next_min, s); }
+                        if (s != min_s) {
+                            next_min = std::min(next_min, s);
+                        }
                     }
                     if (next_min != std::numeric_limits<unsigned>::max() && next_min > 0) {
                         dt.add(true, next_min - 1, child_proc, cost);
@@ -254,7 +276,9 @@ struct LazyCommCostPolicy {
             }
         } else {
             unsigned min_s = val[0];
-            for (unsigned s : val) { min_s = std::min(min_s, s); }
+            for (unsigned s : val) {
+                min_s = std::min(min_s, s);
+            }
 
             if (child_step < min_s) {
                 if (min_s > 0) {
@@ -295,23 +319,31 @@ struct BufferedCommCostPolicy {
         // Buffered: Send at u_step, Receive at v_step - 1.
 
         unsigned min_step = std::numeric_limits<unsigned>::max();
-        for (unsigned s : val) { min_step = std::min(min_step, s); }
+        for (unsigned s : val) {
+            min_step = std::min(min_step, s);
+        }
 
         if (min_step == v_step) {
             unsigned prev_min = std::numeric_limits<unsigned>::max();
-            for (size_t i = 0; i < val.size() - 1; ++i) { prev_min = std::min(prev_min, val[i]); }
+            for (size_t i = 0; i < val.size() - 1; ++i) {
+                prev_min = std::min(prev_min, val[i]);
+            }
 
             if (v_step < prev_min) {
                 if (prev_min != std::numeric_limits<unsigned>::max() && prev_min > 0) {
                     ds.step_proc_receive(prev_min - 1, v_proc) -= cost;
                 }
-                if (v_step > 0) { ds.step_proc_receive(v_step - 1, v_proc) += cost; }
+                if (v_step > 0) {
+                    ds.step_proc_receive(v_step - 1, v_proc) += cost;
+                }
             }
         }
 
         // Send side logic (u_step)
         // If this is the FIRST child on this proc, add send cost.
-        if (val.size() == 1) { ds.step_proc_send(u_step, u_proc) += cost; }
+        if (val.size() == 1) {
+            ds.step_proc_send(u_step, u_proc) += cost;
+        }
     }
 
     template <typename DS, typename comm_weight_t>
@@ -333,11 +365,17 @@ struct BufferedCommCostPolicy {
         } else {
             // Check if v_step was unique minimum for Recv side.
             unsigned new_min = val[0];
-            for (unsigned s : val) { new_min = std::min(new_min, s); }
+            for (unsigned s : val) {
+                new_min = std::min(new_min, s);
+            }
 
             if (v_step < new_min) {
-                if (v_step > 0) { ds.step_proc_receive(v_step - 1, v_proc) -= cost; }
-                if (new_min > 0) { ds.step_proc_receive(new_min - 1, v_proc) += cost; }
+                if (v_step > 0) {
+                    ds.step_proc_receive(v_step - 1, v_proc) -= cost;
+                }
+                if (new_min > 0) {
+                    ds.step_proc_receive(new_min - 1, v_proc) += cost;
+                }
             }
             // Send side remains (val not empty).
         }
@@ -349,7 +387,9 @@ struct BufferedCommCostPolicy {
             return true;    // Need update for send side
         }
         unsigned min_s = val[0];
-        for (unsigned s : val) { min_s = std::min(min_s, s); }
+        for (unsigned s : val) {
+            min_s = std::min(min_s, s);
+        }
         return step == min_s;    // Need update for recv side
     }
 
@@ -361,7 +401,9 @@ struct BufferedCommCostPolicy {
                 return true;    // Need update for send side
             }
             unsigned new_min = val[0];
-            for (unsigned s : val) { new_min = std::min(new_min, s); }
+            for (unsigned s : val) {
+                new_min = std::min(new_min, s);
+            }
             return step < new_min;    // Need update for recv side
         }
         return false;
@@ -383,15 +425,21 @@ struct BufferedCommCostPolicy {
                                               DeltaTracker &dt) {
         // Lazy: Send and Recv are both at min(child_steps) - 1.
 
-        if (val.empty()) { return; }
+        if (val.empty()) {
+            return;
+        }
 
         unsigned min_s = val[0];
-        for (unsigned s : val) { min_s = std::min(min_s, s); }
+        for (unsigned s : val) {
+            min_s = std::min(min_s, s);
+        }
 
         if (child_step == min_s) {
             int count = 0;
             for (unsigned s : val) {
-                if (s == min_s) { count++; }
+                if (s == min_s) {
+                    count++;
+                }
             }
 
             if (count == 1) {
@@ -404,7 +452,9 @@ struct BufferedCommCostPolicy {
                 if (val.size() > 1) {
                     unsigned next_min = std::numeric_limits<unsigned>::max();
                     for (unsigned s : val) {
-                        if (s != min_s) { next_min = std::min(next_min, s); }
+                        if (s != min_s) {
+                            next_min = std::min(next_min, s);
+                        }
                     }
 
                     if (next_min != std::numeric_limits<unsigned>::max() && next_min > 0) {
@@ -434,7 +484,9 @@ struct BufferedCommCostPolicy {
             }
         } else {
             unsigned min_s = val[0];
-            for (unsigned s : val) { min_s = std::min(min_s, s); }
+            for (unsigned s : val) {
+                min_s = std::min(min_s, s);
+            }
 
             if (child_step < min_s) {
                 // New global minimum.
@@ -459,15 +511,21 @@ struct BufferedCommCostPolicy {
 
         // Send side: node_step.
         // If val is not empty, we pay send cost ONCE.
-        if (!val.empty()) { dt.add(false, node_step, node_proc, cost); }
+        if (!val.empty()) {
+            dt.add(false, node_step, node_proc, cost);
+        }
 
         // Recv side: iterate steps in val (child steps).
         // But we only pay at min(val) - 1.
         if (!val.empty()) {
             unsigned min_s = val[0];
-            for (unsigned s : val) { min_s = std::min(min_s, s); }
+            for (unsigned s : val) {
+                min_s = std::min(min_s, s);
+            }
 
-            if (min_s > 0) { dt.add(true, min_s - 1, child_proc, cost); }
+            if (min_s > 0) {
+                dt.add(true, min_s - 1, child_proc, cost);
+            }
         }
     }
 };

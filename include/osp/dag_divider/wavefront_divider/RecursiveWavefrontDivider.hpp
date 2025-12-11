@@ -50,10 +50,14 @@ class RecursiveWavefrontDivider : public AbstractWavefrontDivider<Graph_t> {
 
     std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> divide(const Graph_t &dag) override {
         this->dag_ptr_ = &dag;
-        if constexpr (enable_debug_print) { std::cout << "[DEBUG] Starting recursive-scan division." << std::endl; }
+        if constexpr (enable_debug_print) {
+            std::cout << "[DEBUG] Starting recursive-scan division." << std::endl;
+        }
 
         auto global_level_sets = this->compute_wavefronts();
-        if (global_level_sets.empty()) { return {}; }
+        if (global_level_sets.empty()) {
+            return {};
+        }
 
         std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> all_sections;
         divide_recursive(global_level_sets.cbegin(), global_level_sets.cend(), global_level_sets, all_sections, 0);
@@ -128,7 +132,9 @@ class RecursiveWavefrontDivider : public AbstractWavefrontDivider<Graph_t> {
 
         if constexpr (enable_debug_print) {
             std::cout << "[DEBUG depth " << current_depth << "] Analyzing sequence: ";
-            for (const auto &val : sequence) { std::cout << val << " "; }
+            for (const auto &val : sequence) {
+                std::cout << val << " ";
+            }
             std::cout << std::endl;
         }
 
@@ -146,7 +152,9 @@ class RecursiveWavefrontDivider : public AbstractWavefrontDivider<Graph_t> {
 
         if constexpr (enable_debug_print) {
             std::cout << "[DEBUG depth " << current_depth << "] Found " << local_cuts.size() << " cuts: ";
-            for (const auto c : local_cuts) { std::cout << c << ", "; }
+            for (const auto c : local_cuts) {
+                std::cout << c << ", ";
+            }
             std::cout << "in level range [" << start_level_idx << ", " << end_level_idx << "). Recursing." << std::endl;
         }
 

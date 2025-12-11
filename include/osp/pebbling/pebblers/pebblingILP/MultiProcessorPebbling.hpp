@@ -220,7 +220,9 @@ class MultiProcessorPebbling : public Scheduler<Graph_t> {
 
     inline void setRestrictStepTypes(const bool restrict_) {
         restrict_step_types = restrict_;
-        if (restrict_) { mergeSteps = true; }
+        if (restrict_) {
+            mergeSteps = true;
+        }
     }
 
     inline void setNeedToLoadInputs(const bool load_inputs_) { need_to_load_inputs = load_inputs_; }
@@ -244,7 +246,9 @@ class MultiProcessorPebbling : public Scheduler<Graph_t> {
 
 template <typename Graph_t>
 void MultiProcessorPebbling<Graph_t>::solveILP() {
-    if (!verbose) { model.SetIntParam(COPT_INTPARAM_LOGTOCONSOLE, 0); }
+    if (!verbose) {
+        model.SetIntParam(COPT_INTPARAM_LOGTOCONSOLE, 0);
+    }
 
     model.SetDblParam(COPT_DBLPARAM_TIMELIMIT, time_limit_seconds);
     model.SetIntParam(COPT_INTPARAM_THREADS, 128);
@@ -264,7 +268,9 @@ void MultiProcessorPebbling<Graph_t>::solveILP() {
 
 template <typename Graph_t>
 RETURN_STATUS MultiProcessorPebbling<Graph_t>::computeSchedule(BspSchedule<Graph_t> &schedule) {
-    if (max_time == 0) { max_time = 2 * static_cast<unsigned>(schedule.getInstance().numberOfVertices()); }
+    if (max_time == 0) {
+        max_time = 2 * static_cast<unsigned>(schedule.getInstance().numberOfVertices());
+    }
 
     setupBaseVariablesConstraints(schedule.getInstance());
     setupSyncPhaseVariablesConstraints(schedule.getInstance());
@@ -292,7 +298,9 @@ template <typename Graph_t>
 RETURN_STATUS MultiProcessorPebbling<Graph_t>::computeSynchPebbling(PebblingSchedule<Graph_t> &schedule) {
     const BspInstance<Graph_t> &instance = schedule.getInstance();
 
-    if (max_time == 0) { max_time = 2 * static_cast<unsigned>(instance.numberOfVertices()); }
+    if (max_time == 0) {
+        max_time = 2 * static_cast<unsigned>(instance.numberOfVertices());
+    }
 
     mergeSteps = false;
 
@@ -324,7 +332,9 @@ template <typename Graph_t>
 RETURN_STATUS MultiProcessorPebbling<Graph_t>::computePebbling(PebblingSchedule<Graph_t> &schedule, bool use_async) {
     const BspInstance<Graph_t> &instance = schedule.getInstance();
 
-    if (max_time == 0) { max_time = 2 * static_cast<unsigned>(instance.numberOfVertices()); }
+    if (max_time == 0) {
+        max_time = 2 * static_cast<unsigned>(instance.numberOfVertices());
+    }
 
     synchronous = !use_async;
 
@@ -373,7 +383,9 @@ RETURN_STATUS MultiProcessorPebbling<Graph_t>::computePebblingWithInitialSolutio
 
     max_time = computeMaxTimeForInitialSolution(instance, computeSteps, sendUpSteps, sendDownSteps);
 
-    if (verbose) { std::cout << "Max time set at " << max_time << std::endl; }
+    if (verbose) {
+        std::cout << "Max time set at " << max_time << std::endl;
+    }
 
     setupBaseVariablesConstraints(instance);
     if (synchronous) {
@@ -385,7 +397,9 @@ RETURN_STATUS MultiProcessorPebbling<Graph_t>::computePebblingWithInitialSolutio
 
     setInitialSolution(instance, computeSteps, sendUpSteps, sendDownSteps, nodesEvictedAfterStep);
 
-    if (verbose) { std::cout << "Initial solution set." << std::endl; }
+    if (verbose) {
+        std::cout << "Initial solution set." << std::endl;
+    }
 
     solveILP();
 
@@ -499,7 +513,9 @@ void MultiProcessorPebbling<Graph_t>::setupBaseVariablesConstraints(const BspIns
             if (!need_to_load_inputs && t % (compute_steps_per_cycle + 2) == compute_steps_per_cycle) {
                 this_is_a_comm_step = true;
             }
-            if (need_to_load_inputs && t % (compute_steps_per_cycle + 2) == 0) { this_is_a_comm_step = true; }
+            if (need_to_load_inputs && t % (compute_steps_per_cycle + 2) == 0) {
+                this_is_a_comm_step = true;
+            }
             if (this_is_a_comm_step) {
                 for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
                     for (unsigned processor = 0; processor < instance.numberOfProcessors(); processor++) {
@@ -526,9 +542,15 @@ void MultiProcessorPebbling<Graph_t>::setupBaseVariablesConstraints(const BspIns
             for (unsigned processor = 0; processor < instance.numberOfProcessors(); processor++) {
                 Expr expr;
                 for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
-                    if (compute_exists[node][processor][t]) { expr += compute[node][processor][static_cast<int>(t)]; }
-                    if (send_up_exists[node][processor][t]) { expr += send_up[node][processor][static_cast<int>(t)]; }
-                    if (send_down_exists[node][processor][t]) { expr += send_down[node][processor][static_cast<int>(t)]; }
+                    if (compute_exists[node][processor][t]) {
+                        expr += compute[node][processor][static_cast<int>(t)];
+                    }
+                    if (send_up_exists[node][processor][t]) {
+                        expr += send_up[node][processor][static_cast<int>(t)];
+                    }
+                    if (send_down_exists[node][processor][t]) {
+                        expr += send_down[node][processor][static_cast<int>(t)];
+                    }
                 }
                 model.AddConstr(expr <= 1);
             }
@@ -549,9 +571,15 @@ void MultiProcessorPebbling<Graph_t>::setupBaseVariablesConstraints(const BspIns
             for (unsigned processor = 0; processor < instance.numberOfProcessors(); processor++) {
                 Expr expr_comp, expr_comm;
                 for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
-                    if (compute_exists[node][processor][t]) { expr_comp += compute[node][processor][static_cast<int>(t)]; }
-                    if (send_up_exists[node][processor][t]) { expr_comm += send_up[node][processor][static_cast<int>(t)]; }
-                    if (send_down_exists[node][processor][t]) { expr_comm += send_down[node][processor][static_cast<int>(t)]; }
+                    if (compute_exists[node][processor][t]) {
+                        expr_comp += compute[node][processor][static_cast<int>(t)];
+                    }
+                    if (send_up_exists[node][processor][t]) {
+                        expr_comm += send_up[node][processor][static_cast<int>(t)];
+                    }
+                    if (send_down_exists[node][processor][t]) {
+                        expr_comm += send_down[node][processor][static_cast<int>(t)];
+                    }
                 }
 
                 model.AddConstr(M * comp_step_on_proc[processor][static_cast<int>(t)] >= expr_comp);
@@ -565,12 +593,16 @@ void MultiProcessorPebbling<Graph_t>::setupBaseVariablesConstraints(const BspIns
 
     for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
         for (unsigned t = 1; t < max_time; t++) {
-            if (!has_blue_exists[node][t]) { continue; }
+            if (!has_blue_exists[node][t]) {
+                continue;
+            }
 
             Expr expr;
 
             for (unsigned processor = 0; processor < instance.numberOfProcessors(); processor++) {
-                if (send_up_exists[node][processor][t - 1]) { expr += send_up[node][processor][static_cast<int>(t) - 1]; }
+                if (send_up_exists[node][processor][t - 1]) {
+                    expr += send_up[node][processor][static_cast<int>(t) - 1];
+                }
             }
             model.AddConstr(has_blue[node][static_cast<int>(t)] <= has_blue[node][static_cast<int>(t) - 1] + expr);
         }
@@ -581,9 +613,13 @@ void MultiProcessorPebbling<Graph_t>::setupBaseVariablesConstraints(const BspIns
             for (unsigned t = 1; t < max_time; t++) {
                 Expr expr;
 
-                if (compute_exists[node][processor][t - 1]) { expr += compute[node][processor][static_cast<int>(t) - 1]; }
+                if (compute_exists[node][processor][t - 1]) {
+                    expr += compute[node][processor][static_cast<int>(t) - 1];
+                }
 
-                if (send_down_exists[node][processor][t - 1]) { expr += send_down[node][processor][static_cast<int>(t) - 1]; }
+                if (send_down_exists[node][processor][t - 1]) {
+                    expr += send_down[node][processor][static_cast<int>(t) - 1];
+                }
 
                 model.AddConstr(has_red[node][processor][static_cast<int>(t)]
                                 <= has_red[node][processor][static_cast<int>(t) - 1] + expr);
@@ -594,7 +630,9 @@ void MultiProcessorPebbling<Graph_t>::setupBaseVariablesConstraints(const BspIns
     for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
         for (unsigned processor = 0; processor < instance.numberOfProcessors(); processor++) {
             for (unsigned t = 0; t < max_time; t++) {
-                if (!compute_exists[node][processor][t]) { continue; }
+                if (!compute_exists[node][processor][t]) {
+                    continue;
+                }
 
                 for (const auto &source : instance.getComputationalDag().parents(node)) {
                     if (!mergeSteps || !compute_exists[source][processor][t]) {
@@ -671,7 +709,9 @@ void MultiProcessorPebbling<Graph_t>::setupBaseVariablesConstraints(const BspIns
     } else    // otherwise: specified set of nodes that need blue at the end
     {
         for (vertex_idx node : needs_blue_at_end) {
-            if (has_blue_exists[node][max_time - 1]) { model.AddConstr(has_blue[node][static_cast<int>(max_time) - 1] == 1); }
+            if (has_blue_exists[node][max_time - 1]) {
+                model.AddConstr(has_blue[node][static_cast<int>(max_time) - 1] == 1);
+            }
         }
     }
 
@@ -681,7 +721,9 @@ void MultiProcessorPebbling<Graph_t>::setupBaseVariablesConstraints(const BspIns
             Expr expr;
             for (unsigned processor = 0; processor < instance.numberOfProcessors(); processor++) {
                 for (unsigned t = 0; t < max_time; t++) {
-                    if (compute_exists[node][processor][t]) { expr += compute[node][processor][static_cast<int>(t)]; }
+                    if (compute_exists[node][processor][t]) {
+                        expr += compute[node][processor][static_cast<int>(t)];
+                    }
                 }
             }
 
@@ -707,13 +749,21 @@ void MultiProcessorPebbling<Graph_t>::setupSyncPhaseVariablesConstraints(const B
         Expr expr_comp, expr_comm, expr_send_up, expr_send_down;
         for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
             for (unsigned processor = 0; processor < instance.numberOfProcessors(); processor++) {
-                if (compute_exists[node][processor][t]) { expr_comp += compute[node][processor][static_cast<int>(t)]; }
+                if (compute_exists[node][processor][t]) {
+                    expr_comp += compute[node][processor][static_cast<int>(t)];
+                }
                 if (mergeSteps) {
-                    if (send_up_exists[node][processor][t]) { expr_comm += send_up[node][processor][static_cast<int>(t)]; }
+                    if (send_up_exists[node][processor][t]) {
+                        expr_comm += send_up[node][processor][static_cast<int>(t)];
+                    }
 
-                    if (send_down_exists[node][processor][t]) { expr_comm += send_down[node][processor][static_cast<int>(t)]; }
+                    if (send_down_exists[node][processor][t]) {
+                        expr_comm += send_down[node][processor][static_cast<int>(t)];
+                    }
                 } else {
-                    if (send_up_exists[node][processor][t]) { expr_send_up += send_up[node][processor][static_cast<int>(t)]; }
+                    if (send_up_exists[node][processor][t]) {
+                        expr_send_up += send_up[node][processor][static_cast<int>(t)];
+                    }
 
                     if (send_down_exists[node][processor][t]) {
                         expr_send_down += send_down[node][processor][static_cast<int>(t)];
@@ -1047,7 +1097,9 @@ void MultiProcessorPebbling<Graph_t>::constructPebblingScheduleFromSolution(Pebb
 
     std::vector<vertex_idx> topOrder = GetTopOrder(instance.getComputationalDag());
     std::vector<unsigned> topOrderPosition(instance.numberOfVertices());
-    for (unsigned index = 0; index < instance.numberOfVertices(); ++index) { topOrderPosition[topOrder[index]] = index; }
+    for (unsigned index = 0; index < instance.numberOfVertices(); ++index) {
+        topOrderPosition[topOrder[index]] = index;
+    }
 
     std::vector<bool> empty_step(max_time, true);
     std::vector<std::vector<unsigned>> step_type_on_proc(instance.numberOfProcessors(), std::vector<unsigned>(max_time, 0));
@@ -1160,11 +1212,19 @@ void MultiProcessorPebbling<Graph_t>::constructPebblingScheduleFromSolution(Pebb
             for (unsigned step = 0; step < max_time; step++) {
                 bool is_comp = false, is_comm = false;
                 for (unsigned proc = 0; proc < instance.numberOfProcessors(); proc++) {
-                    if (step_type_on_proc[proc][step] == 1) { is_comp = true; }
-                    if (step_type_on_proc[proc][step] > 1) { is_comm = true; }
+                    if (step_type_on_proc[proc][step] == 1) {
+                        is_comp = true;
+                    }
+                    if (step_type_on_proc[proc][step] > 1) {
+                        is_comm = true;
+                    }
                 }
-                if (is_comp) { begins_with_compute = true; }
-                if (is_comp || is_comm) { break; }
+                if (is_comp) {
+                    begins_with_compute = true;
+                }
+                if (is_comp || is_comm) {
+                    break;
+                }
             }
 
             if (begins_with_compute) {
@@ -1181,7 +1241,9 @@ void MultiProcessorPebbling<Graph_t>::constructPebblingScheduleFromSolution(Pebb
 
         // process steps
         for (unsigned step = 0; step < max_time; step++) {
-            if (empty_step[step]) { continue; }
+            if (empty_step[step]) {
+                continue;
+            }
 
             unsigned step_type = 0;
             for (unsigned proc = 0; proc < instance.numberOfProcessors(); proc++) {
@@ -1248,7 +1310,9 @@ void MultiProcessorPebbling<Graph_t>::constructPebblingScheduleFromSolution(Pebb
         std::vector<bool> already_has_blue(instance.numberOfVertices(), false);
         if (need_to_load_inputs) {
             for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
-                if (instance.getComputationalDag().in_degree(node) == 0) { already_has_blue[node] = true; }
+                if (instance.getComputationalDag().in_degree(node) == 0) {
+                    already_has_blue[node] = true;
+                }
             }
         }
 
@@ -1276,13 +1340,19 @@ void MultiProcessorPebbling<Graph_t>::constructPebblingScheduleFromSolution(Pebb
                     while (idx_limit_on_proc[proc] < max_time && step_type_on_proc[proc][idx_limit_on_proc[proc]] != 1) {
                         bool accept_step = true;
                         for (vertex_idx node : nodes_sent_down[proc][idx_limit_on_proc[proc]]) {
-                            if (!already_has_blue[node] && new_blues.find(node) == new_blues.end()) { accept_step = false; }
+                            if (!already_has_blue[node] && new_blues.find(node) == new_blues.end()) {
+                                accept_step = false;
+                            }
                         }
 
-                        if (!accept_step) { break; }
+                        if (!accept_step) {
+                            break;
+                        }
 
                         for (vertex_idx node : nodes_sent_up[proc][idx_limit_on_proc[proc]]) {
-                            if (!already_has_blue[node]) { new_blues.insert(node); }
+                            if (!already_has_blue[node]) {
+                                new_blues.insert(node);
+                            }
                         }
 
                         still_making_progress = true;
@@ -1364,14 +1434,18 @@ void MultiProcessorPebbling<Graph_t>::setInitialSolution(
     std::vector<bool> in_slow_mem(N, false);
     if (need_to_load_inputs) {
         for (vertex_idx node = 0; node < N; ++node) {
-            if (instance.getComputationalDag().in_degree(node) == 0) { in_slow_mem[node] = true; }
+            if (instance.getComputationalDag().in_degree(node) == 0) {
+                in_slow_mem[node] = true;
+            }
         }
     }
 
     std::vector<std::vector<unsigned>> in_fast_mem(N, std::vector<unsigned>(instance.numberOfProcessors(), false));
     if (!has_red_in_beginning.empty()) {
         for (unsigned proc = 0; proc < instance.numberOfProcessors(); ++proc) {
-            for (vertex_idx node : has_red_in_beginning[proc]) { in_fast_mem[node][proc] = true; }
+            for (vertex_idx node : has_red_in_beginning[proc]) {
+                in_fast_mem[node][proc] = true;
+            }
         }
     }
 
@@ -1393,9 +1467,15 @@ void MultiProcessorPebbling<Graph_t>::setInitialSolution(
                 skip_step = false;
                 bool is_compute = false, is_send_up = false, is_send_down = false;
                 for (unsigned proc = 0; proc < instance.numberOfProcessors(); ++proc) {
-                    if (!computeSteps[proc][step].empty()) { is_compute = true; }
-                    if (!sendUpSteps[proc][step].empty()) { is_send_up = true; }
-                    if (!sendDownSteps[proc][step].empty()) { is_send_down = true; }
+                    if (!computeSteps[proc][step].empty()) {
+                        is_compute = true;
+                    }
+                    if (!sendUpSteps[proc][step].empty()) {
+                        is_send_up = true;
+                    }
+                    if (!sendDownSteps[proc][step].empty()) {
+                        is_send_down = true;
+                    }
                 }
 
                 bool send_up_step_idx
@@ -1405,9 +1485,15 @@ void MultiProcessorPebbling<Graph_t>::setInitialSolution(
                     = (need_to_load_inputs && (new_step_idx % (compute_steps_per_cycle + 2) == 0))
                       || (!need_to_load_inputs && (new_step_idx % (compute_steps_per_cycle + 2) == compute_steps_per_cycle + 1));
 
-                if (is_compute && (send_up_step_idx || send_down_step_idx)) { skip_step = true; }
-                if (is_send_up && !send_up_step_idx) { skip_step = true; }
-                if (is_send_down && !send_down_step_idx) { skip_step = true; }
+                if (is_compute && (send_up_step_idx || send_down_step_idx)) {
+                    skip_step = true;
+                }
+                if (is_send_up && !send_up_step_idx) {
+                    skip_step = true;
+                }
+                if (is_send_down && !send_down_step_idx) {
+                    skip_step = true;
+                }
 
                 if (skip_step) {
                     ++new_step_idx;
@@ -1477,7 +1563,9 @@ void MultiProcessorPebbling<Graph_t>::setInitialSolution(
                 }
             }
 
-            for (vertex_idx node : nodesEvictedAfterStep[proc][step]) { in_fast_mem[node][proc] = false; }
+            for (vertex_idx node : nodesEvictedAfterStep[proc][step]) {
+                in_fast_mem[node][proc] = false;
+            }
         }
         ++new_step_idx;
     }
@@ -1509,7 +1597,9 @@ unsigned MultiProcessorPebbling<Graph_t>::computeMaxTimeForInitialSolution(
     const std::vector<std::vector<std::vector<vertex_idx>>> &computeSteps,
     const std::vector<std::vector<std::vector<vertex_idx>>> &sendUpSteps,
     const std::vector<std::vector<std::vector<vertex_idx>>> &sendDownSteps) const {
-    if (!restrict_step_types) { return static_cast<unsigned>(computeSteps[0].size()) + 3; }
+    if (!restrict_step_types) {
+        return static_cast<unsigned>(computeSteps[0].size()) + 3;
+    }
 
     unsigned step = 0, new_step_idx = 0;
     for (; step < computeSteps[0].size(); ++step) {
@@ -1519,9 +1609,15 @@ unsigned MultiProcessorPebbling<Graph_t>::computeMaxTimeForInitialSolution(
             skip_step = false;
             bool is_compute = false, is_send_up = false, is_send_down = false;
             for (unsigned proc = 0; proc < instance.numberOfProcessors(); ++proc) {
-                if (!computeSteps[proc][step].empty()) { is_compute = true; }
-                if (!sendUpSteps[proc][step].empty()) { is_send_up = true; }
-                if (!sendDownSteps[proc][step].empty()) { is_send_down = true; }
+                if (!computeSteps[proc][step].empty()) {
+                    is_compute = true;
+                }
+                if (!sendUpSteps[proc][step].empty()) {
+                    is_send_up = true;
+                }
+                if (!sendDownSteps[proc][step].empty()) {
+                    is_send_down = true;
+                }
             }
 
             bool send_up_step_idx
@@ -1531,11 +1627,19 @@ unsigned MultiProcessorPebbling<Graph_t>::computeMaxTimeForInitialSolution(
                 = (need_to_load_inputs && (new_step_idx % (compute_steps_per_cycle + 2) == 0))
                   || (!need_to_load_inputs && (new_step_idx % (compute_steps_per_cycle + 2) == compute_steps_per_cycle + 1));
 
-            if (is_compute && (send_up_step_idx || send_down_step_idx)) { skip_step = true; }
-            if (is_send_up && !send_up_step_idx) { skip_step = true; }
-            if (is_send_down && !send_down_step_idx) { skip_step = true; }
+            if (is_compute && (send_up_step_idx || send_down_step_idx)) {
+                skip_step = true;
+            }
+            if (is_send_up && !send_up_step_idx) {
+                skip_step = true;
+            }
+            if (is_send_down && !send_down_step_idx) {
+                skip_step = true;
+            }
 
-            if (skip_step) { ++new_step_idx; }
+            if (skip_step) {
+                ++new_step_idx;
+            }
         }
 
         ++new_step_idx;
@@ -1559,7 +1663,9 @@ bool MultiProcessorPebbling<Graph_t>::hasEmptyStep(const BspInstance<Graph_t> &i
                 }
             }
         }
-        if (empty) { return true; }
+        if (empty) {
+            return true;
+        }
     }
     return false;
 }

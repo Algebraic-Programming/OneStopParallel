@@ -66,7 +66,9 @@ class Union_Find_Universe {
         index = find_origin(index);
         other_index = find_origin(other_index);
 
-        if (index == other_index) { return 0; }
+        if (index == other_index) {
+            return 0;
+        }
 
         if (universe[index].rank >= universe[other_index].rank) {
             universe[other_index].parent_index = index;
@@ -74,7 +76,9 @@ class Union_Find_Universe {
             universe[index].memory += universe[other_index].memory;
             component_indices.erase(other_index);
 
-            if (universe[index].rank == universe[other_index].rank) { universe[index].rank++; }
+            if (universe[index].rank == universe[other_index].rank) {
+                universe[index].rank++;
+            }
         } else {
             universe[index].parent_index = other_index;
             universe[other_index].weight += universe[index].weight;
@@ -112,7 +116,9 @@ class Union_Find_Universe {
     std::vector<T> get_component_names() const {
         std::vector<T> component_names;
         component_names.reserve(component_indices.size());
-        for (auto &indx : component_indices) { component_names.emplace_back(universe[indx].name); }
+        for (auto &indx : component_indices) {
+            component_names.emplace_back(universe[indx].name);
+        }
         return component_names;
     }
 
@@ -163,10 +169,14 @@ class Union_Find_Universe {
 
         std::vector<std::vector<T>> connected_components_by_name;
         for (auto &comp : connected_components_by_index) {
-            if (comp.empty()) { continue; }
+            if (comp.empty()) {
+                continue;
+            }
             std::vector<T> names_in_comp;
             names_in_comp.reserve(comp.size());
-            for (const auto &indx : comp) { names_in_comp.emplace_back(universe[indx].name); }
+            for (const auto &indx : comp) {
+                names_in_comp.emplace_back(universe[indx].name);
+            }
             connected_components_by_name.push_back(names_in_comp);
         }
 
@@ -185,13 +195,17 @@ class Union_Find_Universe {
 
         std::vector<std::pair<std::vector<T>, workw_t>> connected_components_by_name_incl_weight;
         for (auto &comp : connected_components_by_index) {
-            if (comp.empty()) { continue; }
+            if (comp.empty()) {
+                continue;
+            }
 
             workw_t comp_weight = universe[find_origin(comp[0])].weight;
 
             std::vector<T> names_in_comp;
             names_in_comp.reserve(comp.size());
-            for (auto &indx : comp) { names_in_comp.emplace_back(universe[indx].name); }
+            for (auto &indx : comp) {
+                names_in_comp.emplace_back(universe[indx].name);
+            }
             connected_components_by_name_incl_weight.emplace_back(names_in_comp, comp_weight);
         }
 
@@ -210,14 +224,18 @@ class Union_Find_Universe {
 
         std::vector<std::tuple<std::vector<T>, workw_t, memw_t>> connected_components_by_name_incl_weight_memory;
         for (auto &comp : connected_components_by_index) {
-            if (comp.empty()) { continue; }
+            if (comp.empty()) {
+                continue;
+            }
 
             workw_t comp_weight = universe[find_origin(comp[0])].weight;
             memw_t comp_memory = universe[find_origin(comp[0])].memory;
 
             std::vector<T> names_in_comp;
             names_in_comp.reserve(comp.size());
-            for (auto &indx : comp) { names_in_comp.emplace_back(universe[indx].name); }
+            for (auto &indx : comp) {
+                names_in_comp.emplace_back(universe[indx].name);
+            }
             connected_components_by_name_incl_weight_memory.emplace_back(names_in_comp, comp_weight, comp_memory);
         }
 
@@ -282,14 +300,18 @@ class Union_Find_Universe {
             names_to_indices.reserve(new_min_capacity);
         }
 
-        for (auto &name : names) { add_object(name); }
+        for (auto &name : names) {
+            add_object(name);
+        }
     }
 
     /// @brief Adds objects to the union-find structure
     /// @param names of objects
     /// @param weights of objects
     void add_object(const std::vector<T> &names, const std::vector<workw_t> &weights) {
-        if (names.size() != weights.size()) { throw std::runtime_error("Vectors of names and weights must be of equal length."); }
+        if (names.size() != weights.size()) {
+            throw std::runtime_error("Vectors of names and weights must be of equal length.");
+        }
 
         // adjusting universe capacity
         index_t additional_size = static_cast<index_t>(names.size());
@@ -307,7 +329,9 @@ class Union_Find_Universe {
             names_to_indices.reserve(new_min_capacity);
         }
 
-        for (std::size_t i = 0; i < names.size(); i++) { add_object(names[i], weights[i]); }
+        for (std::size_t i = 0; i < names.size(); i++) {
+            add_object(names[i], weights[i]);
+        }
     }
 
     /// @brief Adds objects to the union-find structure
@@ -315,7 +339,9 @@ class Union_Find_Universe {
     /// @param weights of objects
     /// @param memories of objects
     void add_object(const std::vector<T> &names, const std::vector<unsigned> &weights, const std::vector<memw_t> &memories) {
-        if (names.size() != weights.size()) { throw std::runtime_error("Vectors of names and weights must be of equal length."); }
+        if (names.size() != weights.size()) {
+            throw std::runtime_error("Vectors of names and weights must be of equal length.");
+        }
 
         // adjusting universe capacity
         index_t additional_size = static_cast<index_t>(names.size());
@@ -333,7 +359,9 @@ class Union_Find_Universe {
             names_to_indices.reserve(new_min_capacity);
         }
 
-        for (size_t i = 0; i < names.size(); i++) { add_object(names[i], weights[i], memories[i]); }
+        for (size_t i = 0; i < names.size(); i++) {
+            add_object(names[i], weights[i], memories[i]);
+        }
     }
 
     /// @brief Initiates a union-find structure

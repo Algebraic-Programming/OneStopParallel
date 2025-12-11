@@ -316,7 +316,9 @@ struct local_inc_edges_memory_constraint {
         for (const auto &pred : instance->getComputationalDag().parents(v)) {
             if (schedule->assignedSuperstep(pred) != *current_superstep) {
                 const auto pair = current_proc_predec[proc].insert(pred);
-                if (pair.second) { current_proc_memory[proc] += instance->getComputationalDag().vertex_comm_weight(pred); }
+                if (pair.second) {
+                    current_proc_memory[proc] += instance->getComputationalDag().vertex_comm_weight(pred);
+                }
             }
         }
     }
@@ -360,7 +362,9 @@ struct local_sources_inc_edges_memory_constraint {
     inline bool can_add(const vertex_idx_t<Graph_t> &v, const unsigned proc) const {
         v_memw_t<Graph_t> inc_memory = 0;
 
-        if (is_source(v, instance->getComputationalDag())) { inc_memory += instance->getComputationalDag().vertex_mem_weight(v); }
+        if (is_source(v, instance->getComputationalDag())) {
+            inc_memory += instance->getComputationalDag().vertex_mem_weight(v);
+        }
 
         for (const auto &pred : instance->getComputationalDag().parents(v)) {
             if (schedule->assignedSuperstep(v) != *current_superstep
@@ -380,7 +384,9 @@ struct local_sources_inc_edges_memory_constraint {
         for (const auto &pred : instance->getComputationalDag().parents(v)) {
             if (schedule->assignedSuperstep(pred) != *current_superstep) {
                 const auto pair = current_proc_predec[proc].insert(pred);
-                if (pair.second) { current_proc_memory[proc] += instance->getComputationalDag().vertex_comm_weight(pred); }
+                if (pair.second) {
+                    current_proc_memory[proc] += instance->getComputationalDag().vertex_comm_weight(pred);
+                }
             }
         }
     }

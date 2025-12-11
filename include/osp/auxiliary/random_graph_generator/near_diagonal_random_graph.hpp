@@ -54,7 +54,9 @@ void near_diag_random_graph(Graph_t &dag_out, vertex_idx_t<Graph_t> num_vertices
 
         std::sample(range.begin(), range.end(), std::back_inserter(sampled), off_diag_edges_num, gen);
 
-        for (const auto &j : sampled) { dag_out.add_edge(j, j + 1); }
+        for (const auto &j : sampled) {
+            dag_out.add_edge(j, j + 1);
+        }
     }
 }
 

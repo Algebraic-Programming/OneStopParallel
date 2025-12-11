@@ -80,7 +80,9 @@ class BspScheduleCoarser : public CoarserGenContractionMap<Graph_t_in, Graph_t_o
                     bool homogeneous_types = true;
 
                     for (const auto &vertex : set_schedule.step_processor_vertices[step][proc]) {
-                        if (dag_in.vertex_type(vertex) != type) { homogeneous_types = false; }
+                        if (dag_in.vertex_type(vertex) != type) {
+                            homogeneous_types = false;
+                        }
 
                         vertex_map.back().push_back(vertex);
                         reverse_vertex_map[vertex] = vertex_map.size() - 1;
@@ -90,7 +92,9 @@ class BspScheduleCoarser : public CoarserGenContractionMap<Graph_t_in, Graph_t_o
                         total_memory += dag_in.vertex_mem_weight(vertex);
                     }
 
-                    if (schedule_respects_types) { schedule_respects_types = homogeneous_types; }
+                    if (schedule_respects_types) {
+                        schedule_respects_types = homogeneous_types;
+                    }
                 }
             }
         }

@@ -101,7 +101,9 @@ template <typename Graph_t>
 bool checkOrderedIsomorphism(const Graph_t &first, const Graph_t &second) {
     static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
 
-    if (first.num_vertices() != second.num_vertices() || first.num_edges() != second.num_edges()) { return false; }
+    if (first.num_vertices() != second.num_vertices() || first.num_edges() != second.num_edges()) {
+        return false;
+    }
 
     for (const auto &node : first.vertices()) {
         if (first.vertex_work_weight(node) != second.vertex_work_weight(node)
@@ -128,20 +130,28 @@ bool checkOrderedIsomorphism(const Graph_t &first, const Graph_t &second) {
 
             auto itr = first_children.begin(), second_itr = second_children.begin();
             for (; itr != first_children.end() && second_itr != second_children.end(); ++itr) {
-                if (*itr != *second_itr) { return false; }
+                if (*itr != *second_itr) {
+                    return false;
+                }
                 ++second_itr;
             }
 
         } else {
             std::set<vertex_idx_t<Graph_t>> first_children, second_children;
 
-            for (const auto &child : first.children(node)) { first_children.emplace(child); }
+            for (const auto &child : first.children(node)) {
+                first_children.emplace(child);
+            }
 
-            for (const auto &child : second.children(node)) { second_children.emplace(child); }
+            for (const auto &child : second.children(node)) {
+                second_children.emplace(child);
+            }
 
             auto itr = first_children.begin(), second_itr = second_children.begin();
             for (; itr != first_children.end() && second_itr != second_children.end(); ++itr) {
-                if (*itr != *second_itr) { return false; }
+                if (*itr != *second_itr) {
+                    return false;
+                }
                 ++second_itr;
             }
         }
@@ -162,7 +172,9 @@ std::vector<Graph_t_out> create_induced_subgraphs(const Graph_t_in &dag_in, cons
     static_assert(is_constructable_cdag_edge_v<Graph_t_out>, "Graph_t_out must satisfy the constructable_cdag_edge concept");
 
     unsigned number_of_parts = 0;
-    for (const auto id : partition_IDs) { number_of_parts = std::max(number_of_parts, id + 1); }
+    for (const auto id : partition_IDs) {
+        number_of_parts = std::max(number_of_parts, id + 1);
+    }
 
     std::vector<Graph_t_out> split_dags(number_of_parts);
 
@@ -238,7 +250,9 @@ std::unordered_map<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_in>> create_in
         for (const auto &node : selected_nodes) {
             for (const auto &in_edge : in_edges(node, dag)) {
                 const auto &pred = source(in_edge, dag);
-                if (local_idx.count(pred)) { dag_out.add_edge(local_idx[pred], local_idx[node], dag.edge_comm_weight(in_edge)); }
+                if (local_idx.count(pred)) {
+                    dag_out.add_edge(local_idx[pred], local_idx[node], dag.edge_comm_weight(in_edge));
+                }
             }
         }
 
@@ -246,7 +260,9 @@ std::unordered_map<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_in>> create_in
         // add edges without edge comm weights
         for (const auto &node : selected_nodes) {
             for (const auto &pred : dag.parents(node)) {
-                if (local_idx.count(pred)) { dag_out.add_edge(local_idx[pred], local_idx[node]); }
+                if (local_idx.count(pred)) {
+                    dag_out.add_edge(local_idx[pred], local_idx[node]);
+                }
             }
         }
     }

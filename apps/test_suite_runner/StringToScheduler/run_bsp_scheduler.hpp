@@ -194,7 +194,9 @@ RETURN_STATUS run_bsp_scheduler(const ConfigParser &parser,
 
     if (id == "LocalSearch") {
         RETURN_STATUS status = run_bsp_scheduler(parser, algorithm.get_child("parameters").get_child("scheduler"), schedule);
-        if (status == RETURN_STATUS::ERROR) { return RETURN_STATUS::ERROR; }
+        if (status == RETURN_STATUS::ERROR) {
+            return RETURN_STATUS::ERROR;
+        }
 
         std::unique_ptr<ImprovementScheduler<Graph_t>> improver
             = get_bsp_improver_by_name<Graph_t>(parser, algorithm.get_child("parameters").get_child("improver"));
@@ -245,7 +247,9 @@ RETURN_STATUS run_bsp_scheduler(const ConfigParser &parser,
         std::vector<vertex_idx_t<boost_graph_t>> reverse_vertex_map;
         bool status
             = coarser->coarsenDag(instance.getComputationalDag(), instance_coarse.getComputationalDag(), reverse_vertex_map);
-        if (!status) { return RETURN_STATUS::ERROR; }
+        if (!status) {
+            return RETURN_STATUS::ERROR;
+        }
 
         instance_coarse.getArchitecture() = instance.getArchitecture();
         instance_coarse.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
@@ -253,10 +257,14 @@ RETURN_STATUS run_bsp_scheduler(const ConfigParser &parser,
 
         const auto status_coarse
             = run_bsp_scheduler(parser, algorithm.get_child("parameters").get_child("scheduler"), schedule_coarse);
-        if (status_coarse != RETURN_STATUS::OSP_SUCCESS and status_coarse != RETURN_STATUS::BEST_FOUND) { return status_coarse; }
+        if (status_coarse != RETURN_STATUS::OSP_SUCCESS and status_coarse != RETURN_STATUS::BEST_FOUND) {
+            return status_coarse;
+        }
 
         status = coarser_util::pull_back_schedule(schedule_coarse, reverse_vertex_map, schedule);
-        if (!status) { return RETURN_STATUS::ERROR; }
+        if (!status) {
+            return RETURN_STATUS::ERROR;
+        }
 
         return RETURN_STATUS::OSP_SUCCESS;
 

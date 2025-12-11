@@ -59,19 +59,25 @@ class DaryHeap {
     void push(const Key &key, const Value &value) {
         // emplace and check for success to avoid a separate lookup with contains()
         auto [it, success] = node_info.emplace(key, NodeInfo{value, heap.size()});
-        if (!success) { throw std::invalid_argument("Key already exists in the heap."); }
+        if (!success) {
+            throw std::invalid_argument("Key already exists in the heap.");
+        }
 
         heap.push_back(key);
         sift_up(it->second.position);
     }
 
     const Key &top() const {
-        if (is_empty()) { throw std::out_of_range("Heap is empty."); }
+        if (is_empty()) {
+            throw std::out_of_range("Heap is empty.");
+        }
         return heap.front();
     }
 
     Key pop() {
-        if (is_empty()) { throw std::out_of_range("Heap is empty."); }
+        if (is_empty()) {
+            throw std::out_of_range("Heap is empty.");
+        }
 
         Key top_key = std::move(heap.front());
 
@@ -91,7 +97,9 @@ class DaryHeap {
 
     void update(const Key &key, const Value &new_value) {
         auto it = node_info.find(key);
-        if (it == node_info.end()) { throw std::invalid_argument("Key does not exist in the heap."); }
+        if (it == node_info.end()) {
+            throw std::invalid_argument("Key does not exist in the heap.");
+        }
         auto &info = it->second;
         const Value old_value = info.value;
 
@@ -106,7 +114,9 @@ class DaryHeap {
 
     void erase(const Key &key) {
         auto it = node_info.find(key);
-        if (it == node_info.end()) { throw std::invalid_argument("Key does not exist in the heap."); }
+        if (it == node_info.end()) {
+            throw std::invalid_argument("Key does not exist in the heap.");
+        }
 
         size_t index = it->second.position;
         size_t last_index = heap.size() - 1;
@@ -130,7 +140,9 @@ class DaryHeap {
 
     const Value &get_value(const Key &key) const {
         auto it = node_info.find(key);
-        if (it == node_info.end()) { throw std::out_of_range("Key does not exist in the heap."); }
+        if (it == node_info.end()) {
+            throw std::out_of_range("Key does not exist in the heap.");
+        }
         return it->second.value;
     }
 
@@ -158,7 +170,9 @@ class DaryHeap {
     }
 
     void sift_up(size_t index) {
-        if (index == 0) { return; }
+        if (index == 0) {
+            return;
+        }
 
         Key key_to_sift = std::move(heap[index]);
         const Value &value_to_sift = node_info.at(key_to_sift).value;
@@ -197,7 +211,9 @@ class DaryHeap {
             }
 
             // After finding the best child, compare with the sifting element
-            if (comp(value_to_sift, *best_child_value)) { break; }
+            if (comp(value_to_sift, *best_child_value)) {
+                break;
+            }
 
             // Move hole down
             heap[index] = std::move(heap[best_child_idx]);

@@ -39,7 +39,9 @@ BOOST_AUTO_TEST_CASE(HeavyEdgePartitioning) {
         }
 
         int weight = 0;
-        for (const auto &e : edges(graph)) { graph.set_edge_comm_weight(e, 1 + (weight + 100 % 500)); }
+        for (const auto &e : edges(graph)) {
+            graph.set_edge_comm_weight(e, 1 + (weight + 100 % 500));
+        }
 
         auto partition = heavy_edge_preprocess(graph, 5.0, 0.7f, 0.34f);
         std::vector<bool> vertex_in_partition(graph.num_vertices(), false);
@@ -49,6 +51,8 @@ BOOST_AUTO_TEST_CASE(HeavyEdgePartitioning) {
                 vertex_in_partition[vert] = true;
             }
         }
-        for (const bool value : vertex_in_partition) { BOOST_CHECK(value); }
+        for (const bool value : vertex_in_partition) {
+            BOOST_CHECK(value);
+        }
     }
 }

@@ -93,14 +93,18 @@ class EtfScheduler : public Scheduler<Graph_t> {
                     const v_workw_t<Graph_t> tmp_val = BL[target(out_edge, instance.getComputationalDag())]
                                                        + instance.getComputationalDag().edge_comm_weight(out_edge);
 
-                    if (tmp_val > maxval) { maxval = tmp_val; }
+                    if (tmp_val > maxval) {
+                        maxval = tmp_val;
+                    }
                 }
 
             } else {
                 for (const auto &child : instance.getComputationalDag().children(node)) {
                     const v_workw_t<Graph_t> tmp_val = BL[child] + instance.getComputationalDag().vertex_comm_weight(child);
 
-                    if (tmp_val > maxval) { maxval = tmp_val; }
+                    if (tmp_val > maxval) {
+                        maxval = tmp_val;
+                    }
                 }
             }
 
@@ -111,14 +115,18 @@ class EtfScheduler : public Scheduler<Graph_t> {
 
     bool check_mem_feasibility(const BspInstance<Graph_t> &instance, const std::set<tv_pair> &ready) const {
         if (instance.getArchitecture().getMemoryConstraintType() == MEMORY_CONSTRAINT_TYPE::PERSISTENT_AND_TRANSIENT) {
-            if (ready.empty()) { return true; }
+            if (ready.empty()) {
+                return true;
+            }
 
             for (const auto &node_pair : ready) {
                 for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
                     const auto node = node_pair.second;
 
                     if constexpr (use_memory_constraint) {
-                        if (memory_constraint.can_add(node, i)) { return true; }
+                        if (memory_constraint.can_add(node, i)) {
+                            return true;
+                        }
                     }
                 }
             }
@@ -206,7 +214,9 @@ class EtfScheduler : public Scheduler<Graph_t> {
         for (const auto &node : nodeList) {
             for (unsigned j = 0; j < instance.numberOfProcessors(); ++j) {
                 if constexpr (use_memory_constraint) {
-                    if (not memory_constraint.can_add(node, j)) { continue; }
+                    if (not memory_constraint.can_add(node, j)) {
+                        continue;
+                    }
                 }
 
                 std::vector<v_workw_t<Graph_t>> newSend = send;
@@ -250,7 +260,9 @@ class EtfScheduler : public Scheduler<Graph_t> {
     virtual RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &bsp_schedule) override {
         const auto &instance = bsp_schedule.getInstance();
 
-        if constexpr (use_memory_constraint) { memory_constraint.initialize(instance); }
+        if constexpr (use_memory_constraint) {
+            memory_constraint.initialize(instance);
+        }
 
         CSchedule<Graph_t> schedule(instance.numberOfVertices());
 
@@ -270,7 +282,9 @@ class EtfScheduler : public Scheduler<Graph_t> {
 
         std::set<tv_pair> ready;
 
-        for (const auto &v : source_vertices_view(instance.getComputationalDag())) { ready.insert({BL[v], v}); }
+        for (const auto &v : source_vertices_view(instance.getComputationalDag())) {
+            ready.insert({BL[v], v});
+        }
 
         while (!ready.empty()) {
             tv_pair best_tv(0, 0);
@@ -284,7 +298,9 @@ class EtfScheduler : public Scheduler<Graph_t> {
 
             if (mode == ETF) {
                 std::vector<vertex_idx_t<Graph_t>> nodeList;
-                for (const auto &next : ready) { nodeList.push_back(next.second); }
+                for (const auto &next : ready) {
+                    nodeList.push_back(next.second);
+                }
                 best_tv = GetBestESTforNodes(instance, schedule, nodeList, finishTimes, send, rec, best_proc);
                 ready.erase(tv_pair({0, best_tv.second}));
             }
@@ -296,15 +312,21 @@ class EtfScheduler : public Scheduler<Graph_t> {
             schedule.time[node] = best_tv.first;
             finishTimes[best_proc] = schedule.time[node] + instance.getComputationalDag().vertex_work_weight(node);
 
-            if constexpr (use_memory_constraint) { memory_constraint.add(node, best_proc); }
+            if constexpr (use_memory_constraint) {
+                memory_constraint.add(node, best_proc);
+            }
 
             for (const auto &succ : instance.getComputationalDag().children(node)) {
                 ++predecProcessed[succ];
-                if (predecProcessed[succ] == instance.getComputationalDag().in_degree(succ)) { ready.insert({BL[succ], succ}); }
+                if (predecProcessed[succ] == instance.getComputationalDag().in_degree(succ)) {
+                    ready.insert({BL[succ], succ});
+                }
             }
 
             if constexpr (use_memory_constraint) {
-                if (not check_mem_feasibility(instance, ready)) { return RETURN_STATUS::ERROR; }
+                if (not check_mem_feasibility(instance, ready)) {
+                    return RETURN_STATUS::ERROR;
+                }
             }
         }
 

@@ -34,7 +34,9 @@ std::unordered_set<edge_desc_t<Graph_t>> long_edges_in_triangles_parallel(const 
     static_assert(is_directed_graph_edge_desc_v<Graph_t>, "Graph_t must satisfy the directed_graph edge desc concept");
     static_assert(has_hashable_edge_desc_v<Graph_t>, "Graph_t must satisfy the has_hashable_edge_desc concept");
 
-    if (graph.num_edges() < 1000) { return long_edges_in_triangles(graph); }
+    if (graph.num_edges() < 1000) {
+        return long_edges_in_triangles(graph);
+    }
 
     std::unordered_set<edge_desc_t<Graph_t>> long_edges;
     std::vector<std::vector<edge_desc_t<Graph_t>>> deleted_edges_thread(static_cast<size_t>(omp_get_max_threads()));
@@ -46,7 +48,9 @@ std::unordered_set<edge_desc_t<Graph_t>> long_edges_in_triangles_parallel(const 
         const unsigned int proc = static_cast<unsigned>(omp_get_thread_num());
 
         std::unordered_set<vertex_idx_t<Graph_t>> children_set;
-        for (const auto &v : graph.children(vertex)) { children_set.emplace(v); }
+        for (const auto &v : graph.children(vertex)) {
+            children_set.emplace(v);
+        }
 
         for (const auto &edge : out_edges(vertex, graph)) {
             const auto &child = target(edge, graph);
@@ -61,7 +65,9 @@ std::unordered_set<edge_desc_t<Graph_t>> long_edges_in_triangles_parallel(const 
     }
 
     for (const auto &edges_thread : deleted_edges_thread) {
-        for (const auto &edge : edges_thread) { long_edges.emplace(edge); }
+        for (const auto &edge : edges_thread) {
+            long_edges.emplace(edge);
+        }
     }
 
     return long_edges;

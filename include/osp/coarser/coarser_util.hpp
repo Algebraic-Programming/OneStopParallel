@@ -87,7 +87,9 @@ bool construct_coarse_dag(const Graph_t_in &dag_in,
 
         for (const vertex_idx_t<Graph_t_in> &vert : dag_in.vertices()) {
             for (const vertex_idx_t<Graph_t_in> &chld : dag_in.children(vert)) {
-                if (vertex_contraction_map[vert] == vertex_contraction_map[chld]) { continue; }
+                if (vertex_contraction_map[vert] == vertex_contraction_map[chld]) {
+                    continue;
+                }
                 quotient_edges.emplace(vertex_contraction_map[vert], vertex_contraction_map[chld]);
             }
         }
@@ -143,13 +145,17 @@ bool construct_coarse_dag(const Graph_t_in &dag_in,
             static_assert(std::is_same_v<e_commw_t<Graph_t_in>, e_commw_t<Graph_t_out>>,
                           "Edge weight type of in graph and out graph must be the same!");
 
-            for (const auto &edge : edges(coarsened_dag)) { coarsened_dag.set_edge_comm_weight(edge, 0); }
+            for (const auto &edge : edges(coarsened_dag)) {
+                coarsened_dag.set_edge_comm_weight(edge, 0);
+            }
 
             for (const auto &ori_edge : edges(dag_in)) {
                 vertex_idx_t<Graph_t_out> src = vertex_contraction_map[source(ori_edge, dag_in)];
                 vertex_idx_t<Graph_t_out> tgt = vertex_contraction_map[target(ori_edge, dag_in)];
 
-                if (src == tgt) { continue; }
+                if (src == tgt) {
+                    continue;
+                }
 
                 const auto [cont_edge, found] = edge_desc(src, tgt, coarsened_dag);
                 assert(found && "The edge should already exist");
@@ -166,7 +172,9 @@ bool construct_coarse_dag(const Graph_t_in &dag_in,
         const vertex_idx_t<Graph_t_out> num_vert_quotient
             = (*std::max_element(vertex_contraction_map.cbegin(), vertex_contraction_map.cend())) + 1;
 
-        for (vertex_idx_t<Graph_t_out> vert = 0; vert < num_vert_quotient; ++vert) { coarsened_dag.add_vertex(0, 0, 0); }
+        for (vertex_idx_t<Graph_t_out> vert = 0; vert < num_vert_quotient; ++vert) {
+            coarsened_dag.add_vertex(0, 0, 0);
+        }
 
         for (const vertex_idx_t<Graph_t_in> &vert : dag_in.vertices()) {
             coarsened_dag.set_vertex_work_weight(vertex_contraction_map[vert],
@@ -197,7 +205,9 @@ bool construct_coarse_dag(const Graph_t_in &dag_in,
 
         for (const vertex_idx_t<Graph_t_in> &vert : dag_in.vertices()) {
             for (const vertex_idx_t<Graph_t_in> &chld : dag_in.children(vert)) {
-                if (vertex_contraction_map[vert] == vertex_contraction_map[chld]) { continue; }
+                if (vertex_contraction_map[vert] == vertex_contraction_map[chld]) {
+                    continue;
+                }
 
                 if constexpr (has_edge_weights_v<Graph_t_in> && is_constructable_cdag_comm_edge_v<Graph_t_out>) {
                     static_assert(std::is_same_v<e_commw_t<Graph_t_in>, e_commw_t<Graph_t_out>>,
@@ -254,7 +264,9 @@ bool construct_coarse_dag(const Graph_t_in &dag_in,
 
         for (const vertex_idx_t<Graph_t_in> &vert : dag_in.vertices()) {
             for (const vertex_idx_t<Graph_t_in> &chld : dag_in.children(vert)) {
-                if (vertex_contraction_map[vert] == vertex_contraction_map[chld]) { continue; }
+                if (vertex_contraction_map[vert] == vertex_contraction_map[chld]) {
+                    continue;
+                }
                 quotient_edges.emplace(vertex_contraction_map[vert], vertex_contraction_map[chld]);
             }
         }
@@ -320,7 +332,9 @@ bool construct_coarse_dag(const Graph_t_in &dag_in,
                 vertex_idx_t<Graph_t_out> src = vertex_contraction_map[source(ori_edge, dag_in)];
                 vertex_idx_t<Graph_t_out> tgt = vertex_contraction_map[target(ori_edge, dag_in)];
 
-                if (src == tgt) { continue; }
+                if (src == tgt) {
+                    continue;
+                }
 
                 coarsened_dag.set_edge_comm_weight(src, tgt, 0);
             }
@@ -329,7 +343,9 @@ bool construct_coarse_dag(const Graph_t_in &dag_in,
                 vertex_idx_t<Graph_t_out> src = vertex_contraction_map[source(ori_edge, dag_in)];
                 vertex_idx_t<Graph_t_out> tgt = vertex_contraction_map[target(ori_edge, dag_in)];
 
-                if (src == tgt) { continue; }
+                if (src == tgt) {
+                    continue;
+                }
 
                 const auto cont_edge = coarsened_dag.edge(pushforward_map[src], pushforward_map[tgt]);
                 assert(source(cont_edge, coarsened_dag) == pushforward_map[src]
@@ -353,14 +369,22 @@ bool check_valid_expansion_map(const std::vector<std::vector<vertex_idx_t<Graph_
 
     std::vector<bool> preImage;
     for (const std::vector<vertex_idx_t<Graph_t_in>> &group : vertex_expansion_map) {
-        if (group.size() == 0) { return false; }
+        if (group.size() == 0) {
+            return false;
+        }
 
         for (const vertex_idx_t<Graph_t_in> vert : group) {
-            if (vert < static_cast<vertex_idx_t<Graph_t_in>>(0)) { return false; }
+            if (vert < static_cast<vertex_idx_t<Graph_t_in>>(0)) {
+                return false;
+            }
 
-            if (static_cast<std::size_t>(vert) >= preImage.size()) { preImage.resize(vert + 1, false); }
+            if (static_cast<std::size_t>(vert) >= preImage.size()) {
+                preImage.resize(vert + 1, false);
+            }
 
-            if (preImage[vert]) { return false; }
+            if (preImage[vert]) {
+                return false;
+            }
 
             preImage[vert] = true;
             cntr++;
@@ -382,7 +406,9 @@ std::vector<std::vector<vertex_idx_t<Graph_t_in>>> invert_vertex_contraction_map
 
     std::vector<std::vector<vertex_idx_t<Graph_t_in>>> expansion_map(num_vert);
 
-    for (std::size_t i = 0; i < vertex_contraction_map.size(); ++i) { expansion_map[vertex_contraction_map[i]].push_back(i); }
+    for (std::size_t i = 0; i < vertex_contraction_map.size(); ++i) {
+        expansion_map[vertex_contraction_map[i]].push_back(i);
+    }
 
     return expansion_map;
 }
@@ -394,7 +420,9 @@ std::vector<vertex_idx_t<Graph_t_out>> invert_vertex_expansion_map(
 
     vertex_idx_t<Graph_t_in> num_vert = 0;
     for (const auto &group : vertex_expansion_map) {
-        for (const vertex_idx_t<Graph_t_in> &vert : group) { num_vert = std::max(num_vert, vert + 1); }
+        for (const vertex_idx_t<Graph_t_in> &vert : group) {
+            num_vert = std::max(num_vert, vert + 1);
+        }
     }
 
     std::vector<vertex_idx_t<Graph_t_out>> vertex_contraction_map(num_vert);
@@ -413,17 +441,23 @@ void reorder_expansion_map(const Graph_t_in &graph, std::vector<std::vector<vert
 
     std::vector<std::size_t> vertex_contraction_map(graph.num_vertices());
     for (std::size_t i = 0; i < vertex_expansion_map.size(); i++) {
-        for (const vertex_idx_t<Graph_t_in> &vert : vertex_expansion_map[i]) { vertex_contraction_map[vert] = i; }
+        for (const vertex_idx_t<Graph_t_in> &vert : vertex_expansion_map[i]) {
+            vertex_contraction_map[vert] = i;
+        }
     }
 
     std::vector<std::size_t> prec(vertex_expansion_map.size(), 0);
     for (const auto &vert : graph.vertices()) {
         for (const auto &par : graph.parents(vert)) {
-            if (vertex_contraction_map.at(par) != vertex_contraction_map.at(vert)) { prec[vertex_contraction_map.at(vert)] += 1; }
+            if (vertex_contraction_map.at(par) != vertex_contraction_map.at(vert)) {
+                prec[vertex_contraction_map.at(vert)] += 1;
+            }
         }
     }
 
-    for (auto &comp : vertex_expansion_map) { std::nth_element(comp.begin(), comp.begin(), comp.end()); }
+    for (auto &comp : vertex_expansion_map) {
+        std::nth_element(comp.begin(), comp.begin(), comp.end());
+    }
 
     auto cmp = [&vertex_expansion_map](const std::size_t &lhs, const std::size_t &rhs) {
         return vertex_expansion_map[lhs] > vertex_expansion_map[rhs];    // because priority queue is a max_priority queue
@@ -433,7 +467,9 @@ void reorder_expansion_map(const Graph_t_in &graph, std::vector<std::vector<vert
     std::vector<std::size_t> topOrder;
     topOrder.reserve(vertex_expansion_map.size());
     for (std::size_t i = 0; i < vertex_expansion_map.size(); ++i) {
-        if (prec[i] == 0) { ready.emplace(i); }
+        if (prec[i] == 0) {
+            ready.emplace(i);
+        }
     }
 
     while (!ready.empty()) {
@@ -445,7 +481,9 @@ void reorder_expansion_map(const Graph_t_in &graph, std::vector<std::vector<vert
             for (const auto &chld : graph.children(vert)) {
                 if (vertex_contraction_map.at(vert) != vertex_contraction_map.at(chld)) {
                     prec[vertex_contraction_map.at(chld)] -= 1;
-                    if (prec[vertex_contraction_map.at(chld)] == 0) { ready.emplace(vertex_contraction_map.at(chld)); }
+                    if (prec[vertex_contraction_map.at(chld)] == 0) {
+                        ready.emplace(vertex_contraction_map.at(chld));
+                    }
                 }
             }
         }
@@ -494,7 +532,9 @@ std::vector<IntegralType> compose_vertex_contraction_map(const std::vector<Integ
     static_assert(std::is_integral_v<IntegralType>);
     std::vector<IntegralType> composedMap(firstMap.size());
 
-    for (std::size_t i = 0; i < composedMap.size(); ++i) { composedMap[i] = secondMap[firstMap[i]]; }
+    for (std::size_t i = 0; i < composedMap.size(); ++i) {
+        composedMap[i] = secondMap[firstMap[i]];
+    }
 
     return composedMap;
 }

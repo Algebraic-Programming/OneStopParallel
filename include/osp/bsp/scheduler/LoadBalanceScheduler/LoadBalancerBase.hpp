@@ -62,7 +62,9 @@ class LoadBalancerBase : public Scheduler<Graph_t> {
                                                                const BspInstance<Graph_t> &instance,
                                                                const float slack = 0.0) {
         v_workw_t<Graph_t> work_till_now = 0;
-        for (const auto &part_work : total_partition_work) { work_till_now += part_work; }
+        for (const auto &part_work : total_partition_work) {
+            work_till_now += part_work;
+        }
 
         float percentage_complete = static_cast<float>(work_till_now) / static_cast<float>(total_work);
 

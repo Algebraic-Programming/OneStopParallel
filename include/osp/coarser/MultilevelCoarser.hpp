@@ -83,7 +83,9 @@ RETURN_STATUS MultilevelCoarser<Graph_t, Graph_t_coarse>::run(const Graph_t &gra
     RETURN_STATUS status = RETURN_STATUS::OSP_SUCCESS;
     status = std::max(status, run_contractions());
 
-    if (dag_history.size() == 0) { add_identity_contraction(); }
+    if (dag_history.size() == 0) {
+        add_identity_contraction();
+    }
 
     return status;
 }
@@ -104,7 +106,9 @@ void MultilevelCoarser<Graph_t, Graph_t_coarse>::clear_computation_data() {
 
 template <typename Graph_t, typename Graph_t_coarse>
 void MultilevelCoarser<Graph_t, Graph_t_coarse>::compactify_dag_history() {
-    if (dag_history.size() < 3) { return; }
+    if (dag_history.size() < 3) {
+        return;
+    }
 
     size_t dag_indx_first = dag_history.size() - 2;
     size_t map_indx_first = contraction_maps.size() - 2;
@@ -245,7 +249,9 @@ bool MultilevelCoarser<Graph_t, Graph_t_coarse>::coarsenDag(const Graph_t &dag_i
 
     RETURN_STATUS status = run(dag_in);
 
-    if (status != RETURN_STATUS::OSP_SUCCESS && status != RETURN_STATUS::BEST_FOUND) { return false; }
+    if (status != RETURN_STATUS::OSP_SUCCESS && status != RETURN_STATUS::BEST_FOUND) {
+        return false;
+    }
 
     assert(dag_history.size() != 0);
     coarsened_dag = *(dag_history.back());

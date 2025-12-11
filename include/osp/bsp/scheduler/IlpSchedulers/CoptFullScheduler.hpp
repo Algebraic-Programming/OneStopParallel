@@ -175,7 +175,9 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
                         if (GetSolution((*node_to_processor_superstep_var_ptr)[node][processor][static_cast<int>(step)]) >= .99) {
                             schedule.assignments(node).emplace_back(processor, step);
 
-                            if (step >= number_of_supersteps) { number_of_supersteps = step + 1; }
+                            if (step >= number_of_supersteps) {
+                                number_of_supersteps = step + 1;
+                            }
                         }
                     }
                 }
@@ -223,7 +225,9 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
         unsigned number_of_supersteps = 0;
 
         for (unsigned step = 0; step < max_number_supersteps; step++) {
-            if (superstep_used_var[static_cast<int>(step)].Get(COPT_DBLINFO_VALUE) >= .99) { number_of_supersteps++; }
+            if (superstep_used_var[static_cast<int>(step)].Get(COPT_DBLINFO_VALUE) >= .99) {
+                number_of_supersteps++;
+            }
         }
 
         for (const auto &node : instance.vertices()) {
@@ -268,7 +272,9 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
         unsigned number_of_supersteps = 0;
 
         for (unsigned step = 0; step < max_number_supersteps; step++) {
-            if (superstep_used_var[static_cast<int>(step)].Get(COPT_DBLINFO_VALUE) >= .99) { number_of_supersteps++; }
+            if (superstep_used_var[static_cast<int>(step)].Get(COPT_DBLINFO_VALUE) >= .99) {
+                number_of_supersteps++;
+            }
         }
 
         schedule.setNumberOfSupersteps(number_of_supersteps);
@@ -457,13 +463,19 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
         for (unsigned step = 0; step < max_number_supersteps; step++) {
             v_workw_t<Graph_t> max_work = 0;
             for (unsigned i = 0; i < num_processors; i++) {
-                if (max_work < work[step][i]) { max_work = work[step][i]; }
+                if (max_work < work[step][i]) {
+                    max_work = work[step][i];
+                }
             }
 
             v_commw_t<Graph_t> max_comm = 0;
             for (unsigned i = 0; i < num_processors; i++) {
-                if (max_comm < send[step][i]) { max_comm = send[step][i]; }
-                if (max_comm < rec[step][i]) { max_comm = rec[step][i]; }
+                if (max_comm < send[step][i]) {
+                    max_comm = send[step][i];
+                }
+                if (max_comm < rec[step][i]) {
+                    max_comm = rec[step][i];
+                }
             }
 
             model.SetMipStart(max_work_superstep_var[static_cast<int>(step)], max_work);
@@ -741,7 +753,9 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
 
         setupVariablesConstraintsObjective(instance, model);
 
-        if (use_initial_schedule) { loadInitialSchedule(model, instance); }
+        if (use_initial_schedule) {
+            loadInitialSchedule(model, instance);
+        }
 
         computeScheduleBase(schedule, model);
 
@@ -856,7 +870,9 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
 
         setupVariablesConstraintsObjective(schedule.getInstance(), model);
 
-        if (use_initial_schedule || use_initial_schedule_recomp) { loadInitialSchedule(model, schedule.getInstance()); }
+        if (use_initial_schedule || use_initial_schedule_recomp) {
+            loadInitialSchedule(model, schedule.getInstance());
+        }
 
         computeScheduleBase(schedule, model);
 
@@ -879,7 +895,9 @@ class CoptFullScheduler : public Scheduler<Graph_t> {
     };
 
     virtual void computeScheduleBase(const BspScheduleRecomp<Graph_t> &schedule, Model &model) {
-        if (timeLimitSeconds > 0) { model.SetDblParam(COPT_DBLPARAM_TIMELIMIT, timeLimitSeconds); }
+        if (timeLimitSeconds > 0) {
+            model.SetDblParam(COPT_DBLPARAM_TIMELIMIT, timeLimitSeconds);
+        }
         model.SetIntParam(COPT_INTPARAM_THREADS, 128);
 
         model.SetIntParam(COPT_INTPARAM_STRONGBRANCHING, 1);

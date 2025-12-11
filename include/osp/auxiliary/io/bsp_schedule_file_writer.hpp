@@ -109,7 +109,9 @@ void write_sankey(std::ostream &os, const BspScheduleCS<Graph_t> &schedule) {
     os << "Processor workloads in Superstep" << std::endl;
     for (const auto &sstep : proc_workloads) {
         for (size_t proc_ind = 0; proc_ind < sstep.size(); proc_ind++) {
-            if (proc_ind != 0) { os << ","; }
+            if (proc_ind != 0) {
+                os << ",";
+            }
             os << sstep[proc_ind];
         }
         os << std::endl;

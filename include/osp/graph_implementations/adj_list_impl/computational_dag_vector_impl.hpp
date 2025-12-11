@@ -78,7 +78,9 @@ class computational_dag_vector_impl {
      */
     explicit computational_dag_vector_impl(const vertex_idx num_vertices)
         : vertices_(num_vertices), out_neigbors(num_vertices), in_neigbors(num_vertices), num_edges_(0), num_vertex_types_(0) {
-        for (vertex_idx i = 0; i < num_vertices; ++i) { vertices_[i].id = i; }
+        for (vertex_idx i = 0; i < num_vertices; ++i) {
+            vertices_[i].id = i;
+        }
     }
 
     computational_dag_vector_impl(const computational_dag_vector_impl &other) = default;
@@ -234,7 +236,9 @@ class computational_dag_vector_impl {
         }
 
         const auto &out = out_neigbors.at(source);
-        if (std::find(out.begin(), out.end(), target) != out.end()) { return false; }
+        if (std::find(out.begin(), out.end(), target) != out.end()) {
+            return false;
+        }
 
         out_neigbors[source].push_back(target);
         in_neigbors.at(target).push_back(source);

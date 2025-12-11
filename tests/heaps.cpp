@@ -68,12 +68,16 @@ class BoostFibonacciHeapWrapper {
     bool contains(const Key &key) const { return handles.count(key); }
 
     const Key &top() const {
-        if (is_empty()) { throw std::out_of_range("Heap is empty"); }
+        if (is_empty()) {
+            throw std::out_of_range("Heap is empty");
+        }
         return heap.top().key;
     }
 
     Key pop() {
-        if (is_empty()) { throw std::out_of_range("Heap is empty"); }
+        if (is_empty()) {
+            throw std::out_of_range("Heap is empty");
+        }
         Key top_key = heap.top().key;
         heap.pop();
         handles.erase(top_key);
@@ -81,25 +85,33 @@ class BoostFibonacciHeapWrapper {
     }
 
     void push(const Key &key, const Value &value) {
-        if (contains(key)) { throw std::invalid_argument("Key already exists"); }
+        if (contains(key)) {
+            throw std::invalid_argument("Key already exists");
+        }
         handle_type handle = heap.push({key, value});
         handles[key] = handle;
     }
 
     Value get_value(const Key &key) const {
-        if (!contains(key)) { throw std::out_of_range("Key not found"); }
+        if (!contains(key)) {
+            throw std::out_of_range("Key not found");
+        }
         return (*handles.at(key)).value;
     }
 
     void update(const Key &key, const Value &new_value) {
-        if (!contains(key)) { throw std::invalid_argument("Key not found for update"); }
+        if (!contains(key)) {
+            throw std::invalid_argument("Key not found for update");
+        }
         handle_type handle = handles.at(key);
         (*handle).value = new_value;
         heap.update(handle);
     }
 
     void erase(const Key &key) {
-        if (!contains(key)) { throw std::invalid_argument("Key not found for erase"); }
+        if (!contains(key)) {
+            throw std::invalid_argument("Key not found for erase");
+        }
         heap.erase(handles.at(key));
         handles.erase(key);
     }
@@ -147,12 +159,16 @@ class StdSetWrapper {
     bool contains(const Key &key) const { return value_map.count(key); }
 
     const Key &top() const {
-        if (is_empty()) { throw std::out_of_range("Heap is empty"); }
+        if (is_empty()) {
+            throw std::out_of_range("Heap is empty");
+        }
         return data_set.begin()->second;
     }
 
     Key pop() {
-        if (is_empty()) { throw std::out_of_range("Heap is empty"); }
+        if (is_empty()) {
+            throw std::out_of_range("Heap is empty");
+        }
         auto top_node = *data_set.begin();
         data_set.erase(data_set.begin());
         value_map.erase(top_node.second);
@@ -160,27 +176,37 @@ class StdSetWrapper {
     }
 
     void push(const Key &key, const Value &value) {
-        if (contains(key)) { throw std::invalid_argument("Key already exists"); }
+        if (contains(key)) {
+            throw std::invalid_argument("Key already exists");
+        }
         data_set.insert({value, key});
         value_map[key] = value;
     }
 
     Value get_value(const Key &key) const {
-        if (!contains(key)) { throw std::out_of_range("Key not found"); }
+        if (!contains(key)) {
+            throw std::out_of_range("Key not found");
+        }
         return value_map.at(key);
     }
 
     void update(const Key &key, const Value &new_value) {
-        if (!contains(key)) { throw std::invalid_argument("Key not found for update"); }
+        if (!contains(key)) {
+            throw std::invalid_argument("Key not found for update");
+        }
         Value old_value = value_map.at(key);
-        if (old_value == new_value) { return; }
+        if (old_value == new_value) {
+            return;
+        }
         data_set.erase({old_value, key});
         data_set.insert({new_value, key});
         value_map[key] = new_value;
     }
 
     void erase(const Key &key) {
-        if (!contains(key)) { throw std::invalid_argument("Key not found for erase"); }
+        if (!contains(key)) {
+            throw std::invalid_argument("Key not found for erase");
+        }
         Value value = value_map.at(key);
         data_set.erase({value, key});
         value_map.erase(key);
@@ -302,8 +328,12 @@ void stress_test_heap() {
     HeapType heap;
     const int num_items = 1000;
 
-    for (int i = 0; i < num_items; ++i) { heap.push(std::to_string(i), i); }
-    for (int i = 0; i < num_items / 2; ++i) { heap.update(std::to_string(i), i - num_items); }
+    for (int i = 0; i < num_items; ++i) {
+        heap.push(std::to_string(i), i);
+    }
+    for (int i = 0; i < num_items / 2; ++i) {
+        heap.update(std::to_string(i), i - num_items);
+    }
 
     std::vector<int> popped_values;
     while (!heap.is_empty()) {
@@ -335,7 +365,9 @@ void run_performance_test(const std::string &heap_name, size_t num_items, size_t
 
     // Scenario 1: Bulk Insert
     auto start = std::chrono::high_resolution_clock::now();
-    for (size_t i = 0; i < num_items; ++i) { heap.push(keys[i], priorities[i]); }
+    for (size_t i = 0; i < num_items; ++i) {
+        heap.push(keys[i], priorities[i]);
+    }
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> duration = end - start;
     std::cout << "Bulk Insert (" << num_items << " items): " << duration.count() << " ms" << std::endl;
@@ -355,7 +387,9 @@ void run_performance_test(const std::string &heap_name, size_t num_items, size_t
 
     // Scenario 3: Bulk Pop
     start = std::chrono::high_resolution_clock::now();
-    while (!heap.is_empty()) { heap.pop(); }
+    while (!heap.is_empty()) {
+        heap.pop();
+    }
     end = std::chrono::high_resolution_clock::now();
     duration = end - start;
     std::cout << "Bulk Pop (" << num_items << " items): " << duration.count() << " ms" << std::endl;

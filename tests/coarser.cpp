@@ -51,7 +51,9 @@ bool check_vertex_map(std::vector<std::vector<VertexType>> &map, std::size_t siz
 
     for (auto &v : map) {
         for (auto &v2 : v) {
-            if (vertices.find(v2) != vertices.end()) { return false; }
+            if (vertices.find(v2) != vertices.end()) {
+                return false;
+            }
             vertices.insert(v2);
         }
     }
@@ -73,19 +75,27 @@ bool check_vertex_map_constraints(std::vector<std::vector<VertexType>> &map,
         v_workw_t<ComputationalDag> work = 0;
         v_commw_t<ComputationalDag> communication = 0;
 
-        if (super_node.size() > size_threshold) { return false; }
+        if (super_node.size() > size_threshold) {
+            return false;
+        }
 
-        if (super_node.size() == 0) { return false; }
+        if (super_node.size() == 0) {
+            return false;
+        }
 
         for (auto &v : super_node) {
             memory += dag.vertex_mem_weight(v);
             work += dag.vertex_work_weight(v);
             communication += dag.vertex_comm_weight(v);
 
-            if (dag.vertex_type(v) != dag.vertex_type(super_node[0])) { return false; }
+            if (dag.vertex_type(v) != dag.vertex_type(super_node[0])) {
+                return false;
+            }
         }
 
-        if (memory > memory_threshold || work > work_threshold || communication > communication_threshold) { return false; }
+        if (memory > memory_threshold || work > work_threshold || communication > communication_threshold) {
+            return false;
+        }
     }
     return true;
 }

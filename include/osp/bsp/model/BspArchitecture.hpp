@@ -149,13 +149,19 @@ class BspArchitecture {
     }
 
     bool AreSendCostsNuma() {
-        if (numberOfProcessors_ == 1U) { return false; }
+        if (numberOfProcessors_ == 1U) {
+            return false;
+        }
 
         const v_commw_t<Graph_t> val = sendCosts_[1U];
         for (unsigned p1 = 0U; p1 < numberOfProcessors_; p1++) {
             for (unsigned p2 = 0U; p2 < numberOfProcessors_; p2++) {
-                if (p1 == p2) { continue; }
-                if (sendCosts_[FlatIndex(p1, p2)] != val) { return true; }
+                if (p1 == p2) {
+                    continue;
+                }
+                if (sendCosts_[FlatIndex(p1, p2)] != val) {
+                    return true;
+                }
             }
         }
         return false;
@@ -164,12 +170,16 @@ class BspArchitecture {
     void UpdateNumberOfProcessorTypes() {
         numberOfProcessorTypes_ = 0U;
         for (unsigned p = 0U; p < numberOfProcessors_; p++) {
-            if (processorTypes_[p] >= numberOfProcessorTypes_) { numberOfProcessorTypes_ = processorTypes_[p] + 1U; }
+            if (processorTypes_[p] >= numberOfProcessorTypes_) {
+                numberOfProcessorTypes_ = processorTypes_[p] + 1U;
+            }
         }
     }
 
     void SetSendCostDiagonalToZero() {
-        for (unsigned i = 0U; i < numberOfProcessors_; i++) { sendCosts_[FlatIndex(i, i)] = 0U; }
+        for (unsigned i = 0U; i < numberOfProcessors_; i++) {
+            sendCosts_[FlatIndex(i, i)] = 0U;
+        }
     }
 
     void InitializeUniformSendCosts() {
@@ -219,7 +229,9 @@ class BspArchitecture {
             }
 
             sendCosts_.reserve(NumberOfProcessors * NumberOfProcessors);
-            for (const auto &row : SendCosts) { sendCosts_.insert(sendCosts_.end(), row.begin(), row.end()); }
+            for (const auto &row : SendCosts) {
+                sendCosts_.insert(sendCosts_.end(), row.begin(), row.end());
+            }
 
             SetSendCostDiagonalToZero();
             isNuma_ = AreSendCostsNuma();
@@ -331,7 +343,9 @@ class BspArchitecture {
      * @throws std::invalid_argument if the size of the vector is invalid or diagonal elements are not 0.
      */
     void SetSendCosts(const std::vector<std::vector<v_commw_t<Graph_t>>> &vec) {
-        if (vec.size() != numberOfProcessors_) { throw std::invalid_argument("Invalid Argument: Vector size mismatch."); }
+        if (vec.size() != numberOfProcessors_) {
+            throw std::invalid_argument("Invalid Argument: Vector size mismatch.");
+        }
 
         isNuma_ = false;
         for (unsigned i = 0U; i < numberOfProcessors_; i++) {
@@ -345,7 +359,9 @@ class BspArchitecture {
                 }
 
                 sendCosts_.at(FlatIndex(i, j)) = vec.at(i).at(j);
-                if (numberOfProcessors_ > 1U && vec.at(i).at(j) != vec.at(0U).at(1U)) { isNuma_ = true; }
+                if (numberOfProcessors_ > 1U && vec.at(i).at(j) != vec.at(0U).at(1U)) {
+                    isNuma_ = true;
+                }
             }
         }
     }
@@ -440,7 +456,9 @@ class BspArchitecture {
      * @param processorTypes The types of the respective processors.
      */
     void setProcessorsWithTypes(const std::vector<v_type_t<Graph_t>> &processorTypes) {
-        if (processorTypes.empty()) { throw std::invalid_argument("Invalid Argument: Processor types vector is empty."); }
+        if (processorTypes.empty()) {
+            throw std::invalid_argument("Invalid Argument: Processor types vector is empty.");
+        }
         if (processorTypes.size() > std::numeric_limits<unsigned>::max()) {
             throw std::invalid_argument("Invalid Argument: Number of processors exceeds the limit.");
         }
@@ -521,7 +539,9 @@ class BspArchitecture {
     [[nodiscard]] v_memw_t<Graph_t> maxMemoryBoundProcType(const v_type_t<Graph_t> procType) const {
         v_memw_t<Graph_t> max_mem = 0U;
         for (unsigned proc = 0U; proc < numberOfProcessors_; proc++) {
-            if (processorTypes_[proc] == procType) { max_mem = std::max(max_mem, memoryBound_[proc]); }
+            if (processorTypes_[proc] == procType) {
+                max_mem = std::max(max_mem, memoryBound_[proc]);
+            }
         }
         return max_mem;
     }
@@ -553,7 +573,9 @@ class BspArchitecture {
         std::vector<std::vector<v_commw_t<Graph_t>>> matrix(numberOfProcessors_,
                                                             std::vector<v_commw_t<Graph_t>>(numberOfProcessors_));
         for (unsigned i = 0; i < numberOfProcessors_; ++i) {
-            for (unsigned j = 0; j < numberOfProcessors_; ++j) { matrix[i][j] = sendCosts_[FlatIndex(i, j)]; }
+            for (unsigned j = 0; j < numberOfProcessors_; ++j) {
+                matrix[i][j] = sendCosts_[FlatIndex(i, j)];
+            }
         }
         return matrix;
     }
@@ -617,7 +639,9 @@ class BspArchitecture {
      */
     [[nodiscard]] std::vector<unsigned> getProcessorTypeCount() const {
         std::vector<unsigned> type_count(numberOfProcessorTypes_, 0U);
-        for (unsigned p = 0U; p < numberOfProcessors_; p++) { type_count[processorTypes_[p]]++; }
+        for (unsigned p = 0U; p < numberOfProcessors_; p++) {
+            type_count[processorTypes_[p]]++;
+        }
         return type_count;
     }
 
@@ -630,13 +654,19 @@ class BspArchitecture {
            << ", Number of processor types: " << numberOfProcessorTypes_ << ", Communication costs: " << communicationCosts_
            << ", Synchronization costs: " << synchronisationCosts_ << "\n";
         os << std::setw(17) << " Processor: ";
-        for (unsigned i = 0U; i < numberOfProcessors_; i++) { os << std::right << std::setw(5) << i << " "; }
+        for (unsigned i = 0U; i < numberOfProcessors_; i++) {
+            os << std::right << std::setw(5) << i << " ";
+        }
         os << "\n";
         os << std::setw(17) << "Processor type: ";
-        for (unsigned i = 0U; i < numberOfProcessors_; i++) { os << std::right << std::setw(5) << processorTypes_.at(i) << " "; }
+        for (unsigned i = 0U; i < numberOfProcessors_; i++) {
+            os << std::right << std::setw(5) << processorTypes_.at(i) << " ";
+        }
         os << "\n";
         os << std::setw(17) << "Memory bound: ";
-        for (unsigned i = 0U; i < numberOfProcessors_; i++) { os << std::right << std::setw(5) << memoryBound_.at(i) << " "; }
+        for (unsigned i = 0U; i < numberOfProcessors_; i++) {
+            os << std::right << std::setw(5) << memoryBound_.at(i) << " ";
+        }
         os << "\n";
     }
 

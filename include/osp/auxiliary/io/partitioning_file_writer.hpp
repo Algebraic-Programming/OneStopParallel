@@ -52,7 +52,9 @@ void write_txt(std::ostream &os, const PartitioningWithReplication<hypergraph_t>
 
     for (index_type node = 0; node < partition.getInstance().getHypergraph().num_vertices(); ++node) {
         os << node;
-        for (unsigned part : partition.assignedPartitions(node)) { os << " " << part; }
+        for (unsigned part : partition.assignedPartitions(node)) {
+            os << " " << part;
+        }
         os << std::endl;
     }
 }

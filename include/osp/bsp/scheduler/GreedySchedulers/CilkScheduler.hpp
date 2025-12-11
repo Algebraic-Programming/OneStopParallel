@@ -76,7 +76,9 @@ class CilkScheduler : public Scheduler<Graph_t> {
 
             p = 0;
             for (; p < instance.numberOfProcessors(); ++p) {
-                if (procFree[p]) { break; }
+                if (procFree[p]) {
+                    break;
+                }
             }
 
         } else if (mode == CILK) {
@@ -99,7 +101,9 @@ class CilkScheduler : public Scheduler<Graph_t> {
 
             std::vector<unsigned> canStealFrom;
             for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
-                if (!procQueue[i].empty()) { canStealFrom.push_back(i); }
+                if (!procQueue[i].empty()) {
+                    canStealFrom.push_back(i);
+                }
             }
 
             if (canStealFrom.empty()) {
@@ -169,7 +173,9 @@ class CilkScheduler : public Scheduler<Graph_t> {
 
         for (const auto &v : source_vertices_view(instance.getComputationalDag())) {
             ready.insert(v);
-            if (mode == CILK) { procQueue[0].push_front(v); }
+            if (mode == CILK) {
+                procQueue[0].push_front(v);
+            }
         }
 
         while (!finishTimes.empty()) {
@@ -185,7 +191,9 @@ class CilkScheduler : public Scheduler<Graph_t> {
                         ++nrPredecDone[succ];
                         if (nrPredecDone[succ] == instance.getComputationalDag().in_degree(succ)) {
                             ready.insert(succ);
-                            if (mode == CILK) { procQueue[schedule.proc[node]].push_back(succ); }
+                            if (mode == CILK) {
+                                procQueue[schedule.proc[node]].push_back(succ);
+                            }
                         }
                     }
                     procFree[schedule.proc[node]] = true;
@@ -211,7 +219,9 @@ class CilkScheduler : public Scheduler<Graph_t> {
                 finishTimes.insert({time + instance.getComputationalDag().vertex_work_weight(nextNode), nextNode});
                 procFree[nextProc] = false;
 
-                if (nrProcFree > 0) { --nrProcFree; }
+                if (nrProcFree > 0) {
+                    --nrProcFree;
+                }
 
                 greedyProcLists[nextProc].push_back(nextNode);
             }

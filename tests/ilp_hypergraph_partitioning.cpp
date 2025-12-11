@@ -61,7 +61,9 @@ BOOST_AUTO_TEST_CASE(test_full) {
     BOOST_CHECK(partition.satisfiesBalanceConstraint());
     BOOST_CHECK(partition.computeConnectivityCost() >= partition.computeCutNetCost());
 
-    for (unsigned node = 0; node < Hgraph.num_vertices(); ++node) { partition.setAssignedPartition(node, node % 3); }
+    for (unsigned node = 0; node < Hgraph.num_vertices(); ++node) {
+        partition.setAssignedPartition(node, node % 3);
+    }
 
     partitioner.setUseInitialSolution(true);
     partitioner.computePartitioning(partition);
@@ -89,7 +91,9 @@ BOOST_AUTO_TEST_CASE(test_full) {
     BOOST_CHECK(partition_rep.computeConnectivityCost() == 0);
 
     partitioner_rep.setUseInitialSolution(true);
-    for (unsigned node = 0; node < Hgraph.num_vertices(); ++node) { partition_rep.setAssignedPartitions(node, {node % 3}); }
+    for (unsigned node = 0; node < Hgraph.num_vertices(); ++node) {
+        partition_rep.setAssignedPartitions(node, {node % 3});
+    }
 
     partitioner_rep.computePartitioning(partition_rep);
     BOOST_CHECK(partition_rep.satisfiesBalanceConstraint());
@@ -114,7 +118,9 @@ BOOST_AUTO_TEST_CASE(test_full) {
     BOOST_CHECK(partition_rep.computeConnectivityCost() == 0);
 
     partitioner_rep.setUseInitialSolution(true);
-    for (unsigned node = 0; node < Hgraph.num_vertices(); ++node) { partition_rep.setAssignedPartitions(node, {node % 3}); }
+    for (unsigned node = 0; node < Hgraph.num_vertices(); ++node) {
+        partition_rep.setAssignedPartitions(node, {node % 3});
+    }
 
     partitioner_rep.computePartitioning(partition_rep);
     BOOST_CHECK(partition_rep.satisfiesBalanceConstraint());

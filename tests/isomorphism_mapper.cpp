@@ -57,7 +57,9 @@ BOOST_AUTO_TEST_CASE(Mapper_SimpleChain) {
 
     // Translate local map to global map for the test
     std::unordered_map<vertex_idx_t<graph_t>, vertex_idx_t<graph_t>> result_map;
-    for (const auto &[curr_local, rep_local] : result_map_local) { result_map[current_map[curr_local]] = rep_map[rep_local]; }
+    for (const auto &[curr_local, rep_local] : result_map_local) {
+        result_map[current_map[curr_local]] = rep_map[rep_local];
+    }
 
     BOOST_REQUIRE_EQUAL(result_map.size(), 3);
     // current global ID -> rep global ID
@@ -98,7 +100,9 @@ BOOST_AUTO_TEST_CASE(Mapper_ForkJoin) {
     auto result_map_local = mapper.find_mapping(current_graph);
 
     std::unordered_map<vertex_idx_t<graph_t>, vertex_idx_t<graph_t>> result_map;
-    for (const auto &[curr_local, rep_local] : result_map_local) { result_map[current_map[curr_local]] = rep_map[rep_local]; }
+    for (const auto &[curr_local, rep_local] : result_map_local) {
+        result_map[current_map[curr_local]] = rep_map[rep_local];
+    }
 
     BOOST_REQUIRE_EQUAL(result_map.size(), 4);
     // current global ID -> rep global ID
@@ -139,7 +143,9 @@ BOOST_AUTO_TEST_CASE(Mapper_DisconnectedComponents) {
     auto result_map_local = mapper.find_mapping(current_graph);
 
     std::unordered_map<vertex_idx_t<graph_t>, vertex_idx_t<graph_t>> result_map;
-    for (const auto &[curr_local, rep_local] : result_map_local) { result_map[current_map[curr_local]] = rep_map[rep_local]; }
+    for (const auto &[curr_local, rep_local] : result_map_local) {
+        result_map[current_map[curr_local]] = rep_map[rep_local];
+    }
 
     BOOST_REQUIRE_EQUAL(result_map.size(), 4);
 
@@ -188,7 +194,9 @@ BOOST_AUTO_TEST_CASE(Mapper_MultiPipeline) {
     auto result_map_local = mapper.find_mapping(current_graph);
 
     std::unordered_map<vertex_idx_t<graph_t>, vertex_idx_t<graph_t>> result_map;
-    for (const auto &[curr_local, rep_local] : result_map_local) { result_map[current_map[curr_local]] = rep_map[rep_local]; }
+    for (const auto &[curr_local, rep_local] : result_map_local) {
+        result_map[current_map[curr_local]] = rep_map[rep_local];
+    }
 
     BOOST_REQUIRE_EQUAL(result_map.size(), 6);
 
@@ -244,7 +252,9 @@ BOOST_AUTO_TEST_CASE(Mapper_ShuffledSymmetric) {
     auto result_map_local = mapper.find_mapping(current_graph);
 
     std::unordered_map<vertex_idx_t<graph_t>, vertex_idx_t<graph_t>> result_map;
-    for (const auto &[curr_local, rep_local] : result_map_local) { result_map[current_map[curr_local]] = rep_map[rep_local]; }
+    for (const auto &[curr_local, rep_local] : result_map_local) {
+        result_map[current_map[curr_local]] = rep_map[rep_local];
+    }
 
     BOOST_REQUIRE_EQUAL(result_map.size(), 6);
     // Check that structurally identical nodes are mapped, regardless of their original IDs.

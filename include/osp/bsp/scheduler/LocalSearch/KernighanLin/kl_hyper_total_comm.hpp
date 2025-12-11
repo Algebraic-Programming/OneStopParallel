@@ -47,14 +47,18 @@ class kl_hyper_total_comm : public kl_total<Graph_t, MemoryConstraint_t> {
         double comm_costs = 0;
 
         for (const auto &node : current_schedule.instance->getComputationalDag().vertices()) {
-            if (is_sink(node, current_schedule.instance->getComputationalDag())) { continue; }
+            if (is_sink(node, current_schedule.instance->getComputationalDag())) {
+                continue;
+            }
 
             std::unordered_set<unsigned> intersects;
 
             for (const auto &target : current_schedule.instance->getComputationalDag().children(node)) {
                 const unsigned &target_proc = current_schedule.vector_schedule.assignedProcessor(target);
 
-                if (current_schedule.vector_schedule.assignedProcessor(node) != target_proc) { intersects.insert(target_proc); }
+                if (current_schedule.vector_schedule.assignedProcessor(node) != target_proc) {
+                    intersects.insert(target_proc);
+                }
             }
 
             comm_costs += intersects.size() * current_schedule.instance->getComputationalDag().vertex_comm_weight(node);

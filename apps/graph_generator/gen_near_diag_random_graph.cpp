@@ -41,7 +41,9 @@ int main(int argc, char *argv[]) {
     double prob = std::atof(argv[2]);
     double bandwidth = std::atof(argv[3]);
     unsigned num_graphs = 1;
-    if (argc > 4) { num_graphs = static_cast<unsigned>(std::stoul(argv[3])); }
+    if (argc > 4) {
+        num_graphs = static_cast<unsigned>(std::stoul(argv[3]));
+    }
 
     // std::cout << "Vert: " << num_vert << " prob: " << prob << " bandwidth: " << bandwidth << " graphs: " <<
     // num_graphs << std::endl;

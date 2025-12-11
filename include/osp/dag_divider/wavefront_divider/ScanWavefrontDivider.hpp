@@ -42,10 +42,14 @@ class ScanWavefrontDivider : public AbstractWavefrontDivider<Graph_t> {
 
     std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> divide(const Graph_t &dag) override {
         this->dag_ptr_ = &dag;
-        if constexpr (enable_debug_print) { std::cout << "[DEBUG] Starting scan-all division." << std::endl; }
+        if constexpr (enable_debug_print) {
+            std::cout << "[DEBUG] Starting scan-all division." << std::endl;
+        }
 
         std::vector<std::vector<vertex_idx_t<Graph_t>>> level_sets = this->compute_wavefronts();
-        if (level_sets.empty()) { return {}; }
+        if (level_sets.empty()) {
+            return {};
+        }
 
         SequenceGenerator<Graph_t> generator(dag, level_sets);
         std::vector<double> sequence = generator.generate(sequence_metric_);
@@ -53,7 +57,9 @@ class ScanWavefrontDivider : public AbstractWavefrontDivider<Graph_t> {
         if constexpr (enable_debug_print) {
             std::cout << "[DEBUG]   Metric: " << static_cast<int>(sequence_metric_) << std::endl;
             std::cout << "[DEBUG]   Generated sequence: ";
-            for (const auto &val : sequence) { std::cout << val << " "; }
+            for (const auto &val : sequence) {
+                std::cout << val << " ";
+            }
             std::cout << std::endl;
         }
 
@@ -63,7 +69,9 @@ class ScanWavefrontDivider : public AbstractWavefrontDivider<Graph_t> {
 
         if constexpr (enable_debug_print) {
             std::cout << "[DEBUG]   Final cut levels: ";
-            for (const auto &level : cut_levels) { std::cout << level << " "; }
+            for (const auto &level : cut_levels) {
+                std::cout << level << " ";
+            }
             std::cout << std::endl;
         }
 

@@ -57,7 +57,9 @@ RETURN_STATUS HypergraphPartitioningILPWithReplication<hypergraph_t>::computePar
     this->setupFundamentalVariablesConstraintsObjective(result.getInstance(), model);
     setupExtraVariablesConstraints(result.getInstance(), model);
 
-    if (this->use_initial_solution) { setInitialSolution(result, model); }
+    if (this->use_initial_solution) {
+        setInitialSolution(result, model);
+    }
 
     this->solveILP(model);
 
@@ -182,12 +184,16 @@ void HypergraphPartitioningILPWithReplication<hypergraph_t>::setInitialSolution(
 
     const std::vector<std::vector<unsigned> > &assignments = partition.assignedPartitions();
     const unsigned &numPartitions = partition.getInstance().getNumberOfPartitions();
-    if (assignments.size() != partition.getInstance().getHypergraph().num_vertices()) { return; }
+    if (assignments.size() != partition.getInstance().getHypergraph().num_vertices()) {
+        return;
+    }
 
     for (index_type node = 0; node < assignments.size(); ++node) {
         std::vector<bool> assingedToPart(numPartitions, false);
         for (unsigned part : assignments[node]) {
-            if (part < numPartitions) { assingedToPart[part] = true; }
+            if (part < numPartitions) {
+                assingedToPart[part] = true;
+            }
         }
 
         for (unsigned part = 0; part < numPartitions; ++part) {

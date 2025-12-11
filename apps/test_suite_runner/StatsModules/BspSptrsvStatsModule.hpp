@@ -168,9 +168,13 @@ class BspSptrsvStatsModule : public IStatisticModule<TargetObjectType> {
             };
 
             // Permute back if needed
-            if (mode != NO_PERMUTE) { sim.permute_x_vector(perm); }
+            if (mode != NO_PERMUTE) {
+                sim.permute_x_vector(perm);
+            }
 
-            if (!compare_vectors(L_x_ref, L_x_osp)) { std::cout << "Output is not equal" << std::endl; }
+            if (!compare_vectors(L_x_ref, L_x_osp)) {
+                std::cout << "Output is not equal" << std::endl;
+            }
 
             const std::string prefix = mode_tag(mode);
             stats[prefix + "SpTrSV_Runtime_Geomean(ns)"] = to_str(geom_mean);

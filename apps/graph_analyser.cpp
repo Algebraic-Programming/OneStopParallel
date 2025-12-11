@@ -46,14 +46,20 @@ void add_graph_stats(const ComputationalDag &graph, std::ofstream &outfile) {
 
         edge_lengths.emplace(diff);
         sum_edge_length += diff;
-        if (diff == 1) { short_edges += 1; }
+        if (diff == 1) {
+            short_edges += 1;
+        }
     }
     unsigned median_edge_length = 0;
-    if (!edge_lengths.empty()) { median_edge_length = Get_Median(edge_lengths); }
+    if (!edge_lengths.empty()) {
+        median_edge_length = Get_Median(edge_lengths);
+    }
 
     Get_Median(edge_lengths);
 
-    if (graph.num_edges() != 0) { avg_edge_length = static_cast<float>(sum_edge_length) / static_cast<float>(graph.num_edges()); }
+    if (graph.num_edges() != 0) {
+        avg_edge_length = static_cast<float>(sum_edge_length) / static_cast<float>(graph.num_edges());
+    }
 
     // Longest Path
     unsigned longest_path = 1;
@@ -71,7 +77,9 @@ void add_graph_stats(const ComputationalDag &graph, std::ofstream &outfile) {
     // Average bottom distance
     std::vector<unsigned> bot_level = get_bottom_node_distance(graph);
     size_t bot_level_sum = 0;
-    for (size_t i = 0; i < bot_level.size(); i++) { bot_level_sum += bot_level[i]; }
+    for (size_t i = 0; i < bot_level.size(); i++) {
+        bot_level_sum += bot_level[i];
+    }
     float avg_bot_level = static_cast<float>(bot_level_sum) / static_cast<float>(bot_level.size());
 
     // // Number of Triangles
@@ -143,7 +151,9 @@ int main(int argc, char *argv[]) {
                        << std::endl;
 
     for (const auto &dirEntry : std::filesystem::recursive_directory_iterator(graph_dir)) {
-        if (std::filesystem::is_directory(dirEntry)) { continue; }
+        if (std::filesystem::is_directory(dirEntry)) {
+            continue;
+        }
 
         std::cout << "Processing: " << dirEntry << std::endl;
 
@@ -156,7 +166,9 @@ int main(int argc, char *argv[]) {
             return 1;
         }
 
-        if (!status) { continue; }
+        if (!status) {
+            continue;
+        }
 
         std::string graph_name = path_str.substr(path_str.rfind("/") + 1);
         graph_name = graph_name.substr(0, graph_name.rfind("."));

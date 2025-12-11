@@ -77,7 +77,9 @@ class hdagg_coarser : public CoarserGenContractionMap<Graph_t_in, Graph_t_out> {
         auto edge_mask = long_edges_in_triangles(dag_in);
         const auto edge_mast_end = edge_mask.cend();
 
-        for (const auto &sink : sink_vertices_view(dag_in)) { vertex_map.push_back(std::vector<VertexType_in>({sink})); }
+        for (const auto &sink : sink_vertices_view(dag_in)) {
+            vertex_map.push_back(std::vector<VertexType_in>({sink}));
+        }
 
         std::size_t part_ind = 0;
         std::size_t partition_size = vertex_map.size();
@@ -93,11 +95,15 @@ class hdagg_coarser : public CoarserGenContractionMap<Graph_t_in, Graph_t_out> {
                 bool indegree_one = true;
 
                 for (const auto &in_edge : in_edges(vert, dag_in)) {
-                    if (edge_mask.find(in_edge) != edge_mast_end) { continue; }
+                    if (edge_mask.find(in_edge) != edge_mast_end) {
+                        continue;
+                    }
 
                     unsigned count = 0;
                     for (const auto &out_edge : out_edges(source(in_edge, dag_in), dag_in)) {
-                        if (edge_mask.find(out_edge) != edge_mast_end) { continue; }
+                        if (edge_mask.find(out_edge) != edge_mast_end) {
+                            continue;
+                        }
 
                         count++;
                         if (count > 1) {
@@ -106,12 +112,16 @@ class hdagg_coarser : public CoarserGenContractionMap<Graph_t_in, Graph_t_out> {
                         }
                     }
 
-                    if (not indegree_one) { break; }
+                    if (not indegree_one) {
+                        break;
+                    }
                 }
 
                 if (indegree_one) {
                     for (const auto &in_edge : in_edges(vert, dag_in)) {
-                        if (edge_mask.find(in_edge) != edge_mast_end) { continue; }
+                        if (edge_mask.find(in_edge) != edge_mast_end) {
+                            continue;
+                        }
 
                         const auto &edge_source = source(in_edge, dag_in);
 
@@ -141,7 +151,9 @@ class hdagg_coarser : public CoarserGenContractionMap<Graph_t_in, Graph_t_out> {
                     }
                 } else {
                     for (const auto &in_edge : in_edges(vert, dag_in)) {
-                        if (edge_mask.find(in_edge) != edge_mast_end) { continue; }
+                        if (edge_mask.find(in_edge) != edge_mast_end) {
+                            continue;
+                        }
 
                         const auto &edge_source = source(in_edge, dag_in);
 

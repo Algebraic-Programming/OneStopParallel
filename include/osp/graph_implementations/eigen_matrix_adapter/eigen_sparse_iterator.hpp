@@ -41,7 +41,9 @@ class EigenCSRRange {
         bool at_end_;
 
         void skip_diagonal() {
-            while (((!at_end_) && (it_.row() == skip_)) & (it_.col() == skip_)) { ++(*this); }
+            while (((!at_end_) && (it_.row() == skip_)) & (it_.col() == skip_)) {
+                ++(*this);
+            }
         }
 
       public:
@@ -112,7 +114,9 @@ class EigenCSCRange {
         bool at_end_;
 
         void skip_diagonal() {
-            while ((!at_end_) & (it_.row() == skip_) & (it_.col() == skip_)) { ++(*this); }
+            while ((!at_end_) & (it_.row() == skip_) & (it_.col() == skip_)) {
+                ++(*this);
+            }
         }
 
       public:

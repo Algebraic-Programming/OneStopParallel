@@ -36,11 +36,15 @@ template <typename GraphT>
 void check_partition_type_homogeneity(const GraphT &dag, const std::vector<vertex_idx_t<GraphT>> &partition) {
     // Group partitions by their ID
     std::map<vertex_idx_t<GraphT>, std::vector<vertex_idx_t<GraphT>>> partitions;
-    for (vertex_idx_t<GraphT> i = 0; i < dag.num_vertices(); ++i) { partitions[partition[i]].push_back(i); }
+    for (vertex_idx_t<GraphT> i = 0; i < dag.num_vertices(); ++i) {
+        partitions[partition[i]].push_back(i);
+    }
 
     // For each partition, check that all vertices have the same type
     for (const auto &[part_id, vertices] : partitions) {
-        if (vertices.empty()) { continue; }
+        if (vertices.empty()) {
+            continue;
+        }
         const auto first_node_type = dag.vertex_type(vertices[0]);
         for (const auto &vertex : vertices) {
             if (dag.vertex_type(vertex) != first_node_type) {

@@ -68,7 +68,9 @@ class IsomorphismMapper {
         if (current_graph.num_vertices() != num_vertices) {
             throw std::runtime_error("IsomorphismMapper: Graph sizes do not match.");
         }
-        if (num_vertices == 0) { return {}; }
+        if (num_vertices == 0) {
+            return {};
+        }
 
         // 1. Compute hashes and orbits for the current graph.
         MerkleHashComputer<Constr_Graph_t> current_hasher(current_graph);
@@ -156,12 +158,16 @@ class IsomorphismMapper {
             }
         }
 
-        if (mapped_count != num_vertices) { throw std::runtime_error("IsomorphismMapper: Failed to map all vertices."); }
+        if (mapped_count != num_vertices) {
+            throw std::runtime_error("IsomorphismMapper: Failed to map all vertices.");
+        }
 
         // 4. Return the inverted map.
         std::unordered_map<VertexC, VertexC> current_local_to_rep_local;
         current_local_to_rep_local.reserve(num_vertices);
-        for (VertexC i = 0; i < num_vertices; ++i) { current_local_to_rep_local[map_current_to_rep[i]] = i; }
+        for (VertexC i = 0; i < num_vertices; ++i) {
+            current_local_to_rep_local[map_current_to_rep[i]] = i;
+        }
         return current_local_to_rep_local;
     }
 
@@ -182,10 +188,14 @@ class IsomorphismMapper {
         const auto &curr_neighbors_range = match_children ? current_graph.children(u_curr) : current_graph.parents(u_curr);
 
         for (const auto &v_rep : rep_neighbors_range) {
-            if (rep_is_mapped[v_rep]) { continue; }
+            if (rep_is_mapped[v_rep]) {
+                continue;
+            }
 
             for (const auto &v_curr : curr_neighbors_range) {
-                if (current_is_mapped[v_curr]) { continue; }
+                if (current_is_mapped[v_curr]) {
+                    continue;
+                }
 
                 if (rep_hasher.get_vertex_hash(v_rep) == current_hasher.get_vertex_hash(v_curr)) {
                     map_current_to_rep[v_rep] = v_curr;

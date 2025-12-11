@@ -89,8 +89,12 @@ class SquashA : public CoarserGenExpansionMap<Graph_t_in, Graph_t_out> {
                 const vertex_idx_t<Graph_t_in> edge_target = target(edge_d, dag_in);
 
                 // Previously merged
-                if (merged_nodes[edge_source]) { continue; }
-                if (merged_nodes[edge_target]) { continue; }
+                if (merged_nodes[edge_source]) {
+                    continue;
+                }
+                if (merged_nodes[edge_target]) {
+                    continue;
+                }
 
                 // weight check
                 if (connected_components.get_weight_of_component_by_name(edge_source)
@@ -106,40 +110,72 @@ class SquashA : public CoarserGenExpansionMap<Graph_t_in, Graph_t_out> {
                 // Checks over all affected edges
                 // In edges first
                 for (const auto &node : dag_in.parents(edge_source)) {
-                    if (node == edge_target) { continue; }
-                    if (!merged_nodes[node]) { continue; }
-                    if (poset_int_mapping[edge_source] >= poset_int_mapping[node] + 2) { continue; }
+                    if (node == edge_target) {
+                        continue;
+                    }
+                    if (!merged_nodes[node]) {
+                        continue;
+                    }
+                    if (poset_int_mapping[edge_source] >= poset_int_mapping[node] + 2) {
+                        continue;
+                    }
                     check_failed = true;
                     break;
                 }
-                if (check_failed) { continue; }
+                if (check_failed) {
+                    continue;
+                }
                 // Out edges first
                 for (const auto &node : dag_in.children(edge_source)) {
-                    if (node == edge_target) { continue; }
-                    if (!merged_nodes[node]) { continue; }
-                    if (poset_int_mapping[node] >= poset_int_mapping[edge_source] + 2) { continue; }
+                    if (node == edge_target) {
+                        continue;
+                    }
+                    if (!merged_nodes[node]) {
+                        continue;
+                    }
+                    if (poset_int_mapping[node] >= poset_int_mapping[edge_source] + 2) {
+                        continue;
+                    }
                     check_failed = true;
                     break;
                 }
-                if (check_failed) { continue; }
+                if (check_failed) {
+                    continue;
+                }
                 // In edges second
                 for (const auto &node : dag_in.parents(edge_target)) {
-                    if (node == edge_source) { continue; }
-                    if (!merged_nodes[node]) { continue; }
-                    if (poset_int_mapping[edge_target] >= poset_int_mapping[node] + 2) { continue; }
+                    if (node == edge_source) {
+                        continue;
+                    }
+                    if (!merged_nodes[node]) {
+                        continue;
+                    }
+                    if (poset_int_mapping[edge_target] >= poset_int_mapping[node] + 2) {
+                        continue;
+                    }
                     check_failed = true;
                     break;
                 }
-                if (check_failed) { continue; }
+                if (check_failed) {
+                    continue;
+                }
                 // Out edges second
                 for (const auto &node : dag_in.children(edge_target)) {
-                    if (node == edge_source) { continue; }
-                    if (!merged_nodes[node]) { continue; }
-                    if (poset_int_mapping[node] >= poset_int_mapping[edge_target] + 2) { continue; }
+                    if (node == edge_source) {
+                        continue;
+                    }
+                    if (!merged_nodes[node]) {
+                        continue;
+                    }
+                    if (poset_int_mapping[node] >= poset_int_mapping[edge_target] + 2) {
+                        continue;
+                    }
                     check_failed = true;
                     break;
                 }
-                if (check_failed) { continue; }
+                if (check_failed) {
+                    continue;
+                }
 
                 // merging
                 connected_components.join_by_name(edge_source, edge_target);
@@ -203,7 +239,9 @@ std::vector<int> SquashA<Graph_t_in, Graph_t_out>::generate_poset_in_map(const G
         } else {
             std::vector<int> bot_dist = get_bottom_node_distance<Graph_t_in, int>(dag_in);
             poset_int_mapping.resize(bot_dist.size());
-            for (std::size_t i = 0; i < bot_dist.size(); i++) { poset_int_mapping[i] = -bot_dist[i]; }
+            for (std::size_t i = 0; i < bot_dist.size(); i++) {
+                poset_int_mapping[i] = -bot_dist[i];
+            }
         }
     }
     return poset_int_mapping;

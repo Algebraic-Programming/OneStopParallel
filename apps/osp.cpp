@@ -182,7 +182,9 @@ int main(int argc, char *argv[]) {
 
         int tw = 1, ww = 1, cw = 1, nsw = 1, ct = 1;
         for (size_t i = 0; i < parser.scheduler.size(); i++) {
-            if (schedulers_failed[i]) { continue; }
+            if (schedulers_failed[i]) {
+                continue;
+            }
             tw = std::max(tw, 1 + int(std::log10(schedulers_costs[i])));
             ww = std::max(ww, 1 + int(std::log10(schedulers_work_costs[i])));
             cw = std::max(cw, 1 + int(std::log10(schedulers_costs[i] - schedulers_work_costs[i])));

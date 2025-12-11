@@ -85,7 +85,9 @@ int main(int argc, char *argv[]) {
     if (file_ending == "hdag") {
         graph dag;
         file_status = file_reader::readComputationalDagHyperdagFormatDB(filename_hgraph, dag);
-        if (file_status) { instance.getHypergraph() = convert_from_cdag_as_hyperdag<hypergraph, graph>(dag); }
+        if (file_status) {
+            instance.getHypergraph() = convert_from_cdag_as_hyperdag<hypergraph, graph>(dag);
+        }
     } else if (file_ending == "mtx") {
         file_status = file_reader::readHypergraphMartixMarketFormat(filename_hgraph, instance.getHypergraph());
     } else {
@@ -105,8 +107,12 @@ int main(int argc, char *argv[]) {
     for (size_t node = 0; node < instance.getHypergraph().num_vertices(); ++node) {
         initial_partition.setAssignedPartition(node, static_cast<unsigned>(node % static_cast<size_t>(nr_parts)));
     }
-    if (nr_parts == 2) { fm.ImprovePartitioning(initial_partition); }
-    if (nr_parts == 4 || nr_parts == 8 || nr_parts == 16 || nr_parts == 32) { fm.RecursiveFM(initial_partition); }
+    if (nr_parts == 2) {
+        fm.ImprovePartitioning(initial_partition);
+    }
+    if (nr_parts == 4 || nr_parts == 8 || nr_parts == 16 || nr_parts == 32) {
+        fm.RecursiveFM(initial_partition);
+    }
 
     if (replicate > 0) {
         PartitioningWithReplication<hypergraph> partition(instance);
@@ -115,7 +121,9 @@ int main(int argc, char *argv[]) {
         for (size_t node = 0; node < instance.getHypergraph().num_vertices(); ++node) {
             partition.setAssignedPartitions(node, {initial_partition.assignedPartition(node)});
         }
-        if (partition.satisfiesBalanceConstraint()) { partitioner.setUseInitialSolution(true); }
+        if (partition.satisfiesBalanceConstraint()) {
+            partitioner.setUseInitialSolution(true);
+        }
 
         partitioner.setTimeLimitSeconds(600);
         if (replicate == 2) {
@@ -143,7 +151,9 @@ int main(int argc, char *argv[]) {
         for (size_t node = 0; node < instance.getHypergraph().num_vertices(); ++node) {
             partition.setAssignedPartition(node, initial_partition.assignedPartition(node));
         }
-        if (partition.satisfiesBalanceConstraint()) { partitioner.setUseInitialSolution(true); }
+        if (partition.satisfiesBalanceConstraint()) {
+            partitioner.setUseInitialSolution(true);
+        }
 
         partitioner.setTimeLimitSeconds(600);
 

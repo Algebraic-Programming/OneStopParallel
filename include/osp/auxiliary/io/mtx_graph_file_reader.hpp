@@ -40,7 +40,9 @@ bool readComputationalDagMartixMarketFormat(std::ifstream &infile, Graph_t &grap
 
     // Skip comments or empty lines (robustly)
     while (std::getline(infile, line)) {
-        if (line.empty() || line[0] == '%') { continue; }
+        if (line.empty() || line[0] == '%') {
+            continue;
+        }
 
         // Null byte check
         if (line.find('\0') != std::string::npos) {
@@ -77,11 +79,15 @@ bool readComputationalDagMartixMarketFormat(std::ifstream &infile, Graph_t &grap
     std::vector<int> node_work_wts(num_nodes, 0);
     std::vector<int> node_comm_wts(num_nodes, 1);
 
-    for (vertex_t i = 0; i < num_nodes; ++i) { graph.add_vertex(1, 1, 1); }
+    for (vertex_t i = 0; i < num_nodes; ++i) {
+        graph.add_vertex(1, 1, 1);
+    }
 
     int entries_read = 0;
     while (entries_read < nEntries && std::getline(infile, line)) {
-        if (line.empty() || line[0] == '%') { continue; }
+        if (line.empty() || line[0] == '%') {
+            continue;
+        }
         if (line.size() > MAX_LINE_LENGTH) {
             std::cerr << "Error: Line too long.\n";
             return false;

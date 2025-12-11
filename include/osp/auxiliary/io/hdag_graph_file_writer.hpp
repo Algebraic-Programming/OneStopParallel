@@ -60,14 +60,18 @@ void writeComputationalDagHyperdagFormatDB(std::ostream &os, const Graph_t &grap
     os << num_hyperedges << " " << num_vertices << " " << num_pins << "\n";
 
     // Hyperedges
-    if (write_comment_lines) { os << "%% Hyperedges: ID comm_weight mem_weight\n"; }
+    if (write_comment_lines) {
+        os << "%% Hyperedges: ID comm_weight mem_weight\n";
+    }
     for (unsigned i = 0; i < num_hyperedges; ++i) {
         const auto u = hyperedge_idx_to_node[i];
         os << i << " " << graph.vertex_comm_weight(u) << " " << graph.vertex_mem_weight(u) << "\n";
     }
 
     // Vertices
-    if (write_comment_lines) { os << "%% Vertices: ID work_weight type\n"; }
+    if (write_comment_lines) {
+        os << "%% Vertices: ID work_weight type\n";
+    }
     for (const auto &u : graph.vertices()) {
         os << u << " " << graph.vertex_work_weight(u);
         if constexpr (has_typed_vertices_v<Graph_t>) {
@@ -79,7 +83,9 @@ void writeComputationalDagHyperdagFormatDB(std::ostream &os, const Graph_t &grap
     }
 
     // Pins
-    if (write_comment_lines) { os << "%% Pins: HyperedgeID NodeID\n"; }
+    if (write_comment_lines) {
+        os << "%% Pins: HyperedgeID NodeID\n";
+    }
     for (unsigned i = 0; i < num_hyperedges; ++i) {
         const auto u = hyperedge_idx_to_node[i];
         os << i << " " << u << "\n";    // Source pin

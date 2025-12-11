@@ -46,7 +46,9 @@ bool check_vertex_maps(const std::vector<std::vector<std::vector<vertex_idx_t<Gr
     std::unordered_set<vertex_idx_t<Graph_t>> all_vertices;
     for (const auto &step : maps) {
         for (const auto &subgraph : step) {
-            for (const auto &vertex : subgraph) { all_vertices.insert(vertex); }
+            for (const auto &vertex : subgraph) {
+                all_vertices.insert(vertex);
+            }
         }
     }
 
@@ -76,7 +78,9 @@ BOOST_AUTO_TEST_CASE(wavefront_component_divider) {
         ScanWavefrontDivider<graph_t> wavefront;
         auto maps = wavefront.divide(graph);
 
-        if (!maps.empty()) { BOOST_CHECK(check_vertex_maps(maps, graph)); }
+        if (!maps.empty()) {
+            BOOST_CHECK(check_vertex_maps(maps, graph));
+        }
     }
 }
 
@@ -106,6 +110,8 @@ BOOST_AUTO_TEST_CASE(wavefront_component_parallelism_divider) {
 
         auto maps = wavefront.divide(graph);
 
-        if (!maps.empty()) { BOOST_CHECK(check_vertex_maps(maps, graph)); }
+        if (!maps.empty()) {
+            BOOST_CHECK(check_vertex_maps(maps, graph));
+        }
     }
 }

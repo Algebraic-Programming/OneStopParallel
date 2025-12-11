@@ -47,7 +47,9 @@ class CoarseAndSchedule : public Scheduler<Graph_t> {
 
         bool status = coarser.coarsenDag(instance.getComputationalDag(), instance_coarse.getComputationalDag(), reverse_vertex_map);
 
-        if (!status) { return RETURN_STATUS::ERROR; }
+        if (!status) {
+            return RETURN_STATUS::ERROR;
+        }
 
         instance_coarse.getArchitecture() = instance.getArchitecture();
         instance_coarse.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
@@ -56,7 +58,9 @@ class CoarseAndSchedule : public Scheduler<Graph_t> {
 
         const auto status_coarse = scheduler.computeSchedule(schedule_coarse);
 
-        if (status_coarse != RETURN_STATUS::OSP_SUCCESS and status_coarse != RETURN_STATUS::BEST_FOUND) { return status_coarse; }
+        if (status_coarse != RETURN_STATUS::OSP_SUCCESS and status_coarse != RETURN_STATUS::BEST_FOUND) {
+            return status_coarse;
+        }
 
         coarser_util::pull_back_schedule(schedule_coarse, reverse_vertex_map, schedule);
 

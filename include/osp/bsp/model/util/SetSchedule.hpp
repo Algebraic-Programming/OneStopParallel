@@ -115,7 +115,9 @@ class SetSchedule : public IBspSchedule<Graph_t> {
     unsigned assignedSuperstep(vertex_idx node) const override {
         for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
             for (unsigned step = 0; step < number_of_supersteps; step++) {
-                if (step_processor_vertices[step][proc].find(node) != step_processor_vertices[step][proc].end()) { return step; }
+                if (step_processor_vertices[step][proc].find(node) != step_processor_vertices[step][proc].end()) {
+                    return step;
+                }
             }
         }
 
@@ -128,7 +130,9 @@ class SetSchedule : public IBspSchedule<Graph_t> {
     unsigned assignedProcessor(vertex_idx node) const override {
         for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
             for (unsigned step = 0; step < number_of_supersteps; step++) {
-                if (step_processor_vertices[step][proc].find(node) != step_processor_vertices[step][proc].end()) { return proc; }
+                if (step_processor_vertices[step][proc].find(node) != step_processor_vertices[step][proc].end()) {
+                    return proc;
+                }
             }
         }
 
@@ -190,7 +194,9 @@ static void printSetScheduleWorkMemNodesGrid(std::ostream &os,
 
     // Print header row (Supersteps)
     os << std::left << std::setw(cell_width) << "P\\SS";
-    for (unsigned s = 0; s < num_supersteps; ++s) { os << std::setw(cell_width) << ("SS " + std::to_string(s)); }
+    for (unsigned s = 0; s < num_supersteps; ++s) {
+        os << std::setw(cell_width) << ("SS " + std::to_string(s));
+    }
     os << "\n";
 
     // Print separator line
@@ -221,7 +227,9 @@ static void printSetScheduleWorkMemNodesGrid(std::ostream &os,
                     os << "P" << p << " SS" << s << " Nodes: [";
                     for (size_t i = 0; i < nodes_per_cell[p][s].size(); ++i) {
                         os << nodes_per_cell[p][s][i];
-                        if (i < nodes_per_cell[p][s].size() - 1) { os << ", "; }
+                        if (i < nodes_per_cell[p][s].size() - 1) {
+                            os << ", ";
+                        }
                     }
                     os << "]\n";
                 }

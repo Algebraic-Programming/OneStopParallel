@@ -62,7 +62,9 @@ void constructComputationalDag(const Graph_from &from, Graph_to &to) {
         }
     } else {
         for (const auto &v : from.vertices()) {
-            for (const auto &child : from.children(v)) { to.add_edge(vertex_map[v], vertex_map[child]); }
+            for (const auto &child : from.children(v)) {
+                to.add_edge(vertex_map[v], vertex_map[child]);
+            }
         }
     }
 }

@@ -69,7 +69,9 @@ struct ConfigParser {
         bool algorithm_found = false;
         std::string algorithm_identifier = name;
 
-        while (algorithm_identifier.find("-") == 0) { algorithm_identifier = algorithm_identifier.substr(1); }
+        while (algorithm_identifier.find("-") == 0) {
+            algorithm_identifier = algorithm_identifier.substr(1);
+        }
 
         for (auto &algorithm : scheduler_config) {
             std::string alg_name = algorithm.second.get_child("name").get_value<std::string>();
@@ -97,7 +99,9 @@ struct ConfigParser {
 
         pt::ptree scheduler_config_parse = loadPtreeRoot.get_child("algorithms");
         for (auto &algorithm : scheduler_config_parse) {
-            if (algorithm.second.get_child("run").get_value<bool>()) { scheduler.push_back(algorithm); }
+            if (algorithm.second.get_child("run").get_value<bool>()) {
+                scheduler.push_back(algorithm);
+            }
         }
     }
 

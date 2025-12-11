@@ -143,7 +143,9 @@ bool validate_affinity_tables(kl_improver_test<Graph_t, comm_cost_function_t, Me
     }
 
     std::cout << "\n  [" << context << "] Validating " << selected_nodes.size() << " selected nodes: { ";
-    for (const auto n : selected_nodes) { std::cout << n << " "; }
+    for (const auto n : selected_nodes) {
+        std::cout << n << " ";
+    }
     std::cout << "}" << std::endl;
 
     // Compute affinities for all selected nodes
@@ -162,14 +164,18 @@ bool validate_affinity_tables(kl_improver_test<Graph_t, comm_cost_function_t, Me
         unsigned node_step = kl_incremental.get_active_schedule().assigned_superstep(node);
 
         for (unsigned p = 0; p < num_procs; ++p) {
-            if (p >= affinity_inc.size() || p >= affinity_fresh.size()) { continue; }
+            if (p >= affinity_inc.size() || p >= affinity_fresh.size()) {
+                continue;
+            }
 
             for (unsigned idx = 0; idx < affinity_inc[p].size() && idx < affinity_fresh[p].size(); ++idx) {
                 int step_offset = static_cast<int>(idx) - static_cast<int>(window_size);
                 int target_step_signed = static_cast<int>(node_step) + step_offset;
 
                 // Skip affinities for supersteps that don't exist
-                if (target_step_signed < 0 || target_step_signed >= static_cast<int>(num_steps)) { continue; }
+                if (target_step_signed < 0 || target_step_signed >= static_cast<int>(num_steps)) {
+                    continue;
+                }
 
                 double val_inc = affinity_inc[p][idx];
                 double val_fresh = affinity_fresh[p][idx];

@@ -43,7 +43,9 @@ std::vector<std::vector<vertex_idx_t<Graph_t>>> strongly_connected_components(co
 
     using VertexType = vertex_idx_t<Graph_t>;
     const auto num_vertices = graph.num_vertices();
-    if (num_vertices == 0) { return {}; }
+    if (num_vertices == 0) {
+        return {};
+    }
 
     const VertexType unvisited = std::numeric_limits<VertexType>::max();
     std::vector<VertexType> ids(num_vertices, unvisited);
@@ -90,7 +92,9 @@ std::vector<std::vector<vertex_idx_t<Graph_t>>> strongly_connected_components(co
                             s.pop();
                             on_stack[node] = false;
                             scc.push_back(node);
-                            if (node == at) { break; }
+                            if (node == at) {
+                                break;
+                            }
                         }
                         sccs.emplace_back(std::move(scc));
                     }

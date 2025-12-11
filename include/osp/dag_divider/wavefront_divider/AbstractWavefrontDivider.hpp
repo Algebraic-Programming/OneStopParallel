@@ -58,10 +58,14 @@ class AbstractWavefrontDivider : public IDagDivider<Graph_t> {
             }
             for (const auto &node : level_sets[i]) {
                 for (const auto &child : dag_ptr_->children(node)) {
-                    if (uf.is_in_universe(child)) { uf.join_by_name(node, child); }
+                    if (uf.is_in_universe(child)) {
+                        uf.join_by_name(node, child);
+                    }
                 }
                 for (const auto &parent : dag_ptr_->parents(node)) {
-                    if (uf.is_in_universe(parent)) { uf.join_by_name(parent, node); }
+                    if (uf.is_in_universe(parent)) {
+                        uf.join_by_name(parent, node);
+                    }
                 }
             }
         }
@@ -83,7 +87,9 @@ class AbstractWavefrontDivider : public IDagDivider<Graph_t> {
      * This method is now const.
      */
     std::vector<std::vector<VertexType>> compute_wavefronts_for_subgraph(const std::vector<VertexType> &vertices) const {
-        if (vertices.empty()) { return {}; }
+        if (vertices.empty()) {
+            return {};
+        }
 
         std::vector<std::vector<VertexType>> level_sets;
         std::unordered_set<VertexType> vertex_set(vertices.begin(), vertices.end());
@@ -93,9 +99,13 @@ class AbstractWavefrontDivider : public IDagDivider<Graph_t> {
         for (const auto &v : vertices) {
             in_degree[v] = 0;
             for (const auto &p : dag_ptr_->parents(v)) {
-                if (vertex_set.count(p)) { in_degree[v]++; }
+                if (vertex_set.count(p)) {
+                    in_degree[v]++;
+                }
             }
-            if (in_degree[v] == 0) { q.push(v); }
+            if (in_degree[v] == 0) {
+                q.push(v);
+            }
         }
 
         while (!q.empty()) {
@@ -108,7 +118,9 @@ class AbstractWavefrontDivider : public IDagDivider<Graph_t> {
                 for (const auto &v : dag_ptr_->children(u)) {
                     if (vertex_set.count(v)) {
                         in_degree[v]--;
-                        if (in_degree[v] == 0) { q.push(v); }
+                        if (in_degree[v] == 0) {
+                            q.push(v);
+                        }
                     }
                 }
             }

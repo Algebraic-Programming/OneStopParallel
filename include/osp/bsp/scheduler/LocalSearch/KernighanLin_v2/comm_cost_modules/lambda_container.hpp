@@ -192,7 +192,9 @@ struct lambda_vector_container {
              */
             lambda_vector_iterator(const std::vector<unsigned> &vec) : vec_(vec), index_(0) {
                 // Advance to the first valid entry
-                while (index_ < vec_.size() && vec_[index_] == 0) { ++index_; }
+                while (index_ < vec_.size() && vec_[index_] == 0) {
+                    ++index_;
+                }
             }
 
             /**
@@ -208,7 +210,9 @@ struct lambda_vector_container {
              */
             lambda_vector_iterator &operator++() {
                 ++index_;
-                while (index_ < vec_.size() && vec_[index_] == 0) { ++index_; }
+                while (index_ < vec_.size() && vec_[index_] == 0) {
+                    ++index_;
+                }
                 return *this;
             }
 
@@ -319,7 +323,9 @@ struct lambda_vector_container {
     inline unsigned get_proc_count(const vertex_idx_t node) const {
         unsigned count = 0;
         for (unsigned proc = 0; proc < num_procs_; ++proc) {
-            if (node_lambda_vec[node][proc] > 0) { ++count; }
+            if (node_lambda_vec[node][proc] > 0) {
+                ++count;
+            }
         }
         return count;
     }

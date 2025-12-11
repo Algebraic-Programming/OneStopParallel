@@ -56,7 +56,9 @@ class kl_total : public kl_base<Graph_t, MemoryConstraint_t> {
         v_workw_t<Graph_t> max_node_weight_ = 0;
 
         for (const auto vertex : current_schedule.instance->getComputationalDag().vertices()) {
-            if (is_sink(vertex, current_schedule.instance->getComputationalDag())) { continue; }
+            if (is_sink(vertex, current_schedule.instance->getComputationalDag())) {
+                continue;
+            }
 
             max_edge_weight_
                 = std::max(max_edge_weight_, current_schedule.instance->getComputationalDag().vertex_comm_weight(vertex));

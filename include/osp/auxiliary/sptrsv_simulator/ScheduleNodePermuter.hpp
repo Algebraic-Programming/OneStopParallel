@@ -72,7 +72,9 @@ std::vector<size_t> schedule_node_permuter_basic(const BspSchedule<Graph_t> &sch
                 }
             }
 
-            if (mode == SNAKE_PROCESSORS) { forward = !forward; }
+            if (mode == SNAKE_PROCESSORS) {
+                forward = !forward;
+            }
         }
     } else {
         throw std::logic_error("Permutation mode not implemented.");

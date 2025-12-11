@@ -37,7 +37,9 @@ namespace osp {
 // unbiased random int generator
 inline int randInt(int lim) {
     int rnd = std::rand();
-    while (rnd >= RAND_MAX - RAND_MAX % lim) { rnd = std::rand(); }
+    while (rnd >= RAND_MAX - RAND_MAX % lim) {
+        rnd = std::rand();
+    }
 
     return rnd % lim;
 }
@@ -78,7 +80,9 @@ using intTriple = Triple<int, int, int>;
 inline bool isDisjoint(std::vector<intPair> &intervals) {
     sort(intervals.begin(), intervals.end());
     for (size_t i = 0; i + 1 < intervals.size(); ++i) {
-        if (intervals[i].b > intervals[i + 1].a) { return false; }
+        if (intervals[i].b > intervals[i + 1].a) {
+            return false;
+        }
     }
 
     return true;
@@ -89,11 +93,17 @@ template <typename T>
 constexpr T intpow(T base, unsigned exp) {
     static_assert(std::is_integral<T>::value);
 
-    if (exp == 0U) { return 1; }
-    if (exp == 1U) { return base; }
+    if (exp == 0U) {
+        return 1;
+    }
+    if (exp == 1U) {
+        return base;
+    }
 
     T tmp = intpow(base, exp / 2U);
-    if (exp % 2U == 0U) { return tmp * tmp; }
+    if (exp % 2U == 0U) {
+        return tmp * tmp;
+    }
     return base * tmp * tmp;
 }
 
@@ -117,8 +127,12 @@ static const std::vector<std::string> possibleModes{
 // modify problem filename by adding substring at the right place
 inline std::string editFilename(const std::string &filename, const std::string &toInsert) {
     auto pos = filename.find("_coarse");
-    if (pos == std::string::npos) { pos = filename.find("_instance"); }
-    if (pos == std::string::npos) { return toInsert + filename; }
+    if (pos == std::string::npos) {
+        pos = filename.find("_instance");
+    }
+    if (pos == std::string::npos) {
+        return toInsert + filename;
+    }
 
     return filename.substr(0, pos) + toInsert + filename.substr(pos, filename.length() - pos);
 }
@@ -130,7 +144,9 @@ std::unordered_set<T> get_intersection(const std::unordered_set<T> &a, const std
     const auto &larger = a.size() > b.size() ? a : b;
     const auto &smaller = a.size() <= b.size() ? a : b;
     for (const auto &each : smaller) {
-        if (larger.find(each) != larger.end()) { result.emplace_back(each); }
+        if (larger.find(each) != larger.end()) {
+            result.emplace_back(each);
+        }
     }
     return {result.begin(), result.end()};
 }
@@ -140,7 +156,9 @@ template <typename T>
 std::unordered_set<T> get_union(const std::unordered_set<T> &a, const std::unordered_set<T> &b) {
     std::unordered_set<T> larger = a.size() > b.size() ? a : b;
     std::unordered_set<T> smaller = a.size() <= b.size() ? a : b;
-    for (auto &elem : smaller) { larger.emplace(elem); }
+    for (auto &elem : smaller) {
+        larger.emplace(elem);
+    }
     return larger;
 }
 
@@ -151,7 +169,9 @@ std::vector<std::pair<S, T>> zip(const std::vector<S> &a, const std::vector<T> &
 
     std::vector<std::pair<S, T>> result;
     result.resize(a.size());
-    for (size_t i = 0; i < a.size(); i++) { result[i] = std::make_pair(a[i], b[i]); }
+    for (size_t i = 0; i < a.size(); i++) {
+        result[i] = std::make_pair(a[i], b[i]);
+    }
 
     return result;
 }
@@ -189,9 +209,13 @@ std::vector<retT> sorting_arrangement(const std::vector<T> &a, bool increasing =
 
     std::vector<std::pair<T, retT>> zipped = zip(a, rearrangement);
     std::sort(zipped.begin(), zipped.end());
-    if (!increasing) { std::reverse(zipped.begin(), zipped.end()); }
+    if (!increasing) {
+        std::reverse(zipped.begin(), zipped.end());
+    }
 
-    for (size_t i = 0; i < rearrangement.size(); i++) { rearrangement[i] = zipped[i].second; }
+    for (size_t i = 0; i < rearrangement.size(); i++) {
+        rearrangement[i] = zipped[i].second;
+    }
 
     return rearrangement;
 }
@@ -219,7 +243,9 @@ void sort_like_arrangement(std::vector<T> &a, const std::vector<size_t> &arrange
 
     std::vector<bool> moved(a.size(), false);
     for (size_t i = 0; i < a.size(); i++) {
-        if (moved[i]) { continue; }
+        if (moved[i]) {
+            continue;
+        }
         T i_val = a[i];
         size_t prev_j = i;
         size_t j = arrangement[i];

@@ -39,7 +39,9 @@ BOOST_AUTO_TEST_CASE(Random_Biased_Coin) {
     std::cout << "True: " << true << " False: " << false << std::endl;
     Biased_Random Coin;
     std::cout << "Biased Coin: ";
-    for (int i = 0; i < 200; i++) { std::cout << Coin.get_flip(); }
+    for (int i = 0; i < 200; i++) {
+        std::cout << Coin.get_flip();
+    }
     std::cout << std::endl << std::endl;
 }
 
@@ -74,7 +76,9 @@ BOOST_AUTO_TEST_CASE(Thue__Morse) {
 BOOST_AUTO_TEST_CASE(Repeater_Coin) {
     Repeat_Chance Coin;
     std::cout << "Repeater Coin: ";
-    for (int i = 0; i < 200; i++) { std::cout << Coin.get_flip(); }
+    for (int i = 0; i < 200; i++) {
+        std::cout << Coin.get_flip();
+    }
     std::cout << std::endl << std::endl;
 }
 

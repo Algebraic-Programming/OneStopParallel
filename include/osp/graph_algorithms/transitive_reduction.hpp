@@ -52,7 +52,9 @@ void transitive_reduction_sparse(const Graph_t_in &graph_in, Graph_t_out &graph_
     static_assert(is_constructable_cdag_v<Graph_t_out>, "Output graph must be a constructable computational DAG.");
     assert(graph_out.num_vertices() == 0 && "Output graph must be empty.");
 
-    if (graph_in.num_vertices() == 0) { return; }
+    if (graph_in.num_vertices() == 0) {
+        return;
+    }
 
     // 1. Copy vertices and their properties from graph_in to graph_out.
     for (const auto &v_idx : graph_in.vertices()) {
@@ -115,7 +117,9 @@ void transitive_reduction_dense(const Graph_t_in &graph_in, Graph_t_out &graph_o
     assert(graph_out.num_vertices() == 0 && "Output graph must be empty.");
 
     const auto num_v = graph_in.num_vertices();
-    if (num_v == 0) { return; }
+    if (num_v == 0) {
+        return;
+    }
 
     // 1. Copy vertices and their properties from graph_in to graph_out.
     for (const auto &v_idx : graph_in.vertices()) {
@@ -132,14 +136,18 @@ void transitive_reduction_dense(const Graph_t_in &graph_in, Graph_t_out &graph_o
 
     // 2. Compute transitive closure (reachability matrix).
     std::vector<std::vector<bool>> reachable(num_v, std::vector<bool>(num_v, false));
-    for (const auto &edge : edges(graph_in)) { reachable[source(edge, graph_in)][target(edge, graph_in)] = true; }
+    for (const auto &edge : edges(graph_in)) {
+        reachable[source(edge, graph_in)][target(edge, graph_in)] = true;
+    }
 
     const auto top_order = GetTopOrder(graph_in);
     for (const auto &k : top_order) {
         for (const auto &i : top_order) {
             if (reachable[i][k]) {
                 for (const auto &j : top_order) {
-                    if (reachable[k][j]) { reachable[i][j] = true; }
+                    if (reachable[k][j]) {
+                        reachable[i][j] = true;
+                    }
                 }
             }
         }
