@@ -286,9 +286,9 @@ class AbstractTestSuiteRunner {
                             return -1;
                         }
 
-                        bspInstance.getComputationalDag().setCSR(&lCsrInt32);
+                        bspInstance.GetComputationalDag().setCSR(&lCsrInt32);
                         lCscInt32 = lCsrInt32;
-                        bspInstance.getComputationalDag().setCSC(&lCscInt32);
+                        bspInstance.GetComputationalDag().setCSC(&lCscInt32);
                     } else {
                         graphStatus = Eigen::loadMarket(lCsrInt64, filenameGraph);
                         if (!graphStatus) {
@@ -296,13 +296,13 @@ class AbstractTestSuiteRunner {
                             return -1;
                         }
 
-                        bspInstance.getComputationalDag().setCSR(&lCsrInt64);
+                        bspInstance.GetComputationalDag().setCSR(&lCsrInt64);
                         lCscInt64 = lCsrInt64;
-                        bspInstance.getComputationalDag().setCSC(&lCscInt64);
+                        bspInstance.GetComputationalDag().setCSC(&lCscInt64);
                     }
                 } else {
 #endif
-                    graph_status = file_reader::readGraph(filename_graph, bsp_instance.getComputationalDag());
+                    graph_status = file_reader::readGraph(filename_graph, bsp_instance.GetComputationalDag());
 
 #ifdef EIGEN_FOUND
                 }

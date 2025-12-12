@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(WavefrontComponentDivider) {
 
     for (auto &filenameGraph : filenamesGraph) {
         BspInstance<GraphT> instance;
-        auto &graph = instance.getComputationalDag();
+        auto &graph = instance.GetComputationalDag();
 
         auto statusGraph = file_reader::readComputationalDagDotFormat((projectRoot / filenameGraph).string(), graph);
 
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(WavefrontComponentParallelismDivider) {
 
     for (auto &filenameGraph : filenamesGraph) {
         BspInstance<GraphT> instance;
-        auto &graph = instance.getComputationalDag();
+        auto &graph = instance.GetComputationalDag();
 
         auto statusGraph = file_reader::readComputationalDagHyperdagFormatDB((projectRoot / filenameGraph).string(), graph);
 

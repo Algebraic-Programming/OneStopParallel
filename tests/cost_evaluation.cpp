@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(TestCostModelsSimpleDag) {
     instance.setCommunicationCosts(10);
     instance.setSynchronisationCosts(5);
 
-    auto &dag = instance.getComputationalDag();
+    auto &dag = instance.GetComputationalDag();
     dag.add_vertex(10, 1, 0);
     dag.add_vertex(20, 2, 0);
     dag.add_vertex(30, 3, 0);

@@ -669,10 +669,10 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     // const std::vector<VertexType> &vertex_mapping_rev_graph = rev_graph_pair.first;
     // const ComputationalDag &rev_graph = rev_graph_pair.second;
 
-    // BOOST_CHECK_EQUAL(graph.numberOfVertices(), rev_graph.numberOfVertices());
+    // BOOST_CHECK_EQUAL(graph.NumberOfVertices(), rev_graph.NumberOfVertices());
     // BOOST_CHECK_EQUAL(graph.numberOfEdges(), rev_graph.numberOfEdges());
 
-    // for (VertexType vert = 0; vert < graph.numberOfVertices(); vert++) {
+    // for (VertexType vert = 0; vert < graph.NumberOfVertices(); vert++) {
     //     BOOST_CHECK_EQUAL(graph.nodeWorkWeight(vert), rev_graph.nodeWorkWeight(vertex_mapping_rev_graph[vert]));
     //     BOOST_CHECK_EQUAL(graph.nodeCommunicationWeight(vert),
     //     rev_graph.nodeCommunicationWeight(vertex_mapping_rev_graph[vert]));
@@ -680,8 +680,8 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     //     BOOST_CHECK_EQUAL(graph.nodeType(vert), rev_graph.nodeType(vertex_mapping_rev_graph[vert]));
     // }
 
-    // for (VertexType vert_1 = 0; vert_1 < graph.numberOfVertices(); vert_1++) {
-    //     for (VertexType vert_2 = 0; vert_2 < graph.numberOfVertices(); vert_2++) {
+    // for (VertexType vert_1 = 0; vert_1 < graph.NumberOfVertices(); vert_1++) {
+    //     for (VertexType vert_2 = 0; vert_2 < graph.NumberOfVertices(); vert_2++) {
     //         bool edge_in_graph = boost::edge(vert_1, vert_2, graph.getGraph()).second;
     //         bool rev_edge_in_rev_graph = boost::edge(vertex_mapping_rev_graph[vert_2],
     //         vertex_mapping_rev_graph[vert_1], rev_graph.getGraph()).second; BOOST_CHECK_EQUAL(edge_in_graph,

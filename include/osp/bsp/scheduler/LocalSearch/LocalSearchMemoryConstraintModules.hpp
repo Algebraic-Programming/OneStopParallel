@@ -87,7 +87,7 @@ struct LsLocalMemoryConstraint {
         }
 
         setSchedule_ = &setSchedule;
-        graph_ = &setSchedule_->GetInstance().getComputationalDag();
+        graph_ = &setSchedule_->GetInstance().GetComputationalDag();
         step_processor_memory = std::vector<std::vector<v_memw_t<Graph_t>>>(
             set_schedule->NumberOfSupersteps(),
             std::vector<v_memw_t<Graph_t>>(set_schedule->GetInstance().NumberOfProcessors(), 0));
@@ -168,7 +168,7 @@ struct LsLocalIncEdgesMemoryConstraint {
 
         setSchedule_ = &setSchedule;
         vectorSchedule_ = &vecSchedule;
-        graph_ = &setSchedule_->GetInstance().getComputationalDag();
+        graph_ = &setSchedule_->GetInstance().GetComputationalDag();
         step_processor_memory = std::vector<std::vector<v_memw_t<Graph_t>>>(
             set_schedule->NumberOfSupersteps(),
             std::vector<v_memw_t<Graph_t>>(set_schedule->GetInstance().NumberOfProcessors(), 0));
@@ -350,7 +350,7 @@ struct LsLocalSourcesIncEdgesMemoryConstraint {
 
         setSchedule_ = &setSchedule;
         vectorSchedule_ = &vecSchedule;
-        graph_ = &setSchedule_->GetInstance().getComputationalDag();
+        graph_ = &setSchedule_->GetInstance().GetComputationalDag();
         step_processor_memory = std::vector<std::vector<v_memw_t<Graph_t>>>(
             set_schedule->NumberOfSupersteps(),
             std::vector<v_memw_t<Graph_t>>(set_schedule->GetInstance().NumberOfProcessors(), 0));

@@ -43,16 +43,16 @@ class RandomGreedy : public Scheduler<GraphT> {
 
         const auto &instance = sched.GetInstance();
 
-        for (const auto &v : instance.getComputationalDag().vertices()) {
+        for (const auto &v : instance.GetComputationalDag().vertices()) {
             sched.setAssignedProcessor(v, std::numeric_limits<unsigned>::max());
             sched.setAssignedSuperstep(v, std::numeric_limits<unsigned>::max());
         }
 
-        const auto &graph = instance.getComputationalDag();
+        const auto &graph = instance.GetComputationalDag();
 
         unsigned superstepCounter = 0;
 
-        std::vector<VertexType> predecessorsCount(instance.numberOfVertices(), 0);
+        std::vector<VertexType> predecessorsCount(instance.NumberOfVertices(), 0);
         std::vector<VertexType> next;
         for (const auto &i : source_vertices_view(graph)) {
             next.push_back(i);

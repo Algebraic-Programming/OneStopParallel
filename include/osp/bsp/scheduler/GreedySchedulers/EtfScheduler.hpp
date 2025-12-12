@@ -78,9 +78,9 @@ class EtfScheduler : public Scheduler<GraphT> {
      * @return A vector containing the bottom level of each task.
      */
     std::vector<v_workw_t<Graph_t>> ComputeBottomLevel(const BspInstance<GraphT> &instance) const {
-        std::vector<v_workw_t<Graph_t>> bl(instance.numberOfVertices(), 0);
+        std::vector<v_workw_t<Graph_t>> bl(instance.NumberOfVertices(), 0);
 
-        const std::vector<vertex_idx_t<Graph_t>> topOrder = GetTopOrder(instance.getComputationalDag());
+        const std::vector<vertex_idx_t<Graph_t>> topOrder = GetTopOrder(instance.GetComputationalDag());
         auto rIter = topOrder.rbegin();
 
         for (; rIter != topOrder.rend(); ++r_iter) {
@@ -89,9 +89,9 @@ class EtfScheduler : public Scheduler<GraphT> {
             v_workw_t<Graph_t> maxval = 0;
 
             if constexpr (HasEdgeWeightsV<Graph_t>) {
-                for (const auto &out_edge : OutEdges(node, instance.getComputationalDag())) {
-                    const v_workw_t<Graph_t> tmp_val = BL[Traget(out_edge, instance.getComputationalDag())]
-                                                       + instance.getComputationalDag().EdgeCommWeight(out_edge);
+                for (const auto &out_edge : OutEdges(node, instance.GetComputationalDag())) {
+                    const v_workw_t<Graph_t> tmp_val = BL[Traget(out_edge, instance.GetComputationalDag())]
+                                                       + instance.GetComputationalDag().EdgeCommWeight(out_edge);
 
                     if (tmp_val > maxval) {
                         maxval = tmp_val;
@@ -99,8 +99,8 @@ class EtfScheduler : public Scheduler<GraphT> {
                 }
 
             } else {
-                for (const auto &child : instance.getComputationalDag().children(node)) {
-                    const v_workw_t<Graph_t> tmp_val = BL[child] + instance.getComputationalDag().VertexCommWeight(child);
+                for (const auto &child : instance.GetComputationalDag().children(node)) {
+                    const v_workw_t<Graph_t> tmp_val = BL[child] + instance.GetComputationalDag().VertexCommWeight(child);
 
                     if (tmp_val > maxval) {
                         maxval = tmp_val;
@@ -108,7 +108,7 @@ class EtfScheduler : public Scheduler<GraphT> {
                 }
             }
 
-            bl[node] = maxval + instance.getComputationalDag().VertexWorkWeight(node);
+            bl[node] = maxval + instance.GetComputationalDag().VertexWorkWeight(node);
         }
         return BL;
     }
@@ -158,26 +158,26 @@ class EtfScheduler : public Scheduler<GraphT> {
                                      std::vector<v_workw_t<Graph_t>> &send,
                                      std::vector<v_workw_t<Graph_t>> &rec) const {
         std::vector<tv_pair> predec;
-        for (const auto &pred : instance.getComputationalDag().parents(node)) {
-            predec.emplace_back(schedule.time[pred] + instance.getComputationalDag().VertexWorkWeight(pred), pred);
+        for (const auto &pred : instance.GetComputationalDag().parents(node)) {
+            predec.emplace_back(schedule.time[pred] + instance.GetComputationalDag().VertexWorkWeight(pred), pred);
         }
 
         std::sort(predec.begin(), predec.end());
 
         v_workw_t<Graph_t> est = procAvailableFrom;
         for (const auto &next : predec) {
-            v_workw_t<Graph_t> t = schedule.time[next.second] + instance.getComputationalDag().VertexWorkWeight(next.second);
+            v_workw_t<Graph_t> t = schedule.time[next.second] + instance.GetComputationalDag().VertexWorkWeight(next.second);
             if (schedule.proc[next.second] != proc) {
                 t = std::max(t, send[schedule.proc[next.second]]);
                 t = std::max(t, rec[proc]);
 
                 if constexpr (HasEdgeWeightsV<Graph_t>) {
-                    t += instance.getComputationalDag().EdgeCommWeight(
-                             edge_desc(next.second, node, instance.getComputationalDag()).first)
+                    t += instance.GetComputationalDag().EdgeCommWeight(
+                             edge_desc(next.second, node, instance.GetComputationalDag()).first)
                          * instance.sendCosts(schedule.proc[next.second], proc);
 
                 } else {
-                    t += instance.getComputationalDag().VertexCommWeight(next.second)
+                    t += instance.GetComputationalDag().VertexCommWeight(next.second)
                          * instance.sendCosts(schedule.proc[next.second], proc);
                 }
 
@@ -264,11 +264,11 @@ class EtfScheduler : public Scheduler<GraphT> {
             memoryConstraint_.initialize(instance);
         }
 
-        CSchedule<GraphT> schedule(instance.numberOfVertices());
+        CSchedule<GraphT> schedule(instance.NumberOfVertices());
 
         std::vector<std::deque<vertex_idx_t<Graph_t>>> greedyProcLists(instance.NumberOfProcessors());
 
-        std::vector<vertex_idx_t<Graph_t>> predecProcessed(instance.numberOfVertices(), 0);
+        std::vector<vertex_idx_t<Graph_t>> predecProcessed(instance.NumberOfVertices(), 0);
 
         std::vector<v_workw_t<Graph_t>> finishTimes(instance.NumberOfProcessors(), 0), send(instance.NumberOfProcessors(), 0),
             rec(instance.NumberOfProcessors(), 0);
@@ -277,12 +277,12 @@ class EtfScheduler : public Scheduler<GraphT> {
         if (mode_ == BL_EST) {
             BL = ComputeBottomLevel(instance);
         } else {
-            BL = std::vector<v_workw_t<Graph_t>>(instance.numberOfVertices(), 0);
+            BL = std::vector<v_workw_t<Graph_t>>(instance.NumberOfVertices(), 0);
         }
 
         std::set<tv_pair> ready;
 
-        for (const auto &v : source_vertices_view(instance.getComputationalDag())) {
+        for (const auto &v : source_vertices_view(instance.GetComputationalDag())) {
             ready.insert({BL[v], v});
         }
 
@@ -310,15 +310,15 @@ class EtfScheduler : public Scheduler<GraphT> {
             greedyProcLists[bestProc].push_back(node);
 
             schedule.time[node] = best_tv.first;
-            finishTimes[bestProc] = schedule.time[node] + instance.getComputationalDag().VertexWorkWeight(node);
+            finishTimes[bestProc] = schedule.time[node] + instance.GetComputationalDag().VertexWorkWeight(node);
 
             if constexpr (useMemoryConstraint_) {
                 memoryConstraint_.add(node, bestProc);
             }
 
-            for (const auto &succ : instance.getComputationalDag().children(node)) {
+            for (const auto &succ : instance.GetComputationalDag().children(node)) {
                 ++predecProcessed[succ];
-                if (predecProcessed[succ] == instance.getComputationalDag().in_degree(succ)) {
+                if (predecProcessed[succ] == instance.GetComputationalDag().in_degree(succ)) {
                     ready.insert({BL[succ], succ});
                 }
             }

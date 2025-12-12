@@ -39,7 +39,7 @@ limitations under the License.
 //         bsp_schedule.NumberOfSupersteps(),
 //         std::vector<std::vector<unsigned>>(bsp_schedule.GetInstance().NumberOfProcessors(), std::vector<unsigned>()));
 
-//     for (size_t node = 0; node < bsp_schedule.GetInstance().numberOfVertices(); node++) {
+//     for (size_t node = 0; node < bsp_schedule.GetInstance().NumberOfVertices(); node++) {
 //         schedule[bsp_schedule.assignedSuperstep(node)][bsp_schedule.assignedProcessor(node)].push_back(node);
 //     }
 

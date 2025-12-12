@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(Test1) {
 
     BspInstance instance(graph, architecture);
 
-    BOOST_CHECK_EQUAL(instance.numberOfVertices(), 0);
+    BOOST_CHECK_EQUAL(instance.NumberOfVertices(), 0);
     BOOST_CHECK_EQUAL(instance.NumberOfProcessors(), 4);
     BOOST_CHECK_EQUAL(instance.SynchronisationCosts(), 3);
     BOOST_CHECK_EQUAL(instance.CommunicationCosts(), 2);
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(Test1) {
     BOOST_CHECK_EQUAL(instance.NumberOfProcessors(), 6);
     BOOST_CHECK_EQUAL(instance.SynchronisationCosts(), 1);
     BOOST_CHECK_EQUAL(instance.CommunicationCosts(), 3);
-    BOOST_CHECK_EQUAL(instance.numberOfVertices(), 0);
+    BOOST_CHECK_EQUAL(instance.NumberOfVertices(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(TestInstanceBicgstab) {
@@ -67,16 +67,16 @@ BOOST_AUTO_TEST_CASE(TestInstanceBicgstab) {
     }
 
     bool status = file_reader::readComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(),
-                                                                    instance.getComputationalDag());
+                                                                    instance.GetComputationalDag());
 
     BOOST_CHECK(status);
-    BOOST_CHECK_EQUAL(instance.getComputationalDag().NumVertices(), 54);
+    BOOST_CHECK_EQUAL(instance.GetComputationalDag().NumVertices(), 54);
 
-    BOOST_CHECK_EQUAL(instance.getComputationalDag().NumVertexTypes(), 1);
+    BOOST_CHECK_EQUAL(instance.GetComputationalDag().NumVertexTypes(), 1);
 
-    instance.getComputationalDag().SetVertexType(0, 1);
+    instance.GetComputationalDag().SetVertexType(0, 1);
 
-    BOOST_CHECK_EQUAL(instance.getComputationalDag().NumVertexTypes(), 2);
+    BOOST_CHECK_EQUAL(instance.GetComputationalDag().NumVertexTypes(), 2);
 
     instance.GetArchitecture().setProcessorType(0, 1);
     instance.setDiagonalCompatibilityMatrix(2);
@@ -115,9 +115,9 @@ BOOST_AUTO_TEST_CASE(TestInstanceBicgstab) {
 
     BspInstance<computational_dag_vector_impl_def_t> instanceT2(instance);
 
-    BOOST_CHECK_EQUAL(instanceT2.getComputationalDag().NumVertices(), instance.getComputationalDag().NumVertices());
-    BOOST_CHECK_EQUAL(instanceT2.getComputationalDag().NumVertexTypes(), instance.getComputationalDag().NumVertexTypes());
-    BOOST_CHECK_EQUAL(instanceT2.getComputationalDag().NumEdges(), instance.getComputationalDag().NumEdges());
+    BOOST_CHECK_EQUAL(instanceT2.GetComputationalDag().NumVertices(), instance.GetComputationalDag().NumVertices());
+    BOOST_CHECK_EQUAL(instanceT2.GetComputationalDag().NumVertexTypes(), instance.GetComputationalDag().NumVertexTypes());
+    BOOST_CHECK_EQUAL(instanceT2.GetComputationalDag().NumEdges(), instance.GetComputationalDag().NumEdges());
     BOOST_CHECK_EQUAL(instanceT2.GetArchitecture().NumberOfProcessors(), instance.GetArchitecture().NumberOfProcessors());
     BOOST_CHECK_EQUAL(instanceT2.GetArchitecture().getNumberOfProcessorTypes(),
                       instance.GetArchitecture().getNumberOfProcessorTypes());
@@ -128,9 +128,9 @@ BOOST_AUTO_TEST_CASE(TestInstanceBicgstab) {
 
     instanceT3 = instance;
 
-    BOOST_CHECK_EQUAL(instanceT3.getComputationalDag().NumVertices(), instance.getComputationalDag().NumVertices());
-    BOOST_CHECK_EQUAL(instanceT3.getComputationalDag().NumVertexTypes(), instance.getComputationalDag().NumVertexTypes());
-    BOOST_CHECK_EQUAL(instanceT3.getComputationalDag().NumEdges(), instance.getComputationalDag().NumEdges());
+    BOOST_CHECK_EQUAL(instanceT3.GetComputationalDag().NumVertices(), instance.GetComputationalDag().NumVertices());
+    BOOST_CHECK_EQUAL(instanceT3.GetComputationalDag().NumVertexTypes(), instance.GetComputationalDag().NumVertexTypes());
+    BOOST_CHECK_EQUAL(instanceT3.GetComputationalDag().NumEdges(), instance.GetComputationalDag().NumEdges());
     BOOST_CHECK_EQUAL(instanceT3.GetArchitecture().NumberOfProcessors(), instance.GetArchitecture().NumberOfProcessors());
     BOOST_CHECK_EQUAL(instanceT3.GetArchitecture().getNumberOfProcessorTypes(),
                       instance.GetArchitecture().getNumberOfProcessorTypes());
@@ -139,9 +139,9 @@ BOOST_AUTO_TEST_CASE(TestInstanceBicgstab) {
 
     BspInstance<computational_dag_edge_idx_vector_impl_def_t> instanceT4(std::move(instanceT3));
 
-    BOOST_CHECK_EQUAL(instanceT4.getComputationalDag().NumVertices(), instance.getComputationalDag().NumVertices());
-    BOOST_CHECK_EQUAL(instanceT4.getComputationalDag().NumVertexTypes(), instance.getComputationalDag().NumVertexTypes());
-    BOOST_CHECK_EQUAL(instanceT4.getComputationalDag().NumEdges(), instance.getComputationalDag().NumEdges());
+    BOOST_CHECK_EQUAL(instanceT4.GetComputationalDag().NumVertices(), instance.GetComputationalDag().NumVertices());
+    BOOST_CHECK_EQUAL(instanceT4.GetComputationalDag().NumVertexTypes(), instance.GetComputationalDag().NumVertexTypes());
+    BOOST_CHECK_EQUAL(instanceT4.GetComputationalDag().NumEdges(), instance.GetComputationalDag().NumEdges());
     BOOST_CHECK_EQUAL(instanceT4.GetArchitecture().NumberOfProcessors(), instance.GetArchitecture().NumberOfProcessors());
     BOOST_CHECK_EQUAL(instanceT4.GetArchitecture().getNumberOfProcessorTypes(),
                       instance.GetArchitecture().getNumberOfProcessorTypes());
@@ -151,9 +151,9 @@ BOOST_AUTO_TEST_CASE(TestInstanceBicgstab) {
     BspInstance<computational_dag_edge_idx_vector_impl_def_t> instanceT5;
 
     instanceT5 = std::move(instanceT4);
-    BOOST_CHECK_EQUAL(instanceT5.getComputationalDag().NumVertices(), instance.getComputationalDag().NumVertices());
-    BOOST_CHECK_EQUAL(instanceT5.getComputationalDag().NumVertexTypes(), instance.getComputationalDag().NumVertexTypes());
-    BOOST_CHECK_EQUAL(instanceT5.getComputationalDag().NumEdges(), instance.getComputationalDag().NumEdges());
+    BOOST_CHECK_EQUAL(instanceT5.GetComputationalDag().NumVertices(), instance.GetComputationalDag().NumVertices());
+    BOOST_CHECK_EQUAL(instanceT5.GetComputationalDag().NumVertexTypes(), instance.GetComputationalDag().NumVertexTypes());
+    BOOST_CHECK_EQUAL(instanceT5.GetComputationalDag().NumEdges(), instance.GetComputationalDag().NumEdges());
     BOOST_CHECK_EQUAL(instanceT5.GetArchitecture().NumberOfProcessors(), instance.GetArchitecture().NumberOfProcessors());
     BOOST_CHECK_EQUAL(instanceT5.GetArchitecture().getNumberOfProcessorTypes(),
                       instance.GetArchitecture().getNumberOfProcessorTypes());

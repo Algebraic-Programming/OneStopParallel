@@ -151,8 +151,8 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
         }
 
         for (auto &edge : currentSchedule_.current_violations) {
-            const auto &sourceV = Source(edge, currentSchedule_.instance->getComputationalDag());
-            const auto &targetV = Traget(edge, currentSchedule_.instance->getComputationalDag());
+            const auto &sourceV = Source(edge, currentSchedule_.instance->GetComputationalDag());
+            const auto &targetV = Traget(edge, currentSchedule_.instance->GetComputationalDag());
 
             if (locked_nodes.find(source_v) == locked_nodes.end() || locked_nodes.find(target_v) == locked_nodes.end()) {
                 return false;
@@ -211,14 +211,14 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
     void ComputeNodesToUpdate(KlMove<GraphT> move) {
         nodes_to_update.clear();
 
-        for (const auto &target : currentSchedule_.instance->getComputationalDag().children(move.node)) {
+        for (const auto &target : currentSchedule_.instance->GetComputationalDag().children(move.node)) {
             if (node_selection.find(target) != node_selection.end() && locked_nodes.find(target) == locked_nodes.end()
                 && super_locked_nodes.find(target) == super_locked_nodes.end()) {
                 nodes_to_update.insert(target);
             }
         }
 
-        for (const auto &source : currentSchedule_.instance->getComputationalDag().parents(move.node)) {
+        for (const auto &source : currentSchedule_.instance->GetComputationalDag().parents(move.node)) {
             if (node_selection.find(source) != node_selection.end() && locked_nodes.find(source) == locked_nodes.end()
                 && super_locked_nodes.find(source) == super_locked_nodes.end()) {
                 nodes_to_update.insert(source);
@@ -434,16 +434,16 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
                        > currentSchedule_.step_second_max_work[currentStep]) {
                 // new max
                 const double newMaxWork = std::max(currentSchedule_.step_processor_work[currentStep][currentProc]
-                                                       - currentSchedule_.instance->getComputationalDag().VertexWorkWeight(node),
+                                                       - currentSchedule_.instance->GetComputationalDag().VertexWorkWeight(node),
                                                    currentSchedule_.step_second_max_work[currentStep]);
 
                 if (currentSchedule_.step_processor_work[currentStep][newProc]
-                        + currentSchedule_.instance->getComputationalDag().VertexWorkWeight(node)
+                        + currentSchedule_.instance->GetComputationalDag().VertexWorkWeight(node)
                     > newMaxWork) {
                     const double gain
                         = static_cast<double>(currentSchedule_.step_max_work[currentStep])
                           - (static_cast<double>(currentSchedule_.step_processor_work[currentStep][newProc])
-                             + static_cast<double>(currentSchedule_.instance->getComputationalDag().VertexWorkWeight(node)));
+                             + static_cast<double>(currentSchedule_.instance->GetComputationalDag().VertexWorkWeight(node)));
 
                     nodeGains_[node][newProc][1] += gain;
                     nodeChangeInCosts_[node][newProc][1] -= gain;
@@ -458,10 +458,10 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
 
             } else {
                 if (currentSchedule_.step_max_work[currentStep]
-                    < currentSchedule_.instance->getComputationalDag().VertexWorkWeight(node)
+                    < currentSchedule_.instance->GetComputationalDag().VertexWorkWeight(node)
                           + currentSchedule_.step_processor_work[currentStep][newProc]) {
                     const double gain
-                        = (static_cast<double>(currentSchedule_.instance->getComputationalDag().VertexWorkWeight(node))
+                        = (static_cast<double>(currentSchedule_.instance->GetComputationalDag().VertexWorkWeight(node))
                            + static_cast<double>(currentSchedule_.step_processor_work[currentStep][newProc])
                            - static_cast<double>(currentSchedule_.step_max_work[currentStep]));
 
@@ -474,9 +474,9 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
         if (currentStep > 0) {
             if (currentSchedule_.step_max_work[currentStep - 1]
                 < currentSchedule_.step_processor_work[currentStep - 1][newProc]
-                      + currentSchedule_.instance->getComputationalDag().VertexWorkWeight(node)) {
+                      + currentSchedule_.instance->GetComputationalDag().VertexWorkWeight(node)) {
                 const double gain = static_cast<double>(currentSchedule_.step_processor_work[currentStep - 1][newProc])
-                                    + static_cast<double>(currentSchedule_.instance->getComputationalDag().VertexWorkWeight(node))
+                                    + static_cast<double>(currentSchedule_.instance->GetComputationalDag().VertexWorkWeight(node))
                                     - static_cast<double>(currentSchedule_.step_max_work[currentStep - 1]);
 
                 nodeGains_[node][newProc][0] -= gain;
@@ -488,9 +488,9 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
                 && currentSchedule_.step_processor_work[currentStep][currentProc]
                        > currentSchedule_.step_second_max_work[currentStep]) {
                 if (currentSchedule_.step_max_work[currentStep]
-                        - currentSchedule_.instance->getComputationalDag().VertexWorkWeight(node)
+                        - currentSchedule_.instance->GetComputationalDag().VertexWorkWeight(node)
                     > currentSchedule_.step_second_max_work[currentStep]) {
-                    const double gain = currentSchedule_.instance->getComputationalDag().VertexWorkWeight(node);
+                    const double gain = currentSchedule_.instance->GetComputationalDag().VertexWorkWeight(node);
                     nodeGains_[node][newProc][0] += gain;
                     nodeChangeInCosts_[node][newProc][0] -= gain;
 
@@ -510,9 +510,9 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
         if (currentStep < currentSchedule_.num_steps() - 1) {
             if (currentSchedule_.step_max_work[currentStep + 1]
                 < currentSchedule_.step_processor_work[currentStep + 1][newProc]
-                      + currentSchedule_.instance->getComputationalDag().VertexWorkWeight(node)) {
+                      + currentSchedule_.instance->GetComputationalDag().VertexWorkWeight(node)) {
                 const double gain = static_cast<double>(currentSchedule_.step_processor_work[currentStep + 1][newProc])
-                                    + static_cast<double>(currentSchedule_.instance->getComputationalDag().VertexWorkWeight(node))
+                                    + static_cast<double>(currentSchedule_.instance->GetComputationalDag().VertexWorkWeight(node))
                                     - static_cast<double>(currentSchedule_.step_max_work[currentStep + 1]);
 
                 nodeGains_[node][newProc][2] -= gain;
@@ -523,9 +523,9 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
                 && currentSchedule_.step_processor_work[currentStep][currentProc]
                        > currentSchedule_.step_second_max_work[currentStep]) {
                 if ((currentSchedule_.step_max_work[currentStep]
-                     - currentSchedule_.instance->getComputationalDag().VertexWorkWeight(node))
+                     - currentSchedule_.instance->GetComputationalDag().VertexWorkWeight(node))
                     > currentSchedule_.step_second_max_work[currentStep]) {
-                    const double gain = currentSchedule_.instance->getComputationalDag().VertexWorkWeight(node);
+                    const double gain = currentSchedule_.instance->GetComputationalDag().VertexWorkWeight(node);
 
                     nodeGains_[node][newProc][2] += gain;
                     nodeChangeInCosts_[node][newProc][2] -= gain;
@@ -761,7 +761,7 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
                 continue;
             }
 
-            for (const auto &source : currentSchedule_.instance->getComputationalDag().parents(node)) {
+            for (const auto &source : currentSchedule_.instance->GetComputationalDag().parents(node)) {
                 if (currentSchedule_.vector_schedule.assignedProcessor(node)
                     != currentSchedule_.vector_schedule.assignedProcessor(source)) {
                     node_selection.insert(node);
@@ -769,7 +769,7 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
                 }
             }
 
-            for (const auto &target : currentSchedule_.instance->getComputationalDag().children(node)) {
+            for (const auto &target : currentSchedule_.instance->GetComputationalDag().children(node)) {
                 if (currentSchedule_.vector_schedule.assignedProcessor(node)
                     != currentSchedule_.vector_schedule.assignedProcessor(target)) {
                     node_selection.insert(node);
@@ -811,31 +811,31 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
         }
 
         for (const auto &edge : currentSchedule_.current_violations) {
-            const auto &sourceV = Source(edge, currentSchedule_.instance->getComputationalDag());
-            const auto &targetV = Traget(edge, currentSchedule_.instance->getComputationalDag());
+            const auto &sourceV = Source(edge, currentSchedule_.instance->GetComputationalDag());
+            const auto &targetV = Traget(edge, currentSchedule_.instance->GetComputationalDag());
 
             node_selection.insert(source_v);
             node_selection.insert(target_v);
 
-            for (const auto &child : currentSchedule_.instance->getComputationalDag().children(sourceV)) {
+            for (const auto &child : currentSchedule_.instance->GetComputationalDag().children(sourceV)) {
                 if (child != targetV) {
                     node_selection.insert(child);
                 }
             }
 
-            for (const auto &parent : currentSchedule_.instance->getComputationalDag().parents(sourceV)) {
+            for (const auto &parent : currentSchedule_.instance->GetComputationalDag().parents(sourceV)) {
                 if (parent != targetV) {
                     node_selection.insert(parent);
                 }
             }
 
-            for (const auto &child : currentSchedule_.instance->getComputationalDag().children(targetV)) {
+            for (const auto &child : currentSchedule_.instance->GetComputationalDag().children(targetV)) {
                 if (child != sourceV) {
                     node_selection.insert(child);
                 }
             }
 
-            for (const auto &parent : currentSchedule_.instance->getComputationalDag().parents(targetV)) {
+            for (const auto &parent : currentSchedule_.instance->GetComputationalDag().parents(targetV)) {
                 if (parent != sourceV) {
                     node_selection.insert(parent);
                 }
@@ -1215,14 +1215,14 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
     }
 
     void SelectUnlockNeighbors(VertexType node) {
-        for (const auto &target : current_schedule.instance->getComputationalDag().children(node)) {
+        for (const auto &target : current_schedule.instance->GetComputationalDag().children(node)) {
             if (check_node_unlocked(target)) {
                 node_selection.insert(target);
                 nodes_to_update.insert(target);
             }
         }
 
-        for (const auto &source : current_schedule.instance->getComputationalDag().parents(node)) {
+        for (const auto &source : current_schedule.instance->GetComputationalDag().parents(node)) {
             if (check_node_unlocked(source)) {
                 node_selection.insert(source);
                 nodes_to_update.insert(source);
@@ -2375,7 +2375,7 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
         bestSchedule_ = &schedule;
         currentSchedule_.instance = &bestSchedule_->GetInstance();
 
-        num_nodes = current_schedule.instance->numberOfVertices();
+        num_nodes = current_schedule.instance->NumberOfVertices();
         numProcs_ = currentSchedule_.instance->NumberOfProcessors();
 
         SetParameters();

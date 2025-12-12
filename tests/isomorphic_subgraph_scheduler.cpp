@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(TrimSubgraphGroupsTestNoTrim) {
     IsomorphicSubgraphSchedulerTester<GraphT, ConstrGraphT> tester(greedyScheduler);
 
     BspInstance<GraphT> instance;
-    auto &dag = instance.getComputationalDag();
+    auto &dag = instance.GetComputationalDag();
     dag.add_vertex(1, 1, 1, 0);                                                     // 0
     dag.add_vertex(1, 1, 1, 0);                                                     // 1
     dag.add_vertex(1, 1, 1, 0);                                                     // 2
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(TrimSubgraphGroupsTestWithTrim) {
     tester.setAllowTrimmedScheduler(false);
 
     BspInstance<GraphT> instance;
-    auto &dag = instance.getComputationalDag();
+    auto &dag = instance.GetComputationalDag();
     dag.add_vertex(10, 1, 1, 0);                                                    // 0
     dag.add_vertex(10, 1, 1, 0);                                                    // 1
     dag.add_vertex(10, 1, 1, 0);                                                    // 2
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(TrimSubgraphGroupsTestMultipleGroups) {
     tester.setAllowTrimmedScheduler(false);
 
     BspInstance<GraphT> instance;
-    auto &dag = instance.getComputationalDag();
+    auto &dag = instance.GetComputationalDag();
     for (int i = 0; i < 6; ++i) {
         dag.add_vertex(1, 1, 1, 0);    // 0-5
     }
@@ -203,7 +203,7 @@ BOOST_AUTO_TEST_CASE(TrimSubgraphGroupsTestMultipleGroups) {
 BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroupHeterogeneousArch) {
     // --- Setup ---
     BspInstance<GraphT> instance;
-    auto &dag = instance.getComputationalDag();
+    auto &dag = instance.GetComputationalDag();
     // Two isomorphic groups:
     // Group 0: {0,1}, {2,3} (type 0)
     // Group 1: {4}, {5} (type 1)
@@ -272,7 +272,7 @@ BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroupShuffledIDs) {
     // This test ensures that the isomorphism mapping works correctly even if
     // the vertex IDs of isomorphic subgraphs are not in the same relative order.
     BspInstance<GraphT> instance;
-    auto &dag = instance.getComputationalDag();
+    auto &dag = instance.GetComputationalDag();
 
     // Group 0, Subgraph 1: 0 -> 1
     dag.add_vertex(10, 1, 1, 0);    // 0
@@ -332,7 +332,7 @@ BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroupShuffledIDs) {
 //     // This test uses a more complex structure (fork-join) with shuffled IDs
 //     // to ensure the pattern replication is robust.
 //     BspInstance<graph_t> instance;
-//     auto& dag = instance.getComputationalDag();
+//     auto& dag = instance.GetComputationalDag();
 
 //     // Group 0, Subgraph 1: 0 -> {1,2} -> 3
 //     dag.add_vertex(10, 1, 1, 0); // 0 (source)

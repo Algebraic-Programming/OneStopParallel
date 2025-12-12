@@ -55,7 +55,7 @@ MaxBspSchedule<GraphT> GreedyBspToMaxBspConverter<GraphT>::Convert(const BspSche
 
 template <typename GraphT>
 MaxBspScheduleCS<GraphT> GreedyBspToMaxBspConverter<GraphT>::Convert(const BspScheduleCS<GraphT> &schedule) const {
-    const GraphT &dag = schedule.GetInstance().getComputationalDag();
+    const GraphT &dag = schedule.GetInstance().GetComputationalDag();
 
     // Initialize data structures
     std::vector<double> priorities;
@@ -65,7 +65,7 @@ MaxBspScheduleCS<GraphT> GreedyBspToMaxBspConverter<GraphT>::Convert(const BspSc
     std::vector<vertex_idx> nodesRemainingSuperstep(schedule.NumberOfSupersteps(), 0);
 
     MaxBspScheduleCS<GraphT> scheduleMax(schedule.GetInstance());
-    for (vertex_idx node = 0; node < schedule.GetInstance().numberOfVertices(); node++) {
+    for (vertex_idx node = 0; node < schedule.GetInstance().NumberOfVertices(); node++) {
         workRemainingProcSuperstep[schedule.assignedProcessor(node)][schedule.assignedSuperstep(node)]
             += dag.VertexWorkWeight(node);
         ++nodes_remaining_superstep[schedule.assignedSuperstep(node)];
@@ -78,7 +78,7 @@ MaxBspScheduleCS<GraphT> GreedyBspToMaxBspConverter<GraphT>::Convert(const BspSc
                                                                       std::vector<cost_type>(schedule.NumberOfSupersteps(), 0));
 
     std::vector<std::set<std::pair<KeyTriple, unsigned>>> freeCommStepsForSuperstep(schedule.NumberOfSupersteps());
-    std::vector<std::vector<std::pair<KeyTriple, unsigned>>> dependentCommStepsForNode(schedule.GetInstance().numberOfVertices());
+    std::vector<std::vector<std::pair<KeyTriple, unsigned>>> dependentCommStepsForNode(schedule.GetInstance().NumberOfVertices());
     for (auto const &[key, val] : schedule.getCommunicationSchedule()) {
         if (schedule.assignedSuperstep(std::get<0>(key)) == val) {
             dependentCommStepsForNode[std::get<0>(key)].emplace_back(key, val);
@@ -365,7 +365,7 @@ MaxBspScheduleCS<GraphT> GreedyBspToMaxBspConverter<GraphT>::Convert(const BspSc
 template <typename GraphT>
 std::vector<std::vector<std::deque<vertex_idx_t<Graph_t>>>> GreedyBspToMaxBspConverter<GraphT>::CreateSuperstepLists(
     const BspScheduleCS<GraphT> &schedule, std::vector<double> &priorities) const {
-    const GraphT &dag = schedule.GetInstance().getComputationalDag();
+    const GraphT &dag = schedule.GetInstance().GetComputationalDag();
     std::vector<vertex_idx> topOrder = GetTopOrder(dag);
     priorities.clear();
     priorities.resize(dag.NumVertices());
@@ -410,7 +410,7 @@ std::vector<std::vector<std::deque<vertex_idx_t<Graph_t>>>> GreedyBspToMaxBspCon
         schedule.GetInstance().NumberOfProcessors(), std::vector<std::deque<vertex_idx>>(schedule.NumberOfSupersteps()));
 
     std::set<std::pair<double, vertex_idx>> free;
-    for (vertex_idx node = 0; node < schedule.GetInstance().numberOfVertices(); node++) {
+    for (vertex_idx node = 0; node < schedule.GetInstance().NumberOfVertices(); node++) {
         if (localInDegree[node] == 0) {
             free.emplace(priorities[node], node);
         }

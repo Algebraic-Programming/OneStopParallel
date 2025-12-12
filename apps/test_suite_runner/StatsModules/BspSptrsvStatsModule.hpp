@@ -112,10 +112,10 @@ class BspSptrsvStatsModule : public IStatisticModule<TargetObjectType> {
             }
 
             Eigen::VectorXd lBRef, lXRef;
-            auto n = instance.getComputationalDag().getCSC()->cols();
+            auto n = instance.GetComputationalDag().getCSC()->cols();
             lXRef.resize(n);
             lBRef.resize(n);
-            auto lView = (*instance.getComputationalDag().getCSR()).template triangularView<Eigen::Lower>();
+            auto lView = (*instance.GetComputationalDag().getCSR()).template triangularView<Eigen::Lower>();
             lBRef.setOnes();
             lXRef.setZero();
             lXRef = lView.solve(lBRef);

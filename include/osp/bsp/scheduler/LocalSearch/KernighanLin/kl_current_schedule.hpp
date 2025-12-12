@@ -203,7 +203,7 @@ class KlCurrentSchedule {
                 }
             }
 
-            for (const auto &node : instance_->getComputationalDag().vertices()) {
+            for (const auto &node : instance_->GetComputationalDag().vertices()) {
                 vectorSchedule_.setAssignedProcessor(node, schedule.assignedProcessor(node));
                 vectorSchedule_.setAssignedSuperstep(node, schedule.assignedSuperstep(node));
 
@@ -273,7 +273,7 @@ class KlCurrentSchedule {
                 step_processor_work[step][proc] = 0;
 
                 for (const auto &node : setSchedule_.step_processor_vertices[step][proc]) {
-                    step_processor_work[step][proc] += instance->getComputationalDag().VertexWorkWeight(node);
+                    step_processor_work[step][proc] += instance->GetComputationalDag().VertexWorkWeight(node);
                 }
 
                 if (step_processor_work[step][proc] > step_max_work[step]) {
@@ -294,9 +294,9 @@ class KlCurrentSchedule {
         std::cout << "Recompute current violations:" << std::endl;
 #endif
 
-        for (const auto &edge : Edges(instance_->getComputationalDag())) {
-            const auto &sourceV = Source(edge, instance_->getComputationalDag());
-            const auto &targetV = Traget(edge, instance_->getComputationalDag());
+        for (const auto &edge : Edges(instance_->GetComputationalDag())) {
+            const auto &sourceV = Source(edge, instance_->GetComputationalDag());
+            const auto &targetV = Traget(edge, instance_->GetComputationalDag());
 
             if (vectorSchedule_.assignedSuperstep(sourceV) >= vectorSchedule_.assignedSuperstep(targetV)) {
                 if (vectorSchedule_.assignedProcessor(sourceV) != vectorSchedule_.assignedProcessor(targetV)
@@ -330,8 +330,8 @@ class KlCurrentSchedule {
 
         currentCost_ += move.change_in_cost;
 
-        step_processor_work[move.to_step][move.to_proc] += instance->getComputationalDag().VertexWorkWeight(move.node);
-        step_processor_work[move.from_step][move.from_proc] -= instance->getComputationalDag().VertexWorkWeight(move.node);
+        step_processor_work[move.to_step][move.to_proc] += instance->GetComputationalDag().VertexWorkWeight(move.node);
+        step_processor_work[move.from_step][move.from_proc] -= instance->GetComputationalDag().VertexWorkWeight(move.node);
 
         UpdateMaxWorkDatastructures(move);
         update_violations(move.node);
@@ -362,8 +362,8 @@ class KlCurrentSchedule {
         new_violations.clear();
         resolved_violations.clear();
 
-        for (const auto &edge : OutEdges(node, instance->getComputationalDag())) {
-            const auto &child = Traget(edge, instance->getComputationalDag());
+        for (const auto &edge : OutEdges(node, instance->GetComputationalDag())) {
+            const auto &child = Traget(edge, instance->GetComputationalDag());
 
             if (current_violations.find(edge) == current_violations.end()) {
                 if (vector_schedule.assignedSuperstep(node) >= vector_schedule.assignedSuperstep(child)) {
@@ -384,8 +384,8 @@ class KlCurrentSchedule {
             }
         }
 
-        for (const auto &edge : InEdges(node, instance->getComputationalDag())) {
-            const auto &parent = Source(edge, instance->getComputationalDag());
+        for (const auto &edge : InEdges(node, instance->GetComputationalDag())) {
+            const auto &parent = Source(edge, instance->GetComputationalDag());
 
             if (current_violations.find(edge) == current_violations.end()) {
                 if (vector_schedule.assignedSuperstep(node) <= vector_schedule.assignedSuperstep(parent)) {
@@ -411,16 +411,16 @@ class KlCurrentSchedule {
         if (new_violations.size() > 0) {
             std::cout << "New violations: " << std::endl;
             for (const auto &edge : new_violations) {
-                std::cout << "Edge: " << Source(edge.second, instance->getComputationalDag()) << " -> "
-                          << Traget(edge.second, instance->getComputationalDag()) << std::endl;
+                std::cout << "Edge: " << Source(edge.second, instance->GetComputationalDag()) << " -> "
+                          << Traget(edge.second, instance->GetComputationalDag()) << std::endl;
             }
         }
 
         if (resolved_violations.size() > 0) {
             std::cout << "Resolved violations: " << std::endl;
             for (const auto &edge : resolved_violations) {
-                std::cout << "Edge: " << Source(edge, instance->getComputationalDag()) << " -> "
-                          << Traget(edge, instance->getComputationalDag()) << std::endl;
+                std::cout << "Edge: " << Source(edge, instance->GetComputationalDag()) << " -> "
+                          << Traget(edge, instance->GetComputationalDag()) << std::endl;
             }
         }
 

@@ -1421,7 +1421,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
         threadDataVec_.resize(numThreads);
         threadFinishedVec_.assign(numThreads, true);
 
-        set_parameters(schedule.GetInstance().numberOfVertices());
+        set_parameters(schedule.GetInstance().NumberOfVertices());
         InitializeDatastructures(schedule);
         const CostT initialCost = activeSchedule_.get_cost();
         const unsigned numSteps = schedule.NumberOfSupersteps();
@@ -1794,7 +1794,7 @@ void KlImprover<GraphT, CommCostFunctionT, MemoryConstraintT, windowSize, CostT>
     BspSchedule<GraphT> &schedule) {
     inputSchedule_ = &schedule;
     instance_ = &schedule.GetInstance();
-    graph_ = &instance_->getComputationalDag();
+    graph_ = &instance_->GetComputationalDag();
 
     activeSchedule_.initialize(schedule);
 

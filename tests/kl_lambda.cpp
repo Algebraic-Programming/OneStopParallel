@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverWithNodeTypesTest) {
         BspInstance<Graph> instance;
 
         bool statusGraph
-            = file_reader::readComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(), instance.getComputationalDag());
+            = file_reader::readComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(), instance.GetComputationalDag());
 
         instance.GetArchitecture().setSynchronisationCosts(5);
         instance.GetArchitecture().setCommunicationCosts(5);
@@ -130,8 +130,8 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverWithNodeTypesTest) {
 
         std::cout << "Instance: " << filenameGraph << std::endl;
 
-        AddMemWeights(instance.getComputationalDag());
-        AddNodeTypes(instance.getComputationalDag());
+        AddMemWeights(instance.GetComputationalDag());
+        AddNodeTypes(instance.GetComputationalDag());
 
         instance.GetArchitecture().setProcessorsWithTypes({0, 0, 1, 1});
 
@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverOnTestGraphs) {
         BspInstance<Graph> instance;
 
         bool statusGraph
-            = file_reader::readComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(), instance.getComputationalDag());
+            = file_reader::readComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(), instance.GetComputationalDag());
 
         instance.GetArchitecture().setSynchronisationCosts(5);
         instance.GetArchitecture().setCommunicationCosts(5);
@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverOnTestGraphs) {
 
         std::cout << "Instance: " << filenameGraph << std::endl;
 
-        AddMemWeights(instance.getComputationalDag());
+        AddMemWeights(instance.GetComputationalDag());
 
         BspSchedule<Graph> schedule(instance);
         const auto result = testScheduler.computeSchedule(schedule);
@@ -699,7 +699,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverInnerLoopLambdaMapTest) {
 //         GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_int_t> test_scheduler;
 //         BspInstance<graph> instance;
 //         bool status_graph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(),
-//                                                                             instance.getComputationalDag());
+//                                                                             instance.GetComputationalDag());
 
 //         instance.GetArchitecture().setSynchronisationCosts(500);
 //         instance.GetArchitecture().setCommunicationCosts(5);
@@ -718,7 +718,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverInnerLoopLambdaMapTest) {
 //             BOOST_CHECK(false);
 //         }
 
-//         add_mem_weights(instance.getComputationalDag());
+//         add_mem_weights(instance.GetComputationalDag());
 
 //         BspSchedule<graph> schedule(instance);
 //         const auto result = test_scheduler.computeSchedule(schedule);
@@ -778,7 +778,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverInnerLoopLambdaMapTest) {
 //         GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_int_t> test_scheduler;
 //         BspInstance<graph> instance;
 //         bool status_graph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(),
-//                                                                             instance.getComputationalDag());
+//                                                                             instance.GetComputationalDag());
 
 //         instance.GetArchitecture().setSynchronisationCosts(500);
 //         instance.GetArchitecture().setCommunicationCosts(5);
@@ -797,7 +797,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverInnerLoopLambdaMapTest) {
 //             BOOST_CHECK(false);
 //         }
 
-//         add_mem_weights(instance.getComputationalDag());
+//         add_mem_weights(instance.GetComputationalDag());
 
 //         BspSchedule<graph> schedule(instance);
 //         const auto result = test_scheduler.computeSchedule(schedule);

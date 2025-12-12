@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(HillClimbing) {
     }
 
     bool status = file_reader::readComputationalDagHyperdagFormatDB(
-        (cwd / "data/spaa/tiny/instance_CG_N4_K1_nzP0d35.hdag").string(), instance.getComputationalDag());
+        (cwd / "data/spaa/tiny/instance_CG_N4_K1_nzP0d35.hdag").string(), instance.GetComputationalDag());
 
     BOOST_CHECK(status);
 
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(HillClimbingForCommSchedule) {
     }
 
     bool status = file_reader::readComputationalDagHyperdagFormatDB(
-        (cwd / "data/spaa/tiny/instance_CG_N4_K1_nzP0d35.hdag").string(), instance.getComputationalDag());
+        (cwd / "data/spaa/tiny/instance_CG_N4_K1_nzP0d35.hdag").string(), instance.GetComputationalDag());
 
     BOOST_CHECK(status);
 

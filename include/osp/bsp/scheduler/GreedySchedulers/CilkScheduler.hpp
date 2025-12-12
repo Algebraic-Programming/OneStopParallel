@@ -69,7 +69,7 @@ class CilkScheduler : public Scheduler<GraphT> {
         if (mode_ == SJF) {
             node = *readyNodes.begin();
             for (auto &r : readyNodes) {
-                if (instance.getComputationalDag().VertexWorkWeight(r) < instance.getComputationalDag().VertexWorkWeight(node)) {
+                if (instance.GetComputationalDag().VertexWorkWeight(r) < instance.GetComputationalDag().VertexWorkWeight(node)) {
                     node = r;
                 }
             }
@@ -153,11 +153,11 @@ class CilkScheduler : public Scheduler<GraphT> {
 
         const auto &instance = bspSchedule.GetInstance();
 
-        CSchedule<GraphT> schedule(instance.numberOfVertices());
+        CSchedule<GraphT> schedule(instance.NumberOfVertices());
 
         std::set<vertex_idx_t<Graph_t>> ready;
 
-        std::vector<unsigned> nrPredecDone(instance.numberOfVertices(), 0);
+        std::vector<unsigned> nrPredecDone(instance.NumberOfVertices(), 0);
 
         std::vector<bool> procFree(instance.NumberOfProcessors(), true);
 
@@ -171,7 +171,7 @@ class CilkScheduler : public Scheduler<GraphT> {
 
         finishTimes.insert(start);
 
-        for (const auto &v : source_vertices_view(instance.getComputationalDag())) {
+        for (const auto &v : source_vertices_view(instance.GetComputationalDag())) {
             ready.insert(v);
             if (mode_ == CILK) {
                 procQueue[0].push_front(v);
@@ -187,9 +187,9 @@ class CilkScheduler : public Scheduler<GraphT> {
                 finishTimes.erase(finishTimes.begin());
                 const vertex_idx_t<Graph_t> &node = currentPair.second;
                 if (node != std::numeric_limits<vertex_idx_t<Graph_t>>::max()) {
-                    for (const auto &succ : instance.getComputationalDag().children(node)) {
+                    for (const auto &succ : instance.GetComputationalDag().children(node)) {
                         ++nrPredecDone[succ];
-                        if (nrPredecDone[succ] == instance.getComputationalDag().in_degree(succ)) {
+                        if (nrPredecDone[succ] == instance.GetComputationalDag().in_degree(succ)) {
                             ready.insert(succ);
                             if (mode == CILK) {
                                 procQueue[schedule.proc[node]].push_back(succ);
@@ -216,7 +216,7 @@ class CilkScheduler : public Scheduler<GraphT> {
                 //     memory_constraint.add(nextNode, nextProc);
                 // }
 
-                finishTimes.insert({time + instance.getComputationalDag().VertexWorkWeight(nextNode), nextNode});
+                finishTimes.insert({time + instance.GetComputationalDag().VertexWorkWeight(nextNode), nextNode});
                 procFree[nextProc] = false;
 
                 if (nrProcFree > 0) {

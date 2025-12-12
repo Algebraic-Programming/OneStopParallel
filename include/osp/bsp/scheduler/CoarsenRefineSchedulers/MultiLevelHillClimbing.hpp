@@ -105,10 +105,10 @@ RETURN_STATUS MultiLevelHillClimbingScheduler<GraphT>::ComputeSchedule(BspSchedu
     GraphT coarseDAG;
     std::vector<vertex_idx> newVertexId;
 
-    const auto numVerices = schedule.GetInstance().numberOfVertices();
+    const auto numVerices = schedule.GetInstance().NumberOfVertices();
     SetParameter(numVerices);
 
-    coarser.coarsenDag(schedule.GetInstance().getComputationalDag(), coarseDAG, new_vertex_id);
+    coarser.coarsenDag(schedule.GetInstance().GetComputationalDag(), coarseDAG, new_vertex_id);
 
     BspInstance<GraphT> coarseInstance(coarseDAG, schedule.GetInstance().GetArchitecture());
 
@@ -148,7 +148,7 @@ BspSchedule<GraphT> MultiLevelHillClimbingScheduler<GraphT>::Refine(const BspIns
         BspSchedule<Graph_t> schedule(instance);
 
         // Project full schedule to current graph
-        for (vertex_idx node = 0; node < full_instance.numberOfVertices(); ++node) {
+        for (vertex_idx node = 0; node < full_instance.NumberOfVertices(); ++node) {
             schedule.setAssignedProcessor(new_ids[node], schedule_on_full_graph.assignedProcessor(node));
             schedule.setAssignedSuperstep(new_ids[node], schedule_on_full_graph.assignedSuperstep(node));
         }
@@ -173,7 +173,7 @@ BspSchedule<GraphT> MultiLevelHillClimbingScheduler<GraphT>::ComputeUncontracted
 
     BspSchedule<GraphT> schedule(fullInstance);
 
-    for (vertex_idx node = 0; node < fullInstance.numberOfVertices(); ++node) {
+    for (vertex_idx node = 0; node < fullInstance.NumberOfVertices(); ++node) {
         schedule.setAssignedProcessor(node, coarseSchedule.assignedProcessor(new_ids[node]));
         schedule.setAssignedSuperstep(node, coarseSchedule.assignedSuperstep(new_ids[node]));
     }

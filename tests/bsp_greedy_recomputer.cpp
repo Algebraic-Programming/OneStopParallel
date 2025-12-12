@@ -36,11 +36,11 @@ BOOST_AUTO_TEST_CASE(TestRecomputer) {
     instance1.setCommunicationCosts(1);
     instance1.setSynchronisationCosts(1);
 
-    instance1.getComputationalDag().add_vertex(10, 1, 0);
-    instance1.getComputationalDag().add_vertex(10, 1, 0);
-    instance1.getComputationalDag().add_vertex(10, 1, 0);
-    instance1.getComputationalDag().add_edge(0, 1);
-    instance1.getComputationalDag().add_edge(0, 2);
+    instance1.GetComputationalDag().add_vertex(10, 1, 0);
+    instance1.GetComputationalDag().add_vertex(10, 1, 0);
+    instance1.GetComputationalDag().add_vertex(10, 1, 0);
+    instance1.GetComputationalDag().add_edge(0, 1);
+    instance1.GetComputationalDag().add_edge(0, 2);
 
     BspSchedule<Graph> scheduleInit1(instance1);
     scheduleInit1.setAssignedProcessor(0, 0);
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(TestRecomputer) {
     }
 
     bool status = file_reader::readComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(),
-                                                                    instance2.getComputationalDag());
+                                                                    instance2.GetComputationalDag());
 
     BOOST_CHECK(status);
 

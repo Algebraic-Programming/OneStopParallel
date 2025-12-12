@@ -147,7 +147,7 @@ class BspScheduleCS : public BspSchedule<GraphT> {
             throw std::invalid_argument("Invalid Argument while adding communication schedule entry: step out of range.");
         }
 
-        if (std::get<0>(key) >= BspSchedule<GraphT>::instance->numberOfVertices()) {
+        if (std::get<0>(key) >= BspSchedule<GraphT>::instance->NumberOfVertices()) {
             throw std::invalid_argument("Invalid Argument while adding communication schedule entry: node out of range.");
         }
 

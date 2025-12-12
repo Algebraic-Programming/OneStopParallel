@@ -129,7 +129,7 @@ class BspInstance {
     template <typename GraphTOther>
     explicit BspInstance(const BspInstance<GraphTOther> &other)
         : architecture_(other.GetArchitecture()), nodeProcessorCompatibility_(other.getNodeProcessorCompatibilityMatrix()) {
-        constructComputationalDag(other.getComputationalDag(), cdag_);
+        constructComputationalDag(other.GetComputationalDag(), cdag_);
     }
 
     BspInstance(const BspInstance<GraphT> &other) = default;

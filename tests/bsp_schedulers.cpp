@@ -77,7 +77,7 @@ void RunTest(Scheduler<GraphT> *testScheduler) {
 
             BspInstance<GraphT> instance;
 
-            bool statusGraph = file_reader::readGraph((cwd / filenameGraph).string(), instance.getComputationalDag());
+            bool statusGraph = file_reader::readGraph((cwd / filenameGraph).string(), instance.GetComputationalDag());
             bool statusArchitecture
                 = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
 

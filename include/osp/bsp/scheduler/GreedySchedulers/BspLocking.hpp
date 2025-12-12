@@ -111,7 +111,7 @@ class BspLocking : public Scheduler<GraphT> {
 
     int ComputeScore(VertexType node, unsigned proc, const BspInstance<GraphT> &instance) {
         int score = 0;
-        for (const auto &succ : instance.getComputationalDag().children(node)) {
+        for (const auto &succ : instance.GetComputationalDag().children(node)) {
             if (locked[succ] < instance.NumberOfProcessors() && locked[succ] != proc) {
                 score -= lock_penalty;
             }
@@ -167,7 +167,7 @@ class BspLocking : public Scheduler<GraphT> {
 
                 // filling up
                 bool procreadyEmpty = false;
-                while (endSupStep && (remaining_time < instance.getComputationalDag().VertexWorkWeight(top_node))) {
+                while (endSupStep && (remaining_time < instance.GetComputationalDag().VertexWorkWeight(top_node))) {
                     procReady[proc].erase(top_node);
                     readyPhase_[top_node] = std::numeric_limits<unsigned>::max();
                     max_proc_score_heap[proc].pop();
@@ -203,7 +203,7 @@ class BspLocking : public Scheduler<GraphT> {
 
             // filling up
             bool allProcreadyEmpty = false;
-            while (endSupStep && (remaining_time < instance.getComputationalDag().VertexWorkWeight(top_node))) {
+            while (endSupStep && (remaining_time < instance.GetComputationalDag().VertexWorkWeight(top_node))) {
                 allReady.erase(top_node);
                 for (unsigned procDel = 0; procDel < instance.NumberOfProcessors(); procDel++) {
                     if (procDel == proc || !instance.isCompatible(top_node, procDel)) {
@@ -271,7 +271,7 @@ class BspLocking : public Scheduler<GraphT> {
         std::vector<unsigned> readyNodesPerType = nrReadyNodesPerType;
         std::vector<unsigned> procsPerType = nrProcsPerType;
         for (unsigned procType = 0; procType < instance.GetArchitecture().getNumberOfProcessorTypes(); ++procType) {
-            for (unsigned nodeType = 0; nodeType < instance.getComputationalDag().NumVertexTypes(); ++nodeType) {
+            for (unsigned nodeType = 0; nodeType < instance.GetComputationalDag().NumVertexTypes(); ++nodeType) {
                 if (instance.isCompatibleType(nodeType, procType)) {
                     unsigned matched = std::min(readyNodesPerType[nodeType], procsPerType[procType]);
                     nrNodes += matched;
@@ -308,7 +308,7 @@ class BspLocking : public Scheduler<GraphT> {
     virtual RETURN_STATUS computeSchedule(BspSchedule<GraphT> &schedule) override {
         const auto &instance = schedule.GetInstance();
 
-        for (const auto &v : instance.getComputationalDag().vertices()) {
+        for (const auto &v : instance.GetComputationalDag().vertices()) {
             schedule.setAssignedProcessor(v, std::numeric_limits<unsigned>::max());
         }
 
@@ -320,9 +320,9 @@ class BspLocking : public Scheduler<GraphT> {
             memoryConstraint_.initialize(schedule, supstepIdx);
         }
 
-        const auto &n = instance.numberOfVertices();
+        const auto &n = instance.NumberOfVertices();
         const unsigned &paramsP = instance.NumberOfProcessors();
-        const auto &g = instance.getComputationalDag();
+        const auto &g = instance.GetComputationalDag();
 
         const std::vector<v_workw_t<Graph_t>> pathLength = get_longest_path(g);
         v_workw_t<Graph_t> maxPath = 1;

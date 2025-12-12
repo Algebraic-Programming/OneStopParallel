@@ -127,7 +127,7 @@ struct KlBspCommCostFunction {
         activeSchedule_ = &sched;
         procRange_ = &pRange;
         instance_ = &sched.GetInstance();
-        graph_ = &instance_->getComputationalDag();
+        graph_ = &instance_->GetComputationalDag();
 
         const unsigned numSteps = activeSchedule_->num_steps();
         commDs_.initialize(*activeSchedule_);
@@ -229,7 +229,7 @@ struct KlBspCommCostFunction {
         const unsigned windowBound = EndIdx(nodeStep, endStep);
         const unsigned nodeStartIdx = StartIdx(nodeStep, startStep);
 
-        for (const auto &target : instance->getComputationalDag().children(node)) {
+        for (const auto &target : instance->GetComputationalDag().children(node)) {
             const unsigned target_step = active_schedule->assigned_superstep(target);
             const unsigned target_proc = active_schedule->assigned_processor(target);
 
@@ -259,7 +259,7 @@ struct KlBspCommCostFunction {
             }
         }
 
-        for (const auto &source : instance->getComputationalDag().parents(node)) {
+        for (const auto &source : instance->GetComputationalDag().parents(node)) {
             const unsigned source_step = active_schedule->assigned_superstep(source);
             const unsigned source_proc = active_schedule->assigned_processor(source);
 
@@ -521,7 +521,7 @@ struct KlBspCommCostFunction {
         const unsigned startStep = threadData.start_step;
         const unsigned endStep = threadData.end_step;
 
-        for (const auto &target : instance->getComputationalDag().children(move.node)) {
+        for (const auto &target : instance->GetComputationalDag().children(move.node)) {
             const unsigned target_step = active_schedule->assigned_superstep(target);
             if (target_step < start_step || target_step > end_step) {
                 continue;
@@ -605,7 +605,7 @@ struct KlBspCommCostFunction {
             }
         }
 
-        for (const auto &source : instance->getComputationalDag().parents(move.node)) {
+        for (const auto &source : instance->GetComputationalDag().parents(move.node)) {
             const unsigned source_step = active_schedule->assigned_superstep(source);
             if (source_step < start_step || source_step > end_step) {
                 continue;

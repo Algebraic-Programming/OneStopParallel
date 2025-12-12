@@ -31,10 +31,10 @@ template <typename GraphT>
 void WriteTxt(std::ostream &os, const BspSchedule<GraphT> &schedule) {
     os << "%% BspSchedule for " << schedule.GetInstance().NumberOfProcessors() << " processors and "
        << schedule.NumberOfSupersteps() << " supersteps." << std::endl;
-    os << schedule.GetInstance().numberOfVertices() << " " << schedule.GetInstance().NumberOfProcessors() << " "
+    os << schedule.GetInstance().NumberOfVertices() << " " << schedule.GetInstance().NumberOfProcessors() << " "
        << schedule.NumberOfSupersteps() << std::endl;
 
-    for (const auto &vertex : schedule.GetInstance().getComputationalDag().vertices()) {
+    for (const auto &vertex : schedule.GetInstance().GetComputationalDag().vertices()) {
         os << vertex << " " << schedule.assignedProcessor(vertex) << " " << schedule.assignedSuperstep(vertex) << std::endl;
     }
 }
@@ -49,7 +49,7 @@ template <typename GraphT>
 void WriteTxt(std::ostream &os, const BspScheduleCS<GraphT> &schedule) {
     os << "%% BspSchedule for " << schedule.GetInstance().NumberOfProcessors() << " processors and "
        << schedule.NumberOfSupersteps() << " supersteps." << std::endl;
-    os << schedule.GetInstance().numberOfVertices() << " " << schedule.GetInstance().NumberOfProcessors() << " "
+    os << schedule.GetInstance().NumberOfVertices() << " " << schedule.GetInstance().NumberOfProcessors() << " "
        << schedule.NumberOfSupersteps() << " ";
     if (schedule.getCommunicationSchedule().empty()) {
         os << 0 << " ";
@@ -59,7 +59,7 @@ void WriteTxt(std::ostream &os, const BspScheduleCS<GraphT> &schedule) {
 
     os << std::endl;
 
-    for (const auto &vertex : schedule.GetInstance().getComputationalDag().vertices()) {
+    for (const auto &vertex : schedule.GetInstance().GetComputationalDag().vertices()) {
         os << vertex << " " << schedule.assignedProcessor(vertex) << " " << schedule.assignedSuperstep(vertex) << std::endl;
     }
 
@@ -86,9 +86,9 @@ void WriteSankey(std::ostream &os, const BspScheduleCS<GraphT> &schedule) {
     std::vector<std::vector<VWorkwT<GraphT>>> procWorkloads(
         schedule.NumberOfSupersteps(), std::vector<VWorkwT<GraphT>>(schedule.GetInstance().NumberOfProcessors(), 0));
 
-    for (size_t node = 0; node < schedule.GetInstance().numberOfVertices(); node++) {
+    for (size_t node = 0; node < schedule.GetInstance().NumberOfVertices(); node++) {
         procWorkloads[schedule.assignedSuperstep(node)][schedule.assignedProcessor(node)]
-            += schedule.GetInstance().getComputationalDag().VertexWorkWeight(node);
+            += schedule.GetInstance().GetComputationalDag().VertexWorkWeight(node);
     }
 
     // Computing communicationloads
@@ -99,7 +99,7 @@ void WriteSankey(std::ostream &os, const BspScheduleCS<GraphT> &schedule) {
 
     for (const auto &[comm_triple, sstep] : schedule.getCommunicationSchedule()) {
         commloads[sstep][std::get<1>(comm_triple)][std::get<2>(comm_triple)]
-            += schedule.GetInstance().getComputationalDag().VertexCommWeight(std::get<0>(comm_triple));
+            += schedule.GetInstance().GetComputationalDag().VertexCommWeight(std::get<0>(comm_triple));
     }
 
     os << "BspSchedule: Number of Processors, Number of Supersteps" << std::endl;

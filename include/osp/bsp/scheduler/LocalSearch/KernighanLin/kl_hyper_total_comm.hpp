@@ -46,14 +46,14 @@ class kl_hyper_total_comm : public kl_total<Graph_t, MemoryConstraint_t> {
 
         double comm_costs = 0;
 
-        for (const auto &node : current_schedule.instance->getComputationalDag().vertices()) {
-            if (is_sink(node, current_schedule.instance->getComputationalDag())) {
+        for (const auto &node : current_schedule.instance->GetComputationalDag().vertices()) {
+            if (is_sink(node, current_schedule.instance->GetComputationalDag())) {
                 continue;
             }
 
             std::unordered_set<unsigned> intersects;
 
-            for (const auto &target : current_schedule.instance->getComputationalDag().children(node)) {
+            for (const auto &target : current_schedule.instance->GetComputationalDag().children(node)) {
                 const unsigned &target_proc = current_schedule.vector_schedule.assignedProcessor(target);
 
                 if (current_schedule.vector_schedule.assignedProcessor(node) != target_proc) {
@@ -61,7 +61,7 @@ class kl_hyper_total_comm : public kl_total<Graph_t, MemoryConstraint_t> {
                 }
             }
 
-            comm_costs += intersects.size() * current_schedule.instance->getComputationalDag().VertexCommWeight(node);
+            comm_costs += intersects.size() * current_schedule.instance->GetComputationalDag().VertexCommWeight(node);
         }
 
         current_schedule.current_cost = work_costs + comm_costs * current_schedule.comm_multiplier

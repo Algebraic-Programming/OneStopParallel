@@ -86,7 +86,7 @@ class Sptrsv {
             schedule.NumberOfSupersteps(), std::vector<std::vector<EigenIdxType>>(schedule.GetInstance().NumberOfProcessors()));
 
         numSupersteps_ = schedule.NumberOfSupersteps();
-        size_t numberOfVertices = instance_->getComputationalDag().NumVertices();
+        size_t numberOfVertices = instance_->GetComputationalDag().NumVertices();
 
 #    pragma omp parallel num_threads(2)
         {
@@ -168,13 +168,13 @@ class Sptrsv {
         numSupersteps_ = schedule.NumberOfSupersteps();
 
         val_.clear();
-        val_.reserve(static_cast<size_t>(instance_->getComputationalDag().getCSR()->nonZeros()));
+        val_.reserve(static_cast<size_t>(instance_->GetComputationalDag().getCSR()->nonZeros()));
 
         colIdx_.clear();
-        colIdx_.reserve(static_cast<size_t>(instance_->getComputationalDag().getCSR()->nonZeros()));
+        colIdx_.reserve(static_cast<size_t>(instance_->GetComputationalDag().getCSR()->nonZeros()));
 
         rowPtr_.clear();
-        rowPtr_.reserve(instance_->numberOfVertices() + 1);
+        rowPtr_.reserve(instance_->NumberOfVertices() + 1);
 
         stepProcPtr_
             = std::vector<std::vector<unsigned>>(numSupersteps_, std::vector<unsigned>(instance_->NumberOfProcessors(), 0));
@@ -204,7 +204,7 @@ class Sptrsv {
 
             std::set<UVertType> parents;
 
-            for (UVertType par : instance_->getComputationalDag().parents(node)) {
+            for (UVertType par : instance_->GetComputationalDag().parents(node)) {
                 parents.insert(perm[par]);
             }
 
@@ -212,11 +212,11 @@ class Sptrsv {
                 colIdx_.push_back(par);
                 unsigned found = 0;
 
-                const auto *outer = instance_->getComputationalDag().getCSR()->outerIndexPtr();
+                const auto *outer = instance_->GetComputationalDag().getCSR()->outerIndexPtr();
                 for (UVertType parInd = static_cast<UVertType>(outer[node]); parInd < static_cast<UVertType>(outer[node + 1] - 1);
                      ++parInd) {
-                    if (static_cast<size_t>(instance_->getComputationalDag().getCSR()->innerIndexPtr()[parInd]) == permInv[par]) {
-                        val_.push_back(instance_->getComputationalDag().getCSR()->valuePtr()[parInd]);
+                    if (static_cast<size_t>(instance_->GetComputationalDag().getCSR()->innerIndexPtr()[parInd]) == permInv[par]) {
+                        val_.push_back(instance_->GetComputationalDag().getCSR()->valuePtr()[parInd]);
                         found++;
                     }
                 }
@@ -224,44 +224,44 @@ class Sptrsv {
             }
 
             colIdx_.push_back(perm[node]);
-            val_.push_back(instance_->getComputationalDag()
+            val_.push_back(instance_->GetComputationalDag()
                                .getCSR()
-                               ->valuePtr()[instance_->getComputationalDag().getCSR()->outerIndexPtr()[node + 1] - 1]);
+                               ->valuePtr()[instance_->GetComputationalDag().getCSR()->outerIndexPtr()[node + 1] - 1]);
         }
 
         rowPtr_.push_back(colIdx_.size());
     }
 
     void LsolveSerial() {
-        EigenIdxType numberOfVertices = static_cast<EigenIdxType>(instance_->numberOfVertices());
+        EigenIdxType numberOfVertices = static_cast<EigenIdxType>(instance_->NumberOfVertices());
         for (EigenIdxType i = 0; i < numberOfVertices; ++i) {
             x_[i] = b_[i];
-            for (EigenIdxType j = (*(instance_->getComputationalDag().getCSR())).outerIndexPtr()[i];
-                 j < (*(instance_->getComputationalDag().getCSR())).outerIndexPtr()[i + 1] - 1;
+            for (EigenIdxType j = (*(instance_->GetComputationalDag().getCSR())).outerIndexPtr()[i];
+                 j < (*(instance_->GetComputationalDag().getCSR())).outerIndexPtr()[i + 1] - 1;
                  ++j) {
-                x_[i] -= (*(instance_->getComputationalDag().getCSR())).valuePtr()[j]
-                         * x_[(*(instance_->getComputationalDag().getCSR())).innerIndexPtr()[j]];
+                x_[i] -= (*(instance_->GetComputationalDag().getCSR())).valuePtr()[j]
+                         * x_[(*(instance_->GetComputationalDag().getCSR())).innerIndexPtr()[j]];
             }
-            x_[i] /= (*(instance_->getComputationalDag().getCSR()))
-                         .valuePtr()[(*(instance_->getComputationalDag().getCSR())).outerIndexPtr()[i + 1] - 1];
+            x_[i] /= (*(instance_->GetComputationalDag().getCSR()))
+                         .valuePtr()[(*(instance_->GetComputationalDag().getCSR())).outerIndexPtr()[i + 1] - 1];
         }
     }
 
     void UsolveSerial() {
-        EigenIdxType numberOfVertices = static_cast<EigenIdxType>(instance_->numberOfVertices());
+        EigenIdxType numberOfVertices = static_cast<EigenIdxType>(instance_->NumberOfVertices());
 
         EigenIdxType i = numberOfVertices;
         do {
             i--;
             x_[i] = b_[i];
-            for (EigenIdxType j = (*(instance_->getComputationalDag().getCSC())).outerIndexPtr()[i] + 1;
-                 j < (*(instance_->getComputationalDag().getCSC())).outerIndexPtr()[i + 1];
+            for (EigenIdxType j = (*(instance_->GetComputationalDag().getCSC())).outerIndexPtr()[i] + 1;
+                 j < (*(instance_->GetComputationalDag().getCSC())).outerIndexPtr()[i + 1];
                  ++j) {
-                x_[i] -= (*(instance_->getComputationalDag().getCSC())).valuePtr()[j]
-                         * x_[(*(instance_->getComputationalDag().getCSC())).innerIndexPtr()[j]];
+                x_[i] -= (*(instance_->GetComputationalDag().getCSC())).valuePtr()[j]
+                         * x_[(*(instance_->GetComputationalDag().getCSC())).innerIndexPtr()[j]];
             }
-            x_[i] /= (*(instance_->getComputationalDag().getCSC()))
-                         .valuePtr()[(*(instance_->getComputationalDag().getCSC())).outerIndexPtr()[i]];
+            x_[i] /= (*(instance_->GetComputationalDag().getCSC()))
+                         .valuePtr()[(*(instance_->GetComputationalDag().getCSC())).outerIndexPtr()[i]];
         } while (i != 0);
     }
 
@@ -277,14 +277,14 @@ class Sptrsv {
                     const EigenIdxType upperB = boundsArrayL_[step][proc][index + 1];
 
                     for (EigenIdxType node = lowerB; node <= upperB; ++node) {
-                        for (EigenIdxType i = (*(instance_->getComputationalDag().getCSR())).outerIndexPtr()[node];
-                             i < (*(instance_->getComputationalDag().getCSR())).outerIndexPtr()[node + 1] - 1;
+                        for (EigenIdxType i = (*(instance_->GetComputationalDag().getCSR())).outerIndexPtr()[node];
+                             i < (*(instance_->GetComputationalDag().getCSR())).outerIndexPtr()[node + 1] - 1;
                              ++i) {
-                            x_[node] -= (*(instance_->getComputationalDag().getCSR())).valuePtr()[i]
-                                        * x_[(*(instance_->getComputationalDag().getCSR())).innerIndexPtr()[i]];
+                            x_[node] -= (*(instance_->GetComputationalDag().getCSR())).valuePtr()[i]
+                                        * x_[(*(instance_->GetComputationalDag().getCSR())).innerIndexPtr()[i]];
                         }
-                        x_[node] /= (*(instance_->getComputationalDag().getCSR()))
-                                        .valuePtr()[(*(instance_->getComputationalDag().getCSR())).outerIndexPtr()[node + 1] - 1];
+                        x_[node] /= (*(instance_->GetComputationalDag().getCSR()))
+                                        .valuePtr()[(*(instance_->GetComputationalDag().getCSR())).outerIndexPtr()[node + 1] - 1];
                     }
                 }
 #    pragma omp barrier
@@ -307,14 +307,14 @@ class Sptrsv {
 
                     do {
                         node--;
-                        for (EigenIdxType i = (*(instance_->getComputationalDag().getCSC())).outerIndexPtr()[node] + 1;
-                             i < (*(instance_->getComputationalDag().getCSC())).outerIndexPtr()[node + 1];
+                        for (EigenIdxType i = (*(instance_->GetComputationalDag().getCSC())).outerIndexPtr()[node] + 1;
+                             i < (*(instance_->GetComputationalDag().getCSC())).outerIndexPtr()[node + 1];
                              ++i) {
-                            x_[node] -= (*(instance_->getComputationalDag().getCSC())).valuePtr()[i]
-                                        * x_[(*(instance_->getComputationalDag().getCSC())).innerIndexPtr()[i]];
+                            x_[node] -= (*(instance_->GetComputationalDag().getCSC())).valuePtr()[i]
+                                        * x_[(*(instance_->GetComputationalDag().getCSC())).innerIndexPtr()[i]];
                         }
-                        x_[node] /= (*(instance_->getComputationalDag().getCSC()))
-                                        .valuePtr()[(*(instance_->getComputationalDag().getCSC())).outerIndexPtr()[node]];
+                        x_[node] /= (*(instance_->GetComputationalDag().getCSC()))
+                                        .valuePtr()[(*(instance_->GetComputationalDag().getCSC())).outerIndexPtr()[node]];
                     } while (node != lowerB);
                 }
 #    pragma omp barrier
@@ -335,14 +335,14 @@ class Sptrsv {
 
                     for (EigenIdxType node = lowerB; node <= upperB; ++node) {
                         x_[node] = b_[node];
-                        for (EigenIdxType i = (*(instance_->getComputationalDag().getCSR())).outerIndexPtr()[node];
-                             i < (*(instance_->getComputationalDag().getCSR())).outerIndexPtr()[node + 1] - 1;
+                        for (EigenIdxType i = (*(instance_->GetComputationalDag().getCSR())).outerIndexPtr()[node];
+                             i < (*(instance_->GetComputationalDag().getCSR())).outerIndexPtr()[node + 1] - 1;
                              ++i) {
-                            x_[node] -= (*(instance_->getComputationalDag().getCSR())).valuePtr()[i]
-                                        * x_[(*(instance_->getComputationalDag().getCSR())).innerIndexPtr()[i]];
+                            x_[node] -= (*(instance_->GetComputationalDag().getCSR())).valuePtr()[i]
+                                        * x_[(*(instance_->GetComputationalDag().getCSR())).innerIndexPtr()[i]];
                         }
-                        x_[node] /= (*(instance_->getComputationalDag().getCSR()))
-                                        .valuePtr()[(*(instance_->getComputationalDag().getCSR())).outerIndexPtr()[node + 1] - 1];
+                        x_[node] /= (*(instance_->GetComputationalDag().getCSR()))
+                                        .valuePtr()[(*(instance_->GetComputationalDag().getCSR())).outerIndexPtr()[node + 1] - 1];
                     }
                 }
 #    pragma omp barrier
@@ -366,14 +366,14 @@ class Sptrsv {
                     do {
                         node--;
                         x_[node] = b_[node];
-                        for (EigenIdxType i = (*(instance_->getComputationalDag().getCSC())).outerIndexPtr()[node] + 1;
-                             i < (*(instance_->getComputationalDag().getCSC())).outerIndexPtr()[node + 1];
+                        for (EigenIdxType i = (*(instance_->GetComputationalDag().getCSC())).outerIndexPtr()[node] + 1;
+                             i < (*(instance_->GetComputationalDag().getCSC())).outerIndexPtr()[node + 1];
                              ++i) {
-                            x_[node] -= (*(instance_->getComputationalDag().getCSC())).valuePtr()[i]
-                                        * x_[(*(instance_->getComputationalDag().getCSC())).innerIndexPtr()[i]];
+                            x_[node] -= (*(instance_->GetComputationalDag().getCSC())).valuePtr()[i]
+                                        * x_[(*(instance_->GetComputationalDag().getCSC())).innerIndexPtr()[i]];
                         }
-                        x_[node] /= (*(instance_->getComputationalDag().getCSC()))
-                                        .valuePtr()[(*(instance_->getComputationalDag().getCSC())).outerIndexPtr()[node]];
+                        x_[node] /= (*(instance_->GetComputationalDag().getCSC()))
+                                        .valuePtr()[(*(instance_->GetComputationalDag().getCSC())).outerIndexPtr()[node]];
                     } while (node != lowerB);
                 }
 #    pragma omp barrier
@@ -382,32 +382,32 @@ class Sptrsv {
     }
 
     void LsolveSerialInPlace() {
-        EigenIdxType numberOfVertices = static_cast<EigenIdxType>(instance_->numberOfVertices());
+        EigenIdxType numberOfVertices = static_cast<EigenIdxType>(instance_->NumberOfVertices());
         for (EigenIdxType i = 0; i < numberOfVertices; ++i) {
-            for (EigenIdxType j = (*(instance_->getComputationalDag().getCSR())).outerIndexPtr()[i];
-                 j < (*(instance_->getComputationalDag().getCSR())).outerIndexPtr()[i + 1] - 1;
+            for (EigenIdxType j = (*(instance_->GetComputationalDag().getCSR())).outerIndexPtr()[i];
+                 j < (*(instance_->GetComputationalDag().getCSR())).outerIndexPtr()[i + 1] - 1;
                  ++j) {
-                x_[i] -= (*(instance_->getComputationalDag().getCSR())).valuePtr()[j]
-                         * x_[(*(instance_->getComputationalDag().getCSR())).innerIndexPtr()[j]];
+                x_[i] -= (*(instance_->GetComputationalDag().getCSR())).valuePtr()[j]
+                         * x_[(*(instance_->GetComputationalDag().getCSR())).innerIndexPtr()[j]];
             }
-            x_[i] /= (*(instance_->getComputationalDag().getCSR()))
-                         .valuePtr()[(*(instance_->getComputationalDag().getCSR())).outerIndexPtr()[i + 1] - 1];
+            x_[i] /= (*(instance_->GetComputationalDag().getCSR()))
+                         .valuePtr()[(*(instance_->GetComputationalDag().getCSR())).outerIndexPtr()[i + 1] - 1];
         }
     }
 
     void UsolveSerialInPlace() {
-        EigenIdxType numberOfVertices = static_cast<EigenIdxType>(instance_->numberOfVertices());
+        EigenIdxType numberOfVertices = static_cast<EigenIdxType>(instance_->NumberOfVertices());
         EigenIdxType i = numberOfVertices;
         do {
             i--;
-            for (EigenIdxType j = (*(instance_->getComputationalDag().getCSC())).outerIndexPtr()[i] + 1;
-                 j < (*(instance_->getComputationalDag().getCSC())).outerIndexPtr()[i + 1];
+            for (EigenIdxType j = (*(instance_->GetComputationalDag().getCSC())).outerIndexPtr()[i] + 1;
+                 j < (*(instance_->GetComputationalDag().getCSC())).outerIndexPtr()[i + 1];
                  ++j) {
-                x_[i] -= (*(instance_->getComputationalDag().getCSC())).valuePtr()[j]
-                         * x_[(*(instance_->getComputationalDag().getCSC())).innerIndexPtr()[j]];
+                x_[i] -= (*(instance_->GetComputationalDag().getCSC())).valuePtr()[j]
+                         * x_[(*(instance_->GetComputationalDag().getCSC())).innerIndexPtr()[j]];
             }
-            x_[i] /= (*(instance_->getComputationalDag().getCSC()))
-                         .valuePtr()[(*(instance_->getComputationalDag().getCSC())).outerIndexPtr()[i]];
+            x_[i] /= (*(instance_->GetComputationalDag().getCSC()))
+                         .valuePtr()[(*(instance_->GetComputationalDag().getCSC())).outerIndexPtr()[i]];
         } while (i != 0);
     }
 
@@ -451,7 +451,7 @@ class Sptrsv {
     }
 
     void ResetX() {
-        EigenIdxType numberOfVertices = static_cast<EigenIdxType>(instance_->numberOfVertices());
+        EigenIdxType numberOfVertices = static_cast<EigenIdxType>(instance_->NumberOfVertices());
         for (EigenIdxType i = 0; i < numberOfVertices; i++) {
             x_[i] = 1.0;
         }
@@ -477,7 +477,7 @@ class Sptrsv {
         }
     }
 
-    std::size_t GetNumberOfVertices() { return instance_->numberOfVertices(); }
+    std::size_t GetNumberOfVertices() { return instance_->NumberOfVertices(); }
 
     virtual ~Sptrsv() = default;
 };

@@ -181,7 +181,7 @@ RETURN_STATUS AcyclicPartitioningILP<GraphT>::ComputePartitioning(const BspInsta
 
     if (numberOfParts_ == 0) {
         numberOfParts_ = static_cast<unsigned>(
-            std::floor(static_cast<double>(instance.numberOfVertices()) / static_cast<double>(minPartitionSize_)));
+            std::floor(static_cast<double>(instance.NumberOfVertices()) / static_cast<double>(minPartitionSize_)));
         std::cout << "ILP nr parts: " << numberOfParts_ << std::endl;
     }
 
@@ -194,7 +194,7 @@ RETURN_STATUS AcyclicPartitioningILP<GraphT>::ComputePartitioning(const BspInsta
         return RETURN_STATUS::OSP_SUCCESS;
 
     } else if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_INF_OR_UNB) {
-        partitioning.resize(instance.numberOfVertices(), UINT_MAX);
+        partitioning.resize(instance.NumberOfVertices(), UINT_MAX);
         return RETURN_STATUS::ERROR;
 
     } else {
@@ -203,7 +203,7 @@ RETURN_STATUS AcyclicPartitioningILP<GraphT>::ComputePartitioning(const BspInsta
             return RETURN_STATUS::OSP_SUCCESS;
 
         } else {
-            partitioning.resize(instance.numberOfVertices(), UINT_MAX);
+            partitioning.resize(instance.NumberOfVertices(), UINT_MAX);
             return RETURN_STATUS::ERROR;
         }
     }
@@ -213,16 +213,16 @@ template <typename GraphT>
 void AcyclicPartitioningILP<GraphT>::SetupVariablesConstraintsObjective(const BspInstance<GraphT> &instance) {
     // Variables
 
-    node_in_partition = std::vector<VarArray>(instance.numberOfVertices());
+    node_in_partition = std::vector<VarArray>(instance.NumberOfVertices());
 
-    for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
+    for (vertex_idx node = 0; node < instance.NumberOfVertices(); node++) {
         node_in_partition[node] = model.AddVars(static_cast<int>(numberOfParts), COPT_BINARY, "node_in_partition");
     }
 
     std::map<vertex_idx, unsigned> nodeToHyperedgeIndex;
     unsigned numberOfHyperedges = 0;
-    for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
-        if (instance.getComputationalDag().OutDegree(node) > 0) {
+    for (vertex_idx node = 0; node < instance.NumberOfVertices(); node++) {
+        if (instance.GetComputationalDag().OutDegree(node) > 0) {
             nodeToHyperedgeIndex[node] = numberOfHyperedges;
             ++numberOfHyperedges;
         }
@@ -238,7 +238,7 @@ void AcyclicPartitioningILP<GraphT>::SetupVariablesConstraintsObjective(const Bs
     // Constraints
 
     // each node assigned to exactly one partition
-    for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
+    for (vertex_idx node = 0; node < instance.NumberOfVertices(); node++) {
         Expr expr;
         for (unsigned part = 0; part < numberOfParts_; part++) {
             expr += node_in_partition[node][static_cast<int>(part)];
@@ -248,14 +248,14 @@ void AcyclicPartitioningILP<GraphT>::SetupVariablesConstraintsObjective(const Bs
 
     // hyperedge indicators match node variables
     for (unsigned part = 0; part < numberOfParts_; part++) {
-        for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
-            if (instance.getComputationalDag().OutDegree(node) == 0) {
+        for (vertex_idx node = 0; node < instance.NumberOfVertices(); node++) {
+            if (instance.GetComputationalDag().OutDegree(node) == 0) {
                 continue;
             }
 
             model.AddConstr(hyperedge_intersects_partition[node_to_hyperedge_index[node]][static_cast<int>(part)]
                             >= node_in_partition[node][static_cast<int>(part)]);
-            for (const auto &succ : instance.getComputationalDag().children(node)) {
+            for (const auto &succ : instance.GetComputationalDag().children(node)) {
                 model.AddConstr(hyperedge_intersects_partition[node_to_hyperedge_index[node]][static_cast<int>(part)]
                                 >= node_in_partition[succ][static_cast<int>(part)]);
             }
@@ -265,7 +265,7 @@ void AcyclicPartitioningILP<GraphT>::SetupVariablesConstraintsObjective(const Bs
     // partition size constraints
     for (unsigned part = 0; part < numberOfParts_; part++) {
         Expr expr;
-        for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
+        for (vertex_idx node = 0; node < instance.NumberOfVertices(); node++) {
             if (!ignore_sources_for_constraint || is_original_source.empty() || !is_original_source[node]) {
                 expr += node_in_partition[node][static_cast<int>(part)];
             }
@@ -278,8 +278,8 @@ void AcyclicPartitioningILP<GraphT>::SetupVariablesConstraintsObjective(const Bs
     // acyclicity constraints
     for (unsigned fromPart = 0; fromPart < numberOfParts_; fromPart++) {
         for (unsigned toPart = 0; toPart < fromPart; toPart++) {
-            for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
-                for (const auto &succ : instance.getComputationalDag().children(node)) {
+            for (vertex_idx node = 0; node < instance.NumberOfVertices(); node++) {
+                for (const auto &succ : instance.GetComputationalDag().children(node)) {
                     model.AddConstr(node_in_partition[node][static_cast<int>(from_part)]
                                         + node_in_partition[succ][static_cast<int>(to_part)]
                                     <= 1);
@@ -290,11 +290,11 @@ void AcyclicPartitioningILP<GraphT>::SetupVariablesConstraintsObjective(const Bs
 
     // set objective
     Expr expr;
-    for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
-        if (instance.getComputationalDag().OutDegree(node) > 0) {
-            expr -= instance.getComputationalDag().VertexCommWeight(node);
+    for (vertex_idx node = 0; node < instance.NumberOfVertices(); node++) {
+        if (instance.GetComputationalDag().OutDegree(node) > 0) {
+            expr -= instance.GetComputationalDag().VertexCommWeight(node);
             for (unsigned part = 0; part < numberOfParts_; part++) {
-                expr += instance.getComputationalDag().VertexCommWeight(node)
+                expr += instance.GetComputationalDag().VertexCommWeight(node)
                         * hyperedge_intersects_partition[node_to_hyperedge_index[node]][static_cast<int>(part)];
             }
         }
@@ -318,10 +318,10 @@ void AcyclicPartitioningILP<GraphT>::WriteSolutionCallback::Callback() {
 
 template <typename GraphT>
 std::vector<unsigned> AcyclicPartitioningILP<GraphT>::ReturnAssignment(const BspInstance<GraphT> &instance) {
-    std::vector<unsigned> nodeToPartition(instance.numberOfVertices(), UINT_MAX);
+    std::vector<unsigned> nodeToPartition(instance.NumberOfVertices(), UINT_MAX);
 
     std::set<unsigned> nonemptyPartitionIds;
-    for (unsigned node = 0; node < instance.numberOfVertices(); node++) {
+    for (unsigned node = 0; node < instance.NumberOfVertices(); node++) {
         for (unsigned part = 0; part < numberOfParts_; part++) {
             if (node_in_partition[node][static_cast<int>(part)].Get(COPT_DBLINFO_VALUE) >= .99) {
                 nodeToPartition[node] = part;
@@ -343,7 +343,7 @@ std::vector<unsigned> AcyclicPartitioningILP<GraphT>::ReturnAssignment(const Bsp
         ++current_index;
     }
 
-    for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
+    for (vertex_idx node = 0; node < instance.NumberOfVertices(); node++) {
         nodeToPartition[node] = new_index[node_to_partition[node]];
     }
 

@@ -49,7 +49,7 @@ class Serial : public Scheduler<GraphT> {
 
     RETURN_STATUS computeSchedule(BspSchedule<GraphT> &schedule) override {
         const auto &instance = schedule.GetInstance();
-        const auto &dag = instance.getComputationalDag();
+        const auto &dag = instance.GetComputationalDag();
         const auto numVertices = dag.NumVertices();
 
         if (numVertices == 0) {

@@ -89,9 +89,9 @@ std::vector<v_workw_t<Graph_t>> SubproblemMultiScheduling<GraphT>::GetLongestPat
 template <typename GraphT>
 RETURN_STATUS SubproblemMultiScheduling<GraphT>::ComputeMultiSchedule(const BspInstance<GraphT> &instance,
                                                                       std::vector<std::set<unsigned>> &processorsToNode) {
-    const unsigned &n = static_cast<unsigned>(instance.numberOfVertices());
+    const unsigned &n = static_cast<unsigned>(instance.NumberOfVertices());
     const unsigned &p = instance.NumberOfProcessors();
-    const auto &g = instance.getComputationalDag();
+    const auto &g = instance.GetComputationalDag();
 
     processorsToNode.clear();
     processorsToNode.resize(n);
@@ -223,7 +223,7 @@ std::vector<std::pair<vertex_idx_t<Graph_t>, unsigned>> SubproblemMultiSchedulin
             continue;
         }
 
-        for (const auto &succ : instance.getComputationalDag().children(last_node_on_proc[proc])) {
+        for (const auto &succ : instance.GetComputationalDag().children(last_node_on_proc[proc])) {
             if (nodes_available.find({-longest_outgoing_path[succ], succ}) != nodes_available.end()
                 && instance.isCompatible(succ, proc) && assigned_nodes.find(succ) == assigned_nodes.end()) {
                 assignments.emplace_back(succ, proc);

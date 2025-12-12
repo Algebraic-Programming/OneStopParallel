@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerSimpleChain) {
 
     // 1. Setup Instance
     BspInstance<GraphT> instance;
-    auto &dag = instance.getComputationalDag();
+    auto &dag = instance.GetComputationalDag();
 
     // Create a simple coarse-grained DAG: 0 -> 1 -> 2
     dag.add_vertex(100, 1, 0);    // node 0
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerForkJoin) {
 
     // 1. Setup Instance
     BspInstance<GraphT> instance;
-    auto &dag = instance.getComputationalDag();
+    auto &dag = instance.GetComputationalDag();
 
     // Create a fork-join DAG: 0 -> {1,2} -> 3
     dag.add_vertex(100, 1, 0);    // node 0
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerDeadlock) {
 
     // 1. Setup Instance
     BspInstance<GraphT> instance;
-    auto &dag = instance.getComputationalDag();
+    auto &dag = instance.GetComputationalDag();
 
     // Create a single-node DAG
     dag.add_vertex(100, 1, 0);    // node 0
@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerComplexDag) {
 
     // 1. Setup Instance
     BspInstance<GraphT> instance;
-    auto &dag = instance.getComputationalDag();
+    auto &dag = instance.GetComputationalDag();
 
     dag.add_vertex(50, 1, 0);     // 0
     dag.add_vertex(100, 1, 0);    // 1
@@ -226,7 +226,7 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerResourceContention) {
 
     // 1. Setup Instance
     BspInstance<GraphT> instance;
-    auto &dag = instance.getComputationalDag();
+    auto &dag = instance.GetComputationalDag();
 
     // Create a fork-join DAG: 0 -> {1,2,3} -> 4
     dag.add_vertex(10, 1, 0);     // 0
@@ -286,7 +286,7 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerProportionalAllocation) {
 
     // 1. Setup Instance
     BspInstance<GraphT> instance;
-    auto &dag = instance.getComputationalDag();
+    auto &dag = instance.GetComputationalDag();
 
     // Create a fork DAG: 0 -> {1,2}
     dag.add_vertex(10, 1, 0);     // 0

@@ -80,8 +80,8 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
     explicit BspSchedule(const BspInstance<GraphT> &inst)
         : instance_(&inst),
           numberOfSupersteps_(1),
-          nodeToProcessorAssignment_(std::vector<unsigned>(inst.numberOfVertices(), 0)),
-          nodeToSuperstepAssignment_(std::vector<unsigned>(inst.numberOfVertices(), 0)) {}
+          nodeToProcessorAssignment_(std::vector<unsigned>(inst.NumberOfVertices(), 0)),
+          nodeToSuperstepAssignment_(std::vector<unsigned>(inst.NumberOfVertices(), 0)) {}
 
     /**
      * @brief Constructs a BspSchedule object with the specified BspInstance, processor assignment, and superstep
@@ -106,9 +106,9 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
     explicit BspSchedule(const IBspSchedule<GraphT> &schedule)
         : instance_(&schedule.GetInstance()),
           numberOfSupersteps_(schedule.NumberOfSupersteps()),
-          nodeToProcessorAssignment_(schedule.GetInstance().numberOfVertices()),
-          nodeToSuperstepAssignment_(schedule.GetInstance().numberOfVertices()) {
-        for (const auto &v : schedule.GetInstance().getComputationalDag().vertices()) {
+          nodeToProcessorAssignment_(schedule.GetInstance().NumberOfVertices()),
+          nodeToSuperstepAssignment_(schedule.GetInstance().NumberOfVertices()) {
+        for (const auto &v : schedule.GetInstance().GetComputationalDag().vertices()) {
             nodeToProcessorAssignment_[v] = schedule.assignedProcessor(v);
             nodeToSuperstepAssignment_[v] = schedule.assignedSuperstep(v);
         }
@@ -206,7 +206,7 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
      */
     void UpdateNumberOfSupersteps() {
         numberOfSupersteps_ = 0;
-        for (VertexIdxT<GraphT> i = 0; i < static_cast<VertexIdxT<GraphT>>(instance_->numberOfVertices()); ++i) {
+        for (VertexIdxT<GraphT> i = 0; i < static_cast<VertexIdxT<GraphT>>(instance_->NumberOfVertices()); ++i) {
             if (nodeToSuperstepAssignment_[i] >= numberOfSupersteps_) {
                 numberOfSupersteps_ = nodeToSuperstepAssignment_[i] + 1;
             }

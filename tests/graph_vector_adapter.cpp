@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(TestDagVectorAdapterEdge) {
     }
 
     BspInstance<GraphT> instance;
-    instance.getComputationalDag() = graph;
+    instance.GetComputationalDag() = graph;
 
     instance.GetArchitecture().setProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                                        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(TestDagVectorAdapterEdge) {
     auto partition = isoScheduler.compute_partition(instance);
 
     GraphConstrT coraseGraph;
-    coarser_util::construct_coarse_dag(instance.getComputationalDag(), coraseGraph, partition);
+    coarser_util::construct_coarse_dag(instance.GetComputationalDag(), coraseGraph, partition);
     bool acyc = is_acyclic(coraseGraph);
     BOOST_CHECK(acyc);
 
@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(TestDagVectorAdapter) {
     }
 
     BspInstance<GraphT> instance;
-    instance.getComputationalDag() = graph;
+    instance.GetComputationalDag() = graph;
 
     instance.GetArchitecture().setProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                                        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(TestDagVectorAdapter) {
     auto partition = isoScheduler.compute_partition(instance);
 
     GraphConstrT coraseGraph;
-    coarser_util::construct_coarse_dag(instance.getComputationalDag(), coraseGraph, partition);
+    coarser_util::construct_coarse_dag(instance.GetComputationalDag(), coraseGraph, partition);
     bool acyc = is_acyclic(coraseGraph);
     BOOST_CHECK(acyc);
 

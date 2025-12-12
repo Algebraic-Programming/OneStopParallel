@@ -83,10 +83,10 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
                         const std::vector<std::vector<bool>> &procInHyperedge,
                         const BspInstance<GraphT> &instance) const {
         double score = 0;
-        for (const auto &pred : instance.getComputationalDag().parents(node)) {
+        for (const auto &pred : instance.GetComputationalDag().parents(node)) {
             if (procInHyperedge[pred][proc]) {
-                score += static_cast<double>(instance.getComputationalDag().VertexCommWeight(pred))
-                         / static_cast<double>(instance.getComputationalDag().OutDegree(pred));
+                score += static_cast<double>(instance.GetComputationalDag().VertexCommWeight(pred))
+                         / static_cast<double>(instance.GetComputationalDag().OutDegree(pred));
             }
         }
         return score;
@@ -207,7 +207,7 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
         std::vector<unsigned> readyNodesPerType = nrReadyNodesPerType;
         std::vector<unsigned> procsPerType = nrProcsPerType;
         for (unsigned procType = 0; procType < instance.GetArchitecture().getNumberOfProcessorTypes(); ++procType) {
-            for (unsigned nodeType = 0; nodeType < instance.getComputationalDag().NumVertexTypes(); ++nodeType) {
+            for (unsigned nodeType = 0; nodeType < instance.GetComputationalDag().NumVertexTypes(); ++nodeType) {
                 if (instance.isCompatibleType(nodeType, procType)) {
                     unsigned matched = std::min(readyNodesPerType[nodeType], procsPerType[procType]);
                     nrNodes += matched;
@@ -244,7 +244,7 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
     RETURN_STATUS computeSchedule(BspSchedule<GraphT> &schedule) override {
         const auto &instance = schedule.GetInstance();
 
-        for (const auto &v : instance.getComputationalDag().vertices()) {
+        for (const auto &v : instance.GetComputationalDag().vertices()) {
             schedule.setAssignedProcessor(v, std::numeric_limits<unsigned>::max());
         }
 
@@ -256,9 +256,9 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
             memoryConstraint_.initialize(schedule, supstepIdx);
         }
 
-        const std::size_t &n = instance.numberOfVertices();
+        const std::size_t &n = instance.NumberOfVertices();
         const unsigned &paramsP = instance.NumberOfProcessors();
-        const auto &g = instance.getComputationalDag();
+        const auto &g = instance.GetComputationalDag();
 
         maxProcScoreHeap_ = std::vector<boost::heap::fibonacci_heap<HeapNode>>(paramsP);
         maxAllProcScoreHeap_ = std::vector<boost::heap::fibonacci_heap<HeapNode>>(paramsP);
@@ -464,15 +464,15 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
                     for (const auto &child : G.children(pred)) {
                         if (child != nextNode && procReady[nextProc].find(child) != procReady[nextProc].end()) {
                             (*node_proc_heap_handles[nextProc][child]).score
-                                += static_cast<double>(instance.getComputationalDag().VertexCommWeight(pred))
-                                   / static_cast<double>(instance.getComputationalDag().OutDegree(pred));
+                                += static_cast<double>(instance.GetComputationalDag().VertexCommWeight(pred))
+                                   / static_cast<double>(instance.GetComputationalDag().OutDegree(pred));
                             max_proc_score_heap[nextProc].update(node_proc_heap_handles[nextProc][child]);
                         }
 
                         if (child != nextNode && allReady.find(child) != allReady.end() && instance.isCompatible(child, nextProc)) {
                             (*node_all_proc_heap_handles[nextProc][child]).score
-                                += static_cast<double>(instance.getComputationalDag().VertexCommWeight(pred))
-                                   / static_cast<double>(instance.getComputationalDag().OutDegree(pred));
+                                += static_cast<double>(instance.GetComputationalDag().VertexCommWeight(pred))
+                                   / static_cast<double>(instance.GetComputationalDag().OutDegree(pred));
                             max_all_proc_score_heap[nextProc].update(node_all_proc_heap_handles[nextProc][child]);
                         }
                     }

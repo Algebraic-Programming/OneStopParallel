@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
             continue;
         }
 
-        bool statusGraph = file_reader::readGraph(filenameGraph, bspInstance.getComputationalDag());
+        bool statusGraph = file_reader::readGraph(filenameGraph, bspInstance.GetComputationalDag());
         if (!statusGraph) {
             std::cerr << "Reading graph files " + filenameGraph << " failed." << std::endl;
             continue;
@@ -195,8 +195,8 @@ int main(int argc, char *argv[]) {
         std::vector<size_t> ordering = sorting_arrangement(schedulersCosts);
 
         std::cout << std::endl << nameGraph << " - " << nameMachine << std::endl;
-        std::cout << "Number of Vertices: " + std::to_string(bspInstance.getComputationalDag().NumVertices())
-                         + "  Number of Edges: " + std::to_string(bspInstance.getComputationalDag().NumEdges())
+        std::cout << "Number of Vertices: " + std::to_string(bspInstance.GetComputationalDag().NumVertices())
+                         + "  Number of Edges: " + std::to_string(bspInstance.GetComputationalDag().NumEdges())
                   << std::endl;
         for (size_t j = 0; j < parser.scheduler_.size(); j++) {
             size_t i = j;

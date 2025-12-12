@@ -113,7 +113,7 @@ struct MaxCommDatastructure {
         step_second_max_comm_cache.assign(num_steps, 0);
         stepMaxCommCountCache_.assign(numSteps, 0);
 
-        node_lambda_map.initialize(instance->getComputationalDag().NumVertices(), num_procs);
+        node_lambda_map.initialize(instance->GetComputationalDag().NumVertices(), num_procs);
 
         // Initialize scratchpad
         stepIsAffected_.assign(numSteps, false);
@@ -193,7 +193,7 @@ struct MaxCommDatastructure {
         affectedSteps.insert(move.from_step);
         affectedSteps.insert(move.to_step);
 
-        const auto &graph = instance_->getComputationalDag();
+        const auto &graph = instance_->GetComputationalDag();
 
         for (const auto &parent : graph.parents(move.node)) {
             affected_steps.insert(active_schedule->assigned_superstep(parent));
@@ -207,7 +207,7 @@ struct MaxCommDatastructure {
     }
 
     void UpdateDatastructureAfterMove(const kl_move &move, unsigned, unsigned) {
-        const auto &graph = instance_->getComputationalDag();
+        const auto &graph = instance_->GetComputationalDag();
 
         // Prepare Scratchpad (Avoids Allocations) ---
         for (unsigned step : affectedStepsList_) {
@@ -346,7 +346,7 @@ struct MaxCommDatastructure {
         }
 
         const auto &vecSched = activeSchedule_->getVectorSchedule();
-        const auto &graph = instance_->getComputationalDag();
+        const auto &graph = instance_->GetComputationalDag();
 
         for (const auto &u : graph.vertices()) {
             node_lambda_map.reset_node(u);

@@ -45,7 +45,7 @@ class CoarseAndSchedule : public Scheduler<GraphT> {
 
         std::vector<vertex_idx_t<Graph_t_coarse>> reverseVertexMap;
 
-        bool status = coarser_.coarsenDag(instance.getComputationalDag(), instanceCoarse.getComputationalDag(), reverse_vertex_map);
+        bool status = coarser_.coarsenDag(instance.GetComputationalDag(), instanceCoarse.GetComputationalDag(), reverse_vertex_map);
 
         if (!status) {
             return RETURN_STATUS::ERROR;

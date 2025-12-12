@@ -114,7 +114,7 @@ RETURN_STATUS PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<Graph
 
     std::vector<std::set<unsigned>> processorsToParts(nrParts);
     for (unsigned part = 0; part < nrParts; ++part) {
-        for (unsigned type = 0; type < instance.getComputationalDag().NumVertexTypes(); ++type) {
+        for (unsigned type = 0; type < instance.GetComputationalDag().NumVertexTypes(); ++type) {
             if (part_and_nodetype_to_new_index.find({part, type}) != part_and_nodetype_to_new_index.end()) {
                 unsigned newIndex = part_and_nodetype_to_new_index[{part, type}];
                 for (unsigned proc : processors_to_parts_and_types[new_index]) {
@@ -130,13 +130,13 @@ RETURN_STATUS PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<Graph
     std::vector<std::set<vertex_idx>> nodesInPart(nrParts), extra_sources(nr_parts);
     std::vector<std::map<vertex_idx, vertex_idx>> originalNodeId(nrParts);
     std::vector<std::map<unsigned, unsigned>> originalProcId(nrParts);
-    for (vertex_idx node = 0; node < instance.numberOfVertices(); ++node) {
-        if (instance.getComputationalDag().in_degree(node) > 0) {
+    for (vertex_idx node = 0; node < instance.NumberOfVertices(); ++node) {
+        if (instance.GetComputationalDag().in_degree(node) > 0) {
             nodesInPart[assignment_to_parts[node]].insert(node);
         } else {
             extra_sources[assignment_to_parts[node]].insert(node);
         }
-        for (const vertex_idx &pred : instance.getComputationalDag().parents(node)) {
+        for (const vertex_idx &pred : instance.GetComputationalDag().parents(node)) {
             if (assignment_to_parts[node] != assignment_to_parts[pred]) {
                 extra_sources[assignment_to_parts[node]].insert(pred);
             }
@@ -146,7 +146,7 @@ RETURN_STATUS PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<Graph
     std::vector<Graph_t> subDags;
     for (unsigned part = 0; part < nrParts; ++part) {
         GraphT dag;
-        create_induced_subgraph(instance.getComputationalDag(), dag, nodes_in_part[part], extra_sources[part]);
+        create_induced_subgraph(instance.GetComputationalDag(), dag, nodes_in_part[part], extra_sources[part]);
         subDags.push_back(dag);
 
         // set source nodes to a new type, so that they are compatible with any processor
@@ -225,13 +225,13 @@ RETURN_STATUS PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<Graph
 
         std::set<vertex_idx> needsBlueAtEnd;
         for (vertex_idx node : nodes_in_part[part]) {
-            for (const vertex_idx &succ : instance.getComputationalDag().children(node)) {
+            for (const vertex_idx &succ : instance.GetComputationalDag().children(node)) {
                 if (assignment_to_parts[node] != assignment_to_parts[succ]) {
                     needs_blue_at_end.insert(local_id[node]);
                 }
             }
 
-            if (instance.getComputationalDag().OutDegree(node) == 0) {
+            if (instance.GetComputationalDag().OutDegree(node) == 0) {
                 needs_blue_at_end.insert(local_id[node]);
             }
         }
@@ -351,12 +351,12 @@ RETURN_STATUS PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<Graph
 template <typename GraphT>
 GraphT PebblingPartialILP<GraphT>::ContractByPartition(const BspInstance<GraphT> &instance,
                                                        const std::vector<unsigned> &nodeToPartAssignment) {
-    const auto &g = instance.getComputationalDag();
+    const auto &g = instance.GetComputationalDag();
 
     part_and_nodetype_to_new_index.clear();
 
     unsigned nrNewNodes = 0;
-    for (vertex_idx node = 0; node < instance.numberOfVertices(); ++node) {
+    for (vertex_idx node = 0; node < instance.NumberOfVertices(); ++node) {
         if (part_and_nodetype_to_new_index.find({node_to_part_assignment[node], G.VertexType(node)})
             == part_and_nodetype_to_new_index.end()) {
             part_and_nodetype_to_new_index[{node_to_part_assignment[node], G.VertexType(node)}] = nr_new_nodes;
@@ -371,9 +371,9 @@ GraphT PebblingPartialILP<GraphT>::ContractByPartition(const BspInstance<GraphT>
 
     std::set<std::pair<vertex_idx, vertex_idx>> edges;
 
-    for (vertex_idx node = 0; node < instance.numberOfVertices(); ++node) {
+    for (vertex_idx node = 0; node < instance.NumberOfVertices(); ++node) {
         vertex_idx nodeNewIndex = part_and_nodetype_to_new_index[{node_to_part_assignment[node], G.VertexType(node)}];
-        for (const vertex_idx &succ : instance.getComputationalDag().children(node)) {
+        for (const vertex_idx &succ : instance.GetComputationalDag().children(node)) {
             if (node_to_part_assignment[node] != node_to_part_assignment[succ]) {
                 edges.emplace(node_new_index, part_and_nodetype_to_new_index[{node_to_part_assignment[succ], G.VertexType(succ)}]);
             }

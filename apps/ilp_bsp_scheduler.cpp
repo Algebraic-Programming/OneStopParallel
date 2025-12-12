@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
     unsigned steps = static_cast<unsigned>(stepInt);
 
     BspInstance<ComputationalDag> instance;
-    ComputationalDag &graph = instance.getComputationalDag();
+    ComputationalDag &graph = instance.GetComputationalDag();
 
     bool statusGraph = file_reader::readGraph(filenameGraph, graph);
     bool statusArch = file_reader::readBspArchitecture(filenameMachine, instance.GetArchitecture());

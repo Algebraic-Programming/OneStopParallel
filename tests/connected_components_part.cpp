@@ -29,7 +29,7 @@ using namespace osp;
 
 BOOST_AUTO_TEST_CASE(ConnectedComponentPartTest) {
     BspInstance<computational_dag_vector_impl_def_int_t> instance;
-    computational_dag_vector_impl_def_int_t &dag = instance.getComputationalDag();
+    computational_dag_vector_impl_def_int_t &dag = instance.GetComputationalDag();
     using VertexType = vertex_idx_t<computational_dag_vector_impl_def_int_t>;
 
     BOOST_CHECK_EQUAL(dag.NumVertices(), 0);

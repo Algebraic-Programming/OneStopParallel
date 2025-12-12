@@ -44,8 +44,8 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
 
         IsomorphismGroups<GraphT, ConstrGraphT> isoGroups;
         std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> vertexMaps
-            = this->divider_->divide(instance.getComputationalDag());
-        isoGroups.compute_isomorphism_groups(vertex_maps, instance.getComputationalDag());
+            = this->divider_->divide(instance.GetComputationalDag());
+        isoGroups.compute_isomorphism_groups(vertex_maps, instance.GetComputationalDag());
 
         unsigned superstepOffset = 0;
         for (std::size_t i = 0; i < vertexMaps.size(); ++i) {

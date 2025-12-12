@@ -51,7 +51,7 @@ class KlImproverTest : public kl_improver<Graph_t, comm_cost_function_t, MemoryC
 
     void SetupSchedule(BspSchedule<GraphT> &schedule) {
         this->thread_data_vec.resize(1);
-        this->set_parameters(schedule.GetInstance().getComputationalDag().NumVertices());
+        this->set_parameters(schedule.GetInstance().GetComputationalDag().NumVertices());
         this->thread_data_vec[0].end_step = schedule.NumberOfSupersteps() > 0 ? schedule.NumberOfSupersteps() - 1 : 0;
         this->initialize_datastructures(schedule);
         this->thread_data_vec[0].active_schedule_data.initialize_cost(this->active_schedule.get_cost());

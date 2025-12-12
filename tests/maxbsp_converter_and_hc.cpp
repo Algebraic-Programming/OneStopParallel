@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(MaxbspScheduling) {
     }
 
     bool status = file_reader::readComputationalDagHyperdagFormatDB(
-        (cwd / "data/spaa/tiny/instance_CG_N4_K1_nzP0d35.hdag").string(), instance.getComputationalDag());
+        (cwd / "data/spaa/tiny/instance_CG_N4_K1_nzP0d35.hdag").string(), instance.GetComputationalDag());
 
     BOOST_CHECK(status);
 
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(MaxbspScheduling) {
     // PART III: same for larger DAG
 
     status = file_reader::readComputationalDagHyperdagFormatDB((cwd / "data/spaa/large/instance_CG_N24_K22_nzP0d2.hdag").string(),
-                                                               instance.getComputationalDag());
+                                                               instance.GetComputationalDag());
 
     BOOST_CHECK(status);
     instance.setSynchronisationCosts(7);

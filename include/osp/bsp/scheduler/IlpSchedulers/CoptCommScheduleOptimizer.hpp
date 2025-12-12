@@ -137,7 +137,7 @@ void CoptCommScheduleOptimizer<GraphT>::UpdateCommSchedule(BspScheduleCS<GraphT>
 
 template <typename GraphT>
 void CoptCommScheduleOptimizer<GraphT>::SetInitialSolution(BspScheduleCS<GraphT> &schedule, Model &model) {
-    const GraphT &dag = schedule.GetInstance().getComputationalDag();
+    const GraphT &dag = schedule.GetInstance().GetComputationalDag();
     const BspArchitecture<GraphT> &arch = schedule.GetInstance().GetArchitecture();
     const unsigned &numProcessors = schedule.GetInstance().NumberOfProcessors();
     const unsigned &numSupersteps = schedule.NumberOfSupersteps();
@@ -217,7 +217,7 @@ template <typename GraphT>
 void CoptCommScheduleOptimizer<GraphT>::SetupVariablesConstraintsObjective(const BspScheduleCS<GraphT> &schedule, Model &model) {
     const unsigned &maxNumberSupersteps = schedule.NumberOfSupersteps();
     const unsigned &numProcessors = schedule.GetInstance().NumberOfProcessors();
-    const unsigned numVertices = static_cast<unsigned>(schedule.GetInstance().numberOfVertices());
+    const unsigned numVertices = static_cast<unsigned>(schedule.GetInstance().NumberOfVertices());
 
     // variables indicating if superstep is used at all
     if (!ignoreLatency_) {
@@ -265,7 +265,7 @@ void CoptCommScheduleOptimizer<GraphT>::SetupVariablesConstraintsObjective(const
         const unsigned &superstep = schedule.assignedSuperstep(node);
         Expr expr;
         unsigned numComEdges = 0;
-        for (const auto &pred : schedule.GetInstance().getComputationalDag().parents(node)) {
+        for (const auto &pred : schedule.GetInstance().GetComputationalDag().parents(node)) {
             if (schedule.assignedProcessor(node) != schedule.assignedProcessor(pred)) {
                 numComEdges += 1;
                 expr += comm_processor_to_processor_superstep_node_var[processor][processor][superstep][static_cast<int>(pred)];
@@ -314,7 +314,7 @@ void CoptCommScheduleOptimizer<GraphT>::SetupVariablesConstraintsObjective(const
             for (unsigned node = 0; node < numVertices; node++) {
                 for (unsigned pTo = 0; pTo < numProcessors; pTo++) {
                     if (processor != pTo) {
-                        expr1 += schedule.GetInstance().getComputationalDag().VertexCommWeight(node)
+                        expr1 += schedule.GetInstance().GetComputationalDag().VertexCommWeight(node)
                                  * schedule.GetInstance().sendCosts(processor, p_to)
                                  * comm_processor_to_processor_superstep_node_var[processor][p_to][step][static_cast<int>(node)];
                     }
@@ -322,7 +322,7 @@ void CoptCommScheduleOptimizer<GraphT>::SetupVariablesConstraintsObjective(const
 
                 for (unsigned int pFrom = 0; pFrom < numProcessors; pFrom++) {
                     if (processor != pFrom) {
-                        expr2 += schedule.GetInstance().getComputationalDag().VertexCommWeight(node)
+                        expr2 += schedule.GetInstance().GetComputationalDag().VertexCommWeight(node)
                                  * schedule.GetInstance().sendCosts(p_from, processor)
                                  * comm_processor_to_processor_superstep_node_var[p_from][processor][step][static_cast<int>(node)];
                     }

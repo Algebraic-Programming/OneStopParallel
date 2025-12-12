@@ -256,7 +256,7 @@ struct KlActiveScheduleWorkDatastructures {
                 stepProcessorWork_[step][proc].proc = proc;
 
                 for (const auto &node : setSchedule_->step_processor_vertices[step][proc]) {
-                    const work_weight_t vertexWorkWeight = instance_->getComputationalDag().VertexWorkWeight(node);
+                    const work_weight_t vertexWorkWeight = instance_->GetComputationalDag().VertexWorkWeight(node);
                     total_work_weight += vertex_work_weight;
                     max_work_weight = std::max(vertex_work_weight, max_work_weight);
                     stepProcessorWork_[step][proc].work += vertex_work_weight;
@@ -398,7 +398,7 @@ class KlActiveSchedule {
         update_violations(move.node, thread_data);
         threadData.applied_moves.push_back(move);
 
-        workDatastructures_.apply_move(move, instance_->getComputationalDag().VertexWorkWeight(move.node));
+        workDatastructures_.apply_move(move, instance_->GetComputationalDag().VertexWorkWeight(move.node));
         if constexpr (useMemoryConstraint_) {
             memoryConstraint_.apply_move(move.node, move.from_proc, move.from_step, move.to_proc, move.to_step);
         }
@@ -476,7 +476,7 @@ class KlActiveSchedule {
 
             setSchedule_.step_processor_vertices[move.from_step][move.from_proc].erase(move.node);
             setSchedule_.step_processor_vertices[move.to_step][move.to_proc].insert(move.node);
-            workDatastructures_.apply_move(move, instance_->getComputationalDag().VertexWorkWeight(move.node));
+            workDatastructures_.apply_move(move, instance_->GetComputationalDag().VertexWorkWeight(move.node));
             commDatastructures.update_datastructure_after_move(move, startStep, endStep);
             if constexpr (useMemoryConstraint_) {
                 memoryConstraint_.apply_move(move.node, move.from_proc, move.from_step, move.to_proc, move.to_step);
@@ -491,8 +491,8 @@ class KlActiveSchedule {
         const unsigned nodeStep = vectorSchedule_.assignedSuperstep(node);
         const unsigned nodeProc = vectorSchedule_.assignedProcessor(node);
 
-        for (const auto &edge : OutEdges(node, instance->getComputationalDag())) {
-            const auto &child = Traget(edge, instance->getComputationalDag());
+        for (const auto &edge : OutEdges(node, instance->GetComputationalDag())) {
+            const auto &child = Traget(edge, instance->GetComputationalDag());
 
             if (thread_data.current_violations.find(edge) == thread_data.current_violations.end()) {
                 if ((node_step > vector_schedule.assignedSuperstep(child))
@@ -511,8 +511,8 @@ class KlActiveSchedule {
             }
         }
 
-        for (const auto &edge : InEdges(node, instance->getComputationalDag())) {
-            const auto &parent = Source(edge, instance->getComputationalDag());
+        for (const auto &edge : InEdges(node, instance->GetComputationalDag())) {
+            const auto &parent = Source(edge, instance->GetComputationalDag());
 
             if (thread_data.current_violations.find(edge) == thread_data.current_violations.end()) {
                 if ((node_step < vector_schedule.assignedSuperstep(parent))
@@ -536,16 +536,16 @@ class KlActiveSchedule {
         if (thread_data.new_violations.size() > 0) {
             std::cout << "New violations: " << std::endl;
             for (const auto &edge : thread_data.new_violations) {
-                std::cout << "Edge: " << Source(edge.second, instance->getComputationalDag()) << " -> "
-                          << Traget(edge.second, instance->getComputationalDag()) << std::endl;
+                std::cout << "Edge: " << Source(edge.second, instance->GetComputationalDag()) << " -> "
+                          << Traget(edge.second, instance->GetComputationalDag()) << std::endl;
             }
         }
 
         if (thread_data.resolved_violations.size() > 0) {
             std::cout << "Resolved violations: " << std::endl;
             for (const auto &edge : thread_data.resolved_violations) {
-                std::cout << "Edge: " << Source(edge, instance->getComputationalDag()) << " -> "
-                          << Traget(edge, instance->getComputationalDag()) << std::endl;
+                std::cout << "Edge: " << Source(edge, instance->GetComputationalDag()) << " -> "
+                          << Traget(edge, instance->GetComputationalDag()) << std::endl;
             }
         }
 
@@ -574,9 +574,9 @@ void KlActiveSchedule<GraphT, CostT, MemoryConstraintT>::ComputeViolations(Threa
     threadData.current_violations.clear();
     threadData.feasible = true;
 
-    for (const auto &edge : Edges(instance_->getComputationalDag())) {
-        const auto &sourceV = Source(edge, instance_->getComputationalDag());
-        const auto &targetV = Traget(edge, instance_->getComputationalDag());
+    for (const auto &edge : Edges(instance_->GetComputationalDag())) {
+        const auto &sourceV = Source(edge, instance_->GetComputationalDag());
+        const auto &targetV = Traget(edge, instance_->GetComputationalDag());
 
         const unsigned sourceProc = assigned_processor(source_v);
         const unsigned targetProc = assigned_processor(target_v);

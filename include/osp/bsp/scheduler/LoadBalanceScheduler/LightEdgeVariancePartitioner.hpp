@@ -68,9 +68,9 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
         using Base = VariancePartitioner<GraphT, InterpolationT, MemoryConstraintT>;
 
         const auto &instance = schedule.GetInstance();
-        const auto &nVert = instance.numberOfVertices();
+        const auto &nVert = instance.NumberOfVertices();
         const unsigned &nProcessors = instance.NumberOfProcessors();
-        const auto &graph = instance.getComputationalDag();
+        const auto &graph = instance.GetComputationalDag();
 
         unsigned superstep = 0;
 

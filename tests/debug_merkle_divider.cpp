@@ -67,16 +67,16 @@ int main(int argc, char *argv[]) {
     using GraphT2 = GraphT;
 
     BspInstance<GraphT2> instance;
-    if (!file_reader::readComputationalDagDotFormat(dotFilePath, instance.getComputationalDag())) {
+    if (!file_reader::readComputationalDagDotFormat(dotFilePath, instance.GetComputationalDag())) {
         std::cerr << "Failed to read graph from " << dotFilePath << std::endl;
         return 1;
     }
 
-    std::cout << "Graph loaded successfully. " << instance.numberOfVertices() << " vertices." << std::endl;
+    std::cout << "Graph loaded successfully. " << instance.NumberOfVertices() << " vertices." << std::endl;
 
-    for (auto v : instance.getComputationalDag().vertices()) {
-        instance.getComputationalDag().SetVertexCommWeight(
-            v, static_cast<v_commw_t<GraphT2>>(instance.getComputationalDag().VertexCommWeight(v) * 0.01));
+    for (auto v : instance.GetComputationalDag().vertices()) {
+        instance.GetComputationalDag().SetVertexCommWeight(
+            v, static_cast<v_commw_t<GraphT2>>(instance.GetComputationalDag().VertexCommWeight(v) * 0.01));
     }
 
     // Set up architecture
@@ -115,10 +115,10 @@ int main(int argc, char *argv[]) {
     // This is the call that is expected to throw the exception
     auto partition = isoScheduler.compute_partition(instance);
 
-    CheckPartitionTypeHomogeneity(instance.getComputationalDag(), partition);
+    CheckPartitionTypeHomogeneity(instance.GetComputationalDag(), partition);
 
     GraphT coraseGraph;
-    coarser_util::construct_coarse_dag(instance.getComputationalDag(), coraseGraph, partition);
+    coarser_util::construct_coarse_dag(instance.GetComputationalDag(), coraseGraph, partition);
     bool acyc = is_acyclic(coraseGraph);
     std::cout << "Partition is " << (acyc ? "acyclic." : "not acyclic.");
 

@@ -36,7 +36,7 @@ class WavefrontComponentScheduler : public AbstractWavefrontScheduler<GraphT, Co
         const auto &instance = schedule.GetInstance();
         const auto &originalArch = instance.GetArchitecture();
         const auto &originalProcTypeCount = originalArch.getProcessorTypeCount();
-        const auto &computationalDag = instance.getComputationalDag();
+        const auto &computationalDag = instance.GetComputationalDag();
 
         std::vector<std::vector<unsigned>> globalIdsByType(originalArch.getNumberOfProcessorTypes());
         for (unsigned i = 0; i < originalArch.NumberOfProcessors(); ++i) {

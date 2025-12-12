@@ -50,10 +50,10 @@ class GreedyRecomputer {
 template <typename GraphT>
 RETURN_STATUS GreedyRecomputer<GraphT>::ComputeRecompSchedule(BspScheduleCS<GraphT> &initialSchedule,
                                                               BspScheduleRecomp<GraphT> &outSchedule) const {
-    const vertex_idx &n = initialSchedule.GetInstance().numberOfVertices();
+    const vertex_idx &n = initialSchedule.GetInstance().NumberOfVertices();
     const unsigned &p = initialSchedule.GetInstance().NumberOfProcessors();
     const unsigned &s = initialSchedule.NumberOfSupersteps();
-    const GraphT &g = initialSchedule.GetInstance().getComputationalDag();
+    const GraphT &g = initialSchedule.GetInstance().GetComputationalDag();
 
     outSchedule = BspScheduleRecomp<GraphT>(initialSchedule.GetInstance());
     outSchedule.setNumberOfSupersteps(initialSchedule.NumberOfSupersteps());

@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(CoarserHdaggTest) {
 
         BspInstance<GraphT> instance;
 
-        bool statusGraph = file_reader::readGraph((cwd / filenameGraph).string(), instance.getComputationalDag());
+        bool statusGraph = file_reader::readGraph((cwd / filenameGraph).string(), instance.GetComputationalDag());
 
         bool statusArchitecture
             = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
@@ -141,11 +141,11 @@ BOOST_AUTO_TEST_CASE(CoarserHdaggTest) {
 
         BOOST_CHECK_EQUAL(coarser.getCoarserName(), "hdagg_coarser");
 
-        coarser.coarsenDag(instance.getComputationalDag(), coarseInstance.getComputationalDag(), reverseVertexMap);
+        coarser.coarsenDag(instance.GetComputationalDag(), coarseInstance.GetComputationalDag(), reverseVertexMap);
 
         vertexMap = coarser_util::invert_vertex_contraction_map<GraphT, GraphT>(reverseVertexMap);
 
-        BOOST_CHECK(CheckVertexMap(vertexMap, instance.getComputationalDag().NumVertices()));
+        BOOST_CHECK(CheckVertexMap(vertexMap, instance.GetComputationalDag().NumVertices()));
 
         GreedyBspScheduler<GraphT> scheduler;
         BspSchedule<GraphT> schedule(coarseInstance);
@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(CoarserHdaggTestDiffGraphImpl) {
 
         BspInstance<GraphT1> instance;
 
-        bool statusGraph = file_reader::readGraph((cwd / filenameGraph).string(), instance.getComputationalDag());
+        bool statusGraph = file_reader::readGraph((cwd / filenameGraph).string(), instance.GetComputationalDag());
 
         bool statusArchitecture
             = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
@@ -210,11 +210,11 @@ BOOST_AUTO_TEST_CASE(CoarserHdaggTestDiffGraphImpl) {
 
         hdagg_coarser<GraphT1, GraphT2> coarser;
 
-        coarser.coarsenDag(instance.getComputationalDag(), coarseInstance.getComputationalDag(), reverseVertexMap);
+        coarser.coarsenDag(instance.GetComputationalDag(), coarseInstance.GetComputationalDag(), reverseVertexMap);
 
         vertexMap = coarser_util::invert_vertex_contraction_map<GraphT1, GraphT2>(reverseVertexMap);
 
-        BOOST_CHECK(CheckVertexMap(vertexMap, instance.getComputationalDag().NumVertices()));
+        BOOST_CHECK(CheckVertexMap(vertexMap, instance.GetComputationalDag().NumVertices()));
 
         GreedyBspScheduler<GraphT2> scheduler;
         BspSchedule<GraphT2> schedule(coarseInstance);
@@ -260,7 +260,7 @@ BOOST_AUTO_TEST_CASE(CoarserBspscheduleTest) {
 
         BspInstance<GraphT> instance;
 
-        bool statusGraph = file_reader::readGraph((cwd / filenameGraph).string(), instance.getComputationalDag());
+        bool statusGraph = file_reader::readGraph((cwd / filenameGraph).string(), instance.GetComputationalDag());
 
         bool statusArchitecture
             = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
@@ -285,11 +285,11 @@ BOOST_AUTO_TEST_CASE(CoarserBspscheduleTest) {
 
         BspScheduleCoarser<GraphT, GraphT> coarser(scheduleOrig);
 
-        coarser.coarsenDag(instance.getComputationalDag(), coarseInstance.getComputationalDag(), reverseVertexMap);
+        coarser.coarsenDag(instance.GetComputationalDag(), coarseInstance.GetComputationalDag(), reverseVertexMap);
 
         vertexMap = coarser_util::invert_vertex_contraction_map<GraphT, GraphT>(reverseVertexMap);
 
-        BOOST_CHECK(CheckVertexMap(vertexMap, instance.getComputationalDag().NumVertices()));
+        BOOST_CHECK(CheckVertexMap(vertexMap, instance.GetComputationalDag().NumVertices()));
 
         BspSchedule<GraphT> schedule(coarseInstance);
 
@@ -334,7 +334,7 @@ void TestCoarserSameGraph(Coarser<GraphT, GraphT> &coarser) {
 
         BspInstance<GraphT> instance;
 
-        bool statusGraph = file_reader::readGraph((cwd / filenameGraph).string(), instance.getComputationalDag());
+        bool statusGraph = file_reader::readGraph((cwd / filenameGraph).string(), instance.GetComputationalDag());
 
         bool statusArchitecture
             = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
@@ -352,12 +352,12 @@ void TestCoarserSameGraph(Coarser<GraphT, GraphT> &coarser) {
         GreedyBspScheduler<GraphT> scheduler;
 
         bool coarseSuccess
-            = coarser.coarsenDag(instance.getComputationalDag(), coarseInstance.getComputationalDag(), reverseVertexMap);
+            = coarser.coarsenDag(instance.GetComputationalDag(), coarseInstance.GetComputationalDag(), reverseVertexMap);
         BOOST_CHECK(coarseSuccess);
 
         vertexMap = coarser_util::invert_vertex_contraction_map<GraphT, GraphT>(reverseVertexMap);
 
-        BOOST_CHECK(CheckVertexMap(vertexMap, instance.getComputationalDag().NumVertices()));
+        BOOST_CHECK(CheckVertexMap(vertexMap, instance.GetComputationalDag().NumVertices()));
 
         BspSchedule<GraphT> schedule(coarseInstance);
 
@@ -465,7 +465,7 @@ BOOST_AUTO_TEST_CASE(CoarserSquashATestDiffGraphImplCsg) {
 
         BspInstance<GraphT1> instance;
 
-        bool statusGraph = file_reader::readGraph((cwd / filenameGraph).string(), instance.getComputationalDag());
+        bool statusGraph = file_reader::readGraph((cwd / filenameGraph).string(), instance.GetComputationalDag());
 
         bool statusArchitecture
             = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
@@ -487,11 +487,11 @@ BOOST_AUTO_TEST_CASE(CoarserSquashATestDiffGraphImplCsg) {
 
         SquashA<GraphT1, GraphT2> coarser(params);
 
-        coarser.coarsenDag(instance.getComputationalDag(), coarseInstance.getComputationalDag(), reverseVertexMap);
+        coarser.coarsenDag(instance.GetComputationalDag(), coarseInstance.GetComputationalDag(), reverseVertexMap);
 
         vertexMap = coarser_util::invert_vertex_contraction_map<GraphT1, GraphT2>(reverseVertexMap);
 
-        BOOST_CHECK(CheckVertexMap(vertexMap, instance.getComputationalDag().NumVertices()));
+        BOOST_CHECK(CheckVertexMap(vertexMap, instance.GetComputationalDag().NumVertices()));
 
         GreedyBspScheduler<GraphT2> scheduler;
         BspSchedule<GraphT2> schedule(coarseInstance);
@@ -538,7 +538,7 @@ BOOST_AUTO_TEST_CASE(CoarserSquashATestDiffGraphImplCsge) {
 
         BspInstance<GraphT1> instance;
 
-        bool statusGraph = file_reader::readGraph((cwd / filenameGraph).string(), instance.getComputationalDag());
+        bool statusGraph = file_reader::readGraph((cwd / filenameGraph).string(), instance.GetComputationalDag());
 
         bool statusArchitecture
             = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
@@ -560,11 +560,11 @@ BOOST_AUTO_TEST_CASE(CoarserSquashATestDiffGraphImplCsge) {
 
         SquashA<GraphT1, GraphT2> coarser(params);
 
-        coarser.coarsenDag(instance.getComputationalDag(), coarseInstance.getComputationalDag(), reverseVertexMap);
+        coarser.coarsenDag(instance.GetComputationalDag(), coarseInstance.GetComputationalDag(), reverseVertexMap);
 
         vertexMap = coarser_util::invert_vertex_contraction_map<GraphT1, GraphT2>(reverseVertexMap);
 
-        BOOST_CHECK(CheckVertexMap(vertexMap, instance.getComputationalDag().NumVertices()));
+        BOOST_CHECK(CheckVertexMap(vertexMap, instance.GetComputationalDag().NumVertices()));
 
         GreedyBspScheduler<GraphT2> scheduler;
         BspSchedule<GraphT2> schedule(coarseInstance);

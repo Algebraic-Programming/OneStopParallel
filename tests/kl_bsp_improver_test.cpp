@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
 //         GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_int_t> test_scheduler;
 //         BspInstance<graph> instance;
 //         bool status_graph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(),
-//                                                                               instance.getComputationalDag());
+//                                                                               instance.GetComputationalDag());
 
 //         instance.GetArchitecture().setSynchronisationCosts(500);
 //         instance.GetArchitecture().setCommunicationCosts(5);
@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
 //             BOOST_CHECK(false);
 //         }
 
-//         add_mem_weights(instance.getComputationalDag());
+//         add_mem_weights(instance.GetComputationalDag());
 
 //         BspSchedule<graph> schedule(instance);
 //         const auto result = test_scheduler.computeSchedule(schedule);

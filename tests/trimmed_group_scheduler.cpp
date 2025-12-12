@@ -36,7 +36,7 @@ class MockSubScheduler : public Scheduler<ConstrGraphT> {
     // This mock scheduler assigns all nodes to local processor 0 and superstep 0.
     // This simplifies verification of the TrimmedGroupScheduler's mapping logic.
     RETURN_STATUS computeSchedule(BspSchedule<ConstrGraphT> &schedule) override {
-        for (vertex_idx_t<ConstrGraphT> v = 0; v < schedule.GetInstance().getComputationalDag().NumVertices(); ++v) {
+        for (vertex_idx_t<ConstrGraphT> v = 0; v < schedule.GetInstance().GetComputationalDag().NumVertices(); ++v) {
             schedule.setAssignedProcessor(v, 0);
             schedule.setAssignedSuperstep(v, 0);
         }
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(SingleComponentSingleProcessorTypeTest) {
     dag_.add_vertex(1, 1, 1, 0);    // 2
     dag_.add_edge(0, 1);
     dag_.add_edge(1, 2);
-    instance_.getComputationalDag() = dag_;
+    instance_.GetComputationalDag() = dag_;
 
     // Architecture: 4 processors of type 0
     arch_.setProcessorsWithTypes({0, 0, 0, 0});
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(MultipleComponentsSingleProcessorTypeEvenDistributionTest) 
     dag_.add_vertex(1, 1, 1, 0);    // 3
     dag_.add_edge(0, 1);
     dag_.add_edge(2, 3);
-    instance_.getComputationalDag() = dag_;
+    instance_.GetComputationalDag() = dag_;
 
     // Architecture: 4 processors of type 0
     arch_.setProcessorsWithTypes({0, 0, 0, 0});
@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(MultipleComponentsSingleProcessorTypeUnevenDistributionTest
     dag_.add_vertex(1, 1, 1, 0);    // 0
     dag_.add_vertex(1, 1, 1, 0);    // 1
     dag_.add_vertex(1, 1, 1, 0);    // 2
-    instance_.getComputationalDag() = dag_;
+    instance_.GetComputationalDag() = dag_;
 
     // Architecture: 6 processors of type 0
     arch_.setProcessorsWithTypes({0, 0, 0, 0, 0, 0});
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(MultipleComponentsHeterogeneousArchitectureTest) {
     // Graph: 0 (type 0), 1 (type 1) - isolated nodes
     dag_.add_vertex(1, 1, 1, 0);    // 0 (component 0, type 0)
     dag_.add_vertex(1, 1, 1, 1);    // 1 (component 1, type 1)
-    instance_.getComputationalDag() = dag_;
+    instance_.GetComputationalDag() = dag_;
 
     // Architecture: 2 processors of type 0 (global 0,1), 2 processors of type 1 (global 2,3)
     arch_.setProcessorsWithTypes({0, 0, 1, 1});

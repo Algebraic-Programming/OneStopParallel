@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(MultilevelTest) {
     }
 
     bool status = file_reader::readComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_pregel.hdag").string(),
-                                                                    instance.getComputationalDag());
+                                                                    instance.GetComputationalDag());
 
     BOOST_CHECK(status);
 

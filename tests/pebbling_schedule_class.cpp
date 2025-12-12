@@ -78,7 +78,7 @@ void RunTest(Scheduler<GraphT> *testScheduler) {
             BspInstance<GraphT> instance;
 
             bool statusGraph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(),
-                                                                                 instance.getComputationalDag());
+                                                                                 instance.GetComputationalDag());
 
             bool statusArchitecture
                 = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
@@ -147,11 +147,11 @@ BOOST_AUTO_TEST_CASE(TestPebblingScheduleWriter) {
     }
 
     bool status = file_reader::readComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(),
-                                                                    instance.getComputationalDag());
+                                                                    instance.GetComputationalDag());
 
     BOOST_CHECK(status);
-    BOOST_CHECK_EQUAL(instance.getComputationalDag().NumVertices(), 54);
-    BOOST_CHECK_EQUAL(instance.getComputationalDag().NumVertexTypes(), 1);
+    BOOST_CHECK_EQUAL(instance.GetComputationalDag().NumVertices(), 54);
+    BOOST_CHECK_EQUAL(instance.GetComputationalDag().NumVertexTypes(), 1);
 
     BspSchedule bspSchedule(instance);
     GreedyBspScheduler<Graph> scheduler;

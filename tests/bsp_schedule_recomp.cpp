@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecompTest) {
     }
 
     file_reader::readComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(),
-                                                      instance.getComputationalDag());
+                                                      instance.GetComputationalDag());
 
     BspSchedule<Graph> schedule(instance);
     GreedyBspScheduler<Graph> scheduler;
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecompTest) {
     BspScheduleRecomp<Graph> scheduleRecomp(schedule);
 
     BOOST_CHECK(scheduleRecomp.satisfiesConstraints());
-    BOOST_CHECK_EQUAL(scheduleRecomp.getTotalAssignments(), instance.numberOfVertices());
+    BOOST_CHECK_EQUAL(scheduleRecomp.getTotalAssignments(), instance.NumberOfVertices());
     BOOST_CHECK_EQUAL(scheduleRecomp.computeWorkCosts(), schedule.computeWorkCosts());
     BOOST_CHECK_EQUAL(scheduleRecomp.computeCosts(), scheduleCS.computeCosts());
 

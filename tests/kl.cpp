@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(KlTotalCommTest1) {
         BspInstance<graph> instance;
 
         bool status_graph
-            = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(), instance.getComputationalDag());
+            = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(), instance.GetComputationalDag());
 
         instance.GetArchitecture().setSynchronisationCosts(5);
         instance.GetArchitecture().setCommunicationCosts(5);
@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(KlTotalCommTest2) {
         BspInstance<graph> instance;
 
         bool status_graph
-            = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(), instance.getComputationalDag());
+            = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(), instance.GetComputationalDag());
 
         instance.GetArchitecture().setSynchronisationCosts(5);
         instance.GetArchitecture().setCommunicationCosts(5);
@@ -251,7 +251,7 @@ BOOST_AUTO_TEST_CASE(KlTotalCutTest1) {
         BspInstance<graph> instance;
 
         bool status_graph
-            = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(), instance.getComputationalDag());
+            = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(), instance.GetComputationalDag());
         instance.GetArchitecture().setSynchronisationCosts(5);
         instance.GetArchitecture().setCommunicationCosts(5);
         instance.GetArchitecture().setNumberOfProcessors(4);
@@ -296,7 +296,7 @@ BOOST_AUTO_TEST_CASE(KlTotalCutTest2) {
         BspInstance<graph> instance;
 
         bool status_graph
-            = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(), instance.getComputationalDag());
+            = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(), instance.GetComputationalDag());
         instance.GetArchitecture().setSynchronisationCosts(5);
         instance.GetArchitecture().setCommunicationCosts(5);
         instance.GetArchitecture().setNumberOfProcessors(4);

@@ -100,11 +100,11 @@ class EftSubgraphScheduler {
                               const std::vector<unsigned> &multiplicities,
                               const std::vector<std::vector<v_workw_t<Graph_t>>> &requiredProcTypes,
                               const std::vector<unsigned> &maxNumProcs) {
-        jobs_.resize(instance.numberOfVertices());
+        jobs_.resize(instance.NumberOfVertices());
         if constexpr (verbose_) {
             std::cout << "--- Preparing for Subgraph Scheduling ---" << std::endl;
         }
-        const auto &graph = instance.getComputationalDag();
+        const auto &graph = instance.GetComputationalDag();
         const size_t numWorkerTypes = instance.GetArchitecture().getProcessorTypeCount().size();
 
         CalculateUpwardRanks(graph);
@@ -161,7 +161,7 @@ class EftSubgraphScheduler {
         const size_t numWorkerTypes = availableWorkers.size();
         std::vector<job_id_t> runningJobs;
         unsigned completedCount = 0;
-        const auto &graph = instance.getComputationalDag();
+        const auto &graph = instance.GetComputationalDag();
 
         if constexpr (verbose_) {
             std::cout << "\n--- Subgraph Scheduling Execution Started ---" << std::endl;

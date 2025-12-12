@@ -63,7 +63,7 @@ class CSchedule {
             bspSchedule.setAssignedProcessor(v, proc_[v]);
         }
 
-        const vertex_idx n = instance.numberOfVertices();
+        const vertex_idx n = instance.NumberOfVertices();
         const unsigned p = instance.NumberOfProcessors();
 
         unsigned superStepIdx = 0, totalNodesDone = 0;
@@ -83,7 +83,7 @@ class CSchedule {
                     const vertex_idx node = *limit[j];
                     bool cut = false;
 
-                    for (const auto &source : instance.getComputationalDag().parents(node)) {
+                    for (const auto &source : instance.GetComputationalDag().parents(node)) {
                         if (!processed[source] && proc[source] != proc[node]) {
                             cut = true;
                         }
@@ -101,7 +101,7 @@ class CSchedule {
             for (unsigned j = 0; j < p; ++j) {
                 for (; done[j] != limit[j]
                        && (time[*done[j]] < timeLimit
-                           || (time[*done[j]] == timeLimit && instance.getComputationalDag().VertexWorkWeight(*done[j]) == 0));
+                           || (time[*done[j]] == timeLimit && instance.GetComputationalDag().VertexWorkWeight(*done[j]) == 0));
                      ++done[j]) {
                     processed[*done[j]] = true;
                     bspSchedule.setAssignedSuperstep(*done[j], superStepIdx);

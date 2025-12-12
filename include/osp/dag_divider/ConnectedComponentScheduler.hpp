@@ -36,7 +36,7 @@ class ConnectedComponentScheduler : public Scheduler<GraphT> {
     RETURN_STATUS computeSchedule(BspSchedule<GraphT> &schedule) override {
         const auto &instance = schedule.GetInstance();
 
-        const GraphT &dag = instance.getComputationalDag();
+        const GraphT &dag = instance.GetComputationalDag();
         ConnectedComponentDivider<GraphT, ConstrGraphT> partitioner;
 
         partitioner.divide(dag);

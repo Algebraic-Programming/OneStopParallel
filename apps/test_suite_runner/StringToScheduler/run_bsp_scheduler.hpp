@@ -243,7 +243,7 @@ RETURN_STATUS RunBspScheduler(const ConfigParser &parser,
         BspInstance<boost_graph_t> instanceCoarse;
         std::vector<vertex_idx_t<boost_graph_t>> reverseVertexMap;
         bool status
-            = coarser->coarsenDag(instance.getComputationalDag(), instance_coarse.getComputationalDag(), reverse_vertex_map);
+            = coarser->coarsenDag(instance.GetComputationalDag(), instance_coarse.GetComputationalDag(), reverse_vertex_map);
         if (!status) {
             return RETURN_STATUS::ERROR;
         }

@@ -98,7 +98,7 @@ struct AdaptiveAffinityTable {
   public:
     void Initialize(const KlActiveScheduleT &sche, const std::size_t initialTableSize) {
         activeSchedule_ = &sche;
-        graph_ = &(sche.GetInstance().getComputationalDag());
+        graph_ = &(sche.GetInstance().GetComputationalDag());
 
         lastIdx_ = 0;
 
@@ -256,7 +256,7 @@ struct StaticAffinityTable {
   public:
     void Initialize(const KlActiveScheduleT &sche, const std::size_t) {
         activeSchedule_ = &sche;
-        graph_ = &(sche.GetInstance().getComputationalDag());
+        graph_ = &(sche.GetInstance().GetComputationalDag());
 
         affinityTable_.resize(graph_->NumVertices());
         const unsigned numProcs = sche.GetInstance().NumberOfProcessors();
@@ -316,7 +316,7 @@ struct VertexSelectionStrategy {
 
     inline void Initialize(const KlActiveScheduleT &sche, std::mt19937 &gen, const unsigned startStep, const unsigned endStep) {
         activeSchedule_ = &sche;
-        graph_ = &(sche.GetInstance().getComputationalDag());
+        graph_ = &(sche.GetInstance().GetComputationalDag());
         gen_ = &gen;
 
         permutation.reserve(graph->NumVertices() / active_schedule->num_steps() * (end_step - start_step));

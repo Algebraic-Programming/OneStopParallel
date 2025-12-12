@@ -58,7 +58,7 @@ class BspScheduleCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> 
         using VertexType_in = vertex_idx_t<Graph_t_in>;
         using VertexType_out = vertex_idx_t<Graph_t_out>;
 
-        assert(&dagIn == &schedule_->GetInstance().getComputationalDag());
+        assert(&dagIn == &schedule_->GetInstance().GetComputationalDag());
         assert(schedule_->satisfiesPrecedenceConstraints());
 
         SetSchedule<GraphTIn> setSchedule(*schedule_);

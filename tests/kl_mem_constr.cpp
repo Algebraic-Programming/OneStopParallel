@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(KlLocalMemconst) {
         BspInstance<Graph> instance;
 
         bool statusGraph
-            = file_reader::readComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(), instance.getComputationalDag());
+            = file_reader::readComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(), instance.GetComputationalDag());
         instance.GetArchitecture().setSynchronisationCosts(10);
         instance.GetArchitecture().setCommunicationCosts(5);
         instance.GetArchitecture().setNumberOfProcessors(4);
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(KlLocalMemconst) {
 
         const std::vector<int> boundsToTest = {10, 20};
 
-        AddMemWeights(instance.getComputationalDag());
+        AddMemWeights(instance.GetComputationalDag());
 
         if (!statusGraph) {
             std::cout << "Reading files failed." << std::endl;

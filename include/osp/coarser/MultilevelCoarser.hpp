@@ -92,7 +92,7 @@ RETURN_STATUS MultilevelCoarser<GraphT, GraphTCoarse>::Run(const GraphT &graph) 
 
 template <typename GraphT, typename GraphTCoarse>
 RETURN_STATUS MultilevelCoarser<GraphT, GraphTCoarse>::Run(const BspInstance<GraphT> &inst) {
-    return run(inst.getComputationalDag());
+    return run(inst.GetComputationalDag());
 }
 
 template <typename GraphT, typename GraphTCoarse>

@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(TestTotal) {
     }
 
     bool status = file_reader::readComputationalDagHyperdagFormatDB(
-        (cwd / "data/spaa/tiny/instance_spmv_N6_nzP0d4.hdag").string(), instance.getComputationalDag());
+        (cwd / "data/spaa/tiny/instance_spmv_N6_nzP0d4.hdag").string(), instance.GetComputationalDag());
 
     BOOST_CHECK(status);
 
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
     }
 
     bool status = file_reader::readComputationalDagHyperdagFormatDB(
-        (cwd / "data/spaa/tiny/instance_spmv_N6_nzP0d4.hdag").string(), instance.getComputationalDag());
+        (cwd / "data/spaa/tiny/instance_spmv_N6_nzP0d4.hdag").string(), instance.GetComputationalDag());
 
     BOOST_CHECK(status);
 
@@ -150,8 +150,8 @@ BOOST_AUTO_TEST_CASE(TestFull) {
     BspInstance<graph> instanceTyped = instance;
     instanceTyped.GetArchitecture().setProcessorType(0, 1);
     instanceTyped.GetArchitecture().setProcessorType(1, 1);
-    for (vertex_idx_t<graph> node = 0; node < static_cast<vertex_idx_t<graph> >(instance_typed.numberOfVertices()); ++node) {
-        instanceTyped.getComputationalDag().SetVertexType(node, node % 2);
+    for (vertex_idx_t<graph> node = 0; node < static_cast<vertex_idx_t<graph> >(instance_typed.NumberOfVertices()); ++node) {
+        instanceTyped.GetComputationalDag().SetVertexType(node, node % 2);
     }
     instanceTyped.setDiagonalCompatibilityMatrix(2);
 
@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(TestCs) {
     }
 
     bool status = file_reader::readComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_pregel.hdag").string(),
-                                                                    instance.getComputationalDag());
+                                                                    instance.GetComputationalDag());
 
     BOOST_CHECK(status);
 
@@ -253,7 +253,7 @@ BOOST_AUTO_TEST_CASE(TestPartial) {
     }
 
     bool status = file_reader::readComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_pregel.hdag").string(),
-                                                                    instance.getComputationalDag());
+                                                                    instance.GetComputationalDag());
 
     BOOST_CHECK(status);
 

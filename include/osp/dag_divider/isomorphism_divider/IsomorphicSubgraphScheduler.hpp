@@ -132,11 +132,11 @@ class IsomorphicSubgraphScheduler {
         std::unique_ptr<HashComputer<vertex_idx_t<Graph_t>>> localHasher;
         if (!hash_computer_) {
             localHasher = std::make_unique<MerkleHashComputer<GraphT, BwdMerkleNodeHashFunc<GraphT>, true>>(
-                instance.getComputationalDag(), instance.getComputationalDag());
+                instance.GetComputationalDag(), instance.GetComputationalDag());
             hash_computer_ = local_hasher.get();
         }
 
-        orbit_processor.discover_isomorphic_groups(instance.getComputationalDag(), *hash_computer_);
+        orbit_processor.discover_isomorphic_groups(instance.GetComputationalDag(), *hash_computer_);
 
         auto isomorphicGroups = orbitProcessor.get_final_groups();
 
@@ -150,7 +150,7 @@ class IsomorphicSubgraphScheduler {
             = etfScheduler.run(input.instance, input.multiplicities, input.required_proc_types, input.max_num_processors);
         subgraphSchedule.wasTrimmed_ = std::move(wasTrimmed);    // Pass through trimming info
 
-        std::vector<vertex_idx_t<Graph_t>> partition(instance.numberOfVertices(), 0);
+        std::vector<vertex_idx_t<Graph_t>> partition(instance.NumberOfVertices(), 0);
         schedule_isomorphic_group(instance, isomorphic_groups, subgraph_schedule, partition);
 
         if (plotDotGraphs_) {
@@ -162,13 +162,13 @@ class IsomorphicSubgraphScheduler {
 
             DotFileWriter writer;
             writer.write_colored_graph(
-                timestamp + "isomorphic_groups.dot", instance.getComputationalDag(), orbitProcessor.get_final_contraction_map());
+                timestamp + "isomorphic_groups.dot", instance.GetComputationalDag(), orbitProcessor.get_final_contraction_map());
             writer.write_colored_graph(
-                timestamp + "orbits_colored.dot", instance.getComputationalDag(), orbitProcessor.get_contraction_map());
-            writer.write_graph(timestamp + "iso_groups_contracted.dot", input.instance.getComputationalDag());
-            writer.write_colored_graph(timestamp + "graph_partition.dot", instance.getComputationalDag(), partition);
+                timestamp + "orbits_colored.dot", instance.GetComputationalDag(), orbitProcessor.get_contraction_map());
+            writer.write_graph(timestamp + "iso_groups_contracted.dot", input.instance.GetComputationalDag());
+            writer.write_colored_graph(timestamp + "graph_partition.dot", instance.GetComputationalDag(), partition);
             ConstrGraphT coraseGraph;
-            coarser_util::construct_coarse_dag(instance.getComputationalDag(), corase_graph, partition);
+            coarser_util::construct_coarse_dag(instance.GetComputationalDag(), corase_graph, partition);
             writer.write_graph(timestamp + "block_graph.dot", coraseGraph);
         }
         return partition;
@@ -211,10 +211,10 @@ class IsomorphicSubgraphScheduler {
 
                 if constexpr (HasTypedVerticesV<Graph_t>) {
                     if (!group.subgraphs.empty() && !group.subgraphs[0].empty()) {
-                        commonNodeType = instance.getComputationalDag().VertexType(group.subgraphs[0][0]);
+                        commonNodeType = instance.GetComputationalDag().VertexType(group.subgraphs[0][0]);
                         const auto &repSubgraph = group.subgraphs[0];
                         for (const auto &vertex : repSubgraph) {
-                            if (instance.getComputationalDag().VertexType(vertex) != common_node_type) {
+                            if (instance.GetComputationalDag().VertexType(vertex) != common_node_type) {
                                 isSingleTypeGroup = false;
                                 break;
                             }
@@ -333,7 +333,7 @@ class IsomorphicSubgraphScheduler {
         result.multiplicities.resize(isomorphicGroups.size());
         result.max_num_processors.resize(isomorphicGroups.size());
         result.required_proc_types.resize(isomorphicGroups.size());
-        std::vector<vertex_idx_t<Constr_Graph_t>> contractionMap(originalInstance.numberOfVertices());
+        std::vector<vertex_idx_t<Constr_Graph_t>> contractionMap(originalInstance.NumberOfVertices());
 
         size_t coarseNodeIdx = 0;
         for (const auto &group : isomorphicGroups) {
@@ -345,8 +345,8 @@ class IsomorphicSubgraphScheduler {
             for (const auto &subgraph : group.subgraphs) {
                 for (const auto &vertex : subgraph) {
                     contractionMap[vertex] = static_cast<vertex_idx_t<Constr_Graph_t>>(coarseNodeIdx);
-                    const auto vertexWork = originalInstance.getComputationalDag().VertexWorkWeight(vertex);
-                    const auto vertexType = originalInstance.getComputationalDag().VertexType(vertex);
+                    const auto vertexWork = originalInstance.GetComputationalDag().VertexWorkWeight(vertex);
+                    const auto vertexType = originalInstance.GetComputationalDag().VertexType(vertex);
                     for (unsigned j = 0; j < numProcTypes; ++j) {
                         if (originalInstance.isCompatibleType(vertexType, j)) {
                             result.required_proc_types[coarseNodeIdx][j] += vertexWork;
@@ -358,7 +358,7 @@ class IsomorphicSubgraphScheduler {
             ++coarseNodeIdx;
         }
         coarser_util::construct_coarse_dag(
-            original_instance.getComputationalDag(), result.instance.getComputationalDag(), contraction_map);
+            original_instance.GetComputationalDag(), result.instance.GetComputationalDag(), contraction_map);
 
         if constexpr (verbose_) {
             std::cout << "\n--- Preparing Subgraph Scheduling Input ---\n";
@@ -367,7 +367,7 @@ class IsomorphicSubgraphScheduler {
                 std::cout << "  - Coarse Node " << j << " (from " << isomorphicGroups[j].subgraphs.size()
                           << " isomorphic subgraphs):\n";
                 std::cout << "    - Multiplicity for scheduling: " << result.multiplicities[j] << "\n";
-                std::cout << "    - Total Work (in coarse graph): " << result.instance.getComputationalDag().VertexWorkWeight(j)
+                std::cout << "    - Total Work (in coarse graph): " << result.instance.GetComputationalDag().VertexWorkWeight(j)
                           << "\n";
                 std::cout << "    - Required Processor Types: ";
                 for (unsigned k = 0; k < numProcTypes; ++k) {
@@ -398,7 +398,7 @@ class IsomorphicSubgraphScheduler {
 
             BspInstance<ConstrGraphT> representativeInstance;
             auto repGlobalToLocalMap = create_induced_subgraph_map(
-                instance.getComputationalDag(), representativeInstance.getComputationalDag(), repSubgraphVerticesSorted);
+                instance.GetComputationalDag(), representativeInstance.GetComputationalDag(), repSubgraphVerticesSorted);
 
             representativeInstance.GetArchitecture() = instance.GetArchitecture();
             const auto &procsForGroup = subSched.nodeAssignedWorkerPerType_[groupIdx];
@@ -441,7 +441,7 @@ class IsomorphicSubgraphScheduler {
             if constexpr (verbose_) {
                 std::cout << "--- Scheduling representative for group " << groupIdx << " ---" << std::endl;
                 std::cout << "  Number of subgraphs in group: " << group.subgraphs.size() << std::endl;
-                const auto &repDag = representativeInstance.getComputationalDag();
+                const auto &repDag = representativeInstance.GetComputationalDag();
                 std::cout << "  Representative subgraph size: " << repDag.NumVertices() << " vertices" << std::endl;
                 std::vector<unsigned> nodeTypeCounts(repDag.NumVertexTypes(), 0);
                 for (const auto &v : repDag.vertices()) {
@@ -478,7 +478,7 @@ class IsomorphicSubgraphScheduler {
             }
 
             if (plotDotGraphs_) {
-                const auto &repDag = bspSchedule.GetInstance().getComputationalDag();
+                const auto &repDag = bspSchedule.GetInstance().GetComputationalDag();
                 std::vector<unsigned> colors(repDag.NumVertices());
                 std::map<std::pair<unsigned, unsigned>, unsigned> procSsToColor;
                 unsigned nextColor = 0;
@@ -501,8 +501,8 @@ class IsomorphicSubgraphScheduler {
                 writer.write_colored_graph(timestamp + "iso_group_rep_" + std::to_string(groupIdx) + ".dot", repDag, colors);
             }
 
-            const bool maxBsp = useMaxBsp_ && (representativeInstance.getComputationalDag().NumEdges() == 0)
-                                && (representativeInstance.getComputationalDag().VertexType(0) == 0);
+            const bool maxBsp = useMaxBsp_ && (representativeInstance.GetComputationalDag().NumEdges() == 0)
+                                && (representativeInstance.GetComputationalDag().VertexType(0) == 0);
 
             // Build data structures for applying the pattern ---
             // Map (superstep, processor) -> relative partition ID
@@ -521,7 +521,7 @@ class IsomorphicSubgraphScheduler {
             }
 
             // Pre-compute hashes for the representative to use for mapping
-            MerkleHashComputer<Constr_Graph_t> repHasher(representativeInstance.getComputationalDag());
+            MerkleHashComputer<Constr_Graph_t> repHasher(representativeInstance.GetComputationalDag());
 
             // Replicate the schedule pattern for ALL subgraphs in the group ---
             for (vertex_idx_t<Graph_t> i = 0; i < static_cast<vertex_idx_t<Graph_t>>(group.subgraphs.size()); ++i) {
@@ -535,7 +535,7 @@ class IsomorphicSubgraphScheduler {
                     current_vertex_to_rep_local_idx = std::move(rep_global_to_local_map);
                 } else {    // For other subgraphs, build the isomorphic mapping
                     ConstrGraphT currentSubgraphGraph;
-                    create_induced_subgraph(instance.getComputationalDag(), currentSubgraphGraph, current_subgraph_vertices_sorted);
+                    create_induced_subgraph(instance.GetComputationalDag(), currentSubgraphGraph, current_subgraph_vertices_sorted);
 
                     MerkleHashComputer<Constr_Graph_t> currentHasher(currentSubgraphGraph);
 

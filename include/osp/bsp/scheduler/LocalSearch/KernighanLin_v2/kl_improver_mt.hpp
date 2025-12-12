@@ -121,7 +121,7 @@ class KlImproverMt : public KlImprover<GraphT, CommCostFunctionT, MemoryConstrai
                 = 1;    // no parallelization with one thread. Affects parameters.max_out_iteration calculation in set_parameters()
         }
 
-        this->SetParameters(schedule.GetInstance().numberOfVertices());
+        this->SetParameters(schedule.GetInstance().NumberOfVertices());
         this->InitializeDatastructures(schedule);
         const CostT initialCost = this->activeSchedule_.get_cost();
 
