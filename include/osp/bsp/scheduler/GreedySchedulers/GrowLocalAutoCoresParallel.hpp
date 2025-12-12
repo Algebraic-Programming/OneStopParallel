@@ -201,7 +201,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                     }
 
                     newAssignments[0].push_back(chosen_node);
-                    schedule.setAssignedProcessor(chosen_node, 0);
+                    schedule.SetAssignedProcessor(chosen_node, 0);
                     newTotalAssigned++;
                     weightLimit += graph.VertexWorkWeight(chosen_node);
 
@@ -223,9 +223,9 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                         }
 
                         if (schedule.AssignedProcessor(succ) == UINT_MAX) {
-                            schedule.setAssignedProcessor(succ, 0);
+                            schedule.SetAssignedProcessor(succ, 0);
                         } else if (schedule.AssignedProcessor(succ) != 0) {
-                            schedule.setAssignedProcessor(succ, P);
+                            schedule.SetAssignedProcessor(succ, P);
                         }
 
                         VertexType succIndex;
@@ -264,7 +264,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                         }
 
                         newAssignments[proc].push_back(chosen_node);
-                        schedule.setAssignedProcessor(chosen_node, proc);
+                        schedule.SetAssignedProcessor(chosen_node, proc);
                         newTotalAssigned++;
                         currentWeightAssigned += graph.VertexWorkWeight(chosen_node);
 
@@ -286,9 +286,9 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                             }
 
                             if (schedule.AssignedProcessor(succ) == UINT_MAX) {
-                                schedule.setAssignedProcessor(succ, proc);
+                                schedule.SetAssignedProcessor(succ, proc);
                             } else if (schedule.AssignedProcessor(succ) != proc) {
-                                schedule.setAssignedProcessor(succ, P);
+                                schedule.SetAssignedProcessor(succ, P);
                             }
 
                             VertexType succIndex;
@@ -352,7 +352,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                 // undo proc assingments and predec increases in any case
                 for (unsigned proc = 0; proc < p; ++proc) {
                     for (const VertexType &node : new_assignments[proc]) {
-                        schedule.setAssignedProcessor(node, UINT_MAX);
+                        schedule.SetAssignedProcessor(node, UINT_MAX);
                     }
                 }
 
@@ -406,7 +406,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                                 }
                             }
 
-                            schedule.setAssignedProcessor(succ, UINT_MAX);
+                            schedule.SetAssignedProcessor(succ, UINT_MAX);
                         }
                     }
                 }
@@ -431,7 +431,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
 
             for (unsigned proc = 0; proc < p; ++proc) {
                 for (const VertexType &node : best_new_assignments[proc]) {
-                    schedule.setAssignedProcessor(node, proc);
+                    schedule.SetAssignedProcessor(node, proc);
                     schedule.setAssignedSuperstepNoUpdateNumSuperstep(node, supstep);
                     ++total_assigned;
 
@@ -509,7 +509,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
         const VertexType n = instance.NumberOfVertices();
 
         for (VertexType vert = 0; vert < N; ++vert) {
-            schedule.setAssignedProcessor(vert, UINT_MAX);
+            schedule.SetAssignedProcessor(vert, UINT_MAX);
         }
 
         VertexType numNodesPerThread = N / numThreads;

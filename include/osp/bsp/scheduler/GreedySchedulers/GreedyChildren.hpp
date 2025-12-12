@@ -41,7 +41,7 @@ class GreedyChildren : public Scheduler<GraphT> {
         const auto &instance = sched.GetInstance();
 
         for (const auto &v : instance.GetComputationalDag().vertices()) {
-            sched.setAssignedProcessor(v, std::numeric_limits<unsigned>::max());
+            sched.SetAssignedProcessor(v, std::numeric_limits<unsigned>::max());
         }
 
         const auto &graph = instance.GetComputationalDag();
@@ -91,7 +91,7 @@ class GreedyChildren : public Scheduler<GraphT> {
 
                     sched.setAssignedSuperstep(node, superstepCounter);
                     if (processorSet) {
-                        sched.setAssignedProcessor(node, processorToBeAllocated);
+                        sched.SetAssignedProcessor(node, processorToBeAllocated);
                     } else {
                         VWorkwT<GraphT> minWeight = std::numeric_limits<VWorkwT<GraphT>>::max();
                         unsigned bestProc = std::numeric_limits<unsigned>::max();
@@ -103,7 +103,7 @@ class GreedyChildren : public Scheduler<GraphT> {
                                 }
                             }
                         }
-                        sched.setAssignedProcessor(node, bestProc);
+                        sched.SetAssignedProcessor(node, bestProc);
                     }
 
                     nodesAssignedThisSuperstep.emplace(node);

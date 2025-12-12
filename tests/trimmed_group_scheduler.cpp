@@ -37,7 +37,7 @@ class MockSubScheduler : public Scheduler<ConstrGraphT> {
     // This simplifies verification of the TrimmedGroupScheduler's mapping logic.
     ReturnStatus computeSchedule(BspSchedule<ConstrGraphT> &schedule) override {
         for (VertexIdxT<ConstrGraphT> v = 0; v < schedule.GetInstance().GetComputationalDag().NumVertices(); ++v) {
-            schedule.setAssignedProcessor(v, 0);
+            schedule.SetAssignedProcessor(v, 0);
             schedule.setAssignedSuperstep(v, 0);
         }
         schedule.setNumberOfSupersteps(1);

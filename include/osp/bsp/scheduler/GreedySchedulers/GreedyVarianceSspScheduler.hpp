@@ -576,7 +576,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
 
                 oldReady.erase(std::make_pair(nextNode, workVariances[nextNode]));
 
-                schedule.setAssignedProcessor(nextNode, nextProc);
+                schedule.SetAssignedProcessor(nextNode, nextProc);
                 schedule.setAssignedSuperstep(nextNode, supstepIdx);
                 ableToScheduleInStep = true;
 

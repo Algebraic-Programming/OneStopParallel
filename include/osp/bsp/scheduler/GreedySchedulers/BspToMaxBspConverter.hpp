@@ -69,7 +69,7 @@ MaxBspScheduleCS<GraphT> GreedyBspToMaxBspConverter<GraphT>::Convert(const BspSc
         workRemainingProcSuperstep[schedule.AssignedProcessor(node)][schedule.AssignedSuperstep(node)]
             += dag.VertexWorkWeight(node);
         ++nodes_remaining_superstep[schedule.AssignedSuperstep(node)];
-        scheduleMax.setAssignedProcessor(node, schedule.AssignedProcessor(node));
+        scheduleMax.SetAssignedProcessor(node, schedule.AssignedProcessor(node));
     }
 
     std::vector<std::vector<cost_type>> sendCommRemainingProcSuperstep(schedule.GetInstance().NumberOfProcessors(),

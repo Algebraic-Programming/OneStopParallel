@@ -133,7 +133,7 @@ class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
         std::vector<unsigned> whichProcReadyPrior(nVert, nProcessors);
 
         for (const auto &v : graph.vertices()) {
-            schedule.setAssignedProcessor(v, nProcessors);
+            schedule.SetAssignedProcessor(v, nProcessors);
 
             totalWork += graph.VertexWorkWeight(v);
 
@@ -303,7 +303,7 @@ class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
                 } else {
                     // Assignments
                     // std::cout << "Allocated node " << next_node << " to processor " << proc << ".\n";
-                    schedule.setAssignedProcessor(next_node, proc);
+                    schedule.SetAssignedProcessor(next_node, proc);
                     schedule.setAssignedSuperstep(next_node, superstep);
                     num_unable_to_partition_node_loop = 0;
 

@@ -44,7 +44,7 @@ class RandomGreedy : public Scheduler<GraphT> {
         const auto &instance = sched.GetInstance();
 
         for (const auto &v : instance.GetComputationalDag().vertices()) {
-            sched.setAssignedProcessor(v, std::numeric_limits<unsigned>::max());
+            sched.SetAssignedProcessor(v, std::numeric_limits<unsigned>::max());
             sched.setAssignedSuperstep(v, std::numeric_limits<unsigned>::max());
         }
 
@@ -96,13 +96,13 @@ class RandomGreedy : public Scheduler<GraphT> {
 
                 sched.setAssignedSuperstep(node, superstepCounter);
                 if (processorSet) {
-                    sched.setAssignedProcessor(node, processorToBeAllocated);
+                    sched.SetAssignedProcessor(node, processorToBeAllocated);
                 } else {
                     auto minIter = std::min_element(processor_weights.begin(), processor_weights.end());
 
                     assert(std::distance(processor_weights.begin(), min_iter) >= 0);
 
-                    sched.setAssignedProcessor(node, static_cast<unsigned>(std::distance(processor_weights.begin(), min_iter)));
+                    sched.SetAssignedProcessor(node, static_cast<unsigned>(std::distance(processor_weights.begin(), min_iter)));
                 }
 
                 nodesAssignedThisSuperstep.emplace(node);

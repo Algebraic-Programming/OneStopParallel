@@ -1107,9 +1107,9 @@ BOOST_AUTO_TEST_CASE(TestLazyAndBufferedModes) {
 
     std::cout << "Setup Schedule" << std::endl;
     osp::BspSchedule<Graph> schedule(bspInstance);
-    schedule.setAssignedProcessor(0, 0);
-    schedule.setAssignedProcessor(1, 1);
-    schedule.setAssignedProcessor(2, 1);
+    schedule.SetAssignedProcessor(0, 0);
+    schedule.SetAssignedProcessor(1, 1);
+    schedule.SetAssignedProcessor(2, 1);
 
     schedule.setAssignedSuperstep(0, 0);
     schedule.setAssignedSuperstep(1, 2);

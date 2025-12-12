@@ -962,7 +962,7 @@ void HillClimbingScheduler<GraphT>::ExecuteMove(const vertex_idx node,
     }
 
     // update data
-    schedule_->setAssignedProcessor(node, newProc);
+    schedule_->SetAssignedProcessor(node, newProc);
     schedule_->setAssignedSuperstep(node, newStep);
     supsteplists[oldStep][oldProc].erase(supStepListPointer[node]);
     supsteplists[newStep][newProc].push_back(node);

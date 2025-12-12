@@ -328,13 +328,13 @@ BOOST_AUTO_TEST_CASE(TestMaxBspSchedule) {
     // Test a valid schedule with staleness = 2
     {
         MaxBspSchedule<Graph> schedule(instance);
-        schedule.setAssignedProcessor(0, 0);
+        schedule.SetAssignedProcessor(0, 0);
         schedule.setAssignedSuperstep(0, 0);
-        schedule.setAssignedProcessor(1, 0);
+        schedule.SetAssignedProcessor(1, 0);
         schedule.setAssignedSuperstep(1, 1);
-        schedule.setAssignedProcessor(2, 1);
+        schedule.SetAssignedProcessor(2, 1);
         schedule.setAssignedSuperstep(2, 2);    // 0->2 is cross-proc, 2 >= 0+2
-        schedule.setAssignedProcessor(3, 0);
+        schedule.SetAssignedProcessor(3, 0);
         schedule.setAssignedSuperstep(3, 4);    // 2->3 is cross-proc, 4 >= 2+2
         schedule.updateNumberOfSupersteps();
 
@@ -353,13 +353,13 @@ BOOST_AUTO_TEST_CASE(TestMaxBspSchedule) {
     // Test another valid schedule
     {
         MaxBspSchedule<Graph> schedule(instance);
-        schedule.setAssignedProcessor(0, 0);
+        schedule.SetAssignedProcessor(0, 0);
         schedule.setAssignedSuperstep(0, 0);
-        schedule.setAssignedProcessor(1, 1);
+        schedule.SetAssignedProcessor(1, 1);
         schedule.setAssignedSuperstep(1, 2);    // 0->1 is cross-proc, 2 >= 0+2
-        schedule.setAssignedProcessor(2, 1);
+        schedule.SetAssignedProcessor(2, 1);
         schedule.setAssignedSuperstep(2, 2);    // 0->2 is cross-proc, 2 >= 0+2
-        schedule.setAssignedProcessor(3, 0);
+        schedule.SetAssignedProcessor(3, 0);
         schedule.setAssignedSuperstep(3, 4);    // 1->3, 2->3 are cross-proc, 4 >= 2+2
         schedule.updateNumberOfSupersteps();
 
@@ -378,9 +378,9 @@ BOOST_AUTO_TEST_CASE(TestMaxBspSchedule) {
     // Test an invalid schedule (violates staleness=2)
     {
         MaxBspSchedule<Graph> schedule(instance);
-        schedule.setAssignedProcessor(0, 0);
+        schedule.SetAssignedProcessor(0, 0);
         schedule.setAssignedSuperstep(0, 0);
-        schedule.setAssignedProcessor(1, 1);    // 0->1 on different procs
+        schedule.SetAssignedProcessor(1, 1);    // 0->1 on different procs
         schedule.setAssignedSuperstep(1, 1);    // step(0)+2 > step(1) is FALSE (0+2 > 1)
         schedule.updateNumberOfSupersteps();
 
@@ -409,13 +409,13 @@ BOOST_AUTO_TEST_CASE(TestMaxBspScheduleCs) {
     // Test a valid schedule with staleness = 2
     {
         MaxBspScheduleCS<Graph> schedule(instance);
-        schedule.setAssignedProcessor(0, 0);
+        schedule.SetAssignedProcessor(0, 0);
         schedule.setAssignedSuperstep(0, 0);
-        schedule.setAssignedProcessor(1, 0);
+        schedule.SetAssignedProcessor(1, 0);
         schedule.setAssignedSuperstep(1, 1);
-        schedule.setAssignedProcessor(2, 1);
+        schedule.SetAssignedProcessor(2, 1);
         schedule.setAssignedSuperstep(2, 2);    // 0->2 is cross-proc, 2 >= 0+2
-        schedule.setAssignedProcessor(3, 0);
+        schedule.SetAssignedProcessor(3, 0);
         schedule.setAssignedSuperstep(3, 4);    // 2->3 is cross-proc, 4 >= 2+2
         schedule.updateNumberOfSupersteps();
 
@@ -440,9 +440,9 @@ BOOST_AUTO_TEST_CASE(TestMaxBspScheduleCs) {
     // Test an invalid schedule (violates staleness=2)
     {
         MaxBspScheduleCS<Graph> schedule(instance);
-        schedule.setAssignedProcessor(0, 0);
+        schedule.SetAssignedProcessor(0, 0);
         schedule.setAssignedSuperstep(0, 0);
-        schedule.setAssignedProcessor(1, 1);    // 0->1 on different procs
+        schedule.SetAssignedProcessor(1, 1);    // 0->1 on different procs
         schedule.setAssignedSuperstep(1, 1);    // step(0)+2 > step(1) is FALSE (0+2 > 1)
         schedule.updateNumberOfSupersteps();
 

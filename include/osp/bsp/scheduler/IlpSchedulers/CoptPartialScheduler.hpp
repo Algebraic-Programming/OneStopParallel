@@ -227,7 +227,7 @@ void CoptPartialScheduler<GraphT>::UpdateSchedule(BspScheduleCS<GraphT> &schedul
                         COPT_DBLINFO_VALUE)
                     >= .99) {
                     schedule.setAssignedSuperstep(node, startSuperstep_ + step);
-                    schedule.setAssignedProcessor(node, processor);
+                    schedule.SetAssignedProcessor(node, processor);
                 }
             }
         }

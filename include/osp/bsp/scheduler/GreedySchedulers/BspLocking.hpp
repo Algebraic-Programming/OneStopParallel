@@ -309,7 +309,7 @@ class BspLocking : public Scheduler<GraphT> {
         const auto &instance = schedule.GetInstance();
 
         for (const auto &v : instance.GetComputationalDag().vertices()) {
-            schedule.setAssignedProcessor(v, std::numeric_limits<unsigned>::max());
+            schedule.SetAssignedProcessor(v, std::numeric_limits<unsigned>::max());
         }
 
         unsigned supstepIdx = 0;
@@ -508,7 +508,7 @@ class BspLocking : public Scheduler<GraphT> {
 
                 ready.erase(nextNode);
                 --nrReadyNodesPerType[g.VertexType(nextNode)];
-                schedule.setAssignedProcessor(nextNode, nextProc);
+                schedule.SetAssignedProcessor(nextNode, nextProc);
                 schedule.setAssignedSuperstep(nextNode, supstepIdx);
 
                 readyPhase_[nextNode] = std::numeric_limits<unsigned>::max();

@@ -43,11 +43,11 @@ BOOST_AUTO_TEST_CASE(TestRecomputer) {
     instance1.GetComputationalDag().add_edge(0, 2);
 
     BspSchedule<Graph> scheduleInit1(instance1);
-    scheduleInit1.setAssignedProcessor(0, 0);
+    scheduleInit1.SetAssignedProcessor(0, 0);
     scheduleInit1.setAssignedSuperstep(0, 0);
-    scheduleInit1.setAssignedProcessor(1, 0);
+    scheduleInit1.SetAssignedProcessor(1, 0);
     scheduleInit1.setAssignedSuperstep(1, 1);
-    scheduleInit1.setAssignedProcessor(2, 1);
+    scheduleInit1.SetAssignedProcessor(2, 1);
     scheduleInit1.setAssignedSuperstep(2, 1);
     BOOST_CHECK(scheduleInit1.satisfiesPrecedenceConstraints());
     BspScheduleCS<Graph> scheduleInitCs1(scheduleInit1);

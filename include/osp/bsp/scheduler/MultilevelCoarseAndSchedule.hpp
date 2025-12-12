@@ -136,7 +136,7 @@ ReturnStatus MultilevelCoarseAndSchedule<GraphT, GraphTCoarse>::ExpandActiveSche
     std::unique_ptr<BspSchedule<GraphTCoarse>> expandedSchedule = std::make_unique<BspSchedule<GraphTCoarse>>(*expandedInstance);
 
     for (const auto &node : expandedInstance->GetComputationalDag().vertices()) {
-        expandedSchedule->setAssignedProcessor(
+        expandedSchedule->SetAssignedProcessor(
             node,
             activeSchedule_->AssignedProcessor(mlCoarser_->contraction_maps.at(static_cast<std::size_t>(activeGraph_))->at(node)));
         expandedSchedule->setAssignedSuperstep(
@@ -169,7 +169,7 @@ ReturnStatus MultilevelCoarseAndSchedule<GraphT, GraphTCoarse>::ExpandActiveSche
     assert(activeGraph_ == 0L);
 
     for (const auto &node : GetOriginalInstance()->GetComputationalDag().vertices()) {
-        schedule.setAssignedProcessor(
+        schedule.SetAssignedProcessor(
             node,
             activeSchedule_->AssignedProcessor(mlCoarser_->contraction_maps.at(static_cast<std::size_t>(activeGraph_))->at(node)));
         schedule.setAssignedSuperstep(

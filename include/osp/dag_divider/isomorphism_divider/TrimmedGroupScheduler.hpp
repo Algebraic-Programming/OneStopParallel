@@ -165,7 +165,7 @@ class TrimmedGroupScheduler : public Scheduler<ConstrGraphT> {
                 // The local index within that type block.
                 const unsigned global_proc
                     = arch_proc_type_offsets[proc_type] + (i * sub_proc_counts[proc_type]) + local_idx_within_type;
-                schedule.setAssignedProcessor(v_global, global_proc);
+                schedule.SetAssignedProcessor(v_global, global_proc);
                 schedule.setAssignedSuperstep(v_global, sub_superstep);
             }
             maxSupersteps = std::max(maxSupersteps, subSchedule.NumberOfSupersteps());

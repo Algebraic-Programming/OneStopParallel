@@ -245,7 +245,7 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
         const auto &instance = schedule.GetInstance();
 
         for (const auto &v : instance.GetComputationalDag().vertices()) {
-            schedule.setAssignedProcessor(v, std::numeric_limits<unsigned>::max());
+            schedule.SetAssignedProcessor(v, std::numeric_limits<unsigned>::max());
         }
 
         unsigned supstepIdx = 0;
@@ -427,7 +427,7 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
 
                 ready.erase(nextNode);
                 --nrReadyNodesPerType[g.VertexType(nextNode)];
-                schedule.setAssignedProcessor(nextNode, nextProc);
+                schedule.SetAssignedProcessor(nextNode, nextProc);
                 schedule.setAssignedSuperstep(nextNode, supstepIdx);
 
                 if constexpr (useMemoryConstraint_) {

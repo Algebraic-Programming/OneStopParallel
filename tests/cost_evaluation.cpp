@@ -51,15 +51,15 @@ BOOST_AUTO_TEST_CASE(TestCostModelsSimpleDag) {
 
     BspSchedule<Graph> schedule(instance);
 
-    schedule.setAssignedProcessor(0, 0);
+    schedule.SetAssignedProcessor(0, 0);
     schedule.setAssignedSuperstep(0, 0);
-    schedule.setAssignedProcessor(1, 0);
+    schedule.SetAssignedProcessor(1, 0);
     schedule.setAssignedSuperstep(1, 1);
-    schedule.setAssignedProcessor(2, 1);
+    schedule.SetAssignedProcessor(2, 1);
     schedule.setAssignedSuperstep(2, 1);
-    schedule.setAssignedProcessor(3, 1);
+    schedule.SetAssignedProcessor(3, 1);
     schedule.setAssignedSuperstep(3, 2);
-    schedule.setAssignedProcessor(4, 1);
+    schedule.SetAssignedProcessor(4, 1);
     schedule.setAssignedSuperstep(4, 3);
     schedule.updateNumberOfSupersteps();
 

@@ -493,7 +493,7 @@ bool PullBackSchedule(const BspSchedule<GraphTIn> &scheduleIn,
 
         for (const auto &u : vertexMap[v]) {
             scheduleOut.setAssignedSuperstep(u, step);
-            scheduleOut.setAssignedProcessor(u, proc);
+            scheduleOut.SetAssignedProcessor(u, proc);
         }
     }
 
@@ -508,7 +508,7 @@ bool PullBackSchedule(const BspSchedule<GraphTIn> &scheduleIn,
         const auto &v = reverseVertexMap[idx];
 
         scheduleOut.setAssignedSuperstep(idx, scheduleIn.AssignedSuperstep(v));
-        scheduleOut.setAssignedProcessor(idx, scheduleIn.AssignedProcessor(v));
+        scheduleOut.SetAssignedProcessor(idx, scheduleIn.AssignedProcessor(v));
     }
 
     return true;

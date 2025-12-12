@@ -93,7 +93,7 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
                          step++) {
                         assert(size < std::numeric_limits<int>::max());
                         if (GetSolution((*node_to_processor_superstep_var_ptr)[node][processor][static_cast<int>(step)]) >= .99) {
-                            schedule.setAssignedProcessor(node, processor);
+                            schedule.SetAssignedProcessor(node, processor);
                             schedule.setAssignedSuperstep(node, step);
                         }
                     }
@@ -162,7 +162,7 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
                          step++) {
                         assert(step <= std::numeric_limits<int>::max());
                         if (GetSolution((*node_to_processor_superstep_var_ptr)[node][processor][static_cast<int>(step)]) >= .99) {
-                            schedule.setAssignedProcessor(node, processor);
+                            schedule.SetAssignedProcessor(node, processor);
                             schedule.setAssignedSuperstep(node, step);
                         }
                     }
@@ -273,7 +273,7 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
             for (unsigned processor = 0; processor < instance.NumberOfProcessors(); processor++) {
                 for (unsigned step = 0; step < maxNumberSupersteps_; step++) {
                     if (node_to_processor_superstep_var[node][processor][step].Get(COPT_DBLINFO_VALUE) >= .99) {
-                        schedule.setAssignedProcessor(node, processor);
+                        schedule.SetAssignedProcessor(node, processor);
                         schedule.setAssignedSuperstep(node, step);
                     }
                 }

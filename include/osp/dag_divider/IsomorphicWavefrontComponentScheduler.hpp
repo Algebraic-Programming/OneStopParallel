@@ -241,7 +241,7 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
                     unsigned global_proc_id
                         = global_ids_by_type[proc_type][proc_type_offsets[proc_type] + local_proc_id_within_type];
 
-                    schedule.setAssignedProcessor(vertex, global_proc_id);
+                    schedule.SetAssignedProcessor(vertex, global_proc_id);
                     schedule.setAssignedSuperstep(
                         vertex, superstep_offset + sequential_superstep_offset + sub_schedule.AssignedSuperstep(subdag_vertex));
                     subdag_vertex++;
@@ -302,7 +302,7 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
                     unsigned global_proc_id
                         = global_ids_by_type[proc_type][current_member_proc_offsets[proc_type] + local_proc_id_within_type];
 
-                    schedule.setAssignedProcessor(vertex, global_proc_id);
+                    schedule.SetAssignedProcessor(vertex, global_proc_id);
                     schedule.setAssignedSuperstep(vertex, superstep_offset + sub_schedule.AssignedSuperstep(subdag_vertex));
                     subdag_vertex++;
                 }

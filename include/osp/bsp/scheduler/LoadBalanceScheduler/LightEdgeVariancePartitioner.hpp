@@ -94,7 +94,7 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
 
         VWorkwT<GraphT> totalWork = 0;
         for (const auto &v : graph.vertices()) {
-            schedule.setAssignedProcessor(v, nProcessors);
+            schedule.SetAssignedProcessor(v, nProcessors);
 
             totalWork += graph.VertexWorkWeight(v);
 
@@ -351,7 +351,7 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
                             }
                         }
                     } else {
-                        schedule.setAssignedProcessor(next_node, proc);
+                        schedule.SetAssignedProcessor(next_node, proc);
                         has_vertex_been_assigned[next_node] = true;
                         // std::cout << "Allocated node " << next_node << " to processor " << proc << ".\n";
 
@@ -408,7 +408,7 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
                             }
 
                             // Allocation
-                            schedule.setAssignedProcessor(node_in_same_partition, proc);
+                            schedule.SetAssignedProcessor(node_in_same_partition, proc);
                             has_vertex_been_assigned[node_in_same_partition] = true;
                             // std::cout << "Allocated node " << next_node << " to processor " << proc << ".\n";
 

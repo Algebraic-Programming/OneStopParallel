@@ -136,7 +136,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
                 for (unsigned int processor = 0; processor < instancePtr_->NumberOfProcessors(); processor++) {
                     for (unsigned step = 0; step < static_cast<unsigned>((*nodeToProcessorSuperstepVarPtr_)[0][0].Size()); step++) {
                         if (GetSolution((*nodeToProcessorSuperstepVarPtr_)[node][processor][static_cast<int>(step)]) >= .99) {
-                            schedule.setAssignedProcessor(node, processor);
+                            schedule.SetAssignedProcessor(node, processor);
                             schedule.setAssignedSuperstep(node, step);
                         }
                     }
@@ -230,7 +230,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
             for (unsigned processor = 0; processor < instance.NumberOfProcessors(); processor++) {
                 for (unsigned step = 0; step < maxNumberSupersteps_; step++) {
                     if (nodeToProcessorSuperstepVar_[node][processor][static_cast<int>(step)].Get(COPT_DBLINFO_VALUE) >= .99) {
-                        schedule.setAssignedProcessor(node, processor);
+                        schedule.SetAssignedProcessor(node, processor);
                         schedule.setAssignedSuperstep(node, step);
                     }
                 }
