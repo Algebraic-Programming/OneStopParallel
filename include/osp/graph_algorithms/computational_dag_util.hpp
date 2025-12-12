@@ -130,7 +130,7 @@ template <typename EdgeIterator, typename GraphT>
 ECommwT<GraphT> SumOfEdgesCommunicationWeights(EdgeIterator begin, EdgeIterator end, const GraphT &graph) {
     static_assert(HasEdgeWeightsV<GraphT>, "Graph_t must have edge weights");
     return std::accumulate(
-        begin, end, 0, [&](const auto sum, const EdgeDescT<GraphT> &e) { return sum + graph.edge_comm_weight(e); });
+        begin, end, 0, [&](const auto sum, const EdgeDescT<GraphT> &e) { return sum + graph.EdgeCommWeight(e); });
 }
 
 template <typename GraphT>

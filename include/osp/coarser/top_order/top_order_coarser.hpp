@@ -60,10 +60,10 @@ class TopOrderCoarser : public Coarser<GraphTIn, GraphTOut> {
                     if (parent_rev != current_super_node_idx && parent_rev != std::numeric_limits<VertexType>::max()) {
                         auto pair = edge_desc(parent_rev, current_super_node_idx, dag_out);
                         if (pair.second) {
-                            dag_out.set_edge_comm_weight(pair.first,
-                                                         dag_out.edge_comm_weight(pair.first) + dag_in.edge_comm_weight(in_edge));
+                            dag_out.SetEdgeCommWeight(pair.first,
+                                                      dag_out.EdgeCommWeight(pair.first) + dag_in.EdgeCommWeight(in_edge));
                         } else {
-                            dag_out.add_edge(parent_rev, current_super_node_idx, dag_in.edge_comm_weight(in_edge));
+                            dag_out.add_edge(parent_rev, current_super_node_idx, dag_in.EdgeCommWeight(in_edge));
                         }
                     }
                 }

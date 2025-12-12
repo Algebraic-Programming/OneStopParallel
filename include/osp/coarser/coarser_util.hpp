@@ -143,7 +143,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
                           "Edge weight type of in graph and out graph must be the same!");
 
             for (const auto &edge : edges(coarsenedDag)) {
-                coarsenedDag.set_edge_comm_weight(edge, 0);
+                coarsenedDag.SetEdgeCommWeight(edge, 0);
             }
 
             for (const auto &oriEdge : edges(dagIn)) {
@@ -156,8 +156,8 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
 
                 const auto [cont_edge, found] = edge_desc(src, tgt, coarsenedDag);
                 assert(found && "The edge should already exist");
-                coarsenedDag.set_edge_comm_weight(
-                    cont_edge, ECommAccMethod()(coarsenedDag.edge_comm_weight(cont_edge), dagIn.edge_comm_weight(oriEdge)));
+                coarsenedDag.SetEdgeCommWeight(
+                    cont_edge, ECommAccMethod()(coarsenedDag.EdgeCommWeight(cont_edge), dagIn.EdgeCommWeight(oriEdge)));
             }
         }
         return true;
@@ -213,12 +213,12 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
                     edge_desc_t<Graph_t_in> ori_edge = edge_desc(vert, chld, dag_in).first;
                     const auto pair = edge_desc(vertex_contraction_map[vert], vertex_contraction_map[chld], coarsened_dag);
                     if (pair.second) {
-                        coarsened_dag.set_edge_comm_weight(
+                        coarsened_dag.SetEdgeCommWeight(
                             pair.first,
-                            e_comm_acc_method()(coarsened_dag.edge_comm_weight(pair.first), dag_in.edge_comm_weight(ori_edge)));
+                            e_comm_acc_method()(coarsened_dag.EdgeCommWeight(pair.first), dag_in.EdgeCommWeight(ori_edge)));
                     } else {
                         coarsened_dag.add_edge(
-                            vertex_contraction_map[vert], vertex_contraction_map[chld], dag_in.edge_comm_weight(ori_edge));
+                            vertex_contraction_map[vert], vertex_contraction_map[chld], dag_in.EdgeCommWeight(ori_edge));
                     }
                 } else {
                     if (not edge(vertex_contraction_map[vert], vertex_contraction_map[chld], coarsened_dag)) {
@@ -330,7 +330,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
                     continue;
                 }
 
-                coarsenedDag.set_edge_comm_weight(src, tgt, 0);
+                coarsenedDag.SetEdgeCommWeight(src, tgt, 0);
             }
 
             for (const auto &oriEdge : edges(dagIn)) {
@@ -344,8 +344,8 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
                 const auto contEdge = coarsenedDag.edge(pushforwardMap[src], pushforwardMap[tgt]);
                 assert(source(cont_edge, coarsenedDag) == pushforwardMap[src]
                        && target(cont_edge, coarsenedDag) == pushforwardMap[tgt]);
-                coarsenedDag.set_edge_comm_weight(
-                    src, tgt, ECommAccMethod()(coarsenedDag.edge_comm_weight(cont_edge), dagIn.edge_comm_weight(oriEdge)));
+                coarsenedDag.SetEdgeCommWeight(
+                    src, tgt, ECommAccMethod()(coarsenedDag.EdgeCommWeight(cont_edge), dagIn.EdgeCommWeight(oriEdge)));
             }
         }
 

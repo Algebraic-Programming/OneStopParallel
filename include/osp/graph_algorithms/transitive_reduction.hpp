@@ -82,7 +82,7 @@ void TransitiveReductionSparse(const GraphTIn &graphIn, GraphTOut &graphOut) {
         }
         if (!isTransitive) {
             if constexpr (HasEdgeWeightsV<Graph_t_in> && is_constructable_cdag_comm_edge_v<Graph_t_out>) {
-                graphOut.add_edge(u, v, graphIn.edge_comm_weight(edge));
+                graphOut.add_edge(u, v, graphIn.EdgeCommWeight(edge));
             } else {
                 graphOut.add_edge(u, v);
             }
@@ -164,7 +164,7 @@ void TransitiveReductionDense(const GraphTIn &graphIn, GraphTOut &graphOut) {
         }
         if (!isTransitive) {
             if constexpr (HasEdgeWeightsV<Graph_t_in> && is_constructable_cdag_comm_edge_v<Graph_t_out>) {
-                graphOut.add_edge(u, v, graphIn.edge_comm_weight(edge));
+                graphOut.add_edge(u, v, graphIn.EdgeCommWeight(edge));
             } else {
                 graphOut.add_edge(u, v);
             }

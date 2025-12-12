@@ -947,10 +947,10 @@ GraphT StepByStepCoarser<GraphT>::Contract(const std::vector<vertex_idx_t<Graph_
                 const auto pair = edge_desc(new_vertex_id[node], new_vertex_id[succ], G_contracted);
 
                 if (pair.second) {
-                    G_contracted.set_edge_comm_weight(
-                        pair.first, G_contracted.edge_comm_weight(pair.first) + G_full.edge_comm_weight(out_edge));
+                    G_contracted.SetEdgeCommWeight(pair.first,
+                                                   G_contracted.EdgeCommWeight(pair.first) + G_full.EdgeCommWeight(out_edge));
                 } else {
-                    G_contracted.add_edge(new_vertex_id[node], new_vertex_id[succ], G_full.edge_comm_weight(out_edge));
+                    G_contracted.add_edge(new_vertex_id[node], new_vertex_id[succ], G_full.EdgeCommWeight(out_edge));
                 }
 
             } else {

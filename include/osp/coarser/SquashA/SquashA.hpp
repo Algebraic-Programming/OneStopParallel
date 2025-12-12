@@ -266,7 +266,7 @@ std::vector<std::vector<vertex_idx_t<Graph_t_in>>> SquashA<GraphTIn, GraphTOut>:
                     = get_contractable_edges_from_poset_int_map<GraphTIn>(posetIntMapping, dagIn);
                 for (const auto &edge : contractable_edges) {
                     if constexpr (HasEdgeWeightsV<Graph_t_in>) {
-                        edge_weights.emplace(edge, dag_in.edge_comm_weight(edge));
+                        edge_weights.emplace(edge, dag_in.EdgeCommWeight(edge));
                     } else {
                         edge_weights.emplace(edge, dag_in.VertexCommWeight(source(edge, dag_in)));
                     }

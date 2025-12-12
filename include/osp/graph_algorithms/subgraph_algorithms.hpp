@@ -74,7 +74,7 @@ void CreateInducedSubgraph(const GraphTIn &dag,
             for (const auto &in_edge : in_edges(node, dag)) {
                 const auto &pred = source(in_edge, dag);
                 if (selected_nodes.find(pred) != selected_nodes.end() || extra_sources.find(pred) != extra_sources.end()) {
-                    dag_out.add_edge(local_idx[pred], local_idx[node], dag.edge_comm_weight(in_edge));
+                    dag_out.add_edge(local_idx[pred], local_idx[node], dag.EdgeCommWeight(in_edge));
                 }
             }
         }
@@ -119,11 +119,11 @@ bool CheckOrderedIsomorphism(const GraphT &first, const GraphT &second) {
             std::set<std::pair<vertex_idx_t<Graph_t>, e_commw_t<Graph_t>>> first_children, second_children;
 
             for (const auto &outEdge : out_edges(node, first)) {
-                first_children.emplace(target(out_edge, first), first.edge_comm_weight(out_edge));
+                first_children.emplace(target(out_edge, first), first.EdgeCommWeight(out_edge));
             }
 
             for (const auto &outEdge : out_edges(node, second)) {
-                second_children.emplace(target(out_edge, second), second.edge_comm_weight(out_edge));
+                second_children.emplace(target(out_edge, second), second.EdgeCommWeight(out_edge));
             }
 
             auto itr = first_children.begin(), secondItr = second_children.begin();
@@ -196,7 +196,7 @@ std::vector<GraphTOut> CreateInducedSubgraphs(const GraphTIn &dagIn, const std::
                 auto succ = target(outEdge, dagIn);
 
                 if (partitionIDs[node] == partitionIDs[succ]) {
-                    splitDags[partitionIDs[node]].add_edge(local_idx[node], local_idx[succ], dagIn.edge_comm_weight(outEdge));
+                    splitDags[partitionIDs[node]].add_edge(local_idx[node], local_idx[succ], dagIn.EdgeCommWeight(outEdge));
                 }
             }
         }
@@ -247,7 +247,7 @@ std::unordered_map<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_in>> create_in
             for (const auto &in_edge : in_edges(node, dag)) {
                 const auto &pred = source(in_edge, dag);
                 if (local_idx.count(pred)) {
-                    dag_out.add_edge(local_idx[pred], local_idx[node], dag.edge_comm_weight(in_edge));
+                    dag_out.add_edge(local_idx[pred], local_idx[node], dag.EdgeCommWeight(in_edge));
                 }
             }
         }

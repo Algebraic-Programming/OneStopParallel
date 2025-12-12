@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(HeavyEdgePartitioning) {
 
         int weight = 0;
         for (const auto &e : edges(graph)) {
-            graph.set_edge_comm_weight(e, 1 + (weight + 100 % 500));
+            graph.SetEdgeCommWeight(e, 1 + (weight + 100 % 500));
         }
 
         auto partition = heavy_edge_preprocess(graph, 5.0, 0.7f, 0.34f);

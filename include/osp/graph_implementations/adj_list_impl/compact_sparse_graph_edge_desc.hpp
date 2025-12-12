@@ -304,7 +304,7 @@ class CompactSparseGraphEdgeDesc : public CompactSparseGraph<keepVertexOrder,
             for (const auto &edge : Edges(graph)) {
                 const auto src = Source(edge, graph);
                 const auto tgt = Target(edge, graph);
-                set_edge_comm_weight(src, tgt, graph.edge_comm_weight(edge));
+                SetEdgeCommWeight(src, tgt, graph.EdgeCommWeight(edge));
             }
         }
     }

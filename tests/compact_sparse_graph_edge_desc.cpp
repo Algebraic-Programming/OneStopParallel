@@ -734,7 +734,7 @@ BOOST_AUTO_TEST_CASE(Graph1ECommKeepOrder) {
         BOOST_CHECK(it != edges.cend());
 
         auto ind = std::distance(edges.cbegin(), it);
-        BOOST_CHECK_EQUAL(edgeWeights[static_cast<std::size_t>(ind)], graph.edge_comm_weight(edge));
+        BOOST_CHECK_EQUAL(edgeWeights[static_cast<std::size_t>(ind)], graph.EdgeCommWeight(edge));
     }
 }
 
@@ -777,6 +777,6 @@ BOOST_AUTO_TEST_CASE(Graph1ECommReorder) {
         BOOST_CHECK(it != edges.cend());
 
         auto ind = std::distance(edges.cbegin(), it);
-        BOOST_CHECK_EQUAL(edgeWeights[static_cast<std::size_t>(ind)], graph.edge_comm_weight(edge));
+        BOOST_CHECK_EQUAL(edgeWeights[static_cast<std::size_t>(ind)], graph.EdgeCommWeight(edge));
     }
 }

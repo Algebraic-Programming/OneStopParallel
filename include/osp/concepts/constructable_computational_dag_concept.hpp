@@ -153,7 +153,7 @@ inline constexpr bool isConstructableCdagEdgeV = IsConstructableCdagEdge<T>::val
  * @brief Concept to check if edge communication weights are modifiable.
  *
  * Requires:
- * - `set_edge_comm_weight(edge, weight)`
+ * - `SetEdgeCommWeight(edge, weight)`
  *
  * @tparam T The graph type.
  */

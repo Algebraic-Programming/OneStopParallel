@@ -92,7 +92,7 @@ struct KlTotalCommCostFunction {
                     maxCommWeight_ = std::max(maxCommWeight_, sourceCommCost);
                     commCosts += sourceCommCost * instance_->communicationCosts(sourceProc, targetProc);
                 } else {
-                    const CostT sourceCommCost = graph_->edge_comm_weight(edge);
+                    const CostT sourceCommCost = graph_->EdgeCommWeight(edge);
                     maxCommWeight_ = std::max(maxCommWeight_, sourceCommCost);
                     commCosts += sourceCommCost * instance_->communicationCosts(sourceProc, targetProc);
                 }

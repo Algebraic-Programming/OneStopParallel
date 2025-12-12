@@ -39,7 +39,7 @@ class DotFileWriter {
 
         void operator()(std::ostream &out, const edge_desc_t<Graph_t> &i) const {
             out << source(i, graph_) << "->" << target(i, graph_) << " ["
-                << "comm_weight=\"" << graph_.edge_comm_weight(i) << "\";"
+                << "comm_weight=\"" << graph_.EdgeCommWeight(i) << "\";"
                 << "]";
         }
     };

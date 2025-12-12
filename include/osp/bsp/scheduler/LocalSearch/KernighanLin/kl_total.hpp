@@ -69,7 +69,7 @@ class KlTotal : public KlBase<GraphT, MemoryConstraintT> {
             maxEdgeWeight = 0;
 
             for (const auto &edge : edges(currentSchedule_.instance->getComputationalDag())) {
-                maxEdgeWeight = std::max(max_edge_weight_, currentSchedule_.instance->getComputationalDag().edge_comm_weight(edge));
+                maxEdgeWeight = std::max(max_edge_weight_, currentSchedule_.instance->getComputationalDag().EdgeCommWeight(edge));
             }
         }
 
@@ -138,7 +138,7 @@ class KlTotal : public KlBase<GraphT, MemoryConstraintT> {
                     const auto &sourceV = source(inEdge, currentSchedule_.instance->getComputationalDag());
                     if (currentSchedule_.vector_schedule.assignedProcessor(node)
                         != currentSchedule_.vector_schedule.assignedProcessor(sourceV)) {
-                        if (current_schedule.instance->getComputationalDag().edge_comm_weight(in_edge)
+                        if (current_schedule.instance->getComputationalDag().EdgeCommWeight(in_edge)
                             > node_comm_selection_threshold) {
                             KlBase<GraphT, MemoryConstraintT>::node_selection.insert(node);
                             break;
@@ -150,7 +150,7 @@ class KlTotal : public KlBase<GraphT, MemoryConstraintT> {
                     const auto &targetV = target(outEdge, currentSchedule_.instance->getComputationalDag());
                     if (currentSchedule_.vector_schedule.assignedProcessor(node)
                         != currentSchedule_.vector_schedule.assignedProcessor(targetV)) {
-                        if (current_schedule.instance->getComputationalDag().edge_comm_weight(out_edge)
+                        if (current_schedule.instance->getComputationalDag().EdgeCommWeight(out_edge)
                             > node_comm_selection_threshold) {
                             KlBase<GraphT, MemoryConstraintT>::node_selection.insert(node);
                             break;

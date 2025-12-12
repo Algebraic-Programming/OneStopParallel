@@ -123,7 +123,7 @@ HypergraphT ConvertFromCdagAsDag(const GraphT &dag) {
         hgraph.set_vertex_memory_weight(node, dag.VertexMemWeight(node));
         for (const auto &child : dag.children(node)) {
             if constexpr (HasEdgeWeightsV<Graph_t>) {
-                hgraph.add_hyperedge({node, child}, dag.edge_comm_weight(edge_desc(node, child, dag).first));
+                hgraph.add_hyperedge({node, child}, dag.EdgeCommWeight(edge_desc(node, child, dag).first));
             } else {
                 hgraph.add_hyperedge({node, child});
             }

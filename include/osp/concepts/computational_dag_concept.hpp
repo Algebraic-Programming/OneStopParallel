@@ -97,7 +97,7 @@ inline constexpr bool hasTypedVerticesV = HasTypedVertices<T>::value;
  *
  * Requires:
  * - The graph must satisfy `is_directed_graph_edge_desc` (supports edge descriptors).
- * - `edge_comm_weight(e)`: Returns an arithmetic type for a given edge descriptor `e`.
+ * - `EdgeCommWeight(e)`: Returns an arithmetic type for a given edge descriptor `e`.
  *
  * @tparam T The graph type.
  */
