@@ -136,8 +136,8 @@ class AbstractWavefrontScheduler : public Scheduler<GraphT> {
         std::vector<VMemwT<GraphT>> subDagProcessorMemory(original_arch.getProcessorTypeCount().size(),
                                                           std::numeric_limits<VMemwT<GraphT>>::max());
         for (unsigned i = 0; i < originalArch.NumberOfProcessors(); ++i) {
-            subDagProcessorMemory[originalArch.processorType(i)]
-                = std::min(originalArch.memoryBound(i), sub_dag_processor_memory[originalArch.processorType(i)]);
+            subDagProcessorMemory[originalArch.ProcessorType(i)]
+                = std::min(originalArch.memoryBound(i), sub_dag_processor_memory[originalArch.ProcessorType(i)]);
         }
         subArchitecture.SetProcessorsConsequTypes(subDagProcTypes, sub_dag_processor_memory);
         return subArchitecture;

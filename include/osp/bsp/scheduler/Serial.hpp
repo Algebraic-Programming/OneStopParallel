@@ -63,9 +63,9 @@ class Serial : public Scheduler<GraphT> {
         if (arch.GetNumberOfProcessorTypes() > 0) {
             std::vector<bool> typeSeen(arch.GetNumberOfProcessorTypes(), false);
             for (unsigned p = 0; p < arch.NumberOfProcessors(); ++p) {
-                if (!typeSeen[arch.processorType(p)]) {
+                if (!typeSeen[arch.ProcessorType(p)]) {
                     chosenProcs.push_back(p);
-                    typeSeen[arch.processorType(p)] = true;
+                    typeSeen[arch.ProcessorType(p)] = true;
                 }
             }
         }
@@ -79,7 +79,7 @@ class Serial : public Scheduler<GraphT> {
 
         for (VTypeT<GraphT> type = 0; type < numNodeTypes; ++type) {
             for (const auto &p : chosenProcs) {
-                if (instance.isCompatibleType(type, instance.processorType(p))) {
+                if (instance.isCompatibleType(type, instance.ProcessorType(p))) {
                     nodeTypeCompatibleProcessors[type].push_back(p);
                 }
             }
@@ -92,7 +92,7 @@ class Serial : public Scheduler<GraphT> {
         for (const auto &v : dag.vertices()) {
             schedule.setAssignedProcessor(v, std::numeric_limits<unsigned>::max());
             schedule.setAssignedSuperstep(v, std::numeric_limits<unsigned>::max());
-            inDegree[v] = dag.in_degree(v);
+            inDegree[v] = dag.InDegree(v);
             if (inDegree[v] == 0) {
                 readyNodes.push_back(v);
             }

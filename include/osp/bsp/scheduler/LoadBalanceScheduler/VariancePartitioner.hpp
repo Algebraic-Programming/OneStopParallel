@@ -142,7 +142,7 @@ class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
                 allReady.insert(std::make_pair(v, variancePriorities[v]));
 
             } else {
-                numUnallocatedParents[v] = graph.in_degree(v);
+                numUnallocatedParents[v] = graph.InDegree(v);
             }
         }
 

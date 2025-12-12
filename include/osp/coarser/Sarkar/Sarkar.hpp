@@ -146,7 +146,7 @@ std::vector<VWorkwT<GraphTIn>> Sarkar<GraphTIn, GraphTOut>::GetTopDistance(VWork
         for (const auto &j : graph.Parents(vertex)) {
             maxTemp = std::max(max_temp, topDist[j]);
         }
-        if (graph.in_degree(vertex) > 0) {
+        if (graph.InDegree(vertex) > 0) {
             maxTemp += commCost;
         }
 
@@ -489,7 +489,7 @@ VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::AllParentsContraction(
     std::set<std::pair<long, VertexType>, decltype(cmp)> vertPriority(cmp);
 
     for (const VertexType &groupFoot : graph.vertices()) {
-        if (graph.in_degree(groupFoot) < 2) {
+        if (graph.InDegree(groupFoot) < 2) {
             continue;
         }
 
@@ -592,14 +592,14 @@ VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::AllParentsContraction(
 
         // Adding to partition
         std::vector<VertexType> part;
-        part.reserve(1 + graph.in_degree(groupFoot));
+        part.reserve(1 + graph.InDegree(groupFoot));
         part.emplace_back(groupFoot);
         for (const VertexType &groupHead : graph.Parents(groupFoot)) {
             part.emplace_back(groupHead);
         }
 
         expansionMapOutput.emplace_back(std::move(part));
-        counter += static_cast<VertexIdxT<GraphTIn>>(graph.in_degree(groupFoot));
+        counter += static_cast<VertexIdxT<GraphTIn>>(graph.InDegree(groupFoot));
         if (counter > maxCorseningNum) {
             minSave = vertSave;
         }
@@ -882,7 +882,7 @@ VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::SomeParentsContraction(
     std::set<std::pair<long, std::vector<VertexType>>, decltype(cmp)> vertPriority(cmp);
 
     for (const VertexType &groupFoot : graph.vertices()) {
-        if (graph.in_degree(groupFoot) < 2) {
+        if (graph.InDegree(groupFoot) < 2) {
             continue;
         }
 
@@ -929,7 +929,7 @@ VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::SomeParentsContraction(
 
         std::vector<VertexType> contractionEnsemble;
         std::set<VertexType> contractionParentsSet;
-        contractionEnsemble.reserve(1 + graph.in_degree(groupFoot));
+        contractionEnsemble.reserve(1 + graph.InDegree(groupFoot));
         contractionEnsemble.emplace_back(groupFoot);
         VWorkwT<GraphTIn> added_weight = graph.VertexWorkWeight(groupFoot);
 

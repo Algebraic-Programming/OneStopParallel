@@ -111,7 +111,7 @@ class GreedyChildren : public Scheduler<GraphT> {
                     std::vector<VertexType> newNodes;
                     for (const auto &chld : graph.Children(node)) {
                         predecessors_count[chld]++;
-                        if (predecessors_count[chld] == graph.in_degree(chld)) {
+                        if (predecessors_count[chld] == graph.InDegree(chld)) {
                             new_nodes.emplace_back(chld);
                         }
                     }

@@ -103,7 +103,7 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
                 allReady.insert(std::make_pair(v, variancePriorities[v]));
 
             } else {
-                numUnallocatedParents[v] = graph.in_degree(v);
+                numUnallocatedParents[v] = graph.InDegree(v);
             }
         }
 

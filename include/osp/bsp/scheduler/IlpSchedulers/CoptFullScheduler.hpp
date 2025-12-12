@@ -575,7 +575,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
 
         // precedence constraint: if task is computed then all of its predecessors must have been present
         for (const auto &node : instance.vertices()) {
-            if (instance.GetComputationalDag().in_degree(node) > 0) {
+            if (instance.GetComputationalDag().InDegree(node) > 0) {
                 for (unsigned int step = 0; step < maxNumberSupersteps_; step++) {
                     for (unsigned int processor = 0; processor < instance.NumberOfProcessors(); processor++) {
                         Expr expr;
@@ -583,7 +583,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
                             expr += commProcessorToProcessorSuperstepNodeVar_[processor][processor][step][static_cast<int>(parent)];
                         }
 
-                        model.AddConstr(expr >= static_cast<double>(instance.GetComputationalDag().in_degree(node))
+                        model.AddConstr(expr >= static_cast<double>(instance.GetComputationalDag().InDegree(node))
                                                     * nodeToProcessorSuperstepVar_[node][processor][static_cast<int>(step)]);
                     }
                 }

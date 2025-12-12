@@ -156,7 +156,7 @@ class TrimmedGroupScheduler : public Scheduler<ConstrGraphT> {
                 const unsigned sub_superstep = sub_schedule.AssignedSuperstep(v_local);
 
                 // Determine the processor type and its local index within that type in the sub_arch
-                const unsigned proc_type = sub_arch.processorType(sub_proc);
+                const unsigned proc_type = sub_arch.ProcessorType(sub_proc);
                 const unsigned local_idx_within_type = sub_proc - sub_arch_proc_type_offsets[proc_type];
 
                 // Calculate the global processor ID by combining:

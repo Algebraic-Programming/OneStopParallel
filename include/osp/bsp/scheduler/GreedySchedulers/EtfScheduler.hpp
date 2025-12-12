@@ -318,7 +318,7 @@ class EtfScheduler : public Scheduler<GraphT> {
 
             for (const auto &succ : instance.GetComputationalDag().Children(node)) {
                 ++predecProcessed[succ];
-                if (predecProcessed[succ] == instance.GetComputationalDag().in_degree(succ)) {
+                if (predecProcessed[succ] == instance.GetComputationalDag().InDegree(succ)) {
                     ready.insert({BL[succ], succ});
                 }
             }

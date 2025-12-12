@@ -108,8 +108,8 @@ ReturnStatus SubproblemMultiScheduling<GraphT>::ComputeMultiSchedule(const BspIn
 
     std::vector<unsigned> nrPredecRemain(n);
     for (vertex_idx node = 0; node < n; node++) {
-        nrPredecRemain[node] = static_cast<unsigned>(g.in_degree(node));
-        if (g.in_degree(node) == 0) {
+        nrPredecRemain[node] = static_cast<unsigned>(g.InDegree(node));
+        if (g.InDegree(node) == 0) {
             readySet.emplace(-longest_outgoing_path[node], node);
         }
     }

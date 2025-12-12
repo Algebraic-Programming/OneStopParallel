@@ -39,7 +39,7 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
 
         std::vector<std::vector<unsigned>> globalIdsByType(originalArch.GetNumberOfProcessorTypes());
         for (unsigned i = 0; i < originalArch.NumberOfProcessors(); ++i) {
-            globalIdsByType[originalArch.processorType(i)].push_back(i);
+            globalIdsByType[originalArch.ProcessorType(i)].push_back(i);
         }
 
         IsomorphismGroups<GraphT, ConstrGraphT> isoGroups;
@@ -236,7 +236,7 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
                 VertexIdxT<constr_graph_t> subdagVertex = 0;
                 for (const auto &vertex : sorted_component_vertices) {
                     const unsigned proc_in_sub_sched = sub_schedule.AssignedProcessor(subdag_vertex);
-                    const unsigned proc_type = sub_architecture.processorType(proc_in_sub_sched);
+                    const unsigned proc_type = sub_architecture.ProcessorType(proc_in_sub_sched);
                     const unsigned local_proc_id_within_type = proc_in_sub_sched - sub_proc_type_corrections[proc_type];
                     unsigned global_proc_id
                         = global_ids_by_type[proc_type][proc_type_offsets[proc_type] + local_proc_id_within_type];
@@ -297,7 +297,7 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
                 VertexIdxT<constr_graph_t> subdagVertex = 0;
                 for (const auto &vertex : sorted_component_vertices) {
                     const unsigned proc_in_sub_sched = sub_schedule.AssignedProcessor(subdag_vertex);
-                    const unsigned proc_type = sub_schedule.GetInstance().GetArchitecture().processorType(proc_in_sub_sched);
+                    const unsigned proc_type = sub_schedule.GetInstance().GetArchitecture().ProcessorType(proc_in_sub_sched);
                     const unsigned local_proc_id_within_type = proc_in_sub_sched - sub_proc_type_corrections[proc_type];
                     unsigned global_proc_id
                         = global_ids_by_type[proc_type][current_member_proc_offsets[proc_type] + local_proc_id_within_type];

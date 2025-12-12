@@ -121,7 +121,7 @@ class GrowLocalAutoCores : public Scheduler<GraphT> {
         std::vector<VertexIdx> predec(n);
 
         for (const auto &node : g.vertices()) {
-            predec[node] = g.in_degree(node);
+            predec[node] = g.InDegree(node);
 
             if (predec[node] == 0) {
                 ready.insert(node);

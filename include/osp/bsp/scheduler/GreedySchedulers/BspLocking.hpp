@@ -360,7 +360,7 @@ class BspLocking : public Scheduler<GraphT> {
         std::vector<unsigned> nrReadyNodesPerType(g.NumVertexTypes(), 0);
         std::vector<unsigned> nrProcsPerType(instance.GetArchitecture().GetNumberOfProcessorTypes(), 0);
         for (unsigned proc = 0; proc < paramsP; ++proc) {
-            ++nrProcsPerType[instance.GetArchitecture().processorType(proc)];
+            ++nrProcsPerType[instance.GetArchitecture().ProcessorType(proc)];
         }
 
         std::set<std::pair<VWorkwT<GraphT>, VertexType>> finishTimes;
@@ -435,7 +435,7 @@ class BspLocking : public Scheduler<GraphT> {
                 if (node != std::numeric_limits<VertexType>::max()) {
                     for (const auto &succ : G.Children(node)) {
                         ++nrPredecDone[succ];
-                        if (nrPredecDone[succ] == G.in_degree(succ)) {
+                        if (nrPredecDone[succ] == G.InDegree(succ)) {
                             ready.insert(succ);
                             ++nr_ready_nodes_per_type[G.VertexType(succ)];
 

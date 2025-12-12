@@ -329,7 +329,7 @@ VWorkwT<GraphT> PebblingSchedule<GraphT>::ComputeAsynchronousCost() const {
                                                 std::numeric_limits<cost_type>::max());
     if (needToLoadInputs_) {
         for (vertex_idx node = 0; node < instance_->NumberOfVertices(); ++node) {
-            if (instance_->GetComputationalDag().in_degree(node) == 0) {
+            if (instance_->GetComputationalDag().InDegree(node) == 0) {
                 timeWhenNodeGetsBlue[node] = 0;
             }
         }
@@ -489,7 +489,7 @@ void PebblingSchedule<GraphT>::CleanSchedule() {
                                                 std::numeric_limits<cost_type>::max());
     if (needToLoadInputs_) {
         for (vertex_idx node = 0; node < instance_->NumberOfVertices(); ++node) {
-            if (instance_->GetComputationalDag().in_degree(node) == 0) {
+            if (instance_->GetComputationalDag().InDegree(node) == 0) {
                 hasBlue[node] = true;
                 timeWhenNodeGetsBlue[node] = 0;
             }
@@ -638,7 +638,7 @@ bool PebblingSchedule<GraphT>::HasValidSolution(const BspInstance<GraphT> &insta
 
     for (VTypeT<GraphT> nodeType = 0; node_type < instance.GetComputationalDag().NumVertexTypes(); ++node_type) {
         for (unsigned proc = 0; proc < instance.NumberOfProcessors(); ++proc) {
-            if (instance.isCompatibleType(node_type, instance.GetArchitecture().processorType(proc))
+            if (instance.isCompatibleType(node_type, instance.GetArchitecture().ProcessorType(proc))
                 && instance.GetArchitecture().memoryBound(proc) >= memory_required[node_type]) {
                 hasEnoughMemory[node_type] = true;
                 break;
@@ -734,7 +734,7 @@ void PebblingSchedule<GraphT>::SplitSupersteps(const BspSchedule<GraphT> &schedu
                             }
                             if (schedule.AssignedSuperstep(pred) < step
                                 || (schedule.AssignedSuperstep(pred) == step && top_order_idx[pred] < start_idx)
-                                || (need_to_load_inputs && instance->GetComputationalDag().in_degree(pred) == 0)
+                                || (need_to_load_inputs && instance->GetComputationalDag().InDegree(pred) == 0)
                                 || external_sources.find(pred) != external_sources.end()) {
                                 values_needed.insert(pred);
                             }
@@ -749,7 +749,7 @@ void PebblingSchedule<GraphT>::SplitSupersteps(const BspSchedule<GraphT> &schedu
                     for (unsigned idx = startIdx; idx <= endCurrent; ++idx) {
                         vertex_idx node = top_orders[proc][step][idx];
 
-                        if (needToLoadInputs_ && instance_->GetComputationalDag().in_degree(node) == 0) {
+                        if (needToLoadInputs_ && instance_->GetComputationalDag().InDegree(node) == 0) {
                             continue;
                         }
 
@@ -800,7 +800,7 @@ void PebblingSchedule<GraphT>::SplitSupersteps(const BspSchedule<GraphT> &schedu
     std::vector<unsigned> reindexToShrink(superstepIndex);
     std::vector<bool> hasCompute(superstepIndex, false);
     for (vertex_idx node = 0; node < instance_->NumberOfVertices(); ++node) {
-        if (!needToLoadInputs_ || instance_->GetComputationalDag().in_degree(node) > 0) {
+        if (!needToLoadInputs_ || instance_->GetComputationalDag().InDegree(node) > 0) {
             hasCompute[newSuperstepId[node]] = true;
         }
     }
@@ -822,7 +822,7 @@ void PebblingSchedule<GraphT>::SplitSupersteps(const BspSchedule<GraphT> &schedu
     for (unsigned step = 0; step < schedule.NumberOfSupersteps(); ++step) {
         for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); ++proc) {
             for (vertex_idx node : top_orders[proc][step]) {
-                if (!need_to_load_inputs || instance->GetComputationalDag().in_degree(node) > 0) {
+                if (!need_to_load_inputs || instance->GetComputationalDag().InDegree(node) > 0) {
                     compute_steps_for_proc_superstep[proc][reindex_to_shrink[new_superstep_ID[node]] + offset].emplace_back(node);
                 }
             }
@@ -840,7 +840,7 @@ void PebblingSchedule<GraphT>::SetMemoryMovement(CacheEvictionStrategy evictRule
     std::vector<bool> inSlowMem(n, false);
     if (needToLoadInputs_) {
         for (vertex_idx node = 0; node < n; ++node) {
-            if (instance_->GetComputationalDag().in_degree(node) == 0) {
+            if (instance_->GetComputationalDag().InDegree(node) == 0) {
                 inSlowMem[node] = true;
             }
         }
@@ -1152,7 +1152,7 @@ bool PebblingSchedule<GraphT>::IsValid() const {
 
     if (needToLoadInputs_) {
         for (vertex_idx node = 0; node < instance_->NumberOfVertices(); ++node) {
-            if (instance_->GetComputationalDag().in_degree(node) == 0) {
+            if (instance_->GetComputationalDag().InDegree(node) == 0) {
                 inSlowMem[node] = true;
             }
         }
@@ -1181,7 +1181,7 @@ bool PebblingSchedule<GraphT>::IsValid() const {
                     }
                 }
 
-                if (needToLoadInputs_ && instance_->GetComputationalDag().in_degree(computeStep.node) == 0) {
+                if (needToLoadInputs_ && instance_->GetComputationalDag().InDegree(computeStep.node) == 0) {
                     return false;
                 }
 
@@ -1598,7 +1598,7 @@ void PebblingSchedule<GraphT>::CreateFromPartialPebblings(const BspInstance<Grap
 
     std::vector<unsigned> getsBlueInSuperstep(instance_->NumberOfVertices(), UINT_MAX);
     for (vertex_idx node = 0; node < instance_->NumberOfVertices(); ++node) {
-        if (instance_->GetComputationalDag().in_degree(node) == 0) {
+        if (instance_->GetComputationalDag().InDegree(node) == 0) {
             getsBlueInSuperstep[node] = 0;
         }
     }
@@ -1608,7 +1608,7 @@ void PebblingSchedule<GraphT>::CreateFromPartialPebblings(const BspInstance<Grap
 
         // find dependencies on previous subschedules
         for (vertex_idx node = 0; node < pebblings[part].instance->NumberOfVertices(); ++node) {
-            if (pebblings[part].instance->GetComputationalDag().in_degree(node) == 0) {
+            if (pebblings[part].instance->GetComputationalDag().InDegree(node) == 0) {
                 startingStepIndex = std::max(startingStepIndex, getsBlueInSuperstep[original_node_id[part].at(node)]);
             }
         }
@@ -1991,7 +1991,7 @@ BspSchedule<GraphT> PebblingSchedule<GraphT>::ConvertToBsp() const {
     }
     if (needToLoadInputs_) {
         for (vertex_idx node = 0; node < instance_->NumberOfVertices(); ++node) {
-            if (instance_->GetComputationalDag().in_degree(node) == 0) {
+            if (instance_->GetComputationalDag().InDegree(node) == 0) {
                 unsigned minSuperstep = UINT_MAX, procChosen = 0;
                 for (vertex_idx succ : instance->GetComputationalDag().Children(node)) {
                     if (node_to_supstep[succ] < min_superstep) {

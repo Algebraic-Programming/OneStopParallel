@@ -755,7 +755,7 @@ void StepByStepCoarser<GraphT>::CoarsenForPebbling(const GraphT &dagIn,
 
     unsigned nrSources = 0;
     for (vertex_idx node = 0; node < dagIn.NumVertices(); ++node) {
-        if (dagIn.in_degree(node) == 0) {
+        if (dagIn.InDegree(node) == 0) {
             ++nrSources;
         }
     }
@@ -767,7 +767,7 @@ void StepByStepCoarser<GraphT>::CoarsenForPebbling(const GraphT &dagIn,
 
 template <typename GraphT>
 bool StepByStepCoarser<GraphT>::IncontractableForPebbling(const std::pair<vertex_idx, vertex_idx> &edge) const {
-    if (G_coarse.in_degree(edge.first) == 0) {
+    if (G_coarse.InDegree(edge.first) == 0) {
         return true;
     }
 
@@ -824,7 +824,7 @@ void StepByStepCoarser<GraphT>::MergeSourcesInPebbling() {
             continue;
         }
 
-        if (G_coarse.in_degree(node) > 0) {
+        if (G_coarse.InDegree(node) > 0) {
             memory_sum[node] = G_coarse.VertexMemWeight(node);
             for (vertex_idx pred : G_coarse.Parents(node)) {
                 memory_sum[node] += G_coarse.VertexMemWeight(pred);

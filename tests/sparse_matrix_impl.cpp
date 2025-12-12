@@ -93,10 +93,10 @@ BOOST_AUTO_TEST_CASE(TestSparseMatrixAdapter1) {
 
     BOOST_CHECK_EQUAL(graph.NumEdges(), 11);
     BOOST_CHECK_EQUAL(graph.NumVertices(), 7);
-    BOOST_CHECK_EQUAL(graph.in_degree(0), 0);
-    BOOST_CHECK_EQUAL(graph.in_degree(1), 1);
-    BOOST_CHECK_EQUAL(graph.in_degree(3), 2);
-    BOOST_CHECK_EQUAL(graph.in_degree(6), 3);
+    BOOST_CHECK_EQUAL(graph.InDegree(0), 0);
+    BOOST_CHECK_EQUAL(graph.InDegree(1), 1);
+    BOOST_CHECK_EQUAL(graph.InDegree(3), 2);
+    BOOST_CHECK_EQUAL(graph.InDegree(6), 3);
     BOOST_CHECK_EQUAL(graph.OutDegree(0), 4);
     BOOST_CHECK_EQUAL(graph.OutDegree(1), 2);
     BOOST_CHECK_EQUAL(graph.OutDegree(3), 1);
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(TestSparseMatrixAdapter1) {
             BOOST_CHECK_EQUAL(Source(e, graph), inNeighbors[vi][i++]);
         }
 
-        BOOST_CHECK_EQUAL(graph.in_degree(v), inNeighbors[vi].size());
+        BOOST_CHECK_EQUAL(graph.InDegree(v), inNeighbors[vi].size());
         BOOST_CHECK_EQUAL(graph.OutDegree(v), outNeighbors[vi].size());
     }
 

@@ -133,11 +133,11 @@ class VarianceFillup : public Scheduler<GraphT> {
                 }
 
                 for (unsigned i = 0; i < instance.NumberOfProcessors(); ++i) {
-                    if (allReady[instance.GetArchitecture().processorType(i)].empty()) {
+                    if (allReady[instance.GetArchitecture().ProcessorType(i)].empty()) {
                         continue;
                     }
 
-                    const std::pair<VertexType, double> &nodePair = *allReady[instance.GetArchitecture().processorType(i)].begin();
+                    const std::pair<VertexType, double> &nodePair = *allReady[instance.GetArchitecture().ProcessorType(i)].begin();
                     VertexType topNode = node_pair.first;
 
                     if (memoryConstraint_.can_add(top_node, i)) {
@@ -188,12 +188,12 @@ class VarianceFillup : public Scheduler<GraphT> {
         }
 
         for (unsigned i = 0; i < instance.NumberOfProcessors(); ++i) {
-            if (procFree[i] && !allReady[instance.GetArchitecture().processorType(i)].empty()) {
+            if (procFree[i] && !allReady[instance.GetArchitecture().ProcessorType(i)].empty()) {
                 // select node
-                for (auto it = allReady[instance.GetArchitecture().processorType(i)].begin();
-                     it != allReady[instance.GetArchitecture().processorType(i)].end();) {
+                for (auto it = allReady[instance.GetArchitecture().ProcessorType(i)].begin();
+                     it != allReady[instance.GetArchitecture().ProcessorType(i)].end();) {
                     if (endSupStep && (remaining_time < instance.GetComputationalDag().VertexWorkWeight(it->first))) {
-                        it = allReady[instance.GetArchitecture().processorType(i)].erase(it);
+                        it = allReady[instance.GetArchitecture().ProcessorType(i)].erase(it);
                         continue;
                     }
 
@@ -205,9 +205,9 @@ class VarianceFillup : public Scheduler<GraphT> {
                                 node = it->first;
                                 p = i;
 
-                                allReady[instance.GetArchitecture().processorType(i)].erase(it);
+                                allReady[instance.GetArchitecture().ProcessorType(i)].erase(it);
                                 for (unsigned procType :
-                                     procTypesCompatibleWithNodeType_skip_proctype[instance.GetArchitecture().processorType(
+                                     procTypesCompatibleWithNodeType_skip_proctype[instance.GetArchitecture().ProcessorType(
                                          i)][instance.GetComputationalDag().VertexType(node)]) {
                                     allReady[procType].erase(std::make_pair(node, work_variance[node]));
                                 }
@@ -217,9 +217,9 @@ class VarianceFillup : public Scheduler<GraphT> {
                             node = it->first;
                             p = i;
 
-                            allReady[instance.GetArchitecture().processorType(i)].erase(it);
+                            allReady[instance.GetArchitecture().ProcessorType(i)].erase(it);
                             for (unsigned procType :
-                                 procTypesCompatibleWithNodeType_skip_proctype[instance.GetArchitecture().processorType(i)]
+                                 procTypesCompatibleWithNodeType_skip_proctype[instance.GetArchitecture().ProcessorType(i)]
                                                                               [instance.GetComputationalDag().VertexType(node)]) {
                                 allReady[procType].erase(std::make_pair(node, work_variance[node]));
                             }
@@ -243,7 +243,7 @@ class VarianceFillup : public Scheduler<GraphT> {
         }
 
         for (unsigned i = 0; i < instance.NumberOfProcessors(); ++i) {
-            if (procFree[i] && !allReady[instance.GetArchitecture().processorType(i)].empty()) {
+            if (procFree[i] && !allReady[instance.GetArchitecture().ProcessorType(i)].empty()) {
                 return true;
             }
         }
@@ -326,12 +326,12 @@ class VarianceFillup : public Scheduler<GraphT> {
         std::vector<unsigned> nrReadyNodesPerType(g.NumVertexTypes(), 0);
         std::vector<unsigned> nrProcsPerType(instance.GetArchitecture().GetNumberOfProcessorTypes(), 0);
         for (unsigned proc = 0; proc < paramsP; ++proc) {
-            ++nrProcsPerType[instance.GetArchitecture().processorType(proc)];
+            ++nrProcsPerType[instance.GetArchitecture().ProcessorType(proc)];
         }
 
         std::vector<VertexType> nrPredecRemain(n);
         for (VertexType node = 0; node < n; node++) {
-            const auto numParents = g.in_degree(node);
+            const auto numParents = g.InDegree(node);
             nrPredecRemain[node] = num_parents;
             if (numParents == 0) {
                 ready.insert(std::make_pair(node, workVariances[node]));

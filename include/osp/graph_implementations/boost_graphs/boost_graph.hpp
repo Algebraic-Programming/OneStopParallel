@@ -273,7 +273,7 @@ class BoostGraph {
 
     inline size_t OutDegree(const VertexIdx &v) const { return boost::OutDegree(v, graph_); }
 
-    inline size_t InDegree(const VertexIdx &v) const { return boost::in_degree(v, graph_); }
+    inline size_t InDegree(const VertexIdx &v) const { return boost::InDegree(v, graph_); }
 
     VertexWorkWeightType VertexWorkWeight(const VertexIdx &v) const { return graph_[v].workWeight; }
 

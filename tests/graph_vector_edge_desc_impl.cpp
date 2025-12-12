@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(TestDagEdgeIdx) {
             BOOST_CHECK_EQUAL(Traget(e, graph), outNeighbors[v][i++]);
         }
 
-        BOOST_CHECK_EQUAL(graph.in_degree(v), inNeighbors[v].size());
+        BOOST_CHECK_EQUAL(graph.InDegree(v), inNeighbors[v].size());
         BOOST_CHECK_EQUAL(graph.OutDegree(v), outNeighbors[v].size());
     }
 }

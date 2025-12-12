@@ -113,7 +113,7 @@ class EftSubgraphScheduler {
         job_id_t idx = 0;
         for (auto &job : jobs_) {
             job.id = idx;
-            job.in_degree_current = graph.in_degree(idx);
+            job.in_degree_current = graph.InDegree(idx);
             if (job.in_degree_current == 0) {
                 job.status = JobStatus::READY;
                 readyJobs_.insert(&job);

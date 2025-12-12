@@ -50,10 +50,10 @@ BOOST_AUTO_TEST_CASE(ParameterizedConstructorTest) {
     BOOST_CHECK_EQUAL(architecture.processorTypes()[2], 0);
     BOOST_CHECK_EQUAL(architecture.processorTypes()[3], 0);
 
-    BOOST_CHECK_EQUAL(architecture.processorType(0), 0);
-    BOOST_CHECK_EQUAL(architecture.processorType(1), 0);
-    BOOST_CHECK_EQUAL(architecture.processorType(2), 0);
-    BOOST_CHECK_EQUAL(architecture.processorType(3), 0);
+    BOOST_CHECK_EQUAL(architecture.ProcessorType(0), 0);
+    BOOST_CHECK_EQUAL(architecture.ProcessorType(1), 0);
+    BOOST_CHECK_EQUAL(architecture.ProcessorType(2), 0);
+    BOOST_CHECK_EQUAL(architecture.ProcessorType(3), 0);
 
     BOOST_CHECK_EQUAL(architecture.communicationCosts(0, 1), 2);
     BOOST_CHECK_EQUAL(architecture.communicationCosts(0, 0), 0);

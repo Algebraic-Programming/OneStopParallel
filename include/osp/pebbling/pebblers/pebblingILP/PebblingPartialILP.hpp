@@ -131,7 +131,7 @@ ReturnStatus PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<GraphT
     std::vector<std::map<vertex_idx, vertex_idx>> originalNodeId(nrParts);
     std::vector<std::map<unsigned, unsigned>> originalProcId(nrParts);
     for (vertex_idx node = 0; node < instance.NumberOfVertices(); ++node) {
-        if (instance.GetComputationalDag().in_degree(node) > 0) {
+        if (instance.GetComputationalDag().InDegree(node) > 0) {
             nodesInPart[assignment_to_parts[node]].insert(node);
         } else {
             extra_sources[assignment_to_parts[node]].insert(node);
@@ -174,10 +174,10 @@ ReturnStatus PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<GraphT
             std::vector<unsigned> procAssignedPerType(instance.GetArchitecture().GetNumberOfProcessorTypes(), 0);
             std::vector<unsigned> otherProcAssignedPerType(instance.GetArchitecture().GetNumberOfProcessorTypes(), 0);
             for (unsigned proc : processors_to_parts[part]) {
-                ++proc_assigned_per_type[instance.GetArchitecture().processorType(proc)];
+                ++proc_assigned_per_type[instance.GetArchitecture().ProcessorType(proc)];
             }
             for (unsigned proc : processors_to_parts[other_part]) {
-                ++other_proc_assigned_per_type[instance.GetArchitecture().processorType(proc)];
+                ++other_proc_assigned_per_type[instance.GetArchitecture().ProcessorType(proc)];
             }
 
             for (unsigned procType = 0; procType < instance.GetArchitecture().GetNumberOfProcessorTypes(); ++procType) {
@@ -240,7 +240,7 @@ ReturnStatus PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<GraphT
         subArch[part].setNumberOfProcessors(static_cast<unsigned>(processors_to_parts[part].size()));
         unsigned procIndex = 0;
         for (unsigned proc : processors_to_parts[part]) {
-            subArch[part].setProcessorType(proc_index, instance.GetArchitecture().processorType(proc));
+            subArch[part].setProcessorType(proc_index, instance.GetArchitecture().ProcessorType(proc));
             subArch[part].setMemoryBound(instance.GetArchitecture().memoryBound(proc), proc_index);
             original_proc_id[part][proc_index] = proc;
             ++proc_index;

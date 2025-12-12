@@ -490,7 +490,7 @@ void MultiProcessorPebbling<GraphT>::SetupBaseVariablesConstraints(const BspInst
     // restrict source nodes if they need to be loaded
     if (needToLoadInputs_) {
         for (vertex_idx node = 0; node < instance.NumberOfVertices(); node++) {
-            if (instance.GetComputationalDag().in_degree(node) == 0) {
+            if (instance.GetComputationalDag().InDegree(node) == 0) {
                 for (unsigned t = 0; t < maxTime_; t++) {
                     for (unsigned processor = 0; processor < instance.NumberOfProcessors(); processor++) {
                         compute_exists[node][processor][t] = false;
@@ -690,7 +690,7 @@ void MultiProcessorPebbling<GraphT>::SetupBaseVariablesConstraints(const BspInst
     }
 
     for (vertex_idx node = 0; node < instance.NumberOfVertices(); node++) {
-        if (!needToLoadInputs_ || instance.GetComputationalDag().in_degree(node) > 0) {
+        if (!needToLoadInputs_ || instance.GetComputationalDag().InDegree(node) > 0) {
             model.AddConstr(has_blue[node][0] == 0);
         }
     }
@@ -1305,7 +1305,7 @@ void MultiProcessorPebbling<GraphT>::ConstructPebblingScheduleFromSolution(Pebbl
         std::vector<bool> alreadyHasBlue(instance.NumberOfVertices(), false);
         if (needToLoadInputs_) {
             for (vertex_idx node = 0; node < instance.NumberOfVertices(); node++) {
-                if (instance.GetComputationalDag().in_degree(node) == 0) {
+                if (instance.GetComputationalDag().InDegree(node) == 0) {
                     alreadyHasBlue[node] = true;
                 }
             }
@@ -1429,7 +1429,7 @@ void MultiProcessorPebbling<GraphT>::SetInitialSolution(
     std::vector<bool> inSlowMem(n, false);
     if (needToLoadInputs_) {
         for (vertex_idx node = 0; node < n; ++node) {
-            if (instance.GetComputationalDag().in_degree(node) == 0) {
+            if (instance.GetComputationalDag().InDegree(node) == 0) {
                 inSlowMem[node] = true;
             }
         }

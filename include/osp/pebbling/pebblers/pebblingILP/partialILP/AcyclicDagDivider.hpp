@@ -94,7 +94,7 @@ std::vector<unsigned> AcyclicDagDivider<GraphT>::ComputePartitioning(const BspIn
                 }
             } else {
                 for (vertex_idx localId = 0; local_ID < dag.NumVertices(); ++local_ID) {
-                    if (instance.GetComputationalDag().in_degree(original_id[idx][local_ID]) > 0) {
+                    if (instance.GetComputationalDag().InDegree(original_id[idx][local_ID]) > 0) {
                         ++dag_real_size[idx];
                     }
                 }
@@ -130,7 +130,7 @@ std::vector<unsigned> AcyclicDagDivider<GraphT>::ComputePartitioning(const BspIn
                 // mark the source nodes of the original DAG
                 std::vector<bool> isOriginalSource(dag.NumVertices());
                 for (vertex_idx localId = 0; local_ID < dag.NumVertices(); ++local_ID) {
-                    isOriginalSource[local_ID] = (instance.GetComputationalDag().in_degree(original_id[idx][local_ID]) == 0);
+                    isOriginalSource[local_ID] = (instance.GetComputationalDag().InDegree(original_id[idx][local_ID]) == 0);
                 }
 
                 // heuristic splitting

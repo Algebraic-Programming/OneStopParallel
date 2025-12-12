@@ -189,7 +189,7 @@ class CilkScheduler : public Scheduler<GraphT> {
                 if (node != std::numeric_limits<VertexIdxT<GraphT>>::max()) {
                     for (const auto &succ : instance.GetComputationalDag().Children(node)) {
                         ++nrPredecDone[succ];
-                        if (nrPredecDone[succ] == instance.GetComputationalDag().in_degree(succ)) {
+                        if (nrPredecDone[succ] == instance.GetComputationalDag().InDegree(succ)) {
                             ready.insert(succ);
                             if (mode == CILK) {
                                 procQueue[schedule.proc[node]].push_back(succ);
