@@ -135,7 +135,7 @@ class Serial : public Scheduler<GraphT> {
                     deferredNodes.push_back(v);
                 } else {
                     for (const auto &child : dag.Children(v)) {
-                        if (--in_degree[child] == 0) {
+                        if (--inDegree[child] == 0) {
                             readyNodes.push_back(child);
                         }
                     }
@@ -144,16 +144,16 @@ class Serial : public Scheduler<GraphT> {
 
             if (scheduledNodesCount < numVertices) {
                 currentSuperstep++;
-                readyNodes.insert(readyNodes.end(), deferred_nodes.begin(), deferred_nodes.end());
+                readyNodes.insert(readyNodes.end(), deferredNodes.begin(), deferredNodes.end());
                 deferredNodes.clear();
             }
         }
 
-        schedule.setNumberOfSupersteps(currentSuperstep + 1);
+        schedule.SetNumberOfSupersteps(currentSuperstep + 1);
         return ReturnStatus::OSP_SUCCESS;
     }
 
-    std::string getScheduleName() const override { return "Serial"; }
+    std::string GetScheduleName() const override { return "Serial"; }
 };
 
 }    // namespace osp
