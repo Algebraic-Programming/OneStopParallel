@@ -72,7 +72,7 @@ bool CheckNodesInTopologicalOrder(const GraphT &graph) {
 
 template <typename GraphT>
 std::vector<VertexIdxT<GraphT>> GetTopOrder(const GraphT &graph) {
-    if constexpr (hasVerticesInTopOrderV<GraphT>) {
+    if constexpr (HasVerticesInTopOrderV<GraphT>) {
         std::vector<VertexIdxT<GraphT>> topOrd(graph.NumVertices());
         std::iota(topOrd.begin(), topOrd.end(), static_cast<VertexIdxT<GraphT>>(0));
         return topOrd;
@@ -315,7 +315,7 @@ struct TopSortIterator {
  *
  * This class supports two modes of iteration:
  * 1. If the graph type `Graph_t` has a predefined topological order (determined by the
- *    `has_vertices_in_top_order_v` trait), the iteration will directly use the graph's vertices.
+ *    `HasVerticesInTopOrderV<` trait), the iteration will directly use the graph's vertices.
  * 2. Otherwise, it performs a topological sort using a depth-first search (DFS) stack wrapper.
  *
  * @tparam Graph_t The type of the directed graph. Must satisfy the `is_directed_graph` concept.
@@ -334,7 +334,7 @@ class TopSortView {
     TopSortView(const GraphT &graph) : graph_(graph) {}
 
     auto begin() {
-        if constexpr (has_vertices_in_top_order_v<GraphT>) {
+        if constexpr (HasVerticesInTopOrderV << GraphT >) {
             return graph_.Vertices().begin();
         } else {
             return TsIterator(graph_, vertexContainer_, 0);
@@ -342,7 +342,7 @@ class TopSortView {
     }
 
     auto end() {
-        if constexpr (has_vertices_in_top_order_v<GraphT>) {
+        if constexpr (HasVerticesInTopOrderV << GraphT >) {
             return graph_.Vertices().end();
         } else {
             return TsIterator(graph_, vertexContainer_, graph_.NumVertices());
@@ -389,7 +389,7 @@ class DfsTopSortView {
  */
 template <typename GraphT>
 class BfsTopSortView {
-    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
     const GraphT &graph_;
     BfsQueueWrapper<GraphT> vertexContainer_;

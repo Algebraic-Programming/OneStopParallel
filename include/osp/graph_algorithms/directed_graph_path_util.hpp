@@ -193,7 +193,7 @@ template <typename GraphT, typename T = unsigned>
 std::vector<T> GetBottomNodeDistance(const GraphT &graph) {
     static_assert(std::is_integral_v<T>, "T must be of integral type");
 
-    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
     std::vector<T> bottomDistance(graph.NumVertices(), 0);
 
@@ -212,7 +212,7 @@ template <typename GraphT, typename T = unsigned>
 std::vector<T> GetTopNodeDistance(const GraphT &graph) {
     static_assert(std::is_integral_v<T>, "T must be of integral type");
 
-    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
     std::vector<T> topDistance(graph.NumVertices(), 0);
 

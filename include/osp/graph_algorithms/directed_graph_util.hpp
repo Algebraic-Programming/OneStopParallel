@@ -81,7 +81,7 @@ bool IsSink(const VertexIdxT<GraphT> &v, const GraphT &graph) {
  */
 template <typename GraphT>
 bool IsSource(const VertexIdxT<GraphT> &v, const GraphT &graph) {
-    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
     return graph.InDegree(v) == 0u;
 }
 
@@ -94,7 +94,7 @@ bool IsSource(const VertexIdxT<GraphT> &v, const GraphT &graph) {
  */
 template <typename CondEval, typename GraphT, typename IteratorT>
 struct VertexCondIterator {
-    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
     // TODO static_assert(is_callabl_v<cond_eval>;
 
     const GraphT &graph_;
@@ -154,7 +154,7 @@ struct VertexCondIterator {
  */
 template <typename GraphT>
 class SourceVerticesView {
-    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
     const GraphT &graph_;
 
@@ -213,7 +213,7 @@ class SinkVerticesView {
  */
 template <typename GraphT>
 std::vector<VertexIdxT<GraphT>> SourceVertices(const GraphT &graph) {
-    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
     std::vector<VertexIdxT<GraphT>> vec;
     for (const auto &source : SourceVerticesView(graph)) {
         vec.push_back(source);
@@ -230,7 +230,7 @@ std::vector<VertexIdxT<GraphT>> SourceVertices(const GraphT &graph) {
  */
 template <typename GraphT>
 std::vector<VertexIdxT<GraphT>> SinkVertices(const GraphT &graph) {
-    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
     std::vector<VertexIdxT<GraphT>> vec;
 
     for (const auto &sink : SinkVerticesView(graph)) {
@@ -248,7 +248,7 @@ std::vector<VertexIdxT<GraphT>> SinkVertices(const GraphT &graph) {
  */
 template <typename GraphT, typename ContainerWrapper, typename AdjIterator>
 struct TraversalIterator {
-    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
     const GraphT &graph_;
 
@@ -474,7 +474,7 @@ std::vector<VertexIdxT<GraphT>> Ancestors(const VertexIdxT<GraphT> &v, const Gra
 
 template <typename GraphT>
 bool IsAcyclic(const GraphT &graph) {
-    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
     using VertexType = VertexIdxT<GraphT>;
 
