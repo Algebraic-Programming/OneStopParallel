@@ -64,7 +64,7 @@ class RandomGreedy : public Scheduler<GraphT> {
         while (!next.empty()) {
             std::shuffle(next.begin(), next.end(), g);
             std::unordered_set<VertexType> nodesAssignedThisSuperstep;
-            std::vector<v_workw_t<Graph_t>> processorWeights(instance.NumberOfProcessors(), 0);
+            std::vector<VWorkwT<Graph_t>> processorWeights(instance.NumberOfProcessors(), 0);
 
             bool fewSources = next.size() < instance.NumberOfProcessors() ? true : false;
             unsigned failCounter = 0;

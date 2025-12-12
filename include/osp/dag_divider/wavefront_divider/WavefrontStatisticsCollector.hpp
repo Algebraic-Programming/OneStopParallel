@@ -31,7 +31,7 @@ template <typename GraphT>
 struct WavefrontStatistics {
     using VertexType = vertex_idx_t<Graph_t>;
 
-    std::vector<v_workw_t<Graph_t>> connectedComponentsWeights_;
+    std::vector<VWorkwT<Graph_t>> connectedComponentsWeights_;
     std::vector<v_memw_t<Graph_t>> connectedComponentsMemories_;
     std::vector<std::vector<VertexType>> connectedComponentsVertices_;
 };

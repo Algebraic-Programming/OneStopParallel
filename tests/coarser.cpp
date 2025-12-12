@@ -66,13 +66,13 @@ bool CheckVertexMapConstraints(std::vector<std::vector<VertexType>> &map,
                                ComputationalDag &dag,
                                v_type_t<ComputationalDag> sizeThreshold,
                                v_memw_t<ComputationalDag> memoryThreshold,
-                               v_workw_t<ComputationalDag> workThreshold,
+                               VWorkwT<ComputationalDag> workThreshold,
                                v_commw_t<ComputationalDag> communicationThreshold) {
     std::unordered_set<VertexType> vertices;
 
     for (auto &superNode : map) {
         v_memw_t<ComputationalDag> memory = 0;
-        v_workw_t<ComputationalDag> work = 0;
+        VWorkwT<ComputationalDag> work = 0;
         v_commw_t<ComputationalDag> communication = 0;
 
         if (superNode.size() > sizeThreshold) {
@@ -386,7 +386,7 @@ BOOST_AUTO_TEST_CASE(CoarserFunndelBfsTest) {
 
     TestCoarserSameGraph<GraphT>(coarser);
 
-    FunnelBfs<GraphT, GraphT>::FunnelBfs_parameters params{std::numeric_limits<v_workw_t<GraphT>>::max(),
+    FunnelBfs<GraphT, GraphT>::FunnelBfs_parameters params{std::numeric_limits<VWorkwT<GraphT>>::max(),
                                                            std::numeric_limits<v_memw_t<GraphT>>::max(),
                                                            std::numeric_limits<unsigned>::max(),
                                                            false,
@@ -592,7 +592,7 @@ BOOST_AUTO_TEST_CASE(SarkarTest) {
     using GraphT = computational_dag_edge_idx_vector_impl_def_t;
     // using graph_t = computational_dag_vector_impl_def_t;
 
-    SarkarParams::Parameters<v_workw_t<GraphT>> params;
+    SarkarParams::Parameters<VWorkwT<GraphT>> params;
     params.mode = SarkarParams::Mode::LINES;
     params.commCost = 100;
     params.useTopPoset = true;
@@ -646,7 +646,7 @@ BOOST_AUTO_TEST_CASE(SarkarMlTest) {
     using GraphT = computational_dag_edge_idx_vector_impl_def_t;
     // using graph_t = computational_dag_vector_impl_def_t;
 
-    SarkarParams::MulParameters<v_workw_t<GraphT>> params;
+    SarkarParams::MulParameters<VWorkwT<GraphT>> params;
     params.commCostVec = {100};
 
     SarkarMul<GraphT, GraphT> coarser;
@@ -659,7 +659,7 @@ BOOST_AUTO_TEST_CASE(SarkarMlBufferMergeTest) {
     using GraphT = computational_dag_edge_idx_vector_impl_def_t;
     // using graph_t = computational_dag_vector_impl_def_t;
 
-    SarkarParams::MulParameters<v_workw_t<GraphT>> params;
+    SarkarParams::MulParameters<VWorkwT<GraphT>> params;
     params.commCostVec = {1, 2, 10, 50, 100};
     params.buffer_merge_mode = SarkarParams::BufferMergeMode::FULL;
 

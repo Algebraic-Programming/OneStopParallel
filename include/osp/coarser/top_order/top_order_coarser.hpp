@@ -32,7 +32,7 @@ class TopOrderCoarser : public Coarser<GraphTIn, GraphTOut> {
     using VertexType = vertex_idx_t<Graph_t_in>;
 
     // parameters
-    v_workw_t<Graph_t_in> workThreshold_ = std::numeric_limits<v_workw_t<Graph_t_in>>::max();
+    VWorkwT<Graph_t_in> workThreshold_ = std::numeric_limits<VWorkwT<Graph_t_in>>::max();
     v_memw_t<Graph_t_in> memoryThreshold_ = std::numeric_limits<v_memw_t<Graph_t_in>>::max();
     v_commw_t<Graph_t_in> communicationThreshold_ = std::numeric_limits<v_commw_t<Graph_t_in>>::max();
     unsigned degreeThreshold_ = std::numeric_limits<unsigned>::max();
@@ -41,7 +41,7 @@ class TopOrderCoarser : public Coarser<GraphTIn, GraphTOut> {
 
     // internal data strauctures
     v_memw_t<Graph_t_in> currentMemory_ = 0;
-    v_workw_t<Graph_t_in> currentWork_ = 0;
+    VWorkwT<Graph_t_in> currentWork_ = 0;
     v_commw_t<Graph_t_in> currentCommunication_ = 0;
     VertexType currentSuperNodeIdx_ = 0;
 
@@ -108,7 +108,7 @@ class TopOrderCoarser : public Coarser<GraphTIn, GraphTOut> {
 
     inline void SetDegreeThreshold(unsigned degreeThreshold) { degreeThreshold_ = degreeThreshold; }
 
-    inline void SetWorkThreshold(v_workw_t<Graph_t_in> workThreshold) { work_threshold = work_threshold_; }
+    inline void SetWorkThreshold(VWorkwT<Graph_t_in> workThreshold) { work_threshold = work_threshold_; }
 
     inline void SetMemoryThreshold(v_memw_t<Graph_t_in> memoryThreshold) { memory_threshold = memory_threshold_; }
 

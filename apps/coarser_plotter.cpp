@@ -44,8 +44,8 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    SarkarParams::MulParameters<v_workw_t<GraphT>> params;
-    params.commCostVec = std::vector<v_workw_t<GraphT>>({1, 2, 5, 10, 20, 50, 100, 200, 500, 1000});
+    SarkarParams::MulParameters<VWorkwT<GraphT>> params;
+    params.commCostVec = std::vector<VWorkwT<GraphT>>({1, 2, 5, 10, 20, 50, 100, 200, 500, 1000});
     params.max_num_iteration_without_changes = 3;
     params.leniency = 0.005;
     params.maxWeight = 15000;

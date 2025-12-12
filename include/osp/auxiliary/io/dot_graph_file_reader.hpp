@@ -113,7 +113,7 @@ void ParseDotNode(const std::string &line, GraphT &g) {
         }
     }
 
-    if constexpr (isConstructableCdagTypedVertexV<GraphT>) {
+    if constexpr (IsConstructableCdagTypedVertexV<GraphT>) {
         g.AddVertex(workWeight, commWeight, memWeight, type);
     } else {
         g.add_vertex(workWeight, commWeight, memWeight);
@@ -122,7 +122,7 @@ void ParseDotNode(const std::string &line, GraphT &g) {
 
 template <typename GraphT>
 void ParseDotEdge(const std::string &line, GraphT &g) {
-    using EdgeCommwTOrDefault = std::conditional_t<hasEdgeWeightsV<GraphT>, ECommwT<GraphT>, VCommwT<GraphT>>;
+    using EdgeCommwTOrDefault = std::conditional_t<HasEdgeWeightsV<GraphT>, ECommwT<GraphT>, VCommwT<GraphT>>;
 
     std::size_t arrowPos = line.find("->");
     if (arrowPos == std::string::npos) {
@@ -147,7 +147,7 @@ void ParseDotEdge(const std::string &line, GraphT &g) {
         VertexIdxT<GraphT> sourceNode = static_cast<VertexIdxT<GraphT>>(std::stoll(sourceStr));
         VertexIdxT<GraphT> targetNode = static_cast<VertexIdxT<GraphT>>(std::stoll(targetStr));
 
-        if constexpr (isConstructableCdagCommEdgeV<GraphT>) {
+        if constexpr (IsConstructableCdagCommEdgeV<GraphT>) {
             EdgeCommwTOrDefault commWeight = 0;
 
             if (bracketPos != std::string::npos) {

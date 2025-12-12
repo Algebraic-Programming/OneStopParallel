@@ -36,7 +36,7 @@ class StepByStepCoarser : public CoarserGenContractionMap<GraphT, GraphT> {
     using edge_commw_t_or_default = std::conditional_t<HasEdgeWeightsV<Graph_t>, e_commw_t<Graph_t>, v_commw_t<Graph_t>>;
 
     using boost_graph_t
-        = boost_graph<v_workw_t<Graph_t>, v_commw_t<Graph_t>, v_memw_t<Graph_t>, vertex_type_t_or_default, edge_commw_t_or_default>;
+        = boost_graph<VWorkwT<Graph_t>, v_commw_t<Graph_t>, v_memw_t<Graph_t>, vertex_type_t_or_default, edge_commw_t_or_default>;
 
   public:
     enum CoarseningStrategy { EDGE_BY_EDGE, BOTTOM_LEVEL_CLUSTERS };
@@ -45,12 +45,12 @@ class StepByStepCoarser : public CoarserGenContractionMap<GraphT, GraphT> {
 
     struct EdgeToContract {
         std::pair<vertex_idx, vertex_idx> edge_;
-        v_workw_t<Graph_t> workWeight_;
+        VWorkwT<Graph_t> workWeight_;
         v_commw_t<Graph_t> commWeight_;
 
         EdgeToContract(const vertex_idx source,
                        const vertex_idx target,
-                       const v_workw_t<Graph_t> workWeight,
+                       const VWorkwT<Graph_t> workWeight,
                        const v_commw_t<Graph_t> commWeight)
             : edge(source, target), work_weight(work_weight_), comm_weight(comm_weight_) {}
 
@@ -513,7 +513,7 @@ template <typename Graph_t>
 std::pair<vertex_idx_t<Graph_t>, vertex_idx_t<Graph_t>> StepByStepCoarser<Graph_t>::PickEdgeToContract(
     const std::vector<EdgeToContract> &candidates) const {
     size_t limit = (candidates.size() + 2) / 3;
-    v_workw_t<Graph_t> limitCardinality = candidates[limit].work_weight;
+    VWorkwT<Graph_t> limitCardinality = candidates[limit].work_weight;
     while (limit < candidates.size() - 1 && candidates[limit + 1].work_weight == limitCardinality) {
         ++limit;
     }

@@ -97,7 +97,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
         coarsened_dag = Graph_t_out(num_vert_quotient, quotient_edges);
 
         if constexpr (HasVertexWeightsV<Graph_t_in> && IsModifiableCdagVertexV<Graph_t_out>) {
-            static_assert(std::is_same_v<v_workw_t<Graph_t_in>, v_workw_t<Graph_t_out>>,
+            static_assert(std::is_same_v<VWorkwT<Graph_t_in>, VWorkwT<Graph_t_out>>,
                           "Work weight types of in-graph and out-graph must be the same.");
             static_assert(std::is_same_v<v_commw_t<Graph_t_in>, v_commw_t<Graph_t_out>>,
                           "Vertex communication types of in-graph and out-graph must be the same.");
@@ -234,7 +234,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
 
 template <typename GraphTIn,
           class GraphTOut,
-          typename VWorkAccMethod = acc_sum<v_workw_t<Graph_t_in>>,
+          typename VWorkAccMethod = acc_sum<VWorkwT<Graph_t_in>>,
           typename VCommAccMethod = acc_sum<v_commw_t<Graph_t_in>>,
           typename VMemAccMethod = acc_sum<v_memw_t<Graph_t_in>>,
           typename ECommAccMethod = acc_sum<e_commw_t<Graph_t_in>>>
@@ -277,7 +277,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
         }
 
         if constexpr (HasVertexWeightsV<Graph_t_in> && IsModifiableCdagVertexV<Graph_t_out>) {
-            static_assert(std::is_same_v<v_workw_t<Graph_t_in>, v_workw_t<Graph_t_out>>,
+            static_assert(std::is_same_v<VWorkwT<Graph_t_in>, VWorkwT<Graph_t_out>>,
                           "Work weight types of in-graph and out-graph must be the same.");
             static_assert(std::is_same_v<v_commw_t<Graph_t_in>, v_commw_t<Graph_t_out>>,
                           "Vertex communication types of in-graph and out-graph must be the same.");

@@ -80,7 +80,7 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
   private:
     using memw_t = v_memw_t<Graph_t>;
     using commw_t = v_commw_t<Graph_t>;
-    using workw_t = v_workw_t<Graph_t>;
+    using workw_t = VWorkwT<Graph_t>;
 
   protected:
     using VertexType = vertex_idx_t<Graph_t>;
@@ -991,7 +991,7 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
             return false;
         }
 
-        v_workw_t<Graph_t> totalWork = 0;
+        VWorkwT<Graph_t> totalWork = 0;
 
         for (unsigned proc = 0; proc < numProcs_; proc++) {
             totalWork += currentSchedule_.step_processor_work[step][proc];
@@ -1136,9 +1136,9 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
             return false;
         }
 
-        v_workw_t<Graph_t> totalWork = 0;
-        v_workw_t<Graph_t> maxTotalWork = 0;
-        v_workw_t<Graph_t> minTotalWork = std::numeric_limits<v_workw_t<Graph_t>>::max();
+        VWorkwT<Graph_t> totalWork = 0;
+        VWorkwT<Graph_t> maxTotalWork = 0;
+        VWorkwT<Graph_t> minTotalWork = std::numeric_limits<VWorkwT<Graph_t>>::max();
 
         for (unsigned proc = 0; proc < numProcs_; proc++) {
             totalWork += currentSchedule_.step_processor_work[step][proc];

@@ -67,7 +67,7 @@ class SquashA : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
         std::advance(lower_third_it, edge_weights.size() / 3);
         T lowerThirdWt = std::max(lower_third_it->second, static_cast<T>(1));    // Could be 0
 
-        Union_Find_Universe<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_in>, v_workw_t<Graph_t_in>, v_memw_t<Graph_t_in>>
+        Union_Find_Universe<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_in>, VWorkwT<Graph_t_in>, v_memw_t<Graph_t_in>>
             connected_components;
         for (const auto &vert : dagIn.vertices()) {
             connected_components.add_object(vert, dag_in.VertexWorkWeight(vert), dag_in.VertexMemWeight(vert));

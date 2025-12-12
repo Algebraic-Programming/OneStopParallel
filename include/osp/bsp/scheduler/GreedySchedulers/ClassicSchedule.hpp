@@ -36,7 +36,7 @@ template <typename GraphT>
 class CSchedule {
   private:
     using vertex_idx = vertex_idx_t<Graph_t>;
-    using workw_t = v_workw_t<Graph_t>;
+    using workw_t = VWorkwT<Graph_t>;
 
   public:
     std::vector<unsigned> proc_; /**< The processor assigned to each task. */

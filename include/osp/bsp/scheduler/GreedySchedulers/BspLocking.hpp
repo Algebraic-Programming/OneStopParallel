@@ -78,15 +78,15 @@ class BspLocking : public Scheduler<GraphT> {
     std::vector<MaxHeap> maxProcScoreHeap_;
     std::vector<MaxHeap> maxAllProcScoreHeap_;
 
-    static std::vector<v_workw_t<Graph_t>> GetLongestPath(const GraphT &graph) {
-        std::vector<v_workw_t<Graph_t>> longestPath(graph.NumVertices(), 0);
+    static std::vector<VWorkwT<Graph_t>> GetLongestPath(const GraphT &graph) {
+        std::vector<VWorkwT<Graph_t>> longestPath(graph.NumVertices(), 0);
 
         const std::vector<VertexType> topOrder = GetTopOrder(graph);
 
         for (auto rIter = top_order.rbegin(); rIter != top_order.crend(); r_iter++) {
             longestPath[*r_iter] = graph.VertexWorkWeight(*r_iter);
             if (graph.OutDegree(*r_iter) > 0) {
-                v_workw_t<Graph_t> max = 0;
+                VWorkwT<Graph_t> max = 0;
                 for (const auto &child : graph.Children(*r_iter)) {
                     if (max <= longest_path[child]) {
                         max = longest_path[child];
@@ -159,7 +159,7 @@ class BspLocking : public Scheduler<GraphT> {
                 VertexType &node,
                 unsigned &p,
                 const bool endSupStep,
-                const v_workw_t<Graph_t> remainingTime) {
+                const VWorkwT<Graph_t> remainingTime) {
         for (unsigned proc = 0; proc < instance.NumberOfProcessors(); ++proc) {
             if (procFree[proc] && !procReady[proc].empty()) {
                 // select node
@@ -324,8 +324,8 @@ class BspLocking : public Scheduler<GraphT> {
         const unsigned &paramsP = instance.NumberOfProcessors();
         const auto &g = instance.GetComputationalDag();
 
-        const std::vector<v_workw_t<Graph_t>> pathLength = get_longest_path(g);
-        v_workw_t<Graph_t> maxPath = 1;
+        const std::vector<VWorkwT<Graph_t>> pathLength = get_longest_path(g);
+        VWorkwT<Graph_t> maxPath = 1;
         for (const auto &i : instance.vertices()) {
             if (pathLength[i] > max_path) {
                 maxPath = path_length[i];
@@ -336,7 +336,7 @@ class BspLocking : public Scheduler<GraphT> {
         defaultValue_.resize(n, 0);
         for (const auto &i : instance.vertices()) {
             // assert(path_length[i] * 20 / max_path <= std::numeric_limits<int>::max());
-            defaultValue_[i] = static_cast<int>(path_length[i] * static_cast<v_workw_t<Graph_t>>(20) / max_path);
+            defaultValue_[i] = static_cast<int>(path_length[i] * static_cast<VWorkwT<Graph_t>>(20) / max_path);
         }
 
         max_proc_score_heap = std::vector<MaxHeap>(params_p);
@@ -363,7 +363,7 @@ class BspLocking : public Scheduler<GraphT> {
             ++nrProcsPerType[instance.GetArchitecture().processorType(proc)];
         }
 
-        std::set<std::pair<v_workw_t<Graph_t>, VertexType>> finishTimes;
+        std::set<std::pair<VWorkwT<Graph_t>, VertexType>> finishTimes;
         finishTimes.emplace(0, std::numeric_limits<VertexType>::max());
 
         for (const auto &v : source_vertices_view(g)) {
@@ -424,8 +424,8 @@ class BspLocking : public Scheduler<GraphT> {
                 finishTimes.emplace(0, std::numeric_limits<VertexType>::max());
             }
 
-            const v_workw_t<Graph_t> time = finishTimes.begin()->first;
-            const v_workw_t<Graph_t> maxFinishTime = finishTimes.rbegin()->first;
+            const VWorkwT<Graph_t> time = finishTimes.begin()->first;
+            const VWorkwT<Graph_t> maxFinishTime = finishTimes.rbegin()->first;
 
             // Find new ready jobs
             while (!finishTimes.empty() && finishTimes.begin()->first == time) {

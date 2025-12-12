@@ -41,12 +41,12 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
 
         bool useApproxTransitiveReduction_;
 
-        v_workw_t<Graph_t_in> maxWorkWeight_;
+        VWorkwT<Graph_t_in> maxWorkWeight_;
         v_memw_t<Graph_t_in> maxMemoryWeight_;
 
         unsigned maxDepth_;
 
-        FunnelBfsParameters(vWorkwT_<Graph_t_in> max_work_weight_ = std::numeric_limits<v_workw_t<Graph_t_in>>::max(),
+        FunnelBfsParameters(vWorkwT_<Graph_t_in> max_work_weight_ = std::numeric_limits<VWorkwT<Graph_t_in>>::max(),
                             v_memw_t<Graph_t_in> max_memory_weight_ = std::numeric_limits<v_memw_t<Graph_t_in>>::max(),
                             unsigned max_depth_ = std::numeric_limits<unsigned>::max(),
                             bool funnel_incoming_ = true,
@@ -109,7 +109,7 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
                 continue;
             }
 
-            v_workw_t<Graph_t_in> workWeightOfGroup = 0;
+            VWorkwT<Graph_t_in> workWeightOfGroup = 0;
             v_memw_t<Graph_t_in> memoryWeightOfGroup = 0;
 
             std::unordered_map<vertex_idx_t, vertex_idx_t> childrenNotInGroup;
@@ -217,7 +217,7 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
                 continue;
             }
 
-            v_workw_t<Graph_t_in> workWeightOfGroup = 0;
+            VWorkwT<Graph_t_in> workWeightOfGroup = 0;
             v_memw_t<Graph_t_in> memoryWeightOfGroup = 0;
 
             std::unordered_map<vertex_idx_t, vertex_idx_t> parentsNotInGroup;

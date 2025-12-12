@@ -283,7 +283,7 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
             ++nrProcsPerType[instance.GetArchitecture().processorType(proc)];
         }
 
-        std::set<std::pair<v_workw_t<Graph_t>, VertexType>> finishTimes;
+        std::set<std::pair<VWorkwT<Graph_t>, VertexType>> finishTimes;
         finishTimes.emplace(0, std::numeric_limits<VertexType>::max());
 
         for (const auto &v : source_vertices_view(g)) {
@@ -338,7 +338,7 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
                 finishTimes.emplace(0, std::numeric_limits<VertexType>::max());
             }
 
-            const v_workw_t<Graph_t> time = finishTimes.begin()->first;
+            const VWorkwT<Graph_t> time = finishTimes.begin()->first;
 
             // Find new ready jobs
             while (!finishTimes.empty() && finishTimes.begin()->first == time) {

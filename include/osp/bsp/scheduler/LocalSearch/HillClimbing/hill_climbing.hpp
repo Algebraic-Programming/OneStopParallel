@@ -32,9 +32,9 @@ class HillClimbingScheduler : public ImprovementScheduler<GraphT> {
     static_assert(IsComputationalDagV<Graph_t>, "Graph_t must satisfy the computational_dag concept");
 
     using vertex_idx = vertex_idx_t<Graph_t>;
-    using cost_type = v_workw_t<Graph_t>;
+    using cost_type = VWorkwT<Graph_t>;
 
-    static_assert(std::is_same_v<v_workw_t<Graph_t>, v_commw_t<Graph_t>>,
+    static_assert(std::is_same_v<VWorkwT<Graph_t>, v_commw_t<Graph_t>>,
                   "HillClimbing requires work and comm. weights to have the same type.");
 
   public:

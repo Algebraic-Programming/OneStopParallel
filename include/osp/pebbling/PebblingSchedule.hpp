@@ -53,10 +53,10 @@ class PebblingSchedule {
 
   private:
     using vertex_idx = vertex_idx_t<Graph_t>;
-    using cost_type = v_workw_t<Graph_t>;
+    using cost_type = VWorkwT<Graph_t>;
     using memweight_type = v_memw_t<Graph_t>;
 
-    static_assert(std::is_same_v<v_workw_t<Graph_t>, v_commw_t<Graph_t>>,
+    static_assert(std::is_same_v<VWorkwT<Graph_t>, v_commw_t<Graph_t>>,
                   "PebblingSchedule requires work and comm. weights to have the same type.");
 
     const BspInstance<GraphT> *instance_;
@@ -270,7 +270,7 @@ void PebblingSchedule<GraphT>::UpdateNumberOfSupersteps(unsigned newNumberOfSupe
 }
 
 template <typename GraphT>
-v_workw_t<Graph_t> PebblingSchedule<GraphT>::ComputeCost() const {
+VWorkwT<Graph_t> PebblingSchedule<GraphT>::ComputeCost() const {
     cost_type totalCosts = 0;
     for (unsigned step = 0; step < numberOfSupersteps_; ++step) {
         // compute phase
@@ -323,7 +323,7 @@ v_workw_t<Graph_t> PebblingSchedule<GraphT>::ComputeCost() const {
 }
 
 template <typename GraphT>
-v_workw_t<Graph_t> PebblingSchedule<GraphT>::ComputeAsynchronousCost() const {
+VWorkwT<Graph_t> PebblingSchedule<GraphT>::ComputeAsynchronousCost() const {
     std::vector<cost_type> currentTimeAtProcessor(instance_->GetArchitecture().NumberOfProcessors(), 0);
     std::vector<cost_type> timeWhenNodeGetsBlue(instance->GetComputationalDag().NumVertices(),
                                                 std::numeric_limits<cost_type>::max());

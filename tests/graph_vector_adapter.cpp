@@ -74,9 +74,9 @@ BOOST_AUTO_TEST_CASE(TestDagVectorAdapterEdge) {
                                                  true,
                                                  vertex_idx_t<GraphT>,
                                                  std::size_t,
-                                                 v_workw_t<GraphT>,
-                                                 v_workw_t<GraphT>,
-                                                 v_workw_t<GraphT>,
+                                                 VWorkwT<GraphT>,
+                                                 VWorkwT<GraphT>,
+                                                 VWorkwT<GraphT>,
                                                  v_type_t<GraphT>>;
 
     GraphT graph(outNeighbors, inNeighbors);
@@ -163,9 +163,9 @@ BOOST_AUTO_TEST_CASE(TestDagVectorAdapter) {
                                                  true,
                                                  vertex_idx_t<GraphT>,
                                                  std::size_t,
-                                                 v_workw_t<GraphT>,
-                                                 v_workw_t<GraphT>,
-                                                 v_workw_t<GraphT>,
+                                                 VWorkwT<GraphT>,
+                                                 VWorkwT<GraphT>,
+                                                 VWorkwT<GraphT>,
                                                  v_type_t<GraphT>>;
 
     GraphT graph(outNeighbors, inNeighbors);

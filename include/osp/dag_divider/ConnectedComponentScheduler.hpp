@@ -41,7 +41,7 @@ class ConnectedComponentScheduler : public Scheduler<GraphT> {
 
         partitioner.divide(dag);
 
-        v_workw_t<Graph_t> totalWorkWeight = sumOfVerticesWorkWeights(dag);
+        VWorkwT<Graph_t> totalWorkWeight = sumOfVerticesWorkWeights(dag);
 
         unsigned numProcessorsOffset = 0;
 
@@ -49,7 +49,7 @@ class ConnectedComponentScheduler : public Scheduler<GraphT> {
             const auto &subDag = partitioner.get_sub_dags()[i];
             const auto &mapping = partitioner.get_vertex_mapping()[i];
 
-            v_workw_t<Constr_Graph_t> subDagWorkWeight = sumOfVerticesWorkWeights(subDag);
+            VWorkwT<Constr_Graph_t> subDagWorkWeight = sumOfVerticesWorkWeights(subDag);
 
             BspInstance<ConstrGraphT> subInstance(subDag, instance.GetArchitecture());
             BspArchitecture<ConstrGraphT> &subArchitecture = subInstance.GetArchitecture();

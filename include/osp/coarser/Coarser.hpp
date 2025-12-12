@@ -43,7 +43,7 @@ class Coarser {
 
     // probably too strict, need to be refined.
     // maybe add concept for when Gtaph_t2 is constructable/coarseable from Graph_t_in
-    static_assert(std::is_same_v<v_workw_t<Graph_t_in>, v_workw_t<Graph_t_out>>,
+    static_assert(std::is_same_v<VWorkwT<Graph_t_in>, VWorkwT<Graph_t_out>>,
                   "Graph_t_in and Graph_t_out must have the same work weight type");
     static_assert(std::is_same_v<v_memw_t<Graph_t_in>, v_memw_t<Graph_t_out>>,
                   "Graph_t_in and Graph_t_out must have the same memory weight type");

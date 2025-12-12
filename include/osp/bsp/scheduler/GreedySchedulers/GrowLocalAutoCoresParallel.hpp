@@ -68,14 +68,14 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
   private:
     using VertexType = vertex_idx_t<Graph_t>;
 
-    GrowLocalAutoCoresParallel_Params<vertex_idx_t<Graph_t>, v_workw_t<Graph_t>> params;
+    GrowLocalAutoCoresParallel_Params<vertex_idx_t<Graph_t>, VWorkwT<Graph_t>> params;
 
   public:
     /**
      * @brief Default constructor for GrowLocalAutoCoresParallel.
      */
-    GrowLocalAutoCoresParallel(GrowLocalAutoCoresParallel_Params<vertex_idx_t<Graph_t>, v_workw_t<Graph_t>> params_
-                               = GrowLocalAutoCoresParallel_Params<vertex_idx_t<Graph_t>, v_workw_t<Graph_t>>())
+    GrowLocalAutoCoresParallel(GrowLocalAutoCoresParallel_Params<vertex_idx_t<Graph_t>, VWorkwT<Graph_t>> params_
+                               = GrowLocalAutoCoresParallel_Params<vertex_idx_t<Graph_t>, VWorkwT<Graph_t>>())
         : params(params_) {}
 
     /**
@@ -153,8 +153,8 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
         std::vector<std::vector<VertexType>> newAssignments(p);
         std::vector<std::vector<VertexType>> bestNewAssignments(p);
 
-        const v_workw_t<Graph_t> minWeightParallelCheck = params.syncCostMultiplierParallelCheck * instance.SynchronisationCosts();
-        const v_workw_t<Graph_t> minSuperstepWeight = params.syncCostMultiplierMinSuperstepWeight * instance.SynchronisationCosts();
+        const VWorkwT<Graph_t> minWeightParallelCheck = params.syncCostMultiplierParallelCheck * instance.SynchronisationCosts();
+        const VWorkwT<Graph_t> minSuperstepWeight = params.syncCostMultiplierMinSuperstepWeight * instance.SynchronisationCosts();
 
         double desiredParallelism = static_cast<double>(p);
 
@@ -184,8 +184,8 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                 readyIter = ready.begin();
 
                 VertexType newTotalAssigned = 0;
-                v_workw_t<Graph_t> weightLimit = 0;
-                v_workw_t<Graph_t> totalWeightAssigned = 0;
+                VWorkwT<Graph_t> weightLimit = 0;
+                VWorkwT<Graph_t> totalWeightAssigned = 0;
 
                 // Processor 0
                 while (newAssignments[0].size() < limit) {
@@ -250,7 +250,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
 
                 // Processors 1 through P-1
                 for (unsigned proc = 1; proc < p; ++proc) {
-                    v_workw_t<Graph_t> currentWeightAssigned = 0;
+                    VWorkwT<Graph_t> currentWeightAssigned = 0;
                     while (current_weight_assigned < weight_limit) {
                         VertexType chosenNode = std::numeric_limits<VertexType>::max();
                         if (!procReady[proc].empty()) {

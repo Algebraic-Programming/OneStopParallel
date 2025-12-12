@@ -75,7 +75,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
             temp = std::log(temp) / 2 + maxPriority;
 
             double nodeWeight
-                = std::log(static_cast<double>(std::max(graph.VertexWorkWeight(*r_iter), static_cast<v_workw_t<Graph_t>>(1))));
+                = std::log(static_cast<double>(std::max(graph.VertexWorkWeight(*r_iter), static_cast<VWorkwT<Graph_t>>(1))));
             double largerVal = nodeWeight > temp ? nodeWeight : temp;
 
             workVariance[*r_iter] = std::log(std::exp(nodeWeight - largerVal) + std::exp(temp - largerVal)) + largerVal;
@@ -138,7 +138,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
                 VertexType &node,
                 unsigned &p,
                 const bool endSupStep,
-                const v_workw_t<Graph_t> remainingTime,
+                const VWorkwT<Graph_t> remainingTime,
                 const std::vector<std::vector<std::vector<unsigned>>> &procTypesCompatibleWithNodeTypeSkipProctype) const {
         double maxScore = -1;
         bool foundAllocation = false;
@@ -408,7 +408,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
         std::vector<bool> procFree(p, true);
         unsigned free = p;
 
-        std::set<std::pair<v_workw_t<Graph_t>, VertexType>> finishTimes;
+        std::set<std::pair<VWorkwT<Graph_t>, VertexType>> finishTimes;
         finishTimes.emplace(0, std::numeric_limits<VertexType>::max());
 
         std::vector<unsigned> numberOfAllocatedAllReadyTasksInSuperstep(instance.GetArchitecture().getNumberOfProcessorTypes(), 0);
@@ -479,8 +479,8 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
                 finishTimes.emplace(0, std::numeric_limits<VertexType>::max());
             }
 
-            const v_workw_t<Graph_t> time = finishTimes.begin()->first;
-            const v_workw_t<Graph_t> maxFinishTime = finishTimes.rbegin()->first;
+            const VWorkwT<Graph_t> time = finishTimes.begin()->first;
+            const VWorkwT<Graph_t> maxFinishTime = finishTimes.rbegin()->first;
 
             // Find new ready jobs
             while (!finishTimes.empty() && finishTimes.begin()->first == time) {

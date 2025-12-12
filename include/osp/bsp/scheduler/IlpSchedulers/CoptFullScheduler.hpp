@@ -425,8 +425,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
             }
         }
 
-        std::vector<std::vector<v_workw_t<Graph_t>>> work(max_number_supersteps,
-                                                          std::vector<v_workw_t<Graph_t>>(num_processors, 0));
+        std::vector<std::vector<VWorkwT<Graph_t>>> work(max_number_supersteps, std::vector<VWorkwT<Graph_t>>(num_processors, 0));
 
         if (useInitialScheduleRecomp_) {
             for (const auto &node : initialScheduleRecomp_->GetInstance().vertices()) {
@@ -455,7 +454,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
         }
 
         for (unsigned step = 0; step < maxNumberSupersteps_; step++) {
-            v_workw_t<Graph_t> maxWork = 0;
+            VWorkwT<Graph_t> maxWork = 0;
             for (unsigned i = 0; i < numProcessors; i++) {
                 if (max_work < work[step][i]) {
                     maxWork = work[step][i];

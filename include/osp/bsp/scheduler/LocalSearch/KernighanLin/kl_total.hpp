@@ -53,7 +53,7 @@ class KlTotal : public KlBase<GraphT, MemoryConstraintT> {
         KlBase<GraphT, MemoryConstraintT>::initialize_datastructures();
 
         v_commw_t<Graph_t> maxEdgeWeight = 0;
-        v_workw_t<Graph_t> maxNodeWeight = 0;
+        VWorkwT<Graph_t> maxNodeWeight = 0;
 
         for (const auto vertex : currentSchedule_.instance->GetComputationalDag().vertices()) {
             if (is_sink(vertex, currentSchedule_.instance->GetComputationalDag())) {

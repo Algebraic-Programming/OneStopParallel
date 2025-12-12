@@ -117,10 +117,10 @@ class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
             memoryConstraint_.initialize(schedule, superstep);
         }
 
-        v_workw_t<Graph_t> totalWork = 0;
+        VWorkwT<Graph_t> totalWork = 0;
 
-        std::vector<v_workw_t<Graph_t>> totalPartitionWork(nProcessors, 0);
-        std::vector<v_workw_t<Graph_t>> superstepPartitionWork(nProcessors, 0);
+        std::vector<VWorkwT<Graph_t>> totalPartitionWork(nProcessors, 0);
+        std::vector<VWorkwT<Graph_t>> superstepPartitionWork(nProcessors, 0);
 
         std::vector<double> variancePriorities = ComputeWorkVariance(graph, variancePower_);
         std::vector<VertexType> numUnallocatedParents(nVert, 0);

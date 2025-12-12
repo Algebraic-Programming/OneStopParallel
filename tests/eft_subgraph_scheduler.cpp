@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerSimpleChain) {
     // 2. Setup Scheduler Inputs
     std::vector<unsigned> multiplicities = {1, 2, 1};
     std::vector<unsigned> maxProcs = {100, 100, 100};
-    std::vector<std::vector<v_workw_t<GraphT>>> requiredProcTypes(3);
+    std::vector<std::vector<VWorkwT<GraphT>>> requiredProcTypes(3);
 
     // Node 0: work 100, mult 1. Needs type 0.
     requiredProcTypes[0] = {100, 0};
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerForkJoin) {
     // 2. Setup Scheduler Inputs
     std::vector<unsigned> multiplicities = {1, 2, 1, 4};
     std::vector<unsigned> maxProcs = {100, 100, 100, 100};
-    std::vector<std::vector<v_workw_t<GraphT>>> requiredProcTypes(4);
+    std::vector<std::vector<VWorkwT<GraphT>>> requiredProcTypes(4);
 
     // All nodes need type 0
     requiredProcTypes[0] = {100};
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerDeadlock) {
     // Job needs 2 workers (multiplicity), but only 1 is available
     std::vector<unsigned> multiplicities = {2};
     std::vector<unsigned> maxProcs = {100};
-    std::vector<std::vector<v_workw_t<GraphT>>> requiredProcTypes(1);
+    std::vector<std::vector<VWorkwT<GraphT>>> requiredProcTypes(1);
     requiredProcTypes[0] = {100};
 
     // 3. Run Scheduler
@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerComplexDag) {
     // 2. Setup Scheduler Inputs
     std::vector<unsigned> multiplicities = {1, 2, 1, 4, 2, 1};
     std::vector<unsigned> maxProcs = {100, 100, 100, 100, 100, 100};
-    std::vector<std::vector<v_workw_t<GraphT>>> requiredProcTypes(6);
+    std::vector<std::vector<VWorkwT<GraphT>>> requiredProcTypes(6);
     requiredProcTypes[0] = {50, 0};     // Job 0: needs T0
     requiredProcTypes[1] = {100, 0};    // Job 1: needs T0
     requiredProcTypes[2] = {0, 150};    // Job 2: needs T1
@@ -248,7 +248,7 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerResourceContention) {
     // 2. Setup Scheduler Inputs
     std::vector<unsigned> multiplicities = {1, 2, 2, 2, 1};
     std::vector<unsigned> maxProcs = {100, 100, 100, 100, 100};
-    std::vector<std::vector<v_workw_t<GraphT>>> requiredProcTypes(5);
+    std::vector<std::vector<VWorkwT<GraphT>>> requiredProcTypes(5);
     requiredProcTypes[0] = {10};
     requiredProcTypes[1] = {100};
     requiredProcTypes[2] = {50};
@@ -302,7 +302,7 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerProportionalAllocation) {
     // 2. Setup Scheduler Inputs
     std::vector<unsigned> multiplicities = {1, 1, 1};
     std::vector<unsigned> maxProcs = {100, 100, 100};
-    std::vector<std::vector<v_workw_t<GraphT>>> requiredProcTypes(3);
+    std::vector<std::vector<VWorkwT<GraphT>>> requiredProcTypes(3);
     requiredProcTypes[0] = {10};
     requiredProcTypes[1] = {300};
     requiredProcTypes[2] = {100};

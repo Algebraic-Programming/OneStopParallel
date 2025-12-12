@@ -198,8 +198,8 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
                 }
             }
 
-            std::vector<std::vector<v_workw_t<Graph_t>>> work(
-                num_step, std::vector<v_workw_t<Graph_t>>(instance_ptr->NumberOfProcessors(), 0));
+            std::vector<std::vector<VWorkwT<Graph_t>>> work(num_step,
+                                                            std::vector<VWorkwT<Graph_t>>(instance_ptr->NumberOfProcessors(), 0));
 
             for (const auto &node : instancePtr_->vertices()) {
                 work[schedule.assignedSuperstep(node)][schedule.assignedProcessor(node)]
@@ -207,7 +207,7 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
             }
 
             for (unsigned step = 0; step < numStep_; step++) {
-                v_workw_t<Graph_t> maxWork = 0;
+                VWorkwT<Graph_t> maxWork = 0;
                 for (unsigned proc = 0; proc < instancePtr_->NumberOfProcessors(); proc++) {
                     if (max_work < work[step][proc]) {
                         maxWork = work[step][proc];
@@ -312,8 +312,8 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
             }
         }
 
-        std::vector<std::vector<v_workw_t<Graph_t>>> work(
-            max_number_supersteps, std::vector<v_workw_t<Graph_t>>(initial_schedule->GetInstance().NumberOfProcessors(), 0));
+        std::vector<std::vector<VWorkwT<Graph_t>>> work(
+            max_number_supersteps, std::vector<VWorkwT<Graph_t>>(initial_schedule->GetInstance().NumberOfProcessors(), 0));
 
         for (const auto &node : initialSchedule_->GetInstance().vertices()) {
             work[initialSchedule_->assignedSuperstep(node)][initialSchedule_->assignedProcessor(node)]
@@ -321,7 +321,7 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
         }
 
         for (unsigned step = 0; step < maxNumberSupersteps_; step++) {
-            v_workw_t<Graph_t> maxWork = 0;
+            VWorkwT<Graph_t> maxWork = 0;
             for (unsigned i = 0; i < initialSchedule_->GetInstance().NumberOfProcessors(); i++) {
                 if (max_work < work[step][i]) {
                     maxWork = work[step][i];

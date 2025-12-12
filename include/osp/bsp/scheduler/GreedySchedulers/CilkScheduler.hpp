@@ -46,7 +46,7 @@ class CilkScheduler : public Scheduler<GraphT> {
     static_assert(IsComputationalDagV<Graph_t>, "CilkScheduler can only be used with computational DAGs.");
 
   private:
-    using tv_pair = std::pair<v_workw_t<Graph_t>, vertex_idx_t<Graph_t>>;
+    using tv_pair = std::pair<VWorkwT<Graph_t>, vertex_idx_t<Graph_t>>;
 
     CilkMode mode_; /**< The mode of the Cilk scheduler. */
 
@@ -179,7 +179,7 @@ class CilkScheduler : public Scheduler<GraphT> {
         }
 
         while (!finishTimes.empty()) {
-            const v_workw_t<Graph_t> time = finishTimes.begin()->first;
+            const VWorkwT<Graph_t> time = finishTimes.begin()->first;
 
             // Find new ready jobs
             while (!finishTimes.empty() && finishTimes.begin()->first == time) {

@@ -99,7 +99,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
 
     using memw_t = v_memw_t<Graph_t>;
     using commw_t = v_commw_t<Graph_t>;
-    using work_weight_t = v_workw_t<Graph_t>;
+    using work_weight_t = VWorkwT<Graph_t>;
     using VertexType = vertex_idx_t<Graph_t>;
     using EdgeType = edge_desc_t<Graph_t>;
 
@@ -1038,7 +1038,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                                  ThreadSearchContext &threadData,
                                  std::map<VertexType, kl_gain_update_info> &recomputeMaxGain,
                                  std::vector<VertexType> &newNodes,
-                                 const pre_move_work_data<v_workw_t<Graph_t>> &prevWorkData,
+                                 const pre_move_work_data<VWorkwT<Graph_t>> &prevWorkData,
                                  const typename CommCostFunctionT::pre_move_comm_data_t &prevCommData) {
         if constexpr (CommCostFunctionT::is_max_comm_cost_function) {
             commCostF_.update_node_comm_affinity(

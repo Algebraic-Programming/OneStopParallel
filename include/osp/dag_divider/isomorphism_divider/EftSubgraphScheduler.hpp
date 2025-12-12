@@ -45,37 +45,35 @@ class EftSubgraphScheduler {
 
     SubgraphSchedule Run(const BspInstance<GraphT> &instance,
                          const std::vector<unsigned> &multiplicities,
-                         const std::vector<std::vector<v_workw_t<Graph_t>>> &requiredProcTypes,
+                         const std::vector<std::vector<VWorkwT<Graph_t>>> &requiredProcTypes,
                          const std::vector<unsigned> &maxNumProcs) {
         prepare_for_scheduling(instance, multiplicities, required_proc_types, max_num_procs);
         return ExecuteSchedule(instance);
     }
 
-    void SetMinWorkPerProcessor(const v_workw_t<Graph_t> minWorkPerProcessor) {
-        min_work_per_processor_ = min_work_per_processor;
-    }
+    void SetMinWorkPerProcessor(const VWorkwT<Graph_t> minWorkPerProcessor) { min_work_per_processor_ = min_work_per_processor; }
 
   private:
     static constexpr bool verbose_ = false;
 
     using job_id_t = vertex_idx_t<Graph_t>;
 
-    v_workw_t<Graph_t> minWorkPerProcessor_ = 2000;
+    VWorkwT<Graph_t> minWorkPerProcessor_ = 2000;
 
     enum class JobStatus { WAITING, READY, RUNNING, COMPLETED };
 
     struct Job {
         job_id_t id_;
 
-        std::vector<v_workw_t<Graph_t>> requiredProcTypes_;
-        v_workw_t<Graph_t> totalWork_;
+        std::vector<VWorkwT<Graph_t>> requiredProcTypes_;
+        VWorkwT<Graph_t> totalWork_;
         unsigned multiplicity_ = 1;
         unsigned maxNumProcs_ = 1;
 
         job_id_t inDegreeCurrent_ = 0;
 
         JobStatus status_ = JobStatus::WAITING;
-        v_workw_t<Graph_t> upwardRank_ = 0.0;
+        VWorkwT<Graph_t> upwardRank_ = 0.0;
 
         // --- Execution Tracking Members ---
         std::vector<unsigned> assignedWorkers_;
@@ -98,7 +96,7 @@ class EftSubgraphScheduler {
 
     void PrepareForScheduling(const BspInstance<GraphT> &instance,
                               const std::vector<unsigned> &multiplicities,
-                              const std::vector<std::vector<v_workw_t<Graph_t>>> &requiredProcTypes,
+                              const std::vector<std::vector<VWorkwT<Graph_t>>> &requiredProcTypes,
                               const std::vector<unsigned> &maxNumProcs) {
         jobs_.resize(instance.NumberOfVertices());
         if constexpr (verbose_) {
@@ -145,7 +143,7 @@ class EftSubgraphScheduler {
         const auto reverseTopOrder = GetTopOrderReverse(graph);
 
         for (const auto &vertex : reverseTopOrder) {
-            v_workw_t<Graph_t> maxSuccessorRank = 0.0;
+            VWorkwT<Graph_t> maxSuccessorRank = 0.0;
             for (const auto &child : graph.Children(vertex)) {
                 maxSuccessorRank = std::max(max_successor_rank, jobs_.at(child).upward_rank);
             }
@@ -186,7 +184,7 @@ class EftSubgraphScheduler {
             }
 
             std::vector<Job *> jobsToStart;
-            v_workw_t<Graph_t> totalRunnablePriority = 0.0;
+            VWorkwT<Graph_t> totalRunnablePriority = 0.0;
 
             // Iterate through ready jobs and assign minimum resources if available.
             for (const Job *jobPtr : readyJobs_) {

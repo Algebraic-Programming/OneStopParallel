@@ -84,8 +84,8 @@ int main(int argc, char *argv[]) {
 
         std::vector<std::string> schedulersName(parser.scheduler_.size(), "");
         std::vector<bool> schedulersFailed(parser.scheduler_.size(), false);
-        std::vector<v_workw_t<GraphT>> schedulersCosts(parser.scheduler_.size(), 0);
-        std::vector<v_workw_t<GraphT>> schedulersWorkCosts(parser.scheduler_.size(), 0);
+        std::vector<VWorkwT<GraphT>> schedulersCosts(parser.scheduler_.size(), 0);
+        std::vector<VWorkwT<GraphT>> schedulersWorkCosts(parser.scheduler_.size(), 0);
         std::vector<unsigned> schedulersSupersteps(parser.scheduler_.size(), 0);
         std::vector<long> schedulersComputeTime(parser.scheduler_.size(), 0);
 

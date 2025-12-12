@@ -107,9 +107,9 @@ class BspScheduleRecomp : public IBspScheduleEval<GraphT> {
      *
      * @return The communication schedule for the schedule.
      */
-    const std::map<KeyTriple, unsigned int> &GetCommunicationSchedule() const { return commSchedule; }
+    const std::map<KeyTriple, unsigned int> &GetCommunicationSchedule() const { return commSchedule_; }
 
-    std::map<KeyTriple, unsigned int> &GetCommunicationSchedule() { return commSchedule; }
+    std::map<KeyTriple, unsigned int> &GetCommunicationSchedule() { return commSchedule_; }
 
     virtual CostType ComputeWorkCosts() const override;
 
@@ -123,7 +123,7 @@ class BspScheduleRecomp : public IBspScheduleEval<GraphT> {
      */
     bool SatisfiesConstraints() const;
 
-    vertex_idx GetTotalAssignments() const;
+    VertexIdx GetTotalAssignments() const;
 
     void MergeSupersteps();
 };
@@ -139,7 +139,7 @@ BspScheduleRecomp<GraphT>::BspScheduleRecomp(const BspScheduleCS<GraphT> &schedu
                                                                  schedule.AssignedSuperstep(node));
     }
 
-    commSchedule = schedule.getCommunicationSchedule();
+    commSchedule_ = schedule.GetCommunicationSchedule();
 }
 
 template <typename GraphT>
@@ -165,7 +165,7 @@ void BspScheduleRecomp<GraphT>::AddCommunicationScheduleEntry(KeyTriple key, uns
         throw std::invalid_argument("Invalid Argument while adding communication schedule entry: to processor out of range.");
     }
 
-    commSchedule[key] = step;
+    commSchedule_[key] = step;
 }
 
 template <typename GraphT>
@@ -183,11 +183,11 @@ bool BspScheduleRecomp<GraphT>::SatisfiesConstraints() const {
         }
     }
 
-    for (auto const &[key, val] : commSchedule) {
+    for (auto const &[key, val] : commSchedule_) {
         const VertexIdx &node = std::get<0>(key);
-        const unsigned &to_proc = std::get<2>(key);
+        const unsigned &toProc = std::get<2>(key);
 
-        nodeFirstAvailableOnProc[node][to_proc] = std::min(nodeFirstAvailableOnProc[node][to_proc], val + 1);
+        nodeFirstAvailableOnProc[node][toProc] = std::min(nodeFirstAvailableOnProc[node][toProc], val + 1);
     }
 
     // check validity
@@ -204,11 +204,11 @@ bool BspScheduleRecomp<GraphT>::SatisfiesConstraints() const {
         }
     }
 
-    for (auto const &[key, val] : commSchedule) {
+    for (auto const &[key, val] : commSchedule_) {
         const VertexIdx &node = std::get<0>(key);
-        const unsigned &from_proc = std::get<1>(key);
+        const unsigned &fromProc = std::get<1>(key);
 
-        if (nodeFirstAvailableOnProc[node][from_proc] > val) {
+        if (nodeFirstAvailableOnProc[node][fromProc] > val) {
             // std::cout << "Not a valid schedule: node " << node << " not yet available for sending from processor "
             // << from_proc << " in superstep "<< val <<"." << std::endl;
             return false;
@@ -241,14 +241,14 @@ VWorkwT<GraphT> BspScheduleRecomp<GraphT>::ComputeWorkCosts() const {
             }
         }
 
-        totalCosts += max_work;
+        totalCosts += maxWork;
     }
 
-    return total_costs;
+    return totalCosts;
 }
 
 template <typename GraphT>
-v_workw_t<Graph_t> BspScheduleRecomp<GraphT>::ComputeCosts() const {
+VWorkwT<Graph_t> BspScheduleRecomp<GraphT>::ComputeCosts() const {
     assert(SatisfiesConstraints());
 
     std::vector<std::vector<CostType>> rec(numberOfSupersteps_, std::vector<CostType>(instance_->NumberOfProcessors(), 0));

@@ -66,8 +66,8 @@ class IsomorphicSubgraphScheduler {
     bool useMaxGroupSize_ = false;
     unsigned maxGroupSize_ = 0;
     bool plotDotGraphs_ = false;
-    v_workw_t<Constr_Graph_t> workThreshold_ = 10;
-    v_workw_t<Constr_Graph_t> criticalPathThreshold_ = 10;
+    VWorkwT<Constr_Graph_t> workThreshold_ = 10;
+    VWorkwT<Constr_Graph_t> criticalPathThreshold_ = 10;
     double orbitLockRatio_ = 0.4;
     double naturalBreaksCountPercentage_ = 0.1;
     bool mergeDifferentNodeTypes_ = true;
@@ -86,9 +86,9 @@ class IsomorphicSubgraphScheduler {
 
     void SetMergeDifferentTypes(bool flag) { mergeDifferentNodeTypes_ = flag; }
 
-    void SetWorkThreshold(v_workw_t<Constr_Graph_t> workThreshold) { work_threshold_ = work_threshold; }
+    void SetWorkThreshold(VWorkwT<Constr_Graph_t> workThreshold) { work_threshold_ = work_threshold; }
 
-    void SetCriticalPathThreshold(v_workw_t<Constr_Graph_t> criticalPathThreshold) {
+    void SetCriticalPathThreshold(VWorkwT<Constr_Graph_t> criticalPathThreshold) {
         critical_path_threshold_ = critical_path_threshold;
     }
 
@@ -180,7 +180,7 @@ class IsomorphicSubgraphScheduler {
         BspInstance<CGT> instance_;
         std::vector<unsigned> multiplicities_;
         std::vector<unsigned> maxNumProcessors_;
-        std::vector<std::vector<v_workw_t<G_t>>> requiredProcTypes_;
+        std::vector<std::vector<VWorkwT<G_t>>> requiredProcTypes_;
     };
 
     void TrimSubgraphGroups(std::vector<typename OrbitGraphProcessor<GraphT, ConstrGraphT>::Group> &isomorphicGroups,

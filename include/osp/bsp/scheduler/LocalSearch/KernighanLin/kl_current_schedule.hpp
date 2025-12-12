@@ -103,10 +103,10 @@ class KlCurrentSchedule {
 
     MemoryConstraintT memoryConstraint_;
 
-    std::vector<std::vector<v_workw_t<Graph_t>>> stepProcessorWork_;
+    std::vector<std::vector<VWorkwT<Graph_t>>> stepProcessorWork_;
 
-    std::vector<v_workw_t<Graph_t>> stepMaxWork_;
-    std::vector<v_workw_t<Graph_t>> stepSecondMaxWork_;
+    std::vector<VWorkwT<Graph_t>> stepMaxWork_;
+    std::vector<VWorkwT<Graph_t>> stepSecondMaxWork_;
 
     double currentCost_ = 0;
 
@@ -244,10 +244,9 @@ class KlCurrentSchedule {
             memoryConstraint_.initialize(setSchedule_, vectorSchedule_);
         }
 
-        step_processor_work
-            = std::vector<std::vector<v_workw_t<Graph_t>>>(num_steps(), std::vector<v_workw_t<Graph_t>>(num_procs, 0));
-        step_max_work = std::vector<v_workw_t<Graph_t>>(num_steps(), 0);
-        step_second_max_work = std::vector<v_workw_t<Graph_t>>(num_steps(), 0);
+        step_processor_work = std::vector<std::vector<VWorkwT<Graph_t>>>(num_steps(), std::vector<VWorkwT<Graph_t>>(num_procs, 0));
+        step_max_work = std::vector<VWorkwT<Graph_t>>(num_steps(), 0);
+        step_second_max_work = std::vector<VWorkwT<Graph_t>>(num_steps(), 0);
     }
 
     virtual void CleanupSuperstepDatastructures() {

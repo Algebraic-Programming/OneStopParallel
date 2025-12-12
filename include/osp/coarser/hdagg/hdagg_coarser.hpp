@@ -37,7 +37,7 @@ class HdaggCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> {
     using VertexType_out = vertex_idx_t<Graph_t_out>;
 
   protected:
-    v_workw_t<Graph_t_in> workThreshold_ = std::numeric_limits<v_workw_t<Graph_t_in>>::max();
+    VWorkwT<Graph_t_in> workThreshold_ = std::numeric_limits<VWorkwT<Graph_t_in>>::max();
     v_memw_t<Graph_t_in> memoryThreshold_ = std::numeric_limits<v_memw_t<Graph_t_in>>::max();
     v_commw_t<Graph_t_in> communicationThreshold_ = std::numeric_limits<v_commw_t<Graph_t_in>>::max();
 
@@ -47,7 +47,7 @@ class HdaggCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> {
 
     // internal data strauctures
     v_memw_t<Graph_t_in> currentMemory_ = 0;
-    v_workw_t<Graph_t_in> currentWork_ = 0;
+    VWorkwT<Graph_t_in> currentWork_ = 0;
     v_commw_t<Graph_t_in> currentCommunication_ = 0;
     VertexType_out currentSuperNodeIdx_ = 0;
     v_type_t<Graph_t_in> currentVType_ = 0;
@@ -173,7 +173,7 @@ class HdaggCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> {
         return reverse_vertex_map;
     }
 
-    inline void SetWorkThreshold(v_workw_t<Graph_t_in> workThreshold) { work_threshold = work_threshold_; }
+    inline void SetWorkThreshold(VWorkwT<Graph_t_in> workThreshold) { work_threshold = work_threshold_; }
 
     inline void SetMemoryThreshold(v_memw_t<Graph_t_in> memoryThreshold) { memory_threshold = memory_threshold_; }
 

@@ -92,7 +92,7 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
         std::vector<double> variancePriorities = Base::compute_work_variance(graph, Base::variance_power);
         std::vector<VertexType> numUnallocatedParents(nVert, 0);
 
-        v_workw_t<Graph_t> totalWork = 0;
+        VWorkwT<Graph_t> totalWork = 0;
         for (const auto &v : graph.vertices()) {
             schedule.setAssignedProcessor(v, nProcessors);
 
@@ -107,8 +107,8 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
             }
         }
 
-        std::vector<v_workw_t<Graph_t>> totalPartitionWork(nProcessors, 0);
-        std::vector<v_workw_t<Graph_t>> superstepPartitionWork(nProcessors, 0);
+        std::vector<VWorkwT<Graph_t>> totalPartitionWork(nProcessors, 0);
+        std::vector<VWorkwT<Graph_t>> superstepPartitionWork(nProcessors, 0);
 
         std::vector<std::vector<VertexType>> preprocessedPartition = heavy_edge_preprocess(
             graph, heavyIsXTimesMedian_, minPercentComponentsRetained_, boundComponentWeightPercent_ / nProcessors);

@@ -108,12 +108,12 @@ std::unique_ptr<Scheduler<GraphT>> GetBaseBspSchedulerByName(const ConfigParser 
         return scheduler;
 
     } else if (id == "GrowLocal") {
-        GrowLocalAutoCores_Params<v_workw_t<Graph_t>> params;
+        GrowLocalAutoCores_Params<VWorkwT<Graph_t>> params;
         params.minSuperstepSize = algorithm.get_child("parameters").get_child("minSuperstepSize").get_value<unsigned>();
         params.syncCostMultiplierMinSuperstepWeight
-            = algorithm.get_child("parameters").get_child("syncCostMultiplierMinSuperstepWeight").get_value<v_workw_t<Graph_t>>();
+            = algorithm.get_child("parameters").get_child("syncCostMultiplierMinSuperstepWeight").get_value<VWorkwT<Graph_t>>();
         params.syncCostMultiplierParallelCheck
-            = algorithm.get_child("parameters").get_child("syncCostMultiplierParallelCheck").get_value<v_workw_t<Graph_t>>();
+            = algorithm.get_child("parameters").get_child("syncCostMultiplierParallelCheck").get_value<VWorkwT<Graph_t>>();
 
         return std::make_unique<GrowLocalAutoCores<GraphT>>(params);
 
@@ -183,7 +183,7 @@ RETURN_STATUS RunBspScheduler(const ConfigParser &parser,
     using vertex_type_t_or_default = std::conditional_t<IsComputationalDagTypedVerticesV<Graph_t>, v_type_t<Graph_t>, unsigned>;
     using edge_commw_t_or_default = std::conditional_t<HasEdgeWeightsV<Graph_t>, e_commw_t<Graph_t>, v_commw_t<Graph_t>>;
     using boost_graph_t
-        = boost_graph<v_workw_t<Graph_t>, v_commw_t<Graph_t>, v_memw_t<Graph_t>, vertex_type_t_or_default, edge_commw_t_or_default>;
+        = boost_graph<VWorkwT<Graph_t>, v_commw_t<Graph_t>, v_memw_t<Graph_t>, vertex_type_t_or_default, edge_commw_t_or_default>;
 
     const std::string id = algorithm.get_child("id").get_value<std::string>();
 

@@ -51,14 +51,14 @@ template <typename GraphT, typename MemoryConstraintT = NoMemoryConstraint>
 class EtfScheduler : public Scheduler<GraphT> {
     static_assert(IsComputationalDagV<Graph_t>, "EtfScheduler can only be used with computational DAGs.");
 
-    static_assert(std::is_convertible_v<v_commw_t<Graph_t>, v_workw_t<Graph_t>>,
+    static_assert(std::is_convertible_v<v_commw_t<Graph_t>, VWorkwT<Graph_t>>,
                   "EtfScheduler requires that work and communication weights are convertible.");
 
-    static_assert(not HasEdgeWeightsV<Graph_t> || std::is_convertible_v<e_commw_t<Graph_t>, v_workw_t<Graph_t>>,
+    static_assert(not HasEdgeWeightsV<Graph_t> || std::is_convertible_v<e_commw_t<Graph_t>, VWorkwT<Graph_t>>,
                   "EtfScheduler requires that work and communication weights are convertible.");
 
   private:
-    using tv_pair = std::pair<v_workw_t<Graph_t>, vertex_idx_t<Graph_t>>;
+    using tv_pair = std::pair<VWorkwT<Graph_t>, vertex_idx_t<Graph_t>>;
 
     EtfMode mode_;    // The mode of the scheduler (ETF or BL_EST)
     bool useNuma_;    // Flag indicating whether to use NUMA-aware scheduling
@@ -77,8 +77,8 @@ class EtfScheduler : public Scheduler<GraphT> {
      * @param avg_ The average execution time of the tasks.
      * @return A vector containing the bottom level of each task.
      */
-    std::vector<v_workw_t<Graph_t>> ComputeBottomLevel(const BspInstance<GraphT> &instance) const {
-        std::vector<v_workw_t<Graph_t>> bl(instance.NumberOfVertices(), 0);
+    std::vector<VWorkwT<Graph_t>> ComputeBottomLevel(const BspInstance<GraphT> &instance) const {
+        std::vector<VWorkwT<Graph_t>> bl(instance.NumberOfVertices(), 0);
 
         const std::vector<vertex_idx_t<Graph_t>> topOrder = GetTopOrder(instance.GetComputationalDag());
         auto rIter = topOrder.rbegin();
@@ -86,12 +86,12 @@ class EtfScheduler : public Scheduler<GraphT> {
         for (; rIter != topOrder.rend(); ++r_iter) {
             const auto node = *r_iter;
 
-            v_workw_t<Graph_t> maxval = 0;
+            VWorkwT<Graph_t> maxval = 0;
 
             if constexpr (HasEdgeWeightsV<Graph_t>) {
                 for (const auto &out_edge : OutEdges(node, instance.GetComputationalDag())) {
-                    const v_workw_t<Graph_t> tmp_val = BL[Traget(out_edge, instance.GetComputationalDag())]
-                                                       + instance.GetComputationalDag().EdgeCommWeight(out_edge);
+                    const VWorkwT<Graph_t> tmp_val = BL[Traget(out_edge, instance.GetComputationalDag())]
+                                                     + instance.GetComputationalDag().EdgeCommWeight(out_edge);
 
                     if (tmp_val > maxval) {
                         maxval = tmp_val;
@@ -100,7 +100,7 @@ class EtfScheduler : public Scheduler<GraphT> {
 
             } else {
                 for (const auto &child : instance.GetComputationalDag().Children(node)) {
-                    const v_workw_t<Graph_t> tmp_val = BL[child] + instance.GetComputationalDag().VertexCommWeight(child);
+                    const VWorkwT<Graph_t> tmp_val = BL[child] + instance.GetComputationalDag().VertexCommWeight(child);
 
                     if (tmp_val > maxval) {
                         maxval = tmp_val;
@@ -150,13 +150,13 @@ class EtfScheduler : public Scheduler<GraphT> {
      * @param avg_ The average execution time of the tasks.
      * @return The earliest start time (EST) for the task on the processor.
      */
-    v_workw_t<Graph_t> GetESTforProc(const BspInstance<GraphT> &instance,
-                                     CSchedule<GraphT> &schedule,
-                                     vertex_idx_t<Graph_t> node,
-                                     unsigned proc,
-                                     const v_workw_t<Graph_t> procAvailableFrom,
-                                     std::vector<v_workw_t<Graph_t>> &send,
-                                     std::vector<v_workw_t<Graph_t>> &rec) const {
+    VWorkwT<Graph_t> GetESTforProc(const BspInstance<GraphT> &instance,
+                                   CSchedule<GraphT> &schedule,
+                                   vertex_idx_t<Graph_t> node,
+                                   unsigned proc,
+                                   const VWorkwT<Graph_t> procAvailableFrom,
+                                   std::vector<VWorkwT<Graph_t>> &send,
+                                   std::vector<VWorkwT<Graph_t>> &rec) const {
         std::vector<tv_pair> predec;
         for (const auto &pred : instance.GetComputationalDag().Parents(node)) {
             predec.emplace_back(schedule.time[pred] + instance.GetComputationalDag().VertexWorkWeight(pred), pred);
@@ -164,9 +164,9 @@ class EtfScheduler : public Scheduler<GraphT> {
 
         std::sort(predec.begin(), predec.end());
 
-        v_workw_t<Graph_t> est = procAvailableFrom;
+        VWorkwT<Graph_t> est = procAvailableFrom;
         for (const auto &next : predec) {
-            v_workw_t<Graph_t> t = schedule.time[next.second] + instance.GetComputationalDag().VertexWorkWeight(next.second);
+            VWorkwT<Graph_t> t = schedule.time[next.second] + instance.GetComputationalDag().VertexWorkWeight(next.second);
             if (schedule.proc[next.second] != proc) {
                 t = std::max(t, send[schedule.proc[next.second]]);
                 t = std::max(t, rec[proc]);
@@ -204,13 +204,13 @@ class EtfScheduler : public Scheduler<GraphT> {
     tv_pair GetBestESTforNodes(const BspInstance<GraphT> &instance,
                                CSchedule<GraphT> &schedule,
                                const std::vector<vertex_idx_t<Graph_t>> &nodeList,
-                               const std::vector<v_workw_t<Graph_t>> &procAvailableFrom,
-                               std::vector<v_workw_t<Graph_t>> &send,
-                               std::vector<v_workw_t<Graph_t>> &rec,
+                               const std::vector<VWorkwT<Graph_t>> &procAvailableFrom,
+                               std::vector<VWorkwT<Graph_t>> &send,
+                               std::vector<VWorkwT<Graph_t>> &rec,
                                unsigned &bestProc) const {
-        v_workw_t<Graph_t> bestEST = std::numeric_limits<v_workw_t<Graph_t>>::max();
+        VWorkwT<Graph_t> bestEST = std::numeric_limits<VWorkwT<Graph_t>>::max();
         vertex_idx_t<Graph_t> bestNode = 0;
-        std::vector<v_workw_t<Graph_t>> bestSend, bestRec;
+        std::vector<VWorkwT<Graph_t>> bestSend, bestRec;
         for (const auto &node : nodeList) {
             for (unsigned j = 0; j < instance.NumberOfProcessors(); ++j) {
                 if constexpr (use_memory_constraint) {
@@ -219,9 +219,9 @@ class EtfScheduler : public Scheduler<GraphT> {
                     }
                 }
 
-                std::vector<v_workw_t<Graph_t>> newSend = send;
-                std::vector<v_workw_t<Graph_t>> newRec = rec;
-                v_workw_t<Graph_t> EST = GetESTforProc(instance, schedule, node, j, procAvailableFrom[j], newSend, newRec);
+                std::vector<VWorkwT<Graph_t>> newSend = send;
+                std::vector<VWorkwT<Graph_t>> newRec = rec;
+                VWorkwT<Graph_t> EST = GetESTforProc(instance, schedule, node, j, procAvailableFrom[j], newSend, newRec);
                 if (EST < bestEST) {
                     bestEST = EST;
                     bestProc = j;
@@ -270,14 +270,14 @@ class EtfScheduler : public Scheduler<GraphT> {
 
         std::vector<vertex_idx_t<Graph_t>> predecProcessed(instance.NumberOfVertices(), 0);
 
-        std::vector<v_workw_t<Graph_t>> finishTimes(instance.NumberOfProcessors(), 0), send(instance.NumberOfProcessors(), 0),
+        std::vector<VWorkwT<Graph_t>> finishTimes(instance.NumberOfProcessors(), 0), send(instance.NumberOfProcessors(), 0),
             rec(instance.NumberOfProcessors(), 0);
 
-        std::vector<v_workw_t<Graph_t>> bl;
+        std::vector<VWorkwT<Graph_t>> bl;
         if (mode_ == BL_EST) {
             BL = ComputeBottomLevel(instance);
         } else {
-            BL = std::vector<v_workw_t<Graph_t>>(instance.NumberOfVertices(), 0);
+            BL = std::vector<VWorkwT<Graph_t>>(instance.NumberOfVertices(), 0);
         }
 
         std::set<tv_pair> ready;

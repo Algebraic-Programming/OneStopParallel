@@ -56,7 +56,7 @@ class GreedyChildren : public Scheduler<GraphT> {
 
         while (!next.empty()) {
             std::unordered_set<VertexType> nodesAssignedThisSuperstep;
-            std::vector<v_workw_t<Graph_t>> processorWeights(instance.NumberOfProcessors(), 0);
+            std::vector<VWorkwT<Graph_t>> processorWeights(instance.NumberOfProcessors(), 0);
 
             bool fewSources = next.size() < instance.NumberOfProcessors() ? true : false;
             bool nodeAdded = true;
@@ -93,7 +93,7 @@ class GreedyChildren : public Scheduler<GraphT> {
                     if (processorSet) {
                         sched.setAssignedProcessor(node, processorToBeAllocated);
                     } else {
-                        v_workw_t<Graph_t> minWeight = std::numeric_limits<v_workw_t<Graph_t>>::max();
+                        VWorkwT<Graph_t> minWeight = std::numeric_limits<VWorkwT<Graph_t>>::max();
                         unsigned bestProc = std::numeric_limits<unsigned>::max();
                         for (unsigned p = 0; p < instance.NumberOfProcessors(); ++p) {
                             if (instance.isCompatible(node, p)) {
