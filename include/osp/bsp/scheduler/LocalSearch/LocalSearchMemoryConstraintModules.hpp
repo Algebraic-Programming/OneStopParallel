@@ -37,25 +37,25 @@ struct IsLocalSearchMemoryConstraint : std::false_type {};
 template <typename T>
 struct IsLocalSearchMemoryConstraint<
     T,
-    std::void_t<decltype(std::declval<T>().initialize(std::declval<SetSchedule<typename T::Graph_impl_t>>(),
-                                                      std::declval<VectorSchedule<typename T::Graph_impl_t>>())),
-                decltype(std::declval<T>().apply_move(std::declval<VertexIdxT<typename T::Graph_impl_t>>(),
-                                                      std::declval<unsigned>(),
-                                                      std::declval<unsigned>(),
-                                                      std::declval<unsigned>(),
-                                                      std::declval<unsigned>())),
-                decltype(std::declval<T>().compute_memory_datastructure(std::declval<unsigned>(), std::declval<unsigned>())),
-                decltype(std::declval<T>().swap_steps(std::declval<unsigned>(), std::declval<unsigned>())),
-                decltype(std::declval<T>().reset_superstep(std::declval<unsigned>())),
-                decltype(std::declval<T>().override_superstep(
+    std::void_t<decltype(std::declval<T>().Initialize(std::declval<SetSchedule<typename T::GraphImplT>>(),
+                                                      std::declval<VectorSchedule<typename T::GraphImplT>>())),
+                decltype(std::declval<T>().ApplyMove(std::declval<VertexIdxT<typename T::GraphImplT>>(),
+                                                     std::declval<unsigned>(),
+                                                     std::declval<unsigned>(),
+                                                     std::declval<unsigned>(),
+                                                     std::declval<unsigned>())),
+                decltype(std::declval<T>().ComputeMemoryDatastructure(std::declval<unsigned>(), std::declval<unsigned>())),
+                decltype(std::declval<T>().SwapSteps(std::declval<unsigned>(), std::declval<unsigned>())),
+                decltype(std::declval<T>().ResetSuperstep(std::declval<unsigned>())),
+                decltype(std::declval<T>().OverrideSuperstep(
                     std::declval<unsigned>(), std::declval<unsigned>(), std::declval<unsigned>(), std::declval<unsigned>())),
-                decltype(std::declval<T>().can_move(
-                    std::declval<VertexIdxT<typename T::Graph_impl_t>>(), std::declval<unsigned>(), std::declval<unsigned>())),
-                decltype(std::declval<T>().clear()),
+                decltype(std::declval<T>().CanMove(
+                    std::declval<VertexIdxT<typename T::GraphImplT>>(), std::declval<unsigned>(), std::declval<unsigned>())),
+                decltype(std::declval<T>().Clear()),
                 decltype(T())>> : std::true_type {};
 
 template <typename T>
-inline constexpr bool isLocalSearchMemoryConstraintV = IsLocalSearchMemoryConstraint<T>::value;
+inline constexpr bool IsLocalSearchMemoryConstraintV = IsLocalSearchMemoryConstraint<T>::value;
 
 /**
  * @brief The default memory constraint type, no memory constraints apply.
