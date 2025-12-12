@@ -27,6 +27,8 @@ CheckOptions:
 
   - key:             readability-identifier-naming.ClassMethodCase
     value:           CamelCase
+  - key:             readability-identifier-naming.ClassMethodIgnoredRegexp
+    value:           "^(begin|cbegin|end|cend|rbegin|crbegin|rend|crend|size|empty)$"
 
   - key:             readability-identifier-naming.EnumCase
     value:           CamelCase
@@ -59,6 +61,8 @@ CheckOptions:
 
   - key:             readability-identifier-naming.MethodCase
     value:           CamelCase
+  - key:             readability-identifier-naming.MethodIgnoredRegexp
+    value:           "^(begin|cbegin|end|cend|rbegin|crbegin|rend|crend|size|empty)$"
 
   - key:             readability-identifier-naming.NamespaceCase
     value:           lower_case
@@ -75,8 +79,11 @@ CheckOptions:
   - key:             readability-identifier-naming.TemplateParameterCase
     value:           CamelCase
 
+  # Includes the fix for std::iterator_traits compatibility
   - key:             readability-identifier-naming.TypeAliasCase
     value:           CamelCase
+  - key:             readability-identifier-naming.TypeAliasIgnoredRegexp
+    value:           "^(iterator_category|difference_type|value_type|pointer|reference|const_pointer|const_reference)$"
 
   - key:             readability-identifier-naming.TypedefCase
     value:           CamelCase
