@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(TestCostModelsSimpleDag) {
     schedule.SetAssignedSuperstep(4, 3);
     schedule.updateNumberOfSupersteps();
 
-    BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+    BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
     BOOST_CHECK_EQUAL(schedule.NumberOfSupersteps(), 4);
 
     // Work cost (BSP model) = sum of max work per superstep across processors

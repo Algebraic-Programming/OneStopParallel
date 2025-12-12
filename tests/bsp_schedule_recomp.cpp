@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecompTest) {
 
     BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
     BOOST_CHECK_EQUAL(&schedule.GetInstance(), &instance);
-    BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+    BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
 
     BspScheduleCS scheduleCS(schedule);
 

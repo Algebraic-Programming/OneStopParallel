@@ -101,7 +101,7 @@ limitations under the License.
 
 //             BOOST_CHECK_EQUAL(SUCCESS, result0.first);
 
-//             BOOST_CHECK(result0.second.satisfiesPrecedenceConstraints());
+//             BOOST_CHECK(result0.second.SatisfiesPrecedenceConstraints());
 //             BOOST_CHECK(result0.second.hasValidCommSchedule());
 
 //             BalDMixR test1;
@@ -113,7 +113,7 @@ limitations under the License.
 
 //             BOOST_CHECK_EQUAL(SUCCESS, result1.first);
 
-//             BOOST_CHECK(result1.second.satisfiesPrecedenceConstraints());
+//             BOOST_CHECK(result1.second.SatisfiesPrecedenceConstraints());
 //             BOOST_CHECK(result1.second.hasValidCommSchedule());
 
 //             HDagg_simple test2;
@@ -125,7 +125,7 @@ limitations under the License.
 
 //             BOOST_CHECK_EQUAL(SUCCESS, result2.first);
 
-//             BOOST_CHECK(result2.second.satisfiesPrecedenceConstraints());
+//             BOOST_CHECK(result2.second.SatisfiesPrecedenceConstraints());
 //             BOOST_CHECK(result2.second.hasValidCommSchedule());
 
 //         }

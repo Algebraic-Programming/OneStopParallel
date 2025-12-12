@@ -472,7 +472,7 @@ class IsomorphicSubgraphScheduler {
 
             if constexpr (verbose_) {
                 std::cout << "  Schedule satisfies precedence constraints: ";
-                std::cout << bspSchedule.satisfiesPrecedenceConstraints() << std::endl;
+                std::cout << bspSchedule.SatisfiesPrecedenceConstraints() << std::endl;
                 std::cout << "  Schedule satisfies node type constraints: ";
                 std::cout << bspSchedule.satisfiesNodeTypeConstraints() << std::endl;
             }

@@ -619,7 +619,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
             }
         }
 
-        assert(schedule.satisfiesPrecedenceConstraints());
+        assert(schedule.SatisfiesPrecedenceConstraints());
         // schedule.setAutoCommunicationSchedule();
 
         return ReturnStatus::OSP_SUCCESS;

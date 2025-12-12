@@ -2006,7 +2006,7 @@ BspSchedule<GraphT> PebblingSchedule<GraphT>::ConvertToBsp() const {
     }
 
     BspSchedule<GraphT> schedule(*instance_, nodeToProc, nodeToSupstep);
-    if (schedule.satisfiesPrecedenceConstraints() && schedule.satisfiesNodeTypeConstraints()) {
+    if (schedule.SatisfiesPrecedenceConstraints() && schedule.satisfiesNodeTypeConstraints()) {
         schedule.setAutoCommunicationSchedule();
         return schedule;
     } else {

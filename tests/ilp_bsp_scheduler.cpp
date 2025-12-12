@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(TestTotal) {
 
     const auto resultTo = scheduler_to.computeSchedule(schedule_to);
     BOOST_CHECK(result_to == ReturnStatus::OSP_SUCCESS || result_to == ReturnStatus::BEST_FOUND);
-    BOOST_CHECK(scheduleTo.satisfiesPrecedenceConstraints());
+    BOOST_CHECK(scheduleTo.SatisfiesPrecedenceConstraints());
 
     BspSchedule<graph> schedule(instance);
 
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(TestTotal) {
     const auto result = scheduler.computeSchedule(schedule);
 
     BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
-    BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+    BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
 };
 
 BOOST_AUTO_TEST_CASE(TestFull) {
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
 
     const auto resultTo = scheduler_to.computeScheduleCS(schedule_to);
     BOOST_CHECK_EQUAL(ReturnStatus::BEST_FOUND, result_to);
-    BOOST_CHECK(scheduleTo.satisfiesPrecedenceConstraints());
+    BOOST_CHECK(scheduleTo.SatisfiesPrecedenceConstraints());
 
     CoptFullScheduler<graph> schedulerRecomp;
     BspScheduleRecomp<graph> scheduleRecomp(instance);
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
     BspSchedule<graph> scheduleInit(instance);
     GreedyBspScheduler<graph> greedy;
     greedy.computeSchedule(schedule_init);
-    BOOST_CHECK(scheduleInit.satisfiesPrecedenceConstraints());
+    BOOST_CHECK(scheduleInit.SatisfiesPrecedenceConstraints());
     BspScheduleCS<graph> scheduleInitCs(scheduleInit);
     BOOST_CHECK(scheduleInitCs.hasValidCommSchedule());
 
@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
     schedulerInit.setInitialSolutionFromBspSchedule(schedule_init_cs);
     const auto resultInit = scheduler_init.computeScheduleCS(schedule_improved);
     BOOST_CHECK_EQUAL(ReturnStatus::BEST_FOUND, result_init);
-    BOOST_CHECK(scheduleImproved.satisfiesPrecedenceConstraints());
+    BOOST_CHECK(scheduleImproved.SatisfiesPrecedenceConstraints());
     BOOST_CHECK(scheduleImproved.hasValidCommSchedule());
 
     // initialize with standard schedule, return recomputing schedule
@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
 
     BspSchedule<graph> scheduleTyped(instanceTyped);
     greedy.computeSchedule(schedule_typed);
-    BOOST_CHECK(scheduleTyped.satisfiesPrecedenceConstraints());
+    BOOST_CHECK(scheduleTyped.SatisfiesPrecedenceConstraints());
     BOOST_CHECK(scheduleTyped.satisfiesNodeTypeConstraints());
 
     CoptFullScheduler<graph> schedulerTyped;
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
     schedulerTyped.setInitialSolutionFromBspSchedule(schedule_typed_cs);
     const auto resultTyped = scheduler_typed.computeSchedule(schedule_typed);
     BOOST_CHECK_EQUAL(ReturnStatus::BEST_FOUND, result_typed);
-    BOOST_CHECK(scheduleTyped.satisfiesPrecedenceConstraints());
+    BOOST_CHECK(scheduleTyped.SatisfiesPrecedenceConstraints());
     BOOST_CHECK(scheduleTyped.satisfiesNodeTypeConstraints());
 
     // with MaxBSP schedule
@@ -175,13 +175,13 @@ BOOST_AUTO_TEST_CASE(TestFull) {
     schedulerMax.setTimeLimitSeconds(10);
     const auto resultMax = scheduler_max.computeMaxBspScheduleCS(schedule_max);
     BOOST_CHECK(result_max == ReturnStatus::OSP_SUCCESS || result_max == ReturnStatus::BEST_FOUND);
-    BOOST_CHECK(scheduleMax.satisfiesPrecedenceConstraints());
+    BOOST_CHECK(scheduleMax.SatisfiesPrecedenceConstraints());
     BOOST_CHECK(scheduleMax.hasValidCommSchedule());
 
     schedulerMax.setInitialSolutionFromBspSchedule(schedule_max);
     const auto resultMax2 = scheduler_max.computeMaxBspScheduleCS(schedule_max);
     BOOST_CHECK(result_max2 == ReturnStatus::OSP_SUCCESS || result_max2 == ReturnStatus::BEST_FOUND);
-    BOOST_CHECK(scheduleMax.satisfiesPrecedenceConstraints());
+    BOOST_CHECK(scheduleMax.SatisfiesPrecedenceConstraints());
     BOOST_CHECK(scheduleMax.hasValidCommSchedule());
 
     // longer time
@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
     const auto result = scheduler.computeScheduleCS(schedule);
 
     BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
-    BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+    BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
 };
 
 BOOST_AUTO_TEST_CASE(TestCs) {
@@ -219,7 +219,7 @@ BOOST_AUTO_TEST_CASE(TestCs) {
     BspSchedule<graph> schedule(instance);
     GreedyBspScheduler<graph> greedy;
     greedy.computeSchedule(schedule);
-    BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+    BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
     BspScheduleCS<graph> scheduleCs(schedule);
     BOOST_CHECK(scheduleCs.hasValidCommSchedule());
 
@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_CASE(TestCs) {
     const auto after = schedule_cs.compute_cs_communication_costs();
     std::cout << before << " --cs--> " << after << std::endl;
 
-    BOOST_CHECK(scheduleCs.satisfiesPrecedenceConstraints());
+    BOOST_CHECK(scheduleCs.SatisfiesPrecedenceConstraints());
     BOOST_CHECK(scheduleCs.hasValidCommSchedule());
     BOOST_CHECK(before >= after);
 };
@@ -260,7 +260,7 @@ BOOST_AUTO_TEST_CASE(TestPartial) {
     BspSchedule<graph> scheduleInit(instance);
     GreedyBspScheduler<graph> greedy;
     greedy.computeSchedule(schedule_init);
-    BOOST_CHECK(scheduleInit.satisfiesPrecedenceConstraints());
+    BOOST_CHECK(scheduleInit.SatisfiesPrecedenceConstraints());
     BspScheduleCS<graph> schedule(scheduleInit);
     BOOST_CHECK(schedule.hasValidCommSchedule());
 
@@ -270,14 +270,14 @@ BOOST_AUTO_TEST_CASE(TestPartial) {
     auto costBefore = schedule.computeCosts();
     auto result = scheduler.improveSchedule(schedule);
     BOOST_CHECK(result == ReturnStatus::OSP_SUCCESS || result == ReturnStatus::BEST_FOUND);
-    BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+    BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
     BOOST_CHECK(schedule.hasValidCommSchedule());
     auto costMid = schedule.computeCosts();
     BOOST_CHECK(costMid <= cost_before);
     scheduler.setStartAndEndSuperstep(2, 5);
     result = scheduler.improveSchedule(schedule);
     BOOST_CHECK(result == ReturnStatus::OSP_SUCCESS || result == ReturnStatus::BEST_FOUND);
-    BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+    BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
     BOOST_CHECK(schedule.hasValidCommSchedule());
     auto costAfter = schedule.computeCosts();
     BOOST_CHECK(costAfter <= cost_mid);

@@ -54,26 +54,26 @@ BOOST_AUTO_TEST_CASE(HillClimbing) {
     GreedyBspScheduler<Graph> greedy;
     BspSchedule<Graph> bspInitial(instance);
     BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, greedy.computeSchedule(bspInitial));
-    BOOST_CHECK_EQUAL(bspInitial.satisfiesPrecedenceConstraints(), true);
+    BOOST_CHECK_EQUAL(bspInitial.SatisfiesPrecedenceConstraints(), true);
 
     HillClimbingScheduler<Graph> scheduler;
     BspSchedule<Graph> schedule1 = bspInitial;
     scheduler.improveSchedule(schedule1);
-    BOOST_CHECK_EQUAL(schedule1.satisfiesPrecedenceConstraints(), true);
+    BOOST_CHECK_EQUAL(schedule1.SatisfiesPrecedenceConstraints(), true);
 
     scheduler.setSteepestAscend(true);
     BspSchedule<Graph> schedule2 = bspInitial;
     scheduler.improveSchedule(schedule2);
-    BOOST_CHECK_EQUAL(schedule2.satisfiesPrecedenceConstraints(), true);
+    BOOST_CHECK_EQUAL(schedule2.SatisfiesPrecedenceConstraints(), true);
 
     BspSchedule<Graph> schedule3 = bspInitial;
     scheduler.setTimeLimitSeconds(1U);
     scheduler.improveScheduleWithTimeLimit(schedule3);
-    BOOST_CHECK_EQUAL(schedule3.satisfiesPrecedenceConstraints(), true);
+    BOOST_CHECK_EQUAL(schedule3.SatisfiesPrecedenceConstraints(), true);
 
     BspSchedule<Graph> schedule4 = bspInitial;
     scheduler.improveScheduleWithStepLimit(schedule4, 5);
-    BOOST_CHECK_EQUAL(schedule4.satisfiesPrecedenceConstraints(), true);
+    BOOST_CHECK_EQUAL(schedule4.SatisfiesPrecedenceConstraints(), true);
 }
 
 BOOST_AUTO_TEST_CASE(HillClimbingForCommSchedule) {
@@ -100,11 +100,11 @@ BOOST_AUTO_TEST_CASE(HillClimbingForCommSchedule) {
     GreedyBspScheduler<Graph> greedy;
     BspSchedule<Graph> initial(instance);
     BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, greedy.computeSchedule(initial));
-    BOOST_CHECK_EQUAL(initial.satisfiesPrecedenceConstraints(), true);
+    BOOST_CHECK_EQUAL(initial.SatisfiesPrecedenceConstraints(), true);
 
     HillClimbingScheduler<Graph> hc;
     hc.improveSchedule(initial);
-    BOOST_CHECK_EQUAL(initial.satisfiesPrecedenceConstraints(), true);
+    BOOST_CHECK_EQUAL(initial.SatisfiesPrecedenceConstraints(), true);
 
     BspSchedule<Graph> schedule = initial;
     BspScheduleCS<Graph> initialCs(std::move(initial));

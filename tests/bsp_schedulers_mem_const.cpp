@@ -103,7 +103,7 @@ void RunTestLocalMemory(Scheduler<GraphT> *testScheduler) {
                 const auto result = testScheduler->computeSchedule(schedule);
 
                 BOOST_CHECK(ReturnStatus::OSP_SUCCESS == result || ReturnStatus::BEST_FOUND == result);
-                BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+                BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
                 BOOST_CHECK(schedule.satisfiesMemoryConstraints());
             }
         }
@@ -160,7 +160,7 @@ void RunTestPersistentTransientMemory(Scheduler<GraphT> *testScheduler) {
                 const auto result = testScheduler->computeSchedule(schedule);
 
                 BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
-                BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+                BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
                 BOOST_CHECK(schedule.satisfiesMemoryConstraints());
             }
         }
@@ -217,7 +217,7 @@ void RunTestLocalInOutMemory(Scheduler<GraphT> *testScheduler) {
                 const auto result = testScheduler->computeSchedule(schedule);
 
                 BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
-                BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+                BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
                 BOOST_CHECK(schedule.satisfiesMemoryConstraints());
             }
         }
@@ -274,7 +274,7 @@ void RunTestLocalIncEdgesMemory(Scheduler<GraphT> *testScheduler) {
                 const auto result = testScheduler->computeSchedule(schedule);
 
                 BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
-                BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+                BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
                 BOOST_CHECK(schedule.satisfiesMemoryConstraints());
             }
         }
@@ -331,7 +331,7 @@ void RunTestLocalIncEdges2Memory(Scheduler<GraphT> *testScheduler) {
                 const auto result = testScheduler->computeSchedule(schedule);
 
                 BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
-                BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+                BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
                 BOOST_CHECK(schedule.satisfiesMemoryConstraints());
             }
         }

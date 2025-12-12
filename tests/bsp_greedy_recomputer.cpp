@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(TestRecomputer) {
     scheduleInit1.SetAssignedSuperstep(1, 1);
     scheduleInit1.SetAssignedProcessor(2, 1);
     scheduleInit1.SetAssignedSuperstep(2, 1);
-    BOOST_CHECK(scheduleInit1.satisfiesPrecedenceConstraints());
+    BOOST_CHECK(scheduleInit1.SatisfiesPrecedenceConstraints());
     BspScheduleCS<Graph> scheduleInitCs1(scheduleInit1);
     BOOST_CHECK(scheduleInitCs1.hasValidCommSchedule());
 
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(TestRecomputer) {
     BspSchedule<Graph> scheduleInit2(instance2);
     BspLocking<Graph> greedy;
     greedy.computeSchedule(scheduleInit2);
-    BOOST_CHECK(scheduleInit2.satisfiesPrecedenceConstraints());
+    BOOST_CHECK(scheduleInit2.SatisfiesPrecedenceConstraints());
     BspScheduleCS<Graph> scheduleInitCs2(scheduleInit2);
     BOOST_CHECK(scheduleInitCs2.hasValidCommSchedule());
 

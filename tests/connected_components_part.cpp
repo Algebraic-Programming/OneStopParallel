@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(ConnectedComponentPartTest) {
     auto status = scheduler.computeSchedule(schedule);
 
     BOOST_CHECK_EQUAL(status, ReturnStatus::OSP_SUCCESS);
-    BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+    BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
 
     BOOST_CHECK(partitioner.get_sub_dags().size() == 1);
     BOOST_CHECK(partitioner.get_sub_dags()[0].NumVertices() == 8);
@@ -119,5 +119,5 @@ BOOST_AUTO_TEST_CASE(ConnectedComponentPartTest) {
     auto statusNew = scheduler.computeSchedule(scheduleNew);
 
     BOOST_CHECK_EQUAL(statusNew, ReturnStatus::OSP_SUCCESS);
-    BOOST_CHECK(scheduleNew.satisfiesPrecedenceConstraints());
+    BOOST_CHECK(scheduleNew.SatisfiesPrecedenceConstraints());
 }

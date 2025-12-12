@@ -76,7 +76,7 @@ void RunTest(Scheduler<GraphT> *testScheduler) {
             const auto result = testScheduler->computeSchedule(schedule);
 
             BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
-            BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+            BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
         }
     }
 }
@@ -120,7 +120,7 @@ void RunTestMaxBsp(MaxBspScheduler<GraphT> *testScheduler) {
             const auto result = testScheduler->computeSchedule(schedule);
 
             BOOST_CHECK_EQUAL(result, ReturnStatus::OSP_SUCCESS);
-            BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+            BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
         }
     }
 }

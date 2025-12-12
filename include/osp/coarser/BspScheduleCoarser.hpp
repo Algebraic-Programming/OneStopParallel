@@ -59,7 +59,7 @@ class BspScheduleCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> 
         using VertexType_out = VertexIdxT<GraphTOut>;
 
         assert(&dagIn == &schedule_->GetInstance().GetComputationalDag());
-        assert(schedule_->satisfiesPrecedenceConstraints());
+        assert(schedule_->SatisfiesPrecedenceConstraints());
 
         SetSchedule<GraphTIn> setSchedule(*schedule_);
         std::vector<VertexType_out> reverseVertexMap(dagIn.NumVertices(), 0);

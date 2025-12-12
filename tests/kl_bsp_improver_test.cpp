@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
 
 //         BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
 //         BOOST_CHECK_EQUAL(&schedule.GetInstance(), &instance);
-//         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+//         BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
 
 //         kl_total_lambda_comm_improver<graph, no_local_search_memory_constraint, 1> kl_total_lambda;
 //         auto start_time = std::chrono::high_resolution_clock::now();
@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
 //                   << schedule.NumberOfSupersteps() << " number of supersteps" << std::endl;
 
 //         BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
-//         BOOST_CHECK_EQUAL(schedule.satisfiesPrecedenceConstraints(), true);
+//         BOOST_CHECK_EQUAL(schedule.SatisfiesPrecedenceConstraints(), true);
 
 //         kl_bsp_comm_improver_mt<graph, no_local_search_memory_constraint, 1> kl(42);
 //         kl.setTimeQualityParameter(2.0);
@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
 //                   << schedule.NumberOfSupersteps() << " number of supersteps" << std::endl;
 
 //         BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
-//         BOOST_CHECK_EQUAL(schedule.satisfiesPrecedenceConstraints(), true);
+//         BOOST_CHECK_EQUAL(schedule.SatisfiesPrecedenceConstraints(), true);
 
 //         BspScheduleCS<graph> schedule_cs(schedule);
 
@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
 //                   << " with " << schedule_cs.NumberOfSupersteps() << " number of supersteps" << std::endl;
 
 //         BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
-//         BOOST_CHECK_EQUAL(schedule.satisfiesPrecedenceConstraints(), true);
+//         BOOST_CHECK_EQUAL(schedule.SatisfiesPrecedenceConstraints(), true);
 
 //         kl_total_lambda.improveSchedule(schedule_2);
 
@@ -228,7 +228,7 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
 //                   << schedule_2.NumberOfSupersteps() << " number of supersteps" << std::endl;
 
 //         BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
-//         BOOST_CHECK_EQUAL(schedule_2.satisfiesPrecedenceConstraints(), true);
+//         BOOST_CHECK_EQUAL(schedule_2.SatisfiesPrecedenceConstraints(), true);
 
 //         BspScheduleCS<graph> schedule_cs_2(schedule_2);
 
@@ -242,6 +242,6 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
 //                   << " with " << schedule_cs_2.NumberOfSupersteps() << " number of supersteps" << std::endl;
 
 //         BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
-//         BOOST_CHECK_EQUAL(schedule_cs_2.satisfiesPrecedenceConstraints(), true);
+//         BOOST_CHECK_EQUAL(schedule_cs_2.SatisfiesPrecedenceConstraints(), true);
 //     }
 // }

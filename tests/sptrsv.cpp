@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(TestEigenSptrsv) {
 
     BOOST_CHECK_EQUAL(result, ReturnStatus::OSP_SUCCESS);
     BOOST_CHECK_EQUAL(&schedule.GetInstance(), &instance);
-    BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+    BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
 
     BspScheduleCS<SparseMatrixImp<int32_t>> scheduleCs(instance);
     auto resultCs = scheduler.computeScheduleCS(scheduleCs);
