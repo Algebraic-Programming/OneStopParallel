@@ -26,8 +26,8 @@ limitations under the License.
 namespace osp {
 namespace file_writer {
 
-template <typename Graph_t>
-void write_txt(std::ostream &os, const PebblingSchedule<Graph_t> &schedule) {
+template <typename GraphT>
+void WriteTxt(std::ostream &os, const PebblingSchedule<GraphT> &schedule) {
     using vertex_idx = vertex_idx_t<Graph_t>;
 
     os << "%% PebblingSchedule for " << schedule.getInstance().numberOfProcessors() << " processors and "
@@ -64,8 +64,8 @@ void write_txt(std::ostream &os, const PebblingSchedule<Graph_t> &schedule) {
     }
 }
 
-template <typename Graph_t>
-void write_txt(const std::string &filename, const PebblingSchedule<Graph_t> &schedule) {
+template <typename GraphT>
+void WriteTxt(const std::string &filename, const PebblingSchedule<GraphT> &schedule) {
     std::ofstream os(filename);
     write_txt(os, schedule);
 }

@@ -29,43 +29,43 @@ namespace osp {
  * @struct TotalLambdaCommunicationCost
  * @brief Implements the total lambda communication cost model.
  */
-template <typename Graph_t>
+template <typename GraphT>
 struct TotalLambdaCommunicationCost {
-    using cost_type = double;
+    using CostType = double;
 
-    cost_type operator()(const BspSchedule<Graph_t> &schedule) const {
+    CostType operator()(const BspSchedule<GraphT> &schedule) const {
         const auto &instance = schedule.getInstance();
-        const auto &node_to_processor_assignment = schedule.assignedProcessors();
+        const auto &nodeToProcessorAssignment = schedule.assignedProcessors();
 
-        v_commw_t<Graph_t> comm_costs = 0;
-        const double comm_multiplier = 1.0 / instance.numberOfProcessors();
+        v_commw_t<Graph_t> commCosts = 0;
+        const double commMultiplier = 1.0 / instance.numberOfProcessors();
 
         for (const auto &v : instance.vertices()) {
             if (instance.getComputationalDag().out_degree(v) == 0) {
                 continue;
             }
 
-            std::unordered_set<unsigned> target_procs;
+            std::unordered_set<unsigned> targetProcs;
             for (const auto &target : instance.getComputationalDag().children(v)) {
-                target_procs.insert(node_to_processor_assignment[target]);
+                targetProcs.insert(nodeToProcessorAssignment[target]);
             }
 
-            const unsigned source_proc = node_to_processor_assignment[v];
-            const auto v_comm_cost = instance.getComputationalDag().vertex_comm_weight(v);
+            const unsigned sourceProc = nodeToProcessorAssignment[v];
+            const auto vCommCost = instance.getComputationalDag().vertex_comm_weight(v);
 
-            for (const auto &target_proc : target_procs) {
-                comm_costs += v_comm_cost * instance.sendCosts(source_proc, target_proc);
+            for (const auto &targetProc : targetProcs) {
+                commCosts += vCommCost * instance.sendCosts(sourceProc, targetProc);
             }
         }
 
-        const unsigned number_of_supersteps = schedule.numberOfSupersteps();
+        const unsigned numberOfSupersteps = schedule.numberOfSupersteps();
 
-        auto comm_cost = comm_costs * comm_multiplier * static_cast<double>(instance.communicationCosts());
-        auto work_cost = cost_helpers::compute_work_costs(schedule);
-        auto sync_cost = static_cast<v_commw_t<Graph_t>>(number_of_supersteps > 1 ? number_of_supersteps - 1 : 0)
-                         * instance.synchronisationCosts();
+        auto commCost = comm_costs * commMultiplier * static_cast<double>(instance.communicationCosts());
+        auto workCost = cost_helpers::compute_work_costs(schedule);
+        auto syncCost = static_cast<v_commw_t<Graph_t>>(numberOfSupersteps > 1 ? numberOfSupersteps - 1 : 0)
+                        * instance.synchronisationCosts();
 
-        return comm_cost + static_cast<double>(work_cost) + static_cast<double>(sync_cost);
+        return comm_cost + static_cast<double>(work_cost) + static_cast<double>(syncCost);
     }
 };
 

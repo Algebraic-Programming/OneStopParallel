@@ -39,8 +39,8 @@ BOOST_AUTO_TEST_CASE(SubGraphCompactSparseGraph) {
         {3,  7},
         {1,  2}
     });
-    Compact_Sparse_Graph<true, true, true, true, true> graph(11, edges);
-    Compact_Sparse_Graph<true, true, true, true, true> subGraph;
+    CompactSparseGraph<true, true, true, true, true> graph(11, edges);
+    CompactSparseGraph<true, true, true, true, true> subGraph;
 
     unsigned cntr = 0;
     for (const auto &vert : graph.vertices()) {
@@ -52,8 +52,8 @@ BOOST_AUTO_TEST_CASE(SubGraphCompactSparseGraph) {
 
     const std::vector<vertex_idx_t<Compact_Sparse_Graph<true, true, true, true, true>>> selectVert({2, 3, 10, 6, 7});
     const auto vertCorrespondence = create_induced_subgraph_map(graph, subGraph, selectVert);
-    BOOST_CHECK_EQUAL(subGraph.num_vertices(), selectVert.size());
-    BOOST_CHECK_EQUAL(subGraph.num_edges(), 4);
+    BOOST_CHECK_EQUAL(subGraph.NumVertices(), selectVert.size());
+    BOOST_CHECK_EQUAL(subGraph.NumEdges(), 4);
 
     for (const auto &vert : selectVert) {
         BOOST_CHECK_LT(vertCorrespondence.at(vert), selectVert.size());
@@ -74,10 +74,10 @@ BOOST_AUTO_TEST_CASE(SubGraphCompactSparseGraph) {
 }
 
 BOOST_AUTO_TEST_CASE(SubGraphDagVectorImpl) {
-    using v_impl = cdag_vertex_impl<std::size_t, unsigned, unsigned, unsigned, unsigned>;
+    using VImpl = cdag_vertex_impl<std::size_t, unsigned, unsigned, unsigned, unsigned>;
 
-    computational_dag_vector_impl<v_impl> graph;
-    computational_dag_vector_impl<v_impl> subGraph;
+    computational_dag_vector_impl<VImpl> graph;
+    computational_dag_vector_impl<VImpl> subGraph;
 
     const std::size_t numVert = 11;
     const std::vector<std::pair<std::size_t, std::size_t>> edges({
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(SubGraphDagVectorImpl) {
         graph.add_edge(src, tgt);
     }
 
-    const std::vector<vertex_idx_t<computational_dag_vector_impl<v_impl>>> selectVert({2, 3, 10, 6, 7});
+    const std::vector<vertex_idx_t<computational_dag_vector_impl<VImpl>>> selectVert({2, 3, 10, 6, 7});
     const auto vertCorrespondence = create_induced_subgraph_map(graph, subGraph, selectVert);
     BOOST_CHECK_EQUAL(subGraph.num_vertices(), selectVert.size());
     BOOST_CHECK_EQUAL(subGraph.num_edges(), 4);

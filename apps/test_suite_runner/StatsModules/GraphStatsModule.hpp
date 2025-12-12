@@ -32,10 +32,10 @@ template <typename TargetObjectType>
 class GraphStatsModule : public IStatisticModule<TargetObjectType> {
   public:
   private:
-    const std::vector<std::string> metric_headers = {"num_vertices", "num_edges", "avg_wavefront_size"};
+    const std::vector<std::string> metricHeaders_ = {"num_vertices", "num_edges", "avg_wavefront_size"};
 
   public:
-    std::vector<std::string> get_metric_headers() const override { return metric_headers; }
+    std::vector<std::string> get_metric_headers() const override { return metricHeaders_; }
 
     std::map<std::string, std::string> record_statistics(const TargetObjectType &schedule,
                                                          std::ofstream & /*log_stream*/) const override {

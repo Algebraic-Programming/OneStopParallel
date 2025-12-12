@@ -48,13 +48,13 @@ limitations under the License.
 
 using namespace osp;
 
-std::vector<std::string> test_architectures() { return {"data/machine_params/p3.arch"}; }
+std::vector<std::string> TestArchitectures() { return {"data/machine_params/p3.arch"}; }
 
-template <typename Graph_t>
-void run_test(Scheduler<Graph_t> *test_scheduler) {
+template <typename GraphT>
+void RunTest(Scheduler<GraphT> *testScheduler) {
     // static_assert(std::is_base_of<Scheduler, T>::value, "Class is not a scheduler!");
-    std::vector<std::string> filenames_graph = tiny_spaa_graphs();
-    std::vector<std::string> filenames_architectures = test_architectures();
+    std::vector<std::string> filenamesGraph = TinySpaaGraphs();
+    std::vector<std::string> filenamesArchitectures = TestArchitectures();
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -64,30 +64,30 @@ void run_test(Scheduler<Graph_t> *test_scheduler) {
         std::cout << cwd << std::endl;
     }
 
-    for (auto &filename_graph : filenames_graph) {
-        for (auto &filename_machine : filenames_architectures) {
-            std::string name_graph = filename_graph.substr(filename_graph.find_last_of("/\\") + 1);
-            name_graph = name_graph.substr(0, name_graph.find_last_of("."));
-            std::string name_machine = filename_machine.substr(filename_machine.find_last_of("/\\") + 1);
-            name_machine = name_machine.substr(0, name_machine.rfind("."));
+    for (auto &filenameGraph : filenamesGraph) {
+        for (auto &filenameMachine : filenamesArchitectures) {
+            std::string nameGraph = filenameGraph.substr(filenameGraph.find_last_of("/\\") + 1);
+            nameGraph = nameGraph.substr(0, nameGraph.find_last_of("."));
+            std::string nameMachine = filenameMachine.substr(filenameMachine.find_last_of("/\\") + 1);
+            nameMachine = nameMachine.substr(0, nameMachine.rfind("."));
 
-            std::cout << std::endl << "Scheduler: " << test_scheduler->getScheduleName() << std::endl;
-            std::cout << "Graph: " << name_graph << std::endl;
-            std::cout << "Architecture: " << name_machine << std::endl;
+            std::cout << std::endl << "Scheduler: " << testScheduler->getScheduleName() << std::endl;
+            std::cout << "Graph: " << nameGraph << std::endl;
+            std::cout << "Architecture: " << nameMachine << std::endl;
 
-            BspInstance<Graph_t> instance;
+            BspInstance<GraphT> instance;
 
-            bool status_graph = file_reader::readGraph((cwd / filename_graph).string(), instance.getComputationalDag());
-            bool status_architecture
+            bool statusGraph = file_reader::readGraph((cwd / filenameGraph).string(), instance.getComputationalDag());
+            bool statusArchitecture
                 = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.getArchitecture());
 
-            if (!status_graph || !status_architecture) {
+            if (!statusGraph || !statusArchitecture) {
                 std::cout << "Reading files failed." << std::endl;
                 BOOST_CHECK(false);
             }
 
-            BspSchedule<Graph_t> schedule(instance);
-            const auto result = test_scheduler->computeSchedule(schedule);
+            BspSchedule<GraphT> schedule(instance);
+            const auto result = testScheduler->computeSchedule(schedule);
 
             BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
             BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
@@ -95,11 +95,11 @@ void run_test(Scheduler<Graph_t> *test_scheduler) {
     }
 }
 
-template <typename Graph_t>
-void run_test_2(Scheduler<Graph_t> *test_scheduler) {
+template <typename GraphT>
+void RunTest2(Scheduler<GraphT> *testScheduler) {
     // static_assert(std::is_base_of<Scheduler, T>::value, "Class is not a scheduler!");
-    std::vector<std::string> filenames_graph = tiny_spaa_graphs();
-    std::vector<std::string> filenames_architectures = test_architectures();
+    std::vector<std::string> filenamesGraph = TinySpaaGraphs();
+    std::vector<std::string> filenamesArchitectures = TestArchitectures();
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -109,32 +109,32 @@ void run_test_2(Scheduler<Graph_t> *test_scheduler) {
         std::cout << cwd << std::endl;
     }
 
-    for (auto &filename_graph : filenames_graph) {
-        for (auto &filename_machine : filenames_architectures) {
-            std::string name_graph = filename_graph.substr(filename_graph.find_last_of("/\\") + 1);
-            name_graph = name_graph.substr(0, name_graph.find_last_of("."));
-            std::string name_machine = filename_machine.substr(filename_machine.find_last_of("/\\") + 1);
-            name_machine = name_machine.substr(0, name_machine.rfind("."));
+    for (auto &filenameGraph : filenamesGraph) {
+        for (auto &filenameMachine : filenamesArchitectures) {
+            std::string nameGraph = filenameGraph.substr(filenameGraph.find_last_of("/\\") + 1);
+            nameGraph = nameGraph.substr(0, nameGraph.find_last_of("."));
+            std::string nameMachine = filenameMachine.substr(filenameMachine.find_last_of("/\\") + 1);
+            nameMachine = nameMachine.substr(0, nameMachine.rfind("."));
 
-            std::cout << std::endl << "Scheduler: " << test_scheduler->getScheduleName() << std::endl;
-            std::cout << "Graph: " << name_graph << std::endl;
-            std::cout << "Architecture: " << name_machine << std::endl;
+            std::cout << std::endl << "Scheduler: " << testScheduler->getScheduleName() << std::endl;
+            std::cout << "Graph: " << nameGraph << std::endl;
+            std::cout << "Architecture: " << nameMachine << std::endl;
 
             computational_dag_edge_idx_vector_impl_def_t graph;
-            BspArchitecture<Graph_t> arch;
+            BspArchitecture<GraphT> arch;
 
-            bool status_graph = file_reader::readGraph((cwd / filename_graph).string(), graph);
-            bool status_architecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), arch);
+            bool statusGraph = file_reader::readGraph((cwd / filenameGraph).string(), graph);
+            bool statusArchitecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), arch);
 
-            if (!status_graph || !status_architecture) {
+            if (!statusGraph || !statusArchitecture) {
                 std::cout << "Reading files failed." << std::endl;
                 BOOST_CHECK(false);
             }
 
-            BspInstance<Graph_t> instance(graph, arch);
+            BspInstance<GraphT> instance(graph, arch);
 
-            BspSchedule<Graph_t> schedule(instance);
-            const auto result = test_scheduler->computeSchedule(schedule);
+            BspSchedule<GraphT> schedule(instance);
+            const auto result = testScheduler->computeSchedule(schedule);
 
             BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
             BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
@@ -142,206 +142,206 @@ void run_test_2(Scheduler<Graph_t> *test_scheduler) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(GreedyBspScheduler_test) {
+BOOST_AUTO_TEST_CASE(GreedyBspSchedulerTest) {
     GreedyBspScheduler<computational_dag_vector_impl_def_t> test;
-    run_test(&test);
+    RunTest(&test);
 }
 
-BOOST_AUTO_TEST_CASE(GreedyBspScheduler_test_2) {
+BOOST_AUTO_TEST_CASE(GreedyBspSchedulerTest2) {
     GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_t> test;
-    run_test(&test);
+    RunTest(&test);
 }
 
-BOOST_AUTO_TEST_CASE(Serial_test) {
+BOOST_AUTO_TEST_CASE(SerialTest) {
     Serial<computational_dag_vector_impl_def_t> test;
-    run_test(&test);
+    RunTest(&test);
 }
 
-BOOST_AUTO_TEST_CASE(cilk_test_1) {
+BOOST_AUTO_TEST_CASE(CilkTest1) {
     CilkScheduler<computational_dag_vector_impl_def_t> test;
     test.setMode(CILK);
-    run_test(&test);
+    RunTest(&test);
 }
 
-BOOST_AUTO_TEST_CASE(cilk_test_2) {
+BOOST_AUTO_TEST_CASE(CilkTest2) {
     CilkScheduler<computational_dag_vector_impl_def_t> test;
     test.setMode(SJF);
-    run_test(&test);
+    RunTest(&test);
 }
 
-BOOST_AUTO_TEST_CASE(etf_test) {
+BOOST_AUTO_TEST_CASE(EtfTest) {
     EtfScheduler<computational_dag_vector_impl_def_t> test;
-    run_test(&test);
+    RunTest(&test);
 }
 
-BOOST_AUTO_TEST_CASE(random_test) {
+BOOST_AUTO_TEST_CASE(RandomTest) {
     RandomGreedy<computational_dag_vector_impl_def_t> test;
-    run_test(&test);
+    RunTest(&test);
 }
 
-BOOST_AUTO_TEST_CASE(children_test) {
+BOOST_AUTO_TEST_CASE(ChildrenTest) {
     GreedyChildren<computational_dag_vector_impl_def_t> test;
-    run_test(&test);
+    RunTest(&test);
 }
 
-BOOST_AUTO_TEST_CASE(locking_test) {
+BOOST_AUTO_TEST_CASE(LockingTest) {
     BspLocking<computational_dag_vector_impl_def_int_t> test;
-    run_test(&test);
+    RunTest(&test);
 }
 
-BOOST_AUTO_TEST_CASE(variancefillup_test) {
+BOOST_AUTO_TEST_CASE(VariancefillupTest) {
     VarianceFillup<computational_dag_vector_impl_def_t> test;
-    run_test(&test);
+    RunTest(&test);
 }
 
-BOOST_AUTO_TEST_CASE(etf_test_edge_desc_impl) {
+BOOST_AUTO_TEST_CASE(EtfTestEdgeDescImpl) {
     EtfScheduler<computational_dag_edge_idx_vector_impl_def_t> test;
-    run_test(&test);
+    RunTest(&test);
 }
 
-BOOST_AUTO_TEST_CASE(grow_local_auto_test_edge_desc_impl) {
+BOOST_AUTO_TEST_CASE(GrowLocalAutoTestEdgeDescImpl) {
     GrowLocalAutoCores<computational_dag_edge_idx_vector_impl_def_t> test;
-    run_test(&test);
+    RunTest(&test);
 }
 
-BOOST_AUTO_TEST_CASE(grow_local_auto_parallel_top_test_1) {
+BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTopTest1) {
     {
-        using Graph_t = computational_dag_vector_impl_def_t;
-        GrowLocalAutoCoresParallel_Params<vertex_idx_t<Graph_t>, v_workw_t<Graph_t>> params;
+        using GraphT = computational_dag_vector_impl_def_t;
+        GrowLocalAutoCoresParallel_Params<vertex_idx_t<GraphT>, v_workw_t<GraphT>> params;
 
         params.numThreads = 1;
 
-        GrowLocalAutoCoresParallel<Graph_t> test(params);
-        run_test(&test);
+        GrowLocalAutoCoresParallel<GraphT> Test(params);
+        RunTest(&test);
     }
 }
 
-BOOST_AUTO_TEST_CASE(grow_local_auto_parallel_top_test_2) {
+BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTopTest2) {
     {
-        using Graph_t = computational_dag_vector_impl_def_t;
-        GrowLocalAutoCoresParallel_Params<vertex_idx_t<Graph_t>, v_workw_t<Graph_t>> params;
+        using GraphT = computational_dag_vector_impl_def_t;
+        GrowLocalAutoCoresParallel_Params<vertex_idx_t<GraphT>, v_workw_t<GraphT>> params;
 
         params.numThreads = 2;
 
-        GrowLocalAutoCoresParallel<Graph_t> test(params);
-        run_test(&test);
+        GrowLocalAutoCoresParallel<GraphT> Test(params);
+        RunTest(&test);
     }
 }
 
-BOOST_AUTO_TEST_CASE(grow_local_auto_parallel_top_test_5) {
+BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTopTest5) {
     {
-        using Graph_t = computational_dag_vector_impl_def_t;
-        GrowLocalAutoCoresParallel_Params<vertex_idx_t<Graph_t>, v_workw_t<Graph_t>> params;
+        using GraphT = computational_dag_vector_impl_def_t;
+        GrowLocalAutoCoresParallel_Params<vertex_idx_t<GraphT>, v_workw_t<GraphT>> params;
 
         params.numThreads = 5;
 
-        GrowLocalAutoCoresParallel<Graph_t> test(params);
-        run_test(&test);
+        GrowLocalAutoCoresParallel<GraphT> Test(params);
+        RunTest(&test);
     }
 }
 
-BOOST_AUTO_TEST_CASE(grow_local_auto_parallel_test_1) {
+BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTest1) {
     {
-        using Graph_t = Compact_Sparse_Graph<true, true>;
-        GrowLocalAutoCoresParallel_Params<vertex_idx_t<Graph_t>, v_workw_t<Graph_t>> params;
+        using GraphT = CompactSparseGraph<true, true>;
+        GrowLocalAutoCoresParallel_Params<vertex_idx_t<GraphT>, v_workw_t<GraphT>> params;
 
         params.numThreads = 1;
 
-        GrowLocalAutoCoresParallel<Graph_t> test(params);
-        run_test_2(&test);
+        GrowLocalAutoCoresParallel<GraphT> Test(params);
+        RunTest2(&test);
     }
 }
 
-BOOST_AUTO_TEST_CASE(grow_local_auto_parallel_test_2) {
+BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTest2) {
     {
-        using Graph_t = Compact_Sparse_Graph<true, true>;
-        GrowLocalAutoCoresParallel_Params<vertex_idx_t<Graph_t>, v_workw_t<Graph_t>> params;
+        using GraphT = CompactSparseGraph<true, true>;
+        GrowLocalAutoCoresParallel_Params<vertex_idx_t<GraphT>, v_workw_t<GraphT>> params;
 
         params.numThreads = 2;
 
-        GrowLocalAutoCoresParallel<Graph_t> test(params);
-        run_test_2(&test);
+        GrowLocalAutoCoresParallel<GraphT> Test(params);
+        RunTest2(&test);
     }
 }
 
-BOOST_AUTO_TEST_CASE(grow_local_auto_parallel_test_5) {
+BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTest5) {
     {
-        using Graph_t = Compact_Sparse_Graph<true, true>;
-        GrowLocalAutoCoresParallel_Params<vertex_idx_t<Graph_t>, v_workw_t<Graph_t>> params;
+        using GraphT = CompactSparseGraph<true, true>;
+        GrowLocalAutoCoresParallel_Params<vertex_idx_t<GraphT>, v_workw_t<GraphT>> params;
 
         params.numThreads = 5;
 
-        GrowLocalAutoCoresParallel<Graph_t> test(params);
-        run_test_2(&test);
+        GrowLocalAutoCoresParallel<GraphT> Test(params);
+        RunTest2(&test);
     }
 }
 
-BOOST_AUTO_TEST_CASE(VariancePartitioner_test) {
-    VariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, linear_interpolation> test_linear;
-    run_test(&test_linear);
+BOOST_AUTO_TEST_CASE(VariancePartitionerTest) {
+    VariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, linear_interpolation> testLinear;
+    RunTest(&testLinear);
 
-    VariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, flat_spline_interpolation> test_flat;
-    run_test(&test_flat);
+    VariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, flat_spline_interpolation> testFlat;
+    RunTest(&testFlat);
 
-    VariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, superstep_only_interpolation> test_superstep;
-    run_test(&test_superstep);
+    VariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, superstep_only_interpolation> testSuperstep;
+    RunTest(&testSuperstep);
 
-    VariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, global_only_interpolation> test_global;
-    run_test(&test_global);
+    VariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, global_only_interpolation> testGlobal;
+    RunTest(&testGlobal);
 }
 
-BOOST_AUTO_TEST_CASE(LightEdgeVariancePartitioner_test) {
-    LightEdgeVariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, linear_interpolation> test_linear;
-    run_test(&test_linear);
+BOOST_AUTO_TEST_CASE(LightEdgeVariancePartitionerTest) {
+    LightEdgeVariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, linear_interpolation> testLinear;
+    RunTest(&testLinear);
 
-    LightEdgeVariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, flat_spline_interpolation> test_flat;
-    run_test(&test_flat);
+    LightEdgeVariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, flat_spline_interpolation> testFlat;
+    RunTest(&testFlat);
 
-    LightEdgeVariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, superstep_only_interpolation> test_superstep;
-    run_test(&test_superstep);
+    LightEdgeVariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, superstep_only_interpolation> testSuperstep;
+    RunTest(&testSuperstep);
 
-    LightEdgeVariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, global_only_interpolation> test_global;
-    run_test(&test_global);
+    LightEdgeVariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, global_only_interpolation> testGlobal;
+    RunTest(&testGlobal);
 }
 
-BOOST_AUTO_TEST_CASE(SquashAMul_test) {
+BOOST_AUTO_TEST_CASE(SquashAMulTest) {
     GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_t> sched;
 
-    SquashAMul<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t> ml_coarsen;
-    MultilevelCoarseAndSchedule<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t>
-        coarsen_test(sched, ml_coarsen);
+    SquashAMul<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t> mlCoarsen;
+    MultilevelCoarseAndSchedule<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t> coarsenTest(
+        sched, mlCoarsen);
 
-    run_test(&coarsen_test);
+    RunTest(&coarsenTest);
 }
 
-BOOST_AUTO_TEST_CASE(SquashAMul_improver_test) {
-    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_t> sched;
-    HillClimbingScheduler<computational_dag_edge_idx_vector_impl_def_t> improver;
-
-    SquashAMul<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t> ml_coarsen;
-    MultilevelCoarseAndSchedule<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t>
-        coarsen_test(sched, improver, ml_coarsen);
-
-    run_test(&coarsen_test);
-}
-
-BOOST_AUTO_TEST_CASE(SarkarMul_test) {
-    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_t> sched;
-
-    SarkarMul<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t> ml_coarsen;
-    MultilevelCoarseAndSchedule<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t>
-        coarsen_test(sched, ml_coarsen);
-
-    run_test(&coarsen_test);
-}
-
-BOOST_AUTO_TEST_CASE(SarkarMul_improver_test) {
+BOOST_AUTO_TEST_CASE(SquashAMulImproverTest) {
     GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_t> sched;
     HillClimbingScheduler<computational_dag_edge_idx_vector_impl_def_t> improver;
 
-    SarkarMul<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t> ml_coarsen;
-    MultilevelCoarseAndSchedule<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t>
-        coarsen_test(sched, improver, ml_coarsen);
+    SquashAMul<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t> mlCoarsen;
+    MultilevelCoarseAndSchedule<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t> coarsenTest(
+        sched, improver, mlCoarsen);
 
-    run_test(&coarsen_test);
+    RunTest(&coarsenTest);
+}
+
+BOOST_AUTO_TEST_CASE(SarkarMulTest) {
+    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_t> sched;
+
+    SarkarMul<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t> mlCoarsen;
+    MultilevelCoarseAndSchedule<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t> coarsenTest(
+        sched, mlCoarsen);
+
+    RunTest(&coarsenTest);
+}
+
+BOOST_AUTO_TEST_CASE(SarkarMulImproverTest) {
+    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_t> sched;
+    HillClimbingScheduler<computational_dag_edge_idx_vector_impl_def_t> improver;
+
+    SarkarMul<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t> mlCoarsen;
+    MultilevelCoarseAndSchedule<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t> coarsenTest(
+        sched, improver, mlCoarsen);
+
+    RunTest(&coarsenTest);
 }

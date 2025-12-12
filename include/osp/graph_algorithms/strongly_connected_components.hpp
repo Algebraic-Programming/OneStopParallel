@@ -37,51 +37,51 @@ namespace osp {
  * @param graph The input directed graph.
  * @return A vector of vectors, where each inner vector contains the vertices of a strongly connected component.
  */
-template <typename Graph_t>
-std::vector<std::vector<vertex_idx_t<Graph_t>>> strongly_connected_components(const Graph_t &graph) {
+template <typename GraphT>
+std::vector<std::vector<vertex_idx_t<Graph_t>>> StronglyConnectedComponents(const GraphT &graph) {
     static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
 
     using VertexType = vertex_idx_t<Graph_t>;
-    const auto num_vertices = graph.num_vertices();
-    if (num_vertices == 0) {
+    const auto numVertices = graph.num_vertices();
+    if (numVertices == 0) {
         return {};
     }
 
     const VertexType unvisited = std::numeric_limits<VertexType>::max();
-    std::vector<VertexType> ids(num_vertices, unvisited);
-    std::vector<VertexType> low(num_vertices, unvisited);
-    std::vector<bool> on_stack(num_vertices, false);
+    std::vector<VertexType> ids(numVertices, unvisited);
+    std::vector<VertexType> low(numVertices, unvisited);
+    std::vector<bool> onStack(numVertices, false);
     std::stack<VertexType> s;
-    VertexType id_counter = 0;
+    VertexType idCounter = 0;
     std::vector<std::vector<VertexType>> sccs;
 
     using ChildIterator = decltype(graph.children(std::declval<VertexType>()).begin());
 
-    for (VertexType i = 0; i < num_vertices; ++i) {
+    for (VertexType i = 0; i < numVertices; ++i) {
         if (ids[i] == unvisited) {
             std::vector<std::pair<VertexType, std::pair<ChildIterator, ChildIterator>>> dfs_stack;
 
             dfs_stack.emplace_back(i, std::make_pair(graph.children(i).begin(), graph.children(i).end()));
 
             s.push(i);
-            on_stack[i] = true;
+            onStack[i] = true;
             ids[i] = low[i] = id_counter++;
 
             while (!dfs_stack.empty()) {
                 auto &[at, iter_pair] = dfs_stack.back();
-                auto &child_iter = iter_pair.first;
-                const auto &child_end = iter_pair.second;
+                auto &childIter = iter_pair.first;
+                const auto &childEnd = iter_pair.second;
 
-                if (child_iter != child_end) {
+                if (childIter != child_end) {
                     VertexType to = *child_iter;
                     ++child_iter;
 
                     if (ids[to] == unvisited) {
                         dfs_stack.emplace_back(to, std::make_pair(graph.children(to).begin(), graph.children(to).end()));
                         s.push(to);
-                        on_stack[to] = true;
+                        onStack[to] = true;
                         ids[to] = low[to] = id_counter++;
-                    } else if (on_stack[to]) {
+                    } else if (onStack[to]) {
                         low[at] = std::min(low[at], ids[to]);
                     }
                 } else {
@@ -90,7 +90,7 @@ std::vector<std::vector<vertex_idx_t<Graph_t>>> strongly_connected_components(co
                         while (true) {
                             VertexType node = s.top();
                             s.pop();
-                            on_stack[node] = false;
+                            onStack[node] = false;
                             scc.push_back(node);
                             if (node == at) {
                                 break;

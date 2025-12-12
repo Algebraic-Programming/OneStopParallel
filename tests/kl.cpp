@@ -31,18 +31,18 @@ limitations under the License.
 
 using namespace osp;
 
-template <typename Graph_t>
-void add_mem_weights(Graph_t &dag) {
-    int mem_weight = 1;
-    int comm_weight = 1;
+template <typename GraphT>
+void AddMemWeights(GraphT &dag) {
+    int memWeight = 1;
+    int commWeight = 1;
 
     for (const auto &v : dag.vertices()) {
-        dag.set_vertex_mem_weight(v, static_cast<v_memw_t<Graph_t>>(mem_weight++ % 3 + 1));
-        dag.set_vertex_comm_weight(v, static_cast<v_commw_t<Graph_t>>(comm_weight++ % 3 + 1));
+        dag.set_vertex_mem_weight(v, static_cast<v_memw_t<Graph_t>>(memWeight++ % 3 + 1));
+        dag.set_vertex_comm_weight(v, static_cast<v_commw_t<Graph_t>>(commWeight++ % 3 + 1));
     }
 }
 
-BOOST_AUTO_TEST_CASE(kl_base_1) {
+BOOST_AUTO_TEST_CASE(KlBase1) {
     using graph = computational_dag_edge_idx_vector_impl_def_int_t;
     using VertexType = graph::vertex_idx;
 
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(kl_base_1) {
 
     kl.test_setup_schedule(schedule);
 
-    auto &kl_current_schedule = kl.get_current_schedule();
+    auto &klCurrentSchedule = kl.get_current_schedule();
 
     BOOST_CHECK_EQUAL(kl_current_schedule.step_max_work[0], 44.0);
     BOOST_CHECK_EQUAL(kl_current_schedule.step_second_max_work[0], 0.0);
@@ -91,9 +91,9 @@ BOOST_AUTO_TEST_CASE(kl_base_1) {
     BOOST_CHECK_EQUAL(kl_current_schedule.current_cost, 44.0);
     BOOST_CHECK_EQUAL(kl_current_schedule.current_feasible, true);
 
-    kl_move move_1(v1, 0, 6.0 - 2.0, 0, 0, 1, 0);
+    kl_move move1(v1, 0, 6.0 - 2.0, 0, 0, 1, 0);
 
-    kl_current_schedule.apply_move(move_1);
+    klCurrentSchedule.apply_move(move_1);
 
     BOOST_CHECK_EQUAL(kl_current_schedule.step_max_work[0], 42.0);
     BOOST_CHECK_EQUAL(kl_current_schedule.step_second_max_work[0], 2.0);
@@ -102,9 +102,9 @@ BOOST_AUTO_TEST_CASE(kl_base_1) {
     BOOST_CHECK_EQUAL(kl_current_schedule.current_feasible, false);
     BOOST_CHECK_EQUAL(kl_current_schedule.cost_f->compute_current_costs(), 48.0);
 
-    kl_move move_2(v2, 0, 7.0, 0, 0, 1, 0);
+    kl_move move2(v2, 0, 7.0, 0, 0, 1, 0);
 
-    kl_current_schedule.apply_move(move_2);
+    klCurrentSchedule.apply_move(move_2);
 
     BOOST_CHECK_EQUAL(kl_current_schedule.step_max_work[0], 39.0);
     BOOST_CHECK_EQUAL(kl_current_schedule.step_second_max_work[0], 5.0);
@@ -115,8 +115,8 @@ BOOST_AUTO_TEST_CASE(kl_base_1) {
 
     kl.initialize_gain_heap_test({0, 1, 2, 3, 4, 5, 6, 7});
 
-    auto &node_gains = kl.get_node_gains();
-    auto &node_change_in_costs = kl.get_node_change_in_costs();
+    auto &nodeGains = kl.get_node_gains();
+    auto &nodeChangeInCosts = kl.get_node_change_in_costs();
 
     BOOST_CHECK_EQUAL(node_gains[v1][0][1], 4.0);
     BOOST_CHECK_EQUAL(node_change_in_costs[v1][0][1], 0.0);
@@ -127,21 +127,21 @@ BOOST_AUTO_TEST_CASE(kl_base_1) {
     BOOST_CHECK_EQUAL(node_gains[v2][0][1], 19.0);
     BOOST_CHECK_EQUAL(node_change_in_costs[v2][0][1], -7.0);
 
-    kl_move move_3(v7, 0, 7.0, 0, 0, 1, 0);
-    kl_current_schedule.apply_move(move_3);
+    kl_move move3(v7, 0, 7.0, 0, 0, 1, 0);
+    klCurrentSchedule.apply_move(move_3);
     BOOST_CHECK_EQUAL(kl_current_schedule.current_feasible, false);
 
-    kl_move move_4(v2, 0, 7.0, 1, 0, 0, 0);
-    kl_current_schedule.apply_move(move_4);
+    kl_move move4(v2, 0, 7.0, 1, 0, 0, 0);
+    klCurrentSchedule.apply_move(move_4);
     BOOST_CHECK_EQUAL(kl_current_schedule.current_feasible, false);
 
-    kl_move move_5(v1, 0, 7.0, 1, 0, 0, 0);
-    kl_current_schedule.apply_move(move_5);
+    kl_move move5(v1, 0, 7.0, 1, 0, 0, 0);
+    klCurrentSchedule.apply_move(move_5);
     BOOST_CHECK_EQUAL(kl_current_schedule.current_feasible, true);
 };
 
-BOOST_AUTO_TEST_CASE(kl_total_comm_test_1) {
-    std::vector<std::string> filenames_graph = test_graphs();
+BOOST_AUTO_TEST_CASE(KlTotalCommTest1) {
+    std::vector<std::string> filenamesGraph = test_graphs();
 
     using graph = computational_dag_edge_idx_vector_impl_def_int_t;
 
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(kl_total_comm_test_1) {
         std::cout << cwd << std::endl;
     }
 
-    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_int_t> test_scheduler;
+    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_int_t> testScheduler;
 
     for (auto &filename_graph : filenames_graph) {
         BspInstance<graph> instance;
@@ -186,8 +186,8 @@ BOOST_AUTO_TEST_CASE(kl_total_comm_test_1) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(kl_total_comm_test_2) {
-    std::vector<std::string> filenames_graph = test_graphs();
+BOOST_AUTO_TEST_CASE(KlTotalCommTest2) {
+    std::vector<std::string> filenamesGraph = test_graphs();
 
     using graph = computational_dag_edge_idx_vector_impl_def_int_t;
 
@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE(kl_total_comm_test_2) {
         std::cout << cwd << std::endl;
     }
 
-    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_int_t> test_scheduler;
+    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_int_t> testScheduler;
 
     for (auto &filename_graph : filenames_graph) {
         BspInstance<graph> instance;
@@ -232,8 +232,8 @@ BOOST_AUTO_TEST_CASE(kl_total_comm_test_2) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(kl_total_cut_test_1) {
-    std::vector<std::string> filenames_graph = test_graphs();
+BOOST_AUTO_TEST_CASE(KlTotalCutTest1) {
+    std::vector<std::string> filenamesGraph = test_graphs();
 
     using graph = computational_dag_edge_idx_vector_impl_def_int_t;
 
@@ -245,7 +245,7 @@ BOOST_AUTO_TEST_CASE(kl_total_cut_test_1) {
         std::cout << cwd << std::endl;
     }
 
-    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_int_t> test_scheduler;
+    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_int_t> testScheduler;
 
     for (auto &filename_graph : filenames_graph) {
         BspInstance<graph> instance;
@@ -277,8 +277,8 @@ BOOST_AUTO_TEST_CASE(kl_total_cut_test_1) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(kl_total_cut_test_2) {
-    std::vector<std::string> filenames_graph = test_graphs();
+BOOST_AUTO_TEST_CASE(KlTotalCutTest2) {
+    std::vector<std::string> filenamesGraph = test_graphs();
 
     using graph = computational_dag_edge_idx_vector_impl_def_int_t;
 
@@ -290,7 +290,7 @@ BOOST_AUTO_TEST_CASE(kl_total_cut_test_2) {
         std::cout << cwd << std::endl;
     }
 
-    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_int_t> test_scheduler;
+    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_int_t> testScheduler;
 
     for (auto &filename_graph : filenames_graph) {
         BspInstance<graph> instance;

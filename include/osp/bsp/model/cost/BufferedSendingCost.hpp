@@ -30,15 +30,15 @@ namespace osp {
  * @struct BufferedSendingCost
  * @brief Implements the buffered sending cost model.
  */
-template <typename Graph_t>
+template <typename GraphT>
 struct BufferedSendingCost {
     using cost_type = v_commw_t<Graph_t>;
 
-    cost_type operator()(const BspSchedule<Graph_t> &schedule) const {
+    cost_type operator()(const BspSchedule<GraphT> &schedule) const {
         const auto &instance = schedule.getInstance();
-        unsigned number_of_supersteps = schedule.numberOfSupersteps();
-        const auto &node_to_processor_assignment = schedule.assignedProcessors();
-        const auto &node_to_superstep_assignment = schedule.assignedSupersteps();
+        unsigned numberOfSupersteps = schedule.numberOfSupersteps();
+        const auto &nodeToProcessorAssignment = schedule.assignedProcessors();
+        const auto &nodeToSuperstepAssignment = schedule.assignedSupersteps();
         const auto staleness = schedule.getStaleness();
 
         std::vector<std::vector<v_commw_t<Graph_t>>> rec(instance.numberOfProcessors(),
@@ -47,7 +47,7 @@ struct BufferedSendingCost {
                                                           std::vector<v_commw_t<Graph_t>>(number_of_supersteps, 0));
 
         for (vertex_idx_t<Graph_t> node = 0; node < instance.numberOfVertices(); node++) {
-            std::vector<unsigned> step_needed(instance.numberOfProcessors(), number_of_supersteps);
+            std::vector<unsigned> stepNeeded(instance.numberOfProcessors(), numberOfSupersteps);
             for (const auto &target : instance.getComputationalDag().children(node)) {
                 if (node_to_processor_assignment[node] != node_to_processor_assignment[target]) {
                     step_needed[node_to_processor_assignment[target]]
@@ -56,27 +56,27 @@ struct BufferedSendingCost {
             }
 
             for (unsigned proc = 0; proc < instance.numberOfProcessors(); proc++) {
-                if (step_needed[proc] < number_of_supersteps) {
-                    send[node_to_processor_assignment[node]][node_to_superstep_assignment[node]]
-                        += instance.sendCosts(node_to_processor_assignment[node], proc)
+                if (stepNeeded[proc] < numberOfSupersteps) {
+                    send[nodeToProcessorAssignment[node]][nodeToSuperstepAssignment[node]]
+                        += instance.sendCosts(nodeToProcessorAssignment[node], proc)
                            * instance.getComputationalDag().vertex_comm_weight(node);
 
-                    if (step_needed[proc] >= staleness) {
-                        rec[proc][step_needed[proc] - staleness] += instance.sendCosts(node_to_processor_assignment[node], proc)
-                                                                    * instance.getComputationalDag().vertex_comm_weight(node);
+                    if (stepNeeded[proc] >= staleness) {
+                        rec[proc][stepNeeded[proc] - staleness] += instance.sendCosts(nodeToProcessorAssignment[node], proc)
+                                                                   * instance.getComputationalDag().vertex_comm_weight(node);
                     }
                 }
             }
         }
 
-        const auto max_comm_per_step = cost_helpers::compute_max_comm_per_step(schedule, rec, send);
-        v_commw_t<Graph_t> comm_costs = 0;
-        for (unsigned step = 0; step < number_of_supersteps; step++) {
-            const auto step_comm_cost = max_comm_per_step[step];
-            comm_costs += step_comm_cost;
+        const auto maxCommPerStep = cost_helpers::compute_max_comm_per_step(schedule, rec, send);
+        v_commw_t<Graph_t> commCosts = 0;
+        for (unsigned step = 0; step < numberOfSupersteps; step++) {
+            const auto stepCommCost = max_comm_per_step[step];
+            commCosts += step_comm_cost;
 
-            if (step_comm_cost > 0) {
-                comm_costs += instance.synchronisationCosts();
+            if (stepCommCost > 0) {
+                commCosts += instance.synchronisationCosts();
             }
         }
 

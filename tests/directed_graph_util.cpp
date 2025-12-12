@@ -34,19 +34,19 @@ limitations under the License.
 
 using namespace osp;
 
-computational_dag_vector_impl_def_t constr_graph_1() {
+computational_dag_vector_impl_def_t ConstrGraph1() {
     computational_dag_vector_impl_def_t graph;
 
-    using vertex_idx = computational_dag_vector_impl_def_t::vertex_idx;
+    using VertexIdx = computational_dag_vector_impl_def_t::vertex_idx;
 
-    vertex_idx v1 = graph.add_vertex(1, 2, 3, 4);
-    vertex_idx v2 = graph.add_vertex(5, 6, 7, 8);
-    vertex_idx v3 = graph.add_vertex(9, 10, 11, 12);
-    vertex_idx v4 = graph.add_vertex(13, 14, 15, 16);
-    vertex_idx v5 = graph.add_vertex(17, 18, 19, 20);
-    vertex_idx v6 = graph.add_vertex(21, 22, 23, 24);
-    vertex_idx v7 = graph.add_vertex(25, 26, 27, 28);
-    vertex_idx v8 = graph.add_vertex(29, 30, 31, 32);
+    VertexIdx v1 = graph.add_vertex(1, 2, 3, 4);
+    VertexIdx v2 = graph.add_vertex(5, 6, 7, 8);
+    VertexIdx v3 = graph.add_vertex(9, 10, 11, 12);
+    VertexIdx v4 = graph.add_vertex(13, 14, 15, 16);
+    VertexIdx v5 = graph.add_vertex(17, 18, 19, 20);
+    VertexIdx v6 = graph.add_vertex(21, 22, 23, 24);
+    VertexIdx v7 = graph.add_vertex(25, 26, 27, 28);
+    VertexIdx v8 = graph.add_vertex(29, 30, 31, 32);
 
     graph.add_edge(v1, v2);
     graph.add_edge(v1, v3);
@@ -62,60 +62,60 @@ computational_dag_vector_impl_def_t constr_graph_1() {
     return graph;
 }
 
-BOOST_AUTO_TEST_CASE(test_empty_graph) {
+BOOST_AUTO_TEST_CASE(TestEmptyGraph) {
     computational_dag_vector_impl_def_t graph;
 
-    using vertex_idx = computational_dag_vector_impl_def_t::vertex_idx;
+    using VertexIdx = computational_dag_vector_impl_def_t::vertex_idx;
 
     BOOST_CHECK_EQUAL(graph.num_edges(), 0);
     BOOST_CHECK_EQUAL(graph.num_vertices(), 0);
 
-    std::vector<vertex_idx> sources = source_vertices(graph);
+    std::vector<VertexIdx> sources = source_vertices(graph);
     BOOST_CHECK_EQUAL(sources.size(), 0);
 
-    std::vector<vertex_idx> sinks = sink_vertices(graph);
+    std::vector<VertexIdx> sinks = sink_vertices(graph);
     BOOST_CHECK_EQUAL(sinks.size(), 0);
 
     BOOST_CHECK_EQUAL(is_acyclic(graph), true);
     BOOST_CHECK_EQUAL(is_connected(graph), true);
 }
 
-BOOST_AUTO_TEST_CASE(test_util_1) {
-    computational_dag_vector_impl_def_t graph = constr_graph_1();
+BOOST_AUTO_TEST_CASE(TestUtil1) {
+    computational_dag_vector_impl_def_t graph = ConstrGraph1();
 
-    using vertex_idx = computational_dag_vector_impl_def_t::vertex_idx;
+    using VertexIdx = computational_dag_vector_impl_def_t::vertex_idx;
 
     BOOST_CHECK_EQUAL(graph.num_edges(), 9);
     BOOST_CHECK_EQUAL(graph.num_vertices(), 8);
 
-    std::vector<vertex_idx> sources = source_vertices(graph);
+    std::vector<VertexIdx> sources = source_vertices(graph);
     BOOST_CHECK_EQUAL(sources.size(), 1);
     BOOST_CHECK_EQUAL(sources[0], 0);
 
-    std::vector<vertex_idx> sources_s;
+    std::vector<VertexIdx> sourcesS;
     for (const auto &v : source_vertices_view(graph)) {
-        sources_s.push_back(v);
+        sourcesS.push_back(v);
     }
-    BOOST_CHECK_EQUAL(sources_s.size(), 1);
-    BOOST_CHECK_EQUAL(sources_s[0], 0);
+    BOOST_CHECK_EQUAL(sourcesS.size(), 1);
+    BOOST_CHECK_EQUAL(sourcesS[0], 0);
 
-    std::vector<vertex_idx> sinks = sink_vertices(graph);
+    std::vector<VertexIdx> sinks = sink_vertices(graph);
     BOOST_CHECK_EQUAL(sinks.size(), 3);
     BOOST_CHECK_EQUAL(sinks[0], 5);
     BOOST_CHECK_EQUAL(sinks[1], 6);
     BOOST_CHECK_EQUAL(sinks[2], 7);
 
-    std::vector<vertex_idx> sinks_s;
+    std::vector<VertexIdx> sinksS;
     for (const auto &v : sink_vertices_view(graph)) {
-        sinks_s.push_back(v);
+        sinksS.push_back(v);
     }
 
-    BOOST_CHECK_EQUAL(sinks_s.size(), 3);
-    BOOST_CHECK_EQUAL(sinks_s[0], 5);
-    BOOST_CHECK_EQUAL(sinks_s[1], 6);
-    BOOST_CHECK_EQUAL(sinks_s[2], 7);
+    BOOST_CHECK_EQUAL(sinksS.size(), 3);
+    BOOST_CHECK_EQUAL(sinksS[0], 5);
+    BOOST_CHECK_EQUAL(sinksS[1], 6);
+    BOOST_CHECK_EQUAL(sinksS[2], 7);
 
-    std::vector<vertex_idx> bfs;
+    std::vector<VertexIdx> bfs;
 
     for (const auto &v : bfs_view(graph, 1)) {
         bfs.push_back(v);
@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
     t = successors(0, graph);
     BOOST_CHECK_EQUAL_COLLECTIONS(bfs.begin(), bfs.end(), t.begin(), t.end());
 
-    std::vector<vertex_idx> dfs;
+    std::vector<VertexIdx> dfs;
 
     for (const auto &v : dfs_view(graph, 1)) {
         dfs.push_back(v);
@@ -197,60 +197,60 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
     BOOST_CHECK_EQUAL(dfs[6], 1);
     BOOST_CHECK_EQUAL(dfs[7], 6);
 
-    std::vector<vertex_idx> bfs_reverse;
+    std::vector<VertexIdx> bfsReverse;
 
     for (const auto &v : bfs_reverse_view(graph, 1)) {
-        bfs_reverse.push_back(v);
+        bfsReverse.push_back(v);
     }
-    BOOST_CHECK_EQUAL(bfs_reverse.size(), 2);
-    BOOST_CHECK_EQUAL(bfs_reverse[0], 1);
-    BOOST_CHECK_EQUAL(bfs_reverse[1], 0);
+    BOOST_CHECK_EQUAL(bfsReverse.size(), 2);
+    BOOST_CHECK_EQUAL(bfsReverse[0], 1);
+    BOOST_CHECK_EQUAL(bfsReverse[1], 0);
 
     t = ancestors(1, graph);
-    BOOST_CHECK_EQUAL_COLLECTIONS(bfs_reverse.begin(), bfs_reverse.end(), t.begin(), t.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(bfsReverse.begin(), bfsReverse.end(), t.begin(), t.end());
 
-    bfs_reverse.clear();
+    bfsReverse.clear();
 
     for (const auto &v : bfs_reverse_view(graph, 5)) {
-        bfs_reverse.push_back(v);
+        bfsReverse.push_back(v);
     }
 
-    BOOST_CHECK_EQUAL(bfs_reverse.size(), 3);
-    BOOST_CHECK_EQUAL(bfs_reverse[0], 5);
-    BOOST_CHECK_EQUAL(bfs_reverse[1], 2);
-    BOOST_CHECK_EQUAL(bfs_reverse[2], 0);
+    BOOST_CHECK_EQUAL(bfsReverse.size(), 3);
+    BOOST_CHECK_EQUAL(bfsReverse[0], 5);
+    BOOST_CHECK_EQUAL(bfsReverse[1], 2);
+    BOOST_CHECK_EQUAL(bfsReverse[2], 0);
 
     t = ancestors(5, graph);
-    BOOST_CHECK_EQUAL_COLLECTIONS(bfs_reverse.begin(), bfs_reverse.end(), t.begin(), t.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(bfsReverse.begin(), bfsReverse.end(), t.begin(), t.end());
 
-    bfs_reverse.clear();
+    bfsReverse.clear();
 
     for (const auto &v : bfs_reverse_view(graph, 0)) {
-        bfs_reverse.push_back(v);
+        bfsReverse.push_back(v);
     }
 
-    BOOST_CHECK_EQUAL(bfs_reverse.size(), 1);
-    BOOST_CHECK_EQUAL(bfs_reverse[0], 0);
+    BOOST_CHECK_EQUAL(bfsReverse.size(), 1);
+    BOOST_CHECK_EQUAL(bfsReverse[0], 0);
 
     t = ancestors(0, graph);
-    BOOST_CHECK_EQUAL_COLLECTIONS(bfs_reverse.begin(), bfs_reverse.end(), t.begin(), t.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(bfsReverse.begin(), bfsReverse.end(), t.begin(), t.end());
 
-    bfs_reverse.clear();
+    bfsReverse.clear();
 
     for (const auto &v : bfs_reverse_view(graph, 7)) {
-        bfs_reverse.push_back(v);
+        bfsReverse.push_back(v);
     }
 
-    BOOST_CHECK_EQUAL(bfs_reverse.size(), 6);
-    BOOST_CHECK_EQUAL(bfs_reverse[0], 7);
-    BOOST_CHECK_EQUAL(bfs_reverse[1], 4);
-    BOOST_CHECK_EQUAL(bfs_reverse[2], 3);
-    BOOST_CHECK_EQUAL(bfs_reverse[3], 1);
-    BOOST_CHECK_EQUAL(bfs_reverse[4], 2);
-    BOOST_CHECK_EQUAL(bfs_reverse[5], 0);
+    BOOST_CHECK_EQUAL(bfsReverse.size(), 6);
+    BOOST_CHECK_EQUAL(bfsReverse[0], 7);
+    BOOST_CHECK_EQUAL(bfsReverse[1], 4);
+    BOOST_CHECK_EQUAL(bfsReverse[2], 3);
+    BOOST_CHECK_EQUAL(bfsReverse[3], 1);
+    BOOST_CHECK_EQUAL(bfsReverse[4], 2);
+    BOOST_CHECK_EQUAL(bfsReverse[5], 0);
 
     t = ancestors(7, graph);
-    BOOST_CHECK_EQUAL_COLLECTIONS(bfs_reverse.begin(), bfs_reverse.end(), t.begin(), t.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(bfsReverse.begin(), bfsReverse.end(), t.begin(), t.end());
 
     BOOST_CHECK_EQUAL(edge(0, 1, graph), true);
     BOOST_CHECK_EQUAL(edge(0, 2, graph), true);
@@ -396,13 +396,13 @@ BOOST_AUTO_TEST_CASE(test_util_1) {
     BOOST_CHECK_EQUAL(has_path(7, 5, graph), false);
     BOOST_CHECK_EQUAL(has_path(7, 6, graph), false);
 
-    std::vector<vertex_idx> edge_source = {0, 0, 0, 1, 1, 2, 2, 3, 4};
-    std::vector<vertex_idx> edge_target = {1, 2, 3, 4, 6, 4, 5, 7, 7};
+    std::vector<VertexIdx> edgeSource = {0, 0, 0, 1, 1, 2, 2, 3, 4};
+    std::vector<VertexIdx> edgeTarget = {1, 2, 3, 4, 6, 4, 5, 7, 7};
 
     size_t i = 0;
     for (const auto &e : edge_view(graph)) {
-        BOOST_CHECK_EQUAL(e.source, edge_source[i]);
-        BOOST_CHECK_EQUAL(e.target, edge_target[i]);
+        BOOST_CHECK_EQUAL(e.source, edgeSource[i]);
+        BOOST_CHECK_EQUAL(e.target, edgeTarget[i]);
 
         ++i;
     }
@@ -438,20 +438,20 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     const std::vector<int> commW({1, 1, 1, 1, 2, 3, 2, 1, 1, 1});
 
     const boost_graph_int_t graph(out, workW, commW);
-    const boost_graph_int_t graph_empty;
+    const boost_graph_int_t graphEmpty;
 
     BOOST_CHECK_EQUAL(graph.num_edges(), 12);
     BOOST_CHECK_EQUAL(graph.num_vertices(), 10);
-    BOOST_CHECK_EQUAL(graph_empty.num_edges(), 0);
-    BOOST_CHECK_EQUAL(graph_empty.num_vertices(), 0);
+    BOOST_CHECK_EQUAL(graphEmpty.num_edges(), 0);
+    BOOST_CHECK_EQUAL(graphEmpty.num_vertices(), 0);
     BOOST_CHECK_EQUAL(graph.num_vertex_types(), 1);
 
     BOOST_CHECK_EQUAL(is_acyclic(graph), true);
-    BOOST_CHECK_EQUAL(is_acyclic(graph_empty), true);
+    BOOST_CHECK_EQUAL(is_acyclic(graphEmpty), true);
     BOOST_CHECK_EQUAL(is_connected(graph), false);
-    BOOST_CHECK_EQUAL(is_connected(graph_empty), true);
+    BOOST_CHECK_EQUAL(is_connected(graphEmpty), true);
 
-    const auto long_edges = long_edges_in_triangles(graph);
+    const auto longEdges = long_edges_in_triangles(graph);
 
     BOOST_CHECK_EQUAL(graph.num_vertices(), std::distance(graph.vertices().begin(), graph.vertices().end()));
     BOOST_CHECK_EQUAL(graph.num_edges(), std::distance(edges(graph).begin(), edges(graph).end()));
@@ -470,18 +470,18 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
     BOOST_CHECK_EQUAL(sumOfVerticesWorkWeights({0, 1}, graph), 2);
     {
-        int sum_of_work_weights = graph.vertex_work_weight(0) + graph.vertex_work_weight(1);
-        BOOST_CHECK_EQUAL(2, sum_of_work_weights);
+        int sumOfWorkWeights = graph.vertex_work_weight(0) + graph.vertex_work_weight(1);
+        BOOST_CHECK_EQUAL(2, sumOfWorkWeights);
     }
     BOOST_CHECK_EQUAL(sumOfVerticesWorkWeights({5, 3}, graph), 4);
     BOOST_CHECK_EQUAL(sumOfVerticesWorkWeights({}, graph), 0);
     BOOST_CHECK_EQUAL(sumOfVerticesWorkWeights({0, 1, 2, 3, 4, 5}, graph), 9);
 
-    BOOST_CHECK_EQUAL(sumOfVerticesWorkWeights({}, graph_empty), 0);
+    BOOST_CHECK_EQUAL(sumOfVerticesWorkWeights({}, graphEmpty), 0);
 
-    std::size_t num_edges = 0;
+    std::size_t numEdges = 0;
     for (const auto &vertex : graph.vertices()) {
-        num_edges += graph.out_degree(vertex);
+        numEdges += graph.out_degree(vertex);
         for (const auto &parent : graph.parents(vertex)) {
             BOOST_CHECK(std::any_of(
                 graph.children(parent).cbegin(), graph.children(parent).cend(), [vertex](VertexType k) { return k == vertex; }));
@@ -495,97 +495,97 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
         }
     }
 
-    std::vector<VertexType> top_order = GetTopOrder(graph);
-    BOOST_CHECK(top_order.size() == graph.num_vertices());
-    BOOST_CHECK(GetTopOrder(graph_empty).size() == graph_empty.num_vertices());
+    std::vector<VertexType> topOrder = GetTopOrder(graph);
+    BOOST_CHECK(topOrder.size() == graph.num_vertices());
+    BOOST_CHECK(GetTopOrder(graphEmpty).size() == graphEmpty.num_vertices());
 
-    std::vector<size_t> index_in_top_order = sorting_arrangement(top_order);
+    std::vector<size_t> indexInTopOrder = sorting_arrangement(topOrder);
 
-    for (const auto &i : top_order) {
+    for (const auto &i : topOrder) {
         for (const auto &j : graph.children(i)) {
-            BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]);
+            BOOST_CHECK_LT(indexInTopOrder[i], indexInTopOrder[j]);
         }
     }
 
-    top_order = GetTopOrderMaxChildren(graph);
-    BOOST_CHECK(top_order.size() == graph.num_vertices());
-    BOOST_CHECK(GetTopOrder(graph_empty).size() == graph_empty.num_vertices());
+    topOrder = GetTopOrderMaxChildren(graph);
+    BOOST_CHECK(topOrder.size() == graph.num_vertices());
+    BOOST_CHECK(GetTopOrder(graphEmpty).size() == graphEmpty.num_vertices());
 
-    index_in_top_order = sorting_arrangement(top_order);
+    indexInTopOrder = sorting_arrangement(topOrder);
 
-    for (const auto &i : top_order) {
+    for (const auto &i : topOrder) {
         for (const auto &j : graph.children(i)) {
-            BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]);
+            BOOST_CHECK_LT(indexInTopOrder[i], indexInTopOrder[j]);
         }
     }
 
-    top_order = GetTopOrderRandom(graph);
-    BOOST_CHECK(top_order.size() == graph.num_vertices());
-    BOOST_CHECK(GetTopOrderRandom(graph_empty).size() == graph_empty.num_vertices());
+    topOrder = GetTopOrderRandom(graph);
+    BOOST_CHECK(topOrder.size() == graph.num_vertices());
+    BOOST_CHECK(GetTopOrderRandom(graphEmpty).size() == graphEmpty.num_vertices());
 
-    index_in_top_order = sorting_arrangement(top_order);
+    indexInTopOrder = sorting_arrangement(topOrder);
 
-    for (const auto &i : top_order) {
+    for (const auto &i : topOrder) {
         for (const auto &j : graph.children(i)) {
-            BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]);
+            BOOST_CHECK_LT(indexInTopOrder[i], indexInTopOrder[j]);
         }
     }
 
-    top_order = GetTopOrderMinIndex(graph);
-    BOOST_CHECK(top_order.size() == graph.num_vertices());
-    BOOST_CHECK(GetTopOrderMinIndex(graph_empty).size() == graph_empty.num_vertices());
+    topOrder = GetTopOrderMinIndex(graph);
+    BOOST_CHECK(topOrder.size() == graph.num_vertices());
+    BOOST_CHECK(GetTopOrderMinIndex(graphEmpty).size() == graphEmpty.num_vertices());
 
-    index_in_top_order = sorting_arrangement(top_order);
+    indexInTopOrder = sorting_arrangement(topOrder);
 
-    for (const auto &i : top_order) {
+    for (const auto &i : topOrder) {
         for (const auto &j : graph.children(i)) {
-            BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]);
+            BOOST_CHECK_LT(indexInTopOrder[i], indexInTopOrder[j]);
         }
     }
 
-    std::set<VertexType> all_nodes;
+    std::set<VertexType> allNodes;
     for (const auto &vertex : graph.vertices()) {
-        all_nodes.emplace(vertex);
+        allNodes.emplace(vertex);
     }
-    std::set<VertexType> nodes_a({8, 0});
-    std::set<VertexType> nodes_b({6, 2, 5, 3});
-    std::set<VertexType> nodes_c({6, 9, 1});
+    std::set<VertexType> nodesA({8, 0});
+    std::set<VertexType> nodesB({6, 2, 5, 3});
+    std::set<VertexType> nodesC({6, 9, 1});
 
-    std::vector<bool> bool_a(graph.num_vertices(), false);
-    std::vector<bool> bool_b(graph.num_vertices(), false);
-    std::vector<bool> bool_c(graph.num_vertices(), false);
+    std::vector<bool> boolA(graph.num_vertices(), false);
+    std::vector<bool> boolB(graph.num_vertices(), false);
+    std::vector<bool> boolC(graph.num_vertices(), false);
 
-    for (auto &i : nodes_a) {
-        bool_a[i] = true;
+    for (auto &i : nodesA) {
+        boolA[i] = true;
     }
-    for (auto &i : nodes_b) {
-        bool_b[i] = true;
+    for (auto &i : nodesB) {
+        boolB[i] = true;
     }
-    for (auto &i : nodes_c) {
-        bool_c[i] = true;
+    for (auto &i : nodesC) {
+        boolC[i] = true;
     }
 
-    BOOST_CHECK(GetFilteredTopOrder(bool_a, graph) == std::vector<VertexType>({0, 8})
-                || GetFilteredTopOrder(bool_a, graph) == std::vector<VertexType>({8, 0}));
-    BOOST_CHECK(GetFilteredTopOrder(bool_b, graph)[3] == 2);
-    BOOST_CHECK(GetFilteredTopOrder(bool_c, graph) == std::vector<VertexType>({9, 6, 1}));
+    BOOST_CHECK(GetFilteredTopOrder(boolA, graph) == std::vector<VertexType>({0, 8})
+                || GetFilteredTopOrder(boolA, graph) == std::vector<VertexType>({8, 0}));
+    BOOST_CHECK(GetFilteredTopOrder(boolB, graph)[3] == 2);
+    BOOST_CHECK(GetFilteredTopOrder(boolC, graph) == std::vector<VertexType>({9, 6, 1}));
 
-    BOOST_CHECK_EQUAL(longestPath(all_nodes, graph), 4);
-    BOOST_CHECK_EQUAL(longestPath(nodes_a, graph), 0);
-    BOOST_CHECK_EQUAL(longestPath(nodes_b, graph), 1);
-    BOOST_CHECK_EQUAL(longestPath(nodes_c, graph), 2);
+    BOOST_CHECK_EQUAL(longestPath(allNodes, graph), 4);
+    BOOST_CHECK_EQUAL(longestPath(nodesA, graph), 0);
+    BOOST_CHECK_EQUAL(longestPath(nodesB, graph), 1);
+    BOOST_CHECK_EQUAL(longestPath(nodesC, graph), 2);
 
-    BOOST_CHECK_EQUAL(longestPath({}, graph_empty), 0);
+    BOOST_CHECK_EQUAL(longestPath({}, graphEmpty), 0);
 
-    std::vector<VertexType> longest_path = longestChain(graph);
+    std::vector<VertexType> longestPath = longestChain(graph);
 
-    std::vector<VertexType> long_chain1({9, 6, 2, 0, 7});
-    std::vector<VertexType> long_chain2({9, 5, 2, 0, 7});
+    std::vector<VertexType> longChain1({9, 6, 2, 0, 7});
+    std::vector<VertexType> longChain2({9, 5, 2, 0, 7});
 
-    BOOST_CHECK_EQUAL(longestPath(all_nodes, graph) + 1, longestChain(graph).size());
-    BOOST_CHECK(longest_path == long_chain1 || longest_path == long_chain2);
+    BOOST_CHECK_EQUAL(longestPath(allNodes, graph) + 1, longestChain(graph).size());
+    BOOST_CHECK(longestPath == longChain1 || longestPath == longChain2);
 
-    BOOST_CHECK(longestChain(graph_empty) == std::vector<VertexType>({}));
+    BOOST_CHECK(longestChain(graphEmpty) == std::vector<VertexType>({}));
 
     BOOST_CHECK(ancestors(9, graph) == std::vector<VertexType>({9}));
     BOOST_CHECK(ancestors(2, graph) == std::vector<VertexType>({2, 3, 5, 6, 9}));
@@ -597,13 +597,13 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     BOOST_CHECK(successors(8, graph) == std::vector<VertexType>({8, 4}));
     BOOST_CHECK(successors(4, graph) == std::vector<VertexType>({4}));
 
-    std::vector<unsigned> top_dist({4, 3, 3, 1, 2, 2, 2, 5, 1, 1});
-    std::vector<unsigned> bottom_dist({2, 1, 3, 4, 1, 4, 4, 1, 2, 5});
+    std::vector<unsigned> topDist({4, 3, 3, 1, 2, 2, 2, 5, 1, 1});
+    std::vector<unsigned> bottomDist({2, 1, 3, 4, 1, 4, 4, 1, 2, 5});
 
-    BOOST_CHECK(get_top_node_distance(graph) == top_dist);
-    BOOST_CHECK(get_bottom_node_distance(graph) == bottom_dist);
+    BOOST_CHECK(get_top_node_distance(graph) == topDist);
+    BOOST_CHECK(get_bottom_node_distance(graph) == bottomDist);
 
-    const std::vector<std::vector<VertexType>> graph_second_Out = {
+    const std::vector<std::vector<VertexType>> graphSecondOut = {
         {1, 2},
         {3, 4},
         {4, 5},
@@ -612,27 +612,27 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
         {6},
         {},
     };
-    const std::vector<int> graph_second_workW = {1, 1, 1, 1, 1, 1, 3};
-    const std::vector<int> graph_second_commW = graph_second_workW;
+    const std::vector<int> graphSecondWorkW = {1, 1, 1, 1, 1, 1, 3};
+    const std::vector<int> graphSecondCommW = graphSecondWorkW;
 
-    boost_graph_int_t graph_second(graph_second_Out, graph_second_workW, graph_second_commW);
+    boost_graph_int_t graphSecond(graphSecondOut, graphSecondWorkW, graphSecondCommW);
 
-    std::vector<unsigned> top_dist_second({1, 2, 2, 3, 3, 3, 4});
-    std::vector<unsigned> bottom_dist_second({4, 3, 3, 2, 1, 2, 1});
+    std::vector<unsigned> topDistSecond({1, 2, 2, 3, 3, 3, 4});
+    std::vector<unsigned> bottomDistSecond({4, 3, 3, 2, 1, 2, 1});
 
-    BOOST_CHECK(get_top_node_distance(graph_second) == top_dist_second);
-    BOOST_CHECK(get_bottom_node_distance(graph_second) == bottom_dist_second);
+    BOOST_CHECK(get_top_node_distance(graphSecond) == topDistSecond);
+    BOOST_CHECK(get_bottom_node_distance(graphSecond) == bottomDistSecond);
 
-    std::vector<double> poisson_params({0.0000001, 0.08, 0.1, 0.2, 0.5, 1, 4});
+    std::vector<double> poissonParams({0.0000001, 0.08, 0.1, 0.2, 0.5, 1, 4});
 
     for (unsigned loops = 0; loops < 10; loops++) {
         for (unsigned noise = 0; noise < 6; noise++) {
-            for (auto &pois_para : poisson_params) {
-                std::vector<int> poset_int_map = get_strict_poset_integer_map(noise, pois_para, graph);
+            for (auto &poisPara : poissonParams) {
+                std::vector<int> posetIntMap = get_strict_poset_integer_map(noise, poisPara, graph);
 
                 for (const auto &vertex : graph.vertices()) {
                     for (const auto &child : graph.children(vertex)) {
-                        BOOST_CHECK_LE(poset_int_map[vertex] + 1, poset_int_map[child]);
+                        BOOST_CHECK_LE(posetIntMap[vertex] + 1, posetIntMap[child]);
                     }
                 }
             }
@@ -643,7 +643,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
     auto wavefronts = compute_wavefronts(graph);
 
-    std::vector<std::vector<VertexType>> expected_wavefronts = {
+    std::vector<std::vector<VertexType>> expectedWavefronts = {
         {3, 8, 9},
         {4, 6, 5},
         {1, 2},
@@ -658,7 +658,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
         BOOST_CHECK(!wavefront.empty());
 
         BOOST_CHECK_EQUAL_COLLECTIONS(
-            wavefront.begin(), wavefront.end(), expected_wavefronts[counter].begin(), expected_wavefronts[counter].end());
+            wavefront.begin(), wavefront.end(), expectedWavefronts[counter].begin(), expectedWavefronts[counter].end());
 
         counter++;
     }
@@ -690,28 +690,28 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     // }
 }
 
-BOOST_AUTO_TEST_CASE(test_edge_view_indexed_access) {
-    computational_dag_vector_impl_def_t graph = constr_graph_1();
-    auto all_edges = edge_view(graph);
+BOOST_AUTO_TEST_CASE(TestEdgeViewIndexedAccess) {
+    computational_dag_vector_impl_def_t graph = ConstrGraph1();
+    auto allEdges = edge_view(graph);
 
     // Check initial iterator
-    auto it = all_edges.begin();
+    auto it = allEdges.begin();
 
     // Check each edge by index
     for (size_t i = 0; i < graph.num_edges(); ++i) {
         // Construct iterator directly to index i
-        auto indexed_it = decltype(all_edges)::iterator(i, graph);
-        BOOST_CHECK(indexed_it == it);
-        BOOST_CHECK(*indexed_it == *it);
+        auto indexedIt = decltype(allEdges)::iterator(i, graph);
+        BOOST_CHECK(indexedIt == it);
+        BOOST_CHECK(*indexedIt == *it);
 
         ++it;
     }
 
     // Check end condition
-    auto end_it = decltype(all_edges)::iterator(graph.num_edges(), graph);
-    BOOST_CHECK(end_it == all_edges.end());
+    auto endIt = decltype(allEdges)::iterator(graph.num_edges(), graph);
+    BOOST_CHECK(endIt == allEdges.end());
 
     // Check out of bounds
-    auto oob_it = decltype(all_edges)::iterator(graph.num_edges() + 5, graph);
-    BOOST_CHECK(oob_it == all_edges.end());
+    auto oobIt = decltype(allEdges)::iterator(graph.num_edges() + 5, graph);
+    BOOST_CHECK(oobIt == allEdges.end());
 }

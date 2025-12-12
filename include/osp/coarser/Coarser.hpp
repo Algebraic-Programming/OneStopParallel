@@ -35,7 +35,7 @@ namespace osp {
  * @brief Abstract base class for coarsening ComputationalDags.
  *
  */
-template <typename Graph_t_in, typename Graph_t_out>
+template <typename GraphTIn, typename GraphTOut>
 class Coarser {
     static_assert(is_computational_dag_v<Graph_t_in>, "Graph_t_in must be a computational DAG");
     static_assert(is_constructable_cdag_v<Graph_t_out> || is_direct_constructable_cdag_v<Graph_t_out>,
@@ -59,16 +59,16 @@ class Coarser {
      * @param vertex_contraction_map Output mapping from dag_in to coarsened_dag.
      * @return A status code indicating the success or failure of the coarsening operation.
      */
-    virtual bool coarsenDag(const Graph_t_in &dag_in,
-                            Graph_t_out &coarsened_dag,
-                            std::vector<vertex_idx_t<Graph_t_out>> &vertex_contraction_map)
+    virtual bool CoarsenDag(const GraphTIn &dagIn,
+                            GraphTOut &coarsenedDag,
+                            std::vector<vertex_idx_t<Graph_t_out>> &vertexContractionMap)
         = 0;
 
     /**
      * @brief Get the name of the coarsening algorithm.
      * @return A human-readable name of the coarsening algorithm, typically used for identification or logging purposes.
      */
-    virtual std::string getCoarserName() const = 0;
+    virtual std::string GetCoarserName() const = 0;
 
     /**
      * @brief Destructor for the Coarser class.
@@ -81,18 +81,18 @@ class Coarser {
  * @brief Abstract base class for coarsening ComputationalDags.
  *
  */
-template <typename Graph_t_in, typename Graph_t_out>
-class CoarserGenContractionMap : public Coarser<Graph_t_in, Graph_t_out> {
+template <typename GraphTIn, typename GraphTOut>
+class CoarserGenContractionMap : public Coarser<GraphTIn, GraphTOut> {
   public:
-    virtual std::vector<vertex_idx_t<Graph_t_out>> generate_vertex_contraction_map(const Graph_t_in &dag_in) = 0;
+    virtual std::vector<vertex_idx_t<Graph_t_out>> GenerateVertexContractionMap(const GraphTIn &dagIn) = 0;
 
-    virtual bool coarsenDag(const Graph_t_in &dag_in,
-                            Graph_t_out &coarsened_dag,
-                            std::vector<vertex_idx_t<Graph_t_out>> &vertex_contraction_map) override {
+    virtual bool coarsenDag(const GraphTIn &dagIn,
+                            GraphTOut &coarsenedDag,
+                            std::vector<vertex_idx_t<Graph_t_out>> &vertexContractionMap) override {
         vertex_contraction_map = dag_in.num_vertices() == 0 ? std::vector<vertex_idx_t<Graph_t_out>>()
                                                             : generate_vertex_contraction_map(dag_in);
 
-        return coarser_util::construct_coarse_dag(dag_in, coarsened_dag, vertex_contraction_map);
+        return coarser_util::construct_coarse_dag(dagIn, coarsenedDag, vertex_contraction_map);
     }
 
     /**
@@ -106,27 +106,27 @@ class CoarserGenContractionMap : public Coarser<Graph_t_in, Graph_t_out> {
  * @brief Abstract base class for coarsening ComputationalDags.
  *
  */
-template <typename Graph_t_in, typename Graph_t_out>
-class CoarserGenExpansionMap : public Coarser<Graph_t_in, Graph_t_out> {
+template <typename GraphTIn, typename GraphTOut>
+class CoarserGenExpansionMap : public Coarser<GraphTIn, GraphTOut> {
   public:
-    virtual std::vector<std::vector<vertex_idx_t<Graph_t_in>>> generate_vertex_expansion_map(const Graph_t_in &dag_in) = 0;
+    virtual std::vector<std::vector<vertex_idx_t<Graph_t_in>>> GenerateVertexExpansionMap(const GraphTIn &dagIn) = 0;
 
-    virtual bool coarsenDag(const Graph_t_in &dag_in,
-                            Graph_t_out &coarsened_dag,
-                            std::vector<vertex_idx_t<Graph_t_out>> &vertex_contraction_map) override {
-        if (dag_in.num_vertices() == 0) {
+    virtual bool coarsenDag(const GraphTIn &dagIn,
+                            GraphTOut &coarsenedDag,
+                            std::vector<vertex_idx_t<Graph_t_out>> &vertexContractionMap) override {
+        if (dagIn.num_vertices() == 0) {
             vertex_contraction_map = std::vector<vertex_idx_t<Graph_t_out>>();
             return true;
         }
 
-        std::vector<std::vector<vertex_idx_t<Graph_t_in>>> vertex_expansion_map = generate_vertex_expansion_map(dag_in);
-        assert(coarser_util::check_valid_expansion_map<Graph_t_in>(vertex_expansion_map));
+        std::vector<std::vector<vertex_idx_t<Graph_t_in>>> vertexExpansionMap = generate_vertex_expansion_map(dag_in);
+        assert(coarser_util::check_valid_expansion_map<GraphTIn>(vertex_expansion_map));
 
-        coarser_util::reorder_expansion_map<Graph_t_in>(dag_in, vertex_expansion_map);
+        coarser_util::reorder_expansion_map<GraphTIn>(dagIn, vertex_expansion_map);
 
-        vertex_contraction_map = coarser_util::invert_vertex_expansion_map<Graph_t_in, Graph_t_out>(vertex_expansion_map);
+        vertexContractionMap = coarser_util::invert_vertex_expansion_map<GraphTIn, GraphTOut>(vertex_expansion_map);
 
-        return coarser_util::construct_coarse_dag(dag_in, coarsened_dag, vertex_contraction_map);
+        return coarser_util::construct_coarse_dag(dagIn, coarsenedDag, vertex_contraction_map);
     }
 
     /**

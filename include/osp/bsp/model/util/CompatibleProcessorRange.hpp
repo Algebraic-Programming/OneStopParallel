@@ -32,10 +32,10 @@ namespace osp {
  *
  * @tparam Graph_t The type of the computational DAG.
  */
-template <typename Graph_t>
+template <typename GraphT>
 class CompatibleProcessorRange {
-    std::vector<std::vector<unsigned>> typeProcessorIdx;
-    const BspInstance<Graph_t> *instance = nullptr;
+    std::vector<std::vector<unsigned>> typeProcessorIdx_;
+    const BspInstance<GraphT> *instance_ = nullptr;
 
   public:
     /**
@@ -48,23 +48,23 @@ class CompatibleProcessorRange {
      *
      * @param inst The BspInstance.
      */
-    CompatibleProcessorRange(const BspInstance<Graph_t> &inst) { initialize(inst); }
+    CompatibleProcessorRange(const BspInstance<GraphT> &inst) { Initialize(inst); }
 
     /**
      * @brief Initializes the CompatibleProcessorRange with a BspInstance.
      *
      * @param inst The BspInstance.
      */
-    void initialize(const BspInstance<Graph_t> &inst) {
-        instance = &inst;
+    void Initialize(const BspInstance<GraphT> &inst) {
+        instance_ = &inst;
 
         if constexpr (has_typed_vertices_v<Graph_t>) {
-            typeProcessorIdx.resize(inst.getComputationalDag().num_vertex_types());
+            typeProcessorIdx_.resize(inst.getComputationalDag().num_vertex_types());
 
-            for (v_type_t<Graph_t> v_type = 0; v_type < inst.getComputationalDag().num_vertex_types(); v_type++) {
+            for (v_type_t<Graph_t> vType = 0; v_type < inst.getComputationalDag().num_vertex_types(); v_type++) {
                 for (unsigned proc = 0; proc < inst.numberOfProcessors(); proc++) {
                     if (inst.isCompatibleType(v_type, inst.processorType(proc))) {
-                        typeProcessorIdx[v_type].push_back(proc);
+                        typeProcessorIdx_[v_type].push_back(proc);
                     }
                 }
             }
@@ -77,12 +77,12 @@ class CompatibleProcessorRange {
      * @param type The node type.
      * @return A const reference to a vector of compatible processor indices.
      */
-    [[nodiscard]] const auto &compatible_processors_type(const v_type_t<Graph_t> type) const {
-        assert(instance != nullptr);
+    [[nodiscard]] const auto &CompatibleProcessorsType(const v_type_t<Graph_t> type) const {
+        assert(instance_ != nullptr);
         if constexpr (has_typed_vertices_v<Graph_t>) {
-            return typeProcessorIdx[type];
+            return typeProcessorIdx_[type];
         } else {
-            return instance->processors();
+            return instance_->processors();
         }
     }
 
@@ -92,8 +92,8 @@ class CompatibleProcessorRange {
      * @param vertex The vertex index.
      * @return A const reference to a vector of compatible processor indices.
      */
-    [[nodiscard]] const auto &compatible_processors_vertex(const vertex_idx_t<Graph_t> vertex) const {
-        assert(instance != nullptr);
+    [[nodiscard]] const auto &CompatibleProcessorsVertex(const vertex_idx_t<Graph_t> vertex) const {
+        assert(instance_ != nullptr);
         return compatible_processors_type(instance->getComputationalDag().vertex_type(vertex));
     }
 };

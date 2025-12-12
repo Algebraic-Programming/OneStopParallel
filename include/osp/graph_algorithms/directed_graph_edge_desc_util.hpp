@@ -26,10 +26,10 @@ limitations under the License.
 
 namespace osp {
 
-template <typename Graph_t>
-std::pair<edge_desc_t<Graph_t>, bool> edge_desc(const vertex_idx_t<Graph_t> &src,
-                                                const vertex_idx_t<Graph_t> &dest,
-                                                const Graph_t &graph) {
+template <typename GraphT>
+std::pair<edge_desc_t<Graph_t>, bool> EdgeDesc(const vertex_idx_t<Graph_t> &src,
+                                               const vertex_idx_t<Graph_t> &dest,
+                                               const GraphT &graph) {
     static_assert(is_directed_graph_edge_desc_v<Graph_t>, "Graph_t must satisfy the directed_graph edge desc concept");
 
     for (const auto &edge : out_edges(src, graph)) {
@@ -37,29 +37,29 @@ std::pair<edge_desc_t<Graph_t>, bool> edge_desc(const vertex_idx_t<Graph_t> &src
             return {edge, true};
         }
     }
-    return {edge_desc_t<Graph_t>(), false};
+    return {edge_desc_t<GraphT>(), false};
 }
 
-template <typename Graph_t>
-std::unordered_set<edge_desc_t<Graph_t>> long_edges_in_triangles(const Graph_t &graph) {
+template <typename GraphT>
+std::unordered_set<edge_desc_t<Graph_t>> LongEdgesInTriangles(const GraphT &graph) {
     static_assert(is_directed_graph_edge_desc_v<Graph_t>, "Graph_t must satisfy the directed_graph edge desc concept");
     static_assert(has_hashable_edge_desc_v<Graph_t>, "Graph_t must satisfy the has_hashable_edge_desc concept");
 
-    std::unordered_set<edge_desc_t<Graph_t>> long_edges;
+    std::unordered_set<edge_desc_t<Graph_t>> longEdges;
 
     for (const auto &vertex : graph.vertices()) {
-        std::unordered_set<vertex_idx_t<Graph_t>> children_set;
+        std::unordered_set<vertex_idx_t<Graph_t>> childrenSet;
 
         for (const auto &v : graph.children(vertex)) {
-            children_set.emplace(v);
+            childrenSet.emplace(v);
         }
 
         for (const auto &edge : out_edges(vertex, graph)) {
             const auto &child = target(edge, graph);
 
             for (const auto &parent : graph.parents(child)) {
-                if (children_set.find(parent) != children_set.cend()) {
-                    long_edges.emplace(edge);
+                if (childrenSet.find(parent) != children_set.cend()) {
+                    longEdges.emplace(edge);
                     break;
                 }
             }

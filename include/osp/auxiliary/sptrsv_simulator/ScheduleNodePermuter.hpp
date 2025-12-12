@@ -27,7 +27,7 @@ limitations under the License.
 
 namespace osp {
 
-enum SCHEDULE_NODE_PERMUTATION_MODES { LOOP_PROCESSORS, SNAKE_PROCESSORS, PROCESSOR_FIRST, NO_PERMUTE };
+enum ScheduleNodePermutationModes { LOOP_PROCESSORS, SNAKE_PROCESSORS, PROCESSOR_FIRST, NO_PERMUTE };
 
 /**
  * @brief Computes a permutation to improve locality of a schedule, looping through processors
@@ -36,9 +36,9 @@ enum SCHEDULE_NODE_PERMUTATION_MODES { LOOP_PROCESSORS, SNAKE_PROCESSORS, PROCES
  * @param mode ordering of processors
  * @return std::vector<size_t> vec[prev_node_name] = new_node_name(location)
  */
-template <typename Graph_t>
-std::vector<size_t> schedule_node_permuter_basic(const BspSchedule<Graph_t> &sched,
-                                                 const SCHEDULE_NODE_PERMUTATION_MODES mode = LOOP_PROCESSORS) {
+template <typename GraphT>
+std::vector<size_t> ScheduleNodePermuterBasic(const BspSchedule<GraphT> &sched,
+                                              const ScheduleNodePermutationModes mode = LOOP_PROCESSORS) {
     // superstep, processor, nodes
     std::vector<std::vector<std::vector<size_t>>> allocation(
         sched.numberOfSupersteps(),
@@ -53,19 +53,19 @@ std::vector<size_t> schedule_node_permuter_basic(const BspSchedule<Graph_t> &sch
     if (mode == LOOP_PROCESSORS || mode == SNAKE_PROCESSORS) {
         bool forward = true;
         size_t counter = 0;
-        for (auto step_it = allocation.begin(); step_it != allocation.cend(); step_it++) {
+        for (auto stepIt = allocation.begin(); stepIt != allocation.cend(); stepIt++) {
             if (forward) {
-                for (auto proc_it = step_it->begin(); proc_it != step_it->cend(); proc_it++) {
+                for (auto procIt = stepIt->begin(); procIt != stepIt->cend(); procIt++) {
                     // topological_sort_for_data_locality_interior_basic(*proc_it, sched);
-                    for (const auto &node : *proc_it) {
+                    for (const auto &node : *procIt) {
                         permutation[node] = counter;
                         counter++;
                     }
                 }
             } else {
-                for (auto proc_it = step_it->rbegin(); proc_it != step_it->crend(); proc_it++) {
+                for (auto procIt = stepIt->rbegin(); procIt != stepIt->crend(); procIt++) {
                     // topological_sort_for_data_locality_interior_basic(*proc_it, sched);
-                    for (const auto &node : *proc_it) {
+                    for (const auto &node : *procIt) {
                         permutation[node] = counter;
                         counter++;
                     }

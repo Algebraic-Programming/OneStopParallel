@@ -41,14 +41,14 @@ enum CilkMode { CILK, SJF };
  * a greedy scheduling algorithm for Cilk-based BSP (Bulk Synchronous Parallel) systems. The scheduler
  * selects the next node and processor to execute a task based on a greedy strategy.
  */
-template <typename Graph_t>
-class CilkScheduler : public Scheduler<Graph_t> {
+template <typename GraphT>
+class CilkScheduler : public Scheduler<GraphT> {
     static_assert(is_computational_dag_v<Graph_t>, "CilkScheduler can only be used with computational DAGs.");
 
   private:
     using tv_pair = std::pair<v_workw_t<Graph_t>, vertex_idx_t<Graph_t>>;
 
-    CilkMode mode; /**< The mode of the Cilk scheduler. */
+    CilkMode mode_; /**< The mode of the Cilk scheduler. */
 
     // constexpr static bool use_memory_constraint = is_memory_constraint_v<MemoryConstraint_t>;
 
@@ -58,15 +58,15 @@ class CilkScheduler : public Scheduler<Graph_t> {
 
     // MemoryConstraint_t memory_constraint;
 
-    std::mt19937 gen;
+    std::mt19937 gen_;
 
-    void Choose(const BspInstance<Graph_t> &instance,
+    void Choose(const BspInstance<GraphT> &instance,
                 std::vector<std::deque<vertex_idx_t<Graph_t>>> &procQueue,
                 const std::set<vertex_idx_t<Graph_t>> &readyNodes,
                 const std::vector<bool> &procFree,
                 vertex_idx_t<Graph_t> &node,
                 unsigned &p) {
-        if (mode == SJF) {
+        if (mode_ == SJF) {
             node = *readyNodes.begin();
             for (auto &r : readyNodes) {
                 if (instance.getComputationalDag().vertex_work_weight(r) < instance.getComputationalDag().vertex_work_weight(node)) {
@@ -81,7 +81,7 @@ class CilkScheduler : public Scheduler<Graph_t> {
                 }
             }
 
-        } else if (mode == CILK) {
+        } else if (mode_ == CILK) {
             for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
                 if (procFree[i] && !procQueue[i].empty()) {
                     p = i;
@@ -113,7 +113,7 @@ class CilkScheduler : public Scheduler<Graph_t> {
 
             // Pick a random queue to steal from
             std::uniform_int_distribution<unsigned> dis(0, static_cast<unsigned>(canStealFrom.size() - 1));
-            const unsigned chosenIndex = dis(gen);
+            const unsigned chosenIndex = dis(gen_);
             const unsigned chosenQueue = canStealFrom[chosenIndex];
             node = procQueue[chosenQueue].front();
             procQueue[chosenQueue].pop_front();
@@ -128,7 +128,7 @@ class CilkScheduler : public Scheduler<Graph_t> {
      *
      * @param mode_ The Cilk mode for the scheduler.
      */
-    CilkScheduler(CilkMode mode_ = CILK) : Scheduler<Graph_t>(), mode(mode_), gen(std::random_device{}()) {}
+    CilkScheduler(CilkMode mode = CILK) : Scheduler<GraphT>(), mode_(mode), gen_(std::random_device{}()) {}
 
     /**
      * @brief Destroys the GreedyCilkScheduler object.
@@ -146,14 +146,14 @@ class CilkScheduler : public Scheduler<Graph_t> {
      * @param instance The BSP instance to compute the schedule for.
      * @return A pair containing the return status and the computed BSP schedule.
      */
-    virtual RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &bsp_schedule) override {
+    virtual RETURN_STATUS computeSchedule(BspSchedule<GraphT> &bspSchedule) override {
         // if constexpr (use_memory_constraint) {
         //     memory_constraint.initialize(instance);
         // }
 
-        const auto &instance = bsp_schedule.getInstance();
+        const auto &instance = bspSchedule.getInstance();
 
-        CSchedule<Graph_t> schedule(instance.numberOfVertices());
+        CSchedule<GraphT> schedule(instance.numberOfVertices());
 
         std::set<vertex_idx_t<Graph_t>> ready;
 
@@ -173,7 +173,7 @@ class CilkScheduler : public Scheduler<Graph_t> {
 
         for (const auto &v : source_vertices_view(instance.getComputationalDag())) {
             ready.insert(v);
-            if (mode == CILK) {
+            if (mode_ == CILK) {
                 procQueue[0].push_front(v);
             }
         }
@@ -227,7 +227,7 @@ class CilkScheduler : public Scheduler<Graph_t> {
             }
         }
 
-        schedule.convertToBspSchedule(instance, greedyProcLists, bsp_schedule);
+        schedule.convertToBspSchedule(instance, greedyProcLists, bspSchedule);
 
         return RETURN_STATUS::OSP_SUCCESS;
     }
@@ -239,7 +239,7 @@ class CilkScheduler : public Scheduler<Graph_t> {
      *
      * @param mode_ The Cilk mode to set.
      */
-    inline void setMode(CilkMode mode_) { mode = mode_; }
+    inline void SetMode(CilkMode mode) { mode_ = mode; }
 
     /**
      * @brief Gets the Cilk mode of the scheduler.
@@ -248,7 +248,7 @@ class CilkScheduler : public Scheduler<Graph_t> {
      *
      * @return The Cilk mode of the scheduler.
      */
-    inline CilkMode getMode() const { return mode; }
+    inline CilkMode GetMode() const { return mode_; }
 
     /**
      * @brief Gets the name of the schedule.
@@ -258,7 +258,7 @@ class CilkScheduler : public Scheduler<Graph_t> {
      * @return The name of the schedule.
      */
     virtual std::string getScheduleName() const override {
-        switch (mode) {
+        switch (mode_) {
             case CILK:
                 return "CilkGreedy";
                 break;

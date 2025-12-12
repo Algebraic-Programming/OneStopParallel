@@ -29,7 +29,7 @@ namespace osp {
  * @brief Divides the wavefronts of a computational DAG into consecutive groups or sections.
  *
  */
-template <typename Graph_t>
+template <typename GraphT>
 class IDagDivider {
     static_assert(is_directed_graph_v<Graph_t>, "Graph must be directed");
 
@@ -47,7 +47,7 @@ class IDagDivider {
      * @return const std::vector<std::vector<std::vector<unsigned>>>&
      *         A constant reference to the vertex maps.
      */
-    virtual std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> divide(const Graph_t &dag) = 0;
+    virtual std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> Divide(const GraphT &dag) = 0;
 };
 
 }    // namespace osp

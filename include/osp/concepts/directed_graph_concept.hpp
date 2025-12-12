@@ -52,28 +52,28 @@ namespace osp {
  * @tparam T The graph type to check against the concept.
  */
 template <typename T, typename = void>
-struct is_directed_graph : std::false_type {};
+struct IsDirectedGraph : std::false_type {};
 
 template <typename T>
-struct is_directed_graph<T,
-                         std::void_t<typename directed_graph_traits<T>::vertex_idx,
-                                     decltype(std::declval<T>().vertices()),
-                                     decltype(std::declval<T>().num_vertices()),
-                                     decltype(std::declval<T>().num_edges()),
-                                     decltype(std::declval<T>().parents(std::declval<vertex_idx_t<T>>())),
-                                     decltype(std::declval<T>().children(std::declval<vertex_idx_t<T>>())),
-                                     decltype(std::declval<T>().in_degree(std::declval<vertex_idx_t<T>>())),
-                                     decltype(std::declval<T>().out_degree(std::declval<vertex_idx_t<T>>()))>>
-    : std::conjunction<is_forward_range_of<decltype(std::declval<T>().vertices()), vertex_idx_t<T>>,
-                       std::is_integral<decltype(std::declval<T>().num_vertices())>,
-                       std::is_integral<decltype(std::declval<T>().num_edges())>,
-                       is_input_range_of<decltype(std::declval<T>().parents(std::declval<vertex_idx_t<T>>())), vertex_idx_t<T>>,
-                       is_input_range_of<decltype(std::declval<T>().children(std::declval<vertex_idx_t<T>>())), vertex_idx_t<T>>,
-                       std::is_integral<decltype(std::declval<T>().in_degree(std::declval<vertex_idx_t<T>>()))>,
-                       std::is_integral<decltype(std::declval<T>().out_degree(std::declval<vertex_idx_t<T>>()))>> {};
+struct IsDirectedGraph<T,
+                       std::void_t<typename DirectedGraphTraits<T>::vertex_idx,
+                                   decltype(std::declval<T>().vertices()),
+                                   decltype(std::declval<T>().num_vertices()),
+                                   decltype(std::declval<T>().num_edges()),
+                                   decltype(std::declval<T>().parents(std::declval<VertexIdxT<T>>())),
+                                   decltype(std::declval<T>().children(std::declval<VertexIdxT<T>>())),
+                                   decltype(std::declval<T>().in_degree(std::declval<VertexIdxT<T>>())),
+                                   decltype(std::declval<T>().out_degree(std::declval<VertexIdxT<T>>()))>>
+    : std::conjunction<IsForwardRangeOf<decltype(std::declval<T>().Vertices()), VertexIdxT<T>>,
+                       std::is_integral<decltype(std::declval<T>().NumVertices())>,
+                       std::is_integral<decltype(std::declval<T>().NumEdges())>,
+                       IsInputRangeOf<decltype(std::declval<T>().Parents(std::declval<VertexIdxT<T>>())), VertexIdxT<T>>,
+                       IsInputRangeOf<decltype(std::declval<T>().Children(std::declval<VertexIdxT<T>>())), VertexIdxT<T>>,
+                       std::is_integral<decltype(std::declval<T>().InDegree(std::declval<VertexIdxT<T>>()))>,
+                       std::is_integral<decltype(std::declval<T>().OutDegree(std::declval<VertexIdxT<T>>()))>> {};
 
 template <typename T>
-inline constexpr bool is_directed_graph_v = is_directed_graph<T>::value;
+inline constexpr bool isDirectedGraphV = IsDirectedGraph<T>::value;
 
 /**
  * @brief Concept for an edge list structure.
@@ -86,14 +86,14 @@ inline constexpr bool is_directed_graph_v = is_directed_graph<T>::value;
  * @tparam v_type The vertex type.
  * @tparam e_type The size type (usually integral).
  */
-template <typename T, typename v_type, typename e_type, typename = void>
-struct is_edge_list_type : std::false_type {};
+template <typename T, typename VType, typename EType, typename = void>
+struct IsEdgeListType : std::false_type {};
 
-template <typename T, typename v_type, typename e_type>
-struct is_edge_list_type<
+template <typename T, typename VType, typename EType>
+struct IsEdgeListType<
     T,
-    v_type,
-    e_type,
+    VType,
+    EType,
     std::void_t<decltype(std::declval<T>().begin()),
                 decltype(std::declval<T>().end()),
                 decltype(std::declval<T>().size()),
@@ -102,12 +102,12 @@ struct is_edge_list_type<
                 decltype(std::declval<typename std::iterator_traits<decltype(std::begin(std::declval<T>()))>::value_type>().target)>>
     : std::conjunction<
           std::is_same<decltype(std::declval<typename std::iterator_traits<decltype(std::begin(std::declval<T>()))>::value_type>().source),
-                       v_type>,
+                       VType>,
           std::is_same<decltype(std::declval<typename std::iterator_traits<decltype(std::begin(std::declval<T>()))>::value_type>().target),
-                       v_type>,
-          std::is_same<decltype(std::declval<T>().size()), e_type>> {};
+                       VType>,
+          std::is_same<decltype(std::declval<T>().size()), EType>> {};
 
-template <typename T, typename v_type, typename e_type>
-inline constexpr bool is_edge_list_type_v = is_edge_list_type<T, v_type, e_type>::value;
+template <typename T, typename VType, typename EType>
+inline constexpr bool isEdgeListTypeV = IsEdgeListType<T, VType, EType>::value;
 
 }    // namespace osp

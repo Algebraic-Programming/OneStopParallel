@@ -34,11 +34,11 @@ limitations under the License.
 
 namespace osp {
 
-template <typename weight_t>
-struct GrowLocalAutoCores_Params {
-    unsigned minSuperstepSize = 20;
-    weight_t syncCostMultiplierMinSuperstepWeight = 1;
-    weight_t syncCostMultiplierParallelCheck = 4;
+template <typename WeightT>
+struct GrowLocalAutoCoresParams {
+    unsigned minSuperstepSize_ = 20;
+    WeightT syncCostMultiplierMinSuperstepWeight_ = 1;
+    WeightT syncCostMultiplierParallelCheck_ = 4;
 };
 
 /**
@@ -50,30 +50,30 @@ struct GrowLocalAutoCores_Params {
  * The getScheduleName() method returns the name of the schedule, which is "GreedyBspGrowLocalAutoCores" in this
  * case.
  */
-template <typename Graph_t, typename MemoryConstraint_t = no_memory_constraint>
-class GrowLocalAutoCores : public Scheduler<Graph_t> {
+template <typename GraphT, typename MemoryConstraintT = NoMemoryConstraint>
+class GrowLocalAutoCores : public Scheduler<GraphT> {
   private:
-    GrowLocalAutoCores_Params<v_workw_t<Graph_t>> params;
+    GrowLocalAutoCores_Params<v_workw_t<Graph_t>> params_;
 
-    constexpr static bool use_memory_constraint = is_memory_constraint_v<MemoryConstraint_t>
-                                                  or is_memory_constraint_schedule_v<MemoryConstraint_t>;
+    constexpr static bool useMemoryConstraint_ = is_memory_constraint_v<MemoryConstraintT>
+                                                 or is_memory_constraint_schedule_v<MemoryConstraintT>;
 
-    static_assert(not use_memory_constraint or std::is_same_v<Graph_t, typename MemoryConstraint_t::Graph_impl_t>,
+    static_assert(not useMemoryConstraint_ or std::is_same_v<GraphT, typename MemoryConstraintT::Graph_impl_t>,
                   "Graph_t must be the same as MemoryConstraint_t::Graph_impl_t.");
 
-    static_assert(not use_memory_constraint
-                      or not(std::is_same_v<MemoryConstraint_t, persistent_transient_memory_constraint<Graph_t>>
-                             or std::is_same_v<MemoryConstraint_t, global_memory_constraint<Graph_t>>),
+    static_assert(not useMemoryConstraint_
+                      or not(std::is_same_v<MemoryConstraintT, PersistentTransientMemoryConstraint<GraphT>>
+                             or std::is_same_v<MemoryConstraintT, GlobalMemoryConstraint<GraphT>>),
                   "MemoryConstraint_t must not be persistent_transient_memory_constraint or global_memory_constraint. Not "
                   "supported in GrowLocalAutoCores.");
 
-    MemoryConstraint_t local_memory_constraint;
+    MemoryConstraintT localMemoryConstraint_;
 
   public:
     /**
      * @brief Default constructor for GreedyBspGrowLocalAutoCores.
      */
-    GrowLocalAutoCores(GrowLocalAutoCores_Params<v_workw_t<Graph_t>> params_ = GrowLocalAutoCores_Params<v_workw_t<Graph_t>>())
+    GrowLocalAutoCores(GrowLocalAutoCores_Params<v_workw_t<Graph_t>> params = GrowLocalAutoCores_Params<v_workw_t<Graph_t>>())
         : params(params_) {}
 
     /**
@@ -89,8 +89,8 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
      * @param instance The BspInstance object representing the instance to compute the schedule for.
      * @return A pair containing the return status and the computed BspSchedule.
      */
-    virtual RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &schedule) override {
-        using vertex_idx = typename Graph_t::vertex_idx;
+    virtual RETURN_STATUS computeSchedule(BspSchedule<GraphT> &schedule) override {
+        using VertexIdx = typename GraphT::vertex_idx;
         const auto &instance = schedule.getInstance();
 
         for (const auto &v : instance.getComputationalDag().vertices()) {
@@ -100,122 +100,122 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
 
         unsigned supstep = 0;
 
-        if constexpr (is_memory_constraint_v<MemoryConstraint_t>) {
-            local_memory_constraint.initialize(instance);
-        } else if constexpr (is_memory_constraint_schedule_v<MemoryConstraint_t>) {
-            local_memory_constraint.initialize(schedule, supstep);
+        if constexpr (is_memory_constraint_v<MemoryConstraintT>) {
+            localMemoryConstraint_.initialize(instance);
+        } else if constexpr (is_memory_constraint_schedule_v<MemoryConstraintT>) {
+            localMemoryConstraint_.initialize(schedule, supstep);
         }
 
-        auto &node_to_proc = schedule.assignedProcessors();
-        auto &node_to_supstep = schedule.assignedSupersteps();
+        auto &nodeToProc = schedule.assignedProcessors();
+        auto &nodeToSupstep = schedule.assignedSupersteps();
 
-        const auto N = instance.numberOfVertices();
-        const unsigned P = instance.numberOfProcessors();
-        const auto &G = instance.getComputationalDag();
+        const auto n = instance.numberOfVertices();
+        const unsigned p = instance.numberOfProcessors();
+        const auto &g = instance.getComputationalDag();
 
-        std::unordered_set<vertex_idx> ready;
+        std::unordered_set<VertexIdx> ready;
 
-        std::vector<vertex_idx> allReady;
-        std::vector<std::vector<vertex_idx>> procReady(P);
+        std::vector<VertexIdx> allReady;
+        std::vector<std::vector<VertexIdx>> procReady(p);
 
-        std::vector<vertex_idx> predec(N);
+        std::vector<VertexIdx> predec(n);
 
-        for (const auto &node : G.vertices()) {
-            predec[node] = G.in_degree(node);
+        for (const auto &node : g.vertices()) {
+            predec[node] = g.in_degree(node);
 
             if (predec[node] == 0) {
                 ready.insert(node);
             }
         }
 
-        std::vector<std::vector<vertex_idx>> new_assignments(P);
-        std::vector<std::vector<vertex_idx>> best_new_assignments(P);
+        std::vector<std::vector<VertexIdx>> newAssignments(p);
+        std::vector<std::vector<VertexIdx>> bestNewAssignments(p);
 
-        std::vector<vertex_idx> new_ready;
-        std::vector<vertex_idx> best_new_ready;
+        std::vector<VertexIdx> newReady;
+        std::vector<VertexIdx> bestNewReady;
 
         const v_workw_t<Graph_t> minWeightParallelCheck = params.syncCostMultiplierParallelCheck * instance.synchronisationCosts();
         const v_workw_t<Graph_t> minSuperstepWeight = params.syncCostMultiplierMinSuperstepWeight * instance.synchronisationCosts();
 
-        double desiredParallelism = static_cast<double>(P);
+        double desiredParallelism = static_cast<double>(p);
 
-        vertex_idx total_assigned = 0;
-        while (total_assigned < N) {
+        VertexIdx totalAssigned = 0;
+        while (totalAssigned < n) {
             unsigned limit = params.minSuperstepSize;
-            double best_score = 0;
-            double best_parallelism = 0;
+            double bestScore = 0;
+            double bestParallelism = 0;
 
             bool continueSuperstepAttempts = true;
 
             while (continueSuperstepAttempts) {
-                for (unsigned p = 0; p < P; p++) {
-                    new_assignments[p].clear();
+                for (unsigned p = 0; p < p; p++) {
+                    newAssignments[p].clear();
                     procReady[p].clear();
                 }
 
-                new_ready.clear();
+                newReady.clear();
                 allReady.assign(ready.begin(), ready.end());
-                std::make_heap(allReady.begin(), allReady.end(), std::greater<vertex_idx>());
+                std::make_heap(allReady.begin(), allReady.end(), std::greater<VertexIdx>());
 
-                vertex_idx new_total_assigned = 0;
-                v_workw_t<Graph_t> weight_limit = 0, total_weight_assigned = 0;
+                VertexIdx newTotalAssigned = 0;
+                v_workw_t<Graph_t> weightLimit = 0, total_weight_assigned = 0;
 
-                bool early_memory_break = false;
+                bool earlyMemoryBreak = false;
 
                 // Processor 0
-                while (new_assignments[0].size() < limit) {
-                    vertex_idx chosen_node = std::numeric_limits<vertex_idx>::max();
+                while (newAssignments[0].size() < limit) {
+                    VertexIdx chosenNode = std::numeric_limits<VertexIdx>::max();
 
-                    if constexpr (use_memory_constraint) {
-                        if (!procReady[0].empty() && local_memory_constraint.can_add(procReady[0].front(), 0)) {
-                            chosen_node = procReady[0].front();
-                            std::pop_heap(procReady[0].begin(), procReady[0].end(), std::greater<vertex_idx>());
+                    if constexpr (useMemoryConstraint_) {
+                        if (!procReady[0].empty() && localMemoryConstraint_.can_add(procReady[0].front(), 0)) {
+                            chosenNode = procReady[0].front();
+                            std::pop_heap(procReady[0].begin(), procReady[0].end(), std::greater<VertexIdx>());
                             procReady[0].pop_back();
-                        } else if (!allReady.empty() && local_memory_constraint.can_add(allReady.front(), 0)) {
-                            chosen_node = allReady.front();
-                            std::pop_heap(allReady.begin(), allReady.end(), std::greater<vertex_idx>());
+                        } else if (!allReady.empty() && localMemoryConstraint_.can_add(allReady.front(), 0)) {
+                            chosenNode = allReady.front();
+                            std::pop_heap(allReady.begin(), allReady.end(), std::greater<VertexIdx>());
                             allReady.pop_back();
                         } else {
-                            early_memory_break = true;
+                            earlyMemoryBreak = true;
                             break;
                         }
                     } else {
                         if (!procReady[0].empty()) {
-                            chosen_node = procReady[0].front();
-                            std::pop_heap(procReady[0].begin(), procReady[0].end(), std::greater<vertex_idx>());
+                            chosenNode = procReady[0].front();
+                            std::pop_heap(procReady[0].begin(), procReady[0].end(), std::greater<VertexIdx>());
                             procReady[0].pop_back();
                         } else if (!allReady.empty()) {
-                            chosen_node = allReady.front();
-                            std::pop_heap(allReady.begin(), allReady.end(), std::greater<vertex_idx>());
+                            chosenNode = allReady.front();
+                            std::pop_heap(allReady.begin(), allReady.end(), std::greater<VertexIdx>());
                             allReady.pop_back();
                         } else {
                             break;
                         }
                     }
 
-                    new_assignments[0].push_back(chosen_node);
-                    node_to_proc[chosen_node] = 0;
-                    new_total_assigned++;
-                    weight_limit += G.vertex_work_weight(chosen_node);
+                    newAssignments[0].push_back(chosenNode);
+                    nodeToProc[chosenNode] = 0;
+                    newTotalAssigned++;
+                    weightLimit += g.vertex_work_weight(chosenNode);
 
-                    if constexpr (use_memory_constraint) {
-                        local_memory_constraint.add(chosen_node, 0);
+                    if constexpr (useMemoryConstraint_) {
+                        localMemoryConstraint_.add(chosenNode, 0);
                     }
 
-                    for (const auto &succ : G.children(chosen_node)) {
-                        if (node_to_proc[succ] == std::numeric_limits<unsigned>::max()) {
-                            node_to_proc[succ] = 0;
-                        } else if (node_to_proc[succ] != 0) {
-                            node_to_proc[succ] = P;
+                    for (const auto &succ : g.children(chosenNode)) {
+                        if (nodeToProc[succ] == std::numeric_limits<unsigned>::max()) {
+                            nodeToProc[succ] = 0;
+                        } else if (nodeToProc[succ] != 0) {
+                            nodeToProc[succ] = p;
                         }
 
                         predec[succ]--;
                         if (predec[succ] == 0) {
-                            new_ready.push_back(succ);
+                            newReady.push_back(succ);
 
-                            if (node_to_proc[succ] == 0) {
+                            if (nodeToProc[succ] == 0) {
                                 procReady[0].push_back(succ);
-                                std::push_heap(procReady[0].begin(), procReady[0].end(), std::greater<vertex_idx>());
+                                std::push_heap(procReady[0].begin(), procReady[0].end(), std::greater<VertexIdx>());
                             }
                         }
                     }
@@ -224,129 +224,129 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
                 total_weight_assigned += weight_limit;
 
                 // Processors 1 through P-1
-                for (unsigned proc = 1; proc < P; ++proc) {
-                    v_workw_t<Graph_t> current_weight_assigned = 0;
+                for (unsigned proc = 1; proc < p; ++proc) {
+                    v_workw_t<Graph_t> currentWeightAssigned = 0;
                     while (current_weight_assigned < weight_limit) {
-                        vertex_idx chosen_node = std::numeric_limits<vertex_idx>::max();
+                        VertexIdx chosenNode = std::numeric_limits<VertexIdx>::max();
 
-                        if constexpr (use_memory_constraint) {
-                            if (!procReady[proc].empty() && local_memory_constraint.can_add(procReady[proc].front(), proc)) {
-                                chosen_node = procReady[proc].front();
-                                std::pop_heap(procReady[proc].begin(), procReady[proc].end(), std::greater<vertex_idx>());
+                        if constexpr (useMemoryConstraint_) {
+                            if (!procReady[proc].empty() && localMemoryConstraint_.can_add(procReady[proc].front(), proc)) {
+                                chosenNode = procReady[proc].front();
+                                std::pop_heap(procReady[proc].begin(), procReady[proc].end(), std::greater<VertexIdx>());
                                 procReady[proc].pop_back();
-                            } else if (!allReady.empty() && local_memory_constraint.can_add(allReady.front(), proc)) {
-                                chosen_node = allReady.front();
-                                std::pop_heap(allReady.begin(), allReady.end(), std::greater<vertex_idx>());
+                            } else if (!allReady.empty() && localMemoryConstraint_.can_add(allReady.front(), proc)) {
+                                chosenNode = allReady.front();
+                                std::pop_heap(allReady.begin(), allReady.end(), std::greater<VertexIdx>());
                                 allReady.pop_back();
                             } else {
-                                early_memory_break = true;
+                                earlyMemoryBreak = true;
                                 break;
                             }
                         } else {
                             if (!procReady[proc].empty()) {
-                                chosen_node = procReady[proc].front();
-                                std::pop_heap(procReady[proc].begin(), procReady[proc].end(), std::greater<vertex_idx>());
+                                chosenNode = procReady[proc].front();
+                                std::pop_heap(procReady[proc].begin(), procReady[proc].end(), std::greater<VertexIdx>());
                                 procReady[proc].pop_back();
                             } else if (!allReady.empty()) {
-                                chosen_node = allReady.front();
-                                std::pop_heap(allReady.begin(), allReady.end(), std::greater<vertex_idx>());
+                                chosenNode = allReady.front();
+                                std::pop_heap(allReady.begin(), allReady.end(), std::greater<VertexIdx>());
                                 allReady.pop_back();
                             } else {
                                 break;
                             }
                         }
 
-                        new_assignments[proc].push_back(chosen_node);
-                        node_to_proc[chosen_node] = proc;
-                        new_total_assigned++;
-                        current_weight_assigned += G.vertex_work_weight(chosen_node);
+                        newAssignments[proc].push_back(chosenNode);
+                        nodeToProc[chosenNode] = proc;
+                        newTotalAssigned++;
+                        currentWeightAssigned += g.vertex_work_weight(chosenNode);
 
-                        if constexpr (use_memory_constraint) {
-                            local_memory_constraint.add(chosen_node, proc);
+                        if constexpr (useMemoryConstraint_) {
+                            localMemoryConstraint_.add(chosenNode, proc);
                         }
 
-                        for (const auto &succ : G.children(chosen_node)) {
-                            if (node_to_proc[succ] == std::numeric_limits<unsigned>::max()) {
-                                node_to_proc[succ] = proc;
-                            } else if (node_to_proc[succ] != proc) {
-                                node_to_proc[succ] = P;
+                        for (const auto &succ : g.children(chosenNode)) {
+                            if (nodeToProc[succ] == std::numeric_limits<unsigned>::max()) {
+                                nodeToProc[succ] = proc;
+                            } else if (nodeToProc[succ] != proc) {
+                                nodeToProc[succ] = p;
                             }
                             predec[succ]--;
                             if (predec[succ] == 0) {
-                                new_ready.push_back(succ);
+                                newReady.push_back(succ);
 
-                                if (node_to_proc[succ] == proc) {
+                                if (nodeToProc[succ] == proc) {
                                     procReady[proc].push_back(succ);
-                                    std::push_heap(procReady[proc].begin(), procReady[proc].end(), std::greater<vertex_idx>());
+                                    std::push_heap(procReady[proc].begin(), procReady[proc].end(), std::greater<VertexIdx>());
                                 }
                             }
                         }
                     }
 
-                    weight_limit = std::max(weight_limit, current_weight_assigned);
+                    weightLimit = std::max(weight_limit, current_weight_assigned);
                     total_weight_assigned += current_weight_assigned;
                 }
 
-                bool accept_step = false;
+                bool acceptStep = false;
 
                 double score = static_cast<double>(total_weight_assigned)
                                / static_cast<double>(weight_limit + instance.synchronisationCosts());
                 double parallelism = 0;
-                if (weight_limit > 0) {
+                if (weightLimit > 0) {
                     parallelism = static_cast<double>(total_weight_assigned) / static_cast<double>(weight_limit);
                 }
 
-                if (score > 0.97 * best_score) {
-                    best_score = std::max(best_score, score);
-                    best_parallelism = parallelism;
-                    accept_step = true;
+                if (score > 0.97 * bestScore) {
+                    bestScore = std::max(bestScore, score);
+                    bestParallelism = parallelism;
+                    acceptStep = true;
                 } else {
                     continueSuperstepAttempts = false;
                 }
 
-                if (weight_limit >= minWeightParallelCheck) {
+                if (weightLimit >= minWeightParallelCheck) {
                     if (parallelism < std::max(2.0, 0.8 * desiredParallelism)) {
                         continueSuperstepAttempts = false;
                     }
                 }
 
-                if (weight_limit <= minSuperstepWeight) {
+                if (weightLimit <= minSuperstepWeight) {
                     continueSuperstepAttempts = true;
-                    if (total_assigned + new_total_assigned == N) {
-                        accept_step = true;
+                    if (totalAssigned + newTotalAssigned == n) {
+                        acceptStep = true;
                         continueSuperstepAttempts = false;
                     }
                 }
 
-                if (total_assigned + new_total_assigned == N) {
+                if (totalAssigned + newTotalAssigned == n) {
                     continueSuperstepAttempts = false;
                 }
 
-                if constexpr (use_memory_constraint) {
-                    if (early_memory_break) {
+                if constexpr (useMemoryConstraint_) {
+                    if (earlyMemoryBreak) {
                         continueSuperstepAttempts = false;
                     }
                 }
 
                 // undo proc assingments and predec decreases in any case
-                for (unsigned proc = 0; proc < P; ++proc) {
-                    for (const auto &node : new_assignments[proc]) {
-                        node_to_proc[node] = std::numeric_limits<unsigned>::max();
+                for (unsigned proc = 0; proc < p; ++proc) {
+                    for (const auto &node : newAssignments[proc]) {
+                        nodeToProc[node] = std::numeric_limits<unsigned>::max();
 
-                        for (const auto &succ : G.children(node)) {
+                        for (const auto &succ : g.children(node)) {
                             predec[succ]++;
-                            node_to_proc[succ] = std::numeric_limits<unsigned>::max();
+                            nodeToProc[succ] = std::numeric_limits<unsigned>::max();
                         }
                     }
 
-                    if constexpr (use_memory_constraint) {
-                        local_memory_constraint.reset(proc);
+                    if constexpr (useMemoryConstraint_) {
+                        localMemoryConstraint_.reset(proc);
                     }
                 }
 
-                if (accept_step) {
-                    best_new_assignments.swap(new_assignments);
-                    best_new_ready.swap(new_ready);
+                if (acceptStep) {
+                    bestNewAssignments.swap(newAssignments);
+                    bestNewReady.swap(newReady);
                 }
 
                 limit++;
@@ -354,25 +354,25 @@ class GrowLocalAutoCores : public Scheduler<Graph_t> {
             }
 
             // apply best iteration
-            for (const auto &node : best_new_ready) {
+            for (const auto &node : bestNewReady) {
                 ready.insert(node);
             }
 
-            for (unsigned proc = 0; proc < P; ++proc) {
-                for (const auto &node : best_new_assignments[proc]) {
-                    node_to_proc[node] = proc;
-                    node_to_supstep[node] = supstep;
+            for (unsigned proc = 0; proc < p; ++proc) {
+                for (const auto &node : bestNewAssignments[proc]) {
+                    nodeToProc[node] = proc;
+                    nodeToSupstep[node] = supstep;
                     ready.erase(node);
-                    ++total_assigned;
+                    ++totalAssigned;
 
-                    for (const auto &succ : G.children(node)) {
+                    for (const auto &succ : g.children(node)) {
                         predec[succ]--;
                     }
                 }
             }
 
-            desiredParallelism = (0.3 * desiredParallelism) + (0.6 * best_parallelism)
-                                 + (0.1 * static_cast<double>(P));    // weights should sum up to one
+            desiredParallelism = (0.3 * desiredParallelism) + (0.6 * bestParallelism)
+                                 + (0.1 * static_cast<double>(p));    // weights should sum up to one
 
             ++supstep;
         }

@@ -27,8 +27,8 @@ limitations under the License.
 namespace osp {
 namespace file_writer {
 
-template <typename Graph_t>
-void write_txt(std::ostream &os, const BspSchedule<Graph_t> &schedule) {
+template <typename GraphT>
+void WriteTxt(std::ostream &os, const BspSchedule<GraphT> &schedule) {
     os << "%% BspSchedule for " << schedule.getInstance().numberOfProcessors() << " processors and "
        << schedule.numberOfSupersteps() << " supersteps." << std::endl;
     os << schedule.getInstance().numberOfVertices() << " " << schedule.getInstance().numberOfProcessors() << " "
@@ -39,14 +39,14 @@ void write_txt(std::ostream &os, const BspSchedule<Graph_t> &schedule) {
     }
 }
 
-template <typename Graph_t>
-void write_txt(const std::string &filename, const BspSchedule<Graph_t> &schedule) {
+template <typename GraphT>
+void WriteTxt(const std::string &filename, const BspSchedule<GraphT> &schedule) {
     std::ofstream os(filename);
     write_txt(os, schedule);
 }
 
-template <typename Graph_t>
-void write_txt(std::ostream &os, const BspScheduleCS<Graph_t> &schedule) {
+template <typename GraphT>
+void WriteTxt(std::ostream &os, const BspScheduleCS<GraphT> &schedule) {
     os << "%% BspSchedule for " << schedule.getInstance().numberOfProcessors() << " processors and "
        << schedule.numberOfSupersteps() << " supersteps." << std::endl;
     os << schedule.getInstance().numberOfVertices() << " " << schedule.getInstance().numberOfProcessors() << " "
@@ -74,29 +74,28 @@ void write_txt(std::ostream &os, const BspScheduleCS<Graph_t> &schedule) {
     }
 }
 
-template <typename Graph_t>
-void write_txt(const std::string &filename, const BspScheduleCS<Graph_t> &schedule) {
+template <typename GraphT>
+void WriteTxt(const std::string &filename, const BspScheduleCS<GraphT> &schedule) {
     std::ofstream os(filename);
     write_txt(os, schedule);
 }
 
-template <typename Graph_t>
-void write_sankey(std::ostream &os, const BspScheduleCS<Graph_t> &schedule) {
+template <typename GraphT>
+void WriteSankey(std::ostream &os, const BspScheduleCS<GraphT> &schedule) {
     // Computing workloads
-    std::vector<std::vector<v_workw_t<Graph_t>>> proc_workloads(
-        schedule.numberOfSupersteps(), std::vector<v_workw_t<Graph_t>>(schedule.getInstance().numberOfProcessors(), 0));
+    std::vector<std::vector<VWorkwT<GraphT>>> procWorkloads(
+        schedule.numberOfSupersteps(), std::vector<VWorkwT<GraphT>>(schedule.getInstance().numberOfProcessors(), 0));
 
     for (size_t node = 0; node < schedule.getInstance().numberOfVertices(); node++) {
-        proc_workloads[schedule.assignedSuperstep(node)][schedule.assignedProcessor(node)]
+        procWorkloads[schedule.assignedSuperstep(node)][schedule.assignedProcessor(node)]
             += schedule.getInstance().getComputationalDag().vertex_work_weight(node);
     }
 
     // Computing communicationloads
-    std::vector<std::vector<std::vector<v_commw_t<Graph_t>>>> commloads(
+    std::vector<std::vector<std::vector<VCommwT<GraphT>>>> commloads(
         schedule.numberOfSupersteps() - 1,
-        std::vector<std::vector<v_commw_t<Graph_t>>>(
-            schedule.getInstance().numberOfProcessors(),
-            std::vector<v_commw_t<Graph_t>>(schedule.getInstance().numberOfProcessors(), 0)));
+        std::vector<std::vector<VCommwT<GraphT>>>(schedule.getInstance().numberOfProcessors(),
+                                                  std::vector<VCommwT<GraphT>>(schedule.getInstance().numberOfProcessors(), 0)));
 
     for (const auto &[comm_triple, sstep] : schedule.getCommunicationSchedule()) {
         commloads[sstep][std::get<1>(comm_triple)][std::get<2>(comm_triple)]
@@ -107,30 +106,30 @@ void write_sankey(std::ostream &os, const BspScheduleCS<Graph_t> &schedule) {
     os << schedule.getInstance().numberOfProcessors() << "," << schedule.numberOfSupersteps() << std::endl;
 
     os << "Processor workloads in Superstep" << std::endl;
-    for (const auto &sstep : proc_workloads) {
-        for (size_t proc_ind = 0; proc_ind < sstep.size(); proc_ind++) {
-            if (proc_ind != 0) {
+    for (const auto &sstep : procWorkloads) {
+        for (size_t procInd = 0; procInd < sstep.size(); procInd++) {
+            if (procInd != 0) {
                 os << ",";
             }
-            os << sstep[proc_ind];
+            os << sstep[procInd];
         }
         os << std::endl;
     }
 
     os << "Communication between Processors in Supersteps" << std::endl;
     for (size_t sstep = 0; sstep < commloads.size(); sstep++) {
-        for (size_t send_proc = 0; send_proc < schedule.getInstance().numberOfProcessors(); send_proc++) {
-            for (size_t receive_proc = 0; receive_proc < schedule.getInstance().numberOfProcessors(); receive_proc++) {
+        for (size_t sendProc = 0; sendProc < schedule.getInstance().numberOfProcessors(); sendProc++) {
+            for (size_t receiveProc = 0; receiveProc < schedule.getInstance().numberOfProcessors(); receiveProc++) {
                 // if (commloads[ sstep ][ send_proc ][ receive_proc ] == 0) continue;
-                os << sstep + 1 << "," << send_proc + 1 << "," << receive_proc + 1 << ","
-                   << commloads[sstep][send_proc][receive_proc] << std::endl;
+                os << sstep + 1 << "," << sendProc + 1 << "," << receiveProc + 1 << "," << commloads[sstep][sendProc][receiveProc]
+                   << std::endl;
             }
         }
     }
 }
 
-template <typename Graph_t>
-void write_sankey(const std::string &filename, const BspScheduleCS<Graph_t> &schedule) {
+template <typename GraphT>
+void WriteSankey(const std::string &filename, const BspScheduleCS<GraphT> &schedule) {
     std::ofstream os(filename);
     write_sankey(os, schedule);
 }

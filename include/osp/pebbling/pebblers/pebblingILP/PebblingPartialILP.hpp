@@ -29,8 +29,8 @@ limitations under the License.
 
 namespace osp {
 
-template <typename Graph_t>
-class PebblingPartialILP : public Scheduler<Graph_t> {
+template <typename GraphT>
+class PebblingPartialILP : public Scheduler<GraphT> {
     static_assert(is_computational_dag_v<Graph_t>, "PebblingSchedule can only be used with computational DAGs.");
     static_assert(std::is_same_v<v_workw_t<Graph_t>, v_commw_t<Graph_t>>,
                   "PebblingSchedule requires work and comm. weights to have the same type.");
@@ -38,25 +38,25 @@ class PebblingPartialILP : public Scheduler<Graph_t> {
     using vertex_idx = vertex_idx_t<Graph_t>;
     using cost_type = v_workw_t<Graph_t>;
 
-    unsigned minPartitionSize = 50, maxPartitionSize = 100;
-    unsigned time_seconds_for_subILPs = 600;
+    unsigned minPartitionSize_ = 50, maxPartitionSize_ = 100;
+    unsigned timeSecondsForSubIlPs_ = 600;
 
-    bool asynchronous = false;
-    bool verbose = false;
+    bool asynchronous_ = false;
+    bool verbose_ = false;
 
-    std::map<std::pair<unsigned, unsigned>, unsigned> part_and_nodetype_to_new_index;
+    std::map<std::pair<unsigned, unsigned>, unsigned> partAndNodetypeToNewIndex_;
 
   public:
     PebblingPartialILP() {}
 
     virtual ~PebblingPartialILP() = default;
 
-    RETURN_STATUS computePebbling(PebblingSchedule<Graph_t> &schedule);
+    RETURN_STATUS ComputePebbling(PebblingSchedule<GraphT> &schedule);
 
     // not used, only here for using scheduler class base functionality (status enums, timelimits, etc)
-    virtual RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &schedule) override;
+    virtual RETURN_STATUS computeSchedule(BspSchedule<GraphT> &schedule) override;
 
-    Graph_t contractByPartition(const BspInstance<Graph_t> &instance, const std::vector<unsigned> &node_to_part_assignment);
+    GraphT ContractByPartition(const BspInstance<GraphT> &instance, const std::vector<unsigned> &nodeToPartAssignment);
 
     /**
      * @brief Get the name of the schedule.
@@ -66,57 +66,57 @@ class PebblingPartialILP : public Scheduler<Graph_t> {
     virtual std::string getScheduleName() const override { return "PebblingPartialILP"; }
 
     // getters and setters for problem parameters
-    inline std::pair<unsigned, unsigned> getMinAndMaxSize() const { return std::make_pair(minPartitionSize, maxPartitionSize); }
+    inline std::pair<unsigned, unsigned> GetMinAndMaxSize() const { return std::make_pair(minPartitionSize_, maxPartitionSize_); }
 
-    inline void setMinSize(const unsigned min_size) {
-        minPartitionSize = min_size;
-        maxPartitionSize = 2 * min_size;
+    inline void SetMinSize(const unsigned minSize) {
+        minPartitionSize_ = minSize;
+        maxPartitionSize_ = 2 * minSize;
     }
 
-    inline void setMinAndMaxSize(const std::pair<unsigned, unsigned> min_and_max) {
-        minPartitionSize = min_and_max.first;
-        maxPartitionSize = min_and_max.second;
+    inline void SetMinAndMaxSize(const std::pair<unsigned, unsigned> minAndMax) {
+        minPartitionSize_ = min_and_max.first;
+        maxPartitionSize_ = min_and_max.second;
     }
 
-    inline void setAsync(const bool async_) { asynchronous = async_; }
+    inline void SetAsync(const bool async) { asynchronous_ = async; }
 
-    inline void setSecondsForSubILP(const unsigned seconds_) { time_seconds_for_subILPs = seconds_; }
+    inline void SetSecondsForSubIlp(const unsigned seconds) { timeSecondsForSubIlPs_ = seconds; }
 
-    inline void setVerbose(const bool verbose_) { verbose = verbose_; }
+    inline void SetVerbose(const bool verbose) { verbose_ = verbose; }
 };
 
-template <typename Graph_t>
-RETURN_STATUS PebblingPartialILP<Graph_t>::computePebbling(PebblingSchedule<Graph_t> &schedule) {
-    const BspInstance<Graph_t> &instance = schedule.getInstance();
+template <typename GraphT>
+RETURN_STATUS PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<GraphT> &schedule) {
+    const BspInstance<GraphT> &instance = schedule.getInstance();
 
-    if (!PebblingSchedule<Graph_t>::hasValidSolution(instance)) {
+    if (!PebblingSchedule<GraphT>::hasValidSolution(instance)) {
         return RETURN_STATUS::ERROR;
     }
 
     // STEP 1: divide DAG acyclicly with partitioning ILP
 
-    AcyclicDagDivider<Graph_t> dag_divider;
-    dag_divider.setMinAndMaxSize({minPartitionSize, maxPartitionSize});
-    std::vector<unsigned> assignment_to_parts = dag_divider.computePartitioning(instance);
-    unsigned nr_parts = *std::max_element(assignment_to_parts.begin(), assignment_to_parts.end()) + 1;
+    AcyclicDagDivider<GraphT> dagDivider;
+    dagDivider.setMinAndMaxSize({minPartitionSize_, maxPartitionSize_});
+    std::vector<unsigned> assignmentToParts = dagDivider.computePartitioning(instance);
+    unsigned nrParts = *std::max_element(assignment_to_parts.begin(), assignment_to_parts.end()) + 1;
 
     // TODO remove source nodes before this?
-    Graph_t contracted_dag = contractByPartition(instance, assignment_to_parts);
+    GraphT contractedDag = contractByPartition(instance, assignment_to_parts);
 
     // STEP 2: develop high-level multischedule on parts
 
-    BspInstance<Graph_t> contracted_instance(
-        contracted_dag, instance.getArchitecture(), instance.getNodeProcessorCompatibilityMatrix());
+    BspInstance<GraphT> contractedInstance(
+        contractedDag, instance.getArchitecture(), instance.getNodeProcessorCompatibilityMatrix());
 
-    SubproblemMultiScheduling<Graph_t> multi_scheduler;
-    std::vector<std::set<unsigned>> processors_to_parts_and_types;
-    multi_scheduler.computeMultiSchedule(contracted_instance, processors_to_parts_and_types);
+    SubproblemMultiScheduling<GraphT> multiScheduler;
+    std::vector<std::set<unsigned>> processorsToPartsAndTypes;
+    multiScheduler.computeMultiSchedule(contractedInstance, processors_to_parts_and_types);
 
-    std::vector<std::set<unsigned>> processors_to_parts(nr_parts);
-    for (unsigned part = 0; part < nr_parts; ++part) {
+    std::vector<std::set<unsigned>> processorsToParts(nrParts);
+    for (unsigned part = 0; part < nrParts; ++part) {
         for (unsigned type = 0; type < instance.getComputationalDag().num_vertex_types(); ++type) {
             if (part_and_nodetype_to_new_index.find({part, type}) != part_and_nodetype_to_new_index.end()) {
-                unsigned new_index = part_and_nodetype_to_new_index[{part, type}];
+                unsigned newIndex = part_and_nodetype_to_new_index[{part, type}];
                 for (unsigned proc : processors_to_parts_and_types[new_index]) {
                     processors_to_parts[part].insert(proc);
                 }
@@ -127,12 +127,12 @@ RETURN_STATUS PebblingPartialILP<Graph_t>::computePebbling(PebblingSchedule<Grap
     // AUX: check for isomorphism
 
     // create set of nodes & external sources for all parts, and the nodes that need to have blue pebble at the end
-    std::vector<std::set<vertex_idx>> nodes_in_part(nr_parts), extra_sources(nr_parts);
-    std::vector<std::map<vertex_idx, vertex_idx>> original_node_id(nr_parts);
-    std::vector<std::map<unsigned, unsigned>> original_proc_id(nr_parts);
+    std::vector<std::set<vertex_idx>> nodesInPart(nrParts), extra_sources(nr_parts);
+    std::vector<std::map<vertex_idx, vertex_idx>> originalNodeId(nrParts);
+    std::vector<std::map<unsigned, unsigned>> originalProcId(nrParts);
     for (vertex_idx node = 0; node < instance.numberOfVertices(); ++node) {
         if (instance.getComputationalDag().in_degree(node) > 0) {
-            nodes_in_part[assignment_to_parts[node]].insert(node);
+            nodesInPart[assignment_to_parts[node]].insert(node);
         } else {
             extra_sources[assignment_to_parts[node]].insert(node);
         }
@@ -144,35 +144,35 @@ RETURN_STATUS PebblingPartialILP<Graph_t>::computePebbling(PebblingSchedule<Grap
     }
 
     std::vector<Graph_t> subDags;
-    for (unsigned part = 0; part < nr_parts; ++part) {
-        Graph_t dag;
+    for (unsigned part = 0; part < nrParts; ++part) {
+        GraphT dag;
         create_induced_subgraph(instance.getComputationalDag(), dag, nodes_in_part[part], extra_sources[part]);
         subDags.push_back(dag);
 
         // set source nodes to a new type, so that they are compatible with any processor
-        unsigned artificial_type_for_sources = subDags.back().num_vertex_types();
-        for (vertex_idx node_idx = 0; node_idx < extra_sources[part].size(); ++node_idx) {
-            subDags.back().set_vertex_type(node_idx, artificial_type_for_sources);
+        unsigned artificialTypeForSources = subDags.back().num_vertex_types();
+        for (vertex_idx nodeIdx = 0; node_idx < extra_sources[part].size(); ++node_idx) {
+            subDags.back().set_vertex_type(node_idx, artificialTypeForSources);
         }
     }
 
-    std::vector<unsigned> isomorphicTo(nr_parts, UINT_MAX);
+    std::vector<unsigned> isomorphicTo(nrParts, UINT_MAX);
 
-    std::cout << "Number of parts: " << nr_parts << std::endl;
+    std::cout << "Number of parts: " << nrParts << std::endl;
 
-    for (unsigned part = 0; part < nr_parts; ++part) {
-        for (unsigned other_part = part + 1; other_part < nr_parts; ++other_part) {
-            if (isomorphicTo[other_part] < UINT_MAX) {
+    for (unsigned part = 0; part < nrParts; ++part) {
+        for (unsigned otherPart = part + 1; otherPart < nrParts; ++otherPart) {
+            if (isomorphicTo[otherPart] < UINT_MAX) {
                 continue;
             }
 
             bool isomorphic = true;
-            if (!checkOrderedIsomorphism(subDags[part], subDags[other_part])) {
+            if (!checkOrderedIsomorphism(subDags[part], subDags[otherPart])) {
                 continue;
             }
 
-            std::vector<unsigned> proc_assigned_per_type(instance.getArchitecture().getNumberOfProcessorTypes(), 0);
-            std::vector<unsigned> other_proc_assigned_per_type(instance.getArchitecture().getNumberOfProcessorTypes(), 0);
+            std::vector<unsigned> procAssignedPerType(instance.getArchitecture().getNumberOfProcessorTypes(), 0);
+            std::vector<unsigned> otherProcAssignedPerType(instance.getArchitecture().getNumberOfProcessorTypes(), 0);
             for (unsigned proc : processors_to_parts[part]) {
                 ++proc_assigned_per_type[instance.getArchitecture().processorType(proc)];
             }
@@ -180,8 +180,8 @@ RETURN_STATUS PebblingPartialILP<Graph_t>::computePebbling(PebblingSchedule<Grap
                 ++other_proc_assigned_per_type[instance.getArchitecture().processorType(proc)];
             }
 
-            for (unsigned proc_type = 0; proc_type < instance.getArchitecture().getNumberOfProcessorTypes(); ++proc_type) {
-                if (proc_assigned_per_type[proc_type] != other_proc_assigned_per_type[proc_type]) {
+            for (unsigned procType = 0; procType < instance.getArchitecture().getNumberOfProcessorTypes(); ++procType) {
+                if (procAssignedPerType[procType] != other_proc_assigned_per_type[procType]) {
                     isomorphic = false;
                 }
             }
@@ -190,28 +190,28 @@ RETURN_STATUS PebblingPartialILP<Graph_t>::computePebbling(PebblingSchedule<Grap
                 continue;
             }
 
-            isomorphicTo[other_part] = part;
-            std::cout << "Part " << other_part << " is isomorphic to " << part << std::endl;
+            isomorphicTo[otherPart] = part;
+            std::cout << "Part " << otherPart << " is isomorphic to " << part << std::endl;
         }
     }
 
     // PART 3: solve a small ILP for each part
-    std::vector<std::set<vertex_idx>> in_fast_mem(instance.numberOfProcessors());
-    std::vector<PebblingSchedule<Graph_t>> pebbling(nr_parts);
-    std::vector<BspArchitecture<Graph_t>> subArch(nr_parts);
-    std::vector<BspInstance<Graph_t>> subInstance(nr_parts);
+    std::vector<std::set<vertex_idx>> inFastMem(instance.numberOfProcessors());
+    std::vector<PebblingSchedule<Graph_t>> pebbling(nrParts);
+    std::vector<BspArchitecture<Graph_t>> subArch(nrParts);
+    std::vector<BspInstance<Graph_t>> subInstance(nrParts);
 
     // to handle the initial memory content for isomorphic parts
-    std::vector<std::vector<std::set<vertex_idx>>> has_reds_in_beginning(
+    std::vector<std::vector<std::set<vertex_idx>>> hasRedsInBeginning(
         nr_parts, std::vector<std::set<vertex_idx>>(instance.numberOfProcessors()));
 
-    for (unsigned part = 0; part < nr_parts; ++part) {
+    for (unsigned part = 0; part < nrParts; ++part) {
         std::cout << "part " << part << std::endl;
 
         // set up sub-DAG
-        Graph_t &subDag = subDags[part];
-        std::map<vertex_idx, vertex_idx> local_id;
-        vertex_idx node_idx = 0;
+        GraphT &subDag = subDags[part];
+        std::map<vertex_idx, vertex_idx> localId;
+        vertex_idx nodeIdx = 0;
         for (vertex_idx node : extra_sources[part]) {
             local_id[node] = node_idx;
             original_node_id[part][node_idx] = node;
@@ -223,7 +223,7 @@ RETURN_STATUS PebblingPartialILP<Graph_t>::computePebbling(PebblingSchedule<Grap
             ++node_idx;
         }
 
-        std::set<vertex_idx> needs_blue_at_end;
+        std::set<vertex_idx> needsBlueAtEnd;
         for (vertex_idx node : nodes_in_part[part]) {
             for (const vertex_idx &succ : instance.getComputationalDag().children(node)) {
                 if (assignment_to_parts[node] != assignment_to_parts[succ]) {
@@ -238,7 +238,7 @@ RETURN_STATUS PebblingPartialILP<Graph_t>::computePebbling(PebblingSchedule<Grap
 
         // set up sub-architecture
         subArch[part].setNumberOfProcessors(static_cast<unsigned>(processors_to_parts[part].size()));
-        unsigned proc_index = 0;
+        unsigned procIndex = 0;
         for (unsigned proc : processors_to_parts[part]) {
             subArch[part].setProcessorType(proc_index, instance.getArchitecture().processorType(proc));
             subArch[part].setMemoryBound(instance.getArchitecture().memoryBound(proc), proc_index);
@@ -252,22 +252,22 @@ RETURN_STATUS PebblingPartialILP<Graph_t>::computePebbling(PebblingSchedule<Grap
         // skip if isomorphic to previous part
         if (isomorphicTo[part] < UINT_MAX) {
             pebbling[part] = pebbling[isomorphicTo[part]];
-            has_reds_in_beginning[part] = has_reds_in_beginning[isomorphicTo[part]];
+            hasRedsInBeginning[part] = has_reds_in_beginning[isomorphicTo[part]];
             continue;
         }
 
         // set node-processor compatibility matrix
-        std::vector<std::vector<bool>> comp_matrix = instance.getNodeProcessorCompatibilityMatrix();
-        comp_matrix.emplace_back(instance.getArchitecture().getNumberOfProcessorTypes(), true);
+        std::vector<std::vector<bool>> compMatrix = instance.getNodeProcessorCompatibilityMatrix();
+        compMatrix.emplace_back(instance.getArchitecture().getNumberOfProcessorTypes(), true);
         subInstance[part] = BspInstance(subDag, subArch[part], comp_matrix);
 
         // currently we only allow the input laoding scenario - the case where this is false is unmaintained/untested
-        bool need_to_load_inputs = true;
+        bool needToLoadInputs = true;
 
         // keep in fast memory what's relevant, remove the rest
-        for (unsigned proc = 0; proc < processors_to_parts[part].size(); ++proc) {
-            has_reds_in_beginning[part][proc].clear();
-            std::set<vertex_idx> new_content_fast_mem;
+        for (unsigned proc = 0; proc < processorsToParts[part].size(); ++proc) {
+            hasRedsInBeginning[part][proc].clear();
+            std::set<vertex_idx> newContentFastMem;
             for (vertex_idx node : in_fast_mem[original_proc_id[part][proc]]) {
                 if (local_id.find(node) != local_id.end()) {
                     has_reds_in_beginning[part][proc].insert(local_id[node]);
@@ -275,52 +275,52 @@ RETURN_STATUS PebblingPartialILP<Graph_t>::computePebbling(PebblingSchedule<Grap
                 }
             }
 
-            in_fast_mem[original_proc_id[part][proc]] = new_content_fast_mem;
+            inFastMem[original_proc_id[part][proc]] = new_content_fast_mem;
         }
 
         // heuristic solution for baseline
-        PebblingSchedule<Graph_t> heuristic_pebbling;
-        GreedyBspScheduler<Graph_t> greedy_scheduler;
-        BspSchedule<Graph_t> bsp_heuristic(subInstance[part]);
-        greedy_scheduler.computeSchedule(bsp_heuristic);
+        PebblingSchedule<GraphT> heuristicPebbling;
+        GreedyBspScheduler<Graph_t> greedyScheduler;
+        BspSchedule<GraphT> bspHeuristic(subInstance[part]);
+        greedyScheduler.computeSchedule(bspHeuristic);
 
-        std::set<vertex_idx> extra_source_ids;
+        std::set<vertex_idx> extraSourceIds;
         for (vertex_idx idx = 0; idx < extra_sources[part].size(); ++idx) {
-            extra_source_ids.insert(idx);
+            extraSourceIds.insert(idx);
         }
 
-        heuristic_pebbling.setNeedToLoadInputs(true);
-        heuristic_pebbling.SetExternalSources(extra_source_ids);
-        heuristic_pebbling.SetNeedsBlueAtEnd(needs_blue_at_end);
-        heuristic_pebbling.SetHasRedInBeginning(has_reds_in_beginning[part]);
-        heuristic_pebbling.ConvertFromBsp(bsp_heuristic, PebblingSchedule<Graph_t>::CACHE_EVICTION_STRATEGY::FORESIGHT);
+        heuristicPebbling.setNeedToLoadInputs(true);
+        heuristicPebbling.SetExternalSources(extra_source_ids);
+        heuristicPebbling.SetNeedsBlueAtEnd(needs_blue_at_end);
+        heuristicPebbling.SetHasRedInBeginning(has_reds_in_beginning[part]);
+        heuristicPebbling.ConvertFromBsp(bspHeuristic, PebblingSchedule<GraphT>::CACHE_EVICTION_STRATEGY::FORESIGHT);
 
-        heuristic_pebbling.removeEvictStepsFromEnd();
-        pebbling[part] = heuristic_pebbling;
-        cost_type heuristicCost = asynchronous ? heuristic_pebbling.computeAsynchronousCost() : heuristic_pebbling.computeCost();
+        heuristicPebbling.removeEvictStepsFromEnd();
+        pebbling[part] = heuristicPebbling;
+        cost_type heuristicCost = asynchronous_ ? heuristicPebbling.computeAsynchronousCost() : heuristicPebbling.computeCost();
 
-        if (!heuristic_pebbling.isValid()) {
+        if (!heuristicPebbling.isValid()) {
             std::cout << "ERROR: Pebbling heuristic INVALID!" << std::endl;
         }
 
         // solution with subILP
-        MultiProcessorPebbling<Graph_t> mpp;
-        mpp.setVerbose(verbose);
-        mpp.setTimeLimitSeconds(time_seconds_for_subILPs);
-        mpp.setMaxTime(2 * maxPartitionSize);    // just a heuristic choice, does not guarantee feasibility!
+        MultiProcessorPebbling<GraphT> mpp;
+        mpp.setVerbose(verbose_);
+        mpp.setTimeLimitSeconds(timeSecondsForSubIlPs_);
+        mpp.setMaxTime(2 * maxPartitionSize_);    // just a heuristic choice, does not guarantee feasibility!
         mpp.setNeedsBlueAtEnd(needs_blue_at_end);
-        mpp.setNeedToLoadInputs(need_to_load_inputs);
+        mpp.setNeedToLoadInputs(needToLoadInputs);
         mpp.setHasRedInBeginning(has_reds_in_beginning[part]);
 
-        PebblingSchedule<Graph_t> pebblingILP(subInstance[part]);
-        RETURN_STATUS status = mpp.computePebblingWithInitialSolution(heuristic_pebbling, pebblingILP, asynchronous);
+        PebblingSchedule<GraphT> pebblingILP(subInstance[part]);
+        RETURN_STATUS status = mpp.computePebblingWithInitialSolution(heuristicPebbling, pebblingILP, asynchronous_);
         if (status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND) {
             if (!pebblingILP.isValid()) {
                 std::cout << "ERROR: Pebbling ILP INVALID!" << std::endl;
             }
 
             pebblingILP.removeEvictStepsFromEnd();
-            cost_type ILP_cost = asynchronous ? pebblingILP.computeAsynchronousCost() : pebblingILP.computeCost();
+            cost_type ilpCost = asynchronous_ ? pebblingILP.computeAsynchronousCost() : pebblingILP.computeCost();
             if (ILP_cost < heuristicCost) {
                 pebbling[part] = pebblingILP;
                 std::cout << "ILP chosen instead of greedy. (" << ILP_cost << " < " << heuristicCost << ")" << std::endl;
@@ -329,9 +329,9 @@ RETURN_STATUS PebblingPartialILP<Graph_t>::computePebbling(PebblingSchedule<Grap
             }
 
             // save fast memory content for next subproblem
-            std::vector<std::set<vertex_idx>> fast_mem_content_at_end = pebbling[part].getMemContentAtEnd();
-            for (unsigned proc = 0; proc < processors_to_parts[part].size(); ++proc) {
-                in_fast_mem[original_proc_id[part][proc]].clear();
+            std::vector<std::set<vertex_idx>> fastMemContentAtEnd = pebbling[part].getMemContentAtEnd();
+            for (unsigned proc = 0; proc < processorsToParts[part].size(); ++proc) {
+                inFastMem[original_proc_id[part][proc]].clear();
                 for (vertex_idx node : fast_mem_content_at_end[proc]) {
                     in_fast_mem[original_proc_id[part][proc]].insert(original_node_id[part][node]);
                 }
@@ -348,31 +348,31 @@ RETURN_STATUS PebblingPartialILP<Graph_t>::computePebbling(PebblingSchedule<Grap
     return schedule.isValid() ? RETURN_STATUS::OSP_SUCCESS : RETURN_STATUS::ERROR;
 }
 
-template <typename Graph_t>
-Graph_t PebblingPartialILP<Graph_t>::contractByPartition(const BspInstance<Graph_t> &instance,
-                                                         const std::vector<unsigned> &node_to_part_assignment) {
-    const auto &G = instance.getComputationalDag();
+template <typename GraphT>
+GraphT PebblingPartialILP<GraphT>::ContractByPartition(const BspInstance<GraphT> &instance,
+                                                       const std::vector<unsigned> &nodeToPartAssignment) {
+    const auto &g = instance.getComputationalDag();
 
     part_and_nodetype_to_new_index.clear();
 
-    unsigned nr_new_nodes = 0;
+    unsigned nrNewNodes = 0;
     for (vertex_idx node = 0; node < instance.numberOfVertices(); ++node) {
         if (part_and_nodetype_to_new_index.find({node_to_part_assignment[node], G.vertex_type(node)})
             == part_and_nodetype_to_new_index.end()) {
             part_and_nodetype_to_new_index[{node_to_part_assignment[node], G.vertex_type(node)}] = nr_new_nodes;
-            ++nr_new_nodes;
+            ++nrNewNodes;
         }
     }
 
-    Graph_t contracted;
-    for (vertex_idx node = 0; node < nr_new_nodes; ++node) {
+    GraphT contracted;
+    for (vertex_idx node = 0; node < nrNewNodes; ++node) {
         contracted.add_vertex(0, 0, 0);
     }
 
     std::set<std::pair<vertex_idx, vertex_idx>> edges;
 
     for (vertex_idx node = 0; node < instance.numberOfVertices(); ++node) {
-        vertex_idx node_new_index = part_and_nodetype_to_new_index[{node_to_part_assignment[node], G.vertex_type(node)}];
+        vertex_idx nodeNewIndex = part_and_nodetype_to_new_index[{node_to_part_assignment[node], G.vertex_type(node)}];
         for (const vertex_idx &succ : instance.getComputationalDag().children(node)) {
             if (node_to_part_assignment[node] != node_to_part_assignment[succ]) {
                 edges.emplace(node_new_index, part_and_nodetype_to_new_index[{node_to_part_assignment[succ], G.vertex_type(succ)}]);
@@ -380,11 +380,11 @@ Graph_t PebblingPartialILP<Graph_t>::contractByPartition(const BspInstance<Graph
         }
 
         contracted.set_vertex_work_weight(node_new_index,
-                                          contracted.vertex_work_weight(node_new_index) + G.vertex_work_weight(node));
+                                          contracted.vertex_work_weight(node_new_index) + g.vertex_work_weight(node));
         contracted.set_vertex_comm_weight(node_new_index,
-                                          contracted.vertex_comm_weight(node_new_index) + G.vertex_comm_weight(node));
-        contracted.set_vertex_mem_weight(node_new_index, contracted.vertex_mem_weight(node_new_index) + G.vertex_mem_weight(node));
-        contracted.set_vertex_type(node_new_index, G.vertex_type(node));
+                                          contracted.vertex_comm_weight(node_new_index) + g.vertex_comm_weight(node));
+        contracted.set_vertex_mem_weight(node_new_index, contracted.vertex_mem_weight(node_new_index) + g.vertex_mem_weight(node));
+        contracted.set_vertex_type(node_new_index, g.vertex_type(node));
     }
 
     for (auto edge : edges) {
@@ -398,8 +398,8 @@ Graph_t PebblingPartialILP<Graph_t>::contractByPartition(const BspInstance<Graph
     return contracted;
 }
 
-template <typename Graph_t>
-RETURN_STATUS PebblingPartialILP<Graph_t>::computeSchedule(BspSchedule<Graph_t> &) {
+template <typename GraphT>
+RETURN_STATUS PebblingPartialILP<GraphT>::ComputeSchedule(BspSchedule<GraphT> &) {
     return RETURN_STATUS::ERROR;
 }
 

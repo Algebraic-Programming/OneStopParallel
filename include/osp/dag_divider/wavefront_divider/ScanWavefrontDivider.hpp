@@ -33,29 +33,29 @@ namespace osp {
  * @brief Divides a DAG by scanning all wavefronts and applying a splitting algorithm.
  * This revised version uses a fluent API for safer and clearer algorithm configuration.
  */
-template <typename Graph_t>
-class ScanWavefrontDivider : public AbstractWavefrontDivider<Graph_t> {
+template <typename GraphT>
+class ScanWavefrontDivider : public AbstractWavefrontDivider<GraphT> {
   public:
-    constexpr static bool enable_debug_print = true;
+    constexpr static bool enableDebugPrint_ = true;
 
-    ScanWavefrontDivider() { use_largest_step_splitter(3.0, 4); }
+    ScanWavefrontDivider() { UseLargestStepSplitter(3.0, 4); }
 
-    std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> divide(const Graph_t &dag) override {
-        this->dag_ptr_ = &dag;
-        if constexpr (enable_debug_print) {
+    std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> divide(const GraphT &dag) override {
+        this->dagPtr_ = &dag;
+        if constexpr (enableDebugPrint_) {
             std::cout << "[DEBUG] Starting scan-all division." << std::endl;
         }
 
-        std::vector<std::vector<vertex_idx_t<Graph_t>>> level_sets = this->compute_wavefronts();
-        if (level_sets.empty()) {
+        std::vector<std::vector<vertex_idx_t<Graph_t>>> levelSets = this->ComputeWavefronts();
+        if (levelSets.empty()) {
             return {};
         }
 
-        SequenceGenerator<Graph_t> generator(dag, level_sets);
-        std::vector<double> sequence = generator.generate(sequence_metric_);
+        SequenceGenerator<GraphT> generator(dag, level_sets);
+        std::vector<double> sequence = generator.generate(sequenceMetric_);
 
-        if constexpr (enable_debug_print) {
-            std::cout << "[DEBUG]   Metric: " << static_cast<int>(sequence_metric_) << std::endl;
+        if constexpr (enableDebugPrint_) {
+            std::cout << "[DEBUG]   Metric: " << static_cast<int>(sequenceMetric_) << std::endl;
             std::cout << "[DEBUG]   Generated sequence: ";
             for (const auto &val : sequence) {
                 std::cout << val << " ";
@@ -63,11 +63,11 @@ class ScanWavefrontDivider : public AbstractWavefrontDivider<Graph_t> {
             std::cout << std::endl;
         }
 
-        std::vector<size_t> cut_levels = splitter_->split(sequence);
-        std::sort(cut_levels.begin(), cut_levels.end());
-        cut_levels.erase(std::unique(cut_levels.begin(), cut_levels.end()), cut_levels.end());
+        std::vector<size_t> cutLevels = splitter_->Split(sequence);
+        std::sort(cutLevels.begin(), cutLevels.end());
+        cutLevels.erase(std::unique(cutLevels.begin(), cutLevels.end()), cutLevels.end());
 
-        if constexpr (enable_debug_print) {
+        if constexpr (enableDebugPrint_) {
             std::cout << "[DEBUG]   Final cut levels: ";
             for (const auto &level : cut_levels) {
                 std::cout << level << " ";
@@ -78,51 +78,51 @@ class ScanWavefrontDivider : public AbstractWavefrontDivider<Graph_t> {
         return create_vertex_maps_from_cuts(cut_levels, level_sets);
     }
 
-    ScanWavefrontDivider &set_metric(SequenceMetric metric) {
-        sequence_metric_ = metric;
+    ScanWavefrontDivider &SetMetric(SequenceMetric metric) {
+        sequenceMetric_ = metric;
         return *this;
     }
 
-    ScanWavefrontDivider &use_variance_splitter(double mult, double threshold, size_t min_len = 1) {
-        splitter_ = std::make_unique<VarianceSplitter>(mult, threshold, min_len);
+    ScanWavefrontDivider &UseVarianceSplitter(double mult, double threshold, size_t minLen = 1) {
+        splitter_ = std::make_unique<VarianceSplitter>(mult, threshold, minLen);
         return *this;
     }
 
-    ScanWavefrontDivider &use_largest_step_splitter(double threshold, size_t min_len) {
-        splitter_ = std::make_unique<LargestStepSplitter>(threshold, min_len);
+    ScanWavefrontDivider &UseLargestStepSplitter(double threshold, size_t minLen) {
+        splitter_ = std::make_unique<LargestStepSplitter>(threshold, minLen);
         return *this;
     }
 
-    ScanWavefrontDivider &use_threshold_scan_splitter(double diff_threshold, double abs_threshold, size_t min_len = 1) {
-        splitter_ = std::make_unique<ThresholdScanSplitter>(diff_threshold, abs_threshold, min_len);
+    ScanWavefrontDivider &UseThresholdScanSplitter(double diffThreshold, double absThreshold, size_t minLen = 1) {
+        splitter_ = std::make_unique<ThresholdScanSplitter>(diffThreshold, absThreshold, minLen);
         return *this;
     }
 
   private:
     using VertexType = vertex_idx_t<Graph_t>;
 
-    SequenceMetric sequence_metric_ = SequenceMetric::COMPONENT_COUNT;
+    SequenceMetric sequenceMetric_ = SequenceMetric::COMPONENT_COUNT;
     std::unique_ptr<SequenceSplitter> splitter_;
 
-    std::vector<std::vector<std::vector<VertexType>>> create_vertex_maps_from_cuts(
-        const std::vector<size_t> &cut_levels, const std::vector<std::vector<VertexType>> &level_sets) const {
-        if (cut_levels.empty()) {
+    std::vector<std::vector<std::vector<VertexType>>> CreateVertexMapsFromCuts(
+        const std::vector<size_t> &cutLevels, const std::vector<std::vector<VertexType>> &levelSets) const {
+        if (cutLevels.empty()) {
             // If there are no cuts, return a single section with all components.
-            return {this->get_components_for_range(0, level_sets.size(), level_sets)};
+            return {this->GetComponentsForRange(0, level_sets.size(), level_sets)};
         }
 
-        std::vector<std::vector<std::vector<VertexType>>> vertex_maps;
-        size_t start_level = 0;
+        std::vector<std::vector<std::vector<VertexType>>> vertexMaps;
+        size_t startLevel = 0;
 
-        for (const auto &cut_level : cut_levels) {
-            if (start_level < cut_level) {    // Avoid creating empty sections
-                vertex_maps.push_back(this->get_components_for_range(start_level, cut_level, level_sets));
+        for (const auto &cutLevel : cutLevels) {
+            if (startLevel < cutLevel) {    // Avoid creating empty sections
+                vertexMaps.push_back(this->GetComponentsForRange(startLevel, cutLevel, level_sets));
             }
-            start_level = cut_level;
+            startLevel = cutLevel;
         }
         // Add the final section from the last cut to the end of the levels
-        if (start_level < level_sets.size()) {
-            vertex_maps.push_back(this->get_components_for_range(start_level, level_sets.size(), level_sets));
+        if (startLevel < levelSets.size()) {
+            vertexMaps.push_back(this->GetComponentsForRange(startLevel, level_sets.size(), level_sets));
         }
 
         return vertex_maps;

@@ -23,37 +23,37 @@ limitations under the License.
 namespace boost::extensions {
 
 template <typename IteratorType>
-struct source_iterator_range {
+struct SourceIteratorRange {
   public:
-    IteratorType begin() { return _begin; }
+    IteratorType begin() { return begin_; }
 
-    IteratorType begin() const { return _begin; }
+    IteratorType begin() const { return begin_; }
 
-    IteratorType cbegin() const { return _begin; }
+    IteratorType cbegin() const { return begin_; }
 
-    IteratorType end() { return _end; }
+    IteratorType end() { return end_; }
 
-    IteratorType end() const { return _end; }
+    IteratorType end() const { return end_; }
 
-    IteratorType cend() const { return _end; }
+    IteratorType cend() const { return end_; }
 
     std::size_t size() const { return std::distance(cbegin(), cend()); }
 
     template <class RangeType>
-    explicit source_iterator_range(RangeType &r) : _begin(boost::begin(r)), _end(boost::end(r)) {}
+    explicit SourceIteratorRange(RangeType &r) : begin_(boost::begin(r)), end_(boost::end(r)) {}
 
   private:
-    IteratorType _begin, _end;
+    IteratorType begin_, end_;
 };
 
 template <class ForwardRange>
-source_iterator_range<decltype(boost::begin(std::declval<ForwardRange &>()))> make_source_iterator_range(const ForwardRange &r) {
-    return source_iterator_range<decltype(boost::begin(std::declval<ForwardRange &>()))>(r);
+SourceIteratorRange<decltype(boost::begin(std::declval<ForwardRange &>()))> MakeSourceIteratorRange(const ForwardRange &r) {
+    return SourceIteratorRange<decltype(boost::begin(std::declval<ForwardRange &>()))>(r);
 }
 
 template <class ForwardRange>
-source_iterator_range<decltype(boost::begin(std::declval<ForwardRange &>()))> make_source_iterator_range(ForwardRange &r) {
-    return source_iterator_range<decltype(boost::begin(std::declval<ForwardRange &>()))>(r);
+SourceIteratorRange<decltype(boost::begin(std::declval<ForwardRange &>()))> MakeSourceIteratorRange(ForwardRange &r) {
+    return SourceIteratorRange<decltype(boost::begin(std::declval<ForwardRange &>()))>(r);
 }
 
 }    // namespace boost::extensions

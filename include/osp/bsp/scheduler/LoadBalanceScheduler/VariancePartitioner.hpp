@@ -24,8 +24,8 @@ limitations under the License.
 
 namespace osp {
 
-template <typename Graph_t, typename Interpolation_t, typename MemoryConstraint_t = no_memory_constraint>
-class VariancePartitioner : public LoadBalancerBase<Graph_t, Interpolation_t> {
+template <typename GraphT, typename InterpolationT, typename MemoryConstraintT = no_memory_constraint>
+class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
     static_assert(is_computational_dag_v<Graph_t>, "VariancePartitioner can only be used with computational DAGs.");
 
     using VertexType = vertex_idx_t<Graph_t>;
@@ -37,129 +37,129 @@ class VariancePartitioner : public LoadBalancerBase<Graph_t, Interpolation_t> {
     };
 
   protected:
-    constexpr static bool use_memory_constraint = is_memory_constraint_v<MemoryConstraint_t>
-                                                  or is_memory_constraint_schedule_v<MemoryConstraint_t>;
+    constexpr static bool useMemoryConstraint_ = is_memory_constraint_v<MemoryConstraint_t>
+                                                 or is_memory_constraint_schedule_v<MemoryConstraint_t>;
 
-    static_assert(not use_memory_constraint or std::is_same_v<Graph_t, typename MemoryConstraint_t::Graph_impl_t>,
+    static_assert(not useMemoryConstraint_ or std::is_same_v<GraphT, typename MemoryConstraintT::Graph_impl_t>,
                   "Graph_t must be the same as MemoryConstraint_t::Graph_impl_t.");
 
-    MemoryConstraint_t memory_constraint;
+    MemoryConstraintT memoryConstraint_;
 
     /// @brief threshold percentage of idle processors as to when a new superstep should be introduced
-    double max_percent_idle_processors;
+    double maxPercentIdleProcessors_;
 
     /// @brief the power in the power mean average of the variance scheduler
-    double variance_power;
+    double variancePower_;
 
     /// @brief whether or not parallelism should be increased in the next superstep
-    bool increase_parallelism_in_new_superstep;
+    bool increaseParallelismInNewSuperstep_;
 
     /// @brief percentage of the average workload by which the processor priorities may diverge
-    float max_priority_difference_percent;
+    float maxPriorityDifferencePercent_;
 
     /// @brief how much to ignore the global work balance, value between 0 and 1
-    float slack;
+    float slack_;
 
     /// @brief Computes a power mean average of the bottom node distance
     /// @param graph graph
     /// @param power the power in the power mean average
     /// @return vector of the logarithm of power mean averaged bottom node distance
-    std::vector<double> compute_work_variance(const Graph_t &graph, double power = 2) const {
-        std::vector<double> work_variance(graph.num_vertices(), 0.0);
+    std::vector<double> ComputeWorkVariance(const GraphT &graph, double power = 2) const {
+        std::vector<double> workVariance(graph.num_vertices(), 0.0);
 
-        const auto top_order = GetTopOrder(graph);
+        const auto topOrder = GetTopOrder(graph);
 
-        for (auto r_iter = top_order.rbegin(); r_iter != top_order.crend(); r_iter++) {
+        for (auto rIter = topOrder.rbegin(); rIter != topOrder.crend(); rIter++) {
             double temp = 0;
-            double max_priority = 0;
-            for (const auto &child : graph.children(*r_iter)) {
-                max_priority = std::max(work_variance[child], max_priority);
+            double maxPriority = 0;
+            for (const auto &child : graph.children(*rIter)) {
+                maxPriority = std::max(workVariance[child], maxPriority);
             }
-            for (const auto &child : graph.children(*r_iter)) {
-                temp += std::exp(power * (work_variance[child] - max_priority));
+            for (const auto &child : graph.children(*rIter)) {
+                temp += std::exp(power * (workVariance[child] - maxPriority));
             }
-            temp = std::log(temp) / power + max_priority;
+            temp = std::log(temp) / power + maxPriority;
 
-            double node_weight = std::log(graph.vertex_work_weight(*r_iter));
-            double larger_val = node_weight > temp ? node_weight : temp;
+            double nodeWeight = std::log(graph.vertex_work_weight(*rIter));
+            double largerVal = nodeWeight > temp ? nodeWeight : temp;
 
-            work_variance[*r_iter] = std::log(std::exp(node_weight - larger_val) + std::exp(temp - larger_val)) + larger_val;
+            workVariance[*rIter] = std::log(std::exp(nodeWeight - largerVal) + std::exp(temp - largerVal)) + largerVal;
         }
 
-        return work_variance;
+        return workVariance;
     }
 
   public:
-    VariancePartitioner(double max_percent_idle_processors_ = 0.2,
-                        double variance_power_ = 2.0,
-                        bool increase_parallelism_in_new_superstep_ = true,
-                        float max_priority_difference_percent_ = 0.34f,
-                        float slack_ = 0.0f)
-        : max_percent_idle_processors(max_percent_idle_processors_),
-          variance_power(variance_power_),
-          increase_parallelism_in_new_superstep(increase_parallelism_in_new_superstep_),
-          max_priority_difference_percent(max_priority_difference_percent_),
-          slack(slack_) {};
+    VariancePartitioner(double maxPercentIdleProcessors = 0.2,
+                        double variancePower = 2.0,
+                        bool increaseParallelismInNewSuperstep = true,
+                        float maxPriorityDifferencePercent = 0.34f,
+                        float slack = 0.0f)
+        : maxPercentIdleProcessors_(maxPercentIdleProcessors),
+          variancePower_(variancePower),
+          increaseParallelismInNewSuperstep_(increaseParallelismInNewSuperstep),
+          maxPriorityDifferencePercent_(maxPriorityDifferencePercent),
+          slack_(slack) {};
 
     virtual ~VariancePartitioner() = default;
 
-    virtual RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &schedule) override {
+    virtual RETURN_STATUS computeSchedule(BspSchedule<GraphT> &schedule) override {
         const auto &instance = schedule.getInstance();
-        const auto &n_vert = instance.numberOfVertices();
-        const unsigned &n_processors = instance.numberOfProcessors();
+        const auto &nVert = instance.numberOfVertices();
+        const unsigned &nProcessors = instance.numberOfProcessors();
         const auto &graph = instance.getComputationalDag();
 
         unsigned superstep = 0;
 
         if constexpr (is_memory_constraint_v<MemoryConstraint_t>) {
-            memory_constraint.initialize(instance);
+            memoryConstraint_.initialize(instance);
         } else if constexpr (is_memory_constraint_schedule_v<MemoryConstraint_t>) {
-            memory_constraint.initialize(schedule, superstep);
+            memoryConstraint_.initialize(schedule, superstep);
         }
 
-        v_workw_t<Graph_t> total_work = 0;
+        v_workw_t<Graph_t> totalWork = 0;
 
-        std::vector<v_workw_t<Graph_t>> total_partition_work(n_processors, 0);
-        std::vector<v_workw_t<Graph_t>> superstep_partition_work(n_processors, 0);
+        std::vector<v_workw_t<Graph_t>> totalPartitionWork(nProcessors, 0);
+        std::vector<v_workw_t<Graph_t>> superstepPartitionWork(nProcessors, 0);
 
-        std::vector<double> variance_priorities = compute_work_variance(graph, variance_power);
-        std::vector<VertexType> num_unallocated_parents(n_vert, 0);
+        std::vector<double> variancePriorities = ComputeWorkVariance(graph, variancePower_);
+        std::vector<VertexType> numUnallocatedParents(nVert, 0);
 
         std::set<std::pair<VertexType, double>, VarianceCompare> ready;
-        std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> procReady(n_processors);
+        std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> procReady(nProcessors);
         std::set<std::pair<VertexType, double>, VarianceCompare> allReady;
-        std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> procReadyPrior(n_processors);
+        std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> procReadyPrior(nProcessors);
 
-        std::vector<unsigned> which_proc_ready_prior(n_vert, n_processors);
+        std::vector<unsigned> whichProcReadyPrior(nVert, nProcessors);
 
         for (const auto &v : graph.vertices()) {
-            schedule.setAssignedProcessor(v, n_processors);
+            schedule.setAssignedProcessor(v, nProcessors);
 
-            total_work += graph.vertex_work_weight(v);
+            totalWork += graph.vertex_work_weight(v);
 
             if (is_source(v, graph)) {
-                ready.insert(std::make_pair(v, variance_priorities[v]));
-                allReady.insert(std::make_pair(v, variance_priorities[v]));
+                ready.insert(std::make_pair(v, variancePriorities[v]));
+                allReady.insert(std::make_pair(v, variancePriorities[v]));
 
             } else {
-                num_unallocated_parents[v] = graph.in_degree(v);
+                numUnallocatedParents[v] = graph.in_degree(v);
             }
         }
 
-        std::set<unsigned> free_processors;
+        std::set<unsigned> freeProcessors;
 
         bool endsuperstep = false;
-        unsigned num_unable_to_partition_node_loop = 0;
+        unsigned numUnableToPartitionNodeLoop = 0;
         // RETURN_STATUS status = RETURN_STATUS::OSP_SUCCESS;
 
         while (!ready.empty()) {
             // Increase memory capacity if needed
-            if (num_unable_to_partition_node_loop == 1) {
+            if (numUnableToPartitionNodeLoop == 1) {
                 endsuperstep = true;
                 // std::cout << "\nCall for new superstep - unable to schedule.\n";
             } else {
-                if constexpr (use_memory_constraint) {
-                    if (num_unable_to_partition_node_loop >= 2) {
+                if constexpr (useMemoryConstraint_) {
+                    if (numUnableToPartitionNodeLoop >= 2) {
                         return RETURN_STATUS::ERROR;
                     }
                 }
@@ -170,27 +170,27 @@ class VariancePartitioner : public LoadBalancerBase<Graph_t, Interpolation_t> {
             // * n_processors << " ready size " << ready.size() << " small increase " << 1.2 * (n_processors -
             // free_processors.size()) << " large increase " << n_processors - free_processors.size() +  (0.5 *
             // free_processors.size()) << "\n";
-            if (num_unable_to_partition_node_loop == 0
-                && static_cast<double>(free_processors.size()) > max_percent_idle_processors * n_processors
-                && ((!increase_parallelism_in_new_superstep) || ready.size() >= n_processors
-                    || static_cast<double>(ready.size()) >= 1.2 * (n_processors - static_cast<double>(free_processors.size()))
-                    || static_cast<double>(ready.size()) >= n_processors - static_cast<double>(free_processors.size())
-                                                                + (0.5 * static_cast<double>(free_processors.size())))) {
+            if (numUnableToPartitionNodeLoop == 0
+                && static_cast<double>(freeProcessors.size()) > maxPercentIdleProcessors_ * nProcessors
+                && ((!increaseParallelismInNewSuperstep_) || ready.size() >= nProcessors
+                    || static_cast<double>(ready.size()) >= 1.2 * (nProcessors - static_cast<double>(freeProcessors.size()))
+                    || static_cast<double>(ready.size()) >= nProcessors - static_cast<double>(freeProcessors.size())
+                                                                + (0.5 * static_cast<double>(freeProcessors.size())))) {
                 endsuperstep = true;
                 // std::cout << "\nCall for new superstep - parallelism.\n";
             }
-            std::vector<float> processor_priorities
-                = LoadBalancerBase<Graph_t, Interpolation_t>::computeProcessorPrioritiesInterpolation(
+            std::vector<float> processorPriorities
+                = LoadBalancerBase<GraphT, InterpolationT>::computeProcessorPrioritiesInterpolation(
                     superstep_partition_work, total_partition_work, total_work, instance);
-            float min_priority = processor_priorities[0];
-            float max_priority = processor_priorities[0];
+            float minPriority = processorPriorities[0];
+            float maxPriority = processorPriorities[0];
             for (const auto &prio : processor_priorities) {
                 min_priority = std::min(min_priority, prio);
                 max_priority = std::max(max_priority, prio);
             }
-            if (num_unable_to_partition_node_loop == 0
-                && (max_priority - min_priority)
-                       > max_priority_difference_percent * static_cast<float>(total_work) / static_cast<float>(n_processors)) {
+            if (numUnableToPartitionNodeLoop == 0
+                && (maxPriority - minPriority)
+                       > maxPriorityDifferencePercent_ * static_cast<float>(total_work) / static_cast<float>(nProcessors)) {
                 endsuperstep = true;
                 // std::cout << "\nCall for new superstep - difference.\n";
             }
@@ -198,20 +198,20 @@ class VariancePartitioner : public LoadBalancerBase<Graph_t, Interpolation_t> {
             // Introducing new superstep
             if (endsuperstep) {
                 allReady = ready;
-                for (unsigned proc = 0; proc < n_processors; proc++) {
+                for (unsigned proc = 0; proc < nProcessors; proc++) {
                     for (const auto &item : procReady[proc]) {
                         procReadyPrior[proc].insert(item);
                         which_proc_ready_prior[item.first] = proc;
                     }
                     procReady[proc].clear();
 
-                    superstep_partition_work[proc] = 0;
+                    superstepPartitionWork[proc] = 0;
                 }
-                free_processors.clear();
+                freeProcessors.clear();
 
-                if constexpr (use_memory_constraint) {
-                    for (unsigned proc = 0; proc < n_processors; proc++) {
-                        memory_constraint.reset(proc);
+                if constexpr (useMemoryConstraint_) {
+                    for (unsigned proc = 0; proc < nProcessors; proc++) {
+                        memoryConstraint_.reset(proc);
                     }
                 }
 
@@ -219,11 +219,11 @@ class VariancePartitioner : public LoadBalancerBase<Graph_t, Interpolation_t> {
                 endsuperstep = false;
             }
 
-            bool assigned_a_node = false;
+            bool assignedANode = false;
 
             // Choosing next processor
-            std::vector<unsigned> processors_in_order = LoadBalancerBase<Graph_t, Interpolation_t>::computeProcessorPriority(
-                superstep_partition_work, total_partition_work, total_work, instance, slack);
+            std::vector<unsigned> processorsInOrder = LoadBalancerBase<GraphT, InterpolationT>::computeProcessorPriority(
+                superstep_partition_work, total_partition_work, total_work, instance, slack_);
             for (unsigned &proc : processors_in_order) {
                 if ((free_processors.find(proc)) != free_processors.cend()) {
                     continue;
@@ -350,15 +350,15 @@ class VariancePartitioner : public LoadBalancerBase<Graph_t, Interpolation_t> {
                     break;
                 }
             }
-            if (!assigned_a_node) {
-                num_unable_to_partition_node_loop += 1;
+            if (!assignedANode) {
+                numUnableToPartitionNodeLoop += 1;
             }
         }
 
         return RETURN_STATUS::OSP_SUCCESS;
     }
 
-    std::string getScheduleName() const override { return "VariancePartitioner"; };
+    std::string GetScheduleName() const override { return "VariancePartitioner"; };
 };
 
 }    // namespace osp

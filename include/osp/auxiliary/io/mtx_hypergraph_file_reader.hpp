@@ -33,8 +33,8 @@ namespace osp {
 namespace file_reader {
 
 // reads a matrix into Hypergraph format, where nonzeros are vertices, and rows/columns are hyperedges
-template <typename index_type, typename workw_type, typename memw_type, typename commw_type>
-bool readHypergraphMartixMarketFormat(std::ifstream &infile, Hypergraph<index_type, workw_type, memw_type, commw_type> &hgraph) {
+template <typename IndexType, typename WorkwType, typename MemwType, typename CommwType>
+bool ReadHypergraphMartixMarketFormat(std::ifstream &infile, Hypergraph<IndexType, WorkwType, MemwType, CommwType> &hgraph) {
     std::string line;
 
     // Skip comments or empty lines (robustly)
@@ -61,27 +61,27 @@ bool readHypergraphMartixMarketFormat(std::ifstream &infile, Hypergraph<index_ty
         return false;
     }
 
-    int M_row = 0, M_col = 0, nEntries = 0;
+    int mRow = 0, mCol = 0, nEntries = 0;
 
-    std::istringstream header_stream(line);
-    if (!(header_stream >> M_row >> M_col >> nEntries) || M_row <= 0 || M_col <= 0) {
+    std::istringstream headerStream(line);
+    if (!(headerStream >> mRow >> mCol >> nEntries) || mRow <= 0 || mCol <= 0) {
         std::cerr << "Error: Invalid header.\n";
         return false;
     }
 
-    const index_type num_nodes = static_cast<index_type>(nEntries);
+    const IndexType numNodes = static_cast<IndexType>(nEntries);
 
-    hgraph.reset(num_nodes, 0);
-    for (index_type node = 0; node < num_nodes; ++node) {
-        hgraph.set_vertex_work_weight(node, static_cast<workw_type>(1));
-        hgraph.set_vertex_memory_weight(node, static_cast<memw_type>(1));
+    hgraph.reset(numNodes, 0);
+    for (IndexType node = 0; node < numNodes; ++node) {
+        hgraph.SetVertexWorkWeight(node, static_cast<WorkwType>(1));
+        hgraph.SetVertexMemoryWeight(node, static_cast<MemwType>(1));
     }
 
-    std::vector<std::vector<index_type>> row_hyperedges(static_cast<index_type>(M_row));
-    std::vector<std::vector<index_type>> column_hyperedges(static_cast<index_type>(M_col));
+    std::vector<std::vector<IndexType>> rowHyperedges(static_cast<IndexType>(mRow));
+    std::vector<std::vector<IndexType>> columnHyperedges(static_cast<IndexType>(mCol));
 
-    int entries_read = 0;
-    while (entries_read < nEntries && std::getline(infile, line)) {
+    int entriesRead = 0;
+    while (entriesRead < nEntries && std::getline(infile, line)) {
         if (line.empty() || line[0] == '%') {
             continue;
         }
@@ -90,11 +90,11 @@ bool readHypergraphMartixMarketFormat(std::ifstream &infile, Hypergraph<index_ty
             return false;
         }
 
-        std::istringstream entry_stream(line);
+        std::istringstream entryStream(line);
         int row = -1, col = -1;
         double val = 0.0;
 
-        if (!(entry_stream >> row >> col >> val)) {
+        if (!(entryStream >> row >> col >> val)) {
             std::cerr << "Error: Malformed matrix entry.\n";
             return false;
         }
@@ -102,23 +102,23 @@ bool readHypergraphMartixMarketFormat(std::ifstream &infile, Hypergraph<index_ty
         row -= 1;
         col -= 1;    // Convert to 0-based
 
-        if (row < 0 || col < 0 || row >= M_row || col >= M_col) {
+        if (row < 0 || col < 0 || row >= mRow || col >= mCol) {
             std::cerr << "Error: Matrix entry out of bounds.\n";
             return false;
         }
 
-        if (static_cast<index_type>(row) >= num_nodes || static_cast<index_type>(col) >= num_nodes) {
+        if (static_cast<IndexType>(row) >= numNodes || static_cast<IndexType>(col) >= numNodes) {
             std::cerr << "Error: Index exceeds vertex type limit.\n";
             return false;
         }
 
-        row_hyperedges[static_cast<index_type>(row)].push_back(static_cast<index_type>(entries_read));
-        column_hyperedges[static_cast<index_type>(col)].push_back(static_cast<index_type>(entries_read));
+        rowHyperedges[static_cast<IndexType>(row)].push_back(static_cast<IndexType>(entriesRead));
+        columnHyperedges[static_cast<IndexType>(col)].push_back(static_cast<IndexType>(entriesRead));
 
-        ++entries_read;
+        ++entriesRead;
     }
 
-    if (entries_read != nEntries) {
+    if (entriesRead != nEntries) {
         std::cerr << "Error: Incomplete matrix entries.\n";
         return false;
     }
@@ -130,24 +130,23 @@ bool readHypergraphMartixMarketFormat(std::ifstream &infile, Hypergraph<index_ty
         }
     }
 
-    for (index_type row = 0; row < static_cast<index_type>(M_row); ++row) {
-        if (!row_hyperedges[row].empty()) {
-            hgraph.add_hyperedge(row_hyperedges[row]);
+    for (IndexType row = 0; row < static_cast<IndexType>(mRow); ++row) {
+        if (!rowHyperedges[row].empty()) {
+            hgraph.AddHyperedge(rowHyperedges[row]);
         }
     }
 
-    for (index_type col = 0; col < static_cast<index_type>(M_col); ++col) {
-        if (!column_hyperedges[col].empty()) {
-            hgraph.add_hyperedge(column_hyperedges[col]);
+    for (IndexType col = 0; col < static_cast<IndexType>(mCol); ++col) {
+        if (!columnHyperedges[col].empty()) {
+            hgraph.AddHyperedge(columnHyperedges[col]);
         }
     }
 
     return true;
 }
 
-template <typename index_type, typename workw_type, typename memw_type, typename commw_type>
-bool readHypergraphMartixMarketFormat(const std::string &filename,
-                                      Hypergraph<index_type, workw_type, memw_type, commw_type> &hgraph) {
+template <typename IndexType, typename WorkwType, typename MemwType, typename CommwType>
+bool ReadHypergraphMartixMarketFormat(const std::string &filename, Hypergraph<IndexType, WorkwType, MemwType, CommwType> &hgraph) {
     // Ensure the file is .mtx format
     if (std::filesystem::path(filename).extension() != ".mtx") {
         std::cerr << "Error: Only .mtx files are accepted.\n";
@@ -175,7 +174,7 @@ bool readHypergraphMartixMarketFormat(const std::string &filename,
         return false;
     }
 
-    return readHypergraphMartixMarketFormat(infile, hgraph);
+    return ReadHypergraphMartixMarketFormat(infile, hgraph);
 }
 
 }    // namespace file_reader

@@ -34,30 +34,30 @@ namespace osp {
  * @param chance chance/num_vertices is the probability of edge inclusion
  * @return DAG
  */
-template <typename Graph_t>
-void erdos_renyi_graph_gen(Graph_t &dag_out, vertex_idx_t<Graph_t> num_vertices, double chance) {
+template <typename GraphT>
+void ErdosRenyiGraphGen(GraphT &dagOut, vertex_idx_t<Graph_t> numVertices, double chance) {
     static_assert(is_constructable_cdag_v<Graph_t>, "Graph_t must be a constructable computational DAG type");
 
-    dag_out = Graph_t(num_vertices);
+    dagOut = GraphT(num_vertices);
 
     std::random_device rd;
     std::mt19937 gen(rd());
 
-    for (const auto &v : dag_out.vertices()) {
+    for (const auto &v : dagOut.vertices()) {
         const auto one = static_cast<vertex_idx_t<Graph_t>>(1);
-        std::binomial_distribution<vertex_idx_t<Graph_t>> bino_dist(num_vertices - one - v, chance / double(num_vertices));
-        auto out_edges_num = bino_dist(gen);
+        std::binomial_distribution<vertex_idx_t<Graph_t>> binoDist(numVertices - one - v, chance / double(num_vertices));
+        auto outEdgesNum = bino_dist(gen);
 
-        std::unordered_set<vertex_idx_t<Graph_t>> out_edges;
-        while (out_edges.size() < static_cast<size_t>(out_edges_num)) {
+        std::unordered_set<vertex_idx_t<Graph_t>> outEdges;
+        while (outEdges.size() < static_cast<size_t>(out_edges_num)) {
             std::uniform_int_distribution<vertex_idx_t<Graph_t>> dist(0, num_vertices - one - v);
             vertex_idx_t<Graph_t> edge = v + one + dist(gen);
 
-            if (out_edges.find(edge) != out_edges.cend()) {
+            if (outEdges.find(edge) != out_edges.cend()) {
                 continue;
             }
 
-            out_edges.emplace(edge);
+            outEdges.emplace(edge);
         }
 
         for (auto &j : out_edges) {

@@ -53,54 +53,53 @@ namespace pt = boost::property_tree;
 template <typename TargetObjectType, typename GraphType>
 class AbstractTestSuiteRunner {
   protected:
-    std::string executable_dir;
-    ConfigParser parser;
-    std::ofstream log_stream;
-    std::ofstream stats_out_stream;
-    std::vector<std::string> all_csv_headers;
-    std::vector<std::unique_ptr<IStatisticModule<TargetObjectType>>> active_stats_modules;
+    std::string executableDir_;
+    ConfigParser parser_;
+    std::ofstream logStream_;
+    std::ofstream statsOutStream_;
+    std::vector<std::string> allCsvHeaders_;
+    std::vector<std::unique_ptr<IStatisticModule<TargetObjectType>>> activeStatsModules_;
 
-    std::string graph_dir_path, machine_dir_path, output_target_object_dir_path, log_file_path, statistics_output_file_path;
-    bool write_target_object_to_file = false;
-    unsigned time_limit_seconds = 0;
+    std::string graphDirPath_, machineDirPath_, outputTargetObjectDirPath_, logFilePath_, statisticsOutputFilePath_;
+    bool writeTargetObjectToFile_ = false;
+    unsigned timeLimitSeconds_ = 0;
 
-    virtual std::filesystem::path getExecutablePath() const { return std::filesystem::canonical("/proc/self/exe"); }
+    virtual std::filesystem::path GetExecutablePath() const { return std::filesystem::canonical("/proc/self/exe"); }
 
-    virtual bool parse_common_config() {
+    virtual bool ParseCommonConfig() {
         try {
-            executable_dir = getExecutablePath().remove_filename().string();
-            time_limit_seconds = parser.global_params.get_child("timeLimit").get_value<unsigned>();
-            write_target_object_to_file
-                = parser.global_params.get_child("outputSchedule").get_value_optional<bool>().value_or(false);
+            executableDir_ = GetExecutablePath().remove_filename().string();
+            timeLimitSeconds_ = parser_.global_params.get_child("timeLimit").get_value<unsigned>();
+            writeTargetObjectToFile_ = parser_.global_params.get_child("outputSchedule").get_value_optional<bool>().value_or(false);
 
-            graph_dir_path = parser.global_params.get_child("graphDirectory").get_value<std::string>();
-            if (graph_dir_path.substr(0, 1) != "/") {
-                graph_dir_path = executable_dir + graph_dir_path;
+            graphDirPath_ = parser_.global_params.get_child("graphDirectory").get_value<std::string>();
+            if (graphDirPath_.substr(0, 1) != "/") {
+                graphDirPath_ = executableDir_ + graphDirPath_;
             }
 
-            machine_dir_path = parser.global_params.get_child("archDirectory").get_value<std::string>();
-            if (machine_dir_path.substr(0, 1) != "/") {
-                machine_dir_path = executable_dir + machine_dir_path;
+            machineDirPath_ = parser_.global_params.get_child("archDirectory").get_value<std::string>();
+            if (machineDirPath_.substr(0, 1) != "/") {
+                machineDirPath_ = executableDir_ + machineDirPath_;
             }
 
-            if (write_target_object_to_file) {
-                output_target_object_dir_path = parser.global_params.get_child("scheduleDirectory").get_value<std::string>();
-                if (output_target_object_dir_path.substr(0, 1) != "/") {
-                    output_target_object_dir_path = executable_dir + output_target_object_dir_path;
+            if (writeTargetObjectToFile_) {
+                outputTargetObjectDirPath_ = parser_.global_params.get_child("scheduleDirectory").get_value<std::string>();
+                if (outputTargetObjectDirPath_.substr(0, 1) != "/") {
+                    outputTargetObjectDirPath_ = executableDir_ + outputTargetObjectDirPath_;
                 }
-                if (!output_target_object_dir_path.empty() && !std::filesystem::exists(output_target_object_dir_path)) {
-                    std::filesystem::create_directories(output_target_object_dir_path);
+                if (!outputTargetObjectDirPath_.empty() && !std::filesystem::exists(outputTargetObjectDirPath_)) {
+                    std::filesystem::create_directories(outputTargetObjectDirPath_);
                 }
             }
 
-            log_file_path = parser.global_params.get_child("outputLogFile").get_value<std::string>();
-            if (log_file_path.substr(0, 1) != "/") {
-                log_file_path = executable_dir + log_file_path;
+            logFilePath_ = parser_.global_params.get_child("outputLogFile").get_value<std::string>();
+            if (logFilePath_.substr(0, 1) != "/") {
+                logFilePath_ = executableDir_ + logFilePath_;
             }
 
-            statistics_output_file_path = parser.global_params.get_child("outputStatsFile").get_value<std::string>();
-            if (statistics_output_file_path.substr(0, 1) != "/") {
-                statistics_output_file_path = executable_dir + statistics_output_file_path;
+            statisticsOutputFilePath_ = parser_.global_params.get_child("outputStatsFile").get_value<std::string>();
+            if (statisticsOutputFilePath_.substr(0, 1) != "/") {
+                statisticsOutputFilePath_ = executableDir_ + statisticsOutputFilePath_;
             }
 
             return true;
@@ -110,196 +109,196 @@ class AbstractTestSuiteRunner {
         }
     }
 
-    virtual void setup_log_file() {
-        log_stream.open(log_file_path, std::ios_base::app);
-        if (!log_stream.is_open()) {
-            std::cerr << "Error: Could not open log file: " << log_file_path << std::endl;
+    virtual void SetupLogFile() {
+        logStream_.open(logFilePath_, std::ios_base::app);
+        if (!logStream_.is_open()) {
+            std::cerr << "Error: Could not open log file: " << logFilePath_ << std::endl;
         }
     }
 
-    virtual void setup_statistics_file() {
-        all_csv_headers = {"Graph", "Machine", "Algorithm", "TimeToCompute(ms)"};
+    virtual void SetupStatisticsFile() {
+        allCsvHeaders_ = {"Graph", "Machine", "Algorithm", "TimeToCompute(ms)"};
 
-        std::set<std::string> unique_module_metric_headers;
-        for (const auto &mod : active_stats_modules) {
+        std::set<std::string> uniqueModuleMetricHeaders;
+        for (const auto &mod : activeStatsModules_) {
             for (const auto &header : mod->get_metric_headers()) {
-                auto pair = unique_module_metric_headers.insert(header);
+                auto pair = uniqueModuleMetricHeaders.insert(header);
 
                 if (!pair.second) {
-                    log_stream << "Warning: Duplicate metric header '" << header
+                    logStream_ << "Warning: Duplicate metric header '" << header
                                << "' found across statistic modules. Using the first one encountered." << std::endl;
                 }
             }
         }
 
-        all_csv_headers.insert(all_csv_headers.end(), unique_module_metric_headers.begin(), unique_module_metric_headers.end());
+        allCsvHeaders_.insert(allCsvHeaders_.end(), uniqueModuleMetricHeaders.begin(), uniqueModuleMetricHeaders.end());
 
-        std::filesystem::path stats_p(statistics_output_file_path);
-        if (stats_p.has_parent_path() && !std::filesystem::exists(stats_p.parent_path())) {
-            std::filesystem::create_directories(stats_p.parent_path());
+        std::filesystem::path statsP(statisticsOutputFilePath_);
+        if (statsP.has_parent_path() && !std::filesystem::exists(statsP.parent_path())) {
+            std::filesystem::create_directories(statsP.parent_path());
         }
 
-        bool file_exists_and_has_header = false;
-        std::ifstream stats_file_check(statistics_output_file_path);
-        if (stats_file_check.is_open()) {
-            std::string first_line_in_file;
-            getline(stats_file_check, first_line_in_file);
-            std::string expected_header_line;
-            for (size_t i = 0; i < all_csv_headers.size(); ++i) {
-                expected_header_line += all_csv_headers[i] + (i == all_csv_headers.size() - 1 ? "" : ",");
+        bool fileExistsAndHasHeader = false;
+        std::ifstream statsFileCheck(statisticsOutputFilePath_);
+        if (statsFileCheck.is_open()) {
+            std::string firstLineInFile;
+            getline(statsFileCheck, firstLineInFile);
+            std::string expectedHeaderLine;
+            for (size_t i = 0; i < allCsvHeaders_.size(); ++i) {
+                expectedHeaderLine += allCsvHeaders_[i] + (i == allCsvHeaders_.size() - 1 ? "" : ",");
             }
-            if (first_line_in_file == expected_header_line) {
-                file_exists_and_has_header = true;
+            if (firstLineInFile == expectedHeaderLine) {
+                fileExistsAndHasHeader = true;
             }
-            stats_file_check.close();
+            statsFileCheck.close();
         }
 
-        stats_out_stream.open(statistics_output_file_path, std::ios_base::app);
-        if (!stats_out_stream.is_open()) {
-            log_stream << "CRITICAL ERROR: Could not open statistics output file: " << statistics_output_file_path << std::endl;
-            std::cerr << "CRITICAL ERROR: Could not open statistics output file: " << statistics_output_file_path << std::endl;
-        } else if (!file_exists_and_has_header) {
-            for (size_t i = 0; i < all_csv_headers.size(); ++i) {
-                stats_out_stream << all_csv_headers[i] << (i == all_csv_headers.size() - 1 ? "" : ",");
+        statsOutStream_.open(statisticsOutputFilePath_, std::ios_base::app);
+        if (!statsOutStream_.is_open()) {
+            logStream_ << "CRITICAL ERROR: Could not open statistics output file: " << statisticsOutputFilePath_ << std::endl;
+            std::cerr << "CRITICAL ERROR: Could not open statistics output file: " << statisticsOutputFilePath_ << std::endl;
+        } else if (!fileExistsAndHasHeader) {
+            for (size_t i = 0; i < allCsvHeaders_.size(); ++i) {
+                statsOutStream_ << allCsvHeaders_[i] << (i == allCsvHeaders_.size() - 1 ? "" : ",");
             }
-            stats_out_stream << "\n";
-            log_stream << "Initialized statistics file " << statistics_output_file_path << " with header." << std::endl;
+            statsOutStream_ << "\n";
+            logStream_ << "Initialized statistics file " << statisticsOutputFilePath_ << " with header." << std::endl;
         }
     }
 
-    virtual RETURN_STATUS compute_target_object_impl(const BspInstance<GraphType> &instance,
-                                                     std::unique_ptr<TargetObjectType> &target_object,
-                                                     const pt::ptree &algo_config,
-                                                     long long &computation_time_ms)
+    virtual RETURN_STATUS ComputeTargetObjectImpl(const BspInstance<GraphType> &instance,
+                                                  std::unique_ptr<TargetObjectType> &targetObject,
+                                                  const pt::ptree &algoConfig,
+                                                  long long &computationTimeMs)
         = 0;
 
-    virtual void create_and_register_statistic_modules(const std::string &module_name) = 0;
+    virtual void CreateAndRegisterStatisticModules(const std::string &moduleName) = 0;
 
-    virtual void write_target_object_hook(const TargetObjectType &, const std::string &, const std::string &, const std::string &) {
+    virtual void WriteTargetObjectHook(const TargetObjectType &, const std::string &, const std::string &, const std::string &) {
     }    // default in case TargetObjectType cannot be written to file
 
   public:
     AbstractTestSuiteRunner() {}
 
     virtual ~AbstractTestSuiteRunner() {
-        if (log_stream.is_open()) {
-            log_stream.close();
+        if (logStream_.is_open()) {
+            logStream_.close();
         }
-        if (stats_out_stream.is_open()) {
-            stats_out_stream.close();
+        if (statsOutStream_.is_open()) {
+            statsOutStream_.close();
         }
     }
 
-    int run(int argc, char *argv[]) {
+    int Run(int argc, char *argv[]) {
         try {
-            parser.parse_args(argc, argv);
+            parser_.parse_args(argc, argv);
         } catch (const std::exception &e) {
             std::cerr << "Error parsing command line arguments: " << e.what() << std::endl;
             return 1;
         }
 
-        if (!parse_common_config()) {
+        if (!ParseCommonConfig()) {
             return 1;
         }
 
-        setup_log_file();
+        SetupLogFile();
 
-        std::vector<std::string> active_module_names_from_config;
+        std::vector<std::string> activeModuleNamesFromConfig;
         try {
             for (const auto &item : parser.global_params.get_child("activeStatisticModules")) {
                 active_module_names_from_config.push_back(item.second.get_value<std::string>());
             }
         } catch (const pt::ptree_bad_path &e) {
-            log_stream << "Warning: 'activeStatisticModules' not found. No statistics modules will be run. " << e.what()
+            logStream_ << "Warning: 'activeStatisticModules' not found. No statistics modules will be run. " << e.what()
                        << std::endl;
         }
 
-        for (const std::string &module_name : active_module_names_from_config) {
-            create_and_register_statistic_modules(module_name);
+        for (const std::string &moduleName : activeModuleNamesFromConfig) {
+            CreateAndRegisterStatisticModules(moduleName);
         }
 
-        if (active_stats_modules.empty()) {
-            log_stream << "No active statistic modules configured or loaded." << std::endl;
+        if (activeStatsModules_.empty()) {
+            logStream_ << "No active statistic modules configured or loaded." << std::endl;
         }
 
-        setup_statistics_file();
+        SetupStatisticsFile();
 
-        for (const auto &machine_entry : std::filesystem::recursive_directory_iterator(machine_dir_path)) {
-            if (std::filesystem::is_directory(machine_entry)) {
-                log_stream << "Skipping directory " << machine_entry.path().string() << std::endl;
+        for (const auto &machineEntry : std::filesystem::recursive_directory_iterator(machineDirPath_)) {
+            if (std::filesystem::is_directory(machineEntry)) {
+                logStream_ << "Skipping directory " << machineEntry.path().string() << std::endl;
                 continue;
             }
-            std::string filename_machine = machine_entry.path().string();
-            std::string name_machine = filename_machine.substr(filename_machine.rfind('/') + 1);
-            if (name_machine.rfind('.') != std::string::npos) {
-                name_machine = name_machine.substr(0, name_machine.rfind('.'));
+            std::string filenameMachine = machineEntry.path().string();
+            std::string nameMachine = filenameMachine.substr(filenameMachine.rfind('/') + 1);
+            if (nameMachine.rfind('.') != std::string::npos) {
+                nameMachine = nameMachine.substr(0, nameMachine.rfind('.'));
             }
 
             BspArchitecture<GraphType> arch;
             if (!file_reader::readBspArchitecture(filename_machine, arch)) {
-                log_stream << "Reading architecture file " << filename_machine << " failed." << std::endl;
+                logStream_ << "Reading architecture file " << filenameMachine << " failed." << std::endl;
                 continue;
             }
-            log_stream << "Start Machine: " + filename_machine + "\n";
+            logStream_ << "Start Machine: " + filenameMachine + "\n";
 
-            for (const auto &graph_entry : std::filesystem::recursive_directory_iterator(graph_dir_path)) {
-                if (std::filesystem::is_directory(graph_entry)) {
-                    log_stream << "Skipping directory " << graph_entry.path().string() << std::endl;
+            for (const auto &graphEntry : std::filesystem::recursive_directory_iterator(graphDirPath_)) {
+                if (std::filesystem::is_directory(graphEntry)) {
+                    logStream_ << "Skipping directory " << graphEntry.path().string() << std::endl;
                     continue;
                 }
-                std::string filename_graph = graph_entry.path().string();
-                std::string name_graph = filename_graph.substr(filename_graph.rfind('/') + 1);
-                if (name_graph.rfind('.') != std::string::npos) {
-                    name_graph = name_graph.substr(0, name_graph.rfind('.'));
+                std::string filenameGraph = graphEntry.path().string();
+                std::string nameGraph = filenameGraph.substr(filenameGraph.rfind('/') + 1);
+                if (nameGraph.rfind('.') != std::string::npos) {
+                    nameGraph = nameGraph.substr(0, nameGraph.rfind('.'));
                 }
-                log_stream << "Start Graph: " + filename_graph + "\n";
+                logStream_ << "Start Graph: " + filenameGraph + "\n";
 
-                BspInstance<GraphType> bsp_instance;
-                bsp_instance.getArchitecture() = arch;
-                bool graph_status = false;
+                BspInstance<GraphType> bspInstance;
+                bspInstance.getArchitecture() = arch;
+                bool graphStatus = false;
                 std::string ext;
-                if (filename_graph.rfind('.') != std::string::npos) {
-                    ext = filename_graph.substr(filename_graph.rfind('.') + 1);
+                if (filenameGraph.rfind('.') != std::string::npos) {
+                    ext = filenameGraph.substr(filenameGraph.rfind('.') + 1);
                 }
 
 #ifdef EIGEN_FOUND
 
-                using SM_csr_int32 = Eigen::SparseMatrix<double, Eigen::RowMajor, int32_t>;
-                using SM_csc_int32 = Eigen::SparseMatrix<double, Eigen::ColMajor, int32_t>;
-                using SM_csr_int64 = Eigen::SparseMatrix<double, Eigen::RowMajor, int64_t>;
-                using SM_csc_int64 = Eigen::SparseMatrix<double, Eigen::ColMajor, int64_t>;
-                SM_csr_int32 L_csr_int32;
-                SM_csr_int64 L_csr_int64;
-                SM_csc_int32 L_csc_int32{};
-                SM_csc_int64 L_csc_int64{};
+                using SmCsrInt32 = Eigen::SparseMatrix<double, Eigen::RowMajor, int32_t>;
+                using SmCscInt32 = Eigen::SparseMatrix<double, Eigen::ColMajor, int32_t>;
+                using SmCsrInt64 = Eigen::SparseMatrix<double, Eigen::RowMajor, int64_t>;
+                using SmCscInt64 = Eigen::SparseMatrix<double, Eigen::ColMajor, int64_t>;
+                SmCsrInt32 lCsrInt32;
+                SmCsrInt64 lCsrInt64;
+                SmCscInt32 lCscInt32{};
+                SmCscInt64 lCscInt64{};
 
-                if constexpr (std::is_same_v<GraphType, sparse_matrix_graph_int32_t>
-                              || std::is_same_v<GraphType, sparse_matrix_graph_int64_t>) {
+                if constexpr (std::is_same_v<GraphType, SparseMatrixGraphInt32T>
+                              || std::is_same_v<GraphType, SparseMatrixGraphInt64T>) {
                     if (ext != "mtx") {
-                        log_stream << "Error: Only .mtx file is accepted for SpTRSV" << std::endl;
+                        logStream_ << "Error: Only .mtx file is accepted for SpTRSV" << std::endl;
                         return 0;
                     }
 
-                    if constexpr (std::is_same_v<GraphType, sparse_matrix_graph_int32_t>) {
-                        graph_status = Eigen::loadMarket(L_csr_int32, filename_graph);
-                        if (!graph_status) {
-                            std::cerr << "Failed to read matrix from " << filename_graph << std::endl;
+                    if constexpr (std::is_same_v<GraphType, SparseMatrixGraphInt32T>) {
+                        graphStatus = Eigen::loadMarket(lCsrInt32, filenameGraph);
+                        if (!graphStatus) {
+                            std::cerr << "Failed to read matrix from " << filenameGraph << std::endl;
                             return -1;
                         }
 
-                        bsp_instance.getComputationalDag().setCSR(&L_csr_int32);
-                        L_csc_int32 = L_csr_int32;
-                        bsp_instance.getComputationalDag().setCSC(&L_csc_int32);
+                        bspInstance.getComputationalDag().setCSR(&lCsrInt32);
+                        lCscInt32 = lCsrInt32;
+                        bspInstance.getComputationalDag().setCSC(&lCscInt32);
                     } else {
-                        graph_status = Eigen::loadMarket(L_csr_int64, filename_graph);
-                        if (!graph_status) {
-                            std::cerr << "Failed to read matrix from " << filename_graph << std::endl;
+                        graphStatus = Eigen::loadMarket(lCsrInt64, filenameGraph);
+                        if (!graphStatus) {
+                            std::cerr << "Failed to read matrix from " << filenameGraph << std::endl;
                             return -1;
                         }
 
-                        bsp_instance.getComputationalDag().setCSR(&L_csr_int64);
-                        L_csc_int64 = L_csr_int64;
-                        bsp_instance.getComputationalDag().setCSC(&L_csc_int64);
+                        bspInstance.getComputationalDag().setCSR(&lCsrInt64);
+                        lCscInt64 = lCsrInt64;
+                        bspInstance.getComputationalDag().setCSC(&lCscInt64);
                     }
                 } else {
 #endif
@@ -308,8 +307,8 @@ class AbstractTestSuiteRunner {
 #ifdef EIGEN_FOUND
                 }
 #endif
-                if (!graph_status) {
-                    log_stream << "Reading graph file " << filename_graph << " failed." << std::endl;
+                if (!graphStatus) {
+                    logStream_ << "Reading graph file " << filenameGraph << " failed." << std::endl;
                     continue;
                 }
 

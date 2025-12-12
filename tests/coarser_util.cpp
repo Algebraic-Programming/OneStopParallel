@@ -27,7 +27,7 @@ limitations under the License.
 using namespace osp;
 using namespace osp::coarser_util;
 
-using GraphType = Compact_Sparse_Graph<true, true, true, true, true>;
+using GraphType = CompactSparseGraph<true, true, true, true, true>;
 
 BOOST_AUTO_TEST_CASE(ContractionMapValidity) {
     const std::vector<vertex_idx_t<GraphType>> contractionmap1 = {0, 1, 2, 3};
@@ -82,22 +82,22 @@ BOOST_AUTO_TEST_CASE(ContractionMapCoarsening) {
     BOOST_CHECK(construct_coarse_dag(graph, coarseGraph1, contractionMap));
     BOOST_CHECK(contractionMap == std::vector<vertex_idx_t<GraphType>>({0, 0, 1, 1, 2, 3}));
 
-    BOOST_CHECK_EQUAL(coarseGraph1.num_vertices(), 4);
-    BOOST_CHECK_EQUAL(coarseGraph1.num_edges(), 1);
+    BOOST_CHECK_EQUAL(coarseGraph1.NumVertices(), 4);
+    BOOST_CHECK_EQUAL(coarseGraph1.NumEdges(), 1);
 
-    BOOST_CHECK_EQUAL(coarseGraph1.out_degree(0), 1);
-    BOOST_CHECK_EQUAL(coarseGraph1.out_degree(1), 0);
-    BOOST_CHECK_EQUAL(coarseGraph1.out_degree(2), 0);
+    BOOST_CHECK_EQUAL(coarseGraph1.OutDegree(0), 1);
+    BOOST_CHECK_EQUAL(coarseGraph1.OutDegree(1), 0);
+    BOOST_CHECK_EQUAL(coarseGraph1.OutDegree(2), 0);
 
-    BOOST_CHECK_EQUAL(coarseGraph1.in_degree(0), 0);
-    BOOST_CHECK_EQUAL(coarseGraph1.in_degree(1), 1);
-    BOOST_CHECK_EQUAL(coarseGraph1.in_degree(2), 0);
+    BOOST_CHECK_EQUAL(coarseGraph1.InDegree(0), 0);
+    BOOST_CHECK_EQUAL(coarseGraph1.InDegree(1), 1);
+    BOOST_CHECK_EQUAL(coarseGraph1.InDegree(2), 0);
 
-    for (const auto &vert : coarseGraph1.children(0)) {
+    for (const auto &vert : coarseGraph1.Children(0)) {
         BOOST_CHECK_EQUAL(vert, 1);
     }
 
-    for (const auto &vert : coarseGraph1.parents(1)) {
+    for (const auto &vert : coarseGraph1.Parents(1)) {
         BOOST_CHECK_EQUAL(vert, 0);
     }
 }

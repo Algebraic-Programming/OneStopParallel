@@ -35,24 +35,24 @@ namespace osp {
  * @class AbstractWavefrontDivider
  * @brief Base class for wavefront-based DAG dividers.
  */
-template <typename Graph_t>
-class AbstractWavefrontDivider : public IDagDivider<Graph_t> {
+template <typename GraphT>
+class AbstractWavefrontDivider : public IDagDivider<GraphT> {
     static_assert(is_computational_dag_v<Graph_t>, "AbstractWavefrontDivider can only be used with computational DAGs.");
 
   protected:
     using VertexType = vertex_idx_t<Graph_t>;
 
-    const Graph_t *dag_ptr_ = nullptr;
+    const GraphT *dagPtr_ = nullptr;
 
     /**
      * @brief Helper to get connected components for a specific range of levels.
      * This method is now const-correct.
      */
-    std::vector<std::vector<VertexType>> get_components_for_range(size_t start_level,
-                                                                  size_t end_level,
-                                                                  const std::vector<std::vector<VertexType>> &level_sets) const {
+    std::vector<std::vector<VertexType>> GetComponentsForRange(size_t startLevel,
+                                                               size_t endLevel,
+                                                               const std::vector<std::vector<VertexType>> &levelSets) const {
         union_find_universe_t<Graph_t> uf;
-        for (size_t i = start_level; i < end_level; ++i) {
+        for (size_t i = startLevel; i < endLevel; ++i) {
             for (const auto vertex : level_sets[i]) {
                 uf.add_object(vertex, dag_ptr_->vertex_work_weight(vertex), dag_ptr_->vertex_mem_weight(vertex));
             }
@@ -76,8 +76,8 @@ class AbstractWavefrontDivider : public IDagDivider<Graph_t> {
      * @brief Computes wavefronts for the entire DAG.
      * This method is now const.
      */
-    std::vector<std::vector<VertexType>> compute_wavefronts() const {
-        std::vector<VertexType> all_vertices(dag_ptr_->num_vertices());
+    std::vector<std::vector<VertexType>> ComputeWavefronts() const {
+        std::vector<VertexType> allVertices(dagPtr_->num_vertices());
         std::iota(all_vertices.begin(), all_vertices.end(), 0);
         return compute_wavefronts_for_subgraph(all_vertices);
     }
@@ -86,14 +86,14 @@ class AbstractWavefrontDivider : public IDagDivider<Graph_t> {
      * @brief Computes wavefronts for a specific subset of vertices.
      * This method is now const.
      */
-    std::vector<std::vector<VertexType>> compute_wavefronts_for_subgraph(const std::vector<VertexType> &vertices) const {
+    std::vector<std::vector<VertexType>> ComputeWavefrontsForSubgraph(const std::vector<VertexType> &vertices) const {
         if (vertices.empty()) {
             return {};
         }
 
-        std::vector<std::vector<VertexType>> level_sets;
-        std::unordered_set<VertexType> vertex_set(vertices.begin(), vertices.end());
-        std::unordered_map<VertexType, int> in_degree;
+        std::vector<std::vector<VertexType>> levelSets;
+        std::unordered_set<VertexType> vertexSet(vertices.begin(), vertices.end());
+        std::unordered_map<VertexType, int> inDegree;
         std::queue<VertexType> q;
 
         for (const auto &v : vertices) {
@@ -109,12 +109,12 @@ class AbstractWavefrontDivider : public IDagDivider<Graph_t> {
         }
 
         while (!q.empty()) {
-            size_t level_size = q.size();
-            std::vector<VertexType> current_level;
-            for (size_t i = 0; i < level_size; ++i) {
+            size_t levelSize = q.size();
+            std::vector<VertexType> currentLevel;
+            for (size_t i = 0; i < levelSize; ++i) {
                 VertexType u = q.front();
                 q.pop();
-                current_level.push_back(u);
+                currentLevel.push_back(u);
                 for (const auto &v : dag_ptr_->children(u)) {
                     if (vertex_set.count(v)) {
                         in_degree[v]--;
@@ -124,7 +124,7 @@ class AbstractWavefrontDivider : public IDagDivider<Graph_t> {
                     }
                 }
             }
-            level_sets.push_back(current_level);
+            levelSets.push_back(current_level);
         }
         return level_sets;
     }

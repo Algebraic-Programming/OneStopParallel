@@ -34,87 +34,87 @@ namespace osp {
  * smallest number of supersteps.
  *
  */
-template <typename Graph_t>
-class Serial : public Scheduler<Graph_t> {
+template <typename GraphT>
+class Serial : public Scheduler<GraphT> {
   public:
     /**
      * @brief Default constructor for Serial.
      */
-    Serial() : Scheduler<Graph_t>() {}
+    Serial() : Scheduler<GraphT>() {}
 
     /**
      * @brief Default destructor for Serial.
      */
     ~Serial() override = default;
 
-    RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &schedule) override {
+    RETURN_STATUS computeSchedule(BspSchedule<GraphT> &schedule) override {
         const auto &instance = schedule.getInstance();
         const auto &dag = instance.getComputationalDag();
-        const auto num_vertices = dag.num_vertices();
+        const auto numVertices = dag.num_vertices();
 
-        if (num_vertices == 0) {
+        if (numVertices == 0) {
             return RETURN_STATUS::OSP_SUCCESS;
         }
 
         const auto &arch = instance.getArchitecture();
 
         // Select one processor of each type
-        std::vector<unsigned> chosen_procs;
+        std::vector<unsigned> chosenProcs;
         if (arch.getNumberOfProcessorTypes() > 0) {
-            std::vector<bool> type_seen(arch.getNumberOfProcessorTypes(), false);
+            std::vector<bool> typeSeen(arch.getNumberOfProcessorTypes(), false);
             for (unsigned p = 0; p < arch.numberOfProcessors(); ++p) {
-                if (!type_seen[arch.processorType(p)]) {
-                    chosen_procs.push_back(p);
-                    type_seen[arch.processorType(p)] = true;
+                if (!typeSeen[arch.processorType(p)]) {
+                    chosenProcs.push_back(p);
+                    typeSeen[arch.processorType(p)] = true;
                 }
             }
         }
 
-        if (chosen_procs.empty()) {
+        if (chosenProcs.empty()) {
             return RETURN_STATUS::ERROR;
         }
 
-        const unsigned num_node_types = dag.num_vertex_types();
-        std::vector<std::vector<unsigned>> node_type_compatible_processors(num_node_types);
+        const unsigned numNodeTypes = dag.num_vertex_types();
+        std::vector<std::vector<unsigned>> nodeTypeCompatibleProcessors(numNodeTypes);
 
-        for (v_type_t<Graph_t> type = 0; type < num_node_types; ++type) {
-            for (const auto &p : chosen_procs) {
+        for (v_type_t<Graph_t> type = 0; type < numNodeTypes; ++type) {
+            for (const auto &p : chosenProcs) {
                 if (instance.isCompatibleType(type, instance.processorType(p))) {
-                    node_type_compatible_processors[type].push_back(p);
+                    nodeTypeCompatibleProcessors[type].push_back(p);
                 }
             }
         }
 
-        std::vector<vertex_idx_t<Graph_t>> in_degree(num_vertices);
-        std::deque<vertex_idx_t<Graph_t>> ready_nodes;
-        std::deque<vertex_idx_t<Graph_t>> deferred_nodes;
+        std::vector<vertex_idx_t<Graph_t>> inDegree(numVertices);
+        std::deque<vertex_idx_t<Graph_t>> readyNodes;
+        std::deque<vertex_idx_t<Graph_t>> deferredNodes;
 
         for (const auto &v : dag.vertices()) {
             schedule.setAssignedProcessor(v, std::numeric_limits<unsigned>::max());
             schedule.setAssignedSuperstep(v, std::numeric_limits<unsigned>::max());
-            in_degree[v] = dag.in_degree(v);
-            if (in_degree[v] == 0) {
-                ready_nodes.push_back(v);
+            inDegree[v] = dag.in_degree(v);
+            if (inDegree[v] == 0) {
+                readyNodes.push_back(v);
             }
         }
 
-        vertex_idx_t<Graph_t> scheduled_nodes_count = 0;
-        unsigned current_superstep = 0;
+        vertex_idx_t<Graph_t> scheduledNodesCount = 0;
+        unsigned currentSuperstep = 0;
 
-        while (scheduled_nodes_count < num_vertices) {
+        while (scheduled_nodes_count < numVertices) {
             while (not ready_nodes.empty()) {
                 vertex_idx_t<Graph_t> v = ready_nodes.front();
-                ready_nodes.pop_front();
+                readyNodes.pop_front();
 
                 bool scheduled = false;
 
-                unsigned v_type = 0;
+                unsigned vType = 0;
                 if constexpr (has_typed_vertices_v<Graph_t>) {
-                    v_type = dag.vertex_type(v);
+                    vType = dag.vertex_type(v);
                 }
 
-                for (const auto &p : node_type_compatible_processors[v_type]) {
-                    bool parents_compatible = true;
+                for (const auto &p : nodeTypeCompatibleProcessors[vType]) {
+                    bool parentsCompatible = true;
                     for (const auto &parent : dag.parents(v)) {
                         if (schedule.assignedSuperstep(parent) == current_superstep && schedule.assignedProcessor(parent) != p) {
                             parents_compatible = false;
@@ -122,9 +122,9 @@ class Serial : public Scheduler<Graph_t> {
                         }
                     }
 
-                    if (parents_compatible) {
+                    if (parentsCompatible) {
                         schedule.setAssignedProcessor(v, p);
-                        schedule.setAssignedSuperstep(v, current_superstep);
+                        schedule.setAssignedSuperstep(v, currentSuperstep);
                         scheduled = true;
                         ++scheduled_nodes_count;
                         break;
@@ -132,7 +132,7 @@ class Serial : public Scheduler<Graph_t> {
                 }
 
                 if (not scheduled) {
-                    deferred_nodes.push_back(v);
+                    deferredNodes.push_back(v);
                 } else {
                     for (const auto &child : dag.children(v)) {
                         if (--in_degree[child] == 0) {
@@ -142,14 +142,14 @@ class Serial : public Scheduler<Graph_t> {
                 }
             }
 
-            if (scheduled_nodes_count < num_vertices) {
-                current_superstep++;
-                ready_nodes.insert(ready_nodes.end(), deferred_nodes.begin(), deferred_nodes.end());
-                deferred_nodes.clear();
+            if (scheduled_nodes_count < numVertices) {
+                currentSuperstep++;
+                readyNodes.insert(ready_nodes.end(), deferred_nodes.begin(), deferred_nodes.end());
+                deferredNodes.clear();
             }
         }
 
-        schedule.setNumberOfSupersteps(current_superstep + 1);
+        schedule.setNumberOfSupersteps(currentSuperstep + 1);
         return RETURN_STATUS::OSP_SUCCESS;
     }
 

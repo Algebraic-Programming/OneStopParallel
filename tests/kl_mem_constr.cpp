@@ -32,21 +32,21 @@ limitations under the License.
 
 using namespace osp;
 
-template <typename Graph_t>
-void add_mem_weights(Graph_t &dag) {
-    int mem_weight = 1;
-    int comm_weight = 1;
+template <typename GraphT>
+void AddMemWeights(GraphT &dag) {
+    int memWeight = 1;
+    int commWeight = 1;
 
     for (const auto &v : dag.vertices()) {
-        dag.set_vertex_mem_weight(v, static_cast<v_memw_t<Graph_t>>(mem_weight++ % 3 + 1));
-        dag.set_vertex_comm_weight(v, static_cast<v_commw_t<Graph_t>>(comm_weight++ % 3 + 1));
+        dag.set_vertex_mem_weight(v, static_cast<v_memw_t<GraphT>>(memWeight++ % 3 + 1));
+        dag.set_vertex_comm_weight(v, static_cast<v_commw_t<GraphT>>(commWeight++ % 3 + 1));
     }
 }
 
-BOOST_AUTO_TEST_CASE(kl_local_memconst) {
-    std::vector<std::string> filenames_graph = test_graphs();
+BOOST_AUTO_TEST_CASE(KlLocalMemconst) {
+    std::vector<std::string> filenamesGraph = TestGraphs();
 
-    using graph = computational_dag_edge_idx_vector_impl_def_int_t;
+    using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -56,40 +56,40 @@ BOOST_AUTO_TEST_CASE(kl_local_memconst) {
         std::cout << cwd << std::endl;
     }
 
-    GreedyBspScheduler<graph, local_memory_constraint<graph>> test_scheduler;
+    GreedyBspScheduler<Graph, local_memory_constraint<Graph>> testScheduler;
 
-    for (auto &filename_graph : filenames_graph) {
-        std::cout << filename_graph << std::endl;
-        BspInstance<graph> instance;
+    for (auto &filenameGraph : filenamesGraph) {
+        std::cout << filenameGraph << std::endl;
+        BspInstance<Graph> instance;
 
-        bool status_graph
-            = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(), instance.getComputationalDag());
+        bool statusGraph
+            = file_reader::readComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(), instance.getComputationalDag());
         instance.getArchitecture().setSynchronisationCosts(10);
         instance.getArchitecture().setCommunicationCosts(5);
         instance.getArchitecture().setNumberOfProcessors(4);
         instance.getArchitecture().setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::LOCAL);
         instance.getArchitecture().setSynchronisationCosts(0);
 
-        const std::vector<int> bounds_to_test = {10, 20};
+        const std::vector<int> boundsToTest = {10, 20};
 
-        add_mem_weights(instance.getComputationalDag());
+        AddMemWeights(instance.getComputationalDag());
 
-        if (!status_graph) {
+        if (!statusGraph) {
             std::cout << "Reading files failed." << std::endl;
             BOOST_CHECK(false);
         }
 
-        for (const auto &bound : bounds_to_test) {
+        for (const auto &bound : boundsToTest) {
             instance.getArchitecture().setMemoryBound(bound);
 
-            BspSchedule<graph> schedule(instance);
-            const auto result = test_scheduler.computeSchedule(schedule);
+            BspSchedule<Graph> schedule(instance);
+            const auto result = testScheduler.computeSchedule(schedule);
 
             BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
             BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
             BOOST_CHECK(schedule.satisfiesMemoryConstraints());
 
-            kl_total_comm_improver_local_mem_constr<graph> kl;
+            kl_total_comm_improver_local_mem_constr<Graph> kl;
 
             auto status = kl.improveSchedule(schedule);
 

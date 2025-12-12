@@ -31,8 +31,8 @@ namespace osp {
  * The Scheduler class provides a common interface for scheduling scheduler in the BSP scheduling system.
  * It defines methods for setting and getting the time limit, as well as computing schedules.
  */
-template <typename Graph_t>
-class MaxBspScheduler : public Scheduler<Graph_t> {
+template <typename GraphT>
+class MaxBspScheduler : public Scheduler<GraphT> {
   public:
     static_assert(is_computational_dag_v<Graph_t>, "BspSchedule can only be used with computational DAGs.");
 
@@ -47,15 +47,15 @@ class MaxBspScheduler : public Scheduler<Graph_t> {
      * @param instance The BSP instance for which to compute the schedule.
      * @return A pair containing the return status and the computed schedule.
      */
-    virtual RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &schedule) override {
-        MaxBspSchedule<Graph_t> tmpSched(schedule.getInstance());
+    virtual RETURN_STATUS computeSchedule(BspSchedule<GraphT> &schedule) override {
+        MaxBspSchedule<GraphT> tmpSched(schedule.getInstance());
         RETURN_STATUS status = computeSchedule(tmpSched);
         schedule = tmpSched;
         return status;
     }
 
-    virtual RETURN_STATUS computeScheduleCS(BspScheduleCS<Graph_t> &schedule) override {
-        MaxBspScheduleCS<Graph_t> tmpSchedule(schedule.getInstance());
+    virtual RETURN_STATUS computeScheduleCS(BspScheduleCS<GraphT> &schedule) override {
+        MaxBspScheduleCS<GraphT> tmpSchedule(schedule.getInstance());
         auto result = computeScheduleCS(tmpSchedule);
         if (result == RETURN_STATUS::OSP_SUCCESS || result == RETURN_STATUS::BEST_FOUND) {
             schedule = tmpSchedule;
@@ -71,9 +71,9 @@ class MaxBspScheduler : public Scheduler<Graph_t> {
      * @param instance The BSP instance for which to compute the schedule.
      * @return A pair containing the return status and the computed schedule.
      */
-    virtual RETURN_STATUS computeSchedule(MaxBspSchedule<Graph_t> &schedule) = 0;
+    virtual RETURN_STATUS ComputeSchedule(MaxBspSchedule<GraphT> &schedule) = 0;
 
-    virtual RETURN_STATUS computeScheduleCS(MaxBspScheduleCS<Graph_t> &schedule) {
+    virtual RETURN_STATUS ComputeScheduleCs(MaxBspScheduleCS<GraphT> &schedule) {
         auto result = computeSchedule(schedule);
         if (result == RETURN_STATUS::OSP_SUCCESS || result == RETURN_STATUS::BEST_FOUND) {
             // schedule.setAutoCommunicationSchedule();

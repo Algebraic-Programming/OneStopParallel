@@ -31,7 +31,7 @@ limitations under the License.
 
 using namespace osp;
 
-BOOST_AUTO_TEST_CASE(test_mtx_computational_dag_vector_impl) {
+BOOST_AUTO_TEST_CASE(TestMtxComputationalDagVectorImpl) {
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
     std::cout << cwd << std::endl;
@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(test_mtx_computational_dag_vector_impl) {
     BOOST_CHECK_EQUAL_COLLECTIONS(graph.children(7).begin(), graph.children(7).end(), c7.begin(), c7.end());
 }
 
-BOOST_AUTO_TEST_CASE(test_mtx_boost_graph) {
+BOOST_AUTO_TEST_CASE(TestMtxBoostGraph) {
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
     std::cout << cwd << std::endl;
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(test_mtx_boost_graph) {
     BOOST_CHECK_EQUAL_COLLECTIONS(graph.children(7).begin(), graph.children(7).end(), c7.begin(), c7.end());
 }
 
-BOOST_AUTO_TEST_CASE(test_bicgstab) {
+BOOST_AUTO_TEST_CASE(TestBicgstab) {
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
     std::cout << cwd << std::endl;
@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE(test_bicgstab) {
     BOOST_CHECK_EQUAL(graph.num_vertices(), 54);
 }
 
-BOOST_AUTO_TEST_CASE(test_hdag_boost) {
+BOOST_AUTO_TEST_CASE(TestHdagBoost) {
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
     std::cout << cwd << std::endl;
@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(test_hdag_boost) {
     BOOST_CHECK_EQUAL(graph.num_vertices(), 54);
 }
 
-BOOST_AUTO_TEST_CASE(test_arch_smpl) {
+BOOST_AUTO_TEST_CASE(TestArchSmpl) {
     std::filesystem::path cwd = std::filesystem::current_path();
 
     while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
@@ -223,7 +223,7 @@ BOOST_AUTO_TEST_CASE(test_arch_smpl) {
     BOOST_CHECK_EQUAL(arch.getMemoryConstraintType(), MEMORY_CONSTRAINT_TYPE::NONE);
 }
 
-BOOST_AUTO_TEST_CASE(test_arch_smpl_signed) {
+BOOST_AUTO_TEST_CASE(TestArchSmplSigned) {
     std::filesystem::path cwd = std::filesystem::current_path();
 
     while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
@@ -241,7 +241,7 @@ BOOST_AUTO_TEST_CASE(test_arch_smpl_signed) {
     BOOST_CHECK_EQUAL(arch.getMemoryConstraintType(), MEMORY_CONSTRAINT_TYPE::NONE);
 }
 
-BOOST_AUTO_TEST_CASE(test_k_means) {
+BOOST_AUTO_TEST_CASE(TestKMeans) {
     std::filesystem::path cwd = std::filesystem::current_path();
 
     while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
@@ -280,7 +280,7 @@ BOOST_AUTO_TEST_CASE(test_k_means) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(test_dot_graph) {
+BOOST_AUTO_TEST_CASE(TestDotGraph) {
     std::filesystem::path cwd = std::filesystem::current_path();
 
     while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
@@ -309,7 +309,7 @@ BOOST_AUTO_TEST_CASE(test_dot_graph) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(test_dot_graph_boost) {
+BOOST_AUTO_TEST_CASE(TestDotGraphBoost) {
     std::filesystem::path cwd = std::filesystem::current_path();
 
     while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {

@@ -24,41 +24,41 @@ namespace osp {
 
 /// @class IBspSchedule
 /// @brief Interface for a BSP (Bulk Synchronous Parallel) schedule.
-template <typename Graph_t>
+template <typename GraphT>
 class IBspSchedule {
-    using vertex_idx = vertex_idx_t<Graph_t>;
+    using VertexIdx = VertexIdxT<GraphT>;
 
   public:
     /// @brief Destructor.
     virtual ~IBspSchedule() = default;
 
-    virtual const BspInstance<Graph_t> &getInstance() const = 0;
+    virtual const BspInstance<GraphT> &GetInstance() const = 0;
 
     /// @brief Set the assigned superstep for a node.
     /// @param node The node index.
     /// @param superstep The assigned superstep.
-    virtual void setAssignedSuperstep(vertex_idx node, unsigned int superstep) = 0;
+    virtual void SetAssignedSuperstep(VertexIdx node, unsigned int superstep) = 0;
 
     /// @brief Set the assigned processor for a node.
     /// @param node The node index.
     /// @param processor The assigned processor.
-    virtual void setAssignedProcessor(vertex_idx node, unsigned int processor) = 0;
+    virtual void SetAssignedProcessor(VertexIdx node, unsigned int processor) = 0;
 
     /// @brief Get the assigned superstep of a node.
     /// @param node The node index.
     /// @return The assigned superstep of the node.
     ///         If the node is not assigned to a superstep, this.numberOfSupersteps() is returned.
-    virtual unsigned assignedSuperstep(vertex_idx node) const = 0;
+    virtual unsigned AssignedSuperstep(VertexIdx node) const = 0;
 
     /// @brief Get the assigned processor of a node.
     /// @param node The node index.
     /// @return The assigned processor of the node.
     ///         If the node is not assigned to a processor, this.getInstance().numberOfProcessors() is returned.
-    virtual unsigned assignedProcessor(vertex_idx node) const = 0;
+    virtual unsigned AssignedProcessor(VertexIdx node) const = 0;
 
     /// @brief Get the number of supersteps in the schedule.
     /// @return The number of supersteps in the schedule.
-    virtual unsigned numberOfSupersteps() const = 0;
+    virtual unsigned NumberOfSupersteps() const = 0;
 };
 
 }    // namespace  osp

@@ -30,12 +30,12 @@ limitations under the License.
 
 namespace osp {
 
-const std::set<std::string> get_available_pebbler_names() { return {"Pebbler"}; }
+const std::set<std::string> GetAvailablePebblerNames() { return {"Pebbler"}; }
 
-template <typename Graph_t>
-RETURN_STATUS run_pebbler(const ConfigParser &parser,
-                          const boost::property_tree::ptree &algorithm,
-                          PebblingSchedule<Graph_t> &schedule) {
+template <typename GraphT>
+RETURN_STATUS RunPebbler(const ConfigParser &parser,
+                         const boost::property_tree::ptree &algorithm,
+                         PebblingSchedule<GraphT> &schedule) {
     // const unsigned timeLimit = parser.global_params.get_child("timeLimit").get_value<unsigned>();
     //  const bool use_memory_constraint = parser.global_params.get_child("use_memory_constraints").get_value<bool>();
 

@@ -59,32 +59,32 @@ namespace osp {
  *
  * @see cdag_vertex_impl for a reference implementation of the vertex type.
  */
-template <typename v_impl>
-class computational_dag_vector_impl {
+template <typename VImpl>
+class ComputationalDagVectorImpl {
   public:
-    using vertex_idx = typename v_impl::vertex_idx_type;
+    using VertexIdx = typename VImpl::vertex_idx_type;
 
-    using vertex_work_weight_type = typename v_impl::work_weight_type;
-    using vertex_comm_weight_type = typename v_impl::comm_weight_type;
-    using vertex_mem_weight_type = typename v_impl::mem_weight_type;
-    using vertex_type_type = typename v_impl::cdag_vertex_type_type;
+    using VertexWorkWeightType = typename VImpl::work_weight_type;
+    using VertexCommWeightType = typename VImpl::comm_weight_type;
+    using VertexMemWeightType = typename VImpl::mem_weight_type;
+    using VertexTypeType = typename VImpl::cdag_vertex_type_type;
 
-    computational_dag_vector_impl() = default;
+    ComputationalDagVectorImpl() = default;
 
     /**
      * @brief Constructs a graph with a specified number of vertices.
      *
      * @param num_vertices The number of vertices to initialize.
      */
-    explicit computational_dag_vector_impl(const vertex_idx num_vertices)
-        : vertices_(num_vertices), out_neigbors(num_vertices), in_neigbors(num_vertices), num_edges_(0), num_vertex_types_(0) {
-        for (vertex_idx i = 0; i < num_vertices; ++i) {
+    explicit ComputationalDagVectorImpl(const VertexIdx numVertices)
+        : vertices_(numVertices), outNeigbors_(numVertices), inNeigbors_(numVertices), numEdges_(0), numVertexTypes_(0) {
+        for (VertexIdx i = 0; i < numVertices; ++i) {
             vertices_[i].id = i;
         }
     }
 
-    computational_dag_vector_impl(const computational_dag_vector_impl &other) = default;
-    computational_dag_vector_impl &operator=(const computational_dag_vector_impl &other) = default;
+    ComputationalDagVectorImpl(const ComputationalDagVectorImpl &other) = default;
+    ComputationalDagVectorImpl &operator=(const ComputationalDagVectorImpl &other) = default;
 
     /**
      * @brief Constructs a graph from another graph type.
@@ -95,47 +95,47 @@ class computational_dag_vector_impl {
      * @tparam Graph_t The type of the source graph. Must satisfy `is_computational_dag_v`.
      * @param other The source graph to copy from.
      */
-    template <typename Graph_t>
-    explicit computational_dag_vector_impl(const Graph_t &other) {
+    template <typename GraphT>
+    explicit ComputationalDagVectorImpl(const GraphT &other) {
         static_assert(is_computational_dag_v<Graph_t>, "Graph_t must satisfy the is_computation_dag concept");
         constructComputationalDag(other, *this);
     }
 
-    computational_dag_vector_impl(computational_dag_vector_impl &&other) noexcept
+    ComputationalDagVectorImpl(ComputationalDagVectorImpl &&other) noexcept
         : vertices_(std::move(other.vertices_)),
-          out_neigbors(std::move(other.out_neigbors)),
-          in_neigbors(std::move(other.in_neigbors)),
-          num_edges_(other.num_edges_),
-          num_vertex_types_(other.num_vertex_types_) {
-        other.num_edges_ = 0;
-        other.num_vertex_types_ = 0;
+          outNeigbors_(std::move(other.outNeigbors_)),
+          inNeigbors_(std::move(other.inNeigbors_)),
+          numEdges_(other.numEdges_),
+          numVertexTypes_(other.numVertexTypes_) {
+        other.numEdges_ = 0;
+        other.numVertexTypes_ = 0;
     };
 
-    computational_dag_vector_impl &operator=(computational_dag_vector_impl &&other) noexcept {
+    ComputationalDagVectorImpl &operator=(ComputationalDagVectorImpl &&other) noexcept {
         if (this != &other) {
             vertices_ = std::move(other.vertices_);
-            out_neigbors = std::move(other.out_neigbors);
-            in_neigbors = std::move(other.in_neigbors);
-            num_edges_ = other.num_edges_;
-            num_vertex_types_ = other.num_vertex_types_;
+            outNeigbors_ = std::move(other.outNeigbors_);
+            inNeigbors_ = std::move(other.inNeigbors_);
+            numEdges_ = other.numEdges_;
+            numVertexTypes_ = other.numVertexTypes_;
 
-            other.num_edges_ = 0;
-            other.num_vertex_types_ = 0;
+            other.numEdges_ = 0;
+            other.numVertexTypes_ = 0;
         }
         return *this;
     }
 
-    virtual ~computational_dag_vector_impl() = default;
+    virtual ~ComputationalDagVectorImpl() = default;
 
     /**
      * @brief Returns a range of all vertex indices.
      */
-    [[nodiscard]] auto vertices() const { return integral_range<vertex_idx>(static_cast<vertex_idx>(vertices_.size())); }
+    [[nodiscard]] auto Vertices() const { return integral_range<VertexIdx>(static_cast<VertexIdx>(vertices_.size())); }
 
     /**
      * @brief Returns the total number of vertices.
      */
-    [[nodiscard]] vertex_idx num_vertices() const { return static_cast<vertex_idx>(vertices_.size()); }
+    [[nodiscard]] VertexIdx NumVertices() const { return static_cast<VertexIdx>(vertices_.size()); }
 
     /**
      * @brief Checks if the graph is empty (no vertices).
@@ -145,43 +145,43 @@ class computational_dag_vector_impl {
     /**
      * @brief Returns the total number of edges.
      */
-    [[nodiscard]] vertex_idx num_edges() const { return num_edges_; }
+    [[nodiscard]] VertexIdx NumEdges() const { return numEdges_; }
 
     /**
      * @brief Returns the parents (in-neighbors) of a vertex. Does not perform bounds checking.
      * @param v The vertex index.
      */
-    [[nodiscard]] const std::vector<vertex_idx> &parents(const vertex_idx v) const { return in_neigbors[v]; }
+    [[nodiscard]] const std::vector<VertexIdx> &Parents(const VertexIdx v) const { return inNeigbors_[v]; }
 
     /**
      * @brief Returns the children (out-neighbors) of a vertex. Does not perform bounds checking.
      * @param v The vertex index.
      */
-    [[nodiscard]] const std::vector<vertex_idx> &children(const vertex_idx v) const { return out_neigbors[v]; }
+    [[nodiscard]] const std::vector<VertexIdx> &Children(const VertexIdx v) const { return outNeigbors_[v]; }
 
     /**
      * @brief Returns the in-degree of a vertex. Does not perform bounds checking.
      * @param v The vertex index.
      */
-    [[nodiscard]] vertex_idx in_degree(const vertex_idx v) const { return static_cast<vertex_idx>(in_neigbors[v].size()); }
+    [[nodiscard]] VertexIdx InDegree(const VertexIdx v) const { return static_cast<VertexIdx>(inNeigbors_[v].size()); }
 
     /**
      * @brief Returns the out-degree of a vertex. Does not perform bounds checking.
      * @param v The vertex index.
      */
-    [[nodiscard]] vertex_idx out_degree(const vertex_idx v) const { return static_cast<vertex_idx>(out_neigbors[v].size()); }
+    [[nodiscard]] VertexIdx OutDegree(const VertexIdx v) const { return static_cast<VertexIdx>(outNeigbors_[v].size()); }
 
-    [[nodiscard]] vertex_work_weight_type vertex_work_weight(const vertex_idx v) const { return vertices_[v].work_weight; }
+    [[nodiscard]] VertexWorkWeightType VertexWorkWeight(const VertexIdx v) const { return vertices_[v].work_weight; }
 
-    [[nodiscard]] vertex_comm_weight_type vertex_comm_weight(const vertex_idx v) const { return vertices_[v].comm_weight; }
+    [[nodiscard]] VertexCommWeightType VertexCommWeight(const VertexIdx v) const { return vertices_[v].comm_weight; }
 
-    [[nodiscard]] vertex_mem_weight_type vertex_mem_weight(const vertex_idx v) const { return vertices_[v].mem_weight; }
+    [[nodiscard]] VertexMemWeightType VertexMemWeight(const VertexIdx v) const { return vertices_[v].mem_weight; }
 
-    [[nodiscard]] vertex_type_type vertex_type(const vertex_idx v) const { return vertices_[v].vertex_type; }
+    [[nodiscard]] VertexTypeType VertexType(const VertexIdx v) const { return vertices_[v].vertex_type; }
 
-    [[nodiscard]] vertex_type_type num_vertex_types() const { return num_vertex_types_; }
+    [[nodiscard]] VertexTypeType NumVertexTypes() const { return numVertexTypes_; }
 
-    [[nodiscard]] const v_impl &get_vertex_impl(const vertex_idx v) const { return vertices_[v]; }
+    [[nodiscard]] const VImpl &GetVertexImpl(const VertexIdx v) const { return vertices_[v]; }
 
     /**
      * @brief Adds a new isolated vertex to the graph.
@@ -192,34 +192,32 @@ class computational_dag_vector_impl {
      * @param vertex_type Type of the vertex.
      * @return The index of the newly added vertex.
      */
-    vertex_idx add_vertex(const vertex_work_weight_type work_weight,
-                          const vertex_comm_weight_type comm_weight,
-                          const vertex_mem_weight_type mem_weight,
-                          const vertex_type_type vertex_type = 0) {
-        vertices_.emplace_back(vertices_.size(), work_weight, comm_weight, mem_weight, vertex_type);
-        out_neigbors.push_back({});
-        in_neigbors.push_back({});
+    VertexIdx AddVertex(const VertexWorkWeightType workWeight,
+                        const VertexCommWeightType commWeight,
+                        const VertexMemWeightType memWeight,
+                        const VertexTypeType vertexType = 0) {
+        vertices_.emplace_back(vertices_.size(), workWeight, commWeight, memWeight, vertexType);
+        outNeigbors_.push_back({});
+        inNeigbors_.push_back({});
 
-        num_vertex_types_ = std::max(num_vertex_types_, vertex_type + 1);
+        numVertexTypes_ = std::max(numVertexTypes_, vertexType + 1);
 
         return vertices_.back().id;
     }
 
-    void set_vertex_work_weight(const vertex_idx v, const vertex_work_weight_type work_weight) {
-        vertices_.at(v).work_weight = work_weight;
+    void SetVertexWorkWeight(const VertexIdx v, const VertexWorkWeightType workWeight) {
+        vertices_.at(v).work_weight = workWeight;
     }
 
-    void set_vertex_comm_weight(const vertex_idx v, const vertex_comm_weight_type comm_weight) {
-        vertices_.at(v).comm_weight = comm_weight;
+    void SetVertexCommWeight(const VertexIdx v, const VertexCommWeightType commWeight) {
+        vertices_.at(v).comm_weight = commWeight;
     }
 
-    void set_vertex_mem_weight(const vertex_idx v, const vertex_mem_weight_type mem_weight) {
-        vertices_.at(v).mem_weight = mem_weight;
-    }
+    void SetVertexMemWeight(const VertexIdx v, const VertexMemWeightType memWeight) { vertices_.at(v).mem_weight = memWeight; }
 
-    void set_vertex_type(const vertex_idx v, const vertex_type_type vertex_type) {
-        vertices_.at(v).vertex_type = vertex_type;
-        num_vertex_types_ = std::max(num_vertex_types_, vertex_type + 1);
+    void SetVertexType(const VertexIdx v, const VertexTypeType vertexType) {
+        vertices_.at(v).vertex_type = vertexType;
+        numVertexTypes_ = std::max(numVertexTypes_, vertexType + 1);
     }
 
     /**
@@ -229,32 +227,32 @@ class computational_dag_vector_impl {
      * @param target The target vertex index.
      * @return True if the edge was added, false if it already exists or vertices are invalid.
      */
-    bool add_edge(const vertex_idx source, const vertex_idx target) {
-        if (source >= static_cast<vertex_idx>(vertices_.size()) || target >= static_cast<vertex_idx>(vertices_.size())
+    bool AddEdge(const VertexIdx source, const VertexIdx target) {
+        if (source >= static_cast<VertexIdx>(vertices_.size()) || target >= static_cast<VertexIdx>(vertices_.size())
             || source == target) {
             return false;
         }
 
-        const auto &out = out_neigbors.at(source);
+        const auto &out = outNeigbors_.at(source);
         if (std::find(out.begin(), out.end(), target) != out.end()) {
             return false;
         }
 
-        out_neigbors[source].push_back(target);
-        in_neigbors.at(target).push_back(source);
-        num_edges_++;
+        outNeigbors_[source].push_back(target);
+        inNeigbors_.at(target).push_back(source);
+        numEdges_++;
 
         return true;
     }
 
   private:
-    std::vector<v_impl> vertices_;
+    std::vector<VImpl> vertices_;
 
-    std::vector<std::vector<vertex_idx>> out_neigbors;
-    std::vector<std::vector<vertex_idx>> in_neigbors;
+    std::vector<std::vector<VertexIdx>> outNeigbors_;
+    std::vector<std::vector<VertexIdx>> inNeigbors_;
 
-    vertex_idx num_edges_ = 0;
-    unsigned num_vertex_types_ = 0;
+    VertexIdx numEdges_ = 0;
+    unsigned numVertexTypes_ = 0;
 };
 
 /**

@@ -31,7 +31,7 @@ limitations under the License.
 
 using namespace osp;
 
-BOOST_AUTO_TEST_CASE(test_full) {
+BOOST_AUTO_TEST_CASE(TestFull) {
     using graph = computational_dag_vector_impl_def_t;
 
     BspInstance<graph> instance;
@@ -53,16 +53,15 @@ BOOST_AUTO_TEST_CASE(test_full) {
     BOOST_CHECK(status);
 
     GreedyBspScheduler<graph> greedy;
-    BspSchedule<graph> bsp_initial(instance);
+    BspSchedule<graph> bspInitial(instance);
     BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, greedy.computeSchedule(bsp_initial));
 
-    std::vector<v_memw_t<graph> > minimum_memory_required_vector
-        = PebblingSchedule<graph>::minimumMemoryRequiredPerNodeType(instance);
-    v_memw_t<graph> max_required = *std::max_element(minimum_memory_required_vector.begin(), minimum_memory_required_vector.end());
+    std::vector<v_memw_t<graph> > minimumMemoryRequiredVector = PebblingSchedule<graph>::minimumMemoryRequiredPerNodeType(instance);
+    v_memw_t<graph> maxRequired = *std::max_element(minimum_memory_required_vector.begin(), minimum_memory_required_vector.end());
     instance.getArchitecture().setMemoryBound(max_required);
 
-    PebblingSchedule<graph> initial_sol(bsp_initial, PebblingSchedule<graph>::CACHE_EVICTION_STRATEGY::FORESIGHT);
-    BOOST_CHECK(initial_sol.isValid());
+    PebblingSchedule<graph> initialSol(bsp_initial, PebblingSchedule<graph>::CACHE_EVICTION_STRATEGY::FORESIGHT);
+    BOOST_CHECK(initialSol.isValid());
 
     MultiProcessorPebbling<graph> mpp;
     mpp.setTimeLimitSeconds(10);
@@ -72,7 +71,7 @@ BOOST_AUTO_TEST_CASE(test_full) {
     BOOST_CHECK(schedule.isValid());
 };
 
-BOOST_AUTO_TEST_CASE(test_partial) {
+BOOST_AUTO_TEST_CASE(TestPartial) {
     using graph = computational_dag_vector_impl_def_t;
 
     BspInstance<graph> instance;
@@ -93,9 +92,8 @@ BOOST_AUTO_TEST_CASE(test_partial) {
 
     BOOST_CHECK(status);
 
-    std::vector<v_memw_t<graph> > minimum_memory_required_vector
-        = PebblingSchedule<graph>::minimumMemoryRequiredPerNodeType(instance);
-    v_memw_t<graph> max_required = *std::max_element(minimum_memory_required_vector.begin(), minimum_memory_required_vector.end());
+    std::vector<v_memw_t<graph> > minimumMemoryRequiredVector = PebblingSchedule<graph>::minimumMemoryRequiredPerNodeType(instance);
+    v_memw_t<graph> maxRequired = *std::max_element(minimum_memory_required_vector.begin(), minimum_memory_required_vector.end());
     instance.getArchitecture().setMemoryBound(max_required);
 
     PebblingPartialILP<graph> mpp;

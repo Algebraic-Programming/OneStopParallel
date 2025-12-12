@@ -21,13 +21,13 @@ limitations under the License.
 
 namespace osp {
 
-template <typename float_type>
-float_type log_sum_exp(float_type lhs, float_type rhs) {
-    static_assert(std::is_floating_point_v<float_type>);
+template <typename FloatType>
+FloatType LogSumExp(FloatType lhs, FloatType rhs) {
+    static_assert(std::is_floating_point_v<FloatType>);
 
-    const float_type max = std::max(lhs, rhs);
+    const FloatType max = std::max(lhs, rhs);
 
-    float_type result = max;
+    FloatType result = max;
     result += std::log2(std::exp2(lhs - max) + std::exp2(rhs - max));
     return result;
 }

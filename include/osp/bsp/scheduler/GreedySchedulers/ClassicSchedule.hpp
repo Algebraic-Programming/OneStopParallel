@@ -32,22 +32,22 @@ namespace osp {
  *
  * This class stores the processor and time information for a schedule.
  */
-template <typename Graph_t>
+template <typename GraphT>
 class CSchedule {
   private:
     using vertex_idx = vertex_idx_t<Graph_t>;
     using workw_t = v_workw_t<Graph_t>;
 
   public:
-    std::vector<unsigned> proc; /**< The processor assigned to each task. */
-    std::vector<workw_t> time;  /**< The time at which each task starts. */
+    std::vector<unsigned> proc_; /**< The processor assigned to each task. */
+    std::vector<workw_t> time_;  /**< The time at which each task starts. */
 
     /**
      * @brief Constructs a CSchedule object with the given size.
      * @param size The size of the schedule.
      */
     CSchedule(std::size_t size)
-        : proc(std::vector<unsigned>(size, std::numeric_limits<unsigned>::max())), time(std::vector<workw_t>(size, 0)) {}
+        : proc_(std::vector<unsigned>(size, std::numeric_limits<unsigned>::max())), time(std::vector<workw_t>(size, 0)) {}
 
     /**
      * @brief Converts the CSchedule object to a BspSchedule object.
@@ -56,29 +56,29 @@ class CSchedule {
      * @return The converted BspSchedule object.
      */
 
-    void convertToBspSchedule(const BspInstance<Graph_t> &instance,
+    void ConvertToBspSchedule(const BspInstance<GraphT> &instance,
                               const std::vector<std::deque<vertex_idx>> &procAssignmentLists,
-                              BspSchedule<Graph_t> &bsp_schedule) {
+                              BspSchedule<GraphT> &bspSchedule) {
         for (const auto &v : instance.vertices()) {
-            bsp_schedule.setAssignedProcessor(v, proc[v]);
+            bspSchedule.setAssignedProcessor(v, proc_[v]);
         }
 
-        const vertex_idx N = instance.numberOfVertices();
-        const unsigned P = instance.numberOfProcessors();
+        const vertex_idx n = instance.numberOfVertices();
+        const unsigned p = instance.numberOfProcessors();
 
         unsigned superStepIdx = 0, totalNodesDone = 0;
-        std::vector<bool> processed(N, false);
+        std::vector<bool> processed(n, false);
 
-        std::vector<decltype(procAssignmentLists[0].cbegin())> done(P), limit(P);
+        std::vector<decltype(procAssignmentLists[0].cbegin())> done(p), limit(P);
 
-        for (unsigned j = 0; j < P; ++j) {
+        for (unsigned j = 0; j < p; ++j) {
             done[j] = procAssignmentLists[j].cbegin();
         }
 
-        while (totalNodesDone < N) {
+        while (totalNodesDone < n) {
             // create next superstep
             workw_t timeLimit = std::numeric_limits<workw_t>::max();
-            for (unsigned j = 0; j < P; ++j) {
+            for (unsigned j = 0; j < p; ++j) {
                 for (limit[j] = done[j]; limit[j] != procAssignmentLists[j].end(); ++limit[j]) {
                     const vertex_idx node = *limit[j];
                     bool cut = false;
@@ -98,13 +98,13 @@ class CSchedule {
                 }
             }
 
-            for (unsigned j = 0; j < P; ++j) {
+            for (unsigned j = 0; j < p; ++j) {
                 for (; done[j] != limit[j]
                        && (time[*done[j]] < timeLimit
                            || (time[*done[j]] == timeLimit && instance.getComputationalDag().vertex_work_weight(*done[j]) == 0));
                      ++done[j]) {
                     processed[*done[j]] = true;
-                    bsp_schedule.setAssignedSuperstep(*done[j], superStepIdx);
+                    bspSchedule.setAssignedSuperstep(*done[j], superStepIdx);
                     ++totalNodesDone;
                 }
             }

@@ -27,34 +27,34 @@ namespace osp {
  * @struct WavefrontStatistics
  * @brief Holds statistical data for a single wavefront.
  */
-template <typename Graph_t>
+template <typename GraphT>
 struct WavefrontStatistics {
     using VertexType = vertex_idx_t<Graph_t>;
 
-    std::vector<v_workw_t<Graph_t>> connected_components_weights;
-    std::vector<v_memw_t<Graph_t>> connected_components_memories;
-    std::vector<std::vector<VertexType>> connected_components_vertices;
+    std::vector<v_workw_t<Graph_t>> connectedComponentsWeights_;
+    std::vector<v_memw_t<Graph_t>> connectedComponentsMemories_;
+    std::vector<std::vector<VertexType>> connectedComponentsVertices_;
 };
 
 /**
  * @class WavefrontStatisticsCollector
  * @brief Computes forward and backward wavefront statistics for a given DAG.
  */
-template <typename Graph_t>
+template <typename GraphT>
 class WavefrontStatisticsCollector {
     using VertexType = vertex_idx_t<Graph_t>;
     using UnionFind = union_find_universe_t<Graph_t>;
 
   public:
-    WavefrontStatisticsCollector(const Graph_t &dag, const std::vector<std::vector<VertexType>> &level_sets)
+    WavefrontStatisticsCollector(const GraphT &dag, const std::vector<std::vector<VertexType>> &levelSets)
         : dag_(dag), level_sets_(level_sets) {}
 
     /**
      * @brief Computes wavefront statistics by processing levels from start to end.
      * @return A vector of statistics, one for each level.
      */
-    std::vector<WavefrontStatistics<Graph_t>> compute_forward() const {
-        std::vector<WavefrontStatistics<Graph_t>> stats(level_sets_.size());
+    std::vector<WavefrontStatistics<GraphT>> ComputeForward() const {
+        std::vector<WavefrontStatistics<GraphT>> stats(level_sets_.size());
         UnionFind uf;
 
         for (size_t i = 0; i < level_sets_.size(); ++i) {
@@ -68,12 +68,12 @@ class WavefrontStatisticsCollector {
      * @brief Computes wavefront statistics by processing levels from end to start.
      * @return A vector of statistics, one for each level (in original level order).
      */
-    std::vector<WavefrontStatistics<Graph_t>> compute_backward() const {
-        std::vector<WavefrontStatistics<Graph_t>> stats(level_sets_.size());
+    std::vector<WavefrontStatistics<GraphT>> ComputeBackward() const {
+        std::vector<WavefrontStatistics<GraphT>> stats(level_sets_.size());
         UnionFind uf;
 
         for (size_t i = level_sets_.size(); i > 0; --i) {
-            size_t level_idx = i - 1;
+            size_t levelIdx = i - 1;
             update_union_find(uf, level_idx);
             collect_stats_for_level(stats[level_idx], uf);
         }
@@ -81,7 +81,7 @@ class WavefrontStatisticsCollector {
     }
 
   private:
-    void update_union_find(UnionFind &uf, size_t level_idx) const {
+    void UpdateUnionFind(UnionFind &uf, size_t levelIdx) const {
         // Add all vertices from the current level to the universe
         for (const auto vertex : level_sets_[level_idx]) {
             uf.add_object(vertex, dag_.vertex_work_weight(vertex), dag_.vertex_mem_weight(vertex));
@@ -101,7 +101,7 @@ class WavefrontStatisticsCollector {
         }
     }
 
-    void collect_stats_for_level(WavefrontStatistics<Graph_t> &stats, UnionFind &uf) const {
+    void CollectStatsForLevel(WavefrontStatistics<GraphT> &stats, UnionFind &uf) const {
         const auto components = uf.get_connected_components_weights_and_memories();
         stats.connected_components_vertices.reserve(components.size());
         stats.connected_components_weights.reserve(components.size());
@@ -115,8 +115,8 @@ class WavefrontStatisticsCollector {
         }
     }
 
-    const Graph_t &dag_;
-    const std::vector<std::vector<VertexType>> &level_sets_;
+    const GraphT &dag_;
+    const std::vector<std::vector<VertexType>> &levelSets_;
 };
 
 }    // end namespace osp

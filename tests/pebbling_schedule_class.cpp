@@ -32,7 +32,7 @@ limitations under the License.
 
 using namespace osp;
 
-std::vector<std::string> tiny_spaa_graphs() {
+std::vector<std::string> TinySpaaGraphs() {
     return {"data/spaa/tiny/instance_bicgstab.hdag",
             "data/spaa/tiny/instance_CG_N2_K2_nzP0d75.hdag",
             "data/spaa/tiny/instance_CG_N3_K1_nzP0d5.hdag",
@@ -51,12 +51,12 @@ std::vector<std::string> tiny_spaa_graphs() {
             "data/spaa/tiny/instance_spmv_N10_nzP0d25.hdag"};
 }
 
-std::vector<std::string> test_architectures() { return {"data/machine_params/p3.arch"}; }
+std::vector<std::string> TestArchitectures() { return {"data/machine_params/p3.arch"}; }
 
-template <typename Graph_t>
-void run_test(Scheduler<Graph_t> *test_scheduler) {
-    std::vector<std::string> filenames_graph = tiny_spaa_graphs();
-    std::vector<std::string> filenames_architectures = test_architectures();
+template <typename GraphT>
+void RunTest(Scheduler<GraphT> *testScheduler) {
+    std::vector<std::string> filenamesGraph = TinySpaaGraphs();
+    std::vector<std::string> filenamesArchitectures = TestArchitectures();
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -66,75 +66,74 @@ void run_test(Scheduler<Graph_t> *test_scheduler) {
         std::cout << cwd << std::endl;
     }
 
-    for (auto &filename_graph : filenames_graph) {
-        for (auto &filename_machine : filenames_architectures) {
-            std::string name_graph
-                = filename_graph.substr(filename_machine.find_last_of("/\\") + 1, filename_graph.find_last_of("."));
-            std::string name_machine = filename_machine.substr(filename_machine.find_last_of("/\\") + 1);
-            name_machine = name_machine.substr(0, name_machine.rfind("."));
+    for (auto &filenameGraph : filenamesGraph) {
+        for (auto &filenameMachine : filenamesArchitectures) {
+            std::string nameGraph = filenameGraph.substr(filenameMachine.find_last_of("/\\") + 1, filenameGraph.find_last_of("."));
+            std::string nameMachine = filenameMachine.substr(filenameMachine.find_last_of("/\\") + 1);
+            nameMachine = nameMachine.substr(0, nameMachine.rfind("."));
 
-            std::cout << std::endl << "Graph: " << name_graph << std::endl;
-            std::cout << "Architecture: " << name_machine << std::endl;
+            std::cout << std::endl << "Graph: " << nameGraph << std::endl;
+            std::cout << "Architecture: " << nameMachine << std::endl;
 
-            BspInstance<Graph_t> instance;
+            BspInstance<GraphT> instance;
 
-            bool status_graph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(),
-                                                                                  instance.getComputationalDag());
+            bool statusGraph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(),
+                                                                                 instance.getComputationalDag());
 
-            bool status_architecture
+            bool statusArchitecture
                 = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.getArchitecture());
 
-            if (!status_graph || !status_architecture) {
+            if (!statusGraph || !statusArchitecture) {
                 std::cout << "Reading files failed." << std::endl;
                 BOOST_CHECK(false);
             }
 
-            BspSchedule bsp_schedule(instance);
+            BspSchedule bspSchedule(instance);
 
-            RETURN_STATUS result = test_scheduler->computeSchedule(bsp_schedule);
+            RETURN_STATUS result = testScheduler->computeSchedule(bspSchedule);
             BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
 
-            std::vector<v_memw_t<Graph_t> > minimum_memory_required_vector
-                = PebblingSchedule<Graph_t>::minimumMemoryRequiredPerNodeType(instance);
-            v_memw_t<Graph_t> max_required
-                = *std::max_element(minimum_memory_required_vector.begin(), minimum_memory_required_vector.end());
-            instance.getArchitecture().setMemoryBound(max_required);
+            std::vector<v_memw_t<GraphT> > minimumMemoryRequiredVector
+                = PebblingSchedule<GraphT>::minimumMemoryRequiredPerNodeType(instance);
+            v_memw_t<GraphT> maxRequired
+                = *std::max_element(minimumMemoryRequiredVector.begin(), minimumMemoryRequiredVector.end());
+            instance.getArchitecture().setMemoryBound(maxRequired);
 
-            PebblingSchedule<Graph_t> memSchedule1(bsp_schedule, PebblingSchedule<Graph_t>::CACHE_EVICTION_STRATEGY::LARGEST_ID);
+            PebblingSchedule<GraphT> memSchedule1(bspSchedule, PebblingSchedule<GraphT>::CACHE_EVICTION_STRATEGY::LARGEST_ID);
             BOOST_CHECK_EQUAL(&memSchedule1.getInstance(), &instance);
             BOOST_CHECK(memSchedule1.isValid());
 
-            PebblingSchedule<Graph_t> memSchedule3(bsp_schedule,
-                                                   PebblingSchedule<Graph_t>::CACHE_EVICTION_STRATEGY::LEAST_RECENTLY_USED);
+            PebblingSchedule<GraphT> memSchedule3(bspSchedule,
+                                                  PebblingSchedule<GraphT>::CACHE_EVICTION_STRATEGY::LEAST_RECENTLY_USED);
             BOOST_CHECK(memSchedule3.isValid());
 
-            PebblingSchedule<Graph_t> memSchedule5(bsp_schedule, PebblingSchedule<Graph_t>::CACHE_EVICTION_STRATEGY::FORESIGHT);
+            PebblingSchedule<GraphT> memSchedule5(bspSchedule, PebblingSchedule<GraphT>::CACHE_EVICTION_STRATEGY::FORESIGHT);
             BOOST_CHECK(memSchedule5.isValid());
 
-            instance.getArchitecture().setMemoryBound(2 * max_required);
+            instance.getArchitecture().setMemoryBound(2 * maxRequired);
 
-            PebblingSchedule<Graph_t> memSchedule2(bsp_schedule, PebblingSchedule<Graph_t>::CACHE_EVICTION_STRATEGY::LARGEST_ID);
+            PebblingSchedule<GraphT> memSchedule2(bspSchedule, PebblingSchedule<GraphT>::CACHE_EVICTION_STRATEGY::LARGEST_ID);
             BOOST_CHECK(memSchedule2.isValid());
 
-            PebblingSchedule<Graph_t> memSchedule4(bsp_schedule,
-                                                   PebblingSchedule<Graph_t>::CACHE_EVICTION_STRATEGY::LEAST_RECENTLY_USED);
+            PebblingSchedule<GraphT> memSchedule4(bspSchedule,
+                                                  PebblingSchedule<GraphT>::CACHE_EVICTION_STRATEGY::LEAST_RECENTLY_USED);
             BOOST_CHECK(memSchedule4.isValid());
 
-            PebblingSchedule<Graph_t> memSchedule6(bsp_schedule, PebblingSchedule<Graph_t>::CACHE_EVICTION_STRATEGY::FORESIGHT);
+            PebblingSchedule<GraphT> memSchedule6(bspSchedule, PebblingSchedule<GraphT>::CACHE_EVICTION_STRATEGY::FORESIGHT);
             BOOST_CHECK(memSchedule6.isValid());
         }
     }
 }
 
-BOOST_AUTO_TEST_CASE(GreedyBspScheduler_test) {
+BOOST_AUTO_TEST_CASE(GreedyBspSchedulerTest) {
     GreedyBspScheduler<computational_dag_vector_impl_def_t> test;
-    run_test(&test);
+    RunTest(&test);
 }
 
-BOOST_AUTO_TEST_CASE(test_pebbling_schedule_writer) {
-    using graph = computational_dag_vector_impl_def_int_t;
+BOOST_AUTO_TEST_CASE(TestPebblingScheduleWriter) {
+    using Graph = computational_dag_vector_impl_def_int_t;
 
-    BspInstance<graph> instance;
+    BspInstance<Graph> instance;
     instance.setNumberOfProcessors(3);
     instance.setCommunicationCosts(3);
     instance.setSynchronisationCosts(5);
@@ -154,18 +153,17 @@ BOOST_AUTO_TEST_CASE(test_pebbling_schedule_writer) {
     BOOST_CHECK_EQUAL(instance.getComputationalDag().num_vertices(), 54);
     BOOST_CHECK_EQUAL(instance.getComputationalDag().num_vertex_types(), 1);
 
-    BspSchedule bsp_schedule(instance);
-    GreedyBspScheduler<graph> scheduler;
+    BspSchedule bspSchedule(instance);
+    GreedyBspScheduler<Graph> scheduler;
 
-    RETURN_STATUS result = scheduler.computeSchedule(bsp_schedule);
+    RETURN_STATUS result = scheduler.computeSchedule(bspSchedule);
     BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
 
-    std::vector<v_memw_t<graph> > minimum_memory_required_vector
-        = PebblingSchedule<graph>::minimumMemoryRequiredPerNodeType(instance);
-    v_memw_t<graph> max_required = *std::max_element(minimum_memory_required_vector.begin(), minimum_memory_required_vector.end());
-    instance.getArchitecture().setMemoryBound(max_required + 3);
+    std::vector<v_memw_t<Graph> > minimumMemoryRequiredVector = PebblingSchedule<Graph>::minimumMemoryRequiredPerNodeType(instance);
+    v_memw_t<Graph> maxRequired = *std::max_element(minimumMemoryRequiredVector.begin(), minimumMemoryRequiredVector.end());
+    instance.getArchitecture().setMemoryBound(maxRequired + 3);
 
-    PebblingSchedule<graph> memSchedule(bsp_schedule, PebblingSchedule<graph>::CACHE_EVICTION_STRATEGY::LEAST_RECENTLY_USED);
+    PebblingSchedule<Graph> memSchedule(bspSchedule, PebblingSchedule<Graph>::CACHE_EVICTION_STRATEGY::LEAST_RECENTLY_USED);
     BOOST_CHECK(memSchedule.isValid());
 
     std::cout << "Writing pebbling schedule" << std::endl;

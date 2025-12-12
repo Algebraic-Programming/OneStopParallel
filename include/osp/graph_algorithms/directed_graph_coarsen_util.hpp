@@ -32,9 +32,8 @@ limitations under the License.
 
 namespace osp {
 
-template <typename Graph_t>
-std::vector<edge_desc_t<Graph_t>> get_contractable_edges_from_poset_int_map(const std::vector<int> &poset_int_map,
-                                                                            const Graph_t &graph) {
+template <typename GraphT>
+std::vector<edge_desc_t<Graph_t>> GetContractableEdgesFromPosetIntMap(const std::vector<int> &posetIntMap, const GraphT &graph) {
     static_assert(is_directed_graph_edge_desc_v<Graph_t>, "Graph_t must satisfy the directed_graph_edge_desc concept");
 
     std::vector<edge_desc_t<Graph_t>> output;
@@ -43,7 +42,7 @@ std::vector<edge_desc_t<Graph_t>> get_contractable_edges_from_poset_int_map(cons
         vertex_idx_t<Graph_t> src = source(edge, graph);
         vertex_idx_t<Graph_t> tgt = target(edge, graph);
 
-        if (poset_int_map[tgt] == poset_int_map[src] + 1) {
+        if (posetIntMap[tgt] == posetIntMap[src] + 1) {
             output.emplace_back(edge);
         }
     }

@@ -26,12 +26,12 @@ namespace osp {
 
 template <typename T>
 struct DefaultHasEntry {
-    static inline bool has_entry(const T &val) { return val != 0; }
+    static inline bool HasEntry(const T &val) { return val != 0; }
 };
 
 template <typename T>
 struct DefaultHasEntry<std::vector<T>> {
-    static inline bool has_entry(const std::vector<T> &val) { return !val.empty(); }
+    static inline bool HasEntry(const std::vector<T> &val) { return !val.empty(); }
 };
 
 /**
@@ -40,17 +40,17 @@ struct DefaultHasEntry<std::vector<T>> {
  * This structure tracks information about children assigned to each processor.
  * It uses a 2D vector for dense data.
  */
-template <typename vertex_idx_t, typename ValueType = unsigned, typename HasEntry = DefaultHasEntry<ValueType>>
-struct generic_lambda_vector_container {
+template <typename VertexIdxT, typename ValueType = unsigned, typename HasEntry = DefaultHasEntry<ValueType>>
+struct GenericLambdaVectorContainer {
     /**
      * @brief Range adapter for iterating over non-zero/non-empty processor entries.
      */
-    class lambda_vector_range {
+    class LambdaVectorRange {
       private:
         const std::vector<ValueType> &vec_;
 
       public:
-        class lambda_vector_iterator {
+        class LambdaVectorIterator {
             using iterator_category = std::input_iterator_tag;
             using value_type = std::pair<unsigned, ValueType>;
             using difference_type = std::ptrdiff_t;
@@ -62,15 +62,15 @@ struct generic_lambda_vector_container {
             unsigned index_;
 
           public:
-            lambda_vector_iterator(const std::vector<ValueType> &vec) : vec_(vec), index_(0) {
+            LambdaVectorIterator(const std::vector<ValueType> &vec) : vec_(vec), index_(0) {
                 while (index_ < vec_.size() && !HasEntry::has_entry(vec_[index_])) {
                     ++index_;
                 }
             }
 
-            lambda_vector_iterator(const std::vector<ValueType> &vec, unsigned index) : vec_(vec), index_(index) {}
+            LambdaVectorIterator(const std::vector<ValueType> &vec, unsigned index) : vec_(vec), index_(index) {}
 
-            lambda_vector_iterator &operator++() {
+            LambdaVectorIterator &operator++() {
                 ++index_;
                 while (index_ < vec_.size() && !HasEntry::has_entry(vec_[index_])) {
                     ++index_;
@@ -80,42 +80,42 @@ struct generic_lambda_vector_container {
 
             value_type operator*() const { return std::make_pair(index_, vec_[index_]); }
 
-            bool operator==(const lambda_vector_iterator &other) const { return index_ == other.index_; }
+            bool operator==(const LambdaVectorIterator &other) const { return index_ == other.index_; }
 
-            bool operator!=(const lambda_vector_iterator &other) const { return !(*this == other); }
+            bool operator!=(const LambdaVectorIterator &other) const { return !(*this == other); }
         };
 
-        lambda_vector_range(const std::vector<ValueType> &vec) : vec_(vec) {}
+        LambdaVectorRange(const std::vector<ValueType> &vec) : vec_(vec) {}
 
-        lambda_vector_iterator begin() { return lambda_vector_iterator(vec_); }
+        LambdaVectorIterator begin() { return LambdaVectorIterator(vec_); }
 
-        lambda_vector_iterator end() { return lambda_vector_iterator(vec_, static_cast<unsigned>(vec_.size())); }
+        LambdaVectorIterator end() { return LambdaVectorIterator(vec_, static_cast<unsigned>(vec_.size())); }
     };
 
     /// 2D vector: for each node, stores processor assignment info
-    std::vector<std::vector<ValueType>> node_lambda_vec;
+    std::vector<std::vector<ValueType>> nodeLambdaVec_;
 
     /// Number of processors in the system
-    unsigned num_procs_ = 0;
+    unsigned numProcs_ = 0;
 
-    inline void initialize(const vertex_idx_t num_vertices, const unsigned num_procs) {
-        node_lambda_vec.assign(num_vertices, std::vector<ValueType>(num_procs));
-        num_procs_ = num_procs;
+    inline void Initialize(const VertexIdxT numVertices, const unsigned numProcs) {
+        nodeLambdaVec_.assign(numVertices, std::vector<ValueType>(numProcs));
+        numProcs_ = numProcs;
     }
 
-    inline void reset_node(const vertex_idx_t node) { node_lambda_vec[node].assign(num_procs_, ValueType()); }
+    inline void ResetNode(const VertexIdxT node) { nodeLambdaVec_[node].assign(numProcs_, ValueType()); }
 
-    inline void clear() { node_lambda_vec.clear(); }
+    inline void Clear() { nodeLambdaVec_.clear(); }
 
-    inline bool has_proc_entry(const vertex_idx_t node, const unsigned proc) const {
-        return HasEntry::has_entry(node_lambda_vec[node][proc]);
+    inline bool HasProcEntry(const VertexIdxT node, const unsigned proc) const {
+        return HasEntry::has_entry(nodeLambdaVec_[node][proc]);
     }
 
-    inline ValueType &get_proc_entry(const vertex_idx_t node, const unsigned proc) { return node_lambda_vec[node][proc]; }
+    inline ValueType &GetProcEntry(const VertexIdxT node, const unsigned proc) { return nodeLambdaVec_[node][proc]; }
 
-    inline ValueType get_proc_entry(const vertex_idx_t node, const unsigned proc) const { return node_lambda_vec[node][proc]; }
+    inline ValueType GetProcEntry(const VertexIdxT node, const unsigned proc) const { return nodeLambdaVec_[node][proc]; }
 
-    inline auto iterate_proc_entries(const vertex_idx_t node) { return lambda_vector_range(node_lambda_vec[node]); }
+    inline auto IterateProcEntries(const VertexIdxT node) { return LambdaVectorRange(nodeLambdaVec_[node]); }
 };
 
 }    // namespace osp

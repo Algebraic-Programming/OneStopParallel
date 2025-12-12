@@ -28,7 +28,7 @@ limitations under the License.
 using namespace osp;
 using graph_t = computational_dag_vector_impl_def_t;
 
-BOOST_AUTO_TEST_SUITE(TransitiveReduction)
+BOOST_AUTO_TEST_SUITE(transitive_reduction)
 
 // Test with a simple chain graph that has a transitive edge
 BOOST_AUTO_TEST_CASE(SimpleTransitiveEdge) {
@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(SimpleTransitiveEdge) {
     BOOST_REQUIRE_EQUAL(dag.num_vertices(), 3);
     BOOST_REQUIRE_EQUAL(dag.num_edges(), 3);
 
-    graph_t reduced_sparse, reduced_dense;
+    graph_t reducedSparse, reduced_dense;
     transitive_reduction_sparse(dag, reduced_sparse);
     transitive_reduction_dense(dag, reduced_dense);
 
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(NoTransitiveEdges) {
     BOOST_REQUIRE_EQUAL(dag.num_vertices(), 8);
     BOOST_REQUIRE_EQUAL(dag.num_edges(), 11);
 
-    graph_t reduced_sparse, reduced_dense;
+    graph_t reducedSparse, reduced_dense;
     transitive_reduction_sparse(dag, reduced_sparse);
     transitive_reduction_dense(dag, reduced_dense);
 
@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(ComplexGraph) {
     BOOST_REQUIRE_EQUAL(dag.num_vertices(), 5);
     BOOST_REQUIRE_EQUAL(dag.num_edges(), 7);
 
-    graph_t reduced_sparse, reduced_dense;
+    graph_t reducedSparse, reduced_dense;
     transitive_reduction_sparse(dag, reduced_sparse);
     transitive_reduction_dense(dag, reduced_dense);
 

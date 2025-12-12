@@ -31,59 +31,51 @@ limitations under the License.
 
 namespace osp {
 
-using double_cost_t = double;
+using DoubleCostT = double;
 
-template <typename Graph_t,
-          typename MemoryConstraint_t = no_local_search_memory_constraint,
-          unsigned window_size = 1,
-          bool use_node_communication_costs_arg = true>
-using kl_total_comm_improver
-    = kl_improver<Graph_t,
-                  kl_total_comm_cost_function<Graph_t, double_cost_t, MemoryConstraint_t, window_size, use_node_communication_costs_arg>,
-                  MemoryConstraint_t,
-                  window_size,
-                  double_cost_t>;
+template <typename GraphT,
+          typename MemoryConstraintT = NoLocalSearchMemoryConstraint,
+          unsigned windowSize = 1,
+          bool useNodeCommunicationCostsArg = true>
+using KlTotalCommImprover
+    = KlImprover<GraphT,
+                 KlTotalCommCostFunction<GraphT, DoubleCostT, MemoryConstraintT, windowSize, useNodeCommunicationCostsArg>,
+                 MemoryConstraintT,
+                 windowSize,
+                 DoubleCostT>;
 
-template <typename Graph_t,
-          typename MemoryConstraint_t = ls_local_memory_constraint<Graph_t>,
-          unsigned window_size = 1,
-          bool use_node_communication_costs_arg = true>
-using kl_total_comm_improver_local_mem_constr
-    = kl_improver<Graph_t,
-                  kl_total_comm_cost_function<Graph_t, double_cost_t, MemoryConstraint_t, window_size, use_node_communication_costs_arg>,
-                  MemoryConstraint_t,
-                  window_size,
-                  double_cost_t>;
+template <typename GraphT,
+          typename MemoryConstraintT = LsLocalMemoryConstraint<GraphT>,
+          unsigned windowSize = 1,
+          bool useNodeCommunicationCostsArg = true>
+using KlTotalCommImproverLocalMemConstr
+    = KlImprover<GraphT,
+                 KlTotalCommCostFunction<GraphT, DoubleCostT, MemoryConstraintT, windowSize, useNodeCommunicationCostsArg>,
+                 MemoryConstraintT,
+                 windowSize,
+                 DoubleCostT>;
 
-template <typename Graph_t, typename MemoryConstraint_t = no_local_search_memory_constraint, unsigned window_size = 1>
-using kl_total_lambda_comm_improver
-    = kl_improver<Graph_t,
-                  kl_hyper_total_comm_cost_function<Graph_t, double_cost_t, MemoryConstraint_t, window_size>,
-                  MemoryConstraint_t,
-                  window_size,
-                  double_cost_t>;
+template <typename GraphT, typename MemoryConstraintT = NoLocalSearchMemoryConstraint, unsigned windowSize = 1>
+using KlTotalLambdaCommImprover = KlImprover<GraphT,
+                                             KlHyperTotalCommCostFunction<GraphT, DoubleCostT, MemoryConstraintT, windowSize>,
+                                             MemoryConstraintT,
+                                             windowSize,
+                                             DoubleCostT>;
 
-template <typename Graph_t, typename MemoryConstraint_t = ls_local_memory_constraint<Graph_t>, unsigned window_size = 1>
-using kl_total_lambda_comm_improver_local_mem_constr
-    = kl_improver<Graph_t,
-                  kl_hyper_total_comm_cost_function<Graph_t, double_cost_t, MemoryConstraint_t, window_size>,
-                  MemoryConstraint_t,
-                  window_size,
-                  double_cost_t>;
+template <typename GraphT, typename MemoryConstraintT = LsLocalMemoryConstraint<GraphT>, unsigned windowSize = 1>
+using KlTotalLambdaCommImproverLocalMemConstr
+    = KlImprover<GraphT,
+                 KlHyperTotalCommCostFunction<GraphT, DoubleCostT, MemoryConstraintT, windowSize>,
+                 MemoryConstraintT,
+                 windowSize,
+                 DoubleCostT>;
 
-template <typename Graph_t, typename MemoryConstraint_t = no_local_search_memory_constraint, unsigned window_size = 1>
-using kl_bsp_comm_improver = kl_improver<Graph_t,
-                                         kl_bsp_comm_cost_function<Graph_t, double_cost_t, MemoryConstraint_t, window_size>,
-                                         MemoryConstraint_t,
-                                         window_size,
-                                         double_cost_t>;
+template <typename GraphT, typename MemoryConstraintT = NoLocalSearchMemoryConstraint, unsigned windowSize = 1>
+using KlBspCommImprover
+    = KlImprover<GraphT, KlBspCommCostFunction<GraphT, DoubleCostT, MemoryConstraintT, windowSize>, MemoryConstraintT, windowSize, DoubleCostT>;
 
-template <typename Graph_t, typename MemoryConstraint_t = ls_local_memory_constraint<Graph_t>, unsigned window_size = 1>
-using kl_bsp_comm_improver_local_mem_constr
-    = kl_improver<Graph_t,
-                  kl_bsp_comm_cost_function<Graph_t, double_cost_t, MemoryConstraint_t, window_size>,
-                  MemoryConstraint_t,
-                  window_size,
-                  double_cost_t>;
+template <typename GraphT, typename MemoryConstraintT = LsLocalMemoryConstraint<GraphT>, unsigned windowSize = 1>
+using KlBspCommImproverLocalMemConstr
+    = KlImprover<GraphT, KlBspCommCostFunction<GraphT, DoubleCostT, MemoryConstraintT, windowSize>, MemoryConstraintT, windowSize, DoubleCostT>;
 
 }    // namespace osp

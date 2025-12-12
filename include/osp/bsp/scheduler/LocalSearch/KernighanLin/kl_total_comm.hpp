@@ -28,16 +28,12 @@ limitations under the License.
 
 namespace osp {
 
-template <typename Graph_t, typename MemoryConstraint_t = no_local_search_memory_constraint, bool use_node_communication_costs_arg = true>
-class kl_total_comm : public kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg> {
+template <typename GraphT, typename MemoryConstraintT = no_local_search_memory_constraint, bool useNodeCommunicationCostsArg = true>
+class KlTotalComm : public KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg> {
   protected:
-    virtual void compute_comm_gain(vertex_idx_t<Graph_t> node,
-                                   unsigned current_step,
-                                   unsigned current_proc,
-                                   unsigned new_proc) override {
-        if constexpr (kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule
-                          .use_node_communication_costs) {
-            if (current_proc == new_proc) {
+    virtual void compute_comm_gain(vertex_idx_t<Graph_t> node, unsigned currentStep, unsigned currentProc, unsigned newProc) override {
+        if constexpr (KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.use_node_communication_costs) {
+            if (currentProc == newProc) {
                 for (const auto &target :
                      kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule.instance
                          ->getComputationalDag()
@@ -434,7 +430,7 @@ class kl_total_comm : public kl_total<Graph_t, MemoryConstraint_t, use_node_comm
                 }
             }
         } else {
-            if (current_proc == new_proc) {
+            if (currentProc == newProc) {
                 for (const auto &out_edge :
                      out_edges(node,
                                kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule.instance
@@ -858,154 +854,142 @@ class kl_total_comm : public kl_total<Graph_t, MemoryConstraint_t, use_node_comm
     }
 
     virtual double compute_current_costs() override {
-        double work_costs = 0;
+        double workCosts = 0;
         for (unsigned step = 0;
-             step < kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule.num_steps();
+             step < KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.num_steps();
              step++) {
-            work_costs
-                += kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule.step_max_work[step];
+            workCosts += KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.step_max_work[step];
         }
 
-        double comm_costs = 0;
-        for (const auto &edge : edges(kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule
-                                          .instance->getComputationalDag())) {
-            const auto &source_v = source(edge,
-                                          kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule
-                                              .instance->getComputationalDag());
-            const unsigned &source_proc = kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule
-                                              .vector_schedule.assignedProcessor(source_v);
-            const unsigned &target_proc
-                = kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule.vector_schedule
-                      .assignedProcessor(
-                          target(edge,
-                                 kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule
-                                     .instance->getComputationalDag()));
+        double commCosts = 0;
+        for (const auto &edge : edges(KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.instance
+                                          ->getComputationalDag())) {
+            const auto &sourceV = source(
+                edge,
+                KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.instance->getComputationalDag());
+            const unsigned &sourceProc = KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule
+                                             .vector_schedule.assignedProcessor(sourceV);
+            const unsigned &targetProc
+                = KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.vector_schedule
+                      .assignedProcessor(target(edge,
+                                                KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule
+                                                    .instance->getComputationalDag()));
 
-            if (source_proc != target_proc) {
-                if constexpr (kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule
+            if (sourceProc != targetProc) {
+                if constexpr (KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule
                                   .use_node_communication_costs) {
-                    comm_costs
-                        += kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule.instance
-                               ->getComputationalDag()
-                               .vertex_comm_weight(source_v)
-                           * kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule.instance
-                                 ->communicationCosts(source_proc, target_proc);
+                    commCosts += KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.instance
+                                     ->getComputationalDag()
+                                     .vertex_comm_weight(sourceV)
+                                 * KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.instance
+                                       ->communicationCosts(sourceProc, targetProc);
                 } else {
-                    comm_costs
-                        += kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule.instance
-                               ->getComputationalDag()
-                               .edge_comm_weight(edge)
-                           * kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule.instance
-                                 ->communicationCosts(source_proc, target_proc);
+                    commCosts += KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.instance
+                                     ->getComputationalDag()
+                                     .edge_comm_weight(edge)
+                                 * KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.instance
+                                       ->communicationCosts(sourceProc, targetProc);
                 }
             }
         }
 
-        kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule.current_cost
-            = work_costs
-              + comm_costs
-                    * kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule.comm_multiplier
-              + (static_cast<double>(
-                     kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule.num_steps())
+        KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.current_cost
+            = workCosts
+              + commCosts * KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.comm_multiplier
+              + (static_cast<double>(KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.num_steps())
                  - 1)
-                    * kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule.instance
+                    * KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.instance
                           ->synchronisationCosts();
 
-        return kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule.current_cost;
+        return KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.current_cost;
     }
 
   public:
-    kl_total_comm() : kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>() {}
+    KlTotalComm() : KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>() {}
 
-    virtual ~kl_total_comm() = default;
+    virtual ~KlTotalComm() = default;
 
     virtual std::string getScheduleName() const override { return "KLTotalComm"; }
 };
 
-template <typename Graph_t, typename MemoryConstraint_t = no_local_search_memory_constraint, bool use_node_communication_costs_arg = true>
-class kl_total_comm_test : public kl_total_comm<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg> {
+template <typename GraphT, typename MemoryConstraintT = no_local_search_memory_constraint, bool useNodeCommunicationCostsArg = true>
+class KlTotalCommTest : public KlTotalComm<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg> {
   public:
-    kl_total_comm_test() : kl_total_comm<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>() {}
+    KlTotalCommTest() : KlTotalComm<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>() {}
 
-    virtual ~kl_total_comm_test() = default;
+    virtual ~KlTotalCommTest() = default;
 
     virtual std::string getScheduleName() const override { return "KLBaseTest"; }
 
-    kl_current_schedule_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg> &get_current_schedule() {
-        return kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule;
+    KlCurrentScheduleTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg> &GetCurrentSchedule() {
+        return KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule;
     }
 
-    auto &get_node_gains() { return kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::node_gains; }
+    auto &GetNodeGains() { return KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::node_gains; }
 
-    auto &get_node_change_in_costs() {
-        return kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::node_change_in_costs;
+    auto &GetNodeChangeInCosts() {
+        return KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::node_change_in_costs;
     }
 
-    auto &get_max_gain_heap() { return kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::max_gain_heap; }
+    auto &GetMaxGainHeap() { return KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::max_gain_heap; }
 
-    void initialize_gain_heap_test(const std::unordered_set<vertex_idx_t<Graph_t>> &nodes,
-                                   double reward_ = 0.0,
-                                   double penalty_ = 0.0) {
-        kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::reward = reward_;
-        kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::penalty = penalty_;
+    void InitializeGainHeapTest(const std::unordered_set<vertex_idx_t<Graph_t>> &nodes, double reward = 0.0, double penalty = 0.0) {
+        KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::reward = reward;
+        KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::penalty = penalty;
 
-        kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::initialize_gain_heap(nodes);
+        KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::initialize_gain_heap(nodes);
     }
 
-    void test_setup_schedule(BspSchedule<Graph_t> &schedule) {
-        kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule.instance
-            = &schedule.getInstance();
+    void TestSetupSchedule(BspSchedule<GraphT> &schedule) {
+        KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.instance = &schedule.getInstance();
 
-        kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::best_schedule = &schedule;
+        KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::best_schedule = &schedule;
 
-        kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::num_nodes
-            = kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule.instance->numberOfVertices();
-        kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::num_procs
-            = kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule.instance
-                  ->numberOfProcessors();
+        KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::num_nodes
+            = KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.instance->numberOfVertices();
+        KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::num_procs
+            = KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.instance->numberOfProcessors();
 
-        kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::set_parameters();
-        kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::initialize_datastructures();
+        KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::set_parameters();
+        KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::initialize_datastructures();
     }
 
-    RETURN_STATUS improve_schedule_test_1(BspSchedule<Graph_t> &schedule) {
-        kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule.instance
-            = &schedule.getInstance();
+    RETURN_STATUS ImproveScheduleTest1(BspSchedule<GraphT> &schedule) {
+        KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.instance = &schedule.getInstance();
 
-        kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::best_schedule = &schedule;
-        kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::num_nodes
-            = kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule.instance->numberOfVertices();
-        kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::num_procs
-            = kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule.instance
-                  ->numberOfProcessors();
+        KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::best_schedule = &schedule;
+        KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::num_nodes
+            = KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.instance->numberOfVertices();
+        KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::num_procs
+            = KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.instance->numberOfProcessors();
 
-        kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::set_parameters();
-        kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::initialize_datastructures();
+        KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::set_parameters();
+        KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::initialize_datastructures();
 
-        bool improvement_found = kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::run_local_search_simple();
+        bool improvementFound = KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::run_local_search_simple();
 
-        if (improvement_found) {
+        if (improvementFound) {
             return RETURN_STATUS::OSP_SUCCESS;
         } else {
             return RETURN_STATUS::BEST_FOUND;
         }
     }
 
-    RETURN_STATUS improve_schedule_test_2(BspSchedule<Graph_t> &schedule) {
-        kl_total<Graph_t, MemoryConstraint_t, true>::current_schedule.instance = &schedule.getInstance();
+    RETURN_STATUS ImproveScheduleTest2(BspSchedule<GraphT> &schedule) {
+        KlTotal<GraphT, MemoryConstraintT, true>::current_schedule.instance = &schedule.getInstance();
 
-        kl_total<Graph_t, MemoryConstraint_t, true>::best_schedule = &schedule;
-        kl_total<Graph_t, MemoryConstraint_t, true>::num_nodes
-            = kl_total<Graph_t, MemoryConstraint_t, true>::current_schedule.instance->numberOfVertices();
-        kl_total<Graph_t, MemoryConstraint_t, true>::num_procs
-            = kl_total<Graph_t, MemoryConstraint_t, true>::current_schedule.instance->numberOfProcessors();
+        KlTotal<GraphT, MemoryConstraintT, true>::best_schedule = &schedule;
+        KlTotal<GraphT, MemoryConstraintT, true>::num_nodes
+            = KlTotal<GraphT, MemoryConstraintT, true>::current_schedule.instance->numberOfVertices();
+        KlTotal<GraphT, MemoryConstraintT, true>::num_procs
+            = KlTotal<GraphT, MemoryConstraintT, true>::current_schedule.instance->numberOfProcessors();
 
-        kl_total<Graph_t, MemoryConstraint_t, true>::set_parameters();
-        kl_total<Graph_t, MemoryConstraint_t, true>::initialize_datastructures();
+        KlTotal<GraphT, MemoryConstraintT, true>::set_parameters();
+        KlTotal<GraphT, MemoryConstraintT, true>::initialize_datastructures();
 
-        bool improvement_found = kl_total<Graph_t, MemoryConstraint_t, true>::run_local_search_unlock_delay();
+        bool improvementFound = KlTotal<GraphT, MemoryConstraintT, true>::run_local_search_unlock_delay();
 
-        if (improvement_found) {
+        if (improvementFound) {
             return RETURN_STATUS::OSP_SUCCESS;
         } else {
             return RETURN_STATUS::BEST_FOUND;

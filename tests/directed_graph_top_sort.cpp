@@ -34,19 +34,19 @@ limitations under the License.
 
 using namespace osp;
 
-computational_dag_vector_impl_def_t constr_graph_1() {
+computational_dag_vector_impl_def_t ConstrGraph1() {
     computational_dag_vector_impl_def_t graph;
 
-    using vertex_idx = computational_dag_vector_impl_def_t::vertex_idx;
+    using VertexIdx = computational_dag_vector_impl_def_t::vertex_idx;
 
-    vertex_idx v1 = graph.add_vertex(1, 2, 3, 4);
-    vertex_idx v2 = graph.add_vertex(5, 6, 7, 8);
-    vertex_idx v3 = graph.add_vertex(9, 10, 11, 12);
-    vertex_idx v4 = graph.add_vertex(13, 14, 15, 16);
-    vertex_idx v5 = graph.add_vertex(17, 18, 19, 20);
-    vertex_idx v6 = graph.add_vertex(21, 22, 23, 24);
-    vertex_idx v7 = graph.add_vertex(25, 26, 27, 28);
-    vertex_idx v8 = graph.add_vertex(29, 30, 31, 32);
+    VertexIdx v1 = graph.add_vertex(1, 2, 3, 4);
+    VertexIdx v2 = graph.add_vertex(5, 6, 7, 8);
+    VertexIdx v3 = graph.add_vertex(9, 10, 11, 12);
+    VertexIdx v4 = graph.add_vertex(13, 14, 15, 16);
+    VertexIdx v5 = graph.add_vertex(17, 18, 19, 20);
+    VertexIdx v6 = graph.add_vertex(21, 22, 23, 24);
+    VertexIdx v7 = graph.add_vertex(25, 26, 27, 28);
+    VertexIdx v8 = graph.add_vertex(29, 30, 31, 32);
 
     graph.add_edge(v1, v2);
     graph.add_edge(v1, v3);
@@ -62,8 +62,8 @@ computational_dag_vector_impl_def_t constr_graph_1() {
     return graph;
 }
 
-BOOST_AUTO_TEST_CASE(test_util_1) {
-    const computational_dag_vector_impl_def_t graph = constr_graph_1();
+BOOST_AUTO_TEST_CASE(TestUtil1) {
+    const computational_dag_vector_impl_def_t graph = ConstrGraph1();
 
     // using vertex_idx = computational_dag_vector_impl_def_t::vertex_idx;
 }
@@ -87,193 +87,193 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     const std::vector<int> commW({1, 1, 1, 1, 2, 3, 2, 1, 1, 1});
 
     const boost_graph_int_t graph(out, workW, commW);
-    const boost_graph_int_t graph_empty;
+    const boost_graph_int_t graphEmpty;
 
-    std::vector<VertexType> top_order;
-    std::vector<size_t> index_in_top_order;
+    std::vector<VertexType> topOrder;
+    std::vector<size_t> indexInTopOrder;
 
-    top_order = GetTopOrderReverse(graph);
+    topOrder = GetTopOrderReverse(graph);
 
-    BOOST_CHECK(top_order.size() == graph.num_vertices());
+    BOOST_CHECK(topOrder.size() == graph.num_vertices());
 
-    index_in_top_order = sorting_arrangement(top_order);
+    indexInTopOrder = sorting_arrangement(topOrder);
 
-    for (const auto &i : top_order) {
+    for (const auto &i : topOrder) {
         for (const auto &j : graph.children(i)) {
-            BOOST_CHECK_GT(index_in_top_order[i], index_in_top_order[j]);
+            BOOST_CHECK_GT(indexInTopOrder[i], indexInTopOrder[j]);
         }
     }
 
-    top_order = GetTopOrderMaxChildren(graph);
+    topOrder = GetTopOrderMaxChildren(graph);
 
-    BOOST_CHECK(top_order.size() == graph.num_vertices());
+    BOOST_CHECK(topOrder.size() == graph.num_vertices());
 
-    index_in_top_order = sorting_arrangement(top_order);
+    indexInTopOrder = sorting_arrangement(topOrder);
 
-    for (const auto &i : top_order) {
+    for (const auto &i : topOrder) {
         for (const auto &j : graph.children(i)) {
-            BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]);
+            BOOST_CHECK_LT(indexInTopOrder[i], indexInTopOrder[j]);
         }
     }
 
-    top_order = GetTopOrderRandom(graph);
+    topOrder = GetTopOrderRandom(graph);
 
-    BOOST_CHECK(top_order.size() == graph.num_vertices());
+    BOOST_CHECK(topOrder.size() == graph.num_vertices());
 
-    index_in_top_order = sorting_arrangement(top_order);
+    indexInTopOrder = sorting_arrangement(topOrder);
 
-    for (const auto &i : top_order) {
+    for (const auto &i : topOrder) {
         for (const auto &j : graph.children(i)) {
-            BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]);
+            BOOST_CHECK_LT(indexInTopOrder[i], indexInTopOrder[j]);
         }
     }
 
-    top_order = GetTopOrderMinIndex(graph);
+    topOrder = GetTopOrderMinIndex(graph);
 
-    BOOST_CHECK(top_order.size() == graph.num_vertices());
+    BOOST_CHECK(topOrder.size() == graph.num_vertices());
 
-    index_in_top_order = sorting_arrangement(top_order);
+    indexInTopOrder = sorting_arrangement(topOrder);
 
-    for (const auto &i : top_order) {
+    for (const auto &i : topOrder) {
         for (const auto &j : graph.children(i)) {
-            BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]);
+            BOOST_CHECK_LT(indexInTopOrder[i], indexInTopOrder[j]);
         }
     }
 
-    top_order = GetTopOrderGorder(graph);
+    topOrder = GetTopOrderGorder(graph);
 
-    BOOST_CHECK(top_order.size() == graph.num_vertices());
+    BOOST_CHECK(topOrder.size() == graph.num_vertices());
 
-    index_in_top_order = sorting_arrangement(top_order);
+    indexInTopOrder = sorting_arrangement(topOrder);
 
-    for (const auto &i : top_order) {
+    for (const auto &i : topOrder) {
         for (const auto &j : graph.children(i)) {
-            BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]);
+            BOOST_CHECK_LT(indexInTopOrder[i], indexInTopOrder[j]);
         }
     }
 
-    top_order = GetTopOrder(graph);
+    topOrder = GetTopOrder(graph);
 
-    BOOST_CHECK(top_order.size() == graph.num_vertices());
-    BOOST_CHECK(GetTopOrder(graph_empty).size() == graph_empty.num_vertices());
+    BOOST_CHECK(topOrder.size() == graph.num_vertices());
+    BOOST_CHECK(GetTopOrder(graphEmpty).size() == graphEmpty.num_vertices());
 
-    index_in_top_order = sorting_arrangement(top_order);
+    indexInTopOrder = sorting_arrangement(topOrder);
 
-    for (const auto &i : top_order) {
+    for (const auto &i : topOrder) {
         for (const auto &j : graph.children(i)) {
-            BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]);
+            BOOST_CHECK_LT(indexInTopOrder[i], indexInTopOrder[j]);
         }
     }
 
     size_t idx = 0;
-    std::vector<VertexType> bfs_view_top_sort;
+    std::vector<VertexType> bfsViewTopSort;
     for (const auto &v : bfs_top_sort_view(graph)) {
-        bfs_view_top_sort.push_back(v);
-        BOOST_CHECK_EQUAL(top_order[idx], v);
+        bfsViewTopSort.push_back(v);
+        BOOST_CHECK_EQUAL(topOrder[idx], v);
         ++idx;
     }
 
-    BOOST_CHECK_EQUAL(bfs_view_top_sort.size(), graph.num_vertices());
+    BOOST_CHECK_EQUAL(bfsViewTopSort.size(), graph.num_vertices());
 
-    index_in_top_order = sorting_arrangement(bfs_view_top_sort);
-    for (const auto &i : bfs_view_top_sort) {
+    indexInTopOrder = sorting_arrangement(bfsViewTopSort);
+    for (const auto &i : bfsViewTopSort) {
         for (const auto &j : graph.children(i)) {
-            BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]);
+            BOOST_CHECK_LT(indexInTopOrder[i], indexInTopOrder[j]);
         }
     }
 
-    std::vector<VertexType> dfs_view_top_sort;
+    std::vector<VertexType> dfsViewTopSort;
     for (const auto &v : top_sort_view(graph)) {
-        dfs_view_top_sort.push_back(v);
+        dfsViewTopSort.push_back(v);
     }
 
-    BOOST_CHECK_EQUAL(dfs_view_top_sort.size(), graph.num_vertices());
+    BOOST_CHECK_EQUAL(dfsViewTopSort.size(), graph.num_vertices());
 
-    index_in_top_order = sorting_arrangement(dfs_view_top_sort);
-    for (const auto &i : dfs_view_top_sort) {
+    indexInTopOrder = sorting_arrangement(dfsViewTopSort);
+    for (const auto &i : dfsViewTopSort) {
         for (const auto &j : graph.children(i)) {
-            BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]);
+            BOOST_CHECK_LT(indexInTopOrder[i], indexInTopOrder[j]);
         }
     }
 
-    BOOST_CHECK_EQUAL(dfs_view_top_sort[0], 9);
-    BOOST_CHECK_EQUAL(dfs_view_top_sort[1], 5);
-    BOOST_CHECK_EQUAL(dfs_view_top_sort[2], 6);
-    BOOST_CHECK_EQUAL(dfs_view_top_sort[3], 1);
-    BOOST_CHECK_EQUAL(dfs_view_top_sort[4], 8);
-    BOOST_CHECK_EQUAL(dfs_view_top_sort[5], 4);
-    BOOST_CHECK_EQUAL(dfs_view_top_sort[6], 3);
-    BOOST_CHECK_EQUAL(dfs_view_top_sort[7], 2);
-    BOOST_CHECK_EQUAL(dfs_view_top_sort[8], 0);
-    BOOST_CHECK_EQUAL(dfs_view_top_sort[9], 7);
+    BOOST_CHECK_EQUAL(dfsViewTopSort[0], 9);
+    BOOST_CHECK_EQUAL(dfsViewTopSort[1], 5);
+    BOOST_CHECK_EQUAL(dfsViewTopSort[2], 6);
+    BOOST_CHECK_EQUAL(dfsViewTopSort[3], 1);
+    BOOST_CHECK_EQUAL(dfsViewTopSort[4], 8);
+    BOOST_CHECK_EQUAL(dfsViewTopSort[5], 4);
+    BOOST_CHECK_EQUAL(dfsViewTopSort[6], 3);
+    BOOST_CHECK_EQUAL(dfsViewTopSort[7], 2);
+    BOOST_CHECK_EQUAL(dfsViewTopSort[8], 0);
+    BOOST_CHECK_EQUAL(dfsViewTopSort[9], 7);
 
-    std::vector<VertexType> loc_view_top_sort;
+    std::vector<VertexType> locViewTopSort;
 
     for (const auto &v : locality_top_sort_view(graph)) {
-        loc_view_top_sort.push_back(v);
+        locViewTopSort.push_back(v);
     }
 
-    BOOST_CHECK_EQUAL(loc_view_top_sort.size(), graph.num_vertices());
+    BOOST_CHECK_EQUAL(locViewTopSort.size(), graph.num_vertices());
 
-    index_in_top_order = sorting_arrangement(loc_view_top_sort);
-    for (const auto &i : loc_view_top_sort) {
+    indexInTopOrder = sorting_arrangement(locViewTopSort);
+    for (const auto &i : locViewTopSort) {
         for (const auto &j : graph.children(i)) {
-            BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]);
+            BOOST_CHECK_LT(indexInTopOrder[i], indexInTopOrder[j]);
         }
     }
 
-    BOOST_CHECK_EQUAL(loc_view_top_sort[0], 3);
-    BOOST_CHECK_EQUAL(loc_view_top_sort[1], 8);
-    BOOST_CHECK_EQUAL(loc_view_top_sort[2], 4);
-    BOOST_CHECK_EQUAL(loc_view_top_sort[3], 9);
-    BOOST_CHECK_EQUAL(loc_view_top_sort[4], 5);
-    BOOST_CHECK_EQUAL(loc_view_top_sort[5], 6);
-    BOOST_CHECK_EQUAL(loc_view_top_sort[6], 1);
-    BOOST_CHECK_EQUAL(loc_view_top_sort[7], 2);
-    BOOST_CHECK_EQUAL(loc_view_top_sort[8], 0);
-    BOOST_CHECK_EQUAL(loc_view_top_sort[9], 7);
+    BOOST_CHECK_EQUAL(locViewTopSort[0], 3);
+    BOOST_CHECK_EQUAL(locViewTopSort[1], 8);
+    BOOST_CHECK_EQUAL(locViewTopSort[2], 4);
+    BOOST_CHECK_EQUAL(locViewTopSort[3], 9);
+    BOOST_CHECK_EQUAL(locViewTopSort[4], 5);
+    BOOST_CHECK_EQUAL(locViewTopSort[5], 6);
+    BOOST_CHECK_EQUAL(locViewTopSort[6], 1);
+    BOOST_CHECK_EQUAL(locViewTopSort[7], 2);
+    BOOST_CHECK_EQUAL(locViewTopSort[8], 0);
+    BOOST_CHECK_EQUAL(locViewTopSort[9], 7);
 
-    std::vector<VertexType> max_children_view_top_sort;
+    std::vector<VertexType> maxChildrenViewTopSort;
     for (const auto &v : max_children_top_sort_view(graph)) {
-        max_children_view_top_sort.push_back(v);
+        maxChildrenViewTopSort.push_back(v);
     }
 
-    BOOST_CHECK_EQUAL(max_children_view_top_sort.size(), graph.num_vertices());
+    BOOST_CHECK_EQUAL(maxChildrenViewTopSort.size(), graph.num_vertices());
 
-    index_in_top_order = sorting_arrangement(max_children_view_top_sort);
-    for (const auto &i : max_children_view_top_sort) {
+    indexInTopOrder = sorting_arrangement(maxChildrenViewTopSort);
+    for (const auto &i : maxChildrenViewTopSort) {
         for (const auto &j : graph.children(i)) {
-            BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]);
+            BOOST_CHECK_LT(indexInTopOrder[i], indexInTopOrder[j]);
         }
     }
 
-    BOOST_CHECK_EQUAL(max_children_view_top_sort[0], 9);
-    BOOST_CHECK_EQUAL(max_children_view_top_sort[1], 6);
-    BOOST_CHECK_EQUAL(max_children_view_top_sort[2], 5);
-    BOOST_CHECK_EQUAL(max_children_view_top_sort[3], 3);
-    BOOST_CHECK_EQUAL(max_children_view_top_sort[4], 2);
-    BOOST_CHECK_EQUAL(max_children_view_top_sort[5], 0);
-    BOOST_CHECK_EQUAL(max_children_view_top_sort[6], 8);
-    BOOST_CHECK_EQUAL(max_children_view_top_sort[7], 1);
-    BOOST_CHECK_EQUAL(max_children_view_top_sort[8], 4);
-    BOOST_CHECK_EQUAL(max_children_view_top_sort[9], 7);
+    BOOST_CHECK_EQUAL(maxChildrenViewTopSort[0], 9);
+    BOOST_CHECK_EQUAL(maxChildrenViewTopSort[1], 6);
+    BOOST_CHECK_EQUAL(maxChildrenViewTopSort[2], 5);
+    BOOST_CHECK_EQUAL(maxChildrenViewTopSort[3], 3);
+    BOOST_CHECK_EQUAL(maxChildrenViewTopSort[4], 2);
+    BOOST_CHECK_EQUAL(maxChildrenViewTopSort[5], 0);
+    BOOST_CHECK_EQUAL(maxChildrenViewTopSort[6], 8);
+    BOOST_CHECK_EQUAL(maxChildrenViewTopSort[7], 1);
+    BOOST_CHECK_EQUAL(maxChildrenViewTopSort[8], 4);
+    BOOST_CHECK_EQUAL(maxChildrenViewTopSort[9], 7);
 
-    std::vector<VertexType> random_view_top_sort;
+    std::vector<VertexType> randomViewTopSort;
     for (const auto &v : random_top_sort_view(graph)) {
-        random_view_top_sort.push_back(v);
+        randomViewTopSort.push_back(v);
     }
-    BOOST_CHECK_EQUAL(random_view_top_sort.size(), graph.num_vertices());
+    BOOST_CHECK_EQUAL(randomViewTopSort.size(), graph.num_vertices());
 
-    index_in_top_order = sorting_arrangement(random_view_top_sort);
+    indexInTopOrder = sorting_arrangement(randomViewTopSort);
 
-    for (const auto &i : random_view_top_sort) {
+    for (const auto &i : randomViewTopSort) {
         for (const auto &j : graph.children(i)) {
-            BOOST_CHECK_LT(index_in_top_order[i], index_in_top_order[j]);
+            BOOST_CHECK_LT(indexInTopOrder[i], indexInTopOrder[j]);
         }
     }
 }
 
-BOOST_AUTO_TEST_CASE(top_sort_template_overload_csr) {
+BOOST_AUTO_TEST_CASE(TopSortTemplateOverloadCsr) {
     using VertexType = vertex_idx_t<boost_graph_int_t>;
 
     const std::vector<std::vector<VertexType>> out({
@@ -293,20 +293,20 @@ BOOST_AUTO_TEST_CASE(top_sort_template_overload_csr) {
 
     const boost_graph_int_t graph(out, workW, commW);
 
-    Compact_Sparse_Graph<false> graph_csr(graph);
+    CompactSparseGraph<false> graphCsr(graph);
 
-    BOOST_CHECK_EQUAL(graph_csr.num_vertices(), 10);
-    BOOST_CHECK_EQUAL(graph_csr.num_edges(), 12);
+    BOOST_CHECK_EQUAL(graphCsr.NumVertices(), 10);
+    BOOST_CHECK_EQUAL(graphCsr.NumEdges(), 12);
 
-    auto top_order = GetTopOrder(graph_csr);
-    BOOST_CHECK_EQUAL(top_order.size(), graph_csr.num_vertices());
+    auto topOrder = GetTopOrder(graphCsr);
+    BOOST_CHECK_EQUAL(topOrder.size(), graphCsr.NumVertices());
 
-    std::vector<size_t> expected_top_order{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+    std::vector<size_t> expectedTopOrder{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
 
     size_t idx = 0;
-    for (const auto &v : top_sort_view(graph_csr)) {
-        BOOST_CHECK_EQUAL(top_order[idx], v);
-        BOOST_CHECK_EQUAL(expected_top_order[idx], v);
+    for (const auto &v : top_sort_view(graphCsr)) {
+        BOOST_CHECK_EQUAL(topOrder[idx], v);
+        BOOST_CHECK_EQUAL(expectedTopOrder[idx], v);
         ++idx;
     }
 }

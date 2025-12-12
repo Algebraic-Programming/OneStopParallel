@@ -36,116 +36,115 @@ namespace osp {
  * potentially disconnected, subgraph that resulted from merging smaller isomorphic subgraphs. It divides
  * the input graph into its weakly connected components and schedules them on proportionally allocated processors.
  */
-template <typename Constr_Graph_t>
-class TrimmedGroupScheduler : public Scheduler<Constr_Graph_t> {
-    Scheduler<Constr_Graph_t> *sub_scheduler;
-    unsigned min_non_zero_procs_;
+template <typename ConstrGraphT>
+class TrimmedGroupScheduler : public Scheduler<ConstrGraphT> {
+    Scheduler<ConstrGraphT> *subScheduler_;
+    unsigned minNonZeroProcs_;
 
-    static constexpr bool verbose = false;
+    static constexpr bool verbose_ = false;
 
   public:
-    TrimmedGroupScheduler(Scheduler<Constr_Graph_t> &scheduler, unsigned min_non_zero_procs)
-        : sub_scheduler(&scheduler), min_non_zero_procs_(min_non_zero_procs) {}
+    TrimmedGroupScheduler(Scheduler<ConstrGraphT> &scheduler, unsigned minNonZeroProcs)
+        : subScheduler_(&scheduler), minNonZeroProcs_(minNonZeroProcs) {}
 
     std::string getScheduleName() const override { return "TrimmedGroupScheduler"; }
 
-    RETURN_STATUS computeSchedule(BspSchedule<Constr_Graph_t> &schedule) override {
+    RETURN_STATUS computeSchedule(BspSchedule<ConstrGraphT> &schedule) override {
         const auto &instance = schedule.getInstance();
-        const Constr_Graph_t &dag = instance.getComputationalDag();
-        const BspArchitecture<Constr_Graph_t> &arch = instance.getArchitecture();
+        const ConstrGraphT &dag = instance.getComputationalDag();
+        const BspArchitecture<ConstrGraphT> &arch = instance.getArchitecture();
 
         // Find the weakly connected components. These are assumed to be isomorphic subgraphs.
-        std::vector<vertex_idx_t<Constr_Graph_t>> component_map(dag.num_vertices());
-        size_t num_components = compute_weakly_connected_components(dag, component_map);
+        std::vector<vertex_idx_t<Constr_Graph_t>> componentMap(dag.num_vertices());
+        size_t numComponents = compute_weakly_connected_components(dag, component_map);
 
-        if (num_components == 0) {
+        if (numComponents == 0) {
             schedule.setNumberOfSupersteps(0);
             return RETURN_STATUS::OSP_SUCCESS;
         }
 
-        if constexpr (verbose) {
-            std::cout << "  [TrimmedGroupScheduler] min_non_zero_procs: " << min_non_zero_procs_
-                      << ", num_components: " << num_components << std::endl;
+        if constexpr (verbose_) {
+            std::cout << "  [TrimmedGroupScheduler] min_non_zero_procs: " << minNonZeroProcs_
+                      << ", num_components: " << numComponents << std::endl;
         }
 
         // Group vertices by component.
-        std::vector<std::vector<vertex_idx_t<Constr_Graph_t>>> components_vertices(num_components);
+        std::vector<std::vector<vertex_idx_t<Constr_Graph_t>>> componentsVertices(numComponents);
         for (vertex_idx_t<Constr_Graph_t> v = 0; v < dag.num_vertices(); ++v) {
-            components_vertices[component_map[v]].push_back(v);
+            componentsVertices[component_map[v]].push_back(v);
         }
 
         // Distribute components among processor types.
         // The goal is to assign `base_count` components to each processor type group,
         // plus one extra for the first `remainder` groups.
-        const unsigned base_count = static_cast<unsigned>(num_components) / min_non_zero_procs_;
-        const unsigned remainder = static_cast<unsigned>(num_components) % min_non_zero_procs_;
+        const unsigned baseCount = static_cast<unsigned>(numComponents) / minNonZeroProcs_;
+        const unsigned remainder = static_cast<unsigned>(numComponents) % minNonZeroProcs_;
 
-        std::vector<std::vector<unsigned>> component_indices_per_group(min_non_zero_procs_);
-        unsigned component_cursor = 0;
-        for (unsigned i = 0; i < min_non_zero_procs_; ++i) {
-            unsigned num_to_assign = base_count + (i < remainder ? 1 : 0);
-            for (unsigned j = 0; j < num_to_assign; ++j) {
-                if (component_cursor < num_components) {
-                    component_indices_per_group[i].push_back(component_cursor++);
+        std::vector<std::vector<unsigned>> componentIndicesPerGroup(minNonZeroProcs_);
+        unsigned componentCursor = 0;
+        for (unsigned i = 0; i < minNonZeroProcs_; ++i) {
+            unsigned numToAssign = baseCount + (i < remainder ? 1 : 0);
+            for (unsigned j = 0; j < numToAssign; ++j) {
+                if (componentCursor < numComponents) {
+                    componentIndicesPerGroup[i].push_back(componentCursor++);
                 }
             }
         }
 
         // Determine the processor allocation for a single sub-problem.
         // Calculate offsets for processor types within the main 'arch' (passed to TrimmedGroupScheduler)
-        std::vector<unsigned> arch_proc_type_offsets(arch.getNumberOfProcessorTypes(), 0);
-        const auto &arch_proc_type_counts = arch.getProcessorTypeCount();
-        for (unsigned type_idx = 1; type_idx < arch.getNumberOfProcessorTypes(); ++type_idx) {
-            arch_proc_type_offsets[type_idx] = arch_proc_type_offsets[type_idx - 1] + arch_proc_type_counts[type_idx - 1];
+        std::vector<unsigned> archProcTypeOffsets(arch.getNumberOfProcessorTypes(), 0);
+        const auto &archProcTypeCounts = arch.getProcessorTypeCount();
+        for (unsigned typeIdx = 1; typeIdx < arch.getNumberOfProcessorTypes(); ++typeIdx) {
+            archProcTypeOffsets[typeIdx] = archProcTypeOffsets[typeIdx - 1] + archProcTypeCounts[typeIdx - 1];
         }
 
-        std::vector<unsigned> sub_proc_counts(arch.getNumberOfProcessorTypes());
-        std::vector<v_memw_t<Constr_Graph_t>> mem_weights(arch.getNumberOfProcessorTypes(), 0);
-        for (unsigned type_idx = 0; type_idx < arch.getNumberOfProcessorTypes(); ++type_idx) {
-            sub_proc_counts[type_idx] = arch.getProcessorTypeCount()[type_idx] / min_non_zero_procs_;
-            mem_weights[type_idx] = static_cast<v_memw_t<Constr_Graph_t>>(arch.maxMemoryBoundProcType(type_idx));
+        std::vector<unsigned> subProcCounts(arch.getNumberOfProcessorTypes());
+        std::vector<v_memw_t<Constr_Graph_t>> memWeights(arch.getNumberOfProcessorTypes(), 0);
+        for (unsigned typeIdx = 0; typeIdx < arch.getNumberOfProcessorTypes(); ++typeIdx) {
+            subProcCounts[typeIdx] = arch.getProcessorTypeCount()[typeIdx] / minNonZeroProcs_;
+            memWeights[typeIdx] = static_cast<v_memw_t<Constr_Graph_t>>(arch.maxMemoryBoundProcType(typeIdx));
         }
 
-        if constexpr (verbose) {
+        if constexpr (verbose_) {
             std::cout << "  [TrimmedGroupScheduler] Sub-problem processor counts per type: ";
-            for (size_t type_idx = 0; type_idx < sub_proc_counts.size(); ++type_idx) {
-                std::cout << "T" << type_idx << ":" << sub_proc_counts[type_idx] << " ";
+            for (size_t typeIdx = 0; typeIdx < subProcCounts.size(); ++typeIdx) {
+                std::cout << "T" << typeIdx << ":" << subProcCounts[typeIdx] << " ";
             }
             std::cout << std::endl;
         }
 
         // Create the sub-architecture for one sub-problem.
-        BspArchitecture<Constr_Graph_t> sub_arch(arch);
-        sub_arch.SetProcessorsConsequTypes(sub_proc_counts, mem_weights);
+        BspArchitecture<ConstrGraphT> subArch(arch);
+        subArch.SetProcessorsConsequTypes(subProcCounts, mem_weights);
 
         // Calculate offsets for processor types within the 'sub_arch'
-        std::vector<unsigned> sub_arch_proc_type_offsets(sub_arch.getNumberOfProcessorTypes(), 0);
-        const auto &sub_arch_proc_type_counts = sub_arch.getProcessorTypeCount();
-        for (unsigned type_idx = 1; type_idx < sub_arch.getNumberOfProcessorTypes(); ++type_idx) {
-            sub_arch_proc_type_offsets[type_idx]
-                = sub_arch_proc_type_offsets[type_idx - 1] + sub_arch_proc_type_counts[type_idx - 1];
+        std::vector<unsigned> subArchProcTypeOffsets(subArch.getNumberOfProcessorTypes(), 0);
+        const auto &subArchProcTypeCounts = subArch.getProcessorTypeCount();
+        for (unsigned typeIdx = 1; typeIdx < subArch.getNumberOfProcessorTypes(); ++typeIdx) {
+            subArchProcTypeOffsets[typeIdx] = subArchProcTypeOffsets[typeIdx - 1] + subArchProcTypeCounts[typeIdx - 1];
         }
 
-        unsigned max_supersteps = 0;
-        for (unsigned i = 0; i < min_non_zero_procs_; ++i) {
-            std::vector<vertex_idx_t<Constr_Graph_t>> group_vertices;
-            for (unsigned comp_idx : component_indices_per_group[i]) {
-                group_vertices.insert(
-                    group_vertices.end(), components_vertices[comp_idx].begin(), components_vertices[comp_idx].end());
+        unsigned maxSupersteps = 0;
+        for (unsigned i = 0; i < minNonZeroProcs_; ++i) {
+            std::vector<vertex_idx_t<Constr_Graph_t>> groupVertices;
+            for (unsigned compIdx : componentIndicesPerGroup[i]) {
+                groupVertices.insert(
+                    group_vertices.end(), components_vertices[compIdx].begin(), components_vertices[compIdx].end());
             }
             std::sort(group_vertices.begin(), group_vertices.end());
 
-            BspInstance<Constr_Graph_t> sub_instanc;
-            sub_instanc.getArchitecture() = sub_arch;
-            sub_instanc.setNodeProcessorCompatibility(instance.getNodeProcessorCompatibilityMatrix());    // Inherit compatibility
-            auto global_to_local_map = create_induced_subgraph_map(
-                dag, sub_instanc.getComputationalDag(), group_vertices);    // Create induced subgraph
+            BspInstance<ConstrGraphT> subInstanc;
+            subInstanc.getArchitecture() = subArch;
+            subInstanc.setNodeProcessorCompatibility(instance.getNodeProcessorCompatibilityMatrix());    // Inherit compatibility
+            auto globalToLocalMap = create_induced_subgraph_map(
+                dag, subInstanc.getComputationalDag(), group_vertices);    // Create induced subgraph
 
             // Create a schedule object for the sub-problem
-            BspSchedule<Constr_Graph_t> sub_schedule(sub_instanc);
+            BspSchedule<ConstrGraphT> subSchedule(subInstanc);
 
             // Call the sub-scheduler to compute the schedule for this group of components
-            auto status = sub_scheduler->computeSchedule(sub_schedule);
+            auto status = subScheduler_->computeSchedule(subSchedule);
             if (status != RETURN_STATUS::OSP_SUCCESS && status != RETURN_STATUS::BEST_FOUND) {
                 return status;
             }
@@ -169,10 +168,10 @@ class TrimmedGroupScheduler : public Scheduler<Constr_Graph_t> {
                 schedule.setAssignedProcessor(v_global, global_proc);
                 schedule.setAssignedSuperstep(v_global, sub_superstep);
             }
-            max_supersteps = std::max(max_supersteps, sub_schedule.numberOfSupersteps());
+            maxSupersteps = std::max(maxSupersteps, subSchedule.numberOfSupersteps());
         }
 
-        schedule.setNumberOfSupersteps(max_supersteps);
+        schedule.setNumberOfSupersteps(maxSupersteps);
         return RETURN_STATUS::OSP_SUCCESS;
     }
 };

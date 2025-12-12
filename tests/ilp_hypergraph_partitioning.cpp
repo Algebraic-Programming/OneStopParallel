@@ -28,7 +28,7 @@ limitations under the License.
 
 using namespace osp;
 
-BOOST_AUTO_TEST_CASE(test_full) {
+BOOST_AUTO_TEST_CASE(TestFull) {
     using graph = computational_dag_vector_impl_def_int_t;
     using Hypergraph = Hypergraph_def_t;
 
@@ -40,16 +40,16 @@ BOOST_AUTO_TEST_CASE(test_full) {
         std::cout << cwd << std::endl;
     }
 
-    graph DAG;
+    graph dag;
 
     bool status = file_reader::readComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(), DAG);
 
     BOOST_CHECK(status);
 
-    Hypergraph Hgraph = convert_from_cdag_as_hyperdag<Hypergraph, graph>(DAG);
+    Hypergraph hgraph = convert_from_cdag_as_hyperdag<Hypergraph, graph>(DAG);
     BOOST_CHECK_EQUAL(DAG.num_vertices(), Hgraph.num_vertices());
 
-    PartitioningProblem instance(Hgraph, 3, 35);
+    PartitioningProblem instance(hgraph, 3, 35);
     Partitioning partition(instance);
 
     // ILP without replication
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(test_full) {
     BOOST_CHECK(partition.satisfiesBalanceConstraint());
     BOOST_CHECK(partition.computeConnectivityCost() >= partition.computeCutNetCost());
 
-    for (unsigned node = 0; node < Hgraph.num_vertices(); ++node) {
+    for (unsigned node = 0; node < hgraph.num_vertices(); ++node) {
         partition.setAssignedPartition(node, node % 3);
     }
 
@@ -81,57 +81,57 @@ BOOST_AUTO_TEST_CASE(test_full) {
 
     // ILP with replication
 
-    HypergraphPartitioningILPWithReplication<Hypergraph> partitioner_rep;
-    PartitioningWithReplication partition_rep(instance);
+    HypergraphPartitioningILPWithReplication<Hypergraph> partitionerRep;
+    PartitioningWithReplication partitionRep(instance);
 
-    partitioner_rep.setTimeLimitSeconds(60);
-    partitioner_rep.computePartitioning(partition_rep);
+    partitionerRep.setTimeLimitSeconds(60);
+    partitionerRep.computePartitioning(partition_rep);
 
-    BOOST_CHECK(partition_rep.satisfiesBalanceConstraint());
-    BOOST_CHECK(partition_rep.computeConnectivityCost() == 0);
+    BOOST_CHECK(partitionRep.satisfiesBalanceConstraint());
+    BOOST_CHECK(partitionRep.computeConnectivityCost() == 0);
 
-    partitioner_rep.setUseInitialSolution(true);
-    for (unsigned node = 0; node < Hgraph.num_vertices(); ++node) {
-        partition_rep.setAssignedPartitions(node, {node % 3});
+    partitionerRep.setUseInitialSolution(true);
+    for (unsigned node = 0; node < hgraph.num_vertices(); ++node) {
+        partitionRep.setAssignedPartitions(node, {node % 3});
     }
 
-    partitioner_rep.computePartitioning(partition_rep);
-    BOOST_CHECK(partition_rep.satisfiesBalanceConstraint());
-    BOOST_CHECK(partition_rep.computeConnectivityCost() == 0);
+    partitionerRep.computePartitioning(partition_rep);
+    BOOST_CHECK(partitionRep.satisfiesBalanceConstraint());
+    BOOST_CHECK(partitionRep.computeConnectivityCost() == 0);
 
     instance.setMaxWorkWeightExplicitly(60);
-    for (unsigned node = 0; node < Hgraph.num_vertices(); ++node) {
-        partition_rep.setAssignedPartitions(node, {node % 3, (node + 1) % 3});
+    for (unsigned node = 0; node < hgraph.num_vertices(); ++node) {
+        partitionRep.setAssignedPartitions(node, {node % 3, (node + 1) % 3});
     }
 
-    partitioner_rep.computePartitioning(partition_rep);
-    BOOST_CHECK(partition_rep.satisfiesBalanceConstraint());
-    BOOST_CHECK(partition_rep.computeConnectivityCost() == 0);
+    partitionerRep.computePartitioning(partition_rep);
+    BOOST_CHECK(partitionRep.satisfiesBalanceConstraint());
+    BOOST_CHECK(partitionRep.computeConnectivityCost() == 0);
 
     // same tests with other replication formulation
     instance.setMaxWorkWeightExplicitly(35);
     partitioner_rep.setReplicationModel(HypergraphPartitioningILPWithReplication<Hypergraph>::REPLICATION_MODEL_IN_ILP::GENERAL);
-    partitioner_rep.setUseInitialSolution(false);
-    partitioner_rep.computePartitioning(partition_rep);
+    partitionerRep.setUseInitialSolution(false);
+    partitionerRep.computePartitioning(partition_rep);
 
-    BOOST_CHECK(partition_rep.satisfiesBalanceConstraint());
-    BOOST_CHECK(partition_rep.computeConnectivityCost() == 0);
+    BOOST_CHECK(partitionRep.satisfiesBalanceConstraint());
+    BOOST_CHECK(partitionRep.computeConnectivityCost() == 0);
 
-    partitioner_rep.setUseInitialSolution(true);
-    for (unsigned node = 0; node < Hgraph.num_vertices(); ++node) {
-        partition_rep.setAssignedPartitions(node, {node % 3});
+    partitionerRep.setUseInitialSolution(true);
+    for (unsigned node = 0; node < hgraph.num_vertices(); ++node) {
+        partitionRep.setAssignedPartitions(node, {node % 3});
     }
 
-    partitioner_rep.computePartitioning(partition_rep);
-    BOOST_CHECK(partition_rep.satisfiesBalanceConstraint());
-    BOOST_CHECK(partition_rep.computeConnectivityCost() == 0);
+    partitionerRep.computePartitioning(partition_rep);
+    BOOST_CHECK(partitionRep.satisfiesBalanceConstraint());
+    BOOST_CHECK(partitionRep.computeConnectivityCost() == 0);
 
     instance.setMaxWorkWeightExplicitly(60);
-    for (unsigned node = 0; node < Hgraph.num_vertices(); ++node) {
-        partition_rep.setAssignedPartitions(node, {node % 3, (node + 1) % 3});
+    for (unsigned node = 0; node < hgraph.num_vertices(); ++node) {
+        partitionRep.setAssignedPartitions(node, {node % 3, (node + 1) % 3});
     }
 
-    partitioner_rep.computePartitioning(partition_rep);
-    BOOST_CHECK(partition_rep.satisfiesBalanceConstraint());
-    BOOST_CHECK(partition_rep.computeConnectivityCost() == 0);
+    partitionerRep.computePartitioning(partition_rep);
+    BOOST_CHECK(partitionRep.satisfiesBalanceConstraint());
+    BOOST_CHECK(partitionRep.computeConnectivityCost() == 0);
 };

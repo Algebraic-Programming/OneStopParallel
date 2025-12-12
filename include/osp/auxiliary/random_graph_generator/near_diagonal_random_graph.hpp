@@ -34,21 +34,21 @@ namespace osp {
  * @param prob probability of an edge immediately off the diagonal to be included
  * @return DAG
  */
-template <typename Graph_t>
-void near_diag_random_graph(Graph_t &dag_out, vertex_idx_t<Graph_t> num_vertices, double bandwidth, double prob) {
+template <typename GraphT>
+void NearDiagRandomGraph(GraphT &dagOut, vertex_idx_t<Graph_t> numVertices, double bandwidth, double prob) {
     static_assert(is_constructable_cdag_v<Graph_t>, "Graph_t must be a constructable computational DAG type");
 
-    dag_out = Graph_t(num_vertices);
+    dagOut = GraphT(num_vertices);
 
     std::random_device rd;
     std::mt19937 gen(rd());
 
     for (vertex_idx_t<Graph_t> v = 1; v < num_vertices; ++v) {
-        std::binomial_distribution<vertex_idx_t<Graph_t>> bino_dist(vertex_idx_t<Graph_t>(num_vertices - v),
-                                                                    prob * std::exp(1.0 - static_cast<double>(v) / bandwidth));
-        vertex_idx_t<Graph_t> off_diag_edges_num = bino_dist(gen);
+        std::binomial_distribution<vertex_idx_t<Graph_t>> binoDist(vertex_idx_t<GraphT>(num_vertices - v),
+                                                                   prob * std::exp(1.0 - static_cast<double>(v) / bandwidth));
+        vertex_idx_t<Graph_t> offDiagEdgesNum = bino_dist(gen);
 
-        std::vector<vertex_idx_t<Graph_t>> range(num_vertices - v, 0);
+        std::vector<vertex_idx_t<Graph_t>> range(numVertices - v, 0);
         std::iota(range.begin(), range.end(), 0);
         std::vector<vertex_idx_t<Graph_t>> sampled;
 

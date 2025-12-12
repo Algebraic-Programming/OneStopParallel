@@ -26,29 +26,29 @@ limitations under the License.
 
 namespace osp {
 
-template <typename Graph_t_in, typename Graph_t_out, std::vector<vertex_idx_t<Graph_t_in>> (*top_sort_func)(const Graph_t_in &)>
-class top_order_coarser : public Coarser<Graph_t_in, Graph_t_out> {
+template <typename GraphTIn, typename GraphTOut, std::vector<vertex_idx_t<Graph_t_in>> (*topSortFunc)(const GraphTIn &)>
+class TopOrderCoarser : public Coarser<GraphTIn, GraphTOut> {
   private:
     using VertexType = vertex_idx_t<Graph_t_in>;
 
     // parameters
-    v_workw_t<Graph_t_in> work_threshold = std::numeric_limits<v_workw_t<Graph_t_in>>::max();
-    v_memw_t<Graph_t_in> memory_threshold = std::numeric_limits<v_memw_t<Graph_t_in>>::max();
-    v_commw_t<Graph_t_in> communication_threshold = std::numeric_limits<v_commw_t<Graph_t_in>>::max();
-    unsigned degree_threshold = std::numeric_limits<unsigned>::max();
-    unsigned node_dist_threshold = std::numeric_limits<unsigned>::max();
-    VertexType super_node_size_threshold = std::numeric_limits<VertexType>::max();
+    v_workw_t<Graph_t_in> workThreshold_ = std::numeric_limits<v_workw_t<Graph_t_in>>::max();
+    v_memw_t<Graph_t_in> memoryThreshold_ = std::numeric_limits<v_memw_t<Graph_t_in>>::max();
+    v_commw_t<Graph_t_in> communicationThreshold_ = std::numeric_limits<v_commw_t<Graph_t_in>>::max();
+    unsigned degreeThreshold_ = std::numeric_limits<unsigned>::max();
+    unsigned nodeDistThreshold_ = std::numeric_limits<unsigned>::max();
+    VertexType superNodeSizeThreshold_ = std::numeric_limits<VertexType>::max();
 
     // internal data strauctures
-    v_memw_t<Graph_t_in> current_memory = 0;
-    v_workw_t<Graph_t_in> current_work = 0;
-    v_commw_t<Graph_t_in> current_communication = 0;
-    VertexType current_super_node_idx = 0;
+    v_memw_t<Graph_t_in> currentMemory_ = 0;
+    v_workw_t<Graph_t_in> currentWork_ = 0;
+    v_commw_t<Graph_t_in> currentCommunication_ = 0;
+    VertexType currentSuperNodeIdx_ = 0;
 
-    void finish_super_node_add_edges(const Graph_t_in &dag_in,
-                                     Graph_t_out &dag_out,
-                                     const std::vector<VertexType> &nodes,
-                                     std::vector<vertex_idx_t<Graph_t_out>> &reverse_vertex_map) {
+    void FinishSuperNodeAddEdges(const GraphTIn &dagIn,
+                                 GraphTOut &dagOut,
+                                 const std::vector<VertexType> &nodes,
+                                 std::vector<vertex_idx_t<Graph_t_out>> &reverseVertexMap) {
         dag_out.set_vertex_mem_weight(current_super_node_idx, current_memory);
         dag_out.set_vertex_work_weight(current_super_node_idx, current_work);
         dag_out.set_vertex_comm_weight(current_super_node_idx, current_communication);
@@ -80,7 +80,7 @@ class top_order_coarser : public Coarser<Graph_t_in, Graph_t_out> {
         }
     }
 
-    void add_new_super_node(const Graph_t_in &dag_in, Graph_t_out &dag_out, VertexType node) {
+    void AddNewSuperNode(const GraphTIn &dagIn, GraphTOut &dagOut, VertexType node) {
         // int node_mem = dag_in.nodeMemoryWeight(node);
 
         // if (memory_constraint_type == LOCAL_INC_EDGES_2) {
@@ -103,52 +103,52 @@ class top_order_coarser : public Coarser<Graph_t_in, Graph_t_out> {
     }
 
   public:
-    top_order_coarser() {};
-    virtual ~top_order_coarser() = default;
+    TopOrderCoarser() {};
+    virtual ~TopOrderCoarser() = default;
 
-    inline void set_degree_threshold(unsigned degree_threshold_) { degree_threshold = degree_threshold_; }
+    inline void SetDegreeThreshold(unsigned degreeThreshold) { degreeThreshold_ = degreeThreshold; }
 
-    inline void set_work_threshold(v_workw_t<Graph_t_in> work_threshold_) { work_threshold = work_threshold_; }
+    inline void SetWorkThreshold(v_workw_t<Graph_t_in> workThreshold) { work_threshold = work_threshold_; }
 
-    inline void set_memory_threshold(v_memw_t<Graph_t_in> memory_threshold_) { memory_threshold = memory_threshold_; }
+    inline void SetMemoryThreshold(v_memw_t<Graph_t_in> memoryThreshold) { memory_threshold = memory_threshold_; }
 
-    inline void set_communication_threshold(v_commw_t<Graph_t_in> communication_threshold_) {
+    inline void SetCommunicationThreshold(v_commw_t<Graph_t_in> communicationThreshold) {
         communication_threshold = communication_threshold_;
     }
 
-    inline void set_super_node_size_threshold(VertexType super_node_size_threshold_) {
+    inline void SetSuperNodeSizeThreshold(VertexType superNodeSizeThreshold) {
         super_node_size_threshold = super_node_size_threshold_;
     }
 
-    inline void set_node_dist_threshold(unsigned node_dist_threshold_) { node_dist_threshold = node_dist_threshold_; }
+    inline void SetNodeDistThreshold(unsigned nodeDistThreshold) { nodeDistThreshold_ = nodeDistThreshold; }
 
     // inline void set_memory_constraint_type(MEMORY_CONSTRAINT_TYPE memory_constraint_type_) { memory_constraint_type =
     // memory_constraint_type_; }
 
     virtual std::string getCoarserName() const override { return "top_order_coarser"; };
 
-    virtual bool coarsenDag(const Graph_t_in &dag_in,
-                            Graph_t_out &dag_out,
-                            std::vector<vertex_idx_t<Graph_t_out>> &reverse_vertex_map) override {
-        assert(dag_out.num_vertices() == 0);
-        if (dag_in.num_vertices() == 0) {
+    virtual bool coarsenDag(const GraphTIn &dagIn,
+                            GraphTOut &dagOut,
+                            std::vector<vertex_idx_t<Graph_t_out>> &reverseVertexMap) override {
+        assert(dagOut.num_vertices() == 0);
+        if (dagIn.num_vertices() == 0) {
             reverse_vertex_map = std::vector<vertex_idx_t<Graph_t_out>>();
             return true;
         }
 
-        std::vector<VertexType> top_ordering = top_sort_func(dag_in);
+        std::vector<VertexType> topOrdering = topSortFunc(dagIn);
 
-        std::vector<unsigned> source_node_dist = get_top_node_distance(dag_in);
+        std::vector<unsigned> sourceNodeDist = get_top_node_distance(dagIn);
 
         reverse_vertex_map.resize(dag_in.num_vertices(), std::numeric_limits<VertexType>::max());
 
-        std::vector<std::vector<VertexType>> vertex_map;
+        std::vector<std::vector<VertexType>> vertexMap;
         vertex_map.push_back(std::vector<VertexType>({top_ordering[0]}));
 
         add_new_super_node(dag_in, dag_out, top_ordering[0]);
         reverse_vertex_map[top_ordering[0]] = current_super_node_idx;
 
-        for (size_t i = 1; i < top_ordering.size(); i++) {
+        for (size_t i = 1; i < topOrdering.size(); i++) {
             const auto v = top_ordering[i];
 
             // int node_mem = dag_in.vertex_mem_weight(v);
@@ -160,7 +160,7 @@ class top_order_coarser : public Coarser<Graph_t_in, Graph_t_out> {
             //     }
             // }
 
-            const unsigned dist = source_node_dist[v] - source_node_dist[top_ordering[i - 1]];
+            const unsigned dist = sourceNodeDist[v] - sourceNodeDist[top_ordering[i - 1]];
 
             // start new super node if thresholds are exceeded
             if (((current_memory + dag_in.vertex_mem_weight(v) > memory_threshold)
@@ -188,7 +188,7 @@ class top_order_coarser : public Coarser<Graph_t_in, Graph_t_out> {
                         current_work += dag_in.vertex_work_weight(v);
                         current_communication += dag_in.vertex_comm_weight(v);
 
-                        vertex_map.back().push_back(v);
+                        vertexMap.back().push_back(v);
                     }
 
                 } else {
@@ -196,7 +196,7 @@ class top_order_coarser : public Coarser<Graph_t_in, Graph_t_out> {
                     current_work += dag_in.vertex_work_weight(v);
                     current_communication += dag_in.vertex_comm_weight(v);
 
-                    vertex_map.back().push_back(v);
+                    vertexMap.back().push_back(v);
                 }
             }
 

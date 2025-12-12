@@ -42,18 +42,18 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    std::string filename_graph = argv[1];
-    std::string name_graph = filename_graph.substr(0, filename_graph.rfind("."));
+    std::string filenameGraph = argv[1];
+    std::string nameGraph = filenameGraph.substr(0, filenameGraph.rfind("."));
 
-    std::cout << name_graph << std::endl;
+    std::cout << nameGraph << std::endl;
 
-    std::string filename_machine = argv[2];
-    std::string name_machine = filename_machine.substr(filename_machine.find_last_of("/\\") + 1);
-    name_machine = name_machine.substr(0, name_machine.rfind("."));
+    std::string filenameMachine = argv[2];
+    std::string nameMachine = filenameMachine.substr(filenameMachine.find_last_of("/\\") + 1);
+    nameMachine = nameMachine.substr(0, nameMachine.rfind("."));
 
-    int step_int = std::stoi(argv[3]);
-    if (step_int < 1) {
-        std::cerr << "Argument max_number_step must be a positive integer: " << step_int << std::endl;
+    int stepInt = std::stoi(argv[3]);
+    if (stepInt < 1) {
+        std::cerr << "Argument max_number_step must be a positive integer: " << stepInt << std::endl;
         return 1;
     }
 
@@ -66,17 +66,17 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    unsigned steps = static_cast<unsigned>(step_int);
+    unsigned steps = static_cast<unsigned>(stepInt);
 
     BspInstance<ComputationalDag> instance;
     ComputationalDag &graph = instance.getComputationalDag();
 
-    bool status_graph = file_reader::readGraph(filename_graph, graph);
-    bool status_arch = file_reader::readBspArchitecture(filename_machine, instance.getArchitecture());
+    bool statusGraph = file_reader::readGraph(filenameGraph, graph);
+    bool statusArch = file_reader::readBspArchitecture(filenameMachine, instance.getArchitecture());
     // instance.setDiagonalCompatibilityMatrix(graph.num_vertex_types());
     // instance.getArchitecture().setProcessorsWithTypes({0,0,1,1,1,1});
 
-    if (!status_graph || !status_arch) {
+    if (!statusGraph || !statusArch) {
         std::cout << "Reading files failed." << std::endl;
         return 1;
     }
@@ -92,17 +92,17 @@ int main(int argc, char *argv[]) {
     if (recomp) {
         BspScheduleRecomp<ComputationalDag> schedule(instance);
 
-        auto status_schedule = scheduler.computeScheduleRecomp(schedule);
+        auto statusSchedule = scheduler.computeScheduleRecomp(schedule);
 
-        if (status_schedule == RETURN_STATUS::OSP_SUCCESS || status_schedule == RETURN_STATUS::BEST_FOUND) {
-            DotFileWriter dot_writer;
-            dot_writer.write_schedule_recomp(name_graph + "_" + name_machine + "_maxS_" + std::to_string(steps) + "_"
-                                                 + scheduler.getScheduleName() + "_recomp_schedule.dot",
-                                             schedule);
+        if (statusSchedule == RETURN_STATUS::OSP_SUCCESS || statusSchedule == RETURN_STATUS::BEST_FOUND) {
+            DotFileWriter dotWriter;
+            dotWriter.write_schedule_recomp(nameGraph + "_" + nameMachine + "_maxS_" + std::to_string(steps) + "_"
+                                                + scheduler.getScheduleName() + "_recomp_schedule.dot",
+                                            schedule);
 
-            dot_writer.write_schedule_recomp_duplicate(name_graph + "_" + name_machine + "_maxS_" + std::to_string(steps) + "_"
-                                                           + scheduler.getScheduleName() + "_duplicate_recomp_schedule.dot",
-                                                       schedule);
+            dotWriter.write_schedule_recomp_duplicate(nameGraph + "_" + nameMachine + "_maxS_" + std::to_string(steps) + "_"
+                                                          + scheduler.getScheduleName() + "_duplicate_recomp_schedule.dot",
+                                                      schedule);
 
             std::cout << "Recomp Schedule computed with costs: " << schedule.computeCosts() << std::endl;
 
@@ -114,13 +114,13 @@ int main(int argc, char *argv[]) {
     } else {
         BspSchedule<ComputationalDag> schedule(instance);
 
-        auto status_schedule = scheduler.computeSchedule(schedule);
+        auto statusSchedule = scheduler.computeSchedule(schedule);
 
-        if (status_schedule == RETURN_STATUS::OSP_SUCCESS || status_schedule == RETURN_STATUS::BEST_FOUND) {
-            DotFileWriter dot_writer;
-            dot_writer.write_schedule(name_graph + "_" + name_machine + "_maxS_" + std::to_string(steps) + "_"
-                                          + scheduler.getScheduleName() + "_schedule.dot",
-                                      schedule);
+        if (statusSchedule == RETURN_STATUS::OSP_SUCCESS || statusSchedule == RETURN_STATUS::BEST_FOUND) {
+            DotFileWriter dotWriter;
+            dotWriter.write_schedule(nameGraph + "_" + nameMachine + "_maxS_" + std::to_string(steps) + "_"
+                                         + scheduler.getScheduleName() + "_schedule.dot",
+                                     schedule);
 
             std::cout << "Schedule computed with costs: " << schedule.computeCosts() << std::endl;
 

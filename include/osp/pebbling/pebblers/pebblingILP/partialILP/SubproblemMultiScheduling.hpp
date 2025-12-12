@@ -24,8 +24,8 @@ limitations under the License.
 
 namespace osp {
 
-template <typename Graph_t>
-class SubproblemMultiScheduling : public Scheduler<Graph_t> {
+template <typename GraphT>
+class SubproblemMultiScheduling : public Scheduler<GraphT> {
     static_assert(is_computational_dag_v<Graph_t>, "PebblingSchedule can only be used with computational DAGs.");
 
   private:
@@ -33,25 +33,25 @@ class SubproblemMultiScheduling : public Scheduler<Graph_t> {
     using commweight_type = v_commw_t<Graph_t>;
     using workweight_type = v_workw_t<Graph_t>;
 
-    std::vector<vertex_idx> last_node_on_proc;
-    std::vector<std::vector<vertex_idx>> proc_task_lists;
-    std::vector<workweight_type> longest_outgoing_path;
+    std::vector<vertex_idx> lastNodeOnProc_;
+    std::vector<std::vector<vertex_idx>> procTaskLists_;
+    std::vector<workweight_type> longestOutgoingPath_;
 
   public:
     SubproblemMultiScheduling() {}
 
     virtual ~SubproblemMultiScheduling() = default;
 
-    RETURN_STATUS computeMultiSchedule(const BspInstance<Graph_t> &instance, std::vector<std::set<unsigned>> &processors_to_node);
+    RETURN_STATUS ComputeMultiSchedule(const BspInstance<GraphT> &instance, std::vector<std::set<unsigned>> &processorsToNode);
 
-    std::vector<std::pair<vertex_idx, unsigned>> makeAssignment(const BspInstance<Graph_t> &instance,
-                                                                const std::set<std::pair<unsigned, vertex_idx>> &nodes_available,
-                                                                const std::set<unsigned> &procs_available) const;
+    std::vector<std::pair<vertex_idx, unsigned>> MakeAssignment(const BspInstance<GraphT> &instance,
+                                                                const std::set<std::pair<unsigned, vertex_idx>> &nodesAvailable,
+                                                                const std::set<unsigned> &procsAvailable) const;
 
-    std::vector<workweight_type> static get_longest_path(const Graph_t &graph);
+    std::vector<workweight_type> static GetLongestPath(const GraphT &graph);
 
     // not used, only here for using scheduler class base functionality (status enums, timelimits, etc)
-    RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &schedule) override;
+    RETURN_STATUS computeSchedule(BspSchedule<GraphT> &schedule) override;
 
     /**
      * @brief Get the name of the schedule.
@@ -60,18 +60,18 @@ class SubproblemMultiScheduling : public Scheduler<Graph_t> {
      */
     virtual std::string getScheduleName() const override { return "SubproblemMultiScheduling"; }
 
-    inline const std::vector<std::vector<unsigned>> &getProcTaskLists() const { return proc_task_lists; }
+    inline const std::vector<std::vector<unsigned>> &GetProcTaskLists() const { return proc_task_lists; }
 };
 
 // currently duplicated from BSP locking scheduler's code
-template <typename Graph_t>
-std::vector<v_workw_t<Graph_t>> SubproblemMultiScheduling<Graph_t>::get_longest_path(const Graph_t &graph) {
-    std::vector<workweight_type> longest_path(graph.num_vertices(), 0);
+template <typename GraphT>
+std::vector<v_workw_t<Graph_t>> SubproblemMultiScheduling<GraphT>::GetLongestPath(const GraphT &graph) {
+    std::vector<workweight_type> longestPath(graph.num_vertices(), 0);
 
-    std::vector<vertex_idx> top_order = GetTopOrder(graph);
+    std::vector<vertex_idx> topOrder = GetTopOrder(graph);
 
-    for (auto r_iter = top_order.rbegin(); r_iter != top_order.crend(); r_iter++) {
-        longest_path[*r_iter] = graph.vertex_work_weight(*r_iter);
+    for (auto rIter = top_order.rbegin(); rIter != top_order.crend(); r_iter++) {
+        longestPath[*r_iter] = graph.vertex_work_weight(*r_iter);
         if (graph.out_degree(*r_iter) > 0) {
             workweight_type max = 0;
             for (const auto &child : graph.children(*r_iter)) {
@@ -79,22 +79,22 @@ std::vector<v_workw_t<Graph_t>> SubproblemMultiScheduling<Graph_t>::get_longest_
                     max = longest_path[child];
                 }
             }
-            longest_path[*r_iter] += max;
+            longestPath[*r_iter] += max;
         }
     }
 
     return longest_path;
 }
 
-template <typename Graph_t>
-RETURN_STATUS SubproblemMultiScheduling<Graph_t>::computeMultiSchedule(const BspInstance<Graph_t> &instance,
-                                                                       std::vector<std::set<unsigned>> &processors_to_node) {
-    const unsigned &N = static_cast<unsigned>(instance.numberOfVertices());
-    const unsigned &P = instance.numberOfProcessors();
-    const auto &G = instance.getComputationalDag();
+template <typename GraphT>
+RETURN_STATUS SubproblemMultiScheduling<GraphT>::ComputeMultiSchedule(const BspInstance<GraphT> &instance,
+                                                                      std::vector<std::set<unsigned>> &processorsToNode) {
+    const unsigned &n = static_cast<unsigned>(instance.numberOfVertices());
+    const unsigned &p = instance.numberOfProcessors();
+    const auto &g = instance.getComputationalDag();
 
-    processors_to_node.clear();
-    processors_to_node.resize(N);
+    processorsToNode.clear();
+    processorsToNode.resize(n);
 
     proc_task_lists.clear();
     proc_task_lists.resize(P);
@@ -106,20 +106,20 @@ RETURN_STATUS SubproblemMultiScheduling<Graph_t>::computeMultiSchedule(const Bsp
 
     std::set<std::pair<unsigned, vertex_idx>> readySet;
 
-    std::vector<unsigned> nrPredecRemain(N);
-    for (vertex_idx node = 0; node < N; node++) {
-        nrPredecRemain[node] = static_cast<unsigned>(G.in_degree(node));
-        if (G.in_degree(node) == 0) {
+    std::vector<unsigned> nrPredecRemain(n);
+    for (vertex_idx node = 0; node < n; node++) {
+        nrPredecRemain[node] = static_cast<unsigned>(g.in_degree(node));
+        if (g.in_degree(node) == 0) {
             readySet.emplace(-longest_outgoing_path[node], node);
         }
     }
 
-    std::set<unsigned> free_procs;
-    for (unsigned proc = 0; proc < P; ++proc) {
-        free_procs.insert(proc);
+    std::set<unsigned> freeProcs;
+    for (unsigned proc = 0; proc < p; ++proc) {
+        freeProcs.insert(proc);
     }
 
-    std::vector<double> node_finish_time(N, 0);
+    std::vector<double> nodeFinishTime(n, 0);
 
     std::set<std::pair<double, vertex_idx>> finishTimes;
     finishTimes.emplace(0, std::numeric_limits<unsigned>::max());
@@ -148,7 +148,7 @@ RETURN_STATUS SubproblemMultiScheduling<Graph_t>::computeMultiSchedule(const Bsp
         // Assign new jobs to idle processors
 
         // first assign free processors to ready nodes
-        std::vector<std::pair<vertex_idx, unsigned>> new_assingments = makeAssignment(instance, readySet, free_procs);
+        std::vector<std::pair<vertex_idx, unsigned>> newAssingments = makeAssignment(instance, readySet, free_procs);
 
         for (auto entry : new_assingments) {
             vertex_idx node = entry.first;
@@ -166,16 +166,16 @@ RETURN_STATUS SubproblemMultiScheduling<Graph_t>::computeMultiSchedule(const Bsp
         // assign remaining free processors to already started nodes, if it helps
         decltype(finishTimes.rbegin()) itr = finishTimes.rbegin();
         while (!free_procs.empty() && itr != finishTimes.rend()) {
-            double last_finish_time = itr->first;
+            double lastFinishTime = itr->first;
 
-            decltype(finishTimes.rbegin()) itr_latest = itr;
-            std::set<std::pair<workweight_type, vertex_idx>> possible_nodes;
-            while (itr_latest != finishTimes.rend() && itr_latest->first + 0.0001 > last_finish_time) {
+            decltype(finishTimes.rbegin()) itrLatest = itr;
+            std::set<std::pair<workweight_type, vertex_idx>> possibleNodes;
+            while (itrLatest != finishTimes.rend() && itr_latest->first + 0.0001 > lastFinishTime) {
                 vertex_idx node = itr_latest->second;
-                double new_finish_time = time
-                                         + static_cast<double>(G.vertex_work_weight(node))
-                                               / (static_cast<double>(processors_to_node[node].size()) + 1);
-                if (new_finish_time + 0.0001 < itr_latest->first) {
+                double newFinishTime = time
+                                       + static_cast<double>(g.vertex_work_weight(node))
+                                             / (static_cast<double>(processors_to_node[node].size()) + 1);
+                if (newFinishTime + 0.0001 < itr_latest->first) {
                     possible_nodes.emplace(-longest_outgoing_path[node], node);
                 }
 
@@ -197,7 +197,7 @@ RETURN_STATUS SubproblemMultiScheduling<Graph_t>::computeMultiSchedule(const Bsp
                 last_node_on_proc[proc] = node;
                 free_procs.erase(proc);
             }
-            if (new_assingments.empty()) {
+            if (newAssingments.empty()) {
                 itr = itr_latest;
             }
         }
@@ -206,18 +206,18 @@ RETURN_STATUS SubproblemMultiScheduling<Graph_t>::computeMultiSchedule(const Bsp
     return RETURN_STATUS::OSP_SUCCESS;
 }
 
-template <typename Graph_t>
-std::vector<std::pair<vertex_idx_t<Graph_t>, unsigned>> SubproblemMultiScheduling<Graph_t>::makeAssignment(
-    const BspInstance<Graph_t> &instance,
-    const std::set<std::pair<unsigned, vertex_idx>> &nodes_available,
-    const std::set<unsigned> &procs_available) const {
+template <typename GraphT>
+std::vector<std::pair<vertex_idx_t<Graph_t>, unsigned>> SubproblemMultiScheduling<GraphT>::MakeAssignment(
+    const BspInstance<GraphT> &instance,
+    const std::set<std::pair<unsigned, vertex_idx>> &nodesAvailable,
+    const std::set<unsigned> &procsAvailable) const {
     std::vector<std::pair<vertex_idx, unsigned>> assignments;
-    if (nodes_available.empty() || procs_available.empty()) {
+    if (nodesAvailable.empty() || procs_available.empty()) {
         return assignments;
     }
 
-    std::set<vertex_idx> assigned_nodes;
-    std::vector<bool> assigned_procs(instance.numberOfProcessors(), false);
+    std::set<vertex_idx> assignedNodes;
+    std::vector<bool> assignedProcs(instance.numberOfProcessors(), false);
 
     for (unsigned proc : procs_available) {
         if (last_node_on_proc[proc] == UINT_MAX) {
@@ -251,8 +251,8 @@ std::vector<std::pair<vertex_idx_t<Graph_t>, unsigned>> SubproblemMultiSchedulin
     return assignments;
 }
 
-template <typename Graph_t>
-RETURN_STATUS SubproblemMultiScheduling<Graph_t>::computeSchedule(BspSchedule<Graph_t> &) {
+template <typename GraphT>
+RETURN_STATUS SubproblemMultiScheduling<GraphT>::ComputeSchedule(BspSchedule<GraphT> &) {
     return RETURN_STATUS::ERROR;
 }
 

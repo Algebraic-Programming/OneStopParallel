@@ -41,8 +41,8 @@ limitations under the License.
 
 using namespace osp;
 
-BOOST_AUTO_TEST_CASE(test_dag_vector_adapter_edge) {
-    std::vector<std::vector<int>> out_neighbors{
+BOOST_AUTO_TEST_CASE(TestDagVectorAdapterEdge) {
+    std::vector<std::vector<int>> outNeighbors{
         {1, 2, 3},
         {4, 6},
         {4, 5},
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(test_dag_vector_adapter_edge) {
         {}
     };
 
-    std::vector<std::vector<int>> in_neighbors{
+    std::vector<std::vector<int>> inNeighbors{
         {},
         {0},
         {0},
@@ -64,28 +64,28 @@ BOOST_AUTO_TEST_CASE(test_dag_vector_adapter_edge) {
         {4, 3}
     };
 
-    using v_impl = cdag_vertex_impl<unsigned, int, int, int, unsigned>;
-    using graph_t = dag_vector_adapter<v_impl, int>;
-    using graph_constr_t = computational_dag_edge_idx_vector_impl<v_impl, cdag_edge_impl_int>;
+    using VImpl = cdag_vertex_impl<unsigned, int, int, int, unsigned>;
+    using GraphT = dag_vector_adapter<VImpl, int>;
+    using GraphConstrT = computational_dag_edge_idx_vector_impl<VImpl, cdag_edge_impl_int>;
     using CoarseGraphType = Compact_Sparse_Graph<true,
                                                  true,
                                                  true,
                                                  true,
                                                  true,
-                                                 vertex_idx_t<graph_t>,
+                                                 vertex_idx_t<GraphT>,
                                                  std::size_t,
-                                                 v_workw_t<graph_t>,
-                                                 v_workw_t<graph_t>,
-                                                 v_workw_t<graph_t>,
-                                                 v_type_t<graph_t>>;
+                                                 v_workw_t<GraphT>,
+                                                 v_workw_t<GraphT>,
+                                                 v_workw_t<GraphT>,
+                                                 v_type_t<GraphT>>;
 
-    graph_t graph(out_neighbors, in_neighbors);
+    GraphT graph(outNeighbors, inNeighbors);
 
     for (auto v : graph.vertices()) {
         graph.set_vertex_work_weight(v, 10);
     }
 
-    BspInstance<graph_t> instance;
+    BspInstance<GraphT> instance;
     instance.getComputationalDag() = graph;
 
     instance.getArchitecture().setProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -96,42 +96,42 @@ BOOST_AUTO_TEST_CASE(test_dag_vector_adapter_edge) {
     instance.setCommunicationCosts(1);
 
     // Set up the scheduler
-    GrowLocalAutoCores<graph_constr_t> growlocal;
-    BspLocking<graph_constr_t> locking;
-    GreedyChildren<graph_constr_t> children;
-    kl_total_lambda_comm_improver<graph_constr_t> kl(42);
+    GrowLocalAutoCores<GraphConstrT> growlocal;
+    BspLocking<GraphConstrT> locking;
+    GreedyChildren<GraphConstrT> children;
+    kl_total_lambda_comm_improver<GraphConstrT> kl(42);
     kl.setSuperstepRemoveStrengthParameter(2.0);
     kl.setTimeQualityParameter(5.0);
-    ComboScheduler<graph_constr_t> growlocal_kl(growlocal, kl);
-    ComboScheduler<graph_constr_t> locking_kl(locking, kl);
-    ComboScheduler<graph_constr_t> children_kl(children, kl);
+    ComboScheduler<GraphConstrT> growlocalKl(growlocal, kl);
+    ComboScheduler<GraphConstrT> lockingKl(locking, kl);
+    ComboScheduler<GraphConstrT> childrenKl(children, kl);
 
-    GreedyMetaScheduler<graph_constr_t> scheduler;
-    scheduler.addScheduler(locking_kl);
-    scheduler.addScheduler(children_kl);
+    GreedyMetaScheduler<GraphConstrT> scheduler;
+    scheduler.addScheduler(lockingKl);
+    scheduler.addScheduler(childrenKl);
     scheduler.addSerialScheduler();
 
-    IsomorphicSubgraphScheduler<graph_t, graph_constr_t> iso_scheduler(scheduler);
+    IsomorphicSubgraphScheduler<GraphT, GraphConstrT> isoScheduler(scheduler);
 
-    auto partition = iso_scheduler.compute_partition(instance);
+    auto partition = isoScheduler.compute_partition(instance);
 
-    graph_constr_t corase_graph;
-    coarser_util::construct_coarse_dag(instance.getComputationalDag(), corase_graph, partition);
-    bool acyc = is_acyclic(corase_graph);
+    GraphConstrT coraseGraph;
+    coarser_util::construct_coarse_dag(instance.getComputationalDag(), coraseGraph, partition);
+    bool acyc = is_acyclic(coraseGraph);
     BOOST_CHECK(acyc);
 
-    SarkarMul<graph_t, CoarseGraphType> coarser;
+    SarkarMul<GraphT, CoarseGraphType> coarser;
 
-    CoarseGraphType coarse_dag;
-    std::vector<unsigned> reverse_vertex_map;
-    coarser.coarsenDag(graph, coarse_dag, reverse_vertex_map);
+    CoarseGraphType coarseDag;
+    std::vector<unsigned> reverseVertexMap;
+    coarser.coarsenDag(graph, coarseDag, reverseVertexMap);
 
-    acyc = is_acyclic(coarse_dag);
+    acyc = is_acyclic(coarseDag);
     BOOST_CHECK(acyc);
 }
 
-BOOST_AUTO_TEST_CASE(test_dag_vector_adapter) {
-    std::vector<std::vector<int>> out_neighbors{
+BOOST_AUTO_TEST_CASE(TestDagVectorAdapter) {
+    std::vector<std::vector<int>> outNeighbors{
         {1, 2, 3},
         {4, 6},
         {4, 5},
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(test_dag_vector_adapter) {
         {}
     };
 
-    std::vector<std::vector<int>> in_neighbors{
+    std::vector<std::vector<int>> inNeighbors{
         {},
         {0},
         {0},
@@ -153,28 +153,28 @@ BOOST_AUTO_TEST_CASE(test_dag_vector_adapter) {
         {4, 3}
     };
 
-    using v_impl = cdag_vertex_impl<unsigned, int, int, int, unsigned>;
-    using graph_t = dag_vector_adapter<v_impl, int>;
-    using graph_constr_t = computational_dag_vector_impl<v_impl>;
+    using VImpl = cdag_vertex_impl<unsigned, int, int, int, unsigned>;
+    using GraphT = dag_vector_adapter<VImpl, int>;
+    using GraphConstrT = computational_dag_vector_impl<VImpl>;
     using CoarseGraphType = Compact_Sparse_Graph<true,
                                                  true,
                                                  true,
                                                  true,
                                                  true,
-                                                 vertex_idx_t<graph_t>,
+                                                 vertex_idx_t<GraphT>,
                                                  std::size_t,
-                                                 v_workw_t<graph_t>,
-                                                 v_workw_t<graph_t>,
-                                                 v_workw_t<graph_t>,
-                                                 v_type_t<graph_t>>;
+                                                 v_workw_t<GraphT>,
+                                                 v_workw_t<GraphT>,
+                                                 v_workw_t<GraphT>,
+                                                 v_type_t<GraphT>>;
 
-    graph_t graph(out_neighbors, in_neighbors);
+    GraphT graph(outNeighbors, inNeighbors);
 
     for (auto v : graph.vertices()) {
         graph.set_vertex_work_weight(v, 10);
     }
 
-    BspInstance<graph_t> instance;
+    BspInstance<GraphT> instance;
     instance.getComputationalDag() = graph;
 
     instance.getArchitecture().setProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -185,36 +185,36 @@ BOOST_AUTO_TEST_CASE(test_dag_vector_adapter) {
     instance.setCommunicationCosts(1);
 
     // Set up the scheduler
-    GrowLocalAutoCores<graph_constr_t> growlocal;
-    BspLocking<graph_constr_t> locking;
-    GreedyChildren<graph_constr_t> children;
-    kl_total_lambda_comm_improver<graph_constr_t> kl(42);
+    GrowLocalAutoCores<GraphConstrT> growlocal;
+    BspLocking<GraphConstrT> locking;
+    GreedyChildren<GraphConstrT> children;
+    kl_total_lambda_comm_improver<GraphConstrT> kl(42);
     kl.setSuperstepRemoveStrengthParameter(2.0);
     kl.setTimeQualityParameter(5.0);
-    ComboScheduler<graph_constr_t> growlocal_kl(growlocal, kl);
-    ComboScheduler<graph_constr_t> locking_kl(locking, kl);
-    ComboScheduler<graph_constr_t> children_kl(children, kl);
+    ComboScheduler<GraphConstrT> growlocalKl(growlocal, kl);
+    ComboScheduler<GraphConstrT> lockingKl(locking, kl);
+    ComboScheduler<GraphConstrT> childrenKl(children, kl);
 
-    GreedyMetaScheduler<graph_constr_t> scheduler;
-    scheduler.addScheduler(locking_kl);
-    scheduler.addScheduler(children_kl);
+    GreedyMetaScheduler<GraphConstrT> scheduler;
+    scheduler.addScheduler(lockingKl);
+    scheduler.addScheduler(childrenKl);
     scheduler.addSerialScheduler();
 
-    IsomorphicSubgraphScheduler<graph_t, graph_constr_t> iso_scheduler(scheduler);
+    IsomorphicSubgraphScheduler<GraphT, GraphConstrT> isoScheduler(scheduler);
 
-    auto partition = iso_scheduler.compute_partition(instance);
+    auto partition = isoScheduler.compute_partition(instance);
 
-    graph_constr_t corase_graph;
-    coarser_util::construct_coarse_dag(instance.getComputationalDag(), corase_graph, partition);
-    bool acyc = is_acyclic(corase_graph);
+    GraphConstrT coraseGraph;
+    coarser_util::construct_coarse_dag(instance.getComputationalDag(), coraseGraph, partition);
+    bool acyc = is_acyclic(coraseGraph);
     BOOST_CHECK(acyc);
 
-    SarkarMul<graph_t, CoarseGraphType> coarser;
+    SarkarMul<GraphT, CoarseGraphType> coarser;
 
-    CoarseGraphType coarse_dag;
-    std::vector<unsigned> reverse_vertex_map;
-    coarser.coarsenDag(graph, coarse_dag, reverse_vertex_map);
+    CoarseGraphType coarseDag;
+    std::vector<unsigned> reverseVertexMap;
+    coarser.coarsenDag(graph, coarseDag, reverseVertexMap);
 
-    acyc = is_acyclic(coarse_dag);
+    acyc = is_acyclic(coarseDag);
     BOOST_CHECK(acyc);
 }

@@ -40,7 +40,7 @@ class SequenceSplitter {
      * @param seq The sequence of numbers to split.
      * @return A vector of indices where the sequence is split.
      */
-    virtual std::vector<size_t> split(const std::vector<double> &seq) = 0;
+    virtual std::vector<size_t> Split(const std::vector<double> &seq) = 0;
 };
 
 /**
@@ -51,100 +51,100 @@ class SequenceSplitter {
  */
 class VarianceSplitter : public SequenceSplitter {
   public:
-    VarianceSplitter(double var_mult,
-                     double var_threshold,
-                     size_t min_subseq_len = 1,
-                     size_t max_depth = std::numeric_limits<size_t>::max())
-        : var_mult_(var_mult), var_threshold_(var_threshold), min_subseq_len_(min_subseq_len), max_depth_(max_depth) {}
+    VarianceSplitter(double varMult,
+                     double varThreshold,
+                     size_t minSubseqLen = 1,
+                     size_t maxDepth = std::numeric_limits<size_t>::max())
+        : varMult_(varMult), varThreshold_(varThreshold), minSubseqLen_(minSubseqLen), maxDepth_(maxDepth) {}
 
-    std::vector<size_t> split(const std::vector<double> &seq) override {
+    std::vector<size_t> Split(const std::vector<double> &seq) override {
         if (seq.empty()) {
             return {};
         }
 
         // Precompute prefix sums for the entire sequence
-        prefix_sum_.assign(seq.size() + 1, 0.0);
-        prefix_sq_sum_.assign(seq.size() + 1, 0.0);
+        prefixSum_.assign(seq.size() + 1, 0.0);
+        prefixSqSum_.assign(seq.size() + 1, 0.0);
 
         for (size_t i = 0; i < seq.size(); ++i) {
-            prefix_sum_[i + 1] = prefix_sum_[i] + seq[i];
-            prefix_sq_sum_[i + 1] = prefix_sq_sum_[i] + seq[i] * seq[i];
+            prefixSum_[i + 1] = prefixSum_[i] + seq[i];
+            prefixSqSum_[i + 1] = prefixSqSum_[i] + seq[i] * seq[i];
         }
 
         std::vector<size_t> splits;
-        split_recursive(0, seq.size(), splits, 0);
+        SplitRecursive(0, seq.size(), splits, 0);
         std::sort(splits.begin(), splits.end());
         return splits;
     }
 
   private:
     // Compute mean & variance in [l, r) in O(1)
-    void compute_variance(size_t l, size_t r, double &mean, double &variance) const {
+    void ComputeVariance(size_t l, size_t r, double &mean, double &variance) const {
         size_t n = r - l;
         if (n <= 1) {
-            mean = (n == 1) ? (prefix_sum_[r] - prefix_sum_[l]) : 0.0;
+            mean = (n == 1) ? (prefixSum_[r] - prefixSum_[l]) : 0.0;
             variance = 0.0;
             return;
         }
-        double sum = prefix_sum_[r] - prefix_sum_[l];
-        double sq_sum = prefix_sq_sum_[r] - prefix_sq_sum_[l];
+        double sum = prefixSum_[r] - prefixSum_[l];
+        double sqSum = prefixSqSum_[r] - prefixSqSum_[l];
         mean = sum / static_cast<double>(n);
-        variance = sq_sum / static_cast<double>(n) - mean * mean;
+        variance = sqSum / static_cast<double>(n) - mean * mean;
     }
 
-    void split_recursive(size_t l, size_t r, std::vector<size_t> &splits, size_t depth) {
-        if (depth >= max_depth_ || r - l < 2 * min_subseq_len_) {
+    void SplitRecursive(size_t l, size_t r, std::vector<size_t> &splits, size_t depth) {
+        if (depth >= maxDepth_ || r - l < 2 * minSubseqLen_) {
             return;
         }
 
         double mean, variance;
-        compute_variance(l, r, mean, variance);
+        ComputeVariance(l, r, mean, variance);
 
-        if (variance > var_threshold_) {
-            size_t best_split = 0;
-            if (compute_best_split(l, r, best_split, variance)) {
+        if (variance > varThreshold_) {
+            size_t bestSplit = 0;
+            if (ComputeBestSplit(l, r, bestSplit, variance)) {
                 // enforce minimum sub-sequence length
-                if ((best_split - l) >= min_subseq_len_ && (r - best_split) >= min_subseq_len_) {
-                    splits.push_back(best_split);
-                    split_recursive(l, best_split, splits, depth + 1);
-                    split_recursive(best_split, r, splits, depth + 1);
+                if ((bestSplit - l) >= minSubseqLen_ && (r - bestSplit) >= minSubseqLen_) {
+                    splits.push_back(bestSplit);
+                    SplitRecursive(l, bestSplit, splits, depth + 1);
+                    SplitRecursive(bestSplit, r, splits, depth + 1);
                 }
             }
         }
     }
 
-    bool compute_best_split(size_t l, size_t r, size_t &best_split, double original_variance) const {
+    bool ComputeBestSplit(size_t l, size_t r, size_t &bestSplit, double originalVariance) const {
         size_t n = r - l;
         if (n < 2) {
             return false;
         }
 
-        double min_weighted_variance_sum = std::numeric_limits<double>::max();
-        best_split = 0;
+        double minWeightedVarianceSum = std::numeric_limits<double>::max();
+        bestSplit = 0;
 
         for (size_t i = l + 1; i < r; ++i) {
-            double left_mean, left_var, right_mean, right_var;
-            compute_variance(l, i, left_mean, left_var);
-            compute_variance(i, r, right_mean, right_var);
+            double leftMean, leftVar, rightMean, rightVar;
+            ComputeVariance(l, i, leftMean, leftVar);
+            ComputeVariance(i, r, rightMean, rightVar);
 
-            double weighted_sum = static_cast<double>(i - l) * left_var + static_cast<double>(r - i) * right_var;
+            double weightedSum = static_cast<double>(i - l) * leftVar + static_cast<double>(r - i) * rightVar;
 
-            if (weighted_sum < min_weighted_variance_sum) {
-                min_weighted_variance_sum = weighted_sum;
-                best_split = i;
+            if (weightedSum < minWeightedVarianceSum) {
+                minWeightedVarianceSum = weightedSum;
+                bestSplit = i;
             }
         }
 
-        double total_original_variance = original_variance * static_cast<double>(n);
-        return best_split > l && min_weighted_variance_sum < var_mult_ * total_original_variance;
+        double totalOriginalVariance = originalVariance * static_cast<double>(n);
+        return bestSplit > l && minWeightedVarianceSum < varMult_ * totalOriginalVariance;
     }
 
-    double var_mult_;
-    double var_threshold_;
-    size_t min_subseq_len_;
-    size_t max_depth_;
-    std::vector<double> prefix_sum_;
-    std::vector<double> prefix_sq_sum_;
+    double varMult_;
+    double varThreshold_;
+    size_t minSubseqLen_;
+    size_t maxDepth_;
+    std::vector<double> prefixSum_;
+    std::vector<double> prefixSqSum_;
 };
 
 /**
@@ -159,57 +159,57 @@ class LargestStepSplitter : public SequenceSplitter {
     using difference_type = typename std::iterator_traits<ConstIterator>::difference_type;
 
   public:
-    LargestStepSplitter(double diff_threshold, size_t min_subseq_len, size_t max_depth = std::numeric_limits<size_t>::max())
-        : diff_threshold_(diff_threshold), min_subseq_len_(min_subseq_len), max_depth_(max_depth) {}
+    LargestStepSplitter(double diffThreshold, size_t minSubseqLen, size_t maxDepth = std::numeric_limits<size_t>::max())
+        : diffThreshold_(diffThreshold), minSubseqLen_(minSubseqLen), maxDepth_(maxDepth) {}
 
-    std::vector<size_t> split(const std::vector<double> &seq) override {
+    std::vector<size_t> Split(const std::vector<double> &seq) override {
         std::vector<size_t> splits;
-        split_recursive(seq.begin(), seq.end(), splits, 0, 0);
+        SplitRecursive(seq.begin(), seq.end(), splits, 0, 0);
         std::sort(splits.begin(), splits.end());
         return splits;
     }
 
   private:
-    void split_recursive(ConstIterator begin, ConstIterator end, std::vector<size_t> &splits, size_t offset, size_t current_depth) {
-        if (current_depth >= max_depth_) {
+    void SplitRecursive(ConstIterator begin, ConstIterator end, std::vector<size_t> &splits, size_t offset, size_t currentDepth) {
+        if (currentDepth >= maxDepth_) {
             return;
         }
 
         const difference_type size = std::distance(begin, end);
-        if (static_cast<size_t>(size) < 2 * min_subseq_len_) {
+        if (static_cast<size_t>(size) < 2 * minSubseqLen_) {
             return;
         }
 
-        double max_diff = 0.0;
-        difference_type split_point_local = 0;
+        double maxDiff = 0.0;
+        difference_type splitPointLocal = 0;
 
-        difference_type current_local_idx = 0;
+        difference_type currentLocalIdx = 0;
         for (auto it = begin; it != end - 1; ++it) {
             double diff = std::abs(*it - *(it + 1));
-            if (diff > max_diff) {
-                max_diff = diff;
-                split_point_local = current_local_idx + 1;
+            if (diff > maxDiff) {
+                maxDiff = diff;
+                splitPointLocal = currentLocalIdx + 1;
             }
-            current_local_idx++;
+            currentLocalIdx++;
         }
 
-        if (max_diff > diff_threshold_ && split_point_local > 0) {
-            size_t split_point_global = static_cast<size_t>(split_point_local) + offset;
+        if (maxDiff > diffThreshold_ && splitPointLocal > 0) {
+            size_t splitPointGlobal = static_cast<size_t>(splitPointLocal) + offset;
 
-            if ((split_point_local >= static_cast<difference_type>(min_subseq_len_))
-                && ((size - split_point_local) >= static_cast<difference_type>(min_subseq_len_))) {
-                splits.push_back(split_point_global);
+            if ((splitPointLocal >= static_cast<difference_type>(minSubseqLen_))
+                && ((size - splitPointLocal) >= static_cast<difference_type>(minSubseqLen_))) {
+                splits.push_back(splitPointGlobal);
 
-                ConstIterator split_it = begin + split_point_local;
-                split_recursive(begin, split_it, splits, offset, current_depth + 1);
-                split_recursive(split_it, end, splits, split_point_global, current_depth + 1);
+                ConstIterator splitIt = begin + splitPointLocal;
+                SplitRecursive(begin, splitIt, splits, offset, currentDepth + 1);
+                SplitRecursive(splitIt, end, splits, splitPointGlobal, currentDepth + 1);
             }
         }
     }
 
-    double diff_threshold_;
-    size_t min_subseq_len_;
-    size_t max_depth_;
+    double diffThreshold_;
+    size_t minSubseqLen_;
+    size_t maxDepth_;
 };
 
 /**
@@ -219,36 +219,36 @@ class LargestStepSplitter : public SequenceSplitter {
  */
 class ThresholdScanSplitter : public SequenceSplitter {
   public:
-    ThresholdScanSplitter(double diff_threshold, double absolute_threshold, size_t min_subseq_len = 1)
-        : diff_threshold_(diff_threshold), absolute_threshold_(absolute_threshold), min_subseq_len_(min_subseq_len) {}
+    ThresholdScanSplitter(double diffThreshold, double absoluteThreshold, size_t minSubseqLen = 1)
+        : diffThreshold_(diffThreshold), absoluteThreshold_(absoluteThreshold), minSubseqLen_(minSubseqLen) {}
 
-    std::vector<size_t> split(const std::vector<double> &seq) override {
+    std::vector<size_t> Split(const std::vector<double> &seq) override {
         std::vector<size_t> splits;
         if (seq.size() < 2) {
             return splits;
         }
 
-        size_t last_cut = 0;
+        size_t lastCut = 0;
         for (size_t i = 0; i < seq.size() - 1; ++i) {
-            bool should_cut = false;
+            bool shouldCut = false;
             double current = seq[i];
             double next = seq[i + 1];
 
             // A split is triggered by a significant change OR by crossing the absolute threshold.
             if (current > next) {    // Dropping
-                if ((current - next) > diff_threshold_ || (next < absolute_threshold_ && current >= absolute_threshold_)) {
-                    should_cut = true;
+                if ((current - next) > diffThreshold_ || (next < absoluteThreshold_ && current >= absoluteThreshold_)) {
+                    shouldCut = true;
                 }
             } else if (current < next) {    // Rising
-                if ((next - current) > diff_threshold_ || (next > absolute_threshold_ && current <= absolute_threshold_)) {
-                    should_cut = true;
+                if ((next - current) > diffThreshold_ || (next > absoluteThreshold_ && current <= absoluteThreshold_)) {
+                    shouldCut = true;
                 }
             }
 
-            if (should_cut) {
-                if ((i + 1 - last_cut) >= min_subseq_len_ && (seq.size() - (i + 1)) >= min_subseq_len_) {
+            if (shouldCut) {
+                if ((i + 1 - lastCut) >= minSubseqLen_ && (seq.size() - (i + 1)) >= minSubseqLen_) {
                     splits.push_back(i + 1);
-                    last_cut = i + 1;
+                    lastCut = i + 1;
                 }
             }
         }
@@ -256,9 +256,9 @@ class ThresholdScanSplitter : public SequenceSplitter {
     }
 
   private:
-    double diff_threshold_;
-    double absolute_threshold_;
-    size_t min_subseq_len_;
+    double diffThreshold_;
+    double absoluteThreshold_;
+    size_t minSubseqLen_;
 };
 
 }    // namespace osp

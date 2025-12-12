@@ -34,91 +34,91 @@ limitations under the License.
 namespace osp::test {
 
 // Wrapper for boost::heap::fibonacci_heap to match the test interface
-template <typename Key, typename Value, bool IsMinHeap = true>
+template <typename Key, typename Value, bool isMinHeap = true>
 class BoostFibonacciHeapWrapper {
   private:
     struct Node {
-        Key key;
-        Value value;
+        Key key_;
+        Value value_;
     };
 
     struct NodeCompare {
         bool operator()(const Node &a, const Node &b) const {
-            if constexpr (IsMinHeap) {
-                return a.value > b.value;    // For min-heap
+            if constexpr (isMinHeap) {
+                return a.value_ > b.value_;    // For min-heap
             } else {
-                return a.value < b.value;    // For max-heap
+                return a.value_ < b.value_;    // For max-heap
             }
         }
     };
 
     using BoostHeap = boost::heap::fibonacci_heap<Node, boost::heap::compare<NodeCompare>>;
-    using handle_type = typename BoostHeap::handle_type;
+    using HandleType = typename BoostHeap::handle_type;
 
-    BoostHeap heap;
-    std::unordered_map<Key, handle_type> handles;
+    BoostHeap heap_;
+    std::unordered_map<Key, HandleType> handles_;
 
   public:
     BoostFibonacciHeapWrapper() = default;
 
-    bool is_empty() const { return heap.empty(); }
+    bool is_empty() const { return heap_.empty(); }
 
-    size_t size() const { return heap.size(); }
+    size_t size() const { return heap_.size(); }
 
-    bool contains(const Key &key) const { return handles.count(key); }
+    bool contains(const Key &key) const { return handles_.count(key); }
 
     const Key &top() const {
         if (is_empty()) {
             throw std::out_of_range("Heap is empty");
         }
-        return heap.top().key;
+        return heap_.top().key_;
     }
 
     Key pop() {
         if (is_empty()) {
             throw std::out_of_range("Heap is empty");
         }
-        Key top_key = heap.top().key;
-        heap.pop();
-        handles.erase(top_key);
-        return top_key;
+        Key topKey = heap_.top().key_;
+        heap_.pop();
+        handles_.erase(topKey);
+        return topKey;
     }
 
     void push(const Key &key, const Value &value) {
         if (contains(key)) {
             throw std::invalid_argument("Key already exists");
         }
-        handle_type handle = heap.push({key, value});
-        handles[key] = handle;
+        HandleType handle = heap_.push({key, value});
+        handles_[key] = handle;
     }
 
     Value get_value(const Key &key) const {
         if (!contains(key)) {
             throw std::out_of_range("Key not found");
         }
-        return (*handles.at(key)).value;
+        return (*handles_.at(key)).value_;
     }
 
-    void update(const Key &key, const Value &new_value) {
+    void update(const Key &key, const Value &newValue) {
         if (!contains(key)) {
             throw std::invalid_argument("Key not found for update");
         }
-        handle_type handle = handles.at(key);
-        (*handle).value = new_value;
-        heap.update(handle);
+        HandleType handle = handles_.at(key);
+        (*handle).value_ = newValue;
+        heap_.update(handle);
     }
 
     void erase(const Key &key) {
         if (!contains(key)) {
             throw std::invalid_argument("Key not found for erase");
         }
-        heap.erase(handles.at(key));
-        handles.erase(key);
+        heap_.erase(handles_.at(key));
+        handles_.erase(key);
     }
 
     void clear() {
-        heap.clear();
-        handles.clear();
+        heap_.clear();
+        handles_.clear();
     }
 };
 
@@ -129,13 +129,13 @@ template <typename Key, typename Value>
 using MaxBoostFibonacciHeap = BoostFibonacciHeapWrapper<Key, Value, false>;
 
 // Wrapper for std::set to match the test interface
-template <typename Key, typename Value, bool IsMinHeap = true>
+template <typename Key, typename Value, bool isMinHeap = true>
 class StdSetWrapper {
   private:
     struct NodeCompare {
         bool operator()(const std::pair<Value, Key> &a, const std::pair<Value, Key> &b) const {
             if (a.first != b.first) {
-                if constexpr (IsMinHeap) {
+                if constexpr (isMinHeap) {
                     return a.first < b.first;    // For min-heap
                 } else {
                     return a.first > b.first;    // For max-heap
@@ -146,75 +146,75 @@ class StdSetWrapper {
     };
 
     using SetType = std::set<std::pair<Value, Key>, NodeCompare>;
-    SetType data_set;
-    std::unordered_map<Key, Value> value_map;
+    SetType dataSet_;
+    std::unordered_map<Key, Value> valueMap_;
 
   public:
     StdSetWrapper() = default;
 
-    bool is_empty() const { return data_set.empty(); }
+    bool is_empty() const { return dataSet_.empty(); }
 
-    size_t size() const { return data_set.size(); }
+    size_t size() const { return dataSet_.size(); }
 
-    bool contains(const Key &key) const { return value_map.count(key); }
+    bool contains(const Key &key) const { return valueMap_.count(key); }
 
     const Key &top() const {
         if (is_empty()) {
             throw std::out_of_range("Heap is empty");
         }
-        return data_set.begin()->second;
+        return dataSet_.begin()->second;
     }
 
     Key pop() {
         if (is_empty()) {
             throw std::out_of_range("Heap is empty");
         }
-        auto top_node = *data_set.begin();
-        data_set.erase(data_set.begin());
-        value_map.erase(top_node.second);
-        return top_node.second;
+        auto topNode = *dataSet_.begin();
+        dataSet_.erase(dataSet_.begin());
+        valueMap_.erase(topNode.second);
+        return topNode.second;
     }
 
     void push(const Key &key, const Value &value) {
         if (contains(key)) {
             throw std::invalid_argument("Key already exists");
         }
-        data_set.insert({value, key});
-        value_map[key] = value;
+        dataSet_.insert({value, key});
+        valueMap_[key] = value;
     }
 
     Value get_value(const Key &key) const {
         if (!contains(key)) {
             throw std::out_of_range("Key not found");
         }
-        return value_map.at(key);
+        return valueMap_.at(key);
     }
 
-    void update(const Key &key, const Value &new_value) {
+    void update(const Key &key, const Value &newValue) {
         if (!contains(key)) {
             throw std::invalid_argument("Key not found for update");
         }
-        Value old_value = value_map.at(key);
-        if (old_value == new_value) {
+        Value oldValue = valueMap_.at(key);
+        if (oldValue == newValue) {
             return;
         }
-        data_set.erase({old_value, key});
-        data_set.insert({new_value, key});
-        value_map[key] = new_value;
+        dataSet_.erase({oldValue, key});
+        dataSet_.insert({newValue, key});
+        valueMap_[key] = newValue;
     }
 
     void erase(const Key &key) {
         if (!contains(key)) {
             throw std::invalid_argument("Key not found for erase");
         }
-        Value value = value_map.at(key);
-        data_set.erase({value, key});
-        value_map.erase(key);
+        Value value = valueMap_.at(key);
+        dataSet_.erase({value, key});
+        valueMap_.erase(key);
     }
 
     void clear() {
-        data_set.clear();
-        value_map.clear();
+        dataSet_.clear();
+        valueMap_.clear();
     }
 };
 
@@ -226,7 +226,7 @@ using MaxStdSetHeap = StdSetWrapper<Key, Value, false>;
 
 // Generic test suite for any min-heap implementation that follows the API.
 template <typename HeapType>
-void test_min_heap_functionality() {
+void TestMinHeapFunctionality() {
     HeapType heap;
 
     // Basic properties of an empty heap
@@ -308,7 +308,7 @@ void test_min_heap_functionality() {
 }
 
 template <typename HeapType>
-void test_max_heap_functionality() {
+void TestMaxHeapFunctionality() {
     HeapType heap;
     heap.push("A", 10);
     heap.push("B", 5);
@@ -324,39 +324,39 @@ void test_max_heap_functionality() {
 
 // Stress test with a larger number of elements
 template <typename HeapType>
-void stress_test_heap() {
+void StressTestHeap() {
     HeapType heap;
-    const int num_items = 1000;
+    const int numItems = 1000;
 
-    for (int i = 0; i < num_items; ++i) {
+    for (int i = 0; i < numItems; ++i) {
         heap.push(std::to_string(i), i);
     }
-    for (int i = 0; i < num_items / 2; ++i) {
-        heap.update(std::to_string(i), i - num_items);
+    for (int i = 0; i < numItems / 2; ++i) {
+        heap.update(std::to_string(i), i - numItems);
     }
 
-    std::vector<int> popped_values;
+    std::vector<int> poppedValues;
     while (!heap.is_empty()) {
-        popped_values.push_back(heap.get_value(heap.top()));
+        poppedValues.push_back(heap.get_value(heap.top()));
         heap.pop();
     }
 
-    BOOST_CHECK_EQUAL(popped_values.size(), num_items);
-    BOOST_CHECK(std::is_sorted(popped_values.begin(), popped_values.end()));
+    BOOST_CHECK_EQUAL(poppedValues.size(), numItems);
+    BOOST_CHECK(std::is_sorted(poppedValues.begin(), poppedValues.end()));
 }
 
 // Performance test suite for different heap workloads.
 template <typename HeapType>
-void run_performance_test(const std::string &heap_name, size_t num_items, size_t num_updates, size_t num_random_ops) {
-    std::cout << "\n--- Performance Test for " << heap_name << " ---" << std::endl;
+void RunPerformanceTest(const std::string &heapName, size_t numItems, size_t numUpdates, size_t numRandomOps) {
+    std::cout << "\n--- Performance Test for " << heapName << " ---" << std::endl;
 
-    std::vector<std::string> keys(num_items);
-    std::vector<int> priorities(num_items);
+    std::vector<std::string> keys(numItems);
+    std::vector<int> priorities(numItems);
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_int_distribution<int> distrib(0, static_cast<int>(num_items * 10));
+    std::uniform_int_distribution<int> distrib(0, static_cast<int>(numItems * 10));
 
-    for (size_t i = 0; i < num_items; ++i) {
+    for (size_t i = 0; i < numItems; ++i) {
         keys[i] = std::to_string(i);
         priorities[i] = distrib(gen);
     }
@@ -365,25 +365,25 @@ void run_performance_test(const std::string &heap_name, size_t num_items, size_t
 
     // Scenario 1: Bulk Insert
     auto start = std::chrono::high_resolution_clock::now();
-    for (size_t i = 0; i < num_items; ++i) {
+    for (size_t i = 0; i < numItems; ++i) {
         heap.push(keys[i], priorities[i]);
     }
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> duration = end - start;
-    std::cout << "Bulk Insert (" << num_items << " items): " << duration.count() << " ms" << std::endl;
+    std::cout << "Bulk Insert (" << numItems << " items): " << duration.count() << " ms" << std::endl;
 
     // Scenario 2: Decrease Key
-    std::uniform_int_distribution<size_t> key_distrib(0, num_items - 1);
-    std::uniform_int_distribution<> dec_dist(1, 100);
+    std::uniform_int_distribution<size_t> keyDistrib(0, numItems - 1);
+    std::uniform_int_distribution<> decDist(1, 100);
     start = std::chrono::high_resolution_clock::now();
-    for (size_t i = 0; i < num_updates; ++i) {
-        size_t key_idx = key_distrib(gen);
-        int new_prio = heap.get_value(keys[key_idx]) - dec_dist(gen);
-        heap.update(keys[key_idx], new_prio);
+    for (size_t i = 0; i < numUpdates; ++i) {
+        size_t keyIdx = keyDistrib(gen);
+        int newPrio = heap.get_value(keys[keyIdx]) - decDist(gen);
+        heap.update(keys[keyIdx], newPrio);
     }
     end = std::chrono::high_resolution_clock::now();
     duration = end - start;
-    std::cout << "Decrease Key (" << num_updates << " updates): " << duration.count() << " ms" << std::endl;
+    std::cout << "Decrease Key (" << numUpdates << " updates): " << duration.count() << " ms" << std::endl;
 
     // Scenario 3: Bulk Pop
     start = std::chrono::high_resolution_clock::now();
@@ -392,106 +392,106 @@ void run_performance_test(const std::string &heap_name, size_t num_items, size_t
     }
     end = std::chrono::high_resolution_clock::now();
     duration = end - start;
-    std::cout << "Bulk Pop (" << num_items << " items): " << duration.count() << " ms" << std::endl;
+    std::cout << "Bulk Pop (" << numItems << " items): " << duration.count() << " ms" << std::endl;
 
     BOOST_CHECK(heap.is_empty());
 
     // Scenario 4: Random Operations (Push, Erase, Update)
     heap.clear();
-    std::vector<std::string> present_keys;
-    present_keys.reserve(num_items);
-    std::vector<bool> key_in_heap(num_items, false);
-    std::uniform_int_distribution<int> op_dist(0, 2);    // 0: push, 1: erase, 2: update
+    std::vector<std::string> presentKeys;
+    presentKeys.reserve(numItems);
+    std::vector<bool> keyInHeap(numItems, false);
+    std::uniform_int_distribution<int> opDist(0, 2);    // 0: push, 1: erase, 2: update
 
     start = std::chrono::high_resolution_clock::now();
-    for (size_t i = 0; i < num_random_ops; ++i) {
-        int op = op_dist(gen);
-        if (op == 0 || present_keys.empty()) {    // Push
-            size_t key_idx = key_distrib(gen);
-            if (!key_in_heap[key_idx]) {
-                heap.push(keys[key_idx], priorities[key_idx]);
-                present_keys.push_back(keys[key_idx]);
-                key_in_heap[key_idx] = true;
+    for (size_t i = 0; i < numRandomOps; ++i) {
+        int op = opDist(gen);
+        if (op == 0 || presentKeys.empty()) {    // Push
+            size_t keyIdx = keyDistrib(gen);
+            if (!keyInHeap[keyIdx]) {
+                heap.push(keys[keyIdx], priorities[keyIdx]);
+                presentKeys.push_back(keys[keyIdx]);
+                keyInHeap[keyIdx] = true;
             }
         } else {    // Erase or Update
-            std::uniform_int_distribution<size_t> present_key_dist(0, present_keys.size() - 1);
-            size_t present_key_vec_idx = present_key_dist(gen);
-            std::string key_to_op = present_keys[present_key_vec_idx];
+            std::uniform_int_distribution<size_t> presentKeyDist(0, presentKeys.size() - 1);
+            size_t presentKeyVecIdx = presentKeyDist(gen);
+            std::string keyToOp = presentKeys[presentKeyVecIdx];
 
             if (op == 1) {    // Erase a random element
-                heap.erase(key_to_op);
-                key_in_heap[std::stoul(key_to_op)] = false;
-                std::swap(present_keys[present_key_vec_idx], present_keys.back());
-                present_keys.pop_back();
+                heap.erase(keyToOp);
+                keyInHeap[std::stoul(keyToOp)] = false;
+                std::swap(presentKeys[presentKeyVecIdx], presentKeys.back());
+                presentKeys.pop_back();
             } else {    // op == 2, Update a random element (decrease key)
-                int new_prio = heap.get_value(key_to_op) - dec_dist(gen);
-                heap.update(key_to_op, new_prio);
+                int newPrio = heap.get_value(keyToOp) - decDist(gen);
+                heap.update(keyToOp, newPrio);
             }
         }
     }
     end = std::chrono::high_resolution_clock::now();
     duration = end - start;
-    std::cout << "Random Ops (" << num_random_ops << " ops of push/erase/update): " << duration.count() << " ms" << std::endl;
+    std::cout << "Random Ops (" << numRandomOps << " ops of push/erase/update): " << duration.count() << " ms" << std::endl;
 
     // Scenario 5: Mixed Workload with Re-initialization
-    const size_t num_outer_loops_s5 = 500;
-    const size_t num_inner_loops_s5 = 10;
-    const size_t num_initial_pushes_s5 = 100;
-    const size_t num_pushes_per_iter_s5 = 25;
-    const size_t num_updates_per_iter_s5 = 25;
+    const size_t numOuterLoopsS5 = 500;
+    const size_t numInnerLoopsS5 = 10;
+    const size_t numInitialPushesS5 = 100;
+    const size_t numPushesPerIterS5 = 25;
+    const size_t numUpdatesPerIterS5 = 25;
 
     // A large pool of keys to draw from for pushes, to avoid collisions.
-    const size_t key_pool_size_s5 = num_outer_loops_s5 * (num_initial_pushes_s5 + num_inner_loops_s5 * num_pushes_per_iter_s5);
-    std::vector<std::string> keys_s5(key_pool_size_s5);
-    std::vector<int> priorities_s5(key_pool_size_s5);
-    for (size_t i = 0; i < key_pool_size_s5; ++i) {
-        keys_s5[i] = "s5_" + std::to_string(i);
-        priorities_s5[i] = distrib(gen);
+    const size_t keyPoolSizeS5 = numOuterLoopsS5 * (numInitialPushesS5 + numInnerLoopsS5 * numPushesPerIterS5);
+    std::vector<std::string> keysS5(keyPoolSizeS5);
+    std::vector<int> prioritiesS5(keyPoolSizeS5);
+    for (size_t i = 0; i < keyPoolSizeS5; ++i) {
+        keysS5[i] = "s5_" + std::to_string(i);
+        prioritiesS5[i] = distrib(gen);
     }
 
-    size_t key_idx_counter_s5 = 0;
+    size_t keyIdxCounterS5 = 0;
 
     start = std::chrono::high_resolution_clock::now();
 
-    for (size_t outer_i = 0; outer_i < num_outer_loops_s5; ++outer_i) {
+    for (size_t outerI = 0; outerI < numOuterLoopsS5; ++outerI) {
         heap.clear();
-        std::vector<std::string> present_keys_s5;
-        present_keys_s5.reserve(num_initial_pushes_s5 + num_inner_loops_s5 * (num_pushes_per_iter_s5 - 1));
+        std::vector<std::string> presentKeysS5;
+        presentKeysS5.reserve(numInitialPushesS5 + numInnerLoopsS5 * (numPushesPerIterS5 - 1));
 
         // Initial push
-        for (size_t i = 0; i < num_initial_pushes_s5; ++i) {
-            const auto &key = keys_s5[key_idx_counter_s5];
-            heap.push(key, priorities_s5[key_idx_counter_s5]);
-            present_keys_s5.push_back(key);
-            key_idx_counter_s5++;
+        for (size_t i = 0; i < numInitialPushesS5; ++i) {
+            const auto &key = keysS5[keyIdxCounterS5];
+            heap.push(key, prioritiesS5[keyIdxCounterS5]);
+            presentKeysS5.push_back(key);
+            keyIdxCounterS5++;
         }
 
-        for (size_t inner_i = 0; inner_i < num_inner_loops_s5; ++inner_i) {
+        for (size_t innerI = 0; innerI < numInnerLoopsS5; ++innerI) {
             // 1. Pop once
             if (!heap.is_empty()) {
-                std::string popped_key = heap.pop();
+                std::string poppedKey = heap.pop();
                 // Remove from present_keys_s5 efficiently
-                auto it = std::find(present_keys_s5.begin(), present_keys_s5.end(), popped_key);
-                if (it != present_keys_s5.end()) {
-                    std::swap(*it, present_keys_s5.back());
-                    present_keys_s5.pop_back();
+                auto it = std::find(presentKeysS5.begin(), presentKeysS5.end(), poppedKey);
+                if (it != presentKeysS5.end()) {
+                    std::swap(*it, presentKeysS5.back());
+                    presentKeysS5.pop_back();
                 }
             }
 
             // 2. Push 25 keys
-            for (size_t j = 0; j < num_pushes_per_iter_s5; ++j) {
-                const auto &key = keys_s5[key_idx_counter_s5];
-                heap.push(key, priorities_s5[key_idx_counter_s5]);
-                present_keys_s5.push_back(key);
-                key_idx_counter_s5++;
+            for (size_t j = 0; j < numPushesPerIterS5; ++j) {
+                const auto &key = keysS5[keyIdxCounterS5];
+                heap.push(key, prioritiesS5[keyIdxCounterS5]);
+                presentKeysS5.push_back(key);
+                keyIdxCounterS5++;
             }
 
             // 3. Update 25 keys
-            if (!present_keys_s5.empty()) {
-                std::uniform_int_distribution<size_t> present_key_dist(0, present_keys_s5.size() - 1);
-                for (size_t j = 0; j < num_updates_per_iter_s5; ++j) {
-                    const auto &key_to_update = present_keys_s5[present_key_dist(gen)];
-                    heap.update(key_to_update, heap.get_value(key_to_update) - dec_dist(gen));
+            if (!presentKeysS5.empty()) {
+                std::uniform_int_distribution<size_t> presentKeyDist(0, presentKeysS5.size() - 1);
+                for (size_t j = 0; j < numUpdatesPerIterS5; ++j) {
+                    const auto &keyToUpdate = presentKeysS5[presentKeyDist(gen)];
+                    heap.update(keyToUpdate, heap.get_value(keyToUpdate) - decDist(gen));
                 }
             }
         }
@@ -499,56 +499,56 @@ void run_performance_test(const std::string &heap_name, size_t num_items, size_t
 
     end = std::chrono::high_resolution_clock::now();
     duration = end - start;
-    std::cout << "Mixed Re-Init (" << num_outer_loops_s5 << " runs of init + " << num_inner_loops_s5
+    std::cout << "Mixed Re-Init (" << numOuterLoopsS5 << " runs of init + " << numInnerLoopsS5
               << "x(pop/push/update)): " << duration.count() << " ms" << std::endl;
 }
-BOOST_AUTO_TEST_SUITE(HeapTests)
+BOOST_AUTO_TEST_SUITE(heap_tests)
 
-BOOST_AUTO_TEST_CASE(PairingHeapTest) { test_min_heap_functionality<MinPairingHeap<std::string, int>>(); }
+BOOST_AUTO_TEST_CASE(PairingHeapTest) { TestMinHeapFunctionality<MinPairingHeap<std::string, int>>(); }
 
-BOOST_AUTO_TEST_CASE(MaxPairingHeapTest) { test_max_heap_functionality<MaxPairingHeap<std::string, int>>(); }
+BOOST_AUTO_TEST_CASE(MaxPairingHeapTest) { TestMaxHeapFunctionality<MaxPairingHeap<std::string, int>>(); }
 
-BOOST_AUTO_TEST_CASE(PairingHeapStressTest) { stress_test_heap<MinPairingHeap<std::string, int>>(); }
+BOOST_AUTO_TEST_CASE(PairingHeapStressTest) { StressTestHeap<MinPairingHeap<std::string, int>>(); }
 
-BOOST_AUTO_TEST_CASE(BoostFibonacciHeapTest) { test_min_heap_functionality<MinBoostFibonacciHeap<std::string, int>>(); }
+BOOST_AUTO_TEST_CASE(BoostFibonacciHeapTest) { TestMinHeapFunctionality<MinBoostFibonacciHeap<std::string, int>>(); }
 
-BOOST_AUTO_TEST_CASE(MaxBoostFibonacciHeapTest) { test_max_heap_functionality<MaxBoostFibonacciHeap<std::string, int>>(); }
+BOOST_AUTO_TEST_CASE(MaxBoostFibonacciHeapTest) { TestMaxHeapFunctionality<MaxBoostFibonacciHeap<std::string, int>>(); }
 
-BOOST_AUTO_TEST_CASE(BoostFibonacciHeapStressTest) { stress_test_heap<MinBoostFibonacciHeap<std::string, int>>(); }
+BOOST_AUTO_TEST_CASE(BoostFibonacciHeapStressTest) { StressTestHeap<MinBoostFibonacciHeap<std::string, int>>(); }
 
-BOOST_AUTO_TEST_CASE(StdSetHeapTest) { test_min_heap_functionality<MinStdSetHeap<std::string, int>>(); }
+BOOST_AUTO_TEST_CASE(StdSetHeapTest) { TestMinHeapFunctionality<MinStdSetHeap<std::string, int>>(); }
 
-BOOST_AUTO_TEST_CASE(MaxStdSetHeapTest) { test_max_heap_functionality<MaxStdSetHeap<std::string, int>>(); }
+BOOST_AUTO_TEST_CASE(MaxStdSetHeapTest) { TestMaxHeapFunctionality<MaxStdSetHeap<std::string, int>>(); }
 
-BOOST_AUTO_TEST_CASE(StdSetHeapStressTest) { stress_test_heap<MinStdSetHeap<std::string, int>>(); }
+BOOST_AUTO_TEST_CASE(StdSetHeapStressTest) { StressTestHeap<MinStdSetHeap<std::string, int>>(); }
 
-BOOST_AUTO_TEST_CASE(DaryHeap_D2_Test) { test_min_heap_functionality<MinDaryHeap<std::string, int, 2>>(); }
+BOOST_AUTO_TEST_CASE(DaryHeapD2Test) { TestMinHeapFunctionality<MinDaryHeap<std::string, int, 2>>(); }
 
-BOOST_AUTO_TEST_CASE(MaxDaryHeap_D2_Test) { test_max_heap_functionality<MaxDaryHeap<std::string, int, 2>>(); }
+BOOST_AUTO_TEST_CASE(MaxDaryHeapD2Test) { TestMaxHeapFunctionality<MaxDaryHeap<std::string, int, 2>>(); }
 
-BOOST_AUTO_TEST_CASE(DaryHeap_D2_StressTest) { stress_test_heap<MinDaryHeap<std::string, int, 2>>(); }
+BOOST_AUTO_TEST_CASE(DaryHeapD2StressTest) { StressTestHeap<MinDaryHeap<std::string, int, 2>>(); }
 
-BOOST_AUTO_TEST_CASE(DaryHeap_D4_Test) { test_min_heap_functionality<MinDaryHeap<std::string, int, 4>>(); }
+BOOST_AUTO_TEST_CASE(DaryHeapD4Test) { TestMinHeapFunctionality<MinDaryHeap<std::string, int, 4>>(); }
 
-BOOST_AUTO_TEST_CASE(MaxDaryHeap_D4_Test) { test_max_heap_functionality<MaxDaryHeap<std::string, int, 4>>(); }
+BOOST_AUTO_TEST_CASE(MaxDaryHeapD4Test) { TestMaxHeapFunctionality<MaxDaryHeap<std::string, int, 4>>(); }
 
-BOOST_AUTO_TEST_CASE(DaryHeap_D4_StressTest) { stress_test_heap<MinDaryHeap<std::string, int, 4>>(); }
+BOOST_AUTO_TEST_CASE(DaryHeapD4StressTest) { StressTestHeap<MinDaryHeap<std::string, int, 4>>(); }
 
 BOOST_AUTO_TEST_SUITE_END()
 
-BOOST_AUTO_TEST_SUITE(HeapPerformanceTests)
+BOOST_AUTO_TEST_SUITE(heap_performance_tests)
 
 BOOST_AUTO_TEST_CASE(HeapPerformanceComparison) {
-    const size_t num_items = 10000;
-    const size_t num_updates = 5000;
-    const size_t num_random_ops = 40000;
+    const size_t numItems = 10000;
+    const size_t numUpdates = 5000;
+    const size_t numRandomOps = 40000;
 
-    run_performance_test<MinPairingHeap<std::string, int>>("Pairing Heap", num_items, num_updates, num_random_ops);
-    run_performance_test<MinBoostFibonacciHeap<std::string, int>>("Boost Fibonacci Heap", num_items, num_updates, num_random_ops);
-    run_performance_test<MinStdSetHeap<std::string, int>>("std::set", num_items, num_updates, num_random_ops);
-    run_performance_test<MinDaryHeap<std::string, int, 2>>("Binary Heap (d=2)", num_items, num_updates, num_random_ops);
-    run_performance_test<MinDaryHeap<std::string, int, 4>>("4-ary Heap (d=4)", num_items, num_updates, num_random_ops);
-    run_performance_test<MinDaryHeap<std::string, int, 8>>("8-ary Heap (d=8)", num_items, num_updates, num_random_ops);
+    RunPerformanceTest<MinPairingHeap<std::string, int>>("Pairing Heap", numItems, numUpdates, numRandomOps);
+    RunPerformanceTest<MinBoostFibonacciHeap<std::string, int>>("Boost Fibonacci Heap", numItems, numUpdates, numRandomOps);
+    RunPerformanceTest<MinStdSetHeap<std::string, int>>("std::set", numItems, numUpdates, numRandomOps);
+    RunPerformanceTest<MinDaryHeap<std::string, int, 2>>("Binary Heap (d=2)", numItems, numUpdates, numRandomOps);
+    RunPerformanceTest<MinDaryHeap<std::string, int, 4>>("4-ary Heap (d=4)", numItems, numUpdates, numRandomOps);
+    RunPerformanceTest<MinDaryHeap<std::string, int, 8>>("8-ary Heap (d=8)", numItems, numUpdates, numRandomOps);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

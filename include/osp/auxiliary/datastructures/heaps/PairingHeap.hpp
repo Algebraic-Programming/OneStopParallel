@@ -30,20 +30,20 @@ template <typename Key, typename Value, typename Compare>
 class PairingHeap {
   private:
     struct Node {
-        Key key;
-        Value value;
-        Node *child = nullptr;             // Leftmost child
-        Node *next_sibling = nullptr;      // Sibling to the right
-        Node *prev_or_parent = nullptr;    // If leftmost child, parent; otherwise, left sibling.
+        Key key_;
+        Value value_;
+        Node *child_ = nullptr;           // Leftmost child
+        Node *nextSibling_ = nullptr;     // Sibling to the right
+        Node *prevOrParent_ = nullptr;    // If leftmost child, parent; otherwise, left sibling.
     };
 
-    Node *root = nullptr;
-    std::unordered_map<Key, Node *> node_map;
-    size_t num_elements = 0;
-    Compare comp;
+    Node *root_ = nullptr;
+    std::unordered_map<Key, Node *> nodeMap_;
+    size_t numElements_ = 0;
+    Compare comp_;
 
     // Melds two heaps together.
-    Node *meld(Node *heap1, Node *heap2) {
+    Node *Meld(Node *heap1, Node *heap2) {
         if (!heap1) {
             return heap2;
         }
@@ -51,129 +51,129 @@ class PairingHeap {
             return heap1;
         }
 
-        if (comp(heap2->value, heap1->value)) {
+        if (comp_(heap2->value_, heap1->value_)) {
             std::swap(heap1, heap2);
         }
 
         // heap2 becomes the new leftmost child of heap1
-        heap2->next_sibling = heap1->child;
-        if (heap1->child) {
-            heap1->child->prev_or_parent = heap2;
+        heap2->nextSibling_ = heap1->child_;
+        if (heap1->child_) {
+            heap1->child_->prev_or_parent = heap2;
         }
-        heap1->child = heap2;
-        heap2->prev_or_parent = heap1;
+        heap1->child_ = heap2;
+        heap2->prevOrParent_ = heap1;
 
         return heap1;
     }
 
     // Merges a list of sibling heaps using a two-pass strategy.
-    Node *multipass_merge(Node *first_sibling) {
-        if (!first_sibling) {
+    Node *MultipassMerge(Node *firstSibling) {
+        if (!firstSibling) {
             return nullptr;
         }
 
-        std::vector<Node *> heap_list;
-        Node *current = first_sibling;
+        std::vector<Node *> heapList;
+        Node *current = firstSibling;
         while (current) {
-            Node *next = current->next_sibling;
-            current->next_sibling = nullptr;
-            current->prev_or_parent = nullptr;
-            heap_list.push_back(current);
+            Node *next = current->nextSibling_;
+            current->nextSibling_ = nullptr;
+            current->prevOrParent_ = nullptr;
+            heapList.push_back(current);
             current = next;
         }
 
-        if (heap_list.size() <= 1) {
-            return heap_list.empty() ? nullptr : heap_list[0];
+        if (heapList.size() <= 1) {
+            return heapList.empty() ? nullptr : heapList[0];
         }
 
         // Merge pairs from left to right
-        std::vector<Node *> merged_heaps;
-        merged_heaps.reserve((heap_list.size() + 1) / 2);
-        for (size_t i = 0; i + 1 < heap_list.size(); i += 2) {
-            merged_heaps.push_back(meld(heap_list[i], heap_list[i + 1]));
+        std::vector<Node *> mergedHeaps;
+        mergedHeaps.reserve((heapList.size() + 1) / 2);
+        for (size_t i = 0; i + 1 < heapList.size(); i += 2) {
+            mergedHeaps.push_back(Meld(heapList[i], heapList[i + 1]));
         }
-        if (heap_list.size() % 2 == 1) {
-            merged_heaps.push_back(heap_list.back());
+        if (heapList.size() % 2 == 1) {
+            mergedHeaps.push_back(heapList.back());
         }
 
         // Merge resulting heaps from right to left
-        Node *final_heap = merged_heaps.back();
-        for (auto it = merged_heaps.rbegin() + 1; it != merged_heaps.rend(); ++it) {
-            final_heap = meld(final_heap, *it);
+        Node *finalHeap = mergedHeaps.back();
+        for (auto it = mergedHeaps.rbegin() + 1; it != mergedHeaps.rend(); ++it) {
+            finalHeap = Meld(finalHeap, *it);
         }
 
-        return final_heap;
+        return finalHeap;
     }
 
     // Cuts a node from its parent and siblings.
-    void cut(Node *node) {
-        if (node == root) {
+    void Cut(Node *node) {
+        if (node == root_) {
             return;
         }
 
-        if (node->prev_or_parent->child == node) {    // is leftmost child
-            node->prev_or_parent->child = node->next_sibling;
+        if (node->prevOrParent_->child == node) {    // is leftmost child
+            node->prevOrParent_->child = node->nextSibling_;
         } else {    // is not leftmost child
-            node->prev_or_parent->next_sibling = node->next_sibling;
+            node->prevOrParent_->next_sibling = node->nextSibling_;
         }
-        if (node->next_sibling) {
-            node->next_sibling->prev_or_parent = node->prev_or_parent;
+        if (node->nextSibling_) {
+            node->nextSibling_->prev_or_parent = node->prevOrParent_;
         }
-        node->next_sibling = nullptr;
-        node->prev_or_parent = nullptr;
+        node->nextSibling_ = nullptr;
+        node->prevOrParent_ = nullptr;
     }
 
   public:
     PairingHeap() = default;
 
-    ~PairingHeap() { clear(); }
+    ~PairingHeap() { Clear(); }
 
-    PairingHeap(const PairingHeap &other) : num_elements(other.num_elements), comp(other.comp) {
-        root = nullptr;
-        if (!other.root) {
+    PairingHeap(const PairingHeap &other) : numElements_(other.numElements_), comp_(other.comp_) {
+        root_ = nullptr;
+        if (!other.root_) {
             return;
         }
 
-        std::unordered_map<const Node *, Node *> old_to_new;
+        std::unordered_map<const Node *, Node *> oldToNew;
         std::vector<const Node *> q;
-        q.reserve(other.num_elements);
+        q.reserve(other.numElements_);
 
         // Create root
-        root = new Node{other.root->key, other.root->value};
-        node_map[root->key] = root;
-        old_to_new[other.root] = root;
-        q.push_back(other.root);
+        root_ = new Node{other.root_->key_, other.root_->value_};
+        nodeMap_[root_->key_] = root_;
+        oldToNew[other.root_] = root_;
+        q.push_back(other.root_);
 
         size_t head = 0;
         while (head < q.size()) {
-            const Node *old_parent = q[head++];
-            Node *new_parent = old_to_new[old_parent];
+            const Node *oldParent = q[head++];
+            Node *newParent = oldToNew[oldParent];
 
-            if (old_parent->child) {
-                const Node *old_child = old_parent->child;
+            if (oldParent->child_) {
+                const Node *oldChild = oldParent->child_;
 
                 // First child
-                Node *new_child = new Node{old_child->key, old_child->value};
-                new_parent->child = new_child;
-                new_child->prev_or_parent = new_parent;
-                node_map[new_child->key] = new_child;
-                old_to_new[old_child] = new_child;
-                q.push_back(old_child);
+                Node *newChild = new Node{oldChild->key_, oldChild->value_};
+                newParent->child_ = newChild;
+                newChild->prevOrParent_ = newParent;
+                nodeMap_[newChild->key_] = newChild;
+                oldToNew[oldChild] = newChild;
+                q.push_back(oldChild);
 
                 // Siblings
-                Node *prev_new_sibling = new_child;
-                while (old_child->next_sibling) {
-                    old_child = old_child->next_sibling;
-                    new_child = new Node{old_child->key, old_child->value};
+                Node *prevNewSibling = newChild;
+                while (oldChild->nextSibling_) {
+                    oldChild = oldChild->nextSibling_;
+                    newChild = new Node{oldChild->key_, oldChild->value_};
 
-                    prev_new_sibling->next_sibling = new_child;
-                    new_child->prev_or_parent = prev_new_sibling;
+                    prevNewSibling->nextSibling_ = newChild;
+                    newChild->prevOrParent_ = prevNewSibling;
 
-                    node_map[new_child->key] = new_child;
-                    old_to_new[old_child] = new_child;
-                    q.push_back(old_child);
+                    nodeMap_[newChild->key_] = newChild;
+                    oldToNew[oldChild] = newChild;
+                    q.push_back(oldChild);
 
-                    prev_new_sibling = new_child;
+                    prevNewSibling = newChild;
                 }
             }
         }
@@ -182,10 +182,10 @@ class PairingHeap {
     PairingHeap &operator=(const PairingHeap &other) {
         if (this != &other) {
             PairingHeap temp(other);
-            std::swap(root, temp.root);
-            std::swap(node_map, temp.node_map);
-            std::swap(num_elements, temp.num_elements);
-            std::swap(comp, temp.comp);
+            std::swap(root_, temp.root_);
+            std::swap(nodeMap_, temp.nodeMap_);
+            std::swap(numElements_, temp.numElements_);
+            std::swap(comp_, temp.comp_);
         }
         return *this;
     }
@@ -194,194 +194,194 @@ class PairingHeap {
     PairingHeap &operator=(PairingHeap &&) = default;
 
     // Checks if the heap is empty.
-    bool is_empty() const { return root == nullptr; }
+    bool IsEmpty() const { return root_ == nullptr; }
 
     // Returns the number of elements in the heap.
-    size_t size() const { return num_elements; }
+    size_t size() const { return numElements_; }
 
     // Checks if a key exists in the heap.
-    bool contains(const Key &key) const { return node_map.count(key); }
+    bool Contains(const Key &key) const { return nodeMap_.count(key); }
 
     // Inserts a new key-value pair into the heap.
-    void push(const Key &key, const Value &value) {
-        Node *new_node = new Node{key, value};
+    void Push(const Key &key, const Value &value) {
+        Node *newNode = new Node{key, value};
         // emplace and check for success to avoid a separate lookup with contains()
-        const auto pair = node_map.emplace(key, new_node);
+        const auto pair = nodeMap_.emplace(key, newNode);
         const bool &success = pair.second;
         if (!success) {
-            delete new_node;    // Avoid memory leak if key already exists
+            delete newNode;    // Avoid memory leak if key already exists
             throw std::invalid_argument("Key already exists in the heap.");
         }
-        root = meld(root, new_node);
-        num_elements++;
+        root_ = Meld(root_, newNode);
+        numElements_++;
     }
 
     // Returns the key with the minimum value without removing it.
-    const Key &top() const {
-        if (is_empty()) {
+    const Key &Top() const {
+        if (IsEmpty()) {
             throw std::out_of_range("Heap is empty.");
         }
-        return root->key;
+        return root_->key_;
     }
 
     // Removes and returns the key with the minimum value.
-    Key pop() {
-        if (is_empty()) {
+    Key Pop() {
+        if (IsEmpty()) {
             throw std::out_of_range("Heap is empty.");
         }
 
-        Node *old_root = root;
-        Key top_key = old_root->key;
+        Node *oldRoot = root_;
+        Key topKey = oldRoot->key_;
 
-        root = multipass_merge(old_root->child);
+        root_ = MultipassMerge(oldRoot->child_);
 
-        node_map.erase(top_key);
-        delete old_root;
-        num_elements--;
+        nodeMap_.erase(topKey);
+        delete oldRoot;
+        numElements_--;
 
-        return top_key;
+        return topKey;
     }
 
     // Updates the value of an existing key.
-    void update(const Key &key, const Value &new_value) {
-        auto it = node_map.find(key);
-        if (it == node_map.end()) {
+    void Update(const Key &key, const Value &newValue) {
+        auto it = nodeMap_.find(key);
+        if (it == nodeMap_.end()) {
             throw std::invalid_argument("Key does not exist in the heap.");
         }
 
         Node *node = it->second;
-        const Value old_value = node->value;
+        const Value oldValue = node->value_;
 
-        if (comp(new_value, old_value)) {    // Decrease key
-            node->value = new_value;
-            if (node != root) {
-                cut(node);
-                root = meld(root, node);
+        if (comp_(newValue, oldValue)) {    // Decrease key
+            node->value_ = newValue;
+            if (node != root_) {
+                Cut(node);
+                root_ = Meld(root_, node);
             }
-        } else if (comp(old_value, new_value)) {    // Increase key
-            node->value = new_value;
-            if (node != root) {
-                cut(node);
-                if (node->child) {
-                    root = meld(root, multipass_merge(node->child));
-                    node->child = nullptr;
+        } else if (comp_(oldValue, newValue)) {    // Increase key
+            node->value_ = newValue;
+            if (node != root_) {
+                Cut(node);
+                if (node->child_) {
+                    root_ = Meld(root_, MultipassMerge(node->child_));
+                    node->child_ = nullptr;
                 }
-                root = meld(root, node);
+                root_ = Meld(root_, node);
             } else {
                 // The root's value increased, it might not be the minimum anymore.
                 // We can treat it as if we popped it and re-inserted it, without the delete/new.
-                Node *old_root = root;
-                root = multipass_merge(old_root->child);
-                old_root->child = nullptr;
-                root = meld(root, old_root);
+                Node *oldRoot = root_;
+                root_ = MultipassMerge(oldRoot->child_);
+                oldRoot->child_ = nullptr;
+                root_ = Meld(root_, oldRoot);
             }
         } else {
-            node->value = new_value;
+            node->value_ = newValue;
         }
         // If values are equal, do nothing.
     }
 
     // Removes an arbitrary key from the heap.
-    void erase(const Key &key) {
-        auto it = node_map.find(key);
-        if (it == node_map.end()) {
+    void Erase(const Key &key) {
+        auto it = nodeMap_.find(key);
+        if (it == nodeMap_.end()) {
             throw std::invalid_argument("Key does not exist in the heap.");
         }
-        Node *node_to_erase = it->second;
+        Node *nodeToErase = it->second;
 
-        if (node_to_erase == root) {
-            pop();
+        if (nodeToErase == root_) {
+            Pop();
             return;
         }
 
-        cut(node_to_erase);
+        Cut(nodeToErase);
 
         // Merge its children into the main heap
-        if (node_to_erase->child) {
-            root = meld(root, multipass_merge(node_to_erase->child));
-            node_to_erase->child = nullptr;
+        if (nodeToErase->child_) {
+            root_ = Meld(root_, MultipassMerge(nodeToErase->child_));
+            nodeToErase->child_ = nullptr;
         }
 
-        node_map.erase(key);
-        delete node_to_erase;
-        num_elements--;
+        nodeMap_.erase(key);
+        delete nodeToErase;
+        numElements_--;
     }
 
     // Gets the value for a given key.
-    const Value &get_value(const Key &key) const {
-        auto it = node_map.find(key);
-        if (it == node_map.end()) {
+    const Value &GetValue(const Key &key) const {
+        auto it = nodeMap_.find(key);
+        if (it == nodeMap_.end()) {
             throw std::out_of_range("Key does not exist in the heap.");
         }
         return it->second->value;
     }
 
     // Removes all elements from the heap.
-    void clear() {
-        if (!root) {
+    void Clear() {
+        if (!root_) {
             return;
         }
 
         // Iterative post-order traversal to delete all nodes
-        std::vector<Node *> to_visit;
-        if (num_elements > 0) {
-            to_visit.reserve(num_elements);
+        std::vector<Node *> toVisit;
+        if (numElements_ > 0) {
+            toVisit.reserve(numElements_);
         }
-        to_visit.push_back(root);
+        toVisit.push_back(root_);
 
-        while (!to_visit.empty()) {
-            Node *current = to_visit.back();
-            to_visit.pop_back();
+        while (!toVisit.empty()) {
+            Node *current = toVisit.back();
+            toVisit.pop_back();
 
-            Node *child = current->child;
+            Node *child = current->child_;
             while (child) {
-                to_visit.push_back(child);
-                child = child->next_sibling;
+                toVisit.push_back(child);
+                child = child->nextSibling_;
             }
             delete current;
         }
 
-        root = nullptr;
-        node_map.clear();
-        num_elements = 0;
+        root_ = nullptr;
+        nodeMap_.clear();
+        numElements_ = 0;
     }
 
     // Retrieves keys with the top value, up to a specified limit.
     // If limit is 0, all keys with the top value are returned.
-    std::vector<Key> get_top_keys(size_t limit = 0) const {
-        std::vector<Key> top_keys;
-        if (is_empty()) {
-            return top_keys;
+    std::vector<Key> GetTopKeys(size_t limit = 0) const {
+        std::vector<Key> topKeys;
+        if (IsEmpty()) {
+            return topKeys;
         }
 
         if (limit > 0) {
-            top_keys.reserve(limit);
+            topKeys.reserve(limit);
         }
 
-        const Value &top_value = root->value;
+        const Value &topValue = root_->value_;
         std::vector<const Node *> q;
-        q.push_back(root);
+        q.push_back(root_);
         size_t head = 0;
 
         while (head < q.size()) {
             const Node *current = q[head++];
 
-            if (comp(top_value, current->value)) {
+            if (comp_(topValue, current->value_)) {
                 continue;
             }
 
-            top_keys.push_back(current->key);
-            if (limit > 0 && top_keys.size() >= limit) {
-                return top_keys;
+            topKeys.push_back(current->key_);
+            if (limit > 0 && topKeys.size() >= limit) {
+                return topKeys;
             }
 
-            Node *child = current->child;
+            Node *child = current->child_;
             while (child) {
                 q.push_back(child);
-                child = child->next_sibling;
+                child = child->nextSibling_;
             }
         }
-        return top_keys;
+        return topKeys;
     }
 };
 

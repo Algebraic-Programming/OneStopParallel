@@ -32,19 +32,19 @@ template <typename TargetObjectType>
 class BasicBspStatsModule : public IStatisticModule<TargetObjectType> {
   public:
   private:
-    const std::vector<std::string> metric_headers = {"BspCost", "WorkCost", "CommCost", "Supersteps"};
+    const std::vector<std::string> metricHeaders_ = {"BspCost", "WorkCost", "CommCost", "Supersteps"};
 
   public:
-    std::vector<std::string> get_metric_headers() const override { return metric_headers; }
+    std::vector<std::string> get_metric_headers() const override { return metricHeaders_; }
 
     std::map<std::string, std::string> record_statistics(const TargetObjectType &schedule,
                                                          std::ofstream & /*log_stream*/) const override {
         std::map<std::string, std::string> stats;
-        const auto bsp_cost = schedule.computeCosts();
-        const auto work_cost = schedule.computeWorkCosts();
-        stats["BspCost"] = std::to_string(bsp_cost);
-        stats["WorkCost"] = std::to_string(work_cost);
-        stats["CommCost"] = std::to_string(bsp_cost - work_cost);
+        const auto bspCost = schedule.computeCosts();
+        const auto workCost = schedule.computeWorkCosts();
+        stats["BspCost"] = std::to_string(bspCost);
+        stats["WorkCost"] = std::to_string(workCost);
+        stats["CommCost"] = std::to_string(bspCost - workCost);
         stats["Supersteps"] = std::to_string(schedule.numberOfSupersteps());
         return stats;
     }

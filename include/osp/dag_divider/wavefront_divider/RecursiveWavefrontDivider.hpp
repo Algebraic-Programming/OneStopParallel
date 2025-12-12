@@ -38,57 +38,57 @@ namespace osp {
  * section, it recursively repeats the process, allowing for a hierarchical
  * division of the DAG.
  */
-template <typename Graph_t>
-class RecursiveWavefrontDivider : public AbstractWavefrontDivider<Graph_t> {
+template <typename GraphT>
+class RecursiveWavefrontDivider : public AbstractWavefrontDivider<GraphT> {
   public:
-    constexpr static bool enable_debug_print = true;
+    constexpr static bool enableDebugPrint_ = true;
 
     RecursiveWavefrontDivider() {
         // Set a sensible default splitter on construction.
-        use_largest_step_splitter(3.0, 4);
+        UseLargestStepSplitter(3.0, 4);
     }
 
-    std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> divide(const Graph_t &dag) override {
-        this->dag_ptr_ = &dag;
-        if constexpr (enable_debug_print) {
+    std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> divide(const GraphT &dag) override {
+        this->dagPtr_ = &dag;
+        if constexpr (enableDebugPrint_) {
             std::cout << "[DEBUG] Starting recursive-scan division." << std::endl;
         }
 
-        auto global_level_sets = this->compute_wavefronts();
-        if (global_level_sets.empty()) {
+        auto globalLevelSets = this->ComputeWavefronts();
+        if (globalLevelSets.empty()) {
             return {};
         }
 
-        std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> all_sections;
+        std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> allSections;
         divide_recursive(global_level_sets.cbegin(), global_level_sets.cend(), global_level_sets, all_sections, 0);
         return all_sections;
     }
 
-    RecursiveWavefrontDivider &set_metric(SequenceMetric metric) {
-        sequence_metric_ = metric;
+    RecursiveWavefrontDivider &SetMetric(SequenceMetric metric) {
+        sequenceMetric_ = metric;
         return *this;
     }
 
-    RecursiveWavefrontDivider &use_variance_splitter(double mult, double threshold, size_t min_len = 1) {
-        splitter_ = std::make_unique<VarianceSplitter>(mult, threshold, min_len);
-        min_subseq_len_ = min_len;
+    RecursiveWavefrontDivider &UseVarianceSplitter(double mult, double threshold, size_t minLen = 1) {
+        splitter_ = std::make_unique<VarianceSplitter>(mult, threshold, minLen);
+        minSubseqLen_ = minLen;
         return *this;
     }
 
-    RecursiveWavefrontDivider &use_largest_step_splitter(double threshold, size_t min_len) {
-        splitter_ = std::make_unique<LargestStepSplitter>(threshold, min_len);
-        min_subseq_len_ = min_len;
+    RecursiveWavefrontDivider &UseLargestStepSplitter(double threshold, size_t minLen) {
+        splitter_ = std::make_unique<LargestStepSplitter>(threshold, minLen);
+        minSubseqLen_ = minLen;
         return *this;
     }
 
-    RecursiveWavefrontDivider &use_threshold_scan_splitter(double diff_threshold, double abs_threshold, size_t min_len = 1) {
-        splitter_ = std::make_unique<ThresholdScanSplitter>(diff_threshold, abs_threshold, min_len);
-        min_subseq_len_ = min_len;
+    RecursiveWavefrontDivider &UseThresholdScanSplitter(double diffThreshold, double absThreshold, size_t minLen = 1) {
+        splitter_ = std::make_unique<ThresholdScanSplitter>(diffThreshold, absThreshold, minLen);
+        minSubseqLen_ = minLen;
         return *this;
     }
 
-    RecursiveWavefrontDivider &set_max_depth(size_t max_depth) {
-        max_depth_ = max_depth;
+    RecursiveWavefrontDivider &SetMaxDepth(size_t maxDepth) {
+        maxDepth_ = maxDepth;
         return *this;
     }
 
@@ -97,72 +97,72 @@ class RecursiveWavefrontDivider : public AbstractWavefrontDivider<Graph_t> {
     using LevelSetConstIterator = typename std::vector<std::vector<VertexType>>::const_iterator;
     using DifferenceType = typename std::iterator_traits<LevelSetConstIterator>::difference_type;
 
-    SequenceMetric sequence_metric_ = SequenceMetric::COMPONENT_COUNT;
+    SequenceMetric sequenceMetric_ = SequenceMetric::COMPONENT_COUNT;
     std::unique_ptr<SequenceSplitter> splitter_;
-    size_t min_subseq_len_ = 4;
-    size_t max_depth_ = std::numeric_limits<size_t>::max();
+    size_t minSubseqLen_ = 4;
+    size_t maxDepth_ = std::numeric_limits<size_t>::max();
 
-    void divide_recursive(LevelSetConstIterator level_begin,
-                          LevelSetConstIterator level_end,
-                          const std::vector<std::vector<VertexType>> &global_level_sets,
-                          std::vector<std::vector<std::vector<VertexType>>> &all_sections,
-                          size_t current_depth) const {
-        const auto current_range_size = static_cast<size_t>(std::distance(level_begin, level_end));
-        size_t start_level_idx = static_cast<size_t>(std::distance(global_level_sets.cbegin(), level_begin));
-        size_t end_level_idx = static_cast<size_t>(std::distance(global_level_sets.cbegin(), level_end));
+    void DivideRecursive(LevelSetConstIterator levelBegin,
+                         LevelSetConstIterator levelEnd,
+                         const std::vector<std::vector<VertexType>> &globalLevelSets,
+                         std::vector<std::vector<std::vector<VertexType>>> &allSections,
+                         size_t currentDepth) const {
+        const auto currentRangeSize = static_cast<size_t>(std::distance(level_begin, level_end));
+        size_t startLevelIdx = static_cast<size_t>(std::distance(global_level_sets.cbegin(), level_begin));
+        size_t endLevelIdx = static_cast<size_t>(std::distance(global_level_sets.cbegin(), level_end));
 
         // --- Base Cases for Recursion ---
-        if (current_depth >= max_depth_ || current_range_size < min_subseq_len_) {
-            if constexpr (enable_debug_print) {
-                std::cout << "[DEBUG depth " << current_depth << "] Base case reached. Creating section from levels "
-                          << start_level_idx << " to " << end_level_idx << "." << std::endl;
+        if (currentDepth >= maxDepth_ || current_range_size < minSubseqLen_) {
+            if constexpr (enableDebugPrint_) {
+                std::cout << "[DEBUG depth " << currentDepth << "] Base case reached. Creating section from levels "
+                          << startLevelIdx << " to " << endLevelIdx << "." << std::endl;
             }
             // Ensure the section is not empty before adding
-            if (start_level_idx < end_level_idx) {
-                all_sections.push_back(this->get_components_for_range(start_level_idx, end_level_idx, global_level_sets));
+            if (startLevelIdx < endLevelIdx) {
+                allSections.push_back(this->GetComponentsForRange(startLevelIdx, endLevelIdx, global_level_sets));
             }
             return;
         }
 
         // --- Create a view of the levels for the current sub-problem ---
-        std::vector<std::vector<VertexType>> sub_level_sets(level_begin, level_end);
+        std::vector<std::vector<VertexType>> subLevelSets(levelBegin, level_end);
 
-        SequenceGenerator<Graph_t> generator(*(this->dag_ptr_), sub_level_sets);
-        std::vector<double> sequence = generator.generate(sequence_metric_);
+        SequenceGenerator<GraphT> generator(*(this->dagPtr_), sub_level_sets);
+        std::vector<double> sequence = generator.generate(sequenceMetric_);
 
-        if constexpr (enable_debug_print) {
-            std::cout << "[DEBUG depth " << current_depth << "] Analyzing sequence: ";
+        if constexpr (enableDebugPrint_) {
+            std::cout << "[DEBUG depth " << currentDepth << "] Analyzing sequence: ";
             for (const auto &val : sequence) {
                 std::cout << val << " ";
             }
             std::cout << std::endl;
         }
 
-        std::vector<size_t> local_cuts = splitter_->split(sequence);
+        std::vector<size_t> localCuts = splitter_->Split(sequence);
 
         // --- Base Case: No further cuts found ---
-        if (local_cuts.empty()) {
-            if constexpr (enable_debug_print) {
-                std::cout << "[DEBUG depth " << current_depth << "] No cuts found. Creating section from levels "
-                          << start_level_idx << " to " << end_level_idx << "." << std::endl;
+        if (localCuts.empty()) {
+            if constexpr (enableDebugPrint_) {
+                std::cout << "[DEBUG depth " << currentDepth << "] No cuts found. Creating section from levels " << startLevelIdx
+                          << " to " << endLevelIdx << "." << std::endl;
             }
-            all_sections.push_back(this->get_components_for_range(start_level_idx, end_level_idx, global_level_sets));
+            allSections.push_back(this->GetComponentsForRange(startLevelIdx, endLevelIdx, global_level_sets));
             return;
         }
 
-        if constexpr (enable_debug_print) {
-            std::cout << "[DEBUG depth " << current_depth << "] Found " << local_cuts.size() << " cuts: ";
+        if constexpr (enableDebugPrint_) {
+            std::cout << "[DEBUG depth " << currentDepth << "] Found " << localCuts.size() << " cuts: ";
             for (const auto c : local_cuts) {
                 std::cout << c << ", ";
             }
-            std::cout << "in level range [" << start_level_idx << ", " << end_level_idx << "). Recursing." << std::endl;
+            std::cout << "in level range [" << startLevelIdx << ", " << endLevelIdx << "). Recursing." << std::endl;
         }
 
         // --- Recurse on the new, smaller sub-problems ---
-        std::sort(local_cuts.begin(), local_cuts.end());
-        local_cuts.erase(std::unique(local_cuts.begin(), local_cuts.end()), local_cuts.end());
+        std::sort(localCuts.begin(), localCuts.end());
+        localCuts.erase(std::unique(localCuts.begin(), localCuts.end()), localCuts.end());
 
-        auto current_sub_begin = level_begin;
+        auto currentSubBegin = level_begin;
         for (const auto &local_cut_idx : local_cuts) {
             auto cut_iterator = level_begin + static_cast<DifferenceType>(local_cut_idx);
             if (cut_iterator > current_sub_begin) {

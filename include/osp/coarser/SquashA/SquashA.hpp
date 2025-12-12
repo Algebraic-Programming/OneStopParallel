@@ -30,59 +30,59 @@ limitations under the License.
 
 namespace osp {
 
-namespace SquashAParams {
+namespace squash_a_params {
 
 enum class Mode { EDGE_WEIGHT, TRIANGLES };
 
 struct Parameters {
-    double geom_decay_num_nodes{17.0 / 16.0};
-    double poisson_par{0.0};
-    unsigned noise{0U};
-    std::pair<unsigned, unsigned> edge_sort_ratio{3, 2};
-    unsigned num_rep_without_node_decrease{4};
-    double temperature_multiplier{1.125};
-    unsigned number_of_temperature_increases{14};
-    Mode mode{Mode::EDGE_WEIGHT};
-    bool use_structured_poset{false};
-    bool use_top_poset{true};
+    double geomDecayNumNodes_{17.0 / 16.0};
+    double poissonPar_{0.0};
+    unsigned noise_{0U};
+    std::pair<unsigned, unsigned> edgeSortRatio_{3, 2};
+    unsigned numRepWithoutNodeDecrease_{4};
+    double temperatureMultiplier_{1.125};
+    unsigned numberOfTemperatureIncreases_{14};
+    Mode mode_{Mode::EDGE_WEIGHT};
+    bool useStructuredPoset_{false};
+    bool useTopPoset_{true};
 };
 
-}    // end namespace SquashAParams
+}    // namespace squash_a_params
 
-template <typename Graph_t_in, typename Graph_t_out>
-class SquashA : public CoarserGenExpansionMap<Graph_t_in, Graph_t_out> {
+template <typename GraphTIn, typename GraphTOut>
+class SquashA : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
   private:
-    SquashAParams::Parameters params;
+    squash_a_params::Parameters params_;
 
-    std::vector<int> generate_poset_in_map(const Graph_t_in &dag_in);
+    std::vector<int> GeneratePosetInMap(const GraphTIn &dagIn);
 
     template <typename T, typename CMP>
-    std::vector<std::vector<vertex_idx_t<Graph_t_in>>> gen_exp_map_from_contractable_edges(
-        const std::multiset<std::pair<edge_desc_t<Graph_t_in>, T>, CMP> &edge_weights,
-        const std::vector<int> &poset_int_mapping,
-        const Graph_t_in &dag_in) {
+    std::vector<std::vector<vertex_idx_t<Graph_t_in>>> GenExpMapFromContractableEdges(
+        const std::multiset<std::pair<edge_desc_t<Graph_t_in>, T>, CMP> &edgeWeights,
+        const std::vector<int> &posetIntMapping,
+        const GraphTIn &dagIn) {
         static_assert(std::is_arithmetic_v<T>, "T must be of arithmetic type!");
 
-        auto lower_third_it = edge_weights.begin();
+        auto lowerThirdIt = edge_weights.begin();
         std::advance(lower_third_it, edge_weights.size() / 3);
-        T lower_third_wt = std::max(lower_third_it->second, static_cast<T>(1));    // Could be 0
+        T lowerThirdWt = std::max(lower_third_it->second, static_cast<T>(1));    // Could be 0
 
         Union_Find_Universe<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_in>, v_workw_t<Graph_t_in>, v_memw_t<Graph_t_in>>
             connected_components;
-        for (const auto &vert : dag_in.vertices()) {
+        for (const auto &vert : dagIn.vertices()) {
             connected_components.add_object(vert, dag_in.vertex_work_weight(vert), dag_in.vertex_mem_weight(vert));
         }
 
-        std::vector<bool> merged_nodes(dag_in.num_vertices(), false);
+        std::vector<bool> mergedNodes(dagIn.num_vertices(), false);
 
-        vertex_idx_t<Graph_t_in> num_nodes_decrease = 0;
-        vertex_idx_t<Graph_t_in> num_nodes_aim
-            = dag_in.num_vertices()
-              - static_cast<vertex_idx_t<Graph_t_in>>(static_cast<double>(dag_in.num_vertices()) / params.geom_decay_num_nodes);
+        vertex_idx_t<Graph_t_in> numNodesDecrease = 0;
+        vertex_idx_t<Graph_t_in> numNodesAim
+            = dagIn.num_vertices()
+              - static_cast<vertex_idx_t<Graph_t_in>>(static_cast<double>(dagIn.num_vertices()) / params_.geomDecayNumNodes_);
 
         double temperature = 1;
-        unsigned temperature_increase_iteration = 0;
-        while (num_nodes_decrease < num_nodes_aim && temperature_increase_iteration <= params.number_of_temperature_increases) {
+        unsigned temperatureIncreaseIteration = 0;
+        while (num_nodes_decrease < num_nodes_aim && temperatureIncreaseIteration <= params_.numberOfTemperatureIncreases_) {
             for (const auto &wt_edge : edge_weights) {
                 const auto &edge_d = wt_edge.first;
                 const vertex_idx_t<Graph_t_in> edge_source = source(edge_d, dag_in);
@@ -184,26 +184,26 @@ class SquashA : public CoarserGenExpansionMap<Graph_t_in, Graph_t_out> {
                 num_nodes_decrease++;
             }
 
-            temperature *= params.temperature_multiplier;
-            temperature_increase_iteration++;
+            temperature *= params_.temperatureMultiplier_;
+            temperatureIncreaseIteration++;
         }
 
         // Getting components to contract and adding graph contraction
-        std::vector<std::vector<vertex_idx_t<Graph_t_in>>> partition_vec;
+        std::vector<std::vector<vertex_idx_t<Graph_t_in>>> partitionVec;
 
-        vertex_idx_t<Graph_t_in> min_node_decrease
-            = dag_in.num_vertices()
-              - static_cast<vertex_idx_t<Graph_t_in>>(static_cast<double>(dag_in.num_vertices())
-                                                      / std::pow(params.geom_decay_num_nodes, 0.25));
-        if (num_nodes_decrease > 0 && num_nodes_decrease >= min_node_decrease) {
+        vertex_idx_t<Graph_t_in> minNodeDecrease
+            = dagIn.num_vertices()
+              - static_cast<vertex_idx_t<Graph_t_in>>(static_cast<double>(dagIn.num_vertices())
+                                                      / std::pow(params_.geomDecayNumNodes_, 0.25));
+        if (numNodesDecrease > 0 && num_nodes_decrease >= min_node_decrease) {
             partition_vec = connected_components.get_connected_components();
 
         } else {
-            partition_vec.reserve(dag_in.num_vertices());
-            for (const auto &vert : dag_in.vertices()) {
+            partitionVec.reserve(dagIn.num_vertices());
+            for (const auto &vert : dagIn.vertices()) {
                 std::vector<vertex_idx_t<Graph_t_in>> vect;
                 vect.push_back(vert);
-                partition_vec.emplace_back(vect);
+                partitionVec.emplace_back(vect);
             }
         }
 
@@ -211,9 +211,9 @@ class SquashA : public CoarserGenExpansionMap<Graph_t_in, Graph_t_out> {
     }
 
   public:
-    virtual std::vector<std::vector<vertex_idx_t<Graph_t_in>>> generate_vertex_expansion_map(const Graph_t_in &dag_in) override;
+    virtual std::vector<std::vector<vertex_idx_t<Graph_t_in>>> generate_vertex_expansion_map(const GraphTIn &dagIn) override;
 
-    SquashA(SquashAParams::Parameters params_ = SquashAParams::Parameters()) : params(params_) {};
+    SquashA(squash_a_params::Parameters params = squash_a_params::Parameters()) : params_(params) {};
 
     SquashA(const SquashA &) = default;
     SquashA(SquashA &&) = default;
@@ -221,51 +221,50 @@ class SquashA : public CoarserGenExpansionMap<Graph_t_in, Graph_t_out> {
     SquashA &operator=(SquashA &&) = default;
     virtual ~SquashA() override = default;
 
-    inline SquashAParams::Parameters &getParams() { return params; }
+    inline squash_a_params::Parameters &GetParams() { return params_; }
 
-    inline void setParams(SquashAParams::Parameters params_) { params = params_; }
+    inline void SetParams(squash_a_params::Parameters params) { params_ = params; }
 
     std::string getCoarserName() const override { return "SquashA"; }
 };
 
-template <typename Graph_t_in, typename Graph_t_out>
-std::vector<int> SquashA<Graph_t_in, Graph_t_out>::generate_poset_in_map(const Graph_t_in &dag_in) {
-    std::vector<int> poset_int_mapping;
-    if (!params.use_structured_poset) {
-        poset_int_mapping = get_strict_poset_integer_map<Graph_t_in>(params.noise, params.poisson_par, dag_in);
+template <typename GraphTIn, typename GraphTOut>
+std::vector<int> SquashA<GraphTIn, GraphTOut>::GeneratePosetInMap(const GraphTIn &dagIn) {
+    std::vector<int> posetIntMapping;
+    if (!params_.useStructuredPoset_) {
+        posetIntMapping = get_strict_poset_integer_map<GraphTIn>(params_.noise_, params_.poissonPar_, dagIn);
     } else {
-        if (params.use_top_poset) {
-            poset_int_mapping = get_top_node_distance<Graph_t_in, int>(dag_in);
+        if (params_.useTopPoset_) {
+            posetIntMapping = get_top_node_distance<GraphTIn, int>(dagIn);
         } else {
-            std::vector<int> bot_dist = get_bottom_node_distance<Graph_t_in, int>(dag_in);
-            poset_int_mapping.resize(bot_dist.size());
-            for (std::size_t i = 0; i < bot_dist.size(); i++) {
-                poset_int_mapping[i] = -bot_dist[i];
+            std::vector<int> botDist = get_bottom_node_distance<GraphTIn, int>(dagIn);
+            posetIntMapping.resize(botDist.size());
+            for (std::size_t i = 0; i < botDist.size(); i++) {
+                posetIntMapping[i] = -botDist[i];
             }
         }
     }
-    return poset_int_mapping;
+    return posetIntMapping;
 }
 
-template <typename Graph_t_in, typename Graph_t_out>
-std::vector<std::vector<vertex_idx_t<Graph_t_in>>> SquashA<Graph_t_in, Graph_t_out>::generate_vertex_expansion_map(
-    const Graph_t_in &dag_in) {
+template <typename GraphTIn, typename GraphTOut>
+std::vector<std::vector<vertex_idx_t<Graph_t_in>>> SquashA<GraphTIn, GraphTOut>::GenerateVertexExpansionMap(const GraphTIn &dagIn) {
     static_assert(is_directed_graph_edge_desc_v<Graph_t_in>, "Graph_t_in must satisfy the directed_graph_edge_desc concept");
     static_assert(is_computational_dag_edge_desc_v<Graph_t_in>,
                   "Graph_t_in must satisfy the is_computational_dag_edge_desc concept");
     // static_assert(has_hashable_edge_desc_v<Graph_t_in>, "Graph_t_in must have hashable edge descriptors");
 
-    std::vector<int> poset_int_mapping = generate_poset_in_map(dag_in);
+    std::vector<int> posetIntMapping = GeneratePosetInMap(dagIn);
 
     if constexpr (has_edge_weights_v<Graph_t_in>) {
-        if (params.mode == SquashAParams::Mode::EDGE_WEIGHT) {
-            auto edge_w_cmp
+        if (params_.mode_ == squash_a_params::Mode::EDGE_WEIGHT) {
+            auto edgeWCmp
                 = [](const std::pair<edge_desc_t<Graph_t_in>, e_commw_t<Graph_t_in>> &lhs,
                      const std::pair<edge_desc_t<Graph_t_in>, e_commw_t<Graph_t_in>> &rhs) { return lhs.second < rhs.second; };
             std::multiset<std::pair<edge_desc_t<Graph_t_in>, e_commw_t<Graph_t_in>>, decltype(edge_w_cmp)> edge_weights(edge_w_cmp);
             {
-                std::vector<edge_desc_t<Graph_t_in>> contractable_edges
-                    = get_contractable_edges_from_poset_int_map<Graph_t_in>(poset_int_mapping, dag_in);
+                std::vector<edge_desc_t<Graph_t_in>> contractableEdges
+                    = get_contractable_edges_from_poset_int_map<GraphTIn>(posetIntMapping, dagIn);
                 for (const auto &edge : contractable_edges) {
                     if constexpr (has_edge_weights_v<Graph_t_in>) {
                         edge_weights.emplace(edge, dag_in.edge_comm_weight(edge));
@@ -279,13 +278,13 @@ std::vector<std::vector<vertex_idx_t<Graph_t_in>>> SquashA<Graph_t_in, Graph_t_o
                 edge_weights, poset_int_mapping, dag_in);
         }
     }
-    if (params.mode == SquashAParams::Mode::TRIANGLES) {
-        auto edge_w_cmp = [](const std::pair<edge_desc_t<Graph_t_in>, std::size_t> &lhs,
-                             const std::pair<edge_desc_t<Graph_t_in>, std::size_t> &rhs) { return lhs.second < rhs.second; };
-        std::multiset<std::pair<edge_desc_t<Graph_t_in>, std::size_t>, decltype(edge_w_cmp)> edge_weights(edge_w_cmp);
+    if (params_.mode_ == squash_a_params::Mode::TRIANGLES) {
+        auto edgeWCmp = [](const std::pair<edge_desc_t<Graph_t_in>, std::size_t> &lhs,
+                           const std::pair<edge_desc_t<Graph_t_in>, std::size_t> &rhs) { return lhs.second < rhs.second; };
+        std::multiset<std::pair<edge_desc_t<Graph_t_in>, std::size_t>, decltype(edge_w_cmp)> edgeWeights(edgeWCmp);
         {
-            std::vector<edge_desc_t<Graph_t_in>> contractable_edges
-                = get_contractable_edges_from_poset_int_map<Graph_t_in>(poset_int_mapping, dag_in);
+            std::vector<edge_desc_t<Graph_t_in>> contractableEdges
+                = get_contractable_edges_from_poset_int_map<GraphTIn>(posetIntMapping, dagIn);
             for (const auto &edge : contractable_edges) {
                 std::size_t num_common_triangles = num_common_parents(dag_in, source(edge, dag_in), target(edge, dag_in));
                 num_common_triangles += num_common_children(dag_in, source(edge, dag_in), target(edge, dag_in));
@@ -293,7 +292,7 @@ std::vector<std::vector<vertex_idx_t<Graph_t_in>>> SquashA<Graph_t_in, Graph_t_o
             }
         }
 
-        return gen_exp_map_from_contractable_edges<std::size_t, decltype(edge_w_cmp)>(edge_weights, poset_int_mapping, dag_in);
+        return gen_exp_map_from_contractable_edges<std::size_t, decltype(edgeWCmp)>(edge_weights, posetIntMapping, dagIn);
 
     } else {
         throw std::runtime_error("Edge sorting mode not recognised.");

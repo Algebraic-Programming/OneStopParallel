@@ -57,9 +57,9 @@ namespace osp {
  *
  * @tparam Graph_t The type of the computational DAG, which must satisfy the `is_computational_dag` concept.
  */
-template <typename Graph_t>
+template <typename GraphT>
 class BspInstance {
-    static_assert(is_computational_dag_v<Graph_t>, "BspInstance can only be used with computational DAGs.");
+    static_assert(is_computational_dag_v<GraphT>, "BspInstance can only be used with computational DAGs.");
 
   private:
     /**
@@ -68,14 +68,14 @@ class BspInstance {
      * It contains the graph topology (nodes and directed edges) as well as attributes such as node types,
      * work weights, memory weights, and edge communication weights.
      */
-    Graph_t cdag;
+    GraphT cdag_;
     /**
      * @brief The BSP architecture model.
      *
      * It defines the hardware characteristics including processor types, memory limits,
      * communication bandwidth/latency (send costs), and global synchronization costs.
      */
-    BspArchitecture<Graph_t> architecture;
+    BspArchitecture<GraphT> architecture_;
 
     /**
      * @brief Stores the compatibility between node types and processor types.
@@ -85,15 +85,14 @@ class BspInstance {
      * if a node of that type can be assigned to a processor of the given type in a schedule.
      * @note The outer vector is indexed by node type, the inner vector is indexed by processor type.
      */
-    std::vector<std::vector<bool>> nodeProcessorCompatibility = std::vector<std::vector<bool>>({{true}});
+    std::vector<std::vector<bool>> nodeProcessorCompatibility_ = std::vector<std::vector<bool>>({{true}});
 
     /**
      * @brief The type of the vectex types in the computational DAG.
      * If the DAG does not support vertex types, this is `unsigned`.
      */
-    using vertex_type_t_or_default
-        = std::conditional_t<is_computational_dag_typed_vertices_v<Graph_t>, v_type_t<Graph_t>, unsigned>;
-    using processor_type_t = unsigned;
+    using VertexTypeTOrDefault = std::conditional_t<is_computational_dag_typed_vertices_v<GraphT>, VTypeT<GraphT>, unsigned>;
+    using ProcessorTypeT = unsigned;
 
   public:
     /**
@@ -108,10 +107,10 @@ class BspInstance {
      * @param cdag The computational DAG for the instance.
      * @param architecture The BSP architecture for the instance.
      */
-    BspInstance(const Graph_t &cdag_,
-                const BspArchitecture<Graph_t> &architecture_,
-                std::vector<std::vector<bool>> nodeProcessorCompatibility_ = std::vector<std::vector<bool>>({{true}}))
-        : cdag(cdag_), architecture(architecture_), nodeProcessorCompatibility(nodeProcessorCompatibility_) {}
+    BspInstance(const GraphT &cdag,
+                const BspArchitecture<GraphT> &architecture,
+                std::vector<std::vector<bool>> nodeProcessorCompatibility = std::vector<std::vector<bool>>({{true}}))
+        : cdag_(cdag), architecture_(architecture), nodeProcessorCompatibility_(nodeProcessorCompatibility) {}
 
     /**
      * @brief Constructs a BspInstance object with the specified computational DAG and BSP architecture.
@@ -120,62 +119,62 @@ class BspInstance {
      * @param cdag The computational DAG for the instance.
      * @param architecture The BSP architecture for the instance.
      */
-    BspInstance(Graph_t &&cdag_,
-                BspArchitecture<Graph_t> &&architecture_,
-                std::vector<std::vector<bool>> nodeProcessorCompatibility_ = std::vector<std::vector<bool>>({{true}}))
-        : cdag(std::move(cdag_)),
-          architecture(std::move(architecture_)),
-          nodeProcessorCompatibility(nodeProcessorCompatibility_) {}
+    BspInstance(GraphT &&cdag,
+                BspArchitecture<GraphT> &&architecture,
+                std::vector<std::vector<bool>> nodeProcessorCompatibility = std::vector<std::vector<bool>>({{true}}))
+        : cdag_(std::move(cdag)),
+          architecture_(std::move(architecture)),
+          nodeProcessorCompatibility_(nodeProcessorCompatibility) {}
 
-    template <typename Graph_t_other>
-    explicit BspInstance(const BspInstance<Graph_t_other> &other)
-        : architecture(other.getArchitecture()), nodeProcessorCompatibility(other.getNodeProcessorCompatibilityMatrix()) {
-        constructComputationalDag(other.getComputationalDag(), cdag);
+    template <typename GraphTOther>
+    explicit BspInstance(const BspInstance<GraphTOther> &other)
+        : architecture_(other.getArchitecture()), nodeProcessorCompatibility_(other.getNodeProcessorCompatibilityMatrix()) {
+        constructComputationalDag(other.getComputationalDag(), cdag_);
     }
 
-    BspInstance(const BspInstance<Graph_t> &other) = default;
-    BspInstance(BspInstance<Graph_t> &&other) noexcept = default;
+    BspInstance(const BspInstance<GraphT> &other) = default;
+    BspInstance(BspInstance<GraphT> &&other) noexcept = default;
 
-    BspInstance<Graph_t> &operator=(const BspInstance<Graph_t> &other) = default;
-    BspInstance<Graph_t> &operator=(BspInstance<Graph_t> &&other) noexcept = default;
+    BspInstance<GraphT> &operator=(const BspInstance<GraphT> &other) = default;
+    BspInstance<GraphT> &operator=(BspInstance<GraphT> &&other) noexcept = default;
 
     /**
      * @brief Returns a reference to the BSP architecture of the instance.
      * Assigning the BSP architecture via the reference creates a copy of the architecture.
      * The move operator may be used to transfer ownership of the architecture.
      */
-    [[nodiscard]] const BspArchitecture<Graph_t> &getArchitecture() const { return architecture; }
+    [[nodiscard]] const BspArchitecture<GraphT> &GetArchitecture() const { return architecture_; }
 
-    [[nodiscard]] BspArchitecture<Graph_t> &getArchitecture() { return architecture; }
+    [[nodiscard]] BspArchitecture<GraphT> &GetArchitecture() { return architecture_; }
 
     /**
      * @brief Returns a reference to the computational DAG of the instance.
      * Assigning the computational DAG via the reference creates a copy of the DAG.
      * The move operator may be used to transfer ownership of the DAG.
      */
-    [[nodiscard]] const Graph_t &getComputationalDag() const { return cdag; }
+    [[nodiscard]] const GraphT &GetComputationalDag() const { return cdag_; }
 
-    [[nodiscard]] Graph_t &getComputationalDag() { return cdag; }
+    [[nodiscard]] GraphT &GetComputationalDag() { return cdag_; }
 
     /**
      * @brief Returns the number of vertices in the computational DAG.
      */
-    [[nodiscard]] vertex_idx_t<Graph_t> numberOfVertices() const { return cdag.num_vertices(); }
+    [[nodiscard]] VertexIdxT<GraphT> NumberOfVertices() const { return cdag_.num_vertices(); }
 
     /**
      * @brief Returns a view over the vertex indices of the computational DAG.
      */
-    [[nodiscard]] auto vertices() const { return cdag.vertices(); }
+    [[nodiscard]] auto Vertices() const { return cdag_.vertices(); }
 
     /**
      * @brief Returns a view over the processor indices of the BSP architecture.
      */
-    [[nodiscard]] auto processors() const { return architecture.processors(); }
+    [[nodiscard]] auto Processors() const { return architecture_.processors(); }
 
     /**
      * @brief Returns the number of processors in the BSP architecture.
      */
-    [[nodiscard]] unsigned numberOfProcessors() const { return architecture.numberOfProcessors(); }
+    [[nodiscard]] unsigned NumberOfProcessors() const { return architecture_.numberOfProcessors(); }
 
     /**
      * @brief Returns the communication costs between two processors. Does not perform bounds checking.
@@ -184,8 +183,8 @@ class BspInstance {
      * @param p_send The index of the sending processor.
      * @param p_receive The index of the receiving processor.
      */
-    [[nodiscard]] v_commw_t<Graph_t> communicationCosts(const unsigned p_send, const unsigned p_receive) const {
-        return architecture.communicationCosts(p_send, p_receive);
+    [[nodiscard]] VCommwT<GraphT> CommunicationCosts(const unsigned pSend, const unsigned pReceive) const {
+        return architecture_.communicationCosts(pSend, pReceive);
     }
 
     /**
@@ -195,47 +194,47 @@ class BspInstance {
      * @param p_send The index of the sending processor.
      * @param p_receive The index of the receiving processor.
      */
-    [[nodiscard]] v_commw_t<Graph_t> sendCosts(const unsigned p_send, const unsigned p_receive) const {
-        return architecture.sendCosts(p_send, p_receive);
+    [[nodiscard]] VCommwT<GraphT> SendCosts(const unsigned pSend, const unsigned pReceive) const {
+        return architecture_.sendCosts(pSend, pReceive);
     }
 
     /**
      * @brief Returns a copy of the send costs matrix.
      */
-    [[nodiscard]] std::vector<std::vector<v_commw_t<Graph_t>>> sendCosts() const { return architecture.sendCosts(); }
+    [[nodiscard]] std::vector<std::vector<VCommwT<GraphT>>> SendCosts() const { return architecture_.sendCosts(); }
 
     /**
      * @brief Returns the flattened send costs vector.
      */
-    [[nodiscard]] const std::vector<v_commw_t<Graph_t>> &sendCostsVector() const { return architecture.sendCostsVector(); }
+    [[nodiscard]] const std::vector<VCommwT<GraphT>> &SendCostsVector() const { return architecture_.sendCostsVector(); }
 
     /**
      * @brief Returns the communication costs of the BSP architecture.
      */
-    [[nodiscard]] v_commw_t<Graph_t> communicationCosts() const { return architecture.communicationCosts(); }
+    [[nodiscard]] VCommwT<GraphT> CommunicationCosts() const { return architecture_.communicationCosts(); }
 
     /**
      * @brief Returns the synchronization costs of the BSP architecture.
      */
-    [[nodiscard]] v_commw_t<Graph_t> synchronisationCosts() const { return architecture.synchronisationCosts(); }
+    [[nodiscard]] VCommwT<GraphT> SynchronisationCosts() const { return architecture_.synchronisationCosts(); }
 
     /**
      * @brief Returns the memory bound for a specific processor.
      * @param proc The processor index.
      */
-    [[nodiscard]] v_memw_t<Graph_t> memoryBound(const unsigned proc) const { return architecture.memoryBound(proc); }
+    [[nodiscard]] VMemwT<GraphT> MemoryBound(const unsigned proc) const { return architecture_.memoryBound(proc); }
 
     /**
      * @brief Sets the communication costs of the BSP architecture.
      * @param cost The communication costs to set.
      */
-    void setCommunicationCosts(const v_commw_t<Graph_t> cost) { architecture.setCommunicationCosts(cost); }
+    void SetCommunicationCosts(const VCommwT<GraphT> cost) { architecture_.setCommunicationCosts(cost); }
 
     /**
      * @brief Sets the synchronisation costs of the BSP architecture.
      * @param cost The synchronisation costs to set.
      */
-    void setSynchronisationCosts(const v_commw_t<Graph_t> cost) { architecture.setSynchronisationCosts(cost); }
+    void SetSynchronisationCosts(const VCommwT<GraphT> cost) { architecture_.setSynchronisationCosts(cost); }
 
     /**
      * @brief Sets the number of processors. Processor type is set to 0 for all processors.
@@ -243,13 +242,13 @@ class BspInstance {
      * @param numberOfProcessors The number of processors. Must be greater than 0.
      * @throws std::invalid_argument if the number of processors is 0.
      */
-    void setNumberOfProcessors(const unsigned num) { architecture.setNumberOfProcessors(num); }
+    void SetNumberOfProcessors(const unsigned num) { architecture_.setNumberOfProcessors(num); }
 
     /**
      * @brief Returns the processor type for a given processor index. Does not perform bounds checking.
      * @param proc The processor index.
      */
-    [[nodiscard]] vertex_type_t_or_default processorType(const unsigned proc) const { return architecture.processorType(proc); }
+    [[nodiscard]] VertexTypeTOrDefault ProcessorType(const unsigned proc) const { return architecture_.processorType(proc); }
 
     /**
      * @brief Checks if a node is compatible with a processor. Does not perform bounds checking.
@@ -258,8 +257,8 @@ class BspInstance {
      * @param processor_id The processor index.
      * @return True if the node is compatible with the processor, false otherwise.
      */
-    [[nodiscard]] bool isCompatible(const vertex_idx_t<Graph_t> &node, const unsigned processor_id) const {
-        return isCompatibleType(cdag.vertex_type(node), architecture.processorType(processor_id));
+    [[nodiscard]] bool IsCompatible(const VertexIdxT<GraphT> &node, const unsigned processorId) const {
+        return IsCompatibleType(cdag_.vertex_type(node), architecture_.processorType(processorId));
     }
 
     /**
@@ -269,49 +268,49 @@ class BspInstance {
      * @param processorType The processor type.
      * @return True if the node type is compatible with the processor type, false otherwise.
      */
-    [[nodiscard]] bool isCompatibleType(const vertex_type_t_or_default nodeType, const processor_type_t processorType) const {
-        return nodeProcessorCompatibility[nodeType][processorType];
+    [[nodiscard]] bool IsCompatibleType(const VertexTypeTOrDefault nodeType, const ProcessorTypeT processorType) const {
+        return nodeProcessorCompatibility_[nodeType][processorType];
     }
 
     /**
      * @brief Sets the node-processor compatibility matrix. The matrix is copied. Dimensions are not checked.
      * @param compatibility_ The compatibility matrix.
      */
-    void setNodeProcessorCompatibility(const std::vector<std::vector<bool>> &compatibility_) {
-        nodeProcessorCompatibility = compatibility_;
+    void SetNodeProcessorCompatibility(const std::vector<std::vector<bool>> &compatibility) {
+        nodeProcessorCompatibility_ = compatibility;
     }
 
     /**
      * @brief Returns the node-processor compatibility matrix.
      */
-    [[nodiscard]] const std::vector<std::vector<bool>> &getNodeProcessorCompatibilityMatrix() const {
-        return nodeProcessorCompatibility;
+    [[nodiscard]] const std::vector<std::vector<bool>> &GetNodeProcessorCompatibilityMatrix() const {
+        return nodeProcessorCompatibility_;
     }
 
     /**
      * @brief Returns the node type - processor type compatibility matrix.
      */
-    [[nodiscard]] const std::vector<std::vector<bool>> &getProcessorCompatibilityMatrix() const {
-        return nodeProcessorCompatibility;
+    [[nodiscard]] const std::vector<std::vector<bool>> &GetProcessorCompatibilityMatrix() const {
+        return nodeProcessorCompatibility_;
     }
 
     /**
      * @brief Sets the compatibility matrix to be diagonal. This implies that node type `i` is only compatible with processor type `i`.
      * @param number_of_types The number of types.
      */
-    void setDiagonalCompatibilityMatrix(const vertex_type_t_or_default number_of_types) {
-        nodeProcessorCompatibility.assign(number_of_types, std::vector<bool>(number_of_types, false));
-        for (vertex_type_t_or_default i = 0; i < number_of_types; ++i) {
-            nodeProcessorCompatibility[i][i] = true;
+    void SetDiagonalCompatibilityMatrix(const VertexTypeTOrDefault numberOfTypes) {
+        nodeProcessorCompatibility_.assign(numberOfTypes, std::vector<bool>(numberOfTypes, false));
+        for (VertexTypeTOrDefault i = 0; i < numberOfTypes; ++i) {
+            nodeProcessorCompatibility_[i][i] = true;
         }
     }
 
     /**
      * @brief Sets the compatibility matrix to all ones. This implies that all node types are compatible with all processor types.
      */
-    void setAllOnesCompatibilityMatrix() {
-        nodeProcessorCompatibility.assign(cdag.num_vertex_types(),
-                                          std::vector<bool>(architecture.getNumberOfProcessorTypes(), true));
+    void SetAllOnesCompatibilityMatrix() {
+        nodeProcessorCompatibility_.assign(cdag_.num_vertex_types(),
+                                           std::vector<bool>(architecture_.getNumberOfProcessorTypes(), true));
     }
 
     /**
@@ -319,19 +318,19 @@ class BspInstance {
      * @return True if the memory constraints are feasible, false otherwise.
      */
     [[nodiscard]] bool CheckMemoryConstraintsFeasibility() const {
-        std::vector<v_memw_t<Graph_t>> max_memory_per_proc_type(architecture.getNumberOfProcessorTypes(), 0);
-        for (unsigned proc = 0U; proc < architecture.numberOfProcessors(); proc++) {
-            max_memory_per_proc_type[architecture.processorType(proc)]
-                = std::max(max_memory_per_proc_type[architecture.processorType(proc)], architecture.memoryBound(proc));
+        std::vector<VMemwT<GraphT>> maxMemoryPerProcType(architecture_.getNumberOfProcessorTypes(), 0);
+        for (unsigned proc = 0U; proc < architecture_.numberOfProcessors(); proc++) {
+            maxMemoryPerProcType[architecture_.processorType(proc)]
+                = std::max(maxMemoryPerProcType[architecture_.processorType(proc)], architecture_.memoryBound(proc));
         }
 
-        for (vertex_type_t_or_default vertType = 0U; vertType < cdag.num_vertex_types(); vertType++) {
-            v_memw_t<Graph_t> max_memory_of_type = max_memory_weight(vertType, cdag);
+        for (VertexTypeTOrDefault vertType = 0U; vertType < cdag_.num_vertex_types(); vertType++) {
+            VMemwT<GraphT> maxMemoryOfType = max_memory_weight(vertType, cdag_);
             bool fits = false;
 
-            for (processor_type_t proc_type = 0U; proc_type < architecture.getNumberOfProcessorTypes(); proc_type++) {
-                if (isCompatibleType(vertType, proc_type)) {
-                    fits = fits | (max_memory_of_type <= max_memory_per_proc_type[proc_type]);
+            for (ProcessorTypeT procType = 0U; procType < architecture_.getNumberOfProcessorTypes(); procType++) {
+                if (IsCompatibleType(vertType, procType)) {
+                    fits = fits | (maxMemoryOfType <= maxMemoryPerProcType[procType]);
                     if (fits) {
                         break;
                     }
@@ -350,14 +349,14 @@ class BspInstance {
      * @brief Returns a list of compatible processor types for each node type.
      * @return A vector where the index is the node type and the value is a vector of compatible processor types.
      */
-    [[nodiscard]] std::vector<std::vector<processor_type_t>> getProcTypesCompatibleWithNodeType() const {
-        vertex_type_t_or_default numberOfNodeTypes = cdag.num_vertex_types();
-        processor_type_t numberOfProcTypes = architecture.getNumberOfProcessorTypes();
-        std::vector<std::vector<processor_type_t>> compatibleProcTypes(numberOfNodeTypes);
+    [[nodiscard]] std::vector<std::vector<ProcessorTypeT>> GetProcTypesCompatibleWithNodeType() const {
+        VertexTypeTOrDefault numberOfNodeTypes = cdag_.num_vertex_types();
+        ProcessorTypeT numberOfProcTypes = architecture_.getNumberOfProcessorTypes();
+        std::vector<std::vector<ProcessorTypeT>> compatibleProcTypes(numberOfNodeTypes);
 
-        for (vertex_type_t_or_default nodeType = 0U; nodeType < numberOfNodeTypes; ++nodeType) {
-            for (processor_type_t processorType = 0U; processorType < numberOfProcTypes; ++processorType) {
-                if (isCompatibleType(nodeType, processorType)) {
+        for (VertexTypeTOrDefault nodeType = 0U; nodeType < numberOfNodeTypes; ++nodeType) {
+            for (ProcessorTypeT processorType = 0U; processorType < numberOfProcTypes; ++processorType) {
+                if (IsCompatibleType(nodeType, processorType)) {
                     compatibleProcTypes[nodeType].push_back(processorType);
                 }
             }

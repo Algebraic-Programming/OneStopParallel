@@ -25,7 +25,7 @@ limitations under the License.
 
 namespace osp {
 
-template <typename Graph_t>
+template <typename GraphT>
 class GreedyBspToMaxBspConverter {
     static_assert(is_computational_dag_v<Graph_t>, "GreedyBspToMaxBspConverter can only be used with computational DAGs.");
     static_assert(std::is_same_v<v_workw_t<Graph_t>, v_commw_t<Graph_t>>,
@@ -36,101 +36,100 @@ class GreedyBspToMaxBspConverter {
     using cost_type = v_workw_t<Graph_t>;
     using KeyTriple = std::tuple<vertex_idx_t<Graph_t>, unsigned int, unsigned int>;
 
-    double latency_coefficient = 1.25;
-    double decay_factor = 0.5;
+    double latencyCoefficient_ = 1.25;
+    double decayFactor_ = 0.5;
 
-    std::vector<std::vector<std::deque<vertex_idx_t<Graph_t>>>> createSuperstepLists(const BspScheduleCS<Graph_t> &schedule,
+    std::vector<std::vector<std::deque<vertex_idx_t<Graph_t>>>> CreateSuperstepLists(const BspScheduleCS<GraphT> &schedule,
                                                                                      std::vector<double> &priorities) const;
 
   public:
-    MaxBspSchedule<Graph_t> Convert(const BspSchedule<Graph_t> &schedule) const;
-    MaxBspScheduleCS<Graph_t> Convert(const BspScheduleCS<Graph_t> &schedule) const;
+    MaxBspSchedule<GraphT> Convert(const BspSchedule<GraphT> &schedule) const;
+    MaxBspScheduleCS<GraphT> Convert(const BspScheduleCS<GraphT> &schedule) const;
 };
 
-template <typename Graph_t>
-MaxBspSchedule<Graph_t> GreedyBspToMaxBspConverter<Graph_t>::Convert(const BspSchedule<Graph_t> &schedule) const {
-    BspScheduleCS<Graph_t> schedule_cs(schedule);
-    return Convert(schedule_cs);
+template <typename GraphT>
+MaxBspSchedule<GraphT> GreedyBspToMaxBspConverter<GraphT>::Convert(const BspSchedule<GraphT> &schedule) const {
+    BspScheduleCS<GraphT> scheduleCs(schedule);
+    return Convert(scheduleCs);
 }
 
-template <typename Graph_t>
-MaxBspScheduleCS<Graph_t> GreedyBspToMaxBspConverter<Graph_t>::Convert(const BspScheduleCS<Graph_t> &schedule) const {
-    const Graph_t &dag = schedule.getInstance().getComputationalDag();
+template <typename GraphT>
+MaxBspScheduleCS<GraphT> GreedyBspToMaxBspConverter<GraphT>::Convert(const BspScheduleCS<GraphT> &schedule) const {
+    const GraphT &dag = schedule.getInstance().getComputationalDag();
 
     // Initialize data structures
     std::vector<double> priorities;
-    std::vector<std::vector<std::deque<vertex_idx>>> proc_list = createSuperstepLists(schedule, priorities);
-    std::vector<std::vector<cost_type>> work_remaining_proc_superstep(schedule.getInstance().numberOfProcessors(),
-                                                                      std::vector<cost_type>(schedule.numberOfSupersteps(), 0));
-    std::vector<vertex_idx> nodes_remaining_superstep(schedule.numberOfSupersteps(), 0);
+    std::vector<std::vector<std::deque<vertex_idx>>> procList = createSuperstepLists(schedule, priorities);
+    std::vector<std::vector<cost_type>> workRemainingProcSuperstep(schedule.getInstance().numberOfProcessors(),
+                                                                   std::vector<cost_type>(schedule.numberOfSupersteps(), 0));
+    std::vector<vertex_idx> nodesRemainingSuperstep(schedule.numberOfSupersteps(), 0);
 
-    MaxBspScheduleCS<Graph_t> schedule_max(schedule.getInstance());
+    MaxBspScheduleCS<GraphT> scheduleMax(schedule.getInstance());
     for (vertex_idx node = 0; node < schedule.getInstance().numberOfVertices(); node++) {
-        work_remaining_proc_superstep[schedule.assignedProcessor(node)][schedule.assignedSuperstep(node)]
+        workRemainingProcSuperstep[schedule.assignedProcessor(node)][schedule.assignedSuperstep(node)]
             += dag.vertex_work_weight(node);
         ++nodes_remaining_superstep[schedule.assignedSuperstep(node)];
-        schedule_max.setAssignedProcessor(node, schedule.assignedProcessor(node));
+        scheduleMax.setAssignedProcessor(node, schedule.assignedProcessor(node));
     }
 
-    std::vector<std::vector<cost_type>> send_comm_remaining_proc_superstep(
-        schedule.getInstance().numberOfProcessors(), std::vector<cost_type>(schedule.numberOfSupersteps(), 0));
-    std::vector<std::vector<cost_type>> rec_comm_remaining_proc_superstep(
-        schedule.getInstance().numberOfProcessors(), std::vector<cost_type>(schedule.numberOfSupersteps(), 0));
+    std::vector<std::vector<cost_type>> sendCommRemainingProcSuperstep(schedule.getInstance().numberOfProcessors(),
+                                                                       std::vector<cost_type>(schedule.numberOfSupersteps(), 0));
+    std::vector<std::vector<cost_type>> recCommRemainingProcSuperstep(schedule.getInstance().numberOfProcessors(),
+                                                                      std::vector<cost_type>(schedule.numberOfSupersteps(), 0));
 
-    std::vector<std::set<std::pair<KeyTriple, unsigned>>> free_comm_steps_for_superstep(schedule.numberOfSupersteps());
-    std::vector<std::vector<std::pair<KeyTriple, unsigned>>> dependent_comm_steps_for_node(
-        schedule.getInstance().numberOfVertices());
+    std::vector<std::set<std::pair<KeyTriple, unsigned>>> freeCommStepsForSuperstep(schedule.numberOfSupersteps());
+    std::vector<std::vector<std::pair<KeyTriple, unsigned>>> dependentCommStepsForNode(schedule.getInstance().numberOfVertices());
     for (auto const &[key, val] : schedule.getCommunicationSchedule()) {
         if (schedule.assignedSuperstep(std::get<0>(key)) == val) {
-            dependent_comm_steps_for_node[std::get<0>(key)].emplace_back(key, val);
+            dependentCommStepsForNode[std::get<0>(key)].emplace_back(key, val);
 
-            cost_type comm_cost = dag.vertex_comm_weight(std::get<0>(key))
-                                  * schedule.getInstance().getArchitecture().sendCosts(std::get<1>(key), std::get<2>(key));
-            send_comm_remaining_proc_superstep[std::get<1>(key)][val] += comm_cost;
-            rec_comm_remaining_proc_superstep[std::get<2>(key)][val] += comm_cost;
+            cost_type commCost = dag.vertex_comm_weight(std::get<0>(key))
+                                 * schedule.getInstance().getArchitecture().sendCosts(std::get<1>(key), std::get<2>(key));
+            sendCommRemainingProcSuperstep[std::get<1>(key)][val] += comm_cost;
+            recCommRemainingProcSuperstep[std::get<2>(key)][val] += comm_cost;
         } else {
-            free_comm_steps_for_superstep[val].emplace(key, val);
+            freeCommStepsForSuperstep[val].emplace(key, val);
         }
     }
 
     // Iterate through supersteps
-    unsigned current_step = 0;
+    unsigned currentStep = 0;
     for (unsigned step = 0; step < schedule.numberOfSupersteps(); ++step) {
-        std::vector<cost_type> work_done_on_proc(schedule.getInstance().numberOfProcessors(), 0);
-        cost_type max_work_done = 0;
-        std::vector<std::pair<KeyTriple, unsigned>> newly_freed_comm_steps;
-        std::vector<cost_type> send_sum_of_newly_free_on_proc(schedule.getInstance().numberOfProcessors(), 0),
+        std::vector<cost_type> workDoneOnProc(schedule.getInstance().numberOfProcessors(), 0);
+        cost_type maxWorkDone = 0;
+        std::vector<std::pair<KeyTriple, unsigned>> newlyFreedCommSteps;
+        std::vector<cost_type> sendSumOfNewlyFreeOnProc(schedule.getInstance().numberOfProcessors(), 0),
             rec_sum_of_newly_free_on_proc(schedule.getInstance().numberOfProcessors(), 0);
 
-        std::vector<std::pair<KeyTriple, unsigned>> comm_in_current_step;
+        std::vector<std::pair<KeyTriple, unsigned>> commInCurrentStep;
 
-        std::vector<cost_type> send_on_proc(schedule.getInstance().numberOfProcessors(), 0),
+        std::vector<cost_type> sendOnProc(schedule.getInstance().numberOfProcessors(), 0),
             rec_on_proc(schedule.getInstance().numberOfProcessors(), 0);
-        bool empty_superstep = (nodes_remaining_superstep[step] == 0);
+        bool emptySuperstep = (nodesRemainingSuperstep[step] == 0);
 
-        while (nodes_remaining_superstep[step] > 0) {
+        while (nodesRemainingSuperstep[step] > 0) {
             // I. Select the next node (from any proc) with highest priority
-            unsigned chosen_proc = schedule.getInstance().numberOfProcessors();
-            double best_prio = std::numeric_limits<double>::max();
+            unsigned chosenProc = schedule.getInstance().numberOfProcessors();
+            double bestPrio = std::numeric_limits<double>::max();
 
             for (unsigned proc = 0; proc < schedule.getInstance().numberOfProcessors(); ++proc) {
                 if (!proc_list[proc][step].empty()
-                    && (chosen_proc == schedule.getInstance().numberOfProcessors()
-                        || priorities[proc_list[proc][step].front()] < best_prio)) {
-                    chosen_proc = proc;
-                    best_prio = priorities[proc_list[proc][step].front()];
+                    && (chosenProc == schedule.getInstance().numberOfProcessors()
+                        || priorities[proc_list[proc][step].front()] < bestPrio)) {
+                    chosenProc = proc;
+                    bestPrio = priorities[proc_list[proc][step].front()];
                 }
             }
-            if (chosen_proc == schedule.getInstance().numberOfProcessors()) {
+            if (chosenProc == schedule.getInstance().numberOfProcessors()) {
                 break;
             }
 
-            vertex_idx chosen_node = proc_list[chosen_proc][step].front();
-            proc_list[chosen_proc][step].pop_front();
-            work_done_on_proc[chosen_proc] += dag.vertex_work_weight(chosen_node);
-            work_remaining_proc_superstep[chosen_proc][step] -= dag.vertex_work_weight(chosen_node);
-            max_work_done = std::max(max_work_done, work_done_on_proc[chosen_proc]);
-            schedule_max.setAssignedSuperstep(chosen_node, current_step);
+            vertex_idx chosenNode = proc_list[chosenProc][step].front();
+            procList[chosenProc][step].pop_front();
+            workDoneOnProc[chosenProc] += dag.vertex_work_weight(chosen_node);
+            workRemainingProcSuperstep[chosenProc][step] -= dag.vertex_work_weight(chosen_node);
+            maxWorkDone = std::max(max_work_done, work_done_on_proc[chosenProc]);
+            scheduleMax.setAssignedSuperstep(chosen_node, currentStep);
             --nodes_remaining_superstep[step];
             for (const std::pair<KeyTriple, unsigned> &entry : dependent_comm_steps_for_node[chosen_node]) {
                 newly_freed_comm_steps.push_back(entry);
@@ -143,16 +142,16 @@ MaxBspScheduleCS<Graph_t> GreedyBspToMaxBspConverter<Graph_t>::Convert(const Bsp
 
             // II. Add nodes on all other processors if this doesn't increase work cost
             for (unsigned proc = 0; proc < schedule.getInstance().numberOfProcessors(); ++proc) {
-                if (proc == chosen_proc) {
+                if (proc == chosenProc) {
                     continue;
                 }
                 while (!proc_list[proc][step].empty()
                        && work_done_on_proc[proc] + dag.vertex_work_weight(proc_list[proc][step].front()) <= max_work_done) {
                     vertex_idx node = proc_list[proc][step].front();
-                    proc_list[proc][step].pop_front();
-                    work_done_on_proc[proc] += dag.vertex_work_weight(node);
-                    work_remaining_proc_superstep[proc][step] -= dag.vertex_work_weight(node);
-                    schedule_max.setAssignedSuperstep(node, current_step);
+                    procList[proc][step].pop_front();
+                    workDoneOnProc[proc] += dag.vertex_work_weight(node);
+                    workRemainingProcSuperstep[proc][step] -= dag.vertex_work_weight(node);
+                    scheduleMax.setAssignedSuperstep(node, currentStep);
                     --nodes_remaining_superstep[step];
                     for (const std::pair<KeyTriple, unsigned> &entry : dependent_comm_steps_for_node[node]) {
                         newly_freed_comm_steps.push_back(entry);
@@ -168,18 +167,18 @@ MaxBspScheduleCS<Graph_t> GreedyBspToMaxBspConverter<Graph_t>::Convert(const Bsp
             // III. Add communication steps that are already available
             for (auto itr = free_comm_steps_for_superstep[step].begin(); itr != free_comm_steps_for_superstep[step].end();) {
                 if (send_on_proc[std::get<1>(itr->first)] < max_work_done && rec_on_proc[std::get<2>(itr->first)] < max_work_done) {
-                    cost_type comm_cost
+                    cost_type commCost
                         = dag.vertex_comm_weight(std::get<0>(itr->first))
                           * schedule.getInstance().getArchitecture().sendCosts(std::get<1>(itr->first), std::get<2>(itr->first))
                           * schedule.getInstance().getArchitecture().communicationCosts();
-                    send_on_proc[std::get<1>(itr->first)] += comm_cost;
+                    sendOnProc[std::get<1>(itr->first)] += comm_cost;
                     rec_on_proc[std::get<2>(itr->first)] += comm_cost;
-                    if (current_step - 1 >= schedule_max.numberOfSupersteps()) {
-                        schedule_max.setNumberOfSupersteps(current_step);
+                    if (currentStep - 1 >= scheduleMax.numberOfSupersteps()) {
+                        scheduleMax.setNumberOfSupersteps(currentStep);
                     }
-                    schedule_max.addCommunicationScheduleEntry(itr->first, current_step - 1);
-                    comm_in_current_step.emplace_back(*itr);
-                    free_comm_steps_for_superstep[step].erase(itr++);
+                    scheduleMax.addCommunicationScheduleEntry(itr->first, currentStep - 1);
+                    commInCurrentStep.emplace_back(*itr);
+                    freeCommStepsForSuperstep[step].erase(itr++);
                 } else {
                     ++itr;
                 }
@@ -190,9 +189,9 @@ MaxBspScheduleCS<Graph_t> GreedyBspToMaxBspConverter<Graph_t>::Convert(const Bsp
                 continue;
             }
 
-            cost_type max_work_remaining = 0, max_comm_remaining = 0, comm_after_reduction = 0;
+            cost_type maxWorkRemaining = 0, max_comm_remaining = 0, comm_after_reduction = 0;
             for (unsigned proc = 0; proc < schedule.getInstance().numberOfProcessors(); ++proc) {
-                max_work_remaining = std::max(max_work_remaining, work_remaining_proc_superstep[proc][step]);
+                maxWorkRemaining = std::max(max_work_remaining, work_remaining_proc_superstep[proc][step]);
                 max_comm_remaining = std::max(max_comm_remaining, send_comm_remaining_proc_superstep[proc][step]);
                 max_comm_remaining = std::max(max_comm_remaining, rec_comm_remaining_proc_superstep[proc][step]);
                 comm_after_reduction = std::max(
@@ -200,22 +199,22 @@ MaxBspScheduleCS<Graph_t> GreedyBspToMaxBspConverter<Graph_t>::Convert(const Bsp
                 comm_after_reduction = std::max(
                     comm_after_reduction, rec_comm_remaining_proc_superstep[proc][step] - rec_sum_of_newly_free_on_proc[proc]);
             }
-            cost_type comm_reduction
+            cost_type commReduction
                 = (max_comm_remaining - comm_after_reduction) * schedule.getInstance().getArchitecture().communicationCosts();
 
             cost_type gain = std::min(comm_reduction, max_work_remaining);
             if (gain > 0
                 && static_cast<double>(gain) >= static_cast<double>(schedule.getInstance().getArchitecture().synchronisationCosts())
-                                                    * latency_coefficient) {
+                                                    * latencyCoefficient_) {
                 // Split superstep
                 for (unsigned proc = 0; proc < schedule.getInstance().numberOfProcessors(); ++proc) {
-                    work_done_on_proc[proc] = 0;
-                    send_on_proc[proc] = 0;
+                    workDoneOnProc[proc] = 0;
+                    sendOnProc[proc] = 0;
                     rec_on_proc[proc] = 0;
-                    send_sum_of_newly_free_on_proc[proc] = 0;
+                    sendSumOfNewlyFreeOnProc[proc] = 0;
                     rec_sum_of_newly_free_on_proc[proc] = 0;
                 }
-                max_work_done = 0;
+                maxWorkDone = 0;
                 for (const std::pair<KeyTriple, unsigned> &entry : newly_freed_comm_steps) {
                     free_comm_steps_for_superstep[step].insert(entry);
 
@@ -225,36 +224,36 @@ MaxBspScheduleCS<Graph_t> GreedyBspToMaxBspConverter<Graph_t>::Convert(const Bsp
                     send_comm_remaining_proc_superstep[std::get<1>(entry.first)][step] -= comm_cost;
                     rec_comm_remaining_proc_superstep[std::get<2>(entry.first)][step] -= comm_cost;
                 }
-                newly_freed_comm_steps.clear();
-                comm_in_current_step.clear();
-                ++current_step;
+                newlyFreedCommSteps.clear();
+                commInCurrentStep.clear();
+                ++currentStep;
             }
         }
 
-        if (!empty_superstep) {
-            ++current_step;
+        if (!emptySuperstep) {
+            ++currentStep;
         }
 
         for (const std::pair<KeyTriple, unsigned> &entry : newly_freed_comm_steps) {
             free_comm_steps_for_superstep[step].insert(entry);
         }
 
-        if (free_comm_steps_for_superstep[step].empty()) {
+        if (freeCommStepsForSuperstep[step].empty()) {
             continue;
         }
 
         // Handle the remaining communication steps: creating a new superstep afterwards with no work
-        cost_type max_comm_current = 0;
+        cost_type maxCommCurrent = 0;
         for (unsigned proc = 0; proc < schedule.getInstance().numberOfProcessors(); ++proc) {
-            max_comm_current = std::max(max_comm_current, send_on_proc[proc]);
+            maxCommCurrent = std::max(max_comm_current, send_on_proc[proc]);
             max_comm_current = std::max(max_comm_current, rec_on_proc[proc]);
         }
-        send_on_proc.clear();
-        send_on_proc.resize(schedule.getInstance().numberOfProcessors(), 0);
+        sendOnProc.clear();
+        sendOnProc.resize(schedule.getInstance().numberOfProcessors(), 0);
         rec_on_proc.clear();
         rec_on_proc.resize(schedule.getInstance().numberOfProcessors(), 0);
 
-        std::set<std::pair<vertex_idx, unsigned>> late_arriving_nodes;
+        std::set<std::pair<vertex_idx, unsigned>> lateArrivingNodes;
         for (const std::pair<KeyTriple, unsigned> &entry : free_comm_steps_for_superstep[step]) {
             schedule_max.addCommunicationScheduleEntry(entry.first, current_step - 1);
             cost_type comm_cost
@@ -269,9 +268,9 @@ MaxBspScheduleCS<Graph_t> GreedyBspToMaxBspConverter<Graph_t>::Convert(const Bsp
         // Edge case - check if it is worth moving all communications from the current superstep to the next one instead (thus
         // saving a sync cost) (for this we need to compute the h-relation-max in the current superstep, the next superstep, and
         // also their union)
-        cost_type max_comm_after = 0;
+        cost_type maxCommAfter = 0;
         for (unsigned proc = 0; proc < schedule.getInstance().numberOfProcessors(); ++proc) {
-            max_comm_after = std::max(max_comm_after, send_on_proc[proc]);
+            maxCommAfter = std::max(max_comm_after, send_on_proc[proc]);
             max_comm_after = std::max(max_comm_after, rec_on_proc[proc]);
         }
 
@@ -283,16 +282,16 @@ MaxBspScheduleCS<Graph_t> GreedyBspToMaxBspConverter<Graph_t>::Convert(const Bsp
             send_on_proc[std::get<1>(entry.first)] += comm_cost;
             rec_on_proc[std::get<2>(entry.first)] += comm_cost;
         }
-        cost_type max_comm_together = 0;
+        cost_type maxCommTogether = 0;
         for (unsigned proc = 0; proc < schedule.getInstance().numberOfProcessors(); ++proc) {
-            max_comm_together = std::max(max_comm_together, send_on_proc[proc]);
+            maxCommTogether = std::max(max_comm_together, send_on_proc[proc]);
             max_comm_together = std::max(max_comm_together, rec_on_proc[proc]);
         }
 
-        cost_type work_limit = max_comm_after;
-        if (max_comm_together + max_work_done <= max_comm_after + std::max(max_work_done, max_comm_current)
-                                                     + schedule.getInstance().getArchitecture().synchronisationCosts()) {
-            work_limit = max_comm_together;
+        cost_type workLimit = max_comm_after;
+        if (maxCommTogether + max_work_done <= max_comm_after + std::max(max_work_done, max_comm_current)
+                                                   + schedule.getInstance().getArchitecture().synchronisationCosts()) {
+            workLimit = max_comm_together;
             for (const std::pair<KeyTriple, unsigned> &entry : comm_in_current_step) {
                 if (current_step - 1 >= schedule_max.numberOfSupersteps()) {
                     schedule_max.setNumberOfSupersteps(current_step);
@@ -308,8 +307,8 @@ MaxBspScheduleCS<Graph_t> GreedyBspToMaxBspConverter<Graph_t>::Convert(const Bsp
         }
 
         for (unsigned proc = 0; proc < schedule.getInstance().numberOfProcessors(); ++proc) {
-            cost_type work_so_far = 0;
-            std::set<vertex_idx> brought_forward;
+            cost_type workSoFar = 0;
+            std::set<vertex_idx> broughtForward;
             for (vertex_idx node : proc_list[proc][step + 1]) {
                 if (work_so_far + dag.vertex_work_weight(node) > work_limit) {
                     continue;
@@ -352,31 +351,31 @@ MaxBspScheduleCS<Graph_t> GreedyBspToMaxBspConverter<Graph_t>::Convert(const Bsp
                 }
             }
 
-            proc_list[proc][step + 1] = remaining;
+            procList[proc][step + 1] = remaining;
         }
 
-        ++current_step;
+        ++currentStep;
     }
 
-    return schedule_max;
+    return scheduleMax;
 }
 
 // Auxiliary function: creates a separate vectors for each proc-supstep combination, collecting the nodes in a priority-based
 // topological order
-template <typename Graph_t>
-std::vector<std::vector<std::deque<vertex_idx_t<Graph_t>>>> GreedyBspToMaxBspConverter<Graph_t>::createSuperstepLists(
-    const BspScheduleCS<Graph_t> &schedule, std::vector<double> &priorities) const {
-    const Graph_t &dag = schedule.getInstance().getComputationalDag();
-    std::vector<vertex_idx> top_order = GetTopOrder(dag);
+template <typename GraphT>
+std::vector<std::vector<std::deque<vertex_idx_t<Graph_t>>>> GreedyBspToMaxBspConverter<GraphT>::CreateSuperstepLists(
+    const BspScheduleCS<GraphT> &schedule, std::vector<double> &priorities) const {
+    const GraphT &dag = schedule.getInstance().getComputationalDag();
+    std::vector<vertex_idx> topOrder = GetTopOrder(dag);
     priorities.clear();
     priorities.resize(dag.num_vertices());
-    std::vector<vertex_idx> local_in_degree(dag.num_vertices(), 0);
+    std::vector<vertex_idx> localInDegree(dag.num_vertices(), 0);
 
     // compute for each node the amount of dependent send cost in the same superstep
-    std::vector<cost_type> comm_dependency(dag.num_vertices(), 0);
+    std::vector<cost_type> commDependency(dag.num_vertices(), 0);
     for (auto const &[key, val] : schedule.getCommunicationSchedule()) {
         if (schedule.assignedSuperstep(std::get<0>(key)) == val) {
-            comm_dependency[std::get<0>(key)]
+            commDependency[std::get<0>(key)]
                 += dag.vertex_comm_weight(std::get<0>(key))
                    * schedule.getInstance().getArchitecture().sendCosts(std::get<1>(key), std::get<2>(key));
         }
@@ -386,12 +385,12 @@ std::vector<std::vector<std::deque<vertex_idx_t<Graph_t>>>> GreedyBspToMaxBspCon
     for (auto itr = top_order.rbegin(); itr != top_order.rend(); ++itr) {
         vertex_idx node = *itr;
         double base = static_cast<double>(dag.vertex_work_weight(node));
-        if (comm_dependency[node] > 0) {
+        if (commDependency[node] > 0) {
             base /= static_cast<double>(2 * comm_dependency[node]);
         }
 
         double successors = 0;
-        unsigned num_children = 0;
+        unsigned numChildren = 0;
         for (const vertex_idx &child : dag.children(node)) {
             if (schedule.assignedProcessor(node) == schedule.assignedProcessor(child)
                 && schedule.assignedSuperstep(node) == schedule.assignedSuperstep(child)) {
@@ -400,26 +399,26 @@ std::vector<std::vector<std::deque<vertex_idx_t<Graph_t>>>> GreedyBspToMaxBspCon
                 ++local_in_degree[child];
             }
         }
-        if (num_children > 0) {
-            successors = successors * decay_factor / static_cast<double>(num_children);
+        if (numChildren > 0) {
+            successors = successors * decayFactor_ / static_cast<double>(numChildren);
         }
         priorities[node] = base + successors;
     }
 
     // create lists for each processor-superstep pair, in a topological order, sorted by priority
-    std::vector<std::vector<std::deque<vertex_idx>>> superstep_lists(
+    std::vector<std::vector<std::deque<vertex_idx>>> superstepLists(
         schedule.getInstance().numberOfProcessors(), std::vector<std::deque<vertex_idx>>(schedule.numberOfSupersteps()));
 
     std::set<std::pair<double, vertex_idx>> free;
     for (vertex_idx node = 0; node < schedule.getInstance().numberOfVertices(); node++) {
-        if (local_in_degree[node] == 0) {
+        if (localInDegree[node] == 0) {
             free.emplace(priorities[node], node);
         }
     }
     while (!free.empty()) {
         vertex_idx node = free.begin()->second;
         free.erase(free.begin());
-        superstep_lists[schedule.assignedProcessor(node)][schedule.assignedSuperstep(node)].push_back(node);
+        superstepLists[schedule.assignedProcessor(node)][schedule.assignedSuperstep(node)].push_back(node);
         for (const vertex_idx &child : dag.children(node)) {
             if (schedule.assignedProcessor(node) == schedule.assignedProcessor(child)
                 && schedule.assignedSuperstep(node) == schedule.assignedSuperstep(child)) {

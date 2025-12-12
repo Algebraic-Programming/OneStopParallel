@@ -25,7 +25,7 @@ limitations under the License.
 
 namespace osp {
 
-std::vector<std::string> tiny_spaa_graphs() {
+std::vector<std::string> TinySpaaGraphs() {
     return {"data/spaa/tiny/instance_bicgstab.hdag",
             "data/spaa/tiny/instance_CG_N2_K2_nzP0d75.hdag",
             "data/spaa/tiny/instance_CG_N3_K1_nzP0d5.hdag",
@@ -44,14 +44,14 @@ std::vector<std::string> tiny_spaa_graphs() {
             "data/spaa/tiny/instance_spmv_N10_nzP0d25.hdag"};
 }
 
-std::vector<std::string> large_spaa_graphs() {
+std::vector<std::string> LargeSpaaGraphs() {
     return {"data/spaa/large/instance_exp_N50_K12_nzP0d15.hdag",
             "data/spaa/large/instance_CG_N24_K22_nzP0d2.hdag",
             "data/spaa/large/instance_kNN_N45_K15_nzP0d16.hdag",
             "data/spaa/large/instance_spmv_N120_nzP0d18.hdag"};
 }
 
-std::vector<std::string> test_graphs() {
+std::vector<std::string> TestGraphs() {
     return {"data/spaa/tiny/instance_k-means.hdag",
             "data/spaa/tiny/instance_bicgstab.hdag",
             "data/spaa/tiny/instance_CG_N3_K1_nzP0d5.hdag"};
@@ -71,24 +71,24 @@ std::vector<std::string> test_graphs() {
  * @param pipeline_len The length of each pipeline.
  * @return A Graph_t object representing the DAG.
  */
-template <typename Graph_t>
-inline Graph_t construct_multi_pipeline_dag(unsigned num_pipelines, unsigned pipeline_len) {
+template <typename GraphT>
+inline GraphT ConstructMultiPipelineDag(unsigned numPipelines, unsigned pipelineLen) {
     static_assert(is_constructable_cdag_v<Graph_t>, "Graph_t must be a constructable computational DAG");
-    Graph_t dag;
-    if (num_pipelines == 0 || pipeline_len == 0) {
+    GraphT dag;
+    if (numPipelines == 0 || pipelineLen == 0) {
         return dag;
     }
 
-    for (unsigned i = 0; i < num_pipelines; ++i) {
-        for (unsigned j = 0; j < pipeline_len; ++j) {
+    for (unsigned i = 0; i < numPipelines; ++i) {
+        for (unsigned j = 0; j < pipelineLen; ++j) {
             // Nodes at the same stage 'j' have the same work weight
             dag.add_vertex(10 * (j + 1), 1, 1);
         }
     }
 
-    for (unsigned i = 0; i < num_pipelines; ++i) {
-        for (unsigned j = 0; j < pipeline_len - 1; ++j) {
-            dag.add_edge(i * pipeline_len + j, i * pipeline_len + j + 1);
+    for (unsigned i = 0; i < numPipelines; ++i) {
+        for (unsigned j = 0; j < pipelineLen - 1; ++j) {
+            dag.add_edge(i * pipelineLen + j, i * pipelineLen + j + 1);
         }
     }
     return dag;
@@ -104,20 +104,20 @@ inline Graph_t construct_multi_pipeline_dag(unsigned num_pipelines, unsigned pip
  * @param num_rungs The number of rungs in the ladder.
  * @return A Graph_t object representing the DAG.
  */
-template <typename Graph_t>
-inline Graph_t construct_ladder_dag(unsigned num_rungs) {
+template <typename GraphT>
+inline GraphT ConstructLadderDag(unsigned numRungs) {
     static_assert(is_constructable_cdag_v<Graph_t>, "Graph_t must be a constructable computational DAG");
-    Graph_t dag;
-    if (num_rungs == 0) {
+    GraphT dag;
+    if (numRungs == 0) {
         return dag;
     }
 
-    for (unsigned i = 0; i < num_rungs + 1; ++i) {
+    for (unsigned i = 0; i < numRungs + 1; ++i) {
         dag.add_vertex(10, 1, 1);    // Left side node
         dag.add_vertex(20, 1, 1);    // Right side node
     }
 
-    for (unsigned i = 0; i < num_rungs; ++i) {
+    for (unsigned i = 0; i < numRungs; ++i) {
         auto u1 = 2 * i;
         auto v1 = 2 * i + 1;
         auto u2 = 2 * (i + 1);
@@ -140,11 +140,11 @@ inline Graph_t construct_ladder_dag(unsigned num_rungs) {
  * @param num_nodes The number of nodes in the chain.
  * @return A Graph_t object representing the DAG.
  */
-template <typename Graph_t>
-inline Graph_t construct_asymmetric_dag(unsigned num_nodes) {
+template <typename GraphT>
+inline GraphT ConstructAsymmetricDag(unsigned numNodes) {
     static_assert(is_constructable_cdag_v<Graph_t>, "Graph_t must be a constructable computational DAG");
-    Graph_t dag;
-    for (unsigned i = 0; i < num_nodes; ++i) {
+    GraphT dag;
+    for (unsigned i = 0; i < numNodes; ++i) {
         dag.add_vertex(10 * (i + 1), 1, 1);
         if (i > 0) {
             dag.add_edge(i - 1, i);
@@ -159,20 +159,20 @@ inline Graph_t construct_asymmetric_dag(unsigned num_nodes) {
  * @param height The height of the tree. A height of 0 is a single node. Total nodes: 2^(height+1) - 1.
  * @return A Graph_t object representing the out-tree.
  */
-template <typename Graph_t>
-inline Graph_t construct_binary_out_tree(unsigned height) {
+template <typename GraphT>
+inline GraphT ConstructBinaryOutTree(unsigned height) {
     static_assert(is_constructable_cdag_v<Graph_t>, "Graph_t must be a constructable computational DAG");
-    Graph_t dag;
-    unsigned num_nodes = (1U << (height + 1)) - 1;
-    if (num_nodes == 0) {
+    GraphT dag;
+    unsigned numNodes = (1U << (height + 1)) - 1;
+    if (numNodes == 0) {
         return dag;
     }
 
-    for (unsigned i = 0; i < num_nodes; ++i) {
+    for (unsigned i = 0; i < numNodes; ++i) {
         dag.add_vertex(10, 1, 1);
     }
 
-    for (unsigned i = 0; i < num_nodes / 2; ++i) {
+    for (unsigned i = 0; i < numNodes / 2; ++i) {
         dag.add_edge(i, 2 * i + 1);
         dag.add_edge(i, 2 * i + 2);
     }
@@ -185,20 +185,20 @@ inline Graph_t construct_binary_out_tree(unsigned height) {
  * @param height The height of the tree. A height of 0 is a single node. Total nodes: 2^(height+1) - 1.
  * @return A Graph_t object representing the in-tree.
  */
-template <typename Graph_t>
-inline Graph_t construct_binary_in_tree(unsigned height) {
+template <typename GraphT>
+inline GraphT ConstructBinaryInTree(unsigned height) {
     static_assert(is_constructable_cdag_v<Graph_t>, "Graph_t must be a constructable computational DAG");
-    Graph_t dag;
-    unsigned num_nodes = (1U << (height + 1)) - 1;
-    if (num_nodes == 0) {
+    GraphT dag;
+    unsigned numNodes = (1U << (height + 1)) - 1;
+    if (numNodes == 0) {
         return dag;
     }
 
-    for (unsigned i = 0; i < num_nodes; ++i) {
+    for (unsigned i = 0; i < numNodes; ++i) {
         dag.add_vertex(10, 1, 1);
     }
 
-    for (unsigned i = 0; i < num_nodes / 2; ++i) {
+    for (unsigned i = 0; i < numNodes / 2; ++i) {
         dag.add_edge(2 * i + 1, i);
         dag.add_edge(2 * i + 2, i);
     }
@@ -212,10 +212,10 @@ inline Graph_t construct_binary_in_tree(unsigned height) {
  * @param cols The number of columns in the grid.
  * @return A Graph_t object representing the grid.
  */
-template <typename Graph_t>
-inline Graph_t construct_grid_dag(unsigned rows, unsigned cols) {
+template <typename GraphT>
+inline GraphT ConstructGridDag(unsigned rows, unsigned cols) {
     static_assert(is_constructable_cdag_v<Graph_t>, "Graph_t must be a constructable computational DAG");
-    Graph_t dag;
+    GraphT dag;
     if (rows == 0 || cols == 0) {
         return dag;
     }
@@ -243,26 +243,26 @@ inline Graph_t construct_grid_dag(unsigned rows, unsigned cols) {
  * @param stages The number of stages (log2 of the number of inputs). Total nodes: (stages+1) * 2^stages.
  * @return A Graph_t object representing the butterfly graph.
  */
-template <typename Graph_t>
-inline Graph_t construct_butterfly_dag(unsigned stages) {
+template <typename GraphT>
+inline GraphT ConstructButterflyDag(unsigned stages) {
     static_assert(is_constructable_cdag_v<Graph_t>, "Graph_t must be a constructable computational DAG");
-    Graph_t dag;
+    GraphT dag;
     if (stages == 0) {
         return dag;
     }
 
-    unsigned N = 1U << stages;
-    for (unsigned i = 0; i < (stages + 1) * N; ++i) {
+    unsigned n = 1U << stages;
+    for (unsigned i = 0; i < (stages + 1) * n; ++i) {
         dag.add_vertex(10, 1, 1);
     }
 
     for (unsigned s = 0; s < stages; ++s) {
-        for (unsigned i = 0; i < N; ++i) {
-            unsigned current_node = s * N + i;
-            unsigned next_node_straight = (s + 1) * N + i;
-            unsigned next_node_cross = (s + 1) * N + (i ^ (1U << (stages - 1 - s)));
-            dag.add_edge(current_node, next_node_straight);
-            dag.add_edge(current_node, next_node_cross);
+        for (unsigned i = 0; i < n; ++i) {
+            unsigned currentNode = s * n + i;
+            unsigned nextNodeStraight = (s + 1) * n + i;
+            unsigned nextNodeCross = (s + 1) * n + (i ^ (1U << (stages - 1 - s)));
+            dag.add_edge(currentNode, nextNodeStraight);
+            dag.add_edge(currentNode, nextNodeCross);
         }
     }
     return dag;

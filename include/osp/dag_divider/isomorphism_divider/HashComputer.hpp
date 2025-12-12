@@ -32,19 +32,19 @@ namespace osp {
  *
  * @tparam index_type The type used for indexing vertices in the graph.
  */
-template <typename index_type>
+template <typename IndexType>
 class HashComputer {
   public:
     virtual ~HashComputer() = default;
 
-    virtual std::size_t get_vertex_hash(const index_type &v) const = 0;
-    virtual const std::vector<std::size_t> &get_vertex_hashes() const = 0;
-    virtual std::size_t num_orbits() const = 0;
+    virtual std::size_t GetVertexHash(const IndexType &v) const = 0;
+    virtual const std::vector<std::size_t> &GetVertexHashes() const = 0;
+    virtual std::size_t NumOrbits() const = 0;
 
-    virtual const std::vector<index_type> &get_orbit(const index_type &v) const = 0;
-    virtual const std::unordered_map<std::size_t, std::vector<index_type>> &get_orbits() const = 0;
+    virtual const std::vector<IndexType> &GetOrbit(const IndexType &v) const = 0;
+    virtual const std::unordered_map<std::size_t, std::vector<IndexType>> &GetOrbits() const = 0;
 
-    virtual const std::vector<index_type> &get_orbit_from_hash(const std::size_t &hash) const = 0;
+    virtual const std::vector<IndexType> &GetOrbitFromHash(const std::size_t &hash) const = 0;
 };
 
 }    // namespace osp

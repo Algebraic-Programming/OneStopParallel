@@ -37,55 +37,55 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    size_t num_vert = static_cast<size_t>(std::stoul(argv[1]));
+    size_t numVert = static_cast<size_t>(std::stoul(argv[1]));
     double prob = std::atof(argv[2]);
     double bandwidth = std::atof(argv[3]);
-    unsigned num_graphs = 1;
+    unsigned numGraphs = 1;
     if (argc > 4) {
-        num_graphs = static_cast<unsigned>(std::stoul(argv[3]));
+        numGraphs = static_cast<unsigned>(std::stoul(argv[3]));
     }
 
     // std::cout << "Vert: " << num_vert << " prob: " << prob << " bandwidth: " << bandwidth << " graphs: " <<
     // num_graphs << std::endl;
 
     //  Initiating random values
-    double lower_bound = -2;
-    double upper_bound = 2;
-    std::uniform_real_distribution<double> unif(lower_bound, upper_bound);
+    double lowerBound = -2;
+    double upperBound = 2;
+    std::uniform_real_distribution<double> unif(lowerBound, upperBound);
 
-    std::uniform_real_distribution<double> unif_log(-std::log(upper_bound), std::log(upper_bound));
+    std::uniform_real_distribution<double> unifLog(-std::log(upperBound), std::log(upperBound));
     std::default_random_engine re;
 
-    for (size_t i = 0; i < num_graphs; i++) {
+    for (size_t i = 0; i < numGraphs; i++) {
         // Generating the graph
         ComputationalDag graph;
-        near_diag_random_graph(graph, num_vert, bandwidth, prob);
+        near_diag_random_graph(graph, numVert, bandwidth, prob);
 
         //  Generating graph name
-        std::string graph_name = "RandomBand_";
-        graph_name += "p" + std::to_string(static_cast<int>(100 * prob)) + "_";
-        graph_name += "b" + std::to_string(static_cast<int>(bandwidth)) + "_";
-        std::string graph_size_name;
+        std::string graphName = "RandomBand_";
+        graphName += "p" + std::to_string(static_cast<int>(100 * prob)) + "_";
+        graphName += "b" + std::to_string(static_cast<int>(bandwidth)) + "_";
+        std::string graphSizeName;
         if (graph.num_vertices() < 1000) {
-            graph_size_name = std::to_string(graph.num_vertices()) + "_";
+            graphSizeName = std::to_string(graph.num_vertices()) + "_";
         } else {
-            graph_size_name = std::to_string(graph.num_vertices() / 1000) + "k_";
+            graphSizeName = std::to_string(graph.num_vertices() / 1000) + "k_";
         }
-        graph_name += graph_size_name;
+        graphName += graphSizeName;
 
-        std::string graph_edge_size;
+        std::string graphEdgeSize;
         if (graph.num_edges() < 1000) {
-            graph_edge_size = std::to_string(graph.num_edges()) + "_";
+            graphEdgeSize = std::to_string(graph.num_edges()) + "_";
         } else if (graph.num_edges() < 1000000) {
-            graph_edge_size = std::to_string(graph.num_edges() / 1000) + "k_";
+            graphEdgeSize = std::to_string(graph.num_edges() / 1000) + "k_";
         } else {
-            graph_edge_size = std::to_string(graph.num_edges() / 1000000) + "m_";
+            graphEdgeSize = std::to_string(graph.num_edges() / 1000000) + "m_";
         }
-        graph_name += graph_edge_size;
+        graphName += graphEdgeSize;
 
-        graph_name += std::to_string(i);
+        graphName += std::to_string(i);
 
-        graph_name += ".mtx";
+        graphName += ".mtx";
 
         // Graph header
         std::string header = "%"
@@ -99,20 +99,20 @@ int main(int argc, char *argv[]) {
                              "%-------------------------------------------------------------------------------\n";
 
         // Writing the graph to file
-        std::ofstream graph_write;
-        graph_write.open(graph_name);
-        graph_write << header;
-        graph_write << std::to_string(graph.num_vertices()) + " " + std::to_string(graph.num_vertices()) + " "
-                           + std::to_string(graph.num_edges() + graph.num_vertices()) + "\n";
-        for (VertexType j = 0; j < num_vert; j++) {
-            double val = (1 - 2 * randInt(2)) * std::exp(unif_log(re));
-            graph_write << std::to_string(j + 1) + " " + std::to_string(j + 1) + " " + std::to_string(val) + "\n";
+        std::ofstream graphWrite;
+        graphWrite.open(graphName);
+        graphWrite << header;
+        graphWrite << std::to_string(graph.num_vertices()) + " " + std::to_string(graph.num_vertices()) + " "
+                          + std::to_string(graph.num_edges() + graph.num_vertices()) + "\n";
+        for (VertexType j = 0; j < numVert; j++) {
+            double val = (1 - 2 * randInt(2)) * std::exp(unifLog(re));
+            graphWrite << std::to_string(j + 1) + " " + std::to_string(j + 1) + " " + std::to_string(val) + "\n";
             for (const auto &chld : graph.children(j)) {
                 val = unif(re);
-                graph_write << std::to_string(chld + 1) + " " + std::to_string(j + 1) + " " + std::to_string(val) + "\n";
+                graphWrite << std::to_string(chld + 1) + " " + std::to_string(j + 1) + " " + std::to_string(val) + "\n";
             }
         }
-        graph_write.close();
+        graphWrite.close();
     }
 
     return 0;

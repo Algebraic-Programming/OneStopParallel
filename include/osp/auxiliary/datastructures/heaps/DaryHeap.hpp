@@ -39,39 +39,39 @@ namespace osp {
  * @tparam D The number of children for each node (the 'd' in d-ary). Must be >= 2.
  * @tparam Compare The comparison function object type.
  */
-template <typename Key, typename Value, unsigned int D, typename Compare>
+template <typename Key, typename Value, unsigned int d, typename Compare>
 class DaryHeap {
-    static_assert(D >= 2, "D-ary heap must have at least 2 children per node.");
+    static_assert(d >= 2, "D-ary heap must have at least 2 children per node.");
 
   private:
     struct NodeInfo {
-        Value value;
-        size_t position;
+        Value value_;
+        size_t position_;
     };
 
   public:
-    bool is_empty() const noexcept { return heap.empty(); }
+    bool is_empty() const noexcept { return heap_.empty(); }
 
-    size_t size() const noexcept { return heap.size(); }
+    size_t size() const noexcept { return heap_.size(); }
 
-    bool contains(const Key &key) const { return node_info.count(key); }
+    bool contains(const Key &key) const { return nodeInfo_.count(key); }
 
     void push(const Key &key, const Value &value) {
         // emplace and check for success to avoid a separate lookup with contains()
-        auto [it, success] = node_info.emplace(key, NodeInfo{value, heap.size()});
+        auto [it, success] = nodeInfo_.emplace(key, NodeInfo{value, heap_.size()});
         if (!success) {
             throw std::invalid_argument("Key already exists in the heap.");
         }
 
-        heap.push_back(key);
-        sift_up(it->second.position);
+        heap_.push_back(key);
+        SiftUp(it->second.position_);
     }
 
     const Key &top() const {
         if (is_empty()) {
             throw std::out_of_range("Heap is empty.");
         }
-        return heap.front();
+        return heap_.front();
     }
 
     Key pop() {
@@ -79,157 +79,157 @@ class DaryHeap {
             throw std::out_of_range("Heap is empty.");
         }
 
-        Key top_key = std::move(heap.front());
+        Key topKey = std::move(heap_.front());
 
-        node_info.erase(top_key);
+        nodeInfo_.erase(topKey);
 
-        if (heap.size() > 1) {
-            heap[0] = std::move(heap.back());
-            heap.pop_back();
-            node_info.at(heap[0]).position = 0;
-            sift_down(0);
+        if (heap_.size() > 1) {
+            heap_[0] = std::move(heap_.back());
+            heap_.pop_back();
+            nodeInfo_.at(heap_[0]).position_ = 0;
+            SiftDown(0);
         } else {
-            heap.pop_back();
+            heap_.pop_back();
         }
 
-        return top_key;
+        return topKey;
     }
 
-    void update(const Key &key, const Value &new_value) {
-        auto it = node_info.find(key);
-        if (it == node_info.end()) {
+    void update(const Key &key, const Value &newValue) {
+        auto it = nodeInfo_.find(key);
+        if (it == nodeInfo_.end()) {
             throw std::invalid_argument("Key does not exist in the heap.");
         }
         auto &info = it->second;
-        const Value old_value = info.value;
+        const Value oldValue = info.value_;
 
-        if (comp(new_value, old_value)) {
-            info.value = new_value;
-            sift_up(info.position);
-        } else if (comp(old_value, new_value)) {
-            info.value = new_value;
-            sift_down(info.position);
+        if (comp_(newValue, oldValue)) {
+            info.value_ = newValue;
+            SiftUp(info.position_);
+        } else if (comp_(oldValue, newValue)) {
+            info.value_ = newValue;
+            SiftDown(info.position_);
         }
     }
 
     void erase(const Key &key) {
-        auto it = node_info.find(key);
-        if (it == node_info.end()) {
+        auto it = nodeInfo_.find(key);
+        if (it == nodeInfo_.end()) {
             throw std::invalid_argument("Key does not exist in the heap.");
         }
 
-        size_t index = it->second.position;
-        size_t last_index = heap.size() - 1;
+        size_t index = it->second.position_;
+        size_t lastIndex = heap_.size() - 1;
 
-        if (index != last_index) {
-            swap_nodes(index, last_index);
-            heap.pop_back();
-            node_info.erase(it);
+        if (index != lastIndex) {
+            SwapNodes(index, lastIndex);
+            heap_.pop_back();
+            nodeInfo_.erase(it);
 
-            const Key &moved_key = heap[index];
-            if (index > 0 && comp(node_info.at(moved_key).value, node_info.at(heap[parent(index)]).value)) {
-                sift_up(index);
+            const Key &movedKey = heap_[index];
+            if (index > 0 && comp_(nodeInfo_.at(movedKey).value_, nodeInfo_.at(heap_[Parent(index)]).value_)) {
+                SiftUp(index);
             } else {
-                sift_down(index);
+                SiftDown(index);
             }
         } else {
-            heap.pop_back();
-            node_info.erase(it);
+            heap_.pop_back();
+            nodeInfo_.erase(it);
         }
     }
 
     const Value &get_value(const Key &key) const {
-        auto it = node_info.find(key);
-        if (it == node_info.end()) {
+        auto it = nodeInfo_.find(key);
+        if (it == nodeInfo_.end()) {
             throw std::out_of_range("Key does not exist in the heap.");
         }
-        return it->second.value;
+        return it->second.value_;
     }
 
     /**
      * @brief Removes all elements from the heap.
      */
     void clear() noexcept {
-        heap.clear();
-        node_info.clear();
+        heap_.clear();
+        nodeInfo_.clear();
     }
 
   private:
-    std::vector<Key> heap;
-    std::unordered_map<Key, NodeInfo> node_info;
-    Compare comp;
+    std::vector<Key> heap_;
+    std::unordered_map<Key, NodeInfo> nodeInfo_;
+    Compare comp_;
 
-    inline size_t parent(size_t i) const noexcept { return (i - 1) / D; }
+    inline size_t Parent(size_t i) const noexcept { return (i - 1) / d; }
 
-    inline size_t first_child(size_t i) const noexcept { return D * i + 1; }
+    inline size_t FirstChild(size_t i) const noexcept { return d * i + 1; }
 
-    inline void swap_nodes(size_t i, size_t j) {
-        node_info.at(heap[i]).position = j;
-        node_info.at(heap[j]).position = i;
-        std::swap(heap[i], heap[j]);
+    inline void SwapNodes(size_t i, size_t j) {
+        nodeInfo_.at(heap_[i]).position_ = j;
+        nodeInfo_.at(heap_[j]).position_ = i;
+        std::swap(heap_[i], heap_[j]);
     }
 
-    void sift_up(size_t index) {
+    void SiftUp(size_t index) {
         if (index == 0) {
             return;
         }
 
-        Key key_to_sift = std::move(heap[index]);
-        const Value &value_to_sift = node_info.at(key_to_sift).value;
+        Key keyToSift = std::move(heap_[index]);
+        const Value &valueToSift = nodeInfo_.at(keyToSift).value_;
 
         while (index > 0) {
-            size_t p_idx = parent(index);
-            if (comp(value_to_sift, node_info.at(heap[p_idx]).value)) {
-                heap[index] = std::move(heap[p_idx]);
-                node_info.at(heap[index]).position = index;
-                index = p_idx;
+            size_t pIdx = Parent(index);
+            if (comp_(valueToSift, nodeInfo_.at(heap_[pIdx]).value_)) {
+                heap_[index] = std::move(heap_[pIdx]);
+                nodeInfo_.at(heap_[index]).position_ = index;
+                index = pIdx;
             } else {
                 break;
             }
         }
-        heap[index] = std::move(key_to_sift);
-        node_info.at(heap[index]).position = index;
+        heap_[index] = std::move(keyToSift);
+        nodeInfo_.at(heap_[index]).position_ = index;
     }
 
-    void sift_down(size_t index) {
-        Key key_to_sift = std::move(heap[index]);
-        const Value &value_to_sift = node_info.at(key_to_sift).value;
-        size_t size = heap.size();
+    void SiftDown(size_t index) {
+        Key keyToSift = std::move(heap_[index]);
+        const Value &valueToSift = nodeInfo_.at(keyToSift).value_;
+        size_t size = heap_.size();
 
-        while (first_child(index) < size) {
-            size_t best_child_idx = first_child(index);
-            const size_t last_child_idx = std::min(best_child_idx + D, size);
+        while (FirstChild(index) < size) {
+            size_t bestChildIdx = FirstChild(index);
+            const size_t lastChildIdx = std::min(bestChildIdx + d, size);
 
             // Find the best child among the D children
-            const Value *best_child_value = &node_info.at(heap[best_child_idx]).value;
-            for (size_t i = best_child_idx + 1; i < last_child_idx; ++i) {
-                const Value &current_child_value = node_info.at(heap[i]).value;
-                if (comp(current_child_value, *best_child_value)) {
-                    best_child_idx = i;
-                    best_child_value = &current_child_value;
+            const Value *bestChildValue = &nodeInfo_.at(heap_[bestChildIdx]).value_;
+            for (size_t i = bestChildIdx + 1; i < lastChildIdx; ++i) {
+                const Value &currentChildValue = nodeInfo_.at(heap_[i]).value_;
+                if (comp_(currentChildValue, *bestChildValue)) {
+                    bestChildIdx = i;
+                    bestChildValue = &currentChildValue;
                 }
             }
 
             // After finding the best child, compare with the sifting element
-            if (comp(value_to_sift, *best_child_value)) {
+            if (comp_(valueToSift, *bestChildValue)) {
                 break;
             }
 
             // Move hole down
-            heap[index] = std::move(heap[best_child_idx]);
-            node_info.at(heap[index]).position = index;
-            index = best_child_idx;
+            heap_[index] = std::move(heap_[bestChildIdx]);
+            nodeInfo_.at(heap_[index]).position_ = index;
+            index = bestChildIdx;
         }
-        heap[index] = std::move(key_to_sift);
-        node_info.at(heap[index]).position = index;
+        heap_[index] = std::move(keyToSift);
+        nodeInfo_.at(heap_[index]).position_ = index;
     }
 };
 
-template <typename Key, typename Value, unsigned int D>
-using MaxDaryHeap = DaryHeap<Key, Value, D, std::greater<Value>>;
+template <typename Key, typename Value, unsigned int d>
+using MaxDaryHeap = DaryHeap<Key, Value, d, std::greater<Value>>;
 
-template <typename Key, typename Value, unsigned int D>
-using MinDaryHeap = DaryHeap<Key, Value, D, std::less<Value>>;
+template <typename Key, typename Value, unsigned int d>
+using MinDaryHeap = DaryHeap<Key, Value, d, std::less<Value>>;
 
 template <typename Key, typename Value, typename Compare>
 using IndexedHeap = DaryHeap<Key, Value, 2, Compare>;

@@ -41,7 +41,7 @@ limitations under the License.
 namespace osp {
 
 // Turn permutation mode into a human-readable prefix used in metric names
-inline const char *mode_tag(SCHEDULE_NODE_PERMUTATION_MODES m) {
+inline const char *ModeTag(ScheduleNodePermutationModes m) {
     switch (m) {
         case NO_PERMUTE:
             return "NoPermute_";
@@ -54,7 +54,7 @@ inline const char *mode_tag(SCHEDULE_NODE_PERMUTATION_MODES m) {
     }
 }
 
-bool compare_vectors(Eigen::VectorXd &v1, Eigen::VectorXd &v2) {
+bool CompareVectors(Eigen::VectorXd &v1, Eigen::VectorXd &v2) {
     std::cout << std::fixed;
     std::cout << std::setprecision(15);
 
@@ -76,10 +76,10 @@ bool compare_vectors(Eigen::VectorXd &v1, Eigen::VectorXd &v2) {
 template <typename TargetObjectType>
 class BspSptrsvStatsModule : public IStatisticModule<TargetObjectType> {
   public:
-    explicit BspSptrsvStatsModule(SCHEDULE_NODE_PERMUTATION_MODES _mode = NO_PERMUTE) : mode(_mode) {}
+    explicit BspSptrsvStatsModule(ScheduleNodePermutationModes mode = NO_PERMUTE) : mode_(mode) {}
 
     std::vector<std::string> get_metric_headers() const override {
-        const std::string prefix = mode_tag(mode);
+        const std::string prefix = ModeTag(mode_);
         return {prefix + "SpTrSV_Runtime_Geomean(ns)",
                 prefix + "SpTrSV_Runtime_Stddev",
                 prefix + "SpTrSV_Runtime_Q25(ns)",
@@ -91,46 +91,46 @@ class BspSptrsvStatsModule : public IStatisticModule<TargetObjectType> {
 
         if constexpr (std::is_same_v<TargetObjectType, osp::BspSchedule<osp::SparseMatrixImp<int32_t>>>
                       || std::is_same_v<TargetObjectType, osp::BspSchedule<osp::SparseMatrixImp<int64_t>>>) {
-            using index_t
+            using IndexT
                 = std::conditional_t<std::is_same_v<TargetObjectType, osp::BspSchedule<osp::SparseMatrixImp<int32_t>>>, int32_t, int64_t>;
 
             auto instance = schedule.getInstance();
-            Sptrsv<index_t> sim{instance};
+            Sptrsv<IndexT> sim{instance};
 
             std::vector<size_t> perm;
 
-            if (mode == NO_PERMUTE) {
+            if (mode_ == NO_PERMUTE) {
                 sim.setup_csr_no_permutation(schedule);
-            } else if (mode == LOOP_PROCESSORS) {
+            } else if (mode_ == LOOP_PROCESSORS) {
                 perm = schedule_node_permuter_basic(schedule, LOOP_PROCESSORS);
                 sim.setup_csr_with_permutation(schedule, perm);
-            } else if (mode == SNAKE_PROCESSORS) {
+            } else if (mode_ == SNAKE_PROCESSORS) {
                 perm = schedule_node_permuter_basic(schedule, SNAKE_PROCESSORS);
                 sim.setup_csr_with_permutation(schedule, perm);
             } else {
                 std::cout << "Wrong type of permutation provided" << std::endl;
             }
 
-            Eigen::VectorXd L_b_ref, L_x_ref;
+            Eigen::VectorXd lBRef, lXRef;
             auto n = instance.getComputationalDag().getCSC()->cols();
-            L_x_ref.resize(n);
-            L_b_ref.resize(n);
-            auto L_view = (*instance.getComputationalDag().getCSR()).template triangularView<Eigen::Lower>();
-            L_b_ref.setOnes();
-            L_x_ref.setZero();
-            L_x_ref = L_view.solve(L_b_ref);
+            lXRef.resize(n);
+            lBRef.resize(n);
+            auto lView = (*instance.getComputationalDag().getCSR()).template triangularView<Eigen::Lower>();
+            lBRef.setOnes();
+            lXRef.setZero();
+            lXRef = lView.solve(lBRef);
 
-            std::vector<long long> times_ns;
-            Eigen::VectorXd L_x_osp = L_x_ref, L_b_osp = L_b_ref;
+            std::vector<long long> timesNs;
+            Eigen::VectorXd lXOsp = lXRef, lBOsp = lBRef;
 
-            for (int i = 0; i < runs; ++i) {
-                L_b_osp.setOnes();
-                L_x_osp.setZero();
-                sim.x = &L_x_osp[0];
-                sim.b = &L_b_osp[0];
+            for (int i = 0; i < runs_; ++i) {
+                lBOsp.setOnes();
+                lXOsp.setZero();
+                sim.x = &lXOsp[0];
+                sim.b = &lBOsp[0];
                 std::chrono::_V2::system_clock::time_point start, end;
 
-                if (mode == NO_PERMUTE) {
+                if (mode_ == NO_PERMUTE) {
                     start = std::chrono::high_resolution_clock::now();
                     sim.lsolve_no_permutation();
                     end = std::chrono::high_resolution_clock::now();
@@ -141,46 +141,46 @@ class BspSptrsvStatsModule : public IStatisticModule<TargetObjectType> {
                 }
 
                 long long elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-                times_ns.push_back(elapsed);
+                timesNs.push_back(elapsed);
             }
 
             // Geometric mean (requires conversion to double)
-            double total_log = std::accumulate(times_ns.begin(), times_ns.end(), 0.0, [](double sum, long long val) {
+            double totalLog = std::accumulate(timesNs.begin(), timesNs.end(), 0.0, [](double sum, long long val) {
                 return sum + std::log(static_cast<double>(val));
             });
-            long long geom_mean = static_cast<long long>(std::exp(total_log / runs));
+            long long geomMean = static_cast<long long>(std::exp(totalLog / runs_));
 
             // Standard deviation
-            double mean = std::accumulate(times_ns.begin(), times_ns.end(), 0.0) / runs;
-            double sq_sum = std::accumulate(times_ns.begin(), times_ns.end(), 0.0, [mean](double acc, long long val) {
+            double mean = std::accumulate(timesNs.begin(), timesNs.end(), 0.0) / runs_;
+            double sqSum = std::accumulate(timesNs.begin(), timesNs.end(), 0.0, [mean](double acc, long long val) {
                 double diff = static_cast<double>(val) - mean;
                 return acc + diff * diff;
             });
-            long long stddev = static_cast<long long>(std::sqrt(sq_sum / runs));
+            long long stddev = static_cast<long long>(std::sqrt(sqSum / runs_));
 
             // Quartiles
-            std::sort(times_ns.begin(), times_ns.end());
-            long long q25 = times_ns[runs / 4];
-            long long q75 = times_ns[3 * runs / 4];
+            std::sort(timesNs.begin(), timesNs.end());
+            long long q25 = timesNs[runs_ / 4];
+            long long q75 = timesNs[3 * runs_ / 4];
 
-            auto to_str = [](long long value) {
+            auto toStr = [](long long value) {
                 return std::to_string(value);    // no decimal points
             };
 
             // Permute back if needed
-            if (mode != NO_PERMUTE) {
+            if (mode_ != NO_PERMUTE) {
                 sim.permute_x_vector(perm);
             }
 
-            if (!compare_vectors(L_x_ref, L_x_osp)) {
+            if (!CompareVectors(lXRef, lXOsp)) {
                 std::cout << "Output is not equal" << std::endl;
             }
 
-            const std::string prefix = mode_tag(mode);
-            stats[prefix + "SpTrSV_Runtime_Geomean(ns)"] = to_str(geom_mean);
-            stats[prefix + "SpTrSV_Runtime_Stddev"] = to_str(stddev);
-            stats[prefix + "SpTrSV_Runtime_Q25(ns)"] = to_str(q25);
-            stats[prefix + "SpTrSV_Runtime_Q75(ns)"] = to_str(q75);
+            const std::string prefix = ModeTag(mode_);
+            stats[prefix + "SpTrSV_Runtime_Geomean(ns)"] = toStr(geomMean);
+            stats[prefix + "SpTrSV_Runtime_Stddev"] = toStr(stddev);
+            stats[prefix + "SpTrSV_Runtime_Q25(ns)"] = toStr(q25);
+            stats[prefix + "SpTrSV_Runtime_Q75(ns)"] = toStr(q75);
 
         } else {
             std::cout << "Simulation is not available without the SparseMatrix type" << std::endl;
@@ -190,8 +190,8 @@ class BspSptrsvStatsModule : public IStatisticModule<TargetObjectType> {
     }
 
   private:
-    SCHEDULE_NODE_PERMUTATION_MODES mode;
-    static constexpr int runs = 100;    // number of runs for benchmarking
+    ScheduleNodePermutationModes mode_;
+    static constexpr int runs_ = 100;    // number of runs for benchmarking
 };
 
 }    // namespace osp

@@ -24,8 +24,8 @@ limitations under the License.
 
 namespace osp {
 
-template <typename Graph_t>
-class BspScheduleRecomp : public IBspScheduleEval<Graph_t> {
+template <typename GraphT>
+class BspScheduleRecomp : public IBspScheduleEval<GraphT> {
   public:
     using vertex_idx = vertex_idx_t<Graph_t>;
     using cost_type = v_workw_t<Graph_t>;
@@ -37,44 +37,44 @@ class BspScheduleRecomp : public IBspScheduleEval<Graph_t> {
                   "BspScheduleRecomp requires work and comm. weights to have the same type.");
 
   private:
-    const BspInstance<Graph_t> *instance;
+    const BspInstance<GraphT> *instance_;
 
-    unsigned int number_of_supersteps = 0;
+    unsigned int numberOfSupersteps_ = 0;
 
-    std::vector<std::vector<std::pair<unsigned, unsigned>>> node_to_processor_and_supertep_assignment;
+    std::vector<std::vector<std::pair<unsigned, unsigned>>> nodeToProcessorAndSupertepAssignment_;
 
-    std::map<KeyTriple, unsigned> commSchedule;
+    std::map<KeyTriple, unsigned> commSchedule_;
 
   public:
     BspScheduleRecomp() = default;
 
-    BspScheduleRecomp(const BspInstance<Graph_t> &inst) : instance(&inst) {
-        node_to_processor_and_supertep_assignment.resize(inst.numberOfVertices());
+    BspScheduleRecomp(const BspInstance<GraphT> &inst) : instance_(&inst) {
+        nodeToProcessorAndSupertepAssignment_.resize(inst.numberOfVertices());
     }
 
-    BspScheduleRecomp(const BspScheduleCS<Graph_t> &schedule);
+    BspScheduleRecomp(const BspScheduleCS<GraphT> &schedule);
 
-    BspScheduleRecomp(const BspSchedule<Graph_t> &schedule) : BspScheduleRecomp<Graph_t>(BspScheduleCS<Graph_t>(schedule)) {}
+    BspScheduleRecomp(const BspSchedule<GraphT> &schedule) : BspScheduleRecomp<GraphT>(BspScheduleCS<GraphT>(schedule)) {}
 
     virtual ~BspScheduleRecomp() = default;
 
-    const BspInstance<Graph_t> &getInstance() const { return *instance; }
+    const BspInstance<GraphT> &GetInstance() const { return *instance_; }
 
     /**
      * @brief Returns the number of supersteps in the schedule.
      *
      * @return The number of supersteps in the schedule.
      */
-    virtual unsigned numberOfSupersteps() const override { return number_of_supersteps; }
+    virtual unsigned numberOfSupersteps() const override { return numberOfSupersteps_; }
 
-    void setNumberOfSupersteps(unsigned number_of_supersteps_) { number_of_supersteps = number_of_supersteps_; }
+    void SetNumberOfSupersteps(unsigned numberOfSupersteps) { numberOfSupersteps_ = numberOfSupersteps; }
 
-    std::vector<std::pair<unsigned, unsigned>> &assignments(vertex_idx node) {
-        return node_to_processor_and_supertep_assignment[node];
+    std::vector<std::pair<unsigned, unsigned>> &Assignments(vertex_idx node) {
+        return nodeToProcessorAndSupertepAssignment_[node];
     }
 
-    const std::vector<std::pair<unsigned, unsigned>> &assignments(vertex_idx node) const {
-        return node_to_processor_and_supertep_assignment[node];
+    const std::vector<std::pair<unsigned, unsigned>> &Assignments(vertex_idx node) const {
+        return nodeToProcessorAndSupertepAssignment_[node];
     }
 
     /**
@@ -82,7 +82,7 @@ class BspScheduleRecomp : public IBspScheduleEval<Graph_t> {
      *
      * @param cs The communication schedule to set.
      */
-    void setCommunicationSchedule(const std::map<KeyTriple, unsigned int> &cs);
+    void SetCommunicationSchedule(const std::map<KeyTriple, unsigned int> &cs);
 
     /**
      * @brief Adds an entry to the communication schedule.
@@ -90,7 +90,7 @@ class BspScheduleRecomp : public IBspScheduleEval<Graph_t> {
      * @param key The key for the communication schedule entry.
      * @param step The superstep for the communication schedule entry.
      */
-    void addCommunicationScheduleEntry(KeyTriple key, unsigned step);
+    void AddCommunicationScheduleEntry(KeyTriple key, unsigned step);
 
     /**
      * @brief Adds an entry to the communication schedule.
@@ -100,16 +100,16 @@ class BspScheduleRecomp : public IBspScheduleEval<Graph_t> {
      * @param to_proc The processor to which the data is sent.
      * @param step The superstep in which the data is sent.
      */
-    void addCommunicationScheduleEntry(unsigned node, unsigned from_proc, unsigned to_proc, unsigned step);
+    void AddCommunicationScheduleEntry(unsigned node, unsigned fromProc, unsigned toProc, unsigned step);
 
     /**
      * @brief Returns the communication schedule for the schedule.
      *
      * @return The communication schedule for the schedule.
      */
-    const std::map<KeyTriple, unsigned int> &getCommunicationSchedule() const { return commSchedule; }
+    const std::map<KeyTriple, unsigned int> &GetCommunicationSchedule() const { return commSchedule; }
 
-    std::map<KeyTriple, unsigned int> &getCommunicationSchedule() { return commSchedule; }
+    std::map<KeyTriple, unsigned int> &GetCommunicationSchedule() { return commSchedule; }
 
     virtual cost_type computeWorkCosts() const override;
 
@@ -121,61 +121,62 @@ class BspScheduleRecomp : public IBspScheduleEval<Graph_t> {
      *
      * @return True if the schedule is valid, false otherwise.
      */
-    bool satisfiesConstraints() const;
+    bool SatisfiesConstraints() const;
 
-    vertex_idx getTotalAssignments() const;
+    vertex_idx GetTotalAssignments() const;
 
-    void mergeSupersteps();
+    void MergeSupersteps();
 };
 
-template <typename Graph_t>
-BspScheduleRecomp<Graph_t>::BspScheduleRecomp(const BspScheduleCS<Graph_t> &schedule) : instance(&schedule.getInstance()) {
-    node_to_processor_and_supertep_assignment.clear();
-    node_to_processor_and_supertep_assignment.resize(instance->numberOfVertices());
-    number_of_supersteps = schedule.numberOfSupersteps();
+template <typename GraphT>
+BspScheduleRecomp<GraphT>::BspScheduleRecomp(const BspScheduleCS<GraphT> &schedule) : instance_(&schedule.getInstance()) {
+    nodeToProcessorAndSupertepAssignment_.clear();
+    nodeToProcessorAndSupertepAssignment_.resize(instance_->numberOfVertices());
+    numberOfSupersteps_ = schedule.numberOfSupersteps();
 
-    for (vertex_idx node = 0; node < instance->numberOfVertices(); ++node) {
-        node_to_processor_and_supertep_assignment[node].emplace_back(schedule.assignedProcessor(node),
-                                                                     schedule.assignedSuperstep(node));
+    for (vertex_idx node = 0; node < instance_->numberOfVertices(); ++node) {
+        nodeToProcessorAndSupertepAssignment_[node].emplace_back(schedule.assignedProcessor(node),
+                                                                 schedule.assignedSuperstep(node));
     }
 
     commSchedule = schedule.getCommunicationSchedule();
 }
 
-template <typename Graph_t>
-void BspScheduleRecomp<Graph_t>::addCommunicationScheduleEntry(unsigned node, unsigned from_proc, unsigned to_proc, unsigned step) {
-    addCommunicationScheduleEntry(std::make_tuple(node, from_proc, to_proc), step);
+template <typename GraphT>
+void BspScheduleRecomp<GraphT>::AddCommunicationScheduleEntry(unsigned node, unsigned fromProc, unsigned toProc, unsigned step) {
+    AddCommunicationScheduleEntry(std::make_tuple(node, fromProc, toProc), step);
 }
 
-template <typename Graph_t>
-void BspScheduleRecomp<Graph_t>::addCommunicationScheduleEntry(KeyTriple key, unsigned step) {
-    if (step >= number_of_supersteps) {
+template <typename GraphT>
+void BspScheduleRecomp<GraphT>::AddCommunicationScheduleEntry(KeyTriple key, unsigned step) {
+    if (step >= numberOfSupersteps_) {
         throw std::invalid_argument("Invalid Argument while adding communication schedule entry: step out of range.");
     }
 
-    if (std::get<0>(key) >= instance->numberOfVertices()) {
+    if (std::get<0>(key) >= instance_->numberOfVertices()) {
         throw std::invalid_argument("Invalid Argument while adding communication schedule entry: node out of range.");
     }
 
-    if (std::get<1>(key) >= instance->numberOfProcessors()) {
+    if (std::get<1>(key) >= instance_->numberOfProcessors()) {
         throw std::invalid_argument("Invalid Argument while adding communication schedule entry: from processor out of range.");
     }
 
-    if (std::get<2>(key) >= instance->numberOfProcessors()) {
+    if (std::get<2>(key) >= instance_->numberOfProcessors()) {
         throw std::invalid_argument("Invalid Argument while adding communication schedule entry: to processor out of range.");
     }
 
     commSchedule[key] = step;
 }
 
-template <typename Graph_t>
-bool BspScheduleRecomp<Graph_t>::satisfiesConstraints() const {
+template <typename GraphT>
+bool BspScheduleRecomp<GraphT>::SatisfiesConstraints() const {
     // find first availability
 
-    std::vector<std::vector<unsigned>> node_first_available_on_proc(
-        instance->numberOfVertices(), std::vector<unsigned>(instance->numberOfProcessors(), std::numeric_limits<unsigned>::max()));
+    std::vector<std::vector<unsigned>> nodeFirstAvailableOnProc(
+        instance_->numberOfVertices(),
+        std::vector<unsigned>(instance_->numberOfProcessors(), std::numeric_limits<unsigned>::max()));
 
-    for (vertex_idx node = 0; node < instance->numberOfVertices(); ++node) {
+    for (vertex_idx node = 0; node < instance_->numberOfVertices(); ++node) {
         for (const std::pair<unsigned, unsigned> &compute_step : node_to_processor_and_supertep_assignment[node]) {
             node_first_available_on_proc[node][compute_step.first]
                 = std::min(node_first_available_on_proc[node][compute_step.first], compute_step.second);
@@ -191,7 +192,7 @@ bool BspScheduleRecomp<Graph_t>::satisfiesConstraints() const {
 
     // check validity
 
-    for (vertex_idx node = 0; node < instance->numberOfVertices(); ++node) {
+    for (vertex_idx node = 0; node < instance_->numberOfVertices(); ++node) {
         for (vertex_idx pred : instance->getComputationalDag().parents(node)) {
             for (const std::pair<unsigned, unsigned> &compute_step : node_to_processor_and_supertep_assignment[node]) {
                 if (node_first_available_on_proc[pred][compute_step.first] > compute_step.second) {
@@ -217,39 +218,39 @@ bool BspScheduleRecomp<Graph_t>::satisfiesConstraints() const {
     return true;
 }
 
-template <typename Graph_t>
-v_workw_t<Graph_t> BspScheduleRecomp<Graph_t>::computeWorkCosts() const {
-    assert(satisfiesConstraints());
+template <typename GraphT>
+v_workw_t<Graph_t> BspScheduleRecomp<GraphT>::ComputeWorkCosts() const {
+    assert(SatisfiesConstraints());
 
-    std::vector<std::vector<cost_type>> step_proc_work(number_of_supersteps,
-                                                       std::vector<cost_type>(instance->numberOfProcessors(), 0));
+    std::vector<std::vector<cost_type>> stepProcWork(number_of_supersteps,
+                                                     std::vector<cost_type>(instance->numberOfProcessors(), 0));
 
-    for (vertex_idx node = 0; node < instance->numberOfVertices(); node++) {
+    for (vertex_idx node = 0; node < instance_->numberOfVertices(); node++) {
         for (const std::pair<unsigned, unsigned> &processor_superstep : node_to_processor_and_supertep_assignment[node]) {
             step_proc_work[processor_superstep.second][processor_superstep.first]
                 += instance->getComputationalDag().vertex_work_weight(node);
         }
     }
 
-    cost_type total_costs = 0;
-    for (unsigned step = 0; step < number_of_supersteps; step++) {
-        cost_type max_work = 0;
+    cost_type totalCosts = 0;
+    for (unsigned step = 0; step < numberOfSupersteps_; step++) {
+        cost_type maxWork = 0;
 
-        for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
+        for (unsigned proc = 0; proc < instance_->numberOfProcessors(); proc++) {
             if (max_work < step_proc_work[step][proc]) {
-                max_work = step_proc_work[step][proc];
+                maxWork = step_proc_work[step][proc];
             }
         }
 
-        total_costs += max_work;
+        totalCosts += max_work;
     }
 
     return total_costs;
 }
 
-template <typename Graph_t>
-v_workw_t<Graph_t> BspScheduleRecomp<Graph_t>::computeCosts() const {
-    assert(satisfiesConstraints());
+template <typename GraphT>
+v_workw_t<Graph_t> BspScheduleRecomp<GraphT>::ComputeCosts() const {
+    assert(SatisfiesConstraints());
 
     std::vector<std::vector<cost_type>> rec(number_of_supersteps, std::vector<cost_type>(instance->numberOfProcessors(), 0));
     std::vector<std::vector<cost_type>> send(number_of_supersteps, std::vector<cost_type>(instance->numberOfProcessors(), 0));
@@ -261,21 +262,21 @@ v_workw_t<Graph_t> BspScheduleRecomp<Graph_t>::computeCosts() const {
                                       * instance->getComputationalDag().vertex_comm_weight(std::get<0>(key));
     }
 
-    cost_type total_costs = 0;
-    for (unsigned step = 0; step < number_of_supersteps; step++) {
-        cost_type max_comm = 0;
+    cost_type totalCosts = 0;
+    for (unsigned step = 0; step < numberOfSupersteps_; step++) {
+        cost_type maxComm = 0;
 
-        for (unsigned proc = 0; proc < instance->numberOfProcessors(); proc++) {
+        for (unsigned proc = 0; proc < instance_->numberOfProcessors(); proc++) {
             if (max_comm < send[step][proc]) {
-                max_comm = send[step][proc];
+                maxComm = send[step][proc];
             }
             if (max_comm < rec[step][proc]) {
-                max_comm = rec[step][proc];
+                maxComm = rec[step][proc];
             }
         }
 
-        if (max_comm > 0) {
-            total_costs += instance->synchronisationCosts() + max_comm * instance->communicationCosts();
+        if (maxComm > 0) {
+            totalCosts += instance_->synchronisationCosts() + max_comm * instance_->communicationCosts();
         }
     }
 
@@ -284,44 +285,44 @@ v_workw_t<Graph_t> BspScheduleRecomp<Graph_t>::computeCosts() const {
     return total_costs;
 }
 
-template <typename Graph_t>
-vertex_idx_t<Graph_t> BspScheduleRecomp<Graph_t>::getTotalAssignments() const {
+template <typename GraphT>
+vertex_idx_t<Graph_t> BspScheduleRecomp<GraphT>::GetTotalAssignments() const {
     vertex_idx total = 0;
-    for (vertex_idx node = 0; node < instance->numberOfVertices(); ++node) {
-        total += node_to_processor_and_supertep_assignment[node].size();
+    for (vertex_idx node = 0; node < instance_->numberOfVertices(); ++node) {
+        total += nodeToProcessorAndSupertepAssignment_[node].size();
     }
     return total;
 }
 
-template <typename Graph_t>
-void BspScheduleRecomp<Graph_t>::mergeSupersteps() {
-    std::vector<unsigned> new_step_idx(number_of_supersteps);
-    std::vector<bool> comm_phase_empty(number_of_supersteps, true);
+template <typename GraphT>
+void BspScheduleRecomp<GraphT>::MergeSupersteps() {
+    std::vector<unsigned> newStepIdx(numberOfSupersteps_);
+    std::vector<bool> commPhaseEmpty(numberOfSupersteps_, true);
 
     for (auto const &[key, val] : commSchedule) {
         comm_phase_empty[val] = false;
     }
 
-    unsigned current_step_idx = 0;
-    for (unsigned step = 0; step < number_of_supersteps; ++step) {
-        new_step_idx[step] = current_step_idx;
-        if (!comm_phase_empty[step] || step == number_of_supersteps - 1) {
-            ++current_step_idx;
+    unsigned currentStepIdx = 0;
+    for (unsigned step = 0; step < numberOfSupersteps_; ++step) {
+        newStepIdx[step] = currentStepIdx;
+        if (!commPhaseEmpty[step] || step == numberOfSupersteps_ - 1) {
+            ++currentStepIdx;
         }
     }
-    for (vertex_idx node = 0; node < instance->numberOfVertices(); ++node) {
-        std::vector<std::pair<unsigned, unsigned>> new_assignment;
+    for (vertex_idx node = 0; node < instance_->numberOfVertices(); ++node) {
+        std::vector<std::pair<unsigned, unsigned>> newAssignment;
         for (const std::pair<unsigned, unsigned> &entry : node_to_processor_and_supertep_assignment[node]) {
             new_assignment.emplace_back(entry.first, new_step_idx[entry.second]);
         }
-        node_to_processor_and_supertep_assignment[node] = new_assignment;
+        nodeToProcessorAndSupertepAssignment_[node] = newAssignment;
     }
     for (auto &key_step_pair : commSchedule) {
         auto &step = key_step_pair.second;
         step = new_step_idx[step];
     }
 
-    number_of_supersteps = current_step_idx;
+    numberOfSupersteps_ = currentStepIdx;
 }
 
 }    // namespace osp

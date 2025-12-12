@@ -24,56 +24,55 @@ limitations under the License.
 
 namespace osp {
 
-template <typename Graph_t, typename Constr_Graph_t>
-class ConnectedComponentScheduler : public Scheduler<Graph_t> {
-    Scheduler<Constr_Graph_t> *scheduler;
+template <typename GraphT, typename ConstrGraphT>
+class ConnectedComponentScheduler : public Scheduler<GraphT> {
+    Scheduler<ConstrGraphT> *scheduler_;
 
   public:
-    ConnectedComponentScheduler(Scheduler<Constr_Graph_t> &_scheduler) : scheduler(&_scheduler) {}
+    ConnectedComponentScheduler(Scheduler<ConstrGraphT> &scheduler) : scheduler_(&scheduler) {}
 
     std::string getScheduleName() const override { return "SubDagScheduler"; }
 
-    RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &schedule) override {
+    RETURN_STATUS computeSchedule(BspSchedule<GraphT> &schedule) override {
         const auto &instance = schedule.getInstance();
 
-        const Graph_t &dag = instance.getComputationalDag();
-        ConnectedComponentDivider<Graph_t, Constr_Graph_t> partitioner;
+        const GraphT &dag = instance.getComputationalDag();
+        ConnectedComponentDivider<GraphT, ConstrGraphT> partitioner;
 
         partitioner.divide(dag);
 
-        v_workw_t<Graph_t> total_work_weight = sumOfVerticesWorkWeights(dag);
+        v_workw_t<Graph_t> totalWorkWeight = sumOfVerticesWorkWeights(dag);
 
-        unsigned num_processors_offset = 0;
+        unsigned numProcessorsOffset = 0;
 
         for (std::size_t i = 0; i < partitioner.get_sub_dags().size(); i++) {
-            const auto &sub_dag = partitioner.get_sub_dags()[i];
+            const auto &subDag = partitioner.get_sub_dags()[i];
             const auto &mapping = partitioner.get_vertex_mapping()[i];
 
-            v_workw_t<Constr_Graph_t> sub_dag_work_weight = sumOfVerticesWorkWeights(sub_dag);
+            v_workw_t<Constr_Graph_t> subDagWorkWeight = sumOfVerticesWorkWeights(subDag);
 
-            BspInstance<Constr_Graph_t> sub_instance(sub_dag, instance.getArchitecture());
-            BspArchitecture<Constr_Graph_t> &sub_architecture = sub_instance.getArchitecture();
+            BspInstance<ConstrGraphT> subInstance(subDag, instance.getArchitecture());
+            BspArchitecture<ConstrGraphT> &subArchitecture = subInstance.getArchitecture();
 
-            const double sub_dag_work_weight_percent
+            const double subDagWorkWeightPercent
                 = static_cast<double>(sub_dag_work_weight) / static_cast<double>(total_work_weight);
-            const unsigned sub_dag_processors
-                = static_cast<unsigned>(sub_dag_work_weight_percent * sub_architecture.numberOfProcessors());
+            const unsigned subDagProcessors = static_cast<unsigned>(subDagWorkWeightPercent * subArchitecture.numberOfProcessors());
 
-            sub_architecture.setNumberOfProcessors(sub_dag_processors);
+            subArchitecture.setNumberOfProcessors(subDagProcessors);
 
-            BspSchedule<Constr_Graph_t> sub_schedule(sub_instance);
-            auto status = scheduler->computeSchedule(sub_schedule);
+            BspSchedule<ConstrGraphT> subSchedule(subInstance);
+            auto status = scheduler_->computeSchedule(subSchedule);
 
             if (status != RETURN_STATUS::OSP_SUCCESS && status != RETURN_STATUS::BEST_FOUND) {
                 return status;
             }
 
-            for (const auto &v : sub_instance.vertices()) {
-                schedule.setAssignedProcessor(mapping.at(v), sub_schedule.assignedProcessor(v) + num_processors_offset);
-                schedule.setAssignedSuperstep(mapping.at(v), sub_schedule.assignedSuperstep(v));
+            for (const auto &v : subInstance.vertices()) {
+                schedule.setAssignedProcessor(mapping.at(v), subSchedule.assignedProcessor(v) + numProcessorsOffset);
+                schedule.setAssignedSuperstep(mapping.at(v), subSchedule.assignedSuperstep(v));
             }
 
-            num_processors_offset += sub_architecture.numberOfProcessors();
+            numProcessorsOffset += subArchitecture.numberOfProcessors();
         }
 
         return RETURN_STATUS::OSP_SUCCESS;

@@ -33,20 +33,20 @@ namespace osp {
  * @tparam memw_t Type for memory weights.
  * @tparam vertex_type_t Type for vertex types.
  */
-template <typename vertex_idx_t, typename workw_t, typename commw_t, typename memw_t, typename vertex_type_t>
-struct cdag_vertex_impl {
-    using vertex_idx_type = vertex_idx_t;
-    using work_weight_type = workw_t;
-    using comm_weight_type = commw_t;
-    using mem_weight_type = memw_t;
-    using cdag_vertex_type_type = vertex_type_t;
+template <typename VertexIdxT, typename WorkwT, typename CommwT, typename MemwT, typename VertexTypeT>
+struct CdagVertexImpl {
+    using VertexIdxType = VertexIdxT;
+    using WorkWeightType = WorkwT;
+    using CommWeightType = CommwT;
+    using MemWeightType = MemwT;
+    using CdagVertexTypeType = VertexTypeT;
 
-    cdag_vertex_impl() = default;
+    CdagVertexImpl() = default;
 
-    cdag_vertex_impl(const cdag_vertex_impl &other) = default;
-    cdag_vertex_impl(cdag_vertex_impl &&other) noexcept = default;
-    cdag_vertex_impl &operator=(const cdag_vertex_impl &other) = default;
-    cdag_vertex_impl &operator=(cdag_vertex_impl &&other) noexcept = default;
+    CdagVertexImpl(const CdagVertexImpl &other) = default;
+    CdagVertexImpl(CdagVertexImpl &&other) noexcept = default;
+    CdagVertexImpl &operator=(const CdagVertexImpl &other) = default;
+    CdagVertexImpl &operator=(CdagVertexImpl &&other) noexcept = default;
 
     /**
      * @brief Constructs a vertex with specified properties.
@@ -57,16 +57,16 @@ struct cdag_vertex_impl {
      * @param mem_w The memory weight.
      * @param vertex_t The type of the vertex.
      */
-    cdag_vertex_impl(vertex_idx_t vertex_idx_, workw_t work_w, commw_t comm_w, memw_t mem_w, vertex_type_t vertex_t)
-        : id(vertex_idx_), work_weight(work_w), comm_weight(comm_w), mem_weight(mem_w), vertex_type(vertex_t) {}
+    CdagVertexImpl(VertexIdxT vertexIdx, WorkwT workW, CommwT commW, MemwT memW, VertexTypeT vertexT)
+        : id_(vertexIdx), workWeight_(workW), commWeight_(commW), memWeight_(memW), vertexType_(vertexT) {}
 
-    vertex_idx_t id = 0;
+    VertexIdxT id_ = 0;
 
-    workw_t work_weight = 0;
-    commw_t comm_weight = 0;
-    memw_t mem_weight = 0;
+    WorkwT workWeight_ = 0;
+    CommwT commWeight_ = 0;
+    MemwT memWeight_ = 0;
 
-    vertex_type_t vertex_type = 0;
+    VertexTypeT vertexType_ = 0;
 };
 
 /**
@@ -74,13 +74,13 @@ struct cdag_vertex_impl {
  *
  * This struct implements a vertex with integer weights for work, communication, and memory.
  */
-using cdag_vertex_impl_int = cdag_vertex_impl<std::size_t, int, int, int, unsigned>;
+using CdagVertexImplInt = CdagVertexImpl<std::size_t, int, int, int, unsigned>;
 
 /**
  * @brief A vertex implementation with unsigned weights. Indexed by std::size_t. Node types are unsigned.
  *
  * This struct implements a vertex with unsigned weights for work, communication, and memory.
  */
-using cdag_vertex_impl_unsigned = cdag_vertex_impl<std::size_t, unsigned, unsigned, unsigned, unsigned>;
+using CdagVertexImplUnsigned = CdagVertexImpl<std::size_t, unsigned, unsigned, unsigned, unsigned>;
 
 }    // namespace osp

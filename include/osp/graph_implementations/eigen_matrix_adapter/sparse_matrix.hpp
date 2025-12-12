@@ -32,89 +32,89 @@ namespace osp {
 
 /// @brief Implementation of a lower‐triangular sparse matrix as a directed acyclic graph.
 ///        Wraps Eigen's sparse matrix and exposes graph-like methods for scheduling and analysis.
-template <typename eigen_idx_type>
+template <typename EigenIdxType>
 class SparseMatrixImp {
-    static_assert(std::is_integral_v<eigen_idx_type>, "Eigen index type must be integral");
+    static_assert(std::is_integral_v<EigenIdxType>, "Eigen index type must be integral");
 
   private:
     // Define Eigen-compatible matrix types using eigen_idx_type as the index type
-    using MatrixCSR = Eigen::SparseMatrix<double, Eigen::RowMajor, eigen_idx_type>;    // For parents
-    using MatrixCSC = Eigen::SparseMatrix<double, Eigen::ColMajor, eigen_idx_type>;    // For children
+    using MatrixCSR = Eigen::SparseMatrix<double, Eigen::RowMajor, EigenIdxType>;    // For parents
+    using MatrixCSC = Eigen::SparseMatrix<double, Eigen::ColMajor, EigenIdxType>;    // For children
 
     // Internal pointers to the sparse matrices (not owning)
-    MatrixCSR *L_csr_p = nullptr;
-    MatrixCSC *L_csc_p = nullptr;
+    MatrixCSR *lCsrP_ = nullptr;
+    MatrixCSC *lCscP_ = nullptr;
 
   public:
     // Vertex index type must match Eigen's StorageIndex (signed 32-bit)
-    using vertex_idx = size_t;
+    using VertexIdx = size_t;
 
     // Required graph trait aliases (used in concept checks)
-    using vertex_work_weight_type = eigen_idx_type;
-    using vertex_comm_weight_type = eigen_idx_type;
-    using vertex_mem_weight_type = int;
-    using vertex_type_type = unsigned;
+    using VertexWorkWeightType = EigenIdxType;
+    using VertexCommWeightType = EigenIdxType;
+    using VertexMemWeightType = int;
+    using VertexTypeType = unsigned;
 
-    using eigen_idx_t = eigen_idx_type;
+    using EigenIdxT = EigenIdxType;
 
     SparseMatrixImp() = default;
 
     // Setters for the internal CSR and CSC matrix pointers
-    void setCSR(MatrixCSR *mat) { L_csr_p = mat; }
+    void SetCsr(MatrixCSR *mat) { lCsrP_ = mat; }
 
-    void setCSC(MatrixCSC *mat) { L_csc_p = mat; }
+    void SetCsc(MatrixCSC *mat) { lCscP_ = mat; }
 
     // Getters for internal matrices (used by EigenSparseRange)
-    const MatrixCSR *getCSR() const { return L_csr_p; }
+    const MatrixCSR *GetCsr() const { return lCsrP_; }
 
-    const MatrixCSC *getCSC() const { return L_csc_p; }
+    const MatrixCSC *GetCsc() const { return lCscP_; }
 
     /// @brief Number of vertices = number of rows in the matrix
-    size_t num_vertices() const noexcept { return static_cast<size_t>(L_csr_p->rows()); }
+    size_t NumVertices() const noexcept { return static_cast<size_t>(lCsrP_->rows()); }
 
     /// @brief Return a range over all vertices [0, num_vertices)
-    auto vertices() const { return osp::integral_range<size_t>(num_vertices()); }
+    auto Vertices() const { return osp::integral_range<size_t>(num_vertices()); }
 
     /// @brief Number of edges = total non-zeros minus diagonal elements
-    vertex_idx num_edges() const noexcept { return static_cast<vertex_idx>(L_csr_p->nonZeros() - L_csr_p->rows()); }
+    VertexIdx NumEdges() const noexcept { return static_cast<VertexIdx>(lCsrP_->nonZeros() - lCsrP_->rows()); }
 
     /// @brief In-degree = non-zero off-diagonal entries in row v (CSR)
-    vertex_idx in_degree(vertex_idx v) const noexcept {
-        return static_cast<vertex_idx>(L_csr_p->outerIndexPtr()[v + 1] - L_csr_p->outerIndexPtr()[v] - 1);
+    VertexIdx InDegree(VertexIdx v) const noexcept {
+        return static_cast<VertexIdx>(lCsrP_->outerIndexPtr()[v + 1] - lCsrP_->outerIndexPtr()[v] - 1);
     }
 
     /// @brief Out-degree = non-zero off-diagonal entries in column v (CSC)
-    vertex_idx out_degree(vertex_idx v) const noexcept {
-        return static_cast<vertex_idx>(L_csc_p->outerIndexPtr()[v + 1] - L_csc_p->outerIndexPtr()[v] - 1);
+    VertexIdx OutDegree(VertexIdx v) const noexcept {
+        return static_cast<VertexIdx>(lCscP_->outerIndexPtr()[v + 1] - lCscP_->outerIndexPtr()[v] - 1);
     }
 
     /// @brief Get the children (dependents) of vertex v using CSC layout
-    auto children(vertex_idx v) const {
-        return osp::EigenCSCRange<SparseMatrixImp, eigen_idx_type>(*this, static_cast<eigen_idx_type>(v));
+    auto Children(VertexIdx v) const {
+        return osp::EigenCSCRange<SparseMatrixImp, EigenIdxType>(*this, static_cast<EigenIdxType>(v));
     }
 
     /// @brief Get the parents (dependencies) of vertex v using CSR layout
-    auto parents(vertex_idx v) const {
-        return osp::EigenCSRRange<SparseMatrixImp, eigen_idx_type>(*this, static_cast<eigen_idx_type>(v));
+    auto Parents(VertexIdx v) const {
+        return osp::EigenCSRRange<SparseMatrixImp, EigenIdxType>(*this, static_cast<EigenIdxType>(v));
     }
 
     /// @brief Work weight of a vertex (e.g., row size)
-    vertex_work_weight_type vertex_work_weight(vertex_idx v) const noexcept {
-        return L_csr_p->outerIndexPtr()[v + 1] - L_csr_p->outerIndexPtr()[v];
+    VertexWorkWeightType VertexWorkWeight(VertexIdx v) const noexcept {
+        return lCsrP_->outerIndexPtr()[v + 1] - lCsrP_->outerIndexPtr()[v];
     }
 
     // Default zero weights (placeholders, extend as needed)
-    vertex_comm_weight_type vertex_comm_weight(vertex_idx) const noexcept { return 0; }
+    VertexCommWeightType VertexCommWeight(VertexIdx) const noexcept { return 0; }
 
-    vertex_mem_weight_type vertex_mem_weight(vertex_idx) const noexcept { return 0; }
+    VertexMemWeightType VertexMemWeight(VertexIdx) const noexcept { return 0; }
 
-    inline unsigned num_vertex_types() const { return 1; };
+    inline unsigned NumVertexTypes() const { return 1; };
 
-    inline vertex_type_type vertex_type(const vertex_idx) const { return 0; }
+    inline VertexTypeType VertexType(const VertexIdx) const { return 0; }
 };
 
-using sparse_matrix_graph_int32_t = SparseMatrixImp<int32_t>;
-using sparse_matrix_graph_int64_t = SparseMatrixImp<int64_t>;
+using SparseMatrixGraphInt32T = SparseMatrixImp<int32_t>;
+using SparseMatrixGraphInt64T = SparseMatrixImp<int64_t>;
 
 static_assert(is_directed_graph_edge_desc_v<SparseMatrixImp<int32_t>>,
               "SparseMatrix must satisfy the directed_graph_edge_desc concept");

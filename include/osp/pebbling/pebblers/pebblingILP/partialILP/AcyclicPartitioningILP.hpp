@@ -24,7 +24,7 @@ limitations under the License.
 
 namespace osp {
 
-template <typename Graph_t>
+template <typename GraphT>
 class AcyclicPartitioningILP {
     static_assert(is_computational_dag_v<Graph_t>, "PebblingSchedule can only be used with computational DAGs.");
 
@@ -32,58 +32,54 @@ class AcyclicPartitioningILP {
     using vertex_idx = vertex_idx_t<Graph_t>;
     using commweight_type = v_commw_t<Graph_t>;
 
-    Model model;
+    Model model_;
 
-    bool write_solutions_found;
-    bool ignore_sources_for_constraint = true;
+    bool writeSolutionsFound_;
+    bool ignoreSourcesForConstraint_ = true;
 
     class WriteSolutionCallback : public CallbackBase {
       private:
-        unsigned counter;
-        unsigned max_number_solution;
+        unsigned counter_;
+        unsigned maxNumberSolution_;
 
-        double best_obj;
+        double bestObj_;
 
       public:
         WriteSolutionCallback()
-            : counter(0),
-              max_number_solution(500),
-              best_obj(COPT_INFINITY),
-              write_solutions_path_cb(""),
-              solution_file_prefix_cb("") {}
+            : counter_(0), maxNumberSolution_(500), best_obj(COPT_INFINITY), writeSolutionsPathCb_(""), solutionFilePrefixCb_("") {}
 
-        std::string write_solutions_path_cb;
-        std::string solution_file_prefix_cb;
+        std::string writeSolutionsPathCb_;
+        std::string solutionFilePrefixCb_;
 
-        void callback() override;
+        void Callback() override;
     };
 
-    WriteSolutionCallback solution_callback;
+    WriteSolutionCallback solutionCallback_;
 
-    unsigned numberOfParts = 0;
+    unsigned numberOfParts_ = 0;
 
-    std::vector<bool> is_original_source;
+    std::vector<bool> isOriginalSource_;
 
-    unsigned time_limit_seconds;
+    unsigned timeLimitSeconds_;
 
   protected:
-    std::vector<VarArray> node_in_partition;
-    std::vector<VarArray> hyperedge_intersects_partition;
+    std::vector<VarArray> nodeInPartition_;
+    std::vector<VarArray> hyperedgeIntersectsPartition_;
 
-    unsigned minPartitionSize = 500, maxPartitionSize = 1400;
+    unsigned minPartitionSize_ = 500, maxPartitionSize_ = 1400;
 
-    std::vector<unsigned> returnAssignment(const BspInstance<Graph_t> &instance);
+    std::vector<unsigned> ReturnAssignment(const BspInstance<GraphT> &instance);
 
-    void setupVariablesConstraintsObjective(const BspInstance<Graph_t> &instance);
+    void SetupVariablesConstraintsObjective(const BspInstance<GraphT> &instance);
 
-    void solveILP();
+    void SolveIlp();
 
   public:
-    AcyclicPartitioningILP() : model(COPTEnv::getInstance().CreateModel("AsyncPart")), write_solutions_found(false) {}
+    AcyclicPartitioningILP() : model(COPTEnv::getInstance().CreateModel("AsyncPart")), writeSolutionsFound_(false) {}
 
     virtual ~AcyclicPartitioningILP() = default;
 
-    RETURN_STATUS computePartitioning(const BspInstance<Graph_t> &instance, std::vector<unsigned> &partitioning);
+    RETURN_STATUS ComputePartitioning(const BspInstance<GraphT> &instance, std::vector<unsigned> &partitioning);
 
     /**
      * @brief Enables writing intermediate solutions.
@@ -96,10 +92,10 @@ class AcyclicPartitioningILP {
      * @param path The path where the solutions will be written.
      * @param file_prefix The prefix that will be used for the solution files.
      */
-    inline void enableWriteIntermediateSol(std::string path, std::string file_prefix) {
-        write_solutions_found = true;
-        solution_callback.write_solutions_path_cb = path;
-        solution_callback.solution_file_prefix_cb = file_prefix;
+    inline void EnableWriteIntermediateSol(std::string path, std::string filePrefix) {
+        writeSolutionsFound_ = true;
+        solutionCallback_.writeSolutionsPathCb_ = path;
+        solutionCallback_.solutionFilePrefixCb_ = filePrefix;
     }
 
     /**
@@ -109,57 +105,57 @@ class AcyclicPartitioningILP {
      * calling this function, the `enableWriteIntermediateSol` function needs
      * to be called again in order to enable writing of intermediate solutions.
      */
-    inline void disableWriteIntermediateSol() { write_solutions_found = false; }
+    inline void DisableWriteIntermediateSol() { writeSolutionsFound_ = false; }
 
     /**
      * @brief Get the best gap found by the solver.
      *
      * @return The best gap found by the solver.
      */
-    inline double bestGap() { return model.GetDblAttr(COPT_DBLATTR_BESTGAP); }
+    inline double BestGap() { return model.GetDblAttr(COPT_DBLATTR_BESTGAP); }
 
     /**
      * @brief Get the best objective value found by the solver.
      *
      * @return The best objective value found by the solver.
      */
-    inline double bestObjective() { return model.GetDblAttr(COPT_DBLATTR_BESTOBJ); }
+    inline double BestObjective() { return model.GetDblAttr(COPT_DBLATTR_BESTOBJ); }
 
     /**
      * @brief Get the best bound found by the solver.
      *
      * @return The best bound found by the solver.
      */
-    inline double bestBound() { return model.GetDblAttr(COPT_DBLATTR_BESTBND); }
+    inline double BestBound() { return model.GetDblAttr(COPT_DBLATTR_BESTBND); }
 
     /**
      * @brief Get the name of the schedule.
      *
      * @return The name of the schedule.
      */
-    virtual std::string getScheduleName() const { return "AcyclicPartitioningILP"; }
+    virtual std::string GetScheduleName() const { return "AcyclicPartitioningILP"; }
 
     // getters and setters for problem parameters
-    inline std::pair<unsigned, unsigned> getMinAndMaxSize() const { return std::make_pair(minPartitionSize, maxPartitionSize); }
+    inline std::pair<unsigned, unsigned> GetMinAndMaxSize() const { return std::make_pair(minPartitionSize_, maxPartitionSize_); }
 
-    inline void setMinAndMaxSize(const std::pair<unsigned, unsigned> min_and_max) {
-        minPartitionSize = min_and_max.first;
-        maxPartitionSize = min_and_max.second;
+    inline void SetMinAndMaxSize(const std::pair<unsigned, unsigned> minAndMax) {
+        minPartitionSize_ = min_and_max.first;
+        maxPartitionSize_ = min_and_max.second;
     }
 
-    inline unsigned getNumberOfParts() const { return numberOfParts; }
+    inline unsigned GetNumberOfParts() const { return numberOfParts_; }
 
-    inline void setNumberOfParts(const unsigned number_of_parts) { numberOfParts = number_of_parts; }
+    inline void SetNumberOfParts(const unsigned numberOfParts) { numberOfParts_ = numberOfParts; }
 
-    inline void setIgnoreSourceForConstraint(const bool ignore_) { ignore_sources_for_constraint = ignore_; }
+    inline void SetIgnoreSourceForConstraint(const bool ignore) { ignoreSourcesForConstraint_ = ignore; }
 
-    inline void setIsOriginalSource(const std::vector<bool> &is_original_source_) { is_original_source = is_original_source_; }
+    inline void SetIsOriginalSource(const std::vector<bool> &isOriginalSource) { is_original_source = is_original_source_; }
 
-    void setTimeLimitSeconds(unsigned time_limit_seconds_) { time_limit_seconds = time_limit_seconds_; }
+    void SetTimeLimitSeconds(unsigned timeLimitSeconds) { timeLimitSeconds_ = timeLimitSeconds; }
 };
 
-template <typename Graph_t>
-void AcyclicPartitioningILP<Graph_t>::solveILP() {
+template <typename GraphT>
+void AcyclicPartitioningILP<GraphT>::SolveIlp() {
     model.SetIntParam(COPT_INTPARAM_LOGTOCONSOLE, 0);
 
     model.SetDblParam(COPT_DBLPARAM_TIMELIMIT, time_limit_seconds);
@@ -178,20 +174,20 @@ void AcyclicPartitioningILP<Graph_t>::solveILP() {
     model.Solve();
 }
 
-template <typename Graph_t>
-RETURN_STATUS AcyclicPartitioningILP<Graph_t>::computePartitioning(const BspInstance<Graph_t> &instance,
-                                                                   std::vector<unsigned> &partitioning) {
+template <typename GraphT>
+RETURN_STATUS AcyclicPartitioningILP<GraphT>::ComputePartitioning(const BspInstance<GraphT> &instance,
+                                                                  std::vector<unsigned> &partitioning) {
     partitioning.clear();
 
-    if (numberOfParts == 0) {
-        numberOfParts = static_cast<unsigned>(
-            std::floor(static_cast<double>(instance.numberOfVertices()) / static_cast<double>(minPartitionSize)));
-        std::cout << "ILP nr parts: " << numberOfParts << std::endl;
+    if (numberOfParts_ == 0) {
+        numberOfParts_ = static_cast<unsigned>(
+            std::floor(static_cast<double>(instance.numberOfVertices()) / static_cast<double>(minPartitionSize_)));
+        std::cout << "ILP nr parts: " << numberOfParts_ << std::endl;
     }
 
-    setupVariablesConstraintsObjective(instance);
+    SetupVariablesConstraintsObjective(instance);
 
-    solveILP();
+    SolveIlp();
 
     if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_OPTIMAL) {
         partitioning = returnAssignment(instance);
@@ -213,8 +209,8 @@ RETURN_STATUS AcyclicPartitioningILP<Graph_t>::computePartitioning(const BspInst
     }
 }
 
-template <typename Graph_t>
-void AcyclicPartitioningILP<Graph_t>::setupVariablesConstraintsObjective(const BspInstance<Graph_t> &instance) {
+template <typename GraphT>
+void AcyclicPartitioningILP<GraphT>::SetupVariablesConstraintsObjective(const BspInstance<GraphT> &instance) {
     // Variables
 
     node_in_partition = std::vector<VarArray>(instance.numberOfVertices());
@@ -223,11 +219,11 @@ void AcyclicPartitioningILP<Graph_t>::setupVariablesConstraintsObjective(const B
         node_in_partition[node] = model.AddVars(static_cast<int>(numberOfParts), COPT_BINARY, "node_in_partition");
     }
 
-    std::map<vertex_idx, unsigned> node_to_hyperedge_index;
+    std::map<vertex_idx, unsigned> nodeToHyperedgeIndex;
     unsigned numberOfHyperedges = 0;
     for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
         if (instance.getComputationalDag().out_degree(node) > 0) {
-            node_to_hyperedge_index[node] = numberOfHyperedges;
+            nodeToHyperedgeIndex[node] = numberOfHyperedges;
             ++numberOfHyperedges;
         }
     }
@@ -244,14 +240,14 @@ void AcyclicPartitioningILP<Graph_t>::setupVariablesConstraintsObjective(const B
     // each node assigned to exactly one partition
     for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
         Expr expr;
-        for (unsigned part = 0; part < numberOfParts; part++) {
+        for (unsigned part = 0; part < numberOfParts_; part++) {
             expr += node_in_partition[node][static_cast<int>(part)];
         }
         model.AddConstr(expr == 1);
     }
 
     // hyperedge indicators match node variables
-    for (unsigned part = 0; part < numberOfParts; part++) {
+    for (unsigned part = 0; part < numberOfParts_; part++) {
         for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
             if (instance.getComputationalDag().out_degree(node) == 0) {
                 continue;
@@ -267,7 +263,7 @@ void AcyclicPartitioningILP<Graph_t>::setupVariablesConstraintsObjective(const B
     }
 
     // partition size constraints
-    for (unsigned part = 0; part < numberOfParts; part++) {
+    for (unsigned part = 0; part < numberOfParts_; part++) {
         Expr expr;
         for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
             if (!ignore_sources_for_constraint || is_original_source.empty() || !is_original_source[node]) {
@@ -280,8 +276,8 @@ void AcyclicPartitioningILP<Graph_t>::setupVariablesConstraintsObjective(const B
     }
 
     // acyclicity constraints
-    for (unsigned from_part = 0; from_part < numberOfParts; from_part++) {
-        for (unsigned to_part = 0; to_part < from_part; to_part++) {
+    for (unsigned fromPart = 0; fromPart < numberOfParts_; fromPart++) {
+        for (unsigned toPart = 0; toPart < fromPart; toPart++) {
             for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
                 for (const auto &succ : instance.getComputationalDag().children(node)) {
                     model.AddConstr(node_in_partition[node][static_cast<int>(from_part)]
@@ -297,7 +293,7 @@ void AcyclicPartitioningILP<Graph_t>::setupVariablesConstraintsObjective(const B
     for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
         if (instance.getComputationalDag().out_degree(node) > 0) {
             expr -= instance.getComputationalDag().vertex_comm_weight(node);
-            for (unsigned part = 0; part < numberOfParts; part++) {
+            for (unsigned part = 0; part < numberOfParts_; part++) {
                 expr += instance.getComputationalDag().vertex_comm_weight(node)
                         * hyperedge_intersects_partition[node_to_hyperedge_index[node]][static_cast<int>(part)];
             }
@@ -307,29 +303,29 @@ void AcyclicPartitioningILP<Graph_t>::setupVariablesConstraintsObjective(const B
     model.SetObjective(expr, COPT_MINIMIZE);
 };
 
-template <typename Graph_t>
-void AcyclicPartitioningILP<Graph_t>::WriteSolutionCallback::callback() {
+template <typename GraphT>
+void AcyclicPartitioningILP<GraphT>::WriteSolutionCallback::Callback() {
     if (Where() == COPT_CBCONTEXT_MIPSOL && counter < max_number_solution && GetIntInfo(COPT_CBINFO_HASINCUMBENT)) {
         try {
             if (GetDblInfo(COPT_CBINFO_BESTOBJ) < best_obj && 0.0 < GetDblInfo(COPT_CBINFO_BESTBND)) {
                 best_obj = GetDblInfo(COPT_CBINFO_BESTOBJ);
-                counter++;
+                counter_++;
             }
 
         } catch (const std::exception &e) {}
     }
 };
 
-template <typename Graph_t>
-std::vector<unsigned> AcyclicPartitioningILP<Graph_t>::returnAssignment(const BspInstance<Graph_t> &instance) {
-    std::vector<unsigned> node_to_partition(instance.numberOfVertices(), UINT_MAX);
+template <typename GraphT>
+std::vector<unsigned> AcyclicPartitioningILP<GraphT>::ReturnAssignment(const BspInstance<GraphT> &instance) {
+    std::vector<unsigned> nodeToPartition(instance.numberOfVertices(), UINT_MAX);
 
-    std::set<unsigned> nonempty_partition_ids;
+    std::set<unsigned> nonemptyPartitionIds;
     for (unsigned node = 0; node < instance.numberOfVertices(); node++) {
-        for (unsigned part = 0; part < numberOfParts; part++) {
+        for (unsigned part = 0; part < numberOfParts_; part++) {
             if (node_in_partition[node][static_cast<int>(part)].Get(COPT_DBLINFO_VALUE) >= .99) {
-                node_to_partition[node] = part;
-                nonempty_partition_ids.insert(part);
+                nodeToPartition[node] = part;
+                nonemptyPartitionIds.insert(part);
             }
         }
     }
@@ -340,15 +336,15 @@ std::vector<unsigned> AcyclicPartitioningILP<Graph_t>::returnAssignment(const Bs
         }
     }
 
-    unsigned current_index = 0;
-    std::map<unsigned, unsigned> new_index;
+    unsigned currentIndex = 0;
+    std::map<unsigned, unsigned> newIndex;
     for (unsigned part_index : nonempty_partition_ids) {
         new_index[part_index] = current_index;
         ++current_index;
     }
 
     for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
-        node_to_partition[node] = new_index[node_to_partition[node]];
+        nodeToPartition[node] = new_index[node_to_partition[node]];
     }
 
     std::cout << "Acyclic partitioning ILP best solution value: " << model.GetDblAttr(COPT_DBLATTR_BESTOBJ)

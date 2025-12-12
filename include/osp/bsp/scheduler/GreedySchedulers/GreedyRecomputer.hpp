@@ -26,7 +26,7 @@ namespace osp {
  * @brief The GreedyReccomputer class applies a greedy algorithm to remove some of the communciation steps in
  * a BspSchedule by recomputation steps if this decreases the cost.
  */
-template <typename Graph_t>
+template <typename GraphT>
 class GreedyRecomputer {
     static_assert(is_computational_dag_v<Graph_t>, "GreedyRecomputer can only be used with computational DAGs.");
 
@@ -44,44 +44,44 @@ class GreedyRecomputer {
      */
     virtual ~GreedyRecomputer() = default;
 
-    RETURN_STATUS computeRecompSchedule(BspScheduleCS<Graph_t> &initial_schedule, BspScheduleRecomp<Graph_t> &out_schedule) const;
+    RETURN_STATUS ComputeRecompSchedule(BspScheduleCS<GraphT> &initialSchedule, BspScheduleRecomp<GraphT> &outSchedule) const;
 };
 
-template <typename Graph_t>
-RETURN_STATUS GreedyRecomputer<Graph_t>::computeRecompSchedule(BspScheduleCS<Graph_t> &initial_schedule,
-                                                               BspScheduleRecomp<Graph_t> &out_schedule) const {
-    const vertex_idx &N = initial_schedule.getInstance().numberOfVertices();
-    const unsigned &P = initial_schedule.getInstance().numberOfProcessors();
-    const unsigned &S = initial_schedule.numberOfSupersteps();
-    const Graph_t &G = initial_schedule.getInstance().getComputationalDag();
+template <typename GraphT>
+RETURN_STATUS GreedyRecomputer<GraphT>::ComputeRecompSchedule(BspScheduleCS<GraphT> &initialSchedule,
+                                                              BspScheduleRecomp<GraphT> &outSchedule) const {
+    const vertex_idx &n = initialSchedule.getInstance().numberOfVertices();
+    const unsigned &p = initialSchedule.getInstance().numberOfProcessors();
+    const unsigned &s = initialSchedule.numberOfSupersteps();
+    const GraphT &g = initialSchedule.getInstance().getComputationalDag();
 
-    out_schedule = BspScheduleRecomp<Graph_t>(initial_schedule.getInstance());
-    out_schedule.setNumberOfSupersteps(initial_schedule.numberOfSupersteps());
+    outSchedule = BspScheduleRecomp<GraphT>(initialSchedule.getInstance());
+    outSchedule.setNumberOfSupersteps(initialSchedule.numberOfSupersteps());
 
     // Initialize required data structures
-    std::vector<std::vector<cost_type>> work_cost(P, std::vector<cost_type>(S, 0)), send_cost(P, std::vector<cost_type>(S, 0)),
+    std::vector<std::vector<cost_type>> workCost(P, std::vector<cost_type>(S, 0)), send_cost(P, std::vector<cost_type>(S, 0)),
         rec_cost(P, std::vector<cost_type>(S, 0));
 
-    std::vector<std::vector<unsigned>> first_computable(N, std::vector<unsigned>(P, 0U)),
-        first_present(N, std::vector<unsigned>(P, std::numeric_limits<unsigned>::max()));
+    std::vector<std::vector<unsigned>> firstComputable(n, std::vector<unsigned>(p, 0U)),
+        firstPresent(n, std::vector<unsigned>(p, std::numeric_limits<unsigned>::max()));
 
-    std::vector<std::vector<std::multiset<unsigned>>> needed_on_proc(N, std::vector<std::multiset<unsigned>>(P, {S}));
+    std::vector<std::vector<std::multiset<unsigned>>> neededOnProc(n, std::vector<std::multiset<unsigned>>(p, {s}));
 
-    std::vector<cost_type> max_work(S, 0), max_comm(S, 0);
+    std::vector<cost_type> maxWork(s, 0), max_comm(S, 0);
 
-    std::vector<std::set<KeyTriple>> comm_steps(S);
+    std::vector<std::set<KeyTriple>> commSteps(s);
 
     for (vertex_idx node = 0; node < N; ++node) {
-        const unsigned &proc = initial_schedule.assignedProcessor(node);
-        const unsigned &step = initial_schedule.assignedSuperstep(node);
+        const unsigned &proc = initialSchedule.assignedProcessor(node);
+        const unsigned &step = initialSchedule.assignedSuperstep(node);
 
-        work_cost[proc][step] += G.vertex_work_weight(node);
-        first_present[node][proc] = std::min(first_present[node][proc], step);
+        workCost[proc][step] += g.vertex_work_weight(node);
+        firstPresent[node][proc] = std::min(firstPresent[node][proc], step);
         for (vertex_idx pred : G.parents(node)) {
             needed_on_proc[pred][proc].insert(step);
         }
 
-        out_schedule.assignments(node).emplace_back(proc, step);
+        outSchedule.assignments(node).emplace_back(proc, step);
     }
     for (const std::pair<KeyTriple, unsigned> item : initial_schedule.getCommunicationSchedule()) {
         const vertex_idx &node = std::get<0>(item.first);
@@ -97,9 +97,9 @@ RETURN_STATUS GreedyRecomputer<Graph_t>::computeRecompSchedule(BspScheduleCS<Gra
         needed_on_proc[node][from_proc].insert(step);
         first_present[node][to_proc] = std::min(first_present[node][to_proc], step + 1);
     }
-    for (unsigned step = 0; step < S; ++step) {
-        for (unsigned proc = 0; proc < P; ++proc) {
-            max_work[step] = std::max(max_work[step], work_cost[proc][step]);
+    for (unsigned step = 0; step < s; ++step) {
+        for (unsigned proc = 0; proc < p; ++proc) {
+            maxWork[step] = std::max(max_work[step], work_cost[proc][step]);
             max_comm[step] = std::max(max_comm[step], send_cost[proc][step]);
             max_comm[step] = std::max(max_comm[step], rec_cost[proc][step]);
         }
@@ -114,12 +114,12 @@ RETURN_STATUS GreedyRecomputer<Graph_t>::computeRecompSchedule(BspScheduleCS<Gra
     }
 
     // Find improvement steps
-    bool still_improved = true;
-    while (still_improved) {
-        still_improved = false;
+    bool stillImproved = true;
+    while (stillImproved) {
+        stillImproved = false;
 
-        for (unsigned step = 0; step < S; ++step) {
-            std::vector<KeyTriple> to_erase;
+        for (unsigned step = 0; step < s; ++step) {
+            std::vector<KeyTriple> toErase;
             for (const KeyTriple &entry : comm_steps[step]) {
                 const vertex_idx &node = std::get<0>(entry);
                 const unsigned &from_proc = std::get<1>(entry);
@@ -208,13 +208,13 @@ RETURN_STATUS GreedyRecomputer<Graph_t>::computeRecompSchedule(BspScheduleCS<Gra
         }
     }
 
-    for (unsigned step = 0; step < S; ++step) {
+    for (unsigned step = 0; step < s; ++step) {
         for (const KeyTriple &entry : comm_steps[step]) {
             out_schedule.getCommunicationSchedule().emplace(entry, step);
         }
     }
 
-    out_schedule.mergeSupersteps();
+    outSchedule.mergeSupersteps();
 
     return RETURN_STATUS::OSP_SUCCESS;
 }

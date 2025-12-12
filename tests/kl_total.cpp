@@ -31,41 +31,41 @@ limitations under the License.
 
 using namespace osp;
 
-template <typename Graph_t>
-void add_mem_weights(Graph_t &dag) {
-    int mem_weight = 1;
-    int comm_weight = 7;
+template <typename GraphT>
+void AddMemWeights(GraphT &dag) {
+    int memWeight = 1;
+    int commWeight = 7;
 
     for (const auto &v : dag.vertices()) {
-        dag.set_vertex_work_weight(v, static_cast<v_memw_t<Graph_t>>(mem_weight++ % 10 + 2));
-        dag.set_vertex_mem_weight(v, static_cast<v_memw_t<Graph_t>>(mem_weight++ % 10 + 2));
-        dag.set_vertex_comm_weight(v, static_cast<v_commw_t<Graph_t>>(comm_weight++ % 10 + 2));
+        dag.set_vertex_work_weight(v, static_cast<v_memw_t<GraphT>>(memWeight++ % 10 + 2));
+        dag.set_vertex_mem_weight(v, static_cast<v_memw_t<GraphT>>(memWeight++ % 10 + 2));
+        dag.set_vertex_comm_weight(v, static_cast<v_commw_t<GraphT>>(commWeight++ % 10 + 2));
     }
 }
 
-template <typename table_t>
-void check_equal_affinity_table(table_t &table_1, table_t &table_2, const std::set<size_t> &nodes) {
-    BOOST_CHECK_EQUAL(table_1.size(), table_2.size());
+template <typename TableT>
+void CheckEqualAffinityTable(TableT &table1, TableT &table2, const std::set<size_t> &nodes) {
+    BOOST_CHECK_EQUAL(table1.size(), table2.size());
 
     for (auto i : nodes) {
-        for (size_t j = 0; j < table_1[i].size(); ++j) {
-            for (size_t k = 0; k < table_1[i][j].size(); ++k) {
-                BOOST_CHECK(std::abs(table_1[i][j][k] - table_2[i][j][k]) < 0.000001);
+        for (size_t j = 0; j < table1[i].size(); ++j) {
+            for (size_t k = 0; k < table1[i][j].size(); ++k) {
+                BOOST_CHECK(std::abs(table1[i][j][k] - table2[i][j][k]) < 0.000001);
 
-                if (std::abs(table_1[i][j][k] - table_2[i][j][k]) > 0.000001) {
-                    std::cout << "Mismatch at [" << i << "][" << j << "][" << k << "]: table_1=" << table_1[i][j][k]
-                              << ", table_2=" << table_2[i][j][k] << std::endl;
+                if (std::abs(table1[i][j][k] - table2[i][j][k]) > 0.000001) {
+                    std::cout << "Mismatch at [" << i << "][" << j << "][" << k << "]: table_1=" << table1[i][j][k]
+                              << ", table_2=" << table2[i][j][k] << std::endl;
                 }
             }
         }
     }
 }
 
-BOOST_AUTO_TEST_CASE(kl_improver_smoke_test) {
-    using graph = computational_dag_edge_idx_vector_impl_def_int_t;
-    using VertexType = graph::vertex_idx;
+BOOST_AUTO_TEST_CASE(KlImproverSmokeTest) {
+    using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
+    using VertexType = Graph::vertex_idx;
 
-    graph dag;
+    Graph dag;
 
     const VertexType v1 = dag.add_vertex(2, 9, 2);
     const VertexType v2 = dag.add_vertex(3, 8, 4);
@@ -85,9 +85,9 @@ BOOST_AUTO_TEST_CASE(kl_improver_smoke_test) {
     dag.add_edge(v5, v8, 9);
     dag.add_edge(v4, v8, 9);
 
-    BspArchitecture<graph> arch;
+    BspArchitecture<Graph> arch;
 
-    BspInstance<graph> instance(dag, arch);
+    BspInstance<Graph> instance(dag, arch);
 
     BspSchedule schedule(instance);
 
@@ -96,8 +96,8 @@ BOOST_AUTO_TEST_CASE(kl_improver_smoke_test) {
 
     schedule.updateNumberOfSupersteps();
 
-    using kl_improver_t = kl_total_comm_improver<graph, no_local_search_memory_constraint, 1, true>;
-    kl_improver_t kl;
+    using KlImproverT = kl_total_comm_improver<Graph, no_local_search_memory_constraint, 1, true>;
+    KlImproverT kl;
 
     auto status = kl.improveSchedule(schedule);
 
@@ -105,10 +105,10 @@ BOOST_AUTO_TEST_CASE(kl_improver_smoke_test) {
     BOOST_CHECK_EQUAL(schedule.satisfiesPrecedenceConstraints(), true);
 }
 
-BOOST_AUTO_TEST_CASE(kl_improver_on_test_graphs) {
-    std::vector<std::string> filenames_graph = test_graphs();
+BOOST_AUTO_TEST_CASE(KlImproverOnTestGraphs) {
+    std::vector<std::string> filenamesGraph = TestGraphs();
 
-    using graph = computational_dag_edge_idx_vector_impl_def_int_t;
+    using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -118,33 +118,33 @@ BOOST_AUTO_TEST_CASE(kl_improver_on_test_graphs) {
         std::cout << cwd << std::endl;
     }
 
-    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_int_t> test_scheduler;
+    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_int_t> testScheduler;
 
-    for (auto &filename_graph : filenames_graph) {
-        BspInstance<graph> instance;
+    for (auto &filenameGraph : filenamesGraph) {
+        BspInstance<Graph> instance;
 
-        bool status_graph
-            = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(), instance.getComputationalDag());
+        bool statusGraph
+            = file_reader::readComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(), instance.getComputationalDag());
 
         instance.getArchitecture().setSynchronisationCosts(5);
         instance.getArchitecture().setCommunicationCosts(5);
         instance.getArchitecture().setNumberOfProcessors(4);
 
-        if (!status_graph) {
+        if (!statusGraph) {
             std::cout << "Reading files failed." << std::endl;
             BOOST_CHECK(false);
         }
 
-        add_mem_weights(instance.getComputationalDag());
+        AddMemWeights(instance.getComputationalDag());
 
-        BspSchedule<graph> schedule(instance);
-        const auto result = test_scheduler.computeSchedule(schedule);
+        BspSchedule<Graph> schedule(instance);
+        const auto result = testScheduler.computeSchedule(schedule);
 
         BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
         BOOST_CHECK_EQUAL(&schedule.getInstance(), &instance);
         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
-        kl_total_comm_improver<graph> kl;
+        kl_total_comm_improver<Graph> kl;
 
         auto status = kl.improveSchedule(schedule);
 
@@ -153,11 +153,11 @@ BOOST_AUTO_TEST_CASE(kl_improver_on_test_graphs) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(kl_improver_superstep_removal_test) {
-    using graph = computational_dag_edge_idx_vector_impl_def_int_t;
-    using VertexType = graph::vertex_idx;
+BOOST_AUTO_TEST_CASE(KlImproverSuperstepRemovalTest) {
+    using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
+    using VertexType = Graph::vertex_idx;
 
-    graph dag;
+    Graph dag;
 
     const VertexType v1 = dag.add_vertex(2, 9, 2);
     const VertexType v2 = dag.add_vertex(3, 8, 4);
@@ -177,9 +177,9 @@ BOOST_AUTO_TEST_CASE(kl_improver_superstep_removal_test) {
     dag.add_edge(v5, v8, 9);
     dag.add_edge(v4, v8, 9);
 
-    BspArchitecture<graph> arch;
+    BspArchitecture<Graph> arch;
 
-    BspInstance<graph> instance(dag, arch);
+    BspInstance<Graph> instance(dag, arch);
 
     BspSchedule schedule(instance);
     instance.getArchitecture().setSynchronisationCosts(50);
@@ -188,23 +188,23 @@ BOOST_AUTO_TEST_CASE(kl_improver_superstep_removal_test) {
     schedule.setAssignedSupersteps({0, 0, 0, 0, 1, 2, 2, 2});
 
     schedule.updateNumberOfSupersteps();
-    unsigned original_steps = schedule.numberOfSupersteps();
+    unsigned originalSteps = schedule.numberOfSupersteps();
 
-    using cost_f = kl_total_comm_cost_function<graph, double, no_local_search_memory_constraint, 1, true>;
-    kl_improver<graph, cost_f, no_local_search_memory_constraint, 1, double> kl;
+    using CostF = kl_total_comm_cost_function<Graph, double, no_local_search_memory_constraint, 1, true>;
+    kl_improver<Graph, CostF, no_local_search_memory_constraint, 1, double> kl;
 
     auto status = kl.improveSchedule(schedule);
 
     BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
     BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
-    BOOST_CHECK_LT(schedule.numberOfSupersteps(), original_steps);
+    BOOST_CHECK_LT(schedule.numberOfSupersteps(), originalSteps);
 }
 
-BOOST_AUTO_TEST_CASE(kl_improver_inner_loop_test) {
-    using graph = computational_dag_edge_idx_vector_impl_def_int_t;
-    using VertexType = graph::vertex_idx;
+BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
+    using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
+    using VertexType = Graph::vertex_idx;
 
-    graph dag;
+    Graph dag;
 
     const VertexType v1 = dag.add_vertex(2, 9, 2);
     const VertexType v2 = dag.add_vertex(3, 8, 4);
@@ -224,9 +224,9 @@ BOOST_AUTO_TEST_CASE(kl_improver_inner_loop_test) {
     dag.add_edge(v5, v8, 9);
     dag.add_edge(v4, v8, 9);
 
-    BspArchitecture<graph> arch;
+    BspArchitecture<Graph> arch;
 
-    BspInstance<graph> instance(dag, arch);
+    BspInstance<Graph> instance(dag, arch);
 
     BspSchedule schedule(instance);
 
@@ -235,27 +235,27 @@ BOOST_AUTO_TEST_CASE(kl_improver_inner_loop_test) {
 
     schedule.updateNumberOfSupersteps();
 
-    using cost_f = kl_total_comm_cost_function<graph, double, no_local_search_memory_constraint, 1, true>;
-    using kl_improver_test = kl_improver_test<graph, cost_f, no_local_search_memory_constraint, 1, double>;
-    kl_improver_test kl;
+    using CostF = kl_total_comm_cost_function<Graph, double, no_local_search_memory_constraint, 1, true>;
+    using KlImproverTest = kl_improver_test<Graph, CostF, no_local_search_memory_constraint, 1, double>;
+    KlImproverTest kl;
 
     kl.setup_schedule(schedule);
 
-    auto &kl_active_schedule = kl.get_active_schedule();
+    auto &klActiveSchedule = kl.get_active_schedule();
 
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_max_work(0), 5.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_second_max_work(0), 0.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_max_work(1), 9.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_second_max_work(1), 0.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_max_work(2), 7.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_second_max_work(2), 6.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_max_work(3), 9.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_second_max_work(3), 8.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(0), 5.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(0), 0.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(1), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(1), 0.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(2), 7.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(2), 6.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(3), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(3), 8.0);
 
-    BOOST_CHECK_EQUAL(kl_active_schedule.num_steps(), 4);
-    BOOST_CHECK_EQUAL(kl_active_schedule.is_feasible(), true);
+    BOOST_CHECK_EQUAL(klActiveSchedule.num_steps(), 4);
+    BOOST_CHECK_EQUAL(klActiveSchedule.is_feasible(), true);
 
-    auto node_selection = kl.insert_gain_heap_test_penalty({2, 3});
+    auto nodeSelection = kl.insert_gain_heap_test_penalty({2, 3});
 
     auto &affinity = kl.get_affinity_table();
 
@@ -273,36 +273,36 @@ BOOST_AUTO_TEST_CASE(kl_improver_inner_loop_test) {
     BOOST_CHECK_CLOSE(affinity[v4][1][1], -6.5, 0.00001);
     BOOST_CHECK_CLOSE(affinity[v4][1][2], -3.5, 0.00001);
 
-    auto recompute_max_gain = kl.run_inner_iteration_test();
+    auto recomputeMaxGain = kl.run_inner_iteration_test();
     std::cout << "------------------------recompute max_gain: { ";
-    for (const auto &[key, value] : recompute_max_gain) {
+    for (const auto &[key, value] : recomputeMaxGain) {
         std::cout << key << " ";
     }
     std::cout << "}" << std::endl;
 
     BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
 
-    recompute_max_gain = kl.run_inner_iteration_test();
+    recomputeMaxGain = kl.run_inner_iteration_test();
     std::cout << "recompute max_gain: { ";
-    for (const auto &[key, value] : recompute_max_gain) {
+    for (const auto &[key, value] : recomputeMaxGain) {
         std::cout << key << " ";
     }
     std::cout << "}" << std::endl;
 
     BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
 
-    recompute_max_gain = kl.run_inner_iteration_test();
+    recomputeMaxGain = kl.run_inner_iteration_test();
     std::cout << "recompute max_gain: { ";
-    for (const auto &[key, value] : recompute_max_gain) {
+    for (const auto &[key, value] : recomputeMaxGain) {
         std::cout << key << " ";
     }
     std::cout << "}" << std::endl;
 
     BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
 
-    recompute_max_gain = kl.run_inner_iteration_test();
+    recomputeMaxGain = kl.run_inner_iteration_test();
     std::cout << "recompute max_gain: { ";
-    for (const auto &[key, value] : recompute_max_gain) {
+    for (const auto &[key, value] : recomputeMaxGain) {
         std::cout << key << " ";
     }
     std::cout << "}" << std::endl;
@@ -310,11 +310,11 @@ BOOST_AUTO_TEST_CASE(kl_improver_inner_loop_test) {
     BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
 }
 
-BOOST_AUTO_TEST_CASE(kl_improver_inner_loop_penalty_test) {
-    using graph = computational_dag_edge_idx_vector_impl_def_int_t;
-    using VertexType = graph::vertex_idx;
+BOOST_AUTO_TEST_CASE(KlImproverInnerLoopPenaltyTest) {
+    using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
+    using VertexType = Graph::vertex_idx;
 
-    graph dag;
+    Graph dag;
 
     const VertexType v1 = dag.add_vertex(2, 9, 2);
     const VertexType v2 = dag.add_vertex(3, 8, 4);
@@ -334,9 +334,9 @@ BOOST_AUTO_TEST_CASE(kl_improver_inner_loop_penalty_test) {
     dag.add_edge(v5, v8, 9);
     dag.add_edge(v4, v8, 9);
 
-    BspArchitecture<graph> arch;
+    BspArchitecture<Graph> arch;
 
-    BspInstance<graph> instance(dag, arch);
+    BspInstance<Graph> instance(dag, arch);
 
     BspSchedule schedule(instance);
 
@@ -345,9 +345,9 @@ BOOST_AUTO_TEST_CASE(kl_improver_inner_loop_penalty_test) {
 
     schedule.updateNumberOfSupersteps();
 
-    using cost_f = kl_total_comm_cost_function<graph, double, no_local_search_memory_constraint, 1, true>;
-    using kl_improver_test = kl_improver_test<graph, cost_f, no_local_search_memory_constraint, 1, double>;
-    kl_improver_test kl;
+    using CostF = kl_total_comm_cost_function<Graph, double, no_local_search_memory_constraint, 1, true>;
+    using KlImproverTest = kl_improver_test<Graph, CostF, no_local_search_memory_constraint, 1, double>;
+    KlImproverTest kl;
 
     kl.setup_schedule(schedule);
 
@@ -355,38 +355,38 @@ BOOST_AUTO_TEST_CASE(kl_improver_inner_loop_penalty_test) {
 
     BOOST_CHECK_CLOSE(51.5, kl.get_current_cost(), 0.00001);
 
-    auto node_selection = kl.insert_gain_heap_test_penalty({7});
+    auto nodeSelection = kl.insert_gain_heap_test_penalty({7});
 
-    auto recompute_max_gain = kl.run_inner_iteration_test();
+    auto recomputeMaxGain = kl.run_inner_iteration_test();
     std::cout << "-----------recompute max_gain: { ";
-    for (const auto &[key, value] : recompute_max_gain) {
+    for (const auto &[key, value] : recomputeMaxGain) {
         std::cout << key << " ";
     }
     std::cout << "}" << std::endl;
 
     BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
 
-    recompute_max_gain = kl.run_inner_iteration_test();
+    recomputeMaxGain = kl.run_inner_iteration_test();
     std::cout << "recompute max_gain: { ";
-    for (const auto &[key, value] : recompute_max_gain) {
+    for (const auto &[key, value] : recomputeMaxGain) {
         std::cout << key << " ";
     }
     std::cout << "}" << std::endl;
 
     BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
 
-    recompute_max_gain = kl.run_inner_iteration_test();
+    recomputeMaxGain = kl.run_inner_iteration_test();
     std::cout << "recompute max_gain: { ";
-    for (const auto &[key, value] : recompute_max_gain) {
+    for (const auto &[key, value] : recomputeMaxGain) {
         std::cout << key << " ";
     }
     std::cout << "}" << std::endl;
 
     BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
 
-    recompute_max_gain = kl.run_inner_iteration_test();
+    recomputeMaxGain = kl.run_inner_iteration_test();
     std::cout << "recompute max_gain: { ";
-    for (const auto &[key, value] : recompute_max_gain) {
+    for (const auto &[key, value] : recomputeMaxGain) {
         std::cout << key << " ";
     }
     std::cout << "}" << std::endl;
@@ -394,11 +394,11 @@ BOOST_AUTO_TEST_CASE(kl_improver_inner_loop_penalty_test) {
     BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
 }
 
-BOOST_AUTO_TEST_CASE(kl_improver_violation_handling_test) {
-    using graph = computational_dag_edge_idx_vector_impl_def_int_t;
-    using VertexType = graph::vertex_idx;
+BOOST_AUTO_TEST_CASE(KlImproverViolationHandlingTest) {
+    using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
+    using VertexType = Graph::vertex_idx;
 
-    graph dag;
+    Graph dag;
 
     const VertexType v1 = dag.add_vertex(2, 9, 2);
     const VertexType v2 = dag.add_vertex(3, 8, 4);
@@ -418,9 +418,9 @@ BOOST_AUTO_TEST_CASE(kl_improver_violation_handling_test) {
     dag.add_edge(v5, v8, 9);
     dag.add_edge(v4, v8, 9);
 
-    BspArchitecture<graph> arch;
+    BspArchitecture<Graph> arch;
 
-    BspInstance<graph> instance(dag, arch);
+    BspInstance<Graph> instance(dag, arch);
 
     BspSchedule schedule(instance);
 
@@ -429,8 +429,8 @@ BOOST_AUTO_TEST_CASE(kl_improver_violation_handling_test) {
 
     schedule.updateNumberOfSupersteps();
 
-    using cost_f = kl_total_comm_cost_function<graph, double, no_local_search_memory_constraint, 1, true>;
-    kl_improver_test<graph, cost_f, no_local_search_memory_constraint, 1, double> kl;
+    using CostF = kl_total_comm_cost_function<Graph, double, no_local_search_memory_constraint, 1, true>;
+    kl_improver_test<Graph, CostF, no_local_search_memory_constraint, 1, double> kl;
 
     kl.setup_schedule(schedule);
 
@@ -438,17 +438,17 @@ BOOST_AUTO_TEST_CASE(kl_improver_violation_handling_test) {
 
     BOOST_CHECK_EQUAL(kl.is_feasible(), false);
 
-    kl_improver<graph, cost_f, no_local_search_memory_constraint, 1, double> kl_improver;
-    kl_improver.improveSchedule(schedule);
+    kl_improver<Graph, CostF, no_local_search_memory_constraint, 1, double> klImprover;
+    klImprover.improveSchedule(schedule);
 
     BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 }
 
-BOOST_AUTO_TEST_CASE(kl_base_1) {
-    using graph = computational_dag_edge_idx_vector_impl_def_int_t;
-    using VertexType = graph::vertex_idx;
+BOOST_AUTO_TEST_CASE(KlBase1) {
+    using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
+    using VertexType = Graph::vertex_idx;
 
-    graph dag;
+    Graph dag;
 
     const VertexType v1 = dag.add_vertex(2, 9, 2);
     const VertexType v2 = dag.add_vertex(3, 8, 4);
@@ -468,9 +468,9 @@ BOOST_AUTO_TEST_CASE(kl_base_1) {
     dag.add_edge(v5, v8, 9);
     dag.add_edge(v4, v8, 9);
 
-    BspArchitecture<graph> arch;
+    BspArchitecture<Graph> arch;
 
-    BspInstance<graph> instance(dag, arch);
+    BspInstance<Graph> instance(dag, arch);
 
     BspSchedule schedule(instance);
 
@@ -479,39 +479,39 @@ BOOST_AUTO_TEST_CASE(kl_base_1) {
 
     schedule.updateNumberOfSupersteps();
 
-    using cost_f = kl_total_comm_cost_function<graph, double, no_local_search_memory_constraint, 1, true>;
-    kl_improver_test<graph, cost_f, no_local_search_memory_constraint, 1, double> kl;
+    using CostF = kl_total_comm_cost_function<Graph, double, no_local_search_memory_constraint, 1, true>;
+    kl_improver_test<Graph, CostF, no_local_search_memory_constraint, 1, double> kl;
 
     kl.setup_schedule(schedule);
 
-    auto &kl_active_schedule = kl.get_active_schedule();
+    auto &klActiveSchedule = kl.get_active_schedule();
 
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_max_work(0), 44.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_second_max_work(0), 0.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.num_steps(), 1);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(0), 44.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(0), 0.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.num_steps(), 1);
     BOOST_CHECK_CLOSE(kl.get_current_cost(), 44.0, 0.00001);
     BOOST_CHECK_EQUAL(kl.is_feasible(), true);
     BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost(), 44.0, 0.00001);
 
-    using kl_move = kl_move_struct<double, VertexType>;
+    using KlMove = kl_move_struct<double, VertexType>;
 
-    kl_move move_1(v1, 2.0 - 13.5, 0, 0, 1, 0);
+    KlMove move1(v1, 2.0 - 13.5, 0, 0, 1, 0);
 
-    kl.apply_move_test(move_1);
+    kl.apply_move_test(move1);
 
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_max_work(0), 42.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_second_max_work(0), 2.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.num_steps(), 1);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(0), 42.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(0), 2.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.num_steps(), 1);
     BOOST_CHECK_EQUAL(kl.is_feasible(), false);
     BOOST_CHECK_CLOSE(kl.get_current_cost(), kl.get_comm_cost_f().compute_schedule_cost(), 0.00001);
 
-    kl_move move_2(v2, 3.0 + 4.5 - 4.0, 0, 0, 1, 0);
+    KlMove move2(v2, 3.0 + 4.5 - 4.0, 0, 0, 1, 0);
 
-    kl.apply_move_test(move_2);
+    kl.apply_move_test(move2);
 
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_max_work(0), 39.0);          // 42-3
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_second_max_work(0), 5.0);    // 2+3
-    BOOST_CHECK_EQUAL(kl_active_schedule.num_steps(), 1);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(0), 39.0);          // 42-3
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(0), 5.0);    // 2+3
+    BOOST_CHECK_EQUAL(klActiveSchedule.num_steps(), 1);
     BOOST_CHECK_EQUAL(kl.is_feasible(), false);
     BOOST_CHECK_CLOSE(kl.get_current_cost(), kl.get_comm_cost_f().compute_schedule_cost(), 0.00001);
 
@@ -525,24 +525,24 @@ BOOST_AUTO_TEST_CASE(kl_base_1) {
 
     BOOST_CHECK_CLOSE(affinity[v3][0][1], 4.0, 0.00001);
 
-    kl_move move_3(v7, 7.0, 0, 0, 1, 0);
-    kl.apply_move_test(move_3);
+    KlMove move3(v7, 7.0, 0, 0, 1, 0);
+    kl.apply_move_test(move3);
     BOOST_CHECK_EQUAL(kl.is_feasible(), false);
 
-    kl_move move_4(v2, 7.0, 1, 0, 0, 0);
-    kl.apply_move_test(move_4);
+    KlMove move4(v2, 7.0, 1, 0, 0, 0);
+    kl.apply_move_test(move4);
     BOOST_CHECK_EQUAL(kl.is_feasible(), false);
 
-    kl_move move_5(v1, 7.0, 1, 0, 0, 0);
-    kl.apply_move_test(move_5);
+    KlMove move5(v1, 7.0, 1, 0, 0, 0);
+    kl.apply_move_test(move5);
     BOOST_CHECK_EQUAL(kl.is_feasible(), true);
 }
 
-BOOST_AUTO_TEST_CASE(kl_base_2) {
-    using graph = computational_dag_edge_idx_vector_impl_def_int_t;
-    using VertexType = graph::vertex_idx;
+BOOST_AUTO_TEST_CASE(KlBase2) {
+    using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
+    using VertexType = Graph::vertex_idx;
 
-    graph dag;
+    Graph dag;
 
     const VertexType v1 = dag.add_vertex(2, 9, 2);
     const VertexType v2 = dag.add_vertex(3, 8, 4);
@@ -562,9 +562,9 @@ BOOST_AUTO_TEST_CASE(kl_base_2) {
     dag.add_edge(v5, v8, 9);
     dag.add_edge(v4, v8, 9);
 
-    BspArchitecture<graph> arch;
+    BspArchitecture<Graph> arch;
 
-    BspInstance<graph> instance(dag, arch);
+    BspInstance<Graph> instance(dag, arch);
 
     BspSchedule schedule(instance);
 
@@ -573,72 +573,72 @@ BOOST_AUTO_TEST_CASE(kl_base_2) {
 
     schedule.updateNumberOfSupersteps();
 
-    using cost_f = kl_total_comm_cost_function<graph, double, no_local_search_memory_constraint, 1, true>;
-    kl_improver_test<graph, cost_f, no_local_search_memory_constraint, 1, double> kl;
+    using CostF = kl_total_comm_cost_function<Graph, double, no_local_search_memory_constraint, 1, true>;
+    kl_improver_test<Graph, CostF, no_local_search_memory_constraint, 1, double> kl;
 
     kl.setup_schedule(schedule);
 
-    auto &kl_active_schedule = kl.get_active_schedule();
+    auto &klActiveSchedule = kl.get_active_schedule();
 
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_max_work(0), 2.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_second_max_work(0), 0.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_max_work(1), 9.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_second_max_work(1), 3.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_max_work(2), 7.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_second_max_work(2), 6.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_max_work(3), 9.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_second_max_work(3), 8.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(0), 2.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(0), 0.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(1), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(1), 3.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(2), 7.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(2), 6.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(3), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(3), 8.0);
 
-    BOOST_CHECK_EQUAL(kl_active_schedule.num_steps(), 4);
+    BOOST_CHECK_EQUAL(klActiveSchedule.num_steps(), 4);
     BOOST_CHECK_CLOSE(kl.get_current_cost(), kl.get_comm_cost_f().compute_schedule_cost(), 0.00001);
     BOOST_CHECK_EQUAL(kl.is_feasible(), true);
 
-    using kl_move = kl_move_struct<double, VertexType>;
+    using KlMove = kl_move_struct<double, VertexType>;
 
-    kl_move move_1(v1, 0.0 - 4.5, 0, 0, 1, 0);
+    KlMove move1(v1, 0.0 - 4.5, 0, 0, 1, 0);
 
-    kl.apply_move_test(move_1);
+    kl.apply_move_test(move1);
 
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_max_work(0), 2.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_second_max_work(0), 0.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_max_work(1), 9.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_second_max_work(1), 3.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_max_work(2), 7.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_second_max_work(2), 6.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_max_work(3), 9.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_second_max_work(3), 8.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(0), 2.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(0), 0.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(1), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(1), 3.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(2), 7.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(2), 6.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(3), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(3), 8.0);
     BOOST_CHECK_EQUAL(kl.is_feasible(), true);
     BOOST_CHECK_CLOSE(kl.get_current_cost(), kl.get_comm_cost_f().compute_schedule_cost(), 0.00001);
 
-    kl_move move_2(v2, -1.0 - 8.5, 1, 1, 0, 0);
+    KlMove move2(v2, -1.0 - 8.5, 1, 1, 0, 0);
 
-    kl.apply_move_test(move_2);
+    kl.apply_move_test(move2);
 
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_max_work(0), 3.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_second_max_work(0), 2.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_max_work(1), 9.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_second_max_work(1), 0.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_max_work(2), 7.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_second_max_work(2), 6.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_max_work(3), 9.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_second_max_work(3), 8.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.num_steps(), 4);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(0), 3.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(0), 2.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(1), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(1), 0.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(2), 7.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(2), 6.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(3), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(3), 8.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.num_steps(), 4);
     BOOST_CHECK_EQUAL(kl.is_feasible(), false);
     BOOST_CHECK_CLOSE(kl.get_current_cost(), kl.get_comm_cost_f().compute_schedule_cost(), 0.00001);
 
-    kl_move move_x(v2, -2.0 + 8.5, 0, 0, 1, 0);
+    KlMove moveX(v2, -2.0 + 8.5, 0, 0, 1, 0);
 
-    kl.apply_move_test(move_x);
+    kl.apply_move_test(moveX);
 
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_max_work(0), 5.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_second_max_work(0), 0.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_max_work(1), 9.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_second_max_work(1), 0.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_max_work(2), 7.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_second_max_work(2), 6.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_max_work(3), 9.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_second_max_work(3), 8.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.num_steps(), 4);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(0), 5.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(0), 0.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(1), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(1), 0.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(2), 7.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(2), 6.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(3), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(3), 8.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.num_steps(), 4);
     BOOST_CHECK_EQUAL(kl.is_feasible(), true);
     BOOST_CHECK_CLOSE(kl.get_current_cost(), kl.get_comm_cost_f().compute_schedule_cost(), 0.00001);
 
@@ -699,11 +699,11 @@ BOOST_AUTO_TEST_CASE(kl_base_2) {
     BOOST_CHECK_CLOSE(affinity[v8][1][1], 1.0, 0.00001);
 }
 
-BOOST_AUTO_TEST_CASE(kl_base_3) {
-    using graph = computational_dag_edge_idx_vector_impl_def_int_t;
-    using VertexType = graph::vertex_idx;
+BOOST_AUTO_TEST_CASE(KlBase3) {
+    using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
+    using VertexType = Graph::vertex_idx;
 
-    graph dag;
+    Graph dag;
 
     const VertexType v1 = dag.add_vertex(2, 9, 2);
     const VertexType v2 = dag.add_vertex(3, 8, 4);
@@ -723,9 +723,9 @@ BOOST_AUTO_TEST_CASE(kl_base_3) {
     dag.add_edge(v5, v8, 9);
     dag.add_edge(v4, v8, 9);
 
-    BspArchitecture<graph> arch;
+    BspArchitecture<Graph> arch;
 
-    BspInstance<graph> instance(dag, arch);
+    BspInstance<Graph> instance(dag, arch);
 
     BspSchedule schedule(instance);
 
@@ -734,24 +734,24 @@ BOOST_AUTO_TEST_CASE(kl_base_3) {
 
     schedule.updateNumberOfSupersteps();
 
-    using cost_f = kl_total_comm_cost_function<graph, double, no_local_search_memory_constraint, 1, true>;
-    kl_improver_test<graph, cost_f, no_local_search_memory_constraint, 1, double> kl;
+    using CostF = kl_total_comm_cost_function<Graph, double, no_local_search_memory_constraint, 1, true>;
+    kl_improver_test<Graph, CostF, no_local_search_memory_constraint, 1, double> kl;
 
     kl.setup_schedule(schedule);
 
-    auto &kl_active_schedule = kl.get_active_schedule();
+    auto &klActiveSchedule = kl.get_active_schedule();
 
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_max_work(0), 5.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_second_max_work(0), 0.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_max_work(1), 9.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_second_max_work(1), 0.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_max_work(2), 7.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_second_max_work(2), 6.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_max_work(3), 9.0);
-    BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_second_max_work(3), 8.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(0), 5.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(0), 0.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(1), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(1), 0.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(2), 7.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(2), 6.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(3), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(3), 8.0);
 
-    BOOST_CHECK_EQUAL(kl_active_schedule.num_steps(), 4);
-    BOOST_CHECK_EQUAL(kl_active_schedule.is_feasible(), true);
+    BOOST_CHECK_EQUAL(klActiveSchedule.num_steps(), 4);
+    BOOST_CHECK_EQUAL(klActiveSchedule.is_feasible(), true);
 
     kl.insert_gain_heap_test_penalty({0, 1, 2, 3, 4, 5, 6, 7});
 

@@ -28,160 +28,160 @@ namespace osp {
 
 // A lightweight helper to track deltas without hash maps or repeated allocations.
 // Uses a dense vector for O(1) lookups and a sparse list for fast iteration/clearing.
-template <typename comm_weight_t>
+template <typename CommWeightT>
 struct FastDeltaTracker {
-    std::vector<comm_weight_t> dense_vals;     // Size: num_procs
-    std::vector<unsigned> dirty_procs;         // List of modified indices
-    std::vector<unsigned> proc_dirty_index;    // Map proc -> index in dirty_procs (num_procs if not dirty)
-    unsigned num_procs = 0;
+    std::vector<CommWeightT> denseVals_;      // Size: num_procs
+    std::vector<unsigned> dirtyProcs_;        // List of modified indices
+    std::vector<unsigned> procDirtyIndex_;    // Map proc -> index in dirty_procs (num_procs if not dirty)
+    unsigned numProcs_ = 0;
 
-    void initialize(unsigned n_procs) {
-        if (n_procs > num_procs) {
-            num_procs = n_procs;
-            dense_vals.resize(num_procs, 0);
-            dirty_procs.reserve(num_procs);
-            proc_dirty_index.resize(num_procs, num_procs);
+    void Initialize(unsigned nProcs) {
+        if (nProcs > numProcs_) {
+            numProcs_ = nProcs;
+            denseVals_.resize(numProcs_, 0);
+            dirtyProcs_.reserve(numProcs_);
+            procDirtyIndex_.resize(numProcs_, numProcs_);
         }
     }
 
-    inline void add(unsigned proc, comm_weight_t val) {
+    inline void Add(unsigned proc, CommWeightT val) {
         if (val == 0) {
             return;
         }
 
         // If currently 0, it is becoming dirty
-        if (dense_vals[proc] == 0) {
-            proc_dirty_index[proc] = static_cast<unsigned>(dirty_procs.size());
-            dirty_procs.push_back(proc);
+        if (denseVals_[proc] == 0) {
+            procDirtyIndex_[proc] = static_cast<unsigned>(dirtyProcs_.size());
+            dirtyProcs_.push_back(proc);
         }
 
-        dense_vals[proc] += val;
+        denseVals_[proc] += val;
 
         // If it returns to 0, remove it from dirty list (Swap and Pop for O(1))
-        if (dense_vals[proc] == 0) {
-            unsigned idx = proc_dirty_index[proc];
-            unsigned last_proc = dirty_procs.back();
+        if (denseVals_[proc] == 0) {
+            unsigned idx = procDirtyIndex_[proc];
+            unsigned lastProc = dirtyProcs_.back();
 
             // Move last element to the hole
-            dirty_procs[idx] = last_proc;
-            proc_dirty_index[last_proc] = idx;
+            dirtyProcs_[idx] = lastProc;
+            procDirtyIndex_[lastProc] = idx;
 
             // Remove last
-            dirty_procs.pop_back();
-            proc_dirty_index[proc] = num_procs;
+            dirtyProcs_.pop_back();
+            procDirtyIndex_[proc] = numProcs_;
         }
     }
 
-    inline comm_weight_t get(unsigned proc) const {
-        if (proc < dense_vals.size()) {
-            return dense_vals[proc];
+    inline CommWeightT Get(unsigned proc) const {
+        if (proc < denseVals_.size()) {
+            return denseVals_[proc];
         }
         return 0;
     }
 
-    inline void clear() {
-        for (unsigned p : dirty_procs) {
-            dense_vals[p] = 0;
-            proc_dirty_index[p] = num_procs;
+    inline void Clear() {
+        for (unsigned p : dirtyProcs_) {
+            denseVals_[p] = 0;
+            procDirtyIndex_[p] = numProcs_;
         }
-        dirty_procs.clear();
+        dirtyProcs_.clear();
     }
 };
 
-template <typename Graph_t, typename cost_t, typename MemoryConstraint_t, unsigned window_size = 1>
-struct kl_bsp_comm_cost_function {
+template <typename GraphT, typename CostT, typename MemoryConstraintT, unsigned windowSize = 1>
+struct KlBspCommCostFunction {
     using VertexType = vertex_idx_t<Graph_t>;
     using kl_move = kl_move_struct<cost_t, VertexType>;
     using kl_gain_update_info = kl_update_info<VertexType>;
     using comm_weight_t = v_commw_t<Graph_t>;
 
-    constexpr static unsigned window_range = 2 * window_size + 1;
-    constexpr static bool is_max_comm_cost_function = true;
+    constexpr static unsigned windowRange_ = 2 * windowSize + 1;
+    constexpr static bool isMaxCommCostFunction_ = true;
 
-    kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t> *active_schedule;
-    CompatibleProcessorRange<Graph_t> *proc_range;
-    const Graph_t *graph;
-    const BspInstance<Graph_t> *instance;
+    KlActiveSchedule<GraphT, CostT, MemoryConstraintT> *activeSchedule_;
+    CompatibleProcessorRange<GraphT> *procRange_;
+    const GraphT *graph_;
+    const BspInstance<GraphT> *instance_;
 
-    max_comm_datastructure<Graph_t, cost_t, kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t>> comm_ds;
+    MaxCommDatastructure<GraphT, CostT, KlActiveSchedule<GraphT, CostT, MemoryConstraintT>> commDs_;
 
-    inline cost_t get_comm_multiplier() { return 1; }
+    inline CostT GetCommMultiplier() { return 1; }
 
-    inline cost_t get_max_comm_weight() { return comm_ds.max_comm_weight; }
+    inline CostT GetMaxCommWeight() { return commDs_.max_comm_weight; }
 
-    inline cost_t get_max_comm_weight_multiplied() { return comm_ds.max_comm_weight; }
+    inline CostT GetMaxCommWeightMultiplied() { return commDs_.max_comm_weight; }
 
-    inline const std::string name() const { return "bsp_comm"; }
+    inline const std::string Name() const { return "bsp_comm"; }
 
-    inline bool is_compatible(VertexType node, unsigned proc) { return active_schedule->getInstance().isCompatible(node, proc); }
+    inline bool IsCompatible(VertexType node, unsigned proc) { return activeSchedule_->getInstance().isCompatible(node, proc); }
 
-    inline unsigned start_idx(const unsigned node_step, const unsigned start_step) {
-        return (node_step < window_size + start_step) ? window_size - (node_step - start_step) : 0;
+    inline unsigned StartIdx(const unsigned nodeStep, const unsigned startStep) {
+        return (nodeStep < windowSize + startStep) ? windowSize - (nodeStep - startStep) : 0;
     }
 
-    inline unsigned end_idx(const unsigned node_step, const unsigned end_step) {
-        return (node_step + window_size <= end_step) ? window_range : window_range - (node_step + window_size - end_step);
+    inline unsigned EndIdx(const unsigned nodeStep, const unsigned endStep) {
+        return (nodeStep + windowSize <= endStep) ? windowRange_ : windowRange_ - (nodeStep + windowSize - endStep);
     }
 
-    void initialize(kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t> &sched, CompatibleProcessorRange<Graph_t> &p_range) {
-        active_schedule = &sched;
-        proc_range = &p_range;
-        instance = &sched.getInstance();
-        graph = &instance->getComputationalDag();
+    void Initialize(KlActiveSchedule<GraphT, CostT, MemoryConstraintT> &sched, CompatibleProcessorRange<GraphT> &pRange) {
+        activeSchedule_ = &sched;
+        procRange_ = &pRange;
+        instance_ = &sched.getInstance();
+        graph_ = &instance_->getComputationalDag();
 
-        const unsigned num_steps = active_schedule->num_steps();
-        comm_ds.initialize(*active_schedule);
+        const unsigned numSteps = activeSchedule_->num_steps();
+        commDs_.initialize(*activeSchedule_);
     }
 
     using pre_move_comm_data_t = pre_move_comm_data<comm_weight_t>;
 
-    inline pre_move_comm_data<comm_weight_t> get_pre_move_comm_data(const kl_move &move) {
-        return comm_ds.get_pre_move_comm_data(move);
+    inline pre_move_comm_data<comm_weight_t> GetPreMoveCommData(const kl_move &move) {
+        return commDs_.get_pre_move_comm_data(move);
     }
 
-    void compute_send_receive_datastructures() { comm_ds.compute_comm_datastructures(0, active_schedule->num_steps() - 1); }
+    void ComputeSendReceiveDatastructures() { commDs_.compute_comm_datastructures(0, activeSchedule_->num_steps() - 1); }
 
-    template <bool compute_datastructures = true>
-    cost_t compute_schedule_cost() {
-        if constexpr (compute_datastructures) {
-            compute_send_receive_datastructures();
+    template <bool computeDatastructures = true>
+    CostT ComputeScheduleCost() {
+        if constexpr (computeDatastructures) {
+            ComputeSendReceiveDatastructures();
         }
 
-        cost_t total_cost = 0;
-        for (unsigned step = 0; step < active_schedule->num_steps(); step++) {
-            total_cost += active_schedule->get_step_max_work(step);
-            total_cost += comm_ds.step_max_comm(step) * instance->communicationCosts();
+        CostT totalCost = 0;
+        for (unsigned step = 0; step < activeSchedule_->num_steps(); step++) {
+            totalCost += activeSchedule_->get_step_max_work(step);
+            totalCost += commDs_.step_max_comm(step) * instance_->communicationCosts();
         }
 
-        if (active_schedule->num_steps() > 1) {
-            total_cost += static_cast<cost_t>(active_schedule->num_steps() - 1) * instance->synchronisationCosts();
+        if (activeSchedule_->num_steps() > 1) {
+            totalCost += static_cast<CostT>(activeSchedule_->num_steps() - 1) * instance_->synchronisationCosts();
         }
 
-        return total_cost;
+        return totalCost;
     }
 
-    cost_t compute_schedule_cost_test() { return compute_schedule_cost<false>(); }
+    CostT ComputeScheduleCostTest() { return compute_schedule_cost<false>(); }
 
-    void update_datastructure_after_move(const kl_move &move, const unsigned start_step, const unsigned end_step) {
-        comm_ds.update_datastructure_after_move(move, start_step, end_step);
+    void UpdateDatastructureAfterMove(const kl_move &move, const unsigned startStep, const unsigned endStep) {
+        commDs_.update_datastructure_after_move(move, startStep, endStep);
     }
 
     // Structure to hold thread-local scratchpads to avoid re-allocation.
     struct ScratchData {
-        std::vector<FastDeltaTracker<comm_weight_t>> send_deltas;    // Size: num_steps
-        std::vector<FastDeltaTracker<comm_weight_t>> recv_deltas;    // Size: num_steps
+        std::vector<FastDeltaTracker<comm_weight_t>> sendDeltas_;    // Size: num_steps
+        std::vector<FastDeltaTracker<comm_weight_t>> recvDeltas_;    // Size: num_steps
 
-        std::vector<unsigned> active_steps;    // List of steps touched in current operation
-        std::vector<bool> step_is_active;      // Fast lookup for active steps
+        std::vector<unsigned> activeSteps_;    // List of steps touched in current operation
+        std::vector<bool> stepIsActive_;       // Fast lookup for active steps
 
-        std::vector<std::pair<unsigned, comm_weight_t>> child_cost_buffer;
+        std::vector<std::pair<unsigned, comm_weight_t>> childCostBuffer_;
 
-        void init(unsigned n_steps, unsigned n_procs) {
+        void Init(unsigned nSteps, unsigned nProcs) {
             if (send_deltas.size() < n_steps) {
                 send_deltas.resize(n_steps);
                 recv_deltas.resize(n_steps);
-                step_is_active.resize(n_steps, false);
-                active_steps.reserve(n_steps);
+                stepIsActive_.resize(nSteps, false);
+                activeSteps_.reserve(nSteps);
             }
 
             for (auto &tracker : send_deltas) {
@@ -194,40 +194,40 @@ struct kl_bsp_comm_cost_function {
             child_cost_buffer.reserve(n_procs);
         }
 
-        void clear_all() {
-            for (unsigned step : active_steps) {
+        void ClearAll() {
+            for (unsigned step : activeSteps_) {
                 send_deltas[step].clear();
                 recv_deltas[step].clear();
-                step_is_active[step] = false;
+                stepIsActive_[step] = false;
             }
-            active_steps.clear();
+            activeSteps_.clear();
             child_cost_buffer.clear();
         }
 
-        void mark_active(unsigned step) {
-            if (!step_is_active[step]) {
-                step_is_active[step] = true;
-                active_steps.push_back(step);
+        void MarkActive(unsigned step) {
+            if (!stepIsActive_[step]) {
+                stepIsActive_[step] = true;
+                activeSteps_.push_back(step);
             }
         }
     };
 
-    template <typename affinity_table_t>
-    void compute_comm_affinity(VertexType node,
-                               affinity_table_t &affinity_table_node,
-                               const cost_t &penalty,
-                               const cost_t &reward,
-                               const unsigned start_step,
-                               const unsigned end_step) {
+    template <typename AffinityTableT>
+    void ComputeCommAffinity(VertexType node,
+                             AffinityTableT &affinityTableNode,
+                             const CostT &penalty,
+                             const CostT &reward,
+                             const unsigned startStep,
+                             const unsigned endStep) {
         // Use static thread_local scratchpad to avoid allocation in hot loop
         static thread_local ScratchData scratch;
-        scratch.init(active_schedule->num_steps(), instance->numberOfProcessors());
-        scratch.clear_all();
+        scratch.Init(activeSchedule_->num_steps(), instance_->numberOfProcessors());
+        scratch.ClearAll();
 
-        const unsigned node_step = active_schedule->assigned_superstep(node);
-        const unsigned node_proc = active_schedule->assigned_processor(node);
-        const unsigned window_bound = end_idx(node_step, end_step);
-        const unsigned node_start_idx = start_idx(node_step, start_step);
+        const unsigned nodeStep = activeSchedule_->assigned_superstep(node);
+        const unsigned nodeProc = activeSchedule_->assigned_processor(node);
+        const unsigned windowBound = EndIdx(nodeStep, endStep);
+        const unsigned nodeStartIdx = StartIdx(nodeStep, startStep);
 
         for (const auto &target : instance->getComputationalDag().children(node)) {
             const unsigned target_step = active_schedule->assigned_superstep(target);
@@ -290,19 +290,19 @@ struct kl_bsp_comm_cost_function {
             }
         }
 
-        const comm_weight_t comm_w_node = graph->vertex_comm_weight(node);
-        const auto &current_vec_schedule = active_schedule->getVectorSchedule();
+        const comm_weight_t commWNode = graph_->vertex_comm_weight(node);
+        const auto &currentVecSchedule = activeSchedule_->getVectorSchedule();
 
-        auto add_delta = [&](bool is_recv, unsigned step, unsigned proc, comm_weight_t val) {
+        auto addDelta = [&](bool isRecv, unsigned step, unsigned proc, comm_weight_t val) {
             if (val == 0) {
                 return;
             }
-            if (step < active_schedule->num_steps()) {
-                scratch.mark_active(step);
-                if (is_recv) {
-                    scratch.recv_deltas[step].add(proc, val);
+            if (step < activeSchedule_->num_steps()) {
+                scratch.MarkActive(step);
+                if (isRecv) {
+                    scratch.recvDeltas_[step].add(proc, val);
                 } else {
-                    scratch.send_deltas[step].add(proc, val);
+                    scratch.sendDeltas_[step].add(proc, val);
                 }
             }
         };
@@ -311,8 +311,8 @@ struct kl_bsp_comm_cost_function {
 
         // Outgoing (Children)
         // Child stops receiving from node_proc at node_step
-        auto node_lambda_entries = comm_ds.node_lambda_map.iterate_proc_entries(node);
-        comm_weight_t total_send_cost_removed = 0;
+        auto nodeLambdaEntries = commDs_.node_lambda_map.iterate_proc_entries(node);
+        comm_weight_t totalSendCostRemoved = 0;
 
         for (const auto [proc, count] : node_lambda_entries) {
             if (proc != node_proc) {
@@ -323,8 +323,8 @@ struct kl_bsp_comm_cost_function {
                 }
             }
         }
-        if (total_send_cost_removed > 0) {
-            add_delta(false, node_step, node_proc, -total_send_cost_removed);
+        if (totalSendCostRemoved > 0) {
+            addDelta(false, nodeStep, nodeProc, -total_send_cost_removed);
         }
 
         // Incoming (Parents)
@@ -460,15 +460,15 @@ struct kl_bsp_comm_cost_function {
         }
     }
 
-    comm_weight_t calculate_step_cost_change(unsigned step,
-                                             const FastDeltaTracker<comm_weight_t> &delta_send,
-                                             const FastDeltaTracker<comm_weight_t> &delta_recv) {
-        comm_weight_t old_max = comm_ds.step_max_comm(step);
-        comm_weight_t second_max = comm_ds.step_second_max_comm(step);
-        unsigned old_max_count = comm_ds.step_max_comm_count(step);
+    comm_weight_t CalculateStepCostChange(unsigned step,
+                                          const FastDeltaTracker<comm_weight_t> &deltaSend,
+                                          const FastDeltaTracker<comm_weight_t> &deltaRecv) {
+        comm_weight_t oldMax = commDs_.step_max_comm(step);
+        comm_weight_t secondMax = commDs_.step_second_max_comm(step);
+        unsigned oldMaxCount = commDs_.step_max_comm_count(step);
 
-        comm_weight_t new_global_max = 0;
-        unsigned reduced_max_instances = 0;
+        comm_weight_t newGlobalMax = 0;
+        unsigned reducedMaxInstances = 0;
 
         // 1. Check modified sends (Iterate sparse dirty list)
         for (unsigned proc : delta_send.dirty_procs) {
@@ -502,24 +502,24 @@ struct kl_bsp_comm_cost_function {
         }
 
         // 3. Determine result
-        if (new_global_max > old_max) {
+        if (newGlobalMax > old_max) {
             return new_global_max - old_max;
         }
-        if (reduced_max_instances < old_max_count) {
+        if (reducedMaxInstances < oldMaxCount) {
             return 0;
         }
         return std::max(new_global_max, second_max) - old_max;
     }
 
-    template <typename thread_data_t>
-    void update_node_comm_affinity(const kl_move &move,
-                                   thread_data_t &thread_data,
-                                   const cost_t &penalty,
-                                   const cost_t &reward,
-                                   std::map<VertexType, kl_gain_update_info> &,
-                                   std::vector<VertexType> &new_nodes) {
-        const unsigned start_step = thread_data.start_step;
-        const unsigned end_step = thread_data.end_step;
+    template <typename ThreadDataT>
+    void UpdateNodeCommAffinity(const kl_move &move,
+                                ThreadDataT &threadData,
+                                const CostT &penalty,
+                                const CostT &reward,
+                                std::map<VertexType, kl_gain_update_info> &,
+                                std::vector<VertexType> &newNodes) {
+        const unsigned startStep = threadData.start_step;
+        const unsigned endStep = threadData.end_step;
 
         for (const auto &target : instance->getComputationalDag().children(move.node)) {
             const unsigned target_step = active_schedule->assigned_superstep(target);

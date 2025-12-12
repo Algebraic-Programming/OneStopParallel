@@ -28,15 +28,15 @@ limitations under the License.
 
 namespace osp {
 
-template <typename Graph_t>
-class GreedyChildren : public Scheduler<Graph_t> {
+template <typename GraphT>
+class GreedyChildren : public Scheduler<GraphT> {
   private:
-    bool ensure_enough_sources;
+    bool ensureEnoughSources_;
 
   public:
-    GreedyChildren(bool ensure_enough_sources_ = true) : Scheduler<Graph_t>(), ensure_enough_sources(ensure_enough_sources_) {};
+    GreedyChildren(bool ensureEnoughSources = true) : Scheduler<GraphT>(), ensureEnoughSources_(ensureEnoughSources) {};
 
-    RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &sched) override {
+    RETURN_STATUS computeSchedule(BspSchedule<GraphT> &sched) override {
         using VertexType = vertex_idx_t<Graph_t>;
         const auto &instance = sched.getInstance();
 
@@ -46,27 +46,27 @@ class GreedyChildren : public Scheduler<Graph_t> {
 
         const auto &graph = instance.getComputationalDag();
 
-        unsigned superstep_counter = 0;
+        unsigned superstepCounter = 0;
 
-        std::vector<VertexType> predecessors_count(instance.numberOfVertices(), 0);
+        std::vector<VertexType> predecessorsCount(instance.numberOfVertices(), 0);
         std::multiset<std::pair<unsigned, VertexType>, std::greater<>> next;
         for (const VertexType &i : source_vertices_view(graph)) {
             next.emplace(graph.out_degree(i), i);
         }
 
         while (!next.empty()) {
-            std::unordered_set<VertexType> nodes_assigned_this_superstep;
-            std::vector<v_workw_t<Graph_t>> processor_weights(instance.numberOfProcessors(), 0);
+            std::unordered_set<VertexType> nodesAssignedThisSuperstep;
+            std::vector<v_workw_t<Graph_t>> processorWeights(instance.numberOfProcessors(), 0);
 
-            bool few_sources = next.size() < instance.numberOfProcessors() ? true : false;
-            bool node_added = true;
+            bool fewSources = next.size() < instance.numberOfProcessors() ? true : false;
+            bool nodeAdded = true;
             while (!next.empty() && node_added) {
-                node_added = false;
+                nodeAdded = false;
                 for (auto iter = next.begin(); iter != next.cend(); iter++) {
                     const auto &node = iter->second;
-                    bool processor_set = false;
-                    bool failed_to_allocate = false;
-                    unsigned processor_to_be_allocated = 0;
+                    bool processorSet = false;
+                    bool failedToAllocate = false;
+                    unsigned processorToBeAllocated = 0;
 
                     for (const auto &par : graph.parents(node)) {
                         if (nodes_assigned_this_superstep.count(par)) {
@@ -85,30 +85,30 @@ class GreedyChildren : public Scheduler<Graph_t> {
                         }
                     }
 
-                    if (failed_to_allocate) {
+                    if (failedToAllocate) {
                         continue;
                     }
 
-                    sched.setAssignedSuperstep(node, superstep_counter);
-                    if (processor_set) {
-                        sched.setAssignedProcessor(node, processor_to_be_allocated);
+                    sched.setAssignedSuperstep(node, superstepCounter);
+                    if (processorSet) {
+                        sched.setAssignedProcessor(node, processorToBeAllocated);
                     } else {
-                        v_workw_t<Graph_t> min_weight = std::numeric_limits<v_workw_t<Graph_t>>::max();
-                        unsigned best_proc = std::numeric_limits<unsigned>::max();
+                        v_workw_t<Graph_t> minWeight = std::numeric_limits<v_workw_t<Graph_t>>::max();
+                        unsigned bestProc = std::numeric_limits<unsigned>::max();
                         for (unsigned p = 0; p < instance.numberOfProcessors(); ++p) {
                             if (instance.isCompatible(node, p)) {
-                                if (processor_weights[p] < min_weight) {
-                                    min_weight = processor_weights[p];
-                                    best_proc = p;
+                                if (processorWeights[p] < min_weight) {
+                                    minWeight = processor_weights[p];
+                                    bestProc = p;
                                 }
                             }
                         }
-                        sched.setAssignedProcessor(node, best_proc);
+                        sched.setAssignedProcessor(node, bestProc);
                     }
 
-                    nodes_assigned_this_superstep.emplace(node);
-                    processor_weights[sched.assignedProcessor(node)] += graph.vertex_work_weight(node);
-                    std::vector<VertexType> new_nodes;
+                    nodesAssignedThisSuperstep.emplace(node);
+                    processorWeights[sched.assignedProcessor(node)] += graph.vertex_work_weight(node);
+                    std::vector<VertexType> newNodes;
                     for (const auto &chld : graph.children(node)) {
                         predecessors_count[chld]++;
                         if (predecessors_count[chld] == graph.in_degree(chld)) {
@@ -119,7 +119,7 @@ class GreedyChildren : public Scheduler<Graph_t> {
                     for (const auto &vrt : new_nodes) {
                         next.emplace(graph.out_degree(vrt), vrt);
                     }
-                    node_added = true;
+                    nodeAdded = true;
                     break;
                 }
                 if (ensure_enough_sources && few_sources && next.size() >= instance.numberOfProcessors()) {
@@ -127,13 +127,13 @@ class GreedyChildren : public Scheduler<Graph_t> {
                 }
             }
 
-            superstep_counter++;
+            superstepCounter++;
         }
 
         return RETURN_STATUS::OSP_SUCCESS;
     }
 
-    std::string getScheduleName() const override { return ensure_enough_sources ? "GreedyChildrenS" : "GreedyChildren"; }
+    std::string getScheduleName() const override { return ensureEnoughSources_ ? "GreedyChildrenS" : "GreedyChildren"; }
 };
 
 }    // namespace osp

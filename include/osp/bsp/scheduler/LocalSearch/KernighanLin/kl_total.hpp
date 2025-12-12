@@ -28,107 +28,104 @@ limitations under the License.
 
 namespace osp {
 
-template <typename Graph_t, typename MemoryConstraint_t, bool use_node_communication_costs_arg>
-class kl_current_schedule_total : public kl_current_schedule<Graph_t, MemoryConstraint_t> {
+template <typename GraphT, typename MemoryConstraintT, bool useNodeCommunicationCostsArg>
+class KlCurrentScheduleTotal : public KlCurrentSchedule<GraphT, MemoryConstraintT> {
   public:
-    kl_current_schedule_total(Ikl_cost_function *cost_f_) : kl_current_schedule<Graph_t, MemoryConstraint_t>(cost_f_) {}
+    KlCurrentScheduleTotal(IklCostFunction *costF) : KlCurrentSchedule<GraphT, MemoryConstraintT>(costF) {}
 
-    double comm_multiplier = 1.0;
-    constexpr static bool use_node_communication_costs = use_node_communication_costs_arg || not has_edge_weights_v<Graph_t>;
+    double commMultiplier_ = 1.0;
+    constexpr static bool useNodeCommunicationCosts_ = use_node_communication_costs_arg || not has_edge_weights_v<Graph_t>;
 };
 
-template <typename Graph_t, typename MemoryConstraint_t, bool use_node_communication_costs_arg>
-class kl_total : public kl_base<Graph_t, MemoryConstraint_t> {
+template <typename GraphT, typename MemoryConstraintT, bool useNodeCommunicationCostsArg>
+class KlTotal : public KlBase<GraphT, MemoryConstraintT> {
   protected:
-    kl_current_schedule_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg> current_schedule;
+    KlCurrentScheduleTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg> currentSchedule_;
 
-    v_commw_t<Graph_t> node_comm_selection_threshold = 0;
-    double max_edge_weight = 0.0;
+    v_commw_t<Graph_t> nodeCommSelectionThreshold_ = 0;
+    double maxEdgeWeight_ = 0.0;
 
     virtual void initialize_datastructures() override {
 #ifdef KL_DEBUG
         std::cout << "KLTotal initialize datastructures" << std::endl;
 #endif
 
-        kl_base<Graph_t, MemoryConstraint_t>::initialize_datastructures();
+        KlBase<GraphT, MemoryConstraintT>::initialize_datastructures();
 
-        v_commw_t<Graph_t> max_edge_weight_ = 0;
-        v_workw_t<Graph_t> max_node_weight_ = 0;
+        v_commw_t<Graph_t> maxEdgeWeight = 0;
+        v_workw_t<Graph_t> maxNodeWeight = 0;
 
-        for (const auto vertex : current_schedule.instance->getComputationalDag().vertices()) {
-            if (is_sink(vertex, current_schedule.instance->getComputationalDag())) {
+        for (const auto vertex : currentSchedule_.instance->getComputationalDag().vertices()) {
+            if (is_sink(vertex, currentSchedule_.instance->getComputationalDag())) {
                 continue;
             }
 
-            max_edge_weight_
-                = std::max(max_edge_weight_, current_schedule.instance->getComputationalDag().vertex_comm_weight(vertex));
+            maxEdgeWeight = std::max(max_edge_weight_, currentSchedule_.instance->getComputationalDag().vertex_comm_weight(vertex));
 
-            max_node_weight_
-                = std::max(max_node_weight_, current_schedule.instance->getComputationalDag().vertex_work_weight(vertex));
+            maxNodeWeight = std::max(max_node_weight_, currentSchedule_.instance->getComputationalDag().vertex_work_weight(vertex));
         }
 
-        if constexpr (not current_schedule.use_node_communication_costs) {
-            max_edge_weight_ = 0;
+        if constexpr (not currentSchedule_.use_node_communication_costs) {
+            maxEdgeWeight = 0;
 
-            for (const auto &edge : edges(current_schedule.instance->getComputationalDag())) {
-                max_edge_weight_
-                    = std::max(max_edge_weight_, current_schedule.instance->getComputationalDag().edge_comm_weight(edge));
+            for (const auto &edge : edges(currentSchedule_.instance->getComputationalDag())) {
+                maxEdgeWeight = std::max(max_edge_weight_, currentSchedule_.instance->getComputationalDag().edge_comm_weight(edge));
             }
         }
 
-        max_edge_weight = max_edge_weight_ + max_node_weight_;
+        maxEdgeWeight_ = max_edge_weight_ + max_node_weight_;
 
-        kl_base<Graph_t, MemoryConstraint_t>::parameters.initial_penalty
-            = max_edge_weight * current_schedule.comm_multiplier * current_schedule.instance->communicationCosts();
+        KlBase<GraphT, MemoryConstraintT>::parameters.initial_penalty
+            = maxEdgeWeight_ * currentSchedule_.comm_multiplier * currentSchedule_.instance->communicationCosts();
 
-        kl_base<Graph_t, MemoryConstraint_t>::parameters.gain_threshold
-            = max_edge_weight * current_schedule.comm_multiplier * current_schedule.instance->communicationCosts();
+        KlBase<GraphT, MemoryConstraintT>::parameters.gain_threshold
+            = maxEdgeWeight_ * currentSchedule_.comm_multiplier * currentSchedule_.instance->communicationCosts();
     }
 
     virtual void update_reward_penalty() override {
-        if (current_schedule.current_violations.size() <= kl_base<Graph_t, MemoryConstraint_t>::parameters.violations_threshold) {
-            kl_base<Graph_t, MemoryConstraint_t>::penalty = kl_base<Graph_t, MemoryConstraint_t>::parameters.initial_penalty;
-            kl_base<Graph_t, MemoryConstraint_t>::reward = 0.0;
+        if (currentSchedule_.current_violations.size() <= KlBase<GraphT, MemoryConstraintT>::parameters.violations_threshold) {
+            KlBase<GraphT, MemoryConstraintT>::penalty = KlBase<GraphT, MemoryConstraintT>::parameters.initial_penalty;
+            KlBase<GraphT, MemoryConstraintT>::reward = 0.0;
 
         } else {
-            kl_base<Graph_t, MemoryConstraint_t>::parameters.violations_threshold = 0;
+            KlBase<GraphT, MemoryConstraintT>::parameters.violations_threshold = 0;
 
-            kl_base<Graph_t, MemoryConstraint_t>::penalty = std::log((current_schedule.current_violations.size()))
-                                                            * max_edge_weight * current_schedule.comm_multiplier
-                                                            * current_schedule.instance->communicationCosts();
+            KlBase<GraphT, MemoryConstraintT>::penalty = std::log((currentSchedule_.current_violations.size())) * maxEdgeWeight_
+                                                         * currentSchedule_.comm_multiplier
+                                                         * currentSchedule_.instance->communicationCosts();
 
-            kl_base<Graph_t, MemoryConstraint_t>::reward = std::sqrt((current_schedule.current_violations.size() + 4))
-                                                           * max_edge_weight * current_schedule.comm_multiplier
-                                                           * current_schedule.instance->communicationCosts();
+            KlBase<GraphT, MemoryConstraintT>::reward = std::sqrt((currentSchedule_.current_violations.size() + 4))
+                                                        * maxEdgeWeight_ * currentSchedule_.comm_multiplier
+                                                        * currentSchedule_.instance->communicationCosts();
         }
     }
 
     virtual void set_initial_reward_penalty() override {
-        kl_base<Graph_t, MemoryConstraint_t>::penalty = kl_base<Graph_t, MemoryConstraint_t>::parameters.initial_penalty;
-        kl_base<Graph_t, MemoryConstraint_t>::reward
-            = max_edge_weight * current_schedule.comm_multiplier * current_schedule.instance->communicationCosts();
+        KlBase<GraphT, MemoryConstraintT>::penalty = KlBase<GraphT, MemoryConstraintT>::parameters.initial_penalty;
+        KlBase<GraphT, MemoryConstraintT>::reward
+            = maxEdgeWeight_ * currentSchedule_.comm_multiplier * currentSchedule_.instance->communicationCosts();
     }
 
     virtual void select_nodes_comm() override {
-        if constexpr (current_schedule.use_node_communication_costs) {
-            for (const auto &node : current_schedule.instance->getComputationalDag().vertices()) {
-                for (const auto &source : current_schedule.instance->getComputationalDag().parents(node)) {
-                    if (current_schedule.vector_schedule.assignedProcessor(node)
-                        != current_schedule.vector_schedule.assignedProcessor(source)) {
+        if constexpr (currentSchedule_.use_node_communication_costs) {
+            for (const auto &node : currentSchedule_.instance->getComputationalDag().vertices()) {
+                for (const auto &source : currentSchedule_.instance->getComputationalDag().parents(node)) {
+                    if (currentSchedule_.vector_schedule.assignedProcessor(node)
+                        != currentSchedule_.vector_schedule.assignedProcessor(source)) {
                         if (current_schedule.instance->getComputationalDag().vertex_comm_weight(node)
                             > node_comm_selection_threshold) {
-                            kl_base<Graph_t, MemoryConstraint_t>::node_selection.insert(node);
+                            KlBase<GraphT, MemoryConstraintT>::node_selection.insert(node);
                             break;
                         }
                     }
                 }
 
-                for (const auto &target : current_schedule.instance->getComputationalDag().children(node)) {
-                    if (current_schedule.vector_schedule.assignedProcessor(node)
-                        != current_schedule.vector_schedule.assignedProcessor(target)) {
+                for (const auto &target : currentSchedule_.instance->getComputationalDag().children(node)) {
+                    if (currentSchedule_.vector_schedule.assignedProcessor(node)
+                        != currentSchedule_.vector_schedule.assignedProcessor(target)) {
                         if (current_schedule.instance->getComputationalDag().vertex_comm_weight(node)
                             > node_comm_selection_threshold) {
-                            kl_base<Graph_t, MemoryConstraint_t>::node_selection.insert(node);
+                            KlBase<GraphT, MemoryConstraintT>::node_selection.insert(node);
                             break;
                         }
                     }
@@ -136,26 +133,26 @@ class kl_total : public kl_base<Graph_t, MemoryConstraint_t> {
             }
 
         } else {
-            for (const auto &node : current_schedule.instance->getComputationalDag().vertices()) {
-                for (const auto &in_edge : in_edges(node, current_schedule.instance->getComputationalDag())) {
-                    const auto &source_v = source(in_edge, current_schedule.instance->getComputationalDag());
-                    if (current_schedule.vector_schedule.assignedProcessor(node)
-                        != current_schedule.vector_schedule.assignedProcessor(source_v)) {
+            for (const auto &node : currentSchedule_.instance->getComputationalDag().vertices()) {
+                for (const auto &inEdge : in_edges(node, currentSchedule_.instance->getComputationalDag())) {
+                    const auto &sourceV = source(inEdge, currentSchedule_.instance->getComputationalDag());
+                    if (currentSchedule_.vector_schedule.assignedProcessor(node)
+                        != currentSchedule_.vector_schedule.assignedProcessor(sourceV)) {
                         if (current_schedule.instance->getComputationalDag().edge_comm_weight(in_edge)
                             > node_comm_selection_threshold) {
-                            kl_base<Graph_t, MemoryConstraint_t>::node_selection.insert(node);
+                            KlBase<GraphT, MemoryConstraintT>::node_selection.insert(node);
                             break;
                         }
                     }
                 }
 
-                for (const auto &out_edge : out_edges(node, current_schedule.instance->getComputationalDag())) {
-                    const auto &target_v = target(out_edge, current_schedule.instance->getComputationalDag());
-                    if (current_schedule.vector_schedule.assignedProcessor(node)
-                        != current_schedule.vector_schedule.assignedProcessor(target_v)) {
+                for (const auto &outEdge : out_edges(node, currentSchedule_.instance->getComputationalDag())) {
+                    const auto &targetV = target(outEdge, currentSchedule_.instance->getComputationalDag());
+                    if (currentSchedule_.vector_schedule.assignedProcessor(node)
+                        != currentSchedule_.vector_schedule.assignedProcessor(targetV)) {
                         if (current_schedule.instance->getComputationalDag().edge_comm_weight(out_edge)
                             > node_comm_selection_threshold) {
-                            kl_base<Graph_t, MemoryConstraint_t>::node_selection.insert(node);
+                            KlBase<GraphT, MemoryConstraintT>::node_selection.insert(node);
                             break;
                         }
                     }
@@ -165,9 +162,9 @@ class kl_total : public kl_base<Graph_t, MemoryConstraint_t> {
     }
 
   public:
-    kl_total() : kl_base<Graph_t, MemoryConstraint_t>(current_schedule), current_schedule(this) {}
+    KlTotal() : KlBase<GraphT, MemoryConstraintT>(currentSchedule_), currentSchedule_(this) {}
 
-    virtual ~kl_total() = default;
+    virtual ~KlTotal() = default;
 };
 
 }    // namespace osp

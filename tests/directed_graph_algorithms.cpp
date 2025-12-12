@@ -37,45 +37,45 @@ limitations under the License.
 
 using namespace osp;
 
-BOOST_AUTO_TEST_CASE(longest_edge_triangle_parallel) {
-    using graph_t = boost_graph_int_t;
+BOOST_AUTO_TEST_CASE(LongestEdgeTriangleParallel) {
+    using GraphT = boost_graph_int_t;
 
     // static_assert(std::is_base_of<Scheduler, T>::value, "Class is not a scheduler!");
-    std::vector<std::string> filenames_graph = large_spaa_graphs();
+    std::vector<std::string> filenamesGraph = LargeSpaaGraphs();
 
-    const auto project_root = get_project_root();
+    const auto projectRoot = GetProjectRoot();
 
-    for (auto &filename_graph : filenames_graph) {
-        graph_t graph;
+    for (auto &filenameGraph : filenamesGraph) {
+        GraphT graph;
 
-        bool status_graph = file_reader::readComputationalDagHyperdagFormatDB((project_root / filename_graph).string(), graph);
+        bool statusGraph = file_reader::readComputationalDagHyperdagFormatDB((projectRoot / filenameGraph).string(), graph);
 
-        BOOST_CHECK(status_graph);
+        BOOST_CHECK(statusGraph);
 
-        auto start_time = std::chrono::high_resolution_clock::now();
-        auto deleted_edges = long_edges_in_triangles(graph);
-        auto finish_time = std::chrono::high_resolution_clock::now();
+        auto startTime = std::chrono::high_resolution_clock::now();
+        auto deletedEdges = long_edges_in_triangles(graph);
+        auto finishTime = std::chrono::high_resolution_clock::now();
 
-        std::cout << "\n" << filename_graph << std::endl;
+        std::cout << "\n" << filenameGraph << std::endl;
 
         std::cout << "Time for long_edges_in_triangles: "
-                  << std::chrono::duration_cast<std::chrono::milliseconds>(finish_time - start_time).count() << "ms" << std::endl;
+                  << std::chrono::duration_cast<std::chrono::milliseconds>(finishTime - startTime).count() << "ms" << std::endl;
 
-        start_time = std::chrono::high_resolution_clock::now();
-        auto deleted_edges_parallel = long_edges_in_triangles_parallel(graph);
-        finish_time = std::chrono::high_resolution_clock::now();
+        startTime = std::chrono::high_resolution_clock::now();
+        auto deletedEdgesParallel = long_edges_in_triangles_parallel(graph);
+        finishTime = std::chrono::high_resolution_clock::now();
 
         std::cout << "Time for long_edges_in_triangles_parallel: "
-                  << std::chrono::duration_cast<std::chrono::milliseconds>(finish_time - start_time).count() << "ms" << std::endl;
+                  << std::chrono::duration_cast<std::chrono::milliseconds>(finishTime - startTime).count() << "ms" << std::endl;
 
-        BOOST_CHECK_EQUAL(deleted_edges.size(), deleted_edges_parallel.size());
+        BOOST_CHECK_EQUAL(deletedEdges.size(), deletedEdgesParallel.size());
 
-        for (const auto &edge : deleted_edges) {
-            BOOST_CHECK(deleted_edges_parallel.find(edge) != deleted_edges_parallel.cend());
+        for (const auto &edge : deletedEdges) {
+            BOOST_CHECK(deletedEdgesParallel.find(edge) != deletedEdgesParallel.cend());
         }
 
-        for (const auto &edge : deleted_edges_parallel) {
-            BOOST_CHECK(deleted_edges.find(edge) != deleted_edges.cend());
+        for (const auto &edge : deletedEdgesParallel) {
+            BOOST_CHECK(deletedEdges.find(edge) != deletedEdges.cend());
         }
     }
 }

@@ -43,36 +43,36 @@ limitations under the License.
 
 namespace osp {
 
-struct kl_base_parameter {
-    double max_div_best_sol_base_percent = 1.05;
-    double max_div_best_sol_rate_percent = 0.002;
+struct KlBaseParameter {
+    double maxDivBestSolBasePercent_ = 1.05;
+    double maxDivBestSolRatePercent_ = 0.002;
 
-    unsigned max_num_unlocks = 1;
-    unsigned max_num_failed_branches = 5;
+    unsigned maxNumUnlocks_ = 1;
+    unsigned maxNumFailedBranches_ = 5;
 
-    unsigned max_inner_iterations = 150;
-    unsigned max_outer_iterations = 100;
+    unsigned maxInnerIterations_ = 150;
+    unsigned maxOuterIterations_ = 100;
 
-    unsigned max_no_improvement_iterations = 75;
+    unsigned maxNoImprovementIterations_ = 75;
 
-    std::size_t selection_threshold;
-    bool select_all_nodes = false;
+    std::size_t selectionThreshold_;
+    bool selectAllNodes_ = false;
 
-    double initial_penalty = 0.0;
+    double initialPenalty_ = 0.0;
 
-    double gain_threshold = -10.0;
-    double change_in_cost_threshold = 0.0;
+    double gainThreshold_ = -10.0;
+    double changeInCostThreshold_ = 0.0;
 
-    bool quick_pass = false;
+    bool quickPass_ = false;
 
-    unsigned max_step_selection_epochs = 4;
-    unsigned reset_epoch_counter_threshold = 10;
+    unsigned maxStepSelectionEpochs_ = 4;
+    unsigned resetEpochCounterThreshold_ = 10;
 
-    unsigned violations_threshold = 0;
+    unsigned violationsThreshold_ = 0;
 };
 
-template <typename Graph_t, typename MemoryConstraint_t>
-class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
+template <typename GraphT, typename MemoryConstraintT>
+class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
     static_assert(is_directed_graph_edge_desc_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
     static_assert(has_hashable_edge_desc_v<Graph_t>, "Graph_t must satisfy the has_hashable_edge_desc concept");
     static_assert(is_computational_dag_v<Graph_t>, "Graph_t must satisfy the computational_dag concept");
@@ -85,42 +85,42 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
   protected:
     using VertexType = vertex_idx_t<Graph_t>;
 
-    kl_base_parameter parameters;
+    KlBaseParameter parameters_;
 
-    std::mt19937 gen;
+    std::mt19937 gen_;
 
-    VertexType num_nodes;
-    unsigned num_procs;
+    VertexType numNodes_;
+    unsigned numProcs_;
 
-    double penalty = 0.0;
-    double reward = 0.0;
+    double penalty_ = 0.0;
+    double reward_ = 0.0;
 
-    virtual void update_reward_penalty() = 0;
-    virtual void set_initial_reward_penalty() = 0;
+    virtual void UpdateRewardPenalty() = 0;
+    virtual void SetInitialRewardPenalty() = 0;
 
-    boost::heap::fibonacci_heap<kl_move<Graph_t>> max_gain_heap;
-    using heap_handle = typename boost::heap::fibonacci_heap<kl_move<Graph_t>>::handle_type;
+    boost::heap::fibonacci_heap<KlMove<GraphT>> maxGainHeap_;
+    using HeapHandle = typename boost::heap::fibonacci_heap<KlMove<GraphT>>::handle_type;
 
-    std::unordered_map<VertexType, heap_handle> node_heap_handles;
+    std::unordered_map<VertexType, heap_handle> nodeHeapHandles_;
 
-    std::vector<std::vector<std::vector<double>>> node_gains;
-    std::vector<std::vector<std::vector<double>>> node_change_in_costs;
+    std::vector<std::vector<std::vector<double>>> nodeGains_;
+    std::vector<std::vector<std::vector<double>>> nodeChangeInCosts_;
 
-    kl_current_schedule<Graph_t, MemoryConstraint_t> &current_schedule;
+    KlCurrentSchedule<GraphT, MemoryConstraintT> &currentSchedule_;
 
-    BspSchedule<Graph_t> *best_schedule;
-    double best_schedule_costs;
+    BspSchedule<GraphT> *bestSchedule_;
+    double bestScheduleCosts_;
 
-    std::unordered_set<VertexType> locked_nodes;
-    std::unordered_set<VertexType> super_locked_nodes;
-    std::vector<unsigned> unlock;
+    std::unordered_set<VertexType> lockedNodes_;
+    std::unordered_set<VertexType> superLockedNodes_;
+    std::vector<unsigned> unlock_;
 
-    bool unlock_node(VertexType node) {
+    bool UnlockNode(VertexType node) {
         if (super_locked_nodes.find(node) == super_locked_nodes.end()) {
             if (locked_nodes.find(node) == locked_nodes.end()) {
                 return true;
             } else if (locked_nodes.find(node) != locked_nodes.end() && unlock[node] > 0) {
-                unlock[node]--;
+                unlock_[node]--;
 
                 locked_nodes.erase(node);
 
@@ -130,14 +130,14 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
         return false;
     }
 
-    bool check_node_unlocked(VertexType node) {
+    bool CheckNodeUnlocked(VertexType node) {
         if (super_locked_nodes.find(node) == super_locked_nodes.end() && locked_nodes.find(node) == locked_nodes.end()) {
             return true;
         }
         return false;
     };
 
-    void reset_locked_nodes() {
+    void ResetLockedNodes() {
         for (const auto &i : locked_nodes) {
             unlock[i] = parameters.max_num_unlocks;
         }
@@ -145,14 +145,14 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
         locked_nodes.clear();
     }
 
-    bool check_violation_locked() {
-        if (current_schedule.current_violations.empty()) {
+    bool CheckViolationLocked() {
+        if (currentSchedule_.current_violations.empty()) {
             return false;
         }
 
-        for (auto &edge : current_schedule.current_violations) {
-            const auto &source_v = source(edge, current_schedule.instance->getComputationalDag());
-            const auto &target_v = target(edge, current_schedule.instance->getComputationalDag());
+        for (auto &edge : currentSchedule_.current_violations) {
+            const auto &sourceV = source(edge, currentSchedule_.instance->getComputationalDag());
+            const auto &targetV = target(edge, currentSchedule_.instance->getComputationalDag());
 
             if (locked_nodes.find(source_v) == locked_nodes.end() || locked_nodes.find(target_v) == locked_nodes.end()) {
                 return false;
@@ -184,12 +184,12 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
         return false;
     }
 
-    void reset_gain_heap() {
-        max_gain_heap.clear();
+    void ResetGainHeap() {
+        maxGainHeap_.clear();
         node_heap_handles.clear();
     }
 
-    virtual void initialize_datastructures() {
+    virtual void InitializeDatastructures() {
 #ifdef KL_DEBUG
         std::cout << "KLBase initialize datastructures" << std::endl;
 #endif
@@ -202,39 +202,39 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
 
         unlock = std::vector<unsigned>(num_nodes, parameters.max_num_unlocks);
 
-        current_schedule.initialize_current_schedule(*best_schedule);
-        best_schedule_costs = current_schedule.current_cost;
+        currentSchedule_.initialize_current_schedule(*bestSchedule_);
+        bestScheduleCosts_ = currentSchedule_.current_cost;
     }
 
-    std::unordered_set<VertexType> nodes_to_update;
+    std::unordered_set<VertexType> nodesToUpdate_;
 
-    void compute_nodes_to_update(kl_move<Graph_t> move) {
+    void ComputeNodesToUpdate(KlMove<GraphT> move) {
         nodes_to_update.clear();
 
-        for (const auto &target : current_schedule.instance->getComputationalDag().children(move.node)) {
+        for (const auto &target : currentSchedule_.instance->getComputationalDag().children(move.node)) {
             if (node_selection.find(target) != node_selection.end() && locked_nodes.find(target) == locked_nodes.end()
                 && super_locked_nodes.find(target) == super_locked_nodes.end()) {
                 nodes_to_update.insert(target);
             }
         }
 
-        for (const auto &source : current_schedule.instance->getComputationalDag().parents(move.node)) {
+        for (const auto &source : currentSchedule_.instance->getComputationalDag().parents(move.node)) {
             if (node_selection.find(source) != node_selection.end() && locked_nodes.find(source) == locked_nodes.end()
                 && super_locked_nodes.find(source) == super_locked_nodes.end()) {
                 nodes_to_update.insert(source);
             }
         }
 
-        const unsigned start_step = std::min(move.from_step, move.to_step) == 0 ? 0 : std::min(move.from_step, move.to_step) - 1;
-        const unsigned end_step = std::min(current_schedule.num_steps(), std::max(move.from_step, move.to_step) + 2);
+        const unsigned startStep = std::min(move.from_step, move.to_step) == 0 ? 0 : std::min(move.from_step, move.to_step) - 1;
+        const unsigned endStep = std::min(currentSchedule_.num_steps(), std::max(move.from_step, move.to_step) + 2);
 
 #ifdef KL_DEBUG
         std::cout << "updating from step " << start_step << " to step " << end_step << std::endl;
 #endif
 
-        for (unsigned step = start_step; step < end_step; step++) {
-            for (unsigned proc = 0; proc < num_procs; proc++) {
-                for (const auto &node : current_schedule.set_schedule.step_processor_vertices[step][proc]) {
+        for (unsigned step = startStep; step < endStep; step++) {
+            for (unsigned proc = 0; proc < numProcs_; proc++) {
+                for (const auto &node : currentSchedule_.set_schedule.step_processor_vertices[step][proc]) {
                     if (node_selection.find(node) != node_selection.end() && locked_nodes.find(node) == locked_nodes.end()
                         && super_locked_nodes.find(node) == super_locked_nodes.end()) {
                         nodes_to_update.insert(node);
@@ -244,8 +244,8 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
         }
     }
 
-    void initialize_gain_heap(const std::unordered_set<VertexType> &nodes) {
-        reset_gain_heap();
+    void InitializeGainHeap(const std::unordered_set<VertexType> &nodes) {
+        ResetGainHeap();
 
         for (const auto &node : nodes) {
             compute_node_gain(node);
@@ -253,8 +253,8 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
         }
     }
 
-    void initialize_gain_heap_unlocked_nodes(const std::unordered_set<VertexType> &nodes) {
-        reset_gain_heap();
+    void InitializeGainHeapUnlockedNodes(const std::unordered_set<VertexType> &nodes) {
+        ResetGainHeap();
 
         for (const auto &node : nodes) {
             if (locked_nodes.find(node) == locked_nodes.end() && super_locked_nodes.find(node) == super_locked_nodes.end()) {
@@ -264,134 +264,134 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
         }
     }
 
-    void compute_node_gain(VertexType node) {
-        const unsigned &current_proc = current_schedule.vector_schedule.assignedProcessor(node);
-        const unsigned &current_step = current_schedule.vector_schedule.assignedSuperstep(node);
+    void ComputeNodeGain(VertexType node) {
+        const unsigned &currentProc = currentSchedule_.vector_schedule.assignedProcessor(node);
+        const unsigned &currentStep = currentSchedule_.vector_schedule.assignedSuperstep(node);
 
-        for (unsigned new_proc = 0; new_proc < num_procs; new_proc++) {
-            if (current_schedule.instance->isCompatible(node, new_proc)) {
-                node_gains[node][new_proc][0] = 0.0;
-                node_gains[node][new_proc][1] = 0.0;
-                node_gains[node][new_proc][2] = 0.0;
+        for (unsigned newProc = 0; newProc < numProcs_; newProc++) {
+            if (currentSchedule_.instance->isCompatible(node, newProc)) {
+                nodeGains_[node][newProc][0] = 0.0;
+                nodeGains_[node][newProc][1] = 0.0;
+                nodeGains_[node][newProc][2] = 0.0;
 
-                node_change_in_costs[node][new_proc][0] = 0;
-                node_change_in_costs[node][new_proc][1] = 0;
-                node_change_in_costs[node][new_proc][2] = 0;
+                nodeChangeInCosts_[node][newProc][0] = 0;
+                nodeChangeInCosts_[node][newProc][1] = 0;
+                nodeChangeInCosts_[node][newProc][2] = 0;
 
                 compute_comm_gain(node, current_step, current_proc, new_proc);
                 compute_work_gain(node, current_step, current_proc, new_proc);
 
-                if constexpr (current_schedule.use_memory_constraint) {
-                    if (not current_schedule.memory_constraint.can_move(
-                            node, new_proc, current_schedule.vector_schedule.assignedSuperstep(node))) {
-                        node_gains[node][new_proc][1] = std::numeric_limits<double>::lowest();
+                if constexpr (currentSchedule_.use_memory_constraint) {
+                    if (not currentSchedule_.memory_constraint.can_move(
+                            node, newProc, currentSchedule_.vector_schedule.assignedSuperstep(node))) {
+                        nodeGains_[node][newProc][1] = std::numeric_limits<double>::lowest();
                     }
 
-                    if (current_schedule.vector_schedule.assignedSuperstep(node) > 0) {
-                        if (not current_schedule.memory_constraint.can_move(
-                                node, new_proc, current_schedule.vector_schedule.assignedSuperstep(node) - 1)) {
-                            node_gains[node][new_proc][0] = std::numeric_limits<double>::lowest();
+                    if (currentSchedule_.vector_schedule.assignedSuperstep(node) > 0) {
+                        if (not currentSchedule_.memory_constraint.can_move(
+                                node, newProc, currentSchedule_.vector_schedule.assignedSuperstep(node) - 1)) {
+                            nodeGains_[node][newProc][0] = std::numeric_limits<double>::lowest();
                         }
                     }
-                    if (current_schedule.vector_schedule.assignedSuperstep(node) < current_schedule.num_steps() - 1) {
-                        if (not current_schedule.memory_constraint.can_move(
-                                node, new_proc, current_schedule.vector_schedule.assignedSuperstep(node) + 1)) {
-                            node_gains[node][new_proc][2] = std::numeric_limits<double>::lowest();
+                    if (currentSchedule_.vector_schedule.assignedSuperstep(node) < currentSchedule_.num_steps() - 1) {
+                        if (not currentSchedule_.memory_constraint.can_move(
+                                node, newProc, currentSchedule_.vector_schedule.assignedSuperstep(node) + 1)) {
+                            nodeGains_[node][newProc][2] = std::numeric_limits<double>::lowest();
                         }
                     }
                 }
 
             } else {
-                node_gains[node][new_proc][0] = std::numeric_limits<double>::lowest();
-                node_gains[node][new_proc][1] = std::numeric_limits<double>::lowest();
-                node_gains[node][new_proc][2] = std::numeric_limits<double>::lowest();
+                nodeGains_[node][newProc][0] = std::numeric_limits<double>::lowest();
+                nodeGains_[node][newProc][1] = std::numeric_limits<double>::lowest();
+                nodeGains_[node][newProc][2] = std::numeric_limits<double>::lowest();
             }
         }
     }
 
-    double compute_max_gain_insert_or_update_heap(VertexType node) {
-        double node_max_gain = std::numeric_limits<double>::lowest();
-        double node_change_in_cost = 0;
-        unsigned node_best_step = 0;
-        unsigned node_best_proc = 0;
+    double ComputeMaxGainInsertOrUpdateHeap(VertexType node) {
+        double nodeMaxGain = std::numeric_limits<double>::lowest();
+        double nodeChangeInCost = 0;
+        unsigned nodeBestStep = 0;
+        unsigned nodeBestProc = 0;
 
-        double proc_change_in_cost = 0;
-        double proc_max = 0;
-        unsigned best_step = 0;
+        double procChangeInCost = 0;
+        double procMax = 0;
+        unsigned bestStep = 0;
 
-        for (unsigned proc = 0; proc < num_procs; proc++) {
-            int rand_count = 0;
+        for (unsigned proc = 0; proc < numProcs_; proc++) {
+            int randCount = 0;
 
-            if (current_schedule.vector_schedule.assignedSuperstep(node) > 0
-                && current_schedule.vector_schedule.assignedSuperstep(node) < current_schedule.num_steps() - 1) {
-                if (node_gains[node][proc][0] > node_gains[node][proc][1]) {
-                    if (node_gains[node][proc][0] > node_gains[node][proc][2]) {
-                        proc_max = node_gains[node][proc][0];
-                        proc_change_in_cost = node_change_in_costs[node][proc][0];
-                        best_step = 0;
+            if (currentSchedule_.vector_schedule.assignedSuperstep(node) > 0
+                && currentSchedule_.vector_schedule.assignedSuperstep(node) < currentSchedule_.num_steps() - 1) {
+                if (nodeGains_[node][proc][0] > nodeGains_[node][proc][1]) {
+                    if (nodeGains_[node][proc][0] > nodeGains_[node][proc][2]) {
+                        procMax = nodeGains_[node][proc][0];
+                        procChangeInCost = nodeChangeInCosts_[node][proc][0];
+                        bestStep = 0;
 
                     } else {
-                        proc_max = node_gains[node][proc][2];
-                        proc_change_in_cost = node_change_in_costs[node][proc][2];
-                        best_step = 2;
+                        procMax = nodeGains_[node][proc][2];
+                        procChangeInCost = nodeChangeInCosts_[node][proc][2];
+                        bestStep = 2;
                     }
 
                 } else {
-                    if (node_gains[node][proc][1] > node_gains[node][proc][2]) {
-                        proc_max = node_gains[node][proc][1];
-                        proc_change_in_cost = node_change_in_costs[node][proc][1];
-                        best_step = 1;
+                    if (nodeGains_[node][proc][1] > nodeGains_[node][proc][2]) {
+                        procMax = nodeGains_[node][proc][1];
+                        procChangeInCost = nodeChangeInCosts_[node][proc][1];
+                        bestStep = 1;
                     } else {
-                        proc_max = node_gains[node][proc][2];
-                        proc_change_in_cost = node_change_in_costs[node][proc][2];
-                        best_step = 2;
+                        procMax = nodeGains_[node][proc][2];
+                        procChangeInCost = nodeChangeInCosts_[node][proc][2];
+                        bestStep = 2;
                     }
                 }
 
-            } else if (current_schedule.vector_schedule.assignedSuperstep(node) == 0
-                       && current_schedule.vector_schedule.assignedSuperstep(node) < current_schedule.num_steps() - 1) {
-                if (node_gains[node][proc][2] > node_gains[node][proc][1]) {
-                    proc_max = node_gains[node][proc][2];
-                    proc_change_in_cost = node_change_in_costs[node][proc][2];
-                    best_step = 2;
+            } else if (currentSchedule_.vector_schedule.assignedSuperstep(node) == 0
+                       && currentSchedule_.vector_schedule.assignedSuperstep(node) < currentSchedule_.num_steps() - 1) {
+                if (nodeGains_[node][proc][2] > nodeGains_[node][proc][1]) {
+                    procMax = nodeGains_[node][proc][2];
+                    procChangeInCost = nodeChangeInCosts_[node][proc][2];
+                    bestStep = 2;
                 } else {
-                    proc_max = node_gains[node][proc][1];
-                    proc_change_in_cost = node_change_in_costs[node][proc][1];
-                    best_step = 1;
+                    procMax = nodeGains_[node][proc][1];
+                    procChangeInCost = nodeChangeInCosts_[node][proc][1];
+                    bestStep = 1;
                 }
 
-            } else if (current_schedule.vector_schedule.assignedSuperstep(node) > 0
-                       && current_schedule.vector_schedule.assignedSuperstep(node) == current_schedule.num_steps() - 1) {
-                if (node_gains[node][proc][1] > node_gains[node][proc][0]) {
-                    proc_max = node_gains[node][proc][1];
-                    proc_change_in_cost = node_change_in_costs[node][proc][1];
-                    best_step = 1;
+            } else if (currentSchedule_.vector_schedule.assignedSuperstep(node) > 0
+                       && currentSchedule_.vector_schedule.assignedSuperstep(node) == currentSchedule_.num_steps() - 1) {
+                if (nodeGains_[node][proc][1] > nodeGains_[node][proc][0]) {
+                    procMax = nodeGains_[node][proc][1];
+                    procChangeInCost = nodeChangeInCosts_[node][proc][1];
+                    bestStep = 1;
                 } else {
-                    proc_max = node_gains[node][proc][0];
-                    proc_change_in_cost = node_change_in_costs[node][proc][0];
-                    best_step = 0;
+                    procMax = nodeGains_[node][proc][0];
+                    procChangeInCost = nodeChangeInCosts_[node][proc][0];
+                    bestStep = 0;
                 }
             } else {
-                proc_max = node_gains[node][proc][1];
-                proc_change_in_cost = node_change_in_costs[node][proc][1];
-                best_step = 1;
+                procMax = nodeGains_[node][proc][1];
+                procChangeInCost = nodeChangeInCosts_[node][proc][1];
+                bestStep = 1;
             }
 
-            if (node_max_gain < proc_max) {
-                node_max_gain = proc_max;
-                node_change_in_cost = proc_change_in_cost;
-                node_best_step = current_schedule.vector_schedule.assignedSuperstep(node) + best_step - 1;
-                node_best_proc = proc;
-                rand_count = 0;
+            if (nodeMaxGain < procMax) {
+                nodeMaxGain = procMax;
+                nodeChangeInCost = procChangeInCost;
+                nodeBestStep = currentSchedule_.vector_schedule.assignedSuperstep(node) + bestStep - 1;
+                nodeBestProc = proc;
+                randCount = 0;
 
-            } else if (node_max_gain <= proc_max) {    // only ==
+            } else if (nodeMaxGain <= procMax) {    // only ==
 
-                if (rand() % (2 + rand_count) == 0) {
-                    node_max_gain = proc_max;
-                    node_change_in_cost = proc_change_in_cost;
-                    node_best_step = current_schedule.vector_schedule.assignedSuperstep(node) + best_step - 1;
-                    node_best_proc = proc;
-                    rand_count++;
+                if (rand() % (2 + randCount) == 0) {
+                    nodeMaxGain = procMax;
+                    nodeChangeInCost = procChangeInCost;
+                    nodeBestStep = currentSchedule_.vector_schedule.assignedSuperstep(node) + bestStep - 1;
+                    nodeBestProc = proc;
+                    randCount++;
                 }
             }
         }
@@ -411,155 +411,154 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
             // parameters.change_in_cost_threshold)
             //     return node_max_gain;
 
-            kl_move<Graph_t> move(node,
-                                  node_max_gain,
-                                  node_change_in_cost,
-                                  current_schedule.vector_schedule.assignedProcessor(node),
-                                  current_schedule.vector_schedule.assignedSuperstep(node),
-                                  node_best_proc,
-                                  node_best_step);
+            KlMove<GraphT> move(node,
+                                nodeMaxGain,
+                                nodeChangeInCost,
+                                currentSchedule_.vector_schedule.assignedProcessor(node),
+                                currentSchedule_.vector_schedule.assignedSuperstep(node),
+                                nodeBestProc,
+                                nodeBestStep);
             node_heap_handles[node] = max_gain_heap.push(move);
         }
 
-        return node_max_gain;
+        return nodeMaxGain;
     }
 
-    void compute_work_gain(VertexType node, unsigned current_step, unsigned current_proc, unsigned new_proc) {
-        if (current_proc == new_proc) {
-            node_gains[node][current_proc][1] = std::numeric_limits<double>::lowest();
+    void ComputeWorkGain(VertexType node, unsigned currentStep, unsigned currentProc, unsigned newProc) {
+        if (currentProc == newProc) {
+            nodeGains_[node][currentProc][1] = std::numeric_limits<double>::lowest();
 
         } else {
-            if (current_schedule.step_max_work[current_step] == current_schedule.step_processor_work[current_step][current_proc]
-                && current_schedule.step_processor_work[current_step][current_proc]
-                       > current_schedule.step_second_max_work[current_step]) {
+            if (currentSchedule_.step_max_work[currentStep] == currentSchedule_.step_processor_work[currentStep][currentProc]
+                && currentSchedule_.step_processor_work[currentStep][currentProc]
+                       > currentSchedule_.step_second_max_work[currentStep]) {
                 // new max
-                const double new_max_work
-                    = std::max(current_schedule.step_processor_work[current_step][current_proc]
-                                   - current_schedule.instance->getComputationalDag().vertex_work_weight(node),
-                               current_schedule.step_second_max_work[current_step]);
+                const double newMaxWork = std::max(currentSchedule_.step_processor_work[currentStep][currentProc]
+                                                       - currentSchedule_.instance->getComputationalDag().vertex_work_weight(node),
+                                                   currentSchedule_.step_second_max_work[currentStep]);
 
-                if (current_schedule.step_processor_work[current_step][new_proc]
-                        + current_schedule.instance->getComputationalDag().vertex_work_weight(node)
-                    > new_max_work) {
+                if (currentSchedule_.step_processor_work[currentStep][newProc]
+                        + currentSchedule_.instance->getComputationalDag().vertex_work_weight(node)
+                    > newMaxWork) {
                     const double gain
-                        = static_cast<double>(current_schedule.step_max_work[current_step])
-                          - (static_cast<double>(current_schedule.step_processor_work[current_step][new_proc])
-                             + static_cast<double>(current_schedule.instance->getComputationalDag().vertex_work_weight(node)));
+                        = static_cast<double>(currentSchedule_.step_max_work[currentStep])
+                          - (static_cast<double>(currentSchedule_.step_processor_work[currentStep][newProc])
+                             + static_cast<double>(currentSchedule_.instance->getComputationalDag().vertex_work_weight(node)));
 
-                    node_gains[node][new_proc][1] += gain;
-                    node_change_in_costs[node][new_proc][1] -= gain;
+                    nodeGains_[node][newProc][1] += gain;
+                    nodeChangeInCosts_[node][newProc][1] -= gain;
 
                 } else {
                     const double gain
-                        = static_cast<double>(current_schedule.step_max_work[current_step]) - static_cast<double>(new_max_work);
+                        = static_cast<double>(currentSchedule_.step_max_work[currentStep]) - static_cast<double>(newMaxWork);
 
-                    node_gains[node][new_proc][1] += gain;
-                    node_change_in_costs[node][new_proc][1] -= gain;
+                    nodeGains_[node][newProc][1] += gain;
+                    nodeChangeInCosts_[node][newProc][1] -= gain;
                 }
 
             } else {
-                if (current_schedule.step_max_work[current_step]
-                    < current_schedule.instance->getComputationalDag().vertex_work_weight(node)
-                          + current_schedule.step_processor_work[current_step][new_proc]) {
+                if (currentSchedule_.step_max_work[currentStep]
+                    < currentSchedule_.instance->getComputationalDag().vertex_work_weight(node)
+                          + currentSchedule_.step_processor_work[currentStep][newProc]) {
                     const double gain
-                        = (static_cast<double>(current_schedule.instance->getComputationalDag().vertex_work_weight(node))
-                           + static_cast<double>(current_schedule.step_processor_work[current_step][new_proc])
-                           - static_cast<double>(current_schedule.step_max_work[current_step]));
+                        = (static_cast<double>(currentSchedule_.instance->getComputationalDag().vertex_work_weight(node))
+                           + static_cast<double>(currentSchedule_.step_processor_work[currentStep][newProc])
+                           - static_cast<double>(currentSchedule_.step_max_work[currentStep]));
 
-                    node_gains[node][new_proc][1] -= gain;
-                    node_change_in_costs[node][new_proc][1] += gain;
+                    nodeGains_[node][newProc][1] -= gain;
+                    nodeChangeInCosts_[node][newProc][1] += gain;
                 }
             }
         }
 
-        if (current_step > 0) {
-            if (current_schedule.step_max_work[current_step - 1]
-                < current_schedule.step_processor_work[current_step - 1][new_proc]
-                      + current_schedule.instance->getComputationalDag().vertex_work_weight(node)) {
-                const double gain = static_cast<double>(current_schedule.step_processor_work[current_step - 1][new_proc])
-                                    + static_cast<double>(current_schedule.instance->getComputationalDag().vertex_work_weight(node))
-                                    - static_cast<double>(current_schedule.step_max_work[current_step - 1]);
+        if (currentStep > 0) {
+            if (currentSchedule_.step_max_work[currentStep - 1]
+                < currentSchedule_.step_processor_work[currentStep - 1][newProc]
+                      + currentSchedule_.instance->getComputationalDag().vertex_work_weight(node)) {
+                const double gain = static_cast<double>(currentSchedule_.step_processor_work[currentStep - 1][newProc])
+                                    + static_cast<double>(currentSchedule_.instance->getComputationalDag().vertex_work_weight(node))
+                                    - static_cast<double>(currentSchedule_.step_max_work[currentStep - 1]);
 
-                node_gains[node][new_proc][0] -= gain;
+                nodeGains_[node][newProc][0] -= gain;
 
-                node_change_in_costs[node][new_proc][0] += gain;
+                nodeChangeInCosts_[node][newProc][0] += gain;
             }
 
-            if (current_schedule.step_max_work[current_step] == current_schedule.step_processor_work[current_step][current_proc]
-                && current_schedule.step_processor_work[current_step][current_proc]
-                       > current_schedule.step_second_max_work[current_step]) {
-                if (current_schedule.step_max_work[current_step]
-                        - current_schedule.instance->getComputationalDag().vertex_work_weight(node)
-                    > current_schedule.step_second_max_work[current_step]) {
-                    const double gain = current_schedule.instance->getComputationalDag().vertex_work_weight(node);
-                    node_gains[node][new_proc][0] += gain;
-                    node_change_in_costs[node][new_proc][0] -= gain;
+            if (currentSchedule_.step_max_work[currentStep] == currentSchedule_.step_processor_work[currentStep][currentProc]
+                && currentSchedule_.step_processor_work[currentStep][currentProc]
+                       > currentSchedule_.step_second_max_work[currentStep]) {
+                if (currentSchedule_.step_max_work[currentStep]
+                        - currentSchedule_.instance->getComputationalDag().vertex_work_weight(node)
+                    > currentSchedule_.step_second_max_work[currentStep]) {
+                    const double gain = currentSchedule_.instance->getComputationalDag().vertex_work_weight(node);
+                    nodeGains_[node][newProc][0] += gain;
+                    nodeChangeInCosts_[node][newProc][0] -= gain;
 
                 } else {
                     const double gain
-                        = current_schedule.step_max_work[current_step] - current_schedule.step_second_max_work[current_step];
+                        = currentSchedule_.step_max_work[currentStep] - currentSchedule_.step_second_max_work[currentStep];
 
-                    node_gains[node][new_proc][0] += gain;
-                    node_change_in_costs[node][new_proc][0] -= gain;
+                    nodeGains_[node][newProc][0] += gain;
+                    nodeChangeInCosts_[node][newProc][0] -= gain;
                 }
             }
 
         } else {
-            node_gains[node][new_proc][0] = std::numeric_limits<double>::lowest();
+            nodeGains_[node][newProc][0] = std::numeric_limits<double>::lowest();
         }
 
-        if (current_step < current_schedule.num_steps() - 1) {
-            if (current_schedule.step_max_work[current_step + 1]
-                < current_schedule.step_processor_work[current_step + 1][new_proc]
-                      + current_schedule.instance->getComputationalDag().vertex_work_weight(node)) {
-                const double gain = static_cast<double>(current_schedule.step_processor_work[current_step + 1][new_proc])
-                                    + static_cast<double>(current_schedule.instance->getComputationalDag().vertex_work_weight(node))
-                                    - static_cast<double>(current_schedule.step_max_work[current_step + 1]);
+        if (currentStep < currentSchedule_.num_steps() - 1) {
+            if (currentSchedule_.step_max_work[currentStep + 1]
+                < currentSchedule_.step_processor_work[currentStep + 1][newProc]
+                      + currentSchedule_.instance->getComputationalDag().vertex_work_weight(node)) {
+                const double gain = static_cast<double>(currentSchedule_.step_processor_work[currentStep + 1][newProc])
+                                    + static_cast<double>(currentSchedule_.instance->getComputationalDag().vertex_work_weight(node))
+                                    - static_cast<double>(currentSchedule_.step_max_work[currentStep + 1]);
 
-                node_gains[node][new_proc][2] -= gain;
-                node_change_in_costs[node][new_proc][2] += gain;
+                nodeGains_[node][newProc][2] -= gain;
+                nodeChangeInCosts_[node][newProc][2] += gain;
             }
 
-            if (current_schedule.step_max_work[current_step] == current_schedule.step_processor_work[current_step][current_proc]
-                && current_schedule.step_processor_work[current_step][current_proc]
-                       > current_schedule.step_second_max_work[current_step]) {
-                if ((current_schedule.step_max_work[current_step]
-                     - current_schedule.instance->getComputationalDag().vertex_work_weight(node))
-                    > current_schedule.step_second_max_work[current_step]) {
-                    const double gain = current_schedule.instance->getComputationalDag().vertex_work_weight(node);
+            if (currentSchedule_.step_max_work[currentStep] == currentSchedule_.step_processor_work[currentStep][currentProc]
+                && currentSchedule_.step_processor_work[currentStep][currentProc]
+                       > currentSchedule_.step_second_max_work[currentStep]) {
+                if ((currentSchedule_.step_max_work[currentStep]
+                     - currentSchedule_.instance->getComputationalDag().vertex_work_weight(node))
+                    > currentSchedule_.step_second_max_work[currentStep]) {
+                    const double gain = currentSchedule_.instance->getComputationalDag().vertex_work_weight(node);
 
-                    node_gains[node][new_proc][2] += gain;
-                    node_change_in_costs[node][new_proc][2] -= gain;
+                    nodeGains_[node][newProc][2] += gain;
+                    nodeChangeInCosts_[node][newProc][2] -= gain;
 
                 } else {
                     const double gain
-                        = current_schedule.step_max_work[current_step] - current_schedule.step_second_max_work[current_step];
+                        = currentSchedule_.step_max_work[currentStep] - currentSchedule_.step_second_max_work[currentStep];
 
-                    node_gains[node][new_proc][2] += gain;
-                    node_change_in_costs[node][new_proc][2] -= gain;
+                    nodeGains_[node][newProc][2] += gain;
+                    nodeChangeInCosts_[node][newProc][2] -= gain;
                 }
             }
         } else {
-            node_gains[node][new_proc][2] = std::numeric_limits<double>::lowest();
+            nodeGains_[node][newProc][2] = std::numeric_limits<double>::lowest();
         }
     }
 
-    virtual void compute_comm_gain(vertex_idx_t<Graph_t> node, unsigned current_step, unsigned current_proc, unsigned new_proc) = 0;
+    virtual void ComputeCommGain(vertex_idx_t<Graph_t> node, unsigned currentStep, unsigned currentProc, unsigned newProc) = 0;
 
-    void update_node_gains(const std::unordered_set<VertexType> &nodes) {
+    void UpdateNodeGains(const std::unordered_set<VertexType> &nodes) {
         for (const auto &node : nodes) {
             compute_node_gain(node);
             compute_max_gain_insert_or_update_heap(node);
         }
     };
 
-    kl_move<Graph_t> find_best_move() {
-        const unsigned local_max = 50;
-        std::vector<VertexType> max_nodes(local_max);
+    KlMove<GraphT> FindBestMove() {
+        const unsigned localMax = 50;
+        std::vector<VertexType> maxNodes(localMax);
         unsigned count = 0;
-        for (auto iter = max_gain_heap.ordered_begin(); iter != max_gain_heap.ordered_end(); ++iter) {
-            if (iter->gain >= max_gain_heap.top().gain && count < local_max) {
-                max_nodes[count] = (iter->node);
+        for (auto iter = maxGainHeap_.ordered_begin(); iter != maxGainHeap_.ordered_end(); ++iter) {
+            if (iter->gain >= maxGainHeap_.top().gain && count < localMax) {
+                maxNodes[count] = (iter->node);
                 count++;
 
             } else {
@@ -568,184 +567,184 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
         }
 
         std::uniform_int_distribution<unsigned> dis(0, count - 1);
-        unsigned i = dis(gen);
+        unsigned i = dis(gen_);
 
-        kl_move<Graph_t> best_move = kl_move<Graph_t>((*node_heap_handles[max_nodes[i]]));
+        KlMove<GraphT> bestMove = kl_move<Graph_t>((*node_heap_handles[max_nodes[i]]));
 
         max_gain_heap.erase(node_heap_handles[max_nodes[i]]);
         node_heap_handles.erase(max_nodes[i]);
 
-        return best_move;
+        return bestMove;
     }
 
-    kl_move<Graph_t> compute_best_move(VertexType node) {
-        double node_max_gain = std::numeric_limits<double>::lowest();
-        double node_change_in_cost = 0;
-        unsigned node_best_step = 0;
-        unsigned node_best_proc = 0;
+    KlMove<GraphT> ComputeBestMove(VertexType node) {
+        double nodeMaxGain = std::numeric_limits<double>::lowest();
+        double nodeChangeInCost = 0;
+        unsigned nodeBestStep = 0;
+        unsigned nodeBestProc = 0;
 
-        double proc_change_in_cost = 0;
-        double proc_max = 0;
-        unsigned best_step = 0;
-        for (unsigned proc = 0; proc < num_procs; proc++) {
-            unsigned rand_count = 0;
+        double procChangeInCost = 0;
+        double procMax = 0;
+        unsigned bestStep = 0;
+        for (unsigned proc = 0; proc < numProcs_; proc++) {
+            unsigned randCount = 0;
 
-            if (current_schedule.vector_schedule.assignedSuperstep(node) > 0
-                && current_schedule.vector_schedule.assignedSuperstep(node) < current_schedule.num_steps() - 1) {
-                if (node_gains[node][proc][0] > node_gains[node][proc][1]) {
-                    if (node_gains[node][proc][0] > node_gains[node][proc][2]) {
-                        proc_max = node_gains[node][proc][0];
-                        proc_change_in_cost = node_change_in_costs[node][proc][0];
-                        best_step = 0;
+            if (currentSchedule_.vector_schedule.assignedSuperstep(node) > 0
+                && currentSchedule_.vector_schedule.assignedSuperstep(node) < currentSchedule_.num_steps() - 1) {
+                if (nodeGains_[node][proc][0] > nodeGains_[node][proc][1]) {
+                    if (nodeGains_[node][proc][0] > nodeGains_[node][proc][2]) {
+                        procMax = nodeGains_[node][proc][0];
+                        procChangeInCost = nodeChangeInCosts_[node][proc][0];
+                        bestStep = 0;
 
                     } else {
-                        proc_max = node_gains[node][proc][2];
-                        proc_change_in_cost = node_change_in_costs[node][proc][2];
-                        best_step = 2;
+                        procMax = nodeGains_[node][proc][2];
+                        procChangeInCost = nodeChangeInCosts_[node][proc][2];
+                        bestStep = 2;
                     }
 
                 } else {
-                    if (node_gains[node][proc][1] > node_gains[node][proc][2]) {
-                        proc_max = node_gains[node][proc][1];
-                        proc_change_in_cost = node_change_in_costs[node][proc][1];
-                        best_step = 1;
+                    if (nodeGains_[node][proc][1] > nodeGains_[node][proc][2]) {
+                        procMax = nodeGains_[node][proc][1];
+                        procChangeInCost = nodeChangeInCosts_[node][proc][1];
+                        bestStep = 1;
                     } else {
-                        proc_max = node_gains[node][proc][2];
-                        proc_change_in_cost = node_change_in_costs[node][proc][2];
-                        best_step = 2;
+                        procMax = nodeGains_[node][proc][2];
+                        procChangeInCost = nodeChangeInCosts_[node][proc][2];
+                        bestStep = 2;
                     }
                 }
 
-            } else if (current_schedule.vector_schedule.assignedSuperstep(node) == 0
-                       && current_schedule.vector_schedule.assignedSuperstep(node) < current_schedule.num_steps() - 1) {
-                if (node_gains[node][proc][2] > node_gains[node][proc][1]) {
-                    proc_max = node_gains[node][proc][2];
-                    proc_change_in_cost = node_change_in_costs[node][proc][2];
-                    best_step = 2;
+            } else if (currentSchedule_.vector_schedule.assignedSuperstep(node) == 0
+                       && currentSchedule_.vector_schedule.assignedSuperstep(node) < currentSchedule_.num_steps() - 1) {
+                if (nodeGains_[node][proc][2] > nodeGains_[node][proc][1]) {
+                    procMax = nodeGains_[node][proc][2];
+                    procChangeInCost = nodeChangeInCosts_[node][proc][2];
+                    bestStep = 2;
                 } else {
-                    proc_max = node_gains[node][proc][1];
-                    proc_change_in_cost = node_change_in_costs[node][proc][1];
-                    best_step = 1;
+                    procMax = nodeGains_[node][proc][1];
+                    procChangeInCost = nodeChangeInCosts_[node][proc][1];
+                    bestStep = 1;
                 }
 
-            } else if (current_schedule.vector_schedule.assignedSuperstep(node) > 0
-                       && current_schedule.vector_schedule.assignedSuperstep(node) == current_schedule.num_steps() - 1) {
-                if (node_gains[node][proc][1] > node_gains[node][proc][0]) {
-                    proc_max = node_gains[node][proc][1];
-                    proc_change_in_cost = node_change_in_costs[node][proc][1];
-                    best_step = 1;
+            } else if (currentSchedule_.vector_schedule.assignedSuperstep(node) > 0
+                       && currentSchedule_.vector_schedule.assignedSuperstep(node) == currentSchedule_.num_steps() - 1) {
+                if (nodeGains_[node][proc][1] > nodeGains_[node][proc][0]) {
+                    procMax = nodeGains_[node][proc][1];
+                    procChangeInCost = nodeChangeInCosts_[node][proc][1];
+                    bestStep = 1;
                 } else {
-                    proc_max = node_gains[node][proc][0];
-                    proc_change_in_cost = node_change_in_costs[node][proc][0];
-                    best_step = 0;
+                    procMax = nodeGains_[node][proc][0];
+                    procChangeInCost = nodeChangeInCosts_[node][proc][0];
+                    bestStep = 0;
                 }
             } else {
-                proc_max = node_gains[node][proc][1];
-                proc_change_in_cost = node_change_in_costs[node][proc][1];
-                best_step = 1;
+                procMax = nodeGains_[node][proc][1];
+                procChangeInCost = nodeChangeInCosts_[node][proc][1];
+                bestStep = 1;
             }
 
-            if (node_max_gain < proc_max) {
-                node_max_gain = proc_max;
-                node_change_in_cost = proc_change_in_cost;
-                node_best_step = current_schedule.vector_schedule.assignedSuperstep(node) + best_step - 1;
-                node_best_proc = proc;
-                rand_count = 0;
+            if (nodeMaxGain < procMax) {
+                nodeMaxGain = procMax;
+                nodeChangeInCost = procChangeInCost;
+                nodeBestStep = currentSchedule_.vector_schedule.assignedSuperstep(node) + bestStep - 1;
+                nodeBestProc = proc;
+                randCount = 0;
 
-            } else if (node_max_gain <= proc_max) {
-                if (rand() % (2 + rand_count) == 0) {
-                    node_max_gain = proc_max;
-                    node_change_in_cost = proc_change_in_cost;
-                    node_best_step = current_schedule.vector_schedule.assignedSuperstep(node) + best_step - 1;
-                    node_best_proc = proc;
-                    rand_count++;
+            } else if (nodeMaxGain <= procMax) {
+                if (rand() % (2 + randCount) == 0) {
+                    nodeMaxGain = procMax;
+                    nodeChangeInCost = procChangeInCost;
+                    nodeBestStep = currentSchedule_.vector_schedule.assignedSuperstep(node) + bestStep - 1;
+                    nodeBestProc = proc;
+                    randCount++;
                 }
             }
         }
 
-        return kl_move<Graph_t>(node,
-                                node_max_gain,
-                                node_change_in_cost,
-                                current_schedule.vector_schedule.assignedProcessor(node),
-                                current_schedule.vector_schedule.assignedSuperstep(node),
-                                node_best_proc,
-                                node_best_step);
+        return KlMove<GraphT>(node,
+                              nodeMaxGain,
+                              nodeChangeInCost,
+                              currentSchedule_.vector_schedule.assignedProcessor(node),
+                              currentSchedule_.vector_schedule.assignedSuperstep(node),
+                              nodeBestProc,
+                              nodeBestStep);
     }
 
-    kl_move<Graph_t> best_move_change_superstep(VertexType node) {
-        double node_max_gain = std::numeric_limits<double>::lowest();
-        double node_change_in_cost = 0;
-        unsigned node_best_step = 0;
-        unsigned node_best_proc = 0;
+    KlMove<GraphT> BestMoveChangeSuperstep(VertexType node) {
+        double nodeMaxGain = std::numeric_limits<double>::lowest();
+        double nodeChangeInCost = 0;
+        unsigned nodeBestStep = 0;
+        unsigned nodeBestProc = 0;
 
-        double proc_change_in_cost = 0;
-        double proc_max = 0;
-        unsigned best_step = 0;
-        for (unsigned proc = 0; proc < num_procs; proc++) {
-            if (current_schedule.vector_schedule.assignedSuperstep(node) > 0
-                && current_schedule.vector_schedule.assignedSuperstep(node) < current_schedule.num_steps() - 1) {
-                if (node_gains[node][proc][0] > node_gains[node][proc][2]) {
-                    proc_max = node_gains[node][proc][0];
-                    proc_change_in_cost = node_change_in_costs[node][proc][0];
-                    best_step = 0;
+        double procChangeInCost = 0;
+        double procMax = 0;
+        unsigned bestStep = 0;
+        for (unsigned proc = 0; proc < numProcs_; proc++) {
+            if (currentSchedule_.vector_schedule.assignedSuperstep(node) > 0
+                && currentSchedule_.vector_schedule.assignedSuperstep(node) < currentSchedule_.num_steps() - 1) {
+                if (nodeGains_[node][proc][0] > nodeGains_[node][proc][2]) {
+                    procMax = nodeGains_[node][proc][0];
+                    procChangeInCost = nodeChangeInCosts_[node][proc][0];
+                    bestStep = 0;
 
                 } else {
-                    proc_max = node_gains[node][proc][2];
-                    proc_change_in_cost = node_change_in_costs[node][proc][2];
-                    best_step = 2;
+                    procMax = nodeGains_[node][proc][2];
+                    procChangeInCost = nodeChangeInCosts_[node][proc][2];
+                    bestStep = 2;
                 }
 
-            } else if (current_schedule.vector_schedule.assignedSuperstep(node) == 0
-                       && current_schedule.vector_schedule.assignedSuperstep(node) < current_schedule.num_steps() - 1) {
-                proc_max = node_gains[node][proc][2];
-                proc_change_in_cost = node_change_in_costs[node][proc][2];
-                best_step = 2;
+            } else if (currentSchedule_.vector_schedule.assignedSuperstep(node) == 0
+                       && currentSchedule_.vector_schedule.assignedSuperstep(node) < currentSchedule_.num_steps() - 1) {
+                procMax = nodeGains_[node][proc][2];
+                procChangeInCost = nodeChangeInCosts_[node][proc][2];
+                bestStep = 2;
 
-            } else if (current_schedule.vector_schedule.assignedSuperstep(node) > 0
-                       && current_schedule.vector_schedule.assignedSuperstep(node) == current_schedule.num_steps() - 1) {
-                proc_max = node_gains[node][proc][0];
-                proc_change_in_cost = node_change_in_costs[node][proc][0];
-                best_step = 0;
+            } else if (currentSchedule_.vector_schedule.assignedSuperstep(node) > 0
+                       && currentSchedule_.vector_schedule.assignedSuperstep(node) == currentSchedule_.num_steps() - 1) {
+                procMax = nodeGains_[node][proc][0];
+                procChangeInCost = nodeChangeInCosts_[node][proc][0];
+                bestStep = 0;
 
             } else {
                 throw std::invalid_argument("error lk base best_move_change_superstep");
             }
 
-            if (node_max_gain < proc_max) {
-                node_max_gain = proc_max;
-                node_change_in_cost = proc_change_in_cost;
-                node_best_step = current_schedule.vector_schedule.assignedSuperstep(node) + best_step - 1;
-                node_best_proc = proc;
+            if (nodeMaxGain < procMax) {
+                nodeMaxGain = procMax;
+                nodeChangeInCost = procChangeInCost;
+                nodeBestStep = currentSchedule_.vector_schedule.assignedSuperstep(node) + bestStep - 1;
+                nodeBestProc = proc;
             }
         }
 
-        return kl_move<Graph_t>(node,
-                                node_max_gain,
-                                node_change_in_cost,
-                                current_schedule.vector_schedule.assignedProcessor(node),
-                                current_schedule.vector_schedule.assignedSuperstep(node),
-                                node_best_proc,
-                                node_best_step);
+        return KlMove<GraphT>(node,
+                              nodeMaxGain,
+                              nodeChangeInCost,
+                              currentSchedule_.vector_schedule.assignedProcessor(node),
+                              currentSchedule_.vector_schedule.assignedSuperstep(node),
+                              nodeBestProc,
+                              nodeBestStep);
     }
 
-    void save_best_schedule(const IBspSchedule<Graph_t> &schedule) {
-        for (const auto &node : current_schedule.instance->vertices()) {
-            best_schedule->setAssignedProcessor(node, schedule.assignedProcessor(node));
-            best_schedule->setAssignedSuperstep(node, schedule.assignedSuperstep(node));
+    void SaveBestSchedule(const IBspSchedule<GraphT> &schedule) {
+        for (const auto &node : currentSchedule_.instance->vertices()) {
+            bestSchedule_->setAssignedProcessor(node, schedule.assignedProcessor(node));
+            bestSchedule_->setAssignedSuperstep(node, schedule.assignedSuperstep(node));
         }
-        best_schedule->updateNumberOfSupersteps();
+        bestSchedule_->updateNumberOfSupersteps();
     }
 
-    void reverse_move_best_schedule(kl_move<Graph_t> move) {
-        best_schedule->setAssignedProcessor(move.node, move.from_proc);
-        best_schedule->setAssignedSuperstep(move.node, move.from_step);
+    void ReverseMoveBestSchedule(KlMove<GraphT> move) {
+        bestSchedule_->setAssignedProcessor(move.node, move.from_proc);
+        bestSchedule_->setAssignedSuperstep(move.node, move.from_step);
     }
 
-    std::unordered_set<VertexType> node_selection;
+    std::unordered_set<VertexType> nodeSelection_;
 
-    void select_nodes() {
-        if (parameters.select_all_nodes) {
-            for (const auto &node : current_schedule.instance->vertices()) {
+    void SelectNodes() {
+        if (parameters_.selectAllNodes_) {
+            for (const auto &node : currentSchedule_.instance->vertices()) {
                 if (super_locked_nodes.find(node) == super_locked_nodes.end()) {
                     node_selection.insert(node);
                 }
@@ -756,23 +755,23 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
         }
     }
 
-    virtual void select_nodes_comm() {
-        for (const auto &node : current_schedule.instance->vertices()) {
+    virtual void SelectNodesComm() {
+        for (const auto &node : currentSchedule_.instance->vertices()) {
             if (super_locked_nodes.find(node) != super_locked_nodes.end()) {
                 continue;
             }
 
-            for (const auto &source : current_schedule.instance->getComputationalDag().parents(node)) {
-                if (current_schedule.vector_schedule.assignedProcessor(node)
-                    != current_schedule.vector_schedule.assignedProcessor(source)) {
+            for (const auto &source : currentSchedule_.instance->getComputationalDag().parents(node)) {
+                if (currentSchedule_.vector_schedule.assignedProcessor(node)
+                    != currentSchedule_.vector_schedule.assignedProcessor(source)) {
                     node_selection.insert(node);
                     break;
                 }
             }
 
-            for (const auto &target : current_schedule.instance->getComputationalDag().children(node)) {
-                if (current_schedule.vector_schedule.assignedProcessor(node)
-                    != current_schedule.vector_schedule.assignedProcessor(target)) {
+            for (const auto &target : currentSchedule_.instance->getComputationalDag().children(node)) {
+                if (currentSchedule_.vector_schedule.assignedProcessor(node)
+                    != currentSchedule_.vector_schedule.assignedProcessor(target)) {
                     node_selection.insert(node);
                     break;
                 }
@@ -780,11 +779,11 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
         }
     }
 
-    void select_nodes_threshold(std::size_t threshold) {
+    void SelectNodesThreshold(std::size_t threshold) {
         std::uniform_int_distribution<vertex_idx_t<Graph_t>> dis(0, num_nodes - 1);
 
         while (node_selection.size() < threshold) {
-            auto node = dis(gen);
+            auto node = dis(gen_);
 
             if (super_locked_nodes.find(node) == super_locked_nodes.end()) {
                 node_selection.insert(node);
@@ -792,11 +791,11 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
         }
     }
 
-    void select_nodes_permutation_threshold(std::size_t threshold) {
-        std::vector<VertexType> permutation(num_nodes);
+    void SelectNodesPermutationThreshold(std::size_t threshold) {
+        std::vector<VertexType> Permutation(num_nodes);
         std::iota(std::begin(permutation), std::end(permutation), 0);
 
-        std::shuffle(permutation.begin(), permutation.end(), gen);
+        std::shuffle(permutation.begin(), permutation.end(), gen_);
 
         for (std::size_t i = 0; i < threshold; i++) {
             if (super_locked_nodes.find(permutation[i]) == super_locked_nodes.end()) {
@@ -805,75 +804,75 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
         }
     }
 
-    void select_nodes_violations() {
-        if (current_schedule.current_violations.empty()) {
-            select_nodes();
+    void SelectNodesViolations() {
+        if (currentSchedule_.current_violations.empty()) {
+            SelectNodes();
             return;
         }
 
-        for (const auto &edge : current_schedule.current_violations) {
-            const auto &source_v = source(edge, current_schedule.instance->getComputationalDag());
-            const auto &target_v = target(edge, current_schedule.instance->getComputationalDag());
+        for (const auto &edge : currentSchedule_.current_violations) {
+            const auto &sourceV = source(edge, currentSchedule_.instance->getComputationalDag());
+            const auto &targetV = target(edge, currentSchedule_.instance->getComputationalDag());
 
             node_selection.insert(source_v);
             node_selection.insert(target_v);
 
-            for (const auto &child : current_schedule.instance->getComputationalDag().children(source_v)) {
-                if (child != target_v) {
+            for (const auto &child : currentSchedule_.instance->getComputationalDag().children(sourceV)) {
+                if (child != targetV) {
                     node_selection.insert(child);
                 }
             }
 
-            for (const auto &parent : current_schedule.instance->getComputationalDag().parents(source_v)) {
-                if (parent != target_v) {
+            for (const auto &parent : currentSchedule_.instance->getComputationalDag().parents(sourceV)) {
+                if (parent != targetV) {
                     node_selection.insert(parent);
                 }
             }
 
-            for (const auto &child : current_schedule.instance->getComputationalDag().children(target_v)) {
-                if (child != source_v) {
+            for (const auto &child : currentSchedule_.instance->getComputationalDag().children(targetV)) {
+                if (child != sourceV) {
                     node_selection.insert(child);
                 }
             }
 
-            for (const auto &parent : current_schedule.instance->getComputationalDag().parents(target_v)) {
-                if (parent != source_v) {
+            for (const auto &parent : currentSchedule_.instance->getComputationalDag().parents(targetV)) {
+                if (parent != sourceV) {
                     node_selection.insert(parent);
                 }
             }
         }
     }
 
-    void select_nodes_conseque_max_work(bool do_not_select_super_locked_nodes = false) {
-        if (step_selection_epoch_counter > parameters.max_step_selection_epochs) {
+    void SelectNodesConsequeMaxWork(bool doNotSelectSuperLockedNodes = false) {
+        if (stepSelectionEpochCounter_ > parameters_.maxStepSelectionEpochs_) {
 #ifdef KL_DEBUG
             std::cout << "step selection epoch counter exceeded. conseque max work" << std::endl;
 #endif
 
-            select_nodes();
+            SelectNodes();
             return;
         }
 
-        unsigned max_work_step = 0;
-        unsigned max_step = 0;
-        unsigned second_max_work_step = 0;
-        unsigned second_max_step = 0;
+        unsigned maxWorkStep = 0;
+        unsigned maxStep = 0;
+        unsigned secondMaxWorkStep = 0;
+        unsigned secondMaxStep = 0;
 
-        for (unsigned proc = 0; proc < num_procs; proc++) {
-            if (current_schedule.step_processor_work[step_selection_counter][proc] > max_work_step) {
-                second_max_work_step = max_work_step;
-                second_max_step = max_step;
-                max_work_step = current_schedule.step_processor_work[step_selection_counter][proc];
-                max_step = proc;
+        for (unsigned proc = 0; proc < numProcs_; proc++) {
+            if (currentSchedule_.step_processor_work[stepSelectionCounter_][proc] > maxWorkStep) {
+                secondMaxWorkStep = maxWorkStep;
+                secondMaxStep = maxStep;
+                maxWorkStep = currentSchedule_.step_processor_work[stepSelectionCounter_][proc];
+                maxStep = proc;
 
-            } else if (current_schedule.step_processor_work[step_selection_counter][proc] > second_max_work_step) {
-                second_max_work_step = current_schedule.step_processor_work[step_selection_counter][proc];
-                second_max_step = proc;
+            } else if (currentSchedule_.step_processor_work[stepSelectionCounter_][proc] > secondMaxWorkStep) {
+                secondMaxWorkStep = currentSchedule_.step_processor_work[stepSelectionCounter_][proc];
+                secondMaxStep = proc;
             }
         }
 
-        if (current_schedule.set_schedule.step_processor_vertices[step_selection_counter][max_step].size()
-            < parameters.selection_threshold * .66) {
+        if (currentSchedule_.set_schedule.step_processor_vertices[stepSelectionCounter_][maxStep].size()
+            < parameters_.selectionThreshold_ * .66) {
             node_selection.insert(current_schedule.set_schedule.step_processor_vertices[step_selection_counter][max_step].begin(),
                                   current_schedule.set_schedule.step_processor_vertices[step_selection_counter][max_step].end());
 
@@ -885,8 +884,8 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                         gen);
         }
 
-        if (current_schedule.set_schedule.step_processor_vertices[step_selection_counter][second_max_step].size()
-            < parameters.selection_threshold * .33) {
+        if (currentSchedule_.set_schedule.step_processor_vertices[stepSelectionCounter_][secondMaxStep].size()
+            < parameters_.selectionThreshold_ * .33) {
             node_selection.insert(
                 current_schedule.set_schedule.step_processor_vertices[step_selection_counter][second_max_step].begin(),
                 current_schedule.set_schedule.step_processor_vertices[step_selection_counter][second_max_step].end());
@@ -899,7 +898,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                         gen);
         }
 
-        if (do_not_select_super_locked_nodes) {
+        if (doNotSelectSuperLockedNodes) {
             for (const auto &node : super_locked_nodes) {
                 node_selection.erase(node);
             }
@@ -911,56 +910,56 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                   << " and " << second_max_step << std::endl;
 #endif
 
-        step_selection_counter++;
-        if (step_selection_counter >= current_schedule.num_steps()) {
-            step_selection_counter = 0;
-            step_selection_epoch_counter++;
+        stepSelectionCounter_++;
+        if (stepSelectionCounter_ >= currentSchedule_.num_steps()) {
+            stepSelectionCounter_ = 0;
+            stepSelectionEpochCounter_++;
         }
     }
 
-    void select_nodes_check_remove_superstep() {
-        if (step_selection_epoch_counter > parameters.max_step_selection_epochs) {
+    void SelectNodesCheckRemoveSuperstep() {
+        if (stepSelectionEpochCounter_ > parameters_.maxStepSelectionEpochs_) {
 #ifdef KL_DEBUG
             std::cout << "step selection epoch counter exceeded, remove supersteps" << std::endl;
 #endif
 
-            select_nodes();
+            SelectNodes();
             return;
         }
 
-        for (unsigned step_to_remove = step_selection_counter; step_to_remove < current_schedule.num_steps(); step_to_remove++) {
+        for (unsigned stepToRemove = stepSelectionCounter_; stepToRemove < currentSchedule_.num_steps(); stepToRemove++) {
 #ifdef KL_DEBUG
             std::cout << "checking step to remove " << step_to_remove << " / " << current_schedule.num_steps() << std::endl;
 #endif
 
-            if (check_remove_superstep(step_to_remove)) {
+            if (CheckRemoveSuperstep(stepToRemove)) {
 #ifdef KL_DEBUG
                 std::cout << "trying to remove superstep " << step_to_remove << std::endl;
 #endif
 
-                if (scatter_nodes_remove_superstep(step_to_remove)) {
-                    for (unsigned proc = 0; proc < num_procs; proc++) {
-                        if (step_to_remove < current_schedule.num_steps()) {
+                if (ScatterNodesRemoveSuperstep(stepToRemove)) {
+                    for (unsigned proc = 0; proc < numProcs_; proc++) {
+                        if (stepToRemove < currentSchedule_.num_steps()) {
                             node_selection.insert(
                                 current_schedule.set_schedule.step_processor_vertices[step_to_remove][proc].begin(),
                                 current_schedule.set_schedule.step_processor_vertices[step_to_remove][proc].end());
                         }
 
-                        if (step_to_remove > 0) {
+                        if (stepToRemove > 0) {
                             node_selection.insert(
                                 current_schedule.set_schedule.step_processor_vertices[step_to_remove - 1][proc].begin(),
                                 current_schedule.set_schedule.step_processor_vertices[step_to_remove - 1][proc].end());
                         }
                     }
 
-                    step_selection_counter = step_to_remove + 1;
+                    stepSelectionCounter_ = stepToRemove + 1;
 
-                    if (step_selection_counter >= current_schedule.num_steps()) {
-                        step_selection_counter = 0;
-                        step_selection_epoch_counter++;
+                    if (stepSelectionCounter_ >= currentSchedule_.num_steps()) {
+                        stepSelectionCounter_ = 0;
+                        stepSelectionEpochCounter_++;
                     }
 
-                    parameters.violations_threshold = 0;
+                    parameters_.violationsThreshold_ = 0;
                     super_locked_nodes.clear();
 #ifdef KL_DEBUG
                     std::cout << "---- reset super locked nodes" << std::endl;
@@ -975,44 +974,44 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
         std::cout << "no superstep to remove" << std::endl;
 #endif
 
-        step_selection_epoch_counter++;
-        select_nodes();
+        stepSelectionEpochCounter_++;
+        SelectNodes();
         return;
     }
 
-    unsigned step_selection_counter = 0;
-    unsigned step_selection_epoch_counter = 0;
+    unsigned stepSelectionCounter_ = 0;
+    unsigned stepSelectionEpochCounter_ = 0;
 
-    bool auto_alternate = false;
-    bool alternate_reset_remove_superstep = false;
-    bool reset_superstep = false;
+    bool autoAlternate_ = false;
+    bool alternateResetRemoveSuperstep_ = false;
+    bool resetSuperstep_ = false;
 
-    virtual bool check_remove_superstep(unsigned step) {
-        if (current_schedule.num_steps() <= 2) {
+    virtual bool CheckRemoveSuperstep(unsigned step) {
+        if (currentSchedule_.num_steps() <= 2) {
             return false;
         }
 
-        v_workw_t<Graph_t> total_work = 0;
+        v_workw_t<Graph_t> totalWork = 0;
 
-        for (unsigned proc = 0; proc < num_procs; proc++) {
-            total_work += current_schedule.step_processor_work[step][proc];
+        for (unsigned proc = 0; proc < numProcs_; proc++) {
+            totalWork += currentSchedule_.step_processor_work[step][proc];
         }
 
-        if (total_work < 2.0 * current_schedule.instance->synchronisationCosts()) {
+        if (total_work < 2.0 * currentSchedule_.instance->synchronisationCosts()) {
             return true;
         }
         return false;
     }
 
-    bool scatter_nodes_remove_superstep(unsigned step) {
-        assert(step < current_schedule.num_steps());
+    bool ScatterNodesRemoveSuperstep(unsigned step) {
+        assert(step < currentSchedule_.num_steps());
 
-        std::vector<kl_move<Graph_t>> moves;
+        std::vector<KlMove<GraphT>> moves;
 
         bool abort = false;
 
-        for (unsigned proc = 0; proc < num_procs; proc++) {
-            for (const auto &node : current_schedule.set_schedule.step_processor_vertices[step][proc]) {
+        for (unsigned proc = 0; proc < numProcs_; proc++) {
+            for (const auto &node : currentSchedule_.set_schedule.step_processor_vertices[step][proc]) {
                 compute_node_gain(node);
                 moves.push_back(best_move_change_superstep(node));
 
@@ -1021,8 +1020,8 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                     break;
                 }
 
-                if constexpr (current_schedule.use_memory_constraint) {
-                    current_schedule.memory_constraint.apply_move(node, proc, step, moves.back().to_proc, moves.back().to_step);
+                if constexpr (currentSchedule_.use_memory_constraint) {
+                    currentSchedule_.memory_constraint.apply_move(node, proc, step, moves.back().to_proc, moves.back().to_step);
                 }
             }
 
@@ -1032,7 +1031,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
         }
 
         if (abort) {
-            current_schedule.recompute_neighboring_supersteps(step);
+            currentSchedule_.recompute_neighboring_supersteps(step);
 
 #ifdef KL_DEBUG
             BspSchedule<Graph_t> tmp_schedule(current_schedule.set_schedule);
@@ -1044,8 +1043,8 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
             return false;
         }
 
-        for (unsigned proc = 0; proc < num_procs; proc++) {
-            current_schedule.set_schedule.step_processor_vertices[step][proc].clear();
+        for (unsigned proc = 0; proc < numProcs_; proc++) {
+            currentSchedule_.set_schedule.step_processor_vertices[step][proc].clear();
         }
 
         for (const auto &move : moves) {
@@ -1053,12 +1052,12 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
             std::cout << "scatter node " << move.node << " to proc " << move.to_proc << " to step " << move.to_step << std::endl;
 #endif
 
-            current_schedule.vector_schedule.setAssignedSuperstep(move.node, move.to_step);
-            current_schedule.vector_schedule.setAssignedProcessor(move.node, move.to_proc);
-            current_schedule.set_schedule.step_processor_vertices[move.to_step][move.to_proc].insert(move.node);
+            currentSchedule_.vector_schedule.setAssignedSuperstep(move.node, move.to_step);
+            currentSchedule_.vector_schedule.setAssignedProcessor(move.node, move.to_proc);
+            currentSchedule_.set_schedule.step_processor_vertices[move.to_step][move.to_proc].insert(move.node);
         }
 
-        current_schedule.remove_superstep(step);
+        currentSchedule_.remove_superstep(step);
 
 #ifdef KL_DEBUG
         BspSchedule<Graph_t> tmp_schedule(current_schedule.set_schedule);
@@ -1070,49 +1069,49 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
         return true;
     }
 
-    void select_nodes_check_reset_superstep() {
-        if (step_selection_epoch_counter > parameters.max_step_selection_epochs) {
+    void SelectNodesCheckResetSuperstep() {
+        if (stepSelectionEpochCounter_ > parameters_.maxStepSelectionEpochs_) {
 #ifdef KL_DEBUG
             std::cout << "step selection epoch counter exceeded, reset supersteps" << std::endl;
 #endif
 
-            select_nodes();
+            SelectNodes();
             return;
         }
 
-        for (unsigned step_to_remove = step_selection_counter; step_to_remove < current_schedule.num_steps(); step_to_remove++) {
+        for (unsigned stepToRemove = stepSelectionCounter_; stepToRemove < currentSchedule_.num_steps(); stepToRemove++) {
 #ifdef KL_DEBUG
             std::cout << "checking step to reset " << step_to_remove << " / " << current_schedule.num_steps() << std::endl;
 #endif
 
-            if (check_reset_superstep(step_to_remove)) {
+            if (CheckResetSuperstep(stepToRemove)) {
 #ifdef KL_DEBUG
                 std::cout << "trying to reset superstep " << step_to_remove << std::endl;
 #endif
 
-                if (scatter_nodes_reset_superstep(step_to_remove)) {
-                    for (unsigned proc = 0; proc < num_procs; proc++) {
-                        if (step_to_remove < current_schedule.num_steps() - 1) {
+                if (ScatterNodesResetSuperstep(stepToRemove)) {
+                    for (unsigned proc = 0; proc < numProcs_; proc++) {
+                        if (stepToRemove < currentSchedule_.num_steps() - 1) {
                             node_selection.insert(
                                 current_schedule.set_schedule.step_processor_vertices[step_to_remove + 1][proc].begin(),
                                 current_schedule.set_schedule.step_processor_vertices[step_to_remove + 1][proc].end());
                         }
 
-                        if (step_to_remove > 0) {
+                        if (stepToRemove > 0) {
                             node_selection.insert(
                                 current_schedule.set_schedule.step_processor_vertices[step_to_remove - 1][proc].begin(),
                                 current_schedule.set_schedule.step_processor_vertices[step_to_remove - 1][proc].end());
                         }
                     }
 
-                    step_selection_counter = step_to_remove + 1;
+                    stepSelectionCounter_ = stepToRemove + 1;
 
-                    if (step_selection_counter >= current_schedule.num_steps()) {
-                        step_selection_counter = 0;
-                        step_selection_epoch_counter++;
+                    if (stepSelectionCounter_ >= currentSchedule_.num_steps()) {
+                        stepSelectionCounter_ = 0;
+                        stepSelectionEpochCounter_++;
                     }
 
-                    parameters.violations_threshold = 0;
+                    parameters_.violationsThreshold_ = 0;
                     super_locked_nodes.clear();
 #ifdef KL_DEBUG
                     std::cout << "---- reset super locked nodes" << std::endl;
@@ -1127,24 +1126,24 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
         std::cout << "no superstep to reset" << std::endl;
 #endif
 
-        step_selection_epoch_counter++;
-        select_nodes();
+        stepSelectionEpochCounter_++;
+        SelectNodes();
         return;
     }
 
-    virtual bool check_reset_superstep(unsigned step) {
-        if (current_schedule.num_steps() <= 2) {
+    virtual bool CheckResetSuperstep(unsigned step) {
+        if (currentSchedule_.num_steps() <= 2) {
             return false;
         }
 
-        v_workw_t<Graph_t> total_work = 0;
-        v_workw_t<Graph_t> max_total_work = 0;
-        v_workw_t<Graph_t> min_total_work = std::numeric_limits<v_workw_t<Graph_t>>::max();
+        v_workw_t<Graph_t> totalWork = 0;
+        v_workw_t<Graph_t> maxTotalWork = 0;
+        v_workw_t<Graph_t> minTotalWork = std::numeric_limits<v_workw_t<Graph_t>>::max();
 
-        for (unsigned proc = 0; proc < num_procs; proc++) {
-            total_work += current_schedule.step_processor_work[step][proc];
-            max_total_work = std::max(max_total_work, current_schedule.step_processor_work[step][proc]);
-            min_total_work = std::min(min_total_work, current_schedule.step_processor_work[step][proc]);
+        for (unsigned proc = 0; proc < numProcs_; proc++) {
+            totalWork += currentSchedule_.step_processor_work[step][proc];
+            maxTotalWork = std::max(max_total_work, currentSchedule_.step_processor_work[step][proc]);
+            minTotalWork = std::min(min_total_work, currentSchedule_.step_processor_work[step][proc]);
         }
 
 #ifdef KL_DEBUG
@@ -1154,7 +1153,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                   << " max " << max_total_work << " min " << min_total_work << std::endl;
 #endif
 
-        if (static_cast<double>(total_work) / static_cast<double>(current_schedule.instance->numberOfProcessors())
+        if (static_cast<double>(total_work) / static_cast<double>(currentSchedule_.instance->numberOfProcessors())
                 - static_cast<double>(min_total_work)
             > 0.1 * static_cast<double>(min_total_work)) {
             return true;
@@ -1163,15 +1162,15 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
         return false;
     }
 
-    bool scatter_nodes_reset_superstep(unsigned step) {
-        assert(step < current_schedule.num_steps());
+    bool ScatterNodesResetSuperstep(unsigned step) {
+        assert(step < currentSchedule_.num_steps());
 
-        std::vector<kl_move<Graph_t>> moves;
+        std::vector<KlMove<GraphT>> moves;
 
         bool abort = false;
 
-        for (unsigned proc = 0; proc < num_procs; proc++) {
-            for (const auto &node : current_schedule.set_schedule.step_processor_vertices[step][proc]) {
+        for (unsigned proc = 0; proc < numProcs_; proc++) {
+            for (const auto &node : currentSchedule_.set_schedule.step_processor_vertices[step][proc]) {
                 compute_node_gain(node);
                 moves.push_back(best_move_change_superstep(node));
 
@@ -1180,8 +1179,8 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                     break;
                 }
 
-                if constexpr (current_schedule.use_memory_constraint) {
-                    current_schedule.memory_constraint.apply_forward_move(
+                if constexpr (currentSchedule_.use_memory_constraint) {
+                    currentSchedule_.memory_constraint.apply_forward_move(
                         node, proc, step, moves.back().to_proc, moves.back().to_step);
                 }
             }
@@ -1192,12 +1191,12 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
         }
 
         if (abort) {
-            current_schedule.recompute_neighboring_supersteps(step);
+            currentSchedule_.recompute_neighboring_supersteps(step);
             return false;
         }
 
-        for (unsigned proc = 0; proc < num_procs; proc++) {
-            current_schedule.set_schedule.step_processor_vertices[step][proc].clear();
+        for (unsigned proc = 0; proc < numProcs_; proc++) {
+            currentSchedule_.set_schedule.step_processor_vertices[step][proc].clear();
         }
 
         for (const auto &move : moves) {
@@ -1205,17 +1204,17 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
             std::cout << "scatter node " << move.node << " to proc " << move.to_proc << " to step " << move.to_step << std::endl;
 #endif
 
-            current_schedule.vector_schedule.setAssignedSuperstep(move.node, move.to_step);
-            current_schedule.vector_schedule.setAssignedProcessor(move.node, move.to_proc);
-            current_schedule.set_schedule.step_processor_vertices[move.to_step][move.to_proc].insert(move.node);
+            currentSchedule_.vector_schedule.setAssignedSuperstep(move.node, move.to_step);
+            currentSchedule_.vector_schedule.setAssignedProcessor(move.node, move.to_proc);
+            currentSchedule_.set_schedule.step_processor_vertices[move.to_step][move.to_proc].insert(move.node);
         }
 
-        current_schedule.reset_superstep(step);
+        currentSchedule_.reset_superstep(step);
 
         return true;
     }
 
-    void select_unlock_neighbors(VertexType node) {
+    void SelectUnlockNeighbors(VertexType node) {
         for (const auto &target : current_schedule.instance->getComputationalDag().children(node)) {
             if (check_node_unlocked(target)) {
                 node_selection.insert(target);
@@ -1231,17 +1230,17 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
         }
     }
 
-    void set_parameters() {
+    void SetParameters() {
         if (num_nodes < 250) {
-            parameters.max_outer_iterations = 300;
+            parameters_.maxOuterIterations_ = 300;
 
-            parameters.select_all_nodes = true;
+            parameters_.selectAllNodes_ = true;
             parameters.selection_threshold = num_nodes;
 
         } else if (num_nodes < 1000) {
             parameters.max_outer_iterations = static_cast<unsigned>(num_nodes / 2);
 
-            parameters.select_all_nodes = true;
+            parameters_.selectAllNodes_ = true;
             parameters.selection_threshold = num_nodes;
 
         } else if (num_nodes < 5000) {
@@ -1270,17 +1269,17 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
             parameters.selection_threshold = num_nodes / 10;
         }
 
-        if (parameters.quick_pass) {
-            parameters.max_outer_iterations = 50;
-            parameters.max_no_improvement_iterations = 25;
+        if (parameters_.quickPass_) {
+            parameters_.maxOuterIterations_ = 50;
+            parameters_.maxNoImprovementIterations_ = 25;
         }
 
-        if (auto_alternate && current_schedule.instance->getArchitecture().synchronisationCosts() > 10000.0) {
+        if (autoAlternate_ && currentSchedule_.instance->getArchitecture().synchronisationCosts() > 10000.0) {
 #ifdef KL_DEBUG
             std::cout << "KLBase set parameters, large synchchost: only remove supersets" << std::endl;
 #endif
-            reset_superstep = false;
-            alternate_reset_remove_superstep = false;
+            resetSuperstep_ = false;
+            alternateResetRemoveSuperstep_ = false;
         }
 
 #ifdef KL_DEBUG
@@ -1292,33 +1291,33 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
 #endif
     }
 
-    virtual void cleanup_datastructures() {
-        node_change_in_costs.clear();
-        node_gains.clear();
+    virtual void CleanupDatastructures() {
+        nodeChangeInCosts_.clear();
+        nodeGains_.clear();
 
-        unlock.clear();
+        unlock_.clear();
 
-        max_gain_heap.clear();
+        maxGainHeap_.clear();
         node_heap_handles.clear();
 
-        current_schedule.cleanup_superstep_datastructures();
+        currentSchedule_.cleanup_superstep_datastructures();
     }
 
-    void reset_run_datastructures() {
+    void ResetRunDatastructures() {
         node_selection.clear();
         nodes_to_update.clear();
         locked_nodes.clear();
         super_locked_nodes.clear();
     }
 
-    bool run_local_search_without_violations() {
-        penalty = std::numeric_limits<double>::max() * .24;
+    bool RunLocalSearchWithoutViolations() {
+        penalty_ = std::numeric_limits<double>::max() * .24;
 
-        double initial_costs = current_schedule.current_cost;
+        double initialCosts = currentSchedule_.current_cost;
 
-        auto start_time = std::chrono::high_resolution_clock::now();
+        auto startTime = std::chrono::high_resolution_clock::now();
 
-        select_nodes_threshold(parameters.selection_threshold);
+        SelectNodesThreshold(parameters_.selectionThreshold_);
 
         initialize_gain_heap(node_selection);
 
@@ -1326,27 +1325,27 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
         std::cout << "Initial costs " << initial_costs << std::endl;
 #endif
 
-        for (unsigned outer_counter = 0; outer_counter < parameters.max_outer_iterations; outer_counter++) {
+        for (unsigned outerCounter = 0; outerCounter < parameters_.maxOuterIterations_; outerCounter++) {
 #ifdef KL_DEBUG
             std::cout << "outer iteration " << outer_counter << std::endl;
 #endif
-            unsigned failed_branches = 0;
+            unsigned failedBranches = 0;
             // double best_iter_costs = current_schedule.current_cost;
 
-            unsigned inner_counter = 0;
+            unsigned innerCounter = 0;
 
-            while (failed_branches < 3 && inner_counter < parameters.max_inner_iterations && max_gain_heap.size() > 0) {
-                inner_counter++;
+            while (failedBranches < 3 && innerCounter < parameters_.maxInnerIterations_ && maxGainHeap_.size() > 0) {
+                innerCounter++;
 
-                const double iter_costs = current_schedule.current_cost;
+                const double iterCosts = currentSchedule_.current_cost;
 
-                kl_move<Graph_t> best_move = find_best_move();    // O(log n)
+                KlMove<GraphT> bestMove = FindBestMove();    // O(log n)
 
-                if (best_move.gain < -std::numeric_limits<double>::max() * .25) {
+                if (bestMove.gain < -std::numeric_limits<double>::max() * .25) {
                     continue;
                 }
 
-                current_schedule.apply_move(best_move);    // O(p + log n)
+                currentSchedule_.apply_move(bestMove);    // O(p + log n)
 
                 locked_nodes.insert(best_move.node);
 
@@ -1360,18 +1359,18 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                 }
 #endif
 
-                if (best_move.change_in_cost > 0 && current_schedule.current_feasible) {
-                    if (best_schedule_costs > iter_costs) {
+                if (bestMove.change_in_cost > 0 && currentSchedule_.current_feasible) {
+                    if (bestScheduleCosts_ > iterCosts) {
 #ifdef KL_DEBUG
                         std::cout << "costs increased .. save best schedule with costs " << iter_costs << std::endl;
 #endif
-                        best_schedule_costs = iter_costs;
-                        save_best_schedule(current_schedule.vector_schedule);    // O(n)
-                        reverse_move_best_schedule(best_move);
+                        bestScheduleCosts_ = iterCosts;
+                        SaveBestSchedule(currentSchedule_.vector_schedule);    // O(n)
+                        ReverseMoveBestSchedule(bestMove);
                     }
                 }
 
-                compute_nodes_to_update(best_move);
+                ComputeNodesToUpdate(bestMove);
 
                 select_unlock_neighbors(best_move.node);
 
@@ -1387,19 +1386,19 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
 
                 // if (not current_schedule.current_feasible) {
 
-                if (current_schedule.current_cost > (1.04 + outer_counter * 0.002) * best_schedule_costs) {
+                if (currentSchedule_.current_cost > (1.04 + outerCounter * 0.002) * bestScheduleCosts_) {
 #ifdef KL_DEBUG
                     std::cout << "current cost " << current_schedule.current_cost
                               << " too far away from best schedule costs: " << best_schedule_costs << " rollback to best schedule"
                               << std::endl;
 #endif
 
-                    current_schedule.set_current_schedule(*best_schedule);
+                    currentSchedule_.set_current_schedule(*bestSchedule_);
 
                     // set_initial_reward_penalty();
                     initialize_gain_heap_unlocked_nodes(node_selection);
 
-                    failed_branches++;
+                    failedBranches++;
                 }
                 //}
 
@@ -1412,20 +1411,20 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                       << parameters.max_outer_iterations << std::endl;
 #endif
 
-            if (current_schedule.current_feasible) {
-                if (current_schedule.current_cost <= best_schedule_costs) {
-                    save_best_schedule(current_schedule.vector_schedule);
-                    best_schedule_costs = current_schedule.current_cost;
+            if (currentSchedule_.current_feasible) {
+                if (currentSchedule_.current_cost <= bestScheduleCosts_) {
+                    SaveBestSchedule(currentSchedule_.vector_schedule);
+                    bestScheduleCosts_ = currentSchedule_.current_cost;
                 } else {
-                    current_schedule.set_current_schedule(*best_schedule);
+                    currentSchedule_.set_current_schedule(*bestSchedule_);
                 }
             } else {
-                current_schedule.set_current_schedule(*best_schedule);
+                currentSchedule_.set_current_schedule(*bestSchedule_);
             }
 
-            reset_locked_nodes();
+            ResetLockedNodes();
             node_selection.clear();
-            select_nodes_threshold(parameters.selection_threshold);
+            SelectNodesThreshold(parameters_.selectionThreshold_);
 
             initialize_gain_heap(node_selection);
 
@@ -1433,36 +1432,36 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
             std::cout << "end of while, current cost " << current_schedule.current_cost << std::endl;
 #endif
 
-            if (compute_with_time_limit) {
-                auto finish_time = std::chrono::high_resolution_clock::now();
-                auto duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
+            if (computeWithTimeLimit_) {
+                auto finishTime = std::chrono::high_resolution_clock::now();
+                auto duration = std::chrono::duration_cast<std::chrono::seconds>(finishTime - startTime).count();
 
-                if (duration > ImprovementScheduler<Graph_t>::timeLimitSeconds) {
+                if (duration > ImprovementScheduler<GraphT>::timeLimitSeconds) {
                     break;
                 }
             }
 
         }    // for
 
-        cleanup_datastructures();
+        CleanupDatastructures();
 
-        if (initial_costs > current_schedule.current_cost) {
+        if (initialCosts > currentSchedule_.current_cost) {
             return true;
         } else {
             return false;
         }
     }
 
-    bool run_local_search_simple() {
-        set_initial_reward_penalty();
+    bool RunLocalSearchSimple() {
+        SetInitialRewardPenalty();
 
-        const double initial_costs = current_schedule.current_cost;
+        const double initialCosts = currentSchedule_.current_cost;
 
-        unsigned improvement_counter = 0;
+        unsigned improvementCounter = 0;
 
-        auto start_time = std::chrono::high_resolution_clock::now();
+        auto startTime = std::chrono::high_resolution_clock::now();
 
-        select_nodes();
+        SelectNodes();
 
         initialize_gain_heap(node_selection);
 
@@ -1470,30 +1469,30 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
         std::cout << "Initial costs " << initial_costs << std::endl;
 #endif
 
-        for (unsigned outer_counter = 0; outer_counter < parameters.max_outer_iterations; outer_counter++) {
+        for (unsigned outerCounter = 0; outerCounter < parameters_.maxOuterIterations_; outerCounter++) {
 #ifdef KL_DEBUG
             std::cout << "outer iteration " << outer_counter << std::endl;
             if (max_gain_heap.size() == 0) {
                 std::cout << "max gain heap empty" << std::endl;
             }
 #endif
-            unsigned failed_branches = 0;
-            double best_iter_costs = current_schedule.current_cost;
+            unsigned failedBranches = 0;
+            double bestIterCosts = currentSchedule_.current_cost;
 
-            VertexType node_causing_first_violation = 0;
+            VertexType nodeCausingFirstViolation = 0;
 
-            unsigned inner_counter = 0;
+            unsigned innerCounter = 0;
 
-            while (failed_branches < parameters.max_num_failed_branches && inner_counter < parameters.max_inner_iterations
-                   && max_gain_heap.size() > 0) {
-                inner_counter++;
+            while (failedBranches < parameters_.maxNumFailedBranches_ && innerCounter < parameters_.maxInnerIterations_
+                   && maxGainHeap_.size() > 0) {
+                innerCounter++;
 
-                const bool iter_feasible = current_schedule.current_feasible;
-                const double iter_costs = current_schedule.current_cost;
+                const bool iterFeasible = currentSchedule_.current_feasible;
+                const double iterCosts = currentSchedule_.current_cost;
 
-                kl_move<Graph_t> best_move = find_best_move();    // O(log n)
+                KlMove<GraphT> bestMove = FindBestMove();    // O(log n)
 
-                if (best_move.gain < -std::numeric_limits<double>::max() * .25) {
+                if (bestMove.gain < -std::numeric_limits<double>::max() * .25) {
 #ifdef KL_DEBUG
                     std::cout << "abort iteration on very negative max gain" << std::endl;
 #endif
@@ -1508,9 +1507,9 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                           << current_schedule.current_cost << std::endl;
 #endif
 
-                current_schedule.apply_move(best_move);    // O(p + log n)
+                currentSchedule_.apply_move(bestMove);    // O(p + log n)
 
-                update_reward_penalty();
+                UpdateRewardPenalty();
                 locked_nodes.insert(best_move.node);
 
 #ifdef KL_DEBUG
@@ -1523,21 +1522,21 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                 }
 #endif
 
-                if (iter_feasible != current_schedule.current_feasible) {
-                    if (iter_feasible) {
+                if (iterFeasible != currentSchedule_.current_feasible) {
+                    if (iterFeasible) {
 #ifdef KL_DEBUG
                         std::cout << "===> current schedule changed from feasible to infeasible" << std::endl;
 #endif
 
-                        node_causing_first_violation = best_move.node;
+                        nodeCausingFirstViolation = bestMove.node;
 
-                        if (iter_costs < best_schedule_costs) {
+                        if (iterCosts < bestScheduleCosts_) {
 #ifdef KL_DEBUG
                             std::cout << "save best schedule with costs " << iter_costs << std::endl;
 #endif
-                            best_schedule_costs = iter_costs;
-                            save_best_schedule(current_schedule.vector_schedule);    // O(n)
-                            reverse_move_best_schedule(best_move);
+                            bestScheduleCosts_ = iterCosts;
+                            SaveBestSchedule(currentSchedule_.vector_schedule);    // O(n)
+                            ReverseMoveBestSchedule(bestMove);
                         }
 
                     } else {
@@ -1545,24 +1544,24 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                         std::cout << "===> current schedule changed from infeasible to feasible" << std::endl;
 #endif
                     }
-                } else if (best_move.change_in_cost > 0 && current_schedule.current_feasible) {
-                    if (iter_costs < best_schedule_costs) {
+                } else if (bestMove.change_in_cost > 0 && currentSchedule_.current_feasible) {
+                    if (iterCosts < bestScheduleCosts_) {
 #ifdef KL_DEBUG
                         std::cout << "costs increased .. save best schedule with costs " << iter_costs << std::endl;
 #endif
-                        best_schedule_costs = iter_costs;
-                        save_best_schedule(current_schedule.vector_schedule);    // O(n)
-                        reverse_move_best_schedule(best_move);
+                        bestScheduleCosts_ = iterCosts;
+                        SaveBestSchedule(currentSchedule_.vector_schedule);    // O(n)
+                        ReverseMoveBestSchedule(bestMove);
                     }
                 }
 
-                compute_nodes_to_update(best_move);
+                ComputeNodesToUpdate(bestMove);
 
                 select_unlock_neighbors(best_move.node);
 
-                if (check_violation_locked()) {
-                    if (iter_feasible != current_schedule.current_feasible && iter_feasible) {
-                        node_causing_first_violation = best_move.node;
+                if (CheckViolationLocked()) {
+                    if (iterFeasible != currentSchedule_.current_feasible && iterFeasible) {
+                        nodeCausingFirstViolation = bestMove.node;
                     }
                     super_locked_nodes.insert(node_causing_first_violation);
 #ifdef KL_DEBUG
@@ -1574,21 +1573,21 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
 
                 update_node_gains(nodes_to_update);
 
-                if (current_schedule.current_cost
-                    > (parameters.max_div_best_sol_base_percent + outer_counter * parameters.max_div_best_sol_rate_percent)
-                          * best_schedule_costs) {
+                if (currentSchedule_.current_cost
+                    > (parameters_.maxDivBestSolBasePercent_ + outerCounter * parameters_.maxDivBestSolRatePercent_)
+                          * bestScheduleCosts_) {
 #ifdef KL_DEBUG
                     std::cout << "current cost " << current_schedule.current_cost
                               << " too far away from best schedule costs: " << best_schedule_costs << " rollback to best schedule"
                               << std::endl;
 #endif
 
-                    current_schedule.set_current_schedule(*best_schedule);
+                    currentSchedule_.set_current_schedule(*bestSchedule_);
 
-                    set_initial_reward_penalty();
+                    SetInitialRewardPenalty();
                     initialize_gain_heap_unlocked_nodes(node_selection);
 
-                    failed_branches++;
+                    failedBranches++;
                 }
 
             }    // while
@@ -1600,36 +1599,36 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                       << parameters.max_outer_iterations << std::endl;
 #endif
 
-            if (current_schedule.current_feasible) {
-                if (current_schedule.current_cost <= best_schedule_costs) {
-                    save_best_schedule(current_schedule.vector_schedule);
-                    best_schedule_costs = current_schedule.current_cost;
+            if (currentSchedule_.current_feasible) {
+                if (currentSchedule_.current_cost <= bestScheduleCosts_) {
+                    SaveBestSchedule(currentSchedule_.vector_schedule);
+                    bestScheduleCosts_ = currentSchedule_.current_cost;
                 } else {
-                    current_schedule.set_current_schedule(*best_schedule);
+                    currentSchedule_.set_current_schedule(*bestSchedule_);
                 }
             } else {
-                current_schedule.set_current_schedule(*best_schedule);
+                currentSchedule_.set_current_schedule(*bestSchedule_);
             }
 
-            if (outer_counter == 20) {
-                parameters.initial_penalty = 0.0;
+            if (outerCounter == 20) {
+                parameters_.initialPenalty_ = 0.0;
 #ifdef KL_DEBUG
                 std::cout << "---- reset initial penalty" << std::endl;
 #endif
             }
-            if (outer_counter > 0 && outer_counter % 30 == 0) {
+            if (outerCounter > 0 && outerCounter % 30 == 0) {
                 super_locked_nodes.clear();
 #ifdef KL_DEBUG
                 std::cout << "---- reset super locked nodes" << std::endl;
 #endif
             }
 
-            reset_locked_nodes();
+            ResetLockedNodes();
 
             node_selection.clear();
-            select_nodes();
+            SelectNodes();
 
-            set_initial_reward_penalty();
+            SetInitialRewardPenalty();
 
             initialize_gain_heap(node_selection);
 
@@ -1637,16 +1636,16 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
             std::cout << "end of while, current cost " << current_schedule.current_cost << std::endl;
 #endif
 
-            if (compute_with_time_limit) {
-                auto finish_time = std::chrono::high_resolution_clock::now();
-                auto duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
-                if (duration > ImprovementScheduler<Graph_t>::timeLimitSeconds) {
+            if (computeWithTimeLimit_) {
+                auto finishTime = std::chrono::high_resolution_clock::now();
+                auto duration = std::chrono::duration_cast<std::chrono::seconds>(finishTime - startTime).count();
+                if (duration > ImprovementScheduler<GraphT>::timeLimitSeconds) {
                     break;
                 }
             }
 
-            if (best_iter_costs <= current_schedule.current_cost) {
-                if (improvement_counter++ >= parameters.max_no_improvement_iterations) {
+            if (bestIterCosts <= currentSchedule_.current_cost) {
+                if (improvementCounter++ >= parameters_.maxNoImprovementIterations_) {
 #ifdef KL_DEBUG
                     std::cout << "no improvement for " << parameters.max_no_improvement_iterations
                               << " iterations, end local search" << std::endl;
@@ -1654,43 +1653,43 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                     break;
                 }
             } else {
-                improvement_counter = 0;
+                improvementCounter = 0;
             }
 
         }    // for
 
-        cleanup_datastructures();
+        CleanupDatastructures();
 
 #ifdef KL_DEBUG
         std::cout << "kl done, current cost " << best_schedule_costs << " vs " << initial_costs << " initial costs" << std::endl;
         assert(best_schedule->satisfiesPrecedenceConstraints());
 #endif
 
-        if (initial_costs > current_schedule.current_cost) {
+        if (initialCosts > currentSchedule_.current_cost) {
             return true;
         } else {
             return false;
         }
     }
 
-    bool run_local_search_remove_supersteps() {
-        const double initial_costs = current_schedule.current_cost;
+    bool RunLocalSearchRemoveSupersteps() {
+        const double initialCosts = currentSchedule_.current_cost;
 
 #ifdef KL_DEBUG
         std::cout << "Initial costs " << initial_costs << std::endl;
 #endif
 
-        unsigned no_improvement_iter_counter = 0;
+        unsigned noImprovementIterCounter = 0;
 
-        auto start_time = std::chrono::high_resolution_clock::now();
+        auto startTime = std::chrono::high_resolution_clock::now();
 
-        select_nodes_check_remove_superstep();
+        SelectNodesCheckRemoveSuperstep();
 
-        update_reward_penalty();
+        UpdateRewardPenalty();
 
         initialize_gain_heap(node_selection);
 
-        for (unsigned outer_counter = 0; outer_counter < parameters.max_outer_iterations; outer_counter++) {
+        for (unsigned outerCounter = 0; outerCounter < parameters_.maxOuterIterations_; outerCounter++) {
 #ifdef KL_DEBUG
             std::cout << "outer iteration " << outer_counter << " current costs: " << current_schedule.current_cost << std::endl;
             if (max_gain_heap.size() == 0) {
@@ -1698,25 +1697,25 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
             }
 #endif
 
-            unsigned conseq_no_gain_moves_counter = 0;
+            unsigned conseqNoGainMovesCounter = 0;
 
-            unsigned failed_branches = 0;
-            double best_iter_costs = current_schedule.current_cost;
+            unsigned failedBranches = 0;
+            double bestIterCosts = currentSchedule_.current_cost;
 
-            VertexType node_causing_first_violation = 0;
+            VertexType nodeCausingFirstViolation = 0;
 
-            unsigned inner_counter = 0;
+            unsigned innerCounter = 0;
 
-            while (failed_branches < parameters.max_num_failed_branches && inner_counter < parameters.max_inner_iterations
-                   && max_gain_heap.size() > 0) {
-                inner_counter++;
+            while (failedBranches < parameters_.maxNumFailedBranches_ && innerCounter < parameters_.maxInnerIterations_
+                   && maxGainHeap_.size() > 0) {
+                innerCounter++;
 
-                const bool iter_feasible = current_schedule.current_feasible;
-                const double iter_costs = current_schedule.current_cost;
+                const bool iterFeasible = currentSchedule_.current_feasible;
+                const double iterCosts = currentSchedule_.current_cost;
 
-                kl_move<Graph_t> best_move = find_best_move();    // O(log n)
+                KlMove<GraphT> bestMove = FindBestMove();    // O(log n)
 
-                if (best_move.gain < -std::numeric_limits<double>::max() * .25) {
+                if (bestMove.gain < -std::numeric_limits<double>::max() * .25) {
 #ifdef KL_DEBUG
                     std::cout << "abort iteration on very negative max gain" << std::endl;
 #endif
@@ -1732,9 +1731,9 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                           << current_schedule.current_cost + best_move.change_in_cost << std::endl;
 #endif
 
-                current_schedule.apply_move(best_move);    // O(p + log n)
+                currentSchedule_.apply_move(bestMove);    // O(p + log n)
 
-                update_reward_penalty();
+                UpdateRewardPenalty();
                 locked_nodes.insert(best_move.node);
 
 #ifdef KL_DEBUG
@@ -1747,21 +1746,21 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                 }
 #endif
 
-                if (iter_feasible != current_schedule.current_feasible) {
-                    if (iter_feasible) {
+                if (iterFeasible != currentSchedule_.current_feasible) {
+                    if (iterFeasible) {
 #ifdef KL_DEBUG
                         std::cout << "===> current schedule changed from feasible to infeasible" << std::endl;
 #endif
 
-                        node_causing_first_violation = best_move.node;
+                        nodeCausingFirstViolation = bestMove.node;
 
-                        if (iter_costs < best_schedule_costs) {
+                        if (iterCosts < bestScheduleCosts_) {
 #ifdef KL_DEBUG
                             std::cout << "save best schedule with costs " << iter_costs << std::endl;
 #endif
-                            best_schedule_costs = iter_costs;
-                            save_best_schedule(current_schedule.vector_schedule);    // O(n)
-                            reverse_move_best_schedule(best_move);
+                            bestScheduleCosts_ = iterCosts;
+                            SaveBestSchedule(currentSchedule_.vector_schedule);    // O(n)
+                            ReverseMoveBestSchedule(bestMove);
 #ifdef KL_DEBUG
                             std::cout << "KLBase save best schedule with (source node comm) cost "
                                       << best_schedule->computeCostsTotalCommunication() << " and number of supersteps "
@@ -1774,14 +1773,14 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                         std::cout << "===> current schedule changed from infeasible to feasible" << std::endl;
 #endif
                     }
-                } else if (best_move.change_in_cost > 0 && current_schedule.current_feasible) {
-                    if (iter_costs < best_schedule_costs) {
+                } else if (bestMove.change_in_cost > 0 && currentSchedule_.current_feasible) {
+                    if (iterCosts < bestScheduleCosts_) {
 #ifdef KL_DEBUG
                         std::cout << "costs increased .. save best schedule with costs " << iter_costs << std::endl;
 #endif
-                        best_schedule_costs = iter_costs;
-                        save_best_schedule(current_schedule.vector_schedule);    // O(n)
-                        reverse_move_best_schedule(best_move);
+                        bestScheduleCosts_ = iterCosts;
+                        SaveBestSchedule(currentSchedule_.vector_schedule);    // O(n)
+                        ReverseMoveBestSchedule(bestMove);
 #ifdef KL_DEBUG
                         std::cout << "KLBase save best schedule with (source node comm) cost "
                                   << best_schedule->computeCostsTotalCommunication() << " and number of supersteps "
@@ -1790,13 +1789,13 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                     }
                 }
 
-                compute_nodes_to_update(best_move);
+                ComputeNodesToUpdate(bestMove);
 
                 select_unlock_neighbors(best_move.node);
 
-                if (check_violation_locked()) {
-                    if (iter_feasible != current_schedule.current_feasible && iter_feasible) {
-                        node_causing_first_violation = best_move.node;
+                if (CheckViolationLocked()) {
+                    if (iterFeasible != currentSchedule_.current_feasible && iterFeasible) {
+                        nodeCausingFirstViolation = bestMove.node;
                     }
                     super_locked_nodes.insert(node_causing_first_violation);
 #ifdef KL_DEBUG
@@ -1808,25 +1807,25 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
 
                 update_node_gains(nodes_to_update);
 
-                if (current_schedule.current_cost
-                    > (parameters.max_div_best_sol_base_percent + outer_counter * parameters.max_div_best_sol_rate_percent)
-                          * best_schedule_costs) {
+                if (currentSchedule_.current_cost
+                    > (parameters_.maxDivBestSolBasePercent_ + outerCounter * parameters_.maxDivBestSolRatePercent_)
+                          * bestScheduleCosts_) {
 #ifdef KL_DEBUG
                     std::cout << "current cost " << current_schedule.current_cost
                               << " too far away from best schedule costs: " << best_schedule_costs << " rollback to best schedule"
                               << std::endl;
 #endif
 
-                    current_schedule.set_current_schedule(*best_schedule);
+                    currentSchedule_.set_current_schedule(*bestSchedule_);
 
-                    set_initial_reward_penalty();
+                    SetInitialRewardPenalty();
                     initialize_gain_heap_unlocked_nodes(node_selection);
 
 #ifdef KL_DEBUG
                     std::cout << "new current cost " << current_schedule.current_cost << std::endl;
 #endif
 
-                    failed_branches++;
+                    failedBranches++;
                 }
 
             }    // while
@@ -1838,35 +1837,35 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                       << parameters.max_outer_iterations << std::endl;
 #endif
 
-            if (current_schedule.current_feasible) {
-                if (current_schedule.current_cost <= best_schedule_costs) {
-                    save_best_schedule(current_schedule.vector_schedule);
-                    best_schedule_costs = current_schedule.current_cost;
+            if (currentSchedule_.current_feasible) {
+                if (currentSchedule_.current_cost <= bestScheduleCosts_) {
+                    SaveBestSchedule(currentSchedule_.vector_schedule);
+                    bestScheduleCosts_ = currentSchedule_.current_cost;
 #ifdef KL_DEBUG
                     std::cout << "KLBase save best schedule with (source node comm) cost "
                               << best_schedule->computeCostsTotalCommunication() << " and number of supersteps "
                               << best_schedule->numberOfSupersteps() << std::endl;
 #endif
                 } else {
-                    current_schedule.set_current_schedule(*best_schedule);
+                    currentSchedule_.set_current_schedule(*bestSchedule_);
                 }
             } else {
-                current_schedule.set_current_schedule(*best_schedule);
+                currentSchedule_.set_current_schedule(*bestSchedule_);
             }
 
-            if (outer_counter > 0 && outer_counter % 30 == 0) {
+            if (outerCounter > 0 && outerCounter % 30 == 0) {
                 super_locked_nodes.clear();
 #ifdef KL_DEBUG
                 std::cout << "---- reset super locked nodes" << std::endl;
 #endif
             }
 
-            reset_locked_nodes();
+            ResetLockedNodes();
 
             node_selection.clear();
-            select_nodes_check_remove_superstep();
+            SelectNodesCheckRemoveSuperstep();
 
-            update_reward_penalty();
+            UpdateRewardPenalty();
 
             initialize_gain_heap(node_selection);
 
@@ -1874,20 +1873,20 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
             std::cout << "end of while, current cost " << current_schedule.current_cost << std::endl;
 #endif
 
-            if (compute_with_time_limit) {
-                auto finish_time = std::chrono::high_resolution_clock::now();
-                auto duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
-                if (duration > ImprovementScheduler<Graph_t>::timeLimitSeconds) {
+            if (computeWithTimeLimit_) {
+                auto finishTime = std::chrono::high_resolution_clock::now();
+                auto duration = std::chrono::duration_cast<std::chrono::seconds>(finishTime - startTime).count();
+                if (duration > ImprovementScheduler<GraphT>::timeLimitSeconds) {
                     break;
                 }
             }
 
-            if (best_iter_costs <= current_schedule.current_cost) {
-                no_improvement_iter_counter++;
+            if (bestIterCosts <= currentSchedule_.current_cost) {
+                noImprovementIterCounter++;
 
-                if (no_improvement_iter_counter > parameters.reset_epoch_counter_threshold) {
-                    step_selection_epoch_counter = 0;
-                    parameters.reset_epoch_counter_threshold += current_schedule.num_steps();
+                if (noImprovementIterCounter > parameters_.resetEpochCounterThreshold_) {
+                    stepSelectionEpochCounter_ = 0;
+                    parameters_.resetEpochCounterThreshold_ += currentSchedule_.num_steps();
 #ifdef KL_DEBUG
                     std::cout << "no improvement for " << no_improvement_iter_counter
                               << " iterations, reset epoc counter. Increase reset threshold to "
@@ -1895,17 +1894,17 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
 #endif
                 }
 
-                if (no_improvement_iter_counter > 10) {
-                    parameters.initial_penalty = 0.0;
-                    parameters.violations_threshold = 3;
+                if (noImprovementIterCounter > 10) {
+                    parameters_.initialPenalty_ = 0.0;
+                    parameters_.violationsThreshold_ = 3;
 #ifdef KL_DEBUG
                     std::cout << "---- reset initial penalty " << parameters.initial_penalty << " violations threshold "
                               << parameters.violations_threshold << std::endl;
 #endif
                 }
 
-                if (no_improvement_iter_counter == 35) {
-                    parameters.max_div_best_sol_base_percent *= 1.02;
+                if (noImprovementIterCounter == 35) {
+                    parameters_.maxDivBestSolBasePercent_ *= 1.02;
 #ifdef KL_DEBUG
                     std::cout << "no improvement for " << no_improvement_iter_counter
                               << " iterations, increase max_div_best_sol_base_percent to "
@@ -1913,7 +1912,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
 #endif
                 }
 
-                if (no_improvement_iter_counter >= parameters.max_no_improvement_iterations) {
+                if (noImprovementIterCounter >= parameters_.maxNoImprovementIterations_) {
 #ifdef KL_DEBUG
                     std::cout << "no improvement for " << parameters.max_no_improvement_iterations
                               << " iterations, end local search" << std::endl;
@@ -1921,27 +1920,27 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                     break;
                 }
             } else {
-                no_improvement_iter_counter = 0;
+                noImprovementIterCounter = 0;
             }
 
         }    // for
 
-        cleanup_datastructures();
+        CleanupDatastructures();
 
 #ifdef KL_DEBUG
         std::cout << "kl done, current cost " << best_schedule_costs << " vs " << initial_costs << " initial costs" << std::endl;
         assert(best_schedule->satisfiesPrecedenceConstraints());
 #endif
 
-        if (initial_costs > current_schedule.current_cost) {
+        if (initialCosts > currentSchedule_.current_cost) {
             return true;
         } else {
             return false;
         }
     }
 
-    bool run_local_search_unlock_delay() {
-        const double initial_costs = current_schedule.current_cost;
+    bool RunLocalSearchUnlockDelay() {
+        const double initialCosts = currentSchedule_.current_cost;
 
 #ifdef KL_DEBUG_1
         std::cout << "Initial costs " << initial_costs << " with " << best_schedule->numberOfSupersteps() << " supersteps."
@@ -1952,17 +1951,17 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
         print_best_schedule(0);
 #endif
 
-        unsigned no_improvement_iter_counter = 0;
+        unsigned noImprovementIterCounter = 0;
 
-        auto start_time = std::chrono::high_resolution_clock::now();
+        auto startTime = std::chrono::high_resolution_clock::now();
 
-        select_nodes_check_remove_superstep();
+        SelectNodesCheckRemoveSuperstep();
 
-        update_reward_penalty();
+        UpdateRewardPenalty();
 
         initialize_gain_heap(node_selection);
 
-        for (unsigned outer_counter = 0; outer_counter < parameters.max_outer_iterations; outer_counter++) {
+        for (unsigned outerCounter = 0; outerCounter < parameters_.maxOuterIterations_; outerCounter++) {
 #ifdef KL_DEBUG
             std::cout << "outer iteration " << outer_counter << " current costs: " << current_schedule.current_cost << std::endl;
             if (max_gain_heap.size() == 0) {
@@ -1972,25 +1971,25 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
 
             // unsigned conseq_no_gain_moves_counter = 0;
 
-            unsigned failed_branches = 0;
-            double best_iter_costs = current_schedule.current_cost;
+            unsigned failedBranches = 0;
+            double bestIterCosts = currentSchedule_.current_cost;
 
-            VertexType node_causing_first_violation = 0;
+            VertexType nodeCausingFirstViolation = 0;
 
-            unsigned inner_counter = 0;
+            unsigned innerCounter = 0;
 
-            while (failed_branches < parameters.max_num_failed_branches && inner_counter < parameters.max_inner_iterations
-                   && max_gain_heap.size() > 0) {
-                inner_counter++;
+            while (failedBranches < parameters_.maxNumFailedBranches_ && innerCounter < parameters_.maxInnerIterations_
+                   && maxGainHeap_.size() > 0) {
+                innerCounter++;
 
-                const bool iter_feasible = current_schedule.current_feasible;
-                const double iter_costs = current_schedule.current_cost;
+                const bool iterFeasible = currentSchedule_.current_feasible;
+                const double iterCosts = currentSchedule_.current_cost;
 #ifdef KL_DEBUG
                 print_heap();
 #endif
-                kl_move<Graph_t> best_move = find_best_move();    // O(log n)
+                KlMove<GraphT> bestMove = FindBestMove();    // O(log n)
 
-                if (best_move.gain < -std::numeric_limits<double>::max() * .25) {
+                if (bestMove.gain < -std::numeric_limits<double>::max() * .25) {
 #ifdef KL_DEBUG
                     std::cout << "abort iteration on very negative max gain" << std::endl;
 #endif
@@ -2014,7 +2013,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                 printSetScheduleWorkMemNodesGrid(std::cout, current_schedule.set_schedule, true);
 #endif
 
-                current_schedule.apply_move(best_move);    // O(p + log n)
+                currentSchedule_.apply_move(bestMove);    // O(p + log n)
 
                 //             if (best_move.gain <= 0.000000001) {
                 //                 conseq_no_gain_moves_counter++;
@@ -2043,7 +2042,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                 }
 #endif
 
-                update_reward_penalty();
+                UpdateRewardPenalty();
                 locked_nodes.insert(best_move.node);
 
 #ifdef KL_DEBUG
@@ -2056,21 +2055,21 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                 }
 #endif
 
-                if (iter_feasible != current_schedule.current_feasible) {
-                    if (iter_feasible) {
+                if (iterFeasible != currentSchedule_.current_feasible) {
+                    if (iterFeasible) {
 #ifdef KL_DEBUG
                         std::cout << "===> current schedule changed from feasible to infeasible" << std::endl;
 #endif
 
-                        node_causing_first_violation = best_move.node;
+                        nodeCausingFirstViolation = bestMove.node;
 
-                        if (iter_costs < best_schedule_costs) {
+                        if (iterCosts < bestScheduleCosts_) {
 #ifdef KL_DEBUG
                             std::cout << "save best schedule with costs " << iter_costs << std::endl;
 #endif
-                            best_schedule_costs = iter_costs;
-                            save_best_schedule(current_schedule.vector_schedule);    // O(n)
-                            reverse_move_best_schedule(best_move);
+                            bestScheduleCosts_ = iterCosts;
+                            SaveBestSchedule(currentSchedule_.vector_schedule);    // O(n)
+                            ReverseMoveBestSchedule(bestMove);
 #ifdef KL_DEBUG
                             std::cout << "KLBase save best schedule with (source node comm) cost "
                                       << best_schedule->computeTotalCosts() << " and number of supersteps "
@@ -2083,14 +2082,14 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                         std::cout << "===> current schedule changed from infeasible to feasible" << std::endl;
 #endif
                     }
-                } else if (best_move.change_in_cost > 0 && current_schedule.current_feasible) {
-                    if (iter_costs < best_schedule_costs) {
+                } else if (bestMove.change_in_cost > 0 && currentSchedule_.current_feasible) {
+                    if (iterCosts < bestScheduleCosts_) {
 #ifdef KL_DEBUG
                         std::cout << "costs increased .. save best schedule with costs " << iter_costs << std::endl;
 #endif
-                        best_schedule_costs = iter_costs;
-                        save_best_schedule(current_schedule.vector_schedule);    // O(n)
-                        reverse_move_best_schedule(best_move);
+                        bestScheduleCosts_ = iterCosts;
+                        SaveBestSchedule(currentSchedule_.vector_schedule);    // O(n)
+                        ReverseMoveBestSchedule(bestMove);
 #ifdef KL_DEBUG
                         std::cout << "KLBase save best schedule with (source node comm) cost "
                                   << best_schedule->computeTotalCosts() << " and number of supersteps "
@@ -2120,13 +2119,13 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
 
 #endif
 
-                compute_nodes_to_update(best_move);
+                ComputeNodesToUpdate(bestMove);
 
                 select_unlock_neighbors(best_move.node);
 
-                if (check_violation_locked()) {
-                    if (iter_feasible != current_schedule.current_feasible && iter_feasible) {
-                        node_causing_first_violation = best_move.node;
+                if (CheckViolationLocked()) {
+                    if (iterFeasible != currentSchedule_.current_feasible && iterFeasible) {
+                        nodeCausingFirstViolation = bestMove.node;
                     }
                     super_locked_nodes.insert(node_causing_first_violation);
 #ifdef KL_DEBUG
@@ -2146,15 +2145,15 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
 
                 update_node_gains(nodes_to_update);
 
-                if (not(current_schedule.current_violations.size() > 4) && not iter_feasible && not max_gain_heap.empty()) {
-                    const auto &iter = max_gain_heap.ordered_begin();
-                    if (iter->gain < parameters.gain_threshold) {
+                if (not(currentSchedule_.current_violations.size() > 4) && not iterFeasible && not maxGainHeap_.empty()) {
+                    const auto &iter = maxGainHeap_.ordered_begin();
+                    if (iter->gain < parameters_.gainThreshold_) {
                         node_selection.clear();
                         locked_nodes.clear();
                         super_locked_nodes.clear();
-                        select_nodes_violations();
+                        SelectNodesViolations();
 
-                        update_reward_penalty();
+                        UpdateRewardPenalty();
 
                         initialize_gain_heap(node_selection);
 
@@ -2164,25 +2163,25 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                     }
                 }
 
-                if (current_schedule.current_cost
-                    > (parameters.max_div_best_sol_base_percent + outer_counter * parameters.max_div_best_sol_rate_percent)
-                          * best_schedule_costs) {
+                if (currentSchedule_.current_cost
+                    > (parameters_.maxDivBestSolBasePercent_ + outerCounter * parameters_.maxDivBestSolRatePercent_)
+                          * bestScheduleCosts_) {
 #ifdef KL_DEBUG
                     std::cout << "current cost " << current_schedule.current_cost
                               << " too far away from best schedule costs: " << best_schedule_costs << " rollback to best schedule"
                               << std::endl;
 #endif
 
-                    current_schedule.set_current_schedule(*best_schedule);
+                    currentSchedule_.set_current_schedule(*bestSchedule_);
 
-                    set_initial_reward_penalty();
+                    SetInitialRewardPenalty();
                     initialize_gain_heap_unlocked_nodes(node_selection);
 
 #ifdef KL_DEBUG
                     std::cout << "new current cost " << current_schedule.current_cost << std::endl;
 #endif
 
-                    failed_branches++;
+                    failedBranches++;
                 }
 
             }    // while
@@ -2194,30 +2193,30 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                       << parameters.max_outer_iterations << std::endl;
 #endif
 
-            if (current_schedule.current_feasible) {
-                if (current_schedule.current_cost <= best_schedule_costs) {
-                    save_best_schedule(current_schedule.vector_schedule);
-                    best_schedule_costs = current_schedule.current_cost;
+            if (currentSchedule_.current_feasible) {
+                if (currentSchedule_.current_cost <= bestScheduleCosts_) {
+                    SaveBestSchedule(currentSchedule_.vector_schedule);
+                    bestScheduleCosts_ = currentSchedule_.current_cost;
 #ifdef KL_DEBUG
                     std::cout << "KLBase save best schedule with (source node comm) cost " << best_schedule->computeTotalCosts()
                               << " and number of supersteps " << best_schedule->numberOfSupersteps() << std::endl;
 #endif
                 } else {
-                    current_schedule.set_current_schedule(*best_schedule);
+                    currentSchedule_.set_current_schedule(*bestSchedule_);
                 }
             } else {
-                current_schedule.set_current_schedule(*best_schedule);
+                currentSchedule_.set_current_schedule(*bestSchedule_);
             }
 
-            if (compute_with_time_limit) {
-                auto finish_time = std::chrono::high_resolution_clock::now();
-                auto duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
-                if (duration > ImprovementScheduler<Graph_t>::timeLimitSeconds) {
+            if (computeWithTimeLimit_) {
+                auto finishTime = std::chrono::high_resolution_clock::now();
+                auto duration = std::chrono::duration_cast<std::chrono::seconds>(finishTime - startTime).count();
+                if (duration > ImprovementScheduler<GraphT>::timeLimitSeconds) {
                     break;
                 }
             }
 
-            if (outer_counter > 0 && outer_counter % 30 == 0) {
+            if (outerCounter > 0 && outerCounter % 30 == 0) {
                 super_locked_nodes.clear();
 #ifdef KL_DEBUG
                 std::cout << "---- reset super locked nodes" << std::endl;
@@ -2230,17 +2229,17 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
             }
 #endif
 
-            reset_locked_nodes();
+            ResetLockedNodes();
 
             node_selection.clear();
 
             // if (reset_superstep) {
             //     select_nodes_check_reset_superstep();
             // } else {
-            select_nodes_check_remove_superstep();
+            SelectNodesCheckRemoveSuperstep();
             // }
 
-            update_reward_penalty();
+            UpdateRewardPenalty();
 
             initialize_gain_heap(node_selection);
 
@@ -2248,12 +2247,12 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
             std::cout << "end of while, current cost " << current_schedule.current_cost << std::endl;
 #endif
 
-            if (best_iter_costs <= current_schedule.current_cost) {
-                no_improvement_iter_counter++;
+            if (bestIterCosts <= currentSchedule_.current_cost) {
+                noImprovementIterCounter++;
 
-                if (no_improvement_iter_counter > parameters.reset_epoch_counter_threshold) {
-                    step_selection_epoch_counter = 0;
-                    parameters.reset_epoch_counter_threshold += current_schedule.num_steps();
+                if (noImprovementIterCounter > parameters_.resetEpochCounterThreshold_) {
+                    stepSelectionEpochCounter_ = 0;
+                    parameters_.resetEpochCounterThreshold_ += currentSchedule_.num_steps();
 #ifdef KL_DEBUG
                     std::cout << "no improvement for " << no_improvement_iter_counter
                               << " iterations, reset epoc counter. Increase reset threshold to "
@@ -2276,25 +2275,25 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                 // #endif
                 //             }
 
-                if (no_improvement_iter_counter > 50 && no_improvement_iter_counter % 3 == 0) {
-                    parameters.initial_penalty = 0.0;
-                    parameters.violations_threshold = 5;
+                if (noImprovementIterCounter > 50 && noImprovementIterCounter % 3 == 0) {
+                    parameters_.initialPenalty_ = 0.0;
+                    parameters_.violationsThreshold_ = 5;
 
-                } else if (no_improvement_iter_counter > 30 && no_improvement_iter_counter % 5 == 0) {
-                    parameters.initial_penalty = 0.0;
-                    parameters.violations_threshold = 4;
+                } else if (noImprovementIterCounter > 30 && noImprovementIterCounter % 5 == 0) {
+                    parameters_.initialPenalty_ = 0.0;
+                    parameters_.violationsThreshold_ = 4;
 
-                } else if (no_improvement_iter_counter > 9 && no_improvement_iter_counter % 10 == 0) {
-                    parameters.initial_penalty = 0.0;
-                    parameters.violations_threshold = 3;
+                } else if (noImprovementIterCounter > 9 && noImprovementIterCounter % 10 == 0) {
+                    parameters_.initialPenalty_ = 0.0;
+                    parameters_.violationsThreshold_ = 3;
 #ifdef KL_DEBUG
                     std::cout << "---- reset initial penalty " << parameters.initial_penalty << " violations threshold "
                               << parameters.violations_threshold << std::endl;
 #endif
                 }
 
-                if (no_improvement_iter_counter == 35) {
-                    parameters.max_div_best_sol_base_percent *= 1.02;
+                if (noImprovementIterCounter == 35) {
+                    parameters_.maxDivBestSolBasePercent_ *= 1.02;
 #ifdef KL_DEBUG
                     std::cout << "no improvement for " << no_improvement_iter_counter
                               << " iterations, increase max_div_best_sol_base_percent to "
@@ -2302,7 +2301,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
 #endif
                 }
 
-                if (no_improvement_iter_counter >= parameters.max_no_improvement_iterations) {
+                if (noImprovementIterCounter >= parameters_.maxNoImprovementIterations_) {
 #ifdef KL_DEBUG
                     std::cout << "no improvement for " << parameters.max_no_improvement_iterations
                               << " iterations, end local search" << std::endl;
@@ -2310,7 +2309,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
                     break;
                 }
             } else {
-                no_improvement_iter_counter = 0;
+                noImprovementIterCounter = 0;
             }
 
 #ifdef KL_DEBUG
@@ -2319,7 +2318,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
 
         }    // for
 
-        cleanup_datastructures();
+        CleanupDatastructures();
 
 #ifdef KL_DEBUG_1
         std::cout << "kl done, current cost " << best_schedule_costs << " with " << best_schedule->numberOfSupersteps()
@@ -2327,7 +2326,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
         assert(best_schedule->satisfiesPrecedenceConstraints());
 #endif
 
-        if (initial_costs > current_schedule.current_cost) {
+        if (initialCosts > currentSchedule_.current_cost) {
             return true;
         } else {
             return false;
@@ -2339,12 +2338,12 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
 
     // virtual void insertSuperstep(unsigned step);
 
-    void print_heap() {
-        std::cout << "heap current size: " << max_gain_heap.size() << std::endl;
-        std::cout << "heap top node " << max_gain_heap.top().node << " gain " << max_gain_heap.top().gain << std::endl;
+    void PrintHeap() {
+        std::cout << "heap current size: " << maxGainHeap_.size() << std::endl;
+        std::cout << "heap top node " << maxGainHeap_.top().node << " gain " << maxGainHeap_.top().gain << std::endl;
 
         unsigned count = 0;
-        for (auto it = max_gain_heap.ordered_begin(); it != max_gain_heap.ordered_end(); ++it) {
+        for (auto it = maxGainHeap_.ordered_begin(); it != maxGainHeap_.ordered_end(); ++it) {
             std::cout << "node " << it->node << " gain " << it->gain << " to proc " << it->to_proc << " to step " << it->to_step
                       << std::endl;
 
@@ -2354,7 +2353,7 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
         }
     }
 
-    bool compute_with_time_limit = false;
+    bool computeWithTimeLimit_ = false;
 
 #ifdef KL_PRINT_SCHEDULE
     std::string file_name_write_schedule = "kl_schedule_iter_";
@@ -2362,51 +2361,49 @@ class kl_base : public ImprovementScheduler<Graph_t>, public Ikl_cost_function {
 #endif
 
   public:
-    kl_base(kl_current_schedule<Graph_t, MemoryConstraint_t> &current_schedule_)
-        : ImprovementScheduler<Graph_t>(), current_schedule(current_schedule_) {
+    KlBase(KlCurrentSchedule<GraphT, MemoryConstraintT> &currentSchedule)
+        : ImprovementScheduler<GraphT>(), currentSchedule_(currentSchedule) {
         std::random_device rd;
-        gen = std::mt19937(rd());
+        gen_ = std::mt19937(rd());
     }
 
-    virtual ~kl_base() = default;
+    virtual ~KlBase() = default;
 
-    virtual RETURN_STATUS improveSchedule(BspSchedule<Graph_t> &schedule) override {
-        reset_run_datastructures();
+    virtual RETURN_STATUS improveSchedule(BspSchedule<GraphT> &schedule) override {
+        ResetRunDatastructures();
 
-        best_schedule = &schedule;
-        current_schedule.instance = &best_schedule->getInstance();
+        bestSchedule_ = &schedule;
+        currentSchedule_.instance = &bestSchedule_->getInstance();
 
         num_nodes = current_schedule.instance->numberOfVertices();
-        num_procs = current_schedule.instance->numberOfProcessors();
+        numProcs_ = currentSchedule_.instance->numberOfProcessors();
 
-        set_parameters();
-        initialize_datastructures();
+        SetParameters();
+        InitializeDatastructures();
 
-        bool improvement_found = run_local_search_unlock_delay();
+        bool improvementFound = RunLocalSearchUnlockDelay();
 
-        if (improvement_found) {
+        if (improvementFound) {
             return RETURN_STATUS::OSP_SUCCESS;
         } else {
             return RETURN_STATUS::BEST_FOUND;
         }
     }
 
-    virtual RETURN_STATUS improveScheduleWithTimeLimit(BspSchedule<Graph_t> &schedule) override {
-        compute_with_time_limit = true;
+    virtual RETURN_STATUS improveScheduleWithTimeLimit(BspSchedule<GraphT> &schedule) override {
+        computeWithTimeLimit_ = true;
         return improveSchedule(schedule);
     }
 
-    virtual void set_compute_with_time_limit(bool compute_with_time_limit_) {
-        compute_with_time_limit = compute_with_time_limit_;
-    }
+    virtual void SetComputeWithTimeLimit(bool computeWithTimeLimit) { computeWithTimeLimit_ = computeWithTimeLimit; }
 
-    virtual std::string getScheduleName() const = 0;
+    virtual std::string GetScheduleName() const = 0;
 
-    virtual void set_quick_pass(bool quick_pass_) { parameters.quick_pass = quick_pass_; }
+    virtual void SetQuickPass(bool quickPass) { parameters_.quickPass_ = quickPass; }
 
-    virtual void set_alternate_reset_remove_superstep(bool alternate_reset_remove_superstep_) {
-        auto_alternate = false;
-        alternate_reset_remove_superstep = alternate_reset_remove_superstep_;
+    virtual void SetAlternateResetRemoveSuperstep(bool alternateResetRemoveSuperstep) {
+        autoAlternate_ = false;
+        alternateResetRemoveSuperstep_ = alternateResetRemoveSuperstep;
     }
 };
 

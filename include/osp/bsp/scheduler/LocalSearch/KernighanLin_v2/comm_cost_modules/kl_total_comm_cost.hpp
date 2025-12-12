@@ -23,95 +23,95 @@ limitations under the License.
 
 namespace osp {
 
-template <typename Graph_t, typename cost_t, typename MemoryConstraint_t, unsigned window_size = 1, bool use_node_communication_costs_arg = true>
-struct kl_total_comm_cost_function {
+template <typename GraphT, typename CostT, typename MemoryConstraintT, unsigned windowSize = 1, bool useNodeCommunicationCostsArg = true>
+struct KlTotalCommCostFunction {
     using VertexType = vertex_idx_t<Graph_t>;
     using kl_move = kl_move_struct<cost_t, VertexType>;
     using kl_gain_update_info = kl_update_info<VertexType>;
 
-    constexpr static bool is_max_comm_cost_function = false;
+    constexpr static bool isMaxCommCostFunction_ = false;
 
-    constexpr static unsigned window_range = 2 * window_size + 1;
-    constexpr static bool use_node_communication_costs = use_node_communication_costs_arg || not has_edge_weights_v<Graph_t>;
+    constexpr static unsigned windowRange_ = 2 * windowSize + 1;
+    constexpr static bool useNodeCommunicationCosts_ = use_node_communication_costs_arg || not has_edge_weights_v<Graph_t>;
 
-    kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t> *active_schedule;
+    KlActiveSchedule<GraphT, CostT, MemoryConstraintT> *activeSchedule_;
 
-    CompatibleProcessorRange<Graph_t> *proc_range;
+    CompatibleProcessorRange<GraphT> *procRange_;
 
-    const Graph_t *graph;
-    const BspInstance<Graph_t> *instance;
+    const GraphT *graph_;
+    const BspInstance<GraphT> *instance_;
 
-    cost_t comm_multiplier = 1;
-    cost_t max_comm_weight = 0;
+    CostT commMultiplier_ = 1;
+    CostT maxCommWeight_ = 0;
 
-    inline cost_t get_comm_multiplier() { return comm_multiplier; }
+    inline CostT GetCommMultiplier() { return commMultiplier_; }
 
-    inline cost_t get_max_comm_weight() { return max_comm_weight; }
+    inline CostT GetMaxCommWeight() { return maxCommWeight_; }
 
-    inline cost_t get_max_comm_weight_multiplied() { return max_comm_weight * comm_multiplier; }
+    inline CostT GetMaxCommWeightMultiplied() { return maxCommWeight_ * commMultiplier_; }
 
-    const std::string name() const { return "toal_comm_cost"; }
+    const std::string Name() const { return "toal_comm_cost"; }
 
-    inline bool is_compatible(VertexType node, unsigned proc) { return active_schedule->getInstance().isCompatible(node, proc); }
+    inline bool IsCompatible(VertexType node, unsigned proc) { return activeSchedule_->getInstance().isCompatible(node, proc); }
 
-    void initialize(kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t> &sched, CompatibleProcessorRange<Graph_t> &p_range) {
-        active_schedule = &sched;
-        proc_range = &p_range;
-        instance = &sched.getInstance();
-        graph = &instance->getComputationalDag();
-        comm_multiplier = 1.0 / instance->numberOfProcessors();
+    void Initialize(KlActiveSchedule<GraphT, CostT, MemoryConstraintT> &sched, CompatibleProcessorRange<GraphT> &pRange) {
+        activeSchedule_ = &sched;
+        procRange_ = &pRange;
+        instance_ = &sched.getInstance();
+        graph_ = &instance_->getComputationalDag();
+        commMultiplier_ = 1.0 / instance_->numberOfProcessors();
     }
 
-    struct empty_struct {};
+    struct EmptyStruct {};
 
-    using pre_move_comm_data_t = empty_struct;
+    using PreMoveCommDataT = EmptyStruct;
 
-    inline empty_struct get_pre_move_comm_data(const kl_move &) { return empty_struct(); }
+    inline EmptyStruct GetPreMoveCommData(const kl_move &) { return EmptyStruct(); }
 
-    cost_t compute_schedule_cost_test() { return compute_schedule_cost(); }
+    CostT ComputeScheduleCostTest() { return ComputeScheduleCost(); }
 
-    void update_datastructure_after_move(const kl_move &, const unsigned, const unsigned) {}
+    void UpdateDatastructureAfterMove(const kl_move &, const unsigned, const unsigned) {}
 
-    cost_t compute_schedule_cost() {
-        cost_t work_costs = 0;
-        for (unsigned step = 0; step < active_schedule->num_steps(); step++) {
-            work_costs += active_schedule->get_step_max_work(step);
+    CostT ComputeScheduleCost() {
+        CostT workCosts = 0;
+        for (unsigned step = 0; step < activeSchedule_->num_steps(); step++) {
+            workCosts += activeSchedule_->get_step_max_work(step);
         }
 
-        cost_t comm_costs = 0;
-        for (const auto &edge : edges(*graph)) {
-            const auto &source_v = source(edge, *graph);
-            const auto &target_v = target(edge, *graph);
+        CostT commCosts = 0;
+        for (const auto &edge : edges(*graph_)) {
+            const auto &sourceV = source(edge, *graph_);
+            const auto &targetV = target(edge, *graph_);
 
-            const unsigned &source_proc = active_schedule->assigned_processor(source_v);
-            const unsigned &target_proc = active_schedule->assigned_processor(target_v);
+            const unsigned &sourceProc = activeSchedule_->assigned_processor(sourceV);
+            const unsigned &targetProc = activeSchedule_->assigned_processor(targetV);
 
-            if (source_proc != target_proc) {
-                if constexpr (use_node_communication_costs) {
-                    const cost_t source_comm_cost = graph->vertex_comm_weight(source_v);
-                    max_comm_weight = std::max(max_comm_weight, source_comm_cost);
-                    comm_costs += source_comm_cost * instance->communicationCosts(source_proc, target_proc);
+            if (sourceProc != targetProc) {
+                if constexpr (useNodeCommunicationCosts_) {
+                    const CostT sourceCommCost = graph_->vertex_comm_weight(sourceV);
+                    maxCommWeight_ = std::max(maxCommWeight_, sourceCommCost);
+                    commCosts += sourceCommCost * instance_->communicationCosts(sourceProc, targetProc);
                 } else {
-                    const cost_t source_comm_cost = graph->edge_comm_weight(edge);
-                    max_comm_weight = std::max(max_comm_weight, source_comm_cost);
-                    comm_costs += source_comm_cost * instance->communicationCosts(source_proc, target_proc);
+                    const CostT sourceCommCost = graph_->edge_comm_weight(edge);
+                    maxCommWeight_ = std::max(maxCommWeight_, sourceCommCost);
+                    commCosts += sourceCommCost * instance_->communicationCosts(sourceProc, targetProc);
                 }
             }
         }
 
-        return work_costs + comm_costs * comm_multiplier
-               + static_cast<v_commw_t<Graph_t>>(active_schedule->num_steps() - 1) * instance->synchronisationCosts();
+        return workCosts + commCosts * commMultiplier_
+               + static_cast<v_commw_t<Graph_t>>(activeSchedule_->num_steps() - 1) * instance_->synchronisationCosts();
     }
 
-    template <typename thread_data_t>
-    void update_node_comm_affinity(const kl_move &move,
-                                   thread_data_t &thread_data,
-                                   const cost_t &penalty,
-                                   const cost_t &reward,
-                                   std::map<VertexType, kl_gain_update_info> &max_gain_recompute,
-                                   std::vector<VertexType> &new_nodes) {
-        const unsigned &start_step = thread_data.start_step;
-        const unsigned &end_step = thread_data.end_step;
+    template <typename ThreadDataT>
+    void UpdateNodeCommAffinity(const kl_move &move,
+                                ThreadDataT &threadData,
+                                const CostT &penalty,
+                                const CostT &reward,
+                                std::map<VertexType, kl_gain_update_info> &maxGainRecompute,
+                                std::vector<VertexType> &newNodes) {
+        const unsigned &startStep = threadData.start_step;
+        const unsigned &endStep = threadData.end_step;
 
         for (const auto &target : instance->getComputationalDag().children(move.node)) {
             const unsigned target_step = active_schedule->assigned_superstep(target);
@@ -324,32 +324,32 @@ struct kl_total_comm_cost_function {
         }
     }
 
-    inline unsigned start_idx(const unsigned node_step, const unsigned start_step) {
-        return (node_step < window_size + start_step) ? window_size - (node_step - start_step) : 0;
+    inline unsigned StartIdx(const unsigned nodeStep, const unsigned startStep) {
+        return (nodeStep < windowSize + startStep) ? windowSize - (nodeStep - startStep) : 0;
     }
 
-    inline unsigned end_idx(const unsigned node_step, const unsigned end_step) {
-        return (node_step + window_size <= end_step) ? window_range : window_range - (node_step + window_size - end_step);
+    inline unsigned EndIdx(const unsigned nodeStep, const unsigned endStep) {
+        return (nodeStep + windowSize <= endStep) ? windowRange_ : windowRange_ - (nodeStep + windowSize - endStep);
     }
 
-    inline cost_t change_comm_cost(const v_commw_t<Graph_t> &p_target_comm_cost,
-                                   const v_commw_t<Graph_t> &node_target_comm_cost,
-                                   const cost_t &comm_gain) {
-        return p_target_comm_cost > node_target_comm_cost ? (p_target_comm_cost - node_target_comm_cost) * comm_gain
-                                                          : (node_target_comm_cost - p_target_comm_cost) * comm_gain * -1.0;
+    inline CostT ChangeCommCost(const v_commw_t<Graph_t> &pTargetCommCost,
+                                const v_commw_t<Graph_t> &nodeTargetCommCost,
+                                const CostT &commGain) {
+        return p_target_comm_cost > node_target_comm_cost ? (pTargetCommCost - node_target_comm_cost) * commGain
+                                                          : (nodeTargetCommCost - p_target_comm_cost) * commGain * -1.0;
     }
 
-    template <typename affinity_table_t>
-    void compute_comm_affinity(VertexType node,
-                               affinity_table_t &affinity_table_node,
-                               const cost_t &penalty,
-                               const cost_t &reward,
-                               const unsigned start_step,
-                               const unsigned end_step) {
-        const unsigned node_step = active_schedule->assigned_superstep(node);
-        const unsigned node_proc = active_schedule->assigned_processor(node);
-        const unsigned window_bound = end_idx(node_step, end_step);
-        const unsigned node_start_idx = start_idx(node_step, start_step);
+    template <typename AffinityTableT>
+    void ComputeCommAffinity(VertexType node,
+                             AffinityTableT &affinityTableNode,
+                             const CostT &penalty,
+                             const CostT &reward,
+                             const unsigned startStep,
+                             const unsigned endStep) {
+        const unsigned nodeStep = activeSchedule_->assigned_superstep(node);
+        const unsigned nodeProc = activeSchedule_->assigned_processor(node);
+        const unsigned windowBound = EndIdx(nodeStep, endStep);
+        const unsigned nodeStartIdx = StartIdx(nodeStep, startStep);
 
         for (const auto &target : instance->getComputationalDag().children(node)) {
             const unsigned target_step = active_schedule->assigned_superstep(target);

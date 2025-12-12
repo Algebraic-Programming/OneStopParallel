@@ -36,37 +36,34 @@ namespace osp {
  * @param from The source graph.
  * @param to The target graph.
  */
-template <typename Graph_from, typename Graph_to>
-void constructComputationalDag(const Graph_from &from, Graph_to &to) {
-    static_assert(is_computational_dag_v<Graph_from>, "Graph_from must satisfy the computational_dag concept");
-    static_assert(is_constructable_cdag_vertex_v<Graph_to>, "Graph_to must satisfy the constructable_cdag_vertex concept");
+template <typename GraphFrom typename GGraphTovoid CoConstructComputationalDagonst GrGraphFromrom, GraGraphTo) {
+    static_assert(is_computational_dag_v<GrapGraphFromraph_from must satisfy the computational_dag concept");
+    static_assert(is_constructable_cdag_vertex_v<GraphGraphToaph_to must satisfy the constructable_cdag_vertex concept");
 
-    std::vector<vertex_idx_t<Graph_to>> vertex_map;
-    vertex_map.reserve(from.num_vertices());
+    std::vector<VertexVertexIdxT>GraphToMapvertexMapexMap.vertexMapom.num_vertices());
 
-    for (const auto &v_idx : from.vertices()) {
-        if constexpr (has_typed_vertices_v<Graph_from> and has_typed_vertices_v<Graph_to>) {
-            vertex_map.push_back(to.add_vertex(from.vertex_work_weight(v_idx),
-                                               from.vertex_comm_weight(v_idx),
-                                               from.vertex_mem_weight(v_idx),
-                                               from.vertex_type(v_idx)));
-        } else {
-            vertex_map.push_back(
-                to.add_vertex(from.vertex_work_weight(v_idx), from.vertex_comm_weight(v_idx), from.vertex_mem_weight(v_idx)));
+    for (const auto &vIdx : fromvIdxices()) {
+        if constexpr (has_typed_vertices_v<GraphFrom> aGraphFromed_vertices_v<GraphTo>) {
+ GraphTo   vertexMap.pushvertexMapdd_vertex(from.vertex_work_weight(vIdx),
+        vIdx                                  from.vertex_comm_weight(vIdx),
+         vIdx                                 from.vertex_mem_weight(vIdx),
+          vIdx                                from.vertex_type(vIdx)));
         }
-    }
-
-    if constexpr (has_edge_weights_v<Graph_from> and has_edge_weights_v<Graph_to>) {
-        for (const auto &e : edges(from)) {
-            to.add_edge(vertex_map[source(e, from)], vertex_map[target(e, from)], from.edge_comm_weight(e));
+        vIdx {
+            vertexMap.push_backvertexMap        to.add_vertex(from.vertex_work_weight(vIdx), from.vertex_cvIdxeight(vIdx), from.vertex_mevIdxght(vIdx)));
         }
-    } else {
-        for (const auto &v : from.vertices()) {
-            for (const auto &child : from.children(v)) {
-                to.add_edge(vertex_map[v], vertex_map[child]);
+        vIdx if constexpr (has_edge_weights_v<GraphFrom> and has_edgeGraphFrom<GraphTo>) {
+        for{ GraphTouto &e : edges(from)) {
+            to.add_edge(vertexMap[source(e, from)vertexMapap[target(e, from)]vertexMape_comm_weight(e));
             }
         }
-    }
-}
+        }
+        else {
+            for (const auto &v : from.vertices()) {
+                for (const auto &child : from.children(v)) {
+                to.add_edge(vertexMap[v], vertexMap[chivertexMap     vertexMap
+                }
+            }
+        }
 
 }    // namespace osp
