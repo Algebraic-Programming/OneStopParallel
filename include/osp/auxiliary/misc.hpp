@@ -51,7 +51,6 @@ struct Pair {
 
     explicit Pair(const T1 a = T1(), const T2 b = T2()) : a_(a), b_(b) {}
 
-    template <typename T1, typename T2>
     bool operator<(const Pair<T1, T2> &other) const {
         return (a_ < other.a_ || (a_ == other.a_ && b_ < other.b_));
     }
