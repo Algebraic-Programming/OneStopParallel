@@ -54,31 +54,31 @@ template <typename T, typename = void>
 struct HasVertexWorkWeightTmember : std::false_type {};
 
 template <typename T>
-struct HasVertexWorkWeightTmember<T, std::void_t<typename T::VertexWorkWeight>> : std::true_type {};
+struct HasVertexWorkWeightTmember<T, std::void_t<typename T::VertexWorkWeightType>> : std::true_type {};
 
 template <typename T, typename = void>
 struct HasVertexCommWeightTmember : std::false_type {};
 
 template <typename T>
-struct HasVertexCommWeightTmember<T, std::void_t<typename T::VertexCommWeight>> : std::true_type {};
+struct HasVertexCommWeightTmember<T, std::void_t<typename T::VertexCommWeightType>> : std::true_type {};
 
 template <typename T, typename = void>
 struct HasVertexMemWeightTmember : std::false_type {};
 
 template <typename T>
-struct HasVertexMemWeightTmember<T, std::void_t<typename T::VertexMemWeight>> : std::true_type {};
+struct HasVertexMemWeightTmember<T, std::void_t<typename T::VertexMemWeightType>> : std::true_type {};
 
 template <typename T, typename = void>
 struct HasVertexTypeTmember : std::false_type {};
 
 template <typename T>
-struct HasVertexTypeTmember<T, std::void_t<typename T::VertexType>> : std::true_type {};
+struct HasVertexTypeTmember<T, std::void_t<typename T::VertexTypeType>> : std::true_type {};
 
 template <typename T, typename = void>
 struct HasEdgeCommWeightTmember : std::false_type {};
 
 template <typename T>
-struct HasEdgeCommWeightTmember<T, std::void_t<typename T::EdgeCommWeight>> : std::true_type {};
+struct HasEdgeCommWeightTmember<T, std::void_t<typename T::EdgeCommWeightType>> : std::true_type {};
 
 /**
  * @brief Core traits for any directed graph type.

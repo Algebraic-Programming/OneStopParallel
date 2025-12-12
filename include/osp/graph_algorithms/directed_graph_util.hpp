@@ -448,7 +448,7 @@ template <typename GraphT>
 std::vector<VertexIdxT<GraphT>> Successors(const VertexIdxT<GraphT> &v, const GraphT &graph) {
     static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
     std::vector<VertexIdxT<GraphT>> vec;
-    for (const auto &suc : bfs_view(graph, v)) {
+    for (const auto &suc : BfsView(graph, v)) {
         vec.push_back(suc);
     }
     return vec;
@@ -466,7 +466,7 @@ template <typename GraphT>
 std::vector<VertexIdxT<GraphT>> Ancestors(const VertexIdxT<GraphT> &v, const GraphT &graph) {
     static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
     std::vector<VertexIdxT<GraphT>> vec;
-    for (const auto &anc : bfs_reverse_view(graph, v)) {
+    for (const auto &anc : BfsReverseView(graph, v)) {
         vec.push_back(anc);
     }
     return vec;
@@ -487,7 +487,7 @@ bool IsAcyclic(const GraphT &graph) {
     std::queue<VertexType> next;
 
     // Find source nodes
-    for (const VertexType &v : source_vertices_view(graph)) {
+    for (const VertexType &v : SourceVerticesView(graph)) {
         next.push(v);
     }
 
@@ -642,7 +642,7 @@ std::size_t ComputeWeaklyConnectedComponents(const GraphT &graph, std::vector<Ve
 template <typename GraphT>
 std::size_t CountWeaklyConnectedComponents(const GraphT &graph) {
     std::vector<VertexIdxT<GraphT>> components;
-    return compute_weakly_connected_components(graph, components);
+    return ComputeWeaklyConnectedComponents(graph, components);
 }
 
 }    // namespace osp
