@@ -55,7 +55,7 @@ std::vector<IntegralType> DivisorsList(IntegralType num) {
 
     std::vector<IntegralType> divs;
 
-    IntegralType ub = intSqrtFloor<IntegralType>(num);
+    IntegralType ub = IntSqrtFloor<IntegralType>(num);
     for (IntegralType div = 1; div <= ub; ++div) {
         if (num % div == 0) {
             divs.emplace_back(div);
