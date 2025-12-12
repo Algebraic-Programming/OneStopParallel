@@ -611,7 +611,7 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
             for (unsigned proc = 0; proc < instance_->numberOfProcessors(); proc++) {
                 VMemwT<GraphT> memory = 0;
                 for (const auto &node : setSchedule.step_processor_vertices[step][proc]) {
-                    memory += instance_->getComputationalDag().vertex_mem_weight(node);
+                    memory += instance_->getComputationalDag().VertexMemWeight(node);
                 }
 
                 if (memory > instance_->getArchitecture().memoryBound(proc)) {
@@ -637,9 +637,9 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
 
         for (const auto &node : instance_->vertices()) {
             const unsigned proc = nodeToProcessorAssignment_[node];
-            currentProcPersistentMemory[proc] += instance_->getComputationalDag().vertex_mem_weight(node);
+            currentProcPersistentMemory[proc] += instance_->getComputationalDag().VertexMemWeight(node);
             currentProcTransientMemory[proc]
-                = std::max(currentProcTransientMemory[proc], instance_->getComputationalDag().vertex_comm_weight(node));
+                = std::max(currentProcTransientMemory[proc], instance_->getComputationalDag().VertexCommWeight(node));
 
             if (currentProcPersistentMemory[proc] + currentProcTransientMemory[proc]
                 > instance_->getArchitecture().memoryBound(proc)) {
@@ -662,7 +662,7 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
 
         for (const auto &node : instance_->vertices()) {
             const unsigned proc = nodeToProcessorAssignment_[node];
-            currentProcMemory[proc] += instance_->getComputationalDag().vertex_mem_weight(node);
+            currentProcMemory[proc] += instance_->getComputationalDag().VertexMemWeight(node);
 
             if (currentProcMemory[proc] > instance_->getArchitecture().memoryBound(proc)) {
                 return false;
@@ -678,12 +678,12 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
             for (unsigned proc = 0; proc < instance_->numberOfProcessors(); proc++) {
                 VMemwT<GraphT> memory = 0;
                 for (const auto &node : setSchedule.step_processor_vertices[step][proc]) {
-                    memory += instance_->getComputationalDag().vertex_mem_weight(node)
-                              + instance_->getComputationalDag().vertex_comm_weight(node);
+                    memory += instance_->getComputationalDag().VertexMemWeight(node)
+                              + instance_->getComputationalDag().VertexCommWeight(node);
 
                     for (const auto &parent : instance_->getComputationalDag().parents(node)) {
                         if (nodeToProcessorAssignment_[parent] == proc && nodeToSuperstepAssignment_[parent] == step) {
-                            memory -= instance_->getComputationalDag().vertex_comm_weight(parent);
+                            memory -= instance_->getComputationalDag().VertexCommWeight(parent);
                         }
                     }
                 }
@@ -706,7 +706,7 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
 
                 VMemwT<GraphT> memory = 0;
                 for (const auto &node : setSchedule.step_processor_vertices[step][proc]) {
-                    memory += instance_->getComputationalDag().vertex_comm_weight(node);
+                    memory += instance_->getComputationalDag().VertexCommWeight(node);
 
                     for (const auto &parent : instance_->getComputationalDag().parents(node)) {
                         if (nodeToSuperstepAssignment_[parent] != step) {
@@ -716,7 +716,7 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
                 }
 
                 for (const auto &node : nodesWithIncomingEdges) {
-                    memory += instance_->getComputationalDag().vertex_comm_weight(node);
+                    memory += instance_->getComputationalDag().VertexCommWeight(node);
                 }
 
                 if (memory > instance_->getArchitecture().memoryBound(proc)) {
@@ -737,7 +737,7 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
                 VMemwT<GraphT> memory = 0;
                 for (const auto &node : setSchedule.step_processor_vertices[step][proc]) {
                     if (is_source(node, instance_->getComputationalDag())) {
-                        memory += instance_->getComputationalDag().vertex_mem_weight(node);
+                        memory += instance_->getComputationalDag().VertexMemWeight(node);
                     }
 
                     for (const auto &parent : instance_->getComputationalDag().parents(node)) {
@@ -748,7 +748,7 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
                 }
 
                 for (const auto &node : nodesWithIncomingEdges) {
-                    memory += instance_->getComputationalDag().vertex_comm_weight(node);
+                    memory += instance_->getComputationalDag().VertexCommWeight(node);
                 }
 
                 if (memory > instance_->getArchitecture().memoryBound(proc)) {

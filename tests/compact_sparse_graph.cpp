@@ -139,9 +139,9 @@ BOOST_AUTO_TEST_CASE(LineGraphKeepOrder) {
 
     for (const auto &vert : graph.vertices()) {
         if (vert != 0) {
-            BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), 2);
+            BOOST_CHECK_EQUAL(graph.VertexWorkWeight(vert), 2);
         } else {
-            BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), 1);
+            BOOST_CHECK_EQUAL(graph.VertexWorkWeight(vert), 1);
         }
     }
 
@@ -226,9 +226,9 @@ BOOST_AUTO_TEST_CASE(LineGraphReorder) {
 
     for (const auto &vert : graph.vertices()) {
         if (vert != 0) {
-            BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), 2);
+            BOOST_CHECK_EQUAL(graph.VertexWorkWeight(vert), 2);
         } else {
-            BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), 1);
+            BOOST_CHECK_EQUAL(graph.VertexWorkWeight(vert), 1);
         }
     }
 
@@ -350,7 +350,7 @@ BOOST_AUTO_TEST_CASE(Graph1KeepOrder) {
     BOOST_CHECK_EQUAL(count, 11);
 
     for (const auto &vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), 1 + inEdges[vert].size());
+        BOOST_CHECK_EQUAL(graph.VertexWorkWeight(vert), 1 + inEdges[vert].size());
     }
 
     for (const auto &vert : graph.vertices()) {
@@ -481,7 +481,7 @@ BOOST_AUTO_TEST_CASE(Graph1Reorder) {
     }
 
     for (const auto &vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), 1 + inEdges[graphPerm[vert]].size());
+        BOOST_CHECK_EQUAL(graph.VertexWorkWeight(vert), 1 + inEdges[graphPerm[vert]].size());
     }
 
     for (const auto &vert : graph.vertices()) {
@@ -645,11 +645,11 @@ BOOST_AUTO_TEST_CASE(GraphWorkWeightsKeepOrder) {
     CompactSparseGraph<true, true> graph(11, edges, ww);
 
     for (auto vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), ww[vert]);
+        BOOST_CHECK_EQUAL(graph.VertexWorkWeight(vert), ww[vert]);
 
         const unsigned wt = static_cast<unsigned>(rand());
-        graph.set_vertex_work_weight(vert, wt);
-        BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), wt);
+        graph.SetVertexWorkWeight(vert, wt);
+        BOOST_CHECK_EQUAL(graph.VertexWorkWeight(vert), wt);
     }
 }
 
@@ -676,11 +676,11 @@ BOOST_AUTO_TEST_CASE(GraphWorkWeightsReorder) {
     const std::vector<std::size_t> &graphPerm = graph.GetPullbackPermutation();
 
     for (auto vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), ww[graphPerm[vert]]);
+        BOOST_CHECK_EQUAL(graph.VertexWorkWeight(vert), ww[graphPerm[vert]]);
 
         const unsigned wt = static_cast<unsigned>(rand());
-        graph.set_vertex_work_weight(graphPerm[vert], wt);
-        BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), wt);
+        graph.SetVertexWorkWeight(graphPerm[vert], wt);
+        BOOST_CHECK_EQUAL(graph.VertexWorkWeight(vert), wt);
     }
 }
 
@@ -708,15 +708,15 @@ BOOST_AUTO_TEST_CASE(GraphCommWeightsKeepOrder) {
     CompactSparseGraph<true, true, true> graph(11, edges, ww, cw);
 
     for (auto vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), ww[vert]);
+        BOOST_CHECK_EQUAL(graph.VertexWorkWeight(vert), ww[vert]);
     }
 
     for (auto vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.vertex_comm_weight(vert), cw[vert]);
+        BOOST_CHECK_EQUAL(graph.VertexCommWeight(vert), cw[vert]);
 
         const unsigned wt = static_cast<unsigned>(rand());
-        graph.set_vertex_comm_weight(vert, wt);
-        BOOST_CHECK_EQUAL(graph.vertex_comm_weight(vert), wt);
+        graph.SetVertexCommWeight(vert, wt);
+        BOOST_CHECK_EQUAL(graph.VertexCommWeight(vert), wt);
     }
 }
 
@@ -746,15 +746,15 @@ BOOST_AUTO_TEST_CASE(GraphCommWeightsReorder) {
     const std::vector<std::size_t> &graphPerm = graph.GetPullbackPermutation();
 
     for (auto vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), ww[graphPerm[vert]]);
+        BOOST_CHECK_EQUAL(graph.VertexWorkWeight(vert), ww[graphPerm[vert]]);
     }
 
     for (auto vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.vertex_comm_weight(vert), cw[graphPerm[vert]]);
+        BOOST_CHECK_EQUAL(graph.VertexCommWeight(vert), cw[graphPerm[vert]]);
 
         const unsigned wt = static_cast<unsigned>(rand());
-        graph.set_vertex_comm_weight(graphPerm[vert], wt);
-        BOOST_CHECK_EQUAL(graph.vertex_comm_weight(vert), wt);
+        graph.SetVertexCommWeight(graphPerm[vert], wt);
+        BOOST_CHECK_EQUAL(graph.VertexCommWeight(vert), wt);
     }
 }
 
@@ -785,16 +785,16 @@ BOOST_AUTO_TEST_CASE(GraphMemWeightsKeepOrder) {
     CompactSparseGraph<true, true, true, true> graph(11, edges, ww, cw, mw);
 
     for (auto vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), ww[vert]);
-        BOOST_CHECK_EQUAL(graph.vertex_comm_weight(vert), cw[vert]);
+        BOOST_CHECK_EQUAL(graph.VertexWorkWeight(vert), ww[vert]);
+        BOOST_CHECK_EQUAL(graph.VertexCommWeight(vert), cw[vert]);
     }
 
     for (auto vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.vertex_mem_weight(vert), mw[vert]);
+        BOOST_CHECK_EQUAL(graph.VertexMemWeight(vert), mw[vert]);
 
         const unsigned wt = static_cast<unsigned>(rand());
-        graph.set_vertex_mem_weight(vert, wt);
-        BOOST_CHECK_EQUAL(graph.vertex_mem_weight(vert), wt);
+        graph.SetVertexMemWeight(vert, wt);
+        BOOST_CHECK_EQUAL(graph.VertexMemWeight(vert), wt);
     }
 }
 
@@ -827,16 +827,16 @@ BOOST_AUTO_TEST_CASE(GraphMemWeightsReorder) {
     const std::vector<std::size_t> &graphPerm = graph.GetPullbackPermutation();
 
     for (auto vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), ww[graphPerm[vert]]);
-        BOOST_CHECK_EQUAL(graph.vertex_comm_weight(vert), cw[graphPerm[vert]]);
+        BOOST_CHECK_EQUAL(graph.VertexWorkWeight(vert), ww[graphPerm[vert]]);
+        BOOST_CHECK_EQUAL(graph.VertexCommWeight(vert), cw[graphPerm[vert]]);
     }
 
     for (auto vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.vertex_mem_weight(vert), mw[graphPerm[vert]]);
+        BOOST_CHECK_EQUAL(graph.VertexMemWeight(vert), mw[graphPerm[vert]]);
 
         const unsigned wt = static_cast<unsigned>(rand());
-        graph.set_vertex_mem_weight(graphPerm[vert], wt);
-        BOOST_CHECK_EQUAL(graph.vertex_mem_weight(vert), wt);
+        graph.SetVertexMemWeight(graphPerm[vert], wt);
+        BOOST_CHECK_EQUAL(graph.VertexMemWeight(vert), wt);
     }
 }
 
@@ -870,9 +870,9 @@ BOOST_AUTO_TEST_CASE(GraphVtypeKeepOrder) {
     CompactSparseGraph<true, true, true, true, true> graph(11, edges, ww, cw, mw, vt);
 
     for (auto vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), ww[vert]);
-        BOOST_CHECK_EQUAL(graph.vertex_comm_weight(vert), cw[vert]);
-        BOOST_CHECK_EQUAL(graph.vertex_mem_weight(vert), mw[vert]);
+        BOOST_CHECK_EQUAL(graph.VertexWorkWeight(vert), ww[vert]);
+        BOOST_CHECK_EQUAL(graph.VertexCommWeight(vert), cw[vert]);
+        BOOST_CHECK_EQUAL(graph.VertexMemWeight(vert), mw[vert]);
     }
 
     for (auto vert : graph.vertices()) {
@@ -916,9 +916,9 @@ BOOST_AUTO_TEST_CASE(GraphVtypeReorder) {
     const std::vector<std::size_t> &graphPerm = graph.GetPullbackPermutation();
 
     for (auto vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), ww[graphPerm[vert]]);
-        BOOST_CHECK_EQUAL(graph.vertex_comm_weight(vert), cw[graphPerm[vert]]);
-        BOOST_CHECK_EQUAL(graph.vertex_mem_weight(vert), mw[graphPerm[vert]]);
+        BOOST_CHECK_EQUAL(graph.VertexWorkWeight(vert), ww[graphPerm[vert]]);
+        BOOST_CHECK_EQUAL(graph.VertexCommWeight(vert), cw[graphPerm[vert]]);
+        BOOST_CHECK_EQUAL(graph.VertexMemWeight(vert), mw[graphPerm[vert]]);
     }
 
     for (auto vert : graph.vertices()) {
@@ -1001,9 +1001,9 @@ BOOST_AUTO_TEST_CASE(GraphTypeCopyContruction) {
     });
 
     for (const auto &vert : copyGraph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), copyGraph.vertex_work_weight(vert));
-        BOOST_CHECK_EQUAL(graph.vertex_comm_weight(vert), copyGraph.vertex_comm_weight(vert));
-        BOOST_CHECK_EQUAL(graph.vertex_mem_weight(vert), copyGraph.vertex_mem_weight(vert));
+        BOOST_CHECK_EQUAL(graph.VertexWorkWeight(vert), copyGraph.VertexWorkWeight(vert));
+        BOOST_CHECK_EQUAL(graph.VertexCommWeight(vert), copyGraph.VertexCommWeight(vert));
+        BOOST_CHECK_EQUAL(graph.VertexMemWeight(vert), copyGraph.VertexMemWeight(vert));
         BOOST_CHECK_EQUAL(graph.VertexType(vert), copyGraph.VertexType(vert));
     }
 
@@ -1057,9 +1057,9 @@ BOOST_AUTO_TEST_CASE(GraphTypeCopyContruction) {
     BOOST_CHECK(std::is_permutation(perm.cbegin(), perm.cend(), graphPerm.cbegin(), graphPerm.cend()));
 
     for (const auto &vert : reorderGraph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.vertex_work_weight(graphPerm[vert]), reorderGraph.vertex_work_weight(vert));
-        BOOST_CHECK_EQUAL(graph.vertex_comm_weight(graphPerm[vert]), reorderGraph.vertex_comm_weight(vert));
-        BOOST_CHECK_EQUAL(graph.vertex_mem_weight(graphPerm[vert]), reorderGraph.vertex_mem_weight(vert));
+        BOOST_CHECK_EQUAL(graph.VertexWorkWeight(graphPerm[vert]), reorderGraph.VertexWorkWeight(vert));
+        BOOST_CHECK_EQUAL(graph.VertexCommWeight(graphPerm[vert]), reorderGraph.VertexCommWeight(vert));
+        BOOST_CHECK_EQUAL(graph.VertexMemWeight(graphPerm[vert]), reorderGraph.VertexMemWeight(vert));
         BOOST_CHECK_EQUAL(graph.VertexType(graphPerm[vert]), reorderGraph.VertexType(vert));
     }
 
@@ -1176,7 +1176,7 @@ BOOST_AUTO_TEST_CASE(Graph1CopyKeepOrder) {
     }
 
     for (const auto &vert : copyGraph.vertices()) {
-        BOOST_CHECK_EQUAL(copyGraph.vertex_work_weight(vert), 1 + inEdges[vert].size());
+        BOOST_CHECK_EQUAL(copyGraph.VertexWorkWeight(vert), 1 + inEdges[vert].size());
     }
 
     for (const auto &vert : copyGraph.vertices()) {
@@ -1259,7 +1259,7 @@ BOOST_AUTO_TEST_CASE(Graph1MoveKeepOrder) {
     }
 
     for (const auto &vert : copyGraph.vertices()) {
-        BOOST_CHECK_EQUAL(copyGraph.vertex_work_weight(vert), 1 + inEdges[vert].size());
+        BOOST_CHECK_EQUAL(copyGraph.VertexWorkWeight(vert), 1 + inEdges[vert].size());
     }
 
     for (const auto &vert : copyGraph.vertices()) {
@@ -1366,7 +1366,7 @@ BOOST_AUTO_TEST_CASE(Graph1CopyReorder) {
     }
 
     for (const auto &vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), 1 + inEdges[graphPerm[vert]].size());
+        BOOST_CHECK_EQUAL(graph.VertexWorkWeight(vert), 1 + inEdges[graphPerm[vert]].size());
     }
 
     for (const auto &vert : graph.vertices()) {
@@ -1473,7 +1473,7 @@ BOOST_AUTO_TEST_CASE(Graph1MoveReorder) {
     }
 
     for (const auto &vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), 1 + inEdges[graphPerm[vert]].size());
+        BOOST_CHECK_EQUAL(graph.VertexWorkWeight(vert), 1 + inEdges[graphPerm[vert]].size());
     }
 
     for (const auto &vert : graph.vertices()) {

@@ -69,7 +69,7 @@ class CilkScheduler : public Scheduler<GraphT> {
         if (mode_ == SJF) {
             node = *readyNodes.begin();
             for (auto &r : readyNodes) {
-                if (instance.getComputationalDag().vertex_work_weight(r) < instance.getComputationalDag().vertex_work_weight(node)) {
+                if (instance.getComputationalDag().VertexWorkWeight(r) < instance.getComputationalDag().VertexWorkWeight(node)) {
                     node = r;
                 }
             }
@@ -216,7 +216,7 @@ class CilkScheduler : public Scheduler<GraphT> {
                 //     memory_constraint.add(nextNode, nextProc);
                 // }
 
-                finishTimes.insert({time + instance.getComputationalDag().vertex_work_weight(nextNode), nextNode});
+                finishTimes.insert({time + instance.getComputationalDag().VertexWorkWeight(nextNode), nextNode});
                 procFree[nextProc] = false;
 
                 if (nrProcFree > 0) {

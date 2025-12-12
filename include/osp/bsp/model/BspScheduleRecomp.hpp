@@ -228,7 +228,7 @@ v_workw_t<Graph_t> BspScheduleRecomp<GraphT>::ComputeWorkCosts() const {
     for (vertex_idx node = 0; node < instance_->numberOfVertices(); node++) {
         for (const std::pair<unsigned, unsigned> &processor_superstep : node_to_processor_and_supertep_assignment[node]) {
             step_proc_work[processor_superstep.second][processor_superstep.first]
-                += instance->getComputationalDag().vertex_work_weight(node);
+                += instance->getComputationalDag().VertexWorkWeight(node);
         }
     }
 
@@ -257,9 +257,9 @@ v_workw_t<Graph_t> BspScheduleRecomp<GraphT>::ComputeCosts() const {
 
     for (auto const &[key, val] : commSchedule) {
         send[val][std::get<1>(key)] += instance->sendCosts(std::get<1>(key), std::get<2>(key))
-                                       * instance->getComputationalDag().vertex_comm_weight(std::get<0>(key));
+                                       * instance->getComputationalDag().VertexCommWeight(std::get<0>(key));
         rec[val][std::get<2>(key)] += instance->sendCosts(std::get<1>(key), std::get<2>(key))
-                                      * instance->getComputationalDag().vertex_comm_weight(std::get<0>(key));
+                                      * instance->getComputationalDag().VertexCommWeight(std::get<0>(key));
     }
 
     cost_type totalCosts = 0;

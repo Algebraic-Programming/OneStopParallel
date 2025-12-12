@@ -203,7 +203,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                     newAssignments[0].push_back(chosen_node);
                     schedule.setAssignedProcessor(chosen_node, 0);
                     newTotalAssigned++;
-                    weightLimit += graph.vertex_work_weight(chosen_node);
+                    weightLimit += graph.VertexWorkWeight(chosen_node);
 
                     for (const VertexType &succ : graph.children(chosen_node)) {
                         if constexpr (has_vertices_in_top_order_v<Graph_t>) {
@@ -266,7 +266,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                         newAssignments[proc].push_back(chosen_node);
                         schedule.setAssignedProcessor(chosen_node, proc);
                         newTotalAssigned++;
-                        currentWeightAssigned += graph.vertex_work_weight(chosen_node);
+                        currentWeightAssigned += graph.VertexWorkWeight(chosen_node);
 
                         for (const VertexType &succ : graph.children(chosen_node)) {
                             if constexpr (has_vertices_in_top_order_v<Graph_t>) {

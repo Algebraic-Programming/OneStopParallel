@@ -70,7 +70,7 @@ class SquashA : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
         Union_Find_Universe<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_in>, v_workw_t<Graph_t_in>, v_memw_t<Graph_t_in>>
             connected_components;
         for (const auto &vert : dagIn.vertices()) {
-            connected_components.add_object(vert, dag_in.vertex_work_weight(vert), dag_in.vertex_mem_weight(vert));
+            connected_components.add_object(vert, dag_in.VertexWorkWeight(vert), dag_in.VertexMemWeight(vert));
         }
 
         std::vector<bool> mergedNodes(dagIn.NumVertices(), false);
@@ -268,7 +268,7 @@ std::vector<std::vector<vertex_idx_t<Graph_t_in>>> SquashA<GraphTIn, GraphTOut>:
                     if constexpr (HasEdgeWeightsV<Graph_t_in>) {
                         edge_weights.emplace(edge, dag_in.edge_comm_weight(edge));
                     } else {
-                        edge_weights.emplace(edge, dag_in.vertex_comm_weight(source(edge, dag_in)));
+                        edge_weights.emplace(edge, dag_in.VertexCommWeight(source(edge, dag_in)));
                     }
                 }
             }

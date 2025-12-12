@@ -59,13 +59,12 @@ void TransitiveReductionSparse(const GraphTIn &graphIn, GraphTOut &graphOut) {
     // 1. Copy vertices and their properties from graph_in to graph_out.
     for (const auto &vIdx : graphIn.vertices()) {
         if constexpr (HasTypedVerticesV<Graph_t_in> && is_constructable_cdag_typed_vertex_v<Graph_t_out>) {
-            graphOut.add_vertex(graphIn.vertex_work_weight(vIdx),
-                                graphIn.vertex_comm_weight(vIdx),
-                                graphIn.vertex_mem_weight(vIdx),
+            graphOut.add_vertex(graphIn.VertexWorkWeight(vIdx),
+                                graphIn.VertexCommWeight(vIdx),
+                                graphIn.VertexMemWeight(vIdx),
                                 graphIn.VertexType(vIdx));
         } else {
-            graphOut.add_vertex(
-                graphIn.vertex_work_weight(vIdx), graphIn.vertex_comm_weight(vIdx), graphIn.vertex_mem_weight(vIdx));
+            graphOut.add_vertex(graphIn.VertexWorkWeight(vIdx), graphIn.VertexCommWeight(vIdx), graphIn.VertexMemWeight(vIdx));
         }
     }
 
@@ -124,13 +123,12 @@ void TransitiveReductionDense(const GraphTIn &graphIn, GraphTOut &graphOut) {
     // 1. Copy vertices and their properties from graph_in to graph_out.
     for (const auto &vIdx : graphIn.vertices()) {
         if constexpr (HasTypedVerticesV<Graph_t_in> && is_constructable_cdag_typed_vertex_v<Graph_t_out>) {
-            graphOut.add_vertex(graphIn.vertex_work_weight(vIdx),
-                                graphIn.vertex_comm_weight(vIdx),
-                                graphIn.vertex_mem_weight(vIdx),
+            graphOut.add_vertex(graphIn.VertexWorkWeight(vIdx),
+                                graphIn.VertexCommWeight(vIdx),
+                                graphIn.VertexMemWeight(vIdx),
                                 graphIn.VertexType(vIdx));
         } else {
-            graphOut.add_vertex(
-                graphIn.vertex_work_weight(vIdx), graphIn.vertex_comm_weight(vIdx), graphIn.vertex_mem_weight(vIdx));
+            graphOut.add_vertex(graphIn.VertexWorkWeight(vIdx), graphIn.VertexCommWeight(vIdx), graphIn.VertexMemWeight(vIdx));
         }
     }
 

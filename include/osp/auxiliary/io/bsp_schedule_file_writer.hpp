@@ -88,7 +88,7 @@ void WriteSankey(std::ostream &os, const BspScheduleCS<GraphT> &schedule) {
 
     for (size_t node = 0; node < schedule.getInstance().numberOfVertices(); node++) {
         procWorkloads[schedule.assignedSuperstep(node)][schedule.assignedProcessor(node)]
-            += schedule.getInstance().getComputationalDag().vertex_work_weight(node);
+            += schedule.getInstance().getComputationalDag().VertexWorkWeight(node);
     }
 
     // Computing communicationloads
@@ -99,7 +99,7 @@ void WriteSankey(std::ostream &os, const BspScheduleCS<GraphT> &schedule) {
 
     for (const auto &[comm_triple, sstep] : schedule.getCommunicationSchedule()) {
         commloads[sstep][std::get<1>(comm_triple)][std::get<2>(comm_triple)]
-            += schedule.getInstance().getComputationalDag().vertex_comm_weight(std::get<0>(comm_triple));
+            += schedule.getInstance().getComputationalDag().VertexCommWeight(std::get<0>(comm_triple));
     }
 
     os << "BspSchedule: Number of Processors, Number of Supersteps" << std::endl;

@@ -38,8 +38,8 @@ void AddMemWeights(GraphT &dag) {
     int commWeight = 1;
 
     for (const auto &v : dag.vertices()) {
-        dag.set_vertex_mem_weight(v, static_cast<v_memw_t<GraphT>>(memWeight++ % 3 + 1));
-        dag.set_vertex_comm_weight(v, static_cast<v_commw_t<GraphT>>(commWeight++ % 3 + 1));
+        dag.SetVertexMemWeight(v, static_cast<v_memw_t<GraphT>>(memWeight++ % 3 + 1));
+        dag.SetVertexCommWeight(v, static_cast<v_commw_t<GraphT>>(commWeight++ % 3 + 1));
     }
 }
 

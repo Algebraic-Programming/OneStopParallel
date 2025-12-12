@@ -137,24 +137,24 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
                     continue;
                 }
 
-                if (workWeightOfGroup + graph.vertex_work_weight(active_node) > parameters_.maxWorkWeight_) {
+                if (workWeightOfGroup + graph.VertexWorkWeight(active_node) > parameters_.maxWorkWeight_) {
                     continue;
                 }
 
-                if (memoryWeightOfGroup + graph.vertex_mem_weight(active_node) > parameters_.maxMemoryWeight_) {
+                if (memoryWeightOfGroup + graph.VertexMemWeight(active_node) > parameters_.maxMemoryWeight_) {
                     continue;
                 }
 
                 if constexpr (useArchitectureMemoryContraints) {
-                    if (memory_weight_of_group + graph.vertex_mem_weight(active_node)
+                    if (memory_weight_of_group + graph.VertexMemWeight(active_node)
                         > max_memory_per_vertex_type[graph.VertexType(bottom_node)]) {
                         continue;
                     }
                 }
 
                 group.emplace_back(active_node);
-                workWeightOfGroup += graph.vertex_work_weight(active_node);
-                memoryWeightOfGroup += graph.vertex_mem_weight(active_node);
+                workWeightOfGroup += graph.VertexWorkWeight(active_node);
+                memoryWeightOfGroup += graph.VertexMemWeight(active_node);
 
                 for (const auto &in_edge : in_edges(active_node, graph)) {
                     if (parameters.use_approx_transitive_reduction && (edge_mask.find(in_edge) != edge_mask.cend())) {
@@ -245,24 +245,24 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
                     continue;
                 }
 
-                if (workWeightOfGroup + graph.vertex_work_weight(active_node) > parameters_.maxWorkWeight_) {
+                if (workWeightOfGroup + graph.VertexWorkWeight(active_node) > parameters_.maxWorkWeight_) {
                     continue;
                 }
 
-                if (memoryWeightOfGroup + graph.vertex_mem_weight(active_node) > parameters_.maxMemoryWeight_) {
+                if (memoryWeightOfGroup + graph.VertexMemWeight(active_node) > parameters_.maxMemoryWeight_) {
                     continue;
                 }
 
                 if constexpr (useArchitectureMemoryContraints) {
-                    if (memory_weight_of_group + graph.vertex_mem_weight(active_node)
+                    if (memory_weight_of_group + graph.VertexMemWeight(active_node)
                         > max_memory_per_vertex_type[graph.VertexType(top_node)]) {
                         continue;
                     }
                 }
 
                 group.emplace_back(active_node);
-                workWeightOfGroup += graph.vertex_work_weight(active_node);
-                memoryWeightOfGroup += graph.vertex_mem_weight(active_node);
+                workWeightOfGroup += graph.VertexWorkWeight(active_node);
+                memoryWeightOfGroup += graph.VertexMemWeight(active_node);
 
                 for (const auto &out_edge : out_edges(active_node, graph)) {
                     if (parameters.use_approx_transitive_reduction && (edge_mask.find(out_edge) != edge_mask.cend())) {

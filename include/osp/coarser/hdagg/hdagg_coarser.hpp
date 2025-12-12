@@ -53,11 +53,11 @@ class HdaggCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> {
     v_type_t<Graph_t_in> currentVType_ = 0;
 
     void AddNewSuperNode(const GraphTIn &dagIn, VertexType_in node) {
-        v_memw_t<Graph_t_in> nodeMem = dagIn.vertex_mem_weight(node);
+        v_memw_t<Graph_t_in> nodeMem = dagIn.VertexMemWeight(node);
 
         current_memory = node_mem;
-        current_work = dag_in.vertex_work_weight(node);
-        current_communication = dag_in.vertex_comm_weight(node);
+        current_work = dag_in.VertexWorkWeight(node);
+        current_communication = dag_in.VertexCommWeight(node);
         current_v_type = dag_in.VertexType(node);
     }
 
@@ -125,12 +125,12 @@ class HdaggCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> {
 
                         const auto &edge_source = source(in_edge, dag_in);
 
-                        v_memw_t<Graph_t_in> node_mem = dag_in.vertex_mem_weight(edge_source);
+                        v_memw_t<Graph_t_in> node_mem = dag_in.VertexMemWeight(edge_source);
 
                         if (((current_memory + node_mem > memory_threshold)
-                             || (current_work + dag_in.vertex_work_weight(edge_source) > work_threshold)
+                             || (current_work + dag_in.VertexWorkWeight(edge_source) > work_threshold)
                              || (vertex_map[part_ind].size() >= super_node_size_threshold)
-                             || (current_communication + dag_in.vertex_comm_weight(edge_source) > communication_threshold))
+                             || (current_communication + dag_in.VertexCommWeight(edge_source) > communication_threshold))
                             ||
                             // or node type changes
                             (current_v_type != dag_in.VertexType(edge_source))) {
@@ -142,8 +142,8 @@ class HdaggCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> {
 
                         } else {
                             current_memory += node_mem;
-                            current_work += dag_in.vertex_work_weight(edge_source);
-                            current_communication += dag_in.vertex_comm_weight(edge_source);
+                            current_work += dag_in.VertexWorkWeight(edge_source);
+                            current_communication += dag_in.VertexCommWeight(edge_source);
 
                             vertex_map[part_ind].push_back(edge_source);
                             part_size++;

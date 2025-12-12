@@ -75,8 +75,8 @@ int main(int argc, char *argv[]) {
     std::cout << "Graph loaded successfully. " << instance.numberOfVertices() << " vertices." << std::endl;
 
     for (auto v : instance.getComputationalDag().vertices()) {
-        instance.getComputationalDag().set_vertex_comm_weight(
-            v, static_cast<v_commw_t<GraphT2>>(instance.getComputationalDag().vertex_comm_weight(v) * 0.01));
+        instance.getComputationalDag().SetVertexCommWeight(
+            v, static_cast<v_commw_t<GraphT2>>(instance.getComputationalDag().VertexCommWeight(v) * 0.01));
     }
 
     // Set up architecture

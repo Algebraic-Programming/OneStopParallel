@@ -87,9 +87,9 @@ class BspScheduleCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> 
                         vertexMap.back().push_back(vertex);
                         reverseVertexMap[vertex] = vertex_map.size() - 1;
 
-                        totalWork += dagIn.vertex_work_weight(vertex);
-                        totalCommunication += dagIn.vertex_comm_weight(vertex);
-                        totalMemory += dagIn.vertex_mem_weight(vertex);
+                        totalWork += dagIn.VertexWorkWeight(vertex);
+                        totalCommunication += dagIn.VertexCommWeight(vertex);
+                        totalMemory += dagIn.VertexMemWeight(vertex);
                     }
 
                     if (scheduleRespectsTypes) {

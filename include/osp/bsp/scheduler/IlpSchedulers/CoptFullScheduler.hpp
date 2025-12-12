@@ -431,13 +431,13 @@ class CoptFullScheduler : public Scheduler<GraphT> {
         if (useInitialScheduleRecomp_) {
             for (const auto &node : initialScheduleRecomp_->getInstance().vertices()) {
                 for (const std::pair<unsigned, unsigned> &assignment : initialScheduleRecomp_->assignments(node)) {
-                    work[assignment.second][assignment.first] += dag.vertex_work_weight(node);
+                    work[assignment.second][assignment.first] += dag.VertexWorkWeight(node);
                 }
             }
         } else {
             for (const auto &node : initialSchedule_->getInstance().vertices()) {
                 work[initialSchedule_->assignedSuperstep(node)][initialSchedule_->assignedProcessor(node)]
-                    += dag.vertex_work_weight(node);
+                    += dag.VertexWorkWeight(node);
             }
         }
 
@@ -448,10 +448,10 @@ class CoptFullScheduler : public Scheduler<GraphT> {
 
         for (const auto &[key, val] : cs) {
             send[val][std::get<1>(key)]
-                += dag.vertex_comm_weight(std::get<0>(key)) * arch.sendCosts(std::get<1>(key), std::get<2>(key));
+                += dag.VertexCommWeight(std::get<0>(key)) * arch.sendCosts(std::get<1>(key), std::get<2>(key));
 
             rec[val][std::get<2>(key)]
-                += dag.vertex_comm_weight(std::get<0>(key)) * arch.sendCosts(std::get<1>(key), std::get<2>(key));
+                += dag.VertexCommWeight(std::get<0>(key)) * arch.sendCosts(std::get<1>(key), std::get<2>(key));
         }
 
         for (unsigned step = 0; step < maxNumberSupersteps_; step++) {
@@ -520,7 +520,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
                     Expr expr;
                     for (const auto &node : instance.vertices()) {
                         expr += nodeToProcessorSuperstepVar_[node][processor][static_cast<int>(step)]
-                                * instance.getComputationalDag().vertex_mem_weight(node);
+                                * instance.getComputationalDag().VertexMemWeight(node);
                     }
 
                     model.AddConstr(expr <= instance.getArchitecture().memoryBound(processor));
@@ -658,7 +658,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
             for (unsigned int processor = 0; processor < instance.numberOfProcessors(); processor++) {
                 Expr expr;
                 for (unsigned int node = 0; node < instance.numberOfVertices(); node++) {
-                    expr += instance.getComputationalDag().vertex_work_weight(node)
+                    expr += instance.getComputationalDag().VertexWorkWeight(node)
                             * nodeToProcessorSuperstepVar_[node][processor][static_cast<int>(step)];
                 }
 
@@ -672,7 +672,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
                 for (const auto &node : instance.vertices()) {
                     for (unsigned int pTo = 0; pTo < instance.numberOfProcessors(); pTo++) {
                         if (processor != pTo) {
-                            expr += instance.getComputationalDag().vertex_comm_weight(node) * instance.sendCosts(processor, pTo)
+                            expr += instance.getComputationalDag().VertexCommWeight(node) * instance.sendCosts(processor, pTo)
                                     * commProcessorToProcessorSuperstepNodeVar_[processor][pTo][step][static_cast<int>(node)];
                         }
                     }
@@ -688,7 +688,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
                 for (const auto &node : instance.vertices()) {
                     for (unsigned int pFrom = 0; pFrom < instance.numberOfProcessors(); pFrom++) {
                         if (processor != pFrom) {
-                            expr += instance.getComputationalDag().vertex_comm_weight(node) * instance.sendCosts(pFrom, processor)
+                            expr += instance.getComputationalDag().VertexCommWeight(node) * instance.sendCosts(pFrom, processor)
                                     * commProcessorToProcessorSuperstepNodeVar_[pFrom][processor][step][static_cast<int>(node)];
                         }
                     }

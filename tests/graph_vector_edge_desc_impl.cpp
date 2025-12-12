@@ -319,17 +319,17 @@ BOOST_AUTO_TEST_CASE(TestConstrDag) {
 
     BOOST_CHECK_EQUAL(graph2.NumEdges(), 3);
     BOOST_CHECK_EQUAL(graph2.NumVertices(), 4);
-    BOOST_CHECK_EQUAL(graph2.vertex_work_weight(0), 1);
-    BOOST_CHECK_EQUAL(graph2.vertex_comm_weight(0), 2);
-    BOOST_CHECK_EQUAL(graph2.vertex_mem_weight(0), 3);
-    BOOST_CHECK_EQUAL(graph2.vertex_work_weight(1), 5);
-    BOOST_CHECK_EQUAL(graph2.vertex_comm_weight(1), 6);
-    BOOST_CHECK_EQUAL(graph2.vertex_mem_weight(1), 7);
-    BOOST_CHECK_EQUAL(graph2.vertex_work_weight(2), 9);
-    BOOST_CHECK_EQUAL(graph2.vertex_comm_weight(2), 10);
-    BOOST_CHECK_EQUAL(graph2.vertex_mem_weight(2), 11);
-    BOOST_CHECK_EQUAL(graph2.vertex_work_weight(3), 13);
-    BOOST_CHECK_EQUAL(graph2.vertex_comm_weight(3), 14);
+    BOOST_CHECK_EQUAL(graph2.VertexWorkWeight(0), 1);
+    BOOST_CHECK_EQUAL(graph2.VertexCommWeight(0), 2);
+    BOOST_CHECK_EQUAL(graph2.VertexMemWeight(0), 3);
+    BOOST_CHECK_EQUAL(graph2.VertexWorkWeight(1), 5);
+    BOOST_CHECK_EQUAL(graph2.VertexCommWeight(1), 6);
+    BOOST_CHECK_EQUAL(graph2.VertexMemWeight(1), 7);
+    BOOST_CHECK_EQUAL(graph2.VertexWorkWeight(2), 9);
+    BOOST_CHECK_EQUAL(graph2.VertexCommWeight(2), 10);
+    BOOST_CHECK_EQUAL(graph2.VertexMemWeight(2), 11);
+    BOOST_CHECK_EQUAL(graph2.VertexWorkWeight(3), 13);
+    BOOST_CHECK_EQUAL(graph2.VertexCommWeight(3), 14);
 
     boost_graph_int_t bG1;
 
@@ -342,10 +342,10 @@ BOOST_AUTO_TEST_CASE(TestConstrDag) {
 
     BOOST_CHECK_EQUAL(graph3.NumEdges(), 1);
     BOOST_CHECK_EQUAL(graph3.NumVertices(), 2);
-    BOOST_CHECK_EQUAL(graph3.vertex_work_weight(0), 1);
-    BOOST_CHECK_EQUAL(graph3.vertex_comm_weight(0), 2);
-    BOOST_CHECK_EQUAL(graph3.vertex_mem_weight(0), 3);
-    BOOST_CHECK_EQUAL(graph3.vertex_work_weight(1), 5);
-    BOOST_CHECK_EQUAL(graph3.vertex_comm_weight(1), 6);
-    BOOST_CHECK_EQUAL(graph3.vertex_mem_weight(1), 7);
+    BOOST_CHECK_EQUAL(graph3.VertexWorkWeight(0), 1);
+    BOOST_CHECK_EQUAL(graph3.VertexCommWeight(0), 2);
+    BOOST_CHECK_EQUAL(graph3.VertexMemWeight(0), 3);
+    BOOST_CHECK_EQUAL(graph3.VertexWorkWeight(1), 5);
+    BOOST_CHECK_EQUAL(graph3.VertexCommWeight(1), 6);
+    BOOST_CHECK_EQUAL(graph3.VertexMemWeight(1), 7);
 }

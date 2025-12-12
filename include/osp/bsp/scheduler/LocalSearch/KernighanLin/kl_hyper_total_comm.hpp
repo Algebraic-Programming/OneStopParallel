@@ -61,7 +61,7 @@ class kl_hyper_total_comm : public kl_total<Graph_t, MemoryConstraint_t> {
                 }
             }
 
-            comm_costs += intersects.size() * current_schedule.instance->getComputationalDag().vertex_comm_weight(node);
+            comm_costs += intersects.size() * current_schedule.instance->getComputationalDag().VertexCommWeight(node);
         }
 
         current_schedule.current_cost = work_costs + comm_costs * current_schedule.comm_multiplier

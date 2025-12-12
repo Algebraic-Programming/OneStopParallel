@@ -104,7 +104,7 @@ void HypergraphPartitioningILPBase<HypergraphT>::SetupFundamentalVariablesConstr
         for (unsigned part = 0; part < numberOfParts; part++) {
             Expr expr;
             for (IndexType node = 0; node < numberOfVertices; node++) {
-                expr += instance.getHypergraph().get_vertex_work_weight(node) * nodeInPartition_[node][static_cast<int>(part)];
+                expr += instance.getHypergraph().get_VertexWorkWeight(node) * nodeInPartition_[node][static_cast<int>(part)];
             }
 
             model.AddConstr(expr <= instance.getMaxWorkWeightPerPartition());

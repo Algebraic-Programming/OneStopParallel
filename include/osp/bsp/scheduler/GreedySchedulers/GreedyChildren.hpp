@@ -107,7 +107,7 @@ class GreedyChildren : public Scheduler<GraphT> {
                     }
 
                     nodesAssignedThisSuperstep.emplace(node);
-                    processorWeights[sched.assignedProcessor(node)] += graph.vertex_work_weight(node);
+                    processorWeights[sched.assignedProcessor(node)] += graph.VertexWorkWeight(node);
                     std::vector<VertexType> newNodes;
                     for (const auto &chld : graph.children(node)) {
                         predecessors_count[chld]++;

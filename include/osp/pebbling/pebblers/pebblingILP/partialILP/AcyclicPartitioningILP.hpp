@@ -292,9 +292,9 @@ void AcyclicPartitioningILP<GraphT>::SetupVariablesConstraintsObjective(const Bs
     Expr expr;
     for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
         if (instance.getComputationalDag().out_degree(node) > 0) {
-            expr -= instance.getComputationalDag().vertex_comm_weight(node);
+            expr -= instance.getComputationalDag().VertexCommWeight(node);
             for (unsigned part = 0; part < numberOfParts_; part++) {
-                expr += instance.getComputationalDag().vertex_comm_weight(node)
+                expr += instance.getComputationalDag().VertexCommWeight(node)
                         * hyperedge_intersects_partition[node_to_hyperedge_index[node]][static_cast<int>(part)];
             }
         }

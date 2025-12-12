@@ -96,7 +96,7 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
         for (const auto &v : graph.vertices()) {
             schedule.setAssignedProcessor(v, nProcessors);
 
-            totalWork += graph.vertex_work_weight(v);
+            totalWork += graph.VertexWorkWeight(v);
 
             if (is_source(v, graph)) {
                 ready.insert(std::make_pair(v, variancePriorities[v]));
@@ -123,7 +123,7 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
         std::vector<v_memw_t<Graph_t>> memoryCostOfPreprocessedPartition(preprocessedPartition.size(), 0);
         for (size_t i = 0; i < preprocessedPartition.size(); i++) {
             for (const auto &vert : preprocessed_partition[i]) {
-                memory_cost_of_preprocessed_partition[i] += graph.vertex_mem_weight(vert);
+                memory_cost_of_preprocessed_partition[i] += graph.VertexMemWeight(vert);
             }
         }
 
@@ -131,7 +131,7 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
         for (size_t i = 0; i < preprocessedPartition.size(); i++) {
             for (const auto &vert : preprocessed_partition[i]) {
                 transient_cost_of_preprocessed_partition[i]
-                    = std::max(transient_cost_of_preprocessed_partition[i], graph.vertex_comm_weight(vert));
+                    = std::max(transient_cost_of_preprocessed_partition[i], graph.VertexCommWeight(vert));
             }
         }
 
@@ -317,7 +317,7 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
                         num_unable_to_partition_node_loop = 0;
 
                         // Updating loads
-                        superstep_partition_work[proc_alloc_prior] += graph.vertex_work_weight(next_node);
+                        superstep_partition_work[proc_alloc_prior] += graph.VertexWorkWeight(next_node);
 
                         // Deletion from Queues
                         std::pair<VertexType, double> pair = std::make_pair(next_node, variance_priorities[next_node]);
@@ -359,15 +359,15 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
                         num_unable_to_partition_node_loop = 0;
 
                         // Updating loads
-                        total_partition_work[proc] += graph.vertex_work_weight(next_node);
-                        superstep_partition_work[proc] += graph.vertex_work_weight(next_node);
+                        total_partition_work[proc] += graph.VertexWorkWeight(next_node);
+                        superstep_partition_work[proc] += graph.VertexWorkWeight(next_node);
 
                         if constexpr (base::use_memory_constraint) {
                             base::memory_constraint.add(next_node, proc);
                         }
-                        // total_partition_memory[proc] += graph.vertex_mem_weight(next_node);
+                        // total_partition_memory[proc] += graph.VertexMemWeight(next_node);
                         // transient_partition_memory[proc] =
-                        //     std::max(transient_partition_memory[proc], graph.vertex_comm_weight(next_node));
+                        //     std::max(transient_partition_memory[proc], graph.VertexCommWeight(next_node));
 
                         // Deletion from Queues
                         std::pair<VertexType, double> pair = std::make_pair(next_node, variance_priorities[next_node]);
@@ -413,15 +413,15 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
                             // std::cout << "Allocated node " << next_node << " to processor " << proc << ".\n";
 
                             // Update loads
-                            total_partition_work[proc] += graph.vertex_work_weight(node_in_same_partition);
+                            total_partition_work[proc] += graph.VertexWorkWeight(node_in_same_partition);
 
                             if constexpr (base::use_memory_constraint) {
                                 base::memory_constraint.add(node_in_same_partition, proc);
                             }
 
-                            // total_partition_memory[proc] += graph.vertex_mem_weight(node_in_same_partition);
+                            // total_partition_memory[proc] += graph.VertexMemWeight(node_in_same_partition);
                             // transient_partition_memory[proc] = std::max(
-                            //     transient_partition_memory[proc], graph.vertex_comm_weight(node_in_same_partition));
+                            //     transient_partition_memory[proc], graph.VertexCommWeight(node_in_same_partition));
                         }
                     }
 

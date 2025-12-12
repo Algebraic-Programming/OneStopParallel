@@ -256,7 +256,7 @@ struct KlActiveScheduleWorkDatastructures {
                 stepProcessorWork_[step][proc].proc = proc;
 
                 for (const auto &node : setSchedule_->step_processor_vertices[step][proc]) {
-                    const work_weight_t vertexWorkWeight = instance_->getComputationalDag().vertex_work_weight(node);
+                    const work_weight_t vertexWorkWeight = instance_->getComputationalDag().VertexWorkWeight(node);
                     total_work_weight += vertex_work_weight;
                     max_work_weight = std::max(vertex_work_weight, max_work_weight);
                     stepProcessorWork_[step][proc].work += vertex_work_weight;
@@ -398,7 +398,7 @@ class KlActiveSchedule {
         update_violations(move.node, thread_data);
         threadData.applied_moves.push_back(move);
 
-        workDatastructures_.apply_move(move, instance_->getComputationalDag().vertex_work_weight(move.node));
+        workDatastructures_.apply_move(move, instance_->getComputationalDag().VertexWorkWeight(move.node));
         if constexpr (useMemoryConstraint_) {
             memoryConstraint_.apply_move(move.node, move.from_proc, move.from_step, move.to_proc, move.to_step);
         }
@@ -476,7 +476,7 @@ class KlActiveSchedule {
 
             setSchedule_.step_processor_vertices[move.from_step][move.from_proc].erase(move.node);
             setSchedule_.step_processor_vertices[move.to_step][move.to_proc].insert(move.node);
-            workDatastructures_.apply_move(move, instance_->getComputationalDag().vertex_work_weight(move.node));
+            workDatastructures_.apply_move(move, instance_->getComputationalDag().VertexWorkWeight(move.node));
             commDatastructures.update_datastructure_after_move(move, startStep, endStep);
             if constexpr (useMemoryConstraint_) {
                 memoryConstraint_.apply_move(move.node, move.from_proc, move.from_step, move.to_proc, move.to_step);

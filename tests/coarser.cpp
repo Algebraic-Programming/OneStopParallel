@@ -84,9 +84,9 @@ bool CheckVertexMapConstraints(std::vector<std::vector<VertexType>> &map,
         }
 
         for (auto &v : superNode) {
-            memory += dag.vertex_mem_weight(v);
-            work += dag.vertex_work_weight(v);
-            communication += dag.vertex_comm_weight(v);
+            memory += dag.VertexMemWeight(v);
+            work += dag.VertexWorkWeight(v);
+            communication += dag.VertexCommWeight(v);
 
             if (dag.VertexType(v) != dag.VertexType(superNode[0])) {
                 return false;

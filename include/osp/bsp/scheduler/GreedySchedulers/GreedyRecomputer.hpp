@@ -75,7 +75,7 @@ RETURN_STATUS GreedyRecomputer<GraphT>::ComputeRecompSchedule(BspScheduleCS<Grap
         const unsigned &proc = initialSchedule.assignedProcessor(node);
         const unsigned &step = initialSchedule.assignedSuperstep(node);
 
-        workCost[proc][step] += g.vertex_work_weight(node);
+        workCost[proc][step] += g.VertexWorkWeight(node);
         firstPresent[node][proc] = std::min(firstPresent[node][proc], step);
         for (vertex_idx pred : G.parents(node)) {
             needed_on_proc[pred][proc].insert(step);
@@ -88,10 +88,10 @@ RETURN_STATUS GreedyRecomputer<GraphT>::ComputeRecompSchedule(BspScheduleCS<Grap
         const unsigned &from_proc = std::get<1>(item.first);
         const unsigned &to_proc = std::get<2>(item.first);
         const unsigned &step = item.second;
-        send_cost[from_proc][step] += G.vertex_comm_weight(node)
-                                      * initial_schedule.getInstance().getArchitecture().communicationCosts(from_proc, to_proc);
-        rec_cost[to_proc][step] += G.vertex_comm_weight(node)
-                                   * initial_schedule.getInstance().getArchitecture().communicationCosts(from_proc, to_proc);
+        send_cost[from_proc][step]
+            += G.VertexCommWeight(node) * initial_schedule.getInstance().getArchitecture().communicationCosts(from_proc, to_proc);
+        rec_cost[to_proc][step]
+            += G.VertexCommWeight(node) * initial_schedule.getInstance().getArchitecture().communicationCosts(from_proc, to_proc);
 
         comm_steps[step].emplace(item.first);
         needed_on_proc[node][from_proc].insert(step);
@@ -126,7 +126,7 @@ RETURN_STATUS GreedyRecomputer<GraphT>::ComputeRecompSchedule(BspScheduleCS<Grap
                 const unsigned &to_proc = std::get<2>(entry);
 
                 // check how much comm cost we save by removing comm schedule entry
-                cost_type comm_induced = G.vertex_comm_weight(node)
+                cost_type comm_induced = G.VertexCommWeight(node)
                                          * initial_schedule.getInstance().getArchitecture().communicationCosts(from_proc, to_proc);
 
                 cost_type new_max_comm = 0;
@@ -160,8 +160,8 @@ RETURN_STATUS GreedyRecomputer<GraphT>::ComputeRecompSchedule(BspScheduleCS<Grap
                 cost_type smallest_increase = std::numeric_limits<cost_type>::max();
                 for (unsigned comp_step = first_computable[node][to_proc]; comp_step <= *needed_on_proc[node][to_proc].begin();
                      ++comp_step) {
-                    cost_type increase = work_cost[to_proc][comp_step] + G.vertex_work_weight(node) > max_work[comp_step]
-                                             ? work_cost[to_proc][comp_step] + G.vertex_work_weight(node) - max_work[comp_step]
+                    cost_type increase = work_cost[to_proc][comp_step] + G.VertexWorkWeight(node) > max_work[comp_step]
+                                             ? work_cost[to_proc][comp_step] + G.VertexWorkWeight(node) - max_work[comp_step]
                                              : 0;
 
                     if (increase < smallest_increase) {
@@ -183,7 +183,7 @@ RETURN_STATUS GreedyRecomputer<GraphT>::ComputeRecompSchedule(BspScheduleCS<Grap
                 rec_cost[to_proc][step] -= comm_induced;
                 max_comm[step] = new_max_comm;
 
-                work_cost[to_proc][best_step] += G.vertex_work_weight(node);
+                work_cost[to_proc][best_step] += G.VertexWorkWeight(node);
                 max_work[best_step] += smallest_increase;
 
                 // update movability bounds

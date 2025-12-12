@@ -195,9 +195,8 @@ void CoptCommScheduleOptimizer<GraphT>::SetInitialSolution(BspScheduleCS<GraphT>
     std::vector<std::vector<v_commw_t<Graph_t>>> rec(num_supersteps, std::vector<v_commw_t<Graph_t>>(num_processors, 0));
 
     for (const auto &[key, val] : cs) {
-        send[val][std::get<1>(key)]
-            += dag.vertex_comm_weight(std::get<0>(key)) * arch.sendCosts(std::get<1>(key), std::get<2>(key));
-        rec[val][std::get<2>(key)] += dag.vertex_comm_weight(std::get<0>(key)) * arch.sendCosts(std::get<1>(key), std::get<2>(key));
+        send[val][std::get<1>(key)] += dag.VertexCommWeight(std::get<0>(key)) * arch.sendCosts(std::get<1>(key), std::get<2>(key));
+        rec[val][std::get<2>(key)] += dag.VertexCommWeight(std::get<0>(key)) * arch.sendCosts(std::get<1>(key), std::get<2>(key));
     }
 
     for (unsigned step = 0; step < numSupersteps; step++) {
@@ -315,7 +314,7 @@ void CoptCommScheduleOptimizer<GraphT>::SetupVariablesConstraintsObjective(const
             for (unsigned node = 0; node < numVertices; node++) {
                 for (unsigned pTo = 0; pTo < numProcessors; pTo++) {
                     if (processor != pTo) {
-                        expr1 += schedule.getInstance().getComputationalDag().vertex_comm_weight(node)
+                        expr1 += schedule.getInstance().getComputationalDag().VertexCommWeight(node)
                                  * schedule.getInstance().sendCosts(processor, p_to)
                                  * comm_processor_to_processor_superstep_node_var[processor][p_to][step][static_cast<int>(node)];
                     }
@@ -323,7 +322,7 @@ void CoptCommScheduleOptimizer<GraphT>::SetupVariablesConstraintsObjective(const
 
                 for (unsigned int pFrom = 0; pFrom < numProcessors; pFrom++) {
                     if (processor != pFrom) {
-                        expr2 += schedule.getInstance().getComputationalDag().vertex_comm_weight(node)
+                        expr2 += schedule.getInstance().getComputationalDag().VertexCommWeight(node)
                                  * schedule.getInstance().sendCosts(p_from, processor)
                                  * comm_processor_to_processor_superstep_node_var[p_from][processor][step][static_cast<int>(node)];
                     }

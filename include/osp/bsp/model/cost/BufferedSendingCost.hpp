@@ -59,11 +59,11 @@ struct BufferedSendingCost {
                 if (stepNeeded[proc] < numberOfSupersteps) {
                     send[nodeToProcessorAssignment[node]][nodeToSuperstepAssignment[node]]
                         += instance.sendCosts(nodeToProcessorAssignment[node], proc)
-                           * instance.getComputationalDag().vertex_comm_weight(node);
+                           * instance.getComputationalDag().VertexCommWeight(node);
 
                     if (stepNeeded[proc] >= staleness) {
                         rec[proc][stepNeeded[proc] - staleness] += instance.sendCosts(nodeToProcessorAssignment[node], proc)
-                                                                   * instance.getComputationalDag().vertex_comm_weight(node);
+                                                                   * instance.getComputationalDag().VertexCommWeight(node);
                     }
                 }
             }

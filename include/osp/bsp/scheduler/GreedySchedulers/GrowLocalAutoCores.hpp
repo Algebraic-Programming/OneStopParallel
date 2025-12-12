@@ -196,7 +196,7 @@ class GrowLocalAutoCores : public Scheduler<GraphT> {
                     newAssignments[0].push_back(chosenNode);
                     nodeToProc[chosenNode] = 0;
                     newTotalAssigned++;
-                    weightLimit += g.vertex_work_weight(chosenNode);
+                    weightLimit += g.VertexWorkWeight(chosenNode);
 
                     if constexpr (useMemoryConstraint_) {
                         localMemoryConstraint_.add(chosenNode, 0);
@@ -259,7 +259,7 @@ class GrowLocalAutoCores : public Scheduler<GraphT> {
                         newAssignments[proc].push_back(chosenNode);
                         nodeToProc[chosenNode] = proc;
                         newTotalAssigned++;
-                        currentWeightAssigned += g.vertex_work_weight(chosenNode);
+                        currentWeightAssigned += g.VertexWorkWeight(chosenNode);
 
                         if constexpr (useMemoryConstraint_) {
                             localMemoryConstraint_.add(chosenNode, proc);

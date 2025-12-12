@@ -41,7 +41,7 @@ struct TotalCommunicationCost {
             for (const auto &target : instance.getComputationalDag().children(v)) {
                 if (nodeToProcessorAssignment[v] != nodeToProcessorAssignment[target]) {
                     totalCommunication += instance.sendCosts(nodeToProcessorAssignment[v], nodeToProcessorAssignment[target])
-                                          * instance.getComputationalDag().vertex_comm_weight(v);
+                                          * instance.getComputationalDag().VertexCommWeight(v);
                 }
             }
         }

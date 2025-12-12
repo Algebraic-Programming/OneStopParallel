@@ -151,7 +151,7 @@ std::vector<v_workw_t<Graph_t_in>> Sarkar<GraphTIn, GraphTOut>::GetTopDistance(v
             maxTemp += commCost;
         }
 
-        topDist[vertex] = max_temp + graph.vertex_work_weight(vertex);
+        topDist[vertex] = max_temp + graph.VertexWorkWeight(vertex);
     }
 
     return topDist;
@@ -172,7 +172,7 @@ std::vector<v_workw_t<Graph_t_in>> Sarkar<GraphTIn, GraphTOut>::GetBotDistance(v
             maxTemp += commCost;
         }
 
-        botDist[vertex] = max_temp + graph.vertex_work_weight(vertex);
+        botDist[vertex] = max_temp + graph.VertexWorkWeight(vertex);
     }
 
     return botDist;
@@ -210,13 +210,13 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SingleContraction(
             if (vertexPoset[edgeSrc] + 1 != vertexPoset[edgeTgt]) {
                 continue;
             }
-            if (topDist[edgeSrc] + commCost + graph.vertex_work_weight(edgeTgt) != topDist[edgeTgt]) {
+            if (topDist[edgeSrc] + commCost + graph.VertexWorkWeight(edgeTgt) != topDist[edgeTgt]) {
                 continue;
             }
-            if (botDist[edgeTgt] + commCost + graph.vertex_work_weight(edgeSrc) != botDist[edgeSrc]) {
+            if (botDist[edgeTgt] + commCost + graph.VertexWorkWeight(edgeSrc) != botDist[edgeSrc]) {
                 continue;
             }
-            if (graph.vertex_work_weight(edgeSrc) + graph.vertex_work_weight(edgeTgt) > params.maxWeight) {
+            if (graph.VertexWorkWeight(edgeSrc) + graph.VertexWorkWeight(edgeTgt) > params.maxWeight) {
                 continue;
             }
 
@@ -245,7 +245,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SingleContraction(
             }
 
             v_workw_t<Graph_t_in> newMaxPath
-                = maxParentDist + maxChildDist + graph.vertex_work_weight(edgeSrc) + graph.vertex_work_weight(edgeTgt);
+                = maxParentDist + maxChildDist + graph.VertexWorkWeight(edgeSrc) + graph.VertexWorkWeight(edgeTgt);
             long savings = static_cast<long>(maxPath) - static_cast<long>(newMaxPath);
 
             // cannot have leniency here as it may destroy symmetries
@@ -373,17 +373,17 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::AllChildrenContraction(
         if (shouldSkip) {
             continue;
         }
-        v_workw_t<Graph_t_in> combined_weight = graph.vertex_work_weight(groupHead);
+        v_workw_t<Graph_t_in> combined_weight = graph.VertexWorkWeight(groupHead);
         for (const VertexType &groupFoot : graph.children(groupHead)) {
-            combined_weight += graph.vertex_work_weight(groupFoot);
+            combined_weight += graph.VertexWorkWeight(groupFoot);
         }
         if (combined_weight > params.maxWeight) {
             continue;
         }
 
-        v_workw_t<Graph_t_in> maxPath = topDist[groupHead] + botDist[groupHead] - graph.vertex_work_weight(groupHead);
+        v_workw_t<Graph_t_in> maxPath = topDist[groupHead] + botDist[groupHead] - graph.VertexWorkWeight(groupHead);
         for (const VertexType &chld : graph.children(groupHead)) {
-            maxPath = std::max(maxPath, topDist[chld] + botDist[chld] - graph.vertex_work_weight(chld));
+            maxPath = std::max(maxPath, topDist[chld] + botDist[chld] - graph.VertexWorkWeight(chld));
         }
 
         v_workw_t<Graph_t_in> maxParentDist = 0;
@@ -407,9 +407,9 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::AllChildrenContraction(
             }
         }
 
-        v_workw_t<Graph_t_in> newMaxPath = maxParentDist + maxChildDist + graph.vertex_work_weight(groupHead);
+        v_workw_t<Graph_t_in> newMaxPath = maxParentDist + maxChildDist + graph.VertexWorkWeight(groupHead);
         for (const VertexType &groupFoot : graph.children(groupHead)) {
-            newMaxPath += graph.vertex_work_weight(groupFoot);
+            newMaxPath += graph.VertexWorkWeight(groupFoot);
         }
 
         long savings = static_cast<long>(maxPath) - static_cast<long>(newMaxPath);
@@ -521,17 +521,17 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::AllParentsContraction(
         if (shouldSkip) {
             continue;
         }
-        v_workw_t<Graph_t_in> combined_weight = graph.vertex_work_weight(groupFoot);
+        v_workw_t<Graph_t_in> combined_weight = graph.VertexWorkWeight(groupFoot);
         for (const VertexType &groupHead : graph.parents(groupFoot)) {
-            combined_weight += graph.vertex_work_weight(groupHead);
+            combined_weight += graph.VertexWorkWeight(groupHead);
         }
         if (combined_weight > params.maxWeight) {
             continue;
         }
 
-        v_workw_t<Graph_t_in> maxPath = topDist[groupFoot] + botDist[groupFoot] - graph.vertex_work_weight(groupFoot);
+        v_workw_t<Graph_t_in> maxPath = topDist[groupFoot] + botDist[groupFoot] - graph.VertexWorkWeight(groupFoot);
         for (const VertexType &par : graph.parents(groupFoot)) {
-            maxPath = std::max(maxPath, topDist[par] + botDist[par] - graph.vertex_work_weight(par));
+            maxPath = std::max(maxPath, topDist[par] + botDist[par] - graph.VertexWorkWeight(par));
         }
 
         v_workw_t<Graph_t_in> maxParentDist = 0;
@@ -555,9 +555,9 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::AllParentsContraction(
             }
         }
 
-        v_workw_t<Graph_t_in> newMaxPath = maxParentDist + maxChildDist + graph.vertex_work_weight(groupFoot);
+        v_workw_t<Graph_t_in> newMaxPath = maxParentDist + maxChildDist + graph.VertexWorkWeight(groupFoot);
         for (const VertexType &groupHead : graph.parents(groupFoot)) {
-            newMaxPath += graph.vertex_work_weight(groupHead);
+            newMaxPath += graph.VertexWorkWeight(groupHead);
         }
 
         long savings = maxPath - newMaxPath;
@@ -754,7 +754,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SomeChildrenContraction(
         std::set<VertexType> contractionChildrenSet;
         contractionEnsemble.reserve(1 + graph.out_degree(groupHead));
         contractionEnsemble.emplace_back(groupHead);
-        v_workw_t<Graph_t_in> added_weight = graph.vertex_work_weight(groupHead);
+        v_workw_t<Graph_t_in> added_weight = graph.VertexWorkWeight(groupHead);
 
         for (std::size_t i = 0U; i < admissble_children_groups.size(); ++i) {
             const auto &first = admissble_children_groups[i].first;
@@ -763,7 +763,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SomeChildrenContraction(
             for (auto it = first; it != last; ++it) {
                 contractionEnsemble.emplace_back(*it);
                 contractionChildrenSet.emplace(*it);
-                added_weight += graph.vertex_work_weight(*it);
+                added_weight += graph.VertexWorkWeight(*it);
             }
             if (added_weight > params.maxWeight) {
                 break;
@@ -771,7 +771,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SomeChildrenContraction(
 
             v_workw_t<Graph_t_in> maxPath = 0;
             for (const VertexType &vert : contractionEnsemble) {
-                maxPath = std::max(maxPath, topDist[vert] + botDist[vert] - graph.vertex_work_weight(vert));
+                maxPath = std::max(maxPath, topDist[vert] + botDist[vert] - graph.VertexWorkWeight(vert));
             }
 
             v_workw_t<Graph_t_in> maxParentDist = 0;
@@ -800,7 +800,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SomeChildrenContraction(
 
             v_workw_t<Graph_t_in> newMaxPath = maxParentDist + maxChildDist;
             for (const VertexType &vert : contractionEnsemble) {
-                newMaxPath += graph.vertex_work_weight(vert);
+                newMaxPath += graph.VertexWorkWeight(vert);
             }
 
             long savings = static_cast<long>(maxPath) - static_cast<long>(newMaxPath);
@@ -942,7 +942,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SomeParentsContraction(
         std::set<VertexType> contractionParentsSet;
         contractionEnsemble.reserve(1 + graph.in_degree(groupFoot));
         contractionEnsemble.emplace_back(groupFoot);
-        v_workw_t<Graph_t_in> added_weight = graph.vertex_work_weight(groupFoot);
+        v_workw_t<Graph_t_in> added_weight = graph.VertexWorkWeight(groupFoot);
 
         for (std::size_t i = 0U; i < admissble_parent_groups.size(); ++i) {
             const auto &first = admissble_parent_groups[i].first;
@@ -951,7 +951,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SomeParentsContraction(
             for (auto it = first; it != last; ++it) {
                 contractionEnsemble.emplace_back(*it);
                 contractionParentsSet.emplace(*it);
-                added_weight += graph.vertex_work_weight(*it);
+                added_weight += graph.VertexWorkWeight(*it);
             }
             if (added_weight > params.maxWeight) {
                 break;
@@ -959,7 +959,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SomeParentsContraction(
 
             v_workw_t<Graph_t_in> maxPath = 0;
             for (const VertexType &vert : contractionEnsemble) {
-                maxPath = std::max(maxPath, topDist[vert] + botDist[vert] - graph.vertex_work_weight(vert));
+                maxPath = std::max(maxPath, topDist[vert] + botDist[vert] - graph.VertexWorkWeight(vert));
             }
 
             v_workw_t<Graph_t_in> maxParentDist = 0;
@@ -988,7 +988,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SomeParentsContraction(
 
             v_workw_t<Graph_t_in> newMaxPath = maxParentDist + maxChildDist;
             for (const VertexType &vert : contractionEnsemble) {
-                newMaxPath += graph.vertex_work_weight(vert);
+                newMaxPath += graph.VertexWorkWeight(vert);
             }
 
             long savings = static_cast<long>(maxPath) - static_cast<long>(newMaxPath);
@@ -1099,10 +1099,10 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::LevelContraction(
 
         Union_Find_Universe<VertexType, std::size_t, v_workw_t<Graph_t_in>, v_memw_t<Graph_t_in>> uf;
         for (const VertexType &vert : headVertices) {
-            uf.add_object(vert, graph.vertex_work_weight(vert));
+            uf.add_object(vert, graph.VertexWorkWeight(vert));
         }
         for (const VertexType &vert : footVertices) {
-            uf.add_object(vert, graph.vertex_work_weight(vert));
+            uf.add_object(vert, graph.VertexWorkWeight(vert));
         }
 
         for (const VertexType &srcVert : headVertices) {
@@ -1134,7 +1134,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::LevelContraction(
 
             v_workw_t<Graph_t_in> maxPath = std::numeric_limits<v_workw_t<Graph_t_in>>::lowest();
             for (const VertexType &vert : comp) {
-                maxPath = std::max(maxPath, topDist[vert] + botDist[vert] - graph.vertex_work_weight(vert));
+                maxPath = std::max(maxPath, topDist[vert] + botDist[vert] - graph.VertexWorkWeight(vert));
             }
 
             v_workw_t<Graph_t_in> maxParentDist = 0;
@@ -1161,7 +1161,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::LevelContraction(
 
             v_workw_t<Graph_t_in> newMaxPath = maxParentDist + maxChildDist;
             for (const VertexType &vert : comp) {
-                newMaxPath += graph.vertex_work_weight(vert);
+                newMaxPath += graph.VertexWorkWeight(vert);
             }
 
             long savings = static_cast<long>(maxPath) - static_cast<long>(newMaxPath);
@@ -1244,7 +1244,7 @@ std::vector<std::size_t> Sarkar<GraphTIn, GraphTOut>::ComputeNodeHashes(const Gr
     std::vector<std::size_t> hashes(graph.NumVertices());
     for (const VertexType &vert : graph.vertices()) {
         std::size_t &hash = hashes[vert];
-        hash = std::hash<v_workw_t<Graph_t_in>>{}(graph.vertex_work_weight(vert));
+        hash = std::hash<v_workw_t<Graph_t_in>>{}(graph.VertexWorkWeight(vert));
         hash_combine(hash, vertexPoset[vert]);
         hash_combine(hash, dist[vert]);
         if constexpr (HasTypedVerticesV<Graph_t_in>) {
@@ -1352,7 +1352,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::HomogeneousBufferMerge(
 
     std::unordered_map<std::size_t, std::set<VertexType>> orbits;
     for (const VertexType &vert : graph.vertices()) {
-        if (graph.vertex_work_weight(vert) > params.smallWeightThreshold) {
+        if (graph.VertexWorkWeight(vert) > params.smallWeightThreshold) {
             continue;
         }
 
@@ -1371,7 +1371,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::HomogeneousBufferMerge(
     std::vector<bool> partitionedFlag(graph.NumVertices(), false);
 
     for (const VertexType &vert : graph.vertices()) {
-        if (graph.vertex_work_weight(vert) > params.smallWeightThreshold) {
+        if (graph.VertexWorkWeight(vert) > params.smallWeightThreshold) {
             continue;
         }
         if (partitionedFlag[vert]) {
@@ -1405,7 +1405,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::HomogeneousBufferMerge(
             if (vertexBotPoset[vertCandidate] != vertexBotPoset[vert]) {
                 continue;
             }
-            if (graph.vertex_work_weight(vertCandidate) != graph.vertex_work_weight(vert)) {
+            if (graph.VertexWorkWeight(vertCandidate) != graph.VertexWorkWeight(vert)) {
                 continue;
             }
             if (topDist[vertCandidate] != topDist[vert]) {
@@ -1446,12 +1446,12 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::HomogeneousBufferMerge(
             continue;
         }
 
-        const v_workw_t<Graph_t_in> desiredVerticesInGroup = graph.vertex_work_weight(vert) == 0
+        const v_workw_t<Graph_t_in> desiredVerticesInGroup = graph.VertexWorkWeight(vert) == 0
                                                                  ? std::numeric_limits<v_workw_t<Graph_t_in>>::lowest()
-                                                                 : params.smallWeightThreshold / graph.vertex_work_weight(vert);
-        const v_workw_t<Graph_t_in> maxVerticesInGroup = graph.vertex_work_weight(vert) == 0
+                                                                 : params.smallWeightThreshold / graph.VertexWorkWeight(vert);
+        const v_workw_t<Graph_t_in> maxVerticesInGroup = graph.VertexWorkWeight(vert) == 0
                                                              ? std::numeric_limits<v_workw_t<Graph_t_in>>::max()
-                                                             : params.maxWeight / graph.vertex_work_weight(vert);
+                                                             : params.maxWeight / graph.VertexWorkWeight(vert);
 
         const std::size_t minDesiredSize = desiredVerticesInGroup < 2 ? 2U : static_cast<std::size_t>(desiredVerticesInGroup);
         const std::size_t maxDesiredSize

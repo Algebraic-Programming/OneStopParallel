@@ -76,9 +76,9 @@ std::unordered_map<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_in>> create_in
     dag_out = Graph_t_out(nodeCntr, edges);
 
     for (const auto &[oriVert, outVert] : local_idx) {
-        dag_out.set_vertex_work_weight(outVert, dag.vertex_work_weight(oriVert));
-        dag_out.set_vertex_comm_weight(outVert, dag.vertex_comm_weight(oriVert));
-        dag_out.set_vertex_mem_weight(outVert, dag.vertex_mem_weight(oriVert));
+        dag_out.SetVertexWorkWeight(outVert, dag.VertexWorkWeight(oriVert));
+        dag_out.SetVertexCommWeight(outVert, dag.VertexCommWeight(oriVert));
+        dag_out.SetVertexMemWeight(outVert, dag.VertexMemWeight(oriVert));
         dag_out.SetVertexType(outVert, dag.VertexType(oriVert));
     }
 

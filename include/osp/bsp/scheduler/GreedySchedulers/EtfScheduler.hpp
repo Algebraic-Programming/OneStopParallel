@@ -100,7 +100,7 @@ class EtfScheduler : public Scheduler<GraphT> {
 
             } else {
                 for (const auto &child : instance.getComputationalDag().children(node)) {
-                    const v_workw_t<Graph_t> tmp_val = BL[child] + instance.getComputationalDag().vertex_comm_weight(child);
+                    const v_workw_t<Graph_t> tmp_val = BL[child] + instance.getComputationalDag().VertexCommWeight(child);
 
                     if (tmp_val > maxval) {
                         maxval = tmp_val;
@@ -108,7 +108,7 @@ class EtfScheduler : public Scheduler<GraphT> {
                 }
             }
 
-            bl[node] = maxval + instance.getComputationalDag().vertex_work_weight(node);
+            bl[node] = maxval + instance.getComputationalDag().VertexWorkWeight(node);
         }
         return BL;
     }
@@ -159,14 +159,14 @@ class EtfScheduler : public Scheduler<GraphT> {
                                      std::vector<v_workw_t<Graph_t>> &rec) const {
         std::vector<tv_pair> predec;
         for (const auto &pred : instance.getComputationalDag().parents(node)) {
-            predec.emplace_back(schedule.time[pred] + instance.getComputationalDag().vertex_work_weight(pred), pred);
+            predec.emplace_back(schedule.time[pred] + instance.getComputationalDag().VertexWorkWeight(pred), pred);
         }
 
         std::sort(predec.begin(), predec.end());
 
         v_workw_t<Graph_t> est = procAvailableFrom;
         for (const auto &next : predec) {
-            v_workw_t<Graph_t> t = schedule.time[next.second] + instance.getComputationalDag().vertex_work_weight(next.second);
+            v_workw_t<Graph_t> t = schedule.time[next.second] + instance.getComputationalDag().VertexWorkWeight(next.second);
             if (schedule.proc[next.second] != proc) {
                 t = std::max(t, send[schedule.proc[next.second]]);
                 t = std::max(t, rec[proc]);
@@ -177,7 +177,7 @@ class EtfScheduler : public Scheduler<GraphT> {
                          * instance.sendCosts(schedule.proc[next.second], proc);
 
                 } else {
-                    t += instance.getComputationalDag().vertex_comm_weight(next.second)
+                    t += instance.getComputationalDag().VertexCommWeight(next.second)
                          * instance.sendCosts(schedule.proc[next.second], proc);
                 }
 
@@ -310,7 +310,7 @@ class EtfScheduler : public Scheduler<GraphT> {
             greedyProcLists[bestProc].push_back(node);
 
             schedule.time[node] = best_tv.first;
-            finishTimes[bestProc] = schedule.time[node] + instance.getComputationalDag().vertex_work_weight(node);
+            finishTimes[bestProc] = schedule.time[node] + instance.getComputationalDag().VertexWorkWeight(node);
 
             if constexpr (useMemoryConstraint_) {
                 memoryConstraint_.add(node, bestProc);

@@ -101,7 +101,7 @@ class CSchedule {
             for (unsigned j = 0; j < p; ++j) {
                 for (; done[j] != limit[j]
                        && (time[*done[j]] < timeLimit
-                           || (time[*done[j]] == timeLimit && instance.getComputationalDag().vertex_work_weight(*done[j]) == 0));
+                           || (time[*done[j]] == timeLimit && instance.getComputationalDag().VertexWorkWeight(*done[j]) == 0));
                      ++done[j]) {
                     processed[*done[j]] = true;
                     bspSchedule.setAssignedSuperstep(*done[j], superStepIdx);

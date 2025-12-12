@@ -203,7 +203,7 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
 
             for (const auto &node : instancePtr_->vertices()) {
                 work[schedule.assignedSuperstep(node)][schedule.assignedProcessor(node)]
-                    += instancePtr_->getComputationalDag().vertex_work_weight(node);
+                    += instancePtr_->getComputationalDag().VertexWorkWeight(node);
             }
 
             for (unsigned step = 0; step < numStep_; step++) {
@@ -317,7 +317,7 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
 
         for (const auto &node : initialSchedule_->getInstance().vertices()) {
             work[initialSchedule_->assignedSuperstep(node)][initialSchedule_->assignedProcessor(node)]
-                += initialSchedule_->getInstance().getComputationalDag().vertex_work_weight(node);
+                += initialSchedule_->getInstance().getComputationalDag().VertexWorkWeight(node);
         }
 
         for (unsigned step = 0; step < maxNumberSupersteps_; step++) {
@@ -368,7 +368,7 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
                     Expr expr;
                     for (unsigned int node = 0; node < instance.numberOfVertices(); node++) {
                         expr += node_to_processor_superstep_var[node][processor][static_cast<int>(step)]
-                                * instance.getComputationalDag().vertex_mem_weight(node);
+                                * instance.getComputationalDag().VertexMemWeight(node);
                     }
                     model.AddConstr(expr <= instance.getArchitecture().memoryBound(processor));
                 }
@@ -453,7 +453,7 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
                             model.AddConstr(edge_vars[p1][p2][edge_id] >= expr1 + expr2 - 1.001);
 
                             total_edges_cut += edge_vars[p1][p2][edge_id]
-                                               * instance.getComputationalDag().vertex_comm_weight(ep.source)
+                                               * instance.getComputationalDag().VertexCommWeight(ep.source)
                                                * instance.sendCosts(p1, p2);
 
                             edgeId++;
@@ -485,7 +485,7 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
                     model.AddConstr(edge_vars[0][0][edge_id] >= expr1 + expr2 - 1.001);
                 }
 
-                total_edges_cut += instance.getComputationalDag().vertex_comm_weight(ep.source) * edge_vars[0][0][edge_id];
+                total_edges_cut += instance.getComputationalDag().VertexCommWeight(ep.source) * edge_vars[0][0][edge_id];
 
                 edgeId++;
             }
@@ -509,7 +509,7 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
                 for (unsigned int processor = 0; processor < instance.numberOfProcessors(); processor++) {
                     Expr exprWork;
                     for (const auto &node : instance.vertices()) {
-                        expr_work += instance.getComputationalDag().vertex_work_weight(node)
+                        expr_work += instance.getComputationalDag().VertexWorkWeight(node)
                                      * node_to_processor_superstep_var[node][processor][static_cast<int>(step)];
                     }
 

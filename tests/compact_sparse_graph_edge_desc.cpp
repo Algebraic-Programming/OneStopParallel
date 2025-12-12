@@ -218,9 +218,9 @@ BOOST_AUTO_TEST_CASE(LineGraphKeepOrder) {
 
     for (const auto &vert : graph.vertices()) {
         if (vert != 0) {
-            BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), 2);
+            BOOST_CHECK_EQUAL(graph.VertexWorkWeight(vert), 2);
         } else {
-            BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), 1);
+            BOOST_CHECK_EQUAL(graph.VertexWorkWeight(vert), 1);
         }
     }
 
@@ -353,9 +353,9 @@ BOOST_AUTO_TEST_CASE(LineGraphReorder) {
 
     for (const auto &vert : graph.vertices()) {
         if (vert != 0) {
-            BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), 2);
+            BOOST_CHECK_EQUAL(graph.VertexWorkWeight(vert), 2);
         } else {
-            BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), 1);
+            BOOST_CHECK_EQUAL(graph.VertexWorkWeight(vert), 1);
         }
     }
 
@@ -524,7 +524,7 @@ BOOST_AUTO_TEST_CASE(Graph1KeepOrder) {
     BOOST_CHECK_EQUAL(edgeCntr, graph.NumEdges());
 
     for (const auto &vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), 1 + inEdges[vert].size());
+        BOOST_CHECK_EQUAL(graph.VertexWorkWeight(vert), 1 + inEdges[vert].size());
     }
 
     for (const auto &vert : graph.vertices()) {
@@ -673,7 +673,7 @@ BOOST_AUTO_TEST_CASE(Graph1Reorder) {
     }
 
     for (const auto &vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), 1 + inEdges[graphPerm[vert]].size());
+        BOOST_CHECK_EQUAL(graph.VertexWorkWeight(vert), 1 + inEdges[graphPerm[vert]].size());
     }
 
     for (const auto &vert : graph.vertices()) {

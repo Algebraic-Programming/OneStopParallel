@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(TestDagVectorAdapterEdge) {
     GraphT graph(outNeighbors, inNeighbors);
 
     for (auto v : graph.vertices()) {
-        graph.set_vertex_work_weight(v, 10);
+        graph.SetVertexWorkWeight(v, 10);
     }
 
     BspInstance<GraphT> instance;
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(TestDagVectorAdapter) {
     GraphT graph(outNeighbors, inNeighbors);
 
     for (auto v : graph.vertices()) {
-        graph.set_vertex_work_weight(v, 10);
+        graph.SetVertexWorkWeight(v, 10);
     }
 
     BspInstance<GraphT> instance;

@@ -47,7 +47,7 @@ class KlTotalCut : public KlTotal<GraphT, MemoryConstraintT, useNodeCommunicatio
                         = static_cast<double>(
                               kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule.instance
                                   ->getComputationalDag()
-                                  .vertex_comm_weight(node))
+                                  .VertexCommWeight(node))
                           * kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule.instance
                                 ->communicationCosts(new_proc, target_proc)
                           * kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule.comm_multiplier;
@@ -116,7 +116,7 @@ class KlTotalCut : public KlTotal<GraphT, MemoryConstraintT, useNodeCommunicatio
                             += static_cast<double>(
                                    kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule
                                        .instance->getComputationalDag()
-                                       .vertex_comm_weight(node))
+                                       .VertexCommWeight(node))
                                + kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::reward;
                     }
                 }
@@ -132,7 +132,7 @@ class KlTotalCut : public KlTotal<GraphT, MemoryConstraintT, useNodeCommunicatio
                         = static_cast<double>(
                               kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule.instance
                                   ->getComputationalDag()
-                                  .vertex_comm_weight(source))
+                                  .VertexCommWeight(source))
                           * kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule.instance
                                 ->communicationCosts(new_proc, source_proc)
                           * kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule.comm_multiplier;
@@ -201,7 +201,7 @@ class KlTotalCut : public KlTotal<GraphT, MemoryConstraintT, useNodeCommunicatio
                             += static_cast<double>(
                                    kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule
                                        .instance->getComputationalDag()
-                                       .vertex_comm_weight(source))
+                                       .VertexCommWeight(source))
                                + kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::reward;
                     }
                 }
@@ -223,7 +223,7 @@ class KlTotalCut : public KlTotal<GraphT, MemoryConstraintT, useNodeCommunicatio
                                 = static_cast<double>(
                                       kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule
                                           .instance->getComputationalDag()
-                                          .vertex_comm_weight(node))
+                                          .VertexCommWeight(node))
                                   * kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule
                                         .instance->communicationCosts(new_proc, target_proc)
                                   * kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule
@@ -267,7 +267,7 @@ class KlTotalCut : public KlTotal<GraphT, MemoryConstraintT, useNodeCommunicatio
                             = static_cast<double>(
                                   kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule
                                       .instance->getComputationalDag()
-                                      .vertex_comm_weight(node))
+                                      .VertexCommWeight(node))
                               * kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule
                                     .instance->communicationCosts(current_proc, target_proc)
                               * kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule
@@ -307,14 +307,14 @@ class KlTotalCut : public KlTotal<GraphT, MemoryConstraintT, useNodeCommunicatio
                                 += static_cast<double>(
                                        kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule
                                            .instance->getComputationalDag()
-                                           .vertex_comm_weight(node))
+                                           .VertexCommWeight(node))
                                    + kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::reward;
 
                             kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::node_gains[node][new_proc][0]
                                 += static_cast<double>(
                                        kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule
                                            .instance->getComputationalDag()
-                                           .vertex_comm_weight(node))
+                                           .VertexCommWeight(node))
                                    + kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::reward;
 
                         } else if (kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule
@@ -324,7 +324,7 @@ class KlTotalCut : public KlTotal<GraphT, MemoryConstraintT, useNodeCommunicatio
                                 += static_cast<double>(
                                        kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule
                                            .instance->getComputationalDag()
-                                           .vertex_comm_weight(node))
+                                           .VertexCommWeight(node))
                                    + kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::reward;
                         }
 
@@ -339,7 +339,7 @@ class KlTotalCut : public KlTotal<GraphT, MemoryConstraintT, useNodeCommunicatio
                                         .instance->communicationCosts(current_proc, target_proc))
                               * kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule
                                     .instance->getComputationalDag()
-                                    .vertex_comm_weight(node)
+                                    .VertexCommWeight(node)
                               * kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule
                                     .comm_multiplier;
 
@@ -372,7 +372,7 @@ class KlTotalCut : public KlTotal<GraphT, MemoryConstraintT, useNodeCommunicatio
                                 += static_cast<double>(
                                        kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule
                                            .instance->getComputationalDag()
-                                           .vertex_comm_weight(node))
+                                           .VertexCommWeight(node))
                                    + kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::reward;
                         }
                     }
@@ -393,7 +393,7 @@ class KlTotalCut : public KlTotal<GraphT, MemoryConstraintT, useNodeCommunicatio
                                 = static_cast<double>(
                                       kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule
                                           .instance->getComputationalDag()
-                                          .vertex_comm_weight(source))
+                                          .VertexCommWeight(source))
                                   * kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule
                                         .instance->communicationCosts(current_proc, new_proc)
                                   * kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule
@@ -438,7 +438,7 @@ class KlTotalCut : public KlTotal<GraphT, MemoryConstraintT, useNodeCommunicatio
                             = static_cast<double>(
                                   kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule
                                       .instance->getComputationalDag()
-                                      .vertex_comm_weight(source))
+                                      .VertexCommWeight(source))
                               * kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule
                                     .instance->communicationCosts(current_proc, new_proc)
                               * kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule
@@ -478,14 +478,14 @@ class KlTotalCut : public KlTotal<GraphT, MemoryConstraintT, useNodeCommunicatio
                                 += static_cast<double>(
                                        kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule
                                            .instance->getComputationalDag()
-                                           .vertex_comm_weight(source))
+                                           .VertexCommWeight(source))
                                    + kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::reward;
 
                             kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::node_gains[node][new_proc][2]
                                 += static_cast<double>(
                                        kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule
                                            .instance->getComputationalDag()
-                                           .vertex_comm_weight(source))
+                                           .VertexCommWeight(source))
                                    + kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::reward;
 
                         } else if (kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule
@@ -495,7 +495,7 @@ class KlTotalCut : public KlTotal<GraphT, MemoryConstraintT, useNodeCommunicatio
                                 += static_cast<double>(
                                        kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule
                                            .instance->getComputationalDag()
-                                           .vertex_comm_weight(source))
+                                           .VertexCommWeight(source))
                                    + kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::reward;
                         }
 
@@ -509,7 +509,7 @@ class KlTotalCut : public KlTotal<GraphT, MemoryConstraintT, useNodeCommunicatio
                                         .instance->communicationCosts(current_proc, source_proc))
                               * kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule
                                     .instance->getComputationalDag()
-                                    .vertex_comm_weight(source)
+                                    .VertexCommWeight(source)
                               * kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule
                                     .comm_multiplier;
 
@@ -543,7 +543,7 @@ class KlTotalCut : public KlTotal<GraphT, MemoryConstraintT, useNodeCommunicatio
                                 += static_cast<double>(
                                        kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule
                                            .instance->getComputationalDag()
-                                           .vertex_comm_weight(source))
+                                           .VertexCommWeight(source))
                                    + kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::reward;
                         }
                     }
@@ -1116,7 +1116,7 @@ class KlTotalCut : public KlTotal<GraphT, MemoryConstraintT, useNodeCommunicatio
                                   .use_node_communication_costs) {
                     commCosts += KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.instance
                                      ->getComputationalDag()
-                                     .vertex_comm_weight(source_v)
+                                     .VertexCommWeight(source_v)
                                  * KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.instance
                                        ->communicationCosts(sourceProc, targetProc);
                 } else {

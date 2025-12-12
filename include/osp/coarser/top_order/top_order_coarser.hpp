@@ -49,9 +49,9 @@ class TopOrderCoarser : public Coarser<GraphTIn, GraphTOut> {
                                  GraphTOut &dagOut,
                                  const std::vector<VertexType> &nodes,
                                  std::vector<vertex_idx_t<Graph_t_out>> &reverseVertexMap) {
-        dag_out.set_vertex_mem_weight(current_super_node_idx, current_memory);
-        dag_out.set_vertex_work_weight(current_super_node_idx, current_work);
-        dag_out.set_vertex_comm_weight(current_super_node_idx, current_communication);
+        dag_out.SetVertexMemWeight(current_super_node_idx, current_memory);
+        dag_out.SetVertexWorkWeight(current_super_node_idx, current_work);
+        dag_out.SetVertexCommWeight(current_super_node_idx, current_communication);
 
         for (const auto &node : nodes) {
             if constexpr (HasEdgeWeightsV<Graph_t_in> && HasEdgeWeightsV<Graph_t_out>) {
@@ -90,9 +90,9 @@ class TopOrderCoarser : public Coarser<GraphTIn, GraphTOut> {
         //     }
         // }
 
-        current_memory = dag_in.vertex_mem_weight(node);
-        current_work = dag_in.vertex_work_weight(node);
-        current_communication = dag_in.vertex_comm_weight(node);
+        current_memory = dag_in.VertexMemWeight(node);
+        current_work = dag_in.VertexWorkWeight(node);
+        current_communication = dag_in.VertexCommWeight(node);
 
         if constexpr (IsComputationalDagTypedVerticesV<Graph_t_in> && IsComputationalDagTypedVerticesV<Graph_t_out>) {
             current_super_node_idx
@@ -151,7 +151,7 @@ class TopOrderCoarser : public Coarser<GraphTIn, GraphTOut> {
         for (size_t i = 1; i < topOrdering.size(); i++) {
             const auto v = top_ordering[i];
 
-            // int node_mem = dag_in.vertex_mem_weight(v);
+            // int node_mem = dag_in.VertexMemWeight(v);
 
             // if (memory_constraint_type == LOCAL_INC_EDGES_2) {
 
@@ -163,10 +163,10 @@ class TopOrderCoarser : public Coarser<GraphTIn, GraphTOut> {
             const unsigned dist = sourceNodeDist[v] - sourceNodeDist[top_ordering[i - 1]];
 
             // start new super node if thresholds are exceeded
-            if (((current_memory + dag_in.vertex_mem_weight(v) > memory_threshold)
-                 || (current_work + dag_in.vertex_work_weight(v) > work_threshold)
+            if (((current_memory + dag_in.VertexMemWeight(v) > memory_threshold)
+                 || (current_work + dag_in.VertexWorkWeight(v) > work_threshold)
                  || (vertex_map.back().size() >= super_node_size_threshold)
-                 || (current_communication + dag_in.vertex_comm_weight(v) > communication_threshold))
+                 || (current_communication + dag_in.VertexCommWeight(v) > communication_threshold))
                 || (dist > node_dist_threshold) ||
                 // or prev node high out degree
                 (dag_in.out_degree(top_ordering[i - 1]) > degree_threshold)) {
@@ -183,17 +183,17 @@ class TopOrderCoarser : public Coarser<GraphTIn, GraphTOut> {
                         add_new_super_node(dag_in, dag_out, v);
 
                     } else {
-                        current_memory += dag_in.vertex_mem_weight(v);
-                        current_work += dag_in.vertex_work_weight(v);
-                        current_communication += dag_in.vertex_comm_weight(v);
+                        current_memory += dag_in.VertexMemWeight(v);
+                        current_work += dag_in.VertexWorkWeight(v);
+                        current_communication += dag_in.VertexCommWeight(v);
 
                         vertexMap.back().push_back(v);
                     }
 
                 } else {
-                    current_memory += dag_in.vertex_mem_weight(v);
-                    current_work += dag_in.vertex_work_weight(v);
-                    current_communication += dag_in.vertex_comm_weight(v);
+                    current_memory += dag_in.VertexMemWeight(v);
+                    current_work += dag_in.VertexWorkWeight(v);
+                    current_communication += dag_in.VertexCommWeight(v);
 
                     vertexMap.back().push_back(v);
                 }

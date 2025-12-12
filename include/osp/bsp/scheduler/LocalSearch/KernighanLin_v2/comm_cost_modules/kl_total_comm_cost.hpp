@@ -88,7 +88,7 @@ struct KlTotalCommCostFunction {
 
             if (sourceProc != targetProc) {
                 if constexpr (useNodeCommunicationCosts_) {
-                    const CostT sourceCommCost = graph_->vertex_comm_weight(sourceV);
+                    const CostT sourceCommCost = graph_->VertexCommWeight(sourceV);
                     maxCommWeight_ = std::max(maxCommWeight_, sourceCommCost);
                     commCosts += sourceCommCost * instance_->communicationCosts(sourceProc, targetProc);
                 } else {
@@ -206,7 +206,7 @@ struct KlTotalCommCostFunction {
                 const auto from_proc_target_comm_cost = instance->communicationCosts(move.from_proc, target_proc);
                 const auto to_proc_target_comm_cost = instance->communicationCosts(move.to_proc, target_proc);
 
-                const cost_t comm_gain = graph->vertex_comm_weight(move.node) * comm_multiplier;
+                const cost_t comm_gain = graph->VertexCommWeight(move.node) * comm_multiplier;
 
                 unsigned idx = target_start_idx;
                 const unsigned window_bound = end_idx(target_step, end_step);
@@ -308,7 +308,7 @@ struct KlTotalCommCostFunction {
                 const auto from_proc_source_comm_cost = instance->communicationCosts(source_proc, move.from_proc);
                 const auto to_proc_source_comm_cost = instance->communicationCosts(source_proc, move.to_proc);
 
-                const cost_t comm_gain = graph->vertex_comm_weight(source) * comm_multiplier;
+                const cost_t comm_gain = graph->VertexCommWeight(source) * comm_multiplier;
 
                 unsigned idx = start_idx(source_step, start_step);
                 for (; idx < window_bound; idx++) {
@@ -385,7 +385,7 @@ struct KlTotalCommCostFunction {
                 }
             }
 
-            const cost_t comm_gain = graph->vertex_comm_weight(node) * comm_multiplier;
+            const cost_t comm_gain = graph->VertexCommWeight(node) * comm_multiplier;
             const auto node_target_comm_cost = instance->communicationCosts(node_proc, target_proc);
 
             for (const unsigned p : proc_range->compatible_processors_vertex(node)) {
@@ -434,7 +434,7 @@ struct KlTotalCommCostFunction {
                 }
             }
 
-            const cost_t comm_gain = graph->vertex_comm_weight(source) * comm_multiplier;
+            const cost_t comm_gain = graph->VertexCommWeight(source) * comm_multiplier;
             const auto source_node_comm_cost = instance->communicationCosts(source_proc, node_proc);
 
             for (const unsigned p : proc_range->compatible_processors_vertex(node)) {

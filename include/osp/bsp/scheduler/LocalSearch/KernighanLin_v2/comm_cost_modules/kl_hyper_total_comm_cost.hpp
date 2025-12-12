@@ -79,7 +79,7 @@ struct KlHyperTotalCommCostFunction {
         CostT commCosts = 0;
         for (const auto vertex : graph_->vertices()) {
             const unsigned vertexProc = activeSchedule_->assigned_processor(vertex);
-            const CostT vCommCost = graph_->vertex_comm_weight(vertex);
+            const CostT vCommCost = graph_->VertexCommWeight(vertex);
             maxCommWeight_ = std::max(maxCommWeight_, vCommCost);
 
             node_lambda_map.reset_node(vertex);
@@ -107,7 +107,7 @@ struct KlHyperTotalCommCostFunction {
         CostT commCosts = 0;
         for (const auto vertex : graph_->vertices()) {
             const unsigned vertexProc = activeSchedule_->assigned_processor(vertex);
-            const CostT vCommCost = graph_->vertex_comm_weight(vertex);
+            const CostT vCommCost = graph_->VertexCommWeight(vertex);
             for (const auto lambdaproc_mult_pair : node_lambda_map.iterate_proc_entries(vertex)) {
                 const auto &lambda_proc = lambdaproc_mult_pair.first;
                 comm_costs += v_comm_cost * instance->communicationCosts(vertex_proc, lambda_proc);
@@ -235,7 +235,7 @@ struct KlHyperTotalCommCostFunction {
             }
 
             if (move.to_proc != move.from_proc) {
-                const cost_t comm_gain = graph->vertex_comm_weight(move.node) * comm_multiplier;
+                const cost_t comm_gain = graph->VertexCommWeight(move.node) * comm_multiplier;
 
                 const unsigned window_bound = end_idx(target_step, end_step);
                 for (const unsigned p : proc_range->compatible_processors_vertex(target)) {
@@ -265,7 +265,7 @@ struct KlHyperTotalCommCostFunction {
             if (move.to_proc != move.from_proc) {
                 const unsigned source_proc = active_schedule->assigned_processor(source);
                 if (node_lambda_map.has_no_proc_entry(source, move.from_proc)) {
-                    const cost_t comm_gain = graph->vertex_comm_weight(source) * comm_multiplier;
+                    const cost_t comm_gain = graph->VertexCommWeight(source) * comm_multiplier;
 
                     for (const auto &target : instance->getComputationalDag().children(source)) {
                         const unsigned target_step = active_schedule->assigned_superstep(target);
@@ -290,7 +290,7 @@ struct KlHyperTotalCommCostFunction {
                         }
                     }
                 } else if (node_lambda_map.get_proc_entry(source, move.from_proc) == 1) {
-                    const cost_t comm_gain = graph->vertex_comm_weight(source) * comm_multiplier;
+                    const cost_t comm_gain = graph->VertexCommWeight(source) * comm_multiplier;
 
                     for (const auto &target : instance->getComputationalDag().children(source)) {
                         const unsigned target_step = active_schedule->assigned_superstep(target);
@@ -326,7 +326,7 @@ struct KlHyperTotalCommCostFunction {
                 }
 
                 if (node_lambda_map.get_proc_entry(source, move.to_proc) == 1) {
-                    const cost_t comm_gain = graph->vertex_comm_weight(source) * comm_multiplier;
+                    const cost_t comm_gain = graph->VertexCommWeight(source) * comm_multiplier;
 
                     for (const auto &target : instance->getComputationalDag().children(source)) {
                         const unsigned target_step = active_schedule->assigned_superstep(target);
@@ -371,7 +371,7 @@ struct KlHyperTotalCommCostFunction {
                                 const unsigned target_window_bound = end_idx(target_step, end_step);
                                 auto &affinity_table_target = thread_data.affinity_table.at(target);
                                 const cost_t comm_aff = instance->communicationCosts(source_proc, target_proc)
-                                                        * graph->vertex_comm_weight(source) * comm_multiplier;
+                                                        * graph->VertexCommWeight(source) * comm_multiplier;
                                 for (const unsigned p : proc_range->compatible_processors_vertex(target)) {
                                     if (p == target_proc) {
                                         continue;
@@ -472,7 +472,7 @@ struct KlHyperTotalCommCostFunction {
 
             if (move.to_proc != move.from_proc) {
                 if (node_lambda_map.has_no_proc_entry(source, move.from_proc)) {
-                    const cost_t comm_gain = graph->vertex_comm_weight(source) * comm_multiplier;
+                    const cost_t comm_gain = graph->VertexCommWeight(source) * comm_multiplier;
 
                     for (const unsigned p : proc_range->compatible_processors_vertex(source)) {
                         if (p == source_proc) {
@@ -489,7 +489,7 @@ struct KlHyperTotalCommCostFunction {
                 }
 
                 if (node_lambda_map.get_proc_entry(source, move.to_proc) == 1) {
-                    const cost_t comm_gain = graph->vertex_comm_weight(source) * comm_multiplier;
+                    const cost_t comm_gain = graph->VertexCommWeight(source) * comm_multiplier;
 
                     for (const unsigned p : proc_range->compatible_processors_vertex(source)) {
                         if (p == source_proc) {
@@ -570,7 +570,7 @@ struct KlHyperTotalCommCostFunction {
             }
         }    // traget
 
-        const CostT commGain = graph_->vertex_comm_weight(node) * commMultiplier_;
+        const CostT commGain = graph_->VertexCommWeight(node) * commMultiplier_;
 
         for (const unsigned p : proc_range->compatible_processors_vertex(node)) {
             if (p == node_proc) {
@@ -623,7 +623,7 @@ struct KlHyperTotalCommCostFunction {
                 }
             }
 
-            const cost_t source_comm_gain = graph->vertex_comm_weight(source) * comm_multiplier;
+            const cost_t source_comm_gain = graph->VertexCommWeight(source) * comm_multiplier;
             for (const unsigned p : proc_range->compatible_processors_vertex(node)) {
                 if (p == node_proc) {
                     continue;

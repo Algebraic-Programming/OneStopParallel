@@ -44,9 +44,9 @@ BOOST_AUTO_TEST_CASE(SubGraphCompactSparseGraph) {
 
     unsigned cntr = 0;
     for (const auto &vert : graph.vertices()) {
-        graph.set_vertex_work_weight(vert, cntr++);
-        graph.set_vertex_comm_weight(vert, cntr++);
-        graph.set_vertex_mem_weight(vert, cntr++);
+        graph.SetVertexWorkWeight(vert, cntr++);
+        graph.SetVertexCommWeight(vert, cntr++);
+        graph.SetVertexMemWeight(vert, cntr++);
         graph.SetVertexType(vert, cntr++);
     }
 
@@ -66,9 +66,9 @@ BOOST_AUTO_TEST_CASE(SubGraphCompactSparseGraph) {
     }
 
     for (const auto &vert : selectVert) {
-        BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), subGraph.vertex_work_weight(vertCorrespondence.at(vert)));
-        BOOST_CHECK_EQUAL(graph.vertex_comm_weight(vert), subGraph.vertex_comm_weight(vertCorrespondence.at(vert)));
-        BOOST_CHECK_EQUAL(graph.vertex_mem_weight(vert), subGraph.vertex_mem_weight(vertCorrespondence.at(vert)));
+        BOOST_CHECK_EQUAL(graph.VertexWorkWeight(vert), subGraph.VertexWorkWeight(vertCorrespondence.at(vert)));
+        BOOST_CHECK_EQUAL(graph.VertexCommWeight(vert), subGraph.VertexCommWeight(vertCorrespondence.at(vert)));
+        BOOST_CHECK_EQUAL(graph.VertexMemWeight(vert), subGraph.VertexMemWeight(vertCorrespondence.at(vert)));
         BOOST_CHECK_EQUAL(graph.VertexType(vert), subGraph.VertexType(vertCorrespondence.at(vert)));
     }
 }
@@ -119,9 +119,9 @@ BOOST_AUTO_TEST_CASE(SubGraphDagVectorImpl) {
     }
 
     for (const auto &vert : selectVert) {
-        BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), subGraph.vertex_work_weight(vertCorrespondence.at(vert)));
-        BOOST_CHECK_EQUAL(graph.vertex_comm_weight(vert), subGraph.vertex_comm_weight(vertCorrespondence.at(vert)));
-        BOOST_CHECK_EQUAL(graph.vertex_mem_weight(vert), subGraph.vertex_mem_weight(vertCorrespondence.at(vert)));
+        BOOST_CHECK_EQUAL(graph.VertexWorkWeight(vert), subGraph.VertexWorkWeight(vertCorrespondence.at(vert)));
+        BOOST_CHECK_EQUAL(graph.VertexCommWeight(vert), subGraph.VertexCommWeight(vertCorrespondence.at(vert)));
+        BOOST_CHECK_EQUAL(graph.VertexMemWeight(vert), subGraph.VertexMemWeight(vertCorrespondence.at(vert)));
         BOOST_CHECK_EQUAL(graph.VertexType(vert), subGraph.VertexType(vertCorrespondence.at(vert)));
     }
 }

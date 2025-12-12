@@ -40,9 +40,9 @@ namespace osp {
  * @brief Concept to check if vertex weights are modifiable.
  *
  * Requires:
- * - `set_vertex_work_weight(v, w)`
- * - `set_vertex_comm_weight(v, w)`
- * - `set_vertex_mem_weight(v, w)`
+ * - `SetVertexWorkWeight(v, w)`
+ * - `SetVertexCommWeight(v, w)`
+ * - `SetVertexMemWeight(v, w)`
  *
  * Also requires the graph to be default constructible, copy/move constructible, and assignable.
  *

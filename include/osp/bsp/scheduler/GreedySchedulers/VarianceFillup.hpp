@@ -80,7 +80,7 @@ class VarianceFillup : public Scheduler<GraphT> {
             temp = std::log(temp) / 2 + maxPriority;
 
             double nodeWeight
-                = std::log(static_cast<double>(std::max(graph.vertex_work_weight(*r_iter), static_cast<v_workw_t<Graph_t>>(1))));
+                = std::log(static_cast<double>(std::max(graph.VertexWorkWeight(*r_iter), static_cast<v_workw_t<Graph_t>>(1))));
             double largerVal = nodeWeight > temp ? nodeWeight : temp;
 
             workVariance[*r_iter] = std::log(std::exp(nodeWeight - largerVal) + std::exp(temp - largerVal)) + largerVal;
@@ -167,7 +167,7 @@ class VarianceFillup : public Scheduler<GraphT> {
             if (procFree[i] && !procReady[i].empty()) {
                 // select node
                 for (auto nodePairIt = procReady[i].begin(); nodePairIt != procReady[i].end();) {
-                    if (endSupStep && (remaining_time < instance.getComputationalDag().vertex_work_weight(node_pair_it->first))) {
+                    if (endSupStep && (remaining_time < instance.getComputationalDag().VertexWorkWeight(node_pair_it->first))) {
                         nodePairIt = procReady[i].erase(node_pair_it);
                         continue;
                     }
@@ -192,7 +192,7 @@ class VarianceFillup : public Scheduler<GraphT> {
                 // select node
                 for (auto it = allReady[instance.getArchitecture().processorType(i)].begin();
                      it != allReady[instance.getArchitecture().processorType(i)].end();) {
-                    if (endSupStep && (remaining_time < instance.getComputationalDag().vertex_work_weight(it->first))) {
+                    if (endSupStep && (remaining_time < instance.getComputationalDag().VertexWorkWeight(it->first))) {
                         it = allReady[instance.getArchitecture().processorType(i)].erase(it);
                         continue;
                     }
@@ -464,7 +464,7 @@ class VarianceFillup : public Scheduler<GraphT> {
                     }
                 }
 
-                finishTimes.emplace(time + g.vertex_work_weight(nextNode), nextNode);
+                finishTimes.emplace(time + g.VertexWorkWeight(nextNode), nextNode);
                 procFree[nextProc] = false;
                 --free;
             }

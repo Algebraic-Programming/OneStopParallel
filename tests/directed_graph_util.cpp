@@ -463,14 +463,14 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     for (const auto i : graph.vertices()) {
         const auto v = graph.get_boost_graph()[i];
         BOOST_CHECK_EQUAL(v.workWeight, workW[i]);
-        BOOST_CHECK_EQUAL(v.workWeight, graph.vertex_work_weight(i));
+        BOOST_CHECK_EQUAL(v.workWeight, graph.VertexWorkWeight(i));
         BOOST_CHECK_EQUAL(v.communicationWeight, commW[i]);
-        BOOST_CHECK_EQUAL(v.communicationWeight, graph.vertex_comm_weight(i));
+        BOOST_CHECK_EQUAL(v.communicationWeight, graph.VertexCommWeight(i));
     }
 
     BOOST_CHECK_EQUAL(sumOfVerticesWorkWeights({0, 1}, graph), 2);
     {
-        int sumOfWorkWeights = graph.vertex_work_weight(0) + graph.vertex_work_weight(1);
+        int sumOfWorkWeights = graph.VertexWorkWeight(0) + graph.VertexWorkWeight(1);
         BOOST_CHECK_EQUAL(2, sumOfWorkWeights);
     }
     BOOST_CHECK_EQUAL(sumOfVerticesWorkWeights({5, 3}, graph), 4);

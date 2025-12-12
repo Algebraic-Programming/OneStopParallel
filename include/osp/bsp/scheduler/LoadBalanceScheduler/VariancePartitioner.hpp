@@ -80,7 +80,7 @@ class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
             }
             temp = std::log(temp) / power + maxPriority;
 
-            double nodeWeight = std::log(graph.vertex_work_weight(*rIter));
+            double nodeWeight = std::log(graph.VertexWorkWeight(*rIter));
             double largerVal = nodeWeight > temp ? nodeWeight : temp;
 
             workVariance[*rIter] = std::log(std::exp(nodeWeight - largerVal) + std::exp(temp - largerVal)) + largerVal;
@@ -135,7 +135,7 @@ class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
         for (const auto &v : graph.vertices()) {
             schedule.setAssignedProcessor(v, nProcessors);
 
-            totalWork += graph.vertex_work_weight(v);
+            totalWork += graph.VertexWorkWeight(v);
 
             if (is_source(v, graph)) {
                 ready.insert(std::make_pair(v, variancePriorities[v]));
@@ -308,8 +308,8 @@ class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
                     num_unable_to_partition_node_loop = 0;
 
                     // Updating loads
-                    total_partition_work[proc] += graph.vertex_work_weight(next_node);
-                    superstep_partition_work[proc] += graph.vertex_work_weight(next_node);
+                    total_partition_work[proc] += graph.VertexWorkWeight(next_node);
+                    superstep_partition_work[proc] += graph.VertexWorkWeight(next_node);
 
                     if constexpr (use_memory_constraint) {
                         memory_constraint.add(next_node, proc);

@@ -84,7 +84,7 @@ class WavefrontStatisticsCollector {
     void UpdateUnionFind(UnionFind &uf, size_t levelIdx) const {
         // Add all vertices from the current level to the universe
         for (const auto vertex : level_sets_[level_idx]) {
-            uf.add_object(vertex, dag_.vertex_work_weight(vertex), dag_.vertex_mem_weight(vertex));
+            uf.add_object(vertex, dag_.VertexWorkWeight(vertex), dag_.VertexMemWeight(vertex));
         }
         // Join components based on edges connecting to vertices already in the universe
         for (const auto &node : level_sets_[level_idx]) {

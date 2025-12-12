@@ -777,19 +777,19 @@ class CompactSparseGraph {
 
         if constexpr (IsComputationalDagV<Graph_type> && use_work_weights) {
             for (const auto &vert : graph.vertices()) {
-                set_vertex_work_weight(vert, graph.vertex_work_weight(vert));
+                SetVertexWorkWeight(vert, graph.VertexWorkWeight(vert));
             }
         }
 
         if constexpr (IsComputationalDagV<Graph_type> && use_comm_weights) {
             for (const auto &vert : graph.vertices()) {
-                set_vertex_comm_weight(vert, graph.vertex_comm_weight(vert));
+                SetVertexCommWeight(vert, graph.VertexCommWeight(vert));
             }
         }
 
         if constexpr (IsComputationalDagV<Graph_type> && use_mem_weights) {
             for (const auto &vert : graph.vertices()) {
-                set_vertex_mem_weight(vert, graph.vertex_mem_weight(vert));
+                SetVertexMemWeight(vert, graph.VertexMemWeight(vert));
             }
         }
 
@@ -1082,26 +1082,26 @@ static_assert(IsDirectedGraphEdgeDescV<CSG>, "CSG must satisfy the directed_grap
 //         v_memw_t<Graph_out_type>>, "Memory weight types of in-graph and out-graph must be the same.");
 
 //         for (const vertex_idx_t<Graph_t_in> &vert : coarsened_dag.vertices()) {
-//             coarsened_dag.set_vertex_work_weight(vert, 0);
-//             coarsened_dag.set_vertex_comm_weight(vert, 0);
-//             coarsened_dag.set_vertex_mem_weight(vert, 0);
+//             coarsened_dag.SetVertexWorkWeight(vert, 0);
+//             coarsened_dag.SetVertexCommWeight(vert, 0);
+//             coarsened_dag.SetVertexMemWeight(vert, 0);
 //         }
 
 //         for (const vertex_idx_t<Graph_t_in> &vert : dag_in.vertices()) {
-//             coarsened_dag.set_vertex_work_weight(
+//             coarsened_dag.SetVertexWorkWeight(
 //                 vertex_contraction_map[vert],
-//                 v_work_acc_method()(coarsened_dag.vertex_work_weight(combined_expansion_map[vert]),
-//                                 dag_in.vertex_work_weight(vert)));
+//                 v_work_acc_method()(coarsened_dag.VertexWorkWeight(combined_expansion_map[vert]),
+//                                 dag_in.VertexWorkWeight(vert)));
 
-//             coarsened_dag.set_vertex_comm_weight(
+//             coarsened_dag.SetVertexCommWeight(
 //                 vertex_contraction_map[vert],
-//                 v_comm_acc_method()(coarsened_dag.vertex_comm_weight(combined_expansion_map[vert]),
-//                                 dag_in.vertex_comm_weight(vert)));
+//                 v_comm_acc_method()(coarsened_dag.VertexCommWeight(combined_expansion_map[vert]),
+//                                 dag_in.VertexCommWeight(vert)));
 
-//             coarsened_dag.set_vertex_mem_weight(
+//             coarsened_dag.SetVertexMemWeight(
 //                 vertex_contraction_map[vert],
-//                 v_mem_acc_method()(coarsened_dag.vertex_mem_weight(combined_expansion_map[vert]),
-//                                 dag_in.vertex_mem_weight(vert)));
+//                 v_mem_acc_method()(coarsened_dag.VertexMemWeight(combined_expansion_map[vert]),
+//                                 dag_in.VertexMemWeight(vert)));
 //         }
 //     }
 

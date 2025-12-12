@@ -250,12 +250,12 @@ std::vector<unsigned> AcyclicDagDivider<GraphT>::GetTopologicalSplit(const Graph
             for (unsigned topOrderPos = index; topOrderPos <= end; ++topOrderPos) {
                 vertex_idx node = top_order[topOrderPos];
                 if (lastNodeIdxInHyperedge[node] > end) {
-                    extraCost += g.vertex_comm_weight(node);
+                    extraCost += g.VertexCommWeight(node);
                 }
 
                 for (const auto &pred : G.parents(node)) {
                     if (last_node_idx_in_hyperedge[pred] > end) {
-                        extra_cost += G.vertex_comm_weight(pred);
+                        extra_cost += G.VertexCommWeight(pred);
                     }
                 }
             }
@@ -300,7 +300,7 @@ v_commw_t<Graph_t> AcyclicDagDivider<GraphT>::GetSplitCost(const GraphT &g, cons
             parts_included.insert(node_to_part[succ]);
         }
 
-        cost += static_cast<v_commw_t<Graph_t>>(parts_included.size() - 1) * g.vertex_comm_weight(node);
+        cost += static_cast<v_commw_t<Graph_t>>(parts_included.size() - 1) * g.VertexCommWeight(node);
     }
 
     return cost;

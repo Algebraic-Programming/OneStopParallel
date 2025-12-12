@@ -172,7 +172,7 @@ std::vector<vertex_idx_t<Graph_t>> StepByStepCoarser<GraphT>::GenerateVertexCont
         // Init edge weights
         for (vertex_idx node = 0; node < n; ++node) {
             for (vertex_idx succ : G_full.children(node)) {
-                edgeWeights[std::make_pair(node, succ)] = G_full.vertex_comm_weight(node);
+                edgeWeights[std::make_pair(node, succ)] = G_full.VertexCommWeight(node);
             }
         }
 
@@ -262,14 +262,14 @@ std::vector<vertex_idx_t<Graph_t>> StepByStepCoarser<GraphT>::GenerateVertexCont
 
 template <typename GraphT>
 void StepByStepCoarser<GraphT>::ContractSingleEdge(std::pair<vertex_idx, vertex_idx> edge) {
-    G_coarse.set_vertex_work_weight(edge.first, G_coarse.vertex_work_weight(edge.first) + G_coarse.vertex_work_weight(edge.second));
-    G_coarse.set_vertex_work_weight(edge.second, 0);
+    G_coarse.SetVertexWorkWeight(edge.first, G_coarse.VertexWorkWeight(edge.first) + G_coarse.VertexWorkWeight(edge.second));
+    G_coarse.SetVertexWorkWeight(edge.second, 0);
 
-    G_coarse.set_vertex_comm_weight(edge.first, G_coarse.vertex_comm_weight(edge.first) + G_coarse.vertex_comm_weight(edge.second));
-    G_coarse.set_vertex_comm_weight(edge.second, 0);
+    G_coarse.SetVertexCommWeight(edge.first, G_coarse.VertexCommWeight(edge.first) + G_coarse.VertexCommWeight(edge.second));
+    G_coarse.SetVertexCommWeight(edge.second, 0);
 
-    G_coarse.set_vertex_mem_weight(edge.first, G_coarse.vertex_mem_weight(edge.first) + G_coarse.vertex_mem_weight(edge.second));
-    G_coarse.set_vertex_mem_weight(edge.second, 0);
+    G_coarse.SetVertexMemWeight(edge.first, G_coarse.VertexMemWeight(edge.first) + G_coarse.VertexMemWeight(edge.second));
+    G_coarse.SetVertexMemWeight(edge.second, 0);
 
     contractionHistory.emplace_back(edge.first, edge.second);
 
@@ -289,7 +289,7 @@ void StepByStepCoarser<GraphT>::ContractSingleEdge(std::pair<vertex_idx, vertex_
             for (vertex_idx node : contains[pred]) {
                 for (vertex_idx succ : G_coarse.children(node)) {
                     if (succ == edge.first || succ == edge.second) {
-                        edgeWeights[std::make_pair(pred, edge.first)] += G_full.vertex_comm_weight(node);
+                        edgeWeights[std::make_pair(pred, edge.first)] += G_full.VertexCommWeight(node);
                     }
                 }
             }
@@ -440,7 +440,7 @@ void StepByStepCoarser<GraphT>::InitializeContractableEdges() {
     for (vertex_idx node = 0; node < gFull_.NumVertices(); ++node) {
         std::set<vertex_idx> succContractable = getContractableChildren(node);
         for (vertex_idx succ : succ_contractable) {
-            contractable[std::make_pair(node, succ)] = G_full.vertex_comm_weight(node);
+            contractable[std::make_pair(node, succ)] = G_full.VertexCommWeight(node);
         }
     }
 }
@@ -558,7 +558,7 @@ std::vector<std::pair<vertex_idx_t<Graph_t>, vertex_idx_t<Graph_t>>> StepByStepC
     for (vertex_idx node = 0; node < G_full.NumVertices(); ++node) {
         if (node_valid[node]) {
             leader[node] = node;
-            weight[node] = 1 /*G_coarse.vertex_work_weight(node)*/;
+            weight[node] = 1 /*G_coarse.VertexWorkWeight(node)*/;
             nrBadNeighbors[node] = 0;
             leaderBadNeighbors[node] = UINT_MAX;
             clusterNewID[node] = node;
@@ -771,7 +771,7 @@ bool StepByStepCoarser<GraphT>::IncontractableForPebbling(const std::pair<vertex
         return true;
     }
 
-    v_memw_t<Graph_t> sumWeight = G_coarse.vertex_mem_weight(edge.first) + G_coarse.vertex_mem_weight(edge.second);
+    v_memw_t<Graph_t> sumWeight = G_coarse.VertexMemWeight(edge.first) + G_coarse.VertexMemWeight(edge.second);
     std::set<vertex_idx> parents;
     for (vertex_idx pred : G_coarse.parents(edge.first)) {
         parents.insert(pred);
@@ -782,7 +782,7 @@ bool StepByStepCoarser<GraphT>::IncontractableForPebbling(const std::pair<vertex
         }
     }
     for (vertex_idx node : parents) {
-        sum_weight += G_coarse.vertex_mem_weight(node);
+        sum_weight += G_coarse.VertexMemWeight(node);
     }
 
     if (sum_weight > fast_mem_capacity) {
@@ -800,11 +800,10 @@ bool StepByStepCoarser<GraphT>::IncontractableForPebbling(const std::pair<vertex
     }
 
     for (vertex_idx child : children) {
-        sum_weight = G_coarse.vertex_mem_weight(edge.first) + G_coarse.vertex_mem_weight(edge.second)
-                     + G_coarse.vertex_mem_weight(child);
+        sum_weight = G_coarse.VertexMemWeight(edge.first) + G_coarse.VertexMemWeight(edge.second) + G_coarse.VertexMemWeight(child);
         for (vertex_idx pred : G_coarse.parents(child)) {
             if (pred != edge.first && pred != edge.second) {
-                sum_weight += G_coarse.vertex_mem_weight(pred);
+                sum_weight += G_coarse.VertexMemWeight(pred);
             }
         }
 
@@ -826,9 +825,9 @@ void StepByStepCoarser<GraphT>::MergeSourcesInPebbling() {
         }
 
         if (G_coarse.in_degree(node) > 0) {
-            memory_sum[node] = G_coarse.vertex_mem_weight(node);
+            memory_sum[node] = G_coarse.VertexMemWeight(node);
             for (vertex_idx pred : G_coarse.parents(node)) {
-                memory_sum[node] += G_coarse.vertex_mem_weight(pred);
+                memory_sum[node] += G_coarse.VertexMemWeight(pred);
             }
         } else {
             sources.push_back(node);
@@ -876,12 +875,12 @@ void StepByStepCoarser<GraphT>::MergeSourcesInPebbling() {
 
                 bool violatesConstraint = false;
                 for (vertex_idx node : only_a) {
-                    if (memory_sum[node] + G_coarse.vertex_mem_weight(source_b) > fast_mem_capacity) {
+                    if (memory_sum[node] + G_coarse.VertexMemWeight(source_b) > fast_mem_capacity) {
                         violates_constraint = true;
                     }
                 }
                 for (vertex_idx node : only_b) {
-                    if (memory_sum[node] + G_coarse.vertex_mem_weight(source_a) > fast_mem_capacity) {
+                    if (memory_sum[node] + G_coarse.VertexMemWeight(source_a) > fast_mem_capacity) {
                         violates_constraint = true;
                     }
                 }
@@ -901,10 +900,10 @@ void StepByStepCoarser<GraphT>::MergeSourcesInPebbling() {
                     couldMerge = true;
 
                     for (vertex_idx node : only_a) {
-                        memory_sum[node] += G_coarse.vertex_mem_weight(source_b);
+                        memory_sum[node] += G_coarse.VertexMemWeight(source_b);
                     }
                     for (vertex_idx node : only_b) {
-                        memory_sum[node] += G_coarse.vertex_mem_weight(source_a);
+                        memory_sum[node] += G_coarse.VertexMemWeight(source_a);
                     }
                 }
             }
@@ -927,12 +926,12 @@ GraphT StepByStepCoarser<GraphT>::Contract(const std::vector<vertex_idx_t<Graph_
     }
 
     for (vertex_idx node = 0; node < gFull_.NumVertices(); ++node) {
-        gContracted.set_vertex_work_weight(new_vertex_id[node],
-                                           gContracted.vertex_work_weight(new_vertex_id[node]) + gFull_.vertex_work_weight(node));
-        gContracted.set_vertex_comm_weight(new_vertex_id[node],
-                                           gContracted.vertex_comm_weight(new_vertex_id[node]) + gFull_.vertex_comm_weight(node));
-        gContracted.set_vertex_mem_weight(new_vertex_id[node],
-                                          gContracted.vertex_mem_weight(new_vertex_id[node]) + gFull_.vertex_mem_weight(node));
+        gContracted.SetVertexWorkWeight(new_vertex_id[node],
+                                        gContracted.VertexWorkWeight(new_vertex_id[node]) + gFull_.VertexWorkWeight(node));
+        gContracted.SetVertexCommWeight(new_vertex_id[node],
+                                        gContracted.VertexCommWeight(new_vertex_id[node]) + gFull_.VertexCommWeight(node));
+        gContracted.SetVertexMemWeight(new_vertex_id[node],
+                                       gContracted.VertexMemWeight(new_vertex_id[node]) + gFull_.VertexMemWeight(node));
         gContracted.SetVertexType(new_vertex_id[node], gFull_.VertexType(node));
     }
 

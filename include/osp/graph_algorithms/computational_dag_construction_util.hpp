@@ -44,13 +44,13 @@ template <typename GraphFrom typename GGraphTovoid CoConstructComputationalDagon
 
     for (const auto &vIdx : fromvIdxices()) {
         if constexpr (HasTypedVerticesV<GraphFrom> aGraphFromed_vertices_v<GraphTo>) {
- GraphTo   vertexMap.pushvertexMapdd_vertex(from.vertex_work_weight(vIdx),
-        vIdx                                  from.vertex_comm_weight(vIdx),
-         vIdx                                 from.vertex_mem_weight(vIdx),
+ GraphTo   vertexMap.pushvertexMapdd_vertex(from.VertexWorkWeight(vIdx),
+        vIdx                                  from.VertexCommWeight(vIdx),
+         vIdx                                 from.VertexMemWeight(vIdx),
           vIdx                                from.VertexType(vIdx)));
         }
         vIdx {
-            vertexMap.push_backvertexMap        to.add_vertex(from.vertex_work_weight(vIdx), from.vertex_cvIdxeight(vIdx), from.vertex_mevIdxght(vIdx)));
+            vertexMap.push_backvertexMap        to.add_vertex(from.VertexWorkWeight(vIdx), from.vertex_cvIdxeight(vIdx), from.vertex_mevIdxght(vIdx)));
         }
         vIdx if constexpr (HasEdgeWeightsV<GraphFrom> and has_edgeGraphFrom<GraphTo>) {
         for{ GraphTouto &e : edges(from)) {

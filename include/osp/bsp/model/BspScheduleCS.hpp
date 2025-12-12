@@ -67,10 +67,9 @@ class BspScheduleCS : public BspSchedule<GraphT> {
         for (auto const &[key, val] : commSchedule_) {
             send[std::get<1>(key)][val]
                 += BspSchedule<GraphT>::instance->sendCosts(std::get<1>(key), std::get<2>(key))
-                   * BspSchedule<GraphT>::instance->getComputationalDag().vertex_comm_weight(std::get<0>(key));
-            rec[std::get<2>(key)][val]
-                += BspSchedule<GraphT>::instance->sendCosts(std::get<1>(key), std::get<2>(key))
-                   * BspSchedule<GraphT>::instance->getComputationalDag().vertex_comm_weight(std::get<0>(key));
+                   * BspSchedule<GraphT>::instance->getComputationalDag().VertexCommWeight(std::get<0>(key));
+            rec[std::get<2>(key)][val] += BspSchedule<GraphT>::instance->sendCosts(std::get<1>(key), std::get<2>(key))
+                                          * BspSchedule<GraphT>::instance->getComputationalDag().VertexCommWeight(std::get<0>(key));
         }
     }
 
@@ -334,7 +333,7 @@ class BspScheduleCS : public BspSchedule<GraphT> {
             for (const auto &node : stepProcNodeList[0][proc]) {
                 for (const auto &target : BspSchedule<GraphT>::instance->getComputationalDag().children(node)) {
                     if (proc != BspSchedule<GraphT>::assignedProcessor(target)) {
-                        requireSending[proc].insert({BspSchedule<GraphT>::instance->getComputationalDag().vertex_comm_weight(node)
+                        requireSending[proc].insert({BspSchedule<GraphT>::instance->getComputationalDag().VertexCommWeight(node)
                                                          * BspSchedule<GraphT>::instance->getArchitecture().sendCosts(
                                                              proc, BspSchedule<GraphT>::node_to_processor_assignment[target]),
                                                      node,
@@ -358,10 +357,9 @@ class BspScheduleCS : public BspSchedule<GraphT> {
                                 std::make_tuple(source, BspSchedule<GraphT>::node_to_processor_assignment[source], proc),
                                 step - this->GetStaleness());
                             nodeToProcBeenSent[source][proc] = true;
-                            VCommwT<GraphT> commCost
-                                = BspSchedule<GraphT>::instance->getComputationalDag().vertex_comm_weight(source)
-                                  * BspSchedule<GraphT>::instance->getArchitecture().sendCosts(
-                                      BspSchedule<GraphT>::node_to_processor_assignment[source], proc);
+                            VCommwT<GraphT> commCost = BspSchedule<GraphT>::instance->getComputationalDag().VertexCommWeight(source)
+                                                       * BspSchedule<GraphT>::instance->getArchitecture().sendCosts(
+                                                           BspSchedule<GraphT>::node_to_processor_assignment[source], proc);
                             requireSending[BspSchedule<GraphT>::node_to_processor_assignment[source]].erase(
                                 {commCost, source, proc});
                             sendCost[BspSchedule<GraphT>::node_to_processor_assignment[source]] += commCost;
@@ -408,12 +406,11 @@ class BspScheduleCS : public BspSchedule<GraphT> {
                 for (const auto &node : stepProcNodeList[step][proc]) {
                     for (const auto &target : BspSchedule<GraphT>::instance->getComputationalDag().children(node)) {
                         if (proc != BspSchedule<GraphT>::assignedProcessor(target)) {
-                            requireSending[proc].insert(
-                                {BspSchedule<GraphT>::instance->getComputationalDag().vertex_comm_weight(node)
-                                     * BspSchedule<GraphT>::instance->getArchitecture().sendCosts(
-                                         proc, BspSchedule<GraphT>::node_to_processor_assignment[target]),
-                                 node,
-                                 BspSchedule<GraphT>::node_to_processor_assignment[target]});
+                            requireSending[proc].insert({BspSchedule<GraphT>::instance->getComputationalDag().VertexCommWeight(node)
+                                                             * BspSchedule<GraphT>::instance->getArchitecture().sendCosts(
+                                                                 proc, BspSchedule<GraphT>::node_to_processor_assignment[target]),
+                                                         node,
+                                                         BspSchedule<GraphT>::node_to_processor_assignment[target]});
                         }
                     }
                 }

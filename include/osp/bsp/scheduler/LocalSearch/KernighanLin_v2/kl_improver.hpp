@@ -292,7 +292,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                                                         const pre_move_work_data<work_weight_t> &prevWorkData,
                                                         std::vector<std::vector<CostT>> &affinityTableNode) {
         const unsigned nodeStep = activeSchedule_.assigned_superstep(node);
-        const work_weight_t vertexWeight = graph_->vertex_work_weight(node);
+        const work_weight_t vertexWeight = graph_->VertexWorkWeight(node);
 
         kl_gain_update_info updateInfo(node);
 
@@ -311,8 +311,8 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                     const work_weight_t newSecondMaxWeight = activeSchedule_.get_step_second_max_work(move.from_step);
                     const work_weight_t newStepProcWork = activeSchedule_.get_step_processor_work(nodeStep, nodeProc);
                     const work_weight_t prevStepProcWork
-                        = (nodeProc == move.from_proc) ? new_step_proc_work + graph_->vertex_work_weight(move.node)
-                          : (nodeProc == move.to_proc) ? new_step_proc_work - graph_->vertex_work_weight(move.node)
+                        = (nodeProc == move.from_proc) ? new_step_proc_work + graph_->VertexWorkWeight(move.node)
+                          : (nodeProc == move.to_proc) ? new_step_proc_work - graph_->VertexWorkWeight(move.node)
                                                        : new_step_proc_work;
                     const bool prevIsSoleMaxProcessor = (prevWorkData.from_step_max_work_processor_count == 1)
                                                         && (prevMaxWork == prev_step_proc_work);
@@ -351,7 +351,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                     if (node_proc != move.from_proc && is_compatible(node, move.from_proc)) {
                         const work_weight_t prevNewWeight = vertex_weight
                                                             + activeSchedule_.get_step_processor_work(nodeStep, move.from_proc)
-                                                            + graph_->vertex_work_weight(move.node);
+                                                            + graph_->VertexWorkWeight(move.node);
                         const CostT prevOtherAffinity
                             = compute_same_step_affinity(prev_max_work, prev_new_weight, prev_node_proc_affinity);
                         const work_weight_t newWeight
@@ -363,7 +363,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                     if (node_proc != move.to_proc && is_compatible(node, move.to_proc)) {
                         const work_weight_t prevNewWeight = vertex_weight
                                                             + activeSchedule_.get_step_processor_work(nodeStep, move.to_proc)
-                                                            - graph_->vertex_work_weight(move.node);
+                                                            - graph_->VertexWorkWeight(move.node);
                         const CostT prevOtherAffinity
                             = compute_same_step_affinity(prev_max_work, prev_new_weight, prev_node_proc_affinity);
                         const work_weight_t newWeight
@@ -384,7 +384,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                             if (proc == move.from_proc) {
                                 const work_weight_t prev_new_weight
                                     = vertex_weight + active_schedule.get_step_processor_work(move.from_step, proc)
-                                      + graph->vertex_work_weight(move.node);
+                                      + graph->VertexWorkWeight(move.node);
                                 const cost_t prev_affinity
                                     = prev_max_work < prev_new_weight
                                           ? static_cast<cost_t>(prev_new_weight) - static_cast<cost_t>(prev_max_work)
@@ -396,7 +396,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                             } else if (proc == move.to_proc) {
                                 const work_weight_t prev_new_weight
                                     = vertex_weight + active_schedule.get_step_processor_work(move.to_step, proc)
-                                      - graph->vertex_work_weight(move.node);
+                                      - graph->VertexWorkWeight(move.node);
                                 const cost_t prev_affinity
                                     = prev_max_work < prev_new_weight
                                           ? static_cast<cost_t>(prev_new_weight) - static_cast<cost_t>(prev_max_work)
@@ -420,7 +420,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                         if (is_compatible(node, move.from_proc)) {
                             const work_weight_t fromNewWeight
                                 = vertex_weight + activeSchedule_.get_step_processor_work(move.from_step, move.from_proc);
-                            const work_weight_t fromPrevNewWeight = from_new_weight + graph_->vertex_work_weight(move.node);
+                            const work_weight_t fromPrevNewWeight = from_new_weight + graph_->VertexWorkWeight(move.node);
                             const CostT fromPrevAffinity
                                 = prev_max_work < from_prev_new_weight
                                       ? static_cast<CostT>(from_prev_new_weight) - static_cast<CostT>(prev_max_work)
@@ -436,7 +436,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                         if (is_compatible(node, move.to_proc)) {
                             const work_weight_t toNewWeight
                                 = vertex_weight + activeSchedule_.get_step_processor_work(move.to_step, move.to_proc);
-                            const work_weight_t toPrevNewWeight = to_new_weight - graph_->vertex_work_weight(move.node);
+                            const work_weight_t toPrevNewWeight = to_new_weight - graph_->VertexWorkWeight(move.node);
                             const CostT toPrevAffinity
                                 = prev_max_work < to_prev_new_weight
                                       ? static_cast<CostT>(to_prev_new_weight) - static_cast<CostT>(prev_max_work)
@@ -459,7 +459,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                                      vertex_weight,
                                      move.from_step,
                                      move.from_proc,
-                                     graph->vertex_work_weight(move.node),
+                                     graph->VertexWorkWeight(move.node),
                                      prev_work_data.from_step_max_work,
                                      prev_work_data.from_step_second_max_work,
                                      prev_work_data.from_step_max_work_processor_count,
@@ -473,7 +473,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                                      vertex_weight,
                                      move.to_step,
                                      move.to_proc,
-                                     -graph->vertex_work_weight(move.node),
+                                     -graph->VertexWorkWeight(move.node),
                                      prev_work_data.to_step_max_work,
                                      prev_work_data.to_step_second_max_work,
                                      prev_work_data.to_step_max_work_processor_count,
@@ -1558,7 +1558,7 @@ template <typename GraphT, typename CommCostFunctionT, typename MemoryConstraint
 void KlImprover<GraphT, CommCostFunctionT, MemoryConstraintT, windowSize, CostT>::ComputeWorkAffinity(
     VertexType node, std::vector<std::vector<CostT>> &affinityTableNode, ThreadSearchContext &threadData) {
     const unsigned nodeStep = activeSchedule_.assigned_superstep(node);
-    const work_weight_t vertexWeight = graph_->vertex_work_weight(node);
+    const work_weight_t vertexWeight = graph_->VertexWorkWeight(node);
 
     unsigned step = (nodeStep > windowSize) ? (nodeStep - windowSize) : 0;
     for (unsigned idx = threadData.StartIdx(nodeStep); idx < threadData.EndIdx(nodeStep); ++idx, ++step) {

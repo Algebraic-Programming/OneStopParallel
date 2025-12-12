@@ -290,7 +290,7 @@ struct KlBspCommCostFunction {
             }
         }
 
-        const comm_weight_t commWNode = graph_->vertex_comm_weight(node);
+        const comm_weight_t commWNode = graph_->VertexCommWeight(node);
         const auto &currentVecSchedule = activeSchedule_->getVectorSchedule();
 
         auto addDelta = [&](bool isRecv, unsigned step, unsigned proc, comm_weight_t val) {
@@ -331,7 +331,7 @@ struct KlBspCommCostFunction {
         for (const auto &u : graph->parents(node)) {
             const unsigned u_proc = active_schedule->assigned_processor(u);
             const unsigned u_step = current_vec_schedule.assignedSuperstep(u);
-            const comm_weight_t comm_w_u = graph->vertex_comm_weight(u);
+            const comm_weight_t comm_w_u = graph->VertexCommWeight(u);
 
             if (u_proc != node_proc) {
                 if (comm_ds.node_lambda_map.get_proc_entry(u, node_proc) == 1) {
@@ -354,7 +354,7 @@ struct KlBspCommCostFunction {
             for (const auto &u : graph->parents(node)) {
                 const unsigned u_proc = active_schedule->assigned_processor(u);
                 const unsigned u_step = current_vec_schedule.assignedSuperstep(u);
-                const comm_weight_t comm_w_u = graph->vertex_comm_weight(u);
+                const comm_weight_t comm_w_u = graph->VertexCommWeight(u);
 
                 if (u_proc != p_to) {
                     bool already_sending_to_p_to = false;
@@ -434,7 +434,7 @@ struct KlBspCommCostFunction {
             for (const auto &u : graph->parents(node)) {
                 const unsigned u_proc = active_schedule->assigned_processor(u);
                 const unsigned u_step = current_vec_schedule.assignedSuperstep(u);
-                const comm_weight_t comm_w_u = graph->vertex_comm_weight(u);
+                const comm_weight_t comm_w_u = graph->VertexCommWeight(u);
 
                 if (u_proc != p_to) {
                     bool already_sending_to_p_to = false;

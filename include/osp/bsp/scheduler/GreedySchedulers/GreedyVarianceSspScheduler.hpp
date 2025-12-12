@@ -75,7 +75,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
             temp = std::log(temp) / 2 + maxPriority;
 
             double nodeWeight
-                = std::log(static_cast<double>(std::max(graph.vertex_work_weight(*r_iter), static_cast<v_workw_t<Graph_t>>(1))));
+                = std::log(static_cast<double>(std::max(graph.VertexWorkWeight(*r_iter), static_cast<v_workw_t<Graph_t>>(1))));
             double largerVal = nodeWeight > temp ? nodeWeight : temp;
 
             workVariance[*r_iter] = std::log(std::exp(nodeWeight - largerVal) + std::exp(temp - largerVal)) + largerVal;
@@ -150,7 +150,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
 
             auto it = procReady[i].begin();
             while (it != procReady[i].end()) {
-                if (endSupStep && (remaining_time < instance.getComputationalDag().vertex_work_weight(it->first))) {
+                if (endSupStep && (remaining_time < instance.getComputationalDag().VertexWorkWeight(it->first))) {
                     it = procReady[i].erase(it);
                     continue;
                 }
@@ -224,7 +224,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
             auto it = readyList.begin();
 
             while (it != readyList.end()) {
-                if (endSupStep && (remaining_time < instance.getComputationalDag().vertex_work_weight(it->first))) {
+                if (endSupStep && (remaining_time < instance.getComputationalDag().VertexWorkWeight(it->first))) {
                     it = readyList.erase(it);
                     continue;
                 }
@@ -594,7 +594,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
                     }
                 }
 
-                finishTimes.emplace(time + g.vertex_work_weight(nextNode), nextNode);
+                finishTimes.emplace(time + g.VertexWorkWeight(nextNode), nextNode);
                 procFree[nextProc] = false;
                 --free;
             }

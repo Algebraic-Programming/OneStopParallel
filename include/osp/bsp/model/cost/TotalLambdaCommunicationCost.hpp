@@ -51,7 +51,7 @@ struct TotalLambdaCommunicationCost {
             }
 
             const unsigned sourceProc = nodeToProcessorAssignment[v];
-            const auto vCommCost = instance.getComputationalDag().vertex_comm_weight(v);
+            const auto vCommCost = instance.getComputationalDag().VertexCommWeight(v);
 
             for (const auto &targetProc : targetProcs) {
                 commCosts += vCommCost * instance.sendCosts(sourceProc, targetProc);

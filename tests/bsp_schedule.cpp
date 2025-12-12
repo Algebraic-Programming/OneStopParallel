@@ -171,13 +171,10 @@ BOOST_AUTO_TEST_CASE(TestScheduleWriter) {
     BOOST_CHECK_EQUAL(instanceT2.getComputationalDag().NumEdges(), instance.getComputationalDag().NumEdges());
 
     for (const auto &v : instance.getComputationalDag().vertices()) {
-        BOOST_CHECK_EQUAL(instanceT2.getComputationalDag().vertex_work_weight(v),
-                          instance.getComputationalDag().vertex_work_weight(v));
-        BOOST_CHECK_EQUAL(instanceT2.getComputationalDag().vertex_comm_weight(v),
-                          instance.getComputationalDag().vertex_comm_weight(v));
+        BOOST_CHECK_EQUAL(instanceT2.getComputationalDag().VertexWorkWeight(v), instance.getComputationalDag().VertexWorkWeight(v));
+        BOOST_CHECK_EQUAL(instanceT2.getComputationalDag().VertexCommWeight(v), instance.getComputationalDag().VertexCommWeight(v));
 
-        BOOST_CHECK_EQUAL(instanceT2.getComputationalDag().vertex_mem_weight(v),
-                          instance.getComputationalDag().vertex_mem_weight(v));
+        BOOST_CHECK_EQUAL(instanceT2.getComputationalDag().VertexMemWeight(v), instance.getComputationalDag().VertexMemWeight(v));
 
         BOOST_CHECK_EQUAL(instanceT2.getComputationalDag().VertexType(v), instance.getComputationalDag().VertexType(v));
 

@@ -71,7 +71,7 @@ std::vector<v_workw_t<Graph_t>> SubproblemMultiScheduling<GraphT>::GetLongestPat
     std::vector<vertex_idx> topOrder = GetTopOrder(graph);
 
     for (auto rIter = top_order.rbegin(); rIter != top_order.crend(); r_iter++) {
-        longestPath[*r_iter] = graph.vertex_work_weight(*r_iter);
+        longestPath[*r_iter] = graph.VertexWorkWeight(*r_iter);
         if (graph.out_degree(*r_iter) > 0) {
             workweight_type max = 0;
             for (const auto &child : graph.children(*r_iter)) {
@@ -156,8 +156,8 @@ RETURN_STATUS SubproblemMultiScheduling<GraphT>::ComputeMultiSchedule(const BspI
 
             processors_to_node[node].insert(proc);
             proc_task_lists[proc].push_back(node);
-            finishTimes.emplace(time + G.vertex_work_weight(node), node);
-            node_finish_time[node] = time + G.vertex_work_weight(node);
+            finishTimes.emplace(time + G.VertexWorkWeight(node), node);
+            node_finish_time[node] = time + G.VertexWorkWeight(node);
             last_node_on_proc[proc] = node;
             free_procs.erase(proc);
             readySet.erase({-longest_outgoing_path[node], node});
@@ -173,7 +173,7 @@ RETURN_STATUS SubproblemMultiScheduling<GraphT>::ComputeMultiSchedule(const BspI
             while (itrLatest != finishTimes.rend() && itr_latest->first + 0.0001 > lastFinishTime) {
                 vertex_idx node = itr_latest->second;
                 double newFinishTime = time
-                                       + static_cast<double>(g.vertex_work_weight(node))
+                                       + static_cast<double>(g.VertexWorkWeight(node))
                                              / (static_cast<double>(processors_to_node[node].size()) + 1);
                 if (newFinishTime + 0.0001 < itr_latest->first) {
                     possible_nodes.emplace(-longest_outgoing_path[node], node);
@@ -190,8 +190,7 @@ RETURN_STATUS SubproblemMultiScheduling<GraphT>::ComputeMultiSchedule(const BspI
                 proc_task_lists[proc].push_back(node);
                 finishTimes.erase({node_finish_time[node], node});
                 double new_finish_time
-                    = time
-                      + static_cast<double>(G.vertex_work_weight(node)) / (static_cast<double>(processors_to_node[node].size()));
+                    = time + static_cast<double>(G.VertexWorkWeight(node)) / (static_cast<double>(processors_to_node[node].size()));
                 finishTimes.emplace(new_finish_time, node);
                 node_finish_time[node] = new_finish_time;
                 last_node_on_proc[proc] = node;

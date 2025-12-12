@@ -47,9 +47,9 @@ void ComputeLazyCommunicationCosts(const BspInstance<GraphT> &instance,
             if (stepNeeded[proc] < numberOfSupersteps) {
                 send[nodeToProcessorAssignment[node]][stepNeeded[proc] - staleness]
                     += instance.sendCosts(nodeToProcessorAssignment[node], proc)
-                       * instance.getComputationalDag().vertex_comm_weight(node);
+                       * instance.getComputationalDag().VertexCommWeight(node);
                 rec[proc][stepNeeded[proc] - staleness] += instance.sendCosts(nodeToProcessorAssignment[node], proc)
-                                                           * instance.getComputationalDag().vertex_comm_weight(node);
+                                                           * instance.getComputationalDag().VertexCommWeight(node);
             }
         }
     }

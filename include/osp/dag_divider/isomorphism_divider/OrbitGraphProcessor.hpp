@@ -230,8 +230,8 @@ class OrbitGraphProcessor {
                         continue;
                     }
 
-                    const v_workw_t<Constr_Graph_t> uWorkWeight = currentCoarseGraph.vertex_work_weight(u);
-                    const v_workw_t<Constr_Graph_t> vWorkWeight = currentCoarseGraph.vertex_work_weight(v);
+                    const v_workw_t<Constr_Graph_t> uWorkWeight = currentCoarseGraph.VertexWorkWeight(u);
+                    const v_workw_t<Constr_Graph_t> vWorkWeight = currentCoarseGraph.VertexWorkWeight(v);
                     const v_workw_t<Constr_Graph_t> vThreshold
                         = work_threshold * static_cast<v_workw_t<Constr_Graph_t>>(currentGroups[v].size());
                     const v_workw_t<Constr_Graph_t> uThreshold
@@ -473,9 +473,9 @@ class OrbitGraphProcessor {
                 }
 
                 const bool uIsSignificant = (uSize >= minSymmetry_)
-                                            && (currentCoarseGraph.vertex_work_weight(u) > lock_threshold_per_type[u_type]);
+                                            && (currentCoarseGraph.VertexWorkWeight(u) > lock_threshold_per_type[u_type]);
                 const bool vIsSignificant = (vSize >= minSymmetry_)
-                                            && (currentCoarseGraph.vertex_work_weight(v) > lock_threshold_per_type[v_type]);
+                                            && (currentCoarseGraph.VertexWorkWeight(v) > lock_threshold_per_type[v_type]);
 
                 if (uIsSignificant && vIsSignificant) {
                     // Both are significant ---
@@ -616,7 +616,7 @@ class OrbitGraphProcessor {
 
             v_workw_t<Graph_t> orbit_work = 0;
             for (const auto v : vertices) {
-                orbit_work += dag.vertex_work_weight(v);
+                orbit_work += dag.VertexWorkWeight(v);
             }
 
             if (not merge_different_node_types_ && HasTypedVerticesV<Graph_t>) {

@@ -65,7 +65,7 @@ void WriteComputationalDagHyperdagFormatDb(std::ostream &os, const GraphT &graph
     }
     for (unsigned i = 0; i < numHyperedges; ++i) {
         const auto u = hyperedge_idx_to_node[i];
-        os << i << " " << graph.vertex_comm_weight(u) << " " << graph.vertex_mem_weight(u) << "\n";
+        os << i << " " << graph.VertexCommWeight(u) << " " << graph.VertexMemWeight(u) << "\n";
     }
 
     // Vertices
@@ -73,7 +73,7 @@ void WriteComputationalDagHyperdagFormatDb(std::ostream &os, const GraphT &graph
         os << "%% Vertices: ID work_weight type\n";
     }
     for (const auto &u : graph.vertices()) {
-        os << u << " " << graph.vertex_work_weight(u);
+        os << u << " " << graph.VertexWorkWeight(u);
         if constexpr (HasTypedVerticesV<Graph_t>) {
             os << " " << graph.VertexType(u);
         } else {

@@ -345,7 +345,7 @@ class IsomorphicSubgraphScheduler {
             for (const auto &subgraph : group.subgraphs) {
                 for (const auto &vertex : subgraph) {
                     contractionMap[vertex] = static_cast<vertex_idx_t<Constr_Graph_t>>(coarseNodeIdx);
-                    const auto vertexWork = originalInstance.getComputationalDag().vertex_work_weight(vertex);
+                    const auto vertexWork = originalInstance.getComputationalDag().VertexWorkWeight(vertex);
                     const auto vertexType = originalInstance.getComputationalDag().VertexType(vertex);
                     for (unsigned j = 0; j < numProcTypes; ++j) {
                         if (originalInstance.isCompatibleType(vertexType, j)) {
@@ -367,7 +367,7 @@ class IsomorphicSubgraphScheduler {
                 std::cout << "  - Coarse Node " << j << " (from " << isomorphicGroups[j].subgraphs.size()
                           << " isomorphic subgraphs):\n";
                 std::cout << "    - Multiplicity for scheduling: " << result.multiplicities[j] << "\n";
-                std::cout << "    - Total Work (in coarse graph): " << result.instance.getComputationalDag().vertex_work_weight(j)
+                std::cout << "    - Total Work (in coarse graph): " << result.instance.getComputationalDag().VertexWorkWeight(j)
                           << "\n";
                 std::cout << "    - Required Processor Types: ";
                 for (unsigned k = 0; k < numProcTypes; ++k) {

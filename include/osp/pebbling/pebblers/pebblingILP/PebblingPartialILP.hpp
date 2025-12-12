@@ -379,11 +379,9 @@ GraphT PebblingPartialILP<GraphT>::ContractByPartition(const BspInstance<GraphT>
             }
         }
 
-        contracted.set_vertex_work_weight(node_new_index,
-                                          contracted.vertex_work_weight(node_new_index) + g.vertex_work_weight(node));
-        contracted.set_vertex_comm_weight(node_new_index,
-                                          contracted.vertex_comm_weight(node_new_index) + g.vertex_comm_weight(node));
-        contracted.set_vertex_mem_weight(node_new_index, contracted.vertex_mem_weight(node_new_index) + g.vertex_mem_weight(node));
+        contracted.SetVertexWorkWeight(node_new_index, contracted.VertexWorkWeight(node_new_index) + g.VertexWorkWeight(node));
+        contracted.SetVertexCommWeight(node_new_index, contracted.VertexCommWeight(node_new_index) + g.VertexCommWeight(node));
+        contracted.SetVertexMemWeight(node_new_index, contracted.VertexMemWeight(node_new_index) + g.VertexMemWeight(node));
         contracted.SetVertexType(node_new_index, g.VertexType(node));
     }
 

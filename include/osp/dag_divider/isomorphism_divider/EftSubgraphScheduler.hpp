@@ -122,7 +122,7 @@ class EftSubgraphScheduler {
             } else {
                 job.status = JobStatus::WAITING;
             }
-            job.total_work = graph.vertex_work_weight(idx);
+            job.total_work = graph.VertexWorkWeight(idx);
             job.max_num_procs
                 = std::min(max_num_procs[idx],
                            static_cast<unsigned>((job.total_work + min_work_per_processor_ - 1) / min_work_per_processor_));
@@ -151,7 +151,7 @@ class EftSubgraphScheduler {
             }
 
             Job &job = jobs_.at(vertex);
-            job.upwardRank_ = graph.vertex_work_weight(vertex) + max_successor_rank;
+            job.upwardRank_ = graph.VertexWorkWeight(vertex) + max_successor_rank;
         }
     }
 

@@ -52,9 +52,9 @@ class DotFileWriter {
 
         void operator()(std::ostream &out, const vertex_idx_t<Graph_t> &i) const {
             out << i << " ["
-                << "work_weight=\"" << schedule_.getInstance().getComputationalDag().vertex_work_weight(i) << "\";"
-                << "comm_weight=\"" << schedule_.getInstance().getComputationalDag().vertex_comm_weight(i) << "\";"
-                << "mem_weight=\"" << schedule_.getInstance().getComputationalDag().vertex_mem_weight(i) << "\";";
+                << "work_weight=\"" << schedule_.getInstance().getComputationalDag().VertexWorkWeight(i) << "\";"
+                << "comm_weight=\"" << schedule_.getInstance().getComputationalDag().VertexCommWeight(i) << "\";"
+                << "mem_weight=\"" << schedule_.getInstance().getComputationalDag().VertexMemWeight(i) << "\";";
 
             if constexpr (HasTypedVerticesV<Graph_t>) {
                 out << "type=\"" << schedule_.getInstance().getComputationalDag().VertexType(i) << "\";";
@@ -75,9 +75,9 @@ class DotFileWriter {
 
         void operator()(std::ostream &out, const vertex_idx_t<Graph_t> &i) const {
             out << i << " ["
-                << "work_weight=\"" << schedule_.getInstance().getComputationalDag().vertex_work_weight(i) << "\";"
-                << "comm_weight=\"" << schedule_.getInstance().getComputationalDag().vertex_comm_weight(i) << "\";"
-                << "mem_weight=\"" << schedule_.getInstance().getComputationalDag().vertex_mem_weight(i) << "\";";
+                << "work_weight=\"" << schedule_.getInstance().getComputationalDag().VertexWorkWeight(i) << "\";"
+                << "comm_weight=\"" << schedule_.getInstance().getComputationalDag().VertexCommWeight(i) << "\";"
+                << "mem_weight=\"" << schedule_.getInstance().getComputationalDag().VertexMemWeight(i) << "\";";
 
             if constexpr (HasTypedVerticesV<Graph_t>) {
                 out << "type=\"" << schedule_.getInstance().getComputationalDag().VertexType(i) << "\";";
@@ -132,8 +132,8 @@ class DotFileWriter {
 
         template <class VertexOrEdge>
         void operator()(std::ostream &out, const VertexOrEdge &i) const {
-            out << i << " [" << "label=\"" << name_[i] << "\";" << "work_weight=\"" << graph_.vertex_work_weight(i) << "\";"
-                << "comm_weight=\"" << graph_.vertex_comm_weight(i) << "\";" << "mem_weight=\"" << graph_.vertex_mem_weight(i)
+            out << i << " [" << "label=\"" << name_[i] << "\";" << "work_weight=\"" << graph_.VertexWorkWeight(i) << "\";"
+                << "comm_weight=\"" << graph_.VertexCommWeight(i) << "\";" << "mem_weight=\"" << graph_.VertexMemWeight(i)
                 << "\";" << "proc=\"" << nodeToProc_[i] << "\";" << "superstep=\"" << nodeToSuperstep_[i] << "\";";
 
             out << "]";
@@ -148,9 +148,9 @@ class DotFileWriter {
 
         void operator()(std::ostream &out, const vertex_idx_t<Graph_t> &i) const {
             out << i << " ["
-                << "work_weight=\"" << schedule_.getInstance().getComputationalDag().vertex_work_weight(i) << "\";"
-                << "comm_weight=\"" << schedule_.getInstance().getComputationalDag().vertex_comm_weight(i) << "\";"
-                << "mem_weight=\"" << schedule_.getInstance().getComputationalDag().vertex_mem_weight(i) << "\";";
+                << "work_weight=\"" << schedule_.getInstance().getComputationalDag().VertexWorkWeight(i) << "\";"
+                << "comm_weight=\"" << schedule_.getInstance().getComputationalDag().VertexCommWeight(i) << "\";"
+                << "mem_weight=\"" << schedule_.getInstance().getComputationalDag().VertexMemWeight(i) << "\";";
 
             if constexpr (HasTypedVerticesV<Graph_t>) {
                 out << "type=\"" << schedule_.getInstance().getComputationalDag().VertexType(i) << "\";";
@@ -190,9 +190,9 @@ class DotFileWriter {
 
         void operator()(std::ostream &out, const vertex_idx_t<Graph_t> &i) const {
             out << i << " ["
-                << "work_weight=\"" << graph_.vertex_work_weight(i) << "\";"
-                << "comm_weight=\"" << graph_.vertex_comm_weight(i) << "\";"
-                << "mem_weight=\"" << graph_.vertex_mem_weight(i) << "\";";
+                << "work_weight=\"" << graph_.VertexWorkWeight(i) << "\";"
+                << "comm_weight=\"" << graph_.VertexCommWeight(i) << "\";"
+                << "mem_weight=\"" << graph_.VertexMemWeight(i) << "\";";
 
             if constexpr (HasTypedVerticesV<Graph_t>) {
                 out << "type=\"" << graph_.VertexType(i) << "\";";
@@ -243,9 +243,9 @@ class DotFileWriter {
                 out << i << " [style=filled;fillcolor=" << color << ";";
             }
 
-            out << "work_weight=\"" << graph_.vertex_work_weight(i) << "\";"
-                << "comm_weight=\"" << graph_.vertex_comm_weight(i) << "\";"
-                << "mem_weight=\"" << graph_.vertex_mem_weight(i) << "\";";
+            out << "work_weight=\"" << graph_.VertexWorkWeight(i) << "\";"
+                << "comm_weight=\"" << graph_.VertexCommWeight(i) << "\";"
+                << "mem_weight=\"" << graph_.VertexMemWeight(i) << "\";";
 
             if constexpr (HasTypedVerticesV<Graph_t>) {
                 out << "type=\"" << graph_.VertexType(i) << "\";shape=\""
@@ -374,8 +374,7 @@ class DotFileWriter {
 
         for (const auto &node : g.vertices()) {
             if (schedule.assignments(node).size() == 1) {
-                g2.add_vertex(
-                    g.vertex_work_weight(node), g.vertex_comm_weight(node), g.vertex_mem_weight(node), g.VertexType(node));
+                g2.add_vertex(g.VertexWorkWeight(node), g.VertexCommWeight(node), g.VertexMemWeight(node), g.VertexType(node));
 
                 names[idxNew] = std::to_string(node);
                 nodeToProc[idxNew] = schedule.assignments(node)[0].first;
@@ -387,8 +386,7 @@ class DotFileWriter {
             } else {
                 std::vector<size_t> idxs;
                 for (unsigned i = 0; i < schedule.assignments(node).size(); ++i) {
-                    g2.add_vertex(
-                        g.vertex_work_weight(node), g.vertex_comm_weight(node), g.vertex_mem_weight(node), g.VertexType(node));
+                    g2.add_vertex(g.VertexWorkWeight(node), g.VertexCommWeight(node), g.VertexMemWeight(node), g.VertexType(node));
 
                     names[idxNew] = std::to_string(node).append("_").append(std::to_string(i));
                     nodeToProc[idxNew] = schedule.assignments(node)[i].first;

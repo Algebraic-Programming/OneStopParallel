@@ -46,9 +46,9 @@ namespace osp {
  * @brief Concept to check if a graph has vertex weights.
  *
  * Requires validation of:
- * - `vertex_work_weight(v)`: Returns arithmetic type.
- * - `vertex_comm_weight(v)`: Returns arithmetic type.
- * - `vertex_mem_weight(v)`: Returns arithmetic type.
+ * - `VertexWorkWeight(v)`: Returns arithmetic type.
+ * - `VertexCommWeight(v)`: Returns arithmetic type.
+ * - `VertexMemWeight(v)`: Returns arithmetic type.
  *
  * @tparam T The graph type.
  */

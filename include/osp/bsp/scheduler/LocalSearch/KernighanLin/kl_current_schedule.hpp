@@ -273,7 +273,7 @@ class KlCurrentSchedule {
                 step_processor_work[step][proc] = 0;
 
                 for (const auto &node : setSchedule_.step_processor_vertices[step][proc]) {
-                    step_processor_work[step][proc] += instance->getComputationalDag().vertex_work_weight(node);
+                    step_processor_work[step][proc] += instance->getComputationalDag().VertexWorkWeight(node);
                 }
 
                 if (step_processor_work[step][proc] > step_max_work[step]) {
@@ -330,8 +330,8 @@ class KlCurrentSchedule {
 
         currentCost_ += move.change_in_cost;
 
-        step_processor_work[move.to_step][move.to_proc] += instance->getComputationalDag().vertex_work_weight(move.node);
-        step_processor_work[move.from_step][move.from_proc] -= instance->getComputationalDag().vertex_work_weight(move.node);
+        step_processor_work[move.to_step][move.to_proc] += instance->getComputationalDag().VertexWorkWeight(move.node);
+        step_processor_work[move.from_step][move.from_proc] -= instance->getComputationalDag().VertexWorkWeight(move.node);
 
         UpdateMaxWorkDatastructures(move);
         update_violations(move.node);

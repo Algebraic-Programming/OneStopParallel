@@ -83,7 +83,7 @@ int main(int argc, char *argv[]) {
 
     // for (const auto &vertex : graph.vertices()) {
 
-    //     graph.set_vertex_work_weight(vertex, graph.vertex_work_weight(vertex) * 80);
+    //     graph.SetVertexWorkWeight(vertex, graph.VertexWorkWeight(vertex) * 80);
     // }
 
     CoptFullScheduler<ComputationalDag> scheduler;

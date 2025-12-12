@@ -67,7 +67,7 @@ class SequenceGenerator {
         for (size_t i = 0; i < level_sets_.size(); ++i) {
             double levelWork = 0.0;
             for (const auto &vertex : level_sets_[i]) {
-                level_work += dag_.vertex_work_weight(vertex);
+                level_work += dag_.VertexWorkWeight(vertex);
             }
             cumulativeWork += levelWork;
             seq.push_back(cumulativeWork / (static_cast<double>(i) + 1.0));

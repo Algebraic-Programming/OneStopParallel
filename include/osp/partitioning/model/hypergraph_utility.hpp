@@ -119,8 +119,8 @@ HypergraphT ConvertFromCdagAsDag(const GraphT &dag) {
 
     HypergraphT hgraph(dag.NumVertices(), 0);
     for (const auto &node : dag.vertices()) {
-        hgraph.set_vertex_work_weight(node, dag.vertex_work_weight(node));
-        hgraph.set_vertex_memory_weight(node, dag.vertex_mem_weight(node));
+        hgraph.SetVertexWorkWeight(node, dag.VertexWorkWeight(node));
+        hgraph.set_vertex_memory_weight(node, dag.VertexMemWeight(node));
         for (const auto &child : dag.children(node)) {
             if constexpr (HasEdgeWeightsV<Graph_t>) {
                 hgraph.add_hyperedge({node, child}, dag.edge_comm_weight(edge_desc(node, child, dag).first));
@@ -147,8 +147,8 @@ HypergraphT ConvertFromCdagAsHyperdag(const GraphT &dag) {
 
     HypergraphT hgraph(dag.NumVertices(), 0);
     for (const auto &node : dag.vertices()) {
-        hgraph.set_vertex_work_weight(node, dag.vertex_work_weight(node));
-        hgraph.set_vertex_memory_weight(node, dag.vertex_mem_weight(node));
+        hgraph.SetVertexWorkWeight(node, dag.VertexWorkWeight(node));
+        hgraph.set_vertex_memory_weight(node, dag.VertexMemWeight(node));
         if (dag.out_degree(node) == 0) {
             continue;
         }
@@ -156,7 +156,7 @@ HypergraphT ConvertFromCdagAsHyperdag(const GraphT &dag) {
         for (const auto &child : dag.children(node)) {
             newHyperedge.push_back(child);
         }
-        hgraph.add_hyperedge(newHyperedge, dag.vertex_comm_weight(node));
+        hgraph.add_hyperedge(newHyperedge, dag.VertexCommWeight(node));
     }
     return hgraph;
 }

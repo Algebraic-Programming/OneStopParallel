@@ -229,7 +229,7 @@ struct MaxCommDatastructure {
         const unsigned toStep = move.to_step;
         const unsigned fromProc = move.from_proc;
         const unsigned toProc = move.to_proc;
-        const comm_weight_t commWNode = graph.vertex_comm_weight(node);
+        const comm_weight_t commWNode = graph.VertexCommWeight(node);
 
         // Handle Node Movement (Outgoing Edges: Node -> Children)
 
@@ -288,7 +288,7 @@ struct MaxCommDatastructure {
             }
 
             const unsigned parent_proc = active_schedule->assigned_processor(parent);
-            const comm_weight_t comm_w_parent = graph.vertex_comm_weight(parent);
+            const comm_weight_t comm_w_parent = graph.VertexCommWeight(parent);
 
             auto &val = node_lambda_map.get_proc_entry(parent, from_proc);
             const bool removed_from_proc = CommPolicy::remove_child(val, from_step);
@@ -352,7 +352,7 @@ struct MaxCommDatastructure {
             node_lambda_map.reset_node(u);
             const unsigned uProc = vecSched.assignedProcessor(u);
             const unsigned uStep = vecSched.assignedSuperstep(u);
-            const comm_weight_t commW = graph.vertex_comm_weight(u);
+            const comm_weight_t commW = graph.VertexCommWeight(u);
             max_comm_weight = std::max(max_comm_weight, comm_w);
 
             for (const auto &v : graph.children(u)) {

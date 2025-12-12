@@ -54,7 +54,7 @@ class AbstractWavefrontDivider : public IDagDivider<GraphT> {
         union_find_universe_t<Graph_t> uf;
         for (size_t i = startLevel; i < endLevel; ++i) {
             for (const auto vertex : level_sets[i]) {
-                uf.add_object(vertex, dag_ptr_->vertex_work_weight(vertex), dag_ptr_->vertex_mem_weight(vertex));
+                uf.add_object(vertex, dag_ptr_->VertexWorkWeight(vertex), dag_ptr_->VertexMemWeight(vertex));
             }
             for (const auto &node : level_sets[i]) {
                 for (const auto &child : dag_ptr_->children(node)) {

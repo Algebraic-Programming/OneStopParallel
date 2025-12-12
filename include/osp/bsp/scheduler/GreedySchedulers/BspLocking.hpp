@@ -84,7 +84,7 @@ class BspLocking : public Scheduler<GraphT> {
         const std::vector<VertexType> topOrder = GetTopOrder(graph);
 
         for (auto rIter = top_order.rbegin(); rIter != top_order.crend(); r_iter++) {
-            longestPath[*r_iter] = graph.vertex_work_weight(*r_iter);
+            longestPath[*r_iter] = graph.VertexWorkWeight(*r_iter);
             if (graph.out_degree(*r_iter) > 0) {
                 v_workw_t<Graph_t> max = 0;
                 for (const auto &child : graph.children(*r_iter)) {
@@ -167,7 +167,7 @@ class BspLocking : public Scheduler<GraphT> {
 
                 // filling up
                 bool procreadyEmpty = false;
-                while (endSupStep && (remaining_time < instance.getComputationalDag().vertex_work_weight(top_node))) {
+                while (endSupStep && (remaining_time < instance.getComputationalDag().VertexWorkWeight(top_node))) {
                     procReady[proc].erase(top_node);
                     readyPhase_[top_node] = std::numeric_limits<unsigned>::max();
                     max_proc_score_heap[proc].pop();
@@ -203,7 +203,7 @@ class BspLocking : public Scheduler<GraphT> {
 
             // filling up
             bool allProcreadyEmpty = false;
-            while (endSupStep && (remaining_time < instance.getComputationalDag().vertex_work_weight(top_node))) {
+            while (endSupStep && (remaining_time < instance.getComputationalDag().VertexWorkWeight(top_node))) {
                 allReady.erase(top_node);
                 for (unsigned procDel = 0; procDel < instance.numberOfProcessors(); procDel++) {
                     if (procDel == proc || !instance.isCompatible(top_node, procDel)) {
@@ -530,7 +530,7 @@ class BspLocking : public Scheduler<GraphT> {
                     }
                 }
 
-                finishTimes.emplace(time + g.vertex_work_weight(nextNode), nextNode);
+                finishTimes.emplace(time + g.VertexWorkWeight(nextNode), nextNode);
                 procFree[nextProc] = false;
                 --free;
 

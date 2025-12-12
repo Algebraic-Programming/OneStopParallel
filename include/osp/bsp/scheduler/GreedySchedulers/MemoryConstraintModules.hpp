@@ -77,12 +77,12 @@ struct LocalMemoryConstraint {
     }
 
     inline bool CanAdd(const vertex_idx_t<Graph_t> &v, const unsigned proc) const {
-        return current_proc_memory[proc] + instance->getComputationalDag().vertex_mem_weight(v)
+        return current_proc_memory[proc] + instance->getComputationalDag().VertexMemWeight(v)
                <= instance->getArchitecture().memoryBound(proc);
     }
 
     inline void Add(const vertex_idx_t<Graph_t> &v, const unsigned proc) {
-        current_proc_memory[proc] += instance->getComputationalDag().vertex_mem_weight(v);
+        current_proc_memory[proc] += instance->getComputationalDag().VertexMemWeight(v);
     }
 
     inline bool CanAdd(const unsigned proc, const v_memw_t<Graph_t> &customMemWeight, const v_memw_t<Graph_t> &) const {
@@ -133,15 +133,15 @@ struct PersistentTransientMemoryConstraint {
     }
 
     inline bool CanAdd(const vertex_idx_t<Graph_t> &v, const unsigned proc) const {
-        return (current_proc_persistent_memory[proc] + instance->getComputationalDag().vertex_mem_weight(v)
-                    + std::max(current_proc_transient_memory[proc], instance->getComputationalDag().vertex_comm_weight(v))
+        return (current_proc_persistent_memory[proc] + instance->getComputationalDag().VertexMemWeight(v)
+                    + std::max(current_proc_transient_memory[proc], instance->getComputationalDag().VertexCommWeight(v))
                 <= instance->getArchitecture().memoryBound(proc));
     }
 
     inline void Add(const vertex_idx_t<Graph_t> &v, const unsigned proc) {
-        current_proc_persistent_memory[proc] += instance->getComputationalDag().vertex_mem_weight(v);
+        current_proc_persistent_memory[proc] += instance->getComputationalDag().VertexMemWeight(v);
         current_proc_transient_memory[proc]
-            = std::max(current_proc_transient_memory[proc], instance->getComputationalDag().vertex_comm_weight(v));
+            = std::max(current_proc_transient_memory[proc], instance->getComputationalDag().VertexCommWeight(v));
     }
 
     inline bool CanAdd(const unsigned proc,
@@ -180,12 +180,12 @@ struct GlobalMemoryConstraint {
     }
 
     inline bool CanAdd(const vertex_idx_t<Graph_t> &v, const unsigned proc) const {
-        return current_proc_memory[proc] + instance->getComputationalDag().vertex_mem_weight(v)
+        return current_proc_memory[proc] + instance->getComputationalDag().VertexMemWeight(v)
                <= instance->getArchitecture().memoryBound(proc);
     }
 
     inline void Add(const vertex_idx_t<Graph_t> &v, const unsigned proc) {
-        current_proc_memory[proc] += instance->getComputationalDag().vertex_mem_weight(v);
+        current_proc_memory[proc] += instance->getComputationalDag().VertexMemWeight(v);
     }
 
     inline bool CanAdd(const unsigned proc, const v_memw_t<Graph_t> &customMemWeight, const v_commw_t<Graph_t> &) const {
@@ -243,12 +243,12 @@ struct LocalInOutMemoryConstraint {
 
     inline bool CanAdd(const vertex_idx_t<Graph_t> &v, const unsigned proc) const {
         v_memw_t<Graph_t> incMemory
-            = instance_->getComputationalDag().vertex_mem_weight(v) + instance_->getComputationalDag().vertex_comm_weight(v);
+            = instance_->getComputationalDag().VertexMemWeight(v) + instance_->getComputationalDag().VertexCommWeight(v);
 
         for (const auto &pred : instance->getComputationalDag().parents(v)) {
             if (schedule->assignedProcessor(pred) == schedule->assignedProcessor(v)
                 && schedule->assignedSuperstep(pred) == *current_superstep) {
-                inc_memory -= instance->getComputationalDag().vertex_comm_weight(pred);
+                inc_memory -= instance->getComputationalDag().VertexCommWeight(pred);
             }
         }
 
@@ -257,12 +257,12 @@ struct LocalInOutMemoryConstraint {
 
     inline void Add(const vertex_idx_t<Graph_t> &v, const unsigned proc) {
         current_proc_memory[proc]
-            += instance->getComputationalDag().vertex_mem_weight(v) + instance->getComputationalDag().vertex_comm_weight(v);
+            += instance->getComputationalDag().VertexMemWeight(v) + instance->getComputationalDag().VertexCommWeight(v);
 
         for (const auto &pred : instance->getComputationalDag().parents(v)) {
             if (schedule->assignedProcessor(pred) == schedule->assignedProcessor(v)
                 && schedule->assignedSuperstep(pred) == *current_superstep) {
-                current_proc_memory[proc] -= instance->getComputationalDag().vertex_comm_weight(pred);
+                current_proc_memory[proc] -= instance->getComputationalDag().VertexCommWeight(pred);
             }
         }
     }
@@ -298,12 +298,12 @@ struct LocalIncEdgesMemoryConstraint {
     }
 
     inline bool CanAdd(const vertex_idx_t<Graph_t> &v, const unsigned proc) const {
-        v_commw_t<Graph_t> incMemory = instance_->getComputationalDag().vertex_comm_weight(v);
+        v_commw_t<Graph_t> incMemory = instance_->getComputationalDag().VertexCommWeight(v);
 
         for (const auto &pred : instance->getComputationalDag().parents(v)) {
             if (schedule->assignedSuperstep(pred) != *current_superstep
                 && current_proc_predec[proc].find(pred) == current_proc_predec[proc].end()) {
-                inc_memory += instance->getComputationalDag().vertex_comm_weight(pred);
+                inc_memory += instance->getComputationalDag().VertexCommWeight(pred);
             }
         }
 
@@ -311,13 +311,13 @@ struct LocalIncEdgesMemoryConstraint {
     }
 
     inline void Add(const vertex_idx_t<Graph_t> &v, const unsigned proc) {
-        current_proc_memory[proc] += instance->getComputationalDag().vertex_comm_weight(v);
+        current_proc_memory[proc] += instance->getComputationalDag().VertexCommWeight(v);
 
         for (const auto &pred : instance->getComputationalDag().parents(v)) {
             if (schedule->assignedSuperstep(pred) != *current_superstep) {
                 const auto pair = current_proc_predec[proc].insert(pred);
                 if (pair.second) {
-                    current_proc_memory[proc] += instance->getComputationalDag().vertex_comm_weight(pred);
+                    current_proc_memory[proc] += instance->getComputationalDag().VertexCommWeight(pred);
                 }
             }
         }
@@ -363,13 +363,13 @@ struct LocalSourcesIncEdgesMemoryConstraint {
         v_memw_t<Graph_t> incMemory = 0;
 
         if (is_source(v, instance_->getComputationalDag())) {
-            incMemory += instance_->getComputationalDag().vertex_mem_weight(v);
+            incMemory += instance_->getComputationalDag().VertexMemWeight(v);
         }
 
         for (const auto &pred : instance->getComputationalDag().parents(v)) {
             if (schedule->assignedSuperstep(v) != *current_superstep
                 && current_proc_predec[proc].find(pred) == current_proc_predec[proc].end()) {
-                inc_memory += instance->getComputationalDag().vertex_comm_weight(pred);
+                inc_memory += instance->getComputationalDag().VertexCommWeight(pred);
             }
         }
 
@@ -378,14 +378,14 @@ struct LocalSourcesIncEdgesMemoryConstraint {
 
     inline void Add(const vertex_idx_t<Graph_t> &v, const unsigned proc) {
         if (is_source(v, instance_->getComputationalDag())) {
-            current_proc_memory[proc] += instance->getComputationalDag().vertex_mem_weight(v);
+            current_proc_memory[proc] += instance->getComputationalDag().VertexMemWeight(v);
         }
 
         for (const auto &pred : instance->getComputationalDag().parents(v)) {
             if (schedule->assignedSuperstep(pred) != *current_superstep) {
                 const auto pair = current_proc_predec[proc].insert(pred);
                 if (pair.second) {
-                    current_proc_memory[proc] += instance->getComputationalDag().vertex_comm_weight(pred);
+                    current_proc_memory[proc] += instance->getComputationalDag().VertexCommWeight(pred);
                 }
             }
         }

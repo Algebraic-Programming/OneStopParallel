@@ -60,9 +60,9 @@ class KlTotal : public KlBase<GraphT, MemoryConstraintT> {
                 continue;
             }
 
-            maxEdgeWeight = std::max(max_edge_weight_, currentSchedule_.instance->getComputationalDag().vertex_comm_weight(vertex));
+            maxEdgeWeight = std::max(max_edge_weight_, currentSchedule_.instance->getComputationalDag().VertexCommWeight(vertex));
 
-            maxNodeWeight = std::max(max_node_weight_, currentSchedule_.instance->getComputationalDag().vertex_work_weight(vertex));
+            maxNodeWeight = std::max(max_node_weight_, currentSchedule_.instance->getComputationalDag().VertexWorkWeight(vertex));
         }
 
         if constexpr (not currentSchedule_.use_node_communication_costs) {
@@ -112,7 +112,7 @@ class KlTotal : public KlBase<GraphT, MemoryConstraintT> {
                 for (const auto &source : currentSchedule_.instance->getComputationalDag().parents(node)) {
                     if (currentSchedule_.vector_schedule.assignedProcessor(node)
                         != currentSchedule_.vector_schedule.assignedProcessor(source)) {
-                        if (current_schedule.instance->getComputationalDag().vertex_comm_weight(node)
+                        if (current_schedule.instance->getComputationalDag().VertexCommWeight(node)
                             > node_comm_selection_threshold) {
                             KlBase<GraphT, MemoryConstraintT>::node_selection.insert(node);
                             break;
@@ -123,7 +123,7 @@ class KlTotal : public KlBase<GraphT, MemoryConstraintT> {
                 for (const auto &target : currentSchedule_.instance->getComputationalDag().children(node)) {
                     if (currentSchedule_.vector_schedule.assignedProcessor(node)
                         != currentSchedule_.vector_schedule.assignedProcessor(target)) {
-                        if (current_schedule.instance->getComputationalDag().vertex_comm_weight(node)
+                        if (current_schedule.instance->getComputationalDag().VertexCommWeight(node)
                             > node_comm_selection_threshold) {
                             KlBase<GraphT, MemoryConstraintT>::node_selection.insert(node);
                             break;

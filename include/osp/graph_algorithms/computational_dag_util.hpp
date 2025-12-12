@@ -59,18 +59,17 @@ VWorkwT<GraphT> SumOfVerticesWorkWeights(VertexIterator begin, VertexIterator en
     static_assert(HasVertexWeightsV<GraphT>, "Graph_t must have vertex weights");
 
     return std::accumulate(
-        begin, end, 0, [&](const auto sum, const VertexIdxT<GraphT> &v) { return sum + graph.vertex_work_weight(v); });
+        begin, end, 0, [&](const auto sum, const VertexIdxT<GraphT> &v) { return sum + graph.VertexWorkWeight(v); });
 }
 
 template <typename GraphT>
 VWorkwT<GraphT> SumOfVerticesWorkWeights(const GraphT &graph) {
     static_assert(HasVertexWeightsV<GraphT>, "Graph_t must have vertex weights");
 
-    return std::accumulate(
-        graph.vertices().begin(),
-        graph.vertices().end(),
-        static_cast<VWorkwT<GraphT>>(0),
-        [&](const VWorkwT<GraphT> sum, const VertexIdxT<GraphT> &v) { return sum + graph.vertex_work_weight(v); });
+    return std::accumulate(graph.vertices().begin(),
+                           graph.vertices().end(),
+                           static_cast<VWorkwT<GraphT>>(0),
+                           [&](const VWorkwT<GraphT> sum, const VertexIdxT<GraphT> &v) { return sum + graph.VertexWorkWeight(v); });
 }
 
 template <typename GraphT>
@@ -82,7 +81,7 @@ template <typename VertexIterator, typename GraphT>
 VCommwT<GraphT> SumOfVerticesCommunicationWeights(VertexIterator begin, VertexIterator end, const GraphT &graph) {
     static_assert(HasVertexWeightsV<GraphT>, "Graph_t must have vertex weights");
     return std::accumulate(
-        begin, end, 0, [&](const auto sum, const VertexIdxT<GraphT> &v) { return sum + graph.vertex_comm_weight(v); });
+        begin, end, 0, [&](const auto sum, const VertexIdxT<GraphT> &v) { return sum + graph.VertexCommWeight(v); });
 }
 
 /**
@@ -98,7 +97,7 @@ VWorkwT<SubGraphT> SumOfCompatibleWorkWeights(
     return std::accumulate(
         begin, end, static_cast<VWorkwT<SubGraphT>>(0), [&](const VWorkwT<SubGraphT> sum, const VertexIdxT<SubGraphT> &v) {
             if (mainInstance.isCompatibleType(graph.VertexType(v), processorType)) {
-                return sum + graph.vertex_work_weight(v);
+                return sum + graph.VertexWorkWeight(v);
             }
             return sum;
         });
@@ -116,11 +115,10 @@ template <typename GraphT>
 VCommwT<GraphT> SumOfVerticesCommunicationWeights(const GraphT &graph) {
     static_assert(HasVertexWeightsV<GraphT>, "Graph_t must have vertex weights");
 
-    return std::accumulate(
-        graph.vertices().begin(),
-        graph.vertices().end(),
-        static_cast<VCommwT<GraphT>>(0),
-        [&](const VCommwT<GraphT> sum, const VertexIdxT<GraphT> &v) { return sum + graph.vertex_comm_weight(v); });
+    return std::accumulate(graph.vertices().begin(),
+                           graph.vertices().end(),
+                           static_cast<VCommwT<GraphT>>(0),
+                           [&](const VCommwT<GraphT> sum, const VertexIdxT<GraphT> &v) { return sum + graph.VertexCommWeight(v); });
 }
 
 template <typename GraphT>
@@ -159,7 +157,7 @@ VWorkwT<GraphT> CriticalPathWeight(const GraphT &graph) {
             maxTemp = std::max(maxTemp, topLength[parent]);
         }
 
-        topLength[node] = maxTemp + graph.vertex_work_weight(node);
+        topLength[node] = maxTemp + graph.VertexWorkWeight(node);
 
         if (topLength[node] > criticalPathWeight) {
             criticalPathWeight = topLength[node];

@@ -69,7 +69,7 @@ std::vector<VWorkwT<GraphT>> ComputeMaxWorkPerStep(const BspInstance<GraphT> &in
         numberOfSupersteps, std::vector<VWorkwT<GraphT>>(instance.numberOfProcessors(), 0));
     for (const auto &node : instance.vertices()) {
         work[nodeToSuperstepAssignment[node]][nodeToProcessorAssignment[node]]
-            += instance.getComputationalDag().vertex_work_weight(node);
+            += instance.getComputationalDag().VertexWorkWeight(node);
     }
 
     std::vector<VWorkwT<GraphT>> maxWorkPerStep(numberOfSupersteps, 0);

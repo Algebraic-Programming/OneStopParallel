@@ -262,8 +262,8 @@ BOOST_AUTO_TEST_CASE(TestKMeans) {
     BOOST_CHECK_EQUAL(graph.NumEdges(), 45);
 
     for (const auto &v : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.vertex_work_weight(v), work[v]);
-        BOOST_CHECK_EQUAL(graph.vertex_comm_weight(v), comm[v]);
+        BOOST_CHECK_EQUAL(graph.VertexWorkWeight(v), work[v]);
+        BOOST_CHECK_EQUAL(graph.VertexCommWeight(v), comm[v]);
     }
 
     computational_dag_edge_idx_vector_impl_def_t graph2;
@@ -275,8 +275,8 @@ BOOST_AUTO_TEST_CASE(TestKMeans) {
     BOOST_CHECK_EQUAL(graph2.NumEdges(), 45);
 
     for (const auto &v : graph2.vertices()) {
-        BOOST_CHECK_EQUAL(graph2.vertex_work_weight(v), work[v]);
-        BOOST_CHECK_EQUAL(graph2.vertex_comm_weight(v), comm[v]);
+        BOOST_CHECK_EQUAL(graph2.VertexWorkWeight(v), work[v]);
+        BOOST_CHECK_EQUAL(graph2.VertexCommWeight(v), comm[v]);
     }
 }
 
@@ -302,9 +302,9 @@ BOOST_AUTO_TEST_CASE(TestDotGraph) {
     BOOST_CHECK_EQUAL(graph.NumVertexTypes(), 2);
 
     for (const auto &v : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.vertex_work_weight(v), work[v]);
-        BOOST_CHECK_EQUAL(graph.vertex_comm_weight(v), comm[v]);
-        BOOST_CHECK_EQUAL(graph.vertex_mem_weight(v), mem[v]);
+        BOOST_CHECK_EQUAL(graph.VertexWorkWeight(v), work[v]);
+        BOOST_CHECK_EQUAL(graph.VertexCommWeight(v), comm[v]);
+        BOOST_CHECK_EQUAL(graph.VertexMemWeight(v), mem[v]);
         BOOST_CHECK_EQUAL(graph.VertexType(v), type[v]);
     }
 }
@@ -331,9 +331,9 @@ BOOST_AUTO_TEST_CASE(TestDotGraphBoost) {
     BOOST_CHECK_EQUAL(graph.NumVertexTypes(), 2);
 
     for (const auto &v : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.vertex_work_weight(v), work[v]);
-        BOOST_CHECK_EQUAL(graph.vertex_comm_weight(v), comm[v]);
-        BOOST_CHECK_EQUAL(graph.vertex_mem_weight(v), mem[v]);
+        BOOST_CHECK_EQUAL(graph.VertexWorkWeight(v), work[v]);
+        BOOST_CHECK_EQUAL(graph.VertexCommWeight(v), comm[v]);
+        BOOST_CHECK_EQUAL(graph.VertexMemWeight(v), mem[v]);
         BOOST_CHECK_EQUAL(graph.VertexType(v), type[v]);
     }
 }

@@ -434,16 +434,16 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
                        > currentSchedule_.step_second_max_work[currentStep]) {
                 // new max
                 const double newMaxWork = std::max(currentSchedule_.step_processor_work[currentStep][currentProc]
-                                                       - currentSchedule_.instance->getComputationalDag().vertex_work_weight(node),
+                                                       - currentSchedule_.instance->getComputationalDag().VertexWorkWeight(node),
                                                    currentSchedule_.step_second_max_work[currentStep]);
 
                 if (currentSchedule_.step_processor_work[currentStep][newProc]
-                        + currentSchedule_.instance->getComputationalDag().vertex_work_weight(node)
+                        + currentSchedule_.instance->getComputationalDag().VertexWorkWeight(node)
                     > newMaxWork) {
                     const double gain
                         = static_cast<double>(currentSchedule_.step_max_work[currentStep])
                           - (static_cast<double>(currentSchedule_.step_processor_work[currentStep][newProc])
-                             + static_cast<double>(currentSchedule_.instance->getComputationalDag().vertex_work_weight(node)));
+                             + static_cast<double>(currentSchedule_.instance->getComputationalDag().VertexWorkWeight(node)));
 
                     nodeGains_[node][newProc][1] += gain;
                     nodeChangeInCosts_[node][newProc][1] -= gain;
@@ -458,10 +458,10 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
 
             } else {
                 if (currentSchedule_.step_max_work[currentStep]
-                    < currentSchedule_.instance->getComputationalDag().vertex_work_weight(node)
+                    < currentSchedule_.instance->getComputationalDag().VertexWorkWeight(node)
                           + currentSchedule_.step_processor_work[currentStep][newProc]) {
                     const double gain
-                        = (static_cast<double>(currentSchedule_.instance->getComputationalDag().vertex_work_weight(node))
+                        = (static_cast<double>(currentSchedule_.instance->getComputationalDag().VertexWorkWeight(node))
                            + static_cast<double>(currentSchedule_.step_processor_work[currentStep][newProc])
                            - static_cast<double>(currentSchedule_.step_max_work[currentStep]));
 
@@ -474,9 +474,9 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
         if (currentStep > 0) {
             if (currentSchedule_.step_max_work[currentStep - 1]
                 < currentSchedule_.step_processor_work[currentStep - 1][newProc]
-                      + currentSchedule_.instance->getComputationalDag().vertex_work_weight(node)) {
+                      + currentSchedule_.instance->getComputationalDag().VertexWorkWeight(node)) {
                 const double gain = static_cast<double>(currentSchedule_.step_processor_work[currentStep - 1][newProc])
-                                    + static_cast<double>(currentSchedule_.instance->getComputationalDag().vertex_work_weight(node))
+                                    + static_cast<double>(currentSchedule_.instance->getComputationalDag().VertexWorkWeight(node))
                                     - static_cast<double>(currentSchedule_.step_max_work[currentStep - 1]);
 
                 nodeGains_[node][newProc][0] -= gain;
@@ -488,9 +488,9 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
                 && currentSchedule_.step_processor_work[currentStep][currentProc]
                        > currentSchedule_.step_second_max_work[currentStep]) {
                 if (currentSchedule_.step_max_work[currentStep]
-                        - currentSchedule_.instance->getComputationalDag().vertex_work_weight(node)
+                        - currentSchedule_.instance->getComputationalDag().VertexWorkWeight(node)
                     > currentSchedule_.step_second_max_work[currentStep]) {
-                    const double gain = currentSchedule_.instance->getComputationalDag().vertex_work_weight(node);
+                    const double gain = currentSchedule_.instance->getComputationalDag().VertexWorkWeight(node);
                     nodeGains_[node][newProc][0] += gain;
                     nodeChangeInCosts_[node][newProc][0] -= gain;
 
@@ -510,9 +510,9 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
         if (currentStep < currentSchedule_.num_steps() - 1) {
             if (currentSchedule_.step_max_work[currentStep + 1]
                 < currentSchedule_.step_processor_work[currentStep + 1][newProc]
-                      + currentSchedule_.instance->getComputationalDag().vertex_work_weight(node)) {
+                      + currentSchedule_.instance->getComputationalDag().VertexWorkWeight(node)) {
                 const double gain = static_cast<double>(currentSchedule_.step_processor_work[currentStep + 1][newProc])
-                                    + static_cast<double>(currentSchedule_.instance->getComputationalDag().vertex_work_weight(node))
+                                    + static_cast<double>(currentSchedule_.instance->getComputationalDag().VertexWorkWeight(node))
                                     - static_cast<double>(currentSchedule_.step_max_work[currentStep + 1]);
 
                 nodeGains_[node][newProc][2] -= gain;
@@ -523,9 +523,9 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
                 && currentSchedule_.step_processor_work[currentStep][currentProc]
                        > currentSchedule_.step_second_max_work[currentStep]) {
                 if ((currentSchedule_.step_max_work[currentStep]
-                     - currentSchedule_.instance->getComputationalDag().vertex_work_weight(node))
+                     - currentSchedule_.instance->getComputationalDag().VertexWorkWeight(node))
                     > currentSchedule_.step_second_max_work[currentStep]) {
-                    const double gain = currentSchedule_.instance->getComputationalDag().vertex_work_weight(node);
+                    const double gain = currentSchedule_.instance->getComputationalDag().VertexWorkWeight(node);
 
                     nodeGains_[node][newProc][2] += gain;
                     nodeChangeInCosts_[node][newProc][2] -= gain;

@@ -200,9 +200,9 @@ void HillClimbingForCommSteps<GraphT>::Init() {
             commSchedRecListPointer[node][proc] = commSchedRecLists[step][proc].begin();
 
             sent[step][schedule->assignedProcessor(node)]
-                += schedule->getInstance().getComputationalDag().vertex_comm_weight(node)
+                += schedule->getInstance().getComputationalDag().VertexCommWeight(node)
                    * schedule->getInstance().getArchitecture().sendCosts(schedule->assignedProcessor(node), proc);
-            received[step][proc] += schedule->getInstance().getComputationalDag().vertex_comm_weight(node)
+            received[step][proc] += schedule->getInstance().getComputationalDag().VertexCommWeight(node)
                                     * schedule->getInstance().getArchitecture().sendCosts(schedule->assignedProcessor(node), proc);
         }
     }
@@ -237,12 +237,12 @@ int HillClimbingForCommSteps<GraphT>::MoveCostChange(const vertex_idx node, cons
                                 minimum_cost_per_superstep[oldStep])
                        + schedule->getInstance().getArchitecture().synchronisationCosts();
     cost_type maxSource = std::max(sent[oldStep][sourceProc]
-                                       - schedule->getInstance().getComputationalDag().vertex_comm_weight(node)
+                                       - schedule->getInstance().getComputationalDag().VertexCommWeight(node)
                                              * schedule->getInstance().getArchitecture().sendCosts(sourceProc, p),
                                    received[oldStep][sourceProc]);
     cost_type maxTarget = std::max(sent[oldStep][p],
                                    received[oldStep][p]
-                                       - schedule->getInstance().getComputationalDag().vertex_comm_weight(node)
+                                       - schedule->getInstance().getComputationalDag().VertexCommWeight(node)
                                              * schedule->getInstance().getArchitecture().sendCosts(sourceProc, p));
     cost_type maxOther = 0;
     for (; itr != commCostList[oldStep].rend(); ++itr) {
@@ -264,11 +264,11 @@ int HillClimbingForCommSteps<GraphT>::MoveCostChange(const vertex_idx node, cons
     oldMax = std::max(oldMax, minimum_cost_per_superstep[step]);
     maxSource = schedule->getInstance().getArchitecture().communicationCosts()
                 * (sent[step][sourceProc]
-                   + schedule->getInstance().getComputationalDag().vertex_comm_weight(node)
+                   + schedule->getInstance().getComputationalDag().VertexCommWeight(node)
                          * schedule->getInstance().getArchitecture().sendCosts(sourceProc, p));
     maxTarget = schedule->getInstance().getArchitecture().communicationCosts()
                 * (received[step][p]
-                   + schedule->getInstance().getComputationalDag().vertex_comm_weight(node)
+                   + schedule->getInstance().getComputationalDag().VertexCommWeight(node)
                          * schedule->getInstance().getArchitecture().sendCosts(sourceProc, p));
 
     newMax = std::max(std::max(oldMax, maxSource), maxTarget);
@@ -288,28 +288,28 @@ void HillClimbingForCommSteps<GraphT>::ExecuteMove(vertex_idx node, unsigned p, 
     // Old step update
     if (sent[oldStep][sourceProc] > received[oldStep][sourceProc]) {
         commCostList[oldStep].erase(commCostPointer[oldStep][sourceProc]);
-        sent[oldStep][sourceProc] -= schedule->getInstance().getComputationalDag().vertex_comm_weight(node)
+        sent[oldStep][sourceProc] -= schedule->getInstance().getComputationalDag().VertexCommWeight(node)
                                      * schedule->getInstance().getArchitecture().sendCosts(sourceProc, p);
         commCost[oldStep][sourceProc] = std::max(sent[oldStep][sourceProc], received[oldStep][sourceProc]);
         commCostPointer[oldStep][sourceProc] = commCostList[oldStep].emplace(commCost[oldStep][sourceProc], sourceProc).first;
     } else {
-        sent[oldStep][sourceProc] -= schedule->getInstance().getComputationalDag().vertex_comm_weight(node)
+        sent[oldStep][sourceProc] -= schedule->getInstance().getComputationalDag().VertexCommWeight(node)
                                      * schedule->getInstance().getArchitecture().sendCosts(sourceProc, p);
     }
 
     if (received[oldStep][p] > sent[oldStep][p]) {
         commCostList[oldStep].erase(commCostPointer[oldStep][p]);
-        received[oldStep][p] -= schedule->getInstance().getComputationalDag().vertex_comm_weight(node)
+        received[oldStep][p] -= schedule->getInstance().getComputationalDag().VertexCommWeight(node)
                                 * schedule->getInstance().getArchitecture().sendCosts(sourceProc, p);
         commCost[oldStep][p] = std::max(sent[oldStep][p], received[oldStep][p]);
         commCostPointer[oldStep][p] = commCostList[oldStep].emplace(commCost[oldStep][p], p).first;
     } else {
-        received[oldStep][p] -= schedule->getInstance().getComputationalDag().vertex_comm_weight(node)
+        received[oldStep][p] -= schedule->getInstance().getComputationalDag().VertexCommWeight(node)
                                 * schedule->getInstance().getArchitecture().sendCosts(sourceProc, p);
     }
 
     // New step update
-    sent[step][sourceProc] += schedule->getInstance().getComputationalDag().vertex_comm_weight(node)
+    sent[step][sourceProc] += schedule->getInstance().getComputationalDag().VertexCommWeight(node)
                               * schedule->getInstance().getArchitecture().sendCosts(sourceProc, p);
     if (sent[step][sourceProc] > received[step][sourceProc]) {
         commCostList[step].erase(commCostPointer[step][sourceProc]);
@@ -317,7 +317,7 @@ void HillClimbingForCommSteps<GraphT>::ExecuteMove(vertex_idx node, unsigned p, 
         commCostPointer[step][sourceProc] = commCostList[step].emplace(commCost[step][sourceProc], sourceProc).first;
     }
 
-    received[step][p] += schedule->getInstance().getComputationalDag().vertex_comm_weight(node)
+    received[step][p] += schedule->getInstance().getComputationalDag().VertexCommWeight(node)
                          * schedule->getInstance().getArchitecture().sendCosts(sourceProc, p);
     if (received[step][p] > sent[step][p]) {
         commCostList[step].erase(commCostPointer[step][p]);
