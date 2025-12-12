@@ -30,7 +30,7 @@ template <typename GraphTIn, typename GraphTOut>
 class HdaggCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> {
     static_assert(is_directed_graph_edge_desc_v<Graph_t_in>, "Graph_t_in must satisfy the directed_graph edge desc concept");
     static_assert(has_hashable_edge_desc_v<Graph_t_in>, "Graph_t_in must satisfy the has_hashable_edge_desc concept");
-    static_assert(has_typed_vertices_v<Graph_t_in>, "Graph_t_in must have typed vertices");
+    static_assert(HasTypedVerticesV<Graph_t_in>, "Graph_t_in must have typed vertices");
 
   private:
     using VertexType_in = vertex_idx_t<Graph_t_in>;

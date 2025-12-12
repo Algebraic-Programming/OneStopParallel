@@ -56,7 +56,7 @@ class DotFileWriter {
                 << "comm_weight=\"" << schedule_.getInstance().getComputationalDag().vertex_comm_weight(i) << "\";"
                 << "mem_weight=\"" << schedule_.getInstance().getComputationalDag().vertex_mem_weight(i) << "\";";
 
-            if constexpr (has_typed_vertices_v<Graph_t>) {
+            if constexpr (HasTypedVerticesV<Graph_t>) {
                 out << "type=\"" << schedule_.getInstance().getComputationalDag().vertex_type(i) << "\";";
             }
 
@@ -79,7 +79,7 @@ class DotFileWriter {
                 << "comm_weight=\"" << schedule_.getInstance().getComputationalDag().vertex_comm_weight(i) << "\";"
                 << "mem_weight=\"" << schedule_.getInstance().getComputationalDag().vertex_mem_weight(i) << "\";";
 
-            if constexpr (has_typed_vertices_v<Graph_t>) {
+            if constexpr (HasTypedVerticesV<Graph_t>) {
                 out << "type=\"" << schedule_.getInstance().getComputationalDag().vertex_type(i) << "\";";
             }
 
@@ -152,7 +152,7 @@ class DotFileWriter {
                 << "comm_weight=\"" << schedule_.getInstance().getComputationalDag().vertex_comm_weight(i) << "\";"
                 << "mem_weight=\"" << schedule_.getInstance().getComputationalDag().vertex_mem_weight(i) << "\";";
 
-            if constexpr (has_typed_vertices_v<Graph_t>) {
+            if constexpr (HasTypedVerticesV<Graph_t>) {
                 out << "type=\"" << schedule_.getInstance().getComputationalDag().vertex_type(i) << "\";";
             }
 
@@ -194,7 +194,7 @@ class DotFileWriter {
                 << "comm_weight=\"" << graph_.vertex_comm_weight(i) << "\";"
                 << "mem_weight=\"" << graph_.vertex_mem_weight(i) << "\";";
 
-            if constexpr (has_typed_vertices_v<Graph_t>) {
+            if constexpr (HasTypedVerticesV<Graph_t>) {
                 out << "type=\"" << graph_.vertex_type(i) << "\";";
             }
 
@@ -247,7 +247,7 @@ class DotFileWriter {
                 << "comm_weight=\"" << graph_.vertex_comm_weight(i) << "\";"
                 << "mem_weight=\"" << graph_.vertex_mem_weight(i) << "\";";
 
-            if constexpr (has_typed_vertices_v<Graph_t>) {
+            if constexpr (HasTypedVerticesV<Graph_t>) {
                 out << "type=\"" << graph_.vertex_type(i) << "\";shape=\""
                     << shapeStrings_[graph_.vertex_type(i) % shapeStrings_.size()] << "\";";
             }
@@ -264,7 +264,7 @@ class DotFileWriter {
             os << "\n";
         }
 
-        if constexpr (has_edge_weights_v<Graph_t>) {
+        if constexpr (HasEdgeWeightsV<Graph_t>) {
             EdgeWriterDot<GraphT> edgeWriter(graph);
 
             for (const auto &e : edges(graph)) {
@@ -359,9 +359,8 @@ class DotFileWriter {
 
         std::unordered_map<VertexType, std::vector<size_t>> vertex_to_idx;
 
-        using vertex_type_t_or_default
-            = std::conditional_t<is_computational_dag_typed_vertices_v<Graph_t>, v_type_t<Graph_t>, unsigned>;
-        using edge_commw_t_or_default = std::conditional_t<has_edge_weights_v<Graph_t>, e_commw_t<Graph_t>, v_commw_t<Graph_t>>;
+        using vertex_type_t_or_default = std::conditional_t<IsComputationalDagTypedVerticesV<Graph_t>, v_type_t<Graph_t>, unsigned>;
+        using edge_commw_t_or_default = std::conditional_t<HasEdgeWeightsV<Graph_t>, e_commw_t<Graph_t>, v_commw_t<Graph_t>>;
 
         using cdag_vertex_impl_t
             = cdag_vertex_impl<vertex_idx_t<Graph_t>, v_workw_t<Graph_t>, v_commw_t<Graph_t>, v_memw_t<Graph_t>, vertex_type_t_or_default>;
@@ -440,14 +439,14 @@ class DotFileWriter {
 
     template <typename GraphT, typename ColorContainerT>
     void WriteColoredGraph(std::ostream &os, const GraphT &graph, const ColorContainerT &colors) const {
-        static_assert(is_computational_dag_v<Graph_t>, "Graph_t must be a computational DAG");
+        static_assert(IsComputationalDagV<Graph_t>, "Graph_t must be a computational DAG");
 
         write_graph_structure(os, graph, ColoredVertexWriterGraphDot<GraphT, ColorContainerT>(graph, colors));
     }
 
     template <typename GraphT, typename ColorContainerT>
     void WriteColoredGraph(const std::string &filename, const GraphT &graph, const ColorContainerT &colors) const {
-        static_assert(is_computational_dag_v<Graph_t>, "Graph_t must be a computational DAG");
+        static_assert(IsComputationalDagV<Graph_t>, "Graph_t must be a computational DAG");
 
         std::ofstream os(filename);
         write_colored_graph(os, graph, colors);
@@ -455,14 +454,14 @@ class DotFileWriter {
 
     template <typename GraphT>
     void WriteGraph(std::ostream &os, const GraphT &graph) const {
-        static_assert(is_computational_dag_v<Graph_t>, "Graph_t must be a computational DAG");
+        static_assert(IsComputationalDagV<Graph_t>, "Graph_t must be a computational DAG");
 
         write_graph_structure(os, graph, VertexWriterGraphDot<GraphT>(graph));
     }
 
     template <typename GraphT>
     void WriteGraph(const std::string &filename, const GraphT &graph) const {
-        static_assert(is_computational_dag_v<Graph_t>, "Graph_t must be a computational DAG");
+        static_assert(IsComputationalDagV<Graph_t>, "Graph_t must be a computational DAG");
 
         std::ofstream os(filename);
         write_graph(os, graph);

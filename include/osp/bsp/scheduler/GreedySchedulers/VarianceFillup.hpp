@@ -47,7 +47,7 @@ namespace osp {
  */
 template <typename GraphT, typename MemoryConstraintT = NoMemoryConstraint>
 class VarianceFillup : public Scheduler<GraphT> {
-    static_assert(is_computational_dag_v<Graph_t>, "VarianceFillup can only be used with computational DAGs.");
+    static_assert(IsComputationalDagV<Graph_t>, "VarianceFillup can only be used with computational DAGs.");
 
   private:
     using VertexType = vertex_idx_t<Graph_t>;

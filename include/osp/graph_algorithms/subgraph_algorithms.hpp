@@ -46,7 +46,7 @@ void CreateInducedSubgraph(const GraphTIn &dag,
 
     for (const auto &node : extra_sources) {
         local_idx[node] = dag_out.num_vertices();
-        if constexpr (is_constructable_cdag_typed_vertex_v<Graph_t_out> and has_typed_vertices_v<Graph_t_in>) {
+        if constexpr (is_constructable_cdag_typed_vertex_v<Graph_t_out> and HasTypedVerticesV<Graph_t_in>) {
             // add extra source with type
             dag_out.add_vertex(0, dag.vertex_comm_weight(node), dag.vertex_mem_weight(node), dag.vertex_type(node));
         } else {
@@ -58,7 +58,7 @@ void CreateInducedSubgraph(const GraphTIn &dag,
     for (const auto &node : selected_nodes) {
         local_idx[node] = dag_out.num_vertices();
 
-        if constexpr (is_constructable_cdag_typed_vertex_v<Graph_t_out> and has_typed_vertices_v<Graph_t_in>) {
+        if constexpr (is_constructable_cdag_typed_vertex_v<Graph_t_out> and HasTypedVerticesV<Graph_t_in>) {
             // add vertex with type
             dag_out.add_vertex(
                 dag.vertex_work_weight(node), dag.vertex_comm_weight(node), dag.vertex_mem_weight(node), dag.vertex_type(node));
@@ -68,7 +68,7 @@ void CreateInducedSubgraph(const GraphTIn &dag,
         }
     }
 
-    if constexpr (has_edge_weights_v<Graph_t_in> and has_edge_weights_v<Graph_t_out>) {
+    if constexpr (HasEdgeWeightsV<Graph_t_in> and HasEdgeWeightsV<Graph_t_out>) {
         // add edges with edge comm weights
         for (const auto &node : selected_nodes) {
             for (const auto &in_edge : in_edges(node, dag)) {
@@ -116,7 +116,7 @@ bool CheckOrderedIsomorphism(const GraphT &first, const GraphT &second) {
             return false;
         }
 
-        if constexpr (has_edge_weights_v<Graph_t>) {
+        if constexpr (HasEdgeWeightsV<Graph_t>) {
             std::set<std::pair<vertex_idx_t<Graph_t>, e_commw_t<Graph_t>>> first_children, second_children;
 
             for (const auto &outEdge : out_edges(node, first)) {
@@ -182,7 +182,7 @@ std::vector<GraphTOut> CreateInducedSubgraphs(const GraphTIn &dagIn, const std::
     for (const auto node : dagIn.vertices()) {
         localIdx[node] = splitDags[partitionIDs[node]].num_vertices();
 
-        if constexpr (is_constructable_cdag_typed_vertex_v<Graph_t_out> and has_typed_vertices_v<Graph_t_in>) {
+        if constexpr (is_constructable_cdag_typed_vertex_v<Graph_t_out> and HasTypedVerticesV<Graph_t_in>) {
             splitDags[partitionIDs[node]].add_vertex(dagIn.vertex_work_weight(node),
                                                      dagIn.vertex_comm_weight(node),
                                                      dagIn.vertex_mem_weight(node),
@@ -193,7 +193,7 @@ std::vector<GraphTOut> CreateInducedSubgraphs(const GraphTIn &dagIn, const std::
         }
     }
 
-    if constexpr (has_edge_weights_v<Graph_t_in> and has_edge_weights_v<Graph_t_out>) {
+    if constexpr (HasEdgeWeightsV<Graph_t_in> and HasEdgeWeightsV<Graph_t_out>) {
         for (const auto node : dagIn.vertices()) {
             for (const auto &outEdge : out_edges(node, dagIn)) {
                 auto succ = target(outEdge, dagIn);
@@ -234,7 +234,7 @@ std::unordered_map<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_in>> create_in
     for (const auto &node : selected_nodes) {
         local_idx[node] = dag_out.num_vertices();
 
-        if constexpr (is_constructable_cdag_typed_vertex_v<Graph_t_out> and has_typed_vertices_v<Graph_t_in>) {
+        if constexpr (is_constructable_cdag_typed_vertex_v<Graph_t_out> and HasTypedVerticesV<Graph_t_in>) {
             // add vertex with type
             dag_out.add_vertex(
                 dag.vertex_work_weight(node), dag.vertex_comm_weight(node), dag.vertex_mem_weight(node), dag.vertex_type(node));
@@ -244,7 +244,7 @@ std::unordered_map<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_in>> create_in
         }
     }
 
-    if constexpr (has_edge_weights_v<Graph_t_in> and has_edge_weights_v<Graph_t_out>) {
+    if constexpr (HasEdgeWeightsV<Graph_t_in> and HasEdgeWeightsV<Graph_t_out>) {
         // add edges with edge comm weights
         for (const auto &node : selected_nodes) {
             for (const auto &in_edge : in_edges(node, dag)) {

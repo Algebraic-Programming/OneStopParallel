@@ -201,7 +201,7 @@ static_assert(has_vertex_weights_v<dag_vector_adapter<cdag_vertex_impl_unsigned,
 static_assert(is_directed_graph_v<dag_vector_adapter<cdag_vertex_impl_unsigned, int>>,
               "dag_vector_adapter must satisfy the directed_graph concept");
 
-static_assert(is_computational_dag_typed_vertices_v<dag_vector_adapter<cdag_vertex_impl_unsigned, int>>,
+static_assert(IsComputationalDagTypedVerticesV<dag_vector_adapter<cdag_vertex_impl_unsigned, int>>,
               "dag_vector_adapter must satisfy the is_computation_dag concept");
 
 }    // namespace osp

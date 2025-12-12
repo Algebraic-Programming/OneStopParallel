@@ -58,7 +58,7 @@ class CompatibleProcessorRange {
     void Initialize(const BspInstance<GraphT> &inst) {
         instance_ = &inst;
 
-        if constexpr (has_typed_vertices_v<Graph_t>) {
+        if constexpr (HasTypedVerticesV<Graph_t>) {
             typeProcessorIdx_.resize(inst.getComputationalDag().num_vertex_types());
 
             for (v_type_t<Graph_t> vType = 0; v_type < inst.getComputationalDag().num_vertex_types(); v_type++) {
@@ -79,7 +79,7 @@ class CompatibleProcessorRange {
      */
     [[nodiscard]] const auto &CompatibleProcessorsType(const v_type_t<Graph_t> type) const {
         assert(instance_ != nullptr);
-        if constexpr (has_typed_vertices_v<Graph_t>) {
+        if constexpr (HasTypedVerticesV<Graph_t>) {
             return typeProcessorIdx_[type];
         } else {
             return instance_->processors();

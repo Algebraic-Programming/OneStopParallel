@@ -39,7 +39,7 @@ namespace osp {
  */
 template <typename GraphT>
 class SetSchedule : public IBspSchedule<GraphT> {
-    static_assert(is_computational_dag_v<GraphT>, "BspSchedule can only be used with computational DAGs.");
+    static_assert(IsComputationalDagV<GraphT>, "BspSchedule can only be used with computational DAGs.");
 
   private:
     using VertexIdx = VertexIdxT<GraphT>;

@@ -26,7 +26,7 @@ namespace osp {
 
 template <typename GraphT>
 class SubproblemMultiScheduling : public Scheduler<GraphT> {
-    static_assert(is_computational_dag_v<Graph_t>, "PebblingSchedule can only be used with computational DAGs.");
+    static_assert(IsComputationalDagV<Graph_t>, "PebblingSchedule can only be used with computational DAGs.");
 
   private:
     using vertex_idx = vertex_idx_t<Graph_t>;

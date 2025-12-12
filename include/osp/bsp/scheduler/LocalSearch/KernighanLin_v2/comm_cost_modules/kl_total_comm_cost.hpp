@@ -32,7 +32,7 @@ struct KlTotalCommCostFunction {
     constexpr static bool isMaxCommCostFunction_ = false;
 
     constexpr static unsigned windowRange_ = 2 * windowSize + 1;
-    constexpr static bool useNodeCommunicationCosts_ = use_node_communication_costs_arg || not has_edge_weights_v<Graph_t>;
+    constexpr static bool useNodeCommunicationCosts_ = use_node_communication_costs_arg || not HasEdgeWeightsV<Graph_t>;
 
     KlActiveSchedule<GraphT, CostT, MemoryConstraintT> *activeSchedule_;
 

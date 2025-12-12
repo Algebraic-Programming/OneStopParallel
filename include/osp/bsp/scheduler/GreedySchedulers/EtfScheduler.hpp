@@ -49,12 +49,12 @@ enum EtfMode { ETF, BL_EST };
  */
 template <typename GraphT, typename MemoryConstraintT = NoMemoryConstraint>
 class EtfScheduler : public Scheduler<GraphT> {
-    static_assert(is_computational_dag_v<Graph_t>, "EtfScheduler can only be used with computational DAGs.");
+    static_assert(IsComputationalDagV<Graph_t>, "EtfScheduler can only be used with computational DAGs.");
 
     static_assert(std::is_convertible_v<v_commw_t<Graph_t>, v_workw_t<Graph_t>>,
                   "EtfScheduler requires that work and communication weights are convertible.");
 
-    static_assert(not has_edge_weights_v<Graph_t> || std::is_convertible_v<e_commw_t<Graph_t>, v_workw_t<Graph_t>>,
+    static_assert(not HasEdgeWeightsV<Graph_t> || std::is_convertible_v<e_commw_t<Graph_t>, v_workw_t<Graph_t>>,
                   "EtfScheduler requires that work and communication weights are convertible.");
 
   private:
@@ -88,7 +88,7 @@ class EtfScheduler : public Scheduler<GraphT> {
 
             v_workw_t<Graph_t> maxval = 0;
 
-            if constexpr (has_edge_weights_v<Graph_t>) {
+            if constexpr (HasEdgeWeightsV<Graph_t>) {
                 for (const auto &out_edge : out_edges(node, instance.getComputationalDag())) {
                     const v_workw_t<Graph_t> tmp_val = BL[target(out_edge, instance.getComputationalDag())]
                                                        + instance.getComputationalDag().edge_comm_weight(out_edge);
@@ -171,7 +171,7 @@ class EtfScheduler : public Scheduler<GraphT> {
                 t = std::max(t, send[schedule.proc[next.second]]);
                 t = std::max(t, rec[proc]);
 
-                if constexpr (has_edge_weights_v<Graph_t>) {
+                if constexpr (HasEdgeWeightsV<Graph_t>) {
                     t += instance.getComputationalDag().edge_comm_weight(
                              edge_desc(next.second, node, instance.getComputationalDag()).first)
                          * instance.sendCosts(schedule.proc[next.second], proc);

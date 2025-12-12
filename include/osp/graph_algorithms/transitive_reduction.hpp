@@ -58,7 +58,7 @@ void TransitiveReductionSparse(const GraphTIn &graphIn, GraphTOut &graphOut) {
 
     // 1. Copy vertices and their properties from graph_in to graph_out.
     for (const auto &vIdx : graphIn.vertices()) {
-        if constexpr (has_typed_vertices_v<Graph_t_in> && is_constructable_cdag_typed_vertex_v<Graph_t_out>) {
+        if constexpr (HasTypedVerticesV<Graph_t_in> && is_constructable_cdag_typed_vertex_v<Graph_t_out>) {
             graphOut.add_vertex(graphIn.vertex_work_weight(vIdx),
                                 graphIn.vertex_comm_weight(vIdx),
                                 graphIn.vertex_mem_weight(vIdx),
@@ -82,7 +82,7 @@ void TransitiveReductionSparse(const GraphTIn &graphIn, GraphTOut &graphOut) {
             }
         }
         if (!isTransitive) {
-            if constexpr (has_edge_weights_v<Graph_t_in> && is_constructable_cdag_comm_edge_v<Graph_t_out>) {
+            if constexpr (HasEdgeWeightsV<Graph_t_in> && is_constructable_cdag_comm_edge_v<Graph_t_out>) {
                 graphOut.add_edge(u, v, graphIn.edge_comm_weight(edge));
             } else {
                 graphOut.add_edge(u, v);
@@ -123,7 +123,7 @@ void TransitiveReductionDense(const GraphTIn &graphIn, GraphTOut &graphOut) {
 
     // 1. Copy vertices and their properties from graph_in to graph_out.
     for (const auto &vIdx : graphIn.vertices()) {
-        if constexpr (has_typed_vertices_v<Graph_t_in> && is_constructable_cdag_typed_vertex_v<Graph_t_out>) {
+        if constexpr (HasTypedVerticesV<Graph_t_in> && is_constructable_cdag_typed_vertex_v<Graph_t_out>) {
             graphOut.add_vertex(graphIn.vertex_work_weight(vIdx),
                                 graphIn.vertex_comm_weight(vIdx),
                                 graphIn.vertex_mem_weight(vIdx),
@@ -165,7 +165,7 @@ void TransitiveReductionDense(const GraphTIn &graphIn, GraphTOut &graphOut) {
             }
         }
         if (!isTransitive) {
-            if constexpr (has_edge_weights_v<Graph_t_in> && is_constructable_cdag_comm_edge_v<Graph_t_out>) {
+            if constexpr (HasEdgeWeightsV<Graph_t_in> && is_constructable_cdag_comm_edge_v<Graph_t_out>) {
                 graphOut.add_edge(u, v, graphIn.edge_comm_weight(edge));
             } else {
                 graphOut.add_edge(u, v);

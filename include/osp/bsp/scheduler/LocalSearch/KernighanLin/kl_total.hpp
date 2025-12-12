@@ -34,7 +34,7 @@ class KlCurrentScheduleTotal : public KlCurrentSchedule<GraphT, MemoryConstraint
     KlCurrentScheduleTotal(IklCostFunction *costF) : KlCurrentSchedule<GraphT, MemoryConstraintT>(costF) {}
 
     double commMultiplier_ = 1.0;
-    constexpr static bool useNodeCommunicationCosts_ = use_node_communication_costs_arg || not has_edge_weights_v<Graph_t>;
+    constexpr static bool useNodeCommunicationCosts_ = use_node_communication_costs_arg || not HasEdgeWeightsV<Graph_t>;
 };
 
 template <typename GraphT, typename MemoryConstraintT, bool useNodeCommunicationCostsArg>

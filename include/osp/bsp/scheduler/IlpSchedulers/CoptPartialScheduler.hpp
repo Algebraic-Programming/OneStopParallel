@@ -34,7 +34,7 @@ namespace osp {
 
 template <typename GraphT>
 class CoptPartialScheduler {
-    static_assert(is_computational_dag_v<Graph_t>, "CoptPartialScheduler can only be used with computational DAGs.");
+    static_assert(IsComputationalDagV<Graph_t>, "CoptPartialScheduler can only be used with computational DAGs.");
 
     using KeyTriple = std::tuple<vertex_idx_t<Graph_t>, unsigned int, unsigned int>;
 

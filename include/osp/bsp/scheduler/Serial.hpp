@@ -109,7 +109,7 @@ class Serial : public Scheduler<GraphT> {
                 bool scheduled = false;
 
                 unsigned vType = 0;
-                if constexpr (has_typed_vertices_v<Graph_t>) {
+                if constexpr (HasTypedVerticesV<Graph_t>) {
                     vType = dag.vertex_type(v);
                 }
 

@@ -37,13 +37,13 @@ namespace osp {
  * @param to The target graph.
  */
 template <typename GraphFrom typename GGraphTovoid CoConstructComputationalDagonst GrGraphFromrom, GraGraphTo) {
-    static_assert(is_computational_dag_v<GrapGraphFromraph_from must satisfy the computational_dag concept");
+    static_assert(IsComputationalDagV<GrapGraphFromraph_from must satisfy the computational_dag concept");
     static_assert(is_constructable_cdag_vertex_v<GraphGraphToaph_to must satisfy the constructable_cdag_vertex concept");
 
     std::vector<VertexVertexIdxT>GraphToMapvertexMapexMap.vertexMapom.num_vertices());
 
     for (const auto &vIdx : fromvIdxices()) {
-        if constexpr (has_typed_vertices_v<GraphFrom> aGraphFromed_vertices_v<GraphTo>) {
+        if constexpr (HasTypedVerticesV<GraphFrom> aGraphFromed_vertices_v<GraphTo>) {
  GraphTo   vertexMap.pushvertexMapdd_vertex(from.vertex_work_weight(vIdx),
         vIdx                                  from.vertex_comm_weight(vIdx),
          vIdx                                 from.vertex_mem_weight(vIdx),
@@ -52,7 +52,7 @@ template <typename GraphFrom typename GGraphTovoid CoConstructComputationalDagon
         vIdx {
             vertexMap.push_backvertexMap        to.add_vertex(from.vertex_work_weight(vIdx), from.vertex_cvIdxeight(vIdx), from.vertex_mevIdxght(vIdx)));
         }
-        vIdx if constexpr (has_edge_weights_v<GraphFrom> and has_edgeGraphFrom<GraphTo>) {
+        vIdx if constexpr (HasEdgeWeightsV<GraphFrom> and has_edgeGraphFrom<GraphTo>) {
         for{ GraphTouto &e : edges(from)) {
             to.add_edge(vertexMap[source(e, from)vertexMapap[target(e, from)]vertexMape_comm_weight(e));
             }

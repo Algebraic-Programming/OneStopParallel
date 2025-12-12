@@ -63,8 +63,8 @@ class OrbitGraphProcessor {
         NATURAL_BREAKS
     };
 
-    static_assert(is_computational_dag_v<Graph_t>, "Graph must be a computational DAG");
-    static_assert(is_computational_dag_v<Constr_Graph_t>, "Constr_Graph_t must be a computational DAG");
+    static_assert(IsComputationalDagV<Graph_t>, "Graph must be a computational DAG");
+    static_assert(IsComputationalDagV<Constr_Graph_t>, "Constr_Graph_t must be a computational DAG");
     static_assert(is_constructable_cdag_v<Constr_Graph_t>, "Constr_Graph_t must satisfy the constructable_cdag_vertex concept");
     static_assert(std::is_same_v<vertex_idx_t<Graph_t>, vertex_idx_t<Constr_Graph_t>>,
                   "Graph_t and Constr_Graph_t must have the same vertex_idx types");
@@ -212,7 +212,7 @@ class OrbitGraphProcessor {
             changed = false;
             for (const auto u : currentCoarseGraph.vertices()) {
                 for (const auto v : currentCoarseGraph.children(u)) {
-                    if constexpr (has_typed_vertices_v<Constr_Graph_t>) {
+                    if constexpr (HasTypedVerticesV<Constr_Graph_t>) {
                         if (not mergeDifferentNodeTypes_) {
                             if (currentCoarseGraph.vertex_type(u) != currentCoarseGraph.vertex_type(v)) {
                                 if constexpr (verbose_) {
@@ -329,7 +329,7 @@ class OrbitGraphProcessor {
                 if (non_viable_edges_cache_.count({u, v}) || non_viable_crit_path_edges_cache_.count({u, v})) {
                     continue;
                 }
-                if constexpr (has_typed_vertices_v<Constr_Graph_t>) {
+                if constexpr (HasTypedVerticesV<Constr_Graph_t>) {
                     if (not mergeDifferentNodeTypes) {
                         if (currentCoarseGraph.vertex_type(u) != currentCoarseGraph.vertex_type(v)) {
                             continue;
@@ -416,7 +416,7 @@ class OrbitGraphProcessor {
                     continue;
                 }
 
-                if constexpr (has_typed_vertices_v<Constr_Graph_t>) {
+                if constexpr (HasTypedVerticesV<Constr_Graph_t>) {
                     if (not mergeDifferentNodeTypes) {
                         if (currentCoarseGraph.vertex_type(u) != currentCoarseGraph.vertex_type(v)) {
                             if constexpr (verbose_) {
@@ -467,7 +467,7 @@ class OrbitGraphProcessor {
 
                 v_type_t<Graph_t> uType = 0;
                 v_type_t<Graph_t> vType = 0;
-                if (not merge_different_node_types && has_typed_vertices_v<Graph_t>) {
+                if (not merge_different_node_types && HasTypedVerticesV<Graph_t>) {
                     uType = currentCoarseGraph.vertex_type(u);
                     vType = currentCoarseGraph.vertex_type(v);
                 }
@@ -619,7 +619,7 @@ class OrbitGraphProcessor {
                 orbit_work += dag.vertex_work_weight(v);
             }
 
-            if (not merge_different_node_types_ && has_typed_vertices_v<Graph_t>) {
+            if (not merge_different_node_types_ && HasTypedVerticesV<Graph_t>) {
                 work_per_vertex_type[dag.vertex_type(vertices[0])] += orbit_work;
             } else {
                 work_per_vertex_type[0] += orbit_work;
@@ -859,7 +859,7 @@ class OrbitGraphProcessor {
             currentGroups[coarse_node].subgraphs.push_back({i});
         }
 
-        if constexpr (has_typed_vertices_v<Constr_Graph_t>) {
+        if constexpr (HasTypedVerticesV<Constr_Graph_t>) {
             if constexpr (verbose_) {
                 std::cout << "Attempting to merge same node types.\n";
             }

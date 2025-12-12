@@ -124,7 +124,7 @@ class ComputationalDagEdgeIdxVectorImpl {
 
     template <typename GraphT>
     ComputationalDagEdgeIdxVectorImpl(const GraphT &other) {
-        static_assert(is_computational_dag_v<GraphT>, "Graph_t must satisfy the is_computation_dag concept");
+        static_assert(IsComputationalDagV<GraphT>, "Graph_t must satisfy the is_computation_dag concept");
 
         constructComputationalDag(other, *this);
     }

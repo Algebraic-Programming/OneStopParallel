@@ -31,7 +31,7 @@ namespace osp {
 
 template <typename GraphT>
 class PebblingPartialILP : public Scheduler<GraphT> {
-    static_assert(is_computational_dag_v<Graph_t>, "PebblingSchedule can only be used with computational DAGs.");
+    static_assert(IsComputationalDagV<Graph_t>, "PebblingSchedule can only be used with computational DAGs.");
     static_assert(std::is_same_v<v_workw_t<Graph_t>, v_commw_t<Graph_t>>,
                   "PebblingSchedule requires work and comm. weights to have the same type.");
 
@@ -388,7 +388,7 @@ GraphT PebblingPartialILP<GraphT>::ContractByPartition(const BspInstance<GraphT>
     }
 
     for (auto edge : edges) {
-        if constexpr (has_edge_weights_v<Graph_t>) {
+        if constexpr (HasEdgeWeightsV<Graph_t>) {
             contracted.add_edge(edge.first, edge.second, 1);
         } else {
             contracted.add_edge(edge.first, edge.second);

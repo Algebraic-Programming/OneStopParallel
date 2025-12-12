@@ -32,9 +32,8 @@ template <typename GraphT>
 class StepByStepCoarser : public CoarserGenContractionMap<GraphT, GraphT> {
     using vertex_idx = vertex_idx_t<Graph_t>;
 
-    using vertex_type_t_or_default
-        = std::conditional_t<is_computational_dag_typed_vertices_v<Graph_t>, v_type_t<Graph_t>, unsigned>;
-    using edge_commw_t_or_default = std::conditional_t<has_edge_weights_v<Graph_t>, e_commw_t<Graph_t>, v_commw_t<Graph_t>>;
+    using vertex_type_t_or_default = std::conditional_t<IsComputationalDagTypedVerticesV<Graph_t>, v_type_t<Graph_t>, unsigned>;
+    using edge_commw_t_or_default = std::conditional_t<HasEdgeWeightsV<Graph_t>, e_commw_t<Graph_t>, v_commw_t<Graph_t>>;
 
     using boost_graph_t
         = boost_graph<v_workw_t<Graph_t>, v_commw_t<Graph_t>, v_memw_t<Graph_t>, vertex_type_t_or_default, edge_commw_t_or_default>;
@@ -945,7 +944,7 @@ GraphT StepByStepCoarser<GraphT>::Contract(const std::vector<vertex_idx_t<Graph_
                 continue;
             }
 
-            if constexpr (has_edge_weights_v<Graph_t>) {
+            if constexpr (HasEdgeWeightsV<Graph_t>) {
                 const auto pair = edge_desc(new_vertex_id[node], new_vertex_id[succ], G_contracted);
 
                 if (pair.second) {

@@ -44,7 +44,7 @@ namespace osp {
  */
 template <typename GraphT, typename MemoryConstraintT = no_memory_constraint>
 class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
-    static_assert(is_computational_dag_v<Graph_t>, "GreedyVarianceSspScheduler can only be used with computational DAGs.");
+    static_assert(IsComputationalDagV<Graph_t>, "GreedyVarianceSspScheduler can only be used with computational DAGs.");
 
   private:
     using VertexType = vertex_idx_t<Graph_t>;

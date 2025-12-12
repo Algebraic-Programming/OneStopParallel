@@ -52,8 +52,8 @@ namespace osp {
  */
 template <typename GraphT, typename ConstrGraphT>
 class IsomorphicSubgraphScheduler {
-    static_assert(is_computational_dag_v<Graph_t>, "Graph must be a computational DAG");
-    static_assert(is_computational_dag_v<Constr_Graph_t>, "Constr_Graph_t must be a computational DAG");
+    static_assert(IsComputationalDagV<Graph_t>, "Graph must be a computational DAG");
+    static_assert(IsComputationalDagV<Constr_Graph_t>, "Constr_Graph_t must be a computational DAG");
     static_assert(is_constructable_cdag_v<Constr_Graph_t>, "Constr_Graph_t must satisfy the constructable_cdag_vertex concept");
     static_assert(std::is_same_v<vertex_idx_t<Graph_t>, vertex_idx_t<Constr_Graph_t>>,
                   "Graph_t and Constr_Graph_t must have the same vertex_idx types");
@@ -209,7 +209,7 @@ class IsomorphicSubgraphScheduler {
                 bool isSingleTypeGroup = true;
                 v_type_t<Graph_t> commonNodeType = 0;
 
-                if constexpr (has_typed_vertices_v<Graph_t>) {
+                if constexpr (HasTypedVerticesV<Graph_t>) {
                     if (!group.subgraphs.empty() && !group.subgraphs[0].empty()) {
                         commonNodeType = instance.getComputationalDag().vertex_type(group.subgraphs[0][0]);
                         const auto &repSubgraph = group.subgraphs[0];

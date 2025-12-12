@@ -199,7 +199,7 @@ class BoostGraph {
 
     template <typename GraphT>
     BoostGraph(const GraphT &other) : numberOfVertexTypes_(0) {
-        static_assert(osp::is_computational_dag_v<Graph_t>, "Graph_t must satisfy the is_computation_dag concept");
+        static_assert(osp::IsComputationalDagV<Graph_t>, "Graph_t must satisfy the is_computation_dag concept");
 
         graph_.m_vertices.reserve(other.num_vertices());
 

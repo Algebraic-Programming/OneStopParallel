@@ -128,7 +128,7 @@ static_assert(has_vertex_weights_v<SparseMatrixImp<int32_t>>, "Compact_Sparse_Gr
 
 static_assert(has_vertex_weights_v<SparseMatrixImp<int64_t>>, "Compact_Sparse_Graph must satisfy the has_vertex_weights concept");
 
-static_assert(is_computational_dag_typed_vertices_v<SparseMatrixImp<int32_t>>,
+static_assert(IsComputationalDagTypedVerticesV<SparseMatrixImp<int32_t>>,
               "Compact_Sparse_Graph must satisfy the is_computation_dag concept");
 
 }    // namespace osp

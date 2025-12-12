@@ -57,7 +57,7 @@ namespace osp {
  */
 template <typename GraphT>
 class CoptFullScheduler : public Scheduler<GraphT> {
-    static_assert(is_computational_dag_v<Graph_t>, "CoptFullScheduler can only be used with computational DAGs.");
+    static_assert(IsComputationalDagV<Graph_t>, "CoptFullScheduler can only be used with computational DAGs.");
 
   private:
     bool allowRecomputation_;

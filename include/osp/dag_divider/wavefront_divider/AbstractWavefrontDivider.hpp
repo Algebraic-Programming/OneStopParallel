@@ -37,7 +37,7 @@ namespace osp {
  */
 template <typename GraphT>
 class AbstractWavefrontDivider : public IDagDivider<GraphT> {
-    static_assert(is_computational_dag_v<Graph_t>, "AbstractWavefrontDivider can only be used with computational DAGs.");
+    static_assert(IsComputationalDagV<Graph_t>, "AbstractWavefrontDivider can only be used with computational DAGs.");
 
   protected:
     using VertexType = vertex_idx_t<Graph_t>;

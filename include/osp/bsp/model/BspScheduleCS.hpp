@@ -50,7 +50,7 @@ namespace osp {
  */
 template <typename GraphT>
 class BspScheduleCS : public BspSchedule<GraphT> {
-    static_assert(is_computational_dag_v<GraphT>, "BspScheduleCS can only be used with computational DAGs.");
+    static_assert(IsComputationalDagV<GraphT>, "BspScheduleCS can only be used with computational DAGs.");
 
   public:
     using KeyTriple = std::tuple<VertexIdxT<GraphT>, unsigned int, unsigned int>;

@@ -42,7 +42,7 @@ template <typename GraphT>
 VMemwT<GraphT> MaxMemoryWeight(const VTypeT<GraphT> &nodeType, const GraphT &graph) {
     static_assert(is_directed_graph_v<GraphT>, "Graph_t must satisfy the directed_graph concept");
     static_assert(has_vertex_weights_v<GraphT>, "Graph_t must have vertex weights");
-    static_assert(has_typed_vertices_v<GraphT>, "Graph_t must have typed vertices");
+    static_assert(HasTypedVerticesV<GraphT>, "Graph_t must have typed vertices");
 
     VMemwT<GraphT> maxMemoryWeight = 0;
 
@@ -130,7 +130,7 @@ VCommwT<GraphT> SumOfVerticesCommunicationWeights(const std::initializer_list<Ve
 
 template <typename EdgeIterator, typename GraphT>
 ECommwT<GraphT> SumOfEdgesCommunicationWeights(EdgeIterator begin, EdgeIterator end, const GraphT &graph) {
-    static_assert(has_edge_weights_v<GraphT>, "Graph_t must have edge weights");
+    static_assert(HasEdgeWeightsV<GraphT>, "Graph_t must have edge weights");
     return std::accumulate(
         begin, end, 0, [&](const auto sum, const EdgeDescT<GraphT> &e) { return sum + graph.edge_comm_weight(e); });
 }
