@@ -62,11 +62,11 @@ class AcyclicDagDivider {
 
 template <typename Graph_t>
 std::vector<unsigned> AcyclicDagDivider<Graph_t>::computePartitioning(const BspInstance<Graph_t> &instance) {
-    const unsigned N = static_cast<unsigned>(instance.numberOfVertices());
+    const unsigned N = static_cast<unsigned>(instance.NumberOfVertices());
 
     // split to connected components first
     ConnectedComponentDivider<Graph_t, Graph_t> connected_comp;
-    connected_comp.divide(instance.getComputationalDag());
+    connected_comp.divide(instance.GetComputationalDag());
 
     std::vector<Graph_t> subDags = connected_comp.get_sub_dags();
     std::vector<std::pair<unsigned, vertex_idx>> node_to_subdag_and_index(N);
@@ -94,7 +94,7 @@ std::vector<unsigned> AcyclicDagDivider<Graph_t>::computePartitioning(const BspI
                 }
             } else {
                 for (vertex_idx local_ID = 0; local_ID < dag.NumVertices(); ++local_ID) {
-                    if (instance.getComputationalDag().InDegree(original_id[idx][local_ID]) > 0) {
+                    if (instance.GetComputationalDag().InDegree(original_id[idx][local_ID]) > 0) {
                         ++dag_real_size[idx];
                     }
                 }
@@ -130,7 +130,7 @@ std::vector<unsigned> AcyclicDagDivider<Graph_t>::computePartitioning(const BspI
                 // mark the source nodes of the original DAG
                 std::vector<bool> is_original_source(dag.NumVertices());
                 for (vertex_idx local_ID = 0; local_ID < dag.NumVertices(); ++local_ID) {
-                    is_original_source[local_ID] = (instance.getComputationalDag().InDegree(original_id[idx][local_ID]) == 0);
+                    is_original_source[local_ID] = (instance.GetComputationalDag().InDegree(original_id[idx][local_ID]) == 0);
                 }
 
                 // heuristic splitting
@@ -144,7 +144,7 @@ std::vector<unsigned> AcyclicDagDivider<Graph_t>::computePartitioning(const BspI
                 partitioner.setMinAndMaxSize({newMin, newMax});
                 partitioner.setIsOriginalSource(is_original_source);
                 partitioner.setNumberOfParts(2);    // note - if set to more than 2, ILP is MUCH more inefficient
-                BspInstance partial_instance(dag, instance.getArchitecture(), instance.getNodeProcessorCompatibilityMatrix());
+                BspInstance partial_instance(dag, instance.GetArchitecture(), instance.getNodeProcessorCompatibilityMatrix());
                 RETURN_STATUS status = partitioner.computePartitioning(partial_instance, ILP_assignment);
                 if (status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND) {
                     ILPCost = getSplitCost(dag, ILP_assignment);
@@ -154,9 +154,9 @@ std::vector<unsigned> AcyclicDagDivider<Graph_t>::computePartitioning(const BspI
 
                 // split DAG according to labels
                 std::vector<Graph_t> splitDags = create_induced_subgraphs<Graph_t, Graph_t>(dag, assignment);
-                /*std::cout<<"SPLIT DONE: "<<dag.numberOfVertices()<<" nodes to ";
+                /*std::cout<<"SPLIT DONE: "<<dag.NumberOfVertices()<<" nodes to ";
                 for(auto sdag : splitDags)
-                    std::cout<<sdag.numberOfVertices()<<" + ";
+                    std::cout<<sdag.NumberOfVertices()<<" + ";
                 std::cout<<std::endl;*/
 
                 // update labels
@@ -192,7 +192,7 @@ std::vector<unsigned> AcyclicDagDivider<Graph_t>::computePartitioning(const BspI
     for (vertex_idx node = 0; node < N; ++node) {
         final_assignment[node] = node_to_subdag_and_index[node].first;
     }
-    std::cout << "Final cut cost of acyclic DAG divider is " << getSplitCost(instance.getComputationalDag(), final_assignment)
+    std::cout << "Final cut cost of acyclic DAG divider is " << getSplitCost(instance.GetComputationalDag(), final_assignment)
               << std::endl;
 
     return final_assignment;

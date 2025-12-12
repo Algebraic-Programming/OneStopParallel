@@ -41,14 +41,14 @@ std::vector<size_t> ScheduleNodePermuterBasic(const BspSchedule<GraphT> &sched,
                                               const SCHEDULE_NODE_PERMUTATION_MODES mode = LOOP_PROCESSORS) {
     // superstep, processor, nodes
     std::vector<std::vector<std::vector<size_t>>> allocation(
-        sched.numberOfSupersteps(),
-        std::vector<std::vector<size_t>>(sched.getInstance().NumberOfProcessors(), std::vector<size_t>({})));
-    for (size_t node = 0; node < sched.getInstance().NumberOfVertices(); node++) {
+        sched.NumberOfSupersteps(),
+        std::vector<std::vector<size_t>>(sched.GetInstance().NumberOfProcessors(), std::vector<size_t>({})));
+    for (size_t node = 0; node < sched.GetInstance().NumberOfVertices(); node++) {
         allocation[sched.AssignedSuperstep(node)][sched.AssignedProcessor(node)].emplace_back(node);
     }
 
     // reordering and allocating into permutation
-    std::vector<size_t> permutation(sched.getInstance().NumberOfVertices());
+    std::vector<size_t> permutation(sched.GetInstance().NumberOfVertices());
 
     if (mode == LOOP_PROCESSORS || mode == SNAKE_PROCESSORS) {
         bool forward = true;

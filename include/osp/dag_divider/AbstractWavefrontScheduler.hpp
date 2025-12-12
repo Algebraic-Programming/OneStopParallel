@@ -135,7 +135,7 @@ class AbstractWavefrontScheduler : public Scheduler<GraphT> {
         BspArchitecture<ConstrGraphT> subArchitecture(originalArch);
         std::vector<VMemwT<GraphT>> subDagProcessorMemory(originalArch.getProcessorTypeCount().size(),
                                                           std::numeric_limits<VMemwT<GraphT>>::max());
-        for (unsigned i = 0; i < originalArch.numberOfProcessors(); ++i) {
+        for (unsigned i = 0; i < originalArch.NumberOfProcessors(); ++i) {
             subDagProcessorMemory[originalArch.processorType(i)]
                 = std::min(originalArch.memoryBound(i), subDagProcessorMemory[originalArch.processorType(i)]);
         }
@@ -144,7 +144,7 @@ class AbstractWavefrontScheduler : public Scheduler<GraphT> {
     }
 
     bool ValidateWorkDistribution(const std::vector<ConstrGraphT> &subDags, const BspInstance<GraphT> &instance) const {
-        const auto &originalArch = instance.getArchitecture();
+        const auto &originalArch = instance.GetArchitecture();
         for (const auto &repSubDag : subDags) {
             const double totalRepWork = sumOfVerticesWorkWeights(repSubDag);
 

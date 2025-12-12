@@ -55,7 +55,7 @@ class SetSchedule : public IBspSchedule<GraphT> {
 
     SetSchedule(const BspInstance<GraphT> &inst, unsigned numSupersteps) : instance_(&inst), numberOfSupersteps(numSupersteps) {
         stepProcessorVertices = std::vector<std::vector<std::unordered_set<VertexIdx>>>(
-            numSupersteps, std::vector<std::unordered_set<VertexIdx>>(inst.numberOfProcessors()));
+            numSupersteps, std::vector<std::unordered_set<VertexIdx>>(inst.NumberOfProcessors()));
     }
 
     SetSchedule(const IBspSchedule<GraphT> &schedule)

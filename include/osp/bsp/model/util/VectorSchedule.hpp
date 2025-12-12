@@ -44,8 +44,8 @@ class VectorSchedule : public IBspSchedule<GraphT> {
     VectorSchedule() : instance_(nullptr), numberOfSupersteps(0) {}
 
     VectorSchedule(const BspInstance<GraphT> &inst) : instance_(&inst), numberOfSupersteps(0) {
-        nodeToProcessorAssignment = std::vector<unsigned>(inst.numberOfVertices(), instance_->numberOfProcessors());
-        nodeToSuperstepAssignment = std::vector<unsigned>(inst.numberOfVertices(), 0);
+        nodeToProcessorAssignment = std::vector<unsigned>(inst.NumberOfVertices(), instance_->numberOfProcessors());
+        nodeToSuperstepAssignment = std::vector<unsigned>(inst.NumberOfVertices(), 0);
     }
 
     VectorSchedule(const IBspSchedule<GraphT> &schedule)
@@ -68,8 +68,8 @@ class VectorSchedule : public IBspSchedule<GraphT> {
 
     VectorSchedule &operator=(const IBspSchedule<GraphT> &other) {
         if (this != &other) {
-            instance_ = &other.getInstance();
-            numberOfSupersteps = other.numberOfSupersteps();
+            instance_ = &other.GetInstance();
+            numberOfSupersteps = other.NumberOfSupersteps();
             nodeToProcessorAssignment = std::vector<unsigned>(instance_->numberOfVertices(), instance_->numberOfProcessors());
             nodeToSuperstepAssignment = std::vector<unsigned>(instance_->numberOfVertices(), numberOfSupersteps);
 

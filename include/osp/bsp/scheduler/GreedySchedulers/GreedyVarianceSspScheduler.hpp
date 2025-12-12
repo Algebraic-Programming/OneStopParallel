@@ -169,11 +169,11 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
                             if (procType < procTypesCompatibleWithNodeTypeSkipProctype.size()) {
                                 const auto &compatibleTypes
                                     = procTypesCompatibleWithNodeTypeSkipProctype[procType]
-                                                                                 [instance.getComputationalDag().VertexType(node)];
+                                                                                 [instance.GetComputationalDag().VertexType(node)];
 
                                 for (unsigned otherType : compatibleTypes) {
                                     for (unsigned j = 0; j < instance.NumberOfProcessors(); ++j) {
-                                        if (j != i && instance.getArchitecture().processorType(j) == otherType
+                                        if (j != i && instance.GetArchitecture().processorType(j) == otherType
                                             && j < procReady.size()) {
                                             procReady[j].erase(std::make_pair(node, workVariance[node]));
                                         }
@@ -239,7 +239,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
 
                             const auto &compatibleTypes
                                 = procTypesCompatibleWithNodeTypeSkipProctype[procType]
-                                                                             [instance.getComputationalDag().VertexType(node)];
+                                                                             [instance.GetComputationalDag().VertexType(node)];
 
                             for (unsigned otherType : compatibleTypes) {
                                 if (otherType < allReady.size()) {
@@ -274,7 +274,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
                              const std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> &allReady,
                              const std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> &procReady) const {
         if constexpr (useMemoryConstraint) {
-            if (instance.getArchitecture().getMemoryConstraintType() == MEMORY_CONSTRAINT_TYPE::PERSISTENT_AND_TRANSIENT) {
+            if (instance.GetArchitecture().getMemoryConstraintType() == MEMORY_CONSTRAINT_TYPE::PERSISTENT_AND_TRANSIENT) {
                 for (unsigned i = 0; i < instance.NumberOfProcessors(); ++i) {
                     if (!procReady[i].empty()) {
                         const std::pair<VertexType, double> &nodePair = *procReady[i].begin();
@@ -287,11 +287,11 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
                 }
 
                 for (unsigned i = 0; i < instance.NumberOfProcessors(); ++i) {
-                    if (allReady[instance.getArchitecture().processorType(i)].empty()) {
+                    if (allReady[instance.GetArchitecture().processorType(i)].empty()) {
                         continue;
                     }
 
-                    const std::pair<VertexType, double> &nodePair = *allReady[instance.getArchitecture().processorType(i)].begin();
+                    const std::pair<VertexType, double> &nodePair = *allReady[instance.GetArchitecture().processorType(i)].begin();
                     VertexType topNode = nodePair.first;
 
                     if (memoryConstraint_.can_add(topNode, i)) {
@@ -462,7 +462,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
                 }
 
                 if constexpr (useMemoryConstraint) {
-                    if (instance.getArchitecture().getMemoryConstraintType() == MEMORY_CONSTRAINT_TYPE::LOCAL) {
+                    if (instance.GetArchitecture().getMemoryConstraintType() == MEMORY_CONSTRAINT_TYPE::LOCAL) {
                         for (unsigned proc = 0; proc < p; proc++) {
                             memoryConstraint_.reset(proc);
                         }

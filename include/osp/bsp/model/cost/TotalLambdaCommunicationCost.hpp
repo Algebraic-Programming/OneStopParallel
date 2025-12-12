@@ -34,7 +34,7 @@ struct TotalLambdaCommunicationCost {
     using CostType = double;
 
     CostType operator()(const BspSchedule<GraphT> &schedule) const {
-        const auto &instance = schedule.getInstance();
+        const auto &instance = schedule.GetInstance();
         const auto &nodeToProcessorAssignment = schedule.AssignedProcessors();
 
         VCommwT<GraphT> commCosts = 0;
@@ -58,7 +58,7 @@ struct TotalLambdaCommunicationCost {
             }
         }
 
-        const unsigned numberOfSupersteps = schedule.numberOfSupersteps();
+        const unsigned numberOfSupersteps = schedule.NumberOfSupersteps();
 
         auto commCost = commCosts * commMultiplier * static_cast<double>(instance.CommunicationCosts());
         auto workCost = cost_helpers::ComputeWorkCosts(schedule);

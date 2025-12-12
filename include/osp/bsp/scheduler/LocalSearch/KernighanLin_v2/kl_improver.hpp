@@ -1353,7 +1353,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
     void SynchronizeActiveSchedule(const unsigned numThreads) {
         if (numThreads == 1) {    // single thread case
             activeSchedule_.SetCost(threadDataVec_[0].activeScheduleData.cost);
-            activeSchedule_.GetVectorSchedule().NumberOfSupersteps = threadDataVec_[0].NumSteps();
+            activeSchedule_.GetVectorSchedule().numberOfSupersteps = threadDataVec_[0].NumSteps();
             return;
         }
 

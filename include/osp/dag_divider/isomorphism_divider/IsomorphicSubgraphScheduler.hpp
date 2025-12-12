@@ -365,7 +365,7 @@ class IsomorphicSubgraphScheduler {
                 std::cout << "  - Coarse Node " << j << " (from " << isomorphicGroups[j].subgraphs.size()
                           << " isomorphic subgraphs):\n";
                 std::cout << "    - Multiplicity for scheduling: " << result.multiplicities[j] << "\n";
-                std::cout << "    - Total Work (in coarse graph): " << result.instance.getComputationalDag().VertexWorkWeight(j)
+                std::cout << "    - Total Work (in coarse graph): " << result.instance.GetComputationalDag().VertexWorkWeight(j)
                           << "\n";
                 std::cout << "    - Required Processor Types: ";
                 for (unsigned k = 0; k < numProcTypes; ++k) {
@@ -439,7 +439,7 @@ class IsomorphicSubgraphScheduler {
             if constexpr (verbose) {
                 std::cout << "--- Scheduling representative for group " << groupIdx << " ---" << std::endl;
                 std::cout << "  Number of subgraphs in group: " << group.subgraphs.size() << std::endl;
-                const auto &repDag = representativeInstance.getComputationalDag();
+                const auto &repDag = representativeInstance.GetComputationalDag();
                 std::cout << "  Representative subgraph size: " << repDag.NumVertices() << " vertices" << std::endl;
                 std::vector<unsigned> nodeTypeCounts(repDag.NumVertexTypes(), 0);
                 for (const auto &v : repDag.Vertices()) {
@@ -453,9 +453,9 @@ class IsomorphicSubgraphScheduler {
                 }
                 std::cout << std::endl;
 
-                const auto &subArch = representativeInstance.getArchitecture();
+                const auto &subArch = representativeInstance.GetArchitecture();
                 std::cout << "  Sub-architecture for scheduling:" << std::endl;
-                std::cout << "    Processors: " << subArch.numberOfProcessors() << std::endl;
+                std::cout << "    Processors: " << subArch.NumberOfProcessors() << std::endl;
                 std::cout << "    Processor types counts: ";
                 const auto &typeCounts = subArch.getProcessorTypeCount();
                 for (size_t typeIdx = 0; typeIdx < typeCounts.size(); ++typeIdx) {

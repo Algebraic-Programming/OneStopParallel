@@ -47,13 +47,13 @@ class IBspSchedule {
     /// @brief Get the assigned superstep of a node.
     /// @param node The node index.
     /// @return The assigned superstep of the node.
-    ///         If the node is not assigned to a superstep, this.numberOfSupersteps() is returned.
+    ///         If the node is not assigned to a superstep, this.NumberOfSupersteps() is returned.
     virtual unsigned AssignedSuperstep(VertexIdx node) const = 0;
 
     /// @brief Get the assigned processor of a node.
     /// @param node The node index.
     /// @return The assigned processor of the node.
-    ///         If the node is not assigned to a processor, this.getInstance().numberOfProcessors() is returned.
+    ///         If the node is not assigned to a processor, this.GetInstance().NumberOfProcessors() is returned.
     virtual unsigned AssignedProcessor(VertexIdx node) const = 0;
 
     /// @brief Get the number of supersteps in the schedule.

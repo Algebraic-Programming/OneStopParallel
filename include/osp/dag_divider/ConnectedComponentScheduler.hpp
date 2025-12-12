@@ -34,7 +34,7 @@ class ConnectedComponentScheduler : public Scheduler<GraphT> {
     std::string GetScheduleName() const override { return "SubDagScheduler"; }
 
     RETURN_STATUS ComputeSchedule(BspSchedule<GraphT> &schedule) override {
-        const auto &instance = schedule.getInstance();
+        const auto &instance = schedule.GetInstance();
 
         const GraphT &dag = instance.GetComputationalDag();
         ConnectedComponentDivider<GraphT, ConstrGraphT> partitioner;

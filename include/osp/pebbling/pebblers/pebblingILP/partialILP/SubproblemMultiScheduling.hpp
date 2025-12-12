@@ -89,9 +89,9 @@ std::vector<v_workw_t<Graph_t>> SubproblemMultiScheduling<Graph_t>::get_longest_
 template <typename Graph_t>
 RETURN_STATUS SubproblemMultiScheduling<Graph_t>::computeMultiSchedule(const BspInstance<Graph_t> &instance,
                                                                        std::vector<std::set<unsigned>> &processors_to_node) {
-    const unsigned &N = static_cast<unsigned>(instance.numberOfVertices());
-    const unsigned &P = instance.numberOfProcessors();
-    const auto &G = instance.getComputationalDag();
+    const unsigned &N = static_cast<unsigned>(instance.NumberOfVertices());
+    const unsigned &P = instance.NumberOfProcessors();
+    const auto &G = instance.GetComputationalDag();
 
     processors_to_node.clear();
     processors_to_node.resize(N);
@@ -216,14 +216,14 @@ std::vector<std::pair<vertex_idx_t<Graph_t>, unsigned>> SubproblemMultiSchedulin
     }
 
     std::set<vertex_idx> assigned_nodes;
-    std::vector<bool> assigned_procs(instance.numberOfProcessors(), false);
+    std::vector<bool> assigned_procs(instance.NumberOfProcessors(), false);
 
     for (unsigned proc : procs_available) {
         if (last_node_on_proc[proc] == UINT_MAX) {
             continue;
         }
 
-        for (const auto &succ : instance.getComputationalDag().Children(last_node_on_proc[proc])) {
+        for (const auto &succ : instance.GetComputationalDag().Children(last_node_on_proc[proc])) {
             if (nodes_available.find({-longest_outgoing_path[succ], succ}) != nodes_available.end()
                 && instance.isCompatible(succ, proc) && assigned_nodes.find(succ) == assigned_nodes.end()) {
                 assignments.emplace_back(succ, proc);

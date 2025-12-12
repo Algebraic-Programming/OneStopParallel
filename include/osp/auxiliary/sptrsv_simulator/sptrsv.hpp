@@ -75,17 +75,17 @@ class Sptrsv {
 
     void SetupCsrNoPermutation(const BspSchedule<SparseMatrixImp<EigenIdxType>> &schedule) {
         vectorStepProcessorVertices = std::vector<std::vector<std::vector<EigenIdxType>>>(
-            schedule.numberOfSupersteps(), std::vector<std::vector<EigenIdxType>>(schedule.getInstance().NumberOfProcessors()));
+            schedule.NumberOfSupersteps(), std::vector<std::vector<EigenIdxType>>(schedule.GetInstance().NumberOfProcessors()));
 
         vectorStepProcessorVerticesU = std::vector<std::vector<std::vector<EigenIdxType>>>(
-            schedule.numberOfSupersteps(), std::vector<std::vector<EigenIdxType>>(schedule.getInstance().NumberOfProcessors()));
+            schedule.NumberOfSupersteps(), std::vector<std::vector<EigenIdxType>>(schedule.GetInstance().NumberOfProcessors()));
 
         boundsArrayL = std::vector<std::vector<std::vector<EigenIdxType>>>(
-            schedule.numberOfSupersteps(), std::vector<std::vector<EigenIdxType>>(schedule.getInstance().NumberOfProcessors()));
+            schedule.NumberOfSupersteps(), std::vector<std::vector<EigenIdxType>>(schedule.GetInstance().NumberOfProcessors()));
         boundsArrayU = std::vector<std::vector<std::vector<EigenIdxType>>>(
-            schedule.numberOfSupersteps(), std::vector<std::vector<EigenIdxType>>(schedule.getInstance().NumberOfProcessors()));
+            schedule.NumberOfSupersteps(), std::vector<std::vector<EigenIdxType>>(schedule.GetInstance().NumberOfProcessors()));
 
-        numSupersteps = schedule.numberOfSupersteps();
+        numSupersteps = schedule.NumberOfSupersteps();
         size_t numberOfVertices = instance_->GetComputationalDag().NumVertices();
 
 #    pragma omp parallel num_threads(2)
@@ -98,7 +98,7 @@ class Sptrsv {
                             static_cast<EigenIdxType>(node));
                     }
 
-                    for (unsigned int step = 0; step < schedule.numberOfSupersteps(); ++step) {
+                    for (unsigned int step = 0; step < schedule.NumberOfSupersteps(); ++step) {
                         for (unsigned int proc = 0; proc < instance_->NumberOfProcessors(); ++proc) {
                             if (!vectorStepProcessorVertices[step][proc].empty()) {
                                 EigenIdxType start = vectorStepProcessorVertices[step][proc][0];
@@ -129,7 +129,7 @@ class Sptrsv {
                             static_cast<EigenIdxType>(node));
                     } while (node > 0);
 
-                    for (unsigned int step = 0; step < schedule.numberOfSupersteps(); ++step) {
+                    for (unsigned int step = 0; step < schedule.NumberOfSupersteps(); ++step) {
                         for (unsigned int proc = 0; proc < instance_->NumberOfProcessors(); ++proc) {
                             if (!vectorStepProcessorVerticesU[step][proc].empty()) {
                                 EigenIdxType startU = static_cast<EigenIdxType>(vectorStepProcessorVerticesU[step][proc][0]);
@@ -165,7 +165,7 @@ class Sptrsv {
             permInv[perm[i]] = i;
         }
 
-        numSupersteps = schedule.numberOfSupersteps();
+        numSupersteps = schedule.NumberOfSupersteps();
 
         val.clear();
         val.reserve(static_cast<size_t>(instance_->GetComputationalDag().GetCsr()->nonZeros()));

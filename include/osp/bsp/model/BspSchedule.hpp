@@ -178,7 +178,7 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
     template <typename GraphTOther>
     BspSchedule(const BspInstance<GraphT> &instance, const BspSchedule<GraphTOther> &schedule)
         : instance_(&instance),
-          numberOfSupersteps_(schedule.numberOfSupersteps()),
+          numberOfSupersteps_(schedule.NumberOfSupersteps()),
           nodeToProcessorAssignment_(schedule.assignedProcessors()),
           nodeToSuperstepAssignment_(schedule.assignedSupersteps()) {}
 
