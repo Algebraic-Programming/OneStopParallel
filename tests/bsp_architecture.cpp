@@ -36,8 +36,8 @@ BOOST_AUTO_TEST_CASE(ParameterizedConstructorTest) {
     BOOST_TEST(architecture.NumberOfProcessors() == 4);
     BOOST_TEST(architecture.CommunicationCosts() == 2);
     BOOST_TEST(architecture.SynchronisationCosts() == 3);
-    BOOST_CHECK_EQUAL(architecture.getMemoryConstraintType(), MEMORY_CONSTRAINT_TYPE::NONE);
-    BOOST_CHECK_EQUAL(architecture.getNumberOfProcessorTypes(), 1);
+    BOOST_CHECK_EQUAL(architecture.GetMemoryConstraintType(), MemoryConstraintType::NONE);
+    BOOST_CHECK_EQUAL(architecture.GetNumberOfProcessorTypes(), 1);
     BOOST_CHECK_EQUAL(architecture.IsNumaArchitecture(), false);
 
     BOOST_CHECK_EQUAL(architecture.memoryBound(0), 100);

@@ -122,7 +122,7 @@ class TopOrderCoarser : public Coarser<GraphTIn, GraphTOut> {
 
     inline void SetNodeDistThreshold(unsigned nodeDistThreshold) { nodeDistThreshold_ = nodeDistThreshold; }
 
-    // inline void set_memory_constraint_type(MEMORY_CONSTRAINT_TYPE memory_constraint_type_) { memory_constraint_type =
+    // inline void set_memory_constraint_type(MemoryConstraintType memory_constraint_type_) { memory_constraint_type =
     // memory_constraint_type_; }
 
     virtual std::string getCoarserName() const override { return "top_order_coarser"; };

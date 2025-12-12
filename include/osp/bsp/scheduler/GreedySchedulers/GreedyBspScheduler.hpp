@@ -162,7 +162,7 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
                              const std::set<VertexType> &allReady,
                              const std::vector<std::set<VertexType>> &procReady) const {
         if constexpr (useMemoryConstraint_) {
-            if (instance.GetArchitecture().getMemoryConstraintType() == MEMORY_CONSTRAINT_TYPE::PERSISTENT_AND_TRANSIENT) {
+            if (instance.GetArchitecture().GetMemoryConstraintType() == MemoryConstraintType::PERSISTENT_AND_TRANSIENT) {
                 unsigned numEmptyProc = 0;
 
                 for (unsigned i = 0; i < instance.NumberOfProcessors(); ++i) {

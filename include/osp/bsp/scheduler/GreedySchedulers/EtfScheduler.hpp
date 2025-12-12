@@ -114,7 +114,7 @@ class EtfScheduler : public Scheduler<GraphT> {
     }
 
     bool CheckMemFeasibility(const BspInstance<GraphT> &instance, const std::set<tv_pair> &ready) const {
-        if (instance.GetArchitecture().getMemoryConstraintType() == MEMORY_CONSTRAINT_TYPE::PERSISTENT_AND_TRANSIENT) {
+        if (instance.GetArchitecture().GetMemoryConstraintType() == MemoryConstraintType::PERSISTENT_AND_TRANSIENT) {
             if (ready.empty()) {
                 return true;
             }

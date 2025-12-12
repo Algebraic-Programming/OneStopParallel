@@ -55,27 +55,27 @@ bool ReadBspArchitecture(std::ifstream &infile, BspArchitecture<GraphT> &archite
         memType = -1;    // Memory info not present
     }
 
-    architecture.setNumberOfProcessors(p);
-    architecture.setCommunicationCosts(static_cast<v_commw_t<Graph_t>>(g));
-    architecture.setSynchronisationCosts(static_cast<v_commw_t<Graph_t>>(l));
+    architecture.SetNumberOfProcessors(p);
+    architecture.SetCommunicationCosts(static_cast<v_commw_t<Graph_t>>(g));
+    architecture.SetSynchronisationCosts(static_cast<v_commw_t<Graph_t>>(l));
 
     if (0 <= memType && memType <= 3) {
-        using memw_t = v_memw_t<GraphT>;
+        using MemwT = VMemwT<GraphT>;
         switch (memType) {
             case 0:
-                architecture.setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::NONE);
+                architecture.SetMemoryConstraintType(MemoryConstraintType::NONE);
                 break;
             case 1:
-                architecture.setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::LOCAL);
-                architecture.setMemoryBound(static_cast<memw_t>(m));
+                architecture.SetMemoryConstraintType(MemoryConstraintType::LOCAL);
+                architecture.SetMemoryBound(static_cast<memw_t>(m));
                 break;
             case 2:
-                architecture.setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::GLOBAL);
-                architecture.setMemoryBound(static_cast<memw_t>(m));
+                architecture.SetMemoryConstraintType(MemoryConstraintType::GLOBAL);
+                architecture.SetMemoryBound(static_cast<memw_t>(m));
                 break;
             case 3:
-                architecture.setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::PERSISTENT_AND_TRANSIENT);
-                architecture.setMemoryBound(static_cast<memw_t>(m));
+                architecture.SetMemoryConstraintType(MemoryConstraintType::PERSISTENT_AND_TRANSIENT);
+                architecture.SetMemoryBound(static_cast<memw_t>(m));
                 break;
             default:
                 std::cerr << "Invalid memory type.\n";
@@ -83,7 +83,7 @@ bool ReadBspArchitecture(std::ifstream &infile, BspArchitecture<GraphT> &archite
         }
     } else if (memType == -1) {
         std::cout << "No memory type specified. Assuming \"NONE\".\n";
-        architecture.setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::NONE);
+        architecture.SetMemoryConstraintType(MemoryConstraintType::NONE);
     } else {
         std::cerr << "Invalid memory type.\n";
         return false;
@@ -142,7 +142,7 @@ bool ReadBspArchitecture(const std::string &filename, BspArchitecture<GraphT> &a
         return false;
     }
 
-    return readBspArchitecture(infile, architecture);
+    return ReadBspArchitecture(infile, architecture);
 }
 
 }    // namespace file_reader

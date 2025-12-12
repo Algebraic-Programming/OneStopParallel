@@ -43,7 +43,7 @@ class HdaggCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> {
 
     std::size_t superNodeSizeThreshold_ = std::numeric_limits<std::size_t>::max();
 
-    // MEMORY_CONSTRAINT_TYPE memory_constraint_type = NONE;
+    // MemoryConstraintType memory_constraint_type = NONE;
 
     // internal data strauctures
     v_memw_t<Graph_t_in> currentMemory_ = 0;

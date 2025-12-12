@@ -64,11 +64,11 @@ BOOST_AUTO_TEST_CASE(KlLocalMemconst) {
 
         bool statusGraph
             = file_reader::readComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(), instance.GetComputationalDag());
-        instance.GetArchitecture().setSynchronisationCosts(10);
-        instance.GetArchitecture().setCommunicationCosts(5);
-        instance.GetArchitecture().setNumberOfProcessors(4);
-        instance.GetArchitecture().setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::LOCAL);
-        instance.GetArchitecture().setSynchronisationCosts(0);
+        instance.GetArchitecture().SetSynchronisationCosts(10);
+        instance.GetArchitecture().SetCommunicationCosts(5);
+        instance.GetArchitecture().SetNumberOfProcessors(4);
+        instance.GetArchitecture().SetMemoryConstraintType(MemoryConstraintType::LOCAL);
+        instance.GetArchitecture().SetSynchronisationCosts(0);
 
         const std::vector<int> boundsToTest = {10, 20};
 

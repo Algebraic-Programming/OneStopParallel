@@ -86,7 +86,7 @@ void RunTestLocalMemory(Scheduler<GraphT> *testScheduler) {
                 = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
 
             AddMemWeights(instance.GetComputationalDag());
-            instance.GetArchitecture().setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::LOCAL);
+            instance.GetArchitecture().SetMemoryConstraintType(MemoryConstraintType::LOCAL);
             std::cout << "Memory constraint type: LOCAL" << std::endl;
 
             if (!statusGraph || !statusArchitecture) {
@@ -143,7 +143,7 @@ void RunTestPersistentTransientMemory(Scheduler<GraphT> *testScheduler) {
                 = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
 
             AddMemWeights(instance.GetComputationalDag());
-            instance.GetArchitecture().setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::PERSISTENT_AND_TRANSIENT);
+            instance.GetArchitecture().SetMemoryConstraintType(MemoryConstraintType::PERSISTENT_AND_TRANSIENT);
             std::cout << "Memory constraint type: PERSISTENT_AND_TRANSIENT" << std::endl;
 
             if (!statusGraph || !statusArchitecture) {
@@ -200,7 +200,7 @@ void RunTestLocalInOutMemory(Scheduler<GraphT> *testScheduler) {
                 = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
 
             AddMemWeights(instance.GetComputationalDag());
-            instance.GetArchitecture().setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::LOCAL_IN_OUT);
+            instance.GetArchitecture().SetMemoryConstraintType(MemoryConstraintType::LOCAL_IN_OUT);
             std::cout << "Memory constraint type: LOCAL_IN_OUT" << std::endl;
 
             if (!statusGraph || !statusArchitecture) {
@@ -257,7 +257,7 @@ void RunTestLocalIncEdgesMemory(Scheduler<GraphT> *testScheduler) {
                 = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
 
             AddMemWeights(instance.GetComputationalDag());
-            instance.GetArchitecture().setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::LOCAL_INC_EDGES);
+            instance.GetArchitecture().SetMemoryConstraintType(MemoryConstraintType::LOCAL_INC_EDGES);
             std::cout << "Memory constraint type: LOCAL_INC_EDGES" << std::endl;
 
             if (!statusGraph || !statusArchitecture) {
@@ -314,7 +314,7 @@ void RunTestLocalIncEdges2Memory(Scheduler<GraphT> *testScheduler) {
                 = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
 
             AddMemWeights(instance.GetComputationalDag());
-            instance.GetArchitecture().setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::LOCAL_SOURCES_INC_EDGES);
+            instance.GetArchitecture().SetMemoryConstraintType(MemoryConstraintType::LOCAL_SOURCES_INC_EDGES);
             std::cout << "Memory constraint type: LOCAL_SOURCES_INC_EDGES" << std::endl;
 
             if (!statusGraph || !statusArchitecture) {

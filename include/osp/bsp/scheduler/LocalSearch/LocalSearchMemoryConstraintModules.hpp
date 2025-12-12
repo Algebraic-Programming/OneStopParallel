@@ -82,7 +82,7 @@ struct LsLocalMemoryConstraint {
     LsLocalMemoryConstraint() : setSchedule_(nullptr), graph_(nullptr) {}
 
     inline void Initialize(const SetSchedule<GraphT> &setSchedule, const VectorSchedule<GraphT> &) {
-        if (set_schedule_.GetInstance().GetArchitecture().getMemoryConstraintType() != MEMORY_CONSTRAINT_TYPE::LOCAL) {
+        if (set_schedule_.GetInstance().GetArchitecture().GetMemoryConstraintType() != MemoryConstraintType::LOCAL) {
             throw std::invalid_argument("Memory constraint type is not LOCAL");
         }
 
@@ -162,7 +162,7 @@ struct LsLocalIncEdgesMemoryConstraint {
     LsLocalIncEdgesMemoryConstraint() : setSchedule_(nullptr), vectorSchedule_(nullptr), graph_(nullptr) {}
 
     inline void Initialize(const SetSchedule<GraphT> &setSchedule, const VectorSchedule<GraphT> &vecSchedule) {
-        if (set_schedule_.GetInstance().GetArchitecture().getMemoryConstraintType() != MEMORY_CONSTRAINT_TYPE::LOCAL_INC_EDGES) {
+        if (set_schedule_.GetInstance().GetArchitecture().GetMemoryConstraintType() != MemoryConstraintType::LOCAL_INC_EDGES) {
             throw std::invalid_argument("Memory constraint type is not LOCAL_INC_EDGES");
         }
 
@@ -343,8 +343,8 @@ struct LsLocalSourcesIncEdgesMemoryConstraint {
     }
 
     inline void Initialize(const SetSchedule<GraphT> &setSchedule, const VectorSchedule<GraphT> &vecSchedule) {
-        if (set_schedule_.GetInstance().GetArchitecture().getMemoryConstraintType()
-            != MEMORY_CONSTRAINT_TYPE::LOCAL_SOURCES_INC_EDGES) {
+        if (set_schedule_.GetInstance().GetArchitecture().GetMemoryConstraintType()
+            != MemoryConstraintType::LOCAL_SOURCES_INC_EDGES) {
             throw std::invalid_argument("Memory constraint type is not LOCAL_SOURCES_INC_EDGES");
         }
 

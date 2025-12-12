@@ -71,7 +71,7 @@ struct LocalMemoryConstraint {
         instance_ = &instance;
         current_proc_memory = std::vector<v_memw_t<Graph_t>>(instance->NumberOfProcessors(), 0);
 
-        if (instance->GetArchitecture().getMemoryConstraintType() != MEMORY_CONSTRAINT_TYPE::LOCAL) {
+        if (instance->GetArchitecture().GetMemoryConstraintType() != MemoryConstraintType::LOCAL) {
             throw std::invalid_argument("Memory constraint type is not LOCAL");
         }
     }
@@ -127,7 +127,7 @@ struct PersistentTransientMemoryConstraint {
         current_proc_persistent_memory = std::vector<v_memw_t<Graph_t>>(instance->NumberOfProcessors(), 0);
         current_proc_transient_memory = std::vector<v_commw_t<Graph_t>>(instance->NumberOfProcessors(), 0);
 
-        if (instance->GetArchitecture().getMemoryConstraintType() != MEMORY_CONSTRAINT_TYPE::PERSISTENT_AND_TRANSIENT) {
+        if (instance->GetArchitecture().GetMemoryConstraintType() != MemoryConstraintType::PERSISTENT_AND_TRANSIENT) {
             throw std::invalid_argument("Memory constraint type is not PERSISTENT_AND_TRANSIENT");
         }
     }
@@ -174,7 +174,7 @@ struct GlobalMemoryConstraint {
         instance_ = &instance;
         current_proc_memory = std::vector<v_memw_t<Graph_t>>(instance->NumberOfProcessors(), 0);
 
-        if (instance->GetArchitecture().getMemoryConstraintType() != MEMORY_CONSTRAINT_TYPE::GLOBAL) {
+        if (instance->GetArchitecture().GetMemoryConstraintType() != MemoryConstraintType::GLOBAL) {
             throw std::invalid_argument("Memory constraint type is not GLOBAL");
         }
     }
@@ -236,7 +236,7 @@ struct LocalInOutMemoryConstraint {
         instance_ = &schedule_->GetInstance();
         current_proc_memory = std::vector<v_memw_t<Graph_t>>(instance->NumberOfProcessors(), 0);
 
-        if (instance->GetArchitecture().getMemoryConstraintType() != MEMORY_CONSTRAINT_TYPE::LOCAL_IN_OUT) {
+        if (instance->GetArchitecture().GetMemoryConstraintType() != MemoryConstraintType::LOCAL_IN_OUT) {
             throw std::invalid_argument("Memory constraint type is not LOCAL_IN_OUT");
         }
     }
@@ -292,7 +292,7 @@ struct LocalIncEdgesMemoryConstraint {
         current_proc_memory = std::vector<v_commw_t<Graph_t>>(instance->NumberOfProcessors(), 0);
         current_proc_predec = std::vector<std::unordered_set<vertex_idx_t<Graph_t>>>(instance->NumberOfProcessors());
 
-        if (instance->GetArchitecture().getMemoryConstraintType() != MEMORY_CONSTRAINT_TYPE::LOCAL_INC_EDGES) {
+        if (instance->GetArchitecture().GetMemoryConstraintType() != MemoryConstraintType::LOCAL_INC_EDGES) {
             throw std::invalid_argument("Memory constraint type is not LOCAL_INC_EDGES");
         }
     }
@@ -354,7 +354,7 @@ struct LocalSourcesIncEdgesMemoryConstraint {
         current_proc_memory = std::vector<v_memw_t<Graph_t>>(instance->NumberOfProcessors(), 0);
         current_proc_predec = std::vector<std::unordered_set<vertex_idx_t<Graph_t>>>(instance->NumberOfProcessors());
 
-        if (instance->GetArchitecture().getMemoryConstraintType() != MEMORY_CONSTRAINT_TYPE::LOCAL_SOURCES_INC_EDGES) {
+        if (instance->GetArchitecture().GetMemoryConstraintType() != MemoryConstraintType::LOCAL_SOURCES_INC_EDGES) {
             throw std::invalid_argument("Memory constraint type is not LOCAL_INC_EDGES_2");
         }
     }

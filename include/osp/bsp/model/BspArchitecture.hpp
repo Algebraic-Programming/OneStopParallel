@@ -35,7 +35,7 @@ limitations under the License.
 namespace osp {
 
 /**
- * @enum MEMORY_CONSTRAINT_TYPE
+ * @enum MemoryConstraintType
  * @brief Enumerates the different types of memory constraints.
  * Memory bounds are set per processor and apply to aggregated memory weights of nodes according to the different types of memory
  * constraints.
@@ -107,7 +107,7 @@ inline std::ostream &operator<<(std::ostream &os, MemoryConstraintType type) { r
  * By default, send costs are uniform (1 for distinct processors, 0 for self).
  *
  * **Memory Constraints:**
- * Each processor has a memory bound. The `MEMORY_CONSTRAINT_TYPE` determines how these bounds are applied
+ * Each processor has a memory bound. The `MemoryConstraintType` determines how these bounds are applied
  * (e.g., local per superstep, global per processor).
  */
 template <typename GraphT>

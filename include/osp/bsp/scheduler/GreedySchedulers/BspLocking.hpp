@@ -124,7 +124,7 @@ class BspLocking : public Scheduler<GraphT> {
                              const std::set<VertexType> &allReady,
                              const std::vector<std::set<VertexType>> &procReady) const {
         if constexpr (useMemoryConstraint_) {
-            if (instance.GetArchitecture().getMemoryConstraintType() == MEMORY_CONSTRAINT_TYPE::PERSISTENT_AND_TRANSIENT) {
+            if (instance.GetArchitecture().GetMemoryConstraintType() == MemoryConstraintType::PERSISTENT_AND_TRANSIENT) {
                 for (unsigned i = 0; i < instance.NumberOfProcessors(); ++i) {
                     if (!procReady[i].empty()) {
                         VertexType topNode = max_proc_score_heap[i].top();
