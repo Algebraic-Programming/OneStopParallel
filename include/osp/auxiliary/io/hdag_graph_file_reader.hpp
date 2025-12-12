@@ -141,7 +141,7 @@ bool ReadComputationalDagHyperdagFormat(const std::string &filename, GraphT &gra
         return false;
     }
 
-    return readComputationalDagHyperdagFormat(infile, graph);
+    return ReadComputationalDagHyperdagFormat(infile, graph);
 }
 
 template <typename GraphT>
@@ -258,7 +258,7 @@ bool ReadComputationalDagHyperdagFormatDb(std::ifstream &infile, GraphT &graph) 
                 graph.SetEdgeCommWeight(edge.first, static_cast<ECommwT<GraphT>>(hyperedgeCommWeights[edgeIdx]));
 
             } else {
-                graph.add_edge(static_cast<VertexIdxT<GraphT>>(edgeSource[edgeIdx]), static_cast<VertexIdxT<GraphT>>(nodeIdx));
+                graph.AddEdge(static_cast<VertexIdxT<GraphT>>(edgeSource[edgeIdx]), static_cast<VertexIdxT<GraphT>>(nodeIdx));
             }
         }
     }
@@ -290,7 +290,7 @@ bool ReadComputationalDagHyperdagFormatDb(const std::string &filename, GraphT &g
         return false;
     }
 
-    return readComputationalDagHyperdagFormatDB(infile, graph);
+    return ReadComputationalDagHyperdagFormatDB(infile, graph);
 }
 
 }    // namespace file_reader
