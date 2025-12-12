@@ -26,7 +26,7 @@ limitations under the License.
 #include "osp/bsp/scheduler/GreedySchedulers/GreedyChildren.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/GreedyMetaScheduler.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/GrowLocalAutoCores.hpp"
-#include "osp/bsp/scheduler/LocalSearch/KernighanLin_v2/kl_include_mt.hpp"
+#include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_include_mt.hpp"
 #include "osp/bsp/scheduler/Serial.hpp"
 #include "osp/coarser/Sarkar/Sarkar.hpp"
 #include "osp/coarser/Sarkar/SarkarMul.hpp"

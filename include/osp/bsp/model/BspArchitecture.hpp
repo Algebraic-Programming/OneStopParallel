@@ -375,7 +375,7 @@ class BspArchitecture {
      * @throws std::invalid_argument if the processor indices are out of bounds.
      */
     void SetSendCosts(const unsigned p1, const unsigned p2, const VCommwT<GraphT> cost) {
-        if (p1 >= numberOfProcessors_ || p2 >= numberOfProcessors_) {    // Fixed condition: p2 >= number_processors
+        if (p1 >= numberOfProcessors_ || p2 >= numberOfProcessors_) {
             throw std::invalid_argument("Invalid Argument: Processor index out of bounds.");
         }
 

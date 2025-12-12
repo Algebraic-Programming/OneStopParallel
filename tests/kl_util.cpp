@@ -17,14 +17,14 @@ limitations under the License.
 */
 
 #define BOOST_TEST_MODULE kl_util
-#include "osp/bsp/scheduler/LocalSearch/KernighanLin_v2/kl_util.hpp"
+#include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_util.hpp"
 
 #include <boost/test/unit_test.hpp>
 #include <numeric>
 #include <set>
 
 #include "osp/bsp/model/BspSchedule.hpp"
-#include "osp/bsp/scheduler/LocalSearch/KernighanLin_v2/kl_active_schedule.hpp"
+#include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_active_schedule.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 
 using namespace osp;
