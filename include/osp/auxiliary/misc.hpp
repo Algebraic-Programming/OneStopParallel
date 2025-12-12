@@ -163,7 +163,7 @@ std::unordered_set<T> GetUnion(const std::unordered_set<T> &a, const std::unorde
     return larger;
 }
 
-// zip two vectors of equal length
+// Zip two vectors of equal length
 template <typename S, typename T>
 std::vector<std::pair<S, T>> Zip(const std::vector<S> &a, const std::vector<T> &b) {
     assert(a.size() == b.size());
@@ -194,10 +194,10 @@ std::vector<size_t> SortAndSortingArrangement(std::vector<T> &a) {
     rearrangement.resize(a.size());
     std::iota(rearrangement.begin(), rearrangement.end(), 0);
 
-    std::vector<std::pair<T, size_t>> zipped = zip(a, rearrangement);
+    std::vector<std::pair<T, size_t>> zipped = Zip(a, rearrangement);
     std::sort(zipped.begin(), zipped.end());
 
-    unzip(zipped, a, rearrangement);
+    Unzip(zipped, a, rearrangement);
 
     return rearrangement;
 }
@@ -208,7 +208,7 @@ std::vector<RetT> SortingArrangement(const std::vector<T> &a, bool increasing = 
     rearrangement.resize(a.size());
     std::iota(rearrangement.begin(), rearrangement.end(), 0);
 
-    std::vector<std::pair<T, RetT>> zipped = zip(a, rearrangement);
+    std::vector<std::pair<T, RetT>> zipped = Zip(a, rearrangement);
     std::sort(zipped.begin(), zipped.end());
     if (!increasing) {
         std::reverse(zipped.begin(), zipped.end());
@@ -266,8 +266,8 @@ template <typename S, typename T>
 void SortLike(std::vector<S> &a, const std::vector<T> &b) {
     assert(a.size() == b.size());
 
-    std::vector<size_t> arrangement = sorting_arrangement(b);
-    sort_like_arrangement(a, arrangement);
+    std::vector<size_t> arrangement = SortingArrangement(b);
+    SortLikeArrangement(a, arrangement);
 }
 
 /**
