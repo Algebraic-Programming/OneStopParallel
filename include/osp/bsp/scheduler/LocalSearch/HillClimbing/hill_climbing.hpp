@@ -34,7 +34,7 @@ class HillClimbingScheduler : public ImprovementScheduler<GraphT> {
     using vertex_idx = vertex_idx_t<Graph_t>;
     using cost_type = VWorkwT<Graph_t>;
 
-    static_assert(std::is_same_v<VWorkwT<Graph_t>, v_commw_t<Graph_t>>,
+    static_assert(std::is_same_v<VWorkwT<Graph_t>, VCommwT<Graph_t>>,
                   "HillClimbing requires work and comm. weights to have the same type.");
 
   public:
@@ -98,7 +98,7 @@ class HillClimbingScheduler : public ImprovementScheduler<GraphT> {
 
     // For memory constraints
     bool useMemoryConstraint_ = false;
-    std::vector<std::vector<v_memw_t<Graph_t>>> memoryUsed_;
+    std::vector<std::vector<VMemwT<Graph_t>>> memoryUsed_;
     bool ViolatesMemConstraint(vertex_idx node, unsigned processor, int where);
 
     // Compute the cost change incurred by a potential move
@@ -309,7 +309,7 @@ void HillClimbingScheduler<GraphT>::Init() {
     // memory_constraints
     if (useMemoryConstraint_) {
         memory_used.clear();
-        memory_used.resize(P, std::vector<v_memw_t<Graph_t>>(M, 0));
+        memory_used.resize(P, std::vector<VMemwT<Graph_t>>(M, 0));
         for (vertex_idx node = 0; node < N; ++node) {
             memory_used[schedule->assignedProcessor(node)][schedule->assignedSuperstep(node)]
                 += schedule->GetInstance().GetComputationalDag().VertexMemWeight(node);

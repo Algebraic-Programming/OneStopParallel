@@ -76,7 +76,7 @@ int main(int argc, char *argv[]) {
 
     for (auto v : instance.GetComputationalDag().vertices()) {
         instance.GetComputationalDag().SetVertexCommWeight(
-            v, static_cast<v_commw_t<GraphT2>>(instance.GetComputationalDag().VertexCommWeight(v) * 0.01));
+            v, static_cast<VCommwT<GraphT2>>(instance.GetComputationalDag().VertexCommWeight(v) * 0.01));
     }
 
     // Set up architecture

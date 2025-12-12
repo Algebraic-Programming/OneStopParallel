@@ -97,8 +97,8 @@ class KlImprover : public ImprovementScheduler<GraphT> {
     constexpr static bool enablePreresolvingViolations_ = true;
     constexpr static double epsilon_ = 1e-9;
 
-    using memw_t = v_memw_t<Graph_t>;
-    using commw_t = v_commw_t<Graph_t>;
+    using memw_t = VMemwT<Graph_t>;
+    using commw_t = VCommwT<Graph_t>;
     using work_weight_t = VWorkwT<Graph_t>;
     using VertexType = vertex_idx_t<Graph_t>;
     using EdgeType = edge_desc_t<Graph_t>;

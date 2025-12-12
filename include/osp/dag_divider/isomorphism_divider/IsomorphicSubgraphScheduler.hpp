@@ -402,10 +402,10 @@ class IsomorphicSubgraphScheduler {
 
             representativeInstance.GetArchitecture() = instance.GetArchitecture();
             const auto &procsForGroup = subSched.nodeAssignedWorkerPerType_[groupIdx];
-            std::vector<v_memw_t<Constr_Graph_t>> memWeights(procsForGroup.size(), 0);
+            std::vector<VMemwT<Constr_Graph_t>> memWeights(procsForGroup.size(), 0);
             for (unsigned procType = 0; procType < procsForGroup.size(); ++procType) {
                 memWeights[procType]
-                    = static_cast<v_memw_t<Constr_Graph_t>>(instance.GetArchitecture().maxMemoryBoundProcType(procType));
+                    = static_cast<VMemwT<Constr_Graph_t>>(instance.GetArchitecture().maxMemoryBoundProcType(procType));
             }
             representativeInstance.GetArchitecture().SetProcessorsConsequTypes(procsForGroup, mem_weights);
             representativeInstance.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());

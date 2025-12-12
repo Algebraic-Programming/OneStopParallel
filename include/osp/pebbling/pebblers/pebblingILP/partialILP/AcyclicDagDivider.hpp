@@ -40,7 +40,7 @@ class AcyclicDagDivider {
                                               std::pair<unsigned, unsigned> minAndMax,
                                               const std::vector<bool> &isOriginalSource) const;
 
-    v_commw_t<Graph_t> static GetSplitCost(const GraphT &g, const std::vector<unsigned> &nodeToPart);
+    VCommwT<Graph_t> static GetSplitCost(const GraphT &g, const std::vector<unsigned> &nodeToPart);
 
   public:
     AcyclicDagDivider() {}
@@ -290,8 +290,8 @@ std::vector<unsigned> AcyclicDagDivider<GraphT>::GetTopologicalSplit(const Graph
 }
 
 template <typename GraphT>
-v_commw_t<Graph_t> AcyclicDagDivider<GraphT>::GetSplitCost(const GraphT &g, const std::vector<unsigned> &nodeToPart) {
-    v_commw_t<Graph_t> cost = 0;
+VCommwT<Graph_t> AcyclicDagDivider<GraphT>::GetSplitCost(const GraphT &g, const std::vector<unsigned> &nodeToPart) {
+    VCommwT<Graph_t> cost = 0;
 
     for (vertex_idx node = 0; node < g.NumVertices(); ++node) {
         std::set<unsigned> partsIncluded;
@@ -300,7 +300,7 @@ v_commw_t<Graph_t> AcyclicDagDivider<GraphT>::GetSplitCost(const GraphT &g, cons
             parts_included.insert(node_to_part[succ]);
         }
 
-        cost += static_cast<v_commw_t<Graph_t>>(parts_included.size() - 1) * g.VertexCommWeight(node);
+        cost += static_cast<VCommwT<Graph_t>>(parts_included.size() - 1) * g.VertexCommWeight(node);
     }
 
     return cost;

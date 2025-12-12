@@ -461,13 +461,13 @@ class KlCurrentSchedule {
 template <typename GraphT, typename MemoryConstraintT>
 class KlCurrentScheduleMaxComm : public KlCurrentSchedule<GraphT, MemoryConstraintT> {
   public:
-    std::vector<std::vector<v_commw_t<Graph_t>>> stepProcessorSend_;
-    std::vector<v_commw_t<Graph_t>> stepMaxSend_;
-    std::vector<v_commw_t<Graph_t>> stepMaxReceive_;
+    std::vector<std::vector<VCommwT<Graph_t>>> stepProcessorSend_;
+    std::vector<VCommwT<Graph_t>> stepMaxSend_;
+    std::vector<VCommwT<Graph_t>> stepMaxReceive_;
 
-    std::vector<std::vector<v_commw_t<Graph_t>>> stepProcessorReceive_;
-    std::vector<v_commw_t<Graph_t>> stepSecondMaxSend_;
-    std::vector<v_commw_t<Graph_t>> stepSecondMaxReceive_;
+    std::vector<std::vector<VCommwT<Graph_t>>> stepProcessorReceive_;
+    std::vector<VCommwT<Graph_t>> stepSecondMaxSend_;
+    std::vector<VCommwT<Graph_t>> stepSecondMaxReceive_;
 };
 
 }    // namespace osp

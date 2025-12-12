@@ -67,7 +67,7 @@ class SquashA : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
         std::advance(lower_third_it, edge_weights.size() / 3);
         T lowerThirdWt = std::max(lower_third_it->second, static_cast<T>(1));    // Could be 0
 
-        Union_Find_Universe<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_in>, VWorkwT<Graph_t_in>, v_memw_t<Graph_t_in>>
+        Union_Find_Universe<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_in>, VWorkwT<Graph_t_in>, VMemwT<Graph_t_in>>
             connected_components;
         for (const auto &vert : dagIn.vertices()) {
             connected_components.add_object(vert, dag_in.VertexWorkWeight(vert), dag_in.VertexMemWeight(vert));
@@ -258,9 +258,9 @@ std::vector<std::vector<vertex_idx_t<Graph_t_in>>> SquashA<GraphTIn, GraphTOut>:
     if constexpr (HasEdgeWeightsV<Graph_t_in>) {
         if (params_.mode_ == squash_a_params::Mode::EDGE_WEIGHT) {
             auto edgeWCmp
-                = [](const std::pair<edge_desc_t<Graph_t_in>, e_commw_t<Graph_t_in>> &lhs,
-                     const std::pair<edge_desc_t<Graph_t_in>, e_commw_t<Graph_t_in>> &rhs) { return lhs.second < rhs.second; };
-            std::multiset<std::pair<edge_desc_t<Graph_t_in>, e_commw_t<Graph_t_in>>, decltype(edge_w_cmp)> edge_weights(edge_w_cmp);
+                = [](const std::pair<edge_desc_t<Graph_t_in>, ECommwT<Graph_t_in>> &lhs,
+                     const std::pair<edge_desc_t<Graph_t_in>, ECommwT<Graph_t_in>> &rhs) { return lhs.second < rhs.second; };
+            std::multiset<std::pair<edge_desc_t<Graph_t_in>, ECommwT<Graph_t_in>>, decltype(edge_w_cmp)> edge_weights(edge_w_cmp);
             {
                 std::vector<edge_desc_t<Graph_t_in>> contractableEdges
                     = get_contractable_edges_from_poset_int_map<GraphTIn>(posetIntMapping, dagIn);
@@ -273,7 +273,7 @@ std::vector<std::vector<vertex_idx_t<Graph_t_in>>> SquashA<GraphTIn, GraphTOut>:
                 }
             }
 
-            return gen_exp_map_from_contractable_edges<e_commw_t<Graph_t_in>, decltype(edge_w_cmp)>(
+            return gen_exp_map_from_contractable_edges<ECommwT<Graph_t_in>, decltype(edge_w_cmp)>(
                 edge_weights, poset_int_mapping, dag_in);
         }
     }

@@ -181,9 +181,9 @@ RETURN_STATUS RunBspScheduler(const ConfigParser &parser,
                               const boost::property_tree::ptree &algorithm,
                               BspSchedule<GraphT> &schedule) {
     using vertex_type_t_or_default = std::conditional_t<IsComputationalDagTypedVerticesV<Graph_t>, v_type_t<Graph_t>, unsigned>;
-    using edge_commw_t_or_default = std::conditional_t<HasEdgeWeightsV<Graph_t>, e_commw_t<Graph_t>, v_commw_t<Graph_t>>;
+    using edge_commw_t_or_default = std::conditional_t<HasEdgeWeightsV<Graph_t>, ECommwT<Graph_t>, VCommwT<Graph_t>>;
     using boost_graph_t
-        = boost_graph<VWorkwT<Graph_t>, v_commw_t<Graph_t>, v_memw_t<Graph_t>, vertex_type_t_or_default, edge_commw_t_or_default>;
+        = boost_graph<VWorkwT<Graph_t>, VCommwT<Graph_t>, VMemwT<Graph_t>, vertex_type_t_or_default, edge_commw_t_or_default>;
 
     const std::string id = algorithm.get_child("id").get_value<std::string>();
 

@@ -54,9 +54,9 @@ class PebblingSchedule {
   private:
     using vertex_idx = vertex_idx_t<Graph_t>;
     using cost_type = VWorkwT<Graph_t>;
-    using memweight_type = v_memw_t<Graph_t>;
+    using memweight_type = VMemwT<Graph_t>;
 
-    static_assert(std::is_same_v<VWorkwT<Graph_t>, v_commw_t<Graph_t>>,
+    static_assert(std::is_same_v<VWorkwT<Graph_t>, VCommwT<Graph_t>>,
                   "PebblingSchedule requires work and comm. weights to have the same type.");
 
     const BspInstance<GraphT> *instance_;
@@ -1261,15 +1261,15 @@ bool PebblingSchedule<GraphT>::IsValid() const {
 }
 
 template <typename GraphT>
-std::vector<v_memw_t<Graph_t>> PebblingSchedule<GraphT>::MinimumMemoryRequiredPerNodeType(
+std::vector<VMemwT<Graph_t>> PebblingSchedule<GraphT>::MinimumMemoryRequiredPerNodeType(
     const BspInstance<GraphT> &instance, const std::set<vertex_idx> &externalSources) {
-    std::vector<v_memw_t<Graph_t>> maxNeeded(instance.GetComputationalDag().NumVertexTypes(), 0);
+    std::vector<VMemwT<Graph_t>> maxNeeded(instance.GetComputationalDag().NumVertexTypes(), 0);
     for (vertex_idx_t<Graph_t> node = 0; node < instance.GetComputationalDag().NumVertices(); ++node) {
         if (externalSources.find(node) != external_sources.end()) {
             continue;
         }
 
-        v_memw_t<Graph_t> needed = instance.GetComputationalDag().VertexMemWeight(node);
+        VMemwT<Graph_t> needed = instance.GetComputationalDag().VertexMemWeight(node);
         const v_type_t<Graph_t> type = instance.GetComputationalDag().VertexType(node);
         for (vertex_idx_t<Graph_t> pred : instance.GetComputationalDag().Parents(node)) {
             needed += instance.GetComputationalDag().VertexMemWeight(pred);

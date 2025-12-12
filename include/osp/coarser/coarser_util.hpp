@@ -99,9 +99,9 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
         if constexpr (HasVertexWeightsV<Graph_t_in> && IsModifiableCdagVertexV<Graph_t_out>) {
             static_assert(std::is_same_v<VWorkwT<Graph_t_in>, VWorkwT<Graph_t_out>>,
                           "Work weight types of in-graph and out-graph must be the same.");
-            static_assert(std::is_same_v<v_commw_t<Graph_t_in>, v_commw_t<Graph_t_out>>,
+            static_assert(std::is_same_v<VCommwT<Graph_t_in>, VCommwT<Graph_t_out>>,
                           "Vertex communication types of in-graph and out-graph must be the same.");
-            static_assert(std::is_same_v<v_memw_t<Graph_t_in>, v_memw_t<Graph_t_out>>,
+            static_assert(std::is_same_v<VMemwT<Graph_t_in>, VMemwT<Graph_t_out>>,
                           "Memory weight types of in-graph and out-graph must be the same.");
 
             for (const vertex_idx_t<Graph_t_in> &vert : coarsened_dag.vertices()) {
@@ -139,7 +139,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
         }
 
         if constexpr (HasEdgeWeightsV<Graph_t_in> && IsModifiableCdagCommEdgeV<Graph_t_out>) {
-            static_assert(std::is_same_v<e_commw_t<Graph_t_in>, e_commw_t<Graph_t_out>>,
+            static_assert(std::is_same_v<ECommwT<Graph_t_in>, ECommwT<Graph_t_out>>,
                           "Edge weight type of in graph and out graph must be the same!");
 
             for (const auto &edge : Edges(coarsenedDag)) {
@@ -207,7 +207,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
                 }
 
                 if constexpr (HasEdgeWeightsV<Graph_t_in> && is_constructable_cdag_comm_edge_v<Graph_t_out>) {
-                    static_assert(std::is_same_v<e_commw_t<Graph_t_in>, e_commw_t<Graph_t_out>>,
+                    static_assert(std::is_same_v<ECommwT<Graph_t_in>, ECommwT<Graph_t_out>>,
                                   "Edge weight type of in graph and out graph must be the same!");
 
                     edge_desc_t<Graph_t_in> ori_edge = edge_desc(vert, chld, dag_in).first;
@@ -235,9 +235,9 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
 template <typename GraphTIn,
           class GraphTOut,
           typename VWorkAccMethod = acc_sum<VWorkwT<Graph_t_in>>,
-          typename VCommAccMethod = acc_sum<v_commw_t<Graph_t_in>>,
-          typename VMemAccMethod = acc_sum<v_memw_t<Graph_t_in>>,
-          typename ECommAccMethod = acc_sum<e_commw_t<Graph_t_in>>>
+          typename VCommAccMethod = acc_sum<VCommwT<Graph_t_in>>,
+          typename VMemAccMethod = acc_sum<VMemwT<Graph_t_in>>,
+          typename ECommAccMethod = acc_sum<ECommwT<Graph_t_in>>>
 bool ConstructCoarseDag(const GraphTIn &dagIn,
                         GraphTOut &coarsenedDag,
                         std::vector<vertex_idx_t<Graph_t_out>> &vertexContractionMap) {
@@ -279,9 +279,9 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
         if constexpr (HasVertexWeightsV<Graph_t_in> && IsModifiableCdagVertexV<Graph_t_out>) {
             static_assert(std::is_same_v<VWorkwT<Graph_t_in>, VWorkwT<Graph_t_out>>,
                           "Work weight types of in-graph and out-graph must be the same.");
-            static_assert(std::is_same_v<v_commw_t<Graph_t_in>, v_commw_t<Graph_t_out>>,
+            static_assert(std::is_same_v<VCommwT<Graph_t_in>, VCommwT<Graph_t_out>>,
                           "Vertex communication types of in-graph and out-graph must be the same.");
-            static_assert(std::is_same_v<v_memw_t<Graph_t_in>, v_memw_t<Graph_t_out>>,
+            static_assert(std::is_same_v<VMemwT<Graph_t_in>, VMemwT<Graph_t_out>>,
                           "Memory weight types of in-graph and out-graph must be the same.");
 
             for (const vertex_idx_t<Graph_t_in> &vert : coarsened_dag.vertices()) {
@@ -319,7 +319,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
         }
 
         if constexpr (HasEdgeWeightsV<Graph_t_in> && HasEdgeWeightsV<Graph_t_out>) {
-            static_assert(std::is_same_v<e_commw_t<Graph_t_in>, e_commw_t<Graph_t_out>>,
+            static_assert(std::is_same_v<ECommwT<Graph_t_in>, ECommwT<Graph_t_out>>,
                           "Edge weight type of in graph and out graph must be the same!");
 
             for (const auto &oriEdge : Edges(dagIn)) {

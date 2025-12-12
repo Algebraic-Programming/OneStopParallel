@@ -31,7 +31,7 @@ class HillClimbingForCommSteps {
     static_assert(IsComputationalDagV<Graph_t>, "Graph_t must satisfy the computational_dag concept");
 
     using vertex_idx = vertex_idx_t<Graph_t>;
-    using cost_type = v_commw_t<Graph_t>;
+    using cost_type = VCommwT<Graph_t>;
 
     BspScheduleCS<GraphT> *schedule_;
     cost_type cost_ = 0;

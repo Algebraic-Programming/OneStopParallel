@@ -30,7 +30,7 @@ class SubproblemMultiScheduling : public Scheduler<GraphT> {
 
   private:
     using vertex_idx = vertex_idx_t<Graph_t>;
-    using commweight_type = v_commw_t<Graph_t>;
+    using commweight_type = VCommwT<Graph_t>;
     using workweight_type = VWorkwT<Graph_t>;
 
     std::vector<vertex_idx> lastNodeOnProc_;

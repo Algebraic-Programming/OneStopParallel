@@ -48,8 +48,8 @@ void AddMemWeights(GraphT &dag) {
     int commWeight = 1;
 
     for (const auto &v : dag.vertices()) {
-        dag.SetVertexMemWeight(v, static_cast<v_memw_t<GraphT>>(memWeight++ % 3 + 1));
-        dag.SetVertexCommWeight(v, static_cast<v_commw_t<GraphT>>(commWeight++ % 3 + 1));
+        dag.SetVertexMemWeight(v, static_cast<VMemwT<GraphT>>(memWeight++ % 3 + 1));
+        dag.SetVertexCommWeight(v, static_cast<VCommwT<GraphT>>(commWeight++ % 3 + 1));
     }
 }
 
@@ -94,7 +94,7 @@ void RunTestLocalMemory(Scheduler<GraphT> *testScheduler) {
                 BOOST_CHECK(false);
             }
 
-            const std::vector<v_memw_t<GraphT>> boundsToTest = {10, 20, 50, 100};
+            const std::vector<VMemwT<GraphT>> boundsToTest = {10, 20, 50, 100};
 
             for (const auto &bound : boundsToTest) {
                 instance.GetArchitecture().setMemoryBound(bound);
@@ -151,7 +151,7 @@ void RunTestPersistentTransientMemory(Scheduler<GraphT> *testScheduler) {
                 BOOST_CHECK(false);
             }
 
-            const std::vector<v_memw_t<GraphT>> boundsToTest = {50, 100};
+            const std::vector<VMemwT<GraphT>> boundsToTest = {50, 100};
 
             for (const auto &bound : boundsToTest) {
                 instance.GetArchitecture().setMemoryBound(bound);
@@ -208,7 +208,7 @@ void RunTestLocalInOutMemory(Scheduler<GraphT> *testScheduler) {
                 BOOST_CHECK(false);
             }
 
-            const std::vector<v_memw_t<GraphT>> boundsToTest = {10, 20, 50, 100};
+            const std::vector<VMemwT<GraphT>> boundsToTest = {10, 20, 50, 100};
 
             for (const auto &bound : boundsToTest) {
                 instance.GetArchitecture().setMemoryBound(bound);
@@ -265,7 +265,7 @@ void RunTestLocalIncEdgesMemory(Scheduler<GraphT> *testScheduler) {
                 BOOST_CHECK(false);
             }
 
-            const std::vector<v_memw_t<GraphT>> boundsToTest = {50, 100};
+            const std::vector<VMemwT<GraphT>> boundsToTest = {50, 100};
 
             for (const auto &bound : boundsToTest) {
                 instance.GetArchitecture().setMemoryBound(bound);
@@ -322,7 +322,7 @@ void RunTestLocalIncEdges2Memory(Scheduler<GraphT> *testScheduler) {
                 BOOST_CHECK(false);
             }
 
-            const std::vector<v_memw_t<GraphT>> boundsToTest = {20, 50, 100};
+            const std::vector<VMemwT<GraphT>> boundsToTest = {20, 50, 100};
 
             for (const auto &bound : boundsToTest) {
                 instance.GetArchitecture().setMemoryBound(bound);

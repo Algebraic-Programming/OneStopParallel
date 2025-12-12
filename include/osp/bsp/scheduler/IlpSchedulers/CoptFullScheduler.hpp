@@ -440,10 +440,9 @@ class CoptFullScheduler : public Scheduler<GraphT> {
             }
         }
 
-        std::vector<std::vector<v_commw_t<Graph_t>>> send(max_number_supersteps,
-                                                          std::vector<v_commw_t<Graph_t>>(num_processors, 0));
+        std::vector<std::vector<VCommwT<Graph_t>>> send(max_number_supersteps, std::vector<VCommwT<Graph_t>>(num_processors, 0));
 
-        std::vector<std::vector<v_commw_t<Graph_t>>> rec(max_number_supersteps, std::vector<v_commw_t<Graph_t>>(num_processors, 0));
+        std::vector<std::vector<VCommwT<Graph_t>>> rec(max_number_supersteps, std::vector<VCommwT<Graph_t>>(num_processors, 0));
 
         for (const auto &[key, val] : cs) {
             send[val][std::get<1>(key)]
@@ -461,7 +460,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
                 }
             }
 
-            v_commw_t<Graph_t> maxComm = 0;
+            VCommwT<Graph_t> maxComm = 0;
             for (unsigned i = 0; i < numProcessors; i++) {
                 if (max_comm < send[step][i]) {
                     maxComm = send[step][i];

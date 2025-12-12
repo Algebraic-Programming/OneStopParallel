@@ -77,7 +77,7 @@ struct LsLocalMemoryConstraint {
     const SetSchedule<GraphT> *setSchedule_;
     const GraphT *graph_;
 
-    std::vector<std::vector<v_memw_t<Graph_t>>> stepProcessorMemory_;
+    std::vector<std::vector<VMemwT<Graph_t>>> stepProcessorMemory_;
 
     LsLocalMemoryConstraint() : setSchedule_(nullptr), graph_(nullptr) {}
 
@@ -88,9 +88,8 @@ struct LsLocalMemoryConstraint {
 
         setSchedule_ = &setSchedule;
         graph_ = &setSchedule_->GetInstance().GetComputationalDag();
-        step_processor_memory = std::vector<std::vector<v_memw_t<Graph_t>>>(
-            set_schedule->NumberOfSupersteps(),
-            std::vector<v_memw_t<Graph_t>>(set_schedule->GetInstance().NumberOfProcessors(), 0));
+        step_processor_memory = std::vector<std::vector<VMemwT<Graph_t>>>(
+            set_schedule->NumberOfSupersteps(), std::vector<VMemwT<Graph_t>>(set_schedule->GetInstance().NumberOfProcessors(), 0));
     }
 
     inline void ApplyMove(vertex_idx_t<Graph_t> vertex, unsigned fromProc, unsigned fromStep, unsigned toProc, unsigned toStep) {
@@ -156,7 +155,7 @@ struct LsLocalIncEdgesMemoryConstraint {
     const VectorSchedule<GraphT> *vectorSchedule_;
     const GraphT *graph_;
 
-    std::vector<std::vector<v_memw_t<Graph_t>>> stepProcessorMemory_;
+    std::vector<std::vector<VMemwT<Graph_t>>> stepProcessorMemory_;
     std::vector<std::vector<std::unordered_set<vertex_idx_t<Graph_t>>>> stepProcessorPred_;
 
     LsLocalIncEdgesMemoryConstraint() : setSchedule_(nullptr), vectorSchedule_(nullptr), graph_(nullptr) {}
@@ -169,9 +168,8 @@ struct LsLocalIncEdgesMemoryConstraint {
         setSchedule_ = &setSchedule;
         vectorSchedule_ = &vecSchedule;
         graph_ = &setSchedule_->GetInstance().GetComputationalDag();
-        step_processor_memory = std::vector<std::vector<v_memw_t<Graph_t>>>(
-            set_schedule->NumberOfSupersteps(),
-            std::vector<v_memw_t<Graph_t>>(set_schedule->GetInstance().NumberOfProcessors(), 0));
+        step_processor_memory = std::vector<std::vector<VMemwT<Graph_t>>>(
+            set_schedule->NumberOfSupersteps(), std::vector<VMemwT<Graph_t>>(set_schedule->GetInstance().NumberOfProcessors(), 0));
         step_processor_pred = std::vector<std::vector<std::unordered_set<vertex_idx_t<Graph_t>>>>(
             set_schedule->NumberOfSupersteps(),
             std::vector<std::unordered_set<vertex_idx_t<Graph_t>>>(set_schedule->GetInstance().NumberOfProcessors()));
@@ -283,7 +281,7 @@ struct LsLocalIncEdgesMemoryConstraint {
     }
 
     inline bool CanMove(vertex_idx_t<Graph_t> vertex, const unsigned proc, unsigned step) const {
-        v_memw_t<Graph_t> incMemory = graph_->VertexCommWeight(vertex);
+        VMemwT<Graph_t> incMemory = graph_->VertexCommWeight(vertex);
         for (const auto &pred : graph->Parents(vertex)) {
             if (vector_schedule->assignedSuperstep(pred) < step) {
                 if (step_processor_pred[step][proc].find(pred) == step_processor_pred[step][proc].end()) {
@@ -332,7 +330,7 @@ struct LsLocalSourcesIncEdgesMemoryConstraint {
     const VectorSchedule<GraphT> *vectorSchedule_;
     const GraphT *graph_;
 
-    std::vector<std::vector<v_memw_t<Graph_t>>> stepProcessorMemory_;
+    std::vector<std::vector<VMemwT<Graph_t>>> stepProcessorMemory_;
     std::vector<std::vector<std::unordered_set<vertex_idx_t<Graph_t>>>> stepProcessorPred_;
 
     LsLocalSourcesIncEdgesMemoryConstraint() : setSchedule_(nullptr), vectorSchedule_(nullptr), graph_(nullptr) {}
@@ -351,9 +349,8 @@ struct LsLocalSourcesIncEdgesMemoryConstraint {
         setSchedule_ = &setSchedule;
         vectorSchedule_ = &vecSchedule;
         graph_ = &setSchedule_->GetInstance().GetComputationalDag();
-        step_processor_memory = std::vector<std::vector<v_memw_t<Graph_t>>>(
-            set_schedule->NumberOfSupersteps(),
-            std::vector<v_memw_t<Graph_t>>(set_schedule->GetInstance().NumberOfProcessors(), 0));
+        step_processor_memory = std::vector<std::vector<VMemwT<Graph_t>>>(
+            set_schedule->NumberOfSupersteps(), std::vector<VMemwT<Graph_t>>(set_schedule->GetInstance().NumberOfProcessors(), 0));
         step_processor_pred = std::vector<std::vector<std::unordered_set<vertex_idx_t<Graph_t>>>>(
             set_schedule->NumberOfSupersteps(),
             std::vector<std::unordered_set<vertex_idx_t<Graph_t>>>(set_schedule->GetInstance().NumberOfProcessors()));
@@ -464,7 +461,7 @@ struct LsLocalSourcesIncEdgesMemoryConstraint {
     }
 
     inline bool CanMove(vertex_idx_t<Graph_t> vertex, const unsigned proc, unsigned step) const {
-        v_memw_t<Graph_t> incMemory = 0;
+        VMemwT<Graph_t> incMemory = 0;
 
         if (IsSource(vertex, *graph_)) {
             incMemory += graph_->VertexMemWeight(vertex);

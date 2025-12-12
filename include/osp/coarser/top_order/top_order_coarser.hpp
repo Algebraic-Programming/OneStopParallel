@@ -33,16 +33,16 @@ class TopOrderCoarser : public Coarser<GraphTIn, GraphTOut> {
 
     // parameters
     VWorkwT<Graph_t_in> workThreshold_ = std::numeric_limits<VWorkwT<Graph_t_in>>::max();
-    v_memw_t<Graph_t_in> memoryThreshold_ = std::numeric_limits<v_memw_t<Graph_t_in>>::max();
-    v_commw_t<Graph_t_in> communicationThreshold_ = std::numeric_limits<v_commw_t<Graph_t_in>>::max();
+    VMemwT<Graph_t_in> memoryThreshold_ = std::numeric_limits<VMemwT<Graph_t_in>>::max();
+    VCommwT<Graph_t_in> communicationThreshold_ = std::numeric_limits<VCommwT<Graph_t_in>>::max();
     unsigned degreeThreshold_ = std::numeric_limits<unsigned>::max();
     unsigned nodeDistThreshold_ = std::numeric_limits<unsigned>::max();
     VertexType superNodeSizeThreshold_ = std::numeric_limits<VertexType>::max();
 
     // internal data strauctures
-    v_memw_t<Graph_t_in> currentMemory_ = 0;
+    VMemwT<Graph_t_in> currentMemory_ = 0;
     VWorkwT<Graph_t_in> currentWork_ = 0;
-    v_commw_t<Graph_t_in> currentCommunication_ = 0;
+    VCommwT<Graph_t_in> currentCommunication_ = 0;
     VertexType currentSuperNodeIdx_ = 0;
 
     void FinishSuperNodeAddEdges(const GraphTIn &dagIn,
@@ -110,9 +110,9 @@ class TopOrderCoarser : public Coarser<GraphTIn, GraphTOut> {
 
     inline void SetWorkThreshold(VWorkwT<Graph_t_in> workThreshold) { work_threshold = work_threshold_; }
 
-    inline void SetMemoryThreshold(v_memw_t<Graph_t_in> memoryThreshold) { memory_threshold = memory_threshold_; }
+    inline void SetMemoryThreshold(VMemwT<Graph_t_in> memoryThreshold) { memory_threshold = memory_threshold_; }
 
-    inline void SetCommunicationThreshold(v_commw_t<Graph_t_in> communicationThreshold) {
+    inline void SetCommunicationThreshold(VCommwT<Graph_t_in> communicationThreshold) {
         communication_threshold = communication_threshold_;
     }
 

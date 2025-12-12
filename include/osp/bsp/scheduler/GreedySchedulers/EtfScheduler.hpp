@@ -51,10 +51,10 @@ template <typename GraphT, typename MemoryConstraintT = NoMemoryConstraint>
 class EtfScheduler : public Scheduler<GraphT> {
     static_assert(IsComputationalDagV<Graph_t>, "EtfScheduler can only be used with computational DAGs.");
 
-    static_assert(std::is_convertible_v<v_commw_t<Graph_t>, VWorkwT<Graph_t>>,
+    static_assert(std::is_convertible_v<VCommwT<Graph_t>, VWorkwT<Graph_t>>,
                   "EtfScheduler requires that work and communication weights are convertible.");
 
-    static_assert(not HasEdgeWeightsV<Graph_t> || std::is_convertible_v<e_commw_t<Graph_t>, VWorkwT<Graph_t>>,
+    static_assert(not HasEdgeWeightsV<Graph_t> || std::is_convertible_v<ECommwT<Graph_t>, VWorkwT<Graph_t>>,
                   "EtfScheduler requires that work and communication weights are convertible.");
 
   private:

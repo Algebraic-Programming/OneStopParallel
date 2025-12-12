@@ -56,8 +56,8 @@ bool ReadBspArchitecture(std::ifstream &infile, BspArchitecture<GraphT> &archite
     }
 
     architecture.SetNumberOfProcessors(p);
-    architecture.SetCommunicationCosts(static_cast<v_commw_t<Graph_t>>(g));
-    architecture.SetSynchronisationCosts(static_cast<v_commw_t<Graph_t>>(l));
+    architecture.SetCommunicationCosts(static_cast<VCommwT<Graph_t>>(g));
+    architecture.SetSynchronisationCosts(static_cast<VCommwT<Graph_t>>(l));
 
     if (0 <= memType && memType <= 3) {
         using MemwT = VMemwT<GraphT>;
@@ -120,7 +120,7 @@ bool ReadBspArchitecture(std::ifstream &infile, BspArchitecture<GraphT> &archite
             return false;
         }
 
-        architecture.SetSendCosts(fromProc, toProc, static_cast<v_commw_t<Graph_t>>(value));
+        architecture.SetSendCosts(fromProc, toProc, static_cast<VCommwT<Graph_t>>(value));
     }
 
     // Ensure there are no remaining non-comment lines

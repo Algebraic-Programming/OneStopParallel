@@ -64,10 +64,10 @@ std::unique_ptr<Coarser<GraphTIn, GraphTOut>> GetCoarserByName(const ConfigParse
             const auto &paramsPt = paramsOpt.get();
             coarser->set_work_threshold(params_pt.get_optional<VWorkwT<Graph_t_in>>("max_work_weight")
                                             .value_or(std::numeric_limits<VWorkwT<Graph_t_in>>::max()));
-            coarser->set_memory_threshold(params_pt.get_optional<v_memw_t<Graph_t_in>>("max_memory_weight")
-                                              .value_or(std::numeric_limits<v_memw_t<Graph_t_in>>::max()));
-            coarser->set_communication_threshold(params_pt.get_optional<v_commw_t<Graph_t_in>>("max_communication_weight")
-                                                     .value_or(std::numeric_limits<v_commw_t<Graph_t_in>>::max()));
+            coarser->set_memory_threshold(params_pt.get_optional<VMemwT<Graph_t_in>>("max_memory_weight")
+                                              .value_or(std::numeric_limits<VMemwT<Graph_t_in>>::max()));
+            coarser->set_communication_threshold(params_pt.get_optional<VCommwT<Graph_t_in>>("max_communication_weight")
+                                                     .value_or(std::numeric_limits<VCommwT<Graph_t_in>>::max()));
             coarser->set_super_node_size_threshold(
                 paramsPt.get_optional<std::size_t>("max_super_node_size").value_or(std::numeric_limits<std::size_t>::max()));
         }
@@ -84,10 +84,10 @@ std::unique_ptr<Coarser<GraphTIn, GraphTOut>> GetCoarserByName(const ConfigParse
                 const auto &paramsPt = paramsOpt.get();
                 coarser_ptr->set_work_threshold(params_pt.get_optional<VWorkwT<Graph_t_in>>("work_threshold")
                                                     .value_or(std::numeric_limits<VWorkwT<Graph_t_in>>::max()));
-                coarser_ptr->set_memory_threshold(params_pt.get_optional<v_memw_t<Graph_t_in>>("memory_threshold")
-                                                      .value_or(std::numeric_limits<v_memw_t<Graph_t_in>>::max()));
-                coarser_ptr->set_communication_threshold(params_pt.get_optional<v_commw_t<Graph_t_in>>("communication_threshold")
-                                                             .value_or(std::numeric_limits<v_commw_t<Graph_t_in>>::max()));
+                coarser_ptr->set_memory_threshold(params_pt.get_optional<VMemwT<Graph_t_in>>("memory_threshold")
+                                                      .value_or(std::numeric_limits<VMemwT<Graph_t_in>>::max()));
+                coarser_ptr->set_communication_threshold(params_pt.get_optional<VCommwT<Graph_t_in>>("communication_threshold")
+                                                             .value_or(std::numeric_limits<VCommwT<Graph_t_in>>::max()));
                 coarserPtr->set_super_node_size_threshold(
                     paramsPt.get_optional<std::size_t>("super_node_size_threshold").value_or(10));
                 coarserPtr->set_node_dist_threshold(paramsPt.get_optional<unsigned>("node_dist_threshold").value_or(10));

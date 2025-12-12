@@ -120,14 +120,14 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
             }
         }
 
-        std::vector<v_memw_t<Graph_t>> memoryCostOfPreprocessedPartition(preprocessedPartition.size(), 0);
+        std::vector<VMemwT<Graph_t>> memoryCostOfPreprocessedPartition(preprocessedPartition.size(), 0);
         for (size_t i = 0; i < preprocessedPartition.size(); i++) {
             for (const auto &vert : preprocessed_partition[i]) {
                 memory_cost_of_preprocessed_partition[i] += graph.VertexMemWeight(vert);
             }
         }
 
-        std::vector<v_commw_t<Graph_t>> transientCostOfPreprocessedPartition(preprocessedPartition.size(), 0);
+        std::vector<VCommwT<Graph_t>> transientCostOfPreprocessedPartition(preprocessedPartition.size(), 0);
         for (size_t i = 0; i < preprocessedPartition.size(); i++) {
             for (const auto &vert : preprocessed_partition[i]) {
                 transient_cost_of_preprocessed_partition[i]

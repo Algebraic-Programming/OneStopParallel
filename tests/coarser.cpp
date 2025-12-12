@@ -65,15 +65,15 @@ template <typename ComputationalDag>
 bool CheckVertexMapConstraints(std::vector<std::vector<VertexType>> &map,
                                ComputationalDag &dag,
                                v_type_t<ComputationalDag> sizeThreshold,
-                               v_memw_t<ComputationalDag> memoryThreshold,
+                               VMemwT<ComputationalDag> memoryThreshold,
                                VWorkwT<ComputationalDag> workThreshold,
-                               v_commw_t<ComputationalDag> communicationThreshold) {
+                               VCommwT<ComputationalDag> communicationThreshold) {
     std::unordered_set<VertexType> vertices;
 
     for (auto &superNode : map) {
-        v_memw_t<ComputationalDag> memory = 0;
+        VMemwT<ComputationalDag> memory = 0;
         VWorkwT<ComputationalDag> work = 0;
-        v_commw_t<ComputationalDag> communication = 0;
+        VCommwT<ComputationalDag> communication = 0;
 
         if (superNode.size() > sizeThreshold) {
             return false;
@@ -387,7 +387,7 @@ BOOST_AUTO_TEST_CASE(CoarserFunndelBfsTest) {
     TestCoarserSameGraph<GraphT>(coarser);
 
     FunnelBfs<GraphT, GraphT>::FunnelBfs_parameters params{std::numeric_limits<VWorkwT<GraphT>>::max(),
-                                                           std::numeric_limits<v_memw_t<GraphT>>::max(),
+                                                           std::numeric_limits<VMemwT<GraphT>>::max(),
                                                            std::numeric_limits<unsigned>::max(),
                                                            false,
                                                            true};

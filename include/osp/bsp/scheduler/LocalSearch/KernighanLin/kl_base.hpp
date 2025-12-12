@@ -78,8 +78,8 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
     static_assert(IsComputationalDagV<Graph_t>, "Graph_t must satisfy the computational_dag concept");
 
   private:
-    using memw_t = v_memw_t<Graph_t>;
-    using commw_t = v_commw_t<Graph_t>;
+    using memw_t = VMemwT<Graph_t>;
+    using commw_t = VCommwT<Graph_t>;
     using workw_t = VWorkwT<Graph_t>;
 
   protected:

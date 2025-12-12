@@ -191,8 +191,8 @@ void CoptCommScheduleOptimizer<GraphT>::SetInitialSolution(BspScheduleCS<GraphT>
         }
     }
 
-    std::vector<std::vector<v_commw_t<Graph_t>>> send(num_supersteps, std::vector<v_commw_t<Graph_t>>(num_processors, 0));
-    std::vector<std::vector<v_commw_t<Graph_t>>> rec(num_supersteps, std::vector<v_commw_t<Graph_t>>(num_processors, 0));
+    std::vector<std::vector<VCommwT<Graph_t>>> send(num_supersteps, std::vector<VCommwT<Graph_t>>(num_processors, 0));
+    std::vector<std::vector<VCommwT<Graph_t>>> rec(num_supersteps, std::vector<VCommwT<Graph_t>>(num_processors, 0));
 
     for (const auto &[key, val] : cs) {
         send[val][std::get<1>(key)] += dag.VertexCommWeight(std::get<0>(key)) * arch.sendCosts(std::get<1>(key), std::get<2>(key));
@@ -200,7 +200,7 @@ void CoptCommScheduleOptimizer<GraphT>::SetInitialSolution(BspScheduleCS<GraphT>
     }
 
     for (unsigned step = 0; step < numSupersteps; step++) {
-        v_commw_t<Graph_t> maxComm = 0;
+        VCommwT<Graph_t> maxComm = 0;
         for (unsigned proc = 0; proc < numProcessors; proc++) {
             maxComm = std::max(max_comm, send[step][proc]);
             maxComm = std::max(max_comm, rec[step][proc]);

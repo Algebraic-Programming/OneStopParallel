@@ -93,7 +93,7 @@ struct KlBspCommCostFunction {
     using VertexType = vertex_idx_t<Graph_t>;
     using kl_move = kl_move_struct<cost_t, VertexType>;
     using kl_gain_update_info = kl_update_info<VertexType>;
-    using comm_weight_t = v_commw_t<Graph_t>;
+    using comm_weight_t = VCommwT<Graph_t>;
 
     constexpr static unsigned windowRange_ = 2 * windowSize + 1;
     constexpr static bool isMaxCommCostFunction_ = true;

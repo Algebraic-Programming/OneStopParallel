@@ -119,7 +119,7 @@ bool CheckOrderedIsomorphism(const GraphT &first, const GraphT &second) {
         }
 
         if constexpr (HasEdgeWeightsV<Graph_t>) {
-            std::set<std::pair<vertex_idx_t<Graph_t>, e_commw_t<Graph_t>>> firstChildren, secondChildren;
+            std::set<std::pair<vertex_idx_t<Graph_t>, ECommwT<Graph_t>>> firstChildren, secondChildren;
 
             for (const auto &outEdge : OutEdges(node, first)) {
                 firstChildren.emplace(Traget(out_edge, first), first.EdgeCommWeight(out_edge));

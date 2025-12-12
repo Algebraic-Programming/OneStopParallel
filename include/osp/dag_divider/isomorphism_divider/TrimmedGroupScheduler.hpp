@@ -100,10 +100,10 @@ class TrimmedGroupScheduler : public Scheduler<ConstrGraphT> {
         }
 
         std::vector<unsigned> subProcCounts(arch.getNumberOfProcessorTypes());
-        std::vector<v_memw_t<Constr_Graph_t>> memWeights(arch.getNumberOfProcessorTypes(), 0);
+        std::vector<VMemwT<Constr_Graph_t>> memWeights(arch.getNumberOfProcessorTypes(), 0);
         for (unsigned typeIdx = 0; typeIdx < arch.getNumberOfProcessorTypes(); ++typeIdx) {
             subProcCounts[typeIdx] = arch.getProcessorTypeCount()[typeIdx] / minNonZeroProcs_;
-            memWeights[typeIdx] = static_cast<v_memw_t<Constr_Graph_t>>(arch.maxMemoryBoundProcType(typeIdx));
+            memWeights[typeIdx] = static_cast<VMemwT<Constr_Graph_t>>(arch.maxMemoryBoundProcType(typeIdx));
         }
 
         if constexpr (verbose_) {

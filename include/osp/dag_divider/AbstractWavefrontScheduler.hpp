@@ -133,8 +133,8 @@ class AbstractWavefrontScheduler : public Scheduler<GraphT> {
                && "Attempted to create a sub-architecture with zero processors.");
 
         BspArchitecture<ConstrGraphT> subArchitecture(originalArch);
-        std::vector<v_memw_t<Graph_t>> subDagProcessorMemory(original_arch.getProcessorTypeCount().size(),
-                                                             std::numeric_limits<v_memw_t<Graph_t>>::max());
+        std::vector<VMemwT<Graph_t>> subDagProcessorMemory(original_arch.getProcessorTypeCount().size(),
+                                                           std::numeric_limits<VMemwT<Graph_t>>::max());
         for (unsigned i = 0; i < originalArch.NumberOfProcessors(); ++i) {
             subDagProcessorMemory[originalArch.processorType(i)]
                 = std::min(originalArch.memoryBound(i), sub_dag_processor_memory[originalArch.processorType(i)]);

@@ -35,8 +35,8 @@ class MultiProcessorPebbling : public Scheduler<GraphT> {
   private:
     using vertex_idx = vertex_idx_t<Graph_t>;
     using workweight_type = VWorkwT<Graph_t>;
-    using commweight_type = v_commw_t<Graph_t>;
-    using memweight_type = v_memw_t<Graph_t>;
+    using commweight_type = VCommwT<Graph_t>;
+    using memweight_type = VMemwT<Graph_t>;
 
     Model model_;
 

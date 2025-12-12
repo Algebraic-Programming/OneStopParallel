@@ -100,7 +100,7 @@ struct KlTotalCommCostFunction {
         }
 
         return workCosts + commCosts * commMultiplier_
-               + static_cast<v_commw_t<Graph_t>>(activeSchedule_->num_steps() - 1) * instance_->SynchronisationCosts();
+               + static_cast<VCommwT<Graph_t>>(activeSchedule_->num_steps() - 1) * instance_->SynchronisationCosts();
     }
 
     template <typename ThreadDataT>
@@ -332,8 +332,8 @@ struct KlTotalCommCostFunction {
         return (nodeStep + windowSize <= endStep) ? windowRange_ : windowRange_ - (nodeStep + windowSize - endStep);
     }
 
-    inline CostT ChangeCommCost(const v_commw_t<Graph_t> &pTargetCommCost,
-                                const v_commw_t<Graph_t> &nodeTargetCommCost,
+    inline CostT ChangeCommCost(const VCommwT<Graph_t> &pTargetCommCost,
+                                const VCommwT<Graph_t> &nodeTargetCommCost,
                                 const CostT &commGain) {
         return p_target_comm_cost > node_target_comm_cost ? (pTargetCommCost - node_target_comm_cost) * commGain
                                                           : (nodeTargetCommCost - p_target_comm_cost) * commGain * -1.0;

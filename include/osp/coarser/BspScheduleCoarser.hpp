@@ -71,8 +71,8 @@ class BspScheduleCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> 
             for (unsigned proc = 0; proc < schedule_->GetInstance().NumberOfProcessors(); proc++) {
                 if (setSchedule.step_processor_vertices[step][proc].size() > 0) {
                     VWorkwT<Graph_t_in> totalWork = 0;
-                    v_memw_t<Graph_t_in> totalMemory = 0;
-                    v_commw_t<Graph_t_in> totalCommunication = 0;
+                    VMemwT<Graph_t_in> totalMemory = 0;
+                    VCommwT<Graph_t_in> totalCommunication = 0;
 
                     vertex_map.push_back(std::vector<VertexType_in>());
 

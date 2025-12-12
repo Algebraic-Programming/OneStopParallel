@@ -1077,9 +1077,9 @@ static_assert(IsDirectedGraphEdgeDescV<CSG>, "CSG must satisfy the directed_grap
 
 //     if constexpr (HasVertexWeightsV<Graph_t_in> && IsModifiableCdagVertexV<Graph_out_type>) {
 //         static_assert(std::is_same_v<VWorkwT<Graph_t_in>, VWorkwT<Graph_out_type>>, "Work weight types of in-graph and
-//         out-graph must be the same."); static_assert(std::is_same_v<v_commw_t<Graph_t_in>, v_commw_t<Graph_out_type>>, "Vertex
-//         communication types of in-graph and out-graph must be the same."); static_assert(std::is_same_v<v_memw_t<Graph_t_in>,
-//         v_memw_t<Graph_out_type>>, "Memory weight types of in-graph and out-graph must be the same.");
+//         out-graph must be the same."); static_assert(std::is_same_v<VCommwT<Graph_t_in>, VCommwT<Graph_out_type>>, "Vertex
+//         communication types of in-graph and out-graph must be the same."); static_assert(std::is_same_v<VMemwT<Graph_t_in>,
+//         VMemwT<Graph_out_type>>, "Memory weight types of in-graph and out-graph must be the same.");
 
 //         for (const vertex_idx_t<Graph_t_in> &vert : coarsened_dag.vertices()) {
 //             coarsened_dag.SetVertexWorkWeight(vert, 0);

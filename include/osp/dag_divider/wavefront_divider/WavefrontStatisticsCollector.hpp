@@ -32,7 +32,7 @@ struct WavefrontStatistics {
     using VertexType = vertex_idx_t<Graph_t>;
 
     std::vector<VWorkwT<Graph_t>> connectedComponentsWeights_;
-    std::vector<v_memw_t<Graph_t>> connectedComponentsMemories_;
+    std::vector<VMemwT<Graph_t>> connectedComponentsMemories_;
     std::vector<std::vector<VertexType>> connectedComponentsVertices_;
 };
 

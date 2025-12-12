@@ -42,7 +42,7 @@ class KlTotal : public KlBase<GraphT, MemoryConstraintT> {
   protected:
     KlCurrentScheduleTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg> currentSchedule_;
 
-    v_commw_t<Graph_t> nodeCommSelectionThreshold_ = 0;
+    VCommwT<Graph_t> nodeCommSelectionThreshold_ = 0;
     double maxEdgeWeight_ = 0.0;
 
     virtual void initialize_datastructures() override {
@@ -52,7 +52,7 @@ class KlTotal : public KlBase<GraphT, MemoryConstraintT> {
 
         KlBase<GraphT, MemoryConstraintT>::initialize_datastructures();
 
-        v_commw_t<Graph_t> maxEdgeWeight = 0;
+        VCommwT<Graph_t> maxEdgeWeight = 0;
         VWorkwT<Graph_t> maxNodeWeight = 0;
 
         for (const auto vertex : currentSchedule_.instance->GetComputationalDag().vertices()) {
