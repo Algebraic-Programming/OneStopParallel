@@ -38,8 +38,8 @@ void WriteTxt(std::ostream &os, const PebblingSchedule<GraphT> &schedule) {
             const auto &computeSteps = schedule.GetComputeStepsForProcSuperstep(proc, step);
             for (const auto &computeStep : computeSteps) {
                 os << "Compute " << computeStep.node << " on proc " << proc << " in superstep " << step << std::endl;
-                for (vertex_idx to_evict : computeStep.nodes_evicted_after) {
-                    os << "Evict " << to_evict << " from proc " << proc << " in superstep " << step << std::endl;
+                for (vertex_idx toEvict : computeStep.nodesEvictedAfter_) {
+                    os << "Evict " << toEvict << " from proc " << proc << " in superstep " << step << std::endl;
                 }
             }
         }
@@ -67,7 +67,7 @@ void WriteTxt(std::ostream &os, const PebblingSchedule<GraphT> &schedule) {
 template <typename GraphT>
 void WriteTxt(const std::string &filename, const PebblingSchedule<GraphT> &schedule) {
     std::ofstream os(filename);
-    write_txt(os, schedule);
+    WriteTxt(os, schedule);
 }
 
 }    // namespace file_writer
