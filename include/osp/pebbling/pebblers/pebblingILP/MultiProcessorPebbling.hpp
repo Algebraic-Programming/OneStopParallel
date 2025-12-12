@@ -126,7 +126,7 @@ class MultiProcessorPebbling : public Scheduler<GraphT> {
 
     virtual ~MultiProcessorPebbling() = default;
 
-    virtual ReturnStatus computeSchedule(BspSchedule<GraphT> &schedule) override;
+    virtual ReturnStatus ComputeSchedule(BspSchedule<GraphT> &schedule) override;
     virtual ReturnStatus ComputeSynchPebbling(PebblingSchedule<GraphT> &schedule);
 
     virtual ReturnStatus ComputePebbling(PebblingSchedule<GraphT> &schedule, bool useAsync = false);

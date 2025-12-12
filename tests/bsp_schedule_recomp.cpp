@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecompTest) {
 
     BspSchedule<Graph> schedule(instance);
     GreedyBspScheduler<Graph> scheduler;
-    const auto result = scheduler.computeSchedule(schedule);
+    const auto result = scheduler.ComputeSchedule(schedule);
 
     BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
     BOOST_CHECK_EQUAL(&schedule.GetInstance(), &instance);

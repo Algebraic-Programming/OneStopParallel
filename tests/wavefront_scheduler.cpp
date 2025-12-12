@@ -40,7 +40,7 @@ class ConcreteWavefrontScheduler : public osp::AbstractWavefrontScheduler<GraphT
     }
 
     // Dummy implementation for the pure virtual method
-    osp::ReturnStatus computeSchedule(osp::BspSchedule<GraphT> &) override { return osp::ReturnStatus::OSP_SUCCESS; }
+    osp::ReturnStatus ComputeSchedule(osp::BspSchedule<GraphT> &) override { return osp::ReturnStatus::OSP_SUCCESS; }
 
     std::string getScheduleName() const override { return "ConcreteScheduler"; }
 };
@@ -51,7 +51,7 @@ struct MockDivider : public osp::IDagDivider<GraphT> {
 };
 
 struct MockScheduler : public osp::Scheduler<GraphT> {
-    osp::ReturnStatus computeSchedule(osp::BspSchedule<GraphT> &) override { return osp::ReturnStatus::OSP_SUCCESS; }
+    osp::ReturnStatus ComputeSchedule(osp::BspSchedule<GraphT> &) override { return osp::ReturnStatus::OSP_SUCCESS; }
 
     std::string GetScheduleName() const override { return "Mock"; }
 };
@@ -155,7 +155,7 @@ struct MockDivider2 : public osp::IDagDivider<GraphT> {
 
 // A mock sub-scheduler that returns a simple, predictable schedule.
 struct MockSubScheduler : public osp::Scheduler<GraphT> {
-    osp::ReturnStatus computeSchedule(osp::BspSchedule<GraphT> &schedule) override {
+    osp::ReturnStatus ComputeSchedule(osp::BspSchedule<GraphT> &schedule) override {
         // Assign all tasks to the first processor in a single superstep
         for (VertexType v = 0; v < schedule.GetInstance().GetComputationalDag().NumVertices(); ++v) {
             schedule.SetAssignedProcessor(v, 0);
@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE(BasicSchedulingTest) {
     osp::BspInstance<GraphT> instance(dag_, arch_);
     osp::BspSchedule<GraphT> schedule(instance);
 
-    auto status = scheduler.computeSchedule(schedule);
+    auto status = scheduler.ComputeSchedule(schedule);
     BOOST_CHECK_EQUAL(status, osp::ReturnStatus::OSP_SUCCESS);
 
     BOOST_CHECK_EQUAL(schedule.AssignedProcessor(0), 0);
@@ -226,7 +226,7 @@ BOOST_AUTO_TEST_CASE(MultipleSectionsTest) {
     osp::BspInstance<GraphT> instance(dag_, arch_);
     osp::BspSchedule<GraphT> schedule(instance);
 
-    auto status = scheduler.computeSchedule(schedule);
+    auto status = scheduler.ComputeSchedule(schedule);
     BOOST_CHECK_EQUAL(status, osp::ReturnStatus::OSP_SUCCESS);
 
     BOOST_CHECK_EQUAL(schedule.AssignedProcessor(0), 0);
@@ -258,7 +258,7 @@ BOOST_AUTO_TEST_CASE(StarvationReturnsErrorTest) {
     osp::BspSchedule<GraphT> schedule(instance);
 
     // With 2 components and only 1 processor, the starvation case should be hit.
-    auto status = scheduler.computeSchedule(schedule);
+    auto status = scheduler.ComputeSchedule(schedule);
     BOOST_CHECK_EQUAL(status, osp::ReturnStatus::ERROR);
 }
 
@@ -290,7 +290,7 @@ BOOST_AUTO_TEST_SUITE_END()
 //     osp::BspInstance<graph_t> instance(dag, arch);
 //     osp::BspSchedule<graph_t> schedule(instance);
 
-//     auto status = scheduler.computeSchedule(schedule);
+//     auto status = scheduler.ComputeSchedule(schedule);
 //     BOOST_CHECK_EQUAL(status, osp::ReturnStatus::OSP_SUCCESS);
 
 //     // Member 1 of iso group {0,1} gets 1 proc (global proc 0)
@@ -320,7 +320,7 @@ BOOST_AUTO_TEST_SUITE_END()
 //     osp::BspInstance<graph_t> instance(dag, arch);
 //     osp::BspSchedule<graph_t> schedule(instance);
 
-//     auto status = scheduler.computeSchedule(schedule);
+//     auto status = scheduler.ComputeSchedule(schedule);
 //     BOOST_CHECK_EQUAL(status, osp::ReturnStatus::OSP_SUCCESS);
 
 //     BOOST_CHECK_EQUAL(schedule.AssignedProcessor(0), 0);
@@ -346,7 +346,7 @@ BOOST_AUTO_TEST_SUITE_END()
 //     osp::BspSchedule<graph_t> schedule(instance);
 
 //     // With 2 active groups and only 1 processor, starvation is hit.
-//     auto status = scheduler.computeSchedule(schedule);
+//     auto status = scheduler.ComputeSchedule(schedule);
 //     BOOST_CHECK_EQUAL(status, osp::ReturnStatus::ERROR);
 // }
 

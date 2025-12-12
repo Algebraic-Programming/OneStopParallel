@@ -579,7 +579,7 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
 
     virtual ReturnStatus ComputeScheduleWithTimeLimit(BspSchedule<GraphT> &schedule, unsigned timeout) {
         model.SetDblParam(COPT_DBLPARAM_TIMELIMIT, timeout);
-        return computeSchedule(schedule);
+        return ComputeSchedule(schedule);
     }
 
     /**
@@ -592,7 +592,7 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
      * @throws std::invalid_argument if the instance parameters do not
      *         agree with those of the initial schedule's instance
      */
-    virtual ReturnStatus computeSchedule(BspSchedule<GraphT> &schedule) override {
+    virtual ReturnStatus ComputeSchedule(BspSchedule<GraphT> &schedule) override {
         auto &instance = schedule.GetInstance();
 
         assert(!ignoreWorkloadBalance_ || !useLkHeuristicCallback_);
@@ -601,7 +601,7 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
             && (maxNumberSupersteps_ < initialSchedule_->NumberOfSupersteps()
                 || instance.NumberOfProcessors() != initialSchedule_->GetInstance().NumberOfProcessors()
                 || instance.NumberOfVertices() != initialSchedule_->GetInstance().NumberOfVertices())) {
-            throw std::invalid_argument("Invalid Argument while computeSchedule(instance): instance parameters do not "
+            throw std::invalid_argument("Invalid Argument while ComputeSchedule(instance): instance parameters do not "
                                         "agree with those of the initial schedule's instance!");
         }
 

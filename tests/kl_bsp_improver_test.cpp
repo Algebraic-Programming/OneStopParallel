@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
 //         add_mem_weights(instance.GetComputationalDag());
 
 //         BspSchedule<graph> schedule(instance);
-//         const auto result = test_scheduler.computeSchedule(schedule);
+//         const auto result = test_scheduler.ComputeSchedule(schedule);
 
 //         schedule.updateNumberOfSupersteps();
 

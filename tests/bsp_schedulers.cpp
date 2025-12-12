@@ -87,7 +87,7 @@ void RunTest(Scheduler<GraphT> *testScheduler) {
             }
 
             BspSchedule<GraphT> schedule(instance);
-            const auto result = testScheduler->computeSchedule(schedule);
+            const auto result = testScheduler->ComputeSchedule(schedule);
 
             BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
             BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
@@ -134,7 +134,7 @@ void RunTest2(Scheduler<GraphT> *testScheduler) {
             BspInstance<GraphT> instance(graph, arch);
 
             BspSchedule<GraphT> schedule(instance);
-            const auto result = testScheduler->computeSchedule(schedule);
+            const auto result = testScheduler->ComputeSchedule(schedule);
 
             BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
             BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());

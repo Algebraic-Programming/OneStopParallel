@@ -49,7 +49,7 @@ class TrimmedGroupScheduler : public Scheduler<ConstrGraphT> {
 
     std::string getScheduleName() const override { return "TrimmedGroupScheduler"; }
 
-    ReturnStatus computeSchedule(BspSchedule<ConstrGraphT> &schedule) override {
+    ReturnStatus ComputeSchedule(BspSchedule<ConstrGraphT> &schedule) override {
         const auto &instance = schedule.GetInstance();
         const ConstrGraphT &dag = instance.GetComputationalDag();
         const BspArchitecture<ConstrGraphT> &arch = instance.GetArchitecture();
@@ -144,7 +144,7 @@ class TrimmedGroupScheduler : public Scheduler<ConstrGraphT> {
             BspSchedule<ConstrGraphT> subSchedule(subInstanc);
 
             // Call the sub-scheduler to compute the schedule for this group of components
-            auto status = subScheduler_->computeSchedule(subSchedule);
+            auto status = subScheduler_->ComputeSchedule(subSchedule);
             if (status != ReturnStatus::OSP_SUCCESS && status != ReturnStatus::BEST_FOUND) {
                 return status;
             }

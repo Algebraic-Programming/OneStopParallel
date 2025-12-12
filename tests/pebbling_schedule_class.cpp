@@ -90,7 +90,7 @@ void RunTest(Scheduler<GraphT> *testScheduler) {
 
             BspSchedule bspSchedule(instance);
 
-            ReturnStatus result = testScheduler->computeSchedule(bspSchedule);
+            ReturnStatus result = testScheduler->ComputeSchedule(bspSchedule);
             BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
 
             std::vector<VMemwT<GraphT> > minimumMemoryRequiredVector
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(TestPebblingScheduleWriter) {
     BspSchedule bspSchedule(instance);
     GreedyBspScheduler<Graph> scheduler;
 
-    ReturnStatus result = scheduler.computeSchedule(bspSchedule);
+    ReturnStatus result = scheduler.ComputeSchedule(bspSchedule);
     BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
 
     std::vector<VMemwT<Graph> > minimumMemoryRequiredVector = PebblingSchedule<Graph>::minimumMemoryRequiredPerNodeType(instance);

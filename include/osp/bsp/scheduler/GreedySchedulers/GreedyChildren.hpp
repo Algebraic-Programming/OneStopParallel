@@ -36,7 +36,7 @@ class GreedyChildren : public Scheduler<GraphT> {
   public:
     GreedyChildren(bool ensureEnoughSources = true) : Scheduler<GraphT>(), ensureEnoughSources_(ensureEnoughSources) {};
 
-    ReturnStatus computeSchedule(BspSchedule<GraphT> &sched) override {
+    ReturnStatus ComputeSchedule(BspSchedule<GraphT> &sched) override {
         using VertexType = VertexIdxT<GraphT>;
         const auto &instance = sched.GetInstance();
 

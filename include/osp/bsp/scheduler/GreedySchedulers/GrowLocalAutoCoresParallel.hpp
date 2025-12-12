@@ -55,8 +55,8 @@ struct GrowLocalAutoCoresParallelParams {
  * @brief The GrowLocalAutoCoresParallel class represents a scheduler that uses a greedy algorithm to compute
  * schedules for BspInstance.
  *
- * This class inherits from the Scheduler class and implements the computeSchedule() and getScheduleName() methods.
- * The computeSchedule() method computes a schedule for a given BspInstance using a greedy algorithm.
+ * This class inherits from the Scheduler class and implements the ComputeSchedule() and getScheduleName() methods.
+ * The ComputeSchedule() method computes a schedule for a given BspInstance using a greedy algorithm.
  * The getScheduleName() method returns the name of the schedule, which is "GrowLocalAutoCoresParallel" in this
  * case.
  */
@@ -584,7 +584,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
      * @param instance The BspInstance object representing the instance to compute the schedule for.
      * @return A pair containing the return status and the computed BspSchedule.
      */
-    virtual ReturnStatus computeSchedule(BspSchedule<GraphT> &schedule) override {
+    virtual ReturnStatus ComputeSchedule(BspSchedule<GraphT> &schedule) override {
         unsigned numThreads = params.numThreads;
         if (numThreads == 0) {
             // numThreads = static_cast<unsigned>(std::sqrt( static_cast<double>((schedule.GetInstance().NumberOfVertices() / 1000000)))) + 1;

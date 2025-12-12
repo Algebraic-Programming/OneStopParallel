@@ -32,7 +32,7 @@ class WavefrontComponentScheduler : public AbstractWavefrontScheduler<GraphT, Co
 
     std::string getScheduleName() const override { return "WavefrontComponentScheduler"; }
 
-    ReturnStatus computeSchedule(BspSchedule<GraphT> &schedule) override {
+    ReturnStatus ComputeSchedule(BspSchedule<GraphT> &schedule) override {
         const auto &instance = schedule.GetInstance();
         const auto &originalArch = instance.GetArchitecture();
         const auto &originalProcTypeCount = originalArch.getProcessorTypeCount();
@@ -106,7 +106,7 @@ class WavefrontComponentScheduler : public AbstractWavefrontScheduler<GraphT, Co
                 subInstance.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
 
                 BspSchedule<ConstrGraphT> subSchedule(subInstance);
-                const auto status = this->scheduler_->computeSchedule(subSchedule);
+                const auto status = this->scheduler_->ComputeSchedule(subSchedule);
                 if (status != ReturnStatus::OSP_SUCCESS && status != ReturnStatus::BEST_FOUND) {
                     return status;
                 }

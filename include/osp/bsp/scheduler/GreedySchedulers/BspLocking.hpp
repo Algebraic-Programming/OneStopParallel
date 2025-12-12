@@ -39,8 +39,8 @@ namespace osp {
  * @brief The GreedyBspLocking class represents a scheduler that uses a greedy algorithm to compute schedules for
  * BspInstance.
  *
- * This class inherits from the Scheduler class and implements the computeSchedule() and getScheduleName() methods.
- * The computeSchedule() method computes a schedule for a given BspInstance using a greedy algorithm.
+ * This class inherits from the Scheduler class and implements the ComputeSchedule() and getScheduleName() methods.
+ * The ComputeSchedule() method computes a schedule for a given BspInstance using a greedy algorithm.
  * The getScheduleName() method returns the name of the schedule, which is "BspGreedy" in this case.
  */
 
@@ -305,7 +305,7 @@ class BspLocking : public Scheduler<GraphT> {
      * @param instance The BspInstance object representing the instance to compute the schedule for.
      * @return A pair containing the return status and the computed BspSchedule.
      */
-    virtual ReturnStatus computeSchedule(BspSchedule<GraphT> &schedule) override {
+    virtual ReturnStatus ComputeSchedule(BspSchedule<GraphT> &schedule) override {
         const auto &instance = schedule.GetInstance();
 
         for (const auto &v : instance.GetComputationalDag().Vertices()) {

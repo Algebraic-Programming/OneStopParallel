@@ -275,10 +275,10 @@ ReturnStatus RunBspScheduler(const ConfigParser &parser,
             = get_base_bsp_scheduler_by_name<boost_graph_t>(parser, algorithm.get_child("parameters").get_child("scheduler"));
 
         MultilevelCoarseAndSchedule<Graph_t, boost_graph_t> coarseAndSchedule(*scheduler, *improver, *ml_coarser);
-        return coarse_and_schedule.computeSchedule(schedule);
+        return coarse_and_schedule.ComputeSchedule(schedule);
     } else {
         auto scheduler = get_base_bsp_scheduler_by_name<GraphT>(parser, algorithm);
-        return scheduler->computeSchedule(schedule);
+        return scheduler->ComputeSchedule(schedule);
     }
 }
 

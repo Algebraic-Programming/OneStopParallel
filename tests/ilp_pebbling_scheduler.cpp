@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
 
     GreedyBspScheduler<graph> greedy;
     BspSchedule<graph> bspInitial(instance);
-    BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, greedy.computeSchedule(bsp_initial));
+    BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, greedy.ComputeSchedule(bsp_initial));
 
     std::vector<VMemwT<graph> > minimumMemoryRequiredVector = PebblingSchedule<graph>::minimumMemoryRequiredPerNodeType(instance);
     VMemwT<graph> maxRequired = *std::max_element(minimum_memory_required_vector.begin(), minimum_memory_required_vector.end());

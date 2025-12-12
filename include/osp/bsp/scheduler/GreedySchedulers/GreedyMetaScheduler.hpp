@@ -32,8 +32,8 @@ namespace osp {
  * @brief The GreedyMetaScheduler class represents a meta-scheduler that selects the best schedule produced from a list of
  * added schedulers.
  *
- * This class inherits from the Scheduler class and implements the computeSchedule() and getScheduleName() methods.
- * The computeSchedule() method iterates through a list of schedulers, computes a schedule using each one,
+ * This class inherits from the Scheduler class and implements the ComputeSchedule() and getScheduleName() methods.
+ * The ComputeSchedule() method iterates through a list of schedulers, computes a schedule using each one,
  * and returns the schedule with the minimum cost.
  *
  * @tparam Graph_t The graph type representing the computational DAG.
@@ -63,12 +63,12 @@ class GreedyMetaScheduler : public Scheduler<GraphT> {
 
     void ResetScheduler() { schedulers_.clear(); }
 
-    ReturnStatus computeSchedule(BspSchedule<GraphT> &schedule) override {
+    ReturnStatus ComputeSchedule(BspSchedule<GraphT> &schedule) override {
         if (schedule.GetInstance().GetArchitecture().NumberOfProcessors() == 1) {
             if constexpr (verbose_) {
                 std::cout << "Using serial scheduler for P=1." << std::endl;
             }
-            serialScheduler_.computeSchedule(schedule);
+            serialScheduler_.ComputeSchedule(schedule);
             return ReturnStatus::OSP_SUCCESS;
         }
 
@@ -76,7 +76,7 @@ class GreedyMetaScheduler : public Scheduler<GraphT> {
         BspSchedule<GraphT> currentSchedule(schedule.GetInstance());
 
         for (Scheduler<GraphT> *scheduler : schedulers_) {
-            scheduler->computeSchedule(currentSchedule);
+            scheduler->ComputeSchedule(currentSchedule);
             const VWorkwT<GraphT> scheduleCost = CostModel()(currentSchedule);
 
             if constexpr (verbose_) {

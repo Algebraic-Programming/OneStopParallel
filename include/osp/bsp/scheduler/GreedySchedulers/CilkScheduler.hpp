@@ -141,12 +141,12 @@ class CilkScheduler : public Scheduler<GraphT> {
      * @brief Computes the schedule for the given BSP instance using the greedy scheduling algorithm.
      *
      * This member function computes the schedule for the given BSP instance using the greedy scheduling algorithm.
-     * It overrides the computeSchedule() function of the base Scheduler class.
+     * It overrides the ComputeSchedule() function of the base Scheduler class.
      *
      * @param instance The BSP instance to compute the schedule for.
      * @return A pair containing the return status and the computed BSP schedule.
      */
-    virtual ReturnStatus computeSchedule(BspSchedule<GraphT> &bspSchedule) override {
+    virtual ReturnStatus ComputeSchedule(BspSchedule<GraphT> &bspSchedule) override {
         // if constexpr (use_memory_constraint) {
         //     memory_constraint.initialize(instance);
         // }

@@ -54,7 +54,7 @@ class PebblingPartialILP : public Scheduler<GraphT> {
     ReturnStatus ComputePebbling(PebblingSchedule<GraphT> &schedule);
 
     // not used, only here for using scheduler class base functionality (status enums, timelimits, etc)
-    virtual ReturnStatus computeSchedule(BspSchedule<GraphT> &schedule) override;
+    virtual ReturnStatus ComputeSchedule(BspSchedule<GraphT> &schedule) override;
 
     GraphT ContractByPartition(const BspInstance<GraphT> &instance, const std::vector<unsigned> &nodeToPartAssignment);
 
@@ -282,7 +282,7 @@ ReturnStatus PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<GraphT
         PebblingSchedule<GraphT> heuristicPebbling;
         GreedyBspScheduler<GraphT> greedyScheduler;
         BspSchedule<GraphT> bspHeuristic(subInstance[part]);
-        greedyScheduler.computeSchedule(bspHeuristic);
+        greedyScheduler.ComputeSchedule(bspHeuristic);
 
         std::set<vertex_idx> extraSourceIds;
         for (vertex_idx idx = 0; idx < extra_sources[part].size(); ++idx) {

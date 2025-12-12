@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(TestEigenSptrsv) {
     BspInstance<SparseMatrixImp<int32_t>> instance(graph, architecture);
     GrowLocalAutoCores<SparseMatrixImp<int32_t>> scheduler;
     BspSchedule<SparseMatrixImp<int32_t>> schedule(instance);
-    auto result = scheduler.computeSchedule(schedule);
+    auto result = scheduler.ComputeSchedule(schedule);
 
     BOOST_CHECK_EQUAL(result, ReturnStatus::OSP_SUCCESS);
     BOOST_CHECK_EQUAL(&schedule.GetInstance(), &instance);

@@ -38,7 +38,7 @@ class CoarseAndSchedule : public Scheduler<GraphT> {
         return "Coarse(" + coarser_.getCoarserName() + ")AndSchedule(" + scheduler_.getScheduleName() + ")";
     }
 
-    ReturnStatus computeSchedule(BspSchedule<GraphT> &schedule) override {
+    ReturnStatus ComputeSchedule(BspSchedule<GraphT> &schedule) override {
         const auto &instance = schedule.GetInstance();
 
         BspInstance<GraphTCoarse> instanceCoarse;
@@ -56,7 +56,7 @@ class CoarseAndSchedule : public Scheduler<GraphT> {
 
         BspSchedule<GraphTCoarse> scheduleCoarse(instanceCoarse);
 
-        const auto statusCoarse = scheduler_.computeSchedule(scheduleCoarse);
+        const auto statusCoarse = scheduler_.ComputeSchedule(scheduleCoarse);
 
         if (status_coarse != ReturnStatus::OSP_SUCCESS and status_coarse != ReturnStatus::BEST_FOUND) {
             return statusCoarse;

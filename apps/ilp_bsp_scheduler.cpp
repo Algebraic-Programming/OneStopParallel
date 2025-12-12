@@ -114,7 +114,7 @@ int main(int argc, char *argv[]) {
     } else {
         BspSchedule<ComputationalDag> schedule(instance);
 
-        auto statusSchedule = scheduler.computeSchedule(schedule);
+        auto statusSchedule = scheduler.ComputeSchedule(schedule);
 
         if (statusSchedule == ReturnStatus::OSP_SUCCESS || statusSchedule == ReturnStatus::BEST_FOUND) {
             DotFileWriter dotWriter;

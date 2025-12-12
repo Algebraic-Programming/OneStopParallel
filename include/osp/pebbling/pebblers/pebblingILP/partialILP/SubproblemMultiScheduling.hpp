@@ -51,7 +51,7 @@ class SubproblemMultiScheduling : public Scheduler<GraphT> {
     std::vector<workweight_type> static GetLongestPath(const GraphT &graph);
 
     // not used, only here for using scheduler class base functionality (status enums, timelimits, etc)
-    ReturnStatus computeSchedule(BspSchedule<GraphT> &schedule) override;
+    ReturnStatus ComputeSchedule(BspSchedule<GraphT> &schedule) override;
 
     /**
      * @brief Get the name of the schedule.

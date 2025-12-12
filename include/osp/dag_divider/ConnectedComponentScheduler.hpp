@@ -33,7 +33,7 @@ class ConnectedComponentScheduler : public Scheduler<GraphT> {
 
     std::string getScheduleName() const override { return "SubDagScheduler"; }
 
-    ReturnStatus computeSchedule(BspSchedule<GraphT> &schedule) override {
+    ReturnStatus ComputeSchedule(BspSchedule<GraphT> &schedule) override {
         const auto &instance = schedule.GetInstance();
 
         const GraphT &dag = instance.GetComputationalDag();
@@ -61,7 +61,7 @@ class ConnectedComponentScheduler : public Scheduler<GraphT> {
             subArchitecture.setNumberOfProcessors(subDagProcessors);
 
             BspSchedule<ConstrGraphT> subSchedule(subInstance);
-            auto status = scheduler_->computeSchedule(subSchedule);
+            auto status = scheduler_->ComputeSchedule(subSchedule);
 
             if (status != ReturnStatus::OSP_SUCCESS && status != ReturnStatus::BEST_FOUND) {
                 return status;

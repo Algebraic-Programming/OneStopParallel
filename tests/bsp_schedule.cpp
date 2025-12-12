@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(TestInstanceBicgstab) {
     for (auto &scheduler : schedulers) {
         BspSchedule<Graph> schedule(instance);
 
-        const auto result = scheduler->computeSchedule(schedule);
+        const auto result = scheduler->ComputeSchedule(schedule);
 
         BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
         BOOST_CHECK_EQUAL(&schedule.GetInstance(), &instance);
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(TestInstanceBicgstab) {
 
     BspSchedule<Graph> schedule(instance);
     Serial<Graph> serial;
-    const auto result = serial.computeSchedule(schedule);
+    const auto result = serial.ComputeSchedule(schedule);
     BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
     BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
     BOOST_CHECK_EQUAL(schedule.NumberOfSupersteps(), 1);
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(TestScheduleWriter) {
 
     BspLocking<GraphT1> scheduler;
     BspSchedule<GraphT1> schedule(instance);
-    const auto result = scheduler.computeSchedule(schedule);
+    const auto result = scheduler.ComputeSchedule(schedule);
     BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
     BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
 
@@ -225,7 +225,7 @@ BOOST_AUTO_TEST_CASE(TestBspScheduleCs) {
     BspSchedule<Graph> schedule(instance);
     BspLocking<Graph> scheduler;
 
-    const auto result = scheduler.computeSchedule(schedule);
+    const auto result = scheduler.ComputeSchedule(schedule);
 
     BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
     BOOST_CHECK_EQUAL(&schedule.GetInstance(), &instance);

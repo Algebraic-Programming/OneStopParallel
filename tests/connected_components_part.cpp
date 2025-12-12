@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(ConnectedComponentPartTest) {
     arch.setNumberOfProcessors(6);
 
     BspSchedule<computational_dag_vector_impl_def_int_t> schedule(instance);
-    auto status = scheduler.computeSchedule(schedule);
+    auto status = scheduler.ComputeSchedule(schedule);
 
     BOOST_CHECK_EQUAL(status, ReturnStatus::OSP_SUCCESS);
     BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(ConnectedComponentPartTest) {
     BspInstance<computational_dag_vector_impl_def_int_t> instanceNew(dag, arch);
     BspSchedule<computational_dag_vector_impl_def_int_t> scheduleNew(instanceNew);
 
-    auto statusNew = scheduler.computeSchedule(scheduleNew);
+    auto statusNew = scheduler.ComputeSchedule(scheduleNew);
 
     BOOST_CHECK_EQUAL(statusNew, ReturnStatus::OSP_SUCCESS);
     BOOST_CHECK(scheduleNew.SatisfiesPrecedenceConstraints());

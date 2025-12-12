@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(CoarserHdaggTest) {
         GreedyBspScheduler<GraphT> scheduler;
         BspSchedule<GraphT> schedule(coarseInstance);
 
-        const auto statusSched = scheduler.computeSchedule(schedule);
+        const auto statusSched = scheduler.ComputeSchedule(schedule);
 
         BOOST_CHECK(statusSched == ReturnStatus::OSP_SUCCESS);
         BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE(CoarserHdaggTest) {
         CoarseAndSchedule<GraphT, GraphT> coarseAndSchedule(coarser, scheduler);
         BspSchedule<GraphT> schedule2(instance);
 
-        const auto status = coarseAndSchedule.computeSchedule(schedule2);
+        const auto status = coarseAndSchedule.ComputeSchedule(schedule2);
         BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
         BOOST_CHECK(schedule2.SatisfiesPrecedenceConstraints());
     }
@@ -219,7 +219,7 @@ BOOST_AUTO_TEST_CASE(CoarserHdaggTestDiffGraphImpl) {
         GreedyBspScheduler<GraphT2> scheduler;
         BspSchedule<GraphT2> schedule(coarseInstance);
 
-        auto statusSched = scheduler.computeSchedule(schedule);
+        auto statusSched = scheduler.ComputeSchedule(schedule);
 
         BOOST_CHECK(statusSched == ReturnStatus::OSP_SUCCESS);
         BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
@@ -232,7 +232,7 @@ BOOST_AUTO_TEST_CASE(CoarserHdaggTestDiffGraphImpl) {
         CoarseAndSchedule<GraphT1, GraphT2> coarseAndSchedule(coarser, scheduler);
         BspSchedule<GraphT1> schedule2(instance);
 
-        auto status = coarseAndSchedule.computeSchedule(schedule2);
+        auto status = coarseAndSchedule.ComputeSchedule(schedule2);
         BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
         BOOST_CHECK(schedule2.SatisfiesPrecedenceConstraints());
     }
@@ -278,7 +278,7 @@ BOOST_AUTO_TEST_CASE(CoarserBspscheduleTest) {
         GreedyBspScheduler<GraphT> scheduler;
         BspSchedule<GraphT> scheduleOrig(instance);
 
-        const auto statusSchedOrig = scheduler.computeSchedule(scheduleOrig);
+        const auto statusSchedOrig = scheduler.ComputeSchedule(scheduleOrig);
 
         BOOST_CHECK(statusSchedOrig == ReturnStatus::OSP_SUCCESS);
         BOOST_CHECK(scheduleOrig.SatisfiesPrecedenceConstraints());
@@ -293,7 +293,7 @@ BOOST_AUTO_TEST_CASE(CoarserBspscheduleTest) {
 
         BspSchedule<GraphT> schedule(coarseInstance);
 
-        const auto statusSched = scheduler.computeSchedule(schedule);
+        const auto statusSched = scheduler.ComputeSchedule(schedule);
 
         BOOST_CHECK(statusSched == ReturnStatus::OSP_SUCCESS);
         BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
@@ -306,7 +306,7 @@ BOOST_AUTO_TEST_CASE(CoarserBspscheduleTest) {
         CoarseAndSchedule<GraphT, GraphT> coarseAndSchedule(coarser, scheduler);
         BspSchedule<GraphT> schedule2(instance);
 
-        const auto status = coarseAndSchedule.computeSchedule(schedule2);
+        const auto status = coarseAndSchedule.ComputeSchedule(schedule2);
         BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
         BOOST_CHECK(schedule2.SatisfiesPrecedenceConstraints());
     }
@@ -361,7 +361,7 @@ void TestCoarserSameGraph(Coarser<GraphT, GraphT> &coarser) {
 
         BspSchedule<GraphT> schedule(coarseInstance);
 
-        const auto statusSched = scheduler.computeSchedule(schedule);
+        const auto statusSched = scheduler.ComputeSchedule(schedule);
 
         BOOST_CHECK(statusSched == ReturnStatus::OSP_SUCCESS);
         BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
@@ -374,7 +374,7 @@ void TestCoarserSameGraph(Coarser<GraphT, GraphT> &coarser) {
         CoarseAndSchedule<GraphT, GraphT> coarseAndSchedule(coarser, scheduler);
         BspSchedule<GraphT> schedule2(instance);
 
-        const auto status = coarseAndSchedule.computeSchedule(schedule2);
+        const auto status = coarseAndSchedule.ComputeSchedule(schedule2);
         BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
         BOOST_CHECK(schedule2.SatisfiesPrecedenceConstraints());
     }
@@ -496,7 +496,7 @@ BOOST_AUTO_TEST_CASE(CoarserSquashATestDiffGraphImplCsg) {
         GreedyBspScheduler<GraphT2> scheduler;
         BspSchedule<GraphT2> schedule(coarseInstance);
 
-        auto statusSched = scheduler.computeSchedule(schedule);
+        auto statusSched = scheduler.ComputeSchedule(schedule);
 
         BOOST_CHECK(statusSched == ReturnStatus::OSP_SUCCESS);
         BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
@@ -509,7 +509,7 @@ BOOST_AUTO_TEST_CASE(CoarserSquashATestDiffGraphImplCsg) {
         CoarseAndSchedule<GraphT1, GraphT2> coarseAndSchedule(coarser, scheduler);
         BspSchedule<GraphT1> schedule2(instance);
 
-        auto status = coarseAndSchedule.computeSchedule(schedule2);
+        auto status = coarseAndSchedule.ComputeSchedule(schedule2);
         BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
         BOOST_CHECK(schedule2.SatisfiesPrecedenceConstraints());
     }
@@ -569,7 +569,7 @@ BOOST_AUTO_TEST_CASE(CoarserSquashATestDiffGraphImplCsge) {
         GreedyBspScheduler<GraphT2> scheduler;
         BspSchedule<GraphT2> schedule(coarseInstance);
 
-        auto statusSched = scheduler.computeSchedule(schedule);
+        auto statusSched = scheduler.ComputeSchedule(schedule);
 
         BOOST_CHECK(statusSched == ReturnStatus::OSP_SUCCESS);
         BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
@@ -582,7 +582,7 @@ BOOST_AUTO_TEST_CASE(CoarserSquashATestDiffGraphImplCsge) {
         CoarseAndSchedule<GraphT1, GraphT2> coarseAndSchedule(coarser, scheduler);
         BspSchedule<GraphT1> schedule2(instance);
 
-        auto status = coarseAndSchedule.computeSchedule(schedule2);
+        auto status = coarseAndSchedule.ComputeSchedule(schedule2);
         BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
         BOOST_CHECK(schedule2.SatisfiesPrecedenceConstraints());
     }

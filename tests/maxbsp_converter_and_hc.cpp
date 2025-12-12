@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(MaxbspScheduling) {
 
     GreedyBspScheduler<Graph> greedy;
     BspSchedule<Graph> bspInitial(instance);
-    BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, greedy.computeSchedule(bspInitial));
+    BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, greedy.ComputeSchedule(bspInitial));
     BOOST_CHECK(bspInitial.SatisfiesPrecedenceConstraints());
 
     // PART I: from BspSchedule to MaxBspSchedule conversion
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(MaxbspScheduling) {
     instance.setSynchronisationCosts(7);
 
     BspSchedule<Graph> bspInitialLarge(instance);
-    BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, greedy.computeSchedule(bspInitialLarge));
+    BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, greedy.ComputeSchedule(bspInitialLarge));
 
     BspScheduleCS<Graph> bspInitialLargeCs(bspInitialLarge);
     BOOST_CHECK(bspInitialLargeCs.hasValidCommSchedule());

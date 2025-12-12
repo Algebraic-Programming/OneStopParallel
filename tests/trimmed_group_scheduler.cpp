@@ -35,7 +35,7 @@ class MockSubScheduler : public Scheduler<ConstrGraphT> {
   public:
     // This mock scheduler assigns all nodes to local processor 0 and superstep 0.
     // This simplifies verification of the TrimmedGroupScheduler's mapping logic.
-    ReturnStatus computeSchedule(BspSchedule<ConstrGraphT> &schedule) override {
+    ReturnStatus ComputeSchedule(BspSchedule<ConstrGraphT> &schedule) override {
         for (VertexIdxT<ConstrGraphT> v = 0; v < schedule.GetInstance().GetComputationalDag().NumVertices(); ++v) {
             schedule.SetAssignedProcessor(v, 0);
             schedule.SetAssignedSuperstep(v, 0);
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(EmptyGraphTest) {
     TrimmedGroupScheduler<GraphT> scheduler(mockSubScheduler_, 1);
     BspSchedule<GraphT> schedule(instance_);
 
-    auto status = scheduler.computeSchedule(schedule);
+    auto status = scheduler.ComputeSchedule(schedule);
     BOOST_CHECK_EQUAL(status, ReturnStatus::OSP_SUCCESS);
     BOOST_CHECK_EQUAL(schedule.NumberOfSupersteps(), 0);
 }
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(SingleComponentSingleProcessorTypeTest) {
     TrimmedGroupScheduler<GraphT> scheduler(mockSubScheduler_, 1);
     BspSchedule<GraphT> schedule(instance_);
 
-    auto status = scheduler.computeSchedule(schedule);
+    auto status = scheduler.ComputeSchedule(schedule);
     BOOST_CHECK_EQUAL(status, ReturnStatus::OSP_SUCCESS);
     BOOST_CHECK_EQUAL(schedule.NumberOfSupersteps(), 1);
 
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(MultipleComponentsSingleProcessorTypeEvenDistributionTest) 
     TrimmedGroupScheduler<GraphT> scheduler(mockSubScheduler_, 2);
     BspSchedule<GraphT> schedule(instance_);
 
-    auto status = scheduler.computeSchedule(schedule);
+    auto status = scheduler.ComputeSchedule(schedule);
     BOOST_CHECK_EQUAL(status, ReturnStatus::OSP_SUCCESS);
     BOOST_CHECK_EQUAL(schedule.NumberOfSupersteps(), 1);
 
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(MultipleComponentsSingleProcessorTypeUnevenDistributionTest
     TrimmedGroupScheduler<GraphT> scheduler(mockSubScheduler_, 2);
     BspSchedule<GraphT> schedule(instance_);
 
-    auto status = scheduler.computeSchedule(schedule);
+    auto status = scheduler.ComputeSchedule(schedule);
     BOOST_CHECK_EQUAL(status, ReturnStatus::OSP_SUCCESS);
     BOOST_CHECK_EQUAL(schedule.NumberOfSupersteps(), 1);
 
@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE(MultipleComponentsHeterogeneousArchitectureTest) {
     TrimmedGroupScheduler<GraphT> scheduler(mockSubScheduler_, 2);
     BspSchedule<GraphT> schedule(instance_);
 
-    auto status = scheduler.computeSchedule(schedule);
+    auto status = scheduler.ComputeSchedule(schedule);
     BOOST_CHECK_EQUAL(status, ReturnStatus::OSP_SUCCESS);
     BOOST_CHECK_EQUAL(schedule.NumberOfSupersteps(), 1);
 

@@ -468,7 +468,7 @@ class IsomorphicSubgraphScheduler {
                           << ", Comm cost: " << subArch.CommunicationCosts() << std::endl;
             }
 
-            schedulerForGroupPtr->computeSchedule(bspSchedule);
+            schedulerForGroupPtr->ComputeSchedule(bspSchedule);
 
             if constexpr (verbose_) {
                 std::cout << "  Schedule satisfies precedence constraints: ";

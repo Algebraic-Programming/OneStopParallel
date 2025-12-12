@@ -73,7 +73,7 @@ void RunTest(Scheduler<GraphT> *testScheduler) {
             }
 
             BspSchedule<GraphT> schedule(instance);
-            const auto result = testScheduler->computeSchedule(schedule);
+            const auto result = testScheduler->ComputeSchedule(schedule);
 
             BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
             BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
@@ -117,7 +117,7 @@ void RunTestMaxBsp(MaxBspScheduler<GraphT> *testScheduler) {
 
             MaxBspSchedule<GraphT> schedule(instance);
 
-            const auto result = testScheduler->computeSchedule(schedule);
+            const auto result = testScheduler->ComputeSchedule(schedule);
 
             BOOST_CHECK_EQUAL(result, ReturnStatus::OSP_SUCCESS);
             BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
@@ -125,19 +125,19 @@ void RunTestMaxBsp(MaxBspScheduler<GraphT> *testScheduler) {
     }
 }
 
-// Tests computeSchedule(BspSchedule&) → staleness = 1
+// Tests ComputeSchedule(BspSchedule&) → staleness = 1
 BOOST_AUTO_TEST_CASE(GreedyVarianceSspSchedulerTestVectorImpl) {
     GreedyVarianceSspScheduler<computational_dag_vector_impl_def_t> test;
     RunTest(&test);
 }
 
-// Tests computeSchedule(BspSchedule&) → staleness = 1 (different graph impl)
+// Tests ComputeSchedule(BspSchedule&) → staleness = 1 (different graph impl)
 BOOST_AUTO_TEST_CASE(GreedyVarianceSspSchedulerTestEdgeIdxImpl) {
     GreedyVarianceSspScheduler<computational_dag_edge_idx_vector_impl_def_t> test;
     RunTest(&test);
 }
 
-// Tests computeSchedule(MaxBspSchedule&) → staleness = 2
+// Tests ComputeSchedule(MaxBspSchedule&) → staleness = 2
 BOOST_AUTO_TEST_CASE(GreedyVarianceSspSchedulerMaxBspScheduleLargeTest) {
     GreedyVarianceSspScheduler<computational_dag_edge_idx_vector_impl_def_int_t> test;
     RunTestMaxBsp(&test);

@@ -812,7 +812,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
      * @throws std::invalid_argument if the instance parameters do not
      *         agree with those of the initial schedule's instance
      */
-    virtual ReturnStatus computeSchedule(BspSchedule<GraphT> &schedule) override {
+    virtual ReturnStatus ComputeSchedule(BspSchedule<GraphT> &schedule) override {
         BspScheduleCS<GraphT> scheduleCs(schedule.GetInstance());
         ReturnStatus status = computeScheduleCS(schedule_cs);
         if (status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND) {
@@ -825,7 +825,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
 
     virtual ReturnStatus ComputeScheduleWithTimeLimit(BspSchedule<GraphT> &schedule, unsigned timeLimit) {
         timeLimitSeconds_ = timeLimit;
-        return computeSchedule(schedule);
+        return ComputeSchedule(schedule);
     }
 
     virtual ReturnStatus ComputeMaxBspSchedule(MaxBspSchedule<GraphT> &schedule) {

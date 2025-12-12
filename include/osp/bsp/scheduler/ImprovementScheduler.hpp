@@ -106,8 +106,8 @@ class ComboScheduler : public Scheduler<GraphT> {
         return baseScheduler_.getScheduleName() + "+" + improvementScheduler_.getScheduleName();
     }
 
-    virtual ReturnStatus computeSchedule(BspSchedule<GraphT> &schedule) override {
-        ReturnStatus status = baseScheduler_.computeSchedule(schedule);
+    virtual ReturnStatus ComputeSchedule(BspSchedule<GraphT> &schedule) override {
+        ReturnStatus status = baseScheduler_.ComputeSchedule(schedule);
         if (status != ReturnStatus::OSP_SUCCESS and status != ReturnStatus::BEST_FOUND) {
             return status;
         }

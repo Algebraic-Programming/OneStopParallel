@@ -62,7 +62,7 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
 
     std::string GetScheduleName() const override { return "LightEdgeVariancePartitioner"; };
 
-    virtual ReturnStatus computeSchedule(BspSchedule<GraphT> &schedule) override {
+    virtual ReturnStatus ComputeSchedule(BspSchedule<GraphT> &schedule) override {
         // DAGPartition output_partition(instance);
 
         using Base = VariancePartitioner<GraphT, InterpolationT, MemoryConstraintT>;

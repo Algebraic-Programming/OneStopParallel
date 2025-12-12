@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(TestRecomputer) {
 
     BspSchedule<Graph> scheduleInit2(instance2);
     BspLocking<Graph> greedy;
-    greedy.computeSchedule(scheduleInit2);
+    greedy.ComputeSchedule(scheduleInit2);
     BOOST_CHECK(scheduleInit2.SatisfiesPrecedenceConstraints());
     BspScheduleCS<Graph> scheduleInitCs2(scheduleInit2);
     BOOST_CHECK(scheduleInitCs2.hasValidCommSchedule());

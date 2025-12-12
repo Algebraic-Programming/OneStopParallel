@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverWithNodeTypesTest) {
         instance.setDiagonalCompatibilityMatrix(2);
 
         BspSchedule<Graph> schedule(instance);
-        const auto result = testScheduler.computeSchedule(schedule);
+        const auto result = testScheduler.ComputeSchedule(schedule);
 
         BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
         BOOST_CHECK_EQUAL(&schedule.GetInstance(), &instance);
@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverOnTestGraphs) {
         AddMemWeights(instance.GetComputationalDag());
 
         BspSchedule<Graph> schedule(instance);
-        const auto result = testScheduler.computeSchedule(schedule);
+        const auto result = testScheduler.ComputeSchedule(schedule);
 
         BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
         BOOST_CHECK_EQUAL(&schedule.GetInstance(), &instance);
@@ -718,7 +718,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverInnerLoopLambdaMapTest) {
 //         add_mem_weights(instance.GetComputationalDag());
 
 //         BspSchedule<graph> schedule(instance);
-//         const auto result = test_scheduler.computeSchedule(schedule);
+//         const auto result = test_scheduler.ComputeSchedule(schedule);
 
 //         schedule.updateNumberOfSupersteps();
 
@@ -797,7 +797,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverInnerLoopLambdaMapTest) {
 //         add_mem_weights(instance.GetComputationalDag());
 
 //         BspSchedule<graph> schedule(instance);
-//         const auto result = test_scheduler.computeSchedule(schedule);
+//         const auto result = test_scheduler.ComputeSchedule(schedule);
 
 //         schedule.updateNumberOfSupersteps();
 

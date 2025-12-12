@@ -33,7 +33,7 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
 
     std::string getScheduleName() const override { return "IsomorphicWavefrontComponentScheduler"; }
 
-    ReturnStatus computeSchedule(BspSchedule<GraphT> &schedule) override {
+    ReturnStatus ComputeSchedule(BspSchedule<GraphT> &schedule) override {
         const auto &instance = schedule.GetInstance();
         const auto &originalArch = instance.GetArchitecture();
 
@@ -218,7 +218,7 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
             unsigned sequentialSuperstepOffset = 0;
             for (const auto &groupMemberIdx : groupMembers) {
                 BspSchedule<ConstrGraphT> subSchedule(subInstance);
-                auto status = this->scheduler_->computeSchedule(subSchedule);
+                auto status = this->scheduler_->ComputeSchedule(subSchedule);
                 if (status != ReturnStatus::OSP_SUCCESS && status != ReturnStatus::BEST_FOUND) {
                     return status;
                 }
@@ -277,7 +277,7 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
             }
 
             BspSchedule<ConstrGraphT> subSchedule(subInstance);
-            auto status = this->scheduler_->computeSchedule(subSchedule);
+            auto status = this->scheduler_->ComputeSchedule(subSchedule);
             if (status != ReturnStatus::OSP_SUCCESS && status != ReturnStatus::BEST_FOUND) {
                 return status;
             }

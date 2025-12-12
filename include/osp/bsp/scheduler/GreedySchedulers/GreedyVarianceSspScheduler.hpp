@@ -625,9 +625,9 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
         return ReturnStatus::OSP_SUCCESS;
     }
 
-    ReturnStatus computeSchedule(BspSchedule<GraphT> &schedule) override { return computeSspSchedule(schedule, 1U); }
+    ReturnStatus ComputeSchedule(BspSchedule<GraphT> &schedule) override { return computeSspSchedule(schedule, 1U); }
 
-    ReturnStatus computeSchedule(MaxBspSchedule<GraphT> &schedule) override { return computeSspSchedule(schedule, 2U); }
+    ReturnStatus ComputeSchedule(MaxBspSchedule<GraphT> &schedule) override { return computeSspSchedule(schedule, 2U); }
 
     std::string getScheduleName() const override {
         if constexpr (useMemoryConstraint_) {
