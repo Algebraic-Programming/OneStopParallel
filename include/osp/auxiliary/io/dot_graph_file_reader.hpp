@@ -116,7 +116,7 @@ void ParseDotNode(const std::string &line, GraphT &g) {
     if constexpr (IsConstructableCdagTypedVertexV<GraphT>) {
         g.AddVertex(workWeight, commWeight, memWeight, type);
     } else {
-        g.add_vertex(workWeight, commWeight, memWeight);
+        g.AddVertex(workWeight, commWeight, memWeight);
     }
 }
 
@@ -180,7 +180,7 @@ void ParseDotEdge(const std::string &line, GraphT &g) {
 
             g.AddEdge(sourceNode, targetNode, commWeight);
         } else {
-            g.add_edge(sourceNode, targetNode);
+            g.AddEdge(sourceNode, targetNode);
         }
     } catch (...) {
         std::cerr << "Warning: Failed to parse edge nodes from line: " << line << "\n";
@@ -232,7 +232,7 @@ bool ReadComputationalDagDotFormat(const std::string &filename, GraphT &graph) {
         return false;
     }
 
-    return readComputationalDagDotFormat(infile, graph);
+    return ReadComputationalDagDotFormat(infile, graph);
 }
 
 }    // namespace file_reader
