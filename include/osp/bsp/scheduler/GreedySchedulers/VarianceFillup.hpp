@@ -94,9 +94,9 @@ class VarianceFillup : public Scheduler<GraphT> {
         const std::vector<std::vector<unsigned>> procTypesCompatibleWithNodeType = instance.getProcTypesCompatibleWithNodeType();
 
         std::vector<std::vector<std::vector<unsigned>>> procTypesCompatibleWithNodeTypeSkip(
-            instance.GetArchitecture().getNumberOfProcessorTypes(),
+            instance.GetArchitecture().GetNumberOfProcessorTypes(),
             std::vector<std::vector<unsigned>>(instance.GetComputationalDag().NumVertexTypes()));
-        for (unsigned procType = 0; procType < instance.GetArchitecture().getNumberOfProcessorTypes(); procType++) {
+        for (unsigned procType = 0; procType < instance.GetArchitecture().GetNumberOfProcessorTypes(); procType++) {
             for (unsigned nodeType = 0; nodeType < instance.GetComputationalDag().NumVertexTypes(); nodeType++) {
                 for (unsigned otherProcType : procTypesCompatibleWithNodeType[nodeType]) {
                     if (procType == otherProcType) {
@@ -258,7 +258,7 @@ class VarianceFillup : public Scheduler<GraphT> {
 
         std::vector<unsigned> readyNodesPerType = nrReadyNodesPerType;
         std::vector<unsigned> procsPerType = nrProcsPerType;
-        for (unsigned procType = 0; procType < instance.GetArchitecture().getNumberOfProcessorTypes(); ++procType) {
+        for (unsigned procType = 0; procType < instance.GetArchitecture().GetNumberOfProcessorTypes(); ++procType) {
             for (unsigned nodeType = 0; nodeType < instance.GetComputationalDag().NumVertexTypes(); ++nodeType) {
                 if (instance.isCompatibleType(nodeType, procType)) {
                     unsigned matched = std::min(readyNodesPerType[nodeType], procsPerType[procType]);
@@ -317,14 +317,14 @@ class VarianceFillup : public Scheduler<GraphT> {
         std::set<std::pair<VertexType, double>, VarianceCompare> ready;
         std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> procReady(paramsP);
         std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> allReady(
-            instance.GetArchitecture().getNumberOfProcessorTypes());
+            instance.GetArchitecture().GetNumberOfProcessorTypes());
 
         const std::vector<std::vector<unsigned>> procTypesCompatibleWithNodeType = instance.getProcTypesCompatibleWithNodeType();
         const std::vector<std::vector<std::vector<unsigned>>> procTypesCompatibleWithNodeTypeSkipProctype
             = ProcTypesCompatibleWithNodeTypeOmitProcType(instance);
 
         std::vector<unsigned> nrReadyNodesPerType(g.NumVertexTypes(), 0);
-        std::vector<unsigned> nrProcsPerType(instance.GetArchitecture().getNumberOfProcessorTypes(), 0);
+        std::vector<unsigned> nrProcsPerType(instance.GetArchitecture().GetNumberOfProcessorTypes(), 0);
         for (unsigned proc = 0; proc < paramsP; ++proc) {
             ++nrProcsPerType[instance.GetArchitecture().processorType(proc)];
         }
@@ -359,7 +359,7 @@ class VarianceFillup : public Scheduler<GraphT> {
                     }
                 }
 
-                for (unsigned procType = 0; procType < instance.GetArchitecture().getNumberOfProcessorTypes(); ++procType) {
+                for (unsigned procType = 0; procType < instance.GetArchitecture().GetNumberOfProcessorTypes(); ++procType) {
                     allReady[procType].clear();
                 }
 

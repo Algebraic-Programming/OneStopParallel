@@ -270,7 +270,7 @@ class BspLocking : public Scheduler<GraphT> {
 
         std::vector<unsigned> readyNodesPerType = nrReadyNodesPerType;
         std::vector<unsigned> procsPerType = nrProcsPerType;
-        for (unsigned procType = 0; procType < instance.GetArchitecture().getNumberOfProcessorTypes(); ++procType) {
+        for (unsigned procType = 0; procType < instance.GetArchitecture().GetNumberOfProcessorTypes(); ++procType) {
             for (unsigned nodeType = 0; nodeType < instance.GetComputationalDag().NumVertexTypes(); ++nodeType) {
                 if (instance.isCompatibleType(nodeType, procType)) {
                     unsigned matched = std::min(readyNodesPerType[nodeType], procsPerType[procType]);
@@ -358,7 +358,7 @@ class BspLocking : public Scheduler<GraphT> {
         unsigned free = paramsP;
 
         std::vector<unsigned> nrReadyNodesPerType(g.NumVertexTypes(), 0);
-        std::vector<unsigned> nrProcsPerType(instance.GetArchitecture().getNumberOfProcessorTypes(), 0);
+        std::vector<unsigned> nrProcsPerType(instance.GetArchitecture().GetNumberOfProcessorTypes(), 0);
         for (unsigned proc = 0; proc < paramsP; ++proc) {
             ++nrProcsPerType[instance.GetArchitecture().processorType(proc)];
         }

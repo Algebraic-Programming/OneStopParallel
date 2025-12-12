@@ -89,9 +89,9 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
         const std::vector<std::vector<unsigned>> procTypesCompatibleWithNodeType = instance.getProcTypesCompatibleWithNodeType();
 
         std::vector<std::vector<std::vector<unsigned>>> procTypesCompatibleWithNodeTypeSkip(
-            instance.GetArchitecture().getNumberOfProcessorTypes(),
+            instance.GetArchitecture().GetNumberOfProcessorTypes(),
             std::vector<std::vector<unsigned>>(instance.GetComputationalDag().NumVertexTypes()));
-        for (unsigned procType = 0; procType < instance.GetArchitecture().getNumberOfProcessorTypes(); procType++) {
+        for (unsigned procType = 0; procType < instance.GetArchitecture().GetNumberOfProcessorTypes(); procType++) {
             for (unsigned nodeType = 0; nodeType < instance.GetComputationalDag().NumVertexTypes(); nodeType++) {
                 for (unsigned otherProcType : procTypesCompatibleWithNodeType[nodeType]) {
                     if (procType == otherProcType) {
@@ -313,7 +313,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
                                       const std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> &procReady,
                                       const std::vector<unsigned> &nrProcsPerType) const {
         unsigned nrNodes = 0;
-        unsigned numProcTypes = instance.GetArchitecture().getNumberOfProcessorTypes();
+        unsigned numProcTypes = instance.GetArchitecture().GetNumberOfProcessorTypes();
 
         std::vector<unsigned> procsPerType = nrProcsPerType;
 
@@ -379,7 +379,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
         std::vector<std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>>> procReady(
             stale, std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>>(P));
         std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> allReady(
-            instance.GetArchitecture().getNumberOfProcessorTypes());
+            instance.GetArchitecture().GetNumberOfProcessorTypes());
 
         const auto procTypesCompatibleWithNodeType = instance.getProcTypesCompatibleWithNodeType();
         const std::vector<std::vector<std::vector<unsigned>>> procTypesCompatibleWithNodeTypeSkipProctype
@@ -387,7 +387,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
 
         std::vector<unsigned> nrOldReadyNodesPerType(g.NumVertexTypes(), 0);
         std::vector<std::vector<unsigned>> nrReadyStaleNodesPerType(stale, std::vector<unsigned>(g.NumVertexTypes(), 0));
-        std::vector<unsigned> nrProcsPerType(instance.GetArchitecture().getNumberOfProcessorTypes(), 0);
+        std::vector<unsigned> nrProcsPerType(instance.GetArchitecture().GetNumberOfProcessorTypes(), 0);
         for (auto proc = 0u; proc < p; ++proc) {
             ++nrProcsPerType[instance.GetArchitecture().processorType(proc)];
         }
@@ -411,9 +411,9 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
         std::set<std::pair<VWorkwT<GraphT>, VertexType>> finishTimes;
         finishTimes.emplace(0, std::numeric_limits<VertexType>::max());
 
-        std::vector<unsigned> numberOfAllocatedAllReadyTasksInSuperstep(instance.GetArchitecture().getNumberOfProcessorTypes(), 0);
+        std::vector<unsigned> numberOfAllocatedAllReadyTasksInSuperstep(instance.GetArchitecture().GetNumberOfProcessorTypes(), 0);
         std::vector<unsigned> limitOfNumberOfAllocatedAllReadyTasksInSuperstep(
-            instance.GetArchitecture().getNumberOfProcessorTypes(), 0);
+            instance.GetArchitecture().GetNumberOfProcessorTypes(), 0);
 
         bool endSupStep = true;
         bool beginOuterWhile = true;
@@ -431,7 +431,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
             if (finishTimes.empty() && endSupStep) {
                 ableToScheduleInStep = false;
                 numberOfAllocatedAllReadyTasksInSuperstep
-                    = std::vector<unsigned>(instance.GetArchitecture().getNumberOfProcessorTypes(), 0);
+                    = std::vector<unsigned>(instance.GetArchitecture().GetNumberOfProcessorTypes(), 0);
 
                 for (unsigned i = 0; i < p; ++i) {
                     procReady[supstepIdx % stale][i].clear();
@@ -443,7 +443,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
                     beginOuterWhile = false;
                 }
 
-                for (unsigned procType = 0; procType < instance.GetArchitecture().getNumberOfProcessorTypes(); ++procType) {
+                for (unsigned procType = 0; procType < instance.GetArchitecture().GetNumberOfProcessorTypes(); ++procType) {
                     allReady[procType].clear();
                 }
 
@@ -469,7 +469,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
                     }
                 }
 
-                for (unsigned procType = 0; procType < instance.GetArchitecture().getNumberOfProcessorTypes(); procType++) {
+                for (unsigned procType = 0; procType < instance.GetArchitecture().GetNumberOfProcessorTypes(); procType++) {
                     unsigned equalSplit = (static_cast<unsigned>(allReady[procType].size()) + stale - 1) / stale;
                     unsigned atLeastForLongStep = 3 * nrProcsPerType[procType];
                     limitOfNumberOfAllocatedAllReadyTasksInSuperstep[procType] = std::max(atLeastForLongStep, equalSplit);

@@ -253,7 +253,7 @@ class BspArchitecture {
     template <typename GraphTOther>
     BspArchitecture(const BspArchitecture<GraphTOther> &other)
         : numberOfProcessors_(other.NumberOfProcessors()),
-          numberOfProcessorTypes_(other.getNumberOfProcessorTypes()),
+          numberOfProcessorTypes_(other.GetNumberOfProcessorTypes()),
           communicationCosts_(other.CommunicationCosts()),
           synchronisationCosts_(other.SynchronisationCosts()),
           memoryBound_(other.memoryBound()),

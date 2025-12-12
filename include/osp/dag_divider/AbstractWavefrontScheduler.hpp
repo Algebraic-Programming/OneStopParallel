@@ -149,7 +149,7 @@ class AbstractWavefrontScheduler : public Scheduler<GraphT> {
             const double totalRepWork = sumOfVerticesWorkWeights(repSubDag);
 
             double sumOfCompatibleWorksForRep = 0.0;
-            for (unsigned typeIdx = 0; typeIdx < originalArch.getNumberOfProcessorTypes(); ++typeIdx) {
+            for (unsigned typeIdx = 0; typeIdx < originalArch.GetNumberOfProcessorTypes(); ++typeIdx) {
                 sumOfCompatibleWorksForRep += sumOfCompatibleWorkWeights(repSubDag, instance, typeIdx);
             }
 

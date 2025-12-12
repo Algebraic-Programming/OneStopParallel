@@ -38,7 +38,7 @@ class WavefrontComponentScheduler : public AbstractWavefrontScheduler<GraphT, Co
         const auto &originalProcTypeCount = originalArch.getProcessorTypeCount();
         const auto &computationalDag = instance.GetComputationalDag();
 
-        std::vector<std::vector<unsigned>> globalIdsByType(originalArch.getNumberOfProcessorTypes());
+        std::vector<std::vector<unsigned>> globalIdsByType(originalArch.GetNumberOfProcessorTypes());
         for (unsigned i = 0; i < originalArch.NumberOfProcessors(); ++i) {
             globalIdsByType[originalArch.processorType(i)].push_back(i);
         }
@@ -90,13 +90,13 @@ class WavefrontComponentScheduler : public AbstractWavefrontScheduler<GraphT, Co
             }
 
             unsigned maxNumberSupersteps = 0;
-            std::vector<unsigned> procTypeOffsets(originalArch.getNumberOfProcessorTypes(), 0);
+            std::vector<unsigned> procTypeOffsets(originalArch.GetNumberOfProcessorTypes(), 0);
 
             for (std::size_t j = 0; j < components.size(); ++j) {
                 BspArchitecture<ConstrGraphT> subArchitecture = this->CreateSubArchitecture(originalArch, procAllocations[j]);
                 if constexpr (this->enableDebugPrints_) {
                     std::cout << "  Component " << j << " sub-architecture: { ";
-                    for (unsigned typeIdx = 0; typeIdx < subArchitecture.getNumberOfProcessorTypes(); ++typeIdx) {
+                    for (unsigned typeIdx = 0; typeIdx < subArchitecture.GetNumberOfProcessorTypes(); ++typeIdx) {
                         std::cout << "Type " << typeIdx << ": " << subArchitecture.getProcessorTypeCount()[typeIdx] << "; ";
                     }
                     std::cout << "}" << std::endl;
@@ -112,7 +112,7 @@ class WavefrontComponentScheduler : public AbstractWavefrontScheduler<GraphT, Co
                 }
 
                 const auto subProcTypeCount = subArchitecture.getProcessorTypeCount();
-                std::vector<unsigned> subProcTypeCorrections(subArchitecture.getNumberOfProcessorTypes(), 0);
+                std::vector<unsigned> subProcTypeCorrections(subArchitecture.GetNumberOfProcessorTypes(), 0);
                 for (std::size_t k = 1; k < subProcTypeCorrections.size(); ++k) {
                     subProcTypeCorrections[k] = subProcTypeCorrections[k - 1] + subProcTypeCount[k - 1];
                 }

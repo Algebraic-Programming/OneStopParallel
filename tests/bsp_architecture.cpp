@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(ParameterizedConstructorTest) {
     BOOST_CHECK_EQUAL(architecture.getProcessorTypeCount().size(), 1);
     BOOST_CHECK_EQUAL(architecture.getProcessorTypeCount()[0], 4);
 
-    BOOST_CHECK_EQUAL(architecture.getNumberOfProcessorTypes(), 1);
+    BOOST_CHECK_EQUAL(architecture.GetNumberOfProcessorTypes(), 1);
 
     BOOST_CHECK_EQUAL(architecture.maxMemoryBoundProcType(0), 100);
 

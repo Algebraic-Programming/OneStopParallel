@@ -328,7 +328,7 @@ class IsomorphicSubgraphScheduler {
         const std::vector<bool> &wasTrimmed) {
         SubgraphSchedulerInput<GraphT, ConstrGraphT> result;
         result.instance.GetArchitecture() = originalInstance.GetArchitecture();
-        const unsigned numProcTypes = originalInstance.GetArchitecture().getNumberOfProcessorTypes();
+        const unsigned numProcTypes = originalInstance.GetArchitecture().GetNumberOfProcessorTypes();
 
         result.multiplicities.resize(isomorphicGroups.size());
         result.max_num_processors.resize(isomorphicGroups.size());

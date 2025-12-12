@@ -93,15 +93,15 @@ class TrimmedGroupScheduler : public Scheduler<ConstrGraphT> {
 
         // Determine the processor allocation for a single sub-problem.
         // Calculate offsets for processor types within the main 'arch' (passed to TrimmedGroupScheduler)
-        std::vector<unsigned> archProcTypeOffsets(arch.getNumberOfProcessorTypes(), 0);
+        std::vector<unsigned> archProcTypeOffsets(arch.GetNumberOfProcessorTypes(), 0);
         const auto &archProcTypeCounts = arch.getProcessorTypeCount();
-        for (unsigned typeIdx = 1; typeIdx < arch.getNumberOfProcessorTypes(); ++typeIdx) {
+        for (unsigned typeIdx = 1; typeIdx < arch.GetNumberOfProcessorTypes(); ++typeIdx) {
             archProcTypeOffsets[typeIdx] = archProcTypeOffsets[typeIdx - 1] + archProcTypeCounts[typeIdx - 1];
         }
 
-        std::vector<unsigned> subProcCounts(arch.getNumberOfProcessorTypes());
-        std::vector<VMemwT<Constr_Graph_t>> memWeights(arch.getNumberOfProcessorTypes(), 0);
-        for (unsigned typeIdx = 0; typeIdx < arch.getNumberOfProcessorTypes(); ++typeIdx) {
+        std::vector<unsigned> subProcCounts(arch.GetNumberOfProcessorTypes());
+        std::vector<VMemwT<Constr_Graph_t>> memWeights(arch.GetNumberOfProcessorTypes(), 0);
+        for (unsigned typeIdx = 0; typeIdx < arch.GetNumberOfProcessorTypes(); ++typeIdx) {
             subProcCounts[typeIdx] = arch.getProcessorTypeCount()[typeIdx] / minNonZeroProcs_;
             memWeights[typeIdx] = static_cast<VMemwT<Constr_Graph_t>>(arch.maxMemoryBoundProcType(typeIdx));
         }
@@ -119,9 +119,9 @@ class TrimmedGroupScheduler : public Scheduler<ConstrGraphT> {
         subArch.SetProcessorsConsequTypes(subProcCounts, mem_weights);
 
         // Calculate offsets for processor types within the 'sub_arch'
-        std::vector<unsigned> subArchProcTypeOffsets(subArch.getNumberOfProcessorTypes(), 0);
+        std::vector<unsigned> subArchProcTypeOffsets(subArch.GetNumberOfProcessorTypes(), 0);
         const auto &subArchProcTypeCounts = subArch.getProcessorTypeCount();
-        for (unsigned typeIdx = 1; typeIdx < subArch.getNumberOfProcessorTypes(); ++typeIdx) {
+        for (unsigned typeIdx = 1; typeIdx < subArch.GetNumberOfProcessorTypes(); ++typeIdx) {
             subArchProcTypeOffsets[typeIdx] = subArchProcTypeOffsets[typeIdx - 1] + subArchProcTypeCounts[typeIdx - 1];
         }
 

@@ -171,8 +171,8 @@ ReturnStatus PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<GraphT
                 continue;
             }
 
-            std::vector<unsigned> procAssignedPerType(instance.GetArchitecture().getNumberOfProcessorTypes(), 0);
-            std::vector<unsigned> otherProcAssignedPerType(instance.GetArchitecture().getNumberOfProcessorTypes(), 0);
+            std::vector<unsigned> procAssignedPerType(instance.GetArchitecture().GetNumberOfProcessorTypes(), 0);
+            std::vector<unsigned> otherProcAssignedPerType(instance.GetArchitecture().GetNumberOfProcessorTypes(), 0);
             for (unsigned proc : processors_to_parts[part]) {
                 ++proc_assigned_per_type[instance.GetArchitecture().processorType(proc)];
             }
@@ -180,7 +180,7 @@ ReturnStatus PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<GraphT
                 ++other_proc_assigned_per_type[instance.GetArchitecture().processorType(proc)];
             }
 
-            for (unsigned procType = 0; procType < instance.GetArchitecture().getNumberOfProcessorTypes(); ++procType) {
+            for (unsigned procType = 0; procType < instance.GetArchitecture().GetNumberOfProcessorTypes(); ++procType) {
                 if (procAssignedPerType[procType] != other_proc_assigned_per_type[procType]) {
                     isomorphic = false;
                 }
@@ -258,7 +258,7 @@ ReturnStatus PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<GraphT
 
         // set node-processor compatibility matrix
         std::vector<std::vector<bool>> compMatrix = instance.getNodeProcessorCompatibilityMatrix();
-        compMatrix.emplace_back(instance.GetArchitecture().getNumberOfProcessorTypes(), true);
+        compMatrix.emplace_back(instance.GetArchitecture().GetNumberOfProcessorTypes(), true);
         subInstance[part] = BspInstance(subDag, subArch[part], comp_matrix);
 
         // currently we only allow the input laoding scenario - the case where this is false is unmaintained/untested

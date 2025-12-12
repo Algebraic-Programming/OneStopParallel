@@ -119,8 +119,8 @@ BOOST_AUTO_TEST_CASE(TestInstanceBicgstab) {
     BOOST_CHECK_EQUAL(instanceT2.GetComputationalDag().NumVertexTypes(), instance.GetComputationalDag().NumVertexTypes());
     BOOST_CHECK_EQUAL(instanceT2.GetComputationalDag().NumEdges(), instance.GetComputationalDag().NumEdges());
     BOOST_CHECK_EQUAL(instanceT2.GetArchitecture().NumberOfProcessors(), instance.GetArchitecture().NumberOfProcessors());
-    BOOST_CHECK_EQUAL(instanceT2.GetArchitecture().getNumberOfProcessorTypes(),
-                      instance.GetArchitecture().getNumberOfProcessorTypes());
+    BOOST_CHECK_EQUAL(instanceT2.GetArchitecture().GetNumberOfProcessorTypes(),
+                      instance.GetArchitecture().GetNumberOfProcessorTypes());
     BOOST_CHECK_EQUAL(instanceT2.GetArchitecture().CommunicationCosts(), instance.GetArchitecture().CommunicationCosts());
     BOOST_CHECK_EQUAL(instanceT2.GetArchitecture().SynchronisationCosts(), instance.GetArchitecture().SynchronisationCosts());
 
@@ -132,8 +132,8 @@ BOOST_AUTO_TEST_CASE(TestInstanceBicgstab) {
     BOOST_CHECK_EQUAL(instanceT3.GetComputationalDag().NumVertexTypes(), instance.GetComputationalDag().NumVertexTypes());
     BOOST_CHECK_EQUAL(instanceT3.GetComputationalDag().NumEdges(), instance.GetComputationalDag().NumEdges());
     BOOST_CHECK_EQUAL(instanceT3.GetArchitecture().NumberOfProcessors(), instance.GetArchitecture().NumberOfProcessors());
-    BOOST_CHECK_EQUAL(instanceT3.GetArchitecture().getNumberOfProcessorTypes(),
-                      instance.GetArchitecture().getNumberOfProcessorTypes());
+    BOOST_CHECK_EQUAL(instanceT3.GetArchitecture().GetNumberOfProcessorTypes(),
+                      instance.GetArchitecture().GetNumberOfProcessorTypes());
     BOOST_CHECK_EQUAL(instanceT3.GetArchitecture().CommunicationCosts(), instance.GetArchitecture().CommunicationCosts());
     BOOST_CHECK_EQUAL(instanceT3.GetArchitecture().SynchronisationCosts(), instance.GetArchitecture().SynchronisationCosts());
 
@@ -143,8 +143,8 @@ BOOST_AUTO_TEST_CASE(TestInstanceBicgstab) {
     BOOST_CHECK_EQUAL(instanceT4.GetComputationalDag().NumVertexTypes(), instance.GetComputationalDag().NumVertexTypes());
     BOOST_CHECK_EQUAL(instanceT4.GetComputationalDag().NumEdges(), instance.GetComputationalDag().NumEdges());
     BOOST_CHECK_EQUAL(instanceT4.GetArchitecture().NumberOfProcessors(), instance.GetArchitecture().NumberOfProcessors());
-    BOOST_CHECK_EQUAL(instanceT4.GetArchitecture().getNumberOfProcessorTypes(),
-                      instance.GetArchitecture().getNumberOfProcessorTypes());
+    BOOST_CHECK_EQUAL(instanceT4.GetArchitecture().GetNumberOfProcessorTypes(),
+                      instance.GetArchitecture().GetNumberOfProcessorTypes());
     BOOST_CHECK_EQUAL(instanceT4.GetArchitecture().CommunicationCosts(), instance.GetArchitecture().CommunicationCosts());
     BOOST_CHECK_EQUAL(instanceT4.GetArchitecture().SynchronisationCosts(), instance.GetArchitecture().SynchronisationCosts());
 
@@ -155,8 +155,8 @@ BOOST_AUTO_TEST_CASE(TestInstanceBicgstab) {
     BOOST_CHECK_EQUAL(instanceT5.GetComputationalDag().NumVertexTypes(), instance.GetComputationalDag().NumVertexTypes());
     BOOST_CHECK_EQUAL(instanceT5.GetComputationalDag().NumEdges(), instance.GetComputationalDag().NumEdges());
     BOOST_CHECK_EQUAL(instanceT5.GetArchitecture().NumberOfProcessors(), instance.GetArchitecture().NumberOfProcessors());
-    BOOST_CHECK_EQUAL(instanceT5.GetArchitecture().getNumberOfProcessorTypes(),
-                      instance.GetArchitecture().getNumberOfProcessorTypes());
+    BOOST_CHECK_EQUAL(instanceT5.GetArchitecture().GetNumberOfProcessorTypes(),
+                      instance.GetArchitecture().GetNumberOfProcessorTypes());
     BOOST_CHECK_EQUAL(instanceT5.GetArchitecture().CommunicationCosts(), instance.GetArchitecture().CommunicationCosts());
     BOOST_CHECK_EQUAL(instanceT5.GetArchitecture().SynchronisationCosts(), instance.GetArchitecture().SynchronisationCosts());
 }
