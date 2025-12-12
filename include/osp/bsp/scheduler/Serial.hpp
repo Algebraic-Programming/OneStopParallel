@@ -101,9 +101,9 @@ class Serial : public Scheduler<GraphT> {
         VertexIdxT<GraphT> scheduledNodesCount = 0;
         unsigned currentSuperstep = 0;
 
-        while (scheduled_nodes_count < numVertices) {
-            while (not ready_nodes.empty()) {
-                VertexIdxT<GraphT> v = ready_nodes.front();
+        while (scheduledNodesCount < numVertices) {
+            while (not readyNodes.empty()) {
+                VertexIdxT<GraphT> v = readyNodes.front();
                 readyNodes.pop_front();
 
                 bool scheduled = false;
@@ -116,8 +116,8 @@ class Serial : public Scheduler<GraphT> {
                 for (const auto &p : nodeTypeCompatibleProcessors[vType]) {
                     bool parentsCompatible = true;
                     for (const auto &parent : dag.Parents(v)) {
-                        if (schedule.AssignedSuperstep(parent) == current_superstep && schedule.AssignedProcessor(parent) != p) {
-                            parents_compatible = false;
+                        if (schedule.AssignedSuperstep(parent) == currentSuperstep && schedule.AssignedProcessor(parent) != p) {
+                            parentsCompatible = false;
                             break;
                         }
                     }
@@ -126,7 +126,7 @@ class Serial : public Scheduler<GraphT> {
                         schedule.setAssignedProcessor(v, p);
                         schedule.setAssignedSuperstep(v, currentSuperstep);
                         scheduled = true;
-                        ++scheduled_nodes_count;
+                        ++scheduledNodesCount;
                         break;
                     }
                 }
@@ -136,15 +136,15 @@ class Serial : public Scheduler<GraphT> {
                 } else {
                     for (const auto &child : dag.Children(v)) {
                         if (--in_degree[child] == 0) {
-                            ready_nodes.push_back(child);
+                            readyNodes.push_back(child);
                         }
                     }
                 }
             }
 
-            if (scheduled_nodes_count < numVertices) {
+            if (scheduledNodesCount < numVertices) {
                 currentSuperstep++;
-                readyNodes.insert(ready_nodes.end(), deferred_nodes.begin(), deferred_nodes.end());
+                readyNodes.insert(readyNodes.end(), deferred_nodes.begin(), deferred_nodes.end());
                 deferredNodes.clear();
             }
         }
