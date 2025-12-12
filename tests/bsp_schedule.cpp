@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE(TestBspScheduleCs) {
 
     for (const auto &v : instance.GetComputationalDag().vertices()) {
         BOOST_CHECK_EQUAL(scheduleT2.AssignedSuperstep(v), schedule.AssignedSuperstep(v));
-        BOOST_CHECK_EQUAL(scheduleT2.assignedProcessor(v), schedule.assignedProcessor(v));
+        BOOST_CHECK_EQUAL(scheduleT2.AssignedProcessor(v), schedule.AssignedProcessor(v));
     }
 
     BspSchedule<Graph> scheduleT3(instance);
@@ -250,7 +250,7 @@ BOOST_AUTO_TEST_CASE(TestBspScheduleCs) {
 
     for (const auto &v : instance.GetComputationalDag().vertices()) {
         BOOST_CHECK_EQUAL(scheduleT3.AssignedSuperstep(v), schedule.AssignedSuperstep(v));
-        BOOST_CHECK_EQUAL(scheduleT3.assignedProcessor(v), schedule.assignedProcessor(v));
+        BOOST_CHECK_EQUAL(scheduleT3.AssignedProcessor(v), schedule.AssignedProcessor(v));
     }
 
     BspSchedule<Graph> scheduleT4(instance);
@@ -261,7 +261,7 @@ BOOST_AUTO_TEST_CASE(TestBspScheduleCs) {
     BOOST_CHECK_EQUAL(scheduleT4.NumberOfSupersteps(), schedule.NumberOfSupersteps());
     for (const auto &v : instance.GetComputationalDag().vertices()) {
         BOOST_CHECK_EQUAL(scheduleT4.AssignedSuperstep(v), schedule.AssignedSuperstep(v));
-        BOOST_CHECK_EQUAL(scheduleT4.assignedProcessor(v), schedule.assignedProcessor(v));
+        BOOST_CHECK_EQUAL(scheduleT4.AssignedProcessor(v), schedule.AssignedProcessor(v));
     }
 
     BspSchedule<Graph> scheduleT5(std::move(scheduleT4));
@@ -271,7 +271,7 @@ BOOST_AUTO_TEST_CASE(TestBspScheduleCs) {
 
     for (const auto &v : instance.GetComputationalDag().vertices()) {
         BOOST_CHECK_EQUAL(scheduleT5.AssignedSuperstep(v), schedule.AssignedSuperstep(v));
-        BOOST_CHECK_EQUAL(scheduleT5.assignedProcessor(v), schedule.assignedProcessor(v));
+        BOOST_CHECK_EQUAL(scheduleT5.AssignedProcessor(v), schedule.AssignedProcessor(v));
     }
 
     BspScheduleCS<Graph> scheduleCs(scheduleT5);
@@ -282,7 +282,7 @@ BOOST_AUTO_TEST_CASE(TestBspScheduleCs) {
 
     for (const auto &v : instance.GetComputationalDag().vertices()) {
         BOOST_CHECK_EQUAL(scheduleCs.AssignedSuperstep(v), schedule.AssignedSuperstep(v));
-        BOOST_CHECK_EQUAL(scheduleCs.assignedProcessor(v), schedule.assignedProcessor(v));
+        BOOST_CHECK_EQUAL(scheduleCs.AssignedProcessor(v), schedule.AssignedProcessor(v));
     }
 
     // schedule_t5 is still valid
@@ -292,7 +292,7 @@ BOOST_AUTO_TEST_CASE(TestBspScheduleCs) {
 
     for (const auto &v : instance.GetComputationalDag().vertices()) {
         BOOST_CHECK_EQUAL(scheduleT5.AssignedSuperstep(v), schedule.AssignedSuperstep(v));
-        BOOST_CHECK_EQUAL(scheduleT5.assignedProcessor(v), schedule.assignedProcessor(v));
+        BOOST_CHECK_EQUAL(scheduleT5.AssignedProcessor(v), schedule.AssignedProcessor(v));
     }
 
     BspScheduleCS<Graph> scheduleCsT2(std::move(scheduleT5));
@@ -303,7 +303,7 @@ BOOST_AUTO_TEST_CASE(TestBspScheduleCs) {
 
     for (const auto &v : instance.GetComputationalDag().vertices()) {
         BOOST_CHECK_EQUAL(scheduleCsT2.AssignedSuperstep(v), schedule.AssignedSuperstep(v));
-        BOOST_CHECK_EQUAL(scheduleCsT2.assignedProcessor(v), schedule.assignedProcessor(v));
+        BOOST_CHECK_EQUAL(scheduleCsT2.AssignedProcessor(v), schedule.AssignedProcessor(v));
     }
 }
 

@@ -71,14 +71,14 @@ class GreedyChildren : public Scheduler<GraphT> {
                     for (const auto &par : graph.Parents(node)) {
                         if (nodes_assigned_this_superstep.count(par)) {
                             if (!processor_set) {
-                                const unsigned par_proc = sched.assignedProcessor(par);
+                                const unsigned par_proc = sched.AssignedProcessor(par);
                                 if (!instance.isCompatible(node, par_proc)) {
                                     failed_to_allocate = true;
                                     break;
                                 }
                                 processor_set = true;
                                 processor_to_be_allocated = par_proc;
-                            } else if (sched.assignedProcessor(par) != processor_to_be_allocated) {
+                            } else if (sched.AssignedProcessor(par) != processor_to_be_allocated) {
                                 failed_to_allocate = true;
                                 break;
                             }
@@ -107,7 +107,7 @@ class GreedyChildren : public Scheduler<GraphT> {
                     }
 
                     nodesAssignedThisSuperstep.emplace(node);
-                    processorWeights[sched.assignedProcessor(node)] += graph.VertexWorkWeight(node);
+                    processorWeights[sched.AssignedProcessor(node)] += graph.VertexWorkWeight(node);
                     std::vector<VertexType> newNodes;
                     for (const auto &chld : graph.Children(node)) {
                         predecessors_count[chld]++;

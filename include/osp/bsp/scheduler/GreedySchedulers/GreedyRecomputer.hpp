@@ -72,7 +72,7 @@ ReturnStatus GreedyRecomputer<GraphT>::ComputeRecompSchedule(BspScheduleCS<Graph
     std::vector<std::set<KeyTriple>> commSteps(s);
 
     for (vertex_idx node = 0; node < N; ++node) {
-        const unsigned &proc = initialSchedule.assignedProcessor(node);
+        const unsigned &proc = initialSchedule.AssignedProcessor(node);
         const unsigned &step = initialSchedule.AssignedSuperstep(node);
 
         workCost[proc][step] += g.VertexWorkWeight(node);

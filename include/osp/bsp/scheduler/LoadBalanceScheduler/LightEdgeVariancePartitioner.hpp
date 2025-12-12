@@ -307,7 +307,7 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
                 } else {
                     // Assignments
                     if (has_vertex_been_assigned[next_node]) {
-                        unsigned proc_alloc_prior = schedule.assignedProcessor(next_node);
+                        unsigned proc_alloc_prior = schedule.AssignedProcessor(next_node);
 
                         // std::cout << "Allocated node " << next_node << " to processor " << proc_alloc_prior << "
                         // previously.\n";
@@ -337,7 +337,7 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
                                 ready.insert(std::make_pair(chld, variance_priorities[chld]));
                                 bool is_proc_ready = true;
                                 for (const auto &parent : graph.Parents(chld)) {
-                                    if ((schedule.assignedProcessor(parent) != proc_alloc_prior)
+                                    if ((schedule.AssignedProcessor(parent) != proc_alloc_prior)
                                         && (schedule.AssignedSuperstep(parent) == superstep)) {
                                         is_proc_ready = false;
                                         break;
@@ -387,7 +387,7 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
                                 ready.insert(std::make_pair(chld, variance_priorities[chld]));
                                 bool is_proc_ready = true;
                                 for (const auto &parent : graph.Parents(chld)) {
-                                    if ((schedule.assignedProcessor(parent) != proc)
+                                    if ((schedule.AssignedProcessor(parent) != proc)
                                         && (schedule.AssignedSuperstep(parent) == superstep)) {
                                         is_proc_ready = false;
                                         break;

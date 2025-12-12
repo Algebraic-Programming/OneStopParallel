@@ -354,7 +354,7 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
 
                             bool canAdd = true;
                             for (const auto &pred : G.Parents(succ)) {
-                                if (schedule.assignedProcessor(pred) != schedule.assignedProcessor(node)
+                                if (schedule.AssignedProcessor(pred) != schedule.AssignedProcessor(node)
                                     && schedule.AssignedSuperstep(pred) == supstepIdx) {
                                     canAdd = false;
                                     break;
@@ -363,28 +363,28 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
 
                             if constexpr (use_memory_constraint) {
                                 if (canAdd) {
-                                    if (not memory_constraint.can_add(succ, schedule.assignedProcessor(node))) {
+                                    if (not memory_constraint.can_add(succ, schedule.AssignedProcessor(node))) {
                                         canAdd = false;
                                     }
                                 }
                             }
 
-                            if (!instance.isCompatible(succ, schedule.assignedProcessor(node))) {
+                            if (!instance.isCompatible(succ, schedule.AssignedProcessor(node))) {
                                 canAdd = false;
                             }
 
                             if (canAdd) {
-                                procReady[schedule.assignedProcessor(node)].insert(succ);
+                                procReady[schedule.AssignedProcessor(node)].insert(succ);
 
-                                double score = computeScore(succ, schedule.assignedProcessor(node), procInHyperedge, instance);
+                                double score = computeScore(succ, schedule.AssignedProcessor(node), procInHyperedge, instance);
 
                                 heap_node new_node(succ, score);
-                                node_proc_heap_handles[schedule.assignedProcessor(node)][succ]
-                                    = max_proc_score_heap[schedule.assignedProcessor(node)].push(new_node);
+                                node_proc_heap_handles[schedule.AssignedProcessor(node)][succ]
+                                    = max_proc_score_heap[schedule.AssignedProcessor(node)].push(new_node);
                             }
                         }
                     }
-                    procFree[schedule.assignedProcessor(node)] = true;
+                    procFree[schedule.AssignedProcessor(node)] = true;
                     ++free;
                 }
             }

@@ -116,7 +116,7 @@ class Serial : public Scheduler<GraphT> {
                 for (const auto &p : nodeTypeCompatibleProcessors[vType]) {
                     bool parentsCompatible = true;
                     for (const auto &parent : dag.Parents(v)) {
-                        if (schedule.AssignedSuperstep(parent) == current_superstep && schedule.assignedProcessor(parent) != p) {
+                        if (schedule.AssignedSuperstep(parent) == current_superstep && schedule.AssignedProcessor(parent) != p) {
                             parents_compatible = false;
                             break;
                         }

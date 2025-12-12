@@ -350,7 +350,7 @@ class KlActiveSchedule {
 
     inline unsigned NumSteps() const { return vectorSchedule_.NumberOfSupersteps(); }
 
-    inline unsigned AssignedProcessor(VertexType node) const { return vectorSchedule_.assignedProcessor(node); }
+    inline unsigned AssignedProcessor(VertexType node) const { return vectorSchedule_.AssignedProcessor(node); }
 
     inline unsigned AssignedSuperstep(VertexType node) const { return vectorSchedule_.AssignedSuperstep(node); }
 

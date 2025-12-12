@@ -146,7 +146,7 @@ void CoptCommScheduleOptimizer<GraphT>::SetInitialSolution(BspScheduleCS<GraphT>
     std::vector<std::vector<unsigned>> firstAt(DAG.NumVertices(),
                                                std::vector<unsigned>(num_processors, std::numeric_limits<unsigned>::max()));
     for (const auto &node : dag.vertices()) {
-        firstAt[node][schedule.assignedProcessor(node)] = schedule.AssignedSuperstep(node);
+        firstAt[node][schedule.AssignedProcessor(node)] = schedule.AssignedSuperstep(node);
     }
 
     for (const auto &node : dag.vertices()) {
@@ -261,17 +261,17 @@ void CoptCommScheduleOptimizer<GraphT>::SetupVariablesConstraintsObjective(const
     // precedence constraint: if task is computed then all of its predecessors must have been present
     // and vertex is present where it was computed
     for (unsigned node = 0; node < numVertices; node++) {
-        const unsigned &processor = schedule.assignedProcessor(node);
+        const unsigned &processor = schedule.AssignedProcessor(node);
         const unsigned &superstep = schedule.AssignedSuperstep(node);
         Expr expr;
         unsigned numComEdges = 0;
         for (const auto &pred : schedule.GetInstance().GetComputationalDag().Parents(node)) {
-            if (schedule.assignedProcessor(node) != schedule.assignedProcessor(pred)) {
+            if (schedule.AssignedProcessor(node) != schedule.AssignedProcessor(pred)) {
                 numComEdges += 1;
                 expr += comm_processor_to_processor_superstep_node_var[processor][processor][superstep][static_cast<int>(pred)];
 
                 model.AddConstr(
-                    comm_processor_to_processor_superstep_node_var[schedule.assignedProcessor(pred)][schedule.assignedProcessor(
+                    comm_processor_to_processor_superstep_node_var[schedule.AssignedProcessor(pred)][schedule.AssignedProcessor(
                         pred)][schedule.AssignedSuperstep(pred)][static_cast<int>(pred)]
                     == 1);
             }
@@ -287,7 +287,7 @@ void CoptCommScheduleOptimizer<GraphT>::SetupVariablesConstraintsObjective(const
     for (unsigned int step = 0; step < maxNumberSupersteps; step++) {
         for (unsigned int processor = 0; processor < numProcessors; processor++) {
             for (unsigned int node = 0; node < numVertices; node++) {
-                if (processor == schedule.assignedProcessor(node) && step >= schedule.AssignedSuperstep(node)) {
+                if (processor == schedule.AssignedProcessor(node) && step >= schedule.AssignedSuperstep(node)) {
                     continue;
                 }
 

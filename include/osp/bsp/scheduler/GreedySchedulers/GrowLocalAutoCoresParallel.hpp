@@ -222,9 +222,9 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                             }
                         }
 
-                        if (schedule.assignedProcessor(succ) == UINT_MAX) {
+                        if (schedule.AssignedProcessor(succ) == UINT_MAX) {
                             schedule.setAssignedProcessor(succ, 0);
-                        } else if (schedule.assignedProcessor(succ) != 0) {
+                        } else if (schedule.AssignedProcessor(succ) != 0) {
                             schedule.setAssignedProcessor(succ, P);
                         }
 
@@ -237,7 +237,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
 
                         --predec[succIndex];
                         if (predec[succIndex] == 0) {
-                            if (schedule.assignedProcessor(succ) == 0) {
+                            if (schedule.AssignedProcessor(succ) == 0) {
                                 procReady[0].insert(succ);
                             } else {
                                 futureReady.push_back(succ);
@@ -285,9 +285,9 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                                 }
                             }
 
-                            if (schedule.assignedProcessor(succ) == UINT_MAX) {
+                            if (schedule.AssignedProcessor(succ) == UINT_MAX) {
                                 schedule.setAssignedProcessor(succ, proc);
-                            } else if (schedule.assignedProcessor(succ) != proc) {
+                            } else if (schedule.AssignedProcessor(succ) != proc) {
                                 schedule.setAssignedProcessor(succ, P);
                             }
 
@@ -300,7 +300,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
 
                             --predec[succIndex];
                             if (predec[succIndex] == 0) {
-                                if (schedule.assignedProcessor(succ) == proc) {
+                                if (schedule.AssignedProcessor(succ) == proc) {
                                     procReady[proc].insert(succ);
                                 } else {
                                     futureReady.push_back(succ);

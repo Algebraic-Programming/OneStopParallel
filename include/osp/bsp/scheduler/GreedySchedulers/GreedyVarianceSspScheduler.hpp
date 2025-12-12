@@ -488,7 +488,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
                 finishTimes.erase(finishTimes.begin());
 
                 if (node != std::numeric_limits<VertexType>::max()) {
-                    const unsigned procOfNode = schedule.assignedProcessor(node);
+                    const unsigned procOfNode = schedule.AssignedProcessor(node);
 
                     for (const auto &succ : G.Children(node)) {
                         nrPredecRemain[succ]--;
@@ -498,7 +498,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
 
                             unsigned earliest_add = supstepIdx;
                             for (const auto &pred : G.Parents(succ)) {
-                                if (schedule.assignedProcessor(pred) != proc_of_node) {
+                                if (schedule.AssignedProcessor(pred) != proc_of_node) {
                                     earliest_add = std::max(earliest_add, stale + schedule.AssignedSuperstep(pred));
                                 }
                             }

@@ -459,7 +459,7 @@ class BspScheduleCS : public BspSchedule<GraphT> {
         std::vector<std::vector<unsigned>> firstAt = GetFirstPresence();
 
         for (auto const &[key, val] : commSchedule_) {
-            if (this->assignedProcessor(std::get<0>(key)) != std::get<1>(key)) {
+            if (this->AssignedProcessor(std::get<0>(key)) != std::get<1>(key)) {
                 superstepLatestDependency[val]
                     = std::max(superstepLatestDependency[val], firstAt[std::get<0>(key)][std::get<1>(key)]);
             }

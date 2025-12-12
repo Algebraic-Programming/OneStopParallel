@@ -484,7 +484,7 @@ class IsomorphicSubgraphScheduler {
                 unsigned nextColor = 0;
 
                 for (const auto &v : repDag.vertices()) {
-                    const auto assignment = std::make_pair(bspSchedule.assignedProcessor(v), bspSchedule.AssignedSuperstep(v));
+                    const auto assignment = std::make_pair(bspSchedule.AssignedProcessor(v), bspSchedule.AssignedSuperstep(v));
                     if (procSsToColor.find(assignment) == procSsToColor.end()) {
                         procSsToColor[assignment] = nextColor++;
                     }
@@ -509,7 +509,7 @@ class IsomorphicSubgraphScheduler {
             std::map<std::pair<unsigned, unsigned>, VertexIdxT<GraphT>> spProcToRelativePartition;
             VertexIdxT<GraphT> numPartitionsPerSubgraph = 0;
             for (VertexIdxT<GraphT> j = 0; j < static_cast<VertexIdxT<GraphT>>(repSubgraphVerticesSorted.size()); ++j) {
-                auto spPair = std::make_pair(bspSchedule.AssignedSuperstep(j), bspSchedule.assignedProcessor(j));
+                auto spPair = std::make_pair(bspSchedule.AssignedSuperstep(j), bspSchedule.AssignedProcessor(j));
 
                 if (maxBsp) {
                     spPair = std::make_pair(j, 0);
@@ -553,7 +553,7 @@ class IsomorphicSubgraphScheduler {
                 for (const auto &current_vertex : current_subgraph_vertices_sorted) {
                     const auto rep_local_idx = current_vertex_to_rep_local_idx.at(current_vertex);
                     auto sp_pair = std::make_pair(bsp_schedule.AssignedSuperstep(rep_local_idx),
-                                                  bsp_schedule.assignedProcessor(rep_local_idx));
+                                                  bsp_schedule.AssignedProcessor(rep_local_idx));
 
                     if (max_bsp) {
                         sp_pair = std::make_pair(rep_local_idx, 0);

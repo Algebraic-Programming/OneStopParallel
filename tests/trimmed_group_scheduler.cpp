@@ -99,9 +99,9 @@ BOOST_AUTO_TEST_CASE(SingleComponentSingleProcessorTypeTest) {
 
     // MockSubScheduler assigns to local proc 0.
     // TrimmedGroupScheduler should map this to global proc 0.
-    BOOST_CHECK_EQUAL(schedule.assignedProcessor(0), 0);
-    BOOST_CHECK_EQUAL(schedule.assignedProcessor(1), 0);
-    BOOST_CHECK_EQUAL(schedule.assignedProcessor(2), 0);
+    BOOST_CHECK_EQUAL(schedule.AssignedProcessor(0), 0);
+    BOOST_CHECK_EQUAL(schedule.AssignedProcessor(1), 0);
+    BOOST_CHECK_EQUAL(schedule.AssignedProcessor(2), 0);
     BOOST_CHECK_EQUAL(schedule.AssignedSuperstep(0), 0);
     BOOST_CHECK_EQUAL(schedule.AssignedSuperstep(1), 0);
     BOOST_CHECK_EQUAL(schedule.AssignedSuperstep(2), 0);
@@ -131,13 +131,13 @@ BOOST_AUTO_TEST_CASE(MultipleComponentsSingleProcessorTypeEvenDistributionTest) 
 
     // Component 0 (vertices 0,1) assigned to global processors 0,1. Mock scheduler uses local 0.
     // Global proc for group 0: offset 0 + local 0 = 0.
-    BOOST_CHECK_EQUAL(schedule.assignedProcessor(0), 0);
-    BOOST_CHECK_EQUAL(schedule.assignedProcessor(1), 0);
+    BOOST_CHECK_EQUAL(schedule.AssignedProcessor(0), 0);
+    BOOST_CHECK_EQUAL(schedule.AssignedProcessor(1), 0);
 
     // Component 1 (vertices 2,3) assigned to global processors 2,3. Mock scheduler uses local 0.
     // Global proc for group 1: offset 2 + local 0 = 2.
-    BOOST_CHECK_EQUAL(schedule.assignedProcessor(2), 2);
-    BOOST_CHECK_EQUAL(schedule.assignedProcessor(3), 2);
+    BOOST_CHECK_EQUAL(schedule.AssignedProcessor(2), 2);
+    BOOST_CHECK_EQUAL(schedule.AssignedProcessor(3), 2);
 
     BOOST_CHECK_EQUAL(schedule.AssignedSuperstep(0), 0);
     BOOST_CHECK_EQUAL(schedule.AssignedSuperstep(1), 0);
@@ -170,12 +170,12 @@ BOOST_AUTO_TEST_CASE(MultipleComponentsSingleProcessorTypeUnevenDistributionTest
 
     // Group 0 (components 0, 1) maps to global procs 0,1,2. Mock scheduler uses local 0.
     // Global proc for group 0: offset 0 + local 0 = 0.
-    BOOST_CHECK_EQUAL(schedule.assignedProcessor(0), 0);
-    BOOST_CHECK_EQUAL(schedule.assignedProcessor(1), 0);
+    BOOST_CHECK_EQUAL(schedule.AssignedProcessor(0), 0);
+    BOOST_CHECK_EQUAL(schedule.AssignedProcessor(1), 0);
 
     // Group 1 (component 2) maps to global procs 3,4,5. Mock scheduler uses local 0.
     // Global proc for group 1: offset 3 + local 0 = 3.
-    BOOST_CHECK_EQUAL(schedule.assignedProcessor(2), 3);
+    BOOST_CHECK_EQUAL(schedule.AssignedProcessor(2), 3);
 
     BOOST_CHECK_EQUAL(schedule.AssignedSuperstep(0), 0);
     BOOST_CHECK_EQUAL(schedule.AssignedSuperstep(1), 0);
@@ -203,8 +203,8 @@ BOOST_AUTO_TEST_CASE(MultipleComponentsHeterogeneousArchitectureTest) {
     BOOST_CHECK_EQUAL(status, ReturnStatus::OSP_SUCCESS);
     BOOST_CHECK_EQUAL(schedule.NumberOfSupersteps(), 1);
 
-    BOOST_CHECK_EQUAL(schedule.assignedProcessor(0), 0);
-    BOOST_CHECK_EQUAL(schedule.assignedProcessor(1), 1);
+    BOOST_CHECK_EQUAL(schedule.AssignedProcessor(0), 0);
+    BOOST_CHECK_EQUAL(schedule.AssignedProcessor(1), 1);
 
     BOOST_CHECK_EQUAL(schedule.AssignedSuperstep(0), 0);
     BOOST_CHECK_EQUAL(schedule.AssignedSuperstep(1), 0);

@@ -350,13 +350,13 @@ struct MaxCommDatastructure {
 
         for (const auto &u : graph.vertices()) {
             node_lambda_map.reset_node(u);
-            const unsigned uProc = vecSched.assignedProcessor(u);
+            const unsigned uProc = vecSched.AssignedProcessor(u);
             const unsigned uStep = vecSched.AssignedSuperstep(u);
             const comm_weight_t commW = graph.VertexCommWeight(u);
             max_comm_weight = std::max(max_comm_weight, comm_w);
 
             for (const auto &v : graph.Children(u)) {
-                const unsigned vProc = vecSched.assignedProcessor(v);
+                const unsigned vProc = vecSched.AssignedProcessor(v);
                 const unsigned vStep = vecSched.AssignedSuperstep(v);
 
                 const comm_weight_t commWSendCost = (uProc != vProc) ? comm_w * instance_->sendCosts(uProc, vProc) : 0;

@@ -187,7 +187,7 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
                 for (unsigned processor = 0; processor < instancePtr_->NumberOfProcessors(); processor++) {
                     for (unsigned step = 0; step < static_cast<unsigned>((*node_to_processor_superstep_var_ptr)[0][0].Size());
                          step++) {
-                        if (schedule.assignedProcessor(node) == processor && schedule.AssignedSuperstep(node) == step) {
+                        if (schedule.AssignedProcessor(node) == processor && schedule.AssignedSuperstep(node) == step) {
                             assert(step <= std::numeric_limits<int>::max());
                             SetSolution((*node_to_processor_superstep_var_ptr)[node][processor][static_cast<int>(step)], 1.0);
                         } else {
@@ -202,7 +202,7 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
                                                            std::vector<VWorkwT<GraphT>>(instance_ptr->NumberOfProcessors(), 0));
 
             for (const auto &node : instancePtr_->vertices()) {
-                work[schedule.AssignedSuperstep(node)][schedule.assignedProcessor(node)]
+                work[schedule.AssignedSuperstep(node)][schedule.AssignedProcessor(node)]
                     += instancePtr_->GetComputationalDag().VertexWorkWeight(node);
             }
 
@@ -224,7 +224,7 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
                         if (p1 != p2) {
                             int edgeId = 0;
                             for (const auto &ep : edge_view(instancePtr_->GetComputationalDag())) {
-                                if (schedule.assignedProcessor(ep.source) == p1 && schedule.assignedProcessor(ep.target) == p2) {
+                                if (schedule.AssignedProcessor(ep.source) == p1 && schedule.AssignedProcessor(ep.target) == p2) {
                                     SetSolution((*edge_vars_ptr)[p1][p2][edge_id], 1.0);
                                 } else {
                                     SetSolution((*edge_vars_ptr)[p1][p2][edge_id], 0.0);
@@ -239,7 +239,7 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
             } else {
                 int edgeId = 0;
                 for (const auto &ep : edge_view(instancePtr_->GetComputationalDag())) {
-                    if (schedule.assignedProcessor(ep.source) != schedule.assignedProcessor(ep.target)) {
+                    if (schedule.AssignedProcessor(ep.source) != schedule.AssignedProcessor(ep.target)) {
                         SetSolution((*edge_vars_ptr)[0][0][edge_id], 1.0);
                     } else {
                         SetSolution((*edge_vars_ptr)[0][0][edge_id], 0.0);
@@ -300,7 +300,7 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
         for (const auto &node : initialSchedule_->GetInstance().vertices()) {
             for (unsigned proc = 0; proc < initialSchedule_->GetInstance().NumberOfProcessors(); proc++) {
                 for (unsigned step = 0; step < maxNumberSupersteps_; step++) {
-                    if (proc == initialSchedule_->assignedProcessor(node) && step == initialSchedule_->AssignedSuperstep(node)) {
+                    if (proc == initialSchedule_->AssignedProcessor(node) && step == initialSchedule_->AssignedSuperstep(node)) {
                         assert(step <= std::numeric_limits<int>::max());
                         model.SetMipStart(node_to_processor_superstep_var[node][proc][static_cast<int>(step)], 1);
 
@@ -316,7 +316,7 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
             max_number_supersteps, std::vector<VWorkwT<GraphT>>(initial_schedule->GetInstance().NumberOfProcessors(), 0));
 
         for (const auto &node : initialSchedule_->GetInstance().vertices()) {
-            work[initialSchedule_->AssignedSuperstep(node)][initialSchedule_->assignedProcessor(node)]
+            work[initialSchedule_->AssignedSuperstep(node)][initialSchedule_->AssignedProcessor(node)]
                 += initialSchedule_->GetInstance().GetComputationalDag().VertexWorkWeight(node);
         }
 

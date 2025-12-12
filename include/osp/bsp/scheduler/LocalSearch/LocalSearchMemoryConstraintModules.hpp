@@ -194,7 +194,7 @@ struct LsLocalIncEdgesMemoryConstraint {
                         continue;
                     }
 
-                    if (vector_schedule->assignedProcessor(succ) == from_proc
+                    if (vector_schedule->AssignedProcessor(succ) == from_proc
                         && vector_schedule->AssignedSuperstep(succ) == from_step) {
                         remove = false;
                         break;
@@ -211,24 +211,24 @@ struct LsLocalIncEdgesMemoryConstraint {
         if (toStep != fromStep) {
             for (const auto &succ : graph->Children(vertex)) {
                 if (to_step > from_step && vector_schedule->AssignedSuperstep(succ) == to_step) {
-                    if (step_processor_pred[vector_schedule->AssignedSuperstep(succ)][vector_schedule->assignedProcessor(succ)].find(
+                    if (step_processor_pred[vector_schedule->AssignedSuperstep(succ)][vector_schedule->AssignedProcessor(succ)].find(
                             vertex)
-                        != step_processor_pred[vector_schedule->AssignedSuperstep(succ)][vector_schedule->assignedProcessor(succ)]
+                        != step_processor_pred[vector_schedule->AssignedSuperstep(succ)][vector_schedule->AssignedProcessor(succ)]
                                .end()) {
-                        step_processor_memory[vector_schedule->AssignedSuperstep(succ)][vector_schedule->assignedProcessor(succ)]
+                        step_processor_memory[vector_schedule->AssignedSuperstep(succ)][vector_schedule->AssignedProcessor(succ)]
                             -= graph->VertexCommWeight(vertex);
 
-                        step_processor_pred[vector_schedule->AssignedSuperstep(succ)][vector_schedule->assignedProcessor(succ)].erase(
+                        step_processor_pred[vector_schedule->AssignedSuperstep(succ)][vector_schedule->AssignedProcessor(succ)].erase(
                             vertex);
                     }
                 }
 
                 if (vector_schedule->AssignedSuperstep(succ) > to_step) {
                     auto pair
-                        = step_processor_pred[vector_schedule->AssignedSuperstep(succ)][vector_schedule->assignedProcessor(succ)]
+                        = step_processor_pred[vector_schedule->AssignedSuperstep(succ)][vector_schedule->AssignedProcessor(succ)]
                               .insert(vertex);
                     if (pair.second) {
-                        step_processor_memory[vector_schedule->AssignedSuperstep(succ)][vector_schedule->assignedProcessor(succ)]
+                        step_processor_memory[vector_schedule->AssignedSuperstep(succ)][vector_schedule->AssignedProcessor(succ)]
                             += graph->VertexCommWeight(vertex);
                     }
                 }
@@ -307,10 +307,10 @@ struct LsLocalIncEdgesMemoryConstraint {
 
         for (const auto &succ : graph->Children(vertex)) {
             const auto &succ_step = vector_schedule->AssignedSuperstep(succ);
-            const auto &succ_proc = vector_schedule->assignedProcessor(succ);
+            const auto &succ_proc = vector_schedule->AssignedProcessor(succ);
 
             if (succ_step == vector_schedule->AssignedSuperstep(vertex)
-                and succ_proc != vector_schedule->assignedProcessor(vertex)) {
+                and succ_proc != vector_schedule->AssignedProcessor(vertex)) {
                 if (step_processor_memory[succ_step][succ_proc] + graph->VertexCommWeight(vertex)
                     > set_schedule->GetInstance().GetArchitecture().memoryBound(succ_proc)) {
                     return false;
@@ -377,7 +377,7 @@ struct LsLocalSourcesIncEdgesMemoryConstraint {
                         continue;
                     }
 
-                    if (vector_schedule->assignedProcessor(succ) == from_proc
+                    if (vector_schedule->AssignedProcessor(succ) == from_proc
                         && vector_schedule->AssignedSuperstep(succ) == from_step) {
                         remove = false;
                         break;
@@ -394,24 +394,24 @@ struct LsLocalSourcesIncEdgesMemoryConstraint {
         if (toStep != fromStep) {
             for (const auto &succ : graph->Children(vertex)) {
                 if (to_step > from_step && vector_schedule->AssignedSuperstep(succ) == to_step) {
-                    if (step_processor_pred[vector_schedule->AssignedSuperstep(succ)][vector_schedule->assignedProcessor(succ)].find(
+                    if (step_processor_pred[vector_schedule->AssignedSuperstep(succ)][vector_schedule->AssignedProcessor(succ)].find(
                             vertex)
-                        != step_processor_pred[vector_schedule->AssignedSuperstep(succ)][vector_schedule->assignedProcessor(succ)]
+                        != step_processor_pred[vector_schedule->AssignedSuperstep(succ)][vector_schedule->AssignedProcessor(succ)]
                                .end()) {
-                        step_processor_memory[vector_schedule->AssignedSuperstep(succ)][vector_schedule->assignedProcessor(succ)]
+                        step_processor_memory[vector_schedule->AssignedSuperstep(succ)][vector_schedule->AssignedProcessor(succ)]
                             -= graph->VertexCommWeight(vertex);
 
-                        step_processor_pred[vector_schedule->AssignedSuperstep(succ)][vector_schedule->assignedProcessor(succ)].erase(
+                        step_processor_pred[vector_schedule->AssignedSuperstep(succ)][vector_schedule->AssignedProcessor(succ)].erase(
                             vertex);
                     }
                 }
 
                 if (vector_schedule->AssignedSuperstep(succ) > to_step) {
                     auto pair
-                        = step_processor_pred[vector_schedule->AssignedSuperstep(succ)][vector_schedule->assignedProcessor(succ)]
+                        = step_processor_pred[vector_schedule->AssignedSuperstep(succ)][vector_schedule->AssignedProcessor(succ)]
                               .insert(vertex);
                     if (pair.second) {
-                        step_processor_memory[vector_schedule->AssignedSuperstep(succ)][vector_schedule->assignedProcessor(succ)]
+                        step_processor_memory[vector_schedule->AssignedSuperstep(succ)][vector_schedule->AssignedProcessor(succ)]
                             += graph->VertexCommWeight(vertex);
                     }
                 }
@@ -492,10 +492,10 @@ struct LsLocalSourcesIncEdgesMemoryConstraint {
 
         for (const auto &succ : graph->Children(vertex)) {
             const auto &succ_step = vector_schedule->AssignedSuperstep(succ);
-            const auto &succ_proc = vector_schedule->assignedProcessor(succ);
+            const auto &succ_proc = vector_schedule->AssignedProcessor(succ);
 
             if (succ_step == vector_schedule->AssignedSuperstep(vertex)) {
-                if (vector_schedule->assignedProcessor(vertex) != succ_proc || (not IsSource(vertex, *graph))) {
+                if (vector_schedule->AssignedProcessor(vertex) != succ_proc || (not IsSource(vertex, *graph))) {
                     if (step_processor_memory[succ_step][succ_proc] + graph->VertexCommWeight(vertex)
                         > set_schedule->GetInstance().GetArchitecture().memoryBound(succ_proc)) {
                         return false;

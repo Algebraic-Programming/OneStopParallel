@@ -333,7 +333,7 @@ class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
                             ready.insert(std::make_pair(chld, variance_priorities[chld]));
                             bool is_proc_ready = true;
                             for (const auto &parent : graph.Parents(chld)) {
-                                if ((schedule.assignedProcessor(parent) != proc)
+                                if ((schedule.AssignedProcessor(parent) != proc)
                                     && (schedule.AssignedSuperstep(parent) == superstep)) {
                                     is_proc_ready = false;
                                     break;

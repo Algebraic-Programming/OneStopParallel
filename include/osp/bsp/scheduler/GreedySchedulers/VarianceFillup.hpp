@@ -392,7 +392,7 @@ class VarianceFillup : public Scheduler<GraphT> {
 
                             bool canAdd = true;
                             for (const auto &pred : G.Parents(succ)) {
-                                if (schedule.assignedProcessor(pred) != schedule.assignedProcessor(node)
+                                if (schedule.AssignedProcessor(pred) != schedule.AssignedProcessor(node)
                                     && schedule.AssignedSuperstep(pred) == supstepIdx) {
                                     canAdd = false;
                                 }
@@ -400,22 +400,22 @@ class VarianceFillup : public Scheduler<GraphT> {
 
                             if constexpr (use_memory_constraint) {
                                 if (canAdd) {
-                                    if (not memory_constraint.can_add(succ, schedule.assignedProcessor(node))) {
+                                    if (not memory_constraint.can_add(succ, schedule.AssignedProcessor(node))) {
                                         canAdd = false;
                                     }
                                 }
                             }
 
-                            if (!instance.isCompatible(succ, schedule.assignedProcessor(node))) {
+                            if (!instance.isCompatible(succ, schedule.AssignedProcessor(node))) {
                                 canAdd = false;
                             }
 
                             if (canAdd) {
-                                procReady[schedule.assignedProcessor(node)].emplace(succ, work_variances[succ]);
+                                procReady[schedule.AssignedProcessor(node)].emplace(succ, work_variances[succ]);
                             }
                         }
                     }
-                    procFree[schedule.assignedProcessor(node)] = true;
+                    procFree[schedule.AssignedProcessor(node)] = true;
                     ++free;
                 }
             }

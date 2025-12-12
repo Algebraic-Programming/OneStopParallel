@@ -164,10 +164,10 @@ void HillClimbingForCommSteps<GraphT>::Init() {
         for (unsigned proc = 0; proc < p; ++proc) {
             for (const vertex_idx node : supsteplists[step][proc]) {
                 for (const vertex_idx &pred : G.Parents(node)) {
-                    if (schedule->assignedProcessor(pred) != schedule->assignedProcessor(node)
-                        && commSchedule[pred][schedule->assignedProcessor(node)] == UINT_MAX) {
-                        commSchedule[pred][schedule->assignedProcessor(node)] = step - schedule->getStaleness();
-                        commBounds[pred][schedule->assignedProcessor(node)]
+                    if (schedule->AssignedProcessor(pred) != schedule->AssignedProcessor(node)
+                        && commSchedule[pred][schedule->AssignedProcessor(node)] == UINT_MAX) {
+                        commSchedule[pred][schedule->AssignedProcessor(node)] = step - schedule->getStaleness();
+                        commBounds[pred][schedule->AssignedProcessor(node)]
                             = std::make_pair(schedule->AssignedSuperstep(pred), step - schedule->getStaleness());
                     }
                 }
@@ -184,7 +184,7 @@ void HillClimbingForCommSteps<GraphT>::Init() {
                 continue;
             }
 
-            const auto commScheduleKey = std::make_tuple(node, schedule_->assignedProcessor(node), proc);
+            const auto commScheduleKey = std::make_tuple(node, schedule_->AssignedProcessor(node), proc);
             auto mapIterator = originalCommSchedule.find(comm_schedule_key);
             if (mapIterator != originalCommSchedule.end()) {
                 unsigned originalStep = mapIterator->second;
@@ -194,16 +194,16 @@ void HillClimbingForCommSteps<GraphT>::Init() {
             }
 
             unsigned step = commSchedule_[node][proc];
-            commSchedSendLists[step][schedule->assignedProcessor(node)].emplace_front(node, proc);
-            commSchedSendListPointer[node][proc] = commSchedSendLists[step][schedule->assignedProcessor(node)].begin();
+            commSchedSendLists[step][schedule->AssignedProcessor(node)].emplace_front(node, proc);
+            commSchedSendListPointer[node][proc] = commSchedSendLists[step][schedule->AssignedProcessor(node)].begin();
             commSchedRecLists[step][proc].emplace_front(node, proc);
             commSchedRecListPointer[node][proc] = commSchedRecLists[step][proc].begin();
 
-            sent[step][schedule->assignedProcessor(node)]
+            sent[step][schedule->AssignedProcessor(node)]
                 += schedule->GetInstance().GetComputationalDag().VertexCommWeight(node)
-                   * schedule->GetInstance().GetArchitecture().sendCosts(schedule->assignedProcessor(node), proc);
+                   * schedule->GetInstance().GetArchitecture().sendCosts(schedule->AssignedProcessor(node), proc);
             received[step][proc] += schedule->GetInstance().GetComputationalDag().VertexCommWeight(node)
-                                    * schedule->GetInstance().GetArchitecture().sendCosts(schedule->assignedProcessor(node), proc);
+                                    * schedule->GetInstance().GetArchitecture().sendCosts(schedule->AssignedProcessor(node), proc);
         }
     }
 
@@ -228,7 +228,7 @@ void HillClimbingForCommSteps<GraphT>::Init() {
 template <typename GraphT>
 int HillClimbingForCommSteps<GraphT>::MoveCostChange(const vertex_idx node, const unsigned p, const unsigned step) {
     const unsigned oldStep = commSchedule_[node][p];
-    const unsigned sourceProc = schedule_->assignedProcessor(node);
+    const unsigned sourceProc = schedule_->AssignedProcessor(node);
     int change = 0;
 
     // Change at old place
@@ -282,7 +282,7 @@ int HillClimbingForCommSteps<GraphT>::MoveCostChange(const vertex_idx node, cons
 template <typename GraphT>
 void HillClimbingForCommSteps<GraphT>::ExecuteMove(vertex_idx node, unsigned p, const unsigned step, const int changeCost) {
     const unsigned oldStep = commSchedule_[node][p];
-    const unsigned sourceProc = schedule_->assignedProcessor(node);
+    const unsigned sourceProc = schedule_->AssignedProcessor(node);
     cost = static_cast<cost_type>(static_cast<int>(cost) + changeCost);
 
     // Old step update
@@ -450,7 +450,7 @@ void HillClimbingForCommSteps<GraphT>::CreateSupstepLists() {
 
     const std::vector<vertex_idx> topOrder = GetTopOrder(g);
     for (vertex_idx node : topOrder) {
-        supsteplists[schedule->AssignedSuperstep(node)][schedule->assignedProcessor(node)].push_back(node);
+        supsteplists[schedule->AssignedSuperstep(node)][schedule->AssignedProcessor(node)].push_back(node);
     }
 }
 
@@ -464,7 +464,7 @@ void HillClimbingForCommSteps<GraphT>::ConvertCommSchedule() {
     for (vertex_idx node = 0; node < N; ++node) {
         for (unsigned proc = 0; proc < p; ++proc) {
             if (commSchedule_[node][proc] != UINT_MAX) {
-                const auto commScheduleKey = std::make_tuple(node, schedule_->assignedProcessor(node), proc);
+                const auto commScheduleKey = std::make_tuple(node, schedule_->AssignedProcessor(node), proc);
                 newCommSchedule[comm_schedule_key] = commSchedule_[node][proc];
             }
         }

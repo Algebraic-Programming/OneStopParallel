@@ -441,7 +441,7 @@ class BspLocking : public Scheduler<GraphT> {
 
                             bool canAdd = true;
                             for (const auto &pred : G.Parents(succ)) {
-                                if (schedule.assignedProcessor(pred) != schedule.assignedProcessor(node)
+                                if (schedule.AssignedProcessor(pred) != schedule.AssignedProcessor(node)
                                     && schedule.AssignedSuperstep(pred) == supstepIdx) {
                                     canAdd = false;
                                     break;
@@ -450,28 +450,28 @@ class BspLocking : public Scheduler<GraphT> {
 
                             if constexpr (use_memory_constraint) {
                                 if (canAdd) {
-                                    if (not memory_constraint.can_add(succ, schedule.assignedProcessor(node))) {
+                                    if (not memory_constraint.can_add(succ, schedule.AssignedProcessor(node))) {
                                         canAdd = false;
                                     }
                                 }
                             }
 
-                            if (!instance.isCompatible(succ, schedule.assignedProcessor(node))) {
+                            if (!instance.isCompatible(succ, schedule.AssignedProcessor(node))) {
                                 canAdd = false;
                             }
 
                             if (canAdd) {
-                                procReady[schedule.assignedProcessor(node)].insert(succ);
-                                ready_phase[succ] = schedule.assignedProcessor(node);
+                                procReady[schedule.AssignedProcessor(node)].insert(succ);
+                                ready_phase[succ] = schedule.AssignedProcessor(node);
 
-                                int score = computeScore(succ, schedule.assignedProcessor(node), instance);
+                                int score = computeScore(succ, schedule.AssignedProcessor(node), instance);
                                 Priority priority = {score, static_cast<unsigned>(G.OutDegree(succ)), succ};
 
-                                max_proc_score_heap[schedule.assignedProcessor(node)].push(succ, priority);
+                                max_proc_score_heap[schedule.AssignedProcessor(node)].push(succ, priority);
                             }
                         }
                     }
-                    procFree[schedule.assignedProcessor(node)] = true;
+                    procFree[schedule.AssignedProcessor(node)] = true;
                     ++free;
                 }
             }

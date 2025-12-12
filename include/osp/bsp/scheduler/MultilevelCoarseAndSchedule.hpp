@@ -138,7 +138,7 @@ ReturnStatus MultilevelCoarseAndSchedule<GraphT, GraphTCoarse>::ExpandActiveSche
     for (const auto &node : expandedInstance->GetComputationalDag().vertices()) {
         expandedSchedule->setAssignedProcessor(
             node,
-            activeSchedule_->assignedProcessor(mlCoarser_->contraction_maps.at(static_cast<std::size_t>(activeGraph_))->at(node)));
+            activeSchedule_->AssignedProcessor(mlCoarser_->contraction_maps.at(static_cast<std::size_t>(activeGraph_))->at(node)));
         expandedSchedule->setAssignedSuperstep(
             node,
             activeSchedule_->AssignedSuperstep(mlCoarser_->contraction_maps.at(static_cast<std::size_t>(activeGraph_))->at(node)));
@@ -171,7 +171,7 @@ ReturnStatus MultilevelCoarseAndSchedule<GraphT, GraphTCoarse>::ExpandActiveSche
     for (const auto &node : GetOriginalInstance()->GetComputationalDag().vertices()) {
         schedule.setAssignedProcessor(
             node,
-            activeSchedule_->assignedProcessor(mlCoarser_->contraction_maps.at(static_cast<std::size_t>(activeGraph_))->at(node)));
+            activeSchedule_->AssignedProcessor(mlCoarser_->contraction_maps.at(static_cast<std::size_t>(activeGraph_))->at(node)));
         schedule.setAssignedSuperstep(
             node,
             activeSchedule_->AssignedSuperstep(mlCoarser_->contraction_maps.at(static_cast<std::size_t>(activeGraph_))->at(node)));

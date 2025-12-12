@@ -235,7 +235,7 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
 
                 VertexIdxT<constr_graph_t> subdagVertex = 0;
                 for (const auto &vertex : sorted_component_vertices) {
-                    const unsigned proc_in_sub_sched = sub_schedule.assignedProcessor(subdag_vertex);
+                    const unsigned proc_in_sub_sched = sub_schedule.AssignedProcessor(subdag_vertex);
                     const unsigned proc_type = sub_architecture.processorType(proc_in_sub_sched);
                     const unsigned local_proc_id_within_type = proc_in_sub_sched - sub_proc_type_corrections[proc_type];
                     unsigned global_proc_id
@@ -296,7 +296,7 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
 
                 VertexIdxT<constr_graph_t> subdagVertex = 0;
                 for (const auto &vertex : sorted_component_vertices) {
-                    const unsigned proc_in_sub_sched = sub_schedule.assignedProcessor(subdag_vertex);
+                    const unsigned proc_in_sub_sched = sub_schedule.AssignedProcessor(subdag_vertex);
                     const unsigned proc_type = sub_schedule.GetInstance().GetArchitecture().processorType(proc_in_sub_sched);
                     const unsigned local_proc_id_within_type = proc_in_sub_sched - sub_proc_type_corrections[proc_type];
                     unsigned global_proc_id
