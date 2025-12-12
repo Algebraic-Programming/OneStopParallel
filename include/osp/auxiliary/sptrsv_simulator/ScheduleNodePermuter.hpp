@@ -44,7 +44,7 @@ std::vector<size_t> ScheduleNodePermuterBasic(const BspSchedule<GraphT> &sched,
         sched.NumberOfSupersteps(),
         std::vector<std::vector<size_t>>(sched.GetInstance().NumberOfProcessors(), std::vector<size_t>({})));
     for (size_t node = 0; node < sched.GetInstance().NumberOfVertices(); node++) {
-        allocation[sched.assignedSuperstep(node)][sched.assignedProcessor(node)].emplace_back(node);
+        allocation[sched.AssignedSuperstep(node)][sched.AssignedProcessor(node)].emplace_back(node);
     }
 
     // reordering and allocating into permutation
