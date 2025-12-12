@@ -61,10 +61,10 @@ class CompatibleProcessorRange {
         if constexpr (HasTypedVerticesV<GraphT>) {
             typeProcessorIdx_.resize(inst.GetComputationalDag().NumVertexTypes());
 
-            for (VTypeT<GraphT> vType = 0; v_type < inst.GetComputationalDag().NumVertexTypes(); v_type++) {
+            for (VTypeT<GraphT> vType = 0; vType < inst.GetComputationalDag().NumVertexTypes(); vType++) {
                 for (unsigned proc = 0; proc < inst.NumberOfProcessors(); proc++) {
-                    if (inst.IsCompatibleType(v_type, inst.ProcessorType(proc))) {
-                        typeProcessorIdx_[v_type].push_back(proc);
+                    if (inst.IsCompatibleType(vType, inst.ProcessorType(proc))) {
+                        typeProcessorIdx_[vType].push_back(proc);
                     }
                 }
             }

@@ -184,9 +184,9 @@ class EtfScheduler : public Scheduler<GraphT> {
                 send[schedule.proc[next.second]] = t;
                 rec[proc] = t;
             }
-            EST = std::max(EST, t);
+            est = std::max(est, t);
         }
-        return EST;
+        return est;
     };
 
     /**
@@ -221,9 +221,9 @@ class EtfScheduler : public Scheduler<GraphT> {
 
                 std::vector<VWorkwT<GraphT>> newSend = send;
                 std::vector<VWorkwT<GraphT>> newRec = rec;
-                VWorkwT<GraphT> EST = GetESTforProc(instance, schedule, node, j, procAvailableFrom[j], newSend, newRec);
-                if (EST < bestEST) {
-                    bestEST = EST;
+                VWorkwT<GraphT> est = GetESTforProc(instance, schedule, node, j, procAvailableFrom[j], newSend, newRec);
+                if (est < bestEST) {
+                    bestEST = est;
                     bestProc = j;
                     bestNode = node;
                     bestSend = newSend;
@@ -275,15 +275,15 @@ class EtfScheduler : public Scheduler<GraphT> {
 
         std::vector<VWorkwT<GraphT>> bl;
         if (mode_ == BL_EST) {
-            BL = ComputeBottomLevel(instance);
+            bl = ComputeBottomLevel(instance);
         } else {
-            BL = std::vector<VWorkwT<GraphT>>(instance.NumberOfVertices(), 0);
+            bl = std::vector<VWorkwT<GraphT>>(instance.NumberOfVertices(), 0);
         }
 
         std::set<tv_pair> ready;
 
         for (const auto &v : SourceVerticesView(instance.GetComputationalDag())) {
-            ready.insert({BL[v], v});
+            ready.insert({bl[v], v});
         }
 
         while (!ready.empty()) {
@@ -293,7 +293,7 @@ class EtfScheduler : public Scheduler<GraphT> {
             if (mode_ == BL_EST) {
                 std::vector<VertexIdxT<GraphT>> nodeList{ready.begin()->second};
                 ready.erase(ready.begin());
-                best_tv = GetBestESTforNodes(instance, schedule, nodeList, finishTimes, send, rec, best_proc);
+                bestTv = GetBestESTforNodes(instance, schedule, nodeList, finishTimes, send, rec, bestProc);
             }
 
             if (mode_ == ETF) {
@@ -301,15 +301,15 @@ class EtfScheduler : public Scheduler<GraphT> {
                 for (const auto &next : ready) {
                     nodeList.push_back(next.second);
                 }
-                best_tv = GetBestESTforNodes(instance, schedule, nodeList, finishTimes, send, rec, best_proc);
-                ready.erase(tv_pair({0, best_tv.second}));
+                bestTv = GetBestESTforNodes(instance, schedule, nodeList, finishTimes, send, rec, bestProc);
+                ready.erase(tv_pair({0, bestTv.second}));
             }
-            const auto node = best_tv.second;
+            const auto node = bestTv.second;
 
             schedule.proc[node] = bestProc;
             greedyProcLists[bestProc].push_back(node);
 
-            schedule.time[node] = best_tv.first;
+            schedule.time[node] = bestTv.first;
             finishTimes[bestProc] = schedule.time[node] + instance.GetComputationalDag().VertexWorkWeight(node);
 
             if constexpr (useMemoryConstraint_) {
@@ -319,7 +319,7 @@ class EtfScheduler : public Scheduler<GraphT> {
             for (const auto &succ : instance.GetComputationalDag().Children(node)) {
                 ++predecProcessed[succ];
                 if (predecProcessed[succ] == instance.GetComputationalDag().InDegree(succ)) {
-                    ready.insert({BL[succ], succ});
+                    ready.insert({bl[succ], succ});
                 }
             }
 

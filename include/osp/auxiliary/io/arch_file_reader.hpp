@@ -67,15 +67,15 @@ bool ReadBspArchitecture(std::ifstream &infile, BspArchitecture<GraphT> &archite
                 break;
             case 1:
                 architecture.SetMemoryConstraintType(MemoryConstraintType::LOCAL);
-                architecture.SetMemoryBound(static_cast<memw_t>(m));
+                architecture.SetMemoryBound(static_cast<MemwT>(m));
                 break;
             case 2:
                 architecture.SetMemoryConstraintType(MemoryConstraintType::GLOBAL);
-                architecture.SetMemoryBound(static_cast<memw_t>(m));
+                architecture.SetMemoryBound(static_cast<MemwT>(m));
                 break;
             case 3:
                 architecture.SetMemoryConstraintType(MemoryConstraintType::PERSISTENT_AND_TRANSIENT);
-                architecture.SetMemoryBound(static_cast<memw_t>(m));
+                architecture.SetMemoryBound(static_cast<MemwT>(m));
                 break;
             default:
                 std::cerr << "Invalid memory type.\n";

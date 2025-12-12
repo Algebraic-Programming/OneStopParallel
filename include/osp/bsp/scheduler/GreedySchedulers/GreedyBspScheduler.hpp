@@ -72,8 +72,8 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
 
     using HeapHandle = typename boost::heap::fibonacci_heap<HeapNode>::handle_type;
 
-    std::vector<std::unordered_map<VertexType, heap_handle>> nodeProcHeapHandles_;
-    std::vector<std::unordered_map<VertexType, heap_handle>> nodeAllProcHeapHandles_;
+    std::vector<std::unordered_map<VertexType, HeapHandle>> nodeProcHeapHandles_;
+    std::vector<std::unordered_map<VertexType, HeapHandle>> nodeAllProcHeapHandles_;
 
     float maxPercentIdleProcessors_;
     bool increaseParallelismInNewSuperstep_;

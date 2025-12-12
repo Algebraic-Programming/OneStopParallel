@@ -34,19 +34,19 @@ namespace osp {
  * @tparam vertex_type_t Type for vertex types.
  */
 template <typename VertexIdxT, typename WorkwT, typename CommwT, typename MemwT, typename VertexTypeT>
-struct CdagVertexImpl {
+struct CDagVertexImpl {
     using VertexIdxType = VertexIdxT;
     using WorkWeightType = WorkwT;
     using CommWeightType = CommwT;
     using MemWeightType = MemwT;
-    using CdagVertexTypeType = VertexTypeT;
+    using CDagVertexTypeType = VertexTypeT;
 
-    CdagVertexImpl() = default;
+    CDagVertexImpl() = default;
 
-    CdagVertexImpl(const CdagVertexImpl &other) = default;
-    CdagVertexImpl(CdagVertexImpl &&other) noexcept = default;
-    CdagVertexImpl &operator=(const CdagVertexImpl &other) = default;
-    CdagVertexImpl &operator=(CdagVertexImpl &&other) noexcept = default;
+    CDagVertexImpl(const CDagVertexImpl &other) = default;
+    CDagVertexImpl(CDagVertexImpl &&other) noexcept = default;
+    CDagVertexImpl &operator=(const CDagVertexImpl &other) = default;
+    CDagVertexImpl &operator=(CDagVertexImpl &&other) noexcept = default;
 
     /**
      * @brief Constructs a vertex with specified properties.
@@ -57,7 +57,7 @@ struct CdagVertexImpl {
      * @param memW The memory weight.
      * @param vertexT The type of the vertex.
      */
-    CdagVertexImpl(VertexIdxT vertexIdx, WorkwT workW, CommwT commW, MemwT memW, VertexTypeT vertexT)
+    CDagVertexImpl(VertexIdxT vertexIdx, WorkwT workW, CommwT commW, MemwT memW, VertexTypeT vertexT)
         : id_(vertexIdx), workWeight_(workW), commWeight_(commW), memWeight_(memW), vertexType_(vertexT) {}
 
     VertexIdxT id_ = 0;
@@ -74,13 +74,13 @@ struct CdagVertexImpl {
  *
  * This struct implements a vertex with integer weights for work, communication, and memory.
  */
-using CdagVertexImplInt = CdagVertexImpl<std::size_t, int, int, int, unsigned>;
+using CDagVertexImplInt = CDagVertexImpl<std::size_t, int, int, int, unsigned>;
 
 /**
  * @brief A vertex implementation with unsigned weights. Indexed by std::size_t. Node types are unsigned.
  *
  * This struct implements a vertex with unsigned weights for work, communication, and memory.
  */
-using CdagVertexImplUnsigned = CdagVertexImpl<std::size_t, unsigned, unsigned, unsigned, unsigned>;
+using CDagVertexImplUnsigned = CDagVertexImpl<std::size_t, unsigned, unsigned, unsigned, unsigned>;
 
 }    // namespace osp

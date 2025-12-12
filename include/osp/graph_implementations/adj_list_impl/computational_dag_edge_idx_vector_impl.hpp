@@ -56,16 +56,16 @@ struct DirectedEdgeDescriptorImpl {
 };
 
 template <typename EdgeCommWeightT>
-struct CdagEdgeImpl {
-    using CdagEdgeCommWeightType = EdgeCommWeightT;
+struct CDagEdgeImpl {
+    using CDagEdgeCommWeightType = EdgeCommWeightT;
 
-    CdagEdgeImpl(EdgeCommWeightT commWeightArg = 1) : commWeight_(commWeightArg) {}
+    CDagEdgeImpl(EdgeCommWeightT commWeightArg = 1) : commWeight_(commWeightArg) {}
 
     EdgeCommWeightT commWeight_;
 };
 
-using CdagEdgeImplInt = CdagEdgeImpl<int>;
-using CdagEdgeImplUnsigned = CdagEdgeImpl<unsigned>;
+using CDagEdgeImplInt = CDagEdgeImpl<int>;
+using CDagEdgeImplUnsigned = CDagEdgeImpl<unsigned>;
 
 template <typename VImpl, typename EImpl>
 class ComputationalDagEdgeIdxVectorImpl {
@@ -81,8 +81,8 @@ class ComputationalDagEdgeIdxVectorImpl {
     using VertexWorkWeightType = typename VImpl::WorkWeightType;
     using VertexCommWeightType = typename VImpl::CommWeightType;
     using VertexMemWeightType = typename VImpl::MemWeightType;
-    using VertexTypeType = typename VImpl::CdagVertexTypeType;
-    using EdgeCommWeightType = typename EImpl::CdagEdgeCommWeightType;
+    using VertexTypeType = typename VImpl::CDagVertexTypeType;
+    using EdgeCommWeightType = typename EImpl::CDagEdgeCommWeightType;
 
   private:
     using ThisT = ComputationalDagEdgeIdxVectorImpl<VImpl, EImpl>;
@@ -266,9 +266,9 @@ inline VertexIdxT<ComputationalDagEdgeIdxVectorImpl<VImpl, EImpl>> Target(
 }
 
 // default template specialization
-using ComputationalDagEdgeIdxVectorImplDefT = ComputationalDagEdgeIdxVectorImpl<CdagVertexImplUnsigned, CdagEdgeImplUnsigned>;
+using ComputationalDagEdgeIdxVectorImplDefT = ComputationalDagEdgeIdxVectorImpl<CDagVertexImplUnsigned, CDagEdgeImplUnsigned>;
 
-using ComputationalDagEdgeIdxVectorImplDefIntT = ComputationalDagEdgeIdxVectorImpl<CdagVertexImplInt, CdagEdgeImplInt>;
+using ComputationalDagEdgeIdxVectorImplDefIntT = ComputationalDagEdgeIdxVectorImpl<CDagVertexImplInt, CDagEdgeImplInt>;
 
 static_assert(IsDirectedGraphEdgeDescV<ComputationalDagEdgeIdxVectorImplDefT>,
               "computational_dag_edge_idx_vector_impl must satisfy the directed_graph_edge_desc concept");

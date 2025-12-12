@@ -290,7 +290,7 @@ bool ReadComputationalDagHyperdagFormatDb(const std::string &filename, GraphT &g
         return false;
     }
 
-    return ReadComputationalDagHyperdagFormatDB(infile, graph);
+    return ReadComputationalDagHyperdagFormatDb(infile, graph);
 }
 
 }    // namespace file_reader

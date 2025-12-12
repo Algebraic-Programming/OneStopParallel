@@ -258,23 +258,23 @@ class ComputationalDagVectorImpl {
 /**
  * @brief Default implementation of a computational DAG using unsigned integer weights.
  */
-using ComputationalDagVectorImplDefUnsignedT = ComputationalDagVectorImpl<CDagVertexImplUnsignedT>;
+using ComputationalDagVectorImplDefUnsignedT = ComputationalDagVectorImpl<CDagVertexImplUnsigned>;
 
 /**
  * @brief Default implementation of a computational DAG using signed integer weights.
  */
-using ComputationalDagVectorImplDefIntT = ComputationalDagVectorImpl<CDagVertexImplIntT>;
+using ComputationalDagVectorImplDefIntT = ComputationalDagVectorImpl<CDagVertexImplInt>;
 
-static_assert(IsDirectedGraphEdgeDescV<computational_dag_vector_impl<cdag_vertex_impl_unsigned>>,
+static_assert(IsDirectedGraphEdgeDescV<ComputationalDagVectorImplDefUnsignedT>,
               "computational_dag_vector_impl must satisfy the directed_graph_edge_desc concept");
 
-static_assert(HasVertexWeightsV<computational_dag_vector_impl<cdag_vertex_impl_unsigned>>,
+static_assert(HasVertexWeightsV<ComputationalDagVectorImplDefUnsignedT>,
               "computational_dag_vector_impl must satisfy the has_vertex_weights concept");
 
-static_assert(IsDirectedGraphV<computational_dag_vector_impl<cdag_vertex_impl_unsigned>>,
+static_assert(IsDirectedGraphV<ComputationalDagVectorImplDefUnsignedT>,
               "computational_dag_vector_impl must satisfy the directed_graph concept");
 
-static_assert(IsComputationalDagTypedVerticesV<computational_dag_vector_impl<cdag_vertex_impl_unsigned>>,
+static_assert(IsComputationalDagTypedVerticesV<ComputationalDagVectorImplDefUnsignedT>,
               "computational_dag_vector_impl must satisfy the is_computation_dag concept");
 
 }    // namespace osp
