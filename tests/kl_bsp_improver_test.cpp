@@ -165,12 +165,12 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
 //         schedule.updateNumberOfSupersteps();
 
 //         std::cout << "initial scedule with costs: " << schedule.computeCosts() << " and "
-//                   << schedule.numberOfSupersteps() << " number of supersteps" << std::endl;
+//                   << schedule.NumberOfSupersteps() << " number of supersteps" << std::endl;
 
 //         BspSchedule<graph> schedule_2(schedule);
 
 //         BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
-//         BOOST_CHECK_EQUAL(&schedule.getInstance(), &instance);
+//         BOOST_CHECK_EQUAL(&schedule.GetInstance(), &instance);
 //         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
 //         kl_total_lambda_comm_improver<graph, no_local_search_memory_constraint, 1> kl_total_lambda;
@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
 
 //         std::cout << "kl lambda new finished in " << duration << " seconds, costs: " << schedule.computeCosts()
 //                   << " and lambda costs: " << schedule.computeTotalLambdaCosts() << " with "
-//                   << schedule.numberOfSupersteps() << " number of supersteps" << std::endl;
+//                   << schedule.NumberOfSupersteps() << " number of supersteps" << std::endl;
 
 //         BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
 //         BOOST_CHECK_EQUAL(schedule.satisfiesPrecedenceConstraints(), true);
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
 //         duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
 
 //         std::cout << "kl new finished in " << duration << " seconds, costs: " << schedule.computeCosts() << " with "
-//                   << schedule.numberOfSupersteps() << " number of supersteps" << std::endl;
+//                   << schedule.NumberOfSupersteps() << " number of supersteps" << std::endl;
 
 //         BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
 //         BOOST_CHECK_EQUAL(schedule.satisfiesPrecedenceConstraints(), true);
@@ -209,7 +209,7 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
 //         duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
 
 //         std::cout << "hc_comm_steps finished in " << duration << " seconds, costs: " << schedule_cs.computeCosts()
-//                   << " with " << schedule_cs.numberOfSupersteps() << " number of supersteps" << std::endl;
+//                   << " with " << schedule_cs.NumberOfSupersteps() << " number of supersteps" << std::endl;
 
 //         BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
 //         BOOST_CHECK_EQUAL(schedule.satisfiesPrecedenceConstraints(), true);
@@ -225,7 +225,7 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
 //         duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
 
 //         std::cout << "hc finished in " << duration << " seconds, costs: " << schedule_2.computeCosts() << " with "
-//                   << schedule_2.numberOfSupersteps() << " number of supersteps" << std::endl;
+//                   << schedule_2.NumberOfSupersteps() << " number of supersteps" << std::endl;
 
 //         BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
 //         BOOST_CHECK_EQUAL(schedule_2.satisfiesPrecedenceConstraints(), true);
@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
 //         duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
 
 //         std::cout << "hc_comm_steps finished in " << duration << " seconds, costs: " << schedule_cs_2.computeCosts()
-//                   << " with " << schedule_cs_2.numberOfSupersteps() << " number of supersteps" << std::endl;
+//                   << " with " << schedule_cs_2.NumberOfSupersteps() << " number of supersteps" << std::endl;
 
 //         BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
 //         BOOST_CHECK_EQUAL(schedule_cs_2.satisfiesPrecedenceConstraints(), true);

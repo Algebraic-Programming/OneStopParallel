@@ -101,9 +101,9 @@ struct MaxCommDatastructure {
 
     inline void Initialize(KlActiveScheduleT &klSched) {
         activeSchedule_ = &klSched;
-        instance_ = &activeSchedule_->getInstance();
+        instance_ = &activeSchedule_->GetInstance();
         const unsigned numSteps = activeSchedule_->num_steps();
-        const unsigned numProcs = instance_->numberOfProcessors();
+        const unsigned numProcs = instance_->NumberOfProcessors();
         max_comm_weight = 0;
 
         step_proc_send_.assign(num_steps, std::vector<comm_weight_t>(num_procs, 0));

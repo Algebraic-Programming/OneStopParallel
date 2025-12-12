@@ -36,10 +36,10 @@ limitations under the License.
 
 // void print_bsp_schedule(const BspSchedule &bsp_schedule) {
 //     std::vector<std::vector<std::vector<unsigned>>> schedule(
-//         bsp_schedule.numberOfSupersteps(),
-//         std::vector<std::vector<unsigned>>(bsp_schedule.getInstance().numberOfProcessors(), std::vector<unsigned>()));
+//         bsp_schedule.NumberOfSupersteps(),
+//         std::vector<std::vector<unsigned>>(bsp_schedule.GetInstance().NumberOfProcessors(), std::vector<unsigned>()));
 
-//     for (size_t node = 0; node < bsp_schedule.getInstance().numberOfVertices(); node++) {
+//     for (size_t node = 0; node < bsp_schedule.GetInstance().numberOfVertices(); node++) {
 //         schedule[bsp_schedule.assignedSuperstep(node)][bsp_schedule.assignedProcessor(node)].push_back(node);
 //     }
 

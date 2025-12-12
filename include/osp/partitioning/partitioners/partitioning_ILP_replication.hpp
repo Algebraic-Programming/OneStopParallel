@@ -54,8 +54,8 @@ RETURN_STATUS HypergraphPartitioningILPWithReplication<HypergraphT>::ComputePart
     Envr env;
     Model model = env.CreateModel("HypergraphPartRepl");
 
-    this->SetupFundamentalVariablesConstraintsObjective(result.getInstance(), model);
-    SetupExtraVariablesConstraints(result.getInstance(), model);
+    this->SetupFundamentalVariablesConstraintsObjective(result.GetInstance(), model);
+    SetupExtraVariablesConstraints(result.GetInstance(), model);
 
     if (this->useInitialSolution_) {
         SetInitialSolution(result, model);
@@ -64,7 +64,7 @@ RETURN_STATUS HypergraphPartitioningILPWithReplication<HypergraphT>::ComputePart
     this->SolveIlp(model);
 
     if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_OPTIMAL) {
-        result.setAssignedPartitionVectors(this->ReadAllCoptAssignments(result.getInstance(), model));
+        result.setAssignedPartitionVectors(this->ReadAllCoptAssignments(result.GetInstance(), model));
         return RETURN_STATUS::OSP_SUCCESS;
 
     } else if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_INF_OR_UNB) {
@@ -72,7 +72,7 @@ RETURN_STATUS HypergraphPartitioningILPWithReplication<HypergraphT>::ComputePart
 
     } else {
         if (model.GetIntAttr(COPT_INTATTR_HASMIPSOL)) {
-            result.setAssignedPartitionVectors(this->ReadAllCoptAssignments(result.getInstance(), model));
+            result.setAssignedPartitionVectors(this->ReadAllCoptAssignments(result.GetInstance(), model));
             return RETURN_STATUS::OSP_SUCCESS;
 
         } else {
@@ -181,8 +181,8 @@ void HypergraphPartitioningILPWithReplication<HypergraphT>::SetInitialSolution(
     using IndexType = typename HypergraphT::vertex_idx;
 
     const std::vector<std::vector<unsigned> > &assignments = partition.assignedPartitions();
-    const unsigned &numPartitions = partition.getInstance().getNumberOfPartitions();
-    if (assignments.size() != partition.getInstance().getHypergraph().NumVertices()) {
+    const unsigned &numPartitions = partition.GetInstance().getNumberOfPartitions();
+    if (assignments.size() != partition.GetInstance().getHypergraph().NumVertices()) {
         return;
     }
 

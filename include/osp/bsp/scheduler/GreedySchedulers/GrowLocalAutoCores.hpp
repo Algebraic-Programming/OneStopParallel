@@ -91,7 +91,7 @@ class GrowLocalAutoCores : public Scheduler<GraphT> {
      */
     virtual RETURN_STATUS computeSchedule(BspSchedule<GraphT> &schedule) override {
         using VertexIdx = typename GraphT::vertex_idx;
-        const auto &instance = schedule.getInstance();
+        const auto &instance = schedule.GetInstance();
 
         for (const auto &v : instance.getComputationalDag().vertices()) {
             schedule.setAssignedProcessor(v, std::numeric_limits<unsigned>::max());
@@ -110,7 +110,7 @@ class GrowLocalAutoCores : public Scheduler<GraphT> {
         auto &nodeToSupstep = schedule.assignedSupersteps();
 
         const auto n = instance.numberOfVertices();
-        const unsigned p = instance.numberOfProcessors();
+        const unsigned p = instance.NumberOfProcessors();
         const auto &g = instance.getComputationalDag();
 
         std::unordered_set<VertexIdx> ready;

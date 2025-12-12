@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(KlTotalCommTest1) {
         const auto result = test_scheduler.computeSchedule(schedule);
 
         BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
-        BOOST_CHECK_EQUAL(&schedule.getInstance(), &instance);
+        BOOST_CHECK_EQUAL(&schedule.GetInstance(), &instance);
         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
         kl_total_comm_test<graph> kl;
@@ -220,7 +220,7 @@ BOOST_AUTO_TEST_CASE(KlTotalCommTest2) {
         const auto result = test_scheduler.computeSchedule(schedule);
 
         BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
-        BOOST_CHECK_EQUAL(&schedule.getInstance(), &instance);
+        BOOST_CHECK_EQUAL(&schedule.GetInstance(), &instance);
         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
         kl_total_comm_test<graph> kl;
@@ -265,7 +265,7 @@ BOOST_AUTO_TEST_CASE(KlTotalCutTest1) {
         const auto result = test_scheduler.computeSchedule(schedule);
 
         BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
-        BOOST_CHECK_EQUAL(&schedule.getInstance(), &instance);
+        BOOST_CHECK_EQUAL(&schedule.GetInstance(), &instance);
         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
         kl_total_cut_test<graph> kl;
@@ -310,7 +310,7 @@ BOOST_AUTO_TEST_CASE(KlTotalCutTest2) {
         const auto result = test_scheduler.computeSchedule(schedule);
 
         BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
-        BOOST_CHECK_EQUAL(&schedule.getInstance(), &instance);
+        BOOST_CHECK_EQUAL(&schedule.GetInstance(), &instance);
         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
         kl_total_cut_test<graph> kl;

@@ -41,7 +41,7 @@ class GraphStatsModule : public IStatisticModule<TargetObjectType> {
                                                          std::ofstream & /*log_stream*/) const override {
         std::map<std::string, std::string> stats;
 
-        const auto &graph = schedule.getInstance().getComputationalDag();
+        const auto &graph = schedule.GetInstance().getComputationalDag();
 
         stats["num_vertices"] = std::to_string(graph.NumVertices());
         stats["num_edges"] = std::to_string(graph.NumEdges());

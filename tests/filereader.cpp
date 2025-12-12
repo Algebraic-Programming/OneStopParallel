@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE(TestArchSmpl) {
     bool status = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), arch);
 
     BOOST_CHECK(status);
-    BOOST_CHECK_EQUAL(arch.numberOfProcessors(), 3);
+    BOOST_CHECK_EQUAL(arch.NumberOfProcessors(), 3);
     BOOST_CHECK_EQUAL(arch.communicationCosts(), 3);
     BOOST_CHECK_EQUAL(arch.synchronisationCosts(), 5);
     BOOST_CHECK_EQUAL(arch.getMemoryConstraintType(), MEMORY_CONSTRAINT_TYPE::NONE);
@@ -235,7 +235,7 @@ BOOST_AUTO_TEST_CASE(TestArchSmplSigned) {
     bool status = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), arch);
 
     BOOST_CHECK(status);
-    BOOST_CHECK_EQUAL(arch.numberOfProcessors(), 3);
+    BOOST_CHECK_EQUAL(arch.NumberOfProcessors(), 3);
     BOOST_CHECK_EQUAL(arch.communicationCosts(), 3);
     BOOST_CHECK_EQUAL(arch.synchronisationCosts(), 5);
     BOOST_CHECK_EQUAL(arch.getMemoryConstraintType(), MEMORY_CONSTRAINT_TYPE::NONE);

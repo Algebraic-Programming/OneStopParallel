@@ -941,27 +941,27 @@ class KlTotalCommTest : public KlTotalComm<GraphT, MemoryConstraintT, useNodeCom
     }
 
     void TestSetupSchedule(BspSchedule<GraphT> &schedule) {
-        KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.instance = &schedule.getInstance();
+        KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.instance = &schedule.GetInstance();
 
         KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::best_schedule = &schedule;
 
         KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::num_nodes
             = KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.instance->numberOfVertices();
         KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::num_procs
-            = KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.instance->numberOfProcessors();
+            = KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.instance->NumberOfProcessors();
 
         KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::set_parameters();
         KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::initialize_datastructures();
     }
 
     RETURN_STATUS ImproveScheduleTest1(BspSchedule<GraphT> &schedule) {
-        KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.instance = &schedule.getInstance();
+        KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.instance = &schedule.GetInstance();
 
         KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::best_schedule = &schedule;
         KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::num_nodes
             = KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.instance->numberOfVertices();
         KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::num_procs
-            = KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.instance->numberOfProcessors();
+            = KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.instance->NumberOfProcessors();
 
         KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::set_parameters();
         KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::initialize_datastructures();
@@ -976,13 +976,13 @@ class KlTotalCommTest : public KlTotalComm<GraphT, MemoryConstraintT, useNodeCom
     }
 
     RETURN_STATUS ImproveScheduleTest2(BspSchedule<GraphT> &schedule) {
-        KlTotal<GraphT, MemoryConstraintT, true>::current_schedule.instance = &schedule.getInstance();
+        KlTotal<GraphT, MemoryConstraintT, true>::current_schedule.instance = &schedule.GetInstance();
 
         KlTotal<GraphT, MemoryConstraintT, true>::best_schedule = &schedule;
         KlTotal<GraphT, MemoryConstraintT, true>::num_nodes
             = KlTotal<GraphT, MemoryConstraintT, true>::current_schedule.instance->numberOfVertices();
         KlTotal<GraphT, MemoryConstraintT, true>::num_procs
-            = KlTotal<GraphT, MemoryConstraintT, true>::current_schedule.instance->numberOfProcessors();
+            = KlTotal<GraphT, MemoryConstraintT, true>::current_schedule.instance->NumberOfProcessors();
 
         KlTotal<GraphT, MemoryConstraintT, true>::set_parameters();
         KlTotal<GraphT, MemoryConstraintT, true>::initialize_datastructures();

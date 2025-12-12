@@ -38,7 +38,7 @@ class GreedyChildren : public Scheduler<GraphT> {
 
     RETURN_STATUS computeSchedule(BspSchedule<GraphT> &sched) override {
         using VertexType = vertex_idx_t<Graph_t>;
-        const auto &instance = sched.getInstance();
+        const auto &instance = sched.GetInstance();
 
         for (const auto &v : instance.getComputationalDag().vertices()) {
             sched.setAssignedProcessor(v, std::numeric_limits<unsigned>::max());
@@ -56,9 +56,9 @@ class GreedyChildren : public Scheduler<GraphT> {
 
         while (!next.empty()) {
             std::unordered_set<VertexType> nodesAssignedThisSuperstep;
-            std::vector<v_workw_t<Graph_t>> processorWeights(instance.numberOfProcessors(), 0);
+            std::vector<v_workw_t<Graph_t>> processorWeights(instance.NumberOfProcessors(), 0);
 
-            bool fewSources = next.size() < instance.numberOfProcessors() ? true : false;
+            bool fewSources = next.size() < instance.NumberOfProcessors() ? true : false;
             bool nodeAdded = true;
             while (!next.empty() && node_added) {
                 nodeAdded = false;
@@ -95,7 +95,7 @@ class GreedyChildren : public Scheduler<GraphT> {
                     } else {
                         v_workw_t<Graph_t> minWeight = std::numeric_limits<v_workw_t<Graph_t>>::max();
                         unsigned bestProc = std::numeric_limits<unsigned>::max();
-                        for (unsigned p = 0; p < instance.numberOfProcessors(); ++p) {
+                        for (unsigned p = 0; p < instance.NumberOfProcessors(); ++p) {
                             if (instance.isCompatible(node, p)) {
                                 if (processorWeights[p] < min_weight) {
                                     minWeight = processor_weights[p];
@@ -122,7 +122,7 @@ class GreedyChildren : public Scheduler<GraphT> {
                     nodeAdded = true;
                     break;
                 }
-                if (ensure_enough_sources && few_sources && next.size() >= instance.numberOfProcessors()) {
+                if (ensure_enough_sources && few_sources && next.size() >= instance.NumberOfProcessors()) {
                     break;
                 }
             }

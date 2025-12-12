@@ -49,8 +49,8 @@ RETURN_STATUS HypergraphPartitioningILP<HypergraphT>::ComputePartitioning(Partit
     Envr env;
     Model model = env.CreateModel("HypergraphPart");
 
-    this->SetupFundamentalVariablesConstraintsObjective(result.getInstance(), model);
-    SetupExtraVariablesConstraints(result.getInstance(), model);
+    this->SetupFundamentalVariablesConstraintsObjective(result.GetInstance(), model);
+    SetupExtraVariablesConstraints(result.GetInstance(), model);
 
     if (this->useInitialSolution_) {
         SetInitialSolution(result, model);
@@ -59,7 +59,7 @@ RETURN_STATUS HypergraphPartitioningILP<HypergraphT>::ComputePartitioning(Partit
     this->SolveIlp(model);
 
     if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_OPTIMAL) {
-        result.setAssignedPartitions(ReadCoptAssignment(result.getInstance(), model));
+        result.setAssignedPartitions(ReadCoptAssignment(result.GetInstance(), model));
         return RETURN_STATUS::OSP_SUCCESS;
 
     } else if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_INF_OR_UNB) {
@@ -67,7 +67,7 @@ RETURN_STATUS HypergraphPartitioningILP<HypergraphT>::ComputePartitioning(Partit
 
     } else {
         if (model.GetIntAttr(COPT_INTATTR_HASMIPSOL)) {
-            result.setAssignedPartitions(ReadCoptAssignment(result.getInstance(), model));
+            result.setAssignedPartitions(ReadCoptAssignment(result.GetInstance(), model));
             return RETURN_STATUS::OSP_SUCCESS;
 
         } else {
@@ -128,8 +128,8 @@ void HypergraphPartitioningILP<HypergraphT>::SetInitialSolution(const Partitioni
     using IndexType = typename HypergraphT::vertex_idx;
 
     const std::vector<unsigned> &assignment = partition.assignedPartitions();
-    const unsigned &numPartitions = partition.getInstance().getNumberOfPartitions();
-    if (assignment.size() != partition.getInstance().getHypergraph().NumVertices()) {
+    const unsigned &numPartitions = partition.GetInstance().getNumberOfPartitions();
+    if (assignment.size() != partition.GetInstance().getHypergraph().NumVertices()) {
         return;
     }
 

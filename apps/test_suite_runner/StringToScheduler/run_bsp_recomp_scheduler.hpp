@@ -46,7 +46,7 @@ RETURN_STATUS RunBspRecompScheduler(const ConfigParser &parser,
     std::cout << "Running algorithm: " << algorithm.get_child("name").get_value<std::string>() << std::endl;
 
     if (algorithm.get_child("name").get_value<std::string>() == "GreedyRecomputer") {
-        BspSchedule<GraphT> bspSchedule(schedule.getInstance());
+        BspSchedule<GraphT> bspSchedule(schedule.GetInstance());
 
         RETURN_STATUS status = run_bsp_scheduler(parser, algorithm.get_child("parameters").get_child("scheduler"), bspSchedule);
 

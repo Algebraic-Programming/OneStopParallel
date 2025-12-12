@@ -1174,27 +1174,27 @@ class KlTotalCutTest : public KlTotalCut<GraphT, MemoryConstraintT, true> {
     }
 
     void TestSetupSchedule(BspSchedule<GraphT> &schedule) {
-        KlTotal<GraphT, MemoryConstraintT, true>::current_schedule.instance = &schedule.getInstance();
+        KlTotal<GraphT, MemoryConstraintT, true>::current_schedule.instance = &schedule.GetInstance();
 
         KlTotal<GraphT, MemoryConstraintT, true>::best_schedule = &schedule;
 
         KlTotal<GraphT, MemoryConstraintT, true>::num_nodes
             = KlTotal<GraphT, MemoryConstraintT, true>::current_schedule.instance->numberOfVertices();
         KlTotal<GraphT, MemoryConstraintT, true>::num_procs
-            = KlTotal<GraphT, MemoryConstraintT, true>::current_schedule.instance->numberOfProcessors();
+            = KlTotal<GraphT, MemoryConstraintT, true>::current_schedule.instance->NumberOfProcessors();
 
         KlTotal<GraphT, MemoryConstraintT, true>::set_parameters();
         KlTotal<GraphT, MemoryConstraintT, true>::initialize_datastructures();
     }
 
     RETURN_STATUS ImproveScheduleTest1(BspSchedule<GraphT> &schedule) {
-        KlTotal<GraphT, MemoryConstraintT, true>::current_schedule.instance = &schedule.getInstance();
+        KlTotal<GraphT, MemoryConstraintT, true>::current_schedule.instance = &schedule.GetInstance();
 
         KlTotal<GraphT, MemoryConstraintT, true>::best_schedule = &schedule;
         KlTotal<GraphT, MemoryConstraintT, true>::num_nodes
             = KlTotal<GraphT, MemoryConstraintT, true>::current_schedule.instance->numberOfVertices();
         KlTotal<GraphT, MemoryConstraintT, true>::num_procs
-            = KlTotal<GraphT, MemoryConstraintT, true>::current_schedule.instance->numberOfProcessors();
+            = KlTotal<GraphT, MemoryConstraintT, true>::current_schedule.instance->NumberOfProcessors();
 
         KlTotal<GraphT, MemoryConstraintT, true>::set_parameters();
         KlTotal<GraphT, MemoryConstraintT, true>::initialize_datastructures();
@@ -1209,13 +1209,13 @@ class KlTotalCutTest : public KlTotalCut<GraphT, MemoryConstraintT, true> {
     }
 
     RETURN_STATUS ImproveScheduleTest2(BspSchedule<GraphT> &schedule) {
-        KlTotal<GraphT, MemoryConstraintT, true>::current_schedule.instance = &schedule.getInstance();
+        KlTotal<GraphT, MemoryConstraintT, true>::current_schedule.instance = &schedule.GetInstance();
 
         KlTotal<GraphT, MemoryConstraintT, true>::best_schedule = &schedule;
         KlTotal<GraphT, MemoryConstraintT, true>::num_nodes
             = KlTotal<GraphT, MemoryConstraintT, true>::current_schedule.instance->numberOfVertices();
         KlTotal<GraphT, MemoryConstraintT, true>::num_procs
-            = KlTotal<GraphT, MemoryConstraintT, true>::current_schedule.instance->numberOfProcessors();
+            = KlTotal<GraphT, MemoryConstraintT, true>::current_schedule.instance->NumberOfProcessors();
 
         KlTotal<GraphT, MemoryConstraintT, true>::set_parameters();
         KlTotal<GraphT, MemoryConstraintT, true>::initialize_datastructures();

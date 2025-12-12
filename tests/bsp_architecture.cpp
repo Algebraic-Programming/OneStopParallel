@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(ParameterizedConstructorTest) {
     };
 
     BspArchitecture<computational_dag_vector_impl_def_int_t> architecture(4, 2, 3);
-    BOOST_TEST(architecture.numberOfProcessors() == 4);
+    BOOST_TEST(architecture.NumberOfProcessors() == 4);
     BOOST_TEST(architecture.communicationCosts() == 2);
     BOOST_TEST(architecture.synchronisationCosts() == 3);
     BOOST_CHECK_EQUAL(architecture.getMemoryConstraintType(), MEMORY_CONSTRAINT_TYPE::NONE);
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(ParameterizedConstructorTest) {
 BOOST_AUTO_TEST_CASE(Architecture) {
     // default constructor
     BspArchitecture<computational_dag_vector_impl_def_t> test;
-    BOOST_CHECK_EQUAL(test.numberOfProcessors(), 2);
+    BOOST_CHECK_EQUAL(test.NumberOfProcessors(), 2);
     BOOST_CHECK_EQUAL(test.communicationCosts(), 1);
     BOOST_CHECK_EQUAL(test.synchronisationCosts(), 2);
     BOOST_CHECK_EQUAL(test.isNumaArchitecture(), false);
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(Architecture) {
 
     // constructor
     BspArchitecture<computational_dag_vector_impl_def_t> test2(5, 7, 14);
-    BOOST_CHECK_EQUAL(test2.numberOfProcessors(), 5);
+    BOOST_CHECK_EQUAL(test2.NumberOfProcessors(), 5);
     BOOST_CHECK_EQUAL(test2.communicationCosts(), 7);
     BOOST_CHECK_EQUAL(test2.synchronisationCosts(), 14);
     BOOST_CHECK_EQUAL(test2.isNumaArchitecture(), false);
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(Architecture) {
                       std::invalid_argument);
 
     BspArchitecture<computational_dag_vector_impl_def_int_t> test3(6, 47295, 0, sendCosts);
-    BOOST_CHECK_EQUAL(test3.numberOfProcessors(), 6);
+    BOOST_CHECK_EQUAL(test3.NumberOfProcessors(), 6);
     BOOST_CHECK_EQUAL(test3.communicationCosts(), 47295);
     BOOST_CHECK_EQUAL(test3.synchronisationCosts(), 0);
     BOOST_CHECK_EQUAL(test3.isNumaArchitecture(), false);
@@ -201,21 +201,21 @@ BOOST_AUTO_TEST_CASE(Architecture) {
     };
 
     BspArchitecture<computational_dag_vector_impl_def_int_t> test4(6, 0, 4294965, sendCosts2);
-    BOOST_CHECK_EQUAL(test4.numberOfProcessors(), 6);
+    BOOST_CHECK_EQUAL(test4.NumberOfProcessors(), 6);
     BOOST_CHECK_EQUAL(test4.communicationCosts(), 0);
     BOOST_CHECK_EQUAL(test4.synchronisationCosts(), 4294965);
     BOOST_CHECK_EQUAL(test4.isNumaArchitecture(), true);
     BOOST_CHECK_EQUAL(test4.sendCosts(0, 2), 2);
 
     BspArchitecture<computational_dag_vector_impl_def_int_t> test5(6, 0, 4294965, sendCosts3);
-    BOOST_CHECK_EQUAL(test5.numberOfProcessors(), 6);
+    BOOST_CHECK_EQUAL(test5.NumberOfProcessors(), 6);
     BOOST_CHECK_EQUAL(test5.communicationCosts(), 0);
     BOOST_CHECK_EQUAL(test5.synchronisationCosts(), 4294965);
     BOOST_CHECK_EQUAL(test5.isNumaArchitecture(), true);
     BOOST_CHECK_EQUAL(test5.sendCosts(3, 0), 3);
 
     test5.setNumberOfProcessors(8);
-    BOOST_CHECK_EQUAL(test5.numberOfProcessors(), 8);
+    BOOST_CHECK_EQUAL(test5.NumberOfProcessors(), 8);
     BOOST_CHECK_EQUAL(test5.communicationCosts(), 0);
     BOOST_CHECK_EQUAL(test5.synchronisationCosts(), 4294965);
     BOOST_CHECK_EQUAL(test5.sendCosts(3, 0), 1);
@@ -225,7 +225,7 @@ BOOST_AUTO_TEST_CASE(Architecture) {
     BOOST_CHECK_EQUAL(test5.isNumaArchitecture(), false);
 
     test.setNumberOfProcessors(5);
-    BOOST_CHECK_EQUAL(test.numberOfProcessors(), 5);
+    BOOST_CHECK_EQUAL(test.NumberOfProcessors(), 5);
     BOOST_CHECK_EQUAL(test.communicationCosts(), 1);
     BOOST_CHECK_EQUAL(test.synchronisationCosts(), 2);
     BOOST_CHECK_EQUAL(test.sendCosts(4, 3), 1);

@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecompTest) {
     const auto result = scheduler.computeSchedule(schedule);
 
     BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
-    BOOST_CHECK_EQUAL(&schedule.getInstance(), &instance);
+    BOOST_CHECK_EQUAL(&schedule.GetInstance(), &instance);
     BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
     BspScheduleCS scheduleCS(schedule);

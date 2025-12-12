@@ -75,14 +75,14 @@ class CilkScheduler : public Scheduler<GraphT> {
             }
 
             p = 0;
-            for (; p < instance.numberOfProcessors(); ++p) {
+            for (; p < instance.NumberOfProcessors(); ++p) {
                 if (procFree[p]) {
                     break;
                 }
             }
 
         } else if (mode_ == CILK) {
-            for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
+            for (unsigned i = 0; i < instance.NumberOfProcessors(); ++i) {
                 if (procFree[i] && !procQueue[i].empty()) {
                     p = i;
                     node = procQueue[i].back();
@@ -92,7 +92,7 @@ class CilkScheduler : public Scheduler<GraphT> {
             }
 
             // Time to steal
-            for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
+            for (unsigned i = 0; i < instance.NumberOfProcessors(); ++i) {
                 if (procFree[i]) {
                     p = i;
                     break;
@@ -100,7 +100,7 @@ class CilkScheduler : public Scheduler<GraphT> {
             }
 
             std::vector<unsigned> canStealFrom;
-            for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
+            for (unsigned i = 0; i < instance.NumberOfProcessors(); ++i) {
                 if (!procQueue[i].empty()) {
                     canStealFrom.push_back(i);
                 }
@@ -151,7 +151,7 @@ class CilkScheduler : public Scheduler<GraphT> {
         //     memory_constraint.initialize(instance);
         // }
 
-        const auto &instance = bspSchedule.getInstance();
+        const auto &instance = bspSchedule.GetInstance();
 
         CSchedule<GraphT> schedule(instance.numberOfVertices());
 
@@ -159,12 +159,12 @@ class CilkScheduler : public Scheduler<GraphT> {
 
         std::vector<unsigned> nrPredecDone(instance.numberOfVertices(), 0);
 
-        std::vector<bool> procFree(instance.numberOfProcessors(), true);
+        std::vector<bool> procFree(instance.NumberOfProcessors(), true);
 
-        unsigned nrProcFree = instance.numberOfProcessors();
+        unsigned nrProcFree = instance.NumberOfProcessors();
 
-        std::vector<std::deque<vertex_idx_t<Graph_t>>> procQueue(instance.numberOfProcessors());
-        std::vector<std::deque<vertex_idx_t<Graph_t>>> greedyProcLists(instance.numberOfProcessors());
+        std::vector<std::deque<vertex_idx_t<Graph_t>>> procQueue(instance.NumberOfProcessors());
+        std::vector<std::deque<vertex_idx_t<Graph_t>>> greedyProcLists(instance.NumberOfProcessors());
 
         std::set<tv_pair> finishTimes;
         const tv_pair start(0, std::numeric_limits<vertex_idx_t<Graph_t>>::max());
@@ -203,7 +203,7 @@ class CilkScheduler : public Scheduler<GraphT> {
 
             // Assign new jobs to processors
             while (nrProcFree > 0 && !ready.empty()) {
-                unsigned nextProc = instance.numberOfProcessors();
+                unsigned nextProc = instance.NumberOfProcessors();
                 vertex_idx_t<Graph_t> nextNode = std::numeric_limits<vertex_idx_t<Graph_t>>::max();
 
                 Choose(instance, procQueue, ready, procFree, nextNode, nextProc);

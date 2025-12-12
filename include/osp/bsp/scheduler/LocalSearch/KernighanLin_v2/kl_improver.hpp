@@ -168,7 +168,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
     }
 
     inline bool IsCompatible(VertexType node, unsigned proc) const {
-        return activeSchedule_.getInstance().isCompatible(node, proc);
+        return activeSchedule_.GetInstance().isCompatible(node, proc);
     }
 
     void SetStartStep(const unsigned step, ThreadSearchContext &threadData) {
@@ -805,7 +805,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                 }
 
 #ifdef KL_DEBUG
-                if (not active_schedule.getInstance().isCompatible(best_move.node, best_move.to_proc)) {
+                if (not active_schedule.GetInstance().isCompatible(best_move.node, best_move.to_proc)) {
                     std::cout << "move to incompatibe node" << std::endl;
                 }
 #endif
@@ -1073,7 +1073,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
             //     add_steps_range(best_move.to_step);
 
             //     for (unsigned step : steps_to_check) {
-            //         for (unsigned proc = 0; proc < instance->numberOfProcessors(); ++proc) {
+            //         for (unsigned proc = 0; proc < instance->NumberOfProcessors(); ++proc) {
             //             const auto &nodes_in_step = active_schedule.getSetSchedule().step_processor_vertices[step][proc];
             //             for (const auto &node : nodes_in_step) {
             //                 if (!thread_data.affinity_table.is_selected(node) && !thread_data.lock_manager.is_locked(node)) {
@@ -1162,7 +1162,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                     auto &affinityTableNode = threadData.affinityTable_.get_affinity_table(node);
 
                     // Reset affinity table entries to zero
-                    const unsigned numProcs = activeSchedule_.getInstance().numberOfProcessors();
+                    const unsigned numProcs = activeSchedule_.GetInstance().NumberOfProcessors();
                     for (unsigned p = 0; p < numProcs; ++p) {
                         for (unsigned idx = 0; idx < affinityTableNode[p].size(); ++idx) {
                             affinityTableNode[p][idx] = 0;
@@ -1310,7 +1310,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
         assert(step <= threadData.endStep_ && threadData.startStep_ <= step);
         bool abort = false;
 
-        for (unsigned proc = 0; proc < instance_->numberOfProcessors(); proc++) {
+        for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); proc++) {
             const std::vector<VertexType> stepProcNodeVec(
                 activeSchedule_.getSetSchedule().step_processor_vertices[step][proc].begin(),
                 activeSchedule_.getSetSchedule().step_processor_vertices[step][proc].end());
@@ -1412,7 +1412,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
     virtual ~KlImprover() = default;
 
     virtual RETURN_STATUS improveSchedule(BspSchedule<GraphT> &schedule) override {
-        if (schedule.getInstance().numberOfProcessors() < 2) {
+        if (schedule.GetInstance().NumberOfProcessors() < 2) {
             return RETURN_STATUS::BEST_FOUND;
         }
 
@@ -1421,10 +1421,10 @@ class KlImprover : public ImprovementScheduler<GraphT> {
         threadDataVec_.resize(numThreads);
         threadFinishedVec_.assign(numThreads, true);
 
-        set_parameters(schedule.getInstance().numberOfVertices());
+        set_parameters(schedule.GetInstance().numberOfVertices());
         InitializeDatastructures(schedule);
         const CostT initialCost = activeSchedule_.get_cost();
-        const unsigned numSteps = schedule.numberOfSupersteps();
+        const unsigned numSteps = schedule.NumberOfSupersteps();
 
         SetStartStep(0, threadDataVec_[0]);
         threadDataVec_[0].end_step = (numSteps > 0) ? numSteps - 1 : 0;
@@ -1793,7 +1793,7 @@ template <typename GraphT, typename CommCostFunctionT, typename MemoryConstraint
 void KlImprover<GraphT, CommCostFunctionT, MemoryConstraintT, windowSize, CostT>::InitializeDatastructures(
     BspSchedule<GraphT> &schedule) {
     inputSchedule_ = &schedule;
-    instance_ = &schedule.getInstance();
+    instance_ = &schedule.GetInstance();
     graph_ = &instance_->getComputationalDag();
 
     activeSchedule_.initialize(schedule);
@@ -1810,8 +1810,8 @@ void KlImprover<GraphT, CommCostFunctionT, MemoryConstraintT, windowSize, CostT>
             activeSchedule_, commCostF_.get_max_comm_weight_multiplied(), activeSchedule_.get_max_work_weight());
         tData.selection_strategy.initialize(activeSchedule_, gen_, tData.start_step, tData.end_step);
 
-        tData.local_affinity_table.resize(instance_->numberOfProcessors());
-        for (unsigned i = 0; i < instance_->numberOfProcessors(); ++i) {
+        tData.local_affinity_table.resize(instance_->NumberOfProcessors());
+        for (unsigned i = 0; i < instance_->NumberOfProcessors(); ++i) {
             tData.local_affinity_table[i].resize(windowRange_);
         }
     }

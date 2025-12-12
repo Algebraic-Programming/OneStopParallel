@@ -64,7 +64,7 @@ class CSchedule {
         }
 
         const vertex_idx n = instance.numberOfVertices();
-        const unsigned p = instance.numberOfProcessors();
+        const unsigned p = instance.NumberOfProcessors();
 
         unsigned superStepIdx = 0, totalNodesDone = 0;
         std::vector<bool> processed(n, false);

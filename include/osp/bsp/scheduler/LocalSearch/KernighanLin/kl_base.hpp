@@ -1149,11 +1149,11 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
 #ifdef KL_DEBUG
 
         std::cout << " avg "
-                  << static_cast<double>(total_work) / static_cast<double>(current_schedule.instance->numberOfProcessors())
+                  << static_cast<double>(total_work) / static_cast<double>(current_schedule.instance->NumberOfProcessors())
                   << " max " << max_total_work << " min " << min_total_work << std::endl;
 #endif
 
-        if (static_cast<double>(total_work) / static_cast<double>(currentSchedule_.instance->numberOfProcessors())
+        if (static_cast<double>(total_work) / static_cast<double>(currentSchedule_.instance->NumberOfProcessors())
                 - static_cast<double>(min_total_work)
             > 0.1 * static_cast<double>(min_total_work)) {
             return true;
@@ -1407,7 +1407,7 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
 #ifdef KL_DEBUG
             std::cout << "end inner loop current cost: " << current_schedule.current_cost << " with "
                       << current_schedule.current_violations.size() << " violation, best sol cost: " << best_schedule_costs
-                      << " with " << best_schedule->numberOfSupersteps() << " supersteps, counter: " << outer_counter << "/"
+                      << " with " << best_schedule->NumberOfSupersteps() << " supersteps, counter: " << outer_counter << "/"
                       << parameters.max_outer_iterations << std::endl;
 #endif
 
@@ -1595,7 +1595,7 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
 #ifdef KL_DEBUG
             std::cout << "end inner loop current cost: " << current_schedule.current_cost << " with "
                       << current_schedule.current_violations.size() << " violation, best sol cost: " << best_schedule_costs
-                      << " with " << best_schedule->numberOfSupersteps() << " supersteps, counter: " << outer_counter << "/"
+                      << " with " << best_schedule->NumberOfSupersteps() << " supersteps, counter: " << outer_counter << "/"
                       << parameters.max_outer_iterations << std::endl;
 #endif
 
@@ -1764,7 +1764,7 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
 #ifdef KL_DEBUG
                             std::cout << "KLBase save best schedule with (source node comm) cost "
                                       << best_schedule->computeCostsTotalCommunication() << " and number of supersteps "
-                                      << best_schedule->numberOfSupersteps() << std::endl;
+                                      << best_schedule->NumberOfSupersteps() << std::endl;
 #endif
                         }
 
@@ -1784,7 +1784,7 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
 #ifdef KL_DEBUG
                         std::cout << "KLBase save best schedule with (source node comm) cost "
                                   << best_schedule->computeCostsTotalCommunication() << " and number of supersteps "
-                                  << best_schedule->numberOfSupersteps() << std::endl;
+                                  << best_schedule->NumberOfSupersteps() << std::endl;
 #endif
                     }
                 }
@@ -1833,7 +1833,7 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
 #ifdef KL_DEBUG
             std::cout << std::setprecision(12) << "end inner loop current cost: " << current_schedule.current_cost << " with "
                       << current_schedule.current_violations.size() << " violation, best sol cost: " << best_schedule_costs
-                      << " with " << best_schedule->numberOfSupersteps() << " supersteps, counter: " << outer_counter << "/"
+                      << " with " << best_schedule->NumberOfSupersteps() << " supersteps, counter: " << outer_counter << "/"
                       << parameters.max_outer_iterations << std::endl;
 #endif
 
@@ -1844,7 +1844,7 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
 #ifdef KL_DEBUG
                     std::cout << "KLBase save best schedule with (source node comm) cost "
                               << best_schedule->computeCostsTotalCommunication() << " and number of supersteps "
-                              << best_schedule->numberOfSupersteps() << std::endl;
+                              << best_schedule->NumberOfSupersteps() << std::endl;
 #endif
                 } else {
                     currentSchedule_.set_current_schedule(*bestSchedule_);
@@ -1943,7 +1943,7 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
         const double initialCosts = currentSchedule_.current_cost;
 
 #ifdef KL_DEBUG_1
-        std::cout << "Initial costs " << initial_costs << " with " << best_schedule->numberOfSupersteps() << " supersteps."
+        std::cout << "Initial costs " << initial_costs << " with " << best_schedule->NumberOfSupersteps() << " supersteps."
                   << std::endl;
 #endif
 
@@ -2073,7 +2073,7 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
 #ifdef KL_DEBUG
                             std::cout << "KLBase save best schedule with (source node comm) cost "
                                       << best_schedule->computeTotalCosts() << " and number of supersteps "
-                                      << best_schedule->numberOfSupersteps() << std::endl;
+                                      << best_schedule->NumberOfSupersteps() << std::endl;
 #endif
                         }
 
@@ -2093,7 +2093,7 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
 #ifdef KL_DEBUG
                         std::cout << "KLBase save best schedule with (source node comm) cost "
                                   << best_schedule->computeTotalCosts() << " and number of supersteps "
-                                  << best_schedule->numberOfSupersteps() << std::endl;
+                                  << best_schedule->NumberOfSupersteps() << std::endl;
 #endif
                     }
                 }
@@ -2189,7 +2189,7 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
 #ifdef KL_DEBUG
             std::cout << std::setprecision(12) << "end inner loop current cost: " << current_schedule.current_cost << " with "
                       << current_schedule.current_violations.size() << " violation, best sol cost: " << best_schedule_costs
-                      << " with " << best_schedule->numberOfSupersteps() << " supersteps, counter: " << outer_counter << "/"
+                      << " with " << best_schedule->NumberOfSupersteps() << " supersteps, counter: " << outer_counter << "/"
                       << parameters.max_outer_iterations << std::endl;
 #endif
 
@@ -2199,7 +2199,7 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
                     bestScheduleCosts_ = currentSchedule_.current_cost;
 #ifdef KL_DEBUG
                     std::cout << "KLBase save best schedule with (source node comm) cost " << best_schedule->computeTotalCosts()
-                              << " and number of supersteps " << best_schedule->numberOfSupersteps() << std::endl;
+                              << " and number of supersteps " << best_schedule->NumberOfSupersteps() << std::endl;
 #endif
                 } else {
                     currentSchedule_.set_current_schedule(*bestSchedule_);
@@ -2321,7 +2321,7 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
         CleanupDatastructures();
 
 #ifdef KL_DEBUG_1
-        std::cout << "kl done, current cost " << best_schedule_costs << " with " << best_schedule->numberOfSupersteps()
+        std::cout << "kl done, current cost " << best_schedule_costs << " with " << best_schedule->NumberOfSupersteps()
                   << " supersteps vs " << initial_costs << " initial costs" << std::endl;
         assert(best_schedule->satisfiesPrecedenceConstraints());
 #endif
@@ -2373,10 +2373,10 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
         ResetRunDatastructures();
 
         bestSchedule_ = &schedule;
-        currentSchedule_.instance = &bestSchedule_->getInstance();
+        currentSchedule_.instance = &bestSchedule_->GetInstance();
 
         num_nodes = current_schedule.instance->numberOfVertices();
-        numProcs_ = currentSchedule_.instance->numberOfProcessors();
+        numProcs_ = currentSchedule_.instance->NumberOfProcessors();
 
         SetParameters();
         InitializeDatastructures();

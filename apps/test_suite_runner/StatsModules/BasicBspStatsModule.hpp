@@ -45,7 +45,7 @@ class BasicBspStatsModule : public IStatisticModule<TargetObjectType> {
         stats["BspCost"] = std::to_string(bspCost);
         stats["WorkCost"] = std::to_string(workCost);
         stats["CommCost"] = std::to_string(bspCost - workCost);
-        stats["Supersteps"] = std::to_string(schedule.numberOfSupersteps());
+        stats["Supersteps"] = std::to_string(schedule.NumberOfSupersteps());
         return stats;
     }
 };

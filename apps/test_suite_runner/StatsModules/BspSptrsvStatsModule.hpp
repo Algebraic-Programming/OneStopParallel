@@ -94,7 +94,7 @@ class BspSptrsvStatsModule : public IStatisticModule<TargetObjectType> {
             using IndexT
                 = std::conditional_t<std::is_same_v<TargetObjectType, osp::BspSchedule<osp::SparseMatrixImp<int32_t>>>, int32_t, int64_t>;
 
-            auto instance = schedule.getInstance();
+            auto instance = schedule.GetInstance();
             Sptrsv<IndexT> sim{instance};
 
             std::vector<size_t> perm;

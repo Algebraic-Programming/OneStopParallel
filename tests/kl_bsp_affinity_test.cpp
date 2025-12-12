@@ -71,7 +71,7 @@ bool ValidateCommDatastructures(const max_comm_datastructure<Graph, double, KlAc
     commDsFresh.initialize(klSchedFresh);
 
     // Compute for all steps
-    unsigned maxStep = currentSchedule.numberOfSupersteps();
+    unsigned maxStep = currentSchedule.NumberOfSupersteps();
     commDsFresh.compute_comm_datastructures(0, maxStep > 0 ? maxStep - 1 : 0);
 
     bool allMatch = true;
@@ -79,7 +79,7 @@ bool ValidateCommDatastructures(const max_comm_datastructure<Graph, double, KlAc
 
     // 3. Validate Comm Costs
     for (unsigned step = 0; step < maxStep; ++step) {
-        for (unsigned p = 0; p < instance.numberOfProcessors(); ++p) {
+        for (unsigned p = 0; p < instance.NumberOfProcessors(); ++p) {
             auto sendInc = commDsIncremental.step_proc_send(step, p);
             auto sendFresh = commDsFresh.step_proc_send(step, p);
             auto recvInc = commDsIncremental.step_proc_receive(step, p);
@@ -96,7 +96,7 @@ bool ValidateCommDatastructures(const max_comm_datastructure<Graph, double, KlAc
 
     // 4. Validate Lambda Maps
     for (const auto v : instance.vertices()) {
-        for (unsigned p = 0; p < instance.numberOfProcessors(); ++p) {
+        for (unsigned p = 0; p < instance.NumberOfProcessors(); ++p) {
             unsigned countInc = 0;
             if (commDsIncremental.node_lambda_map.has_proc_entry(v, p)) {
                 countInc = commDsIncremental.node_lambda_map.get_proc_entry(v, p);
@@ -152,7 +152,7 @@ bool ValidateAffinityTables(KlImproverTest<GraphT, CommCostFunctionT, MemoryCons
     klFresh.insert_gain_heap_test(selectedNodes);
 
     bool allMatch = true;
-    const unsigned numProcs = instance.numberOfProcessors();
+    const unsigned numProcs = instance.NumberOfProcessors();
     const unsigned numSteps = klIncremental.get_active_schedule().num_steps();
 
     // 3. Compare affinity tables for each selected node

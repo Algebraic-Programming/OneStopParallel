@@ -50,7 +50,7 @@ class TrimmedGroupScheduler : public Scheduler<ConstrGraphT> {
     std::string getScheduleName() const override { return "TrimmedGroupScheduler"; }
 
     RETURN_STATUS computeSchedule(BspSchedule<ConstrGraphT> &schedule) override {
-        const auto &instance = schedule.getInstance();
+        const auto &instance = schedule.GetInstance();
         const ConstrGraphT &dag = instance.getComputationalDag();
         const BspArchitecture<ConstrGraphT> &arch = instance.getArchitecture();
 
@@ -168,7 +168,7 @@ class TrimmedGroupScheduler : public Scheduler<ConstrGraphT> {
                 schedule.setAssignedProcessor(v_global, global_proc);
                 schedule.setAssignedSuperstep(v_global, sub_superstep);
             }
-            maxSupersteps = std::max(maxSupersteps, subSchedule.numberOfSupersteps());
+            maxSupersteps = std::max(maxSupersteps, subSchedule.NumberOfSupersteps());
         }
 
         schedule.setNumberOfSupersteps(maxSupersteps);

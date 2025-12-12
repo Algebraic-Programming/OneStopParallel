@@ -34,7 +34,7 @@ class ConnectedComponentScheduler : public Scheduler<GraphT> {
     std::string getScheduleName() const override { return "SubDagScheduler"; }
 
     RETURN_STATUS computeSchedule(BspSchedule<GraphT> &schedule) override {
-        const auto &instance = schedule.getInstance();
+        const auto &instance = schedule.GetInstance();
 
         const GraphT &dag = instance.getComputationalDag();
         ConnectedComponentDivider<GraphT, ConstrGraphT> partitioner;
@@ -56,7 +56,7 @@ class ConnectedComponentScheduler : public Scheduler<GraphT> {
 
             const double subDagWorkWeightPercent
                 = static_cast<double>(sub_dag_work_weight) / static_cast<double>(total_work_weight);
-            const unsigned subDagProcessors = static_cast<unsigned>(subDagWorkWeightPercent * subArchitecture.numberOfProcessors());
+            const unsigned subDagProcessors = static_cast<unsigned>(subDagWorkWeightPercent * subArchitecture.NumberOfProcessors());
 
             subArchitecture.setNumberOfProcessors(subDagProcessors);
 
@@ -72,7 +72,7 @@ class ConnectedComponentScheduler : public Scheduler<GraphT> {
                 schedule.setAssignedSuperstep(mapping.at(v), subSchedule.assignedSuperstep(v));
             }
 
-            numProcessorsOffset += subArchitecture.numberOfProcessors();
+            numProcessorsOffset += subArchitecture.NumberOfProcessors();
         }
 
         return RETURN_STATUS::OSP_SUCCESS;

@@ -59,7 +59,7 @@ template <typename GraphT>
 void ComputeLazyCommunicationCosts(const BspSchedule<GraphT> &schedule,
                                    std::vector<std::vector<VCommwT<GraphT>>> &rec,
                                    std::vector<std::vector<VCommwT<GraphT>>> &send) {
-    ComputeLazyCommunicationCosts(schedule.getInstance(),
+    ComputeLazyCommunicationCosts(schedule.GetInstance(),
                                   schedule.NumberOfSupersteps(),
                                   schedule.AssignedProcessors(),
                                   schedule.AssignedSupersteps(),

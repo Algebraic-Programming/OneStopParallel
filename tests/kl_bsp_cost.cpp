@@ -276,7 +276,7 @@ bool ValidateCommDatastructures(const max_comm_datastructure<Graph, double, KlAc
     commDsFresh.initialize(klSchedFresh);
 
     // Compute for all steps
-    unsigned maxStep = currentSchedule.numberOfSupersteps();
+    unsigned maxStep = currentSchedule.NumberOfSupersteps();
     commDsFresh.compute_comm_datastructures(0, maxStep > 0 ? maxStep - 1 : 0);
 
     bool allMatch = true;
@@ -284,7 +284,7 @@ bool ValidateCommDatastructures(const max_comm_datastructure<Graph, double, KlAc
 
     // 3. Validate Comm Costs
     for (unsigned step = 0; step < maxStep; ++step) {
-        for (unsigned p = 0; p < instance.numberOfProcessors(); ++p) {
+        for (unsigned p = 0; p < instance.NumberOfProcessors(); ++p) {
             auto sendInc = commDsIncremental.step_proc_send(step, p);
             auto sendFresh = commDsFresh.step_proc_send(step, p);
             auto recvInc = commDsIncremental.step_proc_receive(step, p);
@@ -301,7 +301,7 @@ bool ValidateCommDatastructures(const max_comm_datastructure<Graph, double, KlAc
 
     // 4. Validate Lambda Maps
     for (const auto v : instance.vertices()) {
-        for (unsigned p = 0; p < instance.numberOfProcessors(); ++p) {
+        for (unsigned p = 0; p < instance.NumberOfProcessors(); ++p) {
             unsigned countInc = 0;
             if (commDsIncremental.node_lambda_map.has_proc_entry(v, p)) {
                 countInc = commDsIncremental.node_lambda_map.get_proc_entry(v, p);
@@ -1126,7 +1126,7 @@ BOOST_AUTO_TEST_CASE(TestLazyAndBufferedModes) {
 
     std::cout << "Setup Complete" << std::endl;
     std::cout << "Num Vertices: " << instance.NumVertices() << std::endl;
-    std::cout << "Num Procs: " << arch.numberOfProcessors() << std::endl;
+    std::cout << "Num Procs: " << arch.NumberOfProcessors() << std::endl;
 
     std::cout << "Start Eager Test" << std::endl;
     {

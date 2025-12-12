@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(TestCostModelsSimpleDag) {
     schedule.updateNumberOfSupersteps();
 
     BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
-    BOOST_CHECK_EQUAL(schedule.numberOfSupersteps(), 4);
+    BOOST_CHECK_EQUAL(schedule.NumberOfSupersteps(), 4);
 
     // Work cost (BSP model) = sum of max work per superstep across processors
     // SS0: max(P0=10, P1=0) = 10

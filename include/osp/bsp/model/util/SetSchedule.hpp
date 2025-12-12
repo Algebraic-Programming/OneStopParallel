@@ -140,13 +140,13 @@ class SetSchedule : public IBspSchedule<GraphT> {
     void MergeSupersteps(unsigned startStep, unsigned endStep) {
         unsigned step = startStep + 1;
         for (; step <= endStep; step++) {
-            for (unsigned proc = 0; proc < getInstance().NumberOfProcessors(); proc++) {
+            for (unsigned proc = 0; proc < GetInstance().NumberOfProcessors(); proc++) {
                 stepProcessorVertices_[startStep][proc].merge(stepProcessorVertices_[step][proc]);
             }
         }
 
         for (; step < numberOfSupersteps_; step++) {
-            for (unsigned proc = 0; proc < getInstance().NumberOfProcessors(); proc++) {
+            for (unsigned proc = 0; proc < GetInstance().NumberOfProcessors(); proc++) {
                 stepProcessorVertices_[step - (endStep - startStep)][proc] = std::move(stepProcessorVertices_[step][proc]);
             }
         }

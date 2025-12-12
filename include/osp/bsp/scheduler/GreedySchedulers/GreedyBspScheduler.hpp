@@ -99,7 +99,7 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
                 unsigned &p) const {
         double maxScore = -1.0;
 
-        for (unsigned proc = 0; proc < instance.numberOfProcessors(); ++proc) {
+        for (unsigned proc = 0; proc < instance.NumberOfProcessors(); ++proc) {
             if (procFree[proc] && !procReady[proc].empty()) {
                 // select node
                 HeapNode topNode = maxProcScoreHeap_[proc].top();
@@ -113,7 +113,7 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
             }
         }
 
-        for (unsigned proc = 0; proc < instance.numberOfProcessors(); ++proc) {
+        for (unsigned proc = 0; proc < instance.NumberOfProcessors(); ++proc) {
             if (!procFree[proc] or maxAllProcScoreHeap_[proc].empty()) {
                 continue;
             }
@@ -141,14 +141,14 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
                        const std::set<VertexType> &allReady,
                        const std::vector<std::set<VertexType>> &procReady,
                        const std::vector<bool> &procFree) const {
-        for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
+        for (unsigned i = 0; i < instance.NumberOfProcessors(); ++i) {
             if (procFree[i] && !procReady[i].empty()) {
                 return true;
             }
         }
 
         if (!allReady.empty()) {
-            for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
+            for (unsigned i = 0; i < instance.NumberOfProcessors(); ++i) {
                 if (procFree[i]) {
                     return true;
                 }
@@ -165,7 +165,7 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
             if (instance.getArchitecture().getMemoryConstraintType() == MEMORY_CONSTRAINT_TYPE::PERSISTENT_AND_TRANSIENT) {
                 unsigned numEmptyProc = 0;
 
-                for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
+                for (unsigned i = 0; i < instance.NumberOfProcessors(); ++i) {
                     if (!procReady[i].empty()) {
                         const HeapNode &topNode = maxProcScoreHeap_[i].top();
 
@@ -178,12 +178,12 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
                     }
                 }
 
-                if (numEmptyProc == instance.numberOfProcessors() && allReady.empty()) {
+                if (numEmptyProc == instance.NumberOfProcessors() && allReady.empty()) {
                     return true;
                 }
 
                 if (!allReady.empty()) {
-                    for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
+                    for (unsigned i = 0; i < instance.NumberOfProcessors(); ++i) {
                         const HeapNode &topNode = maxAllProcScoreHeap_[i].top();
 
                         // todo check if this is correct
@@ -242,7 +242,7 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
      * @return A pair containing the return status and the computed BspSchedule.
      */
     RETURN_STATUS computeSchedule(BspSchedule<GraphT> &schedule) override {
-        const auto &instance = schedule.getInstance();
+        const auto &instance = schedule.GetInstance();
 
         for (const auto &v : instance.getComputationalDag().vertices()) {
             schedule.setAssignedProcessor(v, std::numeric_limits<unsigned>::max());
@@ -257,7 +257,7 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
         }
 
         const std::size_t &n = instance.numberOfVertices();
-        const unsigned &paramsP = instance.numberOfProcessors();
+        const unsigned &paramsP = instance.NumberOfProcessors();
         const auto &g = instance.getComputationalDag();
 
         maxProcScoreHeap_ = std::vector<boost::heap::fibonacci_heap<HeapNode>>(paramsP);
@@ -400,10 +400,10 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
 
             while (CanChooseNode(instance, allReady, procReady, procFree)) {
                 VertexType nextNode = std::numeric_limits<VertexType>::max();
-                unsigned nextProc = instance.numberOfProcessors();
+                unsigned nextProc = instance.NumberOfProcessors();
                 Choose(instance, procReady, procFree, nextNode, nextProc);
 
-                if (nextNode == std::numeric_limits<VertexType>::max() || nextProc == instance.numberOfProcessors()) {
+                if (nextNode == std::numeric_limits<VertexType>::max() || nextProc == instance.NumberOfProcessors()) {
                     endSupStep = true;
                     break;
                 }
@@ -417,7 +417,7 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
                 } else {
                     allReady.erase(nextNode);
 
-                    for (unsigned proc = 0; proc < instance.numberOfProcessors(); ++proc) {
+                    for (unsigned proc = 0; proc < instance.NumberOfProcessors(); ++proc) {
                         if (instance.isCompatible(nextNode, proc)) {
                             max_all_proc_score_heap[proc].erase(node_all_proc_heap_handles[proc][nextNode]);
                             node_all_proc_heap_handles[proc].erase(nextNode);

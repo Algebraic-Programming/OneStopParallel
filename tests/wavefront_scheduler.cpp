@@ -157,7 +157,7 @@ struct MockDivider2 : public osp::IDagDivider<GraphT> {
 struct MockSubScheduler : public osp::Scheduler<GraphT> {
     osp::RETURN_STATUS computeSchedule(osp::BspSchedule<GraphT> &schedule) override {
         // Assign all tasks to the first processor in a single superstep
-        for (VertexType v = 0; v < schedule.getInstance().getComputationalDag().NumVertices(); ++v) {
+        for (VertexType v = 0; v < schedule.GetInstance().getComputationalDag().NumVertices(); ++v) {
             schedule.setAssignedProcessor(v, 0);
             schedule.setAssignedSuperstep(v, 0);
         }
@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(BasicSchedulingTest) {
     BOOST_CHECK_EQUAL(schedule.assignedSuperstep(2), 1);
     BOOST_CHECK_EQUAL(schedule.assignedSuperstep(3), 1);
 
-    BOOST_CHECK_EQUAL(schedule.numberOfSupersteps(), 2);
+    BOOST_CHECK_EQUAL(schedule.NumberOfSupersteps(), 2);
 }
 
 BOOST_AUTO_TEST_CASE(MultipleSectionsTest) {
@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE(MultipleSectionsTest) {
     BOOST_CHECK_EQUAL(schedule.assignedSuperstep(2), 1);
     BOOST_CHECK_EQUAL(schedule.assignedSuperstep(3), 1);
 
-    BOOST_CHECK_EQUAL(schedule.numberOfSupersteps(), 2);
+    BOOST_CHECK_EQUAL(schedule.NumberOfSupersteps(), 2);
 }
 
 BOOST_AUTO_TEST_CASE(StarvationReturnsErrorTest) {
@@ -308,7 +308,7 @@ BOOST_AUTO_TEST_SUITE_END()
 //     BOOST_CHECK_EQUAL(schedule.assignedProcessor(5), 2);
 //     BOOST_CHECK_EQUAL(schedule.assignedSuperstep(4), 0);
 
-//     BOOST_CHECK_EQUAL(schedule.numberOfSupersteps(), 1);
+//     BOOST_CHECK_EQUAL(schedule.NumberOfSupersteps(), 1);
 // }
 
 // BOOST_AUTO_TEST_CASE(IndivisibleScarcitySchedulingTest) {
@@ -332,7 +332,7 @@ BOOST_AUTO_TEST_SUITE_END()
 //     BOOST_CHECK_EQUAL(schedule.assignedProcessor(4), 1);
 //     BOOST_CHECK_EQUAL(schedule.assignedSuperstep(4), 0);
 
-//     BOOST_CHECK_EQUAL(schedule.numberOfSupersteps(), 2);
+//     BOOST_CHECK_EQUAL(schedule.NumberOfSupersteps(), 2);
 // }
 
 // BOOST_AUTO_TEST_CASE(StarvationReturnsErrorTest) {

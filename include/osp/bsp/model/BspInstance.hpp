@@ -174,7 +174,7 @@ class BspInstance {
     /**
      * @brief Returns the number of processors in the BSP architecture.
      */
-    [[nodiscard]] unsigned NumberOfProcessors() const { return architecture_.numberOfProcessors(); }
+    [[nodiscard]] unsigned NumberOfProcessors() const { return architecture_.NumberOfProcessors(); }
 
     /**
      * @brief Returns the communication costs between two processors. Does not perform bounds checking.

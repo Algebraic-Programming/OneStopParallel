@@ -70,7 +70,7 @@ class LoadBalancerBase : public Scheduler<GraphT> {
 
         float value = InterpolationT()(percentageComplete, slack);
 
-        std::vector<float> procPrio(instance.numberOfProcessors());
+        std::vector<float> procPrio(instance.NumberOfProcessors());
         for (size_t i = 0; i < procPrio.size(); i++) {
             assert(static_cast<double>(total_partition_work[i]) < std::numeric_limits<float>::max()
                    && static_cast<double>(superstep_partition_work[i]) < std::numeric_limits<float>::max());

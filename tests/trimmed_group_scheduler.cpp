@@ -36,7 +36,7 @@ class MockSubScheduler : public Scheduler<ConstrGraphT> {
     // This mock scheduler assigns all nodes to local processor 0 and superstep 0.
     // This simplifies verification of the TrimmedGroupScheduler's mapping logic.
     RETURN_STATUS computeSchedule(BspSchedule<ConstrGraphT> &schedule) override {
-        for (vertex_idx_t<ConstrGraphT> v = 0; v < schedule.getInstance().getComputationalDag().NumVertices(); ++v) {
+        for (vertex_idx_t<ConstrGraphT> v = 0; v < schedule.GetInstance().getComputationalDag().NumVertices(); ++v) {
             schedule.setAssignedProcessor(v, 0);
             schedule.setAssignedSuperstep(v, 0);
         }
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(EmptyGraphTest) {
 
     auto status = scheduler.computeSchedule(schedule);
     BOOST_CHECK_EQUAL(status, RETURN_STATUS::OSP_SUCCESS);
-    BOOST_CHECK_EQUAL(schedule.numberOfSupersteps(), 0);
+    BOOST_CHECK_EQUAL(schedule.NumberOfSupersteps(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(SingleComponentSingleProcessorTypeTest) {
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(SingleComponentSingleProcessorTypeTest) {
 
     auto status = scheduler.computeSchedule(schedule);
     BOOST_CHECK_EQUAL(status, RETURN_STATUS::OSP_SUCCESS);
-    BOOST_CHECK_EQUAL(schedule.numberOfSupersteps(), 1);
+    BOOST_CHECK_EQUAL(schedule.NumberOfSupersteps(), 1);
 
     // MockSubScheduler assigns to local proc 0.
     // TrimmedGroupScheduler should map this to global proc 0.
@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(MultipleComponentsSingleProcessorTypeEvenDistributionTest) 
 
     auto status = scheduler.computeSchedule(schedule);
     BOOST_CHECK_EQUAL(status, RETURN_STATUS::OSP_SUCCESS);
-    BOOST_CHECK_EQUAL(schedule.numberOfSupersteps(), 1);
+    BOOST_CHECK_EQUAL(schedule.NumberOfSupersteps(), 1);
 
     // Component 0 (vertices 0,1) assigned to global processors 0,1. Mock scheduler uses local 0.
     // Global proc for group 0: offset 0 + local 0 = 0.
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(MultipleComponentsSingleProcessorTypeUnevenDistributionTest
 
     auto status = scheduler.computeSchedule(schedule);
     BOOST_CHECK_EQUAL(status, RETURN_STATUS::OSP_SUCCESS);
-    BOOST_CHECK_EQUAL(schedule.numberOfSupersteps(), 1);
+    BOOST_CHECK_EQUAL(schedule.NumberOfSupersteps(), 1);
 
     // Group 0 (components 0, 1) maps to global procs 0,1,2. Mock scheduler uses local 0.
     // Global proc for group 0: offset 0 + local 0 = 0.
@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(MultipleComponentsHeterogeneousArchitectureTest) {
 
     auto status = scheduler.computeSchedule(schedule);
     BOOST_CHECK_EQUAL(status, RETURN_STATUS::OSP_SUCCESS);
-    BOOST_CHECK_EQUAL(schedule.numberOfSupersteps(), 1);
+    BOOST_CHECK_EQUAL(schedule.NumberOfSupersteps(), 1);
 
     BOOST_CHECK_EQUAL(schedule.assignedProcessor(0), 0);
     BOOST_CHECK_EQUAL(schedule.assignedProcessor(1), 1);

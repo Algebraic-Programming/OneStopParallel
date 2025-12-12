@@ -39,7 +39,7 @@ class BasicPebblingStatsModule : public IStatisticModule<PebblingSchedule<GraphT
         std::map<std::string, std::string> stats;
         stats["PebblingCost"] = std::to_string(schedule.computeCosts());
         stats["AsynchronousPebblingCost"] = std::to_string(computeAsynchronousCost());
-        stats["Supersteps"] = std::to_string(schedule.numberOfSupersteps());
+        stats["Supersteps"] = std::to_string(schedule.NumberOfSupersteps());
         return stats;
     }
 };

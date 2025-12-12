@@ -52,14 +52,14 @@ struct KlTotalCommCostFunction {
 
     const std::string Name() const { return "toal_comm_cost"; }
 
-    inline bool IsCompatible(VertexType node, unsigned proc) { return activeSchedule_->getInstance().isCompatible(node, proc); }
+    inline bool IsCompatible(VertexType node, unsigned proc) { return activeSchedule_->GetInstance().isCompatible(node, proc); }
 
     void Initialize(KlActiveSchedule<GraphT, CostT, MemoryConstraintT> &sched, CompatibleProcessorRange<GraphT> &pRange) {
         activeSchedule_ = &sched;
         procRange_ = &pRange;
-        instance_ = &sched.getInstance();
+        instance_ = &sched.GetInstance();
         graph_ = &instance_->getComputationalDag();
-        commMultiplier_ = 1.0 / instance_->numberOfProcessors();
+        commMultiplier_ = 1.0 / instance_->NumberOfProcessors();
     }
 
     struct EmptyStruct {};

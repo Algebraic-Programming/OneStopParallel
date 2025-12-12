@@ -104,11 +104,11 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
      * @param schedule The schedule to copy.
      */
     explicit BspSchedule(const IBspSchedule<GraphT> &schedule)
-        : instance_(&schedule.getInstance()),
-          numberOfSupersteps_(schedule.numberOfSupersteps()),
-          nodeToProcessorAssignment_(schedule.getInstance().numberOfVertices()),
-          nodeToSuperstepAssignment_(schedule.getInstance().numberOfVertices()) {
-        for (const auto &v : schedule.getInstance().getComputationalDag().vertices()) {
+        : instance_(&schedule.GetInstance()),
+          numberOfSupersteps_(schedule.NumberOfSupersteps()),
+          nodeToProcessorAssignment_(schedule.GetInstance().numberOfVertices()),
+          nodeToSuperstepAssignment_(schedule.GetInstance().numberOfVertices()) {
+        for (const auto &v : schedule.GetInstance().getComputationalDag().vertices()) {
             nodeToProcessorAssignment_[v] = schedule.assignedProcessor(v);
             nodeToSuperstepAssignment_[v] = schedule.assignedSuperstep(v);
         }
@@ -178,7 +178,7 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
     template <typename GraphTOther>
     BspSchedule(const BspInstance<GraphT> &instance, const BspSchedule<GraphTOther> &schedule)
         : instance_(&instance),
-          numberOfSupersteps_(schedule.numberOfSupersteps()),
+          numberOfSupersteps_(schedule.NumberOfSupersteps()),
           nodeToProcessorAssignment_(schedule.assignedProcessors()),
           nodeToSuperstepAssignment_(schedule.assignedSupersteps()) {}
 

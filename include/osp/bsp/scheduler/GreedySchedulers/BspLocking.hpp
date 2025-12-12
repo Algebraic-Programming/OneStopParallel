@@ -112,7 +112,7 @@ class BspLocking : public Scheduler<GraphT> {
     int ComputeScore(VertexType node, unsigned proc, const BspInstance<GraphT> &instance) {
         int score = 0;
         for (const auto &succ : instance.getComputationalDag().children(node)) {
-            if (locked[succ] < instance.numberOfProcessors() && locked[succ] != proc) {
+            if (locked[succ] < instance.NumberOfProcessors() && locked[succ] != proc) {
                 score -= lock_penalty;
             }
         }
@@ -125,7 +125,7 @@ class BspLocking : public Scheduler<GraphT> {
                              const std::vector<std::set<VertexType>> &procReady) const {
         if constexpr (useMemoryConstraint_) {
             if (instance.getArchitecture().getMemoryConstraintType() == MEMORY_CONSTRAINT_TYPE::PERSISTENT_AND_TRANSIENT) {
-                for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
+                for (unsigned i = 0; i < instance.NumberOfProcessors(); ++i) {
                     if (!procReady[i].empty()) {
                         VertexType topNode = max_proc_score_heap[i].top();
 
@@ -136,7 +136,7 @@ class BspLocking : public Scheduler<GraphT> {
                 }
 
                 if (!allReady.empty()) {
-                    for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
+                    for (unsigned i = 0; i < instance.NumberOfProcessors(); ++i) {
                         VertexType topNode = max_all_proc_score_heap[i].top();
 
                         if (memoryConstraint_.can_add(top_node, i)) {
@@ -160,7 +160,7 @@ class BspLocking : public Scheduler<GraphT> {
                 unsigned &p,
                 const bool endSupStep,
                 const v_workw_t<Graph_t> remainingTime) {
-        for (unsigned proc = 0; proc < instance.numberOfProcessors(); ++proc) {
+        for (unsigned proc = 0; proc < instance.NumberOfProcessors(); ++proc) {
             if (procFree[proc] && !procReady[proc].empty()) {
                 // select node
                 VertexType topNode = max_proc_score_heap[proc].top();
@@ -187,14 +187,14 @@ class BspLocking : public Scheduler<GraphT> {
             }
         }
 
-        if (p < instance.numberOfProcessors()) {
+        if (p < instance.NumberOfProcessors()) {
             return true;
         }
 
         Priority bestPriority = {std::numeric_limits<int>::min(), 0, 0};
         bool foundNode = false;
 
-        for (unsigned proc = 0; proc < instance.numberOfProcessors(); ++proc) {
+        for (unsigned proc = 0; proc < instance.NumberOfProcessors(); ++proc) {
             if (!procFree[proc] or max_all_proc_score_heap[proc].is_empty()) {
                 continue;
             }
@@ -205,7 +205,7 @@ class BspLocking : public Scheduler<GraphT> {
             bool allProcreadyEmpty = false;
             while (endSupStep && (remaining_time < instance.getComputationalDag().VertexWorkWeight(top_node))) {
                 allReady.erase(top_node);
-                for (unsigned procDel = 0; procDel < instance.numberOfProcessors(); procDel++) {
+                for (unsigned procDel = 0; procDel < instance.NumberOfProcessors(); procDel++) {
                     if (procDel == proc || !instance.isCompatible(top_node, procDel)) {
                         continue;
                     }
@@ -248,13 +248,13 @@ class BspLocking : public Scheduler<GraphT> {
     bool CanChooseNode(const BspInstance<GraphT> &instance,
                        const std::vector<std::set<VertexType>> &procReady,
                        const std::vector<bool> &procFree) const {
-        for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
+        for (unsigned i = 0; i < instance.NumberOfProcessors(); ++i) {
             if (procFree[i] && !procReady[i].empty()) {
                 return true;
             }
         }
 
-        for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
+        for (unsigned i = 0; i < instance.NumberOfProcessors(); ++i) {
             if (procFree[i] && !max_all_proc_score_heap[i].is_empty()) {
                 return true;
             }
@@ -306,7 +306,7 @@ class BspLocking : public Scheduler<GraphT> {
      * @return A pair containing the return status and the computed BspSchedule.
      */
     virtual RETURN_STATUS computeSchedule(BspSchedule<GraphT> &schedule) override {
-        const auto &instance = schedule.getInstance();
+        const auto &instance = schedule.GetInstance();
 
         for (const auto &v : instance.getComputationalDag().vertices()) {
             schedule.setAssignedProcessor(v, std::numeric_limits<unsigned>::max());
@@ -321,7 +321,7 @@ class BspLocking : public Scheduler<GraphT> {
         }
 
         const auto &n = instance.numberOfVertices();
-        const unsigned &paramsP = instance.numberOfProcessors();
+        const unsigned &paramsP = instance.NumberOfProcessors();
         const auto &g = instance.getComputationalDag();
 
         const std::vector<v_workw_t<Graph_t>> pathLength = get_longest_path(g);
@@ -483,10 +483,10 @@ class BspLocking : public Scheduler<GraphT> {
 
             while (CanChooseNode(instance, procReady, procFree)) {
                 VertexType nextNode = std::numeric_limits<VertexType>::max();
-                unsigned nextProc = instance.numberOfProcessors();
+                unsigned nextProc = instance.NumberOfProcessors();
                 Choose(instance, allReady, procReady, procFree, nextNode, nextProc, endSupStep, max_finish_time - time);
 
-                if (nextNode == std::numeric_limits<VertexType>::max() || nextProc == instance.numberOfProcessors()) {
+                if (nextNode == std::numeric_limits<VertexType>::max() || nextProc == instance.NumberOfProcessors()) {
                     endSupStep = true;
                     break;
                 }
@@ -499,7 +499,7 @@ class BspLocking : public Scheduler<GraphT> {
                 } else {
                     allReady.erase(nextNode);
 
-                    for (unsigned proc = 0; proc < instance.numberOfProcessors(); ++proc) {
+                    for (unsigned proc = 0; proc < instance.NumberOfProcessors(); ++proc) {
                         if (instance.isCompatible(nextNode, proc) && max_all_proc_score_heap[proc].contains(nextNode)) {
                             max_all_proc_score_heap[proc].erase(nextNode);
                         }

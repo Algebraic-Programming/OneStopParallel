@@ -75,7 +75,7 @@ class AcyclicPartitioningILP {
     void SolveIlp();
 
   public:
-    AcyclicPartitioningILP() : model(COPTEnv::getInstance().CreateModel("AsyncPart")), writeSolutionsFound_(false) {}
+    AcyclicPartitioningILP() : model(COPTEnv::GetInstance().CreateModel("AsyncPart")), writeSolutionsFound_(false) {}
 
     virtual ~AcyclicPartitioningILP() = default;
 

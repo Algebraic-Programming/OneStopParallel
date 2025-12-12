@@ -48,7 +48,7 @@ class Serial : public Scheduler<GraphT> {
     ~Serial() override = default;
 
     RETURN_STATUS computeSchedule(BspSchedule<GraphT> &schedule) override {
-        const auto &instance = schedule.getInstance();
+        const auto &instance = schedule.GetInstance();
         const auto &dag = instance.getComputationalDag();
         const auto numVertices = dag.NumVertices();
 
@@ -62,7 +62,7 @@ class Serial : public Scheduler<GraphT> {
         std::vector<unsigned> chosenProcs;
         if (arch.getNumberOfProcessorTypes() > 0) {
             std::vector<bool> typeSeen(arch.getNumberOfProcessorTypes(), false);
-            for (unsigned p = 0; p < arch.numberOfProcessors(); ++p) {
+            for (unsigned p = 0; p < arch.NumberOfProcessors(); ++p) {
                 if (!typeSeen[arch.processorType(p)]) {
                     chosenProcs.push_back(p);
                     typeSeen[arch.processorType(p)] = true;

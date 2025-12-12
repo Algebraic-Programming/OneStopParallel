@@ -90,7 +90,7 @@ template <typename GraphT>
 RETURN_STATUS SubproblemMultiScheduling<GraphT>::ComputeMultiSchedule(const BspInstance<GraphT> &instance,
                                                                       std::vector<std::set<unsigned>> &processorsToNode) {
     const unsigned &n = static_cast<unsigned>(instance.numberOfVertices());
-    const unsigned &p = instance.numberOfProcessors();
+    const unsigned &p = instance.NumberOfProcessors();
     const auto &g = instance.getComputationalDag();
 
     processorsToNode.clear();
@@ -216,7 +216,7 @@ std::vector<std::pair<vertex_idx_t<Graph_t>, unsigned>> SubproblemMultiSchedulin
     }
 
     std::set<vertex_idx> assignedNodes;
-    std::vector<bool> assignedProcs(instance.numberOfProcessors(), false);
+    std::vector<bool> assignedProcs(instance.NumberOfProcessors(), false);
 
     for (unsigned proc : procs_available) {
         if (last_node_on_proc[proc] == UINT_MAX) {

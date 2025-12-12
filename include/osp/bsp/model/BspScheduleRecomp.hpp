@@ -129,7 +129,7 @@ class BspScheduleRecomp : public IBspScheduleEval<GraphT> {
 };
 
 template <typename GraphT>
-BspScheduleRecomp<GraphT>::BspScheduleRecomp(const BspScheduleCS<GraphT> &schedule) : instance_(&schedule.getInstance()) {
+BspScheduleRecomp<GraphT>::BspScheduleRecomp(const BspScheduleCS<GraphT> &schedule) : instance_(&schedule.GetInstance()) {
     nodeToProcessorAndSupertepAssignment_.clear();
     nodeToProcessorAndSupertepAssignment_.resize(instance_->NumberOfVertices());
     numberOfSupersteps_ = schedule.NumberOfSupersteps();
@@ -157,11 +157,11 @@ void BspScheduleRecomp<GraphT>::AddCommunicationScheduleEntry(KeyTriple key, uns
         throw std::invalid_argument("Invalid Argument while adding communication schedule entry: node out of range.");
     }
 
-    if (std::get<1>(key) >= instance_->numberOfProcessors()) {
+    if (std::get<1>(key) >= instance_->NumberOfProcessors()) {
         throw std::invalid_argument("Invalid Argument while adding communication schedule entry: from processor out of range.");
     }
 
-    if (std::get<2>(key) >= instance_->numberOfProcessors()) {
+    if (std::get<2>(key) >= instance_->NumberOfProcessors()) {
         throw std::invalid_argument("Invalid Argument while adding communication schedule entry: to processor out of range.");
     }
 

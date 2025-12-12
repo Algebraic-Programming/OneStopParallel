@@ -75,17 +75,17 @@ class Sptrsv {
 
     void SetupCsrNoPermutation(const BspSchedule<SparseMatrixImp<EigenIdxType>> &schedule) {
         vectorStepProcessorVertices_ = std::vector<std::vector<std::vector<EigenIdxType>>>(
-            schedule.numberOfSupersteps(), std::vector<std::vector<EigenIdxType>>(schedule.getInstance().numberOfProcessors()));
+            schedule.NumberOfSupersteps(), std::vector<std::vector<EigenIdxType>>(schedule.GetInstance().NumberOfProcessors()));
 
         vectorStepProcessorVerticesU_ = std::vector<std::vector<std::vector<EigenIdxType>>>(
-            schedule.numberOfSupersteps(), std::vector<std::vector<EigenIdxType>>(schedule.getInstance().numberOfProcessors()));
+            schedule.NumberOfSupersteps(), std::vector<std::vector<EigenIdxType>>(schedule.GetInstance().NumberOfProcessors()));
 
         boundsArrayL_ = std::vector<std::vector<std::vector<EigenIdxType>>>(
-            schedule.numberOfSupersteps(), std::vector<std::vector<EigenIdxType>>(schedule.getInstance().numberOfProcessors()));
+            schedule.NumberOfSupersteps(), std::vector<std::vector<EigenIdxType>>(schedule.GetInstance().NumberOfProcessors()));
         boundsArrayU_ = std::vector<std::vector<std::vector<EigenIdxType>>>(
-            schedule.numberOfSupersteps(), std::vector<std::vector<EigenIdxType>>(schedule.getInstance().numberOfProcessors()));
+            schedule.NumberOfSupersteps(), std::vector<std::vector<EigenIdxType>>(schedule.GetInstance().NumberOfProcessors()));
 
-        numSupersteps_ = schedule.numberOfSupersteps();
+        numSupersteps_ = schedule.NumberOfSupersteps();
         size_t numberOfVertices = instance_->getComputationalDag().NumVertices();
 
 #    pragma omp parallel num_threads(2)
@@ -98,8 +98,8 @@ class Sptrsv {
                             static_cast<EigenIdxType>(node));
                     }
 
-                    for (unsigned int step = 0; step < schedule.numberOfSupersteps(); ++step) {
-                        for (unsigned int proc = 0; proc < instance_->numberOfProcessors(); ++proc) {
+                    for (unsigned int step = 0; step < schedule.NumberOfSupersteps(); ++step) {
+                        for (unsigned int proc = 0; proc < instance_->NumberOfProcessors(); ++proc) {
                             if (!vectorStepProcessorVertices_[step][proc].empty()) {
                                 EigenIdxType start = vectorStepProcessorVertices_[step][proc][0];
                                 EigenIdxType prev = vectorStepProcessorVertices_[step][proc][0];
@@ -129,8 +129,8 @@ class Sptrsv {
                             static_cast<EigenIdxType>(node));
                     } while (node > 0);
 
-                    for (unsigned int step = 0; step < schedule.numberOfSupersteps(); ++step) {
-                        for (unsigned int proc = 0; proc < instance_->numberOfProcessors(); ++proc) {
+                    for (unsigned int step = 0; step < schedule.NumberOfSupersteps(); ++step) {
+                        for (unsigned int proc = 0; proc < instance_->NumberOfProcessors(); ++proc) {
                             if (!vectorStepProcessorVerticesU_[step][proc].empty()) {
                                 EigenIdxType startU = static_cast<EigenIdxType>(vectorStepProcessorVerticesU_[step][proc][0]);
                                 EigenIdxType prevU = static_cast<EigenIdxType>(vectorStepProcessorVerticesU_[step][proc][0]);
@@ -165,7 +165,7 @@ class Sptrsv {
             permInv[perm[i]] = i;
         }
 
-        numSupersteps_ = schedule.numberOfSupersteps();
+        numSupersteps_ = schedule.NumberOfSupersteps();
 
         val_.clear();
         val_.reserve(static_cast<size_t>(instance_->getComputationalDag().getCSR()->nonZeros()));
@@ -177,7 +177,7 @@ class Sptrsv {
         rowPtr_.reserve(instance_->numberOfVertices() + 1);
 
         stepProcPtr_
-            = std::vector<std::vector<unsigned>>(numSupersteps_, std::vector<unsigned>(instance_->numberOfProcessors(), 0));
+            = std::vector<std::vector<unsigned>>(numSupersteps_, std::vector<unsigned>(instance_->NumberOfProcessors(), 0));
 
         stepProcNum_ = schedule.numAssignedNodesPerSuperstepProcessor();
 
@@ -189,7 +189,7 @@ class Sptrsv {
         for (const UVertType &node : permInv) {
             if (schedule.assignedProcessor(node) != currentProcessor || schedule.assignedSuperstep(node) != currentStep) {
                 while (schedule.assignedProcessor(node) != currentProcessor || schedule.assignedSuperstep(node) != currentStep) {
-                    if (currentProcessor < instance_->numberOfProcessors() - 1) {
+                    if (currentProcessor < instance_->NumberOfProcessors() - 1) {
                         currentProcessor++;
                     } else {
                         currentProcessor = 0;
@@ -266,7 +266,7 @@ class Sptrsv {
     }
 
     void LsolveNoPermutationInPlace() {
-#    pragma omp parallel num_threads(instance_->numberOfProcessors())
+#    pragma omp parallel num_threads(instance_->NumberOfProcessors())
         {
             const size_t proc = static_cast<size_t>(omp_get_thread_num());
             for (unsigned step = 0; step < numSupersteps_; ++step) {
@@ -293,7 +293,7 @@ class Sptrsv {
     }
 
     void UsolveNoPermutationInPlace() {
-#    pragma omp parallel num_threads(instance_->numberOfProcessors())
+#    pragma omp parallel num_threads(instance_->NumberOfProcessors())
         {
             // Process each superstep starting from the last one (opposite of lsolve)
             const size_t proc = static_cast<size_t>(omp_get_thread_num());
@@ -323,7 +323,7 @@ class Sptrsv {
     }
 
     void LsolveNoPermutation() {
-#    pragma omp parallel num_threads(instance_->numberOfProcessors())
+#    pragma omp parallel num_threads(instance_->NumberOfProcessors())
         {
             const size_t proc = static_cast<size_t>(omp_get_thread_num());
             for (unsigned step = 0; step < numSupersteps_; ++step) {
@@ -351,7 +351,7 @@ class Sptrsv {
     }
 
     void UsolveNoPermutation() {
-#    pragma omp parallel num_threads(instance_->numberOfProcessors())
+#    pragma omp parallel num_threads(instance_->NumberOfProcessors())
         {
             // Process each superstep starting from the last one (opposite of lsolve)
             const size_t proc = static_cast<size_t>(omp_get_thread_num());
@@ -412,7 +412,7 @@ class Sptrsv {
     }
 
     void LsolveWithPermutationInPlace() {
-#    pragma omp parallel num_threads(instance_->numberOfProcessors())
+#    pragma omp parallel num_threads(instance_->NumberOfProcessors())
         {
             for (unsigned step = 0; step < numSupersteps_; step++) {
                 const size_t proc = static_cast<size_t>(omp_get_thread_num());
@@ -431,7 +431,7 @@ class Sptrsv {
     }
 
     void LsolveWithPermutation() {
-#    pragma omp parallel num_threads(instance_->numberOfProcessors())
+#    pragma omp parallel num_threads(instance_->NumberOfProcessors())
         {
             for (unsigned step = 0; step < numSupersteps_; step++) {
                 const size_t proc = static_cast<size_t>(omp_get_thread_num());

@@ -113,7 +113,7 @@ struct KlBspCommCostFunction {
 
     inline const std::string Name() const { return "bsp_comm"; }
 
-    inline bool IsCompatible(VertexType node, unsigned proc) { return activeSchedule_->getInstance().isCompatible(node, proc); }
+    inline bool IsCompatible(VertexType node, unsigned proc) { return activeSchedule_->GetInstance().isCompatible(node, proc); }
 
     inline unsigned StartIdx(const unsigned nodeStep, const unsigned startStep) {
         return (nodeStep < windowSize + startStep) ? windowSize - (nodeStep - startStep) : 0;
@@ -126,7 +126,7 @@ struct KlBspCommCostFunction {
     void Initialize(KlActiveSchedule<GraphT, CostT, MemoryConstraintT> &sched, CompatibleProcessorRange<GraphT> &pRange) {
         activeSchedule_ = &sched;
         procRange_ = &pRange;
-        instance_ = &sched.getInstance();
+        instance_ = &sched.GetInstance();
         graph_ = &instance_->getComputationalDag();
 
         const unsigned numSteps = activeSchedule_->num_steps();
@@ -221,7 +221,7 @@ struct KlBspCommCostFunction {
                              const unsigned endStep) {
         // Use static thread_local scratchpad to avoid allocation in hot loop
         static thread_local ScratchData scratch;
-        scratch.Init(activeSchedule_->num_steps(), instance_->numberOfProcessors());
+        scratch.Init(activeSchedule_->num_steps(), instance_->NumberOfProcessors());
         scratch.ClearAll();
 
         const unsigned nodeStep = activeSchedule_->assigned_superstep(node);

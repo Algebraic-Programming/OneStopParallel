@@ -34,11 +34,11 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
     std::string getScheduleName() const override { return "IsomorphicWavefrontComponentScheduler"; }
 
     RETURN_STATUS computeSchedule(BspSchedule<GraphT> &schedule) override {
-        const auto &instance = schedule.getInstance();
+        const auto &instance = schedule.GetInstance();
         const auto &originalArch = instance.getArchitecture();
 
         std::vector<std::vector<unsigned>> globalIdsByType(originalArch.getNumberOfProcessorTypes());
-        for (unsigned i = 0; i < originalArch.numberOfProcessors(); ++i) {
+        for (unsigned i = 0; i < originalArch.NumberOfProcessors(); ++i) {
             globalIdsByType[originalArch.processorType(i)].push_back(i);
         }
 
@@ -77,7 +77,7 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
                                       const std::vector<std::vector<unsigned>> &globalIdsByType,
                                       unsigned superstepOffset,
                                       unsigned &superstepsInSet) {
-        const auto &instance = schedule.getInstance();
+        const auto &instance = schedule.GetInstance();
         const auto &originalArch = instance.getArchitecture();
         const auto &originalProcTypeCount = originalArch.getProcessorTypeCount();
 
@@ -181,7 +181,7 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
                                            const std::vector<unsigned> &procTypeOffsets,
                                            unsigned superstepOffset,
                                            unsigned &superstepsForGroup) {
-        const auto &instance = schedule.getInstance();
+        const auto &instance = schedule.GetInstance();
         const auto &originalArch = instance.getArchitecture();
         const size_t numMembers = groupMembers.size();
         superstepsForGroup = 0;
@@ -246,7 +246,7 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
                         vertex, superstep_offset + sequential_superstep_offset + sub_schedule.assignedSuperstep(subdag_vertex));
                     subdag_vertex++;
                 }
-                sequentialSuperstepOffset += subSchedule.numberOfSupersteps();
+                sequentialSuperstepOffset += subSchedule.NumberOfSupersteps();
             }
             superstepsForGroup = sequentialSuperstepOffset;
 
@@ -282,7 +282,7 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
                 return status;
             }
 
-            const auto subProcTypeCount = subSchedule.getInstance().getArchitecture().getProcessorTypeCount();
+            const auto subProcTypeCount = subSchedule.GetInstance().getArchitecture().getProcessorTypeCount();
             std::vector<unsigned> subProcTypeCorrections(subProcTypeCount.size(), 0);
             for (std::size_t k = 1; k < subProcTypeCorrections.size(); ++k) {
                 subProcTypeCorrections[k] = subProcTypeCorrections[k - 1] + subProcTypeCount[k - 1];
@@ -297,7 +297,7 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
                 vertex_idx_t<constr_graph_t> subdagVertex = 0;
                 for (const auto &vertex : sorted_component_vertices) {
                     const unsigned proc_in_sub_sched = sub_schedule.assignedProcessor(subdag_vertex);
-                    const unsigned proc_type = sub_schedule.getInstance().getArchitecture().processorType(proc_in_sub_sched);
+                    const unsigned proc_type = sub_schedule.GetInstance().getArchitecture().processorType(proc_in_sub_sched);
                     const unsigned local_proc_id_within_type = proc_in_sub_sched - sub_proc_type_corrections[proc_type];
                     unsigned global_proc_id
                         = global_ids_by_type[proc_type][current_member_proc_offsets[proc_type] + local_proc_id_within_type];
@@ -310,7 +310,7 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
                     currentMemberProcOffsets[k] += subProcTypeCount[k];
                 }
             }
-            superstepsForGroup = subSchedule.numberOfSupersteps();
+            superstepsForGroup = subSchedule.NumberOfSupersteps();
         }
         return RETURN_STATUS::OSP_SUCCESS;
     }

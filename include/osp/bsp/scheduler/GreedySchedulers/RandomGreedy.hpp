@@ -41,7 +41,7 @@ class RandomGreedy : public Scheduler<GraphT> {
     RETURN_STATUS computeSchedule(BspSchedule<GraphT> &sched) override {
         using VertexType = vertex_idx_t<Graph_t>;
 
-        const auto &instance = sched.getInstance();
+        const auto &instance = sched.GetInstance();
 
         for (const auto &v : instance.getComputationalDag().vertices()) {
             sched.setAssignedProcessor(v, std::numeric_limits<unsigned>::max());
@@ -64,9 +64,9 @@ class RandomGreedy : public Scheduler<GraphT> {
         while (!next.empty()) {
             std::shuffle(next.begin(), next.end(), g);
             std::unordered_set<VertexType> nodesAssignedThisSuperstep;
-            std::vector<v_workw_t<Graph_t>> processorWeights(instance.numberOfProcessors(), 0);
+            std::vector<v_workw_t<Graph_t>> processorWeights(instance.NumberOfProcessors(), 0);
 
-            bool fewSources = next.size() < instance.numberOfProcessors() ? true : false;
+            bool fewSources = next.size() < instance.NumberOfProcessors() ? true : false;
             unsigned failCounter = 0;
             while (!next.empty() && failCounter < 20) {
                 std::uniform_int_distribution<VertexType> randNodeIdx(0, next.size() - 1);
@@ -120,7 +120,7 @@ class RandomGreedy : public Scheduler<GraphT> {
                 next.erase(it);
                 next.insert(next.end(), new_nodes.cbegin(), new_nodes.cend());
 
-                if (ensureEnoughSources_ && fewSources && next.size() >= instance.numberOfProcessors()) {
+                if (ensureEnoughSources_ && fewSources && next.size() >= instance.NumberOfProcessors()) {
                     break;
                 }
             }

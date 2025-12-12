@@ -33,13 +33,13 @@ class WavefrontComponentScheduler : public AbstractWavefrontScheduler<GraphT, Co
     std::string getScheduleName() const override { return "WavefrontComponentScheduler"; }
 
     RETURN_STATUS computeSchedule(BspSchedule<GraphT> &schedule) override {
-        const auto &instance = schedule.getInstance();
+        const auto &instance = schedule.GetInstance();
         const auto &originalArch = instance.getArchitecture();
         const auto &originalProcTypeCount = originalArch.getProcessorTypeCount();
         const auto &computationalDag = instance.getComputationalDag();
 
         std::vector<std::vector<unsigned>> globalIdsByType(originalArch.getNumberOfProcessorTypes());
-        for (unsigned i = 0; i < originalArch.numberOfProcessors(); ++i) {
+        for (unsigned i = 0; i < originalArch.NumberOfProcessors(); ++i) {
             globalIdsByType[originalArch.processorType(i)].push_back(i);
         }
 
@@ -136,7 +136,7 @@ class WavefrontComponentScheduler : public AbstractWavefrontScheduler<GraphT, Co
                 for (size_t k = 0; k < subProcTypeCount.size(); ++k) {
                     procTypeOffsets[k] += subProcTypeCount[k];
                 }
-                maxNumberSupersteps = std::max(maxNumberSupersteps, subSchedule.numberOfSupersteps());
+                maxNumberSupersteps = std::max(maxNumberSupersteps, subSchedule.NumberOfSupersteps());
             }
             superstepOffset += maxNumberSupersteps;
         }

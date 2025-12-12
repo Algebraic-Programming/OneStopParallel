@@ -215,7 +215,7 @@ RETURN_STATUS RunBspScheduler(const ConfigParser &parser,
                 throw std::invalid_argument("Parameter error: Initial solution cannot be FullILP.\n");
             }
 
-            BspSchedule<GraphT> initialSchedule(schedule.getInstance());
+            BspSchedule<GraphT> initialSchedule(schedule.GetInstance());
 
             RETURN_STATUS status = run_bsp_scheduler(
                 parser, algorithm.get_child("parameters").get_child("initial_solution_scheduler"), initialSchedule);
@@ -239,7 +239,7 @@ RETURN_STATUS RunBspScheduler(const ConfigParser &parser,
     } else if (id == "Coarser") {
         std::unique_ptr<Coarser<Graph_t, boost_graph_t>> coarser
             = get_coarser_by_name<Graph_t, boost_graph_t>(parser, algorithm.get_child("parameters").get_child("coarser"));
-        const auto &instance = schedule.getInstance();
+        const auto &instance = schedule.GetInstance();
         BspInstance<boost_graph_t> instanceCoarse;
         std::vector<vertex_idx_t<boost_graph_t>> reverseVertexMap;
         bool status

@@ -58,7 +58,7 @@ class BspScheduleCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> 
         using VertexType_in = vertex_idx_t<Graph_t_in>;
         using VertexType_out = vertex_idx_t<Graph_t_out>;
 
-        assert(&dagIn == &schedule_->getInstance().getComputationalDag());
+        assert(&dagIn == &schedule_->GetInstance().getComputationalDag());
         assert(schedule_->satisfiesPrecedenceConstraints());
 
         SetSchedule<GraphTIn> setSchedule(*schedule_);
@@ -67,8 +67,8 @@ class BspScheduleCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> 
 
         bool scheduleRespectsTypes = true;
 
-        for (unsigned step = 0; step < schedule_->numberOfSupersteps(); step++) {
-            for (unsigned proc = 0; proc < schedule_->getInstance().numberOfProcessors(); proc++) {
+        for (unsigned step = 0; step < schedule_->NumberOfSupersteps(); step++) {
+            for (unsigned proc = 0; proc < schedule_->GetInstance().NumberOfProcessors(); proc++) {
                 if (setSchedule.step_processor_vertices[step][proc].size() > 0) {
                     v_workw_t<Graph_t_in> totalWork = 0;
                     v_memw_t<Graph_t_in> totalMemory = 0;

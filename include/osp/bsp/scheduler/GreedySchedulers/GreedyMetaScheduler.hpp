@@ -64,7 +64,7 @@ class GreedyMetaScheduler : public Scheduler<GraphT> {
     void ResetScheduler() { schedulers_.clear(); }
 
     RETURN_STATUS computeSchedule(BspSchedule<GraphT> &schedule) override {
-        if (schedule.getInstance().getArchitecture().numberOfProcessors() == 1) {
+        if (schedule.GetInstance().getArchitecture().NumberOfProcessors() == 1) {
             if constexpr (verbose_) {
                 std::cout << "Using serial scheduler for P=1." << std::endl;
             }
@@ -73,7 +73,7 @@ class GreedyMetaScheduler : public Scheduler<GraphT> {
         }
 
         v_workw_t<Graph_t> bestScheduleCost = std::numeric_limits<v_workw_t<Graph_t>>::max();
-        BspSchedule<GraphT> currentSchedule(schedule.getInstance());
+        BspSchedule<GraphT> currentSchedule(schedule.GetInstance());
 
         for (Scheduler<GraphT> *scheduler : schedulers_) {
             scheduler->computeSchedule(currentSchedule);
@@ -81,7 +81,7 @@ class GreedyMetaScheduler : public Scheduler<GraphT> {
 
             if constexpr (verbose_) {
                 std::cout << "Executed scheduler " << scheduler->getScheduleName() << ", costs: " << schedule_cost
-                          << ", nr. supersteps: " << currentSchedule.numberOfSupersteps() << std::endl;
+                          << ", nr. supersteps: " << currentSchedule.NumberOfSupersteps() << std::endl;
             }
 
             if (schedule_cost < best_schedule_cost) {

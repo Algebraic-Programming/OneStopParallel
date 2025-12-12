@@ -85,7 +85,7 @@ RETURN_STATUS CoptCommScheduleOptimizer<GraphT>::ImproveSchedule(BspScheduleCS<G
 
     if (model.GetIntAttr(COPT_INTATTR_HASMIPSOL)) {
         UpdateCommSchedule(schedule);
-        if (CanShrinkResultingSchedule(schedule.numberOfSupersteps())) {
+        if (CanShrinkResultingSchedule(schedule.NumberOfSupersteps())) {
             schedule.shrinkByMergingSupersteps();
         }
     }
@@ -118,11 +118,11 @@ void CoptCommScheduleOptimizer<GraphT>::UpdateCommSchedule(BspScheduleCS<GraphT>
     std::map<KeyTriple, unsigned int> &cs = schedule.getCommunicationSchedule();
     cs.clear();
 
-    for (const auto &node : schedule.getInstance().vertices()) {
-        for (unsigned int pFrom = 0; pFrom < schedule.getInstance().numberOfProcessors(); pFrom++) {
-            for (unsigned int pTo = 0; pTo < schedule.getInstance().numberOfProcessors(); pTo++) {
+    for (const auto &node : schedule.GetInstance().vertices()) {
+        for (unsigned int pFrom = 0; pFrom < schedule.GetInstance().NumberOfProcessors(); pFrom++) {
+            for (unsigned int pTo = 0; pTo < schedule.GetInstance().NumberOfProcessors(); pTo++) {
                 if (pFrom != pTo) {
-                    for (unsigned int step = 0; step < schedule.numberOfSupersteps(); step++) {
+                    for (unsigned int step = 0; step < schedule.NumberOfSupersteps(); step++) {
                         if (comm_processor_to_processor_superstep_node_var[p_from][p_to][step][static_cast<int>(node)].Get(
                                 COPT_DBLINFO_VALUE)
                             >= .99) {
@@ -137,10 +137,10 @@ void CoptCommScheduleOptimizer<GraphT>::UpdateCommSchedule(BspScheduleCS<GraphT>
 
 template <typename GraphT>
 void CoptCommScheduleOptimizer<GraphT>::SetInitialSolution(BspScheduleCS<GraphT> &schedule, Model &model) {
-    const GraphT &dag = schedule.getInstance().getComputationalDag();
-    const BspArchitecture<GraphT> &arch = schedule.getInstance().getArchitecture();
-    const unsigned &numProcessors = schedule.getInstance().numberOfProcessors();
-    const unsigned &numSupersteps = schedule.numberOfSupersteps();
+    const GraphT &dag = schedule.GetInstance().getComputationalDag();
+    const BspArchitecture<GraphT> &arch = schedule.GetInstance().getArchitecture();
+    const unsigned &numProcessors = schedule.GetInstance().NumberOfProcessors();
+    const unsigned &numSupersteps = schedule.NumberOfSupersteps();
     const auto &cs = schedule.getCommunicationSchedule();
 
     std::vector<std::vector<unsigned>> firstAt(DAG.NumVertices(),
@@ -215,9 +215,9 @@ void CoptCommScheduleOptimizer<GraphT>::SetInitialSolution(BspScheduleCS<GraphT>
 
 template <typename GraphT>
 void CoptCommScheduleOptimizer<GraphT>::SetupVariablesConstraintsObjective(const BspScheduleCS<GraphT> &schedule, Model &model) {
-    const unsigned &maxNumberSupersteps = schedule.numberOfSupersteps();
-    const unsigned &numProcessors = schedule.getInstance().numberOfProcessors();
-    const unsigned numVertices = static_cast<unsigned>(schedule.getInstance().numberOfVertices());
+    const unsigned &maxNumberSupersteps = schedule.NumberOfSupersteps();
+    const unsigned &numProcessors = schedule.GetInstance().NumberOfProcessors();
+    const unsigned numVertices = static_cast<unsigned>(schedule.GetInstance().numberOfVertices());
 
     // variables indicating if superstep is used at all
     if (!ignoreLatency_) {
@@ -242,7 +242,7 @@ void CoptCommScheduleOptimizer<GraphT>::SetupVariablesConstraintsObjective(const
 
     if (!ignoreLatency_) {
         unsigned m = numProcessors * numProcessors * numVertices;
-        for (unsigned int step = 0; step < schedule.numberOfSupersteps(); step++) {
+        for (unsigned int step = 0; step < schedule.NumberOfSupersteps(); step++) {
             Expr expr;
 
             for (unsigned p1 = 0; p1 < numProcessors; p1++) {
@@ -265,7 +265,7 @@ void CoptCommScheduleOptimizer<GraphT>::SetupVariablesConstraintsObjective(const
         const unsigned &superstep = schedule.assignedSuperstep(node);
         Expr expr;
         unsigned numComEdges = 0;
-        for (const auto &pred : schedule.getInstance().getComputationalDag().parents(node)) {
+        for (const auto &pred : schedule.GetInstance().getComputationalDag().parents(node)) {
             if (schedule.assignedProcessor(node) != schedule.assignedProcessor(pred)) {
                 numComEdges += 1;
                 expr += comm_processor_to_processor_superstep_node_var[processor][processor][superstep][static_cast<int>(pred)];
@@ -314,16 +314,16 @@ void CoptCommScheduleOptimizer<GraphT>::SetupVariablesConstraintsObjective(const
             for (unsigned node = 0; node < numVertices; node++) {
                 for (unsigned pTo = 0; pTo < numProcessors; pTo++) {
                     if (processor != pTo) {
-                        expr1 += schedule.getInstance().getComputationalDag().VertexCommWeight(node)
-                                 * schedule.getInstance().sendCosts(processor, p_to)
+                        expr1 += schedule.GetInstance().getComputationalDag().VertexCommWeight(node)
+                                 * schedule.GetInstance().sendCosts(processor, p_to)
                                  * comm_processor_to_processor_superstep_node_var[processor][p_to][step][static_cast<int>(node)];
                     }
                 }
 
                 for (unsigned int pFrom = 0; pFrom < numProcessors; pFrom++) {
                     if (processor != pFrom) {
-                        expr2 += schedule.getInstance().getComputationalDag().VertexCommWeight(node)
-                                 * schedule.getInstance().sendCosts(p_from, processor)
+                        expr2 += schedule.GetInstance().getComputationalDag().VertexCommWeight(node)
+                                 * schedule.GetInstance().sendCosts(p_from, processor)
                                  * comm_processor_to_processor_superstep_node_var[p_from][processor][step][static_cast<int>(node)];
                     }
                 }
@@ -341,15 +341,15 @@ void CoptCommScheduleOptimizer<GraphT>::SetupVariablesConstraintsObjective(const
 
     if (!ignoreLatency_) {
         for (unsigned int step = 0; step < maxNumberSupersteps; step++) {
-            expr += schedule.getInstance().communicationCosts() * max_comm_superstep_var[static_cast<int>(step)]
-                    + schedule.getInstance().synchronisationCosts() * superstep_has_comm[static_cast<int>(step)];
+            expr += schedule.GetInstance().communicationCosts() * max_comm_superstep_var[static_cast<int>(step)]
+                    + schedule.GetInstance().synchronisationCosts() * superstep_has_comm[static_cast<int>(step)];
         }
     } else {
         for (unsigned int step = 0; step < maxNumberSupersteps; step++) {
-            expr += schedule.getInstance().communicationCosts() * max_comm_superstep_var[static_cast<int>(step)];
+            expr += schedule.GetInstance().communicationCosts() * max_comm_superstep_var[static_cast<int>(step)];
         }
     }
-    model.SetObjective(expr - schedule.getInstance().synchronisationCosts(), COPT_MINIMIZE);
+    model.SetObjective(expr - schedule.GetInstance().synchronisationCosts(), COPT_MINIMIZE);
 }
 
 }    // namespace osp

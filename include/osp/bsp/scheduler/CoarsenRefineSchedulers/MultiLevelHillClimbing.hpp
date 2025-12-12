@@ -105,12 +105,12 @@ RETURN_STATUS MultiLevelHillClimbingScheduler<GraphT>::ComputeSchedule(BspSchedu
     GraphT coarseDAG;
     std::vector<vertex_idx> newVertexId;
 
-    const auto numVerices = schedule.getInstance().numberOfVertices();
+    const auto numVerices = schedule.GetInstance().numberOfVertices();
     SetParameter(numVerices);
 
-    coarser.coarsenDag(schedule.getInstance().getComputationalDag(), coarseDAG, new_vertex_id);
+    coarser.coarsenDag(schedule.GetInstance().getComputationalDag(), coarseDAG, new_vertex_id);
 
-    BspInstance<GraphT> coarseInstance(coarseDAG, schedule.getInstance().getArchitecture());
+    BspInstance<GraphT> coarseInstance(coarseDAG, schedule.GetInstance().getArchitecture());
 
     GreedyBspScheduler<GraphT> greedy;
     BspSchedule<GraphT> coarseSchedule(coarseInstance);
@@ -126,7 +126,7 @@ RETURN_STATUS MultiLevelHillClimbingScheduler<GraphT>::ComputeSchedule(BspSchedu
         refinement_points.pop_front();
     }
 
-    schedule = Refine(schedule.getInstance(), coarser, coarseSchedule);
+    schedule = Refine(schedule.GetInstance(), coarser, coarseSchedule);
 
     return RETURN_STATUS::OSP_SUCCESS;
 }

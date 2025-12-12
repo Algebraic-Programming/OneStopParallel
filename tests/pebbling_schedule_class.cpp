@@ -100,7 +100,7 @@ void RunTest(Scheduler<GraphT> *testScheduler) {
             instance.getArchitecture().setMemoryBound(maxRequired);
 
             PebblingSchedule<GraphT> memSchedule1(bspSchedule, PebblingSchedule<GraphT>::CACHE_EVICTION_STRATEGY::LARGEST_ID);
-            BOOST_CHECK_EQUAL(&memSchedule1.getInstance(), &instance);
+            BOOST_CHECK_EQUAL(&memSchedule1.GetInstance(), &instance);
             BOOST_CHECK(memSchedule1.isValid());
 
             PebblingSchedule<GraphT> memSchedule3(bspSchedule,

@@ -87,7 +87,7 @@ class PebblingPartialILP : public Scheduler<GraphT> {
 
 template <typename GraphT>
 RETURN_STATUS PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<GraphT> &schedule) {
-    const BspInstance<GraphT> &instance = schedule.getInstance();
+    const BspInstance<GraphT> &instance = schedule.GetInstance();
 
     if (!PebblingSchedule<GraphT>::hasValidSolution(instance)) {
         return RETURN_STATUS::ERROR;
@@ -196,14 +196,14 @@ RETURN_STATUS PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<Graph
     }
 
     // PART 3: solve a small ILP for each part
-    std::vector<std::set<vertex_idx>> inFastMem(instance.numberOfProcessors());
+    std::vector<std::set<vertex_idx>> inFastMem(instance.NumberOfProcessors());
     std::vector<PebblingSchedule<Graph_t>> pebbling(nrParts);
     std::vector<BspArchitecture<Graph_t>> subArch(nrParts);
     std::vector<BspInstance<Graph_t>> subInstance(nrParts);
 
     // to handle the initial memory content for isomorphic parts
     std::vector<std::vector<std::set<vertex_idx>>> hasRedsInBeginning(
-        nr_parts, std::vector<std::set<vertex_idx>>(instance.numberOfProcessors()));
+        nr_parts, std::vector<std::set<vertex_idx>>(instance.NumberOfProcessors()));
 
     for (unsigned part = 0; part < nrParts; ++part) {
         std::cout << "part " << part << std::endl;

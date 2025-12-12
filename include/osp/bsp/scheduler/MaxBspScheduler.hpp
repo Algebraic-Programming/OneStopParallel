@@ -48,14 +48,14 @@ class MaxBspScheduler : public Scheduler<GraphT> {
      * @return A pair containing the return status and the computed schedule.
      */
     virtual RETURN_STATUS computeSchedule(BspSchedule<GraphT> &schedule) override {
-        MaxBspSchedule<GraphT> tmpSched(schedule.getInstance());
+        MaxBspSchedule<GraphT> tmpSched(schedule.GetInstance());
         RETURN_STATUS status = computeSchedule(tmpSched);
         schedule = tmpSched;
         return status;
     }
 
     virtual RETURN_STATUS computeScheduleCS(BspScheduleCS<GraphT> &schedule) override {
-        MaxBspScheduleCS<GraphT> tmpSchedule(schedule.getInstance());
+        MaxBspScheduleCS<GraphT> tmpSchedule(schedule.GetInstance());
         auto result = computeScheduleCS(tmpSchedule);
         if (result == RETURN_STATUS::OSP_SUCCESS || result == RETURN_STATUS::BEST_FOUND) {
             schedule = tmpSchedule;

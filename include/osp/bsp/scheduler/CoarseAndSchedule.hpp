@@ -39,7 +39,7 @@ class CoarseAndSchedule : public Scheduler<GraphT> {
     }
 
     RETURN_STATUS computeSchedule(BspSchedule<GraphT> &schedule) override {
-        const auto &instance = schedule.getInstance();
+        const auto &instance = schedule.GetInstance();
 
         BspInstance<GraphTCoarse> instanceCoarse;
 

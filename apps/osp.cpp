@@ -131,7 +131,7 @@ int main(int argc, char *argv[]) {
             } else {
                 schedulersCosts[algorithmCounter] = BspScheduleCS<GraphT>(schedule).computeCosts();
                 schedulersWorkCosts[algorithmCounter] = schedule.computeWorkCosts();
-                schedulersSupersteps[algorithmCounter] = schedule.numberOfSupersteps();
+                schedulersSupersteps[algorithmCounter] = schedule.NumberOfSupersteps();
 
                 if (parser.globalParams_.get_child("outputSchedule").get_value<bool>()) {
                     try {

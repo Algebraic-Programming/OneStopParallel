@@ -35,7 +35,7 @@ struct RewardPenaltyStrategy {
     CostT reward_ = 0;
 
     void Initialize(KlActiveScheduleT &sched, const CostT maxComm, const CostT maxWork) {
-        maxWeight_ = std::max(maxWork, maxComm * sched.getInstance().communicationCosts());
+        maxWeight_ = std::max(maxWork, maxComm * sched.GetInstance().communicationCosts());
         activeSchedule_ = &sched;
         initialPenalty_ = static_cast<CostT>(std::sqrt(maxWeight_));
     }
@@ -98,7 +98,7 @@ struct AdaptiveAffinityTable {
   public:
     void Initialize(const KlActiveScheduleT &sche, const std::size_t initialTableSize) {
         activeSchedule_ = &sche;
-        graph_ = &(sche.getInstance().getComputationalDag());
+        graph_ = &(sche.GetInstance().getComputationalDag());
 
         lastIdx_ = 0;
 
@@ -109,7 +109,7 @@ struct AdaptiveAffinityTable {
         nodeIsSelected_.assign(nodeIsSelected_.size(), false);
 
         affinityTable_.resize(initialTableSize);
-        const unsigned numProcs = sche.getInstance().numberOfProcessors();
+        const unsigned numProcs = sche.GetInstance().NumberOfProcessors();
         for (auto &table : affinityTable_) {
             table.resize(numProcs);
             for (auto &row : table) {
@@ -169,7 +169,7 @@ struct AdaptiveAffinityTable {
                 selected_nodes.resize(new_size);
                 affinityTable_.resize(newSize);
 
-                const unsigned numProcs = activeSchedule_->getInstance().numberOfProcessors();
+                const unsigned numProcs = activeSchedule_->GetInstance().NumberOfProcessors();
                 for (size_t i = oldSize; i < newSize; ++i) {
                     affinityTable_[i].resize(numProcs);
                     for (auto &row : affinityTable_[i]) {
@@ -256,10 +256,10 @@ struct StaticAffinityTable {
   public:
     void Initialize(const KlActiveScheduleT &sche, const std::size_t) {
         activeSchedule_ = &sche;
-        graph_ = &(sche.getInstance().getComputationalDag());
+        graph_ = &(sche.GetInstance().getComputationalDag());
 
         affinityTable_.resize(graph_->NumVertices());
-        const unsigned numProcs = sche.getInstance().numberOfProcessors();
+        const unsigned numProcs = sche.GetInstance().NumberOfProcessors();
         for (auto &table : affinityTable_) {
             table.resize(numProcs);
             for (auto &row : table) {
@@ -316,7 +316,7 @@ struct VertexSelectionStrategy {
 
     inline void Initialize(const KlActiveScheduleT &sche, std::mt19937 &gen, const unsigned startStep, const unsigned endStep) {
         activeSchedule_ = &sche;
-        graph_ = &(sche.getInstance().getComputationalDag());
+        graph_ = &(sche.GetInstance().getComputationalDag());
         gen_ = &gen;
 
         permutation.reserve(graph->NumVertices() / active_schedule->num_steps() * (end_step - start_step));
@@ -327,7 +327,7 @@ struct VertexSelectionStrategy {
         strategyCounter_ = 0;
         permutation.clear();
 
-        const unsigned numProcs = activeSchedule_->getInstance().numberOfProcessors();
+        const unsigned numProcs = activeSchedule_->GetInstance().NumberOfProcessors();
         for (unsigned step = startStep; step <= endStep; ++step) {
             const auto &processorVertices = activeSchedule_->getSetSchedule().step_processor_vertices[step];
             for (unsigned proc = 0; proc < numProcs; ++proc) {

@@ -120,7 +120,7 @@ class EtfScheduler : public Scheduler<GraphT> {
             }
 
             for (const auto &node_pair : ready) {
-                for (unsigned i = 0; i < instance.numberOfProcessors(); ++i) {
+                for (unsigned i = 0; i < instance.NumberOfProcessors(); ++i) {
                     const auto node = node_pair.second;
 
                     if constexpr (use_memory_constraint) {
@@ -212,7 +212,7 @@ class EtfScheduler : public Scheduler<GraphT> {
         vertex_idx_t<Graph_t> bestNode = 0;
         std::vector<v_workw_t<Graph_t>> bestSend, bestRec;
         for (const auto &node : nodeList) {
-            for (unsigned j = 0; j < instance.numberOfProcessors(); ++j) {
+            for (unsigned j = 0; j < instance.NumberOfProcessors(); ++j) {
                 if constexpr (use_memory_constraint) {
                     if (not memory_constraint.can_add(node, j)) {
                         continue;
@@ -258,7 +258,7 @@ class EtfScheduler : public Scheduler<GraphT> {
      * @return A pair containing the return status and the computed BspSchedule object.
      */
     virtual RETURN_STATUS computeSchedule(BspSchedule<GraphT> &bspSchedule) override {
-        const auto &instance = bspSchedule.getInstance();
+        const auto &instance = bspSchedule.GetInstance();
 
         if constexpr (useMemoryConstraint_) {
             memoryConstraint_.initialize(instance);
@@ -266,12 +266,12 @@ class EtfScheduler : public Scheduler<GraphT> {
 
         CSchedule<GraphT> schedule(instance.numberOfVertices());
 
-        std::vector<std::deque<vertex_idx_t<Graph_t>>> greedyProcLists(instance.numberOfProcessors());
+        std::vector<std::deque<vertex_idx_t<Graph_t>>> greedyProcLists(instance.NumberOfProcessors());
 
         std::vector<vertex_idx_t<Graph_t>> predecProcessed(instance.numberOfVertices(), 0);
 
-        std::vector<v_workw_t<Graph_t>> finishTimes(instance.numberOfProcessors(), 0), send(instance.numberOfProcessors(), 0),
-            rec(instance.numberOfProcessors(), 0);
+        std::vector<v_workw_t<Graph_t>> finishTimes(instance.NumberOfProcessors(), 0), send(instance.NumberOfProcessors(), 0),
+            rec(instance.NumberOfProcessors(), 0);
 
         std::vector<v_workw_t<Graph_t>> bl;
         if (mode_ == BL_EST) {

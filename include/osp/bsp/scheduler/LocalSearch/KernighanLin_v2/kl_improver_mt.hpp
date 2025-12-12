@@ -106,12 +106,12 @@ class KlImproverMt : public KlImprover<GraphT, CommCostFunctionT, MemoryConstrai
     void SetMaxNumThreads(const unsigned numThreads) { maxNumThreads_ = numThreads; }
 
     virtual RETURN_STATUS improveSchedule(BspSchedule<GraphT> &schedule) override {
-        if (schedule.getInstance().numberOfProcessors() < 2) {
+        if (schedule.GetInstance().NumberOfProcessors() < 2) {
             return RETURN_STATUS::BEST_FOUND;
         }
 
         unsigned numThreads = std::min(maxNumThreads_, static_cast<unsigned>(omp_get_max_threads()));
-        SetNumThreads(numThreads, schedule.numberOfSupersteps());
+        SetNumThreads(numThreads, schedule.NumberOfSupersteps());
 
         this->threadDataVec_.resize(numThreads);
         this->threadFinishedVec_.assign(numThreads, true);
@@ -121,12 +121,12 @@ class KlImproverMt : public KlImprover<GraphT, CommCostFunctionT, MemoryConstrai
                 = 1;    // no parallelization with one thread. Affects parameters.max_out_iteration calculation in set_parameters()
         }
 
-        this->SetParameters(schedule.getInstance().numberOfVertices());
+        this->SetParameters(schedule.GetInstance().numberOfVertices());
         this->InitializeDatastructures(schedule);
         const CostT initialCost = this->activeSchedule_.get_cost();
 
         for (size_t i = 0; i < this->parameters_.num_parallel_loops; ++i) {
-            SetThreadBoundaries(numThreads, schedule.numberOfSupersteps(), i % 2 == 0);
+            SetThreadBoundaries(numThreads, schedule.NumberOfSupersteps(), i % 2 == 0);
 
 #pragma omp parallel num_threads(numThreads)
             {
@@ -140,7 +140,7 @@ class KlImproverMt : public KlImprover<GraphT, CommCostFunctionT, MemoryConstrai
             this->SynchronizeActiveSchedule(numThreads);
             if (numThreads > 1) {
                 this->activeSchedule_.set_cost(this->commCostF_.compute_schedule_cost());
-                SetNumThreads(numThreads, schedule.numberOfSupersteps());
+                SetNumThreads(numThreads, schedule.NumberOfSupersteps());
                 this->threadFinishedVec_.resize(numThreads);
             }
         }

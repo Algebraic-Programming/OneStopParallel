@@ -184,10 +184,10 @@ void HillClimbingScheduler<GraphT>::Init() {
         CreateSupstepLists();
     }
 
-    const vertex_idx n = schedule_->getInstance().getComputationalDag().NumVertices();
-    const unsigned p = schedule_->getInstance().getArchitecture().numberOfProcessors();
-    const unsigned m = schedule_->numberOfSupersteps();
-    const GraphT &g = schedule_->getInstance().getComputationalDag();
+    const vertex_idx n = schedule_->GetInstance().getComputationalDag().NumVertices();
+    const unsigned p = schedule_->GetInstance().getArchitecture().NumberOfProcessors();
+    const unsigned m = schedule_->NumberOfSupersteps();
+    const GraphT &g = schedule_->GetInstance().getComputationalDag();
 
     // Movement options
     canMove_.clear();
@@ -256,7 +256,7 @@ void HillClimbingScheduler<GraphT>::Init() {
     for (unsigned step = 0; step < m; ++step) {
         for (unsigned proc = 0; proc < p; ++proc) {
             for (const vertex_idx node : supsteplists[step][proc]) {
-                workCost[step][proc] += schedule->getInstance().getComputationalDag().VertexWorkWeight(node);
+                workCost[step][proc] += schedule->GetInstance().getComputationalDag().VertexWorkWeight(node);
             }
 
             std::pair<cost_type, unsigned> entry(workCost[step][proc], proc);
@@ -275,12 +275,12 @@ void HillClimbingScheduler<GraphT>::Init() {
                         && !present[pred][schedule->assignedProcessor(node)]) {
                         present[pred][schedule->assignedProcessor(node)] = true;
                         sent[step][schedule->assignedProcessor(pred)]
-                            += schedule->getInstance().getComputationalDag().VertexCommWeight(pred)
-                               * schedule->getInstance().getArchitecture().sendCosts(schedule->assignedProcessor(pred),
+                            += schedule->GetInstance().getComputationalDag().VertexCommWeight(pred)
+                               * schedule->GetInstance().getArchitecture().sendCosts(schedule->assignedProcessor(pred),
                                                                                      schedule->assignedProcessor(node));
                         received[step][schedule->assignedProcessor(node)]
-                            += schedule->getInstance().getComputationalDag().VertexCommWeight(pred)
-                               * schedule->getInstance().getArchitecture().sendCosts(schedule->assignedProcessor(pred),
+                            += schedule->GetInstance().getComputationalDag().VertexCommWeight(pred)
+                               * schedule->GetInstance().getArchitecture().sendCosts(schedule->assignedProcessor(pred),
                                                                                      schedule->assignedProcessor(node));
                     }
                 }
@@ -294,8 +294,8 @@ void HillClimbingScheduler<GraphT>::Init() {
             std::pair<cost_type, unsigned> entry(commCost[step][proc], proc);
             commCostPointer[step][proc] = commCostList[step].insert(entry).first;
         }
-        cost_type commCost = schedule->getInstance().getArchitecture().communicationCosts() * commCostList[step].rbegin()->first;
-        cost_type syncCost = (commCost > 0) ? schedule_->getInstance().getArchitecture().synchronisationCosts() : 0;
+        cost_type commCost = schedule->GetInstance().getArchitecture().communicationCosts() * commCostList[step].rbegin()->first;
+        cost_type syncCost = (commCost > 0) ? schedule_->GetInstance().getArchitecture().synchronisationCosts() : 0;
 
         if (schedule_->getStaleness() == 1) {
             cost += comm_cost + work_cost[step + 1] + sync_cost;
@@ -312,7 +312,7 @@ void HillClimbingScheduler<GraphT>::Init() {
         memory_used.resize(P, std::vector<v_memw_t<Graph_t>>(M, 0));
         for (vertex_idx node = 0; node < N; ++node) {
             memory_used[schedule->assignedProcessor(node)][schedule->assignedSuperstep(node)]
-                += schedule->getInstance().getComputationalDag().VertexMemWeight(node);
+                += schedule->GetInstance().getComputationalDag().VertexMemWeight(node);
         }
     }
 }
@@ -323,11 +323,11 @@ void HillClimbingScheduler<GraphT>::UpdatePromisingMoves() {
         return;
     }
 
-    const unsigned p = schedule_->getInstance().getArchitecture().numberOfProcessors();
-    const GraphT &g = schedule_->getInstance().getComputationalDag();
+    const unsigned p = schedule_->GetInstance().getArchitecture().NumberOfProcessors();
+    const GraphT &g = schedule_->GetInstance().getComputationalDag();
 
     promisingMoves.clear();
-    for (vertex_idx node = 0; node < schedule_->getInstance().getComputationalDag().NumVertices(); ++node) {
+    for (vertex_idx node = 0; node < schedule_->GetInstance().getComputationalDag().NumVertices(); ++node) {
         std::vector<unsigned> nrPredOnProc(p, 0);
         for (const vertex_idx &pred : G.parents(node)) {
             ++nrPredOnProc[schedule->assignedProcessor(pred)];
@@ -343,7 +343,7 @@ void HillClimbingScheduler<GraphT>::UpdatePromisingMoves() {
         if (otherProcUsed == 1) {
             for (unsigned proc = 0; proc < p; ++proc) {
                 if (schedule_->assignedProcessor(node) != proc && nrPredOnProc[proc] > 0
-                    && schedule_->getInstance().isCompatible(node, proc)) {
+                    && schedule_->GetInstance().isCompatible(node, proc)) {
                     promisingMoves.push_back(std::make_tuple(node, proc, EARLIER));
                     promisingMoves.push_back(std::make_tuple(node, proc, AT));
                     promisingMoves.push_back(std::make_tuple(node, proc, LATER));
@@ -366,7 +366,7 @@ void HillClimbingScheduler<GraphT>::UpdatePromisingMoves() {
         if (otherProcUsed == 1) {
             for (unsigned proc = 0; proc < p; ++proc) {
                 if (schedule_->assignedProcessor(node) != proc && nrSuccOnProc[proc] > 0
-                    && schedule_->getInstance().isCompatible(node, proc)) {
+                    && schedule_->GetInstance().isCompatible(node, proc)) {
                     promisingMoves.push_back(std::make_tuple(node, proc, EARLIER));
                     promisingMoves.push_back(std::make_tuple(node, proc, AT));
                     promisingMoves.push_back(std::make_tuple(node, proc, LATER));
@@ -375,7 +375,7 @@ void HillClimbingScheduler<GraphT>::UpdatePromisingMoves() {
         }
     }
 
-    for (unsigned step = 0; step < schedule_->numberOfSupersteps(); ++step) {
+    for (unsigned step = 0; step < schedule_->NumberOfSupersteps(); ++step) {
         std::list<unsigned> minProcs, maxProcs;
         cost_type minWork = std::numeric_limits<cost_type>::max(), maxWork = std::numeric_limits<cost_type>::min();
         for (unsigned proc = 0; proc < p; ++proc) {
@@ -397,7 +397,7 @@ void HillClimbingScheduler<GraphT>::UpdatePromisingMoves() {
         for (unsigned to : minProcs) {
             for (unsigned from : maxProcs) {
                 for (vertex_idx node : supsteplists[step][from]) {
-                    if (schedule->getInstance().isCompatible(node, to)) {
+                    if (schedule->GetInstance().isCompatible(node, to)) {
                         promisingMoves.push_back(std::make_tuple(node, to, AT));
                     }
                 }
@@ -414,7 +414,7 @@ void HillClimbingScheduler<GraphT>::UpdateNodeMovesEarlier(const vertex_idx node
     }
 
     std::set<unsigned> predProc;
-    for (const vertex_idx &pred : schedule->getInstance().getComputationalDag().parents(node)) {
+    for (const vertex_idx &pred : schedule->GetInstance().getComputationalDag().parents(node)) {
         if (schedule->assignedSuperstep(pred) == schedule->assignedSuperstep(node)) {
             return;
         }
@@ -424,7 +424,7 @@ void HillClimbingScheduler<GraphT>::UpdateNodeMovesEarlier(const vertex_idx node
         }
     }
     if (schedule_->getStaleness() == 2) {
-        for (const vertex_idx &succ : schedule->getInstance().getComputationalDag().children(node)) {
+        for (const vertex_idx &succ : schedule->GetInstance().getComputationalDag().children(node)) {
             if (schedule->assignedSuperstep(succ) == schedule->assignedSuperstep(node)) {
                 predProc.insert(schedule->assignedProcessor(succ));
             }
@@ -438,7 +438,7 @@ void HillClimbingScheduler<GraphT>::UpdateNodeMovesEarlier(const vertex_idx node
     if (predProc.size() == 1) {
         addMoveOption(node, *predProc.begin(), EARLIER);
     } else {
-        for (unsigned proc = 0; proc < schedule_->getInstance().getArchitecture().numberOfProcessors(); ++proc) {
+        for (unsigned proc = 0; proc < schedule_->GetInstance().getArchitecture().NumberOfProcessors(); ++proc) {
             addMoveOption(node, proc, EARLIER);
         }
     }
@@ -446,20 +446,20 @@ void HillClimbingScheduler<GraphT>::UpdateNodeMovesEarlier(const vertex_idx node
 
 template <typename GraphT>
 void HillClimbingScheduler<GraphT>::UpdateNodeMovesAt(const vertex_idx node) {
-    for (const vertex_idx &pred : schedule->getInstance().getComputationalDag().parents(node)) {
+    for (const vertex_idx &pred : schedule->GetInstance().getComputationalDag().parents(node)) {
         if (static_cast<int>(schedule->assignedSuperstep(pred))
             >= static_cast<int>(schedule->assignedSuperstep(node)) - static_cast<int>(schedule->getStaleness()) + 1) {
             return;
         }
     }
 
-    for (const vertex_idx &succ : schedule->getInstance().getComputationalDag().children(node)) {
+    for (const vertex_idx &succ : schedule->GetInstance().getComputationalDag().children(node)) {
         if (schedule->assignedSuperstep(succ) <= schedule->assignedSuperstep(node) + schedule->getStaleness() - 1) {
             return;
         }
     }
 
-    for (unsigned proc = 0; proc < schedule_->getInstance().getArchitecture().numberOfProcessors(); ++proc) {
+    for (unsigned proc = 0; proc < schedule_->GetInstance().getArchitecture().NumberOfProcessors(); ++proc) {
         if (proc != schedule_->assignedProcessor(node)) {
             addMoveOption(node, proc, AT);
         }
@@ -468,12 +468,12 @@ void HillClimbingScheduler<GraphT>::UpdateNodeMovesAt(const vertex_idx node) {
 
 template <typename GraphT>
 void HillClimbingScheduler<GraphT>::UpdateNodeMovesLater(const vertex_idx node) {
-    if (schedule_->assignedSuperstep(node) == schedule_->numberOfSupersteps() - 1) {
+    if (schedule_->assignedSuperstep(node) == schedule_->NumberOfSupersteps() - 1) {
         return;
     }
 
     std::set<unsigned> succProc;
-    for (const vertex_idx &succ : schedule->getInstance().getComputationalDag().children(node)) {
+    for (const vertex_idx &succ : schedule->GetInstance().getComputationalDag().children(node)) {
         if (schedule->assignedSuperstep(succ) == schedule->assignedSuperstep(node)) {
             return;
         }
@@ -482,7 +482,7 @@ void HillClimbingScheduler<GraphT>::UpdateNodeMovesLater(const vertex_idx node) 
         }
     }
     if (schedule_->getStaleness() == 2) {
-        for (const vertex_idx &pred : schedule->getInstance().getComputationalDag().parents(node)) {
+        for (const vertex_idx &pred : schedule->GetInstance().getComputationalDag().parents(node)) {
             if (schedule->assignedSuperstep(pred) == schedule->assignedSuperstep(node)) {
                 succProc.insert(schedule->assignedProcessor(pred));
             }
@@ -496,7 +496,7 @@ void HillClimbingScheduler<GraphT>::UpdateNodeMovesLater(const vertex_idx node) 
     if (succProc.size() == 1) {
         addMoveOption(node, *succProc.begin(), LATER);
     } else {
-        for (unsigned proc = 0; proc < schedule_->getInstance().getArchitecture().numberOfProcessors(); ++proc) {
+        for (unsigned proc = 0; proc < schedule_->GetInstance().getArchitecture().NumberOfProcessors(); ++proc) {
             addMoveOption(node, proc, LATER);
         }
     }
@@ -512,7 +512,7 @@ void HillClimbingScheduler<GraphT>::UpdateNodeMoves(const vertex_idx node) {
 
 template <typename GraphT>
 void HillClimbingScheduler<GraphT>::UpdateMoveOptions(vertex_idx node, int where) {
-    const GraphT &g = schedule_->getInstance().getComputationalDag();
+    const GraphT &g = schedule_->GetInstance().getComputationalDag();
 
     updateNodeMoves(node);
     if (where == 0) {
@@ -569,7 +569,7 @@ void HillClimbingScheduler<GraphT>::UpdateMoveOptions(vertex_idx node, int where
 
 template <typename GraphT>
 void HillClimbingScheduler<GraphT>::AddMoveOption(const vertex_idx node, const unsigned p, const Direction dir) {
-    if (!canMove_[dir][node][p] && schedule_->getInstance().isCompatible(node, p)) {
+    if (!canMove_[dir][node][p] && schedule_->GetInstance().isCompatible(node, p)) {
         canMove_[dir][node][p] = true;
         moveOptions[dir].emplace_back(node, p);
         movePointer[dir][node][p] = --moveOptions[dir].end();
@@ -587,7 +587,7 @@ void HillClimbingScheduler<GraphT>::EraseMoveOption(vertex_idx node, unsigned p,
 
 template <typename GraphT>
 void HillClimbingScheduler<GraphT>::EraseMoveOptionsEarlier(vertex_idx node) {
-    for (unsigned proc = 0; proc < schedule_->getInstance().getArchitecture().numberOfProcessors(); ++proc) {
+    for (unsigned proc = 0; proc < schedule_->GetInstance().getArchitecture().NumberOfProcessors(); ++proc) {
         if (canMove_[EARLIER][node][proc]) {
             eraseMoveOption(node, proc, EARLIER);
         }
@@ -596,7 +596,7 @@ void HillClimbingScheduler<GraphT>::EraseMoveOptionsEarlier(vertex_idx node) {
 
 template <typename GraphT>
 void HillClimbingScheduler<GraphT>::EraseMoveOptionsAt(vertex_idx node) {
-    for (unsigned proc = 0; proc < schedule_->getInstance().getArchitecture().numberOfProcessors(); ++proc) {
+    for (unsigned proc = 0; proc < schedule_->GetInstance().getArchitecture().NumberOfProcessors(); ++proc) {
         if (canMove_[AT][node][proc]) {
             eraseMoveOption(node, proc, AT);
         }
@@ -605,7 +605,7 @@ void HillClimbingScheduler<GraphT>::EraseMoveOptionsAt(vertex_idx node) {
 
 template <typename GraphT>
 void HillClimbingScheduler<GraphT>::EraseMoveOptionsLater(vertex_idx node) {
-    for (unsigned proc = 0; proc < schedule_->getInstance().getArchitecture().numberOfProcessors(); ++proc) {
+    for (unsigned proc = 0; proc < schedule_->GetInstance().getArchitecture().NumberOfProcessors(); ++proc) {
         if (canMove_[LATER][node][proc]) {
             eraseMoveOption(node, proc, LATER);
         }
@@ -627,7 +627,7 @@ int HillClimbingScheduler<GraphT>::MoveCostChange(const vertex_idx node, unsigne
     unsigned oldProc = schedule_->assignedProcessor(node);
     int change = 0;
 
-    const GraphT &g = schedule_->getInstance().getComputationalDag();
+    const GraphT &g = schedule_->GetInstance().getComputationalDag();
 
     std::set<unsigned> affectedSteps;
 
@@ -639,7 +639,7 @@ int HillClimbingScheduler<GraphT>::MoveCostChange(const vertex_idx node, unsigne
         auto itNext = itBest;
         --itNext;
         maxAfterRemoval
-            = std::max(itBest->first - schedule_->getInstance().getComputationalDag().VertexWorkWeight(node), itNext->first);
+            = std::max(itBest->first - schedule_->GetInstance().getComputationalDag().VertexWorkWeight(node), itNext->first);
         if (itBest->first != maxAfterRemoval) {
             if (step == 0 || schedule_->getStaleness() == 1) {    // incorporate immediately into cost change
                 change -= static_cast<int>(itBest->first) - static_cast<int>(maxAfterRemoval);
@@ -651,12 +651,12 @@ int HillClimbingScheduler<GraphT>::MoveCostChange(const vertex_idx node, unsigne
     }
 
     const cost_type maxBeforeAddition = (where == 0) ? maxAfterRemoval : workCostList[new_step].rbegin()->first;
-    if (workCost[new_step][p] + schedule->getInstance().getComputationalDag().VertexWorkWeight(node) > maxBeforeAddition) {
+    if (workCost[new_step][p] + schedule->GetInstance().getComputationalDag().VertexWorkWeight(node) > maxBeforeAddition) {
         if (newStep == 0 || schedule_->getStaleness() == 1) {    // incorporate immediately into cost change
-            change += static_cast<int>(workCost[new_step][p] + schedule->getInstance().getComputationalDag().VertexWorkWeight(node))
+            change += static_cast<int>(workCost[new_step][p] + schedule->GetInstance().getComputationalDag().VertexWorkWeight(node))
                       - static_cast<int>(maxBeforeAddition);
         } else {
-            newWorkCost[new_step] = workCost[new_step][p] + schedule->getInstance().getComputationalDag().VertexWorkWeight(node);
+            newWorkCost[new_step] = workCost[new_step][p] + schedule->GetInstance().getComputationalDag().VertexWorkWeight(node);
             affectedSteps.insert(newStep - 1);
         }
     }
@@ -665,7 +665,7 @@ int HillClimbingScheduler<GraphT>::MoveCostChange(const vertex_idx node, unsigne
     std::list<std::tuple<unsigned, unsigned, int>> sentInc, recInc;
     //  -outputs
     if (p != oldProc) {
-        for (unsigned j = 0; j < schedule_->getInstance().getArchitecture().numberOfProcessors(); ++j) {
+        for (unsigned j = 0; j < schedule_->GetInstance().getArchitecture().NumberOfProcessors(); ++j) {
             if (succSteps_[node][j].empty()) {
                 continue;
             }
@@ -674,38 +674,38 @@ int HillClimbingScheduler<GraphT>::MoveCostChange(const vertex_idx node, unsigne
             if (j == p) {
                 sentInc.emplace_back(affectedStep,
                                      oldProc,
-                                     -static_cast<int>(schedule_->getInstance().getComputationalDag().VertexCommWeight(node)
-                                                       * schedule_->getInstance().getArchitecture().sendCosts(oldProc, j)));
+                                     -static_cast<int>(schedule_->GetInstance().getComputationalDag().VertexCommWeight(node)
+                                                       * schedule_->GetInstance().getArchitecture().sendCosts(oldProc, j)));
                 recInc.emplace_back(affectedStep,
                                     p,
-                                    -static_cast<int>(schedule_->getInstance().getComputationalDag().VertexCommWeight(node)
-                                                      * schedule_->getInstance().getArchitecture().sendCosts(oldProc, j)));
+                                    -static_cast<int>(schedule_->GetInstance().getComputationalDag().VertexCommWeight(node)
+                                                      * schedule_->GetInstance().getArchitecture().sendCosts(oldProc, j)));
             } else if (j == oldProc) {
                 recInc.emplace_back(affectedStep,
                                     oldProc,
-                                    static_cast<int>(schedule_->getInstance().getComputationalDag().VertexCommWeight(node)
-                                                     * schedule_->getInstance().getArchitecture().sendCosts(p, j)));
+                                    static_cast<int>(schedule_->GetInstance().getComputationalDag().VertexCommWeight(node)
+                                                     * schedule_->GetInstance().getArchitecture().sendCosts(p, j)));
                 sentInc.emplace_back(affectedStep,
                                      p,
-                                     static_cast<int>(schedule_->getInstance().getComputationalDag().VertexCommWeight(node)
-                                                      * schedule_->getInstance().getArchitecture().sendCosts(p, j)));
+                                     static_cast<int>(schedule_->GetInstance().getComputationalDag().VertexCommWeight(node)
+                                                      * schedule_->GetInstance().getArchitecture().sendCosts(p, j)));
             } else {
                 sentInc.emplace_back(affectedStep,
                                      oldProc,
-                                     -static_cast<int>(schedule_->getInstance().getComputationalDag().VertexCommWeight(node)
-                                                       * schedule_->getInstance().getArchitecture().sendCosts(oldProc, j)));
+                                     -static_cast<int>(schedule_->GetInstance().getComputationalDag().VertexCommWeight(node)
+                                                       * schedule_->GetInstance().getArchitecture().sendCosts(oldProc, j)));
                 recInc.emplace_back(affectedStep,
                                     j,
-                                    -static_cast<int>(schedule_->getInstance().getComputationalDag().VertexCommWeight(node)
-                                                      * schedule_->getInstance().getArchitecture().sendCosts(oldProc, j)));
+                                    -static_cast<int>(schedule_->GetInstance().getComputationalDag().VertexCommWeight(node)
+                                                      * schedule_->GetInstance().getArchitecture().sendCosts(oldProc, j)));
                 sentInc.emplace_back(affectedStep,
                                      p,
-                                     static_cast<int>(schedule_->getInstance().getComputationalDag().VertexCommWeight(node)
-                                                      * schedule_->getInstance().getArchitecture().sendCosts(p, j)));
+                                     static_cast<int>(schedule_->GetInstance().getComputationalDag().VertexCommWeight(node)
+                                                      * schedule_->GetInstance().getArchitecture().sendCosts(p, j)));
                 recInc.emplace_back(affectedStep,
                                     j,
-                                    static_cast<int>(schedule_->getInstance().getComputationalDag().VertexCommWeight(node)
-                                                     * schedule_->getInstance().getArchitecture().sendCosts(p, j)));
+                                    static_cast<int>(schedule_->GetInstance().getComputationalDag().VertexCommWeight(node)
+                                                     * schedule_->GetInstance().getArchitecture().sendCosts(p, j)));
             }
         }
     }
@@ -722,24 +722,24 @@ int HillClimbingScheduler<GraphT>::MoveCostChange(const vertex_idx node, unsigne
             if (!skip) {
                 sentInc.emplace_back(step - schedule->getStaleness(),
                                      schedule->assignedProcessor(pred),
-                                     -static_cast<int>(schedule->getInstance().getComputationalDag().VertexCommWeight(pred)
-                                                       * schedule->getInstance().getArchitecture().sendCosts(
+                                     -static_cast<int>(schedule->GetInstance().getComputationalDag().VertexCommWeight(pred)
+                                                       * schedule->GetInstance().getArchitecture().sendCosts(
                                                            schedule->assignedProcessor(pred), p)));
                 recInc.emplace_back(step - schedule->getStaleness(),
                                     p,
-                                    -static_cast<int>(schedule->getInstance().getComputationalDag().VertexCommWeight(pred)
-                                                      * schedule->getInstance().getArchitecture().sendCosts(
+                                    -static_cast<int>(schedule->GetInstance().getComputationalDag().VertexCommWeight(pred)
+                                                      * schedule->GetInstance().getArchitecture().sendCosts(
                                                           schedule->assignedProcessor(pred), p)));
                 sentInc.emplace_back(
                     new_step - schedule->getStaleness(),
                     schedule->assignedProcessor(pred),
-                    static_cast<int>(schedule->getInstance().getComputationalDag().VertexCommWeight(pred)
-                                     * schedule->getInstance().getArchitecture().sendCosts(schedule->assignedProcessor(pred), p)));
+                    static_cast<int>(schedule->GetInstance().getComputationalDag().VertexCommWeight(pred)
+                                     * schedule->GetInstance().getArchitecture().sendCosts(schedule->assignedProcessor(pred), p)));
                 recInc.emplace_back(
                     new_step - schedule->getStaleness(),
                     p,
-                    static_cast<int>(schedule->getInstance().getComputationalDag().VertexCommWeight(pred)
-                                     * schedule->getInstance().getArchitecture().sendCosts(schedule->assignedProcessor(pred), p)));
+                    static_cast<int>(schedule->GetInstance().getComputationalDag().VertexCommWeight(pred)
+                                     * schedule->GetInstance().getArchitecture().sendCosts(schedule->assignedProcessor(pred), p)));
             }
         }
     } else {
@@ -751,26 +751,26 @@ int HillClimbingScheduler<GraphT>::MoveCostChange(const vertex_idx node, unsigne
             if (!skip) {
                 sentInc.emplace_back(step - schedule->getStaleness(),
                                      schedule->assignedProcessor(pred),
-                                     -static_cast<int>(schedule->getInstance().getComputationalDag().VertexCommWeight(pred)
-                                                       * schedule->getInstance().getArchitecture().sendCosts(
+                                     -static_cast<int>(schedule->GetInstance().getComputationalDag().VertexCommWeight(pred)
+                                                       * schedule->GetInstance().getArchitecture().sendCosts(
                                                            schedule->assignedProcessor(pred), oldProc)));
                 recInc.emplace_back(step - schedule->getStaleness(),
                                     oldProc,
-                                    -static_cast<int>(schedule->getInstance().getComputationalDag().VertexCommWeight(pred)
-                                                      * schedule->getInstance().getArchitecture().sendCosts(
+                                    -static_cast<int>(schedule->GetInstance().getComputationalDag().VertexCommWeight(pred)
+                                                      * schedule->GetInstance().getArchitecture().sendCosts(
                                                           schedule->assignedProcessor(pred), oldProc)));
                 ++firstUse;
                 if (firstUse != succSteps[pred][oldProc].end()) {
                     const unsigned nextStep = firstUse->first;
                     sentInc.emplace_back(nextStep - schedule->getStaleness(),
                                          schedule->assignedProcessor(pred),
-                                         static_cast<int>(schedule->getInstance().getComputationalDag().VertexCommWeight(pred)
-                                                          * schedule->getInstance().getArchitecture().sendCosts(
+                                         static_cast<int>(schedule->GetInstance().getComputationalDag().VertexCommWeight(pred)
+                                                          * schedule->GetInstance().getArchitecture().sendCosts(
                                                               schedule->assignedProcessor(pred), oldProc)));
                     recInc.emplace_back(nextStep - schedule->getStaleness(),
                                         oldProc,
-                                        static_cast<int>(schedule->getInstance().getComputationalDag().VertexCommWeight(pred)
-                                                         * schedule->getInstance().getArchitecture().sendCosts(
+                                        static_cast<int>(schedule->GetInstance().getComputationalDag().VertexCommWeight(pred)
+                                                         * schedule->GetInstance().getArchitecture().sendCosts(
                                                              schedule->assignedProcessor(pred), oldProc)));
                 }
             }
@@ -783,23 +783,23 @@ int HillClimbingScheduler<GraphT>::MoveCostChange(const vertex_idx node, unsigne
                 sentInc.emplace_back(
                     new_step - schedule->getStaleness(),
                     schedule->assignedProcessor(pred),
-                    static_cast<int>(schedule->getInstance().getComputationalDag().VertexCommWeight(pred)
-                                     * schedule->getInstance().getArchitecture().sendCosts(schedule->assignedProcessor(pred), p)));
+                    static_cast<int>(schedule->GetInstance().getComputationalDag().VertexCommWeight(pred)
+                                     * schedule->GetInstance().getArchitecture().sendCosts(schedule->assignedProcessor(pred), p)));
                 recInc.emplace_back(
                     new_step - schedule->getStaleness(),
                     p,
-                    static_cast<int>(schedule->getInstance().getComputationalDag().VertexCommWeight(pred)
-                                     * schedule->getInstance().getArchitecture().sendCosts(schedule->assignedProcessor(pred), p)));
+                    static_cast<int>(schedule->GetInstance().getComputationalDag().VertexCommWeight(pred)
+                                     * schedule->GetInstance().getArchitecture().sendCosts(schedule->assignedProcessor(pred), p)));
                 if (firstUse != succSteps[pred][p].end()) {
                     sentInc.emplace_back(firstUse->first - schedule->getStaleness(),
                                          schedule->assignedProcessor(pred),
-                                         -static_cast<int>(schedule->getInstance().getComputationalDag().VertexCommWeight(pred)
-                                                           * schedule->getInstance().getArchitecture().sendCosts(
+                                         -static_cast<int>(schedule->GetInstance().getComputationalDag().VertexCommWeight(pred)
+                                                           * schedule->GetInstance().getArchitecture().sendCosts(
                                                                schedule->assignedProcessor(pred), p)));
                     recInc.emplace_back(firstUse->first - schedule->getStaleness(),
                                         p,
-                                        -static_cast<int>(schedule->getInstance().getComputationalDag().VertexCommWeight(pred)
-                                                          * schedule->getInstance().getArchitecture().sendCosts(
+                                        -static_cast<int>(schedule->GetInstance().getComputationalDag().VertexCommWeight(pred)
+                                                          * schedule->GetInstance().getArchitecture().sendCosts(
                                                               schedule->assignedProcessor(pred), p)));
                 }
             }
@@ -837,11 +837,11 @@ int HillClimbingScheduler<GraphT>::MoveCostChange(const vertex_idx node, unsigne
     auto itrSent = changing.sentChange_.begin(), itrRec = changing.recChange_.begin();
     bool lastAffectedEmpty = false;
     for (const unsigned sstep : affectedSteps) {
-        cost_type oldMax = schedule->getInstance().getArchitecture().communicationCosts() * commCostList[sstep].rbegin()->first;
-        cost_type oldSync = (hCwithLatency_ && oldMax > 0) ? schedule_->getInstance().getArchitecture().synchronisationCosts() : 0;
+        cost_type oldMax = schedule->GetInstance().getArchitecture().communicationCosts() * commCostList[sstep].rbegin()->first;
+        cost_type oldSync = (hCwithLatency_ && oldMax > 0) ? schedule_->GetInstance().getArchitecture().synchronisationCosts() : 0;
 
         cost_type newMax = 0;
-        for (unsigned j = 0; j < schedule_->getInstance().getArchitecture().numberOfProcessors(); ++j) {
+        for (unsigned j = 0; j < schedule_->GetInstance().getArchitecture().NumberOfProcessors(); ++j) {
             int diff = (itrSent != changing.sentChange_.end() && itrSent->first.first == sstep && itrSent->first.second == j)
                            ? (itrSent++)->second
                            : 0;
@@ -855,8 +855,8 @@ int HillClimbingScheduler<GraphT>::MoveCostChange(const vertex_idx node, unsigne
                 newMax = static_cast<cost_type>(static_cast<int>(received[sstep][j]) + diff);
             }
         }
-        newMax *= schedule_->getInstance().getArchitecture().communicationCosts();
-        cost_type newSync = (hCwithLatency_ && newMax > 0) ? schedule_->getInstance().getArchitecture().synchronisationCosts() : 0;
+        newMax *= schedule_->GetInstance().getArchitecture().communicationCosts();
+        cost_type newSync = (hCwithLatency_ && newMax > 0) ? schedule_->GetInstance().getArchitecture().synchronisationCosts() : 0;
 
         if (newMax == 0) {
             if (schedule_->getStaleness() == 1) {
@@ -900,11 +900,11 @@ void HillClimbingScheduler<GraphT>::ExecuteMove(const vertex_idx node,
 
     // Work cost change
     workCostList[oldStep].erase(workCostPointer[oldStep][oldProc]);
-    workCost[oldStep][oldProc] -= schedule->getInstance().getComputationalDag().VertexWorkWeight(node);
+    workCost[oldStep][oldProc] -= schedule->GetInstance().getComputationalDag().VertexWorkWeight(node);
     workCostPointer[oldStep][oldProc] = workCostList[oldStep].insert(std::make_pair(workCost[oldStep][oldProc], oldProc)).first;
 
     workCostList[newStep].erase(workCostPointer[newStep][newProc]);
-    workCost[newStep][newProc] += schedule->getInstance().getComputationalDag().VertexWorkWeight(node);
+    workCost[newStep][newProc] += schedule->GetInstance().getComputationalDag().VertexWorkWeight(node);
     workCostPointer[newStep][newProc] = workCostList[newStep].insert(std::make_pair(workCost[newStep][newProc], newProc)).first;
 
     // Comm cost change
@@ -940,7 +940,7 @@ void HillClimbingScheduler<GraphT>::ExecuteMove(const vertex_idx node,
     }
 
     // update successor lists
-    for (const vertex_idx &pred : schedule->getInstance().getComputationalDag().parents(node)) {
+    for (const vertex_idx &pred : schedule->GetInstance().getComputationalDag().parents(node)) {
         auto itr = succSteps[pred][oldProc].find(oldStep);
         if ((--(itr->second)) == 0) {
             succSteps[pred][oldProc].erase(itr);
@@ -957,8 +957,8 @@ void HillClimbingScheduler<GraphT>::ExecuteMove(const vertex_idx node,
     // memory constraints, if any
     if (useMemoryConstraint_) {
         memory_used[schedule->assignedProcessor(node)][schedule->assignedSuperstep(node)]
-            -= schedule->getInstance().getComputationalDag().VertexMemWeight(node);
-        memory_used[newProc][newStep] += schedule->getInstance().getComputationalDag().VertexMemWeight(node);
+            -= schedule->GetInstance().getComputationalDag().VertexMemWeight(node);
+        memory_used[newProc][newStep] += schedule->GetInstance().getComputationalDag().VertexMemWeight(node);
     }
 
     // update data
@@ -1071,8 +1071,8 @@ bool HillClimbingScheduler<GraphT>::Improve() {
 template <typename GraphT>
 bool HillClimbingScheduler<GraphT>::ViolatesMemConstraint(vertex_idx node, unsigned processor, int where) {
     if (memory_used[processor][static_cast<unsigned>(static_cast<int>(schedule->assignedSuperstep(node)) + where)]
-            + schedule->getInstance().getComputationalDag().VertexMemWeight(node)
-        > schedule->getInstance().memoryBound(processor)) {    // TODO ANDRAS double check change
+            + schedule->GetInstance().getComputationalDag().VertexMemWeight(node)
+        > schedule->GetInstance().memoryBound(processor)) {    // TODO ANDRAS double check change
         return true;
     }
 
@@ -1081,11 +1081,11 @@ bool HillClimbingScheduler<GraphT>::ViolatesMemConstraint(vertex_idx node, unsig
 
 template <typename GraphT>
 void HillClimbingScheduler<GraphT>::CreateSupstepLists() {
-    const unsigned p = schedule_->getInstance().getArchitecture().numberOfProcessors();
-    const GraphT &g = schedule_->getInstance().getComputationalDag();
+    const unsigned p = schedule_->GetInstance().getArchitecture().NumberOfProcessors();
+    const GraphT &g = schedule_->GetInstance().getComputationalDag();
 
     schedule_->updateNumberOfSupersteps();
-    const unsigned m = schedule_->numberOfSupersteps();
+    const unsigned m = schedule_->NumberOfSupersteps();
 
     supsteplists.clear();
     supsteplists.resize(M, std::vector<std::list<vertex_idx>>(P));

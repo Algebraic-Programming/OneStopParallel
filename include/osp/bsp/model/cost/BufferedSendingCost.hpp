@@ -35,7 +35,7 @@ struct BufferedSendingCost {
     using CostType = VCommwT<GraphT>;
 
     CostType operator()(const BspSchedule<GraphT> &schedule) const {
-        const auto &instance = schedule.getInstance();
+        const auto &instance = schedule.GetInstance();
         unsigned numberOfSupersteps = schedule.NumberOfSupersteps();
         const auto &nodeToProcessorAssignment = schedule.AssignedProcessors();
         const auto &nodeToSuperstepAssignment = schedule.AssignedSupersteps();

@@ -457,7 +457,7 @@ class IsomorphicSubgraphScheduler {
 
                 const auto &subArch = representativeInstance.getArchitecture();
                 std::cout << "  Sub-architecture for scheduling:" << std::endl;
-                std::cout << "    Processors: " << subArch.numberOfProcessors() << std::endl;
+                std::cout << "    Processors: " << subArch.NumberOfProcessors() << std::endl;
                 std::cout << "    Processor types counts: ";
                 const auto &typeCounts = subArch.getProcessorTypeCount();
                 for (size_t typeIdx = 0; typeIdx < typeCounts.size(); ++typeIdx) {
@@ -478,7 +478,7 @@ class IsomorphicSubgraphScheduler {
             }
 
             if (plotDotGraphs_) {
-                const auto &repDag = bspSchedule.getInstance().getComputationalDag();
+                const auto &repDag = bspSchedule.GetInstance().getComputationalDag();
                 std::vector<unsigned> colors(repDag.NumVertices());
                 std::map<std::pair<unsigned, unsigned>, unsigned> procSsToColor;
                 unsigned nextColor = 0;
