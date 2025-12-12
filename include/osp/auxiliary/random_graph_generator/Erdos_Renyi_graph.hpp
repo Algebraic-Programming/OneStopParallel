@@ -46,22 +46,22 @@ void ErdosRenyiGraphGen(GraphT &dagOut, VertexIdxT<GraphT> numVertices, double c
     for (const auto &v : dagOut.vertices()) {
         const auto one = static_cast<VertexIdxT<GraphT>>(1);
         std::binomial_distribution<VertexIdxT<GraphT>> binoDist(numVertices - one - v, chance / double(numVertices));
-        auto outEdgesNum = bino_dist(gen);
+        auto outEdgesNum = binoDist(gen);
 
         std::unordered_set<VertexIdxT<GraphT>> outEdges;
-        while (outEdges.size() < static_cast<size_t>(out_edges_num)) {
+        while (outEdges.size() < static_cast<size_t>(outEdgesNum)) {
             std::uniform_int_distribution<VertexIdxT<GraphT>> dist(0, numVertices - one - v);
             VertexIdxT<GraphT> edge = v + one + dist(gen);
 
-            if (outEdges.find(edge) != out_edges.cend()) {
+            if (outEdges.find(edge) != outEdges.cend()) {
                 continue;
             }
 
             outEdges.emplace(edge);
         }
 
-        for (auto &j : out_edges) {
-            dag_out.add_edge(v, j);
+        for (auto &j : outEdges) {
+            dagOut.AddEdge(v, j);
         }
     }
 }

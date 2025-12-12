@@ -44,7 +44,7 @@ void NearDiagRandomGraph(GraphT &dagOut, VertexIdxT<GraphT> numVertices, double 
     std::mt19937 gen(rd());
 
     for (VertexIdxT<GraphT> v = 1; v < numVertices; ++v) {
-        std::binomial_distribution<VertexIdxT<GraphT>> binoDist(VertexIdxT<GraphT>(NumVertices - v),
+        std::binomial_distribution<VertexIdxT<GraphT>> binoDist(VertexIdxT<GraphT>(numVertices - v),
                                                                 prob * std::exp(1.0 - static_cast<double>(v) / bandwidth));
         VertexIdxT<GraphT> offDiagEdgesNum = bino_dist(gen);
 
@@ -52,10 +52,10 @@ void NearDiagRandomGraph(GraphT &dagOut, VertexIdxT<GraphT> numVertices, double 
         std::iota(range.begin(), range.end(), 0);
         std::vector<VertexIdxT<GraphT>> sampled;
 
-        std::sample(range.begin(), range.end(), std::back_inserter(sampled), off_diag_edges_num, gen);
+        std::sample(range.begin(), range.end(), std::back_inserter(sampled), offDiagEdgesNum, gen);
 
         for (const auto &j : sampled) {
-            dag_out.add_edge(j, j + 1);
+            dagOut.AddEdge(j, j + 1);
         }
     }
 }
