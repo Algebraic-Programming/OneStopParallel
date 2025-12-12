@@ -80,9 +80,9 @@ class Scheduler {
      *         ReturnStatus::ERROR if an error occurred, or other status codes as appropriate.
      */
     virtual ReturnStatus ComputeScheduleCs(BspScheduleCS<GraphT> &schedule) {
-        auto result = computeSchedule(schedule);
+        auto result = ComputeSchedule(schedule);
         if (result == ReturnStatus::OSP_SUCCESS || result == ReturnStatus::BEST_FOUND) {
-            schedule.setAutoCommunicationSchedule();
+            schedule.SetAutoCommunicationSchedule();
             return result;
         } else {
             return ReturnStatus::ERROR;
