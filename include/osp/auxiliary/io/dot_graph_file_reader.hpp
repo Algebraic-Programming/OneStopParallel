@@ -191,7 +191,7 @@ template <typename GraphT>
 bool ReadComputationalDagDotFormat(std::ifstream &infile, GraphT &graph) {
     std::string line;
     while (std::getline(infile, line)) {
-        if (line.length() > maxLineLength) {
+        if (line.length() > MAX_LINE_LENGTH) {
             std::cerr << "Warning: Skipping overly long line.\n";
             continue;
         }

@@ -41,7 +41,7 @@ bool ReadComputationalDagHyperdagFormat(std::ifstream &infile, GraphT &graph) {
     // Skip comment lines starting with '%'
     while (std::getline(infile, line) && line[0] == '%') {}
 
-    if (line.length() > maxLineLength) {
+    if (line.length() > MAX_LINE_LENGTH) {
         std::cerr << "Error: Input line too long.\n";
         return false;
     }
@@ -63,7 +63,7 @@ bool ReadComputationalDagHyperdagFormat(std::ifstream &infile, GraphT &graph) {
     // Read pins
     for (int i = 0; i < pins; ++i) {
         while (std::getline(infile, line) && line[0] == '%') {}
-        if (line.empty() || line.length() > maxLineLength) {
+        if (line.empty() || line.length() > MAX_LINE_LENGTH) {
             std::cerr << "Incorrect input file format (invalid or long line).\n";
             return false;
         }
@@ -91,7 +91,7 @@ bool ReadComputationalDagHyperdagFormat(std::ifstream &infile, GraphT &graph) {
     // Read node weights
     for (int i = 0; i < n; ++i) {
         while (std::getline(infile, line) && line[0] == '%') {}
-        if (line.empty() || line.length() > maxLineLength) {
+        if (line.empty() || line.length() > MAX_LINE_LENGTH) {
             std::cerr << "Incorrect input file format (invalid or long line).\n";
             return false;
         }
@@ -151,7 +151,7 @@ bool ReadComputationalDagHyperdagFormatDb(std::ifstream &infile, GraphT &graph) 
     // Skip comment lines
     while (std::getline(infile, line) && line[0] == '%') {}
 
-    if (line.empty() || line.length() > maxLineLength) {
+    if (line.empty() || line.length() > MAX_LINE_LENGTH) {
         std::cerr << "Error: Invalid or excessively long header line.\n";
         return false;
     }
@@ -169,7 +169,7 @@ bool ReadComputationalDagHyperdagFormatDb(std::ifstream &infile, GraphT &graph) 
     // Read hyperedges
     for (int i = 0; i < hEdges; ++i) {
         while (std::getline(infile, line) && line[0] == '%') {}
-        if (line.empty() || line.length() > maxLineLength) {
+        if (line.empty() || line.length() > MAX_LINE_LENGTH) {
             std::cerr << "Warning: Skipping invalid or overly long line for hyperedge " << i << ".\n";
             continue;
         }
@@ -195,7 +195,7 @@ bool ReadComputationalDagHyperdagFormatDb(std::ifstream &infile, GraphT &graph) 
     // Read vertices
     for (int i = 0; i < n; ++i) {
         while (std::getline(infile, line) && line[0] == '%') {}
-        if (line.empty() || line.length() > maxLineLength) {
+        if (line.empty() || line.length() > MAX_LINE_LENGTH) {
             std::cerr << "Warning: Skipping invalid or overly long line for vertex " << i << ".\n";
             continue;
         }
@@ -226,7 +226,7 @@ bool ReadComputationalDagHyperdagFormatDb(std::ifstream &infile, GraphT &graph) 
     // Read pins
     for (int i = 0; i < pins; ++i) {
         while (std::getline(infile, line) && line[0] == '%') {}
-        if (line.empty() || line.length() > maxLineLength) {
+        if (line.empty() || line.length() > MAX_LINE_LENGTH) {
             std::cerr << "Warning: Skipping invalid or overly long line for pin " << i << ".\n";
             continue;
         }

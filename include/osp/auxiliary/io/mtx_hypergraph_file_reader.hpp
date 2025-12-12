@@ -71,7 +71,7 @@ bool ReadHypergraphMartixMarketFormat(std::ifstream &infile, Hypergraph<IndexTyp
 
     const IndexType numNodes = static_cast<IndexType>(nEntries);
 
-    hgraph.reset(numNodes, 0);
+    hgraph.Reset(numNodes, 0);
     for (IndexType node = 0; node < numNodes; ++node) {
         hgraph.SetVertexWorkWeight(node, static_cast<WorkwType>(1));
         hgraph.SetVertexMemoryWeight(node, static_cast<MemwType>(1));

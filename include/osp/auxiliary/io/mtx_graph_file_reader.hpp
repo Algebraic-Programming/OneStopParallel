@@ -50,7 +50,7 @@ bool ReadComputationalDagMartixMarketFormat(std::ifstream &infile, GraphT &graph
             return false;
         }
 
-        if (line.size() > maxLineLength) {
+        if (line.size() > MAX_LINE_LENGTH) {
             std::cerr << "Error: Line too long, possible malformed or malicious file.\n";
             return false;
         }
@@ -88,7 +88,7 @@ bool ReadComputationalDagMartixMarketFormat(std::ifstream &infile, GraphT &graph
         if (line.empty() || line[0] == '%') {
             continue;
         }
-        if (line.size() > maxLineLength) {
+        if (line.size() > MAX_LINE_LENGTH) {
             std::cerr << "Error: Line too long.\n";
             return false;
         }
@@ -178,7 +178,7 @@ bool ReadComputationalDagMartixMarketFormat(const std::string &filename, GraphT 
         return false;
     }
 
-    return readComputationalDagMartixMarketFormat(infile, graph);
+    return ReadComputationalDagMartixMarketFormat(infile, graph);
 }
 
 // bool readProblem(const std::string &filename, DAG &G, BSPproblem &params, bool NoNUMA = true);
