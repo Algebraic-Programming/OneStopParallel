@@ -42,43 +42,43 @@ template <typename T, typename = void>
 struct HasVertexIdxTmember : std::false_type {};
 
 template <typename T>
-struct HasVertexIdxTmember<T, std::void_t<typename T::vertex_idx>> : std::true_type {};
+struct HasVertexIdxTmember<T, std::void_t<typename T::VertexIdx>> : std::true_type {};
 
 template <typename T, typename = void>
 struct HasEdgeDescTmember : std::false_type {};
 
 template <typename T>
-struct HasEdgeDescTmember<T, std::void_t<typename T::directed_edge_descriptor>> : std::true_type {};
+struct HasEdgeDescTmember<T, std::void_t<typename T::DirectedEdgeDescriptor>> : std::true_type {};
 
 template <typename T, typename = void>
 struct HasVertexWorkWeightTmember : std::false_type {};
 
 template <typename T>
-struct HasVertexWorkWeightTmember<T, std::void_t<typename T::vertex_work_weight_type>> : std::true_type {};
+struct HasVertexWorkWeightTmember<T, std::void_t<typename T::VertexWorkWeight>> : std::true_type {};
 
 template <typename T, typename = void>
 struct HasVertexCommWeightTmember : std::false_type {};
 
 template <typename T>
-struct HasVertexCommWeightTmember<T, std::void_t<typename T::vertex_comm_weight_type>> : std::true_type {};
+struct HasVertexCommWeightTmember<T, std::void_t<typename T::VertexCommWeight>> : std::true_type {};
 
 template <typename T, typename = void>
 struct HasVertexMemWeightTmember : std::false_type {};
 
 template <typename T>
-struct HasVertexMemWeightTmember<T, std::void_t<typename T::vertex_mem_weight_type>> : std::true_type {};
+struct HasVertexMemWeightTmember<T, std::void_t<typename T::VertexMemWeight>> : std::true_type {};
 
 template <typename T, typename = void>
 struct HasVertexTypeTmember : std::false_type {};
 
 template <typename T>
-struct HasVertexTypeTmember<T, std::void_t<typename T::vertex_type_type>> : std::true_type {};
+struct HasVertexTypeTmember<T, std::void_t<typename T::VertexType>> : std::true_type {};
 
 template <typename T, typename = void>
 struct HasEdgeCommWeightTmember : std::false_type {};
 
 template <typename T>
-struct HasEdgeCommWeightTmember<T, std::void_t<typename T::edge_comm_weight_type>> : std::true_type {};
+struct HasEdgeCommWeightTmember<T, std::void_t<typename T::EdgeCommWeight>> : std::true_type {};
 
 /**
  * @brief Core traits for any directed graph type.
@@ -97,7 +97,7 @@ struct DirectedGraphTraits {
  * @brief Alias to easily access the vertex index type of a graph.
  */
 template <typename T>
-using VertexIdxT = typename DirectedGraphTraits<T>::vertex_idx;
+using VertexIdxT = typename DirectedGraphTraits<T>::VertexIdx;
 
 /**
  * @brief A default edge descriptor for directed graphs.
@@ -149,7 +149,7 @@ struct DirectedGraphEdgeDescTraits {
 };
 
 template <typename T>
-using EdgeDescT = typename DirectedGraphEdgeDescTraits<T>::directed_edge_descriptor;
+using EdgeDescT = typename DirectedGraphEdgeDescTraits<T>::DirectedEdgeDescriptor;
 
 /**
  * @brief Traits for computational Directed Acyclic Graphs (DAGs).
@@ -173,13 +173,13 @@ struct ComputationalDagTraits {
 };
 
 template <typename T>
-using VWorkwT = typename ComputationalDagTraits<T>::vertex_work_weight_type;
+using VWorkwT = typename ComputationalDagTraits<T>::VertexWorkWeightType;
 
 template <typename T>
-using VCommwT = typename ComputationalDagTraits<T>::vertex_comm_weight_type;
+using VCommwT = typename ComputationalDagTraits<T>::VertexCommWeightType;
 
 template <typename T>
-using VMemwT = typename ComputationalDagTraits<T>::vertex_mem_weight_type;
+using VMemwT = typename ComputationalDagTraits<T>::VertexMemWeightType;
 
 /**
  * @brief Traits to extract the vertex type of a computational DAG, if defined.
@@ -192,12 +192,12 @@ struct ComputationalDagTypedVerticesTraits {
 };
 
 template <typename T>
-struct ComputationalDagTypedVerticesTraits<T, std::void_t<typename T::vertex_type_type>> {
+struct ComputationalDagTypedVerticesTraits<T, std::void_t<typename T::VertexTypeType>> {
     using VertexTypeType = typename T::VertexTypeType;
 };
 
 template <typename T>
-using VTypeT = typename ComputationalDagTypedVerticesTraits<T>::vertex_type_type;
+using VTypeT = typename ComputationalDagTypedVerticesTraits<T>::VertexTypeType;
 
 /**
  * @brief Traits to extract the edge communication weight type of a computational DAG, if defined.
@@ -210,12 +210,12 @@ struct ComputationalDagEdgeDescTraits {
 };
 
 template <typename T>
-struct ComputationalDagEdgeDescTraits<T, std::void_t<typename T::edge_comm_weight_type>> {
+struct ComputationalDagEdgeDescTraits<T, std::void_t<typename T::EdgeCommWeightType>> {
     using EdgeCommWeightType = typename T::EdgeCommWeightType;
 };
 
 template <typename T>
-using ECommwT = typename ComputationalDagEdgeDescTraits<T>::edge_comm_weight_type;
+using ECommwT = typename ComputationalDagEdgeDescTraits<T>::EdgeCommWeightType;
 
 // -----------------------------------------------------------------------------
 // Property Traits
@@ -230,8 +230,8 @@ template <typename T, typename = void>
 struct HasVerticesInTopOrderTrait : std::false_type {};
 
 template <typename T>
-struct HasVerticesInTopOrderTrait<T, std::void_t<decltype(T::vertices_in_top_order)>>
-    : std::bool_constant<std::is_same_v<decltype(T::vertices_in_top_order), const bool> && T::vertices_in_top_order> {};
+struct HasVerticesInTopOrderTrait<T, std::void_t<decltype(T::VerticesInTopOrder)>>
+    : std::bool_constant<std::is_same_v<decltype(T::VerticesInTopOrder), const bool> && T::VerticesInTopOrder> {};
 
 template <typename T>
 inline constexpr bool hasVerticesInTopOrderV = HasVerticesInTopOrderTrait<T>::value;
@@ -243,8 +243,8 @@ template <typename T, typename = void>
 struct HasChildrenInVertexOrderTrait : std::false_type {};
 
 template <typename T>
-struct HasChildrenInVertexOrderTrait<T, std::void_t<decltype(T::children_in_vertex_order)>>
-    : std::bool_constant<std::is_same_v<decltype(T::children_in_vertex_order), const bool> && T::children_in_vertex_order> {};
+struct HasChildrenInVertexOrderTrait<T, std::void_t<decltype(T::ChildrenInVertexOrder)>>
+    : std::bool_constant<std::is_same_v<decltype(T::ChildrenInVertexOrder), const bool> && T::ChildrenInVertexOrder> {};
 
 template <typename T>
 inline constexpr bool hasChildrenInVertexOrderV = HasChildrenInVertexOrderTrait<T>::value;
@@ -256,8 +256,8 @@ template <typename T, typename = void>
 struct HasParentsInVertexOrderTrait : std::false_type {};
 
 template <typename T>
-struct HasParentsInVertexOrderTrait<T, std::void_t<decltype(T::parents_in_vertex_order)>>
-    : std::bool_constant<std::is_same_v<decltype(T::parents_in_vertex_order), const bool> && T::parents_in_vertex_order> {};
+struct HasParentsInVertexOrderTrait<T, std::void_t<decltype(T::ParentsInVertexOrder)>>
+    : std::bool_constant<std::is_same_v<decltype(T::ParentsInVertexOrder), const bool> && T::ParentsInVertexOrder> {};
 
 template <typename T>
 inline constexpr bool hasParentsInVertexOrderV = HasParentsInVertexOrderTrait<T>::value;

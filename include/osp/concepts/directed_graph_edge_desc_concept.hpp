@@ -71,7 +71,7 @@ inline VertexIdxT<GraphT> Target(const DirectedEdge<GraphT> &edge, const GraphT 
  */
 template <typename GraphT>
 inline EdgeView<GraphT> Edges(const GraphT &graph) {
-    return edge_view(graph);
+    return EdgeView<GraphT>(graph);
 }
 
 /**
@@ -117,12 +117,12 @@ struct IsDirectedGraphEdgeDesc : std::false_type {};
 
 template <typename T>
 struct IsDirectedGraphEdgeDesc<T,
-                               std::void_t<typename DirectedGraphEdgeDescTraits<T>::directed_edge_descriptor,
-                                           decltype(edges(std::declval<T>())),
-                                           decltype(out_edges(std::declval<VertexIdxT<T>>(), std::declval<T>())),
-                                           decltype(in_edges(std::declval<VertexIdxT<T>>(), std::declval<T>())),
-                                           decltype(source(std::declval<EdgeDescT<T>>(), std::declval<T>())),
-                                           decltype(target(std::declval<EdgeDescT<T>>(), std::declval<T>()))>>
+                               std::void_t<typename DirectedGraphEdgeDescTraits<T>::DirectedEdgeDescriptor,
+                                           decltype(Edges(std::declval<T>())),
+                                           decltype(OutEdges(std::declval<VertexIdxT<T>>(), std::declval<T>())),
+                                           decltype(InEdges(std::declval<VertexIdxT<T>>(), std::declval<T>())),
+                                           decltype(Source(std::declval<EdgeDescT<T>>(), std::declval<T>())),
+                                           decltype(Target(std::declval<EdgeDescT<T>>(), std::declval<T>()))>>
     : std::conjunction<IsDirectedGraph<T>,
                        std::is_default_constructible<EdgeDescT<T>>,
                        std::is_copy_constructible<EdgeDescT<T>>,

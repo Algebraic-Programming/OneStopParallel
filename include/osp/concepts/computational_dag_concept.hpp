@@ -57,9 +57,9 @@ struct HasVertexWeights : std::false_type {};
 
 template <typename T>
 struct HasVertexWeights<T,
-                        std::void_t<decltype(std::declval<T>().vertex_work_weight(std::declval<VertexIdxT<T>>())),
-                                    decltype(std::declval<T>().vertex_comm_weight(std::declval<VertexIdxT<T>>())),
-                                    decltype(std::declval<T>().vertex_mem_weight(std::declval<VertexIdxT<T>>()))>>
+                        std::void_t<decltype(std::declval<T>().VertexWorkWeight(std::declval<VertexIdxT<T>>())),
+                                    decltype(std::declval<T>().VertexCommWeight(std::declval<VertexIdxT<T>>())),
+                                    decltype(std::declval<T>().VertexMemWeight(std::declval<VertexIdxT<T>>()))>>
     : std::conjunction<std::is_arithmetic<decltype(std::declval<T>().VertexWorkWeight(std::declval<VertexIdxT<T>>()))>,
                        std::is_arithmetic<decltype(std::declval<T>().VertexCommWeight(std::declval<VertexIdxT<T>>()))>,
                        std::is_arithmetic<decltype(std::declval<T>().VertexMemWeight(std::declval<VertexIdxT<T>>()))>> {};
@@ -83,9 +83,9 @@ template <typename T, typename = void>
 struct HasTypedVertices : std::false_type {};
 
 template <typename T>
-struct HasTypedVertices<T,
-                        std::void_t<decltype(std::declval<T>().vertex_type(std::declval<VertexIdxT<T>>())),
-                                    decltype(std::declval<T>().num_vertex_types())>>
+struct HasTypedVertices<
+    T,
+    std::void_t<decltype(std::declval<T>().VertexType(std::declval<VertexIdxT<T>>())), decltype(std::declval<T>().NumVertexTypes())>>
     : std::conjunction<std::is_integral<decltype(std::declval<T>().VertexType(std::declval<VertexIdxT<T>>()))>,
                        std::is_integral<decltype(std::declval<T>().NumVertexTypes())>> {};
 
@@ -106,8 +106,8 @@ struct HasEdgeWeights : std::false_type {};
 
 template <typename T>
 struct HasEdgeWeights<T,
-                      std::void_t<typename DirectedGraphEdgeDescTraits<T>::directed_edge_descriptor,
-                                  decltype(std::declval<T>().edge_comm_weight(std::declval<EdgeDescT<T>>()))>>
+                      std::void_t<typename DirectedGraphEdgeDescTraits<T>::DirectedEdgeDescriptor,
+                                  decltype(std::declval<T>().EdgeCommWeight(std::declval<EdgeDescT<T>>()))>>
     : std::conjunction<std::is_arithmetic<decltype(std::declval<T>().EdgeCommWeight(std::declval<EdgeDescT<T>>()))>,
                        IsDirectedGraphEdgeDesc<T>> {};
 

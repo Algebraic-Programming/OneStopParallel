@@ -54,9 +54,9 @@ struct IsModifiableCdagVertex : std::false_type {};
 template <typename T>
 struct IsModifiableCdagVertex<
     T,
-    std::void_t<decltype(std::declval<T>().set_vertex_work_weight(std::declval<VertexIdxT<T>>(), std::declval<VWorkwT<T>>())),
-                decltype(std::declval<T>().set_vertex_comm_weight(std::declval<VertexIdxT<T>>(), std::declval<VCommwT<T>>())),
-                decltype(std::declval<T>().set_vertex_mem_weight(std::declval<VertexIdxT<T>>(), std::declval<VMemwT<T>>()))>>
+    std::void_t<decltype(std::declval<T>().SetVertexWorkWeight(std::declval<VertexIdxT<T>>(), std::declval<VWorkwT<T>>())),
+                decltype(std::declval<T>().SetVertexCommWeight(std::declval<VertexIdxT<T>>(), std::declval<VCommwT<T>>())),
+                decltype(std::declval<T>().SetVertexMemWeight(std::declval<VertexIdxT<T>>(), std::declval<VMemwT<T>>()))>>
     : std::conjunction<IsComputationalDag<T>,
                        std::is_default_constructible<T>,
                        std::is_copy_constructible<T>,
@@ -81,7 +81,7 @@ struct IsConstructableCdagVertex : std::false_type {};
 
 template <typename T>
 struct IsConstructableCdagVertex<T,
-                                 std::void_t<decltype(std::declval<T>().add_vertex(
+                                 std::void_t<decltype(std::declval<T>().AddVertex(
                                      std::declval<VWorkwT<T>>(), std::declval<VCommwT<T>>(), std::declval<VMemwT<T>>()))>>
     : std::conjunction<IsModifiableCdagVertex<T>, std::is_constructible<T, VertexIdxT<T>>> {};
 
@@ -102,7 +102,7 @@ struct IsModifiableCdagTypedVertex : std::false_type {};
 template <typename T>
 struct IsModifiableCdagTypedVertex<
     T,
-    std::void_t<decltype(std::declval<T>().set_vertex_type(std::declval<VertexIdxT<T>>(), std::declval<VTypeT<T>>()))>>
+    std::void_t<decltype(std::declval<T>().SetVertexType(std::declval<VertexIdxT<T>>(), std::declval<VTypeT<T>>()))>>
     : std::conjunction<IsModifiableCdagVertex<T>, IsComputationalDagTypedVertices<T>> {};    // for default node type
 
 template <typename T>
@@ -122,7 +122,7 @@ struct IsConstructableCdagTypedVertex : std::false_type {};
 template <typename T>
 struct IsConstructableCdagTypedVertex<
     T,
-    std::void_t<decltype(std::declval<T>().add_vertex(
+    std::void_t<decltype(std::declval<T>().AddVertex(
         std::declval<VWorkwT<T>>(), std::declval<VCommwT<T>>(), std::declval<VMemwT<T>>(), std::declval<VTypeT<T>>()))>>
     : std::conjunction<IsConstructableCdagVertex<T>, IsModifiableCdagTypedVertex<T>> {};    // for default node type
 
@@ -143,7 +143,7 @@ struct IsConstructableCdagEdge : std::false_type {};
 template <typename T>
 struct IsConstructableCdagEdge<
     T,
-    std::void_t<decltype(std::declval<T>().add_edge(std::declval<VertexIdxT<T>>(), std::declval<VertexIdxT<T>>()))>>
+    std::void_t<decltype(std::declval<T>().AddEdge(std::declval<VertexIdxT<T>>(), std::declval<VertexIdxT<T>>()))>>
     : IsDirectedGraph<T> {};
 
 template <typename T>
@@ -163,7 +163,7 @@ struct IsModifiableCdagCommEdge : std::false_type {};
 template <typename T>
 struct IsModifiableCdagCommEdge<
     T,
-    std::void_t<decltype(std::declval<T>().set_edge_comm_weight(std::declval<EdgeDescT<T>>(), std::declval<ECommwT<T>>()))>>
+    std::void_t<decltype(std::declval<T>().SetEdgeCommWeight(std::declval<EdgeDescT<T>>(), std::declval<ECommwT<T>>()))>>
     : std::conjunction<IsComputationalDagEdgeDesc<T>> {};    // for default edge weight
 
 template <typename T>
@@ -182,7 +182,7 @@ struct IsConstructableCdagCommEdge : std::false_type {};
 
 template <typename T>
 struct IsConstructableCdagCommEdge<T,
-                                   std::void_t<decltype(std::declval<T>().add_edge(
+                                   std::void_t<decltype(std::declval<T>().AddEdge(
                                        std::declval<VertexIdxT<T>>(), std::declval<VertexIdxT<T>>(), std::declval<ECommwT<T>>()))>>
     : std::conjunction<IsConstructableCdagEdge<T>, IsComputationalDagEdgeDesc<T>, IsModifiableCdagCommEdge<T>> {
 };    // for default edge weight

@@ -56,13 +56,13 @@ struct IsDirectedGraph : std::false_type {};
 
 template <typename T>
 struct IsDirectedGraph<T,
-                       std::void_t<typename DirectedGraphTraits<T>::vertex_idx,
-                                   decltype(std::declval<T>().vertices()),
-                                   decltype(std::declval<T>().num_vertices()),
-                                   decltype(std::declval<T>().num_edges()),
-                                   decltype(std::declval<T>().parents(std::declval<VertexIdxT<T>>())),
-                                   decltype(std::declval<T>().children(std::declval<VertexIdxT<T>>())),
-                                   decltype(std::declval<T>().in_degree(std::declval<VertexIdxT<T>>())),
+                       std::void_t<typename DirectedGraphTraits<T>::VertexIdx,
+                                   decltype(std::declval<T>().Vertices()),
+                                   decltype(std::declval<T>().NumVertices()),
+                                   decltype(std::declval<T>().NumEdges()),
+                                   decltype(std::declval<T>().Parents(std::declval<VertexIdxT<T>>())),
+                                   decltype(std::declval<T>().Children(std::declval<VertexIdxT<T>>())),
+                                   decltype(std::declval<T>().InDegree(std::declval<VertexIdxT<T>>())),
                                    decltype(std::declval<T>().out_degree(std::declval<VertexIdxT<T>>()))>>
     : std::conjunction<IsForwardRangeOf<decltype(std::declval<T>().Vertices()), VertexIdxT<T>>,
                        std::is_integral<decltype(std::declval<T>().NumVertices())>,
