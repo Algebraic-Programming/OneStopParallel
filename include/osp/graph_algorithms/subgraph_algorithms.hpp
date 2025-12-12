@@ -36,55 +36,55 @@ void CreateInducedSubgraph(const GraphTIn &dag,
     static_assert(std::is_same_v<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_out>>,
                   "Graph_t_in and out must have the same vertex_idx types");
 
-    static_assert(is_constructable_cdag_vertex_v<Graph_t_out>, "Graph_t_out must satisfy the constructable_cdag_vertex concept");
+    static_assert(IsConstructableCdagVertexV<Graph_t_out>, "Graph_t_out must satisfy the constructable_cdag_vertex concept");
 
-    static_assert(is_constructable_cdag_edge_v<Graph_t_out>, "Graph_t_out must satisfy the constructable_cdag_edge concept");
+    static_assert(IsConstructableCdagEdgeV<Graph_t_out>, "Graph_t_out must satisfy the constructable_cdag_edge concept");
 
     assert(dagOut.NumVertices() == 0);
 
-    std::map<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_in>> local_idx;
+    std::map<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_in>> localIdx;
 
-    for (const auto &node : extra_sources) {
-        local_idx[node] = dag_out.NumVertices();
-        if constexpr (is_constructable_cdag_typed_vertex_v<Graph_t_out> and HasTypedVerticesV<Graph_t_in>) {
+    for (const auto &node : extraSources) {
+        localIdx[node] = dagOut.NumVertices();
+        if constexpr (IsConstructableCdagTypedVertexV<Graph_t_out> and HasTypedVerticesV<Graph_t_in>) {
             // add extra source with type
-            dag_out.add_vertex(0, dag.VertexCommWeight(node), dag.VertexMemWeight(node), dag.VertexType(node));
+            dagOut.AddVertex(0, dag.VertexCommWeight(node), dag.VertexMemWeight(node), dag.VertexType(node));
         } else {
             // add extra source without type
-            dag_out.add_vertex(0, dag.VertexCommWeight(node), dag.VertexMemWeight(node));
+            dagOut.AddVertex(0, dag.VertexCommWeight(node), dag.VertexMemWeight(node));
         }
     }
 
-    for (const auto &node : selected_nodes) {
-        local_idx[node] = dag_out.NumVertices();
+    for (const auto &node : selectedNodes) {
+        localIdx[node] = dagOut.NumVertices();
 
-        if constexpr (is_constructable_cdag_typed_vertex_v<Graph_t_out> and HasTypedVerticesV<Graph_t_in>) {
+        if constexpr (IsConstructableCdagTypedVertexV<Graph_t_out> and HasTypedVerticesV<Graph_t_in>) {
             // add vertex with type
-            dag_out.add_vertex(
+            dagOut.AddVertex(
                 dag.VertexWorkWeight(node), dag.VertexCommWeight(node), dag.VertexMemWeight(node), dag.VertexType(node));
         } else {
             // add vertex without type
-            dag_out.add_vertex(dag.VertexWorkWeight(node), dag.VertexCommWeight(node), dag.VertexMemWeight(node));
+            dagOut.AddVertex(dag.VertexWorkWeight(node), dag.VertexCommWeight(node), dag.VertexMemWeight(node));
         }
     }
 
     if constexpr (HasEdgeWeightsV<Graph_t_in> and HasEdgeWeightsV<Graph_t_out>) {
         // add edges with edge comm weights
-        for (const auto &node : selected_nodes) {
-            for (const auto &in_edge : InEdges(node, dag)) {
-                const auto &pred = Source(in_edge, dag);
-                if (selected_nodes.find(pred) != selected_nodes.end() || extra_sources.find(pred) != extra_sources.end()) {
-                    dag_out.add_edge(local_idx[pred], local_idx[node], dag.EdgeCommWeight(in_edge));
+        for (const auto &node : selectedNodes) {
+            for (const auto &inEdge : InEdges(node, dag)) {
+                const auto &pred = Source(inEdge, dag);
+                if (selectedNodes.find(pred) != selectedNodes.end() || extraSources.find(pred) != extraSources.end()) {
+                    dagOut.AddEdge(localIdx[pred], localIdx[node], dag.EdgeCommWeight(inEdge));
                 }
             }
         }
 
     } else {
         // add edges without edge comm weights
-        for (const auto &node : selected_nodes) {
+        for (const auto &node : selectedNodes) {
             for (const auto &pred : dag.parents(node)) {
-                if (selected_nodes.find(pred) != selected_nodes.end() || extra_sources.find(pred) != extra_sources.end()) {
-                    dag_out.add_edge(local_idx[pred], local_idx[node]);
+                if (selectedNodes.find(pred) != selectedNodes.end() || extraSources.find(pred) != extraSources.end()) {
+                    dagOut.AddEdge(localIdx[pred], localIdx[node]);
                 }
             }
         }
@@ -92,8 +92,11 @@ void CreateInducedSubgraph(const GraphTIn &dag,
 }
 
 template <typename GraphTIn, typename GraphTOut>
-void CreateInducedSubgraph(const GraphTIn &dag, GraphTOut &dagOut, const std::vector<vertex_idx_t<Graph_t_in>> &selectedNodes) {
-    return create_induced_subgraph(dag, dag_out, std::set<vertex_idx_t<Graph_t_in>>(selected_nodes.begin(), selected_nodes.end()));
+void CreateInducedSubgraph(const GraphTIn &dag,
+                           GraphTOut &dagOut,
+                           const std::vector<vertex_idx_t<Graph_t_in>> &selectedNodes,
+                           const std::vector<vertex_idx_t<Graph_t_in>> &extraSources) {
+    return create_induced_subgraph(dag, dagOut, std::set<vertex_idx_t<Graph_t_in>>(selectedNodes.begin(), selectedNodes.end()));
 }
 
 template <typename GraphT>
@@ -104,53 +107,53 @@ bool CheckOrderedIsomorphism(const GraphT &first, const GraphT &second) {
         return false;
     }
 
-    for (const auto &node : first.vertices()) {
+    for (const auto &node : first.Vertices()) {
         if (first.VertexWorkWeight(node) != second.VertexWorkWeight(node)
             || first.VertexMemWeight(node) != second.VertexMemWeight(node)
             || first.VertexCommWeight(node) != second.VertexCommWeight(node) || first.VertexType(node) != second.VertexType(node)) {
             return false;
         }
 
-        if (first.in_degree(node) != second.in_degree(node) || first.OutDegree(node) != second.OutDegree(node)) {
+        if (first.InDegree(node) != second.InDegree(node) || first.OutDegree(node) != second.OutDegree(node)) {
             return false;
         }
 
         if constexpr (HasEdgeWeightsV<Graph_t>) {
-            std::set<std::pair<vertex_idx_t<Graph_t>, e_commw_t<Graph_t>>> first_children, second_children;
+            std::set<std::pair<vertex_idx_t<Graph_t>, e_commw_t<Graph_t>>> firstChildren, secondChildren;
 
             for (const auto &outEdge : OutEdges(node, first)) {
-                first_children.emplace(Traget(out_edge, first), first.EdgeCommWeight(out_edge));
+                firstChildren.emplace(Traget(out_edge, first), first.EdgeCommWeight(out_edge));
             }
 
             for (const auto &outEdge : OutEdges(node, second)) {
-                second_children.emplace(Traget(out_edge, second), second.EdgeCommWeight(out_edge));
+                secondChildren.emplace(Traget(out_edge, second), second.EdgeCommWeight(out_edge));
             }
 
-            auto itr = first_children.begin(), secondItr = second_children.begin();
-            for (; itr != first_children.end() && second_itr != second_children.end(); ++itr) {
-                if (*itr != *second_itr) {
+            auto itr = firstChildren.begin(), secondItr = secondChildren.begin();
+            for (; itr != firstChildren.end() && secondItr != secondChildren.end(); ++itr) {
+                if (*itr != *secondItr) {
                     return false;
                 }
-                ++second_itr;
+                ++secondItr;
             }
 
         } else {
-            std::set<vertex_idx_t<Graph_t>> firstChildren, second_children;
+            std::set<vertex_idx_t<Graph_t>> firstChildren, secondChildren;
 
-            for (const auto &child : first.children(node)) {
+            for (const auto &child : first.Children(node)) {
                 firstChildren.emplace(child);
             }
 
-            for (const auto &child : second.children(node)) {
-                second_children.emplace(child);
+            for (const auto &child : second.Children(node)) {
+                secondChildren.emplace(child);
             }
 
-            auto itr = first_children.begin(), secondItr = second_children.begin();
-            for (; itr != first_children.end() && second_itr != second_children.end(); ++itr) {
-                if (*itr != *second_itr) {
+            auto itr = firstChildren.begin(), secondItr = secondChildren.begin();
+            for (; itr != firstChildren.end() && secondItr != secondChildren.end(); ++itr) {
+                if (*itr != *secondItr) {
                     return false;
                 }
-                ++second_itr;
+                ++secondItr;
             }
         }
     }
@@ -162,12 +165,12 @@ template <typename GraphTIn, typename GraphTOut>
 std::vector<GraphTOut> CreateInducedSubgraphs(const GraphTIn &dagIn, const std::vector<unsigned> &partitionIDs) {
     // assumes that input partition IDs are consecutive and starting from 0
 
-    static_assert(std::is_same_v<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_out>>,
+    static_assert(std::is_same_v<VertexIdxT<GraphTIn>, VertexIdxT<GraphTOut>>,
                   "Graph_t_in and out must have the same vertex_idx types");
 
-    static_assert(is_constructable_cdag_vertex_v<Graph_t_out>, "Graph_t_out must satisfy the constructable_cdag_vertex concept");
+    static_assert(IsConstructableCdagVertexV<GraphTOut>, "Graph_t_out must satisfy the constructable_cdag_vertex concept");
 
-    static_assert(is_constructable_cdag_edge_v<Graph_t_out>, "Graph_t_out must satisfy the constructable_cdag_edge concept");
+    static_assert(IsConstructableCdagEdgeV<GraphTOut>, "Graph_t_out must satisfy the constructable_cdag_edge concept");
 
     unsigned numberOfParts = 0;
     for (const auto id : partitionIDs) {
@@ -176,35 +179,35 @@ std::vector<GraphTOut> CreateInducedSubgraphs(const GraphTIn &dagIn, const std::
 
     std::vector<GraphTOut> splitDags(numberOfParts);
 
-    std::vector<vertex_idx_t<Graph_t_out>> localIdx(dagIn.NumVertices());
+    std::vector<VertexIdxT<GraphTOut>> localIdx(dagIn.NumVertices());
 
-    for (const auto node : dagIn.vertices()) {
+    for (const auto node : dagIn.Vertices()) {
         localIdx[node] = splitDags[partitionIDs[node]].NumVertices();
 
-        if constexpr (is_constructable_cdag_typed_vertex_v<Graph_t_out> and HasTypedVerticesV<Graph_t_in>) {
-            splitDags[partitionIDs[node]].add_vertex(
+        if constexpr (IsConstructableCdagTypedVertexV<GraphTOut> and HasTypedVerticesV<GraphTIn>) {
+            splitDags[partitionIDs[node]].AddVertex(
                 dagIn.VertexWorkWeight(node), dagIn.VertexCommWeight(node), dagIn.VertexMemWeight(node), dagIn.VertexType(node));
         } else {
-            splitDags[partitionIDs[node]].add_vertex(
+            splitDags[partitionIDs[node]].AddVertex(
                 dagIn.VertexWorkWeight(node), dagIn.VertexCommWeight(node), dagIn.VertexMemWeight(node));
         }
     }
 
-    if constexpr (HasEdgeWeightsV<Graph_t_in> and HasEdgeWeightsV<Graph_t_out>) {
-        for (const auto node : dagIn.vertices()) {
+    if constexpr (HasEdgeWeightsV<GraphTIn> and HasEdgeWeightsV<GraphTOut>) {
+        for (const auto node : dagIn.Vertices()) {
             for (const auto &outEdge : OutEdges(node, dagIn)) {
                 auto succ = Traget(outEdge, dagIn);
 
                 if (partitionIDs[node] == partitionIDs[succ]) {
-                    splitDags[partitionIDs[node]].add_edge(local_idx[node], local_idx[succ], dagIn.EdgeCommWeight(outEdge));
+                    splitDags[partitionIDs[node]].AddEdge(localIdx[node], localIdx[succ], dagIn.EdgeCommWeight(outEdge));
                 }
             }
         }
     } else {
-        for (const auto node : dagIn.vertices()) {
-            for (const auto &child : dagIn.children(node)) {
+        for (const auto node : dagIn.Vertices()) {
+            for (const auto &child : dagIn.Children(node)) {
                 if (partitionIDs[node] == partitionIDs[child]) {
-                    splitDags[partitionIDs[node]].add_edge(local_idx[node], local_idx[child]);
+                    splitDags[partitionIDs[node]].AddEdge(localIdx[node], localIdx[child]);
                 }
             }
         }
@@ -213,57 +216,57 @@ std::vector<GraphTOut> CreateInducedSubgraphs(const GraphTIn &dagIn, const std::
     return splitDags;
 }
 
-template <typename Graph_t_in, typename Graph_t_out>
-std::unordered_map<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_in>> create_induced_subgraph_map(
-    const Graph_t_in &dag, Graph_t_out &dag_out, const std::vector<vertex_idx_t<Graph_t_in>> &selected_nodes) {
-    static_assert(std::is_same_v<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_out>>,
+template <typename GraphTIn, typename GraphTOut>
+std::unordered_map<VertexIdxT<GraphTIn>, VertexIdxT<GraphTOut>> CreateInducedSubgraphMap(
+    const GraphTIn &dag, GraphTOut &dagOut, const std::vector<VertexIdxT<GraphTIn>> &selectedNodes) {
+    static_assert(std::is_same_v<VertexIdxT<GraphTIn>, VertexIdxT<GraphTOut>>,
                   "Graph_t_in and out must have the same vertex_idx types");
 
-    static_assert(is_constructable_cdag_vertex_v<Graph_t_out>, "Graph_t_out must satisfy the constructable_cdag_vertex concept");
+    static_assert(IsConstructableCdagVertexV<GraphTOut>, "Graph_t_out must satisfy the constructable_cdag_vertex concept");
 
-    static_assert(is_constructable_cdag_edge_v<Graph_t_out>, "Graph_t_out must satisfy the constructable_cdag_edge concept");
+    static_assert(IsConstructableCdagEdgeV<GraphTOut>, "Graph_t_out must satisfy the constructable_cdag_edge concept");
 
-    assert(dag_out.NumVertices() == 0);
+    assert(dagOut.NumVertices() == 0);
 
-    std::unordered_map<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_in>> local_idx;
-    local_idx.reserve(selected_nodes.size());
+    std::unordered_map<VertexIdxT<GraphTIn>, VertexIdxT<GraphTOut>> localIdx;
+    localIdx.reserve(selectedNodes.size());
 
-    for (const auto &node : selected_nodes) {
-        local_idx[node] = dag_out.NumVertices();
+    for (const auto &node : selectedNodes) {
+        localIdx[node] = dagOut.NumVertices();
 
-        if constexpr (is_constructable_cdag_typed_vertex_v<Graph_t_out> and HasTypedVerticesV<Graph_t_in>) {
+        if constexpr (IsConstructableCdagTypedVertexV<GraphTOut> and HasTypedVerticesV<GraphTIn>) {
             // add vertex with type
-            dag_out.add_vertex(
+            dagOut.AddVertex(
                 dag.VertexWorkWeight(node), dag.VertexCommWeight(node), dag.VertexMemWeight(node), dag.VertexType(node));
         } else {
             // add vertex without type
-            dag_out.add_vertex(dag.VertexWorkWeight(node), dag.VertexCommWeight(node), dag.VertexMemWeight(node));
+            dagOut.AddVertex(dag.VertexWorkWeight(node), dag.VertexCommWeight(node), dag.VertexMemWeight(node));
         }
     }
 
-    if constexpr (HasEdgeWeightsV<Graph_t_in> and HasEdgeWeightsV<Graph_t_out>) {
+    if constexpr (HasEdgeWeightsV<GraphTIn> and HasEdgeWeightsV<GraphTOut>) {
         // add edges with edge comm weights
-        for (const auto &node : selected_nodes) {
-            for (const auto &in_edge : InEdges(node, dag)) {
-                const auto &pred = Source(in_edge, dag);
-                if (local_idx.count(pred)) {
-                    dag_out.add_edge(local_idx[pred], local_idx[node], dag.EdgeCommWeight(in_edge));
+        for (const auto &node : selectedNodes) {
+            for (const auto &inEdge : InEdges(node, dag)) {
+                const auto &pred = Source(inEdge, dag);
+                if (localIdx.count(pred)) {
+                    dagOut.AddEdge(localIdx[pred], localIdx[node], dag.EdgeCommWeight(inEdge));
                 }
             }
         }
 
     } else {
         // add edges without edge comm weights
-        for (const auto &node : selected_nodes) {
-            for (const auto &pred : dag.parents(node)) {
-                if (local_idx.count(pred)) {
-                    dag_out.add_edge(local_idx[pred], local_idx[node]);
+        for (const auto &node : selectedNodes) {
+            for (const auto &pred : dag.Parents(node)) {
+                if (localIdx.count(pred)) {
+                    dagOut.AddEdge(localIdx[pred], localIdx[node]);
                 }
             }
         }
     }
 
-    return local_idx;
+    return localIdx;
 }
 
 }    // end namespace osp

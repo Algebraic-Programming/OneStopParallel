@@ -57,14 +57,14 @@ void TransitiveReductionSparse(const GraphTIn &graphIn, GraphTOut &graphOut) {
     }
 
     // 1. Copy vertices and their properties from graph_in to graph_out.
-    for (const auto &vIdx : graphIn.vertices()) {
-        if constexpr (HasTypedVerticesV<Graph_t_in> && is_constructable_cdag_typed_vertex_v<Graph_t_out>) {
-            graphOut.add_vertex(graphIn.VertexWorkWeight(vIdx),
-                                graphIn.VertexCommWeight(vIdx),
-                                graphIn.VertexMemWeight(vIdx),
-                                graphIn.VertexType(vIdx));
+    for (const auto &vIdx : graphIn.Vertices()) {
+        if constexpr (HasTypedVerticesV<GraphTIn> && IsConstructableCdagTypedVertexV<GraphTOut>) {
+            graphOut.AddVertex(graphIn.VertexWorkWeight(vIdx),
+                               graphIn.VertexCommWeight(vIdx),
+                               graphIn.VertexMemWeight(vIdx),
+                               graphIn.VertexType(vIdx));
         } else {
-            graphOut.add_vertex(graphIn.VertexWorkWeight(vIdx), graphIn.VertexCommWeight(vIdx), graphIn.VertexMemWeight(vIdx));
+            graphOut.AddVertex(graphIn.VertexWorkWeight(vIdx), graphIn.VertexCommWeight(vIdx), graphIn.VertexMemWeight(vIdx));
         }
     }
 
@@ -74,17 +74,17 @@ void TransitiveReductionSparse(const GraphTIn &graphIn, GraphTOut &graphOut) {
         const auto u = Source(edge, graphIn);
         const auto v = Traget(edge, graphIn);
         bool isTransitive = false;
-        for (const auto &w : graphIn.children(u)) {
-            if (w != v && has_path(w, v, graphIn)) {
+        for (const auto &w : graphIn.Children(u)) {
+            if (w != v && HasPath(w, v, graphIn)) {
                 isTransitive = true;
                 break;
             }
         }
         if (!isTransitive) {
-            if constexpr (HasEdgeWeightsV<Graph_t_in> && is_constructable_cdag_comm_edge_v<Graph_t_out>) {
-                graphOut.add_edge(u, v, graphIn.EdgeCommWeight(edge));
+            if constexpr (HasEdgeWeightsV<GraphTIn> && IsConstructableCdagCommEdgeV<GraphTOut>) {
+                graphOut.AddEdge(u, v, graphIn.EdgeCommWeight(edge));
             } else {
-                graphOut.add_edge(u, v);
+                graphOut.AddEdge(u, v);
             }
         }
     }
@@ -121,14 +121,14 @@ void TransitiveReductionDense(const GraphTIn &graphIn, GraphTOut &graphOut) {
     }
 
     // 1. Copy vertices and their properties from graph_in to graph_out.
-    for (const auto &vIdx : graphIn.vertices()) {
-        if constexpr (HasTypedVerticesV<Graph_t_in> && is_constructable_cdag_typed_vertex_v<Graph_t_out>) {
-            graphOut.add_vertex(graphIn.VertexWorkWeight(vIdx),
-                                graphIn.VertexCommWeight(vIdx),
-                                graphIn.VertexMemWeight(vIdx),
-                                graphIn.VertexType(vIdx));
+    for (const auto &vIdx : graphIn.Vertices()) {
+        if constexpr (HasTypedVerticesV<GraphTIn> && IsConstructableCdagTypedVertexV<GraphTOut>) {
+            graphOut.AddVertex(graphIn.VertexWorkWeight(vIdx),
+                               graphIn.VertexCommWeight(vIdx),
+                               graphIn.VertexMemWeight(vIdx),
+                               graphIn.VertexType(vIdx));
         } else {
-            graphOut.add_vertex(graphIn.VertexWorkWeight(vIdx), graphIn.VertexCommWeight(vIdx), graphIn.VertexMemWeight(vIdx));
+            graphOut.AddVertex(graphIn.VertexWorkWeight(vIdx), graphIn.VertexCommWeight(vIdx), graphIn.VertexMemWeight(vIdx));
         }
     }
 
@@ -156,17 +156,17 @@ void TransitiveReductionDense(const GraphTIn &graphIn, GraphTOut &graphOut) {
         const auto u = Source(edge, graphIn);
         const auto v = Traget(edge, graphIn);
         bool isTransitive = false;
-        for (const auto &w : graphIn.children(u)) {
+        for (const auto &w : graphIn.Children(u)) {
             if (w != v && reachable[w][v]) {
                 isTransitive = true;
                 break;
             }
         }
         if (!isTransitive) {
-            if constexpr (HasEdgeWeightsV<Graph_t_in> && is_constructable_cdag_comm_edge_v<Graph_t_out>) {
-                graphOut.add_edge(u, v, graphIn.EdgeCommWeight(edge));
+            if constexpr (HasEdgeWeightsV<GraphTIn> && IsConstructableCdagCommEdgeV<GraphTOut>) {
+                graphOut.AddEdge(u, v, graphIn.EdgeCommWeight(edge));
             } else {
-                graphOut.add_edge(u, v);
+                graphOut.AddEdge(u, v);
             }
         }
     }
