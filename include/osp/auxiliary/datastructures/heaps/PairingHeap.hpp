@@ -58,7 +58,7 @@ class PairingHeap {
         // heap2 becomes the new leftmost child of heap1
         heap2->nextSibling_ = heap1->child_;
         if (heap1->child_) {
-            heap1->child_->prev_or_parent = heap2;
+            heap1->child_->prevOrParent_ = heap2;
         }
         heap1->child_ = heap2;
         heap2->prevOrParent_ = heap1;
@@ -111,13 +111,13 @@ class PairingHeap {
             return;
         }
 
-        if (node->prevOrParent_->child == node) {    // is leftmost child
-            node->prevOrParent_->child = node->nextSibling_;
+        if (node->prevOrParent_->child_ == node) {    // is leftmost child
+            node->prevOrParent_->child_ = node->nextSibling_;
         } else {    // is not leftmost child
-            node->prevOrParent_->next_sibling = node->nextSibling_;
+            node->prevOrParent_->nextSibling_ = node->nextSibling_;
         }
         if (node->nextSibling_) {
-            node->nextSibling_->prev_or_parent = node->prevOrParent_;
+            node->nextSibling_->prevOrParent_ = node->prevOrParent_;
         }
         node->nextSibling_ = nullptr;
         node->prevOrParent_ = nullptr;
@@ -313,7 +313,7 @@ class PairingHeap {
         if (it == nodeMap_.end()) {
             throw std::out_of_range("Key does not exist in the heap.");
         }
-        return it->second->value;
+        return it->second->value_;
     }
 
     // Removes all elements from the heap.

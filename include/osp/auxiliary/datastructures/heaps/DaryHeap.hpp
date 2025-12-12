@@ -50,14 +50,14 @@ class DaryHeap {
     };
 
   public:
-    bool is_empty() const noexcept { return heap_.empty(); }
+    bool IsEmpty() const noexcept { return heap_.empty(); }
 
     size_t size() const noexcept { return heap_.size(); }
 
-    bool contains(const Key &key) const { return nodeInfo_.count(key); }
+    bool Contains(const Key &key) const { return nodeInfo_.count(key); }
 
-    void push(const Key &key, const Value &value) {
-        // emplace and check for success to avoid a separate lookup with contains()
+    void Push(const Key &key, const Value &value) {
+        // emplace and check for success to avoid a separate lookup with Contains()
         auto [it, success] = nodeInfo_.emplace(key, NodeInfo{value, heap_.size()});
         if (!success) {
             throw std::invalid_argument("Key already exists in the heap.");
@@ -67,15 +67,15 @@ class DaryHeap {
         SiftUp(it->second.position_);
     }
 
-    const Key &top() const {
-        if (is_empty()) {
+    const Key &Top() const {
+        if (IsEmpty()) {
             throw std::out_of_range("Heap is empty.");
         }
         return heap_.front();
     }
 
-    Key pop() {
-        if (is_empty()) {
+    Key Pop() {
+        if (IsEmpty()) {
             throw std::out_of_range("Heap is empty.");
         }
 
@@ -95,7 +95,7 @@ class DaryHeap {
         return topKey;
     }
 
-    void update(const Key &key, const Value &newValue) {
+    void Update(const Key &key, const Value &newValue) {
         auto it = nodeInfo_.find(key);
         if (it == nodeInfo_.end()) {
             throw std::invalid_argument("Key does not exist in the heap.");
@@ -112,7 +112,7 @@ class DaryHeap {
         }
     }
 
-    void erase(const Key &key) {
+    void Erase(const Key &key) {
         auto it = nodeInfo_.find(key);
         if (it == nodeInfo_.end()) {
             throw std::invalid_argument("Key does not exist in the heap.");
@@ -138,7 +138,7 @@ class DaryHeap {
         }
     }
 
-    const Value &get_value(const Key &key) const {
+    const Value &GetValue(const Key &key) const {
         auto it = nodeInfo_.find(key);
         if (it == nodeInfo_.end()) {
             throw std::out_of_range("Key does not exist in the heap.");
@@ -149,7 +149,7 @@ class DaryHeap {
     /**
      * @brief Removes all elements from the heap.
      */
-    void clear() noexcept {
+    void Clear() noexcept {
         heap_.clear();
         nodeInfo_.clear();
     }
