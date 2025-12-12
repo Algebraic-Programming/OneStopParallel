@@ -334,7 +334,7 @@ class TopSortView {
     TopSortView(const GraphT &graph) : graph_(graph) {}
 
     auto begin() {
-        if constexpr (HasVerticesInTopOrderV << GraphT >) {
+        if constexpr (HasVerticesInTopOrderV<GraphT>) {
             return graph_.Vertices().begin();
         } else {
             return TsIterator(graph_, vertexContainer_, 0);
@@ -342,7 +342,7 @@ class TopSortView {
     }
 
     auto end() {
-        if constexpr (HasVerticesInTopOrderV << GraphT >) {
+        if constexpr (HasVerticesInTopOrderV<GraphT>) {
             return graph_.Vertices().end();
         } else {
             return TsIterator(graph_, vertexContainer_, graph_.NumVertices());
