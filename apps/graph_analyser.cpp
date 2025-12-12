@@ -84,7 +84,7 @@ void AddGraphStats(const ComputationalDag &graph, std::ofstream &outfile) {
 
     // // Number of Triangles
     // size_t number_triangles = 0;
-    // for (const auto& edge : edges(graph)) {
+    // for (const auto& edge : Edges(graph)) {
     //     std::set<int> neighbour_src;
     //     std::set<int> neighbour_tgt;
 

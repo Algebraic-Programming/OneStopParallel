@@ -55,8 +55,8 @@ class TopOrderCoarser : public Coarser<GraphTIn, GraphTOut> {
 
         for (const auto &node : nodes) {
             if constexpr (HasEdgeWeightsV<Graph_t_in> && HasEdgeWeightsV<Graph_t_out>) {
-                for (const auto &in_edge : in_edges(node, dag_in)) {
-                    const VertexType parent_rev = reverse_vertex_map[source(in_edge, dag_in)];
+                for (const auto &in_edge : InEdges(node, dag_in)) {
+                    const VertexType parent_rev = reverse_vertex_map[Source(in_edge, dag_in)];
                     if (parent_rev != current_super_node_idx && parent_rev != std::numeric_limits<VertexType>::max()) {
                         auto pair = edge_desc(parent_rev, current_super_node_idx, dag_out);
                         if (pair.second) {

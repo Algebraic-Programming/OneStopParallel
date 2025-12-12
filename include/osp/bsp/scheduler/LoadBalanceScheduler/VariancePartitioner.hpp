@@ -137,7 +137,7 @@ class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
 
             totalWork += graph.VertexWorkWeight(v);
 
-            if (is_source(v, graph)) {
+            if (IsSource(v, graph)) {
                 ready.insert(std::make_pair(v, variancePriorities[v]));
                 allReady.insert(std::make_pair(v, variancePriorities[v]));
 

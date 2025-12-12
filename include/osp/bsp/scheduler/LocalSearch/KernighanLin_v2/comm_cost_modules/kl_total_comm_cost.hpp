@@ -79,9 +79,9 @@ struct KlTotalCommCostFunction {
         }
 
         CostT commCosts = 0;
-        for (const auto &edge : edges(*graph_)) {
-            const auto &sourceV = source(edge, *graph_);
-            const auto &targetV = target(edge, *graph_);
+        for (const auto &edge : Edges(*graph_)) {
+            const auto &sourceV = Source(edge, *graph_);
+            const auto &targetV = Traget(edge, *graph_);
 
             const unsigned &sourceProc = activeSchedule_->assigned_processor(sourceV);
             const unsigned &targetProc = activeSchedule_->assigned_processor(targetV);

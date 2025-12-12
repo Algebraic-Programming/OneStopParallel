@@ -322,14 +322,14 @@ BOOST_AUTO_TEST_CASE(TestUtil1) {
     BOOST_CHECK_EQUAL(edge(7, 5, graph), false);
     BOOST_CHECK_EQUAL(edge(7, 6, graph), false);
 
-    BOOST_CHECK_EQUAL(is_source(0, graph), true);
-    BOOST_CHECK_EQUAL(is_source(1, graph), false);
-    BOOST_CHECK_EQUAL(is_source(2, graph), false);
-    BOOST_CHECK_EQUAL(is_source(3, graph), false);
-    BOOST_CHECK_EQUAL(is_source(4, graph), false);
-    BOOST_CHECK_EQUAL(is_source(5, graph), false);
-    BOOST_CHECK_EQUAL(is_source(6, graph), false);
-    BOOST_CHECK_EQUAL(is_source(7, graph), false);
+    BOOST_CHECK_EQUAL(IsSource(0, graph), true);
+    BOOST_CHECK_EQUAL(IsSource(1, graph), false);
+    BOOST_CHECK_EQUAL(IsSource(2, graph), false);
+    BOOST_CHECK_EQUAL(IsSource(3, graph), false);
+    BOOST_CHECK_EQUAL(IsSource(4, graph), false);
+    BOOST_CHECK_EQUAL(IsSource(5, graph), false);
+    BOOST_CHECK_EQUAL(IsSource(6, graph), false);
+    BOOST_CHECK_EQUAL(IsSource(7, graph), false);
 
     BOOST_CHECK_EQUAL(is_sink(0, graph), false);
     BOOST_CHECK_EQUAL(is_sink(1, graph), false);

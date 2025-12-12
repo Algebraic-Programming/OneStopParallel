@@ -92,15 +92,15 @@ BOOST_AUTO_TEST_CASE(TestBoostGraphAdapter1) {
 
     size_t edgeIdx = 0;
     for (const auto &edge : graph.edges()) {
-        BOOST_CHECK_EQUAL(source(edge, graph), edgeSources[edgeIdx]);
-        BOOST_CHECK_EQUAL(target(edge, graph), edgeTargets[edgeIdx]);
+        BOOST_CHECK_EQUAL(Source(edge, graph), edgeSources[edgeIdx]);
+        BOOST_CHECK_EQUAL(Traget(edge, graph), edgeTargets[edgeIdx]);
         edgeIdx++;
     }
 
     edgeIdx = 0;
-    for (const auto &edge : edges(graph)) {
-        BOOST_CHECK_EQUAL(source(edge, graph), edgeSources[edgeIdx]);
-        BOOST_CHECK_EQUAL(target(edge, graph), edgeTargets[edgeIdx]);
+    for (const auto &edge : Edges(graph)) {
+        BOOST_CHECK_EQUAL(Source(edge, graph), edgeSources[edgeIdx]);
+        BOOST_CHECK_EQUAL(Traget(edge, graph), edgeTargets[edgeIdx]);
         edgeIdx++;
     }
 
@@ -140,12 +140,12 @@ BOOST_AUTO_TEST_CASE(TestBoostGraphAdapter1) {
 
         i = 0;
         for (const auto &e : graph.out_edges(v)) {
-            BOOST_CHECK_EQUAL(target(e, graph), outNeighbors[v][i++]);
+            BOOST_CHECK_EQUAL(Traget(e, graph), outNeighbors[v][i++]);
         }
 
         i = 0;
         for (const auto &e : graph.out_edges(v)) {
-            BOOST_CHECK_EQUAL(graph.target(e), outNeighbors[v][i++]);
+            BOOST_CHECK_EQUAL(graph.Traget(e), outNeighbors[v][i++]);
         }
 
         i = 0;
@@ -155,22 +155,22 @@ BOOST_AUTO_TEST_CASE(TestBoostGraphAdapter1) {
 
         i = 0;
         for (const auto &e : graph.in_edges(v)) {
-            BOOST_CHECK_EQUAL(source(e, graph), inNeighbors[v][i++]);
+            BOOST_CHECK_EQUAL(Source(e, graph), inNeighbors[v][i++]);
         }
 
         i = 0;
         for (const auto &e : graph.in_edges(v)) {
-            BOOST_CHECK_EQUAL(graph.source(e), inNeighbors[v][i++]);
+            BOOST_CHECK_EQUAL(graph.Source(e), inNeighbors[v][i++]);
         }
 
         i = 0;
-        for (const auto &e : in_edges(v, graph)) {
-            BOOST_CHECK_EQUAL(source(e, graph), inNeighbors[v][i++]);
+        for (const auto &e : InEdges(v, graph)) {
+            BOOST_CHECK_EQUAL(Source(e, graph), inNeighbors[v][i++]);
         }
 
         i = 0;
-        for (const auto &e : out_edges(v, graph)) {
-            BOOST_CHECK_EQUAL(target(e, graph), outNeighbors[v][i++]);
+        for (const auto &e : OutEdges(v, graph)) {
+            BOOST_CHECK_EQUAL(Traget(e, graph), outNeighbors[v][i++]);
         }
 
         BOOST_CHECK_EQUAL(graph.in_degree(v), inNeighbors[v].size());

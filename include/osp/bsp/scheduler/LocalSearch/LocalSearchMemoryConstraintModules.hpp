@@ -360,7 +360,7 @@ struct LsLocalSourcesIncEdgesMemoryConstraint {
     }
 
     inline void ApplyMove(vertex_idx_t<Graph_t> vertex, unsigned fromProc, unsigned fromStep, unsigned toProc, unsigned toStep) {
-        if (is_source(vertex, *graph_)) {
+        if (IsSource(vertex, *graph_)) {
             step_processor_memory[to_step][to_proc] += graph->VertexMemWeight(vertex);
             step_processor_memory[from_step][from_proc] -= graph->VertexMemWeight(vertex);
         }
@@ -429,7 +429,7 @@ struct LsLocalSourcesIncEdgesMemoryConstraint {
                 step_processor_pred[step][proc].clear();
 
                 for (const auto &node : setSchedule_->step_processor_vertices[step][proc]) {
-                    if (is_source(node, *graph_)) {
+                    if (IsSource(node, *graph_)) {
                         step_processor_memory[step][proc] += graph->VertexMemWeight(node);
                     }
 
@@ -466,7 +466,7 @@ struct LsLocalSourcesIncEdgesMemoryConstraint {
     inline bool CanMove(vertex_idx_t<Graph_t> vertex, const unsigned proc, unsigned step) const {
         v_memw_t<Graph_t> incMemory = 0;
 
-        if (is_source(vertex, *graph_)) {
+        if (IsSource(vertex, *graph_)) {
             incMemory += graph_->VertexMemWeight(vertex);
         }
 
@@ -498,14 +498,14 @@ struct LsLocalSourcesIncEdgesMemoryConstraint {
             const auto &succ_proc = vector_schedule->assignedProcessor(succ);
 
             if (succ_step == vector_schedule->assignedSuperstep(vertex)) {
-                if (vector_schedule->assignedProcessor(vertex) != succ_proc || (not is_source(vertex, *graph))) {
+                if (vector_schedule->assignedProcessor(vertex) != succ_proc || (not IsSource(vertex, *graph))) {
                     if (step_processor_memory[succ_step][succ_proc] + graph->VertexCommWeight(vertex)
                         > set_schedule->getInstance().getArchitecture().memoryBound(succ_proc)) {
                         return false;
                     }
 
                 } else {
-                    if (is_source(vertex, *graph)) {
+                    if (IsSource(vertex, *graph)) {
                         if (step_processor_memory[succ_step][succ_proc] + graph->VertexCommWeight(vertex)
                                 - graph->VertexMemWeight(vertex)
                             > set_schedule->getInstance().getArchitecture().memoryBound(succ_proc)) {

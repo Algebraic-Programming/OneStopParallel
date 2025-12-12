@@ -52,8 +52,8 @@ std::unordered_set<edge_desc_t<Graph_t>> LongEdgesInTrianglesParallel(const Grap
             children_set.emplace(v);
         }
 
-        for (const auto &edge : out_edges(vertex, graph)) {
-            const auto &child = target(edge, graph);
+        for (const auto &edge : OutEdges(vertex, graph)) {
+            const auto &child = Traget(edge, graph);
 
             for (const auto &parent : graph.parents(child)) {
                 if (children_set.find(parent) != children_set.cend()) {

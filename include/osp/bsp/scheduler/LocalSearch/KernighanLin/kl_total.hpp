@@ -68,7 +68,7 @@ class KlTotal : public KlBase<GraphT, MemoryConstraintT> {
         if constexpr (not currentSchedule_.use_node_communication_costs) {
             maxEdgeWeight = 0;
 
-            for (const auto &edge : edges(currentSchedule_.instance->getComputationalDag())) {
+            for (const auto &edge : Edges(currentSchedule_.instance->getComputationalDag())) {
                 maxEdgeWeight = std::max(max_edge_weight_, currentSchedule_.instance->getComputationalDag().EdgeCommWeight(edge));
             }
         }
@@ -134,8 +134,8 @@ class KlTotal : public KlBase<GraphT, MemoryConstraintT> {
 
         } else {
             for (const auto &node : currentSchedule_.instance->getComputationalDag().vertices()) {
-                for (const auto &inEdge : in_edges(node, currentSchedule_.instance->getComputationalDag())) {
-                    const auto &sourceV = source(inEdge, currentSchedule_.instance->getComputationalDag());
+                for (const auto &inEdge : InEdges(node, currentSchedule_.instance->getComputationalDag())) {
+                    const auto &sourceV = Source(inEdge, currentSchedule_.instance->getComputationalDag());
                     if (currentSchedule_.vector_schedule.assignedProcessor(node)
                         != currentSchedule_.vector_schedule.assignedProcessor(sourceV)) {
                         if (current_schedule.instance->getComputationalDag().EdgeCommWeight(in_edge)
@@ -146,8 +146,8 @@ class KlTotal : public KlBase<GraphT, MemoryConstraintT> {
                     }
                 }
 
-                for (const auto &outEdge : out_edges(node, currentSchedule_.instance->getComputationalDag())) {
-                    const auto &targetV = target(outEdge, currentSchedule_.instance->getComputationalDag());
+                for (const auto &outEdge : OutEdges(node, currentSchedule_.instance->getComputationalDag())) {
+                    const auto &targetV = Traget(outEdge, currentSchedule_.instance->getComputationalDag());
                     if (currentSchedule_.vector_schedule.assignedProcessor(node)
                         != currentSchedule_.vector_schedule.assignedProcessor(targetV)) {
                         if (current_schedule.instance->getComputationalDag().EdgeCommWeight(out_edge)

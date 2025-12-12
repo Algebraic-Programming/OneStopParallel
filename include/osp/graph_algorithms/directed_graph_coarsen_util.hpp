@@ -38,9 +38,9 @@ std::vector<edge_desc_t<Graph_t>> GetContractableEdgesFromPosetIntMap(const std:
 
     std::vector<edge_desc_t<Graph_t>> output;
 
-    for (const auto &edge : edges(graph)) {
-        vertex_idx_t<Graph_t> src = source(edge, graph);
-        vertex_idx_t<Graph_t> tgt = target(edge, graph);
+    for (const auto &edge : Edges(graph)) {
+        vertex_idx_t<Graph_t> src = Source(edge, graph);
+        vertex_idx_t<Graph_t> tgt = Traget(edge, graph);
 
         if (posetIntMap[tgt] == posetIntMap[src] + 1) {
             output.emplace_back(edge);

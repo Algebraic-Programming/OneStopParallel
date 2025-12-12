@@ -130,7 +130,7 @@ std::vector<vertex_idx_t<Graph_t>> CuthillMckeeUndirected(const GraphT &dag, boo
         unsigned maxDistance = 0;
         const std::vector<unsigned> bottomNodeDistance = get_bottom_node_distance(dag);
         for (const auto &i : dag.vertices()) {
-            if (is_source(i, dag)) {
+            if (IsSource(i, dag)) {
                 maxNodeDistances[i] = bottomNodeDistance[i];
 
                 if (bottomNodeDistance[i] > maxDistance) {

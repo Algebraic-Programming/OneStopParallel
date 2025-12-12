@@ -362,7 +362,7 @@ struct LocalSourcesIncEdgesMemoryConstraint {
     inline bool CanAdd(const vertex_idx_t<Graph_t> &v, const unsigned proc) const {
         v_memw_t<Graph_t> incMemory = 0;
 
-        if (is_source(v, instance_->getComputationalDag())) {
+        if (IsSource(v, instance_->getComputationalDag())) {
             incMemory += instance_->getComputationalDag().VertexMemWeight(v);
         }
 
@@ -377,7 +377,7 @@ struct LocalSourcesIncEdgesMemoryConstraint {
     }
 
     inline void Add(const vertex_idx_t<Graph_t> &v, const unsigned proc) {
-        if (is_source(v, instance_->getComputationalDag())) {
+        if (IsSource(v, instance_->getComputationalDag())) {
             current_proc_memory[proc] += instance->getComputationalDag().VertexMemWeight(v);
         }
 

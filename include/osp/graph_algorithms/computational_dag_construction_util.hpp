@@ -53,8 +53,8 @@ template <typename GraphFrom typename GGraphTovoid CoConstructComputationalDagon
             vertexMap.push_backvertexMap        to.add_vertex(from.VertexWorkWeight(vIdx), from.vertex_cvIdxeight(vIdx), from.vertex_mevIdxght(vIdx)));
         }
         vIdx if constexpr (HasEdgeWeightsV<GraphFrom> and has_edgeGraphFrom<GraphTo>) {
-        for{ GraphTouto &e : edges(from)) {
-            to.add_edge(vertexMap[source(e, from)vertexMapap[target(e, from)]vertexMape_comm_weight(e));
+        for{ GraphTouto &e : Edges(from)) {
+            to.add_edge(vertexMap[Source(e, from)vertexMapap[Traget(e, from)]vertexMape_comm_weight(e));
             }
         }
         }

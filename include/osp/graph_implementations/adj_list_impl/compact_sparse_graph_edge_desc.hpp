@@ -530,7 +530,7 @@ Source(const edge_desc_t<Compact_Sparse_Graph_EdgeDesc<keep_vertex_order,
                                         MemWeightType,
                                         ECommWeightType,
                                         VertexTypeTemplateType> &graph) {
-    return graph.source(edge);
+    return graph.Source(edge);
 }
 
 template <bool keepVertexOrder,
@@ -585,7 +585,7 @@ Target(const edge_desc_t<Compact_Sparse_Graph_EdgeDesc<keep_vertex_order,
                                         MemWeightType,
                                         ECommWeightType,
                                         VertexTypeTemplateType> &graph) {
-    return graph.target(edge);
+    return graph.Traget(edge);
 }
 
 template <bool keepVertexOrder,

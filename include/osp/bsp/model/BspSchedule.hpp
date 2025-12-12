@@ -736,7 +736,7 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
 
                 VMemwT<GraphT> memory = 0;
                 for (const auto &node : setSchedule.step_processor_vertices[step][proc]) {
-                    if (is_source(node, instance_->getComputationalDag())) {
+                    if (IsSource(node, instance_->getComputationalDag())) {
                         memory += instance_->getComputationalDag().VertexMemWeight(node);
                     }
 

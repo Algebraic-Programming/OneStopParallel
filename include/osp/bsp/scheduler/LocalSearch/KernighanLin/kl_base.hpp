@@ -151,8 +151,8 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
         }
 
         for (auto &edge : currentSchedule_.current_violations) {
-            const auto &sourceV = source(edge, currentSchedule_.instance->getComputationalDag());
-            const auto &targetV = target(edge, currentSchedule_.instance->getComputationalDag());
+            const auto &sourceV = Source(edge, currentSchedule_.instance->getComputationalDag());
+            const auto &targetV = Traget(edge, currentSchedule_.instance->getComputationalDag());
 
             if (locked_nodes.find(source_v) == locked_nodes.end() || locked_nodes.find(target_v) == locked_nodes.end()) {
                 return false;
@@ -811,8 +811,8 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
         }
 
         for (const auto &edge : currentSchedule_.current_violations) {
-            const auto &sourceV = source(edge, currentSchedule_.instance->getComputationalDag());
-            const auto &targetV = target(edge, currentSchedule_.instance->getComputationalDag());
+            const auto &sourceV = Source(edge, currentSchedule_.instance->getComputationalDag());
+            const auto &targetV = Traget(edge, currentSchedule_.instance->getComputationalDag());
 
             node_selection.insert(source_v);
             node_selection.insert(target_v);

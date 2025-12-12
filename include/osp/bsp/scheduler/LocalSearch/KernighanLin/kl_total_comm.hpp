@@ -436,7 +436,7 @@ class KlTotalComm : public KlTotal<GraphT, MemoryConstraintT, useNodeCommunicati
                                kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule.instance
                                    ->getComputationalDag())) {
                     const auto &target_v
-                        = target(out_edge,
+                        = Traget(out_edge,
                                  kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule
                                      .instance->getComputationalDag());
                     // for (const auto &target :
@@ -484,7 +484,7 @@ class KlTotalComm : public KlTotal<GraphT, MemoryConstraintT, useNodeCommunicati
                               kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule.instance
                                   ->getComputationalDag())) {
                     const auto &source_v
-                        = source(in_edge,
+                        = Source(in_edge,
                                  kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule
                                      .instance->getComputationalDag());
                     // for (const auto &source :
@@ -534,7 +534,7 @@ class KlTotalComm : public KlTotal<GraphT, MemoryConstraintT, useNodeCommunicati
                                kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule.instance
                                    ->getComputationalDag())) {
                     const auto &target_v
-                        = target(out_edge,
+                        = Traget(out_edge,
                                  kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule
                                      .instance->getComputationalDag());
                     const unsigned &target_proc
@@ -694,7 +694,7 @@ class KlTotalComm : public KlTotal<GraphT, MemoryConstraintT, useNodeCommunicati
                               kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule.instance
                                   ->getComputationalDag())) {
                     const auto &source_v
-                        = source(in_edge,
+                        = Source(in_edge,
                                  kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule
                                      .instance->getComputationalDag());
 
@@ -862,16 +862,16 @@ class KlTotalComm : public KlTotal<GraphT, MemoryConstraintT, useNodeCommunicati
         }
 
         double commCosts = 0;
-        for (const auto &edge : edges(KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.instance
+        for (const auto &edge : Edges(KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.instance
                                           ->getComputationalDag())) {
-            const auto &sourceV = source(
+            const auto &sourceV = Source(
                 edge,
                 KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.instance->getComputationalDag());
             const unsigned &sourceProc = KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule
                                              .vector_schedule.assignedProcessor(sourceV);
             const unsigned &targetProc
                 = KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.vector_schedule
-                      .assignedProcessor(target(edge,
+                      .assignedProcessor(Traget(edge,
                                                 KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule
                                                     .instance->getComputationalDag()));
 

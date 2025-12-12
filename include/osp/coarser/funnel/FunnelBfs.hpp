@@ -156,12 +156,12 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
                 workWeightOfGroup += graph.VertexWorkWeight(active_node);
                 memoryWeightOfGroup += graph.VertexMemWeight(active_node);
 
-                for (const auto &in_edge : in_edges(active_node, graph)) {
+                for (const auto &in_edge : InEdges(active_node, graph)) {
                     if (parameters.use_approx_transitive_reduction && (edge_mask.find(in_edge) != edge_mask.cend())) {
                         continue;
                     }
 
-                    const vertex_idx_t &par = source(in_edge, graph);
+                    const vertex_idx_t &par = Source(in_edge, graph);
 
                     if (children_not_in_group.find(par) != children_not_in_group.cend()) {
                         children_not_in_group[par] -= 1;
@@ -170,7 +170,7 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
                         if (parameters.use_approx_transitive_reduction) {
                             children_not_in_group[par] = 0;
 
-                            for (const auto out_edge : out_edges(par, graph)) {
+                            for (const auto out_edge : OutEdges(par, graph)) {
                                 if (edge_mask.find(out_edge) != edge_mask.cend()) {
                                     continue;
                                 }
@@ -183,12 +183,12 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
                         children_not_in_group[par] -= 1;
                     }
                 }
-                for (const auto &in_edge : in_edges(active_node, graph)) {
+                for (const auto &in_edge : InEdges(active_node, graph)) {
                     if (parameters.use_approx_transitive_reduction && (edge_mask.find(in_edge) != edge_mask.cend())) {
                         continue;
                     }
 
-                    const vertex_idx_t &par = source(in_edge, graph);
+                    const vertex_idx_t &par = Source(in_edge, graph);
                     if (children_not_in_group[par] == 0) {
                         next_vertex_processing_fifo.emplace_back(par);
                     }
@@ -264,12 +264,12 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
                 workWeightOfGroup += graph.VertexWorkWeight(active_node);
                 memoryWeightOfGroup += graph.VertexMemWeight(active_node);
 
-                for (const auto &out_edge : out_edges(active_node, graph)) {
+                for (const auto &out_edge : OutEdges(active_node, graph)) {
                     if (parameters.use_approx_transitive_reduction && (edge_mask.find(out_edge) != edge_mask.cend())) {
                         continue;
                     }
 
-                    const vertex_idx_t &child = target(out_edge, graph);
+                    const vertex_idx_t &child = Traget(out_edge, graph);
 
                     if (parents_not_in_group.find(child) != parents_not_in_group.cend()) {
                         parents_not_in_group[child] -= 1;
@@ -278,7 +278,7 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
                         if (parameters.use_approx_transitive_reduction) {
                             parents_not_in_group[child] = 0;
 
-                            for (const auto in_edge : in_edges(child, graph)) {
+                            for (const auto in_edge : InEdges(child, graph)) {
                                 if (edge_mask.find(in_edge) != edge_mask.cend()) {
                                     continue;
                                 }
@@ -291,12 +291,12 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
                         parents_not_in_group[child] -= 1;
                     }
                 }
-                for (const auto &out_edge : out_edges(active_node, graph)) {
+                for (const auto &out_edge : OutEdges(active_node, graph)) {
                     if (parameters.use_approx_transitive_reduction && (edge_mask.find(out_edge) != edge_mask.cend())) {
                         continue;
                     }
 
-                    const vertex_idx_t &child = target(out_edge, graph);
+                    const vertex_idx_t &child = Traget(out_edge, graph);
                     if (parents_not_in_group[child] == 0) {
                         next_vertex_processing_fifo.emplace_back(child);
                     }

@@ -32,8 +32,8 @@ std::pair<edge_desc_t<Graph_t>, bool> EdgeDesc(const vertex_idx_t<Graph_t> &src,
                                                const GraphT &graph) {
     static_assert(IsDirectedGraphEdgeDescV<Graph_t>, "Graph_t must satisfy the directed_graph edge desc concept");
 
-    for (const auto &edge : out_edges(src, graph)) {
-        if (target(edge, graph) == dest) {
+    for (const auto &edge : OutEdges(src, graph)) {
+        if (Traget(edge, graph) == dest) {
             return {edge, true};
         }
     }
@@ -54,8 +54,8 @@ std::unordered_set<edge_desc_t<Graph_t>> LongEdgesInTriangles(const GraphT &grap
             childrenSet.emplace(v);
         }
 
-        for (const auto &edge : out_edges(vertex, graph)) {
-            const auto &child = target(edge, graph);
+        for (const auto &edge : OutEdges(vertex, graph)) {
+            const auto &child = Traget(edge, graph);
 
             for (const auto &parent : graph.parents(child)) {
                 if (childrenSet.find(parent) != children_set.cend()) {

@@ -118,13 +118,13 @@ BOOST_AUTO_TEST_CASE(TestDag) {
         }
 
         i = 0;
-        for (const auto &e : out_edges(v, graph)) {
-            BOOST_CHECK_EQUAL(target(e, graph), outNeighbors[v][i++]);
+        for (const auto &e : OutEdges(v, graph)) {
+            BOOST_CHECK_EQUAL(Traget(e, graph), outNeighbors[v][i++]);
         }
 
         i = 0;
-        for (const auto &e : in_edges(v, graph)) {
-            BOOST_CHECK_EQUAL(source(e, graph), inNeighbors[v][i++]);
+        for (const auto &e : InEdges(v, graph)) {
+            BOOST_CHECK_EQUAL(Source(e, graph), inNeighbors[v][i++]);
         }
 
         BOOST_CHECK_EQUAL(graph.in_degree(v), inNeighbors[v].size());
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(TestDag) {
     }
 
     unsigned count = 0;
-    for (const auto &e : edges(graph)) {
+    for (const auto &e : Edges(graph)) {
         std::cout << e.source << " -> " << e.target << std::endl;
         count++;
     }
@@ -259,13 +259,13 @@ BOOST_AUTO_TEST_CASE(TestDagVectorAdapter) {
         }
 
         i = 0;
-        for (const auto &e : out_edges(v, graph)) {
-            BOOST_CHECK_EQUAL(target(e, graph), outNeighbors[vv][i++]);
+        for (const auto &e : OutEdges(v, graph)) {
+            BOOST_CHECK_EQUAL(Traget(e, graph), outNeighbors[vv][i++]);
         }
 
         i = 0;
-        for (const auto &e : in_edges(v, graph)) {
-            BOOST_CHECK_EQUAL(source(e, graph), inNeighbors[vv][i++]);
+        for (const auto &e : InEdges(v, graph)) {
+            BOOST_CHECK_EQUAL(Source(e, graph), inNeighbors[vv][i++]);
         }
 
         BOOST_CHECK_EQUAL(graph.in_degree(v), inNeighbors[vv].size());
@@ -273,7 +273,7 @@ BOOST_AUTO_TEST_CASE(TestDagVectorAdapter) {
     }
 
     unsigned count = 0;
-    for (const auto &e : edges(graph)) {
+    for (const auto &e : Edges(graph)) {
         std::cout << e.source << " -> " << e.target << std::endl;
         count++;
     }

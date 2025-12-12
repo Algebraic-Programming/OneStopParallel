@@ -94,13 +94,13 @@ class HdaggCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> {
                 reverse_vertex_map[vert] = current_super_node_idx;
                 bool indegreeOne = true;
 
-                for (const auto &in_edge : in_edges(vert, dag_in)) {
+                for (const auto &in_edge : InEdges(vert, dag_in)) {
                     if (edge_mask.find(in_edge) != edge_mast_end) {
                         continue;
                     }
 
                     unsigned count = 0;
-                    for (const auto &out_edge : out_edges(source(in_edge, dag_in), dag_in)) {
+                    for (const auto &out_edge : OutEdges(Source(in_edge, dag_in), dag_in)) {
                         if (edge_mask.find(out_edge) != edge_mast_end) {
                             continue;
                         }
@@ -118,12 +118,12 @@ class HdaggCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> {
                 }
 
                 if (indegreeOne) {
-                    for (const auto &in_edge : in_edges(vert, dag_in)) {
+                    for (const auto &in_edge : InEdges(vert, dag_in)) {
                         if (edge_mask.find(in_edge) != edge_mast_end) {
                             continue;
                         }
 
-                        const auto &edge_source = source(in_edge, dag_in);
+                        const auto &edge_source = Source(in_edge, dag_in);
 
                         v_memw_t<Graph_t_in> node_mem = dag_in.VertexMemWeight(edge_source);
 
@@ -150,12 +150,12 @@ class HdaggCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> {
                         }
                     }
                 } else {
-                    for (const auto &in_edge : in_edges(vert, dag_in)) {
+                    for (const auto &in_edge : InEdges(vert, dag_in)) {
                         if (edge_mask.find(in_edge) != edge_mast_end) {
                             continue;
                         }
 
-                        const auto &edge_source = source(in_edge, dag_in);
+                        const auto &edge_source = Source(in_edge, dag_in);
 
                         if (!visited[edge_source]) {
                             vertex_map.push_back(std::vector<VertexType_in>({edge_source}));

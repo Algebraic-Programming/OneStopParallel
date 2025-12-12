@@ -71,8 +71,8 @@ void CreateInducedSubgraph(const GraphTIn &dag,
     if constexpr (HasEdgeWeightsV<Graph_t_in> and HasEdgeWeightsV<Graph_t_out>) {
         // add edges with edge comm weights
         for (const auto &node : selected_nodes) {
-            for (const auto &in_edge : in_edges(node, dag)) {
-                const auto &pred = source(in_edge, dag);
+            for (const auto &in_edge : InEdges(node, dag)) {
+                const auto &pred = Source(in_edge, dag);
                 if (selected_nodes.find(pred) != selected_nodes.end() || extra_sources.find(pred) != extra_sources.end()) {
                     dag_out.add_edge(local_idx[pred], local_idx[node], dag.EdgeCommWeight(in_edge));
                 }
@@ -118,12 +118,12 @@ bool CheckOrderedIsomorphism(const GraphT &first, const GraphT &second) {
         if constexpr (HasEdgeWeightsV<Graph_t>) {
             std::set<std::pair<vertex_idx_t<Graph_t>, e_commw_t<Graph_t>>> first_children, second_children;
 
-            for (const auto &outEdge : out_edges(node, first)) {
-                first_children.emplace(target(out_edge, first), first.EdgeCommWeight(out_edge));
+            for (const auto &outEdge : OutEdges(node, first)) {
+                first_children.emplace(Traget(out_edge, first), first.EdgeCommWeight(out_edge));
             }
 
-            for (const auto &outEdge : out_edges(node, second)) {
-                second_children.emplace(target(out_edge, second), second.EdgeCommWeight(out_edge));
+            for (const auto &outEdge : OutEdges(node, second)) {
+                second_children.emplace(Traget(out_edge, second), second.EdgeCommWeight(out_edge));
             }
 
             auto itr = first_children.begin(), secondItr = second_children.begin();
@@ -192,8 +192,8 @@ std::vector<GraphTOut> CreateInducedSubgraphs(const GraphTIn &dagIn, const std::
 
     if constexpr (HasEdgeWeightsV<Graph_t_in> and HasEdgeWeightsV<Graph_t_out>) {
         for (const auto node : dagIn.vertices()) {
-            for (const auto &outEdge : out_edges(node, dagIn)) {
-                auto succ = target(outEdge, dagIn);
+            for (const auto &outEdge : OutEdges(node, dagIn)) {
+                auto succ = Traget(outEdge, dagIn);
 
                 if (partitionIDs[node] == partitionIDs[succ]) {
                     splitDags[partitionIDs[node]].add_edge(local_idx[node], local_idx[succ], dagIn.EdgeCommWeight(outEdge));
@@ -244,8 +244,8 @@ std::unordered_map<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_in>> create_in
     if constexpr (HasEdgeWeightsV<Graph_t_in> and HasEdgeWeightsV<Graph_t_out>) {
         // add edges with edge comm weights
         for (const auto &node : selected_nodes) {
-            for (const auto &in_edge : in_edges(node, dag)) {
-                const auto &pred = source(in_edge, dag);
+            for (const auto &in_edge : InEdges(node, dag)) {
+                const auto &pred = Source(in_edge, dag);
                 if (local_idx.count(pred)) {
                     dag_out.add_edge(local_idx[pred], local_idx[node], dag.EdgeCommWeight(in_edge));
                 }

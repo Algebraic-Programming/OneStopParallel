@@ -373,8 +373,8 @@ struct VertexSelectionStrategy {
                                const unsigned startStep,
                                const unsigned endStep) {
         for (const auto &edge : current_violations) {
-            const auto source_v = source(edge, *graph);
-            const auto target_v = target(edge, *graph);
+            const auto source_v = Source(edge, *graph);
+            const auto target_v = Traget(edge, *graph);
 
             const unsigned source_step = active_schedule->assigned_superstep(source_v);
             if (source_step >= start_step && source_step <= end_step) {

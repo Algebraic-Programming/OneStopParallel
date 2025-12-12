@@ -936,8 +936,8 @@ GraphT StepByStepCoarser<GraphT>::Contract(const std::vector<vertex_idx_t<Graph_
     }
 
     for (vertex_idx node = 0; node < gFull_.NumVertices(); ++node) {
-        for (const auto &out_edge : out_edges(node, G_full)) {
-            const vertex_idx succ = target(out_edge, G_full);
+        for (const auto &out_edge : OutEdges(node, G_full)) {
+            const vertex_idx succ = Traget(out_edge, G_full);
 
             if (new_vertex_id[node] == new_vertex_id[succ]) {
                 continue;
@@ -974,7 +974,7 @@ void StepByStepCoarser<GraphT>::SetIdVector(std::vector<vertex_idx_t<Graph_t>> &
 
 template <typename GraphT>
 std::vector<vertex_idx_t<Graph_t>> StepByStepCoarser<GraphT>::GetIntermediateIDs(vertex_idx untilWhichStep) const {
-    std::vector<vertex_idx> target(gFull_.NumVertices()), pointsTo(G_full.NumVertices(), std::numeric_limits<vertex_idx>::max());
+    std::vector<vertex_idx> Traget(gFull_.NumVertices()), pointsTo(G_full.NumVertices(), std::numeric_limits<vertex_idx>::max());
 
     for (vertex_idx iterate = 0; iterate < contractionHistory.size() && iterate < until_which_step; ++iterate) {
         const std::pair<vertex_idx, vertex_idx> &contractionStep = contractionHistory[iterate];

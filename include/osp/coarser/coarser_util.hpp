@@ -142,13 +142,13 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
             static_assert(std::is_same_v<e_commw_t<Graph_t_in>, e_commw_t<Graph_t_out>>,
                           "Edge weight type of in graph and out graph must be the same!");
 
-            for (const auto &edge : edges(coarsenedDag)) {
+            for (const auto &edge : Edges(coarsenedDag)) {
                 coarsenedDag.SetEdgeCommWeight(edge, 0);
             }
 
-            for (const auto &oriEdge : edges(dagIn)) {
-                vertex_idx_t<Graph_t_out> src = vertex_contraction_map[source(oriEdge, dagIn)];
-                vertex_idx_t<Graph_t_out> tgt = vertex_contraction_map[target(oriEdge, dagIn)];
+            for (const auto &oriEdge : Edges(dagIn)) {
+                vertex_idx_t<Graph_t_out> src = vertex_contraction_map[Source(oriEdge, dagIn)];
+                vertex_idx_t<Graph_t_out> tgt = vertex_contraction_map[Traget(oriEdge, dagIn)];
 
                 if (src == tgt) {
                     continue;
@@ -322,9 +322,9 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
             static_assert(std::is_same_v<e_commw_t<Graph_t_in>, e_commw_t<Graph_t_out>>,
                           "Edge weight type of in graph and out graph must be the same!");
 
-            for (const auto &oriEdge : edges(dagIn)) {
-                vertex_idx_t<Graph_t_out> src = vertex_contraction_map[source(oriEdge, dagIn)];
-                vertex_idx_t<Graph_t_out> tgt = vertex_contraction_map[target(oriEdge, dagIn)];
+            for (const auto &oriEdge : Edges(dagIn)) {
+                vertex_idx_t<Graph_t_out> src = vertex_contraction_map[Source(oriEdge, dagIn)];
+                vertex_idx_t<Graph_t_out> tgt = vertex_contraction_map[Traget(oriEdge, dagIn)];
 
                 if (src == tgt) {
                     continue;
@@ -333,17 +333,17 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
                 coarsenedDag.SetEdgeCommWeight(src, tgt, 0);
             }
 
-            for (const auto &oriEdge : edges(dagIn)) {
-                vertex_idx_t<Graph_t_out> src = vertex_contraction_map[source(oriEdge, dagIn)];
-                vertex_idx_t<Graph_t_out> tgt = vertex_contraction_map[target(oriEdge, dagIn)];
+            for (const auto &oriEdge : Edges(dagIn)) {
+                vertex_idx_t<Graph_t_out> src = vertex_contraction_map[Source(oriEdge, dagIn)];
+                vertex_idx_t<Graph_t_out> tgt = vertex_contraction_map[Traget(oriEdge, dagIn)];
 
                 if (src == tgt) {
                     continue;
                 }
 
                 const auto contEdge = coarsenedDag.edge(pushforwardMap[src], pushforwardMap[tgt]);
-                assert(source(cont_edge, coarsenedDag) == pushforwardMap[src]
-                       && target(cont_edge, coarsenedDag) == pushforwardMap[tgt]);
+                assert(Source(cont_edge, coarsenedDag) == pushforwardMap[src]
+                       && Traget(cont_edge, coarsenedDag) == pushforwardMap[tgt]);
                 coarsenedDag.SetEdgeCommWeight(
                     src, tgt, ECommAccMethod()(coarsenedDag.EdgeCommWeight(cont_edge), dagIn.EdgeCommWeight(oriEdge)));
             }

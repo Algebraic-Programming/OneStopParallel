@@ -38,7 +38,7 @@ class DotFileWriter {
         EdgeWriterDot(const GraphT &graph) : graph_(graph) {}
 
         void operator()(std::ostream &out, const edge_desc_t<Graph_t> &i) const {
-            out << source(i, graph_) << "->" << target(i, graph_) << " ["
+            out << Source(i, graph_) << "->" << Traget(i, graph_) << " ["
                 << "comm_weight=\"" << graph_.EdgeCommWeight(i) << "\";"
                 << "]";
         }
@@ -267,7 +267,7 @@ class DotFileWriter {
         if constexpr (HasEdgeWeightsV<Graph_t>) {
             EdgeWriterDot<GraphT> edgeWriter(graph);
 
-            for (const auto &e : edges(graph)) {
+            for (const auto &e : Edges(graph)) {
                 edgeWriter(os, e);
                 os << "\n";
             }

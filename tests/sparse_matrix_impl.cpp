@@ -144,13 +144,13 @@ BOOST_AUTO_TEST_CASE(TestSparseMatrixAdapter1) {
         }
 
         i = 0;
-        for (const auto &e : out_edges(v, graph)) {
-            BOOST_CHECK_EQUAL(target(e, graph), outNeighbors[vi][i++]);
+        for (const auto &e : OutEdges(v, graph)) {
+            BOOST_CHECK_EQUAL(Traget(e, graph), outNeighbors[vi][i++]);
         }
 
         i = 0;
-        for (const auto &e : in_edges(v, graph)) {
-            BOOST_CHECK_EQUAL(source(e, graph), inNeighbors[vi][i++]);
+        for (const auto &e : InEdges(v, graph)) {
+            BOOST_CHECK_EQUAL(Source(e, graph), inNeighbors[vi][i++]);
         }
 
         BOOST_CHECK_EQUAL(graph.in_degree(v), inNeighbors[vi].size());
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(TestSparseMatrixAdapter1) {
     }
 
     unsigned count = 0;
-    for (const auto &e : edges(graph)) {
+    for (const auto &e : Edges(graph)) {
         std::cout << e.source << " -> " << e.target << std::endl;
         count++;
     }

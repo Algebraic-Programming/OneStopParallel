@@ -657,8 +657,8 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                 auto it = currentViolations.begin();
                 std::advance(it, dis(gen_));
                 const auto &nextEdge = *it;
-                const VertexType sourceV = source(nextEdge, *graph_);
-                const VertexType targetV = target(nextEdge, *graph_);
+                const VertexType sourceV = Source(nextEdge, *graph_);
+                const VertexType targetV = Traget(nextEdge, *graph_);
                 const bool sourceLocked = local_lock.find(source_v) != local_lock.end();
                 const bool targetLocked = local_lock.find(target_v) != local_lock.end();
 
@@ -1188,8 +1188,8 @@ class KlImprover : public ImprovementScheduler<GraphT> {
         if (threadData.unlockEdgeBacktrackCounter_ > 1) {
             for (const auto vertexEdgePair : threadData.activeScheduleData_.new_violations) {
                 const auto &e = vertexEdgePair.second;
-                const auto sourceV = source(e, *graph_);
-                const auto targetV = target(e, *graph_);
+                const auto sourceV = Source(e, *graph_);
+                const auto targetV = Traget(e, *graph_);
 
                 if (node == sourceV && threadData.lockManager_.is_locked(targetV)) {
                     unlockNodes.push_back(targetV);

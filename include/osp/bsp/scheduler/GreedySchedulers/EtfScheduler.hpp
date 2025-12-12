@@ -89,8 +89,8 @@ class EtfScheduler : public Scheduler<GraphT> {
             v_workw_t<Graph_t> maxval = 0;
 
             if constexpr (HasEdgeWeightsV<Graph_t>) {
-                for (const auto &out_edge : out_edges(node, instance.getComputationalDag())) {
-                    const v_workw_t<Graph_t> tmp_val = BL[target(out_edge, instance.getComputationalDag())]
+                for (const auto &out_edge : OutEdges(node, instance.getComputationalDag())) {
+                    const v_workw_t<Graph_t> tmp_val = BL[Traget(out_edge, instance.getComputationalDag())]
                                                        + instance.getComputationalDag().EdgeCommWeight(out_edge);
 
                     if (tmp_val > maxval) {

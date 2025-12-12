@@ -85,8 +85,8 @@ class SquashA : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
         while (num_nodes_decrease < num_nodes_aim && temperatureIncreaseIteration <= params_.numberOfTemperatureIncreases_) {
             for (const auto &wt_edge : edge_weights) {
                 const auto &edge_d = wt_edge.first;
-                const vertex_idx_t<Graph_t_in> edge_source = source(edge_d, dag_in);
-                const vertex_idx_t<Graph_t_in> edge_target = target(edge_d, dag_in);
+                const vertex_idx_t<Graph_t_in> edge_source = Source(edge_d, dag_in);
+                const vertex_idx_t<Graph_t_in> edge_target = Traget(edge_d, dag_in);
 
                 // Previously merged
                 if (merged_nodes[edge_source]) {
@@ -268,7 +268,7 @@ std::vector<std::vector<vertex_idx_t<Graph_t_in>>> SquashA<GraphTIn, GraphTOut>:
                     if constexpr (HasEdgeWeightsV<Graph_t_in>) {
                         edge_weights.emplace(edge, dag_in.EdgeCommWeight(edge));
                     } else {
-                        edge_weights.emplace(edge, dag_in.VertexCommWeight(source(edge, dag_in)));
+                        edge_weights.emplace(edge, dag_in.VertexCommWeight(Source(edge, dag_in)));
                     }
                 }
             }
@@ -285,8 +285,8 @@ std::vector<std::vector<vertex_idx_t<Graph_t_in>>> SquashA<GraphTIn, GraphTOut>:
             std::vector<edge_desc_t<Graph_t_in>> contractableEdges
                 = get_contractable_edges_from_poset_int_map<GraphTIn>(posetIntMapping, dagIn);
             for (const auto &edge : contractable_edges) {
-                std::size_t num_common_triangles = num_common_parents(dag_in, source(edge, dag_in), target(edge, dag_in));
-                num_common_triangles += num_common_children(dag_in, source(edge, dag_in), target(edge, dag_in));
+                std::size_t num_common_triangles = num_common_parents(dag_in, Source(edge, dag_in), Traget(edge, dag_in));
+                num_common_triangles += num_common_children(dag_in, Source(edge, dag_in), Traget(edge, dag_in));
                 edge_weights.emplace(edge, num_common_triangles);
             }
         }

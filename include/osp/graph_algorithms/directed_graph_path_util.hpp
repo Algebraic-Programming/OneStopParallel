@@ -279,7 +279,7 @@ std::vector<int> GetStrictPosetIntegerMap(unsigned const noise, double const poi
 
     std::unordered_map<EdgeType, bool> upOrDown;
 
-    for (const auto &edge : edges(graph)) {
+    for (const auto &edge : Edges(graph)) {
         upOrDown.emplace(edge, repeaterCoin.GetFlip());
     }
 
@@ -312,14 +312,14 @@ std::vector<int> GetStrictPosetIntegerMap(unsigned const noise, double const poi
     }
 
     for (const auto &vertex : topOrder) {
-        if (is_source(vertex, graph)) {
+        if (IsSource(vertex, graph)) {
             continue;
         }
 
         int maxTemp = std::numeric_limits<int>::min();
 
-        for (const auto &edge : in_edges(vertex, graph)) {
-            int temp = newTop[source(edge, graph)];
+        for (const auto &edge : InEdges(vertex, graph)) {
+            int temp = newTop[Source(edge, graph)];
             if (upOrDown.at(edge)) {
                 if (poissonParam <= 0.0) {
                     temp += 1;
@@ -339,8 +339,8 @@ std::vector<int> GetStrictPosetIntegerMap(unsigned const noise, double const poi
 
         int maxTemp = std::numeric_limits<int>::min();
 
-        for (const auto &edge : out_edges(*iter, graph)) {
-            int temp = newBot[target(edge, graph)];
+        for (const auto &edge : OutEdges(*iter, graph)) {
+            int temp = newBot[Traget(edge, graph)];
             if (!upOrDown.at(edge)) {
                 temp += 1 + poissonGen(gen);
             }
