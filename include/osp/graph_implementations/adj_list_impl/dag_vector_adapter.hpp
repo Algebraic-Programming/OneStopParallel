@@ -61,12 +61,12 @@ namespace osp {
 template <typename VImpl, typename IndexT>
 class DagVectorAdapter {
   public:
-    using VertexIdx = typename VImpl::vertex_idx_type;
+    using VertexIdx = typename VImpl::VertexIdxType;
 
-    using VertexWorkWeightType = typename VImpl::work_weight_type;
-    using VertexCommWeightType = typename VImpl::comm_weight_type;
-    using VertexMemWeightType = typename VImpl::mem_weight_type;
-    using VertexTypeType = typename VImpl::cdag_vertex_type_type;
+    using VertexWorkWeightType = typename VImpl::WorkWeightType;
+    using VertexCommWeightType = typename VImpl::CommWeightType;
+    using VertexMemWeightType = typename VImpl::MemWeightType;
+    using VertexTypeType = typename VImpl::CDagVertexTypeType;
 
     DagVectorAdapter() = default;
 

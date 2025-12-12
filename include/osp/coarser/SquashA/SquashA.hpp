@@ -58,7 +58,7 @@ class SquashA : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
 
     template <typename T, typename CMP>
     std::vector<std::vector<VertexIdxT<Graph_t_in>>> GenExpMapFromContractableEdges(
-        const std::multiset<std::pair<edge_desc_t<Graph_t_in>, T>, CMP> &edgeWeights,
+        const std::multiset<std::pair<EdgeDescT<Graph_t_in>, T>, CMP> &edgeWeights,
         const std::vector<int> &posetIntMapping,
         const GraphTIn &dagIn) {
         static_assert(std::is_arithmetic_v<T>, "T must be of arithmetic type!");
@@ -257,11 +257,11 @@ std::vector<std::vector<VertexIdxT<Graph_t_in>>> SquashA<GraphTIn, GraphTOut>::G
     if constexpr (HasEdgeWeightsV<Graph_t_in>) {
         if (params_.mode_ == squash_a_params::Mode::EDGE_WEIGHT) {
             auto edgeWCmp
-                = [](const std::pair<edge_desc_t<Graph_t_in>, ECommwT<Graph_t_in>> &lhs,
-                     const std::pair<edge_desc_t<Graph_t_in>, ECommwT<Graph_t_in>> &rhs) { return lhs.second < rhs.second; };
-            std::multiset<std::pair<edge_desc_t<Graph_t_in>, ECommwT<Graph_t_in>>, decltype(edge_w_cmp)> edge_weights(edge_w_cmp);
+                = [](const std::pair<EdgeDescT<Graph_t_in>, ECommwT<Graph_t_in>> &lhs,
+                     const std::pair<EdgeDescT<Graph_t_in>, ECommwT<Graph_t_in>> &rhs) { return lhs.second < rhs.second; };
+            std::multiset<std::pair<EdgeDescT<Graph_t_in>, ECommwT<Graph_t_in>>, decltype(edge_w_cmp)> edge_weights(edge_w_cmp);
             {
-                std::vector<edge_desc_t<Graph_t_in>> contractableEdges
+                std::vector<EdgeDescT<Graph_t_in>> contractableEdges
                     = get_contractable_edges_from_poset_int_map<GraphTIn>(posetIntMapping, dagIn);
                 for (const auto &edge : contractable_edges) {
                     if constexpr (HasEdgeWeightsV<Graph_t_in>) {
@@ -277,11 +277,11 @@ std::vector<std::vector<VertexIdxT<Graph_t_in>>> SquashA<GraphTIn, GraphTOut>::G
         }
     }
     if (params_.mode_ == squash_a_params::Mode::TRIANGLES) {
-        auto edgeWCmp = [](const std::pair<edge_desc_t<Graph_t_in>, std::size_t> &lhs,
-                           const std::pair<edge_desc_t<Graph_t_in>, std::size_t> &rhs) { return lhs.second < rhs.second; };
-        std::multiset<std::pair<edge_desc_t<Graph_t_in>, std::size_t>, decltype(edge_w_cmp)> edgeWeights(edgeWCmp);
+        auto edgeWCmp = [](const std::pair<EdgeDescT<Graph_t_in>, std::size_t> &lhs,
+                           const std::pair<EdgeDescT<Graph_t_in>, std::size_t> &rhs) { return lhs.second < rhs.second; };
+        std::multiset<std::pair<EdgeDescT<Graph_t_in>, std::size_t>, decltype(edge_w_cmp)> edgeWeights(edgeWCmp);
         {
-            std::vector<edge_desc_t<Graph_t_in>> contractableEdges
+            std::vector<EdgeDescT<Graph_t_in>> contractableEdges
                 = get_contractable_edges_from_poset_int_map<GraphTIn>(posetIntMapping, dagIn);
             for (const auto &edge : contractable_edges) {
                 std::size_t num_common_triangles = num_common_parents(dag_in, Source(edge, dag_in), Traget(edge, dag_in));

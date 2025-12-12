@@ -62,12 +62,12 @@ namespace osp {
 template <typename VImpl>
 class ComputationalDagVectorImpl {
   public:
-    using VertexIdx = typename VImpl::vertex_idx_type;
+    using VertexIdx = typename VImpl::VertexIdxType;
 
-    using VertexWorkWeightType = typename VImpl::work_weight_type;
-    using VertexCommWeightType = typename VImpl::comm_weight_type;
-    using VertexMemWeightType = typename VImpl::mem_weight_type;
-    using VertexTypeType = typename VImpl::cdag_vertex_type_type;
+    using VertexWorkWeightType = typename VImpl::WorkWeightType;
+    using VertexCommWeightType = typename VImpl::CommWeightType;
+    using VertexMemWeightType = typename VImpl::MemWeightType;
+    using VertexTypeType = typename VImpl::CDagVertexTypeType;
 
     ComputationalDagVectorImpl() = default;
 
@@ -258,12 +258,12 @@ class ComputationalDagVectorImpl {
 /**
  * @brief Default implementation of a computational DAG using unsigned integer weights.
  */
-using computational_dag_vector_impl_def_t = computational_dag_vector_impl<cdag_vertex_impl_unsigned>;
+using ComputationalDagVectorImplDefUnsignedT = ComputationalDagVectorImpl<CDagVertexImplUnsignedT>;
 
 /**
  * @brief Default implementation of a computational DAG using signed integer weights.
  */
-using computational_dag_vector_impl_def_int_t = computational_dag_vector_impl<cdag_vertex_impl_int>;
+using ComputationalDagVectorImplDefIntT = ComputationalDagVectorImpl<CDagVertexImplIntT>;
 
 static_assert(IsDirectedGraphEdgeDescV<computational_dag_vector_impl<cdag_vertex_impl_unsigned>>,
               "computational_dag_vector_impl must satisfy the directed_graph_edge_desc concept");

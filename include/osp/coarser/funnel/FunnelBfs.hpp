@@ -94,9 +94,9 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
     void RunInContraction(const GraphTIn &graph, std::vector<std::vector<VertexIdxT<Graph_t_in>>> &partition) {
         using vertex_idx_t = VertexIdxT<Graph_t_in>;
 
-        const std::unordered_set<edge_desc_t<Graph_t_in>> edgeMask = parameters.use_approx_transitive_reduction
-                                                                         ? long_edges_in_triangles_parallel(graph)
-                                                                         : std::unordered_set<edge_desc_t<Graph_t_in>>();
+        const std::unordered_set<EdgeDescT<Graph_t_in>> edgeMask = parameters.use_approx_transitive_reduction
+                                                                       ? long_edges_in_triangles_parallel(graph)
+                                                                       : std::unordered_set<EdgeDescT<Graph_t_in>>();
 
         std::vector<bool> visited(graph.NumVertices(), false);
 
@@ -206,9 +206,9 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
     void RunOutContraction(const GraphTIn &graph, std::vector<std::vector<VertexIdxT<Graph_t_in>>> &partition) {
         using vertex_idx_t = VertexIdxT<Graph_t_in>;
 
-        const std::unordered_set<edge_desc_t<Graph_t_in>> edgeMask = parameters.use_approx_transitive_reduction
-                                                                         ? long_edges_in_triangles_parallel(graph)
-                                                                         : std::unordered_set<edge_desc_t<Graph_t_in>>();
+        const std::unordered_set<EdgeDescT<Graph_t_in>> edgeMask = parameters.use_approx_transitive_reduction
+                                                                       ? long_edges_in_triangles_parallel(graph)
+                                                                       : std::unordered_set<EdgeDescT<Graph_t_in>>();
 
         std::vector<bool> visited(graph.NumVertices(), false);
 

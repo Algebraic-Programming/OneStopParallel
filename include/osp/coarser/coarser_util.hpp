@@ -210,7 +210,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
                     static_assert(std::is_same_v<ECommwT<Graph_t_in>, ECommwT<Graph_t_out>>,
                                   "Edge weight type of in graph and out graph must be the same!");
 
-                    edge_desc_t<Graph_t_in> ori_edge = edge_desc(vert, chld, dag_in).first;
+                    EdgeDescT<Graph_t_in> ori_edge = edge_desc(vert, chld, dag_in).first;
                     const auto pair = edge_desc(vertex_contraction_map[vert], vertex_contraction_map[chld], coarsened_dag);
                     if (pair.second) {
                         coarsened_dag.SetEdgeCommWeight(

@@ -30,7 +30,7 @@ limitations under the License.
 namespace osp {
 
 template <typename GraphT>
-std::unordered_set<edge_desc_t<GraphT>> LongEdgesInTrianglesParallel(const GraphT &graph) {
+std::unordered_set<EdgeDescT<GraphT>> LongEdgesInTrianglesParallel(const GraphT &graph) {
     static_assert(IsDirectedGraphEdgeDescV<GraphT>, "Graph_t must satisfy the directed_graph edge desc concept");
     static_assert(has_hashable_edge_desc_v<GraphT>, "Graph_t must satisfy the has_hashable_edge_desc concept");
 
@@ -38,8 +38,8 @@ std::unordered_set<edge_desc_t<GraphT>> LongEdgesInTrianglesParallel(const Graph
         return LongEdgesInTriangles(graph);
     }
 
-    std::unordered_set<edge_desc_t<GraphT>> longEdges;
-    std::vector<std::vector<edge_desc_t<GraphT>>> deletedEdgesThread(static_cast<size_t>(omp_get_max_threads()));
+    std::unordered_set<EdgeDescT<GraphT>> longEdges;
+    std::vector<std::vector<EdgeDescT<GraphT>>> deletedEdgesThread(static_cast<size_t>(omp_get_max_threads()));
 
 #pragma omp parallel for schedule(dynamic, 4)
     for (VertexIdxT<GraphT> vertex = 0; vertex < graph.NumVertices(); ++vertex) {

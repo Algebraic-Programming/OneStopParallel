@@ -354,14 +354,14 @@ inline auto inEdges(osp::VertexIdxT<boost_graph<vertex_workw_t, vertex_commw_t, 
 
 template <typename VertexWorkwT, typename VertexCommwT, typename VertexMemwT, typename VertexTypeT, typename EdgeCommwT>
 inline osp::VertexIdxT<boost_graph<vertex_workw_t, vertex_commw_t, vertex_memw_t, vertex_type_t, edge_commw_t>> Source(
-    const osp::edge_desc_t<boost_graph<vertex_workw_t, vertex_commw_t, vertex_memw_t, vertex_type_t, edge_commw_t>> &edge,
+    const osp::EdgeDescT<boost_graph<vertex_workw_t, vertex_commw_t, vertex_memw_t, vertex_type_t, edge_commw_t>> &edge,
     const BoostGraph<VertexWorkwT, VertexCommwT, VertexMemwT, VertexTypeT, EdgeCommwT> &graph) {
     return graph.Source(edge);
 }
 
 template <typename VertexWorkwT, typename VertexCommwT, typename VertexMemwT, typename VertexTypeT, typename EdgeCommwT>
 inline osp::VertexIdxT<boost_graph<vertex_workw_t, vertex_commw_t, vertex_memw_t, vertex_type_t, edge_commw_t>> Target(
-    const osp::edge_desc_t<boost_graph<vertex_workw_t, vertex_commw_t, vertex_memw_t, vertex_type_t, edge_commw_t>> &edge,
+    const osp::EdgeDescT<boost_graph<vertex_workw_t, vertex_commw_t, vertex_memw_t, vertex_type_t, edge_commw_t>> &edge,
     const BoostGraph<VertexWorkwT, VertexCommwT, VertexMemwT, VertexTypeT, EdgeCommwT> &graph) {
     return graph.Traget(edge);
 }

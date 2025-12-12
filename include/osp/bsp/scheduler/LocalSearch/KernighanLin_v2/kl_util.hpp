@@ -301,7 +301,7 @@ struct StaticAffinityTable {
 
 template <typename GraphT, typename ContainerT, typename KlActiveScheduleT>
 struct VertexSelectionStrategy {
-    using EdgeType = edge_desc_t<GraphT>;
+    using EdgeType = EdgeDescT<GraphT>;
 
     const KlActiveScheduleT *activeSchedule_;
     const GraphT *graph_;

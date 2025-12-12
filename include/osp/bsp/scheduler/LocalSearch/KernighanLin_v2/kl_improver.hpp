@@ -101,7 +101,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
     using commw_t = VCommwT<GraphT>;
     using work_weight_t = VWorkwT<GraphT>;
     using VertexType = VertexIdxT<GraphT>;
-    using EdgeType = edge_desc_t<GraphT>;
+    using EdgeType = EdgeDescT<GraphT>;
 
     using kl_move = kl_move_struct<cost_t, VertexType>;
     using heap_datastructure = MaxPairingHeap<VertexType, kl_move>;

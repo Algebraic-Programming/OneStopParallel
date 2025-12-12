@@ -283,7 +283,7 @@ struct KlActiveScheduleWorkDatastructures {
 template <typename GraphT, typename CostT>
 struct ThreadLocalActiveScheduleData {
     using VertexType = VertexIdxT<GraphT>;
-    using EdgeType = edge_desc_t<GraphT>;
+    using EdgeType = EdgeDescT<GraphT>;
 
     using kl_move = kl_move_struct<cost_t, VertexType>;
 
@@ -321,7 +321,7 @@ template <typename GraphT, typename CostT, typename MemoryConstraintT>
 class KlActiveSchedule {
   private:
     using VertexType = VertexIdxT<GraphT>;
-    using EdgeType = edge_desc_t<GraphT>;
+    using EdgeType = EdgeDescT<GraphT>;
     using kl_move = kl_move_struct<cost_t, VertexType>;
     using ThreadDataT = ThreadLocalActiveScheduleData<GraphT, CostT>;
 
