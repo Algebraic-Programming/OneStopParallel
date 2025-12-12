@@ -129,6 +129,8 @@ _add_test( permutations )
 
 _add_test( bit_mask )
 
+_add_test( hash_pair )
+
 ## io
 _add_test( filereader DATA )
 
