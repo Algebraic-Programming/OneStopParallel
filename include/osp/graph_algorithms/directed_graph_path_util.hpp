@@ -264,7 +264,7 @@ std::vector<std::vector<VertexIdxT<GraphT>>> ComputeWavefronts(const GraphT &gra
 
 template <typename GraphT>
 std::vector<int> GetStrictPosetIntegerMap(unsigned const noise, double const poissonParam, const GraphT &graph) {
-    static_assert(is_directed_graph_edge_desc_v<GraphT>, "Graph_t must satisfy the directed_graph_edge_desc concept");
+    static_assert(IsDirectedGraphEdgeDescV<GraphT>, "Graph_t must satisfy the directed_graph_edge_desc concept");
 
     if (noise > static_cast<unsigned>(std::numeric_limits<int>::max())) {
         throw std::overflow_error("Overflow in get_strict_poset_integer_map");

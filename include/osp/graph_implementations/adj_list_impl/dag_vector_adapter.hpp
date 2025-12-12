@@ -192,10 +192,10 @@ class DagVectorAdapter {
     unsigned numVertexTypes_ = 0;
 };
 
-static_assert(is_directed_graph_edge_desc_v<dag_vector_adapter<cdag_vertex_impl_unsigned, int>>,
+static_assert(IsDirectedGraphEdgeDescV<dag_vector_adapter<cdag_vertex_impl_unsigned, int>>,
               "dag_vector_adapter must satisfy the directed_graph_edge_desc concept");
 
-static_assert(has_vertex_weights_v<dag_vector_adapter<cdag_vertex_impl_unsigned, int>>,
+static_assert(HasVertexWeightsV<dag_vector_adapter<cdag_vertex_impl_unsigned, int>>,
               "dag_vector_adapter must satisfy the has_vertex_weights concept");
 
 static_assert(is_directed_graph_v<dag_vector_adapter<cdag_vertex_impl_unsigned, int>>,

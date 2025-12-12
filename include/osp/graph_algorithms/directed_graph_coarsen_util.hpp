@@ -34,7 +34,7 @@ namespace osp {
 
 template <typename GraphT>
 std::vector<edge_desc_t<Graph_t>> GetContractableEdgesFromPosetIntMap(const std::vector<int> &posetIntMap, const GraphT &graph) {
-    static_assert(is_directed_graph_edge_desc_v<Graph_t>, "Graph_t must satisfy the directed_graph_edge_desc concept");
+    static_assert(IsDirectedGraphEdgeDescV<Graph_t>, "Graph_t must satisfy the directed_graph_edge_desc concept");
 
     std::vector<edge_desc_t<Graph_t>> output;
 

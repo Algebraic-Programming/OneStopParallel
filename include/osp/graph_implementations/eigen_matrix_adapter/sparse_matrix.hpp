@@ -116,17 +116,16 @@ class SparseMatrixImp {
 using SparseMatrixGraphInt32T = SparseMatrixImp<int32_t>;
 using SparseMatrixGraphInt64T = SparseMatrixImp<int64_t>;
 
-static_assert(is_directed_graph_edge_desc_v<SparseMatrixImp<int32_t>>,
-              "SparseMatrix must satisfy the directed_graph_edge_desc concept");
+static_assert(IsDirectedGraphEdgeDescV<SparseMatrixImp<int32_t>>, "SparseMatrix must satisfy the directed_graph_edge_desc concept");
 
 // Verify that SparseMatrixImp satisfies the directed graph concept
 static_assert(is_directed_graph_v<SparseMatrixImp<int32_t>>, "SparseMatrix must satisfy directed_graph_concept");
 
 static_assert(is_directed_graph_v<SparseMatrixImp<int64_t>>, "SparseMatrix must satisfy directed_graph_concept");
 
-static_assert(has_vertex_weights_v<SparseMatrixImp<int32_t>>, "Compact_Sparse_Graph must satisfy the has_vertex_weights concept");
+static_assert(HasVertexWeightsV<SparseMatrixImp<int32_t>>, "Compact_Sparse_Graph must satisfy the has_vertex_weights concept");
 
-static_assert(has_vertex_weights_v<SparseMatrixImp<int64_t>>, "Compact_Sparse_Graph must satisfy the has_vertex_weights concept");
+static_assert(HasVertexWeightsV<SparseMatrixImp<int64_t>>, "Compact_Sparse_Graph must satisfy the has_vertex_weights concept");
 
 static_assert(IsComputationalDagTypedVerticesV<SparseMatrixImp<int32_t>>,
               "Compact_Sparse_Graph must satisfy the is_computation_dag concept");

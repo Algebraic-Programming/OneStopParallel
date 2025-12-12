@@ -73,7 +73,7 @@ struct KlBaseParameter {
 
 template <typename GraphT, typename MemoryConstraintT>
 class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
-    static_assert(is_directed_graph_edge_desc_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(IsDirectedGraphEdgeDescV<Graph_t>, "Graph_t must satisfy the directed_graph concept");
     static_assert(has_hashable_edge_desc_v<Graph_t>, "Graph_t must satisfy the has_hashable_edge_desc concept");
     static_assert(IsComputationalDagV<Graph_t>, "Graph_t must satisfy the computational_dag concept");
 

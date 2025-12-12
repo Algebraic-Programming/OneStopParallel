@@ -369,10 +369,10 @@ inline osp::vertex_idx_t<boost_graph<vertex_workw_t, vertex_commw_t, vertex_memw
 using BoostGraphIntT = BoostGraph<int, int, int, unsigned, int>;
 using BoostGraphUintT = BoostGraph<unsigned, unsigned, unsigned, unsigned, unsigned>;
 
-static_assert(osp::is_directed_graph_edge_desc_v<boost_graph_int_t>,
+static_assert(osp::IsDirectedGraphEdgeDescV<boost_graph_int_t>,
               "boost_graph_adapter does not satisfy the directed_graph_edge_desc concept");
 
-static_assert(osp::is_computational_dag_typed_vertices_edge_desc_v<boost_graph_int_t>,
+static_assert(osp::IsComputationalDagTypedVerticesEdgeDescV<boost_graph_int_t>,
               "boost_graph_adapter must satisfy the computational_dag_typed_vertices_edge_desc concept");
 
 static_assert(osp::is_constructable_cdag_vertex_v<boost_graph_int_t>,

@@ -112,7 +112,7 @@ void TransitiveReductionSparse(const GraphTIn &graphIn, GraphTOut &graphOut) {
  */
 template <typename GraphTIn, typename GraphTOut>
 void TransitiveReductionDense(const GraphTIn &graphIn, GraphTOut &graphOut) {
-    static_assert(is_directed_graph_edge_desc_v<Graph_t_in>, "Input graph must be a directed graph with edge descriptors.");
+    static_assert(IsDirectedGraphEdgeDescV<Graph_t_in>, "Input graph must be a directed graph with edge descriptors.");
     static_assert(is_constructable_cdag_v<Graph_t_out>, "Output graph must be a constructable computational DAG.");
     assert(graphOut.num_vertices() == 0 && "Output graph must be empty.");
 

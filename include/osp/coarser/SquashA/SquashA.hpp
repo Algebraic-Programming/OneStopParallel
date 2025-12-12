@@ -249,9 +249,8 @@ std::vector<int> SquashA<GraphTIn, GraphTOut>::GeneratePosetInMap(const GraphTIn
 
 template <typename GraphTIn, typename GraphTOut>
 std::vector<std::vector<vertex_idx_t<Graph_t_in>>> SquashA<GraphTIn, GraphTOut>::GenerateVertexExpansionMap(const GraphTIn &dagIn) {
-    static_assert(is_directed_graph_edge_desc_v<Graph_t_in>, "Graph_t_in must satisfy the directed_graph_edge_desc concept");
-    static_assert(is_computational_dag_edge_desc_v<Graph_t_in>,
-                  "Graph_t_in must satisfy the is_computational_dag_edge_desc concept");
+    static_assert(IsDirectedGraphEdgeDescV<Graph_t_in>, "Graph_t_in must satisfy the directed_graph_edge_desc concept");
+    static_assert(IsComputationalDagEdgeDescV<Graph_t_in>, "Graph_t_in must satisfy the is_computational_dag_edge_desc concept");
     // static_assert(has_hashable_edge_desc_v<Graph_t_in>, "Graph_t_in must have hashable edge descriptors");
 
     std::vector<int> posetIntMapping = GeneratePosetInMap(dagIn);

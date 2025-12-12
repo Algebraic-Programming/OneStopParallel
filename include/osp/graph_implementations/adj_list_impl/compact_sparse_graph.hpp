@@ -990,10 +990,10 @@ static_assert(is_Compact_Sparse_Graph_v<Compact_Sparse_Graph<false>>);
 static_assert(!is_Compact_Sparse_Graph_reorder_v<Compact_Sparse_Graph<true>>);
 static_assert(is_Compact_Sparse_Graph_reorder_v<Compact_Sparse_Graph<false>>);
 
-static_assert(has_vertex_weights_v<Compact_Sparse_Graph<true, true>>,
+static_assert(HasVertexWeightsV<Compact_Sparse_Graph<true, true>>,
               "Compact_Sparse_Graph must satisfy the has_vertex_weights concept");
 
-static_assert(has_vertex_weights_v<Compact_Sparse_Graph<false, true>>,
+static_assert(HasVertexWeightsV<Compact_Sparse_Graph<false, true>>,
               "Compact_Sparse_Graph must satisfy the has_vertex_weights concept");
 
 static_assert(is_directed_graph_v<Compact_Sparse_Graph<false, false, false, false, false>>,
@@ -1028,7 +1028,7 @@ static_assert(is_direct_constructable_cdag_v<Compact_Sparse_Graph<false, true>>,
 
 using CSG = CompactSparseGraph<false, true, true, true, true, std::size_t, std::size_t, unsigned, unsigned, unsigned, unsigned>;
 
-static_assert(is_directed_graph_edge_desc_v<CSG>, "CSG must satisfy the directed_graph_edge_desc concept");
+static_assert(IsDirectedGraphEdgeDescV<CSG>, "CSG must satisfy the directed_graph_edge_desc concept");
 
 // // Graph specific implementations
 
@@ -1077,7 +1077,7 @@ static_assert(is_directed_graph_edge_desc_v<CSG>, "CSG must satisfy the directed
 //         combined_expansion_map[vert] = pushforward_map[vertex_contraction_map[vert]];
 //     }
 
-//     if constexpr (has_vertex_weights_v<Graph_t_in> && is_modifiable_cdag_vertex_v<Graph_out_type>) {
+//     if constexpr (HasVertexWeightsV<Graph_t_in> && is_modifiable_cdag_vertex_v<Graph_out_type>) {
 //         static_assert(std::is_same_v<v_workw_t<Graph_t_in>, v_workw_t<Graph_out_type>>, "Work weight types of in-graph and
 //         out-graph must be the same."); static_assert(std::is_same_v<v_commw_t<Graph_t_in>, v_commw_t<Graph_out_type>>, "Vertex
 //         communication types of in-graph and out-graph must be the same."); static_assert(std::is_same_v<v_memw_t<Graph_t_in>,

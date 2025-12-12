@@ -96,7 +96,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
 
         coarsened_dag = Graph_t_out(num_vert_quotient, quotient_edges);
 
-        if constexpr (has_vertex_weights_v<Graph_t_in> && is_modifiable_cdag_vertex_v<Graph_t_out>) {
+        if constexpr (HasVertexWeightsV<Graph_t_in> && is_modifiable_cdag_vertex_v<Graph_t_out>) {
             static_assert(std::is_same_v<v_workw_t<Graph_t_in>, v_workw_t<Graph_t_out>>,
                           "Work weight types of in-graph and out-graph must be the same.");
             static_assert(std::is_same_v<v_commw_t<Graph_t_in>, v_commw_t<Graph_t_out>>,
@@ -279,7 +279,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
             combinedExpansionMap[vert] = pushforwardMap[vertex_contraction_map[vert]];
         }
 
-        if constexpr (has_vertex_weights_v<Graph_t_in> && is_modifiable_cdag_vertex_v<Graph_t_out>) {
+        if constexpr (HasVertexWeightsV<Graph_t_in> && is_modifiable_cdag_vertex_v<Graph_t_out>) {
             static_assert(std::is_same_v<v_workw_t<Graph_t_in>, v_workw_t<Graph_t_out>>,
                           "Work weight types of in-graph and out-graph must be the same.");
             static_assert(std::is_same_v<v_commw_t<Graph_t_in>, v_commw_t<Graph_t_out>>,
