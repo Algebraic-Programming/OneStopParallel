@@ -66,7 +66,7 @@ class SubproblemMultiScheduling : public Scheduler<GraphT> {
 // currently duplicated from BSP locking scheduler's code
 template <typename GraphT>
 std::vector<v_workw_t<Graph_t>> SubproblemMultiScheduling<GraphT>::GetLongestPath(const GraphT &graph) {
-    std::vector<workweight_type> longestPath(graph.num_vertices(), 0);
+    std::vector<workweight_type> longestPath(graph.NumVertices(), 0);
 
     std::vector<vertex_idx> topOrder = GetTopOrder(graph);
 

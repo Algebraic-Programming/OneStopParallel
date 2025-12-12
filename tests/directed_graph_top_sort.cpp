@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
     topOrder = GetTopOrderReverse(graph);
 
-    BOOST_CHECK(topOrder.size() == graph.num_vertices());
+    BOOST_CHECK(topOrder.size() == graph.NumVertices());
 
     indexInTopOrder = sorting_arrangement(topOrder);
 
@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
     topOrder = GetTopOrderMaxChildren(graph);
 
-    BOOST_CHECK(topOrder.size() == graph.num_vertices());
+    BOOST_CHECK(topOrder.size() == graph.NumVertices());
 
     indexInTopOrder = sorting_arrangement(topOrder);
 
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
     topOrder = GetTopOrderRandom(graph);
 
-    BOOST_CHECK(topOrder.size() == graph.num_vertices());
+    BOOST_CHECK(topOrder.size() == graph.NumVertices());
 
     indexInTopOrder = sorting_arrangement(topOrder);
 
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
     topOrder = GetTopOrderMinIndex(graph);
 
-    BOOST_CHECK(topOrder.size() == graph.num_vertices());
+    BOOST_CHECK(topOrder.size() == graph.NumVertices());
 
     indexInTopOrder = sorting_arrangement(topOrder);
 
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
     topOrder = GetTopOrderGorder(graph);
 
-    BOOST_CHECK(topOrder.size() == graph.num_vertices());
+    BOOST_CHECK(topOrder.size() == graph.NumVertices());
 
     indexInTopOrder = sorting_arrangement(topOrder);
 
@@ -154,8 +154,8 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
     topOrder = GetTopOrder(graph);
 
-    BOOST_CHECK(topOrder.size() == graph.num_vertices());
-    BOOST_CHECK(GetTopOrder(graphEmpty).size() == graphEmpty.num_vertices());
+    BOOST_CHECK(topOrder.size() == graph.NumVertices());
+    BOOST_CHECK(GetTopOrder(graphEmpty).size() == graphEmpty.NumVertices());
 
     indexInTopOrder = sorting_arrangement(topOrder);
 
@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
         ++idx;
     }
 
-    BOOST_CHECK_EQUAL(bfsViewTopSort.size(), graph.num_vertices());
+    BOOST_CHECK_EQUAL(bfsViewTopSort.size(), graph.NumVertices());
 
     indexInTopOrder = sorting_arrangement(bfsViewTopSort);
     for (const auto &i : bfsViewTopSort) {
@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
         dfsViewTopSort.push_back(v);
     }
 
-    BOOST_CHECK_EQUAL(dfsViewTopSort.size(), graph.num_vertices());
+    BOOST_CHECK_EQUAL(dfsViewTopSort.size(), graph.NumVertices());
 
     indexInTopOrder = sorting_arrangement(dfsViewTopSort);
     for (const auto &i : dfsViewTopSort) {
@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
         locViewTopSort.push_back(v);
     }
 
-    BOOST_CHECK_EQUAL(locViewTopSort.size(), graph.num_vertices());
+    BOOST_CHECK_EQUAL(locViewTopSort.size(), graph.NumVertices());
 
     indexInTopOrder = sorting_arrangement(locViewTopSort);
     for (const auto &i : locViewTopSort) {
@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
         maxChildrenViewTopSort.push_back(v);
     }
 
-    BOOST_CHECK_EQUAL(maxChildrenViewTopSort.size(), graph.num_vertices());
+    BOOST_CHECK_EQUAL(maxChildrenViewTopSort.size(), graph.NumVertices());
 
     indexInTopOrder = sorting_arrangement(maxChildrenViewTopSort);
     for (const auto &i : maxChildrenViewTopSort) {
@@ -262,7 +262,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     for (const auto &v : random_top_sort_view(graph)) {
         randomViewTopSort.push_back(v);
     }
-    BOOST_CHECK_EQUAL(randomViewTopSort.size(), graph.num_vertices());
+    BOOST_CHECK_EQUAL(randomViewTopSort.size(), graph.NumVertices());
 
     indexInTopOrder = sorting_arrangement(randomViewTopSort);
 

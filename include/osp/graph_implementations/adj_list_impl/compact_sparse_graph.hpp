@@ -772,7 +772,7 @@ class CompactSparseGraph {
     }
 
     template <typename GraphType>
-    CompactSparseGraph(const GraphType &graph) : CompactSparseGraph(graph.num_vertices(), edge_view(graph)) {
+    CompactSparseGraph(const GraphType &graph) : CompactSparseGraph(graph.NumVertices(), edge_view(graph)) {
         static_assert(is_directed_graph_v<Graph_type>);
 
         if constexpr (IsComputationalDagV<Graph_type> && use_work_weights) {
@@ -1070,7 +1070,7 @@ static_assert(IsDirectedGraphEdgeDescV<CSG>, "CSG must satisfy the directed_grap
 //     coarsened_dag = Graph_out_type(num_vert_quotient, quotient_edges);
 
 //     const auto& pushforward_map = coarsened_dag.get_pushforward_permutation();
-//     std::vector<vertex_idx_t<Graph_out_type>> combined_expansion_map(dag_in.num_vertices());
+//     std::vector<vertex_idx_t<Graph_out_type>> combined_expansion_map(dag_in.NumVertices());
 //     for (const auto &vert : dag_in.vertices()) {
 //         combined_expansion_map[vert] = pushforward_map[vertex_contraction_map[vert]];
 //     }

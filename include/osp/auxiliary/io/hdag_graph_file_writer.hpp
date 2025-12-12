@@ -42,7 +42,7 @@ template <typename GraphT>
 void WriteComputationalDagHyperdagFormatDb(std::ostream &os, const GraphT &graph, const bool writeCommentLines = false) {
     static_assert(IsComputationalDagV<Graph_t>, "Graph_t must be a computational DAG");
 
-    const auto numVertices = graph.num_vertices();
+    const auto numVertices = graph.NumVertices();
     unsigned numHyperedges = 0;
     vertex_idx_t<Graph_t> numPins = 0;
     std::vector<vertex_idx_t<Graph_t>> hyperedgeIdxToNode;

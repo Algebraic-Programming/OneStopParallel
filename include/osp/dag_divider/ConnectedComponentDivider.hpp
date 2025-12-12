@@ -61,7 +61,7 @@ class ConnectedComponentDivider : public IDagDivider<GraphT> {
     inline const std::vector<vertex_idx> &GetVertexMap() const { return vertex_map; }
 
     virtual std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> divide(const GraphT &dag) override {
-        if (dag.num_vertices() == 0) {
+        if (dag.NumVertices() == 0) {
             return {};
         }
 
@@ -72,7 +72,7 @@ class ConnectedComponentDivider : public IDagDivider<GraphT> {
         if (hasMoreThanOneConnectedComponent) {
             vertexMaps[0].resize(subDags_.size());
             for (unsigned i = 0; i < subDags_.size(); ++i) {
-                vertexMaps[0][i].resize(subDags_[i].num_vertices());
+                vertexMaps[0][i].resize(subDags_[i].NumVertices());
             }
 
             for (const auto &v : dag.vertices()) {
@@ -82,11 +82,11 @@ class ConnectedComponentDivider : public IDagDivider<GraphT> {
             subDags_.resize(1);
             subDags_[0] = dag;
             vertex_mapping.resize(1);
-            vertex_mapping[0].resize(dag.num_vertices());
-            vertex_map.resize(dag.num_vertices());
+            vertex_mapping[0].resize(dag.NumVertices());
+            vertex_map.resize(dag.NumVertices());
 
             vertexMaps[0].resize(1);
-            vertexMaps[0][0].resize(dag.num_vertices());
+            vertexMaps[0][0].resize(dag.NumVertices());
             for (const auto &v : dag.vertices()) {
                 vertexMaps[0][0][v] = v;
                 vertex_map[v] = v;
@@ -102,7 +102,7 @@ class ConnectedComponentDivider : public IDagDivider<GraphT> {
 
         vertexMaps[0].resize(subDags_.size());
         for (unsigned i = 0; i < subDags_.size(); ++i) {
-            vertexMaps[0][i].resize(subDags_[i].num_vertices());
+            vertexMaps[0][i].resize(subDags_[i].NumVertices());
         }
 
         for (const auto &v : dag.vertices()) {
@@ -117,9 +117,9 @@ class ConnectedComponentDivider : public IDagDivider<GraphT> {
         subDags_.clear();
         vertex_mapping.clear();
         vertex_map.clear();
-        component_.assign(dag.num_vertices(), std::numeric_limits<unsigned>::max());
+        component_.assign(dag.NumVertices(), std::numeric_limits<unsigned>::max());
 
-        if (dag.num_vertices() == 0) {
+        if (dag.NumVertices() == 0) {
             return false;
         }
 
@@ -164,7 +164,7 @@ class ConnectedComponentDivider : public IDagDivider<GraphT> {
 
         // Create the mappings between global and local vertex indices.
         vertex_mapping.resize(sub_dags.size());
-        vertex_map.resize(dag.num_vertices());
+        vertex_map.resize(dag.NumVertices());
 
         std::vector<vertex_idx> currentIndexInSubdag(subDags_.size(), 0);
         for (const auto &v : dag.vertices()) {
@@ -173,7 +173,7 @@ class ConnectedComponentDivider : public IDagDivider<GraphT> {
             vertex_map[v] = local_idx;
 
             if (vertex_mapping[comp_id].empty()) {
-                vertex_mapping[comp_id].resize(sub_dags[comp_id].num_vertices());
+                vertex_mapping[comp_id].resize(sub_dags[comp_id].NumVertices());
             }
 
             vertex_mapping[comp_id][local_idx] = v;

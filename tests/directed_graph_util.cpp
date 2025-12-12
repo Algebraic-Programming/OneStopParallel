@@ -67,8 +67,8 @@ BOOST_AUTO_TEST_CASE(TestEmptyGraph) {
 
     using VertexIdx = computational_dag_vector_impl_def_t::vertex_idx;
 
-    BOOST_CHECK_EQUAL(graph.num_edges(), 0);
-    BOOST_CHECK_EQUAL(graph.num_vertices(), 0);
+    BOOST_CHECK_EQUAL(graph.NumEdges(), 0);
+    BOOST_CHECK_EQUAL(graph.NumVertices(), 0);
 
     std::vector<VertexIdx> sources = source_vertices(graph);
     BOOST_CHECK_EQUAL(sources.size(), 0);
@@ -85,8 +85,8 @@ BOOST_AUTO_TEST_CASE(TestUtil1) {
 
     using VertexIdx = computational_dag_vector_impl_def_t::vertex_idx;
 
-    BOOST_CHECK_EQUAL(graph.num_edges(), 9);
-    BOOST_CHECK_EQUAL(graph.num_vertices(), 8);
+    BOOST_CHECK_EQUAL(graph.NumEdges(), 9);
+    BOOST_CHECK_EQUAL(graph.NumVertices(), 8);
 
     std::vector<VertexIdx> sources = source_vertices(graph);
     BOOST_CHECK_EQUAL(sources.size(), 1);
@@ -440,10 +440,10 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     const boost_graph_int_t graph(out, workW, commW);
     const boost_graph_int_t graphEmpty;
 
-    BOOST_CHECK_EQUAL(graph.num_edges(), 12);
-    BOOST_CHECK_EQUAL(graph.num_vertices(), 10);
-    BOOST_CHECK_EQUAL(graphEmpty.num_edges(), 0);
-    BOOST_CHECK_EQUAL(graphEmpty.num_vertices(), 0);
+    BOOST_CHECK_EQUAL(graph.NumEdges(), 12);
+    BOOST_CHECK_EQUAL(graph.NumVertices(), 10);
+    BOOST_CHECK_EQUAL(graphEmpty.NumEdges(), 0);
+    BOOST_CHECK_EQUAL(graphEmpty.NumVertices(), 0);
     BOOST_CHECK_EQUAL(graph.num_vertex_types(), 1);
 
     BOOST_CHECK_EQUAL(is_acyclic(graph), true);
@@ -453,8 +453,8 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
     const auto longEdges = long_edges_in_triangles(graph);
 
-    BOOST_CHECK_EQUAL(graph.num_vertices(), std::distance(graph.vertices().begin(), graph.vertices().end()));
-    BOOST_CHECK_EQUAL(graph.num_edges(), std::distance(edges(graph).begin(), edges(graph).end()));
+    BOOST_CHECK_EQUAL(graph.NumVertices(), std::distance(graph.vertices().begin(), graph.vertices().end()));
+    BOOST_CHECK_EQUAL(graph.NumEdges(), std::distance(edges(graph).begin(), edges(graph).end()));
     for (const auto &v : graph.vertices()) {
         BOOST_CHECK_EQUAL(graph.in_degree(v), std::distance(graph.parents(v).begin(), graph.parents(v).end()));
         BOOST_CHECK_EQUAL(graph.out_degree(v), std::distance(graph.children(v).begin(), graph.children(v).end()));
@@ -496,8 +496,8 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     }
 
     std::vector<VertexType> topOrder = GetTopOrder(graph);
-    BOOST_CHECK(topOrder.size() == graph.num_vertices());
-    BOOST_CHECK(GetTopOrder(graphEmpty).size() == graphEmpty.num_vertices());
+    BOOST_CHECK(topOrder.size() == graph.NumVertices());
+    BOOST_CHECK(GetTopOrder(graphEmpty).size() == graphEmpty.NumVertices());
 
     std::vector<size_t> indexInTopOrder = sorting_arrangement(topOrder);
 
@@ -508,8 +508,8 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     }
 
     topOrder = GetTopOrderMaxChildren(graph);
-    BOOST_CHECK(topOrder.size() == graph.num_vertices());
-    BOOST_CHECK(GetTopOrder(graphEmpty).size() == graphEmpty.num_vertices());
+    BOOST_CHECK(topOrder.size() == graph.NumVertices());
+    BOOST_CHECK(GetTopOrder(graphEmpty).size() == graphEmpty.NumVertices());
 
     indexInTopOrder = sorting_arrangement(topOrder);
 
@@ -520,8 +520,8 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     }
 
     topOrder = GetTopOrderRandom(graph);
-    BOOST_CHECK(topOrder.size() == graph.num_vertices());
-    BOOST_CHECK(GetTopOrderRandom(graphEmpty).size() == graphEmpty.num_vertices());
+    BOOST_CHECK(topOrder.size() == graph.NumVertices());
+    BOOST_CHECK(GetTopOrderRandom(graphEmpty).size() == graphEmpty.NumVertices());
 
     indexInTopOrder = sorting_arrangement(topOrder);
 
@@ -532,8 +532,8 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     }
 
     topOrder = GetTopOrderMinIndex(graph);
-    BOOST_CHECK(topOrder.size() == graph.num_vertices());
-    BOOST_CHECK(GetTopOrderMinIndex(graphEmpty).size() == graphEmpty.num_vertices());
+    BOOST_CHECK(topOrder.size() == graph.NumVertices());
+    BOOST_CHECK(GetTopOrderMinIndex(graphEmpty).size() == graphEmpty.NumVertices());
 
     indexInTopOrder = sorting_arrangement(topOrder);
 
@@ -551,9 +551,9 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     std::set<VertexType> nodesB({6, 2, 5, 3});
     std::set<VertexType> nodesC({6, 9, 1});
 
-    std::vector<bool> boolA(graph.num_vertices(), false);
-    std::vector<bool> boolB(graph.num_vertices(), false);
-    std::vector<bool> boolC(graph.num_vertices(), false);
+    std::vector<bool> boolA(graph.NumVertices(), false);
+    std::vector<bool> boolB(graph.NumVertices(), false);
+    std::vector<bool> boolC(graph.NumVertices(), false);
 
     for (auto &i : nodesA) {
         boolA[i] = true;
@@ -663,7 +663,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
         counter++;
     }
 
-    BOOST_CHECK_EQUAL(size, graph.num_vertices());
+    BOOST_CHECK_EQUAL(size, graph.NumVertices());
 
     // const std::pair<std::vector<VertexType>, ComputationalDag> rev_graph_pair = graph.reverse_graph();
     // const std::vector<VertexType> &vertex_mapping_rev_graph = rev_graph_pair.first;
@@ -698,7 +698,7 @@ BOOST_AUTO_TEST_CASE(TestEdgeViewIndexedAccess) {
     auto it = allEdges.begin();
 
     // Check each edge by index
-    for (size_t i = 0; i < graph.num_edges(); ++i) {
+    for (size_t i = 0; i < graph.NumEdges(); ++i) {
         // Construct iterator directly to index i
         auto indexedIt = decltype(allEdges)::iterator(i, graph);
         BOOST_CHECK(indexedIt == it);
@@ -708,10 +708,10 @@ BOOST_AUTO_TEST_CASE(TestEdgeViewIndexedAccess) {
     }
 
     // Check end condition
-    auto endIt = decltype(allEdges)::iterator(graph.num_edges(), graph);
+    auto endIt = decltype(allEdges)::iterator(graph.NumEdges(), graph);
     BOOST_CHECK(endIt == allEdges.end());
 
     // Check out of bounds
-    auto oobIt = decltype(allEdges)::iterator(graph.num_edges() + 5, graph);
+    auto oobIt = decltype(allEdges)::iterator(graph.NumEdges() + 5, graph);
     BOOST_CHECK(oobIt == allEdges.end());
 }

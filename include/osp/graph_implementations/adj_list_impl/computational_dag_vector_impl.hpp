@@ -74,7 +74,7 @@ class ComputationalDagVectorImpl {
     /**
      * @brief Constructs a graph with a specified number of vertices.
      *
-     * @param num_vertices The number of vertices to initialize.
+     * @param NumVertices The number of vertices to initialize.
      */
     explicit ComputationalDagVectorImpl(const VertexIdx numVertices)
         : vertices_(numVertices), outNeigbors_(numVertices), inNeigbors_(numVertices), numEdges_(0), numVertexTypes_(0) {

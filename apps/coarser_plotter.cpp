@@ -90,7 +90,7 @@ int main(int argc, char *argv[]) {
             return 1;
         }
 
-        std::vector<unsigned> coarseColours(coarseGraph.num_vertices());
+        std::vector<unsigned> coarseColours(coarseGraph.NumVertices());
         std::iota(coarseColours.begin(), coarseColours.end(), 0);
 
         writer.write_colored_graph(coarseOutDot, coarseGraph, coarseColours);

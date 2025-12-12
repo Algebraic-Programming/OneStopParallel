@@ -86,7 +86,7 @@ class Sptrsv {
             schedule.numberOfSupersteps(), std::vector<std::vector<EigenIdxType>>(schedule.getInstance().numberOfProcessors()));
 
         numSupersteps_ = schedule.numberOfSupersteps();
-        size_t numberOfVertices = instance_->getComputationalDag().num_vertices();
+        size_t numberOfVertices = instance_->getComputationalDag().NumVertices();
 
 #    pragma omp parallel num_threads(2)
         {

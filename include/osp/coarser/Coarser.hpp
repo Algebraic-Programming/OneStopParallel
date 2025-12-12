@@ -89,8 +89,8 @@ class CoarserGenContractionMap : public Coarser<GraphTIn, GraphTOut> {
     virtual bool coarsenDag(const GraphTIn &dagIn,
                             GraphTOut &coarsenedDag,
                             std::vector<vertex_idx_t<Graph_t_out>> &vertexContractionMap) override {
-        vertex_contraction_map = dag_in.num_vertices() == 0 ? std::vector<vertex_idx_t<Graph_t_out>>()
-                                                            : generate_vertex_contraction_map(dag_in);
+        vertex_contraction_map = dag_in.NumVertices() == 0 ? std::vector<vertex_idx_t<Graph_t_out>>()
+                                                           : generate_vertex_contraction_map(dag_in);
 
         return coarser_util::construct_coarse_dag(dagIn, coarsenedDag, vertex_contraction_map);
     }
@@ -114,7 +114,7 @@ class CoarserGenExpansionMap : public Coarser<GraphTIn, GraphTOut> {
     virtual bool coarsenDag(const GraphTIn &dagIn,
                             GraphTOut &coarsenedDag,
                             std::vector<vertex_idx_t<Graph_t_out>> &vertexContractionMap) override {
-        if (dagIn.num_vertices() == 0) {
+        if (dagIn.NumVertices() == 0) {
             vertex_contraction_map = std::vector<vertex_idx_t<Graph_t_out>>();
             return true;
         }

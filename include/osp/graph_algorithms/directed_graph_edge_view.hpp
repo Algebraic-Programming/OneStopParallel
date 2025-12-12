@@ -61,7 +61,7 @@ class EdgeView {
         VertexIdxT<GraphT> currentEdgeIdx_;    // Global index of the current edge in the traversal order
 
         void AdvanceToValid() {
-            while (currentVertex_ != graph_->num_vertices()) {
+            while (currentVertex_ != graph_->NumVertices()) {
                 if (graph_->children(currentVertex_).begin() != graph_->children(currentVertex_).end()) {
                     currentChild_ = graph_->children(currentVertex_).begin();
                     break;
@@ -85,16 +85,16 @@ class EdgeView {
 
         DirectedEdgeIterator(const VertexIdxT<GraphT> edgeIdx, const GraphT &graph1)
             : graph_(&graph1), currentVertex_(0), currentEdgeIdx_(edgeIdx) {
-            if (currentEdgeIdx_ >= graph_->num_edges()) {
-                currentEdgeIdx_ = graph_->num_edges();
-                currentVertex_ = graph_->num_vertices();
+            if (currentEdgeIdx_ >= graph_->NumEdges()) {
+                currentEdgeIdx_ = graph_->NumEdges();
+                currentVertex_ = graph_->NumVertices();
                 return;
             }
 
             VertexIdxT<GraphT> currentAccumulatedEdges = 0;
 
             // Optimization: Skip vertices entirely if their degree is small enough
-            while (currentVertex_ < graph_->num_vertices()) {
+            while (currentVertex_ < graph_->NumVertices()) {
                 const auto degree = graph_->out_degree(currentVertex_);
                 if (currentAccumulatedEdges + degree > currentEdgeIdx_) {
                     break;
@@ -104,7 +104,7 @@ class EdgeView {
             }
 
             // Initialize child iterator and advance within the specific vertex
-            if (currentVertex_ < graph_->num_vertices()) {
+            if (currentVertex_ < graph_->NumVertices()) {
                 currentChild_ = graph_->children(currentVertex_).begin();
                 std::advance(currentChild_, currentEdgeIdx_ - currentAccumulatedEdges);
             }
@@ -150,13 +150,13 @@ class EdgeView {
 
     [[nodiscard]] auto cbegin() const { return DirEdgeIterator(graph_); }
 
-    [[nodiscard]] auto end() const { return DirEdgeIterator(graph_.num_edges(), graph_); }
+    [[nodiscard]] auto end() const { return DirEdgeIterator(graph_.NumEdges(), graph_); }
 
-    [[nodiscard]] auto cend() const { return DirEdgeIterator(graph_.num_edges(), graph_); }
+    [[nodiscard]] auto cend() const { return DirEdgeIterator(graph_.NumEdges(), graph_); }
 
-    [[nodiscard]] auto size() const { return graph_.num_edges(); }
+    [[nodiscard]] auto size() const { return graph_.NumEdges(); }
 
-    [[nodiscard]] bool empty() const { return graph_.num_edges() == 0; }
+    [[nodiscard]] bool empty() const { return graph_.NumEdges() == 0; }
 };
 
 /**

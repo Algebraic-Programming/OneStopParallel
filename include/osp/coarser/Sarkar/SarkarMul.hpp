@@ -120,9 +120,9 @@ RETURN_STATUS SarkarMul<GraphT, GraphTCoarse>::RunSingleContractionMode(vertex_i
 
     vertex_idx_t<Graph_t> currentNumVertices;
     if (firstCoarsen_) {
-        currentNumVertices = MultilevelCoarser<GraphT, GraphTCoarse>::getOriginalGraph()->num_vertices();
+        currentNumVertices = MultilevelCoarser<GraphT, GraphTCoarse>::getOriginalGraph()->NumVertices();
     } else {
-        currentNumVertices = MultilevelCoarser<GraphT, GraphTCoarse>::dag_history.back()->num_vertices();
+        currentNumVertices = MultilevelCoarser<GraphT, GraphTCoarse>::dag_history.back()->NumVertices();
     }
 
     GraphTCoarse coarsenedDag;
@@ -145,8 +145,8 @@ RETURN_STATUS SarkarMul<GraphT, GraphTCoarse>::RunSingleContractionMode(vertex_i
     status = std::max(
         status, MultilevelCoarser<GraphT, GraphTCoarse>::add_contraction(std::move(contraction_map), std::move(coarsenedDag)));
 
-    vertex_idx_t<Graph_t> newNumVertices = MultilevelCoarser<GraphT, GraphTCoarse>::dag_history.back()->num_vertices();
-    diffVertices = current_num_vertices - new_num_vertices;
+    vertex_idx_t<Graph_t> newNumVertices = MultilevelCoarser<GraphT, GraphTCoarse>::dag_history.back()->NumVertices();
+    diffVertices = current_NumVertices - new_NumVertices;
 
     return status;
 }

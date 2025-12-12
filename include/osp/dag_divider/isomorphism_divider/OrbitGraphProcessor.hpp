@@ -122,7 +122,7 @@ class OrbitGraphProcessor {
     std::pair<Constr_Graph_t, std::vector<VertexType>> SimulateMerge(VertexType u,
                                                                      VertexType v,
                                                                      const ConstrGraphT &currentCoarseGraph) const {
-        std::vector<VertexType> tempContractionMap(currentCoarseGraph.num_vertices());
+        std::vector<VertexType> tempContractionMap(currentCoarseGraph.NumVertices());
         VertexType newIdx = 0;
         for (VertexType i = 0; i < static_cast<VertexType>(temp_contraction_map.size()); ++i) {
             if (i != v) {
@@ -178,7 +178,7 @@ class OrbitGraphProcessor {
         non_viable_crit_path_edges_cache_ = std::move(next_non_viable_crit_path_edges);
 
         // Update groups
-        std::vector<Group> nextGroups(currentCoarseGraph.num_vertices());
+        std::vector<Group> nextGroups(currentCoarseGraph.NumVertices());
         for (VertexType i = 0; i < static_cast<VertexType>(currentGroups.size()); ++i) {
             if (i != u && i != v) {
                 nextGroups[group_remap[i]] = std::move(currentGroups[i]);
@@ -282,7 +282,7 @@ class OrbitGraphProcessor {
 
                     if constexpr (verbose_) {
                         std::cout << "  - Merging " << v << " into " << u << ". New coarse graph has "
-                                  << temp_coarse_graph.num_vertices() << " nodes.\n";
+                                  << temp_coarse_graph.NumVertices() << " nodes.\n";
                     }
 
                     commit_merge(u,
@@ -524,7 +524,7 @@ class OrbitGraphProcessor {
                 // Commit Merge
                 if constexpr (verbose_) {
                     std::cout << "  - Merging " << v << " into " << u << ". New coarse graph has "
-                              << temp_coarse_graph.num_vertices() << " nodes.\n";
+                              << temp_coarse_graph.NumVertices() << " nodes.\n";
                 }
 
                 commit_merge(u,
@@ -582,13 +582,13 @@ class OrbitGraphProcessor {
         non_viable_edges_cache_.clear();
         non_viable_crit_path_edges_cache_.clear();
 
-        if (dag.num_vertices() == 0) {
+        if (dag.NumVertices() == 0) {
             return;
         }
 
         const auto &orbits = hasher.get_orbits();
 
-        contraction_map_.assign(dag.num_vertices(), 0);
+        contraction_map_.assign(dag.NumVertices(), 0);
         VertexType coarseNodeIdx = 0;
 
         for (const auto &hash_vertices_pair : orbits) {
@@ -845,16 +845,16 @@ class OrbitGraphProcessor {
         finalCoarseGraph_ = ConstrGraphT();
         final_contraction_map_.clear();
 
-        if (initialCoarseGraph.num_vertices() == 0) {
+        if (initialCoarseGraph.NumVertices() == 0) {
             return;
         }
 
         ConstrGraphT currentCoarseGraph = initialCoarseGraph;
-        std::vector<Group> currentGroups(initialCoarseGraph.num_vertices());
+        std::vector<Group> currentGroups(initialCoarseGraph.NumVertices());
         std::vector<VertexType> currentContractionMap = contraction_map_;
 
         // Initialize groups: each group corresponds to an orbit.
-        for (VertexType i = 0; i < originalDag.num_vertices(); ++i) {
+        for (VertexType i = 0; i < originalDag.NumVertices(); ++i) {
             const VertexType coarseNode = contraction_map_[i];
             currentGroups[coarse_node].subgraphs.push_back({i});
         }
@@ -907,15 +907,15 @@ class OrbitGraphProcessor {
         finalCoarseGraph_ = ConstrGraphT();
         final_contraction_map_.clear();
 
-        if (initialCoarseGraph.num_vertices() == 0) {
+        if (initialCoarseGraph.NumVertices() == 0) {
             return;
         }
 
         ConstrGraphT currentCoarseGraph = initialCoarseGraph;
-        std::vector<Group> currentGroups(initialCoarseGraph.num_vertices());
+        std::vector<Group> currentGroups(initialCoarseGraph.NumVertices());
         std::vector<VertexType> currentContractionMap = contraction_map_;
 
-        for (VertexType i = 0; i < originalDag.num_vertices(); ++i) {
+        for (VertexType i = 0; i < originalDag.NumVertices(); ++i) {
             const VertexType coarseNode = contraction_map_[i];
             currentGroups[coarse_node].subgraphs.push_back({i});
         }

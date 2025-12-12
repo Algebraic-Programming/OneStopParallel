@@ -61,7 +61,7 @@ struct KlHyperTotalCommCostFunction {
         instance_ = &sched.getInstance();
         graph_ = &instance_->getComputationalDag();
         commMultiplier_ = 1.0 / instance_->numberOfProcessors();
-        node_lambda_map.initialize(graph->num_vertices(), instance->numberOfProcessors());
+        node_lambda_map.initialize(graph->NumVertices(), instance->numberOfProcessors());
     }
 
     struct EmptyStruct {};

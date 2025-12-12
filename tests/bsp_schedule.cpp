@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(TestInstanceBicgstab) {
     bool status = file_reader::readGraph((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(), instance.getComputationalDag());
 
     BOOST_CHECK(status);
-    BOOST_CHECK_EQUAL(instance.getComputationalDag().num_vertices(), 54);
+    BOOST_CHECK_EQUAL(instance.getComputationalDag().NumVertices(), 54);
     BOOST_CHECK_EQUAL(instance.getComputationalDag().num_vertex_types(), 1);
 
     std::vector<Scheduler<Graph> *> schedulers = {new BspLocking<Graph>(),
@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE(TestScheduleWriter) {
     bool status = file_reader::readGraph((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(), instance.getComputationalDag());
 
     BOOST_CHECK(status);
-    BOOST_CHECK_EQUAL(instance.getComputationalDag().num_vertices(), 54);
+    BOOST_CHECK_EQUAL(instance.getComputationalDag().NumVertices(), 54);
     BOOST_CHECK_EQUAL(instance.getComputationalDag().num_vertex_types(), 1);
 
     BspLocking<GraphT1> scheduler;
@@ -163,12 +163,12 @@ BOOST_AUTO_TEST_CASE(TestScheduleWriter) {
     BspInstance<GraphT2> instanceT2(instance);
     BspSchedule<GraphT2> scheduleT2(instanceT2);
 
-    BOOST_CHECK_EQUAL(scheduleT2.getInstance().getComputationalDag().num_vertices(), instance.getComputationalDag().num_vertices());
+    BOOST_CHECK_EQUAL(scheduleT2.getInstance().getComputationalDag().NumVertices(), instance.getComputationalDag().NumVertices());
     BOOST_CHECK(scheduleT2.satisfiesPrecedenceConstraints());
 
-    BOOST_CHECK_EQUAL(instanceT2.getComputationalDag().num_vertices(), instance.getComputationalDag().num_vertices());
+    BOOST_CHECK_EQUAL(instanceT2.getComputationalDag().NumVertices(), instance.getComputationalDag().NumVertices());
     BOOST_CHECK_EQUAL(instanceT2.getComputationalDag().num_vertex_types(), instance.getComputationalDag().num_vertex_types());
-    BOOST_CHECK_EQUAL(instanceT2.getComputationalDag().num_edges(), instance.getComputationalDag().num_edges());
+    BOOST_CHECK_EQUAL(instanceT2.getComputationalDag().NumEdges(), instance.getComputationalDag().NumEdges());
 
     for (const auto &v : instance.getComputationalDag().vertices()) {
         BOOST_CHECK_EQUAL(instanceT2.getComputationalDag().vertex_work_weight(v),
@@ -236,7 +236,7 @@ BOOST_AUTO_TEST_CASE(TestBspScheduleCs) {
 
     BspSchedule<Graph> scheduleT2(schedule);
 
-    BOOST_CHECK_EQUAL(scheduleT2.getInstance().getComputationalDag().num_vertices(), instance.getComputationalDag().num_vertices());
+    BOOST_CHECK_EQUAL(scheduleT2.getInstance().getComputationalDag().NumVertices(), instance.getComputationalDag().NumVertices());
     BOOST_CHECK(scheduleT2.satisfiesPrecedenceConstraints());
     BOOST_CHECK_EQUAL(scheduleT2.numberOfSupersteps(), schedule.numberOfSupersteps());
 
@@ -247,7 +247,7 @@ BOOST_AUTO_TEST_CASE(TestBspScheduleCs) {
 
     BspSchedule<Graph> scheduleT3(instance);
     scheduleT3 = scheduleT2;
-    BOOST_CHECK_EQUAL(scheduleT3.getInstance().getComputationalDag().num_vertices(), instance.getComputationalDag().num_vertices());
+    BOOST_CHECK_EQUAL(scheduleT3.getInstance().getComputationalDag().NumVertices(), instance.getComputationalDag().NumVertices());
     BOOST_CHECK(scheduleT3.satisfiesPrecedenceConstraints());
     BOOST_CHECK_EQUAL(scheduleT3.numberOfSupersteps(), schedule.numberOfSupersteps());
 
@@ -259,7 +259,7 @@ BOOST_AUTO_TEST_CASE(TestBspScheduleCs) {
     BspSchedule<Graph> scheduleT4(instance);
     scheduleT4 = std::move(scheduleT3);
 
-    BOOST_CHECK_EQUAL(scheduleT4.getInstance().getComputationalDag().num_vertices(), instance.getComputationalDag().num_vertices());
+    BOOST_CHECK_EQUAL(scheduleT4.getInstance().getComputationalDag().NumVertices(), instance.getComputationalDag().NumVertices());
     BOOST_CHECK(scheduleT4.satisfiesPrecedenceConstraints());
     BOOST_CHECK_EQUAL(scheduleT4.numberOfSupersteps(), schedule.numberOfSupersteps());
     for (const auto &v : instance.getComputationalDag().vertices()) {
@@ -268,7 +268,7 @@ BOOST_AUTO_TEST_CASE(TestBspScheduleCs) {
     }
 
     BspSchedule<Graph> scheduleT5(std::move(scheduleT4));
-    BOOST_CHECK_EQUAL(scheduleT5.getInstance().getComputationalDag().num_vertices(), instance.getComputationalDag().num_vertices());
+    BOOST_CHECK_EQUAL(scheduleT5.getInstance().getComputationalDag().NumVertices(), instance.getComputationalDag().NumVertices());
     BOOST_CHECK(scheduleT5.satisfiesPrecedenceConstraints());
     BOOST_CHECK_EQUAL(scheduleT5.numberOfSupersteps(), schedule.numberOfSupersteps());
 
@@ -278,7 +278,7 @@ BOOST_AUTO_TEST_CASE(TestBspScheduleCs) {
     }
 
     BspScheduleCS<Graph> scheduleCs(scheduleT5);
-    BOOST_CHECK_EQUAL(scheduleCs.getInstance().getComputationalDag().num_vertices(), instance.getComputationalDag().num_vertices());
+    BOOST_CHECK_EQUAL(scheduleCs.getInstance().getComputationalDag().NumVertices(), instance.getComputationalDag().NumVertices());
     BOOST_CHECK(scheduleCs.satisfiesPrecedenceConstraints());
     BOOST_CHECK(scheduleCs.hasValidCommSchedule());
     BOOST_CHECK_EQUAL(scheduleCs.numberOfSupersteps(), schedule.numberOfSupersteps());
@@ -289,7 +289,7 @@ BOOST_AUTO_TEST_CASE(TestBspScheduleCs) {
     }
 
     // schedule_t5 is still valid
-    BOOST_CHECK_EQUAL(scheduleT5.getInstance().getComputationalDag().num_vertices(), instance.getComputationalDag().num_vertices());
+    BOOST_CHECK_EQUAL(scheduleT5.getInstance().getComputationalDag().NumVertices(), instance.getComputationalDag().NumVertices());
     BOOST_CHECK(scheduleT5.satisfiesPrecedenceConstraints());
     BOOST_CHECK_EQUAL(scheduleT5.numberOfSupersteps(), schedule.numberOfSupersteps());
 
@@ -299,8 +299,7 @@ BOOST_AUTO_TEST_CASE(TestBspScheduleCs) {
     }
 
     BspScheduleCS<Graph> scheduleCsT2(std::move(scheduleT5));
-    BOOST_CHECK_EQUAL(scheduleCsT2.getInstance().getComputationalDag().num_vertices(),
-                      instance.getComputationalDag().num_vertices());
+    BOOST_CHECK_EQUAL(scheduleCsT2.getInstance().getComputationalDag().NumVertices(), instance.getComputationalDag().NumVertices());
     BOOST_CHECK(scheduleCsT2.satisfiesPrecedenceConstraints());
     BOOST_CHECK(scheduleCsT2.hasValidCommSchedule());
     BOOST_CHECK_EQUAL(scheduleCsT2.numberOfSupersteps(), schedule.numberOfSupersteps());

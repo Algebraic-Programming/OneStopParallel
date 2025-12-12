@@ -47,8 +47,8 @@ BOOST_AUTO_TEST_CASE(TestMtxComputationalDagVectorImpl) {
 
     std::cout << "STATUS:" << status << std::endl;
     BOOST_CHECK(status);
-    BOOST_CHECK_EQUAL(graph.num_vertices(), 8);
-    BOOST_CHECK_EQUAL(graph.num_edges(), 19);
+    BOOST_CHECK_EQUAL(graph.NumVertices(), 8);
+    BOOST_CHECK_EQUAL(graph.NumEdges(), 19);
 
     // ---- Node 0
     std::vector<int> p0{};
@@ -116,8 +116,8 @@ BOOST_AUTO_TEST_CASE(TestMtxBoostGraph) {
 
     std::cout << "STATUS:" << status << std::endl;
     BOOST_CHECK(status);
-    BOOST_CHECK_EQUAL(graph.num_vertices(), 8);
-    BOOST_CHECK_EQUAL(graph.num_edges(), 19);
+    BOOST_CHECK_EQUAL(graph.NumVertices(), 8);
+    BOOST_CHECK_EQUAL(graph.NumEdges(), 19);
 
     // ---- Node 0
     std::vector<int> p0{};
@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(TestBicgstab) {
         = file_reader::readComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(), graph);
 
     BOOST_CHECK(status);
-    BOOST_CHECK_EQUAL(graph.num_vertices(), 54);
+    BOOST_CHECK_EQUAL(graph.NumVertices(), 54);
 }
 
 BOOST_AUTO_TEST_CASE(TestHdagBoost) {
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(TestHdagBoost) {
         = file_reader::readComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(), graph);
 
     BOOST_CHECK(status);
-    BOOST_CHECK_EQUAL(graph.num_vertices(), 54);
+    BOOST_CHECK_EQUAL(graph.NumVertices(), 54);
 }
 
 BOOST_AUTO_TEST_CASE(TestArchSmpl) {
@@ -258,8 +258,8 @@ BOOST_AUTO_TEST_CASE(TestKMeans) {
     bool status = file_reader::readComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_k-means.hdag").string(), graph);
 
     BOOST_CHECK(status);
-    BOOST_CHECK_EQUAL(graph.num_vertices(), 40);
-    BOOST_CHECK_EQUAL(graph.num_edges(), 45);
+    BOOST_CHECK_EQUAL(graph.NumVertices(), 40);
+    BOOST_CHECK_EQUAL(graph.NumEdges(), 45);
 
     for (const auto &v : graph.vertices()) {
         BOOST_CHECK_EQUAL(graph.vertex_work_weight(v), work[v]);
@@ -271,8 +271,8 @@ BOOST_AUTO_TEST_CASE(TestKMeans) {
     status = file_reader::readComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_k-means.hdag").string(), graph2);
 
     BOOST_CHECK(status);
-    BOOST_CHECK_EQUAL(graph2.num_vertices(), 40);
-    BOOST_CHECK_EQUAL(graph2.num_edges(), 45);
+    BOOST_CHECK_EQUAL(graph2.NumVertices(), 40);
+    BOOST_CHECK_EQUAL(graph2.NumEdges(), 45);
 
     for (const auto &v : graph2.vertices()) {
         BOOST_CHECK_EQUAL(graph2.vertex_work_weight(v), work[v]);
@@ -297,8 +297,8 @@ BOOST_AUTO_TEST_CASE(TestDotGraph) {
     bool status = file_reader::readComputationalDagDotFormat((cwd / "data/dot/smpl_dot_graph_1.dot").string(), graph);
 
     BOOST_CHECK(status);
-    BOOST_CHECK_EQUAL(graph.num_vertices(), 11);
-    BOOST_CHECK_EQUAL(graph.num_edges(), 10);
+    BOOST_CHECK_EQUAL(graph.NumVertices(), 11);
+    BOOST_CHECK_EQUAL(graph.NumEdges(), 10);
     BOOST_CHECK_EQUAL(graph.num_vertex_types(), 2);
 
     for (const auto &v : graph.vertices()) {
@@ -326,8 +326,8 @@ BOOST_AUTO_TEST_CASE(TestDotGraphBoost) {
     bool status = file_reader::readComputationalDagDotFormat((cwd / "data/dot/smpl_dot_graph_1.dot").string(), graph);
 
     BOOST_CHECK(status);
-    BOOST_CHECK_EQUAL(graph.num_vertices(), 11);
-    BOOST_CHECK_EQUAL(graph.num_edges(), 10);
+    BOOST_CHECK_EQUAL(graph.NumVertices(), 11);
+    BOOST_CHECK_EQUAL(graph.NumEdges(), 10);
     BOOST_CHECK_EQUAL(graph.num_vertex_types(), 2);
 
     for (const auto &v : graph.vertices()) {

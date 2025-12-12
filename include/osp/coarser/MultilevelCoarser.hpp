@@ -116,8 +116,8 @@ void MultilevelCoarser<GraphT, GraphTCoarse>::CompactifyDagHistory() {
     size_t dagIndxSecond = dagHistory_.size() - 1;
     size_t mapIndxSecond = contraction_maps.size() - 1;
 
-    if ((static_cast<double>(dagHistory_[dagIndxFirst - 1]->num_vertices())
-         / static_cast<double>(dagHistory_[dagIndxSecond - 1]->num_vertices()))
+    if ((static_cast<double>(dagHistory_[dagIndxFirst - 1]->NumVertices())
+         / static_cast<double>(dagHistory_[dagIndxSecond - 1]->NumVertices()))
         > 1.25) {
         return;
     }
@@ -228,7 +228,7 @@ RETURN_STATUS MultilevelCoarser<GraphT, GraphTCoarse>::AddContraction(std::vecto
 
 template <typename GraphT, typename GraphTCoarse>
 std::vector<vertex_idx_t<Graph_t_coarse>> MultilevelCoarser<GraphT, GraphTCoarse>::GetCombinedContractionMap() const {
-    std::vector<vertex_idx_t<Graph_t_coarse>> combinedContractionMap(originalGraph_->num_vertices());
+    std::vector<vertex_idx_t<Graph_t_coarse>> combinedContractionMap(originalGraph_->NumVertices());
     std::iota(combinedContractionMap.begin(), combinedContractionMap.end(), 0);
 
     for (std::size_t j = 0; j < contraction_maps.size(); ++j) {
@@ -264,9 +264,9 @@ template <typename GraphT, typename GraphTCoarse>
 void MultilevelCoarser<GraphT, GraphTCoarse>::AddIdentityContraction() {
     std::size_t nVert;
     if (dagHistory_.size() == 0) {
-        nVert = static_cast<std::size_t>(originalGraph_->num_vertices());
+        nVert = static_cast<std::size_t>(originalGraph_->NumVertices());
     } else {
-        nVert = static_cast<std::size_t>(dagHistory_.back()->num_vertices());
+        nVert = static_cast<std::size_t>(dagHistory_.back()->NumVertices());
     }
 
     std::vector<vertex_idx_t<Graph_t_coarse>> contractionMap(nVert);

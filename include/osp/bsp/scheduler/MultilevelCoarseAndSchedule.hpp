@@ -119,7 +119,7 @@ RETURN_STATUS MultilevelCoarseAndSchedule<GraphT, GraphTCoarse>::ComputeInitialS
 template <typename GraphT, typename GraphTCoarse>
 RETURN_STATUS MultilevelCoarseAndSchedule<GraphT, GraphTCoarse>::ImproveActiveSchedule() {
     if (improver_) {
-        if (activeInstance_->getComputationalDag().num_vertices() == 0) {
+        if (activeInstance_->getComputationalDag().NumVertices() == 0) {
             return RETURN_STATUS::OSP_SUCCESS;
         }
         return improver_->improveSchedule(*activeSchedule_);
@@ -147,18 +147,18 @@ RETURN_STATUS MultilevelCoarseAndSchedule<GraphT, GraphTCoarse>::ExpandActiveSch
     assert(expandedSchedule->satisfiesPrecedenceConstraints());
 
     // std::cout << "exp_inst:  " << expanded_instance.get() << " n: " << expanded_instance->numberOfVertices() << " m:
-    // " << expanded_instance->getComputationalDag().num_edges() << std::endl; std::cout << "exp_sched: " <<
+    // " << expanded_instance->getComputationalDag().NumEdges() << std::endl; std::cout << "exp_sched: " <<
     // &expanded_schedule->getInstance() << " n: " << expanded_schedule->getInstance().numberOfVertices() << " m: " <<
-    // expanded_schedule->getInstance().getComputationalDag().num_edges() << std::endl;
+    // expanded_schedule->getInstance().getComputationalDag().NumEdges() << std::endl;
 
     activeGraph_--;
     std::swap(expandedInstance, activeInstance_);
     std::swap(expandedSchedule, activeSchedule_);
 
     // std::cout << "act_inst:  " << active_instance.get() << " n: " << active_instance->numberOfVertices() << " m: " <<
-    // active_instance->getComputationalDag().num_edges() << std::endl; std::cout << "act_sched: " <<
+    // active_instance->getComputationalDag().NumEdges() << std::endl; std::cout << "act_sched: " <<
     // &active_schedule->getInstance() << " n: " << active_schedule->getInstance().numberOfVertices() << " m: " <<
-    // active_schedule->getInstance().getComputationalDag().num_edges() << std::endl;
+    // active_schedule->getInstance().getComputationalDag().NumEdges() << std::endl;
 
     assert(activeSchedule_->satisfiesPrecedenceConstraints());
     return RETURN_STATUS::OSP_SUCCESS;

@@ -159,7 +159,7 @@ class BspInstance {
     /**
      * @brief Returns the number of vertices in the computational DAG.
      */
-    [[nodiscard]] VertexIdxT<GraphT> NumberOfVertices() const { return cdag_.num_vertices(); }
+    [[nodiscard]] VertexIdxT<GraphT> NumberOfVertices() const { return cdag_.NumVertices(); }
 
     /**
      * @brief Returns a view over the vertex indices of the computational DAG.

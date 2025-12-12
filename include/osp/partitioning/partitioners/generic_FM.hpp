@@ -317,7 +317,7 @@ void GenericFM<HypergraphT>::RecursiveFM(Partitioning<HypergraphT> &partition) {
 
             GenericFM subFm;
             subFm.SetMaxNodesInPart(maxNodesOnLevel[level]);
-            // std::cout<<"Hgraph of size "<<hgraph.num_vertices()<<" split into two parts of at most "<<max_nodes_on_level[level]<<std::endl;
+            // std::cout<<"Hgraph of size "<<hgraph.NumVertices()<<" split into two parts of at most "<<max_nodes_on_level[level]<<std::endl;
             subFm.ImprovePartitioning(subPartition);
 
             std::vector<unsigned> currentIdx(2, 0);

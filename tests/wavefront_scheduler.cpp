@@ -157,7 +157,7 @@ struct MockDivider2 : public osp::IDagDivider<GraphT> {
 struct MockSubScheduler : public osp::Scheduler<GraphT> {
     osp::RETURN_STATUS computeSchedule(osp::BspSchedule<GraphT> &schedule) override {
         // Assign all tasks to the first processor in a single superstep
-        for (VertexType v = 0; v < schedule.getInstance().getComputationalDag().num_vertices(); ++v) {
+        for (VertexType v = 0; v < schedule.getInstance().getComputationalDag().NumVertices(); ++v) {
             schedule.setAssignedProcessor(v, 0);
             schedule.setAssignedSuperstep(v, 0);
         }

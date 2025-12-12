@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(HeavyEdgePartitioning) {
         }
 
         auto partition = heavy_edge_preprocess(graph, 5.0, 0.7f, 0.34f);
-        std::vector<bool> vertexInPartition(graph.num_vertices(), false);
+        std::vector<bool> vertexInPartition(graph.NumVertices(), false);
         for (const auto &part : partition) {
             for (const auto &vert : part) {
                 BOOST_CHECK(!vertexInPartition[vert]);

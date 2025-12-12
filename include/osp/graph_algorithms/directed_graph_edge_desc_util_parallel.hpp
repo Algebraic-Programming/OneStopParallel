@@ -34,7 +34,7 @@ std::unordered_set<edge_desc_t<Graph_t>> LongEdgesInTrianglesParallel(const Grap
     static_assert(IsDirectedGraphEdgeDescV<Graph_t>, "Graph_t must satisfy the directed_graph edge desc concept");
     static_assert(has_hashable_edge_desc_v<Graph_t>, "Graph_t must satisfy the has_hashable_edge_desc concept");
 
-    if (graph.num_edges() < 1000) {
+    if (graph.NumEdges() < 1000) {
         return long_edges_in_triangles(graph);
     }
 
@@ -42,7 +42,7 @@ std::unordered_set<edge_desc_t<Graph_t>> LongEdgesInTrianglesParallel(const Grap
     std::vector<std::vector<edge_desc_t<Graph_t>>> deletedEdgesThread(static_cast<size_t>(omp_get_max_threads()));
 
 #pragma omp parallel for schedule(dynamic, 4)
-    for (vertex_idx_t<Graph_t> vertex = 0; vertex < graph.num_vertices(); ++vertex) {
+    for (vertex_idx_t<Graph_t> vertex = 0; vertex < graph.NumVertices(); ++vertex) {
         // for (const auto &vertex : graph.vertices()) {
 
         const unsigned int proc = static_cast<unsigned>(omp_get_thread_num());

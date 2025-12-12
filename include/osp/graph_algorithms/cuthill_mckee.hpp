@@ -54,9 +54,9 @@ std::vector<vertex_idx_t<Graph_t>> CuthillMckeeWavefront(const GraphT &dag, bool
     using VertexType = vertex_idx_t<Graph_t>;
     using CmVertex = CmVertex<GraphT>;
 
-    std::vector<VertexType> result(dag.num_vertices());
-    std::vector<unsigned> predecessorsCount(dag.num_vertices(), 0);
-    std::vector<VertexType> predecessorsPosition(dag.num_vertices(), dag.num_vertices());
+    std::vector<VertexType> result(dag.NumVertices());
+    std::vector<unsigned> predecessorsCount(dag.NumVertices(), 0);
+    std::vector<VertexType> predecessorsPosition(dag.NumVertices(), dag.NumVertices());
 
     std::vector<CmVertex> currentWavefront;
     for (const auto &source : source_vertices_view(dag)) {
@@ -65,7 +65,7 @@ std::vector<vertex_idx_t<Graph_t>> CuthillMckeeWavefront(const GraphT &dag, bool
 
     std::vector<CmVertex> newWavefront;
     VertexType nodeCounter = 0;
-    while (node_counter < dag.num_vertices()) {
+    while (node_counter < dag.NumVertices()) {
         newWavefront.clear();
         std::sort(currentWavefront.begin(), currentWavefront.end());
 
@@ -79,7 +79,7 @@ std::vector<vertex_idx_t<Graph_t>> CuthillMckeeWavefront(const GraphT &dag, bool
             }
         }
 
-        if (nodeCounter + static_cast<VertexType>(currentWavefront.size()) == dag.num_vertices()) {
+        if (nodeCounter + static_cast<VertexType>(currentWavefront.size()) == dag.NumVertices()) {
             break;
         }
 
@@ -107,7 +107,7 @@ std::vector<vertex_idx_t<Graph_t>> CuthillMckeeUndirected(const GraphT &dag, boo
     using VertexType = vertex_idx_t<Graph_t>;
     using CmVertex = CmVertex<GraphT>;
 
-    std::vector<VertexType> cmOrder(dag.num_vertices());
+    std::vector<VertexType> cmOrder(dag.NumVertices());
 
     std::unordered_map<VertexType, unsigned> maxNodeDistances;
     VertexType firstNode = 0;
@@ -164,7 +164,7 @@ std::vector<vertex_idx_t<Graph_t>> CuthillMckeeUndirected(const GraphT &dag, boo
     }
 
     VertexType nodeCounter = 1;
-    while (node_counter < dag.num_vertices()) {
+    while (node_counter < dag.NumVertices()) {
         std::sort(currentLevel.begin(), currentLevel.end());
 
         if (perm) {
@@ -177,7 +177,7 @@ std::vector<vertex_idx_t<Graph_t>> CuthillMckeeUndirected(const GraphT &dag, boo
             }
         }
 
-        if (nodeCounter + currentLevel.size() == dag.num_vertices()) {
+        if (nodeCounter + currentLevel.size() == dag.NumVertices()) {
             break;
         }
 
@@ -257,9 +257,9 @@ std::vector<vertex_idx_t<Graph_t>> CuthillMckeeUndirected(const GraphT &dag, boo
 template <typename GraphT>
 inline std::vector<vertex_idx_t<Graph_t>> GetTopOrderCuthillMcKeeWavefront(const GraphT &dag) {
     std::vector<vertex_idx_t<Graph_t>> order;
-    if (dag.num_vertices() > 0) {
+    if (dag.NumVertices() > 0) {
         std::vector<vertex_idx_t<Graph_t>> priority = cuthill_mckee_wavefront(dag);
-        order.reserve(dag.num_vertices());
+        order.reserve(dag.NumVertices());
         for (const auto &v : priority_vec_top_sort_view(dag, priority)) {
             order.push_back(v);
         }
@@ -271,9 +271,9 @@ inline std::vector<vertex_idx_t<Graph_t>> GetTopOrderCuthillMcKeeWavefront(const
 template <typename GraphT>
 inline std::vector<vertex_idx_t<Graph_t>> GetTopOrderCuthillMcKeeUndirected(const GraphT &dag) {
     std::vector<vertex_idx_t<Graph_t>> order;
-    if (dag.num_vertices() > 0) {
+    if (dag.NumVertices() > 0) {
         std::vector<vertex_idx_t<Graph_t>> priority = cuthill_mckee_undirected(dag, true, true);
-        order.reserve(dag.num_vertices());
+        order.reserve(dag.NumVertices());
         for (const auto &v : priority_vec_top_sort_view(dag, priority)) {
             order.push_back(v);
         }

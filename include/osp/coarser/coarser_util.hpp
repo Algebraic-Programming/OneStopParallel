@@ -274,7 +274,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
         coarsened_dag = Graph_t_out(num_vert_quotient, quotient_edges);
 
         const auto &pushforwardMap = coarsenedDag.get_pushforward_permutation();
-        std::vector<vertex_idx_t<Graph_t_out>> combinedExpansionMap(dagIn.num_vertices());
+        std::vector<vertex_idx_t<Graph_t_out>> combinedExpansionMap(dagIn.NumVertices());
         for (const auto &vert : dagIn.vertices()) {
             combinedExpansionMap[vert] = pushforwardMap[vertex_contraction_map[vert]];
         }
@@ -438,7 +438,7 @@ template <typename GraphTIn>
 void ReorderExpansionMap(const GraphTIn &graph, std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &vertexExpansionMap) {
     assert(check_valid_expansion_map<GraphTIn>(vertex_expansion_map));
 
-    std::vector<std::size_t> vertexContractionMap(graph.num_vertices());
+    std::vector<std::size_t> vertexContractionMap(graph.NumVertices());
     for (std::size_t i = 0; i < vertexExpansionMap.size(); i++) {
         for (const vertex_idx_t<Graph_t_in> &vert : vertex_expansion_map[i]) {
             vertex_contraction_map[vert] = i;

@@ -94,7 +94,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    std::cout << "Successfully read graph with " << graph.num_vertices() << " vertices and " << graph.num_edges() << " edges."
+    std::cout << "Successfully read graph with " << graph.NumVertices() << " vertices and " << graph.NumEdges() << " edges."
               << std::endl;
 
     std::filesystem::path outputPath(outputFilename);

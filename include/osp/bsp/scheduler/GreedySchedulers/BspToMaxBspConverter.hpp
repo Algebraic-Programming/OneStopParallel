@@ -368,11 +368,11 @@ std::vector<std::vector<std::deque<vertex_idx_t<Graph_t>>>> GreedyBspToMaxBspCon
     const GraphT &dag = schedule.getInstance().getComputationalDag();
     std::vector<vertex_idx> topOrder = GetTopOrder(dag);
     priorities.clear();
-    priorities.resize(dag.num_vertices());
-    std::vector<vertex_idx> localInDegree(dag.num_vertices(), 0);
+    priorities.resize(dag.NumVertices());
+    std::vector<vertex_idx> localInDegree(dag.NumVertices(), 0);
 
     // compute for each node the amount of dependent send cost in the same superstep
-    std::vector<cost_type> commDependency(dag.num_vertices(), 0);
+    std::vector<cost_type> commDependency(dag.NumVertices(), 0);
     for (auto const &[key, val] : schedule.getCommunicationSchedule()) {
         if (schedule.assignedSuperstep(std::get<0>(key)) == val) {
             commDependency[std::get<0>(key)]

@@ -98,7 +98,7 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
                                                                          ? long_edges_in_triangles_parallel(graph)
                                                                          : std::unordered_set<edge_desc_t<Graph_t_in>>();
 
-        std::vector<bool> visited(graph.num_vertices(), false);
+        std::vector<bool> visited(graph.NumVertices(), false);
 
         const std::vector<vertex_idx_t> topOrder = GetTopOrder(graph);
 
@@ -210,7 +210,7 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
                                                                          ? long_edges_in_triangles_parallel(graph)
                                                                          : std::unordered_set<edge_desc_t<Graph_t_in>>();
 
-        std::vector<bool> visited(graph.num_vertices(), false);
+        std::vector<bool> visited(graph.NumVertices(), false);
 
         for (const auto &topNode : top_sort_view(graph)) {
             if (visited[topNode]) {

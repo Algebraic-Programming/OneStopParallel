@@ -63,9 +63,9 @@ class MultiLevelHillClimbingScheduler : public Scheduler<GraphT> {
         targetNrOfNodes_ = std::min(targetNrOfNodes_, static_cast<unsigned>(numVertices));
 
         if (useLinearRefinement_) {
-            setLinearRefinementPoints(num_vertices, linear_refinement_step_size_);
+            setLinearRefinementPoints(numVertices, linear_refinement_step_size_);
         } else if (useExponentialRefinement_) {
-            setExponentialRefinementPoints(num_vertices, exponential_refinement_step_ratio_);
+            setExponentialRefinementPoints(numVertices, exponential_refinement_step_ratio_);
         }
     }
 
@@ -122,7 +122,7 @@ RETURN_STATUS MultiLevelHillClimbingScheduler<GraphT>::ComputeSchedule(BspSchedu
     if (refinement_points.empty()) {
         setExponentialRefinementPoints(num_verices, 1.1);
     }
-    while (!refinement_points.empty() && refinement_points.front() <= coarseDAG.num_vertices()) {
+    while (!refinement_points.empty() && refinement_points.front() <= coarseDAG.NumVertices()) {
         refinement_points.pop_front();
     }
 
@@ -140,7 +140,7 @@ BspSchedule<GraphT> MultiLevelHillClimbingScheduler<GraphT>::Refine(const BspIns
         = ComputeUncontractedSchedule(coarser, full_instance, coarse_schedule, coarser.getContractionHistory().size());
 
     for (vertex_idx next_size : refinement_points) {
-        const vertex_idx contract_steps = coarser.getOriginalDag().num_vertices() - next_size;
+        const vertex_idx contract_steps = coarser.getOriginalDag().NumVertices() - next_size;
         std::vector<vertex_idx> new_ids = coarser.GetIntermediateIDs(contract_steps);
         Graph_t dag = coarser.Contract(new_ids);
 

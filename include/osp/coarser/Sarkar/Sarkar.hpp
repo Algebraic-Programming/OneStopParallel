@@ -139,7 +139,7 @@ std::vector<vertex_idx_t<Graph_t_in>> Sarkar<GraphTIn, GraphTOut>::GetBotPosetMa
 template <typename GraphTIn, typename GraphTOut>
 std::vector<v_workw_t<Graph_t_in>> Sarkar<GraphTIn, GraphTOut>::GetTopDistance(v_workw_t<Graph_t_in> commCost,
                                                                                const GraphTIn &graph) const {
-    std::vector<v_workw_t<Graph_t_in>> topDist(graph.num_vertices(), 0);
+    std::vector<v_workw_t<Graph_t_in>> topDist(graph.NumVertices(), 0);
 
     for (const auto &vertex : GetTopOrder<GraphTIn>(graph)) {
         v_workw_t<Graph_t_in> maxTemp = 0;
@@ -160,7 +160,7 @@ std::vector<v_workw_t<Graph_t_in>> Sarkar<GraphTIn, GraphTOut>::GetTopDistance(v
 template <typename GraphTIn, typename GraphTOut>
 std::vector<v_workw_t<Graph_t_in>> Sarkar<GraphTIn, GraphTOut>::GetBotDistance(v_workw_t<Graph_t_in> commCost,
                                                                                const GraphTIn &graph) const {
-    std::vector<v_workw_t<Graph_t_in>> botDist(graph.num_vertices(), 0);
+    std::vector<v_workw_t<Graph_t_in>> botDist(graph.NumVertices(), 0);
 
     for (const auto &vertex : GetTopOrderReverse<GraphTIn>(graph)) {
         v_workw_t<Graph_t_in> maxTemp = 0;
@@ -255,12 +255,11 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SingleContraction(
         }
     }
 
-    std::vector<bool> partitionedSourceFlag(graph.num_vertices(), false);
-    std::vector<bool> partitionedTargetFlag(graph.num_vertices(), false);
+    std::vector<bool> partitionedSourceFlag(graph.NumVertices(), false);
+    std::vector<bool> partitionedTargetFlag(graph.NumVertices(), false);
 
     vertex_idx_t<Graph_t_in> maxCorseningNum
-        = graph.num_vertices()
-          - static_cast<vertex_idx_t<Graph_t_in>>(static_cast<double>(graph.num_vertices()) * params.geomDecay);
+        = graph.NumVertices() - static_cast<vertex_idx_t<Graph_t_in>>(static_cast<double>(graph.NumVertices()) * params.geomDecay);
 
     vertex_idx_t<Graph_t_in> counter = 0;
     long minSave = std::numeric_limits<long>::lowest();
@@ -316,7 +315,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SingleContraction(
         partitionedTargetFlag[edgeTgt] = true;
     }
 
-    expansionMapOutput.reserve(graph.num_vertices() - counter);
+    expansionMapOutput.reserve(graph.NumVertices() - counter);
     for (const VertexType &vert : graph.vertices()) {
         if (partitionedSourceFlag[vert]) {
             continue;
@@ -419,11 +418,10 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::AllChildrenContraction(
         }
     }
 
-    std::vector<bool> partitionedFlag(graph.num_vertices(), false);
+    std::vector<bool> partitionedFlag(graph.NumVertices(), false);
 
     vertex_idx_t<Graph_t_in> maxCorseningNum
-        = graph.num_vertices()
-          - static_cast<vertex_idx_t<Graph_t_in>>(static_cast<double>(graph.num_vertices()) * params.geomDecay);
+        = graph.NumVertices() - static_cast<vertex_idx_t<Graph_t_in>>(static_cast<double>(graph.NumVertices()) * params.geomDecay);
 
     vertex_idx_t<Graph_t_in> counter = 0;
     long minSave = std::numeric_limits<long>::lowest();
@@ -568,11 +566,10 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::AllParentsContraction(
         }
     }
 
-    std::vector<bool> partitionedFlag(graph.num_vertices(), false);
+    std::vector<bool> partitionedFlag(graph.NumVertices(), false);
 
     vertex_idx_t<Graph_t_in> maxCorseningNum
-        = graph.num_vertices()
-          - static_cast<vertex_idx_t<Graph_t_in>>(static_cast<double>(graph.num_vertices()) * params.geomDecay);
+        = graph.NumVertices() - static_cast<vertex_idx_t<Graph_t_in>>(static_cast<double>(graph.NumVertices()) * params.geomDecay);
 
     vertex_idx_t<Graph_t_in> counter = 0;
     long minSave = std::numeric_limits<long>::lowest();
@@ -813,12 +810,11 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SomeChildrenContraction(
         }
     }
 
-    std::vector<bool> partitionedFlag(graph.num_vertices(), false);
-    std::vector<bool> partitionedHeadFlag(graph.num_vertices(), false);
+    std::vector<bool> partitionedFlag(graph.NumVertices(), false);
+    std::vector<bool> partitionedHeadFlag(graph.NumVertices(), false);
 
     vertex_idx_t<Graph_t_in> maxCorseningNum
-        = graph.num_vertices()
-          - static_cast<vertex_idx_t<Graph_t_in>>(static_cast<double>(graph.num_vertices()) * params.geomDecay);
+        = graph.NumVertices() - static_cast<vertex_idx_t<Graph_t_in>>(static_cast<double>(graph.NumVertices()) * params.geomDecay);
 
     vertex_idx_t<Graph_t_in> counter = 0;
     long minSave = std::numeric_limits<long>::lowest();
@@ -1002,12 +998,11 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SomeParentsContraction(
         }
     }
 
-    std::vector<bool> partitionedFlag(graph.num_vertices(), false);
-    std::vector<bool> partitionedFootFlag(graph.num_vertices(), false);
+    std::vector<bool> partitionedFlag(graph.NumVertices(), false);
+    std::vector<bool> partitionedFootFlag(graph.NumVertices(), false);
 
     vertex_idx_t<Graph_t_in> maxCorseningNum
-        = graph.num_vertices()
-          - static_cast<vertex_idx_t<Graph_t_in>>(static_cast<double>(graph.num_vertices()) * params.geomDecay);
+        = graph.NumVertices() - static_cast<vertex_idx_t<Graph_t_in>>(static_cast<double>(graph.NumVertices()) * params.geomDecay);
 
     vertex_idx_t<Graph_t_in> counter = 0;
     long minSave = std::numeric_limits<long>::lowest();
@@ -1177,11 +1172,10 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::LevelContraction(
         }
     }
 
-    std::vector<bool> partitionedFlag(graph.num_vertices(), false);
+    std::vector<bool> partitionedFlag(graph.NumVertices(), false);
 
     vertex_idx_t<Graph_t_in> maxCorseningNum
-        = graph.num_vertices()
-          - static_cast<vertex_idx_t<Graph_t_in>>(static_cast<double>(graph.num_vertices()) * params.geomDecay);
+        = graph.NumVertices() - static_cast<vertex_idx_t<Graph_t_in>>(static_cast<double>(graph.NumVertices()) * params.geomDecay);
 
     vertex_idx_t<Graph_t_in> counter = 0;
     long minSave = std::numeric_limits<long>::lowest();
@@ -1229,7 +1223,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::LevelContraction(
         }
     }
 
-    expansionMapOutput.reserve(graph.num_vertices() - counter);
+    expansionMapOutput.reserve(graph.NumVertices() - counter);
     for (const VertexType &vert : graph.vertices()) {
         if (partitionedFlag[vert]) {
             continue;
@@ -1247,7 +1241,7 @@ std::vector<std::size_t> Sarkar<GraphTIn, GraphTOut>::ComputeNodeHashes(const Gr
                                                                         const std::vector<v_workw_t<Graph_t_in>> &dist) const {
     using VertexType = vertex_idx_t<Graph_t_in>;
 
-    std::vector<std::size_t> hashes(graph.num_vertices());
+    std::vector<std::size_t> hashes(graph.NumVertices());
     for (const VertexType &vert : graph.vertices()) {
         std::size_t &hash = hashes[vert];
         hash = std::hash<v_workw_t<Graph_t_in>>{}(graph.vertex_work_weight(vert));
@@ -1329,7 +1323,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::HomogeneousBufferMerge(
     const std::vector<v_workw_t<Graph_t_in>> topDist = getTopDistance(commCost, graph);
     const std::vector<v_workw_t<Graph_t_in>> botDist = getBotDistance(commCost, graph);
 
-    std::vector<std::size_t> hashValuesCombined(graph.num_vertices(), 1729U);
+    std::vector<std::size_t> hashValuesCombined(graph.NumVertices(), 1729U);
 
     if (params.mode == SarkarParams::Mode::FAN_OUT_BUFFER || params.mode == SarkarParams::Mode::HOMOGENEOUS_BUFFER) {
         const std::vector<std::size_t> hashValues = computeNodeHashes(graph, vertexTopPoset, topDist);
@@ -1374,7 +1368,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::HomogeneousBufferMerge(
     }
 
     vertex_idx_t<Graph_t_in> counter = 0;
-    std::vector<bool> partitionedFlag(graph.num_vertices(), false);
+    std::vector<bool> partitionedFlag(graph.NumVertices(), false);
 
     for (const VertexType &vert : graph.vertices()) {
         if (graph.vertex_work_weight(vert) > params.smallWeightThreshold) {

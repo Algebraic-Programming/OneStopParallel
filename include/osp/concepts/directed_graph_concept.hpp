@@ -34,8 +34,8 @@ namespace osp {
  * A type `T` satisfies `is_directed_graph` if it provides the following API:
  *
  * - **vertices()**: Returns a range of all vertices in the graph.
- * - **num_vertices()**: Returns the total number of vertices as an integral type.
- * - **num_edges()**: Returns the total number of edges as an integral type.
+ * - **NumVertices()**: Returns the total number of vertices as an integral type.
+ * - **NumEdges()**: Returns the total number of edges as an integral type.
  * - **parents(v)**: Returns a range of parent vertices for a given vertex `v`.
  *   - `v` must be of type `vertex_idx_t<T>`.
  * - **children(v)**: Returns a range of child vertices for a given vertex `v`.

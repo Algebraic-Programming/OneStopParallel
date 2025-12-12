@@ -77,7 +77,7 @@ class AbstractWavefrontDivider : public IDagDivider<GraphT> {
      * This method is now const.
      */
     std::vector<std::vector<VertexType>> ComputeWavefronts() const {
-        std::vector<VertexType> allVertices(dagPtr_->num_vertices());
+        std::vector<VertexType> allVertices(dagPtr_->NumVertices());
         std::iota(all_vertices.begin(), all_vertices.end(), 0);
         return compute_wavefronts_for_subgraph(all_vertices);
     }

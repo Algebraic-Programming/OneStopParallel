@@ -50,7 +50,7 @@ class Serial : public Scheduler<GraphT> {
     RETURN_STATUS computeSchedule(BspSchedule<GraphT> &schedule) override {
         const auto &instance = schedule.getInstance();
         const auto &dag = instance.getComputationalDag();
-        const auto numVertices = dag.num_vertices();
+        const auto numVertices = dag.NumVertices();
 
         if (numVertices == 0) {
             return RETURN_STATUS::OSP_SUCCESS;

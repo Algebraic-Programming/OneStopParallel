@@ -76,7 +76,7 @@ class MerkleHashComputer : public HashComputer<vertex_idx_t<Graph_t>> {
 
     template <typename RetT = void>
     std::enable_if_t<forward, RetT> ComputeHashes(const GraphT &graph) {
-        vertexHashes_.resize(graph.num_vertices());
+        vertexHashes_.resize(graph.NumVertices());
 
         for (const VertexType &v : top_sort_view(graph)) {
             std::vector<std::size_t> parent_hashes;
@@ -89,7 +89,7 @@ class MerkleHashComputer : public HashComputer<vertex_idx_t<Graph_t>> {
 
     template <typename RetT = void>
     std::enable_if_t<not forward, RetT> ComputeHashes(const GraphT &graph) {
-        vertexHashes_.resize(graph.num_vertices());
+        vertexHashes_.resize(graph.NumVertices());
 
         const auto topSort = GetTopOrderReverse(graph);
         for (auto it = topSort.cbegin(); it != topSort.cend(); ++it) {
@@ -129,7 +129,7 @@ class MerkleHashComputer : public HashComputer<vertex_idx_t<Graph_t>> {
 template <typename GraphT, typename NodeHashFuncT = uniform_node_hash_func<vertex_idx_t<Graph_t>>, bool forward = true>
 bool AreIsomorphicByMerkleHash(const GraphT &g1, const GraphT &g2) {
     // Basic check: Different numbers of vertices or edges mean they can't be isomorphic.
-    if (g1.num_vertices() != g2.num_vertices() || g1.num_edges() != g2.num_edges()) {
+    if (g1.NumVertices() != g2.NumVertices() || g1.NumEdges() != g2.NumEdges()) {
         return false;
     }
 

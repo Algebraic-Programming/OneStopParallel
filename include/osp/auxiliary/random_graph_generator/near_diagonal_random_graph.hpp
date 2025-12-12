@@ -29,8 +29,8 @@ namespace osp {
  * @brief Generates a random graph where an edge (i,j), with i<j, is included with probability
  * prob*exp(-(j-i-1)/bandwidth)
  *
- * @param num_vertices Number of vertices of the graph
- * @param bandwidth chance/num_vertices is the probability of edge inclusion
+ * @param numVertices Number of vertices of the graph
+ * @param bandwidth chance/numVertices is the probability of edge inclusion
  * @param prob probability of an edge immediately off the diagonal to be included
  * @return DAG
  */
@@ -38,13 +38,13 @@ template <typename GraphT>
 void NearDiagRandomGraph(GraphT &dagOut, vertex_idx_t<Graph_t> numVertices, double bandwidth, double prob) {
     static_assert(IsConstructableCdagV<Graph_t>, "Graph_t must be a constructable computational DAG type");
 
-    dagOut = GraphT(num_vertices);
+    dagOut = GraphT(numVertices);
 
     std::random_device rd;
     std::mt19937 gen(rd());
 
-    for (vertex_idx_t<Graph_t> v = 1; v < num_vertices; ++v) {
-        std::binomial_distribution<vertex_idx_t<Graph_t>> binoDist(vertex_idx_t<GraphT>(num_vertices - v),
+    for (vertex_idx_t<Graph_t> v = 1; v < numVertices; ++v) {
+        std::binomial_distribution<vertex_idx_t<Graph_t>> binoDist(vertex_idx_t<GraphT>(NumVertices - v),
                                                                    prob * std::exp(1.0 - static_cast<double>(v) / bandwidth));
         vertex_idx_t<Graph_t> offDiagEdgesNum = bino_dist(gen);
 

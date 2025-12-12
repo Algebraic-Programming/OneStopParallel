@@ -201,7 +201,7 @@ class BoostGraph {
     BoostGraph(const GraphT &other) : numberOfVertexTypes_(0) {
         static_assert(osp::IsComputationalDagV<Graph_t>, "Graph_t must satisfy the is_computation_dag concept");
 
-        graph_.m_vertices.reserve(other.num_vertices());
+        graph_.m_vertices.reserve(other.NumVertices());
 
         osp::constructComputationalDag(other, *this);
     }
@@ -210,9 +210,9 @@ class BoostGraph {
 
     inline BoostGraphImplT &GetBoostGraph() { return graph_; }
 
-    inline size_t NumVertices() const { return boost::num_vertices(graph_); }
+    inline size_t NumVertices() const { return boost::NumVertices(graph_); }
 
-    inline size_t NumEdges() const { return boost::num_edges(graph_); }
+    inline size_t NumEdges() const { return boost::NumEdges(graph_); }
 
     void UpdateNumberOfVertexTypes() {
         numberOfVertexTypes_ = 0;

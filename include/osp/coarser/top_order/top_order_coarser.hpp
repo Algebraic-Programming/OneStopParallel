@@ -130,8 +130,8 @@ class TopOrderCoarser : public Coarser<GraphTIn, GraphTOut> {
     virtual bool coarsenDag(const GraphTIn &dagIn,
                             GraphTOut &dagOut,
                             std::vector<vertex_idx_t<Graph_t_out>> &reverseVertexMap) override {
-        assert(dagOut.num_vertices() == 0);
-        if (dagIn.num_vertices() == 0) {
+        assert(dagOut.NumVertices() == 0);
+        if (dagIn.NumVertices() == 0) {
             reverse_vertex_map = std::vector<vertex_idx_t<Graph_t_out>>();
             return true;
         }
@@ -140,7 +140,7 @@ class TopOrderCoarser : public Coarser<GraphTIn, GraphTOut> {
 
         std::vector<unsigned> sourceNodeDist = get_top_node_distance(dagIn);
 
-        reverse_vertex_map.resize(dag_in.num_vertices(), std::numeric_limits<VertexType>::max());
+        reverse_vertex_map.resize(dag_in.NumVertices(), std::numeric_limits<VertexType>::max());
 
         std::vector<std::vector<VertexType>> vertexMap;
         vertex_map.push_back(std::vector<VertexType>({top_ordering[0]}));

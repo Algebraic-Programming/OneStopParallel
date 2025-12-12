@@ -87,7 +87,7 @@ void HypergraphPartitioningILPWithReplication<HypergraphT>::SetupExtraVariablesC
     using IndexType = typename HypergraphT::vertex_idx;
 
     const IndexType numberOfParts = instance.getNumberOfPartitions();
-    const IndexType numberOfVertices = instance.getHypergraph().num_vertices();
+    const IndexType numberOfVertices = instance.getHypergraph().NumVertices();
 
     if (replicationModel_ == ReplicationModelInIlp::GENERAL) {
         // create variables for each pin+partition combination
@@ -182,7 +182,7 @@ void HypergraphPartitioningILPWithReplication<HypergraphT>::SetInitialSolution(
 
     const std::vector<std::vector<unsigned> > &assignments = partition.assignedPartitions();
     const unsigned &numPartitions = partition.getInstance().getNumberOfPartitions();
-    if (assignments.size() != partition.getInstance().getHypergraph().num_vertices()) {
+    if (assignments.size() != partition.getInstance().getHypergraph().NumVertices()) {
         return;
     }
 

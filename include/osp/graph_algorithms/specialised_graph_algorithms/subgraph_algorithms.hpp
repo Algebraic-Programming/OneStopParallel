@@ -45,7 +45,7 @@ std::unordered_map<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_in>> create_in
 
     const std::vector<vertex_idx_t<Graph_t_in>> topOrder = GetTopOrder(dag);
     std::vector<vertex_idx_t<Graph_t_in>> topOrderPosition(topOrder.size());
-    for (vertex_idx_t<Graph_t_in> pos = 0; pos < dag.num_vertices(); ++pos) {
+    for (vertex_idx_t<Graph_t_in> pos = 0; pos < dag.NumVertices(); ++pos) {
         topOrderPosition[topOrder[pos]] = pos;
     }
 

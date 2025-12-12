@@ -210,7 +210,7 @@ class CompactSparseGraphEdgeDesc : public CompactSparseGraph<keepVertexOrder,
     CompactSparseGraphEdgeDesc(VertexIdx numVertices, const EdgeListType &edges, const std::vector<VertexWorkWeightType> &ww)
         : BaseT(numVertices, edges, ww) {
         if constexpr (useEdgeCommWeights) {
-            edgeCommWeights_ = std::vector<EdgeCommWeightType>(BaseT::num_edges(), static_cast<EdgeCommWeightType>(0));
+            edgeCommWeights_ = std::vector<EdgeCommWeightType>(BaseT::NumEdges(), static_cast<EdgeCommWeightType>(0));
         }
     }
 
@@ -218,7 +218,7 @@ class CompactSparseGraphEdgeDesc : public CompactSparseGraph<keepVertexOrder,
     CompactSparseGraphEdgeDesc(VertexIdx numVertices, const EdgeListType &edges, const std::vector<VertexWorkWeightType> &&ww)
         : BaseT(numVertices, edges, std::move(ww)) {
         if constexpr (useEdgeCommWeights) {
-            edgeCommWeights_ = std::vector<EdgeCommWeightType>(BaseT::num_edges(), static_cast<EdgeCommWeightType>(0));
+            edgeCommWeights_ = std::vector<EdgeCommWeightType>(BaseT::NumEdges(), static_cast<EdgeCommWeightType>(0));
         }
     }
 
@@ -229,7 +229,7 @@ class CompactSparseGraphEdgeDesc : public CompactSparseGraph<keepVertexOrder,
                                std::vector<VertexCommWeightType> &cw)
         : BaseT(numVertices, edges, ww, cw) {
         if constexpr (useEdgeCommWeights) {
-            edgeCommWeights_ = std::vector<EdgeCommWeightType>(BaseT::num_edges(), static_cast<EdgeCommWeightType>(0));
+            edgeCommWeights_ = std::vector<EdgeCommWeightType>(BaseT::NumEdges(), static_cast<EdgeCommWeightType>(0));
         }
     }
 
@@ -240,7 +240,7 @@ class CompactSparseGraphEdgeDesc : public CompactSparseGraph<keepVertexOrder,
                                std::vector<VertexCommWeightType> &&cw)
         : BaseT(numVertices, edges, std::move(ww), std::move(cw)) {
         if constexpr (useEdgeCommWeights) {
-            edgeCommWeights_ = std::vector<EdgeCommWeightType>(BaseT::num_edges(), static_cast<EdgeCommWeightType>(0));
+            edgeCommWeights_ = std::vector<EdgeCommWeightType>(BaseT::NumEdges(), static_cast<EdgeCommWeightType>(0));
         }
     }
 
@@ -252,7 +252,7 @@ class CompactSparseGraphEdgeDesc : public CompactSparseGraph<keepVertexOrder,
                                const std::vector<VertexMemWeightType> &mw)
         : BaseT(numVertices, edges, ww, cw, mw) {
         if constexpr (useEdgeCommWeights) {
-            edgeCommWeights_ = std::vector<EdgeCommWeightType>(BaseT::num_edges(), static_cast<EdgeCommWeightType>(0));
+            edgeCommWeights_ = std::vector<EdgeCommWeightType>(BaseT::NumEdges(), static_cast<EdgeCommWeightType>(0));
         }
     }
 
@@ -264,7 +264,7 @@ class CompactSparseGraphEdgeDesc : public CompactSparseGraph<keepVertexOrder,
                                const std::vector<VertexMemWeightType> &&mw)
         : BaseT(numVertices, edges, std::move(ww), std::move(cw), std::move(mw)) {
         if constexpr (useEdgeCommWeights) {
-            edgeCommWeights_ = std::vector<EdgeCommWeightType>(BaseT::num_edges(), static_cast<EdgeCommWeightType>(0));
+            edgeCommWeights_ = std::vector<EdgeCommWeightType>(BaseT::NumEdges(), static_cast<EdgeCommWeightType>(0));
         }
     }
 
@@ -277,7 +277,7 @@ class CompactSparseGraphEdgeDesc : public CompactSparseGraph<keepVertexOrder,
                                const std::vector<VertexTypeType> &vt)
         : BaseT(numVertices, edges, ww, cw, mw, vt) {
         if constexpr (useEdgeCommWeights) {
-            edgeCommWeights_ = std::vector<EdgeCommWeightType>(BaseT::num_edges(), static_cast<EdgeCommWeightType>(0));
+            edgeCommWeights_ = std::vector<EdgeCommWeightType>(BaseT::NumEdges(), static_cast<EdgeCommWeightType>(0));
         }
     }
 
@@ -290,14 +290,14 @@ class CompactSparseGraphEdgeDesc : public CompactSparseGraph<keepVertexOrder,
                                const std::vector<VertexTypeType> &&vt)
         : BaseT(numVertices, edges, std::move(ww), std::move(cw), std::move(mw), std::move(vt)) {
         if constexpr (useEdgeCommWeights) {
-            edgeCommWeights_ = std::vector<EdgeCommWeightType>(BaseT::num_edges(), static_cast<EdgeCommWeightType>(0));
+            edgeCommWeights_ = std::vector<EdgeCommWeightType>(BaseT::NumEdges(), static_cast<EdgeCommWeightType>(0));
         }
     }
 
     template <typename GraphType>
     CompactSparseGraphEdgeDesc(const GraphType &graph) : BaseT(graph) {
         if constexpr (useEdgeCommWeights) {
-            edgeCommWeights_ = std::vector<EdgeCommWeightType>(BaseT::num_edges(), static_cast<EdgeCommWeightType>(0));
+            edgeCommWeights_ = std::vector<EdgeCommWeightType>(BaseT::NumEdges(), static_cast<EdgeCommWeightType>(0));
         }
 
         if constexpr (HasEdgeWeightsV<Graph_type> && use_edge_comm_weights) {

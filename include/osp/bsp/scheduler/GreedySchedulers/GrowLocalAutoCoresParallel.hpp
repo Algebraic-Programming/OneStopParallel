@@ -534,7 +534,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
 
         std::vector<VertexType> posInTopOrder;
         if constexpr (not has_vertices_in_top_order_v<Graph_t>) {
-            posInTopOrder = std::vector<VertexType>(graph.num_vertices());
+            posInTopOrder = std::vector<VertexType>(graph.NumVertices());
             for (VertexType ind = 0; ind < static_cast<VertexType>(topOrder.size()); ++ind) {
                 posInTopOrder[topOrder[ind]] = ind;
             }

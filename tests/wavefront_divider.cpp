@@ -52,7 +52,7 @@ bool CheckVertexMaps(const std::vector<std::vector<std::vector<vertex_idx_t<Grap
         }
     }
 
-    return allVertices.size() == dag.num_vertices();
+    return allVertices.size() == dag.NumVertices();
 }
 
 BOOST_AUTO_TEST_CASE(WavefrontComponentDivider) {

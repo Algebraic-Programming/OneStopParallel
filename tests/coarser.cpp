@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(CoarserHdaggTest) {
 
         vertexMap = coarser_util::invert_vertex_contraction_map<GraphT, GraphT>(reverseVertexMap);
 
-        BOOST_CHECK(CheckVertexMap(vertexMap, instance.getComputationalDag().num_vertices()));
+        BOOST_CHECK(CheckVertexMap(vertexMap, instance.getComputationalDag().NumVertices()));
 
         GreedyBspScheduler<GraphT> scheduler;
         BspSchedule<GraphT> schedule(coarseInstance);
@@ -214,7 +214,7 @@ BOOST_AUTO_TEST_CASE(CoarserHdaggTestDiffGraphImpl) {
 
         vertexMap = coarser_util::invert_vertex_contraction_map<GraphT1, GraphT2>(reverseVertexMap);
 
-        BOOST_CHECK(CheckVertexMap(vertexMap, instance.getComputationalDag().num_vertices()));
+        BOOST_CHECK(CheckVertexMap(vertexMap, instance.getComputationalDag().NumVertices()));
 
         GreedyBspScheduler<GraphT2> scheduler;
         BspSchedule<GraphT2> schedule(coarseInstance);
@@ -289,7 +289,7 @@ BOOST_AUTO_TEST_CASE(CoarserBspscheduleTest) {
 
         vertexMap = coarser_util::invert_vertex_contraction_map<GraphT, GraphT>(reverseVertexMap);
 
-        BOOST_CHECK(CheckVertexMap(vertexMap, instance.getComputationalDag().num_vertices()));
+        BOOST_CHECK(CheckVertexMap(vertexMap, instance.getComputationalDag().NumVertices()));
 
         BspSchedule<GraphT> schedule(coarseInstance);
 
@@ -357,7 +357,7 @@ void TestCoarserSameGraph(Coarser<GraphT, GraphT> &coarser) {
 
         vertexMap = coarser_util::invert_vertex_contraction_map<GraphT, GraphT>(reverseVertexMap);
 
-        BOOST_CHECK(CheckVertexMap(vertexMap, instance.getComputationalDag().num_vertices()));
+        BOOST_CHECK(CheckVertexMap(vertexMap, instance.getComputationalDag().NumVertices()));
 
         BspSchedule<GraphT> schedule(coarseInstance);
 
@@ -491,7 +491,7 @@ BOOST_AUTO_TEST_CASE(CoarserSquashATestDiffGraphImplCsg) {
 
         vertexMap = coarser_util::invert_vertex_contraction_map<GraphT1, GraphT2>(reverseVertexMap);
 
-        BOOST_CHECK(CheckVertexMap(vertexMap, instance.getComputationalDag().num_vertices()));
+        BOOST_CHECK(CheckVertexMap(vertexMap, instance.getComputationalDag().NumVertices()));
 
         GreedyBspScheduler<GraphT2> scheduler;
         BspSchedule<GraphT2> schedule(coarseInstance);
@@ -564,7 +564,7 @@ BOOST_AUTO_TEST_CASE(CoarserSquashATestDiffGraphImplCsge) {
 
         vertexMap = coarser_util::invert_vertex_contraction_map<GraphT1, GraphT2>(reverseVertexMap);
 
-        BOOST_CHECK(CheckVertexMap(vertexMap, instance.getComputationalDag().num_vertices()));
+        BOOST_CHECK(CheckVertexMap(vertexMap, instance.getComputationalDag().NumVertices()));
 
         GreedyBspScheduler<GraphT2> scheduler;
         BspSchedule<GraphT2> schedule(coarseInstance);

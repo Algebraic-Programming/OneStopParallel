@@ -442,7 +442,7 @@ class IsomorphicSubgraphScheduler {
                 std::cout << "--- Scheduling representative for group " << groupIdx << " ---" << std::endl;
                 std::cout << "  Number of subgraphs in group: " << group.subgraphs.size() << std::endl;
                 const auto &repDag = representativeInstance.getComputationalDag();
-                std::cout << "  Representative subgraph size: " << repDag.num_vertices() << " vertices" << std::endl;
+                std::cout << "  Representative subgraph size: " << repDag.NumVertices() << " vertices" << std::endl;
                 std::vector<unsigned> nodeTypeCounts(repDag.num_vertex_types(), 0);
                 for (const auto &v : repDag.vertices()) {
                     nodeTypeCounts[repDag.vertex_type(v)]++;
@@ -479,7 +479,7 @@ class IsomorphicSubgraphScheduler {
 
             if (plotDotGraphs_) {
                 const auto &repDag = bspSchedule.getInstance().getComputationalDag();
-                std::vector<unsigned> colors(repDag.num_vertices());
+                std::vector<unsigned> colors(repDag.NumVertices());
                 std::map<std::pair<unsigned, unsigned>, unsigned> procSsToColor;
                 unsigned nextColor = 0;
 
@@ -501,7 +501,7 @@ class IsomorphicSubgraphScheduler {
                 writer.write_colored_graph(timestamp + "iso_group_rep_" + std::to_string(groupIdx) + ".dot", repDag, colors);
             }
 
-            const bool maxBsp = useMaxBsp_ && (representativeInstance.getComputationalDag().num_edges() == 0)
+            const bool maxBsp = useMaxBsp_ && (representativeInstance.getComputationalDag().NumEdges() == 0)
                                 && (representativeInstance.getComputationalDag().vertex_type(0) == 0);
 
             // Build data structures for applying the pattern ---

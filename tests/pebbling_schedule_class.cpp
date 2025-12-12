@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(TestPebblingScheduleWriter) {
                                                                     instance.getComputationalDag());
 
     BOOST_CHECK(status);
-    BOOST_CHECK_EQUAL(instance.getComputationalDag().num_vertices(), 54);
+    BOOST_CHECK_EQUAL(instance.getComputationalDag().NumVertices(), 54);
     BOOST_CHECK_EQUAL(instance.getComputationalDag().num_vertex_types(), 1);
 
     BspSchedule bspSchedule(instance);

@@ -305,7 +305,7 @@ class BspScheduleCS : public BspSchedule<GraphT> {
 
     void SetImprovedLazyCommunicationSchedule() {
         commSchedule_.clear();
-        if (BspSchedule<GraphT>::instance->getComputationalDag().num_vertices() <= 1
+        if (BspSchedule<GraphT>::instance->getComputationalDag().NumVertices() <= 1
             || BspSchedule<GraphT>::number_of_supersteps <= 1) {
             return;
         }

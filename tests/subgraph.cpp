@@ -105,8 +105,8 @@ BOOST_AUTO_TEST_CASE(SubGraphDagVectorImpl) {
 
     const std::vector<vertex_idx_t<computational_dag_vector_impl<VImpl>>> selectVert({2, 3, 10, 6, 7});
     const auto vertCorrespondence = create_induced_subgraph_map(graph, subGraph, selectVert);
-    BOOST_CHECK_EQUAL(subGraph.num_vertices(), selectVert.size());
-    BOOST_CHECK_EQUAL(subGraph.num_edges(), 4);
+    BOOST_CHECK_EQUAL(subGraph.NumVertices(), selectVert.size());
+    BOOST_CHECK_EQUAL(subGraph.NumEdges(), 4);
 
     for (const auto &vert : selectVert) {
         BOOST_CHECK_LT(vertCorrespondence.at(vert), selectVert.size());

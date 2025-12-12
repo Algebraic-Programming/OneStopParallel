@@ -73,12 +73,12 @@ class SquashA : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
             connected_components.add_object(vert, dag_in.vertex_work_weight(vert), dag_in.vertex_mem_weight(vert));
         }
 
-        std::vector<bool> mergedNodes(dagIn.num_vertices(), false);
+        std::vector<bool> mergedNodes(dagIn.NumVertices(), false);
 
         vertex_idx_t<Graph_t_in> numNodesDecrease = 0;
         vertex_idx_t<Graph_t_in> numNodesAim
-            = dagIn.num_vertices()
-              - static_cast<vertex_idx_t<Graph_t_in>>(static_cast<double>(dagIn.num_vertices()) / params_.geomDecayNumNodes_);
+            = dagIn.NumVertices()
+              - static_cast<vertex_idx_t<Graph_t_in>>(static_cast<double>(dagIn.NumVertices()) / params_.geomDecayNumNodes_);
 
         double temperature = 1;
         unsigned temperatureIncreaseIteration = 0;
@@ -192,14 +192,14 @@ class SquashA : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
         std::vector<std::vector<vertex_idx_t<Graph_t_in>>> partitionVec;
 
         vertex_idx_t<Graph_t_in> minNodeDecrease
-            = dagIn.num_vertices()
-              - static_cast<vertex_idx_t<Graph_t_in>>(static_cast<double>(dagIn.num_vertices())
+            = dagIn.NumVertices()
+              - static_cast<vertex_idx_t<Graph_t_in>>(static_cast<double>(dagIn.NumVertices())
                                                       / std::pow(params_.geomDecayNumNodes_, 0.25));
         if (numNodesDecrease > 0 && num_nodes_decrease >= min_node_decrease) {
             partition_vec = connected_components.get_connected_components();
 
         } else {
-            partitionVec.reserve(dagIn.num_vertices());
+            partitionVec.reserve(dagIn.NumVertices());
             for (const auto &vert : dagIn.vertices()) {
                 std::vector<vertex_idx_t<Graph_t_in>> vect;
                 vect.push_back(vert);

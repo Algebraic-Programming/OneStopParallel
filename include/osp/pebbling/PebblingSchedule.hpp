@@ -325,7 +325,7 @@ v_workw_t<Graph_t> PebblingSchedule<GraphT>::ComputeCost() const {
 template <typename GraphT>
 v_workw_t<Graph_t> PebblingSchedule<GraphT>::ComputeAsynchronousCost() const {
     std::vector<cost_type> currentTimeAtProcessor(instance_->getArchitecture().numberOfProcessors(), 0);
-    std::vector<cost_type> timeWhenNodeGetsBlue(instance->getComputationalDag().num_vertices(),
+    std::vector<cost_type> timeWhenNodeGetsBlue(instance->getComputationalDag().NumVertices(),
                                                 std::numeric_limits<cost_type>::max());
     if (needToLoadInputs_) {
         for (vertex_idx node = 0; node < instance_->numberOfVertices(); ++node) {
@@ -485,7 +485,7 @@ void PebblingSchedule<GraphT>::CleanSchedule() {
     }
 
     std::vector<bool> hasBlue(instance_->numberOfVertices());
-    std::vector<cost_type> timeWhenNodeGetsBlue(instance->getComputationalDag().num_vertices(),
+    std::vector<cost_type> timeWhenNodeGetsBlue(instance->getComputationalDag().NumVertices(),
                                                 std::numeric_limits<cost_type>::max());
     if (needToLoadInputs_) {
         for (vertex_idx node = 0; node < instance_->numberOfVertices(); ++node) {
@@ -661,7 +661,7 @@ void PebblingSchedule<GraphT>::SplitSupersteps(const BspSchedule<GraphT> &schedu
     // get DFS topological order in each superstep
     std::vector<std::vector<std::vector<vertex_idx>>> topOrders = computeTopOrdersDFS(schedule);
 
-    std::vector<unsigned> topOrderIdx(instance_->getComputationalDag().num_vertices(), 0);
+    std::vector<unsigned> topOrderIdx(instance_->getComputationalDag().NumVertices(), 0);
     for (unsigned proc = 0; proc < instance_->numberOfProcessors(); ++proc) {
         for (unsigned step = 0; step < schedule.numberOfSupersteps(); ++step) {
             for (unsigned idx = 0; idx < topOrders[proc][step].size(); ++idx) {
@@ -671,7 +671,7 @@ void PebblingSchedule<GraphT>::SplitSupersteps(const BspSchedule<GraphT> &schedu
     }
 
     // split supersteps as needed
-    std::vector<unsigned> newSuperstepId(instance_->getComputationalDag().num_vertices());
+    std::vector<unsigned> newSuperstepId(instance_->getComputationalDag().NumVertices());
     unsigned superstepIndex = 0;
     for (unsigned step = 0; step < schedule.numberOfSupersteps(); ++step) {
         unsigned maxSegmentsInSuperstep = 0;
@@ -832,7 +832,7 @@ void PebblingSchedule<GraphT>::SplitSupersteps(const BspSchedule<GraphT> &schedu
 
 template <typename GraphT>
 void PebblingSchedule<GraphT>::SetMemoryMovement(CacheEvictionStrategy evictRule) {
-    const size_t n = instance_->getComputationalDag().num_vertices();
+    const size_t n = instance_->getComputationalDag().NumVertices();
 
     std::vector<memweight_type> memUsed(instance_->numberOfProcessors(), 0);
     std::vector<std::set<vertex_idx>> inMem(instance_->numberOfProcessors());
@@ -1146,9 +1146,9 @@ void PebblingSchedule<GraphT>::ResetToForesight() {
 template <typename GraphT>
 bool PebblingSchedule<GraphT>::IsValid() const {
     std::vector<memweight_type> memUsed(instance_->numberOfProcessors(), 0);
-    std::vector<std::vector<vertex_idx>> inFastMem(instance->getComputationalDag().num_vertices(),
+    std::vector<std::vector<vertex_idx>> inFastMem(instance->getComputationalDag().NumVertices(),
                                                    std::vector<vertex_idx>(instance->numberOfProcessors(), false));
-    std::vector<vertex_idx> inSlowMem(instance_->getComputationalDag().num_vertices(), false);
+    std::vector<vertex_idx> inSlowMem(instance_->getComputationalDag().NumVertices(), false);
 
     if (needToLoadInputs_) {
         for (vertex_idx node = 0; node < instance_->numberOfVertices(); ++node) {
@@ -1264,7 +1264,7 @@ template <typename GraphT>
 std::vector<v_memw_t<Graph_t>> PebblingSchedule<GraphT>::MinimumMemoryRequiredPerNodeType(
     const BspInstance<GraphT> &instance, const std::set<vertex_idx> &externalSources) {
     std::vector<v_memw_t<Graph_t>> maxNeeded(instance.getComputationalDag().num_vertex_types(), 0);
-    for (vertex_idx_t<Graph_t> node = 0; node < instance.getComputationalDag().num_vertices(); ++node) {
+    for (vertex_idx_t<Graph_t> node = 0; node < instance.getComputationalDag().NumVertices(); ++node) {
         if (externalSources.find(node) != external_sources.end()) {
             continue;
         }
@@ -1285,7 +1285,7 @@ std::vector<v_memw_t<Graph_t>> PebblingSchedule<GraphT>::MinimumMemoryRequiredPe
 template <typename GraphT>
 std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> PebblingSchedule<GraphT>::ComputeTopOrdersDfs(
     const BspSchedule<GraphT> &schedule) const {
-    size_t n = schedule.getInstance().getComputationalDag().num_vertices();
+    size_t n = schedule.getInstance().getComputationalDag().NumVertices();
     unsigned numProcs = schedule.getInstance().numberOfProcessors();
     unsigned numSupsteps = schedule.numberOfSupersteps();
 

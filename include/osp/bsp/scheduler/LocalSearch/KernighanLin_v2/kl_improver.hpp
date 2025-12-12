@@ -1805,7 +1805,7 @@ void KlImprover<GraphT, CommCostFunctionT, MemoryConstraintT, windowSize, CostT>
 
     for (auto &tData : threadDataVec_) {
         tData.affinity_table.initialize(activeSchedule_, tData.selection_strategy.selection_threshold);
-        tData.lock_manager.initialize(graph_->num_vertices());
+        tData.lock_manager.initialize(graph_->NumVertices());
         tData.reward_penalty_strat.initialize(
             activeSchedule_, commCostF_.get_max_comm_weight_multiplied(), activeSchedule_.get_max_work_weight());
         tData.selection_strategy.initialize(activeSchedule_, gen_, tData.start_step, tData.end_step);

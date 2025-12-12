@@ -184,7 +184,7 @@ void HillClimbingScheduler<GraphT>::Init() {
         CreateSupstepLists();
     }
 
-    const vertex_idx n = schedule_->getInstance().getComputationalDag().num_vertices();
+    const vertex_idx n = schedule_->getInstance().getComputationalDag().NumVertices();
     const unsigned p = schedule_->getInstance().getArchitecture().numberOfProcessors();
     const unsigned m = schedule_->numberOfSupersteps();
     const GraphT &g = schedule_->getInstance().getComputationalDag();
@@ -327,7 +327,7 @@ void HillClimbingScheduler<GraphT>::UpdatePromisingMoves() {
     const GraphT &g = schedule_->getInstance().getComputationalDag();
 
     promisingMoves.clear();
-    for (vertex_idx node = 0; node < schedule_->getInstance().getComputationalDag().num_vertices(); ++node) {
+    for (vertex_idx node = 0; node < schedule_->getInstance().getComputationalDag().NumVertices(); ++node) {
         std::vector<unsigned> nrPredOnProc(p, 0);
         for (const vertex_idx &pred : G.parents(node)) {
             ++nrPredOnProc[schedule->assignedProcessor(pred)];

@@ -32,8 +32,8 @@ BOOST_AUTO_TEST_CASE(ConnectedComponentPartTest) {
     computational_dag_vector_impl_def_int_t &dag = instance.getComputationalDag();
     using VertexType = vertex_idx_t<computational_dag_vector_impl_def_int_t>;
 
-    BOOST_CHECK_EQUAL(dag.num_vertices(), 0);
-    BOOST_CHECK_EQUAL(dag.num_edges(), 0);
+    BOOST_CHECK_EQUAL(dag.NumVertices(), 0);
+    BOOST_CHECK_EQUAL(dag.NumEdges(), 0);
 
     VertexType v1 = dag.add_vertex(2, 1, 2);
     VertexType v2 = dag.add_vertex(3, 1, 2);
@@ -44,8 +44,8 @@ BOOST_AUTO_TEST_CASE(ConnectedComponentPartTest) {
     VertexType v7 = dag.add_vertex(8, 1, 2);
     VertexType v8 = dag.add_vertex(9, 1, 2);
 
-    BOOST_CHECK_EQUAL(dag.num_vertices(), 8);
-    BOOST_CHECK_EQUAL(dag.num_edges(), 0);
+    BOOST_CHECK_EQUAL(dag.NumVertices(), 8);
+    BOOST_CHECK_EQUAL(dag.NumEdges(), 0);
 
     dag.add_edge(v1, v2);
     dag.add_edge(v1, v3);
@@ -74,8 +74,8 @@ BOOST_AUTO_TEST_CASE(ConnectedComponentPartTest) {
     BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
     BOOST_CHECK(partitioner.get_sub_dags().size() == 1);
-    BOOST_CHECK(partitioner.get_sub_dags()[0].num_vertices() == 8);
-    BOOST_CHECK(partitioner.get_sub_dags()[0].num_edges() == 9);
+    BOOST_CHECK(partitioner.get_sub_dags()[0].NumVertices() == 8);
+    BOOST_CHECK(partitioner.get_sub_dags()[0].NumEdges() == 9);
 
     for (unsigned i = 0; i < 8; i++) {
         BOOST_CHECK_EQUAL(partitioner.get_component()[i], 0);
@@ -96,10 +96,10 @@ BOOST_AUTO_TEST_CASE(ConnectedComponentPartTest) {
     partitioner.compute_connected_components(dag);
 
     BOOST_CHECK_EQUAL(partitioner.get_sub_dags().size(), 2);
-    BOOST_CHECK_EQUAL(partitioner.get_sub_dags()[0].num_vertices(), 8);
-    BOOST_CHECK_EQUAL(partitioner.get_sub_dags()[0].num_edges(), 9);
-    BOOST_CHECK_EQUAL(partitioner.get_sub_dags()[1].num_vertices(), 4);
-    BOOST_CHECK_EQUAL(partitioner.get_sub_dags()[1].num_edges(), 4);
+    BOOST_CHECK_EQUAL(partitioner.get_sub_dags()[0].NumVertices(), 8);
+    BOOST_CHECK_EQUAL(partitioner.get_sub_dags()[0].NumEdges(), 9);
+    BOOST_CHECK_EQUAL(partitioner.get_sub_dags()[1].NumVertices(), 4);
+    BOOST_CHECK_EQUAL(partitioner.get_sub_dags()[1].NumEdges(), 4);
 
     for (unsigned i = 0; i < 8; i++) {
         BOOST_CHECK_EQUAL(partitioner.get_component()[i], 0);

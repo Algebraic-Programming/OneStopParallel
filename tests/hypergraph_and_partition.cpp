@@ -61,9 +61,9 @@ BOOST_AUTO_TEST_CASE(HypergraphAndPartitionTest) {
 
     // DAG format, all hyperedges have size 2
     hgraph = convert_from_cdag_as_dag<Hypergraph, Graph>(dag);
-    BOOST_CHECK_EQUAL(dag.num_vertices(), hgraph.NumVertices());
-    BOOST_CHECK_EQUAL(dag.num_edges(), hgraph.NumHyperedges());
-    BOOST_CHECK_EQUAL(dag.num_edges() * 2, hgraph.NumPins());
+    BOOST_CHECK_EQUAL(dag.NumVertices(), hgraph.NumVertices());
+    BOOST_CHECK_EQUAL(dag.NumEdges(), hgraph.NumHyperedges());
+    BOOST_CHECK_EQUAL(dag.NumEdges() * 2, hgraph.NumPins());
 
     // HyperDAG format, one hypredge for each non-sink node
     unsigned nrOfNonSinks = 0;
@@ -74,9 +74,9 @@ BOOST_AUTO_TEST_CASE(HypergraphAndPartitionTest) {
     }
 
     hgraph = convert_from_cdag_as_hyperdag<Hypergraph, Graph>(dag);
-    BOOST_CHECK_EQUAL(dag.num_vertices(), hgraph.NumVertices());
+    BOOST_CHECK_EQUAL(dag.NumVertices(), hgraph.NumVertices());
     BOOST_CHECK_EQUAL(nrOfNonSinks, hgraph.NumHyperedges());
-    BOOST_CHECK_EQUAL(dag.num_edges() + nrOfNonSinks, hgraph.NumPins());
+    BOOST_CHECK_EQUAL(dag.NumEdges() + nrOfNonSinks, hgraph.NumPins());
 
     // Dummy partitioning
 

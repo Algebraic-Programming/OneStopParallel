@@ -40,7 +40,7 @@ struct LambdaMapContainer {
 
     /**
      * @brief Initialize the container for a given number of vertices.
-     * @param num_vertices Number of nodes in the schedule
+     * @param NumVertices Number of nodes in the schedule
      * @param (unused) Number of processors (not needed for map-based implementation)
      */
     inline void Initialize(const VertexIdxT numVertices, const unsigned) { nodeLambdaMap_.resize(numVertices); }
@@ -258,7 +258,7 @@ struct LambdaVectorContainer {
 
     /**
      * @brief Initialize the container for a given number of vertices and processors.
-     * @param num_vertices Number of nodes in the schedule
+     * @param NumVertices Number of nodes in the schedule
      * @param num_procs Number of processors in the system
      */
     inline void Initialize(const VertexIdxT numVertices, const unsigned numProcs) {

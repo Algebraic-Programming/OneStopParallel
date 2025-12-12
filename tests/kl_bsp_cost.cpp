@@ -1125,7 +1125,7 @@ BOOST_AUTO_TEST_CASE(TestLazyAndBufferedModes) {
     activeScheduleData.initialize_cost(0.0);
 
     std::cout << "Setup Complete" << std::endl;
-    std::cout << "Num Vertices: " << instance.num_vertices() << std::endl;
+    std::cout << "Num Vertices: " << instance.NumVertices() << std::endl;
     std::cout << "Num Procs: " << arch.numberOfProcessors() << std::endl;
 
     std::cout << "Start Eager Test" << std::endl;

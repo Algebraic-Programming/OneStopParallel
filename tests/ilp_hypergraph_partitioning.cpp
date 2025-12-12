@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
     BOOST_CHECK(status);
 
     Hypergraph hgraph = convert_from_cdag_as_hyperdag<Hypergraph, graph>(DAG);
-    BOOST_CHECK_EQUAL(DAG.num_vertices(), Hgraph.num_vertices());
+    BOOST_CHECK_EQUAL(DAG.NumVertices(), Hgraph.NumVertices());
 
     PartitioningProblem instance(hgraph, 3, 35);
     Partitioning partition(instance);
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
     BOOST_CHECK(partition.satisfiesBalanceConstraint());
     BOOST_CHECK(partition.computeConnectivityCost() >= partition.computeCutNetCost());
 
-    for (unsigned node = 0; node < hgraph.num_vertices(); ++node) {
+    for (unsigned node = 0; node < hgraph.NumVertices(); ++node) {
         partition.setAssignedPartition(node, node % 3);
     }
 
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
     BOOST_CHECK(partitionRep.computeConnectivityCost() == 0);
 
     partitionerRep.setUseInitialSolution(true);
-    for (unsigned node = 0; node < hgraph.num_vertices(); ++node) {
+    for (unsigned node = 0; node < hgraph.NumVertices(); ++node) {
         partitionRep.setAssignedPartitions(node, {node % 3});
     }
 
@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
     BOOST_CHECK(partitionRep.computeConnectivityCost() == 0);
 
     instance.setMaxWorkWeightExplicitly(60);
-    for (unsigned node = 0; node < hgraph.num_vertices(); ++node) {
+    for (unsigned node = 0; node < hgraph.NumVertices(); ++node) {
         partitionRep.setAssignedPartitions(node, {node % 3, (node + 1) % 3});
     }
 
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
     BOOST_CHECK(partitionRep.computeConnectivityCost() == 0);
 
     partitionerRep.setUseInitialSolution(true);
-    for (unsigned node = 0; node < hgraph.num_vertices(); ++node) {
+    for (unsigned node = 0; node < hgraph.NumVertices(); ++node) {
         partitionRep.setAssignedPartitions(node, {node % 3});
     }
 
@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
     BOOST_CHECK(partitionRep.computeConnectivityCost() == 0);
 
     instance.setMaxWorkWeightExplicitly(60);
-    for (unsigned node = 0; node < hgraph.num_vertices(); ++node) {
+    for (unsigned node = 0; node < hgraph.NumVertices(); ++node) {
         partitionRep.setAssignedPartitions(node, {node % 3, (node + 1) % 3});
     }
 

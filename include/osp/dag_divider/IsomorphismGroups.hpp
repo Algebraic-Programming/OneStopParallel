@@ -39,7 +39,7 @@ class IsomorphismGroups {
         for (std::size_t i = 0; i < isomorphismGroups_.size(); i++) {
             std::cout << "Level " << i << std::endl;
             for (size_t j = 0; j < isomorphismGroups_[i].size(); j++) {
-                std::cout << "Group " << j << " of size " << isomorphismGroupsSubgraphs_[i][j].num_vertices() << " : ";
+                std::cout << "Group " << j << " of size " << isomorphismGroupsSubgraphs_[i][j].NumVertices() << " : ";
 
                 // ComputationalDagWriter writer(isomorphism_groups_subgraphs[i][j]);
                 // writer.write_dot("isomorphism_group_" + std::to_string(i) + "_" + std::to_string(j) + ".dot");

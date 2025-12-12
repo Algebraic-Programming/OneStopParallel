@@ -91,8 +91,8 @@ BOOST_AUTO_TEST_CASE(TestSparseMatrixAdapter1) {
     lCsc = lCsr;
     graph.setCSC(&lCsc);
 
-    BOOST_CHECK_EQUAL(graph.num_edges(), 11);
-    BOOST_CHECK_EQUAL(graph.num_vertices(), 7);
+    BOOST_CHECK_EQUAL(graph.NumEdges(), 11);
+    BOOST_CHECK_EQUAL(graph.NumVertices(), 7);
     BOOST_CHECK_EQUAL(graph.in_degree(0), 0);
     BOOST_CHECK_EQUAL(graph.in_degree(1), 1);
     BOOST_CHECK_EQUAL(graph.in_degree(3), 2);

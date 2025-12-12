@@ -530,12 +530,12 @@ BOOST_AUTO_TEST_CASE(GraphEdgeContruction) {
     pair = graph.add_edge(v5, v8);
     BOOST_CHECK_EQUAL(pair.second, true);
 
-    BOOST_CHECK_EQUAL(graph.num_edges(), 9);
-    BOOST_CHECK_EQUAL(graph.num_vertices(), 8);
+    BOOST_CHECK_EQUAL(graph.NumEdges(), 9);
+    BOOST_CHECK_EQUAL(graph.NumVertices(), 8);
 
-    Compact_Sparse_Graph<true, false, false, false, false, VertexIdx> copyGraph(graph.num_vertices(), edge_view(graph));
-    BOOST_CHECK_EQUAL(copyGraph.num_vertices(), 8);
-    BOOST_CHECK_EQUAL(copyGraph.num_edges(), 9);
+    Compact_Sparse_Graph<true, false, false, false, false, VertexIdx> copyGraph(graph.NumVertices(), edge_view(graph));
+    BOOST_CHECK_EQUAL(copyGraph.NumVertices(), 8);
+    BOOST_CHECK_EQUAL(copyGraph.NumEdges(), 9);
 
     std::vector<std::vector<std::size_t>> outEdges({
         {1, 2, 3},
@@ -577,9 +577,9 @@ BOOST_AUTO_TEST_CASE(GraphEdgeContruction) {
         }
     }
 
-    Compact_Sparse_Graph<false, false, false, false, false, VertexIdx> reorderGraph(graph.num_vertices(), edge_view(graph));
-    BOOST_CHECK_EQUAL(reorderGraph.num_vertices(), 8);
-    BOOST_CHECK_EQUAL(reorderGraph.num_edges(), 9);
+    Compact_Sparse_Graph<false, false, false, false, false, VertexIdx> reorderGraph(graph.NumVertices(), edge_view(graph));
+    BOOST_CHECK_EQUAL(reorderGraph.NumVertices(), 8);
+    BOOST_CHECK_EQUAL(reorderGraph.NumEdges(), 9);
 
     std::vector<std::size_t> perm(8, 0);
     std::iota(perm.begin(), perm.end(), 0);
@@ -971,8 +971,8 @@ BOOST_AUTO_TEST_CASE(GraphTypeCopyContruction) {
     pair = graph.add_edge(v5, v8);
     BOOST_CHECK_EQUAL(pair.second, true);
 
-    BOOST_CHECK_EQUAL(graph.num_edges(), 9);
-    BOOST_CHECK_EQUAL(graph.num_vertices(), 8);
+    BOOST_CHECK_EQUAL(graph.NumEdges(), 9);
+    BOOST_CHECK_EQUAL(graph.NumVertices(), 8);
 
     Compact_Sparse_Graph<true,
                          true,
@@ -986,8 +986,8 @@ BOOST_AUTO_TEST_CASE(GraphTypeCopyContruction) {
                          computational_dag_edge_idx_vector_impl_def_t::vertex_mem_weight_type,
                          computational_dag_edge_idx_vector_impl_def_t::vertex_type_type>
         copyGraph(graph);
-    BOOST_CHECK_EQUAL(copyGraph.num_vertices(), 8);
-    BOOST_CHECK_EQUAL(copyGraph.num_edges(), 9);
+    BOOST_CHECK_EQUAL(copyGraph.NumVertices(), 8);
+    BOOST_CHECK_EQUAL(copyGraph.NumEdges(), 9);
 
     std::vector<std::vector<std::size_t>> outEdges({
         {1, 2, 3},
@@ -1048,8 +1048,8 @@ BOOST_AUTO_TEST_CASE(GraphTypeCopyContruction) {
                          computational_dag_edge_idx_vector_impl_def_t::vertex_mem_weight_type,
                          computational_dag_edge_idx_vector_impl_def_t::vertex_type_type>
         reorderGraph(graph);
-    BOOST_CHECK_EQUAL(reorderGraph.num_vertices(), 8);
-    BOOST_CHECK_EQUAL(reorderGraph.num_edges(), 9);
+    BOOST_CHECK_EQUAL(reorderGraph.NumVertices(), 8);
+    BOOST_CHECK_EQUAL(reorderGraph.NumEdges(), 9);
 
     std::vector<std::size_t> perm(8, 0);
     std::iota(perm.begin(), perm.end(), 0);

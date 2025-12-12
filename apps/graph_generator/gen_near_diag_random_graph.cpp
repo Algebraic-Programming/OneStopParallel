@@ -66,20 +66,20 @@ int main(int argc, char *argv[]) {
         graphName += "p" + std::to_string(static_cast<int>(100 * prob)) + "_";
         graphName += "b" + std::to_string(static_cast<int>(bandwidth)) + "_";
         std::string graphSizeName;
-        if (graph.num_vertices() < 1000) {
-            graphSizeName = std::to_string(graph.num_vertices()) + "_";
+        if (graph.NumVertices() < 1000) {
+            graphSizeName = std::to_string(graph.NumVertices()) + "_";
         } else {
-            graphSizeName = std::to_string(graph.num_vertices() / 1000) + "k_";
+            graphSizeName = std::to_string(graph.NumVertices() / 1000) + "k_";
         }
         graphName += graphSizeName;
 
         std::string graphEdgeSize;
-        if (graph.num_edges() < 1000) {
-            graphEdgeSize = std::to_string(graph.num_edges()) + "_";
-        } else if (graph.num_edges() < 1000000) {
-            graphEdgeSize = std::to_string(graph.num_edges() / 1000) + "k_";
+        if (graph.NumEdges() < 1000) {
+            graphEdgeSize = std::to_string(graph.NumEdges()) + "_";
+        } else if (graph.NumEdges() < 1000000) {
+            graphEdgeSize = std::to_string(graph.NumEdges() / 1000) + "k_";
         } else {
-            graphEdgeSize = std::to_string(graph.num_edges() / 1000000) + "m_";
+            graphEdgeSize = std::to_string(graph.NumEdges() / 1000000) + "m_";
         }
         graphName += graphEdgeSize;
 
@@ -102,8 +102,8 @@ int main(int argc, char *argv[]) {
         std::ofstream graphWrite;
         graphWrite.open(graphName);
         graphWrite << header;
-        graphWrite << std::to_string(graph.num_vertices()) + " " + std::to_string(graph.num_vertices()) + " "
-                          + std::to_string(graph.num_edges() + graph.num_vertices()) + "\n";
+        graphWrite << std::to_string(graph.NumVertices()) + " " + std::to_string(graph.NumVertices()) + " "
+                          + std::to_string(graph.NumEdges() + graph.NumVertices()) + "\n";
         for (VertexType j = 0; j < numVert; j++) {
             double val = (1 - 2 * randInt(2)) * std::exp(unifLog(re));
             graphWrite << std::to_string(j + 1) + " " + std::to_string(j + 1) + " " + std::to_string(val) + "\n";

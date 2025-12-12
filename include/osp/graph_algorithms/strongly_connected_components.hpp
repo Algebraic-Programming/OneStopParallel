@@ -42,7 +42,7 @@ std::vector<std::vector<vertex_idx_t<Graph_t>>> StronglyConnectedComponents(cons
     static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
 
     using VertexType = vertex_idx_t<Graph_t>;
-    const auto numVertices = graph.num_vertices();
+    const auto numVertices = graph.NumVertices();
     if (numVertices == 0) {
         return {};
     }

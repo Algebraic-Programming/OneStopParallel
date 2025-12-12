@@ -145,11 +145,11 @@ VWorkwT<GraphT> CriticalPathWeight(const GraphT &graph) {
     static_assert(IsDirectedGraphEdgeDescV<GraphT>, "Graph_t must satisfy the directed_graph concept");
     static_assert(HasVertexWeightsV<GraphT>, "Graph_t must have vertex weights");
 
-    if (graph.num_vertices() == 0) {
+    if (graph.NumVertices() == 0) {
         return 0;
     }
 
-    std::vector<VWorkwT<GraphT>> topLength(graph.num_vertices(), 0);
+    std::vector<VWorkwT<GraphT>> topLength(graph.NumVertices(), 0);
     VWorkwT<GraphT> criticalPathWeight = 0;
 
     // calculating lenght of longest path

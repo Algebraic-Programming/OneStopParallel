@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecompTest) {
 
     MerkleHashComputer<GraphT, uniform_node_hash_func<vertex_idx_t<GraphT>>> mHash(graph);
 
-    BOOST_CHECK_EQUAL(mHash.get_vertex_hashes().size(), graph.num_vertices());
+    BOOST_CHECK_EQUAL(mHash.get_vertex_hashes().size(), graph.NumVertices());
 
     for (const auto &v : source_vertices_view(graph)) {
         BOOST_CHECK_EQUAL(mHash.get_vertex_hash(v), 11);
@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecompTest) {
         std::cout << std::endl;
     }
 
-    BOOST_CHECK_EQUAL(num, graph.num_vertices());
+    BOOST_CHECK_EQUAL(num, graph.NumVertices());
 
     BOOST_CHECK_EQUAL(mHash.get_vertex_hash(41), mHash.get_vertex_hash(47));
     BOOST_CHECK_EQUAL(mHash.get_vertex_hash(28), mHash.get_vertex_hash(18));
@@ -69,11 +69,11 @@ BOOST_AUTO_TEST_CASE(MerkleHashComputerTestFwBwPrecomp) {
     const auto projectRoot = GetProjectRoot();
     file_reader::readComputationalDagHyperdagFormatDB((projectRoot / "data/spaa/tiny/instance_bicgstab.hdag").string(), graphTest);
 
-    std::vector<size_t> precomNodeHashes(graphTest.num_vertices(), 5);
+    std::vector<size_t> precomNodeHashes(graphTest.NumVertices(), 5);
 
     MerkleHashComputer<GraphT, precom_bwd_merkle_node_hash_func<GraphT>> mHash(graphTest, graphTest, precomNodeHashes);
 
-    BOOST_CHECK_EQUAL(mHash.get_vertex_hashes().size(), graphTest.num_vertices());
+    BOOST_CHECK_EQUAL(mHash.get_vertex_hashes().size(), graphTest.NumVertices());
 
     size_t num = 0;
     for (const auto &pair : mHash.get_orbits()) {
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(MerkleHashComputerTestFwBwPrecomp) {
         std::cout << std::endl;
     }
 
-    BOOST_CHECK_EQUAL(num, graphTest.num_vertices());
+    BOOST_CHECK_EQUAL(num, graphTest.NumVertices());
 }
 
 using GraphType = computational_dag_vector_impl_def_t;

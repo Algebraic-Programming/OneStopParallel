@@ -40,12 +40,12 @@ void CreateInducedSubgraph(const GraphTIn &dag,
 
     static_assert(is_constructable_cdag_edge_v<Graph_t_out>, "Graph_t_out must satisfy the constructable_cdag_edge concept");
 
-    assert(dagOut.num_vertices() == 0);
+    assert(dagOut.NumVertices() == 0);
 
     std::map<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_in>> local_idx;
 
     for (const auto &node : extra_sources) {
-        local_idx[node] = dag_out.num_vertices();
+        local_idx[node] = dag_out.NumVertices();
         if constexpr (is_constructable_cdag_typed_vertex_v<Graph_t_out> and HasTypedVerticesV<Graph_t_in>) {
             // add extra source with type
             dag_out.add_vertex(0, dag.vertex_comm_weight(node), dag.vertex_mem_weight(node), dag.vertex_type(node));
@@ -56,7 +56,7 @@ void CreateInducedSubgraph(const GraphTIn &dag,
     }
 
     for (const auto &node : selected_nodes) {
-        local_idx[node] = dag_out.num_vertices();
+        local_idx[node] = dag_out.NumVertices();
 
         if constexpr (is_constructable_cdag_typed_vertex_v<Graph_t_out> and HasTypedVerticesV<Graph_t_in>) {
             // add vertex with type
@@ -100,7 +100,7 @@ template <typename GraphT>
 bool CheckOrderedIsomorphism(const GraphT &first, const GraphT &second) {
     static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
 
-    if (first.num_vertices() != second.num_vertices() || first.num_edges() != second.num_edges()) {
+    if (first.NumVertices() != second.NumVertices() || first.NumEdges() != second.NumEdges()) {
         return false;
     }
 
@@ -177,10 +177,10 @@ std::vector<GraphTOut> CreateInducedSubgraphs(const GraphTIn &dagIn, const std::
 
     std::vector<GraphTOut> splitDags(numberOfParts);
 
-    std::vector<vertex_idx_t<Graph_t_out>> localIdx(dagIn.num_vertices());
+    std::vector<vertex_idx_t<Graph_t_out>> localIdx(dagIn.NumVertices());
 
     for (const auto node : dagIn.vertices()) {
-        localIdx[node] = splitDags[partitionIDs[node]].num_vertices();
+        localIdx[node] = splitDags[partitionIDs[node]].NumVertices();
 
         if constexpr (is_constructable_cdag_typed_vertex_v<Graph_t_out> and HasTypedVerticesV<Graph_t_in>) {
             splitDags[partitionIDs[node]].add_vertex(dagIn.vertex_work_weight(node),
@@ -226,13 +226,13 @@ std::unordered_map<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_in>> create_in
 
     static_assert(is_constructable_cdag_edge_v<Graph_t_out>, "Graph_t_out must satisfy the constructable_cdag_edge concept");
 
-    assert(dag_out.num_vertices() == 0);
+    assert(dag_out.NumVertices() == 0);
 
     std::unordered_map<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_in>> local_idx;
     local_idx.reserve(selected_nodes.size());
 
     for (const auto &node : selected_nodes) {
-        local_idx[node] = dag_out.num_vertices();
+        local_idx[node] = dag_out.NumVertices();
 
         if constexpr (is_constructable_cdag_typed_vertex_v<Graph_t_out> and HasTypedVerticesV<Graph_t_in>) {
             // add vertex with type

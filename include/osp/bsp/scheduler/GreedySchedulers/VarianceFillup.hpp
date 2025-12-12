@@ -64,7 +64,7 @@ class VarianceFillup : public Scheduler<GraphT> {
     bool increaseParallelismInNewSuperstep_;
 
     std::vector<double> ComputeWorkVariance(const GraphT &graph) const {
-        std::vector<double> workVariance(graph.num_vertices(), 0.0);
+        std::vector<double> workVariance(graph.NumVertices(), 0.0);
 
         const std::vector<VertexType> topOrder = GetTopOrder(graph);
 

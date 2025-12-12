@@ -143,7 +143,7 @@ void CoptCommScheduleOptimizer<GraphT>::SetInitialSolution(BspScheduleCS<GraphT>
     const unsigned &numSupersteps = schedule.numberOfSupersteps();
     const auto &cs = schedule.getCommunicationSchedule();
 
-    std::vector<std::vector<unsigned>> firstAt(DAG.num_vertices(),
+    std::vector<std::vector<unsigned>> firstAt(DAG.NumVertices(),
                                                std::vector<unsigned>(num_processors, std::numeric_limits<unsigned>::max()));
     for (const auto &node : dag.vertices()) {
         firstAt[node][schedule.assignedProcessor(node)] = schedule.assignedSuperstep(node);
@@ -236,7 +236,7 @@ void CoptCommScheduleOptimizer<GraphT>::SetupVariablesConstraintsObjective(const
         for (unsigned p2 = 0; p2 < numProcessors; p2++) {
             for (unsigned step = 0; step < maxNumberSupersteps; step++) {
                 comm_processor_to_processor_superstep_node_var[p1][p2][step]
-                    = model.AddVars(static_cast<int>(num_vertices), COPT_BINARY, "comm_processor_to_processor_superstep_node");
+                    = model.AddVars(static_cast<int>(numVertices), COPT_BINARY, "comm_processor_to_processor_superstep_node");
             }
         }
     }

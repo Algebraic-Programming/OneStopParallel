@@ -70,16 +70,16 @@ boost_graph_int_t ConstrGraph1() {
     pair = graph.add_edge(v5, v8);
     BOOST_CHECK_EQUAL(pair.second, true);
 
-    BOOST_CHECK_EQUAL(graph.num_edges(), 9);
-    BOOST_CHECK_EQUAL(graph.num_vertices(), 8);
+    BOOST_CHECK_EQUAL(graph.NumEdges(), 9);
+    BOOST_CHECK_EQUAL(graph.NumVertices(), 8);
 
     return graph;
 }
 
 BOOST_AUTO_TEST_CASE(TestEmptyDagBoostGraphAdapter) {
     boost_graph_int_t graph;
-    BOOST_CHECK_EQUAL(graph.num_edges(), 0);
-    BOOST_CHECK_EQUAL(graph.num_vertices(), 0);
+    BOOST_CHECK_EQUAL(graph.NumEdges(), 0);
+    BOOST_CHECK_EQUAL(graph.NumVertices(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(TestBoostGraphAdapter1) {
@@ -181,8 +181,8 @@ BOOST_AUTO_TEST_CASE(TestBoostGraphAdapter1) {
 BOOST_AUTO_TEST_CASE(TestUtil1) {
     const boost_graph_int_t graph = ConstrGraph1();
 
-    BOOST_CHECK_EQUAL(graph.num_edges(), 9);
-    BOOST_CHECK_EQUAL(graph.num_vertices(), 8);
+    BOOST_CHECK_EQUAL(graph.NumEdges(), 9);
+    BOOST_CHECK_EQUAL(graph.NumVertices(), 8);
 
     auto sources = source_vertices(graph);
     BOOST_CHECK_EQUAL(sources.size(), 1);
@@ -265,8 +265,8 @@ BOOST_AUTO_TEST_CASE(TestConstrDag) {
 
     boost_graph_int_t graph2(graph);
 
-    BOOST_CHECK_EQUAL(graph2.num_edges(), 3);
-    BOOST_CHECK_EQUAL(graph2.num_vertices(), 4);
+    BOOST_CHECK_EQUAL(graph2.NumEdges(), 3);
+    BOOST_CHECK_EQUAL(graph2.NumVertices(), 4);
     BOOST_CHECK_EQUAL(graph2.vertex_work_weight(0), 1);
     BOOST_CHECK_EQUAL(graph2.vertex_comm_weight(0), 2);
     BOOST_CHECK_EQUAL(graph2.vertex_mem_weight(0), 3);
@@ -287,8 +287,8 @@ BOOST_AUTO_TEST_CASE(TestConstrDag) {
 
     boost_graph_int_t graph3(graphOther);
 
-    BOOST_CHECK_EQUAL(graph3.num_edges(), 1);
-    BOOST_CHECK_EQUAL(graph3.num_vertices(), 2);
+    BOOST_CHECK_EQUAL(graph3.NumEdges(), 1);
+    BOOST_CHECK_EQUAL(graph3.NumVertices(), 2);
     BOOST_CHECK_EQUAL(graph3.vertex_work_weight(0), 1);
     BOOST_CHECK_EQUAL(graph3.vertex_comm_weight(0), 2);
     BOOST_CHECK_EQUAL(graph3.vertex_mem_weight(0), 3);
@@ -299,16 +299,16 @@ BOOST_AUTO_TEST_CASE(TestConstrDag) {
 
 BOOST_AUTO_TEST_CASE(TestBoostGraphConst1) {
     boost_graph_int_t graph(10u);
-    BOOST_CHECK_EQUAL(graph.num_edges(), 0);
-    BOOST_CHECK_EQUAL(graph.num_vertices(), 10);
+    BOOST_CHECK_EQUAL(graph.NumEdges(), 0);
+    BOOST_CHECK_EQUAL(graph.NumVertices(), 10);
 }
 
 BOOST_AUTO_TEST_CASE(TestBoostGraphConst2) {
     boost_graph_int_t graph1 = ConstrGraph1();
 
     boost_graph_int_t graphCopy(graph1);
-    BOOST_CHECK_EQUAL(graphCopy.num_edges(), 9);
-    BOOST_CHECK_EQUAL(graphCopy.num_vertices(), 8);
+    BOOST_CHECK_EQUAL(graphCopy.NumEdges(), 9);
+    BOOST_CHECK_EQUAL(graphCopy.NumVertices(), 8);
 
     BOOST_CHECK_EQUAL(has_path(2, 7, graphCopy), true);
     BOOST_CHECK_EQUAL(has_path(3, 7, graphCopy), true);
@@ -319,8 +319,8 @@ BOOST_AUTO_TEST_CASE(TestBoostGraphConst2) {
 
     boost_graph_int_t graphCopy2 = graph1;
 
-    BOOST_CHECK_EQUAL(graph1.num_edges(), 9);
-    BOOST_CHECK_EQUAL(graph1.num_vertices(), 8);
+    BOOST_CHECK_EQUAL(graph1.NumEdges(), 9);
+    BOOST_CHECK_EQUAL(graph1.NumVertices(), 8);
 
     BOOST_CHECK_EQUAL(has_path(2, 7, graph1), true);
     BOOST_CHECK_EQUAL(has_path(3, 7, graph1), true);
@@ -329,8 +329,8 @@ BOOST_AUTO_TEST_CASE(TestBoostGraphConst2) {
     BOOST_CHECK_EQUAL(has_path(1, 3, graph1), false);
     BOOST_CHECK_EQUAL(has_path(2, 1, graph1), false);
 
-    BOOST_CHECK_EQUAL(graphCopy2.num_edges(), 9);
-    BOOST_CHECK_EQUAL(graphCopy2.num_vertices(), 8);
+    BOOST_CHECK_EQUAL(graphCopy2.NumEdges(), 9);
+    BOOST_CHECK_EQUAL(graphCopy2.NumVertices(), 8);
 
     BOOST_CHECK_EQUAL(has_path(2, 7, graphCopy2), true);
     BOOST_CHECK_EQUAL(has_path(3, 7, graphCopy2), true);
@@ -341,11 +341,11 @@ BOOST_AUTO_TEST_CASE(TestBoostGraphConst2) {
 
     boost_graph_int_t graphMove1(std::move(graphCopy));
 
-    BOOST_CHECK_EQUAL(graphCopy.num_edges(), 0);
-    BOOST_CHECK_EQUAL(graphCopy.num_vertices(), 0);
+    BOOST_CHECK_EQUAL(graphCopy.NumEdges(), 0);
+    BOOST_CHECK_EQUAL(graphCopy.NumVertices(), 0);
 
-    BOOST_CHECK_EQUAL(graphMove1.num_edges(), 9);
-    BOOST_CHECK_EQUAL(graphMove1.num_vertices(), 8);
+    BOOST_CHECK_EQUAL(graphMove1.NumEdges(), 9);
+    BOOST_CHECK_EQUAL(graphMove1.NumVertices(), 8);
 
     BOOST_CHECK_EQUAL(has_path(2, 7, graphMove1), true);
     BOOST_CHECK_EQUAL(has_path(3, 7, graphMove1), true);
@@ -355,11 +355,11 @@ BOOST_AUTO_TEST_CASE(TestBoostGraphConst2) {
     BOOST_CHECK_EQUAL(has_path(2, 1, graphMove1), false);
 
     boost_graph_int_t graphMove2 = std::move(graphCopy2);
-    BOOST_CHECK_EQUAL(graphCopy2.num_edges(), 0);
-    BOOST_CHECK_EQUAL(graphCopy2.num_vertices(), 0);
+    BOOST_CHECK_EQUAL(graphCopy2.NumEdges(), 0);
+    BOOST_CHECK_EQUAL(graphCopy2.NumVertices(), 0);
 
-    BOOST_CHECK_EQUAL(graphMove2.num_edges(), 9);
-    BOOST_CHECK_EQUAL(graphMove2.num_vertices(), 8);
+    BOOST_CHECK_EQUAL(graphMove2.NumEdges(), 9);
+    BOOST_CHECK_EQUAL(graphMove2.NumVertices(), 8);
 
     BOOST_CHECK_EQUAL(has_path(2, 7, graphMove2), true);
     BOOST_CHECK_EQUAL(has_path(3, 7, graphMove2), true);

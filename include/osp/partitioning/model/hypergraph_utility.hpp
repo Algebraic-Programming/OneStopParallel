@@ -53,7 +53,7 @@ typename HypergraphT::vertex_mem_weight_type ComputeTotalVertexMemoryWeight(cons
     using MemwType = typename HypergraphT::vertex_mem_weight_type;
 
     MemwType total = 0;
-    for (IndexType node = 0; node < hgraph.num_vertices(); ++node) {
+    for (IndexType node = 0; node < hgraph.NumVertices(); ++node) {
         total += hgraph.get_vertex_memory_weight(node);
     }
     return total;
@@ -117,7 +117,7 @@ HypergraphT ConvertFromCdagAsDag(const GraphT &dag) {
     static_assert(!HasEdgeWeightsV<Graph_t> || std::is_same_v<e_commw_t<Graph_t>, commw_type>,
                   "Communication weight type mismatch, cannot convert DAG to hypergraph.");
 
-    HypergraphT hgraph(dag.num_vertices(), 0);
+    HypergraphT hgraph(dag.NumVertices(), 0);
     for (const auto &node : dag.vertices()) {
         hgraph.set_vertex_work_weight(node, dag.vertex_work_weight(node));
         hgraph.set_vertex_memory_weight(node, dag.vertex_mem_weight(node));
@@ -145,7 +145,7 @@ HypergraphT ConvertFromCdagAsHyperdag(const GraphT &dag) {
     static_assert(std::is_same_v<v_commw_t<Graph_t>, commw_type>,
                   "Communication weight type mismatch, cannot convert DAG to hypergraph.");
 
-    HypergraphT hgraph(dag.num_vertices(), 0);
+    HypergraphT hgraph(dag.NumVertices(), 0);
     for (const auto &node : dag.vertices()) {
         hgraph.set_vertex_work_weight(node, dag.vertex_work_weight(node));
         hgraph.set_vertex_memory_weight(node, dag.vertex_mem_weight(node));

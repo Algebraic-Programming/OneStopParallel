@@ -115,7 +115,7 @@ std::size_t LongestPath(const GraphT &graph) {
 
     std::size_t maxEdgecount = 0;
     std::queue<VertexType> bfsQueue;
-    std::vector<VertexType> distances(graph.num_vertices(), 0), visitCounter(graph.num_vertices(), 0);
+    std::vector<VertexType> distances(graph.NumVertices(), 0), visitCounter(graph.NumVertices(), 0);
 
     // Find source nodes
     for (const auto &node : source_vertices_view(graph)) {
@@ -148,11 +148,11 @@ std::vector<VertexIdxT<GraphT>> LongestChain(const GraphT &graph) {
 
     std::vector<VertexType> chain;
 
-    if (graph.num_vertices() == 0) {
+    if (graph.NumVertices() == 0) {
         return chain;
     }
 
-    std::vector<unsigned> topLength(graph.num_vertices(), 0);
+    std::vector<unsigned> topLength(graph.NumVertices(), 0);
     unsigned runningLongestChain = 0;
 
     VertexType endLongestChain = 0;
@@ -231,7 +231,7 @@ std::vector<std::vector<VertexIdxT<GraphT>>> ComputeWavefronts(const GraphT &gra
     static_assert(is_directed_graph_v<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
     std::vector<std::vector<VertexIdxT<GraphT>>> wavefronts;
-    std::vector<VertexIdxT<GraphT>> parentsVisited(graph.num_vertices(), 0);
+    std::vector<VertexIdxT<GraphT>> parentsVisited(graph.NumVertices(), 0);
 
     wavefronts.push_back(std::vector<VertexIdxT<GraphT>>());
     for (const auto &vertex : graph.vertices()) {
@@ -244,7 +244,7 @@ std::vector<std::vector<VertexIdxT<GraphT>>> ComputeWavefronts(const GraphT &gra
 
     VertexIdxT<GraphT> counter = static_cast<VertexIdxT<GraphT>>(wavefronts.back().size());
 
-    while (counter < graph.num_vertices()) {
+    while (counter < graph.NumVertices()) {
         std::vector<VertexIdxT<GraphT>> nextWavefront;
         for (const auto &vPrevWavefront : wavefronts.back()) {
             for (const auto &child : graph.children(vPrevWavefront)) {
@@ -289,8 +289,8 @@ std::vector<int> GetStrictPosetIntegerMap(unsigned const noise, double const poi
 
     std::vector<unsigned> topDistance = get_top_node_distance(graph);
     std::vector<unsigned> botDistance = get_bottom_node_distance(graph);
-    std::vector<int> newTop(graph.num_vertices(), 0);
-    std::vector<int> newBot(graph.num_vertices(), 0);
+    std::vector<int> newTop(graph.NumVertices(), 0);
+    std::vector<int> newBot(graph.NumVertices(), 0);
 
     unsigned maxPath = 0;
     for (const auto &vertex : graph.vertices()) {
@@ -349,8 +349,8 @@ std::vector<int> GetStrictPosetIntegerMap(unsigned const noise, double const poi
         newBot[*iter] = maxTemp;
     }
 
-    std::vector<int> output(graph.num_vertices());
-    for (unsigned i = 0; i < graph.num_vertices(); i++) {
+    std::vector<int> output(graph.NumVertices());
+    for (unsigned i = 0; i < graph.NumVertices(); i++) {
         output[i] = newTop[i] - newBot[i];
     }
     return output;

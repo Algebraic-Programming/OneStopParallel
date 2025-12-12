@@ -36,7 +36,7 @@ template <typename GraphT>
 void CheckPartitionTypeHomogeneity(const GraphT &dag, const std::vector<vertex_idx_t<GraphT>> &partition) {
     // Group partitions by their ID
     std::map<vertex_idx_t<GraphT>, std::vector<vertex_idx_t<GraphT>>> partitions;
-    for (vertex_idx_t<GraphT> i = 0; i < dag.num_vertices(); ++i) {
+    for (vertex_idx_t<GraphT> i = 0; i < dag.NumVertices(); ++i) {
         partitions[partition[i]].push_back(i);
     }
 

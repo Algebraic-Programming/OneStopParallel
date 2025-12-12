@@ -172,7 +172,7 @@ class SourceVerticesView {
 
     auto end() const { return SourceIterator(graph_, graph_.Vertices().end()); }
 
-    auto size() const { return graph_.num_vertices(); }
+    auto size() const { return graph_.NumVertices(); }
 };
 
 /**
@@ -201,7 +201,7 @@ class SinkVerticesView {
 
     auto end() const { return SinkIterator(graph_, graph_.vertices().end()); }
 
-    auto size() const { return graph_.num_vertices(); }
+    auto size() const { return graph_.NumVertices(); }
 };
 
 /**
@@ -268,7 +268,7 @@ struct TraversalIterator {
 
     TraversalIterator(const GraphT &graph, const VertexIdxT<GraphT> &start)
         : graph_(graph), adjIter_(graph), currentVertex_(start) {
-        if (graph_.num_vertices() == start) {
+        if (graph_.NumVertices() == start) {
             return;
         }
 
@@ -285,7 +285,7 @@ struct TraversalIterator {
     // Prefix increment
     TraversalIterator &operator++() {
         if (vertexContainer_.empty()) {
-            currentVertex_ = graph_.num_vertices();
+            currentVertex_ = graph_.NumVertices();
             return *this;
         }
 
@@ -357,9 +357,9 @@ class BfsView {
 
     auto begin() const { return BfsIterator(graph_, startVertex_); }
 
-    auto end() const { return BfsIterator(graph_, graph_.num_vertices()); }
+    auto end() const { return BfsIterator(graph_, graph_.NumVertices()); }
 
-    auto size() const { return graph_.num_vertices(); }
+    auto size() const { return graph_.NumVertices(); }
 };
 
 template <typename GraphT>
@@ -397,9 +397,9 @@ class DfsView {
 
     auto begin() const { return DfsIterator(graph_, startVertex_); }
 
-    auto end() const { return DfsIterator(graph_, graph_.num_vertices()); }
+    auto end() const { return DfsIterator(graph_, graph_.NumVertices()); }
 
-    auto size() const { return graph_.num_vertices(); }
+    auto size() const { return graph_.NumVertices(); }
 };
 
 template <typename GraphT>
@@ -431,9 +431,9 @@ class BfsReverseView {
 
     auto begin() const { return BfsIterator(graph_, startVertex_); }
 
-    auto end() const { return BfsIterator(graph_, graph_.num_vertices()); }
+    auto end() const { return BfsIterator(graph_, graph_.NumVertices()); }
 
-    auto size() const { return graph_.num_vertices(); }
+    auto size() const { return graph_.NumVertices(); }
 };
 
 /**
@@ -514,7 +514,7 @@ bool IsConnected(const GraphT &graph) {
 
     using VertexType = VertexIdxT<GraphT>;
 
-    if (graph.num_vertices() < 2) {
+    if (graph.NumVertices() < 2) {
         return true;
     }
 
@@ -538,7 +538,7 @@ bool IsConnected(const GraphT &graph) {
         }
     }
 
-    return nodeCount == graph.num_vertices();
+    return nodeCount == graph.NumVertices();
 }
 
 template <typename GraphT>
@@ -598,12 +598,12 @@ std::size_t ComputeWeaklyConnectedComponents(const GraphT &graph, std::vector<Ve
     static_assert(is_directed_graph_v<GraphT>, "Graph_t must satisfy the directed_graph concept");
     using VertexType = VertexIdxT<GraphT>;
 
-    if (graph.num_vertices() == 0) {
+    if (graph.NumVertices() == 0) {
         components.clear();
         return 0;
     }
 
-    components.assign(graph.num_vertices(), std::numeric_limits<VertexType>::max());
+    components.assign(graph.NumVertices(), std::numeric_limits<VertexType>::max());
     VertexType componentId = 0;
 
     for (const auto &v : graph.vertices()) {

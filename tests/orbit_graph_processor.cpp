@@ -44,19 +44,19 @@ void CheckPartitioning(const GraphT &dag, const OrbitGraphProcessor<GraphT, Grap
     BOOST_CHECK(is_acyclic(finalCoarseGraph));
 
     // Check that the final groups form a valid partition of the original DAG's vertices
-    std::vector<int> vertexCounts(dag.num_vertices(), 0);
+    std::vector<int> vertexCounts(dag.NumVertices(), 0);
     size_t totalVerticesInGroups = 0;
     for (const auto &group : finalGroups) {
         for (const auto &subgraph : group.subgraphs) {
             totalVerticesInGroups += subgraph.size();
             for (const auto &vertex : subgraph) {
-                BOOST_REQUIRE_LT(vertex, dag.num_vertices());
+                BOOST_REQUIRE_LT(vertex, dag.NumVertices());
                 vertexCounts[vertex]++;
             }
         }
     }
-    BOOST_CHECK_EQUAL(totalVerticesInGroups, dag.num_vertices());
-    for (size_t i = 0; i < dag.num_vertices(); ++i) {
+    BOOST_CHECK_EQUAL(totalVerticesInGroups, dag.NumVertices());
+    for (size_t i = 0; i < dag.NumVertices(); ++i) {
         BOOST_CHECK_EQUAL(vertexCounts[i], 1);
     }
 }
@@ -84,7 +84,7 @@ void CheckPartitioning(const GraphT &dag, const OrbitGraphProcessor<GraphT, Grap
 //     writer.write_colored_graph("orbit_graph_groups_colored.dot", dag, final_contraction_map);
 
 //     // Color by final subgraphs (each subgraph gets a unique color)
-//     std::vector<unsigned> subgraph_colors(dag.num_vertices());
+//     std::vector<unsigned> subgraph_colors(dag.NumVertices());
 //     unsigned current_subgraph_color = 0;
 //     for (const auto& group : final_groups) {
 //         for (const auto& subgraph : group.subgraphs) {
@@ -97,10 +97,10 @@ void CheckPartitioning(const GraphT &dag, const OrbitGraphProcessor<GraphT, Grap
 //     writer.write_colored_graph("orbit_graph_subgraphs_colored.dot", dag, subgraph_colors);
 //     writer.write_graph("orbit_graph_final_coarse_graph.dot", final_coarse_graph);
 
-//     BOOST_CHECK_GT(coarse_graph.num_vertices(), 0);
-//     BOOST_CHECK_LT(coarse_graph.num_vertices(), dag.num_vertices());
-//     BOOST_CHECK_GT(final_coarse_graph.num_vertices(), 0);
-//     BOOST_CHECK_LE(final_coarse_graph.num_vertices(), coarse_graph.num_vertices());
+//     BOOST_CHECK_GT(coarse_graph.NumVertices(), 0);
+//     BOOST_CHECK_LT(coarse_graph.NumVertices(), dag.NumVertices());
+//     BOOST_CHECK_GT(final_coarse_graph.NumVertices(), 0);
+//     BOOST_CHECK_LE(final_coarse_graph.NumVertices(), coarse_graph.NumVertices());
 
 //     check_partitioning(dag, processor);
 // }
@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessorSimpleMerge) {
     const auto &finalGroups = processor.get_final_groups();
 
     // Expect a single node in the final coarse graph
-    BOOST_CHECK_EQUAL(finalCoarseGraph.num_vertices(), 1);
+    BOOST_CHECK_EQUAL(finalCoarseGraph.NumVertices(), 1);
     BOOST_CHECK_EQUAL(finalGroups.size(), 1);
 
     // The single group should contain two subgraphs: {0,1} and {2,3}
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessorForkJoinNoMerge) {
     const auto &finalGroups = processor.get_final_groups();
 
     // Expect no merges, so final graph is same as initial coarse graph.
-    BOOST_CHECK_EQUAL(finalCoarseGraph.num_vertices(), 3);
+    BOOST_CHECK_EQUAL(finalCoarseGraph.NumVertices(), 3);
     BOOST_CHECK_EQUAL(finalGroups.size(), 3);
 
     // Check group structures
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessorPartitionCheckMediumGraph) {
     GraphT dag;
     file_reader::readComputationalDagHyperdagFormatDB((projectRoot / "data/spaa/tiny/instance_bicgstab.hdag").string(), dag);
 
-    BOOST_REQUIRE_GT(dag.num_vertices(), 0);
+    BOOST_REQUIRE_GT(dag.NumVertices(), 0);
 
     // Use a higher threshold to encourage more merging on this larger graph
     OrbitGraphProcessor<GraphT, GraphT> processor;
@@ -209,7 +209,7 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessorMultiPipelineMerge) {
     // Initial orbits: 4 groups of 5 identical nodes. Coarse graph: 0->1->2->3
     // With a threshold of 5, the entire graph should merge into a single group.
     const auto dag = construct_multi_pipeline_dag<GraphT>(5, 4);
-    BOOST_REQUIRE_EQUAL(dag.num_vertices(), 20);
+    BOOST_REQUIRE_EQUAL(dag.NumVertices(), 20);
 
     OrbitGraphProcessor<GraphT, GraphT> processor;    // Set threshold to match pipeline count
     MerkleHashComputer<GraphT, bwd_merkle_node_hash_func<GraphT>, true> hasher(dag, dag);
@@ -219,7 +219,7 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessorMultiPipelineMerge) {
     const auto &finalGroups = processor.get_final_groups();
 
     // Expect a single node in the final coarse graph
-    BOOST_CHECK_EQUAL(finalCoarseGraph.num_vertices(), 1);
+    BOOST_CHECK_EQUAL(finalCoarseGraph.NumVertices(), 1);
     BOOST_CHECK_EQUAL(finalGroups.size(), 1);
 
     // The single group should contain 5 subgraphs, each with 4 nodes.
@@ -237,7 +237,7 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessorLadderNoMerge) {
     // prevents a full merge. The exact number of final nodes is non-trivial,
     // but it should be greater than 1.
     const auto dag = construct_ladder_dag<GraphT>(10);
-    BOOST_REQUIRE_EQUAL(dag.num_vertices(), 22);
+    BOOST_REQUIRE_EQUAL(dag.NumVertices(), 22);
 
     OrbitGraphProcessor<GraphT, GraphT> processor;
     MerkleHashComputer<GraphT, bwd_merkle_node_hash_func<GraphT>, true> hasher(dag, dag);
@@ -247,8 +247,8 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessorLadderNoMerge) {
     const auto &finalCoarseGraph = processor.get_final_coarse_graph();
 
     // Expect no merges, so final graph is the same as the initial coarse graph.
-    BOOST_CHECK_EQUAL(finalCoarseGraph.num_vertices(), initialCoarseGraph.num_vertices());
-    BOOST_CHECK_GT(finalCoarseGraph.num_vertices(), 1);
+    BOOST_CHECK_EQUAL(finalCoarseGraph.NumVertices(), initialCoarseGraph.NumVertices());
+    BOOST_CHECK_GT(finalCoarseGraph.NumVertices(), 1);
 
     CheckPartitioning(dag, processor);
 }
@@ -257,7 +257,7 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessorAsymmetricNoMerge) {
     // A simple chain where every node is unique.
     // Since all groups are below the threshold, they will all be merged into one.
     const auto dag = construct_asymmetric_dag<GraphT>(30);
-    BOOST_REQUIRE_EQUAL(dag.num_vertices(), 30);
+    BOOST_REQUIRE_EQUAL(dag.NumVertices(), 30);
 
     OrbitGraphProcessor<GraphT, GraphT> processor;
     MerkleHashComputer<GraphT, bwd_merkle_node_hash_func<GraphT>, true> hasher(dag, dag);
@@ -266,7 +266,7 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessorAsymmetricNoMerge) {
     const auto &finalCoarseGraph = processor.get_final_coarse_graph();
 
     // Expect all nodes to be merged into a single coarse node.
-    BOOST_CHECK_EQUAL(finalCoarseGraph.num_vertices(), 1);
+    BOOST_CHECK_EQUAL(finalCoarseGraph.NumVertices(), 1);
 
     CheckPartitioning(dag, processor);
 }
@@ -279,7 +279,7 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessorBinaryTreeNoMerge) {
     // longest path in the coarse graph. This results in the chain being partially, but not
     // fully, collapsed. The expected outcome is 2 final coarse nodes.
     const auto dag = construct_binary_out_tree<GraphT>(4);
-    BOOST_REQUIRE_EQUAL(dag.num_vertices(), (1 << 5) - 1);
+    BOOST_REQUIRE_EQUAL(dag.NumVertices(), (1 << 5) - 1);
 
     OrbitGraphProcessor<GraphT, GraphT> processor;
     MerkleHashComputer<GraphT, bwd_merkle_node_hash_func<GraphT>, true> hasher(dag, dag);
@@ -287,21 +287,21 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessorBinaryTreeNoMerge) {
 
     const auto &finalCoarseGraph = processor.get_final_coarse_graph();
 
-    BOOST_CHECK_EQUAL(finalCoarseGraph.num_vertices(), 3);
+    BOOST_CHECK_EQUAL(finalCoarseGraph.NumVertices(), 3);
 
     CheckPartitioning(dag, processor);
 }
 
 BOOST_AUTO_TEST_CASE(OrbitGraphProcessorButterflyMerge) {
     const auto dag = construct_butterfly_dag<GraphT>(3);
-    BOOST_REQUIRE_EQUAL(dag.num_vertices(), (3 + 1) * 8);
+    BOOST_REQUIRE_EQUAL(dag.NumVertices(), (3 + 1) * 8);
 
     OrbitGraphProcessor<GraphT, GraphT> processor;
     MerkleHashComputer<GraphT, bwd_merkle_node_hash_func<GraphT>, true> hasher(dag, dag);
     processor.discover_isomorphic_groups(dag, hasher);
 
     const auto &finalCoarseGraph = processor.get_final_coarse_graph();
-    BOOST_CHECK_EQUAL(finalCoarseGraph.num_vertices(), 4);
+    BOOST_CHECK_EQUAL(finalCoarseGraph.NumVertices(), 4);
 
     CheckPartitioning(dag, processor);
 }

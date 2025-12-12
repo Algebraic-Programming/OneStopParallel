@@ -52,7 +52,7 @@ class IsomorphismMapper {
      * @param representative_graph The subgraph to use as the "pattern".
      */
     IsomorphismMapper(const ConstrGraphT &representativeGraph)
-        : repGraph_(representativeGraph), rep_hasher(representative_graph), numVertices_(representativeGraph.num_vertices()) {}
+        : repGraph_(representativeGraph), rep_hasher(representative_graph), numVertices_(representativeGraph.NumVertices()) {}
 
     virtual ~IsomorphismMapper() = default;
 
@@ -65,7 +65,7 @@ class IsomorphismMapper {
      * @return A map from `current_local_vertex_id` -> `representative_local_vertex_id`.
      */
     std::unordered_map<VertexC, VertexC> FindMapping(const ConstrGraphT &currentGraph) const {
-        if (currentGraph.num_vertices() != numVertices_) {
+        if (currentGraph.NumVertices() != numVertices_) {
             throw std::runtime_error("IsomorphismMapper: Graph sizes do not match.");
         }
         if (numVertices_ == 0) {
@@ -89,7 +89,7 @@ class IsomorphismMapper {
         }
 
         // 3. Iteratively map all components of the graph.
-        std::vector<VertexC> MapCurrentToRep(num_vertices, std::numeric_limits<VertexC>::max());
+        std::vector<VertexC> MapCurrentToRep(NumVertices, std::numeric_limits<VertexC>::max());
         std::vector<bool> repIsMapped(numVertices_, false);
         std::vector<bool> currentIsMapped(numVertices_, false);
         size_t mappedCount = 0;
@@ -107,7 +107,7 @@ class IsomorphismMapper {
             }
 
             if (rep_seed == std::numeric_limits<VertexC>::max()) {
-                break;    // Should be unreachable if mapped_count < num_vertices
+                break;    // Should be unreachable if mapped_count < NumVertices
             }
 
             // Find a corresponding unmapped vertex in the current graph's orbit.

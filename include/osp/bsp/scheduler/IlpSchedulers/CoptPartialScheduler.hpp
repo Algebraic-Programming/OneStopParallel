@@ -309,7 +309,7 @@ void CoptPartialScheduler<GraphT>::SetupVariablesConstraintsObjective(const BspS
     VarArray hasCommAtEnd = model.AddVars(1, COPT_BINARY, "has_comm_at_end");
 
     // variables for assigments of nodes to processor and superstep
-    node_to_processor_superstep_var = std::vector<std::vector<VarArray>>(num_vertices, std::vector<VarArray>(num_processors));
+    node_to_processor_superstep_var = std::vector<std::vector<VarArray>>(numVertices, std::vector<VarArray>(numProcessors));
 
     for (unsigned int node = 0; node < numVertices; node++) {
         for (unsigned int processor = 0; processor < numProcessors; processor++) {
@@ -327,7 +327,7 @@ void CoptPartialScheduler<GraphT>::SetupVariablesConstraintsObjective(const BspS
         for (unsigned int p2 = 0; p2 < numProcessors; p2++) {
             for (unsigned int step = 0; step < maxNumberSupersteps_; step++) {
                 comm_processor_to_processor_superstep_node_var[p1][p2][step]
-                    = model.AddVars(static_cast<int>(num_vertices), COPT_BINARY, "comm_processor_to_processor_superstep_node");
+                    = model.AddVars(static_cast<int>(numVertices), COPT_BINARY, "comm_processor_to_processor_superstep_node");
             }
         }
     }
@@ -368,12 +368,12 @@ void CoptPartialScheduler<GraphT>::SetupVariablesConstraintsObjective(const BspS
     }
 
     // check whether superstep is used at all (work or comm), and whether superstep has any communication at all
-    unsigned largeConstantWork = static_cast<unsigned>(num_vertices) * numProcessors;
-    unsigned largeConstantComm = static_cast<unsigned>(num_vertices + num_sources) * num_processors * num_processors
+    unsigned largeConstantWork = static_cast<unsigned>(numVertices) * numProcessors;
+    unsigned largeConstantComm = static_cast<unsigned>(numVertices + num_sources) * num_processors * num_processors
                                  + static_cast<unsigned>(fixed_comm_steps.size());
     for (unsigned int step = 0; step < maxNumberSupersteps_; step++) {
         Expr exprWork, expr_comm;
-        for (vertex_idx_t<Graph_t> node = 0; node < num_vertices; node++) {
+        for (vertex_idx_t<Graph_t> node = 0; node < numVertices; node++) {
             for (unsigned int processor = 0; processor < numProcessors; processor++) {
                 expr_work += node_to_processor_superstep_var[node][processor][static_cast<int>(step)];
 
@@ -435,7 +435,7 @@ void CoptPartialScheduler<GraphT>::SetupVariablesConstraintsObjective(const BspS
                     <= has_comm_at_end[0]);
 
     // nodes are assigend
-    for (vertex_idx_t<Graph_t> node = 0; node < num_vertices; node++) {
+    for (vertex_idx_t<Graph_t> node = 0; node < numVertices; node++) {
         Expr expr;
         for (unsigned int processor = 0; processor < numProcessors; processor++) {
             for (unsigned int step = 0; step < maxNumberSupersteps_; step++) {
@@ -447,7 +447,7 @@ void CoptPartialScheduler<GraphT>::SetupVariablesConstraintsObjective(const BspS
     }
 
     // precedence constraint: if task is computed then all of its predecessors must have been present
-    for (vertex_idx_t<Graph_t> node = 0; node < num_vertices; node++) {
+    for (vertex_idx_t<Graph_t> node = 0; node < numVertices; node++) {
         for (unsigned int step = 0; step < maxNumberSupersteps_; step++) {
             for (unsigned int processor = 0; processor < numProcessors; processor++) {
                 Expr expr;
@@ -476,7 +476,7 @@ void CoptPartialScheduler<GraphT>::SetupVariablesConstraintsObjective(const BspS
     // or communicated
     for (unsigned int step = 0; step < maxNumberSupersteps_; step++) {
         for (unsigned int processor = 0; processor < numProcessors; processor++) {
-            for (vertex_idx_t<Graph_t> node = 0; node < num_vertices; node++) {
+            for (vertex_idx_t<Graph_t> node = 0; node < numVertices; node++) {
                 Expr expr1, expr2;
                 if (step > 0) {
                     for (unsigned int pFrom = 0; pFrom < numProcessors; pFrom++) {
@@ -553,7 +553,7 @@ void CoptPartialScheduler<GraphT>::SetupVariablesConstraintsObjective(const BspS
     for (unsigned int step = 0; step < maxNumberSupersteps_; step++) {
         for (unsigned int processor = 0; processor < numProcessors; processor++) {
             Expr expr1, expr2;
-            for (vertex_idx_t<Graph_t> node = 0; node < num_vertices; node++) {
+            for (vertex_idx_t<Graph_t> node = 0; node < numVertices; node++) {
                 for (unsigned int pOther = 0; pOther < numProcessors; pOther++) {
                     if (processor != pOther) {
                         expr1 += schedule.getInstance().getComputationalDag().vertex_comm_weight(node_global_ID[node])

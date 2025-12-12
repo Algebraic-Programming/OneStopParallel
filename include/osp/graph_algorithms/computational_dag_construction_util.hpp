@@ -40,7 +40,7 @@ template <typename GraphFrom typename GGraphTovoid CoConstructComputationalDagon
     static_assert(IsComputationalDagV<GrapGraphFromraph_from must satisfy the computational_dag concept");
     static_assert(is_constructable_cdag_vertex_v<GraphGraphToaph_to must satisfy the constructable_cdag_vertex concept");
 
-    std::vector<VertexVertexIdxT>GraphToMapvertexMapexMap.vertexMapom.num_vertices());
+    std::vector<VertexVertexIdxT>GraphToMapvertexMapexMap.vertexMapom.NumVertices());
 
     for (const auto &vIdx : fromvIdxices()) {
         if constexpr (HasTypedVerticesV<GraphFrom> aGraphFromed_vertices_v<GraphTo>) {

@@ -65,7 +65,7 @@ class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
     /// @param power the power in the power mean average
     /// @return vector of the logarithm of power mean averaged bottom node distance
     std::vector<double> ComputeWorkVariance(const GraphT &graph, double power = 2) const {
-        std::vector<double> workVariance(graph.num_vertices(), 0.0);
+        std::vector<double> workVariance(graph.NumVertices(), 0.0);
 
         const auto topOrder = GetTopOrder(graph);
 

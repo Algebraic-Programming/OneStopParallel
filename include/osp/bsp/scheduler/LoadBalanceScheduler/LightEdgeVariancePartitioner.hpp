@@ -113,7 +113,7 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
         std::vector<std::vector<VertexType>> preprocessedPartition = heavy_edge_preprocess(
             graph, heavyIsXTimesMedian_, minPercentComponentsRetained_, boundComponentWeightPercent_ / nProcessors);
 
-        std::vector<size_t> whichPreprocessPartition(graph.num_vertices());
+        std::vector<size_t> whichPreprocessPartition(graph.NumVertices());
         for (size_t i = 0; i < preprocessedPartition.size(); i++) {
             for (const VertexType &vert : preprocessed_partition[i]) {
                 which_preprocess_partition[vert] = i;

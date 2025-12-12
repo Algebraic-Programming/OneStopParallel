@@ -438,9 +438,9 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
             for (unsigned int p1 = 0; p1 < instance.numberOfProcessors(); p1++) {
                 for (unsigned int p2 = 0; p2 < instance.numberOfProcessors(); p2++) {
                     if (p1 != p2) {
-                        assert(instance.getComputationalDag().num_edges() <= std::numeric_limits<int>::max());
+                        assert(instance.getComputationalDag().NumEdges() <= std::numeric_limits<int>::max());
                         edge_vars[p1][p2]
-                            = model.AddVars(static_cast<int>(instance.getComputationalDag().num_edges()), COPT_BINARY, "edge");
+                            = model.AddVars(static_cast<int>(instance.getComputationalDag().NumEdges()), COPT_BINARY, "edge");
 
                         int edgeId = 0;
                         for (const auto &ep : edge_view(instance.getComputationalDag())) {
@@ -464,8 +464,8 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
 
         } else {
             edge_vars = std::vector<std::vector<VarArray>>(1, std::vector<VarArray>(1));
-            assert(instance.getComputationalDag().num_edges() <= std::numeric_limits<int>::max());
-            edge_vars[0][0] = model.AddVars(static_cast<int>(instance.getComputationalDag().num_edges()), COPT_BINARY, "edge");
+            assert(instance.getComputationalDag().NumEdges() <= std::numeric_limits<int>::max());
+            edge_vars[0][0] = model.AddVars(static_cast<int>(instance.getComputationalDag().NumEdges()), COPT_BINARY, "edge");
 
             int edgeId = 0;
             for (const auto &ep : edge_view(instance.getComputationalDag())) {

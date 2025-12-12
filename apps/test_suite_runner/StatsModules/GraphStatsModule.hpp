@@ -43,10 +43,10 @@ class GraphStatsModule : public IStatisticModule<TargetObjectType> {
 
         const auto &graph = schedule.getInstance().getComputationalDag();
 
-        stats["num_vertices"] = std::to_string(graph.num_vertices());
-        stats["num_edges"] = std::to_string(graph.num_edges());
+        stats["num_vertices"] = std::to_string(graph.NumVertices());
+        stats["num_edges"] = std::to_string(graph.NumEdges());
         stats["avg_wavefront_size"]
-            = std::to_string(static_cast<double>(graph.num_vertices()) / static_cast<double>(longestPath(graph)));
+            = std::to_string(static_cast<double>(graph.NumVertices()) / static_cast<double>(longestPath(graph)));
         return stats;
     }
 };

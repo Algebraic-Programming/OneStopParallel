@@ -102,8 +102,8 @@ struct AdaptiveAffinityTable {
 
         lastIdx_ = 0;
 
-        nodeIsSelected_.resize(graph_->num_vertices());
-        selectedNodesIdx_.resize(graph_->num_vertices());
+        nodeIsSelected_.resize(graph_->NumVertices());
+        selectedNodesIdx_.resize(graph_->NumVertices());
         selected_nodes.resize(initial_table_size);
 
         nodeIsSelected_.assign(nodeIsSelected_.size(), false);
@@ -164,7 +164,7 @@ struct AdaptiveAffinityTable {
 
             if (insert_location >= selected_nodes.size()) {
                 const size_t oldSize = selected_nodes.size();
-                const size_t newSize = std::min(oldSize * 2, static_cast<size_t>(graph_->num_vertices()));
+                const size_t newSize = std::min(oldSize * 2, static_cast<size_t>(graph_->NumVertices()));
 
                 selected_nodes.resize(new_size);
                 affinityTable_.resize(newSize);
@@ -258,7 +258,7 @@ struct StaticAffinityTable {
         activeSchedule_ = &sche;
         graph_ = &(sche.getInstance().getComputationalDag());
 
-        affinityTable_.resize(graph_->num_vertices());
+        affinityTable_.resize(graph_->NumVertices());
         const unsigned numProcs = sche.getInstance().numberOfProcessors();
         for (auto &table : affinityTable_) {
             table.resize(numProcs);
@@ -319,7 +319,7 @@ struct VertexSelectionStrategy {
         graph_ = &(sche.getInstance().getComputationalDag());
         gen_ = &gen;
 
-        permutation.reserve(graph->num_vertices() / active_schedule->num_steps() * (end_step - start_step));
+        permutation.reserve(graph->NumVertices() / active_schedule->num_steps() * (end_step - start_step));
     }
 
     inline void Setup(const unsigned startStep, const unsigned endStep) {

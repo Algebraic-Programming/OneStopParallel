@@ -353,7 +353,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
             // model.SetMipStart(max_comm_superstep_var[step], COPT_INFINITY);
         }
 
-        std::vector<std::set<std::pair<unsigned, unsigned>>> computed(dag.num_vertices());
+        std::vector<std::set<std::pair<unsigned, unsigned>>> computed(dag.NumVertices());
         for (const auto &node : dag.vertices()) {
             if (useInitialScheduleRecomp_) {
                 for (const std::pair<unsigned, unsigned> &assignment : initialScheduleRecomp_->assignments(node)) {
@@ -364,7 +364,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
             }
         }
 
-        std::vector<std::vector<unsigned>> firstAt(dag.num_vertices(),
+        std::vector<std::vector<unsigned>> firstAt(dag.NumVertices(),
                                                    std::vector<unsigned>(numProcessors, std::numeric_limits<unsigned>::max()));
         for (const auto &node : dag.vertices()) {
             if (useInitialScheduleRecomp_) {

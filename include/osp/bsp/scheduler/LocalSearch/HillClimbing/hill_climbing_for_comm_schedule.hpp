@@ -127,7 +127,7 @@ RETURN_STATUS HillClimbingForCommSteps<GraphT>::ImproveScheduleWithTimeLimit(Bsp
 // Initialization for comm. schedule hill climbing
 template <typename GraphT>
 void HillClimbingForCommSteps<GraphT>::Init() {
-    const unsigned n = static_cast<unsigned>(schedule_->getInstance().getComputationalDag().num_vertices());
+    const unsigned n = static_cast<unsigned>(schedule_->getInstance().getComputationalDag().NumVertices());
     const unsigned p = schedule_->getInstance().getArchitecture().numberOfProcessors();
     const unsigned m = schedule_->numberOfSupersteps();
     const GraphT &g = schedule_->getInstance().getComputationalDag();
@@ -456,7 +456,7 @@ void HillClimbingForCommSteps<GraphT>::CreateSupstepLists() {
 
 template <typename GraphT>
 void HillClimbingForCommSteps<GraphT>::ConvertCommSchedule() {
-    const vertex_idx n = static_cast<vertex_idx>(schedule_->getInstance().getComputationalDag().num_vertices());
+    const vertex_idx n = static_cast<vertex_idx>(schedule_->getInstance().getComputationalDag().NumVertices());
     const unsigned p = schedule_->getInstance().getArchitecture().numberOfProcessors();
 
     std::map<std::tuple<vertex_idx, unsigned, unsigned>, unsigned> newCommSchedule;

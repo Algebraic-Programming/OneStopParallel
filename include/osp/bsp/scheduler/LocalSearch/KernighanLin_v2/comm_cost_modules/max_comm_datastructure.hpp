@@ -113,7 +113,7 @@ struct MaxCommDatastructure {
         step_second_max_comm_cache.assign(num_steps, 0);
         stepMaxCommCountCache_.assign(numSteps, 0);
 
-        node_lambda_map.initialize(instance->getComputationalDag().num_vertices(), num_procs);
+        node_lambda_map.initialize(instance->getComputationalDag().NumVertices(), num_procs);
 
         // Initialize scratchpad
         stepIsAffected_.assign(numSteps, false);

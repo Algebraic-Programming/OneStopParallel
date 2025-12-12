@@ -79,7 +79,7 @@ class BspLocking : public Scheduler<GraphT> {
     std::vector<MaxHeap> maxAllProcScoreHeap_;
 
     static std::vector<v_workw_t<Graph_t>> GetLongestPath(const GraphT &graph) {
-        std::vector<v_workw_t<Graph_t>> longestPath(graph.num_vertices(), 0);
+        std::vector<v_workw_t<Graph_t>> longestPath(graph.NumVertices(), 0);
 
         const std::vector<VertexType> topOrder = GetTopOrder(graph);
 
