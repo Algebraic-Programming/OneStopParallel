@@ -41,27 +41,27 @@ void constructComputationalDag(const GraphFrom &from, GraphTo &to) {
     static_assert(IsComputationalDagV<GraphFrom>, "GraphFrom must satisfy the computational_dag concept");
     static_assert(IsConstructableCdagVertexV<GraphTo>, "GraphTo must satisfy the constructable_cdag_vertex concept");
 
-    std::vector<VertexIdxT<GraphTo>> vertex_map;
-    vertex_map.reserve(from.NumVertices());
+    std::vector<VertexIdxT<GraphTo>> vertexMap;
+    vertexMap.reserve(from.NumVertices());
 
     for (const auto &v_idx : from.Vertices()) {
         if constexpr (HasTypedVerticesV<GraphFrom> and HasTypedVerticesV<GraphTo>) {
-            vertex_map.push_back(to.AddVertex(
+            vertexMap.push_back(to.AddVertex(
                 from.VertexWorkWeight(v_idx), from.VertexCommWeight(v_idx), from.VertexMemWeight(v_idx), from.VertexType(v_idx)));
         } else {
-            vertex_map.push_back(
+            vertexMap.push_back(
                 to.AddVertex(from.VertexWorkWeight(v_idx), from.VertexCommWeight(v_idx), from.VertexMemWeight(v_idx)));
         }
     }
 
     if constexpr (HasEdgeWeightsV<GraphFrom> and HasEdgeWeightsV<GraphTo>) {
         for (const auto &e : Edges(from)) {
-            to.AddEdge(vertex_map[Source(e, from)], vertex_map[Target(e, from)], from.EdgeCommWeight(e));
+            to.AddEdge(vertexMap[Source(e, from)], vertexMap[Target(e, from)], from.EdgeCommWeight(e));
         }
     } else {
         for (const auto &v : from.Vertices()) {
             for (const auto &child : from.Children(v)) {
-                to.AddEdge(vertex_map[v], vertex_map[child]);
+                to.AddEdge(vertexMap[v], vertexMap[child]);
             }
         }
     }

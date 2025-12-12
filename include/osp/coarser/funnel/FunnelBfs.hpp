@@ -178,7 +178,7 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
                             }
 
                         } else {
-                            children_not_in_group[par] = graph.out_degree(par);
+                            children_not_in_group[par] = graph.OutDegree(par);
                         }
                         children_not_in_group[par] -= 1;
                     }

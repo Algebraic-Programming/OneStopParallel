@@ -85,7 +85,7 @@ class BspLocking : public Scheduler<GraphT> {
 
         for (auto rIter = top_order.rbegin(); rIter != top_order.crend(); r_iter++) {
             longestPath[*r_iter] = graph.VertexWorkWeight(*r_iter);
-            if (graph.out_degree(*r_iter) > 0) {
+            if (graph.OutDegree(*r_iter) > 0) {
                 v_workw_t<Graph_t> max = 0;
                 for (const auto &child : graph.children(*r_iter)) {
                     if (max <= longest_path[child]) {
@@ -374,7 +374,7 @@ class BspLocking : public Scheduler<GraphT> {
 
             for (unsigned proc = 0; proc < paramsP; ++proc) {
                 if (instance.isCompatible(v, proc)) {
-                    Priority priority = {defaultValue_[v], static_cast<unsigned>(g.out_degree(v)), v};
+                    Priority priority = {defaultValue_[v], static_cast<unsigned>(g.OutDegree(v)), v};
                     max_all_proc_score_heap[proc].push(v, priority);
                 }
             }
@@ -412,7 +412,7 @@ class BspLocking : public Scheduler<GraphT> {
                         }
 
                         int score = computeScore(v, proc, instance);
-                        Priority priority = {score, static_cast<unsigned>(G.out_degree(v)), v};
+                        Priority priority = {score, static_cast<unsigned>(G.OutDegree(v)), v};
                         max_all_proc_score_heap[proc].push(v, priority);
                     }
                 }
@@ -465,7 +465,7 @@ class BspLocking : public Scheduler<GraphT> {
                                 ready_phase[succ] = schedule.assignedProcessor(node);
 
                                 int score = computeScore(succ, schedule.assignedProcessor(node), instance);
-                                Priority priority = {score, static_cast<unsigned>(G.out_degree(succ)), succ};
+                                Priority priority = {score, static_cast<unsigned>(G.OutDegree(succ)), succ};
 
                                 max_proc_score_heap[schedule.assignedProcessor(node)].push(succ, priority);
                             }

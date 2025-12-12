@@ -119,9 +119,9 @@ using SparseMatrixGraphInt64T = SparseMatrixImp<int64_t>;
 static_assert(IsDirectedGraphEdgeDescV<SparseMatrixImp<int32_t>>, "SparseMatrix must satisfy the directed_graph_edge_desc concept");
 
 // Verify that SparseMatrixImp satisfies the directed graph concept
-static_assert(is_directed_graph_v<SparseMatrixImp<int32_t>>, "SparseMatrix must satisfy directed_graph_concept");
+static_assert(IsDirectedGraphV<SparseMatrixImp<int32_t>>, "SparseMatrix must satisfy directed_graph_concept");
 
-static_assert(is_directed_graph_v<SparseMatrixImp<int64_t>>, "SparseMatrix must satisfy directed_graph_concept");
+static_assert(IsDirectedGraphV<SparseMatrixImp<int64_t>>, "SparseMatrix must satisfy directed_graph_concept");
 
 static_assert(HasVertexWeightsV<SparseMatrixImp<int32_t>>, "Compact_Sparse_Graph must satisfy the has_vertex_weights concept");
 

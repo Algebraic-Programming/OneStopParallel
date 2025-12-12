@@ -178,9 +178,9 @@ BOOST_AUTO_TEST_CASE(TestScheduleWriter) {
 
         BOOST_CHECK_EQUAL(instanceT2.getComputationalDag().VertexType(v), instance.getComputationalDag().VertexType(v));
 
-        BOOST_CHECK_EQUAL(instanceT2.getComputationalDag().out_degree(v), instance.getComputationalDag().out_degree(v));
+        BOOST_CHECK_EQUAL(instanceT2.getComputationalDag().OutDegree(v), instance.getComputationalDag().OutDegree(v));
 
-        BOOST_CHECK_EQUAL(instanceT2.getComputationalDag().in_degree(v), instance.getComputationalDag().in_degree(v));
+        BOOST_CHECK_EQUAL(instanceT2.getComputationalDag().InDegree(v), instance.getComputationalDag().InDegree(v));
     }
 
     std::cout << "Writing schedule_t2" << std::endl;

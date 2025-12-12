@@ -86,7 +86,7 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
         for (const auto &pred : instance.getComputationalDag().parents(node)) {
             if (procInHyperedge[pred][proc]) {
                 score += static_cast<double>(instance.getComputationalDag().VertexCommWeight(pred))
-                         / static_cast<double>(instance.getComputationalDag().out_degree(pred));
+                         / static_cast<double>(instance.getComputationalDag().OutDegree(pred));
             }
         }
         return score;
@@ -465,14 +465,14 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
                         if (child != nextNode && procReady[nextProc].find(child) != procReady[nextProc].end()) {
                             (*node_proc_heap_handles[nextProc][child]).score
                                 += static_cast<double>(instance.getComputationalDag().VertexCommWeight(pred))
-                                   / static_cast<double>(instance.getComputationalDag().out_degree(pred));
+                                   / static_cast<double>(instance.getComputationalDag().OutDegree(pred));
                             max_proc_score_heap[nextProc].update(node_proc_heap_handles[nextProc][child]);
                         }
 
                         if (child != nextNode && allReady.find(child) != allReady.end() && instance.isCompatible(child, nextProc)) {
                             (*node_all_proc_heap_handles[nextProc][child]).score
                                 += static_cast<double>(instance.getComputationalDag().VertexCommWeight(pred))
-                                   / static_cast<double>(instance.getComputationalDag().out_degree(pred));
+                                   / static_cast<double>(instance.getComputationalDag().OutDegree(pred));
                             max_all_proc_score_heap[nextProc].update(node_all_proc_heap_handles[nextProc][child]);
                         }
                     }

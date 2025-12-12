@@ -72,7 +72,7 @@ std::vector<v_workw_t<Graph_t>> SubproblemMultiScheduling<GraphT>::GetLongestPat
 
     for (auto rIter = top_order.rbegin(); rIter != top_order.crend(); r_iter++) {
         longestPath[*r_iter] = graph.VertexWorkWeight(*r_iter);
-        if (graph.out_degree(*r_iter) > 0) {
+        if (graph.OutDegree(*r_iter) > 0) {
             workweight_type max = 0;
             for (const auto &child : graph.children(*r_iter)) {
                 if (max <= longest_path[child]) {

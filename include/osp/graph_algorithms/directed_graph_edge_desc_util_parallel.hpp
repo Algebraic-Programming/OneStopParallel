@@ -35,7 +35,7 @@ std::unordered_set<edge_desc_t<Graph_t>> LongEdgesInTrianglesParallel(const Grap
     static_assert(has_hashable_edge_desc_v<Graph_t>, "Graph_t must satisfy the has_hashable_edge_desc concept");
 
     if (graph.NumEdges() < 1000) {
-        return long_edges_in_triangles(graph);
+        return LongEdgesInTriangles(graph);
     }
 
     std::unordered_set<edge_desc_t<Graph_t>> longEdges;
@@ -47,26 +47,26 @@ std::unordered_set<edge_desc_t<Graph_t>> LongEdgesInTrianglesParallel(const Grap
 
         const unsigned int proc = static_cast<unsigned>(omp_get_thread_num());
 
-        std::unordered_set<vertex_idx_t<Graph_t>> children_set;
-        for (const auto &v : graph.children(vertex)) {
-            children_set.emplace(v);
+        std::unordered_set<vertex_idx_t<Graph_t>> childrenSet;
+        for (const auto &v : graph.Children(vertex)) {
+            childrenSet.emplace(v);
         }
 
         for (const auto &edge : OutEdges(vertex, graph)) {
             const auto &child = Traget(edge, graph);
 
-            for (const auto &parent : graph.parents(child)) {
-                if (children_set.find(parent) != children_set.cend()) {
-                    deleted_edges_thread[proc].emplace_back(edge);
+            for (const auto &parent : graph.Parents(child)) {
+                if (childrenSet.find(parent) != childrenSet.cend()) {
+                    deletedEdgesThread[proc].emplace_back(edge);
                     break;
                 }
             }
         }
     }
 
-    for (const auto &edges_thread : deleted_edges_thread) {
-        for (const auto &edge : edges_thread) {
-            long_edges.emplace(edge);
+    for (const auto &edgesThread : deletedEdgesThread) {
+        for (const auto &edge : edgesThread) {
+            longEdges.emplace(edge);
         }
     }
 

@@ -222,7 +222,7 @@ void AcyclicPartitioningILP<GraphT>::SetupVariablesConstraintsObjective(const Bs
     std::map<vertex_idx, unsigned> nodeToHyperedgeIndex;
     unsigned numberOfHyperedges = 0;
     for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
-        if (instance.getComputationalDag().out_degree(node) > 0) {
+        if (instance.getComputationalDag().OutDegree(node) > 0) {
             nodeToHyperedgeIndex[node] = numberOfHyperedges;
             ++numberOfHyperedges;
         }
@@ -249,7 +249,7 @@ void AcyclicPartitioningILP<GraphT>::SetupVariablesConstraintsObjective(const Bs
     // hyperedge indicators match node variables
     for (unsigned part = 0; part < numberOfParts_; part++) {
         for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
-            if (instance.getComputationalDag().out_degree(node) == 0) {
+            if (instance.getComputationalDag().OutDegree(node) == 0) {
                 continue;
             }
 
@@ -291,7 +291,7 @@ void AcyclicPartitioningILP<GraphT>::SetupVariablesConstraintsObjective(const Bs
     // set objective
     Expr expr;
     for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
-        if (instance.getComputationalDag().out_degree(node) > 0) {
+        if (instance.getComputationalDag().OutDegree(node) > 0) {
             expr -= instance.getComputationalDag().VertexCommWeight(node);
             for (unsigned part = 0; part < numberOfParts_; part++) {
                 expr += instance.getComputationalDag().VertexCommWeight(node)

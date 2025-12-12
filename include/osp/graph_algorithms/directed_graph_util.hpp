@@ -48,8 +48,8 @@ namespace osp {
  */
 template <typename GraphT>
 bool Edge(const VertexIdxT<GraphT> &src, const VertexIdxT<GraphT> &dest, const GraphT &graph) {
-    static_assert(is_directed_graph_v<GraphT>, "Graph_t must satisfy the directed_graph concept");
-    for (const auto &child : graph.children(src)) {
+    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    for (const auto &child : graph.Children(src)) {
         if (child == dest) {
             return true;
         }
@@ -67,8 +67,8 @@ bool Edge(const VertexIdxT<GraphT> &src, const VertexIdxT<GraphT> &dest, const G
  */
 template <typename GraphT>
 bool IsSink(const VertexIdxT<GraphT> &v, const GraphT &graph) {
-    static_assert(is_directed_graph_v<GraphT>, "Graph_t must satisfy the directed_graph concept");
-    return graph.out_degree(v) == 0u;
+    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    return graph.OutDegree(v) == 0u;
 }
 
 /**
@@ -159,7 +159,7 @@ class SourceVerticesView {
     const GraphT &graph_;
 
     struct SourceEval {
-        // static bool eval(const Graph_t &graph, const vertex_idx_t<Graph_t> &v) { return graph.in_degree(v) == 0; }
+        // static bool eval(const Graph_t &graph, const vertex_idx_t<Graph_t> &v) { return graph.InDegree(v) == 0; }
         bool operator()(const GraphT &graph, const VertexIdxT<GraphT> &v) const { return graph.InDegree(v) == 0; }
     };
 
@@ -183,23 +183,23 @@ class SourceVerticesView {
  */
 template <typename GraphT>
 class SinkVerticesView {
-    static_assert(is_directed_graph_v<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
     const GraphT &graph_;
 
     struct SinkEval {
-        // static bool eval(const Graph_t &graph, const vertex_idx_t<Graph_t> &v) { return graph.out_degree(v) == 0; }
-        bool operator()(const GraphT &graph, const VertexIdxT<GraphT> &v) { return graph.out_degree(v) == 0; }
+        // static bool eval(const Graph_t &graph, const vertex_idx_t<Graph_t> &v) { return graph.OutDegree(v) == 0; }
+        bool operator()(const GraphT &graph, const VertexIdxT<GraphT> &v) { return graph.OutDegree(v) == 0; }
     };
 
-    using SinkIterator = VertexCondIterator<SinkEval, GraphT, decltype(graph_.vertices().begin())>;
+    using SinkIterator = VertexCondIterator<SinkEval, GraphT, decltype(graph_.Vertices().begin())>;
 
   public:
     SinkVerticesView(const GraphT &graph) : graph_(graph) {}
 
-    auto begin() const { return SinkIterator(graph_, graph_.vertices().begin()); }
+    auto begin() const { return SinkIterator(graph_, graph_.Vertices().begin()); }
 
-    auto end() const { return SinkIterator(graph_, graph_.vertices().end()); }
+    auto end() const { return SinkIterator(graph_, graph_.Vertices().end()); }
 
     auto size() const { return graph_.NumVertices(); }
 };
@@ -213,9 +213,9 @@ class SinkVerticesView {
  */
 template <typename GraphT>
 std::vector<VertexIdxT<GraphT>> SourceVertices(const GraphT &graph) {
-    static_assert(is_directed_graph_v<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
     std::vector<VertexIdxT<GraphT>> vec;
-    for (const auto &source : source_vertices_view(graph)) {
+    for (const auto &source : SourceVerticesView(graph)) {
         vec.push_back(source);
     }
     return vec;
@@ -230,10 +230,10 @@ std::vector<VertexIdxT<GraphT>> SourceVertices(const GraphT &graph) {
  */
 template <typename GraphT>
 std::vector<VertexIdxT<GraphT>> SinkVertices(const GraphT &graph) {
-    static_assert(is_directed_graph_v<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
     std::vector<VertexIdxT<GraphT>> vec;
 
-    for (const auto &sink : sink_vertices_view(graph)) {
+    for (const auto &sink : SinkVerticesView(graph)) {
         vec.push_back(sink);
     }
     return vec;
@@ -248,7 +248,7 @@ std::vector<VertexIdxT<GraphT>> SinkVertices(const GraphT &graph) {
  */
 template <typename GraphT, typename ContainerWrapper, typename AdjIterator>
 struct TraversalIterator {
-    static_assert(is_directed_graph_v<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
     const GraphT &graph_;
 
@@ -345,7 +345,7 @@ struct BfsQueueWrapper {
  */
 template <typename GraphT>
 class BfsView {
-    static_assert(is_directed_graph_v<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
     const GraphT &graph_;
     VertexIdxT<GraphT> startVertex_;
@@ -385,7 +385,7 @@ struct DfsStackWrapper {
  */
 template <typename GraphT>
 class DfsView {
-    static_assert(is_directed_graph_v<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
     const GraphT &graph_;
     VertexIdxT<GraphT> startVertex_;
@@ -419,7 +419,7 @@ struct ParentsIterator {
  */
 template <typename GraphT>
 class BfsReverseView {
-    static_assert(is_directed_graph_v<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
     const GraphT &graph_;
     VertexIdxT<GraphT> startVertex_;
@@ -446,7 +446,7 @@ class BfsReverseView {
  */
 template <typename GraphT>
 std::vector<VertexIdxT<GraphT>> Successors(const VertexIdxT<GraphT> &v, const GraphT &graph) {
-    static_assert(is_directed_graph_v<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
     std::vector<VertexIdxT<GraphT>> vec;
     for (const auto &suc : bfs_view(graph, v)) {
         vec.push_back(suc);
@@ -464,7 +464,7 @@ std::vector<VertexIdxT<GraphT>> Successors(const VertexIdxT<GraphT> &v, const Gr
  */
 template <typename GraphT>
 std::vector<VertexIdxT<GraphT>> Ancestors(const VertexIdxT<GraphT> &v, const GraphT &graph) {
-    static_assert(is_directed_graph_v<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
     std::vector<VertexIdxT<GraphT>> vec;
     for (const auto &anc : bfs_reverse_view(graph, v)) {
         vec.push_back(anc);
@@ -510,7 +510,7 @@ bool IsAcyclic(const GraphT &graph) {
 
 template <typename GraphT>
 bool IsConnected(const GraphT &graph) {
-    static_assert(is_directed_graph_v<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
     using VertexType = VertexIdxT<GraphT>;
 
@@ -543,10 +543,10 @@ bool IsConnected(const GraphT &graph) {
 
 template <typename GraphT>
 std::size_t NumCommonParents(const GraphT &graph, VertexIdxT<GraphT> v1, VertexIdxT<GraphT> v2) {
-    static_assert(is_directed_graph_v<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
     std::unordered_set<VertexIdxT<GraphT>> parents;
-    parents.reserve(graph.in_degree(v1));
+    parents.reserve(graph.InDegree(v1));
     for (const auto &par : graph.parents(v1)) {
         parents.emplace(par);
     }
@@ -563,10 +563,10 @@ std::size_t NumCommonParents(const GraphT &graph, VertexIdxT<GraphT> v1, VertexI
 
 template <typename GraphT>
 std::size_t NumCommonChildren(const GraphT &graph, VertexIdxT<GraphT> v1, VertexIdxT<GraphT> v2) {
-    static_assert(is_directed_graph_v<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
     std::unordered_set<VertexIdxT<GraphT>> childrn;
-    childrn.reserve(graph.out_degree(v1));
+    childrn.reserve(graph.OutDegree(v1));
     for (const auto &chld : graph.children(v1)) {
         childrn.emplace(chld);
     }
@@ -595,7 +595,7 @@ std::size_t NumCommonChildren(const GraphT &graph, VertexIdxT<GraphT> v1, Vertex
  */
 template <typename GraphT>
 std::size_t ComputeWeaklyConnectedComponents(const GraphT &graph, std::vector<VertexIdxT<GraphT>> &components) {
-    static_assert(is_directed_graph_v<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
     using VertexType = VertexIdxT<GraphT>;
 
     if (graph.NumVertices() == 0) {

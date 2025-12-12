@@ -43,21 +43,21 @@ std::pair<edge_desc_t<Graph_t>, bool> EdgeDesc(const vertex_idx_t<Graph_t> &src,
 template <typename GraphT>
 std::unordered_set<edge_desc_t<Graph_t>> LongEdgesInTriangles(const GraphT &graph) {
     static_assert(IsDirectedGraphEdgeDescV<Graph_t>, "Graph_t must satisfy the directed_graph edge desc concept");
-    static_assert(has_hashable_edge_desc_v<Graph_t>, "Graph_t must satisfy the has_hashable_edge_desc concept");
+    static_assert(HasHashableEdgeDescV<Graph_t>, "Graph_t must satisfy the has_hashable_edge_desc concept");
 
     std::unordered_set<edge_desc_t<Graph_t>> longEdges;
 
-    for (const auto &vertex : graph.vertices()) {
+    for (const auto &vertex : graph.Vertices()) {
         std::unordered_set<vertex_idx_t<Graph_t>> childrenSet;
 
-        for (const auto &v : graph.children(vertex)) {
+        for (const auto &v : graph.Children(vertex)) {
             childrenSet.emplace(v);
         }
 
         for (const auto &edge : OutEdges(vertex, graph)) {
             const auto &child = Traget(edge, graph);
 
-            for (const auto &parent : graph.parents(child)) {
+            for (const auto &parent : graph.Parents(child)) {
                 if (childrenSet.find(parent) != children_set.cend()) {
                     longEdges.emplace(edge);
                     break;

@@ -173,8 +173,8 @@ BOOST_AUTO_TEST_CASE(TestBoostGraphAdapter1) {
             BOOST_CHECK_EQUAL(Traget(e, graph), outNeighbors[v][i++]);
         }
 
-        BOOST_CHECK_EQUAL(graph.in_degree(v), inNeighbors[v].size());
-        BOOST_CHECK_EQUAL(graph.out_degree(v), outNeighbors[v].size());
+        BOOST_CHECK_EQUAL(graph.InDegree(v), inNeighbors[v].size());
+        BOOST_CHECK_EQUAL(graph.OutDegree(v), outNeighbors[v].size());
     }
 }
 

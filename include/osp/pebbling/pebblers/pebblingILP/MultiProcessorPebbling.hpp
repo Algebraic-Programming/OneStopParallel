@@ -698,7 +698,7 @@ void MultiProcessorPebbling<GraphT>::SetupBaseVariablesConstraints(const BspInst
     if (needs_blue_at_end.empty())    // default case: blue pebbles required on sinks at the end
     {
         for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
-            if (instance.getComputationalDag().out_degree(node) == 0 && has_blue_exists[node][max_time - 1]) {
+            if (instance.getComputationalDag().OutDegree(node) == 0 && has_blue_exists[node][max_time - 1]) {
                 model.AddConstr(has_blue[node][static_cast<int>(max_time) - 1] == 1);
             }
         }

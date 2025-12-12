@@ -271,7 +271,7 @@ class BoostGraph {
 
     VertexIdx Target(const DirectedEdgeDescriptor &e) const { return boost::target(e, graph_); }
 
-    inline size_t OutDegree(const VertexIdx &v) const { return boost::out_degree(v, graph_); }
+    inline size_t OutDegree(const VertexIdx &v) const { return boost::OutDegree(v, graph_); }
 
     inline size_t InDegree(const VertexIdx &v) const { return boost::in_degree(v, graph_); }
 

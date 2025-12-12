@@ -149,7 +149,7 @@ HypergraphT ConvertFromCdagAsHyperdag(const GraphT &dag) {
     for (const auto &node : dag.vertices()) {
         hgraph.SetVertexWorkWeight(node, dag.VertexWorkWeight(node));
         hgraph.set_vertex_memory_weight(node, dag.VertexMemWeight(node));
-        if (dag.out_degree(node) == 0) {
+        if (dag.OutDegree(node) == 0) {
             continue;
         }
         std::vector<IndexType> newHyperedge({node});

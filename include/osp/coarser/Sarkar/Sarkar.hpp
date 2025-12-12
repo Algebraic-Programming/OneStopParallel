@@ -168,7 +168,7 @@ std::vector<v_workw_t<Graph_t_in>> Sarkar<GraphTIn, GraphTOut>::GetBotDistance(v
         for (const auto &j : graph.children(vertex)) {
             maxTemp = std::max(max_temp, botDist[j]);
         }
-        if (graph.out_degree(vertex) > 0) {
+        if (graph.OutDegree(vertex) > 0) {
             maxTemp += commCost;
         }
 
@@ -348,7 +348,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::AllChildrenContraction(
     std::set<std::pair<long, VertexType>, decltype(cmp)> vertPriority(cmp);
 
     for (const VertexType &groupHead : graph.vertices()) {
-        if (graph.out_degree(groupHead) < 2) {
+        if (graph.OutDegree(groupHead) < 2) {
             continue;
         }
 
@@ -451,14 +451,14 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::AllChildrenContraction(
 
         // Adding to partition
         std::vector<VertexType> part;
-        part.reserve(1 + graph.out_degree(groupHead));
+        part.reserve(1 + graph.OutDegree(groupHead));
         part.emplace_back(groupHead);
         for (const VertexType &groupFoot : graph.children(groupHead)) {
             part.emplace_back(groupFoot);
         }
 
         expansionMapOutput.emplace_back(std::move(part));
-        counter += static_cast<vertex_idx_t<Graph_t_in>>(graph.out_degree(groupHead));
+        counter += static_cast<vertex_idx_t<Graph_t_in>>(graph.OutDegree(groupHead));
         if (counter > maxCorseningNum) {
             minSave = vertSave;
         }
@@ -704,7 +704,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SomeChildrenContraction(
     std::set<std::pair<long, std::vector<VertexType>>, decltype(cmp)> vertPriority(cmp);
 
     for (const VertexType &groupHead : graph.vertices()) {
-        if (graph.out_degree(groupHead) < 2) {
+        if (graph.OutDegree(groupHead) < 2) {
             continue;
         }
 
@@ -752,7 +752,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SomeChildrenContraction(
 
         std::vector<VertexType> contractionEnsemble;
         std::set<VertexType> contractionChildrenSet;
-        contractionEnsemble.reserve(1 + graph.out_degree(groupHead));
+        contractionEnsemble.reserve(1 + graph.OutDegree(groupHead));
         contractionEnsemble.emplace_back(groupHead);
         v_workw_t<Graph_t_in> added_weight = graph.VertexWorkWeight(groupHead);
 

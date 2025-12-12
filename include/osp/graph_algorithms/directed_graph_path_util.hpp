@@ -47,7 +47,7 @@ namespace osp {
  */
 template <typename GraphT>
 bool HasPath(const VertexIdxT<GraphT> src, const VertexIdxT<GraphT> dest, const GraphT &graph) {
-    static_assert(is_directed_graph_v<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
     for (const auto &child : bfs_view(graph, src)) {
         if (child == dest) {
@@ -60,7 +60,7 @@ bool HasPath(const VertexIdxT<GraphT> src, const VertexIdxT<GraphT> dest, const 
 
 template <typename GraphT>
 std::size_t LongestPath(const std::set<VertexIdxT<GraphT>> &vertices, const GraphT &graph) {
-    static_assert(is_directed_graph_v<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
     using VertexType = VertexIdxT<GraphT>;
 
@@ -109,7 +109,7 @@ std::size_t LongestPath(const std::set<VertexIdxT<GraphT>> &vertices, const Grap
 
 template <typename GraphT>
 std::size_t LongestPath(const GraphT &graph) {
-    static_assert(is_directed_graph_v<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
     using VertexType = VertexIdxT<GraphT>;
 
@@ -129,7 +129,7 @@ std::size_t LongestPath(const GraphT &graph) {
 
         for (const VertexType &child : graph.children(current)) {
             ++visitCounter[child];
-            if (visitCounter[child] == graph.in_degree(child)) {
+            if (visitCounter[child] == graph.InDegree(child)) {
                 bfsQueue.push(child);
                 distances[child] = distances[current] + 1;
                 maxEdgecount = std::max(maxEdgecount, distances[child]);
@@ -142,7 +142,7 @@ std::size_t LongestPath(const GraphT &graph) {
 
 template <typename GraphT>
 std::vector<VertexIdxT<GraphT>> LongestChain(const GraphT &graph) {
-    static_assert(is_directed_graph_v<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
     using VertexType = VertexIdxT<GraphT>;
 
@@ -173,7 +173,7 @@ std::vector<VertexIdxT<GraphT>> LongestChain(const GraphT &graph) {
 
     // reconstructing longest path
     chain.push_back(endLongestChain);
-    while (graph.in_degree(endLongestChain) != 0) {
+    while (graph.InDegree(endLongestChain) != 0) {
         for (const VertexType &inNode : graph.parents(endLongestChain)) {
             if (topLength[inNode] != topLength[endLongestChain] - 1) {
                 continue;
@@ -228,17 +228,17 @@ std::vector<T> GetTopNodeDistance(const GraphT &graph) {
 
 template <typename GraphT>
 std::vector<std::vector<VertexIdxT<GraphT>>> ComputeWavefronts(const GraphT &graph) {
-    static_assert(is_directed_graph_v<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
     std::vector<std::vector<VertexIdxT<GraphT>>> wavefronts;
     std::vector<VertexIdxT<GraphT>> parentsVisited(graph.NumVertices(), 0);
 
     wavefronts.push_back(std::vector<VertexIdxT<GraphT>>());
     for (const auto &vertex : graph.vertices()) {
-        if (graph.in_degree(vertex) == 0) {
+        if (graph.InDegree(vertex) == 0) {
             wavefronts.back().push_back(vertex);
         } else {
-            parentsVisited[vertex] = static_cast<VertexIdxT<GraphT>>(graph.in_degree(vertex));
+            parentsVisited[vertex] = static_cast<VertexIdxT<GraphT>>(graph.InDegree(vertex));
         }
     }
 
@@ -287,24 +287,24 @@ std::vector<int> GetStrictPosetIntegerMap(unsigned const noise, double const poi
     std::mt19937 gen(rd());
     std::poisson_distribution<> poissonGen(poissonParam + 1.0e-12);
 
-    std::vector<unsigned> topDistance = get_top_node_distance(graph);
-    std::vector<unsigned> botDistance = get_bottom_node_distance(graph);
+    std::vector<unsigned> topDistance = GetTopNodeDistance(graph);
+    std::vector<unsigned> botDistance = GetBottomNodeDistance(graph);
     std::vector<int> newTop(graph.NumVertices(), 0);
     std::vector<int> newBot(graph.NumVertices(), 0);
 
     unsigned maxPath = 0;
-    for (const auto &vertex : graph.vertices()) {
+    for (const auto &vertex : graph.Vertices()) {
         maxPath = std::max(maxPath, topDistance[vertex]);
     }
 
-    for (const auto &source : source_vertices_view(graph)) {
+    for (const auto &source : SourceVertices(graph)) {
         if (maxPath - botDistance[source] + 1U + 2U * noise > static_cast<unsigned>(std::numeric_limits<int>::max())) {
             throw std::overflow_error("Overflow in get_strict_poset_integer_map");
         }
         newTop[source] = RandInt(static_cast<int>(maxPath - botDistance[source] + 1 + 2 * noise)) - static_cast<int>(noise);
     }
 
-    for (const auto &sink : sink_vertices_view(graph)) {
+    for (const auto &sink : SinkVertices(graph)) {
         if (maxPath - topDistance[sink] + 1U + 2U * noise > static_cast<unsigned>(std::numeric_limits<int>::max())) {
             throw std::overflow_error("Overflow in get_strict_poset_integer_map");
         }
@@ -333,7 +333,7 @@ std::vector<int> GetStrictPosetIntegerMap(unsigned const noise, double const poi
     }
 
     for (std::reverse_iterator iter = topOrder.crbegin(); iter != topOrder.crend(); ++iter) {
-        if (is_sink(*iter, graph)) {
+        if (IsSink(*iter, graph)) {
             continue;
         }
 

@@ -48,10 +48,10 @@ void WriteComputationalDagHyperdagFormatDb(std::ostream &os, const GraphT &graph
     std::vector<vertex_idx_t<Graph_t>> hyperedgeIdxToNode;
 
     for (const auto &u : graph.vertices()) {
-        if (graph.out_degree(u) > 0) {
+        if (graph.OutDegree(u) > 0) {
             hyperedgeIdxToNode.push_back(u);
             numHyperedges++;
-            numPins += (graph.out_degree(u) + 1);
+            numPins += (graph.OutDegree(u) + 1);
         }
     }
 

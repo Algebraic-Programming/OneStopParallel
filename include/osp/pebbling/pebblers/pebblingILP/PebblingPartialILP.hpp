@@ -231,7 +231,7 @@ RETURN_STATUS PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<Graph
                 }
             }
 
-            if (instance.getComputationalDag().out_degree(node) == 0) {
+            if (instance.getComputationalDag().OutDegree(node) == 0) {
                 needs_blue_at_end.insert(local_id[node]);
             }
         }

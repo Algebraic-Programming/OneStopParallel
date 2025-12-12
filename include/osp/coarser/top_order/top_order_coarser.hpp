@@ -169,7 +169,7 @@ class TopOrderCoarser : public Coarser<GraphTIn, GraphTOut> {
                  || (current_communication + dag_in.VertexCommWeight(v) > communication_threshold))
                 || (dist > node_dist_threshold) ||
                 // or prev node high out degree
-                (dag_in.out_degree(top_ordering[i - 1]) > degree_threshold)) {
+                (dag_in.OutDegree(top_ordering[i - 1]) > degree_threshold)) {
                 finish_super_node_add_edges(dag_in, dag_out, vertex_map.back(), reverse_vertex_map);
                 vertex_map.push_back(std::vector<VertexType>({v}));
                 add_new_super_node(dag_in, dag_out, v);

@@ -35,7 +35,7 @@ namespace osp {
 template <typename GraphT>
 class EdgeView {
   private:
-    static_assert(is_directed_graph_v<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
     const GraphT &graph_;
 
@@ -62,8 +62,8 @@ class EdgeView {
 
         void AdvanceToValid() {
             while (currentVertex_ != graph_->NumVertices()) {
-                if (graph_->children(currentVertex_).begin() != graph_->children(currentVertex_).end()) {
-                    currentChild_ = graph_->children(currentVertex_).begin();
+                if (graph_->Children(currentVertex_).begin() != graph_->Children(currentVertex_).end()) {
+                    currentChild_ = graph_->Children(currentVertex_).begin();
                     break;
                 }
                 currentVertex_++;
@@ -95,7 +95,7 @@ class EdgeView {
 
             // Optimization: Skip vertices entirely if their degree is small enough
             while (currentVertex_ < graph_->NumVertices()) {
-                const auto degree = graph_->out_degree(currentVertex_);
+                const auto degree = graph_->OutDegree(currentVertex_);
                 if (currentAccumulatedEdges + degree > currentEdgeIdx_) {
                     break;
                 }
@@ -105,7 +105,7 @@ class EdgeView {
 
             // Initialize child iterator and advance within the specific vertex
             if (currentVertex_ < graph_->NumVertices()) {
-                currentChild_ = graph_->children(currentVertex_).begin();
+                currentChild_ = graph_->Children(currentVertex_).begin();
                 std::advance(currentChild_, currentEdgeIdx_ - currentAccumulatedEdges);
             }
         }
@@ -118,7 +118,7 @@ class EdgeView {
             currentChild_++;
             currentEdgeIdx_++;
 
-            if (currentChild_ == graph_->children(currentVertex_).end()) {
+            if (currentChild_ == graph_->Children(currentVertex_).end()) {
                 currentVertex_++;
                 AdvanceToValid();
             }
@@ -140,7 +140,7 @@ class EdgeView {
 
   public:
     using DirEdgeIterator
-        = DirectedEdgeIterator<decltype(std::declval<GraphT>().children(std::declval<VertexIdxT<GraphT>>()).begin())>;
+        = DirectedEdgeIterator<decltype(std::declval<GraphT>().Children(std::declval<VertexIdxT<GraphT>>()).begin())>;
     using Iterator = DirEdgeIterator;
     using ConstIterator = DirEdgeIterator;
 
@@ -171,7 +171,7 @@ class EdgeView {
 template <typename GraphT, bool isOutgoing>
 class IncidentEdgeView {
   private:
-    static_assert(is_directed_graph_v<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
     const GraphT &graph_;
     VertexIdxT<GraphT> anchorVertex_;
@@ -240,8 +240,8 @@ class IncidentEdgeView {
     // Helper to deduce iterator type based on direction
     using BaseIteratorType
         = std::conditional_t<isOutgoing,
-                             decltype(std::declval<GraphT>().children(std::declval<VertexIdxT<GraphT>>()).begin()),
-                             decltype(std::declval<GraphT>().parents(std::declval<VertexIdxT<GraphT>>()).begin())>;
+                             decltype(std::declval<GraphT>().Children(std::declval<VertexIdxT<GraphT>>()).begin()),
+                             decltype(std::declval<GraphT>().Parents(std::declval<VertexIdxT<GraphT>>()).begin())>;
 
   public:
     using Iterator = IncidentEdgeIterator<BaseIteratorType>;
@@ -251,9 +251,9 @@ class IncidentEdgeView {
 
     [[nodiscard]] auto begin() const {
         if constexpr (isOutgoing) {
-            return Iterator(anchorVertex_, graph_.children(anchorVertex_).begin());
+            return Iterator(anchorVertex_, graph_.Children(anchorVertex_).begin());
         } else {
-            return Iterator(anchorVertex_, graph_.parents(anchorVertex_).begin());
+            return Iterator(anchorVertex_, graph_.Parents(anchorVertex_).begin());
         }
     }
 
@@ -261,9 +261,9 @@ class IncidentEdgeView {
 
     [[nodiscard]] auto end() const {
         if constexpr (isOutgoing) {
-            return Iterator(anchorVertex_, graph_.children(anchorVertex_).end());
+            return Iterator(anchorVertex_, graph_.Children(anchorVertex_).end());
         } else {
-            return Iterator(anchorVertex_, graph_.parents(anchorVertex_).end());
+            return Iterator(anchorVertex_, graph_.Parents(anchorVertex_).end());
         }
     }
 
@@ -271,17 +271,17 @@ class IncidentEdgeView {
 
     [[nodiscard]] auto size() const {
         if constexpr (isOutgoing) {
-            return graph_.out_degree(anchorVertex_);
+            return graph_.OutDegree(anchorVertex_);
         } else {
-            return graph_.in_degree(anchorVertex_);
+            return graph_.InDegree(anchorVertex_);
         }
     }
 
     [[nodiscard]] bool empty() const {
         if constexpr (isOutgoing) {
-            return graph_.out_degree(anchorVertex_) == 0;
+            return graph_.OutDegree(anchorVertex_) == 0;
         } else {
-            return graph_.in_degree(anchorVertex_) == 0;
+            return graph_.InDegree(anchorVertex_) == 0;
         }
     }
 };

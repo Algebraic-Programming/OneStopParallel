@@ -456,8 +456,8 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     BOOST_CHECK_EQUAL(graph.NumVertices(), std::distance(graph.vertices().begin(), graph.vertices().end()));
     BOOST_CHECK_EQUAL(graph.NumEdges(), std::distance(edges(graph).begin(), edges(graph).end()));
     for (const auto &v : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.in_degree(v), std::distance(graph.parents(v).begin(), graph.parents(v).end()));
-        BOOST_CHECK_EQUAL(graph.out_degree(v), std::distance(graph.children(v).begin(), graph.children(v).end()));
+        BOOST_CHECK_EQUAL(graph.InDegree(v), std::distance(graph.parents(v).begin(), graph.parents(v).end()));
+        BOOST_CHECK_EQUAL(graph.OutDegree(v), std::distance(graph.children(v).begin(), graph.children(v).end()));
     }
 
     for (const auto i : graph.vertices()) {
@@ -481,7 +481,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
     std::size_t numEdges = 0;
     for (const auto &vertex : graph.vertices()) {
-        numEdges += graph.out_degree(vertex);
+        numEdges += graph.OutDegree(vertex);
         for (const auto &parent : graph.parents(vertex)) {
             BOOST_CHECK(std::any_of(
                 graph.children(parent).cbegin(), graph.children(parent).cend(), [vertex](VertexType k) { return k == vertex; }));

@@ -66,7 +66,7 @@ template <typename GraphTIn, class GraphTOut, typename VWorkAccMethod, typename 
 bool ConstructCoarseDag(const GraphTIn &dagIn,
                         GraphTOut &coarsenedDag,
                         const std::vector<vertex_idx_t<Graph_t_out>> &vertexContractionMap) {
-    static_assert(is_directed_graph_v<Graph_t_in> && is_directed_graph_v<Graph_t_out>,
+    static_assert(IsDirectedGraphV<Graph_t_in> && IsDirectedGraphV<Graph_t_out>,
                   "Graph types need to satisfy the is_directed_graph concept.");
     static_assert(IsComputationalDagV<Graph_t_in>, "Graph_t_in must be a computational DAG");
     static_assert(IsConstructableCdagV<Graph_t_out> || IsDirectConstructableCdagV<Graph_t_out>,
@@ -242,7 +242,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
                         GraphTOut &coarsenedDag,
                         std::vector<vertex_idx_t<Graph_t_out>> &vertexContractionMap) {
     if constexpr (is_Compact_Sparse_Graph_reorder_v<GraphTOut>) {
-        static_assert(is_directed_graph_v<Graph_t_in> && is_directed_graph_v<Graph_t_out>,
+        static_assert(IsDirectedGraphV<Graph_t_in> && IsDirectedGraphV<Graph_t_out>,
                       "Graph types need to satisfy the is_directed_graph concept.");
         static_assert(IsComputationalDagV<Graph_t_in>, "Graph_t_in must be a computational DAG");
         static_assert(IsConstructableCdagV<Graph_t_out> || IsDirectConstructableCdagV<Graph_t_out>,

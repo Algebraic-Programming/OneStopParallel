@@ -198,7 +198,7 @@ static_assert(IsDirectedGraphEdgeDescV<dag_vector_adapter<cdag_vertex_impl_unsig
 static_assert(HasVertexWeightsV<dag_vector_adapter<cdag_vertex_impl_unsigned, int>>,
               "dag_vector_adapter must satisfy the has_vertex_weights concept");
 
-static_assert(is_directed_graph_v<dag_vector_adapter<cdag_vertex_impl_unsigned, int>>,
+static_assert(IsDirectedGraphV<dag_vector_adapter<cdag_vertex_impl_unsigned, int>>,
               "dag_vector_adapter must satisfy the directed_graph concept");
 
 static_assert(IsComputationalDagTypedVerticesV<dag_vector_adapter<cdag_vertex_impl_unsigned, int>>,

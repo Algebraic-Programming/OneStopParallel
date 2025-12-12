@@ -394,7 +394,7 @@ void PebblingSchedule<GraphT>::CleanSchedule() {
     std::vector<bool> everNeededAsBlue(instance_->numberOfVertices(), false);
     if (needs_blue_at_end.empty()) {
         for (vertex_idx node = 0; node < instance_->numberOfVertices(); ++node) {
-            if (instance_->getComputationalDag().out_degree(node) == 0) {
+            if (instance_->getComputationalDag().OutDegree(node) == 0) {
                 everNeededAsBlue[node] = true;
             }
         }
@@ -709,7 +709,7 @@ void PebblingSchedule<GraphT>::SplitSupersteps(const BspSchedule<GraphT> &schedu
                         vertex_idx node = top_orders[proc][step][idx];
                         neededAfter[node] = false;
                         if (needs_blue_at_end.empty()) {
-                            neededAfter[node] = (instance_->getComputationalDag().out_degree(node) == 0);
+                            neededAfter[node] = (instance_->getComputationalDag().OutDegree(node) == 0);
                         } else {
                             neededAfter[node] = (needs_blue_at_end.find(node) != needs_blue_at_end.end());
                         }
@@ -905,7 +905,7 @@ void PebblingSchedule<GraphT>::SetMemoryMovement(CacheEvictionStrategy evictRule
     }
     if (needs_blue_at_end.empty()) {
         for (vertex_idx node = 0; node < n; ++node) {
-            if (instance_->getComputationalDag().out_degree(node) == 0) {
+            if (instance_->getComputationalDag().OutDegree(node) == 0) {
                 mustBePreserved[node] = true;
             }
         }
@@ -1100,7 +1100,7 @@ void PebblingSchedule<GraphT>::SetMemoryMovement(CacheEvictionStrategy evictRule
                     mem_used[proc] -= instance->getComputationalDag().VertexMemWeight(node);
                     in_mem[proc].erase(node);
                     nodes_evicted_in_comm[proc][superstep].push_back(node);
-                    if ((instance->getComputationalDag().out_degree(node) == 0
+                    if ((instance->getComputationalDag().OutDegree(node) == 0
                          || needs_blue_at_end.find(node) != needs_blue_at_end.end())
                         && !in_slow_mem[node]) {
                         in_slow_mem[node] = true;
@@ -1245,7 +1245,7 @@ bool PebblingSchedule<GraphT>::IsValid() const {
 
     if (needs_blue_at_end.empty()) {
         for (vertex_idx node = 0; node < instance_->numberOfVertices(); ++node) {
-            if (instance_->getComputationalDag().out_degree(node) == 0 && !in_slow_mem[node]) {
+            if (instance_->getComputationalDag().OutDegree(node) == 0 && !in_slow_mem[node]) {
                 return false;
             }
         }

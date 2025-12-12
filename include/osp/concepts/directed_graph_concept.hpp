@@ -40,8 +40,8 @@ namespace osp {
  *   - `v` must be of type `vertex_idx_t<T>`.
  * - **children(v)**: Returns a range of child vertices for a given vertex `v`.
  *   - `v` must be of type `vertex_idx_t<T>`.
- * - **in_degree(v)**: Returns the number of incoming edges for vertex `v` as an integral type.
- * - **out_degree(v)**: Returns the number of outgoing edges for vertex `v` as an integral type.
+ * - **InDegree(v)**: Returns the number of incoming edges for vertex `v` as an integral type.
+ * - **OutDegree(v)**: Returns the number of outgoing edges for vertex `v` as an integral type.
  *
  * This concept ensures that any graph implementation passed to OSP algorithms exposes
  * the necessary structural information for processing.
@@ -63,7 +63,7 @@ struct IsDirectedGraph<T,
                                    decltype(std::declval<T>().Parents(std::declval<VertexIdxT<T>>())),
                                    decltype(std::declval<T>().Children(std::declval<VertexIdxT<T>>())),
                                    decltype(std::declval<T>().InDegree(std::declval<VertexIdxT<T>>())),
-                                   decltype(std::declval<T>().out_degree(std::declval<VertexIdxT<T>>()))>>
+                                   decltype(std::declval<T>().OutDegree(std::declval<VertexIdxT<T>>()))>>
     : std::conjunction<IsForwardRangeOf<decltype(std::declval<T>().Vertices()), VertexIdxT<T>>,
                        std::is_integral<decltype(std::declval<T>().NumVertices())>,
                        std::is_integral<decltype(std::declval<T>().NumEdges())>,

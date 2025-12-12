@@ -97,10 +97,10 @@ BOOST_AUTO_TEST_CASE(TestSparseMatrixAdapter1) {
     BOOST_CHECK_EQUAL(graph.in_degree(1), 1);
     BOOST_CHECK_EQUAL(graph.in_degree(3), 2);
     BOOST_CHECK_EQUAL(graph.in_degree(6), 3);
-    BOOST_CHECK_EQUAL(graph.out_degree(0), 4);
-    BOOST_CHECK_EQUAL(graph.out_degree(1), 2);
-    BOOST_CHECK_EQUAL(graph.out_degree(3), 1);
-    BOOST_CHECK_EQUAL(graph.out_degree(6), 0);
+    BOOST_CHECK_EQUAL(graph.OutDegree(0), 4);
+    BOOST_CHECK_EQUAL(graph.OutDegree(1), 2);
+    BOOST_CHECK_EQUAL(graph.OutDegree(3), 1);
+    BOOST_CHECK_EQUAL(graph.OutDegree(6), 0);
 
     using VertexIdx = int32_t;
 
@@ -154,7 +154,7 @@ BOOST_AUTO_TEST_CASE(TestSparseMatrixAdapter1) {
         }
 
         BOOST_CHECK_EQUAL(graph.in_degree(v), inNeighbors[vi].size());
-        BOOST_CHECK_EQUAL(graph.out_degree(v), outNeighbors[vi].size());
+        BOOST_CHECK_EQUAL(graph.OutDegree(v), outNeighbors[vi].size());
     }
 
     unsigned count = 0;

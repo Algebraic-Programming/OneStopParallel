@@ -41,7 +41,7 @@ struct TotalLambdaCommunicationCost {
         const double commMultiplier = 1.0 / instance.numberOfProcessors();
 
         for (const auto &v : instance.vertices()) {
-            if (instance.getComputationalDag().out_degree(v) == 0) {
+            if (instance.getComputationalDag().OutDegree(v) == 0) {
                 continue;
             }
 

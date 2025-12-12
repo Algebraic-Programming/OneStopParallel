@@ -27,28 +27,28 @@ namespace osp {
 
 template <typename GraphT>
 VMemwT<GraphT> MaxMemoryWeight(const GraphT &graph) {
-    static_assert(is_directed_graph_v<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
     static_assert(HasVertexWeightsV<GraphT>, "Graph_t must have vertex weights");
 
     VMemwT<GraphT> maxMemoryWeight = 0;
 
-    for (const auto &v : graph.vertices()) {
-        maxMemoryWeight = std::max(maxMemoryWeight, graph.vertex_memory_weight(v));
+    for (const auto &v : graph.Vertices()) {
+        maxMemoryWeight = std::max(maxMemoryWeight, graph.VertexMemWeight(v));
     }
     return maxMemoryWeight;
 }
 
 template <typename GraphT>
 VMemwT<GraphT> MaxMemoryWeight(const VTypeT<GraphT> &nodeType, const GraphT &graph) {
-    static_assert(is_directed_graph_v<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
     static_assert(HasVertexWeightsV<GraphT>, "Graph_t must have vertex weights");
     static_assert(HasTypedVerticesV<GraphT>, "Graph_t must have typed vertices");
 
     VMemwT<GraphT> maxMemoryWeight = 0;
 
-    for (const auto &node : graph.vertices()) {
-        if (graph.node_type(node) == nodeType) {
-            maxMemoryWeight = std::max(maxMemoryWeight, graph.vertex_memory_weight(node));
+    for (const auto &node : graph.Vertices()) {
+        if (graph.VertexType(node) == nodeType) {
+            maxMemoryWeight = std::max(maxMemoryWeight, graph.VertexMemWeight(node));
         }
     }
     return maxMemoryWeight;
@@ -66,8 +66,8 @@ template <typename GraphT>
 VWorkwT<GraphT> SumOfVerticesWorkWeights(const GraphT &graph) {
     static_assert(HasVertexWeightsV<GraphT>, "Graph_t must have vertex weights");
 
-    return std::accumulate(graph.vertices().begin(),
-                           graph.vertices().end(),
+    return std::accumulate(graph.Vertices().begin(),
+                           graph.Vertices().end(),
                            static_cast<VWorkwT<GraphT>>(0),
                            [&](const VWorkwT<GraphT> sum, const VertexIdxT<GraphT> &v) { return sum + graph.VertexWorkWeight(v); });
 }
@@ -108,15 +108,15 @@ VWorkwT<SubGraphT> SumOfCompatibleWorkWeights(
  */
 template <typename SubGraphT, typename InstanceT>
 VWorkwT<SubGraphT> SumOfCompatibleWorkWeights(const SubGraphT &graph, const InstanceT &mainInstance, unsigned processorType) {
-    return sumOfCompatibleWorkWeights(graph.vertices().begin(), graph.vertices().end(), graph, mainInstance, processorType);
+    return sumOfCompatibleWorkWeights(graph.Vertices().begin(), graph.Vertices().end(), graph, mainInstance, processorType);
 }
 
 template <typename GraphT>
 VCommwT<GraphT> SumOfVerticesCommunicationWeights(const GraphT &graph) {
     static_assert(HasVertexWeightsV<GraphT>, "Graph_t must have vertex weights");
 
-    return std::accumulate(graph.vertices().begin(),
-                           graph.vertices().end(),
+    return std::accumulate(graph.Vertices().begin(),
+                           graph.Vertices().end(),
                            static_cast<VCommwT<GraphT>>(0),
                            [&](const VCommwT<GraphT> sum, const VertexIdxT<GraphT> &v) { return sum + graph.VertexCommWeight(v); });
 }
@@ -153,7 +153,7 @@ VWorkwT<GraphT> CriticalPathWeight(const GraphT &graph) {
     // calculating lenght of longest path
     for (const auto &node : GetTopOrder(graph)) {
         VWorkwT<GraphT> maxTemp = 0;
-        for (const auto &parent : graph.parents(node)) {
+        for (const auto &parent : graph.Parents(node)) {
             maxTemp = std::max(maxTemp, topLength[parent]);
         }
 
