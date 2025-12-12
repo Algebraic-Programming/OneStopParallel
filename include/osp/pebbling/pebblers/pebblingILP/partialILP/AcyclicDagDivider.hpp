@@ -213,7 +213,7 @@ std::vector<unsigned> AcyclicDagDivider<GraphT>::GetTopologicalSplit(const Graph
     std::vector<unsigned> lastNodeIdxInHyperedge(g.NumVertices());
     for (unsigned node = 0; node < g.NumVertices(); ++node) {
         lastNodeIdxInHyperedge[node] = top_order_idx[node];
-        for (const auto &succ : g.children(node)) {
+        for (const auto &succ : g.Children(node)) {
             lastNodeIdxInHyperedge[node] = std::max(last_node_idx_in_hyperedge[node], top_order_idx[succ]);
         }
     }
@@ -253,7 +253,7 @@ std::vector<unsigned> AcyclicDagDivider<GraphT>::GetTopologicalSplit(const Graph
                     extraCost += g.VertexCommWeight(node);
                 }
 
-                for (const auto &pred : G.parents(node)) {
+                for (const auto &pred : G.Parents(node)) {
                     if (last_node_idx_in_hyperedge[pred] > end) {
                         extra_cost += G.VertexCommWeight(pred);
                     }
@@ -296,7 +296,7 @@ v_commw_t<Graph_t> AcyclicDagDivider<GraphT>::GetSplitCost(const GraphT &g, cons
     for (vertex_idx node = 0; node < g.NumVertices(); ++node) {
         std::set<unsigned> partsIncluded;
         partsIncluded.insert(node_to_part[node]);
-        for (const auto &succ : G.children(node)) {
+        for (const auto &succ : G.Children(node)) {
             parts_included.insert(node_to_part[succ]);
         }
 

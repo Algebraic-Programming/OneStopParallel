@@ -203,7 +203,7 @@ void HillClimbingScheduler<GraphT>::Init() {
     succSteps_.clear();
     succSteps_.resize(N, std::vector<std::map<unsigned, unsigned>>(p));
     for (vertex_idx node = 0; node < N; ++node) {
-        for (const vertex_idx &succ : G.children(node)) {
+        for (const vertex_idx &succ : G.Children(node)) {
             if (succSteps[node][schedule->assignedProcessor(succ)].find(schedule->assignedSuperstep(succ))
                 == succSteps[node][schedule->assignedProcessor(succ)].end()) {
                 succSteps[node][schedule->assignedProcessor(succ)].insert({schedule->assignedSuperstep(succ), 1U});
@@ -270,7 +270,7 @@ void HillClimbingScheduler<GraphT>::Init() {
     for (unsigned step = 0; step < m - schedule_->getStaleness(); ++step) {
         for (unsigned proc = 0; proc < p; ++proc) {
             for (const vertex_idx node : supsteplists[step + schedule->getStaleness()][proc]) {
-                for (const vertex_idx &pred : G.parents(node)) {
+                for (const vertex_idx &pred : G.Parents(node)) {
                     if (schedule->assignedProcessor(node) != schedule->assignedProcessor(pred)
                         && !present[pred][schedule->assignedProcessor(node)]) {
                         present[pred][schedule->assignedProcessor(node)] = true;
@@ -329,7 +329,7 @@ void HillClimbingScheduler<GraphT>::UpdatePromisingMoves() {
     promisingMoves.clear();
     for (vertex_idx node = 0; node < schedule_->GetInstance().GetComputationalDag().NumVertices(); ++node) {
         std::vector<unsigned> nrPredOnProc(p, 0);
-        for (const vertex_idx &pred : G.parents(node)) {
+        for (const vertex_idx &pred : G.Parents(node)) {
             ++nrPredOnProc[schedule->assignedProcessor(pred)];
         }
 
@@ -352,7 +352,7 @@ void HillClimbingScheduler<GraphT>::UpdatePromisingMoves() {
         }
 
         std::vector<unsigned> nrSuccOnProc(p, 0);
-        for (const vertex_idx &succ : G.children(node)) {
+        for (const vertex_idx &succ : G.Children(node)) {
             ++nrSuccOnProc[schedule->assignedProcessor(succ)];
         }
 
@@ -414,7 +414,7 @@ void HillClimbingScheduler<GraphT>::UpdateNodeMovesEarlier(const vertex_idx node
     }
 
     std::set<unsigned> predProc;
-    for (const vertex_idx &pred : schedule->GetInstance().GetComputationalDag().parents(node)) {
+    for (const vertex_idx &pred : schedule->GetInstance().GetComputationalDag().Parents(node)) {
         if (schedule->assignedSuperstep(pred) == schedule->assignedSuperstep(node)) {
             return;
         }
@@ -424,7 +424,7 @@ void HillClimbingScheduler<GraphT>::UpdateNodeMovesEarlier(const vertex_idx node
         }
     }
     if (schedule_->getStaleness() == 2) {
-        for (const vertex_idx &succ : schedule->GetInstance().GetComputationalDag().children(node)) {
+        for (const vertex_idx &succ : schedule->GetInstance().GetComputationalDag().Children(node)) {
             if (schedule->assignedSuperstep(succ) == schedule->assignedSuperstep(node)) {
                 predProc.insert(schedule->assignedProcessor(succ));
             }
@@ -446,14 +446,14 @@ void HillClimbingScheduler<GraphT>::UpdateNodeMovesEarlier(const vertex_idx node
 
 template <typename GraphT>
 void HillClimbingScheduler<GraphT>::UpdateNodeMovesAt(const vertex_idx node) {
-    for (const vertex_idx &pred : schedule->GetInstance().GetComputationalDag().parents(node)) {
+    for (const vertex_idx &pred : schedule->GetInstance().GetComputationalDag().Parents(node)) {
         if (static_cast<int>(schedule->assignedSuperstep(pred))
             >= static_cast<int>(schedule->assignedSuperstep(node)) - static_cast<int>(schedule->getStaleness()) + 1) {
             return;
         }
     }
 
-    for (const vertex_idx &succ : schedule->GetInstance().GetComputationalDag().children(node)) {
+    for (const vertex_idx &succ : schedule->GetInstance().GetComputationalDag().Children(node)) {
         if (schedule->assignedSuperstep(succ) <= schedule->assignedSuperstep(node) + schedule->getStaleness() - 1) {
             return;
         }
@@ -473,7 +473,7 @@ void HillClimbingScheduler<GraphT>::UpdateNodeMovesLater(const vertex_idx node) 
     }
 
     std::set<unsigned> succProc;
-    for (const vertex_idx &succ : schedule->GetInstance().GetComputationalDag().children(node)) {
+    for (const vertex_idx &succ : schedule->GetInstance().GetComputationalDag().Children(node)) {
         if (schedule->assignedSuperstep(succ) == schedule->assignedSuperstep(node)) {
             return;
         }
@@ -482,7 +482,7 @@ void HillClimbingScheduler<GraphT>::UpdateNodeMovesLater(const vertex_idx node) 
         }
     }
     if (schedule_->getStaleness() == 2) {
-        for (const vertex_idx &pred : schedule->GetInstance().GetComputationalDag().parents(node)) {
+        for (const vertex_idx &pred : schedule->GetInstance().GetComputationalDag().Parents(node)) {
             if (schedule->assignedSuperstep(pred) == schedule->assignedSuperstep(node)) {
                 succProc.insert(schedule->assignedProcessor(pred));
             }
@@ -516,17 +516,17 @@ void HillClimbingScheduler<GraphT>::UpdateMoveOptions(vertex_idx node, int where
 
     updateNodeMoves(node);
     if (where == 0) {
-        for (const vertex_idx &pred : G.parents(node)) {
+        for (const vertex_idx &pred : G.Parents(node)) {
             eraseMoveOptionsLater(pred);
             updateNodeMovesLater(pred);
         }
-        for (const vertex_idx &succ : G.children(node)) {
+        for (const vertex_idx &succ : G.Children(node)) {
             eraseMoveOptionsEarlier(succ);
             updateNodeMovesEarlier(succ);
         }
     }
     if (where == -1) {
-        for (const vertex_idx &pred : G.parents(node)) {
+        for (const vertex_idx &pred : G.Parents(node)) {
             eraseMoveOptionsLater(pred);
             updateNodeMovesLater(pred);
             eraseMoveOptionsAt(pred);
@@ -536,7 +536,7 @@ void HillClimbingScheduler<GraphT>::UpdateMoveOptions(vertex_idx node, int where
                 updateNodeMovesEarlier(pred);
             }
         }
-        for (const vertex_idx &succ : G.children(node)) {
+        for (const vertex_idx &succ : G.Children(node)) {
             eraseMoveOptionsEarlier(succ);
             updateNodeMovesEarlier(succ);
             if (schedule->getStaleness() == 2) {
@@ -546,7 +546,7 @@ void HillClimbingScheduler<GraphT>::UpdateMoveOptions(vertex_idx node, int where
         }
     }
     if (where == 1) {
-        for (const vertex_idx &pred : G.parents(node)) {
+        for (const vertex_idx &pred : G.Parents(node)) {
             eraseMoveOptionsLater(pred);
             updateNodeMovesLater(pred);
             if (schedule->getStaleness() == 2) {
@@ -554,7 +554,7 @@ void HillClimbingScheduler<GraphT>::UpdateMoveOptions(vertex_idx node, int where
                 updateNodeMovesAt(pred);
             }
         }
-        for (const vertex_idx &succ : G.children(node)) {
+        for (const vertex_idx &succ : G.Children(node)) {
             eraseMoveOptionsEarlier(succ);
             updateNodeMovesEarlier(succ);
             eraseMoveOptionsAt(succ);
@@ -712,7 +712,7 @@ int HillClimbingScheduler<GraphT>::MoveCostChange(const vertex_idx node, unsigne
 
     //  -inputs
     if (p == oldProc) {
-        for (const vertex_idx &pred : G.parents(node)) {
+        for (const vertex_idx &pred : G.Parents(node)) {
             if (schedule->assignedProcessor(pred) == p) {
                 continue;
             }
@@ -743,7 +743,7 @@ int HillClimbingScheduler<GraphT>::MoveCostChange(const vertex_idx node, unsigne
             }
         }
     } else {
-        for (const vertex_idx &pred : G.parents(node)) {
+        for (const vertex_idx &pred : G.Parents(node)) {
             // Comm. cost of sending pred to oldProc
             auto firstUse = succSteps[pred][oldProc].begin();
             bool skip = (schedule->assignedProcessor(pred) == oldProc) || firstUse->first < step
@@ -940,7 +940,7 @@ void HillClimbingScheduler<GraphT>::ExecuteMove(const vertex_idx node,
     }
 
     // update successor lists
-    for (const vertex_idx &pred : schedule->GetInstance().GetComputationalDag().parents(node)) {
+    for (const vertex_idx &pred : schedule->GetInstance().GetComputationalDag().Parents(node)) {
         auto itr = succSteps[pred][oldProc].find(oldStep);
         if ((--(itr->second)) == 0) {
             succSteps[pred][oldProc].erase(itr);

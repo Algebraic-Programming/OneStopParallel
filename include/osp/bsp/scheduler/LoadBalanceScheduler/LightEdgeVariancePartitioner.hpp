@@ -330,13 +330,13 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
                         }
 
                         // Checking children
-                        for (const auto &chld : graph.children(next_node)) {
+                        for (const auto &chld : graph.Children(next_node)) {
                             num_unallocated_parents[chld] -= 1;
                             if (num_unallocated_parents[chld] == 0) {
                                 // std::cout << "Inserting child " << chld << " into ready.\n";
                                 ready.insert(std::make_pair(chld, variance_priorities[chld]));
                                 bool is_proc_ready = true;
-                                for (const auto &parent : graph.parents(chld)) {
+                                for (const auto &parent : graph.Parents(chld)) {
                                     if ((schedule.assignedProcessor(parent) != proc_alloc_prior)
                                         && (schedule.assignedSuperstep(parent) == superstep)) {
                                         is_proc_ready = false;
@@ -380,13 +380,13 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
                         }
 
                         // Checking children
-                        for (const auto &chld : graph.children(next_node)) {
+                        for (const auto &chld : graph.Children(next_node)) {
                             num_unallocated_parents[chld] -= 1;
                             if (num_unallocated_parents[chld] == 0) {
                                 // std::cout << "Inserting child " << chld << " into ready.\n";
                                 ready.insert(std::make_pair(chld, variance_priorities[chld]));
                                 bool is_proc_ready = true;
-                                for (const auto &parent : graph.parents(chld)) {
+                                for (const auto &parent : graph.Parents(chld)) {
                                     if ((schedule.assignedProcessor(parent) != proc)
                                         && (schedule.assignedSuperstep(parent) == superstep)) {
                                         is_proc_ready = false;

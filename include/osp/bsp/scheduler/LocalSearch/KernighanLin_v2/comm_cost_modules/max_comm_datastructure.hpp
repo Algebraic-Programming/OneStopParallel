@@ -195,7 +195,7 @@ struct MaxCommDatastructure {
 
         const auto &graph = instance_->GetComputationalDag();
 
-        for (const auto &parent : graph.parents(move.node)) {
+        for (const auto &parent : graph.Parents(move.node)) {
             affected_steps.insert(active_schedule->assigned_superstep(parent));
         }
 
@@ -280,7 +280,7 @@ struct MaxCommDatastructure {
 
         // Update Parents' Outgoing Communication (Parents → Node)
 
-        for (const auto &parent : graph.parents(node)) {
+        for (const auto &parent : graph.Parents(node)) {
             const unsigned parent_step = active_schedule->assigned_superstep(parent);
             // Fast boundary check
             if (parent_step >= step_proc_send_.size()) {
@@ -355,7 +355,7 @@ struct MaxCommDatastructure {
             const comm_weight_t commW = graph.VertexCommWeight(u);
             max_comm_weight = std::max(max_comm_weight, comm_w);
 
-            for (const auto &v : graph.children(u)) {
+            for (const auto &v : graph.Children(u)) {
                 const unsigned vProc = vecSched.assignedProcessor(v);
                 const unsigned vStep = vecSched.assignedSuperstep(v);
 

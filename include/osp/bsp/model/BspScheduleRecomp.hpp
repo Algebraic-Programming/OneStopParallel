@@ -193,7 +193,7 @@ bool BspScheduleRecomp<GraphT>::SatisfiesConstraints() const {
     // check validity
 
     for (VertexIdx node = 0; node < instance_->NumberOfVertices(); ++node) {
-        for (VertexIdx pred : instance_->GetComputationalDag().parents(node)) {
+        for (VertexIdx pred : instance_->GetComputationalDag().Parents(node)) {
             for (const std::pair<unsigned, unsigned> &compute_step : nodeToProcessorAndSupertepAssignment_[node]) {
                 if (nodeFirstAvailableOnProc[pred][compute_step.first] > compute_step.second) {
                     // std::cout << "Not a valid schedule: parent " << pred << " of node "<< node <<

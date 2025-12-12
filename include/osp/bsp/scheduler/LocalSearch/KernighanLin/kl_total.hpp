@@ -109,7 +109,7 @@ class KlTotal : public KlBase<GraphT, MemoryConstraintT> {
     virtual void select_nodes_comm() override {
         if constexpr (currentSchedule_.use_node_communication_costs) {
             for (const auto &node : currentSchedule_.instance->GetComputationalDag().vertices()) {
-                for (const auto &source : currentSchedule_.instance->GetComputationalDag().parents(node)) {
+                for (const auto &source : currentSchedule_.instance->GetComputationalDag().Parents(node)) {
                     if (currentSchedule_.vector_schedule.assignedProcessor(node)
                         != currentSchedule_.vector_schedule.assignedProcessor(source)) {
                         if (current_schedule.instance->GetComputationalDag().VertexCommWeight(node)
@@ -120,7 +120,7 @@ class KlTotal : public KlBase<GraphT, MemoryConstraintT> {
                     }
                 }
 
-                for (const auto &target : currentSchedule_.instance->GetComputationalDag().children(node)) {
+                for (const auto &target : currentSchedule_.instance->GetComputationalDag().Children(node)) {
                     if (currentSchedule_.vector_schedule.assignedProcessor(node)
                         != currentSchedule_.vector_schedule.assignedProcessor(target)) {
                         if (current_schedule.instance->GetComputationalDag().VertexCommWeight(node)

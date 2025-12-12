@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(TestBoostGraphAdapter1) {
         BOOST_CHECK_EQUAL(v, vertices[idx++]);
 
         size_t i = 0;
-        for (const auto &e : graph.children(v)) {
+        for (const auto &e : graph.Children(v)) {
             BOOST_CHECK_EQUAL(e, outNeighbors[v][i++]);
         }
 
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(TestBoostGraphAdapter1) {
         }
 
         i = 0;
-        for (const auto &e : graph.parents(v)) {
+        for (const auto &e : graph.Parents(v)) {
             BOOST_CHECK_EQUAL(e, inNeighbors[v][i++]);
         }
 

@@ -76,7 +76,7 @@ class RandomGreedy : public Scheduler<GraphT> {
                 bool failedToAllocate = false;
                 unsigned processorToBeAllocated = 0;
 
-                for (const auto &par : graph.parents(node)) {
+                for (const auto &par : graph.Parents(node)) {
                     if (processor_set && (nodes_assigned_this_superstep.find(par) != nodes_assigned_this_superstep.cend())
                         && (sched.assignedProcessor(par) != processor_to_be_allocated)) {
                         failed_to_allocate = true;
@@ -108,7 +108,7 @@ class RandomGreedy : public Scheduler<GraphT> {
                 nodesAssignedThisSuperstep.emplace(node);
                 processorWeights[sched.assignedProcessor(node)] += graph.VertexWorkWeight(node);
                 std::vector<VertexType> newNodes;
-                for (const auto &chld : graph.children(node)) {
+                for (const auto &chld : graph.Children(node)) {
                     predecessors_count[chld]++;
                     if (predecessors_count[chld] == graph.in_degree(chld)) {
                         new_nodes.emplace_back(chld);

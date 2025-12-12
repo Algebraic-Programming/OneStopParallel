@@ -99,7 +99,7 @@ class EtfScheduler : public Scheduler<GraphT> {
                 }
 
             } else {
-                for (const auto &child : instance.GetComputationalDag().children(node)) {
+                for (const auto &child : instance.GetComputationalDag().Children(node)) {
                     const v_workw_t<Graph_t> tmp_val = BL[child] + instance.GetComputationalDag().VertexCommWeight(child);
 
                     if (tmp_val > maxval) {
@@ -158,7 +158,7 @@ class EtfScheduler : public Scheduler<GraphT> {
                                      std::vector<v_workw_t<Graph_t>> &send,
                                      std::vector<v_workw_t<Graph_t>> &rec) const {
         std::vector<tv_pair> predec;
-        for (const auto &pred : instance.GetComputationalDag().parents(node)) {
+        for (const auto &pred : instance.GetComputationalDag().Parents(node)) {
             predec.emplace_back(schedule.time[pred] + instance.GetComputationalDag().VertexWorkWeight(pred), pred);
         }
 
@@ -316,7 +316,7 @@ class EtfScheduler : public Scheduler<GraphT> {
                 memoryConstraint_.add(node, bestProc);
             }
 
-            for (const auto &succ : instance.GetComputationalDag().children(node)) {
+            for (const auto &succ : instance.GetComputationalDag().Children(node)) {
                 ++predecProcessed[succ];
                 if (predecProcessed[succ] == instance.GetComputationalDag().in_degree(succ)) {
                     ready.insert({BL[succ], succ});

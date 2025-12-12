@@ -82,7 +82,7 @@ void CreateInducedSubgraph(const GraphTIn &dag,
     } else {
         // add edges without edge comm weights
         for (const auto &node : selectedNodes) {
-            for (const auto &pred : dag.parents(node)) {
+            for (const auto &pred : dag.Parents(node)) {
                 if (selectedNodes.find(pred) != selectedNodes.end() || extraSources.find(pred) != extraSources.end()) {
                     dagOut.AddEdge(localIdx[pred], localIdx[node]);
                 }

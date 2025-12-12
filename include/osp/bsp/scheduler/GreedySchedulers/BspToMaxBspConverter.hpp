@@ -316,7 +316,7 @@ MaxBspScheduleCS<GraphT> GreedyBspToMaxBspConverter<GraphT>::Convert(const BspSc
 
                 bool has_dependency = false;
 
-                for (const vertex_idx &parent : dag.parents(node)) {
+                for (const vertex_idx &parent : dag.Parents(node)) {
                     if (schedule.assignedProcessor(node) != schedule.assignedProcessor(parent)
                         && late_arriving_nodes.find(std::make_pair(parent, proc)) != late_arriving_nodes.end()) {
                         has_dependency = true;
@@ -391,7 +391,7 @@ std::vector<std::vector<std::deque<vertex_idx_t<Graph_t>>>> GreedyBspToMaxBspCon
 
         double successors = 0;
         unsigned numChildren = 0;
-        for (const vertex_idx &child : dag.children(node)) {
+        for (const vertex_idx &child : dag.Children(node)) {
             if (schedule.assignedProcessor(node) == schedule.assignedProcessor(child)
                 && schedule.assignedSuperstep(node) == schedule.assignedSuperstep(child)) {
                 ++num_children;
@@ -419,7 +419,7 @@ std::vector<std::vector<std::deque<vertex_idx_t<Graph_t>>>> GreedyBspToMaxBspCon
         vertex_idx node = free.begin()->second;
         free.erase(free.begin());
         superstepLists[schedule.assignedProcessor(node)][schedule.assignedSuperstep(node)].push_back(node);
-        for (const vertex_idx &child : dag.children(node)) {
+        for (const vertex_idx &child : dag.Children(node)) {
             if (schedule.assignedProcessor(node) == schedule.assignedProcessor(child)
                 && schedule.assignedSuperstep(node) == schedule.assignedSuperstep(child)) {
                 if (--local_in_degree[child] == 0) {

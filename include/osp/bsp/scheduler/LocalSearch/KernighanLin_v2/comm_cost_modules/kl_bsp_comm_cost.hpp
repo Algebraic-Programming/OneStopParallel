@@ -229,7 +229,7 @@ struct KlBspCommCostFunction {
         const unsigned windowBound = EndIdx(nodeStep, endStep);
         const unsigned nodeStartIdx = StartIdx(nodeStep, startStep);
 
-        for (const auto &target : instance->GetComputationalDag().children(node)) {
+        for (const auto &target : instance->GetComputationalDag().Children(node)) {
             const unsigned target_step = active_schedule->assigned_superstep(target);
             const unsigned target_proc = active_schedule->assigned_processor(target);
 
@@ -259,7 +259,7 @@ struct KlBspCommCostFunction {
             }
         }
 
-        for (const auto &source : instance->GetComputationalDag().parents(node)) {
+        for (const auto &source : instance->GetComputationalDag().Parents(node)) {
             const unsigned source_step = active_schedule->assigned_superstep(source);
             const unsigned source_proc = active_schedule->assigned_processor(source);
 
@@ -328,7 +328,7 @@ struct KlBspCommCostFunction {
         }
 
         // Incoming (Parents)
-        for (const auto &u : graph->parents(node)) {
+        for (const auto &u : graph->Parents(node)) {
             const unsigned u_proc = active_schedule->assigned_processor(u);
             const unsigned u_step = current_vec_schedule.assignedSuperstep(u);
             const comm_weight_t comm_w_u = graph->VertexCommWeight(u);
@@ -351,7 +351,7 @@ struct KlBspCommCostFunction {
             // These updates are specific to p_to but independent of s_to.
             // We apply them, run the s_to loop, then revert them.
 
-            for (const auto &u : graph->parents(node)) {
+            for (const auto &u : graph->Parents(node)) {
                 const unsigned u_proc = active_schedule->assigned_processor(u);
                 const unsigned u_step = current_vec_schedule.assignedSuperstep(u);
                 const comm_weight_t comm_w_u = graph->VertexCommWeight(u);
@@ -431,7 +431,7 @@ struct KlBspCommCostFunction {
             }
 
             // Revert Incoming Deltas (Inverse of Part A)
-            for (const auto &u : graph->parents(node)) {
+            for (const auto &u : graph->Parents(node)) {
                 const unsigned u_proc = active_schedule->assigned_processor(u);
                 const unsigned u_step = current_vec_schedule.assignedSuperstep(u);
                 const comm_weight_t comm_w_u = graph->VertexCommWeight(u);
@@ -521,7 +521,7 @@ struct KlBspCommCostFunction {
         const unsigned startStep = threadData.start_step;
         const unsigned endStep = threadData.end_step;
 
-        for (const auto &target : instance->GetComputationalDag().children(move.node)) {
+        for (const auto &target : instance->GetComputationalDag().Children(move.node)) {
             const unsigned target_step = active_schedule->assigned_superstep(target);
             if (target_step < start_step || target_step > end_step) {
                 continue;
@@ -605,7 +605,7 @@ struct KlBspCommCostFunction {
             }
         }
 
-        for (const auto &source : instance->GetComputationalDag().parents(move.node)) {
+        for (const auto &source : instance->GetComputationalDag().Parents(move.node)) {
             const unsigned source_step = active_schedule->assigned_superstep(source);
             if (source_step < start_step || source_step > end_step) {
                 continue;

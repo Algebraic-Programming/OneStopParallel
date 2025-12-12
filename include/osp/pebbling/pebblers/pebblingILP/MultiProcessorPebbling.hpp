@@ -630,7 +630,7 @@ void MultiProcessorPebbling<GraphT>::SetupBaseVariablesConstraints(const BspInst
                     continue;
                 }
 
-                for (const auto &source : instance.GetComputationalDag().parents(node)) {
+                for (const auto &source : instance.GetComputationalDag().Parents(node)) {
                     if (!mergeSteps || !compute_exists[source][processor][t]) {
                         model.AddConstr(compute[node][processor][static_cast<int>(t)]
                                         <= has_red[source][processor][static_cast<int>(t)]);

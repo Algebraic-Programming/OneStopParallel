@@ -86,7 +86,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
         std::set<std::pair<vertex_idx_t<Graph_t_out>, vertex_idx_t<Graph_t_out>>> quotient_edges;
 
         for (const vertex_idx_t<Graph_t_in> &vert : dag_in.vertices()) {
-            for (const vertex_idx_t<Graph_t_in> &chld : dag_in.children(vert)) {
+            for (const vertex_idx_t<Graph_t_in> &chld : dag_in.Children(vert)) {
                 if (vertex_contraction_map[vert] == vertex_contraction_map[chld]) {
                     continue;
                 }
@@ -201,7 +201,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
         }
 
         for (const vertex_idx_t<Graph_t_in> &vert : dag_in.vertices()) {
-            for (const vertex_idx_t<Graph_t_in> &chld : dag_in.children(vert)) {
+            for (const vertex_idx_t<Graph_t_in> &chld : dag_in.Children(vert)) {
                 if (vertex_contraction_map[vert] == vertex_contraction_map[chld]) {
                     continue;
                 }
@@ -260,7 +260,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
         std::set<std::pair<vertex_idx_t<Graph_t_out>, vertex_idx_t<Graph_t_out>>> quotient_edges;
 
         for (const vertex_idx_t<Graph_t_in> &vert : dag_in.vertices()) {
-            for (const vertex_idx_t<Graph_t_in> &chld : dag_in.children(vert)) {
+            for (const vertex_idx_t<Graph_t_in> &chld : dag_in.Children(vert)) {
                 if (vertex_contraction_map[vert] == vertex_contraction_map[chld]) {
                     continue;
                 }
@@ -441,7 +441,7 @@ void ReorderExpansionMap(const GraphTIn &graph, std::vector<std::vector<vertex_i
 
     std::vector<std::size_t> prec(vertexExpansionMap.size(), 0);
     for (const auto &vert : graph.vertices()) {
-        for (const auto &par : graph.parents(vert)) {
+        for (const auto &par : graph.Parents(vert)) {
             if (vertexContractionMap.at(par) != vertexContractionMap.at(vert)) {
                 prec[vertexContractionMap.at(vert)] += 1;
             }
@@ -471,7 +471,7 @@ void ReorderExpansionMap(const GraphTIn &graph, std::vector<std::vector<vertex_i
         topOrder.emplace_back(nextGroup);
 
         for (const auto &vert : vertex_expansion_map[next_group]) {
-            for (const auto &chld : graph.children(vert)) {
+            for (const auto &chld : graph.Children(vert)) {
                 if (vertex_contraction_map.at(vert) != vertex_contraction_map.at(chld)) {
                     prec[vertex_contraction_map.at(chld)] -= 1;
                     if (prec[vertex_contraction_map.at(chld)] == 0) {

@@ -144,7 +144,7 @@ std::vector<v_workw_t<Graph_t_in>> Sarkar<GraphTIn, GraphTOut>::GetTopDistance(v
     for (const auto &vertex : GetTopOrder<GraphTIn>(graph)) {
         v_workw_t<Graph_t_in> maxTemp = 0;
 
-        for (const auto &j : graph.parents(vertex)) {
+        for (const auto &j : graph.Parents(vertex)) {
             maxTemp = std::max(max_temp, topDist[j]);
         }
         if (graph.in_degree(vertex) > 0) {
@@ -165,7 +165,7 @@ std::vector<v_workw_t<Graph_t_in>> Sarkar<GraphTIn, GraphTOut>::GetBotDistance(v
     for (const auto &vertex : GetTopOrderReverse<GraphTIn>(graph)) {
         v_workw_t<Graph_t_in> maxTemp = 0;
 
-        for (const auto &j : graph.children(vertex)) {
+        for (const auto &j : graph.Children(vertex)) {
             maxTemp = std::max(max_temp, botDist[j]);
         }
         if (graph.OutDegree(vertex) > 0) {
@@ -200,7 +200,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SingleContraction(
     std::set<std::tuple<long, VertexType, VertexType>, decltype(cmp)> edgePriority(cmp);
 
     for (const VertexType &edgeSrc : graph.vertices()) {
-        for (const VertexType &edgeTgt : graph.children(edgeSrc)) {
+        for (const VertexType &edgeTgt : graph.Children(edgeSrc)) {
             if constexpr (HasTypedVerticesV<Graph_t_in>) {
                 if (graph.VertexType(edgeSrc) != graph.VertexType(edgeTgt)) {
                     continue;
@@ -224,23 +224,23 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SingleContraction(
             v_workw_t<Graph_t_in> maxParentDist = 0;
             v_workw_t<Graph_t_in> maxChildDist = 0;
 
-            for (const auto &par : graph.parents(edgeSrc)) {
+            for (const auto &par : graph.Parents(edgeSrc)) {
                 maxParentDist = std::max(maxParentDist, topDist[par] + commCost);
             }
-            for (const auto &par : graph.parents(edgeTgt)) {
+            for (const auto &par : graph.Parents(edgeTgt)) {
                 if (par == edgeSrc) {
                     continue;
                 }
                 maxParentDist = std::max(maxParentDist, topDist[par] + commCost);
             }
 
-            for (const auto &chld : graph.children(edgeSrc)) {
+            for (const auto &chld : graph.Children(edgeSrc)) {
                 if (chld == edgeTgt) {
                     continue;
                 }
                 maxChildDist = std::max(maxChildDist, botDist[chld] + commCost);
             }
-            for (const auto &chld : graph.children(edgeTgt)) {
+            for (const auto &chld : graph.Children(edgeTgt)) {
                 maxChildDist = std::max(maxChildDist, botDist[chld] + commCost);
             }
 
@@ -288,14 +288,14 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SingleContraction(
         }
 
         bool shouldSkipSrc = false;
-        for (const VertexType &chld : graph.children(edgeSrc)) {
+        for (const VertexType &chld : graph.Children(edgeSrc)) {
             if ((vertexPoset[chld] == vertexPoset[edgeSrc] + 1) && partitionedTargetFlag[chld]) {
                 shouldSkipSrc = true;
                 break;
             }
         }
         bool shouldSkipTgt = false;
-        for (const VertexType &par : graph.parents(edgeTgt)) {
+        for (const VertexType &par : graph.Parents(edgeTgt)) {
             if ((vertexPoset[par] + 1 == vertexPoset[edgeTgt]) && partitionedSourceFlag[par]) {
                 shouldSkipTgt = true;
                 break;
@@ -354,7 +354,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::AllChildrenContraction(
 
         bool shouldSkip = false;
         if constexpr (HasTypedVerticesV<Graph_t_in>) {
-            for (const VertexType &groupFoot : graph.children(groupHead)) {
+            for (const VertexType &groupFoot : graph.Children(groupHead)) {
                 if (graph.VertexType(groupHead) != graph.VertexType(groupFoot)) {
                     shouldSkip = true;
                     break;
@@ -364,7 +364,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::AllChildrenContraction(
         if (shouldSkip) {
             continue;
         }
-        for (const VertexType &groupFoot : graph.children(groupHead)) {
+        for (const VertexType &groupFoot : graph.Children(groupHead)) {
             if (vertexPoset[groupFoot] != vertexPoset[groupHead] + 1) {
                 shouldSkip = true;
                 break;
@@ -374,7 +374,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::AllChildrenContraction(
             continue;
         }
         v_workw_t<Graph_t_in> combined_weight = graph.VertexWorkWeight(groupHead);
-        for (const VertexType &groupFoot : graph.children(groupHead)) {
+        for (const VertexType &groupFoot : graph.Children(groupHead)) {
             combined_weight += graph.VertexWorkWeight(groupFoot);
         }
         if (combined_weight > params.maxWeight) {
@@ -382,18 +382,18 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::AllChildrenContraction(
         }
 
         v_workw_t<Graph_t_in> maxPath = topDist[groupHead] + botDist[groupHead] - graph.VertexWorkWeight(groupHead);
-        for (const VertexType &chld : graph.children(groupHead)) {
+        for (const VertexType &chld : graph.Children(groupHead)) {
             maxPath = std::max(maxPath, topDist[chld] + botDist[chld] - graph.VertexWorkWeight(chld));
         }
 
         v_workw_t<Graph_t_in> maxParentDist = 0;
         v_workw_t<Graph_t_in> maxChildDist = 0;
 
-        for (const VertexType &par : graph.parents(groupHead)) {
+        for (const VertexType &par : graph.Parents(groupHead)) {
             maxParentDist = std::max(maxParentDist, topDist[par] + commCost);
         }
-        for (const VertexType &groupFoot : graph.children(groupHead)) {
-            for (const VertexType &par : graph.parents(groupFoot)) {
+        for (const VertexType &groupFoot : graph.Children(groupHead)) {
+            for (const VertexType &par : graph.Parents(groupFoot)) {
                 if (par == groupHead) {
                     continue;
                 }
@@ -401,14 +401,14 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::AllChildrenContraction(
             }
         }
 
-        for (const VertexType &groupFoot : graph.children(groupHead)) {
-            for (const VertexType &chld : graph.children(groupFoot)) {
+        for (const VertexType &groupFoot : graph.Children(groupHead)) {
+            for (const VertexType &chld : graph.Children(groupFoot)) {
                 maxChildDist = std::max(maxChildDist, botDist[chld] + commCost);
             }
         }
 
         v_workw_t<Graph_t_in> newMaxPath = maxParentDist + maxChildDist + graph.VertexWorkWeight(groupHead);
-        for (const VertexType &groupFoot : graph.children(groupHead)) {
+        for (const VertexType &groupFoot : graph.Children(groupHead)) {
             newMaxPath += graph.VertexWorkWeight(groupFoot);
         }
 
@@ -439,7 +439,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::AllChildrenContraction(
             continue;
         }
         bool shouldSkip = false;
-        for (const VertexType &groupFoot : graph.children(groupHead)) {
+        for (const VertexType &groupFoot : graph.Children(groupHead)) {
             if (partitionedFlag[groupFoot]) {
                 shouldSkip = true;
                 break;
@@ -453,7 +453,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::AllChildrenContraction(
         std::vector<VertexType> part;
         part.reserve(1 + graph.OutDegree(groupHead));
         part.emplace_back(groupHead);
-        for (const VertexType &groupFoot : graph.children(groupHead)) {
+        for (const VertexType &groupFoot : graph.Children(groupHead)) {
             part.emplace_back(groupFoot);
         }
 
@@ -463,7 +463,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::AllChildrenContraction(
             minSave = vertSave;
         }
         partitionedFlag[groupHead] = true;
-        for (const VertexType &groupFoot : graph.children(groupHead)) {
+        for (const VertexType &groupFoot : graph.Children(groupHead)) {
             partitionedFlag[groupFoot] = true;
         }
     }
@@ -502,7 +502,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::AllParentsContraction(
 
         bool shouldSkip = false;
         if constexpr (HasTypedVerticesV<Graph_t_in>) {
-            for (const VertexType &groupHead : graph.parents(groupFoot)) {
+            for (const VertexType &groupHead : graph.Parents(groupFoot)) {
                 if (graph.VertexType(groupHead) != graph.VertexType(groupFoot)) {
                     shouldSkip = true;
                     break;
@@ -512,7 +512,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::AllParentsContraction(
         if (shouldSkip) {
             continue;
         }
-        for (const VertexType &groupHead : graph.parents(groupFoot)) {
+        for (const VertexType &groupHead : graph.Parents(groupFoot)) {
             if (vertexPoset[groupFoot] != vertexPoset[groupHead] + 1) {
                 shouldSkip = true;
                 break;
@@ -522,7 +522,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::AllParentsContraction(
             continue;
         }
         v_workw_t<Graph_t_in> combined_weight = graph.VertexWorkWeight(groupFoot);
-        for (const VertexType &groupHead : graph.parents(groupFoot)) {
+        for (const VertexType &groupHead : graph.Parents(groupFoot)) {
             combined_weight += graph.VertexWorkWeight(groupHead);
         }
         if (combined_weight > params.maxWeight) {
@@ -530,18 +530,18 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::AllParentsContraction(
         }
 
         v_workw_t<Graph_t_in> maxPath = topDist[groupFoot] + botDist[groupFoot] - graph.VertexWorkWeight(groupFoot);
-        for (const VertexType &par : graph.parents(groupFoot)) {
+        for (const VertexType &par : graph.Parents(groupFoot)) {
             maxPath = std::max(maxPath, topDist[par] + botDist[par] - graph.VertexWorkWeight(par));
         }
 
         v_workw_t<Graph_t_in> maxParentDist = 0;
         v_workw_t<Graph_t_in> maxChildDist = 0;
 
-        for (const VertexType &child : graph.children(groupFoot)) {
+        for (const VertexType &child : graph.Children(groupFoot)) {
             maxChildDist = std::max(maxChildDist, botDist[child] + commCost);
         }
-        for (const VertexType &groupHead : graph.parents(groupFoot)) {
-            for (const VertexType &chld : graph.children(groupHead)) {
+        for (const VertexType &groupHead : graph.Parents(groupFoot)) {
+            for (const VertexType &chld : graph.Children(groupHead)) {
                 if (chld == groupFoot) {
                     continue;
                 }
@@ -549,14 +549,14 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::AllParentsContraction(
             }
         }
 
-        for (const VertexType &groupHead : graph.parents(groupFoot)) {
-            for (const VertexType &par : graph.parents(groupHead)) {
+        for (const VertexType &groupHead : graph.Parents(groupFoot)) {
+            for (const VertexType &par : graph.Parents(groupHead)) {
                 maxParentDist = std::max(maxParentDist, topDist[par] + commCost);
             }
         }
 
         v_workw_t<Graph_t_in> newMaxPath = maxParentDist + maxChildDist + graph.VertexWorkWeight(groupFoot);
-        for (const VertexType &groupHead : graph.parents(groupFoot)) {
+        for (const VertexType &groupHead : graph.Parents(groupFoot)) {
             newMaxPath += graph.VertexWorkWeight(groupHead);
         }
 
@@ -587,7 +587,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::AllParentsContraction(
             continue;
         }
         bool shouldSkip = false;
-        for (const VertexType &groupHead : graph.parents(groupFoot)) {
+        for (const VertexType &groupHead : graph.Parents(groupFoot)) {
             if (partitionedFlag[groupHead]) {
                 shouldSkip = true;
                 break;
@@ -601,7 +601,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::AllParentsContraction(
         std::vector<VertexType> part;
         part.reserve(1 + graph.in_degree(groupFoot));
         part.emplace_back(groupFoot);
-        for (const VertexType &groupHead : graph.parents(groupFoot)) {
+        for (const VertexType &groupHead : graph.Parents(groupFoot)) {
             part.emplace_back(groupHead);
         }
 
@@ -611,7 +611,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::AllParentsContraction(
             minSave = vertSave;
         }
         partitionedFlag[groupFoot] = true;
-        for (const VertexType &groupHead : graph.parents(groupFoot)) {
+        for (const VertexType &groupHead : graph.Parents(groupFoot)) {
             partitionedFlag[groupHead] = true;
         }
     }
@@ -713,7 +713,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SomeChildrenContraction(
                    || ((topDist[lhs] == topDist[rhs]) && (botDist[lhs] == botDist[rhs]) && (lhs < rhs));
         };
         std::set<VertexType, decltype(cmp_chld)> childrenPriority(cmp_chld);
-        for (const VertexType &chld : graph.children(groupHead)) {
+        for (const VertexType &chld : graph.Children(groupHead)) {
             if (vertexPoset[chld] == vertexPoset[groupHead] + 1) {
                 childrenPriority.emplace(chld);
             }
@@ -778,7 +778,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SomeChildrenContraction(
             v_workw_t<Graph_t_in> maxChildDist = 0;
 
             for (const VertexType &vert : contractionEnsemble) {
-                for (const VertexType &par : graph.parents(vert)) {
+                for (const VertexType &par : graph.Parents(vert)) {
                     if (par == groupHead) {
                         continue;
                     }
@@ -786,14 +786,14 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SomeChildrenContraction(
                 }
             }
 
-            for (const VertexType &chld : graph.children(groupHead)) {
+            for (const VertexType &chld : graph.Children(groupHead)) {
                 if (contractionChildrenSet.find(chld) == contractionChildrenSet.end()) {
                     maxChildDist = std::max(maxChildDist, botDist[chld] + commCost);
                 }
             }
 
             for (std::size_t j = 1; j < contractionEnsemble.size(); j++) {
-                for (const VertexType &chld : graph.children(contractionEnsemble[j])) {
+                for (const VertexType &chld : graph.Children(contractionEnsemble[j])) {
                     maxChildDist = std::max(maxChildDist, botDist[chld] + commCost);
                 }
             }
@@ -840,7 +840,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SomeChildrenContraction(
             continue;
         }
 
-        for (const VertexType &chld : graph.children(groupHead)) {
+        for (const VertexType &chld : graph.Children(groupHead)) {
             if ((std::find(contractionEnsemble.cbegin(), contractionEnsemble.cend(), chld) == contractionEnsemble.cend())
                 && (vertexPoset[chld] == vertexPoset[groupHead] + 1)) {
                 if ((partitionedFlag[chld]) && (!partitionedHeadFlag[chld])) {
@@ -902,7 +902,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SomeParentsContraction(
                    || ((botDist[lhs] == botDist[rhs]) && (topDist[lhs] == topDist[rhs]) && (lhs < rhs));
         };
         std::set<VertexType, decltype(cmp_par)> parentsPriority(cmp_par);
-        for (const VertexType &par : graph.parents(groupFoot)) {
+        for (const VertexType &par : graph.Parents(groupFoot)) {
             if (vertexPoset[par] + 1 == vertexPoset[groupFoot]) {
                 parentsPriority.emplace(par);
             }
@@ -966,7 +966,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SomeParentsContraction(
             v_workw_t<Graph_t_in> maxChildDist = 0;
 
             for (const VertexType &vert : contractionEnsemble) {
-                for (const VertexType &chld : graph.children(vert)) {
+                for (const VertexType &chld : graph.Children(vert)) {
                     if (chld == groupFoot) {
                         continue;
                     }
@@ -974,14 +974,14 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SomeParentsContraction(
                 }
             }
 
-            for (const VertexType &par : graph.parents(groupFoot)) {
+            for (const VertexType &par : graph.Parents(groupFoot)) {
                 if (contractionParentsSet.find(par) == contractionParentsSet.end()) {
                     maxParentDist = std::max(maxParentDist, topDist[par] + commCost);
                 }
             }
 
             for (std::size_t j = 1; j < contractionEnsemble.size(); j++) {
-                for (const VertexType &par : graph.parents(contractionEnsemble[j])) {
+                for (const VertexType &par : graph.Parents(contractionEnsemble[j])) {
                     maxParentDist = std::max(maxParentDist, topDist[par] + commCost);
                 }
             }
@@ -1028,7 +1028,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SomeParentsContraction(
             continue;
         }
 
-        for (const VertexType &par : graph.parents(groupFoot)) {
+        for (const VertexType &par : graph.Parents(groupFoot)) {
             if ((std::find(contractionEnsemble.cbegin(), contractionEnsemble.cend(), par) == contractionEnsemble.cend())
                 && (vertexPoset[par] + 1 == vertexPoset[groupFoot])) {
                 if ((partitionedFlag[par]) && (!partitionedFootFlag[par])) {
@@ -1106,7 +1106,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::LevelContraction(
         }
 
         for (const VertexType &srcVert : headVertices) {
-            for (const VertexType &tgtVert : graph.children(srcVert)) {
+            for (const VertexType &tgtVert : graph.Children(srcVert)) {
                 if (vertexPoset[tgtVert] != footLevel) {
                     continue;
                 }
@@ -1139,7 +1139,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::LevelContraction(
 
             v_workw_t<Graph_t_in> maxParentDist = 0;
             for (const VertexType &vert : comp) {
-                for (const VertexType &par : graph.parents(vert)) {
+                for (const VertexType &par : graph.Parents(vert)) {
                     if (std::binary_search(comp.cbegin(), comp.cend(), par)) {
                         continue;
                     }
@@ -1150,7 +1150,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::LevelContraction(
 
             v_workw_t<Graph_t_in> maxChildDist = 0;
             for (const VertexType &vert : comp) {
-                for (const VertexType &chld : graph.children(vert)) {
+                for (const VertexType &chld : graph.Children(vert)) {
                     if (std::binary_search(comp.cbegin(), comp.cend(), chld)) {
                         continue;
                     }
@@ -1193,13 +1193,13 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::LevelContraction(
         bool shouldSkipFoot = false;
         for (const VertexType &vert : comp) {
             if (((vertexPoset[vert] - minLevel - parity) % 2) == 0) {    // head vertex
-                for (const VertexType &chld : graph.children(vert)) {
+                for (const VertexType &chld : graph.Children(vert)) {
                     if ((vertexPoset[chld] == vertexPoset[vert] + 1) && partitionedFlag[chld]) {
                         shouldSkipHead = true;
                     }
                 }
             } else {    // foot vertex
-                for (const VertexType &par : graph.parents(vert)) {
+                for (const VertexType &par : graph.Parents(vert)) {
                     if ((vertexPoset[par] + 1 == vertexPoset[vert]) && partitionedFlag[par]) {
                         shouldSkipFoot = true;
                     }
@@ -1329,7 +1329,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::HomogeneousBufferMerge(
         const std::vector<std::size_t> hashValues = computeNodeHashes(graph, vertexTopPoset, topDist);
         std::vector<std::size_t> hashValuesWithParents = hashValues;
         for (const VertexType &par : graph.vertices()) {
-            for (const VertexType &chld : graph.children(par)) {
+            for (const VertexType &chld : graph.Children(par)) {
                 hash_combine(hashValuesWithParents[chld], hashValues[par]);
             }
         }
@@ -1341,7 +1341,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::HomogeneousBufferMerge(
         const std::vector<std::size_t> hashValues = computeNodeHashes(graph, vertexBotPoset, botDist);
         std::vector<std::size_t> hashValuesWithChildren = hashValues;
         for (const VertexType &chld : graph.vertices()) {
-            for (const VertexType &par : graph.parents(chld)) {
+            for (const VertexType &par : graph.Parents(chld)) {
                 hash_combine(hashValuesWithChildren[par], hashValues[chld]);
             }
         }
@@ -1385,14 +1385,14 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::HomogeneousBufferMerge(
 
         std::set<VertexType> parents;
         if (params.mode == SarkarParams::Mode::FAN_OUT_BUFFER || params.mode == SarkarParams::Mode::HOMOGENEOUS_BUFFER) {
-            for (const VertexType &par : graph.parents(vert)) {
+            for (const VertexType &par : graph.Parents(vert)) {
                 parents.emplace(par);
             }
         }
 
         std::set<VertexType> children;
         if (params.mode == SarkarParams::Mode::FAN_IN_BUFFER || params.mode == SarkarParams::Mode::HOMOGENEOUS_BUFFER) {
-            for (const VertexType &chld : graph.children(vert)) {
+            for (const VertexType &chld : graph.Children(vert)) {
                 children.emplace(chld);
             }
         }
@@ -1422,7 +1422,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::HomogeneousBufferMerge(
 
             if (params.mode == SarkarParams::Mode::FAN_OUT_BUFFER || params.mode == SarkarParams::Mode::HOMOGENEOUS_BUFFER) {
                 std::set<VertexType> candidateParents;
-                for (const VertexType &par : graph.parents(vertCandidate)) {
+                for (const VertexType &par : graph.Parents(vertCandidate)) {
                     candidateParents.emplace(par);
                 }
                 if (candidateParents != parents) {
@@ -1432,7 +1432,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::HomogeneousBufferMerge(
 
             if (params.mode == SarkarParams::Mode::FAN_IN_BUFFER || params.mode == SarkarParams::Mode::HOMOGENEOUS_BUFFER) {
                 std::set<VertexType> candidateChildren;
-                for (const VertexType &chld : graph.children(vertCandidate)) {
+                for (const VertexType &chld : graph.Children(vertCandidate)) {
                     candidateChildren.emplace(chld);
                 }
                 if (candidateChildren != children) {

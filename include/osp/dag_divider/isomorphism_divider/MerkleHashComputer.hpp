@@ -80,7 +80,7 @@ class MerkleHashComputer : public HashComputer<vertex_idx_t<Graph_t>> {
 
         for (const VertexType &v : top_sort_view(graph)) {
             std::vector<std::size_t> parent_hashes;
-            for (const VertexType &parent : graph.parents(v)) {
+            for (const VertexType &parent : graph.Parents(v)) {
                 parent_hashes.push_back(vertex_hashes[parent]);
             }
             compute_hashes_helper(v, parent_hashes);
@@ -95,7 +95,7 @@ class MerkleHashComputer : public HashComputer<vertex_idx_t<Graph_t>> {
         for (auto it = topSort.cbegin(); it != topSort.cend(); ++it) {
             const VertexType &v = *it;
             std::vector<std::size_t> childHashes;
-            for (const VertexType &child : graph.children(v)) {
+            for (const VertexType &child : graph.Children(v)) {
                 child_hashes.push_back(vertex_hashes[child]);
             }
             compute_hashes_helper(v, child_hashes);

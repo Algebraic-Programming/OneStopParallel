@@ -255,7 +255,7 @@ void AcyclicPartitioningILP<GraphT>::SetupVariablesConstraintsObjective(const Bs
 
             model.AddConstr(hyperedge_intersects_partition[node_to_hyperedge_index[node]][static_cast<int>(part)]
                             >= node_in_partition[node][static_cast<int>(part)]);
-            for (const auto &succ : instance.GetComputationalDag().children(node)) {
+            for (const auto &succ : instance.GetComputationalDag().Children(node)) {
                 model.AddConstr(hyperedge_intersects_partition[node_to_hyperedge_index[node]][static_cast<int>(part)]
                                 >= node_in_partition[succ][static_cast<int>(part)]);
             }
@@ -279,7 +279,7 @@ void AcyclicPartitioningILP<GraphT>::SetupVariablesConstraintsObjective(const Bs
     for (unsigned fromPart = 0; fromPart < numberOfParts_; fromPart++) {
         for (unsigned toPart = 0; toPart < fromPart; toPart++) {
             for (vertex_idx node = 0; node < instance.NumberOfVertices(); node++) {
-                for (const auto &succ : instance.GetComputationalDag().children(node)) {
+                for (const auto &succ : instance.GetComputationalDag().Children(node)) {
                     model.AddConstr(node_in_partition[node][static_cast<int>(from_part)]
                                         + node_in_partition[succ][static_cast<int>(to_part)]
                                     <= 1);

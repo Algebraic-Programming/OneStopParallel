@@ -265,7 +265,7 @@ void CoptCommScheduleOptimizer<GraphT>::SetupVariablesConstraintsObjective(const
         const unsigned &superstep = schedule.assignedSuperstep(node);
         Expr expr;
         unsigned numComEdges = 0;
-        for (const auto &pred : schedule.GetInstance().GetComputationalDag().parents(node)) {
+        for (const auto &pred : schedule.GetInstance().GetComputationalDag().Parents(node)) {
             if (schedule.assignedProcessor(node) != schedule.assignedProcessor(pred)) {
                 numComEdges += 1;
                 expr += comm_processor_to_processor_superstep_node_var[processor][processor][superstep][static_cast<int>(pred)];

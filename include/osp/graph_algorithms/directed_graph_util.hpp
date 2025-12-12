@@ -319,7 +319,7 @@ struct ChildIterator {
 
     ChildIterator(const GraphT &graph) : graph_(graph) {}
 
-    inline auto Iterate(const VertexIdxT<GraphT> &v) const { return graph_.children(v); }
+    inline auto Iterate(const VertexIdxT<GraphT> &v) const { return graph_.Children(v); }
 };
 
 template <typename GraphT>
@@ -408,7 +408,7 @@ struct ParentsIterator {
 
     ParentsIterator(const GraphT &graph) : graph_(graph) {}
 
-    inline auto Iterate(const VertexIdxT<GraphT> &v) const { return graph_.parents(v); }
+    inline auto Iterate(const VertexIdxT<GraphT> &v) const { return graph_.Parents(v); }
 };
 
 /**
@@ -530,7 +530,7 @@ bool IsConnected(const GraphT &graph) {
         next.pop();
         ++nodeCount;
 
-        for (const VertexType &current : graph.children(node)) {
+        for (const VertexType &current : graph.Children(node)) {
             if (visited.find(current) == visited.end()) {
                 next.push(current);
                 visited.insert(current);
@@ -547,12 +547,12 @@ std::size_t NumCommonParents(const GraphT &graph, VertexIdxT<GraphT> v1, VertexI
 
     std::unordered_set<VertexIdxT<GraphT>> parents;
     parents.reserve(graph.InDegree(v1));
-    for (const auto &par : graph.parents(v1)) {
+    for (const auto &par : graph.Parents(v1)) {
         parents.emplace(par);
     }
 
     std::size_t num = 0;
-    for (const auto &par : graph.parents(v2)) {
+    for (const auto &par : graph.Parents(v2)) {
         if (parents.find(par) != parents.end()) {
             ++num;
         }
@@ -567,12 +567,12 @@ std::size_t NumCommonChildren(const GraphT &graph, VertexIdxT<GraphT> v1, Vertex
 
     std::unordered_set<VertexIdxT<GraphT>> childrn;
     childrn.reserve(graph.OutDegree(v1));
-    for (const auto &chld : graph.children(v1)) {
+    for (const auto &chld : graph.Children(v1)) {
         childrn.emplace(chld);
     }
 
     std::size_t num = 0;
-    for (const auto &chld : graph.children(v2)) {
+    for (const auto &chld : graph.Children(v2)) {
         if (childrn.find(chld) != childrn.end()) {
             ++num;
         }
@@ -615,13 +615,13 @@ std::size_t ComputeWeaklyConnectedComponents(const GraphT &graph, std::vector<Ve
 
             while (head < q.size()) {
                 VertexType u = q[head++];
-                for (const auto &neighbor : graph.parents(u)) {
+                for (const auto &neighbor : graph.Parents(u)) {
                     if (components[neighbor] == std::numeric_limits<VertexType>::max()) {
                         components[neighbor] = componentId;
                         q.push_back(neighbor);
                     }
                 }
-                for (const auto &neighbor : graph.children(u)) {
+                for (const auto &neighbor : graph.Children(u)) {
                     if (components[neighbor] == std::numeric_limits<VertexType>::max()) {
                         components[neighbor] = componentId;
                         q.push_back(neighbor);

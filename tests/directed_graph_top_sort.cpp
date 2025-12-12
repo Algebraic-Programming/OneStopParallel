@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     indexInTopOrder = sorting_arrangement(topOrder);
 
     for (const auto &i : topOrder) {
-        for (const auto &j : graph.children(i)) {
+        for (const auto &j : graph.Children(i)) {
             BOOST_CHECK_GT(indexInTopOrder[i], indexInTopOrder[j]);
         }
     }
@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     indexInTopOrder = sorting_arrangement(topOrder);
 
     for (const auto &i : topOrder) {
-        for (const auto &j : graph.children(i)) {
+        for (const auto &j : graph.Children(i)) {
             BOOST_CHECK_LT(indexInTopOrder[i], indexInTopOrder[j]);
         }
     }
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     indexInTopOrder = sorting_arrangement(topOrder);
 
     for (const auto &i : topOrder) {
-        for (const auto &j : graph.children(i)) {
+        for (const auto &j : graph.Children(i)) {
             BOOST_CHECK_LT(indexInTopOrder[i], indexInTopOrder[j]);
         }
     }
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     indexInTopOrder = sorting_arrangement(topOrder);
 
     for (const auto &i : topOrder) {
-        for (const auto &j : graph.children(i)) {
+        for (const auto &j : graph.Children(i)) {
             BOOST_CHECK_LT(indexInTopOrder[i], indexInTopOrder[j]);
         }
     }
@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     indexInTopOrder = sorting_arrangement(topOrder);
 
     for (const auto &i : topOrder) {
-        for (const auto &j : graph.children(i)) {
+        for (const auto &j : graph.Children(i)) {
             BOOST_CHECK_LT(indexInTopOrder[i], indexInTopOrder[j]);
         }
     }
@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     indexInTopOrder = sorting_arrangement(topOrder);
 
     for (const auto &i : topOrder) {
-        for (const auto &j : graph.children(i)) {
+        for (const auto &j : graph.Children(i)) {
             BOOST_CHECK_LT(indexInTopOrder[i], indexInTopOrder[j]);
         }
     }
@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
     indexInTopOrder = sorting_arrangement(bfsViewTopSort);
     for (const auto &i : bfsViewTopSort) {
-        for (const auto &j : graph.children(i)) {
+        for (const auto &j : graph.Children(i)) {
             BOOST_CHECK_LT(indexInTopOrder[i], indexInTopOrder[j]);
         }
     }
@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
     indexInTopOrder = sorting_arrangement(dfsViewTopSort);
     for (const auto &i : dfsViewTopSort) {
-        for (const auto &j : graph.children(i)) {
+        for (const auto &j : graph.Children(i)) {
             BOOST_CHECK_LT(indexInTopOrder[i], indexInTopOrder[j]);
         }
     }
@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
     indexInTopOrder = sorting_arrangement(locViewTopSort);
     for (const auto &i : locViewTopSort) {
-        for (const auto &j : graph.children(i)) {
+        for (const auto &j : graph.Children(i)) {
             BOOST_CHECK_LT(indexInTopOrder[i], indexInTopOrder[j]);
         }
     }
@@ -242,7 +242,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
     indexInTopOrder = sorting_arrangement(maxChildrenViewTopSort);
     for (const auto &i : maxChildrenViewTopSort) {
-        for (const auto &j : graph.children(i)) {
+        for (const auto &j : graph.Children(i)) {
             BOOST_CHECK_LT(indexInTopOrder[i], indexInTopOrder[j]);
         }
     }
@@ -267,7 +267,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     indexInTopOrder = sorting_arrangement(randomViewTopSort);
 
     for (const auto &i : randomViewTopSort) {
-        for (const auto &j : graph.children(i)) {
+        for (const auto &j : graph.Children(i)) {
             BOOST_CHECK_LT(indexInTopOrder[i], indexInTopOrder[j]);
         }
     }

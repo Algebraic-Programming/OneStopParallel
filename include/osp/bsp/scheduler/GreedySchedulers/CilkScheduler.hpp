@@ -187,7 +187,7 @@ class CilkScheduler : public Scheduler<GraphT> {
                 finishTimes.erase(finishTimes.begin());
                 const vertex_idx_t<Graph_t> &node = currentPair.second;
                 if (node != std::numeric_limits<vertex_idx_t<Graph_t>>::max()) {
-                    for (const auto &succ : instance.GetComputationalDag().children(node)) {
+                    for (const auto &succ : instance.GetComputationalDag().Children(node)) {
                         ++nrPredecDone[succ];
                         if (nrPredecDone[succ] == instance.GetComputationalDag().in_degree(succ)) {
                             ready.insert(succ);

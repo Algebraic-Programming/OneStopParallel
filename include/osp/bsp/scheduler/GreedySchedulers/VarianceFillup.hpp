@@ -71,10 +71,10 @@ class VarianceFillup : public Scheduler<GraphT> {
         for (auto rIter = top_order.rbegin(); rIter != top_order.crend(); r_iter++) {
             double temp = 0;
             double maxPriority = 0;
-            for (const auto &child : graph.children(*r_iter)) {
+            for (const auto &child : graph.Children(*r_iter)) {
                 max_priority = std::max(work_variance[child], max_priority);
             }
-            for (const auto &child : graph.children(*r_iter)) {
+            for (const auto &child : graph.Children(*r_iter)) {
                 temp += std::exp(2 * (work_variance[child] - max_priority));
             }
             temp = std::log(temp) / 2 + maxPriority;
@@ -384,14 +384,14 @@ class VarianceFillup : public Scheduler<GraphT> {
                 const VertexType node = finishTimes.begin()->second;
                 finishTimes.erase(finishTimes.begin());
                 if (node != std::numeric_limits<VertexType>::max()) {
-                    for (const auto &succ : G.children(node)) {
+                    for (const auto &succ : G.Children(node)) {
                         nrPredecRemain[succ]--;
                         if (nrPredecRemain[succ] == 0) {
                             ready.emplace(succ, work_variances[succ]);
                             ++nr_ready_nodes_per_type[G.VertexType(succ)];
 
                             bool canAdd = true;
-                            for (const auto &pred : G.parents(succ)) {
+                            for (const auto &pred : G.Parents(succ)) {
                                 if (schedule.assignedProcessor(pred) != schedule.assignedProcessor(node)
                                     && schedule.assignedSuperstep(pred) == supstepIdx) {
                                     canAdd = false;

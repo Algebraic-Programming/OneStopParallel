@@ -84,7 +84,7 @@ struct KlHyperTotalCommCostFunction {
 
             node_lambda_map.reset_node(vertex);
 
-            for (const auto &target : instance_->GetComputationalDag().children(vertex)) {
+            for (const auto &target : instance_->GetComputationalDag().Children(vertex)) {
                 const unsigned targetProc = activeSchedule_->assigned_processor(target);
 
                 if (node_lambda_map.increase_proc_count(vertex, target_proc)) {
@@ -120,7 +120,7 @@ struct KlHyperTotalCommCostFunction {
 
     inline void UpdateDatastructureAfterMove(const kl_move &move, const unsigned startStep, const unsigned endStep) {
         if (move.to_proc != move.from_proc) {
-            for (const auto &source : instance->GetComputationalDag().parents(move.node)) {
+            for (const auto &source : instance->GetComputationalDag().Parents(move.node)) {
                 const unsigned source_step = active_schedule->assigned_superstep(source);
                 if (source_step < start_step || source_step > end_step) {
                     continue;
@@ -145,7 +145,7 @@ struct KlHyperTotalCommCostFunction {
         const unsigned startStep = threadData.start_step;
         const unsigned endStep = threadData.end_step;
 
-        for (const auto &target : instance->GetComputationalDag().children(move.node)) {
+        for (const auto &target : instance->GetComputationalDag().Children(move.node)) {
             const unsigned target_step = active_schedule->assigned_superstep(target);
             if (target_step < start_step || target_step > end_step) {
                 continue;
@@ -261,13 +261,13 @@ struct KlHyperTotalCommCostFunction {
             }
         }
 
-        for (const auto &source : instance->GetComputationalDag().parents(move.node)) {
+        for (const auto &source : instance->GetComputationalDag().Parents(move.node)) {
             if (move.to_proc != move.from_proc) {
                 const unsigned source_proc = active_schedule->assigned_processor(source);
                 if (node_lambda_map.has_no_proc_entry(source, move.from_proc)) {
                     const cost_t comm_gain = graph->VertexCommWeight(source) * comm_multiplier;
 
-                    for (const auto &target : instance->GetComputationalDag().children(source)) {
+                    for (const auto &target : instance->GetComputationalDag().Children(source)) {
                         const unsigned target_step = active_schedule->assigned_superstep(target);
                         if ((target_step < start_step || target_step > end_step) || (target == move.node)
                             || (not thread_data.affinity_table.is_selected(target)) || thread_data.lock_manager.is_locked(target)) {
@@ -292,7 +292,7 @@ struct KlHyperTotalCommCostFunction {
                 } else if (node_lambda_map.get_proc_entry(source, move.from_proc) == 1) {
                     const cost_t comm_gain = graph->VertexCommWeight(source) * comm_multiplier;
 
-                    for (const auto &target : instance->GetComputationalDag().children(source)) {
+                    for (const auto &target : instance->GetComputationalDag().Children(source)) {
                         const unsigned target_step = active_schedule->assigned_superstep(target);
                         if ((target_step < start_step || target_step > end_step) || (target == move.node)
                             || thread_data.lock_manager.is_locked(target) || (not thread_data.affinity_table.is_selected(target))) {
@@ -328,7 +328,7 @@ struct KlHyperTotalCommCostFunction {
                 if (node_lambda_map.get_proc_entry(source, move.to_proc) == 1) {
                     const cost_t comm_gain = graph->VertexCommWeight(source) * comm_multiplier;
 
-                    for (const auto &target : instance->GetComputationalDag().children(source)) {
+                    for (const auto &target : instance->GetComputationalDag().Children(source)) {
                         const unsigned target_step = active_schedule->assigned_superstep(target);
                         if ((target_step < start_step || target_step > end_step) || (target == move.node)
                             || (not thread_data.affinity_table.is_selected(target)) || thread_data.lock_manager.is_locked(target)) {
@@ -351,7 +351,7 @@ struct KlHyperTotalCommCostFunction {
                         }
                     }
                 } else if (node_lambda_map.get_proc_entry(source, move.to_proc) == 2) {
-                    for (const auto &target : instance->GetComputationalDag().children(source)) {
+                    for (const auto &target : instance->GetComputationalDag().Children(source)) {
                         const unsigned target_step = active_schedule->assigned_superstep(target);
                         if ((target_step < start_step || target_step > end_step) || (target == move.node)
                             || (not thread_data.affinity_table.is_selected(target)) || thread_data.lock_manager.is_locked(target)) {
@@ -535,7 +535,7 @@ struct KlHyperTotalCommCostFunction {
         const unsigned windowBound = EndIdx(nodeStep, endStep);
         const unsigned nodeStartIdx = StartIdx(nodeStep, startStep);
 
-        for (const auto &target : instance->GetComputationalDag().children(node)) {
+        for (const auto &target : instance->GetComputationalDag().Children(node)) {
             const unsigned target_step = active_schedule->assigned_superstep(target);
             const unsigned target_proc = active_schedule->assigned_processor(target);
 
@@ -587,7 +587,7 @@ struct KlHyperTotalCommCostFunction {
             }
         }
 
-        for (const auto &source : instance->GetComputationalDag().parents(node)) {
+        for (const auto &source : instance->GetComputationalDag().Parents(node)) {
             const unsigned source_step = active_schedule->assigned_superstep(source);
             const unsigned source_proc = active_schedule->assigned_processor(source);
 

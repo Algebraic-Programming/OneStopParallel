@@ -57,12 +57,12 @@ class AbstractWavefrontDivider : public IDagDivider<GraphT> {
                 uf.add_object(vertex, dag_ptr_->VertexWorkWeight(vertex), dag_ptr_->VertexMemWeight(vertex));
             }
             for (const auto &node : level_sets[i]) {
-                for (const auto &child : dag_ptr_->children(node)) {
+                for (const auto &child : dag_ptr_->Children(node)) {
                     if (uf.is_in_universe(child)) {
                         uf.join_by_name(node, child);
                     }
                 }
-                for (const auto &parent : dag_ptr_->parents(node)) {
+                for (const auto &parent : dag_ptr_->Parents(node)) {
                     if (uf.is_in_universe(parent)) {
                         uf.join_by_name(parent, node);
                     }
@@ -98,7 +98,7 @@ class AbstractWavefrontDivider : public IDagDivider<GraphT> {
 
         for (const auto &v : vertices) {
             in_degree[v] = 0;
-            for (const auto &p : dag_ptr_->parents(v)) {
+            for (const auto &p : dag_ptr_->Parents(v)) {
                 if (vertex_set.count(p)) {
                     in_degree[v]++;
                 }
@@ -115,7 +115,7 @@ class AbstractWavefrontDivider : public IDagDivider<GraphT> {
                 VertexType u = q.front();
                 q.pop();
                 currentLevel.push_back(u);
-                for (const auto &v : dag_ptr_->children(u)) {
+                for (const auto &v : dag_ptr_->Children(u)) {
                     if (vertex_set.count(v)) {
                         in_degree[v]--;
                         if (in_degree[v] == 0) {

@@ -108,12 +108,12 @@ BOOST_AUTO_TEST_CASE(TestDag) {
         BOOST_CHECK_EQUAL(v, vertices[idx++]);
 
         size_t i = 0;
-        for (const auto &e : graph.children(v)) {
+        for (const auto &e : graph.Children(v)) {
             BOOST_CHECK_EQUAL(e, outNeighbors[v][i++]);
         }
 
         i = 0;
-        for (const auto &e : graph.parents(v)) {
+        for (const auto &e : graph.Parents(v)) {
             BOOST_CHECK_EQUAL(e, inNeighbors[v][i++]);
         }
 
@@ -249,12 +249,12 @@ BOOST_AUTO_TEST_CASE(TestDagVectorAdapter) {
         unsigned vv = static_cast<unsigned>(v);
 
         size_t i = 0;
-        for (const auto &e : graph.children(v)) {
+        for (const auto &e : graph.Children(v)) {
             BOOST_CHECK_EQUAL(e, outNeighbors[vv][i++]);
         }
 
         i = 0;
-        for (const auto &e : graph.parents(v)) {
+        for (const auto &e : graph.Parents(v)) {
             BOOST_CHECK_EQUAL(e, inNeighbors[vv][i++]);
         }
 

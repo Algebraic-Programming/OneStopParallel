@@ -456,8 +456,8 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     BOOST_CHECK_EQUAL(graph.NumVertices(), std::distance(graph.vertices().begin(), graph.vertices().end()));
     BOOST_CHECK_EQUAL(graph.NumEdges(), std::distance(edges(graph).begin(), edges(graph).end()));
     for (const auto &v : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.InDegree(v), std::distance(graph.parents(v).begin(), graph.parents(v).end()));
-        BOOST_CHECK_EQUAL(graph.OutDegree(v), std::distance(graph.children(v).begin(), graph.children(v).end()));
+        BOOST_CHECK_EQUAL(graph.InDegree(v), std::distance(graph.Parents(v).begin(), graph.Parents(v).end()));
+        BOOST_CHECK_EQUAL(graph.OutDegree(v), std::distance(graph.Children(v).begin(), graph.Children(v).end()));
     }
 
     for (const auto i : graph.vertices()) {
@@ -482,16 +482,16 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     std::size_t numEdges = 0;
     for (const auto &vertex : graph.vertices()) {
         numEdges += graph.OutDegree(vertex);
-        for (const auto &parent : graph.parents(vertex)) {
+        for (const auto &parent : graph.Parents(vertex)) {
             BOOST_CHECK(std::any_of(
-                graph.children(parent).cbegin(), graph.children(parent).cend(), [vertex](VertexType k) { return k == vertex; }));
+                graph.Children(parent).cbegin(), graph.Children(parent).cend(), [vertex](VertexType k) { return k == vertex; }));
         }
     }
 
     for (const auto &vertex : graph.vertices()) {
-        for (const auto &child : graph.children(vertex)) {
+        for (const auto &child : graph.Children(vertex)) {
             BOOST_CHECK(std::any_of(
-                graph.parents(child).cbegin(), graph.parents(child).cend(), [vertex](VertexType k) { return k == vertex; }));
+                graph.Parents(child).cbegin(), graph.Parents(child).cend(), [vertex](VertexType k) { return k == vertex; }));
         }
     }
 
@@ -502,7 +502,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     std::vector<size_t> indexInTopOrder = sorting_arrangement(topOrder);
 
     for (const auto &i : topOrder) {
-        for (const auto &j : graph.children(i)) {
+        for (const auto &j : graph.Children(i)) {
             BOOST_CHECK_LT(indexInTopOrder[i], indexInTopOrder[j]);
         }
     }
@@ -514,7 +514,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     indexInTopOrder = sorting_arrangement(topOrder);
 
     for (const auto &i : topOrder) {
-        for (const auto &j : graph.children(i)) {
+        for (const auto &j : graph.Children(i)) {
             BOOST_CHECK_LT(indexInTopOrder[i], indexInTopOrder[j]);
         }
     }
@@ -526,7 +526,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     indexInTopOrder = sorting_arrangement(topOrder);
 
     for (const auto &i : topOrder) {
-        for (const auto &j : graph.children(i)) {
+        for (const auto &j : graph.Children(i)) {
             BOOST_CHECK_LT(indexInTopOrder[i], indexInTopOrder[j]);
         }
     }
@@ -538,7 +538,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     indexInTopOrder = sorting_arrangement(topOrder);
 
     for (const auto &i : topOrder) {
-        for (const auto &j : graph.children(i)) {
+        for (const auto &j : graph.Children(i)) {
             BOOST_CHECK_LT(indexInTopOrder[i], indexInTopOrder[j]);
         }
     }
@@ -631,7 +631,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
                 std::vector<int> posetIntMap = get_strict_poset_integer_map(noise, poisPara, graph);
 
                 for (const auto &vertex : graph.vertices()) {
-                    for (const auto &child : graph.children(vertex)) {
+                    for (const auto &child : graph.Children(vertex)) {
                         BOOST_CHECK_LE(posetIntMap[vertex] + 1, posetIntMap[child]);
                     }
                 }

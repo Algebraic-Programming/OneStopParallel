@@ -412,7 +412,7 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
             for (unsigned processor = 0; processor < instance.NumberOfProcessors(); processor++) {
                 assert(maxNumberSupersteps_ <= std::numeric_limits<int>::max());
                 for (unsigned step = 0; step < maxNumberSupersteps_; step++) {
-                    for (const auto &source : instance.GetComputationalDag().parents(node)) {
+                    for (const auto &source : instance.GetComputationalDag().Parents(node)) {
                         Expr expr1;
 
                         for (unsigned p2 = 0; p2 < instance.NumberOfProcessors(); p2++) {

@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(TestEigenSptrsv) {
     /*
     for (const auto &node : instance.vertices()) {
         std::cout << "Vertex " << node << " children:" <<  std::endl;
-        for (const auto &target : instance.GetComputationalDag().children(node)) {
+        for (const auto &target : instance.GetComputationalDag().Children(node)) {
             std::cout << "target:" << target << std::endl;
         }
         std::cout << std::endl;

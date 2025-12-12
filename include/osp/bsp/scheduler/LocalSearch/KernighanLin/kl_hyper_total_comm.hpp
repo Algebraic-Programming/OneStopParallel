@@ -53,7 +53,7 @@ class kl_hyper_total_comm : public kl_total<Graph_t, MemoryConstraint_t> {
 
             std::unordered_set<unsigned> intersects;
 
-            for (const auto &target : current_schedule.instance->GetComputationalDag().children(node)) {
+            for (const auto &target : current_schedule.instance->GetComputationalDag().Children(node)) {
                 const unsigned &target_proc = current_schedule.vector_schedule.assignedProcessor(target);
 
                 if (current_schedule.vector_schedule.assignedProcessor(node) != target_proc) {

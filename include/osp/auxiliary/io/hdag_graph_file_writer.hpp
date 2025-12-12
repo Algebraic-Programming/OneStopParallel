@@ -89,7 +89,7 @@ void WriteComputationalDagHyperdagFormatDb(std::ostream &os, const GraphT &graph
     for (unsigned i = 0; i < numHyperedges; ++i) {
         const auto u = hyperedge_idx_to_node[i];
         os << i << " " << u << "\n";    // Source pin
-        for (const auto &v : graph.children(u)) {
+        for (const auto &v : graph.Children(u)) {
             os << i << " " << v << "\n";    // Target pins
         }
     }

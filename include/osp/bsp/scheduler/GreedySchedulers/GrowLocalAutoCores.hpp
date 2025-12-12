@@ -202,7 +202,7 @@ class GrowLocalAutoCores : public Scheduler<GraphT> {
                         localMemoryConstraint_.add(chosenNode, 0);
                     }
 
-                    for (const auto &succ : g.children(chosenNode)) {
+                    for (const auto &succ : g.Children(chosenNode)) {
                         if (nodeToProc[succ] == std::numeric_limits<unsigned>::max()) {
                             nodeToProc[succ] = 0;
                         } else if (nodeToProc[succ] != 0) {
@@ -265,7 +265,7 @@ class GrowLocalAutoCores : public Scheduler<GraphT> {
                             localMemoryConstraint_.add(chosenNode, proc);
                         }
 
-                        for (const auto &succ : g.children(chosenNode)) {
+                        for (const auto &succ : g.Children(chosenNode)) {
                             if (nodeToProc[succ] == std::numeric_limits<unsigned>::max()) {
                                 nodeToProc[succ] = proc;
                             } else if (nodeToProc[succ] != proc) {
@@ -333,7 +333,7 @@ class GrowLocalAutoCores : public Scheduler<GraphT> {
                     for (const auto &node : newAssignments[proc]) {
                         nodeToProc[node] = std::numeric_limits<unsigned>::max();
 
-                        for (const auto &succ : g.children(node)) {
+                        for (const auto &succ : g.Children(node)) {
                             predec[succ]++;
                             nodeToProc[succ] = std::numeric_limits<unsigned>::max();
                         }
@@ -365,7 +365,7 @@ class GrowLocalAutoCores : public Scheduler<GraphT> {
                     ready.erase(node);
                     ++totalAssigned;
 
-                    for (const auto &succ : g.children(node)) {
+                    for (const auto &succ : g.Children(node)) {
                         predec[succ]--;
                     }
                 }

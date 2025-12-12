@@ -211,14 +211,14 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
     void ComputeNodesToUpdate(KlMove<GraphT> move) {
         nodes_to_update.clear();
 
-        for (const auto &target : currentSchedule_.instance->GetComputationalDag().children(move.node)) {
+        for (const auto &target : currentSchedule_.instance->GetComputationalDag().Children(move.node)) {
             if (node_selection.find(target) != node_selection.end() && locked_nodes.find(target) == locked_nodes.end()
                 && super_locked_nodes.find(target) == super_locked_nodes.end()) {
                 nodes_to_update.insert(target);
             }
         }
 
-        for (const auto &source : currentSchedule_.instance->GetComputationalDag().parents(move.node)) {
+        for (const auto &source : currentSchedule_.instance->GetComputationalDag().Parents(move.node)) {
             if (node_selection.find(source) != node_selection.end() && locked_nodes.find(source) == locked_nodes.end()
                 && super_locked_nodes.find(source) == super_locked_nodes.end()) {
                 nodes_to_update.insert(source);
@@ -761,7 +761,7 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
                 continue;
             }
 
-            for (const auto &source : currentSchedule_.instance->GetComputationalDag().parents(node)) {
+            for (const auto &source : currentSchedule_.instance->GetComputationalDag().Parents(node)) {
                 if (currentSchedule_.vector_schedule.assignedProcessor(node)
                     != currentSchedule_.vector_schedule.assignedProcessor(source)) {
                     node_selection.insert(node);
@@ -769,7 +769,7 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
                 }
             }
 
-            for (const auto &target : currentSchedule_.instance->GetComputationalDag().children(node)) {
+            for (const auto &target : currentSchedule_.instance->GetComputationalDag().Children(node)) {
                 if (currentSchedule_.vector_schedule.assignedProcessor(node)
                     != currentSchedule_.vector_schedule.assignedProcessor(target)) {
                     node_selection.insert(node);
@@ -817,25 +817,25 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
             node_selection.insert(source_v);
             node_selection.insert(target_v);
 
-            for (const auto &child : currentSchedule_.instance->GetComputationalDag().children(sourceV)) {
+            for (const auto &child : currentSchedule_.instance->GetComputationalDag().Children(sourceV)) {
                 if (child != targetV) {
                     node_selection.insert(child);
                 }
             }
 
-            for (const auto &parent : currentSchedule_.instance->GetComputationalDag().parents(sourceV)) {
+            for (const auto &parent : currentSchedule_.instance->GetComputationalDag().Parents(sourceV)) {
                 if (parent != targetV) {
                     node_selection.insert(parent);
                 }
             }
 
-            for (const auto &child : currentSchedule_.instance->GetComputationalDag().children(targetV)) {
+            for (const auto &child : currentSchedule_.instance->GetComputationalDag().Children(targetV)) {
                 if (child != sourceV) {
                     node_selection.insert(child);
                 }
             }
 
-            for (const auto &parent : currentSchedule_.instance->GetComputationalDag().parents(targetV)) {
+            for (const auto &parent : currentSchedule_.instance->GetComputationalDag().Parents(targetV)) {
                 if (parent != sourceV) {
                     node_selection.insert(parent);
                 }
@@ -1215,14 +1215,14 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
     }
 
     void SelectUnlockNeighbors(VertexType node) {
-        for (const auto &target : current_schedule.instance->GetComputationalDag().children(node)) {
+        for (const auto &target : current_schedule.instance->GetComputationalDag().Children(node)) {
             if (check_node_unlocked(target)) {
                 node_selection.insert(target);
                 nodes_to_update.insert(target);
             }
         }
 
-        for (const auto &source : current_schedule.instance->GetComputationalDag().parents(node)) {
+        for (const auto &source : current_schedule.instance->GetComputationalDag().Parents(node)) {
             if (check_node_unlocked(source)) {
                 node_selection.insert(source);
                 nodes_to_update.insert(source);

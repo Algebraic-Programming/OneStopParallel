@@ -109,7 +109,7 @@ class SquashA : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
                 assert(abs(poset_int_mapping[edge_source] - poset_int_mapping[edge_target]) <= 1);
                 // Checks over all affected edges
                 // In edges first
-                for (const auto &node : dag_in.parents(edge_source)) {
+                for (const auto &node : dag_in.Parents(edge_source)) {
                     if (node == edge_target) {
                         continue;
                     }
@@ -126,7 +126,7 @@ class SquashA : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
                     continue;
                 }
                 // Out edges first
-                for (const auto &node : dag_in.children(edge_source)) {
+                for (const auto &node : dag_in.Children(edge_source)) {
                     if (node == edge_target) {
                         continue;
                     }
@@ -143,7 +143,7 @@ class SquashA : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
                     continue;
                 }
                 // In edges second
-                for (const auto &node : dag_in.parents(edge_target)) {
+                for (const auto &node : dag_in.Parents(edge_target)) {
                     if (node == edge_source) {
                         continue;
                     }
@@ -160,7 +160,7 @@ class SquashA : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
                     continue;
                 }
                 // Out edges second
-                for (const auto &node : dag_in.children(edge_target)) {
+                for (const auto &node : dag_in.Children(edge_target)) {
                     if (node == edge_source) {
                         continue;
                     }

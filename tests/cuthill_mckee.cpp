@@ -126,7 +126,7 @@ bool IsTopSort(const std::vector<VertexType> &vec, const ComputationalDag &dag) 
     }
 
     for (const auto &vertex : dag.vertices()) {
-        for (const auto &child : dag.children(vertex)) {
+        for (const auto &child : dag.Children(vertex)) {
             if (position[vertex] > position[child]) {
                 return false;
             }

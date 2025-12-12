@@ -204,7 +204,7 @@ class Sptrsv {
 
             std::set<UVertType> parents;
 
-            for (UVertType par : instance_->GetComputationalDag().parents(node)) {
+            for (UVertType par : instance_->GetComputationalDag().Parents(node)) {
                 parents.insert(perm[par]);
             }
 

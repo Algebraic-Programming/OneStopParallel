@@ -136,14 +136,14 @@ class ConnectedComponentDivider : public IDagDivider<GraphT> {
                     vertex_idx current = q.front();
                     q.pop();
 
-                    for (const auto &child : dag.children(current)) {
+                    for (const auto &child : dag.Children(current)) {
                         if (component[child] == std::numeric_limits<unsigned>::max()) {
                             q.push(child);
                             component[child] = component_id;
                         }
                     }
 
-                    for (const auto &parent : dag.parents(current)) {
+                    for (const auto &parent : dag.Parents(current)) {
                         if (component[parent] == std::numeric_limits<unsigned>::max()) {
                             q.push(parent);
                             component[parent] = component_id;

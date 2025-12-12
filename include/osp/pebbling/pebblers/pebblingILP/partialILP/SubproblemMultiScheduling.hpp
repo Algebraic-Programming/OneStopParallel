@@ -74,7 +74,7 @@ std::vector<v_workw_t<Graph_t>> SubproblemMultiScheduling<GraphT>::GetLongestPat
         longestPath[*r_iter] = graph.VertexWorkWeight(*r_iter);
         if (graph.OutDegree(*r_iter) > 0) {
             workweight_type max = 0;
-            for (const auto &child : graph.children(*r_iter)) {
+            for (const auto &child : graph.Children(*r_iter)) {
                 if (max <= longest_path[child]) {
                     max = longest_path[child];
                 }
@@ -133,7 +133,7 @@ RETURN_STATUS SubproblemMultiScheduling<GraphT>::ComputeMultiSchedule(const BspI
             finishTimes.erase(finishTimes.begin());
 
             if (node != std::numeric_limits<unsigned>::max()) {
-                for (const vertex_idx &succ : G.children(node)) {
+                for (const vertex_idx &succ : G.Children(node)) {
                     nrPredecRemain[succ]--;
                     if (nrPredecRemain[succ] == 0) {
                         readySet.emplace(-longest_outgoing_path[succ], succ);
@@ -223,7 +223,7 @@ std::vector<std::pair<vertex_idx_t<Graph_t>, unsigned>> SubproblemMultiSchedulin
             continue;
         }
 
-        for (const auto &succ : instance.GetComputationalDag().children(last_node_on_proc[proc])) {
+        for (const auto &succ : instance.GetComputationalDag().Children(last_node_on_proc[proc])) {
             if (nodes_available.find({-longest_outgoing_path[succ], succ}) != nodes_available.end()
                 && instance.isCompatible(succ, proc) && assigned_nodes.find(succ) == assigned_nodes.end()) {
                 assignments.emplace_back(succ, proc);

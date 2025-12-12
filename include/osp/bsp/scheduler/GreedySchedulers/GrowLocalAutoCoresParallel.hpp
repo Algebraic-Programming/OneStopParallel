@@ -111,7 +111,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
         if constexpr (HasVerticesInTopOrderV<Graph_t>) {
             if constexpr (HasChildrenInVertexOrderV<Graph_t>) {
                 for (VertexType vert = startNode; vert < endNode; ++vert) {
-                    for (const VertexType &chld : graph.children(vert)) {
+                    for (const VertexType &chld : graph.Children(vert)) {
                         if (chld >= endNode) {
                             break;
                         }
@@ -120,7 +120,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                 }
             } else {
                 for (VertexType vert = startNode; vert < endNode; ++vert) {
-                    for (const VertexType &chld : graph.children(vert)) {
+                    for (const VertexType &chld : graph.Children(vert)) {
                         if (chld < endNode) {
                             ++predec[chld - startNode];
                         }
@@ -130,7 +130,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
         } else {
             for (VertexType index = startNode; index < endNode; ++index) {
                 VertexType vert = topOrder[index];
-                for (const VertexType &par : graph.parents(vert)) {
+                for (const VertexType &par : graph.Parents(vert)) {
                     VertexType posPar = posInTopOrder[par];
                     if (posPar >= startNode) {
                         ++predec[index - startNode];
@@ -205,7 +205,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                     newTotalAssigned++;
                     weightLimit += graph.VertexWorkWeight(chosen_node);
 
-                    for (const VertexType &succ : graph.children(chosen_node)) {
+                    for (const VertexType &succ : graph.Children(chosen_node)) {
                         if constexpr (HasVerticesInTopOrderV<Graph_t>) {
                             if constexpr (HasChildrenInVertexOrderV<Graph_t>) {
                                 if (succ >= endNode) {
@@ -268,7 +268,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                         newTotalAssigned++;
                         currentWeightAssigned += graph.VertexWorkWeight(chosen_node);
 
-                        for (const VertexType &succ : graph.children(chosen_node)) {
+                        for (const VertexType &succ : graph.Children(chosen_node)) {
                             if constexpr (HasVerticesInTopOrderV<Graph_t>) {
                                 if constexpr (HasChildrenInVertexOrderV<Graph_t>) {
                                     if (succ >= endNode) {
@@ -358,7 +358,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
 
                 for (unsigned proc = 0; proc < p; ++proc) {
                     for (const VertexType &node : new_assignments[proc]) {
-                        for (const VertexType &succ : graph.children(node)) {
+                        for (const VertexType &succ : graph.Children(node)) {
                             if constexpr (HasVerticesInTopOrderV<Graph_t>) {
                                 if constexpr (HasChildrenInVertexOrderV<Graph_t>) {
                                     if (succ >= endNode) {
@@ -389,7 +389,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
 
                 for (unsigned proc = 0; proc < p; ++proc) {
                     for (const VertexType &node : new_assignments[proc]) {
-                        for (const VertexType &succ : graph.children(node)) {
+                        for (const VertexType &succ : graph.Children(node)) {
                             if constexpr (HasVerticesInTopOrderV<Graph_t>) {
                                 if constexpr (HasChildrenInVertexOrderV<Graph_t>) {
                                     if (succ >= endNode) {
@@ -435,7 +435,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                     schedule.setAssignedSuperstepNoUpdateNumSuperstep(node, supstep);
                     ++total_assigned;
 
-                    for (const VertexType &succ : graph.children(node)) {
+                    for (const VertexType &succ : graph.Children(node)) {
                         if constexpr (HasVerticesInTopOrderV<Graph_t>) {
                             if constexpr (HasChildrenInVertexOrderV<Graph_t>) {
                                 if (succ >= endNode) {

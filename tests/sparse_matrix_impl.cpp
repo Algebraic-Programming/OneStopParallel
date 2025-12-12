@@ -134,12 +134,12 @@ BOOST_AUTO_TEST_CASE(TestSparseMatrixAdapter1) {
         size_t i = 0;
         const size_t vi = static_cast<size_t>(v);
 
-        for (const auto &e : graph.children(v)) {
+        for (const auto &e : graph.Children(v)) {
             BOOST_CHECK_EQUAL(e, outNeighbors[vi][i++]);
         }
 
         i = 0;
-        for (const auto &e : graph.parents(v)) {
+        for (const auto &e : graph.Parents(v)) {
             BOOST_CHECK_EQUAL(e, inNeighbors[vi][i++]);
         }
 

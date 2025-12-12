@@ -115,7 +115,7 @@ class Serial : public Scheduler<GraphT> {
 
                 for (const auto &p : nodeTypeCompatibleProcessors[vType]) {
                     bool parentsCompatible = true;
-                    for (const auto &parent : dag.parents(v)) {
+                    for (const auto &parent : dag.Parents(v)) {
                         if (schedule.assignedSuperstep(parent) == current_superstep && schedule.assignedProcessor(parent) != p) {
                             parents_compatible = false;
                             break;
@@ -134,7 +134,7 @@ class Serial : public Scheduler<GraphT> {
                 if (not scheduled) {
                     deferredNodes.push_back(v);
                 } else {
-                    for (const auto &child : dag.children(v)) {
+                    for (const auto &child : dag.Children(v)) {
                         if (--in_degree[child] == 0) {
                             ready_nodes.push_back(child);
                         }

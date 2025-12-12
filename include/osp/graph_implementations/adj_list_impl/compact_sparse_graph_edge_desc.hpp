@@ -125,7 +125,7 @@ class CompactSparseGraphEdgeDesc : public CompactSparseGraph<keepVertexOrder,
 
             inline value_type operator*() const {
                 const VertexIdx srcVert = *current_;
-                typename BaseT::Compact_Children_Edges::Children_range range = cscOutEdges_.children(srcVert);
+                typename BaseT::Compact_Children_Edges::Children_range range = cscOutEdges_.Children(srcVert);
 
                 assert(std::binary_search(range.cbegin(), range.cend(), targetVert_));
                 auto it = std::lower_bound(range.cbegin(), range.cend(), targetVert_);

@@ -70,7 +70,7 @@ std::size_t LongestPath(const std::set<VertexIdxT<GraphT>> &vertices, const Grap
     // Find source nodes
     for (const VertexType &node : vertices) {
         unsigned indeg = 0;
-        for (const VertexType &parent : graph.parents(node)) {
+        for (const VertexType &parent : graph.Parents(node)) {
             if (vertices.count(parent) == 1) {
                 ++indeg;
             }
@@ -89,7 +89,7 @@ std::size_t LongestPath(const std::set<VertexIdxT<GraphT>> &vertices, const Grap
         const VertexType current = bfsQueue.front();
         bfsQueue.pop();
 
-        for (const VertexType &child : graph.children(current)) {
+        for (const VertexType &child : graph.Children(current)) {
             if (vertices.count(child) == 0) {
                 continue;
             }
@@ -127,7 +127,7 @@ std::size_t LongestPath(const GraphT &graph) {
         const VertexType current = bfsQueue.front();
         bfsQueue.pop();
 
-        for (const VertexType &child : graph.children(current)) {
+        for (const VertexType &child : graph.Children(current)) {
             ++visitCounter[child];
             if (visitCounter[child] == graph.InDegree(child)) {
                 bfsQueue.push(child);
@@ -160,7 +160,7 @@ std::vector<VertexIdxT<GraphT>> LongestChain(const GraphT &graph) {
     // calculating lenght of longest path
     for (const VertexType &node : top_sort_view(graph)) {
         unsigned maxTemp = 0;
-        for (const auto &parent : graph.parents(node)) {
+        for (const auto &parent : graph.Parents(node)) {
             maxTemp = std::max(maxTemp, topLength[parent]);
         }
 
@@ -174,7 +174,7 @@ std::vector<VertexIdxT<GraphT>> LongestChain(const GraphT &graph) {
     // reconstructing longest path
     chain.push_back(endLongestChain);
     while (graph.InDegree(endLongestChain) != 0) {
-        for (const VertexType &inNode : graph.parents(endLongestChain)) {
+        for (const VertexType &inNode : graph.Parents(endLongestChain)) {
             if (topLength[inNode] != topLength[endLongestChain] - 1) {
                 continue;
             }
@@ -247,7 +247,7 @@ std::vector<std::vector<VertexIdxT<GraphT>>> ComputeWavefronts(const GraphT &gra
     while (counter < graph.NumVertices()) {
         std::vector<VertexIdxT<GraphT>> nextWavefront;
         for (const auto &vPrevWavefront : wavefronts.back()) {
-            for (const auto &child : graph.children(vPrevWavefront)) {
+            for (const auto &child : graph.Children(vPrevWavefront)) {
                 parentsVisited[child]--;
                 if (parentsVisited[child] == 0) {
                     nextWavefront.push_back(child);

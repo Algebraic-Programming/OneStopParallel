@@ -83,7 +83,7 @@ class CSchedule {
                     const vertex_idx node = *limit[j];
                     bool cut = false;
 
-                    for (const auto &source : instance.GetComputationalDag().parents(node)) {
+                    for (const auto &source : instance.GetComputationalDag().Parents(node)) {
                         if (!processed[source] && proc[source] != proc[node]) {
                             cut = true;
                         }

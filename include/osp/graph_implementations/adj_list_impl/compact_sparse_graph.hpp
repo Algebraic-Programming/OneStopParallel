@@ -1059,7 +1059,7 @@ static_assert(IsDirectedGraphEdgeDescV<CSG>, "CSG must satisfy the directed_grap
 //     std::set<std::pair<vertex_idx_t<Graph_out_type>, vertex_idx_t<Graph_out_type>>> quotient_edges;
 
 //     for (const vertex_idx_t<Graph_t_in> &vert : dag_in.vertices()) {
-//         for (const vertex_idx_t<Graph_t_in> &chld : dag_in.children(vert)) {
+//         for (const vertex_idx_t<Graph_t_in> &chld : dag_in.Children(vert)) {
 //             if (vertex_contraction_map[vert] == vertex_contraction_map[chld]) {
 //                 continue;
 //             }

@@ -342,14 +342,14 @@ struct VertexSelectionStrategy {
     }
 
     void AddNeighboursToSelection(vertex_idx_t<Graph_t> node, ContainerT &nodes, const unsigned startStep, const unsigned endStep) {
-        for (const auto parent : graph->parents(node)) {
+        for (const auto parent : graph->Parents(node)) {
             const unsigned parent_step = active_schedule->assigned_superstep(parent);
             if (parent_step >= start_step && parent_step <= end_step) {
                 nodes.insert(parent);
             }
         }
 
-        for (const auto child : graph->children(node)) {
+        for (const auto child : graph->Children(node)) {
             const unsigned child_step = active_schedule->assigned_superstep(child);
             if (child_step >= start_step && child_step <= end_step) {
                 nodes.insert(child);

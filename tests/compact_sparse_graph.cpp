@@ -88,10 +88,10 @@ BOOST_AUTO_TEST_CASE(LineGraphKeepOrder) {
     for (const auto &vert : graph.vertices()) {
         if (vert != 7) {
             BOOST_CHECK_EQUAL(graph.OutDegree(vert), 1);
-            for (const std::size_t &chld : graph.children(vert)) {
+            for (const std::size_t &chld : graph.Children(vert)) {
                 BOOST_CHECK_EQUAL(chld, vert + 1);
             }
-            auto chldren = graph.children(vert);
+            auto chldren = graph.Children(vert);
             BOOST_CHECK_EQUAL(chldren.crend() - chldren.crbegin(), graph.OutDegree(vert));
             for (auto it = chldren.crbegin(); it != chldren.crend(); ++it) {
                 BOOST_CHECK_EQUAL(*it, vert + 1);
@@ -99,11 +99,11 @@ BOOST_AUTO_TEST_CASE(LineGraphKeepOrder) {
 
         } else {
             BOOST_CHECK_EQUAL(graph.OutDegree(vert), 0);
-            for (const std::size_t &chld : graph.children(vert)) {
+            for (const std::size_t &chld : graph.Children(vert)) {
                 BOOST_CHECK(false);
                 BOOST_CHECK_EQUAL(chld, 100);
             }
-            auto chldren = graph.children(vert);
+            auto chldren = graph.Children(vert);
             BOOST_CHECK_EQUAL(chldren.crend() - chldren.crbegin(), graph.OutDegree(vert));
             for (auto it = chldren.crbegin(); it != chldren.crend(); ++it) {
                 BOOST_CHECK(false);
@@ -114,21 +114,21 @@ BOOST_AUTO_TEST_CASE(LineGraphKeepOrder) {
     for (const auto &vert : graph.vertices()) {
         if (vert != 0) {
             BOOST_CHECK_EQUAL(graph.in_degree(vert), 1);
-            for (const std::size_t &par : graph.parents(vert)) {
+            for (const std::size_t &par : graph.Parents(vert)) {
                 BOOST_CHECK_EQUAL(par, vert - 1);
             }
-            auto prnts = graph.parents(vert);
+            auto prnts = graph.Parents(vert);
             BOOST_CHECK_EQUAL(prnts.crend() - prnts.crbegin(), graph.in_degree(vert));
             for (auto it = prnts.crbegin(); it != prnts.crend(); ++it) {
                 BOOST_CHECK_EQUAL(*it, vert - 1);
             }
         } else {
             BOOST_CHECK_EQUAL(graph.in_degree(vert), 0);
-            for (const std::size_t &par : graph.parents(vert)) {
+            for (const std::size_t &par : graph.Parents(vert)) {
                 BOOST_CHECK(false);
                 BOOST_CHECK_EQUAL(par, 100);
             }
-            auto prnts = graph.parents(vert);
+            auto prnts = graph.Parents(vert);
             BOOST_CHECK_EQUAL(prnts.crend() - prnts.crbegin(), graph.in_degree(vert));
             for (auto it = prnts.crbegin(); it != prnts.crend(); ++it) {
                 BOOST_CHECK(false);
@@ -176,21 +176,21 @@ BOOST_AUTO_TEST_CASE(LineGraphReorder) {
     for (const auto &vert : graph.vertices()) {
         if (vert != 7) {
             BOOST_CHECK_EQUAL(graph.OutDegree(vert), 1);
-            for (const std::size_t &chld : graph.children(vert)) {
+            for (const std::size_t &chld : graph.Children(vert)) {
                 BOOST_CHECK_EQUAL(chld, vert + 1);
             }
-            auto chldren = graph.children(vert);
+            auto chldren = graph.Children(vert);
             BOOST_CHECK_EQUAL(chldren.crend() - chldren.crbegin(), graph.OutDegree(vert));
             for (auto it = chldren.crbegin(); it != chldren.crend(); ++it) {
                 BOOST_CHECK_EQUAL(*it, vert + 1);
             }
         } else {
             BOOST_CHECK_EQUAL(graph.OutDegree(vert), 0);
-            for (const std::size_t &chld : graph.children(vert)) {
+            for (const std::size_t &chld : graph.Children(vert)) {
                 BOOST_CHECK(false);
                 BOOST_CHECK_EQUAL(chld, 100);
             }
-            auto chldren = graph.children(vert);
+            auto chldren = graph.Children(vert);
             BOOST_CHECK_EQUAL(chldren.crend() - chldren.crbegin(), graph.OutDegree(vert));
             for (auto it = chldren.crbegin(); it != chldren.crend(); ++it) {
                 BOOST_CHECK(false);
@@ -201,21 +201,21 @@ BOOST_AUTO_TEST_CASE(LineGraphReorder) {
     for (const auto &vert : graph.vertices()) {
         if (vert != 0) {
             BOOST_CHECK_EQUAL(graph.in_degree(vert), 1);
-            for (const std::size_t &par : graph.parents(vert)) {
+            for (const std::size_t &par : graph.Parents(vert)) {
                 BOOST_CHECK_EQUAL(par, vert - 1);
             }
-            auto prnts = graph.parents(vert);
+            auto prnts = graph.Parents(vert);
             BOOST_CHECK_EQUAL(prnts.crend() - prnts.crbegin(), graph.in_degree(vert));
             for (auto it = prnts.crbegin(); it != prnts.crend(); ++it) {
                 BOOST_CHECK_EQUAL(*it, vert - 1);
             }
         } else {
             BOOST_CHECK_EQUAL(graph.in_degree(vert), 0);
-            for (const std::size_t &par : graph.parents(vert)) {
+            for (const std::size_t &par : graph.Parents(vert)) {
                 BOOST_CHECK(false);
                 BOOST_CHECK_EQUAL(par, 100);
             }
-            auto prnts = graph.parents(vert);
+            auto prnts = graph.Parents(vert);
             BOOST_CHECK_EQUAL(prnts.crend() - prnts.crbegin(), graph.in_degree(vert));
             for (auto it = prnts.crbegin(); it != prnts.crend(); ++it) {
                 BOOST_CHECK(false);
@@ -290,11 +290,11 @@ BOOST_AUTO_TEST_CASE(Graph1KeepOrder) {
     for (const auto &vert : graph.vertices()) {
         BOOST_CHECK_EQUAL(graph.OutDegree(vert), outEdges[vert].size());
         std::size_t cntr = 0;
-        for (const auto &chld : graph.children(vert)) {
+        for (const auto &chld : graph.Children(vert)) {
             BOOST_CHECK_EQUAL(chld, outEdges[vert][cntr]);
             ++cntr;
         }
-        auto chldrn = graph.children(vert);
+        auto chldrn = graph.Children(vert);
         BOOST_CHECK_EQUAL(chldrn.crend() - chldrn.crbegin(), graph.OutDegree(vert));
         for (auto it = chldrn.crbegin(); it != chldrn.crend(); ++it) {
             --cntr;
@@ -324,11 +324,11 @@ BOOST_AUTO_TEST_CASE(Graph1KeepOrder) {
     for (const auto &vert : graph.vertices()) {
         BOOST_CHECK_EQUAL(graph.in_degree(vert), inEdges[vert].size());
         std::size_t cntr = 0;
-        for (const auto &par : graph.parents(vert)) {
+        for (const auto &par : graph.Parents(vert)) {
             BOOST_CHECK_EQUAL(par, inEdges[vert][cntr]);
             ++cntr;
         }
-        auto prnts = graph.parents(vert);
+        auto prnts = graph.Parents(vert);
         BOOST_CHECK_EQUAL(prnts.crend() - prnts.crbegin(), graph.in_degree(vert));
         for (auto it = prnts.crbegin(); it != prnts.crend(); ++it) {
             --cntr;
@@ -410,7 +410,7 @@ BOOST_AUTO_TEST_CASE(Graph1Reorder) {
 
         std::size_t previousChld = 0;
         std::size_t cntr = 0;
-        for (const auto &chld : graph.children(vert)) {
+        for (const auto &chld : graph.Children(vert)) {
             if (cntr > 0) {
                 BOOST_CHECK_LE(previousChld, chld);
             }
@@ -421,7 +421,7 @@ BOOST_AUTO_TEST_CASE(Graph1Reorder) {
             previousChld = chld;
             ++cntr;
         }
-        auto chldrn = graph.children(vert);
+        auto chldrn = graph.Children(vert);
         BOOST_CHECK_EQUAL(chldrn.crend() - chldrn.crbegin(), graph.OutDegree(vert));
         for (auto it = chldrn.crbegin(); it != chldrn.crend(); ++it) {
             if (cntr < graph.OutDegree(vert)) {
@@ -456,7 +456,7 @@ BOOST_AUTO_TEST_CASE(Graph1Reorder) {
 
         std::size_t previousPar = 0;
         std::size_t cntr = 0;
-        for (const auto &par : graph.parents(vert)) {
+        for (const auto &par : graph.Parents(vert)) {
             if (cntr > 0) {
                 BOOST_CHECK_LE(previousPar, par);
             }
@@ -466,7 +466,7 @@ BOOST_AUTO_TEST_CASE(Graph1Reorder) {
             previousPar = par;
             ++cntr;
         }
-        auto prnts = graph.parents(vert);
+        auto prnts = graph.Parents(vert);
         BOOST_CHECK_EQUAL(prnts.crend() - prnts.crbegin(), graph.in_degree(vert));
         for (auto it = prnts.crbegin(); it != prnts.crend(); ++it) {
             if (cntr < graph.OutDegree(vert)) {
@@ -551,7 +551,7 @@ BOOST_AUTO_TEST_CASE(GraphEdgeContruction) {
     for (const auto &vert : copyGraph.vertices()) {
         BOOST_CHECK_EQUAL(copyGraph.OutDegree(vert), outEdges[vert].size());
         std::size_t cntr = 0;
-        for (const auto &chld : copyGraph.children(vert)) {
+        for (const auto &chld : copyGraph.Children(vert)) {
             BOOST_CHECK_EQUAL(chld, outEdges[vert][cntr]);
             ++cntr;
         }
@@ -571,7 +571,7 @@ BOOST_AUTO_TEST_CASE(GraphEdgeContruction) {
     for (const auto &vert : copyGraph.vertices()) {
         BOOST_CHECK_EQUAL(copyGraph.in_degree(vert), inEdges[vert].size());
         std::size_t cntr = 0;
-        for (const auto &par : copyGraph.parents(vert)) {
+        for (const auto &par : copyGraph.Parents(vert)) {
             BOOST_CHECK_EQUAL(par, inEdges[vert][cntr]);
             ++cntr;
         }
@@ -592,7 +592,7 @@ BOOST_AUTO_TEST_CASE(GraphEdgeContruction) {
 
         std::size_t previousChld = 0;
         std::size_t cntr = 0;
-        for (const auto &chld : reorderGraph.children(vert)) {
+        for (const auto &chld : reorderGraph.Children(vert)) {
             if (cntr > 0) {
                 BOOST_CHECK_LE(previousChld, chld);
             }
@@ -611,7 +611,7 @@ BOOST_AUTO_TEST_CASE(GraphEdgeContruction) {
 
         std::size_t previousPar = 0;
         std::size_t cntr = 0;
-        for (const auto &par : reorderGraph.parents(vert)) {
+        for (const auto &par : reorderGraph.Parents(vert)) {
             if (cntr > 0) {
                 BOOST_CHECK_LE(previousPar, par);
             }
@@ -1010,7 +1010,7 @@ BOOST_AUTO_TEST_CASE(GraphTypeCopyContruction) {
     for (const auto &vert : copyGraph.vertices()) {
         BOOST_CHECK_EQUAL(copyGraph.OutDegree(vert), outEdges[vert].size());
         std::size_t cntr = 0;
-        for (const auto &chld : copyGraph.children(vert)) {
+        for (const auto &chld : copyGraph.Children(vert)) {
             BOOST_CHECK_EQUAL(chld, outEdges[vert][cntr]);
             ++cntr;
         }
@@ -1030,7 +1030,7 @@ BOOST_AUTO_TEST_CASE(GraphTypeCopyContruction) {
     for (const auto &vert : copyGraph.vertices()) {
         BOOST_CHECK_EQUAL(copyGraph.in_degree(vert), inEdges[vert].size());
         std::size_t cntr = 0;
-        for (const auto &par : copyGraph.parents(vert)) {
+        for (const auto &par : copyGraph.Parents(vert)) {
             BOOST_CHECK_EQUAL(par, inEdges[vert][cntr]);
             ++cntr;
         }
@@ -1069,7 +1069,7 @@ BOOST_AUTO_TEST_CASE(GraphTypeCopyContruction) {
 
         std::size_t previousChld = 0;
         std::size_t cntr = 0;
-        for (const auto &chld : reorderGraph.children(vert)) {
+        for (const auto &chld : reorderGraph.Children(vert)) {
             if (cntr > 0) {
                 BOOST_CHECK_LE(previousChld, chld);
             }
@@ -1088,7 +1088,7 @@ BOOST_AUTO_TEST_CASE(GraphTypeCopyContruction) {
 
         std::size_t previousPar = 0;
         std::size_t cntr = 0;
-        for (const auto &par : reorderGraph.parents(vert)) {
+        for (const auto &par : reorderGraph.Parents(vert)) {
             if (cntr > 0) {
                 BOOST_CHECK_LE(previousPar, par);
             }
@@ -1146,7 +1146,7 @@ BOOST_AUTO_TEST_CASE(Graph1CopyKeepOrder) {
     for (const auto &vert : copyGraph.vertices()) {
         BOOST_CHECK_EQUAL(copyGraph.OutDegree(vert), outEdges[vert].size());
         std::size_t cntr = 0;
-        for (const auto &chld : copyGraph.children(vert)) {
+        for (const auto &chld : copyGraph.Children(vert)) {
             BOOST_CHECK_EQUAL(chld, outEdges[vert][cntr]);
             ++cntr;
         }
@@ -1169,7 +1169,7 @@ BOOST_AUTO_TEST_CASE(Graph1CopyKeepOrder) {
     for (const auto &vert : copyGraph.vertices()) {
         BOOST_CHECK_EQUAL(copyGraph.in_degree(vert), inEdges[vert].size());
         std::size_t cntr = 0;
-        for (const auto &par : copyGraph.parents(vert)) {
+        for (const auto &par : copyGraph.Parents(vert)) {
             BOOST_CHECK_EQUAL(par, inEdges[vert][cntr]);
             ++cntr;
         }
@@ -1229,7 +1229,7 @@ BOOST_AUTO_TEST_CASE(Graph1MoveKeepOrder) {
     for (const auto &vert : copyGraph.vertices()) {
         BOOST_CHECK_EQUAL(copyGraph.OutDegree(vert), outEdges[vert].size());
         std::size_t cntr = 0;
-        for (const auto &chld : copyGraph.children(vert)) {
+        for (const auto &chld : copyGraph.Children(vert)) {
             BOOST_CHECK_EQUAL(chld, outEdges[vert][cntr]);
             ++cntr;
         }
@@ -1252,7 +1252,7 @@ BOOST_AUTO_TEST_CASE(Graph1MoveKeepOrder) {
     for (const auto &vert : copyGraph.vertices()) {
         BOOST_CHECK_EQUAL(copyGraph.in_degree(vert), inEdges[vert].size());
         std::size_t cntr = 0;
-        for (const auto &par : copyGraph.parents(vert)) {
+        for (const auto &par : copyGraph.Parents(vert)) {
             BOOST_CHECK_EQUAL(par, inEdges[vert][cntr]);
             ++cntr;
         }
@@ -1320,7 +1320,7 @@ BOOST_AUTO_TEST_CASE(Graph1CopyReorder) {
 
         std::size_t previousChld = 0;
         std::size_t cntr = 0;
-        for (const auto &chld : graph.children(vert)) {
+        for (const auto &chld : graph.Children(vert)) {
             if (cntr > 0) {
                 BOOST_CHECK_LE(previousChld, chld);
             }
@@ -1353,7 +1353,7 @@ BOOST_AUTO_TEST_CASE(Graph1CopyReorder) {
 
         std::size_t previousPar = 0;
         std::size_t cntr = 0;
-        for (const auto &par : graph.parents(vert)) {
+        for (const auto &par : graph.Parents(vert)) {
             if (cntr > 0) {
                 BOOST_CHECK_LE(previousPar, par);
             }
@@ -1427,7 +1427,7 @@ BOOST_AUTO_TEST_CASE(Graph1MoveReorder) {
 
         std::size_t previousChld = 0;
         std::size_t cntr = 0;
-        for (const auto &chld : graph.children(vert)) {
+        for (const auto &chld : graph.Children(vert)) {
             if (cntr > 0) {
                 BOOST_CHECK_LE(previousChld, chld);
             }
@@ -1460,7 +1460,7 @@ BOOST_AUTO_TEST_CASE(Graph1MoveReorder) {
 
         std::size_t previousPar = 0;
         std::size_t cntr = 0;
-        for (const auto &par : graph.parents(vert)) {
+        for (const auto &par : graph.Parents(vert)) {
             if (cntr > 0) {
                 BOOST_CHECK_LE(previousPar, par);
             }

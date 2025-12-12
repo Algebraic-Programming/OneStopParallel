@@ -66,10 +66,10 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
         for (auto rIter = top_order.rbegin(); rIter != top_order.crend(); r_iter++) {
             double temp = 0;
             double maxPriority = 0;
-            for (const auto &child : graph.children(*r_iter)) {
+            for (const auto &child : graph.Children(*r_iter)) {
                 max_priority = std::max(work_variance[child], max_priority);
             }
-            for (const auto &child : graph.children(*r_iter)) {
+            for (const auto &child : graph.Children(*r_iter)) {
                 temp += std::exp(2 * (work_variance[child] - max_priority));
             }
             temp = std::log(temp) / 2 + maxPriority;
@@ -490,14 +490,14 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
                 if (node != std::numeric_limits<VertexType>::max()) {
                     const unsigned procOfNode = schedule.assignedProcessor(node);
 
-                    for (const auto &succ : G.children(node)) {
+                    for (const auto &succ : G.Children(node)) {
                         nrPredecRemain[succ]--;
                         if (nrPredecRemain[succ] == 0) {
                             ready[supstepIdx % stale].emplace(succ, work_variances[succ]);
                             nr_ready_stale_nodes_per_type[supstepIdx % stale][G.VertexType(succ)]++;
 
                             unsigned earliest_add = supstepIdx;
-                            for (const auto &pred : G.parents(succ)) {
+                            for (const auto &pred : G.Parents(succ)) {
                                 if (schedule.assignedProcessor(pred) != proc_of_node) {
                                     earliest_add = std::max(earliest_add, stale + schedule.assignedSuperstep(pred));
                                 }

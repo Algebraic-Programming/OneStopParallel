@@ -77,7 +77,7 @@ RETURN_STATUS GreedyRecomputer<GraphT>::ComputeRecompSchedule(BspScheduleCS<Grap
 
         workCost[proc][step] += g.VertexWorkWeight(node);
         firstPresent[node][proc] = std::min(firstPresent[node][proc], step);
-        for (vertex_idx pred : G.parents(node)) {
+        for (vertex_idx pred : G.Parents(node)) {
             needed_on_proc[pred][proc].insert(step);
         }
 
@@ -106,7 +106,7 @@ RETURN_STATUS GreedyRecomputer<GraphT>::ComputeRecompSchedule(BspScheduleCS<Grap
     }
 
     for (vertex_idx node = 0; node < N; ++node) {
-        for (const vertex_idx &pred : G.parents(node)) {
+        for (const vertex_idx &pred : G.Parents(node)) {
             for (unsigned proc = 0; proc < P; ++proc) {
                 first_computable[node][proc] = std::max(first_computable[node][proc], first_present[pred][proc]);
             }
@@ -187,15 +187,15 @@ RETURN_STATUS GreedyRecomputer<GraphT>::ComputeRecompSchedule(BspScheduleCS<Grap
                 max_work[best_step] += smallest_increase;
 
                 // update movability bounds
-                for (const vertex_idx &pred : G.parents(node)) {
+                for (const vertex_idx &pred : G.Parents(node)) {
                     needed_on_proc[pred][to_proc].insert(best_step);
                 }
 
                 needed_on_proc[node][from_proc].erase(needed_on_proc[node][from_proc].lower_bound(step));
 
                 first_present[node][to_proc] = best_step;
-                for (const vertex_idx &succ : G.children(node)) {
-                    for (const vertex_idx &pred : G.parents(node)) {
+                for (const vertex_idx &succ : G.Children(node)) {
+                    for (const vertex_idx &pred : G.Parents(node)) {
                         first_computable[succ][to_proc] = std::max(first_computable[succ][to_proc], first_present[pred][to_proc]);
                     }
                 }

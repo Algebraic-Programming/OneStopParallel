@@ -163,7 +163,7 @@ void HillClimbingForCommSteps<GraphT>::Init() {
     for (unsigned step = 1; step < m; ++step) {
         for (unsigned proc = 0; proc < p; ++proc) {
             for (const vertex_idx node : supsteplists[step][proc]) {
-                for (const vertex_idx &pred : G.parents(node)) {
+                for (const vertex_idx &pred : G.Parents(node)) {
                     if (schedule->assignedProcessor(pred) != schedule->assignedProcessor(node)
                         && commSchedule[pred][schedule->assignedProcessor(node)] == UINT_MAX) {
                         commSchedule[pred][schedule->assignedProcessor(node)] = step - schedule->getStaleness();

@@ -427,7 +427,7 @@ void PebblingSchedule<GraphT>::CleanSchedule() {
                 vertex_idx node = computeStep.node;
                 needed[node][proc].emplace_back(false);
                 keepFalse[node][proc] = hasRedAfterCleaning[node][proc];
-                for (vertex_idx pred : instance->GetComputationalDag().parents(node)) {
+                for (vertex_idx pred : instance->GetComputationalDag().Parents(node)) {
                     has_red_after_cleaning[pred][proc] = true;
                     if (!keep_false[pred][proc]) {
                         needed[pred][proc].back() = true;
@@ -713,7 +713,7 @@ void PebblingSchedule<GraphT>::SplitSupersteps(const BspSchedule<GraphT> &schedu
                         } else {
                             neededAfter[node] = (needs_blue_at_end.find(node) != needs_blue_at_end.end());
                         }
-                        for (vertex_idx succ : instance->GetComputationalDag().children(node)) {
+                        for (vertex_idx succ : instance->GetComputationalDag().Children(node)) {
                             if (schedule.assignedSuperstep(succ) > step) {
                                 neededAfter[node] = true;
                             }
@@ -727,7 +727,7 @@ void PebblingSchedule<GraphT>::SplitSupersteps(const BspSchedule<GraphT> &schedu
                     std::set<vertex_idx> valuesNeeded;
                     for (unsigned idx = startIdx; idx <= endCurrent; ++idx) {
                         vertex_idx node = top_orders[proc][step][idx];
-                        for (vertex_idx pred : instance->GetComputationalDag().parents(node)) {
+                        for (vertex_idx pred : instance->GetComputationalDag().Parents(node)) {
                             if (schedule.assignedSuperstep(pred) < step
                                 || (schedule.assignedSuperstep(pred) == step && !neededAfter[pred])) {
                                 lastUsedBy[pred] = node;
@@ -759,7 +759,7 @@ void PebblingSchedule<GraphT>::SplitSupersteps(const BspSchedule<GraphT> &schedu
                             break;
                         }
 
-                        for (vertex_idx pred : instance->GetComputationalDag().parents(node)) {
+                        for (vertex_idx pred : instance->GetComputationalDag().Parents(node)) {
                             if (lastUsedBy[pred] == node) {
                                 mem_needed -= instance->GetComputationalDag().VertexMemWeight(pred);
                             }
@@ -892,7 +892,7 @@ void PebblingSchedule<GraphT>::SetMemoryMovement(CacheEvictionStrategy evictRule
             for (unsigned stepIndex = 0; stepIndex < computeStepsForProcSuperstep_[proc][superstep].size(); ++stepIndex) {
                 vertex_idx node = computeStepsForProcSuperstep_[proc][superstep][stepIndex].node;
                 computedInCurrentSuperstep[node] = true;
-                for (vertex_idx pred : instance->GetComputationalDag().parents(node)) {
+                for (vertex_idx pred : instance->GetComputationalDag().Parents(node)) {
                     if (!computed_in_current_superstep[pred]) {
                         must_be_preserved[pred] = true;
                     }
@@ -924,7 +924,7 @@ void PebblingSchedule<GraphT>::SetMemoryMovement(CacheEvictionStrategy evictRule
         for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); ++proc) {
             for (unsigned stepIndex = 0; stepIndex < computeStepsForProcSuperstep_[proc][superstep].size(); ++stepIndex) {
                 vertex_idx node = computeStepsForProcSuperstep_[proc][superstep][stepIndex].node;
-                for (vertex_idx pred : instance->GetComputationalDag().parents(node)) {
+                for (vertex_idx pred : instance->GetComputationalDag().Parents(node)) {
                     node_used_at_proc_lists[pred][proc].back().emplace_back(superstep, stepIndex);
                 }
 
@@ -966,7 +966,7 @@ void PebblingSchedule<GraphT>::SetMemoryMovement(CacheEvictionStrategy evictRule
             for (unsigned stepIndex = 0; stepIndex < computeStepsForProcSuperstep_[proc][superstep].size(); ++stepIndex) {
                 vertex_idx node = computeStepsForProcSuperstep_[proc][superstep][stepIndex].node;
                 computedInCurrentSuperstep[node] = true;
-                for (vertex_idx pred : instance->GetComputationalDag().parents(node)) {
+                for (vertex_idx pred : instance->GetComputationalDag().Parents(node)) {
                     if (!computed_in_current_superstep[pred]) {
                         non_evictable[proc].insert(pred);
 
@@ -1050,7 +1050,7 @@ void PebblingSchedule<GraphT>::SetMemoryMovement(CacheEvictionStrategy evictRule
                 {
                     ++totalStepCountOnProc[proc];
                     nodeLastUsedOnProc[node][proc] = totalStepCountOnProc[proc];
-                    for (vertex_idx pred : instance->GetComputationalDag().parents(node)) {
+                    for (vertex_idx pred : instance->GetComputationalDag().Parents(node)) {
                         node_last_used_on_proc[pred][proc] = total_step_count_on_proc[proc];
                     }
                 }
@@ -1064,7 +1064,7 @@ void PebblingSchedule<GraphT>::SetMemoryMovement(CacheEvictionStrategy evictRule
 
                 nodeUsedAtProcLists[node][proc].pop_front();
 
-                for (vertex_idx pred : instance->GetComputationalDag().parents(node)) {
+                for (vertex_idx pred : instance->GetComputationalDag().Parents(node)) {
                     node_used_at_proc_lists[pred][proc].front().pop_front();
 
                     if (needed_after[pred]) {
@@ -1175,7 +1175,7 @@ bool PebblingSchedule<GraphT>::IsValid() const {
                     return false;
                 }
 
-                for (vertex_idx pred : instance->GetComputationalDag().parents(computeStep.node)) {
+                for (vertex_idx pred : instance->GetComputationalDag().Parents(computeStep.node)) {
                     if (!in_fast_mem[pred][proc]) {
                         return false;
                     }
@@ -1271,7 +1271,7 @@ std::vector<v_memw_t<Graph_t>> PebblingSchedule<GraphT>::MinimumMemoryRequiredPe
 
         v_memw_t<Graph_t> needed = instance.GetComputationalDag().VertexMemWeight(node);
         const v_type_t<Graph_t> type = instance.GetComputationalDag().VertexType(node);
-        for (vertex_idx_t<Graph_t> pred : instance.GetComputationalDag().parents(node)) {
+        for (vertex_idx_t<Graph_t> pred : instance.GetComputationalDag().Parents(node)) {
             needed += instance.GetComputationalDag().VertexMemWeight(pred);
         }
 
@@ -1297,7 +1297,7 @@ std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> PebblingSchedule<Gr
     std::vector<unsigned> predDone(n, 0);
     for (vertex_idx node = 0; node < n; ++node) {
         unsigned predecessors = 0;
-        for (vertex_idx pred : schedule.GetInstance().GetComputationalDag().parents(node)) {
+        for (vertex_idx pred : schedule.GetInstance().GetComputationalDag().Parents(node)) {
             if (external_sources.find(pred) == external_sources.end()
                 && schedule.assignedProcessor(node) == schedule.assignedProcessor(pred)
                 && schedule.assignedSuperstep(node) == schedule.assignedSuperstep(pred)) {
@@ -1315,7 +1315,7 @@ std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> PebblingSchedule<Gr
                 vertex_idx node = Q[proc][step].front();
                 Q[proc][step].pop_front();
                 TopOrders[proc][step].push_back(node);
-                for (vertex_idx succ : schedule.GetInstance().GetComputationalDag().children(node)) {
+                for (vertex_idx succ : schedule.GetInstance().GetComputationalDag().Children(node)) {
                     if (schedule.assignedProcessor(node) == schedule.assignedProcessor(succ)
                         && schedule.assignedSuperstep(node) == schedule.assignedSuperstep(succ)) {
                         ++pred_done[succ];
@@ -1993,7 +1993,7 @@ BspSchedule<GraphT> PebblingSchedule<GraphT>::ConvertToBsp() const {
         for (vertex_idx node = 0; node < instance_->NumberOfVertices(); ++node) {
             if (instance_->GetComputationalDag().in_degree(node) == 0) {
                 unsigned minSuperstep = UINT_MAX, procChosen = 0;
-                for (vertex_idx succ : instance->GetComputationalDag().children(node)) {
+                for (vertex_idx succ : instance->GetComputationalDag().Children(node)) {
                     if (node_to_supstep[succ] < min_superstep) {
                         min_superstep = node_to_supstep[succ];
                         proc_chosen = node_to_proc[succ];

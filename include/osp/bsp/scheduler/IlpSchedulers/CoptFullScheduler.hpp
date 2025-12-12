@@ -581,7 +581,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
                 for (unsigned int step = 0; step < maxNumberSupersteps_; step++) {
                     for (unsigned int processor = 0; processor < instance.NumberOfProcessors(); processor++) {
                         Expr expr;
-                        for (const auto &parent : instance.GetComputationalDag().parents(node)) {
+                        for (const auto &parent : instance.GetComputationalDag().Parents(node)) {
                             expr += commProcessorToProcessorSuperstepNodeVar_[processor][processor][step][static_cast<int>(parent)];
                         }
 

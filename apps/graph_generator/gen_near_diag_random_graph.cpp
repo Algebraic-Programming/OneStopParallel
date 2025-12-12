@@ -107,7 +107,7 @@ int main(int argc, char *argv[]) {
         for (VertexType j = 0; j < numVert; j++) {
             double val = (1 - 2 * randInt(2)) * std::exp(unifLog(re));
             graphWrite << std::to_string(j + 1) + " " + std::to_string(j + 1) + " " + std::to_string(val) + "\n";
-            for (const auto &chld : graph.children(j)) {
+            for (const auto &chld : graph.Children(j)) {
                 val = unif(re);
                 graphWrite << std::to_string(chld + 1) + " " + std::to_string(j + 1) + " " + std::to_string(val) + "\n";
             }

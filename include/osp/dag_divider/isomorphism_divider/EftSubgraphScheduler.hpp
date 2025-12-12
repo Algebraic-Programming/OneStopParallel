@@ -146,7 +146,7 @@ class EftSubgraphScheduler {
 
         for (const auto &vertex : reverseTopOrder) {
             v_workw_t<Graph_t> maxSuccessorRank = 0.0;
-            for (const auto &child : graph.children(vertex)) {
+            for (const auto &child : graph.Children(vertex)) {
                 maxSuccessorRank = std::max(max_successor_rank, jobs_.at(child).upward_rank);
             }
 
@@ -342,7 +342,7 @@ class EftSubgraphScheduler {
                     if constexpr (verbose_) {
                         std::cout << "  - Updating successors..." << std::endl;
                     }
-                    for (const auto &successor_id : graph.children(job.id)) {
+                    for (const auto &successor_id : graph.Children(job.id)) {
                         Job &successor_job = jobs_.at(successor_id);
                         successor_job.in_degree_current--;
                         if (successor_job.in_degree_current == 0) {

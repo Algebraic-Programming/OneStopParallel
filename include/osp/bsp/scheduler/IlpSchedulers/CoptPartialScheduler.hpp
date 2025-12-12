@@ -452,7 +452,7 @@ void CoptPartialScheduler<GraphT>::SetupVariablesConstraintsObjective(const BspS
             for (unsigned int processor = 0; processor < numProcessors; processor++) {
                 Expr expr;
                 unsigned numTerms = 0;
-                for (const auto &pred : schedule.GetInstance().GetComputationalDag().parents(node_global_ID[node])) {
+                for (const auto &pred : schedule.GetInstance().GetComputationalDag().Parents(node_global_ID[node])) {
                     if (node_local_ID.find(pred) != node_local_ID.end()) {
                         ++num_terms;
                         expr += comm_processor_to_processor_superstep_node_var[processor][processor][step]
@@ -676,7 +676,7 @@ void CoptPartialScheduler<GraphT>::SetupVertexMaps(const BspScheduleCS<GraphT> &
             node_local_ID[node] = static_cast<vertex_idx_t<Graph_t>>(node_global_ID.size());
             node_global_ID.push_back(node);
 
-            for (const auto &pred : schedule.GetInstance().GetComputationalDag().parents(node)) {
+            for (const auto &pred : schedule.GetInstance().GetComputationalDag().Parents(node)) {
                 if (schedule.assignedSuperstep(pred) < startSuperstep_) {
                     if (source_local_ID.find(pred) == source_local_ID.end()) {
                         source_local_ID[pred] = static_cast<vertex_idx_t<Graph_t>>(source_global_ID.size());
@@ -705,7 +705,7 @@ void CoptPartialScheduler<GraphT>::SetupVertexMaps(const BspScheduleCS<GraphT> &
         vertex_idx_t<Graph_t> source = source_and_ID.first;
 
         std::set<unsigned> procs_needing_this;
-        for (const auto &succ : schedule.GetInstance().GetComputationalDag().children(source)) {
+        for (const auto &succ : schedule.GetInstance().GetComputationalDag().Children(source)) {
             if (schedule.assignedProcessor(succ) != schedule.assignedProcessor(source)
                 && schedule.assignedSuperstep(succ) > end_superstep) {
                 procs_needing_this.insert(schedule.assignedProcessor(succ));
@@ -734,7 +734,7 @@ void CoptPartialScheduler<GraphT>::SetupVertexMaps(const BspScheduleCS<GraphT> &
         vertex_idx_t<Graph_t> node = node_and_ID.first;
 
         std::set<unsigned> procs_needing_this;
-        for (const auto &succ : schedule.GetInstance().GetComputationalDag().children(node)) {
+        for (const auto &succ : schedule.GetInstance().GetComputationalDag().Children(node)) {
             if (schedule.assignedSuperstep(succ) > end_superstep) {
                 procs_needing_this.insert(schedule.assignedProcessor(succ));
             }

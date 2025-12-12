@@ -87,7 +87,7 @@ class BspLocking : public Scheduler<GraphT> {
             longestPath[*r_iter] = graph.VertexWorkWeight(*r_iter);
             if (graph.OutDegree(*r_iter) > 0) {
                 v_workw_t<Graph_t> max = 0;
-                for (const auto &child : graph.children(*r_iter)) {
+                for (const auto &child : graph.Children(*r_iter)) {
                     if (max <= longest_path[child]) {
                         max = longest_path[child];
                     }
@@ -111,7 +111,7 @@ class BspLocking : public Scheduler<GraphT> {
 
     int ComputeScore(VertexType node, unsigned proc, const BspInstance<GraphT> &instance) {
         int score = 0;
-        for (const auto &succ : instance.GetComputationalDag().children(node)) {
+        for (const auto &succ : instance.GetComputationalDag().Children(node)) {
             if (locked[succ] < instance.NumberOfProcessors() && locked[succ] != proc) {
                 score -= lock_penalty;
             }
@@ -433,14 +433,14 @@ class BspLocking : public Scheduler<GraphT> {
                 finishTimes.erase(finishTimes.begin());
 
                 if (node != std::numeric_limits<VertexType>::max()) {
-                    for (const auto &succ : G.children(node)) {
+                    for (const auto &succ : G.Children(node)) {
                         ++nrPredecDone[succ];
                         if (nrPredecDone[succ] == G.in_degree(succ)) {
                             ready.insert(succ);
                             ++nr_ready_nodes_per_type[G.VertexType(succ)];
 
                             bool canAdd = true;
-                            for (const auto &pred : G.parents(succ)) {
+                            for (const auto &pred : G.Parents(succ)) {
                                 if (schedule.assignedProcessor(pred) != schedule.assignedProcessor(node)
                                     && schedule.assignedSuperstep(pred) == supstepIdx) {
                                     canAdd = false;
@@ -536,9 +536,9 @@ class BspLocking : public Scheduler<GraphT> {
 
                 // update auxiliary structures
 
-                for (const auto &succ : G.children(nextNode)) {
+                for (const auto &succ : G.Children(nextNode)) {
                     if (locked[succ] < params_p && locked[succ] != nextProc) {
-                        for (const auto &parent : G.parents(succ)) {
+                        for (const auto &parent : G.Parents(succ)) {
                             if (ready_phase[parent] < std::numeric_limits<unsigned>::max() && ready_phase[parent] < params_p
                                 && ready_phase[parent] != locked[succ]) {
                                 Priority p = max_proc_score_heap[ready_phase[parent]].get_value(parent);
@@ -564,7 +564,7 @@ class BspLocking : public Scheduler<GraphT> {
                         locked_set.push_back(succ);
                         locked[succ] = nextProc;
 
-                        for (const auto &parent : G.parents(succ)) {
+                        for (const auto &parent : G.Parents(succ)) {
                             if (ready_phase[parent] < std::numeric_limits<unsigned>::max() && ready_phase[parent] < params_p
                                 && ready_phase[parent] != nextProc) {
                                 Priority p = max_proc_score_heap[ready_phase[parent]].get_value(parent);

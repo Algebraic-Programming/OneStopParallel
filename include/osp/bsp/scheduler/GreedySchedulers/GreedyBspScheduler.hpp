@@ -83,7 +83,7 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
                         const std::vector<std::vector<bool>> &procInHyperedge,
                         const BspInstance<GraphT> &instance) const {
         double score = 0;
-        for (const auto &pred : instance.GetComputationalDag().parents(node)) {
+        for (const auto &pred : instance.GetComputationalDag().Parents(node)) {
             if (procInHyperedge[pred][proc]) {
                 score += static_cast<double>(instance.GetComputationalDag().VertexCommWeight(pred))
                          / static_cast<double>(instance.GetComputationalDag().OutDegree(pred));
@@ -346,14 +346,14 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
                 finishTimes.erase(finishTimes.begin());
 
                 if (node != std::numeric_limits<VertexType>::max()) {
-                    for (const auto &succ : G.children(node)) {
+                    for (const auto &succ : G.Children(node)) {
                         ++nrPredecDone[succ];
                         if (nrPredecDone[succ] == G.in_degree(succ)) {
                             ready.insert(succ);
                             ++nr_ready_nodes_per_type[G.VertexType(succ)];
 
                             bool canAdd = true;
-                            for (const auto &pred : G.parents(succ)) {
+                            for (const auto &pred : G.Parents(succ)) {
                                 if (schedule.assignedProcessor(pred) != schedule.assignedProcessor(node)
                                     && schedule.assignedSuperstep(pred) == supstepIdx) {
                                     canAdd = false;
@@ -454,14 +454,14 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
                 // update comm auxiliary structure
                 procInHyperedge[nextNode][nextProc] = true;
 
-                for (const auto &pred : G.parents(nextNode)) {
+                for (const auto &pred : G.Parents(nextNode)) {
                     if (procInHyperedge[pred][nextProc]) {
                         continue;
                     }
 
                     procInHyperedge[pred][nextProc] = true;
 
-                    for (const auto &child : G.children(pred)) {
+                    for (const auto &child : G.Children(pred)) {
                         if (child != nextNode && procReady[nextProc].find(child) != procReady[nextProc].end()) {
                             (*node_proc_heap_handles[nextProc][child]).score
                                 += static_cast<double>(instance.GetComputationalDag().VertexCommWeight(pred))

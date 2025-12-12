@@ -184,8 +184,8 @@ class IsomorphismMapper {
                         size_t &mappedCount,
                         std::queue<std::pair<VertexC, VertexC>> &q,
                         bool matchChildren) const {
-        const auto &repNeighborsRange = matchChildren ? repGraph_.children(u_rep) : repGraph_.parents(u_rep);
-        const auto &currNeighborsRange = matchChildren ? currentGraph.children(u_curr) : currentGraph.parents(u_curr);
+        const auto &repNeighborsRange = matchChildren ? repGraph_.Children(u_rep) : repGraph_.Parents(u_rep);
+        const auto &currNeighborsRange = matchChildren ? currentGraph.Children(u_curr) : currentGraph.Parents(u_curr);
 
         for (const auto &v_rep : rep_neighbors_range) {
             if (rep_is_mapped[v_rep]) {

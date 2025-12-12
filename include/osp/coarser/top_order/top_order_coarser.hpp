@@ -68,7 +68,7 @@ class TopOrderCoarser : public Coarser<GraphTIn, GraphTOut> {
                     }
                 }
             } else {
-                for (const auto &parent : dag_in.parents(node)) {
+                for (const auto &parent : dag_in.Parents(node)) {
                     const VertexType parent_rev = reverse_vertex_map[parent];
                     if (parent_rev != current_super_node_idx && parent_rev != std::numeric_limits<VertexType>::max()) {
                         if (not edge(parent_rev, current_super_node_idx, dag_out)) {

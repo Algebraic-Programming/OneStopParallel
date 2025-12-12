@@ -39,7 +39,7 @@ class KlTotalCut : public KlTotal<GraphT, MemoryConstraintT, useNodeCommunicatio
                 for (const auto &target :
                      kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule.instance
                          ->GetComputationalDag()
-                         .children(node)) {
+                         .Children(node)) {
                     const unsigned &target_proc
                         = kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule
                               .vector_schedule.assignedProcessor(target);
@@ -124,7 +124,7 @@ class KlTotalCut : public KlTotal<GraphT, MemoryConstraintT, useNodeCommunicatio
                 for (const auto &source :
                      kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule.instance
                          ->GetComputationalDag()
-                         .parents(node)) {
+                         .Parents(node)) {
                     const unsigned &source_proc
                         = kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule
                               .vector_schedule.assignedProcessor(source);
@@ -211,7 +211,7 @@ class KlTotalCut : public KlTotal<GraphT, MemoryConstraintT, useNodeCommunicatio
                 for (const auto &target :
                      kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule.instance
                          ->GetComputationalDag()
-                         .children(node)) {
+                         .Children(node)) {
                     const unsigned &target_proc
                         = kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule
                               .vector_schedule.assignedProcessor(target);
@@ -381,7 +381,7 @@ class KlTotalCut : public KlTotal<GraphT, MemoryConstraintT, useNodeCommunicatio
                 for (const auto &source :
                      kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule.instance
                          ->GetComputationalDag()
-                         .parents(node)) {
+                         .Parents(node)) {
                     const unsigned &source_proc
                         = kl_total<Graph_t, MemoryConstraint_t, use_node_communication_costs_arg>::current_schedule
                               .vector_schedule.assignedProcessor(source);

@@ -211,7 +211,7 @@ class OrbitGraphProcessor {
 
             changed = false;
             for (const auto u : currentCoarseGraph.vertices()) {
-                for (const auto v : currentCoarseGraph.children(u)) {
+                for (const auto v : currentCoarseGraph.Children(u)) {
                     if constexpr (HasTypedVerticesV<Constr_Graph_t>) {
                         if (not mergeDifferentNodeTypes_) {
                             if (currentCoarseGraph.VertexType(u) != currentCoarseGraph.VertexType(v)) {
