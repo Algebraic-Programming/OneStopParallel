@@ -1,24 +1,94 @@
 Checks: '-*,readability-identifier-naming'
 
 CheckOptions:
-  # 1. Member Variables: camelBack with a trailing underscore (e.g., memberVariableTest_)
+  - key:             readability-identifier-naming.AggressiveDependentMemberLookup
+    value:           1
+
+  - key:             readability-identifier-naming.AbstractClassCase
+    value:           CamelCase
+
+  - key:             readability-identifier-naming.ClassCase
+    value:           CamelCase
+
+  - key:             readability-identifier-naming.ClassConstexprCase
+    value:           camelBack
+  - key:             readability-identifier-naming.ClassConstexprSuffix
+    value:           _
+
+  - key:             readability-identifier-naming.ClassConstantCase
+    value:           camelBack
+  - key:             readability-identifier-naming.ClassConstantSuffix
+    value:           _
+
+  - key:             readability-identifier-naming.ClassMemberCase
+    value:           camelBack
+  - key:             readability-identifier-naming.ClassMemberSuffix
+    value:           _
+
+  - key:             readability-identifier-naming.ClassMethodCase
+    value:           CamelCase
+
+  - key:             readability-identifier-naming.EnumCase
+    value:           CamelCase
+
+  - key:             readability-identifier-naming.EnumConstantCase
+    value:           UPPER_CASE
+
+  - key:             readability-identifier-naming.FunctionCase
+    value:           CamelCase
+
+  - key:             readability-identifier-naming.GlobalConstexprVariableCase
+    value:           UPPER_CASE
+
+  - key:             readability-identifier-naming.GlobalVariableCase
+    value:           camelBack
+
+  - key:             readability-identifier-naming.LocalVariableCase
+    value:           camelBack
+
+  - key:             readability-identifier-naming.MacroDefinitionCase
+    value:           UPPER_CASE
+
+  - key:             readability-identifier-naming.MacroDefinitionIgnoredRegexp
+    value:           '^[A-Z]+(_[A-Z]+)*_$'
+
   - key:             readability-identifier-naming.MemberCase
     value:           camelBack
   - key:             readability-identifier-naming.MemberSuffix
     value:           _
 
-  # 2. Functions: CamelCase (e.g., CalculateTotal)
-  - key:             readability-identifier-naming.FunctionCase
+  - key:             readability-identifier-naming.MethodCase
     value:           CamelCase
 
-  # 3. Local Variables/Parameters: camelBack (e.g., totalValue)
-  - key:             readability-identifier-naming.VariableCase
-    value:           camelBack
+  - key:             readability-identifier-naming.NamespaceCase
+    value:           lower_case
+
   - key:             readability-identifier-naming.ParameterCase
     value:           camelBack
 
-  # 4. Classes/Structs: CamelCase (e.g., MyClass)
-  - key:             readability-identifier-naming.ClassCase
-    value:           CamelCase
+  - key:             readability-identifier-naming.ScopedEnumConstantCase
+    value:           UPPER_CASE
+
   - key:             readability-identifier-naming.StructCase
     value:           CamelCase
+
+  - key:             readability-identifier-naming.TemplateParameterCase
+    value:           CamelCase
+
+  - key:             readability-identifier-naming.TypeAliasCase
+    value:           CamelCase
+
+  - key:             readability-identifier-naming.TypedefCase
+    value:           CamelCase
+
+  - key:             readability-identifier-naming.TypeTemplateParameterCase
+    value:           CamelCase
+
+  - key:             readability-identifier-naming.ValueTemplateParameterCase
+    value:           camelBack
+
+  - key:             readability-identifier-naming.VariableCase
+    value:           camelBack
+
+  - key:             readability-identifier-naming.IgnoreMainLikeFunctions
+    value:           1
