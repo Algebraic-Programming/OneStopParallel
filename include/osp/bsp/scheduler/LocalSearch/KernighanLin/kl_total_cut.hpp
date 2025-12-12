@@ -33,7 +33,7 @@ class KlTotalCut : public KlTotal<GraphT, MemoryConstraintT, useNodeCommunicatio
   protected:
     double maxEdgeWeight_ = 0.0;
 
-    virtual void compute_comm_gain(vertex_idx_t<Graph_t> node, unsigned currentStep, unsigned currentProc, unsigned newProc) override {
+    virtual void compute_comm_gain(VertexIdxT<GraphT> node, unsigned currentStep, unsigned currentProc, unsigned newProc) override {
         if constexpr (KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.use_node_communication_costs) {
             if (currentProc == newProc) {
                 for (const auto &target :
@@ -1096,10 +1096,10 @@ class KlTotalCut : public KlTotal<GraphT, MemoryConstraintT, useNodeCommunicatio
         double commCosts = 0;
         for (const auto &edge : Edges(KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.instance
                                           ->GetComputationalDag())) {
-            const vertex_idx_t<Graph_t> &sourceV = Source(
+            const VertexIdxT<GraphT> &sourceV = Source(
                 edge,
                 KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.instance->GetComputationalDag());
-            const vertex_idx_t<Graph_t> &targetV = Traget(
+            const VertexIdxT<GraphT> &targetV = Traget(
                 edge,
                 KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.instance->GetComputationalDag());
             const unsigned &sourceProc = KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule
@@ -1166,7 +1166,7 @@ class KlTotalCutTest : public KlTotalCut<GraphT, MemoryConstraintT, true> {
 
     auto &GetMaxGainHeap() { return KlTotal<GraphT, MemoryConstraintT, true>::max_gain_heap; }
 
-    void InitializeGainHeapTest(const std::unordered_set<vertex_idx_t<Graph_t>> &nodes, double reward = 0.0, double penalty = 0.0) {
+    void InitializeGainHeapTest(const std::unordered_set<VertexIdxT<GraphT>> &nodes, double reward = 0.0, double penalty = 0.0) {
         KlTotal<GraphT, MemoryConstraintT, true>::reward = reward;
         KlTotal<GraphT, MemoryConstraintT, true>::penalty = penalty;
 

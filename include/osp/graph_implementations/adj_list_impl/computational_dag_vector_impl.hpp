@@ -97,7 +97,7 @@ class ComputationalDagVectorImpl {
      */
     template <typename GraphT>
     explicit ComputationalDagVectorImpl(const GraphT &other) {
-        static_assert(IsComputationalDagV<Graph_t>, "Graph_t must satisfy the is_computation_dag concept");
+        static_assert(IsComputationalDagV<GraphT>, "Graph_t must satisfy the is_computation_dag concept");
         constructComputationalDag(other, *this);
     }
 

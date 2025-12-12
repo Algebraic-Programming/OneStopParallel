@@ -31,7 +31,7 @@ namespace osp {
  */
 template <typename GraphT>
 class IDagDivider {
-    static_assert(IsDirectedGraphV<Graph_t>, "Graph must be directed");
+    static_assert(IsDirectedGraphV<GraphT>, "Graph must be directed");
 
   public:
     virtual ~IDagDivider() = default;
@@ -47,7 +47,7 @@ class IDagDivider {
      * @return const std::vector<std::vector<std::vector<unsigned>>>&
      *         A constant reference to the vertex maps.
      */
-    virtual std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> Divide(const GraphT &dag) = 0;
+    virtual std::vector<std::vector<std::vector<VertexIdxT<GraphT>>>> Divide(const GraphT &dag) = 0;
 };
 
 }    // namespace osp

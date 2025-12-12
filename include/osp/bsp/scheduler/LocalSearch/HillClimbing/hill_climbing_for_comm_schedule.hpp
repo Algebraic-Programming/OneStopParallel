@@ -27,11 +27,11 @@ namespace osp {
 
 template <typename GraphT>
 class HillClimbingForCommSteps {
-    static_assert(IsDirectedGraphV<Graph_t>, "Graph_t must satisfy the directed_graph concept");
-    static_assert(IsComputationalDagV<Graph_t>, "Graph_t must satisfy the computational_dag concept");
+    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(IsComputationalDagV<GraphT>, "Graph_t must satisfy the computational_dag concept");
 
-    using vertex_idx = vertex_idx_t<Graph_t>;
-    using cost_type = VCommwT<Graph_t>;
+    using vertex_idx = VertexIdxT<GraphT>;
+    using cost_type = VCommwT<GraphT>;
 
     BspScheduleCS<GraphT> *schedule_;
     cost_type cost_ = 0;

@@ -80,7 +80,7 @@ struct VectorVertexLockManger {
 template <typename GraphT, typename CostT, typename KlActiveScheduleT, unsigned windowSize>
 struct AdaptiveAffinityTable {
     constexpr static unsigned windowRange_ = 2 * windowSize + 1;
-    using VertexType = vertex_idx_t<Graph_t>;
+    using VertexType = VertexIdxT<GraphT>;
 
   private:
     const KlActiveScheduleT *activeSchedule_;
@@ -243,7 +243,7 @@ struct AdaptiveAffinityTable {
 template <typename GraphT, typename CostT, typename KlActiveScheduleT, unsigned windowSize>
 struct StaticAffinityTable {
     constexpr static unsigned windowRange_ = 2 * windowSize + 1;
-    using VertexType = vertex_idx_t<Graph_t>;
+    using VertexType = VertexIdxT<GraphT>;
 
   private:
     const KlActiveScheduleT *activeSchedule_;
@@ -301,7 +301,7 @@ struct StaticAffinityTable {
 
 template <typename GraphT, typename ContainerT, typename KlActiveScheduleT>
 struct VertexSelectionStrategy {
-    using EdgeType = edge_desc_t<Graph_t>;
+    using EdgeType = edge_desc_t<GraphT>;
 
     const KlActiveScheduleT *activeSchedule_;
     const GraphT *graph_;
@@ -309,7 +309,7 @@ struct VertexSelectionStrategy {
     std::size_t selectionThreshold_ = 0;
     unsigned strategyCounter_ = 0;
 
-    std::vector<vertex_idx_t<Graph_t>> permutation_;
+    std::vector<VertexIdxT<GraphT>> permutation_;
     std::size_t permutationIdx_;
 
     unsigned maxWorkCounter_ = 0;
@@ -341,7 +341,7 @@ struct VertexSelectionStrategy {
         std::shuffle(permutation.begin(), permutation.end(), *gen);
     }
 
-    void AddNeighboursToSelection(vertex_idx_t<Graph_t> node, ContainerT &nodes, const unsigned startStep, const unsigned endStep) {
+    void AddNeighboursToSelection(VertexIdxT<GraphT> node, ContainerT &nodes, const unsigned startStep, const unsigned endStep) {
         for (const auto parent : graph->Parents(node)) {
             const unsigned parent_step = active_schedule->assigned_superstep(parent);
             if (parent_step >= start_step && parent_step <= end_step) {
@@ -420,7 +420,7 @@ struct VertexSelectionStrategy {
         const unsigned numMaxWorkProc = activeSchedule_->work_datastructures.step_max_work_processor_count[step];
         for (unsigned idx = 0; idx < numMaxWorkProc; idx++) {
             const unsigned proc = activeSchedule_->work_datastructures.step_processor_work_[step][idx].proc;
-            const std::unordered_set<vertex_idx_t<Graph_t>> stepProcVert
+            const std::unordered_set<VertexIdxT<GraphT>> stepProcVert
                 = activeSchedule_->getSetSchedule().step_processor_vertices[step][proc];
             const size_t numInsert = std::min(threshold - nodeSelection.size(), step_proc_vert.size());
             auto endIt = step_proc_vert.begin();

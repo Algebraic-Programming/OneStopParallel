@@ -49,14 +49,14 @@ typedef std::tuple<unsigned int, unsigned int, unsigned int> KeyTriple;
  */
 template <typename GraphT>
 class PebblingSchedule {
-    static_assert(IsComputationalDagV<Graph_t>, "PebblingSchedule can only be used with computational DAGs.");
+    static_assert(IsComputationalDagV<GraphT>, "PebblingSchedule can only be used with computational DAGs.");
 
   private:
-    using vertex_idx = vertex_idx_t<Graph_t>;
-    using cost_type = VWorkwT<Graph_t>;
-    using memweight_type = VMemwT<Graph_t>;
+    using vertex_idx = VertexIdxT<GraphT>;
+    using cost_type = VWorkwT<GraphT>;
+    using memweight_type = VMemwT<GraphT>;
 
-    static_assert(std::is_same_v<VWorkwT<Graph_t>, VCommwT<Graph_t>>,
+    static_assert(std::is_same_v<VWorkwT<GraphT>, VCommwT<GraphT>>,
                   "PebblingSchedule requires work and comm. weights to have the same type.");
 
     const BspInstance<GraphT> *instance_;
@@ -270,7 +270,7 @@ void PebblingSchedule<GraphT>::UpdateNumberOfSupersteps(unsigned newNumberOfSupe
 }
 
 template <typename GraphT>
-VWorkwT<Graph_t> PebblingSchedule<GraphT>::ComputeCost() const {
+VWorkwT<GraphT> PebblingSchedule<GraphT>::ComputeCost() const {
     cost_type totalCosts = 0;
     for (unsigned step = 0; step < numberOfSupersteps_; ++step) {
         // compute phase
@@ -323,7 +323,7 @@ VWorkwT<Graph_t> PebblingSchedule<GraphT>::ComputeCost() const {
 }
 
 template <typename GraphT>
-VWorkwT<Graph_t> PebblingSchedule<GraphT>::ComputeAsynchronousCost() const {
+VWorkwT<GraphT> PebblingSchedule<GraphT>::ComputeAsynchronousCost() const {
     std::vector<cost_type> currentTimeAtProcessor(instance_->GetArchitecture().NumberOfProcessors(), 0);
     std::vector<cost_type> timeWhenNodeGetsBlue(instance->GetComputationalDag().NumVertices(),
                                                 std::numeric_limits<cost_type>::max());
@@ -636,7 +636,7 @@ bool PebblingSchedule<GraphT>::HasValidSolution(const BspInstance<GraphT> &insta
         }
     }
 
-    for (v_type_t<Graph_t> nodeType = 0; node_type < instance.GetComputationalDag().NumVertexTypes(); ++node_type) {
+    for (v_type_t<GraphT> nodeType = 0; node_type < instance.GetComputationalDag().NumVertexTypes(); ++node_type) {
         for (unsigned proc = 0; proc < instance.NumberOfProcessors(); ++proc) {
             if (instance.isCompatibleType(node_type, instance.GetArchitecture().processorType(proc))
                 && instance.GetArchitecture().memoryBound(proc) >= memory_required[node_type]) {
@@ -646,7 +646,7 @@ bool PebblingSchedule<GraphT>::HasValidSolution(const BspInstance<GraphT> &insta
         }
     }
 
-    for (v_type_t<Graph_t> nodeType = 0; node_type < instance.GetComputationalDag().NumVertexTypes(); ++node_type) {
+    for (v_type_t<GraphT> nodeType = 0; node_type < instance.GetComputationalDag().NumVertexTypes(); ++node_type) {
         if (!hasEnoughMemory[node_type]) {
             std::cout << "No valid solution exists. Minimum memory required for node type " << node_type << " is "
                       << memory_required[node_type] << std::endl;
@@ -1261,17 +1261,17 @@ bool PebblingSchedule<GraphT>::IsValid() const {
 }
 
 template <typename GraphT>
-std::vector<VMemwT<Graph_t>> PebblingSchedule<GraphT>::MinimumMemoryRequiredPerNodeType(
-    const BspInstance<GraphT> &instance, const std::set<vertex_idx> &externalSources) {
-    std::vector<VMemwT<Graph_t>> maxNeeded(instance.GetComputationalDag().NumVertexTypes(), 0);
-    for (vertex_idx_t<Graph_t> node = 0; node < instance.GetComputationalDag().NumVertices(); ++node) {
+std::vector<VMemwT<GraphT>> PebblingSchedule<GraphT>::MinimumMemoryRequiredPerNodeType(const BspInstance<GraphT> &instance,
+                                                                                       const std::set<vertex_idx> &externalSources) {
+    std::vector<VMemwT<GraphT>> maxNeeded(instance.GetComputationalDag().NumVertexTypes(), 0);
+    for (VertexIdxT<GraphT> node = 0; node < instance.GetComputationalDag().NumVertices(); ++node) {
         if (externalSources.find(node) != external_sources.end()) {
             continue;
         }
 
-        VMemwT<Graph_t> needed = instance.GetComputationalDag().VertexMemWeight(node);
-        const v_type_t<Graph_t> type = instance.GetComputationalDag().VertexType(node);
-        for (vertex_idx_t<Graph_t> pred : instance.GetComputationalDag().Parents(node)) {
+        VMemwT<GraphT> needed = instance.GetComputationalDag().VertexMemWeight(node);
+        const v_type_t<GraphT> type = instance.GetComputationalDag().VertexType(node);
+        for (VertexIdxT<GraphT> pred : instance.GetComputationalDag().Parents(node)) {
             needed += instance.GetComputationalDag().VertexMemWeight(pred);
         }
 
@@ -1283,7 +1283,7 @@ std::vector<VMemwT<Graph_t>> PebblingSchedule<GraphT>::MinimumMemoryRequiredPerN
 }
 
 template <typename GraphT>
-std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> PebblingSchedule<GraphT>::ComputeTopOrdersDfs(
+std::vector<std::vector<std::vector<VertexIdxT<GraphT>>>> PebblingSchedule<GraphT>::ComputeTopOrdersDfs(
     const BspSchedule<GraphT> &schedule) const {
     size_t n = schedule.GetInstance().GetComputationalDag().NumVertices();
     unsigned numProcs = schedule.GetInstance().NumberOfProcessors();
@@ -1474,7 +1474,7 @@ void PebblingSchedule<GraphT>::GetDataForMultiprocessorPebbling(
 }
 
 template <typename GraphT>
-std::vector<std::set<vertex_idx_t<Graph_t>>> PebblingSchedule<GraphT>::GetMemContentAtEnd() const {
+std::vector<std::set<VertexIdxT<GraphT>>> PebblingSchedule<GraphT>::GetMemContentAtEnd() const {
     std::vector<std::set<vertex_idx>> memContent(instance_->NumberOfProcessors());
     if (!has_red_in_beginning.empty()) {
         mem_content = has_red_in_beginning;
@@ -1764,7 +1764,7 @@ void PebblingSchedule<GraphT>::FixForceEvicts(const std::vector<std::tuple<verte
             continue;
         }
 
-        PebblingSchedule<Graph_t> test_schedule = *this;
+        PebblingSchedule<GraphT> test_schedule = *this;
         for (auto itr = test_schedule.nodes_evicted_in_comm[proc][superstep].begin();
              itr != test_schedule.nodes_evicted_in_comm[proc][superstep].end();
              ++itr) {

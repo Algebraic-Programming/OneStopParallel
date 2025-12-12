@@ -31,10 +31,7 @@ namespace osp {
 template <typename Graph_t, typename MemoryConstraint_t>
 class kl_hyper_total_cut : public kl_total<Graph_t, MemoryConstraint_t> {
   protected:
-    virtual void compute_comm_gain(vertex_idx_t<Graph_t> node,
-                                   unsigned current_step,
-                                   unsigned current_proc,
-                                   unsigned new_proc) override {
+    virtual void compute_comm_gain(VertexIdxT<GraphT> node, unsigned current_step, unsigned current_proc, unsigned new_proc) override {
         throw std::runtime_error("Not implemented yet");
     }
 
@@ -73,7 +70,7 @@ class kl_hyper_total_cut : public kl_total<Graph_t, MemoryConstraint_t> {
     }
 
   public:
-    kl_hyper_total_cut(bool use_node_communication_costs_ = false) : kl_total<Graph_t>(use_node_communication_costs_) {}
+    kl_hyper_total_cut(bool use_node_communication_costs_ = false) : kl_total<GraphT>(use_node_communication_costs_) {}
 
     virtual ~kl_hyper_total_cut() = default;
 

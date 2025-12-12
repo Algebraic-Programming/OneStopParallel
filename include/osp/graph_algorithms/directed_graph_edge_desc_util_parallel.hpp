@@ -30,24 +30,24 @@ limitations under the License.
 namespace osp {
 
 template <typename GraphT>
-std::unordered_set<edge_desc_t<Graph_t>> LongEdgesInTrianglesParallel(const GraphT &graph) {
-    static_assert(IsDirectedGraphEdgeDescV<Graph_t>, "Graph_t must satisfy the directed_graph edge desc concept");
-    static_assert(has_hashable_edge_desc_v<Graph_t>, "Graph_t must satisfy the has_hashable_edge_desc concept");
+std::unordered_set<edge_desc_t<GraphT>> LongEdgesInTrianglesParallel(const GraphT &graph) {
+    static_assert(IsDirectedGraphEdgeDescV<GraphT>, "Graph_t must satisfy the directed_graph edge desc concept");
+    static_assert(has_hashable_edge_desc_v<GraphT>, "Graph_t must satisfy the has_hashable_edge_desc concept");
 
     if (graph.NumEdges() < 1000) {
         return LongEdgesInTriangles(graph);
     }
 
-    std::unordered_set<edge_desc_t<Graph_t>> longEdges;
-    std::vector<std::vector<edge_desc_t<Graph_t>>> deletedEdgesThread(static_cast<size_t>(omp_get_max_threads()));
+    std::unordered_set<edge_desc_t<GraphT>> longEdges;
+    std::vector<std::vector<edge_desc_t<GraphT>>> deletedEdgesThread(static_cast<size_t>(omp_get_max_threads()));
 
 #pragma omp parallel for schedule(dynamic, 4)
-    for (vertex_idx_t<Graph_t> vertex = 0; vertex < graph.NumVertices(); ++vertex) {
+    for (VertexIdxT<GraphT> vertex = 0; vertex < graph.NumVertices(); ++vertex) {
         // for (const auto &vertex : graph.vertices()) {
 
         const unsigned int proc = static_cast<unsigned>(omp_get_thread_num());
 
-        std::unordered_set<vertex_idx_t<Graph_t>> childrenSet;
+        std::unordered_set<VertexIdxT<GraphT>> childrenSet;
         for (const auto &v : graph.Children(vertex)) {
             childrenSet.emplace(v);
         }

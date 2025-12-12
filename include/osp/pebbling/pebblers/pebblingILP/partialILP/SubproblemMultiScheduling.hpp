@@ -26,12 +26,12 @@ namespace osp {
 
 template <typename GraphT>
 class SubproblemMultiScheduling : public Scheduler<GraphT> {
-    static_assert(IsComputationalDagV<Graph_t>, "PebblingSchedule can only be used with computational DAGs.");
+    static_assert(IsComputationalDagV<GraphT>, "PebblingSchedule can only be used with computational DAGs.");
 
   private:
-    using vertex_idx = vertex_idx_t<Graph_t>;
-    using commweight_type = VCommwT<Graph_t>;
-    using workweight_type = VWorkwT<Graph_t>;
+    using vertex_idx = VertexIdxT<GraphT>;
+    using commweight_type = VCommwT<GraphT>;
+    using workweight_type = VWorkwT<GraphT>;
 
     std::vector<vertex_idx> lastNodeOnProc_;
     std::vector<std::vector<vertex_idx>> procTaskLists_;
@@ -65,7 +65,7 @@ class SubproblemMultiScheduling : public Scheduler<GraphT> {
 
 // currently duplicated from BSP locking scheduler's code
 template <typename GraphT>
-std::vector<VWorkwT<Graph_t>> SubproblemMultiScheduling<GraphT>::GetLongestPath(const GraphT &graph) {
+std::vector<VWorkwT<GraphT>> SubproblemMultiScheduling<GraphT>::GetLongestPath(const GraphT &graph) {
     std::vector<workweight_type> longestPath(graph.NumVertices(), 0);
 
     std::vector<vertex_idx> topOrder = GetTopOrder(graph);
@@ -206,7 +206,7 @@ RETURN_STATUS SubproblemMultiScheduling<GraphT>::ComputeMultiSchedule(const BspI
 }
 
 template <typename GraphT>
-std::vector<std::pair<vertex_idx_t<Graph_t>, unsigned>> SubproblemMultiScheduling<GraphT>::MakeAssignment(
+std::vector<std::pair<VertexIdxT<GraphT>, unsigned>> SubproblemMultiScheduling<GraphT>::MakeAssignment(
     const BspInstance<GraphT> &instance,
     const std::set<std::pair<unsigned, vertex_idx>> &nodesAvailable,
     const std::set<unsigned> &procsAvailable) const {

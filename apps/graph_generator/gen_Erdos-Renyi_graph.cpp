@@ -28,7 +28,7 @@ limitations under the License.
 using namespace osp;
 
 using ComputationalDag = computational_dag_vector_impl_def_int_t;
-using VertexType = vertex_idx_t<ComputationalDag>;
+using VertexType = VertexIdxT<ComputationalDag>;
 
 int main(int argc, char *argv[]) {
     if (argc < 3) {

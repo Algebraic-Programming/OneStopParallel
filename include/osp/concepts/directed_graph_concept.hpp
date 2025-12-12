@@ -37,9 +37,9 @@ namespace osp {
  * - **NumVertices()**: Returns the total number of vertices as an integral type.
  * - **NumEdges()**: Returns the total number of edges as an integral type.
  * - **parents(v)**: Returns a range of parent vertices for a given vertex `v`.
- *   - `v` must be of type `vertex_idx_t<T>`.
+ *   - `v` must be of type `VertexIdxT<T>`.
  * - **children(v)**: Returns a range of child vertices for a given vertex `v`.
- *   - `v` must be of type `vertex_idx_t<T>`.
+ *   - `v` must be of type `VertexIdxT<T>`.
  * - **InDegree(v)**: Returns the number of incoming edges for vertex `v` as an integral type.
  * - **OutDegree(v)**: Returns the number of outgoing edges for vertex `v` as an integral type.
  *

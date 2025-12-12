@@ -56,8 +56,8 @@ struct PreMoveCommData {
 
 template <typename GraphT, typename CostT, typename KlActiveScheduleT, typename CommPolicy = EagerCommCostPolicy>
 struct MaxCommDatastructure {
-    using comm_weight_t = VCommwT<Graph_t>;
-    using VertexType = vertex_idx_t<Graph_t>;
+    using comm_weight_t = VCommwT<GraphT>;
+    using VertexType = VertexIdxT<GraphT>;
     using kl_move = kl_move_struct<cost_t, VertexType>;
 
     const BspInstance<GraphT> *instance_;

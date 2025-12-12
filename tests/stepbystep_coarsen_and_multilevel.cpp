@@ -57,8 +57,8 @@ BOOST_AUTO_TEST_CASE(StepByStepCoarserTest) {
     coarser.setTargetNumberOfNodes(static_cast<unsigned>(dag.NumVertices()) / 2);
 
     Graph coarsenedDag1, coarsenedDag2;
-    std::vector<std::vector<vertex_idx_t<Graph>>> oldVertexIds;
-    std::vector<vertex_idx_t<Graph>> newVertexId;
+    std::vector<std::vector<VertexIdxT<Graph>>> oldVertexIds;
+    std::vector<VertexIdxT<Graph>> newVertexId;
 
     coarser.coarsenDag(dag, coarsenedDag1, newVertexId);
     oldVertexIds = coarser_util::invert_vertex_contraction_map<Graph, Graph>(newVertexId);

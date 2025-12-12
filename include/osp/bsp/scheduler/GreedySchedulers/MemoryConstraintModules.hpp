@@ -36,8 +36,8 @@ template <typename T>
 struct IsMemoryConstraint<
     T,
     std::void_t<decltype(std::declval<T>().initialize(std::declval<BspInstance<typename T::Graph_impl_t>>())),
-                decltype(std::declval<T>().can_add(std::declval<vertex_idx_t<typename T::Graph_impl_t>>(), std::declval<unsigned>())),
-                decltype(std::declval<T>().add(std::declval<vertex_idx_t<typename T::Graph_impl_t>>(), std::declval<unsigned>())),
+                decltype(std::declval<T>().can_add(std::declval<VertexIdxT<typename T::Graph_impl_t>>(), std::declval<unsigned>())),
+                decltype(std::declval<T>().add(std::declval<VertexIdxT<typename T::Graph_impl_t>>(), std::declval<unsigned>())),
                 decltype(std::declval<T>().reset(std::declval<unsigned>())),
                 decltype(T())>> : std::true_type {};
 
@@ -63,33 +63,33 @@ struct LocalMemoryConstraint {
 
     const BspInstance<GraphT> *instance_;
 
-    std::vector<VMemwT<Graph_t>> currentProcMemory_;
+    std::vector<VMemwT<GraphT>> currentProcMemory_;
 
     LocalMemoryConstraint() : instance_(nullptr) {}
 
     inline void Initialize(const BspInstance<GraphT> &instance) {
         instance_ = &instance;
-        current_proc_memory = std::vector<VMemwT<Graph_t>>(instance->NumberOfProcessors(), 0);
+        current_proc_memory = std::vector<VMemwT<GraphT>>(instance->NumberOfProcessors(), 0);
 
         if (instance->GetArchitecture().GetMemoryConstraintType() != MemoryConstraintType::LOCAL) {
             throw std::invalid_argument("Memory constraint type is not LOCAL");
         }
     }
 
-    inline bool CanAdd(const vertex_idx_t<Graph_t> &v, const unsigned proc) const {
+    inline bool CanAdd(const VertexIdxT<GraphT> &v, const unsigned proc) const {
         return current_proc_memory[proc] + instance->GetComputationalDag().VertexMemWeight(v)
                <= instance->GetArchitecture().memoryBound(proc);
     }
 
-    inline void Add(const vertex_idx_t<Graph_t> &v, const unsigned proc) {
+    inline void Add(const VertexIdxT<GraphT> &v, const unsigned proc) {
         current_proc_memory[proc] += instance->GetComputationalDag().VertexMemWeight(v);
     }
 
-    inline bool CanAdd(const unsigned proc, const VMemwT<Graph_t> &customMemWeight, const VMemwT<Graph_t> &) const {
+    inline bool CanAdd(const unsigned proc, const VMemwT<GraphT> &customMemWeight, const VMemwT<GraphT> &) const {
         return current_proc_memory[proc] + custom_mem_weight <= instance->GetArchitecture().memoryBound(proc);
     }
 
-    inline void Add(const unsigned proc, const VMemwT<Graph_t> &customMemWeight, const VMemwT<Graph_t> &) {
+    inline void Add(const unsigned proc, const VMemwT<GraphT> &customMemWeight, const VMemwT<GraphT> &) {
         current_proc_memory[proc] += custom_mem_weight;
     }
 
@@ -109,48 +109,48 @@ struct LocalMemoryConstraint {
  */
 template <typename GraphT>
 struct PersistentTransientMemoryConstraint {
-    static_assert(std::is_convertible_v<VCommwT<Graph_t>, VMemwT<Graph_t>>,
+    static_assert(std::is_convertible_v<VCommwT<GraphT>, VMemwT<GraphT>>,
                   "persistent_transient_memory_constraint requires that memory and communication weights are convertible.");
 
     using GraphImplT = GraphT;
 
     const BspInstance<GraphT> *instance_;
 
-    std::vector<VMemwT<Graph_t>> currentProcPersistentMemory_;
-    std::vector<VCommwT<Graph_t>> currentProcTransientMemory_;
+    std::vector<VMemwT<GraphT>> currentProcPersistentMemory_;
+    std::vector<VCommwT<GraphT>> currentProcTransientMemory_;
 
     PersistentTransientMemoryConstraint() : instance_(nullptr) {}
 
     inline void Initialize(const BspInstance<GraphT> &instance) {
         instance_ = &instance;
 
-        current_proc_persistent_memory = std::vector<VMemwT<Graph_t>>(instance->NumberOfProcessors(), 0);
-        current_proc_transient_memory = std::vector<VCommwT<Graph_t>>(instance->NumberOfProcessors(), 0);
+        current_proc_persistent_memory = std::vector<VMemwT<GraphT>>(instance->NumberOfProcessors(), 0);
+        current_proc_transient_memory = std::vector<VCommwT<GraphT>>(instance->NumberOfProcessors(), 0);
 
         if (instance->GetArchitecture().GetMemoryConstraintType() != MemoryConstraintType::PERSISTENT_AND_TRANSIENT) {
             throw std::invalid_argument("Memory constraint type is not PERSISTENT_AND_TRANSIENT");
         }
     }
 
-    inline bool CanAdd(const vertex_idx_t<Graph_t> &v, const unsigned proc) const {
+    inline bool CanAdd(const VertexIdxT<GraphT> &v, const unsigned proc) const {
         return (current_proc_persistent_memory[proc] + instance->GetComputationalDag().VertexMemWeight(v)
                     + std::max(current_proc_transient_memory[proc], instance->GetComputationalDag().VertexCommWeight(v))
                 <= instance->GetArchitecture().memoryBound(proc));
     }
 
-    inline void Add(const vertex_idx_t<Graph_t> &v, const unsigned proc) {
+    inline void Add(const VertexIdxT<GraphT> &v, const unsigned proc) {
         current_proc_persistent_memory[proc] += instance->GetComputationalDag().VertexMemWeight(v);
         current_proc_transient_memory[proc]
             = std::max(current_proc_transient_memory[proc], instance->GetComputationalDag().VertexCommWeight(v));
     }
 
-    inline bool CanAdd(const unsigned proc, const VMemwT<Graph_t> &customMemWeight, const VCommwT<Graph_t> &customCommWeight) const {
+    inline bool CanAdd(const unsigned proc, const VMemwT<GraphT> &customMemWeight, const VCommwT<GraphT> &customCommWeight) const {
         return (current_proc_persistent_memory[proc] + custom_mem_weight
                     + std::max(current_proc_transient_memory[proc], custom_comm_weight)
                 <= instance->GetArchitecture().memoryBound(proc));
     }
 
-    inline void Add(const unsigned proc, const VMemwT<Graph_t> &customMemWeight, const VCommwT<Graph_t> &customCommWeight) {
+    inline void Add(const unsigned proc, const VMemwT<GraphT> &customMemWeight, const VCommwT<GraphT> &customCommWeight) {
         current_proc_persistent_memory[proc] += custom_mem_weight;
         current_proc_transient_memory[proc] = std::max(current_proc_transient_memory[proc], custom_comm_weight);
     }
@@ -164,33 +164,33 @@ struct GlobalMemoryConstraint {
 
     const BspInstance<GraphT> *instance_;
 
-    std::vector<VMemwT<Graph_t>> currentProcMemory_;
+    std::vector<VMemwT<GraphT>> currentProcMemory_;
 
     GlobalMemoryConstraint() : instance_(nullptr) {}
 
     inline void Initialize(const BspInstance<GraphT> &instance) {
         instance_ = &instance;
-        current_proc_memory = std::vector<VMemwT<Graph_t>>(instance->NumberOfProcessors(), 0);
+        current_proc_memory = std::vector<VMemwT<GraphT>>(instance->NumberOfProcessors(), 0);
 
         if (instance->GetArchitecture().GetMemoryConstraintType() != MemoryConstraintType::GLOBAL) {
             throw std::invalid_argument("Memory constraint type is not GLOBAL");
         }
     }
 
-    inline bool CanAdd(const vertex_idx_t<Graph_t> &v, const unsigned proc) const {
+    inline bool CanAdd(const VertexIdxT<GraphT> &v, const unsigned proc) const {
         return current_proc_memory[proc] + instance->GetComputationalDag().VertexMemWeight(v)
                <= instance->GetArchitecture().memoryBound(proc);
     }
 
-    inline void Add(const vertex_idx_t<Graph_t> &v, const unsigned proc) {
+    inline void Add(const VertexIdxT<GraphT> &v, const unsigned proc) {
         current_proc_memory[proc] += instance->GetComputationalDag().VertexMemWeight(v);
     }
 
-    inline bool CanAdd(const unsigned proc, const VMemwT<Graph_t> &customMemWeight, const VCommwT<Graph_t> &) const {
+    inline bool CanAdd(const unsigned proc, const VMemwT<GraphT> &customMemWeight, const VCommwT<GraphT> &) const {
         return current_proc_memory[proc] + custom_mem_weight <= instance->GetArchitecture().memoryBound(proc);
     }
 
-    inline void Add(const unsigned proc, const VMemwT<Graph_t> &customMemWeight, const VCommwT<Graph_t> &) {
+    inline void Add(const unsigned proc, const VMemwT<GraphT> &customMemWeight, const VCommwT<GraphT> &) {
         current_proc_memory[proc] += custom_mem_weight;
     }
 
@@ -204,8 +204,8 @@ template <typename T>
 struct IsMemoryConstraintSchedule<
     T,
     std::void_t<decltype(std::declval<T>().initialize(std::declval<BspSchedule<typename T::Graph_impl_t>>(), std::declval<unsigned>())),
-                decltype(std::declval<T>().can_add(std::declval<vertex_idx_t<typename T::Graph_impl_t>>(), std::declval<unsigned>())),
-                decltype(std::declval<T>().add(std::declval<vertex_idx_t<typename T::Graph_impl_t>>(), std::declval<unsigned>())),
+                decltype(std::declval<T>().can_add(std::declval<VertexIdxT<typename T::Graph_impl_t>>(), std::declval<unsigned>())),
+                decltype(std::declval<T>().add(std::declval<VertexIdxT<typename T::Graph_impl_t>>(), std::declval<unsigned>())),
                 decltype(std::declval<T>().reset(std::declval<unsigned>())),
                 decltype(T())>> : std::true_type {};
 
@@ -214,7 +214,7 @@ inline constexpr bool isMemoryConstraintScheduleV = IsMemoryConstraintSchedule<T
 
 template <typename GraphT>
 struct LocalInOutMemoryConstraint {
-    static_assert(std::is_convertible_v<VCommwT<Graph_t>, VMemwT<Graph_t>>,
+    static_assert(std::is_convertible_v<VCommwT<GraphT>, VMemwT<GraphT>>,
                   "local_in_out_memory_constraint requires that memory and communication weights are convertible.");
 
     using GraphImplT = GraphT;
@@ -224,7 +224,7 @@ struct LocalInOutMemoryConstraint {
 
     const unsigned *currentSuperstep_ = 0;
 
-    std::vector<VMemwT<Graph_t>> currentProcMemory_;
+    std::vector<VMemwT<GraphT>> currentProcMemory_;
 
     LocalInOutMemoryConstraint() : instance_(nullptr), schedule_(nullptr) {}
 
@@ -232,15 +232,15 @@ struct LocalInOutMemoryConstraint {
         currentSuperstep_ = &supstepIdx;
         schedule_ = &schedule;
         instance_ = &schedule_->GetInstance();
-        current_proc_memory = std::vector<VMemwT<Graph_t>>(instance->NumberOfProcessors(), 0);
+        current_proc_memory = std::vector<VMemwT<GraphT>>(instance->NumberOfProcessors(), 0);
 
         if (instance->GetArchitecture().GetMemoryConstraintType() != MemoryConstraintType::LOCAL_IN_OUT) {
             throw std::invalid_argument("Memory constraint type is not LOCAL_IN_OUT");
         }
     }
 
-    inline bool CanAdd(const vertex_idx_t<Graph_t> &v, const unsigned proc) const {
-        VMemwT<Graph_t> incMemory
+    inline bool CanAdd(const VertexIdxT<GraphT> &v, const unsigned proc) const {
+        VMemwT<GraphT> incMemory
             = instance_->GetComputationalDag().VertexMemWeight(v) + instance_->GetComputationalDag().VertexCommWeight(v);
 
         for (const auto &pred : instance->GetComputationalDag().Parents(v)) {
@@ -253,7 +253,7 @@ struct LocalInOutMemoryConstraint {
         return current_proc_memory[proc] + inc_memory <= instance->GetArchitecture().memoryBound(proc);
     }
 
-    inline void Add(const vertex_idx_t<Graph_t> &v, const unsigned proc) {
+    inline void Add(const VertexIdxT<GraphT> &v, const unsigned proc) {
         current_proc_memory[proc]
             += instance->GetComputationalDag().VertexMemWeight(v) + instance->GetComputationalDag().VertexCommWeight(v);
 
@@ -277,8 +277,8 @@ struct LocalIncEdgesMemoryConstraint {
 
     const unsigned *currentSuperstep_ = 0;
 
-    std::vector<VCommwT<Graph_t>> currentProcMemory_;
-    std::vector<std::unordered_set<vertex_idx_t<Graph_t>>> currentProcPredec_;
+    std::vector<VCommwT<GraphT>> currentProcMemory_;
+    std::vector<std::unordered_set<VertexIdxT<GraphT>>> currentProcPredec_;
 
     LocalIncEdgesMemoryConstraint() : instance_(nullptr), schedule_(nullptr) {}
 
@@ -287,16 +287,16 @@ struct LocalIncEdgesMemoryConstraint {
         schedule_ = &schedule;
         instance_ = &schedule_->GetInstance();
 
-        current_proc_memory = std::vector<VCommwT<Graph_t>>(instance->NumberOfProcessors(), 0);
-        current_proc_predec = std::vector<std::unordered_set<vertex_idx_t<Graph_t>>>(instance->NumberOfProcessors());
+        current_proc_memory = std::vector<VCommwT<GraphT>>(instance->NumberOfProcessors(), 0);
+        current_proc_predec = std::vector<std::unordered_set<VertexIdxT<GraphT>>>(instance->NumberOfProcessors());
 
         if (instance->GetArchitecture().GetMemoryConstraintType() != MemoryConstraintType::LOCAL_INC_EDGES) {
             throw std::invalid_argument("Memory constraint type is not LOCAL_INC_EDGES");
         }
     }
 
-    inline bool CanAdd(const vertex_idx_t<Graph_t> &v, const unsigned proc) const {
-        VCommwT<Graph_t> incMemory = instance_->GetComputationalDag().VertexCommWeight(v);
+    inline bool CanAdd(const VertexIdxT<GraphT> &v, const unsigned proc) const {
+        VCommwT<GraphT> incMemory = instance_->GetComputationalDag().VertexCommWeight(v);
 
         for (const auto &pred : instance->GetComputationalDag().Parents(v)) {
             if (schedule->assignedSuperstep(pred) != *current_superstep
@@ -308,7 +308,7 @@ struct LocalIncEdgesMemoryConstraint {
         return current_proc_memory[proc] + inc_memory <= instance->GetArchitecture().memoryBound(proc);
     }
 
-    inline void Add(const vertex_idx_t<Graph_t> &v, const unsigned proc) {
+    inline void Add(const VertexIdxT<GraphT> &v, const unsigned proc) {
         current_proc_memory[proc] += instance->GetComputationalDag().VertexCommWeight(v);
 
         for (const auto &pred : instance->GetComputationalDag().Parents(v)) {
@@ -329,7 +329,7 @@ struct LocalIncEdgesMemoryConstraint {
 
 template <typename GraphT>
 struct LocalSourcesIncEdgesMemoryConstraint {
-    static_assert(std::is_convertible_v<VCommwT<Graph_t>, VMemwT<Graph_t>>,
+    static_assert(std::is_convertible_v<VCommwT<GraphT>, VMemwT<GraphT>>,
                   "local_sources_inc_edges_memory_constraint requires that memory and communication weights are convertible.");
 
     using GraphImplT = GraphT;
@@ -339,8 +339,8 @@ struct LocalSourcesIncEdgesMemoryConstraint {
 
     const unsigned *currentSuperstep_ = 0;
 
-    std::vector<VMemwT<Graph_t>> currentProcMemory_;
-    std::vector<std::unordered_set<vertex_idx_t<Graph_t>>> currentProcPredec_;
+    std::vector<VMemwT<GraphT>> currentProcMemory_;
+    std::vector<std::unordered_set<VertexIdxT<GraphT>>> currentProcPredec_;
 
     LocalSourcesIncEdgesMemoryConstraint() : instance_(nullptr), schedule_(nullptr) {}
 
@@ -349,16 +349,16 @@ struct LocalSourcesIncEdgesMemoryConstraint {
         schedule_ = &schedule;
         instance_ = &schedule_->GetInstance();
 
-        current_proc_memory = std::vector<VMemwT<Graph_t>>(instance->NumberOfProcessors(), 0);
-        current_proc_predec = std::vector<std::unordered_set<vertex_idx_t<Graph_t>>>(instance->NumberOfProcessors());
+        current_proc_memory = std::vector<VMemwT<GraphT>>(instance->NumberOfProcessors(), 0);
+        current_proc_predec = std::vector<std::unordered_set<VertexIdxT<GraphT>>>(instance->NumberOfProcessors());
 
         if (instance->GetArchitecture().GetMemoryConstraintType() != MemoryConstraintType::LOCAL_SOURCES_INC_EDGES) {
             throw std::invalid_argument("Memory constraint type is not LOCAL_INC_EDGES_2");
         }
     }
 
-    inline bool CanAdd(const vertex_idx_t<Graph_t> &v, const unsigned proc) const {
-        VMemwT<Graph_t> incMemory = 0;
+    inline bool CanAdd(const VertexIdxT<GraphT> &v, const unsigned proc) const {
+        VMemwT<GraphT> incMemory = 0;
 
         if (IsSource(v, instance_->GetComputationalDag())) {
             incMemory += instance_->GetComputationalDag().VertexMemWeight(v);
@@ -374,7 +374,7 @@ struct LocalSourcesIncEdgesMemoryConstraint {
         return current_proc_memory[proc] + inc_memory <= instance->GetArchitecture().memoryBound(proc);
     }
 
-    inline void Add(const vertex_idx_t<Graph_t> &v, const unsigned proc) {
+    inline void Add(const VertexIdxT<GraphT> &v, const unsigned proc) {
         if (IsSource(v, instance_->GetComputationalDag())) {
             current_proc_memory[proc] += instance->GetComputationalDag().VertexMemWeight(v);
         }

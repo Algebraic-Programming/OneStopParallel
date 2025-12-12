@@ -33,8 +33,8 @@ class HdaggCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> {
     static_assert(HasTypedVerticesV<Graph_t_in>, "Graph_t_in must have typed vertices");
 
   private:
-    using VertexType_in = vertex_idx_t<Graph_t_in>;
-    using VertexType_out = vertex_idx_t<Graph_t_out>;
+    using VertexType_in = VertexIdxT<Graph_t_in>;
+    using VertexType_out = VertexIdxT<Graph_t_out>;
 
   protected:
     VWorkwT<Graph_t_in> workThreshold_ = std::numeric_limits<VWorkwT<Graph_t_in>>::max();
@@ -68,7 +68,7 @@ class HdaggCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> {
 
     virtual std::string getCoarserName() const override { return "hdagg_coarser"; };
 
-    virtual std::vector<vertex_idx_t<Graph_t_out>> generate_vertex_contraction_map(const GraphTIn &dagIn) override {
+    virtual std::vector<VertexIdxT<Graph_t_out>> generate_vertex_contraction_map(const GraphTIn &dagIn) override {
         std::vector<bool> visited(dagIn.NumVertices(), false);
         std::vector<VertexType_out> reverseVertexMap(dagIn.NumVertices());
 

@@ -108,12 +108,12 @@ std::unique_ptr<Scheduler<GraphT>> GetBaseBspSchedulerByName(const ConfigParser 
         return scheduler;
 
     } else if (id == "GrowLocal") {
-        GrowLocalAutoCores_Params<VWorkwT<Graph_t>> params;
+        GrowLocalAutoCores_Params<VWorkwT<GraphT>> params;
         params.minSuperstepSize = algorithm.get_child("parameters").get_child("minSuperstepSize").get_value<unsigned>();
         params.syncCostMultiplierMinSuperstepWeight
-            = algorithm.get_child("parameters").get_child("syncCostMultiplierMinSuperstepWeight").get_value<VWorkwT<Graph_t>>();
+            = algorithm.get_child("parameters").get_child("syncCostMultiplierMinSuperstepWeight").get_value<VWorkwT<GraphT>>();
         params.syncCostMultiplierParallelCheck
-            = algorithm.get_child("parameters").get_child("syncCostMultiplierParallelCheck").get_value<VWorkwT<Graph_t>>();
+            = algorithm.get_child("parameters").get_child("syncCostMultiplierParallelCheck").get_value<VWorkwT<GraphT>>();
 
         return std::make_unique<GrowLocalAutoCores<GraphT>>(params);
 
@@ -157,7 +157,7 @@ std::unique_ptr<Scheduler<GraphT>> GetBaseBspSchedulerByName(const ConfigParser 
         return scheduler;
     }
 
-    if constexpr (IsConstructableCdagV<Graph_t> || IsDirectConstructableCdagV<Graph_t>) {
+    if constexpr (IsConstructableCdagV<GraphT> || IsDirectConstructableCdagV<GraphT>) {
         if (id == "MultiHC") {
             auto scheduler = std::make_unique<MultiLevelHillClimbingScheduler<GraphT>>();
             const unsigned timeLimit = parser.globalParams_.get_child("timeLimit").get_value<unsigned>();
@@ -180,10 +180,10 @@ template <typename GraphT>
 RETURN_STATUS RunBspScheduler(const ConfigParser &parser,
                               const boost::property_tree::ptree &algorithm,
                               BspSchedule<GraphT> &schedule) {
-    using vertex_type_t_or_default = std::conditional_t<IsComputationalDagTypedVerticesV<Graph_t>, v_type_t<Graph_t>, unsigned>;
-    using edge_commw_t_or_default = std::conditional_t<HasEdgeWeightsV<Graph_t>, ECommwT<Graph_t>, VCommwT<Graph_t>>;
+    using vertex_type_t_or_default = std::conditional_t<IsComputationalDagTypedVerticesV<GraphT>, v_type_t<GraphT>, unsigned>;
+    using edge_commw_t_or_default = std::conditional_t<HasEdgeWeightsV<GraphT>, ECommwT<GraphT>, VCommwT<GraphT>>;
     using boost_graph_t
-        = boost_graph<VWorkwT<Graph_t>, VCommwT<Graph_t>, VMemwT<Graph_t>, vertex_type_t_or_default, edge_commw_t_or_default>;
+        = boost_graph<VWorkwT<GraphT>, VCommwT<GraphT>, VMemwT<GraphT>, vertex_type_t_or_default, edge_commw_t_or_default>;
 
     const std::string id = algorithm.get_child("id").get_value<std::string>();
 
@@ -241,7 +241,7 @@ RETURN_STATUS RunBspScheduler(const ConfigParser &parser,
             = get_coarser_by_name<Graph_t, boost_graph_t>(parser, algorithm.get_child("parameters").get_child("coarser"));
         const auto &instance = schedule.GetInstance();
         BspInstance<boost_graph_t> instanceCoarse;
-        std::vector<vertex_idx_t<boost_graph_t>> reverseVertexMap;
+        std::vector<VertexIdxT<boost_graph_t>> reverseVertexMap;
         bool status
             = coarser->coarsenDag(instance.GetComputationalDag(), instance_coarse.GetComputationalDag(), reverse_vertex_map);
         if (!status) {

@@ -42,8 +42,8 @@ std::vector<std::string> TinySpaaGraphs() {
 }
 
 template <typename GraphT>
-bool CheckVertexMaps(const std::vector<std::vector<std::vector<vertex_idx_t<GraphT>>>> &maps, const GraphT &dag) {
-    std::unordered_set<vertex_idx_t<GraphT>> allVertices;
+bool CheckVertexMaps(const std::vector<std::vector<std::vector<VertexIdxT<GraphT>>>> &maps, const GraphT &dag) {
+    std::unordered_set<VertexIdxT<GraphT>> allVertices;
     for (const auto &step : maps) {
         for (const auto &subgraph : step) {
             for (const auto &vertex : subgraph) {

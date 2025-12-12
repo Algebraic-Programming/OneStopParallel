@@ -29,14 +29,14 @@ namespace osp {
 
 template <typename GraphT, typename ConstrGraphT>
 class ConnectedComponentDivider : public IDagDivider<GraphT> {
-    static_assert(IsComputationalDagV<Graph_t>, "Graph must be a computational DAG");
+    static_assert(IsComputationalDagV<GraphT>, "Graph must be a computational DAG");
     static_assert(IsComputationalDagV<Constr_Graph_t>, "Constr_Graph_t must be a computational DAG");
     static_assert(IsConstructableCdagV<Constr_Graph_t>, "Constr_Graph_t must satisfy the constructable_cdag_vertex concept");
-    static_assert(std::is_same_v<vertex_idx_t<Graph_t>, vertex_idx_t<Constr_Graph_t>>,
+    static_assert(std::is_same_v<VertexIdxT<GraphT>, VertexIdxT<Constr_Graph_t>>,
                   "Graph_t and Constr_Graph_t must have the same vertex_idx types");
 
   private:
-    using vertex_idx = vertex_idx_t<Graph_t>;
+    using vertex_idx = VertexIdxT<GraphT>;
 
     std::vector<ConstrGraphT> subDags_;
 
@@ -60,14 +60,14 @@ class ConnectedComponentDivider : public IDagDivider<GraphT> {
 
     inline const std::vector<vertex_idx> &GetVertexMap() const { return vertex_map; }
 
-    virtual std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> divide(const GraphT &dag) override {
+    virtual std::vector<std::vector<std::vector<VertexIdxT<GraphT>>>> divide(const GraphT &dag) override {
         if (dag.NumVertices() == 0) {
             return {};
         }
 
         bool hasMoreThanOneConnectedComponent = ComputeConnectedComponents(dag);
 
-        std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> vertexMaps(1);
+        std::vector<std::vector<std::vector<VertexIdxT<GraphT>>>> vertexMaps(1);
 
         if (hasMoreThanOneConnectedComponent) {
             vertexMaps[0].resize(subDags_.size());
@@ -97,8 +97,8 @@ class ConnectedComponentDivider : public IDagDivider<GraphT> {
         return vertex_maps;
     }
 
-    std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> ComputeVertexMaps(const GraphT &dag) {
-        std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> vertexMaps(1);
+    std::vector<std::vector<std::vector<VertexIdxT<GraphT>>>> ComputeVertexMaps(const GraphT &dag) {
+        std::vector<std::vector<std::vector<VertexIdxT<GraphT>>>> vertexMaps(1);
 
         vertexMaps[0].resize(subDags_.size());
         for (unsigned i = 0; i < subDags_.size(); ++i) {

@@ -29,10 +29,10 @@ namespace osp {
  */
 template <typename GraphT>
 struct WavefrontStatistics {
-    using VertexType = vertex_idx_t<Graph_t>;
+    using VertexType = VertexIdxT<GraphT>;
 
-    std::vector<VWorkwT<Graph_t>> connectedComponentsWeights_;
-    std::vector<VMemwT<Graph_t>> connectedComponentsMemories_;
+    std::vector<VWorkwT<GraphT>> connectedComponentsWeights_;
+    std::vector<VMemwT<GraphT>> connectedComponentsMemories_;
     std::vector<std::vector<VertexType>> connectedComponentsVertices_;
 };
 
@@ -42,8 +42,8 @@ struct WavefrontStatistics {
  */
 template <typename GraphT>
 class WavefrontStatisticsCollector {
-    using VertexType = vertex_idx_t<Graph_t>;
-    using UnionFind = union_find_universe_t<Graph_t>;
+    using VertexType = VertexIdxT<GraphT>;
+    using UnionFind = union_find_universe_t<GraphT>;
 
   public:
     WavefrontStatisticsCollector(const GraphT &dag, const std::vector<std::vector<VertexType>> &levelSets)

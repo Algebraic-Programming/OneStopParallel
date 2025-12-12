@@ -47,10 +47,10 @@ namespace osp {
  */
 template <typename GraphT, typename MemoryConstraintT = NoMemoryConstraint>
 class VarianceFillup : public Scheduler<GraphT> {
-    static_assert(IsComputationalDagV<Graph_t>, "VarianceFillup can only be used with computational DAGs.");
+    static_assert(IsComputationalDagV<GraphT>, "VarianceFillup can only be used with computational DAGs.");
 
   private:
-    using VertexType = vertex_idx_t<Graph_t>;
+    using VertexType = VertexIdxT<GraphT>;
 
     constexpr static bool useMemoryConstraint_ = is_memory_constraint_v<MemoryConstraintT>
                                                  or is_memory_constraint_schedule_v<MemoryConstraintT>;
@@ -80,7 +80,7 @@ class VarianceFillup : public Scheduler<GraphT> {
             temp = std::log(temp) / 2 + maxPriority;
 
             double nodeWeight
-                = std::log(static_cast<double>(std::max(graph.VertexWorkWeight(*r_iter), static_cast<VWorkwT<Graph_t>>(1))));
+                = std::log(static_cast<double>(std::max(graph.VertexWorkWeight(*r_iter), static_cast<VWorkwT<GraphT>>(1))));
             double largerVal = nodeWeight > temp ? nodeWeight : temp;
 
             workVariance[*r_iter] = std::log(std::exp(nodeWeight - largerVal) + std::exp(temp - largerVal)) + largerVal;
@@ -160,7 +160,7 @@ class VarianceFillup : public Scheduler<GraphT> {
                 VertexType &node,
                 unsigned &p,
                 const bool endSupStep,
-                const VWorkwT<Graph_t> remainingTime,
+                const VWorkwT<GraphT> remainingTime,
                 const std::vector<std::vector<std::vector<unsigned>>> &procTypesCompatibleWithNodeTypeSkipProctype) const {
         double maxScore = -1;
         for (unsigned i = 0; i < instance.NumberOfProcessors(); ++i) {
@@ -345,7 +345,7 @@ class VarianceFillup : public Scheduler<GraphT> {
         std::vector<bool> procFree(paramsP, true);
         unsigned free = paramsP;
 
-        std::set<std::pair<VWorkwT<Graph_t>, VertexType>> finishTimes;
+        std::set<std::pair<VWorkwT<GraphT>, VertexType>> finishTimes;
         finishTimes.emplace(0, std::numeric_limits<VertexType>::max());
 
         bool endSupStep = false;
@@ -376,8 +376,8 @@ class VarianceFillup : public Scheduler<GraphT> {
                 finishTimes.emplace(0, std::numeric_limits<VertexType>::max());
             }
 
-            const VWorkwT<Graph_t> time = finishTimes.begin()->first;
-            const VWorkwT<Graph_t> maxFinishTime = finishTimes.rbegin()->first;
+            const VWorkwT<GraphT> time = finishTimes.begin()->first;
+            const VWorkwT<GraphT> maxFinishTime = finishTimes.rbegin()->first;
 
             // Find new ready jobs
             while (!finishTimes.empty() && finishTimes.begin()->first == time) {

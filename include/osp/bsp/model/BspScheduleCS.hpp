@@ -264,7 +264,7 @@ class BspScheduleCS : public BspSchedule<GraphT> {
 
     void SetAutoCommunicationSchedule() {
         std::map<KeyTriple, unsigned> bestCommSchedule;
-        VWorkwT<GraphT> bestCommCost = std::numeric_limits<VWorkwT<GraphT>>::max();    // computeCosts retunrs VWorkwT<Graph_t>
+        VWorkwT<GraphT> bestCommCost = std::numeric_limits<VWorkwT<GraphT>>::max();    // computeCosts retunrs VWorkwT<GraphT>
 
         if (HasValidCommSchedule()) {
             VWorkwT<GraphT> costsCom = BspSchedule<GraphT>::ComputeCosts();

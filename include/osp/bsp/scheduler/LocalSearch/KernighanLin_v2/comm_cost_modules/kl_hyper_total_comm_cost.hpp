@@ -26,7 +26,7 @@ namespace osp {
 
 template <typename GraphT, typename CostT, typename MemoryConstraintT, unsigned windowSize = 1>
 struct KlHyperTotalCommCostFunction {
-    using VertexType = vertex_idx_t<Graph_t>;
+    using VertexType = VertexIdxT<GraphT>;
     using kl_move = kl_move_struct<cost_t, VertexType>;
     using kl_gain_update_info = kl_update_info<VertexType>;
 
@@ -95,7 +95,7 @@ struct KlHyperTotalCommCostFunction {
         }
 
         return workCosts + commCosts * commMultiplier_
-               + static_cast<VCommwT<Graph_t>>(activeSchedule_->num_steps() - 1) * instance_->SynchronisationCosts();
+               + static_cast<VCommwT<GraphT>>(activeSchedule_->num_steps() - 1) * instance_->SynchronisationCosts();
     }
 
     CostT ComputeScheduleCostTest() {
@@ -115,7 +115,7 @@ struct KlHyperTotalCommCostFunction {
         }
 
         return workCosts + commCosts * commMultiplier_
-               + static_cast<VCommwT<Graph_t>>(activeSchedule_->num_steps() - 1) * instance_->SynchronisationCosts();
+               + static_cast<VCommwT<GraphT>>(activeSchedule_->num_steps() - 1) * instance_->SynchronisationCosts();
     }
 
     inline void UpdateDatastructureAfterMove(const kl_move &move, const unsigned startStep, const unsigned endStep) {
@@ -516,8 +516,8 @@ struct KlHyperTotalCommCostFunction {
         return nodeStep + windowSize <= endStep ? windowRange_ : windowRange_ - (nodeStep + windowSize - endStep);
     }
 
-    inline CostT ChangeCommCost(const VCommwT<Graph_t> &pTargetCommCost,
-                                const VCommwT<Graph_t> &nodeTargetCommCost,
+    inline CostT ChangeCommCost(const VCommwT<GraphT> &pTargetCommCost,
+                                const VCommwT<GraphT> &nodeTargetCommCost,
                                 const CostT &commGain) {
         return p_target_comm_cost > node_target_comm_cost ? (pTargetCommCost - node_target_comm_cost) * commGain
                                                           : (nodeTargetCommCost - p_target_comm_cost) * commGain * -1.0;

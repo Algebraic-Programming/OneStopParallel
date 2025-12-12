@@ -46,10 +46,10 @@ namespace osp {
 
 template <typename GraphT, typename MemoryConstraintT = NoMemoryConstraint>
 class BspLocking : public Scheduler<GraphT> {
-    static_assert(IsComputationalDagV<Graph_t>, "BspLocking can only be used with computational DAGs.");
+    static_assert(IsComputationalDagV<GraphT>, "BspLocking can only be used with computational DAGs.");
 
   private:
-    using VertexType = vertex_idx_t<Graph_t>;
+    using VertexType = VertexIdxT<GraphT>;
 
     constexpr static bool useMemoryConstraint_ = is_memory_constraint_v<MemoryConstraintT>
                                                  or is_memory_constraint_schedule_v<MemoryConstraintT>;
@@ -78,15 +78,15 @@ class BspLocking : public Scheduler<GraphT> {
     std::vector<MaxHeap> maxProcScoreHeap_;
     std::vector<MaxHeap> maxAllProcScoreHeap_;
 
-    static std::vector<VWorkwT<Graph_t>> GetLongestPath(const GraphT &graph) {
-        std::vector<VWorkwT<Graph_t>> longestPath(graph.NumVertices(), 0);
+    static std::vector<VWorkwT<GraphT>> GetLongestPath(const GraphT &graph) {
+        std::vector<VWorkwT<GraphT>> longestPath(graph.NumVertices(), 0);
 
         const std::vector<VertexType> topOrder = GetTopOrder(graph);
 
         for (auto rIter = top_order.rbegin(); rIter != top_order.crend(); r_iter++) {
             longestPath[*r_iter] = graph.VertexWorkWeight(*r_iter);
             if (graph.OutDegree(*r_iter) > 0) {
-                VWorkwT<Graph_t> max = 0;
+                VWorkwT<GraphT> max = 0;
                 for (const auto &child : graph.Children(*r_iter)) {
                     if (max <= longest_path[child]) {
                         max = longest_path[child];
@@ -159,7 +159,7 @@ class BspLocking : public Scheduler<GraphT> {
                 VertexType &node,
                 unsigned &p,
                 const bool endSupStep,
-                const VWorkwT<Graph_t> remainingTime) {
+                const VWorkwT<GraphT> remainingTime) {
         for (unsigned proc = 0; proc < instance.NumberOfProcessors(); ++proc) {
             if (procFree[proc] && !procReady[proc].empty()) {
                 // select node
@@ -324,8 +324,8 @@ class BspLocking : public Scheduler<GraphT> {
         const unsigned &paramsP = instance.NumberOfProcessors();
         const auto &g = instance.GetComputationalDag();
 
-        const std::vector<VWorkwT<Graph_t>> pathLength = get_longest_path(g);
-        VWorkwT<Graph_t> maxPath = 1;
+        const std::vector<VWorkwT<GraphT>> pathLength = get_longest_path(g);
+        VWorkwT<GraphT> maxPath = 1;
         for (const auto &i : instance.vertices()) {
             if (pathLength[i] > max_path) {
                 maxPath = path_length[i];
@@ -336,7 +336,7 @@ class BspLocking : public Scheduler<GraphT> {
         defaultValue_.resize(n, 0);
         for (const auto &i : instance.vertices()) {
             // assert(path_length[i] * 20 / max_path <= std::numeric_limits<int>::max());
-            defaultValue_[i] = static_cast<int>(path_length[i] * static_cast<VWorkwT<Graph_t>>(20) / max_path);
+            defaultValue_[i] = static_cast<int>(path_length[i] * static_cast<VWorkwT<GraphT>>(20) / max_path);
         }
 
         max_proc_score_heap = std::vector<MaxHeap>(params_p);
@@ -363,7 +363,7 @@ class BspLocking : public Scheduler<GraphT> {
             ++nrProcsPerType[instance.GetArchitecture().processorType(proc)];
         }
 
-        std::set<std::pair<VWorkwT<Graph_t>, VertexType>> finishTimes;
+        std::set<std::pair<VWorkwT<GraphT>, VertexType>> finishTimes;
         finishTimes.emplace(0, std::numeric_limits<VertexType>::max());
 
         for (const auto &v : source_vertices_view(g)) {
@@ -424,8 +424,8 @@ class BspLocking : public Scheduler<GraphT> {
                 finishTimes.emplace(0, std::numeric_limits<VertexType>::max());
             }
 
-            const VWorkwT<Graph_t> time = finishTimes.begin()->first;
-            const VWorkwT<Graph_t> maxFinishTime = finishTimes.rbegin()->first;
+            const VWorkwT<GraphT> time = finishTimes.begin()->first;
+            const VWorkwT<GraphT> maxFinishTime = finishTimes.rbegin()->first;
 
             // Find new ready jobs
             while (!finishTimes.empty() && finishTimes.begin()->first == time) {

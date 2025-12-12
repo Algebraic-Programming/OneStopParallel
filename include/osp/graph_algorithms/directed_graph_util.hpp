@@ -159,7 +159,7 @@ class SourceVerticesView {
     const GraphT &graph_;
 
     struct SourceEval {
-        // static bool eval(const Graph_t &graph, const vertex_idx_t<Graph_t> &v) { return graph.InDegree(v) == 0; }
+        // static bool eval(const Graph_t &graph, const VertexIdxT<GraphT> &v) { return graph.InDegree(v) == 0; }
         bool operator()(const GraphT &graph, const VertexIdxT<GraphT> &v) const { return graph.InDegree(v) == 0; }
     };
 
@@ -188,7 +188,7 @@ class SinkVerticesView {
     const GraphT &graph_;
 
     struct SinkEval {
-        // static bool eval(const Graph_t &graph, const vertex_idx_t<Graph_t> &v) { return graph.OutDegree(v) == 0; }
+        // static bool eval(const Graph_t &graph, const VertexIdxT<GraphT> &v) { return graph.OutDegree(v) == 0; }
         bool operator()(const GraphT &graph, const VertexIdxT<GraphT> &v) { return graph.OutDegree(v) == 0; }
     };
 

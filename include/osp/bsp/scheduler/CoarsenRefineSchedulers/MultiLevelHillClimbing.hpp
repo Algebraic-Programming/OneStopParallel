@@ -25,10 +25,10 @@ namespace osp {
 
 template <typename GraphT>
 class MultiLevelHillClimbingScheduler : public Scheduler<GraphT> {
-    using vertex_idx = vertex_idx_t<Graph_t>;
+    using vertex_idx = VertexIdxT<GraphT>;
 
-    using vertex_type_t_or_default = std::conditional_t<IsComputationalDagTypedVerticesV<Graph_t>, v_type_t<Graph_t>, unsigned>;
-    using edge_commw_t_or_default = std::conditional_t<HasEdgeWeightsV<Graph_t>, ECommwT<Graph_t>, VCommwT<Graph_t>>;
+    using vertex_type_t_or_default = std::conditional_t<IsComputationalDagTypedVerticesV<GraphT>, v_type_t<GraphT>, unsigned>;
+    using edge_commw_t_or_default = std::conditional_t<HasEdgeWeightsV<GraphT>, ECommwT<GraphT>, VCommwT<GraphT>>;
 
   private:
     typename StepByStepCoarser<GraphT>::COARSENING_STRATEGY coarseningStrategy_
@@ -144,8 +144,8 @@ BspSchedule<GraphT> MultiLevelHillClimbingScheduler<GraphT>::Refine(const BspIns
         std::vector<vertex_idx> new_ids = coarser.GetIntermediateIDs(contract_steps);
         Graph_t dag = coarser.Contract(new_ids);
 
-        BspInstance<Graph_t> instance(dag, full_instance.GetArchitecture());
-        BspSchedule<Graph_t> schedule(instance);
+        BspInstance<GraphT> instance(dag, full_instance.GetArchitecture());
+        BspSchedule<GraphT> schedule(instance);
 
         // Project full schedule to current graph
         for (vertex_idx node = 0; node < full_instance.NumberOfVertices(); ++node) {
@@ -153,7 +153,7 @@ BspSchedule<GraphT> MultiLevelHillClimbingScheduler<GraphT>::Refine(const BspIns
             schedule.setAssignedSuperstep(new_ids[node], schedule_on_full_graph.assignedSuperstep(node));
         }
 
-        HillClimbingScheduler<Graph_t> hc;
+        HillClimbingScheduler<GraphT> hc;
         hc.improveScheduleWithStepLimit(schedule, number_hc_steps);
 
         schedule_on_full_graph = ComputeUncontractedSchedule(coarser, full_instance, schedule, contract_steps);

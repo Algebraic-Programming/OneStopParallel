@@ -90,10 +90,10 @@ struct FastDeltaTracker {
 
 template <typename GraphT, typename CostT, typename MemoryConstraintT, unsigned windowSize = 1>
 struct KlBspCommCostFunction {
-    using VertexType = vertex_idx_t<Graph_t>;
+    using VertexType = VertexIdxT<GraphT>;
     using kl_move = kl_move_struct<cost_t, VertexType>;
     using kl_gain_update_info = kl_update_info<VertexType>;
-    using comm_weight_t = VCommwT<Graph_t>;
+    using comm_weight_t = VCommwT<GraphT>;
 
     constexpr static unsigned windowRange_ = 2 * windowSize + 1;
     constexpr static bool isMaxCommCostFunction_ = true;

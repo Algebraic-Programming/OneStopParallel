@@ -28,7 +28,7 @@ namespace file_writer {
 
 template <typename GraphT>
 void WriteTxt(std::ostream &os, const PebblingSchedule<GraphT> &schedule) {
-    using vertex_idx = vertex_idx_t<Graph_t>;
+    using vertex_idx = VertexIdxT<GraphT>;
 
     os << "%% PebblingSchedule for " << schedule.GetInstance().NumberOfProcessors() << " processors and "
        << schedule.NumberOfSupersteps() << " supersteps." << std::endl;

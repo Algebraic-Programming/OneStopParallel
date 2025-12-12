@@ -31,7 +31,7 @@ namespace osp {
 
 template <typename GraphT>
 struct CmVertex {
-    using VertexType = vertex_idx_t<Graph_t>;
+    using VertexType = VertexIdxT<GraphT>;
     VertexType vertex_;
 
     VertexType parentPosition_;
@@ -50,8 +50,8 @@ struct CmVertex {
 };
 
 template <typename GraphT>
-std::vector<vertex_idx_t<Graph_t>> CuthillMckeeWavefront(const GraphT &dag, bool permutation = false) {
-    using VertexType = vertex_idx_t<Graph_t>;
+std::vector<VertexIdxT<GraphT>> CuthillMckeeWavefront(const GraphT &dag, bool permutation = false) {
+    using VertexType = VertexIdxT<GraphT>;
     using CmVertex = CmVertex<GraphT>;
 
     std::vector<VertexType> result(dag.NumVertices());
@@ -103,8 +103,8 @@ std::vector<vertex_idx_t<Graph_t>> CuthillMckeeWavefront(const GraphT &dag, bool
 }
 
 template <typename GraphT>
-std::vector<vertex_idx_t<Graph_t>> CuthillMckeeUndirected(const GraphT &dag, bool startAtSink, bool perm = false) {
-    using VertexType = vertex_idx_t<Graph_t>;
+std::vector<VertexIdxT<GraphT>> CuthillMckeeUndirected(const GraphT &dag, bool startAtSink, bool perm = false) {
+    using VertexType = VertexIdxT<GraphT>;
     using CmVertex = CmVertex<GraphT>;
 
     std::vector<VertexType> cmOrder(dag.NumVertices());
@@ -255,10 +255,10 @@ std::vector<vertex_idx_t<Graph_t>> CuthillMckeeUndirected(const GraphT &dag, boo
 
 // Cuthill-McKee Wavefront
 template <typename GraphT>
-inline std::vector<vertex_idx_t<Graph_t>> GetTopOrderCuthillMcKeeWavefront(const GraphT &dag) {
-    std::vector<vertex_idx_t<Graph_t>> order;
+inline std::vector<VertexIdxT<GraphT>> GetTopOrderCuthillMcKeeWavefront(const GraphT &dag) {
+    std::vector<VertexIdxT<GraphT>> order;
     if (dag.NumVertices() > 0) {
-        std::vector<vertex_idx_t<Graph_t>> priority = CuthillMcKeeWavefront(dag);
+        std::vector<VertexIdxT<GraphT>> priority = CuthillMcKeeWavefront(dag);
         order.reserve(dag.NumVertices());
         for (const auto &v : PriorityVecTopSortView(dag, priority)) {
             order.push_back(v);
@@ -269,10 +269,10 @@ inline std::vector<vertex_idx_t<Graph_t>> GetTopOrderCuthillMcKeeWavefront(const
 
 // Cuthill-McKee Undirected
 template <typename GraphT>
-inline std::vector<vertex_idx_t<Graph_t>> GetTopOrderCuthillMcKeeUndirected(const GraphT &dag) {
-    std::vector<vertex_idx_t<Graph_t>> order;
+inline std::vector<VertexIdxT<GraphT>> GetTopOrderCuthillMcKeeUndirected(const GraphT &dag) {
+    std::vector<VertexIdxT<GraphT>> order;
     if (dag.NumVertices() > 0) {
-        std::vector<vertex_idx_t<Graph_t>> priority = CuthillMcKeeUndirected(dag, true, true);
+        std::vector<VertexIdxT<GraphT>> priority = CuthillMcKeeUndirected(dag, true, true);
         order.reserve(dag.NumVertices());
         for (const auto &v : PriorityVecTopSortView(dag, priority)) {
             order.push_back(v);

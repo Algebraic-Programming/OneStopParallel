@@ -85,7 +85,7 @@ struct PreMoveWorkData {
 
 template <typename GraphT>
 struct KlActiveScheduleWorkDatastructures {
-    using work_weight_t = VWorkwT<Graph_t>;
+    using work_weight_t = VWorkwT<GraphT>;
 
     const BspInstance<GraphT> *instance_;
     const SetSchedule<GraphT> *setSchedule_;
@@ -282,8 +282,8 @@ struct KlActiveScheduleWorkDatastructures {
 
 template <typename GraphT, typename CostT>
 struct ThreadLocalActiveScheduleData {
-    using VertexType = vertex_idx_t<Graph_t>;
-    using EdgeType = edge_desc_t<Graph_t>;
+    using VertexType = VertexIdxT<GraphT>;
+    using EdgeType = edge_desc_t<GraphT>;
 
     using kl_move = kl_move_struct<cost_t, VertexType>;
 
@@ -320,8 +320,8 @@ struct ThreadLocalActiveScheduleData {
 template <typename GraphT, typename CostT, typename MemoryConstraintT>
 class KlActiveSchedule {
   private:
-    using VertexType = vertex_idx_t<Graph_t>;
-    using EdgeType = edge_desc_t<Graph_t>;
+    using VertexType = VertexIdxT<GraphT>;
+    using EdgeType = edge_desc_t<GraphT>;
     using kl_move = kl_move_struct<cost_t, VertexType>;
     using ThreadDataT = ThreadLocalActiveScheduleData<GraphT, CostT>;
 
@@ -354,23 +354,23 @@ class KlActiveSchedule {
 
     inline unsigned AssignedSuperstep(VertexType node) const { return vectorSchedule_.assignedSuperstep(node); }
 
-    inline VWorkwT<Graph_t> GetStepMaxWork(unsigned step) const { return workDatastructures_.step_max_work(step); }
+    inline VWorkwT<GraphT> GetStepMaxWork(unsigned step) const { return workDatastructures_.step_max_work(step); }
 
-    inline VWorkwT<Graph_t> GetStepSecondMaxWork(unsigned step) const { return workDatastructures_.step_second_max_work(step); }
+    inline VWorkwT<GraphT> GetStepSecondMaxWork(unsigned step) const { return workDatastructures_.step_second_max_work(step); }
 
     inline std::vector<unsigned> &GetStepMaxWorkProcessorCount() { return workDatastructures_.step_max_work_processor_count; }
 
-    inline VWorkwT<Graph_t> GetStepProcessorWork(unsigned step, unsigned proc) const {
+    inline VWorkwT<GraphT> GetStepProcessorWork(unsigned step, unsigned proc) const {
         return workDatastructures_.step_proc_work(step, proc);
     }
 
-    inline pre_move_work_data<VWorkwT<Graph_t>> GetPreMoveWorkData(kl_move move) {
+    inline pre_move_work_data<VWorkwT<GraphT>> GetPreMoveWorkData(kl_move move) {
         return workDatastructures_.get_pre_move_work_data(move);
     }
 
-    inline VWorkwT<Graph_t> GetMaxWorkWeight() { return workDatastructures_.max_work_weight; }
+    inline VWorkwT<GraphT> GetMaxWorkWeight() { return workDatastructures_.max_work_weight; }
 
-    inline VWorkwT<Graph_t> GetTotalWorkWeight() { return workDatastructures_.total_work_weight; }
+    inline VWorkwT<GraphT> GetTotalWorkWeight() { return workDatastructures_.total_work_weight; }
 
     inline void SetCost(CostT cost) { cost_ = cost; }
 
@@ -380,8 +380,8 @@ class KlActiveSchedule {
 
     KlActiveScheduleWorkDatastructures<GraphT> workDatastructures_;
 
-    inline VWorkwT<Graph_t> GetStepTotalWork(unsigned step) const {
-        VWorkwT<Graph_t> totalWork = 0;
+    inline VWorkwT<GraphT> GetStepTotalWork(unsigned step) const {
+        VWorkwT<GraphT> totalWork = 0;
         for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); proc++) {
             total_work += get_step_processor_work(step, proc);
         }

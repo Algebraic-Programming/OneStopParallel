@@ -30,7 +30,7 @@ namespace osp {
 
 template <typename GraphT>
 struct KlMove {
-    vertex_idx_t<Graph_t> node_;
+    VertexIdxT<GraphT> node_;
 
     double gain_;
     double changeInCost_;
@@ -43,7 +43,7 @@ struct KlMove {
 
     KlMove() : node(0), gain_(0), changeInCost_(0), fromProc_(0), fromStep_(0), toProc_(0), toStep_(0) {}
 
-    KlMove(vertexIdxT_<Graph_t> _node,
+    KlMove(vertexIdxT_<GraphT> _node,
            double _gain,
            double _change_cost,
            unsigned _from_proc,
@@ -76,8 +76,8 @@ class IklCostFunction {
 template <typename GraphT, typename MemoryConstraintT>
 class KlCurrentSchedule {
   private:
-    using VertexType = vertex_idx_t<Graph_t>;
-    using EdgeType = edge_desc_t<Graph_t>;
+    using VertexType = VertexIdxT<GraphT>;
+    using EdgeType = edge_desc_t<GraphT>;
 
   public:
     KlCurrentSchedule(IklCostFunction *costF) : costF_(costF) {
@@ -103,10 +103,10 @@ class KlCurrentSchedule {
 
     MemoryConstraintT memoryConstraint_;
 
-    std::vector<std::vector<VWorkwT<Graph_t>>> stepProcessorWork_;
+    std::vector<std::vector<VWorkwT<GraphT>>> stepProcessorWork_;
 
-    std::vector<VWorkwT<Graph_t>> stepMaxWork_;
-    std::vector<VWorkwT<Graph_t>> stepSecondMaxWork_;
+    std::vector<VWorkwT<GraphT>> stepMaxWork_;
+    std::vector<VWorkwT<GraphT>> stepSecondMaxWork_;
 
     double currentCost_ = 0;
 
@@ -244,9 +244,9 @@ class KlCurrentSchedule {
             memoryConstraint_.initialize(setSchedule_, vectorSchedule_);
         }
 
-        step_processor_work = std::vector<std::vector<VWorkwT<Graph_t>>>(num_steps(), std::vector<VWorkwT<Graph_t>>(num_procs, 0));
-        step_max_work = std::vector<VWorkwT<Graph_t>>(num_steps(), 0);
-        step_second_max_work = std::vector<VWorkwT<Graph_t>>(num_steps(), 0);
+        step_processor_work = std::vector<std::vector<VWorkwT<GraphT>>>(num_steps(), std::vector<VWorkwT<GraphT>>(num_procs, 0));
+        step_max_work = std::vector<VWorkwT<GraphT>>(num_steps(), 0);
+        step_second_max_work = std::vector<VWorkwT<GraphT>>(num_steps(), 0);
     }
 
     virtual void CleanupSuperstepDatastructures() {
@@ -461,13 +461,13 @@ class KlCurrentSchedule {
 template <typename GraphT, typename MemoryConstraintT>
 class KlCurrentScheduleMaxComm : public KlCurrentSchedule<GraphT, MemoryConstraintT> {
   public:
-    std::vector<std::vector<VCommwT<Graph_t>>> stepProcessorSend_;
-    std::vector<VCommwT<Graph_t>> stepMaxSend_;
-    std::vector<VCommwT<Graph_t>> stepMaxReceive_;
+    std::vector<std::vector<VCommwT<GraphT>>> stepProcessorSend_;
+    std::vector<VCommwT<GraphT>> stepMaxSend_;
+    std::vector<VCommwT<GraphT>> stepMaxReceive_;
 
-    std::vector<std::vector<VCommwT<Graph_t>>> stepProcessorReceive_;
-    std::vector<VCommwT<Graph_t>> stepSecondMaxSend_;
-    std::vector<VCommwT<Graph_t>> stepSecondMaxReceive_;
+    std::vector<std::vector<VCommwT<GraphT>>> stepProcessorReceive_;
+    std::vector<VCommwT<GraphT>> stepSecondMaxSend_;
+    std::vector<VCommwT<GraphT>> stepSecondMaxReceive_;
 };
 
 }    // namespace osp

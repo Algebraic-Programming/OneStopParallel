@@ -48,7 +48,7 @@ class IsomorphicSubgraphSchedulerTester : public IsomorphicSubgraphScheduler<Gra
     void TestScheduleIsomorphicGroup(const BspInstance<GraphT> &instance,
                                      const std::vector<GroupT> &isomorphicGroups,
                                      const SubgraphSchedule &subSched,
-                                     std::vector<vertex_idx_t<Graph_t>> &partition) {
+                                     std::vector<VertexIdxT<GraphT>> &partition) {
         this->ScheduleIsomorphicGroup(instance, isomorphicGroups, subSched, partition);
     }
 };
@@ -233,7 +233,7 @@ BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroupHeterogeneousArch) {
     subSched.nodeAssignedWorkerPerType_[1] = {0, 2};    // 2xT1 for group 1
     subSched.wasTrimmed_ = {false, false};              // No trimming occurred
 
-    std::vector<vertex_idx_t<GraphT>> partition(dag.NumVertices());
+    std::vector<VertexIdxT<GraphT>> partition(dag.NumVertices());
 
     GreedyBspScheduler<ConstrGraphT> greedyScheduler;
     IsomorphicSubgraphSchedulerTester<GraphT, ConstrGraphT> tester(greedyScheduler);
@@ -260,7 +260,7 @@ BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroupHeterogeneousArch) {
     BOOST_CHECK_NE(partition[2], partition[5]);
 
     // Verify all partitions are unique as expected
-    std::set<vertex_idx_t<GraphT>> partitionIds;
+    std::set<VertexIdxT<GraphT>> partitionIds;
     for (const auto &pId : partition) {
         partitionIds.insert(pId);
     }
@@ -299,7 +299,7 @@ BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroupShuffledIDs) {
     subSched.nodeAssignedWorkerPerType_[0] = {2};
     subSched.wasTrimmed_ = {false};    // No trimming occurred
 
-    std::vector<vertex_idx_t<GraphT>> partition(dag.NumVertices());
+    std::vector<VertexIdxT<GraphT>> partition(dag.NumVertices());
 
     // Use a simple greedy scheduler for the sub-problems.
     GreedyBspScheduler<ConstrGraphT> greedyScheduler;
@@ -369,7 +369,7 @@ BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroupShuffledIDs) {
 //     sub_sched.node_assigned_worker_per_type.resize(1);
 //     sub_sched.node_assigned_worker_per_type[0] = {4};
 
-//     std::vector<vertex_idx_t<graph_t>> partition(dag.NumVertices());
+//     std::vector<VertexIdxT<graph_t>> partition(dag.NumVertices());
 
 //     GreedyBspScheduler<constr_graph_t> greedy_scheduler;
 //     IsomorphicSubgraphSchedulerTester<graph_t, constr_graph_t> tester(greedy_scheduler);

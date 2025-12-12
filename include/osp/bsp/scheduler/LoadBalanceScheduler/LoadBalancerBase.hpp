@@ -56,12 +56,12 @@ class LoadBalancerBase : public Scheduler<GraphT> {
     /// @param instance bsp instance
     /// @param slack how much to ignore global balance
     /// @return vector with the interpolated priorities
-    std::vector<float> ComputeProcessorPrioritiesInterpolation(const std::vector<VWorkwT<Graph_t>> &superstepPartitionWork,
-                                                               const std::vector<VWorkwT<Graph_t>> &totalPartitionWork,
-                                                               const VWorkwT<Graph_t> &totalWork,
+    std::vector<float> ComputeProcessorPrioritiesInterpolation(const std::vector<VWorkwT<GraphT>> &superstepPartitionWork,
+                                                               const std::vector<VWorkwT<GraphT>> &totalPartitionWork,
+                                                               const VWorkwT<GraphT> &totalWork,
                                                                const BspInstance<GraphT> &instance,
                                                                const float slack = 0.0) {
-        VWorkwT<Graph_t> workTillNow = 0;
+        VWorkwT<GraphT> workTillNow = 0;
         for (const auto &part_work : total_partition_work) {
             work_till_now += part_work;
         }
@@ -88,9 +88,9 @@ class LoadBalancerBase : public Scheduler<GraphT> {
     /// @param instance bsp instance
     /// @param slack how much to ignore global balance
     /// @return vector with the processors in order of priority
-    std::vector<unsigned> ComputeProcessorPriority(const std::vector<VWorkwT<Graph_t>> &superstepPartitionWork,
-                                                   const std::vector<VWorkwT<Graph_t>> &totalPartitionWork,
-                                                   const VWorkwT<Graph_t> &totalWork,
+    std::vector<unsigned> ComputeProcessorPriority(const std::vector<VWorkwT<GraphT>> &superstepPartitionWork,
+                                                   const std::vector<VWorkwT<GraphT>> &totalPartitionWork,
+                                                   const VWorkwT<GraphT> &totalWork,
                                                    const BspInstance<GraphT> &instance,
                                                    const float slack = 0.0) {
         return sorting_arrangement<float, unsigned>(

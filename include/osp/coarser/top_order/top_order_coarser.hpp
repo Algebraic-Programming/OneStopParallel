@@ -26,10 +26,10 @@ limitations under the License.
 
 namespace osp {
 
-template <typename GraphTIn, typename GraphTOut, std::vector<vertex_idx_t<Graph_t_in>> (*topSortFunc)(const GraphTIn &)>
+template <typename GraphTIn, typename GraphTOut, std::vector<VertexIdxT<Graph_t_in>> (*topSortFunc)(const GraphTIn &)>
 class TopOrderCoarser : public Coarser<GraphTIn, GraphTOut> {
   private:
-    using VertexType = vertex_idx_t<Graph_t_in>;
+    using VertexType = VertexIdxT<Graph_t_in>;
 
     // parameters
     VWorkwT<Graph_t_in> workThreshold_ = std::numeric_limits<VWorkwT<Graph_t_in>>::max();
@@ -48,7 +48,7 @@ class TopOrderCoarser : public Coarser<GraphTIn, GraphTOut> {
     void FinishSuperNodeAddEdges(const GraphTIn &dagIn,
                                  GraphTOut &dagOut,
                                  const std::vector<VertexType> &nodes,
-                                 std::vector<vertex_idx_t<Graph_t_out>> &reverseVertexMap) {
+                                 std::vector<VertexIdxT<Graph_t_out>> &reverseVertexMap) {
         dag_out.SetVertexMemWeight(current_super_node_idx, current_memory);
         dag_out.SetVertexWorkWeight(current_super_node_idx, current_work);
         dag_out.SetVertexCommWeight(current_super_node_idx, current_communication);
@@ -129,10 +129,10 @@ class TopOrderCoarser : public Coarser<GraphTIn, GraphTOut> {
 
     virtual bool coarsenDag(const GraphTIn &dagIn,
                             GraphTOut &dagOut,
-                            std::vector<vertex_idx_t<Graph_t_out>> &reverseVertexMap) override {
+                            std::vector<VertexIdxT<Graph_t_out>> &reverseVertexMap) override {
         assert(dagOut.NumVertices() == 0);
         if (dagIn.NumVertices() == 0) {
-            reverse_vertex_map = std::vector<vertex_idx_t<Graph_t_out>>();
+            reverse_vertex_map = std::vector<VertexIdxT<Graph_t_out>>();
             return true;
         }
 

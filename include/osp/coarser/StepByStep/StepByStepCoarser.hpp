@@ -30,13 +30,13 @@ namespace osp {
 
 template <typename GraphT>
 class StepByStepCoarser : public CoarserGenContractionMap<GraphT, GraphT> {
-    using vertex_idx = vertex_idx_t<Graph_t>;
+    using vertex_idx = VertexIdxT<GraphT>;
 
-    using vertex_type_t_or_default = std::conditional_t<IsComputationalDagTypedVerticesV<Graph_t>, v_type_t<Graph_t>, unsigned>;
-    using edge_commw_t_or_default = std::conditional_t<HasEdgeWeightsV<Graph_t>, ECommwT<Graph_t>, VCommwT<Graph_t>>;
+    using vertex_type_t_or_default = std::conditional_t<IsComputationalDagTypedVerticesV<GraphT>, v_type_t<GraphT>, unsigned>;
+    using edge_commw_t_or_default = std::conditional_t<HasEdgeWeightsV<GraphT>, ECommwT<GraphT>, VCommwT<GraphT>>;
 
     using boost_graph_t
-        = boost_graph<VWorkwT<Graph_t>, VCommwT<Graph_t>, VMemwT<Graph_t>, vertex_type_t_or_default, edge_commw_t_or_default>;
+        = boost_graph<VWorkwT<GraphT>, VCommwT<GraphT>, VMemwT<GraphT>, vertex_type_t_or_default, edge_commw_t_or_default>;
 
   public:
     enum CoarseningStrategy { EDGE_BY_EDGE, BOTTOM_LEVEL_CLUSTERS };
@@ -45,13 +45,13 @@ class StepByStepCoarser : public CoarserGenContractionMap<GraphT, GraphT> {
 
     struct EdgeToContract {
         std::pair<vertex_idx, vertex_idx> edge_;
-        VWorkwT<Graph_t> workWeight_;
-        VCommwT<Graph_t> commWeight_;
+        VWorkwT<GraphT> workWeight_;
+        VCommwT<GraphT> commWeight_;
 
         EdgeToContract(const vertex_idx source,
                        const vertex_idx target,
-                       const VWorkwT<Graph_t> workWeight,
-                       const VCommwT<Graph_t> commWeight)
+                       const VWorkwT<GraphT> workWeight,
+                       const VCommwT<GraphT> commWeight)
             : edge(source, target), work_weight(work_weight_), comm_weight(comm_weight_) {}
 
         bool operator<(const EdgeToContract &other) const {
@@ -72,12 +72,12 @@ class StepByStepCoarser : public CoarserGenContractionMap<GraphT, GraphT> {
 
     std::vector<std::set<vertex_idx>> contains_;
 
-    std::map<std::pair<vertex_idx, vertex_idx>, VCommwT<Graph_t>> edgeWeights;
-    std::map<std::pair<vertex_idx, vertex_idx>, VCommwT<Graph_t>> contractable;
+    std::map<std::pair<vertex_idx, vertex_idx>, VCommwT<GraphT>> edgeWeights;
+    std::map<std::pair<vertex_idx, vertex_idx>, VCommwT<GraphT>> contractable;
     std::vector<bool> nodeValid_;
     std::vector<vertex_idx> topOrderIdx_;
 
-    VMemwT<Graph_t> fastMemCapacity_ = std::numeric_limits<VMemwT<Graph_t>>::max();    // for pebbling
+    VMemwT<GraphT> fastMemCapacity_ = std::numeric_limits<VMemwT<GraphT>>::max();    // for pebbling
 
     // Utility functions for coarsening in general
     void ContractSingleEdge(std::pair<vertex_idx, vertex_idx> edge);
@@ -101,7 +101,7 @@ class StepByStepCoarser : public CoarserGenContractionMap<GraphT, GraphT> {
     void MergeSourcesInPebbling();
 
     // Utility for contracting into final format
-    void SetIdVector(std::vector<vertex_idx_t<Graph_t>> &newVertexId) const;
+    void SetIdVector(std::vector<VertexIdxT<GraphT>> &newVertexId) const;
     static std::vector<vertex_idx> GetFilteredTopOrderIdx(const GraphT &g, const std::vector<bool> &isValid);
 
   public:
@@ -110,32 +110,32 @@ class StepByStepCoarser : public CoarserGenContractionMap<GraphT, GraphT> {
     virtual std::string getCoarserName() const override { return "StepByStepCoarsening"; }
 
     // DAG coarsening
-    virtual std::vector<vertex_idx_t<Graph_t>> generate_vertex_contraction_map(const GraphT &dagIn) override;
+    virtual std::vector<VertexIdxT<GraphT>> generate_vertex_contraction_map(const GraphT &dagIn) override;
 
     // Coarsening for pebbling problems - leaves source nodes intact, considers memory bound
-    void CoarsenForPebbling(const GraphT &dagIn, GraphT &coarsenedDag, std::vector<vertex_idx_t<Graph_t>> &newVertexId);
+    void CoarsenForPebbling(const GraphT &dagIn, GraphT &coarsenedDag, std::vector<VertexIdxT<GraphT>> &newVertexId);
 
     void SetCoarseningStrategy(CoarseningStrategy strategy) { coarseningStrategy_ = strategy; }
 
     void SetTargetNumberOfNodes(const unsigned nrNodes) { targetNrOfNodes_ = nrNodes; }
 
-    void SetFastMemCapacity(const VMemwT<Graph_t> capacity) { fast_mem_capacity = capacity_; }
+    void SetFastMemCapacity(const VMemwT<GraphT> capacity) { fast_mem_capacity = capacity_; }
 
     std::vector<std::pair<vertex_idx, vertex_idx>> GetContractionHistory() const { return contractionHistory; }
 
     std::vector<vertex_idx> GetIntermediateIDs(vertex_idx untilWhichStep) const;
-    GraphT Contract(const std::vector<vertex_idx_t<Graph_t>> &newVertexId) const;
+    GraphT Contract(const std::vector<VertexIdxT<GraphT>> &newVertexId) const;
 
     const GraphT &GetOriginalDag() const { return gFull_; }
 };
 
 // template<typename Graph_t>
-// bool StepByStepCoarser<Graph_t>::coarseDag(const Graph_t& dag_in, Graph_t &dag_out,
-//                         std::vector<std::vector<vertex_idx_t<Graph_t>>> &old_vertex_ids,
-//                         std::vector<vertex_idx_t<Graph_t>> &new_vertex_id)
+// bool StepByStepCoarser<GraphT>::coarseDag(const Graph_t& dag_in, Graph_t &dag_out,
+//                         std::vector<std::vector<VertexIdxT<GraphT>>> &old_vertex_ids,
+//                         std::vector<VertexIdxT<GraphT>> &new_vertex_id)
 
 template <typename GraphT>
-std::vector<vertex_idx_t<Graph_t>> StepByStepCoarser<GraphT>::GenerateVertexContractionMap(const GraphT &dagIn) {
+std::vector<VertexIdxT<GraphT>> StepByStepCoarser<GraphT>::GenerateVertexContractionMap(const GraphT &dagIn) {
     const unsigned n = static_cast<unsigned>(dagIn.NumVertices());
 
     gFull_ = dagIn;
@@ -254,7 +254,7 @@ std::vector<vertex_idx_t<Graph_t>> StepByStepCoarser<GraphT>::GenerateVertexCont
         MergeSourcesInPebbling();
     }
 
-    std::vector<vertex_idx_t<Graph_t>> newVertexId;
+    std::vector<VertexIdxT<GraphT>> newVertexId;
     SetIdVector(new_vertex_id);
 
     return new_vertex_id;
@@ -358,7 +358,7 @@ bool StepByStepCoarser<GraphT>::IsContractable(std::pair<vertex_idx, vertex_idx>
 }
 
 template <typename GraphT>
-std::set<vertex_idx_t<Graph_t>> StepByStepCoarser<GraphT>::GetContractableChildren(const vertex_idx node) const {
+std::set<VertexIdxT<GraphT>> StepByStepCoarser<GraphT>::GetContractableChildren(const vertex_idx node) const {
     std::deque<vertex_idx> queue;
     std::set<vertex_idx> visited;
     std::set<vertex_idx> succContractable;
@@ -396,7 +396,7 @@ std::set<vertex_idx_t<Graph_t>> StepByStepCoarser<GraphT>::GetContractableChildr
 }
 
 template <typename GraphT>
-std::set<vertex_idx_t<Graph_t>> StepByStepCoarser<GraphT>::GetContractableParents(const vertex_idx node) const {
+std::set<VertexIdxT<GraphT>> StepByStepCoarser<GraphT>::GetContractableParents(const vertex_idx node) const {
     std::deque<vertex_idx> queue;
     std::set<vertex_idx> visited;
     std::set<vertex_idx> predContractable;
@@ -510,10 +510,10 @@ std::vector<typename StepByStepCoarser<GraphT>::EdgeToContract> StepByStepCoarse
 }
 
 template <typename Graph_t>
-std::pair<vertex_idx_t<Graph_t>, vertex_idx_t<Graph_t>> StepByStepCoarser<Graph_t>::PickEdgeToContract(
+std::pair<VertexIdxT<GraphT>, VertexIdxT<GraphT>> StepByStepCoarser<GraphT>::PickEdgeToContract(
     const std::vector<EdgeToContract> &candidates) const {
     size_t limit = (candidates.size() + 2) / 3;
-    VWorkwT<Graph_t> limitCardinality = candidates[limit].work_weight;
+    VWorkwT<GraphT> limitCardinality = candidates[limit].work_weight;
     while (limit < candidates.size() - 1 && candidates[limit + 1].work_weight == limitCardinality) {
         ++limit;
     }
@@ -542,7 +542,7 @@ std::pair<vertex_idx_t<Graph_t>, vertex_idx_t<Graph_t>> StepByStepCoarser<Graph_
  *
  */
 template <typename Graph_t>
-std::vector<std::pair<vertex_idx_t<Graph_t>, vertex_idx_t<Graph_t>>> StepByStepCoarser<Graph_t>::ClusterCoarsen() const {
+std::vector<std::pair<VertexIdxT<GraphT>, VertexIdxT<GraphT>>> StepByStepCoarser<GraphT>::ClusterCoarsen() const {
     std::vector<bool> singleton(G_full.NumVertices(), true);
     std::vector<vertex_idx> leader(G_full.NumVertices());
     std::vector<unsigned> weight(G_full.NumVertices());
@@ -736,8 +736,8 @@ void StepByStepCoarser<GraphT>::ComputeFilteredTopOrderIdx() {
 }
 
 template <typename GraphT>
-std::vector<vertex_idx_t<Graph_t>> StepByStepCoarser<GraphT>::GetFilteredTopOrderIdx(const GraphT &g,
-                                                                                     const std::vector<bool> &isValid) {
+std::vector<VertexIdxT<GraphT>> StepByStepCoarser<GraphT>::GetFilteredTopOrderIdx(const GraphT &g,
+                                                                                  const std::vector<bool> &isValid) {
     std::vector<vertex_idx> topOrder = GetFilteredTopOrder(isValid, g);
     std::vector<vertex_idx> idx(g.NumVertices());
     for (vertex_idx node = 0; node < top_order.size(); ++node) {
@@ -749,7 +749,7 @@ std::vector<vertex_idx_t<Graph_t>> StepByStepCoarser<GraphT>::GetFilteredTopOrde
 template <typename GraphT>
 void StepByStepCoarser<GraphT>::CoarsenForPebbling(const GraphT &dagIn,
                                                    GraphT &coarsenedDag,
-                                                   std::vector<vertex_idx_t<Graph_t>> &newVertexId) {
+                                                   std::vector<VertexIdxT<GraphT>> &newVertexId) {
     problemType_ = ProblemType::PEBBLING;
     coarseningStrategy_ = CoarseningStrategy::EDGE_BY_EDGE;
 
@@ -771,7 +771,7 @@ bool StepByStepCoarser<GraphT>::IncontractableForPebbling(const std::pair<vertex
         return true;
     }
 
-    VMemwT<Graph_t> sumWeight = G_coarse.VertexMemWeight(edge.first) + G_coarse.VertexMemWeight(edge.second);
+    VMemwT<GraphT> sumWeight = G_coarse.VertexMemWeight(edge.first) + G_coarse.VertexMemWeight(edge.second);
     std::set<vertex_idx> parents;
     for (vertex_idx pred : G_coarse.Parents(edge.first)) {
         parents.insert(pred);
@@ -817,7 +817,7 @@ bool StepByStepCoarser<GraphT>::IncontractableForPebbling(const std::pair<vertex
 template <typename GraphT>
 void StepByStepCoarser<GraphT>::MergeSourcesInPebbling() {
     // initialize memory requirement sums to check viability later
-    std::vector<VMemwT<Graph_t>> memorySum(G_coarse.NumVertices(), 0);
+    std::vector<VMemwT<GraphT>> memorySum(G_coarse.NumVertices(), 0);
     std::vector<vertex_idx> sources;
     for (vertex_idx node = 0; node < G_coarse.NumVertices(); ++node) {
         if (!nodeValid_[node]) {
@@ -912,7 +912,7 @@ void StepByStepCoarser<GraphT>::MergeSourcesInPebbling() {
 }
 
 template <typename GraphT>
-GraphT StepByStepCoarser<GraphT>::Contract(const std::vector<vertex_idx_t<Graph_t>> &newVertexId) const {
+GraphT StepByStepCoarser<GraphT>::Contract(const std::vector<VertexIdxT<GraphT>> &newVertexId) const {
     GraphT gContracted;
     std::vector<bool> isValid(gFull_.NumVertices(), false);
     for (vertex_idx node = 0; node < gFull_.NumVertices(); ++node) {
@@ -943,7 +943,7 @@ GraphT StepByStepCoarser<GraphT>::Contract(const std::vector<vertex_idx_t<Graph_
                 continue;
             }
 
-            if constexpr (HasEdgeWeightsV<Graph_t>) {
+            if constexpr (HasEdgeWeightsV<GraphT>) {
                 const auto pair = edge_desc(new_vertex_id[node], new_vertex_id[succ], G_contracted);
 
                 if (pair.second) {
@@ -965,7 +965,7 @@ GraphT StepByStepCoarser<GraphT>::Contract(const std::vector<vertex_idx_t<Graph_
 }
 
 template <typename GraphT>
-void StepByStepCoarser<GraphT>::SetIdVector(std::vector<vertex_idx_t<Graph_t>> &newVertexId) const {
+void StepByStepCoarser<GraphT>::SetIdVector(std::vector<VertexIdxT<GraphT>> &newVertexId) const {
     newVertexId.clear();
     newVertexId.resize(gFull_.NumVertices());
 
@@ -973,7 +973,7 @@ void StepByStepCoarser<GraphT>::SetIdVector(std::vector<vertex_idx_t<Graph_t>> &
 }
 
 template <typename GraphT>
-std::vector<vertex_idx_t<Graph_t>> StepByStepCoarser<GraphT>::GetIntermediateIDs(vertex_idx untilWhichStep) const {
+std::vector<VertexIdxT<GraphT>> StepByStepCoarser<GraphT>::GetIntermediateIDs(vertex_idx untilWhichStep) const {
     std::vector<vertex_idx> Traget(gFull_.NumVertices()), pointsTo(G_full.NumVertices(), std::numeric_limits<vertex_idx>::max());
 
     for (vertex_idx iterate = 0; iterate < contractionHistory.size() && iterate < until_which_step; ++iterate) {

@@ -248,7 +248,7 @@ VWorkwT<GraphT> BspScheduleRecomp<GraphT>::ComputeWorkCosts() const {
 }
 
 template <typename GraphT>
-VWorkwT<Graph_t> BspScheduleRecomp<GraphT>::ComputeCosts() const {
+VWorkwT<GraphT> BspScheduleRecomp<GraphT>::ComputeCosts() const {
     assert(SatisfiesConstraints());
 
     std::vector<std::vector<CostType>> rec(numberOfSupersteps_, std::vector<CostType>(instance_->NumberOfProcessors(), 0));

@@ -37,10 +37,10 @@ namespace osp {
  */
 template <typename GraphT>
 class AbstractWavefrontDivider : public IDagDivider<GraphT> {
-    static_assert(IsComputationalDagV<Graph_t>, "AbstractWavefrontDivider can only be used with computational DAGs.");
+    static_assert(IsComputationalDagV<GraphT>, "AbstractWavefrontDivider can only be used with computational DAGs.");
 
   protected:
-    using VertexType = vertex_idx_t<Graph_t>;
+    using VertexType = VertexIdxT<GraphT>;
 
     const GraphT *dagPtr_ = nullptr;
 
@@ -51,7 +51,7 @@ class AbstractWavefrontDivider : public IDagDivider<GraphT> {
     std::vector<std::vector<VertexType>> GetComponentsForRange(size_t startLevel,
                                                                size_t endLevel,
                                                                const std::vector<std::vector<VertexType>> &levelSets) const {
-        union_find_universe_t<Graph_t> uf;
+        union_find_universe_t<GraphT> uf;
         for (size_t i = startLevel; i < endLevel; ++i) {
             for (const auto vertex : level_sets[i]) {
                 uf.add_object(vertex, dag_ptr_->VertexWorkWeight(vertex), dag_ptr_->VertexMemWeight(vertex));

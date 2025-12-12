@@ -40,12 +40,12 @@ namespace file_writer {
  */
 template <typename GraphT>
 void WriteComputationalDagHyperdagFormatDb(std::ostream &os, const GraphT &graph, const bool writeCommentLines = false) {
-    static_assert(IsComputationalDagV<Graph_t>, "Graph_t must be a computational DAG");
+    static_assert(IsComputationalDagV<GraphT>, "Graph_t must be a computational DAG");
 
     const auto numVertices = graph.NumVertices();
     unsigned numHyperedges = 0;
-    vertex_idx_t<Graph_t> numPins = 0;
-    std::vector<vertex_idx_t<Graph_t>> hyperedgeIdxToNode;
+    VertexIdxT<GraphT> numPins = 0;
+    std::vector<VertexIdxT<GraphT>> hyperedgeIdxToNode;
 
     for (const auto &u : graph.vertices()) {
         if (graph.OutDegree(u) > 0) {
@@ -74,7 +74,7 @@ void WriteComputationalDagHyperdagFormatDb(std::ostream &os, const GraphT &graph
     }
     for (const auto &u : graph.vertices()) {
         os << u << " " << graph.VertexWorkWeight(u);
-        if constexpr (HasTypedVerticesV<Graph_t>) {
+        if constexpr (HasTypedVerticesV<GraphT>) {
             os << " " << graph.VertexType(u);
         } else {
             os << " " << 0;

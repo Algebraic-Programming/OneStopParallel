@@ -82,7 +82,7 @@ class IsomorphismGroups {
      * - The second dimension represents the groups of isomorphic connected components.
      * - The third dimension contains the subgraph of the isomorphism group.
      *
-     * @return const std::vector<std::vector<Graph_t>>& A constant reference
+     * @return const std::vector<std::vector<GraphT>>& A constant reference
      * to the isomorphism groups subgraphs.
      */
     const std::vector<std::vector<ConstrGraphT>> &GetIsomorphismGroupsSubgraphs() const { return isomorphismGroupsSubgraphs_; }
@@ -96,7 +96,7 @@ class IsomorphismGroups {
      *
      * Reqires the dag to be divided before calling this function.
      */
-    void ComputeIsomorphismGroups(std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> &vertexMaps, const GraphT &dag) {
+    void ComputeIsomorphismGroups(std::vector<std::vector<std::vector<VertexIdxT<GraphT>>>> &vertexMaps, const GraphT &dag) {
         isomorphismGroups_ = std::vector<std::vector<std::vector<std::size_t>>>(vertex_maps.size());
 
         isomorphismGroupsSubgraphs_ = std::vector<std::vector<ConstrGraphT>>(vertex_maps.size());
@@ -132,7 +132,7 @@ class IsomorphismGroups {
      * @param merge_threshold If a group has more members than this, it will be merged.
      * @param target_group_count The number of larger groups to create from a single large group.
      */
-    void MergeLargeIsomorphismGroups(std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> &vertexMaps,
+    void MergeLargeIsomorphismGroups(std::vector<std::vector<std::vector<VertexIdxT<GraphT>>>> &vertexMaps,
                                      const GraphT &dag,
                                      size_t mergeThreshold,
                                      size_t targetGroupCount = 8) {
@@ -140,7 +140,7 @@ class IsomorphismGroups {
         assert(mergeThreshold > targetGroupCount);
 
         for (size_t i = 0; i < isomorphismGroups_.size(); ++i) {
-            std::vector<std::vector<vertex_idx_t<Graph_t>>> newVertexMapsForLevel;
+            std::vector<std::vector<VertexIdxT<GraphT>>> newVertexMapsForLevel;
             std::vector<std::vector<std::size_t>> newIsoGroupsForLevel;
             std::vector<ConstrGraphT> newIsoSubgraphsForLevel;
 
@@ -170,7 +170,7 @@ class IsomorphismGroups {
                     size_t currentOriginalIdx = 0;
 
                     for (size_t k = 0; k < targetGroupCount; ++k) {
-                        std::vector<vertex_idx_t<Graph_t>> mergedComponent;
+                        std::vector<VertexIdxT<GraphT>> mergedComponent;
                         size_t numToMerge = baseMult + (k < remainder ? 1 : 0);
 
                         for (size_t m = 0; m < numToMerge; ++m) {

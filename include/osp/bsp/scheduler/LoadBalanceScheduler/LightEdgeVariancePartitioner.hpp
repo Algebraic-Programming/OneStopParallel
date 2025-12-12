@@ -26,7 +26,7 @@ namespace osp {
 template <typename GraphT, typename InterpolationT, typename MemoryConstraintT = no_memory_constraint>
 class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, InterpolationT, MemoryConstraintT> {
   private:
-    using VertexType = vertex_idx_t<Graph_t>;
+    using VertexType = VertexIdxT<GraphT>;
 
     struct VarianceCompare {
         bool operator()(const std::pair<VertexType, double> &lhs, const std::pair<VertexType, double> &rhs) const {
@@ -92,7 +92,7 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
         std::vector<double> variancePriorities = Base::compute_work_variance(graph, Base::variance_power);
         std::vector<VertexType> numUnallocatedParents(nVert, 0);
 
-        VWorkwT<Graph_t> totalWork = 0;
+        VWorkwT<GraphT> totalWork = 0;
         for (const auto &v : graph.vertices()) {
             schedule.setAssignedProcessor(v, nProcessors);
 
@@ -107,8 +107,8 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
             }
         }
 
-        std::vector<VWorkwT<Graph_t>> totalPartitionWork(nProcessors, 0);
-        std::vector<VWorkwT<Graph_t>> superstepPartitionWork(nProcessors, 0);
+        std::vector<VWorkwT<GraphT>> totalPartitionWork(nProcessors, 0);
+        std::vector<VWorkwT<GraphT>> superstepPartitionWork(nProcessors, 0);
 
         std::vector<std::vector<VertexType>> preprocessedPartition = heavy_edge_preprocess(
             graph, heavyIsXTimesMedian_, minPercentComponentsRetained_, boundComponentWeightPercent_ / nProcessors);
@@ -120,14 +120,14 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
             }
         }
 
-        std::vector<VMemwT<Graph_t>> memoryCostOfPreprocessedPartition(preprocessedPartition.size(), 0);
+        std::vector<VMemwT<GraphT>> memoryCostOfPreprocessedPartition(preprocessedPartition.size(), 0);
         for (size_t i = 0; i < preprocessedPartition.size(); i++) {
             for (const auto &vert : preprocessed_partition[i]) {
                 memory_cost_of_preprocessed_partition[i] += graph.VertexMemWeight(vert);
             }
         }
 
-        std::vector<VCommwT<Graph_t>> transientCostOfPreprocessedPartition(preprocessedPartition.size(), 0);
+        std::vector<VCommwT<GraphT>> transientCostOfPreprocessedPartition(preprocessedPartition.size(), 0);
         for (size_t i = 0; i < preprocessedPartition.size(); i++) {
             for (const auto &vert : preprocessed_partition[i]) {
                 transient_cost_of_preprocessed_partition[i]

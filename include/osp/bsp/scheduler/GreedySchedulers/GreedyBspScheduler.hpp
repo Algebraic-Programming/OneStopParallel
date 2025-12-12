@@ -42,10 +42,10 @@ namespace osp {
  */
 template <typename GraphT, typename MemoryConstraintT = NoMemoryConstraint>
 class GreedyBspScheduler : public Scheduler<GraphT> {
-    static_assert(IsComputationalDagV<Graph_t>, "GreedyBspScheduler can only be used with computational DAGs.");
+    static_assert(IsComputationalDagV<GraphT>, "GreedyBspScheduler can only be used with computational DAGs.");
 
   private:
-    using VertexType = vertex_idx_t<Graph_t>;
+    using VertexType = VertexIdxT<GraphT>;
 
     constexpr static bool useMemoryConstraint_ = is_memory_constraint_v<MemoryConstraintT>
                                                  or is_memory_constraint_schedule_v<MemoryConstraintT>;
@@ -283,7 +283,7 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
             ++nrProcsPerType[instance.GetArchitecture().processorType(proc)];
         }
 
-        std::set<std::pair<VWorkwT<Graph_t>, VertexType>> finishTimes;
+        std::set<std::pair<VWorkwT<GraphT>, VertexType>> finishTimes;
         finishTimes.emplace(0, std::numeric_limits<VertexType>::max());
 
         for (const auto &v : source_vertices_view(g)) {
@@ -338,7 +338,7 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
                 finishTimes.emplace(0, std::numeric_limits<VertexType>::max());
             }
 
-            const VWorkwT<Graph_t> time = finishTimes.begin()->first;
+            const VWorkwT<GraphT> time = finishTimes.begin()->first;
 
             // Find new ready jobs
             while (!finishTimes.empty() && finishTimes.begin()->first == time) {

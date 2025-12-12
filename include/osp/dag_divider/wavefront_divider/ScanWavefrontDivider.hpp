@@ -40,13 +40,13 @@ class ScanWavefrontDivider : public AbstractWavefrontDivider<GraphT> {
 
     ScanWavefrontDivider() { UseLargestStepSplitter(3.0, 4); }
 
-    std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> divide(const GraphT &dag) override {
+    std::vector<std::vector<std::vector<VertexIdxT<GraphT>>>> divide(const GraphT &dag) override {
         this->dagPtr_ = &dag;
         if constexpr (enableDebugPrint_) {
             std::cout << "[DEBUG] Starting scan-all division." << std::endl;
         }
 
-        std::vector<std::vector<vertex_idx_t<Graph_t>>> levelSets = this->ComputeWavefronts();
+        std::vector<std::vector<VertexIdxT<GraphT>>> levelSets = this->ComputeWavefronts();
         if (levelSets.empty()) {
             return {};
         }
@@ -99,7 +99,7 @@ class ScanWavefrontDivider : public AbstractWavefrontDivider<GraphT> {
     }
 
   private:
-    using VertexType = vertex_idx_t<Graph_t>;
+    using VertexType = VertexIdxT<GraphT>;
 
     SequenceMetric sequenceMetric_ = SequenceMetric::COMPONENT_COUNT;
     std::unique_ptr<SequenceSplitter> splitter_;

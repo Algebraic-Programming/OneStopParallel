@@ -30,7 +30,7 @@ limitations under the License.
 using namespace osp;
 
 using ComputationalDag = boost_graph_int_t;
-using VertexType = vertex_idx_t<ComputationalDag>;
+using VertexType = VertexIdxT<ComputationalDag>;
 
 BOOST_AUTO_TEST_CASE(CuthillMckee1) {
     ComputationalDag dag;

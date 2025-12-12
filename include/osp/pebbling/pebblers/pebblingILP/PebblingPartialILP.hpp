@@ -31,12 +31,12 @@ namespace osp {
 
 template <typename GraphT>
 class PebblingPartialILP : public Scheduler<GraphT> {
-    static_assert(IsComputationalDagV<Graph_t>, "PebblingSchedule can only be used with computational DAGs.");
-    static_assert(std::is_same_v<VWorkwT<Graph_t>, VCommwT<Graph_t>>,
+    static_assert(IsComputationalDagV<GraphT>, "PebblingSchedule can only be used with computational DAGs.");
+    static_assert(std::is_same_v<VWorkwT<GraphT>, VCommwT<GraphT>>,
                   "PebblingSchedule requires work and comm. weights to have the same type.");
 
-    using vertex_idx = vertex_idx_t<Graph_t>;
-    using cost_type = VWorkwT<Graph_t>;
+    using vertex_idx = VertexIdxT<GraphT>;
+    using cost_type = VWorkwT<GraphT>;
 
     unsigned minPartitionSize_ = 50, maxPartitionSize_ = 100;
     unsigned timeSecondsForSubIlPs_ = 600;
@@ -143,7 +143,7 @@ RETURN_STATUS PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<Graph
         }
     }
 
-    std::vector<Graph_t> subDags;
+    std::vector<GraphT> subDags;
     for (unsigned part = 0; part < nrParts; ++part) {
         GraphT dag;
         create_induced_subgraph(instance.GetComputationalDag(), dag, nodes_in_part[part], extra_sources[part]);
@@ -197,9 +197,9 @@ RETURN_STATUS PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<Graph
 
     // PART 3: solve a small ILP for each part
     std::vector<std::set<vertex_idx>> inFastMem(instance.NumberOfProcessors());
-    std::vector<PebblingSchedule<Graph_t>> pebbling(nrParts);
-    std::vector<BspArchitecture<Graph_t>> subArch(nrParts);
-    std::vector<BspInstance<Graph_t>> subInstance(nrParts);
+    std::vector<PebblingSchedule<GraphT>> pebbling(nrParts);
+    std::vector<BspArchitecture<GraphT>> subArch(nrParts);
+    std::vector<BspInstance<GraphT>> subInstance(nrParts);
 
     // to handle the initial memory content for isomorphic parts
     std::vector<std::vector<std::set<vertex_idx>>> hasRedsInBeginning(
@@ -280,7 +280,7 @@ RETURN_STATUS PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<Graph
 
         // heuristic solution for baseline
         PebblingSchedule<GraphT> heuristicPebbling;
-        GreedyBspScheduler<Graph_t> greedyScheduler;
+        GreedyBspScheduler<GraphT> greedyScheduler;
         BspSchedule<GraphT> bspHeuristic(subInstance[part]);
         greedyScheduler.computeSchedule(bspHeuristic);
 
@@ -386,7 +386,7 @@ GraphT PebblingPartialILP<GraphT>::ContractByPartition(const BspInstance<GraphT>
     }
 
     for (auto edge : edges) {
-        if constexpr (HasEdgeWeightsV<Graph_t>) {
+        if constexpr (HasEdgeWeightsV<GraphT>) {
             contracted.add_edge(edge.first, edge.second, 1);
         } else {
             contracted.add_edge(edge.first, edge.second);

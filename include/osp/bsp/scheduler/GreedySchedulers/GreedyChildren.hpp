@@ -37,7 +37,7 @@ class GreedyChildren : public Scheduler<GraphT> {
     GreedyChildren(bool ensureEnoughSources = true) : Scheduler<GraphT>(), ensureEnoughSources_(ensureEnoughSources) {};
 
     RETURN_STATUS computeSchedule(BspSchedule<GraphT> &sched) override {
-        using VertexType = vertex_idx_t<Graph_t>;
+        using VertexType = VertexIdxT<GraphT>;
         const auto &instance = sched.GetInstance();
 
         for (const auto &v : instance.GetComputationalDag().vertices()) {
@@ -56,7 +56,7 @@ class GreedyChildren : public Scheduler<GraphT> {
 
         while (!next.empty()) {
             std::unordered_set<VertexType> nodesAssignedThisSuperstep;
-            std::vector<VWorkwT<Graph_t>> processorWeights(instance.NumberOfProcessors(), 0);
+            std::vector<VWorkwT<GraphT>> processorWeights(instance.NumberOfProcessors(), 0);
 
             bool fewSources = next.size() < instance.NumberOfProcessors() ? true : false;
             bool nodeAdded = true;
@@ -93,7 +93,7 @@ class GreedyChildren : public Scheduler<GraphT> {
                     if (processorSet) {
                         sched.setAssignedProcessor(node, processorToBeAllocated);
                     } else {
-                        VWorkwT<Graph_t> minWeight = std::numeric_limits<VWorkwT<Graph_t>>::max();
+                        VWorkwT<GraphT> minWeight = std::numeric_limits<VWorkwT<GraphT>>::max();
                         unsigned bestProc = std::numeric_limits<unsigned>::max();
                         for (unsigned p = 0; p < instance.NumberOfProcessors(); ++p) {
                             if (instance.isCompatible(node, p)) {

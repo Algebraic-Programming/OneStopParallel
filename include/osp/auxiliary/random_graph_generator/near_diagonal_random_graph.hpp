@@ -35,22 +35,22 @@ namespace osp {
  * @return DAG
  */
 template <typename GraphT>
-void NearDiagRandomGraph(GraphT &dagOut, vertex_idx_t<Graph_t> numVertices, double bandwidth, double prob) {
-    static_assert(IsConstructableCdagV<Graph_t>, "Graph_t must be a constructable computational DAG type");
+void NearDiagRandomGraph(GraphT &dagOut, VertexIdxT<GraphT> numVertices, double bandwidth, double prob) {
+    static_assert(IsConstructableCdagV<GraphT>, "Graph_t must be a constructable computational DAG type");
 
     dagOut = GraphT(numVertices);
 
     std::random_device rd;
     std::mt19937 gen(rd());
 
-    for (vertex_idx_t<Graph_t> v = 1; v < numVertices; ++v) {
-        std::binomial_distribution<vertex_idx_t<Graph_t>> binoDist(vertex_idx_t<GraphT>(NumVertices - v),
-                                                                   prob * std::exp(1.0 - static_cast<double>(v) / bandwidth));
-        vertex_idx_t<Graph_t> offDiagEdgesNum = bino_dist(gen);
+    for (VertexIdxT<GraphT> v = 1; v < numVertices; ++v) {
+        std::binomial_distribution<VertexIdxT<GraphT>> binoDist(VertexIdxT<GraphT>(NumVertices - v),
+                                                                prob * std::exp(1.0 - static_cast<double>(v) / bandwidth));
+        VertexIdxT<GraphT> offDiagEdgesNum = bino_dist(gen);
 
-        std::vector<vertex_idx_t<Graph_t>> range(numVertices - v, 0);
+        std::vector<VertexIdxT<GraphT>> range(numVertices - v, 0);
         std::iota(range.begin(), range.end(), 0);
-        std::vector<vertex_idx_t<Graph_t>> sampled;
+        std::vector<VertexIdxT<GraphT>> sampled;
 
         std::sample(range.begin(), range.end(), std::back_inserter(sampled), off_diag_edges_num, gen);
 

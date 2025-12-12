@@ -73,17 +73,17 @@ struct KlBaseParameter {
 
 template <typename GraphT, typename MemoryConstraintT>
 class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
-    static_assert(IsDirectedGraphEdgeDescV<Graph_t>, "Graph_t must satisfy the directed_graph concept");
-    static_assert(has_hashable_edge_desc_v<Graph_t>, "Graph_t must satisfy the has_hashable_edge_desc concept");
-    static_assert(IsComputationalDagV<Graph_t>, "Graph_t must satisfy the computational_dag concept");
+    static_assert(IsDirectedGraphEdgeDescV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(has_hashable_edge_desc_v<GraphT>, "Graph_t must satisfy the has_hashable_edge_desc concept");
+    static_assert(IsComputationalDagV<GraphT>, "Graph_t must satisfy the computational_dag concept");
 
   private:
-    using memw_t = VMemwT<Graph_t>;
-    using commw_t = VCommwT<Graph_t>;
-    using workw_t = VWorkwT<Graph_t>;
+    using memw_t = VMemwT<GraphT>;
+    using commw_t = VCommwT<GraphT>;
+    using workw_t = VWorkwT<GraphT>;
 
   protected:
-    using VertexType = vertex_idx_t<Graph_t>;
+    using VertexType = VertexIdxT<GraphT>;
 
     KlBaseParameter parameters_;
 
@@ -543,7 +543,7 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
         }
     }
 
-    virtual void ComputeCommGain(vertex_idx_t<Graph_t> node, unsigned currentStep, unsigned currentProc, unsigned newProc) = 0;
+    virtual void ComputeCommGain(VertexIdxT<GraphT> node, unsigned currentStep, unsigned currentProc, unsigned newProc) = 0;
 
     void UpdateNodeGains(const std::unordered_set<VertexType> &nodes) {
         for (const auto &node : nodes) {
@@ -569,7 +569,7 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
         std::uniform_int_distribution<unsigned> dis(0, count - 1);
         unsigned i = dis(gen_);
 
-        KlMove<GraphT> bestMove = kl_move<Graph_t>((*node_heap_handles[max_nodes[i]]));
+        KlMove<GraphT> bestMove = kl_move<GraphT>((*node_heap_handles[max_nodes[i]]));
 
         max_gain_heap.erase(node_heap_handles[max_nodes[i]]);
         node_heap_handles.erase(max_nodes[i]);
@@ -780,7 +780,7 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
     }
 
     void SelectNodesThreshold(std::size_t threshold) {
-        std::uniform_int_distribution<vertex_idx_t<Graph_t>> dis(0, num_nodes - 1);
+        std::uniform_int_distribution<VertexIdxT<GraphT>> dis(0, num_nodes - 1);
 
         while (node_selection.size() < threshold) {
             auto node = dis(gen_);
@@ -991,7 +991,7 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
             return false;
         }
 
-        VWorkwT<Graph_t> totalWork = 0;
+        VWorkwT<GraphT> totalWork = 0;
 
         for (unsigned proc = 0; proc < numProcs_; proc++) {
             totalWork += currentSchedule_.step_processor_work[step][proc];
@@ -1034,7 +1034,7 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
             currentSchedule_.recompute_neighboring_supersteps(step);
 
 #ifdef KL_DEBUG
-            BspSchedule<Graph_t> tmp_schedule(current_schedule.set_schedule);
+            BspSchedule<GraphT> tmp_schedule(current_schedule.set_schedule);
             if (not tmp_schedule.satisfiesMemoryConstraints()) {
                 std::cout << "Mem const violated" << std::endl;
             }
@@ -1060,7 +1060,7 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
         currentSchedule_.remove_superstep(step);
 
 #ifdef KL_DEBUG
-        BspSchedule<Graph_t> tmp_schedule(current_schedule.set_schedule);
+        BspSchedule<GraphT> tmp_schedule(current_schedule.set_schedule);
         if (not tmp_schedule.satisfiesMemoryConstraints()) {
             std::cout << "Mem const violated" << std::endl;
         }
@@ -1136,9 +1136,9 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
             return false;
         }
 
-        VWorkwT<Graph_t> totalWork = 0;
-        VWorkwT<Graph_t> maxTotalWork = 0;
-        VWorkwT<Graph_t> minTotalWork = std::numeric_limits<VWorkwT<Graph_t>>::max();
+        VWorkwT<GraphT> totalWork = 0;
+        VWorkwT<GraphT> maxTotalWork = 0;
+        VWorkwT<GraphT> minTotalWork = std::numeric_limits<VWorkwT<GraphT>>::max();
 
         for (unsigned proc = 0; proc < numProcs_; proc++) {
             totalWork += currentSchedule_.step_processor_work[step][proc];
@@ -2036,7 +2036,7 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
                 //             }
 
 #ifdef KL_DEBUG
-                BspSchedule<Graph_t> tmp_schedule(current_schedule.set_schedule);
+                BspSchedule<GraphT> tmp_schedule(current_schedule.set_schedule);
                 if (not tmp_schedule.satisfiesMemoryConstraints()) {
                     std::cout << "Mem const violated" << std::endl;
                 }

@@ -63,13 +63,13 @@ class OrbitGraphProcessor {
         NATURAL_BREAKS
     };
 
-    static_assert(IsComputationalDagV<Graph_t>, "Graph must be a computational DAG");
+    static_assert(IsComputationalDagV<GraphT>, "Graph must be a computational DAG");
     static_assert(IsComputationalDagV<Constr_Graph_t>, "Constr_Graph_t must be a computational DAG");
     static_assert(IsConstructableCdagV<Constr_Graph_t>, "Constr_Graph_t must satisfy the constructable_cdag_vertex concept");
-    static_assert(std::is_same_v<vertex_idx_t<Graph_t>, vertex_idx_t<Constr_Graph_t>>,
+    static_assert(std::is_same_v<VertexIdxT<GraphT>, VertexIdxT<Constr_Graph_t>>,
                   "Graph_t and Constr_Graph_t must have the same vertex_idx types");
 
-    using VertexType = vertex_idx_t<Graph_t>;
+    using VertexType = VertexIdxT<GraphT>;
 
     static constexpr bool verbose_ = false;
 
@@ -204,10 +204,10 @@ class OrbitGraphProcessor {
                           const VWorkwT<Constr_Graph_t> pathThreshold = 0) {
         bool changed = true;
         while (changed) {
-            const std::vector<vertex_idx_t<Constr_Graph_t>> vertexPoset
-                = get_top_node_distance<Constr_Graph_t, vertex_idx_t<Constr_Graph_t>>(current_coarse_graph);
-            const std::vector<vertex_idx_t<Constr_Graph_t>> vertexBotPoset
-                = get_bottom_node_distance<Constr_Graph_t, vertex_idx_t<Constr_Graph_t>>(current_coarse_graph);
+            const std::vector<VertexIdxT<Constr_Graph_t>> vertexPoset
+                = get_top_node_distance<Constr_Graph_t, VertexIdxT<Constr_Graph_t>>(current_coarse_graph);
+            const std::vector<VertexIdxT<Constr_Graph_t>> vertexBotPoset
+                = get_bottom_node_distance<Constr_Graph_t, VertexIdxT<Constr_Graph_t>>(current_coarse_graph);
 
             changed = false;
             for (const auto u : currentCoarseGraph.vertices()) {
@@ -316,10 +316,10 @@ class OrbitGraphProcessor {
                        const VWorkwT<Constr_Graph_t> pathThreshold = 0) {
         bool changed = true;
         while (changed) {
-            const std::vector<vertex_idx_t<Constr_Graph_t>> vertexPoset
-                = get_top_node_distance<Constr_Graph_t, vertex_idx_t<Constr_Graph_t>>(current_coarse_graph);
-            const std::vector<vertex_idx_t<Constr_Graph_t>> vertexBotPoset
-                = get_bottom_node_distance<Constr_Graph_t, vertex_idx_t<Constr_Graph_t>>(current_coarse_graph);
+            const std::vector<VertexIdxT<Constr_Graph_t>> vertexPoset
+                = get_top_node_distance<Constr_Graph_t, VertexIdxT<Constr_Graph_t>>(current_coarse_graph);
+            const std::vector<VertexIdxT<Constr_Graph_t>> vertexBotPoset
+                = get_bottom_node_distance<Constr_Graph_t, VertexIdxT<Constr_Graph_t>>(current_coarse_graph);
 
             changed = false;
             for (const auto &edge : Edges(currentCoarseGraph)) {
@@ -395,14 +395,14 @@ class OrbitGraphProcessor {
                                   std::vector<VertexType> &currentContractionMap,
                                   const bool mergeDifferentNodeTypes,
                                   const bool mergeBelowThreshold,
-                                  const std::vector<VWorkwT<Graph_t>> &lockThresholdPerType,
+                                  const std::vector<VWorkwT<GraphT>> &lockThresholdPerType,
                                   const VWorkwT<Constr_Graph_t> pathThreshold = 0) {
         bool changed = true;
         while (changed) {
-            const std::vector<vertex_idx_t<Constr_Graph_t>> vertexPoset
-                = get_top_node_distance<Constr_Graph_t, vertex_idx_t<Constr_Graph_t>>(current_coarse_graph);
-            const std::vector<vertex_idx_t<Constr_Graph_t>> vertexBotPoset
-                = get_bottom_node_distance<Constr_Graph_t, vertex_idx_t<Constr_Graph_t>>(current_coarse_graph);
+            const std::vector<VertexIdxT<Constr_Graph_t>> vertexPoset
+                = get_top_node_distance<Constr_Graph_t, VertexIdxT<Constr_Graph_t>>(current_coarse_graph);
+            const std::vector<VertexIdxT<Constr_Graph_t>> vertexBotPoset
+                = get_bottom_node_distance<Constr_Graph_t, VertexIdxT<Constr_Graph_t>>(current_coarse_graph);
 
             changed = false;
             for (const auto &edge : Edges(currentCoarseGraph)) {
@@ -465,9 +465,9 @@ class OrbitGraphProcessor {
                     continue;
                 }
 
-                v_type_t<Graph_t> uType = 0;
-                v_type_t<Graph_t> vType = 0;
-                if (not merge_different_node_types && HasTypedVerticesV<Graph_t>) {
+                v_type_t<GraphT> uType = 0;
+                v_type_t<GraphT> vType = 0;
+                if (not merge_different_node_types && HasTypedVerticesV<GraphT>) {
                     uType = currentCoarseGraph.VertexType(u);
                     vType = currentCoarseGraph.VertexType(v);
                 }
@@ -599,12 +599,12 @@ class OrbitGraphProcessor {
             coarse_node_idx++;
         }
 
-        std::vector<VWorkwT<Graph_t>> workPerVertexType;
+        std::vector<VWorkwT<GraphT>> workPerVertexType;
         workPerVertexType.resize(mergeDifferentNodeTypes_ ? 1U : dag.NumVertexTypes(), 0);
 
         std::map<size_t, size_t> orbitSizeCounts;
-        std::map<size_t, VWorkwT<Graph_t>> workPerOrbitSize;
-        VWorkwT<Graph_t> totalWork = 0;
+        std::map<size_t, VWorkwT<GraphT>> workPerOrbitSize;
+        VWorkwT<GraphT> totalWork = 0;
         for (const auto &[hash, vertices] : orbits) {
             const size_t orbit_size = vertices.size();
 
@@ -614,12 +614,12 @@ class OrbitGraphProcessor {
 
             orbit_size_counts[orbit_size]++;
 
-            VWorkwT<Graph_t> orbit_work = 0;
+            VWorkwT<GraphT> orbit_work = 0;
             for (const auto v : vertices) {
                 orbit_work += dag.VertexWorkWeight(v);
             }
 
-            if (not merge_different_node_types_ && HasTypedVerticesV<Graph_t>) {
+            if (not merge_different_node_types_ && HasTypedVerticesV<GraphT>) {
                 work_per_vertex_type[dag.VertexType(vertices[0])] += orbit_work;
             } else {
                 work_per_vertex_type[0] += orbit_work;
@@ -629,9 +629,9 @@ class OrbitGraphProcessor {
             total_work += orbit_work;
         }
 
-        std::vector<VWorkwT<Graph_t>> lockThresholdPerType(workPerVertexType.size());
+        std::vector<VWorkwT<GraphT>> lockThresholdPerType(workPerVertexType.size());
         for (size_t i = 0; i < workPerVertexType.size(); ++i) {
-            lockThresholdPerType[i] = static_cast<VWorkwT<Graph_t>>(lockOrbitRatio_ * work_per_vertex_type[i]);
+            lockThresholdPerType[i] = static_cast<VWorkwT<GraphT>>(lockOrbitRatio_ * work_per_vertex_type[i]);
         }
 
         std::vector<double> relAccWorkPerOrbitSize;
@@ -702,8 +702,8 @@ class OrbitGraphProcessor {
 
   private:
     std::vector<size_t> ComputeSymmetryLevels(std::vector<double> &relAccWorkPerOrbitSize,
-                                              const std::map<size_t, VWorkwT<Graph_t>> workPerOrbitSize,
-                                              const VWorkwT<Graph_t> totalWork,
+                                              const std::map<size_t, VWorkwT<GraphT>> workPerOrbitSize,
+                                              const VWorkwT<GraphT> totalWork,
                                               const std::map<size_t, size_t> orbitSizeCounts) {
         std::vector<size_t> symmetryLevelsToTest;
         minSymmetry_ = 2;
@@ -714,7 +714,7 @@ class OrbitGraphProcessor {
                     std::cout << "Using PERCENTILE_BASED heuristic for symmetry levels.\n";
                 }
                 size_t percentileIdx = 0;
-                VWorkwT<Graph_t> cumulativeWork = 0;
+                VWorkwT<GraphT> cumulativeWork = 0;
                 for (auto it = work_per_orbit_size.rbegin(); it != work_per_orbit_size.rend(); ++it) {
                     cumulativeWork += it->second;
                     if (totalWork == 0) {
@@ -792,7 +792,7 @@ class OrbitGraphProcessor {
                 }
 
                 // Verbose print data
-                VWorkwT<Graph_t> cumulativeWork = 0;
+                VWorkwT<GraphT> cumulativeWork = 0;
                 for (auto it = work_per_orbit_size.rbegin(); it != work_per_orbit_size.rend(); ++it) {
                     cumulativeWork += it->second;
                     if (totalWork > 0) {
@@ -808,7 +808,7 @@ class OrbitGraphProcessor {
                     std::cout << "Using CURRENT_DEFAULT heuristic for symmetry levels.\n";
                 }
                 double threshold = lockOrbitRatio_;
-                VWorkwT<Graph_t> cumulativeWork = 0;
+                VWorkwT<GraphT> cumulativeWork = 0;
                 for (auto it = work_per_orbit_size.rbegin(); it != work_per_orbit_size.rend(); ++it) {
                     cumulativeWork += it->second;
                     const double relWork
@@ -902,7 +902,7 @@ class OrbitGraphProcessor {
 
     void PerformCoarseningAdaptiveSymmetry(const GraphT &originalDag,
                                            const ConstrGraphT &initialCoarseGraph,
-                                           const std::vector<VWorkwT<Graph_t>> &lockThresholdPerType,
+                                           const std::vector<VWorkwT<GraphT>> &lockThresholdPerType,
                                            const std::vector<size_t> &symmetryLevelsToTest) {
         finalCoarseGraph_ = ConstrGraphT();
         final_contraction_map_.clear();

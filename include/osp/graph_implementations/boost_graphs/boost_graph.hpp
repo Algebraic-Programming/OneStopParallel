@@ -199,7 +199,7 @@ class BoostGraph {
 
     template <typename GraphT>
     BoostGraph(const GraphT &other) : numberOfVertexTypes_(0) {
-        static_assert(osp::IsComputationalDagV<Graph_t>, "Graph_t must satisfy the is_computation_dag concept");
+        static_assert(osp::IsComputationalDagV<GraphT>, "Graph_t must satisfy the is_computation_dag concept");
 
         graph_.m_vertices.reserve(other.NumVertices());
 
@@ -341,26 +341,26 @@ inline auto Edges(const BoostGraph<VertexWorkwT, VertexCommwT, VertexMemwT, Vert
 }
 
 template <typename VertexWorkwT, typename VertexCommwT, typename VertexMemwT, typename VertexTypeT, typename EdgeCommwT>
-inline auto outEdges(osp::vertex_idx_t<boost_graph<vertex_workw_t, vertex_commw_t, vertex_memw_t, vertex_type_t, edge_commw_t>> v,
+inline auto outEdges(osp::VertexIdxT<boost_graph<vertex_workw_t, vertex_commw_t, vertex_memw_t, vertex_type_t, edge_commw_t>> v,
                      const boost_graph<vertex_workw_t, vertex_commw_t, vertex_memw_t, vertex_type_t, edge_commw_t> &graph) {
     return graph.out_edges(v);
 }
 
 template <typename VertexWorkwT, typename VertexCommwT, typename VertexMemwT, typename VertexTypeT, typename EdgeCommwT>
-inline auto inEdges(osp::vertex_idx_t<boost_graph<vertex_workw_t, vertex_commw_t, vertex_memw_t, vertex_type_t, edge_commw_t>> v,
+inline auto inEdges(osp::VertexIdxT<boost_graph<vertex_workw_t, vertex_commw_t, vertex_memw_t, vertex_type_t, edge_commw_t>> v,
                     const boost_graph<vertex_workw_t, vertex_commw_t, vertex_memw_t, vertex_type_t, edge_commw_t> &graph) {
     return graph.in_edges(v);
 }
 
 template <typename VertexWorkwT, typename VertexCommwT, typename VertexMemwT, typename VertexTypeT, typename EdgeCommwT>
-inline osp::vertex_idx_t<boost_graph<vertex_workw_t, vertex_commw_t, vertex_memw_t, vertex_type_t, edge_commw_t>> Source(
+inline osp::VertexIdxT<boost_graph<vertex_workw_t, vertex_commw_t, vertex_memw_t, vertex_type_t, edge_commw_t>> Source(
     const osp::edge_desc_t<boost_graph<vertex_workw_t, vertex_commw_t, vertex_memw_t, vertex_type_t, edge_commw_t>> &edge,
     const BoostGraph<VertexWorkwT, VertexCommwT, VertexMemwT, VertexTypeT, EdgeCommwT> &graph) {
     return graph.Source(edge);
 }
 
 template <typename VertexWorkwT, typename VertexCommwT, typename VertexMemwT, typename VertexTypeT, typename EdgeCommwT>
-inline osp::vertex_idx_t<boost_graph<vertex_workw_t, vertex_commw_t, vertex_memw_t, vertex_type_t, edge_commw_t>> Target(
+inline osp::VertexIdxT<boost_graph<vertex_workw_t, vertex_commw_t, vertex_memw_t, vertex_type_t, edge_commw_t>> Target(
     const osp::edge_desc_t<boost_graph<vertex_workw_t, vertex_commw_t, vertex_memw_t, vertex_type_t, edge_commw_t>> &edge,
     const BoostGraph<VertexWorkwT, VertexCommwT, VertexMemwT, VertexTypeT, EdgeCommwT> &graph) {
     return graph.Traget(edge);

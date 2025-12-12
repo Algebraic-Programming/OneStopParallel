@@ -56,7 +56,7 @@ int main(int argc, char *argv[]) {
     coarser.setParameters(params);
 
     GraphT coarseGraph;
-    std::vector<vertex_idx_t<GraphT>> contractionMap;
+    std::vector<VertexIdxT<GraphT>> contractionMap;
 
     GraphT graphCopy = graph;
     bool ignoreVertexTypes = false;

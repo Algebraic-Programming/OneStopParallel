@@ -1039,7 +1039,7 @@ static_assert(IsDirectedGraphEdgeDescV<CSG>, "CSG must satisfy the directed_grap
 //             const Graph_t_in &dag_in,
 //             Compact_Sparse_Graph<false, use_work_weights, use_comm_weights, use_mem_weights, use_vert_types, vert_t, edge_t,
 //             work_weight_type, comm_weight_type, mem_weight_type, vertex_type_template_type> &coarsened_dag,
-//             std::vector<vertex_idx_t<Compact_Sparse_Graph<false, use_work_weights, use_comm_weights, use_mem_weights,
+//             std::vector<VertexIdxT<Compact_Sparse_Graph<false, use_work_weights, use_comm_weights, use_mem_weights,
 //             use_vert_types, vert_t, edge_t, work_weight_type, comm_weight_type, mem_weight_type, vertex_type_template_type>>>
 //             &vertex_contraction_map) {
 
@@ -1053,13 +1053,13 @@ static_assert(IsDirectedGraphEdgeDescV<CSG>, "CSG must satisfy the directed_grap
 
 //     assert(check_valid_contraction_map<Graph_out_type>(vertex_contraction_map));
 
-//     const vertex_idx_t<Graph_out_type> num_vert_quotient =
+//     const VertexIdxT<Graph_out_type> num_vert_quotient =
 //         (*std::max_element(vertex_contraction_map.cbegin(), vertex_contraction_map.cend())) + 1;
 
-//     std::set<std::pair<vertex_idx_t<Graph_out_type>, vertex_idx_t<Graph_out_type>>> quotient_edges;
+//     std::set<std::pair<VertexIdxT<Graph_out_type>, VertexIdxT<Graph_out_type>>> quotient_edges;
 
-//     for (const vertex_idx_t<Graph_t_in> &vert : dag_in.vertices()) {
-//         for (const vertex_idx_t<Graph_t_in> &chld : dag_in.Children(vert)) {
+//     for (const VertexIdxT<Graph_t_in> &vert : dag_in.vertices()) {
+//         for (const VertexIdxT<Graph_t_in> &chld : dag_in.Children(vert)) {
 //             if (vertex_contraction_map[vert] == vertex_contraction_map[chld]) {
 //                 continue;
 //             }
@@ -1070,7 +1070,7 @@ static_assert(IsDirectedGraphEdgeDescV<CSG>, "CSG must satisfy the directed_grap
 //     coarsened_dag = Graph_out_type(num_vert_quotient, quotient_edges);
 
 //     const auto& pushforward_map = coarsened_dag.get_pushforward_permutation();
-//     std::vector<vertex_idx_t<Graph_out_type>> combined_expansion_map(dag_in.NumVertices());
+//     std::vector<VertexIdxT<Graph_out_type>> combined_expansion_map(dag_in.NumVertices());
 //     for (const auto &vert : dag_in.vertices()) {
 //         combined_expansion_map[vert] = pushforward_map[vertex_contraction_map[vert]];
 //     }
@@ -1081,13 +1081,13 @@ static_assert(IsDirectedGraphEdgeDescV<CSG>, "CSG must satisfy the directed_grap
 //         communication types of in-graph and out-graph must be the same."); static_assert(std::is_same_v<VMemwT<Graph_t_in>,
 //         VMemwT<Graph_out_type>>, "Memory weight types of in-graph and out-graph must be the same.");
 
-//         for (const vertex_idx_t<Graph_t_in> &vert : coarsened_dag.vertices()) {
+//         for (const VertexIdxT<Graph_t_in> &vert : coarsened_dag.vertices()) {
 //             coarsened_dag.SetVertexWorkWeight(vert, 0);
 //             coarsened_dag.SetVertexCommWeight(vert, 0);
 //             coarsened_dag.SetVertexMemWeight(vert, 0);
 //         }
 
-//         for (const vertex_idx_t<Graph_t_in> &vert : dag_in.vertices()) {
+//         for (const VertexIdxT<Graph_t_in> &vert : dag_in.vertices()) {
 //             coarsened_dag.SetVertexWorkWeight(
 //                 vertex_contraction_map[vert],
 //                 v_work_acc_method()(coarsened_dag.VertexWorkWeight(combined_expansion_map[vert]),
@@ -1109,7 +1109,7 @@ static_assert(IsDirectedGraphEdgeDescV<CSG>, "CSG must satisfy the directed_grap
 //         static_assert(std::is_same_v<v_type_t<Graph_t_in>, v_type_t<Graph_out_type>>,
 //                         "Vertex type types of in graph and out graph must be the same!");
 
-//         for (const vertex_idx_t<Graph_t_in> &vert : dag_in.vertices()) {
+//         for (const VertexIdxT<Graph_t_in> &vert : dag_in.vertices()) {
 //             coarsened_dag.SetVertexType(vertex_contraction_map[vert], dag_in.VertexType(vert));
 //         }
 //         // assert(std::all_of(dag_in.vertices().begin(), dag_in.vertices().end(),

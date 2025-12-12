@@ -72,12 +72,12 @@ class GreedyMetaScheduler : public Scheduler<GraphT> {
             return RETURN_STATUS::OSP_SUCCESS;
         }
 
-        VWorkwT<Graph_t> bestScheduleCost = std::numeric_limits<VWorkwT<Graph_t>>::max();
+        VWorkwT<GraphT> bestScheduleCost = std::numeric_limits<VWorkwT<GraphT>>::max();
         BspSchedule<GraphT> currentSchedule(schedule.GetInstance());
 
         for (Scheduler<GraphT> *scheduler : schedulers_) {
             scheduler->computeSchedule(currentSchedule);
-            const VWorkwT<Graph_t> scheduleCost = CostModel()(currentSchedule);
+            const VWorkwT<GraphT> scheduleCost = CostModel()(currentSchedule);
 
             if constexpr (verbose_) {
                 std::cout << "Executed scheduler " << scheduler->getScheduleName() << ", costs: " << schedule_cost

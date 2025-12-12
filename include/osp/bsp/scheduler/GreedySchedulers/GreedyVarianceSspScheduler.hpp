@@ -44,10 +44,10 @@ namespace osp {
  */
 template <typename GraphT, typename MemoryConstraintT = no_memory_constraint>
 class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
-    static_assert(IsComputationalDagV<Graph_t>, "GreedyVarianceSspScheduler can only be used with computational DAGs.");
+    static_assert(IsComputationalDagV<GraphT>, "GreedyVarianceSspScheduler can only be used with computational DAGs.");
 
   private:
-    using VertexType = vertex_idx_t<Graph_t>;
+    using VertexType = VertexIdxT<GraphT>;
 
     constexpr static bool useMemoryConstraint_ = is_memory_constraint_v<MemoryConstraint_t>
                                                  or is_memory_constraint_schedule_v<MemoryConstraint_t>;
@@ -75,7 +75,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
             temp = std::log(temp) / 2 + maxPriority;
 
             double nodeWeight
-                = std::log(static_cast<double>(std::max(graph.VertexWorkWeight(*r_iter), static_cast<VWorkwT<Graph_t>>(1))));
+                = std::log(static_cast<double>(std::max(graph.VertexWorkWeight(*r_iter), static_cast<VWorkwT<GraphT>>(1))));
             double largerVal = nodeWeight > temp ? nodeWeight : temp;
 
             workVariance[*r_iter] = std::log(std::exp(nodeWeight - largerVal) + std::exp(temp - largerVal)) + largerVal;
@@ -138,7 +138,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
                 VertexType &node,
                 unsigned &p,
                 const bool endSupStep,
-                const VWorkwT<Graph_t> remainingTime,
+                const VWorkwT<GraphT> remainingTime,
                 const std::vector<std::vector<std::vector<unsigned>>> &procTypesCompatibleWithNodeTypeSkipProctype) const {
         double maxScore = -1;
         bool foundAllocation = false;
@@ -408,7 +408,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
         std::vector<bool> procFree(p, true);
         unsigned free = p;
 
-        std::set<std::pair<VWorkwT<Graph_t>, VertexType>> finishTimes;
+        std::set<std::pair<VWorkwT<GraphT>, VertexType>> finishTimes;
         finishTimes.emplace(0, std::numeric_limits<VertexType>::max());
 
         std::vector<unsigned> numberOfAllocatedAllReadyTasksInSuperstep(instance.GetArchitecture().getNumberOfProcessorTypes(), 0);
@@ -479,8 +479,8 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
                 finishTimes.emplace(0, std::numeric_limits<VertexType>::max());
             }
 
-            const VWorkwT<Graph_t> time = finishTimes.begin()->first;
-            const VWorkwT<Graph_t> maxFinishTime = finishTimes.rbegin()->first;
+            const VWorkwT<GraphT> time = finishTimes.begin()->first;
+            const VWorkwT<GraphT> maxFinishTime = finishTimes.rbegin()->first;
 
             // Find new ready jobs
             while (!finishTimes.empty() && finishTimes.begin()->first == time) {

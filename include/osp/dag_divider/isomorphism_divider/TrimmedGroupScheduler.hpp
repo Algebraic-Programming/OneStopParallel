@@ -55,7 +55,7 @@ class TrimmedGroupScheduler : public Scheduler<ConstrGraphT> {
         const BspArchitecture<ConstrGraphT> &arch = instance.GetArchitecture();
 
         // Find the weakly connected components. These are assumed to be isomorphic subgraphs.
-        std::vector<vertex_idx_t<Constr_Graph_t>> componentMap(dag.NumVertices());
+        std::vector<VertexIdxT<Constr_Graph_t>> componentMap(dag.NumVertices());
         size_t numComponents = compute_weakly_connected_components(dag, component_map);
 
         if (numComponents == 0) {
@@ -69,8 +69,8 @@ class TrimmedGroupScheduler : public Scheduler<ConstrGraphT> {
         }
 
         // Group vertices by component.
-        std::vector<std::vector<vertex_idx_t<Constr_Graph_t>>> componentsVertices(numComponents);
-        for (vertex_idx_t<Constr_Graph_t> v = 0; v < dag.NumVertices(); ++v) {
+        std::vector<std::vector<VertexIdxT<Constr_Graph_t>>> componentsVertices(numComponents);
+        for (VertexIdxT<Constr_Graph_t> v = 0; v < dag.NumVertices(); ++v) {
             componentsVertices[component_map[v]].push_back(v);
         }
 
@@ -127,7 +127,7 @@ class TrimmedGroupScheduler : public Scheduler<ConstrGraphT> {
 
         unsigned maxSupersteps = 0;
         for (unsigned i = 0; i < minNonZeroProcs_; ++i) {
-            std::vector<vertex_idx_t<Constr_Graph_t>> groupVertices;
+            std::vector<VertexIdxT<Constr_Graph_t>> groupVertices;
             for (unsigned compIdx : componentIndicesPerGroup[i]) {
                 groupVertices.insert(
                     group_vertices.end(), components_vertices[compIdx].begin(), components_vertices[compIdx].end());

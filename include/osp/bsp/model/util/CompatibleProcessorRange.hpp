@@ -58,10 +58,10 @@ class CompatibleProcessorRange {
     void Initialize(const BspInstance<GraphT> &inst) {
         instance_ = &inst;
 
-        if constexpr (HasTypedVerticesV<Graph_t>) {
+        if constexpr (HasTypedVerticesV<GraphT>) {
             typeProcessorIdx_.resize(inst.GetComputationalDag().NumVertexTypes());
 
-            for (v_type_t<Graph_t> vType = 0; v_type < inst.GetComputationalDag().NumVertexTypes(); v_type++) {
+            for (v_type_t<GraphT> vType = 0; v_type < inst.GetComputationalDag().NumVertexTypes(); v_type++) {
                 for (unsigned proc = 0; proc < inst.NumberOfProcessors(); proc++) {
                     if (inst.IsCompatibleType(v_type, inst.ProcessorType(proc))) {
                         typeProcessorIdx_[v_type].push_back(proc);
@@ -77,9 +77,9 @@ class CompatibleProcessorRange {
      * @param type The node type.
      * @return A const reference to a vector of compatible processor indices.
      */
-    [[nodiscard]] const auto &CompatibleProcessorsType(const v_type_t<Graph_t> type) const {
+    [[nodiscard]] const auto &CompatibleProcessorsType(const v_type_t<GraphT> type) const {
         assert(instance_ != nullptr);
-        if constexpr (HasTypedVerticesV<Graph_t>) {
+        if constexpr (HasTypedVerticesV<GraphT>) {
             return typeProcessorIdx_[type];
         } else {
             return instance_->Processors();
@@ -92,7 +92,7 @@ class CompatibleProcessorRange {
      * @param vertex The vertex index.
      * @return A const reference to a vector of compatible processor indices.
      */
-    [[nodiscard]] const auto &CompatibleProcessorsVertex(const vertex_idx_t<Graph_t> vertex) const {
+    [[nodiscard]] const auto &CompatibleProcessorsVertex(const VertexIdxT<GraphT> vertex) const {
         assert(instance_ != nullptr);
         return CompatibleProcessorsType(instance_->GetComputationalDag().VertexType(vertex));
     }

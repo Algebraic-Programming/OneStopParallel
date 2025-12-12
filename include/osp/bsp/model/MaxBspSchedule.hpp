@@ -40,12 +40,12 @@ namespace osp {
  */
 template <typename GraphT>
 class MaxBspSchedule : public BspSchedule<GraphT> {
-    static_assert(IsComputationalDagV<Graph_t>, "BspSchedule can only be used with computational DAGs.");
-    static_assert(std::is_same_v<VWorkwT<Graph_t>, VCommwT<Graph_t>>,
+    static_assert(IsComputationalDagV<GraphT>, "BspSchedule can only be used with computational DAGs.");
+    static_assert(std::is_same_v<VWorkwT<GraphT>, VCommwT<GraphT>>,
                   "BspSchedule requires work and comm. weights to have the same type.");
 
   protected:
-    using VertexIdx = VertexIdxT<Graph_t>;
+    using VertexIdx = VertexIdxT<GraphT>;
 
   public:
     MaxBspSchedule() = delete;

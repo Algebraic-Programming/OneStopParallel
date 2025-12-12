@@ -30,7 +30,7 @@ namespace osp {
 
 template <typename GraphT>
 class RandomGreedy : public Scheduler<GraphT> {
-    static_assert(IsComputationalDagV<Graph_t>, "RandomGreedy can only be used with computational DAGs.");
+    static_assert(IsComputationalDagV<GraphT>, "RandomGreedy can only be used with computational DAGs.");
 
   private:
     bool ensureEnoughSources_;
@@ -39,7 +39,7 @@ class RandomGreedy : public Scheduler<GraphT> {
     RandomGreedy(bool ensureEnoughSources = true) : Scheduler<GraphT>(), ensureEnoughSources_(ensureEnoughSources) {};
 
     RETURN_STATUS computeSchedule(BspSchedule<GraphT> &sched) override {
-        using VertexType = vertex_idx_t<Graph_t>;
+        using VertexType = VertexIdxT<GraphT>;
 
         const auto &instance = sched.GetInstance();
 
@@ -64,7 +64,7 @@ class RandomGreedy : public Scheduler<GraphT> {
         while (!next.empty()) {
             std::shuffle(next.begin(), next.end(), g);
             std::unordered_set<VertexType> nodesAssignedThisSuperstep;
-            std::vector<VWorkwT<Graph_t>> processorWeights(instance.NumberOfProcessors(), 0);
+            std::vector<VWorkwT<GraphT>> processorWeights(instance.NumberOfProcessors(), 0);
 
             bool fewSources = next.size() < instance.NumberOfProcessors() ? true : false;
             unsigned failCounter = 0;

@@ -33,10 +33,10 @@ limitations under the License.
 using namespace osp;
 
 template <typename GraphT>
-void CheckPartitionTypeHomogeneity(const GraphT &dag, const std::vector<vertex_idx_t<GraphT>> &partition) {
+void CheckPartitionTypeHomogeneity(const GraphT &dag, const std::vector<VertexIdxT<GraphT>> &partition) {
     // Group partitions by their ID
-    std::map<vertex_idx_t<GraphT>, std::vector<vertex_idx_t<GraphT>>> partitions;
-    for (vertex_idx_t<GraphT> i = 0; i < dag.NumVertices(); ++i) {
+    std::map<VertexIdxT<GraphT>, std::vector<VertexIdxT<GraphT>>> partitions;
+    for (VertexIdxT<GraphT> i = 0; i < dag.NumVertices(); ++i) {
         partitions[partition[i]].push_back(i);
     }
 
@@ -123,7 +123,7 @@ int main(int argc, char *argv[]) {
     std::cout << "Partition is " << (acyc ? "acyclic." : "not acyclic.");
 
     std::cout << "Partition computation finished." << std::endl;
-    std::cout << "Generated " << std::set<vertex_idx_t<GraphT>>(partition.begin(), partition.end()).size() << " partitions."
+    std::cout << "Generated " << std::set<VertexIdxT<GraphT>>(partition.begin(), partition.end()).size() << " partitions."
               << std::endl;
 
     return 0;

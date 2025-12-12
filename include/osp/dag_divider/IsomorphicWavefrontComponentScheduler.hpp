@@ -43,7 +43,7 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
         }
 
         IsomorphismGroups<GraphT, ConstrGraphT> isoGroups;
-        std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> vertexMaps
+        std::vector<std::vector<std::vector<VertexIdxT<GraphT>>>> vertexMaps
             = this->divider_->divide(instance.GetComputationalDag());
         isoGroups.compute_isomorphism_groups(vertex_maps, instance.GetComputationalDag());
 
@@ -71,7 +71,7 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
 
   private:
     RETURN_STATUS ProcessWavefrontSet(BspSchedule<GraphT> &schedule,
-                                      const std::vector<std::vector<vertex_idx_t<Graph_t>>> &vertexMapForSet,
+                                      const std::vector<std::vector<VertexIdxT<GraphT>>> &vertexMapForSet,
                                       const std::vector<std::vector<size_t>> &isoGroupsForSet,
                                       const std::vector<ConstrGraphT> &subgraphsForSet,
                                       const std::vector<std::vector<unsigned>> &globalIdsByType,
@@ -173,7 +173,7 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
     }
 
     RETURN_STATUS ScheduleIsomorphismGroup(BspSchedule<GraphT> &schedule,
-                                           const std::vector<std::vector<vertex_idx_t<Graph_t>>> &vertexMapForSet,
+                                           const std::vector<std::vector<VertexIdxT<GraphT>>> &vertexMapForSet,
                                            const std::vector<size_t> &groupMembers,
                                            const ConstrGraphT &repSubDag,
                                            const std::vector<unsigned> &procsForGroup,
@@ -229,11 +229,11 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
                     subProcTypeCorrections[k] = subProcTypeCorrections[k - 1] + subProcTypeCount[k - 1];
                 }
 
-                std::vector<vertex_idx_t<Graph_t>> sortedComponentVertices(vertexMapForSet[groupMemberIdx].begin(),
-                                                                           vertex_map_for_set[groupMemberIdx].end());
+                std::vector<VertexIdxT<GraphT>> sortedComponentVertices(vertexMapForSet[groupMemberIdx].begin(),
+                                                                        vertex_map_for_set[groupMemberIdx].end());
                 std::sort(sorted_component_vertices.begin(), sorted_component_vertices.end());
 
-                vertex_idx_t<constr_graph_t> subdagVertex = 0;
+                VertexIdxT<constr_graph_t> subdagVertex = 0;
                 for (const auto &vertex : sorted_component_vertices) {
                     const unsigned proc_in_sub_sched = sub_schedule.assignedProcessor(subdag_vertex);
                     const unsigned proc_type = sub_architecture.processorType(proc_in_sub_sched);
@@ -290,11 +290,11 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
 
             std::vector<unsigned> currentMemberProcOffsets = procTypeOffsets;
             for (const auto &groupMemberIdx : groupMembers) {
-                std::vector<vertex_idx_t<Graph_t>> sortedComponentVertices(vertexMapForSet[groupMemberIdx].begin(),
-                                                                           vertex_map_for_set[groupMemberIdx].end());
+                std::vector<VertexIdxT<GraphT>> sortedComponentVertices(vertexMapForSet[groupMemberIdx].begin(),
+                                                                        vertex_map_for_set[groupMemberIdx].end());
                 std::sort(sorted_component_vertices.begin(), sorted_component_vertices.end());
 
-                vertex_idx_t<constr_graph_t> subdagVertex = 0;
+                VertexIdxT<constr_graph_t> subdagVertex = 0;
                 for (const auto &vertex : sorted_component_vertices) {
                     const unsigned proc_in_sub_sched = sub_schedule.assignedProcessor(subdag_vertex);
                     const unsigned proc_type = sub_schedule.GetInstance().GetArchitecture().processorType(proc_in_sub_sched);

@@ -27,7 +27,7 @@ namespace osp {
 template <typename GraphT, typename GraphTCoarse>
 class SquashAMul : public MultilevelCoarser<GraphT, GraphTCoarse> {
   private:
-    vertex_idx_t<Graph_t> minNodes_{1};
+    VertexIdxT<GraphT> minNodes_{1};
     Thue_Morse_Sequence thueCoin_{};
     Biased_Random balancedRandom_{};
 
@@ -45,7 +45,7 @@ class SquashAMul : public MultilevelCoarser<GraphT, GraphTCoarse> {
   public:
     void SetParams(squash_a_params::Parameters params) { params_ = params; };
 
-    void SetMinimumNumberVertices(vertex_idx_t<Graph_t> num) { min_nodes = num; };
+    void SetMinimumNumberVertices(VertexIdxT<GraphT> num) { min_nodes = num; };
 
     std::string GetCoarserName() const { return "SquashA"; };
 };
@@ -67,13 +67,13 @@ RETURN_STATUS SquashAMul<GraphT, GraphTCoarse>::RunContractions() {
 
     bool firstCoarsen = true;
     unsigned noChangeInARow = 0;
-    vertex_idx_t<Graph_t> currentNumVertices = MultilevelCoarser<GraphT, GraphTCoarse>::getOriginalGraph()->NumVertices();
+    VertexIdxT<GraphT> currentNumVertices = MultilevelCoarser<GraphT, GraphTCoarse>::getOriginalGraph()->NumVertices();
 
     while (no_change_in_a_row < params.num_rep_without_node_decrease && current_num_vertices > min_nodes) {
         UpdateParams();
 
         GraphTCoarse coarsenedDag;
-        std::vector<vertex_idx_t<Graph_t_coarse>> contractionMap;
+        std::vector<VertexIdxT<Graph_t_coarse>> contractionMap;
         bool coarsenSuccess;
 
         if (firstCoarsen) {
@@ -92,7 +92,7 @@ RETURN_STATUS SquashAMul<GraphT, GraphTCoarse>::RunContractions() {
         status = std::max(
             status, MultilevelCoarser<GraphT, GraphTCoarse>::add_contraction(std::move(contraction_map), std::move(coarsenedDag)));
 
-        vertex_idx_t<Graph_t> newNumVertices = MultilevelCoarser<GraphT, GraphTCoarse>::dag_history.back()->NumVertices();
+        VertexIdxT<GraphT> newNumVertices = MultilevelCoarser<GraphT, GraphTCoarse>::dag_history.back()->NumVertices();
 
         if (newNumVertices == current_num_vertices) {
             noChangeInARow++;

@@ -27,7 +27,7 @@ namespace osp {
 
 template <typename GraphT>
 class VectorSchedule : public IBspSchedule<GraphT> {
-    static_assert(IsComputationalDagV<Graph_t>, "BspSchedule can only be used with computational DAGs.");
+    static_assert(IsComputationalDagV<GraphT>, "BspSchedule can only be used with computational DAGs.");
 
   private:
     const BspInstance<GraphT> *instance_;

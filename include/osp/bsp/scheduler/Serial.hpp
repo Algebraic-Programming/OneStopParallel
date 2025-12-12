@@ -77,7 +77,7 @@ class Serial : public Scheduler<GraphT> {
         const unsigned numNodeTypes = dag.NumVertexTypes();
         std::vector<std::vector<unsigned>> nodeTypeCompatibleProcessors(numNodeTypes);
 
-        for (v_type_t<Graph_t> type = 0; type < numNodeTypes; ++type) {
+        for (v_type_t<GraphT> type = 0; type < numNodeTypes; ++type) {
             for (const auto &p : chosenProcs) {
                 if (instance.isCompatibleType(type, instance.processorType(p))) {
                     nodeTypeCompatibleProcessors[type].push_back(p);
@@ -85,9 +85,9 @@ class Serial : public Scheduler<GraphT> {
             }
         }
 
-        std::vector<vertex_idx_t<Graph_t>> inDegree(numVertices);
-        std::deque<vertex_idx_t<Graph_t>> readyNodes;
-        std::deque<vertex_idx_t<Graph_t>> deferredNodes;
+        std::vector<VertexIdxT<GraphT>> inDegree(numVertices);
+        std::deque<VertexIdxT<GraphT>> readyNodes;
+        std::deque<VertexIdxT<GraphT>> deferredNodes;
 
         for (const auto &v : dag.vertices()) {
             schedule.setAssignedProcessor(v, std::numeric_limits<unsigned>::max());
@@ -98,18 +98,18 @@ class Serial : public Scheduler<GraphT> {
             }
         }
 
-        vertex_idx_t<Graph_t> scheduledNodesCount = 0;
+        VertexIdxT<GraphT> scheduledNodesCount = 0;
         unsigned currentSuperstep = 0;
 
         while (scheduled_nodes_count < numVertices) {
             while (not ready_nodes.empty()) {
-                vertex_idx_t<Graph_t> v = ready_nodes.front();
+                VertexIdxT<GraphT> v = ready_nodes.front();
                 readyNodes.pop_front();
 
                 bool scheduled = false;
 
                 unsigned vType = 0;
-                if constexpr (HasTypedVerticesV<Graph_t>) {
+                if constexpr (HasTypedVerticesV<GraphT>) {
                     vType = dag.VertexType(v);
                 }
 

@@ -87,9 +87,9 @@ template <typename GraphT,
           unsigned windowSize = 1,
           typename CostT = double>
 class KlImprover : public ImprovementScheduler<GraphT> {
-    static_assert(IsDirectedGraphEdgeDescV<Graph_t>, "Graph_t must satisfy the directed_graph concept");
-    static_assert(has_hashable_edge_desc_v<Graph_t>, "Graph_t must satisfy the has_hashable_edge_desc concept");
-    static_assert(IsComputationalDagV<Graph_t>, "Graph_t must satisfy the computational_dag concept");
+    static_assert(IsDirectedGraphEdgeDescV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(has_hashable_edge_desc_v<GraphT>, "Graph_t must satisfy the has_hashable_edge_desc concept");
+    static_assert(IsComputationalDagV<GraphT>, "Graph_t must satisfy the computational_dag concept");
 
   protected:
     constexpr static unsigned windowRange_ = 2 * windowSize + 1;
@@ -97,11 +97,11 @@ class KlImprover : public ImprovementScheduler<GraphT> {
     constexpr static bool enablePreresolvingViolations_ = true;
     constexpr static double epsilon_ = 1e-9;
 
-    using memw_t = VMemwT<Graph_t>;
-    using commw_t = VCommwT<Graph_t>;
-    using work_weight_t = VWorkwT<Graph_t>;
-    using VertexType = vertex_idx_t<Graph_t>;
-    using EdgeType = edge_desc_t<Graph_t>;
+    using memw_t = VMemwT<GraphT>;
+    using commw_t = VCommwT<GraphT>;
+    using work_weight_t = VWorkwT<GraphT>;
+    using VertexType = VertexIdxT<GraphT>;
+    using EdgeType = edge_desc_t<GraphT>;
 
     using kl_move = kl_move_struct<cost_t, VertexType>;
     using heap_datastructure = MaxPairingHeap<VertexType, kl_move>;
@@ -1038,7 +1038,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                                  ThreadSearchContext &threadData,
                                  std::map<VertexType, kl_gain_update_info> &recomputeMaxGain,
                                  std::vector<VertexType> &newNodes,
-                                 const pre_move_work_data<VWorkwT<Graph_t>> &prevWorkData,
+                                 const pre_move_work_data<VWorkwT<GraphT>> &prevWorkData,
                                  const typename CommCostFunctionT::pre_move_comm_data_t &prevCommData) {
         if constexpr (CommCostFunctionT::is_max_comm_cost_function) {
             commCostF_.update_node_comm_affinity(
@@ -1246,7 +1246,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
     }
 
     bool IsLocalSearchBlocked(ThreadSearchContext &threadData);
-    void SetParameters(vertex_idx_t<Graph_t> numNodes);
+    void SetParameters(VertexIdxT<GraphT> numNodes);
     void ResetInnerSearchStructures(ThreadSearchContext &threadData) const;
     void InitializeDatastructures(BspSchedule<GraphT> &schedule);
     void PrintHeap(heap_datastructure &maxGainHeap) const;
@@ -1461,7 +1461,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
 };
 
 template <typename GraphT, typename CommCostFunctionT, typename MemoryConstraintT, unsigned windowSize, typename CostT>
-void KlImprover<GraphT, CommCostFunctionT, MemoryConstraintT, windowSize, CostT>::SetParameters(vertex_idx_t<Graph_t> numNodes) {
+void KlImprover<GraphT, CommCostFunctionT, MemoryConstraintT, windowSize, CostT>::SetParameters(VertexIdxT<GraphT> numNodes) {
     const unsigned logNumNodes = (numNodes > 1) ? static_cast<unsigned>(std::log(num_nodes)) : 1;
 
     // Total number of outer iterations. Proportional to sqrt N.

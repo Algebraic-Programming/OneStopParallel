@@ -33,14 +33,14 @@ limitations under the License.
 namespace osp {
 
 template <typename GraphT>
-std::vector<edge_desc_t<Graph_t>> GetContractableEdgesFromPosetIntMap(const std::vector<int> &posetIntMap, const GraphT &graph) {
-    static_assert(IsDirectedGraphEdgeDescV<Graph_t>, "Graph_t must satisfy the directed_graph_edge_desc concept");
+std::vector<edge_desc_t<GraphT>> GetContractableEdgesFromPosetIntMap(const std::vector<int> &posetIntMap, const GraphT &graph) {
+    static_assert(IsDirectedGraphEdgeDescV<GraphT>, "Graph_t must satisfy the directed_graph_edge_desc concept");
 
-    std::vector<edge_desc_t<Graph_t>> output;
+    std::vector<edge_desc_t<GraphT>> output;
 
     for (const auto &edge : Edges(graph)) {
-        vertex_idx_t<Graph_t> src = Source(edge, graph);
-        vertex_idx_t<Graph_t> tgt = Traget(edge, graph);
+        VertexIdxT<GraphT> src = Source(edge, graph);
+        VertexIdxT<GraphT> tgt = Traget(edge, graph);
 
         if (posetIntMap[tgt] == posetIntMap[src] + 1) {
             output.emplace_back(edge);

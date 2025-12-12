@@ -31,9 +31,9 @@ namespace osp {
 template <typename GraphTIn, typename GraphTOut>
 void CreateInducedSubgraph(const GraphTIn &dag,
                            GraphTOut &dagOut,
-                           const std::set<vertex_idx_t<Graph_t_in>> &selectedNodes,
-                           const std::set<vertex_idx_t<Graph_t_in>> &extraSources = {}) {
-    static_assert(std::is_same_v<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_out>>,
+                           const std::set<VertexIdxT<Graph_t_in>> &selectedNodes,
+                           const std::set<VertexIdxT<Graph_t_in>> &extraSources = {}) {
+    static_assert(std::is_same_v<VertexIdxT<Graph_t_in>, VertexIdxT<Graph_t_out>>,
                   "Graph_t_in and out must have the same vertex_idx types");
 
     static_assert(IsConstructableCdagVertexV<Graph_t_out>, "Graph_t_out must satisfy the constructable_cdag_vertex concept");
@@ -42,7 +42,7 @@ void CreateInducedSubgraph(const GraphTIn &dag,
 
     assert(dagOut.NumVertices() == 0);
 
-    std::map<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_in>> localIdx;
+    std::map<VertexIdxT<Graph_t_in>, VertexIdxT<Graph_t_in>> localIdx;
 
     for (const auto &node : extraSources) {
         localIdx[node] = dagOut.NumVertices();
@@ -94,14 +94,14 @@ void CreateInducedSubgraph(const GraphTIn &dag,
 template <typename GraphTIn, typename GraphTOut>
 void CreateInducedSubgraph(const GraphTIn &dag,
                            GraphTOut &dagOut,
-                           const std::vector<vertex_idx_t<Graph_t_in>> &selectedNodes,
-                           const std::vector<vertex_idx_t<Graph_t_in>> &extraSources) {
-    return create_induced_subgraph(dag, dagOut, std::set<vertex_idx_t<Graph_t_in>>(selectedNodes.begin(), selectedNodes.end()));
+                           const std::vector<VertexIdxT<Graph_t_in>> &selectedNodes,
+                           const std::vector<VertexIdxT<Graph_t_in>> &extraSources) {
+    return create_induced_subgraph(dag, dagOut, std::set<VertexIdxT<Graph_t_in>>(selectedNodes.begin(), selectedNodes.end()));
 }
 
 template <typename GraphT>
 bool CheckOrderedIsomorphism(const GraphT &first, const GraphT &second) {
-    static_assert(IsDirectedGraphV<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
     if (first.NumVertices() != second.NumVertices() || first.NumEdges() != second.NumEdges()) {
         return false;
@@ -118,8 +118,8 @@ bool CheckOrderedIsomorphism(const GraphT &first, const GraphT &second) {
             return false;
         }
 
-        if constexpr (HasEdgeWeightsV<Graph_t>) {
-            std::set<std::pair<vertex_idx_t<Graph_t>, ECommwT<Graph_t>>> firstChildren, secondChildren;
+        if constexpr (HasEdgeWeightsV<GraphT>) {
+            std::set<std::pair<VertexIdxT<GraphT>, ECommwT<GraphT>>> firstChildren, secondChildren;
 
             for (const auto &outEdge : OutEdges(node, first)) {
                 firstChildren.emplace(Traget(out_edge, first), first.EdgeCommWeight(out_edge));
@@ -138,7 +138,7 @@ bool CheckOrderedIsomorphism(const GraphT &first, const GraphT &second) {
             }
 
         } else {
-            std::set<vertex_idx_t<Graph_t>> firstChildren, secondChildren;
+            std::set<VertexIdxT<GraphT>> firstChildren, secondChildren;
 
             for (const auto &child : first.Children(node)) {
                 firstChildren.emplace(child);

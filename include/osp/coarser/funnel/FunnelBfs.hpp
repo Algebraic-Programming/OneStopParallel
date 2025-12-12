@@ -64,14 +64,14 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
 
     virtual ~FunnelBfs() = default;
 
-    virtual std::vector<std::vector<vertex_idx_t<Graph_t_in>>> generate_vertex_expansion_map(const GraphTIn &graph) override {
+    virtual std::vector<std::vector<VertexIdxT<Graph_t_in>>> generate_vertex_expansion_map(const GraphTIn &graph) override {
         if constexpr (useArchitectureMemoryContraints) {
             if (max_memory_per_vertex_type.size() < graph.NumVertexTypes()) {
                 throw std::runtime_error("FunnelBfs: max_memory_per_vertex_type has insufficient size.");
             }
         }
 
-        std::vector<std::vector<vertex_idx_t<Graph_t_in>>> partition;
+        std::vector<std::vector<VertexIdxT<Graph_t_in>>> partition;
 
         if (parameters_.funnelIncoming_) {
             run_in_contraction(graph, partition);
@@ -91,8 +91,8 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
 
     std::vector<VMemwT<Graph_t_in>> maxMemoryPerVertexType_;
 
-    void RunInContraction(const GraphTIn &graph, std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &partition) {
-        using vertex_idx_t = vertex_idx_t<Graph_t_in>;
+    void RunInContraction(const GraphTIn &graph, std::vector<std::vector<VertexIdxT<Graph_t_in>>> &partition) {
+        using vertex_idx_t = VertexIdxT<Graph_t_in>;
 
         const std::unordered_set<edge_desc_t<Graph_t_in>> edgeMask = parameters.use_approx_transitive_reduction
                                                                          ? long_edges_in_triangles_parallel(graph)
@@ -203,8 +203,8 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
         }
     }
 
-    void RunOutContraction(const GraphTIn &graph, std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &partition) {
-        using vertex_idx_t = vertex_idx_t<Graph_t_in>;
+    void RunOutContraction(const GraphTIn &graph, std::vector<std::vector<VertexIdxT<Graph_t_in>>> &partition) {
+        using vertex_idx_t = VertexIdxT<Graph_t_in>;
 
         const std::unordered_set<edge_desc_t<Graph_t_in>> edgeMask = parameters.use_approx_transitive_reduction
                                                                          ? long_edges_in_triangles_parallel(graph)

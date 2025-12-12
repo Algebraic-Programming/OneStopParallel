@@ -135,7 +135,7 @@ bool ValidateAffinityTables(KlImproverTest<GraphT, CommCostFunctionT, MemoryCons
     klFresh.setup_schedule(currentSchedule);
 
     // Get selected nodes from incremental
-    std::vector<vertex_idx_t<GraphT>> selectedNodes;
+    std::vector<VertexIdxT<GraphT>> selectedNodes;
 
     const size_t activeCount = klIncremental.get_affinity_table().size();
     for (size_t i = 0; i < activeCount; ++i) {

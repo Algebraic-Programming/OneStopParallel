@@ -35,7 +35,7 @@ namespace osp {
 
 template <typename GraphT>
 class CoptCommScheduleOptimizer {
-    static_assert(IsComputationalDagV<Graph_t>, "CoptFullScheduler can only be used with computational DAGs.");
+    static_assert(IsComputationalDagV<GraphT>, "CoptFullScheduler can only be used with computational DAGs.");
 
     bool ignoreLatency_ = false;
 
@@ -55,7 +55,7 @@ class CoptCommScheduleOptimizer {
     void UpdateCommSchedule(BspScheduleCS<GraphT> &schedule) const;
 
   public:
-    using KeyTriple = std::tuple<vertex_idx_t<Graph_t>, unsigned int, unsigned int>;
+    using KeyTriple = std::tuple<VertexIdxT<GraphT>, unsigned int, unsigned int>;
     virtual ~CoptCommScheduleOptimizer() = default;
 
     virtual RETURN_STATUS ImproveSchedule(BspScheduleCS<GraphT> &schedule);
@@ -191,8 +191,8 @@ void CoptCommScheduleOptimizer<GraphT>::SetInitialSolution(BspScheduleCS<GraphT>
         }
     }
 
-    std::vector<std::vector<VCommwT<Graph_t>>> send(num_supersteps, std::vector<VCommwT<Graph_t>>(num_processors, 0));
-    std::vector<std::vector<VCommwT<Graph_t>>> rec(num_supersteps, std::vector<VCommwT<Graph_t>>(num_processors, 0));
+    std::vector<std::vector<VCommwT<GraphT>>> send(num_supersteps, std::vector<VCommwT<GraphT>>(num_processors, 0));
+    std::vector<std::vector<VCommwT<GraphT>>> rec(num_supersteps, std::vector<VCommwT<GraphT>>(num_processors, 0));
 
     for (const auto &[key, val] : cs) {
         send[val][std::get<1>(key)] += dag.VertexCommWeight(std::get<0>(key)) * arch.sendCosts(std::get<1>(key), std::get<2>(key));
@@ -200,7 +200,7 @@ void CoptCommScheduleOptimizer<GraphT>::SetInitialSolution(BspScheduleCS<GraphT>
     }
 
     for (unsigned step = 0; step < numSupersteps; step++) {
-        VCommwT<Graph_t> maxComm = 0;
+        VCommwT<GraphT> maxComm = 0;
         for (unsigned proc = 0; proc < numProcessors; proc++) {
             maxComm = std::max(max_comm, send[step][proc]);
             maxComm = std::max(max_comm, rec[step][proc]);

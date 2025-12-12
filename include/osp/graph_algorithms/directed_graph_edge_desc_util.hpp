@@ -27,10 +27,8 @@ limitations under the License.
 namespace osp {
 
 template <typename GraphT>
-std::pair<edge_desc_t<Graph_t>, bool> EdgeDesc(const vertex_idx_t<Graph_t> &src,
-                                               const vertex_idx_t<Graph_t> &dest,
-                                               const GraphT &graph) {
-    static_assert(IsDirectedGraphEdgeDescV<Graph_t>, "Graph_t must satisfy the directed_graph edge desc concept");
+std::pair<edge_desc_t<GraphT>, bool> EdgeDesc(const VertexIdxT<GraphT> &src, const VertexIdxT<GraphT> &dest, const GraphT &graph) {
+    static_assert(IsDirectedGraphEdgeDescV<GraphT>, "Graph_t must satisfy the directed_graph edge desc concept");
 
     for (const auto &edge : OutEdges(src, graph)) {
         if (Traget(edge, graph) == dest) {
@@ -41,14 +39,14 @@ std::pair<edge_desc_t<Graph_t>, bool> EdgeDesc(const vertex_idx_t<Graph_t> &src,
 }
 
 template <typename GraphT>
-std::unordered_set<edge_desc_t<Graph_t>> LongEdgesInTriangles(const GraphT &graph) {
-    static_assert(IsDirectedGraphEdgeDescV<Graph_t>, "Graph_t must satisfy the directed_graph edge desc concept");
-    static_assert(HasHashableEdgeDescV<Graph_t>, "Graph_t must satisfy the has_hashable_edge_desc concept");
+std::unordered_set<edge_desc_t<GraphT>> LongEdgesInTriangles(const GraphT &graph) {
+    static_assert(IsDirectedGraphEdgeDescV<GraphT>, "Graph_t must satisfy the directed_graph edge desc concept");
+    static_assert(HasHashableEdgeDescV<GraphT>, "Graph_t must satisfy the has_hashable_edge_desc concept");
 
-    std::unordered_set<edge_desc_t<Graph_t>> longEdges;
+    std::unordered_set<edge_desc_t<GraphT>> longEdges;
 
     for (const auto &vertex : graph.Vertices()) {
-        std::unordered_set<vertex_idx_t<Graph_t>> childrenSet;
+        std::unordered_set<VertexIdxT<GraphT>> childrenSet;
 
         for (const auto &v : graph.Children(vertex)) {
             childrenSet.emplace(v);

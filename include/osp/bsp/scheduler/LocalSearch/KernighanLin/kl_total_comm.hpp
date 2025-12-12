@@ -31,7 +31,7 @@ namespace osp {
 template <typename GraphT, typename MemoryConstraintT = no_local_search_memory_constraint, bool useNodeCommunicationCostsArg = true>
 class KlTotalComm : public KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg> {
   protected:
-    virtual void compute_comm_gain(vertex_idx_t<Graph_t> node, unsigned currentStep, unsigned currentProc, unsigned newProc) override {
+    virtual void compute_comm_gain(VertexIdxT<GraphT> node, unsigned currentStep, unsigned currentProc, unsigned newProc) override {
         if constexpr (KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.use_node_communication_costs) {
             if (currentProc == newProc) {
                 for (const auto &target :
@@ -933,7 +933,7 @@ class KlTotalCommTest : public KlTotalComm<GraphT, MemoryConstraintT, useNodeCom
 
     auto &GetMaxGainHeap() { return KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::max_gain_heap; }
 
-    void InitializeGainHeapTest(const std::unordered_set<vertex_idx_t<Graph_t>> &nodes, double reward = 0.0, double penalty = 0.0) {
+    void InitializeGainHeapTest(const std::unordered_set<VertexIdxT<GraphT>> &nodes, double reward = 0.0, double penalty = 0.0) {
         KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::reward = reward;
         KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::penalty = penalty;
 

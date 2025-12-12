@@ -28,7 +28,7 @@ template <typename GraphT,
           unsigned windowSize = 1,
           typename CostT = double>
 class KlImproverTest : public kl_improver<Graph_t, comm_cost_function_t, MemoryConstraint_t, window_size, cost_t> {
-    using VertexType = vertex_idx_t<Graph_t>;
+    using VertexType = VertexIdxT<GraphT>;
     using kl_move = kl_move_struct<cost_t, VertexType>;
     using heap_datastructure = MaxPairingHeap<VertexType, kl_move>;
     using active_schedule_t = kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t>;

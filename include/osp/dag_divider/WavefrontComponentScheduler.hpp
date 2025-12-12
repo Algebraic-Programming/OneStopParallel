@@ -117,8 +117,8 @@ class WavefrontComponentScheduler : public AbstractWavefrontScheduler<GraphT, Co
                     subProcTypeCorrections[k] = subProcTypeCorrections[k - 1] + subProcTypeCount[k - 1];
                 }
 
-                vertex_idx_t<constr_graph_t> subdagVertex = 0;
-                std::vector<vertex_idx_t<Graph_t>> sortedComponentVertices(components[j].begin(), components[j].end());
+                VertexIdxT<constr_graph_t> subdagVertex = 0;
+                std::vector<VertexIdxT<GraphT>> sortedComponentVertices(components[j].begin(), components[j].end());
                 std::sort(sorted_component_vertices.begin(), sorted_component_vertices.end());
 
                 for (const auto &vertex : sorted_component_vertices) {

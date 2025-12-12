@@ -26,9 +26,9 @@ namespace osp {
 
 template <typename GraphT, typename InterpolationT, typename MemoryConstraintT = no_memory_constraint>
 class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
-    static_assert(IsComputationalDagV<Graph_t>, "VariancePartitioner can only be used with computational DAGs.");
+    static_assert(IsComputationalDagV<GraphT>, "VariancePartitioner can only be used with computational DAGs.");
 
-    using VertexType = vertex_idx_t<Graph_t>;
+    using VertexType = VertexIdxT<GraphT>;
 
     struct VarianceCompare {
         bool operator()(const std::pair<VertexType, double> &lhs, const std::pair<VertexType, double> &rhs) const {
@@ -117,10 +117,10 @@ class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
             memoryConstraint_.initialize(schedule, superstep);
         }
 
-        VWorkwT<Graph_t> totalWork = 0;
+        VWorkwT<GraphT> totalWork = 0;
 
-        std::vector<VWorkwT<Graph_t>> totalPartitionWork(nProcessors, 0);
-        std::vector<VWorkwT<Graph_t>> superstepPartitionWork(nProcessors, 0);
+        std::vector<VWorkwT<GraphT>> totalPartitionWork(nProcessors, 0);
+        std::vector<VWorkwT<GraphT>> superstepPartitionWork(nProcessors, 0);
 
         std::vector<double> variancePriorities = ComputeWorkVariance(graph, variancePower_);
         std::vector<VertexType> numUnallocatedParents(nVert, 0);

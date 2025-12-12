@@ -43,7 +43,7 @@ class CoarseAndSchedule : public Scheduler<GraphT> {
 
         BspInstance<GraphTCoarse> instanceCoarse;
 
-        std::vector<vertex_idx_t<Graph_t_coarse>> reverseVertexMap;
+        std::vector<VertexIdxT<Graph_t_coarse>> reverseVertexMap;
 
         bool status = coarser_.coarsenDag(instance.GetComputationalDag(), instanceCoarse.GetComputationalDag(), reverse_vertex_map);
 

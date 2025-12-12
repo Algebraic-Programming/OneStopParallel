@@ -30,13 +30,13 @@ namespace osp {
 
 template <typename GraphT>
 class MultiProcessorPebbling : public Scheduler<GraphT> {
-    static_assert(IsComputationalDagV<Graph_t>, "PebblingSchedule can only be used with computational DAGs.");
+    static_assert(IsComputationalDagV<GraphT>, "PebblingSchedule can only be used with computational DAGs.");
 
   private:
-    using vertex_idx = vertex_idx_t<Graph_t>;
-    using workweight_type = VWorkwT<Graph_t>;
-    using commweight_type = VCommwT<Graph_t>;
-    using memweight_type = VMemwT<Graph_t>;
+    using vertex_idx = VertexIdxT<GraphT>;
+    using workweight_type = VWorkwT<GraphT>;
+    using commweight_type = VCommwT<GraphT>;
+    using memweight_type = VMemwT<GraphT>;
 
     Model model_;
 
@@ -1406,15 +1406,15 @@ void MultiProcessorPebbling<GraphT>::ConstructPebblingScheduleFromSolution(Pebbl
     std::cout << "MPP ILP best solution value: " << model.GetDblAttr(COPT_DBLATTR_BESTOBJ)
               << ", best lower bound: " << model.GetDblAttr(COPT_DBLATTR_BESTBND) << std::endl;
 
-    schedule = PebblingSchedule<Graph_t>(instance,
-                                         compute_steps_per_supstep,
-                                         nodes_evicted_after_compute,
-                                         nodes_sent_up_in_supstep,
-                                         nodes_sent_down_in_supstep,
-                                         nodes_evicted_in_comm_phase,
-                                         needs_blue_at_end,
-                                         has_red_in_beginning,
-                                         need_to_load_inputs);
+    schedule = PebblingSchedule<GraphT>(instance,
+                                        compute_steps_per_supstep,
+                                        nodes_evicted_after_compute,
+                                        nodes_sent_up_in_supstep,
+                                        nodes_sent_down_in_supstep,
+                                        nodes_evicted_in_comm_phase,
+                                        needs_blue_at_end,
+                                        has_red_in_beginning,
+                                        need_to_load_inputs);
 }
 
 template <typename GraphT>

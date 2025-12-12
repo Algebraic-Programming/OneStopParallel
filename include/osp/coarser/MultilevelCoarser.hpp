@@ -44,16 +44,16 @@ class MultilevelCoarser : public Coarser<GraphT, GraphTCoarse> {
     inline const GraphT *GetOriginalGraph() const { return originalGraph_; };
 
     std::vector<std::unique_ptr<GraphTCoarse>> dagHistory_;
-    std::vector<std::unique_ptr<std::vector<vertex_idx_t<Graph_t_coarse>>>> contractionMaps_;
+    std::vector<std::unique_ptr<std::vector<VertexIdxT<Graph_t_coarse>>>> contractionMaps_;
 
-    RETURN_STATUS AddContraction(const std::vector<vertex_idx_t<Graph_t_coarse>> &contractionMap);
-    RETURN_STATUS AddContraction(std::vector<vertex_idx_t<Graph_t_coarse>> &&contractionMap);
-    RETURN_STATUS AddContraction(const std::vector<vertex_idx_t<Graph_t_coarse>> &contractionMap,
+    RETURN_STATUS AddContraction(const std::vector<VertexIdxT<Graph_t_coarse>> &contractionMap);
+    RETURN_STATUS AddContraction(std::vector<VertexIdxT<Graph_t_coarse>> &&contractionMap);
+    RETURN_STATUS AddContraction(const std::vector<VertexIdxT<Graph_t_coarse>> &contractionMap,
                                  const GraphTCoarse &contractedGraph);
-    RETURN_STATUS AddContraction(std::vector<vertex_idx_t<Graph_t_coarse>> &&contractionMap, GraphTCoarse &&contractedGraph);
+    RETURN_STATUS AddContraction(std::vector<VertexIdxT<Graph_t_coarse>> &&contractionMap, GraphTCoarse &&contractedGraph);
     void AddIdentityContraction();
 
-    std::vector<vertex_idx_t<Graph_t_coarse>> GetCombinedContractionMap() const;
+    std::vector<VertexIdxT<Graph_t_coarse>> GetCombinedContractionMap() const;
 
     virtual RETURN_STATUS RunContractions() = 0;
     void CompactifyDagHistory();
@@ -67,7 +67,7 @@ class MultilevelCoarser : public Coarser<GraphT, GraphTCoarse> {
 
     bool coarsenDag(const GraphT &dagIn,
                     GraphTCoarse &coarsenedDag,
-                    std::vector<vertex_idx_t<Graph_t_coarse>> &vertexContractionMap) override;
+                    std::vector<VertexIdxT<Graph_t_coarse>> &vertexContractionMap) override;
 
     RETURN_STATUS Run(const GraphT &graph);
     RETURN_STATUS Run(const BspInstance<GraphT> &inst);
@@ -123,8 +123,8 @@ void MultilevelCoarser<GraphT, GraphTCoarse>::CompactifyDagHistory() {
     }
 
     // Compute combined contraction_map
-    std::unique_ptr<std::vector<vertex_idx_t<Graph_t_coarse>>> combiContractionMap
-        = std::make_unique<std::vector<vertex_idx_t<Graph_t_coarse>>>(contraction_maps[map_indx_first]->size());
+    std::unique_ptr<std::vector<VertexIdxT<Graph_t_coarse>>> combiContractionMap
+        = std::make_unique<std::vector<VertexIdxT<Graph_t_coarse>>>(contraction_maps[map_indx_first]->size());
     for (std::size_t vert = 0; vert < contraction_maps[map_indx_first]->size(); ++vert) {
         combi_contraction_map->at(vert) = contraction_maps[map_indx_second]->at(contraction_maps[map_indx_first]->at(vert));
     }
@@ -144,8 +144,7 @@ void MultilevelCoarser<GraphT, GraphTCoarse>::CompactifyDagHistory() {
 }
 
 template <typename GraphT, typename GraphTCoarse>
-RETURN_STATUS MultilevelCoarser<GraphT, GraphTCoarse>::AddContraction(
-    const std::vector<vertex_idx_t<Graph_t_coarse>> &contractionMap) {
+RETURN_STATUS MultilevelCoarser<GraphT, GraphTCoarse>::AddContraction(const std::vector<VertexIdxT<Graph_t_coarse>> &contractionMap) {
     std::unique_ptr<GraphTCoarse> newGraph = std::make_unique<GraphTCoarse>();
 
     contraction_maps.emplace_back(contraction_map);
@@ -171,11 +170,11 @@ RETURN_STATUS MultilevelCoarser<GraphT, GraphTCoarse>::AddContraction(
 }
 
 template <typename GraphT, typename GraphTCoarse>
-RETURN_STATUS MultilevelCoarser<GraphT, GraphTCoarse>::AddContraction(std::vector<vertex_idx_t<Graph_t_coarse>> &&contractionMap) {
+RETURN_STATUS MultilevelCoarser<GraphT, GraphTCoarse>::AddContraction(std::vector<VertexIdxT<Graph_t_coarse>> &&contractionMap) {
     std::unique_ptr<GraphTCoarse> newGraph = std::make_unique<GraphTCoarse>();
 
-    std::unique_ptr<std::vector<vertex_idx_t<Graph_t_coarse>>> contrMapPtr(
-        new std::vector<vertex_idx_t<Graph_t_coarse>>(std::move(contraction_map)));
+    std::unique_ptr<std::vector<VertexIdxT<Graph_t_coarse>>> contrMapPtr(
+        new std::vector<VertexIdxT<Graph_t_coarse>>(std::move(contraction_map)));
     contraction_maps.emplace_back(std::move(contr_map_ptr));
 
     bool success = false;
@@ -199,13 +198,13 @@ RETURN_STATUS MultilevelCoarser<GraphT, GraphTCoarse>::AddContraction(std::vecto
 }
 
 template <typename GraphT, typename GraphTCoarse>
-RETURN_STATUS MultilevelCoarser<GraphT, GraphTCoarse>::AddContraction(
-    const std::vector<vertex_idx_t<Graph_t_coarse>> &contractionMap, const GraphTCoarse &contractedGraph) {
+RETURN_STATUS MultilevelCoarser<GraphT, GraphTCoarse>::AddContraction(const std::vector<VertexIdxT<Graph_t_coarse>> &contractionMap,
+                                                                      const GraphTCoarse &contractedGraph) {
     std::unique_ptr<GraphTCoarse> graphPtr(new GraphTCoarse(contractedGraph));
     dagHistory_.emplace_back(std::move(graphPtr));
 
-    std::unique_ptr<std::vector<vertex_idx_t<Graph_t_coarse>>> contrMapPtr(
-        new std::vector<vertex_idx_t<Graph_t_coarse>>(contraction_map));
+    std::unique_ptr<std::vector<VertexIdxT<Graph_t_coarse>>> contrMapPtr(
+        new std::vector<VertexIdxT<Graph_t_coarse>>(contraction_map));
     contraction_maps.emplace_back(std::move(contr_map_ptr));
 
     CompactifyDagHistory();
@@ -213,13 +212,13 @@ RETURN_STATUS MultilevelCoarser<GraphT, GraphTCoarse>::AddContraction(
 }
 
 template <typename GraphT, typename GraphTCoarse>
-RETURN_STATUS MultilevelCoarser<GraphT, GraphTCoarse>::AddContraction(std::vector<vertex_idx_t<Graph_t_coarse>> &&contractionMap,
+RETURN_STATUS MultilevelCoarser<GraphT, GraphTCoarse>::AddContraction(std::vector<VertexIdxT<Graph_t_coarse>> &&contractionMap,
                                                                       GraphTCoarse &&contractedGraph) {
     std::unique_ptr<GraphTCoarse> graphPtr(new GraphTCoarse(std::move(contractedGraph)));
     dagHistory_.emplace_back(std::move(graphPtr));
 
-    std::unique_ptr<std::vector<vertex_idx_t<Graph_t_coarse>>> contrMapPtr(
-        new std::vector<vertex_idx_t<Graph_t_coarse>>(std::move(contraction_map)));
+    std::unique_ptr<std::vector<VertexIdxT<Graph_t_coarse>>> contrMapPtr(
+        new std::vector<VertexIdxT<Graph_t_coarse>>(std::move(contraction_map)));
     contraction_maps.emplace_back(std::move(contr_map_ptr));
 
     CompactifyDagHistory();
@@ -227,8 +226,8 @@ RETURN_STATUS MultilevelCoarser<GraphT, GraphTCoarse>::AddContraction(std::vecto
 }
 
 template <typename GraphT, typename GraphTCoarse>
-std::vector<vertex_idx_t<Graph_t_coarse>> MultilevelCoarser<GraphT, GraphTCoarse>::GetCombinedContractionMap() const {
-    std::vector<vertex_idx_t<Graph_t_coarse>> combinedContractionMap(originalGraph_->NumVertices());
+std::vector<VertexIdxT<Graph_t_coarse>> MultilevelCoarser<GraphT, GraphTCoarse>::GetCombinedContractionMap() const {
+    std::vector<VertexIdxT<Graph_t_coarse>> combinedContractionMap(originalGraph_->NumVertices());
     std::iota(combinedContractionMap.begin(), combinedContractionMap.end(), 0);
 
     for (std::size_t j = 0; j < contraction_maps.size(); ++j) {
@@ -243,7 +242,7 @@ std::vector<vertex_idx_t<Graph_t_coarse>> MultilevelCoarser<GraphT, GraphTCoarse
 template <typename GraphT, typename GraphTCoarse>
 bool MultilevelCoarser<GraphT, GraphTCoarse>::CoarsenDag(const GraphT &dagIn,
                                                          GraphTCoarse &coarsenedDag,
-                                                         std::vector<vertex_idx_t<Graph_t_coarse>> &vertexContractionMap) {
+                                                         std::vector<VertexIdxT<Graph_t_coarse>> &vertexContractionMap) {
     ClearComputationData();
 
     RETURN_STATUS status = run(dag_in);
@@ -269,7 +268,7 @@ void MultilevelCoarser<GraphT, GraphTCoarse>::AddIdentityContraction() {
         nVert = static_cast<std::size_t>(dagHistory_.back()->NumVertices());
     }
 
-    std::vector<vertex_idx_t<Graph_t_coarse>> contractionMap(nVert);
+    std::vector<VertexIdxT<Graph_t_coarse>> contractionMap(nVert);
     std::iota(contraction_map.begin(), contraction_map.end(), 0);
 
     add_contraction(std::move(contraction_map));

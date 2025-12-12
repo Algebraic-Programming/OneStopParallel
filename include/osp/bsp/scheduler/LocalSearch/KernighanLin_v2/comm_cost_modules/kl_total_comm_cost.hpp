@@ -25,14 +25,14 @@ namespace osp {
 
 template <typename GraphT, typename CostT, typename MemoryConstraintT, unsigned windowSize = 1, bool useNodeCommunicationCostsArg = true>
 struct KlTotalCommCostFunction {
-    using VertexType = vertex_idx_t<Graph_t>;
+    using VertexType = VertexIdxT<GraphT>;
     using kl_move = kl_move_struct<cost_t, VertexType>;
     using kl_gain_update_info = kl_update_info<VertexType>;
 
     constexpr static bool isMaxCommCostFunction_ = false;
 
     constexpr static unsigned windowRange_ = 2 * windowSize + 1;
-    constexpr static bool useNodeCommunicationCosts_ = use_node_communication_costs_arg || not HasEdgeWeightsV<Graph_t>;
+    constexpr static bool useNodeCommunicationCosts_ = use_node_communication_costs_arg || not HasEdgeWeightsV<GraphT>;
 
     KlActiveSchedule<GraphT, CostT, MemoryConstraintT> *activeSchedule_;
 
@@ -100,7 +100,7 @@ struct KlTotalCommCostFunction {
         }
 
         return workCosts + commCosts * commMultiplier_
-               + static_cast<VCommwT<Graph_t>>(activeSchedule_->num_steps() - 1) * instance_->SynchronisationCosts();
+               + static_cast<VCommwT<GraphT>>(activeSchedule_->num_steps() - 1) * instance_->SynchronisationCosts();
     }
 
     template <typename ThreadDataT>
@@ -332,8 +332,8 @@ struct KlTotalCommCostFunction {
         return (nodeStep + windowSize <= endStep) ? windowRange_ : windowRange_ - (nodeStep + windowSize - endStep);
     }
 
-    inline CostT ChangeCommCost(const VCommwT<Graph_t> &pTargetCommCost,
-                                const VCommwT<Graph_t> &nodeTargetCommCost,
+    inline CostT ChangeCommCost(const VCommwT<GraphT> &pTargetCommCost,
+                                const VCommwT<GraphT> &nodeTargetCommCost,
                                 const CostT &commGain) {
         return p_target_comm_cost > node_target_comm_cost ? (pTargetCommCost - node_target_comm_cost) * commGain
                                                           : (nodeTargetCommCost - p_target_comm_cost) * commGain * -1.0;

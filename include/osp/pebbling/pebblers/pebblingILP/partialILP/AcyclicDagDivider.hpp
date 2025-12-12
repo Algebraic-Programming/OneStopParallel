@@ -28,10 +28,10 @@ namespace osp {
 
 template <typename GraphT>
 class AcyclicDagDivider {
-    static_assert(IsComputationalDagV<Graph_t>, "PebblingSchedule can only be used with computational DAGs.");
+    static_assert(IsComputationalDagV<GraphT>, "PebblingSchedule can only be used with computational DAGs.");
 
   protected:
-    using vertex_idx = vertex_idx_t<Graph_t>;
+    using vertex_idx = VertexIdxT<GraphT>;
 
     unsigned minPartitionSize_ = 40, maxPartitionSize_ = 80;
     bool ignoreSourcesInSize_ = true;
@@ -40,7 +40,7 @@ class AcyclicDagDivider {
                                               std::pair<unsigned, unsigned> minAndMax,
                                               const std::vector<bool> &isOriginalSource) const;
 
-    VCommwT<Graph_t> static GetSplitCost(const GraphT &g, const std::vector<unsigned> &nodeToPart);
+    VCommwT<GraphT> static GetSplitCost(const GraphT &g, const std::vector<unsigned> &nodeToPart);
 
   public:
     AcyclicDagDivider() {}
@@ -68,7 +68,7 @@ std::vector<unsigned> AcyclicDagDivider<GraphT>::ComputePartitioning(const BspIn
     ConnectedComponentDivider<GraphT, GraphT> connectedComp;
     connectedComp.divide(instance.GetComputationalDag());
 
-    std::vector<Graph_t> subDags = connectedComp.get_sub_dags();
+    std::vector<GraphT> subDags = connectedComp.get_sub_dags();
     std::vector<std::pair<unsigned, vertex_idx>> nodeToSubdagAndIndex(n);
     std::vector<std::vector<vertex_idx>> originalId(subDags.size());
     for (vertex_idx node = 0; node < n; ++node) {
@@ -109,7 +109,7 @@ std::vector<unsigned> AcyclicDagDivider<GraphT>::ComputePartitioning(const BspIn
             break;
         }
 
-        std::vector<Graph_t> newDagList;
+        std::vector<GraphT> newDagList;
         std::vector<std::vector<vertex_idx>> originalIdUpdated;
 
         for (unsigned idx = 0; idx < subDags.size(); ++idx) {
@@ -153,7 +153,7 @@ std::vector<unsigned> AcyclicDagDivider<GraphT>::ComputePartitioning(const BspIn
                 std::vector<unsigned> assignment = ilpCost < heuristicCost ? ILP_assignment : heuristic_assignment;
 
                 // split DAG according to labels
-                std::vector<Graph_t> splitDags = create_induced_subgraphs<GraphT, GraphT>(dag, assignment);
+                std::vector<GraphT> splitDags = create_induced_subgraphs<GraphT, GraphT>(dag, assignment);
                 /*std::cout<<"SPLIT DONE: "<<dag.NumberOfVertices()<<" nodes to ";
                 for(auto sdag : splitDags)
                     std::cout<<sdag.NumberOfVertices()<<" + ";
@@ -290,8 +290,8 @@ std::vector<unsigned> AcyclicDagDivider<GraphT>::GetTopologicalSplit(const Graph
 }
 
 template <typename GraphT>
-VCommwT<Graph_t> AcyclicDagDivider<GraphT>::GetSplitCost(const GraphT &g, const std::vector<unsigned> &nodeToPart) {
-    VCommwT<Graph_t> cost = 0;
+VCommwT<GraphT> AcyclicDagDivider<GraphT>::GetSplitCost(const GraphT &g, const std::vector<unsigned> &nodeToPart) {
+    VCommwT<GraphT> cost = 0;
 
     for (vertex_idx node = 0; node < g.NumVertices(); ++node) {
         std::set<unsigned> partsIncluded;
@@ -300,7 +300,7 @@ VCommwT<Graph_t> AcyclicDagDivider<GraphT>::GetSplitCost(const GraphT &g, const 
             parts_included.insert(node_to_part[succ]);
         }
 
-        cost += static_cast<VCommwT<Graph_t>>(parts_included.size() - 1) * g.VertexCommWeight(node);
+        cost += static_cast<VCommwT<GraphT>>(parts_included.size() - 1) * g.VertexCommWeight(node);
     }
 
     return cost;

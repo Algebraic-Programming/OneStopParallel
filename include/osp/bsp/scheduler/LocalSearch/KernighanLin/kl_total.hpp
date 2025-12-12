@@ -34,7 +34,7 @@ class KlCurrentScheduleTotal : public KlCurrentSchedule<GraphT, MemoryConstraint
     KlCurrentScheduleTotal(IklCostFunction *costF) : KlCurrentSchedule<GraphT, MemoryConstraintT>(costF) {}
 
     double commMultiplier_ = 1.0;
-    constexpr static bool useNodeCommunicationCosts_ = use_node_communication_costs_arg || not HasEdgeWeightsV<Graph_t>;
+    constexpr static bool useNodeCommunicationCosts_ = use_node_communication_costs_arg || not HasEdgeWeightsV<GraphT>;
 };
 
 template <typename GraphT, typename MemoryConstraintT, bool useNodeCommunicationCostsArg>
@@ -42,7 +42,7 @@ class KlTotal : public KlBase<GraphT, MemoryConstraintT> {
   protected:
     KlCurrentScheduleTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg> currentSchedule_;
 
-    VCommwT<Graph_t> nodeCommSelectionThreshold_ = 0;
+    VCommwT<GraphT> nodeCommSelectionThreshold_ = 0;
     double maxEdgeWeight_ = 0.0;
 
     virtual void initialize_datastructures() override {
@@ -52,8 +52,8 @@ class KlTotal : public KlBase<GraphT, MemoryConstraintT> {
 
         KlBase<GraphT, MemoryConstraintT>::initialize_datastructures();
 
-        VCommwT<Graph_t> maxEdgeWeight = 0;
-        VWorkwT<Graph_t> maxNodeWeight = 0;
+        VCommwT<GraphT> maxEdgeWeight = 0;
+        VWorkwT<GraphT> maxNodeWeight = 0;
 
         for (const auto vertex : currentSchedule_.instance->GetComputationalDag().vertices()) {
             if (is_sink(vertex, currentSchedule_.instance->GetComputationalDag())) {

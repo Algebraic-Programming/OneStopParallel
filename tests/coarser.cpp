@@ -44,7 +44,7 @@ limitations under the License.
 
 using namespace osp;
 
-using VertexType = vertex_idx_t<computational_dag_edge_idx_vector_impl_def_t>;
+using VertexType = VertexIdxT<computational_dag_edge_idx_vector_impl_def_t>;
 
 bool CheckVertexMap(std::vector<std::vector<VertexType>> &map, std::size_t size) {
     std::unordered_set<VertexType> vertices;

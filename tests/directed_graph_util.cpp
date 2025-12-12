@@ -420,7 +420,7 @@ BOOST_AUTO_TEST_CASE(TestUtil1) {
 }
 
 BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
-    using VertexType = vertex_idx_t<boost_graph_int_t>;
+    using VertexType = VertexIdxT<boost_graph_int_t>;
 
     const std::vector<std::vector<VertexType>> out({
         {7},

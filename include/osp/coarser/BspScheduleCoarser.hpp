@@ -51,12 +51,12 @@ class BspScheduleCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> 
     virtual std::string getCoarserName() const override { return "BspScheduleCoarser"; }
 
     // virtual bool coarseDag(const Graph_t_in &dag_in, Graph_t_out &dag_out,
-    //                        std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &vertex_map,
-    //                        std::vector<vertex_idx_t<Graph_t_out>> &reverse_vertex_map) override {
+    //                        std::vector<std::vector<VertexIdxT<Graph_t_in>>> &vertex_map,
+    //                        std::vector<VertexIdxT<Graph_t_out>> &reverse_vertex_map) override {
 
-    virtual std::vector<vertex_idx_t<Graph_t_out>> generate_vertex_contraction_map(const GraphTIn &dagIn) override {
-        using VertexType_in = vertex_idx_t<Graph_t_in>;
-        using VertexType_out = vertex_idx_t<Graph_t_out>;
+    virtual std::vector<VertexIdxT<Graph_t_out>> generate_vertex_contraction_map(const GraphTIn &dagIn) override {
+        using VertexType_in = VertexIdxT<Graph_t_in>;
+        using VertexType_out = VertexIdxT<Graph_t_out>;
 
         assert(&dagIn == &schedule_->GetInstance().GetComputationalDag());
         assert(schedule_->satisfiesPrecedenceConstraints());

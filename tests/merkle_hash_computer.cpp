@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecompTest) {
     const auto projectRoot = GetProjectRoot();
     file_reader::readComputationalDagHyperdagFormatDB((projectRoot / "data/spaa/tiny/instance_bicgstab.hdag").string(), graph);
 
-    MerkleHashComputer<GraphT, uniform_node_hash_func<vertex_idx_t<GraphT>>> mHash(graph);
+    MerkleHashComputer<GraphT, uniform_node_hash_func<VertexIdxT<GraphT>>> mHash(graph);
 
     BOOST_CHECK_EQUAL(mHash.get_vertex_hashes().size(), graph.NumVertices());
 
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(MerkleHashComputerTestFwBwPrecomp) {
 }
 
 using GraphType = computational_dag_vector_impl_def_t;
-using VertexType = vertex_idx_t<GraphType>;
+using VertexType = VertexIdxT<GraphType>;
 
 BOOST_AUTO_TEST_CASE(MerkleIsomorphismTestIdenticalGraphsAreIsomorphic) {
     GraphType dag1;

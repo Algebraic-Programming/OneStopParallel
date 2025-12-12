@@ -27,20 +27,20 @@ namespace osp {
 
 template <typename GraphT>
 class GreedyBspToMaxBspConverter {
-    static_assert(IsComputationalDagV<Graph_t>, "GreedyBspToMaxBspConverter can only be used with computational DAGs.");
-    static_assert(std::is_same_v<VWorkwT<Graph_t>, VCommwT<Graph_t>>,
+    static_assert(IsComputationalDagV<GraphT>, "GreedyBspToMaxBspConverter can only be used with computational DAGs.");
+    static_assert(std::is_same_v<VWorkwT<GraphT>, VCommwT<GraphT>>,
                   "GreedyBspToMaxBspConverter requires work and comm. weights to have the same type.");
 
   protected:
-    using vertex_idx = vertex_idx_t<Graph_t>;
-    using cost_type = VWorkwT<Graph_t>;
-    using KeyTriple = std::tuple<vertex_idx_t<Graph_t>, unsigned int, unsigned int>;
+    using vertex_idx = VertexIdxT<GraphT>;
+    using cost_type = VWorkwT<GraphT>;
+    using KeyTriple = std::tuple<VertexIdxT<GraphT>, unsigned int, unsigned int>;
 
     double latencyCoefficient_ = 1.25;
     double decayFactor_ = 0.5;
 
-    std::vector<std::vector<std::deque<vertex_idx_t<Graph_t>>>> CreateSuperstepLists(const BspScheduleCS<GraphT> &schedule,
-                                                                                     std::vector<double> &priorities) const;
+    std::vector<std::vector<std::deque<VertexIdxT<GraphT>>>> CreateSuperstepLists(const BspScheduleCS<GraphT> &schedule,
+                                                                                  std::vector<double> &priorities) const;
 
   public:
     MaxBspSchedule<GraphT> Convert(const BspSchedule<GraphT> &schedule) const;
@@ -363,7 +363,7 @@ MaxBspScheduleCS<GraphT> GreedyBspToMaxBspConverter<GraphT>::Convert(const BspSc
 // Auxiliary function: creates a separate vectors for each proc-supstep combination, collecting the nodes in a priority-based
 // topological order
 template <typename GraphT>
-std::vector<std::vector<std::deque<vertex_idx_t<Graph_t>>>> GreedyBspToMaxBspConverter<GraphT>::CreateSuperstepLists(
+std::vector<std::vector<std::deque<VertexIdxT<GraphT>>>> GreedyBspToMaxBspConverter<GraphT>::CreateSuperstepLists(
     const BspScheduleCS<GraphT> &schedule, std::vector<double> &priorities) const {
     const GraphT &dag = schedule.GetInstance().GetComputationalDag();
     std::vector<vertex_idx> topOrder = GetTopOrder(dag);

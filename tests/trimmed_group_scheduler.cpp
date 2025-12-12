@@ -36,7 +36,7 @@ class MockSubScheduler : public Scheduler<ConstrGraphT> {
     // This mock scheduler assigns all nodes to local processor 0 and superstep 0.
     // This simplifies verification of the TrimmedGroupScheduler's mapping logic.
     RETURN_STATUS computeSchedule(BspSchedule<ConstrGraphT> &schedule) override {
-        for (vertex_idx_t<ConstrGraphT> v = 0; v < schedule.GetInstance().GetComputationalDag().NumVertices(); ++v) {
+        for (VertexIdxT<ConstrGraphT> v = 0; v < schedule.GetInstance().GetComputationalDag().NumVertices(); ++v) {
             schedule.setAssignedProcessor(v, 0);
             schedule.setAssignedSuperstep(v, 0);
         }

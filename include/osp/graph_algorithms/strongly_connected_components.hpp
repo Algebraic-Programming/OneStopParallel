@@ -38,10 +38,10 @@ namespace osp {
  * @return A vector of vectors, where each inner vector contains the vertices of a strongly connected component.
  */
 template <typename GraphT>
-std::vector<std::vector<vertex_idx_t<Graph_t>>> StronglyConnectedComponents(const GraphT &graph) {
-    static_assert(IsDirectedGraphV<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+std::vector<std::vector<VertexIdxT<GraphT>>> StronglyConnectedComponents(const GraphT &graph) {
+    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
-    using VertexType = vertex_idx_t<Graph_t>;
+    using VertexType = VertexIdxT<GraphT>;
     const auto numVertices = graph.NumVertices();
     if (numVertices == 0) {
         return {};

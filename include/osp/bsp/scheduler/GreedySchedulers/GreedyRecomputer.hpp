@@ -28,14 +28,14 @@ namespace osp {
  */
 template <typename GraphT>
 class GreedyRecomputer {
-    static_assert(IsComputationalDagV<Graph_t>, "GreedyRecomputer can only be used with computational DAGs.");
+    static_assert(IsComputationalDagV<GraphT>, "GreedyRecomputer can only be used with computational DAGs.");
 
   private:
-    using vertex_idx = vertex_idx_t<Graph_t>;
-    using cost_type = VWorkwT<Graph_t>;
-    using KeyTriple = std::tuple<vertex_idx_t<Graph_t>, unsigned int, unsigned int>;
+    using vertex_idx = VertexIdxT<GraphT>;
+    using cost_type = VWorkwT<GraphT>;
+    using KeyTriple = std::tuple<VertexIdxT<GraphT>, unsigned int, unsigned int>;
 
-    static_assert(std::is_same_v<VWorkwT<Graph_t>, VCommwT<Graph_t>>,
+    static_assert(std::is_same_v<VWorkwT<GraphT>, VCommwT<GraphT>>,
                   "GreedyRecomputer requires work and comm. weights to have the same type.");
 
   public:

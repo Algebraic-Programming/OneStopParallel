@@ -48,7 +48,7 @@ class RecursiveWavefrontDivider : public AbstractWavefrontDivider<GraphT> {
         UseLargestStepSplitter(3.0, 4);
     }
 
-    std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> divide(const GraphT &dag) override {
+    std::vector<std::vector<std::vector<VertexIdxT<GraphT>>>> divide(const GraphT &dag) override {
         this->dagPtr_ = &dag;
         if constexpr (enableDebugPrint_) {
             std::cout << "[DEBUG] Starting recursive-scan division." << std::endl;
@@ -59,7 +59,7 @@ class RecursiveWavefrontDivider : public AbstractWavefrontDivider<GraphT> {
             return {};
         }
 
-        std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> allSections;
+        std::vector<std::vector<std::vector<VertexIdxT<GraphT>>>> allSections;
         divide_recursive(global_level_sets.cbegin(), global_level_sets.cend(), global_level_sets, all_sections, 0);
         return all_sections;
     }
@@ -93,7 +93,7 @@ class RecursiveWavefrontDivider : public AbstractWavefrontDivider<GraphT> {
     }
 
   private:
-    using VertexType = vertex_idx_t<Graph_t>;
+    using VertexType = VertexIdxT<GraphT>;
     using LevelSetConstIterator = typename std::vector<std::vector<VertexType>>::const_iterator;
     using DifferenceType = typename std::iterator_traits<LevelSetConstIterator>::difference_type;
 

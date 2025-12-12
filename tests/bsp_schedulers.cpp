@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE(GrowLocalAutoTestEdgeDescImpl) {
 BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTopTest1) {
     {
         using GraphT = computational_dag_vector_impl_def_t;
-        GrowLocalAutoCoresParallel_Params<vertex_idx_t<GraphT>, VWorkwT<GraphT>> params;
+        GrowLocalAutoCoresParallel_Params<VertexIdxT<GraphT>, VWorkwT<GraphT>> params;
 
         params.numThreads = 1;
 
@@ -219,7 +219,7 @@ BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTopTest1) {
 BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTopTest2) {
     {
         using GraphT = computational_dag_vector_impl_def_t;
-        GrowLocalAutoCoresParallel_Params<vertex_idx_t<GraphT>, VWorkwT<GraphT>> params;
+        GrowLocalAutoCoresParallel_Params<VertexIdxT<GraphT>, VWorkwT<GraphT>> params;
 
         params.numThreads = 2;
 
@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTopTest2) {
 BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTopTest5) {
     {
         using GraphT = computational_dag_vector_impl_def_t;
-        GrowLocalAutoCoresParallel_Params<vertex_idx_t<GraphT>, VWorkwT<GraphT>> params;
+        GrowLocalAutoCoresParallel_Params<VertexIdxT<GraphT>, VWorkwT<GraphT>> params;
 
         params.numThreads = 5;
 
@@ -243,7 +243,7 @@ BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTopTest5) {
 BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTest1) {
     {
         using GraphT = CompactSparseGraph<true, true>;
-        GrowLocalAutoCoresParallel_Params<vertex_idx_t<GraphT>, VWorkwT<GraphT>> params;
+        GrowLocalAutoCoresParallel_Params<VertexIdxT<GraphT>, VWorkwT<GraphT>> params;
 
         params.numThreads = 1;
 
@@ -255,7 +255,7 @@ BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTest1) {
 BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTest2) {
     {
         using GraphT = CompactSparseGraph<true, true>;
-        GrowLocalAutoCoresParallel_Params<vertex_idx_t<GraphT>, VWorkwT<GraphT>> params;
+        GrowLocalAutoCoresParallel_Params<VertexIdxT<GraphT>, VWorkwT<GraphT>> params;
 
         params.numThreads = 2;
 
@@ -267,7 +267,7 @@ BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTest2) {
 BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTest5) {
     {
         using GraphT = CompactSparseGraph<true, true>;
-        GrowLocalAutoCoresParallel_Params<vertex_idx_t<GraphT>, VWorkwT<GraphT>> params;
+        GrowLocalAutoCoresParallel_Params<VertexIdxT<GraphT>, VWorkwT<GraphT>> params;
 
         params.numThreads = 5;
 

@@ -28,13 +28,13 @@ namespace osp {
 
 template <typename GraphT>
 class HillClimbingScheduler : public ImprovementScheduler<GraphT> {
-    static_assert(IsDirectedGraphV<Graph_t>, "Graph_t must satisfy the directed_graph concept");
-    static_assert(IsComputationalDagV<Graph_t>, "Graph_t must satisfy the computational_dag concept");
+    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(IsComputationalDagV<GraphT>, "Graph_t must satisfy the computational_dag concept");
 
-    using vertex_idx = vertex_idx_t<Graph_t>;
-    using cost_type = VWorkwT<Graph_t>;
+    using vertex_idx = VertexIdxT<GraphT>;
+    using cost_type = VWorkwT<GraphT>;
 
-    static_assert(std::is_same_v<VWorkwT<Graph_t>, VCommwT<Graph_t>>,
+    static_assert(std::is_same_v<VWorkwT<GraphT>, VCommwT<GraphT>>,
                   "HillClimbing requires work and comm. weights to have the same type.");
 
   public:
@@ -98,7 +98,7 @@ class HillClimbingScheduler : public ImprovementScheduler<GraphT> {
 
     // For memory constraints
     bool useMemoryConstraint_ = false;
-    std::vector<std::vector<VMemwT<Graph_t>>> memoryUsed_;
+    std::vector<std::vector<VMemwT<GraphT>>> memoryUsed_;
     bool ViolatesMemConstraint(vertex_idx node, unsigned processor, int where);
 
     // Compute the cost change incurred by a potential move
@@ -309,7 +309,7 @@ void HillClimbingScheduler<GraphT>::Init() {
     // memory_constraints
     if (useMemoryConstraint_) {
         memory_used.clear();
-        memory_used.resize(P, std::vector<VMemwT<Graph_t>>(M, 0));
+        memory_used.resize(P, std::vector<VMemwT<GraphT>>(M, 0));
         for (vertex_idx node = 0; node < N; ++node) {
             memory_used[schedule->assignedProcessor(node)][schedule->assignedSuperstep(node)]
                 += schedule->GetInstance().GetComputationalDag().VertexMemWeight(node);

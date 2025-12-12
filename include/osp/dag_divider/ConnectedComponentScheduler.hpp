@@ -41,7 +41,7 @@ class ConnectedComponentScheduler : public Scheduler<GraphT> {
 
         partitioner.divide(dag);
 
-        VWorkwT<Graph_t> totalWorkWeight = sumOfVerticesWorkWeights(dag);
+        VWorkwT<GraphT> totalWorkWeight = sumOfVerticesWorkWeights(dag);
 
         unsigned numProcessorsOffset = 0;
 

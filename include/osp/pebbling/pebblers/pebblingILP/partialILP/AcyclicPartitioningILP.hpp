@@ -26,11 +26,11 @@ namespace osp {
 
 template <typename GraphT>
 class AcyclicPartitioningILP {
-    static_assert(IsComputationalDagV<Graph_t>, "PebblingSchedule can only be used with computational DAGs.");
+    static_assert(IsComputationalDagV<GraphT>, "PebblingSchedule can only be used with computational DAGs.");
 
   private:
-    using vertex_idx = vertex_idx_t<Graph_t>;
-    using commweight_type = VCommwT<Graph_t>;
+    using vertex_idx = VertexIdxT<GraphT>;
+    using commweight_type = VCommwT<GraphT>;
 
     Model model_;
 

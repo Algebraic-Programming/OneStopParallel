@@ -32,7 +32,7 @@ enum class SequenceMetric { COMPONENT_COUNT, AVAILABLE_PARALLELISM };
  */
 template <typename GraphT>
 class SequenceGenerator {
-    using VertexType = vertex_idx_t<Graph_t>;
+    using VertexType = VertexIdxT<GraphT>;
 
   public:
     SequenceGenerator(const GraphT &dag, const std::vector<std::vector<VertexType>> &levelSets)

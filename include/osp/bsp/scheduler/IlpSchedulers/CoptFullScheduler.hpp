@@ -57,7 +57,7 @@ namespace osp {
  */
 template <typename GraphT>
 class CoptFullScheduler : public Scheduler<GraphT> {
-    static_assert(IsComputationalDagV<Graph_t>, "CoptFullScheduler can only be used with computational DAGs.");
+    static_assert(IsComputationalDagV<GraphT>, "CoptFullScheduler can only be used with computational DAGs.");
 
   private:
     bool allowRecomputation_;
@@ -425,7 +425,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
             }
         }
 
-        std::vector<std::vector<VWorkwT<Graph_t>>> work(max_number_supersteps, std::vector<VWorkwT<Graph_t>>(num_processors, 0));
+        std::vector<std::vector<VWorkwT<GraphT>>> work(max_number_supersteps, std::vector<VWorkwT<GraphT>>(num_processors, 0));
 
         if (useInitialScheduleRecomp_) {
             for (const auto &node : initialScheduleRecomp_->GetInstance().vertices()) {
@@ -440,9 +440,9 @@ class CoptFullScheduler : public Scheduler<GraphT> {
             }
         }
 
-        std::vector<std::vector<VCommwT<Graph_t>>> send(max_number_supersteps, std::vector<VCommwT<Graph_t>>(num_processors, 0));
+        std::vector<std::vector<VCommwT<GraphT>>> send(max_number_supersteps, std::vector<VCommwT<GraphT>>(num_processors, 0));
 
-        std::vector<std::vector<VCommwT<Graph_t>>> rec(max_number_supersteps, std::vector<VCommwT<Graph_t>>(num_processors, 0));
+        std::vector<std::vector<VCommwT<GraphT>>> rec(max_number_supersteps, std::vector<VCommwT<GraphT>>(num_processors, 0));
 
         for (const auto &[key, val] : cs) {
             send[val][std::get<1>(key)]
@@ -453,14 +453,14 @@ class CoptFullScheduler : public Scheduler<GraphT> {
         }
 
         for (unsigned step = 0; step < maxNumberSupersteps_; step++) {
-            VWorkwT<Graph_t> maxWork = 0;
+            VWorkwT<GraphT> maxWork = 0;
             for (unsigned i = 0; i < numProcessors; i++) {
                 if (max_work < work[step][i]) {
                     maxWork = work[step][i];
                 }
             }
 
-            VCommwT<Graph_t> maxComm = 0;
+            VCommwT<GraphT> maxComm = 0;
             for (unsigned i = 0; i < numProcessors; i++) {
                 if (max_comm < send[step][i]) {
                     maxComm = send[step][i];
@@ -697,7 +697,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
         }
 
         // vertex type restrictions
-        for (const vertex_idx_t<Graph_t> &node : instance.vertices()) {
+        for (const VertexIdxT<GraphT> &node : instance.vertices()) {
             for (unsigned int processor = 0; processor < instance.NumberOfProcessors(); processor++) {
                 if (!instance.isCompatible(node, processor)) {
                     for (unsigned int step = 0; step < max_number_supersteps; step++) {

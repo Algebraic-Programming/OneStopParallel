@@ -61,7 +61,7 @@ class Coarser {
      */
     virtual bool CoarsenDag(const GraphTIn &dagIn,
                             GraphTOut &coarsenedDag,
-                            std::vector<vertex_idx_t<Graph_t_out>> &vertexContractionMap)
+                            std::vector<VertexIdxT<Graph_t_out>> &vertexContractionMap)
         = 0;
 
     /**
@@ -84,12 +84,12 @@ class Coarser {
 template <typename GraphTIn, typename GraphTOut>
 class CoarserGenContractionMap : public Coarser<GraphTIn, GraphTOut> {
   public:
-    virtual std::vector<vertex_idx_t<Graph_t_out>> GenerateVertexContractionMap(const GraphTIn &dagIn) = 0;
+    virtual std::vector<VertexIdxT<Graph_t_out>> GenerateVertexContractionMap(const GraphTIn &dagIn) = 0;
 
     virtual bool coarsenDag(const GraphTIn &dagIn,
                             GraphTOut &coarsenedDag,
-                            std::vector<vertex_idx_t<Graph_t_out>> &vertexContractionMap) override {
-        vertex_contraction_map = dag_in.NumVertices() == 0 ? std::vector<vertex_idx_t<Graph_t_out>>()
+                            std::vector<VertexIdxT<Graph_t_out>> &vertexContractionMap) override {
+        vertex_contraction_map = dag_in.NumVertices() == 0 ? std::vector<VertexIdxT<Graph_t_out>>()
                                                            : generate_vertex_contraction_map(dag_in);
 
         return coarser_util::construct_coarse_dag(dagIn, coarsenedDag, vertex_contraction_map);
@@ -109,17 +109,17 @@ class CoarserGenContractionMap : public Coarser<GraphTIn, GraphTOut> {
 template <typename GraphTIn, typename GraphTOut>
 class CoarserGenExpansionMap : public Coarser<GraphTIn, GraphTOut> {
   public:
-    virtual std::vector<std::vector<vertex_idx_t<Graph_t_in>>> GenerateVertexExpansionMap(const GraphTIn &dagIn) = 0;
+    virtual std::vector<std::vector<VertexIdxT<Graph_t_in>>> GenerateVertexExpansionMap(const GraphTIn &dagIn) = 0;
 
     virtual bool coarsenDag(const GraphTIn &dagIn,
                             GraphTOut &coarsenedDag,
-                            std::vector<vertex_idx_t<Graph_t_out>> &vertexContractionMap) override {
+                            std::vector<VertexIdxT<Graph_t_out>> &vertexContractionMap) override {
         if (dagIn.NumVertices() == 0) {
-            vertex_contraction_map = std::vector<vertex_idx_t<Graph_t_out>>();
+            vertex_contraction_map = std::vector<VertexIdxT<Graph_t_out>>();
             return true;
         }
 
-        std::vector<std::vector<vertex_idx_t<Graph_t_in>>> vertexExpansionMap = generate_vertex_expansion_map(dag_in);
+        std::vector<std::vector<VertexIdxT<Graph_t_in>>> vertexExpansionMap = generate_vertex_expansion_map(dag_in);
         assert(coarser_util::check_valid_expansion_map<GraphTIn>(vertex_expansion_map));
 
         coarser_util::reorder_expansion_map<GraphTIn>(dagIn, vertex_expansion_map);

@@ -35,8 +35,8 @@ namespace osp {
  * @return DAG
  */
 template <typename GraphT>
-void ErdosRenyiGraphGen(GraphT &dagOut, vertex_idx_t<Graph_t> numVertices, double chance) {
-    static_assert(IsConstructableCdagV<Graph_t>, "Graph_t must be a constructable computational DAG type");
+void ErdosRenyiGraphGen(GraphT &dagOut, VertexIdxT<GraphT> numVertices, double chance) {
+    static_assert(IsConstructableCdagV<GraphT>, "Graph_t must be a constructable computational DAG type");
 
     dagOut = GraphT(numVertices);
 
@@ -44,14 +44,14 @@ void ErdosRenyiGraphGen(GraphT &dagOut, vertex_idx_t<Graph_t> numVertices, doubl
     std::mt19937 gen(rd());
 
     for (const auto &v : dagOut.vertices()) {
-        const auto one = static_cast<vertex_idx_t<Graph_t>>(1);
-        std::binomial_distribution<vertex_idx_t<Graph_t>> binoDist(numVertices - one - v, chance / double(numVertices));
+        const auto one = static_cast<VertexIdxT<GraphT>>(1);
+        std::binomial_distribution<VertexIdxT<GraphT>> binoDist(numVertices - one - v, chance / double(numVertices));
         auto outEdgesNum = bino_dist(gen);
 
-        std::unordered_set<vertex_idx_t<Graph_t>> outEdges;
+        std::unordered_set<VertexIdxT<GraphT>> outEdges;
         while (outEdges.size() < static_cast<size_t>(out_edges_num)) {
-            std::uniform_int_distribution<vertex_idx_t<Graph_t>> dist(0, numVertices - one - v);
-            vertex_idx_t<Graph_t> edge = v + one + dist(gen);
+            std::uniform_int_distribution<VertexIdxT<GraphT>> dist(0, numVertices - one - v);
+            VertexIdxT<GraphT> edge = v + one + dist(gen);
 
             if (outEdges.find(edge) != out_edges.cend()) {
                 continue;
