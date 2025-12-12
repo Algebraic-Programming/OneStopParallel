@@ -362,11 +362,11 @@ class DotFileWriter {
         using VertexTypeTOrDefault = std::conditional_t<IsComputationalDagTypedVerticesV<GraphT>, VTypeT<GraphT>, unsigned>;
         using EdgeCommwTOrDefault = std::conditional_t<HasEdgeWeightsV<GraphT>, ECommwT<GraphT>, VCommwT<GraphT>>;
 
-        using CdagVertexImplT
-            = CdagVertexImpl<VertexIdxT<GraphT>, VWorkwT<GraphT>, VCommwT<GraphT>, VMemwT<GraphT>, VertexTypeTOrDefault>;
-        using CdagEdgeImplT = CdagEdgeImpl<EdgeCommwTOrDefault>;
+        using CDagVertexImplT
+            = CDagVertexImpl<VertexIdxT<GraphT>, VWorkwT<GraphT>, VCommwT<GraphT>, VMemwT<GraphT>, VertexTypeTOrDefault>;
+        using CDagEdgeImplT = CDagEdgeImpl<EdgeCommwTOrDefault>;
 
-        using GraphT2 = ComputationalDagEdgeIdxVectorImpl<CdagVertexImplT, CdagEdgeImplT>;
+        using GraphT2 = ComputationalDagEdgeIdxVectorImpl<CDagVertexImplT, CDagEdgeImplT>;
 
         GraphT2 g2;
 

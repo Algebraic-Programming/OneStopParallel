@@ -256,10 +256,10 @@ class BspArchitecture {
           numberOfProcessorTypes_(other.GetNumberOfProcessorTypes()),
           communicationCosts_(other.CommunicationCosts()),
           synchronisationCosts_(other.SynchronisationCosts()),
-          memoryBound_(other.memoryBound()),
+          memoryBound_(other.MemoryBound()),
           isNuma_(other.IsNumaArchitecture()),
-          processorTypes_(other.processorTypes()),
-          sendCosts_(other.sendCostsVector()) {
+          processorTypes_(other.ProcessorTypes()),
+          sendCosts_(other.SendCostsVector()) {
         static_assert(std::is_same_v<VMemwT<GraphT>, VMemwT<GraphTOther>>,
                       "BspArchitecture: Graph_t and Graph_t_other have the same memory weight type.");
 
