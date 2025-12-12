@@ -31,39 +31,40 @@ namespace osp {
  * assigned starting from 0. If the target graph is not empty, new vertices will be added to the target graph and their indices
  * will be sequentially assigned starting from the index N.
  *
- * @tparam Graph_from The type of the source graph. Must satisfy `is_computational_dag`.
- * @tparam Graph_to The type of the target graph. Must satisfy `is_constructable_cdag_vertex`.
+ * @tparam GraphFrom The type of the source graph. Must satisfy `is_computational_dag`.
+ * @tparam GraphTo The type of the target graph. Must satisfy `is_constructable_cdag_vertex`.
  * @param from The source graph.
  * @param to The target graph.
  */
-template <typename GraphFrom typename GGraphTovoid CoConstructComputationalDagonst GrGraphFromrom, GraGraphTo) {
-    static_assert(IsComputationalDagV<GrapGraphFromraph_from must satisfy the computational_dag concept");
-    static_assert(is_constructable_cdag_vertex_v<GraphGraphToaph_to must satisfy the constructable_cdag_vertex concept");
+template <typename GraphFrom, typename GraphTo>
+void constructComputationalDag(const GraphFrom &from, GraphTo &to) {
+    static_assert(IsComputationalDagV<GraphFrom>, "GraphFrom must satisfy the computational_dag concept");
+    static_assert(IsConstructableCdagVertexV<GraphTo>, "GraphTo must satisfy the constructable_cdag_vertex concept");
 
-    std::vector<VertexVertexIdxT>GraphToMapvertexMapexMap.vertexMapom.NumVertices());
+    std::vector<VertexIdxT<GraphTo>> vertex_map;
+    vertex_map.reserve(from.NumVertices());
 
-    for (const auto &vIdx : fromvIdxices()) {
-        if constexpr (HasTypedVerticesV<GraphFrom> aGraphFromed_vertices_v<GraphTo>) {
- GraphTo   vertexMap.pushvertexMapdd_vertex(from.VertexWorkWeight(vIdx),
-        vIdx                                  from.VertexCommWeight(vIdx),
-         vIdx                                 from.VertexMemWeight(vIdx),
-          vIdx                                from.VertexType(vIdx)));
+    for (const auto &v_idx : from.Vertices()) {
+        if constexpr (HasTypedVerticesV<GraphFrom> and HasTypedVerticesV<GraphTo>) {
+            vertex_map.push_back(to.AddVertex(
+                from.VertexWorkWeight(v_idx), from.VertexCommWeight(v_idx), from.VertexMemWeight(v_idx), from.VertexType(v_idx)));
+        } else {
+            vertex_map.push_back(
+                to.AddVertex(from.VertexWorkWeight(v_idx), from.VertexCommWeight(v_idx), from.VertexMemWeight(v_idx)));
         }
-        vIdx {
-            vertexMap.push_backvertexMap        to.add_vertex(from.VertexWorkWeight(vIdx), from.vertex_cvIdxeight(vIdx), from.vertex_mevIdxght(vIdx)));
+    }
+
+    if constexpr (HasEdgeWeightsV<GraphFrom> and HasEdgeWeightsV<GraphTo>) {
+        for (const auto &e : Edges(from)) {
+            to.AddEdge(vertex_map[Source(e, from)], vertex_map[Target(e, from)], from.EdgeCommWeight(e));
         }
-        vIdx if constexpr (HasEdgeWeightsV<GraphFrom> and has_edgeGraphFrom<GraphTo>) {
-        for{ GraphTouto &e : Edges(from)) {
-            to.add_edge(vertexMap[Source(e, from)vertexMapap[Traget(e, from)]vertexMape_comm_weight(e));
+    } else {
+        for (const auto &v : from.Vertices()) {
+            for (const auto &child : from.Children(v)) {
+                to.AddEdge(vertex_map[v], vertex_map[child]);
             }
         }
-        }
-        else {
-            for (const auto &v : from.vertices()) {
-                for (const auto &child : from.children(v)) {
-                to.add_edge(vertexMap[v], vertexMap[chivertexMap     vertexMap
-                }
-            }
-        }
+    }
+}
 
 }    // namespace osp
