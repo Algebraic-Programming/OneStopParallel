@@ -234,7 +234,7 @@ struct HasVerticesInTopOrderTrait<T, std::void_t<decltype(T::VerticesInTopOrder)
     : std::bool_constant<std::is_same_v<decltype(T::VerticesInTopOrder), const bool> && T::VerticesInTopOrder> {};
 
 template <typename T>
-inline constexpr bool hasVerticesInTopOrderV = HasVerticesInTopOrderTrait<T>::value;
+inline constexpr bool HasVerticesInTopOrderV = HasVerticesInTopOrderTrait<T>::value;
 
 /**
  * @brief Check if a graph guarantees children of a vertex are stored/iterated in vertex index order.
@@ -247,7 +247,7 @@ struct HasChildrenInVertexOrderTrait<T, std::void_t<decltype(T::ChildrenInVertex
     : std::bool_constant<std::is_same_v<decltype(T::ChildrenInVertexOrder), const bool> && T::ChildrenInVertexOrder> {};
 
 template <typename T>
-inline constexpr bool hasChildrenInVertexOrderV = HasChildrenInVertexOrderTrait<T>::value;
+inline constexpr bool HasChildrenInVertexOrderV = HasChildrenInVertexOrderTrait<T>::value;
 
 /**
  * @brief Check if a graph guarantees parents of a vertex are stored/iterated in vertex index order.
@@ -260,7 +260,7 @@ struct HasParentsInVertexOrderTrait<T, std::void_t<decltype(T::ParentsInVertexOr
     : std::bool_constant<std::is_same_v<decltype(T::ParentsInVertexOrder), const bool> && T::ParentsInVertexOrder> {};
 
 template <typename T>
-inline constexpr bool hasParentsInVertexOrderV = HasParentsInVertexOrderTrait<T>::value;
+inline constexpr bool HasParentsInVertexOrderV = HasParentsInVertexOrderTrait<T>::value;
 
 }    // namespace osp
 

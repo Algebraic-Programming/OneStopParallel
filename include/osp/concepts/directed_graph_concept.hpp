@@ -73,7 +73,7 @@ struct IsDirectedGraph<T,
                        std::is_integral<decltype(std::declval<T>().OutDegree(std::declval<VertexIdxT<T>>()))>> {};
 
 template <typename T>
-inline constexpr bool isDirectedGraphV = IsDirectedGraph<T>::value;
+inline constexpr bool IsDirectedGraphV = IsDirectedGraph<T>::value;
 
 /**
  * @brief Concept for an edge list structure.
@@ -108,6 +108,6 @@ struct IsEdgeListType<
           std::is_same<decltype(std::declval<T>().size()), EType>> {};
 
 template <typename T, typename VType, typename EType>
-inline constexpr bool isEdgeListTypeV = IsEdgeListType<T, VType, EType>::value;
+inline constexpr bool IsEdgeListTypeV = IsEdgeListType<T, VType, EType>::value;
 
 }    // namespace osp
