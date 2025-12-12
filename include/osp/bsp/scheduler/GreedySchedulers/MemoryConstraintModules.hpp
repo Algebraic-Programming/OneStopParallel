@@ -71,14 +71,14 @@ struct LocalMemoryConstraint {
         instance_ = &instance;
         current_proc_memory = std::vector<v_memw_t<Graph_t>>(instance->NumberOfProcessors(), 0);
 
-        if (instance->getArchitecture().getMemoryConstraintType() != MEMORY_CONSTRAINT_TYPE::LOCAL) {
+        if (instance->GetArchitecture().getMemoryConstraintType() != MEMORY_CONSTRAINT_TYPE::LOCAL) {
             throw std::invalid_argument("Memory constraint type is not LOCAL");
         }
     }
 
     inline bool CanAdd(const vertex_idx_t<Graph_t> &v, const unsigned proc) const {
         return current_proc_memory[proc] + instance->getComputationalDag().VertexMemWeight(v)
-               <= instance->getArchitecture().memoryBound(proc);
+               <= instance->GetArchitecture().memoryBound(proc);
     }
 
     inline void Add(const vertex_idx_t<Graph_t> &v, const unsigned proc) {
@@ -86,7 +86,7 @@ struct LocalMemoryConstraint {
     }
 
     inline bool CanAdd(const unsigned proc, const v_memw_t<Graph_t> &customMemWeight, const v_memw_t<Graph_t> &) const {
-        return current_proc_memory[proc] + custom_mem_weight <= instance->getArchitecture().memoryBound(proc);
+        return current_proc_memory[proc] + custom_mem_weight <= instance->GetArchitecture().memoryBound(proc);
     }
 
     inline void Add(const unsigned proc, const v_memw_t<Graph_t> &customMemWeight, const v_memw_t<Graph_t> &) {
@@ -127,7 +127,7 @@ struct PersistentTransientMemoryConstraint {
         current_proc_persistent_memory = std::vector<v_memw_t<Graph_t>>(instance->NumberOfProcessors(), 0);
         current_proc_transient_memory = std::vector<v_commw_t<Graph_t>>(instance->NumberOfProcessors(), 0);
 
-        if (instance->getArchitecture().getMemoryConstraintType() != MEMORY_CONSTRAINT_TYPE::PERSISTENT_AND_TRANSIENT) {
+        if (instance->GetArchitecture().getMemoryConstraintType() != MEMORY_CONSTRAINT_TYPE::PERSISTENT_AND_TRANSIENT) {
             throw std::invalid_argument("Memory constraint type is not PERSISTENT_AND_TRANSIENT");
         }
     }
@@ -135,7 +135,7 @@ struct PersistentTransientMemoryConstraint {
     inline bool CanAdd(const vertex_idx_t<Graph_t> &v, const unsigned proc) const {
         return (current_proc_persistent_memory[proc] + instance->getComputationalDag().VertexMemWeight(v)
                     + std::max(current_proc_transient_memory[proc], instance->getComputationalDag().VertexCommWeight(v))
-                <= instance->getArchitecture().memoryBound(proc));
+                <= instance->GetArchitecture().memoryBound(proc));
     }
 
     inline void Add(const vertex_idx_t<Graph_t> &v, const unsigned proc) {
@@ -149,7 +149,7 @@ struct PersistentTransientMemoryConstraint {
                        const v_commw_t<Graph_t> &customCommWeight) const {
         return (current_proc_persistent_memory[proc] + custom_mem_weight
                     + std::max(current_proc_transient_memory[proc], custom_comm_weight)
-                <= instance->getArchitecture().memoryBound(proc));
+                <= instance->GetArchitecture().memoryBound(proc));
     }
 
     inline void Add(const unsigned proc, const v_memw_t<Graph_t> &customMemWeight, const v_commw_t<Graph_t> &customCommWeight) {
@@ -174,14 +174,14 @@ struct GlobalMemoryConstraint {
         instance_ = &instance;
         current_proc_memory = std::vector<v_memw_t<Graph_t>>(instance->NumberOfProcessors(), 0);
 
-        if (instance->getArchitecture().getMemoryConstraintType() != MEMORY_CONSTRAINT_TYPE::GLOBAL) {
+        if (instance->GetArchitecture().getMemoryConstraintType() != MEMORY_CONSTRAINT_TYPE::GLOBAL) {
             throw std::invalid_argument("Memory constraint type is not GLOBAL");
         }
     }
 
     inline bool CanAdd(const vertex_idx_t<Graph_t> &v, const unsigned proc) const {
         return current_proc_memory[proc] + instance->getComputationalDag().VertexMemWeight(v)
-               <= instance->getArchitecture().memoryBound(proc);
+               <= instance->GetArchitecture().memoryBound(proc);
     }
 
     inline void Add(const vertex_idx_t<Graph_t> &v, const unsigned proc) {
@@ -189,7 +189,7 @@ struct GlobalMemoryConstraint {
     }
 
     inline bool CanAdd(const unsigned proc, const v_memw_t<Graph_t> &customMemWeight, const v_commw_t<Graph_t> &) const {
-        return current_proc_memory[proc] + custom_mem_weight <= instance->getArchitecture().memoryBound(proc);
+        return current_proc_memory[proc] + custom_mem_weight <= instance->GetArchitecture().memoryBound(proc);
     }
 
     inline void Add(const unsigned proc, const v_memw_t<Graph_t> &customMemWeight, const v_commw_t<Graph_t> &) {
@@ -236,7 +236,7 @@ struct LocalInOutMemoryConstraint {
         instance_ = &schedule_->GetInstance();
         current_proc_memory = std::vector<v_memw_t<Graph_t>>(instance->NumberOfProcessors(), 0);
 
-        if (instance->getArchitecture().getMemoryConstraintType() != MEMORY_CONSTRAINT_TYPE::LOCAL_IN_OUT) {
+        if (instance->GetArchitecture().getMemoryConstraintType() != MEMORY_CONSTRAINT_TYPE::LOCAL_IN_OUT) {
             throw std::invalid_argument("Memory constraint type is not LOCAL_IN_OUT");
         }
     }
@@ -252,7 +252,7 @@ struct LocalInOutMemoryConstraint {
             }
         }
 
-        return current_proc_memory[proc] + inc_memory <= instance->getArchitecture().memoryBound(proc);
+        return current_proc_memory[proc] + inc_memory <= instance->GetArchitecture().memoryBound(proc);
     }
 
     inline void Add(const vertex_idx_t<Graph_t> &v, const unsigned proc) {
@@ -292,7 +292,7 @@ struct LocalIncEdgesMemoryConstraint {
         current_proc_memory = std::vector<v_commw_t<Graph_t>>(instance->NumberOfProcessors(), 0);
         current_proc_predec = std::vector<std::unordered_set<vertex_idx_t<Graph_t>>>(instance->NumberOfProcessors());
 
-        if (instance->getArchitecture().getMemoryConstraintType() != MEMORY_CONSTRAINT_TYPE::LOCAL_INC_EDGES) {
+        if (instance->GetArchitecture().getMemoryConstraintType() != MEMORY_CONSTRAINT_TYPE::LOCAL_INC_EDGES) {
             throw std::invalid_argument("Memory constraint type is not LOCAL_INC_EDGES");
         }
     }
@@ -307,7 +307,7 @@ struct LocalIncEdgesMemoryConstraint {
             }
         }
 
-        return current_proc_memory[proc] + inc_memory <= instance->getArchitecture().memoryBound(proc);
+        return current_proc_memory[proc] + inc_memory <= instance->GetArchitecture().memoryBound(proc);
     }
 
     inline void Add(const vertex_idx_t<Graph_t> &v, const unsigned proc) {
@@ -354,7 +354,7 @@ struct LocalSourcesIncEdgesMemoryConstraint {
         current_proc_memory = std::vector<v_memw_t<Graph_t>>(instance->NumberOfProcessors(), 0);
         current_proc_predec = std::vector<std::unordered_set<vertex_idx_t<Graph_t>>>(instance->NumberOfProcessors());
 
-        if (instance->getArchitecture().getMemoryConstraintType() != MEMORY_CONSTRAINT_TYPE::LOCAL_SOURCES_INC_EDGES) {
+        if (instance->GetArchitecture().getMemoryConstraintType() != MEMORY_CONSTRAINT_TYPE::LOCAL_SOURCES_INC_EDGES) {
             throw std::invalid_argument("Memory constraint type is not LOCAL_INC_EDGES_2");
         }
     }
@@ -373,7 +373,7 @@ struct LocalSourcesIncEdgesMemoryConstraint {
             }
         }
 
-        return current_proc_memory[proc] + inc_memory <= instance->getArchitecture().memoryBound(proc);
+        return current_proc_memory[proc] + inc_memory <= instance->GetArchitecture().memoryBound(proc);
     }
 
     inline void Add(const vertex_idx_t<Graph_t> &v, const unsigned proc) {

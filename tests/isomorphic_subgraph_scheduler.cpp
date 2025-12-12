@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_SUITE(isomorphic_subgraph_scheduler_test_suite)
 
 BOOST_AUTO_TEST_CASE(EmptyGraphTest) {
     BspInstance<GraphT> instance;
-    instance.getArchitecture().setNumberOfProcessors(4);
+    instance.GetArchitecture().setNumberOfProcessors(4);
 
     GreedyBspScheduler<ConstrGraphT> greedyScheduler;
     IsomorphicSubgraphScheduler<GraphT, ConstrGraphT> isoScheduler(greedyScheduler);
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(TrimSubgraphGroupsTestNoTrim) {
     dag.add_vertex(1, 1, 1, 0);                                                     // 1
     dag.add_vertex(1, 1, 1, 0);                                                     // 2
     dag.add_vertex(1, 1, 1, 0);                                                     // 3
-    instance.getArchitecture().setProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0});    // 8 processors of type 0
+    instance.GetArchitecture().setProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0});    // 8 processors of type 0
     instance.setDiagonalCompatibilityMatrix(1);
 
     // A single group with 4 subgraphs, each with 1 node.
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(TrimSubgraphGroupsTestWithTrim) {
     dag.add_vertex(10, 1, 1, 0);                                                    // 3
     dag.add_vertex(10, 1, 1, 0);                                                    // 4
     dag.add_vertex(10, 1, 1, 0);                                                    // 5
-    instance.getArchitecture().setProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0});    // 8 processors of type 0
+    instance.GetArchitecture().setProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0});    // 8 processors of type 0
     instance.setDiagonalCompatibilityMatrix(1);
 
     // 6 subgraphs, each with 1 node and work weight 10.
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(TrimSubgraphGroupsTestMultipleGroups) {
     // Make sure all vertices used in iso_groups exist.
     // All are type 0.
 
-    instance.getArchitecture().setProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0, 0});    // 9 processors of type 0
+    instance.GetArchitecture().setProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0, 0});    // 9 processors of type 0
     instance.setDiagonalCompatibilityMatrix(1);
 
     // Group 1: size 6. gcd(6, 9) = 3. merge_size = 6/3 = 2. -> 3 subgraphs of size 2.
@@ -219,7 +219,7 @@ BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroupHeterogeneousArch) {
     dag.add_edge(3, 5);
 
     // 2 procs of type 0, 2 procs of type 1
-    instance.getArchitecture().setProcessorsWithTypes({0, 0, 1, 1});
+    instance.GetArchitecture().setProcessorsWithTypes({0, 0, 1, 1});
     instance.setDiagonalCompatibilityMatrix(2);
 
     std::vector<GroupT> isoGroups = {GroupT{{{0, 1}, {2, 3}}}, GroupT{{{4}, {5}}}};
@@ -285,7 +285,7 @@ BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroupShuffledIDs) {
     dag.add_edge(3, 2);
 
     // Architecture: 2 processors, so each subgraph gets its own partition space.
-    instance.getArchitecture().setProcessorsWithTypes({0, 0});
+    instance.GetArchitecture().setProcessorsWithTypes({0, 0});
     instance.setDiagonalCompatibilityMatrix(1);
 
     // Manually define the isomorphic groups.
@@ -356,7 +356,7 @@ BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroupShuffledIDs) {
 //     dag.add_edge(5, 6);
 
 //     // Architecture: 4 processors, so each subgraph gets its own partition space.
-//     instance.getArchitecture().setProcessorsWithTypes({0, 0, 0, 0});
+//     instance.GetArchitecture().setProcessorsWithTypes({0, 0, 0, 0});
 //     instance.setDiagonalCompatibilityMatrix(1);
 
 //     // Manually define the isomorphic groups.

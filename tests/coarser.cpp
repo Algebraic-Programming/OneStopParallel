@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(CoarserHdaggTest) {
         bool statusGraph = file_reader::readGraph((cwd / filenameGraph).string(), instance.getComputationalDag());
 
         bool statusArchitecture
-            = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.getArchitecture());
+            = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
 
         if (!statusGraph || !statusArchitecture) {
             std::cout << "Reading files failed." << std::endl;
@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(CoarserHdaggTest) {
         }
 
         BspInstance<GraphT> coarseInstance;
-        coarseInstance.getArchitecture() = instance.getArchitecture();
+        coarseInstance.GetArchitecture() = instance.GetArchitecture();
         std::vector<std::vector<VertexType>> vertexMap;
         std::vector<VertexType> reverseVertexMap;
 
@@ -195,7 +195,7 @@ BOOST_AUTO_TEST_CASE(CoarserHdaggTestDiffGraphImpl) {
         bool statusGraph = file_reader::readGraph((cwd / filenameGraph).string(), instance.getComputationalDag());
 
         bool statusArchitecture
-            = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.getArchitecture());
+            = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
 
         if (!statusGraph || !statusArchitecture) {
             std::cout << "Reading files failed." << std::endl;
@@ -203,8 +203,8 @@ BOOST_AUTO_TEST_CASE(CoarserHdaggTestDiffGraphImpl) {
         }
 
         BspInstance<GraphT2> coarseInstance;
-        BspArchitecture<GraphT2> architectureT2(instance.getArchitecture());
-        coarseInstance.getArchitecture() = architectureT2;
+        BspArchitecture<GraphT2> architectureT2(instance.GetArchitecture());
+        coarseInstance.GetArchitecture() = architectureT2;
         std::vector<std::vector<VertexType>> vertexMap;
         std::vector<VertexType> reverseVertexMap;
 
@@ -263,7 +263,7 @@ BOOST_AUTO_TEST_CASE(CoarserBspscheduleTest) {
         bool statusGraph = file_reader::readGraph((cwd / filenameGraph).string(), instance.getComputationalDag());
 
         bool statusArchitecture
-            = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.getArchitecture());
+            = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
 
         if (!statusGraph || !statusArchitecture) {
             std::cout << "Reading files failed." << std::endl;
@@ -271,7 +271,7 @@ BOOST_AUTO_TEST_CASE(CoarserBspscheduleTest) {
         }
 
         BspInstance<GraphT> coarseInstance;
-        coarseInstance.getArchitecture() = instance.getArchitecture();
+        coarseInstance.GetArchitecture() = instance.GetArchitecture();
         std::vector<std::vector<VertexType>> vertexMap;
         std::vector<VertexType> reverseVertexMap;
 
@@ -337,7 +337,7 @@ void TestCoarserSameGraph(Coarser<GraphT, GraphT> &coarser) {
         bool statusGraph = file_reader::readGraph((cwd / filenameGraph).string(), instance.getComputationalDag());
 
         bool statusArchitecture
-            = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.getArchitecture());
+            = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
 
         if (!statusGraph || !statusArchitecture) {
             std::cout << "Reading files failed." << std::endl;
@@ -345,7 +345,7 @@ void TestCoarserSameGraph(Coarser<GraphT, GraphT> &coarser) {
         }
 
         BspInstance<GraphT> coarseInstance;
-        coarseInstance.getArchitecture() = instance.getArchitecture();
+        coarseInstance.GetArchitecture() = instance.GetArchitecture();
         std::vector<std::vector<VertexType>> vertexMap;
         std::vector<VertexType> reverseVertexMap;
 
@@ -468,7 +468,7 @@ BOOST_AUTO_TEST_CASE(CoarserSquashATestDiffGraphImplCsg) {
         bool statusGraph = file_reader::readGraph((cwd / filenameGraph).string(), instance.getComputationalDag());
 
         bool statusArchitecture
-            = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.getArchitecture());
+            = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
 
         if (!statusGraph || !statusArchitecture) {
             std::cout << "Reading files failed." << std::endl;
@@ -476,8 +476,8 @@ BOOST_AUTO_TEST_CASE(CoarserSquashATestDiffGraphImplCsg) {
         }
 
         BspInstance<GraphT2> coarseInstance;
-        BspArchitecture<GraphT2> architectureT2(instance.getArchitecture());
-        coarseInstance.getArchitecture() = architectureT2;
+        BspArchitecture<GraphT2> architectureT2(instance.GetArchitecture());
+        coarseInstance.GetArchitecture() = architectureT2;
         std::vector<std::vector<VertexType>> vertexMap;
         std::vector<VertexType> reverseVertexMap;
 
@@ -541,7 +541,7 @@ BOOST_AUTO_TEST_CASE(CoarserSquashATestDiffGraphImplCsge) {
         bool statusGraph = file_reader::readGraph((cwd / filenameGraph).string(), instance.getComputationalDag());
 
         bool statusArchitecture
-            = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.getArchitecture());
+            = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
 
         if (!statusGraph || !statusArchitecture) {
             std::cout << "Reading files failed." << std::endl;
@@ -549,8 +549,8 @@ BOOST_AUTO_TEST_CASE(CoarserSquashATestDiffGraphImplCsge) {
         }
 
         BspInstance<GraphT2> coarseInstance;
-        BspArchitecture<GraphT2> architectureT2(instance.getArchitecture());
-        coarseInstance.getArchitecture() = architectureT2;
+        BspArchitecture<GraphT2> architectureT2(instance.GetArchitecture());
+        coarseInstance.GetArchitecture() = architectureT2;
         std::vector<std::vector<VertexType>> vertexMap;
         std::vector<VertexType> reverseVertexMap;
 

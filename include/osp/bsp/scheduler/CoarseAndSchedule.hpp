@@ -51,7 +51,7 @@ class CoarseAndSchedule : public Scheduler<GraphT> {
             return RETURN_STATUS::ERROR;
         }
 
-        instanceCoarse.getArchitecture() = instance.getArchitecture();
+        instanceCoarse.GetArchitecture() = instance.GetArchitecture();
         instanceCoarse.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
 
         BspSchedule<GraphTCoarse> scheduleCoarse(instanceCoarse);

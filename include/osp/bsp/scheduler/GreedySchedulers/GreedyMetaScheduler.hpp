@@ -64,7 +64,7 @@ class GreedyMetaScheduler : public Scheduler<GraphT> {
     void ResetScheduler() { schedulers_.clear(); }
 
     RETURN_STATUS computeSchedule(BspSchedule<GraphT> &schedule) override {
-        if (schedule.GetInstance().getArchitecture().NumberOfProcessors() == 1) {
+        if (schedule.GetInstance().GetArchitecture().NumberOfProcessors() == 1) {
             if constexpr (verbose_) {
                 std::cout << "Using serial scheduler for P=1." << std::endl;
             }

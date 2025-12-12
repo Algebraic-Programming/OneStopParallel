@@ -997,7 +997,7 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
             totalWork += currentSchedule_.step_processor_work[step][proc];
         }
 
-        if (total_work < 2.0 * currentSchedule_.instance->synchronisationCosts()) {
+        if (total_work < 2.0 * currentSchedule_.instance->SynchronisationCosts()) {
             return true;
         }
         return false;
@@ -1274,7 +1274,7 @@ class KlBase : public ImprovementScheduler<GraphT>, public IklCostFunction {
             parameters_.maxNoImprovementIterations_ = 25;
         }
 
-        if (autoAlternate_ && currentSchedule_.instance->getArchitecture().synchronisationCosts() > 10000.0) {
+        if (autoAlternate_ && currentSchedule_.instance->GetArchitecture().SynchronisationCosts() > 10000.0) {
 #ifdef KL_DEBUG
             std::cout << "KLBase set parameters, large synchchost: only remove supersets" << std::endl;
 #endif

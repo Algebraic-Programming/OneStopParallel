@@ -328,8 +328,8 @@ class CoptFullScheduler : public Scheduler<GraphT> {
         const auto &dag = useInitialScheduleRecomp_ ? initialScheduleRecomp_->GetInstance().getComputationalDag()
                                                     : initialSchedule_->GetInstance().getComputationalDag();
 
-        const auto &arch = useInitialScheduleRecomp_ ? initialScheduleRecomp_->GetInstance().getArchitecture()
-                                                     : initialSchedule_->GetInstance().getArchitecture();
+        const auto &arch = useInitialScheduleRecomp_ ? initialScheduleRecomp_->GetInstance().GetArchitecture()
+                                                     : initialSchedule_->GetInstance().GetArchitecture();
 
         const unsigned &numProcessors = useInitialScheduleRecomp_ ? initialScheduleRecomp_->GetInstance().NumberOfProcessors()
                                                                   : initialSchedule_->GetInstance().NumberOfProcessors();
@@ -523,7 +523,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
                                 * instance.getComputationalDag().VertexMemWeight(node);
                     }
 
-                    model.AddConstr(expr <= instance.getArchitecture().memoryBound(processor));
+                    model.AddConstr(expr <= instance.GetArchitecture().memoryBound(processor));
                 }
             }
         }
@@ -720,19 +720,19 @@ class CoptFullScheduler : public Scheduler<GraphT> {
                 model.AddConstr(maxSuperstepVar[static_cast<int>(step)] >= maxWorkSuperstepVar_[static_cast<int>(step)]);
                 if (step > 0) {
                     model.AddConstr(maxSuperstepVar[static_cast<int>(step)]
-                                    >= instance.communicationCosts() * maxCommSuperstepVar_[static_cast<int>(step - 1)]);
+                                    >= instance.CommunicationCosts() * maxCommSuperstepVar_[static_cast<int>(step - 1)]);
                 }
                 expr += maxSuperstepVar[static_cast<int>(step)];
-                expr += instance.synchronisationCosts() * superstepHasComm[static_cast<int>(step)];
-                expr += instance.synchronisationCosts() * mergeableSuperstepPenalty[static_cast<int>(step)];
+                expr += instance.SynchronisationCosts() * superstepHasComm[static_cast<int>(step)];
+                expr += instance.SynchronisationCosts() * mergeableSuperstepPenalty[static_cast<int>(step)];
             }
         } else {
             for (unsigned int step = 0; step < maxNumberSupersteps_; step++) {
                 expr += maxWorkSuperstepVar_[static_cast<int>(step)]
-                        + instance.communicationCosts() * maxCommSuperstepVar_[static_cast<int>(step)]
-                        + instance.synchronisationCosts() * superstepUsedVar_[static_cast<int>(step)];
+                        + instance.CommunicationCosts() * maxCommSuperstepVar_[static_cast<int>(step)]
+                        + instance.SynchronisationCosts() * superstepUsedVar_[static_cast<int>(step)];
             }
-            expr -= instance.synchronisationCosts();
+            expr -= instance.SynchronisationCosts();
         }
 
         model.SetObjective(expr, COPT_MINIMIZE);

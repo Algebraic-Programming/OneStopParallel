@@ -79,7 +79,7 @@ void RunTest(Scheduler<GraphT> *testScheduler) {
 
             bool statusGraph = file_reader::readGraph((cwd / filenameGraph).string(), instance.getComputationalDag());
             bool statusArchitecture
-                = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.getArchitecture());
+                = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
 
             if (!statusGraph || !statusArchitecture) {
                 std::cout << "Reading files failed." << std::endl;

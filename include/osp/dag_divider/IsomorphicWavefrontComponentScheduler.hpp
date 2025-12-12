@@ -35,7 +35,7 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
 
     RETURN_STATUS computeSchedule(BspSchedule<GraphT> &schedule) override {
         const auto &instance = schedule.GetInstance();
-        const auto &originalArch = instance.getArchitecture();
+        const auto &originalArch = instance.GetArchitecture();
 
         std::vector<std::vector<unsigned>> globalIdsByType(originalArch.getNumberOfProcessorTypes());
         for (unsigned i = 0; i < originalArch.NumberOfProcessors(); ++i) {
@@ -78,7 +78,7 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
                                       unsigned superstepOffset,
                                       unsigned &superstepsInSet) {
         const auto &instance = schedule.GetInstance();
-        const auto &originalArch = instance.getArchitecture();
+        const auto &originalArch = instance.GetArchitecture();
         const auto &originalProcTypeCount = originalArch.getProcessorTypeCount();
 
         if constexpr (this->enableDebugPrints_) {
@@ -182,7 +182,7 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
                                            unsigned superstepOffset,
                                            unsigned &superstepsForGroup) {
         const auto &instance = schedule.GetInstance();
-        const auto &originalArch = instance.getArchitecture();
+        const auto &originalArch = instance.GetArchitecture();
         const size_t numMembers = groupMembers.size();
         superstepsForGroup = 0;
 
@@ -205,7 +205,7 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
 
             BspInstance<ConstrGraphT> subInstance(repSubDag, this->CreateSubArchitecture(originalArch, procsForGroup));
             subInstance.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
-            auto &subArchitecture = subInstance.getArchitecture();
+            auto &subArchitecture = subInstance.GetArchitecture();
 
             if constexpr (this->enableDebugPrints_) {
                 std::cout << "    Sub-architecture for sequential scheduling: { ";
@@ -268,7 +268,7 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
             subInstance.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
 
             if constexpr (this->enableDebugPrints_) {
-                const auto &subArch = subInstance.getArchitecture();
+                const auto &subArch = subInstance.GetArchitecture();
                 std::cout << "    Sub-architecture for replication (per member): { ";
                 for (unsigned typeIdx = 0; typeIdx < subArch.getNumberOfProcessorTypes(); ++typeIdx) {
                     std::cout << "Type " << typeIdx << ": " << subArch.getProcessorTypeCount()[typeIdx] << "; ";
@@ -282,7 +282,7 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
                 return status;
             }
 
-            const auto subProcTypeCount = subSchedule.GetInstance().getArchitecture().getProcessorTypeCount();
+            const auto subProcTypeCount = subSchedule.GetInstance().GetArchitecture().getProcessorTypeCount();
             std::vector<unsigned> subProcTypeCorrections(subProcTypeCount.size(), 0);
             for (std::size_t k = 1; k < subProcTypeCorrections.size(); ++k) {
                 subProcTypeCorrections[k] = subProcTypeCorrections[k - 1] + subProcTypeCount[k - 1];
@@ -297,7 +297,7 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
                 vertex_idx_t<constr_graph_t> subdagVertex = 0;
                 for (const auto &vertex : sorted_component_vertices) {
                     const unsigned proc_in_sub_sched = sub_schedule.assignedProcessor(subdag_vertex);
-                    const unsigned proc_type = sub_schedule.GetInstance().getArchitecture().processorType(proc_in_sub_sched);
+                    const unsigned proc_type = sub_schedule.GetInstance().GetArchitecture().processorType(proc_in_sub_sched);
                     const unsigned local_proc_id_within_type = proc_in_sub_sched - sub_proc_type_corrections[proc_type];
                     unsigned global_proc_id
                         = global_ids_by_type[proc_type][current_member_proc_offsets[proc_type] + local_proc_id_within_type];

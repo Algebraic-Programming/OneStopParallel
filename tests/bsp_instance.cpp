@@ -39,16 +39,16 @@ BOOST_AUTO_TEST_CASE(Test1) {
 
     BOOST_CHECK_EQUAL(instance.numberOfVertices(), 0);
     BOOST_CHECK_EQUAL(instance.NumberOfProcessors(), 4);
-    BOOST_CHECK_EQUAL(instance.synchronisationCosts(), 3);
-    BOOST_CHECK_EQUAL(instance.communicationCosts(), 2);
+    BOOST_CHECK_EQUAL(instance.SynchronisationCosts(), 3);
+    BOOST_CHECK_EQUAL(instance.CommunicationCosts(), 2);
 
     BspArchitecture<computational_dag_vector_impl_def_t> architecture2(6, 3, 1);
 
-    instance.getArchitecture() = architecture2;
+    instance.GetArchitecture() = architecture2;
 
     BOOST_CHECK_EQUAL(instance.NumberOfProcessors(), 6);
-    BOOST_CHECK_EQUAL(instance.synchronisationCosts(), 1);
-    BOOST_CHECK_EQUAL(instance.communicationCosts(), 3);
+    BOOST_CHECK_EQUAL(instance.SynchronisationCosts(), 1);
+    BOOST_CHECK_EQUAL(instance.CommunicationCosts(), 3);
     BOOST_CHECK_EQUAL(instance.numberOfVertices(), 0);
 }
 
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(TestInstanceBicgstab) {
 
     BOOST_CHECK_EQUAL(instance.getComputationalDag().NumVertexTypes(), 2);
 
-    instance.getArchitecture().setProcessorType(0, 1);
+    instance.GetArchitecture().setProcessorType(0, 1);
     instance.setDiagonalCompatibilityMatrix(2);
 
     BOOST_CHECK_EQUAL(instance.isCompatible(0, 0), true);
@@ -118,11 +118,11 @@ BOOST_AUTO_TEST_CASE(TestInstanceBicgstab) {
     BOOST_CHECK_EQUAL(instanceT2.getComputationalDag().NumVertices(), instance.getComputationalDag().NumVertices());
     BOOST_CHECK_EQUAL(instanceT2.getComputationalDag().NumVertexTypes(), instance.getComputationalDag().NumVertexTypes());
     BOOST_CHECK_EQUAL(instanceT2.getComputationalDag().NumEdges(), instance.getComputationalDag().NumEdges());
-    BOOST_CHECK_EQUAL(instanceT2.getArchitecture().NumberOfProcessors(), instance.getArchitecture().NumberOfProcessors());
-    BOOST_CHECK_EQUAL(instanceT2.getArchitecture().getNumberOfProcessorTypes(),
-                      instance.getArchitecture().getNumberOfProcessorTypes());
-    BOOST_CHECK_EQUAL(instanceT2.getArchitecture().communicationCosts(), instance.getArchitecture().communicationCosts());
-    BOOST_CHECK_EQUAL(instanceT2.getArchitecture().synchronisationCosts(), instance.getArchitecture().synchronisationCosts());
+    BOOST_CHECK_EQUAL(instanceT2.GetArchitecture().NumberOfProcessors(), instance.GetArchitecture().NumberOfProcessors());
+    BOOST_CHECK_EQUAL(instanceT2.GetArchitecture().getNumberOfProcessorTypes(),
+                      instance.GetArchitecture().getNumberOfProcessorTypes());
+    BOOST_CHECK_EQUAL(instanceT2.GetArchitecture().CommunicationCosts(), instance.GetArchitecture().CommunicationCosts());
+    BOOST_CHECK_EQUAL(instanceT2.GetArchitecture().SynchronisationCosts(), instance.GetArchitecture().SynchronisationCosts());
 
     BspInstance<computational_dag_edge_idx_vector_impl_def_t> instanceT3;
 
@@ -131,22 +131,22 @@ BOOST_AUTO_TEST_CASE(TestInstanceBicgstab) {
     BOOST_CHECK_EQUAL(instanceT3.getComputationalDag().NumVertices(), instance.getComputationalDag().NumVertices());
     BOOST_CHECK_EQUAL(instanceT3.getComputationalDag().NumVertexTypes(), instance.getComputationalDag().NumVertexTypes());
     BOOST_CHECK_EQUAL(instanceT3.getComputationalDag().NumEdges(), instance.getComputationalDag().NumEdges());
-    BOOST_CHECK_EQUAL(instanceT3.getArchitecture().NumberOfProcessors(), instance.getArchitecture().NumberOfProcessors());
-    BOOST_CHECK_EQUAL(instanceT3.getArchitecture().getNumberOfProcessorTypes(),
-                      instance.getArchitecture().getNumberOfProcessorTypes());
-    BOOST_CHECK_EQUAL(instanceT3.getArchitecture().communicationCosts(), instance.getArchitecture().communicationCosts());
-    BOOST_CHECK_EQUAL(instanceT3.getArchitecture().synchronisationCosts(), instance.getArchitecture().synchronisationCosts());
+    BOOST_CHECK_EQUAL(instanceT3.GetArchitecture().NumberOfProcessors(), instance.GetArchitecture().NumberOfProcessors());
+    BOOST_CHECK_EQUAL(instanceT3.GetArchitecture().getNumberOfProcessorTypes(),
+                      instance.GetArchitecture().getNumberOfProcessorTypes());
+    BOOST_CHECK_EQUAL(instanceT3.GetArchitecture().CommunicationCosts(), instance.GetArchitecture().CommunicationCosts());
+    BOOST_CHECK_EQUAL(instanceT3.GetArchitecture().SynchronisationCosts(), instance.GetArchitecture().SynchronisationCosts());
 
     BspInstance<computational_dag_edge_idx_vector_impl_def_t> instanceT4(std::move(instanceT3));
 
     BOOST_CHECK_EQUAL(instanceT4.getComputationalDag().NumVertices(), instance.getComputationalDag().NumVertices());
     BOOST_CHECK_EQUAL(instanceT4.getComputationalDag().NumVertexTypes(), instance.getComputationalDag().NumVertexTypes());
     BOOST_CHECK_EQUAL(instanceT4.getComputationalDag().NumEdges(), instance.getComputationalDag().NumEdges());
-    BOOST_CHECK_EQUAL(instanceT4.getArchitecture().NumberOfProcessors(), instance.getArchitecture().NumberOfProcessors());
-    BOOST_CHECK_EQUAL(instanceT4.getArchitecture().getNumberOfProcessorTypes(),
-                      instance.getArchitecture().getNumberOfProcessorTypes());
-    BOOST_CHECK_EQUAL(instanceT4.getArchitecture().communicationCosts(), instance.getArchitecture().communicationCosts());
-    BOOST_CHECK_EQUAL(instanceT4.getArchitecture().synchronisationCosts(), instance.getArchitecture().synchronisationCosts());
+    BOOST_CHECK_EQUAL(instanceT4.GetArchitecture().NumberOfProcessors(), instance.GetArchitecture().NumberOfProcessors());
+    BOOST_CHECK_EQUAL(instanceT4.GetArchitecture().getNumberOfProcessorTypes(),
+                      instance.GetArchitecture().getNumberOfProcessorTypes());
+    BOOST_CHECK_EQUAL(instanceT4.GetArchitecture().CommunicationCosts(), instance.GetArchitecture().CommunicationCosts());
+    BOOST_CHECK_EQUAL(instanceT4.GetArchitecture().SynchronisationCosts(), instance.GetArchitecture().SynchronisationCosts());
 
     BspInstance<computational_dag_edge_idx_vector_impl_def_t> instanceT5;
 
@@ -154,9 +154,9 @@ BOOST_AUTO_TEST_CASE(TestInstanceBicgstab) {
     BOOST_CHECK_EQUAL(instanceT5.getComputationalDag().NumVertices(), instance.getComputationalDag().NumVertices());
     BOOST_CHECK_EQUAL(instanceT5.getComputationalDag().NumVertexTypes(), instance.getComputationalDag().NumVertexTypes());
     BOOST_CHECK_EQUAL(instanceT5.getComputationalDag().NumEdges(), instance.getComputationalDag().NumEdges());
-    BOOST_CHECK_EQUAL(instanceT5.getArchitecture().NumberOfProcessors(), instance.getArchitecture().NumberOfProcessors());
-    BOOST_CHECK_EQUAL(instanceT5.getArchitecture().getNumberOfProcessorTypes(),
-                      instance.getArchitecture().getNumberOfProcessorTypes());
-    BOOST_CHECK_EQUAL(instanceT5.getArchitecture().communicationCosts(), instance.getArchitecture().communicationCosts());
-    BOOST_CHECK_EQUAL(instanceT5.getArchitecture().synchronisationCosts(), instance.getArchitecture().synchronisationCosts());
+    BOOST_CHECK_EQUAL(instanceT5.GetArchitecture().NumberOfProcessors(), instance.GetArchitecture().NumberOfProcessors());
+    BOOST_CHECK_EQUAL(instanceT5.GetArchitecture().getNumberOfProcessorTypes(),
+                      instance.GetArchitecture().getNumberOfProcessorTypes());
+    BOOST_CHECK_EQUAL(instanceT5.GetArchitecture().CommunicationCosts(), instance.GetArchitecture().CommunicationCosts());
+    BOOST_CHECK_EQUAL(instanceT5.GetArchitecture().SynchronisationCosts(), instance.GetArchitecture().SynchronisationCosts());
 }

@@ -275,7 +275,7 @@ v_workw_t<Graph_t> PebblingSchedule<GraphT>::ComputeCost() const {
     for (unsigned step = 0; step < numberOfSupersteps_; ++step) {
         // compute phase
         cost_type maxWork = std::numeric_limits<cost_type>::min();
-        for (unsigned proc = 0; proc < instance_->getArchitecture().NumberOfProcessors(); ++proc) {
+        for (unsigned proc = 0; proc < instance_->GetArchitecture().NumberOfProcessors(); ++proc) {
             cost_type work = 0;
             for (const auto &computeStep : computeStepsForProcSuperstep_[proc][step]) {
                 work += instance_->getComputationalDag().VertexWorkWeight(computeStep.node);
@@ -289,11 +289,11 @@ v_workw_t<Graph_t> PebblingSchedule<GraphT>::ComputeCost() const {
 
         // communication phase
         cost_type maxSendUp = std::numeric_limits<cost_type>::min();
-        for (unsigned proc = 0; proc < instance_->getArchitecture().NumberOfProcessors(); ++proc) {
+        for (unsigned proc = 0; proc < instance_->GetArchitecture().NumberOfProcessors(); ++proc) {
             cost_type sendUp = 0;
             for (vertex_idx node : nodes_sent_up[proc][step]) {
                 send_up
-                    += instance->getComputationalDag().VertexCommWeight(node) * instance->getArchitecture().communicationCosts();
+                    += instance->getComputationalDag().VertexCommWeight(node) * instance->GetArchitecture().CommunicationCosts();
             }
 
             if (sendUp > max_send_up) {
@@ -302,14 +302,14 @@ v_workw_t<Graph_t> PebblingSchedule<GraphT>::ComputeCost() const {
         }
         totalCosts += max_send_up;
 
-        totalCosts += static_cast<cost_type>(instance_->getArchitecture().synchronisationCosts());
+        totalCosts += static_cast<cost_type>(instance_->GetArchitecture().SynchronisationCosts());
 
         cost_type maxSendDown = std::numeric_limits<cost_type>::min();
-        for (unsigned proc = 0; proc < instance_->getArchitecture().NumberOfProcessors(); ++proc) {
+        for (unsigned proc = 0; proc < instance_->GetArchitecture().NumberOfProcessors(); ++proc) {
             cost_type sendDown = 0;
             for (vertex_idx node : nodes_sent_down[proc][step]) {
                 send_down
-                    += instance->getComputationalDag().VertexCommWeight(node) * instance->getArchitecture().communicationCosts();
+                    += instance->getComputationalDag().VertexCommWeight(node) * instance->GetArchitecture().CommunicationCosts();
             }
 
             if (sendDown > max_send_down) {
@@ -324,7 +324,7 @@ v_workw_t<Graph_t> PebblingSchedule<GraphT>::ComputeCost() const {
 
 template <typename GraphT>
 v_workw_t<Graph_t> PebblingSchedule<GraphT>::ComputeAsynchronousCost() const {
-    std::vector<cost_type> currentTimeAtProcessor(instance_->getArchitecture().NumberOfProcessors(), 0);
+    std::vector<cost_type> currentTimeAtProcessor(instance_->GetArchitecture().NumberOfProcessors(), 0);
     std::vector<cost_type> timeWhenNodeGetsBlue(instance->getComputationalDag().NumVertices(),
                                                 std::numeric_limits<cost_type>::max());
     if (needToLoadInputs_) {
@@ -337,17 +337,17 @@ v_workw_t<Graph_t> PebblingSchedule<GraphT>::ComputeAsynchronousCost() const {
 
     for (unsigned step = 0; step < numberOfSupersteps_; ++step) {
         // compute phase
-        for (unsigned proc = 0; proc < instance_->getArchitecture().NumberOfProcessors(); ++proc) {
+        for (unsigned proc = 0; proc < instance_->GetArchitecture().NumberOfProcessors(); ++proc) {
             for (const auto &computeStep : computeStepsForProcSuperstep_[proc][step]) {
                 currentTimeAtProcessor[proc] += instance_->getComputationalDag().VertexWorkWeight(computeStep.node);
             }
         }
 
         // communication phase - send up
-        for (unsigned proc = 0; proc < instance_->getArchitecture().NumberOfProcessors(); ++proc) {
+        for (unsigned proc = 0; proc < instance_->GetArchitecture().NumberOfProcessors(); ++proc) {
             for (vertex_idx node : nodes_sent_up[proc][step]) {
                 current_time_at_processor[proc]
-                    += instance->getComputationalDag().VertexCommWeight(node) * instance->getArchitecture().communicationCosts();
+                    += instance->getComputationalDag().VertexCommWeight(node) * instance->GetArchitecture().CommunicationCosts();
                 if (time_when_node_gets_blue[node] > current_time_at_processor[proc]) {
                     time_when_node_gets_blue[node] = current_time_at_processor[proc];
                 }
@@ -355,19 +355,19 @@ v_workw_t<Graph_t> PebblingSchedule<GraphT>::ComputeAsynchronousCost() const {
         }
 
         // communication phase - send down
-        for (unsigned proc = 0; proc < instance_->getArchitecture().NumberOfProcessors(); ++proc) {
+        for (unsigned proc = 0; proc < instance_->GetArchitecture().NumberOfProcessors(); ++proc) {
             for (vertex_idx node : nodes_sent_down[proc][step]) {
                 if (current_time_at_processor[proc] < time_when_node_gets_blue[node]) {
                     current_time_at_processor[proc] = time_when_node_gets_blue[node];
                 }
                 current_time_at_processor[proc]
-                    += instance->getComputationalDag().VertexCommWeight(node) * instance->getArchitecture().communicationCosts();
+                    += instance->getComputationalDag().VertexCommWeight(node) * instance->GetArchitecture().CommunicationCosts();
             }
         }
     }
 
     cost_type makespan = 0;
-    for (unsigned proc = 0; proc < instance_->getArchitecture().NumberOfProcessors(); ++proc) {
+    for (unsigned proc = 0; proc < instance_->GetArchitecture().NumberOfProcessors(); ++proc) {
         if (currentTimeAtProcessor[proc] > makespan) {
             makespan = current_time_at_processor[proc];
         }
@@ -422,7 +422,7 @@ void PebblingSchedule<GraphT>::CleanSchedule() {
 
     for (unsigned step = 0; step < numberOfSupersteps_; ++step) {
         // compute phase
-        for (unsigned proc = 0; proc < instance_->getArchitecture().NumberOfProcessors(); ++proc) {
+        for (unsigned proc = 0; proc < instance_->GetArchitecture().NumberOfProcessors(); ++proc) {
             for (const auto &computeStep : computeStepsForProcSuperstep_[proc][step]) {
                 vertex_idx node = computeStep.node;
                 needed[node][proc].emplace_back(false);
@@ -440,7 +440,7 @@ void PebblingSchedule<GraphT>::CleanSchedule() {
         }
 
         // send up phase
-        for (unsigned proc = 0; proc < instance_->getArchitecture().NumberOfProcessors(); ++proc) {
+        for (unsigned proc = 0; proc < instance_->GetArchitecture().NumberOfProcessors(); ++proc) {
             for (vertex_idx node : nodes_sent_up[proc][step]) {
                 if (ever_needed_as_blue[node]) {
                     has_red_after_cleaning[node][proc] = true;
@@ -451,14 +451,14 @@ void PebblingSchedule<GraphT>::CleanSchedule() {
             }
         }
 
-        for (unsigned proc = 0; proc < instance_->getArchitecture().NumberOfProcessors(); ++proc) {
+        for (unsigned proc = 0; proc < instance_->GetArchitecture().NumberOfProcessors(); ++proc) {
             for (vertex_idx node : nodes_evicted_in_comm[proc][step]) {
                 has_red_after_cleaning[node][proc] = false;
             }
         }
 
         // send down phase
-        for (unsigned proc = 0; proc < instance_->getArchitecture().NumberOfProcessors(); ++proc) {
+        for (unsigned proc = 0; proc < instance_->GetArchitecture().NumberOfProcessors(); ++proc) {
             for (vertex_idx node : nodes_sent_down[proc][step]) {
                 needed[node][proc].emplace_back(false);
                 keep_false[node][proc] = has_red_after_cleaning[node][proc];
@@ -496,11 +496,11 @@ void PebblingSchedule<GraphT>::CleanSchedule() {
         }
     }
 
-    std::vector<cost_type> currentTimeAtProcessor(instance_->getArchitecture().NumberOfProcessors(), 0);
+    std::vector<cost_type> currentTimeAtProcessor(instance_->GetArchitecture().NumberOfProcessors(), 0);
 
     for (unsigned superstep = 0; superstep < numberOfSupersteps_; ++superstep) {
         // compute phase
-        for (unsigned proc = 0; proc < instance_->getArchitecture().NumberOfProcessors(); ++proc) {
+        for (unsigned proc = 0; proc < instance_->GetArchitecture().NumberOfProcessors(); ++proc) {
             std::vector<bool> stepRemains(computeStepsForProcSuperstep_[proc][superstep].size(), false);
             std::vector<std::vector<vertex_idx>> newEvictAfter(computeStepsForProcSuperstep_[proc][superstep].size());
 
@@ -553,7 +553,7 @@ void PebblingSchedule<GraphT>::CleanSchedule() {
                 }
             }
         }
-        for (unsigned proc = 0; proc < instance_->getArchitecture().NumberOfProcessors(); ++proc) {
+        for (unsigned proc = 0; proc < instance_->GetArchitecture().NumberOfProcessors(); ++proc) {
             // send up phase
             for (vertex_idx node : nodes_sent_up[proc][superstep]) {
                 if (!ever_needed_as_blue[node]) {
@@ -562,7 +562,7 @@ void PebblingSchedule<GraphT>::CleanSchedule() {
 
                 cost_type new_time_at_processor
                     = current_time_at_processor[proc]
-                      + instance->getComputationalDag().VertexCommWeight(node) * instance->getArchitecture().communicationCosts();
+                      + instance->getComputationalDag().VertexCommWeight(node) * instance->GetArchitecture().CommunicationCosts();
 
                 // only copy send up step if it is not obsolete in at least one of the two cases (sync or async schedule)
                 if (!has_blue[node] || new_time_at_processor < time_when_node_gets_blue[node]) {
@@ -577,7 +577,7 @@ void PebblingSchedule<GraphT>::CleanSchedule() {
         }
 
         // comm phase evict
-        for (unsigned proc = 0; proc < instance_->getArchitecture().NumberOfProcessors(); ++proc) {
+        for (unsigned proc = 0; proc < instance_->GetArchitecture().NumberOfProcessors(); ++proc) {
             for (vertex_idx node : nodes_evicted_in_comm[proc][superstep]) {
                 if (has_red[node][proc]) {
                     new_nodes_evicted_in_comm[proc][superstep].push_back(node);
@@ -586,7 +586,7 @@ void PebblingSchedule<GraphT>::CleanSchedule() {
             }
         }
 
-        for (unsigned proc = 0; proc < instance_->getArchitecture().NumberOfProcessors(); ++proc) {
+        for (unsigned proc = 0; proc < instance_->GetArchitecture().NumberOfProcessors(); ++proc) {
             // send down phase
             for (vertex_idx node : nodes_sent_down[proc][superstep]) {
                 if (needed[node][proc].front()) {
@@ -596,7 +596,7 @@ void PebblingSchedule<GraphT>::CleanSchedule() {
                         current_time_at_processor[proc] = time_when_node_gets_blue[node];
                     }
                     current_time_at_processor[proc] += instance->getComputationalDag().VertexCommWeight(node)
-                                                       * instance->getArchitecture().communicationCosts();
+                                                       * instance->GetArchitecture().CommunicationCosts();
                 }
                 needed[node][proc].pop_front();
             }
@@ -638,8 +638,8 @@ bool PebblingSchedule<GraphT>::HasValidSolution(const BspInstance<GraphT> &insta
 
     for (v_type_t<Graph_t> nodeType = 0; node_type < instance.getComputationalDag().NumVertexTypes(); ++node_type) {
         for (unsigned proc = 0; proc < instance.NumberOfProcessors(); ++proc) {
-            if (instance.isCompatibleType(node_type, instance.getArchitecture().processorType(proc))
-                && instance.getArchitecture().memoryBound(proc) >= memory_required[node_type]) {
+            if (instance.isCompatibleType(node_type, instance.GetArchitecture().processorType(proc))
+                && instance.GetArchitecture().memoryBound(proc) >= memory_required[node_type]) {
                 hasEnoughMemory[node_type] = true;
                 break;
             }
@@ -754,7 +754,7 @@ void PebblingSchedule<GraphT>::SplitSupersteps(const BspSchedule<GraphT> &schedu
                         }
 
                         memNeeded += instance_->getComputationalDag().VertexMemWeight(node);
-                        if (memNeeded > instance_->getArchitecture().memoryBound(proc)) {
+                        if (memNeeded > instance_->GetArchitecture().memoryBound(proc)) {
                             valid = false;
                             break;
                         }
@@ -999,7 +999,7 @@ void PebblingSchedule<GraphT>::SetMemoryMovement(CacheEvictionStrategy evictRule
                 = instance_->getComputationalDag().VertexMemWeight(computeStepsForProcSuperstep_[proc][superstep][0].node);
 
             while (memUsed[proc] + first_node_weight
-                   > instance_->getArchitecture().memoryBound(proc))    // no sliding pebbles for now
+                   > instance_->GetArchitecture().memoryBound(proc))    // no sliding pebbles for now
             {
                 if (evictable[proc].empty()) {
                     std::cout << "ERROR: Cannot create valid memory movement for these superstep lists." << std::endl;
@@ -1025,7 +1025,7 @@ void PebblingSchedule<GraphT>::SetMemoryMovement(CacheEvictionStrategy evictRule
 
                 if (stepIndex > 0) {
                     // evict nodes to make space
-                    while (memUsed[proc] + node_weight > instance_->getArchitecture().memoryBound(proc)) {
+                    while (memUsed[proc] + node_weight > instance_->GetArchitecture().memoryBound(proc)) {
                         if (evictable[proc].empty()) {
                             std::cout << "ERROR: Cannot create valid memory movement for these superstep lists." << std::endl;
                             return;
@@ -1190,7 +1190,7 @@ bool PebblingSchedule<GraphT>::IsValid() const {
                     memUsed[proc] += instance_->getComputationalDag().VertexMemWeight(computeStep.node);
                 }
 
-                if (memUsed[proc] > instance_->getArchitecture().memoryBound(proc)) {
+                if (memUsed[proc] > instance_->GetArchitecture().memoryBound(proc)) {
                     return false;
                 }
 
@@ -1237,7 +1237,7 @@ bool PebblingSchedule<GraphT>::IsValid() const {
         }
 
         for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); ++proc) {
-            if (memUsed[proc] > instance_->getArchitecture().memoryBound(proc)) {
+            if (memUsed[proc] > instance_->GetArchitecture().memoryBound(proc)) {
                 return false;
             }
         }
@@ -1382,7 +1382,7 @@ void PebblingSchedule<GraphT>::GetDataForMultiprocessorPebbling(
             for (unsigned stepIndex = 0; stepIndex < computeStepsForProcSuperstep_[proc][superstep].size(); ++stepIndex) {
                 vertex_idx node = computeStepsForProcSuperstep_[proc][superstep][stepIndex].node;
                 if (memUsed[proc] + instance_->getComputationalDag().VertexMemWeight(node)
-                    > instance_->getArchitecture().memoryBound(proc)) {
+                    > instance_->GetArchitecture().memoryBound(proc)) {
                     // open new step
                     nodesEvictedAfterStep[proc][stepOnProc[proc]] = evict_list;
                     ++stepOnProc[proc];
@@ -1515,7 +1515,7 @@ void PebblingSchedule<GraphT>::RemoveEvictStepsFromEnd() {
             mem_used[proc] += instance->getComputationalDag().VertexMemWeight(node);
         }
 
-        bottleneck[proc] = instance_->getArchitecture().memoryBound(proc) - mem_used[proc];
+        bottleneck[proc] = instance_->GetArchitecture().memoryBound(proc) - mem_used[proc];
     }
 
     for (unsigned step = numberOfSupersteps_; step > 0;) {
@@ -1540,7 +1540,7 @@ void PebblingSchedule<GraphT>::RemoveEvictStepsFromEnd() {
                 }
             }
             nodes_evicted_in_comm[proc][step] = remaining;
-            bottleneck[proc] = std::min(bottleneck[proc], instance_->getArchitecture().memoryBound(proc) - mem_used[proc]);
+            bottleneck[proc] = std::min(bottleneck[proc], instance_->GetArchitecture().memoryBound(proc) - mem_used[proc]);
 
             // computation phase
             for (unsigned stepIndex = static_cast<unsigned>(computeStepsForProcSuperstep_[proc][step].size()); stepIndex > 0;) {
@@ -1559,7 +1559,7 @@ void PebblingSchedule<GraphT>::RemoveEvictStepsFromEnd() {
                     }
                 }
                 computeStep.nodes_evicted_after = remaining_2;
-                bottleneck[proc] = std::min(bottleneck[proc], instance_->getArchitecture().memoryBound(proc) - mem_used[proc]);
+                bottleneck[proc] = std::min(bottleneck[proc], instance_->GetArchitecture().memoryBound(proc) - mem_used[proc]);
 
                 memUsed[proc] -= instance_->getComputationalDag().VertexMemWeight(computeStep.node);
             }

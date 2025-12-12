@@ -162,7 +162,7 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
                              const std::set<VertexType> &allReady,
                              const std::vector<std::set<VertexType>> &procReady) const {
         if constexpr (useMemoryConstraint_) {
-            if (instance.getArchitecture().getMemoryConstraintType() == MEMORY_CONSTRAINT_TYPE::PERSISTENT_AND_TRANSIENT) {
+            if (instance.GetArchitecture().getMemoryConstraintType() == MEMORY_CONSTRAINT_TYPE::PERSISTENT_AND_TRANSIENT) {
                 unsigned numEmptyProc = 0;
 
                 for (unsigned i = 0; i < instance.NumberOfProcessors(); ++i) {
@@ -206,7 +206,7 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
 
         std::vector<unsigned> readyNodesPerType = nrReadyNodesPerType;
         std::vector<unsigned> procsPerType = nrProcsPerType;
-        for (unsigned procType = 0; procType < instance.getArchitecture().getNumberOfProcessorTypes(); ++procType) {
+        for (unsigned procType = 0; procType < instance.GetArchitecture().getNumberOfProcessorTypes(); ++procType) {
             for (unsigned nodeType = 0; nodeType < instance.getComputationalDag().NumVertexTypes(); ++nodeType) {
                 if (instance.isCompatibleType(nodeType, procType)) {
                     unsigned matched = std::min(readyNodesPerType[nodeType], procsPerType[procType]);
@@ -278,9 +278,9 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
         unsigned free = paramsP;
 
         std::vector<unsigned> nrReadyNodesPerType(g.NumVertexTypes(), 0);
-        std::vector<unsigned> nrProcsPerType(instance.getArchitecture().getNumberOfProcessorTypes(), 0);
+        std::vector<unsigned> nrProcsPerType(instance.GetArchitecture().getNumberOfProcessorTypes(), 0);
         for (unsigned proc = 0; proc < paramsP; ++proc) {
-            ++nrProcsPerType[instance.getArchitecture().processorType(proc)];
+            ++nrProcsPerType[instance.GetArchitecture().processorType(proc)];
         }
 
         std::set<std::pair<v_workw_t<Graph_t>, VertexType>> finishTimes;

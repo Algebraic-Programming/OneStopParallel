@@ -89,9 +89,9 @@ RETURN_STATUS GreedyRecomputer<GraphT>::ComputeRecompSchedule(BspScheduleCS<Grap
         const unsigned &to_proc = std::get<2>(item.first);
         const unsigned &step = item.second;
         send_cost[from_proc][step]
-            += G.VertexCommWeight(node) * initial_schedule.GetInstance().getArchitecture().communicationCosts(from_proc, to_proc);
+            += G.VertexCommWeight(node) * initial_schedule.GetInstance().GetArchitecture().communicationCosts(from_proc, to_proc);
         rec_cost[to_proc][step]
-            += G.VertexCommWeight(node) * initial_schedule.GetInstance().getArchitecture().communicationCosts(from_proc, to_proc);
+            += G.VertexCommWeight(node) * initial_schedule.GetInstance().GetArchitecture().communicationCosts(from_proc, to_proc);
 
         comm_steps[step].emplace(item.first);
         needed_on_proc[node][from_proc].insert(step);
@@ -127,7 +127,7 @@ RETURN_STATUS GreedyRecomputer<GraphT>::ComputeRecompSchedule(BspScheduleCS<Grap
 
                 // check how much comm cost we save by removing comm schedule entry
                 cost_type comm_induced = G.VertexCommWeight(node)
-                                         * initial_schedule.GetInstance().getArchitecture().communicationCosts(from_proc, to_proc);
+                                         * initial_schedule.GetInstance().GetArchitecture().communicationCosts(from_proc, to_proc);
 
                 cost_type new_max_comm = 0;
                 for (unsigned proc = 0; proc < P; ++proc) {
@@ -152,7 +152,7 @@ RETURN_STATUS GreedyRecomputer<GraphT>::ComputeRecompSchedule(BspScheduleCS<Grap
 
                 cost_type decrease = max_comm[step] - new_max_comm;
                 if (max_comm[step] > 0 && new_max_comm == 0) {
-                    decrease += initial_schedule.GetInstance().getArchitecture().synchronisationCosts();
+                    decrease += initial_schedule.GetInstance().GetArchitecture().SynchronisationCosts();
                 }
 
                 // check how much it would increase the work cost instead

@@ -64,11 +64,11 @@ BOOST_AUTO_TEST_CASE(KlLocalMemconst) {
 
         bool statusGraph
             = file_reader::readComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(), instance.getComputationalDag());
-        instance.getArchitecture().setSynchronisationCosts(10);
-        instance.getArchitecture().setCommunicationCosts(5);
-        instance.getArchitecture().setNumberOfProcessors(4);
-        instance.getArchitecture().setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::LOCAL);
-        instance.getArchitecture().setSynchronisationCosts(0);
+        instance.GetArchitecture().setSynchronisationCosts(10);
+        instance.GetArchitecture().setCommunicationCosts(5);
+        instance.GetArchitecture().setNumberOfProcessors(4);
+        instance.GetArchitecture().setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::LOCAL);
+        instance.GetArchitecture().setSynchronisationCosts(0);
 
         const std::vector<int> boundsToTest = {10, 20};
 
@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(KlLocalMemconst) {
         }
 
         for (const auto &bound : boundsToTest) {
-            instance.getArchitecture().setMemoryBound(bound);
+            instance.GetArchitecture().setMemoryBound(bound);
 
             BspSchedule<Graph> schedule(instance);
             const auto result = testScheduler.computeSchedule(schedule);

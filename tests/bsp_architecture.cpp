@@ -34,11 +34,11 @@ BOOST_AUTO_TEST_CASE(ParameterizedConstructorTest) {
 
     BspArchitecture<computational_dag_vector_impl_def_int_t> architecture(4, 2, 3);
     BOOST_TEST(architecture.NumberOfProcessors() == 4);
-    BOOST_TEST(architecture.communicationCosts() == 2);
-    BOOST_TEST(architecture.synchronisationCosts() == 3);
+    BOOST_TEST(architecture.CommunicationCosts() == 2);
+    BOOST_TEST(architecture.SynchronisationCosts() == 3);
     BOOST_CHECK_EQUAL(architecture.getMemoryConstraintType(), MEMORY_CONSTRAINT_TYPE::NONE);
     BOOST_CHECK_EQUAL(architecture.getNumberOfProcessorTypes(), 1);
-    BOOST_CHECK_EQUAL(architecture.isNumaArchitecture(), false);
+    BOOST_CHECK_EQUAL(architecture.IsNumaArchitecture(), false);
 
     BOOST_CHECK_EQUAL(architecture.memoryBound(0), 100);
     BOOST_CHECK_EQUAL(architecture.memoryBound(1), 100);
@@ -91,9 +91,9 @@ BOOST_AUTO_TEST_CASE(Architecture) {
     // default constructor
     BspArchitecture<computational_dag_vector_impl_def_t> test;
     BOOST_CHECK_EQUAL(test.NumberOfProcessors(), 2);
-    BOOST_CHECK_EQUAL(test.communicationCosts(), 1);
-    BOOST_CHECK_EQUAL(test.synchronisationCosts(), 2);
-    BOOST_CHECK_EQUAL(test.isNumaArchitecture(), false);
+    BOOST_CHECK_EQUAL(test.CommunicationCosts(), 1);
+    BOOST_CHECK_EQUAL(test.SynchronisationCosts(), 2);
+    BOOST_CHECK_EQUAL(test.IsNumaArchitecture(), false);
     BOOST_CHECK_EQUAL(test.sendCosts(0, 1), 1);
     BOOST_CHECK_EQUAL(test.sendCosts(0, 0), 0);
     BOOST_CHECK_EQUAL(test.sendCosts(1, 1), 0);
@@ -102,9 +102,9 @@ BOOST_AUTO_TEST_CASE(Architecture) {
     // constructor
     BspArchitecture<computational_dag_vector_impl_def_t> test2(5, 7, 14);
     BOOST_CHECK_EQUAL(test2.NumberOfProcessors(), 5);
-    BOOST_CHECK_EQUAL(test2.communicationCosts(), 7);
-    BOOST_CHECK_EQUAL(test2.synchronisationCosts(), 14);
-    BOOST_CHECK_EQUAL(test2.isNumaArchitecture(), false);
+    BOOST_CHECK_EQUAL(test2.CommunicationCosts(), 7);
+    BOOST_CHECK_EQUAL(test2.SynchronisationCosts(), 14);
+    BOOST_CHECK_EQUAL(test2.IsNumaArchitecture(), false);
 
     for (unsigned i = 0; i < 5; i++) {
         for (unsigned j = 0; j < 5; j++) {
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(Architecture) {
     }
 
     test2.setCommunicationCosts(14);
-    BOOST_CHECK_EQUAL(test2.communicationCosts(), 14);
+    BOOST_CHECK_EQUAL(test2.CommunicationCosts(), 14);
 
     for (unsigned i = 0; i < 5; i++) {
         for (unsigned j = 0; j < 5; j++) {
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(Architecture) {
     }
 
     test2.setCommunicationCosts(0);
-    BOOST_CHECK_EQUAL(test2.communicationCosts(), 0);
+    BOOST_CHECK_EQUAL(test2.CommunicationCosts(), 0);
 
     for (unsigned i = 0; i < 5; i++) {
         for (unsigned j = 0; j < 5; j++) {
@@ -165,9 +165,9 @@ BOOST_AUTO_TEST_CASE(Architecture) {
 
     BspArchitecture<computational_dag_vector_impl_def_int_t> test3(6, 47295, 0, sendCosts);
     BOOST_CHECK_EQUAL(test3.NumberOfProcessors(), 6);
-    BOOST_CHECK_EQUAL(test3.communicationCosts(), 47295);
-    BOOST_CHECK_EQUAL(test3.synchronisationCosts(), 0);
-    BOOST_CHECK_EQUAL(test3.isNumaArchitecture(), false);
+    BOOST_CHECK_EQUAL(test3.CommunicationCosts(), 47295);
+    BOOST_CHECK_EQUAL(test3.SynchronisationCosts(), 0);
+    BOOST_CHECK_EQUAL(test3.IsNumaArchitecture(), false);
 
     for (unsigned i = 0; i < 6; i++) {
         for (unsigned j = 0; j < 6; j++) {
@@ -202,32 +202,32 @@ BOOST_AUTO_TEST_CASE(Architecture) {
 
     BspArchitecture<computational_dag_vector_impl_def_int_t> test4(6, 0, 4294965, sendCosts2);
     BOOST_CHECK_EQUAL(test4.NumberOfProcessors(), 6);
-    BOOST_CHECK_EQUAL(test4.communicationCosts(), 0);
-    BOOST_CHECK_EQUAL(test4.synchronisationCosts(), 4294965);
-    BOOST_CHECK_EQUAL(test4.isNumaArchitecture(), true);
+    BOOST_CHECK_EQUAL(test4.CommunicationCosts(), 0);
+    BOOST_CHECK_EQUAL(test4.SynchronisationCosts(), 4294965);
+    BOOST_CHECK_EQUAL(test4.IsNumaArchitecture(), true);
     BOOST_CHECK_EQUAL(test4.sendCosts(0, 2), 2);
 
     BspArchitecture<computational_dag_vector_impl_def_int_t> test5(6, 0, 4294965, sendCosts3);
     BOOST_CHECK_EQUAL(test5.NumberOfProcessors(), 6);
-    BOOST_CHECK_EQUAL(test5.communicationCosts(), 0);
-    BOOST_CHECK_EQUAL(test5.synchronisationCosts(), 4294965);
-    BOOST_CHECK_EQUAL(test5.isNumaArchitecture(), true);
+    BOOST_CHECK_EQUAL(test5.CommunicationCosts(), 0);
+    BOOST_CHECK_EQUAL(test5.SynchronisationCosts(), 4294965);
+    BOOST_CHECK_EQUAL(test5.IsNumaArchitecture(), true);
     BOOST_CHECK_EQUAL(test5.sendCosts(3, 0), 3);
 
     test5.setNumberOfProcessors(8);
     BOOST_CHECK_EQUAL(test5.NumberOfProcessors(), 8);
-    BOOST_CHECK_EQUAL(test5.communicationCosts(), 0);
-    BOOST_CHECK_EQUAL(test5.synchronisationCosts(), 4294965);
+    BOOST_CHECK_EQUAL(test5.CommunicationCosts(), 0);
+    BOOST_CHECK_EQUAL(test5.SynchronisationCosts(), 4294965);
     BOOST_CHECK_EQUAL(test5.sendCosts(3, 0), 1);
     BOOST_CHECK_EQUAL(test5.sendCosts(7, 7), 0);
     BOOST_CHECK_EQUAL(test5.sendCosts(7, 6), 1);
     BOOST_CHECK_EQUAL(test5.sendCosts(3, 5), 1);
-    BOOST_CHECK_EQUAL(test5.isNumaArchitecture(), false);
+    BOOST_CHECK_EQUAL(test5.IsNumaArchitecture(), false);
 
     test.setNumberOfProcessors(5);
     BOOST_CHECK_EQUAL(test.NumberOfProcessors(), 5);
-    BOOST_CHECK_EQUAL(test.communicationCosts(), 1);
-    BOOST_CHECK_EQUAL(test.synchronisationCosts(), 2);
+    BOOST_CHECK_EQUAL(test.CommunicationCosts(), 1);
+    BOOST_CHECK_EQUAL(test.SynchronisationCosts(), 2);
     BOOST_CHECK_EQUAL(test.sendCosts(4, 3), 1);
-    BOOST_CHECK_EQUAL(test.isNumaArchitecture(), false);
+    BOOST_CHECK_EQUAL(test.IsNumaArchitecture(), false);
 }

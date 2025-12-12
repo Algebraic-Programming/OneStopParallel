@@ -161,9 +161,9 @@ BOOST_AUTO_TEST_CASE(KlTotalCommTest1) {
         bool status_graph
             = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(), instance.getComputationalDag());
 
-        instance.getArchitecture().setSynchronisationCosts(5);
-        instance.getArchitecture().setCommunicationCosts(5);
-        instance.getArchitecture().setNumberOfProcessors(4);
+        instance.GetArchitecture().setSynchronisationCosts(5);
+        instance.GetArchitecture().setCommunicationCosts(5);
+        instance.GetArchitecture().setNumberOfProcessors(4);
 
         if (!status_graph) {
             std::cout << "Reading files failed." << std::endl;
@@ -207,9 +207,9 @@ BOOST_AUTO_TEST_CASE(KlTotalCommTest2) {
         bool status_graph
             = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(), instance.getComputationalDag());
 
-        instance.getArchitecture().setSynchronisationCosts(5);
-        instance.getArchitecture().setCommunicationCosts(5);
-        instance.getArchitecture().setNumberOfProcessors(4);
+        instance.GetArchitecture().setSynchronisationCosts(5);
+        instance.GetArchitecture().setCommunicationCosts(5);
+        instance.GetArchitecture().setNumberOfProcessors(4);
 
         if (!status_graph) {
             std::cout << "Reading files failed." << std::endl;
@@ -252,9 +252,9 @@ BOOST_AUTO_TEST_CASE(KlTotalCutTest1) {
 
         bool status_graph
             = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(), instance.getComputationalDag());
-        instance.getArchitecture().setSynchronisationCosts(5);
-        instance.getArchitecture().setCommunicationCosts(5);
-        instance.getArchitecture().setNumberOfProcessors(4);
+        instance.GetArchitecture().setSynchronisationCosts(5);
+        instance.GetArchitecture().setCommunicationCosts(5);
+        instance.GetArchitecture().setNumberOfProcessors(4);
 
         if (!status_graph) {
             std::cout << "Reading files failed." << std::endl;
@@ -297,9 +297,9 @@ BOOST_AUTO_TEST_CASE(KlTotalCutTest2) {
 
         bool status_graph
             = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(), instance.getComputationalDag());
-        instance.getArchitecture().setSynchronisationCosts(5);
-        instance.getArchitecture().setCommunicationCosts(5);
-        instance.getArchitecture().setNumberOfProcessors(4);
+        instance.GetArchitecture().setSynchronisationCosts(5);
+        instance.GetArchitecture().setCommunicationCosts(5);
+        instance.GetArchitecture().setNumberOfProcessors(4);
 
         if (!status_graph) {
             std::cout << "Reading files failed." << std::endl;

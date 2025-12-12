@@ -150,11 +150,11 @@ struct KlBspCommCostFunction {
         CostT totalCost = 0;
         for (unsigned step = 0; step < activeSchedule_->num_steps(); step++) {
             totalCost += activeSchedule_->get_step_max_work(step);
-            totalCost += commDs_.step_max_comm(step) * instance_->communicationCosts();
+            totalCost += commDs_.step_max_comm(step) * instance_->CommunicationCosts();
         }
 
         if (activeSchedule_->num_steps() > 1) {
-            totalCost += static_cast<CostT>(activeSchedule_->num_steps() - 1) * instance_->synchronisationCosts();
+            totalCost += static_cast<CostT>(activeSchedule_->num_steps() - 1) * instance_->SynchronisationCosts();
         }
 
         return totalCost;
@@ -419,7 +419,7 @@ struct KlBspCommCostFunction {
                     }
                 }
 
-                affinity_table_node[p_to][s_to_idx] += total_change * instance->communicationCosts();
+                affinity_table_node[p_to][s_to_idx] += total_change * instance->CommunicationCosts();
 
                 // Revert Outgoing Deltas for s_to (Inverse of Apply)
                 for (const auto &[v_proc, cost] : scratch.child_cost_buffer) {

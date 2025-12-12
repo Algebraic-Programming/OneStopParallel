@@ -144,7 +144,7 @@ std::vector<unsigned> AcyclicDagDivider<GraphT>::ComputePartitioning(const BspIn
                 partitioner.setMinAndMaxSize({newMin, newMax});
                 partitioner.setIsOriginalSource(is_original_source);
                 partitioner.setNumberOfParts(2);    // note - if set to more than 2, ILP is MUCH more inefficient
-                BspInstance partialInstance(dag, instance.getArchitecture(), instance.getNodeProcessorCompatibilityMatrix());
+                BspInstance partialInstance(dag, instance.GetArchitecture(), instance.getNodeProcessorCompatibilityMatrix());
                 RETURN_STATUS status = partitioner.computePartitioning(partial_instance, ILP_assignment);
                 if (status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND) {
                     ilpCost = getSplitCost(dag, ILP_assignment);

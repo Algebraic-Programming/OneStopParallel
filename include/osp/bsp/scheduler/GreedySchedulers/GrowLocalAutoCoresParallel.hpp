@@ -153,8 +153,8 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
         std::vector<std::vector<VertexType>> newAssignments(p);
         std::vector<std::vector<VertexType>> bestNewAssignments(p);
 
-        const v_workw_t<Graph_t> minWeightParallelCheck = params.syncCostMultiplierParallelCheck * instance.synchronisationCosts();
-        const v_workw_t<Graph_t> minSuperstepWeight = params.syncCostMultiplierMinSuperstepWeight * instance.synchronisationCosts();
+        const v_workw_t<Graph_t> minWeightParallelCheck = params.syncCostMultiplierParallelCheck * instance.SynchronisationCosts();
+        const v_workw_t<Graph_t> minSuperstepWeight = params.syncCostMultiplierMinSuperstepWeight * instance.SynchronisationCosts();
 
         double desiredParallelism = static_cast<double>(p);
 
@@ -316,7 +316,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                 bool acceptStep = false;
 
                 double score = static_cast<double>(total_weight_assigned)
-                               / static_cast<double>(weight_limit + instance.synchronisationCosts());
+                               / static_cast<double>(weight_limit + instance.SynchronisationCosts());
                 double parallelism = 0;
                 if (weightLimit > 0) {
                     parallelism = static_cast<double>(total_weight_assigned) / static_cast<double>(weight_limit);

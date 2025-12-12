@@ -56,7 +56,7 @@ class Serial : public Scheduler<GraphT> {
             return RETURN_STATUS::OSP_SUCCESS;
         }
 
-        const auto &arch = instance.getArchitecture();
+        const auto &arch = instance.GetArchitecture();
 
         // Select one processor of each type
         std::vector<unsigned> chosenProcs;

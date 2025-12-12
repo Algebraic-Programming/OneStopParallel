@@ -644,15 +644,15 @@ void CoptPartialScheduler<GraphT>::SetupVariablesConstraintsObjective(const BspS
 
     for (unsigned int step = 0; step < maxNumberSupersteps_; step++) {
         expr += max_work_superstep_var[static_cast<int>(step)]
-                + schedule.GetInstance().communicationCosts() * max_comm_superstep_var[static_cast<int>(step + 1)]
-                + schedule.GetInstance().synchronisationCosts() * superstep_used_var[static_cast<int>(step)];
+                + schedule.GetInstance().CommunicationCosts() * max_comm_superstep_var[static_cast<int>(step + 1)]
+                + schedule.GetInstance().SynchronisationCosts() * superstep_used_var[static_cast<int>(step)];
     }
 
-    expr += schedule.GetInstance().communicationCosts() * max_comm_superstep_var[0];
-    expr += schedule.GetInstance().synchronisationCosts() * superstep_has_comm[0];
-    expr += schedule.GetInstance().synchronisationCosts() * has_comm_at_end[0];
+    expr += schedule.GetInstance().CommunicationCosts() * max_comm_superstep_var[0];
+    expr += schedule.GetInstance().SynchronisationCosts() * superstep_has_comm[0];
+    expr += schedule.GetInstance().SynchronisationCosts() * has_comm_at_end[0];
 
-    model.SetObjective(expr - schedule.GetInstance().synchronisationCosts(), COPT_MINIMIZE);
+    model.SetObjective(expr - schedule.GetInstance().SynchronisationCosts(), COPT_MINIMIZE);
 };
 
 template <typename GraphT>

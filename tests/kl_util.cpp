@@ -47,9 +47,9 @@ struct ScheduleFixture {
             dag.add_edge(i, i + 1, 1);
         }
 
-        instance_.getArchitecture().setNumberOfProcessors(4);
-        instance_.getArchitecture().setCommunicationCosts(1);
-        instance_.getArchitecture().setSynchronisationCosts(10);
+        instance_.GetArchitecture().setNumberOfProcessors(4);
+        instance_.GetArchitecture().setCommunicationCosts(1);
+        instance_.GetArchitecture().setSynchronisationCosts(10);
 
         std::vector<unsigned> procs(20);
         std::vector<unsigned> steps(20);

@@ -52,7 +52,7 @@ class TrimmedGroupScheduler : public Scheduler<ConstrGraphT> {
     RETURN_STATUS computeSchedule(BspSchedule<ConstrGraphT> &schedule) override {
         const auto &instance = schedule.GetInstance();
         const ConstrGraphT &dag = instance.getComputationalDag();
-        const BspArchitecture<ConstrGraphT> &arch = instance.getArchitecture();
+        const BspArchitecture<ConstrGraphT> &arch = instance.GetArchitecture();
 
         // Find the weakly connected components. These are assumed to be isomorphic subgraphs.
         std::vector<vertex_idx_t<Constr_Graph_t>> componentMap(dag.NumVertices());
@@ -135,7 +135,7 @@ class TrimmedGroupScheduler : public Scheduler<ConstrGraphT> {
             std::sort(group_vertices.begin(), group_vertices.end());
 
             BspInstance<ConstrGraphT> subInstanc;
-            subInstanc.getArchitecture() = subArch;
+            subInstanc.GetArchitecture() = subArch;
             subInstanc.setNodeProcessorCompatibility(instance.getNodeProcessorCompatibilityMatrix());    // Inherit compatibility
             auto globalToLocalMap = create_induced_subgraph_map(
                 dag, subInstanc.getComputationalDag(), group_vertices);    // Create induced subgraph

@@ -144,7 +144,7 @@ class AbstractWavefrontScheduler : public Scheduler<GraphT> {
     }
 
     bool ValidateWorkDistribution(const std::vector<ConstrGraphT> &subDags, const BspInstance<GraphT> &instance) const {
-        const auto &originalArch = instance.getArchitecture();
+        const auto &originalArch = instance.GetArchitecture();
         for (const auto &repSubDag : subDags) {
             const double totalRepWork = sumOfVerticesWorkWeights(repSubDag);
 

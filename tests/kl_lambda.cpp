@@ -119,9 +119,9 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverWithNodeTypesTest) {
         bool statusGraph
             = file_reader::readComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(), instance.getComputationalDag());
 
-        instance.getArchitecture().setSynchronisationCosts(5);
-        instance.getArchitecture().setCommunicationCosts(5);
-        instance.getArchitecture().setNumberOfProcessors(4);
+        instance.GetArchitecture().setSynchronisationCosts(5);
+        instance.GetArchitecture().setCommunicationCosts(5);
+        instance.GetArchitecture().setNumberOfProcessors(4);
 
         if (!statusGraph) {
             std::cout << "Reading files failed." << std::endl;
@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverWithNodeTypesTest) {
         AddMemWeights(instance.getComputationalDag());
         AddNodeTypes(instance.getComputationalDag());
 
-        instance.getArchitecture().setProcessorsWithTypes({0, 0, 1, 1});
+        instance.GetArchitecture().setProcessorsWithTypes({0, 0, 1, 1});
 
         instance.setDiagonalCompatibilityMatrix(2);
 
@@ -176,9 +176,9 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverOnTestGraphs) {
         bool statusGraph
             = file_reader::readComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(), instance.getComputationalDag());
 
-        instance.getArchitecture().setSynchronisationCosts(5);
-        instance.getArchitecture().setCommunicationCosts(5);
-        instance.getArchitecture().setNumberOfProcessors(4);
+        instance.GetArchitecture().setSynchronisationCosts(5);
+        instance.GetArchitecture().setCommunicationCosts(5);
+        instance.GetArchitecture().setNumberOfProcessors(4);
 
         if (!statusGraph) {
             std::cout << "Reading files failed." << std::endl;
@@ -701,16 +701,16 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverInnerLoopLambdaMapTest) {
 //         bool status_graph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(),
 //                                                                             instance.getComputationalDag());
 
-//         instance.getArchitecture().setSynchronisationCosts(500);
-//         instance.getArchitecture().setCommunicationCosts(5);
-//         instance.getArchitecture().setNumberOfProcessors(4);
+//         instance.GetArchitecture().setSynchronisationCosts(500);
+//         instance.GetArchitecture().setCommunicationCosts(5);
+//         instance.GetArchitecture().setNumberOfProcessors(4);
 
 //         std::vector<std::vector<int>> send_cost = {{0,1,4,4},
 //                                                    {1,0,4,4},
 //                                                    {4,4,0,1},
 //                                                    {4,4,1,0}};
 
-//         instance.getArchitecture().SetSendCosts(send_cost);
+//         instance.GetArchitecture().SetSendCosts(send_cost);
 
 //         if (!status_graph) {
 
@@ -780,16 +780,16 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverInnerLoopLambdaMapTest) {
 //         bool status_graph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(),
 //                                                                             instance.getComputationalDag());
 
-//         instance.getArchitecture().setSynchronisationCosts(500);
-//         instance.getArchitecture().setCommunicationCosts(5);
-//         instance.getArchitecture().setNumberOfProcessors(4);
+//         instance.GetArchitecture().setSynchronisationCosts(500);
+//         instance.GetArchitecture().setCommunicationCosts(5);
+//         instance.GetArchitecture().setNumberOfProcessors(4);
 
 //         std::vector<std::vector<int>> send_cost = {{0,1,4,4},
 //                                                    {1,0,4,4},
 //                                                    {4,4,0,1},
 //                                                    {4,4,1,0}};
 
-//         instance.getArchitecture().SetSendCosts(send_cost);
+//         instance.GetArchitecture().SetSendCosts(send_cost);
 
 //         if (!status_graph) {
 

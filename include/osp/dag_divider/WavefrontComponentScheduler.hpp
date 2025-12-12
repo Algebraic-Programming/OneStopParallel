@@ -34,7 +34,7 @@ class WavefrontComponentScheduler : public AbstractWavefrontScheduler<GraphT, Co
 
     RETURN_STATUS computeSchedule(BspSchedule<GraphT> &schedule) override {
         const auto &instance = schedule.GetInstance();
-        const auto &originalArch = instance.getArchitecture();
+        const auto &originalArch = instance.GetArchitecture();
         const auto &originalProcTypeCount = originalArch.getProcessorTypeCount();
         const auto &computationalDag = instance.getComputationalDag();
 

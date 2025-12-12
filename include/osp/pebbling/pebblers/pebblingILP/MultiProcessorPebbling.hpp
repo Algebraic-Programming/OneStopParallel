@@ -674,7 +674,7 @@ void MultiProcessorPebbling<GraphT>::SetupBaseVariablesConstraints(const BspInst
                 }
             }
 
-            model.AddConstr(expr <= instance.getArchitecture().memoryBound(processor));
+            model.AddConstr(expr <= instance.GetArchitecture().memoryBound(processor));
         }
     }
 
@@ -929,8 +929,8 @@ void MultiProcessorPebbling<GraphT>::SetupBspVariablesConstraintsObjective(const
 
     Expr expr;
     for (unsigned t = 0; t < maxTime_; t++) {
-        expr += work_induced[static_cast<int>(t)] + instance.synchronisationCosts() * comm_phase_ends[static_cast<int>(t)]
-                + instance.communicationCosts() * comm_induced[static_cast<int>(t)];
+        expr += work_induced[static_cast<int>(t)] + instance.SynchronisationCosts() * comm_phase_ends[static_cast<int>(t)]
+                + instance.CommunicationCosts() * comm_induced[static_cast<int>(t)];
     }
 
     model.SetObjective(expr, COPT_MINIMIZE);
@@ -941,11 +941,11 @@ void MultiProcessorPebbling<GraphT>::SetupSyncObjective(const BspInstance<GraphT
     Expr expr;
     for (unsigned t = 0; t < maxTime_; t++) {
         if (!mergeSteps_) {
-            expr += comp_phase[static_cast<int>(t)] + instance.communicationCosts() * send_up_phase[static_cast<int>(t)]
-                    + instance.communicationCosts() * send_down_phase[static_cast<int>(t)];
+            expr += comp_phase[static_cast<int>(t)] + instance.CommunicationCosts() * send_up_phase[static_cast<int>(t)]
+                    + instance.CommunicationCosts() * send_down_phase[static_cast<int>(t)];
         } else {
             // this objective+parameter combination is not very meaningful, but still defined here to avoid a segfault otherwise
-            expr += comp_phase[static_cast<int>(t)] + instance.communicationCosts() * comm_phase[static_cast<int>(t)];
+            expr += comp_phase[static_cast<int>(t)] + instance.CommunicationCosts() * comm_phase[static_cast<int>(t)];
         }
     }
 
@@ -973,7 +973,7 @@ void MultiProcessorPebbling<GraphT>::SetupAsyncVariablesConstraintsObjective(con
             Expr sendDownStepLength;
             for (vertex_idx node = 0; node < instance.numberOfVertices(); node++) {
                 if (send_down_exists[node][processor][t]) {
-                    send_down_step_length += instance.communicationCosts() * instance.getComputationalDag().VertexCommWeight(node)
+                    send_down_step_length += instance.CommunicationCosts() * instance.getComputationalDag().VertexCommWeight(node)
                                              * send_down[node][processor][static_cast<int>(t)];
                 }
             }
@@ -1009,12 +1009,12 @@ void MultiProcessorPebbling<GraphT>::SetupAsyncVariablesConstraintsObjective(con
             }
 
             if (send_up_exists[node][processor][0]) {
-                expr += instance.communicationCosts() * instance.getComputationalDag().VertexCommWeight(node)
+                expr += instance.CommunicationCosts() * instance.getComputationalDag().VertexCommWeight(node)
                         * send_up[node][processor][0];
             }
 
             if (send_down_exists[node][processor][0]) {
-                expr += instance.communicationCosts() * instance.getComputationalDag().VertexCommWeight(node)
+                expr += instance.CommunicationCosts() * instance.getComputationalDag().VertexCommWeight(node)
                         * send_down[node][processor][0];
             }
         }
@@ -1031,12 +1031,12 @@ void MultiProcessorPebbling<GraphT>::SetupAsyncVariablesConstraintsObjective(con
                 }
 
                 if (send_up_exists[node][processor][t]) {
-                    expr += instance.communicationCosts() * instance.getComputationalDag().VertexCommWeight(node)
+                    expr += instance.CommunicationCosts() * instance.getComputationalDag().VertexCommWeight(node)
                             * send_up[node][processor][static_cast<int>(t)];
                 }
 
                 if (send_down_exists[node][processor][t]) {
-                    expr += instance.communicationCosts() * instance.getComputationalDag().VertexCommWeight(node)
+                    expr += instance.CommunicationCosts() * instance.getComputationalDag().VertexCommWeight(node)
                             * send_down[node][processor][static_cast<int>(t)];
                 }
             }

@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerSimpleChain) {
     dag.add_edge(1, 2);
 
     // Setup Architecture: 2 processors of type 0, 2 of type 1
-    instance.getArchitecture().setProcessorsWithTypes({0, 0, 1, 1});
+    instance.GetArchitecture().setProcessorsWithTypes({0, 0, 1, 1});
     instance.setDiagonalCompatibilityMatrix(2);
 
     // 2. Setup Scheduler Inputs
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerForkJoin) {
     dag.add_edge(2, 3);
 
     // Setup Architecture: 4 processors of type 0
-    instance.getArchitecture().setProcessorsWithTypes({0, 0, 0, 0});
+    instance.GetArchitecture().setProcessorsWithTypes({0, 0, 0, 0});
     instance.setDiagonalCompatibilityMatrix(1);
 
     // 2. Setup Scheduler Inputs
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerDeadlock) {
     dag.add_vertex(100, 1, 0);    // node 0
 
     // Setup Architecture: 1 processor of type 0
-    instance.getArchitecture().setProcessorsWithTypes({0});
+    instance.GetArchitecture().setProcessorsWithTypes({0});
     instance.setDiagonalCompatibilityMatrix(1);
 
     // 2. Setup Scheduler Inputs
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerComplexDag) {
     dag.add_edge(4, 5);
 
     // Setup Architecture: 4 processors of type 0, 4 of type 1
-    instance.getArchitecture().setProcessorsWithTypes({0, 0, 0, 0, 1, 1, 1, 1});
+    instance.GetArchitecture().setProcessorsWithTypes({0, 0, 0, 0, 1, 1, 1, 1});
     instance.setDiagonalCompatibilityMatrix(2);
 
     // 2. Setup Scheduler Inputs
@@ -242,7 +242,7 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerResourceContention) {
     dag.add_edge(3, 4);
 
     // Setup Architecture: 4 processors of type 0
-    instance.getArchitecture().setProcessorsWithTypes({0, 0, 0, 0});
+    instance.GetArchitecture().setProcessorsWithTypes({0, 0, 0, 0});
     instance.setDiagonalCompatibilityMatrix(1);
 
     // 2. Setup Scheduler Inputs
@@ -296,7 +296,7 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerProportionalAllocation) {
     dag.add_edge(0, 2);
 
     // Setup Architecture: 10 processors of type 0
-    instance.getArchitecture().setProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+    instance.GetArchitecture().setProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
     instance.setDiagonalCompatibilityMatrix(1);
 
     // 2. Setup Scheduler Inputs

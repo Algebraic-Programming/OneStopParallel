@@ -106,7 +106,7 @@ RETURN_STATUS PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<Graph
     // STEP 2: develop high-level multischedule on parts
 
     BspInstance<GraphT> contractedInstance(
-        contractedDag, instance.getArchitecture(), instance.getNodeProcessorCompatibilityMatrix());
+        contractedDag, instance.GetArchitecture(), instance.getNodeProcessorCompatibilityMatrix());
 
     SubproblemMultiScheduling<GraphT> multiScheduler;
     std::vector<std::set<unsigned>> processorsToPartsAndTypes;
@@ -171,16 +171,16 @@ RETURN_STATUS PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<Graph
                 continue;
             }
 
-            std::vector<unsigned> procAssignedPerType(instance.getArchitecture().getNumberOfProcessorTypes(), 0);
-            std::vector<unsigned> otherProcAssignedPerType(instance.getArchitecture().getNumberOfProcessorTypes(), 0);
+            std::vector<unsigned> procAssignedPerType(instance.GetArchitecture().getNumberOfProcessorTypes(), 0);
+            std::vector<unsigned> otherProcAssignedPerType(instance.GetArchitecture().getNumberOfProcessorTypes(), 0);
             for (unsigned proc : processors_to_parts[part]) {
-                ++proc_assigned_per_type[instance.getArchitecture().processorType(proc)];
+                ++proc_assigned_per_type[instance.GetArchitecture().processorType(proc)];
             }
             for (unsigned proc : processors_to_parts[other_part]) {
-                ++other_proc_assigned_per_type[instance.getArchitecture().processorType(proc)];
+                ++other_proc_assigned_per_type[instance.GetArchitecture().processorType(proc)];
             }
 
-            for (unsigned procType = 0; procType < instance.getArchitecture().getNumberOfProcessorTypes(); ++procType) {
+            for (unsigned procType = 0; procType < instance.GetArchitecture().getNumberOfProcessorTypes(); ++procType) {
                 if (procAssignedPerType[procType] != other_proc_assigned_per_type[procType]) {
                     isomorphic = false;
                 }
@@ -240,13 +240,13 @@ RETURN_STATUS PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<Graph
         subArch[part].setNumberOfProcessors(static_cast<unsigned>(processors_to_parts[part].size()));
         unsigned procIndex = 0;
         for (unsigned proc : processors_to_parts[part]) {
-            subArch[part].setProcessorType(proc_index, instance.getArchitecture().processorType(proc));
-            subArch[part].setMemoryBound(instance.getArchitecture().memoryBound(proc), proc_index);
+            subArch[part].setProcessorType(proc_index, instance.GetArchitecture().processorType(proc));
+            subArch[part].setMemoryBound(instance.GetArchitecture().memoryBound(proc), proc_index);
             original_proc_id[part][proc_index] = proc;
             ++proc_index;
         }
-        subArch[part].setCommunicationCosts(instance.getArchitecture().communicationCosts());
-        subArch[part].setSynchronisationCosts(instance.getArchitecture().synchronisationCosts());
+        subArch[part].setCommunicationCosts(instance.GetArchitecture().CommunicationCosts());
+        subArch[part].setSynchronisationCosts(instance.GetArchitecture().SynchronisationCosts());
         // no NUMA parameters for now
 
         // skip if isomorphic to previous part
@@ -258,7 +258,7 @@ RETURN_STATUS PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<Graph
 
         // set node-processor compatibility matrix
         std::vector<std::vector<bool>> compMatrix = instance.getNodeProcessorCompatibilityMatrix();
-        compMatrix.emplace_back(instance.getArchitecture().getNumberOfProcessorTypes(), true);
+        compMatrix.emplace_back(instance.GetArchitecture().getNumberOfProcessorTypes(), true);
         subInstance[part] = BspInstance(subDag, subArch[part], comp_matrix);
 
         // currently we only allow the input laoding scenario - the case where this is false is unmaintained/untested

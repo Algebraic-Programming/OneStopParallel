@@ -447,7 +447,7 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
      * @return True if memory constraints are satisfied, false otherwise.
      */
     [[nodiscard]] bool SatisfiesMemoryConstraints() const {
-        switch (instance_->getArchitecture().getMemoryConstraintType()) {
+        switch (instance_->GetArchitecture().getMemoryConstraintType()) {
             case MemoryConstraintType::LOCAL:
                 return SatisfiesLocalMemoryConstraints();
 

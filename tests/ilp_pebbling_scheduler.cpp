@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
 
     std::vector<v_memw_t<graph> > minimumMemoryRequiredVector = PebblingSchedule<graph>::minimumMemoryRequiredPerNodeType(instance);
     v_memw_t<graph> maxRequired = *std::max_element(minimum_memory_required_vector.begin(), minimum_memory_required_vector.end());
-    instance.getArchitecture().setMemoryBound(max_required);
+    instance.GetArchitecture().setMemoryBound(max_required);
 
     PebblingSchedule<graph> initialSol(bsp_initial, PebblingSchedule<graph>::CACHE_EVICTION_STRATEGY::FORESIGHT);
     BOOST_CHECK(initialSol.isValid());
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(TestPartial) {
 
     std::vector<v_memw_t<graph> > minimumMemoryRequiredVector = PebblingSchedule<graph>::minimumMemoryRequiredPerNodeType(instance);
     v_memw_t<graph> maxRequired = *std::max_element(minimum_memory_required_vector.begin(), minimum_memory_required_vector.end());
-    instance.getArchitecture().setMemoryBound(max_required);
+    instance.GetArchitecture().setMemoryBound(max_required);
 
     PebblingPartialILP<graph> mpp;
     mpp.setMinSize(15);

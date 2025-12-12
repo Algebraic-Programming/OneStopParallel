@@ -1272,7 +1272,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
             activeSchedule_.swap_empty_step_fwd(threadData.stepToRemove_, threadData.endStep_);
             threadData.endStep_--;
             threadData.localSearchStartStep_ = static_cast<unsigned>(threadData.activeScheduleData_.applied_moves.size());
-            threadData.activeScheduleData_.update_cost(static_cast<CostT>(-1.0 * instance_->synchronisationCosts()));
+            threadData.activeScheduleData_.update_cost(static_cast<CostT>(-1.0 * instance_->SynchronisationCosts()));
 
             if constexpr (enablePreresolvingViolations_) {
                 ResolveViolations(threadData);
@@ -1759,7 +1759,7 @@ bool KlImprover<GraphT, CommCostFunctionT, MemoryConstraintT, windowSize, CostT>
         return false;
     }
 
-    if (activeSchedule_.get_step_max_work(step) < instance_->synchronisationCosts()) {
+    if (activeSchedule_.get_step_max_work(step) < instance_->SynchronisationCosts()) {
         return true;
     }
 

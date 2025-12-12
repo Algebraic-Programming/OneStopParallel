@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(ConnectedComponentPartTest) {
     GreedyBspScheduler<boost_graph_int_t> bspScheduler;
     ConnectedComponentScheduler<computational_dag_vector_impl_def_int_t, boost_graph_int_t> scheduler(bspScheduler);
 
-    BspArchitecture<computational_dag_vector_impl_def_int_t> arch = instance.getArchitecture();
+    BspArchitecture<computational_dag_vector_impl_def_int_t> arch = instance.GetArchitecture();
     arch.setNumberOfProcessors(6);
 
     BspSchedule<computational_dag_vector_impl_def_int_t> schedule(instance);

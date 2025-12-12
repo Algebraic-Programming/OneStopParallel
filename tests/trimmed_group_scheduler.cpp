@@ -66,7 +66,7 @@ BOOST_FIXTURE_TEST_SUITE(trimmed_group_scheduler_test_suite, TrimmedGroupSchedul
 BOOST_AUTO_TEST_CASE(EmptyGraphTest) {
     // Graph is empty by default
     arch_.setNumberOfProcessors(4);
-    instance_.getArchitecture() = arch_;
+    instance_.GetArchitecture() = arch_;
 
     TrimmedGroupScheduler<GraphT> scheduler(mockSubScheduler_, 1);
     BspSchedule<GraphT> schedule(instance_);
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(SingleComponentSingleProcessorTypeTest) {
 
     // Architecture: 4 processors of type 0
     arch_.setProcessorsWithTypes({0, 0, 0, 0});
-    instance_.getArchitecture() = arch_;
+    instance_.GetArchitecture() = arch_;
 
     // min_non_zero_procs_ = 1 (all 4 processors assigned to this single component group)
     TrimmedGroupScheduler<GraphT> scheduler(mockSubScheduler_, 1);
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(MultipleComponentsSingleProcessorTypeEvenDistributionTest) 
 
     // Architecture: 4 processors of type 0
     arch_.setProcessorsWithTypes({0, 0, 0, 0});
-    instance_.getArchitecture() = arch_;
+    instance_.GetArchitecture() = arch_;
 
     // min_non_zero_procs_ = 2 (2 component groups, each gets 2 processors)
     TrimmedGroupScheduler<GraphT> scheduler(mockSubScheduler_, 2);
@@ -154,7 +154,7 @@ BOOST_AUTO_TEST_CASE(MultipleComponentsSingleProcessorTypeUnevenDistributionTest
 
     // Architecture: 6 processors of type 0
     arch_.setProcessorsWithTypes({0, 0, 0, 0, 0, 0});
-    instance_.getArchitecture() = arch_;
+    instance_.GetArchitecture() = arch_;
 
     // min_non_zero_procs_ = 2 (3 components, 2 groups)
     // base_count = 3 / 2 = 1, remainder = 3 % 2 = 1
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(MultipleComponentsHeterogeneousArchitectureTest) {
 
     // Architecture: 2 processors of type 0 (global 0,1), 2 processors of type 1 (global 2,3)
     arch_.setProcessorsWithTypes({0, 0, 1, 1});
-    instance_.getArchitecture() = arch_;
+    instance_.GetArchitecture() = arch_;
     instance_.setDiagonalCompatibilityMatrix(2);    // Node type 0 compatible with proc type 0, etc.
 
     // min_non_zero_procs_ = 2 (2 components, 2 groups)

@@ -100,7 +100,7 @@ struct KlTotalCommCostFunction {
         }
 
         return workCosts + commCosts * commMultiplier_
-               + static_cast<v_commw_t<Graph_t>>(activeSchedule_->num_steps() - 1) * instance_->synchronisationCosts();
+               + static_cast<v_commw_t<Graph_t>>(activeSchedule_->num_steps() - 1) * instance_->SynchronisationCosts();
     }
 
     template <typename ThreadDataT>

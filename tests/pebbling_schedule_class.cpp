@@ -81,7 +81,7 @@ void RunTest(Scheduler<GraphT> *testScheduler) {
                                                                                  instance.getComputationalDag());
 
             bool statusArchitecture
-                = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.getArchitecture());
+                = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
 
             if (!statusGraph || !statusArchitecture) {
                 std::cout << "Reading files failed." << std::endl;
@@ -97,7 +97,7 @@ void RunTest(Scheduler<GraphT> *testScheduler) {
                 = PebblingSchedule<GraphT>::minimumMemoryRequiredPerNodeType(instance);
             v_memw_t<GraphT> maxRequired
                 = *std::max_element(minimumMemoryRequiredVector.begin(), minimumMemoryRequiredVector.end());
-            instance.getArchitecture().setMemoryBound(maxRequired);
+            instance.GetArchitecture().setMemoryBound(maxRequired);
 
             PebblingSchedule<GraphT> memSchedule1(bspSchedule, PebblingSchedule<GraphT>::CACHE_EVICTION_STRATEGY::LARGEST_ID);
             BOOST_CHECK_EQUAL(&memSchedule1.GetInstance(), &instance);
@@ -110,7 +110,7 @@ void RunTest(Scheduler<GraphT> *testScheduler) {
             PebblingSchedule<GraphT> memSchedule5(bspSchedule, PebblingSchedule<GraphT>::CACHE_EVICTION_STRATEGY::FORESIGHT);
             BOOST_CHECK(memSchedule5.isValid());
 
-            instance.getArchitecture().setMemoryBound(2 * maxRequired);
+            instance.GetArchitecture().setMemoryBound(2 * maxRequired);
 
             PebblingSchedule<GraphT> memSchedule2(bspSchedule, PebblingSchedule<GraphT>::CACHE_EVICTION_STRATEGY::LARGEST_ID);
             BOOST_CHECK(memSchedule2.isValid());
@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(TestPebblingScheduleWriter) {
 
     std::vector<v_memw_t<Graph> > minimumMemoryRequiredVector = PebblingSchedule<Graph>::minimumMemoryRequiredPerNodeType(instance);
     v_memw_t<Graph> maxRequired = *std::max_element(minimumMemoryRequiredVector.begin(), minimumMemoryRequiredVector.end());
-    instance.getArchitecture().setMemoryBound(maxRequired + 3);
+    instance.GetArchitecture().setMemoryBound(maxRequired + 3);
 
     PebblingSchedule<Graph> memSchedule(bspSchedule, PebblingSchedule<Graph>::CACHE_EVICTION_STRATEGY::LEAST_RECENTLY_USED);
     BOOST_CHECK(memSchedule.isValid());

@@ -76,10 +76,10 @@ class KlTotal : public KlBase<GraphT, MemoryConstraintT> {
         maxEdgeWeight_ = max_edge_weight_ + max_node_weight_;
 
         KlBase<GraphT, MemoryConstraintT>::parameters.initial_penalty
-            = maxEdgeWeight_ * currentSchedule_.comm_multiplier * currentSchedule_.instance->communicationCosts();
+            = maxEdgeWeight_ * currentSchedule_.comm_multiplier * currentSchedule_.instance->CommunicationCosts();
 
         KlBase<GraphT, MemoryConstraintT>::parameters.gain_threshold
-            = maxEdgeWeight_ * currentSchedule_.comm_multiplier * currentSchedule_.instance->communicationCosts();
+            = maxEdgeWeight_ * currentSchedule_.comm_multiplier * currentSchedule_.instance->CommunicationCosts();
     }
 
     virtual void update_reward_penalty() override {
@@ -92,18 +92,18 @@ class KlTotal : public KlBase<GraphT, MemoryConstraintT> {
 
             KlBase<GraphT, MemoryConstraintT>::penalty = std::log((currentSchedule_.current_violations.size())) * maxEdgeWeight_
                                                          * currentSchedule_.comm_multiplier
-                                                         * currentSchedule_.instance->communicationCosts();
+                                                         * currentSchedule_.instance->CommunicationCosts();
 
             KlBase<GraphT, MemoryConstraintT>::reward = std::sqrt((currentSchedule_.current_violations.size() + 4))
                                                         * maxEdgeWeight_ * currentSchedule_.comm_multiplier
-                                                        * currentSchedule_.instance->communicationCosts();
+                                                        * currentSchedule_.instance->CommunicationCosts();
         }
     }
 
     virtual void set_initial_reward_penalty() override {
         KlBase<GraphT, MemoryConstraintT>::penalty = KlBase<GraphT, MemoryConstraintT>::parameters.initial_penalty;
         KlBase<GraphT, MemoryConstraintT>::reward
-            = maxEdgeWeight_ * currentSchedule_.comm_multiplier * currentSchedule_.instance->communicationCosts();
+            = maxEdgeWeight_ * currentSchedule_.comm_multiplier * currentSchedule_.instance->CommunicationCosts();
     }
 
     virtual void select_nodes_comm() override {

@@ -218,8 +218,8 @@ BOOST_AUTO_TEST_CASE(TestArchSmpl) {
 
     BOOST_CHECK(status);
     BOOST_CHECK_EQUAL(arch.NumberOfProcessors(), 3);
-    BOOST_CHECK_EQUAL(arch.communicationCosts(), 3);
-    BOOST_CHECK_EQUAL(arch.synchronisationCosts(), 5);
+    BOOST_CHECK_EQUAL(arch.CommunicationCosts(), 3);
+    BOOST_CHECK_EQUAL(arch.SynchronisationCosts(), 5);
     BOOST_CHECK_EQUAL(arch.getMemoryConstraintType(), MEMORY_CONSTRAINT_TYPE::NONE);
 }
 
@@ -236,8 +236,8 @@ BOOST_AUTO_TEST_CASE(TestArchSmplSigned) {
 
     BOOST_CHECK(status);
     BOOST_CHECK_EQUAL(arch.NumberOfProcessors(), 3);
-    BOOST_CHECK_EQUAL(arch.communicationCosts(), 3);
-    BOOST_CHECK_EQUAL(arch.synchronisationCosts(), 5);
+    BOOST_CHECK_EQUAL(arch.CommunicationCosts(), 3);
+    BOOST_CHECK_EQUAL(arch.SynchronisationCosts(), 5);
     BOOST_CHECK_EQUAL(arch.getMemoryConstraintType(), MEMORY_CONSTRAINT_TYPE::NONE);
 }
 

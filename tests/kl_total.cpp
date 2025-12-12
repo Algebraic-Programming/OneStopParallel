@@ -126,9 +126,9 @@ BOOST_AUTO_TEST_CASE(KlImproverOnTestGraphs) {
         bool statusGraph
             = file_reader::readComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(), instance.getComputationalDag());
 
-        instance.getArchitecture().setSynchronisationCosts(5);
-        instance.getArchitecture().setCommunicationCosts(5);
-        instance.getArchitecture().setNumberOfProcessors(4);
+        instance.GetArchitecture().setSynchronisationCosts(5);
+        instance.GetArchitecture().setCommunicationCosts(5);
+        instance.GetArchitecture().setNumberOfProcessors(4);
 
         if (!statusGraph) {
             std::cout << "Reading files failed." << std::endl;
@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE(KlImproverSuperstepRemovalTest) {
     BspInstance<Graph> instance(dag, arch);
 
     BspSchedule schedule(instance);
-    instance.getArchitecture().setSynchronisationCosts(50);
+    instance.GetArchitecture().setSynchronisationCosts(50);
     // Create a schedule with an almost empty superstep (step 1)
     schedule.setAssignedProcessors({0, 0, 0, 0, 1, 1, 1, 1});
     schedule.setAssignedSupersteps({0, 0, 0, 0, 1, 2, 2, 2});
@@ -956,16 +956,16 @@ BOOST_AUTO_TEST_CASE(KlBase3) {
 //         bool status_graph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(),
 //                                                                             instance.getComputationalDag());
 
-//         instance.getArchitecture().setSynchronisationCosts(500);
-//         instance.getArchitecture().setCommunicationCosts(5);
-//         instance.getArchitecture().setNumberOfProcessors(4);
+//         instance.GetArchitecture().setSynchronisationCosts(500);
+//         instance.GetArchitecture().setCommunicationCosts(5);
+//         instance.GetArchitecture().setNumberOfProcessors(4);
 
 //         std::vector<std::vector<int>> send_cost = {{0,1,4,4},
 //                                                    {1,0,4,4},
 //                                                    {4,4,0,1},
 //                                                    {4,4,1,0}};
 
-//         instance.getArchitecture().SetSendCosts(send_cost);
+//         instance.GetArchitecture().SetSendCosts(send_cost);
 
 //         if (!status_graph) {
 
@@ -1038,16 +1038,16 @@ BOOST_AUTO_TEST_CASE(KlBase3) {
 //         bool status_graph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(),
 //                                                                             instance.getComputationalDag());
 
-//         instance.getArchitecture().setSynchronisationCosts(500);
-//         instance.getArchitecture().setCommunicationCosts(5);
-//         instance.getArchitecture().setNumberOfProcessors(4);
+//         instance.GetArchitecture().setSynchronisationCosts(500);
+//         instance.GetArchitecture().setCommunicationCosts(5);
+//         instance.GetArchitecture().setNumberOfProcessors(4);
 
 //         std::vector<std::vector<int>> send_cost = {{0,1,4,4},
 //                                                    {1,0,4,4},
 //                                                    {4,4,0,1},
 //                                                    {4,4,1,0}};
 
-//         instance.getArchitecture().SetSendCosts(send_cost);
+//         instance.GetArchitecture().SetSendCosts(send_cost);
 
 //         if (!status_graph) {
 

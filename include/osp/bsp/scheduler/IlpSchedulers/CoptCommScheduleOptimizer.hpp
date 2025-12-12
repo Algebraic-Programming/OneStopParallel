@@ -138,7 +138,7 @@ void CoptCommScheduleOptimizer<GraphT>::UpdateCommSchedule(BspScheduleCS<GraphT>
 template <typename GraphT>
 void CoptCommScheduleOptimizer<GraphT>::SetInitialSolution(BspScheduleCS<GraphT> &schedule, Model &model) {
     const GraphT &dag = schedule.GetInstance().getComputationalDag();
-    const BspArchitecture<GraphT> &arch = schedule.GetInstance().getArchitecture();
+    const BspArchitecture<GraphT> &arch = schedule.GetInstance().GetArchitecture();
     const unsigned &numProcessors = schedule.GetInstance().NumberOfProcessors();
     const unsigned &numSupersteps = schedule.NumberOfSupersteps();
     const auto &cs = schedule.getCommunicationSchedule();
@@ -341,15 +341,15 @@ void CoptCommScheduleOptimizer<GraphT>::SetupVariablesConstraintsObjective(const
 
     if (!ignoreLatency_) {
         for (unsigned int step = 0; step < maxNumberSupersteps; step++) {
-            expr += schedule.GetInstance().communicationCosts() * max_comm_superstep_var[static_cast<int>(step)]
-                    + schedule.GetInstance().synchronisationCosts() * superstep_has_comm[static_cast<int>(step)];
+            expr += schedule.GetInstance().CommunicationCosts() * max_comm_superstep_var[static_cast<int>(step)]
+                    + schedule.GetInstance().SynchronisationCosts() * superstep_has_comm[static_cast<int>(step)];
         }
     } else {
         for (unsigned int step = 0; step < maxNumberSupersteps; step++) {
-            expr += schedule.GetInstance().communicationCosts() * max_comm_superstep_var[static_cast<int>(step)];
+            expr += schedule.GetInstance().CommunicationCosts() * max_comm_superstep_var[static_cast<int>(step)];
         }
     }
-    model.SetObjective(expr - schedule.GetInstance().synchronisationCosts(), COPT_MINIMIZE);
+    model.SetObjective(expr - schedule.GetInstance().SynchronisationCosts(), COPT_MINIMIZE);
 }
 
 }    // namespace osp

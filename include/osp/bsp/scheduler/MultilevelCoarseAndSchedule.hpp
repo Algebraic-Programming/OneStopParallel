@@ -105,7 +105,7 @@ RETURN_STATUS MultilevelCoarseAndSchedule<GraphT, GraphTCoarse>::ComputeInitialS
     RETURN_STATUS status;
 
     activeInstance_ = std::make_unique<BspInstance<GraphTCoarse>>(
-        *(mlCoarser_->dag_history.at(static_cast<std::size_t>(activeGraph_))), originalInst_->getArchitecture());
+        *(mlCoarser_->dag_history.at(static_cast<std::size_t>(activeGraph_))), originalInst_->GetArchitecture());
     activeSchedule_ = std::make_unique<BspSchedule<GraphTCoarse>>(*activeInstance_);
     status = sched_->computeSchedule(*activeSchedule_);
     assert(activeSchedule_->satisfiesPrecedenceConstraints());
@@ -132,7 +132,7 @@ RETURN_STATUS MultilevelCoarseAndSchedule<GraphT, GraphTCoarse>::ExpandActiveSch
     assert((activeGraph_ > 0L) && (static_cast<long unsigned>(activeGraph_) < mlCoarser_->dag_history.size()));
 
     std::unique_ptr<BspInstance<GraphTCoarse>> expandedInstance = std::make_unique<BspInstance<GraphTCoarse>>(
-        *(mlCoarser_->dag_history.at(static_cast<std::size_t>(activeGraph_) - 1)), originalInst_->getArchitecture());
+        *(mlCoarser_->dag_history.at(static_cast<std::size_t>(activeGraph_) - 1)), originalInst_->GetArchitecture());
     std::unique_ptr<BspSchedule<GraphTCoarse>> expandedSchedule = std::make_unique<BspSchedule<GraphTCoarse>>(*expandedInstance);
 
     for (const auto &node : expandedInstance->getComputationalDag().vertices()) {

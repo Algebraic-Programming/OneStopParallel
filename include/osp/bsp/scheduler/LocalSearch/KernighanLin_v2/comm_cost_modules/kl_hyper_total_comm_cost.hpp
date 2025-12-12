@@ -95,7 +95,7 @@ struct KlHyperTotalCommCostFunction {
         }
 
         return workCosts + commCosts * commMultiplier_
-               + static_cast<v_commw_t<Graph_t>>(activeSchedule_->num_steps() - 1) * instance_->synchronisationCosts();
+               + static_cast<v_commw_t<Graph_t>>(activeSchedule_->num_steps() - 1) * instance_->SynchronisationCosts();
     }
 
     CostT ComputeScheduleCostTest() {
@@ -115,7 +115,7 @@ struct KlHyperTotalCommCostFunction {
         }
 
         return workCosts + commCosts * commMultiplier_
-               + static_cast<v_commw_t<Graph_t>>(activeSchedule_->num_steps() - 1) * instance_->synchronisationCosts();
+               + static_cast<v_commw_t<Graph_t>>(activeSchedule_->num_steps() - 1) * instance_->SynchronisationCosts();
     }
 
     inline void UpdateDatastructureAfterMove(const kl_move &move, const unsigned startStep, const unsigned endStep) {

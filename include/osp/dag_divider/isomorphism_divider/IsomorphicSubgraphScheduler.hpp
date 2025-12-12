@@ -229,7 +229,7 @@ class IsomorphicSubgraphScheduler {
                 if (isSingleTypeGroup) {
                     // Dynamically determine min_proc_type_count based on compatible processors for this type
                     unsigned minCompatibleProcessors = std::numeric_limits<unsigned>::max();
-                    const auto &procTypeCounts = instance.getArchitecture().getProcessorTypeCount();
+                    const auto &procTypeCounts = instance.GetArchitecture().getProcessorTypeCount();
 
                     bool foundCompatibleProcessor = false;
                     for (unsigned procTypeIdx = 0; procTypeIdx < procTypeCounts.size(); ++procTypeIdx) {
@@ -256,7 +256,7 @@ class IsomorphicSubgraphScheduler {
                     }
                 } else {
                     // Fallback to a default min_proc_type_count if not a single-type group or no typed vertices.
-                    const auto &typeCount = instance.getArchitecture().getProcessorTypeCount();
+                    const auto &typeCount = instance.GetArchitecture().getProcessorTypeCount();
                     if (typeCount.empty()) {
                         effectiveMinProcTypeCount = 0;
                     }
@@ -327,8 +327,8 @@ class IsomorphicSubgraphScheduler {
         const std::vector<typename OrbitGraphProcessor<GraphT, ConstrGraphT>::Group> &isomorphicGroups,
         const std::vector<bool> &wasTrimmed) {
         SubgraphSchedulerInput<GraphT, ConstrGraphT> result;
-        result.instance.getArchitecture() = originalInstance.getArchitecture();
-        const unsigned numProcTypes = originalInstance.getArchitecture().getNumberOfProcessorTypes();
+        result.instance.GetArchitecture() = originalInstance.GetArchitecture();
+        const unsigned numProcTypes = originalInstance.GetArchitecture().getNumberOfProcessorTypes();
 
         result.multiplicities.resize(isomorphicGroups.size());
         result.max_num_processors.resize(isomorphicGroups.size());
@@ -400,14 +400,14 @@ class IsomorphicSubgraphScheduler {
             auto repGlobalToLocalMap = create_induced_subgraph_map(
                 instance.getComputationalDag(), representativeInstance.getComputationalDag(), repSubgraphVerticesSorted);
 
-            representativeInstance.getArchitecture() = instance.getArchitecture();
+            representativeInstance.GetArchitecture() = instance.GetArchitecture();
             const auto &procsForGroup = subSched.nodeAssignedWorkerPerType_[groupIdx];
             std::vector<v_memw_t<Constr_Graph_t>> memWeights(procsForGroup.size(), 0);
             for (unsigned procType = 0; procType < procsForGroup.size(); ++procType) {
                 memWeights[procType]
-                    = static_cast<v_memw_t<Constr_Graph_t>>(instance.getArchitecture().maxMemoryBoundProcType(procType));
+                    = static_cast<v_memw_t<Constr_Graph_t>>(instance.GetArchitecture().maxMemoryBoundProcType(procType));
             }
-            representativeInstance.getArchitecture().SetProcessorsConsequTypes(procsForGroup, mem_weights);
+            representativeInstance.GetArchitecture().SetProcessorsConsequTypes(procsForGroup, mem_weights);
             representativeInstance.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
 
             // --- Decide which scheduler to use ---
@@ -455,7 +455,7 @@ class IsomorphicSubgraphScheduler {
                 }
                 std::cout << std::endl;
 
-                const auto &subArch = representativeInstance.getArchitecture();
+                const auto &subArch = representativeInstance.GetArchitecture();
                 std::cout << "  Sub-architecture for scheduling:" << std::endl;
                 std::cout << "    Processors: " << subArch.NumberOfProcessors() << std::endl;
                 std::cout << "    Processor types counts: ";
@@ -464,8 +464,8 @@ class IsomorphicSubgraphScheduler {
                     std::cout << "T" << typeIdx << ":" << typeCounts[typeIdx] << " ";
                 }
                 std::cout << std::endl;
-                std::cout << "    Sync cost: " << subArch.synchronisationCosts()
-                          << ", Comm cost: " << subArch.communicationCosts() << std::endl;
+                std::cout << "    Sync cost: " << subArch.SynchronisationCosts()
+                          << ", Comm cost: " << subArch.CommunicationCosts() << std::endl;
             }
 
             schedulerForGroupPtr->computeSchedule(bspSchedule);

@@ -105,7 +105,7 @@ class EftSubgraphScheduler {
             std::cout << "--- Preparing for Subgraph Scheduling ---" << std::endl;
         }
         const auto &graph = instance.getComputationalDag();
-        const size_t numWorkerTypes = instance.getArchitecture().getProcessorTypeCount().size();
+        const size_t numWorkerTypes = instance.GetArchitecture().getProcessorTypeCount().size();
 
         CalculateUpwardRanks(graph);
 
@@ -157,7 +157,7 @@ class EftSubgraphScheduler {
 
     SubgraphSchedule ExecuteSchedule(const BspInstance<GraphT> &instance) {
         double currentTime = 0.0;
-        std::vector<unsigned> availableWorkers = instance.getArchitecture().getProcessorTypeCount();
+        std::vector<unsigned> availableWorkers = instance.GetArchitecture().getProcessorTypeCount();
         const size_t numWorkerTypes = availableWorkers.size();
         std::vector<job_id_t> runningJobs;
         unsigned completedCount = 0;

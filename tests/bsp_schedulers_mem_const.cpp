@@ -83,10 +83,10 @@ void RunTestLocalMemory(Scheduler<GraphT> *testScheduler) {
             bool statusGraph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(),
                                                                                  instance.getComputationalDag());
             bool statusArchitecture
-                = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.getArchitecture());
+                = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
 
             AddMemWeights(instance.getComputationalDag());
-            instance.getArchitecture().setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::LOCAL);
+            instance.GetArchitecture().setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::LOCAL);
             std::cout << "Memory constraint type: LOCAL" << std::endl;
 
             if (!statusGraph || !statusArchitecture) {
@@ -97,7 +97,7 @@ void RunTestLocalMemory(Scheduler<GraphT> *testScheduler) {
             const std::vector<v_memw_t<GraphT>> boundsToTest = {10, 20, 50, 100};
 
             for (const auto &bound : boundsToTest) {
-                instance.getArchitecture().setMemoryBound(bound);
+                instance.GetArchitecture().setMemoryBound(bound);
 
                 BspSchedule<GraphT> schedule(instance);
                 const auto result = testScheduler->computeSchedule(schedule);
@@ -140,10 +140,10 @@ void RunTestPersistentTransientMemory(Scheduler<GraphT> *testScheduler) {
             bool statusGraph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(),
                                                                                  instance.getComputationalDag());
             bool statusArchitecture
-                = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.getArchitecture());
+                = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
 
             AddMemWeights(instance.getComputationalDag());
-            instance.getArchitecture().setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::PERSISTENT_AND_TRANSIENT);
+            instance.GetArchitecture().setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::PERSISTENT_AND_TRANSIENT);
             std::cout << "Memory constraint type: PERSISTENT_AND_TRANSIENT" << std::endl;
 
             if (!statusGraph || !statusArchitecture) {
@@ -154,7 +154,7 @@ void RunTestPersistentTransientMemory(Scheduler<GraphT> *testScheduler) {
             const std::vector<v_memw_t<GraphT>> boundsToTest = {50, 100};
 
             for (const auto &bound : boundsToTest) {
-                instance.getArchitecture().setMemoryBound(bound);
+                instance.GetArchitecture().setMemoryBound(bound);
 
                 BspSchedule<GraphT> schedule(instance);
                 const auto result = testScheduler->computeSchedule(schedule);
@@ -197,10 +197,10 @@ void RunTestLocalInOutMemory(Scheduler<GraphT> *testScheduler) {
             bool statusGraph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(),
                                                                                  instance.getComputationalDag());
             bool statusArchitecture
-                = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.getArchitecture());
+                = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
 
             AddMemWeights(instance.getComputationalDag());
-            instance.getArchitecture().setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::LOCAL_IN_OUT);
+            instance.GetArchitecture().setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::LOCAL_IN_OUT);
             std::cout << "Memory constraint type: LOCAL_IN_OUT" << std::endl;
 
             if (!statusGraph || !statusArchitecture) {
@@ -211,7 +211,7 @@ void RunTestLocalInOutMemory(Scheduler<GraphT> *testScheduler) {
             const std::vector<v_memw_t<GraphT>> boundsToTest = {10, 20, 50, 100};
 
             for (const auto &bound : boundsToTest) {
-                instance.getArchitecture().setMemoryBound(bound);
+                instance.GetArchitecture().setMemoryBound(bound);
 
                 BspSchedule<GraphT> schedule(instance);
                 const auto result = testScheduler->computeSchedule(schedule);
@@ -254,10 +254,10 @@ void RunTestLocalIncEdgesMemory(Scheduler<GraphT> *testScheduler) {
             bool statusGraph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(),
                                                                                  instance.getComputationalDag());
             bool statusArchitecture
-                = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.getArchitecture());
+                = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
 
             AddMemWeights(instance.getComputationalDag());
-            instance.getArchitecture().setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::LOCAL_INC_EDGES);
+            instance.GetArchitecture().setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::LOCAL_INC_EDGES);
             std::cout << "Memory constraint type: LOCAL_INC_EDGES" << std::endl;
 
             if (!statusGraph || !statusArchitecture) {
@@ -268,7 +268,7 @@ void RunTestLocalIncEdgesMemory(Scheduler<GraphT> *testScheduler) {
             const std::vector<v_memw_t<GraphT>> boundsToTest = {50, 100};
 
             for (const auto &bound : boundsToTest) {
-                instance.getArchitecture().setMemoryBound(bound);
+                instance.GetArchitecture().setMemoryBound(bound);
 
                 BspSchedule<GraphT> schedule(instance);
                 const auto result = testScheduler->computeSchedule(schedule);
@@ -311,10 +311,10 @@ void RunTestLocalIncEdges2Memory(Scheduler<GraphT> *testScheduler) {
             bool statusGraph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(),
                                                                                  instance.getComputationalDag());
             bool statusArchitecture
-                = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.getArchitecture());
+                = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
 
             AddMemWeights(instance.getComputationalDag());
-            instance.getArchitecture().setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::LOCAL_SOURCES_INC_EDGES);
+            instance.GetArchitecture().setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::LOCAL_SOURCES_INC_EDGES);
             std::cout << "Memory constraint type: LOCAL_SOURCES_INC_EDGES" << std::endl;
 
             if (!statusGraph || !statusArchitecture) {
@@ -325,7 +325,7 @@ void RunTestLocalIncEdges2Memory(Scheduler<GraphT> *testScheduler) {
             const std::vector<v_memw_t<GraphT>> boundsToTest = {20, 50, 100};
 
             for (const auto &bound : boundsToTest) {
-                instance.getArchitecture().setMemoryBound(bound);
+                instance.GetArchitecture().setMemoryBound(bound);
 
                 BspSchedule<GraphT> schedule(instance);
                 const auto result = testScheduler->computeSchedule(schedule);

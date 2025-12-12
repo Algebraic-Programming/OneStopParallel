@@ -65,7 +65,7 @@ class kl_hyper_total_comm : public kl_total<Graph_t, MemoryConstraint_t> {
         }
 
         current_schedule.current_cost = work_costs + comm_costs * current_schedule.comm_multiplier
-                                        + (current_schedule.num_steps() - 1) * current_schedule.instance->synchronisationCosts();
+                                        + (current_schedule.num_steps() - 1) * current_schedule.instance->SynchronisationCosts();
 
         return current_schedule.current_cost;
     }

@@ -254,10 +254,10 @@ class BspArchitecture {
     BspArchitecture(const BspArchitecture<GraphTOther> &other)
         : numberOfProcessors_(other.NumberOfProcessors()),
           numberOfProcessorTypes_(other.getNumberOfProcessorTypes()),
-          communicationCosts_(other.communicationCosts()),
-          synchronisationCosts_(other.synchronisationCosts()),
+          communicationCosts_(other.CommunicationCosts()),
+          synchronisationCosts_(other.SynchronisationCosts()),
           memoryBound_(other.memoryBound()),
-          isNuma_(other.isNumaArchitecture()),
+          isNuma_(other.IsNumaArchitecture()),
           processorTypes_(other.processorTypes()),
           sendCosts_(other.sendCostsVector()) {
         static_assert(std::is_same_v<VMemwT<GraphT>, VMemwT<GraphTOther>>,

@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
         std::string nameMachine
             = filenameMachine.substr(filenameMachine.rfind("/") + 1, filenameMachine.rfind(".") - filenameMachine.rfind("/") - 1);
 
-        bool statusArchitecture = file_reader::readBspArchitecture(filenameMachine, bspInstance.getArchitecture());
+        bool statusArchitecture = file_reader::readBspArchitecture(filenameMachine, bspInstance.GetArchitecture());
 
         if (!statusArchitecture) {
             std::cerr << "Reading architecture files " + filenameMachine << " failed." << std::endl;

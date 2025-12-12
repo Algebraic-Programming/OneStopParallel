@@ -51,8 +51,8 @@ class ConnectedComponentScheduler : public Scheduler<GraphT> {
 
             v_workw_t<Constr_Graph_t> subDagWorkWeight = sumOfVerticesWorkWeights(subDag);
 
-            BspInstance<ConstrGraphT> subInstance(subDag, instance.getArchitecture());
-            BspArchitecture<ConstrGraphT> &subArchitecture = subInstance.getArchitecture();
+            BspInstance<ConstrGraphT> subInstance(subDag, instance.GetArchitecture());
+            BspArchitecture<ConstrGraphT> &subArchitecture = subInstance.GetArchitecture();
 
             const double subDagWorkWeightPercent
                 = static_cast<double>(sub_dag_work_weight) / static_cast<double>(total_work_weight);

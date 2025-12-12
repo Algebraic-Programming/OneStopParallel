@@ -35,7 +35,7 @@ struct RewardPenaltyStrategy {
     CostT reward_ = 0;
 
     void Initialize(KlActiveScheduleT &sched, const CostT maxComm, const CostT maxWork) {
-        maxWeight_ = std::max(maxWork, maxComm * sched.GetInstance().communicationCosts());
+        maxWeight_ = std::max(maxWork, maxComm * sched.GetInstance().CommunicationCosts());
         activeSchedule_ = &sched;
         initialPenalty_ = static_cast<CostT>(std::sqrt(maxWeight_));
     }

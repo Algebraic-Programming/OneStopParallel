@@ -148,8 +148,8 @@ BOOST_AUTO_TEST_CASE(TestFull) {
 
     // with vertex types
     BspInstance<graph> instanceTyped = instance;
-    instanceTyped.getArchitecture().setProcessorType(0, 1);
-    instanceTyped.getArchitecture().setProcessorType(1, 1);
+    instanceTyped.GetArchitecture().setProcessorType(0, 1);
+    instanceTyped.GetArchitecture().setProcessorType(1, 1);
     for (vertex_idx_t<graph> node = 0; node < static_cast<vertex_idx_t<graph> >(instance_typed.numberOfVertices()); ++node) {
         instanceTyped.getComputationalDag().SetVertexType(node, node % 2);
     }

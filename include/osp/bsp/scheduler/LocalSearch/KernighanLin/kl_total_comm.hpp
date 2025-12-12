@@ -899,7 +899,7 @@ class KlTotalComm : public KlTotal<GraphT, MemoryConstraintT, useNodeCommunicati
               + (static_cast<double>(KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.num_steps())
                  - 1)
                     * KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.instance
-                          ->synchronisationCosts();
+                          ->SynchronisationCosts();
 
         return KlTotal<GraphT, MemoryConstraintT, useNodeCommunicationCostsArg>::current_schedule.current_cost;
     }

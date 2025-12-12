@@ -72,9 +72,9 @@ int main(int argc, char *argv[]) {
     ComputationalDag &graph = instance.getComputationalDag();
 
     bool statusGraph = file_reader::readGraph(filenameGraph, graph);
-    bool statusArch = file_reader::readBspArchitecture(filenameMachine, instance.getArchitecture());
+    bool statusArch = file_reader::readBspArchitecture(filenameMachine, instance.GetArchitecture());
     // instance.setDiagonalCompatibilityMatrix(graph.NumVertexTypes());
-    // instance.getArchitecture().setProcessorsWithTypes({0,0,1,1,1,1});
+    // instance.GetArchitecture().setProcessorsWithTypes({0,0,1,1,1,1});
 
     if (!statusGraph || !statusArch) {
         std::cout << "Reading files failed." << std::endl;

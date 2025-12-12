@@ -248,7 +248,7 @@ RETURN_STATUS RunBspScheduler(const ConfigParser &parser,
             return RETURN_STATUS::ERROR;
         }
 
-        instanceCoarse.getArchitecture() = instance.getArchitecture();
+        instanceCoarse.GetArchitecture() = instance.GetArchitecture();
         instanceCoarse.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
         BspSchedule<boost_graph_t> scheduleCoarse(instanceCoarse);
 

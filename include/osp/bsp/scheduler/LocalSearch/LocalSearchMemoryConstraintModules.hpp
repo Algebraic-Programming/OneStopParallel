@@ -82,7 +82,7 @@ struct LsLocalMemoryConstraint {
     LsLocalMemoryConstraint() : setSchedule_(nullptr), graph_(nullptr) {}
 
     inline void Initialize(const SetSchedule<GraphT> &setSchedule, const VectorSchedule<GraphT> &) {
-        if (set_schedule_.GetInstance().getArchitecture().getMemoryConstraintType() != MEMORY_CONSTRAINT_TYPE::LOCAL) {
+        if (set_schedule_.GetInstance().GetArchitecture().getMemoryConstraintType() != MEMORY_CONSTRAINT_TYPE::LOCAL) {
             throw std::invalid_argument("Memory constraint type is not LOCAL");
         }
 
@@ -100,7 +100,7 @@ struct LsLocalMemoryConstraint {
 
     inline bool CanMove(vertex_idx_t<Graph_t> vertex, const unsigned proc, unsigned step) const {
         return step_processor_memory[step][proc] + graph->VertexMemWeight(vertex)
-               <= set_schedule->GetInstance().getArchitecture().memoryBound(proc);
+               <= set_schedule->GetInstance().GetArchitecture().memoryBound(proc);
     }
 
     void SwapSteps(const unsigned step1, const unsigned step2) {
@@ -127,7 +127,7 @@ struct LsLocalMemoryConstraint {
     }
 
     inline void ResetSuperstep(unsigned step) {
-        for (unsigned proc = 0; proc < setSchedule_->GetInstance().getArchitecture().NumberOfProcessors(); proc++) {
+        for (unsigned proc = 0; proc < setSchedule_->GetInstance().GetArchitecture().NumberOfProcessors(); proc++) {
             step_processor_memory[step][proc] = 0;
         }
     }
@@ -139,7 +139,7 @@ struct LsLocalMemoryConstraint {
     bool SatisfiedMemoryConstraint() const {
         for (unsigned step = 0; step < setSchedule_->NumberOfSupersteps(); step++) {
             for (unsigned proc = 0; proc < setSchedule_->GetInstance().NumberOfProcessors(); proc++) {
-                if (step_processor_memory[step][proc] > set_schedule->GetInstance().getArchitecture().memoryBound(proc)) {
+                if (step_processor_memory[step][proc] > set_schedule->GetInstance().GetArchitecture().memoryBound(proc)) {
                     return false;
                 }
             }
@@ -162,7 +162,7 @@ struct LsLocalIncEdgesMemoryConstraint {
     LsLocalIncEdgesMemoryConstraint() : setSchedule_(nullptr), vectorSchedule_(nullptr), graph_(nullptr) {}
 
     inline void Initialize(const SetSchedule<GraphT> &setSchedule, const VectorSchedule<GraphT> &vecSchedule) {
-        if (set_schedule_.GetInstance().getArchitecture().getMemoryConstraintType() != MEMORY_CONSTRAINT_TYPE::LOCAL_INC_EDGES) {
+        if (set_schedule_.GetInstance().GetArchitecture().getMemoryConstraintType() != MEMORY_CONSTRAINT_TYPE::LOCAL_INC_EDGES) {
             throw std::invalid_argument("Memory constraint type is not LOCAL_INC_EDGES");
         }
 
@@ -271,7 +271,7 @@ struct LsLocalIncEdgesMemoryConstraint {
     }
 
     inline void ResetSuperstep(unsigned step) {
-        for (unsigned proc = 0; proc < setSchedule_->GetInstance().getArchitecture().NumberOfProcessors(); proc++) {
+        for (unsigned proc = 0; proc < setSchedule_->GetInstance().GetArchitecture().NumberOfProcessors(); proc++) {
             step_processor_memory[step][proc] = 0;
             step_processor_pred[step][proc].clear();
         }
@@ -300,10 +300,10 @@ struct LsLocalIncEdgesMemoryConstraint {
 
         if (step >= vectorSchedule_->assignedSuperstep(vertex)) {
             return step_processor_memory[step][proc] + inc_memory
-                   <= set_schedule->GetInstance().getArchitecture().memoryBound(proc);
+                   <= set_schedule->GetInstance().GetArchitecture().memoryBound(proc);
         }
 
-        if (step_processor_memory[step][proc] + inc_memory > set_schedule->GetInstance().getArchitecture().memoryBound(proc)) {
+        if (step_processor_memory[step][proc] + inc_memory > set_schedule->GetInstance().GetArchitecture().memoryBound(proc)) {
             return false;
         }
 
@@ -314,7 +314,7 @@ struct LsLocalIncEdgesMemoryConstraint {
             if (succ_step == vector_schedule->assignedSuperstep(vertex)
                 and succ_proc != vector_schedule->assignedProcessor(vertex)) {
                 if (step_processor_memory[succ_step][succ_proc] + graph->VertexCommWeight(vertex)
-                    > set_schedule->GetInstance().getArchitecture().memoryBound(succ_proc)) {
+                    > set_schedule->GetInstance().GetArchitecture().memoryBound(succ_proc)) {
                     return false;
                 }
             }
@@ -343,7 +343,7 @@ struct LsLocalSourcesIncEdgesMemoryConstraint {
     }
 
     inline void Initialize(const SetSchedule<GraphT> &setSchedule, const VectorSchedule<GraphT> &vecSchedule) {
-        if (set_schedule_.GetInstance().getArchitecture().getMemoryConstraintType()
+        if (set_schedule_.GetInstance().GetArchitecture().getMemoryConstraintType()
             != MEMORY_CONSTRAINT_TYPE::LOCAL_SOURCES_INC_EDGES) {
             throw std::invalid_argument("Memory constraint type is not LOCAL_SOURCES_INC_EDGES");
         }
@@ -452,7 +452,7 @@ struct LsLocalSourcesIncEdgesMemoryConstraint {
     }
 
     inline void ResetSuperstep(unsigned step) {
-        for (unsigned proc = 0; proc < setSchedule_->GetInstance().getArchitecture().NumberOfProcessors(); proc++) {
+        for (unsigned proc = 0; proc < setSchedule_->GetInstance().GetArchitecture().NumberOfProcessors(); proc++) {
             step_processor_memory[step][proc] = 0;
             step_processor_pred[step][proc].clear();
         }
@@ -486,10 +486,10 @@ struct LsLocalSourcesIncEdgesMemoryConstraint {
 
         if (vectorSchedule_->assignedSuperstep(vertex) <= step) {
             return step_processor_memory[step][proc] + inc_memory
-                   <= set_schedule->GetInstance().getArchitecture().memoryBound(proc);
+                   <= set_schedule->GetInstance().GetArchitecture().memoryBound(proc);
         }
 
-        if (step_processor_memory[step][proc] + inc_memory > set_schedule->GetInstance().getArchitecture().memoryBound(proc)) {
+        if (step_processor_memory[step][proc] + inc_memory > set_schedule->GetInstance().GetArchitecture().memoryBound(proc)) {
             return false;
         }
 
@@ -500,7 +500,7 @@ struct LsLocalSourcesIncEdgesMemoryConstraint {
             if (succ_step == vector_schedule->assignedSuperstep(vertex)) {
                 if (vector_schedule->assignedProcessor(vertex) != succ_proc || (not IsSource(vertex, *graph))) {
                     if (step_processor_memory[succ_step][succ_proc] + graph->VertexCommWeight(vertex)
-                        > set_schedule->GetInstance().getArchitecture().memoryBound(succ_proc)) {
+                        > set_schedule->GetInstance().GetArchitecture().memoryBound(succ_proc)) {
                         return false;
                     }
 
@@ -508,7 +508,7 @@ struct LsLocalSourcesIncEdgesMemoryConstraint {
                     if (IsSource(vertex, *graph)) {
                         if (step_processor_memory[succ_step][succ_proc] + graph->VertexCommWeight(vertex)
                                 - graph->VertexMemWeight(vertex)
-                            > set_schedule->GetInstance().getArchitecture().memoryBound(succ_proc)) {
+                            > set_schedule->GetInstance().GetArchitecture().memoryBound(succ_proc)) {
                             return false;
                         }
                     }
