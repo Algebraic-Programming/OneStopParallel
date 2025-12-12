@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
 
     bool statusGraph = file_reader::readGraph(filenameGraph, graph);
     bool statusArch = file_reader::readBspArchitecture(filenameMachine, instance.getArchitecture());
-    // instance.setDiagonalCompatibilityMatrix(graph.num_vertex_types());
+    // instance.setDiagonalCompatibilityMatrix(graph.NumVertexTypes());
     // instance.getArchitecture().setProcessorsWithTypes({0,0,1,1,1,1});
 
     if (!statusGraph || !statusArch) {

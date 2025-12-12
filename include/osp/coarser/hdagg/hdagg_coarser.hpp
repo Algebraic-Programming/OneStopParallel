@@ -58,7 +58,7 @@ class HdaggCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> {
         current_memory = node_mem;
         current_work = dag_in.vertex_work_weight(node);
         current_communication = dag_in.vertex_comm_weight(node);
-        current_v_type = dag_in.vertex_type(node);
+        current_v_type = dag_in.VertexType(node);
     }
 
   public:
@@ -133,7 +133,7 @@ class HdaggCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> {
                              || (current_communication + dag_in.vertex_comm_weight(edge_source) > communication_threshold))
                             ||
                             // or node type changes
-                            (current_v_type != dag_in.vertex_type(edge_source))) {
+                            (current_v_type != dag_in.VertexType(edge_source))) {
                             if (!visited[edge_source]) {
                                 vertex_map.push_back(std::vector<VertexType_in>({edge_source}));
                                 partition_size++;

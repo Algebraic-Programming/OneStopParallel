@@ -74,7 +74,7 @@ class Serial : public Scheduler<GraphT> {
             return RETURN_STATUS::ERROR;
         }
 
-        const unsigned numNodeTypes = dag.num_vertex_types();
+        const unsigned numNodeTypes = dag.NumVertexTypes();
         std::vector<std::vector<unsigned>> nodeTypeCompatibleProcessors(numNodeTypes);
 
         for (v_type_t<Graph_t> type = 0; type < numNodeTypes; ++type) {
@@ -110,7 +110,7 @@ class Serial : public Scheduler<GraphT> {
 
                 unsigned vType = 0;
                 if constexpr (HasTypedVerticesV<Graph_t>) {
-                    vType = dag.vertex_type(v);
+                    vType = dag.VertexType(v);
                 }
 
                 for (const auto &p : nodeTypeCompatibleProcessors[vType]) {

@@ -114,7 +114,7 @@ RETURN_STATUS PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<Graph
 
     std::vector<std::set<unsigned>> processorsToParts(nrParts);
     for (unsigned part = 0; part < nrParts; ++part) {
-        for (unsigned type = 0; type < instance.getComputationalDag().num_vertex_types(); ++type) {
+        for (unsigned type = 0; type < instance.getComputationalDag().NumVertexTypes(); ++type) {
             if (part_and_nodetype_to_new_index.find({part, type}) != part_and_nodetype_to_new_index.end()) {
                 unsigned newIndex = part_and_nodetype_to_new_index[{part, type}];
                 for (unsigned proc : processors_to_parts_and_types[new_index]) {
@@ -150,9 +150,9 @@ RETURN_STATUS PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<Graph
         subDags.push_back(dag);
 
         // set source nodes to a new type, so that they are compatible with any processor
-        unsigned artificialTypeForSources = subDags.back().num_vertex_types();
+        unsigned artificialTypeForSources = subDags.back().NumVertexTypes();
         for (vertex_idx nodeIdx = 0; node_idx < extra_sources[part].size(); ++node_idx) {
-            subDags.back().set_vertex_type(node_idx, artificialTypeForSources);
+            subDags.back().SetVertexType(node_idx, artificialTypeForSources);
         }
     }
 
@@ -357,9 +357,9 @@ GraphT PebblingPartialILP<GraphT>::ContractByPartition(const BspInstance<GraphT>
 
     unsigned nrNewNodes = 0;
     for (vertex_idx node = 0; node < instance.numberOfVertices(); ++node) {
-        if (part_and_nodetype_to_new_index.find({node_to_part_assignment[node], G.vertex_type(node)})
+        if (part_and_nodetype_to_new_index.find({node_to_part_assignment[node], G.VertexType(node)})
             == part_and_nodetype_to_new_index.end()) {
-            part_and_nodetype_to_new_index[{node_to_part_assignment[node], G.vertex_type(node)}] = nr_new_nodes;
+            part_and_nodetype_to_new_index[{node_to_part_assignment[node], G.VertexType(node)}] = nr_new_nodes;
             ++nrNewNodes;
         }
     }
@@ -372,10 +372,10 @@ GraphT PebblingPartialILP<GraphT>::ContractByPartition(const BspInstance<GraphT>
     std::set<std::pair<vertex_idx, vertex_idx>> edges;
 
     for (vertex_idx node = 0; node < instance.numberOfVertices(); ++node) {
-        vertex_idx nodeNewIndex = part_and_nodetype_to_new_index[{node_to_part_assignment[node], G.vertex_type(node)}];
+        vertex_idx nodeNewIndex = part_and_nodetype_to_new_index[{node_to_part_assignment[node], G.VertexType(node)}];
         for (const vertex_idx &succ : instance.getComputationalDag().children(node)) {
             if (node_to_part_assignment[node] != node_to_part_assignment[succ]) {
-                edges.emplace(node_new_index, part_and_nodetype_to_new_index[{node_to_part_assignment[succ], G.vertex_type(succ)}]);
+                edges.emplace(node_new_index, part_and_nodetype_to_new_index[{node_to_part_assignment[succ], G.VertexType(succ)}]);
             }
         }
 
@@ -384,7 +384,7 @@ GraphT PebblingPartialILP<GraphT>::ContractByPartition(const BspInstance<GraphT>
         contracted.set_vertex_comm_weight(node_new_index,
                                           contracted.vertex_comm_weight(node_new_index) + g.vertex_comm_weight(node));
         contracted.set_vertex_mem_weight(node_new_index, contracted.vertex_mem_weight(node_new_index) + g.vertex_mem_weight(node));
-        contracted.set_vertex_type(node_new_index, g.vertex_type(node));
+        contracted.SetVertexType(node_new_index, g.VertexType(node));
     }
 
     for (auto edge : edges) {

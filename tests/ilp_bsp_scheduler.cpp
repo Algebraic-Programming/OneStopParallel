@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
     instanceTyped.getArchitecture().setProcessorType(0, 1);
     instanceTyped.getArchitecture().setProcessorType(1, 1);
     for (vertex_idx_t<graph> node = 0; node < static_cast<vertex_idx_t<graph> >(instance_typed.numberOfVertices()); ++node) {
-        instanceTyped.getComputationalDag().set_vertex_type(node, node % 2);
+        instanceTyped.getComputationalDag().SetVertexType(node, node % 2);
     }
     instanceTyped.setDiagonalCompatibilityMatrix(2);
 

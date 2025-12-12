@@ -62,7 +62,7 @@ void TransitiveReductionSparse(const GraphTIn &graphIn, GraphTOut &graphOut) {
             graphOut.add_vertex(graphIn.vertex_work_weight(vIdx),
                                 graphIn.vertex_comm_weight(vIdx),
                                 graphIn.vertex_mem_weight(vIdx),
-                                graphIn.vertex_type(vIdx));
+                                graphIn.VertexType(vIdx));
         } else {
             graphOut.add_vertex(
                 graphIn.vertex_work_weight(vIdx), graphIn.vertex_comm_weight(vIdx), graphIn.vertex_mem_weight(vIdx));
@@ -127,7 +127,7 @@ void TransitiveReductionDense(const GraphTIn &graphIn, GraphTOut &graphOut) {
             graphOut.add_vertex(graphIn.vertex_work_weight(vIdx),
                                 graphIn.vertex_comm_weight(vIdx),
                                 graphIn.vertex_mem_weight(vIdx),
-                                graphIn.vertex_type(vIdx));
+                                graphIn.VertexType(vIdx));
         } else {
             graphOut.add_vertex(
                 graphIn.vertex_work_weight(vIdx), graphIn.vertex_comm_weight(vIdx), graphIn.vertex_mem_weight(vIdx));

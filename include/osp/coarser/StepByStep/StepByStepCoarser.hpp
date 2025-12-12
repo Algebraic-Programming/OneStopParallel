@@ -933,7 +933,7 @@ GraphT StepByStepCoarser<GraphT>::Contract(const std::vector<vertex_idx_t<Graph_
                                            gContracted.vertex_comm_weight(new_vertex_id[node]) + gFull_.vertex_comm_weight(node));
         gContracted.set_vertex_mem_weight(new_vertex_id[node],
                                           gContracted.vertex_mem_weight(new_vertex_id[node]) + gFull_.vertex_mem_weight(node));
-        gContracted.set_vertex_type(new_vertex_id[node], gFull_.vertex_type(node));
+        gContracted.SetVertexType(new_vertex_id[node], gFull_.VertexType(node));
     }
 
     for (vertex_idx node = 0; node < gFull_.NumVertices(); ++node) {

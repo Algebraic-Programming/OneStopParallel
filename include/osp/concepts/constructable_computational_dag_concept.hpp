@@ -92,7 +92,7 @@ inline constexpr bool isConstructableCdagVertexV = IsConstructableCdagVertex<T>:
  * @brief Concept to check if vertex types are modifiable.
  *
  * Requires:
- * - `set_vertex_type(v, type)`
+ * - `SetVertexType(v, type)`
  *
  * @tparam T The graph type.
  */

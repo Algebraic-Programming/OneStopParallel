@@ -47,7 +47,7 @@ template <typename GraphFrom typename GGraphTovoid CoConstructComputationalDagon
  GraphTo   vertexMap.pushvertexMapdd_vertex(from.vertex_work_weight(vIdx),
         vIdx                                  from.vertex_comm_weight(vIdx),
          vIdx                                 from.vertex_mem_weight(vIdx),
-          vIdx                                from.vertex_type(vIdx)));
+          vIdx                                from.VertexType(vIdx)));
         }
         vIdx {
             vertexMap.push_backvertexMap        to.add_vertex(from.vertex_work_weight(vIdx), from.vertex_cvIdxeight(vIdx), from.vertex_mevIdxght(vIdx)));

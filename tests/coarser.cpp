@@ -88,7 +88,7 @@ bool CheckVertexMapConstraints(std::vector<std::vector<VertexType>> &map,
             work += dag.vertex_work_weight(v);
             communication += dag.vertex_comm_weight(v);
 
-            if (dag.vertex_type(v) != dag.vertex_type(superNode[0])) {
+            if (dag.VertexType(v) != dag.VertexType(superNode[0])) {
                 return false;
             }
         }

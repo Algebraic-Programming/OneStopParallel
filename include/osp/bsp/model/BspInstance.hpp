@@ -258,7 +258,7 @@ class BspInstance {
      * @return True if the node is compatible with the processor, false otherwise.
      */
     [[nodiscard]] bool IsCompatible(const VertexIdxT<GraphT> &node, const unsigned processorId) const {
-        return IsCompatibleType(cdag_.vertex_type(node), architecture_.processorType(processorId));
+        return IsCompatibleType(cdag_.VertexType(node), architecture_.processorType(processorId));
     }
 
     /**
@@ -309,7 +309,7 @@ class BspInstance {
      * @brief Sets the compatibility matrix to all ones. This implies that all node types are compatible with all processor types.
      */
     void SetAllOnesCompatibilityMatrix() {
-        nodeProcessorCompatibility_.assign(cdag_.num_vertex_types(),
+        nodeProcessorCompatibility_.assign(cdag_.NumVertexTypes(),
                                            std::vector<bool>(architecture_.getNumberOfProcessorTypes(), true));
     }
 
@@ -324,7 +324,7 @@ class BspInstance {
                 = std::max(maxMemoryPerProcType[architecture_.processorType(proc)], architecture_.memoryBound(proc));
         }
 
-        for (VertexTypeTOrDefault vertType = 0U; vertType < cdag_.num_vertex_types(); vertType++) {
+        for (VertexTypeTOrDefault vertType = 0U; vertType < cdag_.NumVertexTypes(); vertType++) {
             VMemwT<GraphT> maxMemoryOfType = max_memory_weight(vertType, cdag_);
             bool fits = false;
 
@@ -350,7 +350,7 @@ class BspInstance {
      * @return A vector where the index is the node type and the value is a vector of compatible processor types.
      */
     [[nodiscard]] std::vector<std::vector<ProcessorTypeT>> GetProcTypesCompatibleWithNodeType() const {
-        VertexTypeTOrDefault numberOfNodeTypes = cdag_.num_vertex_types();
+        VertexTypeTOrDefault numberOfNodeTypes = cdag_.NumVertexTypes();
         ProcessorTypeT numberOfProcTypes = architecture_.getNumberOfProcessorTypes();
         std::vector<std::vector<ProcessorTypeT>> compatibleProcTypes(numberOfNodeTypes);
 

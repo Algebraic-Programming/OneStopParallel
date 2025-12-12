@@ -76,11 +76,11 @@ class BspScheduleCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> 
 
                     vertex_map.push_back(std::vector<VertexType_in>());
 
-                    v_type_t<Graph_t_in> type = dagIn.vertex_type(*(setSchedule.step_processor_vertices[step][proc].begin()));
+                    v_type_t<Graph_t_in> type = dagIn.VertexType(*(setSchedule.step_processor_vertices[step][proc].begin()));
                     bool homogeneousTypes = true;
 
                     for (const auto &vertex : setSchedule.step_processor_vertices[step][proc]) {
-                        if (dagIn.vertex_type(vertex) != type) {
+                        if (dagIn.VertexType(vertex) != type) {
                             homogeneousTypes = false;
                         }
 

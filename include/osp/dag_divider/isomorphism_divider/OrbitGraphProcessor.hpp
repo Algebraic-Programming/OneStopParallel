@@ -214,7 +214,7 @@ class OrbitGraphProcessor {
                 for (const auto v : currentCoarseGraph.children(u)) {
                     if constexpr (HasTypedVerticesV<Constr_Graph_t>) {
                         if (not mergeDifferentNodeTypes_) {
-                            if (currentCoarseGraph.vertex_type(u) != currentCoarseGraph.vertex_type(v)) {
+                            if (currentCoarseGraph.VertexType(u) != currentCoarseGraph.VertexType(v)) {
                                 if constexpr (verbose_) {
                                     std::cout << "  - Merge of " << u << " and " << v << " not viable (different node types)\n";
                                 }
@@ -331,7 +331,7 @@ class OrbitGraphProcessor {
                 }
                 if constexpr (HasTypedVerticesV<Constr_Graph_t>) {
                     if (not mergeDifferentNodeTypes) {
-                        if (currentCoarseGraph.vertex_type(u) != currentCoarseGraph.vertex_type(v)) {
+                        if (currentCoarseGraph.VertexType(u) != currentCoarseGraph.VertexType(v)) {
                             continue;
                         }
                     }
@@ -418,7 +418,7 @@ class OrbitGraphProcessor {
 
                 if constexpr (HasTypedVerticesV<Constr_Graph_t>) {
                     if (not mergeDifferentNodeTypes) {
-                        if (currentCoarseGraph.vertex_type(u) != currentCoarseGraph.vertex_type(v)) {
+                        if (currentCoarseGraph.VertexType(u) != currentCoarseGraph.VertexType(v)) {
                             if constexpr (verbose_) {
                                 std::cout << "  - Merge of " << u << " and " << v << " not viable (different node types)\n";
                             }
@@ -468,8 +468,8 @@ class OrbitGraphProcessor {
                 v_type_t<Graph_t> uType = 0;
                 v_type_t<Graph_t> vType = 0;
                 if (not merge_different_node_types && HasTypedVerticesV<Graph_t>) {
-                    uType = currentCoarseGraph.vertex_type(u);
-                    vType = currentCoarseGraph.vertex_type(v);
+                    uType = currentCoarseGraph.VertexType(u);
+                    vType = currentCoarseGraph.VertexType(v);
                 }
 
                 const bool uIsSignificant = (uSize >= minSymmetry_)
@@ -600,7 +600,7 @@ class OrbitGraphProcessor {
         }
 
         std::vector<v_workw_t<Graph_t>> workPerVertexType;
-        workPerVertexType.resize(mergeDifferentNodeTypes_ ? 1U : dag.num_vertex_types(), 0);
+        workPerVertexType.resize(mergeDifferentNodeTypes_ ? 1U : dag.NumVertexTypes(), 0);
 
         std::map<size_t, size_t> orbitSizeCounts;
         std::map<size_t, v_workw_t<Graph_t>> workPerOrbitSize;
@@ -620,7 +620,7 @@ class OrbitGraphProcessor {
             }
 
             if (not merge_different_node_types_ && HasTypedVerticesV<Graph_t>) {
-                work_per_vertex_type[dag.vertex_type(vertices[0])] += orbit_work;
+                work_per_vertex_type[dag.VertexType(vertices[0])] += orbit_work;
             } else {
                 work_per_vertex_type[0] += orbit_work;
             }

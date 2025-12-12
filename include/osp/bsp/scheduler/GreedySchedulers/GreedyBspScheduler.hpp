@@ -207,7 +207,7 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
         std::vector<unsigned> readyNodesPerType = nrReadyNodesPerType;
         std::vector<unsigned> procsPerType = nrProcsPerType;
         for (unsigned procType = 0; procType < instance.getArchitecture().getNumberOfProcessorTypes(); ++procType) {
-            for (unsigned nodeType = 0; nodeType < instance.getComputationalDag().num_vertex_types(); ++nodeType) {
+            for (unsigned nodeType = 0; nodeType < instance.getComputationalDag().NumVertexTypes(); ++nodeType) {
                 if (instance.isCompatibleType(nodeType, procType)) {
                     unsigned matched = std::min(readyNodesPerType[nodeType], procsPerType[procType]);
                     nrNodes += matched;
@@ -277,7 +277,7 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
         std::vector<bool> procFree(paramsP, true);
         unsigned free = paramsP;
 
-        std::vector<unsigned> nrReadyNodesPerType(g.num_vertex_types(), 0);
+        std::vector<unsigned> nrReadyNodesPerType(g.NumVertexTypes(), 0);
         std::vector<unsigned> nrProcsPerType(instance.getArchitecture().getNumberOfProcessorTypes(), 0);
         for (unsigned proc = 0; proc < paramsP; ++proc) {
             ++nrProcsPerType[instance.getArchitecture().processorType(proc)];
@@ -289,7 +289,7 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
         for (const auto &v : source_vertices_view(g)) {
             ready.insert(v);
             allReady.insert(v);
-            ++nrReadyNodesPerType[g.vertex_type(v)];
+            ++nrReadyNodesPerType[g.VertexType(v)];
 
             for (unsigned proc = 0; proc < paramsP; ++proc) {
                 if (instance.isCompatible(v, proc)) {
@@ -350,7 +350,7 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
                         ++nrPredecDone[succ];
                         if (nrPredecDone[succ] == G.in_degree(succ)) {
                             ready.insert(succ);
-                            ++nr_ready_nodes_per_type[G.vertex_type(succ)];
+                            ++nr_ready_nodes_per_type[G.VertexType(succ)];
 
                             bool canAdd = true;
                             for (const auto &pred : G.parents(succ)) {
@@ -426,7 +426,7 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
                 }
 
                 ready.erase(nextNode);
-                --nrReadyNodesPerType[g.vertex_type(nextNode)];
+                --nrReadyNodesPerType[g.VertexType(nextNode)];
                 schedule.setAssignedProcessor(nextNode, nextProc);
                 schedule.setAssignedSuperstep(nextNode, supstepIdx);
 

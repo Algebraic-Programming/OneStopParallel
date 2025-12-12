@@ -97,7 +97,7 @@ VWorkwT<SubGraphT> SumOfCompatibleWorkWeights(
     static_assert(HasVertexWeightsV<SubGraphT>, "SubGraph_t must have vertex weights");
     return std::accumulate(
         begin, end, static_cast<VWorkwT<SubGraphT>>(0), [&](const VWorkwT<SubGraphT> sum, const VertexIdxT<SubGraphT> &v) {
-            if (mainInstance.isCompatibleType(graph.vertex_type(v), processorType)) {
+            if (mainInstance.isCompatibleType(graph.VertexType(v), processorType)) {
                 return sum + graph.vertex_work_weight(v);
             }
             return sum;

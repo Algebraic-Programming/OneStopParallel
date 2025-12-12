@@ -71,8 +71,8 @@ inline constexpr bool hasVertexWeightsV = HasVertexWeights<T>::value;
  * @brief Concept to check if a graph has typed vertices.
  *
  * Requires validation of:
- * - `vertex_type(v)`: Returns an integral type representing the type of vertex `v`.
- * - `num_vertex_types()`: Returns the total number of distinct vertex types.
+ * - `VertexType(v)`: Returns an integral type representing the type of vertex `v`.
+ * - `NumVertexTypes()`: Returns the total number of distinct vertex types.
  *
  * This is useful for scheduling on heterogeneous resources where tasks (vertices)
  * may be compatible only with certain processor types.

@@ -79,7 +79,7 @@ std::unordered_map<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_in>> create_in
         dag_out.set_vertex_work_weight(outVert, dag.vertex_work_weight(oriVert));
         dag_out.set_vertex_comm_weight(outVert, dag.vertex_comm_weight(oriVert));
         dag_out.set_vertex_mem_weight(outVert, dag.vertex_mem_weight(oriVert));
-        dag_out.set_vertex_type(outVert, dag.vertex_type(oriVert));
+        dag_out.SetVertexType(outVert, dag.VertexType(oriVert));
     }
 
     return local_idx;

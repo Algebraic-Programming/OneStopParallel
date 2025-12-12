@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(SubGraphCompactSparseGraph) {
         graph.set_vertex_work_weight(vert, cntr++);
         graph.set_vertex_comm_weight(vert, cntr++);
         graph.set_vertex_mem_weight(vert, cntr++);
-        graph.set_vertex_type(vert, cntr++);
+        graph.SetVertexType(vert, cntr++);
     }
 
     const std::vector<vertex_idx_t<Compact_Sparse_Graph<true, true, true, true, true>>> selectVert({2, 3, 10, 6, 7});
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(SubGraphCompactSparseGraph) {
         BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), subGraph.vertex_work_weight(vertCorrespondence.at(vert)));
         BOOST_CHECK_EQUAL(graph.vertex_comm_weight(vert), subGraph.vertex_comm_weight(vertCorrespondence.at(vert)));
         BOOST_CHECK_EQUAL(graph.vertex_mem_weight(vert), subGraph.vertex_mem_weight(vertCorrespondence.at(vert)));
-        BOOST_CHECK_EQUAL(graph.vertex_type(vert), subGraph.vertex_type(vertCorrespondence.at(vert)));
+        BOOST_CHECK_EQUAL(graph.VertexType(vert), subGraph.VertexType(vertCorrespondence.at(vert)));
     }
 }
 
@@ -122,6 +122,6 @@ BOOST_AUTO_TEST_CASE(SubGraphDagVectorImpl) {
         BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), subGraph.vertex_work_weight(vertCorrespondence.at(vert)));
         BOOST_CHECK_EQUAL(graph.vertex_comm_weight(vert), subGraph.vertex_comm_weight(vertCorrespondence.at(vert)));
         BOOST_CHECK_EQUAL(graph.vertex_mem_weight(vert), subGraph.vertex_mem_weight(vertCorrespondence.at(vert)));
-        BOOST_CHECK_EQUAL(graph.vertex_type(vert), subGraph.vertex_type(vertCorrespondence.at(vert)));
+        BOOST_CHECK_EQUAL(graph.VertexType(vert), subGraph.VertexType(vertCorrespondence.at(vert)));
     }
 }

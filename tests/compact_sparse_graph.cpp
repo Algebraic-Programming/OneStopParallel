@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(LineGraphKeepOrder) {
     }
 
     for (const auto &vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.vertex_type(vert), 0);
+        BOOST_CHECK_EQUAL(graph.VertexType(vert), 0);
     }
 }
 
@@ -233,7 +233,7 @@ BOOST_AUTO_TEST_CASE(LineGraphReorder) {
     }
 
     for (const auto &vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.vertex_type(vert), 0);
+        BOOST_CHECK_EQUAL(graph.VertexType(vert), 0);
     }
 
     std::vector<std::size_t> perm(8, 0);
@@ -354,7 +354,7 @@ BOOST_AUTO_TEST_CASE(Graph1KeepOrder) {
     }
 
     for (const auto &vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.vertex_type(vert), 0);
+        BOOST_CHECK_EQUAL(graph.VertexType(vert), 0);
     }
 }
 
@@ -485,7 +485,7 @@ BOOST_AUTO_TEST_CASE(Graph1Reorder) {
     }
 
     for (const auto &vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.vertex_type(vert), 0);
+        BOOST_CHECK_EQUAL(graph.VertexType(vert), 0);
     }
 }
 
@@ -876,11 +876,11 @@ BOOST_AUTO_TEST_CASE(GraphVtypeKeepOrder) {
     }
 
     for (auto vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.vertex_type(vert), vt[vert]);
+        BOOST_CHECK_EQUAL(graph.VertexType(vert), vt[vert]);
 
         const unsigned wt = static_cast<unsigned>(rand());
-        graph.set_vertex_type(vert, wt);
-        BOOST_CHECK_EQUAL(graph.vertex_type(vert), wt);
+        graph.SetVertexType(vert, wt);
+        BOOST_CHECK_EQUAL(graph.VertexType(vert), wt);
     }
 }
 
@@ -922,11 +922,11 @@ BOOST_AUTO_TEST_CASE(GraphVtypeReorder) {
     }
 
     for (auto vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.vertex_type(vert), vt[graphPerm[vert]]);
+        BOOST_CHECK_EQUAL(graph.VertexType(vert), vt[graphPerm[vert]]);
 
         const unsigned wt = static_cast<unsigned>(rand());
-        graph.set_vertex_type(graphPerm[vert], wt);
-        BOOST_CHECK_EQUAL(graph.vertex_type(vert), wt);
+        graph.SetVertexType(graphPerm[vert], wt);
+        BOOST_CHECK_EQUAL(graph.VertexType(vert), wt);
     }
 }
 
@@ -1004,7 +1004,7 @@ BOOST_AUTO_TEST_CASE(GraphTypeCopyContruction) {
         BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), copyGraph.vertex_work_weight(vert));
         BOOST_CHECK_EQUAL(graph.vertex_comm_weight(vert), copyGraph.vertex_comm_weight(vert));
         BOOST_CHECK_EQUAL(graph.vertex_mem_weight(vert), copyGraph.vertex_mem_weight(vert));
-        BOOST_CHECK_EQUAL(graph.vertex_type(vert), copyGraph.vertex_type(vert));
+        BOOST_CHECK_EQUAL(graph.VertexType(vert), copyGraph.VertexType(vert));
     }
 
     for (const auto &vert : copyGraph.vertices()) {
@@ -1060,7 +1060,7 @@ BOOST_AUTO_TEST_CASE(GraphTypeCopyContruction) {
         BOOST_CHECK_EQUAL(graph.vertex_work_weight(graphPerm[vert]), reorderGraph.vertex_work_weight(vert));
         BOOST_CHECK_EQUAL(graph.vertex_comm_weight(graphPerm[vert]), reorderGraph.vertex_comm_weight(vert));
         BOOST_CHECK_EQUAL(graph.vertex_mem_weight(graphPerm[vert]), reorderGraph.vertex_mem_weight(vert));
-        BOOST_CHECK_EQUAL(graph.vertex_type(graphPerm[vert]), reorderGraph.vertex_type(vert));
+        BOOST_CHECK_EQUAL(graph.VertexType(graphPerm[vert]), reorderGraph.VertexType(vert));
     }
 
     for (const auto &vert : reorderGraph.vertices()) {
@@ -1180,7 +1180,7 @@ BOOST_AUTO_TEST_CASE(Graph1CopyKeepOrder) {
     }
 
     for (const auto &vert : copyGraph.vertices()) {
-        BOOST_CHECK_EQUAL(copyGraph.vertex_type(vert), 0);
+        BOOST_CHECK_EQUAL(copyGraph.VertexType(vert), 0);
     }
 }
 
@@ -1263,7 +1263,7 @@ BOOST_AUTO_TEST_CASE(Graph1MoveKeepOrder) {
     }
 
     for (const auto &vert : copyGraph.vertices()) {
-        BOOST_CHECK_EQUAL(copyGraph.vertex_type(vert), 0);
+        BOOST_CHECK_EQUAL(copyGraph.VertexType(vert), 0);
     }
 }
 
@@ -1370,7 +1370,7 @@ BOOST_AUTO_TEST_CASE(Graph1CopyReorder) {
     }
 
     for (const auto &vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.vertex_type(vert), 0);
+        BOOST_CHECK_EQUAL(graph.VertexType(vert), 0);
     }
 }
 
@@ -1477,6 +1477,6 @@ BOOST_AUTO_TEST_CASE(Graph1MoveReorder) {
     }
 
     for (const auto &vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.vertex_type(vert), 0);
+        BOOST_CHECK_EQUAL(graph.VertexType(vert), 0);
     }
 }

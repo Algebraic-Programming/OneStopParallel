@@ -96,7 +96,7 @@ class TopOrderCoarser : public Coarser<GraphTIn, GraphTOut> {
 
         if constexpr (IsComputationalDagTypedVerticesV<Graph_t_in> && IsComputationalDagTypedVerticesV<Graph_t_out>) {
             current_super_node_idx
-                = dag_out.add_vertex(current_work, current_communication, current_memory, dag_in.vertex_type(node));
+                = dag_out.add_vertex(current_work, current_communication, current_memory, dag_in.VertexType(node));
         } else {
             current_super_node_idx = dag_out.add_vertex(current_work, current_communication, current_memory);
         }
@@ -177,7 +177,7 @@ class TopOrderCoarser : public Coarser<GraphTIn, GraphTOut> {
             } else {    // grow current super node
 
                 if constexpr (IsComputationalDagTypedVerticesV<Graph_t_in> && IsComputationalDagTypedVerticesV<Graph_t_out>) {
-                    if (dag_out.vertex_type(current_super_node_idx) != dag_in.vertex_type(v)) {
+                    if (dag_out.VertexType(current_super_node_idx) != dag_in.VertexType(v)) {
                         finish_super_node_add_edges(dag_in, dag_out, vertex_map.back(), reverse_vertex_map);
                         vertex_map.push_back(std::vector<VertexType>({v}));
                         add_new_super_node(dag_in, dag_out, v);

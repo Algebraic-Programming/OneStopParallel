@@ -51,7 +51,7 @@ void AddNodeTypes(GraphT &dag) {
     unsigned nodeType = 0;
 
     for (const auto &v : dag.vertices()) {
-        dag.set_vertex_type(v, nodeType++ % 2);
+        dag.SetVertexType(v, nodeType++ % 2);
     }
 }
 

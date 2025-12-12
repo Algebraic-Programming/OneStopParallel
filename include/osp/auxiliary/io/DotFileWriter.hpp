@@ -57,7 +57,7 @@ class DotFileWriter {
                 << "mem_weight=\"" << schedule_.getInstance().getComputationalDag().vertex_mem_weight(i) << "\";";
 
             if constexpr (HasTypedVerticesV<Graph_t>) {
-                out << "type=\"" << schedule_.getInstance().getComputationalDag().vertex_type(i) << "\";";
+                out << "type=\"" << schedule_.getInstance().getComputationalDag().VertexType(i) << "\";";
             }
 
             out << "proc=\"" << schedule_.assignedProcessor(i) << "\";" << "superstep=\"" << schedule_.assignedSuperstep(i)
@@ -80,7 +80,7 @@ class DotFileWriter {
                 << "mem_weight=\"" << schedule_.getInstance().getComputationalDag().vertex_mem_weight(i) << "\";";
 
             if constexpr (HasTypedVerticesV<Graph_t>) {
-                out << "type=\"" << schedule_.getInstance().getComputationalDag().vertex_type(i) << "\";";
+                out << "type=\"" << schedule_.getInstance().getComputationalDag().VertexType(i) << "\";";
             }
 
             out << "proc=\"(";
@@ -153,7 +153,7 @@ class DotFileWriter {
                 << "mem_weight=\"" << schedule_.getInstance().getComputationalDag().vertex_mem_weight(i) << "\";";
 
             if constexpr (HasTypedVerticesV<Graph_t>) {
-                out << "type=\"" << schedule_.getInstance().getComputationalDag().vertex_type(i) << "\";";
+                out << "type=\"" << schedule_.getInstance().getComputationalDag().VertexType(i) << "\";";
             }
 
             out << "proc=\"" << schedule_.assignedProcessor(i) << "\";" << "superstep=\"" << schedule_.assignedSuperstep(i)
@@ -195,7 +195,7 @@ class DotFileWriter {
                 << "mem_weight=\"" << graph_.vertex_mem_weight(i) << "\";";
 
             if constexpr (HasTypedVerticesV<Graph_t>) {
-                out << "type=\"" << graph_.vertex_type(i) << "\";";
+                out << "type=\"" << graph_.VertexType(i) << "\";";
             }
 
             out << "]";
@@ -248,8 +248,8 @@ class DotFileWriter {
                 << "mem_weight=\"" << graph_.vertex_mem_weight(i) << "\";";
 
             if constexpr (HasTypedVerticesV<Graph_t>) {
-                out << "type=\"" << graph_.vertex_type(i) << "\";shape=\""
-                    << shapeStrings_[graph_.vertex_type(i) % shapeStrings_.size()] << "\";";
+                out << "type=\"" << graph_.VertexType(i) << "\";shape=\""
+                    << shapeStrings_[graph_.VertexType(i) % shapeStrings_.size()] << "\";";
             }
 
             out << "]";
@@ -375,7 +375,7 @@ class DotFileWriter {
         for (const auto &node : g.vertices()) {
             if (schedule.assignments(node).size() == 1) {
                 g2.add_vertex(
-                    g.vertex_work_weight(node), g.vertex_comm_weight(node), g.vertex_mem_weight(node), g.vertex_type(node));
+                    g.vertex_work_weight(node), g.vertex_comm_weight(node), g.vertex_mem_weight(node), g.VertexType(node));
 
                 names[idxNew] = std::to_string(node);
                 nodeToProc[idxNew] = schedule.assignments(node)[0].first;
@@ -388,7 +388,7 @@ class DotFileWriter {
                 std::vector<size_t> idxs;
                 for (unsigned i = 0; i < schedule.assignments(node).size(); ++i) {
                     g2.add_vertex(
-                        g.vertex_work_weight(node), g.vertex_comm_weight(node), g.vertex_mem_weight(node), g.vertex_type(node));
+                        g.vertex_work_weight(node), g.vertex_comm_weight(node), g.vertex_mem_weight(node), g.VertexType(node));
 
                     names[idxNew] = std::to_string(node).append("_").append(std::to_string(i));
                     nodeToProc[idxNew] = schedule.assignments(node)[i].first;

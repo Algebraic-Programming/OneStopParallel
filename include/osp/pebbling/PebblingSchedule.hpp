@@ -629,14 +629,14 @@ void PebblingSchedule<GraphT>::ConvertFromBsp(const BspSchedule<GraphT> &schedul
 template <typename GraphT>
 bool PebblingSchedule<GraphT>::HasValidSolution(const BspInstance<GraphT> &instance, const std::set<vertex_idx> &externalSources) {
     std::vector<memweight_type> memoryRequired = minimumMemoryRequiredPerNodeType(instance);
-    std::vector<bool> hasEnoughMemory(instance.getComputationalDag().num_vertex_types(), true);
+    std::vector<bool> hasEnoughMemory(instance.getComputationalDag().NumVertexTypes(), true);
     for (vertex_idx node = 0; node < instance.numberOfVertices(); ++node) {
         if (externalSources.find(node) == external_sources.end()) {
-            hasEnoughMemory[instance.getComputationalDag().vertex_type(node)] = false;
+            hasEnoughMemory[instance.getComputationalDag().VertexType(node)] = false;
         }
     }
 
-    for (v_type_t<Graph_t> nodeType = 0; node_type < instance.getComputationalDag().num_vertex_types(); ++node_type) {
+    for (v_type_t<Graph_t> nodeType = 0; node_type < instance.getComputationalDag().NumVertexTypes(); ++node_type) {
         for (unsigned proc = 0; proc < instance.numberOfProcessors(); ++proc) {
             if (instance.isCompatibleType(node_type, instance.getArchitecture().processorType(proc))
                 && instance.getArchitecture().memoryBound(proc) >= memory_required[node_type]) {
@@ -646,7 +646,7 @@ bool PebblingSchedule<GraphT>::HasValidSolution(const BspInstance<GraphT> &insta
         }
     }
 
-    for (v_type_t<Graph_t> nodeType = 0; node_type < instance.getComputationalDag().num_vertex_types(); ++node_type) {
+    for (v_type_t<Graph_t> nodeType = 0; node_type < instance.getComputationalDag().NumVertexTypes(); ++node_type) {
         if (!hasEnoughMemory[node_type]) {
             std::cout << "No valid solution exists. Minimum memory required for node type " << node_type << " is "
                       << memory_required[node_type] << std::endl;
@@ -1263,14 +1263,14 @@ bool PebblingSchedule<GraphT>::IsValid() const {
 template <typename GraphT>
 std::vector<v_memw_t<Graph_t>> PebblingSchedule<GraphT>::MinimumMemoryRequiredPerNodeType(
     const BspInstance<GraphT> &instance, const std::set<vertex_idx> &externalSources) {
-    std::vector<v_memw_t<Graph_t>> maxNeeded(instance.getComputationalDag().num_vertex_types(), 0);
+    std::vector<v_memw_t<Graph_t>> maxNeeded(instance.getComputationalDag().NumVertexTypes(), 0);
     for (vertex_idx_t<Graph_t> node = 0; node < instance.getComputationalDag().NumVertices(); ++node) {
         if (externalSources.find(node) != external_sources.end()) {
             continue;
         }
 
         v_memw_t<Graph_t> needed = instance.getComputationalDag().vertex_mem_weight(node);
-        const v_type_t<Graph_t> type = instance.getComputationalDag().vertex_type(node);
+        const v_type_t<Graph_t> type = instance.getComputationalDag().VertexType(node);
         for (vertex_idx_t<Graph_t> pred : instance.getComputationalDag().parents(node)) {
             needed += instance.getComputationalDag().vertex_mem_weight(pred);
         }

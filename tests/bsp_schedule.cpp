@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(TestInstanceBicgstab) {
 
     BOOST_CHECK(status);
     BOOST_CHECK_EQUAL(instance.getComputationalDag().NumVertices(), 54);
-    BOOST_CHECK_EQUAL(instance.getComputationalDag().num_vertex_types(), 1);
+    BOOST_CHECK_EQUAL(instance.getComputationalDag().NumVertexTypes(), 1);
 
     std::vector<Scheduler<Graph> *> schedulers = {new BspLocking<Graph>(),
                                                   new EtfScheduler<Graph>(),
@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE(TestScheduleWriter) {
 
     BOOST_CHECK(status);
     BOOST_CHECK_EQUAL(instance.getComputationalDag().NumVertices(), 54);
-    BOOST_CHECK_EQUAL(instance.getComputationalDag().num_vertex_types(), 1);
+    BOOST_CHECK_EQUAL(instance.getComputationalDag().NumVertexTypes(), 1);
 
     BspLocking<GraphT1> scheduler;
     BspSchedule<GraphT1> schedule(instance);
@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(TestScheduleWriter) {
     BOOST_CHECK(scheduleT2.satisfiesPrecedenceConstraints());
 
     BOOST_CHECK_EQUAL(instanceT2.getComputationalDag().NumVertices(), instance.getComputationalDag().NumVertices());
-    BOOST_CHECK_EQUAL(instanceT2.getComputationalDag().num_vertex_types(), instance.getComputationalDag().num_vertex_types());
+    BOOST_CHECK_EQUAL(instanceT2.getComputationalDag().NumVertexTypes(), instance.getComputationalDag().NumVertexTypes());
     BOOST_CHECK_EQUAL(instanceT2.getComputationalDag().NumEdges(), instance.getComputationalDag().NumEdges());
 
     for (const auto &v : instance.getComputationalDag().vertices()) {
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(TestScheduleWriter) {
         BOOST_CHECK_EQUAL(instanceT2.getComputationalDag().vertex_mem_weight(v),
                           instance.getComputationalDag().vertex_mem_weight(v));
 
-        BOOST_CHECK_EQUAL(instanceT2.getComputationalDag().vertex_type(v), instance.getComputationalDag().vertex_type(v));
+        BOOST_CHECK_EQUAL(instanceT2.getComputationalDag().VertexType(v), instance.getComputationalDag().VertexType(v));
 
         BOOST_CHECK_EQUAL(instanceT2.getComputationalDag().out_degree(v), instance.getComputationalDag().out_degree(v));
 

@@ -48,7 +48,7 @@ void CreateInducedSubgraph(const GraphTIn &dag,
         local_idx[node] = dag_out.NumVertices();
         if constexpr (is_constructable_cdag_typed_vertex_v<Graph_t_out> and HasTypedVerticesV<Graph_t_in>) {
             // add extra source with type
-            dag_out.add_vertex(0, dag.vertex_comm_weight(node), dag.vertex_mem_weight(node), dag.vertex_type(node));
+            dag_out.add_vertex(0, dag.vertex_comm_weight(node), dag.vertex_mem_weight(node), dag.VertexType(node));
         } else {
             // add extra source without type
             dag_out.add_vertex(0, dag.vertex_comm_weight(node), dag.vertex_mem_weight(node));
@@ -61,7 +61,7 @@ void CreateInducedSubgraph(const GraphTIn &dag,
         if constexpr (is_constructable_cdag_typed_vertex_v<Graph_t_out> and HasTypedVerticesV<Graph_t_in>) {
             // add vertex with type
             dag_out.add_vertex(
-                dag.vertex_work_weight(node), dag.vertex_comm_weight(node), dag.vertex_mem_weight(node), dag.vertex_type(node));
+                dag.vertex_work_weight(node), dag.vertex_comm_weight(node), dag.vertex_mem_weight(node), dag.VertexType(node));
         } else {
             // add vertex without type
             dag_out.add_vertex(dag.vertex_work_weight(node), dag.vertex_comm_weight(node), dag.vertex_mem_weight(node));
@@ -108,7 +108,7 @@ bool CheckOrderedIsomorphism(const GraphT &first, const GraphT &second) {
         if (first.vertex_work_weight(node) != second.vertex_work_weight(node)
             || first.vertex_mem_weight(node) != second.vertex_mem_weight(node)
             || first.vertex_comm_weight(node) != second.vertex_comm_weight(node)
-            || first.vertex_type(node) != second.vertex_type(node)) {
+            || first.VertexType(node) != second.VertexType(node)) {
             return false;
         }
 
@@ -186,7 +186,7 @@ std::vector<GraphTOut> CreateInducedSubgraphs(const GraphTIn &dagIn, const std::
             splitDags[partitionIDs[node]].add_vertex(dagIn.vertex_work_weight(node),
                                                      dagIn.vertex_comm_weight(node),
                                                      dagIn.vertex_mem_weight(node),
-                                                     dagIn.vertex_type(node));
+                                                     dagIn.VertexType(node));
         } else {
             splitDags[partitionIDs[node]].add_vertex(
                 dagIn.vertex_work_weight(node), dagIn.vertex_comm_weight(node), dagIn.vertex_mem_weight(node));
@@ -237,7 +237,7 @@ std::unordered_map<vertex_idx_t<Graph_t_in>, vertex_idx_t<Graph_t_in>> create_in
         if constexpr (is_constructable_cdag_typed_vertex_v<Graph_t_out> and HasTypedVerticesV<Graph_t_in>) {
             // add vertex with type
             dag_out.add_vertex(
-                dag.vertex_work_weight(node), dag.vertex_comm_weight(node), dag.vertex_mem_weight(node), dag.vertex_type(node));
+                dag.vertex_work_weight(node), dag.vertex_comm_weight(node), dag.vertex_mem_weight(node), dag.VertexType(node));
         } else {
             // add vertex without type
             dag_out.add_vertex(dag.vertex_work_weight(node), dag.vertex_comm_weight(node), dag.vertex_mem_weight(node));

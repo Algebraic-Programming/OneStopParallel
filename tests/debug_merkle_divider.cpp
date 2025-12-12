@@ -45,9 +45,9 @@ void CheckPartitionTypeHomogeneity(const GraphT &dag, const std::vector<vertex_i
         if (vertices.empty()) {
             continue;
         }
-        const auto firstNodeType = dag.vertex_type(vertices[0]);
+        const auto firstNodeType = dag.VertexType(vertices[0]);
         for (const auto &vertex : vertices) {
-            if (dag.vertex_type(vertex) != firstNodeType) {
+            if (dag.VertexType(vertex) != firstNodeType) {
                 std::cerr << "Partition " << part_id << " contains vertices with different types." << std::endl;
                 return;
             }

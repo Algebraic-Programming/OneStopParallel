@@ -795,7 +795,7 @@ class CompactSparseGraph {
 
         if constexpr (IsComputationalDagTypedVerticesV<Graph_type> && use_vert_types) {
             for (const auto &vert : graph.vertices()) {
-                set_vertex_type(vert, graph.vertex_type(vert));
+                SetVertexType(vert, graph.VertexType(vert));
             }
         }
     }
@@ -1110,11 +1110,11 @@ static_assert(IsDirectedGraphEdgeDescV<CSG>, "CSG must satisfy the directed_grap
 //                         "Vertex type types of in graph and out graph must be the same!");
 
 //         for (const vertex_idx_t<Graph_t_in> &vert : dag_in.vertices()) {
-//             coarsened_dag.set_vertex_type(vertex_contraction_map[vert], dag_in.vertex_type(vert));
+//             coarsened_dag.SetVertexType(vertex_contraction_map[vert], dag_in.VertexType(vert));
 //         }
 //         // assert(std::all_of(dag_in.vertices().begin(), dag_in.vertices().end(),
 //         //         [&dag_in, &vertex_contraction_map, &coarsened_dag](const auto &vert){ return
-//         //         dag_in.vertex_type(vert) ==  coarsened_dag.vertex_type(vertex_contraction_map[vert]); })
+//         //         dag_in.VertexType(vert) ==  coarsened_dag.VertexType(vertex_contraction_map[vert]); })
 //         //                 && "Contracted vertices must be of the same type");
 //     }
 

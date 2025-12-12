@@ -66,7 +66,7 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
 
     virtual std::vector<std::vector<vertex_idx_t<Graph_t_in>>> generate_vertex_expansion_map(const GraphTIn &graph) override {
         if constexpr (useArchitectureMemoryContraints) {
-            if (max_memory_per_vertex_type.size() < graph.num_vertex_types()) {
+            if (max_memory_per_vertex_type.size() < graph.NumVertexTypes()) {
                 throw std::runtime_error("FunnelBfs: max_memory_per_vertex_type has insufficient size.");
             }
         }
@@ -133,7 +133,7 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
                 vertex_idx_t activeNode = vertex_processing_fifo.front();
                 vertexProcessingFifo.pop_front();
 
-                if (graph.vertex_type(active_node) != graph.vertex_type(bottom_node)) {
+                if (graph.VertexType(active_node) != graph.VertexType(bottom_node)) {
                     continue;
                 }
 
@@ -147,7 +147,7 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
 
                 if constexpr (useArchitectureMemoryContraints) {
                     if (memory_weight_of_group + graph.vertex_mem_weight(active_node)
-                        > max_memory_per_vertex_type[graph.vertex_type(bottom_node)]) {
+                        > max_memory_per_vertex_type[graph.VertexType(bottom_node)]) {
                         continue;
                     }
                 }
@@ -241,7 +241,7 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
                 vertex_idx_t activeNode = vertex_processing_fifo.front();
                 vertexProcessingFifo.pop_front();
 
-                if (graph.vertex_type(active_node) != graph.vertex_type(topNode)) {
+                if (graph.VertexType(active_node) != graph.VertexType(topNode)) {
                     continue;
                 }
 
@@ -255,7 +255,7 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
 
                 if constexpr (useArchitectureMemoryContraints) {
                     if (memory_weight_of_group + graph.vertex_mem_weight(active_node)
-                        > max_memory_per_vertex_type[graph.vertex_type(top_node)]) {
+                        > max_memory_per_vertex_type[graph.VertexType(top_node)]) {
                         continue;
                     }
                 }

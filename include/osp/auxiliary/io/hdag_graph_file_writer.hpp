@@ -75,7 +75,7 @@ void WriteComputationalDagHyperdagFormatDb(std::ostream &os, const GraphT &graph
     for (const auto &u : graph.vertices()) {
         os << u << " " << graph.vertex_work_weight(u);
         if constexpr (HasTypedVerticesV<Graph_t>) {
-            os << " " << graph.vertex_type(u);
+            os << " " << graph.VertexType(u);
         } else {
             os << " " << 0;
         }

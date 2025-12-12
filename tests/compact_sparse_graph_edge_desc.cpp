@@ -225,7 +225,7 @@ BOOST_AUTO_TEST_CASE(LineGraphKeepOrder) {
     }
 
     for (const auto &vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.vertex_type(vert), 0);
+        BOOST_CHECK_EQUAL(graph.VertexType(vert), 0);
     }
 
     std::size_t edgeCounter = 0;
@@ -360,7 +360,7 @@ BOOST_AUTO_TEST_CASE(LineGraphReorder) {
     }
 
     for (const auto &vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.vertex_type(vert), 0);
+        BOOST_CHECK_EQUAL(graph.VertexType(vert), 0);
     }
 
     std::vector<std::size_t> perm(8, 0);
@@ -528,7 +528,7 @@ BOOST_AUTO_TEST_CASE(Graph1KeepOrder) {
     }
 
     for (const auto &vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.vertex_type(vert), 0);
+        BOOST_CHECK_EQUAL(graph.VertexType(vert), 0);
     }
 }
 
@@ -677,7 +677,7 @@ BOOST_AUTO_TEST_CASE(Graph1Reorder) {
     }
 
     for (const auto &vert : graph.vertices()) {
-        BOOST_CHECK_EQUAL(graph.vertex_type(vert), 0);
+        BOOST_CHECK_EQUAL(graph.VertexType(vert), 0);
     }
 
     std::size_t edgeCntr = 0;

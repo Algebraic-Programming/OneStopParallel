@@ -202,7 +202,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SingleContraction(
     for (const VertexType &edgeSrc : graph.vertices()) {
         for (const VertexType &edgeTgt : graph.children(edgeSrc)) {
             if constexpr (HasTypedVerticesV<Graph_t_in>) {
-                if (graph.vertex_type(edgeSrc) != graph.vertex_type(edgeTgt)) {
+                if (graph.VertexType(edgeSrc) != graph.VertexType(edgeTgt)) {
                     continue;
                 }
             }
@@ -355,7 +355,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::AllChildrenContraction(
         bool shouldSkip = false;
         if constexpr (HasTypedVerticesV<Graph_t_in>) {
             for (const VertexType &groupFoot : graph.children(groupHead)) {
-                if (graph.vertex_type(groupHead) != graph.vertex_type(groupFoot)) {
+                if (graph.VertexType(groupHead) != graph.VertexType(groupFoot)) {
                     shouldSkip = true;
                     break;
                 }
@@ -503,7 +503,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::AllParentsContraction(
         bool shouldSkip = false;
         if constexpr (HasTypedVerticesV<Graph_t_in>) {
             for (const VertexType &groupHead : graph.parents(groupFoot)) {
-                if (graph.vertex_type(groupHead) != graph.vertex_type(groupFoot)) {
+                if (graph.VertexType(groupHead) != graph.VertexType(groupFoot)) {
                     shouldSkip = true;
                     break;
                 }
@@ -727,7 +727,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SomeChildrenContraction(
             admissble_children_groups;
         for (auto chld_iter_start = childrenPriority.cbegin(); chld_iter_start != childrenPriority.cend();) {
             if constexpr (HasTypedVerticesV<Graph_t_in>) {
-                if (graph.vertex_type(groupHead) != graph.vertex_type(*chld_iter_start)) {
+                if (graph.VertexType(groupHead) != graph.VertexType(*chld_iter_start)) {
                     ++chld_iter_start;
                     continue;
                 }
@@ -739,7 +739,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SomeChildrenContraction(
             while (chld_iter_end != childrenPriority.cend() && t_dist == topDist[*chld_iter_end]
                    && b_dist == botDist[*chld_iter_end]) {
                 if constexpr (HasTypedVerticesV<Graph_t_in>) {
-                    if (graph.vertex_type(groupHead) != graph.vertex_type(*chld_iter_end)) {
+                    if (graph.VertexType(groupHead) != graph.VertexType(*chld_iter_end)) {
                         break;
                     }
                 }
@@ -916,7 +916,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SomeParentsContraction(
             admissble_parent_groups;
         for (auto par_iter_start = parentsPriority.cbegin(); par_iter_start != parentsPriority.cend();) {
             if constexpr (HasTypedVerticesV<Graph_t_in>) {
-                if (graph.vertex_type(groupFoot) != graph.vertex_type(*par_iter_start)) {
+                if (graph.VertexType(groupFoot) != graph.VertexType(*par_iter_start)) {
                     ++par_iter_start;
                     continue;
                 }
@@ -927,7 +927,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SomeParentsContraction(
             auto par_iter_end = par_iter_start;
             while (par_iter_end != parentsPriority.cend() && t_dist == topDist[*par_iter_end] && b_dist == botDist[*par_iter_end]) {
                 if constexpr (HasTypedVerticesV<Graph_t_in>) {
-                    if (graph.vertex_type(groupFoot) != graph.vertex_type(*par_iter_end)) {
+                    if (graph.VertexType(groupFoot) != graph.VertexType(*par_iter_end)) {
                         break;
                     }
                 }
@@ -1112,7 +1112,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::LevelContraction(
                 }
 
                 if constexpr (HasTypedVerticesV<Graph_t_in>) {
-                    if (graph.vertex_type(srcVert) != graph.vertex_type(tgtVert)) {
+                    if (graph.VertexType(srcVert) != graph.VertexType(tgtVert)) {
                         continue;
                     }
                 }
@@ -1248,7 +1248,7 @@ std::vector<std::size_t> Sarkar<GraphTIn, GraphTOut>::ComputeNodeHashes(const Gr
         hash_combine(hash, vertexPoset[vert]);
         hash_combine(hash, dist[vert]);
         if constexpr (HasTypedVerticesV<Graph_t_in>) {
-            hash_combine(hash, graph.vertex_type(vert));
+            hash_combine(hash, graph.VertexType(vert));
         }
     }
 
@@ -1415,7 +1415,7 @@ vertex_idx_t<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::HomogeneousBufferMerge(
                 continue;
             }
             if constexpr (HasTypedVerticesV<Graph_t_in>) {
-                if (graph.vertex_type(vertCandidate) != graph.vertex_type(vert)) {
+                if (graph.VertexType(vertCandidate) != graph.VertexType(vert)) {
                     continue;
                 }
             }

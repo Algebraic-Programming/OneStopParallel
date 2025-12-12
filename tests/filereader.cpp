@@ -299,13 +299,13 @@ BOOST_AUTO_TEST_CASE(TestDotGraph) {
     BOOST_CHECK(status);
     BOOST_CHECK_EQUAL(graph.NumVertices(), 11);
     BOOST_CHECK_EQUAL(graph.NumEdges(), 10);
-    BOOST_CHECK_EQUAL(graph.num_vertex_types(), 2);
+    BOOST_CHECK_EQUAL(graph.NumVertexTypes(), 2);
 
     for (const auto &v : graph.vertices()) {
         BOOST_CHECK_EQUAL(graph.vertex_work_weight(v), work[v]);
         BOOST_CHECK_EQUAL(graph.vertex_comm_weight(v), comm[v]);
         BOOST_CHECK_EQUAL(graph.vertex_mem_weight(v), mem[v]);
-        BOOST_CHECK_EQUAL(graph.vertex_type(v), type[v]);
+        BOOST_CHECK_EQUAL(graph.VertexType(v), type[v]);
     }
 }
 
@@ -328,12 +328,12 @@ BOOST_AUTO_TEST_CASE(TestDotGraphBoost) {
     BOOST_CHECK(status);
     BOOST_CHECK_EQUAL(graph.NumVertices(), 11);
     BOOST_CHECK_EQUAL(graph.NumEdges(), 10);
-    BOOST_CHECK_EQUAL(graph.num_vertex_types(), 2);
+    BOOST_CHECK_EQUAL(graph.NumVertexTypes(), 2);
 
     for (const auto &v : graph.vertices()) {
         BOOST_CHECK_EQUAL(graph.vertex_work_weight(v), work[v]);
         BOOST_CHECK_EQUAL(graph.vertex_comm_weight(v), comm[v]);
         BOOST_CHECK_EQUAL(graph.vertex_mem_weight(v), mem[v]);
-        BOOST_CHECK_EQUAL(graph.vertex_type(v), type[v]);
+        BOOST_CHECK_EQUAL(graph.VertexType(v), type[v]);
     }
 }

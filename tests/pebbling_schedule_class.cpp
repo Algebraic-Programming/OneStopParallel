@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(TestPebblingScheduleWriter) {
 
     BOOST_CHECK(status);
     BOOST_CHECK_EQUAL(instance.getComputationalDag().NumVertices(), 54);
-    BOOST_CHECK_EQUAL(instance.getComputationalDag().num_vertex_types(), 1);
+    BOOST_CHECK_EQUAL(instance.getComputationalDag().NumVertexTypes(), 1);
 
     BspSchedule bspSchedule(instance);
     GreedyBspScheduler<Graph> scheduler;

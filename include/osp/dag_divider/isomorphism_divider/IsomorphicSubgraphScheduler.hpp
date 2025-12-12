@@ -211,10 +211,10 @@ class IsomorphicSubgraphScheduler {
 
                 if constexpr (HasTypedVerticesV<Graph_t>) {
                     if (!group.subgraphs.empty() && !group.subgraphs[0].empty()) {
-                        commonNodeType = instance.getComputationalDag().vertex_type(group.subgraphs[0][0]);
+                        commonNodeType = instance.getComputationalDag().VertexType(group.subgraphs[0][0]);
                         const auto &repSubgraph = group.subgraphs[0];
                         for (const auto &vertex : repSubgraph) {
-                            if (instance.getComputationalDag().vertex_type(vertex) != common_node_type) {
+                            if (instance.getComputationalDag().VertexType(vertex) != common_node_type) {
                                 isSingleTypeGroup = false;
                                 break;
                             }
@@ -346,7 +346,7 @@ class IsomorphicSubgraphScheduler {
                 for (const auto &vertex : subgraph) {
                     contractionMap[vertex] = static_cast<vertex_idx_t<Constr_Graph_t>>(coarseNodeIdx);
                     const auto vertexWork = originalInstance.getComputationalDag().vertex_work_weight(vertex);
-                    const auto vertexType = originalInstance.getComputationalDag().vertex_type(vertex);
+                    const auto vertexType = originalInstance.getComputationalDag().VertexType(vertex);
                     for (unsigned j = 0; j < numProcTypes; ++j) {
                         if (originalInstance.isCompatibleType(vertexType, j)) {
                             result.required_proc_types[coarseNodeIdx][j] += vertexWork;
@@ -443,9 +443,9 @@ class IsomorphicSubgraphScheduler {
                 std::cout << "  Number of subgraphs in group: " << group.subgraphs.size() << std::endl;
                 const auto &repDag = representativeInstance.getComputationalDag();
                 std::cout << "  Representative subgraph size: " << repDag.NumVertices() << " vertices" << std::endl;
-                std::vector<unsigned> nodeTypeCounts(repDag.num_vertex_types(), 0);
+                std::vector<unsigned> nodeTypeCounts(repDag.NumVertexTypes(), 0);
                 for (const auto &v : repDag.vertices()) {
-                    nodeTypeCounts[repDag.vertex_type(v)]++;
+                    nodeTypeCounts[repDag.VertexType(v)]++;
                 }
                 std::cout << "    Node type counts: ";
                 for (size_t typeIdx = 0; typeIdx < nodeTypeCounts.size(); ++typeIdx) {
@@ -502,7 +502,7 @@ class IsomorphicSubgraphScheduler {
             }
 
             const bool maxBsp = useMaxBsp_ && (representativeInstance.getComputationalDag().NumEdges() == 0)
-                                && (representativeInstance.getComputationalDag().vertex_type(0) == 0);
+                                && (representativeInstance.getComputationalDag().VertexType(0) == 0);
 
             // Build data structures for applying the pattern ---
             // Map (superstep, processor) -> relative partition ID

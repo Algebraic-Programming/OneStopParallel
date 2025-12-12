@@ -444,7 +444,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     BOOST_CHECK_EQUAL(graph.NumVertices(), 10);
     BOOST_CHECK_EQUAL(graphEmpty.NumEdges(), 0);
     BOOST_CHECK_EQUAL(graphEmpty.NumVertices(), 0);
-    BOOST_CHECK_EQUAL(graph.num_vertex_types(), 1);
+    BOOST_CHECK_EQUAL(graph.NumVertexTypes(), 1);
 
     BOOST_CHECK_EQUAL(is_acyclic(graph), true);
     BOOST_CHECK_EQUAL(is_acyclic(graphEmpty), true);
