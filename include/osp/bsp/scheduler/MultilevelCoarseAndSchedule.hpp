@@ -84,20 +84,20 @@ class MultilevelCoarseAndSchedule : public Scheduler<GraphT> {
 
     inline void SetMultilevelCoarser(MultilevelCoarser<GraphT, GraphTCoarse> &mlCoarser) { mlCoarser_ = &mlCoarser; };
 
-    ReturnStatus computeSchedule(BspSchedule<GraphT> &schedule) override;
+    ReturnStatus ComputeSchedule(BspSchedule<GraphT> &schedule) override;
 
-    std::string getScheduleName() const override {
+    std::string GetScheduleName() const override {
         if (improver_ == nullptr) {
-            return "C:" + mlCoarser_->getCoarserName() + "-S:" + sched_->getScheduleName();
+            return "C:" + mlCoarser_->GetCoarserName() + "-S:" + sched_->GetScheduleName();
         } else {
-            return "C:" + mlCoarser_->getCoarserName() + "-S:" + sched_->getScheduleName() + "-I:" + improver_->getScheduleName();
+            return "C:" + mlCoarser_->GetCoarserName() + "-S:" + sched_->GetScheduleName() + "-I:" + improver_->GetScheduleName();
         }
     };
 };
 
 template <typename GraphT, typename GraphTCoarse>
 ReturnStatus MultilevelCoarseAndSchedule<GraphT, GraphTCoarse>::ComputeInitialSchedule() {
-    activeGraph_ = static_cast<long int>(mlCoarser_->dag_history.size());
+    activeGraph_ = static_cast<long int>(mlCoarser_->dagHistory.size());
     activeGraph_--;
 
     assert((activeGraph_ >= 0L) && "Must have done at least one coarsening!");
@@ -105,12 +105,12 @@ ReturnStatus MultilevelCoarseAndSchedule<GraphT, GraphTCoarse>::ComputeInitialSc
     ReturnStatus status;
 
     activeInstance_ = std::make_unique<BspInstance<GraphTCoarse>>(
-        *(mlCoarser_->dag_history.at(static_cast<std::size_t>(activeGraph_))), originalInst_->GetArchitecture());
+        *(mlCoarser_->dagHistory.at(static_cast<std::size_t>(activeGraph_))), originalInst_->GetArchitecture());
     activeSchedule_ = std::make_unique<BspSchedule<GraphTCoarse>>(*activeInstance_);
-    status = sched_->computeSchedule(*activeSchedule_);
-    assert(activeSchedule_->satisfiesPrecedenceConstraints());
+    status = sched_->ComputeSchedule(*activeSchedule_);
+    assert(activeSchedule_->SatisfiesPrecedenceConstraints());
 
-    ReturnStatus ret = improve_active_schedule();
+    ReturnStatus ret = ImproveActiveSchedule();
     status = std::max(ret, status);
 
     return status;
@@ -122,17 +122,17 @@ ReturnStatus MultilevelCoarseAndSchedule<GraphT, GraphTCoarse>::ImproveActiveSch
         if (activeInstance_->GetComputationalDag().NumVertices() == 0) {
             return ReturnStatus::OSP_SUCCESS;
         }
-        return improver_->improveSchedule(*activeSchedule_);
+        return improver_->ImproveSchedule(*activeSchedule_);
     }
     return ReturnStatus::OSP_SUCCESS;
 }
 
 template <typename GraphT, typename GraphTCoarse>
 ReturnStatus MultilevelCoarseAndSchedule<GraphT, GraphTCoarse>::ExpandActiveSchedule() {
-    assert((activeGraph_ > 0L) && (static_cast<long unsigned>(activeGraph_) < mlCoarser_->dag_history.size()));
+    assert((activeGraph_ > 0L) && (static_cast<long unsigned>(activeGraph_) < mlCoarser_->dagHistory.size()));
 
     std::unique_ptr<BspInstance<GraphTCoarse>> expandedInstance = std::make_unique<BspInstance<GraphTCoarse>>(
-        *(mlCoarser_->dag_history.at(static_cast<std::size_t>(activeGraph_) - 1)), originalInst_->GetArchitecture());
+        *(mlCoarser_->dagHistory.at(static_cast<std::size_t>(activeGraph_) - 1)), originalInst_->GetArchitecture());
     std::unique_ptr<BspSchedule<GraphTCoarse>> expandedSchedule = std::make_unique<BspSchedule<GraphTCoarse>>(*expandedInstance);
 
     for (const auto &node : expandedInstance->GetComputationalDag().vertices()) {
@@ -144,7 +144,7 @@ ReturnStatus MultilevelCoarseAndSchedule<GraphT, GraphTCoarse>::ExpandActiveSche
             activeSchedule_->AssignedSuperstep(mlCoarser_->contraction_maps.at(static_cast<std::size_t>(activeGraph_))->at(node)));
     }
 
-    assert(expandedSchedule->satisfiesPrecedenceConstraints());
+    assert(expandedSchedule->SatisfiesPrecedenceConstraints());
 
     // std::cout << "exp_inst:  " << expanded_instance.get() << " n: " << expanded_instance->NumberOfVertices() << " m:
     // " << expanded_instance->GetComputationalDag().NumEdges() << std::endl; std::cout << "exp_sched: " <<
@@ -160,7 +160,7 @@ ReturnStatus MultilevelCoarseAndSchedule<GraphT, GraphTCoarse>::ExpandActiveSche
     // &active_schedule->GetInstance() << " n: " << active_schedule->GetInstance().NumberOfVertices() << " m: " <<
     // active_schedule->GetInstance().GetComputationalDag().NumEdges() << std::endl;
 
-    assert(activeSchedule_->satisfiesPrecedenceConstraints());
+    assert(activeSchedule_->SatisfiesPrecedenceConstraints());
     return ReturnStatus::OSP_SUCCESS;
 }
 
@@ -168,7 +168,7 @@ template <typename GraphT, typename GraphTCoarse>
 ReturnStatus MultilevelCoarseAndSchedule<GraphT, GraphTCoarse>::ExpandActiveScheduleToOriginalSchedule(BspSchedule<GraphT> &schedule) {
     assert(activeGraph_ == 0L);
 
-    for (const auto &node : GetOriginalInstance()->GetComputationalDag().vertices()) {
+    for (const auto &node : GetOriginalInstance()->GetComputationalDag().Vertices()) {
         schedule.SetAssignedProcessor(
             node,
             activeSchedule_->AssignedProcessor(mlCoarser_->contraction_maps.at(static_cast<std::size_t>(activeGraph_))->at(node)));
@@ -181,23 +181,23 @@ ReturnStatus MultilevelCoarseAndSchedule<GraphT, GraphTCoarse>::ExpandActiveSche
     activeInstance_ = std::unique_ptr<BspInstance<GraphTCoarse>>();
     activeSchedule_ = std::unique_ptr<BspSchedule<GraphTCoarse>>();
 
-    assert(schedule.satisfiesPrecedenceConstraints());
+    assert(schedule.SatisfiesPrecedenceConstraints());
 
     return ReturnStatus::OSP_SUCCESS;
 }
 
 template <typename GraphT, typename GraphTCoarse>
 ReturnStatus MultilevelCoarseAndSchedule<GraphT, GraphTCoarse>::RunExpansions(BspSchedule<GraphT> &schedule) {
-    assert(activeGraph_ >= 0L && static_cast<long unsigned>(activeGraph_) == mlCoarser_->dag_history.size() - 1);
+    assert(activeGraph_ >= 0L && static_cast<long unsigned>(activeGraph_) == mlCoarser_->dagHistory.size() - 1);
 
     ReturnStatus status = ReturnStatus::OSP_SUCCESS;
 
     while (activeGraph_ > 0L) {
-        status = std::max(status, expand_active_schedule());
-        status = std::max(status, improve_active_schedule());
+        status = std::max(status, ExpandActiveSchedule());
+        status = std::max(status, ImproveActiveSchedule());
     }
 
-    status = std::max(status, expand_active_schedule_to_original_schedule(schedule));
+    status = std::max(status, ExpandActiveScheduleToOriginalSchedule(schedule));
 
     return status;
 }
@@ -220,17 +220,17 @@ ReturnStatus MultilevelCoarseAndSchedule<GraphT, GraphTCoarse>::ComputeSchedule(
     status = std::max(status, mlCoarser_->run(*originalInst_));
 
     if constexpr (std::is_same_v<GraphT, GraphTCoarse>) {
-        if (mlCoarser_->dag_history.size() == 0) {
-            status = std::max(status, sched_->computeSchedule(schedule));
+        if (mlCoarser_->dagHistory.size() == 0) {
+            status = std::max(status, sched_->ComputeSchedule(schedule));
         } else {
-            status = std::max(status, compute_initial_schedule());
-            status = std::max(status, run_expansions(schedule));
+            status = std::max(status, ComputeInitialSchedule());
+            status = std::max(status, RunExpansions(schedule));
         }
     } else {
-        assert(mlCoarser_->dag_history.size() > 0);
+        assert(mlCoarser_->dagHistory.size() > 0);
 
-        status = std::max(status, compute_initial_schedule());
-        status = std::max(status, run_expansions(schedule));
+        status = std::max(status, ComputeInitialSchedule());
+        status = std::max(status, RunExpansions(schedule));
     }
 
     assert(activeGraph_ == -1L);
