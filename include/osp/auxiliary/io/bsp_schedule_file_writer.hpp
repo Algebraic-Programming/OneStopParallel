@@ -35,14 +35,14 @@ void WriteTxt(std::ostream &os, const BspSchedule<GraphT> &schedule) {
        << schedule.NumberOfSupersteps() << std::endl;
 
     for (const auto &vertex : schedule.GetInstance().GetComputationalDag().vertices()) {
-        os << vertex << " " << schedule.assignedProcessor(vertex) << " " << schedule.assignedSuperstep(vertex) << std::endl;
+        os << vertex << " " << schedule.AssignedProcessor(vertex) << " " << schedule.AssignedSuperstep(vertex) << std::endl;
     }
 }
 
 template <typename GraphT>
 void WriteTxt(const std::string &filename, const BspSchedule<GraphT> &schedule) {
     std::ofstream os(filename);
-    write_txt(os, schedule);
+    WriteTxt(os, schedule);
 }
 
 template <typename GraphT>
@@ -51,7 +51,7 @@ void WriteTxt(std::ostream &os, const BspScheduleCS<GraphT> &schedule) {
        << schedule.NumberOfSupersteps() << " supersteps." << std::endl;
     os << schedule.GetInstance().NumberOfVertices() << " " << schedule.GetInstance().NumberOfProcessors() << " "
        << schedule.NumberOfSupersteps() << " ";
-    if (schedule.getCommunicationSchedule().empty()) {
+    if (schedule.GetCommunicationSchedule().empty()) {
         os << 0 << " ";
     } else {
         os << 1 << " ";
@@ -59,16 +59,16 @@ void WriteTxt(std::ostream &os, const BspScheduleCS<GraphT> &schedule) {
 
     os << std::endl;
 
-    for (const auto &vertex : schedule.GetInstance().GetComputationalDag().vertices()) {
-        os << vertex << " " << schedule.assignedProcessor(vertex) << " " << schedule.assignedSuperstep(vertex) << std::endl;
+    for (const auto &vertex : schedule.GetInstance().GetComputationalDag().Vertices()) {
+        os << vertex << " " << schedule.AssignedProcessor(vertex) << " " << schedule.AssignedSuperstep(vertex) << std::endl;
     }
 
-    if (schedule.getCommunicationSchedule().empty()) {
+    if (schedule.GetCommunicationSchedule().empty()) {
         os << "%% No communication schedule available." << std::endl;
     } else {
         os << "%% Communication schedule available." << std::endl;
 
-        for (const auto &[key, val] : schedule.getCommunicationSchedule()) {
+        for (const auto &[key, val] : schedule.GetCommunicationSchedule()) {
             os << std::get<0>(key) << " " << std::get<1>(key) << " " << std::get<2>(key) << " " << val << std::endl;
         }
     }
@@ -77,7 +77,7 @@ void WriteTxt(std::ostream &os, const BspScheduleCS<GraphT> &schedule) {
 template <typename GraphT>
 void WriteTxt(const std::string &filename, const BspScheduleCS<GraphT> &schedule) {
     std::ofstream os(filename);
-    write_txt(os, schedule);
+    WriteTxt(os, schedule);
 }
 
 template <typename GraphT>
@@ -87,7 +87,7 @@ void WriteSankey(std::ostream &os, const BspScheduleCS<GraphT> &schedule) {
         schedule.NumberOfSupersteps(), std::vector<VWorkwT<GraphT>>(schedule.GetInstance().NumberOfProcessors(), 0));
 
     for (size_t node = 0; node < schedule.GetInstance().NumberOfVertices(); node++) {
-        procWorkloads[schedule.assignedSuperstep(node)][schedule.assignedProcessor(node)]
+        procWorkloads[schedule.AssignedSuperstep(node)][schedule.AssignedProcessor(node)]
             += schedule.GetInstance().GetComputationalDag().VertexWorkWeight(node);
     }
 
@@ -97,9 +97,9 @@ void WriteSankey(std::ostream &os, const BspScheduleCS<GraphT> &schedule) {
         std::vector<std::vector<VCommwT<GraphT>>>(schedule.GetInstance().NumberOfProcessors(),
                                                   std::vector<VCommwT<GraphT>>(schedule.GetInstance().NumberOfProcessors(), 0)));
 
-    for (const auto &[comm_triple, sstep] : schedule.getCommunicationSchedule()) {
-        commloads[sstep][std::get<1>(comm_triple)][std::get<2>(comm_triple)]
-            += schedule.GetInstance().GetComputationalDag().VertexCommWeight(std::get<0>(comm_triple));
+    for (const auto &[commTriple, sstep] : schedule.GetCommunicationSchedule()) {
+        commloads[sstep][std::get<1>(commTriple)][std::get<2>(commTriple)]
+            += schedule.GetInstance().GetComputationalDag().VertexCommWeight(std::get<0>(commTriple));
     }
 
     os << "BspSchedule: Number of Processors, Number of Supersteps" << std::endl;
@@ -131,7 +131,7 @@ void WriteSankey(std::ostream &os, const BspScheduleCS<GraphT> &schedule) {
 template <typename GraphT>
 void WriteSankey(const std::string &filename, const BspScheduleCS<GraphT> &schedule) {
     std::ofstream os(filename);
-    write_sankey(os, schedule);
+    WriteSankey(os, schedule);
 }
 
 }    // namespace file_writer
