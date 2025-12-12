@@ -36,10 +36,10 @@ namespace coarser_util {
 
 template <typename GraphTOut>
 bool CheckValidContractionMap(const std::vector<VertexIdxT<GraphTOut>> &vertexContractionMap) {
-    std::set<VertexIdxT<GraphTOut>> image(vertexContractionMap.cbegin(), vertex_contraction_map.cend());
+    std::set<VertexIdxT<GraphTOut>> image(vertexContractionMap.cbegin(), vertexContractionMap.cend());
     const VertexIdxT<GraphTOut> imageSize = static_cast<VertexIdxT<GraphTOut>>(image.size());
-    return std::all_of(image.cbegin(), image.cend(), [image_size](const VertexIdxT<GraphTOut> &vert) {
-        return (vert >= static_cast<VertexIdxT<GraphTOut>>(0)) && (vert < image_size);
+    return std::all_of(image.cbegin(), image.cend(), [imageSize](const VertexIdxT<GraphTOut> &vert) {
+        return (vert >= static_cast<VertexIdxT<GraphTOut>>(0)) && (vert < imageSize);
     });
 }
 
@@ -113,15 +113,15 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
             for (const VertexIdxT<GraphTIn> &vert : dagIn.Vertices()) {
                 coarsenedDag.SetVertexWorkWeight(
                     vertexContractionMap[vert],
-                    vWorkAccMethod()(coarsenedDag.VertexWorkWeight(vertexContractionMap[vert]), dagIn.VertexWorkWeight(vert)));
+                    VWorkAccMethod()(coarsenedDag.VertexWorkWeight(vertexContractionMap[vert]), dagIn.VertexWorkWeight(vert)));
 
                 coarsenedDag.SetVertexCommWeight(
                     vertexContractionMap[vert],
-                    vCommAccMethod()(coarsenedDag.VertexCommWeight(vertexContractionMap[vert]), dagIn.VertexCommWeight(vert)));
+                    VCommAccMethod()(coarsenedDag.VertexCommWeight(vertexContractionMap[vert]), dagIn.VertexCommWeight(vert)));
 
                 coarsenedDag.SetVertexMemWeight(
                     vertexContractionMap[vert],
-                    vMemAccMethod()(coarsenedDag.VertexMemWeight(vertexContractionMap[vert]), dagIn.VertexMemWeight(vert)));
+                    VMemAccMethod()(coarsenedDag.VertexMemWeight(vertexContractionMap[vert]), dagIn.VertexMemWeight(vert)));
             }
         }
 
@@ -167,32 +167,32 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
         coarsenedDag = GraphTOut();
 
         const VertexIdxT<GraphTOut> numVertQuotient
-            = (*std::max_element(vertex_contraction_map.cbegin(), vertex_contraction_map.cend())) + 1;
+            = (*std::max_element(vertexContractionMap.cbegin(), vertexContractionMap.cend())) + 1;
 
-        for (VertexIdxT<GraphTOut> vert = 0; vert < num_vert_quotient; ++vert) {
-            coarsenedDag.add_vertex(0, 0, 0);
+        for (VertexIdxT<GraphTOut> vert = 0; vert < numVertQuotient; ++vert) {
+            coarsenedDag.AddVertex(0, 0, 0);
         }
 
-        for (const VertexIdxT<GraphTIn> &vert : dag_in.vertices()) {
-            coarsened_dag.SetVertexWorkWeight(
-                vertex_contraction_map[vert],
-                v_work_acc_method()(coarsened_dag.VertexWorkWeight(vertex_contraction_map[vert]), dag_in.VertexWorkWeight(vert)));
+        for (const VertexIdxT<GraphTIn> &vert : dagIn.Vertices()) {
+            coarsenedDag.SetVertexWorkWeight(
+                vertexContractionMap[vert],
+                VWorkAccMethod()(coarsenedDag.VertexWorkWeight(vertexContractionMap[vert]), dagIn.VertexWorkWeight(vert)));
 
-            coarsened_dag.SetVertexCommWeight(
-                vertex_contraction_map[vert],
-                v_comm_acc_method()(coarsened_dag.VertexCommWeight(vertex_contraction_map[vert]), dag_in.VertexCommWeight(vert)));
+            coarsenedDag.SetVertexCommWeight(
+                vertexContractionMap[vert],
+                VCommAccMethod()(coarsenedDag.VertexCommWeight(vertexContractionMap[vert]), dagIn.VertexCommWeight(vert)));
 
-            coarsened_dag.SetVertexMemWeight(
-                vertex_contraction_map[vert],
-                v_mem_acc_method()(coarsened_dag.VertexMemWeight(vertex_contraction_map[vert]), dag_in.VertexMemWeight(vert)));
+            coarsenedDag.SetVertexMemWeight(
+                vertexContractionMap[vert],
+                VMemAccMethod()(coarsenedDag.VertexMemWeight(vertexContractionMap[vert]), dagIn.VertexMemWeight(vert)));
         }
 
-        if constexpr (HasTypedVerticesV<GraphTIn> && is_constructable_cdag_typed_vertex_v<GraphTOut>) {
+        if constexpr (HasTypedVerticesV<GraphTIn> && IsModifiableCdagTypedVertexV<GraphTOut>) {
             static_assert(std::is_same_v<VTypeT<GraphTIn>, VTypeT<GraphTOut>>,
                           "Vertex type types of in graph and out graph must be the same!");
 
-            for (const VertexIdxT<GraphTIn> &vert : dag_in.vertices()) {
-                coarsened_dag.SetVertexType(vertex_contraction_map[vert], dag_in.VertexType(vert));
+            for (const VertexIdxT<GraphTIn> &vert : dagIn.Vertices()) {
+                coarsenedDag.SetVertexType(vertexContractionMap[vert], dagIn.VertexType(vert));
             }
             // assert(std::all_of(dag_in.vertices().begin(), dag_in.vertices().end(),
             //         [&dag_in, &vertex_contraction_map, &coarsened_dag](const auto &vert){ return
@@ -200,29 +200,28 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
             //                 && "Contracted vertices must be of the same type");
         }
 
-        for (const VertexIdxT<GraphTIn> &vert : dag_in.vertices()) {
-            for (const VertexIdxT<GraphTIn> &chld : dag_in.Children(vert)) {
-                if (vertex_contraction_map[vert] == vertex_contraction_map[chld]) {
+        for (const VertexIdxT<GraphTIn> &vert : dagIn.Vertices()) {
+            for (const VertexIdxT<GraphTIn> &chld : dagIn.Children(vert)) {
+                if (vertexContractionMap[vert] == vertexContractionMap[chld]) {
                     continue;
                 }
 
-                if constexpr (HasEdgeWeightsV<GraphTIn> && is_constructable_cdag_comm_edge_v<GraphTOut>) {
+                if constexpr (HasEdgeWeightsV<GraphTIn> && IsModifiableCdagCommEdgeV<GraphTOut>) {
                     static_assert(std::is_same_v<ECommwT<GraphTIn>, ECommwT<GraphTOut>>,
                                   "Edge weight type of in graph and out graph must be the same!");
 
-                    EdgeDescT<GraphTIn> ori_edge = edge_desc(vert, chld, dag_in).first;
-                    const auto pair = edge_desc(vertex_contraction_map[vert], vertex_contraction_map[chld], coarsened_dag);
+                    EdgeDescT<GraphTIn> ori_edge = EdgeDesc(vert, chld, dagIn).first;
+                    const auto pair = EdgeDesc(vertexContractionMap[vert], vertexContractionMap[chld], coarsenedDag);
                     if (pair.second) {
-                        coarsened_dag.SetEdgeCommWeight(
-                            pair.first,
-                            e_comm_acc_method()(coarsened_dag.EdgeCommWeight(pair.first), dag_in.EdgeCommWeight(ori_edge)));
+                        coarsenedDag.SetEdgeCommWeight(
+                            pair.first, ECommAccMethod()(coarsenedDag.EdgeCommWeight(pair.first), dagIn.EdgeCommWeight(ori_edge)));
                     } else {
-                        coarsened_dag.add_edge(
-                            vertex_contraction_map[vert], vertex_contraction_map[chld], dag_in.EdgeCommWeight(ori_edge));
+                        coarsenedDag.AddEdge(
+                            vertexContractionMap[vert], vertexContractionMap[chld], dagIn.EdgeCommWeight(ori_edge));
                     }
                 } else {
-                    if (not edge(vertex_contraction_map[vert], vertex_contraction_map[chld], coarsened_dag)) {
-                        coarsened_dag.add_edge(vertex_contraction_map[vert], vertex_contraction_map[chld]);
+                    if (not Edge(vertexContractionMap[vert], vertexContractionMap[chld], coarsenedDag)) {
+                        coarsenedDag.AddEdge(vertexContractionMap[vert], vertexContractionMap[chld]);
                     }
                 }
             }
@@ -234,44 +233,44 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
 
 template <typename GraphTIn,
           class GraphTOut,
-          typename VWorkAccMethod = acc_sum<VWorkwT<GraphTIn>>,
-          typename VCommAccMethod = acc_sum<VCommwT<GraphTIn>>,
-          typename VMemAccMethod = acc_sum<VMemwT<GraphTIn>>,
-          typename ECommAccMethod = acc_sum<ECommwT<GraphTIn>>>
+          typename VWorkAccMethod = AccSum<VWorkwT<GraphTIn>>,
+          typename VCommAccMethod = AccSum<VCommwT<GraphTIn>>,
+          typename VMemAccMethod = AccSum<VMemwT<GraphTIn>>,
+          typename ECommAccMethod = AccSum<ECommwT<GraphTIn>>>
 bool ConstructCoarseDag(const GraphTIn &dagIn, GraphTOut &coarsenedDag, std::vector<VertexIdxT<GraphTOut>> &vertexContractionMap) {
-    if constexpr (is_Compact_Sparse_Graph_reorder_v<GraphTOut>) {
+    if constexpr (IsCompactSparseGraphReorderV<GraphTOut>) {
         static_assert(IsDirectedGraphV<GraphTIn> && IsDirectedGraphV<GraphTOut>,
                       "Graph types need to satisfy the is_directed_graph concept.");
         static_assert(IsComputationalDagV<GraphTIn>, "GraphTIn must be a computational DAG");
         static_assert(IsConstructableCdagV<GraphTOut> || IsDirectConstructableCdagV<GraphTOut>,
                       "GraphTOut must be a (direct) constructable computational DAG");
 
-        assert(check_valid_contraction_map<GraphTOut>(vertex_contraction_map));
+        assert(check_valid_contraction_map<GraphTOut>(vertexContractionMap));
 
         if (vertexContractionMap.size() == 0) {
             coarsenedDag = GraphTOut();
             return true;
         }
         const VertexIdxT<GraphTOut> numVertQuotient
-            = (*std::max_element(vertex_contraction_map.cbegin(), vertex_contraction_map.cend())) + 1;
+            = (*std::max_element(vertexContractionMap.cbegin(), vertexContractionMap.cend())) + 1;
 
         std::set<std::pair<VertexIdxT<GraphTOut>, VertexIdxT<GraphTOut>>> quotient_edges;
 
-        for (const VertexIdxT<GraphTIn> &vert : dag_in.vertices()) {
-            for (const VertexIdxT<GraphTIn> &chld : dag_in.Children(vert)) {
-                if (vertex_contraction_map[vert] == vertex_contraction_map[chld]) {
+        for (const VertexIdxT<GraphTIn> &vert : dagIn.Vertices()) {
+            for (const VertexIdxT<GraphTIn> &chld : dagIn.Children(vert)) {
+                if (vertexContractionMap[vert] == vertexContractionMap[chld]) {
                     continue;
                 }
-                quotient_edges.emplace(vertex_contraction_map[vert], vertex_contraction_map[chld]);
+                quotient_edges.emplace(vertexContractionMap[vert], vertexContractionMap[chld]);
             }
         }
 
-        coarsened_dag = GraphTOut(num_vert_quotient, quotient_edges);
+        coarsenedDag = GraphTOut(numVertQuotient, quotient_edges);
 
         const auto &pushforwardMap = coarsenedDag.get_pushforward_permutation();
         std::vector<VertexIdxT<GraphTOut>> combinedExpansionMap(dagIn.NumVertices());
-        for (const auto &vert : dagIn.vertices()) {
-            combinedExpansionMap[vert] = pushforwardMap[vertex_contraction_map[vert]];
+        for (const auto &vert : dagIn.Vertices()) {
+            combinedExpansionMap[vert] = pushforwardMap[vertexContractionMap[vert]];
         }
 
         if constexpr (HasVertexWeightsV<GraphTIn> && IsModifiableCdagVertexV<GraphTOut>) {
@@ -282,33 +281,33 @@ bool ConstructCoarseDag(const GraphTIn &dagIn, GraphTOut &coarsenedDag, std::vec
             static_assert(std::is_same_v<VMemwT<GraphTIn>, VMemwT<GraphTOut>>,
                           "Memory weight types of in-graph and out-graph must be the same.");
 
-            for (const VertexIdxT<GraphTIn> &vert : coarsened_dag.vertices()) {
-                coarsened_dag.SetVertexWorkWeight(vert, 0);
-                coarsened_dag.SetVertexCommWeight(vert, 0);
-                coarsened_dag.SetVertexMemWeight(vert, 0);
+            for (const VertexIdxT<GraphTIn> &vert : coarsenedDag.Vertices()) {
+                coarsenedDag.SetVertexWorkWeight(vert, 0);
+                coarsenedDag.SetVertexCommWeight(vert, 0);
+                coarsenedDag.SetVertexMemWeight(vert, 0);
             }
 
-            for (const VertexIdxT<GraphTIn> &vert : dag_in.vertices()) {
-                coarsened_dag.SetVertexWorkWeight(vertex_contraction_map[vert],
-                                                  v_work_acc_method()(coarsened_dag.VertexWorkWeight(combined_expansion_map[vert]),
-                                                                      dag_in.VertexWorkWeight(vert)));
+            for (const VertexIdxT<GraphTIn> &vert : dagIn.Vertices()) {
+                coarsenedDag.SetVertexWorkWeight(
+                    vertexContractionMap[vert],
+                    VWorkAccMethod()(coarsenedDag.VertexWorkWeight(combinedExpansionMap[vert]), dagIn.VertexWorkWeight(vert)));
 
-                coarsened_dag.SetVertexCommWeight(vertex_contraction_map[vert],
-                                                  v_comm_acc_method()(coarsened_dag.VertexCommWeight(combined_expansion_map[vert]),
-                                                                      dag_in.VertexCommWeight(vert)));
+                coarsenedDag.SetVertexCommWeight(
+                    vertexContractionMap[vert],
+                    VCommAccMethod()(coarsenedDag.VertexCommWeight(combinedExpansionMap[vert]), dagIn.VertexCommWeight(vert)));
 
-                coarsened_dag.SetVertexMemWeight(
-                    vertex_contraction_map[vert],
-                    v_mem_acc_method()(coarsened_dag.VertexMemWeight(combined_expansion_map[vert]), dag_in.VertexMemWeight(vert)));
+                coarsenedDag.SetVertexMemWeight(
+                    vertexContractionMap[vert],
+                    VMemAccMethod()(coarsenedDag.VertexMemWeight(combinedExpansionMap[vert]), dagIn.VertexMemWeight(vert)));
             }
         }
 
-        if constexpr (HasTypedVerticesV<GraphTIn> && is_modifiable_cdag_typed_vertex_v<GraphTOut>) {
+        if constexpr (HasTypedVerticesV<GraphTIn> && IsModifiableCdagTypedVertexV<GraphTOut>) {
             static_assert(std::is_same_v<VTypeT<GraphTIn>, VTypeT<GraphTOut>>,
                           "Vertex type types of in graph and out graph must be the same!");
 
-            for (const VertexIdxT<GraphTIn> &vert : dag_in.vertices()) {
-                coarsened_dag.SetVertexType(vertex_contraction_map[vert], dag_in.VertexType(vert));
+            for (const VertexIdxT<GraphTIn> &vert : dagIn.Vertices()) {
+                coarsenedDag.SetVertexType(vertexContractionMap[vert], dagIn.VertexType(vert));
             }
             // assert(std::all_of(dag_in.vertices().begin(), dag_in.vertices().end(),
             //         [&dag_in, &vertex_contraction_map, &coarsened_dag](const auto &vert){ return
@@ -321,8 +320,8 @@ bool ConstructCoarseDag(const GraphTIn &dagIn, GraphTOut &coarsenedDag, std::vec
                           "Edge weight type of in graph and out graph must be the same!");
 
             for (const auto &oriEdge : Edges(dagIn)) {
-                VertexIdxT<GraphTOut> src = vertex_contraction_map[Source(oriEdge, dagIn)];
-                VertexIdxT<GraphTOut> tgt = vertex_contraction_map[Traget(oriEdge, dagIn)];
+                VertexIdxT<GraphTOut> src = vertexContractionMap[Source(oriEdge, dagIn)];
+                VertexIdxT<GraphTOut> tgt = vertexContractionMap[Traget(oriEdge, dagIn)];
 
                 if (src == tgt) {
                     continue;
@@ -332,26 +331,26 @@ bool ConstructCoarseDag(const GraphTIn &dagIn, GraphTOut &coarsenedDag, std::vec
             }
 
             for (const auto &oriEdge : Edges(dagIn)) {
-                VertexIdxT<GraphTOut> src = vertex_contraction_map[Source(oriEdge, dagIn)];
-                VertexIdxT<GraphTOut> tgt = vertex_contraction_map[Traget(oriEdge, dagIn)];
+                VertexIdxT<GraphTOut> src = vertexContractionMap[Source(oriEdge, dagIn)];
+                VertexIdxT<GraphTOut> tgt = vertexContractionMap[Traget(oriEdge, dagIn)];
 
                 if (src == tgt) {
                     continue;
                 }
 
                 const auto contEdge = coarsenedDag.edge(pushforwardMap[src], pushforwardMap[tgt]);
-                assert(Source(cont_edge, coarsenedDag) == pushforwardMap[src]
-                       && Traget(cont_edge, coarsenedDag) == pushforwardMap[tgt]);
+                assert(Source(contEdge, coarsenedDag) == pushforwardMap[src]
+                       && Traget(contEdge, coarsenedDag) == pushforwardMap[tgt]);
                 coarsenedDag.SetEdgeCommWeight(
-                    src, tgt, ECommAccMethod()(coarsenedDag.EdgeCommWeight(cont_edge), dagIn.EdgeCommWeight(oriEdge)));
+                    src, tgt, ECommAccMethod()(coarsenedDag.EdgeCommWeight(contEdge), dagIn.EdgeCommWeight(oriEdge)));
             }
         }
 
-        std::swap(vertex_contraction_map, combined_expansion_map);
+        std::swap(vertexContractionMap, combinedExpansionMap);
         return true;
     } else {
-        return construct_coarse_dag<GraphTIn, GraphTOut, VWorkAccMethod, VCommAccMethod, VMemAccMethod, ECommAccMethod>(
-            dagIn, coarsenedDag, static_cast<const std::vector<VertexIdxT<GraphTOut>> &>(vertex_contraction_map));
+        return ConstructCoarseDag<GraphTIn, GraphTOut, VWorkAccMethod, VCommAccMethod, VMemAccMethod, ECommAccMethod>(
+            dagIn, coarsenedDag, static_cast<const std::vector<VertexIdxT<GraphTOut>> &>(vertexContractionMap));
     }
 }
 
@@ -360,7 +359,7 @@ bool CheckValidExpansionMap(const std::vector<std::vector<VertexIdxT<GraphTIn>>>
     std::size_t cntr = 0;
 
     std::vector<bool> preImage;
-    for (const std::vector<VertexIdxT<GraphTIn>> &group : vertex_expansion_map) {
+    for (const std::vector<VertexIdxT<GraphTIn>> &group : vertexExpansionMap) {
         if (group.size() == 0) {
             return false;
         }
@@ -389,50 +388,49 @@ bool CheckValidExpansionMap(const std::vector<std::vector<VertexIdxT<GraphTIn>>>
 template <typename GraphTIn, typename GraphTOut>
 std::vector<std::vector<VertexIdxT<GraphTIn>>> InvertVertexContractionMap(
     const std::vector<VertexIdxT<GraphTOut>> &vertexContractionMap) {
-    assert(check_valid_contraction_map<GraphTOut>(vertex_contraction_map));
+    assert(CheckValidContractionMap<GraphTOut>(vertexContractionMap));
 
-    VertexIdxT<GraphTOut> numVert = vertex_contraction_map.size() == 0
-                                        ? 0
-                                        : *std::max_element(vertex_contraction_map.cbegin(), vertex_contraction_map.cend()) + 1;
+    VertexIdxT<GraphTOut> numVert
+        = vertexContractionMap.size() == 0 ? 0 : *std::max_element(vertexContractionMap.cbegin(), vertexContractionMap.cend()) + 1;
 
     std::vector<std::vector<VertexIdxT<GraphTIn>>> expansionMap(numVert);
 
     for (std::size_t i = 0; i < vertexContractionMap.size(); ++i) {
-        expansionMap[vertex_contraction_map[i]].push_back(i);
+        expansionMap[vertexContractionMap[i]].push_back(i);
     }
 
-    return expansion_map;
+    return expansionMap;
 }
 
 template <typename GraphTIn, typename GraphTOut>
 std::vector<VertexIdxT<GraphTOut>> InvertVertexExpansionMap(const std::vector<std::vector<VertexIdxT<GraphTIn>>> &vertexExpansionMap) {
-    assert(check_valid_expansion_map<GraphTIn>(vertex_expansion_map));
+    assert(CheckValidExpansionMap<GraphTIn>(vertexExpansionMap));
 
     VertexIdxT<GraphTIn> numVert = 0;
-    for (const auto &group : vertex_expansion_map) {
+    for (const auto &group : vertexExpansionMap) {
         for (const VertexIdxT<GraphTIn> &vert : group) {
-            num_vert = std::max(num_vert, vert + 1);
+            numVert = std::max(numVert, vert + 1);
         }
     }
 
     std::vector<VertexIdxT<GraphTOut>> vertexContractionMap(numVert);
     for (std::size_t i = 0; i < vertexExpansionMap.size(); i++) {
-        for (const VertexIdxT<GraphTIn> &vert : vertex_expansion_map[i]) {
-            vertex_contraction_map[vert] = static_cast<VertexIdxT<GraphTOut>>(i);
+        for (const VertexIdxT<GraphTIn> &vert : vertexExpansionMap[i]) {
+            vertexContractionMap[vert] = static_cast<VertexIdxT<GraphTOut>>(i);
         }
     }
 
-    return vertex_contraction_map;
+    return vertexContractionMap;
 }
 
 template <typename GraphTIn>
 void ReorderExpansionMap(const GraphTIn &graph, std::vector<std::vector<VertexIdxT<GraphTIn>>> &vertexExpansionMap) {
-    assert(check_valid_expansion_map<GraphTIn>(vertex_expansion_map));
+    assert(CheckValidExpansionMap<GraphTIn>(vertexExpansionMap));
 
     std::vector<std::size_t> vertexContractionMap(graph.NumVertices());
     for (std::size_t i = 0; i < vertexExpansionMap.size(); i++) {
-        for (const VertexIdxT<GraphTIn> &vert : vertex_expansion_map[i]) {
-            vertex_contraction_map[vert] = i;
+        for (const VertexIdxT<GraphTIn> &vert : vertexExpansionMap[i]) {
+            vertexContractionMap[vert] = i;
         }
     }
 
@@ -445,17 +443,17 @@ void ReorderExpansionMap(const GraphTIn &graph, std::vector<std::vector<VertexId
         }
     }
 
-    for (auto &comp : vertex_expansion_map) {
+    for (auto &comp : vertexExpansionMap) {
         std::nth_element(comp.begin(), comp.begin(), comp.end());
     }
 
-    auto cmp = [&vertex_expansion_map](const std::size_t &lhs, const std::size_t &rhs) {
-        return vertex_expansion_map[lhs] > vertex_expansion_map[rhs];    // because priority queue is a max_priority queue
+    auto cmp = [&vertexExpansionMap](const std::size_t &lhs, const std::size_t &rhs) {
+        return vertexExpansionMap[lhs] > vertexExpansionMap[rhs];    // because priority queue is a max_priority queue
     };
 
     std::priority_queue<std::size_t, std::vector<std::size_t>, decltype(cmp)> ready(cmp);
     std::vector<std::size_t> topOrder;
-    topOrder.reserve(vertex_expansion_map.size());
+    topOrder.reserve(vertexExpansionMap.size());
     for (std::size_t i = 0; i < vertexExpansionMap.size(); ++i) {
         if (prec[i] == 0) {
             ready.emplace(i);
@@ -467,20 +465,20 @@ void ReorderExpansionMap(const GraphTIn &graph, std::vector<std::vector<VertexId
         ready.pop();
         topOrder.emplace_back(nextGroup);
 
-        for (const auto &vert : vertex_expansion_map[next_group]) {
+        for (const auto &vert : vertexExpansionMap[nextGroup]) {
             for (const auto &chld : graph.Children(vert)) {
-                if (vertex_contraction_map.at(vert) != vertex_contraction_map.at(chld)) {
-                    prec[vertex_contraction_map.at(chld)] -= 1;
-                    if (prec[vertex_contraction_map.at(chld)] == 0) {
-                        ready.emplace(vertex_contraction_map.at(chld));
+                if (vertexContractionMap.at(vert) != vertexContractionMap.at(chld)) {
+                    prec[vertexContractionMap.at(chld)] -= 1;
+                    if (prec[vertexContractionMap.at(chld)] == 0) {
+                        ready.emplace(vertexContractionMap.at(chld));
                     }
                 }
             }
         }
     }
-    assert(topOrder.size() == vertex_expansion_map.size());
+    assert(topOrder.size() == vertexExpansionMap.size());
 
-    inverse_permute_inplace(vertex_expansion_map, topOrder);
+    inverse_permute_inplace(vertexExpansionMap, topOrder);
 
     return;
 }
@@ -493,9 +491,9 @@ bool PullBackSchedule(const BspSchedule<GraphTIn> &scheduleIn,
         const auto proc = scheduleIn.assignedProcessor(v);
         const auto step = scheduleIn.assignedSuperstep(v);
 
-        for (const auto &u : vertex_map[v]) {
-            schedule_out.setAssignedSuperstep(u, step);
-            schedule_out.setAssignedProcessor(u, proc);
+        for (const auto &u : vertexMap[v]) {
+            scheduleOut.setAssignedSuperstep(u, step);
+            scheduleOut.setAssignedProcessor(u, proc);
         }
     }
 
@@ -507,7 +505,7 @@ bool PullBackSchedule(const BspSchedule<GraphTIn> &scheduleIn,
                       const std::vector<VertexIdxT<GraphTOut>> &reverseVertexMap,
                       BspSchedule<GraphTOut> &scheduleOut) {
     for (unsigned idx = 0; idx < reverseVertexMap.size(); ++idx) {
-        const auto &v = reverse_vertex_map[idx];
+        const auto &v = reverseVertexMap[idx];
 
         scheduleOut.setAssignedSuperstep(idx, scheduleIn.assignedSuperstep(v));
         scheduleOut.setAssignedProcessor(idx, scheduleIn.assignedProcessor(v));
