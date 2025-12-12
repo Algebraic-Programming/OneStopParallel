@@ -55,9 +55,9 @@ class UnionFindUniverse {
     std::set<IndexT> componentIndices_;
 
     IndexT FindOrigin(IndexT index) {
-        while (index != universe_[index].parent_index) {
-            universe_[index].parent_index = universe_[universe_[index].parent_index].parent_index;
-            index = universe_[index].parent_index;
+        while (index != universe_[index].parentIndex_) {
+            universe_[index].parentIndex_ = universe_[universe_[index].parentIndex_].parentIndex_;
+            index = universe_[index].parentIndex_;
         }
         return index;
     }
@@ -70,19 +70,19 @@ class UnionFindUniverse {
             return 0;
         }
 
-        if (universe_[index].rank >= universe_[otherIndex].rank) {
-            universe_[otherIndex].parent_index = index;
-            universe_[index].weight += universe_[otherIndex].weight;
-            universe_[index].memory += universe_[otherIndex].memory;
+        if (universe_[index].rank_ >= universe_[otherIndex].rank_) {
+            universe_[otherIndex].parentIndex_ = index;
+            universe_[index].weight_ += universe_[otherIndex].weight_;
+            universe_[index].memory_ += universe_[otherIndex].memory_;
             componentIndices_.erase(otherIndex);
 
-            if (universe_[index].rank == universe_[otherIndex].rank) {
-                universe_[index].rank++;
+            if (universe_[index].rank_ == universe_[otherIndex].rank_) {
+                universe_[index].rank_++;
             }
         } else {
-            universe_[index].parent_index = otherIndex;
-            universe_[otherIndex].weight += universe_[index].weight;
-            universe_[otherIndex].memory += universe_[index].memory;
+            universe_[index].parentIndex_ = otherIndex;
+            universe_[otherIndex].weight_ += universe_[index].weight_;
+            universe_[otherIndex].memory_ += universe_[index].memory_;
             componentIndices_.erase(index);
         }
         return -1;
@@ -102,7 +102,7 @@ class UnionFindUniverse {
     /// @brief Loops till object is its own parent
     /// @param name of object
     /// @return returns (current) name of component
-    T FindOriginByName(const T &name) { return universe_[FindOrigin(namesToIndices_.at(name))].name; }
+    T FindOriginByName(const T &name) { return universe_[FindOrigin(namesToIndices_.at(name))].name_; }
 
     /// @brief Joins two components
     /// @param name of object to join
@@ -147,7 +147,7 @@ class UnionFindUniverse {
     WorkwT GetWeightOfComponentByName(const T &name) {
         IndexT index = GetIndexFromName(name);
         index = FindOrigin(index);
-        return universe_[index].weight;
+        return universe_[index].weight_;
     }
 
     /// @brief Retrieves the memory of the component containing the given object
@@ -155,7 +155,7 @@ class UnionFindUniverse {
     MemwT GetMemoryOfComponentByName(const T &name) {
         IndexT index = GetIndexFromName(name);
         index = FindOrigin(index);
-        return universe_[index].memory;
+        return universe_[index].memory_;
     }
 
     /// @brief Retrieves the connected components
@@ -199,12 +199,12 @@ class UnionFindUniverse {
                 continue;
             }
 
-            WorkwT compWeight = universe_[FindOrigin(comp[0])].weight;
+            WorkwT compWeight = universe_[FindOrigin(comp[0])].weight_;
 
             std::vector<T> namesInComp;
             namesInComp.reserve(comp.size());
             for (auto &indx : comp) {
-                namesInComp.emplace_back(universe_[indx].name);
+                namesInComp.emplace_back(universe_[indx].name_);
             }
             connectedComponentsByNameInclWeight.emplace_back(namesInComp, compWeight);
         }
@@ -228,13 +228,13 @@ class UnionFindUniverse {
                 continue;
             }
 
-            WorkwT compWeight = universe_[FindOrigin(comp[0])].weight;
-            MemwT compMemory = universe_[FindOrigin(comp[0])].memory;
+            WorkwT compWeight = universe_[FindOrigin(comp[0])].weight_;
+            MemwT compMemory = universe_[FindOrigin(comp[0])].memory_;
 
             std::vector<T> namesInComp;
             namesInComp.reserve(comp.size());
             for (auto &indx : comp) {
-                namesInComp.emplace_back(universe_[indx].name);
+                namesInComp.emplace_back(universe_[indx].name_);
             }
             connectedComponentsByNameInclWeightMemory.emplace_back(namesInComp, compWeight, compMemory);
         }
@@ -301,7 +301,7 @@ class UnionFindUniverse {
         }
 
         for (auto &name : names) {
-            add_object(name);
+            AddObject(name);
         }
     }
 
@@ -330,7 +330,7 @@ class UnionFindUniverse {
         }
 
         for (std::size_t i = 0; i < names.size(); i++) {
-            add_object(names[i], weights[i]);
+            AddObject(names[i], weights[i]);
         }
     }
 
@@ -360,7 +360,7 @@ class UnionFindUniverse {
         }
 
         for (size_t i = 0; i < names.size(); i++) {
-            add_object(names[i], weights[i], memories[i]);
+            AddObject(names[i], weights[i], memories[i]);
         }
     }
 
@@ -369,26 +369,26 @@ class UnionFindUniverse {
 
     /// @brief Initiates a union-find structure
     /// @param names of objects
-    explicit UnionFindUniverse(const std::vector<T> &names) { add_object(names); }
+    explicit UnionFindUniverse(const std::vector<T> &names) { AddObject(names); }
 
     /// @brief Initiates a union-find structure
     /// @param names of objects
     /// @param weights of objects
-    explicit UnionFindUniverse(const std::vector<T> &names, const std::vector<WorkwT> &weights) { add_object(names, weights); }
+    explicit UnionFindUniverse(const std::vector<T> &names, const std::vector<WorkwT> &weights) { AddObject(names, weights); }
 
     /// @brief Initiates a union-find structure
     /// @param names of objects
     /// @param weights of objects
     explicit UnionFindUniverse(const std::vector<T> &names, const std::vector<WorkwT> &weights, const std::vector<MemwT> &memories) {
-        add_object(names, weights, memories);
+        AddObject(names, weights, memories);
     }
 
     UnionFindUniverse(const UnionFindUniverse &other) = default;
     UnionFindUniverse &operator=(const UnionFindUniverse &other) = default;
 };
 
-template <typename Graph_t>
-using union_find_universe_t
-    = Union_Find_Universe<vertex_idx_t<Graph_t>, vertex_idx_t<Graph_t>, v_workw_t<Graph_t>, v_memw_t<Graph_t>>;
+template <typename GraphT>
+using UnionFindUniverseT
+    = UnionFindUniverse<VertexIdxT<GraphT>, VertexIdxT<GraphT>, VWorkwT<GraphT>, VMemwT<GraphT>>;
 
 }    // namespace osp

@@ -28,154 +28,154 @@ using namespace osp;
 
 BOOST_AUTO_TEST_CASE(UnionFindStructure1) {
     std::vector<std::string> names({"a", "b", "c", "d", "e", "f"});
-    Union_Find_Universe<std::string, unsigned, int, int> testUniverse(names);
+    UnionFindUniverse<std::string, unsigned, int, int> testUniverse(names);
 
     for (auto &name : names) {
-        BOOST_CHECK_EQUAL(testUniverse.find_origin_by_name(name), name);
+        BOOST_CHECK_EQUAL(testUniverse.FindOriginByName(name), name);
     }
 
-    BOOST_CHECK_EQUAL(testUniverse.get_number_of_connected_components(), 6);
+    BOOST_CHECK_EQUAL(testUniverse.GetNumberOfConnectedComponents(), 6);
 
-    BOOST_CHECK_THROW(testUniverse.add_object("a"), std::runtime_error);
-    BOOST_CHECK_THROW(testUniverse.add_object("e"), std::runtime_error);
+    BOOST_CHECK_THROW(testUniverse.AddObject("a"), std::runtime_error);
+    BOOST_CHECK_THROW(testUniverse.AddObject("e"), std::runtime_error);
 
-    BOOST_CHECK_EQUAL(testUniverse.get_number_of_connected_components(), 6);
+    BOOST_CHECK_EQUAL(testUniverse.GetNumberOfConnectedComponents(), 6);
 
-    testUniverse.join_by_name("a", "b");
-    BOOST_CHECK_EQUAL(testUniverse.find_origin_by_name("a"), testUniverse.find_origin_by_name("b"));
-    BOOST_CHECK_EQUAL(testUniverse.get_number_of_connected_components(), 5);
+    testUniverse.JoinByName("a", "b");
+    BOOST_CHECK_EQUAL(testUniverse.FindOriginByName("a"), testUniverse.FindOriginByName("b"));
+    BOOST_CHECK_EQUAL(testUniverse.GetNumberOfConnectedComponents(), 5);
 
-    testUniverse.join_by_name("b", "c");
-    BOOST_CHECK_EQUAL(testUniverse.get_number_of_connected_components(), 4);
-    BOOST_CHECK_EQUAL(testUniverse.find_origin_by_name("a"), testUniverse.find_origin_by_name("b"));
-    BOOST_CHECK_EQUAL(testUniverse.find_origin_by_name("a"), testUniverse.find_origin_by_name("c"));
-    BOOST_CHECK_EQUAL(testUniverse.find_origin_by_name("b"), testUniverse.find_origin_by_name("c"));
+    testUniverse.JoinByName("b", "c");
+    BOOST_CHECK_EQUAL(testUniverse.GetNumberOfConnectedComponents(), 4);
+    BOOST_CHECK_EQUAL(testUniverse.FindOriginByName("a"), testUniverse.FindOriginByName("b"));
+    BOOST_CHECK_EQUAL(testUniverse.FindOriginByName("a"), testUniverse.FindOriginByName("c"));
+    BOOST_CHECK_EQUAL(testUniverse.FindOriginByName("b"), testUniverse.FindOriginByName("c"));
 
-    testUniverse.join_by_name("d", "b");
-    BOOST_CHECK_EQUAL(testUniverse.get_number_of_connected_components(), 3);
-    BOOST_CHECK_EQUAL(testUniverse.find_origin_by_name("a"), testUniverse.find_origin_by_name("d"));
-    BOOST_CHECK_EQUAL(testUniverse.find_origin_by_name("d"), testUniverse.find_origin_by_name("b"));
+    testUniverse.JoinByName("d", "b");
+    BOOST_CHECK_EQUAL(testUniverse.GetNumberOfConnectedComponents(), 3);
+    BOOST_CHECK_EQUAL(testUniverse.FindOriginByName("a"), testUniverse.FindOriginByName("d"));
+    BOOST_CHECK_EQUAL(testUniverse.FindOriginByName("d"), testUniverse.FindOriginByName("b"));
 
-    testUniverse.join_by_name("a", "c");
-    BOOST_CHECK_EQUAL(testUniverse.get_number_of_connected_components(), 3);
-    BOOST_CHECK_EQUAL(testUniverse.find_origin_by_name("a"), testUniverse.find_origin_by_name("c"));
+    testUniverse.JoinByName("a", "c");
+    BOOST_CHECK_EQUAL(testUniverse.GetNumberOfConnectedComponents(), 3);
+    BOOST_CHECK_EQUAL(testUniverse.FindOriginByName("a"), testUniverse.FindOriginByName("c"));
 
-    testUniverse.join_by_name("a", "d");
-    BOOST_CHECK_EQUAL(testUniverse.get_number_of_connected_components(), 3);
-    BOOST_CHECK_EQUAL(testUniverse.find_origin_by_name("a"), testUniverse.find_origin_by_name("d"));
+    testUniverse.JoinByName("a", "d");
+    BOOST_CHECK_EQUAL(testUniverse.GetNumberOfConnectedComponents(), 3);
+    BOOST_CHECK_EQUAL(testUniverse.FindOriginByName("a"), testUniverse.FindOriginByName("d"));
 
-    testUniverse.join_by_name("e", "f");
-    BOOST_CHECK_EQUAL(testUniverse.get_number_of_connected_components(), 2);
-    BOOST_CHECK_EQUAL(testUniverse.find_origin_by_name("e"), testUniverse.find_origin_by_name("f"));
-    BOOST_CHECK_NE(testUniverse.find_origin_by_name("a"), testUniverse.find_origin_by_name("f"));
+    testUniverse.JoinByName("e", "f");
+    BOOST_CHECK_EQUAL(testUniverse.GetNumberOfConnectedComponents(), 2);
+    BOOST_CHECK_EQUAL(testUniverse.FindOriginByName("e"), testUniverse.FindOriginByName("f"));
+    BOOST_CHECK_NE(testUniverse.FindOriginByName("a"), testUniverse.FindOriginByName("f"));
 
-    BOOST_CHECK_EQUAL(testUniverse.find_origin_by_name("a"), testUniverse.find_origin_by_name("b"));
-    BOOST_CHECK_EQUAL(testUniverse.find_origin_by_name("b"), testUniverse.find_origin_by_name("c"));
-    BOOST_CHECK_EQUAL(testUniverse.find_origin_by_name("c"), testUniverse.find_origin_by_name("d"));
-    BOOST_CHECK_EQUAL(testUniverse.find_origin_by_name("a"), testUniverse.find_origin_by_name("d"));
-    BOOST_CHECK_EQUAL(testUniverse.find_origin_by_name("c"), testUniverse.find_origin_by_name("b"));
+    BOOST_CHECK_EQUAL(testUniverse.FindOriginByName("a"), testUniverse.FindOriginByName("b"));
+    BOOST_CHECK_EQUAL(testUniverse.FindOriginByName("b"), testUniverse.FindOriginByName("c"));
+    BOOST_CHECK_EQUAL(testUniverse.FindOriginByName("c"), testUniverse.FindOriginByName("d"));
+    BOOST_CHECK_EQUAL(testUniverse.FindOriginByName("a"), testUniverse.FindOriginByName("d"));
+    BOOST_CHECK_EQUAL(testUniverse.FindOriginByName("c"), testUniverse.FindOriginByName("b"));
 
-    BOOST_CHECK_EQUAL(testUniverse.find_origin_by_name("e"), testUniverse.find_origin_by_name("f"));
+    BOOST_CHECK_EQUAL(testUniverse.FindOriginByName("e"), testUniverse.FindOriginByName("f"));
 
-    BOOST_CHECK_NE(testUniverse.find_origin_by_name("a"), testUniverse.find_origin_by_name("f"));
+    BOOST_CHECK_NE(testUniverse.FindOriginByName("a"), testUniverse.FindOriginByName("f"));
 }
 
 BOOST_AUTO_TEST_CASE(UnionFindStructure2) {
     std::vector<std::string> names({"a", "b", "c", "d", "e", "f", "g", "h", "i"});
-    Union_Find_Universe<std::string, unsigned, int, int> testUniverse;
+    UnionFindUniverse<std::string, unsigned, int, int> testUniverse;
 
     for (auto &name : names) {
-        testUniverse.add_object(name);
+        testUniverse.AddObject(name);
     }
 
     for (auto &name : names) {
-        BOOST_CHECK_EQUAL(testUniverse.find_origin_by_name(name), name);
+        BOOST_CHECK_EQUAL(testUniverse.FindOriginByName(name), name);
     }
 
-    BOOST_CHECK_THROW(testUniverse.add_object("c"), std::runtime_error);
-    BOOST_CHECK_THROW(testUniverse.add_object("i"), std::runtime_error);
+    BOOST_CHECK_THROW(testUniverse.AddObject("c"), std::runtime_error);
+    BOOST_CHECK_THROW(testUniverse.AddObject("i"), std::runtime_error);
 
     for (auto &name : names) {
-        BOOST_CHECK_EQUAL(testUniverse.find_origin_by_name(name), name);
+        BOOST_CHECK_EQUAL(testUniverse.FindOriginByName(name), name);
     }
 
-    BOOST_CHECK_EQUAL(testUniverse.get_number_of_connected_components(), 9);
+    BOOST_CHECK_EQUAL(testUniverse.GetNumberOfConnectedComponents(), 9);
 
-    testUniverse.join_by_name("a", "b");
-    BOOST_CHECK_EQUAL(testUniverse.get_number_of_connected_components(), 8);
-    testUniverse.join_by_name("b", "c");
-    BOOST_CHECK_EQUAL(testUniverse.get_number_of_connected_components(), 7);
-    testUniverse.join_by_name("c", "d");
-    BOOST_CHECK_EQUAL(testUniverse.get_number_of_connected_components(), 6);
-    testUniverse.join_by_name("d", "e");
-    BOOST_CHECK_EQUAL(testUniverse.get_number_of_connected_components(), 5);
-    testUniverse.join_by_name("e", "f");
-    BOOST_CHECK_EQUAL(testUniverse.get_number_of_connected_components(), 4);
+    testUniverse.JoinByName("a", "b");
+    BOOST_CHECK_EQUAL(testUniverse.GetNumberOfConnectedComponents(), 8);
+    testUniverse.JoinByName("b", "c");
+    BOOST_CHECK_EQUAL(testUniverse.GetNumberOfConnectedComponents(), 7);
+    testUniverse.JoinByName("c", "d");
+    BOOST_CHECK_EQUAL(testUniverse.GetNumberOfConnectedComponents(), 6);
+    testUniverse.JoinByName("d", "e");
+    BOOST_CHECK_EQUAL(testUniverse.GetNumberOfConnectedComponents(), 5);
+    testUniverse.JoinByName("e", "f");
+    BOOST_CHECK_EQUAL(testUniverse.GetNumberOfConnectedComponents(), 4);
 
-    testUniverse.join_by_name("c", "f");
-    BOOST_CHECK_EQUAL(testUniverse.get_number_of_connected_components(), 4);
+    testUniverse.JoinByName("c", "f");
+    BOOST_CHECK_EQUAL(testUniverse.GetNumberOfConnectedComponents(), 4);
 
-    testUniverse.join_by_name("g", "h");
-    BOOST_CHECK_EQUAL(testUniverse.get_number_of_connected_components(), 3);
-    testUniverse.join_by_name("h", "i");
-    BOOST_CHECK_EQUAL(testUniverse.get_number_of_connected_components(), 2);
+    testUniverse.JoinByName("g", "h");
+    BOOST_CHECK_EQUAL(testUniverse.GetNumberOfConnectedComponents(), 3);
+    testUniverse.JoinByName("h", "i");
+    BOOST_CHECK_EQUAL(testUniverse.GetNumberOfConnectedComponents(), 2);
 
-    testUniverse.join_by_name("b", "h");
-    BOOST_CHECK_EQUAL(testUniverse.get_number_of_connected_components(), 1);
+    testUniverse.JoinByName("b", "h");
+    BOOST_CHECK_EQUAL(testUniverse.GetNumberOfConnectedComponents(), 1);
 
-    BOOST_CHECK_EQUAL(testUniverse.find_origin_by_name("a"), testUniverse.find_origin_by_name("b"));
-    BOOST_CHECK_EQUAL(testUniverse.find_origin_by_name("b"), testUniverse.find_origin_by_name("c"));
-    BOOST_CHECK_EQUAL(testUniverse.find_origin_by_name("c"), testUniverse.find_origin_by_name("d"));
-    BOOST_CHECK_EQUAL(testUniverse.find_origin_by_name("a"), testUniverse.find_origin_by_name("h"));
-    BOOST_CHECK_EQUAL(testUniverse.find_origin_by_name("c"), testUniverse.find_origin_by_name("i"));
-    BOOST_CHECK_EQUAL(testUniverse.find_origin_by_name("f"), testUniverse.find_origin_by_name("g"));
+    BOOST_CHECK_EQUAL(testUniverse.FindOriginByName("a"), testUniverse.FindOriginByName("b"));
+    BOOST_CHECK_EQUAL(testUniverse.FindOriginByName("b"), testUniverse.FindOriginByName("c"));
+    BOOST_CHECK_EQUAL(testUniverse.FindOriginByName("c"), testUniverse.FindOriginByName("d"));
+    BOOST_CHECK_EQUAL(testUniverse.FindOriginByName("a"), testUniverse.FindOriginByName("h"));
+    BOOST_CHECK_EQUAL(testUniverse.FindOriginByName("c"), testUniverse.FindOriginByName("i"));
+    BOOST_CHECK_EQUAL(testUniverse.FindOriginByName("f"), testUniverse.FindOriginByName("g"));
 }
 
 BOOST_AUTO_TEST_CASE(UnionFindWeightStructure) {
     std::vector<std::string> names({"a", "b", "c", "d", "e", "f"});
     std::vector<unsigned> weights({1, 2, 1, 3, 1, 1});
 
-    Union_Find_Universe<std::string, unsigned, unsigned, unsigned> testUniverse(names, weights, weights);
+    UnionFindUniverse<std::string, unsigned, unsigned, unsigned> testUniverse(names, weights, weights);
 
     for (size_t i = 0; i < names.size(); i++) {
-        BOOST_CHECK_EQUAL(testUniverse.find_origin_by_name(names[i]), names[i]);
-        BOOST_CHECK_EQUAL(testUniverse.get_weight_of_component_by_name(names[i]), weights[i]);
-        BOOST_CHECK_EQUAL(testUniverse.get_memory_of_component_by_name(names[i]), weights[i]);
+        BOOST_CHECK_EQUAL(testUniverse.FindOriginByName(names[i]), names[i]);
+        BOOST_CHECK_EQUAL(testUniverse.GetWeightOfComponentByName(names[i]), weights[i]);
+        BOOST_CHECK_EQUAL(testUniverse.GetMemoryOfComponentByName(names[i]), weights[i]);
     }
 
-    BOOST_CHECK_EQUAL(testUniverse.get_number_of_connected_components(), 6);
+    BOOST_CHECK_EQUAL(testUniverse.GetNumberOfConnectedComponents(), 6);
 
-    BOOST_CHECK_THROW(testUniverse.add_object("a"), std::runtime_error);
-    BOOST_CHECK_THROW(testUniverse.add_object("e"), std::runtime_error);
+    BOOST_CHECK_THROW(testUniverse.AddObject("a"), std::runtime_error);
+    BOOST_CHECK_THROW(testUniverse.AddObject("e"), std::runtime_error);
 
-    testUniverse.join_by_name("a", "b");
-    testUniverse.join_by_name("b", "c");
-    testUniverse.join_by_name("d", "b");
-    testUniverse.join_by_name("a", "c");
-    testUniverse.join_by_name("a", "d");
+    testUniverse.JoinByName("a", "b");
+    testUniverse.JoinByName("b", "c");
+    testUniverse.JoinByName("d", "b");
+    testUniverse.JoinByName("a", "c");
+    testUniverse.JoinByName("a", "d");
 
-    testUniverse.join_by_name("e", "f");
+    testUniverse.JoinByName("e", "f");
 
-    BOOST_CHECK_EQUAL(testUniverse.find_origin_by_name("a"), testUniverse.find_origin_by_name("b"));
-    BOOST_CHECK_EQUAL(testUniverse.find_origin_by_name("b"), testUniverse.find_origin_by_name("c"));
-    BOOST_CHECK_EQUAL(testUniverse.find_origin_by_name("c"), testUniverse.find_origin_by_name("d"));
-    BOOST_CHECK_EQUAL(testUniverse.find_origin_by_name("a"), testUniverse.find_origin_by_name("d"));
-    BOOST_CHECK_EQUAL(testUniverse.find_origin_by_name("c"), testUniverse.find_origin_by_name("b"));
+    BOOST_CHECK_EQUAL(testUniverse.FindOriginByName("a"), testUniverse.FindOriginByName("b"));
+    BOOST_CHECK_EQUAL(testUniverse.FindOriginByName("b"), testUniverse.FindOriginByName("c"));
+    BOOST_CHECK_EQUAL(testUniverse.FindOriginByName("c"), testUniverse.FindOriginByName("d"));
+    BOOST_CHECK_EQUAL(testUniverse.FindOriginByName("a"), testUniverse.FindOriginByName("d"));
+    BOOST_CHECK_EQUAL(testUniverse.FindOriginByName("c"), testUniverse.FindOriginByName("b"));
 
-    BOOST_CHECK_EQUAL(testUniverse.find_origin_by_name("e"), testUniverse.find_origin_by_name("f"));
+    BOOST_CHECK_EQUAL(testUniverse.FindOriginByName("e"), testUniverse.FindOriginByName("f"));
 
-    BOOST_CHECK_NE(testUniverse.find_origin_by_name("a"), testUniverse.find_origin_by_name("f"));
+    BOOST_CHECK_NE(testUniverse.FindOriginByName("a"), testUniverse.FindOriginByName("f"));
 
-    BOOST_CHECK_EQUAL(testUniverse.get_weight_of_component_by_name("a"), 7);
-    BOOST_CHECK_EQUAL(testUniverse.get_weight_of_component_by_name("b"), 7);
-    BOOST_CHECK_EQUAL(testUniverse.get_weight_of_component_by_name("e"), 2);
+    BOOST_CHECK_EQUAL(testUniverse.GetWeightOfComponentByName("a"), 7);
+    BOOST_CHECK_EQUAL(testUniverse.GetWeightOfComponentByName("b"), 7);
+    BOOST_CHECK_EQUAL(testUniverse.GetWeightOfComponentByName("e"), 2);
 
-    BOOST_CHECK_EQUAL(testUniverse.get_memory_of_component_by_name("a"), 7);
-    BOOST_CHECK_EQUAL(testUniverse.get_memory_of_component_by_name("e"), 2);
-    BOOST_CHECK_EQUAL(testUniverse.get_memory_of_component_by_name("b"), 7);
+    BOOST_CHECK_EQUAL(testUniverse.GetMemoryOfComponentByName("a"), 7);
+    BOOST_CHECK_EQUAL(testUniverse.GetMemoryOfComponentByName("e"), 2);
+    BOOST_CHECK_EQUAL(testUniverse.GetMemoryOfComponentByName("b"), 7);
 
     std::vector<std::pair<std::vector<std::string>, unsigned>> componentsNWeights
-        = testUniverse.get_connected_components_and_weights();
+        = testUniverse.GetConnectedComponentsAndWeights();
     unsigned totalCompWeights = 0;
     unsigned totalElements = 0;
     for (auto &[comp, wt] : componentsNWeights) {
@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE(UnionFindWeightStructure) {
     }
 
     std::vector<std::tuple<std::vector<std::string>, unsigned, unsigned>> componentsNWeightsNMemory
-        = testUniverse.get_connected_components_weights_and_memories();
+        = testUniverse.GetConnectedComponentsWeightsAndMemories();
     unsigned totalCompWeights2 = 0;
     unsigned totalCompMemory = 0;
     unsigned totalElements2 = 0;
@@ -223,55 +223,55 @@ BOOST_AUTO_TEST_CASE(UnionFindWeightStructure) {
 BOOST_AUTO_TEST_CASE(UnionFindStructureWeightCompCount) {
     std::vector<std::string> names({"a", "b", "c", "d", "e", "f"});
     std::vector<unsigned> weights({1, 2, 1, 3, 1, 1});
-    Union_Find_Universe<std::string, unsigned, unsigned, unsigned> testUniverse;
+    UnionFindUniverse<std::string, unsigned, unsigned, unsigned> testUniverse;
 
     for (size_t i = 0; i < names.size(); i++) {
-        testUniverse.add_object(names[i], weights[i], weights[i]);
+        testUniverse.AddObject(names[i], weights[i], weights[i]);
     }
 
     for (size_t i = 0; i < names.size(); i++) {
-        BOOST_CHECK_EQUAL(testUniverse.find_origin_by_name(names[i]), names[i]);
-        BOOST_CHECK_EQUAL(testUniverse.get_weight_of_component_by_name(names[i]), weights[i]);
-        BOOST_CHECK_EQUAL(testUniverse.get_memory_of_component_by_name(names[i]), weights[i]);
+        BOOST_CHECK_EQUAL(testUniverse.FindOriginByName(names[i]), names[i]);
+        BOOST_CHECK_EQUAL(testUniverse.GetWeightOfComponentByName(names[i]), weights[i]);
+        BOOST_CHECK_EQUAL(testUniverse.GetMemoryOfComponentByName(names[i]), weights[i]);
     }
 
-    testUniverse.join_by_name("a", "b");
-    BOOST_CHECK_EQUAL(testUniverse.get_weight_of_component_by_name("a"), 3);
-    BOOST_CHECK_EQUAL(testUniverse.get_memory_of_component_by_name("a"), 3);
-    testUniverse.join_by_name("a", "b");
-    BOOST_CHECK_EQUAL(testUniverse.get_weight_of_component_by_name("a"), 3);
-    BOOST_CHECK_EQUAL(testUniverse.get_memory_of_component_by_name("a"), 3);
-    testUniverse.join_by_name("b", "a");
-    BOOST_CHECK_EQUAL(testUniverse.get_weight_of_component_by_name("a"), 3);
-    BOOST_CHECK_EQUAL(testUniverse.get_memory_of_component_by_name("a"), 3);
+    testUniverse.JoinByName("a", "b");
+    BOOST_CHECK_EQUAL(testUniverse.GetWeightOfComponentByName("a"), 3);
+    BOOST_CHECK_EQUAL(testUniverse.GetMemoryOfComponentByName("a"), 3);
+    testUniverse.JoinByName("a", "b");
+    BOOST_CHECK_EQUAL(testUniverse.GetWeightOfComponentByName("a"), 3);
+    BOOST_CHECK_EQUAL(testUniverse.GetMemoryOfComponentByName("a"), 3);
+    testUniverse.JoinByName("b", "a");
+    BOOST_CHECK_EQUAL(testUniverse.GetWeightOfComponentByName("a"), 3);
+    BOOST_CHECK_EQUAL(testUniverse.GetMemoryOfComponentByName("a"), 3);
 
-    testUniverse.join_by_name("a", "c");
-    BOOST_CHECK_EQUAL(testUniverse.get_weight_of_component_by_name("c"), 4);
-    BOOST_CHECK_EQUAL(testUniverse.get_memory_of_component_by_name("c"), 4);
-    BOOST_CHECK_EQUAL(testUniverse.find_origin_by_name("a"), testUniverse.find_origin_by_name("b"));
-    BOOST_CHECK_EQUAL(testUniverse.find_origin_by_name("b"), testUniverse.find_origin_by_name("c"));
+    testUniverse.JoinByName("a", "c");
+    BOOST_CHECK_EQUAL(testUniverse.GetWeightOfComponentByName("c"), 4);
+    BOOST_CHECK_EQUAL(testUniverse.GetMemoryOfComponentByName("c"), 4);
+    BOOST_CHECK_EQUAL(testUniverse.FindOriginByName("a"), testUniverse.FindOriginByName("b"));
+    BOOST_CHECK_EQUAL(testUniverse.FindOriginByName("b"), testUniverse.FindOriginByName("c"));
 
-    testUniverse.join_by_name("d", "e");
-    testUniverse.join_by_name("e", "f");
-    BOOST_CHECK_EQUAL(testUniverse.get_weight_of_component_by_name("f"), 5);
-    BOOST_CHECK_EQUAL(testUniverse.get_memory_of_component_by_name("f"), 5);
-    BOOST_CHECK_EQUAL(testUniverse.find_origin_by_name("a"), testUniverse.find_origin_by_name("b"));
-    BOOST_CHECK_EQUAL(testUniverse.find_origin_by_name("e"), testUniverse.find_origin_by_name("f"));
-    BOOST_CHECK_NE(testUniverse.find_origin_by_name("a"), testUniverse.find_origin_by_name("e"));
-    BOOST_CHECK_NE(testUniverse.find_origin_by_name("b"), testUniverse.find_origin_by_name("d"));
+    testUniverse.JoinByName("d", "e");
+    testUniverse.JoinByName("e", "f");
+    BOOST_CHECK_EQUAL(testUniverse.GetWeightOfComponentByName("f"), 5);
+    BOOST_CHECK_EQUAL(testUniverse.GetMemoryOfComponentByName("f"), 5);
+    BOOST_CHECK_EQUAL(testUniverse.FindOriginByName("a"), testUniverse.FindOriginByName("b"));
+    BOOST_CHECK_EQUAL(testUniverse.FindOriginByName("e"), testUniverse.FindOriginByName("f"));
+    BOOST_CHECK_NE(testUniverse.FindOriginByName("a"), testUniverse.FindOriginByName("e"));
+    BOOST_CHECK_NE(testUniverse.FindOriginByName("b"), testUniverse.FindOriginByName("d"));
 
-    std::vector<std::pair<std::vector<std::string>, unsigned>> compNWeights = testUniverse.get_connected_components_and_weights();
+    std::vector<std::pair<std::vector<std::string>, unsigned>> compNWeights = testUniverse.GetConnectedComponentsAndWeights();
     BOOST_CHECK(compNWeights.size() == 2);
-    BOOST_CHECK(compNWeights.size() == testUniverse.get_number_of_connected_components());
+    BOOST_CHECK(compNWeights.size() == testUniverse.GetNumberOfConnectedComponents());
     BOOST_CHECK(compNWeights[0].first.size() == 3);
     BOOST_CHECK(compNWeights[1].first.size() == 3);
     BOOST_CHECK((compNWeights[0].second == 4 && compNWeights[1].second == 5)
                 || (compNWeights[0].second == 5 && compNWeights[1].second == 4));
 
     std::vector<std::tuple<std::vector<std::string>, unsigned, unsigned>> compNWeightNMemory
-        = testUniverse.get_connected_components_weights_and_memories();
+        = testUniverse.GetConnectedComponentsWeightsAndMemories();
     BOOST_CHECK(compNWeightNMemory.size() == 2);
-    BOOST_CHECK(compNWeightNMemory.size() == testUniverse.get_number_of_connected_components());
+    BOOST_CHECK(compNWeightNMemory.size() == testUniverse.GetNumberOfConnectedComponents());
     BOOST_CHECK(std::get<0>(compNWeightNMemory[0]).size() == 3);
     BOOST_CHECK(std::get<0>(compNWeightNMemory[1]).size() == 3);
     BOOST_CHECK((std::get<1>(compNWeightNMemory[0]) == 4 && std::get<1>(compNWeightNMemory[1]) == 5)
@@ -280,7 +280,7 @@ BOOST_AUTO_TEST_CASE(UnionFindStructureWeightCompCount) {
                 || (std::get<2>(compNWeightNMemory[0]) == 5 && std::get<2>(compNWeightNMemory[1]) == 4));
 
     std::vector<std::pair<std::vector<std::string>, unsigned>> componentsNWeights
-        = testUniverse.get_connected_components_and_weights();
+        = testUniverse.GetConnectedComponentsAndWeights();
     unsigned totalCompWeights = 0;
     unsigned totalElements = 0;
     for (auto &[comp, wt] : componentsNWeights) {
@@ -310,59 +310,59 @@ BOOST_AUTO_TEST_CASE(UnionFindStructureWeightCompCount) {
 BOOST_AUTO_TEST_CASE(UnionFindStructureWeightChainsCompCount) {
     std::vector<std::string> names({"a", "b", "c", "d", "e", "f", "g", "h", "i"});
     std::vector<unsigned> weights({1, 1, 1, 1, 1, 1, 1, 1, 1});
-    Union_Find_Universe<std::string, unsigned, unsigned, unsigned> testUniverse(names, weights, weights);
+    UnionFindUniverse<std::string, unsigned, unsigned, unsigned> testUniverse(names, weights, weights);
 
-    testUniverse.join_by_name("a", "b");
-    BOOST_CHECK_EQUAL(testUniverse.get_weight_of_component_by_name("a"), 2);
-    BOOST_CHECK_EQUAL(testUniverse.get_memory_of_component_by_name("a"), 2);
-    testUniverse.join_by_name("b", "c");
-    BOOST_CHECK_EQUAL(testUniverse.get_weight_of_component_by_name("a"), 3);
-    BOOST_CHECK_EQUAL(testUniverse.get_memory_of_component_by_name("a"), 3);
-    testUniverse.join_by_name("c", "d");
-    BOOST_CHECK_EQUAL(testUniverse.get_weight_of_component_by_name("c"), 4);
-    BOOST_CHECK_EQUAL(testUniverse.get_memory_of_component_by_name("c"), 4);
-    BOOST_CHECK_EQUAL(testUniverse.get_weight_of_component_by_name("e"), 1);
-    BOOST_CHECK_EQUAL(testUniverse.get_memory_of_component_by_name("e"), 1);
-    testUniverse.join_by_name("d", "e");
-    BOOST_CHECK_EQUAL(testUniverse.get_weight_of_component_by_name("e"), 5);
-    BOOST_CHECK_EQUAL(testUniverse.get_memory_of_component_by_name("e"), 5);
-    testUniverse.join_by_name("a", "b");
-    BOOST_CHECK_EQUAL(testUniverse.get_weight_of_component_by_name("a"), 5);
-    BOOST_CHECK_EQUAL(testUniverse.get_memory_of_component_by_name("a"), 5);
-    BOOST_CHECK_EQUAL(testUniverse.get_weight_of_component_by_name("e"), 5);
-    BOOST_CHECK_EQUAL(testUniverse.get_memory_of_component_by_name("e"), 5);
-    testUniverse.join_by_name("e", "f");
-    BOOST_CHECK_EQUAL(testUniverse.get_weight_of_component_by_name("a"), 6);
-    BOOST_CHECK_EQUAL(testUniverse.get_memory_of_component_by_name("a"), 6);
+    testUniverse.JoinByName("a", "b");
+    BOOST_CHECK_EQUAL(testUniverse.GetWeightOfComponentByName("a"), 2);
+    BOOST_CHECK_EQUAL(testUniverse.GetMemoryOfComponentByName("a"), 2);
+    testUniverse.JoinByName("b", "c");
+    BOOST_CHECK_EQUAL(testUniverse.GetWeightOfComponentByName("a"), 3);
+    BOOST_CHECK_EQUAL(testUniverse.GetMemoryOfComponentByName("a"), 3);
+    testUniverse.JoinByName("c", "d");
+    BOOST_CHECK_EQUAL(testUniverse.GetWeightOfComponentByName("c"), 4);
+    BOOST_CHECK_EQUAL(testUniverse.GetMemoryOfComponentByName("c"), 4);
+    BOOST_CHECK_EQUAL(testUniverse.GetWeightOfComponentByName("e"), 1);
+    BOOST_CHECK_EQUAL(testUniverse.GetMemoryOfComponentByName("e"), 1);
+    testUniverse.JoinByName("d", "e");
+    BOOST_CHECK_EQUAL(testUniverse.GetWeightOfComponentByName("e"), 5);
+    BOOST_CHECK_EQUAL(testUniverse.GetMemoryOfComponentByName("e"), 5);
+    testUniverse.JoinByName("a", "b");
+    BOOST_CHECK_EQUAL(testUniverse.GetWeightOfComponentByName("a"), 5);
+    BOOST_CHECK_EQUAL(testUniverse.GetMemoryOfComponentByName("a"), 5);
+    BOOST_CHECK_EQUAL(testUniverse.GetWeightOfComponentByName("e"), 5);
+    BOOST_CHECK_EQUAL(testUniverse.GetMemoryOfComponentByName("e"), 5);
+    testUniverse.JoinByName("e", "f");
+    BOOST_CHECK_EQUAL(testUniverse.GetWeightOfComponentByName("a"), 6);
+    BOOST_CHECK_EQUAL(testUniverse.GetMemoryOfComponentByName("a"), 6);
 
-    testUniverse.join_by_name("c", "f");
-    BOOST_CHECK_EQUAL(testUniverse.get_weight_of_component_by_name("a"), 6);
-    BOOST_CHECK_EQUAL(testUniverse.get_memory_of_component_by_name("a"), 6);
-    BOOST_CHECK_EQUAL(testUniverse.get_number_of_connected_components(), 4);
+    testUniverse.JoinByName("c", "f");
+    BOOST_CHECK_EQUAL(testUniverse.GetWeightOfComponentByName("a"), 6);
+    BOOST_CHECK_EQUAL(testUniverse.GetMemoryOfComponentByName("a"), 6);
+    BOOST_CHECK_EQUAL(testUniverse.GetNumberOfConnectedComponents(), 4);
 
-    testUniverse.join_by_name("g", "h");
-    BOOST_CHECK_EQUAL(testUniverse.get_weight_of_component_by_name("g"), 2);
-    BOOST_CHECK_EQUAL(testUniverse.get_memory_of_component_by_name("g"), 2);
+    testUniverse.JoinByName("g", "h");
+    BOOST_CHECK_EQUAL(testUniverse.GetWeightOfComponentByName("g"), 2);
+    BOOST_CHECK_EQUAL(testUniverse.GetMemoryOfComponentByName("g"), 2);
 
-    BOOST_CHECK_EQUAL(testUniverse.find_origin_by_name("i"), "i");
-    BOOST_CHECK_EQUAL(testUniverse.get_weight_of_component_by_name("i"), 1);
-    BOOST_CHECK_EQUAL(testUniverse.get_memory_of_component_by_name("i"), 1);
+    BOOST_CHECK_EQUAL(testUniverse.FindOriginByName("i"), "i");
+    BOOST_CHECK_EQUAL(testUniverse.GetWeightOfComponentByName("i"), 1);
+    BOOST_CHECK_EQUAL(testUniverse.GetMemoryOfComponentByName("i"), 1);
 
-    testUniverse.join_by_name("h", "i");
-    BOOST_CHECK_EQUAL(testUniverse.get_weight_of_component_by_name("i"), 3);
-    BOOST_CHECK_EQUAL(testUniverse.get_memory_of_component_by_name("i"), 3);
+    testUniverse.JoinByName("h", "i");
+    BOOST_CHECK_EQUAL(testUniverse.GetWeightOfComponentByName("i"), 3);
+    BOOST_CHECK_EQUAL(testUniverse.GetMemoryOfComponentByName("i"), 3);
 
-    testUniverse.join_by_name("b", "h");
-    BOOST_CHECK_EQUAL(testUniverse.get_weight_of_component_by_name("a"), 9);
-    BOOST_CHECK_EQUAL(testUniverse.get_memory_of_component_by_name("a"), 9);
+    testUniverse.JoinByName("b", "h");
+    BOOST_CHECK_EQUAL(testUniverse.GetWeightOfComponentByName("a"), 9);
+    BOOST_CHECK_EQUAL(testUniverse.GetMemoryOfComponentByName("a"), 9);
 
-    BOOST_CHECK_EQUAL(testUniverse.find_origin_by_name("a"), testUniverse.find_origin_by_name("b"));
-    BOOST_CHECK_EQUAL(testUniverse.find_origin_by_name("d"), testUniverse.find_origin_by_name("i"));
-    BOOST_CHECK_EQUAL(testUniverse.find_origin_by_name("e"), testUniverse.find_origin_by_name("h"));
-    BOOST_CHECK_EQUAL(testUniverse.find_origin_by_name("b"), testUniverse.find_origin_by_name("i"));
+    BOOST_CHECK_EQUAL(testUniverse.FindOriginByName("a"), testUniverse.FindOriginByName("b"));
+    BOOST_CHECK_EQUAL(testUniverse.FindOriginByName("d"), testUniverse.FindOriginByName("i"));
+    BOOST_CHECK_EQUAL(testUniverse.FindOriginByName("e"), testUniverse.FindOriginByName("h"));
+    BOOST_CHECK_EQUAL(testUniverse.FindOriginByName("b"), testUniverse.FindOriginByName("i"));
 
     std::vector<std::pair<std::vector<std::string>, unsigned>> componentsNWeights
-        = testUniverse.get_connected_components_and_weights();
+        = testUniverse.GetConnectedComponentsAndWeights();
     unsigned totalCompWeights = 0;
     unsigned totalElements = 0;
     for (auto &[comp, wt] : componentsNWeights) {
