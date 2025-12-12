@@ -36,7 +36,7 @@ namespace osp {
  */
 template <typename GraphT>
 void ErdosRenyiGraphGen(GraphT &dagOut, vertex_idx_t<Graph_t> numVertices, double chance) {
-    static_assert(is_constructable_cdag_v<Graph_t>, "Graph_t must be a constructable computational DAG type");
+    static_assert(IsConstructableCdagV<Graph_t>, "Graph_t must be a constructable computational DAG type");
 
     dagOut = GraphT(num_vertices);
 
