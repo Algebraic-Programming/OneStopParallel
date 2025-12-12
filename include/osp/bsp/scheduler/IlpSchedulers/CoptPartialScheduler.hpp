@@ -212,7 +212,7 @@ void CoptPartialScheduler<GraphT>::UpdateSchedule(BspScheduleCS<GraphT> &schedul
 
     for (VertexIdxT<GraphT> node = 0; node < schedule.GetInstance().NumberOfVertices(); node++) {
         if (schedule.AssignedSuperstep(node) > endSuperstep_) {
-            schedule.setAssignedSuperstep(node, static_cast<unsigned>(static_cast<int>(schedule.AssignedSuperstep(node)) + offset));
+            schedule.SetAssignedSuperstep(node, static_cast<unsigned>(static_cast<int>(schedule.AssignedSuperstep(node)) + offset));
         }
     }
 
@@ -226,7 +226,7 @@ void CoptPartialScheduler<GraphT>::UpdateSchedule(BspScheduleCS<GraphT> &schedul
                 if (node_to_processor_superstep_var[node_local_ID.at(node)][processor][static_cast<int>(step)].Get(
                         COPT_DBLINFO_VALUE)
                     >= .99) {
-                    schedule.setAssignedSuperstep(node, startSuperstep_ + step);
+                    schedule.SetAssignedSuperstep(node, startSuperstep_ + step);
                     schedule.SetAssignedProcessor(node, processor);
                 }
             }

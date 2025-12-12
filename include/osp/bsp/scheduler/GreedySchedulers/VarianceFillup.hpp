@@ -446,7 +446,7 @@ class VarianceFillup : public Scheduler<GraphT> {
                 ready.erase(std::make_pair(nextNode, workVariances[nextNode]));
                 --nrReadyNodesPerType[g.VertexType(nextNode)];
                 schedule.SetAssignedProcessor(nextNode, nextProc);
-                schedule.setAssignedSuperstep(nextNode, supstepIdx);
+                schedule.SetAssignedSuperstep(nextNode, supstepIdx);
 
                 if constexpr (useMemoryConstraint_) {
                     memoryConstraint_.add(nextNode, nextProc);

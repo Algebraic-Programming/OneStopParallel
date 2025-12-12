@@ -150,7 +150,7 @@ BspSchedule<GraphT> MultiLevelHillClimbingScheduler<GraphT>::Refine(const BspIns
         // Project full schedule to current graph
         for (vertex_idx node = 0; node < full_instance.NumberOfVertices(); ++node) {
             schedule.SetAssignedProcessor(new_ids[node], schedule_on_full_graph.AssignedProcessor(node));
-            schedule.setAssignedSuperstep(new_ids[node], schedule_on_full_graph.AssignedSuperstep(node));
+            schedule.SetAssignedSuperstep(new_ids[node], schedule_on_full_graph.AssignedSuperstep(node));
         }
 
         HillClimbingScheduler<GraphT> hc;
@@ -175,7 +175,7 @@ BspSchedule<GraphT> MultiLevelHillClimbingScheduler<GraphT>::ComputeUncontracted
 
     for (vertex_idx node = 0; node < fullInstance.NumberOfVertices(); ++node) {
         schedule.SetAssignedProcessor(node, coarseSchedule.AssignedProcessor(new_ids[node]));
-        schedule.setAssignedSuperstep(node, coarseSchedule.AssignedSuperstep(new_ids[node]));
+        schedule.SetAssignedSuperstep(node, coarseSchedule.AssignedSuperstep(new_ids[node]));
     }
     return schedule;
 }

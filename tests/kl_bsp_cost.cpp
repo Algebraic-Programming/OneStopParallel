@@ -1111,9 +1111,9 @@ BOOST_AUTO_TEST_CASE(TestLazyAndBufferedModes) {
     schedule.SetAssignedProcessor(1, 1);
     schedule.SetAssignedProcessor(2, 1);
 
-    schedule.setAssignedSuperstep(0, 0);
-    schedule.setAssignedSuperstep(1, 2);
-    schedule.setAssignedSuperstep(2, 4);
+    schedule.SetAssignedSuperstep(0, 0);
+    schedule.SetAssignedSuperstep(1, 2);
+    schedule.SetAssignedSuperstep(2, 4);
 
     schedule.updateNumberOfSupersteps();
 

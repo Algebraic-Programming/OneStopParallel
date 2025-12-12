@@ -129,7 +129,7 @@ MaxBspScheduleCS<GraphT> GreedyBspToMaxBspConverter<GraphT>::Convert(const BspSc
             workDoneOnProc[chosenProc] += dag.VertexWorkWeight(chosen_node);
             workRemainingProcSuperstep[chosenProc][step] -= dag.VertexWorkWeight(chosen_node);
             maxWorkDone = std::max(max_work_done, work_done_on_proc[chosenProc]);
-            scheduleMax.setAssignedSuperstep(chosen_node, currentStep);
+            scheduleMax.SetAssignedSuperstep(chosen_node, currentStep);
             --nodes_remaining_superstep[step];
             for (const std::pair<KeyTriple, unsigned> &entry : dependent_comm_steps_for_node[chosen_node]) {
                 newly_freed_comm_steps.push_back(entry);
@@ -151,7 +151,7 @@ MaxBspScheduleCS<GraphT> GreedyBspToMaxBspConverter<GraphT>::Convert(const BspSc
                     procList[proc][step].pop_front();
                     workDoneOnProc[proc] += dag.VertexWorkWeight(node);
                     workRemainingProcSuperstep[proc][step] -= dag.VertexWorkWeight(node);
-                    scheduleMax.setAssignedSuperstep(node, currentStep);
+                    scheduleMax.SetAssignedSuperstep(node, currentStep);
                     --nodes_remaining_superstep[step];
                     for (const std::pair<KeyTriple, unsigned> &entry : dependent_comm_steps_for_node[node]) {
                         newly_freed_comm_steps.push_back(entry);
@@ -335,7 +335,7 @@ MaxBspScheduleCS<GraphT> GreedyBspToMaxBspConverter<GraphT>::Convert(const BspSc
 
                 brought_forward.insert(node);
                 work_so_far += dag.VertexWorkWeight(node);
-                schedule_max.setAssignedSuperstep(node, current_step);
+                schedule_max.SetAssignedSuperstep(node, current_step);
                 work_remaining_proc_superstep[proc][step + 1] -= dag.VertexWorkWeight(node);
                 --nodes_remaining_superstep[step + 1];
 

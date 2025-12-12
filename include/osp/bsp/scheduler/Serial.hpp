@@ -91,7 +91,7 @@ class Serial : public Scheduler<GraphT> {
 
         for (const auto &v : dag.vertices()) {
             schedule.SetAssignedProcessor(v, std::numeric_limits<unsigned>::max());
-            schedule.setAssignedSuperstep(v, std::numeric_limits<unsigned>::max());
+            schedule.SetAssignedSuperstep(v, std::numeric_limits<unsigned>::max());
             inDegree[v] = dag.InDegree(v);
             if (inDegree[v] == 0) {
                 readyNodes.push_back(v);
@@ -124,7 +124,7 @@ class Serial : public Scheduler<GraphT> {
 
                     if (parentsCompatible) {
                         schedule.SetAssignedProcessor(v, p);
-                        schedule.setAssignedSuperstep(v, currentSuperstep);
+                        schedule.SetAssignedSuperstep(v, currentSuperstep);
                         scheduled = true;
                         ++scheduledNodesCount;
                         break;

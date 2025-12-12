@@ -129,7 +129,7 @@ class WavefrontComponentScheduler : public AbstractWavefrontScheduler<GraphT, Co
                         = global_ids_by_type[proc_type][proc_type_offsets[proc_type] + local_proc_id_within_type];
 
                     schedule.SetAssignedProcessor(vertex, global_proc_id);
-                    schedule.setAssignedSuperstep(vertex, superstep_offset + sub_schedule.AssignedSuperstep(subdag_vertex));
+                    schedule.SetAssignedSuperstep(vertex, superstep_offset + sub_schedule.AssignedSuperstep(subdag_vertex));
                     subdag_vertex++;
                 }
 

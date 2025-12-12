@@ -159,7 +159,7 @@ struct MockSubScheduler : public osp::Scheduler<GraphT> {
         // Assign all tasks to the first processor in a single superstep
         for (VertexType v = 0; v < schedule.GetInstance().GetComputationalDag().NumVertices(); ++v) {
             schedule.SetAssignedProcessor(v, 0);
-            schedule.setAssignedSuperstep(v, 0);
+            schedule.SetAssignedSuperstep(v, 0);
         }
         schedule.setNumberOfSupersteps(1);
         return osp::ReturnStatus::OSP_SUCCESS;

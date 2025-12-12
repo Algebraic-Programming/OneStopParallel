@@ -95,7 +95,7 @@ class GrowLocalAutoCores : public Scheduler<GraphT> {
 
         for (const auto &v : instance.GetComputationalDag().vertices()) {
             schedule.SetAssignedProcessor(v, std::numeric_limits<unsigned>::max());
-            schedule.setAssignedSuperstep(v, std::numeric_limits<unsigned>::max());
+            schedule.SetAssignedSuperstep(v, std::numeric_limits<unsigned>::max());
         }
 
         unsigned supstep = 0;

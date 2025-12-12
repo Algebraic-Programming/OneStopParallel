@@ -375,8 +375,8 @@ BOOST_AUTO_TEST_CASE(ActiveScheduleComputeViolationsTest) {
     ThreadDataT threadData;
 
     // Manually create a violation
-    schedule_.setAssignedSuperstep(1, 0);    // node 1 is now in step 0 (was 1)
-    schedule_.setAssignedSuperstep(0, 1);    // node 0 is now in step 1 (was 0)
+    schedule_.SetAssignedSuperstep(1, 0);    // node 1 is now in step 0 (was 1)
+    schedule_.SetAssignedSuperstep(0, 1);    // node 0 is now in step 1 (was 0)
     // Now we have a violation for edge 0 -> 1, since step(0) > step(1)
     activeSchedule_.initialize(schedule_);
 
@@ -463,7 +463,7 @@ BOOST_AUTO_TEST_CASE(ActiveScheduleRevertToBestScheduleTest) {
 
 BOOST_AUTO_TEST_CASE(ActiveScheduleSwapEmptyStepFwdTest) {
     // Make step 1 empty by moving node 1 to step 0
-    activeSchedule_.getVectorSchedule().setAssignedSuperstep(1, 0);
+    activeSchedule_.getVectorSchedule().SetAssignedSuperstep(1, 0);
     activeSchedule_.initialize(activeSchedule_.getVectorSchedule());    // re-init to update set_schedule and work_ds
 
     BOOST_CHECK_EQUAL(activeSchedule_.get_step_total_work(1), 0);
@@ -481,7 +481,7 @@ BOOST_AUTO_TEST_CASE(ActiveScheduleSwapEmptyStepFwdTest) {
 
 BOOST_AUTO_TEST_CASE(ActiveScheduleRemoveEmptyStepTest) {
     // Make step 1 empty by moving node 1 to step 0
-    activeSchedule_.getVectorSchedule().setAssignedSuperstep(1, 0);
+    activeSchedule_.getVectorSchedule().SetAssignedSuperstep(1, 0);
     activeSchedule_.initialize(activeSchedule_.getVectorSchedule());
 
     unsigned originalNumSteps = activeSchedule_.num_steps();

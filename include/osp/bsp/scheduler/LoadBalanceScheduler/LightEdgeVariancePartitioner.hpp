@@ -312,7 +312,7 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
                         // std::cout << "Allocated node " << next_node << " to processor " << proc_alloc_prior << "
                         // previously.\n";
 
-                        schedule.setAssignedSuperstep(next_node, superstep);
+                        schedule.SetAssignedSuperstep(next_node, superstep);
 
                         num_unable_to_partition_node_loop = 0;
 
@@ -355,7 +355,7 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
                         has_vertex_been_assigned[next_node] = true;
                         // std::cout << "Allocated node " << next_node << " to processor " << proc << ".\n";
 
-                        schedule.setAssignedSuperstep(next_node, superstep);
+                        schedule.SetAssignedSuperstep(next_node, superstep);
                         num_unable_to_partition_node_loop = 0;
 
                         // Updating loads

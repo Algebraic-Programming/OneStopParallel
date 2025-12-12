@@ -162,7 +162,7 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
                 for (const auto &originalCompIdx : groupMembers) {
                     const auto &componentVertices = vertex_map_for_set[originalCompIdx];
                     for (const auto &vertex : component_vertices) {
-                        schedule.setAssignedSuperstep(vertex, schedule.AssignedSuperstep(vertex) + num_supersteps_per_iso_group[j]);
+                        schedule.SetAssignedSuperstep(vertex, schedule.AssignedSuperstep(vertex) + num_supersteps_per_iso_group[j]);
                     }
                 }
             }
@@ -242,7 +242,7 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
                         = global_ids_by_type[proc_type][proc_type_offsets[proc_type] + local_proc_id_within_type];
 
                     schedule.SetAssignedProcessor(vertex, global_proc_id);
-                    schedule.setAssignedSuperstep(
+                    schedule.SetAssignedSuperstep(
                         vertex, superstep_offset + sequential_superstep_offset + sub_schedule.AssignedSuperstep(subdag_vertex));
                     subdag_vertex++;
                 }
@@ -303,7 +303,7 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
                         = global_ids_by_type[proc_type][current_member_proc_offsets[proc_type] + local_proc_id_within_type];
 
                     schedule.SetAssignedProcessor(vertex, global_proc_id);
-                    schedule.setAssignedSuperstep(vertex, superstep_offset + sub_schedule.AssignedSuperstep(subdag_vertex));
+                    schedule.SetAssignedSuperstep(vertex, superstep_offset + sub_schedule.AssignedSuperstep(subdag_vertex));
                     subdag_vertex++;
                 }
                 for (size_t k = 0; k < subProcTypeCount.size(); ++k) {

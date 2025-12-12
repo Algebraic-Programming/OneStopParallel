@@ -304,7 +304,7 @@ class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
                     // Assignments
                     // std::cout << "Allocated node " << next_node << " to processor " << proc << ".\n";
                     schedule.SetAssignedProcessor(next_node, proc);
-                    schedule.setAssignedSuperstep(next_node, superstep);
+                    schedule.SetAssignedSuperstep(next_node, superstep);
                     num_unable_to_partition_node_loop = 0;
 
                     // Updating loads

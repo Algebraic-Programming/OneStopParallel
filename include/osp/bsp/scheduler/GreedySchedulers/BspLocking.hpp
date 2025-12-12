@@ -509,7 +509,7 @@ class BspLocking : public Scheduler<GraphT> {
                 ready.erase(nextNode);
                 --nrReadyNodesPerType[g.VertexType(nextNode)];
                 schedule.SetAssignedProcessor(nextNode, nextProc);
-                schedule.setAssignedSuperstep(nextNode, supstepIdx);
+                schedule.SetAssignedSuperstep(nextNode, supstepIdx);
 
                 readyPhase_[nextNode] = std::numeric_limits<unsigned>::max();
 

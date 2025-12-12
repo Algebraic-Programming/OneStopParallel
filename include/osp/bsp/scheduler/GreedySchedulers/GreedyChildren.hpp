@@ -89,7 +89,7 @@ class GreedyChildren : public Scheduler<GraphT> {
                         continue;
                     }
 
-                    sched.setAssignedSuperstep(node, superstepCounter);
+                    sched.SetAssignedSuperstep(node, superstepCounter);
                     if (processorSet) {
                         sched.SetAssignedProcessor(node, processorToBeAllocated);
                     } else {

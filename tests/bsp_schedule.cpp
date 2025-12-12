@@ -329,13 +329,13 @@ BOOST_AUTO_TEST_CASE(TestMaxBspSchedule) {
     {
         MaxBspSchedule<Graph> schedule(instance);
         schedule.SetAssignedProcessor(0, 0);
-        schedule.setAssignedSuperstep(0, 0);
+        schedule.SetAssignedSuperstep(0, 0);
         schedule.SetAssignedProcessor(1, 0);
-        schedule.setAssignedSuperstep(1, 1);
+        schedule.SetAssignedSuperstep(1, 1);
         schedule.SetAssignedProcessor(2, 1);
-        schedule.setAssignedSuperstep(2, 2);    // 0->2 is cross-proc, 2 >= 0+2
+        schedule.SetAssignedSuperstep(2, 2);    // 0->2 is cross-proc, 2 >= 0+2
         schedule.SetAssignedProcessor(3, 0);
-        schedule.setAssignedSuperstep(3, 4);    // 2->3 is cross-proc, 4 >= 2+2
+        schedule.SetAssignedSuperstep(3, 4);    // 2->3 is cross-proc, 4 >= 2+2
         schedule.updateNumberOfSupersteps();
 
         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
@@ -354,13 +354,13 @@ BOOST_AUTO_TEST_CASE(TestMaxBspSchedule) {
     {
         MaxBspSchedule<Graph> schedule(instance);
         schedule.SetAssignedProcessor(0, 0);
-        schedule.setAssignedSuperstep(0, 0);
+        schedule.SetAssignedSuperstep(0, 0);
         schedule.SetAssignedProcessor(1, 1);
-        schedule.setAssignedSuperstep(1, 2);    // 0->1 is cross-proc, 2 >= 0+2
+        schedule.SetAssignedSuperstep(1, 2);    // 0->1 is cross-proc, 2 >= 0+2
         schedule.SetAssignedProcessor(2, 1);
-        schedule.setAssignedSuperstep(2, 2);    // 0->2 is cross-proc, 2 >= 0+2
+        schedule.SetAssignedSuperstep(2, 2);    // 0->2 is cross-proc, 2 >= 0+2
         schedule.SetAssignedProcessor(3, 0);
-        schedule.setAssignedSuperstep(3, 4);    // 1->3, 2->3 are cross-proc, 4 >= 2+2
+        schedule.SetAssignedSuperstep(3, 4);    // 1->3, 2->3 are cross-proc, 4 >= 2+2
         schedule.updateNumberOfSupersteps();
 
         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
@@ -379,9 +379,9 @@ BOOST_AUTO_TEST_CASE(TestMaxBspSchedule) {
     {
         MaxBspSchedule<Graph> schedule(instance);
         schedule.SetAssignedProcessor(0, 0);
-        schedule.setAssignedSuperstep(0, 0);
+        schedule.SetAssignedSuperstep(0, 0);
         schedule.SetAssignedProcessor(1, 1);    // 0->1 on different procs
-        schedule.setAssignedSuperstep(1, 1);    // step(0)+2 > step(1) is FALSE (0+2 > 1)
+        schedule.SetAssignedSuperstep(1, 1);    // step(0)+2 > step(1) is FALSE (0+2 > 1)
         schedule.updateNumberOfSupersteps();
 
         BOOST_CHECK(!schedule.satisfiesPrecedenceConstraints());
@@ -410,13 +410,13 @@ BOOST_AUTO_TEST_CASE(TestMaxBspScheduleCs) {
     {
         MaxBspScheduleCS<Graph> schedule(instance);
         schedule.SetAssignedProcessor(0, 0);
-        schedule.setAssignedSuperstep(0, 0);
+        schedule.SetAssignedSuperstep(0, 0);
         schedule.SetAssignedProcessor(1, 0);
-        schedule.setAssignedSuperstep(1, 1);
+        schedule.SetAssignedSuperstep(1, 1);
         schedule.SetAssignedProcessor(2, 1);
-        schedule.setAssignedSuperstep(2, 2);    // 0->2 is cross-proc, 2 >= 0+2
+        schedule.SetAssignedSuperstep(2, 2);    // 0->2 is cross-proc, 2 >= 0+2
         schedule.SetAssignedProcessor(3, 0);
-        schedule.setAssignedSuperstep(3, 4);    // 2->3 is cross-proc, 4 >= 2+2
+        schedule.SetAssignedSuperstep(3, 4);    // 2->3 is cross-proc, 4 >= 2+2
         schedule.updateNumberOfSupersteps();
 
         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
@@ -441,9 +441,9 @@ BOOST_AUTO_TEST_CASE(TestMaxBspScheduleCs) {
     {
         MaxBspScheduleCS<Graph> schedule(instance);
         schedule.SetAssignedProcessor(0, 0);
-        schedule.setAssignedSuperstep(0, 0);
+        schedule.SetAssignedSuperstep(0, 0);
         schedule.SetAssignedProcessor(1, 1);    // 0->1 on different procs
-        schedule.setAssignedSuperstep(1, 1);    // step(0)+2 > step(1) is FALSE (0+2 > 1)
+        schedule.SetAssignedSuperstep(1, 1);    // step(0)+2 > step(1) is FALSE (0+2 > 1)
         schedule.updateNumberOfSupersteps();
 
         BOOST_CHECK(!schedule.satisfiesPrecedenceConstraints());

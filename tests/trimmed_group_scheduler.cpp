@@ -38,7 +38,7 @@ class MockSubScheduler : public Scheduler<ConstrGraphT> {
     ReturnStatus computeSchedule(BspSchedule<ConstrGraphT> &schedule) override {
         for (VertexIdxT<ConstrGraphT> v = 0; v < schedule.GetInstance().GetComputationalDag().NumVertices(); ++v) {
             schedule.SetAssignedProcessor(v, 0);
-            schedule.setAssignedSuperstep(v, 0);
+            schedule.SetAssignedSuperstep(v, 0);
         }
         schedule.setNumberOfSupersteps(1);
         return ReturnStatus::OSP_SUCCESS;
