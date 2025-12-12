@@ -442,7 +442,7 @@ class BspLocking : public Scheduler<GraphT> {
                             bool canAdd = true;
                             for (const auto &pred : G.Parents(succ)) {
                                 if (schedule.assignedProcessor(pred) != schedule.assignedProcessor(node)
-                                    && schedule.assignedSuperstep(pred) == supstepIdx) {
+                                    && schedule.AssignedSuperstep(pred) == supstepIdx) {
                                     canAdd = false;
                                     break;
                                 }

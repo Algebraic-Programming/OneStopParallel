@@ -204,11 +204,11 @@ void HillClimbingScheduler<GraphT>::Init() {
     succSteps_.resize(N, std::vector<std::map<unsigned, unsigned>>(p));
     for (vertex_idx node = 0; node < N; ++node) {
         for (const vertex_idx &succ : G.Children(node)) {
-            if (succSteps[node][schedule->assignedProcessor(succ)].find(schedule->assignedSuperstep(succ))
+            if (succSteps[node][schedule->assignedProcessor(succ)].find(schedule->AssignedSuperstep(succ))
                 == succSteps[node][schedule->assignedProcessor(succ)].end()) {
-                succSteps[node][schedule->assignedProcessor(succ)].insert({schedule->assignedSuperstep(succ), 1U});
+                succSteps[node][schedule->assignedProcessor(succ)].insert({schedule->AssignedSuperstep(succ), 1U});
             } else {
-                succSteps[node][schedule->assignedProcessor(succ)].at(schedule->assignedSuperstep(succ)) += 1;
+                succSteps[node][schedule->assignedProcessor(succ)].at(schedule->AssignedSuperstep(succ)) += 1;
             }
         }
     }
@@ -311,7 +311,7 @@ void HillClimbingScheduler<GraphT>::Init() {
         memory_used.clear();
         memory_used.resize(P, std::vector<VMemwT<GraphT>>(M, 0));
         for (vertex_idx node = 0; node < N; ++node) {
-            memory_used[schedule->assignedProcessor(node)][schedule->assignedSuperstep(node)]
+            memory_used[schedule->assignedProcessor(node)][schedule->AssignedSuperstep(node)]
                 += schedule->GetInstance().GetComputationalDag().VertexMemWeight(node);
         }
     }
@@ -409,23 +409,23 @@ void HillClimbingScheduler<GraphT>::UpdatePromisingMoves() {
 // Functions to compute and update the std::list of possible moves
 template <typename GraphT>
 void HillClimbingScheduler<GraphT>::UpdateNodeMovesEarlier(const vertex_idx node) {
-    if (schedule_->assignedSuperstep(node) == 0) {
+    if (schedule_->AssignedSuperstep(node) == 0) {
         return;
     }
 
     std::set<unsigned> predProc;
     for (const vertex_idx &pred : schedule->GetInstance().GetComputationalDag().Parents(node)) {
-        if (schedule->assignedSuperstep(pred) == schedule->assignedSuperstep(node)) {
+        if (schedule->AssignedSuperstep(pred) == schedule->AssignedSuperstep(node)) {
             return;
         }
-        if (static_cast<int>(schedule->assignedSuperstep(pred))
-            >= static_cast<int>(schedule->assignedSuperstep(node)) - static_cast<int>(schedule->getStaleness())) {
+        if (static_cast<int>(schedule->AssignedSuperstep(pred))
+            >= static_cast<int>(schedule->AssignedSuperstep(node)) - static_cast<int>(schedule->getStaleness())) {
             predProc.insert(schedule->assignedProcessor(pred));
         }
     }
     if (schedule_->getStaleness() == 2) {
         for (const vertex_idx &succ : schedule->GetInstance().GetComputationalDag().Children(node)) {
-            if (schedule->assignedSuperstep(succ) == schedule->assignedSuperstep(node)) {
+            if (schedule->AssignedSuperstep(succ) == schedule->AssignedSuperstep(node)) {
                 predProc.insert(schedule->assignedProcessor(succ));
             }
         }
@@ -447,14 +447,14 @@ void HillClimbingScheduler<GraphT>::UpdateNodeMovesEarlier(const vertex_idx node
 template <typename GraphT>
 void HillClimbingScheduler<GraphT>::UpdateNodeMovesAt(const vertex_idx node) {
     for (const vertex_idx &pred : schedule->GetInstance().GetComputationalDag().Parents(node)) {
-        if (static_cast<int>(schedule->assignedSuperstep(pred))
-            >= static_cast<int>(schedule->assignedSuperstep(node)) - static_cast<int>(schedule->getStaleness()) + 1) {
+        if (static_cast<int>(schedule->AssignedSuperstep(pred))
+            >= static_cast<int>(schedule->AssignedSuperstep(node)) - static_cast<int>(schedule->getStaleness()) + 1) {
             return;
         }
     }
 
     for (const vertex_idx &succ : schedule->GetInstance().GetComputationalDag().Children(node)) {
-        if (schedule->assignedSuperstep(succ) <= schedule->assignedSuperstep(node) + schedule->getStaleness() - 1) {
+        if (schedule->AssignedSuperstep(succ) <= schedule->AssignedSuperstep(node) + schedule->getStaleness() - 1) {
             return;
         }
     }
@@ -468,22 +468,22 @@ void HillClimbingScheduler<GraphT>::UpdateNodeMovesAt(const vertex_idx node) {
 
 template <typename GraphT>
 void HillClimbingScheduler<GraphT>::UpdateNodeMovesLater(const vertex_idx node) {
-    if (schedule_->assignedSuperstep(node) == schedule_->NumberOfSupersteps() - 1) {
+    if (schedule_->AssignedSuperstep(node) == schedule_->NumberOfSupersteps() - 1) {
         return;
     }
 
     std::set<unsigned> succProc;
     for (const vertex_idx &succ : schedule->GetInstance().GetComputationalDag().Children(node)) {
-        if (schedule->assignedSuperstep(succ) == schedule->assignedSuperstep(node)) {
+        if (schedule->AssignedSuperstep(succ) == schedule->AssignedSuperstep(node)) {
             return;
         }
-        if (schedule->assignedSuperstep(succ) <= schedule->assignedSuperstep(node) + schedule->getStaleness()) {
+        if (schedule->AssignedSuperstep(succ) <= schedule->AssignedSuperstep(node) + schedule->getStaleness()) {
             succProc.insert(schedule->assignedProcessor(succ));
         }
     }
     if (schedule_->getStaleness() == 2) {
         for (const vertex_idx &pred : schedule->GetInstance().GetComputationalDag().Parents(node)) {
-            if (schedule->assignedSuperstep(pred) == schedule->assignedSuperstep(node)) {
+            if (schedule->AssignedSuperstep(pred) == schedule->AssignedSuperstep(node)) {
                 succProc.insert(schedule->assignedProcessor(pred));
             }
         }
@@ -622,7 +622,7 @@ void HillClimbingScheduler<GraphT>::EraseMoveOptions(vertex_idx node) {
 // Compute the cost change incurred by a potential move
 template <typename GraphT>
 int HillClimbingScheduler<GraphT>::MoveCostChange(const vertex_idx node, unsigned p, const int where, StepAuxData &changing) {
-    const unsigned step = schedule_->assignedSuperstep(node);
+    const unsigned step = schedule_->AssignedSuperstep(node);
     const unsigned newStep = static_cast<unsigned>(static_cast<int>(step) + where);
     unsigned oldProc = schedule_->assignedProcessor(node);
     int change = 0;
@@ -893,7 +893,7 @@ void HillClimbingScheduler<GraphT>::ExecuteMove(const vertex_idx node,
                                                 const unsigned newProc,
                                                 const int where,
                                                 const StepAuxData &changing) {
-    unsigned oldStep = schedule_->assignedSuperstep(node);
+    unsigned oldStep = schedule_->AssignedSuperstep(node);
     unsigned newStep = static_cast<unsigned>(static_cast<int>(oldStep) + where);
     const unsigned oldProc = schedule_->assignedProcessor(node);
     cost = changing.newCost;
@@ -956,7 +956,7 @@ void HillClimbingScheduler<GraphT>::ExecuteMove(const vertex_idx node,
 
     // memory constraints, if any
     if (useMemoryConstraint_) {
-        memory_used[schedule->assignedProcessor(node)][schedule->assignedSuperstep(node)]
+        memory_used[schedule->assignedProcessor(node)][schedule->AssignedSuperstep(node)]
             -= schedule->GetInstance().GetComputationalDag().VertexMemWeight(node);
         memory_used[newProc][newStep] += schedule->GetInstance().GetComputationalDag().VertexMemWeight(node);
     }
@@ -1070,7 +1070,7 @@ bool HillClimbingScheduler<GraphT>::Improve() {
 // Check if move violates mem constraints
 template <typename GraphT>
 bool HillClimbingScheduler<GraphT>::ViolatesMemConstraint(vertex_idx node, unsigned processor, int where) {
-    if (memory_used[processor][static_cast<unsigned>(static_cast<int>(schedule->assignedSuperstep(node)) + where)]
+    if (memory_used[processor][static_cast<unsigned>(static_cast<int>(schedule->AssignedSuperstep(node)) + where)]
             + schedule->GetInstance().GetComputationalDag().VertexMemWeight(node)
         > schedule->GetInstance().memoryBound(processor)) {    // TODO ANDRAS double check change
         return true;
@@ -1091,7 +1091,7 @@ void HillClimbingScheduler<GraphT>::CreateSupstepLists() {
     supsteplists.resize(M, std::vector<std::list<vertex_idx>>(P));
 
     for (vertex_idx node : top_sort_view(G)) {
-        supsteplists[schedule->assignedSuperstep(node)][schedule->assignedProcessor(node)].push_back(node);
+        supsteplists[schedule->AssignedSuperstep(node)][schedule->assignedProcessor(node)].push_back(node);
     }
 }
 

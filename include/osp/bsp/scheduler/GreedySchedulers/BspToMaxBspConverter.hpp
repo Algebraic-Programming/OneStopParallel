@@ -66,9 +66,9 @@ MaxBspScheduleCS<GraphT> GreedyBspToMaxBspConverter<GraphT>::Convert(const BspSc
 
     MaxBspScheduleCS<GraphT> scheduleMax(schedule.GetInstance());
     for (vertex_idx node = 0; node < schedule.GetInstance().NumberOfVertices(); node++) {
-        workRemainingProcSuperstep[schedule.assignedProcessor(node)][schedule.assignedSuperstep(node)]
+        workRemainingProcSuperstep[schedule.assignedProcessor(node)][schedule.AssignedSuperstep(node)]
             += dag.VertexWorkWeight(node);
-        ++nodes_remaining_superstep[schedule.assignedSuperstep(node)];
+        ++nodes_remaining_superstep[schedule.AssignedSuperstep(node)];
         scheduleMax.setAssignedProcessor(node, schedule.assignedProcessor(node));
     }
 
@@ -80,7 +80,7 @@ MaxBspScheduleCS<GraphT> GreedyBspToMaxBspConverter<GraphT>::Convert(const BspSc
     std::vector<std::set<std::pair<KeyTriple, unsigned>>> freeCommStepsForSuperstep(schedule.NumberOfSupersteps());
     std::vector<std::vector<std::pair<KeyTriple, unsigned>>> dependentCommStepsForNode(schedule.GetInstance().NumberOfVertices());
     for (auto const &[key, val] : schedule.getCommunicationSchedule()) {
-        if (schedule.assignedSuperstep(std::get<0>(key)) == val) {
+        if (schedule.AssignedSuperstep(std::get<0>(key)) == val) {
             dependentCommStepsForNode[std::get<0>(key)].emplace_back(key, val);
 
             cost_type commCost = dag.VertexCommWeight(std::get<0>(key))
@@ -323,7 +323,7 @@ MaxBspScheduleCS<GraphT> GreedyBspToMaxBspConverter<GraphT>::Convert(const BspSc
                     }
 
                     if (schedule.assignedProcessor(node) == schedule.assignedProcessor(parent)
-                        && schedule.assignedSuperstep(parent) == step + 1
+                        && schedule.AssignedSuperstep(parent) == step + 1
                         && brought_forward.find(parent) == brought_forward.end()) {
                         has_dependency = true;
                     }
@@ -374,7 +374,7 @@ std::vector<std::vector<std::deque<VertexIdxT<GraphT>>>> GreedyBspToMaxBspConver
     // compute for each node the amount of dependent send cost in the same superstep
     std::vector<cost_type> commDependency(dag.NumVertices(), 0);
     for (auto const &[key, val] : schedule.getCommunicationSchedule()) {
-        if (schedule.assignedSuperstep(std::get<0>(key)) == val) {
+        if (schedule.AssignedSuperstep(std::get<0>(key)) == val) {
             commDependency[std::get<0>(key)]
                 += dag.VertexCommWeight(std::get<0>(key))
                    * schedule.GetInstance().GetArchitecture().sendCosts(std::get<1>(key), std::get<2>(key));
@@ -393,7 +393,7 @@ std::vector<std::vector<std::deque<VertexIdxT<GraphT>>>> GreedyBspToMaxBspConver
         unsigned numChildren = 0;
         for (const vertex_idx &child : dag.Children(node)) {
             if (schedule.assignedProcessor(node) == schedule.assignedProcessor(child)
-                && schedule.assignedSuperstep(node) == schedule.assignedSuperstep(child)) {
+                && schedule.AssignedSuperstep(node) == schedule.AssignedSuperstep(child)) {
                 ++num_children;
                 successors += priorities[child];
                 ++local_in_degree[child];
@@ -418,10 +418,10 @@ std::vector<std::vector<std::deque<VertexIdxT<GraphT>>>> GreedyBspToMaxBspConver
     while (!free.empty()) {
         vertex_idx node = free.begin()->second;
         free.erase(free.begin());
-        superstepLists[schedule.assignedProcessor(node)][schedule.assignedSuperstep(node)].push_back(node);
+        superstepLists[schedule.assignedProcessor(node)][schedule.AssignedSuperstep(node)].push_back(node);
         for (const vertex_idx &child : dag.Children(node)) {
             if (schedule.assignedProcessor(node) == schedule.assignedProcessor(child)
-                && schedule.assignedSuperstep(node) == schedule.assignedSuperstep(child)) {
+                && schedule.AssignedSuperstep(node) == schedule.AssignedSuperstep(child)) {
                 if (--local_in_degree[child] == 0) {
                     free.emplace(priorities[child], child);
                 }

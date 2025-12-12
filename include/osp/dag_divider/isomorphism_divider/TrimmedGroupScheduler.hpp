@@ -153,7 +153,7 @@ class TrimmedGroupScheduler : public Scheduler<ConstrGraphT> {
             for (const auto &v_global : group_vertices) {
                 const auto v_local = global_to_local_map.at(v_global);
                 const unsigned sub_proc = sub_schedule.assignedProcessor(v_local);
-                const unsigned sub_superstep = sub_schedule.assignedSuperstep(v_local);
+                const unsigned sub_superstep = sub_schedule.AssignedSuperstep(v_local);
 
                 // Determine the processor type and its local index within that type in the sub_arch
                 const unsigned proc_type = sub_arch.processorType(sub_proc);

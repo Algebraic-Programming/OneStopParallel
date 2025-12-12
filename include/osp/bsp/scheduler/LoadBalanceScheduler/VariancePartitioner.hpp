@@ -334,7 +334,7 @@ class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
                             bool is_proc_ready = true;
                             for (const auto &parent : graph.Parents(chld)) {
                                 if ((schedule.assignedProcessor(parent) != proc)
-                                    && (schedule.assignedSuperstep(parent) == superstep)) {
+                                    && (schedule.AssignedSuperstep(parent) == superstep)) {
                                     is_proc_ready = false;
                                     break;
                                 }

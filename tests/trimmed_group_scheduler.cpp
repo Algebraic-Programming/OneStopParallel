@@ -102,9 +102,9 @@ BOOST_AUTO_TEST_CASE(SingleComponentSingleProcessorTypeTest) {
     BOOST_CHECK_EQUAL(schedule.assignedProcessor(0), 0);
     BOOST_CHECK_EQUAL(schedule.assignedProcessor(1), 0);
     BOOST_CHECK_EQUAL(schedule.assignedProcessor(2), 0);
-    BOOST_CHECK_EQUAL(schedule.assignedSuperstep(0), 0);
-    BOOST_CHECK_EQUAL(schedule.assignedSuperstep(1), 0);
-    BOOST_CHECK_EQUAL(schedule.assignedSuperstep(2), 0);
+    BOOST_CHECK_EQUAL(schedule.AssignedSuperstep(0), 0);
+    BOOST_CHECK_EQUAL(schedule.AssignedSuperstep(1), 0);
+    BOOST_CHECK_EQUAL(schedule.AssignedSuperstep(2), 0);
 }
 
 BOOST_AUTO_TEST_CASE(MultipleComponentsSingleProcessorTypeEvenDistributionTest) {
@@ -139,10 +139,10 @@ BOOST_AUTO_TEST_CASE(MultipleComponentsSingleProcessorTypeEvenDistributionTest) 
     BOOST_CHECK_EQUAL(schedule.assignedProcessor(2), 2);
     BOOST_CHECK_EQUAL(schedule.assignedProcessor(3), 2);
 
-    BOOST_CHECK_EQUAL(schedule.assignedSuperstep(0), 0);
-    BOOST_CHECK_EQUAL(schedule.assignedSuperstep(1), 0);
-    BOOST_CHECK_EQUAL(schedule.assignedSuperstep(2), 0);
-    BOOST_CHECK_EQUAL(schedule.assignedSuperstep(3), 0);
+    BOOST_CHECK_EQUAL(schedule.AssignedSuperstep(0), 0);
+    BOOST_CHECK_EQUAL(schedule.AssignedSuperstep(1), 0);
+    BOOST_CHECK_EQUAL(schedule.AssignedSuperstep(2), 0);
+    BOOST_CHECK_EQUAL(schedule.AssignedSuperstep(3), 0);
 }
 
 BOOST_AUTO_TEST_CASE(MultipleComponentsSingleProcessorTypeUnevenDistributionTest) {
@@ -177,9 +177,9 @@ BOOST_AUTO_TEST_CASE(MultipleComponentsSingleProcessorTypeUnevenDistributionTest
     // Global proc for group 1: offset 3 + local 0 = 3.
     BOOST_CHECK_EQUAL(schedule.assignedProcessor(2), 3);
 
-    BOOST_CHECK_EQUAL(schedule.assignedSuperstep(0), 0);
-    BOOST_CHECK_EQUAL(schedule.assignedSuperstep(1), 0);
-    BOOST_CHECK_EQUAL(schedule.assignedSuperstep(2), 0);
+    BOOST_CHECK_EQUAL(schedule.AssignedSuperstep(0), 0);
+    BOOST_CHECK_EQUAL(schedule.AssignedSuperstep(1), 0);
+    BOOST_CHECK_EQUAL(schedule.AssignedSuperstep(2), 0);
 }
 
 BOOST_AUTO_TEST_CASE(MultipleComponentsHeterogeneousArchitectureTest) {
@@ -206,8 +206,8 @@ BOOST_AUTO_TEST_CASE(MultipleComponentsHeterogeneousArchitectureTest) {
     BOOST_CHECK_EQUAL(schedule.assignedProcessor(0), 0);
     BOOST_CHECK_EQUAL(schedule.assignedProcessor(1), 1);
 
-    BOOST_CHECK_EQUAL(schedule.assignedSuperstep(0), 0);
-    BOOST_CHECK_EQUAL(schedule.assignedSuperstep(1), 0);
+    BOOST_CHECK_EQUAL(schedule.AssignedSuperstep(0), 0);
+    BOOST_CHECK_EQUAL(schedule.AssignedSuperstep(1), 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

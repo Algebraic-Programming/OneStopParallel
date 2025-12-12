@@ -487,7 +487,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                                      const VertexType endNode,
                                      const unsigned incr) const {
         for (VertexType node = startNode; node < endNode; node++) {
-            schedule.setAssignedSuperstepNoUpdateNumSuperstep(node, schedule.assignedSuperstep(node) + incr);
+            schedule.setAssignedSuperstepNoUpdateNumSuperstep(node, schedule.AssignedSuperstep(node) + incr);
         }
     }
 
@@ -498,7 +498,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                                              const unsigned incr) const {
         for (VertexType index = startIndex; index < endIndex; index++) {
             const VertexType node = topOrder[index];
-            schedule.setAssignedSuperstepNoUpdateNumSuperstep(node, schedule.assignedSuperstep(node) + incr);
+            schedule.setAssignedSuperstepNoUpdateNumSuperstep(node, schedule.AssignedSuperstep(node) + incr);
         }
     }
 

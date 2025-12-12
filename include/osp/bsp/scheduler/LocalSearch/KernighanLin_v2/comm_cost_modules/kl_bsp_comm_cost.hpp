@@ -330,7 +330,7 @@ struct KlBspCommCostFunction {
         // Incoming (Parents)
         for (const auto &u : graph->Parents(node)) {
             const unsigned u_proc = active_schedule->assigned_processor(u);
-            const unsigned u_step = current_vec_schedule.assignedSuperstep(u);
+            const unsigned u_step = current_vec_schedule.AssignedSuperstep(u);
             const comm_weight_t comm_w_u = graph->VertexCommWeight(u);
 
             if (u_proc != node_proc) {
@@ -353,7 +353,7 @@ struct KlBspCommCostFunction {
 
             for (const auto &u : graph->Parents(node)) {
                 const unsigned u_proc = active_schedule->assigned_processor(u);
-                const unsigned u_step = current_vec_schedule.assignedSuperstep(u);
+                const unsigned u_step = current_vec_schedule.AssignedSuperstep(u);
                 const comm_weight_t comm_w_u = graph->VertexCommWeight(u);
 
                 if (u_proc != p_to) {
@@ -433,7 +433,7 @@ struct KlBspCommCostFunction {
             // Revert Incoming Deltas (Inverse of Part A)
             for (const auto &u : graph->Parents(node)) {
                 const unsigned u_proc = active_schedule->assigned_processor(u);
-                const unsigned u_step = current_vec_schedule.assignedSuperstep(u);
+                const unsigned u_step = current_vec_schedule.AssignedSuperstep(u);
                 const comm_weight_t comm_w_u = graph->VertexCommWeight(u);
 
                 if (u_proc != p_to) {

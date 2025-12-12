@@ -146,7 +146,7 @@ void CoptCommScheduleOptimizer<GraphT>::SetInitialSolution(BspScheduleCS<GraphT>
     std::vector<std::vector<unsigned>> firstAt(DAG.NumVertices(),
                                                std::vector<unsigned>(num_processors, std::numeric_limits<unsigned>::max()));
     for (const auto &node : dag.vertices()) {
-        firstAt[node][schedule.assignedProcessor(node)] = schedule.assignedSuperstep(node);
+        firstAt[node][schedule.assignedProcessor(node)] = schedule.AssignedSuperstep(node);
     }
 
     for (const auto &node : dag.vertices()) {
@@ -262,7 +262,7 @@ void CoptCommScheduleOptimizer<GraphT>::SetupVariablesConstraintsObjective(const
     // and vertex is present where it was computed
     for (unsigned node = 0; node < numVertices; node++) {
         const unsigned &processor = schedule.assignedProcessor(node);
-        const unsigned &superstep = schedule.assignedSuperstep(node);
+        const unsigned &superstep = schedule.AssignedSuperstep(node);
         Expr expr;
         unsigned numComEdges = 0;
         for (const auto &pred : schedule.GetInstance().GetComputationalDag().Parents(node)) {
@@ -272,7 +272,7 @@ void CoptCommScheduleOptimizer<GraphT>::SetupVariablesConstraintsObjective(const
 
                 model.AddConstr(
                     comm_processor_to_processor_superstep_node_var[schedule.assignedProcessor(pred)][schedule.assignedProcessor(
-                        pred)][schedule.assignedSuperstep(pred)][static_cast<int>(pred)]
+                        pred)][schedule.AssignedSuperstep(pred)][static_cast<int>(pred)]
                     == 1);
             }
         }
@@ -287,7 +287,7 @@ void CoptCommScheduleOptimizer<GraphT>::SetupVariablesConstraintsObjective(const
     for (unsigned int step = 0; step < maxNumberSupersteps; step++) {
         for (unsigned int processor = 0; processor < numProcessors; processor++) {
             for (unsigned int node = 0; node < numVertices; node++) {
-                if (processor == schedule.assignedProcessor(node) && step >= schedule.assignedSuperstep(node)) {
+                if (processor == schedule.assignedProcessor(node) && step >= schedule.AssignedSuperstep(node)) {
                     continue;
                 }
 

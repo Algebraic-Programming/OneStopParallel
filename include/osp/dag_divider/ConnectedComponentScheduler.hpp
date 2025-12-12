@@ -69,7 +69,7 @@ class ConnectedComponentScheduler : public Scheduler<GraphT> {
 
             for (const auto &v : subInstance.vertices()) {
                 schedule.setAssignedProcessor(mapping.at(v), subSchedule.assignedProcessor(v) + numProcessorsOffset);
-                schedule.setAssignedSuperstep(mapping.at(v), subSchedule.assignedSuperstep(v));
+                schedule.setAssignedSuperstep(mapping.at(v), subSchedule.AssignedSuperstep(v));
             }
 
             numProcessorsOffset += subArchitecture.NumberOfProcessors();

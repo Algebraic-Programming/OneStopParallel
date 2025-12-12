@@ -107,7 +107,7 @@ class GrowLocalAutoCores : public Scheduler<GraphT> {
         }
 
         auto &nodeToProc = schedule.assignedProcessors();
-        auto &nodeToSupstep = schedule.assignedSupersteps();
+        auto &nodeToSupstep = schedule.AssignedSupersteps();
 
         const auto n = instance.NumberOfVertices();
         const unsigned p = instance.NumberOfProcessors();

@@ -207,10 +207,10 @@ BOOST_AUTO_TEST_CASE(BasicSchedulingTest) {
     BOOST_CHECK_EQUAL(schedule.assignedProcessor(2), 0);
     BOOST_CHECK_EQUAL(schedule.assignedProcessor(3), 0);
 
-    BOOST_CHECK_EQUAL(schedule.assignedSuperstep(0), 0);
-    BOOST_CHECK_EQUAL(schedule.assignedSuperstep(1), 0);
-    BOOST_CHECK_EQUAL(schedule.assignedSuperstep(2), 1);
-    BOOST_CHECK_EQUAL(schedule.assignedSuperstep(3), 1);
+    BOOST_CHECK_EQUAL(schedule.AssignedSuperstep(0), 0);
+    BOOST_CHECK_EQUAL(schedule.AssignedSuperstep(1), 0);
+    BOOST_CHECK_EQUAL(schedule.AssignedSuperstep(2), 1);
+    BOOST_CHECK_EQUAL(schedule.AssignedSuperstep(3), 1);
 
     BOOST_CHECK_EQUAL(schedule.NumberOfSupersteps(), 2);
 }
@@ -231,13 +231,13 @@ BOOST_AUTO_TEST_CASE(MultipleSectionsTest) {
 
     BOOST_CHECK_EQUAL(schedule.assignedProcessor(0), 0);
     BOOST_CHECK_EQUAL(schedule.assignedProcessor(1), 3);
-    BOOST_CHECK_EQUAL(schedule.assignedSuperstep(0), 0);
-    BOOST_CHECK_EQUAL(schedule.assignedSuperstep(1), 0);
+    BOOST_CHECK_EQUAL(schedule.AssignedSuperstep(0), 0);
+    BOOST_CHECK_EQUAL(schedule.AssignedSuperstep(1), 0);
 
     BOOST_CHECK_EQUAL(schedule.assignedProcessor(2), 0);
     BOOST_CHECK_EQUAL(schedule.assignedProcessor(3), 4);
-    BOOST_CHECK_EQUAL(schedule.assignedSuperstep(2), 1);
-    BOOST_CHECK_EQUAL(schedule.assignedSuperstep(3), 1);
+    BOOST_CHECK_EQUAL(schedule.AssignedSuperstep(2), 1);
+    BOOST_CHECK_EQUAL(schedule.AssignedSuperstep(3), 1);
 
     BOOST_CHECK_EQUAL(schedule.NumberOfSupersteps(), 2);
 }
@@ -296,17 +296,17 @@ BOOST_AUTO_TEST_SUITE_END()
 //     // Member 1 of iso group {0,1} gets 1 proc (global proc 0)
 //     BOOST_CHECK_EQUAL(schedule.assignedProcessor(0), 0);
 //     BOOST_CHECK_EQUAL(schedule.assignedProcessor(1), 0);
-//     BOOST_CHECK_EQUAL(schedule.assignedSuperstep(0), 0);
+//     BOOST_CHECK_EQUAL(schedule.AssignedSuperstep(0), 0);
 
 //     // Member 2 of iso group {2,3} gets 1 proc (global proc 1)
 //     BOOST_CHECK_EQUAL(schedule.assignedProcessor(2), 1);
 //     BOOST_CHECK_EQUAL(schedule.assignedProcessor(3), 1);
-//     BOOST_CHECK_EQUAL(schedule.assignedSuperstep(2), 0);
+//     BOOST_CHECK_EQUAL(schedule.AssignedSuperstep(2), 0);
 
 //     // Unique group {4,5} gets 4 procs (global procs 2,3,4,5), sub-schedule uses first one.
 //     BOOST_CHECK_EQUAL(schedule.assignedProcessor(4), 2);
 //     BOOST_CHECK_EQUAL(schedule.assignedProcessor(5), 2);
-//     BOOST_CHECK_EQUAL(schedule.assignedSuperstep(4), 0);
+//     BOOST_CHECK_EQUAL(schedule.AssignedSuperstep(4), 0);
 
 //     BOOST_CHECK_EQUAL(schedule.NumberOfSupersteps(), 1);
 // }
@@ -324,13 +324,13 @@ BOOST_AUTO_TEST_SUITE_END()
 //     BOOST_CHECK_EQUAL(status, osp::ReturnStatus::OSP_SUCCESS);
 
 //     BOOST_CHECK_EQUAL(schedule.assignedProcessor(0), 0);
-//     BOOST_CHECK_EQUAL(schedule.assignedSuperstep(0), 0);
+//     BOOST_CHECK_EQUAL(schedule.AssignedSuperstep(0), 0);
 //     BOOST_CHECK_EQUAL(schedule.assignedProcessor(2), 0);
-//     BOOST_CHECK_EQUAL(schedule.assignedSuperstep(2), 1); // Sequential
+//     BOOST_CHECK_EQUAL(schedule.AssignedSuperstep(2), 1); // Sequential
 
 //     // Unique group scheduled on its 2 processors (global procs 1, 2)
 //     BOOST_CHECK_EQUAL(schedule.assignedProcessor(4), 1);
-//     BOOST_CHECK_EQUAL(schedule.assignedSuperstep(4), 0);
+//     BOOST_CHECK_EQUAL(schedule.AssignedSuperstep(4), 0);
 
 //     BOOST_CHECK_EQUAL(schedule.NumberOfSupersteps(), 2);
 // }

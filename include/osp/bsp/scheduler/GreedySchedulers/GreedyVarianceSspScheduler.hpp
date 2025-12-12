@@ -499,7 +499,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
                             unsigned earliest_add = supstepIdx;
                             for (const auto &pred : G.Parents(succ)) {
                                 if (schedule.assignedProcessor(pred) != proc_of_node) {
-                                    earliest_add = std::max(earliest_add, stale + schedule.assignedSuperstep(pred));
+                                    earliest_add = std::max(earliest_add, stale + schedule.AssignedSuperstep(pred));
                                 }
                             }
 

@@ -73,7 +73,7 @@ ReturnStatus GreedyRecomputer<GraphT>::ComputeRecompSchedule(BspScheduleCS<Graph
 
     for (vertex_idx node = 0; node < N; ++node) {
         const unsigned &proc = initialSchedule.assignedProcessor(node);
-        const unsigned &step = initialSchedule.assignedSuperstep(node);
+        const unsigned &step = initialSchedule.AssignedSuperstep(node);
 
         workCost[proc][step] += g.VertexWorkWeight(node);
         firstPresent[node][proc] = std::min(firstPresent[node][proc], step);

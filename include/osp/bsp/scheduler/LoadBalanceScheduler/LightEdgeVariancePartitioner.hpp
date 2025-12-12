@@ -338,7 +338,7 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
                                 bool is_proc_ready = true;
                                 for (const auto &parent : graph.Parents(chld)) {
                                     if ((schedule.assignedProcessor(parent) != proc_alloc_prior)
-                                        && (schedule.assignedSuperstep(parent) == superstep)) {
+                                        && (schedule.AssignedSuperstep(parent) == superstep)) {
                                         is_proc_ready = false;
                                         break;
                                     }
@@ -388,7 +388,7 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
                                 bool is_proc_ready = true;
                                 for (const auto &parent : graph.Parents(chld)) {
                                     if ((schedule.assignedProcessor(parent) != proc)
-                                        && (schedule.assignedSuperstep(parent) == superstep)) {
+                                        && (schedule.AssignedSuperstep(parent) == superstep)) {
                                         is_proc_ready = false;
                                         break;
                                     }

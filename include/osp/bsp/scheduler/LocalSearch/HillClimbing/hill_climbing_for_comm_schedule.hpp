@@ -168,7 +168,7 @@ void HillClimbingForCommSteps<GraphT>::Init() {
                         && commSchedule[pred][schedule->assignedProcessor(node)] == UINT_MAX) {
                         commSchedule[pred][schedule->assignedProcessor(node)] = step - schedule->getStaleness();
                         commBounds[pred][schedule->assignedProcessor(node)]
-                            = std::make_pair(schedule->assignedSuperstep(pred), step - schedule->getStaleness());
+                            = std::make_pair(schedule->AssignedSuperstep(pred), step - schedule->getStaleness());
                     }
                 }
             }
@@ -450,7 +450,7 @@ void HillClimbingForCommSteps<GraphT>::CreateSupstepLists() {
 
     const std::vector<vertex_idx> topOrder = GetTopOrder(g);
     for (vertex_idx node : topOrder) {
-        supsteplists[schedule->assignedSuperstep(node)][schedule->assignedProcessor(node)].push_back(node);
+        supsteplists[schedule->AssignedSuperstep(node)][schedule->assignedProcessor(node)].push_back(node);
     }
 }
 

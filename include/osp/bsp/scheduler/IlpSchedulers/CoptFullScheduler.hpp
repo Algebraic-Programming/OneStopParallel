@@ -360,7 +360,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
                     computed[node].emplace(assignment);
                 }
             } else {
-                computed[node].emplace(initialSchedule_->assignedProcessor(node), initialSchedule_->assignedSuperstep(node));
+                computed[node].emplace(initialSchedule_->assignedProcessor(node), initialSchedule_->AssignedSuperstep(node));
             }
         }
 
@@ -373,7 +373,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
                 }
             } else {
                 firstAt[node][initialSchedule_->assignedProcessor(node)] = std::min(
-                    firstAt[node][initialSchedule_->assignedProcessor(node)], initialSchedule_->assignedSuperstep(node));
+                    firstAt[node][initialSchedule_->assignedProcessor(node)], initialSchedule_->AssignedSuperstep(node));
             }
         }
 
@@ -435,7 +435,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
             }
         } else {
             for (const auto &node : initialSchedule_->GetInstance().vertices()) {
-                work[initialSchedule_->assignedSuperstep(node)][initialSchedule_->assignedProcessor(node)]
+                work[initialSchedule_->AssignedSuperstep(node)][initialSchedule_->assignedProcessor(node)]
                     += dag.VertexWorkWeight(node);
             }
         }

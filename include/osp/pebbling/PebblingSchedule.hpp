@@ -714,10 +714,10 @@ void PebblingSchedule<GraphT>::SplitSupersteps(const BspSchedule<GraphT> &schedu
                             neededAfter[node] = (needs_blue_at_end.find(node) != needs_blue_at_end.end());
                         }
                         for (vertex_idx succ : instance->GetComputationalDag().Children(node)) {
-                            if (schedule.assignedSuperstep(succ) > step) {
+                            if (schedule.AssignedSuperstep(succ) > step) {
                                 neededAfter[node] = true;
                             }
-                            if (schedule.assignedSuperstep(succ) == step && top_order_idx[succ] <= end_current) {
+                            if (schedule.AssignedSuperstep(succ) == step && top_order_idx[succ] <= end_current) {
                                 neededAfter[node] = true;
                             }
                         }
@@ -728,12 +728,12 @@ void PebblingSchedule<GraphT>::SplitSupersteps(const BspSchedule<GraphT> &schedu
                     for (unsigned idx = startIdx; idx <= endCurrent; ++idx) {
                         vertex_idx node = top_orders[proc][step][idx];
                         for (vertex_idx pred : instance->GetComputationalDag().Parents(node)) {
-                            if (schedule.assignedSuperstep(pred) < step
-                                || (schedule.assignedSuperstep(pred) == step && !neededAfter[pred])) {
+                            if (schedule.AssignedSuperstep(pred) < step
+                                || (schedule.AssignedSuperstep(pred) == step && !neededAfter[pred])) {
                                 lastUsedBy[pred] = node;
                             }
-                            if (schedule.assignedSuperstep(pred) < step
-                                || (schedule.assignedSuperstep(pred) == step && top_order_idx[pred] < start_idx)
+                            if (schedule.AssignedSuperstep(pred) < step
+                                || (schedule.AssignedSuperstep(pred) == step && top_order_idx[pred] < start_idx)
                                 || (need_to_load_inputs && instance->GetComputationalDag().in_degree(pred) == 0)
                                 || external_sources.find(pred) != external_sources.end()) {
                                 values_needed.insert(pred);
@@ -1300,13 +1300,13 @@ std::vector<std::vector<std::vector<VertexIdxT<GraphT>>>> PebblingSchedule<Graph
         for (vertex_idx pred : schedule.GetInstance().GetComputationalDag().Parents(node)) {
             if (external_sources.find(pred) == external_sources.end()
                 && schedule.assignedProcessor(node) == schedule.assignedProcessor(pred)
-                && schedule.assignedSuperstep(node) == schedule.assignedSuperstep(pred)) {
+                && schedule.AssignedSuperstep(node) == schedule.AssignedSuperstep(pred)) {
                 ++predecessors;
             }
         }
         nrPred[node] = predecessors;
         if (predecessors == 0 && external_sources.find(node) == external_sources.end()) {
-            Q[schedule.assignedProcessor(node)][schedule.assignedSuperstep(node)].push_back(node);
+            Q[schedule.assignedProcessor(node)][schedule.AssignedSuperstep(node)].push_back(node);
         }
     }
     for (unsigned proc = 0; proc < numProcs; ++proc) {
@@ -1317,7 +1317,7 @@ std::vector<std::vector<std::vector<VertexIdxT<GraphT>>>> PebblingSchedule<Graph
                 TopOrders[proc][step].push_back(node);
                 for (vertex_idx succ : schedule.GetInstance().GetComputationalDag().Children(node)) {
                     if (schedule.assignedProcessor(node) == schedule.assignedProcessor(succ)
-                        && schedule.assignedSuperstep(node) == schedule.assignedSuperstep(succ)) {
+                        && schedule.AssignedSuperstep(node) == schedule.AssignedSuperstep(succ)) {
                         ++pred_done[succ];
                         if (pred_done[succ] == nr_pred[succ]) {
                             Q[proc][step].push_front(succ);

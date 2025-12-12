@@ -352,7 +352,7 @@ class KlActiveSchedule {
 
     inline unsigned AssignedProcessor(VertexType node) const { return vectorSchedule_.assignedProcessor(node); }
 
-    inline unsigned AssignedSuperstep(VertexType node) const { return vectorSchedule_.assignedSuperstep(node); }
+    inline unsigned AssignedSuperstep(VertexType node) const { return vectorSchedule_.AssignedSuperstep(node); }
 
     inline VWorkwT<GraphT> GetStepMaxWork(unsigned step) const { return workDatastructures_.step_max_work(step); }
 

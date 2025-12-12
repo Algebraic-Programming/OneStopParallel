@@ -134,7 +134,7 @@ void CoptPartialScheduler<GraphT>::SetInitialSolution(const BspScheduleCS<GraphT
         }
         for (unsigned proc = 0; proc < num_processors; proc++) {
             for (unsigned step = 0; step < max_number_supersteps; ++step) {
-                if (schedule.assignedProcessor(node) == proc && schedule.assignedSuperstep(node) == start_superstep + step) {
+                if (schedule.assignedProcessor(node) == proc && schedule.AssignedSuperstep(node) == start_superstep + step) {
                     model.SetMipStart(node_to_processor_superstep_var[node_local_ID[node]][proc][static_cast<int>(step)], 1);
                 } else {
                     model.SetMipStart(node_to_processor_superstep_var[node_local_ID[node]][proc][static_cast<int>(step)], 0);
@@ -211,8 +211,8 @@ void CoptPartialScheduler<GraphT>::UpdateSchedule(BspScheduleCS<GraphT> &schedul
     const int offset = static_cast<int>(numberOfSupersteps) - static_cast<int>(endSuperstep_ - startSuperstep_ + 1);
 
     for (VertexIdxT<GraphT> node = 0; node < schedule.GetInstance().NumberOfVertices(); node++) {
-        if (schedule.assignedSuperstep(node) > endSuperstep_) {
-            schedule.setAssignedSuperstep(node, static_cast<unsigned>(static_cast<int>(schedule.assignedSuperstep(node)) + offset));
+        if (schedule.AssignedSuperstep(node) > endSuperstep_) {
+            schedule.setAssignedSuperstep(node, static_cast<unsigned>(static_cast<int>(schedule.AssignedSuperstep(node)) + offset));
         }
     }
 
@@ -672,18 +672,18 @@ void CoptPartialScheduler<GraphT>::SetupVertexMaps(const BspScheduleCS<GraphT> &
     maxNumberSupersteps_ = endSuperstep_ - startSuperstep_ + 3;
 
     for (unsigned node = 0; node < schedule.GetInstance().NumberOfVertices(); node++) {
-        if (schedule.assignedSuperstep(node) >= startSuperstep_ && schedule.assignedSuperstep(node) <= endSuperstep_) {
+        if (schedule.AssignedSuperstep(node) >= startSuperstep_ && schedule.AssignedSuperstep(node) <= endSuperstep_) {
             node_local_ID[node] = static_cast<VertexIdxT<GraphT>>(node_global_ID.size());
             node_global_ID.push_back(node);
 
             for (const auto &pred : schedule.GetInstance().GetComputationalDag().Parents(node)) {
-                if (schedule.assignedSuperstep(pred) < startSuperstep_) {
+                if (schedule.AssignedSuperstep(pred) < startSuperstep_) {
                     if (source_local_ID.find(pred) == source_local_ID.end()) {
                         source_local_ID[pred] = static_cast<VertexIdxT<GraphT>>(source_global_ID.size());
                         source_global_ID.push_back(pred);
                     }
 
-                } else if (schedule.assignedSuperstep(pred) > endSuperstep_) {
+                } else if (schedule.AssignedSuperstep(pred) > endSuperstep_) {
                     throw std::invalid_argument("Initial Schedule might be invalid?!");
                 }
             }
@@ -707,7 +707,7 @@ void CoptPartialScheduler<GraphT>::SetupVertexMaps(const BspScheduleCS<GraphT> &
         std::set<unsigned> procs_needing_this;
         for (const auto &succ : schedule.GetInstance().GetComputationalDag().Children(source)) {
             if (schedule.assignedProcessor(succ) != schedule.assignedProcessor(source)
-                && schedule.assignedSuperstep(succ) > end_superstep) {
+                && schedule.AssignedSuperstep(succ) > end_superstep) {
                 procs_needing_this.insert(schedule.assignedProcessor(succ));
             }
         }
@@ -735,7 +735,7 @@ void CoptPartialScheduler<GraphT>::SetupVertexMaps(const BspScheduleCS<GraphT> &
 
         std::set<unsigned> procs_needing_this;
         for (const auto &succ : schedule.GetInstance().GetComputationalDag().Children(node)) {
-            if (schedule.assignedSuperstep(succ) > end_superstep) {
+            if (schedule.AssignedSuperstep(succ) > end_superstep) {
                 procs_needing_this.insert(schedule.assignedProcessor(succ));
             }
         }
@@ -760,7 +760,7 @@ void CoptPartialScheduler<GraphT>::SetupVertexMaps(const BspScheduleCS<GraphT> &
     hasFixedCommInPrecedingStep_ = false;
     for (const auto &[key, val] : schedule.getCommunicationSchedule()) {
         VertexIdxT<GraphT> source = std::get<0>(key);
-        if (source_local_ID.find(source) == source_local_ID.end() && schedule.assignedSuperstep(source) < start_superstep
+        if (source_local_ID.find(source) == source_local_ID.end() && schedule.AssignedSuperstep(source) < start_superstep
             && val >= start_superstep - 1 && val <= end_superstep) {
             fixed_comm_steps.emplace_back(std::get<0>(key), std::get<1>(key), std::get<2>(key), val);
             if (val == startSuperstep_ - 1) {

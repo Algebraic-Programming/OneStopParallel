@@ -110,7 +110,7 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
           nodeToSuperstepAssignment_(schedule.GetInstance().NumberOfVertices()) {
         for (const auto &v : schedule.GetInstance().GetComputationalDag().vertices()) {
             nodeToProcessorAssignment_[v] = schedule.assignedProcessor(v);
-            nodeToSuperstepAssignment_[v] = schedule.assignedSuperstep(v);
+            nodeToSuperstepAssignment_[v] = schedule.AssignedSuperstep(v);
         }
     }
 
@@ -180,7 +180,7 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
         : instance_(&instance),
           numberOfSupersteps_(schedule.NumberOfSupersteps()),
           nodeToProcessorAssignment_(schedule.assignedProcessors()),
-          nodeToSuperstepAssignment_(schedule.assignedSupersteps()) {}
+          nodeToSuperstepAssignment_(schedule.AssignedSupersteps()) {}
 
     /**
      * @brief Destructor for the BspSchedule class.
